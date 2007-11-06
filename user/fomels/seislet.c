@@ -22,8 +22,8 @@
 #include "predict.h"
 
 static int nt, n;
-static bool inv;
-static float **t, **d, *t1, *t2;
+static bool inv, unit;
+static float **t, **d, *t1, *t2, *w;
 static void (*transform)(bool);
 
 static void predict_forw(bool adj, float *tt, int i, int j)
@@ -257,11 +257,17 @@ static void linear(bool adj)
 void seislet_init(int n1      /* trace length */, 
 		  int n2      /* number of traces */, 
 		  bool inv1   /* inversion flag */, 
+		  bool unit1  /* weighting flag */,
 		  float eps   /* regularization parameter */,
 		  char type   /* transform type */) 
 /*< allocate space >*/
 {
+    int i,j;
+    float wi;
+
     inv = inv1;
+    unit = unit1;
+
     n = n1;
     for (nt=1; nt < n2; nt *= 2) ;
     t = sf_floatalloc2(n,nt);
@@ -281,6 +287,18 @@ void seislet_init(int n1      /* trace length */,
 	    sf_error("Unknown wavelet type=%c",type);
 	    break;
     }
+
+    if (unit) {
+	w = sf_floatalloc(nt);
+
+	w[0] = sqrtf((float) nt);
+	wi = 0.5;	
+	for (j=1; j <= nt/2; j *= 2, wi *= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		w[i+j] = sqrtf(wi);
+	    }
+	}
+    }
 }
 
 void seislet_set(float **dip /* local slope */)
@@ -296,6 +314,7 @@ void seislet_close(void)
     free (t);
     free (t1);
     free (t2);
+    if (unit) free(w);
     predict_close();
 }
 
@@ -330,11 +349,31 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 		}
 	    }	    	    
 	}
+
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    if (inv) {
+			t[it][i1] /= w[it];
+		    } else {
+			t[it][i1] *= w[it];
+		    }
+		}
+	    }
+	}
     }
 
     transform(adj);
 
     if (adj) {
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    t[it][i1] *= w[it];
+		}
+	    }
+	}
+
 	for (i1=0; i1 < n; i1++) {
 	    x[i1] += t[0][i1];
 	}

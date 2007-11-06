@@ -33,7 +33,7 @@ void diplet_init(int n1      /* trace length */,
 		 char type   /* transform type */) 
 /*< allocate space >*/
 {
-    seislet_init(n1, n2, inv, eps, type);
+    seislet_init(n1, n2, inv, true, eps, type);
     np = np1;
     p = p1;
 }

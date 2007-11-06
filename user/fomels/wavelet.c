@@ -164,7 +164,11 @@ void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 
 	if (unit) {
 	    for (it=0; it < nt; it++) {
-		t[it] *= w[it];
+		if (inv) {
+		    t[it] /= w[it];
+		} else {
+		    t[it] *= w[it];
+		}
 	    }
 	}
     } else {

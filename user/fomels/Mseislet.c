@@ -26,7 +26,7 @@
 int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, i3, n3, n12, niter;
-    bool inv, adj;
+    bool inv, adj, unit;
     char *type;
     float *pp, *qq, **ww, *hilb, **dd, eps;
     sf_file in, out, dip;
@@ -68,10 +68,13 @@ int main(int argc, char *argv[])
 	hilb = NULL;
     }
 
-    if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* wavelet type (haar,linear) */
+    if (!sf_getbool("unit",&unit)) unit=false;
+    /* if y, use unitary scaling */
 
-    seislet_init(n1,n2,inv,eps,type[0]);
+    if (NULL == (type=sf_getstring("type"))) type="linear";
+    /* [haar,linear] wavelet type, the default is linear  */
+
+    seislet_init(n1,n2,inv,unit,eps,type[0]);
     seislet_set(dd);
 
     for (i3=0; i3 < n3; i3++) {
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
 		    }
 		}
 
-		sf_solver_prec (seislet_lop,sf_cgstep,weight_lop,n12, 	                 
+		sf_solver_prec (seislet_lop,sf_cgstep,weight_lop,n12, 	      
 				n12,n12,qq,pp,niter,0.,"verb",true,"end");
 		sf_cgstep_close();
 	    }

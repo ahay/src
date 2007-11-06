@@ -73,7 +73,7 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float mean, usum, usum2, psum, pi, lam;
+    float mean, usum, usum2, psum, ui, pi, lam;
     allpass ap;
  
     ap = allpass_init (nw,nj,n1,n2,n3,p);
@@ -90,17 +90,23 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
 	} else {
 	    allpass2 (true,  ap, u,u1);
 	}
-
-	mean = cblas_snrm2(n,u1,1);
+	
+	mean = 0.;
+	for(i=0; i < n; i++) {
+	    ui = u1[i];
+	    mean += ui*ui;
+	}
 	if (mean == 0.) return;
+
 	mean = sqrtf (mean/n);
 
-	cblas_sscal(n,1./mean,u1,1);
-	cblas_sscal(n,1./mean,u2,1);
-	usum = cblas_snrm2(n,u2,1);
-
+	usum = 0.;
 	psum = 0.;
+
 	for(i=0; i < n; i++) {
+	    u1[i] /= mean;
+	    u2[i] /= mean;
+	    usum += u2[i]*u2[i];
 	    if (verb) psum += p[i];
 	    p0[i] = p[i];
 	}
@@ -132,12 +138,15 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
 		allpass2 (false, ap, u,u2);
 	    }
 
-	    usum2 = cblas_snrm2(n,u2,1);
+	    usum2 = 0.;
+	    for(i=0; i < n; i++) {
+		usum2 += u2[i]*u2[i];
+	    }
 	    if (usum2 < usum*mean*mean) break;
 	    lam *= 0.5;
 	}
     } /* iter */
-    
+
     free(ap);
 }
 
