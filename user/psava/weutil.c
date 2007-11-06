@@ -79,6 +79,22 @@ struct ssr{
 /*^*/
 
 /*------------------------------------------------------------*/
+typedef struct lsr *lsr3d;
+/*^*/
+
+struct lsr{
+    sf_axa     bxx,byy;
+    float         **kk;
+    float         **kw;
+    int        *lx,*ly;
+    sf_complex   ***wk;
+    sf_complex   ***wt;
+    float       dsmax2;
+    fft2d          f2d;
+};
+/*^*/
+
+/*------------------------------------------------------------*/
 typedef struct cam *cam3d;
 /*^*/
 
@@ -160,6 +176,21 @@ struct ssroperator{
     fslice        wtmp; /* tmp wavefield (for SR modeling) */
     float      ***rr;   /*  reflectivity (for SR modeling)  */
     float       **qq;   /* image (for ZO modeling/migration) */
+};
+/*^*/
+
+/*------------------------------------------------------------*/
+typedef struct ssrmvaoperator *ssrmvaoperator3d;
+/*^*/
+
+struct ssrmvaoperator{
+    sf_complex ***bw; /* wavefield */
+    sf_complex ***dw; /* wavefield */
+    sf_complex ***pw;
+    sf_complex ***pwsum;
+    sf_complex ***ds; /* slowness */
+    sf_complex ***ps;
+    sf_complex ***pssum;
 };
 /*^*/
 
