@@ -12,7 +12,7 @@ ocparcel octentwt ofilp ofpwd ofpwd2 patch pick pick0 pick2 planemis2
 planemis3 planereg2 planereg3 planesignoi pmshape2 pradon predict pwd
 pwdix pwpick pwdsigk pwdsmooth2 seislet seisigk shapebin shapebin1
 shapesigk shearer similarity threshold timeshift tomo tree trismooth2
-twodip2 twofreq2 velcon warp1 warpadd warpscan ztrace
+tristack twodip2 twofreq2 velcon warp1 warpadd warpscan ztrace
 '''
 
 pyprogs = 'rcat'
