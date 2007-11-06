@@ -45,7 +45,7 @@ int main (int argc, char* argv[])
 	snprintf(key,6,"sign%d",i+1);
 	if (!sf_getint(key,sign+i)) sign[i]=0;
 	/*( sign#=0 transform along #-th dimension 
-	  (+1 forward or -1 backward) )*/ 
+	  [+1 forward or -1 backward] )*/ 
 	if (sign[i]) {
 	    dim1 = i;
 	    snprintf(key,3,"o%d",i+1);
