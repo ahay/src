@@ -535,11 +535,16 @@ def blas(context):
     if res:
         context.Result(res)
         context.env['LIBS'] = LIBS
+        context.env['BLAS'] = blas
+        if plat['OS'] == 'cygwin':
+            context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
+                                         ':/lib/lapack'
     else:
         context.Result(context_failure)
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
         context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
         LIBS.pop()
+        context.env['BLAS'] = None
 
 package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
 
