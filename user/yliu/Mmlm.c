@@ -92,13 +92,13 @@ int main (int argc, char* argv[])
 
 			for(pass=1;pass<4;pass++)
 			{
-				for(j=0;j<4-pass;j++)
+				for(int jj=0;jj<4-pass;jj++)
 				{
-					if(z[j]>z[j+1])
+					if(z[jj]>z[jj+1])
 					{
-						a=z[j];
-						z[j]=z[j+1];
-						z[j+1]=a;
+						a=z[jj];
+						z[jj]=z[jj+1];
+						z[jj+1]=a;
 					}
 				}
 			}
