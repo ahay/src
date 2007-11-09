@@ -236,6 +236,22 @@ def i2s(dimag,dslow,bwfld,bslow,par):
          slo=${SOURCES[2]}
          ''' % param(par))
 
+def s2i3(dslow,dimag,bwfld,bslow,par):
+    Flow(dimag,[dslow,bwfld,bslow],
+         '''
+         zomva3 inv=n %s
+         wfl=${SOURCES[1]}
+         slo=${SOURCES[2]}
+         ''' % param(par))
+
+def i2s3(dimag,dslow,bwfld,bslow,par):
+    Flow(dslow,[dimag,bwfld,bslow],
+         '''
+         zomva3 inv=y %s
+         wfl=${SOURCES[1]}
+         slo=${SOURCES[2]}
+         ''' % param(par))
+
 # ------------------------------------------------------------
 # simulate shot-record migration
 def wem(imag,sdat,rdat,velo,custom,par):

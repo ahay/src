@@ -99,8 +99,16 @@ def image3(imag,slow,data,par):
          camig3 mode=m inv=n %s verb=y
          slo=${SOURCES[1]}
          ''' % param(par))
+
+# ------------------------------------------------------------
+def wfld3(wfld,slow,data,par):
+    Flow(wfld,[data,slow],
+         '''
+         camig3 mode=w %s verb=y
+         slo=${SOURCES[1]}
+         ''' % param(par))
+
     
-         
 #def cimage(imag,slow,data,par):
 #    Flow(imag,[data,slow],
 #         '''

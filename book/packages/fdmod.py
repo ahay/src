@@ -529,6 +529,43 @@ def wom(wom,wfld,velo,vmean,par):
                 par['wweight']))
 
 # ------------------------------------------------------------
+# (elastic) wavefield-over-model
+def wem(wom,wfld,velo,vmean,par):
+
+    if(not par.has_key('wweight')): par['wweight']=10
+    if(not par.has_key('wclip')):   par['wclip']=1.0
+
+    Flow(velo+'-spray',
+         velo,
+         '''
+         add add=-%g |
+         scale axis=123 |
+         spray axis=3 n=%d o=%g d=%g
+         ''' % (vmean,
+                par['nt']/par['jsnap'],
+                par['ot'],
+                par['dt']*par['jsnap']))
+
+    for i in range(2):
+        Flow(wom+'-%d' %i ,wfld,'window n3=1 f3=%d' %i)
+        Flow(wom+'-%d' %i +'chop',
+             wom+'-%d' %i,
+             '''
+             window
+             min1=%(zmin)g max1=%(zmax)g
+             min2=%(xmin)g max2=%(xmax)g |
+             scale axis=123 |
+             clip clip=%(wclip)g
+             ''' % par)
+
+        Flow(wom+'-%d' %i +'-wom',
+             [velo+'-spray',wom+'-%d' %i + 'chop'],
+             'math w=${SOURCES[1]} output="input+%g*w" | transp plane=34' % par['wweight'])
+
+    Flow(wom,[wom+'-0-wom',wom+'-1-wom'],'cat axis=3 space=n ${SOURCES[1]}')
+    
+        
+# ------------------------------------------------------------
 # image-over-model plot
 def iom(iom,imag,velo,vmean,par):
 
