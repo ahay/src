@@ -19,10 +19,11 @@
 #include <rsf.h>
 
 #include "tristack.h"
+#include "gaustack.h"
 
 int main(int argc, char* argv[])
 {
-    bool adj;
+    bool adj, gauss;
     int nc, nd, nb, i2, n2;
     float *c, *d;
     sf_file in, out;
@@ -36,6 +37,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("rect",&nb)) nb=1;
     /* smoothing radius */
+
+    if (!sf_getbool("gauss",&gauss)) gauss=false;
+    /* use pseudo-gaussian */
 
     if (adj) {
 	if (!sf_histint(in,"n1",&nc)) sf_error("No n1= in input");
@@ -51,7 +55,11 @@ int main(int argc, char* argv[])
     c = sf_floatalloc(nc);
     d = sf_floatalloc(nd);
 
-    tristack_init(nb,nc);
+    if (gauss) {
+	gaustack_init(nb,nc);
+    } else {
+	tristack_init(nb,nc);
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	if (adj) {
@@ -60,7 +68,11 @@ int main(int argc, char* argv[])
 	    sf_floatread(d,nd,in);
 	}
 
-	tristack(adj,false,nd,nc,d,c);
+	if (gauss) {
+	    gaustack(adj,false,nd,nc,d,c);
+	} else {
+	    tristack(adj,false,nd,nc,d,c);
+	}
 
 	if (adj) {
 	    sf_floatwrite(d,nd,out);
