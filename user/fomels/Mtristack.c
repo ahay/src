@@ -19,20 +19,19 @@
 #include <rsf.h>
 
 #include "tristack.h"
-#include "gaustack.h"
 
 int main(int argc, char* argv[])
 {
     bool adj, gauss;
     int nc, nd, nb, i2, n2;
-    float *c, *d;
+    float *c, *d, d1;
     sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("adj",&adj)) adj=false;
+    if (!sf_getbool("adj",&adj)) adj=true;
     /* adjoint flag */
 
     if (!sf_getint("rect",&nb)) nb=1;
@@ -41,44 +40,40 @@ int main(int argc, char* argv[])
     if (!sf_getbool("gauss",&gauss)) gauss=false;
     /* use pseudo-gaussian */
 
+    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+
     if (adj) {
-	if (!sf_histint(in,"n1",&nc)) sf_error("No n1= in input");
-	nd = (nc-1)*nb+1;
-	sf_putint(out,"n1",nd);
-    } else {
 	if (!sf_histint(in,"n1",&nd)) sf_error("No n1= in input");
 	nc = (nd-1)/nb+1;
 	sf_putint(out,"n1",nc);
-    }
+	sf_putfloat(out,"d1",d1*nb);
+    } else {
+	if (!sf_histint(in,"n1",&nc)) sf_error("No n1= in input");
+	nd = (nc-1)*nb+1;
+	sf_putint(out,"n1",nd);
+	sf_putfloat(out,"d1",d1/nb);
+    } 
     n2 = sf_leftsize(in,1);
 
     c = sf_floatalloc(nc);
     d = sf_floatalloc(nd);
 
-    if (gauss) {
-	gaustack_init(nb,nc);
-    } else {
-	tristack_init(nb,nc);
-    }
+    tristack_init(gauss, nd, nb);
 
     for (i2=0; i2 < n2; i2++) {
 	if (adj) {
-	    sf_floatread(c,nc,in);
-	} else {
 	    sf_floatread(d,nd,in);
-	}
-
-	if (gauss) {
-	    gaustack(adj,false,nd,nc,d,c);
 	} else {
-	    tristack(adj,false,nd,nc,d,c);
-	}
+	    sf_floatread(c,nc,in);
+	} 
+
+	tristack(adj,false,nc,nd,c,d);
 
 	if (adj) {
-	    sf_floatwrite(d,nd,out);
-	} else {
 	    sf_floatwrite(c,nc,out);
-	}
+	} else {
+	    sf_floatwrite(d,nd,out);
+	} 
     }
     
     exit(0);

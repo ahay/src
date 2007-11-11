@@ -79,7 +79,7 @@ void sf_prefilter_init (int nw     /* spline order */,
 }
 
 void sf_prefilter_apply (int nd     /* data length */, 
-		      float* dat /* in - data, out - coefficients */)
+			 float* dat /* in - data, out - coefficients */)
 /*< Convert 1-D data to spline coefficients >*/
 {
     int i;
@@ -103,8 +103,8 @@ void sf_prefilter_apply (int nd     /* data length */,
 }
 
 void sf_prefilter (int dim    /* number of dimensions */, 
-		int* n     /* data size [dim] */, 
-		float* dat /* in - data, out - coefficients */)
+		   int* n     /* data size [dim] */, 
+		   float* dat /* in - data, out - coefficients */)
 /*< Convert N-D data to spline coefficients >*/
 {
     int i, i2, j, kk, k, n12;

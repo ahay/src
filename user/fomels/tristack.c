@@ -20,175 +20,71 @@
 
 #include "tristack.h"
 
-static float *tmp, *tmp2, wt;
-static int nc, nb, nd, np;
+static bool gauss;
+static int nx, rect;
+static float *t, *t2;
 
-void tristack_init (int nbox /* triangle length */, 
-		    int ndat /* coarse data length */)
+void tristack_init (bool gauss1 /* pseudo-gaussian */,
+		    int ndat /* dense data length */,
+		    int nbox /* triangle length */)
 /*< initialize >*/
 {
-    nc = ndat;
-    nb = nbox;
+    nx = ndat;
+    gauss = gauss1;
+    rect = nbox;
 
-    nd = (nc-1)*nb+1;
-    np = nd + 2*nb;
-    
-    tmp = sf_floatalloc(np);
-    tmp2 = sf_floatalloc(nc+2);
+    t = sf_floatalloc(nx);
+    if (gauss) t2 = sf_floatalloc(nx);
 
-    wt = 1.0/(nb*nb);
+    sf_triangle1_init (nbox,ndat);
 }
 
 void  tristack_close(void)
 /*< free allocated storage >*/
 {
-    free (tmp);
-    free (tmp2);
+    free(t);
+    if (gauss) free(t2);
+
+    sf_triangle1_close();
 }
 
-static void fold (const float *dense)
-{
-    int i, j;
-
-    /* copy middle */
-    for (i=0; i < nd; i++) 
-	tmp[i+nb] = dense[i];
-    
-    /* reflections from the right side */
-    for (j=nb+nd; j < np; j += nd) {
-	for (i=0; i < nd && i < np-j; i++)
-	    tmp[j+i] = dense[nd-1-i];
-	j += nd;
-	for (i=0; i < nd && i < np-j; i++)
-	    tmp[j+i] = dense[i];
-    }
-    
-    /* reflections from the left side */
-    for (j=nb; j >= 0; j -= nd) {
-	for (i=0; i < nd && i < j; i++)
-	    tmp[j-1-i] = dense[i];
-	j -= nd;
-	for (i=0; i < nd && i < j; i++)
-	    tmp[j-1-i] = dense[nd-1-i];
-    }
-}
-
-static void fold2 (float *dense)
-{
-    int i, j;
-
-    /* copy middle */
-    for (i=0; i < nd; i++) 
-	dense[i] += tmp[i+nb];
-
-    /* reflections from the right side */
-    for (j=nb+nd; j < np; j += nd) {
-	for (i=0; i < nd && i < np-j; i++)
-	    dense[nd-1-i] += tmp[j+i];
-	j += nd;
-	for (i=0; i < nd && i < np-j; i++)
-	    dense[i] += tmp[j+i];
-    }
-    
-    /* reflections from the left side */
-    for (j=nb; j >= 0; j -= nd) {
-	for (i=0; i < nd && i < j; i++)
-	    dense[i] += tmp[j-1-i];
-	j -= nd;
-	for (i=0; i < nd && i < j; i++)
-	    dense[nd-1-i] += tmp[j-1-i];
-    }
-}
-    
-static void doubint (void)
-{
-    int i, j;
-    float t;
-
-    /* integrate backward */
-    t = 0.;
-    for (i=np-1; i >= 0; i--) {
-	t += tmp[i];
-	tmp[i] = t;
-    }
-
-    /* integrate forward */
-    t=0.;
-    j=0;
-    for (i=0; i < np; i++) {
-	t += tmp[i];
-	if (0 == i%nb) {
-	    tmp2[j] = t;
-	    j++;
-	}
-    }
-}
-
-static void doubint2 (void)
-{
-    int i, j;
-    float t;
-
-    /* integrate backward */
-    t = 0.;
-    j=nc+1;
-    for (i=np-1; i >= 0; i--) {
-	if (0 == i%nb) {
-	    t += tmp2[j];
-	    j--;
-	}
-	tmp[i] = t;
-    }
-
-    /* integrate forward */
-    t=0.;
-    for (j=i=0; i < np; i++) {
-	t += tmp[i];
-	tmp[i] = t;
-    }
-}
-
-static void triple (float* coarse)
-{
-    int i;
-    
-    for (i=0; i < nc; i++) {
-	coarse[i] += (2*tmp2[i+1] - tmp2[i] - tmp2[i+2])*wt;
-    }
-}
-
-static void triple2 (const float* coarse)
-{
-    int i;
-    float c;
-    
-    for (i=0; i < nc + 2; i++) {
-	tmp2[i] = 0.;
-    }
-
-    for (i=0; i < nc; i++) {
-	c = coarse[i]*wt;
-	tmp2[i] -= c;
-	tmp2[i+1] += 2*c;
-	tmp2[i+2] -= c;
-    }
-}
-
-void tristack (bool adj, bool add, int nx, int ny, float *dense, float *coarse)  
+void tristack (bool adj, bool add, int nc, int nd, float *c, float *d) 
 /*< linear operator >*/
 {
-    if (nd != nx || nc != ny) sf_error("%s: wrong size",__FILE__);
+    int ic, id;
 
-    sf_adjnull(adj,add,nd,nc,dense,coarse);
+    if (nd != nx) sf_error("%s: wrong size",__FILE__);
+
+    sf_adjnull(adj,add,nc,nd,c,d);
 
     if (adj) {
-	triple2 (coarse);
-	doubint2 ();
-	fold2 (dense);
+	if (gauss) {
+	    sf_triangle1_lop(false,false,nd,nd,d,t2);
+	    sf_triangle1_lop(true,false,nd,nd,t,t2);
+	} else {
+	    sf_triangle1_lop(true,false,nd,nd,t,d);
+	}
+	for (ic=id=0; id < nd; id++) {
+	    if (0==id%rect) {
+		c[ic] += t[id];
+		ic++;
+	    } 
+	}
     } else {
-	fold (dense);
-	doubint ();
-	triple (coarse);
+	for (ic=id=0; id < nd; id++) {
+	    if (0==id%rect) {
+		t[id] = c[ic];
+		ic++;
+	    } else {
+		t[id] = 0.;
+	    }
+	}
+	if (gauss) {
+	    sf_triangle1_lop(false,false,nd,nd,t,t2);
+	    sf_triangle1_lop(true,true,nd,nd,d,t2);
+	} else {
+	    sf_triangle1_lop(false,true,nd,nd,t,d);
+	}
     }
 }
 
