@@ -21,6 +21,12 @@ memsize=1 command-line parameter to force out-of-core operation.
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <stdio.h>
 #include <string.h>
 
