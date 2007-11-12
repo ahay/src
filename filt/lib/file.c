@@ -614,6 +614,7 @@ Prepares file for writing binary data >*/
     time_t tm;
     char line[BUFSIZ];
  
+    /* if already flushed, do nothing */
     if (NULL == file->dataname) return;
  
     if (NULL != src && NULL != src->head) {
