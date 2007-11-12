@@ -31,6 +31,7 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env.Append(BUILDERS={'Place':configure.Place})
     SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
@@ -48,6 +49,14 @@ for prog in mains:
 	       other = string.replace(str(main[0]),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,other),main[0])
 	       docmerge = configure.docextra(docmerge,'sf'+prog,other)
+
+mpicc = env.get('MPICC')
+if mpicc:
+    prog = env.Program('sfmpi','mpi.c',CC=mpicc)
+else:
+    prog = env.Place('sfmpi',None,var='MPI')
+if root:
+    env.Install(bindir,prog[0])
 
 ######################################################################
 # SELF-DOCUMENTATION

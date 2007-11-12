@@ -550,9 +550,10 @@ package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
 
 def mpi(context):
     context.Message("checking for MPI ... ")
-    mpicc = WhereIs('mpicc')
+    mpicc = context.env.get('MPICC',WhereIs('mpicc'))
     if mpicc:
-        context.Message("checking if MPI works ... ")
+        context.Result(mpicc)
+        context.Message("checking if %s works ... " % mpicc)
         # Try linking with mpicc instead of cc
         text = '''
         #include <mpi.h>
@@ -855,6 +856,7 @@ def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
+    opts.Add('MPICC','MPI C compiler')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
     opts.Add('CC','The C compiler')
