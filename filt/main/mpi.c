@@ -112,9 +112,6 @@ int main(int argc, char* argv[])
 	    iname = inames[node-1];
 	    oname = onames[node-1];
 	    
-	    snprintf(cmdline,CMDLEN,"sfrm %s",iname);
-	    system(cmdline);
-
 	    in = sf_input(oname);
 	    sf_setform(in,SF_NATIVE);
 
@@ -124,8 +121,8 @@ int main(int argc, char* argv[])
 		sf_charwrite(data,size,out);
 	    }
 
-	    snprintf(cmdline,CMDLEN,"sfrm %s",oname);
-	    system(cmdline);
+	    sf_rm(iname,true,false,false);
+	    sf_rm(oname,true,false,false);
 	}
     } else { /* slave nodes */
 	MPI_Recv(cmdline, CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
