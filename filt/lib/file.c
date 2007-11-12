@@ -721,10 +721,7 @@ Prepares file for writing binary data >*/
     free (file->dataname);
     file->dataname=NULL;
 
-    if (file->dryrun) {
-	sf_warning("aborting due to dryrun"); 
-	exit(0);
-    }
+    if (file->dryrun) exit(0);
 }
 
 void sf_putint (sf_file file, const char* key, int par)
@@ -1203,32 +1200,21 @@ off_t sf_tell (sf_file file)
     return ftello(file->stream);
 }
 
-char *sf_tempname(void)
-/*< Create a temporary file name >*/
-{
-    char *path, *name;
-    extern int mkstemp (char *template);
-
-    path = gettmpdatapath();
-    if (NULL == path) path = getdatapath();
-    name = sf_charalloc (NAME_MAX+1);
-    snprintf(name,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
-    mkstemp(name);
-
-    return name;
-}
-    
-
 FILE *sf_tempfile(char** dataname, const char* mode)
 /*< Create a temporary file with a unique name >*/
 {
     FILE *tmp;
+    char *path;
     extern FILE * fdopen (int fd, const char *mode);
+    extern int mkstemp (char *template);
     
-    *dataname = sf_tempname();
-    tmp = fdopen(*dataname,mode);
+    path = gettmpdatapath();
+    if (NULL == path) path = getdatapath();
+    *dataname = sf_charalloc (NAME_MAX+1);
+    snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
+    tmp = fdopen(mkstemp(*dataname),mode);
     if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,*dataname);
-
+    
     return tmp;
 }
 

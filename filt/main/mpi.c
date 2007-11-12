@@ -31,9 +31,10 @@
 int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,n[SF_MAX_DIM],last,chunk,i,j,len,nc,sys;
-    off_t size;
+    off_t size, size2;
     char cmdline[CMDLEN], command[CMDLEN], *iname, *oname, *data, key[5];
     char **inames, **onames;
+    FILE *ifile, *ofile;
     sf_file inp, out, in;
     MPI_Status stat;
 
@@ -45,8 +46,8 @@ int main(int argc, char* argv[])
     if (!rank) { /* master node */
 	sf_init(argc,argv);
 
-	inp = sf_input("input");
-	out = sf_output("output");
+	inp = sf_input("in");
+	out = sf_output("out");
 
 	ndim = sf_filedims (inp,n);
 	size = sf_esize(inp);
@@ -63,8 +64,8 @@ int main(int argc, char* argv[])
 
 	j=0;
 	for (i=1; i < argc; i++) {
-	    if (strncmp(argv[i],"input=",6) &&
-		strncmp(argv[i],"output=",7)) {
+	    if (strncmp(argv[i],"inp=",4) &&
+		strncmp(argv[i],"out=",4)) {
 		len = strlen(argv[i]);
 		if (j+len > CMDLEN-2) sf_error("command line is too long");
 		strncpy(command+j,argv[i],len);
@@ -78,13 +79,14 @@ int main(int argc, char* argv[])
 	onames = (char**) sf_alloc(nodes-1,sizeof(char*));
 
 	for (node=1; node < nodes; node++) {
-	    iname = sf_tempname();
-	    oname = sf_tempname();
+	    ifile = sf_tempfile(*iname,"w+b");
+	    ofile = sf_tempfile(*oname,"w+b");
 
 	    inames[node-1]=iname;
 	    onames[node-1]=oname;
 
 	    in = sf_output(iname);
+	    fclose(ifile);
 
 	    nc = (node==nodes-1)? chunk+last:chunk;
 
@@ -101,10 +103,37 @@ int main(int argc, char* argv[])
 
 	    snprintf(cmdline,CMDLEN,"%s < %s > %s",command,iname,oname);
 	    MPI_Send(cmdline,strlen(cmdline)+1,MPI_CHAR,node,0,MPI_COMM_WORLD);
+	    fclose(ofile);
+	}
+
+	sf_fileclose(inp);
+
+	iname = sf_getstring("in");
+	if (NULL == iname) sf_error("Need in=");
+	ofile = sf_tempfile(*oname,"w+b");
+
+	snprintf(cmdline,CMDLEN,"%s dryrun=y < %s > %s",command,iname,oname);
+	sys = system(cmdline);
+	if (sys == -1) sf_error("failed to run \"%s\"",cmdline);	
+	fclose(ofile);
+
+	inp = sf_input(oname);
+	ndim = sf_filedims (inp,n);
+	if (last != n[ndim-1]) sf_error("Wrong dimensionality");
+
+ 	size2 = sf_esize(inp);
+	for (i=0; i < ndim-1; i++) {
+	    size2 *= n[i];
+	}
+
+	if (size2 != size) {
+	    free(data);
+	    data = sf_charalloc(size2);
 	}
 
 	sf_fileflush(out,inp);
 	sf_setform(out,SF_NATIVE);
+	sf_fileclose(inp);
 
 	for (node=1; node < nodes; node++) {
 	    MPI_Recv(&sys,1, MPI_INT, node, 1, MPI_COMM_WORLD,&stat);
@@ -117,8 +146,8 @@ int main(int argc, char* argv[])
 
 	    nc = (node==nodes-1)? chunk+last:chunk;
 	    for (i=0; i < nc; i++) {
-		sf_charread(data,size,in);
-		sf_charwrite(data,size,out);
+		sf_charread(data,size2,in);
+		sf_charwrite(data,size2,out);
 	    }
 
 	    sf_rm(iname,true,false,false);
