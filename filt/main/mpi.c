@@ -35,9 +35,9 @@ static int my_system(const char *command);
 int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,n[SF_MAX_DIM],last,extra,chunk,i,j,len,nc,sys;
-    off_t size, size2;
-    char cmdline[CMDLEN], command[CMDLEN], *iname, *oname, *data, key[5];
-    char **inames, **onames;
+    off_t size, size2, left,nbuf;
+    char cmdline[CMDLEN], command[CMDLEN], *iname, *oname, key[5];
+    char **inames, **onames, buffer[BUFSIZ];
     FILE *ifile, *ofile;
     sf_file inp, out, in;
     MPI_Status stat;
@@ -62,8 +62,6 @@ int main(int argc, char* argv[])
 	for (i=0; i < ndim-1; i++) {
 	    size *= n[i];
 	}
-
-	data = sf_charalloc(size);
 
 	last = n[ndim-1];
 	chunk = last/(nodes-1);
@@ -106,8 +104,12 @@ int main(int argc, char* argv[])
 	    sf_setform(in,SF_NATIVE);
 
 	    for (i=0; i < nc; i++) {
-		sf_charread(data,size,inp);
-		sf_charwrite(data,size,in);
+		for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
+		    if (nbuf > left) nbuf=left;
+
+		    sf_charread(buffer,nbuf,inp);
+		    sf_charwrite(buffer,nbuf,in);
+		}
 	    }
 	    
 	    sf_fileclose(in);
@@ -136,14 +138,9 @@ int main(int argc, char* argv[])
 	    MPI_Finalize();
 	}
 
- 	size2 = sf_esize(inp);
+ 	size = sf_esize(inp);
 	for (i=0; i < ndim-1; i++) {
-	    size2 *= n[i];
-	}
-
-	if (size2 != size) {
-	    free(data);
-	    data = sf_charalloc(size2);
+	    size *= n[i];
 	}
 
 	sf_setformat(out,sf_histstring(inp,"data_format"));
@@ -163,8 +160,12 @@ int main(int argc, char* argv[])
 
 	    nc = (node==nodes-1)? chunk+extra:chunk;
 	    for (i=0; i < nc; i++) {
-		sf_charread(data,size2,in);
-		sf_charwrite(data,size2,out);
+		for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
+		    if (nbuf > left) nbuf=left;
+
+		    sf_charread(buffer,nbuf,in);
+		    sf_charwrite(buffer,nbuf,out);
+		}
 	    }
 
 	    sf_rm(iname,true,false,false);
