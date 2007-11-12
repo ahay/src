@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
         if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
         /* filter-window length (positive and odd integer)*/
         if (nfw < 1)  sf_error("Need positive integer input"); 
-        if (nfw%2 != 0)  nfw = (nfw+1);
+        if (nfw%2 == 0)  nfw = (nfw+1);
         m=(nfw-1)/2;
 
         trace = sf_floatalloc(n1*n2);
@@ -165,6 +165,6 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 }
 
 
-/* 	$Id: Mmlm.c 1131 2007-10-09 23:25:10Z yang $	 */
+/* 	$Id: Mmlm.c 1131 2007-11-12 10:00:10Z yang $	 */
 
 

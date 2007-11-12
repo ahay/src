@@ -56,7 +56,7 @@ int main (int argc, char* argv[])
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
 	/* reference filter-window length (>7, positive and odd integer)*/
 	if (nfw < 7)  sf_error("Need positive integer input and greater than 7"); 
-	if (nfw%2 != 0)  nfw = (nfw+1);
+	if (nfw%2 == 0)  nfw = (nfw+1);
 	m=(nfw-1)/2;
 	tempnfw=nfw;
 
@@ -225,6 +225,6 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 	}	
 }
 
-/* 	$Id: Mtvmf.c 1131 2007-10-15 17:30:10Z yang $	 */
+/* 	$Id: Mtvmf.c 1131 2007-11-12 10:00:10Z yang $	 */
 
 
