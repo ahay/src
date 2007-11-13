@@ -58,7 +58,7 @@ static void haar(bool adj)
 		    for (i1=0; i1 < n; i1++) {
 			t1[i1] = t[i][i1];
 		    }
-		    predict_forw(false,t1,i,j);
+		    predict_forw(false,t1,i,j); /* *z0 */
 		    for (i1=0; i1 < n; i1++) {
 			t[i+j][i1] -= t1[i1];     
 			/* d = o - P[e] */
@@ -66,7 +66,7 @@ static void haar(bool adj)
 		    for (i1=0; i1 < n; i1++) {
 			t2[i1] = t[i+j][i1];
 		    }
-		    predict_back(false,t2,i,j);
+		    predict_back(false,t2,i,j); /* 1/z0 */
 		    for (i1=0; i1 < n; i1++) {
 			t[i][i1] += t2[i1]/2; 
                         /* s = e + U[d] */

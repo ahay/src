@@ -26,8 +26,9 @@
 
 int main(int argc, char* argv[])
 {
-    int j, n1, n2, n3, i2, i3, ni, axis, esize;
+    int j, n1, n2, i2, ni, axis, esize;
     float f;
+    off_t i3, n3;
     size_t n;
     sf_file in, out;
     char key1[7], key2[7], *val, *trace;
@@ -78,32 +79,7 @@ int main(int argc, char* argv[])
 	sf_putstring(out,key1,val);
     }
 
-    n3 = 1;
-    for (j=axis; j < SF_MAX_DIM; j++) {
-	sprintf(key2,"n%d",j+1);
-	sprintf(key1,"n%d",j);
-	if (!sf_histint(in,key1,&ni)) break;
-	sf_putint(out,key2,ni);
-	n3 *= ni;
-	
-	sprintf(key2,"o%d",j+1);
-	sprintf(key1,"o%d",j);
-	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
-
-	sprintf(key2,"d%d",j+1);
-	sprintf(key1,"d%d",j);
-	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
-
-	sprintf(key2,"label%d",j+1);
-	sprintf(key1,"label%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
-
-	sprintf(key2,"unit%d",j+1);
-	sprintf(key1,"unit%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
-    }
+    n3 = sf_shiftdim(in, out, axis);
     
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);

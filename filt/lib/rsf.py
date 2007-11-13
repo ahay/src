@@ -1,10 +1,29 @@
-import os, sys, types
+import os, sys, types, tempfile, re
 import c_rsf
 import numpy
 
 #      a=100 Xa=5
 #      float=5.625 cc=fgsg
 #      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
+
+datapath = os.environ.get('DATAPATH')
+if not datapath:
+    try:
+        pathfile = open('.datapath','r')
+    except:
+        try:
+            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+        except:
+            pathfile = None
+    if pathfile:
+        for line in pathfile.readlines():
+            check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
+            if check:
+                datapath = check.group(1)
+        pathfile.close()
+    if not datapath:
+        datapath = './' # the ultimate fallback
+tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
 
 class Par:
     def __init__(self,argv=sys.argv):
@@ -53,6 +72,13 @@ class File:
     def __init__(self):
         self.type = datatype[c_rsf.sf_gettype(self.file)]
         self.form = dataform[c_rsf.sf_getform(self.file)]
+    def __add__(self,other):
+        add = Output(None)
+        if os.path.isfile(self.tag) and os.path.isfile(other.tag):
+            os.system('sfadd %s %s > %s' % (self.tag,other.tag,add.tag))
+        else:
+            raise TypeError, 'Cannot add %s and %s' % (self.tag,other.tag)
+        return add
     def size(self,dim=0):
         return c_rsf.sf_leftsize(self.file,dim)
     def settype(self,type):
@@ -106,7 +132,8 @@ class File:
 
 class Input(File):
     def __init__(self,tag='in'):
-        self.file = c_rsf.sf_input(tag)
+        self.tag = tag
+        self.file = c_rsf.sf_input(self.tag)
         File.__init__(self)
     def read(self,data):
         if self.type == 'float':
@@ -118,7 +145,11 @@ class Input(File):
 
 class Output(File):
     def __init__(self,tag='out',src=None):
-        self.file = c_rsf.sf_output(tag)
+        if not tag:
+            self.tag = tempfile.mktemp(dir=tmpdatapath)
+        else:
+            self.tag = tag
+        self.file = c_rsf.sf_output(self.tag)
         if src: # clone source file
             c_rsf.sf_settype(self.file,datatype.index(src.type))
             c_rsf.sf_fileflush(self.file,src.file)
