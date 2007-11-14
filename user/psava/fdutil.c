@@ -15,6 +15,9 @@ typedef struct abcone *abcone2d;
 typedef struct sponge *sponge2d;
 /*^*/
 
+typedef struct ofg *ofg2d;
+/*^*/
+
 struct fdm{
     int n1,n1pad;
     int n2,n2pad;
@@ -53,6 +56,12 @@ struct sponge{
     float *w;
 };
 /*^*/
+
+struct ofg{
+    float **tt;
+};
+/*^*/
+
 
 #endif
 
@@ -94,6 +103,83 @@ fdm2d fdutil_init(bool verb_,
     fdm->ompchunk=ompchunk_;
 
     return fdm;
+}
+
+/*------------------------------------------------------------*/
+ofg2d offgrid_init(fdm2d fdm)
+/*< init off-grid interpolation >*/
+{
+    ofg2d ofg;
+    ofg = (ofg2d) sf_alloc(1,sizeof(*ofg));
+    
+    ofg->tt = sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    
+    return ofg;
+}
+
+/*------------------------------------------------------------*/
+void offgridfor(float **ti,
+		ofg2d  ofg,
+		fdm2d  fdm)
+/*< forward off-grid interpolation (in place) >*/
+{
+    int i1,i2;
+
+    /* zero output */
+    for     (i2=0;i2<fdm->n2;i2++) {
+	for (i1=0;i1<fdm->n1;i1++) {
+	    ofg->tt[i2][i1]=0;
+	}
+    }
+
+    for     (i2=0;i2<fdm->n2-1;i2++) {
+	for (i1=0;i1<fdm->n1-1;i1++) {
+	    ofg->tt[i2][i1] =
+		ti[i2  ][i1  ] + 
+		ti[i2+1][i1  ] + 
+		ti[i2  ][i1+1] + 
+		ti[i2+1][i1+1];
+	}
+    }   
+
+    /* copy to input array */
+    for     (i2=0;i2<fdm->n2;i2++) {
+	for (i1=0;i1<fdm->n1;i1++) {
+	    ti[i2][i1] = 0.25 * ofg->tt[i2][i1];
+	}
+    }
+}
+
+/*------------------------------------------------------------*/
+void offgridadj(float **ti,
+		ofg2d  ofg,
+		fdm2d  fdm)
+/*< adjoint off-grid interpolation (in place) >*/
+{
+    int i1,i2;
+
+    /* zero output */
+    for     (i2=0;i2<fdm->n2;i2++) {
+	for (i1=0;i1<fdm->n1;i1++) {
+	    ofg->tt[i2][i1]=0;
+	}
+    }
+    
+    for     (i2=0;i2<fdm->n2-1;i2++) {
+	for (i1=0;i1<fdm->n1-1;i1++) {
+	    ofg->tt[i2  ][i1  ] += ti[i2][i1];
+	    ofg->tt[i2+1][i1  ] += ti[i2][i1];
+	    ofg->tt[i2  ][i1+1] += ti[i2][i1];
+	    ofg->tt[i2+1][i1+1] += ti[i2][i1];
+	}
+    }   
+
+    /* copy to input array */
+    for     (i2=0;i2<fdm->n2;i2++) {
+	for (i1=0;i1<fdm->n1;i1++) {
+	    ti[i2][i1] = 0.25 * ofg->tt[i2][i1];
+	}
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -282,8 +368,6 @@ void lint2d_inject1(float**uu,
 	uu[ ca->j2[ia]+1 ][ ca->j1[ia]+1 ] -= ww * ca->w11[ia];
     }
 }
-
-
 
 /*------------------------------------------------------------*/
 void lint2d_extract(float**uu,
@@ -488,3 +572,4 @@ void sponge2d_apply(float**   uu,
 
     }
 }
+
