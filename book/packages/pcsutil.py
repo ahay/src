@@ -46,7 +46,6 @@ def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
          ''' % (n1) )
     Flow(mod,[mod+'1',mod+'2'],'add ${SOURCES[1]} scale=1,-1 | scale axis=123')
 
-
 # ------------------------------------------------------------
 # make a model with a dipping linear interface
 # defined by coordinates [start](s1,s2) and [end](e1,e2)

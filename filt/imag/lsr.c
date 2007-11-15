@@ -138,7 +138,6 @@ void kweight( float **bs, /* slowness */
 }
 
 /*------------------------------------------------------------*/
-
 void lsr_s2w(
     sf_complex    w /* frequency */,
     sf_complex **bw /* background   wavefield */,
@@ -200,6 +199,7 @@ void lsr_s2w(
     }
 }
 
+/*------------------------------------------------------------*/
 void lsr_w2s(
     sf_complex    w /* frequency */,
     sf_complex **bw /* background   wavefield */,
@@ -230,7 +230,6 @@ void lsr_w2s(
 	kweight(bs,wo);     /* k-domain weight */
 
 	for( isc=1; isc<=nsc; isc++) {
-
 	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = pw[iy][ix]; );
 #ifdef SF_HAS_COMPLEX_H
