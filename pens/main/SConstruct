@@ -24,6 +24,7 @@ except: # local version
     SConscript('../genlib/SConstruct')
     env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
                SCANNERS=[configure.Include])
+    
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../utilities','../genlib',
@@ -99,7 +100,8 @@ if ppm:
     env.Depends(obj,'raspen.h')
     main = env.Program('ppmpen',[obj,]+objects,
                        LIBS=[ppm]+env.get('LIBS',[]))
-    docmerge = configure.docextra(docmerge,'sfraspen','sfppmpen')
+    if root:
+        docmerge = configure.docextra(docmerge,'sfraspen','sfppmpen')
     pens.append('raspen')
 else:
     main = env.Place('ppmpen',None,var='PPM',package='netpbm-devel')

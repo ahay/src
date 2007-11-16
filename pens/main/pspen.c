@@ -407,8 +407,12 @@ extern struct pat pat[];
 
 static bool force_color;
 static bool dumb_fat; 
+static bool rgb_colorspace;
 static char *label;
 extern FILE *pltout;
+
+static void rgb_to_cmyk (int red, int green, int blue,
+                  int *cyan, int *magenta, int *yellow, int *black);
 
 void psarea (int npts, struct vertex  *verlist)
 /*< area >*/
@@ -750,6 +754,8 @@ int             red[32768] = {0, 0, 255, 255, 0, 0, 255, 255};
 int             green[32768] = {0, 0, 0, 0, 255, 255, 255, 255};
 int             blue[32768] = {0, 255, 0, 255, 0, 255, 0, 255};
 
+int             cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black;
+
 int             ps_grey_ras[32768];
 
 float           ps_curcolor = 0.;	/* Only used for mono */
@@ -960,20 +966,36 @@ void ps_set_color (int value)
     {
 	if (new_ps_curcolor_no != ps_curcolor_no || !ps_curcolor_set)
 	{
-	    if (force_color)
-	    {
-#ifdef PSDEBUG
-		fprintf (stderr, "%.2g %.2g %.2g setrgbcolor\n", red[new_ps_curcolor_no] / 255., green[new_ps_curcolor_no] / 255., blue[new_ps_curcolor_no] / 255.);
-#endif
-		fprintf (pltout, "%.2g %.2g %.2g setrgbcolor\n", red[new_ps_curcolor_no] / 255., green[new_ps_curcolor_no] / 255., blue[new_ps_curcolor_no] / 255.);
-	    }
-	    else
-	    {
-#ifdef PSDEBUG
-		fprintf (stderr, "%.2g %.2g %.2g setrgbcolor\n", 1. - red[new_ps_curcolor_no] / 255., 1. - green[new_ps_curcolor_no] / 255., 1. - blue[new_ps_curcolor_no] / 255.);
-#endif
-		fprintf (pltout, "%.2g %.2g %.2g setrgbcolor\n", 1. - red[new_ps_curcolor_no] / 255., 1. - green[new_ps_curcolor_no] / 255., 1. - blue[new_ps_curcolor_no] / 255.);
-	    }
+            if (rgb_colorspace)
+            {
+	        if (force_color)
+	        {
+		    fprintf (pltout, "%.2g %.2g %.2g setrgbcolor\n", red[new_ps_curcolor_no] / 255., green[new_ps_curcolor_no] / 255., blue[new_ps_curcolor_no] / 255.);
+	        }
+	        else
+	        {
+		    fprintf (pltout, "%.2g %.2g %.2g setrgbcolor\n", 1. - red[new_ps_curcolor_no] / 255., 1. - green[new_ps_curcolor_no] / 255., 1. - blue[new_ps_curcolor_no] / 255.);
+	        }
+            }
+            else
+            {
+	        if (force_color)
+	        {
+		    rgb_to_cmyk(red[new_ps_curcolor_no], green[new_ps_curcolor_no], blue[new_ps_curcolor_no], &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+                }
+	        else
+	        {
+		    rgb_to_cmyk(255 - red[new_ps_curcolor_no], 255 - green[new_ps_curcolor_no], 255 - blue[new_ps_curcolor_no], &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+                }
+
+
+	/*
+	 * Use the setcmykcolor command instead of the setrgbcolor command.
+	 * Note, the setcmykcolor command is not guaranteed to
+	 * to be supported in Level 1 postscript interpreters.
+	 */
+	        fprintf (pltout, "%.2g %.2g %.2g %.2g setcmykcolor\n", cmyk_cyan / 255., cmyk_magenta / 255., cmyk_yellow / 255., cmyk_black / 255.);
+            }
 
 	    ps_curcolor_no = new_ps_curcolor_no;
 	    ps_curcolor_set = YES;
@@ -1199,7 +1221,16 @@ static int      page_count = 1;
 	    fprintf (pltout, "  closepath 1 setgray fill grestore\n");
 	    fprintf (pltout, "  gsave 0 setgray\n");
 	    fprintf (pltout, "  show grestore} def\n");
-	    fprintf (pltout, "/Helvetica-BoldOblique findfont %d scalefont setfont\n", TEXT_HEIGHT);
+
+            if (serifs_OK)
+	    {
+	        fprintf (pltout, "/Helvetica-BoldOblique findfont %d scalefont setfont\n", TEXT_HEIGHT);
+	    }
+	    else
+	    {
+	        /* SEG doesn't like bold or oblique fonts either */
+	        fprintf (pltout, "/Helvetica findfont %d scalefont setfont\n", TEXT_HEIGHT);
+	    }
 	    fprintf (pltout, "(%s) labelshow\n", full_label);
 	}
 	if (tex == NO)
@@ -1562,6 +1593,22 @@ void psopen (int argc, char* argv[])
     if (!sf_getbool("force",&force_color)) force_color=false;
     /* if y, don't replace colors with their compliments */
 
+/*
+ * GEOPHYSICS now requires the cmyk color space. However,
+ * older level 1 postscript interpreters will not understand that,
+ * and it makes for a longer postscript file as well.
+ * So for now the default is to keep using the RGB color space.
+ * For figures turned into GEOPHYSICS, use "rgb=no".
+ */
+    if (!sf_getbool("rgb",&rgb_colorspace)) rgb_colorspace=true;
+    /* For figures turned into GEOPHYSICS, use "rgb=no". */
+
+/*
+ * If we can't use serifs for labels, go ahead and change
+ * the default font to a non-serif one.
+ */
+    if (! serifs_OK) default_ps_font = DEFAULT_SANSSERIF_FONT;
+
     if (ps_color)
     {
 	mono = false;
@@ -1741,52 +1788,59 @@ char           *spooldirnm;
     }
 
     /* in case colorimage command is not known by this device */
-    fprintf (pltout, " \n");
-    fprintf (pltout, "systemdict /colorimage known not { \n");
-    fprintf (pltout, "  /colortograyscale { \n");
-    fprintf (pltout, "    dup /rgbdata exch store \n");
-    fprintf (pltout, "    length 3 idiv \n");
-    fprintf (pltout, "    /npixls exch store \n");
-    fprintf (pltout, "    /indx 0 store \n");
-    fprintf (pltout, "    /pixls npixls string store \n");
-    fprintf (pltout, "    0 1 npixls -1 add { \n");
-    fprintf (pltout, "      pixls exch \n");
-    fprintf (pltout, "      rgbdata indx get .3 mul \n");
-    fprintf (pltout, "      rgbdata indx 1 add get .59 mul add \n");
-    fprintf (pltout, "      rgbdata indx 2 add get .11 mul add \n");
-    fprintf (pltout, "      cvi \n");
-    fprintf (pltout, "  put \n");
-    fprintf (pltout, "      /indx indx 3 add store \n");
-    fprintf (pltout, "    } for \n");
-    fprintf (pltout, "    pixls \n");
-    fprintf (pltout, "  } bind def \n");
-    fprintf (pltout, "  /mergeprocs { \n");
-    fprintf (pltout, "    dup length \n");
-    fprintf (pltout, "    3 -1 roll \n");
-    fprintf (pltout, "    dup \n");
-    fprintf (pltout, "    length \n");
-    fprintf (pltout, "    dup \n");
-    fprintf (pltout, "    5 1 roll \n");
-    fprintf (pltout, "    3 -1 roll \n");
-    fprintf (pltout, "    add \n");
-    fprintf (pltout, "    array cvx \n");
-    fprintf (pltout, "    dup \n");
-    fprintf (pltout, "    3 -1 roll \n");
-    fprintf (pltout, "    0 exch \n");
-    fprintf (pltout, "    putinterval \n");
-    fprintf (pltout, "    dup \n");
-    fprintf (pltout, "    4 2 roll \n");
-    fprintf (pltout, "    putinterval \n");
-    fprintf (pltout, "  } bind def \n");
-    fprintf (pltout, "  /colorimage { \n");
-    fprintf (pltout, "     pop \n");
-    fprintf (pltout, "     pop \n");
-    fprintf (pltout, "     {colortograyscale} \n");
-    fprintf (pltout, "     mergeprocs \n");
-    fprintf (pltout, "     image \n");
-    fprintf (pltout, "  } bind def \n");
-    fprintf (pltout, "} if \n");
-    fprintf (pltout, " \n");
+    if (rgb_colorspace)
+    {
+       /*
+        * If they require the CMYK color space we just have to hope
+        * the colorimage command is known.
+        */
+        fprintf (pltout, " \n");
+        fprintf (pltout, "systemdict /colorimage known not { \n");
+        fprintf (pltout, "  /colortograyscale { \n");
+        fprintf (pltout, "    dup /rgbdata exch store \n");
+        fprintf (pltout, "    length 3 idiv \n");
+        fprintf (pltout, "    /npixls exch store \n");
+        fprintf (pltout, "    /indx 0 store \n");
+        fprintf (pltout, "    /pixls npixls string store \n");
+        fprintf (pltout, "    0 1 npixls -1 add { \n");
+        fprintf (pltout, "      pixls exch \n");
+        fprintf (pltout, "      rgbdata indx get .3 mul \n");
+        fprintf (pltout, "      rgbdata indx 1 add get .59 mul add \n");
+        fprintf (pltout, "      rgbdata indx 2 add get .11 mul add \n");
+        fprintf (pltout, "      cvi \n");
+        fprintf (pltout, "  put \n");
+        fprintf (pltout, "      /indx indx 3 add store \n");
+        fprintf (pltout, "    } for \n");
+        fprintf (pltout, "    pixls \n");
+        fprintf (pltout, "  } bind def \n");
+        fprintf (pltout, "  /mergeprocs { \n");
+        fprintf (pltout, "    dup length \n");
+        fprintf (pltout, "    3 -1 roll \n");
+        fprintf (pltout, "    dup \n");
+        fprintf (pltout, "    length \n");
+        fprintf (pltout, "    dup \n");
+        fprintf (pltout, "    5 1 roll \n");
+        fprintf (pltout, "    3 -1 roll \n");
+        fprintf (pltout, "    add \n");
+        fprintf (pltout, "    array cvx \n");
+        fprintf (pltout, "    dup \n");
+        fprintf (pltout, "    3 -1 roll \n");
+        fprintf (pltout, "    0 exch \n");
+        fprintf (pltout, "    putinterval \n");
+        fprintf (pltout, "    dup \n");
+        fprintf (pltout, "    4 2 roll \n");
+        fprintf (pltout, "    putinterval \n");
+        fprintf (pltout, "  } bind def \n");
+        fprintf (pltout, "  /colorimage { \n");
+        fprintf (pltout, "     pop \n");
+        fprintf (pltout, "     pop \n");
+        fprintf (pltout, "     {colortograyscale} \n");
+        fprintf (pltout, "     mergeprocs \n");
+        fprintf (pltout, "     image \n");
+        fprintf (pltout, "  } bind def \n");
+        fprintf (pltout, "} if \n");
+        fprintf (pltout, " \n");
+    }
 
     /* Some abbreviations to make the files more compact */
     fprintf (pltout, "/m { moveto } bind def\n");
@@ -1998,19 +2052,41 @@ int             rangle;
     	   	fprintf (pltout, "\n");
 	}
     }
+    } else if (rgb_colorspace) {
+        fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 3 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
+
+        fprintf (pltout, "colraster\n");
+
+	    for (j = 0; j < xpix*ypix; j+=80)
+	    {
+		    for (i=j; (i<j+80 && i<xpix*ypix); i++)
+		    {
+	    	    fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
+		    }
+    		    fprintf (pltout, "\n");
+	    }
     } else {
-    fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 3 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
+        /* RGB=no. Use CMYK colorspace */
+/*
+ * The "colorimage" command uses RGB if 3 bytes per pixel are specified,
+ * but CMYK if 4 bytes per pixel are specified.
+ */
+        fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 4 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
 
-    fprintf (pltout, "colraster\n");
+        fprintf (pltout, "colraster\n");
 
-	for (j = 0; j < xpix*ypix; j+=80)
-	{
-		for (i=j; (i<j+80 && i<xpix*ypix); i++)
-		{
-	    	fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
-		}
-    		fprintf (pltout, "\n");
-	}
+	    for (j = 0; j < xpix*ypix; j+=80)
+	    {
+		    for (i=j; (i<j+80 && i<xpix*ypix); i++)
+		    {
+		    rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
+		    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+
+	    	    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
+                    cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+		    }
+    		    fprintf (pltout, "\n");
+	    }
     }
 
     fprintf (pltout, "grestore\n");
@@ -2092,14 +2168,15 @@ static char     last_size = 0, last_font;
     if (*string == '\0')
 	return;
 
+    if (txfont > psmaxfont)
+    {
+	txfont = default_ps_font;
+    }
+
     if (txfont < 100)
     {
 	gentext (string, pathx, pathy, upx, upy);
 	return;
-    }
-    else if (txfont > psmaxfont)
-    {
-	txfont = default_ps_font;
     }
 
 /*
@@ -2316,4 +2393,46 @@ static int      xlst, ylst;
     psplot (x2, y2, 1);
     xlst = x2;
     ylst = y2;
+}
+
+/*
+ * Convert from RGB (what vplot uses) to CMYK (required by some
+ * noncompliant postscript interpreters that can't convert from RGB
+ * to CMYK themselves).
+ * Input and output values range between 0 and 255.
+ * This version maximizes the amount of black used.
+ */
+void rgb_to_cmyk (int red, int green, int blue,
+                  int *cyan, int *magenta, int *yellow, int *black)
+{
+/*
+ * First, calculate the color using just Cyan, Magenta, and Yellow
+ * ink.
+ */
+*cyan = 255 - red;
+*magenta = 255 - green;
+*yellow = 255 - blue;
+
+/*
+ * Find the minimum of the three.
+ */
+*black = 255;
+if (*black > *cyan) *black = *cyan;
+if (*black > *magenta) *black = *magenta;
+if (*black > *yellow) *black = *yellow;
+
+if (*black == 255)
+{
+/* Their color is black. So just use black ink with no color inks. */
+*cyan = 0;
+*magenta = 0;
+*yellow = 0;
+}
+else
+{
+/* Use as much black as possible, then as much of other colors as needed */
+*cyan    = (int) (.5 + 255. * (float) (*cyan - *black) / (float) (255 - *black));
+*magenta = (int) (.5 + 255. * (float) (*magenta - *black) / (float) (255 - *black));
+*yellow  = (int) (.5 + 255. * (float) (*yellow - *black) / (float) (255 - *black));
+}
 }

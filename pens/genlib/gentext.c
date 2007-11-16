@@ -362,6 +362,14 @@ int             linecount;
 		    if (istring[2 * ii + 1] >= 0)
 		    {
 			ttxfont = istring[2 * ii + 1] % NUMGENFONT;
+
+/* Perform serif font substitution once and for all here, if needed */
+                        if (! serifs_OK)
+                        {
+                            if (ttxfont == DEFAULT_HARDCOPY_FONT) ttxfont = DEFAULT_SANSSERIF_FONT;
+                            if (ttxfont == GREEK_SERIF_FONT) ttxfont = GREEK_SANSSERIF_FONT;
+                        }
+
 /* On this first pass through, load all the fonts we're going to need */
 			if (font[ttxfont].load == NO)
 			{

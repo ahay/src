@@ -10,4 +10,4 @@
 " vshift=[0.0](inch) | break=[b,e,i]    | xwmin,ywmin,xwmax,ywmax= (inch)",
 " txscale=[1.0]      | invras=[y,n]     | dashscale=[1.0]",
 " txfont=[0](0-16)(d)| txsquare=[y,n]   | mkscale=[1.0]",
-" cachepipe=[n,y]    |                  |              ",
+" cachepipe=[n,y]    | serifs=[y,n]     |              ",

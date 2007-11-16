@@ -994,6 +994,22 @@ char            string[MAXFLEN + 1];
 	     * These are made available to the device text routine
 	     */
 	    ii = geth (pltin);
+
+	    /*
+             * Force font substitution if serif fonts aren't OK
+             */
+            if (! serifs_OK)
+            {
+                if (ii == DEFAULT_HARDCOPY_FONT)
+                {
+		    ii = DEFAULT_SANSSERIF_FONT;
+                }
+                else if (ii == GREEK_SERIF_FONT)
+                {
+		    ii = GREEK_SANSSERIF_FONT;
+                }
+            }
+
 	    if (ii >= 0)
 		txfont = ii;
 	    else

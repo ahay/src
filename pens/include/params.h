@@ -19,8 +19,12 @@
 #define DEFAULT_LINESTYLE 0
 #define DEFAULT_FONT	0
 #define DEFAULT_HARDCOPY_FONT	3
+#define DEFAULT_SANSSERIF_FONT	2
 #define DEFAULT_PREC	0
 #define DEFAULT_HARDCOPY_PREC	2
+
+#define GREEK_SERIF_FONT	10
+#define GREEK_SANSSERIF_FONT	9
 
 /*
  * Ratio of fatness to size for symbols

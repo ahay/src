@@ -23,7 +23,7 @@ pspen = os.path.join(bindir,'pspen')
 
 def convert(vplot,eps,
             options='color=n fat=1 fatmult=1.5 invras=y',
-            psborder=0.05,
+            psborder=0.1,
             ppi=72 # points per inch resolution
             ):
     "Convert vplot to EPS"

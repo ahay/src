@@ -79,6 +79,7 @@ extern int  xorig, yorig;
 extern bool overlay;
 extern float  xscale, yscale, txscale, mkscale, dashscale;
 extern float  hdevscale, vdevscale;
+extern bool serifs_OK;
 
 /*
  * variables

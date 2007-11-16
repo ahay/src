@@ -231,8 +231,9 @@ int             erase = FORCE_INITIAL | DO_LITERALS;
 int             xcenter, ycenter;	/* Vplot of point to force as center */
 int             fatbase = 0;
 int             epause = 0;	/* time to pause before erasing screen */
-bool             overlay = false;	/* 1=overlay 0=replace */
+bool            overlay = false;	/* 1=overlay 0=replace */
 int             default_overlay;
+bool		serifs_OK = true;  /* If false, substitute serif fonts */
 
 /*
  * 0 = none
@@ -388,6 +389,7 @@ void init_vplot (int argc, char* argv[])
     default_overlay = overlay;
     sf_getbool ("invras", &invras);
     sf_getbool ("txsquare", &no_stretch_text);
+    sf_getbool ("serifs", &serifs_OK);
 
     if (!sf_getbools ("colormask",colormask,5)) 
 	colormask[0] = colormask[1] = colormask[2] = 
@@ -412,6 +414,13 @@ void init_vplot (int argc, char* argv[])
     sf_getint ("txfont",  &txfont);
     sf_getint ("txprec",  &txprec);
     sf_getint ("txovly",  &txovly);
+
+    if (! serifs_OK)
+    {
+        if (txfont == DEFAULT_HARDCOPY_FONT) txfont = DEFAULT_SANSSERIF_FONT;
+        if (txfont == GREEK_SERIF_FONT) txfont = GREEK_SANSSERIF_FONT;
+    }
+
     default_txfont = txfont;
     default_txprec = txprec;
     default_txovly = txovly;
