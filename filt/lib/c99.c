@@ -25,7 +25,7 @@
 
 #ifndef _sf_c99_h
 
-#if !defined (__cplusplus) && !defined(NO_COMPLEX) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+#if !defined (__cplusplus) && !defined(NO_COMPLEX) && defined(__STDC__) && ((__STDC_VERSION__ >= 199901L) || defined(__ICC))
 /*^*/
 
 #define SF_HAS_COMPLEX_H
