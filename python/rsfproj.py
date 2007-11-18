@@ -304,7 +304,6 @@ class Project(Environment):
                 self.np = self.np + nh
                 self.nodes.extend([hosts[i-1]]*nh)
             self.ip = 0
-            print self.nodes
 
         self.environ = self.get('ENVIRON')
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
