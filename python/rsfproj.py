@@ -294,7 +294,7 @@ class Project(Environment):
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
 
-        self.environ = self.get('ENVIRON'.'')
+        self.environ = self.get('ENVIRON','')
 
         self.np = 0
         cluster = self.get('CLUSTER')
