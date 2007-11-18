@@ -436,8 +436,7 @@ class Project(Environment):
         if self.np: # do it remotely
             command = re.sub('"','\\"',command)
             command = string.join([WhereIs('ssh'),self.nodes[self.ip],
-                                   WhereIs('sh'),'-c','\"cd ',self.cwd,';',
-                                   command,'\"'])
+                                   '\"cd ',self.cwd,';',command,'\"'])
             self.ip = self.ip + 1
             if self.ip == self.np:
                 self.ip = 0
