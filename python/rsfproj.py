@@ -223,8 +223,10 @@ class Project(Environment):
         opts.Add('TIMER','Whether to time execution')
         opts.Add('CHECKPAR','Whether to check parameters')
         opts.Add('CLUSTER','Nodes available on a cluster')
+        opts.Add('ENVIRON','Additional environment settings')
         opts.Update(self)
         cwd = os.getcwd()
+        self.cwd = cwd
         self.path = pathdir
         if not os.path.exists(self.path):
             os.mkdir(self.path)
@@ -295,7 +297,16 @@ class Project(Environment):
         self.np = 0
         cluster = self.get('CLUSTER')
         if cluster:
-            nodes = string.split(cluster)
+            hosts = string.split(cluster)
+            self.nodes = []
+            for i in range(1,len(hosts),2):
+                nh = int(hosts[i])
+                self.np = self.np + nh
+                self.nodes.extend([hosts[i-1]]*nh)
+            self.ip = 0
+            print self.nodes
+
+        self.environ = self.get('ENVIRON')
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=None):
 
@@ -315,7 +326,8 @@ class Project(Environment):
         else:
             sfiles = []
 
-        if split and self.np and rsf:
+        if split and self.np and rsf and sfiles:
+            # Split the flow into parallel flows
             axis = split[0]
             n = split[1]
             w = n/self.np
@@ -325,21 +337,16 @@ class Project(Environment):
                     chunk = n - w*i
                 else:
                     chunk = w
+                mysource = sfiles[0] + '__' + str(i)
                 mytarget = tfiles[0] + '__' + str(i)
                 mytargets.append(mytarget)
-                if sfiles:
-                    mysource = sfiles[0] + '__' + str(i)
-                    self.Flow(mysource,sfiles[0],
-                              'window n%d=%d f%d=%d' % (axis,chunk,axis,i*w))
-                    self.Flow([mytarget,]+tfiles[1:],
-                              [mysource,]+sfiles[1:],flow,
-                              stdout,stdin,1,
-                              suffix,prefix,src_suffix)
-                else:
-                    self.Flow([mytarget,]+tfiles[1:],
-                              None,flow,
-                              stdout,stdin,1,
-                              suffix,prefix,src_suffix)
+
+                self.Flow(mysource,sfiles[0],
+                          'window n%d=%d f%d=%d' % (axis,chunk,axis,i*w))
+                self.Flow([mytarget,]+tfiles[1:],
+                          [mysource,]+sfiles[1:],flow,
+                          stdout,stdin,1,
+                          suffix,prefix,src_suffix)
             self.Flow(tfiles[0],mytargets,
                       'cat axis=%d ${SOURCES[1:%d]}' % (axis,self.np))
             return
@@ -419,6 +426,15 @@ class Project(Environment):
         if stdin:
             command = "< $SOURCE " + command
         command = self.timer + command
+        if self.environ:
+            command = string.join([WhereIs('env'),self.environ,command])
+        if self.np: # do it remotely
+            command = string.join([WhereIs('ssh'),self.nodes[self.ip],
+                                   WhereIs('sh'),'-c','\"cd ',self.cwd,';',
+                                   command,'\"'])
+            self.ip = self.ip + 1
+            if self.ip == self.np:
+                self.ip = 0
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
