@@ -429,6 +429,7 @@ class Project(Environment):
         if self.environ:
             command = string.join([WhereIs('env'),self.environ,command])
         if self.np: # do it remotely
+            command = re.sub('"','\\"',command)
             command = string.join([WhereIs('ssh'),self.nodes[self.ip],
                                    WhereIs('sh'),'-c','\"cd ',self.cwd,';',
                                    command,'\"'])
