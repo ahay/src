@@ -222,6 +222,7 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Add('TIMER','Whether to time execution')
         opts.Add('CHECKPAR','Whether to check parameters')
+        opts.Add('CLUSTER','Nodes available on a cluster')
         opts.Update(self)
         cwd = os.getcwd()
         self.path = pathdir
@@ -281,17 +282,71 @@ class Project(Environment):
         self.coms = []
         self.data = []
         sys.path.append('../../../packages')
+
+        timer = self.get('TIMER')
+        if timer and timer[0] != 'n' and timer[0] != '0':
+            self.timer = WhereIs('time') + ' '
+        else:
+            self.timer = ''
+
+        checkpar = self.get('CHECKPAR')
+        self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
+
+        self.np = 0
+        cluster = self.get('CLUSTER')
+        if cluster:
+            nodes = string.split(cluster)
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,rsh=None):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=None):
+
         if not flow:
-            return None        
-        sources = []
+            return None     
+
+        if type(target) is types.ListType:
+            tfiles = target
+        else:
+            tfiles = string.split(target)
+
         if source:
             if type(source) is types.ListType:
-                files = source
+                sfiles = source
             else:
-                files = string.split(source)
-            for file in files:
+                sfiles = string.split(source)
+        else:
+            sfiles = []
+
+        if split and self.np and rsf:
+            axis = split[0]
+            n = split[1]
+            w = n/self.np
+            mytargets = []
+            for i in range(self.np):
+                if i==self.np-1:
+                    chunk = n - w*i
+                else:
+                    chunk = w
+                mytarget = tfiles[0] + '__' + str(i)
+                mytargets.append(mytarget)
+                if sfiles:
+                    mysource = sfiles[0] + '__' + str(i)
+                    self.Flow(mysource,sfiles[0],
+                              'window n%d=%d f%d=%d' % (axis,chunk,axis,i*w))
+                    self.Flow([mytarget,]+tfiles[1:],
+                              [mysource,]+sfiles[1:],flow,
+                              stdout,stdin,1,
+                              suffix,prefix,src_suffix)
+                else:
+                    self.Flow([mytarget,]+tfiles[1:],
+                              None,flow,
+                              stdout,stdin,1,
+                              suffix,prefix,src_suffix)
+            self.Flow(tfiles[0],mytargets,
+                      'cat axis=%d ${SOURCES[1:%d]}' % (axis,self.np))
+            return
+
+        sources = []
+        if sfiles:
+            for file in sfiles:
                 if ('.' not in file):
                     file = file + src_suffix
                 sources.append(file)
@@ -299,8 +354,6 @@ class Project(Environment):
             stdin=0
         lines = string.split(flow,'&&')
         steps = []
-        checkpar = self.get('CHECKPAR')
-        checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
         for line in lines:
             substeps = []
             sublines = string.split(line,'|')
@@ -316,10 +369,11 @@ class Project(Environment):
                     else:
                         rsfprog = prefix + command            
                     if rsfdoc.progs.has_key(rsfprog):
-                        if checkpar:
+                        if self.checkpar:
                             for par in pars:
                                 if rsfdoc.progs[rsfprog].check(par):
-                                    sys.stderr.write('Failed on "%s"\n' % subline)
+                                    sys.stderr.write('Failed on "%s"\n' % 
+                                                     subline)
                                     sys.exit(1)
                         command = os.path.join(bindir,rsfprog+self.progsuffix) 
                         sources.append(command)
@@ -364,17 +418,9 @@ class Project(Environment):
             command = command + " >/dev/null"
         if stdin:
             command = "< $SOURCE " + command
-        timer = self.get('TIMER')
-        if timer and timer[0] != 'n' and timer[0] != '0':
-            command = WhereIs('time') + ' ' + command
-        if rsh and rsh != 'localhost':
-            command = 'rsh %s %s' % (rsh,command)
+        command = self.timer + command
         targets = []
-        if type(target) is types.ListType:
-            files = target
-        else:
-            files = string.split(target)
-        for file in files:
+        for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
