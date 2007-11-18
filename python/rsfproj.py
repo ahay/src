@@ -222,8 +222,8 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Add('TIMER','Whether to time execution')
         opts.Add('CHECKPAR','Whether to check parameters')
-        opts.Add('CLUSTER','Nodes available on a cluster')
         opts.Add('ENVIRON','Additional environment settings')
+        opts.Add('CLUSTER','Nodes available on a cluster')
         opts.Update(self)
         cwd = os.getcwd()
         self.cwd = cwd
@@ -294,6 +294,8 @@ class Project(Environment):
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
 
+        self.environ = self.get('ENVIRON'.'')
+
         self.np = 0
         cluster = self.get('CLUSTER')
         if cluster:
@@ -305,7 +307,11 @@ class Project(Environment):
                 self.nodes.extend([hosts[i-1]]*nh)
             self.ip = 0
 
-        self.environ = self.get('ENVIRON')
+            if self.np:
+                for key in self['ENV'].keys():
+                    self.environ = self.environ + \
+                        ' %s=%s' % (key,self['ENV'][key]) 
+
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=None):
 
