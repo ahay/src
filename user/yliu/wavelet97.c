@@ -1,0 +1,203 @@
+/* Digital wavelet transform */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+   
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+   
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+   
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
+
+#include "wavelet97.h"
+
+static int nt;
+//static void (*transform)(bool);
+static float *t;
+static bool inv;
+
+static void biorthogonal(bool adj) 
+/* Lifting CDF 9/7 biorthogonal wavelet transform in place */
+{
+    int i,j;
+    float a;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    if (inv) {
+                a= 1.230174105;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]  /= a;
+	        }
+	        t[0] /= a;                         /*left boundary*/
+	        if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] *= a;
+		    /* Undo Scale */
+	        }
+
+                a= -0.4435068522;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]   += (t[i+j]+t[i-j])*a;
+		    /* Undo Update 2 */
+	        }
+	        t[0] += 2*a*t[j];                  /*left boundary*/
+
+	        a = -0.8829110762;
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] += (t[i]+t[i+2*j])*a;
+		    /* Undo Predict 2 */
+	        }	 
+                    /* Undo Step 2 */
+
+                a= 0.05298011854;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]   += (t[i+j]+t[i-j])*a;
+		    /* Undo Update 1 */
+	        }
+	        t[0] += 2*a*t[j];                  /*left boundary*/ 
+
+	        a = 1.586134342;
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] += (t[i]+t[i+2*j])*a;
+		    /* Undo Predict 1 */
+	        }	 
+                    /* Undo Step 1 */
+
+
+	    } else {
+/*		for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i+j] += t[i]/4;
+		    t[i-j] += t[i]/4;
+		}
+		t[j] += t[0]/2;
+		for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i]     -= t[i+j]/2;
+		    t[i+2*j] -= t[i+j]/2;
+		}	 
+		if (i+j < nt) t[i] -= t[i+j];
+*/	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {        /*different scale*/
+	    a = -1.586134342;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] += (t[i]+t[i+2*j])*a;
+		/* Predict 1 */
+	    }	 
+	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+ 
+            a= -0.05298011854;
+	    t[0] += 2*a*t[j];                  /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i-j])*a;
+		/* Update 1 */
+	    }
+                /* Step 1 */
+
+	    a = 0.8829110762;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] += (t[i]+t[i+2*j])*a;
+		/* Predict 2 */
+	    }	 
+	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+ 
+            a= 0.4435068522;
+	    t[0] += 2*a*t[j];                  /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i-j])*a;
+		/* Update 2 */
+	    }
+                /* Step 2 */
+
+            a= 1/1.230174105;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] *= a;
+	    }	 
+	    if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+	    t[0] /= a;                         /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]  /= a;
+		/* Scale */
+	    }
+	}
+    }
+
+}
+
+
+void wavelet_init(int n /* data size */, bool inv1) 
+/*< allocate space >*/
+{
+//    int i, j;
+    inv = inv1;
+    for (nt=1; nt < n; nt *= 2) ;  
+    /*get nt, nt is 2^n and less than n */
+    t = sf_floatalloc(nt);
+
+}
+
+void wavelet_close(void) 
+/*< deallocate space >*/
+{
+    free (t);
+//    free (tempbank);
+}
+
+void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< linear operator >*/
+{
+    int it, i, j;
+    sf_adjnull (adj,add,nx,ny,x,y);
+
+    if (adj) {
+        t[0] = y[0];
+        it = 1;
+        for (j=nt/2;j>=1;j/=2) {
+            for (i=0;i<nt-j;i+=2*j) {
+                if (it < ny) {
+                   t[i+j]=y[it];
+                   it++;
+                } else {
+                    t[i+j]=0.;
+                }
+            }
+        }
+    } else {
+        for (it=0; it < nx; it++) {
+            t[it]=x[it];
+        }
+        for (it=nx; it < nt; it++) {
+            t[it] = 0.;
+        }
+    }
+    biorthogonal(adj);
+
+    if (adj) {
+        for (it=0;it <nx;it++) {
+            x[it] +=t[it];
+        }
+    } else {
+        y[0] += t[0];
+        it = 1;
+        for (j=nt/2; j >= 1; j /=2) {
+            for (i=0; i < nt-j; i +=2*j) {
+               y[it] +=t[i+j];
+               it++;
+               if( it>= ny) return;
+            }
+        }
+    }
+
+}

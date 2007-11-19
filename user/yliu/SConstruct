@@ -6,6 +6,7 @@ progs = '''
 mf
 mlm
 tvmf
+dwt97
 '''
 
 try:  # distributed version
