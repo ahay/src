@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 	if (adj) {
 	    for (i1=0; i1 < n1; i1++) {
-		pp[i1] = 0.;
+		pp[i1] = sf_cmplx(0.,0.);
 	    }
 	} else {
 	    sf_complexread(pp,n1,in);
@@ -101,7 +101,11 @@ int main(int argc, char *argv[])
 	if (adj) {
 	    if (inv) {
 		for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		    pp[i1] /= nw;
+#else
+		    pp[i1] = sf_crmul(pp[i1],1.0f/nw);
+#endif
 		}
 	    } 
 	    sf_complexwrite(pp,n1,out);
