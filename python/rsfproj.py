@@ -338,16 +338,17 @@ class Project(Environment):
             w = n/self.np
             mytargets = []
             for i in range(self.np):
-                if i==self.np-1:
-                    chunk = n - w*i
-                else:
-                    chunk = w
                 mysource = sfiles[0] + '__' + str(i)
                 mytarget = tfiles[0] + '__' + str(i)
                 mytargets.append(mytarget)
 
-                self.Flow(mysource,sfiles[0],
-                          'window n%d=%d f%d=%d' % (axis,chunk,axis,i*w))
+                if i==self.np-1:
+                    self.Flow(mysource,sfiles[0],
+                              'window f%d=%d' % (axis,i*w))
+                else:
+                    self.Flow(mysource,sfiles[0],
+                              'window n%d=%d f%d=%d' % (axis,w,axis,i*w))
+                    
                 self.Flow([mytarget,]+tfiles[1:],
                           [mysource,]+sfiles[1:],flow,
                           stdout,stdin,1,

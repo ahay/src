@@ -109,15 +109,15 @@ int main (int argc, char* argv[])
     
     /* BUG: figure out dh for irregular off[ih] */
 
-    for (ix = 0; ix < nx; ix++) {
-	for (ih = 0; ih < nh; ih++) {
+    for (ix = 0; ix < nx; ix++) { /* midpoints */
+	for (ih = 0; ih < nh; ih++) { /* offset */
 	    h = off[ih] + 0.5*dh + (dh/CDPtype)*(ix%CDPtype); 
 
-	    sf_floatread (trace,nt,cmp);
-	    sf_floatread (p, nt, dip);
+	    sf_floatread (trace,nt,cmp); /* data */
+	    sf_floatread (p, nt, dip);   /* slope */
 
 	    if (NULL != crv)  {
-		sf_floatread (q, nt, crv);
+		sf_floatread (q, nt, crv); /* curvature */
 
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;
@@ -138,15 +138,15 @@ int main (int argc, char* argv[])
 		    }
 		}
 	    } else {
-		for (it=0; it < nt; it++) {
+		for (it=0; it < nt; it++) { /* time */
 		    t = t0 + it*dt;
-		    f = t - p[it]*h*dt/dh;
+		    f = t - p[it]*h*dt/dh; 
 		    
 		    if (f < 0. || f > t) {
 			str[it] = t0-10.*dt;
 			vtr[it] = 0.;
 		    } else {
-			str[it] = sqrtf(t*f);
+			str[it] = sqrtf(t*f); /* t -> tau */
 			vtr[it] = h/sqrtf(t*(t-f)+eps);
 		    }
 		}

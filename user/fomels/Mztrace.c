@@ -1,5 +1,4 @@
-/* Multiple arrivals by depth marching.
-*/
+/* Multiple arrivals by depth marching. */
 /*
 Copyright (C) 2004 University of Texas at Austin
 

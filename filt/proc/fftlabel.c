@@ -16,6 +16,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <string.h>
+
 #include <rsf.h>
 
 void fix_unit(int axis,   /* axis number */
@@ -28,7 +30,11 @@ void fix_unit(int axis,   /* axis number */
 
     snprintf(varname,7,"unit%d",axis);
     if (NULL != (unit = sf_histstring(in,varname))) {
-	if (0==strncmp(unit,"1/",2)) {
+	if (0==strcmp(unit,"s")) {
+	    sf_putstring(out,varname,"Hz");
+	} else if (0==strcmp(unit,"Hz")) {
+	    sf_putstring(out,varname,"s");
+	} else if (0==strncmp(unit,"1/",2)) {
 	    sf_putstring(out,varname,unit+2);
 	} else {
 	    len=strlen(unit)+3;

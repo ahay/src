@@ -22,12 +22,14 @@
 
 #include <rsf.h>
 
+#include "fftlabel.h"
+
 int main (int argc, char* argv[]) 
 {
     int n1, n2, ni, nfft, nw, i, i1, i2;
     float d1, o1, dw, *spec, *trace, scale;
     kiss_fft_cpx *fft;
-    char key[3];
+    char key[3], *label;
     bool sum;
     sf_file in, out;
     kiss_fftr_cfg cfg;
@@ -46,6 +48,12 @@ int main (int argc, char* argv[])
 
     if (!sf_histfloat(in,"d1",&d1)) d1=0.004;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+
+    /* fix label */
+    if (NULL != (label = sf_histstring(in,"label1"))) {
+	(void) fix_label(1,label,out);
+    }
+    fix_unit(1,in,out);
 
     /* determine frequency sampling (for real to complex FFT) */
     nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
