@@ -232,7 +232,7 @@ def cc(context):
                                      ['/sw/include',]
 	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
                                      ['/sw/lib',]
-            context.env['LDFLAGS'] = context.env.get('LDFLAGS','') + \
+            context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
                                      ' -framework Accelerate'
 
     elif plat['OS'] == 'sunos':
@@ -868,6 +868,7 @@ def options(opts):
              'The list of directories that will be searched for libraries')
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
+    opts.Add('LINKFLAGS','General options that are passed to the linker')
     opts.Add('XLIBPATH','Location of X11 libraries')
     opts.Add('XLIBS','X11 libraries')
     opts.Add('XINC','Location of X11 headers')
