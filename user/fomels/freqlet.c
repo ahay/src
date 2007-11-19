@@ -37,11 +37,23 @@ static void haar(bool adj)
 	    z0 = z[j];
 	    for (i=0; i < nt-j; i += 2*j) {
 		if (inv) {
+#ifdef SF_HAS_COMPLEX_H
 		    t[i]   -= t[i+j]/(2*z0);
 		    t[i+j] += t[i]*z0;
+#else
+		    t[i] = sf_cadd(t[i],
+				   sf_crmul(
+				       sf_cmul(t[i+j],sf_conjf(z0)),-0.5));
+		    t[i+j] = sf_cadd(t[i+j],sf_cmul(t[i],z0));		    
+#endif
 		} else {
+#ifdef SF_HAS_COMPLEX_H
 		    t[i+j] += t[i]*z0/2;
 		    t[i]   -= t[i+j]/z0;
+#else
+		    t[i+j] = sf_cadd(t[i+j],sf_crmul(sf_cmul(t[i],z0),0.5));
+		    t[i]   = sf_cadd(t[i],sf_cmul(t[i+j],sf_neg(sf_conjf(z0))));
+#endif
 		}
 	    }
 	}
@@ -49,8 +61,14 @@ static void haar(bool adj)
 	for (j=1; j <= nt/2; j *= 2) {
 	    z0 = z[j];
 	    for (i=0; i < nt-j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H
 		t[i+j] -= t[i]*z0;
 		t[i]   += t[i+j]/(2*z0);
+#else
+		t[i+j] = sf_cadd(t[i+j],sf_cmul(t[i],sf_neg(z0)));
+		t[i]   = sf_cadd(t[i],
+				 sf_crmul(sf_cmul(t[i+j],sf_conjf(z0)),0.5));
+#endif
 	    }	    
 	}
     }
@@ -68,24 +86,73 @@ static void linear(bool adj)
 	    z0 = z[j];
 	    if (inv) {
 		for (i=2*j; i < nt-j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H
 		    t[i]   -= (t[i+j]/z0+t[i-j]*z0)/4;
+#else
+		    t[i] = sf_cadd(t[i],
+				   sf_crmul(
+				       sf_cadd(
+					   sf_cmul(t[i+j],sf_conjf(z0)),
+					   sf_cmul(t[i-j],z0)),
+				       -0.25))
+#endif
 		}
+#ifdef SF_HAS_COMPLEX_H
 		t[0] -= t[j]/(2*z0);
+#else
+		t[0] = sf_cadd(t[0],sf_crmul(sf_cmul(t[j],sf_conjf(z0)),-0.5));
+#endif
 		for (i=0; i < nt-2*j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H
 		    t[i+j] += (t[i]*z0+t[i+2*j]/z0)/2;
-		}	 
+#else
+		    t[i+j] = sf_cadd(t[i+j],
+				     sf_crmul(
+					 sf_cadd(sf_cmul(t[i],z0),
+						 sf_cmul(t[i+2*j],sf_conjf(z0))),
+					 0.5));
+#endif
+		}
+#ifdef SF_HAS_COMPLEX_H		
 		if (i+j < nt) t[i+j] += t[i]*z0;
+#else
+		if (i+j < nt) t[i+j] = sf_cadd(t[i+j],sf_cmul(t[i],z0));
+#endif
 	    } else {
 		for (i=2*j; i < nt-j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H	
 		    t[i+j] += t[i]*z0/4;
 		    t[i-j] += t[i]/(4*z0);
+#else
+		    t[i+j] = sf_cadd(t[i+j],
+				    sf_crmul(sf_mul(t[i],z0),0.25));
+		    t[i-j] = sf_cadd(t[i-j],
+				    sf_crmul(sf_mul(t[i],sf_conjf(z0)),0.25));
+#endif
 		}
+#ifdef SF_HAS_COMPLEX_H	
 		t[j] += t[0]*z0/2;
+#else
+		t[j] = sf_cadd(t[j],sf_crmul(sf_cmul(t[0],z0),0.5));
+#endif
 		for (i=0; i < nt-2*j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H	
 		    t[i]     -= t[i+j]/(2*z0);
 		    t[i+2*j] -= t[i+j]*z0/2;
+#else
+		    t[i] = sf_cadd(t[i],sf_crmul(sf_cmul(t[i+j],sf_conjf(z0)),
+						 -0.5));
+		    t[i+2*j] = sf_cadd(t[i+2*j],sf_crmul(sf_cmul(t[i+j],z0),
+							 -0.5));
+#endif
 		}	 
+#ifdef SF_HAS_COMPLEX_H	
 		if (i+j < nt) t[i] -= t[i+j]/z0;
+#else
+		if (i+j < nt) t[i] = sf_cadd(t[i],
+					     sf_neg(
+						 sf_cmul(t[i+j],sf_conjf(z0))));
+#endif
 	    }
 	}
     } else {
@@ -93,14 +160,33 @@ static void linear(bool adj)
 	    z0 = z[j];
 
 	    for (i=0; i < nt-2*j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H	
 		t[i+j] -= (t[i]*z0+t[i+2*j]/z0)/2;
 		/* d = o - P e */
+#else
+		t[i+j] = sf_cadd(t[i+j],
+				 sf_crmul(
+				     sf_cadd(sf_cmul(t[i],z0),
+					     sf_cmul(t[i+2*j],sf_conjf(z0))),
+				     -0.5));
+#endif
 	    }	 
+#ifdef SF_HAS_COMPLEX_H
 	    if (i+j < nt) t[i+j] -= t[i]*z0;    
 	    t[0] += t[j]/(2*z0);
+#else
+	    if (i+j < nt) t[i+j] = sf_cadd(t[i+j],sf_cneg(sf_cmul(t[i],z0)));
+	    t[0] = sf_cadd(t[0],sf_crmul(sf_cmul(t[j],sf_conjf(z0)),0.5));
+#endif
 	    for (i=2*j; i < nt-j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H
 		t[i]   += (t[i+j]/z0+t[i-j]*z0)/4;
 		/* s = e + U d */
+#else
+		t[i] = sf_cadd(t[i],sf_crmul(sf_cadd(
+						 sf_cmul(t[i+j],sf_conjf(z0)),
+						 sf_cmul(t[i-j],z0)),0.25));
+#endif
 	    }
 	}
     }
@@ -120,7 +206,7 @@ void freqlet_init(int n /* data size */, bool inv1, bool unit1, char type)
     z = sf_complexalloc(nt);
     
     for (j=1; j <= nt/2; j *= 2) {
-	z[j] = 1.; 
+	z[j] = sf_cmplx(1.,0.); 
     }
     
     switch(type) {
@@ -184,7 +270,7 @@ void freqlet_lop(bool adj, bool add, int nx, int ny,
 		    t[i+j]=y[it];
 		    it++;
 		} else {
-		    t[i+j]=0.;
+		    t[i+j]=sf_cmplx(0.,0.);
 		}
 	    }	    	    
 	}
@@ -192,9 +278,17 @@ void freqlet_lop(bool adj, bool add, int nx, int ny,
 	if (unit) {
 	    for (it=0; it < nt; it++) {
 		if (inv) {
+#ifdef SF_HAS_COMPLEX_H
 		    t[it] /= w[it];
+#else
+		    t[it] = sf_crmul(t[it],1.0f/w[it]);
+#endif
 		} else {
+#ifdef SF_HAS_COMPLEX_H
 		    t[it] *= w[it];
+#else
+		    t[it] = sf_crmul(t[it],w[it]);
+#endif
 		}
 	    }
 	}
@@ -203,7 +297,7 @@ void freqlet_lop(bool adj, bool add, int nx, int ny,
 	    t[it]=x[it];
 	}
 	for (it=nx; it < nt; it++) {
-	    t[it] = 0.;
+	    t[it] = sf_cmplx(0.,0.);
 	}
     }
 
@@ -211,20 +305,36 @@ void freqlet_lop(bool adj, bool add, int nx, int ny,
 
     if (adj) {
 	for (it=0; it < nx; it++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[it] += t[it];
+#else
+	    x[it] = sf_add(x[it],t[it]);
+#endif
 	}
     } else {
 	if (unit) {
 	    for (it=0; it < nt; it++) {
+#ifdef SF_HAS_COMPLEX_H
 		t[it] *= w[it];
+#else
+		t[it] = sf_crmul(t[it],w[it]);
+#endif
 	    }
 	}
 
+#ifdef SF_HAS_COMPLEX_H
 	y[0] += t[0];
+#else
+	y[0] = sf_cadd(y[0],t[0]);
+#endif
 	it = 1;
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
+#ifdef SF_HAS_COMPLEX_H
 		y[it] += t[i+j];
+#else
+		y[it] = sf_cadd(y[it],t[i+j]);
+#endif
 		it++;
 		if (it >= ny) return;
 	    }	    	    

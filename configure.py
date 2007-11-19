@@ -117,6 +117,7 @@ def check_all(context):
     jpeg(context) # FDNSI
     blas(context) # FDNSI
     mpi (context) # FDNSI
+    omp (context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -203,7 +204,7 @@ def cc(context):
     context.Result(res)
     if not res:
         needed_package('libc')
-    if CC[-3:]=='gcc':
+    if string.rfind(CC,'gcc') >= 0:
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
@@ -575,6 +576,25 @@ def mpi(context):
         context.Result(context_failure)
         needed_package('mpi',0)
         context.env['MPICC'] = None
+
+def omp(context):
+    context.Message("checking for OpenMP ... ")
+    LIBS = context.env.get('LIBS',[])
+    LIBS.append('gomp')
+    text = '''
+    #include <omp.h>
+    int main(void) {
+    #pragma omp parallel
+    return omp_get_num_threads();}
+    '''
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+        context.env['LIBS'] = LIBS
+        context.env['CCFLAGS'] = context.env.get('CCFLAGS') + ' -D_OPENMP'
+    else:
+        context.Result(context_failure)
+        LIBS.pop()
 
 def api_options(context):
     context.Message("checking API options ... ")
