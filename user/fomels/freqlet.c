@@ -52,7 +52,8 @@ static void haar(bool adj)
 		    t[i]   -= t[i+j]/z0;
 #else
 		    t[i+j] = sf_cadd(t[i+j],sf_crmul(sf_cmul(t[i],z0),0.5));
-		    t[i]   = sf_cadd(t[i],sf_cmul(t[i+j],sf_neg(sf_conjf(z0))));
+		    t[i]   = sf_cadd(t[i],sf_cmul(t[i+j],
+						  sf_cneg(sf_conjf(z0))));
 #endif
 		}
 	    }
@@ -65,7 +66,7 @@ static void haar(bool adj)
 		t[i+j] -= t[i]*z0;
 		t[i]   += t[i+j]/(2*z0);
 #else
-		t[i+j] = sf_cadd(t[i+j],sf_cmul(t[i],sf_neg(z0)));
+		t[i+j] = sf_cadd(t[i+j],sf_cmul(t[i],sf_cneg(z0)));
 		t[i]   = sf_cadd(t[i],
 				 sf_crmul(sf_cmul(t[i+j],sf_conjf(z0)),0.5));
 #endif
@@ -94,7 +95,7 @@ static void linear(bool adj)
 				       sf_cadd(
 					   sf_cmul(t[i+j],sf_conjf(z0)),
 					   sf_cmul(t[i-j],z0)),
-				       -0.25))
+				       -0.25));
 #endif
 		}
 #ifdef SF_HAS_COMPLEX_H
@@ -125,9 +126,9 @@ static void linear(bool adj)
 		    t[i-j] += t[i]/(4*z0);
 #else
 		    t[i+j] = sf_cadd(t[i+j],
-				    sf_crmul(sf_mul(t[i],z0),0.25));
+				    sf_crmul(sf_cmul(t[i],z0),0.25));
 		    t[i-j] = sf_cadd(t[i-j],
-				    sf_crmul(sf_mul(t[i],sf_conjf(z0)),0.25));
+				    sf_crmul(sf_cmul(t[i],sf_conjf(z0)),0.25));
 #endif
 		}
 #ifdef SF_HAS_COMPLEX_H	
@@ -150,7 +151,7 @@ static void linear(bool adj)
 		if (i+j < nt) t[i] -= t[i+j]/z0;
 #else
 		if (i+j < nt) t[i] = sf_cadd(t[i],
-					     sf_neg(
+					     sf_cneg(
 						 sf_cmul(t[i+j],sf_conjf(z0))));
 #endif
 	    }
@@ -308,7 +309,7 @@ void freqlet_lop(bool adj, bool add, int nx, int ny,
 #ifdef SF_HAS_COMPLEX_H
 	    x[it] += t[it];
 #else
-	    x[it] = sf_add(x[it],t[it]);
+	    x[it] = sf_cadd(x[it],t[it]);
 #endif
 	}
     } else {
