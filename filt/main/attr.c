@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
         want=   'norm' displays the square norm, otherwise specified by lval.
         want=   'var' displays the variance
         want=   'std' displays the standard deviation
-	want=   'nonzero' displays number of nonzero samples
-	want=   'samples' displays total number of samples
+        want=   'nonzero' displays number of nonzero samples
+        want=   'samples' displays total number of samples
         want=   'short' displays a short one-line version
      */ 
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
