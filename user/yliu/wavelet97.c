@@ -39,11 +39,11 @@ static void biorthogonal(bool adj)
 		    t[i]  /= a;
 	        }
 	        t[0] /= a;                         /*left boundary*/
-	        if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
 	        for (i=0; i < nt-2*j; i += 2*j) {
 		    t[i+j] *= a;
 		    /* Undo Scale */
 	        }
+	        if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
 
                 a= -0.4435068522;
 	        for (i=2*j; i < nt-j; i += 2*j) {
@@ -53,11 +53,11 @@ static void biorthogonal(bool adj)
 	        t[0] += 2*a*t[j];                  /*left boundary*/
 
 	        a = -0.8829110762;
-	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
 	        for (i=0; i < nt-2*j; i += 2*j) {
 		    t[i+j] += (t[i]+t[i+2*j])*a;
 		    /* Undo Predict 2 */
 	        }	 
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
                     /* Undo Step 2 */
 
                 a= 0.05298011854;
@@ -68,11 +68,11 @@ static void biorthogonal(bool adj)
 	        t[0] += 2*a*t[j];                  /*left boundary*/ 
 
 	        a = 1.586134342;
-	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
 	        for (i=0; i < nt-2*j; i += 2*j) {
 		    t[i+j] += (t[i]+t[i+2*j])*a;
 		    /* Undo Predict 1 */
 	        }	 
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
                     /* Undo Step 1 */
 
 
