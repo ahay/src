@@ -59,17 +59,19 @@ int main(int argc, char* argv[])
     
     sf_init (argc,argv);
     want = sf_getstring("want");
-    /* 'all' (default), 'rms', 'mean', 'norm', 'var', 'std', 'max', 'min', 'short' 
+    /* 'all'(default),'rms','mean','norm','var','std','max','min','nonzero','samples','short' 
         want=   'rms' displays the root mean square
         want=   'norm' displays the square norm, otherwise specified by lval.
         want=   'var' displays the variance
         want=   'std' displays the standard deviation
+	want=   'nonzero' displays number of nonzero samples
+	want=   'samples' displays total number of samples
         want=   'short' displays a short one-line version
      */ 
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
     
     if (!sf_getint("lval",&lval)) lval=2;
-    /* want=norm option, lval is a positive integer, computes the vector lval-norm */
+    /* norm option, lval is a non-negative integer, computes the vector lval-norm */
  
     in = sf_input("in");
 
@@ -132,7 +134,7 @@ int main(int argc, char* argv[])
 	    }
 	    fsum += f;
 	    fsqr += f*f;
-	    if (lval != 2) flval += pow(fabs(f),lval);
+	    if (lval != 2 || lval != 0) flval += pow(fabs(f),lval);
 	    if (0. == f) nzero++;
 	    if (SF_COMPLEX==type) {
 		if (crealf(c) > crealf(cmax1)) {
@@ -164,8 +166,9 @@ int main(int argc, char* argv[])
 	}
     }
     fmean = fsum/nsiz;
-    if (lval == 2) fnorm = sqrt(fsqr);
-    else fnorm = pow(flval,1./lval);
+    if (lval==2)      fnorm = sqrt(fsqr);
+    else if (lval==0) fnorm = nsiz-nzero;
+    else              fnorm = pow(flval,1./lval);
     frms = sqrt(fsqr/nsiz);
     if (nsiz > 1) fvar = (fsqr-nsiz*fmean*fmean)/(nsiz-1);
     else          fvar = 0.0;
@@ -212,10 +215,12 @@ int main(int argc, char* argv[])
 	    printf("minimum value = %g at ",fmin);
 	    location(minloc,dim,n);
 	}
-    }    
-    if(NULL==want) {
+    }
+    if(NULL==want || 0==strcmp(want,"nonzero"))
 	printf("number of nonzero samples = %d \n",(int) nsiz-nzero);
+    if(NULL==want || 0==strcmp(want,"samples"))
 	printf("total number of samples = %d \n",(int) nsiz);
+    if(NULL==want) {
 	printf("******************************************* \n");
     }
     if(NULL != want && 0==strcmp(want,"short")) {
