@@ -49,13 +49,10 @@ output = sf.Output()
 assert 'float' == input.type,"sffdct needs float input"
 
 ### read FDCT parameters from cmd line
-nbs = par.int("nbs") # number of scale for the decomposition
-nba = par.int("nba") # number of angle at the 2nd coarsest scale
-ac = par.bool("ac") # curvelets at finest scale
-if ac is None:
-    ac = False
-
-adj = par.bool("adj",False) # adj/inv transform
+nbs = par.int("nbs",4) # number of scale for the decomposition
+nba = par.int("nba",8) # number of angle at the 2nd coarsest scale
+ac = par.bool("ac",1) # curvelets at finest scale
+adj = par.bool("adj",False) # adjoint transform
 
 if adj:
     ### inverse transform
@@ -68,11 +65,11 @@ if adj:
     input.read(x)
 
     # apply transform
-    shot = np.float32(ct.fdct2((n2,n1),nbs,nba,ac).inv(x) )
+    shot = np.float32(ct.fdct2((n2,n1),nbs,nba,ac).inv(x))
 
     # write result to file
     output.put("n1",n1)
-    output.put("n2",n2 )
+    output.put("n2",n2)
     output.write(shot)
 else:
     ### forward transform
@@ -87,10 +84,10 @@ else:
     input.read(shot)
 
     # apply transform
-    x = np.float32(ct.fdct2(shot.shape,nbs,nba,ac).fwd(shot) )
+    x = np.float32(ct.fdct2(shot.shape,nbs,nba,ac).fwd(shot))
 
     # write result to file
-    output.put("n1",len(x) )
-    output.put("n2",1 )
-    output.put("sizes",[n1,n2] )
+    output.put("n1",len(x))
+    output.put("n2",1)
+    output.put("sizes",[n1,n2])
     output.write(x)

@@ -2,7 +2,7 @@ import os, sys, re, string, glob, shutil
 sys.path.append('../..')
 import configure
 
-progs = 'thr sort'
+progs = 'boolcmp thr sort'
 cpp_progs = ''
 py_progs = 'fdct killtraces jitter'
 py_mods = 'hegilles'
@@ -39,9 +39,11 @@ for source in src:
 
 mains = Split(progs)
 for prog in mains:
-    mainc = env.Program(prog + '.c')
+    sources = ['M' + prog]
+    configure.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,mainc[0])
+        env.Install(bindir,prog)
 
 
 ######################################################################
@@ -89,7 +91,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog+'.c'),mains) + \
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
            map(lambda prog: env.Doc(prog+'.cc'),cpp_mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
                py_mains)
