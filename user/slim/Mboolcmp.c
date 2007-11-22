@@ -31,11 +31,11 @@ Created: Nov 2007
 int main(int argc, char *argv[])
 {
     int n[SF_MAX_DIM],n_r[SF_MAX_DIM],qq[BUFSIZ];
-    char buf[BUFSIZ],buf_r[BUFSIZ],*right,*sign;
-    float eps,fl,fr;
-    size_t bufsiz=BUFSIZ,nsiz,nsiz_r,dim,dim_r,nleft,i,nbuf;
+    char buf[BUFSIZ],buf_r[BUFSIZ],*right=0,*sign;
+    float eps,fl=0,fr;
+    size_t bufsiz=BUFSIZ,nsiz,nsiz_r=0,dim,dim_r,nleft,i,nbuf;
     sf_complex c;
-    sf_file in,in_r,out;
+    sf_file in,in_r=0,out;
     sf_datatype type;
     bool cmp_num=false;
 
