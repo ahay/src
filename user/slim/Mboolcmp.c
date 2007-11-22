@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
         sign=   'lq' less-than or equal-to ( <= )
         sign=   'lt' less-than ( < )
         sign=   'ne' not-equal ( != )
+	sign=   'and' the values are both non-zero ( && )
+	sign=   'or' one value is non-zero ( !! )
     */ 
 
     if (!sf_getfloat("eps",&eps)) eps=0;
@@ -128,7 +130,9 @@ int main(int argc, char *argv[])
 	else if (0==strcmp(sign,"lt")) qq[i] = ((fl-fr) < eps);
 	else if (0==strcmp(sign,"lq")) qq[i] = ((fl-fr) <= eps);
 	else if (0==strcmp(sign,"ne")) qq[i] = (fabs(fl-fr) > eps);
-	else sf_error("Sign not recognized. Please specify: gt,ge,eq,lq,lt,ne");
+	else if (0==strcmp(sign,"and")) qq[i] = ((fabs(fl) > eps) && (fabs(fr) > eps));
+	else if (0==strcmp(sign,"or")) qq[i] = ((fabs(fl) > eps) || (fabs(fr) > eps));
+	else sf_error("Sign not recognized. Please specify: gt,ge,eq,lq,lt,ne,and,or");
       }
       sf_intwrite(qq,nbuf,out);
     }
