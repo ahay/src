@@ -1,4 +1,9 @@
 /* Element-wise boolean comparison of values. For int/float/complex data-sets.
+This program will solve the solution to this problem:
+    - [input] [sign] [right]
+    - sfboolcmp <left.rsf sign=ge right=right.rsf 
+    - left.rsf >= right.rsf
+This will return a vector of same length as left and return 0's or 1's depending on the result of the inequality.  Optionally you can supply a right_f parameter to compare the input data to a single value.
 
 Written by: C. Brown, UBC
 Created: Nov 2007
@@ -25,17 +30,21 @@ Created: Nov 2007
 
 int main(int argc, char *argv[])
 {
-  int n[SF_MAX_DIM],n_r[SF_MAX_DIM],*qq;
-    size_t nsiz,nsiz_r,i,dim,dim_r;
+    int n[SF_MAX_DIM],n_r[SF_MAX_DIM],qq[BUFSIZ];
+    char buf[BUFSIZ],buf_r[BUFSIZ],*right,*sign;
     float eps,fl,fr;
-    char *right,*sign,*pl,*pr;
+    size_t bufsiz=BUFSIZ,nsiz,nsiz_r,dim,dim_r,nleft,i,nbuf;
     sf_complex c;
     sf_file in,in_r,out;
     sf_datatype type;
+    bool cmp_num=false;
 
     sf_init(argc,argv);
 
-    if (NULL == (right=sf_getstring("right"))) sf_error("No right parameter set.");
+    cmp_num = sf_getfloat("right_f",&fr);
+    /* compare input (left) to a single float value (right) */
+
+    if (!cmp_num && NULL == (right=sf_getstring("right"))) sf_error("No right or right_f parameter set.");
     /* the rsf file you will be comparing to */
 
     if (NULL == (sign=sf_getstring("sign"))) sign="eq";
@@ -52,77 +61,76 @@ int main(int argc, char *argv[])
     /* comparing within this range epsilon */
 
     in = sf_input("in");
-    in_r = sf_input(right);
     out = sf_output("out");
+    sf_settype(out,SF_INT);
 
     dim = (size_t) sf_filedims(in,n);
     for (nsiz=1, i=0; i < dim; i++) nsiz *= n[i];
 
-    dim_r = (size_t) sf_filedims(in_r,n_r);
-    for (nsiz_r=1, i=0; i < dim_r; i++) nsiz_r *= n_r[i];
+    if (!cmp_num) {
+      in_r = sf_input(right);
+      dim_r = (size_t) sf_filedims(in_r,n_r);
+      for (nsiz_r=1, i=0; i < dim_r; i++) nsiz_r *= n_r[i];
+    }
 
+    bufsiz /= sf_esize(in);
     type = sf_gettype(in);
 
-    if (type != sf_gettype(in_r)) sf_error("Type of input and right files do not match.");
-    if (nsiz != nsiz_r) sf_error("Size of input and right files do not match.");
+    if (!cmp_num && type != sf_gettype(in_r)) sf_error("Type of input and right files do not match.");
+    if (!cmp_num && nsiz != nsiz_r) sf_error("Size of input and right files do not match.");
 
 
-    switch (type) {
-      case SF_FLOAT:
-	pl = (char*)sf_floatalloc(nsiz);
-	pr = (char*)sf_floatalloc(nsiz);
-	sf_floatread((float*) pl,nsiz,in);
-	sf_floatread((float*) pr,nsiz,in_r);
-	break;
-      case SF_INT:
-	pl = (char*)sf_intalloc(nsiz);
-	pr = (char*)sf_intalloc(nsiz);
-	sf_intread((int*) pl,nsiz,in);
-	sf_intread((int*) pr,nsiz,in_r);
-	break;
-      case SF_COMPLEX:
-	pl = (char*)sf_complexalloc(nsiz);
-	pr = (char*)sf_complexalloc(nsiz);
-	sf_complexread((sf_complex*) pl,nsiz,in);
-	sf_complexread((sf_complex*) pr,nsiz,in_r);
-	break;
-      default:
-	sf_error("Type not understood.");
-	break;
-    }
-    qq = sf_intalloc(nsiz);
-
-    for (i=0; i<nsiz; i++) {
+    for (nleft=nsiz;nleft>0;nleft -= nbuf) {
+      nbuf = (bufsiz < nleft)? bufsiz: nleft;
       switch (type) {
         case SF_FLOAT:
-	  fl = ((float*)pl)[i];
-	  fr = ((float*)pr)[i];
+	  sf_floatread((float*) buf,nbuf,in);
+	  if (!cmp_num) sf_floatread((float*) buf_r,nbuf,in_r);
 	  break;
         case SF_INT:
-	  fl = (float) ((int*)pl)[i];
-	  fr = (float) ((int*)pr)[i];
+	  sf_intread((int*) buf,nbuf,in);
+	  if (!cmp_num) sf_intread((int*) buf_r,nbuf,in_r);
 	  break;
         case SF_COMPLEX:
-	  c=((sf_complex*)pl)[i];  
-	  fl=cabsf(c);
-	  c=((sf_complex*)pr)[i];  
-	  fr=cabsf(c);
+	  sf_complexread((sf_complex*) buf,nbuf,in);
+	  if (!cmp_num) sf_complexread((sf_complex*) buf_r,nbuf,in_r);
 	  break;
         default:
 	  sf_error("Type not understood.");
 	  break;
       }
+      for (i=0; i<nbuf; i++) {
+	switch (type) {
+          case SF_FLOAT:
+	    fl = ((float*)buf)[i];
+	    if (!cmp_num) fr = ((float*)buf_r)[i];
+	    break;
+          case SF_INT:
+	    fl = (float) ((int*)buf)[i];
+	    if (!cmp_num) fr = (float) ((int*)buf_r)[i];
+	    break;
+          case SF_COMPLEX:
+	    c=((sf_complex*)buf)[i];  
+	    fl=cabsf(c);
+	    if (!cmp_num) {
+	      c=((sf_complex*)buf_r)[i];  
+	      fr=cabsf(c);
+	    }
+	    break;
+          default:
+	    sf_error("Type not understood.");
+	    break;
+	}
 
-      if      (0==strcmp(sign,"ge")) qq[i] = ((fl-fr) >= -eps);
-      else if (0==strcmp(sign,"gt")) qq[i] = ((fl-fr) > -eps);
-      else if (0==strcmp(sign,"eq")) qq[i] = (abs(fl-fr) <= eps);
-      else if (0==strcmp(sign,"lt")) qq[i] = ((fl-fr) < eps);
-      else if (0==strcmp(sign,"lq")) qq[i] = ((fl-fr) <= eps);
-      else if (0==strcmp(sign,"ne")) qq[i] = (abs(fl-fr) > eps);
-      else sf_error("Sign not recognized. Please specify: gt,ge,eq,lq,lt,ne");
+	if      (0==strcmp(sign,"ge")) qq[i] = ((fl-fr) >= -eps);
+	else if (0==strcmp(sign,"gt")) qq[i] = ((fl-fr) > -eps);
+	else if (0==strcmp(sign,"eq")) qq[i] = (fabs(fl-fr) <= eps);
+	else if (0==strcmp(sign,"lt")) qq[i] = ((fl-fr) < eps);
+	else if (0==strcmp(sign,"lq")) qq[i] = ((fl-fr) <= eps);
+	else if (0==strcmp(sign,"ne")) qq[i] = (fabs(fl-fr) > eps);
+	else sf_error("Sign not recognized. Please specify: gt,ge,eq,lq,lt,ne");
+      }
+      sf_intwrite(qq,nbuf,out);
     }
-
-    sf_settype(out,SF_INT);
-    sf_intwrite(qq,nsiz,out);
     exit(0);
 }
