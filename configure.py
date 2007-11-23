@@ -587,6 +587,8 @@ def omp(context):
     if gcc:
         LIBS.append('gomp')
     if icc:
+        LIBS.append('guide')
+        LIBS.append('pthread')
         CCFLAGS = flags + ' -openmp'
     else:
         CCFLAGS = flags
@@ -608,6 +610,9 @@ def omp(context):
     else:
         context.Result(context_failure)        
         if gcc:
+            LIBS.pop()
+        if icc:
+            LIBS.pop()
             LIBS.pop()
         context.env['LIBS'] = LIBS
         context.env['CCFLAGS'] = flags
