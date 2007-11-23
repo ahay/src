@@ -175,7 +175,7 @@ static void add_float (bool   collect,
 		       float  add,
                        int    ompchunk)
 {
-    size_t jbuf;
+    int jbuf;
     float f;
 
     if (collect) {
