@@ -55,14 +55,14 @@
   \begin{eqnarray}
     \label{eq:x0}
     \mathbf{X}(0) & = & \left[\begin{array}{cc} 
-        \frac{\cos \theta}{S_0} & \frac{\sin \theta}{S_0} \\
-        0 & 0 \end{array}\right]\;, \\
+        S_0\,\cos{\theta} & 0 \\
+        S_0\,\sin{\theta} & 0 \end{array}\right]\;, \\
     \mathbf{P}(0) & = & \left[\begin{array}{cc} 
-        0 & 0 \\
-        -S_0\,\sin \theta & S_0\,\cos \theta \end{array}\right]\;, \\
-    \label{eq:p0}
+        g_1 & -S_0\,\sin{\theta} \\
+        g_2 & S_0\,\cos{\theta} \end{array}\right]\;, 
   \end{eqnarray}
-  where $\theta$ is the initial ray angle.
+  where $\theta$ is the initial ray angle, , and $g_1$ and $g_2$ are
+  components of $\mathbf{g}$.
 \item Solve system~(\ref{eq:dxds}-\ref{eq:dpds}) with initial
   conditions~(\ref{eq:x0}-\ref{eq:p0}) to find $\mathbf{X}(\sigma)$
   and $\mathbf{P}(\sigma)$.

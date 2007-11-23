@@ -579,22 +579,38 @@ def mpi(context):
 
 def omp(context):
     context.Message("checking for OpenMP ... ")
-    LIBS = context.env.get('LIBS',[])
-    LIBS.append('gomp')
+    LIBS  = context.env.get('LIBS',[])
+    CC    = context.env.get('CC','gcc')
+    flags = context.env.get('CCFLAGS','')
+    gcc = (string.rfind(CC,'gcc') >= 0)
+    icc = (string.rfind(CC,'icc') >= 0)
+    if gcc:
+        LIBS.append('gomp')
+    if icc:
+        CCFLAGS = flags + ' -openmp'
+    else:
+        CCFLAGS = flags
+    
     text = '''
     #include <omp.h>
     int main(void) {
+    int nt;
     #pragma omp parallel
-    return omp_get_num_threads();}
+    nt = omp_get_num_threads();
+    return 0;
+    }
     '''
+    context.env['LIBS'] = LIBS
+    context.env['CCFLAGS'] = CCFLAGS + ' -D_OPENMP'
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
-        context.env['LIBS'] = LIBS
-        context.env['CCFLAGS'] = context.env.get('CCFLAGS') + ' -D_OPENMP'
     else:
-        context.Result(context_failure)
-        LIBS.pop()
+        context.Result(context_failure)        
+        if gcc:
+            LIBS.pop()
+        context.env['LIBS'] = LIBS
+        context.env['CCFLAGS'] = flags
 
 def api_options(context):
     context.Message("checking API options ... ")
