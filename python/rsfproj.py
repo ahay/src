@@ -344,10 +344,11 @@ class Project(Environment):
 
                 if i==self.np-1:
                     self.Flow(mysource,sfiles[0],
-                              'window f%d=%d' % (axis,i*w))
+                              'window f%d=%d squeeze=n' % (axis,i*w))
                 else:
                     self.Flow(mysource,sfiles[0],
-                              'window n%d=%d f%d=%d' % (axis,w,axis,i*w))
+                              'window n%d=%d f%d=%d squeeze=n' % 
+                              (axis,w,axis,i*w))
                     
                 self.Flow([mytarget,]+tfiles[1:],
                           [mysource,]+sfiles[1:],flow,
