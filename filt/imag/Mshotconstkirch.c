@@ -28,7 +28,7 @@ Requires the input to be in (time,offset,shot)
 
 int main(int argc, char* argv[])
 {
-    bool aal;
+    bool aal, off;
     int nt,nx, nh, ix,it,ih, ns, is;
     float dt,dx, t0,x, v, dh, h0, h, t, sq, ds, s0, s, x0;
     float *time, *str, *tx, *amp, **cinp, *cout;
@@ -58,9 +58,19 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dx",&dx)) dx=ds;
     if (!sf_getfloat("x0",&x0)) x0=s0;
 
-    sf_putint(out,"n2",nx);
-    sf_putfloat(out,"d2",dx);
-    sf_putfloat(out,"o2",x0);
+    if (!sf_getbool("offset",&off)) off=false;
+    /* if y, the output is in offset */
+
+    if (off) {
+	sf_putint(out,"n3",nx);
+	sf_putfloat(out,"d3",dx);
+	sf_putfloat(out,"o3",x0);
+	sf_putint(out,"n4",ns);
+    } else {
+	sf_putint(out,"n2",nx);
+	sf_putfloat(out,"d2",dx);
+	sf_putfloat(out,"o2",x0);
+    }
 
     if (!sf_getfloat ("vel",&v)) sf_error("Need vel=");
     /* velocity */
@@ -108,12 +118,14 @@ int main(int argc, char* argv[])
 
 		aastretch_define (str, tx, amp);
 		aastretch_lop (true,true,nt,nt,cout,cinp[ih]);
+
+		if (off) sf_floatwrite (cout,nt,out);
 	    } /* h */
 
-	    sf_floatwrite (cout,nt,out);
+	    if (!off) sf_floatwrite (cout,nt,out);
 	} /* x */
     } /* s */
- 
+    
     exit(0);
 }
 
