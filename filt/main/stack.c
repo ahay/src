@@ -91,14 +91,13 @@ int main(int argc, char* argv[])
     sprintf(key2,"label%d",j);
     if (NULL != (val = sf_histstring(in,key1))) 
         sf_putstring(out,key2,val);
-    }
 
     sprintf(key1,"unit%d",j+1);
     sprintf(key2,"unit%d",j);
-    if (NULL != (val = sf_histstring(in,key1))) 
+    if (NULL != (val = sf_histstring(in,key1)))
         sf_putstring(out,key2,val);
     }
-
+    
     if (!sf_getbool("rms",&rms)) rms = false;
     /* If y, compute the root-mean-square instead of stack. */
     if (rms || !sf_getbool("norm",&norm)) norm = true;
