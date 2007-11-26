@@ -1,4 +1,4 @@
-/* Jacobi rotation of a symemtric matrix */
+/* Jacobi rotation of a symmetric matrix */
 /*
   Copyright (C) 2007 University of Texas at Austin
   
