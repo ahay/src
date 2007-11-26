@@ -433,12 +433,13 @@ class Project(Environment):
         if stdin:
             command = "< $SOURCE " + command
         command = self.timer + command
-        if self.environ:
-            command = string.join([WhereIs('env'),self.environ,command])
         if self.np: # do it remotely
             command = re.sub('"','\\"',command)
-            command = string.join([WhereIs('ssh'),self.nodes[self.ip],
-                                   '\"cd ',self.cwd,';',command,'\"'])
+            node = self.nodes[self.ip]
+            if node != 'localhost':
+                command = string.join([WhereIs('ssh'),node,'\"cd ',
+                                       self.cwd,';',WhereIs('env'),
+                                       self.environ,command,'\"'])
             self.ip = self.ip + 1
             if self.ip == self.np:
                 self.ip = 0
