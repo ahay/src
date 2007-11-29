@@ -1,4 +1,4 @@
-/* 1-D digital wavelet transform 9/7*/
+/* 1-D CDF 9/7 biorthogonal digital wavelet transform */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
