@@ -1,4 +1,4 @@
-/* Digital wavelet transform */
+/* Digital 9/7 biorthogonal wavelet transform */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
