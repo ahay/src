@@ -172,7 +172,7 @@ static void biorthogonal(bool adj)
 }
 
 
-void wavelet_init(int n /* data size */, bool inv1) 
+void wavelet97_init(int n /* data size */, bool inv1) 
 /*< allocate space >*/
 {
     inv = inv1;
@@ -182,13 +182,13 @@ void wavelet_init(int n /* data size */, bool inv1)
 
 }
 
-void wavelet_close(void) 
+void wavelet97_close(void) 
 /*< deallocate space >*/
 {
     free (t);
 }
 
-void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+void wavelet97_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j;

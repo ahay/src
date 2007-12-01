@@ -45,14 +45,14 @@ int main(int argc, char *argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* if y, do adjoint transform */
 
-    wavelet_init(n1,inv);
+    wavelet97_init(n1,inv);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);
         if (adj) {
-            wavelet_lop(adj,false,n1,n1,qq,pp);
+            wavelet97_lop(adj,false,n1,n1,qq,pp);
         } else {
-            wavelet_lop(adj,false,n1,n1,pp,qq);
+            wavelet97_lop(adj,false,n1,n1,pp,qq);
         }
 	sf_floatwrite(qq,n1,out);
     }
