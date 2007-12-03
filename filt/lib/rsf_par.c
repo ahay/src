@@ -1,4 +1,4 @@
-/* Get a parameter from an RSF file.
+/* Get a parameter from a RSF file.
  *
  * MATLAB usage: par = rsf_par(file,name,type,default)
  *

@@ -1,4 +1,4 @@
-/* Read data from an RSF file.
+/* Read data from a RSF file.
  *
  * MATLAB usage: rsf_read(data,file[,same])
  *

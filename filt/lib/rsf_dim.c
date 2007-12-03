@@ -1,4 +1,4 @@
-/* Extract dimensions from an RSF file.
+/* Extract dimensions from a RSF file.
  *
  * MATLAB usage: dims = rsf_dim(file)
  *

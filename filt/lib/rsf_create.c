@@ -1,4 +1,4 @@
-/* Read data from an RSF file.
+/* Write RSF header with desired info to disk
  *
  * MATLAB usage: rsf_create(file,file0 | dims)
  *
@@ -61,7 +61,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     file = sf_output(tag);
 
     if (mxIsChar(prhs[1])) {
-	/* First input must be a row vector. */
+	/* Second input must be a row vector. */
 	if (mxGetM(prhs[1]) != 1)
 	    mexErrMsgTxt("Second input must be a row vector.");
     
@@ -97,6 +97,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
     sf_setformat(file,"native_float");
-    sf_fileflush(file,file2);
+    sf_fileflush(file,file2); /* The actual writing to disk */
     sf_fileclose(file);
 }
