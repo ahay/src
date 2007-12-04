@@ -49,23 +49,51 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
     if (k==l || cabsf(a[k][l]) < FLT_EPSILON) return 0.0f;
     
 
+#ifdef SF_HAS_COMPLEX_H
     t = 0.5*(a[l][l]-a[k][k]);
     s = csqrtf(t*t+a[l][k]*a[k][l]);
+#else
+    t = sf_crmul(sf_cadd(a[l][l],sf_cneg(a[k][k])),0.5);
+    s = csqrtf(sf_cadd(sf_cmul(t,t),sf_cmul(a[l][k],a[k][l])));
+#endif
 
     if (cabsf(t) < FLT_EPSILON && cabsf(s) < FLT_EPSILON) return 0.0f;
 
+#ifdef SF_HAS_COMPLEX_H
     if (cabsf(t+s) > cabsf(t-s)) {
 	t = a[k][l]/(t+s);
     } else {
 	t = a[k][l]/(t-s);
     }
+#else
+    if (cabsf(sf_cadd(t,s)) > cabsf(sf_cadd(t,sf_cneg(s)))) {
+	t = sf_cdiv(a[k][l],sf_cadd(t,s));
+    } else {
+	t = sf_cdiv(a[k][l],sf_cadd(t,sf_cneg(s)));
+    }
+#endif
 
+#ifdef SF_HAS_COMPLEX_H
     akl = a[k][l] + t*(a[k][k]-a[l][l])-t*t*a[l][k];
+#else
+    akl = sf_cadd(a[k][l],
+		  sf_cadd(sf_cmul(t,
+				  sf_cadd(a[k][k],sf_cneg(a[l][l]))),
+			  sf_cneg(sf_cmul(t,sf_cmul(t,a[l][k])))));
+#endif
     for (i=0; i < n; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	ak[i] = a[i][l] + t*a[i][k];
+#else
+	ak[i] = sf_cadd(a[i][l],sf_cmul(t,a[i][k]));
+#endif
     }
     for (i=0; i < n; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	a[k][i] -= t*a[l][i];
+#else
+	a[k][i] = sf_cadd(a[k][i],sf_cmul(t,a[l][i]));
+#endif
     }
     for (i=0; i < n; i++) {
 	a[i][l] = ak[i];

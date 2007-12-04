@@ -48,20 +48,24 @@ int main(int argc, char* argv[])
 	sf_complexread(e,n,poly);
 
 	for (m = n; m > 0; m--) {
-	    if (fabsf(e[m-1]) > FLT_EPSILON) break;
+	    if (cabsf(e[m-1]) > FLT_EPSILON) break;
 	}
 	m--;
 
 	for (j=0; j < m; j++) {
 	    for (k=0; k < m; k++) {
-		a[j][k] = 0.;
+		a[j][k] = sf_cmplx(0.,0.);
 	    }
 	}
 	for (j=0; j < m-1; j++) {
-	    a[j][j+1]=1.;
+	    a[j][j+1]=sf_cmplx(1.,0.);
 	}
 	for (j=0; j < m; j++) {
+#ifdef SF_HAS_COMPLEX_H
 	    a[m-1][j]=-e[j]/e[m];
+#else
+	    a[m-1][j]=sf_cneg(sf_cdiv(e[j],e[m]));
+#endif
 	}
 
 	for (iter=0; iter < niter; iter++) {
