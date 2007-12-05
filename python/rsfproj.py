@@ -434,9 +434,9 @@ class Project(Environment):
             command = "< $SOURCE " + command
         command = self.timer + command
         if self.np: # do it remotely
-            command = re.sub('"','\\"',command)
             node = self.nodes[self.ip]
             if node != 'localhost':
+                command = re.sub('"','\\"',command)
                 command = string.join([WhereIs('ssh'),node,'\"cd ',
                                        self.cwd,';',WhereIs('env'),
                                        self.environ,command,'\"'])
