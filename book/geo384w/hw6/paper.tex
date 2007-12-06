@@ -1,0 +1,92 @@
+\author{Charles Hewitt Dix} 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 6}
+
+\begin{abstract}
+  In this (after class) homework we return to the Blake Outer Ridge
+  dataset and process it to create an image of the subsurface. Your
+  task is open-ended: find a way to improve the image by modifying the
+  data processing flow.
+\end{abstract}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\section{Computational part}
+\inputdir{blake}
+
+The dataset is a 2-D line from the Blake Outer Ridge area
+offshore Florida. It was collected by USGS in order to study the
+occurrence of methane hydrates. The dataset and its analysis for gas
+hydrate detection are described by
+\cite{GEO63-05-16591669,GEO65-02-05650573}.
+
+The following figures show the dataset at different stages of seismic
+data processing: from initial data to an image in depth. \textbf{Your
+  task:} Modify the data processing sequence to create a justifiably
+better image.
+
+\plot{nmo}{width=\textwidth}{Common midpoint gather (left),
+  velocity analysis panel using normal moveout (middle), and common
+  midpoint gather after normal moveout (right). A curve in the middle plot
+  indicates an automatically picked velocity trend.}
+
+\multiplot{2}{noff,stack}{width=0.8\textwidth}{(a) Near-offset
+  section. (b) Normal moveout stack.}
+
+\multiplot{2}{picks,vel}{width=0.8\textwidth}{(a) Picked stacking
+  velocity. (b) Interval velocity estimated by Dix inversion.}
+
+\plot{image}{width=\textwidth}{Seismic image created by converting
+  stacked data from time to depth. Can you identify geological
+  features that are not properly imaged?}
+
+{\small
+  \lstinputlisting[frame=single]{blake/SConstruct}}
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+> cd ~/geo384w/hw6/blake
+\end{verbatim}
+\item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+to generate figures and display them on your screen.  
+\item Edit the \texttt{SConstruct} file.
+Check your result by running
+\begin{verbatim}
+> scons view
+\end{verbatim}
+again.
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#~/geo384w/hw6#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Huygens's.
+\item Run
+\begin{verbatim}
+  > sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+  > sftour scons -c
+\end{verbatim}
+  to remove intermediate files.
+\item Run
+ \begin{verbatim} 
+  > scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. If you do your assignment on one of the computers in the
+  Unix lab, you can simply leave the file in your directory.
+\end{enumerate}
+
+\bibliographystyle{seg} 
+\bibliography{SEG}
+
