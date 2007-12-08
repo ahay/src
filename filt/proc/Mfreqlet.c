@@ -24,7 +24,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, nw, n1w, niter;
+    int i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
     bool inv, adj, unit;
     float *w0, d1, *ww;
     char *type;
@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
     if (!sf_getint("niter",&niter)) niter=0;
     /* number of iterations for inversion */
 
+    if (!sf_getint("ncycle",&ncycle)) ncycle=0;
+    /* number of IRLS iterations */
+    
     if (adj) {
 	n2 = sf_leftsize(in,1);
 	sf_putint(out,"n2",nw);
@@ -72,7 +75,9 @@ int main(int argc, char *argv[])
     if (niter > 0) {
 	ww = sf_floatalloc(n1w);
 	cweight_init(ww);
-    } 
+    } else {
+	ww = NULL;
+    }
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     /* sampling in the input file */
@@ -92,24 +97,21 @@ int main(int argc, char *argv[])
 	    sf_complexread(qq,n1w,in);
 	} 
 
-	if (adj && niter > 0) {
-	    /* least squares inverse */
-	    sf_csolver (freqlets_lop,sf_ccgstep,
-		       n1w,n1,qq,pp,niter,"verb",true,"end");
-	    sf_ccgstep_close();
+	freqlets_lop(adj,false,n1w,n1,qq,pp);
 
-	    /* weight by absolute value */
-	    for (i1=0; i1 < n1w; i1++) {
-		ww[i1] = cabsf(qq[i1]);
+	if (adj) {
+	    for (i=0; i < ncycle; i++) {	    
+		/* weight by absolute value */
+		for (i1=0; i1 < n1w; i1++) {
+		    ww[i1] = cabsf(qq[i1]);
+		}
+
+		/* sparse inverse */
+		sf_csolver_prec (freqlets_lop,sf_ccgstep,cweight_lop,n1w,
+				 n1w,n1,qq,pp,niter,0.,"verb",true,"end");
+		sf_ccgstep_close();
 	    }
-
-	    /* sparse inverse */
-	    sf_csolver_prec (freqlets_lop,sf_ccgstep,cweight_lop,n1w, 	      
-			     n1w,n1,qq,pp,niter,0.,"verb",true,"end");
-	    sf_ccgstep_close();
-	} else {
-	    freqlets_lop(adj,false,n1w,n1,qq,pp);
-	}
+	} 
 
 	if (adj) {
 	    sf_complexwrite(qq,n1w,out);
