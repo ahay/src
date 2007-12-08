@@ -45,6 +45,28 @@ void sf_chain( sf_operator oper1     /* outer operator */,
     }
 }
 
+void sf_cchain( sf_coperator oper1         /* outer operator */, 
+		sf_coperator oper2         /* inner operator */, 
+		bool adj                   /* adjoint flag */, 
+		bool add                   /* addition flag */, 
+		int nm                     /* model size */, 
+		int nd                     /* data size */, 
+		int nt                     /* intermediate size */, 
+		/*@out@*/ sf_complex* mod  /* [nm] model */, 
+		/*@out@*/ sf_complex* dat  /* [nd] data */, 
+		sf_complex* tmp            /* [nt] intermediate */) 
+/*< Chains two complex operators, computing oper1{oper2{mod}} 
+  or its adjoint. The tmp array is used for temporary storage. >*/
+{
+    if (adj) {
+	oper1 (true, false, nt, nd, tmp, dat);
+	oper2 (true, add, nm, nt, mod, tmp);
+    } else {
+	oper2 (false, false, nm, nt, mod, tmp);
+	oper1 (false, add, nt, nd, tmp, dat);
+    }
+}
+
 void sf_array( sf_operator oper1     /* top operator */, 
 	       sf_operator oper2     /* bottom operator */, 
 	       bool adj              /* adjoint flag */, 

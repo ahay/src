@@ -19,13 +19,14 @@
 
 #include <rsf.h>
 
-#include "freqlet.h"
+#include "freqlets.h"
+#include "cweight.h"
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, iw, nw, niter;
+    int i1, n1, i2, n2, nw, n1w, niter;
     bool inv, adj, unit;
-    float *w0, d1;
+    float *w0, d1, *ww;
     char *type;
     sf_complex *pp, *qq;
     sf_file in, out, w;
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     
     if (!sf_histint(w,"n1",&nw)) sf_error("No n1= in freq");
     w0 = sf_floatalloc(nw);
+    n1w = n1*nw;
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
     if (!sf_getbool("unit",&unit)) unit=false;
     /* if y, use unitary scaling */
 
-    if (!sf_getbool("niter",&niter)) niter=0;
+    if (!sf_getint("niter",&niter)) niter=0;
     /* number of iterations for inversion */
 
     if (adj) {
@@ -66,15 +68,19 @@ int main(int argc, char *argv[])
     } 
 
     pp = sf_complexalloc(n1);
-    qq = sf_complexalloc(n1);
-    
+    qq = sf_complexalloc(n1w);
+    if (niter > 0) {
+	ww = sf_floatalloc(n1w);
+	cweight_init(ww);
+    } 
+
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     /* sampling in the input file */
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    freqlet_init(n1,inv,unit,type[0]);
+    freqlets_init(n1,d1,inv,unit,type[0],nw,w0);
     
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
@@ -83,25 +89,31 @@ int main(int argc, char *argv[])
 	if (adj) {
 	    sf_complexread(pp,n1,in);
 	} else {
-	    for (i1=0; i1 < n1; i1++) {
-		pp[i1] = sf_cmplx(0.,0.);
-	    }
+	    sf_complexread(qq,n1w,in);
 	} 
 
-	/* loop over frequencies */
-	for (iw=0; iw < nw; iw++) {
-	    freqlet_set(w0[iw]* 2*SF_PI*d1);
-	    
-	    if (adj) {
-		freqlet_lop(true,false,n1,n1,qq,pp);
-		sf_complexwrite(qq,n1,out);
-	    } else {
-		sf_complexread(qq,n1,in);		
-		freqlet_lop(false,true,n1,n1,qq,pp);
-	    } 
+	if (adj && niter > 0) {
+	    /* least squares inverse */
+	    sf_csolver (freqlets_lop,sf_ccgstep,
+		       n1w,n1,qq,pp,niter,"verb",true,"end");
+	    sf_ccgstep_close();
+
+	    /* weight by absolute value */
+	    for (i1=0; i1 < n1w; i1++) {
+		ww[i1] = cabsf(qq[i1]);
+	    }
+
+	    /* sparse inverse */
+	    sf_csolver_prec (freqlets_lop,sf_ccgstep,cweight_lop,n1w, 	      
+			     n1w,n1,qq,pp,niter,0.,"verb",true,"end");
+	    sf_ccgstep_close();
+	} else {
+	    freqlets_lop(adj,false,n1w,n1,qq,pp);
 	}
-	
-	if (!adj) {
+
+	if (adj) {
+	    sf_complexwrite(qq,n1w,out);
+	} else {
 	    if (inv) {
 		for (i1=0; i1 < n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -114,6 +126,6 @@ int main(int argc, char *argv[])
 	    sf_complexwrite(pp,n1,out);
 	}
     }
-
+		
     exit(0);
 }
