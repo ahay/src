@@ -403,7 +403,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
  "nfreq":  int:            periodic restart
  "xmov":   sf_complex**:        model iteration
  "rmov":   sf_complex**:        residual iteration
- "err":    sf_complex*:         final error
+ "err":    sf_float*:         final error
  "res":    sf_complex*:         final residual
  "xp":     sf_complex*:         preconditioned model
  >*/
@@ -421,7 +421,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
     int nfreq = 0;
     sf_complex** xmov = NULL;
     sf_complex** rmov = NULL;
-    sf_complex* err = NULL;
+    float* err = NULL;
     sf_complex* res = NULL;
     sf_complex* xp = NULL;
     float* wht = NULL;
@@ -457,7 +457,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	else if (0 == strcmp (par,"rmov"))      
 	{                    rmov = va_arg (args, sf_complex**);}
 	else if (0 == strcmp (par,"err"))      
-	{                    err = va_arg (args, sf_complex*);}
+	{                    err = va_arg (args, float*);}
 	else if (0 == strcmp (par,"res"))      
 	{                    res = va_arg (args, sf_complex*);}
 	else if (0 == strcmp (par,"xp"))      
@@ -472,8 +472,12 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
     rr = sf_complexalloc (ny);
     gg = sf_complexalloc (ny);
     for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	rr[i] = -dat[i];
-	p[i+nprec] = 0.0;
+#else
+	rr[i] = sf_cneg(dat[i]);
+#endif	
+	p[i+nprec] = sf_cmplx(0.0,0.0);
     }
 
     if (wt != NULL || wght != NULL) {
@@ -497,7 +501,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	if (nloper != NULL) {
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		sf_cchain (nloper, prec, false, true, nprec, ny, nx, tp, rr, x);
 	    } else { 
@@ -506,7 +514,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	} else {
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		sf_cchain (  oper, prec, false, true, nprec, ny, nx, tp, rr, x);
 	    } else { 
@@ -515,7 +527,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
     } else {
 	for (i=0; i < nprec; i++) {
-	    p[i] = 0.0; 
+	    p[i] = sf_cmplx(0.0,0.0); 
 	}
     }
 
@@ -528,8 +540,14 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] = eps*p[i+nprec] + wht[i]*rr[i];
 		td[i] = rr[i]*wht[i];
+#else
+		rr[i] = sf_cadd(sf_crmul(p[i+nprec],eps),
+				sf_crmul(rr[i],wht[i]));
+		td[i] = sf_crmul(rr[i],wht[i]);
+#endif
 	    } 
 	    sf_cchain (oper, prec, true, false, nprec, ny, nx, g, td, x); 
 	} else {
@@ -537,23 +555,35 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
 	if (mwt != NULL) {
 	    for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		g[i] *= mwt[i];
+#else
+		g[i] = sf_crmul(g[i],mwt[i]);
+#endif
 	    }
 	}
 	for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    g[i+nprec] = eps*rr[i];
+#else
+	    g[i+nprec] = sf_crmul(rr[i],eps);
+#endif
 	}
 	if (known != NULL) {
 	    for (i=0; i < nprec; i++) {
 		if (known[i]) {
-		    g[i] = 0.0;
+		    g[i] = sf_cmplx(0.0,0.0);
 		} 
 	    }
 	}
 
 	if (mwt != NULL) {
 	    for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		tp[i] = g[i]*mwt[i];
+#else
+		tp[i] = sf_crmul(g[i],mwt[i]);
+#endif
 	    }
 	    sf_cchain (oper, prec, false, false, nprec, ny, nx, tp, gg, x);
 	} else {
@@ -561,7 +591,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		gg[i] *= wht[i];
+#else
+		gg[i] = sf_crmul(gg[i],wht[i]);
+#endif
 	    }
 	}
         /*	cblas_saxpy(ny,eps,g+nprec,1,gg,1); */
@@ -570,7 +604,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 #ifdef SF_HAS_COMPLEX_H
 	    gg[i] += eps * g[i+nprec];
 #else
-	    gg[i] += sf_cadd(gg[i],sf_crmul(g[i+nprec],eps));
+	    gg[i] = sf_cadd(gg[i],sf_crmul(g[i+nprec],eps));
 #endif
 	}
 
@@ -600,7 +634,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		prec (false, false, nprec, nx, tp, x);
 	    } else {
@@ -615,11 +653,19 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 
 	if (nloper != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] = eps*p[i+nprec] - dat[i];
+#else
+		rr[i] = sf_cadd(sf_crmul(p[i+nprec],eps),sf_cneg(dat[i]));
+#endif
 	    }
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		sf_cchain (nloper, prec, false, true, nprec, ny, nx, tp, rr, x);
 	    } else { 
@@ -627,11 +673,19 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	    }
 	} else if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] = -dat[i];
+#else
+		rr[i] = sf_cneg(dat[i]);
+#endif
 	    }
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		sf_cchain (  oper, prec, false, true, nprec, ny, nx, tp, rr, x);
 	    } else { 
@@ -640,7 +694,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	} else if (xmov != NULL || iter == niter-1) {
 	    if (mwt != NULL) {
 		for (i=0; i < nprec; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		    tp[i] = p[i]*mwt[i];
+#else
+		    tp[i] = sf_crmul(p[i],mwt[i]);
+#endif
 		}
 		prec (false, false, nprec, nx, tp, x);
 	    } else {
@@ -654,7 +712,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
 	if (rmov != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rmov[iter][i] =  p[i+nprec] * eps;
+#else
+		rmov[iter][i] =  sf_crmul(p[i+nprec],eps);
+#endif
 	    }
 	}
 	if (err != NULL) err[iter] = cblas_scnrm2(ny, rr, 1);
@@ -679,7 +741,11 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 	}
 	if (rmov != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rmov[iter][i] =  p[i+nprec] * eps;
+#else
+		rmov[iter][i] =  sf_crmul(p[i+nprec],eps);
+#endif
 	    }
 	}    
 	if (err != NULL) err[iter] = cblas_scnrm2(ny, rr, 1);
