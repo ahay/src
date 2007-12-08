@@ -23,7 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, iw, nw;
+    int i1, n1, i2, n2, iw, nw, niter;
     bool inv, adj, unit;
     float *w0, d1;
     char *type;
@@ -47,20 +47,23 @@ int main(int argc, char *argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
 
-    if (!sf_getbool("adj",&adj)) adj=false;
+    if (!sf_getbool("adj",&adj)) adj=true;
     /* if y, do adjoint transform */
 
     if (!sf_getbool("unit",&unit)) unit=false;
     /* if y, use unitary scaling */
 
+    if (!sf_getbool("niter",&niter)) niter=0;
+    /* number of iterations for inversion */
+
     if (adj) {
-	n2 = sf_leftsize(in,2);
-	sf_unshiftdim(in, out, 2);
-    } else {
 	n2 = sf_leftsize(in,1);
 	sf_putint(out,"n2",nw);
 	(void) sf_shiftdim(in, out, 2);
-    }
+    } else {
+	n2 = sf_leftsize(in,2);
+	sf_unshiftdim(in, out, 2);
+    } 
 
     pp = sf_complexalloc(n1);
     qq = sf_complexalloc(n1);
@@ -69,7 +72,7 @@ int main(int argc, char *argv[])
     /* sampling in the input file */
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* [haar,linear] wavelet type, the default is linear  */
+    /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
     freqlet_init(n1,inv,unit,type[0]);
     
@@ -78,27 +81,27 @@ int main(int argc, char *argv[])
 	sf_floatread(w0,nw,w);
 
 	if (adj) {
+	    sf_complexread(pp,n1,in);
+	} else {
 	    for (i1=0; i1 < n1; i1++) {
 		pp[i1] = sf_cmplx(0.,0.);
 	    }
-	} else {
-	    sf_complexread(pp,n1,in);
-	}
+	} 
 
 	/* loop over frequencies */
 	for (iw=0; iw < nw; iw++) {
 	    freqlet_set(w0[iw]* 2*SF_PI*d1);
 	    
 	    if (adj) {
-		sf_complexread(qq,n1,in);		
-		freqlet_lop(true,true,n1,n1,pp,qq);
-	    } else {
-		freqlet_lop(false,false,n1,n1,pp,qq);
+		freqlet_lop(true,false,n1,n1,qq,pp);
 		sf_complexwrite(qq,n1,out);
-	    }
+	    } else {
+		sf_complexread(qq,n1,in);		
+		freqlet_lop(false,true,n1,n1,qq,pp);
+	    } 
 	}
 	
-	if (adj) {
+	if (!adj) {
 	    if (inv) {
 		for (i1=0; i1 < n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
