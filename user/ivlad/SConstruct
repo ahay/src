@@ -8,7 +8,7 @@ import configure
 
 # C mains
 progs = '''
-su2rsf segy2rsf quantile leftsize filedims
+su2rsf segy2rsf quantile leftsize filedims fileflush create
 '''
 
 # Python mains that do not need SWIG+numpy
