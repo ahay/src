@@ -1168,97 +1168,83 @@ used to define scaling.  Thus, \texttt{sfscale rscale=0 axis=1} is
 equivalent to \texttt{sfscale axis=1}, and \texttt{sfscale rscale=0}
 is equivalent to \texttt{sfscale dscale=1}.
 
-\begin{comment}
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfsegyread}
   }}
 
-The SEG Y format is an open standard for the exchange of geophysical
-data. It is controlled by the non-profit SEG Technical Standards
-Committee. There are two versions of this standard: rev0 (1975)[3] and
-rev1 (2002)[4]. The implementation in sfsegyread is a mixture of rev0
-(i.e. no checks for Extended Textual Headers) and rev1 (IEEE floating
-point format allowed for trace data samples).
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfsegywrite}
+  }}
 
-A SEG-Y file as understood by sfsegyread contains a "Reel
-Identification Header" (3200 bytes in EBCDIC followed by 400 bytes in
-a binary encoding), followed by a number of "Trace Blocks". Each
-"Trace Block" contains a 240-byte "Trace Header" (binary) followed by
-"Trace Data" -- a sequence of ns samples. Binary values in both reel
-headers and trace headers are two's complement integers, either two
-bytes or four bytes long. There are no floating-point values defined
-in the headers. Trace Data samples can have various encodings, either
-floating point or integer, described further down, but they are all
-big-endian. To convert from SEG-Y to RSF, sfsegyread will strip the
-tape reel EBCDIC header and convert it to ASCII, will extract the reel
-binary header without changing it, and will put the trace headers into
-one RSF file, and the traces themselves on another.
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfspike}
+  }}
 
-A SU file is nothing more than a SEG-Y file without the reel headers,
-and with the Trace Data samples in the native encoding of the CPU the
-file was created on (Attention -- limited portability!). So, to
-convert from SU to RSF, sfsegyread will just separate headers and
-traces into two RSF files. Now it is easy to understand the
-parameters:
 
-* tape= specifies the input data. Stdin could not be used because
-sfsegyread has to work with tapes, and needs to fseek back and forth
-through the input file. Thankfully, output is on stdout.
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfspray}
+  }}
 
-* su= specifies if the input file is SU or SEG-Y. Default is su=n
-(SEG-Y file).
+\texttt{sfspray} extends the input hypercube by replicating the data
+in one of the dimensions. The output dataset acquires one additional
+dimension. Here is an example:
 
-* suxdr= specifies whether the input file was created with a SU
-package with XDR support enabled. If you have access to the source
-code of your SU install (try $CWPROOT/src), type: grep 'XDRFLAG ='
-$CWPROOT/src/Makefile.config and look at the last uncommented entry.
-If no value is given for XDRFLAG, the package was not compiled with
-XDR support.
+Start with a 2-D dataset
+\begin{verbatim}
+bash$ sfmath n1=5 n2=2 output=x1+x2 > test.rsf
+bash$ sfin test.rsf
+test.rsf:
+    in="/var/tmp/test.rsf@"
+    esize=4 type=float form=native 
+    n1=5           d1=1           o1=0          
+    n2=2           d2=1           o2=0          
+        10 elements 40 bytes
+bash$ < test.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             1            2            3            4            5
+\end{verbatim}
 
-* hfile= specifies the name of the file in which the EBCDIC reel
-header will be put after conversion to ASCII. If you are certain there
-is no useful information in it, hfile=/dev/null works just fine. If
-you do not specify anything for this parameter you will get an ASCII
-file named header in the current directory.
+Extend the data in the second dimension
+\begin{verbatim}
+bash$ < test.rsf sfspray axis=2 n=3 > test2.rsf
+bash$ sfin test2.rsf
+test2.rsf:
+    in="/var/tmp/test2.rsf@"
+    esize=4 type=float form=native 
+    n1=5           d1=1           o1=0          
+    n2=3           d2=1           o2=0          
+    n3=2           d3=1           o3=0          
+        30 elements 120 bytes
+bash$ < test2.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             0            1            2            3            4
+  10:             0            1            2            3            4
+  15:             1            2            3            4            5
+  20:             1            2            3            4            5
+  25:             1            2            3            4            5
+\end{verbatim}
+The output is three-dimensional, with traces from the original
+data duplicated along the second axis.
 
-* bfile= specifies name of the file in which the binary reel header
-(the 400-bytes thing following the 3600-bytes EBCDIC) will be put
-without any conversion. The default name is "binary". Unless you have
-software that knows how to read exactly this special type of file, it
-will be completely useless, so do bfile=/dev/null
-
-* read= specifies what parts of the "Trace Blocks" will be read. It
-can be read=t (only trace data is read), read=h (only trace headers
-are read) or read=b (both are read).
-
-* tfile= gives the name of the RSF file to which trace headers are
-written. Obviously, it should be only specified with read=h or read=b.
-
-* format= specifies the format in which the trace data samples are in
-the SEG-Y input file. This is read from the binary reel header of the
-SEG-Y file. Valid values are 1(IBM floating point), 2 (4-byte
-integer), 3 (2-byte integer) and 5 (IEEE floating point). If the input
-file is SU, the format will be assumed to be the native float format.
-
-* mask= is an optional parameter specifying the name of a mask that
-says which traces will be read. The mask is a 1-D RSF file with
-integers. The number of samples in the mask is the same as the number
-of traces in the unmasked SEG-Y. In places corresponding to unwanted
-traces there should be zeros in the mask.
-
-* ns= specifies the number of samples in a trace. For SEG-Y files, the
-default is taken from the binary reel header, and for SU files, from
-the header of the first trace. This parameter is however critical
-enough that a command line override was given for it.
-
-* verbose= is the verbosity flag. Can be y or n.
-
-* endian= is a y/n flag (default y), specifying whether to
-automatically estimate or not if samples in the Trace Data blocks are
-big-endian or little-endian. Try it if you are in trouble and do not
-know what else to do, otherwise let the automatic estimation do its
-job.
-\end{comment}
+Extend the data in the third dimension
+\begin{verbatim}
+bash$ < test.rsf sfspray axis=3 n=2 > test3.rsf
+bash$ sfin test3.rsf
+test3.rsf:
+    in="/var/tmp/test3.rsf@"
+    esize=4 type=float form=native 
+    n1=5           d1=1           o1=0          
+    n2=2           d2=1           o2=0          
+    n3=2           d3=?           o3=?          
+        20 elements 80 bytes
+bash$ < test3.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             1            2            3            4            5
+  10:             0            1            2            3            4
+  15:             1            2            3            4            5
+\end{verbatim}
+The output is also three-dimensional, with the original data replicated
+along the third axis.
 
 \bibliographystyle{seg}
 \bibliography{SEG}
