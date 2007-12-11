@@ -160,7 +160,7 @@ def identify_platform(context):
         name = uname()[2].split('.')[-1]
         if plat['OS'] == 'linux':
             if name[:2] == 'fc':
-                plat['distro'] = 'fc' # Fedora Core
+                plat['distro'] = 'fedora'
             elif name[:2] == 'EL':
                 plat['distro'] = 'EL' # Redhat Enterprise
             elif name[-7:] == 'generic':
@@ -181,7 +181,7 @@ def identify_platform(context):
              # commands through os.system to find distro/version
     context.Result('%(OS)s [%(distro)s]' % plat)
 
-package['gcc'] = {'fc':'gcc'}
+package['gcc'] = {'fedora':'gcc'}
 package['libc'] = {'generic':'libc6-dev'}
 
 # A C compiler is needed by most Madagascar programs
@@ -240,7 +240,7 @@ def cc(context):
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
 
-package['ar']={'fc':'binutils'}
+package['ar']={'fedora':'binutils'}
 
 
 # Used for building libraries.
@@ -254,7 +254,7 @@ def ar(context):
         context.Result(context_failure)
         needed_package('ar')
 
-package['libs'] = {'fc':'glibc-headers',
+package['libs'] = {'fedora':'glibc-headers',
                    'cygwin':'sunrpc (Setup...Libs)'}
 
 # Failing this check stops the installation.
@@ -286,7 +286,7 @@ def libs(context):
         context.Result(context_failure)
         needed_package('libs')
 
-package['c99'] = {'fc':'glibc-headers'}
+package['c99'] = {'fedora':'glibc-headers'}
 
 # Complex number support according to ISO C99 standard
 def c99(context):
@@ -373,7 +373,7 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
-package['xaw']={'fc':'libXaw-devel',
+package['xaw']={'fedora':'libXaw-devel',
                 'generic':'libxaw7-dev'}
 
 # If this check is failed 
@@ -450,7 +450,7 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
-package['netpbm'] = {'fc':'netpbm-devel',
+package['netpbm'] = {'fedora':'netpbm-devel',
                      'generic':'libnetpbm10-dev',
                      'darwin':'netpbm (fink)',
                      'cygwin':'libnetpbm-devel (Setup...Devel)'}
@@ -483,7 +483,7 @@ def ppm(context):
         needed_package('netpbm',0)
         context.env['PPM'] = None
 
-package['jpeg'] = {'fc':'libjpeg-devel',
+package['jpeg'] = {'fedora':'libjpeg-devel',
                    'generic':'libjpeg62-dev'}
 
 # If this test is failed, no writing to jpeg files
@@ -547,7 +547,7 @@ def blas(context):
         LIBS.pop()
         context.env['BLAS'] = None
 
-package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
+package['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
 def mpi(context):
     context.Message("checking for MPI ... ")
@@ -651,7 +651,7 @@ def api_options(context):
     context.env['API'] = api
     return api
 
-package['c++'] = {'fc':'gcc-c++',
+package['c++'] = {'fedora':'gcc-c++',
                   'generic':'g++'}
 
 # For the C++ API
@@ -692,7 +692,7 @@ fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran', # used to be f2cFortran
            'f2c':'f2cFortran'}
 
-package['f77'] = {'fc':'gcc-gfortran',
+package['f77'] = {'fedora':'gcc-gfortran',
                   'generic':'g77'}
 
 def f77(context):
@@ -735,7 +735,7 @@ def f77(context):
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
 
-package['f90'] = {'fc':'gcc-gfortran',
+package['f90'] = {'fedora':'gcc-gfortran',
                   'generic':'gfortran'}
 
 def f90(context):
@@ -842,9 +842,9 @@ def matlab(context):
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
-package['swig'] = {'fc':'swig',
+package['swig'] = {'fedora':'swig',
                    'generic':'swig'}
-package['numpy'] = {'fc':'numpy',
+package['numpy'] = {'fedora':'numpy',
                     'generic':'python-scipy, python-numpy-dev'}
 
 def python(context):
