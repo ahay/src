@@ -86,28 +86,28 @@ if 'c++' in api:
 
     for ccfile in ['getpar','file']:
         test = 'Test' + ccfile + '.cc'
-        
+
         env.Program([test,libcc,lib],
                     OBJSUFFIX='++.o',CPPPATH='../../include',
                     PROGSUFFIX='++.x',PROGPREFIX='')
-        
+
 ##############################################################################
 # FORTRAN-77 BINDING
 ##############################################################################
 if 'f77' in api:
     env.Object('fortran.o','fortran.c',
                CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
-    libf = env.StaticLibrary('rsff','fortran.o')                         
-    
+    libf = env.StaticLibrary('rsff','fortran.o')
+
     if root:
         env.Install(libdir,libf)
-        
+
     for ffile in ['getpar','file']:
         test = 'Test' + ffile + '.f'
         env.Program([test,libf,lib],PROGSUFFIX='f.x',PROGPREFIX='',
                     OBJSUFFIX='f.o',
                     LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
-        
+
 ##############################################################################
 # FORTRAN-90 BINDING
 ##############################################################################
@@ -128,13 +128,13 @@ if 'f90' in api and env.has_key('F90'):
     mod = objf90[1]
 
     installf90 = env.Install('../../include',mod)
-             
+
     if root:
         env.Install(incdir,mod)
         env.Install(libdir,libf90)
     else:
         env.Alias('install',installf90)
-            
+
     for f90file in ['getpar','file']:
         test = 'Test' + f90file + '.f90'
         env.Program([test,libf90,lib],
@@ -182,12 +182,12 @@ if 'python' in api:
             pydir = re.sub('lib(?:64)?','include',path)
             if os.path.isdir(pydir):
                 pythinc.append(pydir)
-                
+
     if root:
         ifile = '#/filt/lib/rsf.i'
     else:
         ifile = 'rsf.i'
-        
+
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
@@ -216,6 +216,17 @@ if 'matlab' in api:
         if root:
             env.Install(libdir,mexfile)
 
+##############################################################################
+# OCTAVE BINDING
+##############################################################################
+
+if root:
+    octdir = os.path.join(libdir,'octave')
+    for inp in Split('dim create'): # par, read and write coming soon
+        env.Install(octdir, 'rsf_'+inp+'.m')
+
+#if 'octave' in api:
+#    install those that actually have an Octave dependency. Coming soon
 ##############################################################################
 # LINT
 ##############################################################################

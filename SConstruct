@@ -25,7 +25,7 @@ if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
     conf.CheckAll()
     env = conf.Finish()
-    
+
 Help(opts.GenerateHelpText(env))
 opts.Save('config.py',env)
 
@@ -113,5 +113,9 @@ rsfuser = os.path.join(libdir,'rsfuser')
 env.Install(rsfuser,'__init__.py')
 
 env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir])
+
+# Needed so that 'scons -c install' removes these directories:
+env.Clean('install', rsfuser)
+env.Clean('install', os.path.join(libdir,'octave'))
 
 # 	$Id$

@@ -106,7 +106,7 @@ def needed_package(type,fatal=1):
 # are found further down, in the order they are called
 # FDNSI = Failure Does Not Stop Installation
 def check_all(context):
-    
+
     identify_platform(context)
     cc  (context)
     ar  (context)
@@ -127,6 +127,8 @@ def check_all(context):
         f90(context)
     if 'matlab' in api:
         matlab(context)
+    if 'octave' in api:
+        octave(context)
     if 'python' in api:
         python(context)
 
@@ -592,7 +594,7 @@ def omp(context):
         CCFLAGS = flags + ' -openmp'
     else:
         CCFLAGS = flags
-    
+
     text = '''
     #include <omp.h>
     int main(void) {
@@ -621,7 +623,7 @@ def api_options(context):
     context.Message("checking API options ... ")
     api = string.split(string.lower(context.env.get('API','')),',')
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
-                         'f90', 'python', 'matlab']
+                         'f90', 'python', 'matlab', 'octave']
 
     for option in api:
         if not option in valid_api_options:
@@ -642,8 +644,7 @@ def api_options(context):
     except:
         pass # Not a big deal if this is not done
 
-    # Readable output. For non-pythonistas,
-    # [''] represents an emoticon, not "empty list"
+    # Improve output readability
     if api == ['']:
         context.Result('none')
     else:
@@ -689,7 +690,7 @@ def cxx(context):
 
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
-           'gfortran':'NAGf90Fortran', # used to be f2cFortran
+           'gfortran':'NAGf90Fortran',
            'f2c':'f2cFortran'}
 
 package['f77'] = {'fedora':'gcc-gfortran',
@@ -842,6 +843,23 @@ def matlab(context):
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
+
+package['octave'] = {'fedora':'octave',
+                     'generic':'octave'}
+
+def octave(context):
+    context.Message("checking for Octave ... ")
+    octave = WhereIs('octave')
+    if octave:
+        context.Result(octave)
+        context.env['OCTAVE'] = octave
+    else:
+        context.Result(context_failure)
+        stderr_write('Please install Octave.')
+        needed_package('octave')
+        sys.exit(unix_failure)
+
+
 package['swig'] = {'fedora':'swig',
                    'generic':'swig'}
 package['numpy'] = {'fedora':'numpy',
@@ -929,7 +947,8 @@ def options(opts):
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
     opts.Add('MEXSUFFIX','Suffix for mex files')
     opts.Add('MEX','Mex cmd')
-    opts.Add('MATLAB','Matlab program')
+    opts.Add('MATLAB','The Matlab interpreter')
+    opts.Add('OCTAVE','The Octave interpreter')
     opts.Add('PYMODULES','List of Python modules available')
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
