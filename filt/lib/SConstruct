@@ -222,7 +222,7 @@ if 'matlab' in api:
 
 if root:
     octdir = os.path.join(libdir,'octave')
-    for inp in Split('dim create'): # par, read and write coming soon
+    for inp in Split('dim create par'): # read and write coming soon
         env.Install(octdir, 'rsf_'+inp+'.m')
 
 #if 'octave' in api:
