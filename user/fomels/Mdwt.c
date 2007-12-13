@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     /* if y, use unitary scaling */
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* [haar,linear] wavelet type, the default is linear  */
+    /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
     wavelet_init(n1,inv,unit,type[0]);
 

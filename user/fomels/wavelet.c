@@ -25,6 +25,152 @@ static bool inv, unit;
 static void (*transform)(bool);
 static float *t, *w;
 
+static void biorthogonal(bool adj) 
+/* Lifting CDF 9/7 biorthogonal wavelet transform in place */
+{
+    int i,j;
+    float a;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    if (inv) {                            /*reverse dwt9/7 transform*/
+                a= 1.230174105f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]  /= a;
+	        }
+	        t[0] /= a;                         /*left boundary*/
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] *= a;
+		    /* Undo Scale */
+	        }
+	        if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+
+                a= -0.4435068522f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]   += (t[i+j]+t[i-j])*a;
+		    /* Undo Update 2 */
+	        }
+	        t[0] += 2*a*t[j];                  /*left boundary*/
+
+	        a = -0.8829110762f;
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] += (t[i]+t[i+2*j])*a;
+		    /* Undo Predict 2 */
+	        }	 
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+                    /* Undo Step 2 */
+
+                a= 0.05298011854f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]   += (t[i+j]+t[i-j])*a;
+		    /* Undo Update 1 */
+	        }
+	        t[0] += 2*a*t[j];                  /*left boundary*/ 
+
+	        a = 1.586134342f;
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] += (t[i]+t[i+2*j])*a;
+		    /* Undo Predict 1 */
+	        }	 
+	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+                    /* Undo Step 1 */
+
+
+	    } else {                               /*adjoint transform*/
+                a= 1.230174105f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]  *= a;
+	        }
+	        t[0] *= a;                         /*left boundary*/
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] /= a;
+		    /* Undo Scale */
+	        }
+	        if (i+j < nt) t[i+j] /= a;         /*right boundary*/  
+
+                a= -0.4435068522f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i+j]   -= t[i]*a;
+                    t[i-j]   -= t[i]*a;
+		    /* Undo Update 2 */
+	        }
+	        t[j] -= 2*a*t[0];                  /*left boundary*/
+
+	        a = -0.8829110762f;
+	        for (i=0; i < nt-2*j; i += 2*j) {
+                    t[i]     -= t[i+j]*a;
+                    t[i+2*j] -= t[i+j]*a;
+		    /* Undo Predict 2 */
+	        }	 
+	        if (i+j < nt) t[i] -= 2*a*t[i+j];  /*right boundary*/  
+                    /* Undo Step 2 */
+
+                a= 0.05298011854f;
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i+j]   -= t[i]*a;
+                    t[i-j]   -= t[i]*a;
+		    /* Undo Update 1 */
+	        }
+	        t[j] -= 2*a*t[0];                  /*left boundary*/ 
+
+	        a = 1.586134342f;
+	        for (i=0; i < nt-2*j; i += 2*j) {
+                    t[i]     -= t[i+j]*a;
+                    t[i+2*j] -= t[i+j]*a;
+		    /* Undo Predict 1 */
+	        }	 
+	        if (i+j < nt) t[i] -= 2*a*t[i+j];  /*right boundary*/  
+                    /* Undo Step 1 */
+
+	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {        /*different scale*/
+	    a = -1.586134342f;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] += (t[i]+t[i+2*j])*a;
+		/* Predict 1 */
+	    }	 
+	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+ 
+            a= -0.05298011854f;
+	    t[0] += 2*a*t[j];                  /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i-j])*a;
+		/* Update 1 */
+	    }
+                /* Step 1 */
+
+	    a = 0.8829110762f;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] += (t[i]+t[i+2*j])*a;
+		/* Predict 2 */
+	    }	 
+	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+ 
+            a= 0.4435068522f;
+	    t[0] += 2*a*t[j];                  /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i-j])*a;
+		/* Update 2 */
+	    }
+                /* Step 2 */
+
+            a= 1/(1.230174105f);
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] *= a;
+	    }	 
+	    if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+	    t[0] /= a;                         /*left boundary*/
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]  /= a;
+		/* Scale */
+	    }
+	}
+    }
+
+}
+
 static void linear(bool adj) 
 /* Lifting linear-interpolation transform in place */
 {
@@ -116,6 +262,10 @@ void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type)
 	case 'l':
 	    transform = linear;
 	    break;
+	case 'b':
+	    transform = biorthogonal;
+	    break;
+
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
 	    break;
