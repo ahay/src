@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     /* if y, use unitary scaling */
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* [haar,linear] wavelet type, the default is linear  */
+    /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
     seislet_init(n1,n2,inv,unit,eps,type[0]);
     seislet_set(dd);

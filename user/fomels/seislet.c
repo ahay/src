@@ -254,6 +254,354 @@ static void linear(bool adj)
     }
 }
 
+static void biorthogonal(bool adj)
+{
+    int i, j, i1;
+    float a;    
+    if (adj) {
+	for (j=1; j <= nt/2; j *= 2) {
+	    if (inv) {
+
+		a = -1.586134342f;
+	    	for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+                        t1[i1] = t[i][i1];
+                        t2[i1] = t[i+2*j][i1];
+                    }
+		    predict_forw(false,t1,i,j);
+		    predict_back(false,t2,i+j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Predict 1 */
+                    }
+	        }	 
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(false,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		    }		    
+		}
+                a= -0.05298011854f;
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(false,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+                }
+
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(false,t1,i,j);
+		    predict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Update 1 */
+                    }
+	        }
+                /* Step 1 */
+		a = 0.8829110762f;
+	    	for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+                        t1[i1] = t[i][i1];
+                        t2[i1] = t[i+2*j][i1];
+                    }
+		    predict_forw(false,t1,i,j);
+		    predict_back(false,t2,i+j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Predict 2 */
+                    }
+	        }	 
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(false,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		    }		    
+		}
+                a= 0.4435068522f;
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(false,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+                }
+
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(false,t1,i,j);
+		    predict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Update 2 */
+                    }
+	        }
+                /* Step 2 */
+
+
+                a= 1/(1.230174105f);
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] *= a;
+                    }
+	        }
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] *= a;  /*right boundary*/  
+		    }		    
+		}
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] /= a;        /*left boundary*/
+                }
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] /= a;
+                    }
+	        }
+		       /* Scale */
+	    } else {
+
+		a = -1.586134342f;
+	    	for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+                        t1[i1] = t[i][i1];
+                        t2[i1] = t[i+2*j][i1];
+                    }
+		    predict_forw(true,t1,i,j);
+		    predict_back(true,t2,i+j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Predict 1 */
+                    }
+	        }	 
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(true,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		    }		    
+		}
+                a= -0.05298011854f;
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(true,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+                }
+
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(true,t1,i,j);
+		    predict_forw(true,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Update 1 */
+                    }
+	        }
+                /* Step 1 */
+		a = 0.8829110762f;
+	    	for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+                        t1[i1] = t[i][i1];
+                        t2[i1] = t[i+2*j][i1];
+                    }
+		    predict_forw(true,t1,i,j);
+		    predict_back(true,t2,i+j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Predict 2 */
+                    }
+	        }	 
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(true,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		    }		    
+		}
+                a= 0.4435068522f;
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(true,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+                }
+
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(true,t1,i,j);
+		    predict_forw(true,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+		        t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Update 2 */
+                    }
+	        }
+                     /* Step 2 */
+                a= 1/(1.230174105f);
+	        for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] *= a;
+                    }
+	        }
+	        if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+                        t[i+j][i1] *= a;  /*right boundary*/  
+		    }		    
+		}
+		for (i1=0; i1 < n; i1++) {
+	            t[0][i1] /= a;        /*left boundary*/
+                }
+	        for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+		        t[i+j][i1] /= a;
+                    }
+	        }
+  		       /* Scale */
+	    }
+
+	}
+    } else {
+	for (j=nt/2; j >= 1; j /= 2) {
+
+            a= 1.230174105f;
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] /= a;
+                }
+	    }
+            for (i1=0; i1 < n; i1++) {
+	        t[0][i1] /= a;        /*left boundary*/
+            }
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] *= a;
+                }
+	    }
+	    if (i+j < nt) {
+		for (i1=0; i1 < n; i1++) {
+                    t[i+j][i1] *= a;  /*right boundary*/  
+		}		    
+            }
+		    /* Undo Scale */
+
+            a= -0.4435068522f;
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+	            t1[i1] = t[i+j][i1];
+		    t2[i1] = t[i-j][i1];
+		}
+		predict_back(false,t1,i,j);
+		predict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Undo Update 2 */
+                }
+	    }
+            for (i1=0; i1 < n; i1++) {
+		t1[i1] = t[j][i1];
+	    }
+	    predict_back(false,t1,0,j);
+	    for (i1=0; i1 < n; i1++) {
+	        t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+            }
+
+	    a = -0.8829110762f;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+                    t1[i1] = t[i][i1];
+                    t2[i1] = t[i+2*j][i1];
+                }
+		predict_forw(false,t1,i,j);
+		predict_back(false,t2,i+j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Undo Predict 2 */
+                }
+	    }	 
+	    if (i+j < nt) {
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i][i1];
+		}
+		predict_forw(false,t1,i,j);
+		for (i1=0; i1 < n; i1++) {
+                    t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		}		    
+	    }
+                   /* Undo Step 2 */
+
+            a= 0.05298011854f;
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+	            t1[i1] = t[i+j][i1];
+		    t2[i1] = t[i-j][i1];
+		}
+		predict_back(false,t1,i,j);
+		predict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i][i1] += (t1[i1]+t2[i1])*a;
+		        /* Undo Update 1 */
+                }
+	    }
+            for (i1=0; i1 < n; i1++) {
+		t1[i1] = t[j][i1];
+	    }
+	    predict_back(false,t1,0,j);
+	    for (i1=0; i1 < n; i1++) {
+	        t[0][i1] += 2*a*t1[i1];      /*left boundary*/
+            }
+	    a = 1.586134342f;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+                    t1[i1] = t[i][i1];
+                    t2[i1] = t[i+2*j][i1];
+                }
+		predict_forw(false,t1,i,j);
+		predict_back(false,t2,i+j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] += (t1[i1]+t2[i1])*a;
+		         /* Undo Predict 1 */
+                }
+	    }	 
+	    if (i+j < nt) {
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i][i1];
+		}
+		predict_forw(false,t1,i,j);
+		for (i1=0; i1 < n; i1++) {
+                    t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
+		}		    
+	    }
+                   /* Undo Step 1 */
+	}
+    }
+}
+
+
 void seislet_init(int n1      /* trace length */, 
 		  int n2      /* number of traces */, 
 		  bool inv1   /* inversion flag */, 
@@ -282,6 +630,9 @@ void seislet_init(int n1      /* trace length */,
 	    break;
 	case 'l':
 	    transform = linear;
+	    break;
+	case 'b':
+	    transform = biorthogonal;
 	    break;
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
