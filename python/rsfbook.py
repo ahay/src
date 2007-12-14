@@ -52,6 +52,8 @@ full = {
     'SEP': 'Stanford Exploration Project'
     }
 
+prefs = ('abs','pref','ack')
+
 def get_year(default):
     year = default
     if not year:
@@ -184,6 +186,44 @@ def report_tpg(target=None,source=None,env=None):
     tpg.close()
     return 0
 
+def thesis_tpg(target=None,source=None,env=None):
+    "Build the title page for a thesis"
+    tpg = open(str(target[0]),'w')
+    tpg.write('%% This file is automatocally generated, DO NOT EDIT\n\n')
+    author = env.get('author')
+    if author:
+        tpg.write('\\vfill\n\\author{%s}\n' % author)
+    title = env.get('title')
+    if title:
+        tpg.write('\\vfill\n\\title{%s}\n' % title)
+    year = get_year(env.get('year'))
+    tpg.write('\\copyrightyear{%s}\n' % year)
+    tpg.write('\\dept{Geophysics}\n')
+    tpg.close()
+    return 0
+
+def thesis_intro(target=None,source=None,env=None):
+    "Build the introductory part of a thesis"
+    intro = open(str(target[0]),'w')
+    intro.write('%% This file is automatocally generated, DO NOT EDIT\n\n')
+    committee = env.get('committee')
+    if committee:
+        for i in range(4):
+            if len(committee) > i:            
+                intro.write('\\%s{%s}\n' %
+                            (('principaladviser','firstreader','secondreader','thirdreader')[i],
+                             committee[i]))
+    intro.write('\\beforepreface\n')
+    intro.write('\\newpage \\ \n')
+    for pref in prefs:
+        tex = pref+'.tex'
+        if os.path.isfile(tex): # input if file exists
+            print "Found %s" % tex
+            intro.write('\\input{%s}\n' % pref)
+    intro.write('\\afterpreface\n')
+    intro.close()
+    return 0
+
 def report_bio(target=None,source=None,env=None):
     "Build author biographies"
     bio = open(str(target[0]),'w')
@@ -224,9 +264,10 @@ def report_all(target=None,source=None,env=None):
     "Build the main paper"
     all = open(str(target[0]),'w')
     grp = env.get('group',full.get(group))
+    rep = env.get('report',report)
     map(all.write,
         ['%% This file is automatocally generated, DO NOT EDIT\n\n',
-         '\\renewcommand{\\REPORT}{%s}\n' % report,
+         '\\renewcommand{\\REPORT}{%s}\n' % rep,
          '\\renewcommand{\\GROUP}{%s}\n' % grp,
          '\\renewcommand{\\thepage}{}\n',
          include('tpg','\\cleardoublepage'),
@@ -249,10 +290,14 @@ def report_all(target=None,source=None,env=None):
         resdir = resdirs.get(tag[0],'Fig')
         all.write('\\setfigdir{%s}' % resdir)
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
-        all.write('\\cleardoublepage')
+        all.write('\\cleardoublepage\n')
     all.write('%% end of paper list\n')
     for tex in misc.keys():
         all.write(include(os.path.splitext(tex)[0]))
+    biblio = env.get('biblio')
+    if biblio:
+        all.write('\\newpage\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
+                  % biblio)
     all.close()
     return 0
 
@@ -345,8 +390,38 @@ class RSFReport(Environment):
                            (os.path.splitext(os.path.basename(x))[0],target),
                            papers)
             self.Tour(target+'s',papers,command=comm)
-    def End(self,**kw):
-        kw.update({'lclass':'georeport'})
+    def Thesis(self,chapters,**kw):
+        # get list of chapters
+        for i in range(len(chapters)):
+            chapter = chapters[i]
+            # add suffix if missing
+            if chapter[-4:] != '.tex':
+                chapters[i] = chapter + '/paper.tex'
+        # make title page
+        kw.update({'action':Action(thesis_tpg),
+                   'varlist':['author','title','year']})
+        apply(self.Command,('tpg.tex',None),kw)
+        rsftex.Paper('tpg',lclass='stanford-thesis',scons=0)
+        # make introductory materials
+        kw.update({'action':Action(thesis_intro),
+                   'varlist':['committee']})
+        apply(self.Command,('intro.tex',None),kw)
+        rsftex.Paper('intro',lclass='stanford-thesis',scons=0)
+        for pref in prefs:
+            tex = pref+'.tex'
+            if os.path.isfile(tex):
+                self.Depends('intro.tex',tex)
+        # make report
+        kw.update({'action':Action(report_all),
+                   'varlist':['group','resdirs','biblio','report']})
+        apply(self.Command,('book.tex',chapters),kw)
+        self.Depends('book.tex','tpg.tex')
+        self.Depends('book.tex','intro.tex')
+        for target in ('html','pdf','install'):	
+            comm = 'scons -Q ' + target
+            self.Tour(target+'s',chapters,command=comm)
+    def End(self,lclass='georeport',**kw):
+        kw.update({'lclass':lclass})
         apply(rsftex.Paper,('book',),kw)
         self.Alias('pdf','book.pdf')
         self.Depends('book.pdf','pdfs')
@@ -367,8 +442,10 @@ class RSFReport(Environment):
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
     return apply(book.Papers,(papers,),kw)
-def End(**kw):
-    return apply(book.End,(),kw)
+def Thesis(chapters=glob.glob('[a-z]*/paper.tex'),**kw):
+    return apply(book.Thesis,(chapters,),kw)
+def End(lclass='georeport',**kw):
+    return apply(book.End,(lclass,),kw)
 
 
 
