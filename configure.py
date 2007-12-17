@@ -848,13 +848,26 @@ def matlab(context):
 package['octave'] = {'fedora':'octave',
                      'generic':'octave'}
 
+package['mkoctave'] = {'fedora':'octave-devel',
+                       'generic':'octave-headers'}
+
 def octave(context):
     context.Message("checking for Octave ... ")
     octave = WhereIs('octave')
     if octave:
         context.Result(octave)
         context.env['OCTAVE'] = octave
-    else:
+        context.Message("checking for mkoctfile ... ")
+        mkoctfile = WhereIs('mkoctfile')
+        if mkoctfile:
+            context.Result(mkoctfile)
+            context.env['MKOCTFILE'] = mkoctfile
+        else:
+            context.Result(context_failure)
+            stderr_write('Please install mkoctfile.')
+            needed_package('mkoctfile')
+            sys.exit(unix_failure)
+    else: # octave not found
         context.Result(context_failure)
         stderr_write('Please install Octave.')
         needed_package('octave')
