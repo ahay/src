@@ -587,11 +587,12 @@ def omp(context):
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
-        LIBS.append('gomp')
+#        LIBS.append('gomp')
+        CCFLAGS = flags + ' -fopenmp'
     if icc:
         LIBS.append('guide')
         LIBS.append('pthread')
-        CCFLAGS = flags + ' -openmp'
+        CCFLAGS = flags + ' -openmp -D_OPENMP'
     else:
         CCFLAGS = flags
 
@@ -605,7 +606,7 @@ def omp(context):
     }
     '''
     context.env['LIBS'] = LIBS
-    context.env['CCFLAGS'] = CCFLAGS + ' -D_OPENMP'
+    context.env['CCFLAGS'] = CCFLAGS
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
