@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
     pp = sf_complexalloc(n1);
     qq = sf_complexalloc(n1w);
-    if (niter > 0) {
+    if (ncycle > 0) {
 	ww = sf_floatalloc(n1w);
 	cweight_init(ww);
     } else {
@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
 	freqlets_lop(adj,false,n1w,n1,qq,pp);
 
 	if (adj) {
+	    /* do inversion if ncycle > 0 */
 	    for (i=0; i < ncycle; i++) {	    
 		/* weight by absolute value */
 		for (i1=0; i1 < n1w; i1++) {

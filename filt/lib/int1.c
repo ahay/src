@@ -95,6 +95,39 @@ void  sf_int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
     }
 }
 
+void  sf_cint1_lop (bool adj, bool add, int nm, int ny, sf_complex* x, sf_complex* ord)
+/*< linear operator for complex numbers >*/
+{ 
+    int id, i0, i, im;
+    
+    if (ny != nd) sf_error("%s: wrong data size: %d != %d",__FILE__,ny,nd);
+
+    sf_cadjnull (adj,add,nm,nd,x,ord);
+
+    for (id=0; id < nd; id++) {
+	if (mask[id]) continue;
+	i0 = nx[id];
+
+	for (i = SF_MAX(0,-i0); i < SF_MIN(nf,m1-i0); i++) { 
+	    im = i+i0;
+	    if( adj) { 
+#ifdef SF_HAS_COMPLEX_H
+		x[im] += ord[id] * w1[id][i];
+#else
+		x[im] = sf_cadd(x[im],sf_crmul(ord[id],w1[id][i]));
+#endif
+	    } else {
+#ifdef SF_HAS_COMPLEX_H
+		ord[id] += x[im] * w1[id][i];
+#else
+		ord[id] = sf_cadd(ord[id],sf_crmul(x[im],w1[id][i]));
+#endif
+	    }
+	}
+    }
+}
+
+
 void sf_int1_close (void)
 /*< free allocated storage >*/
 {
