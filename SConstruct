@@ -113,9 +113,6 @@ rsfuser = os.path.join(libdir,'rsfuser')
 env.Install(rsfuser,'__init__.py')
 
 env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir])
-
-# Needed so that 'scons -c install' removes these directories:
 env.Clean('install', rsfuser)
-env.Clean('install', os.path.join(libdir,'octave'))
 
 # 	$Id$

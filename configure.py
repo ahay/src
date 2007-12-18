@@ -13,6 +13,7 @@ else:  # old style
 # CONSTANTS -- DO NOT CHANGE
 context_success = 1
 context_failure = 0
+py_success = 0 # user-defined
 unix_failure = 1
 
 # Make sure error messages stand out visually
@@ -45,7 +46,7 @@ def header(target=None,source=None,env=None):
             out.write('/*'+extract[1]+'*/\n\n')
     out.write('#endif\n')
     out.close()
-    return 0
+    return py_success
 
 Header = Builder (action = Action(header,varlist=['prefix']),
                   src_suffix='.c',suffix='.h')
@@ -92,21 +93,20 @@ plat = {'OS': 'unknown',
         'distro': 'unknown',
         'arch': 'unknown',
         'cpu': 'unknown'}
-package = {}
+pkg = {}
 
-def needed_package(type,fatal=1):
-    global package, plat
-    pack = package[type].get(plat['distro'])
-    if pack:
-        stderr_write('Needed package: ' + pack)
+def need_pkg(type,fatal=True):
+    global pkg, plat
+    mypkg = pkg[type].get(plat['distro'])
+    if mypkg:
+        stderr_write('Needed package: ' + mypkg)
     if fatal:
         sys.exit(unix_failure)
 
-# The functions called inside check_all
-# are found further down, in the order they are called
-# FDNSI = Failure Does Not Stop Installation
+
 def check_all(context):
 
+    # FDNSI = Failure Does Not Stop Installation
     identify_platform(context)
     cc  (context)
     ar  (context)
@@ -135,7 +135,6 @@ def check_all(context):
 def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
-    # Hey everybody, add a test for your platform here!
 
     # Check for OS or Unix environment
     if sys.platform[:5] == 'linux':
@@ -183,8 +182,9 @@ def identify_platform(context):
              # commands through os.system to find distro/version
     context.Result('%(OS)s [%(distro)s]' % plat)
 
-package['gcc'] = {'fedora':'gcc'}
-package['libc'] = {'generic':'libc6-dev'}
+pkg['gcc'] = {'fedora':'gcc'}
+pkg['libc'] = {'fedora':'glibc',
+               'generic':'libc6-dev'}
 
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
@@ -195,7 +195,7 @@ def cc(context):
         context.Result(CC)
     else:
         context.Result(context_failure)
-        needed_package('gcc')
+        need_pkg('gcc')
     text = '''
     int main(int argc,char* argv[]) {
     return 0;
@@ -205,7 +205,7 @@ def cc(context):
     res = context.TryLink(text,'.c')
     context.Result(res)
     if not res:
-        needed_package('libc')
+        need_pkg('libc')
     if string.rfind(CC,'gcc') >= 0:
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
@@ -242,8 +242,7 @@ def cc(context):
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
 
-package['ar']={'fedora':'binutils'}
-
+pkg['ar']={'fedora':'binutils'}
 
 # Used for building libraries.
 def ar(context):
@@ -254,10 +253,10 @@ def ar(context):
         context.env['AR'] = AR
     else:
         context.Result(context_failure)
-        needed_package('ar')
+        need_pkg('ar')
 
-package['libs'] = {'fedora':'glibc-headers',
-                   'cygwin':'sunrpc (Setup...Libs)'}
+pkg['libs'] = {'fedora':'glibc-headers',
+               'cygwin':'sunrpc (Setup...Libs)'}
 
 # Failing this check stops the installation.
 def libs(context):
@@ -286,9 +285,9 @@ def libs(context):
         context.env['LIBS'] = LIBS
     else:
         context.Result(context_failure)
-        needed_package('libs')
+        need_pkg('libs')
 
-package['c99'] = {'fedora':'glibc-headers'}
+pkg['c99'] = {'fedora':'glibc-headers'}
 
 # Complex number support according to ISO C99 standard
 def c99(context):
@@ -309,7 +308,7 @@ def c99(context):
     else:
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(context_failure)
-        needed_package('c99',0)
+        need_pkg('c99', fatal=False)
 
 # The two lists below only used in the x11 check
 xinc = [
@@ -375,10 +374,10 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
-package['xaw']={'fedora':'libXaw-devel',
-                'generic':'libxaw7-dev'}
+pkg['xaw']={'fedora':'libXaw-devel',
+            'generic':'libxaw7-dev'}
 
-# If this check is failed 
+# If this check is failed
 # you may not be able to display .vpl images on the screen
 def x11(context):
     text = '''
@@ -410,7 +409,7 @@ def x11(context):
     if not res:
         context.Result(context_failure)
         stderr_write('xtpen (for displaying .vpl images) will not be built.')
-        needed_package('xaw',0)
+        need_pkg('xaw', fatal=False)
         context.env['XINC'] = None
         return
 
@@ -452,10 +451,10 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
-package['netpbm'] = {'fedora':'netpbm-devel',
-                     'generic':'libnetpbm10-dev',
-                     'darwin':'netpbm (fink)',
-                     'cygwin':'libnetpbm-devel (Setup...Devel)'}
+pkg['netpbm'] = {'fedora':'netpbm-devel',
+                 'generic':'libnetpbm10-dev',
+                 'darwin':'netpbm (fink)',
+                 'cygwin':'libnetpbm-devel (Setup...Devel)'}
 
 def ppm(context):
     context.Message("checking for ppm ... ")
@@ -473,7 +472,7 @@ def ppm(context):
 	
 	if res:
 	    context.Result(res)
-	    context.env['PPM'] = ppm           
+	    context.env['PPM'] = ppm
 	    break
 	else:
 	    LIBS.pop()
@@ -482,11 +481,11 @@ def ppm(context):
         LIBS.pop()
     else:
         context.Result(context_failure)
-        needed_package('netpbm',0)
+        need_pkg('netpbm', fatal=False)
         context.env['PPM'] = None
 
-package['jpeg'] = {'fedora':'libjpeg-devel',
-                   'generic':'libjpeg62-dev'}
+pkg['jpeg'] = {'fedora':'libjpeg-devel',
+               'generic':'libjpeg62-dev'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -510,7 +509,7 @@ def jpeg(context):
     else:
         context.Result(context_failure)
         stderr_write('sfbyte2jpg will not be built.')
-        needed_package('jpeg',0)
+        need_pkg('jpeg', fatal=False)
         context.env['JPEG'] = None
 
     LIBS.pop()
@@ -549,7 +548,7 @@ def blas(context):
         LIBS.pop()
         context.env['BLAS'] = None
 
-package['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
+pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
 def mpi(context):
     context.Message("checking for MPI ... ")
@@ -576,8 +575,10 @@ def mpi(context):
         context.env['MPICC'] = mpicc
     else:
         context.Result(context_failure)
-        needed_package('mpi',0)
+        need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
+
+pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
     context.Message("checking for OpenMP ... ")
@@ -611,7 +612,8 @@ def omp(context):
     if res:
         context.Result(res)
     else:
-        context.Result(context_failure)        
+        context.Result(context_failure)
+        need_pkg('omp', fatal=False)
         if gcc:
             LIBS.pop()
         if icc:
@@ -623,6 +625,7 @@ def omp(context):
 def api_options(context):
     context.Message("checking API options ... ")
     api = string.split(string.lower(context.env.get('API','')),',')
+
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
                          'f90', 'python', 'matlab', 'octave']
 
@@ -651,10 +654,13 @@ def api_options(context):
     else:
         context.Result(str(api))
     context.env['API'] = api
+
+    context.env['APIFORCE'] = bool(context.env.get('APIFORCE',''))
+
     return api
 
-package['c++'] = {'fedora':'gcc-c++',
-                  'generic':'g++'}
+pkg['c++'] = {'fedora':'gcc-c++',
+              'generic':'g++'}
 
 # For the C++ API
 def cxx(context):
@@ -664,7 +670,7 @@ def cxx(context):
         context.Result(CXX)
     else:
         context.Result(context_failure)
-        needed_package('c++')
+        need_pkg('c++')
     context.Message("checking if %s works ... " % CXX)
     text = '''
     #include <valarray>
@@ -688,14 +694,13 @@ def cxx(context):
         if not res:
             context.env['CXXFLAGS'] = oldflag
 
-
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran',
            'f2c':'f2cFortran'}
 
-package['f77'] = {'fedora':'gcc-gfortran',
-                  'generic':'g77'}
+pkg['f77'] = {'fedora':'gcc-gfortran',
+              'generic':'g77'}
 
 def f77(context):
     context.Message("checking for F77 compiler ... ")
@@ -714,8 +719,7 @@ def f77(context):
         context.Result(F77)
     else:
         context.Result(context_failure)
-        needed_package('f77')
-        sys.exit(unix_failure)
+        need_pkg('f77')
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
@@ -737,8 +741,8 @@ def f77(context):
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
 
-package['f90'] = {'fedora':'gcc-gfortran',
-                  'generic':'gfortran'}
+pkg['f90'] = {'fedora':'gcc-gfortran',
+              'generic':'gfortran'}
 
 def f90(context):
     context.Message("checking for F90 compiler ... ")
@@ -757,7 +761,7 @@ def f90(context):
         context.Result(F90)
     else:
         context.Result(context_failure)
-        needed_package('f90')
+        need_pkg('f90')
 
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
@@ -794,7 +798,6 @@ def f90(context):
             break
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
-
 
 def matlab(context):
     context.Message("checking for Matlab ... ")
@@ -844,12 +847,11 @@ def matlab(context):
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
+pkg['octave'] = {'fedora':'octave',
+                 'generic':'octave'}
 
-package['octave'] = {'fedora':'octave',
-                     'generic':'octave'}
-
-package['mkoctave'] = {'fedora':'octave-devel',
-                       'generic':'octave-headers'}
+pkg['mkoctave'] = {'fedora':'octave-devel',
+                   'generic':'octave-headers'}
 
 def octave(context):
     context.Message("checking for Octave ... ")
@@ -865,19 +867,17 @@ def octave(context):
         else:
             context.Result(context_failure)
             stderr_write('Please install mkoctfile.')
-            needed_package('mkoctfile')
-            sys.exit(unix_failure)
+            need_pkg('mkoctfile')
     else: # octave not found
         context.Result(context_failure)
         stderr_write('Please install Octave.')
-        needed_package('octave')
-        sys.exit(unix_failure)
+        need_pkg('octave')
 
-
-package['swig'] = {'fedora':'swig',
-                   'generic':'swig'}
-package['numpy'] = {'fedora':'numpy',
-                    'generic':'python-scipy, python-numpy-dev'}
+pkg['swig'] = {'fedora':'swig',
+               'generic':'swig'}
+pkg['numpy'] = {'fedora':'numpy',
+                'generic':'python-scipy, python-numpy-dev'}
+pkg['scipy'] = {'fedora':'scipy'}
 
 def python(context):
     context.Message("checking for SWIG ... ")
@@ -885,32 +885,31 @@ def python(context):
         context.Result( WhereIs('swig') )
     else:
         context.Result(context_failure)
-        stderr_write('Please install SWIG.')
-        needed_package('swig')
+        need_pkg('swig')
 
     context.Message("checking for numpy ... ")
     try:
         import numpy
         context.Result(context_success)
-	context.env['PYMODULES'] = ['numpy']
+        context.env['PYMODULES'] = ['numpy']
     except:
         context.Result(context_failure)
-        stderr_write('Please install numpy.')
-        needed_package('numpy')
+        need_pkg('numpy')
 
     context.Message("checking for scipy ... ")
     try:
         import scipy
         context.Result(context_success)
-	context.env.Append(PYMODULES='scipy')
+        context.env.Append(PYMODULES='scipy')
     except:
         context.Result(context_failure)
+        need_pkg('scipy', fatal=False)
 
     context.Message("checking for pyct ... ")
     try:
         import pyct
         context.Result(context_success)
-	context.env.Append(PYMODULES='pyct')
+        context.env.Append(PYMODULES='pyct')
     except:
         context.Result(context_failure)
 
@@ -946,7 +945,7 @@ def options(opts):
     opts.Add('XLIBS','X11 libraries')
     opts.Add('XINC','Location of X11 headers')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
-    opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, python')
+    opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, octave, python')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')
@@ -960,10 +959,12 @@ def options(opts):
     opts.Add('CFORTRAN90','Type of the Fortran-90 compiler (for cfortran.h)')
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
     opts.Add('MEXSUFFIX','Suffix for mex files')
-    opts.Add('MEX','Mex cmd')
-    opts.Add('MATLAB','The Matlab interpreter')
-    opts.Add('OCTAVE','The Octave interpreter')
+    opts.Add('MEX','Matlab function compiler')
+    opts.Add('MATLAB','Matlab interpreter')
+    opts.Add('OCTAVE','Octave interpreter')
+    opts.Add('MKOCTFILE','Octave function compiler')
     opts.Add('PYMODULES','List of Python modules available')
+    opts.Add('APIFORCE','Install API components that have no dependencies')
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
@@ -971,7 +972,7 @@ def includes(list,file):
     global local_include
     fd = open(file,'r')
     for line in fd.readlines():
-         match = local_include.match(line)            
+         match = local_include.match(line)
          if match:
              other = os.path.join(os.path.dirname(file),match.group(1))
              if not other in list:
@@ -994,7 +995,7 @@ def merge(target=None,source=None,env=None):
                 out.write(line)
         inp.close()
     out.close()
-    return 0
+    return py_success
 
 docmerge = '''echo "import rsfdoc" > $TARGET
 echo "" > tmp
@@ -1020,7 +1021,7 @@ def placeholder(target=None,source=None,env=None):
     out.write('\n\'\'\' % sys.argv[0])\nsys.exit(1)\n')
     out.close()
     os.chmod(filename,0775)
-    return 0
+    return py_success
 
 Place = Builder (action = Action(placeholder,varlist=['var','package']))
 

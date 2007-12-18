@@ -22,6 +22,7 @@ try: # distribution version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
+    apiforce = env.get('APIFORCE',False)
 except: # local version
     root = None
     env = Environment()
@@ -34,6 +35,7 @@ except: # local version
                                         '-xO2','-g')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
+    apiforce = False
 
 ##############################################################################
 # INCLUDES
@@ -144,8 +146,8 @@ if 'f90' in api and env.has_key('F90'):
 ##############################################################################
 # PYTHON BINDING
 ##############################################################################
-# Minimum-functionality backup to rsf python module in case python api fails
-if root:
+# Minimum-functionality backup to rsf python module if numpy/swig are missing
+if root and apiforce:
     env.Install(libdir,'rsfbak.py')
 
 objs = []
@@ -221,12 +223,18 @@ if 'matlab' in api:
 ##############################################################################
 
 if root:
-    octdir = os.path.join(libdir,'octave')
-    for inp in Split('dim create par'): # read and write coming soon
-        env.Install(octdir, 'rsf_'+inp+'.m')
+    if apiforce or ('octave' in api):
+        octdir = os.path.join(libdir,'octave')
+        env.Command(octdir,None, Mkdir('$TARGET'))
+        env.Clean(libdir,octdir)
+        for inp in Split('dim create par'):
+            env.Install(octdir, 'rsf_'+inp+'.m')
 
-#if 'octave' in api:
-#    install those that actually have an Octave dependency. Coming soon
+# if 'octave' in api:
+#     build rsf_read.oct, rsf_write.oct
+#     if root:
+#         install to octdir
+
 ##############################################################################
 # LINT
 ##############################################################################
