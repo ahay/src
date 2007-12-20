@@ -22,23 +22,11 @@
 */
 
 #include <mex.h>
-
 #include <string.h>
 
 #include "file.h"
 #include "getpar.h"
 #include "files.h"
-
-/* BSD - MAXNAMELEN, Posix - NAME_MAX */
-#ifndef NAME_MAX
-#ifdef MAXNAMELEN
-#define	NAME_MAX MAXNAMELEN
-#else
-#ifdef FILENAME_MAX
-#define NAME_MAX FILENAME_MAX
-#endif
-#endif
-#endif
 
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
