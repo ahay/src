@@ -50,6 +50,7 @@ int main (int argc, char* argv[])
     if (hlb && !sf_getfloat("phase",&a)) a=90.;
     /* phase shift (in degrees) to use with hilb=y */
     a *= SF_PI/180.;
+    /* convert to radian */
 
     hilbert_init(n1, n, c);
 

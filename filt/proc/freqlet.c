@@ -598,6 +598,28 @@ void freqlet_set(float w0)
     }
 }
 
+void freqlet_setz(sf_complex z0)
+/*< set z=exp(i*w) >*/
+{
+    int j;
+    sf_complex z1;
+
+#ifdef SF_HAS_COMPLEX_H    
+    z1 = cabsf(z0)/z0;
+#else
+    z1 = sf_cdel(cabsf(z0),z0);
+#endif 
+
+    for (j=1; j <= nt/2; j *= 2) {
+	z[j] = z1;
+#ifdef SF_HAS_COMPLEX_H
+	z1 *= z1;
+#else
+	z1 = sf_cmul(z1,z1);
+#endif
+    }
+}
+
 void freqlet_close(void) 
 /*< deallocate space >*/
 {

@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-abalance agmig angle angle2 approx bandpass beamform cflow chebvc
+abalance agmig angle angle2 approx bandpass beamform cflow chebvc cpef
 dealias deblur deriv dijkstra dip diplet dips divn dix dixshape dwt
 envelope equal erf exgr explanesignoi expsignoi fern flat flat3 focus
 freqest gaussmooth green heat iphase jacobi jacobi2 kron lapfill lpf

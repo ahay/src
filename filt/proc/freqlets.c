@@ -23,19 +23,22 @@
 
 static int n, nw;
 static float d, *w;
+static sf_complex *z;
 
  
 void freqlets_init(int n1 /* data size */, 
 		   float d1 /* sampling */,
 		   bool inv, bool unit, char type,
 		   int nw1 /* number of frequencies */, 
-		   float *w1 /* [nw] frequencies */)
+		   float *w1      /* [nw] frequencies */,
+		   sf_complex *z1 /* [nw] Z factors */)
 /*< allocate space >*/
 {
     n = n1;
     d = d1 * 2 * SF_PI;
     nw = nw1;
     w = w1;
+    z = z1;
     freqlet_init(n,inv,unit,type);
 }
 
@@ -57,7 +60,11 @@ void freqlets_lop(bool adj, bool add, int nx, int ny,
 
     /* loop over frequencies */
     for (iw=0; iw < nw; iw++) {
-	freqlet_set(w[iw]*d);
+	if (NULL != w) {
+	    freqlet_set(w[iw]*d);
+	} else {
+	    freqlet_setz(z[iw]);
+	}
 	freqlet_lop(adj,true,n,n,x+iw*n,y);
     }
 }

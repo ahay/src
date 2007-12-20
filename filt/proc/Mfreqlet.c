@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     bool inv, adj, unit;
     float *w0, d1, *ww;
     char *type;
-    sf_complex *pp, *qq;
+    sf_complex *pp, *qq, *z0;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -38,12 +38,20 @@ int main(int argc, char *argv[])
     w = sf_input("freq");
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-    if (SF_FLOAT != sf_gettype(w)) sf_error("Need float freq");
-
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    
-    if (!sf_histint(w,"n1",&nw)) sf_error("No n1= in freq");
-    w0 = sf_floatalloc(nw);
+
+    if (!sf_histint(w,"n1",&nw)) sf_error("No n1= in freq");    
+    if (SF_FLOAT == sf_gettype(w)) {
+	w0 = sf_floatalloc(nw);
+	z0 = NULL;
+    } else if (SF_COMPLEX == sf_gettype(w)) {
+	w0 = NULL;
+	z0 = sf_complexalloc(nw);
+    } else {
+	sf_error("Need float or complex type in freq");
+	w0 = NULL;
+	z0 = NULL;
+    }
     n1w = n1*nw;
 
     if (!sf_getbool("inv",&inv)) inv=false;
@@ -68,6 +76,7 @@ int main(int argc, char *argv[])
     } else {
 	n2 = sf_leftsize(in,2);
 	sf_unshiftdim(in, out, 2);
+	sf_putint(out,"n3",1);
     } 
 
     pp = sf_complexalloc(n1);
@@ -85,11 +94,15 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    freqlets_init(n1,d1,inv,unit,type[0],nw,w0);
+    freqlets_init(n1,d1,inv,unit,type[0],nw,w0,z0);
     
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(w0,nw,w);
+	if (NULL != w0) {
+	    sf_floatread(w0,nw,w);
+	} else {
+	    sf_complexread(z0,nw,w);
+	}
 
 	if (adj) {
 	    sf_complexread(pp,n1,in);

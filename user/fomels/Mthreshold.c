@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
 {
     int i, n, n1;
     float *dat, *adat, t, pclip, d;
+    sf_complex *cdat;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -29,7 +30,6 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     n = sf_filesize(in);
-    dat = sf_floatalloc(n);
     adat = sf_floatalloc(n);
 
     if (!sf_getfloat("pclip",&pclip)) sf_error("Need pclip=");
@@ -38,25 +38,59 @@ int main(int argc, char* argv[])
     if (n1 < 0) n1=0;
     if (n1 >= n) n1=n-1;
 
-    sf_floatread(dat,n,in);
-    for (i=0; i < n; i++) {
-	adat[i] = fabsf(dat[i]);
+    if (SF_FLOAT == sf_gettype(in)) {
+	dat = sf_floatalloc(n);
+	sf_floatread(dat,n,in);
+	for (i=0; i < n; i++) {
+	    adat[i] = fabsf(dat[i]);
+	}
+	cdat = NULL;
+    } else if (SF_COMPLEX == sf_gettype(in)) {
+	cdat = sf_complexalloc(n);
+	sf_complexread(cdat,n,in);
+	for (i=0; i < n; i++) {
+	    adat[i] = cabsf(cdat[i]);
+	}
+	dat = NULL;
+    } else {
+	sf_error("Need float or complex input");
     }
     
     t = sf_quantile(n1,n,adat);
 
-    for (i=0; i < n; i++) {
-	d = dat[i];
-	if (d < -t) {
-	    dat[i] = d+t;
-	} else if (d > t) {
-	    dat[i] = d-t;
-	} else {
-	    dat[i] = 0.;
+    if (NULL != dat) {
+	for (i=0; i < n; i++) {
+	    d = dat[i];
+	    if (d < -t) {
+		dat[i] = d+t;
+	    } else if (d > t) {
+		dat[i] = d-t;
+	    } else {
+		dat[i] = 0.;
+	    }
 	}
+	sf_floatwrite(dat,n,out);
+    } else {
+	for (i=0; i < n; i++) {
+	    d = cabsf(cdat[i]);
+	    if (d < -t) {
+#ifdef SF_HAS_COMPLEX_H
+		cdat[i] *= (d+t)/d;
+#else
+		cdat[i] = sf_crmul(cdat[i],(d+t)/d);
+#endif
+	    } else if (d > t) {		
+#ifdef SF_HAS_COMPLEX_H
+		cdat[i] *= (d-t)/d;
+#else
+		cdat[i] = sf_crmul(cdat[i],(d-t)/d);
+#endif
+	    } else {
+		cdat[i] = sf_cmplx(0.,0.);
+	    }
+	}
+	sf_complexwrite(cdat,n,out);
     }
-
-    sf_floatwrite(dat,n,out);
 
     exit(0);
 }

@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int j, k, n, m, i2, n2, iter, niter;
     sf_complex **a, *e;
-    float s2;
+    float s2,s0=1.,tol;
     sf_file poly, root;
 
     sf_init(argc,argv);
@@ -37,6 +37,10 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(poly,1);
 
     if (!sf_getint("niter",&niter)) niter=10;
+    /* number of iterations */
+
+    if (!sf_getfloat("tol",&tol)) tol=1.0e-6;
+    /* tolerance for convergence */
 
     sf_putint(root,"n1",n-1);
 
@@ -76,6 +80,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    sf_warning("iter=%d s2=%g",iter+1,s2);
+	    if (0==iter) {
+		s0 = s2;
+	    } else {
+		if (s2 <= s0*tol) break;
+	    }
 	}
 
 	for (j=0; j < m; j++) {

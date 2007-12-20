@@ -93,9 +93,7 @@ int main(int argc, char* argv[])
   /* y=ascending; n=descending */
 
   /* n1 is the vector length */
-  if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-  /* leftsize gets n2*n3*n4*... */
-  if (sf_leftsize(in,1) != 1) sf_error("Need a vector as input");    
+  n1 = sf_filesize(in);
   
   /* check that the input is float or complex and format output appropriately */
   if (SF_COMPLEX == sf_gettype(in)){
