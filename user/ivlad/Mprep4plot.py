@@ -1,15 +1,5 @@
 #! /usr/bin/env python
 '''Resamples a 2-D dataset to the desired picture resolution, with antialias
-For a figure that does not need the aspect ratio preserved, 
-and needs to fill a 1280x1024 projector display:
-
-sfprep4plot inp=file1.rsf out=file2.rsf w=1280 h=1024 prar=n
-
-For a print figure that has to fit in a 6x8in box
-at a resolution of 250 dpi, preserving the aspect ratio:
-
-sfprep4plot inp=file1.rsf out=file2.rsf w=6 h=8 unit=in ppi=250
-
 Only one of the h and w parameters needs to be specified.
 If prar=n, no action will be taken on axis for which h/w was not specified
 If prar=y and only one par (h or w) is specified, the picture will scale
