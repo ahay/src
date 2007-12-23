@@ -697,6 +697,7 @@ def cxx(context):
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran',
+           'gfc':'NAGf90Fortran',
            'f2c':'f2cFortran'}
 
 pkg['f77'] = {'fedora':'gcc-gfortran',
@@ -707,7 +708,7 @@ def f77(context):
     F77 = context.env.get('F77')
     if not F77:
         compilers = ['g77','f77','f90','f95','xlf90','pgf90',
-                     'ifort','ifc','pghpf']
+                     'ifort','ifc','pghpf','gfc']
         F77 = context.env.Detect(compilers)
         if not F77:
             for comp in compilers:
@@ -748,7 +749,7 @@ def f90(context):
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
-        compilers = ['gfortran','f90','f95','xlf90','pgf90',
+        compilers = ['gfortran','gfc','f90','f95','xlf90','pgf90',
                      'ifort','ifc','pghpf']
         F90 = context.env.Detect(compilers)
         if not F90:

@@ -29,12 +29,12 @@ This operation is adjoint to sfspray.
 
 int main(int argc, char* argv[])
 {
-    int j, n1, n2, n3, i2, i3, ni, *fold = NULL, axis;
-    size_t i, n;
+    int j, n2, i2, ni, *fold = NULL, axis;
+    off_t i, n, i3, n3;
     sf_file in, out;
-    char key1[7], key2[7], *val;
+    char key1[7];
     bool norm, rms, min, max;
-    float *trace, *stack, f;
+    float *trace, *stack;
     double *dstack;
     sf_datatype type;
 
@@ -46,58 +46,27 @@ int main(int argc, char* argv[])
     if (!sf_getint("axis",&axis)) axis=2;
     /* which axis to stack */
 
-    n1 = 1;
+    n = 1;
     for (j=0; j < axis-1; j++) {
-    sprintf(key1,"n%d",j+1);
-    if (!sf_histint(in,key1,&ni)) break;
-    n1 *= ni;
+	sprintf(key1,"n%d",j+1);
+	if (!sf_histint(in,key1,&ni)) break;
+	n *= ni;
     }
-
-    n = (size_t) n1;
 
     type = sf_gettype (in);
     if (SF_FLOAT != type) {
-    if (SF_COMPLEX == sf_gettype (in)) {
-        n *= 2; 
-	/* possibly incorrect norm for complex data */
-    } else {
-        sf_error("Incorrect data type in input");
-    }
+	if (SF_COMPLEX == sf_gettype (in)) {
+	    n *= 2; 
+	    /* possibly incorrect norm for complex data */
+	} else {
+	    sf_error("Incorrect data type in input");
+	}
     }
 
     sprintf(key1,"n%d",axis);
     if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
-    
-    n3 = 1;
-    for (j=axis; j < SF_MAX_DIM; j++) {
-    sprintf(key1,"n%d",j+1);
-    sprintf(key2,"n%d",j);
-    if (!sf_histint(in,key1,&ni)) {
-        sf_putint(out,key2,1);
-        break;
-    }
-    sf_putint(out,key2,ni);
-    n3 *= ni;
-    
-    sprintf(key1,"o%d",j+1);
-    sprintf(key2,"o%d",j);
-    if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
-
-    sprintf(key1,"d%d",j+1);
-    sprintf(key2,"d%d",j);
-    if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
-
-    sprintf(key1,"label%d",j+1);
-    sprintf(key2,"label%d",j);
-    if (NULL != (val = sf_histstring(in,key1))) 
-        sf_putstring(out,key2,val);
-
-    sprintf(key1,"unit%d",j+1);
-    sprintf(key2,"unit%d",j);
-    if (NULL != (val = sf_histstring(in,key1)))
-        sf_putstring(out,key2,val);
-    }
-    
+    n3 = sf_unshiftdim(in,out,axis);
+ 
     if (!sf_getbool("rms",&rms)) rms = false;
     /* If y, compute the root-mean-square instead of stack. */
     if (rms || !sf_getbool("norm",&norm)) norm = true;

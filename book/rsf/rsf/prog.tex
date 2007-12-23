@@ -1246,6 +1246,44 @@ bash$ < test3.rsf sfdisfil
 The output is also three-dimensional, with the original data replicated
 along the third axis.
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfstack}
+  }}
+
+While \texttt{sfspray} adds a dimension to a hypercube,
+\texttt{sfstack} effectively removes one of the dimensions by stacking
+over it. Here are some examples:
+\begin{verbatim}
+bash$ sfmath n1=5 n2=3 output=x1+x2 > test.rsf
+bash$ < test.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             1            2            3            4            5
+  10:             2            3            4            5            6
+bash$ < test.rsf sfstack axis=2 | sfdisfil
+   0:           1.5            2            3            4            5
+bash$ < test.rsf sfstack axis=1 | sfdisfil
+   0:           2.5            3            4
+\end{verbatim}
+Why is the first value not 1 (in the first case) or 2 (in the second
+case)? By default, \texttt{sfstack} normalizes the stack by the fold
+(the number of non-zero entries). To avoid normalization, use
+\texttt{norm=n}, as follows:
+\begin{verbatim}
+bash$ < test.rsf sfstack norm=n | sfdisfil 
+   0:             3            6            9           12           15
+\end{verbatim}
+\texttt{sfstack} can also compute root-mean-square values as 
+well as minimum and maximum values.
+\begin{verbatim}
+bash$ < test.rsf sfstack rms=y | sfdisfil
+   0:         1.581         2.16        3.109        4.082        5.066
+bash$ < test.rsf sfstack min=y | sfdisfil
+   0:             0            1            2            3            4
+bash$ < test.rsf sfstack axis=1 max=y | sfdisfil 
+   0:             4            5            6
+\end{verbatim}
+
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 

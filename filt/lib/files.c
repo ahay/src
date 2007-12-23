@@ -192,7 +192,10 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
     for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j+1);
 	sprintf(key1,"n%d",j);
-	if (!sf_histint(in,key1,&ni)) break;
+	if (!sf_histint(in,key1,&ni)) {
+	     sf_putint(out,key2,1);
+	     break;
+	}
 	sf_putint(out,key2,ni);
 	n3 *= ni;
 	
@@ -218,18 +221,24 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
     return n3;
 }
 
-void sf_unshiftdim(sf_file in, sf_file out, int axis) 
+off_t sf_unshiftdim(sf_file in, sf_file out, int axis) 
 /*< shift grid after axis by one dimension backward >*/
 {
     int j, ni;
+    off_t n3;
     float f;
     char key1[7], key2[7], *val;
 
+    n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j);
 	sprintf(key1,"n%d",j+1);
-	if (!sf_histint(in,key1,&ni)) break;
+	if (!sf_histint(in,key1,&ni)) {
+	    sf_putint(out,key2,1);
+	    break;
+	}
 	sf_putint(out,key2,ni);
+	n3 *= ni;
 	
 	sprintf(key2,"o%d",j);
 	sprintf(key1,"o%d",j+1);
@@ -249,6 +258,8 @@ void sf_unshiftdim(sf_file in, sf_file out, int axis)
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
     }
+
+    return n3;
 }
 
 

@@ -118,7 +118,7 @@ if 'f90' in api and env.has_key('F90'):
     F90base =  os.path.basename(F90)
     F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
 
-    if F90base == 'gfortran':
+    if F90base == 'gfortran' or F90base == 'gfc':
         F90flags = F90flags + ' -DGFORTRAN'
         env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
     elif F90base == 'ifort':
