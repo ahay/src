@@ -192,13 +192,13 @@ contains
     if (present (type)) then
        select case (type(1:1))
        case ("f")
-          if (ftype /= 2) call sf_error("Need float input")
+          if (ftype /= 3) call sf_error("Need float input")
        case ("i")
-          if (ftype /= 1) call sf_error("Need int input")
+          if (ftype /= 2) call sf_error("Need int input")
        case ("c")
-          if (ftype /= 3) call sf_error("Need complex input")
+          if (ftype /= 4) call sf_error("Need complex input")
        end select
-    else if (ftype /= 2) then
+    else if (ftype /= 3) then
        call sf_error("Need float input")
     end if
   end subroutine from_history_dim

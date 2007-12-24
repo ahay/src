@@ -25,14 +25,14 @@ int main (int argc, char *argv[])
 {
     int nt, nt2;	/* number of time samples */
     int nz;		/* number of migrated time samples */
-    int nk;		/* number of wavenumbers */
-    int ik,iz;          /* loop counters 	*/
+    int nx, ny;		/* number of wavenumbers */
+    int it,ix,iy,iz;          /* loop counters 	*/
     
     float dt;		/* time sampling interval 	*/
     float dz;		/* migrated time sampling interval */
-    float dk;	        /* wave number sampling interval */
-    float k;            /* wave number */
-    float k0;           /* wave number origin */
+    float dx,dy;	/* wave number sampling interval */
+    float x,y;          /* wave number */
+    float x0,y0;        /* wave number origin */
     float *vt, v0;	/* velocity v(t)		*/
     float *p,*q;	/* input, output data		*/
 
@@ -56,12 +56,17 @@ int main (int argc, char *argv[])
     if (!sf_getbool("depth",&depth)) depth = false;
     /* if true, depth migration */
 
-    if (!sf_histint(in,"n2",&nk)) nk = 1;
-    if (!sf_histfloat(in,"d2",&dk)) 
+    if (!sf_histint(in,"n2",&nx)) nx = 1;
+    if (!sf_histfloat(in,"d2",&dx)) 
 	sf_error ("No d2= in input");
-    if (!sf_histfloat(in,"o2",&k0)) k0=0.;
-    dk *= 2.*SF_PI;
-    k0 *= 2.*SF_PI;
+    if (!sf_histfloat(in,"o2",&x0)) x0=0.;
+
+    if (!sf_histint(in,"n3",&ny)) ny = 1;
+    if (!sf_histfloat(in,"d3",&dy)) dy=dx;
+    if (!sf_histfloat(in,"o3",&y0)) y0=0.;
+
+    dx *= 2.*SF_PI; x0 *= 2.*SF_PI;
+    dy *= 2.*SF_PI; y0 *= 2.*SF_PI;
 
     if (inv) { /* modeling */
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
@@ -131,7 +136,7 @@ int main (int argc, char *argv[])
     }
 
     /* determine frequency sampling */    
-    nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
+    if (!sf_getint("pad",&nt2)) nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
 
     p = sf_floatalloc(nt2);
     q = sf_floatalloc(nz);
@@ -141,23 +146,32 @@ int main (int argc, char *argv[])
 
     gazdag_init (eps, nt2, dt, nz, dz, vt, depth, rule[0]);
 
-    for (ik=0; ik < nk; ik++) {
-	k = k0+ik*dk;
-	k *= k;
+    for (iy=0; iy < ny; iy++) {
+	y = y0+iy*dy;
+	y *= y;
+
+	for (ix=0; ix < nx; ix++) {
+	    x = x0+ix*dx;
+	    x = x*x+y;
 	
-	if (inv) {
-	    sf_floatread(q,nz,in);
-	} else {
-	    sf_floatread(p,nt,in);
-	    if (nt != nt2) p[nt]=0.;
-	}
+	    if (inv) {
+		sf_floatread(q,nz,in);
+	    } else {
+		sf_floatread(p,nt,in);
+		if (nt != nt2) {
+		    for (it=nt; it < nt2; it++) {
+			p[it]=0.;
+		    }
+		}
+	    }
 
-	gazdag(inv,k,p,q);
+	    gazdag(inv,x,p,q);
 
-	if (inv) {
-	    sf_floatwrite(p,nt,out);
-	} else {
-	    sf_floatwrite(q,nz,out);
+	    if (inv) {
+		sf_floatwrite(p,nt,out);
+	    } else {
+		sf_floatwrite(q,nz,out);
+	    }
 	}
     } 
     

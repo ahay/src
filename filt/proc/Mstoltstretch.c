@@ -102,7 +102,6 @@ int main(int argc, char* argv[])
 	    sf_putint (st,buffer,ifix);
 	}
     }
-
     
     for (ix=0; ix < nx; ix++) {
 	for (it=0; it < nt; it++) {

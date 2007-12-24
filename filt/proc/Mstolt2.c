@@ -24,26 +24,10 @@ Requires the input to be cosine-transformed over the lateral axes.
 
 #include <rsf.h>
 
-#include "fint1.h"
-
-static float a, b, x, vel;
-
-static float stolt(float w, int iw) {
-    float sq;
-
-    sq = (vel < 0)? w*w - x: w*w + x;
-    if (sq > 0.) {
-	sq = sqrtf(sq);
-	sq = a*w + b*sq;
-    }
-    return sq;
-}
-
 int main(int argc, char* argv[])
 {
-    fint1 map;
-    int nt,nx,ny, iw,ix,iy, nf, nw, mute;
-    float dw, dt, dx,dy, t0, y, st, *trace, minstr;
+    int nt,nx,ny, iw,ix,iy, nf, nw;
+    float dw, dt, dx,dy, t0, y, w,st,sq, *str, *trace2, *trace, vel, a, b, x;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -72,25 +56,19 @@ int main(int argc, char* argv[])
     dy *= SF_PI * fabsf (vel);	
 
     if (!sf_getfloat("stretch", &st) && !sf_histfloat(in,"stretch",&st)) st=1.;
-    if (1. != st) sf_warning("stretch=%g",st);
-
     /* Stolt stretch parameter */
-    if (vel > 0) st = 2.-st;
+    if (vel < 0) st = 2.-st;
     a = (1.-1./st);
     b = 1./st;
 
-    if (!sf_getint("extend",&nf)) nf=4;
-    /* trace extension */
-
-    if (!sf_getint("mute",&mute)) mute=12;
-    /* mute zone */
-
-    if (!sf_getfloat("minstr",&minstr)) minstr=0.5;
-    /* minimum stretch allowed */
+    if (!sf_getint("nf",&nf)) nf=2;
+    /* Interpolation accuracy */
 
     trace = sf_floatalloc(nw);
-    map = fint1_init (nf, nw, mute);
+    trace2 = sf_floatalloc(nw);
+    str = sf_floatalloc(nw);
 
+    sf_prefilter_init (nf, nw, 3*nw);
     for (iy = 0; iy < ny; iy++) {
 	sf_warning("%d of %d",iy+1,ny);
 	y = iy*dy;
@@ -104,16 +82,29 @@ int main(int argc, char* argv[])
 		trace[iw]=0.;
 	    }
 	    sf_cosft_frw (trace,0,1);
-	    
-	    fint1_set(map,trace);
-	    stretch(map,stolt,nw,dw,0.,nw,dw,0.,trace,minstr);
 
-	    sf_cosft_inv (trace,0,1);
-	    sf_floatwrite(trace,nt,out);
+	    for (iw = 0; iw < nw; iw++) {
+		w = iw*dw;
+		sq = (vel < 0)? w*w - x: w*w + x;
+		if (sq > 0.) {
+		    sq = sqrtf(sq);
+		    str[iw] = a*w + b*sq;
+		    /* trace[iw] *= (a + b*w/sq); Jacobian */
+		} else {
+		    str[iw] = - 2.*dw;
+		    trace[iw] = 0.;
+		}
+	    }
+       
+	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
+	    sf_prefilter_apply (nw, trace);
+	    sf_int1_lop (false,false,nw,nw,trace,trace2);
+	    sf_cosft_inv (trace2,0,1);
+	    sf_floatwrite(trace2,nt,out);
 	}
     }
 
     exit (0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Mstolt.c 2497 2007-01-23 00:24:42Z sfomel $	 */

@@ -219,7 +219,8 @@ int main(int argc, char* argv[])
 		    w2 = w*vel[ix][iz+1];
 		    omega = 2.*(w1+w2-1./(1./w1+1/w2))/3.;
 #ifdef SF_HAS_COMPLEX_H
-		    cu[ix] = cd[ix] * cexpf(-I*omega) + depth[ix][iz];
+		    cu[ix] = cd[ix] * sf_cmplx(cosf(omega),
+					       -sinf(omega)) + depth[ix][iz];
 #else
 		    cu[ix] = sf_cadd(sf_cmul(cd[ix],
 					     sf_cmplx(cosf(omega),
@@ -244,7 +245,7 @@ int main(int argc, char* argv[])
 
 		    depth[ix][iz] += crealf (cu[ix]);
 #ifdef SF_HAS_COMPLEX_H
-		    cd[ix] = cu[ix] * cexpf(I*omega);
+		    cd[ix] = cu[ix] * sf_cmplx(cosf(omega),sinf(omega));
 #else
 		    cd[ix] = sf_cmul(cu[ix],sf_cmplx(cosf(omega),sinf(omega)));
 #endif

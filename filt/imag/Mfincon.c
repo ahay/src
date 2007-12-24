@@ -94,8 +94,8 @@ int main(int argc, char* argv[])
 	}
 
 #ifdef SF_HAS_COMPLEX_H		
-	c1 = 3.*(9. + w2 + 4.*w*I)/(w2*(3. - w*I));
-	c2 = 3.*(w2 - 27. + 8.*w*I)/(w2*(3. - w*I));
+	c1 = 3.*sf_cmplx(9. + w2,4.*w)/(w2*sf_cmplx(3.,- w));
+	c2 = 3.*sf_cmplx(w2 - 27.,8.*w)/(w2*sf_cmplx(3.,- w));
 #else
 	c1 = sf_cdiv(sf_cmplx(3.*(9. + w2),3.*4.*w),
 		     sf_cmplx(w2*3.,-w2*w));

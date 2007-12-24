@@ -41,11 +41,11 @@
 Although Stolt migration is regarded as the fastest of all the known
 seismic migration algorithms, it has a limited applicability because
 of the intrinsic constant velocity assumption. The time-stretching
-trick proposed in Stolt's classic paper \cite{GEO43.01.00230048}
+trick proposed in Stolt's classic paper \cite[]{GEO43-01-00230048}
 provides an approximate extension of the method to a variable velocity
 case.  Implicitly, Stolt stretch transforms reflection traveltime
 curves to fit an approximate constant velocity pattern
-\cite{levin35,Levin.sep.42.373,Claerbout.blackwell.85}. In other
+\cite[]{Levin.sep.35.195,Levin.sep.42.373,Claerbout.blackwell.85}. In other
 words, the wave equation with variable velocity is transformed by a
 particular stretch of the time axis to an approximate differential
 equation with constant coefficients. The two constant coefficients are
@@ -54,17 +54,17 @@ parameter ($W$ in Stolt's original notation). In the constant velocity
 case $W$ is equal to 1, and the transformed equation coincides with
 the exact constant velocity wave equation. In variable velocity media,
 $W$ is generally assumed to lie between $0$ and $1$. As shown by
-\longcite{GEO52-05-06180643}, the cascaded $f$-$k$ migration
+\cite{GEO52-05-06180643}, the cascaded $f$-$k$ migration
 approach can move the value of $W$ for each migration in a cascade
 closer to 1, thus increasing the accuracy of the Stolt stretch
 approximation.
 
-The $W$ factor is defined by \longcite{GEO43.01.00230048} as an
+The $W$ factor is defined by \cite{GEO43-01-00230048} as an
 approximate average of a complicated function, which depends on both
 time and space coordinates and cannot be computed directly.
 Therefore, in practice, the estimation of $W$ is always replaced by a
-heuristic guess.  That is why \longcite{levin35} jokingly called the
-$W$ parameter ``infamous'', and \longcite{GEO52-05-06180643} called it
+heuristic guess.  That is why \cite{Levin.sep.35.195} jokingly called the
+$W$ parameter ``infamous'', and \cite{GEO52-05-06180643} called it
 ``esoteric.''
 
 In this paper, we use an analytic technique to evaluate the Stolt
@@ -72,7 +72,7 @@ stretch parameter explicitly. The main idea is to constrain this
 parameter by fitting the Stolt-stretch traveltime function to the
 exact one.  It turns out that in the isotropic case, the $W$ parameter
 is connected to the ``parameter of heterogeneity''
-\cite{ussr,Sword.sep.51.313,castle,nmo}. The definition of
+\cite[]{ussr,Sword.sep.51.313,castle,nmo}. The definition of
 heterogeneity is modified for the case of an anisotropic
 (transversally isotropic) media.
 
@@ -85,10 +85,10 @@ cost.
 
 Although Stolt migration is not currently at the forefront of
 geophysical research, it is still widely used in practice
-\cite{yilmaz,yilmazLE} and keeps recurring in different contexts.
-\longcite{muir} propose a new interpolation scheme for improving the
-practical accuracy of the method. \longcite{sava} uses a variation of
-Stolt migration - Stolt residual migration \cite{GEO61-02-06050607} -
+\cite[]{yilmaz,yilmazLE} and keeps recurring in different contexts.
+\cite{muir} propose a new interpolation scheme for improving the
+practical accuracy of the method. \cite{sava} uses a variation of
+Stolt migration - Stolt residual migration \cite[]{GEO61-02-06050607} -
 in the context of wave-equation migration velocity analysis.
 
 The growth in computer speed does not automatically make fast
@@ -158,7 +158,7 @@ part of the wavefield is the one used in migration.
 
 The case of a varying velocity complicates the frequency-domain
 algorithm and therefore requires special consideration.
-\longcite{GEO43.01.00230048} suggested the following change of the
+\cite{GEO43-01-00230048} suggested the following change of the
 time variable (referred to in the literature as {\em Stolt stretch}):
 \begin{equation}
 s(t)={\left({{2 \over v_0^2}\,\int_0^t\eta d \tau}\right)}^{1/2}\;,
@@ -248,7 +248,7 @@ a given velocity distribution.
 \inputdir{Math}
 
 A useful tool for that purpose is Levin's equation for the traveltime
-curve.  \longcite{Levin.sep.42.373} applied the stationary
+curve.  \cite{Levin.sep.42.373} applied the stationary
 phase technique to the dispersion relation (\ref{eqn:sdispersion}) to
 obtain an explicit equation for the summation curve of the integral
 migration operator analogous to the Stolt stretch migration. The
@@ -307,7 +307,7 @@ different three-parameter traveltime approximations leads to a
 constructive estimate of the $W$ parameter.  The first useful
 observation is a formal similarity between equation (\ref{eqn:levin})
 and Malovichko's approximation for the reflection traveltime curve in
-vertically inhomogeneous media \cite{ussr,Sword.sep.51.313,castle,nmo}
+vertically inhomogeneous media \cite[]{ussr,Sword.sep.51.313,castle,nmo}
 defined by
 \begin{equation}
 t_0=
@@ -407,7 +407,7 @@ of $W$.
 \subsection{Stolt stretch for anisotropic media}
 
 As follows from the analysis of the reflection moveout in a vertically
-heterogeneous transversely isotropic medium \cite{Fomel.sep.92.135},
+heterogeneous transversely isotropic medium \cite[]{Fomel.sep.92.135},
 expression~(\ref{eqn:main}) for the Stolt stretch parameter will
 remain valid in this case if the values of $v_{rms}$ and $S$ are
 computed according to equations
@@ -420,12 +420,12 @@ S\left(t_v\right) & = & {1 \over{v_{rms}^4 t_v}}\,\int_{0}^{t_v} v^4(t) \,
 \label{eqn:TIsk}
 \end{eqnarray}
 where $\delta$ and $\eta$ are the conventional anisotropic parameters
-\cite{GEO51-10-19541966,GEO60-05-15501566}, which may vary with depth.
+\cite[]{GEO51-10-19541966,GEO60-05-15501566}, which may vary with depth.
 
 As we demonstrate in the next section, the method of cascaded
-migrations \cite{GEO52.05.06180643} can improve the performance of
+migrations \cite[]{GEO52-05-06180643} can improve the performance of
 Stolt migration in the case of variable velocity
-\cite{GEO53.07.08810893}.  However, this method affects only the
+\cite[]{GEO53-07-08810893}.  However, this method affects only the
 isotropic part of the model and cannot change the contribution of the
 anisotropic parameters.  Therefore, in the anisotropic case, it is
 important to incorporate anisotropic parameters into the Stolt stretch
@@ -435,7 +435,7 @@ correction.
 \section{Application}
 \inputdir{elfst}
 
-Following the study by \longcite{GEO54.06.07010717}, we selected a
+Following the study by \cite{GEO54-06-07010717}, we selected a
 dataset that includes steep dips in order to test the accuracy of our
 algorithms. The dataset is courtesy of Elf Aquitaine.  It was recorded
 in the North Sea over a salt-dome structure.
@@ -467,11 +467,11 @@ the reference velocity model.
   migrated with the Stolt-stretch method using the optimal value
   ($\approx 0.67$) for the parameter $W$. (b) Section migrated with
   the phase-shift method. (c) Section migrated using the cascaded
-  Stolt-stretch approach (6 velocities).}
+  Stolt-stretch approach (5 velocities).}
 
 \par
 The reference method of migration for our study is the phase-shift
-method \cite{GEO43.07.13421351}. It is known to be perfectly accurate
+method \cite[]{GEO43-07-13421351}. It is known to be perfectly accurate
 for all dips up to $90^\circ$ in a $v(z)$ velocity field. A comparison
 between the phase-shift migration result
 (Figure~\ref{fig:data-ststr-pshift-casc}b) and the section migrated
@@ -482,7 +482,7 @@ made by stretching the time axis breaks for recovering steep events.
 \par
 A way to overcome the difficulties encountered by Stolt's migration is
 to divide the whole process into a cascade, as suggested by
-\longcite{GEO53.07.08810893}. The theory of cascaded migration proves
+\cite{GEO53-07-08810893}. The theory of cascaded migration proves
 that {\it f-k} migration algorithms with a $v(t)$ velocity model like
 Stolt-stretch can be performed sequentially as a cascade of $n$
 migrations with smaller interval velocities $v_i(t) \; , \;
@@ -492,18 +492,17 @@ i=1,\ldots,n$, such then
 v^2(t) = \sum_{i=1}^{n} v_i^2(t)\;.
 \end{equation}
 At a given vertical traveltime $t$, all the successive velocity models
-have to be constant, except the last one \cite{GEO52.05.06180643}.
+have to be constant, except the last one \cite[]{GEO52-05-06180643}.
 Typically, the first stage is done with a constant velocity model and
 can be computed using Stolt's method, which is then accurate for all
 dips. Figure~\ref{fig:velocities} illustrates such a cascade of
-velocity models in our particular case, with 3 and 6 stages.
+velocity models in our particular case, with 3 and 5 stages.
 
 \plot{velocities}{width=6in,height=3.5in}{(a) Interval velocity
 model $v(t)$ estimated from the 2-D reference model. (b)
 Decomposition in a cascade of 3 models, such as $v^2 = v_1^2
-+ v_2^2 + v_3^2$. (c) Decomposition in a cascade of 6 models,
-such as $v^2 = v_1^2 + v_2^2 + v_3^2 + v_4^2 +
-v_5^2 + v_6^2$}
++ v_2^2 + v_3^2$. (c) Decomposition in a cascade of 5 models,
+such as $v^2 = v_1^2 + v_2^2 + v_3^2 + v_4^2 + v_5^2$}
 \par
 As a consequence of this decomposition, each intermediate velocity
 model shows not only a smaller velocity but also less vertical
@@ -511,11 +510,12 @@ heterogeneity. In other words, the Stolt-stretch parameter $W$
 estimated for each stage tends to be closer to 1.0, thus reducing the
 migration errors due to the
 approximation. Figure~\ref{fig:data-ststr-pshift-casc}c shows the
-migration result using a 6-stage cascaded scheme. All the successive
+migration result using a 5-stage cascaded scheme. All the successive
 values of $W$ were greater than 0.8. There are almost no
 differences with the phase-shift result
 (Figure~\ref{fig:data-ststr-pshift-casc}b).
 \par
+\inputdir{imps}
 An accuracy of the cascaded stolt-stretch migration is additionally
 verified by comparing its impulse response with that of the
 phase-shift migration (Figure~\ref{fig:imp-mig3}). The impulses are
@@ -525,7 +525,7 @@ more detailed comparison. We can see a kinematic difference in the
 impulse response of Stolt-stretch compared to phase-shift.  While
 Gazdag's phase-shift honor ray bending in any $v(z)$ model,
 Stolt-stretch is only designed to make the fitting curve look like an
-hyperbola close to the apex \cite{Levin.sep.35.195}, and therefore
+hyperbola close to the apex \cite[]{Levin.sep.35.195}, and therefore
 induces residual migration errors.  As seen in
 Figure~\ref{fig:data-ststr-pshift-casc}a, Stolt-stretch result
 displays residual hyperbolic migration artifacts that are due to this
@@ -541,11 +541,11 @@ velocities in the cascaded Stolt-stretch scheme. In theory, the
 migration errors in the cascaded approach can be made as small as
 desired by increasing the number of stages. At the limit, it
 corresponds to the velocity continuation concept
-\cite{me,SEG-1997-1762}.
+\cite[]{me,SEG-1997-1762}.
 \par
 In our case, six stages were enough to obtain a result comparable to
 phase-shift. In their comparative study on time migration algorithms,
-\longcite{GEO54.06.07010717} have shown that four-stage cascaded {\it
+\cite{GEO54-06-07010717} have shown that four-stage cascaded {\it
   f-k} migration is accurate for dips up to $85^\circ$, which is
 almost comparable to phase-shift, accurate for all dips.  It is worth
 noting the computational cost difference between the two: on our
@@ -557,12 +557,17 @@ Stolt-stretch (a) and phase-shift (b) operators.}
 
 \plot{imp-mig}{width=6in}{Impulses responses of the different
 operators. (a) Stolt-stretch. (b) Phase-shift. (c) and (d) Cascaded
-Stolt-stretch, with 3 and 6 velocities, respectively.}
+Stolt-stretch, with 3 and 5 velocities, respectively.}
+
+\inputdir{elfst}
 
 \plot{dip-zoom}{width=6in}{Zoom in the salt body area where steep dips
-are located. (a) Migration with the Stolt-stretch method. (b)
-Migration with the phase-shift method. (c) and (d) Migrations with the
-cascaded Stolt-stretch approach, using, respectively, 3 and 6 velocities.}
+  are located. (a) Migration with the Stolt-stretch method using optimal $W$. 
+  (b)
+  Migration with the phase-shift method. (c) 
+  Migration with the Stolt-stretch method using $W=0.5$. 
+  (d) Migration with the
+  cascaded Stolt-stretch approach, using 5 velocities.}
 
 %--------------------------------------------------------
 \section{Conclusions}
@@ -585,7 +590,7 @@ Exploration Project for financial support and Elf Aquitaine for
 providing the data used in this work.
 
 \bibliographystyle{seg}
-\bibliography{stolt,SEG}
+\bibliography{stolt,SEG,SEP2}
 
 \append{\ }
 
@@ -672,7 +677,7 @@ into (\ref{eqn:lev2}) produces an equality similar to
 theoretically accurate in depth-varying velocity media up to the
 second term in (\ref{eqn:taylor}). It is this remarkable property that
 proves the validity of the Stolt stretch method
-\cite{levin35,Claerbout.blackwell.85}. Moreover, equation
+\cite[]{Levin.sep.35.195,Claerbout.blackwell.85}. Moreover, equation
 (\ref{eqn:levin}) is accurate up to the third term if the value of the
 fourth-order traveltime derivative in (\ref{eqn:lev4}) coincides with
 (\ref{eqn:mal4}). Substituting equation (\ref{eqn:mal4}) into
