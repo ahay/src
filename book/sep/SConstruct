@@ -2,7 +2,7 @@ from rsfbook import *
 
 report = (('Optimization','cdstep stack forwd spitz oc2 pwd'),
           ('Helix Transform','precon findif burg specfac'),
-          ('Imaging','antial angle huygens fmeiko fmsec'),
+          ('Imaging','stoltst antial angle huygens fmeiko fmsec'),
           ('Azimuth Moveout','oc1 norm fkamo'),
           ('Velocities','aniso vc1 velspec vc2'))
 
@@ -10,6 +10,7 @@ Papers(authors={'aniso':'Sergey Fomel and Vladimir Grechka',
                 'precon':'Sergey Fomel and Jon Claerbout',
                 'norm': 'Sergey Fomel and Norman Bleistein',
                 'rwe':'Paul Sava and Sergey Fomel',
+                'stoltst':'Sergey Fomel and Louis Vaillant',
                 'burg':'''Sergey Fomel and Paul Sava and
                 James Rickett and Jon F. Claerbout'''},
        copyr='Stanford University',
