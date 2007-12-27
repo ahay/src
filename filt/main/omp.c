@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	sf_system(cmdline[rank]);
     }
 
-    sf_warning("end parallel job");
+    sf_warning("end parallel job, %s",iname2);
 
     ofile = sf_tempfile(&oname,"w+b");
     snprintf(command,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
