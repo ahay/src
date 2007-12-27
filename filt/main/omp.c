@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,n[SF_MAX_DIM],last,extra,chunk,i,j,len,nc;
     off_t size, left,nbuf;
-    char command[CMDLEN], *iname, *oname, *iname2, key[5];
+    char command[CMDLEN], command2[CMDLEN], *iname, *oname, *iname2, key[5];
     char **inames, **onames, **cmdline, buffer[BUFSIZ];
     FILE *ifile=NULL, *ofile=NULL;
     sf_file inp, out, in, inp2;
@@ -121,13 +121,15 @@ int main(int argc, char* argv[])
 	sf_system(cmdline[rank]);
     }
 
-    sf_warning("end parallel job, %s",iname2);
+    sf_warning("end parallel job");
 
     ofile = sf_tempfile(&oname,"w+b");
-    snprintf(command,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
-    sf_system(command);
+    snprintf(command2,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
+    sf_system(command2);
     sf_rm(iname2,true,false,false);
     
+    sf_warning("dryrun to %s",oname);
+
     inp = sf_input(oname);
     ndim = sf_filedims (inp,n);
     if (last != n[ndim-1]) 
