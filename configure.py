@@ -602,8 +602,9 @@ def omp(context):
     int main(void) {
     int nt;
 #pragma omp parallel
+{
     nt = omp_get_num_threads();
-#pragma omp end parallel
+}
     return 0;
     }
     '''

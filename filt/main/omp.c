@@ -36,10 +36,11 @@ int main(int argc, char* argv[])
     sf_file inp, out, in;
 
 #pragma omp parallel
-    nodes = omp_get_num_threads();
-    if (1 >= nodes) nodes = omp_get_num_procs(); 
-#pragma omp end parallel
-   
+    {
+	nodes = omp_get_num_threads();
+	if (1 >= nodes) nodes = omp_get_num_procs(); 
+    }
+  
     /* master node */
     sf_init(argc,argv);
     sf_warning("Running %d threads",nodes);
@@ -105,11 +106,12 @@ int main(int argc, char* argv[])
 	snprintf(cmdline[node],CMDLEN,"%s < %s > %s",command,iname,oname);
     }
     
-#pragma omp parallel private(rank,sys)
-    omp_set_num_threads(nodes);
-    rank = omp_get_thread_num();
-    sf_system(cmdline[rank]);
-#pragma omp end parallel
+#pragma omp parallel private(rank)
+    {
+	omp_set_num_threads(nodes);
+	rank = omp_get_thread_num();
+	sf_system(cmdline[rank]);
+    }
 
     ifile = sf_tempfile(&iname,"w+b");
     ofile = sf_tempfile(&oname,"w+b");
