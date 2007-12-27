@@ -39,11 +39,10 @@ int main(int argc, char* argv[])
     nodes = omp_get_num_threads();
     if (1 >= nodes) nodes = omp_get_num_procs(); 
 #pragma omp end parallel
-
-    sf_warning("Running %d threads",nodes);
    
     /* master node */
     sf_init(argc,argv);
+    sf_warning("Running %d threads",nodes);
 
     inp = sf_input("in");
     out = sf_output("out");
@@ -125,7 +124,8 @@ int main(int argc, char* argv[])
     
     inp = sf_input(oname);
     ndim = sf_filedims (inp,n);
-    if (last != n[ndim-1]) sf_error("Wrong dimensionality %d != %d",last,n[ndim-1]);
+    if (last != n[ndim-1]) 
+	sf_error("Wrong dimensionality %d != %d",last,n[ndim-1]);
 
     size = sf_esize(inp);
     for (i=0; i < ndim-1; i++) {
