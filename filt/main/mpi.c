@@ -29,7 +29,7 @@
 int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,n[SF_MAX_DIM],last,extra,chunk,i,j,len,nc,sys;
-    off_t size, size2, left,nbuf;
+    off_t size, left,nbuf;
     char cmdline[CMDLEN], command[CMDLEN], *iname, *oname, key[5];
     char **inames, **onames, buffer[BUFSIZ];
     FILE *ifile, *ofile;

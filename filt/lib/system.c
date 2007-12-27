@@ -24,7 +24,7 @@
 #include "error.h"
 
 void sf_system(const char *command)
-/* System command */
+/*< System command >*/
 {
     pid_t pid;
     int status;
