@@ -76,7 +76,15 @@ int main(int argc, char* argv[])
     ifile = sf_tempfile(&iname2,"w+b");
     inp2 = sf_output(iname2);
     fclose(ifile);
+
+    sf_fileflush(inp2,inp);
+    sf_setform(inp2,SF_NATIVE);
+
+    sf_fileflush(out,inp);
+    sf_setform(out,SF_NATIVE);
     
+    sf_setform(inp,SF_NATIVE);
+
     for (node=0; node < nodes; node++) {
 	if (node > 0) {
 	    fclose(ifile);
@@ -112,7 +120,7 @@ int main(int argc, char* argv[])
     }
     sf_fileclose(inp2);
 
-    sf_warning("start parallel job");
+    /* sf_warning("start parallel job"); */
 
 #pragma omp parallel private(rank)
     {
@@ -121,14 +129,12 @@ int main(int argc, char* argv[])
 	sf_system(cmdline[rank]);
     }
 
-    sf_warning("end parallel job");
+    /* sf_warning("end parallel job"); */
 
     ofile = sf_tempfile(&oname,"w+b");
     snprintf(command2,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
     sf_system(command2);
     sf_rm(iname2,true,false,false);
-    
-    sf_warning("dryrun to %s",oname);
 
     inp = sf_input(oname);
     ndim = sf_filedims (inp,n);
