@@ -58,6 +58,14 @@ else:
 if root:
     env.Install(bindir,prog[0])
 
+omp = env.get('OMP')
+if omp:
+    prog = env.Program('sfomp','omp.c')
+else:
+    prog = env.Place('sfomp',None,var='OMP')
+if root:
+    env.Install(bindir,prog[0])
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################

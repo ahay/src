@@ -601,8 +601,9 @@ def omp(context):
     #include <omp.h>
     int main(void) {
     int nt;
-    #pragma omp parallel
+#pragma omp parallel
     nt = omp_get_num_threads();
+#pragma omp end parallel
     return 0;
     }
     '''
@@ -611,6 +612,7 @@ def omp(context):
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
+        context.env['OMP'] = True
     else:
         context.Result(context_failure)
         need_pkg('omp', fatal=False)
@@ -621,6 +623,7 @@ def omp(context):
             LIBS.pop()
         context.env['LIBS'] = LIBS
         context.env['CCFLAGS'] = flags
+        context.env['OMP'] = False
 
 def api_options(context):
     context.Message("checking API options ... ")
@@ -930,6 +933,7 @@ def options(opts):
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('MPICC','MPI C compiler')
+    opts.Add('OMP','OpenMP support')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
     opts.Add('CC','The C compiler')

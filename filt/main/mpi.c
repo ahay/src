@@ -20,17 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
 #include <mpi.h>
 
 #include <rsf.h>
 
 #define CMDLEN 4096
-
-static int my_system(const char *command);
 
 int main(int argc, char* argv[])
 {
@@ -125,11 +119,7 @@ int main(int argc, char* argv[])
 	ofile = sf_tempfile(&oname,"w+b");
 
 	snprintf(cmdline,CMDLEN,"%s dryrun=y < %s > %s",command,iname,oname);
-	sys = my_system(cmdline);
-	if (sys == -1) {
-	    sf_warning("failed to run \"%s\"",cmdline);	
-	    MPI_Finalize();
-	}
+	sf_system(cmdline);
 
 	inp = sf_input(oname);
 	ndim = sf_filedims (inp,n);
@@ -150,7 +140,7 @@ int main(int argc, char* argv[])
 	sf_rm(oname,true,false,false);
 
 	for (node=1; node < nodes; node++) {
-	    MPI_Recv(&sys,1, MPI_INT, node, 1, MPI_COMM_WORLD,&stat);
+	    MPI_Recv(&rank,1, MPI_INT, node, 1, MPI_COMM_WORLD,&stat);
 
 	    iname = inames[node-1];
 	    oname = onames[node-1];
@@ -173,28 +163,9 @@ int main(int argc, char* argv[])
 	}
     } else { /* slave nodes */
 	MPI_Recv(cmdline, CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
-        sys = my_system(cmdline);
-	if (sys ==-1) printf("\"%s\" failed on Node %d\n",cmdline,rank);
-	MPI_Send(&sys,1,MPI_INT,0,1,MPI_COMM_WORLD);
+        sf_system(cmdline);
+	MPI_Send(&rank,1,MPI_INT,0,1,MPI_COMM_WORLD);
     }
 
     MPI_Finalize();
-}
-    
-static int my_system(const char *command)
-{
-    pid_t pid;
-    int status;
-
-    pid = fork();
-
-    if (pid < 0) {
-	return -1;
-    } else if (pid==0) { /* child */
-	execl("/bin/sh","sh","-c",command,(char*) NULL);
-	_exit(127);
-    } else { /* parent */
-	waitpid(pid,&status,0);
-	return status;
-    }
 }

@@ -19,7 +19,7 @@ stack.stack('bei',
             srect2=5,
             vslope=0.67, 
             vx0=1.5,     
-            tmax=4,
+            tmax=3.996,
             f1=15,
             an=2,
             nout=2048)
