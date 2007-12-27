@@ -30,10 +30,10 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,n[SF_MAX_DIM],last,extra,chunk,i,j,len,nc;
     off_t size, left,nbuf;
-    char command[CMDLEN], *iname, *oname, key[5];
+    char command[CMDLEN], *iname, *oname, *iname2, key[5];
     char **inames, **onames, **cmdline, buffer[BUFSIZ];
-    FILE *ifile, *ofile;
-    sf_file inp, out, in;
+    FILE *ifile=NULL, *ofile=NULL;
+    sf_file inp, out, in, inp2;
 
 #pragma omp parallel
     {
@@ -73,6 +73,10 @@ int main(int argc, char* argv[])
     onames = (char**) sf_alloc(nodes,sizeof(char*));
     cmdline = (char**) sf_alloc(nodes,sizeof(char*));
 
+    ifile = sf_tempfile(&iname2,"w+b");
+    inp2 = sf_output(iname2);
+    fclose(ifile);
+    
     for (node=0; node < nodes; node++) {
 	if (node > 0) {
 	    fclose(ifile);
@@ -97,6 +101,7 @@ int main(int argc, char* argv[])
 		
 		sf_charread(buffer,nbuf,inp);
 		sf_charwrite(buffer,nbuf,in);
+		sf_charwrite(buffer,nbuf,inp2);
 	    }
 	}
 	    
@@ -105,9 +110,8 @@ int main(int argc, char* argv[])
 	cmdline[node] = sf_charalloc(CMDLEN);
 	snprintf(cmdline[node],CMDLEN,"%s < %s > %s",command,iname,oname);
     }
+    sf_fileclose(inp2);
 
-    sf_warning("start parallel part");
-    
 #pragma omp parallel private(rank)
     {
 	omp_set_num_threads(nodes);
@@ -115,18 +119,10 @@ int main(int argc, char* argv[])
 	sf_system(cmdline[rank]);
     }
 
-    sf_warning("end parallel part");
-
-    ifile = sf_tempfile(&iname,"w+b");
     ofile = sf_tempfile(&oname,"w+b");
-
-    in = sf_output(iname);
-    sf_cp(inp,in);
-    sf_fileclose(inp);
-
-    snprintf(command,CMDLEN,"%s dryrun=y < %s > %s",command,iname,oname);
+    snprintf(command,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
     sf_system(command);
-    sf_rm(iname,true,false,false);
+    sf_rm(iname2,true,false,false);
     
     inp = sf_input(oname);
     ndim = sf_filedims (inp,n);
