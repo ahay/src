@@ -105,6 +105,8 @@ int main(int argc, char* argv[])
 	cmdline[node] = sf_charalloc(CMDLEN);
 	snprintf(cmdline[node],CMDLEN,"%s < %s > %s",command,iname,oname);
     }
+
+    sf_warning("start parallel part");
     
 #pragma omp parallel private(rank)
     {
@@ -112,6 +114,8 @@ int main(int argc, char* argv[])
 	rank = omp_get_thread_num();
 	sf_system(cmdline[rank]);
     }
+
+    sf_warning("end parallel part");
 
     ifile = sf_tempfile(&iname,"w+b");
     ofile = sf_tempfile(&oname,"w+b");
