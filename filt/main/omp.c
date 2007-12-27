@@ -112,12 +112,16 @@ int main(int argc, char* argv[])
     }
     sf_fileclose(inp2);
 
+    sf_warning("start parallel job");
+
 #pragma omp parallel private(rank)
     {
 	omp_set_num_threads(nodes);
 	rank = omp_get_thread_num();
 	sf_system(cmdline[rank]);
     }
+
+    sf_warning("end parallel job");
 
     ofile = sf_tempfile(&oname,"w+b");
     snprintf(command,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
