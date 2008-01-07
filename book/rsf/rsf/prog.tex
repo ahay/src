@@ -1283,6 +1283,46 @@ bash$ < test.rsf sfstack axis=1 max=y | sfdisfil
    0:             4            5            6
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sftransp}
+  }}
+
+The \texttt{sftransp} program transposes the input hypercube
+exchanging the two axes specified by the \texttt{plane=} parameter. 
+\begin{verbatim}
+bash$ sfspike n1=10 n2=20 n3=30 > orig123.rsf
+bash$ sfin orig123.rsf 
+orig123.rsf:
+    in="/var/tmp/orig123.rsf@"
+    esize=4 type=float form=native 
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=20          d2=0.1         o2=0          label2="Distance2" unit2="km" 
+    n3=30          d3=0.1         o3=0          label3="Distance3" unit3="km" 
+        6000 elements 24000 bytes
+bash$ <orig123.rsf sftransp plane=23 >out132.rsf
+bash$ sfin out132.rsf 
+out132.rsf:
+    in="/var/tmp/out132.rsf@"
+    esize=4 type=float form=native 
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=30          d2=0.1         o2=0          label2="Distance3" unit2="km" 
+    n3=20          d3=0.1         o3=0          label3="Distance2" unit3="km" 
+        6000 elements 24000 bytes
+bash$ <orig123.rsf sftransp plane=13 >out321.rsf
+bash$ sfin out321.rsf 
+out321.rsf:
+    in="/var/tmp/out132.rsf@"
+    esize=4 type=float form=native 
+    n1=30          d1=0.1         o1=0          label1="Distance" unit1="km" 
+    n2=20          d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=10          d3=0.004       o3=0          label3="Time" unit3="s" 
+        6000 elements 24000 bytes
+\end{verbatim}
+\texttt{sftransp} tries to fit the dataset in memory to transpose it
+there but, if not enough memory is available, it performs a slower
+transpose out of core using disk operations. You can control the
+amount of available memory using the \texttt{memsize=} parameter or
+the \texttt{RSFMEMSIZE} environmental variable.
 
 \bibliographystyle{seg}
 \bibliography{SEG}
