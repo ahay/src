@@ -184,11 +184,10 @@ void cblas_sscal(int n, float alpha, float *x, int sx)
     int i, ix;
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,ix)
+#pragma omp parallel for private(i)
 #endif
-    for (i=ix=0; i < n; i++) {
-	x[ix] *= alpha;
-	ix += sx;
+    for (i=0; i < n; i++) {
+	x[i*sx] *= alpha;
     }
 }
 

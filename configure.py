@@ -590,7 +590,7 @@ def omp(context):
     if gcc:
         LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
-    if icc:
+    elif icc:
         LIBS.append('guide')
         LIBS.append('pthread')
         CCFLAGS = flags + ' -openmp -D_OPENMP'
