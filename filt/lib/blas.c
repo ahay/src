@@ -43,7 +43,9 @@ double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy) reduction(+:dot)
 #endif
-    for (i=ix=iy=0; i < n; i++, ix += sx, iy += sy) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
         dot += (double) x[ix] * y[iy];
     }
 
@@ -69,10 +71,10 @@ void cblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy)
 #endif
-    for (i=ix=iy=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
 	y[iy] += a * x[ix];
-	ix += sx;
-	iy += sy;
     }
 }
 
@@ -85,12 +87,12 @@ void cblas_sswap(int n, float *x, int sx, float* y, int sy)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy,t)
 #endif
-    for (i=ix=iy=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
 	t = x[ix];
 	x[ix] = y[iy];
 	y[iy] = t;
-	ix += sx;
-	iy += sy;
     }
 }
 
@@ -105,10 +107,10 @@ float cblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy) reduction(+:dot)
 #endif
-    for (i=ix=iy=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
 	dot += x[ix] * y[iy];
-	ix += sx;
-	iy += sy;
     }
 
     return dot;
@@ -126,10 +128,10 @@ double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy) reduction(+:dot)
 #endif
-    for (i=ix=iy=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
 	dot += (double) x[ix] * y[iy];
-	ix += sx;
-	iy += sy;
     }
 
     return dot;
@@ -146,9 +148,9 @@ float cblas_snrm2 (int n, const float* x, int sx)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix) reduction(+:xn)
 #endif
-    for (i=ix=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
 	xn += x[ix]*x[ix];
-	ix += sx;
     }
     return xn;
 }
@@ -167,7 +169,8 @@ float cblas_scnrm2 (int n, const void* x, int sx)
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix) reduction(+:xn)
 #endif
-    for (i=ix=0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
 #ifdef SF_HAS_COMPLEX_H
 	xn += crealf(c[ix]*conjf(c[ix]));
 #else
@@ -208,7 +211,9 @@ void cblas_cdotc_sub(int n,
 #ifdef _OPENMP
 #pragma omp parallel for private(i,ix,iy,xi,yi,pi) reduction(+:prod)
 #endif
-    for (i = ix = iy = 0; i < n; i++) {
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
 	xi = cx[ix];
 	yi = cy[iy];
 	pi = sf_dcmplx((double) crealf(xi)*crealf(yi) + 
@@ -220,8 +225,6 @@ void cblas_cdotc_sub(int n,
 #else
 	prod = sf_dcadd(prod,pi);
 #endif
-	ix += sx;
-	iy += sy;
     }
 
     *((sf_complex *) dot) = sf_cmplx(creal(prod),cimag(prod));

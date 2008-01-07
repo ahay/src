@@ -5,7 +5,7 @@ Flow('dense',None,
      spike n1=140 n2=500 nsp=3 k1=10,70,110 d1=0.012 d2=0.004 |
      nmostretch inv=y v0=1.5 half=n
      ''')
-Plot('dense','dense','grey crowd2=0.96 crowd1=0.80 pclip=100')
+Plot('dense','dense','grey crowd2=0.96 crowd1=0.80 pclip=100 wanttitle=n')
 
 Flow('sparse','dense','put n2=50 n3=10 | stack norm=no')
 Plot('sparse',
@@ -17,6 +17,14 @@ Plot('sparse',
 Result('oversamp','dense sparse','SideBySideAniso')
 
 Result('nmotraj', None,'nmotraj',prefix=plprefix)
+
+#strings=1 connect=3
+#antialias=1.
+#overlap=1.6
+
+Flow('model',None,'spike label= nsp=4 n1=140 k1=10,40,46,132')
+Flow('gather','model','...')
+
 
 End()
 
