@@ -33,14 +33,15 @@ void freqint_init (int nd /* irregular data size */,
 		   int nf                  /* interpolator length */,
 		   bool inv, bool unit, char type,
 		   int nw /* number of frequencies */, 
-		   float *w /* [nw] frequencies */)
+		   float *w /* [nw] frequencies */,
+		   sf_complex *z /* [nw] Z factors */)
 /*< allocate space >*/
 {
     nt = n;
     t = sf_complexalloc(nt);
 
     sf_int1_init (coord,o,d,n,interp,nf,nd);
-    freqlets_init(n,d,inv,unit,type,nw,w,NULL);
+    freqlets_init(n,d,inv,unit,type,nw,w,z);
 }
 
 void freqint_close(void)

@@ -46,5 +46,15 @@ int main (void) {
 	    crealf(x[2]),cimagf(x[2]),
 	    crealf(x[3]),cimagf(x[3]));
 
+    sf_ccdstep_init();
+    sf_csolver(cmatmult_lop, sf_ccdstep, n, n, x, b, 2*n, 
+	      "verb", true, "end");
+
+    fprintf(stderr,"inverse: (%f,%f) (%f,%f) (%f,%f) (%f,%f)\n", 
+	    crealf(x[0]),cimagf(x[0]),
+	    crealf(x[1]),cimagf(x[1]),
+	    crealf(x[2]),cimagf(x[2]),
+	    crealf(x[3]),cimagf(x[3]));
+
     exit(0);
 }

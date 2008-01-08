@@ -25,10 +25,11 @@
 
 int main(int argc, char *argv[])
 {
+    bool inv;
     int nd, i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
-    float *w0, d1, o1, *ww, *crd;
+    float *w0, d1, o1, *ww, *crd, eps;
     char *type;
-    sf_complex *pp, *qq, *mm;
+    sf_complex *pp, *qq, *mm, *z0;
     sf_file in, out, w, coord;
 
     sf_init(argc,argv);
@@ -39,7 +40,6 @@ int main(int argc, char *argv[])
     coord = sf_input("coord");
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-    if (SF_FLOAT != sf_gettype(w)) sf_error("Need float freq");
 
     /* get data size */
     if (!sf_histint(in,"n1",&nd)) sf_error("No n1= in input");
@@ -58,7 +58,19 @@ int main(int argc, char *argv[])
     sf_putfloat(out,"o1",o1);
     
     if (!sf_histint(w,"n1",&nw)) sf_error("No n1= in freq");
-    w0 = sf_floatalloc(nw);
+
+    if (SF_FLOAT == sf_gettype(w)) {
+	w0 = sf_floatalloc(nw);
+	z0 = NULL;
+    } else if (SF_COMPLEX == sf_gettype(w)) {
+	w0 = NULL;
+	z0 = sf_complexalloc(nw);
+    } else {
+	sf_error("Need float or complex type in freq");
+	w0 = NULL;
+	z0 = NULL;
+    }
+
     n1w = n1*nw;
 
     if (!sf_getint("niter",&niter)) niter=10;
@@ -66,6 +78,12 @@ int main(int argc, char *argv[])
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=1;
     /* number of IRLS iterations */
+
+    if (!sf_getfloat("eps",&eps)) eps=0.;
+    /* regularization parameter */
+
+    if (!sf_getbool("inv",&inv)) inv=true;
+    /* inversion flag */
     
     pp = sf_complexalloc(nd);
     crd = sf_floatalloc(nd);
@@ -84,12 +102,16 @@ int main(int argc, char *argv[])
     
     sf_floatread(crd,nd,coord);
 
-    freqint_init(nd,crd,n1,d1,o1,sf_lin_int,2,true,true,type[0],nw,w0);
+    freqint_init(nd,crd,n1,d1,o1,sf_lin_int,2,inv,true,type[0],nw,w0,z0);
     
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 	/* read frequencies */
-	sf_floatread(w0,nw,w);
+	if (NULL != w0) {
+	    sf_floatread(w0,nw,w);
+	} else {
+	    sf_complexread(z0,nw,w);
+	}
 
 	/* read data */
 	sf_complexread(pp,nd,in);
@@ -105,9 +127,10 @@ int main(int argc, char *argv[])
 	    }
 
 	    /* sparse inverse */
-	    sf_csolver_prec (freqint_lop,sf_ccgstep,cweight_lop,n1w,
-			     n1w,nd,qq,pp,niter,0.,"verb",true,"end");
-	    sf_ccgstep_close();
+	    sf_ccdstep_init();
+	    sf_csolver_prec (freqint_lop,sf_ccdstep,cweight_lop,n1w,
+			     n1w,nd,qq,pp,niter,eps,"verb",true,"end");
+	    sf_ccdstep_close();
 	} 
 
 	/* reconstruct regular data */
