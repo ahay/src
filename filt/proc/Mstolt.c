@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("mute",&mute)) mute=12;
     /* mute zone */
 
-    if (!sf_getfloat("minstr",&minstr)) minstr=0.5;
+    if (!sf_getfloat("minstr",&minstr)) minstr=0.0;
     /* minimum stretch allowed */
 
     trace = sf_floatalloc(nw);
