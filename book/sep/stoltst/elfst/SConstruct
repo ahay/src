@@ -18,7 +18,7 @@ def zoom(title):
 Plot('data',grey('(a) DMO-stack data'))
 
 Flow('fk','data','cosft sign2=1')
-Flow('stolt','fk','stolt vel=2000 pad=2049 | cosft sign2=-1')
+Flow('stolt','fk','stolt vel=2000 pad=2049 minstr=0.5 | cosft sign2=-1')
 
 Plot('stolt',grey('(b) Stolt migration (v0 = 2000 m/s)'))
 
@@ -63,7 +63,7 @@ for case in par.keys():
     stolt = 'stolt-'+case
     Flow(stolt,'stfk vt1',
          '''
-         stolt vel=%g pad=2049 %s |
+         stolt vel=%g pad=2049 minstr=0.5 %s |
          cosft sign2=-1 |
          stoltstretch velocity=${SOURCES[1]} vel=%g inv=y
          ''' % (v0,par[case],v0))
@@ -126,7 +126,7 @@ for ic in range(ncut):
          '''
          stoltstretch velocity=${SOURCES[1]} vel=%g pad=1250 |
          cosft sign2=1 |
-         stolt vel=%g pad=2049 |
+         stolt vel=%g pad=2049 minstr=0.5 |
          cosft sign2=-1 |
          stoltstretch velocity=${SOURCES[1]} vel=%g inv=y
          ''' % (v0,v0,v0))
