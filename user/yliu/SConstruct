@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-mf mlm tvmf dwt97 seislet97 freqintpef
+mf mlm tvmf dwt97 seislet97 freqintpef random
 '''
 
 try:  # distributed version
