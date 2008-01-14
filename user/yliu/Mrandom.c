@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
         max=0.;
 	sf_floatread(dat,n1*n2,in);
         for (i=0; i<n1*n2; i++) {
-            if (max < dat[i]) {
+            if (max < fabs(dat[i])) {
                max = fabs(dat[i]);
             }
         }
@@ -83,7 +83,7 @@ int main (int argc, char* argv[])
         max=0.;
 	sf_floatread(dat,n1*n2,in);
         for (i=0; i<n1*n2; i++) {
-            if (max < dat[i]) {
+            if (max < fabs(dat[i])) {
                max = fabs(dat[i]);
             }
         }
@@ -110,4 +110,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrandom.c 3250 2007-01-11 14:16:30Z yliu $	 */
+/* 	$Id: Mrandom.c 3251 2008-01-13 23:58:30Z yliu $	 */
