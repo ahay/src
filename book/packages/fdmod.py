@@ -466,14 +466,14 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     rout = imag+'_dr' # receiver data (not the input rdat!)
 
     # source wavefield (z,x,t)
-    awe(sout,swfl,sdat,velo,dens,sacq,iacq,custom,par)
+    awefd(sout,swfl,sdat,velo,dens,sacq,iacq,custom,par)
 
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     tout = imag+'_tdr'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(tout,rwfl,tdat,velo,dens,racq,iacq,custom,par)
+    awefd(tout,rwfl,tdat,velo,dens,racq,iacq,custom,par)
     Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
     # conventional (cross-correlation zero-lag) imaging condition
@@ -495,7 +495,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     twfl = imag+'_tur'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % par['nt'],par)
+    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % par['nt'],par)
 
     Flow(imag,twfl,'window n3=1')
 
