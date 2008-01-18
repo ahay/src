@@ -112,14 +112,14 @@ def datum3(swf1,rwf1,slow,swf0,rwf0,par):
 def image(imag,slow,swlf,rwfl,par):
     Flow(imag,[swlf,slow,rwfl],
          '''
-         srmig %s
+         srmig3 %s
          slo=${SOURCES[1]}
          rwf=${SOURCES[2]}
          ''' % param(par))
 def image_cw(imag,sslo,rslo,swlf,rwfl,par):
     Flow(imag,[swlf,sslo,rslo,rwfl],
          '''
-         srmig %s
+         srmig3 %s
          slo=${SOURCES[1]}
          sls=${SOURCES[2]}
          rwf=${SOURCES[3]}
@@ -196,7 +196,7 @@ def imageCW3(imag,cigs,sslo,rslo,swlf,rwfl,par):
 def model(data,slow,wfld,refl,par):
     Flow(data,[wfld,slow,refl],
           '''
-          srmod %s
+          srmod3 %s
           slo=${SOURCES[1]}
           ref=${SOURCES[2]}
           ''' % param(par))
@@ -205,7 +205,7 @@ def model(data,slow,wfld,refl,par):
 def model_cw(data,sslo,rslo,wfld,refl,par):
     Flow(data,[wfld,sslo,rslo,refl],
           '''
-          srmod %s
+          srmod3 %s
           slo=${SOURCES[1]}
           sls=${SOURCES[2]}
           ref=${SOURCES[3]}

@@ -23,6 +23,7 @@
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "axis.h"
 #include "vplot.h"
@@ -47,7 +48,7 @@ its scale ranges from num1 to num2, ltic is the size of tick marks
 if dnum=0., an optimal linear scale is estimated
 >*/
 {
-    int nopt, i;
+    int nopt, i, maxstrlen;
     float xpath, ypath, xup, yup, dist, costh, sinth, dtic, otic;
     float dxtic, dytic, loc, num, xpos, ypos;
     char string[32];
@@ -84,7 +85,7 @@ if dnum=0., an optimal linear scale is estimated
     } 
 
     if (dnum == 0.) { /* figure out onum and dnum */
-	nopt = vp_optimal_scale(dist/(aspect*size), num1, num2, &onum, &dnum);
+	nopt = vp_optimal_scale(dist/(aspect*size), true, num1, num2, &onum, &dnum, &maxstrlen);
     } else { /* use client's scale */
 	nopt = 1+ (int) (floor) (num2-onum)/dnum;
 	if (onum+(nopt-1)*dnum > num2) nopt--;
@@ -114,30 +115,50 @@ if dnum=0., an optimal linear scale is estimated
 }
 
 int vp_optimal_scale(int chars                /* characters */, 
-		     float min, float max,    /* scale range */ 
-		     /*@out@*/ float *onum,   /* output origin */
-		     /*@out@*/ float *dnum    /* output scaling */)
+		     bool parallel            /* parallel or perpendicular to the axis */,
+		     float min, float max     /* scale range */, 
+		     /*@out@*/ float *onum    /* output origin */,
+		     /*@out@*/ float *dnum    /* output scaling */,
+		     /*@out@*/ int *maxstrlen /* longest tick label */)
 /*< Find an optimal scale. Returns the number of tics >*/
 {
-    int i, ntics, nopt;
+    int i, ntics, nopt, len;
     float num;
     char string[32];
 
     nopt = 0;
+    *maxstrlen = 1;
 
     for (ntics = chars; ntics >= 1; ntics--) {
 	nopt = optimal_scale(ntics, min, max, onum, dnum);
-	
+	/* nopt - optimal number of tickmarks */
+
+	*maxstrlen = 1;
 	for (i=0; i < nopt; i++) {
 	    num = *onum + i*(*dnum);
+            /* number on a tickmark */
+
 	    if (fabsf(*dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
+	    /* set it to zero if it is close to zero */
 
 	    snprintf(string,32,"%1.5g",num);
-	    if ((strlen(string)+2)*nopt > chars) break;
+	    /* put it in a string */
+	    
+	    len = strlen(string);
+	    if (len > *maxstrlen) *maxstrlen = len;
+
+	    /* see if we can fit it in */
+	    if (parallel) {
+		if ((len+2)*nopt > chars) break;
+	    } else {
+		if (2.5*nopt > chars) break;
+	    }	    
 	}
 	    
 	if (i == nopt) break;
+	/* everything fits in, we are done */
+
 	if (ntics > nopt) ntics = nopt;
     } 
     

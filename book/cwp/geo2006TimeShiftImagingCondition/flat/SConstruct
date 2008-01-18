@@ -265,7 +265,7 @@ for h in ('x','t'):
             dip = 'd' + k + n
             
             # offset gather
-            Flow(off,img,'window | transp | stack ')
+            Flow(off,img,'window | transp')
             if(h=='x'):
                 Plot(off,off,
                      igrey('pclip=100 label1=z unit1=m label2=h unit2=m %s') % tit)

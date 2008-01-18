@@ -74,8 +74,8 @@ enum {
 };
 enum {
     TV_NORMAL, /* Use the default */
-    TV_BOTTOM, /* Bottom of letters */
-    TV_BASE,   /* Bottom of descenders */
+    TV_BOTTOM, /* Bottom of writing area */
+    TV_BASE,   /* Bottom of capital letters */
     TV_HALF,   /* Centered */
     TV_CAP,    /* Top of capital letters */
     TV_TOP,    /* Top of writing area */

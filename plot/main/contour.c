@@ -29,7 +29,7 @@ Run "sfdoc stdplot" for more parameters.
 
 int main (int argc, char* argv[])
 {
-    int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2;
+    int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2, maxstr;
     char *cfilename;
     float **z, zi, dc, c0, zmin=0., zmax=0., *c;
     float  min1, min2, max1, max2, bmin, bmax, o1, o2, d1, d2;
@@ -125,9 +125,9 @@ int main (int argc, char* argv[])
 		if (hasdc) {
 		    for (c0 = floorf(zmin/dc) * dc - dc; c0 < zmin; c0 += dc) ;
 		} else if (hasc0) {		
-		    nc = vp_optimal_scale(nc0, zmin-c0, zmax-c0, &zi, &dc);
+		    nc = vp_optimal_scale(nc0, false, zmin-c0, zmax-c0, &zi, &dc, &maxstr);
 		} else {
-		    nc = vp_optimal_scale(nc0, zmin, zmax, &c0, &dc);
+		    nc = vp_optimal_scale(nc0, false, zmin,    zmax,    &c0, &dc, &maxstr);
 		}
 	    }
 	    for (ic=0; ic < nc; ic++) {

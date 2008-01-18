@@ -38,7 +38,7 @@ static int cubelinecol=VP_WHITE;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat, xreverse, yreverse;
 static char blank[]=" ";
-static const float aspect=0.8;
+static const float aspect=0.8, ticksep=1.75;
 
 static struct Label {
     char where;
@@ -52,7 +52,8 @@ static struct Label {
     /*@null@*/ *barlabel=NULL;
 
 static struct Axis {
-    int ntic;
+    bool parallel;
+    int ntic, maxstrlen;
     float or, dnum, num0;
 }   /*@null@*/ *axis1=NULL, 
     /*@null@*/ *axis2=NULL, 
@@ -408,7 +409,7 @@ static void make_labels (sf_file in, char where1, char where2)
     }
     vs = 2.5*labelsz;
 
-    if (NULL != label1) {
+    if (NULL != label1) { /* horizontal axis */
 	if (!cube && NULL != (where = sf_getstring("wherexlabel"))) {
 	    /* where to put horizontal axis (top,bottom) */
 	    label1->where = *where;
@@ -457,7 +458,7 @@ static void make_labels (sf_file in, char where1, char where2)
 	}
     }
 
-    if (NULL != label3) {
+    if (NULL != label3) { /* out of plane axis */
 	if (!sf_getint ("labelfat",&(label3->fat))) label3->fat=0;
 	/* label fatness */
 	if ((NULL == (labl=sf_getstring("label3"))) &&
@@ -517,7 +518,7 @@ static void make_labels (sf_file in, char where1, char where2)
 	label3->max = l3max;
     }
 
-    if (NULL != label2) {
+    if (NULL != label2) { /* vertical axis */
 	if (!cube && NULL != (where = sf_getstring("whereylabel"))) {
 	    /* where to put vertical label (left,right) */
 	    label2->where = *where;
@@ -545,7 +546,6 @@ static void make_labels (sf_file in, char where1, char where2)
 
 	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
 	/* if rotate vertical label */
-	if (labelrot) vs *= 1.7;
 
 	label2->ypath = labelrot? -labelsz: labelsz;
 	label2->yup = 0.;
@@ -597,9 +597,11 @@ static void make_baraxis (float min, float max)
 	/* obarnum scalebar ticmarks origin */
 	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
 					 (aspect*labelsz), 
+					 true,
 					 min, max, 
 					 &(baraxis->num0), 
-					 &(baraxis->dnum));
+					 &(baraxis->dnum),
+	                                 &(baraxis->maxstrlen));
     bar0 = (baraxis->num0-0.5*(min+max))/(max-min+FLT_EPSILON);
     dbar = (baraxis->dnum)/(max-min+FLT_EPSILON);
 
@@ -616,10 +618,11 @@ static void make_baraxis (float min, float max)
 }	
 
 static void make_axes (void)
+/* put tickmarks */
 {
     char* where;
 
-    if (label1 != NULL) {
+    if (label1 != NULL) { /* horizontal axis */ 
 	if (NULL == axis1) 
 	    axis1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
@@ -635,18 +638,23 @@ static void make_axes (void)
 					   inch1*(mid1-min1)/
 					   ((max1-min1)*aspect*labelsz):
 					   inch1/(aspect*labelsz), 
+					   true,
 					   label1->min, label1->max, 
 					   &(axis1->num0), 
-					   &(axis1->dnum));
+					   &(axis1->dnum),
+		                           &(axis1->maxstrlen));
     }	
     
-    if (label2 != NULL) {
+    if (label2 != NULL) { /* vertical axis */
 	if (NULL == axis2)
 	    axis2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
 	if (!sf_getfloat ("axisor2",&(axis2->or)))
 	    axis2->or = (label2->where == 'l'? min1: max1);
 	/* second axis origin */
+
+	if (!sf_getbool ("parallel2",&(axis2->parallel))) axis2->parallel=true;
+	/* tickmark labels parallel to the axis */
 
 	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
 	/* second axis ticmarks */
@@ -656,9 +664,11 @@ static void make_axes (void)
 					   inch2*(mid2-min2)/
 					   ((max2-min2)*aspect*labelsz):
 					   inch2/(aspect*labelsz), 
+					   axis2->parallel, 
 					   label2->min, label2->max, 
 					   &(axis2->num0), 
-					   &(axis2->dnum));
+					   &(axis2->dnum),
+		                           &(axis2->maxstrlen));
     }
 
     if (label3 != NULL) {
@@ -673,10 +683,12 @@ static void make_axes (void)
 	/* third axis ticmarks */
 	if (!sf_getfloat ("d3num", &(axis3->dnum)) ||
 	    !sf_getfloat ("o3num", &(axis3->num0))) 
-	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz), 
+	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz),
+					   true,
 					   label3->min, label3->max, 
 					   &(axis3->num0), 
-					   &(axis3->dnum));
+					   &(axis3->dnum),
+					   &(axis3->maxstrlen));
     }
 
     wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
@@ -810,10 +822,11 @@ static void make_title (sf_file in, char wheret)
     vs = titlesz * 0.6;
 
     if (title->where == 'l' || title->where == 'r') {	
-	if (!sf_getbool ("labelrot",&labelrot)) labelrot = true;
+	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
 	/* label rotation (for vertical labels */
 	if (NULL != label2 && title->where == label2->where)
 	    vs += 3.25*labelsz;
+	/* !!! fix that - use text justification */
 
 	title->ypath = labelrot? -titlesz: titlesz;
 	title->yup = 0.;
@@ -911,8 +924,6 @@ static void make_barlabel (sf_file in)
     }
 
     if (vertbar) {
-	if (labelrot) vs *= 1.7;
-
 	barlabel->ypath = labelrot? -barlabelsz: barlabelsz;
 	barlabel->yup = 0.;
 	barlabel->xpath = 0.;
@@ -1135,6 +1146,12 @@ void vp_frame(void)
 		 label1->xup, label1->yup, label1->text);
 
 	/* plot tics */
+	if (label1->where == 't') { 
+	    vp_tjust (TH_CENTER, TV_BASE);
+	} else {
+	    vp_tjust (TH_CENTER, TV_CAP);
+	}
+
 	vs = label1->where == 't'? 0.5*labelsz: -0.5*labelsz;
 	for (i=0; i < axis1->ntic; i++) {
 	    num = axis1->num0 + i*(axis1->dnum);
@@ -1154,7 +1171,7 @@ void vp_frame(void)
 	    vp_draw (xc, yc+vs);
 
 	    snprintf (string,32,"%1.5g", num);
-	    vp_gtext(xc, yc+1.5*vs, labelsz, 0., 0., labelsz, string);
+	    vp_gtext(xc, yc+ticksep*vs, labelsz, 0., 0., labelsz, string);
 	}
     }    
 
@@ -1162,17 +1179,37 @@ void vp_frame(void)
 	vp_fat (label2->fat);
 
 	/* plot label */
-	if (label2->where == 'l') {
+	if (((label2->where != 'l') && labelrot) ||
+	    ((label2->where == 'l') && !labelrot)) {
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 	} else {
 	    vp_tjust (TH_CENTER, TV_TOP);
 	}
+
+	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	if (! axis2->parallel) label2->x += (axis2->maxstrlen-1)*labelsz*SF_SIG(vs);
+
 	vp_gtext(label2->x, label2->y, 
 		 label2->xpath, label2->ypath, 
 		 label2->xup, label2->yup, label2->text);
 	
         /* plot tics */
-	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+
+	if (axis2->parallel) {
+	    if (((label2->where != 'l') && labelrot) ||
+		((label2->where == 'l') && !labelrot)) {
+		vp_tjust (TH_CENTER, TV_BASE);
+	    } else {
+		vp_tjust (TH_CENTER, TV_CAP);
+	    }
+	} else {
+	    if (label2->where == 'l') {
+		vp_tjust (TH_RIGHT, TV_HALF);
+	    } else {
+		vp_tjust (TH_LEFT, TV_HALF);
+	    }
+	}
+
 	for (i=0; i < axis2->ntic; i++) {
 	    num = axis2->num0 + i*(axis2->dnum);
 	    if (fabsf(axis2->dnum) > FLT_EPSILON && 
@@ -1187,17 +1224,23 @@ void vp_frame(void)
 		xc = axis2->or;
 	    }	    
 
+	    /* draw the tick */
 	    vp_umove (xc, yc);
 	    vp_where (&xc, &yc);
 	    vp_draw (xc+vs, yc);
 
+	    /* tick label */
 	    snprintf (string,32,"%1.5g", num);
 
-	    if (labelrot) {
-		vp_gtext(xc+5.0*vs, yc, 0., -labelsz, labelsz, 0., string);
+	    if (axis2->parallel) {
+		if (labelrot) {
+		    vp_gtext(xc+ticksep*vs, yc, 0., -labelsz, labelsz, 0., string);
+		} else {
+		    vp_gtext(xc+ticksep*vs, yc, 0., labelsz, -labelsz, 0., string);
+		}
 	    } else {
-		vp_gtext(xc+1.5*vs, yc, 0., labelsz, -labelsz, 0., string);
-	    }
+		vp_gtext(xc+ticksep*vs, yc, labelsz, 0., 0., labelsz, string);
+	    }		
 	}
     }
 
@@ -1211,6 +1254,8 @@ void vp_frame(void)
 		 label3->xup, label3->yup, label3->text);
 	
         /* plot tics */
+	vp_tjust (TH_CENTER, TV_CAP);
+
 	vs = -0.5*labelsz;
 	for (i=0; i < axis3->ntic; i++) {
 	    num = axis3->num0 + i*(axis3->dnum);
@@ -1227,7 +1272,7 @@ void vp_frame(void)
 		vp_draw (xc, yc+vs);
 
 		snprintf (string,32,"%1.5g", num);
-		vp_gtext(xc, yc+1.5*vs,labelsz,0.,0.,labelsz,string);
+		vp_gtext(xc, yc+ticksep*vs,labelsz,0.,0.,labelsz,string);
 	    } else {
 		xc = mid1+(num-label3->min)*(max1-mid1)/
 		    (label3->max-label3->min);
@@ -1239,7 +1284,7 @@ void vp_frame(void)
 		vp_draw (xc-vs*sinth, yc+vs*costh);
 		
 		snprintf (string,32,"%1.5g", num);
-		vp_gtext(xc-1.5*vs*sinth, yc+1.5*vs*costh, 
+		vp_gtext(xc-ticksep*vs*sinth, yc+ticksep*vs*costh, 
 			 labelsz*costh,labelsz*sinth,
 			 -labelsz*sinth,labelsz*costh,string);
 	    }
@@ -1424,10 +1469,10 @@ void vp_barframe(void)
 		vp_draw (xc+vs, yc);
 
 		if (labelrot) {
-		    vp_gtext(xc+5.0*vs, yc, 0., 
+		    vp_gtext(xc+ticksep*vs, yc, 0., 
 			     -labelsz, labelsz, 0., string);
 		} else {
-		    vp_gtext(xc+1.5*vs, yc, 0.,
+		    vp_gtext(xc+ticksep*vs, yc, 0.,
 			     labelsz, -labelsz, 0., string);
 		}
 	    } else {
@@ -1437,7 +1482,7 @@ void vp_barframe(void)
 		vp_move (xc, yc);
 		vp_draw (xc, yc+vs);
 		
-		vp_gtext(xc, yc+1.5*vs, labelsz, 0., 0., labelsz, string);
+		vp_gtext(xc, yc+ticksep*vs, labelsz, 0., 0., labelsz, string);
 	    }
 	}
     }    
