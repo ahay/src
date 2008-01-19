@@ -596,8 +596,8 @@ def wframe(frame,movie,index,custom,par):
     Flow([movie+'_plt',movie+'_bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
 
-    Result(frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
+#    Result(frame,[movie+'_plt',movie+'_bar'],
+#           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     Plot  (frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     
