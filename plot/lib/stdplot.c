@@ -1295,15 +1295,34 @@ void vp_frame(void)
 	vp_fat (label3->fat);
 
 	/* plot label */
+
 	vp_tjust (TH_CENTER, TV_TOP);
+	vs = -0.5*labelsz;
+	
+	if (! axis3->parallel) {
+	    if (flat) {
+		label3->y += 2*(axis3->maxstrlen-1)*vs;
+	    } else {
+		label3->y += 2*(axis3->maxstrlen-1)*vs*costh;	
+		label3->x -= 2*(axis3->maxstrlen-1)*vs*sinth;
+	    }
+	}
+	
 	vp_gtext(label3->x, label3->y, 
 		 label3->xpath, label3->ypath, 
 		 label3->xup, label3->yup, label3->text);
 	
         /* plot tics */
-	vp_tjust (TH_CENTER, TV_CAP);
+	if (axis3->parallel) {
+	    vp_tjust (TH_CENTER, TV_CAP);
+	} else {
+	    if (labelrot) {
+		vp_tjust (TH_LEFT, TV_HALF);
+	    } else {
+		vp_tjust (TH_RIGHT, TV_HALF);
+	    }
+	}
 
-	vs = -0.5*labelsz;
 	for (i=0; i < axis3->ntic; i++) {
 	    num = axis3->num0 + i*(axis3->dnum);
 	    if (fabsf(axis3->dnum) > FLT_EPSILON && 
@@ -1319,8 +1338,24 @@ void vp_frame(void)
 		vp_draw (xc, yc+vs);
 
 		snprintf (string,32,"%1.5g", num);
-		vp_gtext(xc, yc+ticksep*vs,labelsz,0.,0.,labelsz,string);
-	    } else {
+
+		if (axis3->parallel) {
+		    vp_gtext(xc, yc+ticksep*vs,
+			     labelsz,0.,0.,labelsz,string);
+		} else {
+		    if (labelrot) {
+			vp_gtext(xc, yc+ticksep*vs, 
+				 0., -labelsz, 
+				 labelsz, 0., string);
+		    } else {
+			vp_gtext(xc, yc+ticksep*vs, 
+				 0., labelsz, 
+				 -labelsz, 0., string);
+		    }
+		}
+
+	    } else { /* not flat */
+
 		xc = mid1+(num-label3->min)*(max1-mid1)/
 		    (label3->max-label3->min);
 		yc = min2+(num-label3->min)*(max2-mid2-min2)/
@@ -1331,9 +1366,25 @@ void vp_frame(void)
 		vp_draw (xc-vs*sinth, yc+vs*costh);
 		
 		snprintf (string,32,"%1.5g", num);
-		vp_gtext(xc-ticksep*vs*sinth, yc+ticksep*vs*costh, 
-			 labelsz*costh,labelsz*sinth,
-			 -labelsz*sinth,labelsz*costh,string);
+
+		if (axis3->parallel) {
+		    vp_gtext(xc-ticksep*vs*sinth, 
+			     yc+ticksep*vs*costh, 
+			     labelsz*costh,labelsz*sinth,
+			     -labelsz*sinth,labelsz*costh,string);
+		} else {
+		    if (labelrot) {
+			vp_gtext(xc-ticksep*vs*sinth, 
+				 yc+ticksep*vs*costh,
+				 labelsz*sinth, -labelsz*costh, 
+				 labelsz*costh,  labelsz*sinth, string);
+		    } else {
+			vp_gtext(xc-ticksep*vs*sinth, 
+				 yc+ticksep*vs*costh,
+				 -labelsz*sinth, labelsz*costh, 
+				 -labelsz*costh, -labelsz*sinth, string);
+		    }
+		}
 	    }
 	}
     }
