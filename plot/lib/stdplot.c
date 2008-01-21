@@ -409,6 +409,9 @@ static void make_labels (sf_file in, char where1, char where2)
     }
     vs = 2.5*labelsz;
 
+    if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
+    /* if rotate vertical label */
+    
     if (NULL != label1) { /* horizontal axis */
 	if (!cube && NULL != (where = sf_getstring("wherexlabel"))) {
 	    /* where to put horizontal axis (top,bottom) */
@@ -544,9 +547,6 @@ static void make_labels (sf_file in, char where1, char where2)
 	    free(unit);
 	}
 
-	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
-	/* if rotate vertical label */
-
 	label2->ypath = labelrot? -labelsz: labelsz;
 	label2->yup = 0.;
 	label2->xpath = 0.;
@@ -589,6 +589,12 @@ static void make_baraxis (float min, float max)
 	}
     }
 
+    if (!sf_getbool ("parallelbar",&(baraxis->parallel)) &&
+	(( vertbar && !sf_getbool ("parallel2",&(baraxis->parallel))) ||
+	 (!vertbar && !sf_getbool ("parallel1",&(baraxis->parallel)))) &&
+	!sf_getbool ("parallel", &(baraxis->parallel))) baraxis->parallel=true;
+	/* tickmark labels parallel to the axis */
+
     if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
     /* nbartic number of scalebar ticmarks */
     if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
@@ -597,7 +603,7 @@ static void make_baraxis (float min, float max)
 	/* obarnum scalebar ticmarks origin */
 	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
 					 (aspect*labelsz), 
-					 true,
+					 baraxis->parallel,
 					 min, max, 
 					 &(baraxis->num0), 
 					 &(baraxis->dnum),
@@ -630,6 +636,10 @@ static void make_axes (void)
 	    axis1->or = (label1->where == 'b'? min2: max2);
 	/* first axis origin */
 
+	if (!sf_getbool ("parallel1",&(axis1->parallel)) &&
+	    !sf_getbool ("parallel", &(axis1->parallel))) axis1->parallel=true;
+	/* tickmark labels parallel to the axis */
+
 	if (!sf_getint ("n1tic",&(axis1->ntic))) axis1->ntic = 1;
 	/* first axis ticmarks */
 	if (!sf_getfloat ("d1num", &(axis1->dnum)) ||
@@ -638,7 +648,7 @@ static void make_axes (void)
 					   inch1*(mid1-min1)/
 					   ((max1-min1)*aspect*labelsz):
 					   inch1/(aspect*labelsz), 
-					   true,
+					   axis1->parallel,
 					   label1->min, label1->max, 
 					   &(axis1->num0), 
 					   &(axis1->dnum),
@@ -653,7 +663,8 @@ static void make_axes (void)
 	    axis2->or = (label2->where == 'l'? min1: max1);
 	/* second axis origin */
 
-	if (!sf_getbool ("parallel2",&(axis2->parallel))) axis2->parallel=true;
+	if (!sf_getbool ("parallel2",&(axis2->parallel)) &&
+	    !sf_getbool ("parallel", &(axis2->parallel))) axis2->parallel=true;
 	/* tickmark labels parallel to the axis */
 
 	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
@@ -678,13 +689,17 @@ static void make_axes (void)
 	if (!sf_getfloat ("axisor3",&(axis3->or)))
 	    axis3->or = min1;
 	/* third axis origin */
+
+	if (!sf_getbool ("parallel3",&(axis3->parallel)) &&
+	    !sf_getbool ("parallel", &(axis3->parallel))) axis3->parallel=true;
+	/* tickmark labels parallel to the axis */
 	
 	if (!sf_getint ("n3tic",&(axis3->ntic))) axis3->ntic = 1;
 	/* third axis ticmarks */
 	if (!sf_getfloat ("d3num", &(axis3->dnum)) ||
 	    !sf_getfloat ("o3num", &(axis3->num0))) 
 	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz),
-					   true,
+					   axis3->parallel,
 					   label3->min, label3->max, 
 					   &(axis3->num0), 
 					   &(axis3->dnum),
@@ -822,11 +837,8 @@ static void make_title (sf_file in, char wheret)
     vs = titlesz * 0.6;
 
     if (title->where == 'l' || title->where == 'r') {	
-	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
-	/* label rotation (for vertical labels */
 	if (NULL != label2 && title->where == label2->where)
-	    vs += 3.25*labelsz;
-	/* !!! fix that - use text justification */
+	    vs += 3.25*labelsz; /* !!! fix that - use text justification */
 
 	title->ypath = labelrot? -titlesz: titlesz;
 	title->yup = 0.;
@@ -842,7 +854,7 @@ static void make_title (sf_file in, char wheret)
 	title->x = (title->where == 'l')? xc-vs: xc+vs;
     } else {
 	if (NULL != label1 && title->where == label1->where) 
-	    vs += 3.25*labelsz;
+	    vs += 3.25*labelsz; /* !!! fix that - use text justification */
 	if (cube) vs += 2.00*labelsz;
 
 	title->ypath = 0.;
@@ -1138,21 +1150,36 @@ void vp_frame(void)
 	/* plot label */
 	if (label1->where == 't') { 
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	    vs = 0.5*labelsz;
 	} else {
 	    vp_tjust (TH_CENTER, TV_TOP);
+	    vs = -0.5*labelsz;
 	}
+
+	if (! axis1->parallel) 
+	    label1->y += 2*(axis1->maxstrlen-1)*vs;
+
 	vp_gtext(label1->x, label1->y, 
 		 label1->xpath, label1->ypath, 
 		 label1->xup, label1->yup, label1->text);
 
 	/* plot tics */
-	if (label1->where == 't') { 
-	    vp_tjust (TH_CENTER, TV_BASE);
+
+	if (axis1->parallel) {
+	    if (label1->where == 't') { 
+		vp_tjust (TH_CENTER, TV_BASE);
+	    } else {
+		vp_tjust (TH_CENTER, TV_CAP);
+	    }
 	} else {
-	    vp_tjust (TH_CENTER, TV_CAP);
+	    if (((label1->where != 'b') && labelrot) ||
+		((label1->where == 'b') && !labelrot)) {
+		vp_tjust (TH_RIGHT, TV_HALF);
+	    } else {
+		vp_tjust (TH_LEFT, TV_HALF);
+	    }
 	}
 
-	vs = label1->where == 't'? 0.5*labelsz: -0.5*labelsz;
 	for (i=0; i < axis1->ntic; i++) {
 	    num = axis1->num0 + i*(axis1->dnum);
 	    if (fabsf(axis1->dnum) > FLT_EPSILON && 
@@ -1171,7 +1198,22 @@ void vp_frame(void)
 	    vp_draw (xc, yc+vs);
 
 	    snprintf (string,32,"%1.5g", num);
-	    vp_gtext(xc, yc+ticksep*vs, labelsz, 0., 0., labelsz, string);
+
+	    if (axis1->parallel) {
+		vp_gtext(xc, yc+ticksep*vs, 
+			 labelsz, 0., 
+			 0., labelsz, string);
+	    } else {
+		if (labelrot) {
+		    vp_gtext(xc, yc+ticksep*vs, 
+			     0., -labelsz, 
+			     labelsz, 0., string);
+		} else {
+		    vp_gtext(xc, yc+ticksep*vs, 
+			     0., labelsz, 
+			     -labelsz, 0., string);
+		}
+	    }
 	}
     }    
 
@@ -1187,7 +1229,8 @@ void vp_frame(void)
 	}
 
 	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
-	if (! axis2->parallel) label2->x += (axis2->maxstrlen-1)*labelsz*SF_SIG(vs);
+	if (! axis2->parallel) 
+	    label2->x += 2*(axis2->maxstrlen-1)*vs;
 
 	vp_gtext(label2->x, label2->y, 
 		 label2->xpath, label2->ypath, 
@@ -1234,13 +1277,17 @@ void vp_frame(void)
 
 	    if (axis2->parallel) {
 		if (labelrot) {
-		    vp_gtext(xc+ticksep*vs, yc, 0., -labelsz, labelsz, 0., string);
+		    vp_gtext(xc+ticksep*vs, yc, 
+			     0., -labelsz, 
+			     labelsz, 0., string);
 		} else {
-		    vp_gtext(xc+ticksep*vs, yc, 0., labelsz, -labelsz, 0., string);
+		    vp_gtext(xc+ticksep*vs, yc, 
+			     0., labelsz, 
+			     -labelsz, 0., string);
 		}
 	    } else {
 		vp_gtext(xc+ticksep*vs, yc, labelsz, 0., 0., labelsz, string);
-	    }		
+	    }
 	}
     }
 
@@ -1436,11 +1483,26 @@ void vp_barframe(void)
     if (NULL != barlabel) {
 	vp_fat (barlabel->fat);
 
-	if (barlabel->where == 't' || 
-	    barlabel->where == 'l') { 
-	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	if (vertbar) {
+	    if (((barlabel->where != 'l') && labelrot) ||
+		((barlabel->where == 'l') && !labelrot)) { 
+		vp_tjust (TH_CENTER, TV_BOTTOM);
+	    } else {
+		vp_tjust (TH_CENTER, TV_TOP);
+	    }
+	    vs = barlabel->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	    if (! baraxis->parallel) 
+		barlabel->x += 2*(baraxis->maxstrlen-1)*vs;
 	} else {
-	    vp_tjust (TH_CENTER, TV_TOP);
+	    if (barlabel->where == 't') {
+		vp_tjust (TH_CENTER, TV_BOTTOM);
+		vs = 0.5*labelsz;
+	    } else {
+		vp_tjust (TH_CENTER, TV_TOP);
+		vs = -0.5*labelsz;
+	    }
+	    if (! baraxis->parallel) 
+		barlabel->y += 2*(baraxis->maxstrlen-1)*vs;
 	}
 
 	vp_gtext(barlabel->x, barlabel->y, 
@@ -1448,10 +1510,37 @@ void vp_barframe(void)
 		 barlabel->xup, barlabel->yup, barlabel->text);
 
 	/* plot tics */
+
 	if (vertbar) {
-	    vs = barlabel->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	    if (baraxis->parallel) {
+		if (((barlabel->where != 'l') && labelrot) ||
+		    ((barlabel->where == 'l') && !labelrot)) {
+		    vp_tjust (TH_CENTER, TV_BASE);
+		} else {
+		    vp_tjust (TH_CENTER, TV_CAP);
+		}
+	    } else {
+		if (barlabel->where == 'l') {
+		    vp_tjust (TH_RIGHT, TV_HALF);
+		} else {
+		    vp_tjust (TH_LEFT, TV_HALF);
+		}
+	    }
 	} else {
-	    vs = barlabel->where == 't'? 0.5*labelsz: -0.5*labelsz;
+	    if (baraxis->parallel) {
+		if (barlabel->where == 't') {
+		    vp_tjust (TH_CENTER, TV_BASE);
+		} else {
+		    vp_tjust (TH_CENTER, TV_CAP);
+		}
+	    } else {
+		if (((barlabel->where != 'b') && labelrot) ||
+		    ((barlabel->where == 'b') && !labelrot)) {
+		    vp_tjust (TH_RIGHT, TV_HALF);
+		} else {
+		    vp_tjust (TH_LEFT, TV_HALF);
+		}
+	    }
 	}
 
 	for (i=0; i < baraxis->ntic; i++) {
@@ -1468,24 +1557,46 @@ void vp_barframe(void)
 		vp_move (xc, yc);
 		vp_draw (xc+vs, yc);
 
-		if (labelrot) {
-		    vp_gtext(xc+ticksep*vs, yc, 0., 
-			     -labelsz, labelsz, 0., string);
+		if (baraxis->parallel) {
+		    if (labelrot) {
+			vp_gtext(xc+ticksep*vs, yc, 
+				 0., -labelsz, 
+				 labelsz, 0., string);
+		    } else {
+			vp_gtext(xc+ticksep*vs, yc, 
+				 0., labelsz, 
+				 -labelsz, 0., string);
+		    }
 		} else {
-		    vp_gtext(xc+ticksep*vs, yc, 0.,
-			     labelsz, -labelsz, 0., string);
+		    vp_gtext(xc+ticksep*vs, yc, 
+			     labelsz, 0., 
+			     0., labelsz, string);
 		}
-	    } else {
+	    } else { /* horizontal bar */
 		xc = bar0 + i*dbar;
 		yc = baraxis->or;
 
 		vp_move (xc, yc);
 		vp_draw (xc, yc+vs);
-		
-		vp_gtext(xc, yc+ticksep*vs, labelsz, 0., 0., labelsz, string);
+
+		if (baraxis->parallel) {
+		    vp_gtext(xc, yc+ticksep*vs, 
+			     labelsz, 0., 
+			     0., labelsz, string);
+		} else {
+		    if (labelrot) {
+			vp_gtext(xc, yc+ticksep*vs, 
+				 0., -labelsz, 
+				 labelsz, 0., string);
+		    } else {
+			vp_gtext(xc, yc+ticksep*vs, 
+				 0., labelsz, 
+				 -labelsz, 0., string);
+		    }
+		}
 	    }
 	}
-    }    
+    }
 }
 
 void vp_barraster (int nbuf, unsigned char** buf /* buf[1][nbuf] */)
