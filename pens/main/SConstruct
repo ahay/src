@@ -29,7 +29,7 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../utilities','../genlib',
                      '../../plot/lib','../../filt/lib'],
-            LIBS=['genpen','util','rsfplot','rsf'])
+            LIBS=['genpen','penutil','rsfplot','rsf'])
 
 env['PROGPREFIX'] = ''
 
