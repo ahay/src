@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 {
     map4 nmo; /* using cubic spline interpolation */
     bool half, slow, ellipse;
-    int it,ix,iy, ih, nt, nx, ny, nh, nw, nc, CDPtype;
+    int it,ix,iy, ih, nt, nx, ny, nh, nhx, nhy, nw, CDPtype;
     float dt, t0, hx, hy, h0x, h0y, h, f, dhx, dhy, eps, dc, vx, vy, vxy;
     float *trace, *vel, *off,*offx,*offy, *str, *out;
     sf_file cmp, nmod, velocity, offset;
