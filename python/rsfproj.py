@@ -335,6 +335,10 @@ class Project(Environment):
             # Split the flow into parallel flows
             axis = split[0]
             n = split[1]
+            if len(split) > 2:
+                reduce = split[2]
+            else:
+                reduce = 'cat'
             w = n/self.np
             mytargets = []
             for i in range(self.np):
@@ -354,8 +358,9 @@ class Project(Environment):
                           [mysource,]+sfiles[1:],flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
+
             self.Flow(tfiles[0],mytargets,
-                      'cat axis=%d ${SOURCES[1:%d]}' % (axis,self.np))
+                      '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
             return
 
         sources = []

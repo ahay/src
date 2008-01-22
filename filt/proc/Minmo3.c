@@ -77,7 +77,6 @@ int main (int argc, char* argv[])
 
 	for (ih = 0; ih < nhx; ih++) {
 	  offx[ih] = h0x + ih*dhx;
-	  /*off[ih] = sqrtf((h0x + ihx*dhx)*(h0x + ihx*dhx)+(h0y + ihy*dhy)*(h0y + ihy*dhy)); */
 	}
 	for (ih = 0; ih < nhy; ih++) {
 	  offy[ih] = h0y + ih*dhy;
