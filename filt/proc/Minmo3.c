@@ -66,6 +66,7 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
 	if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
 	if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
+    }
 
 	if (!sf_getbool("half",&half)) half=true;
 	/* if y, the second and third axes are half-offset instead of full offset */
