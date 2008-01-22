@@ -34,7 +34,6 @@ int main (int argc, char* argv[])
 
     sf_init (argc,argv);
     cmp = sf_input("in");
-    velocity = sf_input("velocity");
     nmod = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
@@ -46,6 +45,16 @@ int main (int argc, char* argv[])
     if (!sf_histint(cmp,"n3",&nhy)) sf_error("No n3= in input");
 
     off = sf_floatalloc(nh);
+
+    if (NULL != sf_getstring("velocity")) {
+	velocity = sf_input("velocity");
+    }else{
+      sf_warning("No velocity file specified. Using velocity ellipse parameters.");
+      ellipse=true;
+      if (!= sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      if (!= sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      if (!= sf_getstring("vxy") sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+    }
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
