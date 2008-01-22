@@ -27,8 +27,8 @@ int main (int argc, char* argv[])
 {
     map4 nmo; /* using cubic spline interpolation */
     bool half, slow, ellipse;
-    int it,ix,ih, nt, nx, ny, nh, nw, nc, CDPtype;
-    float dt, t0, hx, hy, h0x, h0y, f, dhx, dhy, eps, dc, vx, vy, vxy;
+    int it,ix,iy, ih, nt, nx, ny, nh, nw, nc, CDPtype;
+    float dt, t0, hx, hy, h0x, h0y, h, f, dhx, dhy, eps, dc, vx, vy, vxy;
     float *trace, *vel, *off,*offx,*offy, *str, *out;
     sf_file cmp, nmod, velocity, offset;
 
@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
-	sf_floatread (off,nhx,nhy,offset);
+	sf_floatread (off,nh,offset);
 	sf_fileclose(offset);
     } else {
 	if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
 	}
 	
 	if (sf_histfloat(cmp,"d4",&dc)) {
-	    CDPtype=0.5+0.5*dh/dc;
+	    CDPtype=0.5+0.5*dhx/dc;
 	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
 	} 	   
 	if (1 > CDPtype) CDPtype=1;
