@@ -75,10 +75,10 @@ int main (int argc, char* argv[])
 	if (1 > CDPtype) CDPtype=1;
 	sf_warning("CDPtype=%d",CDPtype);
 
-	for (ih = 0; ih < nhx; ih++) {
+	for (ih = 0; ih < nh; ih++) {
 	  offx[ih] = h0x + ih*dhx;
 	}
-	for (ih = 0; ih < nhy; ih++) {
+	for (ih = 0; ih < nh; ih++) {
 	  offy[ih] = h0y + ih*dhy;
 	}
 
