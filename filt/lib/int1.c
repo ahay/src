@@ -24,6 +24,7 @@
 #include "alloc.h"
 #include "error.h"
 #include "adjnull.h"
+#include "komplex.h"
 
 #include "interp.h"
 /*^*/

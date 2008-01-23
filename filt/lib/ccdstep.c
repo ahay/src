@@ -26,6 +26,7 @@
 
 #include "_bool.h"
 #include "c99.h"
+#include "komplex.h"
 /*^*/
 
 static sf_clist steps;
@@ -77,7 +78,11 @@ void sf_ccdstep(bool forget          /* restart flag */,
 
     for (i=0; i < n; i++) {
 	sf_clist_down (steps, &si, &beta);
+#ifdef SF_HAS_COMPLEX_H
 	alpha = - dsdot(ny, gg, si+nx) / beta;
+#else
+	alpha = sf_dcrmul(dsdot(ny, gg, si+nx),-1./beta);
+#endif
 	saxpy(nx+ny,alpha,si,s);
     }
     
@@ -86,8 +91,12 @@ void sf_ccdstep(bool forget          /* restart flag */,
 
     sf_clist_add (steps, s, beta);
     if (forget) sf_clist_chop (steps);
+#ifdef SF_HAS_COMPLEX_H
     alpha = -  dsdot(ny, rr, ss) / beta;
-    
+#else
+    alpha = sf_dcrmul(dsdot(ny, rr, ss),-1./beta);
+#endif    
+
     saxpy(nx,alpha,s,x);
     saxpy(ny,alpha,ss,rr);
 }
@@ -106,7 +115,7 @@ static void saxpy(int n, sf_double_complex a,
 #ifdef SF_HAS_COMPLEX_H
 	y[i] += a * x[i];
 #else
-	y[i] = sf_cadd(y[i],sf_cmul(x[i],a));
+	y[i] = sf_cadd(y[i],sf_cmul(x[i],sf_cmplx(sf_creal(a),sf_cimag(a))));
 #endif
     }
 }
