@@ -23,7 +23,7 @@
 #include "cburg.h"
 
 static  int n, nf, nc;
-float complex **f, **b;
+sf_complex **f, **b;
 
 void cburg_init (int n_in  /* trace length */, 
 		 int nc_in /* number of traces */, 
@@ -47,13 +47,12 @@ void cburg_close(void)
     free (b);
 }
 
-void cburg_apply (float complex *x  /* [n*nc] input data */, 
-		  float complex *a  /* [nf] output prediction-error filter */)
+void cburg_apply (sf_complex *x  /* [n*nc] input data */, 
+		  sf_complex *a  /* [nf] output prediction-error filter */)
 /*< estimate PEF >*/
 {
-    double complex cj, num; 
     double den;
-    float complex fi, bi, ai;
+    sf_complex fi, bi, ai, num, cj;
     int j, ic, i;
 
     for (ic=0; ic < nc; ic++) {
@@ -62,31 +61,57 @@ void cburg_apply (float complex *x  /* [n*nc] input data */,
 	}
     }
 
-    a[0] = 1.;
+    a[0] = sf_cmplx(1.,0.);
     for (j=1; j < nf; j++) {
-	num = den = 0.;
+	num = sf_cmplx(0.,0.);
+	den = 0.;
 	for (ic=0; ic < nc; ic++) {
 	    for (i=j; i < n; i++) {
 		fi = f[ic][i];
 		bi = b[ic][i-j];
+#ifdef SF_HAS_COMPLEX_H
 		num += fi*conj(bi);
 		den += creal(fi*conj(fi) + bi*conj(bi));
+#else
+		num = sf_cadd(num,sf_cmul(fi,conjf(bi)));
+		den += sf_crealf(sf_cadd(sf_cmul(fi,conjf(fi)),
+					 sf_cmul(bi,conjf(bi))));
+#endif
 	    }
 	}
+#ifdef SF_HAS_COMPLEX_H
 	cj = 2.*num/den;
+#else
+	cj = sf_crmul(num,2./den);
+#endif
 	for (ic=0; ic < nc; ic++) {
 	    for (i=j; i < n; i++) {
 		fi = f[ic][i];
 		bi = b[ic][i-j];
+#ifdef SF_HAS_COMPLEX_H
 		f[ic][i] -= cj*bi;
 		b[ic][i-j] -= conj(cj)*fi;
+#else
+		f[ic][i] = sf_cadd(f[ic][i],sf_cneg(sf_cmul(cj,bi)));
+		b[ic][i-j] = sf_cadd(b[ic][i-j],
+				     sf_cneg(sf_cmul(sf_conjf(cj),fi)));
+#endif
 	    }
 	}
 	for (i=1; i <= j/2; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    ai = a[j-i]-cj*conjf(a[i]);
 	    a[i] -= cj*conjf(a[j-i]);
+#else
+	    ai = sf_cadd(a[j-i],sf_cneg(sf_cmul(cj,sf_conjf(a[i]))));
+	    a[i] = sf_cadd(a[i],sf_cneg(sf_cmul(cj,sf_conjf(a[j-i]))));
+#endif
 	    a[j-i] = ai;
 	}
+#ifdef SF_HAS_COMPLEX_H
 	a[j] = -cj;
+#else
+	a[j] = sf_cneg(cj);
+#endif
     }
 }
