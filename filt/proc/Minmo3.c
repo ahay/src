@@ -63,6 +63,7 @@ int main (int argc, char* argv[])
 	sf_floatread (off,nhx,offset);
 	sf_fileclose(offset);
     } else {
+        sf_warning("No offset file specified. Using data dimensions.");
 	if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
 	if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
@@ -77,6 +78,9 @@ int main (int argc, char* argv[])
 	    dhy *= 2.;
 	    h0x *= 2.;
 	    h0y *= 2.;
+	    sf_warning("Since half=y, offsets were doubled.");
+	}else{
+            sf_warning("Since half=n, offsets not doubled.");
 	}
 	
 	if (sf_histfloat(cmp,"d4",&dc)) {
