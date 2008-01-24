@@ -125,14 +125,12 @@ int main (int argc, char* argv[])
     /* trace extension */
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
-
+    
     if (ellipse == true) {
-
+      sf_warning("Removing NMO using ellipse parameters...");
       for (ix = 0; ix < nx; ix++) {
 	for (iy = 0; iy < ny; iy++) {
 	  for (ih = 0; ih < nhx; ih++) {
-	    /*Should probably window data into 2-D gathers and loop.*/
-	    /*As long as x and y coords are there, should be 3-D ok.*/
 	    sf_floatread (trace,nt,cmp);
 	    
 	    hx = offx[ih] + (dhx/CDPtype)*(ix%CDPtype) - h0x;
@@ -159,7 +157,7 @@ int main (int argc, char* argv[])
       }
 
     } else {
-
+      sf_warning("Removing NMO using velocity model...");
       for (ix = 0; ix < nx; ix++) {
 	for (iy = 0; iy < ny; iy++) {
 	  sf_floatread (vel,nt,velocity);	
