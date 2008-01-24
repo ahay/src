@@ -52,9 +52,9 @@ int main (int argc, char* argv[])
     }else{
       sf_warning("No velocity file specified. Using velocity ellipse parameters.");
       ellipse=true;
-      if (NULL != sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-      if (NULL != sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-      if (NULL != sf_getstring("vxy")) sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      if (NULL == sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      if (NULL == sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      if (NULL == sf_getstring("vxy")) sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
     }
 
     CDPtype=1;
