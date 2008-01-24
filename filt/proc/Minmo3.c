@@ -44,7 +44,8 @@ int main (int argc, char* argv[])
     if (!sf_histint(cmp,"n2",&nhx)) sf_error("No n2= in input");
     if (!sf_histint(cmp,"n3",&nhy)) sf_error("No n3= in input");
 
-    off = sf_floatalloc(nh);
+    offx = sf_floatalloc(nhx);
+    offy = sf_floatalloc(nhy);
 
     if (NULL != sf_getstring("velocity")) {
 	velocity = sf_input("velocity");
@@ -124,8 +125,9 @@ int main (int argc, char* argv[])
 
       for (ix = 0; ix < nx; ix++) {
 	for (iy = 0; iy < ny; iy++) {
-	  for (ih = 0; ih < nh; ih++) {
-
+	  for (ih = 0; ih < nhx; ih++) {
+	    /*Should probably window data into 2-D gathers and loop.*/
+	    /*As long as x and y coords are there, should be 3-D ok.*/
 	    sf_floatread (trace,nt,cmp);
 	    
 	    hx = offx[ih] + (dhx/CDPtype)*(ix%CDPtype) - h0x;
