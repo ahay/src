@@ -36,25 +36,25 @@ int main (int argc, char* argv[])
 	int m;
 	float a;   /*temporary variable*/
         /**/
-	float *trace,*weight;
+	float *trace,*wei;
 	float *tempt,*tempw;
 	float *extendt,*extendw;
 	float *temp1,*temp2,*temp3,*temp4;
 	float *tempw1,*tempw2,*tempw3,*tempw4;
 	float *z,*Y;
-        sf_file in, out, slope;
+        sf_file in, out, weights;
 
         sf_init (argc, argv); 
         in = sf_input("in");
         out = sf_output("out");
-	slope=sf_input("weights");
+	weights=sf_input("weights");
     
         if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
         n2 = sf_leftsize(in,1);
 	/* get the trace length (n1) and the number of traces (n2)*/
 
-        if (!sf_histint(slope,"n1",&wn1)) sf_error("No n1= in weights");
-        wn2 = sf_leftsize(slope,1);
+        if (!sf_histint(weights,"n1",&wn1)) sf_error("No n1= in weights");
+        wn2 = sf_leftsize(weights,1);
 
 	if (n1!=wn1 || n2!=wn2) sf_error("Different size in two input data");
 
@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
         m=(nfw-1)/2;
 
         trace = sf_floatalloc(n1*n2);
-	weight = sf_floatalloc(n1*n2);
+	wei = sf_floatalloc(n1*n2);
 	tempt = sf_floatalloc(n1*n2);
 	extendt = sf_floatalloc((n1+2*m)*(n2+2*m));
 	tempw = sf_floatalloc(n1*n2);
@@ -82,12 +82,12 @@ int main (int argc, char* argv[])
 	z = sf_floatalloc(4);
 	Y = sf_floatalloc(3);
 	sf_floatread(trace,n1*n2,in);
-	sf_floatread(weight,n1*n2,slope);
+	sf_floatread(wei,n1*n2,weights);
 
 	for(i=0;i<n1*n2;i++)
 	{
 		tempt[i]=trace[i];
-		tempw[i]=weight[i];
+		tempw[i]=fabs(wei[i]);
 	}
 
 	extenddata(tempt,extendt,nfw,n1,n2);
