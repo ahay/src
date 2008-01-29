@@ -359,7 +359,7 @@ class Project(Environment):
                               (axis,w,axis,i*w))
 
                 # Modified WBJB 01/28/08    
-                self.Flow([mytarget],
+                self.Flow(mytarget,
                           [mysource,]+sfiles[1:],flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
