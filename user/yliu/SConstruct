@@ -3,8 +3,8 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-mf mlm tvmf dwt97 seislet97 freqintpef random
-difference
+difference dwt97 freqintpef initial mf mlm mlwm random
+seislet97 tvmf
 '''
 
 try:  # distributed version
@@ -62,5 +62,5 @@ if root:
 
 env['SCANNERS'].remove(configure.Include)
 
-# 	$Id: SConstruct 777 2004-09-07 09:40:19Z fomels $
+# 	$Id: SConstruct 3280 2008-01-28 16:06:10Z yang $
 
