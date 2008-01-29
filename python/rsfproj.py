@@ -343,7 +343,11 @@ class Project(Environment):
             mytargets = []
             for i in range(self.np):
                 mysource = sfiles[0] + '__' + str(i)
-                mytarget = tfiles[0] + '__' + str(i)
+                
+                # Modified WBJB 01/28/08
+                mytarget = []
+                for j in range(len(tfiles)):
+                    mytarget.append(tfiles[j] + '__' + str(i))
                 mytargets.append(mytarget)
 
                 if i==self.np-1:
@@ -353,13 +357,22 @@ class Project(Environment):
                     self.Flow(mysource,sfiles[0],
                               'window n%d=%d f%d=%d squeeze=n' % 
                               (axis,w,axis,i*w))
-                    
-                self.Flow([mytarget,]+tfiles[1:],
+
+                # Modified WBJB 01/28/08    
+                self.Flow([mytarget],
                           [mysource,]+sfiles[1:],flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
 
-            self.Flow(tfiles[0],mytargets,
+            # Modified WBJB 01/28/08
+            tmytargets = []
+            for j in range(len(tfiles)):
+                tmytargets.append(range(self.np))
+            for j in range(len(tfiles)):
+                for i in range(self.np):
+                tmytargets[j][i] = mytargets[i][j]
+            for j in range(len(tfiles)):
+                self.Flow(tfiles[j],tmytargets[j],
                       '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
             return
 

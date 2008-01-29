@@ -35,6 +35,8 @@ int main (int argc, char* argv[])
     sf_init (argc,argv);
     cmp = sf_input("in");
     nmod = sf_output("out");
+    
+    sf_warning("WARNING!!!!  inmo3 is not ready for use yet.  This message will be removed or edited when it is.-wb");
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
@@ -48,13 +50,13 @@ int main (int argc, char* argv[])
     offy = sf_floatalloc(nhy);
 
     if (NULL != sf_getstring("velocity")) {
-	velocity = sf_input("velocity");
+        velocity = sf_input("velocity");
     }else{
-      sf_warning("No velocity file specified. Using velocity ellipse parameters.");
-      ellipse='y';
-      if (NULL == sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-      if (NULL == sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-      if (NULL == sf_getstring("vxy")) sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+        sf_warning("No velocity file specified. Using velocity ellipse parameters.");
+        ellipse='y';
+        if (NULL == sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+        if (NULL == sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+        if (NULL == sf_getstring("vxy")) sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
     }
 
     CDPtype=1;
@@ -139,7 +141,7 @@ int main (int argc, char* argv[])
 	    
 	    for (it=0; it < nt; it++) {
 	      f = t0 + it*dt;
-	      f = f*f + hx*hx/(vx*vx)+hy*hy/(vy*vy)+hx*hy/(vxy*vxy);
+	      f = f*f + hx*hx/(vx*vx)+hy*hy/(vy*vy)+2*hx*hy/(vxy*vxy);
 		
 	      if (f < 0.) {
 		str[it]=t0-10.*dt;
