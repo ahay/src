@@ -330,13 +330,13 @@ class Project(Environment):
                 sfiles = string.split(source)
         else:
             sfiles = []
-
+    
         if split and self.np and rsf and sfiles:
             # Split the flow into parallel flows
             axis = split[0]
             n = split[1]
             
-            # Modified WBJB 01/29/08
+            # Modified WBJB 01/29/08: Split the first nsfile SOURCES into parallel:
             if len(split) > 3:
                 nsfile = split[3]
             else:
@@ -350,7 +350,7 @@ class Project(Environment):
             mytargets = []
             for i in range(self.np):
 
-                # Modified WBJB 01/29/08
+                # Modified WBJB 01/29/08: Create parallel SOURCES:
                 mysources = []
                 for j in range(nsfile):
                     mysource = sfiles[j] + '__' + str(i)
@@ -363,27 +363,19 @@ class Project(Environment):
                                   'window n%d=%d f%d=%d squeeze=n' % 
                                   (axis,w,axis,i*w))
                 
-                # Modified WBJB 01/28/08
+                # Modified WBJB 01/28/08: Split all TARGETS into parallel:
                 mytarget = []
                 for j in range(len(tfiles)):
                     mytarget.append(tfiles[j] + '__' + str(i))
                 mytargets.append(mytarget)
 
-                #if i==self.np-1:
-                #    self.Flow(mysource,sfiles[0],
-                #              'window f%d=%d squeeze=n' % (axis,i*w))
-                #else:
-                #    self.Flow(mysource,sfiles[0],
-                #              'window n%d=%d f%d=%d squeeze=n' % 
-                #              (axis,w,axis,i*w))
-
-                # Modified WBJB 01/28/08    
+                # Modified WBJB 01/28/08: Create parallel TARGETS:    
                 self.Flow(mytarget,
                           mysources+sfiles[nsfile:],flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
 
-            # Modified WBJB 01/28/08
+            # Modified WBJB 01/28/08: Reduce parallel TARGETS down to original TARGETS:
             tmytargets = []
             for j in range(len(tfiles)):
                 tmytargets.append(range(self.np))
