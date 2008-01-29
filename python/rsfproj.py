@@ -335,6 +335,13 @@ class Project(Environment):
             # Split the flow into parallel flows
             axis = split[0]
             n = split[1]
+            
+            # Modified WBJB 01/29/08
+            if len(split) > 3:
+                nsfile = split[3]
+            else:
+                nsfile = 1
+                
             if len(split) > 2:
                 reduce = split[2]
             else:
@@ -342,7 +349,19 @@ class Project(Environment):
             w = n/self.np
             mytargets = []
             for i in range(self.np):
-                mysource = sfiles[0] + '__' + str(i)
+
+                # Modified WBJB 01/29/08
+                mysources = []
+                for j in range(nsfile):
+                    mysource = sfiles[j] + '__' + str(i)
+                    mysources.append(mysource)
+                    if i==self.np-1:
+                        self.Flow(mysource,sfiles[j],
+                                  'window f%d=%d squeeze=n' % (axis,i*w))
+                    else:
+                        self.Flow(mysource,sfiles[j],
+                                  'window n%d=%d f%d=%d squeeze=n' % 
+                                  (axis,w,axis,i*w))
                 
                 # Modified WBJB 01/28/08
                 mytarget = []
@@ -350,17 +369,17 @@ class Project(Environment):
                     mytarget.append(tfiles[j] + '__' + str(i))
                 mytargets.append(mytarget)
 
-                if i==self.np-1:
-                    self.Flow(mysource,sfiles[0],
-                              'window f%d=%d squeeze=n' % (axis,i*w))
-                else:
-                    self.Flow(mysource,sfiles[0],
-                              'window n%d=%d f%d=%d squeeze=n' % 
-                              (axis,w,axis,i*w))
+                #if i==self.np-1:
+                #    self.Flow(mysource,sfiles[0],
+                #              'window f%d=%d squeeze=n' % (axis,i*w))
+                #else:
+                #    self.Flow(mysource,sfiles[0],
+                #              'window n%d=%d f%d=%d squeeze=n' % 
+                #              (axis,w,axis,i*w))
 
                 # Modified WBJB 01/28/08    
                 self.Flow(mytarget,
-                          [mysource,]+sfiles[1:],flow,
+                          mysources+sfiles[nsfile:],flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
 
