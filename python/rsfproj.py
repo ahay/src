@@ -370,7 +370,7 @@ class Project(Environment):
                 tmytargets.append(range(self.np))
             for j in range(len(tfiles)):
                 for i in range(self.np):
-                tmytargets[j][i] = mytargets[i][j]
+                    tmytargets[j][i] = mytargets[i][j]
             for j in range(len(tfiles)):
                 self.Flow(tfiles[j],tmytargets[j],
                       '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
