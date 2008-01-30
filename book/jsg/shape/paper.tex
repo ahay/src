@@ -95,7 +95,7 @@ well-known form
 where $\widehat\mathbf{m}$ denotes the least-squares estimate of $\mathbf{m}$,
 and $\mathbf{L}^T$ denotes the adjoint operator.  One can carry out the
 optimization iteratively with the help of the conjugate-gradient method
-\cite[]{Hestenes.1952} or its analogs. Iterative methods have computational
+\cite[]{hestenes} or its analogs. Iterative methods have computational
 advantages in large-scale problems when forward and adjoint operators are
 represented by sparse matrices and can be computed efficiently
 \cite[]{saad,vorst}.
@@ -693,7 +693,7 @@ discussions, TOTAL for partially supporting this research, and three
 A complete algorithm for conjugate-gradient iterative inversion with
 shaping regularization is given below. The algorithm follows directly
 from combining equation~\ref{eqn:sym} with the classic
-conjugate-gradient algorithm of \cite{Hestenes.1952}.
+conjugate-gradient algorithm of \cite{hestenes}.
 
 \begin{algorithm}{Conjugate gradients with shaping}{\mathbf{L},\mathbf{H},\mathbf{d},\lambda,tol,N}
   \mathbf{p \= 0} \\
