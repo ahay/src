@@ -13,6 +13,7 @@ wigner wdf
 srmig3 srmod3 zomig3 camig3
 xlagtoang2d tlagtoang2d
 stack3
+hwt3d int3d rrt3d
 '''
 
 try:  # distributed version
