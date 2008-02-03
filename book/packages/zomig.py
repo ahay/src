@@ -325,6 +325,6 @@ def zom(imag,data,velo,par):
     
     Flow(imag,[freq,slow],
          '''
-         zomig mode=m inv=n %s
+         zomig3 mode=m inv=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
