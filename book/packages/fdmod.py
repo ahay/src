@@ -43,6 +43,15 @@ def param(par):
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=5 labelfat=3 '
+
+    if(not par.has_key('nq1')): par['nq1']=par['nz']
+    if(not par.has_key('oq1')): par['oq1']=par['oz']
+    if(not par.has_key('dq1')): par['dq1']=par['dz']
+
+    if(not par.has_key('nq2')): par['nq2']=par['nx']
+    if(not par.has_key('oq2')): par['oq2']=par['ox']
+    if(not par.has_key('dq2')): par['dq2']=par['dx']
+    
     
     par['labelattr']=' '+par['labelattr']+' '
 # ------------------------------------------------------------
@@ -237,6 +246,12 @@ def qqplot(custom,par):
     window n1=2 |
     dd type=complex |
     ''' + cgraph('symbol=. plotcol=1 plotfat=3 wantaxis=n %s' % custom,par)
+
+def qqwin(par):
+    return '''
+    nq1=%(nq1)d oq1=%(oq1)g dq1=%(dq1)g
+    nq2=%(nq2)d oq2=%(oq2)g dq2=%(dq2)g
+    ''' % par
 
 # ------------------------------------------------------------
 # rays plot
