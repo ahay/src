@@ -489,7 +489,7 @@ class Project(Environment):
              flowcommand = self.Command(targets,sources,command)
              TargetSignatures('content')
 ##             Ignore(flowcommand,string.join([WhereIs('ssh'),node]))
-            return flowcommand
+             return flowcommand
         else:
             return self.Command(targets,sources,command)
         
