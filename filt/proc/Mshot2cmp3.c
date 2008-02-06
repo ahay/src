@@ -28,12 +28,11 @@ The axes in the output are {time, offset_x, offset_y, midpoint_x, midpoint_y}
 int main(int argc, char* argv[])
 {
 
-    int typex, typey;
     off_t pos;
     bool sign, half;
     int   nsx, nsy,   nmx, nmy,   nhx, nhy,   nmhx, nmhy,   nt;
-    int   isx, isy,   imx, imy,   ihx, ihy,   imhx=0, imhy=0;
-    float osx, osy, dsx, dsy, omx, omy, dmx, dmy, ohx, ohy, dhx, dhy, binx, biny;
+    int   isx, isy,   imx, imy,   ihx, ihy;
+    float osx, osy, dsx, dsy, omx, omy, dmx, dmy, ohx, ohy, dhx, dhy, dmhx, dmhy, binx, biny;
     float s_xmin, s_ymin, r_xmin, r_ymin, s_xmax, s_ymax, r_xmax, r_ymax, survey_xmin, survey_ymin, survey_xmax, survey_ymax;
     char *trace, *zero;
     sf_file in, out;
@@ -94,7 +93,7 @@ int main(int argc, char* argv[])
 
     s_xmin = osx;
     s_ymin = osy;
-    s_xmaz = osx+(nsx*dsx);
+    s_xmax = osx+(nsx*dsx);
     s_ymax = osy+(nsy*dsy);
     
     r_xmin = s_xmin+2*ohx;
