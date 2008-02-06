@@ -486,8 +486,9 @@ class Project(Environment):
                                  x[-4:] == suffix,targets))
         #return self.Command(targets,sources,command)
         if self.np:
-            flowcommand=self.Command(targets,sources,command)
-            Ignore(flowcommand,string.join([WhereIs('ssh'),node]))
+             flowcommand = self.Command(targets,sources,command)
+             TargetSignatures('content')
+##             Ignore(flowcommand,string.join([WhereIs('ssh'),node]))
             return flowcommand
         else:
             return self.Command(targets,sources,command)
