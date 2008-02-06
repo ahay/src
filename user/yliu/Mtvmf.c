@@ -111,7 +111,7 @@ int main (int argc, char* argv[])
 			{
 				if(fabs(medianarray[n1*i+j])<medianv/2.0)
 				{
-					tempnfw=nfw+3;
+					tempnfw=nfw+2;
 				}
 				else
 				{
@@ -122,11 +122,11 @@ int main (int argc, char* argv[])
 			{
 				if(fabs(medianarray[n1*i+j])>=(medianv*2.0))
 				{
-					tempnfw=nfw-6;
+					tempnfw=nfw-4;
 				}
 				else
 				{
-					tempnfw=nfw-3;
+					tempnfw=nfw-2;
 				}
 			}
 			temp3 = sf_floatalloc(tempnfw);
@@ -225,6 +225,6 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 	}	
 }
 
-/* 	$Id: Mtvmf.c 1131 2007-11-12 10:00:10Z yang $	 */
+/* 	$Id: Mtvmf.c 3303 2008-02-06 15:17:10Z yang $	 */
 
 

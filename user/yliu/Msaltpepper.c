@@ -1,4 +1,4 @@
-/* Add random noise with random distribution to the data.*/
+/* Add salt and pepper noise to the data.*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
 
 
     if (!sf_getfloat("den",&den)) den=10.;
-    /* random noise density (percent, default=10, Min=0, Max=100) */
+    /* noise density (percent, default=10, Min=0, Max=100) */
     if ( den < 0. ){
        den =0.;
     } else {
@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
     den *= 0.01;
 
     if (!sf_getfloat("inten",&inten)) inten=0.1;
-    /* random noise intensity (multiple peak value of data, default=0.1) */
+    /* noise intensity (multiple peak value of data, default=0.1) */
 
     if (!sf_getbool("rep",&rep)) rep=false;
     /* if y, replace data with noise */
@@ -110,4 +110,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrandom.c 3251 2008-01-13 23:58:30Z yliu $	 */
+/* 	$Id: Msaltpepper.c 3303 2008-02-06 15:10:30Z yliu $	 */

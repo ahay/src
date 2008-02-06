@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-difference dwt97 freqintpef initial mf mlm mlwm random
+difference dwt97 freqintpef initial mf mlm mlwm saltpepper
 seislet97 tvmf
 '''
 
