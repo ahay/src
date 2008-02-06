@@ -484,7 +484,11 @@ class Project(Environment):
                       map(lambda x, self=self: self.path + x + '@',
                           filter(lambda x, suffix=suffix:
                                  x[-4:] == suffix,targets))
-        return self.Command(targets,sources,command)
+        #return self.Command(targets,sources,command)
+        flowcommand=self.Command(targets,sources,command)
+        Ignore(flowcommand,string.join([WhereIs('ssh'),node]))
+        return flowcommand
+    
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
               view=None,**kw):
         if not flow: # two arguments
