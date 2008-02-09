@@ -1,4 +1,4 @@
-/* Delay */
+/* shift 1d or 2d array */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
 
-    if(! sf_getfloat("del1",&del1))   del1=0.;   
-    if(! sf_getfloat("del2",&del2))   del2=0.;   
+    if(! sf_getfloat("del1",&del1))   del1=0.;   /* delay on axis 1 */
+    if(! sf_getfloat("del2",&del2))   del2=0.;   /* delay on axis 2 */
 
     Fi = sf_input ("in" );
     Fo = sf_output("out");
