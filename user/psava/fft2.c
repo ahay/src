@@ -103,19 +103,33 @@ void fft2(bool inv          /* inverse/forward flag */,
 void sft2_init(float o1, float d1, float o2, float d2)
 /*< origin shift >*/
 {
-    int i1,i2;
+    int   i1,i2;
+    int   k1,k2;
+    float w1,w2;
     float shift;
 
+    w1=2.0*SF_PI/(n1*d1) * o1;
+    w2=2.0*SF_PI/(n2*d2) * o2;
+
+    k1=n1/2;
+    k2=n2/2;
+
     shf1 = sf_complexalloc(n1);
-    for( i1=0; i1<n1; i1++) {
-	shift = 2.0*SF_PI*i1/n1*o1/d1;
-	shf1[i1] = sf_cmplx(cosf(shift),sinf(shift));
+    for( i1=0; i1<k1; i1++) {
+	shift = w1 * i1;
+	shf1[i1]      = sf_cmplx(cosf(shift),sinf(shift));
+
+	shift = w1 * (-k1-1+i1);
+	shf1[k1+i1] = sf_cmplx(cosf(shift),sinf(shift));
     }
 
     shf2 = sf_complexalloc(n2);
-    for( i2=0; i2<n2; i2++) {
-	shift = 2.0*SF_PI*i2/n2*o2/d2;
-	shf2[i2] = sf_cmplx(cosf(shift),sinf(shift));
+    for( i2=0; i2<k2; i2++) {
+	shift = w2 * i2;
+	shf2[i2]      = sf_cmplx(cosf(shift),sinf(shift));
+
+	shift = w2 * (-k2-1+i2);
+	shf2[k2+i2] = sf_cmplx(cosf(shift),sinf(shift));
     }
 }
 
