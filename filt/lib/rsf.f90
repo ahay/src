@@ -151,12 +151,12 @@ contains
 
     nd = sf_filedims(hist%tag,n)
   end function dimension
-  
+
   function axisname (i,var) result (name)
-    character (len=3) :: name
-    integer           :: i
-    character (len=*) :: var
-    optional          :: var
+    integer          , intent(in)           :: i
+    character (len=*), intent(in), optional :: var
+    character (len=3)                       :: name
+
     if (present (var)) then
        if (i < 10) then
           write (name,"(a,i1)") var,i
