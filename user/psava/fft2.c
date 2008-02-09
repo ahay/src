@@ -29,6 +29,7 @@ static float        fftscale;
 static kiss_fft_cpx *ctrace;
 static sf_complex *shf1,*shf2;
 
+/*------------------------------------------------------------*/
 void fft2_init(int n1_, int n2_)
 /*< initialize >*/
 {
@@ -49,6 +50,7 @@ void fft2_init(int n1_, int n2_)
     fftscale = 1./sqrtf(n1*n2);
 }
 
+/*------------------------------------------------------------*/
 void fft2_close(void)
 /*< Free allocated storage >*/
 {
@@ -59,6 +61,7 @@ void fft2_close(void)
     free (invs1);
 }
 
+/*------------------------------------------------------------*/
 void fft2(bool inv          /* inverse/forward flag */, 
 	  kiss_fft_cpx **pp /* [1...n2][1...n1] */) 
 /*< Apply 2-D FFT >*/
@@ -100,8 +103,10 @@ void fft2(bool inv          /* inverse/forward flag */,
     }
 }
 
-void sft2_init(float o1, float d1, float o2, float d2)
-/*< origin shift >*/
+/*------------------------------------------------------------*/
+void sft2_init(float o1, float d1, 
+	       float o2, float d2)
+/*< origin shift (assumes no centering) >*/
 {
     int   i1,i2;
     int   k1,k2;
@@ -115,24 +120,29 @@ void sft2_init(float o1, float d1, float o2, float d2)
     k2=n2/2;
 
     shf1 = sf_complexalloc(n1);
+    for(i1=0; i1<n1; i1++) { shf1[i1]=1.0; }
+
     for( i1=0; i1<k1; i1++) {
 	shift = w1 * i1;
-	shf1[i1]      = sf_cmplx(cosf(shift),sinf(shift));
+	shf1[i1]    = sf_cmplx(cosf(shift),sinf(shift));
 
 	shift = w1 * (-k1-1+i1);
 	shf1[k1+i1] = sf_cmplx(cosf(shift),sinf(shift));
     }
 
     shf2 = sf_complexalloc(n2);
+    for(i2=0; i2<n2; i2++) { shf2[i2]=1.0; }
+
     for( i2=0; i2<k2; i2++) {
 	shift = w2 * i2;
-	shf2[i2]      = sf_cmplx(cosf(shift),sinf(shift));
+	shf2[i2]    = sf_cmplx(cosf(shift),sinf(shift));
 
 	shift = w2 * (-k2-1+i2);
 	shf2[k2+i2] = sf_cmplx(cosf(shift),sinf(shift));
     }
 }
 
+/*------------------------------------------------------------*/
 void sft2_close()
 /*< close shift >*/
 {
@@ -140,6 +150,7 @@ void sft2_close()
     free(shf2);
 }
 
+/*------------------------------------------------------------*/
 void sft2(sf_complex **pp)
 /*< apply shift >*/
 {
@@ -156,6 +167,7 @@ void sft2(sf_complex **pp)
     }    
 }
 
+/*------------------------------------------------------------*/
 void cnt2(sf_complex **pp)
 /*< apply centering >*/
 {
