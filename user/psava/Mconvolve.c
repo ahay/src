@@ -103,11 +103,11 @@ int main(int argc, char* argv[])
 	for(k1=0; k1<sf_n(f1); k1++) {
 	    
 	    for(    j2=0; j2<sf_n(a2); j2++) {
-		i2=j2-k2+m2;		
+		i2=j2+k2-m2;		
 		if( (i2>=0 && i2<sf_n(a2))) {
 		    
 		    for(j1=0; j1<sf_n(a1); j1++) {
-			i1=j1-k1+m1;
+			i1=j1+k1-m1;
 			if( (i1>=0 && i1<sf_n(a1)) ) {
 			    
 			    y[j2][j1] += x[i2][i1] * f[k2][k1];

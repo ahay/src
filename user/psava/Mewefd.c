@@ -28,24 +28,24 @@
 #define C4 -0.000348 /* -1225/(1024*1715)/2 */
 
 /*  forward FD derivative stencils */
-#define F1(a,i2,i1,s) (C4*(a[i2  ][i1+4] - a[i2  ][i1-3]) +	\
-		       C3*(a[i2  ][i1+3] - a[i2  ][i1-2]) +	\
-		       C2*(a[i2  ][i1+2] - a[i2  ][i1-1]) +	\
-                       C1*(a[i2  ][i1+1] - a[i2  ][i1  ])  )*s
-#define F2(a,i2,i1,s) (C4*(a[i2+4][i1  ] - a[i2-3][i1  ]) +	\
-		       C3*(a[i2+3][i1  ] - a[i2-2][i1  ]) +	\
-		       C2*(a[i2+2][i1  ] - a[i2-1][i1  ]) +	\
-                       C1*(a[i2+1][i1  ] - a[i2  ][i1  ])  )*s
+#define Fz(a,ix,iz,s) (C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +	\
+		       C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +	\
+		       C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +	\
+                       C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
+#define Fx(a,ix,iz,s) (C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +	\
+		       C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +	\
+		       C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +	\
+                       C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
 
 /* backward FD derivative stencils */
-#define B1(a,i2,i1,s) (C4*(a[i2  ][i1+3] - a[i2  ][i1-4]) +	\
-		       C3*(a[i2  ][i1+2] - a[i2  ][i1-3]) +	\
-		       C2*(a[i2  ][i1+1] - a[i2  ][i1-2]) +	\
-                       C1*(a[i2  ][i1  ] - a[i2  ][i1-1])  )*s
-#define B2(a,i2,i1,s) (C4*(a[i2+3][i1  ] - a[i2-4][i1  ]) +	\
-		       C3*(a[i2+2][i1  ] - a[i2-3][i1  ]) +	\
-		       C2*(a[i2+1][i1  ] - a[i2-2][i1  ]) +	\
-                       C1*(a[i2  ][i1  ] - a[i2-1][i1  ])  )*s
+#define Bz(a,ix,iz,s) (C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +	\
+		       C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +	\
+		       C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +	\
+                       C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
+#define Bx(a,ix,iz,s) (C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +	\
+		       C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +	\
+		       C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +	\
+                       C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
 
 int main(int argc, char* argv[])
 {
@@ -81,20 +81,20 @@ int main(int argc, char* argv[])
     float **c33=NULL;
     float **c44=NULL;
 
-    float **um1,**uo1,**up1,**ua1,**ut1; /* displacement: um = U @ t-1; uo = U @ t; up = U @ t+1 */
-    float **um2,**uo2,**up2,**ua2,**ut2;
+    float **umz,**uoz,**upz,**ua1,**utz; /* displacement: um = U @ t-1; uo = U @ t; up = U @ t+1 */
+    float **umx,**uox,**upx,**uax,**utx;
 
-    float **t11,**t12,**t22;       /* stress/strain tensor */ 
-    float   s11,  s12,  s22;
+    float **tzz,**txz,**txx;       /* stress/strain tensor */ 
+    float   szz,  sxz,  sxx;
 
     float **qp=NULL,**qs=NULL;     /* potential (P waves, S waves) */
     float **vp,     **vs;          /* velocity  (P waves, S waves) */
 
     /* cube axes */
-    sf_axis at,a1,a2,as,ar,ac;
+    sf_axis at,az,ax,as,ar,ac;
     int     nt,n1,n2,ns,nr,nc,nb;
-    int     it,i1,i2;
-    float   dt,d1,d2,id1,id2,dt2;
+    int     it,iz,ix;
+    float   dt,d1,d2,idz,idx,dt2;
 
     /* linear interpolation weights/indices */
     lint2d cs,cr;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     int ompnth,ompath;
 #endif 
 
-    sf_axis   ac1=NULL,ac2=NULL;
+    sf_axis   acz=NULL,acx=NULL;
     int       nq1,nq2;
     float     oq1,oq2;
     float     dq1,dq2;
@@ -154,8 +154,8 @@ int main(int argc, char* argv[])
     at = sf_iaxa(Fwav,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
-    a1 = sf_iaxa(Fccc,1); sf_setlabel(a1,"z"); if(verb) sf_raxa(a1); /* depth */
-    a2 = sf_iaxa(Fccc,2); sf_setlabel(a2,"x"); if(verb) sf_raxa(a2); /* space */
+    az = sf_iaxa(Fccc,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
+    ax = sf_iaxa(Fccc,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
 
     /* 2D vector components */
     nc=2;
@@ -164,8 +164,8 @@ int main(int argc, char* argv[])
     nt = sf_n(at); dt = sf_d(at);
     ns = sf_n(as);
     nr = sf_n(ar);
-    n1 = sf_n(a1); d1 = sf_d(a1);
-    n2 = sf_n(a2); d2 = sf_d(a2);
+    n1 = sf_n(az); d1 = sf_d(az);
+    n2 = sf_n(ax); d2 = sf_d(ax);
 
     if(! sf_getint("jdata",&jdata)) jdata=1;
     if(snap) {  /* save wavefield every *jsnap* time steps */
@@ -176,11 +176,11 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
+    fdm=fdutil_init(verb,fsrf,az,ax,nb,ompchunk);
     fdbell_init(nbell);
 
-    sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
-    sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
+    sf_setn(az,fdm->n1pad); sf_seto(az,fdm->o1pad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->n2pad); sf_seto(ax,fdm->o2pad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
     /* setup output data header */
@@ -193,25 +193,25 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	if(!sf_getint  ("nq1",&nq1)) nq1=sf_n(a1);
-	if(!sf_getint  ("nq2",&nq2)) nq2=sf_n(a2);
-	if(!sf_getfloat("oq1",&oq1)) oq1=sf_o(a1);
-	if(!sf_getfloat("oq2",&oq2)) oq2=sf_o(a2);
-	dq1=sf_d(a1);
-	dq2=sf_d(a2);
+	if(!sf_getint  ("nq1",&nq1)) nq1=sf_n(az);
+	if(!sf_getint  ("nq2",&nq2)) nq2=sf_n(ax);
+	if(!sf_getfloat("oq1",&oq1)) oq1=sf_o(az);
+	if(!sf_getfloat("oq2",&oq2)) oq2=sf_o(ax);
+	dq1=sf_d(az);
+	dq2=sf_d(ax);
 
-	ac1 = sf_maxa(nq1,oq1,dq1); sf_raxa(ac1);
-	ac2 = sf_maxa(nq2,oq2,dq2); sf_raxa(ac2);
+	acz = sf_maxa(nq1,oq1,dq1); sf_raxa(acz);
+	acx = sf_maxa(nq2,oq2,dq2); sf_raxa(acx);
 
 	/* check if the imaging window fits in the wavefield domain */
 
-	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
+	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
 
 	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
-	sf_oaxa(Fwfl,ac1,1);
-	sf_oaxa(Fwfl,ac2,2);
+	sf_oaxa(Fwfl,acz,1);
+	sf_oaxa(Fwfl,acx,2);
 	sf_oaxa(Fwfl,ac, 3);
 	sf_oaxa(Fwfl,at, 4);
     }
@@ -237,8 +237,8 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     dt2 = dt*dt;
-    id1 = 2/d1;
-    id2 = 2/d2;
+    idz = 2/d1;
+    idx = 2/d2;
 
     /*------------------------------------------------------------*/ 
     /* input density */
@@ -277,41 +277,41 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* allocate wavefield arrays */
-    um1=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    uo1=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    up1=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    umz=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    uoz=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    upz=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
     ua1=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
 
-    um2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    uo2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    up2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    ua2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    umx=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    uox=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    upx=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    uax=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
 
     if(opot) {
 	qp=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
 	qs=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
     }
 
-    t11=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    t12=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    t22=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    tzz=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    txz=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    txx=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
 
-    for    (i2=0; i2<fdm->n2pad; i2++) {
-	for(i1=0; i1<fdm->n1pad; i1++) {
-	    um1[i2][i1]=0; um2[i2][i1]=0;
-	    uo1[i2][i1]=0; uo2[i2][i1]=0;
-	    up1[i2][i1]=0; up2[i2][i1]=0;
-	    ua1[i2][i1]=0; ua2[i2][i1]=0;
+    for    (ix=0; ix<fdm->n2pad; ix++) {
+	for(iz=0; iz<fdm->n1pad; iz++) {
+	    umz[ix][iz]=0; umx[ix][iz]=0;
+	    uoz[ix][iz]=0; uox[ix][iz]=0;
+	    upz[ix][iz]=0; upx[ix][iz]=0;
+	    ua1[ix][iz]=0; uax[ix][iz]=0;
 	}
     }
 
     /* one-way abc setup   */
     vp = sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     vs = sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
-    for    (i2=0; i2<fdm->n2pad; i2++) {
-	for(i1=0; i1<fdm->n1pad; i1++) {
-	    vp[i2][i1] = sqrt( c11[i2][i1]/ro[i2][i1] );
-	    vs[i2][i1] = sqrt( c13[i2][i1]/ro[i2][i1] );
+    for    (ix=0; ix<fdm->n2pad; ix++) {
+	for(iz=0; iz<fdm->n1pad; iz++) {
+	    vp[ix][iz] = sqrt( c11[ix][iz]/ro[ix][iz] );
+	    vs[ix][iz] = sqrt( c13[ix][iz]/ro[ix][iz] );
 	}
     }
     abcp = abcone2d_make(NOP,dt,vp,fsrf,fdm);
@@ -337,54 +337,54 @@ int main(int argc, char* argv[])
 	   exz(x-dx/2,z-dz/2) = Bx( uz(x     ,z-dz/2) ) + */
 	/*                      Bz( ux(x-dx/2,z     ) )   */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,t11,t12,t22,uo1,uo2,id1,id2)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(iz,ix) shared(fdm,tzz,txz,txx,uoz,uox,idz,idx)
 #endif
-	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
+	    for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 		
-		t11[i2][i1] = F1(uo1,i2,i1,id1);
+		tzz[ix][iz] = Fz(uoz,ix,iz,idz);
 		
-		t22[i2][i1] = F2(uo2,i2,i1,id2);
+		txx[ix][iz] = Fx(uox,ix,iz,idx);
 
-	        t12[i2][i1] = B2(uo1,i2,i1,id2) 
-		    +         B1(uo2,i2,i1,id1);
+	        txz[ix][iz] = Bx(uoz,ix,iz,idx) 
+		    +         Bz(uox,ix,iz,idz);
 	    }
 	}		
 
 	/*------------------------------------------------------------*/
 	/* from strain to stress                                      */
 	/*------------------------------------------------------------*/
-	/* szz(x     ,z     ) = c11(x     ,z     ) ezz(x     ,z     ) + */
+	/* szz(x     ,z     ) = c33(x     ,z     ) ezz(x     ,z     ) + */
 	/*                      c13(x     ,z     ) exx(x     ,z     )   */
 	/* sxx(x     ,z     ) = c13(x     ,z     ) ezz(x     ,z     ) + */
-	/*                      c33(x     ,z     ) exx(x     ,z     )   */
+	/*                      c11(x     ,z     ) exx(x     ,z     )   */
 	/* sxz(x-dx/2,z-dz/2) = c44(x-dx/2,z-dz/2) exz(x-dx/2,z-dz/2)   */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2,s11,s12,s22) shared(fdm,t11,t12,t22,c11,c13,c33,c44)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(iz,ix,szz,sxz,sxx) shared(fdm,tzz,txz,txx,c11,c13,c33,c44)
 #endif
-	for    (i2=0; i2<fdm->n2pad; i2++) {
-	    for(i1=0; i1<fdm->n1pad; i1++) {
+	for    (ix=0; ix<fdm->n2pad; ix++) {
+	    for(iz=0; iz<fdm->n1pad; iz++) {
 		
-		s11 = c33[i2][i1] * t11[i2][i1] 
-		    + c13[i2][i1] * t22[i2][i1];
+		szz = c33[ix][iz] * tzz[ix][iz] 
+		    + c13[ix][iz] * txx[ix][iz];
 		
-		s22 = c13[i2][i1] * t11[i2][i1] 
-		    + c11[i2][i1] * t22[i2][i1];
+		sxx = c13[ix][iz] * tzz[ix][iz] 
+		    + c11[ix][iz] * txx[ix][iz];
 		
-		s12 = c44[i2][i1] * t12[i2][i1];
+		sxz = c44[ix][iz] * txz[ix][iz];
 
-		t11[i2][i1] = s11;
-		t22[i2][i1] = s22;
-		t12[i2][i1] = s12;
+		tzz[ix][iz] = szz;
+		txx[ix][iz] = sxx;
+		txz[ix][iz] = sxz;
 	    }
 	}
 
 	if(fsrf) {
-	    for    (i2=0; i2<fdm->n2pad; i2++) {
-		for(i1=0; i1<fdm->nb; i1++) {
-		    t11[i2][i1]=0;
-		    t12[i2][i1]=0;
-		    t22[i2][i1]=0;
+	    for    (ix=0; ix<fdm->n2pad; ix++) {
+		for(iz=0; iz<fdm->nb; iz++) {
+		    tzz[ix][iz]=0;
+		    txz[ix][iz]=0;
+		    txx[ix][iz]=0;
 		}
 	    }
 	}
@@ -393,10 +393,10 @@ int main(int argc, char* argv[])
 	/* inject stress source                                       */
 	/*------------------------------------------------------------*/
 	if(ssou) {
-/*	    lint2d_inject(t11,ww[it][0],cs);*/
-/*	    lint2d_inject(t22,ww[it][0],cs);*/
-	    lint2d_bell(t11,ww[it][0],cs);
-	    lint2d_bell(t22,ww[it][0],cs);
+/*	    lint2d_inject(tzz,ww[it][0],cs);*/
+/*	    lint2d_inject(txx,ww[it][0],cs);*/
+	    lint2d_bell(tzz,ww[it][0],cs);
+	    lint2d_bell(txx,ww[it][0],cs);
 	}
 
 	/*------------------------------------------------------------*/
@@ -407,16 +407,16 @@ int main(int argc, char* argv[])
 	/* ax(x-dx/2,z) = Bx( sxx(x     ,z     ) ) + */
 	/*                Fz( sxz(x-dx/2,z-dz/2) )   */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,t11,t12,t22,ua1,ua2,id1,id2)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(iz,ix) shared(fdm,tzz,txz,txx,ua1,uax,idz,idx)
 #endif
-	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
+	    for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 
-		ua1[i2][i1] = F2( t12,i2,i1,id2 ) 
-		    +         B1( t11,i2,i1,id1 );
+		ua1[ix][iz] = Fx( txz,ix,iz,idx ) 
+		    +         Bz( tzz,ix,iz,idz );
 
-		ua2[i2][i1] = B2( t22,i2,i1,id2 ) 
-		    +         F1( t12,i2,i1,id1 );
+		uax[ix][iz] = Bx( txx,ix,iz,idx ) 
+		    +         Fz( txz,ix,iz,idz );
 	    }
 	}
 
@@ -425,53 +425,53 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	if(!ssou) {
 /*	    lint2d_inject(ua1,ww[it][0],cs);*/
-/*	    lint2d_inject(ua2,ww[it][1],cs);*/
+/*	    lint2d_inject(uax,ww[it][1],cs);*/
 	    lint2d_bell(ua1,ww[it][0],cs);
-	    lint2d_bell(ua2,ww[it][1],cs);
+	    lint2d_bell(uax,ww[it][1],cs);
 	}
 
 	/*------------------------------------------------------------*/
 	/* step forward in time                                       */
 	/*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,uo1,uo2,um1,um2,up1,up2,ua1,ua2,ro,dt2)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(iz,ix) shared(fdm,uoz,uox,umz,umx,upz,upx,ua1,uax,ro,dt2)
 #endif
-	for    (i2=0; i2<fdm->n2pad; i2++) {
-	    for(i1=0; i1<fdm->n1pad; i1++) {
-		up1[i2][i1] = 2*uo1[i2][i1] 
-		    -           um1[i2][i1] 
-		    +           ua1[i2][i1] / ro[i2][i1] * dt2; 
+	for    (ix=0; ix<fdm->n2pad; ix++) {
+	    for(iz=0; iz<fdm->n1pad; iz++) {
+		upz[ix][iz] = 2*uoz[ix][iz] 
+		    -           umz[ix][iz] 
+		    +           ua1[ix][iz] / ro[ix][iz] * dt2; 
 
-		up2[i2][i1] = 2*uo2[i2][i1] 
-		    -           um2[i2][i1] 
-		    +           ua2[i2][i1] / ro[i2][i1] * dt2; 
+		upx[ix][iz] = 2*uox[ix][iz] 
+		    -           umx[ix][iz] 
+		    +           uax[ix][iz] / ro[ix][iz] * dt2; 
 	    }
 	}
 	/* circulate wavefield arrays */
-	ut1=um1; ut2=um2;
-	um1=uo1; um2=uo2;
-	uo1=up1; uo2=up2;
-	up1=ut1; up2=ut2;
+	utz=umz; utx=umx;
+	umz=uoz; umx=uox;
+	uoz=upz; uox=upx;
+	upz=utz; upx=utx;
 
 	/*------------------------------------------------------------*/
 	/* one-way abc                                                */
 	/*------------------------------------------------------------*/
-	abcone2d_apply(uo1,um1,NOP,abcp,fdm);
-	abcone2d_apply(uo2,um2,NOP,abcp,fdm);
+	abcone2d_apply(uoz,umz,NOP,abcp,fdm);
+	abcone2d_apply(uox,umx,NOP,abcp,fdm);
 
-	abcone2d_apply(uo1,um1,NOP,abcs,fdm);
-	abcone2d_apply(uo2,um2,NOP,abcs,fdm);
+	abcone2d_apply(uoz,umz,NOP,abcs,fdm);
+	abcone2d_apply(uox,umx,NOP,abcs,fdm);
 
 	/*------------------------------------------------------------*/
 	/* sponge abc                                                 */
 	/*------------------------------------------------------------*/
-	sponge2d_apply(um1,spo,fdm);
-	sponge2d_apply(uo1,spo,fdm);
-	sponge2d_apply(up1,spo,fdm);
+	sponge2d_apply(umz,spo,fdm);
+	sponge2d_apply(uoz,spo,fdm);
+	sponge2d_apply(upz,spo,fdm);
 
-	sponge2d_apply(um2,spo,fdm);
-	sponge2d_apply(uo2,spo,fdm);
-	sponge2d_apply(up2,spo,fdm);
+	sponge2d_apply(umx,spo,fdm);
+	sponge2d_apply(uox,spo,fdm);
+	sponge2d_apply(upx,spo,fdm);
 
 	/*------------------------------------------------------------*/
 	/* compute potentials                                         */
@@ -479,20 +479,20 @@ int main(int argc, char* argv[])
 	/* qp(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) + */
 	/*                     Fz( uz(x     ,z-dz/2) )   */
 	/* qs(x-dx/2,z-dz/2) = Bz( ux(x-dx/2,z     ) ) + */
-	/*                     Bz( uz(x     ,z-dz/2) )   */
+	/*                     Bx( uz(x     ,z-dz/2) )   */
 
 	if(opot) {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,uo1,uo2,qp,qs,id1,id2)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(iz,ix) shared(fdm,uoz,uox,qp,qs,idz,idx)
 #endif
-	    for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-		for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	    for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
+		for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 		    
-		    qp[i2][i1] = F1( uo1,i2,i1,id1 ) 
-			+        F2( uo2,i2,i1,id2 );
+		    qp[ix][iz] = Fz( uoz,ix,iz,idz ) 
+			+        Fx( uox,ix,iz,idx );
 		    
-		    qs[i2][i1] = B1( uo2,i2,i1,id1 ) 
-			-        B2( uo1,i2,i1,id2 );
+		    qs[ix][iz] = Bz( uox,ix,iz,idz ) 
+			-        Bx( uoz,ix,iz,idx );
 		}
 	    }
 
@@ -500,23 +500,23 @@ int main(int argc, char* argv[])
 	    lint2d_extract(qs,dd[1],cr);
 	    
 	    if(snap && it%jsnap==0) {
-		cut2d(qp,uc,fdm,ac1,ac2);
-		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+		cut2d(qp,uc,fdm,acz,acx);
+		sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 		
-		cut2d(qs,uc,fdm,ac1,ac2);
-		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+		cut2d(qs,uc,fdm,acz,acx);
+		sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 	    }
 	} else {
 
-	    lint2d_extract(uo1,dd[0],cr);
-	    lint2d_extract(uo2,dd[1],cr);
+	    lint2d_extract(uoz,dd[0],cr);
+	    lint2d_extract(uox,dd[1],cr);
 	    
 	    if(snap && it%jsnap==0) {
-		cut2d(uo1,uc,fdm,ac1,ac2);
-		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+		cut2d(uoz,uc,fdm,acz,acx);
+		sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 
-		cut2d(uo2,uc,fdm,ac1,ac2);
-		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+		cut2d(uox,uc,fdm,acz,acx);
+		sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 	    }
 	}
 	if(it%jdata==0) sf_floatwrite(dd[0],nr*nc,Fdat);
