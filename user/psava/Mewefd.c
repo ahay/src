@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
 	/* qp(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) + */
 	/*                     Fz( uz(x     ,z-dz/2) )   */
 	/* qs(x-dx/2,z-dz/2) = Bz( ux(x-dx/2,z     ) ) + */
-	/*                     Bz( ux(x     ,z-dz/2) )   */
+	/*                     Bz( uz(x     ,z-dz/2) )   */
 
 	if(opot) {
 #ifdef _OPENMP
