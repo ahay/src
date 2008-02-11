@@ -82,7 +82,7 @@ for filt in ('four','waves'):
     Result('wrap-' + filt,[inp,div],'SideBySideAniso',vppen='txscale=1.4')
 
     Flow(div2,[div,filt],helicon(1,1))
-<     Flow(div4,[div2,filt],helicon(1) + ' | ' + helicon(0))
+    Flow(div4,[div2,filt],helicon(1) + ' | ' + helicon(0))
     Plot(div2,g % '(input/filter)/filter\'')
     Plot(div4,g % '((input/filter)/filter\')filter\'filter')
     Result('back-' + filt,[div2,div4],'SideBySideAniso',vppen='txscale=1.4')
