@@ -27,15 +27,17 @@
 #ifndef _sf_helix_h
 
 typedef struct sf_helixfilter {
-    int nh;
+    int     nh;
     float* flt;
-    int* lag;
-    bool* mis;
+    int*   lag;
+    bool*  mis;
+    float   h0;
 } *sf_filter;
 /*^*/
 
 #endif
 
+/*------------------------------------------------------------*/
 sf_filter sf_allocatehelix( int nh) 
 /*< allocation >*/
 {
@@ -44,12 +46,13 @@ sf_filter sf_allocatehelix( int nh)
     aa = (sf_filter) sf_alloc(1,sizeof(*aa));
     aa->nh = nh;
     aa->flt = sf_floatalloc(nh);
-    aa->lag = sf_intalloc(nh);
+    aa->lag = sf_intalloc  (nh);
     aa->mis = NULL;
     
     return aa;
 }
 
+/*------------------------------------------------------------*/
 void sf_deallocatehelix( sf_filter aa) 
 /*< deallocation >*/
 {
@@ -59,4 +62,16 @@ void sf_deallocatehelix( sf_filter aa)
     free( aa);
 }
 
-/* 	$Id: helix.c 838 2004-10-25 11:10:38Z fomels $	 */
+/*------------------------------------------------------------*/
+void sf_displayhelix( sf_filter aa)
+/*< display filter >*/
+{
+    int ih;
+
+    sf_warning("------------------------------------------------------------");
+    sf_warning("h0=%g",aa->h0);
+    for (ih=0; ih < aa->nh; ih++) {
+	sf_warning("%4d %4d %4.8g",ih,aa->lag[ih],aa->flt[ih]);
+    }
+    sf_warning("------------------------------------------------------------");
+}
