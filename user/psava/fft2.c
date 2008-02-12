@@ -1,6 +1,6 @@
 /* 2-D FFT encapsulated */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2008 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ static kiss_fft_cfg forw1, invs1; /* FFT on axis 1 */
 static kiss_fft_cfg forw2, invs2; /* FFT on axis 2 */
 static int          n1,n2;
 static float        fftscale;
-static kiss_fft_cpx *ctrace;
-static sf_complex *shf1,*shf2;
+static kiss_fft_cpx *trace2;
+static sf_complex   *shf1,*shf2;
 
 /*------------------------------------------------------------*/
 void fft2_init(int n1_, int n2_)
@@ -38,10 +38,11 @@ void fft2_init(int n1_, int n2_)
 
     forw1 = kiss_fft_alloc(n1,0,NULL,NULL);
     invs1 = kiss_fft_alloc(n1,1,NULL,NULL);
+
     forw2 = kiss_fft_alloc(n2,0,NULL,NULL);
     invs2 = kiss_fft_alloc(n2,1,NULL,NULL);
 
-    ctrace = (kiss_fft_cpx*) sf_complexalloc(n2);
+    trace2 = (kiss_fft_cpx*) sf_complexalloc(n2);
 
     if (NULL == forw2 || NULL == invs2 || 
 	NULL == forw1 || NULL == invs1) 
@@ -54,11 +55,12 @@ void fft2_init(int n1_, int n2_)
 void fft2_close(void)
 /*< Free allocated storage >*/
 {
-    free (ctrace);
-    free (forw2);
-    free (invs2);
+    free (trace2);
+
     free (forw1);
     free (invs1);
+    free (forw2);
+    free (invs2);
 }
 
 /*------------------------------------------------------------*/
@@ -69,35 +71,45 @@ void fft2(bool inv          /* inverse/forward flag */,
     int i1,i2;
     
     if (inv) {
-	for (i2=0; i2 < n2; i2++) {
+
+	/* IFT 1 */
+	for(i2=0; i2 < n2; i2++) {
 	    kiss_fft(invs1,pp[i2],pp[i2]);
 	}
-	for (i1=0; i1 < n1; i1++) {
-	    kiss_fft_stride(invs2,pp[0]+i1,ctrace,n1);
-	    for (i2=0; i2<n2; i2++) {
-		pp[i2][i1] = ctrace[i2];
+
+	/* IFT 2 */
+	for(i1=0; i1 < n1; i1++) {
+	    kiss_fft_stride(invs2,pp[0]+i1,trace2,n1);
+	    for(i2=0; i2<n2; i2++) {
+		pp[i2][i1] = trace2[i2];
 	    }
 	}
 
-	for (i2=0; i2<n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
+	/* scaling */
+	for    (i2=0; i2<n2; i2++) {
+	    for(i1=0; i1 < n1; i1++) {
 		pp[i2][i1] = sf_crmul(pp[i2][i1],fftscale);
 	    }
 	}
     } else {
-	for (i2=0; i2<n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
+
+	/* scaling */
+	for    (i2=0; i2<n2; i2++) {
+	    for(i1=0; i1 < n1; i1++) {
 		pp[i2][i1] = sf_crmul(pp[i2][i1],fftscale);
 	    }
 	}
 
-	for (i1=0; i1 < n1; i1++) {
-	    kiss_fft_stride(forw2,pp[0]+i1,ctrace,n1);
-	    for (i2=0; i2<n2; i2++) {
-		pp[i2][i1] = ctrace[i2];
+	/* FFT 2 */
+	for(i1=0; i1 < n1; i1++) {
+	    kiss_fft_stride(forw2,pp[0]+i1,trace2,n1);
+	    for(i2=0; i2<n2; i2++) {
+		pp[i2][i1] = trace2[i2];
 	    }
 	}
-	for (i2=0; i2 < n2; i2++) {
+
+	/* FFT 1 */
+	for(i2=0; i2 < n2; i2++) {
 	    kiss_fft(forw1,pp[i2],pp[i2]);
 	}
     }
@@ -122,7 +134,7 @@ void sft2_init(float o1, float d1,
     shf1 = sf_complexalloc(n1);
     for(i1=0; i1<n1; i1++) { shf1[i1]=1.0; }
 
-    for( i1=0; i1<k1; i1++) {
+    for(i1=0; i1<k1; i1++) {
 	shift = w1 * i1;
 	shf1[i1]    = sf_cmplx(cosf(shift),sinf(shift));
 
@@ -133,7 +145,7 @@ void sft2_init(float o1, float d1,
     shf2 = sf_complexalloc(n2);
     for(i2=0; i2<n2; i2++) { shf2[i2]=1.0; }
 
-    for( i2=0; i2<k2; i2++) {
+    for(i2=0; i2<k2; i2++) {
 	shift = w2 * i2;
 	shf2[i2]    = sf_cmplx(cosf(shift),sinf(shift));
 
@@ -156,12 +168,14 @@ void sft2(sf_complex **pp)
 {
     int i1,i2;
 
-    for(i2=0; i2<n2; i2++) {
-	for (i1=0; i1<n1; i1++) {
+    for    (i2=0; i2<n2; i2++) {
+	for(i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	    pp[i2][i1] *= shf1[i1]*shf2[i2];
 #else
-	    pp[i2][i1] = sf_cmul(pp[i2][i1],sf_cmul(shf1[i1],shf2[i2]));
+	    pp[i2][i1] = sf_cmul(pp[i2][i1],
+				 sf_cmul(shf1[i1],shf2[i2])
+		);
 #endif
 	}
     }    
@@ -173,7 +187,7 @@ void cnt2(sf_complex **pp)
 {
     int i1,i2;
 
-    for(i2=1; i2<n2; i2+=2) {
+    for    (i2=1; i2<n2; i2+=2) {
 	for(i1=1; i1<n1; i1+=2) {
 #ifdef SF_HAS_COMPLEX_H
 	    pp[i2][i1] = - pp[i2][i1];

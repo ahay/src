@@ -1,6 +1,6 @@
-/* shift 1d or 2d array */
+/* non-integer shift in 1,2 and 3 dimensions */
 /*
-  Copyright (C) 2006 Colorado School of Mines
+  Copyright (C) 2008 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "fft2.h"
+#include "fft3.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -28,19 +28,19 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int  ompchunk; 
-    float del1,del2;
+    float del1,del2,del3;
 
     sf_file Fi=NULL; /* input   */
     sf_file Fo=NULL; /* output  */
 
-    float      **rr=NULL;  /* data */
-    sf_complex **cc=NULL;
+    float      ***rr=NULL;  /* data */
+    sf_complex ***cc=NULL;
 
     /* cube axes */
-    sf_axis a1,a2;
-    int     i1,i2;
-/*------------------------------------------------------------*/
+    sf_axis a1,a2,a3;
+    int     i1,i2,i3;
 
+    /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
 
@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getfloat("del1",&del1))   del1=0.;   /* delay on axis 1 */
     if(! sf_getfloat("del2",&del2))   del2=0.;   /* delay on axis 2 */
+    if(! sf_getfloat("del3",&del3))   del3=0.;   /* delay on axis 3 */
 
     Fi = sf_input ("in" );
     Fo = sf_output("out");
@@ -56,45 +57,55 @@ int main(int argc, char* argv[])
     /* input axes */
     a1 = sf_iaxa(Fi,1);
     a2 = sf_iaxa(Fi,2);
-    if(verb) sf_raxa(a1);
-    if(verb) sf_raxa(a2);
+    a3 = sf_iaxa(Fi,3);
+    if(verb) {
+	sf_raxa(a1);
+	sf_raxa(a2);
+	sf_raxa(a3);
+    }
 
-    fft2_init(sf_n(a1),sf_n(a2));
+    /* init FFT */
+    fft3_init(sf_n(a1),sf_n(a2),sf_n(a3));
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* allocate arrays */
-    rr = sf_floatalloc2   (sf_n(a1),sf_n(a2)); /*    data */
-    cc = sf_complexalloc2 (sf_n(a1),sf_n(a2));
+    rr = sf_floatalloc3  (sf_n(a1),sf_n(a2),sf_n(a3)); /*    data */
+    cc = sf_complexalloc3(sf_n(a1),sf_n(a2),sf_n(a3));
 
-/*------------------------------------------------------------*/
-    sf_floatread(rr[0],sf_n(a1)*sf_n(a2),Fi); /* read data */
-    for(    i2=0;i2<sf_n(a2);i2++) {
-	for(i1=0;i1<sf_n(a1);i1++) {
-	    cc[i2][i1] = rr[i2][i1];
+    /*------------------------------------------------------------*/
+    sf_floatread(rr[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fi); /* read data */
+    for(        i3=0;i3<sf_n(a3);i3++) {
+	for(    i2=0;i2<sf_n(a2);i2++) {
+	    for(i1=0;i1<sf_n(a1);i1++) {
+		cc[i3][i2][i1] = rr[i3][i2][i1];
+	    }
 	}
     }
-    fft2(false,(kiss_fft_cpx**) cc);
+    fft3(false,(kiss_fft_cpx***) cc);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* init shift */
-    sft2_init(-del1,sf_d(a1),
-	      -del2,sf_d(a2));
+    sft3_init(-del1,sf_d(a1),
+	      -del2,sf_d(a2),
+	      -del3,sf_d(a3));
     
     /* apply shift */
-    sft2(cc);
+    sft3(cc);
 
-/*------------------------------------------------------------*/
-
-    fft2( true,(kiss_fft_cpx**) cc);
-    for(    i2=0;i2<sf_n(a2);i2++) {
-	for(i1=0;i1<sf_n(a1);i1++) {
-	    rr[i2][i1] = cc[i2][i1];
+    /*------------------------------------------------------------*/
+    fft3( true,(kiss_fft_cpx***) cc);
+    for(        i3=0;i3<sf_n(a3);i3++) {
+	for(    i2=0;i2<sf_n(a2);i2++) {
+	    for(i1=0;i1<sf_n(a1);i1++) {
+		rr[i3][i2][i1] = cc[i3][i2][i1];
+	    }
 	}
     }
-    sf_floatwrite(rr[0],sf_n(a1)*sf_n(a2),Fo); /* write data */
-/*------------------------------------------------------------*/
+    sf_floatwrite(rr[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fo); /* write data */
+    /*------------------------------------------------------------*/
+
+    /* close FFT */
+    fft3_close();
 
     exit (0);
 }
