@@ -22,6 +22,8 @@
 #include <omp.h>
 #endif
 
+#define INBOUND(imin,imax,i) ((i>=imin && i<imax)?true:false)
+
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -48,8 +50,8 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;      /* OpenMP data chunk size */
-    if(! sf_getbool("verb",&verb)) verb=false;             /* verbosity flag */
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1; /* OpenMP chunk size */
+    if(! sf_getbool("verb",&verb)) verb=false;        /* verbosity flag */
 
     Fx = sf_input ("in" );
     Fy = sf_output("out");
@@ -100,7 +102,6 @@ int main(int argc, char* argv[])
     }
     
     /*------------------------------------------------------------*/
-	/* center filter */
     m1=(sf_n(f1)+1)/2-1; m1=sf_n(f1)>1?m1:0;
     m2=(sf_n(f2)+1)/2-1; m2=sf_n(f2)>1?m2:0;
     m3=(sf_n(f3)+1)/2-1; m3=sf_n(f3)>1?m3:0;
@@ -108,26 +109,42 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     for(        k3=0; k3<sf_n(f3); k3++) {
+
+#ifdef _OPENMP
+#pragma omp parallel \
+    private(k2,k1,j3,j2,j1,i3,i2,i1,) \
+    shared(k3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)
+#endif	
 	for(    k2=0; k2<sf_n(f2); k2++) {
 	    for(k1=0; k1<sf_n(f1); k1++) {
 		
 		for(j3=0; j3<sf_n(a3); j3++) {
-		    i3=SF_MIN(SF_MAX(j3+k3-m3,0),sf_n(a3)-1);
-		    
-		    for(j2=0; j2<sf_n(a2); j2++) {
-			i2=SF_MIN(SF_MAX(j2+k2-m2,0),sf_n(a2)-1);
+		    i3=j3-k3+m3;
+		    if( INBOUND(0,sf_n(a3),i3)) {
 			
-			for(j1=0; j1<sf_n(a1); j1++) {
-			    i1=SF_MIN(SF_MAX(j1+k1-m1,0),sf_n(a1)-1);
-			    
-			    y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
-			    
-			} /* j1 loop */				
-		    } /* j2 loop */
+			for(j2=0; j2<sf_n(a2); j2++) {
+			    i2=j2-k2+m2;
+			    if( INBOUND(0,sf_n(a2),i2)) {
+				
+				for(j1=0; j1<sf_n(a1); j1++) {
+				    i1=j1-k1+m1;
+				    if( INBOUND(0,sf_n(a1),i1)) {   
+
+					y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+
+				    }
+				} /* j1 loop */				
+				
+			    }
+			} /* j2 loop */
+			
+		    }
 		} /* j3 loop */
 		
 	    } /* k1 loop */
 	} /* k2 loop */
+
+
     } /* k3 loop */
 
     /*------------------------------------------------------------*/
