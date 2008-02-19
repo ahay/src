@@ -29,7 +29,7 @@ module RSF
      module procedure from_param_real_array
      module procedure from_param_bool
      module procedure from_param_bool_array
-!!$     module procedure from_param_char
+     module procedure from_param_string
   end interface
 
   interface from_either
@@ -151,12 +151,12 @@ contains
 
     nd = sf_filedims(hist%tag,n)
   end function dimension
-
+  
   function axisname (i,var) result (name)
-    integer          , intent(in)           :: i
-    character (len=*), intent(in), optional :: var
-    character (len=3)                       :: name
-
+    character (len=3) :: name
+    integer           :: i
+    character (len=*) :: var
+    optional          :: var
     if (present (var)) then
        if (i < 10) then
           write (name,"(a,i1)") var,i
@@ -498,36 +498,26 @@ contains
     end if
   end subroutine from_param_bool_array
 
-!!$  subroutine from_param_char (name, value, default)
-!!$    character (len = *), intent (in)  :: name, default
-!!$    character (len = *), intent (out) :: value
-!!$    optional                          :: default
-!!$
-!!$    integer getch
-!!$    external getch
-!!$
-!!$    if(getch(name,'s',value) == 0) then
-!!$       if (present (default)) then
-!!$          value = default
-!!$       else
-!!$          call sf_error("missing parameter value: " // name)
-!!$       end if
-!!$    end if
-!!$    if(putch_no .ne. "no putch") &
-!!$    call putch("From par: " // name,'s',value)
-!!$  end  subroutine from_param_char
+  subroutine from_param_string (name, value, default)
+    character (len = *), intent (in)  :: name, default
+    character (len = *), intent (out) :: value
+    optional                          :: default
 
-!!$  function exist_file (name) result (test)
-!!$    logical                           :: test
-!!$    character (len = *), intent (in)  :: name
-!!$
-!!$    character (len = 80)              :: file
-!!$
-!!$    integer getch
-!!$    external getch
-!!$
-!!$    test = (getch (name,'s',file) /= 0)
-!!$  end function exist_file
+    character sf_getstring
+    external sf_getstring
+
+    value = sf_getstring(name)
+    if (value == "" .and. present (default)) value = default
+  end subroutine from_param_string
+
+  function exist_par (name) result (test)
+    logical                           :: test
+    character (len = *), intent (in)  :: name
+    character (len = 80)              :: par
+
+    call from_par(name,par)
+    test = (par /= "")
+  end function exist_par
 
   subroutine to_history_int (hist, name, value)
     type (file),         intent (in) :: hist

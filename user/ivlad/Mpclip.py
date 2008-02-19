@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys, rsfprog
+import sys, rsfprog, os
 
 try:
     import rsf
@@ -50,6 +50,12 @@ class NoReturnFromQuantile(Error):
 os_success = 0
 os_error   = 1
 
+# Find programs in RSF
+RSFROOT = os.environ.get('RSFROOT')
+bindir = os.path.join(RSFROOT,'bin')
+sfquantile = os.path.join(bindir,'sfquantile')
+sfclip = os.path.join(bindir,'sfclip')
+
 def main(argv=sys.argv):
 
     # Parse arguments into a parameter table
@@ -67,13 +73,13 @@ def main(argv=sys.argv):
     if pclip <0 or pclip>100:
         raise PclipWrongVal
 
-    clip = send_to_os('sfquantile', arg='pclip='+str(pclip),
+    clip = send_to_os(sfquantile, arg='pclip='+str(pclip),
                       stdin=inp, want='stdout', verb=verb)
 
     if not clip:
         raise NoReturnFromQuantile
 
-    send_to_os('sfclip', arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
+    send_to_os(sfclip, arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
 
     return os_success
 
