@@ -4,14 +4,10 @@ import configure
 
 # for future use
 progs = '''
+plotrays3 
 '''
 
-oglprogs = '''
-'''
-
-# plotrays3 
-
-oglsrc = 'gl2ps trackserv'
+oglsrc = 'gl2ps trackball'
 
 try:  # distributed version
     Import('env')
@@ -35,39 +31,32 @@ except: # local version
     env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
                SCANNERS=[configure.Include])
 
-# Treat OpenGL sources differently
-for source in Split(oglsrc):
-    src.remove(source+'.c')
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../filt/lib'],
             LIBS=['rsf'])
+
+ogl = env.get('OPENGL')
+if ogl:
+    if type(ogl) is not types.ListType:
+        ogl = Split(ogl)
+    env.Prepend(LIBS=ogl)
+
+# Treat OpenGL sources differently
+for source in Split(oglsrc):
+    src.remove(source+'.c')
 
 for source in src:
     inc = env.Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+
 mains = Split(progs)
 for prog in mains:
-    sources = ['M' + prog]
-    configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
-        env.Install(bindir,prog)
-
-ogl = env.get('OPENGL')
-if ogl:
-    if type(ogl) is not types.ListType:
-        ogl = Split(ogl)
-    ogllibs=env.get('LIBS')+ogl
-
-oglmains = Split(oglprogs)
-for prog in oglmains:
     if ogl:
         sources = ['M' + prog]
         configure.depends(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.c',sources),LIBS=ogllibs)
+        prog = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
         prog = env.Place('sf'+prog,None,var='OPENGL',package='mesa-libGL-devel')
     if root:

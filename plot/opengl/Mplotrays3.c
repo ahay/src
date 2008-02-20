@@ -401,7 +401,7 @@ int main (int argc, char **argv) {
     float oz, dz, ox, dx, oy, dy;
     float curr1, curr2, curr3, prev1, prev2, prev3;
     float scale_max;
-    int nsr, it, nt;
+    int nsr;
     GLubyte ri, gi, bi;
     sf_file in, frame;
 

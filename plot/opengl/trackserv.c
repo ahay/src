@@ -28,6 +28,36 @@
 #else
 #include <GL/glut.h>
 #endif
+/*^*/
+
+#include "trackball.h"
+/*^*/
+
+#ifndef _trackserv_h
+
+typedef struct _RSFTrackballData RSFTrackballData;
+/*^*/
+
+struct _RSFTrackballData {
+    float     begin_x, begin_y;  /* position of mouse */
+    float     zoom;
+    float     dx, dy;
+    float     quat[4]; /* orientation of object */
+    float     dquat[4];
+    GLdouble  shift_wx, shift_wy;
+    GLdouble  last_wx, last_wy;
+    GLfloat   near_plane, far_plane;
+    GLfloat   translate;
+    GLfloat   world_width, world_height;
+    GLint     screen_width, screen_height;
+    GLfloat   m[4][4]; /* Rotation matrix */
+    void(*motion_callback)(RSFTrackballData*, int, int);
+    int       redraw; /* if 1 - needs redraw after motion_callback); */
+    int       reshape; /* if 1 - needs reshape after mouse_callback); */
+};
+/*^*/
+
+#endif
 
 #define ZOOM_DEF 1.0f
 #define ZOOM_MIN 0.25f
@@ -41,7 +71,6 @@
 
 
 static void rsf_trackball_motion_rotate_event (RSFTrackballData *data, int x,int y) {
-
     if (NULL == data)
         return;
 
@@ -112,6 +141,7 @@ static void rsf_trackball_motion_move_event (RSFTrackballData *data, int x,int y
 }
 
 void rsf_trackball_mouse_event (RSFTrackballData *data, int button, int state, int x, int y) {
+/*< event >*/
     if (GLUT_LEFT_BUTTON == button) {
         if (GLUT_DOWN == state) {
             data->dquat[0] = 0.0;
@@ -155,7 +185,7 @@ void rsf_trackball_mouse_event (RSFTrackballData *data, int button, int state, i
 }
 
 void rsf_trackball_init (RSFTrackballData *data) {
-
+/*< initialize >*/
     if (NULL == data)
         return;
 
