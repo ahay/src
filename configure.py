@@ -115,6 +115,7 @@ def check_all(context):
     x11 (context) # FDNSI
     ppm (context) # FDNSI
     jpeg(context) # FDNSI
+    opengl(context) # FDNSI
     blas(context) # FDNSI
     mpi (context) # FDNSI
     omp (context) # FDNSI
@@ -513,6 +514,43 @@ def jpeg(context):
         context.env['JPEG'] = None
 
     LIBS.pop()
+
+pkg['opengl'] = {'generic':'mesa-libGL-devel'}
+
+# If this test is failed, no writing to jpeg files
+def opengl(context):
+    context.Message("checking for OpenGL ... ")
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    ogl = context.env.get('OPENGL')
+    if type(ogl) is not types.ListType:
+        ogl = string.split(ogl)
+    oldlibs = LIBS
+    LIBS = LIBS + ogl
+    text = '''
+    #include <stdio.h>
+    #ifdef __APPLE__
+    #include <OpenGL/glu.h>
+    #include <GLUT/glut.h>
+    #else
+    #include <GL/glu.h>
+    #include <GL/glut.h>
+    #endif
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
+
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+        context.env['OPENGL'] = ogl
+    else:
+        context.Result(context_failure)
+        need_pkg('opengl', fatal=False)
+        context.env['OPENGL'] = None
+
+    LIBS = oldlibs
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -933,6 +971,7 @@ def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
+    opts.Add('OPENGL','OpenGL libraries','GL GLU glut')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('OMP','OpenMP support')
     opts.Add('BLAS','The BLAS library')
