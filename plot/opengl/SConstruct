@@ -69,7 +69,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+oglmains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	
 
     doc = env.Command(main,docs,configure.docmerge)
