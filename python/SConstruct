@@ -11,7 +11,7 @@ txtdir = os.path.join(docdir,'txt')
 
 python = WhereIs('python')
 
-dirs = Split('main proc imag plot libplot pens sumain suplot')
+dirs = Split('main proc imag plot opengl libplot pens sumain suplot')
 dirs = dirs + env['USERS']
 
 env.Command('rsfprog.py',None,

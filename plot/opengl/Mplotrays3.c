@@ -424,7 +424,7 @@ int main (int argc, char **argv) {
         sf_error ("Need n3=");
 
     if (!sf_histfloat (in, "d1", &d1) && !sf_getfloat ("d1", &d1))
-        sf_error ("Need d1=");
+        sf_error ("Need d1="); /* sampling on the first axis */
     if (!sf_histfloat (in, "d2", &d2) && !sf_getfloat ("d2", &d2))
         sf_error ("Need d2=");
     if (!sf_histfloat (in, "d3", &d3) && !sf_getfloat ("d3", &d3))
