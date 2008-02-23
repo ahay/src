@@ -1,3 +1,4 @@
+Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@beg.utexas.edu>
 Sergey Fomel <sergey.fomel@beg.utexas.edu> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
@@ -11,6 +12,7 @@ Colin Russell <crussell@eos.ubc.ca>
 Paul Sava <psava@mines.edu>
 Jeffrey Shragge <jshragge@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
+Jia Yan <jyan@dix.mines.edu>
 
 Vplot authors:
 
@@ -21,5 +23,7 @@ Dave Nichols
 Includes kiss_fft by Mark Borgerding
 Includes mt19937ar by Takuji Nishimura and Makoto Matsumoto
 Includes predicates by Jonathan Richard Shewchuk
+Includes trackball (c) Silicon Graphics
+Includes gl2ps by Christophe Geuzaine and contributors
 Includes numpy.i by Eric Jones, John Hunter, and Bill Spotz
 Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
