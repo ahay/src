@@ -36,7 +36,7 @@ int main (int argc, char* argv[])
     sf_file in, out;
     
     sf_init (argc,argv);
-    in = sf_input("in");
+    in  = sf_input("in");
     out = sf_output("out");
     
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -121,5 +121,3 @@ int main (int argc, char* argv[])
     
     exit(0);
 }
-
-/* 	$Id: Menvelope.c 696 2004-07-06 23:17:31Z fomels $	 */
