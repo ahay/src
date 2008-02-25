@@ -607,7 +607,7 @@ void freqlet_setz(sf_complex z0)
 #ifdef SF_HAS_COMPLEX_H    
     z1 = cabsf(z0)/z0;
 #else
-    z1 = sf_cdel(cabsf(z0),z0);
+    z1 = sf_cdiv(sf_cmplx(cabsf(z0),0.),z0);
 #endif 
 
     for (j=1; j <= nt/2; j *= 2) {

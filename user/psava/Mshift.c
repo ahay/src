@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     for(        i3=0;i3<sf_n(a3);i3++) {
 	for(    i2=0;i2<sf_n(a2);i2++) {
 	    for(i1=0;i1<sf_n(a1);i1++) {
-		cc[i3][i2][i1] = rr[i3][i2][i1];
+		cc[i3][i2][i1] = sf_cmplx(rr[i3][i2][i1],0.);
 	    }
 	}
     }
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     for(        i3=0;i3<sf_n(a3);i3++) {
 	for(    i2=0;i2<sf_n(a2);i2++) {
 	    for(i1=0;i1<sf_n(a1);i1++) {
-		rr[i3][i2][i1] = cc[i3][i2][i1];
+		rr[i3][i2][i1] = crealf(cc[i3][i2][i1]);
 	    }
 	}
     }

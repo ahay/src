@@ -132,7 +132,7 @@ void sft2_init(float o1, float d1,
     k2=n2/2;
 
     shf1 = sf_complexalloc(n1);
-    for(i1=0; i1<n1; i1++) { shf1[i1]=1.0; }
+    for(i1=0; i1<n1; i1++) { shf1[i1]=sf_cmplx(1.0,0.0); }
 
     for(i1=0; i1<k1; i1++) {
 	shift = w1 * i1;
@@ -143,7 +143,7 @@ void sft2_init(float o1, float d1,
     }
 
     shf2 = sf_complexalloc(n2);
-    for(i2=0; i2<n2; i2++) { shf2[i2]=1.0; }
+    for(i2=0; i2<n2; i2++) { shf2[i2]=sf_cmplx(1.0,0.0); }
 
     for(i2=0; i2<k2; i2++) {
 	shift = w2 * i2;

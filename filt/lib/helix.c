@@ -20,6 +20,7 @@
 
 #include "helix.h"
 #include "alloc.h"
+#include "error.h"
 
 #include "_bool.h"
 /*^*/
