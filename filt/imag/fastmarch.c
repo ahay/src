@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+/*^*/
 
 #include "fastmarch.h"
 #include "neighbors.h"
