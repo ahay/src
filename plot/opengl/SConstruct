@@ -40,6 +40,9 @@ if ogl:
     if type(ogl) is not types.ListType:
         ogl = Split(ogl)
     env.Prepend(LIBS=ogl)
+    oglpath = env.get('OPENGLPATH')
+    if oglpath:
+        env.Append(LIBPATH=[oglpath])
 
 # Treat OpenGL sources differently
 for source in Split(oglsrc):

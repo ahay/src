@@ -20,10 +20,11 @@
  *
  * Author:  Vladimir Bashkardin  <vovizmus@users.sourceforge.net>
  */
+#include <stdlib.h>
 
 #include "trackserv.h"
 
-#if defined(__APPLE__)&& defined(__MACH__)
+#ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>

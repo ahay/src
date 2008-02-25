@@ -526,8 +526,16 @@ def opengl(context):
     ogl = context.env.get('OPENGL')
     if type(ogl) is not types.ListType:
         ogl = string.split(ogl)
-    oldlibs = LIBS
-    LIBS = LIBS + ogl
+    context.env['LIBS'] = LIBS + ogl
+    LIBPATH = context.env.get('LIBPATH',[])
+    if sys.platform[:6] == 'darwin':
+        glpath = '/usr/X11R6/lib'
+    else:
+        glpath = '/none'
+    if os.path.isdir(glpath):
+        context.env['LIBPATH'] = LIBPATH+[glpath]
+        context.env['OPENGLPATH'] = glpath
+
     text = '''
     #include <stdio.h>
     #ifdef __APPLE__
@@ -538,6 +546,7 @@ def opengl(context):
     #include <GL/glut.h>
     #endif
     int main(int argc,char* argv[]) {
+    glutInit (&argc, argv);
     return 0;
     }\n'''
 
@@ -550,7 +559,8 @@ def opengl(context):
         need_pkg('opengl', fatal=False)
         context.env['OPENGL'] = None
 
-    LIBS = oldlibs
+    context.env['LIBS'] = LIBS
+    context.env['LIBPATH'] = LIBPATH
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -972,6 +982,7 @@ def options(opts):
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries','GL GLU glut')
+    opts.Add('OPENGLPATH','Path for OpenGL libraries')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('OMP','OpenMP support')
     opts.Add('BLAS','The BLAS library')
