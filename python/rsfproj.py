@@ -297,7 +297,7 @@ class Project(Environment):
         self.environ = self.get('ENVIRON','')
 
         
-        self.np = GetOption('num_jobs')
+        self.jobs = GetOption('num_jobs')
         cluster = self.get('CLUSTER','localhost 1')
         hosts = string.split(cluster)
         self.nodes = []
@@ -307,7 +307,7 @@ class Project(Environment):
         self.ip = 0
 
         # self.nodes is a list of CPUs
-        # self.np is the number of CPUs
+        # self.jobs is the number of jobs
         # self.ip is the current CPU
 
         for key in self['ENV'].keys():
@@ -332,21 +332,21 @@ class Project(Environment):
         else:
             sfiles = []
 
-        if split and self.np > 1 and rsf and sfiles:
+        if split and self.jobs > 1 and rsf and sfiles:
             # Split the flow into parallel flows
             
-            w = length/self.np # length of one chunk
+            w = length/self.jobs # length of one chunk
             par_sfiles = copy.copy(sfiles)
             par_targets = {}
             for tfile in tfiles:
                 par_targets[tfile] = []
                 
-            for i in range(self.np):
+            for i in range(self.jobs):
                 for j in split:
                     source = sfiles[j] + '__' + str(i)
                     par_sfiles[j] = source
 
-                    if i==self.np-1: # last chunk
+                    if i==self.jobs-1: # last chunk
                         self.Flow(source,sfiles[j],
                                   'window f%d=%d squeeze=n' % (axis,i*w))
                     else:
@@ -374,7 +374,7 @@ class Project(Environment):
 
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
-                          '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
+                          '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.jobs))
             return
 
         sources = []
@@ -461,7 +461,7 @@ class Project(Environment):
                                    self.cwd,';',WhereIs('env'),
                                    self.environ,command,'\"'])
         self.ip = self.ip + 1
-        if self.ip == self.np:
+        if self.ip == len(self.nodes):
             self.ip = 0
             
         targets = []
