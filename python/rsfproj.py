@@ -296,25 +296,22 @@ class Project(Environment):
 
         self.environ = self.get('ENVIRON','')
 
-        self.np = 0
-        cluster = self.get('CLUSTER')
-        if cluster:
-            hosts = string.split(cluster)
-            self.nodes = []
-            for i in range(1,len(hosts),2):
-                nh = int(hosts[i])
-                self.np = self.np + nh
-                self.nodes.extend([hosts[i-1]]*nh)
-            self.ip = 0
+        
+        self.np = GetOption('num_jobs')
+        cluster = self.get('CLUSTER','localhost 1')
+        hosts = string.split(cluster)
+        self.nodes = []
+        for i in range(1,len(hosts),2):
+            nh = int(hosts[i])
+            self.nodes.extend([hosts[i-1]]*nh)
+        self.ip = 0
 
-            # self.nodes is a list of CPUs
-            # self.np is the number of CPUs
-            # self.ip is the current CPU
+        # self.nodes is a list of CPUs
+        # self.np is the number of CPUs
+        # self.ip is the current CPU
 
-            if self.np:
-                for key in self['ENV'].keys():
-                    self.environ = self.environ + \
-                        ' %s=%s' % (key,self['ENV'][key]) 
+        for key in self['ENV'].keys():
+            self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=3,length=1,reduce='cat'):
@@ -335,7 +332,7 @@ class Project(Environment):
         else:
             sfiles = []
 
-        if split and self.np and rsf and sfiles:
+        if split and self.np > 1 and rsf and sfiles:
             # Split the flow into parallel flows
             
             w = length/self.np # length of one chunk
@@ -455,16 +452,18 @@ class Project(Environment):
         if stdin:
             command = "< $SOURCE " + command
         command = self.timer + command
-        if self.np: # may need to do it remotely
-            node = self.nodes[self.ip]
-            if node != 'localhost':
-                command = re.sub('"','\\"',command)
-                command = string.join([WhereIs('ssh'),node,'\"cd ',
-                                       self.cwd,';',WhereIs('env'),
-                                       self.environ,command,'\"'])
-            self.ip = self.ip + 1
-            if self.ip == self.np:
-                self.ip = 0
+
+        # May need to do it remotely
+        node = self.nodes[self.ip]
+        if node != 'localhost':
+            command = re.sub('"','\\"',command)
+            command = string.join([WhereIs('ssh'),node,'\"cd ',
+                                   self.cwd,';',WhereIs('env'),
+                                   self.environ,command,'\"'])
+        self.ip = self.ip + 1
+        if self.ip == self.np:
+            self.ip = 0
+            
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
