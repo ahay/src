@@ -1,4 +1,4 @@
-\author{Gustav Kirchhoff} 
+\author{Jules Browaeys}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Homework 4}
 
@@ -27,6 +27,14 @@
   \item Apply Fermat's principle to derive the horizontal coordinate of
     the reflection point $y$ and the reflection traveltime $T$ as 
     functions of $s$, $r$, $h$, and $\alpha$.
+ \begin{eqnarray}
+L(y) & = & \sqrt{z^2(y)+(y-s)^2} + \sqrt{z^2(y)+(y-r)^2}\; \\
+0 & = & \frac{y/\cos^2\alpha-s}{\sqrt{z^2(y)+(y-s)^2}}
++ \frac{y/\cos^2\alpha-r}{\sqrt{z^2(y)+(y-r)^2}}\;
+ \end{eqnarray}
+ \begin{eqnarray}
+ (y/\cos^2\alpha-s)^2\;(z^2(y)+(y-r)^2) & = & (y/\cos^2\alpha-r)^2\;(z^2(y)+(y-s)^2)\;. \nonumber
+ \end{eqnarray}
   \item Test your equations by considering the limiting cases
     \begin{itemize}
     \item $h=0$, 
@@ -87,7 +95,7 @@ the effect of velocities on imaging.
   is shown in Figure~\ref{fig:model}.
 
   \inputdir{times}
-  \plot{model}{width=\textwidth}{Synthetic velocity model with one reflector.}
+  %\plot{model}{width=\textwidth}{Synthetic velocity model with one reflector.}
 
 {\small
   \lstinputlisting[frame=single]{times/SConstruct}}
@@ -98,34 +106,34 @@ the effect of velocities on imaging.
   recorded reflection traveltime, and taking the zero level set of
   their difference as a map of the reflector location.
 
-  \multiplot{3}{dtime0-0,dtime1-0,dtime2-0}{width=\textwidth}{Forward
-    traveltime continuation from the source (left), backward
-    traveltime continuation from the recorded reflection traveltime
-    (center), and their difference (right) for three different source
-    locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, 
-    (c) $s=3\,\mbox{km}$.}
+  %\multiplot{3}{dtime0-0,dtime1-0,dtime2-0}{width=\textwidth}{Forward
+  %  traveltime continuation from the source (left), backward
+  %  traveltime continuation from the recorded reflection traveltime
+  %  (center), and their difference (right) for three different source
+  %  locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, 
+  %  (c) $s=3\,\mbox{km}$.}
 
   Combining images from different sources, we obtain the result shown
   in Figure~\ref{fig:time0}.
 
-  \plot{time0}{width=\textwidth}{Reflector images from traveltime
-    continuation overlayed on top of the velocity model.}
+  %\plot{time0}{width=\textwidth}{Reflector images from traveltime
+  %  continuation overlayed on top of the velocity model.}
 
   What happens when the velocity used for traveltime continuation is
   incorrect? The results are shown in
   Figures~\ref{fig:dtime0-1,dtime1-1,dtime2-1} and~\ref{fig:time1}.
 
-  \multiplot{3}{dtime0-1,dtime1-1,dtime2-1}{width=\textwidth}{ Imaging
-    in velocity that is 10\% lower than the correct one. Forward
-    traveltime continuation from the source (left), backward
-    traveltime continuation from the recorded reflection traveltime
-    (center), and their difference (right) for three different source
-    locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, (c)
-    $s=3\,\mbox{km}$.}
+  %\multiplot{3}{dtime0-1,dtime1-1,dtime2-1}{width=\textwidth}{ Imaging
+  %  in velocity that is 10\% lower than the correct one. Forward
+  %  traveltime continuation from the source (left), backward
+  %  traveltime continuation from the recorded reflection traveltime
+  %  (center), and their difference (right) for three different source
+  %  locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, (c)
+  %  $s=3\,\mbox{km}$.}
 
-  \plot{time1}{width=\textwidth}{Imaging in velocity that is 10\%
-    lower than the correct one. Reflector images from traveltime
-    continuation overlaid on top of the velocity model.}
+  %\plot{time1}{width=\textwidth}{Imaging in velocity that is 10\%
+  %  lower than the correct one. Reflector images from traveltime
+  %  continuation overlaid on top of the velocity model.}
 
 \begin{enumerate}
 \item Change directory 
@@ -156,8 +164,8 @@ migration with the correct velocity.
 {\small \lstinputlisting[frame=single]{waves/SConstruct}}
 
 \inputdir{waves}
-\plot{shots}{width=\textwidth}{Shot gathers for the hyperbolic reflector model.}
-\plot{image}{width=\textwidth}{Kirchhoff image for the hyperbolic reflector model.}
+%\plot{shots}{width=\textwidth}{Shot gathers for the hyperbolic reflector model.}
+%\plot{image}{width=\textwidth}{Kirchhoff image for the hyperbolic reflector model.}
 
 % ADD ANOTHER FIGURE HERE
 

@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+import sys, os, string
+
+def cpus(): # Thanks to Lawrence Oluyede on python-list
+    '''
+    Retdurns the number of CPUs in the system
+    '''
+    num = 0
+    
+    if sys.platform == 'win32':
+        try:
+            num = int(os.environ['NUMBER_OF_PROCESSORS'])
+        except (ValueError, KeyError):
+            pass
+    elif sys.platform == 'darwin':
+        try:
+            num = int(os.popen('sysctl -n hw.ncpu').read())
+        except ValueError:
+            pass
+    else:
+        # A better way: parse /proc/cpuinfo for physical CPUs
+        # rather than virtual CPUs from hyperthreading
+        
+        try:
+            num = os.sysconf('SC_NPROCESSORS_ONLN')
+        except (ValueError, OSError, AttributeError):
+            pass
+        
+    if num >= 1:
+        return num
+    else:
+        raise NotImplementedError
+
+cpu = cpus()
+
+threads = int(os.environ.get('RSF_THREADS',cpu))
+cluster = os.environ.get('RSF_CLUSTER','localhost %d' % cpu)
+
+args = string.join(sys.argv[1:])
+command = 'scons -j %d CLUSTER="%s" %s' % (threads,cluster,args)
+
+sys.stderr.write(command+'\n')
+os.system(command)
+
+sys.exit(0)

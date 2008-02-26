@@ -31,6 +31,7 @@ for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi','sftour'):
 
 for src in ('doc','units'):
     env.Install(bindir,'sf'+src)
+env.Install(bindir,'pscons')
 
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')

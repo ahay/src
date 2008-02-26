@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, stat, sys, types 
+import os, stat, sys, types, copy
 import re, string, urllib, ftplib
 
 # database for .sconsign
@@ -307,13 +307,17 @@ class Project(Environment):
                 self.nodes.extend([hosts[i-1]]*nh)
             self.ip = 0
 
+            # self.nodes is a list of CPUs
+            # self.np is the number of CPUs
+            # self.ip is the current CPU
+
             if self.np:
                 for key in self['ENV'].keys():
                     self.environ = self.environ + \
                         ' %s=%s' % (key,self['ENV'][key]) 
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=None):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=3,length=1,reduce='cat'):
 
         if not flow:
             return None     
@@ -330,61 +334,50 @@ class Project(Environment):
                 sfiles = string.split(source)
         else:
             sfiles = []
-    
+
         if split and self.np and rsf and sfiles:
             # Split the flow into parallel flows
-            axis = split[0]
-            n = split[1]
             
-            # Modified WBJB 01/29/08: Split the first nsfile SOURCES into parallel:
-            if len(split) > 3:
-                nsfile = split[3]
-            else:
-                nsfile = 1
+            w = length/self.np # length of one chunk
+            par_sfiles = copy.copy(sfiles)
+            par_targets = {}
+            for tfile in tfiles:
+                par_targets[tfile] = []
                 
-            if len(split) > 2:
-                reduce = split[2]
-            else:
-                reduce = 'cat'
-            w = n/self.np
-            mytargets = []
             for i in range(self.np):
+                for j in split:
+                    source = sfiles[j] + '__' + str(i)
+                    par_sfiles[j] = source
 
-                # Modified WBJB 01/29/08: Create parallel SOURCES:
-                mysources = []
-                for j in range(nsfile):
-                    mysource = sfiles[j] + '__' + str(i)
-                    mysources.append(mysource)
-                    if i==self.np-1:
-                        self.Flow(mysource,sfiles[j],
+                    if i==self.np-1: # last chunk
+                        self.Flow(source,sfiles[j],
                                   'window f%d=%d squeeze=n' % (axis,i*w))
                     else:
-                        self.Flow(mysource,sfiles[j],
+                        self.Flow(source,sfiles[j],
                                   'window n%d=%d f%d=%d squeeze=n' % 
                                   (axis,w,axis,i*w))
                 
-                # Modified WBJB 01/28/08: Split all TARGETS into parallel:
-                mytarget = []
-                for j in range(len(tfiles)):
-                    mytarget.append(tfiles[j] + '__' + str(i))
-                mytargets.append(mytarget)
 
-                # Modified WBJB 01/28/08: Create parallel TARGETS:    
-                self.Flow(mytarget,
-                          mysources+sfiles[nsfile:],flow,
+                par_tfiles = []
+                for j in range(len(tfiles)):
+                    tfile = tfiles[j]
+                    par_tfile = tfile + '__' + str(i)
+                    
+                    par_tfiles.append(par_tfile)
+                    par_targets[tfile].append(par_tfile)
+ 
+                # operation on one chunk    
+                self.Flow(par_tfiles,par_sfiles,flow,
                           stdout,stdin,1,
                           suffix,prefix,src_suffix)
 
-            # Modified WBJB 01/28/08: Reduce parallel TARGETS down to original TARGETS:
-            tmytargets = []
-            for j in range(len(tfiles)):
-                tmytargets.append(range(self.np))
-            for j in range(len(tfiles)):
-                for i in range(self.np):
-                    tmytargets[j][i] = mytargets[i][j]
-            for j in range(len(tfiles)):
-                self.Flow(tfiles[j],tmytargets[j],
-                      '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
+            # Reduce parallel TARGETS down to original TARGETS:
+
+            print par_targets
+
+            for tfile in tfiles:
+                self.Flow(tfile,par_targets[tfile],
+                          '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.np))
             return
 
         sources = []
@@ -462,7 +455,7 @@ class Project(Environment):
         if stdin:
             command = "< $SOURCE " + command
         command = self.timer + command
-        if self.np: # do it remotely
+        if self.np: # may need to do it remotely
             node = self.nodes[self.ip]
             if node != 'localhost':
                 command = re.sub('"','\\"',command)

@@ -1,4 +1,4 @@
-\author{Christiaan Huygens} 
+\author{Jules Browaeys}
 %%%%%%%%%%%%%%%%%%%%%%
 \title{Homework 3}
 
@@ -43,17 +43,42 @@ Unix computers in the Department of Geological Sciences.
 Using the connection between the pressure and displacement, derive the
 acoustic wave equation for the displacement vector
 $\mathbf{u}(\mathbf{x},t)$:
-\begin{equation}
+\begin{eqnarray}
   \label{eq:uwave}
-  \rho(\mathbf{x})\,\frac{\partial^2 \mathbf{u}}{\partial t^2} =
-\end{equation}
+  \rho(\mathbf{x})\,\frac{\partial^2 \mathbf{u}}{\partial t^2} = - \nabla P = \nabla \left(K(\mathbf{x})\nabla \cdot \mathbf{u}\right)\\
+{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 \mathbf{u}}{\partial t^2}} = 
+\nabla^2 \mathbf{u} + \nabla\times(\nabla\times\mathbf{u}) + 
+\frac{\nabla\cdot\mathbf{u}}{K(\mathbf{x})}\; \nabla K(\mathbf{x})
+\end{eqnarray}
+Thanks to the Helmholtz's theorem, we can consider the displacement vector field to be curl free for the acoustic propagation:
+\begin{eqnarray}
+{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 \mathbf{u}}{\partial t^2}} = 
+\nabla^2 \mathbf{u} + \frac{\nabla\cdot\mathbf{u}}{K(\mathbf{x})}\; \nabla K(\mathbf{x})
+\end{eqnarray}
+
 \item Consider a geometrical wave representation in the vicinity of a wavefront
 \begin{equation}
-  {\mathbf{u}(\mathbf{x},t)} = \mathbf{a}(\mathbf{x})\,f\left(t-T(\mathbf{x}\right)
+  {\mathbf{u}(\mathbf{x},t)} = \mathbf{a}(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
   \label{eq:gwave}
 \end{equation}
 and derive partial differential equations for the traveltime function
 $T(\mathbf{x})$ and the vector amplitude $\mathbf{a}(\mathbf{x})$.
+\begin{eqnarray}
+\ddot{\mathbf{u}} = \mathbf{a}\;\ddot{f}\\
+\nabla\cdot\mathbf{u} = f\;(\nabla\cdot\mathbf{a}) - \dot{f}\;(\mathbf{a}\cdot\nabla T)\\
+\nabla^2\;\mathbf{u} = f\;\nabla^2\mathbf{a} - 2\dot{f}\;(\nabla T \cdot \nabla)\;\mathbf{a}
++ \ddot{f}\;(\nabla T)^2\,\mathbf{a} - \mathbf{a}\;\dot{f}\;\nabla^2\,T
+\end{eqnarray}
+\begin{eqnarray}
+& & \left[S^2(\mathbf{x})-(\nabla T)^2\right]\mathbf{a}\;\ddot{f}(t-T(\mathbf{x})) \\
+& + & \left[2(\nabla T \cdot \nabla)\mathbf{a}+\mathbf{a}\;\nabla^2\,T
++ \frac{\mathbf{a}\cdot\nabla T}{K(\mathbf{x})}\; \nabla K(\mathbf{x})\right]\dot{f}(t-T(\mathbf{x})) \\
+& = & \left[\nabla^2\mathbf{a}+ \frac{\nabla\cdot \mathbf{a}}{K(\mathbf{x})}\; \nabla K(\mathbf{x})  \right]{f}(t-T(\mathbf{x}))
+\end{eqnarray}
+The term in front of $\ddot{f}$ is zero to enable discontinuities to propagate and is the eikonal equation.
+The term in front of $\dot{f}$ is zero, if we neglect the lower order term in $f$ in the framework 
+of high frequencies (WKBJ), and this is the transport equation.
+%
 \item Assuming that the geometrical wave propagates in the direction
   of the traveltime gradient
 \begin{equation}
@@ -61,16 +86,37 @@ $T(\mathbf{x})$ and the vector amplitude $\mathbf{a}(\mathbf{x})$.
   \label{eq:vamp}
 \end{equation}
 show that the amplitude equation can take the conservative form
-\begin{equation}
+\begin{eqnarray}
   \label{eq:cons}
-  \nabla \cdot \left(\rho(\mathbf{x})\,V^2(\mathbf{x})\,A^2(\mathbf{x})\,\nabla T\right) = 0\;.
-\end{equation}
-\item Show that the displacement amplitude continuation along a ray is given by equation 
+  \nabla \cdot \left(\rho(\mathbf{x})\,V^2(\mathbf{x})\,A^2(\mathbf{x})\,\nabla T\right) = 0 \\
+  \nabla \cdot \left(K(\mathbf{x})\,A^2(\mathbf{x})\,\nabla T\right) = 0\\
+ A^2(\mathbf{x})\left[\nabla K \cdot \nabla T\right] + 2K(\mathbf{x})\;A(\mathbf{x})\;
+\left[\nabla A \cdot \nabla T\right] + K(\mathbf{x})\;A^2(\mathbf{x})\;\nabla^2 T = 0
+\end{eqnarray}
+On the other hand, with the transport equation:
+\begin{eqnarray}
+2(\nabla T \cdot \nabla)(A(\mathbf{x})\,\mathbf{u}_T)
++ A(\mathbf{x})\,V(\mathbf{x})\nabla T\; \nabla^2T
++ A(\mathbf{x})
+\frac{S(\mathbf{x})}{K(\mathbf{x})}\; \nabla K(\mathbf{x}) = 0
+\end{eqnarray}
+where $\mathbf{u}_T$ is the unitary vector along the traveltime gradient direction.
+By performing the dot product with the traveltime gradient vector and multiplying by
+$A(\mathbf{x})\;K(\mathbf{x})\;V(\mathbf{x})$:
+\begin{eqnarray}
+& & 2\,K(\mathbf{x})\; A^2(\mathbf{x})\; V(\mathbf{x}) \left[(\nabla T \cdot \nabla)\;\mathbf{u}_T\right]\cdot\nabla T\\
+& + & 2\,K(\mathbf{x})\; A(\mathbf{x})\left[\nabla A \cdot \nabla T\right]\\
+& + &  A^2(\mathbf{x})\,K(\mathbf{x})\;\nabla^2T \\
+& + & A^2(\mathbf{x})\; \nabla K(\mathbf{x})\cdot\nabla T = 0
+\end{eqnarray}
+The first term is zero since the gradient of the unitary vector along the traveltime gradient direction is zero.
+\item The displacement amplitude continuation along a ray is given by equation 
 \begin{equation}
   \label{eq:avj}
   \left|\mathbf{a}_1\right| = \left|\mathbf{a}_0\right|\,
   \left(\frac{\rho_0\,V_0\,J_0}{\rho_1\,V_1\,J_1}\right)^{1/2}\;, 
 \end{equation}
+thanks to the Gauss theorem,
 where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
 \item (EXTRA CREDIT) Consider the elastic wave equation
 \begin{equation}
@@ -162,8 +208,8 @@ time into the subsurface using a velocity that is half of the true
 velocity and stopping at zero time. Using the intermediate time steps,
 you will create a movie of the backward traveltime extrapolation.
 
-\inputdir{image}
-\plot{image}{width=\textwidth}{Seismic image created with the water velocity.}
+%\inputdir{image}
+%\plot{image}{width=\textwidth}{Seismic image created with the water velocity.}
 
 \begin{enumerate}
 \item Change directory 
