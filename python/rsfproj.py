@@ -369,9 +369,6 @@ class Project(Environment):
                           suffix,prefix,src_suffix)
 
             # Reduce parallel TARGETS down to original TARGETS:
-
-            print par_targets
-
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
                           '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.jobs))
