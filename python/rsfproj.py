@@ -382,6 +382,18 @@ class Project(Environment):
                 sources.append(file)
         else:
             stdin=0
+
+        # May need to do it remotely
+        node = self.nodes[self.ip]
+        self.ip = self.ip + 1
+        if self.ip == len(self.nodes):
+            self.ip = 0
+        
+        if node != 'localhost':
+            remote = '%s %s ' % (WhereIs('env'),self.environ)
+        else:
+            remote = ''
+            
         lines = string.split(flow,'&&')
         steps = []
         for line in lines:
@@ -436,8 +448,9 @@ class Project(Environment):
                         if re.match(r'[^/]+\.exe$',command): # local program
                             command = os.path.join('.',command)                 
                     pars.insert(1,command)
-                #<- assemble the command line                
-                substeps.append(string.join(pars,' '))
+                #<- assemble the command line
+                substep = remote + string.join(pars,' ')
+                substeps.append(substep)
             #<-
             steps.append(string.join(substeps," | "))
         #<- assemble the pipeline
@@ -451,16 +464,11 @@ class Project(Environment):
         command = self.timer + command
 
         # May need to do it remotely
-        node = self.nodes[self.ip]
-        if node != 'localhost':
+        if remote:
             command = re.sub('"','\\"',command)
             command = string.join([WhereIs('ssh'),node,'\"cd ',
-                                   self.cwd,';',WhereIs('env'),
-                                   self.environ,command,'\"'])
-        self.ip = self.ip + 1
-        if self.ip == len(self.nodes):
-            self.ip = 0
-            
+                                   self.cwd,';',command,'\"'])
+                        
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
