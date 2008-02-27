@@ -138,7 +138,9 @@ int main(int argc, char *argv[])
 	}
     }
     
-    ns = sf_segyns (bhead); 
+    if (!sf_histint(in,"n1",&ns)) ns = su? 0: sf_segyns (bhead); 
+    if (0 >= ns) sf_error("Failed to determine trace length");
+
     if (verbose) sf_warning("Detected trace length of %d",ns);
 
     if (su) {

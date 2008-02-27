@@ -31,6 +31,8 @@ def cpus(): # Thanks to Lawrence Oluyede on python-list
     else:
         raise NotImplementedError
 
+child = None
+
 def handler(signum, frame):
     'signal handler for abortion [Ctrl-C]'
     global child
@@ -54,9 +56,11 @@ sys.stderr.write(command+'\n')
 # interruptable system command
 child = os.fork()
 if child:
-    (pid,exit) = os.waitpid(child,0)
-    child = 0
-    sys.exit(0)
+    try:
+        (pid,exit) = os.waitpid(child,0)
+        sys.exit(exit)
+    except OSError:
+        sys.exit(0)
 else:
     os.system(command)
     os._exit(0)
