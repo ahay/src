@@ -1,4 +1,7 @@
-/* Signal and noise separation using plane-wave destruction filters.  */
+/* Signal and noise separation using plane-wave destruction filters.  
+
+If n3=1 in the output, outputs both signal and noise. Otherwise, only signal.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,7 +27,7 @@
 
     int main(int argc, char* argv[])
 {
-    int i, n1, n2, n12, nj1, nj2, niter, nw;
+    int i, n1, n2, n12, nj1, nj2, niter, nw, n3, i3;
     float eps, *d, *s, *nd, **nn, **ss;
     bool verb;
     sf_file in, out, ndip, sdip;
@@ -39,13 +42,14 @@
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n12 = n1*n2;
 
+    n3 = sf_leftsize(in,2);
+    if (1==n3) sf_putint (out,"n3",2);
+
     if (!sf_getint ("niter",&niter)) niter=50;
     /* maximum number of iterations */
 
     if (!sf_getfloat ("eps",&eps)) eps=1.;
     /* regularization parameter */
-
-    sf_putint (out,"n3",2);
 
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy order */
@@ -65,25 +69,35 @@
     nn = sf_floatalloc2(n1,n2);
     ss = sf_floatalloc2(n1,n2);
 
-    sf_floatread (d,n12,in);
-    sf_floatread (nn[0],n12,ndip);
-    sf_floatread (ss[0],n12,sdip);
-
-    allpass22_init(allpass2_init(nw,nj1,n1,n2,nn));
-    allpass21_lop (false,false,n12,n12,d,nd);
     for (i=0; i < n12; i++) {
 	nd[n12+i] = 0.;
     }
 
     planesignoi_init (nw, nj1,nj2, n1,n2, nn, ss, eps);
-    sf_solver (planesignoi_lop, sf_cgstep, n12, n12*2, s, nd, niter, 
-	       "verb", verb, "end");
 
-    sf_floatwrite(s,n12,out);
-    for (i=0; i < n12; i++) {
-	d[i] -= s[i];
+    for (i3=0; i3 < n3; i3++) {
+	sf_floatread (d,n12,in);
+	sf_floatread (nn[0],n12,ndip);
+	sf_floatread (ss[0],n12,sdip);
+
+	allpass22_init(allpass2_init(nw,nj1,n1,n2,nn));
+	allpass21_lop (false,false,n12,n12,d,nd);
+	
+
+	sf_solver (planesignoi_lop, sf_cgstep, n12, n12*2, s, nd, niter, 
+		   "verb", verb, "end");
+
+	sf_cgstep_close();
+
+	sf_floatwrite(s,n12,out);
+
+	if (1==n3) {
+	    for (i=0; i < n12; i++) {
+		d[i] -= s[i];
+	    }
+	    sf_floatwrite(d,n12,out);
+	}
     }
-    sf_floatwrite(d,n12,out);
-
+    
     exit(0);
 }
