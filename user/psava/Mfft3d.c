@@ -1,4 +1,4 @@
-/* FFT in 3D */
+/* 3D FFT with centering and Hermitian scaling  */
 /*
   Copyright (C) 2008 Colorado School of Mines
   
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "fft3.h"
+#include "ftutil.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     sf_axis a1,a2,a3;
     sf_axis b1=NULL,b2=NULL,b3=NULL;
 
-    float scale1,scale2,scale3;
+    fft3d ft1,ft2,ft3; /* FT structures */
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -71,6 +71,21 @@ int main(int argc, char* argv[])
 
     if(cnt) {
 	switch(axis) {
+	    case 23:
+	    case 32:
+		b2= sf_maxa(sf_n(a2),-1./(2.*sf_d(a2)),1./(sf_n(a2)*sf_d(a2)));
+		b3= sf_maxa(sf_n(a3),-1./(2.*sf_d(a3)),1./(sf_n(a3)*sf_d(a3)));
+		break;
+	    case 13:
+	    case 31:
+		b1= sf_maxa(sf_n(a1),-1./(2.*sf_d(a1)),1./(sf_n(a1)*sf_d(a1)));
+		b3= sf_maxa(sf_n(a3),-1./(2.*sf_d(a3)),1./(sf_n(a3)*sf_d(a3)));
+		break;
+	    case 12:
+	    case 21:
+		b1= sf_maxa(sf_n(a1),-1./(2.*sf_d(a1)),1./(sf_n(a1)*sf_d(a1)));
+		b2= sf_maxa(sf_n(a2),-1./(2.*sf_d(a2)),1./(sf_n(a2)*sf_d(a2)));
+		break;
 	    case 3:
 		b3= sf_maxa(sf_n(a3),-1./(2.*sf_d(a3)),1./(sf_n(a3)*sf_d(a3)));
 		break;		
@@ -80,6 +95,8 @@ int main(int argc, char* argv[])
 	    case 1:
 		b1= sf_maxa(sf_n(a1),-1./(2.*sf_d(a1)),1./(sf_n(a1)*sf_d(a1)));
 		break;		
+	    case 123:
+	    case 321:
 	    case 0:
 	    default:
 		b1= sf_maxa(sf_n(a1),-1./(2.*sf_d(a1)),1./(sf_n(a1)*sf_d(a1)));
@@ -89,6 +106,21 @@ int main(int argc, char* argv[])
 	}
     } else {
 	switch(axis) {
+	    case 23:
+	    case 32:
+		b2= sf_maxa(sf_n(a2),                0,1./(sf_n(a2)*sf_d(a2)));
+		b3= sf_maxa(sf_n(a3),                0,1./(sf_n(a3)*sf_d(a3)));
+		break;
+	    case 13:
+	    case 31:
+		b1= sf_maxa(sf_n(a1),                0,1./(sf_n(a1)*sf_d(a1)));
+		b3= sf_maxa(sf_n(a3),                0,1./(sf_n(a3)*sf_d(a3)));
+		break;
+	    case 12:
+	    case 21:
+		b1= sf_maxa(sf_n(a1),                0,1./(sf_n(a1)*sf_d(a1)));
+		b2= sf_maxa(sf_n(a2),                0,1./(sf_n(a2)*sf_d(a2)));
+		break;
 	    case 3:
 		b3= sf_maxa(sf_n(a3),                0,1./(sf_n(a3)*sf_d(a3)));
 		break;		
@@ -98,6 +130,8 @@ int main(int argc, char* argv[])
 	    case 1:
 		b1= sf_maxa(sf_n(a1),                0,1./(sf_n(a1)*sf_d(a1)));
 		break;		
+	    case 123:
+	    case 321:
 	    case 0:
 	    default:
 		b1= sf_maxa(sf_n(a1),                0,1./(sf_n(a1)*sf_d(a1)));
@@ -112,54 +146,150 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* allocate arrays */
-    cc = sf_complexalloc3(sf_n(a1),sf_n(a2),sf_n(a3)); /*    data */
+    cc = sf_complexalloc3(sf_n(a1),sf_n(a2),sf_n(a3));
 
     /*------------------------------------------------------------*/
-    sf_complexread(cc[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fi); /* read */
+    /* read */
+    sf_complexread(cc[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fi);
     /*------------------------------------------------------------*/
 
     switch(axis) {
+	case 23:
+	case 32:
+	    sf_warning("FFT on axes 2 and 3");
+
+	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a2(cc,ft2);
+	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+
+	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a3(cc,ft3);
+	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    
+	    break;
+	case 13:
+	case 31:
+	    sf_warning("FFT on axes 1 and 3");
+	    
+	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a1(cc,ft1);
+	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+
+	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a3(cc,ft3);
+	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    
+	    break;
+	case 12:
+	case 21:
+	    sf_warning("FFT on axes 1 and 2");
+	    
+	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a1(cc,ft1);
+	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+
+	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a2(cc,ft2);
+	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    
+	    break;
 	case 3:
 	    sf_warning("FFT on axis 3");
-	    scale3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv) cnt3a3(cc);
-	    fft3a3(inv,(kiss_fft_cpx***) cc,scale3);
-	    if(cnt &&  inv) cnt3a3(cc);
-	    break;
+	    
+	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a3(cc,ft3);
+	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           cnt3a3(cc,ft3);
 
+	    break;
 	case 2:
 	    sf_warning("FFT on axis 2");
-	    scale2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv) cnt3a2(cc);
-	    fft3a2(inv,(kiss_fft_cpx***) cc,scale2);
-	    if(cnt &&  inv) cnt3a2(cc);
+	    
+	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a2(cc,ft2);
+	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    
 	    break;
-
 	case 1:
 	    sf_warning("FFT on axis 1");
-	    scale1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv) cnt3a1(cc);
-	    fft3a1(inv,(kiss_fft_cpx***) cc,scale1);
-	    if(cnt &&  inv) cnt3a1(cc);
-	    break;
 
+	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a1(cc,ft1);
+	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+
+	    break;
+	case 123:
+	case 321:
 	case 0:
 	default:
-	    sf_warning("FFT on axes 123");
-	    fft3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv) cnt3(cc);
-	    fft3(inv,(kiss_fft_cpx***) cc);
-	    if(cnt &&  inv) cnt3(cc);
+	    sf_warning("FFT on axes 1,2 and 3");
+
+	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a1(cc,ft1);
+	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+
+	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a2(cc,ft2);
+	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+
+	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           cnt3a3(cc,ft3);
+	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+
 	    break;
     }
 
-
     /*------------------------------------------------------------*/
-    sf_complexwrite(cc[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fo); /* write */
+    /* write */
+    sf_complexwrite(cc[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fo); 
     /*------------------------------------------------------------*/
 
     /* close FFT */
-    fft3_close();
-
+    switch(axis) {
+	case 23:
+	case 32:
+	    fft3a2_close(ft2);
+	    fft3a3_close(ft3);
+	    break;
+	case 13:
+	case 31:
+	    fft3a1_close(ft1);
+	    fft3a3_close(ft3);
+	    break;
+	case 12:
+	case 21:
+	    fft3a1_close(ft1);
+	    fft3a2_close(ft2);
+	    break;
+	case 3:
+	    fft3a3_close(ft3);
+	    break;		
+	case 2:
+	    fft3a2_close(ft2);
+	    break;		
+	case 1:
+	    fft3a1_close(ft1);
+	    break;	
+	case 123:
+	case 321:	
+	case 0:
+	default:
+	    fft3a1_close(ft1);
+	    fft3a2_close(ft2);
+	    fft3a3_close(ft3);
+	    break;
+    }
+    
     exit (0);
 }
