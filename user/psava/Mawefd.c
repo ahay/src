@@ -139,8 +139,9 @@ int main(int argc, char* argv[])
     n2 = sf_n(a2); d2 = sf_d(a2);
 
     if(! sf_getint("jdata",&jdata)) jdata=1;
-    if(snap) {  /* save wavefield every *jsnap* time steps */
+    if(snap) {  
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
+        /* save wavefield every *jsnap* time steps */
     }
 
     /*------------------------------------------------------------*/

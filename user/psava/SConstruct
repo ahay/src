@@ -3,7 +3,6 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-awe
 awefd lwefd ewefd hdefd
 off2abs off2abs3
 icor xcor tcor ucor laps

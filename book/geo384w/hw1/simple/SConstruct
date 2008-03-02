@@ -16,6 +16,9 @@ Result('model',
        scalebar=y barreverse=y barlabel=Velocity barunit=km/s 
        ''')
 
+# Constant density
+Flow('density','model','math output=1')
+
 # Wavelet shift
 dt = 0.001
 nt = 201
@@ -25,7 +28,8 @@ tau = (nt-1)*dt
 Flow('wavelet',None,
      '''
      spike nsp=1 n1=2000 d1=%g k1=%d |
-     ricker1 frequency=10
+     ricker1 frequency=10 |
+     transp
      ''' % (dt,nt))
 
 # Source location
@@ -36,13 +40,14 @@ Flow('source',None,
      'spike n1=3 nsp=3 k1=1,2,3 mag=%g,%g,1' % (x,z))
 
 # Modeling
-Flow('data wave','wavelet model source',
+Flow('data wave','wavelet model source density',
      '''
-     afdm2d verb=y abc=y free=n snap=y jsnap=5
-     nbz=50 tz=0.006125 nbx=50 tx=0.006125 
+     awefd verb=y free=n snap=y jsnap=5
+     nb=50 tz=0.006125 nbx=50 tx=0.006125 
      vel=${SOURCES[1]}
      sou=${SOURCES[2]}
      rec=${SOURCES[2]}
+     den=${SOURCES[3]}
      wfl=${TARGETS[1]}         
      ''')
 

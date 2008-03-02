@@ -39,6 +39,9 @@ def seislet(data,              # data name
            grey  title="Seislet Transform" label2=Scale unit2=
            ''')
 
+    scoef = data+'scoef'
+    Flow(scoef,seis,'put n1=%d o1=1 d1=1 n2=1 unit1= unit2= | sort' % (n1*n2))
+
 #    sseis = data+'sseis'
 #    Flow(sseis,[data,dip],
 #         'seislet dip=${SOURCES[1]} eps=%g adj=y niter=100' % eps)
@@ -56,10 +59,23 @@ def seislet(data,              # data name
     wvlt = data+'wvlt'
 
     Flow(wvlt,data,'transp | dwt unit=y | transp')
+
+    coef = data+'coef'
+    Flow(coef,wvlt,'put n1=%d o1=1 d1=1 n2=1 unit1= unit2= | sort' % (n1*n2))
+
     Result(wvlt,
            '''
            put o2=0 d2=1 | grey  title="Wavelet Transform" label2=Scale unit2=
            ''')
+
+    Result(coef,[coef,scoef],
+           '''
+           cat axis=2 ${SOURCES[1]} |
+           window n1=%d |
+           scale axis=1 |
+           math output="log(input)" |
+           graph dash=1,0 label1=n label2="log(a\_n\^)" wanttitle=n 
+           ''' % (n1*n2/2))
 
     four = data+'four'
     Flow(four,data,'cosft sign2=1')
