@@ -649,7 +649,7 @@ contains
     type (file),         intent (in)  :: hist
     complex, dimension (:), intent (out) :: array
 
-    call sf_complexread(hist,array,size(array))
+    call rsf_read_complex_1d_n(hist,array,size(array))
   end subroutine rsf_read_complex_1d
 
   subroutine rsf_read_complex_2d (hist, array)    
