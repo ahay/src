@@ -358,7 +358,7 @@ class Project(Environment):
                 par_tfiles = []
                 for j in range(len(tfiles)):
                     tfile = tfiles[j]
-                    par_tfile = '_' + tfile + '__' + str(i)
+                    par_tfile = tfile + '__' + str(i)
                     
                     par_tfiles.append(par_tfile)
                     par_targets[tfile].append(par_tfile)
@@ -370,14 +370,8 @@ class Project(Environment):
 
             # Reduce parallel TARGETS down to original TARGETS:
             for tfile in tfiles:
-                par_tfiles = par_targets[tfile] # local
-                par_tfiles2 = [] # global
-                for pfile in par_tfiles:
-                    pfile2 = pfile[1:]
-                    Flow(pfile2,pfile,'cp $SOURCE $TARGET datapath=%s' % self.path,stdin=0,stdout=-1)
-                    par_tfiles2.append(pfile2)
-                self.Flow(tfile,par_tfiles2,
-                          '%s axis=%d ${SOURCES[1:%d]} datapath=%s' % (reduce,axis,self.jobs,self.path))
+                self.Flow(tfile,par_targets[tfile],
+                          '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.jobs))
             return
 
         sources = []
@@ -396,7 +390,7 @@ class Project(Environment):
             self.ip = 0
         
         if node != 'localhost':
-            remote = '%s %s DATAPATH=%s' % (WhereIs('env'),self.environ,tmpdatapath)
+            remote = '%s %s ' % (WhereIs('env'),self.environ)
         else:
             remote = ''
             
