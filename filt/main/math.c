@@ -17,7 +17,7 @@ Examples:
 
 sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
 sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
-sfmath n1=100 type=complex output="exp(I*x1)"
+sfmath n1=100 type=complex output="exp(I*x1)" > out.rsf
 
 See also: sfheadermath.
 */
