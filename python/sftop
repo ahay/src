@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+import os, string, commands
+
+cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
+for node in cluster[::2]:
+    if node == 'localhost':
+        (stat,top) = commands.getstatusoutput('top | head --lines=15')
+    else:
+        (stat,top) = commands.getstatusoutput('ssh %s top | head --lines=15' % node)
+    if not stat:
+        print top
+

@@ -92,18 +92,18 @@ anomalies.
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
-\moddex{attr}{attr}{76}{79}{filt/main}
+\moddex{attr}{attr}{78}{81}{filt/main}
 
 In the main loop, we read the input data buffer by buffer.
-\moddex{attr}{attr}{93}{112}{filt/main}
+\moddex{attr}{attr}{95}{114}{filt/main}
 
 The data attributes are accumulated in corresponding double-precision
 variables. 
-\moddex{attr}{attr}{133}{134}{filt/main}
+\moddex{attr}{attr}{135}{136}{filt/main}
 
 Finally, the attributes are reduced and printed out.
-\moddex{attr}{attr}{166}{172}{filt/main}
-\moddex{attr}{attr}{179}{188}{filt/main}
+\moddex{attr}{attr}{168}{175}{filt/main}
+\moddex{attr}{attr}{182}{191}{filt/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
@@ -152,6 +152,33 @@ The axes that are not being merged are checked for consistency:
 bash$ sfcat one.rsf two.rsf > three.rsf
 sfcat: n2 mismatch: need 3
 \end{verbatim}
+
+\subsubsection{Implementation: \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/add.c?view=markup}{filt/main/cat.c}}
+
+The first input file is either in the list or in the standard input.
+\moddex{cat}{cat}{48}{55}{filt/main}
+
+Everything on command line that does not contain a ``='' sign is
+treated as a file name, and the corresponding file object is added to the list.
+\moddex{cat}{cat}{57}{63}{filt/main}
+
+As explained above, if the \texttt{space=} parameter is not set, it is
+inferred from the program name: \texttt{sfmerge} corresponds to
+\texttt{space=y} and \texttt{sfcat} corresponds to \texttt{space=n}.
+\moddex{cat}{cat}{67}{80}{filt/main}
+
+Find the axis for the merging (from the command line \texttt{axis=}
+argument) and figure out two sizes: \texttt{n1} for everything after
+the axis and \texttt{n2} for everything before the axis.
+\moddex{cat}{cat}{94}{99}{filt/main}
+
+In the output, the selected axis will get extended.
+\moddex{cat}{cat}{111}{125}{filt/main}
+
+The rest is simple: loop through the datasets reading and writing the
+data in buffer-size chunks and adding extra empty chunks if
+\texttt{space=y}.
+\moddex{cat}{cat}{134}{149}{filt/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcmplx}

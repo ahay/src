@@ -31,13 +31,14 @@ sfmerge inserts additional space between merged data.
 
 #include <rsf.h>
 
-static void check_compat (int esize, size_t nin, sf_file *in, int axis, 
+static void check_compat (int esize, int nin, sf_file *in, int axis, 
 			  int dim, const int *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
-    int i, axis, *naxis, n[SF_MAX_DIM], dim, dim1, n1, n2, i2, esize, nspace;
-    size_t j, nin, ni, nbuf;
+    int i, j, axis, *naxis, n[SF_MAX_DIM], nin;
+    int dim, dim1, esize, nspace;
+    off_t ni, nbuf, n1, n2, i2;
     sf_file *in, out;
     char* prog, key[3], buf[BUFSIZ];
     bool space;
@@ -54,7 +55,8 @@ int main (int argc, char* argv[])
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
-	if (NULL != strchr(argv[i],'=')) continue; /* not a file */
+	if (NULL != strchr(argv[i],'=')) 
+	    continue; /* not a file */
 	in[nin] = sf_input(argv[i]);
 	nin++;
     }
@@ -71,7 +73,8 @@ int main (int argc, char* argv[])
 	} else if (NULL != strstr (prog, "cat")) {
 	    space = false;
 	} else {
-	    sf_warning("%s is neither merge nor cat, assume merge",prog);
+	    sf_warning("%s is neither merge nor cat,"
+		       " assume merge",prog);
 	    space = true;
 	}
     }
@@ -112,7 +115,8 @@ int main (int argc, char* argv[])
     }
 
     if (space) {
-	if (!sf_getint("nspace",&nspace)) nspace = (int) (ni/(20*nin) + 1);
+	if (!sf_getint("nspace",&nspace)) 
+	    nspace = (int) (ni/(20*nin) + 1);
 	/* if space=y, number of traces to insert */ 
 	ni += nspace*(nin-1);
     } 
@@ -129,7 +133,7 @@ int main (int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
-	    for (ni = (size_t) n1*naxis[j]*esize; ni > 0; ni -= nbuf) {
+	    for (ni = n1*naxis[j]*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
 		sf_charread (buf,nbuf,in[j]);
 		sf_charwrite (buf,nbuf,out);
@@ -137,7 +141,7 @@ int main (int argc, char* argv[])
 	    if (!space || j == nin-1) continue;
 	    /* Add spaces */
 	    memset(buf,0,BUFSIZ);
-	    for (ni = (size_t) n1*nspace*esize; ni > 0; ni -= nbuf) {
+	    for (ni = n1*nspace*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
 		sf_charwrite (buf,nbuf,out);
 	    }
@@ -147,11 +151,11 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim, 
+static void check_compat (int esize, int nin, sf_file *in, int axis, int dim, 
 			  const int *n, /*@out@*/ int *naxis) 
+/*< check if the file dimensions are compatible >*/
 {
-    size_t i;
-    int ni, id;
+    int i, ni, id;
     float o, d, di, oi;
     char key[3];
     const float tol=1.e-3;
