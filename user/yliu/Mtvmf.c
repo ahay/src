@@ -29,13 +29,12 @@ float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
 
 int main (int argc, char* argv[]) 
 {
-	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
-	int i,j,k,kk;
+	int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
+	int i,j,k,kk,ii;
 	int nfw;    /*nfw is the reference filter-window length*/
 	int tempnfw;  /*temporary variable*/
 	int m;
 	float medianv; /*temporary median variable*/
-
 
 	float *trace;
 	float *tempt; /*temporary array*/
@@ -50,8 +49,9 @@ int main (int argc, char* argv[])
 	out = sf_output("out");
     
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-	n2 = sf_leftsize(in,1);
-	/* get the trace length (n1) and the number of traces (n2)*/
+	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+	n3 = sf_leftsize(in,2);
+	/* get the trace length (n1) and the number of traces (n2) and n3*/
 
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
 	/* reference filter-window length (>7, positive and odd integer)*/
@@ -69,75 +69,74 @@ int main (int argc, char* argv[])
 	temp2 = sf_floatalloc(n1);
 	/*set the data space*/
 
-	sf_floatread(trace,n1*n2,in);
+        for(ii=0;ii<n3;ii++)
+        {
+  	        sf_floatread(trace,n1*n2,in);
+	        for(i=0;i<n1*n2;i++)
+	        {
+		        tempt[i]=trace[i];
+	        }
 
-	for(i=0;i<n1*n2;i++)
-	{
-		tempt[i]=trace[i];
-	}
+	        extenddata1(tempt,extendt,nfw,n1,n2);
 
-	extenddata1(tempt,extendt,nfw,n1,n2);
+	        /************1D reference median filtering****************/
 
-	/************1D reference median filtering****************/
+	        for(i=0;i<n2;i++)	        {
+		        for(j=0;j<n1;j++)
+		        {
+			        for(k=0;k<nfw;k++)
+			        {
+				        temp1[k]=extendt[(n1+2*m)*i+j+k];
+			        }
+			        medianarray[n1*i+j]=medianfilter(temp1,nfw);
+		        }
+                }
+	        medianv=0.0;
+	        for(i=0;i<n1*n2;i++)
+	        {
+		        medianv=medianv+fabs(medianarray[i]);
+	        }
+	        medianv=medianv/(1.0*n1*n2);
 
-	for(i=0;i<n2;i++)
-	{
-		for(j=0;j<n1;j++)
-		{
-			for(k=0;k<nfw;k++)
-			{
-				temp1[k]=extendt[(n1+2*m)*i+j+k];
-			}
-			medianarray[n1*i+j]=medianfilter(temp1,nfw);
-		}
-       }
-	medianv=0.0;
-	for(i=0;i<n1*n2;i++)
-	{
-		medianv=medianv+fabs(medianarray[i]);
-	}
-	medianv=medianv/(1.0*n1*n2);
-
-	/************1D time-varying median filter****************/
-	for(i=0;i<n2;i++)
-	{
-		for(kk=0;kk<n1;kk++)
-		{
-			temp2[kk]=trace[n1*i+kk];
-		}
-		for(j=0;j<n1;j++)
-		{
-			if(fabs(medianarray[n1*i+j])<medianv)
-			{
-				if(fabs(medianarray[n1*i+j])<medianv/2.0)
-				{
-					tempnfw=nfw+2;
-				}
-				else
-				{
-					tempnfw=nfw;
-				}
-			}
-			else
-			{
-				if(fabs(medianarray[n1*i+j])>=(medianv*2.0))
-				{
-					tempnfw=nfw-4;
-				}
-				else
-				{
-					tempnfw=nfw-2;
-				}
-			}
-			temp3 = sf_floatalloc(tempnfw);
-			extenddata2(temp2,temp3,n1,tempnfw,j);
-			result[n1*i+j]=medianfilter(temp3,tempnfw);
-			tempnfw=nfw;
-		
-		}
-       }
-
-	sf_floatwrite(result,n1*n2,out);
+	        /************1D time-varying median filter****************/
+	        for(i=0;i<n2;i++)
+	        {
+		        for(kk=0;kk<n1;kk++)
+		        {
+			        temp2[kk]=trace[n1*i+kk];
+		        }
+		        for(j=0;j<n1;j++)
+		        {
+			        if(fabs(medianarray[n1*i+j])<medianv)
+			        {
+				        if(fabs(medianarray[n1*i+j])<medianv/2.0)
+				        {
+					        tempnfw=nfw+2;
+				        }
+				        else
+				        {
+					        tempnfw=nfw;
+				        }
+			        }
+			        else
+			        {
+				        if(fabs(medianarray[n1*i+j])>=(medianv*2.0))
+				        {
+					        tempnfw=nfw-4;
+				        }
+				        else
+				        {
+					        tempnfw=nfw-2;
+				        }
+			        }
+			        temp3 = sf_floatalloc(tempnfw);
+			        extenddata2(temp2,temp3,n1,tempnfw,j);
+			        result[n1*i+j]=medianfilter(temp3,tempnfw);
+			        tempnfw=nfw;
+		        }
+                }
+	        sf_floatwrite(result,n1*n2,out);
+        }
 
     exit (0);
 }
@@ -156,7 +155,7 @@ void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seis
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j]=0.0;
+			extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
 		}
 	}
 	for(i=0;i<n2;i++)
@@ -170,7 +169,7 @@ void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seis
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j+n1+m]=0.0;
+			extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
 		}
 	}
 }
@@ -190,7 +189,7 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 	{
 		for(k=0;k<(abs(j-tempnfw/2));k++)
 		{
-			temp3[k]=0.0;
+			temp3[k]=temp2[0];
 		}
 		for(k=(abs(j-tempnfw/2));k<tempnfw;k++)
 		{
@@ -205,14 +204,14 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 		}
 		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
 		{
-			temp3[k]=0.0;
+			temp3[k]=temp2[n1];
 		}
 	}
 	else
 	{
 		for(k=0;k<(abs(j-tempnfw/2));k++)
 		{
-			temp3[k]=0.0;
+			temp3[k]=temp2[0];
 		}
 		for(k=(abs(j-tempnfw/2));k<(tempnfw-abs(j+tempnfw/2-n1+1));k++)
 		{
@@ -220,11 +219,11 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 		}
 		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
 		{
-			temp3[k]=0.0;
+			temp3[k]=temp2[n1];
 		}
 	}	
 }
 
-/* 	$Id: Mtvmf.c 3303 2008-02-06 15:17:10Z yang $	 */
+/* 	$Id: Mtvmf.c 3351 2008-03-05 20:36:10Z yang $	 */
 
 

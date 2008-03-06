@@ -28,10 +28,10 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);
 
 int main (int argc, char* argv[]) 
 {
-	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
+	int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
         int nfw;    /*nfw is the filter-window length*/
 	int m;
-        int i,j,k;
+        int i,j,k,ii;
 
 	float *trace;
 	float *tempt;
@@ -44,8 +44,9 @@ int main (int argc, char* argv[])
 	out = sf_output("out");
     
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-	n2 = sf_leftsize(in,1);
-	/* get the trace length (n1) and the number of traces (n2)*/
+	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+	n3 = sf_leftsize(in,2);
+	/* get the trace length (n1) and the number of traces (n2) and n3*/
 
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
 	/* filter-window length (positive and odd integer)*/
@@ -58,30 +59,33 @@ int main (int argc, char* argv[])
 	temp1 = sf_floatalloc(nfw);
 	extendt = sf_floatalloc((n1+2*m)*n2);
 
-	sf_floatread(trace,n1*n2,in);
+        for(ii=0;ii<n3;ii++)
+        {
+		sf_floatread(trace,n1*n2,in);
 
-	for(i=0;i<n1*n2;i++)
-	{
-		tempt[i]=trace[i];
-	}
+		for(i=0;i<n1*n2;i++)
+		{
+			tempt[i]=trace[i];
+		}
 
-	extenddata(tempt,extendt,nfw,n1,n2);
+		extenddata(tempt,extendt,nfw,n1,n2);
 
 	   /************1D median filter****************/
 
-	for(i=0;i<n2;i++)
-	{
-		for(j=0;j<n1;j++)
+		for(i=0;i<n2;i++)
 		{
-			for(k=0;k<nfw;k++)
+			for(j=0;j<n1;j++)
 			{
-				temp1[k]=extendt[(n1+2*m)*i+j+k];
+				for(k=0;k<nfw;k++)
+				{
+					temp1[k]=extendt[(n1+2*m)*i+j+k];
+				}
+				trace[n1*i+j]=medianfilter(temp1,nfw);
 			}
-			trace[n1*i+j]=medianfilter(temp1,nfw);
 		}
-       }
 
-	sf_floatwrite(trace,n1*n2,out);
+		sf_floatwrite(trace,n1*n2,out);
+	}
 
 	exit (0);
 }
@@ -101,7 +105,7 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j]=0.0;
+			extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
 		}
 	}
 	for(i=0;i<n2;i++)
@@ -115,13 +119,13 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j+n1+m]=0.0;
+			extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
 		}
 	}
 	
 }
 
 
-/* 	$Id: Mmf.c 1131 2007-11-12 10:00:10Z yang $	 */
+/* 	$Id: Mmf.c 3351 2008-03-05 20:36:10Z yang $	 */
 
 
