@@ -16,7 +16,8 @@ for node in cluster[::2]:
             fields = string.split(job)
             if fields[0] != 'root' \
                    and fields[0] != 'nobody' \
-                   and float(fields[2]) > 0.0:
+                   and float(fields[2]) > 0.0 \
+                   and fields[-1] != 'ps aux':
                 print job
 
 sys.exit(0)
