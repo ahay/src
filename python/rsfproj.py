@@ -314,7 +314,7 @@ class Project(Environment):
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=3,length=1,reduce='cat'):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=3,length=1,reduce='cat',local=0):
 
         if not flow:
             return None     
@@ -371,7 +371,8 @@ class Project(Environment):
             # Reduce parallel TARGETS down to original TARGETS:
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
-                          '%s axis=%d ${SOURCES[1:%d]}' % (reduce,axis,self.jobs))
+                          '%s axis=%d ${SOURCES[1:%d]}' % \
+                          (reduce,axis,self.jobs),local=1)
             return
 
         sources = []
@@ -384,11 +385,14 @@ class Project(Environment):
             stdin=0
 
         # May need to do it remotely
-        node = self.nodes[self.ip]
-        self.ip = self.ip + 1
-        if self.ip == len(self.nodes):
-            self.ip = 0
-        
+        if local:
+            node = 'localhost'
+        else: # get it from the rotating list
+            node = self.nodes[self.ip]
+            self.ip = self.ip + 1
+            if self.ip == len(self.nodes):
+                self.ip = 0
+                
         if node != 'localhost':
             remote = '%s %s ' % (WhereIs('env'),self.environ)
         else:
