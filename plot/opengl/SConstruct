@@ -36,6 +36,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=['rsf'])
 
 ogl = env.get('OPENGL')
+
 if ogl:
     if type(ogl) is not types.ListType:
         ogl = Split(ogl)
@@ -50,9 +51,9 @@ for source in Split(oglsrc):
 
 for source in src:
     inc = env.Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-
+    if ogl:
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
 
 mains = Split(progs)
 for prog in mains:
@@ -61,7 +62,8 @@ for prog in mains:
         configure.depends(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
-        prog = env.Place('sf'+prog,None,var='OPENGL',package='mesa-libGL-devel')
+        prog = env.Place('sf'+prog,None,var='OPENGL',
+                         package='mesa-libGL-devel')
     if root:
         env.Install(bindir,prog)
 
