@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     fint1 str, istr;
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
-    float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
+    float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t, x0, y0;
     float *trace, *strace;
     sf_complex *ctrace, **cstack, shift;
     char *time, *space, *unit;
@@ -72,8 +72,11 @@ int main(int argc, char* argv[])
 
     if(!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
     if(!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
+
     if(!sf_histfloat(in,"d3",&dx)) sf_error("No d3= in input");
     if(!sf_histfloat(in,"d4",&dy)) dy=dx;
+    if(!sf_histfloat(in,"o3",&x0)) x0=0.;
+    if(!sf_histfloat(in,"o4",&y0)) y0=0.;
 
     sf_putfloat(out,"o2",v0+dv);
     sf_putfloat(out,"d2",dv);
@@ -93,6 +96,8 @@ int main(int argc, char* argv[])
 
     dx *= 2.*SF_PI; 
     dy *= 2.*SF_PI; 
+    x0 *= 2.*SF_PI; 
+    y0 *= 2.*SF_PI; 
 
     trace = sf_floatalloc(n1);
     strace = sf_floatalloc(n3);
@@ -105,10 +110,10 @@ int main(int argc, char* argv[])
     istr = fint1_init(next,n2,0);
 
     for (iy=0; iy < ny; iy++) {
-	y = iy*dy; 
+	y = y0+iy*dy; 
 	y *= y;
 	for (ix=0; ix < nx; ix++) {
-	    x = ix*dx; 
+	    x = x0+ix*dx; 
 	    x *= x;
 
 	    if (verb) sf_warning("wavenumber %d of %d and %d of %d", 

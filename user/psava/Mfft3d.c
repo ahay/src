@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     sf_axis a1,a2,a3;
     sf_axis b1=NULL,b2=NULL,b3=NULL;
 
-    fft3d ft1,ft2,ft3; /* FT structures */
+    fft3d ft1=NULL,ft2=NULL,ft3=NULL; /* FT structures */
 
     /*------------------------------------------------------------*/
     /* init RSF */

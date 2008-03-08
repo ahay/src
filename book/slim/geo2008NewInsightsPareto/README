@@ -5,7 +5,7 @@ New insights into one-norm solvers from the Pareto curve
 ===============
 - RSF (http://rsf.sourceforge.net/) with Matlab API
 	+ add $RSFROOT/lib to your Matlab startup.m file
-- SPGL1 (http://www.cs.ubc.ca/labs/scl/index.php/Main/Spgl1)
+- SPGL1 (http://www.cs.ubc.ca/labs/scl/spgl1/)
 	+ add path_to_SPGL1 to your Matlab startup.m file
 - Sparco (http://www.cs.ubc.ca/labs/scl/sparco/)
 	+ add path_to_Sparco to your Matlab startup.m file
