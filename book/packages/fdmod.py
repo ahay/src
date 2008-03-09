@@ -435,6 +435,22 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
+def ewefd2(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [odat,owfl],[idat,cccc,dens,sou,rec,'./EWEFD.x'],
+         '''
+         ./EWEFD.x
+         ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
+         ccc=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+    
 # ------------------------------------------------------------
 # heat modeling
 def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
