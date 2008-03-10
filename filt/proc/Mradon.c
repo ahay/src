@@ -42,15 +42,14 @@ int main (int argc, char **argv)
     float dw,w;               /* frequency increment, frequency */
     float eps,tol;            /* damping and tolerance for inversion */ 
     float x0, dx, ox;         /* reference offset, increment, origin */
-    float maxw;               /* maximum weight */
     sf_complex *dd;           /* data (CMP gather)    */
     sf_complex *mm;           /* model (Radon gather) */
     sf_complex *pp=NULL;      /* preconditioned model */
     sf_complex *qq=NULL;      /* work array */
     sf_complex **cm, **cd;    /* model and data storage */
     float *xx;                /* offset header */
-    float *ww=NULL;           /* weight */
     float *tt;                /* trace */
+    float perc;               /* percentage for sharpening */
     kiss_fftr_cfg forw, invs;
     sf_file in, out, offset;
 
@@ -122,7 +121,12 @@ int main (int argc, char **argv)
 	if (!sf_getfloat("eps",&eps)) eps=1.;
 	if (spk) {
 	    if (!sf_getint("ns",&ns)) ns=1;
-	    if (!sf_getfloat("tol",&tol)) tol=1.e-5;
+	    /* number of sharpening cycles */
+	    if (!sf_getfloat("tol",&tol)) tol=1.e-6;
+	    /* inversion tolerance */
+	    if (!sf_getfloat("perc",&perc)) perc=50.0;
+	    /* percentage for sharpening */
+	    sf_sharpen_init(np,perc);
 	}
     }
 
@@ -172,13 +176,10 @@ int main (int argc, char **argv)
 	qq = sf_complexalloc(np);
 	ctoeplitz_init (np); /* initialize toeplitz inversion */
 	if (spk) {
-	    ww = sf_floatalloc(np);
 	    pp = sf_complexalloc(np);
 
 	    /* cg2_init (np, nx, false, tol); initialize CG */
-	    sf_cconjgrad_init(np, np, nx, nx, eps, tol, false, false);
-	    sf_weight_init(ww);
-
+	    sf_cconjgrad_init(np, np, nx, nx, eps, tol, verb, false);
 	    if (!sf_getint("niter",&niter)) niter=100;
 	}
     }
@@ -247,16 +248,7 @@ int main (int argc, char **argv)
 
 		if (spk) {
 		    for (is=0; is < ns; is++) {
-			maxw = 0.;
-			for (ip=0; ip < np; ip++) { 
-			    ww[ip] = cabsf(mm[ip]); /* fill weight */
-			    if (ww[ip] > maxw) maxw = ww[ip];
-			}
-			if (maxw == 0.) break;
-			for (ip=0; ip < np; ip++) { 
-			    ww[ip] /= maxw; /* normalize weight */
-			}
-
+			sf_csharpen(mm);
 			sf_cconjgrad(NULL, radon_lop, sf_cweight_lop, 
 				     pp, mm, dd, niter);
 		    }

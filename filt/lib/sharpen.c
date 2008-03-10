@@ -23,6 +23,7 @@
 #include "adjnull.h"
 #include "komplex.h"
 #include "alloc.h"
+#include "error.h"
 #include "quantile.h"
 #include "weight.h"
 
@@ -40,7 +41,7 @@ void sf_sharpen_init(int n1     /* data size */,
     n = n1;
     np = n*perc*0.01;
     if (np < 0) np=0;
-    if (np >= n) np=n-1;
+    if (np >= n-1) np=n-2;
 
     ww = sf_floatalloc(n);
     sf_weight_init(ww);
@@ -60,20 +61,23 @@ void sf_sharpen(const float *pp)
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
-    float wi, wp;
+    float wp, wmax, wmin, wi;
 
+    wmax = 0.;
     for (i=0; i < n; i++) {
-	wi = SF_MAX(pp[i]*pp[i],FLT_EPSILON);
-	ww[i]=wi*wi;
+	ww[i] = fabsf(pp[i]);
+	if (ww[i] > wmax) wmax=ww[i];
     }
-    for (n1=np; n1 < n; n1++) {
+    wmin = FLT_EPSILON*wmax;
+
+    for (n1=np; n1 < n-1; n1++) {
 	wp = sf_quantile(n1,n,ww);
-	if (wp > FLT_EPSILON) break;
+	if (wp > wmin) break;
     }
-    
+  
     for (i=0; i < n; i++) {
-	wi = SF_MAX(pp[i]*pp[i],FLT_EPSILON);
-	ww[i] = expf(-wp/wi);
+	wi = fabsf(pp[i])+wmin;
+	ww[i] = expf(-0.5*wp*wp/(wi*wi));
     }
 }
 
@@ -81,20 +85,23 @@ void sf_csharpen(const sf_complex *pp)
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
-    float wi, wp;
+    float wp, wmax, wmin, wi;
 
+    wmax = 0.;
     for (i=0; i < n; i++) {
-	wi = SF_MAX(crealf(conjf(pp[i])*pp[i]),FLT_EPSILON);
-	ww[i]=wi*wi;
+	ww[i] = cabsf(pp[i]);
+	if (ww[i] > wmax) wmax=ww[i];
     }
-    for (n1=np; n1 < n; n1++) {
+    wmin = FLT_EPSILON*wmax;
+
+    for (n1=np; n1 < n-1; n1++) {
 	wp = sf_quantile(n1,n,ww);
-	if (wp > FLT_EPSILON) break;
+	if (wp > wmin) break;
     }
-    
+  
     for (i=0; i < n; i++) {
-	wi = SF_MAX(crealf(conjf(pp[i])*pp[i]),FLT_EPSILON);
-	ww[i] = expf(-wp/wi);
+	wi = cabsf(pp[i])+wmin;
+	ww[i] = expf(-0.5*wp*wp/(wi*wi));
     }
 }
 
