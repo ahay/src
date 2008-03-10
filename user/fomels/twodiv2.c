@@ -47,7 +47,7 @@ void twodiv2_init(int nw             /* number of components */,
 	gauss2_init(n1,n2,f1,f2);
 	repeat_init(n,nw,freqfilt2_lop);
     } else {
-	triangle2_init((int) f1, (int) f2, n1, n2);
+	triangle2_init((int) f1, (int) f2, n1, n2, 1);
 	repeat_init(n,nw,triangle2_lop);
     }
     sf_conjgrad_init(nw*n, nw*n, n, n, 1., 1.e-6, verb, false);

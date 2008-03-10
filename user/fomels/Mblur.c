@@ -24,8 +24,8 @@
 int main(int argc, char* argv[])
 {
     bool adj, inv;
-    int n, n1, n2, i, niter, rect, np, nc, ic;
-    float *x, *y, *w, *p, eps, w0=0., perc;
+    int n, n1, n2, niter, rect, nc, ic, nr;
+    float *x, *y, *p, eps, perc;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -49,30 +49,25 @@ int main(int argc, char* argv[])
     if (!sf_getint("rect",&rect)) sf_error("Need rect=");
     /* blurring radius */
 
+    if (!sf_getint("repeat",&nr)) nr=1;
+    /* repeat smoothing */
+
     if (!sf_getint("ncycle",&nc)) nc=1;
     /* number of nonlinear cycles */
     
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    np = n*perc*0.01;
-    if (np < 0) np=0;
-    if (np >= n) np=n-1;
+    sf_sharpen_init(n,perc);
 
     x = sf_floatalloc(n);
     y = sf_floatalloc(n);
     if (adj && inv) {
-	w = sf_floatalloc(n);
 	p = sf_floatalloc(n);
-	sf_weight_init(w);
-	for (i=0; i < n; i++) {
-	    w[i] = 1.0;
-	}
     } else {
-	w = NULL;
 	p = NULL;
     }
 
-    triangle2_init(rect,rect,n1,n2);
+    triangle2_init(rect,rect,n1,n2,nr);
     sf_floatread(x,n,in);
 
     if (adj) {
@@ -81,19 +76,7 @@ int main(int argc, char* argv[])
 
 	    for (ic=0; ic < nc; ic++) {
 		sf_conjgrad(NULL,triangle2_lop,sf_weight_lop,p,y,x,niter);
-		
-		for (i=0; i < n; i++) {
-		    w[i] = y[i]*y[i];
-		}
-		
-		for (n1=np; n1 < n; n1++) {
-		    w0 = sf_quantile(n1,n,w);
-		    if (w0 > 0.) break;
-		}
-		
-		for (i=0; i < n; i++) {
-		    w[i] = exp(-w0/(y[i]*y[i]));
-		}
+		sf_sharpen(y);
 	    } 
 	} else {
 	    triangle2_lop(true,false,n,n,y,x);

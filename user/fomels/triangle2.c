@@ -22,17 +22,20 @@
 #include <rsf.h>
 /*^*/
 
-static int n1, n2, nd;
+static int n1, n2, nd, nr;
 static sf_triangle tr1, tr2;
 static float *tmp;
 
 void triangle2_init (int nbox1, int nbox2 /* triangle size */, 
-		     int ndat1, int ndat2 /* data size */)
+		     int ndat1, int ndat2 /* data size */,
+                     int nrep /* repeat smoothing */)
 /*< initialize >*/
 {
     n1 = ndat1;
     n2 = ndat2;
     nd = n1*n2;
+    nr = nrep;
+
     tr1 = (nbox1>1)? sf_triangle_init (nbox1,ndat1): NULL;
     tr2 = (nbox2>1)? sf_triangle_init (nbox2,ndat2): NULL;
     tmp = sf_floatalloc (nd);
@@ -41,7 +44,7 @@ void triangle2_init (int nbox1, int nbox2 /* triangle size */,
 void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
-    int i, i1, i2;
+    int i, i1, i2, ir;
 
     if (nx != ny || nx != nd) 
 	sf_error("%s: Wrong data dimensions: nx=%d, ny=%d, nd=%d",
@@ -55,14 +58,18 @@ void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	}
   
 	if (NULL != tr1) {
-	    for (i2=0; i2 < n2; i2++) {    
-		sf_smooth (tr1, i2*n1, 1, false, tmp);
+	    for (i2=0; i2 < n2; i2++) {
+		for (ir=0; ir < nr; ir++) {
+		    sf_smooth (tr1, i2*n1, 1, false, tmp);
+		}
 	    }
 	}
   
 	if (NULL != tr2) {
-	    for (i1=0; i1 < n1; i1++) { 
-		sf_smooth (tr2, i1, n1, false, tmp);
+	    for (i1=0; i1 < n1; i1++) {
+		for (ir=0; ir < nr; ir++) {
+		    sf_smooth (tr2, i1, n1, false, tmp);
+		}
 	    }
 	}
 
@@ -76,13 +83,17 @@ void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
   
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) { 
-		sf_smooth (tr2, i1, n1, false, tmp);
+		for (ir=0; ir < nr; ir++) {
+		    sf_smooth (tr2, i1, n1, false, tmp);
+		}
 	    }
 	}
 
 	if (NULL != tr1) {
-	    for (i2=0; i2 < n2; i2++) {    
-		sf_smooth (tr1, i2*n1, 1, false, tmp);
+	    for (i2=0; i2 < n2; i2++) { 
+		for (ir=0; ir < nr; ir++) {
+		    sf_smooth (tr1, i2*n1, 1, false, tmp);
+		}
 	    }
 	}
 

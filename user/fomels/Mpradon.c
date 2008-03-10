@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    triangle2_init(rect1, rect2, nt, np);
+    triangle2_init(rect1, rect2, nt, np, 1);
     sf_conjgrad_init(ntp, ntp, ntx, ntx, eps, FLT_EPSILON, verb, false);
 
     sf_putint(out,"n2",np);

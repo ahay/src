@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "freqlets.h"
-#include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
@@ -71,7 +70,7 @@ int main(int argc, char *argv[])
 
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    sharpen_init(n1w,perc);
+    sf_sharpen_init(n1w,perc);
     
     if (adj) {
 	n2 = sf_leftsize(in,1);
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 	    /* do inversion if ncycle > 0 */
 	    for (i=0; i < ncycle; i++) {
 		sf_cconjgrad(NULL,freqlets_lop,sf_cweight_lop,q,qq,pp,niter);
-		csharpen(qq,i);
+		sf_csharpen(qq);
 	    }
 	}
 

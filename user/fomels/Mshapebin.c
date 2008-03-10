@@ -191,7 +191,7 @@ int main (int argc, char* argv[])
 	    }
 	    shaping = freqfilt2_lop;
 	} else {
-	    triangle2_init((int) filt1, (int) filt2, nx, ny);
+	    triangle2_init((int) filt1, (int) filt2, nx, ny, 1);
 	    shaping = triangle2_lop;
 	}
 

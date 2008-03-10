@@ -8,7 +8,7 @@ int main(void) {
     float dot1[2], dot2[2];
     static int n1=100, n2=100, f1=10, f2=5;
 
-    triangle2_init(f1, f2, n1, n2);
+    triangle2_init(f1, f2, n1, n2, 3);
     sf_dot_test(triangle2_lop, n1*n2, n1*n2, dot1, dot2);
     triangle2_close();
 

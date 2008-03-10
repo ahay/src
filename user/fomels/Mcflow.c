@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
     /* diffusion */
     sf_int2_init (x, 0,0,1,1,n1,n2, sf_lin_int, 2, i);
-    triangle2_init(rect,rect, n1, n2);
+    triangle2_init(rect,rect, n1, n2, 1);
     sf_conjgrad_init(n12, n12, i, i, 1.0/i, 1.e-8, true, false);
     sf_conjgrad(NULL, 
 		sf_int2_lop, triangle2_lop, grad[0], img[0], y, niter);

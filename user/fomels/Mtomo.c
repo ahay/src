@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
 	sf_floatread(t, nt, time);
 
 	/* initializtion for shaping (smoothing) */ 
-	triangle2_init(rect1,rect2,nz,nx);
+	triangle2_init(rect1,rect2,nz,nx,1);
 
 	/* intitialize conjugate gradients */
 	sf_conjgrad_init(ns, ns, nt, nt, eps, tol, true, false);

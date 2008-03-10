@@ -21,7 +21,6 @@
 
 #include "freqint.h"
 #include "freqlets.h"
-#include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
@@ -87,7 +86,7 @@ int main(int argc, char *argv[])
 
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    sharpen_init(n1w,perc);
+    sf_sharpen_init(n1w,perc);
     
     pp = sf_complexalloc(nd);
     crd = sf_floatalloc(nd);
@@ -122,8 +121,8 @@ int main(int argc, char *argv[])
 
 	/* do inversion if ncycle > 0 */
 	for (i=0; i < ncycle; i++) {
-	    csharpen(qq,i);
 	    sf_cconjgrad(NULL,freqint_lop,sf_cweight_lop,q,qq,pp,niter);
+	    sf_csharpen(qq);
 	} 
 
 	/* reconstruct regular data */

@@ -16,14 +16,23 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <float.h>
 
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "_defs.h"
+#include "adjnull.h"
+#include "komplex.h"
+#include "alloc.h"
+#include "quantile.h"
+#include "weight.h"
+
+#include "sharpen.h"
 
 static int np=0, n=1;
 static float *ww;
 
-void sharpen_init(int n1,float perc) 
+void sf_sharpen_init(int n1     /* data size */,
+		     float perc /* quantile percentage */) 
 /*< initialize >*/
 {
     int i;
@@ -41,54 +50,50 @@ void sharpen_init(int n1,float perc)
     }
 }
 
-void sharpen_close(void)
+void sf_sharpen_close(void)
 /*< free allocated storage >*/
 {
     free(ww);
 }
 
-void sharpen(const float *pp, int iter) 
+void sf_sharpen(const float *pp) 
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
     float wi, wp;
 
-    if (0==iter) {
-	for (i=0; i < n; i++) {
-	    wi = pp[i]*pp[i];
-	    ww[i]=wi*wi;
-	}
-	for (n1=np; n1 < n; n1++) {
-	    wp = sf_quantile(n1,n,ww);
-	    if (wp > 0.) break;
-	}
+    for (i=0; i < n; i++) {
+	wi = SF_MAX(pp[i]*pp[i],FLT_EPSILON);
+	ww[i]=wi*wi;
+    }
+    for (n1=np; n1 < n; n1++) {
+	wp = sf_quantile(n1,n,ww);
+	if (wp > FLT_EPSILON) break;
     }
     
     for (i=0; i < n; i++) {
-	wi = pp[i]*pp[i];
+	wi = SF_MAX(pp[i]*pp[i],FLT_EPSILON);
 	ww[i] = expf(-wp/wi);
     }
 }
 
-void csharpen(const sf_complex *pp, int iter) 
+void sf_csharpen(const sf_complex *pp) 
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
     float wi, wp;
 
-    if (0==iter) {
-	for (i=0; i < n; i++) {
-	    wi = crealf(conjf(pp[i])*pp[i]);
-	    ww[i]=wi*wi;
-	}
-	for (n1=np; n1 < n; n1++) {
-	    wp = sf_quantile(n1,n,ww);
-	    if (wp > 0.) break;
-	}
+    for (i=0; i < n; i++) {
+	wi = SF_MAX(crealf(conjf(pp[i])*pp[i]),FLT_EPSILON);
+	ww[i]=wi*wi;
+    }
+    for (n1=np; n1 < n; n1++) {
+	wp = sf_quantile(n1,n,ww);
+	if (wp > FLT_EPSILON) break;
     }
     
     for (i=0; i < n; i++) {
-	wi = crealf(conjf(pp[i])*pp[i]);
+	wi = SF_MAX(crealf(conjf(pp[i])*pp[i]),FLT_EPSILON);
 	ww[i] = expf(-wp/wi);
     }
 }

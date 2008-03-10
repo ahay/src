@@ -42,7 +42,7 @@ void div2_init(int n1, int n2     /* data dimensions */,
     if (gauss) {
 	gauss2_init(n1,n2,f1,f2);
     } else {
-	triangle2_init((int) f1, (int) f2, n1, n2);
+	triangle2_init((int) f1, (int) f2, n1, n2, 1);
     }
     sf_conjgrad_init(n, n, n, n, 1., 1.e-6, verb, false);
     p = sf_floatalloc (n);

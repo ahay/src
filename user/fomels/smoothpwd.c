@@ -41,7 +41,7 @@ void smoothpwd_init(int n1, int n2 /* data size */,
     repeat_init(n1,n2,sf_causint_lop);
     predict_init (n1,n2,eps,1);
     predict_set(dip);
-    triangle2_init (rect1,1,n1,n2);
+    triangle2_init (rect1,1,n1,n2,1);
 
     w = sf_floatalloc(n);
     p = sf_floatalloc(n);
