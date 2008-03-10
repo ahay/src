@@ -23,8 +23,8 @@
 
 #include "median.h"
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2);/*extend seismic data*/
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j);/*extend temporary seismic data*/
+void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);/*extend seismic data*/
+void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary);/*extend temporary seismic data*/
 float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
 
 int main (int argc, char* argv[]) 
@@ -35,6 +35,7 @@ int main (int argc, char* argv[])
 	int tempnfw;  /*temporary variable*/
 	int m;
 	float medianv; /*temporary median variable*/
+        bool boundary;
 
 	float *trace;
 	float *tempt; /*temporary array*/
@@ -52,6 +53,9 @@ int main (int argc, char* argv[])
 	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
 	n3 = sf_leftsize(in,2);
 	/* get the trace length (n1) and the number of traces (n2) and n3*/
+
+        if (!sf_getbool("boundary",&boundary)) boundary=false;
+        /* if y, boundary is data, whereas zero*/
 
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
 	/* reference filter-window length (>7, positive and odd integer)*/
@@ -77,7 +81,7 @@ int main (int argc, char* argv[])
 		        tempt[i]=trace[i];
 	        }
 
-	        extenddata1(tempt,extendt,nfw,n1,n2);
+	        extenddata1(tempt,extendt,nfw,n1,n2,boundary);
 
 	        /************1D reference median filtering****************/
 
@@ -130,7 +134,7 @@ int main (int argc, char* argv[])
 				        }
 			        }
 			        temp3 = sf_floatalloc(tempnfw);
-			        extenddata2(temp2,temp3,n1,tempnfw,j);
+			        extenddata2(temp2,temp3,n1,tempnfw,j,boundary);
 			        result[n1*i+j]=medianfilter(temp3,tempnfw);
 			        tempnfw=nfw;
 		        }
@@ -141,7 +145,8 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seismic data*/
+void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
+/*extend seismic data*/
 {
 	int m=(nfw-1)/2;
 	int i,j;
@@ -155,7 +160,15 @@ void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seis
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
+                        if (boundary)
+			{
+			    extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
+			}
+                        else
+                        {
+                            extendt[(n1+2*m)*i+j+m]=0.0;
+                        }
+
 		}
 	}
 	for(i=0;i<n2;i++)
@@ -169,12 +182,19 @@ void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seis
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
+                        if (boundary)
+			{
+			    extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
+			}
+                        else
+                        {
+                            extendt[(n1+2*m)*i+j+n1+m]=0.0;
+                        }
 		}
 	}
 }
 
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend temporary seismic data*/
+void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary)/*extend temporary seismic data*/
 {
 	int k;
 	/*extend trace*/
@@ -189,7 +209,15 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 	{
 		for(k=0;k<(abs(j-tempnfw/2));k++)
 		{
-			temp3[k]=temp2[0];
+                        if (boundary)
+			{
+			    temp3[k]=temp2[0];
+			}
+                        else
+                        {
+			    temp3[k]=0.0;
+			}
+
 		}
 		for(k=(abs(j-tempnfw/2));k<tempnfw;k++)
 		{
@@ -204,14 +232,28 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 		}
 		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
 		{
-			temp3[k]=temp2[n1];
+                        if (boundary)
+			{
+			    temp3[k]=temp2[n1];
+			}
+                        else
+                        {
+			    temp3[k]=0.0;
+			}
 		}
 	}
 	else
 	{
 		for(k=0;k<(abs(j-tempnfw/2));k++)
 		{
-			temp3[k]=temp2[0];
+                        if (boundary)
+			{
+			    temp3[k]=temp2[0];
+			}
+                        else
+                        {
+			    temp3[k]=0.0;
+			}
 		}
 		for(k=(abs(j-tempnfw/2));k<(tempnfw-abs(j+tempnfw/2-n1+1));k++)
 		{
@@ -219,11 +261,18 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 		}
 		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
 		{
-			temp3[k]=temp2[n1];
+                        if (boundary)
+			{
+			    temp3[k]=temp2[n1];
+			}
+                        else
+                        {
+			    temp3[k]=0.0;
+			}
 		}
 	}	
 }
 
-/* 	$Id: Mtvmf.c 3351 2008-03-05 20:36:10Z yang $	 */
+/* 	$Id: Mtvmf.c 3368 2008-03-09 20:42:10Z yang	 */
 
 

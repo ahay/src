@@ -23,7 +23,7 @@
 
 #include "median.h"
 
-static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);
+static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);
 /*extend seismic data*/
 
 int main (int argc, char* argv[]) 
@@ -32,6 +32,7 @@ int main (int argc, char* argv[])
         int nfw;    /*nfw is the filter-window length*/
 	int m;
         int i,j,k,ii;
+        bool boundary;
 
 	float *trace;
 	float *tempt;
@@ -50,6 +51,10 @@ int main (int argc, char* argv[])
 
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
 	/* filter-window length (positive and odd integer)*/
+
+        if (!sf_getbool("boundary",&boundary)) boundary=false;
+        /* if y, boundary is data, whereas zero*/
+
 	if (nfw < 1)  sf_error("Need positive integer input"); 
 	if (nfw%2 == 0)  nfw = (nfw+1);
 	m=(nfw-1)/2;
@@ -68,7 +73,7 @@ int main (int argc, char* argv[])
 			tempt[i]=trace[i];
 		}
 
-		extenddata(tempt,extendt,nfw,n1,n2);
+		extenddata(tempt,extendt,nfw,n1,n2,boundary);
 
 	   /************1D median filter****************/
 
@@ -90,7 +95,7 @@ int main (int argc, char* argv[])
 	exit (0);
 }
 
-static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
+static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
 /*extend seismic data*/
 {
 	int m=(nfw-1)/2;
@@ -105,7 +110,14 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
+                        if (boundary)
+			{
+			    extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
+			}
+                        else
+                        {
+                            extendt[(n1+2*m)*i+j]=0.0;
+                        }
 		}
 	}
 	for(i=0;i<n2;i++)
@@ -119,13 +131,20 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	{
 		for(j=0;j<m;j++)
 		{
-			extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
+                        if (boundary)
+			{
+			    extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
+ 			}
+                        else
+                        {
+                            extendt[(n1+2*m)*i+j+n1+m]=0.0;
+                        }
 		}
 	}
 	
 }
 
 
-/* 	$Id: Mmf.c 3351 2008-03-05 20:36:10Z yang $	 */
+/* 	$Id: Mmf.c 3368 2008-03-09 20:42:10Z yang $	 */
 
 
