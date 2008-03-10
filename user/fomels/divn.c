@@ -21,7 +21,6 @@
 
 #include "divn.h"
 #include "trianglen.h"
-#include "weight.h"
 
 static int niter;
 static float *p;
@@ -51,8 +50,8 @@ void divn_close (void)
 void divn (float* num, float* den,  float* rat)
 /*< smoothly divide rat=num/den >*/
 {
-    weight_init(den);
-    sf_conjgrad(NULL, weight_lop,trianglen_lop,p,rat,num,niter); 
+    sf_weight_init(den);
+    sf_conjgrad(NULL, sf_weight_lop,trianglen_lop,p,rat,num,niter); 
 }
 
 /* 	$Id$	 */

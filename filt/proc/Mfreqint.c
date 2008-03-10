@@ -21,14 +21,13 @@
 
 #include "freqint.h"
 #include "freqlets.h"
-#include "cweight.h"
 #include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
     bool inv;
     int nd, n1, i2, n2, nw, n1w, niter, i, ncycle;
-    float *w0, d1, o1, *ww, *crd, eps, perc;
+    float *w0, d1, o1, *crd, eps, perc;
     char *type;
     sf_complex *pp, *qq, *mm, *z0, *q;
     sf_file in, out, w, coord;
@@ -97,12 +96,8 @@ int main(int argc, char *argv[])
     mm = sf_complexalloc(n1);
 
     if (ncycle > 0) {
-	ww = sf_floatalloc(n1w);
-	cweight_init(ww);
 	sf_cconjgrad_init(n1w,n1w,nd,nd,eps,1.e-6,true,false);
-    } else {
-	ww = NULL;
-    }
+    } 
 
     if (NULL == (type=sf_getstring("type"))) type="bior";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
@@ -127,8 +122,8 @@ int main(int argc, char *argv[])
 
 	/* do inversion if ncycle > 0 */
 	for (i=0; i < ncycle; i++) {
-	    csharpen(qq,ww);
-	    sf_cconjgrad(NULL,freqint_lop,cweight_lop,q,qq,pp,niter);
+	    csharpen(qq,i);
+	    sf_cconjgrad(NULL,freqint_lop,sf_cweight_lop,q,qq,pp,niter);
 	} 
 
 	/* reconstruct regular data */

@@ -1,4 +1,4 @@
-/* Weight operator for complex numbers. */
+/* Simple weight operator */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -17,21 +17,41 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "error.h"
+#include "adjnull.h"
+#include "komplex.h"
 
-#include "cweight.h"
+#include "weight.h"
 
 static float* w;
 
-void cweight_init(float *w1)
-/*< initialize weight >*/
+void sf_weight_init(float *w1)
+/*< initialize >*/
 {
     w = w1;
 }
 
-void cweight_lop (bool adj, bool add, int nx, int ny, 
-		 sf_complex* xx, sf_complex* yy)
+void sf_weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
+/*< linear operator >*/
+{
+    int i;
+
+    if (ny!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__,ny,nx);
+
+    sf_adjnull (adj, add, nx, ny, xx, yy);
+  
+    for (i=0; i < nx; i++) {
+	if (adj) {
+	    xx[i] += yy[i] * w[i];
+	} else {
+	    yy[i] += xx[i] * w[i];
+	}
+    }
+}
+
+void sf_cweight_lop (bool adj, bool add, int nx, int ny, 
+		     sf_complex* xx, sf_complex* yy)
 /*< linear operator >*/
 {
     int i;

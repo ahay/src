@@ -21,7 +21,6 @@
 
 #include <rsf.h>
 
-#include "cweight.h"
 #include "radon.h"       
 #include "ctoeplitz.h"
 
@@ -178,7 +177,7 @@ int main (int argc, char **argv)
 
 	    /* cg2_init (np, nx, false, tol); initialize CG */
 	    sf_cconjgrad_init(np, np, nx, nx, eps, tol, false, false);
-	    cweight_init(ww);
+	    sf_weight_init(ww);
 
 	    if (!sf_getint("niter",&niter)) niter=100;
 	}
@@ -258,7 +257,7 @@ int main (int argc, char **argv)
 			    ww[ip] /= maxw; /* normalize weight */
 			}
 
-			sf_cconjgrad(NULL, radon_lop, cweight_lop, 
+			sf_cconjgrad(NULL, radon_lop, sf_cweight_lop, 
 				     pp, mm, dd, niter);
 		    }
 		}

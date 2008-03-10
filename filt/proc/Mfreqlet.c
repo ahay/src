@@ -20,14 +20,13 @@
 #include <rsf.h>
 
 #include "freqlets.h"
-#include "cweight.h"
 #include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
     bool inv, adj, unit;
-    float *w0, d1, *ww, perc;
+    float *w0, d1, perc;
     char *type;
     sf_complex *pp, *qq, *z0, *q;
     sf_file in, out, w;
@@ -88,11 +87,8 @@ int main(int argc, char *argv[])
     qq = sf_complexalloc(n1w);
 
     if (ncycle > 0) {
-	ww = sf_floatalloc(n1w);
 	q = sf_complexalloc(n1w);
-	cweight_init(ww);
     } else {
-	ww = NULL;
 	q = NULL;
     }
 
@@ -126,13 +122,8 @@ int main(int argc, char *argv[])
 	if (adj) {
 	    /* do inversion if ncycle > 0 */
 	    for (i=0; i < ncycle; i++) {
-		if (0==i) {
-		    for (i1=0; i1 < n1w; i1++) {
-			ww[i1] = 1.0;
-		    }
-		}
-		sf_cconjgrad(NULL,freqlets_lop,cweight_lop,q,qq,pp,niter);
-		csharpen(qq,ww);
+		sf_cconjgrad(NULL,freqlets_lop,sf_cweight_lop,q,qq,pp,niter);
+		csharpen(qq,i);
 	    }
 	}
 

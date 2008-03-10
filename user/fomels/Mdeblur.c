@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "ntriangle1.h"
-#include "weight.h"
 #include "hilbert.h"
 
 int main(int argc, char* argv[])
@@ -74,11 +73,11 @@ int main(int argc, char* argv[])
     /* regularization parameter */
 
     ntriangle1_init(nbox,n1,n2,nr);
-    weight_init(wght);
+    sf_weight_init(wght);
     hilbert_init(n1, 10, 1.);
 
     for (iter=0; iter < nliter; iter++) {
-	sf_solver_prec(ntriangle1_lop,sf_cgstep,weight_lop,
+	sf_solver_prec(ntriangle1_lop,sf_cgstep,sf_weight_lop,
 		       n12,n12,n12,modl,data,niter,eps,
 		       "verb",verb,"end");
 	sf_cgstep_close();

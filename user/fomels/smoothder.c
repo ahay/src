@@ -24,7 +24,6 @@
 #include "repeat.h"
 #include "trianglen.h"
 #include "ntrianglen.h"
-#include "weight.h"
 
 static float *tmp;
 static bool nonstat;
@@ -77,8 +76,8 @@ void smoothder(int niter     /* number of iterations */,
 /*< find the derivative >*/
 { 
     if (NULL != weight) {
-	weight_init(weight);
-	sf_conjgrad(weight_lop,repeat_lop,oper,tmp,der,data,niter);
+	sf_weight_init(weight);
+	sf_conjgrad(sf_weight_lop,repeat_lop,oper,tmp,der,data,niter);
     } else {
 	sf_conjgrad(NULL,repeat_lop,oper,tmp,der,data,niter);
     }

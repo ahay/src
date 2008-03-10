@@ -23,7 +23,6 @@
 #include "gauss2.h"
 #include "freqfilt2.h"
 #include "triangle2.h"
-#include "weight.h"
 
 static int n, niter;
 static float *p;
@@ -64,11 +63,11 @@ void div2_close (void)
 void div2 (float* num, float* den,  float* rat)
 /*< smooth division: rat=num/den >*/
 {
-    weight_init(den);
+    sf_weight_init(den);
     if (gauss) {
-	sf_conjgrad(NULL, weight_lop,freqfilt2_lop,p,rat,num,niter);
+	sf_conjgrad(NULL, sf_weight_lop,freqfilt2_lop,p,rat,num,niter);
     } else {
-	sf_conjgrad(NULL, weight_lop,triangle2_lop,p,rat,num,niter); 
+	sf_conjgrad(NULL, sf_weight_lop,triangle2_lop,p,rat,num,niter); 
     }
 }
 

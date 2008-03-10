@@ -22,7 +22,6 @@
 #include "smoothshape.h"
 #include "pwdsl.h"
 #include "repeat.h"
-#include "weight.h"
 
 static float *tmp;
 
@@ -59,8 +58,8 @@ void smoothshape(int niter     /* number of iterations */,
 /*< find the derivative >*/
 { 
     if (NULL != weight) {
-	weight_init(weight);
-	sf_conjgrad(weight_lop,repeat_lop,pwdsl_lop,tmp,der,data,niter);
+	sf_weight_init(weight);
+	sf_conjgrad(sf_weight_lop,repeat_lop,pwdsl_lop,tmp,der,data,niter);
     } else {
 	sf_conjgrad(NULL,repeat_lop,pwdsl_lop,tmp,der,data,niter);
     }

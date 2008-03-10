@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "kron.h"
-#include "weight.h"
 
 int main(int argc, char* argv[])
 {
@@ -70,12 +69,12 @@ int main(int argc, char* argv[])
 
     if (adj) {
 	if (inv) {
-	    weight_init(w);
+	    sf_weight_init(w);
 	    for (i2=0; i2 < n2; i2++) {
 		w[i2] = 1.;
 	    }
 	    for (iter=0; iter < nliter; iter++) {
-		sf_solver_prec (kron_lop, sf_cgstep, weight_lop, n2, n2, n2,
+		sf_solver_prec (kron_lop, sf_cgstep, sf_weight_lop, n2, n2, n2,
 				y, x, niter,  eps, "verb", true, "end");
 		sf_cgstep_close();
 		for (i2=0; i2 < n2; i2++) {

@@ -21,32 +21,76 @@
 /*^*/
 
 static int np=0, n=1;
+static float *ww;
 
 void sharpen_init(int n1,float perc) 
 /*< initialize >*/
 {
+    int i;
+
     n = n1;
     np = n*perc*0.01;
     if (np < 0) np=0;
     if (np >= n) np=n-1;
+
+    ww = sf_floatalloc(n);
+    sf_weight_init(ww);
+
+    for (i=0; i < n; i++) {
+	ww[i] = 1.0;
+    }
 }
 
-void csharpen(const sf_complex *pp, float *ww) 
+void sharpen_close(void)
+/*< free allocated storage >*/
+{
+    free(ww);
+}
+
+void sharpen(const float *pp, int iter) 
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
     float wi, wp;
 
+    if (0==iter) {
+	for (i=0; i < n; i++) {
+	    wi = pp[i]*pp[i];
+	    ww[i]=wi*wi;
+	}
+	for (n1=np; n1 < n; n1++) {
+	    wp = sf_quantile(n1,n,ww);
+	    if (wp > 0.) break;
+	}
+    }
+    
     for (i=0; i < n; i++) {
-	wi = crealf(conjf(pp[i])*pp[i]);
-	ww[i]=wi*wi;
+	wi = pp[i]*pp[i];
+	ww[i] = expf(-wp/wi);
     }
-    for (n1=np; n1 < n; n1++) {
-	wp = sf_quantile(n1,n,ww);
-	if (wp > 0.) break;
+}
+
+void csharpen(const sf_complex *pp, int iter) 
+/*< compute weight for sharpening regularization >*/
+{
+    int i, n1;
+    float wi, wp;
+
+    if (0==iter) {
+	for (i=0; i < n; i++) {
+	    wi = crealf(conjf(pp[i])*pp[i]);
+	    ww[i]=wi*wi;
+	}
+	for (n1=np; n1 < n; n1++) {
+	    wp = sf_quantile(n1,n,ww);
+	    if (wp > 0.) break;
+	}
     }
+    
     for (i=0; i < n; i++) {
 	wi = crealf(conjf(pp[i])*pp[i]);
 	ww[i] = expf(-wp/wi);
     }
 }
+
+

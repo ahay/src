@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "triangle2.h"
-#include "weight.h"
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +63,7 @@ int main(int argc, char* argv[])
     if (adj && inv) {
 	w = sf_floatalloc(n);
 	p = sf_floatalloc(n);
-	weight_init(w);
+	sf_weight_init(w);
 	for (i=0; i < n; i++) {
 	    w[i] = 1.0;
 	}
@@ -81,7 +80,7 @@ int main(int argc, char* argv[])
 	    sf_conjgrad_init(n,n,n,n,eps,1.e-6,true,false);
 
 	    for (ic=0; ic < nc; ic++) {
-		sf_conjgrad(NULL,triangle2_lop,weight_lop,p,y,x,niter);
+		sf_conjgrad(NULL,triangle2_lop,sf_weight_lop,p,y,x,niter);
 		
 		for (i=0; i < n; i++) {
 		    w[i] = y[i]*y[i];

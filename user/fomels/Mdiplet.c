@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "diplet.h"
-#include "weight.h"
 #include "hilbert.h"
 
 int main(int argc, char *argv[])
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
 	if (niter) {
 	    ww = sf_floatalloc3(n1,n2,np);
 	    hilb = sf_floatalloc(n1);
-	    weight_init(ww[0][0]);
+	    sf_weight_init(ww[0][0]);
 	    hilbert_init(n1, 6, 1.);
 	}
     } else {
@@ -102,7 +101,7 @@ int main(int argc, char *argv[])
 			}
 		    }
 		}
-		sf_solver_prec (diplet_lop,sf_cgstep,weight_lop,n12p, 	                 
+		sf_solver_prec (diplet_lop,sf_cgstep,sf_weight_lop,n12p, 	                 
 				n12p,n12,qq,pp,niter,0.,"verb",true,"end");
 		sf_cgstep_close();
 	    }
