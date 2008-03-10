@@ -382,6 +382,7 @@ sft3d sft3_init(int n,
 	sft->www[i]   = sf_cmplx(cosf(s),sinf(s));
 	
 	s = w * (-k-1+i);
+	s = w * (-k+i);
 	sft->www[k+i] = sf_cmplx(cosf(s),sinf(s));
     }
     
