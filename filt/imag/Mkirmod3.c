@@ -340,7 +340,6 @@ int main(int argc, char* argv[])
 					      fabsf(ts->ty+tg->ty)*dy); 
 		}
 	    }}
-
 	    aastretch_define (time[0][0],delt[0][0],NULL);
 	    aastretch_lop (false,false,nxyc,nt,ampl[0][0],trace);
 	    
