@@ -22,7 +22,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, i2, n2, nf;
+    bool single;
+    int n1, i2, n2, nf, nc;
     sf_complex *trace, *a;
     sf_file in, out;
 
@@ -32,19 +33,30 @@ int main(int argc, char* argv[])
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
+
+    if (!sf_getbool("single",&single)) single=true;
+    /* single channel or multichannel */
+
+    if (single) {
+	nc = 1;
+	n2 = sf_leftsize(in,1);
+    } else {
+	if (!sf_histint(in,"n2",&nc)) nc=1;
+	n2 = sf_leftsize(in,2);
+	sf_putint(out,"n2",1);
+    }
 
     if (!sf_getint("nf",&nf)) sf_error("Need nf=");
     /* filter length */
     sf_putint(out,"n1",nf);
 
-    cburg_init(n1,1,nf);
+    cburg_init(n1,nc,nf);
 
-    trace = sf_complexalloc(n1);
+    trace = sf_complexalloc(n1*nc);
     a = sf_complexalloc(nf);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_complexread(trace,n1,in);
+	sf_complexread(trace,n1*nc,in);
 
 	cburg_apply(trace,a);
 

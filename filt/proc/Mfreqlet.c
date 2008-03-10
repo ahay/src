@@ -21,14 +21,15 @@
 
 #include "freqlets.h"
 #include "cweight.h"
+#include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
     bool inv, adj, unit;
-    float *w0, d1, *ww;
+    float *w0, d1, *ww, perc;
     char *type;
-    sf_complex *pp, *qq, *z0;
+    sf_complex *pp, *qq, *z0, *q;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -68,6 +69,10 @@ int main(int argc, char *argv[])
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of IRLS iterations */
+
+    if (!sf_getfloat("perc",&perc)) perc=50.0;
+    /* percentage for sharpening */
+    sharpen_init(n1w,perc);
     
     if (adj) {
 	n2 = sf_leftsize(in,1);
@@ -81,11 +86,14 @@ int main(int argc, char *argv[])
 
     pp = sf_complexalloc(n1);
     qq = sf_complexalloc(n1w);
+
     if (ncycle > 0) {
 	ww = sf_floatalloc(n1w);
+	q = sf_complexalloc(n1w);
 	cweight_init(ww);
     } else {
 	ww = NULL;
+	q = NULL;
     }
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
@@ -95,6 +103,9 @@ int main(int argc, char *argv[])
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
     freqlets_init(n1,d1,inv,unit,type[0],nw,w0,z0);
+
+
+    sf_cconjgrad_init(n1w,n1w,n1,n1,1.0,1.e-6,true,false);
     
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
@@ -114,18 +125,16 @@ int main(int argc, char *argv[])
 
 	if (adj) {
 	    /* do inversion if ncycle > 0 */
-	    for (i=0; i < ncycle; i++) {	    
-		/* weight by absolute value */
-		for (i1=0; i1 < n1w; i1++) {
-		    ww[i1] = cabsf(qq[i1]);
+	    for (i=0; i < ncycle; i++) {
+		if (0==i) {
+		    for (i1=0; i1 < n1w; i1++) {
+			ww[i1] = 1.0;
+		    }
 		}
-
-		/* sparse inverse */
-		sf_csolver_prec (freqlets_lop,sf_ccgstep,cweight_lop,n1w,
-				 n1w,n1,qq,pp,niter,0.,"verb",true,"end");
-		sf_ccgstep_close();
+		sf_cconjgrad(NULL,freqlets_lop,cweight_lop,q,qq,pp,niter);
+		csharpen(qq,ww);
 	    }
-	} 
+	}
 
 	if (adj) {
 	    sf_complexwrite(qq,n1w,out);

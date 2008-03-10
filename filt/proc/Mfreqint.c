@@ -22,14 +22,15 @@
 #include "freqint.h"
 #include "freqlets.h"
 #include "cweight.h"
+#include "sharpen.h"
 
 int main(int argc, char *argv[])
 {
     bool inv;
-    int nd, i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
-    float *w0, d1, o1, *ww, *crd, eps;
+    int nd, n1, i2, n2, nw, n1w, niter, i, ncycle;
+    float *w0, d1, o1, *ww, *crd, eps, perc;
     char *type;
-    sf_complex *pp, *qq, *mm, *z0;
+    sf_complex *pp, *qq, *mm, *z0, *q;
     sf_file in, out, w, coord;
 
     sf_init(argc,argv);
@@ -79,20 +80,26 @@ int main(int argc, char *argv[])
     if (!sf_getint("ncycle",&ncycle)) ncycle=1;
     /* number of IRLS iterations */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.;
+    if (!sf_getfloat("eps",&eps)) eps=1.0;
     /* regularization parameter */
 
-    if (!sf_getbool("inv",&inv)) inv=true;
+    if (!sf_getbool("inv",&inv)) inv=false;
     /* inversion flag */
+
+    if (!sf_getfloat("perc",&perc)) perc=50.0;
+    /* percentage for sharpening */
+    sharpen_init(n1w,perc);
     
     pp = sf_complexalloc(nd);
     crd = sf_floatalloc(nd);
     qq = sf_complexalloc(n1w);
+    q = sf_complexalloc(n1w);
     mm = sf_complexalloc(n1);
 
     if (ncycle > 0) {
 	ww = sf_floatalloc(n1w);
 	cweight_init(ww);
+	sf_cconjgrad_init(n1w,n1w,nd,nd,eps,1.e-6,true,false);
     } else {
 	ww = NULL;
     }
@@ -101,9 +108,8 @@ int main(int argc, char *argv[])
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
     
     sf_floatread(crd,nd,coord);
-
     freqint_init(nd,crd,n1,d1,o1,sf_lin_int,2,inv,true,type[0],nw,w0,z0);
-    
+
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 	/* read frequencies */
@@ -120,17 +126,9 @@ int main(int argc, char *argv[])
 	freqint_lop(true,false,n1w,nd,qq,pp);
 
 	/* do inversion if ncycle > 0 */
-	for (i=0; i < ncycle; i++) {	    
-	    /* weight by absolute value */
-	    for (i1=0; i1 < n1w; i1++) {
-		ww[i1] = cabsf(qq[i1]);
-	    }
-
-	    /* sparse inverse */
-	    sf_ccdstep_init();
-	    sf_csolver_prec (freqint_lop,sf_ccdstep,cweight_lop,n1w,
-			     n1w,nd,qq,pp,niter,eps,"verb",true,"end");
-	    sf_ccdstep_close();
+	for (i=0; i < ncycle; i++) {
+	    csharpen(qq,ww);
+	    sf_cconjgrad(NULL,freqint_lop,cweight_lop,q,qq,pp,niter);
 	} 
 
 	/* reconstruct regular data */

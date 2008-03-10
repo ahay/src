@@ -21,6 +21,16 @@
 
 #include "jacobi2.h"
 
+static int compare(const void * a, const void * b)
+{
+    float aa, bb;
+
+    aa = cargf(* (sf_complex*) a);
+    bb = cargf(* (sf_complex*) b);
+
+    return (aa<bb)? -1: (aa>bb)? 1:0;
+}
+
 int main(int argc, char* argv[])
 {
     int j, k, n, m, i2, n2, iter, niter;
@@ -94,6 +104,7 @@ int main(int argc, char* argv[])
 	    e[j]=sf_cmplx(0.,0.);
 	}
 	
+	qsort(e,n-1,sizeof(sf_complex),compare);
 	sf_complexwrite(e,n-1, root);
     }
     
