@@ -23,9 +23,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj, inv;
+    bool adj, inv, spk;
     int n, n1, n2, niter, rect, nc, ic, nr;
-    float *x, *y, *p, eps, perc;
+    float *x, *y, *p, eps, perc, rect2;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
     /* adjoint flag */
     if (!sf_getbool("inv",&inv)) inv=false;
     /* inversion flag */
+    if (!sf_getbool("spk",&spk)) spk=true;
+    /* spiky inversion */
+
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
     if (!sf_getfloat("eps",&eps)) eps=1.;
@@ -48,6 +51,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("rect",&rect)) sf_error("Need rect=");
     /* blurring radius */
+
+    if (!sf_getfloat("rect2",&rect2)) rect2=1.0;
+    /* smoothing radius */
 
     if (!sf_getint("repeat",&nr)) nr=1;
     /* repeat smoothing */
@@ -72,12 +78,20 @@ int main(int argc, char* argv[])
 
     if (adj) {
 	if (inv) {
-	    sf_conjgrad_init(n,n,n,n,eps,1.e-6,true,false);
-
-	    for (ic=0; ic < nc; ic++) {
-		sf_conjgrad(NULL,triangle2_lop,sf_weight_lop,p,y,x,niter);
-		sf_sharpen(y);
-	    } 
+	    if (spk) {
+		sf_conjgrad_init(n,n,n,n,eps,1.e-6,true,false);
+		
+		for (ic=0; ic < nc; ic++) {
+		    sf_conjgrad(NULL,triangle2_lop,sf_weight_lop,p,y,x,niter);
+		    sf_sharpen(y);
+		} 
+	    } else {
+		sf_impl2_init (rect2, rect2, n1, n2, 0.1, 50., 
+			       false, true, NULL, 1, NULL);
+		sf_solver_prec (triangle2_lop,sf_cgstep,sf_impl2_lop,
+				n,n,n,y,x,niter,eps,"verb",true,"end");
+		sf_cgstep_close();
+	    }
 	} else {
 	    triangle2_lop(true,false,n,n,y,x);
 	} 

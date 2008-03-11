@@ -1,4 +1,4 @@
-/* Apply a linear operator on each trace */
+/* Double causal integration */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -16,40 +16,35 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
-/*^*/
 
-#include "repeat.h"
+#include "doubint.h"
 
-static int n1, n2;
-static sf_operator oper;
+static int n;
+static float *tt;
 
-void repeat_init(int m1            /* trace length */, 
-		 int m2            /* number of traces */, 
-		 sf_operator oper1 /* operator */)
+void doubint_init(int n1)
 /*< initialize >*/
 {
-    n1 = m1;
-    n2 = m2;
-    oper = oper1;
+    n = n1;
+    tt = sf_floatalloc(n);
 }
 
-void repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
-/*< combined linear operator >*/
+void doubint_close(void)
+/*< free allocated storage >*/
 {
-    int i2;       
-    
-    if (nx != ny || nx != n1*n2) 
-	sf_error("%s: Wrong size (nx=%d ny=%d n1=%d n2=%d)",
-		 __FILE__,nx,ny,n1,n2);
+    free(tt);
+}
+
+void doubint_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
+{
+    if (nx != n || ny != n) sf_error("%s: wrong size",__FILE__);
 
     sf_adjnull (adj, add, nx, ny, xx, yy);
-
-    for (i2=0; i2 < n2; i2++) {
-	oper(adj,true,n1,n1,xx+i2*n1,yy+i2*n1);
-    }
+    sf_chain (sf_causint_lop,
+	      sf_causint_lop,
+	      adj, true, n, n, n, xx, yy, tt);
 }
 
-/* 	$Id$	 */
-
+/* 	$Id: causint.c 2119 2006-08-06 02:03:25Z sfomel $	 */

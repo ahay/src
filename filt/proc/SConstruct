@@ -64,7 +64,7 @@ for prog in mains:
 		doc = os.path.splitext(copy)[0]
 	        docmerge = configure.docextra(docmerge,'sf'+prog,doc)
 
-for prog in Split('cbanded cmatmult impl2'):
+for prog in Split('cbanded cmatmult'):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

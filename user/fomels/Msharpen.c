@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     int n;
     float perc,a, *din, *dout;
-    sf_file in, out;
+    sf_file in, out, other;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -45,7 +45,13 @@ int main(int argc, char* argv[])
 
     sf_floatread(din,n,in);
 
-    sf_sharpen(din);
+    if (NULL != sf_getstring("other")) {
+	other = sf_input("other");
+	sf_floatread(dout,n,other);
+	sf_sharpen(dout);
+    } else {
+	sf_sharpen(din);
+    }
 
     sf_weight_lop(false,false,n,n,din,dout);
     sf_weight_lop(true,false,n,n,din,dout);

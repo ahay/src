@@ -19,13 +19,11 @@
 
 #include <rsf.h>
 
-#include "impl2.h"
-
 int main(int argc, char* argv[])
 {
     int n1, n2, n12, n3, i3, ns;
-    float r1, r2, tau, pclip, **dat, *dist;
-    bool up, verb;
+    float r1, r2, tau, pclip, **dat, *dist, **dat2;
+    bool up, verb, lin, adj;
     char *file;
     sf_file in, out, dst, snp;
 
@@ -52,7 +50,11 @@ int main(int argc, char* argv[])
     /* verbosity flag */
     if (!sf_getint("nsnap",&ns)) ns=1;
     /* number of snapshots */
-    
+    if (!sf_getbool ("lin",&lin)) lin=false;
+    /* if linear operator */
+    if (!sf_getbool ("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     if (NULL != (file = sf_getstring("dist"))) {
 	/* inverse distance file (input) */
 	dst = sf_input(file);
@@ -70,17 +72,27 @@ int main(int argc, char* argv[])
 	snp = NULL;
     }
 
-    impl2_init (r1, r2, n1, n2, tau, pclip, up, verb, dist, ns, snp);
+    sf_impl2_init (r1, r2, n1, n2, tau, pclip, up, verb, dist, ns, snp);
 
     dat = sf_floatalloc2(n1,n2);
+    if (lin) dat2 = sf_floatalloc2(n1,n2);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread (dat[0],n12,in);
 	if (NULL != dst) sf_floatread(dist,n12,dst);
+	   
+	sf_floatread (dat[0],n12,in);
 
-	impl2_apply (dat,true,false);
-
-	sf_floatwrite (dat[0],n12,out);
+	if (lin) {
+	    if (adj) {
+		sf_impl2_lop(true,false,n12,n12,dat2[0],dat[0]);
+	    } else {
+		sf_impl2_lop(false,false,n12,n12,dat[0],dat2[0]);
+	    }
+	    sf_floatwrite (dat2[0],n12,out);
+	} else {
+	    sf_impl2_apply (dat,true,false);
+	    sf_floatwrite (dat[0],n12,out);
+	}
     }
 
     exit(0);
