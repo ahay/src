@@ -1,9 +1,33 @@
 /* Anisotropic diffusion, 2-D */
+/*
+  Copyright (C) 2008 University of Texas at Austin
+   
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+   
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+   
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "_defs.h"
+#include "alloc.h"
+#include "error.h"
+#include "adjnull.h"
+#include "file.h"
+#include "quantile.h"
+#include "tridiagonal.h"
+#include "edge.h"
 
 #include "impl2.h"
 
@@ -13,7 +37,7 @@ static bool up, verb;
 static sf_tris slv1, slv2;
 static sf_file snap;
 
-void impl2_init (float r1, float r2   /* radius */, 
+void sf_impl2_init (float r1, float r2   /* radius */, 
 		 int n1_in, int n2_in /* data size */, 
 		 float tau            /* duration */, 
 		 float pclip          /* percentage clip */, 
@@ -79,7 +103,7 @@ void impl2_init (float r1, float r2   /* radius */,
     }
 }
 
-void impl2_close (void)
+void sf_impl2_close (void)
 /*< free allocated storage >*/
 {
     free(*y);
@@ -98,7 +122,7 @@ void impl2_close (void)
     sf_tridiagonal_close (slv2);
 }
 
-void impl2_set(float ** x)
+void sf_impl2_set(float ** x)
 /*< compute weighting function >*/
 {
     int i;
@@ -132,7 +156,7 @@ void impl2_set(float ** x)
     }
 }
 
-void impl2_apply (float **x, bool set, bool adj)
+void sf_impl2_apply (float **x, bool set, bool adj)
 /*< apply diffusion >*/
 {
     int istep, i1, i2, i, is;
@@ -144,7 +168,7 @@ void impl2_apply (float **x, bool set, bool adj)
 	    is++;
 	}
 
-	if (set) impl2_set(x);
+	if (set) sf_impl2_set(x);
 
 	for (i=0; i < n; i++) {
 	    if (!adj) x[0][i] *= w[0][i];
@@ -214,7 +238,7 @@ void impl2_apply (float **x, bool set, bool adj)
     }
 }
 
-void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+void sf_impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
     int i1, i2;
@@ -227,7 +251,7 @@ void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	}
     }
 
-    impl2_apply(t,false,adj);
+    sf_impl2_apply(t,false,adj);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -240,5 +264,5 @@ void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id$	 */
+/* 	$Id: sf_impl2.c 2362 2006-11-09 01:41:19Z sfomel $	 */
 
