@@ -314,7 +314,7 @@ class Project(Environment):
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=3,length=1,reduce='cat',local=0):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=[3,1],reduce='cat',local=0):
 
         if not flow:
             return None     
@@ -335,7 +335,7 @@ class Project(Environment):
         if split and self.jobs > 1 and rsf and sfiles:
             # Split the flow into parallel flows
             
-            w = length/self.jobs # length of one chunk
+            w = axis[1]/self.jobs # length of one chunk
             par_sfiles = copy.copy(sfiles)
             par_targets = {}
             for tfile in tfiles:
@@ -348,11 +348,11 @@ class Project(Environment):
 
                     if i==self.jobs-1: # last chunk
                         self.Flow(source,sfiles[j],
-                                  'window f%d=%d squeeze=n' % (axis,i*w))
+                                  'window f%d=%d squeeze=n' % (axis[0],i*w))
                     else:
                         self.Flow(source,sfiles[j],
                                   'window n%d=%d f%d=%d squeeze=n' % 
-                                  (axis,w,axis,i*w))
+                                  (axis[0],w,axis[0],i*w))
                 
 
                 par_tfiles = []
@@ -372,7 +372,7 @@ class Project(Environment):
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
                           '%s axis=%d ${SOURCES[1:%d]}' % \
-                          (reduce,axis,self.jobs),local=1)
+                          (reduce,axis[0],self.jobs),local=1)
             return
 
         sources = []
