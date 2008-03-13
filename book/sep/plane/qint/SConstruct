@@ -21,4 +21,9 @@ for case in range(2):
 
 Result('qslope','dip0 dip1','SideBySideIso')
 
+Flow('mask','qdome','window n1=1 | noise rep=y type=n seed=1234 mean=0.5 | mask min=0.6')
+Flow('qhole','qdome mask','headercut mask=${SOURCES[1]}') 
+
+Plot('qhole',cube('60% Removed'))
+
 End()
