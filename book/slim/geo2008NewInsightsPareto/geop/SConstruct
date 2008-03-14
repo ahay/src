@@ -6,7 +6,10 @@
 # Date  : December, 07
 
 from   rsfproj import *
-import numpy   as     np
+try:
+    import numpy   as     np
+except:
+    raise Exception('Cannot find numpy')
 import os
 
 ########################################################################
