@@ -184,3 +184,12 @@ Result('plot','pcurve ISTc_UnLim IST_UnLim SPGL1_UnLim IRLS_UnLim','Overlay')
 Result('plotLim','pcurve ISTc_Lim IST_Lim SPGL1_Lim IRLS_Lim','Overlay')
 
 End()
+
+########################################################################
+# RUN TIME (iMac 2.4 GHz Intel Core 2 Duo, 2GB 667 MHz DDR2 SDRAM)
+########################################################################
+## time scons
+## scons: done building targets.
+##  real    1m24.173s
+##  user    0m59.979s
+##  sys     0m21.136s

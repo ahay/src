@@ -49,7 +49,7 @@ Fetch(fname,loc,FTPserver)
 matfun = 'BuildPareto'
 Flow('pxnorms prnorms pbxnorms pbrnorms pixnorms pirnorms',['./'+fname,os.path.join(matROOT,matfun+'.m')],
      matlab + '''
-     -nosplash -noawt -r "addpath %(matROOT)s;%(matfun)s('$SOURCE','$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$SOURCE','$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
      '''%vars(),stdin=0,stdout=-1)
 Flow('ppath','pxnorms prnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
 Flow('pbpath','pbxnorms pbrnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
@@ -81,7 +81,7 @@ matfun = 'TrackCRSIwSPGL1'
 
 Flow('data interp model xnorms rnorms',[os.path.join(matROOT,matfun+'.m')],
      matlab + '''
-     -nosplash -noawt -r "addpath %(matROOT)s;%(matfun)s('$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}',%(maxiters)g);quit"
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}',%(maxiters)g);quit"
      '''%vars(),stdin=0,stdout=-1)
 Flow('opath','xnorms rnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
 
@@ -98,3 +98,12 @@ Result('data','sfput d1=.004 |'+mygrey("",label1="Time",label2="Trace #",unit1="
 Result('interp','sfput d1=.004 |'+mygrey("",label1="Time",label2="Trace #",unit1="s",unit2=""))
 
 End()
+
+########################################################################
+# RUN TIME (iMac 2.4 GHz Intel Core 2 Duo, 2GB 667 MHz DDR2 SDRAM)
+########################################################################
+## time scons
+## scons: done building targets.
+## real    2m23.229s
+## user    1m47.608s
+## sys     0m34.237s
