@@ -515,7 +515,8 @@ def jpeg(context):
 
     LIBS.pop()
 
-pkg['opengl'] = {'generic':'mesa-libGL-devel'}
+pkg['opengl'] = {'generic':'mesa-libGL-devel',
+                 'fedora': 'mesa-libGL-devel + freeglut + freeglut-devel'}
 
 # If this test is failed, no writing to jpeg files
 def opengl(context):
