@@ -24,7 +24,7 @@
 int main (int argc, char* argv[])
 {
     float den, inten, max, *dat, slope;
-    int n1, n2, point, i, j, dx, tt, width, num, temp1, temp2, temp3, temp4;
+    int n1, n2, n3, point, i, j, dx, tt, width, num, temp1, temp2, temp3, temp4, ii;
     bool rep, noise;
     sf_file in, out;
 
@@ -33,7 +33,9 @@ int main (int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
+    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    n3 = sf_leftsize(in,2);
+	/* get the trace length (n1) and the number of traces (n2) and n3*/
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -70,6 +72,8 @@ int main (int argc, char* argv[])
     dat = sf_floatalloc (n1*n2);
 
     srand((unsigned)time(NULL));
+    for(ii=0;ii<n3;ii++)
+    {
 
     if (noise) {
         max=0.;
@@ -161,6 +165,7 @@ int main (int argc, char* argv[])
     }
 
     sf_floatwrite(dat,n1*n2,out);  
+    }
        
     exit (0);
 }
