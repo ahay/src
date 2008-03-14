@@ -1,4 +1,4 @@
-/* Plane-wave destruction with 3-D plane-wave filter. */
+/* Missing data interpolation with 3-D plane-wave filter. */
 /*
   Copyright (C) 2008 University of Texas at Austin
   
@@ -20,20 +20,22 @@
 #include <rsf.h>
 
 #include "nhelix.h"
-#include "nhelicon.h"
+#include "nmis2.h"
 #include "npfactor.h"
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
-    int ntxy, nt, nx, ny, pt, px, niter, npx, npy, np, m[3], n[3];
-    float eps, *pp, *qq; 
+    bool *mm;
+    int ntxy, nt, nx, ny, pt, px, i, niter, npx, npy, miter, n[3], m[3];
+    float eps, *pp, *qq, *x;
     nfilter pfilt;
-    sf_file in, out, dip;
+    sf_file in, out, dip, mask;
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
     dip = sf_input("dip");
+    mask = sf_input("mask");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -48,10 +50,11 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("npx",&npx)) npx=100;
     if (!sf_getint("npy",&npy)) npy=100;
-    np = npx *npy;
 
     if (!sf_getint("niter",&niter)) niter=10;
-    /* number of iterations */
+    /* number of factorization iterations */
+    if (!sf_getint("miter",&miter)) miter=10;
+    /* number of interpolation iterations */
 
     pp = sf_floatalloc(ntxy);
     qq = sf_floatalloc(ntxy);
@@ -63,11 +66,24 @@ int main(int argc, char* argv[])
     pfilt = npfactor(npx, npy, n, m, pp, qq, niter, eps); 
     sf_warning("Done with filters");
 
-    sf_floatread (pp,ntxy,in);
-    nhelicon_init (pfilt);
-    nhelicon_lop (false,false,ntxy,ntxy,pp,qq);
-    sf_floatwrite(qq,ntxy,out);
+    free(pp);
+    free(qq);
 
+    x = sf_floatalloc(ntxy);
+    mm = sf_boolalloc(ntxy);
+
+    sf_floatread(x,ntxy,mask);
+
+    for (i=0; i < ntxy; i++) {
+	mm[i] = (x[i] != 0.);
+    }
+
+    sf_floatread(x,ntxy,in);
+
+    nmis2(niter,ntxy,x,pfilt,mm,true);
+
+    sf_floatwrite(x,ntxy,out);
+  
     exit(0);
 }
 

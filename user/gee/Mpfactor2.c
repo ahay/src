@@ -19,15 +19,15 @@
 
 #include <rsf.h>
 
-#include "wilson.h"
-#include "compress.h"
+#include "pfactor.h"
 
 int main (int argc, char* argv[])
 {
+    bool fixed;
     int nt, nx, i, na, niter, n[3];
-    float a0, s0, p, q, f, eps;
+    float a0, p, q, eps;
     char* lagfile;
-    sf_filter ss, aa;
+    sf_filter aa;
     sf_file filt, lag;
 
     sf_init (argc,argv);
@@ -47,87 +47,20 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("p",&p)) sf_error("Need p=");
     if (!sf_getfloat("q",&q)) sf_error("Need q=");
 
-    ss =  sf_allocatehelix(8);
-    ss->lag[0] = 1;
-    ss->lag[1] = 2;
-    ss->lag[2] = nt - 1;
-    ss->lag[3] = nt;
-    ss->lag[4] = nt + 1;
-    ss->lag[5] = nt * nx - 1;
-    ss->lag[6] = nt * nx;
-    ss->lag[7] = nt * nx + 1;
-    f = p*p*(p*p-1.) + q*q*(q*q-1.);
-    s0 = 2. + 0.75*f;
-    ss->flt[0] = -f;
-    ss->flt[1] = 0.25*f;
-    ss->flt[2] = 0.5*p*(1.-p);
-    ss->flt[3] = p*p-1.;
-    ss->flt[4] = -0.5*p*(1.+p);
-    ss->flt[5] = 0.5*q*(1.-q);
-    ss->flt[6] = q*q-1.;
-    ss->flt[7] = -0.5*q*(1.+q);
-
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of factorization iterations */
     if (!sf_getint("na",&na)) na=25; /* filter size */
-    if (25 != na) na = nt*nx + 1;
     if (!sf_getfloat("eps",&eps)) eps=FLT_EPSILON;
-    /* regularization */
+    /* compression tolerance */
+    if (!sf_getbool("fixed",&fixed)) fixed=true;
+    /* if fixed size */
 
-    aa = sf_allocatehelix (na);
+    if (!fixed && 25 == na) na = nt*nx + 1;
 
-    if (25 == na) {
-	aa->lag[0] = 1;
-	aa->lag[1] = 2;
-	aa->lag[2] = nt-1;
-	aa->lag[3] = nt;
-	aa->lag[4] = nt+1;
-	aa->lag[5] = 2*nt-1;
-	aa->lag[6] = 2*nt;
-	aa->lag[7] = 2*nt+1;
-	aa->lag[8]  = nt*(nx-3)-2;
-	aa->lag[9] = nt*(nx-3)-1;
-	aa->lag[10] = nt*(nx-3);
-	aa->lag[11] = nt*(nx-3)+1;
-	aa->lag[12] = nt*(nx-3)+2;
-	aa->lag[13] = nt*(nx-2)-2;
-	aa->lag[14] = nt*(nx-2)-1;
-	aa->lag[15] = nt*(nx-2);
-	aa->lag[16] = nt*(nx-2)+1;
-	aa->lag[17] = nt*(nx-2)+2;
-	aa->lag[18] = nt*(nx-1)-1;
-	aa->lag[19] = nt*(nx-1);
-	aa->lag[20] = nt*(nx-1)+1;
-	aa->lag[21] = nt*(nx-1)+2;
-	aa->lag[22] = nt*nx-1;
-	aa->lag[23] = nt*nx;
-	aa->lag[24] = nt*nx+1;
-    } else {
-	for (i=0; i < na; i++) {
-	    aa->lag[i] = i+1;
-	}
-    }
+    pfactor_init(nt,nx);
+    aa = sf_allocatehelix(na);
 
-    for (i=0; i < na; i++) {
-	aa->flt[i] = 0.;
-    }
-
-    wilson_init (nt*nx*10);
-    a0 =  wilson_factor (niter, 2.*s0, ss, aa, true, 1.e-6);
-    wilson_close ();
-
-    aa = compress(aa,eps);
-
-    if (25 != na) {
-	for (i=0; i < na; i++) {
-	    aa->flt[i] = 0.;
-	}
-
-	wilson_init (nt*nx*10);
-	a0 =  wilson_factor (niter, 2.*s0, ss, aa, true, 1.e-6);
-	wilson_close ();
-    }
-
+    aa = pfactor(na,p,q,niter,eps,fixed,true,&a0);
     na = aa->nh;
 
     for (i=0; i < na; i++) {

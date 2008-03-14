@@ -12,8 +12,8 @@ for np in (-1,1):
         Flow([filt,'lag'+filt],None,
              '''
              pfactor2 p=%g q=0.5 nt=20 nx=20
-             niter=10 lag=${TARGETS[1]} %s
-             ''' % (p,('na=1','')[case]))
+             niter=10 lag=${TARGETS[1]} fixed=%d
+             ''' % (p,case))
         Flow(plane,['spike',filt],
              '''
              helicon filt=${SOURCES[1]} div=1 adj=0 |
@@ -22,7 +22,7 @@ for np in (-1,1):
         Plot(plane,
              '''
              byte gainpanel=all | grey3 frame1=20 frame2=20 frame3=20
-             flat=n point1=0.586 point2=0.586 wantcoordlabel=-1 title="Px=%g Py=0.5"
+             flat=n point1=0.586 point2=0.586 title="Px=%g Py=0.5"
              ''' % p)
 
 Result('eplane','plane1-0 plane-1-0','SideBySideIso')

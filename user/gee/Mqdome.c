@@ -24,6 +24,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool impedance;
     float ranget,o1,d1,o2,d2,o3,d3;
     float gaussvel, throw, rand, t1, t2;
     float frac1, frac2, f1, zrad, xnew;
@@ -62,6 +63,8 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("throw",&throw)) throw=0.01;
     if (!sf_getint("endtaper",&endtaper)) endtaper=20;
     if (!sf_getint("slicei",&slicei)) slicei=40;
+
+    if (!sf_getbool("impedance",&impedance)) impedance=false;
 
     sf_putstring(mod,"label1","Time (s)");
     sf_putstring(mod,"label2","West-East (km)");
@@ -188,16 +191,20 @@ int main (int argc, char* argv[])
     }
 
     /*   Form reflectivity from impedance. */
-    refl[0] = 0.;
-    for (i3=0; i3 < n3; i3++) {
-	for (i2=0; i2 < n2; i2++) {
-	    refl2 = earth[i3][i2]+1;
-	    refl1 = earth[i3][i2];
-	    for (i1=0; i1 < n1-1; i1++) {
-		refl[i1+1] = (refl1[i1] - refl2[i1]) / (refl1[i1] + refl2[i1]);
-	    }
-	    for (i1=0; i1 < n1; i1++) {
-		earth[i3][i2][i1] = refl[i1];
+    if (!impedance) {
+	refl[0] = 0.;
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		refl2 = earth[i3][i2]+1;
+		refl1 = earth[i3][i2];
+		for (i1=0; i1 < n1-1; i1++) {
+		    refl[i1+1] = 
+			(refl1[i1] - refl2[i1]) / 
+			(refl1[i1] + refl2[i1]);
+		}
+		for (i1=0; i1 < n1; i1++) {
+		    earth[i3][i2][i1] = refl[i1];
+		}
 	    }
 	}
     }
@@ -207,7 +214,7 @@ int main (int argc, char* argv[])
 	tr = sf_triangle_init (i, n1);
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		sf_smooth(tr,0,1,false,earth[i3][i2]);
+		sf_smooth(tr,0,1,impedance,earth[i3][i2]);
 	    }
 	}
 	sf_triangle_close (tr);
