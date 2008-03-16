@@ -24,9 +24,7 @@
 #include <mex.h>
 #include <string.h>
 
-#include "file.h"
-#include "getpar.h"
-#include "files.h"
+#include <rsf.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
