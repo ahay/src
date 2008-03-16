@@ -4,16 +4,19 @@ import os, string
 top = os.environ.get('RSFROOT')
 libdir = os.path.join(top,'lib')
 
-for path in ('MATLABPATH','LD_LIBRARY_PATH'):
-    oldpath = os.environ.get(path)
+path = {'exe':WhereIs('matlab')}
+for key in ('MATLAB','LD_LIBRARY_'):
+    oldpath = os.environ.get(key+'PATH')
     if oldpath:
-        os.environ[path] = string.join([libdir,oldpath],':')
+        path[key] = string.join([libdir,oldpath],':')
     else:
-        os.environ[path] = libdir
+        path[key] = libdir
 
 Flow('spike',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clip','spike clip.m',
      '''
-     %s -nosplash -nojvm -nodesktop -r "clip('$SOURCE','$TARGET',0.5);quit"
-     ''' % WhereIs('matlab'),stdin=0,stdout=-1)
+     MATLABPATH=%(MATLAB)s LD_LIBRARY_PATH=%(LD_LIBRARY_)s
+     %(exe)s -nosplash -nojvm -nodesktop 
+     -r "clip('$SOURCE','$TARGET',0.5);quit"
+     ''' % path,stdin=0,stdout=-1)
 Flow('test.attr','clip','attr')
