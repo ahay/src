@@ -4,5 +4,5 @@ Flow('spike',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clip','spike clip.m',
      '''
      %s -nosplash -nojvm -nodesktop -r "clip('$SOURCE','$TARGET',0.5);quit"
-     ''' % WhereIs('matlab'))
+     ''' % WhereIs('matlab'),stdin=0,stdout=-1)
 Flow('test.attr','clip','attr')
