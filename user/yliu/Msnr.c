@@ -30,19 +30,11 @@ int main (int argc, char* argv[])
 	int i,j,k;
         char *type;
         int ntw1, ntw2, nsw1, nsw2; /*ntw is trace-window position, nsw is sample-window position */
-//	int nfw;    /*nfw is the reference filter-window length*/
 	float temp;  /*temporary variable*/
-//	int m;
-//	float medianv; /*temporary median variable*/
-//        bool boundary;
 
 	float *trace;
 	float *tempt; /*temporary array*/
         float en, es, snr; /*en is noise energy, es is signal energy, snr is signal-noise-ratio*/
-//	float *result; /*output array*/
-//	float *extendt;
-//	float *medianarray;   /*1D median filtered array*/
-//	float *temp1,*temp2,*temp3; /*temporary array*/
 	sf_file in, out;
 
 	sf_init (argc, argv); 
@@ -114,7 +106,6 @@ int main (int argc, char* argv[])
                     printf("noise  energy at n3=%d      = %f \n", (k+1),en);
                     printf("the SNR of    at n3=%d      = %f \n", (k+1),snr);
                     printf("***************************************\n");
-//                    sf_floatwrite(snr,1,out);
                 }
 	        break;
 	    default:
@@ -125,4 +116,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msnr.c 3392 2008-03-15 20:42:10Z yang $	 */
+/* 	$Id: Msnr.c 3394 2008-03-15 20:42:10Z yang $	 */
