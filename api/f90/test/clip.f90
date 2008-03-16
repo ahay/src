@@ -11,7 +11,7 @@ program Clipit
   in = rsf_input()
   out = rsf_output()
 
-  if (sf_float /= gettype(in)) call sf_error("Need float type")
+  if (sf_float /= gettype(in)) call sf_error("Need floats")
 
   call from_par(in,"n1",n1)
   n2 = filesize(in,1)

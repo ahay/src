@@ -13,5 +13,6 @@ proj.Flow('test.attr','clip.exe',
 proj.Program(['matmult_test.cc',
               'matmult.cc',
               'matmult_wrap.cc'])
+proj.Program('afdm.cc')
 
         

@@ -249,7 +249,7 @@ f77 clip.f -L$RSFROOT/lib -lrsff -lrsf -lm
 \end{verbatim}
 Change \texttt{f77} to the Fortran compiler appropriate for your system and
 include additional compiler flags if necessary. The flags that RSF typically
-uses are in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+uses are in \\ \texttt{\$RSFROOT/lib/rsfconfig.py}.
 
 \section{Fortran-90 interface}
 
@@ -358,7 +358,7 @@ clipping, and writing out each trace.
 
 The python script does not require compilation. Simply make sure that
 \texttt{\$RSFROOT/lib} is in \texttt{PYTHONPATH} and
-\texttt{LD_LIBRARY_PATH}.
+\texttt{LD\_LIBRARY\_PATH}.
 
 \section{MATLAB interface} % a meaningless comment
 
@@ -367,28 +367,28 @@ The python script does not require compilation. Simply make sure that
 
 The MATLAB clip function is listed below.
 
-\lstinputlisting[frame=single]{\RSF/api/clip.m}
+\lstinputlisting[frame=single]{\rsfclip}
 
 Let us examine it in detail. 
 
-\lstinputlisting[firstline=4,lastline=4,frame=single]{\RSF/api/clip.m}
+\lstinputlisting[firstline=4,lastline=4,frame=single]{\rsfclip}
 We start by figuring out the input file dimensions.
 
-\lstinputlisting[firstline=5,lastline=6,frame=single]{\RSF/api/clip.m}
+\lstinputlisting[firstline=5,lastline=6,frame=single]{\rsfclip}
 The first dimension is the trace length, the product of all other
 dimensions correspond to the number of traces.
 
-\lstinputlisting[firstline=7,lastline=8,frame=single]{\RSF/api/clip.m}
+\lstinputlisting[firstline=7,lastline=8,frame=single]{\rsfclip}
 Next, we allocate the trace array and create an output file.
 
-\lstinputlisting[firstline=10,lastline=15,frame=single]{\RSF/api/clip.m}
+\lstinputlisting[firstline=10,lastline=15,frame=single]{\rsfclip}
 Finally, we do the actual work: loop over input traces, reading,
 clipping, and writing out each trace.
 
 \subsection{Compiling}
 
 The MATLAB script does not require compilation. Simply make sure that
-\texttt{\$RSFROOT/lib} is in \texttt{MATLABPATH}.
+\texttt{\$RSFROOT/lib} is in \texttt{MATLABPATH} and \texttt{LD\_LIBRARY\_PATH}.
 
 \section{Installation} 
 
@@ -396,7 +396,7 @@ To install the interface to a particular language, use \texttt{API=}
 parameter in the RSF configuration. For example, to to install C++ and
 Fortran-90 API bindings in addition to the basic package, run
 \begin{verbatim}
-scons API=c++,fortran-90 config
+scons API=c++,f90 config
 \end{verbatim}
 Only the C interface is configured by default. The configuration
 parameters are stored in \texttt{\$RSFROOT/lib/rsfconfig.py}.
