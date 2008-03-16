@@ -1,4 +1,15 @@
 from rsfproj import *
+import os, string
+
+top = os.environ.get('RSFROOT')
+libdir = os.path.join(top,'lib')
+
+for path in ('MATLABPATH','LD_LIBRARY_PATH'):
+    oldpath = os.environ.get(path)
+    if oldpath:
+        os.environ[path] = string.join([libdir,oldpath],':')
+    else:
+        os.environ[path] = libdir
 
 Flow('spike',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clip','spike clip.m',
