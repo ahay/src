@@ -13,7 +13,10 @@ proj.Flow('test.attr','clip.exe',
           ./$SOURCE clip=0.5 | attr
           ''',stdin=0)
 
-proj.Program('afdm.f90')
+proj.Program('afdm.f90',
+             LINK=proj.get('F90'),
+             F90PATH=proj.get('CPPPATH'),
+             LINKFLAGS=proj.get('F90FLAGS'))
 
 
         
