@@ -760,7 +760,7 @@ def f77(context):
     context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')
     if not F77:
-        compilers = ['g77','f77','f90','f95','xlf90','pgf90',
+        compilers = ['gfortran','g77','f77','f90','f95','xlf90','pgf90',
                      'ifort','ifc','pghpf','gfc']
         F77 = context.env.Detect(compilers)
         if not F77:
