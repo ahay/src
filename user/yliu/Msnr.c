@@ -52,6 +52,7 @@ int main (int argc, char* argv[])
 	if (!sf_getint("ntw2",&ntw2)) ntw2=n2;
 	/* trace-window end position (default=n2)*/
 	if (ntw2 > n2 || (ntw2%1)!=0.0 )  sf_error("Need <= n2 integer input"); 
+	if (ntw1>ntw2)  sf_error("Need ntw1 <= ntw2 integer input"); 
 
 	if (!sf_getint("nsw1",&nsw1)) nsw1=1;
 	/* sample-window beginning position (default=1)*/
@@ -59,6 +60,7 @@ int main (int argc, char* argv[])
 	if (!sf_getint("nsw2",&nsw2)) nsw2=n1;
 	/* sample-window end position (default=n1)*/
 	if (nsw2 > n1 || (nsw2%1)!=0.0 )  sf_error("Need <= n1 integer input"); 
+	if (nsw1>nsw2)  sf_error("Need nsw1 <= nsw2 integer input"); 
 
         if (NULL == (type=sf_getstring("type"))) type="stack";
         /* [stack] method type, the default is stack */
@@ -84,8 +86,8 @@ int main (int argc, char* argv[])
                     for(i=0;i<nsw2-nsw1+1;i++) {
                         tempt[i]=0.0;
                     }             
-                    for(i=nsw1;i<nsw2;i++) {
-                        for(j=ntw1;j<ntw2;j++) {
+                    for(i=nsw1;i<=nsw2;i++) {
+                        for(j=ntw1;j<=ntw2;j++) {
                             tempt[i-nsw1]+=trace[n1*j+i];
                         }
                         es+=tempt[i-nsw1]*tempt[i-nsw1];
@@ -93,8 +95,8 @@ int main (int argc, char* argv[])
                     es=es/(ntw2-ntw1+1);
 
                     temp=0.0;
-                    for(i=nsw1;i<nsw2;i++) {
-                        for(j=ntw1;j<ntw2;j++) {
+                    for(i=nsw1;i<=nsw2;i++) {
+                        for(j=ntw1;j<=ntw2;j++) {
                             temp+=trace[n1*j+i]*trace[n1*j+i];
                         }
                     }
@@ -116,4 +118,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msnr.c 3395 2008-03-15 20:42:10Z yang $	 */
+/* 	$Id: Msnr.c 3405 2008-03-15 20:42:10Z yang $	 */
