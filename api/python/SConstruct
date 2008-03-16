@@ -52,11 +52,15 @@ if 'python' in env.get('API',[]):
             if os.path.isdir(pydir):
                 pythinc.append(pydir)
 
+    print pythinc
     env.Append(CPPPATH=pythinc)
 
+    if sys.platform[:6] == 'darwin':
+        env['SHLINKFLAGS'] = \
+            '$LINKFLAGS -bundle -flat_namespace -undefined suppress'
+
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
-    python = env.SharedLibrary('rsf',wrap[0],
-                               SHLIBPREFIX='_c_')
+    python = env.SharedLibrary('rsf',wrap[0],SHLIBPREFIX='_c_')
     pfiles = [python,wrap[1],'rsf.py']
 
     env.Install('../../lib',pfiles)
