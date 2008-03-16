@@ -57,11 +57,11 @@ int main (int argc, char* argv[])
 	/* sample-window beginning position (default=1)*/
 	if (nsw1 < 1 || (nsw1%1)!=0.0 )  sf_error("Need positive integer input"); 
 	if (!sf_getint("nsw2",&nsw2)) nsw2=n1;
-	/* sample-window endd position (default=n1)*/
+	/* sample-window end position (default=n1)*/
 	if (nsw2 > n1 || (nsw2%1)!=0.0 )  sf_error("Need <= n1 integer input"); 
 
         if (NULL == (type=sf_getstring("type"))) type="stack";
-        /* method type, the default is stack method  */
+        /* [stack] method type, the default is stack */
 
         ntw1=ntw1-1;
         ntw2=ntw2-1;
@@ -116,4 +116,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msnr.c 3394 2008-03-15 20:42:10Z yang $	 */
+/* 	$Id: Msnr.c 3395 2008-03-15 20:42:10Z yang $	 */
