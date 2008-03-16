@@ -1,4 +1,4 @@
-import os, sys, string, re
+import os, sys, string
 sys.path.append('../..')
 import configure
 
@@ -22,7 +22,6 @@ try: # distribution version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
-    apiforce = env.get('APIFORCE',False)
 except: # local version
     root = None
     env = Environment()
@@ -35,7 +34,6 @@ except: # local version
                                         '-xO2','-g')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
-    apiforce = False
 
 ##############################################################################
 # INCLUDES
@@ -43,162 +41,42 @@ except: # local version
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src2)+Split(src))
 
-objects = []
+sobjs = []
+dobjs = []
 for source in Split(src2):
     env.Include(source,prefix='sf_')
+
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
-    objects.append(obj)
+    sobjs.append(obj)
+
+    obj = env.SharedObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    dobjs.append(obj)
 
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('rsf',objects+sources)
+slib = env.StaticLibrary('rsf',sobjs+sources)
+dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
+
 inc = env.Command('rsf.h',includes,Action(configure.merge))
-install = env.Install('../../include',inc)
-env.Precious('../../include')
+
+env.Install('../../lib',[slib,dlib])
+env.Install('../../include',inc)
 
 if root:
-    env.Install(libdir,lib)
+    env.Install(libdir,[slib,dlib])
     env.Install(incdir,inc)
-else:
-    env.Alias('install',install)
 
 ##############################################################################
 # TESTING
 ##############################################################################
-for cfile in Split('banded eno2 fft file getpar quantile simtab'):
-    test = env.StaticObject('Test' + cfile + '.c')
-    prog = env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
-    env.Depends(test,includes) # remove later 
+for file in Split('banded eno2 fft file getpar quantile simtab'):
+    test = env.StaticObject('Test' + file + '.c')
+    prog = env.Program(file,[test,slib],PROGSUFFIX='.x',PROGPREFIX='Test')
 
 api = env.get('API',[])
-
-##############################################################################
-# C++ BINDING
-##############################################################################
-if 'c++' in api:
-    libcc = env.StaticLibrary('rsf++',Split('rsf.cc cub.cc vai.cc'),
-                              OBJSUFFIX='++.o',CPPPATH='../../include')
-    env.Install('../../include','rsf.hh')
-
-    if root:
-        env.Install(libdir,libcc)
-        env.Install(incdir,Split('rsf.hh cub.hh vai.hh'))
-
-    for ccfile in ['getpar','file']:
-        test = 'Test' + ccfile + '.cc'
-
-        env.Program([test,libcc,lib],
-                    OBJSUFFIX='++.o',CPPPATH='../../include',
-                    PROGSUFFIX='++.x',PROGPREFIX='')
-
-##############################################################################
-# FORTRAN-77 BINDING
-##############################################################################
-if 'f77' in api:
-    env.Object('fortran.o','fortran.c',
-               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
-    libf = env.StaticLibrary('rsff','fortran.o')
-
-    if root:
-        env.Install(libdir,libf)
-
-    for ffile in ['getpar','file']:
-        test = 'Test' + ffile + '.f'
-        env.Program([test,libf,lib],PROGSUFFIX='f.x',PROGPREFIX='',
-                    OBJSUFFIX='f.o',
-                    LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
-
-##############################################################################
-# FORTRAN-90 BINDING
-##############################################################################
-if 'f90' in api and env.has_key('F90'):
-    F90 = env.get('F90')
-    F90base =  os.path.basename(F90)
-    F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
-
-    if F90base[:8] == 'gfortran' or F90base == 'gfc':
-        F90flags = F90flags + ' -DGFORTRAN'
-        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
-    elif F90base == 'ifort':
-        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -module ${SOURCE.dir}'
-
-    env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
-    objf90 = env.Object('rsf.f90',)
-    libf90 = env.StaticLibrary('rsff90',[objf90[0],'fortran90.o'])
-    mod = objf90[1]
-
-    installf90 = env.Install('../../include',mod)
-
-    if root:
-        env.Install(incdir,mod)
-        env.Install(libdir,libf90)
-    else:
-        env.Alias('install',installf90)
-
-    for f90file in ['getpar','file']:
-        test = 'Test' + f90file + '.f90'
-        env.Program([test,libf90,lib],
-                    PROGSUFFIX='f90.x',PROGPREFIX='',OBJSUFFIX='f90.o',
-                    LINK=F90,LINKFLAGS=env.get('F90FLAGS'))
-
-##############################################################################
-# PYTHON BINDING
-##############################################################################
-# Minimum-functionality backup to rsf python module if numpy/swig are missing
-if root and apiforce:
-    env.Install(libdir,'rsfbak.py')
-
-objs = []
-for source in Split(src2):
-    obj = env.SharedObject(source+'.c')
-    env.Depends(obj,source+'.h')
-    objs.append(obj)
-
-if 'python' in api:
-    # Python includes for SWIG
-
-    try:
-        EnsureSConsVersion(0,96,95)
-    except:
-        print "\n\n\tPlease upgrade SCons to version >= 0.96.95\n\n"
-        sys.exit(1)
-
-    pythinc = []
-    try:
-        import numpy
-        numpy_loc = os.path.split(numpy.__file__)[0]
-        pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
-        pythinc.append(os.path.join(numpy_loc,'core','include'))
-    except:
-        for path in sys.path:
-            if string.find(path,'python') >= 0:
-                dir = os.path.join(string.replace(path,'lib','include'),
-                                   'numarray')
-                if os.path.isdir(dir):
-                    pythinc.append(dir)
-
-    for path in sys.path:
-        if string.find(path,'python') >= 0:
-            pydir = re.sub('lib(?:64)?','include',path)
-            if os.path.isdir(pydir):
-                pythinc.append(pydir)
-
-    if root:
-        ifile = '#/filt/lib/rsf.i'
-    else:
-        ifile = 'rsf.i'
-
-    wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
-    python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
-                               CPPPATH=pythinc,
-                               SHLIBPREFIX='_c_')
-
-    if root:
-        env.Install(libdir,python)
-        env.Install(libdir,wrap[1])
-        env.Install(libdir,'rsf.py')
 
 ##############################################################################
 # MATLAB BINDING
@@ -222,6 +100,7 @@ if 'matlab' in api:
 # OCTAVE BINDING
 ##############################################################################
 
+apiforce=False
 if root:
     if apiforce or ('octave' in api):
         octdir = os.path.join(libdir,'octave')
@@ -229,11 +108,6 @@ if root:
         env.Clean(libdir,octdir)
         for inp in Split('dim create par'):
             env.Install(octdir, 'rsf_'+inp+'.m')
-
-# if 'octave' in api:
-#     build rsf_read.oct, rsf_write.oct
-#     if root:
-#         install to octdir
 
 ##############################################################################
 # LINT

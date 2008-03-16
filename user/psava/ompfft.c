@@ -156,7 +156,8 @@ void ompfft2(bool inv          /* inverse/forward flag */,
 	/* IFT 2 */
 	for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
-	    kiss_fft_stride(fft->invs2[ompith],pp[0]+i1,fft->ctrace[ompith],fft->n1);
+	    kiss_fft_stride(fft->invs2[ompith],pp[0]+i1,
+			    fft->ctrace[ompith],fft->n1);
 	    for (i2=0; i2<fft->n2; i2++) {
 		pp[i2][i1] = fft->ctrace[ompith][i2];
 	    }
@@ -181,7 +182,8 @@ void ompfft2(bool inv          /* inverse/forward flag */,
 	/* FFT 2 */
 	for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
-	    kiss_fft_stride(fft->forw2[ompith],pp[0]+i1,fft->ctrace[ompith],fft->n1);
+	    kiss_fft_stride(fft->forw2[ompith],pp[0]+i1,
+			    fft->ctrace[ompith],fft->n1);
 	    for (i2=0; i2<fft->n2; i2++) {
 		pp[i2][i1] = fft->ctrace[ompith][i2];
 	    }
@@ -218,7 +220,8 @@ void ompfft3(bool inv          /* inverse/forward flag */,
 	for (i3=0; i3 < fft->n3; i3++) {
 	    for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
-		kiss_fft_stride(fft->invs2[ompith],pp[i3][0]+i1,fft->ctrace2[ompith],fft->n1);
+		kiss_fft_stride(fft->invs2[ompith],pp[i3][0]+i1,
+				fft->ctrace2[ompith],fft->n1);
 		for (i2=0; i2<fft->n2; i2++) {
 		    pp[i3][i2][i1] = fft->ctrace2[ompith][i2];
 		}
@@ -229,7 +232,8 @@ void ompfft3(bool inv          /* inverse/forward flag */,
 	for (i2=0; i2 < fft->n2; i2++) {
 	    for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
-		kiss_fft_stride(fft->invs3[ompith],pp[0][i2]+i1,fft->ctrace3[ompith],fft->n1);
+		kiss_fft_stride(fft->invs3[ompith],pp[0][i2]+i1,
+				fft->ctrace3[ompith],fft->n1);
 		for (i3=0; i3 < fft->n3; i3++) {
 		    pp[i3][i2][i1] = fft->ctrace3[ompith][i3];
 		}
@@ -272,7 +276,8 @@ void ompfft3(bool inv          /* inverse/forward flag */,
 	for (i3=0; i3 < fft->n3; i3++) {
 	    for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
-		kiss_fft_stride(fft->forw2[ompith],pp[i3][0]+i1,fft->ctrace2[ompith],fft->n1);
+		kiss_fft_stride(fft->forw2[ompith],pp[i3][0]+i1,
+				fft->ctrace2[ompith],fft->n1);
 		for (i2=0; i2 < fft->n2; i2++) {
 		    pp[i3][i2][i1] = fft->ctrace2[ompith][i2];
 		}
@@ -334,7 +339,8 @@ void ompsft2(sf_complex **pp,
 #ifdef SF_HAS_COMPLEX_H
 	    pp[i2][i1] *= fft->shf1[i1]*fft->shf2[i2];
 #else
-	    pp[i2][i1] = sf_cmul(pp[i2][i1],sf_cmul(fft->shf1[i1],fft->shf2[i2]));
+	    pp[i2][i1] = sf_cmul(pp[i2][i1],
+				 sf_cmul(fft->shf1[i1],fft->shf2[i2]));
 #endif
 	}
     }    

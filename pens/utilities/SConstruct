@@ -3,7 +3,8 @@ sys.path.append('../..')
 import configure
 
 src = '''
-clip dashvec dither dupside error fatvec geth greycorr intersect solve sort vecoutline vptodev
+clip dashvec dither dupside error fatvec geth greycorr intersect solve
+sort vecoutline vptodev
 '''
 
 try: # distribution version
@@ -12,7 +13,6 @@ try: # distribution version
     env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
-    incdir = os.path.join(root,'include')
 except: # local version
     root = None
     env = Environment()

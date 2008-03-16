@@ -9,7 +9,6 @@ genraster1 genraster gentext genvector nulldev polyfix polysubs vecarea
 
 try: # distribution version
     Import('env')
-
     env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')

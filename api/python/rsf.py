@@ -208,4 +208,4 @@ if __name__ == "__main__":
         output.write(trace)
     os.system("sfrm junk.rsf")
     
-# 	$Id$	
+# 	$Id: rsf.py 3148 2007-11-13 00:13:20Z sfomel $	

@@ -5,11 +5,7 @@
 %{
 #include <stdio.h>
 
-#include "c99.h"
-#include "alloc.h"
-#include "file.h"
-#include "getpar.h"
-#include "files.h"
+#include <rsf.h>
 
 #define SWIG_FILE_WITH_INIT
 %}

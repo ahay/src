@@ -34,4 +34,4 @@ int main (void)
     exit (0);
 }
 
-// 	$Id$	
+// 	$Id: Testgetpar.cc 982 2005-01-30 23:38:22Z shan $	

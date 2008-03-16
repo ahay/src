@@ -7,8 +7,6 @@
 #include "hilbert.h"
 #include "migzrots.h"
 
-#define PI            3.1415926535898
-
 /* 
 improvements do be done:
  i.   use the correct weight function,
@@ -73,7 +71,8 @@ int main (int argc, char ** argv)
    
    /* checking dimensions */
    if((dx!=d2t)||(dz!=d1t)) 
-     sf_error("sampling interval have to be the same in:\n image and traveltime file\n");
+     sf_error("sampling interval have to be the same in:\n"
+	      " image and traveltime file\n");
    if(ox<o2t) ox=o2t; 
    if(oz<o1t) oz=o1t;
    if((ox+(nx-1)*dx)>(o2t+(n2t-1)*d2t)) nx=floor(((o2t+(n2t-1)*d2t)-ox)/dx)+1;
@@ -86,14 +85,14 @@ int main (int argc, char ** argv)
    sf_oaxa(Fout,ax,2);
 
    /* anti-aliasing */
-   //df = fmax;
+   /* df = fmax; */
    nf = initAalias(-1,verb,fmax,df,n1,d1,&aa);
-   //fprintf(stderr,"forcing nf=%d df=%f\n",nf,df);
+   /* fprintf(stderr,"forcing nf=%d df=%f\n",nf,df); */
 
    /* aperture angle */
-   tg    = tan(PI*theta/180);
-   tgtap = tan(PI*(theta-dtheta)/180);
-   if(verb) fprintf(stderr,"tgmax=%f tgtap=%f\n",tg,tgtap);
+   tg    = tan(SF_PI*theta/180);
+   tgtap = tan(SF_PI*(theta-dtheta)/180);
+   if(verb) sf_warning("tgmax=%f tgtap=%f",tg,tgtap);
    
    /* allocating */
    dat   = sf_floatalloc(n1);
@@ -105,17 +104,17 @@ int main (int argc, char ** argv)
    px    = sf_floatalloc2(n1t,n2t);
    pz    = sf_floatalloc2(n1t,n2t);
     
-   if(verb) fprintf(stderr,"initializing traveltime loading\n");
+   if(verb) sf_warning("initializing traveltime loading");
    /* initializing traveltime maps */
    tabtt = fslice_init(n1t*n2t,n3t,sizeof(float));
    fslice_load(Ftt,tabtt,SF_FLOAT);
-   if(verb) fprintf(stderr,"traveltime loading has finished\n");
+   if(verb) sf_warning("traveltime loading has finished");
 
    /* reading the source-slice from traveltime table */
    eps = .01*d2;
    itt = floor((xs+eps-o3t)/d3t);
    fslice_get(tabtt,itt,ts[0]);
-   if(verb) fprintf(stderr,"traveltime table from source was read\n");
+   if(verb) sf_warning("traveltime table from source was read");
 
    for(i2=0;i2<n2;i2++) {
 
@@ -154,6 +153,6 @@ int main (int argc, char ** argv)
    sf_floatwrite(image[0],n1*n2,Fout);
    fprintf( stderr," \n terminou processamento \n");
 
-   return EXIT_SUCCESS;
+   exit(0);
 }
 /*--------------------------------------------------------------------------*/

@@ -7,8 +7,6 @@
 
 #include "rsf.hh"
 
-#include "_bool.h"
-
 // ***** Public methods ***********
 ///////////////////////////////////
 
@@ -349,4 +347,4 @@ oRSF::put (const char* name, int size, const int*   value) const
 //     sf_putfloats(file_,name,value,size);
 // }
 
-// 	$Id$	
+// 	$Id: rsf.cc 969 2005-01-21 03:20:13Z fomels $	

@@ -13,7 +13,6 @@ try:  # distributed version
     root = env.get('RSFROOT')    
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    incdir = os.path.join(root,'include')
     dir = string.replace(os.getcwd(),'/build','')
 except: # local version
     root = None
@@ -22,12 +21,13 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    SConscript('../../api/f90/SConstruct')
 
 F90 = env.get('F90')
 api = env.get('API',[])
  
 env.Prepend(F90PATH=['../../include'],
-            LIBPATH=['../../filt/lib'],
+            LIBPATH=['../../lib'],
             LIBS=['rsff90','rsf'])
 
 mains = Split(progs)

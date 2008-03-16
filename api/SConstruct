@@ -25,71 +25,7 @@ MATLABPATH=%s %s -nosplash -nojvm -nodesktop
 attr < ${TARGETS[2]} > ${TARGETS[0]}
 '''
 
-############################################################################
-# C API
-############################################################################
-
-proj.Program('clip.c')
-ctest = proj.Flow('c','clip.exe',test % 'clip',suffix='.attr',stdin=0)
-Default(ctest)
-
 api = proj.get('API',[])
-
-############################################################################
-# C++ API
-############################################################################
-
-if 'c++' in api:
-    proj.Program('clip.cc',
-                 PROGSUFFIX='++.exe',
-                 OBJSUFFIX='++.o',LIBS=['rsf++','rsf','m'])
-    cctest = proj.Flow('cc','clip++.exe',test % 'clip++',suffix='.attr',stdin=0)
-    Default(cctest)
-
-    cctest2 = proj.Program('matmult_test',
-                          ['matmult_test.cc',
-                           'matmult.cc',
-                           'matmult_wrap.cc'])
-    Default(cctest2)
-
-############################################################################
-# Fortran-77 API
-############################################################################
-
-if 'f77' in api:
-    proj.Program('clip.f',
-                 PROGSUFFIX='f.exe',
-                 OBJSUFFIX='f.o',
-                 LIBS=['rsff','rsf','m'],
-                 LINK=proj.get('F77'),
-                 LINKFLAGS=proj.get('F77FLAGS'))
-    ftest = proj.Flow('f','clipf.exe',test % 'clipf',suffix='.attr',stdin=0)
-    Default(ftest)
-
-############################################################################
-# Fortran-90 API
-############################################################################
-
-if 'f90' in api:
-    proj.Program('clip.f90',
-                 PROGSUFFIX='.exe',
-                 OBJSUFFIX='f90.o',
-                 LIBS=['rsff90','rsf','m'],
-                 F90PATH=[incdir],
-                 LINK=proj.get('F90'),
-                 LINKFLAGS=proj.get('F90FLAGS'))
-    f90test = proj.Flow('f90','clipf90.exe',test % 'clipf90',
-                        suffix='.attr',stdin=0)
-    Default(f90test)
-
-############################################################################
-# Python API
-############################################################################
-
-if 'python' in api:
-    pytest = proj.Flow('py','clippy.exe',
-                       test % 'clippy',suffix='.attr',stdin=0)
-    Default(pytest)
 
 ############################################################################
 # Matlab API

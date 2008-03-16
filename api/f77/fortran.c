@@ -2,13 +2,7 @@
 
 #include "cfortran.h"
 
-#include "getpar.h"
-#include "alloc.h"
-#include "error.h"
-#include "_bool.h"
-#include "file.h"
-#include "files.h"
-#include "cosft.h"
+#include <rsf.h>
 
 /* Fortran functions for command-line arguments - NON-STANDARD
    use #ifdefs if necessary */
@@ -158,4 +152,4 @@ FCALLSCSUB0(sf_cosft_close,SF_COSFT_CLOSE,sf_cosft_close)
 FCALLSCSUB3(sf_cosft_frw,SF_COSFT_FRW,sf_cosft_frw,PFLOAT,INT,INT)
 FCALLSCSUB3(sf_cosft_inv,SF_COSFT_INV,sf_cosft_inv,PFLOAT,INT,INT)
 
-/* 	$Id$	 */
+/* 	$Id: fortran.c 2069 2006-07-26 05:16:46Z sfomel $	 */

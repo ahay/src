@@ -792,7 +792,7 @@ def f77(context):
         sys.exit(unix_failure)
     cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
     context.env['CFORTRAN'] = cfortran 
-    context.Message("checking %s type for cfortran.h ... " % F77)
+    context.Message("checking %s type ... " % F77)
     context.Result(cfortran)
 
 pkg['f90'] = {'fedora':'gcc-gfortran',
@@ -837,7 +837,7 @@ def f90(context):
         del context.env['F90']
         sys.exit(unix_failure)
     base = os.path.basename(F90)
-    context.Message("checking %s type for cfortran.h ... " % base)
+    context.Message("checking %s type ... " % base)
     cfortran = fortran.get(base,'NAGf90Fortran')
     context.env['CFORTRAN90'] = cfortran
     context.Result(cfortran)

@@ -26,4 +26,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-// 	$Id$	
+// 	$Id: Testfile.cc 982 2005-01-30 23:38:22Z shan $	

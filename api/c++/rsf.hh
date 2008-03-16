@@ -76,4 +76,4 @@ private:
 
 #endif
 
-// 	$Id$	
+// 	$Id: rsf.hh 969 2005-01-21 03:20:13Z fomels $	

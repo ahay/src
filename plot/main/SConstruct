@@ -12,7 +12,6 @@ try:
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    incdir = os.path.join(root,'include')
     docmerge = configure.docmerge
     alias = {'grey':'byte','grey3':'cubeplot'}
 except:
@@ -27,7 +26,8 @@ except:
     SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../filt/lib','../lib'],LIBS=['rsfplot','rsf'])
+            LIBPATH=['../../lib'],
+            LIBS=['rsfplot','rsf'])
 
 mains = Split(progs)
 

@@ -67,7 +67,8 @@ if not datapath:
         pathfile = open('.datapath','r')
     except:
         try:
-            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),
+                            'r')
         except:
             pathfile = None
     if pathfile:
@@ -314,7 +315,8 @@ class Project(Environment):
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,split=[],axis=[3,1],reduce='cat',local=0):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
+             split=[],axis=[3,1],reduce='cat',local=0):
 
         if not flow:
             return None     

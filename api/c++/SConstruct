@@ -1,0 +1,43 @@
+import sys, os
+sys.path.append('../..')
+import configure
+
+sources = Split('rsf cub vai')
+
+try: # distribution version
+    Import('env')
+    env = env.Copy()
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    SConscript('../../filt/lib/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
+if 'c++' in env.get('API',[]):
+    ccfiles = map(lambda x: x+'.cc',sources)
+    hhfiles = map(lambda x: x+'.hh',sources)
+
+    lib = env.StaticLibrary('rsf++',ccfiles)
+    env.Install('../../lib',lib)
+    env.Install('../../include',hhfiles)
+
+    if root:
+        env.Install(libdir,lib)
+        env.Install(incdir,hhfiles)
+
+    for ccfile in ['getpar','file']:
+        test = 'Test' + ccfile + '.cc'
+        env.Program([test,lib])
+
+
+        

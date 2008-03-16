@@ -1,0 +1,41 @@
+import sys, os
+sys.path.append('../..')
+import configure
+
+try: # distribution version
+    Import('env')
+    env = env.Copy()
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    SConscript('../../filt/lib/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
+if 'f77' in env.get('API',[]):
+    env.Object('fortran.o','fortran.c',
+               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
+    lib = env.StaticLibrary('rsff','fortran.o')
+    env.Install('../../lib',lib)
+    
+    if root:
+        env.Install(libdir,lib)
+
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f'
+        env.Program(file,[test,lib],
+                    PROGPREFIX='Test',
+                    PROGSUFFIX='.x',
+                    LINK=env.get('F77'),
+                    LINKFLAGS=env.get('F77FLAGS'))
+
+        

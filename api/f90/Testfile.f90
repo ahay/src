@@ -22,4 +22,4 @@ program Test
   end do
 end program Test
 
-!	$Id$	
+!	$Id: Testfile.f90 982 2005-01-30 23:38:22Z shan $	

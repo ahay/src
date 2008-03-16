@@ -57,9 +57,29 @@ Export('env')
 dirs = ('lib','main','proc','imag')
 
 Default('build/include')
-subdirs = map(lambda x: os.path.join('filt',x), dirs) + \
-          map(lambda x: os.path.join('user',x), user)
-for dir in subdirs:
+Default('build/lib')
+for dir in map(lambda x: os.path.join('filt',x), dirs):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
+
+
+##########################################################################
+# API BUILD
+##########################################################################
+api = env.get('API',[])
+
+for dir in map(lambda x: os.path.join('api',x), api):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
+
+##########################################################################
+# USER BUILD
+##########################################################################
+for dir in map(lambda x: os.path.join('user',x), user):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')
@@ -68,11 +88,8 @@ for dir in subdirs:
 ##########################################################################
 # PLOT BUILD
 ##########################################################################
-
-Export('env')
 pdirs = ('lib','main','test','opengl')
 
-Default('build/include')
 for dir in map(lambda x: os.path.join('plot',x), pdirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
@@ -82,10 +99,8 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 ##########################################################################
 # PENS BUILD
 ##########################################################################
-Export('env')
 pdirs = ('fonts','include','utilities','genlib','main')
 
-Default('build/include')
 for dir in map(lambda x: os.path.join('pens',x), pdirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
@@ -95,10 +110,8 @@ for dir in map(lambda x: os.path.join('pens',x), pdirs):
 ##########################################################################
 # SU BUILD
 ##########################################################################
-Export('env')
 sudirs = ('lib','main','plot')
 
-Default('build/include')
 for dir in map(lambda x: os.path.join('su',x), sudirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)

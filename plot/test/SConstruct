@@ -14,7 +14,6 @@ try:
 	root = env.get('RSFROOT')
 	libdir = os.path.join(root,'lib')
 	bindir = os.path.join(root,'bin')
-	incdir = os.path.join(root,'include')
 except:
 	root = None
 	env = Environment()
@@ -25,7 +24,7 @@ except:
 	SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
-	    LIBPATH=['../../filt/lib','../lib'],
+	    LIBPATH=['../../lib'],
 	    LIBS=['rsfplot','rsf'])
 
 vplot = Builder(action = './$SOURCE - > $TARGET',suffix='.vpl')

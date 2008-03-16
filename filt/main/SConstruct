@@ -15,7 +15,6 @@ try: # distributed version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    incdir = os.path.join(root,'include')
     docmerge = configure.docmerge
     alias = {'cat':'merge',
              'real':'imag',
@@ -35,7 +34,7 @@ except: # local version
     SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../lib'],
+            LIBPATH=['../../lib'],
             LIBS=['rsf'])
 
 mains = Split(progs)

@@ -1,0 +1,55 @@
+import sys, os
+sys.path.append('../..')
+import configure
+
+try: # distribution version
+    Import('env')
+    env = env.Copy()
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    SConscript('../../filt/lib/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
+if 'f90' in env.get('API',[]) and env.has_key('F90'):
+    F90 = env.get('F90')
+    F90base =  os.path.basename(F90)
+    F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
+
+    if F90base[:8] == 'gfortran' or F90base == 'gfc':
+        F90flags = F90flags + ' -DGFORTRAN'
+        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
+    elif F90base == 'ifort':
+        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -module ${SOURCE.dir}'
+
+    env.Object('fortran.o','fortran.c',CCFLAGS=F90flags)
+    obj = env.Object('rsf.f90')
+
+    lib = env.StaticLibrary('rsff90',[obj[0],'fortran.o'])
+    mod = obj[1]
+
+    env.Install('../../lib',lib)
+    env.Install('../../include',mod)
+    
+    if root:
+        env.Install(libdir,lib)
+        env.Install(incdir,mod)
+
+
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f90'
+        env.Program(file,[test,lib],
+                    PROGSUFFIX='.x',
+                    PROGPREFIX='Test',
+                    LINK=F90,
+                    LINKFLAGS=env.get('F90FLAGS'))

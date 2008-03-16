@@ -10,7 +10,6 @@ try: # distribution version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    incdir = os.path.join(root,'include') 
     docmerge = configure.docmerge   
 except: # local version
     root = None
@@ -25,10 +24,8 @@ except: # local version
     env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
                SCANNERS=[configure.Include])
     
-
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../utilities','../genlib',
-                     '../../plot/lib','../../filt/lib'],
+            LIBPATH=['../utilities','../genlib','../../lib'],
             LIBS=['genpen','penutil','rsfplot','rsf'])
 
 env['PROGPREFIX'] = ''

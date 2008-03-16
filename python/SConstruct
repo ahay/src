@@ -17,7 +17,7 @@ dirs = dirs + env['USERS']
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
 
-for src in ('doc','proj','prog','tex','book'):
+for src in ('doc','proj','prog','tex','book','bak'):
     py = 'rsf%s.py' % src
     env.Install(libdir,py)
 # clean .pyc files?

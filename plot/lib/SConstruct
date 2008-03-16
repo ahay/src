@@ -27,9 +27,9 @@ except: # local version
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
 
-env.Prepend(CPPPATH=['../../filt/lib'],
-            LIBS=['rsf'],
-            LIBPATH=['../../filt/lib'])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
 
 ##############################################################################
 # INCLUDES
@@ -48,8 +48,9 @@ for source in psrc:
 ##############################################################################
 lib = env.StaticLibrary('rsfplot',objects)
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
+env.Install('../../lib',lib)
 env.Install('../../include',inc)
- 
+
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
@@ -62,10 +63,8 @@ api = env.get('API',[])
 if 'f77' in api:
     env.Object('fortran.o','fortran.c',
                CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
-    libf = env.StaticLibrary('rsfplotf','fortran.o')                         
-    
-    if root:
-        env.Install(libdir,libf)
+    libf = env.StaticLibrary('rsfplotf','fortran.o')                            
+    env.Install(libdir,libf)
 
 ##############################################################################
 # TESTING

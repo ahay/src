@@ -35,4 +35,4 @@ contains
   end subroutine assert
 end program Test
 
-!	$Id$	
+!	$Id: Testgetpar.f90 982 2005-01-30 23:38:22Z shan $	

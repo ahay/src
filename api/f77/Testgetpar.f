@@ -33,4 +33,4 @@ C      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
       return
       end
 
-C	$Id$	
+C	$Id: Testgetpar.f 982 2005-01-30 23:38:22Z shan $	

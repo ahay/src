@@ -9,6 +9,7 @@ src = 'intsinc8 inttable8 mksinc sinc toeplitz'
 
 try: # distribution version
     Import('env')
+    env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
@@ -25,10 +26,13 @@ except: # local version
     SConscript('../../filt/lib/SConstruct')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
+    libdir = '../../lib'
+    incdir = '../../include'
 
-env.Prepend(CPPPATH=['../../filt/lib'],
-            LIBS=['rsf'],
-            LIBPATH=['../../filt/lib'])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
 
 ##############################################################################
 # INCLUDES
@@ -48,11 +52,10 @@ for source in Split(src):
 ##############################################################################
 lib = env.StaticLibrary('su',objects)
 inc = env.Command('su.h',includes,Action(configure.merge))
-install = env.Install('../../include',inc)
-env.Precious('../../include')
+env.Install('../../lib',lib)
+env.Install('../../include',inc)
 
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
-else:
-    env.Alias('install',install)
+

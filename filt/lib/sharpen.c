@@ -70,6 +70,7 @@ void sf_sharpen(const float *pp)
     }
     wmin = FLT_EPSILON*wmax;
 
+    wp = 0.;
     for (n1=np; n1 < n-1; n1++) {
 	wp = sf_quantile(n1,n,ww);
 	if (wp > wmin) break;
@@ -94,6 +95,7 @@ void sf_csharpen(const sf_complex *pp)
     }
     wmin = FLT_EPSILON*wmax;
 
+    wp = 0.;
     for (n1=np; n1 < n-1; n1++) {
 	wp = sf_quantile(n1,n,ww);
 	if (wp > wmin) break;
