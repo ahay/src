@@ -106,7 +106,7 @@ int main (int argc, char* argv[])
                     printf("***************************************\n");
                     printf("signal energy at n3=%d      = %f \n", (k+1),es);
                     printf("noise  energy at n3=%d      = %f \n", (k+1),en);
-                    printf("the SNR of    at n3=%d      = %f \n", (k+1),snr);
+                    printf("the SNR       at n3=%d      = %f \n", (k+1),snr);
                     printf("***************************************\n");
                 }
 	        break;
