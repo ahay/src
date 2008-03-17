@@ -8,7 +8,10 @@ path = {}
 for key in ('PYTHON','LD_LIBRARY_'):
     oldpath = os.environ.get(key+'PATH')
     if oldpath:
-        path[key] = string.join([libdir,oldpath],':')
+        paths = string.split(oldpath,':')
+        if libdir not in paths:
+            paths.append(libpath)
+        path[key] = string.join(paths,':')
     else:
         path[key] = libdir
 

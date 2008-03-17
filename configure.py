@@ -791,7 +791,11 @@ def f77(context):
     if not res:
         del context.env['F77']
         sys.exit(unix_failure)
-    cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
+    F77base = os.path.basename(F77)
+    if F77base[:3] == 'f77' and plat['OS'] == 'sunos':
+        cfortran = 'sunFortran'
+    else:
+        cfortran = fortran.get(F77base,'NAGf90Fortran')
     context.env['CFORTRAN'] = cfortran 
     context.Message("checking %s type ... " % F77)
     context.Result(cfortran)
