@@ -24,15 +24,14 @@ env.Prepend(CPPPATH=['../../include'],
 if 'f90' in env.get('API',[]) and env.has_key('F90'):
     F90 = env.get('F90')
     F90base =  os.path.basename(F90)
-    F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
+    env.Append(CCFLAGS=' -D$CFORTRAN90')
 
-    if F90base[:8] == 'gfortran' or F90base == 'gfc':
-        F90flags = F90flags + ' -DGFORTRAN'
-        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
+    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
+        env.Append(CCFLAGS=' -DGFORTRAN',F90FLAGS=' -J${SOURCE.dir}')
     elif F90base == 'ifort':
-        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -module ${SOURCE.dir}'
+        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
-    env.Object('fortran.o','fortran.c',CCFLAGS=F90flags)
+    env.Object('fortran.o','fortran.c')
     obj = env.Object('rsf.f90')
 
     lib = env.StaticLibrary('rsff90',[obj[0],'fortran.o'])

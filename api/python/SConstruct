@@ -70,13 +70,15 @@ if 'python' in env.get('API',[]):
     env.Install('../../lib',pfiles)
 
     if root:
+        install = env.Install(libdir,pfiles)
         if sys.platform[:6] == 'darwin':
-            env.AddPostAction(python,
+            env.AddPostAction(install,
                               'install_name_tool -change '
                               'build/filt/lib/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,python[0].path))
+                              '%s/libdrsf.dylib %s/%s' % \
+                                  (libdir,libdir,python[0]))
         
-        env.Install(libdir,pfiles)
+ 
 
                               
     

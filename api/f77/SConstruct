@@ -24,12 +24,13 @@ env.Prepend(CPPPATH=['../../include'],
 if 'f77' in env.get('API',[]):
     F77 = env.get('F77')
     F77base =  os.path.basename(F77)
-    F77flags = env.get('CCFLAGS')+' -D$CFORTRAN'
+
+    env.Append(CCFLAGS=' -D$CFORTRAN')
 
     if F77base[:8] == 'gfortran' or F77base[:3] == 'gfc':
-        F77flags = F77flags + ' -DGFORTRAN'
+        env.Append(CCFLAGS=' -DGFORTRAN')
         
-    env.Object('fortran.o','fortran.c',CCFLAGS=F77flags)
+    env.Object('fortran.o','fortran.c')
 
     lib = env.StaticLibrary('rsff','fortran.o')
     env.Install('../../lib',lib)
