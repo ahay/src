@@ -375,7 +375,7 @@ sft3d sft3_init(int n,
     k=n/2;
     
     sft->www = sf_complexalloc(n);
-    for(i=0; i<n; i++) { sft->www[i]=1.0; }
+    for(i=0; i<n; i++) { sft->www[i]=sf_cmplx(1.0,0.0); }
     
     for(i=0; i<k; i++) {
 	s = w * i;
