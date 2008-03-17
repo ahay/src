@@ -21,8 +21,7 @@ except: # local version
     ifile = 'rsf.i'
 
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=['drsf'])
+            LIBPATH=['../../lib'])
 
 if 'python' in env.get('API',[]):
     try:
@@ -54,14 +53,17 @@ if 'python' in env.get('API',[]):
 
     env.Append(CPPPATH=pythinc)
 
-    if sys.platform[:6] == 'darwin':
-        env['SHLINKFLAGS'] = '$LINKFLAGS -bundle' + \
-                             ' -flat_namespace -undefined suppress'
-        env['SHLIBSUFFIX'] = '.so'
-    elif sys.platform[:6] == 'cygwin':
+    if sys.platform[:6] == 'cygwin':
         python = 'python%s' % sys.version[:3]
-        env.Append(LIBPATH=['/usr/lib/%s/config' % python],
-                   LIBS = [python])
+        env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
+                    LIBS = ['librsf',python])
+    else:
+        env.Append(LIBS=['drsf'])
+
+        if sys.platform[:6] == 'darwin':
+            env['SHLINKFLAGS'] = '$LINKFLAGS -bundle' + \
+                                 ' -flat_namespace -undefined suppress'
+            env['SHLIBSUFFIX'] = '.so'
 
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',wrap[0],SHLIBPREFIX='_c_')

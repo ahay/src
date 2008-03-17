@@ -257,6 +257,10 @@ class Project(Environment):
             getenv = os.environ.get(env)
             if getenv:
                 self.Append(ENV={env:getenv})
+        if sys.platform[:6] == 'cygwin':
+            exe = ''
+        else:
+            exe = '.exe'
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
@@ -272,7 +276,7 @@ class Project(Environment):
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
                     LIBS=[libs],
-                    PROGSUFFIX='.exe')
+                    PROGSUFFIX=exe)
         self.Prepend(LIBS=['rsf'])
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
