@@ -22,7 +22,9 @@
 int main(int argc, char* argv[])
 {
     int n;
-    float perc,a, *din, *dout;
+    float perc,a, *din=NULL, *dout=NULL;
+    sf_complex *cin=NULL, *cout=NULL;
+    sf_datatype type;
     sf_file in, out, other;
 
     sf_init(argc,argv);
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     n = sf_filesize(in);
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    type = sf_gettype(in);
      
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
@@ -40,23 +42,51 @@ int main(int argc, char* argv[])
 
     sf_sharpen_init(n,perc);
 
-    din = sf_floatalloc(n);
-    dout = sf_floatalloc(n);
+    if (SF_FLOAT == type) {
 
-    sf_floatread(din,n,in);
+      din = sf_floatalloc(n);	
+      dout = sf_floatalloc(n);
+      
+      sf_floatread(din,n,in);	
 
-    if (NULL != sf_getstring("other")) {
+      if (NULL != sf_getstring("other")) {
 	other = sf_input("other");
+	if (SF_FLOAT != sf_gettype(other)) sf_error("Need float type in other");
 	sf_floatread(dout,n,other);
 	sf_sharpen(dout);
-    } else {
+      } else {
 	sf_sharpen(din);
+      }
+
+      sf_weight_lop(false,false,n,n,din,dout);
+      sf_weight_lop(true,false,n,n,din,dout);
+
+      sf_floatwrite(din,n,out);
+
+    } else if (SF_COMPLEX == type) {
+
+      cin = sf_complexalloc(n);	
+      cout = sf_complexalloc(n);
+
+      sf_complexread(cin,n,in);	
+
+      if (NULL != sf_getstring("other")) {
+	other = sf_input("other");
+	if (SF_COMPLEX != sf_gettype(other)) sf_error("Need complex type in other");
+	sf_complexread(cout,n,other);
+	sf_csharpen(cout);
+      } else {
+	sf_csharpen(cin);
+      }
+
+      sf_cweight_lop(false,false,n,n,cin,cout);
+      sf_cweight_lop(true,false,n,n,cin,cout);
+
+      sf_complexwrite(cin,n,out);
+
+    } else {
+      sf_error("Need float or complex type");
     }
-
-    sf_weight_lop(false,false,n,n,din,dout);
-    sf_weight_lop(true,false,n,n,din,dout);
-
-    sf_floatwrite(din,n,out);
 
     exit(0);
 }

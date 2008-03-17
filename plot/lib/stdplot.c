@@ -653,6 +653,7 @@ static void make_axes (void)
 					   &(axis1->num0), 
 					   &(axis1->dnum),
 		                           &(axis1->maxstrlen));
+	/* d1num tic mark spacing on the first axis */
     }	
     
     if (label2 != NULL) { /* vertical axis */
