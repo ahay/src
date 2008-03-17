@@ -749,6 +749,7 @@ def cxx(context):
 
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
+           'f77':'f2cFortran',
            'gfortran':'NAGf90Fortran',
            'gfc':'NAGf90Fortran',
            'f2c':'f2cFortran'}
@@ -1055,9 +1056,9 @@ def merge(target=None,source=None,env=None):
     return py_success
 
 docmerge = '''echo "import rsfdoc" > $TARGET
-echo "" > tmp
-cat tmp $SOURCES >> $TARGET
-rm tmp'''
+echo "" > ${TARGET}.junk
+cat ${TARGET}.junk $SOURCES >> $TARGET
+rm ${TARGET}.junk'''
 
 def docextra(docmerge,source,copy):
     return docmerge + '''

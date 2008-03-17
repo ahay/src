@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     sf_impl2_init (r1, r2, n1, n2, tau, pclip, up, verb, dist, ns, snp);
 
     dat = sf_floatalloc2(n1,n2);
-    if (lin) dat2 = sf_floatalloc2(n1,n2);
+    dat2 = lin? sf_floatalloc2(n1,n2): NULL;
 
     for (i3=0; i3 < n3; i3++) {
 	if (NULL != dst) sf_floatread(dist,n12,dst);

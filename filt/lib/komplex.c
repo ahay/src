@@ -36,6 +36,8 @@
 #define conjf   sf_conjf
 #define cabsf   sf_cabsf
 #define cabs    sf_cabs
+#define cargf   sf_cargf
+#define carg    sf_carg
 #define ccosf   sf_ccosf
 #define csinf   sf_csinf
 #define ctanf   sf_ctanf
@@ -149,6 +151,13 @@ double sf_cabs(sf_double_complex z)
 {
     extern double hypot(double,double);
     return hypot(z.r,z.i);
+}
+
+double sf_carg(sf_double_complex z)
+/*< replacement for cargf >*/
+{
+    extern double atan2(double,double);
+    return atan2(z.i,z.r);
 }
 
 #endif
