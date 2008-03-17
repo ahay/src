@@ -25,17 +25,19 @@
 
 int main (int argc, char* argv[])
 {
+    bool top;
+
     fint1 sft;
     int  ext;
 
-    float a,n,f,da,a0;
+    float a,n,f,da,a0,t0,dt,s;
     int   fint,na,nx,nz,nt;
 
     sf_axis ax,az,at,aa;
     int ix,iz,it,ia;
 
-    float   **stk, **ang, *tmp;
-    sf_file  Fstk,  Fang;
+    float   **stk, **ang, *tmp, *vel;
+    sf_file  Fstk,  Fang, velocity;
 
     sf_init (argc,argv);
 
@@ -46,7 +48,7 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
     az=sf_iaxa(Fstk,1); nz=sf_n(az);
-    at=sf_iaxa(Fstk,2); nt=sf_n(at);
+    at=sf_iaxa(Fstk,2); nt=sf_n(at); t0=sf_o(at); dt=sf_d(at);
     ax=sf_iaxa(Fstk,3); nx=sf_n(ax);
 
     if (!sf_getint  ("na",&na)) na=nt;       
@@ -58,6 +60,16 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
+    if (!sf_getbool("top",&top)) top=false;
+
+    if (top) {
+	velocity = sf_input("velocity");
+	vel = sf_floatalloc(nz);
+    } else {
+	velocity = NULL;
+	vel = NULL;
+    }
+
     stk = sf_floatalloc2(nz,nt);
     ang = sf_floatalloc2(nz,na);
     tmp = sf_floatalloc(nt);
@@ -66,6 +78,7 @@ int main (int argc, char* argv[])
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread(stk[0],nz*nt,Fstk);
+	if (top) sf_floatread(vel,nz,velocity);
 	
 	/*------------------------------------------------------------*/
 	for (iz = 0; iz < nz; iz++) {
@@ -75,10 +88,20 @@ int main (int argc, char* argv[])
 	    fint1_set(sft,tmp);
 	    
 	    for (ia=0; ia < na; ia++) {
-		a = a0+ia*da;          /* ang */
-		n = tanf(a/180*SF_PI); /* tan */
+		a = a0+ia*da;          /* ang or p */
 
-		f = (n - sf_o(at)) / sf_d(at);
+		if (top) {
+		    s = a*vel[iz];
+		    if (s >= 1.) {
+			n = t0 - 10.*dt;
+		    } else {
+			n = s/sqrtf(1.0-s*s);
+		    }
+		} else {
+		    n = tanf(a/180*SF_PI); /* tan */
+		}
+
+		f = (n - t0) / dt;
 		fint = f;
 
 		if (fint >= 0 && fint < nt) {

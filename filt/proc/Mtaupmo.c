@@ -44,7 +44,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(taup,"d2",&dp)) sf_error("No d2= in input");
     if (!sf_histfloat(taup,"o2",&p0)) sf_error("No o2= in input");   
 
-    /* half velocity */
+    /* half velocity ??? */
     p0 *= 0.5;
     dp *= 0.5;
 
