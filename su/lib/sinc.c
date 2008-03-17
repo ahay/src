@@ -1,3 +1,4 @@
+/* Sinc function */
 /*
   Copyright © 2007, Colorado School of Mines,
   All rights reserved.

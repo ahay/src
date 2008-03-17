@@ -1,3 +1,4 @@
+/* Interpolation tables for 8-point sinc */
 /*
   Copyright © 2007, Colorado School of Mines,
   All rights reserved.
