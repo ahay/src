@@ -24,7 +24,8 @@
 int main (int argc, char* argv[])
 {
     float den, inten, max, *dat, slope;
-    int n1, n2, n3, point, i, j, dx, tt, width, length, num, temp1, temp2, temp3, temp4, ii;
+    int n1, n2, n3, point, i, j, k;
+    int dx, tt, width, length, num, temp1, temp2, temp3, temp4, ii;
     bool rep, noise;
     sf_file in, out;
 
@@ -97,7 +98,7 @@ int main (int argc, char* argv[])
                 point= (int)(j*1.0/den)+rand()%10;
                 dx=(int)(j*slope);
                 temp4 = -1*width;
-                for(int k=temp4; k<(temp4+rand()%(width)); k++){
+                for(k=temp4; k<(temp4+rand()%(width)); k++){
                     temp3 = point + rand()%(length);
                     if((tt+k+dx)<n2 && temp3<n1 && (tt+k+dx)>0 && temp3>0){
                         dat[(tt+k+dx)*n1+temp3] += inten*max*(0.01*(rand()%100)*2.-1.);
@@ -129,7 +130,7 @@ int main (int argc, char* argv[])
                     point= (int)(j*1.0/den)+rand()%10;
                     dx=(int)(j*slope);
                     temp4 = -1*width;
-                    for(int k=temp4; k<(temp4+rand()%(width)); k++){
+                    for(k=temp4; k<(temp4+rand()%(width)); k++){
                         temp3 = point + rand()%(length);
                         if((tt+k+dx)<n2 && temp3<n1 && (tt+k+dx)>0 && temp3>0){
                             dat[(tt+k+dx)*n1+temp3] = inten*max*(0.01*(rand()%100)*2.-1.);
@@ -151,7 +152,7 @@ int main (int argc, char* argv[])
                     point= (int)(j*1.0/den)+rand()%10;
                     dx=(int)(j*slope);
                     temp4 = -1*width;
-                    for(int k=temp4; k<(temp4+rand()%(width)); k++){
+                    for(k=temp4; k<(temp4+rand()%(width)); k++){
                         temp3 = point + rand()%(length);
                         if((tt+k+dx)<n2 && temp3<n1 && (tt+k+dx)>0 && temp3>0){
                             dat[(tt+k+dx)*n1+temp3] += inten*max*(0.01*(rand()%100)*2.-1.);

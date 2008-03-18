@@ -550,12 +550,6 @@ void seislet97_init(int n1      /* trace length */,
     t2 = sf_floatalloc(n);
 
     switch(type) {
-//	case 'h': 
-//	    transform = haar;
-//	    break;
-//	case 'l':
-//	    transform = linear;
-//	    break;
 	case 'b':
 	    transform = biorthogonal;
 	    break;

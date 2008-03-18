@@ -427,9 +427,9 @@ static void biorthogonal(bool adj)
 				      sf_cmul(t[i+2*j],sf_conjf(z0))),
 				  a));
 #endif
-//	    a = -1.586134342f;
-//	    for (i=0; i < nt-2*j; i += 2*j) {
-//		t[i+j] += (t[i]+t[i+2*j])*a;
+/*	    a = -1.586134342f;
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] += (t[i]+t[i+2*j])*a; */
 		/* Predict 1 */
 	    }	 
 
@@ -438,7 +438,7 @@ static void biorthogonal(bool adj)
 #else
 	    if (i+j < nt) t[i+j] = sf_cadd(t[i+j],sf_crmul(sf_crmul(sf_cmul(t[i],z0),a),2));
 #endif
-//	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+/*	    if (i+j < nt) t[i+j] += 2*a*t[i];  *right boundary*/  
  
             a= -0.05298011854f;
 #ifdef SF_HAS_COMPLEX_H
@@ -446,7 +446,7 @@ static void biorthogonal(bool adj)
 #else
 	    t[0] = sf_cadd(t[0],sf_crmul(sf_crmul(sf_cmul(t[j],sf_conjf(z0)),a),2));
 #endif
-//	    t[0] += 2*a*t[j];                  /*left boundary*/
+/*	    t[0] += 2*a*t[j];                  *left boundary*/
 	    for (i=2*j; i < nt-j; i += 2*j) {
 #ifdef SF_HAS_COMPLEX_H
 		t[i]   += (t[i+j]/z0+t[i-j]*z0)*a;
@@ -458,7 +458,7 @@ static void biorthogonal(bool adj)
 				   sf_cmul(t[i-j],z0)),
 			       a));
 #endif
-//		t[i]   += (t[i+j]+t[i-j])*a;
+/*		t[i]   += (t[i+j]+t[i-j])*a; */	
 		/* Update 1 */
 	    }
                 /* Step 1 */
@@ -475,7 +475,7 @@ static void biorthogonal(bool adj)
 				      sf_cmul(t[i+2*j],sf_conjf(z0))),
 				  a));
 #endif
-//		t[i+j] += (t[i]+t[i+2*j])*a;
+/*		t[i+j] += (t[i]+t[i+2*j])*a; */
 		/* Predict 2 */
 	    }	 
 #ifdef SF_HAS_COMPLEX_H	 
@@ -483,7 +483,7 @@ static void biorthogonal(bool adj)
 #else
 	    if (i+j < nt) t[i+j] = sf_cadd(t[i+j],sf_crmul(sf_crmul(sf_cmul(t[i],z0),a),2));
 #endif
-//	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
+/*	    if (i+j < nt) t[i+j] += 2*a*t[i];  *right boundary*/  
  
             a= 0.4435068522f;
 #ifdef SF_HAS_COMPLEX_H
@@ -491,7 +491,7 @@ static void biorthogonal(bool adj)
 #else
 	    t[0] = sf_cadd(t[0],sf_crmul(sf_crmul(sf_cmul(t[j],sf_conjf(z0)),a),2));
 #endif
-//	    t[0] += 2*a*t[j];                  /*left boundary*/
+/*	    t[0] += 2*a*t[j];                  *left boundary*/
 	    for (i=2*j; i < nt-j; i += 2*j) {
 #ifdef SF_HAS_COMPLEX_H
 		t[i]   += (t[i+j]/z0+t[i-j]*z0)*a;
@@ -503,7 +503,7 @@ static void biorthogonal(bool adj)
 				   sf_cmul(t[i-j],z0)),
 			       a));
 #endif
-//		t[i]   += (t[i+j]+t[i-j])*a;
+/*		t[i]   += (t[i+j]+t[i-j])*a; */
 		/* Update 2 */
 	    }
                 /* Step 2 */
@@ -515,27 +515,27 @@ static void biorthogonal(bool adj)
 #else
 	        t[i+j] = sf_crmul(t[i+j],a);
 #endif
-//		t[i+j] *= a;
+/*		t[i+j] *= a; */
 	    }	 
 #ifdef SF_HAS_COMPLEX_H
 	    if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
 #else
 	    if (i+j < nt) t[i+j] = sf_crmul(t[i+j],a);
 #endif
-//	    if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+/*	    if (i+j < nt) t[i+j] *= a;         *right boundary*/  
 #ifdef SF_HAS_COMPLEX_H
 	    t[0] /= a;                         /*left boundary*/
 #else
 	    t[0] = sf_crmul(t[0],(1/a));
 #endif
-//	    t[0] /= a;                         /*left boundary*/
+/*	    t[0] /= a;                         *left boundary*/
 	    for (i=2*j; i < nt-j; i += 2*j) {
 #ifdef SF_HAS_COMPLEX_H
 		t[i]  /= a;
 #else
 	        t[i] = sf_crmul(t[i],(1/a));
 #endif
-//		t[i]  /= a;
+/*		t[i]  /= a; */
 		/* Scale */
 	    }
 	}

@@ -29,7 +29,7 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2,bool bo
 int main (int argc, char* argv[]) 
 {
 	int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
-	int i,j,k,pass,ii;
+	int i,j,k,pass,ii,jj;
         int nfw;    /*nfw is the filter-window length*/
 	int m;
 	float a;   /*temporary variable*/
@@ -102,7 +102,7 @@ int main (int argc, char* argv[])
 
 				for(pass=1;pass<4;pass++)
 				{
-					for(int jj=0;jj<4-pass;jj++)
+					for(jj=0;jj<4-pass;jj++)
 					{
 						if(z[jj]>z[jj+1])
 						{

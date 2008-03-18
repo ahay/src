@@ -21,7 +21,6 @@
 #include "wavelet97.h"
 
 static int nt;
-//static void (*transform)(bool);
 static float *t;
 static bool inv;
 

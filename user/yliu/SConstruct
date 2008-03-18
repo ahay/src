@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-difference dwt97 freqintpef initial mf mlm mlwm saltpepper
+difference dwt97 initial mf mlm mlwm saltpepper
 snr swell seislet97 tvmf
 '''
 

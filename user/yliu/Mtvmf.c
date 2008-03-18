@@ -85,7 +85,7 @@ int main (int argc, char* argv[])
 
 	        /************1D reference median filtering****************/
 
-	        for(i=0;i<n2;i++)	        {
+	        for(i=0;i<n2;i++)	        {
 		        for(j=0;j<n1;j++)
 		        {
 			        for(k=0;k<nfw;k++)

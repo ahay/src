@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
 {
 	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
 	int wn1,wn2;/*n1 is weight data traces length, n2 is the number of weight data traces*/
-	int i,j,k,pass;
+	int i,j,k,pass,jj;
         int nfw;    /*nfw is the filter-window length*/
 	int m;
 	float a;   /*temporary variable*/
@@ -112,7 +112,7 @@ int main (int argc, char* argv[])
 	    z[3]=wmedianfilter(temp4,tempw4,nfw);
 
 	    for(pass=1;pass<4;pass++){
-	      for(int jj=0;jj<4-pass;jj++){
+	      for(jj=0;jj<4-pass;jj++){
 		if(z[jj]>z[jj+1]){
 		  a=z[jj];
 		  z[jj]=z[jj+1];

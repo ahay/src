@@ -83,22 +83,22 @@ http://registry.gimp.org/
 #pragma pack(1)
 
 typedef struct {
-    unsigned char ident_size;       // size of ID field that follows 18 byte header (0 usually)
-    unsigned char colormap_type;    // type of color map 0 = none, 1 = has palette
-    unsigned char image_type;       // type of image 0 = none,1 = indexed, 2 = rgb, 3 = greyscale, + 8 = rle packed
+    unsigned char ident_size;       /* size of ID field that follows 18 byte header (0 usually) */
+    unsigned char colormap_type;    /* type of color map 0 = none, 1 = has palette */
+    unsigned char image_type;       /* type of image 0 = none,1 = indexed, 2 = rgb, 3 = greyscale, + 8 = rle packed */
 
-    unsigned short colormap_start;  // first color map entry in palette
-    unsigned short colormap_length; // number of colors in palette
-    unsigned char colormap_bits;    // number of bits per palette entry 8, 16, 24, 32
+    unsigned short colormap_start;  /* first color map entry in palette */
+    unsigned short colormap_length; /* number of colors in palette */
+    unsigned char colormap_bits;    /* number of bits per palette entry 8, 16, 24, 32 */
 
-    unsigned short x_start;         // image x origin
-    unsigned short y_start;         // image y origin
-    unsigned short width;           // image width in pixels
-    unsigned short height;          // image height in pixels
-    unsigned char bits;             // image bits per pixel 8, 16, 24, 32
-    unsigned char descriptor;       // image descriptor bits (vh flip bits)
+    unsigned short x_start;         /* image x origin */
+    unsigned short y_start;         /* image y origin */
+    unsigned short width;           /* image width in pixels */
+    unsigned short height;          /* image height in pixels */
+    unsigned char bits;             /* image bits per pixel 8, 16, 24, 32 */
+    unsigned char descriptor;       /* image descriptor bits (vh flip bits) */
 
-    // colormap (if defined) and pixel data follow header
+    /* colormap (if defined) and pixel data follow header */
 } TGA_HEADER;
 
 #define BUFFER_SIZE 1024

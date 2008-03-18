@@ -128,7 +128,7 @@ int main (int argc, char ** argv)
        loadBank(aa,dat,datf);
 
        /* reading the receiver-slice of traveltime table */
-       //itt = floor((o2-o2t)/d2)+i2;
+       /* itt = floor((o2-o2t)/d2)+i2; */
        itt = floor((xr+eps-o3t)/d3t);
        fslice_get(tabtt,itt,tr[0]);
 
