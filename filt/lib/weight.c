@@ -84,9 +84,9 @@ void sf_cweight_apply(int nx, sf_complex *xx)
 
     for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	    xx[i] *= w[i];
+      xx[i] *= w[i]*w[i];
 #else
-	    xx[i] = sf_crmul(xx[i],w[i]);
+      xx[i] = sf_crmul(xx[i],w[i]*w[i]);
 #endif
     }
 }

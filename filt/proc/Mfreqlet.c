@@ -36,10 +36,10 @@ static void scale(int n1,int nw,sf_complex *pp)
 int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, nw, n1w, i, ncycle;
-    bool inv;
-    float *w0, d1, perc;
+    bool inv, verb;
+    float *w0, d1, perc, qdif0=0., pdif0=0., qdif, pdif, pi;
     char *type;
-    sf_complex *pp, *qq, *z0, *q0;
+    sf_complex *pp, *qq, *z0, *q0, *p0;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -67,6 +67,9 @@ int main(int argc, char *argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* forward or inverse transform */
+
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of IRLS iterations */
@@ -119,6 +122,16 @@ int main(int argc, char *argv[])
 	    for (i1=0; i1 < n1w; i1++) {
 		q0[i1] = qq[i1];
 	    }
+
+	    if (verb) {
+	      p0 = sf_complexalloc(n1);
+	      for (i1=0; i1 < n1; i1++) {
+		p0[i1] = pp[i1];
+	      }
+	    } else {
+	      p0 = NULL;
+	    }
+
 	    for (i=0; i < ncycle; i++) {
 		freqlets_lop(false,false,n1w,n1,qq,pp);
 		scale(n1,-nw,pp);
@@ -128,6 +141,30 @@ int main(int argc, char *argv[])
 		}
 		sf_csharpen(qq);
 		sf_cweight_apply(n1w,qq);
+
+		if (verb) {		  
+		  pdif = 0.;
+		  for (i1=0; i1 < n1; i1++) {
+		    pi = cabsf(pp[i1]-p0[i1]);
+		    pdif += pi*pi;
+		  }
+		  qdif = 0.;
+		  for (i1=0; i1 < n1w; i1++) {
+		    qdif += cabsf(qq[i1]);
+		  }
+
+		  if (0==i) {
+		    pdif0 = pdif;
+		    qdif0 = qdif;
+		    pdif=1.;
+		    qdif=1.;
+		  } else {
+		    pdif /= pdif0;
+		    qdif /= qdif0;
+		  }
+
+		  sf_warning("iteration %d dres: %f mnorm: %f",i,pdif,qdif);
+		}
 	    }
 	}
 
