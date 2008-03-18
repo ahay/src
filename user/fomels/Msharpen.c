@@ -51,7 +51,8 @@ int main(int argc, char* argv[])
 
       if (NULL != sf_getstring("other")) {
 	other = sf_input("other");
-	if (SF_FLOAT != sf_gettype(other)) sf_error("Need float type in other");
+	if (SF_FLOAT != sf_gettype(other)) 
+	    sf_error("Need float type in other");
 	sf_floatread(dout,n,other);
 	sf_sharpen(dout);
       } else {
@@ -72,7 +73,8 @@ int main(int argc, char* argv[])
 
       if (NULL != sf_getstring("other")) {
 	other = sf_input("other");
-	if (SF_COMPLEX != sf_gettype(other)) sf_error("Need complex type in other");
+	if (SF_COMPLEX != sf_gettype(other)) 
+	    sf_error("Need complex type in other");
 	sf_complexread(cout,n,other);
 	sf_csharpen(cout);
       } else {

@@ -21,13 +21,25 @@
 
 #include "freqlets.h"
 
+static void scale(int n1,int nw,sf_complex *pp)
+{
+    int i1;
+    for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+	pp[i1] /= nw;
+#else
+	pp[i1] = sf_crmul(pp[i1],1.0f/nw);
+#endif
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, nw, n1w, niter, i, ncycle;
-    bool inv, adj, unit;
+    int i1, n1, i2, n2, nw, n1w, i, ncycle;
+    bool inv;
     float *w0, d1, perc;
     char *type;
-    sf_complex *pp, *qq, *z0, *q;
+    sf_complex *pp, *qq, *z0, *q0;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -54,42 +66,26 @@ int main(int argc, char *argv[])
     n1w = n1*nw;
 
     if (!sf_getbool("inv",&inv)) inv=false;
-    /* if y, do inverse transform */
-
-    if (!sf_getbool("adj",&adj)) adj=true;
-    /* if y, do adjoint transform */
-
-    if (!sf_getbool("unit",&unit)) unit=false;
-    /* if y, use unitary scaling */
-
-    if (!sf_getint("niter",&niter)) niter=0;
-    /* number of iterations for inversion */
+    /* forward or inverse transform */
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of IRLS iterations */
-
+    
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    sf_sharpen_init(n1w,perc);
-    
-    if (adj) {
-	n2 = sf_leftsize(in,1);
-	sf_putint(out,"n2",nw);
-	(void) sf_shiftdim(in, out, 2);
-    } else {
+
+    if (inv) {
 	n2 = sf_leftsize(in,2);
 	sf_unshiftdim(in, out, 2);
 	sf_putint(out,"n3",1);
-    } 
+    } else {
+	n2 = sf_leftsize(in,1);
+	sf_putint(out,"n2",nw);
+	(void) sf_shiftdim(in, out, 2);
+    }
 
     pp = sf_complexalloc(n1);
     qq = sf_complexalloc(n1w);
-
-    if (ncycle > 0) {
-	q = sf_complexalloc(n1w);
-    } else {
-	q = NULL;
-    }
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     /* sampling in the input file */
@@ -97,10 +93,7 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    freqlets_init(n1,d1,inv,unit,type[0],nw,w0,z0);
-
-
-    sf_cconjgrad_init(n1w,n1w,n1,n1,1.0,1.e-6,true,false);
+    freqlets_init(n1,d1,true,true,type[0],nw,w0,z0);
     
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
@@ -110,36 +103,40 @@ int main(int argc, char *argv[])
 	    sf_complexread(z0,nw,w);
 	}
 
-	if (adj) {
-	    sf_complexread(pp,n1,in);
-	} else {
+	if (inv) {
 	    sf_complexread(qq,n1w,in);
+	} else {
+	    sf_complexread(pp,n1,in);
 	} 
 
-	freqlets_lop(adj,false,n1w,n1,qq,pp);
+	freqlets_lop(!inv,false,n1w,n1,qq,pp);
 
-	if (adj) {
-	    /* do inversion if ncycle > 0 */
+	if (!inv && ncycle > 0) {
+	    /* m_k+1 = S[ A*d + (I-A*F)*m_k], m_0 = A*d */
+
+	    sf_sharpen_init(n1w,perc);
+	    q0 = sf_complexalloc(n1w);
+	    for (i1=0; i1 < n1w; i1++) {
+		q0[i1] = qq[i1];
+	    }
 	    for (i=0; i < ncycle; i++) {
-		sf_cconjgrad(NULL,freqlets_lop,sf_cweight_lop,q,qq,pp,niter);
+		freqlets_lop(false,false,n1w,n1,qq,pp);
+		scale(n1,-nw,pp);
+		freqlets_lop(true,true,n1w,n1,qq,pp);
+		for (i1=0; i1 < n1w; i1++) {
+		    qq[i1] += q0[i1];
+		}
 		sf_csharpen(qq);
+		sf_cweight_apply(n1w,qq);
 	    }
 	}
 
-	if (adj) {
-	    sf_complexwrite(qq,n1w,out);
-	} else {
-	    if (inv) {
-		for (i1=0; i1 < n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		    pp[i1] /= nw;
-#else
-		    pp[i1] = sf_crmul(pp[i1],1.0f/nw);
-#endif
-		}
-	    } 
+	if (inv) {
+	    scale(n1,nw,pp);
 	    sf_complexwrite(pp,n1,out);
-	}
+	} else {
+	    sf_complexwrite(qq,n1w,out);
+	} 
     }
 		
     exit(0);

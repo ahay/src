@@ -45,7 +45,7 @@ for prog in mains:
 
 for cfile in Split('dmeig'):
     test = env.StaticObject('Test' + cfile + '.o', cfile + '.c',
-                            CFLAGS=' -DTEST')
+                            CCFLAGS=env.get('CCFLAGS','')+' -DTEST')
     prog = env.Program(test,PROGSUFFIX='.x',PROGPREFIX='')
 
 ######################################################################

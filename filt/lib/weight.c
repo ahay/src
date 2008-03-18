@@ -77,4 +77,18 @@ void sf_cweight_lop (bool adj, bool add, int nx, int ny,
     }
 }
 
+void sf_cweight_apply(int nx, sf_complex *xx)
+/*< apply weighting in place >*/
+{
+    int i;
+
+    for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
+	    xx[i] *= w[i];
+#else
+	    xx[i] = sf_crmul(xx[i],w[i]);
+#endif
+    }
+}
+
 /* 	$Id$	 */
