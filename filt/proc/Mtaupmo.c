@@ -23,12 +23,24 @@
 
 #include "fint1.h"
 
+static float p, f, dt, *vel;
+
+static float nmo_map(float t, int it) {
+    float ft;
+    
+    ft = vel[it];
+    ft = 1.-p*ft*ft;
+    if (ft > 0.) 
+	f += sqrtf(ft); 
+    return f*dt;
+}
+
 int main (int argc, char* argv[])
 {
     fint1 nmo;
-    int it, iz, ip, ix, nt, np, nx, nw;
-    float dt, t0, dp, p0, p, f, ft;
-    float *trace, *vel;
+    int ip, ix, nt, np, nx, nw, mute;
+    float t0, dp, p0, str;
+    float *trace;
     sf_file taup, nmod, velocity;
 
     sf_init (argc,argv);
@@ -37,18 +49,26 @@ int main (int argc, char* argv[])
     nmod = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(taup)) sf_error("Need float input");
+
     if (!sf_histint(taup,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(taup,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(taup,"o1",&t0)) sf_error("No o1= in input");
+
     if (!sf_histint(taup,"n2",&np)) sf_error("No n2= in input");
     if (!sf_histfloat(taup,"d2",&dp)) sf_error("No d2= in input");
     if (!sf_histfloat(taup,"o2",&p0)) sf_error("No o2= in input");   
 
-    /* half velocity ??? */
-    p0 *= 0.5;
-    dp *= 0.5;
-
     nx = sf_leftsize(taup,2);
+
+    if (!sf_getint("mute",&mute)) mute=12;
+    /* mute zone */
+    if (!sf_getfloat("str",&str)) str=0.5;
+    /* maximum stretch */
+
+    /*
+      p0 *= 0.5;
+      dp *= 0.5;
+    */
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* interpolation accuracy */
@@ -56,7 +76,7 @@ int main (int argc, char* argv[])
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
 
-    nmo = fint1_init (nw, nt, 0);
+    nmo = fint1_init (nw, nt, mute);
 
     for (ix=0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
@@ -69,27 +89,7 @@ int main (int argc, char* argv[])
 	    fint1_set(nmo,trace);
 
 	    f = 0.;
-	    for (it=0; it < nt; it++) {
-		ft = vel[it];
-		ft = 1.-p*ft*ft;
-		if (ft < 0.) {
-		    for (; it < nt; it++) {
-			trace[it]=0.;			
-		    }
-		    break;
-		} 
-
-		f += sqrtf(ft);
-
-		ft = (f-t0)/dt;
-		iz = f;
-
-		if (iz >= 0 && iz < nt) {
-		    trace[it] = fint1_apply(nmo,iz,f-iz,false);
-		} else {
-		    trace[it] = 0.;
-		}
-	    }
+	    stretch(nmo,nmo_map,nt,dt,t0,nt,dt,t0,trace,str);
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
