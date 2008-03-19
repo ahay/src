@@ -65,7 +65,9 @@ static void shooting(void)
 	ts=0.0;
 
 	for( j=1; j<nt; j++) {
+	    ind=i+nx*j; 
 	    tj=j*ht;
+
 	    while( ts < tj && xs>=0.0 && xs<=xmax && ys>=0.0 && ys<=ymax ) {
 		arr=rkm(xs,ys,as,ts,ht);
 		xs=arr.x;
@@ -73,12 +75,15 @@ static void shooting(void)
 		as=arr.a;
 		ts=arr.t;
 	    }
+
 	    if( xs>=0.0 && xs<=xmax && ys>=0.0 && ys<=ymax ) {
-		ind=i+nx*j; 
 		xr[ind]=xs;
 		yr[ind]=ys;
 		s(xs,ys);
 		w[ind]=v;
+	    } else {
+		xr[ind]=xr[ind-1];
+		yr[ind]=yr[ind-1];
 	    }
 	}
     }
@@ -114,7 +119,7 @@ static void rhs( float x, float y, float a, float *kx, float *ky, float *ka)
     s(x,y);
     *kx = sinf(a)*v;
     *ky = cosf(a)*v;
-    *ka = gradv[1]*sin(a)/hx-gradv[0]*cos(a)/hy;
+    *ka = gradv[1]*sin(a)/hy-gradv[0]*cos(a)/hx;
 }
 
 /*******************************************************/
