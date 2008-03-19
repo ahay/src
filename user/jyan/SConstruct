@@ -3,7 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-afac convolve
+afac 
+convolve convolve2
+ewefd2
 '''
 
 try:  # distributed version

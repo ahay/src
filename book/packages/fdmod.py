@@ -438,9 +438,9 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
 def ewefd2(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
-    Flow( [odat,owfl],[idat,cccc,dens,sou,rec,'./EWEFD.x'],
+    Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
-         ./EWEFD.x
+         ewefd2
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
