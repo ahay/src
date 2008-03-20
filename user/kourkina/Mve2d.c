@@ -43,7 +43,7 @@ static sf_eno2 pnt;
 static void shooting(void) 
 {
     int i, j, ind;
-    float tj, xs, ys, as, ts;
+    float xs, ys, as, ts;
     struct darr arr;
     
     for( i=0; i<nx; i++ ) {
@@ -65,27 +65,29 @@ static void shooting(void)
 	ts=0.0;
 
 	for( j=1; j<nt; j++) {
+	    arr=rkm(xs,ys,as,ts,ht);
+	    xs=arr.x;
+	    ys=arr.y;
+	    as=arr.a;
+	    ts=arr.t;
+
 	    ind=i+nx*j; 
-	    tj=j*ht;
 
-	    while( ts < tj && xs>=0.0 && xs<=xmax && ys>=0.0 && ys<=ymax ) {
-		arr=rkm(xs,ys,as,ts,ht);
-		xs=arr.x;
-		ys=arr.y;
-		as=arr.a;
-		ts=arr.t;
-	    }
-
-	    if( xs>=0.0 && xs<=xmax && ys>=0.0 && ys<=ymax ) {
+	    if( xs>=0.0 && xs<=xmax && 
+		ys>=0.0 && ys<=ymax ) {
 		xr[ind]=xs;
 		yr[ind]=ys;
 		s(xs,ys);
 		w[ind]=v;
 	    } else {
-		xr[ind]=xr[ind-1];
-		yr[ind]=yr[ind-1];
+		for(; j<nt; j++) {
+		    ind=i+nx*j;
+		    xr[ind]=xs;
+		    yr[ind]=ys;
+		    w[ind]=v;
+		}
 	    }
-	}
+	}	
     }
 }
 
