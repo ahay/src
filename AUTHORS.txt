@@ -1,5 +1,6 @@
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@beg.utexas.edu>
+Maria Cameron <kourkina@earthlink.net>
 Sergey Fomel <sergey.fomel@beg.utexas.edu> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>

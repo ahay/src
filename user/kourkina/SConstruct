@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-lf2d ve2d spiral
+cameron2d ve2d spiral
 '''
 
 try:  # distributed version

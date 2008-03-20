@@ -8,6 +8,7 @@ def velcon(data,        # data name
            v0,          # initial velocity
            dv,          # velocity step
            nx,          # lateral dimension
+           nh,          # number of offsets
            padt,        # time padding
            padt2,       # extra time padding
            padx=None,   # lateral padding
@@ -27,7 +28,7 @@ def velcon(data,        # data name
     vm = v0+0.5*nv*dv
     
     mig=data+'-mig'
-    Flow(mig,data,'preconstkirch vel=%g' % v0)
+    Flow(mig,data,'preconstkirch vel=%g' % v0,split=[0],axis=[4,nh])
 
     if n1:
         mig2cip = '''
@@ -66,7 +67,7 @@ def velcon(data,        # data name
          ''' % (nv,dv,v0,padt,padt2,nx))
     
     if v1:
-        Flow(mig+'1',data,'preconstkirch vel=%g' % v1)
+        Flow(mig+'1',data,'preconstkirch vel=%g' % v1,split=[0],axis=[4,nh])
         Flow(cip+'1',mig+'1',mig2cip)
 
         migr = data+'-migr'

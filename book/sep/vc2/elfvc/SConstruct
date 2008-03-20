@@ -21,6 +21,7 @@ velcon.velcon('elf',
               v0=1400,     # initial velocity
               dv=25,       # velocity step
               nx=1000,     # lateral dimension
+              nh=136,      # number of offsets
               padt=1024,   # time padding
               padt2=4096,  # extra time padding
               padx=1025,   # lateral padding
@@ -73,8 +74,8 @@ Plot('ppick1','ppick',graph(7,1))
 Plot('mpick0','mpick',graph(0,10))
 Plot('mpick1','mpick',graph(7,1))
 
-Result('escan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
-Result('eslice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
+#Result('escan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
+#Result('eslice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
 
 Flow('left0','elf-unc','math output=x1-0.5*input')
 Flow('rite0','elf-unc','math output=x1+0.5*input')
@@ -85,14 +86,14 @@ Flow('rite','rite0 rite1','cmplx ${SOURCES[:2]}',stdin=0)
 
 Flow('arr','left rite',
      'cat axis=3 ${SOURCES[1]} | transp plane=13')
-Result('earr','arr',
-       '''
-       window j2=10 j3=10 | put n3=1 n2=8000 |
-       graph title="Structural Uncertainty"
-       min1=0 max1=3.196 min2=0 max2=13320 pad=n
-       transp=y yreverse=y wheretitle=b wherexlabel=t
-       label1="Time (s)" label2="Lateral (m)"
-       ''')
+#Result('earr','arr',
+#       '''
+#       window j2=10 j3=10 | put n3=1 n2=8000 |
+#       graph title="Structural Uncertainty"
+#       min1=0 max1=3.196 min2=0 max2=13320 pad=n
+#       transp=y yreverse=y wheretitle=b wherexlabel=t
+#       label1="Time (s)" label2="Lateral (m)"
+#       ''')
 
 End()
        
