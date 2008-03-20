@@ -705,6 +705,8 @@ class TeXPaper(Environment):
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),
+			 'RSF_REPOSITORY': os.environ.get('RSF_REPOSITORY'),
+			 'RSF_ENSCRIPT': WhereIs('enscript'),
                          'HOME': os.environ.get('HOME')},
                     SCANNERS=[LaTeX],
                     BUILDERS={'Latify':Latify,
