@@ -1,4 +1,7 @@
-/* 3-D Inverse normal moveout.*/
+/* 3-D Inverse normal moveout.
+
+velocity file contains slowness squared with n2=3 (wx,wy,wxy)
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,100 +29,58 @@
 int main (int argc, char* argv[])
 {
     map4 nmo; /* using cubic spline interpolation */
-    bool half, slow, ellipse;
-    int it,ix,iy, ih, nt, nx, ny, nhx, nhy, nw, CDPtype;
-    float dt, t0, hx, hy, h0x, h0y, h, f, dhx, dhy, eps, dc, vx, vy, vxy;
-    float *trace, *vel, *off,*offx,*offy, *str, *out;
-    sf_file cmp, nmod, velocity, offset;
+    bool half;
+    int it,ix,iy, nt, nx, ny, nw, i4, n4, n;
+    float dt, t0, x, y, x0, y0, f, dx, dy, eps;
+    float *trace, *vx, *vy, *vxy, *str, *out;
+    sf_file cmp, nmod, vel;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
     nmod = sf_output("out");
     
-    sf_warning("WARNING!!!!  inmo3 is not ready for use yet.  This message will be removed or edited when it is.-wb");
-
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
 
-    if (!sf_histint(cmp,"n2",&nhx)) sf_error("No n2= in input");
-    if (!sf_histint(cmp,"n3",&nhy)) sf_error("No n3= in input");
+    if (!sf_histint(cmp,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histint(cmp,"n3",&ny)) sf_error("No n3= in input");
+    n4 = sf_leftsize(cmp,3);
+    
+    vel = sf_input("velocity");
+    if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float velocity");
+    if (!sf_histint(vel,"n1",&n) || nt != n) sf_error("Need n1=%d in velocity",nt);
+    if (!sf_histint(vel,"n2",&n) || 3 != n) sf_error("Need n2=3 in velocity",nt);
+    if (n4 != sf_leftsize(vel,2)) sf_error("Wrong dimensions in velocity");
 
-    offx = sf_floatalloc(nhx);
-    offy = sf_floatalloc(nhy);
+    if (!sf_histfloat(cmp,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(cmp,"o2",&x0)) sf_error("No o2= in input");
+    if (!sf_histfloat(cmp,"d3",&dy)) sf_error("No d3= in input");
+    if (!sf_histfloat(cmp,"o3",&y0)) sf_error("No o3= in input");
+    
 
-    if (NULL != sf_getstring("velocity")) {
-        velocity = sf_input("velocity");
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second and third axes are half-offset instead of full offset */
+	
+    if (half) { /* get full offset - multiply by 2 */
+      dx *= 2.;
+      dy *= 2.;
+      x0 *= 2.;
+      y0 *= 2.;
+      sf_warning("Since half=y, offsets were doubled.");
     }else{
-        sf_warning("No velocity file specified. Using velocity ellipse parameters.");
-        ellipse='y';
-        if (NULL == sf_getstring("vx")) sf_error("No vx= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-        if (NULL == sf_getstring("vy")) sf_error("No vy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
-        if (NULL == sf_getstring("vxy")) sf_error("No vxy= in input. Must specify velocity file, or vx= vy= vxy= parameters.");
+      sf_warning("Since half=n, offsets not doubled.");
     }
-
-    CDPtype=1;
-    if (NULL != sf_getstring("offset")) {
-	offset = sf_input("offset");
-	sf_floatread (off,nhx,offset);
-	sf_fileclose(offset);
-    } else {
-        sf_warning("No offset file specified. Using data dimensions.");
-	if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
-	if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
-	if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
-	if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
-    
-
-	if (!sf_getbool("half",&half)) half=true;
-	/* if y, the second and third axes are half-offset instead of full offset */
 	
-	if (half) {
-	    dhx *= 2.;
-	    dhy *= 2.;
-	    h0x *= 2.;
-	    h0y *= 2.;
-	    sf_warning("Since half=y, offsets were doubled.");
-	}else{
-            sf_warning("Since half=n, offsets not doubled.");
-	}
-	
-	if (sf_histfloat(cmp,"d4",&dc)) {
-	    CDPtype=0.5+0.5*dhx/dc;
-	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
-	} 	   
-	if (1 > CDPtype) CDPtype=1;
-	sf_warning("CDPtype=%d",CDPtype);
-
-	for (ih = 0; ih < nhx; ih++) {
-	  offx[ih] = h0x + ih*dhx;
-	}
-	for (ih = 0; ih < nhy; ih++) {
-	  offy[ih] = h0y + ih*dhy;
-	}
-	sf_warning("Offset vectors assigned.");
-
-    }
-
-    if (!sf_getbool("slowness",&slow)) slow=false;
-    /* if y, use slowness instead of velocity */
-
-    if (!sf_getbool("ellipse",&ellipse)) ellipse=false;
-    /* if y, use ellipse instead of velocity */
-    
-
-    nx = sf_leftsize(cmp,2);
-    ny = sf_leftsize(cmp,3);
-
-    if (!sf_getfloat ("h0x",&h0x)) h0x=0.;
-    if (!sf_getfloat ("h0y",&h0y)) h0y=0.;
-    /* reference offset */
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
     trace = sf_floatalloc(nt);
-    vel = sf_floatalloc(nt);
+    vx = sf_floatalloc(nt);
+    vy = sf_floatalloc(nt);
+    vxy = sf_floatalloc(nt);
+
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
 
@@ -128,72 +89,38 @@ int main (int argc, char* argv[])
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
     
-    if (ellipse == true) {
-      sf_warning("Removing NMO using ellipse parameters...");
-      for (ix = 0; ix < nx; ix++) {
-	for (iy = 0; iy < ny; iy++) {
-	  for (ih = 0; ih < nhx; ih++) {
-	    sf_floatread (trace,nt,cmp);
+    for (i4=0; i4 < n4; i4++) { /* loop over cmps */
+      sf_floatread (vx,nt,vel);
+      sf_floatread (vy,nt,vel);
+      sf_floatread (vxy,nt,vel);
+
+      for (iy = 0; iy < ny; iy++) {
+	y = y0+iy*dy;
+
+	for (ix = 0; ix < nx; ix++) {
+	  x = x0 + ix*dx;
+
+	  sf_floatread (trace,nt,cmp);
 	    
-	    hx = offx[ih] + (dhx/CDPtype)*(ix%CDPtype) - h0x;
-	    hy = offy[ih] + (dhy/CDPtype)*(iy%CDPtype) - h0y;
-	    /*h = h*h - h0*h0;*/
+	  for (it=0; it < nt; it++) {
+	    f = t0 + it*dt;
+	    f = f*f + x*x*vx[it]+y*y*vy[it]+2*x*y*vxy[it];
 	    
-	    for (it=0; it < nt; it++) {
-	      f = t0 + it*dt;
-	      f = f*f + hx*hx/(vx*vx)+hy*hy/(vy*vy)+2*hx*hy/(vxy*vxy);
-		
-	      if (f < 0.) {
-		str[it]=t0-10.*dt;
-	      } else {
-		str[it] = sqrtf(f);
-	      }
+	    if (f < 0.) {
+	      str[it]=t0-10.*dt;
+	    } else {
+	      str[it] = sqrtf(f);
 	    }
-
-	    stretch4_define (nmo,str);
-	    stretch4_apply (nmo,trace,out);
-	    
-	    sf_floatwrite (out,nt,nmod);
 	  }
-	}
-      }
-
-    } else {
-      sf_warning("Removing NMO using velocity model...");
-      for (ix = 0; ix < nx; ix++) {
-	for (iy = 0; iy < ny; iy++) {
-	  sf_floatread (vel,nt,velocity);	
-
-	  for (ih = 0; ih < nhx; ih++) {
-	    sf_floatread (trace,nt,cmp);
-	    
-	    hx = offx[ih] + (dhx/CDPtype)*(ix%CDPtype); 
-	    hy = offx[ih] + (dhy/CDPtype)*(iy%CDPtype);
-	    h = (hx-h0x)*(hx-h0x)+(hy-h0y)*(hy-h0y);
-	    
-	    for (it=0; it < nt; it++) {
-		f = t0 + it*dt;
-		if (slow) {
-		    f = f*f + h*vel[it]*vel[it];
-		} else {
-		    f = f*f + h/(vel[it]*vel[it]);
-		}
-		if (f < 0.) {
-		    str[it]=t0-10.*dt;
-		} else {
-		    str[it] = sqrtf(f);
-		}
-	    }
-
-	    stretch4_define (nmo,str);
-	    stretch4_apply (nmo,trace,out);
-	    
-	    sf_floatwrite (out,nt,nmod);
-	  }
-	}
-      }
-    }
-	
+	  
+	  stretch4_define (nmo,str);
+	  stretch4_apply (nmo,trace,out);
+	  
+	  sf_floatwrite (out,nt,nmod);
+	} /* ix */
+      } /* iy */
+    } /* i4 */
+    
     exit (0);
 }
 
