@@ -52,6 +52,11 @@ mathematica = WhereIs('mathematica')
 if mathematica:
     mathematica = WhereIs('math')
 matlab      = WhereIs('matlab')
+try:
+    import numpy, pylab
+    haspylab=1
+except:
+    haspylab=0
 
 vpsuffix  = '.vpl'
 pssuffix  = '.eps'
@@ -610,24 +615,29 @@ if latex2html:
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir -image_type %s %s' %
                    (inputs,l2hdir,latex2html,itype,init),src_suffix='.ltx')
-
-if mathematica and epstopdf:
-     Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
-                    '< $SOURCE >& /dev/null > /dev/null && '
-                    '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
-                    (mathematica,epstopdf),
-                    suffix='.pdf',src_suffix='.ma')
-if matlab and epstopdf:
-    matlabpath = os.environ.get('MATLABPATH')
-    if matlabpath:
-        matlabpath = string.join([matlabpath,'Matlab'],':')
-    else:
-        matlabpath = 'Matlab'
-    Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nojvm '
-                     '< $SOURCE >& /dev/null > /dev/null && '
-                     '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
-                     (matlabpath,matlab,epstopdf),
-                     suffix='.pdf',src_suffix='.ml')
+if epstopdf:
+    if mathematica:
+        Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
+                       '< $SOURCE >& /dev/null > /dev/null && '
+                       '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
+                       (mathematica,epstopdf),
+                       suffix='.pdf',src_suffix='.ma')
+    if matlab:
+        matlabpath = os.environ.get('MATLABPATH')
+        if matlabpath:
+            matlabpath = string.join([matlabpath,'Matlab'],':')
+        else:
+            matlabpath = 'Matlab'
+        Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nojvm '
+                         '< $SOURCE >& /dev/null > /dev/null && '
+                         '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
+                         (matlabpath,matlab,epstopdf),
+                         suffix='.pdf',src_suffix='.ml')
+    if haspylab:
+        Pylab = Builder(action = '%s $SOURCE && '
+                        '%s junk_py.eps -o=$TARGET && rm junk_py.eps' %
+                        (WhereIs('python'),epstopdf),
+                        suffix='.pdf',src_suffix='.py')
      
 Color = Builder(action = Action(colorize),suffix='.html')
                    
@@ -747,10 +757,14 @@ class TeXPaper(Environment):
                 self.imgs = []
         if (acroread and ps2eps) or pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
-        if mathematica and epstopdf:
-            self.Append(BUILDERS={'Math':Math})
-        if matlab and epstopdf:
-            self.Append(BUILDERS={'Matlab':Matlab})
+        if epstopdf:
+            if mathematica:
+                self.Append(BUILDERS={'Math':Math})
+            if matlab:
+                self.Append(BUILDERS={'Matlab':Matlab})
+            if haspylab:
+                self.Append(BUILDERS={'Pylab':Pylab})
+            
         self.scons = []
         self.figs = []
         self.uses = []
@@ -835,6 +849,18 @@ class TeXPaper(Environment):
             matlabdir = os.path.join(self.doc,'Matlab')
             self.Install2(matlabdir,mtls)
             self.Alias('figinstall',matlabdir)
+        # pylab figures
+        pyls = glob.glob('%s/Pylab/*.py' % topdir)
+        if pyls:
+            for pyl in pyls:
+                pdf = re.sub(r'([^/]+)\.py$',
+                             os.path.join(resdir,'\g<1>.pdf'),pyl)
+                if haspylab and epstopdf:
+                    self.Pylab(pdf,pyl)
+                crfigs.append(pdf)
+            pylabdir = os.path.join(self.doc,'Pylab')
+            self.Install2(pylabdir,pyls)
+            self.Alias('figinstall',pylabdir)
         # xfig figures:
         figs =  glob.glob('%s/XFig/*.fig' % topdir)
         if figs: 

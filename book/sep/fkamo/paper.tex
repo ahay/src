@@ -94,7 +94,6 @@ described AMO.
 \plot{impresp1}{width=6in,height=4in}{AMO impulse response}
 
 \section{Stretching and aliasing}
-\inputdir{Matlab}
 
 For the purpose of this discussion we define stretching of a
 single-dimension space as any transformation from one space to
@@ -129,11 +128,21 @@ frequency given by the sampling rate ($f_{Ny}$). Thus, we can replace in our cal
 \Delta x_{\max }  = \frac{1}{{2f_{\max } }},
 \]
 which will result in a $\Delta y_{\max }$ larger than that computed using $\Delta x$, the sampling rate in the $x$ space.
+
+\inputdir{Matlab}
 \plot{strali}{width=6.5in}{Illustration of how aliasing can occur
 while stretching: if the same sampling rate is used for the $y$-space
 (lower plot) as for the $x$-space (upper plot), serious aliasing will
 occur when transforming back to $x$-space. This will not happen if the
 sampling rate in the $y$-space is smaller than or equal to $\Delta y_{\max }$}
+
+\inputdir{Pylab}
+\plot{pystrali}{width=6.5in}{Illustration of how aliasing can occur
+while stretching: if the same sampling rate is used for the $y$-space
+(lower plot) as for the $x$-space (upper plot), serious aliasing will
+occur when transforming back to $x$-space. This will not happen if the
+sampling rate in the $y$-space is smaller than or equal to $\Delta y_{\max }$}
+
 In order to compute $\Delta y_{\max }$, we will consider two points in the $x$ space, as seen in Fig. \ref{fig:strali}, such as
 \begin{equation}
 \label{eqn:xa}
