@@ -20,14 +20,13 @@
 #include <rsf.h>
 
 #include "diplet.h"
-#include "hilbert.h"
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, i3, n3, n12, ip, np, n12p, niter;
+    int n1, n2, i3, n3, n12, np, n12p, ncycle;
     bool inv, adj;
     char *type;
-    float *pp, *qq, ***ww=NULL, *hilb=NULL, ***dd, eps, *q;
+    float *pp, *qq, ***dd, eps;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -50,61 +49,32 @@ int main(int argc, char *argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
 
-    if (!sf_getbool("adj",&adj)) adj=false;
-    /* if y, do adjoint transform */
-
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
-    if (!sf_getint("niter",&niter)) niter=0;
+    if (!sf_getint("niter",&ncycle)) ncycle=0;
     /* number of iterations */
 
     if (adj) {
 	n3 = sf_leftsize(in,2);
 	sf_putint(out,"n3",np);
 	sf_putint(out,"n4",n3);
-	if (niter) {
-	    ww = sf_floatalloc3(n1,n2,np);
-	    hilb = sf_floatalloc(n1);
-	    sf_weight_init(ww[0][0]);
-	    hilbert_init(n1, 6, 1.);
-	}
     } else {
 	n3 = sf_leftsize(in,3);
 	sf_putint(out,"n3",n3);
     }
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* wavelet type (haar,linear) */
+    /* wavelet type (haar,linear,biorthogonal), default is linear */
     
-    diplet_init(n1,n2,np,dd,inv,eps,type[0]);
+    diplet_init(n1,n2,np,dd,true,eps,type[0]);
     
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dd[0][0],n12p,dip);	
 	
-	if (adj) {
+	if (!inv) {
     	    sf_floatread(pp,n12,in);
-	    if (0==niter) {
-		diplet_lop(adj,false,n12p,n12,qq,pp);
-	    } else {
-		sf_solver (diplet_lop,sf_cgstep,
-			   n12p,n12,qq,pp,niter,"verb",true,"end");
-		sf_cgstep_close();
-
-		/* find envelope */
-		for (ip=0; ip < np; ip++) {
-		    for (i2=0; i2 < n2; i2++) {
-			q = qq+(i2+ip*n2)*n1;
-			hilbert(q,hilb);
-			for (i1=0; i1 < n1; i1++) {
-			    ww[ip][i2][i1] = hypotf(qq[i1],hilb[i1])/(i2+1);
-			}
-		    }
-		}
-		sf_solver_prec (diplet_lop,sf_cgstep,sf_weight_lop,n12p, 	                 
-				n12p,n12,qq,pp,niter,0.,"verb",true,"end");
-		sf_cgstep_close();
-	    }
+	    diplet_lop(adj,false,n12p,n12,qq,pp);
 	    sf_floatwrite(qq,n12p,out);
 	} else {
 	    sf_floatread(qq,n12p,in);
