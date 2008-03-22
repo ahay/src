@@ -50,8 +50,13 @@ for cig in (41,83,110,137,165):
 
 Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 
-Flow('pwk','bei-dip',
-     'remap1 n1=1500 | pwpick i0=125 eps=0.05 | window n1=1000')
+Flow('trace','bei-dip','window n2=1 | pad n1=1500 | math output=x1')
+Flow('pwk','bei-dip trace',
+     '''
+     remap1 n1=1500 | 
+     pwpick trace=${SOURCES[1]} i0=125 eps=0.05 | 
+     window n1=1000
+     ''')
 Plot('pwk',
      '''
      contour c0=0 dc=0.16 nc=25

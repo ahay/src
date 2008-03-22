@@ -1,4 +1,4 @@
-/* Picking by plane-wave construction. */
+/* Painting by plane-wave construction. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -25,11 +25,12 @@ int main (int argc, char *argv[])
     bool verb;
     int n1,n2,n3, i1,i2,i3, i0;
     float eps, **u, **p, *trace, t0, dt;
-    sf_file out, dip;
+    sf_file out, dip, seed;
 
     sf_init(argc,argv);
     dip = sf_input("in");
     out = sf_output("out");
+    seed = sf_input("seed");
 
     if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
@@ -51,15 +52,13 @@ int main (int argc, char *argv[])
     p = sf_floatalloc2(n1,n2);
     trace = sf_floatalloc(n1);
 
-    for (i1=0; i1 < n1; i1++) {
-	u[i0][i1] = t0+i1*dt;
-    }
-
     for (i3=0; i3 < n3; i3++) {
 	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
 	sf_floatread(p[0],n1*n2,dip);
+	sf_floatread(trace,n1,seed);
+
 	for (i1=0; i1 < n1; i1++) {
-	    trace[i1] = u[i0][i1];
+	    u[i0][i1] = trace[i1];
 	}
 	for (i2=i0-1; i2 >= 0; i2--) {
 	    predict_step(false,false,trace,p[i2]);

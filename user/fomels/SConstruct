@@ -10,7 +10,7 @@ flat3 focus freqest gaussmooth green heat iphase jacobi jacobi2 kron
 lapfill lpf mandelbrot matmult max1 mig3 miss2 miss3 monof monof2
 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 patch pick pick0
 pick2 planemis2 planemis3 planereg2 planereg3 planesignoi pmshape2
-pradon predict pwd pwdix pwpick pwdsigk pwdsmooth2 roots seislet
+pradon predict pwd pwdix pwpaint pwdsigk pwdsmooth2 roots seislet
 seisigk shapebin shapebin1 shapesigk sharpen shearer similarity
 threshold timeshift tomo tree trismooth2 tristack twodip2 twofreq2
 velcon warp1 warpadd warpscan ztrace
