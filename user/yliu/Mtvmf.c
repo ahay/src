@@ -36,6 +36,7 @@ int main (int argc, char* argv[])
 	int m;
 	float medianv; /*temporary median variable*/
         bool boundary;
+	int alpha,beta,gamma,delta; /*time-varying window coefficients*/
 
 	float *trace;
 	float *tempt; /*temporary array*/
@@ -58,7 +59,28 @@ int main (int argc, char* argv[])
         /* if y, boundary is data, whereas zero*/
 
 	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
-	/* reference filter-window length (>7, positive and odd integer)*/
+	/* reference filter-window length (>delta, positive and odd integer)*/
+
+	if (!sf_getint("alpha",&alpha)) alpha=2;
+	/* time-varying window parameter "alpha" (default=2)*/
+
+	if (!sf_getint("beta",&beta)) beta=0;
+	/* time-varying window parameter "beta" (default=0)*/
+
+	if (!sf_getint("gamma",&gamma)) gamma=2;
+	/* time-varying window parameter "gamma" (default=2)*/
+
+	if (!sf_getint("delta",&delta)) delta=4;
+	/* time-varying window parameter "delta" (default=4)*/
+
+	if (alpha<beta || delta<gamma) sf_error("Need alpha>=beta && delta>=gamma"); 
+	if ((alpha%2)!=0) alpha = alpha+1;
+	if ((beta%2)!=0) beta = beta+1;
+	if ((gamma%2)!=0) gamma = gamma+1;
+	if ((delta%2)!=0) delta = delta+1;
+
+	if (nfw<=delta) sf_error("Need nfw>delta"); 
+
 	if (nfw < 7)  sf_error("Need positive integer input and greater than 7"); 
 	if (nfw%2 == 0)  nfw = (nfw+1);
 	m=(nfw-1)/2;
@@ -115,22 +137,22 @@ int main (int argc, char* argv[])
 			        {
 				        if(fabs(medianarray[n1*i+j])<medianv/2.0)
 				        {
-					        tempnfw=nfw+2;
+					        tempnfw=nfw+alpha;
 				        }
 				        else
 				        {
-					        tempnfw=nfw;
+					        tempnfw=nfw+beta;
 				        }
 			        }
 			        else
 			        {
 				        if(fabs(medianarray[n1*i+j])>=(medianv*2.0))
 				        {
-					        tempnfw=nfw-4;
+					        tempnfw=nfw-delta;
 				        }
 				        else
 				        {
-					        tempnfw=nfw-2;
+					        tempnfw=nfw-gamma;
 				        }
 			        }
 			        temp3 = sf_floatalloc(tempnfw);
