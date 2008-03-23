@@ -196,19 +196,21 @@ Test = Builder(action=Action(test))
 
 combine ={
     'SideBySideAniso': lambda n:
-    vppen + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
+        vppen + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
     'OverUnderAniso': lambda n:
-    vppen + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
+        vppen + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
     'SideBySideIso': lambda n:
-    vppen + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
+        vppen + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
     'OverUnderIso': lambda n:
-    vppen + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
+        vppen + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
     'TwoRows': lambda n:
-    vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % (n/2),
+        vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % (n/2),
+    'TwoColumns': lambda n:
+        vppen + " size=r vpstyle=n gridnum=2,%d $SOURCES" % (n/2),
     'Overlay': lambda n:
-    vppen + " erase=o vpstyle=n $SOURCES",
+        vppen + " erase=o vpstyle=n $SOURCES",
     'Movie': lambda n:
-    vppen + " vpstyle=n $SOURCES"
+        vppen + " vpstyle=n $SOURCES"
     }
 
 # Environmental variables to pass to SCons

@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     int n;
-    float perc,a, *din=NULL, *dout=NULL;
+    float perc, *din=NULL, *dout=NULL;
     sf_complex *cin=NULL, *cout=NULL;
     sf_datatype type;
     sf_file in, out, other;
@@ -36,9 +36,6 @@ int main(int argc, char* argv[])
      
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-
-    if (!sf_getfloat("perc",&a)) a=0.1;
-    /* sharpening cutoff */
 
     sf_sharpen_init(n,perc);
 
