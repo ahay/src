@@ -12,9 +12,9 @@ Henryk Modzelewski <henryk_modzelewski@mac.com>
 Colin Russell <crussell@eos.ubc.ca>
 Paul Sava <psava@mines.edu>
 Jeffrey Shragge <jshragge@gmail.com>
-Eduardo Filpo Silva 
+Eduardo Filpo Silva <effsilva@mines.edu>
 Ioan Vlad <i.vlad@yahoo.com>
-Jia Yan <jyan@dix.mines.edu>
+Jia Yan <jyan@mines.edu>
 
 Vplot authors:
 
