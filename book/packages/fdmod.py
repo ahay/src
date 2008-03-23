@@ -1,4 +1,5 @@
 from rsfproj import *
+import pplot
 
 # default parameters
 def param(par):
@@ -627,10 +628,9 @@ def wframe(frame,movie,index,custom,par):
     Flow([movie+'_plt',movie+'_bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
 
-#    Result(frame,[movie+'_plt',movie+'_bar'],
-#           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     Plot  (frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
+           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index
+           + wgrey(custom,par))
     
 # ------------------------------------------------------------
 # elastic wavefield movie
@@ -668,32 +668,26 @@ def emovie(wfld,custom,axis,par):
 # elastic wavefield movie
 def eframe(frame,movie,index,custom,axis,par):
 
-    if(axis==1):        
-        height=2*par['height']
-        if(height>10): height=10
-        ratio =2*par['ratio']
-    if(axis==2):
-        height=par['height']
-        if(height>10): height=10
-        ratio =0.5*par['ratio']
-
-    Flow([movie+'_plt',movie+'_bar'],movie,
+    Flow([movie+'-plt',movie+'-bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
-    
-    Result(frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index +
-           '''
-           grey title="" wantaxis=y screenratio=%f screenht=%f
-           gainpanel=a pclip=99 %s
-           %s
-           ''' % (ratio,height,par['labelattr'],custom) )
+
+    for i in range(2):
+        Plot(frame+'-'+str(i),movie+'-plt',
+             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
+             + cgrey('',par))
+
+    if(axis==1):
+        pplot.p2x1(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
+    else:
+        pplot.p1x2(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
     
 # ------------------------------------------------------------
 # plot elastic wavelet
 def ewavelet(wavelet,custom,par):
     
     for i in range(2):
-        Plot(wavelet+str(i+1),wavelet,
+        Plot(wavelet+'-'+str(i+1),wavelet,
              'window n2=1 f2=%d | transp | window |'%i +
              waveplot('%d %s'% (i,custom) ,par))
-    Result(wavelet,[wavelet+'1',wavelet+'2'],'SideBySideIso')
+    pplot.p1x2(wavelet,wavelet+'-1',wavelet+'-2',0.5,0.5,-11)
+
