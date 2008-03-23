@@ -634,7 +634,7 @@ def wframe(frame,movie,index,custom,par):
     
 # ------------------------------------------------------------
 # elastic wavefield movie
-def emovie(wfld,custom,axis,par):
+def emovieold(wfld,custom,axis,par):
 
     # loop over wavefield components
     for i in range(2):
@@ -680,6 +680,15 @@ def eframe(frame,movie,index,custom,axis,par):
         pplot.p2x1(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
     else:
         pplot.p1x2(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
+
+def emovie(movie,wfld,nframes,custom,axis,par):
+
+    for iframe in range(nframes):
+        tag = "-%02d" % iframe
+        eframe(movie+tag,wfld,iframe,custom,axis,par)
+
+    allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
+    Result(movie,allframes,'Movie')
     
 # ------------------------------------------------------------
 # plot elastic wavelet

@@ -50,7 +50,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,ssou,opot;
-    int  jsnap;
+    int  jsnap,ntsnap;
     int  jdata;
 
     /* I/O files */
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("opot",&opot)) opot=false; /* output potential */
 
     if(! sf_getint("nbell",&nbell)) nbell=1;  /* bell size */
-    sf_warning("nbell=%d",nbell);
+    if(verb) sf_warning("nbell=%d",nbell);
 
     Fwav = sf_input ("in" ); /* wavelet   */
     Fccc = sf_input ("ccc"); /* stiffness */
@@ -211,13 +211,19 @@ int main(int argc, char* argv[])
 
 	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
 
-	sf_setn(at,nt/jsnap);
+	ntsnap=0;
+	for(it=0; it<nt; it++) {
+	    if(it%jsnap==0) ntsnap++;
+	}
+	sf_setn(at,  ntsnap);
 	sf_setd(at,dt*jsnap);
 
 	sf_oaxa(Fwfl,acz,1);
 	sf_oaxa(Fwfl,acx,2);
 	sf_oaxa(Fwfl,ac, 3);
 	sf_oaxa(Fwfl,at, 4);
+
+	if(verb) sf_raxa(at);
     }
 
     /* source array */
