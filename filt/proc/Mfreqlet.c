@@ -1,4 +1,4 @@
-/* 1-D freqlet transform */
+/* 1-D seislet frame */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "freqlets.h"
-#include "sharpinv.h"
 
 int main(int argc, char *argv[])
 {
@@ -55,13 +54,13 @@ int main(int argc, char *argv[])
     n1w = n1*nw;
 
     if (!sf_getbool("inv",&inv)) inv=false;
-    /* forward or inverse transform */
+    /* if y, do inverse transform */
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
-    /* number of IRLS iterations */
+    /* number of iterations */
     
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
@@ -103,7 +102,7 @@ int main(int argc, char *argv[])
 
 	freqlets_lop(!inv,false,n1w,n1,qq,pp);
 	if (!inv && ncycle > 0) 
-	    csharpinv(freqlets_lop,1./nw,ncycle,perc,verb,n1w,n1,qq,pp); 
+	    sf_csharpinv(freqlets_lop,1./nw,ncycle,perc,verb,n1w,n1,qq,pp); 
 
 	if (inv) {
 	    for (i1=0; i1 < n1; i1++) {

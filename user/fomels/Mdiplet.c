@@ -23,10 +23,10 @@
 
 int main(int argc, char *argv[])
 {
-    int n1, n2, i3, n3, n12, np, n12p, ncycle;
-    bool inv, adj;
+    int i, n1, n2, i3, n3, n12, np, n12p, ncycle;
+    bool inv, verb;
     char *type;
-    float *pp, *qq, ***dd, eps;
+    float *pp, *qq, ***dd, eps, perc;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -52,17 +52,23 @@ int main(int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
+
     if (!sf_getint("niter",&ncycle)) ncycle=0;
     /* number of iterations */
 
-    if (adj) {
+    if (!sf_getfloat("perc",&perc)) perc=50.0;
+    /* percentage for sharpening */
+
+    if (inv) {
+	n3 = sf_leftsize(in,3);
+	sf_putint(out,"n3",n3);
+    } else {
 	n3 = sf_leftsize(in,2);
 	sf_putint(out,"n3",np);
 	sf_putint(out,"n4",n3);
-    } else {
-	n3 = sf_leftsize(in,3);
-	sf_putint(out,"n3",n3);
-    }
+    } 
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type (haar,linear,biorthogonal), default is linear */
@@ -74,11 +80,20 @@ int main(int argc, char *argv[])
 	
 	if (!inv) {
     	    sf_floatread(pp,n12,in);
-	    diplet_lop(adj,false,n12p,n12,qq,pp);
+	    diplet_lop(true,false,n12p,n12,qq,pp);
 	    sf_floatwrite(qq,n12p,out);
+
+	    if (ncycle > 0) 
+		sf_sharpinv(diplet_lop,1./np,ncycle,perc,verb,n12p,n12,qq,pp); 
+
 	} else {
 	    sf_floatread(qq,n12p,in);
-	    diplet_lop(adj,false,n12p,n12,qq,pp);
+	    diplet_lop(false,false,n12p,n12,qq,pp);
+
+	    for (i=0; i < n12; i++) {
+		pp[i] /= np;
+	    }
+
 	    sf_floatwrite(pp,n12,out);
 	}
     }

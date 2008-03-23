@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
 {
     map4 nmo;
     bool half,offpar;
-    int it,ix,ihx,ihy,ih, nt,nx, nh,nhx,nhy, nw, CDPtype;
+    int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw, CDPtype;
     float dt, t0, hx,hy, h0x, h0y, t, f, dhx, dhy, eps;
     float *trace, *px, *py, *offx, *offy,  *str, *out, *vtr;
 

@@ -77,6 +77,17 @@ void sf_cweight_lop (bool adj, bool add, int nx, int ny,
     }
 }
 
+void sf_weight_apply(int nx, float *xx)
+/*< apply weighting in place >*/
+{
+    int i;
+
+    for (i=0; i < nx; i++) {
+	xx[i] *= w[i]*w[i];
+    }
+}
+
+
 void sf_cweight_apply(int nx, sf_complex *xx)
 /*< apply weighting in place >*/
 {
