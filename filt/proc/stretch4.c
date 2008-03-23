@@ -71,7 +71,7 @@ map4 stretch4_init (int n1, float o1, float d1 /* regular axis */,
     return str;
 }
 
-void stretch4_define (map4 str, const float* coord)
+void stretch4_define (map4 str, const float* coord /* [nd] */)
 /*< set coordinates >*/
 {
     int id, ix, i1, n1, i, j, i2;
@@ -138,7 +138,9 @@ void stretch4_define (map4 str, const float* coord)
     }
 }
 
-void stretch4_apply (map4 str, const float* ord, float* mod)
+void stretch4_apply (map4 str, 
+		     const float* ord /* [nd] */, 
+		     float* mod       /* [n1] */)
 /*< transform ordinates to model >*/
 {
     int id, it, i, nt, i1, i2;

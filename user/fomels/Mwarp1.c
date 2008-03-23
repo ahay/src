@@ -1,5 +1,4 @@
-/* Multicomponent data registration by 1-D warping.
-*/
+/* Multicomponent data registration by 1-D warping. */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
