@@ -79,9 +79,7 @@ int main (int argc, char* argv[])
 	if ((gamma%2)!=0) gamma = gamma+1;
 	if ((delta%2)!=0) delta = delta+1;
 
-	if (nfw<=delta) sf_error("Need nfw>delta"); 
-
-	if (nfw < 7)  sf_error("Need positive integer input and greater than 7"); 
+	if (nfw <=delta)  sf_error("Need nfw > delta"); 
 	if (nfw%2 == 0)  nfw = (nfw+1);
 	m=(nfw-1)/2;
 	tempnfw=nfw;
