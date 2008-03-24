@@ -21,13 +21,15 @@
 int main(int argc, char* argv[])
 {
     int i1, n1, i2, n2, ip, np, *npick;
-    float o1, d1, t0, t1, t2, t, *trace, *pick;
-    sf_file in, picks, npicks;
+    float o1, d1, t0, t1, t2, t, a, *trace, *pick, *ampl;
+    sf_file in, picks, npicks, ampls;
 
     sf_init(argc, argv);
     in = sf_input("in");
     picks = sf_output("out");
+    ampls = sf_output("ampl");
     npicks = sf_output("picks");
+    
     /* number of picks at each trace */
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
@@ -40,12 +42,14 @@ int main(int argc, char* argv[])
     /* maximum number of picks */
 
     sf_putint(picks,"n1",np);
+    sf_putint(ampls,"n1",np);
 
     sf_putint(npicks,"n1",1);
     sf_settype(npicks,SF_INT);
 
     trace = sf_floatalloc(n1);
     pick = sf_floatalloc(np);
+    ampl = sf_floatalloc(np);
     npick = sf_intalloc(n2);
 
     for (i2=0; i2 < n2; i2++) {
@@ -60,13 +64,18 @@ int main(int argc, char* argv[])
 	    if (ip < np && t1 > t0 && t1 > t2) {
 		/* parabolic approximation */
 		t = 0.5*(t2-t0)/(2*t1-t0-t2);
+		a = t1+0.25*(t2-t0)*t;
+
 		if (t < -1.) {
 		    t=-1;
+		    a=t0;
 		} else if (t > 1.) {
 		    t=1.;
-		}
+		    a=t2;
+		} 
 
 		pick[ip] = o1+(i1-1+t)*d1;
+		ampl[ip] = a;
 		ip++;
 	    }
 
@@ -82,9 +91,11 @@ int main(int argc, char* argv[])
 	
 	for (i1=ip; i1 < np; i1++) {
 	    pick[i1] = pick[ip-1];
+	    ampl[i1] = 0.;
 	}
 
 	sf_floatwrite(pick,np,picks);
+	sf_floatwrite(ampl,np,ampls);
     }
     sf_intwrite(npick,n2,npicks);
 
