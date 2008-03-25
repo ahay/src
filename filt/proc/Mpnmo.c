@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
 {
     map4 nmo;
     bool half;
-    int it,ix,ih, nt,nx, nh, nw, CDPtype;
+    int it,ix,ih, nt,nx, nh, CDPtype;
     float dt, t0, h, h0, t, f, g, dh, eps, dy;
     float *trace, *p, *q, *off, *str, *out, *vtr, *etr;
     sf_file cmp, nmod, dip, offset, crv, vel, eta;
@@ -100,9 +100,6 @@ int main (int argc, char* argv[])
 	etr = NULL;
     }
 
-    if (!sf_getint("extend",&nw)) nw=8;
-    /* trace extension */
-
     nmo = stretch4_init (nt, t0, dt, nt, eps);
 
     eps = 100.*FLT_EPSILON;
@@ -170,4 +167,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c 729 2004-07-29 18:22:16Z fomels $	 */
+/* 	$Id$	 */

@@ -33,7 +33,8 @@ Flow('sdip','synt sdip0',
      dip order=3 liter=100 pmin=0
      idip=${SOURCES[1]} niter=10 rect1=40 rect2=5
      ''')
-Plot('sdip','grey title="(b) Slope" allpos=y scalebar=y clip=2 maxval=2 color=j')
+Plot('sdip',
+     'grey title="(b) Slope" allpos=y scalebar=y clip=2 maxval=2 color=j')
 
 Flow('dipx','sdip','transp | deriv order=3 | transp')
 Flow('dipt','sdip','deriv order=3')
