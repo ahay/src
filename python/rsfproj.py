@@ -342,19 +342,25 @@ class Project(Environment):
 
         if split and self.jobs > 1 and rsf and sfiles:
             # Split the flow into parallel flows
-            
-            w = axis[1]/self.jobs # length of one chunk
+
+            if self.jobs < axis[1]:
+                jobs = self.jobs            
+                w = axis[1]/self.jobs # length of one chunk
+            else:
+                jobs = axis[1]
+                w = 1
+                
             par_sfiles = copy.copy(sfiles)
             par_targets = {}
             for tfile in tfiles:
                 par_targets[tfile] = []
                 
-            for i in range(self.jobs):
+            for i in range(jobs):
                 for j in split:
                     source = sfiles[j] + '__' + str(i)
                     par_sfiles[j] = source
 
-                    if i==self.jobs-1: # last chunk
+                    if i==jobs-1: # last chunk
                         self.Flow(source,sfiles[j],
                                   'window f%d=%d squeeze=n' % (axis[0],i*w))
                     else:
@@ -380,7 +386,7 @@ class Project(Environment):
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
                           '%s axis=%d ${SOURCES[1:%d]}' % \
-                          (reduce,axis[0],self.jobs),local=1)
+                          (reduce,axis[0],jobs),local=1)
             return
 
         sources = []

@@ -30,11 +30,11 @@ typedef struct Step {
 } *step;
 
 static int n1, n2, np, **status;
-static float **cost;
+static float **cost, **udc, **lrc;
 static step **path, here;
 static const float big_number = FLT_MAX;
 
-void dijkstra_init(int m1, int m2)
+void dijkstra_init(int m1, int m2, float **udcost, float ** lrcost)
 /*< initialize with model size >*/
 {
     int i2, i1;
@@ -56,6 +56,9 @@ void dijkstra_init(int m1, int m2)
 	}
     }
     sf_pqueue_init (2*(n1+n2));
+
+    udc=udcost;
+    lrc=lrcost;
 }
 
 void dijkstra_close(void)
@@ -112,46 +115,57 @@ static void fix_neighbor(int s1, int s2 /* location */,
     st->next = path[s2][s1];
 }
 
-static void neighbors(int s1, int s2, float **ud, float **lr)
+static void neighbors(int s1, int s2)
 /* process neighbors */
 {
-    if (s1 < n1-1) { fix_neighbor(s1,s2,+1,0,ud[s2][s1  ]); }
-    if (s1 > 0)    { fix_neighbor(s1,s2,-1,0,ud[s2][s1-1]); }
-    if (s2 < n2-1) { fix_neighbor(s1,s2,0,+1,lr[s2  ][s1]); }
-    if (s2 > 0)    { fix_neighbor(s1,s2,0,-1,lr[s2-1][s1]); }
+    if (s1 < n1-1) { fix_neighbor(s1,s2,+1,0,udc[s2][s1  ]); }
+    if (s1 > 0)    { fix_neighbor(s1,s2,-1,0,udc[s2][s1-1]); }
+    if (s2 < n2-1) { fix_neighbor(s1,s2,0,+1,lrc[s2  ][s1]); }
+    if (s2 > 0)    { fix_neighbor(s1,s2,0,-1,lrc[s2-1][s1]); }
 }
 
-void dijkstra(int s1, int s2         /* source location */, 
-	      float **ud, float **lr /* up-down and left-right cost */) 
-/*< run the algorithm >*/
+void dijkstra_source(int s1, int s2) 
+/*< initialize source >*/
 {
-    int s;
-    float *p;
-
-    /* Intialize source */
     cost[s2][s1] = 0.;
     status[s2][s1] = SF_IN;
     sf_pqueue_start (); 
     np = 0.;
-    neighbors(s1,s2,ud,lr);
+    neighbors(s1,s2);
+}
 
-    while (np > 0) {
-	/* Extract smallest */
-	p = sf_pqueue_extract(); 
-	np--;
+bool dijskstra_step(int *i1, int *i2, int *ud, int *lr)
+/*< one step of the algorithm, true on success >*/
+{
+    int s, s1, s2;
+    float *p;
+    
+    bool success;
 
-	if (p == NULL) {
-	    sf_warning("%s: heap exausted!",__FILE__);
-	    break;
-	}
+    success = (np > 0);
 
-	s = p - cost[0];
-	s2 = s/n1;
-	s1 = s - s2*n1;
+    p = sf_pqueue_extract(); 
+    np--;
 
-	status[s2][s1] = SF_IN;
-	neighbors(s1,s2,ud,lr);
+    if (NULL == p) {
+	sf_warning("%s: heap exausted!",__FILE__);
+	return false;
     }
+
+    s = p - cost[0];
+    s2 = s/n1;
+    s1 = s - s2*n1;
+    
+    status[s2][s1] = SF_IN;
+    here = path[s2][s1];
+    *i1=s1;
+    *i2=s2;
+    *ud = here->ud;
+    *lr = here->lr;
+    
+    neighbors(s1,s2);
+
+    return success;
 }
 
 void dijkstra_start(int s1, int s2)
@@ -173,8 +187,8 @@ bool dijkstra_next(int *ud, int *lr)
     return true;
 }
 
-float *dijsktra_cost(void)
-/*< return pointer to the final cost >*/
+void dijkstra_cost(sf_file out)
+/*< write cost function >*/
 {
-    return (*cost);
+    sf_floatwrite(cost[0],n1*n2,out);
 }

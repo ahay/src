@@ -48,10 +48,10 @@ int main (int argc, char *argv[])
 
     sf_putint(out,"n3",1);
 
-    dijkstra_init(n1,n2);
-    dijkstra(ref1,ref2,p,q);
-
-    sf_floatwrite(dijsktra_cost(),n12,out);
+    dijkstra_init(n1,n2,p,q);
+    dijkstra_source(ref1,ref2);
+    while (dijskstra_step(&j1,&j2,&ud,&lr)) {;}
+    dijkstra_cost(out);
 
     if (!sf_getint("nf",&nf)) nf=0;
     /* number of final points */

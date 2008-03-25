@@ -105,11 +105,6 @@ Plot('svsc2','svsc vrms','Overlay')
 
 Result('svsc','svsc2 svtr2','SideBySideAniso',vppen='txscale=1.5')
 
-Flow('sflat','synt sdip','flat dip=${SOURCES[1]}')
-Plot('sflat','grey title=Flattened')
-
-Result('sflat','synt sdip sflat','SideBySideAniso')
-
 Plot('svel',
      '''
      window min1=0.5 max1=3.5 min2=150 |
