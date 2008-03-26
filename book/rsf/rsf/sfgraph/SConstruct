@@ -1,11 +1,11 @@
 from rsfproj import *
 
-Flow('t0',None,'spike n1=1001 d1=0.001 unit1= label1=')
+Flow('t0',None,'spike n1=1001 d1=0.001 unit1="s" label1="Time" ')
 Flow('t1','t0','math output=x1')
 
 for n in range(2,11):
     Flow('t%d' % n,['t%d' % (n-1),'t%d' % (n-2)],
-         'math t2=${SOURCES[1]} output="2*x1*input-t2" ')
+         'math t2=${SOURCES[1]} output="2*x1*input-t2" | sfput label2="Amplitude" ')
 
 title='\s100 \F11 Polinom CHebysheva ' + \
     '\c3 \F3 T\_\s75 n\^\s100 (cos \F10 q) = \F3 cos n\F10 q'
