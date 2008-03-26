@@ -57,7 +57,7 @@ void sf_sharpen_close(void)
     free(ww);
 }
 
-void sf_sharpen(const float *pp) 
+float sf_sharpen(const float *pp) 
 /*< compute weight for sharpening regularization >*/
 {
     int i, n1;
@@ -80,6 +80,8 @@ void sf_sharpen(const float *pp)
 	wi = fabsf(pp[i])+wmin;
 	ww[i] = expf(-0.5*wp*wp/(wi*wi));
     }
+
+    return wp;
 }
 
 void sf_csharpen(const sf_complex *pp) 

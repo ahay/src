@@ -3,7 +3,8 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-box contour dots graph graph3 grey grey3 plas pldb plotrays thplot wiggle
+box contour contour3 dots graph graph3 grey grey3 plas pldb plotrays
+thplot wiggle
 '''
 
 try:

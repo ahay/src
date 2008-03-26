@@ -34,6 +34,7 @@ int main (int argc, char* argv[])
     float **z, zi, dc, c0, zmin=0., zmax=0., *c;
     float  min1, min2, max1, max2, bmin, bmax, o1, o2, d1, d2;
     bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false, pos, transp;
+    vp_contour cnt;
     sf_file in, cfile;
     
     sf_init(argc,argv);
@@ -106,7 +107,7 @@ int main (int argc, char* argv[])
     if (!sf_getbool("allpos",&pos)) pos=true;
     /* contour positive values only */
 
-    vp_contour_init(transp,n1,o1,d1,n2,o2,d2);
+    cnt = vp_contour_init(transp,n1,o1,d1,n2,o2,d2);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(z[0],n12,in);
@@ -125,9 +126,11 @@ int main (int argc, char* argv[])
 		if (hasdc) {
 		    for (c0 = floorf(zmin/dc) * dc - dc; c0 < zmin; c0 += dc) ;
 		} else if (hasc0) {		
-		    nc = vp_optimal_scale(nc0, false, zmin-c0, zmax-c0, &zi, &dc, &maxstr);
+		    nc = vp_optimal_scale(nc0, false, zmin-c0, zmax-c0, 
+					  &zi, &dc, &maxstr);
 		} else {
-		    nc = vp_optimal_scale(nc0, false, zmin,    zmax,    &c0, &dc, &maxstr);
+		    nc = vp_optimal_scale(nc0, false, zmin,    zmax,    
+					  &c0, &dc, &maxstr);
 		}
 	    }
 	    for (ic=0; ic < nc; ic++) {
@@ -144,7 +147,7 @@ int main (int argc, char* argv[])
 
 	for (ic = 0; ic < nc; ic++) {
 	    vp_plot_set (ic);
-	    vp_contour (pos, z, c[ic]);
+	    vp_contour_draw (cnt, pos, z, c[ic]);
 	} 
 
 	if (scalebar) {

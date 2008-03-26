@@ -22,37 +22,57 @@
 
 #include "vplot.h"
 
+#ifndef _vp_contour_h
+
+typedef struct sf_Contour *vp_contour;
+/* abstract data type */
+/*^*/
+
+#endif
+
+struct sf_Contour {
+    int n1, n2;
+    float o1, o2, d1, d2;
+    bool transp, **west, **south;
+};
+/* concrete data type */
+
 static float delta (float a, float b, float  c);
-static bool cconnect (bool pos, float** z, float  c, int *ix, int *iy);
-static void draw (bool mask, float x, float y);
+static bool cconnect (vp_contour cnt, 
+		      bool pos, float** z, float  c, int *ix, int *iy);
+static void draw (vp_contour cnt, bool mask, float x, float y);
 
-static bool transp, **west, **south;
-static int n1, n2;
-static float o1, o2, d1, d2;
-
-void vp_contour_init(bool transp_in,                      /* transpose flag */
-		     int n1_in, float o1_in, float d1_in, /* first axis */
-		     int n2_in, float o2_in, float d2_in) /* second axis */
+vp_contour vp_contour_init(bool transp,                /* transpose flag */
+			   int n1, float o1, float d1, /* first axis */
+			   int n2, float o2, float d2) /* second axis */
 /*< initialize >*/
 {
-    transp = transp_in;
-    n1 = n1_in; o1 = o1_in; d1 = d1_in;
-    n2 = n2_in; o2 = o2_in; d2 = d2_in;
+    vp_contour cnt;
 
-    west = sf_boolalloc2(n1,n2);
-    south = sf_boolalloc2(n1,n2);
+    cnt = sf_alloc(1,sizeof(*cnt));
+    
+    cnt->transp = transp;
+    cnt->n1 = n1; cnt->o1 = o1; cnt->d1 = d1;
+    cnt->n2 = n2; cnt->o2 = o2; cnt->d2 = d2;
+
+    cnt->west = sf_boolalloc2(n1,n2);
+    cnt->south = sf_boolalloc2(n1,n2);
+
+    return cnt;
 }
 
-void vp_contour_close(void)
+void vp_contour_close(vp_contour cnt)
 /*< free allocated storage >*/
 {
-    free(*west); free(west);
-    free(*south); free(south);
+    free(*(cnt->west)); free(cnt->west);
+    free(*(cnt->south)); free(cnt->south);
+    free(cnt);
 }
 
-void vp_contour (bool pos  /* positive only flag */, 
-		 float **z /* data to contour */, 
-		 float c   /* contour level */)
+void vp_contour_draw (vp_contour cnt,
+		      bool pos  /* positive only flag */, 
+		      float **z /* data to contour */, 
+		      float c   /* contour level */)
 /*< draw contours >*/
 {
     int ix, iy, non, jx, jy;
@@ -70,138 +90,139 @@ void vp_contour (bool pos  /* positive only flag */,
 
     /* find all the intersections */
     non = 0;      /* clear intersection counter */
-    for (iy = 0; iy < n2 - 1; iy++) {
-	for (ix = 0; ix < n1 - 1; ix++) {
+    for (iy = 0; iy < cnt->n2 - 1; iy++) {
+	for (ix = 0; ix < cnt->n1 - 1; ix++) {
 	    zxy = z[iy][ix] - c;   /* z(x,y) - c */
 	    ze = z[iy][ix+1] - c;  /* (z to the east) - c */
 	    zn = z[iy+1][ix] - c;  /* (z to the north) - c */
 
 	    if ((0. < zxy) != (0. < zn)) { /* if west edge intersected */
-		west[iy][ix] = true;
+		cnt->west[iy][ix] = true;
 		non++; 
 	    } else { 
-		west[iy][ix] = false;
+		cnt->west[iy][ix] = false;
 	    }
 
 	    if ((0. < zxy) != (0. < ze)) {  /* if south edge intersected */
-		south[iy][ix] = true;
+		cnt->south[iy][ix] = true;
 		non++; 
 	    } else { 
-		south[iy][ix] = false;
+		cnt->south[iy][ix] = false;
 	    }
 	}
     }
 
-    for (ix = 0, iy = n2 - 1; ix < n1 - 1; ix++) { /* northern boundary */
+    for (ix = 0, iy = cnt->n2 - 1; ix < cnt->n1 - 1; ix++) { /* northern boundary */
 	zxy = z[iy][ix]  - c;  /* z(x,y) - c */
 	ze = z[iy][ix+1] - c;  /* (z to the east) - c */
 	
 	if ((0. < zxy) != (0. < ze)) { /* if south edge intersected */
-	    south[iy][ix] = true;
+	    cnt->south[iy][ix] = true;
 	    non++; 
 	} else { 
-	    south[iy][ix] = false;
+	    cnt->south[iy][ix] = false;
 	}
-	west[iy][ix] = false;
+	cnt->west[iy][ix] = false;
     }
     
-    for (iy = 0, ix = n1 - 1; iy < n2 - 1; iy++) { /* eastern boundary */
+    for (iy = 0, ix = cnt->n1 - 1; iy < cnt->n2 - 1; iy++) { /* eastern boundary */
 	zxy = z[iy][ix]  - c;  /* z(x,y) - c */
 	zn = z[iy+1][ix] - c;  /* (z to the north) - c */
 	
 	if ((0. < zxy) != (0. < zn)) { /* if west edge intersected */
-	    west[iy][ix] = true;
+	    cnt->west[iy][ix] = true;
 	    non++; 
 	} else { 
-	    west[iy][ix] = false;
+	    cnt->west[iy][ix] = false;
 	}
-	south[iy][ix] = false;
+	cnt->south[iy][ix] = false;
     }
     
     /* draw contours intersecting a boundary */
-    for (ix = 0, iy = n2 - 1; ix < n1 - 1 && non > 0; ix++) { /* north */
-	if (south[iy][ix]) {
-	    south[iy][ix] = false;
+    for (ix = 0, iy = cnt->n2 - 1; ix < cnt->n1 - 1 && non > 0; ix++) { /* north */
+	if (cnt->south[iy][ix]) {
+	    cnt->south[iy][ix] = false;
 	    non--;
 
 	    x = ix + delta (c, z[iy][ix], z[iy][ix + 1]);
 	    y = iy;
 
-	    draw (false, x, y);
+	    draw (cnt, false, x, y);
 
 	    jx = ix;
 	    jy = iy - 1;
-	    while (cconnect (pos, z, c, &jx, &jy)) non--;
+	    while (cconnect (cnt, pos, z, c, &jx, &jy)) non--;
 	}
     }
     
-    for (ix = n1 - 1, iy = 0; iy < n2 - 1 && non > 0; iy++) { /* east */
-	if (west[iy][ix]) {
-	    west[iy][ix] = false;
+    for (ix = cnt->n1 - 1, iy = 0; iy < cnt->n2 - 1 && non > 0; iy++) { /* east */
+	if (cnt->west[iy][ix]) {
+	    cnt->west[iy][ix] = false;
 	    non--;
 
 	    x = ix;
 	    y = iy + delta (c, z[iy][ix], z[iy + 1][ix]);
-	    draw (false, x, y);
+	    draw (cnt, false, x, y);
 
 	    jx = ix - 1;
 	    jy = iy;
-	    while (cconnect (pos, z, c, &jx, &jy)) non--;
+	    while (cconnect (cnt, pos, z, c, &jx, &jy)) non--;
 	}
     }
 
-    for (ix = 0, iy = 0; ix < n1 - 1 && non > 0; ix++) {  /* south */
-	if (south[iy][ix]) {
-	    south[iy][ix] = false;
+    for (ix = 0, iy = 0; ix < cnt->n1 - 1 && non > 0; ix++) {  /* south */
+	if (cnt->south[iy][ix]) {
+	    cnt->south[iy][ix] = false;
 	    non--;
 
 	    x = ix + delta (c, z[iy][ix], z[iy][ix + 1]);
 	    y = iy;
-	    draw (false, x, y);
+	    draw (cnt, false, x, y);
 
 	    jx = ix;
 	    jy = iy;
-	    while (cconnect (pos, z, c, &jx, &jy)) non--;
+	    while (cconnect (cnt, pos, z, c, &jx, &jy)) non--;
 	}
     }
 
-    for (ix = 0, iy = 0; iy < n2 - 1 && non > 0; iy++) { /* west */
-	if (west[iy][ix]) {
-	    west[iy][ix] = false;
+    for (ix = 0, iy = 0; iy < cnt->n2 - 1 && non > 0; iy++) { /* west */
+	if (cnt->west[iy][ix]) {
+	    cnt->west[iy][ix] = false;
 	    non--;
 
 	    x = ix;
 	    y = iy + delta (c, z[iy][ix], z[iy + 1][ix]);
-	    draw (false, x, y);
+	    draw (cnt, false, x, y);
 
 	    jx = ix;
 	    jy = iy;
-	    while (cconnect (pos, z, c, &jx, &jy)) non--;
+	    while (cconnect (cnt, pos, z, c, &jx, &jy)) non--;
 	}
     }
 
     /* draw interior contours */ 
-    for (iy = 0; iy < n2 - 1 && non > 0; iy++) {
-	for (ix = 0; ix < n1 - 1 && non > 0; ix++) {
-	    if (south[iy][ix]) {  /* check south edge of cell */
-		south[iy][ix] = false;
+    for (iy = 0; iy < cnt->n2 - 1 && non > 0; iy++) {
+	for (ix = 0; ix < cnt->n1 - 1 && non > 0; ix++) {
+	    if (cnt->south[iy][ix]) {  /* check south edge of cell */
+		cnt->south[iy][ix] = false;
 		non--;
 
 		x = ix + delta (c, z[iy][ix], z[iy][ix + 1]);
 		y = iy;
-		draw (false, x, y);
+		draw (cnt, false, x, y);
 
 		jx = ix;
 		jy = iy;
-		south[iy][ix] = cconnect (pos, z, c, &jx, &jy);
-		while (cconnect (pos, z, c, &jx, &jy)) non--;
+		cnt->south[iy][ix] = cconnect (cnt, pos, z, c, &jx, &jy);
+		while (cconnect (cnt, pos, z, c, &jx, &jy)) non--;
 	    }
 	}
     }
 }
 
 
-static bool cconnect (bool pos, float** z, float  c, int *ix, int *iy)
+static bool cconnect (vp_contour cnt, 
+		      bool pos, float** z, float  c, int *ix, int *iy)
 /* 
    draws a line from one intersection of the cell (ix,iy)
    to another intersection of the cell, 
@@ -222,38 +243,38 @@ static bool cconnect (bool pos, float** z, float  c, int *ix, int *iy)
     mask = !pos || (z[jy][jx] >= 0.   && z[jy][jx+1] >= 0. && 
 		    z[jy+1][jx] >= 0. && z[jy+1][jx+1] >= 0.);
 
-    if (south[jy + 1][jx]) {  /* if exiting north */
+    if (cnt->south[jy + 1][jx]) {  /* if exiting north */
 	jy++;
-	south[jy][jx] = false;
+	cnt->south[jy][jx] = false;
 
 	x = jx + delta (c, z[jy][jx], z[jy][jx + 1]);
 	y = jy;
-	draw (mask, x, y);
+	draw (cnt, mask, x, y);
 
-	if (++(*iy) >= n2 - 1) return false;
-    } else if (west[jy][jx + 1]) { /* if exiting east */
+	if (++(*iy) >= cnt->n2 - 1) return false;
+    } else if (cnt->west[jy][jx + 1]) { /* if exiting east */
 	jx++;
-	west[jy][jx] = false;
+	cnt->west[jy][jx] = false;
 
 	x = jx;
 	y = jy + delta (c, z[jy][jx], z[jy + 1][jx]);
-	draw (mask, x, y);
+	draw (cnt, mask, x, y);
 
-	if (++(*ix) >= n1 - 1) return false;
-    } else if (south[jy][jx]) {  /* if exiting south */
-	south[jy][jx] = false;
+	if (++(*ix) >= cnt->n1 - 1) return false;
+    } else if (cnt->south[jy][jx]) {  /* if exiting south */
+	cnt->south[jy][jx] = false;
 
 	x = jx + delta (c, z[jy][jx], z[jy][jx + 1]);
 	y = jy;
-	draw (mask, x, y);
+	draw (cnt, mask, x, y);
 
 	if (--(*iy) < 0) return false;
-    } else if (west[jy][jx]) { /* if exiting west */
-	west[jy][jx] = false;
+    } else if (cnt->west[jy][jx]) { /* if exiting west */
+	cnt->west[jy][jx] = false;
 	
 	x = jx;
 	y = jy + delta (c, z[jy][jx], z[jy + 1][jx]);
-	draw (mask, x, y);
+	draw (cnt, mask, x, y);
 
 	if (--(*ix) < 0) return false;
     } else {
@@ -272,18 +293,19 @@ static float delta (float a, float b, float  c)
     return (t != 0.0)? ((a - b) / t): 0.5;
 }
 
-static void draw (bool mask, float x, float y) {
-    if (transp) {    
+static void draw (vp_contour cnt, bool mask, float x, float y) 
+{
+    if (cnt->transp) {    
 	if (mask) {
-	    vp_udraw (o2+y*d2, o1+x*d1);
+	    vp_udraw (cnt->o2+y*cnt->d2, cnt->o1+x*cnt->d1);
 	} else {
-	    vp_umove (o2+y*d2, o1+x*d1);
+	    vp_umove (cnt->o2+y*cnt->d2, cnt->o1+x*cnt->d1);
 	}
     } else {
 	if (mask) {
-	    vp_udraw (o1+x*d1, o2+y*d2);
+	    vp_udraw (cnt->o1+x*cnt->d1, cnt->o2+y*cnt->d2);
 	} else {
-	    vp_umove (o1+x*d1, o2+y*d2);
+	    vp_umove (cnt->o1+x*cnt->d1, cnt->o2+y*cnt->d2);
 	}
     }
 }

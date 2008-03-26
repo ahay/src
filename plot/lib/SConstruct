@@ -63,8 +63,9 @@ api = env.get('API',[])
 if 'f77' in api:
     env.Object('fortran.o','fortran.c',
                CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
-    libf = env.StaticLibrary('rsfplotf','fortran.o')                            
-    env.Install(libdir,libf)
+    libf = env.StaticLibrary('rsfplotf','fortran.o')
+    if root:
+        env.Install(libdir,libf)
 
 ##############################################################################
 # TESTING

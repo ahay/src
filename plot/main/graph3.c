@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
     char *label1, *label2, *unit1, *unit2;
     off_t esize;
     bool flat;
+    vp_contour cnt;
     sf_file in;
 
     sf_init(argc,argv);
@@ -237,9 +238,11 @@ int main(int argc, char* argv[])
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
     vp_plot_init(n3);
-    vp_contour_init(false,n1,o1,d1,n2,o2,d2); 
+    cnt = vp_contour_init(false,n1,o1,d1,n2,o2,d2); 
 
     for (iframe=0; iframe < nframe; iframe++) {
+	if (iframe > 0) vp_erase (); 
+
 	for (i3=0; i3 < n3; i3++) {
 	    vp_plot_set (i3);
 
@@ -267,10 +270,8 @@ int main(int argc, char* argv[])
 	    sf_floatread(top[0],n1*n2,in);		
 	    
 	    vp_cubecoord(1,x[0],x[n1-1],y[0],y[n2-1]);
-	    vp_contour(false,top,frame1);
+	    vp_contour_draw(cnt,false,top,frame1);
 	}
-
-	if (iframe > 0) vp_erase (); 
 	
 	vp_plot_unset();
 	vp_coordinates();

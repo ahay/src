@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     int n;
-    float perc, *din=NULL, *dout=NULL;
+    float perc, wp, *din=NULL, *dout=NULL;
     sf_complex *cin=NULL, *cout=NULL;
     sf_datatype type;
     sf_file in, out, other;
@@ -47,14 +47,15 @@ int main(int argc, char* argv[])
       sf_floatread(din,n,in);	
 
       if (NULL != sf_getstring("other")) {
-	other = sf_input("other");
-	if (SF_FLOAT != sf_gettype(other)) 
-	    sf_error("Need float type in other");
-	sf_floatread(dout,n,other);
-	sf_sharpen(dout);
+	  other = sf_input("other");
+	  if (SF_FLOAT != sf_gettype(other)) 
+	      sf_error("Need float type in other");
+	  sf_floatread(dout,n,other);
+	  wp = sf_sharpen(dout);
       } else {
-	sf_sharpen(din);
+	  wp = sf_sharpen(din);
       }
+      sf_warning("wp=%g",wp);
 
       sf_weight_lop(false,false,n,n,din,dout);
       sf_weight_lop(true,false,n,n,din,dout);
