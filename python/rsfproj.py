@@ -370,7 +370,7 @@ class Project(Environment):
 
                     self.Flow(source,sfiles[j],
                               'window n%d=%d f%d=%d squeeze=n' % 
-                              (axis[0],chunk,axis[0],skip)
+                              (axis[0],chunk,axis[0],skip))
 
                 par_tfiles = []
                 for j in range(len(tfiles)):
