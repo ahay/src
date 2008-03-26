@@ -35,7 +35,7 @@ function yi = interp_qcmixed(x,f,g,xi,alpha)
            1, x2, x2^2 ; ...
            0, 1,  2*x2];
      b  = [f(i); f(i+1); g(i+1)];
-     c  = A \ b;
+     c  = pinv(A)*b;
      idx = find((xi >= x1) & (xi <= x2));
      if ~isempty(idx)
         xs  = xi(idx);
@@ -55,7 +55,7 @@ function yi = interp_qcmixed(x,f,g,xi,alpha)
            1, x2, x2^2, x2^3  ; ...
            0, 1,  2*x2, 3*x2^2];
      b  = [f(i); g(i); f(i+1); g(i+1)];
-     c  = A \ b;
+     c  = pinv(A)*b;
 
      % Check convexity
      xr = -2*c(3) / (2 * 3 * c(4));
