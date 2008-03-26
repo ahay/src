@@ -345,7 +345,7 @@ class Project(Environment):
 
             if self.jobs < axis[1]:
                 jobs = self.jobs            
-                w = axis[1]/self.jobs # length of one chunk
+                w = int(0.5+float(axis[1])/jobs) # length of one chunk
             else:
                 jobs = axis[1]
                 w = 1
@@ -354,20 +354,23 @@ class Project(Environment):
             par_targets = {}
             for tfile in tfiles:
                 par_targets[tfile] = []
-                
+
+            bigjobs = axis[1] - jobs*(w-1)
             for i in range(jobs):
+                if i < bigjobs:
+                    chunk=w
+                    skip=i*w
+                else:
+                    chunk=w-1
+                    skip=bigjobs*w+(i-bigjobs)*chunk
+                
                 for j in split:
                     source = sfiles[j] + '__' + str(i)
                     par_sfiles[j] = source
 
-                    if i==jobs-1: # last chunk
-                        self.Flow(source,sfiles[j],
-                                  'window f%d=%d squeeze=n' % (axis[0],i*w))
-                    else:
-                        self.Flow(source,sfiles[j],
-                                  'window n%d=%d f%d=%d squeeze=n' % 
-                                  (axis[0],w,axis[0],i*w))
-                
+                    self.Flow(source,sfiles[j],
+                              'window n%d=%d f%d=%d squeeze=n' % 
+                              (axis[0],chunk,axis[0],skip)
 
                 par_tfiles = []
                 for j in range(len(tfiles)):
