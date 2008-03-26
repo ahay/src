@@ -55,6 +55,7 @@ static struct Axis {
     bool parallel;
     int ntic, maxstrlen;
     float or, dnum, num0;
+    char *format;
 }   /*@null@*/ *axis1=NULL, 
     /*@null@*/ *axis2=NULL, 
     /*@null@*/ *axis3=NULL, 
@@ -654,6 +655,9 @@ static void make_axes (void)
 					   &(axis1->dnum),
 		                           &(axis1->maxstrlen));
 	/* d1num tic mark spacing on the first axis */
+
+	if (NULL == (axis1->format = sf_getstring("format1")))
+	    axis1->format = "%1.5g"; /* tick mark format */
     }	
     
     if (label2 != NULL) { /* vertical axis */
@@ -681,6 +685,9 @@ static void make_axes (void)
 					   &(axis2->num0), 
 					   &(axis2->dnum),
 		                           &(axis2->maxstrlen));
+
+	if (NULL == (axis2->format = sf_getstring("format2")))
+	    axis2->format = "%1.5g"; /* tick mark format */
     }
 
     if (label3 != NULL) {
@@ -705,6 +712,9 @@ static void make_axes (void)
 					   &(axis3->num0), 
 					   &(axis3->dnum),
 					   &(axis3->maxstrlen));
+
+	if (NULL == (axis3->format = sf_getstring("format3")))
+	    axis3->format = "%1.5g"; /* tick mark format */
     }
 
     wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
@@ -1198,7 +1208,7 @@ void vp_frame(void)
 	    vp_where (&xc, &yc);
 	    vp_draw (xc, yc+vs);
 
-	    snprintf (string,32,"%1.5g", num);
+	    snprintf (string,32,axis1->format, num);
 
 	    if (axis1->parallel) {
 		vp_gtext(xc, yc+ticksep*vs, 
@@ -1274,7 +1284,7 @@ void vp_frame(void)
 	    vp_draw (xc+vs, yc);
 
 	    /* tick label */
-	    snprintf (string,32,"%1.5g", num);
+	    snprintf (string,32,axis2->format, num);
 
 	    if (axis2->parallel) {
 		if (labelrot) {
@@ -1338,7 +1348,7 @@ void vp_frame(void)
 		vp_where (&xc, &yc);
 		vp_draw (xc, yc+vs);
 
-		snprintf (string,32,"%1.5g", num);
+		snprintf (string,32,axis3->format, num);
 
 		if (axis3->parallel) {
 		    vp_gtext(xc, yc+ticksep*vs,
@@ -1366,7 +1376,7 @@ void vp_frame(void)
 		vp_where (&xc, &yc);
 		vp_draw (xc-vs*sinth, yc+vs*costh);
 		
-		snprintf (string,32,"%1.5g", num);
+		snprintf (string,32,axis3->format, num);
 
 		if (axis3->parallel) {
 		    vp_gtext(xc-ticksep*vs*sinth, 
