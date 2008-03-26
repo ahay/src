@@ -85,11 +85,14 @@ if dnum=0., an optimal linear scale is estimated
     } 
 
     if (dnum == 0.) { /* figure out onum and dnum */
-	nopt = vp_optimal_scale(dist/(aspect*size), true, num1, num2, &onum, &dnum, &maxstrlen);
+	nopt = dist/(aspect*size);
     } else { /* use client's scale */
 	nopt = 1+ (int) (floor) (num2-onum)/dnum;
 	if (onum+(nopt-1)*dnum > num2) nopt--;
     }
+
+    nopt = vp_optimal_scale(nopt,dnum==0.,true, "%1.5g",
+			    num1, num2, &onum, &dnum, &maxstrlen);
 
     /* figure out the tic mark spacing */
     otic = (onum-num1)*dist/(num2-num1);
@@ -114,8 +117,10 @@ if dnum=0., an optimal linear scale is estimated
     vp_gtext(xpos,ypos,xpath,ypath,xup,yup,label);
 }
 
-int vp_optimal_scale(int chars                /* characters */, 
-		     bool parallel            /* parallel or perpendicular to the axis */,
+int vp_optimal_scale(int chars                /* characters */, 		
+		     bool modify              /* modify the scale */,
+		     bool parallel            /* parallel to the axis */,
+		     const char* format       /* string format */,
 		     float min, float max     /* scale range */, 
 		     /*@out@*/ float *onum    /* output origin */,
 		     /*@out@*/ float *dnum    /* output scaling */,
@@ -124,13 +129,13 @@ int vp_optimal_scale(int chars                /* characters */,
 {
     int i, ntics, nopt, len;
     float num;
-    char string[32];
+    char string[1024];
 
     nopt = 0;
     *maxstrlen = 1;
 
     for (ntics = chars; ntics >= 1; ntics--) {
-	nopt = optimal_scale(ntics, min, max, onum, dnum);
+	nopt = modify? optimal_scale(ntics, min, max, onum, dnum):chars;
 	/* nopt - optimal number of tickmarks */
 
 	*maxstrlen = 1;
@@ -142,23 +147,25 @@ int vp_optimal_scale(int chars                /* characters */,
 		fabsf(num) < FLT_EPSILON) num=0.;
 	    /* set it to zero if it is close to zero */
 
-	    snprintf(string,32,"%1.5g",num);
+	    snprintf(string,1024,format,num);
 	    /* put it in a string */
 	    
 	    len = strlen(string);
 	    if (len > *maxstrlen) *maxstrlen = len;
 
 	    /* see if we can fit it in */
-	    if (parallel) {
-		if ((len+2)*nopt > chars) break;
-	    } else {
-		if (2.5*nopt > chars) break;
-	    }	    
+	    if (modify) {
+		if (parallel) {
+		    if ((len+2)*nopt > chars) break;
+		} else {
+		    if (2.5*nopt > chars) break;
+		}	    
+	    }
 	}
 	    
 	if (i == nopt) break;
 	/* everything fits in, we are done */
-
+	
 	if (ntics > nopt) ntics = nopt;
     } 
     

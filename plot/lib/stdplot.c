@@ -575,6 +575,7 @@ static void make_labels (sf_file in, char where1, char where2)
 static void make_baraxis (float min, float max)
 {
     char* where;
+    bool modify;
 
     if (barlabel == NULL) return;
 
@@ -596,19 +597,26 @@ static void make_baraxis (float min, float max)
 	!sf_getbool ("parallel", &(baraxis->parallel))) baraxis->parallel=true;
 	/* tickmark labels parallel to the axis */
 
-    if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
+    if (!sf_getint ("nbartic",&(baraxis->ntic))) 
+	baraxis->ntic = (vertbar? inch2: inch1)/(aspect*labelsz);
     /* nbartic number of scalebar ticmarks */
-    if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
-	/* dbarnum scalebar ticmarks increment */
-	!sf_getfloat ("obarnum", &(baraxis->num0)))
-	/* obarnum scalebar ticmarks origin */
-	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
-					 (aspect*labelsz), 
-					 baraxis->parallel,
-					 min, max, 
-					 &(baraxis->num0), 
-					 &(baraxis->dnum),
-	                                 &(baraxis->maxstrlen));
+
+    if (NULL == (baraxis->format = sf_getstring("formatbar"))) 
+	baraxis->format="%1.5g";
+    /* format for ticmark labels in the scalebar */
+
+
+    modify = (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
+	      !sf_getfloat ("obarnum", &(baraxis->num0)));
+
+    baraxis->ntic = vp_optimal_scale(baraxis->ntic, 
+				     modify,
+				     baraxis->parallel,
+				     baraxis->format,
+				     min, max, 
+				     &(baraxis->num0), 
+				     &(baraxis->dnum),
+				     &(baraxis->maxstrlen));
     bar0 = (baraxis->num0-0.5*(min+max))/(max-min+FLT_EPSILON);
     dbar = (baraxis->dnum)/(max-min+FLT_EPSILON);
 
@@ -628,6 +636,7 @@ static void make_axes (void)
 /* put tickmarks */
 {
     char* where;
+    bool modify;
 
     if (label1 != NULL) { /* horizontal axis */ 
 	if (NULL == axis1) 
@@ -641,23 +650,26 @@ static void make_axes (void)
 	    !sf_getbool ("parallel", &(axis1->parallel))) axis1->parallel=true;
 	/* tickmark labels parallel to the axis */
 
-	if (!sf_getint ("n1tic",&(axis1->ntic))) axis1->ntic = 1;
-	/* first axis ticmarks */
-	if (!sf_getfloat ("d1num", &(axis1->dnum)) ||
-	    !sf_getfloat ("o1num", &(axis1->num0))) 
-	    axis1->ntic = vp_optimal_scale(cube? 
-					   inch1*(mid1-min1)/
-					   ((max1-min1)*aspect*labelsz):
-					   inch1/(aspect*labelsz), 
-					   axis1->parallel,
-					   label1->min, label1->max, 
-					   &(axis1->num0), 
-					   &(axis1->dnum),
-		                           &(axis1->maxstrlen));
-	/* d1num tic mark spacing on the first axis */
-
 	if (NULL == (axis1->format = sf_getstring("format1")))
 	    axis1->format = "%1.5g"; /* tick mark format */
+
+	if (!sf_getint ("n1tic",&(axis1->ntic))) 
+	    axis1->ntic = cube? 
+		inch1*(mid1-min1)/((max1-min1)*aspect*labelsz):
+		inch1/(aspect*labelsz);
+	/* first axis ticmarks */
+
+	modify = (!sf_getfloat ("d1num", &(axis1->dnum)) ||
+		  !sf_getfloat ("o1num", &(axis1->num0)));
+ 
+	axis1->ntic = vp_optimal_scale(axis1->ntic,
+				       modify,
+				       axis1->parallel,
+				       axis1->format,
+				       label1->min, label1->max, 
+				       &(axis1->num0), 
+				       &(axis1->dnum),
+				       &(axis1->maxstrlen));
     }	
     
     if (label2 != NULL) { /* vertical axis */
@@ -672,22 +684,26 @@ static void make_axes (void)
 	    !sf_getbool ("parallel", &(axis2->parallel))) axis2->parallel=true;
 	/* tickmark labels parallel to the axis */
 
-	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
-	/* second axis ticmarks */
-	if (!sf_getfloat ("d2num", &(axis2->dnum)) ||
-	    !sf_getfloat ("o2num", &(axis2->num0))) 
-	    axis2->ntic = vp_optimal_scale(cube?
-					   inch2*(mid2-min2)/
-					   ((max2-min2)*aspect*labelsz):
-					   inch2/(aspect*labelsz), 
-					   axis2->parallel, 
-					   label2->min, label2->max, 
-					   &(axis2->num0), 
-					   &(axis2->dnum),
-		                           &(axis2->maxstrlen));
-
 	if (NULL == (axis2->format = sf_getstring("format2")))
-	    axis2->format = "%1.5g"; /* tick mark format */
+	    axis2->format = "%1.5g"; /* tickmark format */
+
+	if (!sf_getint ("n2tic",&(axis2->ntic))) 
+	    axis2->ntic = cube?
+		inch2*(mid2-min2)/((max2-min2)*aspect*labelsz):
+		inch2/(aspect*labelsz);
+	/* number of tickmarks on the second axis */
+
+	modify = (!sf_getfloat ("d2num", &(axis2->dnum)) ||
+		  !sf_getfloat ("o2num", &(axis2->num0)));
+
+	axis2->ntic = vp_optimal_scale(axis2->ntic,
+				       modify,
+				       axis2->parallel,
+				       axis2->format,
+				       label2->min, label2->max, 
+				       &(axis2->num0), 
+				       &(axis2->dnum),
+				       &(axis2->maxstrlen));
     }
 
     if (label3 != NULL) {
@@ -701,26 +717,30 @@ static void make_axes (void)
 	if (!sf_getbool ("parallel3",&(axis3->parallel)) &&
 	    !sf_getbool ("parallel", &(axis3->parallel))) axis3->parallel=true;
 	/* tickmark labels parallel to the axis */
-	
-	if (!sf_getint ("n3tic",&(axis3->ntic))) axis3->ntic = 1;
-	/* third axis ticmarks */
-	if (!sf_getfloat ("d3num", &(axis3->dnum)) ||
-	    !sf_getfloat ("o3num", &(axis3->num0))) 
-	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz),
-					   axis3->parallel,
-					   label3->min, label3->max, 
-					   &(axis3->num0), 
-					   &(axis3->dnum),
-					   &(axis3->maxstrlen));
 
 	if (NULL == (axis3->format = sf_getstring("format3")))
-	    axis3->format = "%1.5g"; /* tick mark format */
+	    axis3->format = "%1.5g"; /* tickmark format */
+	
+	if (!sf_getint ("n3tic",&(axis3->ntic))) 
+	    axis3->ntic = inch3/(aspect*labelsz);
+	/* third axis tickmarks */
+
+	modify = (!sf_getfloat ("d3num", &(axis3->dnum)) ||
+		  !sf_getfloat ("o3num", &(axis3->num0)));
+ 
+	axis3->ntic = vp_optimal_scale(axis3->ntic,
+				       modify,
+				       axis3->parallel,
+				       axis3->format,
+				       label3->min, label3->max, 
+				       &(axis3->num0), 
+				       &(axis3->dnum),
+				       &(axis3->maxstrlen));
     }
 
     wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
 			('a' == *where));
 }
-
 
 static void make_grid (bool grid)
 {

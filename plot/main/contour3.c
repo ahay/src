@@ -198,11 +198,11 @@ int main(int argc, char* argv[])
 	    if (hasdc) {
 		for (c0 = floorf(zmin/dc) * dc - dc; c0 < zmin; c0 += dc) ;
 	    } else if (hasc0) {		
-		nc = vp_optimal_scale(nc0, false, zmin-c0, zmax-c0, 
-				      &zi, &dc, &maxstr);
+		nc = vp_optimal_scale(nc0, true, false, "%g",
+				      zmin-c0, zmax-c0,   &zi, &dc, &maxstr);
 	    } else {
-		nc = vp_optimal_scale(nc0, false, zmin,    zmax,    
-				      &c0, &dc, &maxstr);
+		nc = vp_optimal_scale(nc0, true, false, "%g",
+				      zmin,    zmax,      &c0, &dc, &maxstr);
 	    }
 	}
 	for (ic=0; ic < nc; ic++) {
