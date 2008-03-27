@@ -12,7 +12,9 @@
 
 \title{New insights into one-norm solvers from the Pareto curve}
 
-\footer{}
+\footer{Accepted 2008 March 7. Received 2008 March 3. In original form
+  2007 December 18.}
+
 \lefthead{Hennenfent et al.}
 \righthead{Pareto curve and one-norm solvers}
 \maketitle
@@ -24,7 +26,7 @@
   in problems with two-norm priors where they are plotted on a log-log
   scale and are known as L-curves. For other priors, such as the
   sparsity-promoting one norm, Pareto curves remain relatively
-  unexplored. We show how these curves lead to new insights in
+  unexplored. We show how these curves lead to new insights into
   one-norm regularization. First, we confirm the theoretical
   properties of smoothness and convexity of these curves from a
   stylized and a geophysical example. Second, we exploit these crucial
@@ -194,7 +196,7 @@ in \cite{vandenberg07}:
 For large-scale geophysical applications, it is not practical (or even
 feasible) to sample the entire Pareto curve. However, its regularity,
 as implied by this result, means that it is possible to obtain a good
-approximation to the curve with very few interpolating points as
+approximation to the curve with very few interpolating points, as
 illustrated later in this letter.
 %
 \plot{pcurve}{width=.9\columnwidth}{Schematic illustration of a Pareto
@@ -215,9 +217,9 @@ solution can only be attained in the limit as $\lambda\to0$.
 We construct a benchmark problem that is typically used in the
 compressed sensing literature \cite[][]{donoho06stomp}. The matrix
 $\tensor{A}$ is taken to have Gaussian independent and
-identically-distributed (iid) entries; a sparse solution
-$\vector{x}_0$ is randomly generated, and the ``observations''
-$\vector{y}$ are computed according to equation~\ref{eq:yeqAx}.
+identically-distributed entries; a sparse solution $\vector{x}_0$ is
+randomly generated, and the ``observations'' $\vector{y}$ are computed
+according to equation~\ref{eq:yeqAx}.
 
 \subsection{Solution paths}
 \inputdir{pareto}
@@ -267,18 +269,18 @@ technique outlined above to understand the robustness of a given
 solver that is limited by a maximum number of iterations or
 matrix-vector products that can be performed.
 
-Figure \ref{fig:plotLim} shows the Pareto curve and the solution
-paths of the various solvers where the maximum number of iterations is
+Figure \ref{fig:plotLim} shows the Pareto curve and the solution paths
+of the various solvers where the maximum number of iterations is
 fixed. This roughly equates to using the same number of matrix-vector
 products for each solver. Whereas SPG$\ell_1$ continues to provide a
 fairly accurate approximation to the BP$_0$ solution, those computed
-by IST, ISTc, and IRLS suffer from larger errors. IST stops before the
-effect of the one-norm regularization kicks in; hence the data misfit
-at the candidate solution is small but the one norm is completely
-incorrect. ISTc and IRLS accumulate small errors along their paths
-because there are not enough iterations to solve each subproblem to
-sufficient accuracy. Note that both solvers accumulate errors along
-both axes.
+by IST, ISTc, and IRLS suffer from larger errors.  IST stops before
+the effect of the one-norm regularization kicks in; hence the data
+misfit at the candidate solution is small but the one norm is
+completely incorrect. ISTc and IRLS accumulate small errors along
+their paths because there are not enough iterations to solve each
+subproblem to sufficient accuracy. Note that both solvers accumulate
+errors along both axes.
 %
 \plot{plotLim}{width=.9\columnwidth}{Pareto curve and optimization
   paths (same, limited number of iterations) of four solvers for a
@@ -376,7 +378,7 @@ project with support, secured through
 \bibliographystyle{seg}
 \bibliography{bib}
 
-% $Id: paper.tex 85 2008-03-03 22:18:54Z hegilles $
+% $Id: paper.tex 91 2008-03-11 03:25:18Z hegilles $
 
 %%% Local Variables: 
 %%% mode: latex

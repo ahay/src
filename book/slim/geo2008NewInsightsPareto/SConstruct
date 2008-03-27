@@ -31,6 +31,7 @@ color
 newcmds = '''
 \\renewcommand{\\vector}[1]{\\ensuremath{\\mathbf{\\MakeLowercase{#1}}}}
 \\newcommand{\\half}{\\textstyle \\frac{1}{2}}
+\\newcommand{\\SortNoop}[1]{}
 \\newtheorem{res}{Result}
 \hyphenation{herr-mann}
 '''
