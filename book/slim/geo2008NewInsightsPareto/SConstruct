@@ -8,6 +8,8 @@
 from rsftex import *
 import os
 
+SConscript('Fig/SConstruct')
+
 # make color of figures a cmd line option
 color = int(ARGUMENTS.get('color', 1))
 os.environ['PSTEXPENOPTS'] = 'color=%(color)d fat=5 famult=5 invras=y'%vars()

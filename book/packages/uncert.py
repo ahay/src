@@ -6,6 +6,7 @@ def uncert(data,        # data name
            v0,          # initial velocity
            dv,          # velocity step
            nx,          # lateral dimension
+           nh,          # number of offsets
            padt,        # time padding
            padt2,       # extra time padding
            padx=None,   # lateral padding
@@ -20,7 +21,7 @@ def uncert(data,        # data name
            rect1=10,    # vertical smoothing
            rect2=10):   # lateral  smoothing
 
-    velcon.velcon(data,nv,v0,dv,nx,padt,padt2,padx,v1,n1,dt,dx,units,vslope,vx0,x0,rect1,rect2)
+    velcon.velcon(data,nv,v0,dv,nx,nh,padt,padt2,padx,v1,n1,dt,dx,units,vslope,vx0,x0,rect1,rect2)
     
     vlf=data+'-vlf'
     vlf2=data+'-vlf2'

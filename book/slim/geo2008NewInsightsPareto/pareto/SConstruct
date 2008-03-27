@@ -38,7 +38,7 @@ LimIters = 30
 
 # construct problems
 Flow('A',None,
-     'sfspike n1=%(n)g n2=%(N)g | sfnoise rep=y | sfmath output="input/57" '%vars() )
+     'sfspike n1=%(n)g n2=%(N)g | sfnoise rep=y seed=2008 | sfmath output="input/57" '%vars() )
 pos = np.sort(np.round(np.random.rand(k)*N))
 amp = np.random.randn(k)
 

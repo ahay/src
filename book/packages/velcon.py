@@ -98,18 +98,32 @@ def velcon(data,        # data name
 
     npk = data+'-npk'
     Flow(npk,vlf2,pick)
+    Plot(npk, 	 
+         ''' 	 
+         grey pclip=100 color=j bias=%g 	 
+         scalebar=y title="Picked Migration Velocity" 	 
+         label1=Time unit1=s label2="Lateral Position" unit2=%s 	 
+         barlabel=Velocity barunit="%s/s" barreverse=y 	 
+         ''' % (vm,units,units))
         
     fmg = data+'-fmg'
     Flow(fmg,[vlf,npk],'slice pick=${SOURCES[1]} | transp plane=23')
+
     Result(fmg,
            'grey title=Slice label1=Time unit1=s label2="Lateral Position" unit2=%s ' % units)
 
     agc = data+'-agc'
     Flow(agc,fmg,'agc rect1=200')
+    Plot(fmg,agc,
+         '''
+         grey title="Time-Migrated Image" label1="Time" unit1=s label2="Lateral Position" unit2=%s
+         ''' % units)
     Result(agc,
            '''
            grey title=Picked pclip=98 label1="Time" unit1=s label2="Lateral Position" unit2=%s
            ''' % units)
+
+    Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
     Flow(agc+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
     

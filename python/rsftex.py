@@ -46,7 +46,7 @@ else:
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
 pdf2ps      = WhereIs('pdf2ps')
-ps2eps      = WhereIs('ps2epsi')
+ps2eps      = WhereIs('gs') or WhereIs('ps2epsi')
 pstoimg     = WhereIs('pstoimg')
 mathematica = WhereIs('mathematica')
 if mathematica:
@@ -594,10 +594,18 @@ if pdftops:
     PSBuild = Builder(action = pdftops + ' -eps $SOURCE $TARGET',
                       suffix=pssuffix,src_suffix='.pdf')
 elif acroread and ps2eps:
-    PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
-                      ' junk.ps && %s junk.ps $TARGET && rm junk.ps' % \
-                      (acroread,ps2eps),
-                      suffix=pssuffix,src_suffix='.pdf')
+    gs = WhereIs('gs')
+    if gs:
+        PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
+                          ' junk.ps && %s -q -sDEVICE=epswrite -sOutputFile=$TARGET'
+                          ' -r600 input.ps && rm junk.ps' % \
+                          (acroread,gs),
+                          suffix=pssuffix,src_suffix='.pdf')
+    else:
+        PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
+                          ' junk.ps && %s junk.ps $TARGET && rm junk.ps' % \
+                          (acroread,ps2eps),
+                          suffix=pssuffix,src_suffix='.pdf')
 elif pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
                       suffix=pssuffix,src_suffix='.pdf')
