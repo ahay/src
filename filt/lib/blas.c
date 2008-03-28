@@ -40,9 +40,6 @@ double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 
     dot = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy) reduction(+:dot)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -68,9 +65,6 @@ void cblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
 {
     int i, ix, iy;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -84,9 +78,6 @@ void cblas_sswap(int n, float *x, int sx, float* y, int sy)
     int i, ix, iy;
     float t;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy,t)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -104,9 +95,6 @@ float cblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 
     dot = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy) reduction(+:dot)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -125,9 +113,6 @@ double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 
     dot = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy) reduction(+:dot)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -145,9 +130,6 @@ float cblas_snrm2 (int n, const float* x, int sx)
 
     xn = 0.0;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix) reduction(+:xn)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	xn += x[ix]*x[ix];
@@ -166,9 +148,6 @@ float cblas_scnrm2 (int n, const void* x, int sx)
 
     xn = 0.0;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix) reduction(+:xn)
-#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 #ifdef SF_HAS_COMPLEX_H
@@ -186,9 +165,6 @@ void cblas_sscal(int n, float alpha, float *x, int sx)
 {
     int i, ix;
 
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix)
-#endif
     for (i=0; i < n; i++) {
         ix = i*sx;
 	x[ix] *= alpha;
@@ -208,9 +184,7 @@ void cblas_cdotc_sub(int n,
     cy = (sf_complex*) y;
 
     prod = sf_dcmplx(0.,0.);
-#ifdef _OPENMP
-#pragma omp parallel for private(i,ix,iy,xi,yi,pi) reduction(+:prod)
-#endif
+
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
