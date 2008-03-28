@@ -677,7 +677,11 @@ def omp(context):
 
 def api_options(context):
     context.Message("checking API options ... ")
-    api = string.split(string.lower(context.env.get('API','')),',')
+    api = context.env.get('API')
+    if api:
+        api = string.split(string.lower(api),',')
+    else:
+        api = []
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
                          'f90', 'python', 'matlab', 'octave']
