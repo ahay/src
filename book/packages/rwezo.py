@@ -19,13 +19,14 @@ def param(par):
     par['gmax']=par['og'] + (par['ng']-1) * par['dg']
     # ------------------------------------------------------------
 
-    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
-    par['height']=14.0*par['ratio']
-
+    if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    if(not par.has_key('height')):   par['height']=par['ratio']*14
+    if(par['height']>10): par['height']=10
+    
     if(not par.has_key('ntap')):      par['ntap']=10
     if(not par.has_key('prefix')):    par['prefix']=''
     if(not par.has_key('scalebar')):  par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=5 labelfat=3 titlefat=3 '
+    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 parallel2=n '
 
 def cgrey(custom,par):
     return '''
@@ -84,9 +85,9 @@ def cos(cos,jray,jwft,custom,par):
     par['jwft']=jwft
 
     Plot(ray,cos,'window j1=%(jray)d | transp |' % par
-         + cgraph('plotcol=1 '+custom,par))
+         + fdmod.cgraph('plotcol=1 '+custom,par))
     Plot(wft,cos,'window j2=%(jwft)d |' % par
-         + cgraph('plotcol=2 '+custom,par))
+         + fdmod.cgraph('plotcol=2 '+custom,par))
     
     Plot(cos,[ray,wft],'Overlay')
 

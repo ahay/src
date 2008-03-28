@@ -43,7 +43,7 @@ def param(par):
     if(par['height']>10): par['height']=10
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 parallel2=n '
 
     if(not par.has_key('nq1')): par['nq1']=par['nz']
     if(not par.has_key('oq1')): par['oq1']=par['oz']
@@ -213,7 +213,6 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
-
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     Flow(cc+'_',None,
@@ -634,39 +633,39 @@ def wframe(frame,movie,index,custom,par):
     
 # ------------------------------------------------------------
 # elastic wavefield movie
-def emovieold(wfld,custom,axis,par):
-
-    # loop over wavefield components
-    for i in range(2):
-        Flow(wfld+str(i+1),wfld,
-             '''
-             window n3=1 f3=%d |
-             window min1=%g max1=%g min2=%g max2=%g
-             ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
-
-    # join component wavefields
-    Flow(wfld+'all',[wfld+'1',wfld+'2'],
-         'cat axis=%d space=n ${SOURCES[1:2]}' % axis)
-
-    if(axis==1):        
-        height=2*par['height']
-        if(height>10): height=10
-        ratio =2*par['ratio']
-    if(axis==2):
-        height=par['height']
-        if(height>10): height=10
-        ratio =0.5*par['ratio']
-    
-    Result(wfld,wfld+'all',
-           '''
-           grey title="" wantaxis=y screenratio=%f screenht=%f
-           gainpanel=a pclip=99 %s
-           %s
-           ''' % (ratio,height,par['labelattr'],custom) )
+#def emovieold(wfld,custom,axis,par):
+#
+#    # loop over wavefield components
+#    for i in range(2):
+#        Flow(wfld+str(i+1),wfld,
+#             '''
+#             window n3=1 f3=%d |
+#             window min1=%g max1=%g min2=%g max2=%g
+#             ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+#
+#    # join component wavefields
+#    Flow(wfld+'all',[wfld+'1',wfld+'2'],
+#         'cat axis=%d space=n ${SOURCES[1:2]}' % axis)
+#
+#    if(axis==1):        
+#        height=2*par['height']
+#        if(height>10): height=10
+#        ratio =2*par['ratio']
+#    if(axis==2):
+#        height=par['height']
+#        if(height>10): height=10
+#        ratio =0.5*par['ratio']
+#    
+#    Result(wfld,wfld+'all',
+#           '''
+#           grey title="" wantaxis=y screenratio=%f screenht=%f
+#           gainpanel=a pclip=99 %s
+#           %s
+#           ''' % (ratio,height,par['labelattr'],custom) )
 
 # ------------------------------------------------------------
-# elastic wavefield movie
-def eframe(frame,movie,index,custom,axis,par):
+# elastic wavefield movie frames
+def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25):
 
     Flow([movie+'-plt',movie+'-bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
@@ -677,16 +676,18 @@ def eframe(frame,movie,index,custom,axis,par):
              + cgrey('',par))
 
     if(axis==1):
-        pplot.p2x1(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
+        pplot.p2x1(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
     else:
-        pplot.p1x2(frame,frame+'-0',frame+'-1',0.75,0.75,-8.25)
+        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
 
-def emovie(movie,wfld,nframes,custom,axis,par):
-
+# ------------------------------------------------------------
+# elastic wavefield movie
+def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25):
+    
     for iframe in range(nframes):
         tag = "-%02d" % iframe
-        eframe(movie+tag,wfld,iframe,custom,axis,par)
-
+        eframe(movie+tag,wfld,iframe,custom,axis,par,xscale,yscale,shift)
+        
     allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
     Result(movie,allframes,'Movie')
     
