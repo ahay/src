@@ -568,6 +568,12 @@ bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par,size_t n)
     return sf_simtab_getints (file->pars,key,par, n);
 }
 
+bool sf_histlongint (sf_file file, const char* key,/*@out@*/ long int* par)
+/*< read a long int parameter from file >*/ 
+{
+    return sf_simtab_getlongint (file->pars,key,par);
+}
+
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par) 
 /*< read a float parameter from file >*/
 {
@@ -749,6 +755,14 @@ void sf_putints (sf_file file, const char* key, const int* par, size_t n)
     sf_simtab_enter (file->pars,key,val);
 }
 
+void sf_putlongint (sf_file file, const char* key, long int par)
+/*< put a long int parameter to a file >*/
+{
+    char val[256];
+
+    snprintf(val,256,"%ld",par);
+    sf_simtab_enter (file->pars,key,val);
+}
 
 void sf_putfloat (sf_file file, const char* key,float par)
 /*< put a float parameter to a file >*/
