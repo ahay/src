@@ -26,7 +26,8 @@ def param(par):
     if(not par.has_key('ntap')):      par['ntap']=10
     if(not par.has_key('prefix')):    par['prefix']=''
     if(not par.has_key('scalebar')):  par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 parallel2=n '
+    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    # parallel2=n
 
 def cgrey(custom,par):
     return '''

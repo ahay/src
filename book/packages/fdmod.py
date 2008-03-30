@@ -43,8 +43,8 @@ def param(par):
     if(par['height']>10): par['height']=10
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 parallel2=n '
-
+    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    # parallel2=n
     if(not par.has_key('nq1')): par['nq1']=par['nz']
     if(not par.has_key('oq1')): par['oq1']=par['oz']
     if(not par.has_key('dq1')): par['dq1']=par['dz']
