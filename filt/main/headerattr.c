@@ -27,7 +27,7 @@ Only nonzero values are reported.
 int main(int argc, char* argv[])
 {
     int i1, i2, n1, n2, *max, *min, *inp, imax, imin;
-    float *mean;
+    double *mean;
     char pad[] = "                    ", out[21];
     sf_file head;
     
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     inp = sf_intalloc(n1);
     max = sf_intalloc(n1);
     min = sf_intalloc(n1);
-    mean = sf_floatalloc(n1);
+    mean = sf_alloc(n1,sizeof(double));
 
     sf_intread(inp,n1,head);
     imax = imin = 0;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 	    printf("%s%s",out,pad+strlen(out));
 	    snprintf(out,21,"max[%d]=%d",imax,max[i1]);
 	    printf("%s%s",out,pad+strlen(out));
-	    printf("mean=%g\n",mean[i1]/n2);
+	    printf("mean=%lg\n",mean[i1]/n2);
 	}
     }
    

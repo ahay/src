@@ -26,6 +26,7 @@ Takes: > plot.vpl
 int main(int argc, char* argv[])
 {
     bool flat, scalebar, nomin=true, nomax=true, barreverse, hasc, hasdc, hasc0;
+    bool transp, yreverse;
     char *cfilename;
     int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, iframe, nc, nc0, ic, maxstr;
     int n1pix, n2pix, m1pix, m2pix, n1front,n2front, movie, nframe=1, dframe; 
@@ -61,6 +62,14 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2;
     if (!sf_getfloat("max3",&max3)) max3=o3+(n3-1)*d3;
     /* data window to plot */
+
+    if (!sf_getbool ("yreverse",&yreverse)) yreverse=true;
+    /* if y, reverse the first axis */
+    if (yreverse) {
+	zi = min1;
+	min1 = max1;
+	max1 = zi;
+    }
 
     hasc = (NULL != (cfilename = sf_getstring("cfile")));
     /* contours in a file */
@@ -117,11 +126,14 @@ int main(int argc, char* argv[])
     if (!sf_getint("dframe",&dframe)) dframe=1;
     /* frame increment in a movie */
 
+    if (!sf_getbool ("transp",&transp)) transp=true;
+    /* if y, transpose the axes */
+
     switch (movie) {
 	case 0:
 	    nframe = 1;
 	    break;
-	case 1:
+	case 1:	    
 	    nframe = (n1-frame1)/dframe;
 	    break;
 	case 2:
@@ -160,7 +172,7 @@ int main(int argc, char* argv[])
     if (n2front >= n2pix) n2front=n2pix-1;
 
     front = sf_floatalloc2(n1,n2);
-    top = sf_floatalloc2(n3,n2);
+    top = sf_floatalloc2(n2,n3);
     side = sf_floatalloc2(n1,n3);
 
     if (!sf_getbool("flat",&flat)) flat=true;
@@ -214,8 +226,8 @@ int main(int argc, char* argv[])
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 
-    cfront = vp_contour_init(false,n1,o1,d1,n2,o2,d2);
-    cside = vp_contour_init(false,n1,o1,d1,n3,o3,d3);
+    cfront = vp_contour_init(transp,n1,o1,d1,n2,o2,d2);
+    cside = vp_contour_init(transp,n1,o1,d1,n3,o3,d3);
     ctop = vp_contour_init(false,n2,o2,d2,n3,o3,d3);
 
     vp_plot_init(nc);
@@ -227,7 +239,13 @@ int main(int argc, char* argv[])
 	    sf_seek(in,(off_t) frame3*n1*n2*sizeof(float),SEEK_SET);
 	    sf_floatread(front[0],n1*n2,in);
 	}
-	vp_cubecoord(3,min1,max1,min2,max2);
+
+	if (transp) {
+	    vp_cubecoord(3,min2,max2,min1,max1);
+	} else {
+	    vp_cubecoord(3,min1,max1,min2,max2);
+	}
+
 	for (ic=0; ic < nc; ic++) {
 	    vp_plot_set (ic);
 	    vp_contour_draw(cfront,false,front,c[ic]);
@@ -239,7 +257,13 @@ int main(int argc, char* argv[])
 		sf_floatread(side[i3],n1,in);
 	    }
 	}
-	vp_cubecoord(2,min1,max1,min3,max3);
+
+	if (transp) {
+	    vp_cubecoord(2,min3,max3,min1,max1);
+	} else {
+	    vp_cubecoord(2,min1,max1,min3,max3);
+	}
+
 	for (ic=0; ic < nc; ic++) {
 	    vp_plot_set (ic);
 	    vp_contour_draw(cside,false,side,c[ic]);
@@ -250,11 +274,13 @@ int main(int argc, char* argv[])
 		for (i2=0; i2 < n2; i2++) {
 		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame1)*sizeof(float),
 			    SEEK_SET);
-		    sf_floatread(&top[i2][i3],1,in);
+		    sf_floatread(&top[i3][i2],1,in);
 		}
 	    }
 	}
+	
 	vp_cubecoord(1,min2,max2,min3,max3);
+	
 	for (ic=0; ic < nc; ic++) {
 	    vp_plot_set (ic);
 	    vp_contour_draw(ctop,false,top,c[ic]);
