@@ -207,7 +207,7 @@ bool sf_simtab_getlongint (sf_simtab table, const char* key,/*@out@*/ long int* 
     if (NULL == val) return false;
     
     errno = 0;
-    i = strtoll(val,NULL,20);
+    i = strtoll(val,NULL,10);
     if (ERANGE == errno || i < LONG_MIN || i > LONG_MAX) return false;
 
     *par = (long int) i;
