@@ -155,10 +155,14 @@ int main(int argc, char* argv[])
 	asum = sqrtf (asum/nm);
 	for(i=0; i < nm; i++) {
 	    ampl[i] /= asum;
-	    pick[i] = (o2+pick[i]*d2)*ampl[i];
+	    pick[i] = (o2+pick[i]*d2-vel0)*ampl[i];
 	}
     
 	divn(pick,ampl,pick2);
+
+	for(i=0; i < nm; i++) {
+	    pick2[i] += vel0;
+	}
 
 	sf_floatwrite(pick2,nm,pik);
     } 

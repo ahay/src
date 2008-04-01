@@ -26,19 +26,21 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, n12, ref2, ref3, i2,i3,i1, ud, lr;
-    float eps, ***dat, ***p, ***q, **p2, **q2, pi, qi, *trace;
-    sf_file dip, out, seed;
+    int n1,n2,n3, n12, n23, ref2, ref3, i2,i3,i1, ud, lr;
+    float eps, ***dat, ***p, ***q, **p2, **q2, *trace;
+    sf_file dip, out, seed, cost;
 
     sf_init(argc,argv);
     dip = sf_input("in");
     out = sf_output("out");
     seed = sf_input("seed");
+    cost = sf_input("cost");
 
     if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(dip,"n3",&n3)) sf_error("No n3= in input");
-    n12 = n1*n2*n3;
+    n23 = n2*n3;
+    n12 = n1*n23;
 
     if (!sf_getbool("verb",&verb)) verb=false;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -60,18 +62,8 @@ int main (int argc, char *argv[])
     p2 = sf_floatalloc2(n2,n3);
     q2 = sf_floatalloc2(n2,n3);
 
-    for (i3=0; i3 < n3; i3++) {
-	for (i2=0; i2 < n2; i2++) {
-	    pi = 0.;
-	    qi = 0.;
-	    for (i1=0; i1 < n1; i1++) {
-		pi += p[i3][i2][i1]*p[i3][i2][i1]; 
-		qi += q[i3][i2][i1]*q[i3][i2][i1];
-	    }
-	    p2[i3][i2] = sqrtf(pi/n1);
-	    q2[i3][i2] = sqrtf(qi/n1);
-	}
-    }
+    sf_floatread(p2[0],n23,cost);
+    sf_floatread(q2[0],n23,cost);
 
     dijkstra_init(n2,n3,p2,q2);
     dijkstra_source(ref2,ref3);

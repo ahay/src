@@ -148,7 +148,7 @@ bool dijskstra_step(int *i1, int *i2, int *ud, int *lr)
     np--;
 
     if (NULL == p) {
-	sf_warning("%s: heap exausted!",__FILE__);
+	if (np > 0) sf_warning("%s: heap exausted!",__FILE__);
 	return false;
     }
 

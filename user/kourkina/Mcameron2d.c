@@ -158,7 +158,8 @@ static void qp_lf(void)
 	  *(g+ind+nx)=0.5*(*(g+ind-1)+(*(g+ind+1)))- 
 	      0.25*lam*((f3*q3-ff*qq)/(q1)-(ff*qq-f2*q2)/(q0))/(ff*qq);
 	  f2=*(f+ind+nx);
-	  *(q+ind+nx)=-1.0/(-1.0/(qq)+0.5*ht*(ff*ff*(*(g+ind))+f2*f2*(*(g+ind+nx))));
+	  *(q+ind+nx)=-1.0/
+	      (-1.0/(qq)+0.5*ht*(ff*ff*(*(g+ind))+f2*f2*(*(g+ind+nx))));
       }
   }
   for( i=0; i<nx; i++ ) {
@@ -223,6 +224,8 @@ static void qp_cheb(void)
     }
   }
   while(k<nt1  && ch=='y') {
+      sf_warning("%d of %d",k,nt1);
+
     /*---chebspectrum for y---*/
     for(i=0;i<nc;i++) b[i]=*(y+i+k*nc);
     chebcoef(b,coef,nc);
@@ -253,7 +256,8 @@ static void qp_cheb(void)
       b[i]=chebeval(cder,cp[i],neval);
       rhs[k%3][i]=(*(y+ind))*b[i]/(*(fc+ind))+eps*chebeval(crd2,cp[i],neval);
       ind1=ind+nc;
-      *(g+ind1)=*(g+ind)+ht*(a1*rhs[k%3][i]+a2*rhs[(k-1)%3][i]+a3*rhs[(k-2)%3][i]);
+      *(g+ind1)=*(g+ind)+
+	  ht*(a1*rhs[k%3][i]+a2*rhs[(k-1)%3][i]+a3*rhs[(k-2)%3][i]);
       f0=*(fc+ind);
       f1=*(fc+ind1);
       *(y+ind1)=*(y+ind)+0.5*ht*(f0*f0*(*(g+ind))+f1*f1*(*(g+ind1)));
