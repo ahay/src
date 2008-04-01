@@ -68,10 +68,13 @@ int main (int argc, char *argv[])
     dijkstra_init(n2,n3,p2,q2);
     dijkstra_source(ref2,ref3);
     sf_floatread(dat[ref3][ref2],n1,seed);
+    if (verb) sf_warning("%d %d",ref2,ref3);
 
     predict_init(n1,n2, eps*eps, 1);
     
     while (dijskstra_step(&i2,&i3,&ud,&lr)) {
+	if (verb) sf_warning("%d %d",i2,i3);
+
 	trace = dat[i3][i2];
 	for (i1=0; i1 < n1; i1++) {
 	    trace[i1] = dat[i3-lr][i2-ud][i1];

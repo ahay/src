@@ -14,6 +14,7 @@ velcon.velcon('sig',
               v0=2,       # initial velocity
               dv=-0.01,   # velocity step
               nx=200,     # lateral dimension
+              nh=61,      # number of offsets
               padt=1024,  # time padding
               padt2=2048, # extra time padding
               padx=521,   # lateral padding

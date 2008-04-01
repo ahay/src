@@ -54,8 +54,8 @@ sf_bands sf_banded_init (int n    /* matrix size */,
 }
 
 void sf_banded_define (sf_bands slv, 
-		    float* diag  /* diagonal [n] */, 
-		    float** offd /* off-diagonal [band][n] */)
+		       float* diag  /* diagonal [n] */, 
+		       float** offd /* off-diagonal [band][n] */)
 /*< define the matrix >*/
 {
     int k, m, n;
@@ -165,7 +165,7 @@ void sf_banded_const_define_reflect (sf_bands slv,
     }
 }
 
-void sf_banded_solve (sf_bands slv, float* b)
+void sf_banded_solve (const sf_bands slv, float* b)
 /*< invert (in place) >*/
 {
     int k, m;
