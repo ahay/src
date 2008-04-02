@@ -171,7 +171,7 @@ def diplet(data,              # data name
          ''' % (np,pmin,(pmax-pmin)/(np-1)))
     
     dipl = data+'dipl'
-    Flow(dipl,[data,dips],'diplet dips=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
+    Flow(dipl,[data,dips],'diplet dips=${SOURCES[1]} eps=%g perc=90 niter=100' % eps)
 
     for c in (1,clip,25):
         rec = '%sdrec%d' % (data,c)
@@ -193,7 +193,7 @@ def diplet(data,              # data name
     Flow(imps,dips,
          '''
          spike nsp=%d k1=%s k2=%s k3=%s n1=%d n2=%d n3=%d o2=%g d2=%g |
-         diplet dips=$SOURCE eps=%g
+         diplet dips=$SOURCE eps=%g inv=y
          ''' % (nsp,k1,k2,k3,n1,n2,np,o2,d2,eps),stdin=0)
     Result(imps,'grey  title="Seislet Frame Members" ')
 
