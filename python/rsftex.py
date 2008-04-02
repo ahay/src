@@ -576,8 +576,12 @@ Build = Builder(action = Action(pstexpen),
 Uses = Builder(action = Action(uses),varlist=['tree'])
 
 
+gs_options_defaults = '-dAutoFilterColorImages=false -dColorImageFilter=/LZWEncode -dAutoFilterGrayImages=false -dGrayImageFilter=/LZWEncode'
+
 if epstopdf:
-    epstopdf = 'LD_LIBRARY_PATH=%s %s' % (os.environ.get('LD_LIBRARY_PATH',''), epstopdf)
+    epstopdf = "LD_LIBRARY_PATH=%s GS_OPTIONS='%s' %s" % (os.environ.get('LD_LIBRARY_PATH',''),
+                                                          os.environ.get('GS_OPTIONS',gs_options_defaults),
+                                                          epstopdf)
     PDFBuild = Builder(action = epstopdf +" $SOURCES",
 		       src_suffix=pssuffix,suffix='.pdf')
 
