@@ -67,6 +67,8 @@ if 'python' in env.get('API',[]):
 
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',wrap[0],SHLIBPREFIX='_c_')
+    # Hack for darwin to force dependence on libdrsf.dylib instead of libdrsf.so
+    if env['PLATFORM'] == 'darwin': env.Depends(python,'../../lib/libdrsf.dylib')
     pfiles = [python,wrap[1],'rsf.py']
 
     env.Install('../../lib',pfiles)
