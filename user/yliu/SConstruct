@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 difference dwt97 initial mf mlm mlwm saltpepper
-snr swell seislet97 tvmf
+seislet97 snr svddenoise swell tvmf
 '''
 
 try:  # distributed version
