@@ -51,7 +51,7 @@ int main (int argc, char* argv[])
     at=sf_iaxa(Fstk,2); nt=sf_n(at); t0=sf_o(at); dt=sf_d(at);
     ax=sf_iaxa(Fstk,3); nx=sf_n(ax);
 
-    if (!sf_getint  ("na",&na)) na=nt;          /* number of angle values*/
+    if (!sf_getint  ("na",&na)) na=nt;          /* number of angles*/
     if (!sf_getfloat("da",&da)) da=90/(nt-1);   /* angle sampling */
     if (!sf_getfloat("a0",&a0)) a0=0.;          /* angle origin */
     aa = sf_maxa(na,a0,da);
@@ -98,7 +98,7 @@ int main (int argc, char* argv[])
 			n = s/sqrtf(1.0-s*s);
 		    }
 		} else {
-		    n = cosf(a/180*SF_PI); /* cos */
+		    n = -1/(cosf(a/180*SF_PI)); /* 1/cos : no angle close to +-90 */
 		}
 
 		f = (n - t0) / dt;
