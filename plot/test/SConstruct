@@ -9,7 +9,7 @@ headray hyplay nmotraj reflector reflexpt reflkine sg vrms whitepruf
 
 try:
 	Import('env')
-	env = env.Copy()
+	env = env.Clone()
 	
 	root = env.get('RSFROOT')
 	libdir = os.path.join(root,'lib')

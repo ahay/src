@@ -9,7 +9,7 @@ thplot wiggle
 
 try:
     Import('env')
-    env = env.Copy()
+    env = env.Clone()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')

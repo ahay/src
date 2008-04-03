@@ -6,7 +6,7 @@ src = 'do  init_  main_ proc_'
 
 try: # distribution version
     Import('env')
-    env = env.Copy()
+    env = env.Clone()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')

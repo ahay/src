@@ -12,7 +12,7 @@ karmans
 
 try:  # distributed version
     Import('env')
-    env = env.Copy()
+    env = env.Clone()
     
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
