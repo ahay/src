@@ -65,7 +65,7 @@ def depends(env,list,file):
     fd.close()
 
 
-include90 = re.compile(r'use\s+(\S+)')
+include90 = re.compile(r'^[^!]*use\s+(\S+)')
 
 # find dependencies for Fortran-90
 def depends90(env,list,file):
