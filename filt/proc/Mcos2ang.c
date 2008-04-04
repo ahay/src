@@ -98,7 +98,7 @@ int main (int argc, char* argv[])
 			n = s/sqrtf(1.0-s*s);
 		    }
 		} else {
-		    n = 1/(cosf(a/180*SF_PI)); /* 1/cos : no angle close to +-90 */
+		    n = -1.0/(cosf(a/180.0*SF_PI)); /* 1/cos : no angle close to +-90 */
 		}
 
 		f = (n - t0) / dt;
