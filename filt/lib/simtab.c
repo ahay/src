@@ -214,6 +214,23 @@ bool sf_simtab_getlongint (sf_simtab table, const char* key,/*@out@*/ long int* 
     return true;
 }
 
+bool sf_simtab_getunsignedlongint (sf_simtab table, const char* key,/*@out@*/ unsigned long int* par)
+/*< extract a long int parameter from the table >*/
+{
+    char* val;
+    unsigned long long int i;
+
+    val = sf_simtab_get(table,key);
+    if (NULL == val) return false;
+    
+    errno = 0;
+    i = strtoull(val,NULL,10);
+    if (ERANGE == errno || i > ULONG_MAX) return false;
+
+    *par = (unsigned long int) i;
+    return true;
+}
+
 bool sf_simtab_getfloat (sf_simtab table, const char* key,/*@out@*/ float* par)
 /*< extract a float parameter from the table >*/
 {

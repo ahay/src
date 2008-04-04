@@ -574,6 +574,12 @@ bool sf_histlongint (sf_file file, const char* key,/*@out@*/ long int* par)
     return sf_simtab_getlongint (file->pars,key,par);
 }
 
+bool sf_histunsignedlongint (sf_file file, const char* key,/*@out@*/ unsigned long int* par)
+/*< read a long int parameter from file >*/ 
+{
+    return sf_simtab_getunsignedlongint (file->pars,key,par);
+}
+
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par) 
 /*< read a float parameter from file >*/
 {
@@ -761,6 +767,15 @@ void sf_putlongint (sf_file file, const char* key, long int par)
     char val[256];
 
     snprintf(val,256,"%ld",par);
+    sf_simtab_enter (file->pars,key,val);
+}
+
+void sf_putunsignedlongint (sf_file file, const char* key, unsigned long int par)
+/*< put a long int parameter to a file >*/
+{
+    char val[256];
+
+    snprintf(val,256,"%lu",par);
     sf_simtab_enter (file->pars,key,val);
 }
 
