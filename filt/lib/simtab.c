@@ -32,6 +32,7 @@
 #include "error.h"
 
 #include "_bool.h"
+#include "_largeint.h"
 /*^*/
 
 #ifndef _sf_simtab_h
@@ -197,8 +198,8 @@ bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par)
     return true;
 }
 
-bool sf_simtab_getlongint (sf_simtab table, const char* key,/*@out@*/ long int* par)
-/*< extract a long int parameter from the table >*/
+bool sf_simtab_getlargeint (sf_simtab table, const char* key,/*@out@*/ sf_largeint* par)
+/*< extract a sf_largeint parameter from the table >*/
 {
     char* val;
     long long int i;
@@ -210,12 +211,12 @@ bool sf_simtab_getlongint (sf_simtab table, const char* key,/*@out@*/ long int* 
     i = strtoll(val,NULL,10);
     if (ERANGE == errno || i < LONG_MIN || i > LONG_MAX) return false;
 
-    *par = (long int) i;
+    *par = (sf_largeint) i;
     return true;
 }
 
-bool sf_simtab_getunsignedlongint (sf_simtab table, const char* key,/*@out@*/ unsigned long int* par)
-/*< extract a long int parameter from the table >*/
+bool sf_simtab_getulargeint (sf_simtab table, const char* key,/*@out@*/ sf_ulargeint* par)
+/*< extract a sf_ulargeint parameter from the table >*/
 {
     char* val;
     unsigned long long int i;
@@ -227,7 +228,7 @@ bool sf_simtab_getunsignedlongint (sf_simtab table, const char* key,/*@out@*/ un
     i = strtoull(val,NULL,10);
     if (ERANGE == errno || i > ULONG_MAX) return false;
 
-    *par = (unsigned long int) i;
+    *par = (sf_ulargeint) i;
     return true;
 }
 

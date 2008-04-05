@@ -62,6 +62,7 @@
 #include "komplex.h"
 
 #include "_bool.h"
+#include "_largeint.h"
 #include "c99.h"
 /*^*/
 
@@ -568,16 +569,16 @@ bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par,size_t n)
     return sf_simtab_getints (file->pars,key,par, n);
 }
 
-bool sf_histlongint (sf_file file, const char* key,/*@out@*/ long int* par)
-/*< read a long int parameter from file >*/ 
+bool sf_histlargeint (sf_file file, const char* key,/*@out@*/ sf_largeint* par)
+/*< read a sf_largeint parameter from file >*/ 
 {
-    return sf_simtab_getlongint (file->pars,key,par);
+    return sf_simtab_getlargeint (file->pars,key,par);
 }
 
-bool sf_histunsignedlongint (sf_file file, const char* key,/*@out@*/ unsigned long int* par)
-/*< read a long int parameter from file >*/ 
+bool sf_histulargeint (sf_file file, const char* key,/*@out@*/ sf_ulargeint* par)
+/*< read a sf_ulargeint parameter from file >*/ 
 {
-    return sf_simtab_getunsignedlongint (file->pars,key,par);
+    return sf_simtab_getulargeint (file->pars,key,par);
 }
 
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par) 
@@ -761,8 +762,8 @@ void sf_putints (sf_file file, const char* key, const int* par, size_t n)
     sf_simtab_enter (file->pars,key,val);
 }
 
-void sf_putlongint (sf_file file, const char* key, long int par)
-/*< put a long int parameter to a file >*/
+void sf_putlargeint (sf_file file, const char* key, sf_largeint par)
+/*< put a sf_largeint parameter to a file >*/
 {
     char val[256];
 
@@ -770,8 +771,8 @@ void sf_putlongint (sf_file file, const char* key, long int par)
     sf_simtab_enter (file->pars,key,val);
 }
 
-void sf_putunsignedlongint (sf_file file, const char* key, unsigned long int par)
-/*< put a long int parameter to a file >*/
+void sf_putulargeint (sf_file file, const char* key, sf_ulargeint par)
+/*< put a sf_ulargeint parameter to a file >*/
 {
     char val[256];
 
