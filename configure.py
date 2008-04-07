@@ -143,11 +143,11 @@ def identify_platform(context):
         from platform import architecture, uname
         plat['arch'] = architecture()[0]
         name = uname()[2].split('.')[-1]
-        if plat['OS'] == 'linux':
+        if plat['OS'] == 'linux' or plat['OS'] == 'posix':
             if name[:2] == 'fc':
                 plat['distro'] = 'fedora'
-            elif name[:2] == 'EL':
-                plat['distro'] = 'EL' # Redhat Enterprise
+            elif name[:2] == 'EL' or name[:2] == 'el':
+                plat['distro'] = 'RedHat EL' # Redhat Enterprise
             elif name[-7:] == 'generic':
                 plat['distro'] = 'generic' # Ubuntu
         elif plat['OS'] == 'sunos':
@@ -412,7 +412,7 @@ def x11(context):
     else:
         if  plat['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
-        elif plat['OS'] == 'linux':
+        elif plat['OS'] == 'linux' or plat['OS'] == 'posix':
             XLIBS = ['Xaw','Xt']
         else:
             XLIBS = ['Xaw','Xt','X11']
@@ -878,7 +878,7 @@ def matlab(context):
         sys.exit(unix_failure)
 
     # See http://www.mathworks.com/access/helpdesk/help/techdoc/ref/mex.html
-    if plat['OS'] == 'linux':
+    if plat['OS'] == 'linux' or plat['OS'] == 'posix':
         if plat['arch'] == '32bit':
             suffix = 'glx'
         else:
