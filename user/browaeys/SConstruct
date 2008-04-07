@@ -6,9 +6,8 @@ progs = '''
 karman
 karman2
 karmans
+zoimg3
 '''
-
-# autocirc2
 
 try:  # distributed version
     Import('env')
