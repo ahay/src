@@ -206,7 +206,7 @@ int main (int argc, char *argv[])
 		imag = fslice_init(n,nz,sizeof(float));
 
 		fslice_load(Fi,imag,SF_FLOAT);			
-	    } else { /* migration, output = complex cross-correlation at zero time in frequency domain */
+	    } else { /* migration, output = frequency domain complex cross-correlation at t=0 */
 		Fd = sf_input ( "in");
 		Fi = sf_output("out"); sf_settype(Fi,SF_COMPLEX);
 		if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");

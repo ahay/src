@@ -213,7 +213,7 @@ void zomig3(ssroperator3d weop,
 	    {
 		fslice_get(imag,0,weop->qq[0]);
 		LOOP(;      weop->qq[imy][imx] += 
-		     crealf(weop->ww[ompith][imy][imx] ); );
+		     weop->ww[ompith][imy][imx]; );
 		fslice_put(imag,0,weop->qq[0]);
 	    }
 	    
@@ -240,7 +240,7 @@ void zomig3(ssroperator3d weop,
 		{
 		    fslice_get(imag,imz+1,weop->qq[0]); /* I.C. */
 		    LOOP(;      weop->qq[imy][imx] += 
-			 crealf(weop->ww[ompith][imy][imx] ); );
+			 weop->ww[ompith][imy][imx]; );
 		    fslice_put(imag,imz+1,weop->qq[0]);
 		}
 	    } /* z */
