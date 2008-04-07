@@ -53,36 +53,33 @@ if 'python' in env.get('API',[]):
 
     env.Append(CPPPATH=pythinc)
 
-    if sys.platform[:6] == 'cygwin':
+    if env['PLATFORM'] == 'cygwin':
         python = 'python%s' % sys.version[:3]
         env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
                     LIBS = ['librsf',python])
     else:
         env.Append(LIBS=['drsf'])
 
-        if sys.platform[:6] == 'darwin':
+        if env['PLATFORM'] == 'darwin':
             env['SHLINKFLAGS'] = '$LINKFLAGS -bundle' + \
                                  ' -flat_namespace -undefined suppress'
             env['SHLIBSUFFIX'] = '.so'
 
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',wrap[0],SHLIBPREFIX='_c_')
-    # Hack for darwin to force dependence on libdrsf.dylib instead of libdrsf.so
-    if env['PLATFORM'] == 'darwin': env.Depends(python,'../../lib/libdrsf.dylib')
-    pfiles = [python,wrap[1],'rsf.py']
 
+    # Hack for darwin to force dependence on libdrsf.dylib instead of libdrsf.so
+    if env['PLATFORM'] == 'darwin': 
+        env.Depends(python,'../../lib/libdrsf.dylib')
+
+    pfiles = [python,wrap[1],'rsf.py']
     env.Install('../../lib',pfiles)
 
     if root:
         install = env.Install(libdir,pfiles)
-        if sys.platform[:6] == 'darwin':
+        if env['PLATFORM'] == 'darwin':
             env.AddPostAction(install,
                               'install_name_tool -change '
                               'build/filt/lib/libdrsf.dylib '
                               '%s/libdrsf.dylib %s/%s' % \
                                   (libdir,libdir,python[0]))
-        
- 
-
-                              
-    

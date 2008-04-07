@@ -136,24 +136,7 @@ def check_all(context):
 def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
-
-    # Check for OS or Unix environment
-    if sys.platform[:5] == 'linux':
-        plat['OS'] = 'linux'
-    elif sys.platform[:5] == 'sunos':
-        plat['OS'] = 'sunos' # SunOS
-    elif sys.platform[:6] == 'darwin':
-        plat['OS'] = 'darwin' # Mac OS X
-    elif sys.platform[:6] == 'cygwin':
-        plat['OS'] = 'cygwin'
-    elif sys.platform[:7] == 'interix':
-        plat['OS'] = 'interix' # Microsoft Windows Services for UNIX
-    elif sys.platform[:4] == 'irix':
-        plat['OS'] = 'irix' # Irix
-    elif sys.platform[:5] == 'hp-ux':
-        plat['OS'] = 'hp-ux' # HP-UX
-    else:
-        plat['OS'] = sys.platform
+    plat['OS'] = context.env.get('PLATFORM',sys.platform)
 
     # Check for distributions / OS versions
     try:
@@ -520,6 +503,7 @@ pkg['opengl'] = {'generic':'mesa-libGL-devel',
 
 # If this test is failed, no writing to jpeg files
 def opengl(context):
+    global plat
     context.Message("checking for OpenGL ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
@@ -529,7 +513,7 @@ def opengl(context):
         ogl = string.split(ogl)
     context.env['LIBS'] = LIBS + ogl
     LIBPATH = context.env.get('LIBPATH',[])
-    if sys.platform[:6] == 'darwin':
+    if plat['OS'] == 'darwin':
         glpath = '/usr/X11R6/lib'
     else:
         glpath = '/none'
