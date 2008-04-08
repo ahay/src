@@ -23,6 +23,7 @@
 
 int main (int argc, char *argv[])
 {
+    bool verb;
 
     float d,x,z,t,dd,d0,dx,x0,dz,z0,dt;
     int   nd,nx,nz,nt;
@@ -54,27 +55,34 @@ int main (int argc, char *argv[])
     ad = sf_maxa(nd,d0,dd);
     sf_oaxa(Fimgd,ad,3);
 
+    if (!sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+
     imgt = sf_floatalloc3(nx,nz,nt);
     imgd = sf_floatalloc3(nx,nz,nd);
+
+    sf_floatread(imgt[0][0],nx*nz*nt,Fimgt);
 
     velocity = sf_input("velocity");
     velc = sf_floatalloc2(nx,nz);
 
+    sf_floatread(velc[0],nx*nz,velocity);
+
 
     /*------------------------------------------------------------*/
 
-    for (ix = 0; ix < nx; ix++) {
+   for (id = 0; id < nd; id++) {
 
-        x = x0 + ix*dx;
+        d = d0 + id*dd;
+        if (verb) sf_warning("Loop : id=%d",id);
 
-        for (iz = 0; iz < nz; iz++) {
+        for (ix = 0; ix < nx; ix++) {
 
-            z = z0 + iz*dz;
+            x = x0 + ix*dx;
 
-            for (id = 0; id < nd; id++) {
+            for (iz = 0; iz < nz; iz++) {
 
-                d = d0 + id*dd;
-                imgd[ix][iz][id] = 0.0;
+                z = z0 + iz*dz;
+                imgd[ix][iz][id] = 0.0;           
 
                 for (it = 0; it < nt; it++) {
 
@@ -97,14 +105,13 @@ int main (int argc, char *argv[])
 
                     imgd[ix][iz][id] += (1.0-tx)*(1.0-tz)*imt1 + tx*(1.0-tz)*imt2 + tx*tz*imt3 + (1.0-tx)*tz*imt4;
 
-
 		}
             }
 	}
 
     }
 
-    sf_floatwrite(imgd[0],nx*nz*nd,Fimgd);
+    sf_floatwrite(imgd[0][0],nx*nz*nd,Fimgd);
 	
     exit (0);
 }
