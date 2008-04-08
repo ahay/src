@@ -1,0 +1,110 @@
+/* Directional angle transform for 3-D time image cube I(x,z,t) into G(x,z,d) */
+/*
+  Copyright (C) 2008 University of Texas at Austin
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <math.h>
+#include <rsf.h>
+
+
+int main (int argc, char *argv[])
+{
+
+    float d,x,z,t,dd,d0,dx,x0,dz,z0,dt;
+    int   nd,nx,nz,nt;
+
+    sf_axis ax,az,at,ad;
+    int ix,iz,id,it,ixm,izm;
+
+    float xp,zp,imt1,imt2,imt3,imt4,imtp,tx,tz;
+
+    float   ***imgt, ***imgd, **velc;
+    sf_file   Fimgt,   Fimgd,  velocity;
+
+    sf_init (argc,argv);
+
+    /*------------------------------------------------------------*/
+
+    Fimgt = sf_input("in");
+    Fimgd = sf_output("out");
+
+    if (SF_FLOAT != sf_gettype(Fimgt)) sf_error("Need float input");
+
+    ax=sf_iaxa(Fimgt,1); nx=sf_n(ax); x0=sf_o(ax); dx=sf_d(ax);
+    az=sf_iaxa(Fimgt,2); nz=sf_n(az); z0=sf_o(az); dz=sf_d(az);
+    at=sf_iaxa(Fimgt,3); nt=sf_n(at); dt=sf_d(at);
+
+    if (!sf_getint  ("nd",&nd)) nd=nt;       
+    if (!sf_getfloat("dd",&dd)) dd=160.0/(nt-1);
+    if (!sf_getfloat("d0",&d0)) d0=-80.0;
+    ad = sf_maxa(nd,d0,dd);
+    sf_oaxa(Fimgd,ad,3);
+
+    imgt = sf_floatalloc3(nx,nz,nt);
+    imgd = sf_floatalloc3(nx,nz,nd);
+
+    velocity = sf_input("velocity");
+    velc = sf_floatalloc2(nx,nz);
+
+
+    /*------------------------------------------------------------*/
+
+    for (ix = 0; ix < nx; ix++) {
+
+        x = x0 + ix*dx;
+
+        for (iz = 0; iz < nz; iz++) {
+
+            z = z0 + iz*dz;
+
+            for (id = 0; id < nd; id++) {
+
+                d = d0 + id*dd;
+                imgd[ix][iz][id] = 0.0;
+
+                for (it = 0; it < nt; it++) {
+
+                    t = it*dt;
+                    xp = x + velc[ix][iz]*t*sinf(d);
+                    zp = z + velc[ix][iz]*t*cosf(d);
+
+                    /* Bilinear interpolation */ 
+
+                    ixm = floor(xp/dx);
+                    izm = floor(zp/dz);
+
+                    tx = (xp-ixm*dx)/dx;
+                    tz = (zp-izm*dz)/dz;
+
+                    imt1 = imgt[ixm][izm][it];
+                    imt2 = imgt[ixm+1][izm][it];
+                    imt2 = imgt[ixm+1][izm+1][it];
+                    imt4 = imgt[ixm][izm+1][it];
+
+                    imgd[ix][iz][id] += (1.0-tx)*(1.0-tz)*imt1 + tx*(1.0-tz)*imt2 + tx*tz*imt3 + (1.0-tx)*tz*imt4;
+
+
+		}
+            }
+	}
+
+    }
+
+    sf_floatwrite(imgd[0],nx*nz*nd,Fimgd);
+	
+    exit (0);
+}
