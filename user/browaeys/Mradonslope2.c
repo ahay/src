@@ -98,12 +98,12 @@ int main (int argc, char *argv[])
                     tx = (xp-ixm*dx)/dx;
                     tz = (zp-izm*dz)/dz;
 
-                    imt1 = imgt[ixm][izm][it];
-                    imt2 = imgt[ixm+1][izm][it];
-                    imt3 = imgt[ixm+1][izm+1][it];
-                    imt4 = imgt[ixm][izm+1][it];
+                    imt1 = imgt[ixm][izm][it]*(1.0-tx)*(1.0-tz);
+                    imt2 = imgt[ixm+1][izm][it]*tx*(1.0-tz);
+                    imt3 = imgt[ixm+1][izm+1][it]*tx*tz;
+                    imt4 = imgt[ixm][izm+1][it]*(1.0-tx)*tz;
 
-                    imgd[ix][iz][id] += (1.0-tx)*(1.0-tz)*imt1 + tx*(1.0-tz)*imt2 + tx*tz*imt3 + (1.0-tx)*tz*imt4;
+                    imgd[ix][iz][id] += imt1 + imt2 + imt3 + imt4;
 
 		}
             }
