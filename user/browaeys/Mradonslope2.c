@@ -29,12 +29,12 @@ int main (int argc, char *argv[])
     int   nd,nx,nz,nt;
 
     sf_axis ax,az,at,ad;
-    int ix,iz,id,it,ixm,izm;
+    int ix,iz,it,id,ixm,izm;
 
     float xp,zp,imt1,imt2,imt3,imt4,tx,tz;
 
-    float   ***imgt, ***imgd, **velc;
-    sf_file   Fimgt,   Fimgd,  velocity;
+    float   ***imgt, ***imgd, **slow;
+    sf_file   Fimgt,   Fimgd,  slowness;
 
     sf_init (argc,argv);
 
@@ -62,10 +62,10 @@ int main (int argc, char *argv[])
 
     sf_floatread(imgt[0][0],nx*nz*nt,Fimgt);
 
-    velocity = sf_input("velocity");
-    velc = sf_floatalloc2(nx,nz);
+    slowness = sf_input("slowness");
+    slow = sf_floatalloc2(nx,nz);
 
-    sf_floatread(velc[0],nx*nz,velocity);
+    sf_floatread(slow[0],nx*nz,slowness);
 
 
     /*------------------------------------------------------------*/
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
    for (id = 0; id < nd; id++) {
 
         d = d0 + id*dd;
-        if (verb) sf_warning("Loop : id=%d",id);
+        if (verb) sf_warning("idip=%d",id);
 
         for (ix = 0; ix < nx; ix++) {
 
@@ -87,19 +87,18 @@ int main (int argc, char *argv[])
                 for (it = 0; it < nt; it++) {
 
                     t = it*dt;
-                    xp = x + velc[ix][iz]*t*sinf(d/180*SF_PI);
-                    zp = z + velc[ix][iz]*t*cosf(d/180*SF_PI);
+                    xp = x + 1.0/(2.0*slow[ix][iz]*sinf(d/180*SF_PI))*t;
+                    zp = z - 1.0/(2.0*slow[ix][iz]*cosf(d/180*SF_PI))*t;
 
                     /* Bilinear interpolation */ 
 
-                    ixm = floor(xp/dx);
-                    izm = floor(zp/dz);
+                    ixm = floor((xp-x0)/dx);
+                    izm = floor((zp-z0)/dz);
 
                     if (ixm >= 0 && izm >= 0 && ixm <= (nx-1) && izm <= (nz-1)){
 
-
-                       tx = (xp-ixm*dx)/dx;
-                       tz = (zp-izm*dz)/dz;
+                       tx = (xp-ixm*dx-x0)/dx;
+                       tz = (zp-izm*dz-z0)/dz;
 
                        imt1 = imgt[ixm][izm][it]*(1.0-tx)*(1.0-tz);
                        imt2 = imgt[ixm+1][izm][it]*tx*(1.0-tz);
