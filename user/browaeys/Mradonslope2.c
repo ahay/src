@@ -87,8 +87,8 @@ int main (int argc, char *argv[])
                 for (it = 0; it < nt; it++) {
 
                     t = it*dt;
-                    xp = x - t/(2.0*slow[ix][iz]*sinf(d/180*SF_PI));
-                    zp = z + t/(2.0*slow[ix][iz]*cosf(d/180*SF_PI));
+                    xp = x - t*sinf(d/180*SF_PI)/(slow[ix][iz]);
+                    zp = z + t*cosf(d/180*SF_PI)/(slow[ix][iz]);
 
                     /* Bilinear interpolation */ 
 
