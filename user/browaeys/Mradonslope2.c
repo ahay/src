@@ -105,7 +105,7 @@ int main (int argc, char *argv[])
                        imt3 = imgt[ixm+1][izm+1][it]*tx*tz;
                        imt4 = imgt[ixm][izm+1][it]*(1.0-tx)*tz;
 
-                       imgd[ix][iz][id] += imt1 + imt2 + imt3 + imt4;
+                       imgd[ix][iz][id] += (imt1 + imt2 + imt3 + imt4);
 		    }
 
 		}
