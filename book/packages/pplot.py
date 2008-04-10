@@ -1,5 +1,30 @@
 from rsfproj import *
 
+
+# ------------------------------------------------------------
+def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
+
+    alljnk=[]
+    for ix in range(nx):
+        for iy in range(ny):
+            ii = ix*ny+iy
+
+            plt = allplots[ii]
+            jnk = '_' + plt
+
+            Plot(jnk,
+                 plt,
+                 'Overlay',
+                 vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f '
+                 % (ys,xs,(ny-iy-1)*yc,ix*xc))
+
+            alljnk.append(jnk)
+
+    Result(plot,alljnk,'Overlay')
+# ------------------------------------------------------------
+
+
+
 def p2x2(plot,p0,p1,p2,p3,ys,xs,yc,xc):
     j0 = '_' + p0
     j1 = '_' + p1
