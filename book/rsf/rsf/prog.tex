@@ -862,7 +862,7 @@ same dimensions and data type. The data type can be real (floating
 point) or complex. Here is an example that demonstrates several
 features of \texttt{sfmath}.
 \begin{verbatim}
-bash$ sfmath n1=600 d1=0.01 o1=0 n2=40 d2=1 o2=5 \
+bash$ sfmath n1=629 d1=0.01 o1=0 n2=40 d2=1 o2=5 \
 output="x2*(8+sin(6*x1+x2/10))" > rad.rsf
 bash$ < rad.rsf sfrtoc | sfmath output="input*exp(I*x1)" > rose.rsf
 bash$ < rose.rsf sfgraph title=Rose screenratio=1 wantaxis=n | xtpen
