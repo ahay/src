@@ -56,4 +56,4 @@ int main(int argc, char *argv[])
     exit(0);
 }
 
-/* 	$Id: Msvddenoise.c 3491 2008-04-03 18:10:05Z yliu $	 */
+/* 	$Id$	 */
