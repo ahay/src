@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+# Kill processes (remotely for cluster computing)
+
+import sys, os, string, commands, pwd
+
+cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
+(statmyname,myname) = commands.getstatusoutput('whoami')
+
+argcommand = raw_input("Process to kill : ")
+print '\n'
+
+for node in cluster[::2]:
+    if node == 'localhost':
+        (stat,kill) = commands.getstatusoutput('pkill -u %s %s' % (myname,argcommand))
+    else:
+        (stat,kill) = commands.getstatusoutput("ssh %s 'pkill -u %s %s' " % (node,myname,argcommand))
+    if not stat:
+        print 'Killing processes on [%s]\n' % node
+
+sys.exit(0)
