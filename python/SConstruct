@@ -29,7 +29,7 @@ for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi','sftour'):
         env.Install(libdir,src+'.py')
         env.InstallAs(os.path.join(bindir,src),src+'.py')
 
-for src in ('doc','units','top'):
+for src in ('doc','units','top','kill'):
     env.Install(bindir,'sf'+src)
 env.Install(bindir,'pscons')
 
