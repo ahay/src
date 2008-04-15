@@ -7,9 +7,9 @@ absoffdip agc ai2refl aliasp avo bin bin1 boxsmooth cascade canny
 causint clip cmatmult costaper cos2ang cmp2shot cosft depth2time dimag
 dipfilter enoint2 extract fft1 fft3 fourvc fourvc0 fourvc2 freqint
 freqlet grad2 grad3 histogram hslice igrad imospray impl1 impl2 impl3
-infill inmo inmo3 intbin intshow inttest1 inttest2 isin2ang itaupmo iwarp
-linefit lpad map2list migsteep3 modrefl modrefl2 modrefl3 nmo noise
-ofsemb pgen pmig pnmo pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic
+infill inmo inmo3 intbin intshow inttest1 inttest2 isin2ang itaupmo
+iwarp linefit lpad map2list migsteep3 modrefl modrefl2 modrefl3 nmo
+noise ofsemb pmig pnmo pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic
 prestolt ptaupmo pveltran radial radon randrefl refer reshape ricker
 shot2cmp shot2cmp3 shotholes shotprop slice smooth smoothder smoothreg
 smoothreg2 spectra spectra2 spicks spline splinefilter stolt stolt2
@@ -82,9 +82,7 @@ if root:
     env.Depends(docs,'#/python/rsfdoc.py')
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
-    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
-
-    
+#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))    
 #####################################################################
 
 # 	$Id$

@@ -77,8 +77,7 @@ if root:
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
  
-    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
-
+#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
 # 	$Id$
