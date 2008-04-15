@@ -5,7 +5,7 @@ import sys, os, string, commands, pwd
 
 cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
 pathtmp = os.environ.get('TMPDATAPATH')
-pathtsf = pathtmp+'sf*'
+pathtsf = pathtmp + 'sf*'
 
 (statmyname,myname) = commands.getstatusoutput('whoami')
 
