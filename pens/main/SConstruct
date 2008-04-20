@@ -9,8 +9,7 @@ try: # distribution version
     env = env.Clone()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
-    bindir = os.path.join(root,'bin')
-    docmerge = configure.docmerge   
+    bindir = os.path.join(root,'bin')   
 except: # local version
     root = None
     env = Environment()
@@ -38,6 +37,8 @@ for source in sources:
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
+
+docalias = {}
 
 # vppen
 #######
@@ -97,8 +98,7 @@ if ppm:
     env.Depends(obj,'raspen.h')
     main = env.Program('ppmpen',[obj,]+objects,
                        LIBS=[ppm]+env.get('LIBS',[]))
-    if root:
-        docmerge = configure.docextra(docmerge,'sfraspen','sfppmpen')
+    docalias['sfppmpen']='sfraspen'
     pens.append('raspen')
 else:
     main = env.Place('ppmpen',None,var='PPM',package='netpbm-devel')
@@ -118,11 +118,9 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M'+prog),pens)
     env.Depends(docs,'#/python/rsfdoc.py')
-
-    doc = env.Command(main,docs,docmerge)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
  
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
 # 	$Id$	

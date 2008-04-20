@@ -67,10 +67,9 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	
-
-    doc = env.Command(main,docs,configure.docmerge)
+    doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
 #####################################################################
 
 # 	$Id$

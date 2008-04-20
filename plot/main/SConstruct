@@ -13,7 +13,6 @@ try:
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    docmerge = configure.docmerge
     alias = {'grey':'byte','grey3':'cubeplot'}
 except:
     root = None
@@ -32,6 +31,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 mains = Split(progs)
 
+docalias={}
 for prog in mains:
     main = env.Program(prog + '.c')
     if root:
@@ -40,7 +40,7 @@ for prog in mains:
 	       copy = string.replace(str(main[0]),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,copy),main[0])
                doc = os.path.splitext(copy)[0]
-	       docmerge = configure.docextra(docmerge,'sf'+prog,doc)
+               docalias[doc] = 'sf'+prog
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -50,10 +50,9 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')
-
-    doc = env.Command(main,docs,docmerge)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
 #####################################################################
 
 # 	$Id$

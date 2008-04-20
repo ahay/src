@@ -25,7 +25,6 @@ try: # distributed version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    docmerge = configure.docmerge
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
@@ -51,6 +50,7 @@ for source in src:
  
 mains = Split(progs)
 
+docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
@@ -62,7 +62,7 @@ for prog in mains:
                 copy = string.replace(str(main[0]),'stretch',stretch+'stretch')
                 env.InstallAs(os.path.join(bindir,copy),main[0])
 		doc = os.path.splitext(copy)[0]
-	        docmerge = configure.docextra(docmerge,'sf'+prog,doc)
+                docalias[doc] = 'sf'+prog
 
 for prog in Split('cbanded cmatmult'):
     sources = ['Test' + prog,prog]
@@ -80,9 +80,9 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')
-    doc = env.Command(main,docs,docmerge)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))    
+  
 #####################################################################
 
 # 	$Id$

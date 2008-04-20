@@ -48,10 +48,9 @@ if root:
 	main = 'crplot.py'
     
 	docs = map(lambda prog: env.Doc(prog,rsfprefix='cr'),mains)
-	docmerge = configure.docmerge
-	doc = env.Command(main,docs,docmerge)
+	doc = env.Docmerge(main,docs)
 	env.Install(libdir,doc)
-#	Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
 #####################################################################
 
 

@@ -15,7 +15,6 @@ try: # distributed version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    docmerge = configure.docmerge
     alias = {'cat':'merge',
              'real':'imag',
              'cp':'mv',
@@ -39,15 +38,17 @@ env.Prepend(CPPPATH=['../../include'],
 
 mains = Split(progs)
 
+docalias = {}
 for prog in mains:
     main = env.Program(prog + '.c')
     
     if root:
         env.Install(bindir,main[0])
+
         if prog in alias.keys():
 	       other = string.replace(str(main[0]),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,other),main[0])
-	       docmerge = configure.docextra(docmerge,'sf'+prog,other)
+               docalias[other] = 'sf'+prog
 
 mpicc = env.get('MPICC')
 if mpicc:
@@ -73,8 +74,7 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')
-
-    doc = env.Command(main,docs,docmerge)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
  
 #    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))

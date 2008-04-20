@@ -1,4 +1,4 @@
-import sys, os, string, re, commands, types
+import sys, os, string, re, commands, types, py_compile
 
 import SCons
 
@@ -19,6 +19,14 @@ unix_failure = 1
 # Make sure error messages stand out visually
 def stderr_write(message):
     sys.stderr.write('\n  %s\n' % message)
+
+def pycompile(target, source, env):
+    "convert py to pyc "
+    for i in range(0,len(source)):
+        py_compile.compile(source[i].abspath,target[i].abspath) 
+    return py_success  
+
+Pycompile = Builder(action=pycompile)
 
 toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
                       '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
@@ -1047,14 +1055,28 @@ def merge(target=None,source=None,env=None):
     out.close()
     return py_success
 
-docmerge = '''echo "import rsfdoc" > $TARGET
-echo "" > ${TARGET}.junk
-cat ${TARGET}.junk $SOURCES >> $TARGET
-rm ${TARGET}.junk'''
+def docmerge(target=None,source=None,env=None):
+    outfile = target[0].abspath
+    out = open(outfile,'w')
+    out.write('import rsfdoc\n\n')
+    for src in map(str,source):
+        inp = open(src,'r')
+        for line in inp.readlines():
+                out.write(line)
+        inp.close()
+    alias = env.get('alias',{})
+    for prog in alias.keys():
+        out.write("rsfdoc.progs['%s']=%s\n" % (prog,alias[prog]))
+    out.close()
+    py_compile.compile(outfile,outfile+'c')
+    return py_success
 
-def docextra(docmerge,source,copy):
-    return docmerge + '''
-    echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
+def pycompile_emit(target, source, env):
+    target.append(str(target[0])+'c')              
+    return target,source 
+
+Docmerge = Builder(action=Action(docmerge,varlist=['alias']),
+                   emitter=pycompile_emit)
 
 def placeholder(target=None,source=None,env=None):
     filename = str(target[0])

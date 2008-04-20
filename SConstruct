@@ -34,6 +34,7 @@ env.Precious(config)
 
 env.InstallAs(os.path.join(libdir,'rsfconfig.py'),'config.py')
 env.InstallAs(os.path.join(libdir,'rsfconf.py'),'configure.py')
+env.InstallAs(os.path.join(libdir,'rsfconf.pyc'),'configure.pyc')
 Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 env.Alias('config',config)
 
@@ -45,10 +46,14 @@ user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 env['USERS']=user
 
 Export('env')
-SConscript(dirs='python',name='SConstruct')
 
-env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
+env.Append(BUILDERS={'Include':configure.Header,
+                     'Place':configure.Place,
+                     'Pycompile':configure.Pycompile,
+                     'Docmerge':configure.Docmerge},
            SCANNERS=[configure.Include])
+
+SConscript(dirs='python',name='SConstruct')
 
 ##########################################################################
 # FILT BUILD

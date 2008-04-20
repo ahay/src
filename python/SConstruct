@@ -17,28 +17,33 @@ dirs = dirs + env['USERS']
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
 
-for src in ('doc','proj','prog','tex','book','bak'):
-    py = 'rsf%s.py' % src
-    env.Install(libdir,py)
-# clean .pyc files?
+def py_install(source):
+    global env,libdir
+    py = source+'.py'
+    pyc = py+'c'
+    env.Pycompile(pyc,py)
+    env.Install(libdir,[py,pyc])
 
-env.Install(libdir,'suproj.py')
+for src in ('doc','proj','prog','tex','book','bak'):
+    py_install('rsf' + src)
+py_install('suproj')
 
 for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi','sftour'):
     if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
-        env.Install(libdir,src+'.py')
+        py_install(src)
         env.InstallAs(os.path.join(bindir,src),src+'.py')
 
 for src in Split('doc units top kill'):
     env.Install(bindir,'sf'+src)
 env.Install(bindir,'pscons')
 
-use = os.path.join(libdir,'rsfuse.py')
-env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')
+use = env.Command('rsfuse.py',None,
+                  action=Action(rsfdoc.use,varlist=['book']),book='book')
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 Depends(use,os.path.join(libdir,'suproj.py'))
 Depends(use,os.path.join(libdir,'vplot2eps.py'))
+py_install('rsfuse')
 
 htm = os.path.join(docdir,'index.html')
 txt = os.path.join(txtdir,'INDEX.txt')

@@ -12,7 +12,6 @@ try: # distributed version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    docmerge = configure.docmerge
 except: # local version
     root = None
     env = Environment()
@@ -45,11 +44,8 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')
-
-    doc = env.Command(main,docs,docmerge)
+    doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
- 
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
 # 	$Id$

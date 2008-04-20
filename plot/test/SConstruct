@@ -57,12 +57,11 @@ if root:
 	main = 'vpplot.py'
     
 	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
-	docmerge = configure.docmerge
-	docmerge = configure.docextra(docmerge,'vpreflector','vpreflexpt')
-	docmerge = configure.docextra(docmerge,'vpreflector','vpreflkine')
-	doc = env.Command(main,docs,docmerge)
+	docalias = {'vpreflexpt':'vpreflector',
+		    'vpreflkine':'vpreflector'}
+	doc = env.Docmerge(main,docs,alias=docalias)
 	env.Install(libdir,doc)
-#	Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
 #####################################################################
 
 
