@@ -39,8 +39,13 @@ def getprogs(target=None,source=None,env=None):
     out.write('import rsfdoc\n\n')
     for mod in dirs:
         out.write('import sf%s\n' % mod)
-    out.write('\nimport vpplot\n\nimport rsfuse\n')
-    out.write('def selfdoc():\n')
+    out.write('\nimport vpplot\n\n')
+    out.write('''
+try:
+   import rsfuse
+except:
+   pass\n''')
+    out.write('\ndef selfdoc():\n')
     out.write('   prog = rsfdoc.progs.get(os.path.basename(sys.argv[0]))\n')
     out.write('   prog.document()\n')
     out.close()

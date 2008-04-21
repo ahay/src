@@ -756,6 +756,7 @@ class TeXPaper(Environment):
             if level:
                 self.doc = os.path.join(self.doc,level)
         mkdir(self.doc)
+        self.SConsignFile(self.doc)
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
@@ -791,7 +792,7 @@ class TeXPaper(Environment):
             html = dir+'.html'
             self.Color(html,scons)
             self.scons.append(html)
-            uses = dir+'.uses'
+            uses = os.path.join(self.doc,dir+'.uses')
             self.Uses(uses,scons,tree=self.tree)
             self.uses.append(uses)
 
