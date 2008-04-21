@@ -100,17 +100,18 @@ void ztrace2_step (int kz)
 	g0[1] /= dx;
 	g0[0] /= dz;
 
-	x = x0+kx*dx;
-	z = z0+kz*dz;
+	x = x0+kx*dx; ix=kx;
+	z = z0+kz*dz; iz=kz;
 	
-	t = sf_cell_update2 (2, 0.,v0, p, g0); 
-
 	for (kp=0; kp < na; kp++) { /* loop in angle */
 	    k = kp + kx*na; /* index in a slice */
 
 	    a = a0+kp*da;
 	    p[1] = sinf(a);
 	    p[0] = -cosf(a);
+
+            t = sf_cell_update2 (2, 0.,v0, p, g0);
+            /* p is normal vector now ||p|| = 1 */
 
 	    /* decide if we are out already */
 	    if ((iz == 0    && p[0] < 0.) ||

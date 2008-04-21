@@ -123,6 +123,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    ztrace_close();
+
     exit (0);
 }
 
