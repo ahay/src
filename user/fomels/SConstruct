@@ -13,7 +13,7 @@ planemis2 planemis3 planereg2 planereg3 planesignoi pmshape2 predict
 pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk pwdsmooth2 roots seislet
 seisigk shapebin shapebin1 shapesigk sharpen shearer similarity
 threshold timeshift tomo tree trismooth2 tristack twodip2 twofreq2
-velcon warp1 warpadd warpscan ztrace
+velcon warp1 warpadd warpscan ztrace ztrace2
 '''
 
 pyprogs = 'rcat'

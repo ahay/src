@@ -199,7 +199,11 @@ float sf_cell_update1 (int dim, float s, float v, float *p, const float *g)
 }
 
 
-float sf_cell_update2 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell_update2 (int dim        /* number of dimensions */, 
+		       float s        /* sigma */, 
+		       float v        /* slowness */, 
+		       float *p       /* in - ?, out - direction */, 
+		       const float *g /* slowness gradient */) 
 /*< symplectic second-order: step 2 >*/
 {
     int i;

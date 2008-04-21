@@ -175,7 +175,7 @@ struct ssroperator{
     sf_complex ***ww  ; /*          wavefield */   
     fslice        wtmp; /* tmp wavefield (for SR modeling) */
     float      ***rr;   /*  reflectivity (for SR modeling)  */
-    float       **qq;   /* image (for ZO modeling/migration) */
+    sf_complex  **qq;   /* image (for ZO modeling/migration) */
 };
 /*^*/
 
@@ -200,7 +200,7 @@ typedef struct camoperator *camoperator3d;
 
 struct camoperator{
     sf_complex ****ww; /* wavefield */   
-    float       ***qq;  /* image */   
+    sf_complex  ***qq;  /* image */   
 };
 /*^*/
 
