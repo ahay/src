@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     bool vel;
     int nz,nx, iz, na, nax, ix, order, is, iorder, k;
-    float **slow, *slice[NS];
+    float **slow, *slicez[NS];
     float dz,dx,da,x0,z0,a0;
     sf_file in, out[NS];
 
@@ -104,14 +104,14 @@ int main(int argc, char* argv[])
     }
     
     for (is = 0; is < NS; is++) {
-	slice[is] = sf_floatalloc(nax);
+	slicez[is] = sf_floatalloc(nax);
 	for (k = 0; k < nax; k++) {
-	    slice[is][k] = 0.;
+	    slicez[is][k] = 0.;
 	}
     }
 
     ztrace2_init (order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0, slow, slice);
+		  dx, dz, da, x0, z0, a0, slow, slicez);
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	ztrace2_step (iz);
 
 	for (is=0; is < NS; is++) {
-	    sf_floatwrite (slice[is],nax,out[is]);
+	    sf_floatwrite (slicez[is],nax,out[is]);
 	}
     }
 
