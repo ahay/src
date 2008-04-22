@@ -12,7 +12,7 @@ from rsfproj import *
 
 def cig2ssk(np,op,dp):
     return '''
-    radon adj=y np=%d p0=%g dp=%g verb=y
+    radon adj=y np=%d p0=%g dp=%g verb=y niter=10
     ''' % (np,op,dp) 
 
 # ------------------------------------------------------------
