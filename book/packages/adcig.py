@@ -5,6 +5,7 @@ from rsfproj import *
 # ------------------------------------------------------------
 # input:  z-h-x       OR z-t-x
 # output: z-tan(a)-x  OR z-dt/dx-x
+
 #def cig2ssk(np,op,dp):
 #    return '''
 #    slant adj=y np=%d p0=%g dp=%g verb=y
@@ -20,23 +21,24 @@ def cig2ssk(np,op,dp):
 # ------------------------------------------------------------
 # input: z-tan(a)-x
 # output z-a-x
-def xsk2angold(na,oa,da):
-    return '''
-    pp2psang2
-    dip=${SOURCES[1]}
-    vpvs=${SOURCES[2]} |
-    tan2ang na=%d a0=%g da=%g
-    ''' % (na,oa,da)
+#def xsk2angold(na,oa,da):
+#    return '''
+#    pp2psang2
+#    dip=${SOURCES[1]}
+#    vpvs=${SOURCES[2]} |
+#    tan2ang na=%d a0=%g da=%g
+#    ''' % (na,oa,da)
 
 # input: z-dt/dx-x
 # output z-a-x
-def tsk2angold(na,oa,da):
-    return '''
-    pp2pstsic na=%d a0=%g da=%g
-    velocity=${SOURCES[1]}
-    dip=${SOURCES[2]}
-    vpvs=${SOURCES[3]}
-    ''' % (na,oa,da)
+#def tsk2angold(na,oa,da):
+#    return '''
+#    pp2pstsic na=%d a0=%g da=%g
+#    velocity=${SOURCES[1]}
+#    dip=${SOURCES[2]}
+#    vpvs=${SOURCES[3]}
+#    ''' % (na,oa,da)
+
 # ------------------------------------------------------------
 def xsk2ang(na,oa,da):
     return '''
