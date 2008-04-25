@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    bool vel;
+    bool vel, straight;
     int nz,nx, iz, na, nax, ix, order, is, iorder, k;
     float **slow, *slicez[NS];
     float dz,dx,da,x0,z0,a0;
@@ -87,6 +87,9 @@ int main(int argc, char* argv[])
     /* additional parameters */
     if(!sf_getbool("vel",&vel)) vel=true;
     /* y, input is velocity; n, slowness */
+    if(!sf_getbool("straight",&straight)) straight=false;
+    /* if y, straight rays */
+
     if(!sf_getint("order",&order)) order=3;
     /* interpolation accuracy for velocity */
     if(!sf_getint("iorder",&iorder)) iorder=4;
@@ -110,7 +113,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    ztrace2_init (order, iorder, nx, nz, na,
+    ztrace2_init (straight, order, iorder, nx, nz, na,
 		  dx, dz, da, x0, z0, a0, slow, slicez);
 
     for (iz = 0; iz < nz; iz++) {

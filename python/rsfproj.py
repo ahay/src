@@ -122,6 +122,13 @@ def test(target=None,source=None,env=None):
         print 'No locked file "%s" ' % locked
     return 0
 
+def echo(target,source,env):
+    obj = env.get('out','')
+    if type(obj) is types.ListType:
+        obj = string.join(obj)
+    print obj
+    return 0
+
 def symlink(target, source, env):
     "Create symbolic link"
     src = str(source[0])
@@ -189,6 +196,7 @@ Print = Builder(action = pspen + " printer=%s $SOURCES" % printer,src_suffix=vps
 Retrieve = Builder(action = Action(retrieve,
                                    varlist=['dir','private','top','server']))
 Test = Builder(action=Action(test))
+Echo = Builder(action=Action(echo),varlist=['out'])
 
 #############################################################################
 # PLOTTING COMMANDS
@@ -274,7 +282,8 @@ class Project(Environment):
                     BUILDERS={'View':View,
                               'Print':Print,
                               'Retrieve':Retrieve,
-                              'Test':Test},
+                              'Test':Test,
+                              'Echo':Echo},
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
                     LIBS=[libs],
@@ -550,9 +559,9 @@ class Project(Environment):
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
         else:
-            self.Command('test',None,'echo "Nothing to test"')
-        self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
-        self.Command('.sf_data',None,'echo %s' % string.join(self.data,' '))
+            self.Echo('test',None,out='Nothing to test')
+        self.Echo('.sf_uses',None,out=self.coms)
+        self.Echo('.sf_data',None,out=self.data)
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:
             self.data.append('PRIVATE')

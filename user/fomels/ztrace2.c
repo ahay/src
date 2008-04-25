@@ -30,14 +30,16 @@
 
 #endif
 
+static bool straight;
 static int nx, nz, na, nax;
-static float dx,dz,da, x0,z0,a0, x1,z1;
+static float dx,dz,da, x0,z0,a0, x1,z1,a1;
 static sf_eno2 cvel, fslc[NS];
 static float **slice;
 
 static int snap(float *f, int n);
 
-void ztrace2_init (int order        /* interpolation order for velocity */, 
+void ztrace2_init (bool straight1   /* straight rays */,
+		   int order        /* interpolation order for velocity */, 
 		   int iorder       /* interpolation order for values */,
 		   int nx1          /* lateral samples */, 
 		   int nz1          /* depth samples */, 
@@ -49,11 +51,12 @@ void ztrace2_init (int order        /* interpolation order for velocity */,
 		   float z01        /* depth origin */, 
 		   float a01        /* angle origin */,
 		   float** vel      /* slowness [nx][nz] */, 
-		   float** slice_in /* depth slice [nx][na][NS] */)
+		   float** slice_in /* depth slice [NS][nx*na] */)
 /*< Initialize >*/
 {
     int is;
 
+    straight=straight1;
     slice = slice_in;
     nx = nx1; nz = nz1; na = na1;
     dx = dx1; dz = dz1; da = da1;
@@ -61,6 +64,7 @@ void ztrace2_init (int order        /* interpolation order for velocity */,
     nax = na*nx; 
     x1 = x0 + (nx-1)*dx;
     z1 = z0 + (nz-1)*dz;
+    a1 = a0 + (na-1)*da;
 
     cvel = sf_eno2_init (order, nz, nx);
     sf_eno2_set (cvel, vel);
@@ -85,39 +89,42 @@ void ztrace_close (void)
 void ztrace2_step (int kz) 
 /*< Step in depth >*/
 {
-    float v, v0, g[2], g0[2], t, z, x, a, p[2], s, sx, sz, sx1, sx2, sz1, sz2, fx, fz, fa;
-    int is, kx, kp, k, ix, iz, ia;
+    float v, v0, g[2], g0[2], t, z, x, a, p[2], p0[2];
+    float s, sx, sz, sx1, sx2, sz1, sz2, fx, fz, fa, d, pg0, pg;
+    int is, kx, ka, k, ix, iz, ia;
 
     /* assign the previous slice for interpolation */
     for (is=0; is < NS; is++) {
 	sf_eno2_set1 (fslc[is], slice[is]);
     }
+
+    if (straight) {
+	g0[0]=g0[1]=g[0]=g[1]=0.;
+    }
     
     for (kx=0; kx < nx; kx++) { /* loop in x */
 
 	/* get slowness and gradient */
-	sf_eno2_apply(cvel,kz,kx,0.,0.,&v0,g0,BOTH);
-	g0[1] /= dx;
+	sf_eno2_apply(cvel,kz,kx,0.,0.,&v0,g0,straight? FUNC: BOTH);
 	g0[0] /= dz;
-
-	x = x0+kx*dx; ix=kx;
-	z = z0+kz*dz; iz=kz;
+	g0[1] /= dx;
 	
-	for (kp=0; kp < na; kp++) { /* loop in angle */
-	    k = kp + kx*na; /* index in a slice */
+	for (ka=0; ka < na; ka++) { /* loop in angle */
+	    k = ka + kx*na; /* index in a slice */
 
-	    a = a0+kp*da;
-	    p[1] = sinf(a);
-	    p[0] = -cosf(a);
+	    a = a0+ka*da;
+	    p0[1] = sinf(a);
+	    p0[0] = -cosf(a);
+	    /* p0 is dimensionless */
 
-            t = sf_cell_update2 (2, 0.,v0, p, g0);
-            /* p is normal vector now ||p|| = 1 */
+	    x = x0+kx*dx; 
+	    z = z0+kz*dz; 
 
 	    /* decide if we are out already */
-	    if ((iz == 0    && p[0] < 0.) ||
-		(iz == nz-1 && p[0] > 0.) ||
-		(ix == 0    && p[1] < 0.) ||
-		(ix == nx-1 && p[1] > 0.)) {
+	    if ((kz == 0    && p0[0] < 0.) ||
+		(kz == nz-1 && p0[0] > 0.) ||
+		(kx == 0    && p0[1] < 0.) ||
+		(kx == nx-1 && p0[1] > 0.)) {
 		slice[0][k] = 0.;
 		slice[1][k] = x;
 		slice[2][k] = z;
@@ -126,18 +133,22 @@ void ztrace2_step (int kz)
 	    } 
 
 	    /* find the nearest intersection of ray and box */
-	    sx1 = sf_quadratic_solve (g0[1],p[1],2*(x-x0)/v0);
-	    sx2 = sf_quadratic_solve (g0[1],p[1],2*(x-x1)/v0);
-	    sz1 = sf_quadratic_solve (g0[0],p[0],-2*dz/v0);
-	    sz2 = sf_quadratic_solve (g0[0],p[0],2*(z-z1)/v0);
+	    sx1 = sf_quadratic_solve (g0[1],p0[1],2*(x-x0)/v0);
+	    sx2 = sf_quadratic_solve (g0[1],p0[1],2*(x-x1)/v0);
+	    sz1 = sf_quadratic_solve (g0[0],p0[0],2*dz/v0);
+	    sz2 = sf_quadratic_solve (g0[0],p0[0],2*(z-z1)/v0);
 
 	    
 	    sx = SF_MIN(sx1,sx2);
 	    sz = SF_MIN(sz1,sz2);
 	    s = SF_MIN(sx,sz);
 
-	    t =	sf_cell_update1 (2, s, v0, p, g0);
-	    /* p is slowness vector now ||p||=v */
+	    pg0 = g0[0]*p0[0]+g0[1]*p0[1];
+	    t = v0*v0*(1.+s*pg0/3.0);
+	    
+	    p[0] = v0*(p0[0] + 0.5*g0[0]*s);
+	    p[1] = v0*(p0[1] + 0.5*g0[1]*s);
+	    /* p1/2 is dimensions of slowness */
 
 	    if (s == sx) { /* exited from the side */
 		if (s == sx1) {
@@ -166,12 +177,30 @@ void ztrace2_step (int kz)
 	    }
 
 	    /* slowness and gradient at new location */
-	    sf_eno2_apply(cvel,iz,ix,fz,fx,&v,g,BOTH);
+	    sf_eno2_apply(cvel,iz,ix,fz,fx,&v,g,straight? FUNC:BOTH);
 	    g[1] /= dx;
 	    g[0] /= dz;
 
-	    t += sf_cell_update2 (2, s, v, p, g);
-	    /* p is normal vector now ||p||=1 */
+	    p[0] += 0.5*g[0]*v*s;
+	    p[1] += 0.5*g[1]*v*s;
+
+	    d = 1./hypotf(p[0],p[1]);
+	    
+	    p[0] *= d;
+	    p[1] *= d;
+	    /* p is dimensionless */
+
+	    pg = g[0]*p[0]+g[1]*p[1];
+	    t += v*v*(1.-s*pg/3.0);
+	    t *= 0.5*s;
+
+	    if (t < 0.) {
+		pg = pg*v*v-pg0*v0*v0;
+		d = v*v-v0*v0;
+		t = 0.25*(pg*s*s/3. + d*d/pg);
+
+		if (t < 0.) sf_error("Negative time!");
+	    }
 
 	    if (s == sz1) { /* to previous level */
 		/* interpolate */
@@ -181,6 +210,14 @@ void ztrace2_step (int kz)
 		    sf_eno2_apply(fslc[is],ia,ix,fa,fx,
 				  &slice[is][k],NULL,FUNC);
 		}
+		if (slice[0][k] < 0.) slice[0][k]=0.;
+		if (slice[1][k] < x0) slice[1][k]=x0;
+		if (slice[1][k] > x1) slice[1][k]=x1;
+		if (slice[2][k] < z0) slice[2][k]=z0;
+		if (slice[2][k] > z1) slice[2][k]=z1;
+		if (slice[3][k] < a0*180./SF_PI) slice[3][k]=a0*180./SF_PI;
+		if (slice[3][k] > a1*180./SF_PI) slice[3][k]=a1*180./SF_PI;
+
 		slice[0][k] += t;
 	    } else {
 		slice[0][k] = t;
@@ -188,7 +225,7 @@ void ztrace2_step (int kz)
 		slice[2][k] = z;
 		slice[3][k] = sf_cell_p2a(p)*180./SF_PI;
 	    }
-	} /* kp */
+	} /* ka */
     } /* kx */
 }
 
@@ -200,7 +237,7 @@ static int snap(float *f, int n)
     if (i < 0) {
 	i=0;
 	*f=0.;
-    } else if (i >= n) {
+    } else if (i >= n-1) {
 	i=n-1;
 	*f=0.;
     } else {
