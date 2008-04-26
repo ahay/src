@@ -16,7 +16,7 @@
 
 import os, re, glob, string, types, pwd, shutil
 import cStringIO, token, tokenize, cgi, sys, keyword
-import rsfconf, rsfdoc, rsfprog, latex2wiki, vplot2eps
+import rsfconf, rsfdoc, rsfprog, rsfpath, latex2wiki, vplot2eps
 
 import SCons
 
@@ -70,19 +70,6 @@ bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
-
-#############################################################################
-# UTILITY FUNCTIONS
-#############################################################################
-
-def mkdir(dir):
-    'Recursive directory making'
-    while os.path.basename(dir) == '.':
-        dir = os.path.dirname(dir)
-    if not os.path.isdir(dir):
-        mkdir(os.path.dirname(dir))        
-        os.mkdir(dir)
-    return dir
 
 #############################################################################
 # REGULAR EXPRESSIONS
@@ -292,32 +279,32 @@ def pstexpen(target=None,source=None,env=None):
         return 1
     return 0
 
-def uses(target=None,source=None,env=None):
+def use(target=None,source=None,env=None):
     "Collect RSF program uses"
     project = os.path.dirname(str(source[0]))
 
-    out = open(str(target[0]),"w")
+    trg = str(target[0])
+    out = open(trg,'w')
+    what = os.path.basename(trg)[-4:] # uses or data
+
     os.chdir(project)
-
-    sin, sout, serr = os.popen3('scons -s .sf_uses')
-    sin.close()
-
-    progs = sout.read()
-    sout.close()
-
-    status = serr.read()
-    serr.close() 
-
-    if status:
-        sys.stderr.write('No uses found in %s: %s\n' % (project,status))
-    elif string.find(progs,'scons') < 0:
-        tree = env.get('tree')
-        doc = map(lambda prog:
-                  'rsfdoc.progs["%s"].use("%s","%s","%s")' %
-                  (prog,tree[1],tree[2],project),string.split(progs))
-        out.write(string.join(doc,'\n') + '\n')
-        
+    os.system('scons -s ' + what)
     os.chdir('..')
+
+    uses = os.path.join(os.path.dirname(trg),project,'.sf_uses')
+
+    if os.path.isfile(uses):
+        usesfile = open(uses,'r')
+        progs = usesfile.readline()
+        usesfile.close()
+
+        if string.find(progs,'scons') < 0:
+            tree = env.get('tree')
+            doc = map(lambda prog:
+                          'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+                      (prog,tree[1],tree[2],project),string.split(progs))
+            out.write(string.join(doc,'\n') + '\n')
+
     out.close()
     return 0
 
@@ -479,30 +466,22 @@ def colorize(target=None,source=None,env=None):
 
      out.write('</font></pre></table>')
 
-     cwd = os.getcwd()
-     os.chdir(os.path.dirname(py))
-
-     #     (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
-
-     for case in ('uses','data'):
-         sin, sout, serr = os.popen3('scons -s .sf_'+case)
-         sin.close()
+     for case in range(1,3):
+         uses = str(source[case])
+         sout = open(uses)
          progs = sout.read()
          sout.close()
-         status = serr.read()
-         serr.close() 
-     
-         if not status:
-             items = string.split(progs)
-             if items:
-                 if case=='uses':
-                     out.write('</div><p><div class="progs">')
-                     out.write(rsfdoc.multicolumn(items,_proglink))
-                 else:
-                     while 'PRIVATE' in items:
-                         items.remove('PRIVATE')
-                     out.write('</div><p><div class="dsets">')
-                     out.write(rsfdoc.multicolumn(items,_datalink))
+
+         items = string.split(progs)
+         if items:
+             if case==1:
+                 out.write('</div><p><div class="progs">')
+                 out.write(rsfdoc.multicolumn(items,_proglink))
+             else:
+                 while 'PRIVATE' in items:
+                     items.remove('PRIVATE')
+                 out.write('</div><p><div class="dsets">')
+                 out.write(rsfdoc.multicolumn(items,_datalink))
  
      out.write('''
      </div>
@@ -510,7 +489,6 @@ def colorize(target=None,source=None,env=None):
      </html>
      ''')
 
-     os.chdir(cwd)
      return 0
 
 
@@ -573,7 +551,7 @@ if pdfread:
 
 Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
-Uses = Builder(action = Action(uses),varlist=['tree'])
+Uses = Builder(action = Action(use),varlist=['tree'])
 
 
 gs_options_defaults = '-dAutoFilterColorImages=false -dColorImageFilter=/LZWEncode -dAutoFilterGrayImages=false -dGrayImageFilter=/LZWEncode'
@@ -743,20 +721,26 @@ class TeXPaper(Environment):
         for plat in path.keys():
             if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
                 self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
-        cwd = os.getcwd()
-        # create a hierarcical structure
-        self.tree = (
-            os.path.basename(os.path.dirname(os.path.dirname(cwd))),
-            os.path.basename(os.path.dirname(cwd)),
-            os.path.basename(cwd))
+
+        self.tree = rsfpath.dirtree()
+
 	self.doc = os.environ.get(
             'RSFDOC',
             os.path.join(os.environ.get('RSFROOT'),'doc'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
-        mkdir(self.doc)
-        self.SConsignFile(self.doc)
+        rsfpath.mkdir(self.doc)
+
+        datapath = rsfpath.datapath()
+        self.path = os.path.dirname(datapath)
+        if datapath[:2] != './':
+            for level in self.tree[1:]:
+                self.path = os.path.join(self.path,level)
+        rsfpath.mkdir(self.path)
+        self.path = os.path.join(self.path,os.path.basename(datapath))
+        self.SConsignFile(self.path+'.sconsign2')
+
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
@@ -783,18 +767,23 @@ class TeXPaper(Environment):
         self.uses = []
         self.Dir()
     def Install2(self,dir,fil):
-        dir2 = mkdir(dir)
+        dir2 = rsfpath.mkdir(dir)
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
             dir = os.path.dirname(scons)
-            html = dir+'.html'
-            self.Color(html,scons)
-            self.scons.append(html)
-            uses = os.path.join(self.doc,dir+'.uses')
+
+            uses = os.path.join(self.path,dir+'.uses')
             self.Uses(uses,scons,tree=self.tree)
             self.uses.append(uses)
+
+            data = os.path.join(self.path,dir+'.data')
+            self.Uses(data,scons,tree=self.tree)
+
+            html = dir+'.html'
+            self.Color(html,[scons,uses,data])
+            self.scons.append(html)
 
         if self.scons:
             self.Install(self.doc,self.scons)
@@ -949,10 +938,13 @@ class TeXPaper(Environment):
             self.Alias('figs',paper+'.figs')
             self.Default('pdf')
          self.Command('dummy.tex',self.figs,Action(dummy))
+
+         uses = os.path.join(self.path,'.sf_uses2')
          if self.uses:
-              self.Command('.sf_uses',self.uses,'cat $SOURCES')
+             self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
          else:
-              self.Command('.sf_uses',None,'echo ')
+             self.Command(uses,None,'touch $TARGET')
+         self.Alias('uses',uses)
 
 default = TeXPaper()
 def Dir(**kw):

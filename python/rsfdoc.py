@@ -16,6 +16,7 @@
 
 import pydoc #, datetime
 import re, sys, os, string, glob, string
+import rsfpath
 
 progs = {}
 data = {}
@@ -66,9 +67,18 @@ def use(target=None,source=None,env=None):
                 os.chdir(chapter)
                 print "...%s" % chapter
 
-                sout = os.popen('scons -s .sf_uses')
-                doc = doc + sout.read()
-                sout.close()
+                os.system('scons -s uses')
+
+                datapath = rsfpath.datapath()
+                path = os.path.dirname(datapath)
+                if datapath[:2] != './':
+                    path = os.path.join(path,book,chapter)
+                uses = os.path.join(path,'.sf_uses2')
+
+                if os.path.isfile(uses):
+                    sout = open(uses,'r')
+                    doc = doc + sout.read()
+                    sout.close()
 
                 os.chdir(cwbook)
             os.chdir(cwtop)

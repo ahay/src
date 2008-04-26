@@ -677,7 +677,6 @@ int main (int argc, char *argv[])
 		    } else if (keysym==XK_q || keysym==XK_Q) {
 			/* This is the exit from the event loop */
 			break;
-			continue;
 		    }
 
 		    /* else if button down (1 == zoom, 2 == mouse tracking */

@@ -17,17 +17,6 @@
 import os, stat, sys, types, copy
 import re, string, urllib, ftplib
 
-# database for .sconsign
-try:
-    import dbhash
-    db='dbhash'
-except:
-    try:
-        import gdbm
-        db='gdbm'
-    except:
-        db=None
-        
 try:
     import filecmp
 except:
@@ -36,6 +25,7 @@ except:
 import rsfdoc
 import rsfprog
 import rsfconf
+import rsfpath
 
 import SCons
 
@@ -60,30 +50,7 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-# path for binary files
-datapath = os.environ.get('DATAPATH')
-if not datapath:
-    try:
-        pathfile = open('.datapath','r')
-    except:
-        try:
-            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),
-                            'r')
-        except:
-            pathfile = None
-    if pathfile:
-        for line in pathfile.readlines():
-            check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
-            if check:
-                datapath = check.group(1)
-        pathfile.close()
-    if not datapath:
-        datapath = './' # the ultimate fallback
 dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
-tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
-# split into directory
-pathdir = os.path.dirname(datapath)
-pathbase = os.path.basename(datapath)
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -124,9 +91,15 @@ def test(target=None,source=None,env=None):
 
 def echo(target,source,env):
     obj = env.get('out','')
-    if type(obj) is types.ListType:
-        obj = string.join(obj)
-    print obj
+    if obj:
+        trg = open(str(target[0]),'w')
+        if type(obj) is types.ListType:
+            obj = string.join(obj)
+            trg.write(obj+'\n')
+        trg.close()
+    err = env.get('err','')
+    if err:
+        stderr.write(err+'\n')
     return 0
 
 def symlink(target, source, env):
@@ -238,27 +211,22 @@ class Project(Environment):
         opts.Update(self)
         cwd = os.getcwd()
         self.cwd = cwd
-        self.path = pathdir
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
+
+        # path for binary files
+        datapath = rsfpath.datapath()
+        tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
+
+        self.path = os.path.dirname(datapath)
         if datapath[:2] != './':
             # create a hierarcical structure
-            (book,chap,proj) = (os.path.basename(
-                os.path.dirname(os.path.dirname(cwd))),
-                                os.path.basename(os.path.dirname(cwd)),
-                                os.path.basename(cwd))
-            for level in (book,chap,proj):
+            tree = rsfpath.dirtree(cwd)
+            for level in tree:
                 if level:
                     self.path = os.path.join(self.path,level)
-                    if not os.path.exists(self.path):
-                        os.mkdir(self.path)
-        self.path = os.path.join(self.path,pathbase)
-        if db=='gdbm':
-            self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
-        elif db=='dbhash':
-            self.SConsignFile(self.path+'.sconsign.'+db,dbhash)
-        else:
-            self.SConsignFile(self.path+'.sconsign')
+        rsfpath.mkdir(self.path)
+        self.path = os.path.join(self.path,os.path.basename(datapath))
+        self.SConsignFile(self.path+'.sconsign')
+
         self.resdir = resdir
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                              figdir+'/\\1',cwd)
@@ -559,9 +527,13 @@ class Project(Environment):
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
         else:
-            self.Echo('test',None,out='Nothing to test')
-        self.Echo('.sf_uses',None,out=self.coms)
-        self.Echo('.sf_data',None,out=self.data)
+            self.Echo('test',None,err='Nothing to test')
+        uses = os.path.join(self.path,'.sf_uses')
+        data = os.path.join(self.path,'.sf_data')
+        self.Echo(uses,'SConstruct',out=self.coms)
+        self.Echo(data,'SConstruct',out=self.data)
+        self.Alias('uses',uses)
+        self.Alias('data',data)
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:
             self.data.append('PRIVATE')
