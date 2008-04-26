@@ -20,6 +20,8 @@
 
 #include "_bool.h"
 #include "_solver.h"
+#include "c99.h"
+#include "komplex.h"
 #include "alloc.h"
 #include "error.h"
 #include "sharpen.h"
@@ -77,7 +79,11 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 	if (verb) {		  
 	    pdif = 0.;
 	    for (i1=0; i1 < np; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		pi = cabsf(pp[i1]-p0[i1]);
+#else
+		pi = cabsf(sf_cadd(pp[i1],sf_cneg(p0[i1])));
+#endif
 		pdif += pi*pi;
 	    }
 	    qdif = 0.;

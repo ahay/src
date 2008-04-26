@@ -84,8 +84,12 @@ static void init(char meth)
 
 static void chebyshev_init(void)
 {
-  int i,j,ind,k,klo,khi;
-  float yp1,ypn,u[nx],b[nx],b2[nx],a1,a2,un,qn,x,aux;
+    int i,j,ind,k,klo,khi;
+    float yp1,ypn, *u, *b, *b2,a1,a2,un,qn,x,aux;
+    
+    u = sf_floatalloc(nx);
+    b = sf_floatalloc(nx);
+    b2 = sf_floatalloc(nx);
 
     /*--- compute f in chebyshev points---*/
     for( i=nc-1; i>=0; i-- ) {
@@ -125,6 +129,10 @@ static void chebyshev_init(void)
 		((a1*a1*a1-a1)*b2[klo]+(a2*a2*a2-a2)*b2[khi])*hx*hx/6.0;
 	}
     }
+    
+    free(u);
+    free(b);
+    free(b2);
 }
 
 /******** COMPUTE Q AND P IN TIME COORDINATES *********/

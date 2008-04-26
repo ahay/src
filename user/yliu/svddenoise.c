@@ -25,15 +25,16 @@ static float *a, *u, *v, *mid, *pxt;
 
 void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
 {
+    int i, j, max, ka;
+    int nclip;
+    const double eps = 1.0e-5;
+
     a = sf_floatalloc(m*n);
     u = sf_floatalloc(m*m);
     v = sf_floatalloc(n*n);
     mid = sf_floatalloc(m*n);
     pxt = sf_floatalloc(m*n);
 
-    int i, j, max, ka;
-    int nclip;
-    double eps = 1.0e-5;
     max = m > n ? m : n;
     ka = max +1;
     nclip = (int)(m*pclip/100.+0.5);

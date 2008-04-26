@@ -86,10 +86,11 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
     int i,j,k,l,it,ll,kk,ix,iy,mm,nn,iz,m1,ks;
     float d,dd,t,sm,sm1,em1,sk,ek,b,c,shh,fg[2],cs[2];
     float *s,*e,*w;
-    s=(float*)malloc(ka*sizeof(float));//s = new float[ka*sizeof( float )];
-    e=(float*)malloc(ka*sizeof(float));//e = new float[ka*sizeof( float )];
-    w=(float*)malloc(ka*sizeof(float));//w = new float[ka*sizeof( float )];
-    
+   
+    s = sf_floatalloc(ka); 
+    e = sf_floatalloc(ka);
+    w = sf_floatalloc(ka);
+ 
     it=60; k=n;
     if (m-1<n) k=m-1;
     l=m;

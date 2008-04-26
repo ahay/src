@@ -161,8 +161,9 @@ void zomig3(ssroperator3d weop,
 		    LOOP( weop->ww[ompith][imy][imx] +=
 			  weop->qq        [imy][imx]; );
 #else
-		    LOOP( weop->ww[ompith][imy][imx].r +=
-			  weop->qq        [imy][imx]; );
+		    LOOP( weop->ww[ompith][imy][imx] = sf_cadd(
+			      weop->ww[ompith][imy][imx],
+			      weop->qq        [imy][imx]); );
 #endif		
 		}
 #ifdef _OPENMP	
@@ -185,8 +186,9 @@ void zomig3(ssroperator3d weop,
 		LOOP( weop->ww[ompith][imy][imx]  += 
 		      weop->qq[imy][imx]; );	
 #else
-		LOOP( weop->ww[ompith][imy][imx].r  += 
-		      weop->qq[imy][imx]; );
+		LOOP( weop->ww[ompith][imy][imx]  = sf_cadd(
+			  weop->ww[ompith][imy][imx],
+			  weop->qq[imy][imx]); );
 #endif	    
 	    }
 
@@ -212,8 +214,14 @@ void zomig3(ssroperator3d weop,
 #endif
 	    {
 		fslice_get(imag,0,weop->qq[0]);
+#ifdef SF_HAS_COMPLEX_H
 		LOOP(;      weop->qq[imy][imx] += 
 		     weop->ww[ompith][imy][imx]; );
+#else
+		LOOP(;      weop->qq[imy][imx] = sf_cadd(
+			 weop->qq[imy][imx],
+			 weop->ww[ompith][imy][imx]); );
+#endif
 		fslice_put(imag,0,weop->qq[0]);
 	    }
 	    
@@ -239,8 +247,14 @@ void zomig3(ssroperator3d weop,
 #endif
 		{
 		    fslice_get(imag,imz+1,weop->qq[0]); /* I.C. */
+#ifdef SF_HAS_COMPLEX_H
 		    LOOP(;      weop->qq[imy][imx] += 
 			 weop->ww[ompith][imy][imx]; );
+#else
+		    LOOP(;      weop->qq[imy][imx] = sf_cadd(
+			     weop->qq[imy][imx],
+			     weop->ww[ompith][imy][imx]); );
+#endif
 		    fslice_put(imag,imz+1,weop->qq[0]);
 		}
 	    } /* z */
