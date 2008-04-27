@@ -313,7 +313,7 @@ def Sections(report):
     sections = {}
     for section in report:
         first = Split(section[1])[0]
-        sections[first]= section[0]
+        sections[paper_tag(first)[1]]= section[0]
     return sections
 
 class RSFReport(Environment):
@@ -334,7 +334,9 @@ class RSFReport(Environment):
     def Papers(self,papers,**kw):
         # get list of papers
         if type(papers[0]) is types.TupleType:
-            kw.update({'sections':Sections(papers)})
+            sections = Sections(papers)
+            print sections
+            kw.update({'sections':sections})
             papers = Split(string.join(map(lambda x: x[1],papers)))
         for i in range(len(papers)):
             paper = papers[i]

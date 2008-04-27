@@ -10,7 +10,7 @@ from   rsfproj import *
 try:
     import numpy   as     np
 except:
-    sys.stderr.write('Cannot find numpy\n')
+    sys.stderr.write('\nCannot find numpy.\n')
     sys.exit(1)
 
 import os
@@ -20,7 +20,7 @@ import os
 ########################################################################
 matlab         = WhereIs('matlab')
 if not matlab:
-    sys.stderr.write('Cannot find Matlab\n')
+    sys.stderr.write('\nCannot find Matlab.\n')
     sys.exit(1)
 
 matROOT = '../matfcts'

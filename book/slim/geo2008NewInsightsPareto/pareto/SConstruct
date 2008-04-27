@@ -4,12 +4,14 @@
 #         The University of British Columbia
 #         
 # Date  : December, 07
+import sys
 
 from   rsfproj import *
 try:
     import numpy   as     np
 except:
-    raise Exception('Cannot find numpy')
+    sys.stderr.write('\nCannot find numpy.\n')
+    sys.exit(1)
 import os
 
 ########################################################################
@@ -17,7 +19,8 @@ import os
 ########################################################################
 matlab         = WhereIs('matlab')
 if not matlab:
-    raise Exception('Cannot find Matlab')
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
 
 matROOT = '../matfcts'
 
