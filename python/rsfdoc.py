@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc #, datetime
-import re, sys, os, string, glob, string
+import re, sys, os, string, glob, string, signal
 import rsfpath
 
 progs = {}
@@ -28,6 +28,28 @@ headercut headermath headersort headerwindow in interleave mask math
 pad prep4plot put real remap1 reverse rm rotate rtoc scale segyread
 segywrite spike spray stack stretch transp window
 ''')
+
+def handler(signum, frame):
+    'signal handler for abortion [Ctrl-C]'
+    sys.stderr.write('\n[Ctrl-C] Aborting...\n')
+    if child:
+        os.kill (signal.SIGINT,child)
+    sys.exit(-1)
+
+signal.signal(signal.SIGINT,handler) # handle interrupt
+
+child = None
+def syswait(comm):
+    'Interruptable system command'
+    global child
+    child = os.fork()
+    if child:
+        (pid,exit) = os.waitpid(child,0)
+        child = 0
+        return exit
+    else:
+        os.system(comm)
+        os._exit(0)
 
 def subdirs():
     return filter(lambda x: x[-5:] != '_html',
@@ -67,7 +89,7 @@ def use(target=None,source=None,env=None):
                 os.chdir(chapter)
                 print "...%s" % chapter
 
-                os.system('scons -s uses')
+                syswait('scons -s uses')
 
                 datapath = rsfpath.datapath()
                 path = os.path.dirname(datapath)
@@ -85,6 +107,7 @@ def use(target=None,source=None,env=None):
         os.chdir(cwd)
     out.write(doc)
     out.close()
+    return 0
 
 def selfdoc(target=None,source=None,env=None):
     src = str(source[0])

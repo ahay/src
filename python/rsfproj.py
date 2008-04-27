@@ -37,6 +37,8 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
+SCons.Defaults.DefaultEnvironment(tools = [])
+
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES
 ##############################################################################
@@ -225,7 +227,7 @@ class Project(Environment):
                     self.path = os.path.join(self.path,level)
         rsfpath.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
-        self.SConsignFile(self.path+'.sconsign')
+        rsfpath.sconsign(self)
 
         self.resdir = resdir
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',

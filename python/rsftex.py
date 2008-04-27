@@ -28,6 +28,8 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
+SCons.Defaults.DefaultEnvironment(tools = [])
+
 #############################################################################
 # CONFIGURATION VARIABLES
 #############################################################################
@@ -698,6 +700,7 @@ LaTeX = Scanner(name='LaTeX',function=latexscan,skeys=['.tex','.ltx'])
 
 class TeXPaper(Environment):
     def __init__(self,**kw):
+        kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
@@ -739,7 +742,7 @@ class TeXPaper(Environment):
                 self.path = os.path.join(self.path,level)
         rsfpath.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
-        self.SConsignFile(self.path+'.sconsign2')
+        rsfpath.sconsign(self)
 
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})

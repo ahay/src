@@ -40,9 +40,8 @@ env.Install(bindir,'pscons')
 use = env.Command('rsfuse.py',None,
                   action=Action(rsfdoc.use,varlist=['book']),book='book')
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
-Depends(use,os.path.join(libdir,'vpplot.py'))
-Depends(use,os.path.join(libdir,'suproj.py'))
-Depends(use,os.path.join(libdir,'vplot2eps.py'))
+for case in ('vpplot','suproj','vplot2eps','rsftex','rsfproj'):
+    Depends(use,os.path.join(libdir,case+'.py'))
 py_install('rsfuse')
 
 htm = os.path.join(docdir,'index.html')

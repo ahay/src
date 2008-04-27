@@ -55,3 +55,20 @@ def mkdir(dir):
         mkdir(os.path.dirname(dir))        
         os.mkdir(dir)
     return dir
+
+def sconsign(env):
+    'SConsign database file'
+
+    try: 	 
+        import dbhash 	 
+        env.SConsignFile(env.path+ '.sconsign.dbhash',dbhash)	 
+    except: 	 
+        try: 	 
+            import gdbm 	 
+            env.SConsignFile(env.path+ '.sconsign.gdbm',gdbm)
+        except:
+            try:
+                import anydbm
+                env.SConsignFile(env.path+ '.sconsign.db',anydbm)
+            except:
+                env.SConsignFile(env.path+ '.sconsign')
