@@ -101,7 +101,7 @@ def echo(target,source,env):
         trg.close()
     err = env.get('err','')
     if err:
-        stderr.write(err+'\n')
+        sys.stderr.write(err+'\n')
     return 0
 
 def symlink(target, source, env):
@@ -225,7 +225,7 @@ class Project(Environment):
             for level in tree:
                 if level:
                     self.path = os.path.join(self.path,level)
-        rsfpath.mkdir(self.path)
+            rsfpath.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
         rsfpath.sconsign(self)
 

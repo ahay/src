@@ -1,4 +1,4 @@
-/* Analytical traveltime in a linear slowness squared model. */
+/* Analytical point-source traveltime in a linear slowness squared model. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
