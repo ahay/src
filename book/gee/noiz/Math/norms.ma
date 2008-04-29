@@ -25,7 +25,7 @@ cc=Plot [CCC,{m,0,6},PlotRange->{0.0,7},PlotPoints->100];
 
 aaa=Show[GraphicsArray[{{a,b,c},{aa,bb,cc}}]];
 
-Display["junk_ma.eps", aaa, "EPS", ImageSize->1000];
+Export["junk_ma.eps", aaa, "EPS", ImageSize->1000];
 
 
 

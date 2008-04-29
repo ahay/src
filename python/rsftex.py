@@ -609,7 +609,7 @@ if latex2html:
                    (inputs,l2hdir,latex2html,itype,init),src_suffix='.ltx')
 if epstopdf:
     if mathematica:
-        Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
+        Math = Builder(action = '%s -batchoutput '
                        '< $SOURCE >& /dev/null > /dev/null && '
                        '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
                        (mathematica,epstopdf),

@@ -11,7 +11,7 @@ a [r_] := Show[GraphicsArray[{{a1 [r]},{an [r]}}]];
 
 gr = Show[GraphicsArray[{a[2],a[1],a[0.2]}]];
 
-Display["junk_ma.eps", gr, "EPS", ImageSize->1000];
+Export["junk_ma.eps", gr, "EPS", ImageSize->1000];
 
 
 

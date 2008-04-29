@@ -174,7 +174,7 @@ The following
 \bx{pseudocode}
 does matrix multiplication
 $\bold y=\bold B\bold x$ and multiplication by the transpose
-$\tilde \bold x = \bold B' \bold y$:
+$\tilde{\bold x} = \bold{B}' \bold{y}$:
 \par\noindent
 \vbox{\begin{tabbing}
 indent \= atechars \= atechars \=  atechars \= \kill
@@ -2103,8 +2103,8 @@ The size measure of a vector is a positive value called a norm.
 The norm is usually defined to be the \bx{dot product}
 (also called the $L_2$ \bx{norm}), say $\bold d \cdot \bold d$.
 For complex data it is
-$\bar \bold d \cdot \bold d$
-where $\bar \bold d $ is the complex conjugate of $\bold d$.
+$\bar{\bold{d}} \cdot \bold{d}$
+where $\bar{\bold{d}}$ is the complex conjugate of $\bold{d}$.
 In theoretical work the ``length of a vector'' means the vector's norm.
 In computational work the ``length of a vector'' means the
 number of components in the vector.
@@ -2185,14 +2185,14 @@ Thus,
 To perform the dot-product test,
 load the vectors $\bold x$ and $\bold y$ with random numbers.
 Using your program for $\bold F$,
-compute the vector $\tilde \bold y = \bold F\bold x$,
-and using your program for $\bold F'$,
-compute $\tilde \bold x = \bold F'\bold y$.
+compute the vector $\tilde{\bold{y}} = \bold{F}\bold{x}$,
+and using your program for $\bold{F}'$,
+compute $\tilde{\bold{x}} = \bold{F}'\bold{y}$.
 Inserting these into equation~(\ref{eqn:bilin2})
 gives you two scalars that should be equal.
 \begin{equation}
-\bold y' ( \bold F \bold x ) \eq
-\bold y' \tilde \bold y \eq \tilde \bold x ' \bold x
+\bold{y}' ( \bold F \bold x ) \eq
+\bold y' \tilde{\bold y} \eq \tilde{\bold x} ' \bold x
 \eq ( \bold F' \bold y )' \bold x
 \label{eqn:bilin}
 \end{equation}
@@ -2262,7 +2262,7 @@ may need to be changed to an integral.
 The input or the output or both can be given
 either on a continuum or in a discrete domain.
 So the dot-product test
-$\bold y' \tilde \bold y = \tilde \bold x ' \bold x$
+$\bold y' \tilde{\bold y} = \tilde{\bold x}' \bold x$
 could have an integration on one side of the equal sign
 and a summation on the other.
 Linear-operator theory is rich with concepts not developed here.
@@ -2457,7 +2457,7 @@ Equation (\ref{eqn:overimplication}) says that the estimate $\hat {\bold m}_1$
 gives the correct model $\bold m$
 if you start from the theoretical data.
 Equation (\ref{eqn:underimplication}) says that the model estimate $\hat {\bold m}_2$
-gives the theoretical data if we derive $\hat \bold m_2$
+gives the theoretical data if we derive $\hat{\bold m}_2$
 from the theoretical data.
 Both of these statements are delightful.
 Now let us return to the problem of the inverse matrices.

@@ -410,7 +410,7 @@ We do not multiply by the backside zeros, nor do we even store them in memory.
 Whereas an ordinary convolution program would do time shifting
 by a code line like {\tt iy=ix+lag},
 Module
-\texttt{helicon} \vpageref{lst:helicon}
+\texttt{helicon} %\vpageref{lst:helicon}
 ignores the many zero filter values on backside of the tube
 by using the code {\tt iy=ix+lag[ia]}
 where a counter {\tt ia} ranges over the nonzero filter coefficients.

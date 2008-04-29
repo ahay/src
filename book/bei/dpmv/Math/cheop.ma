@@ -1,4 +1,3 @@
-<< Graphics`Arrow`;
 slice[t_, a_, r_] := {
     Sqrt[2]*r*Cos[a]*Sqrt[(t*(-0.04 + t^2))/
     (2*t + Sqrt[2]*Sqrt[0.04 + t^2 - (-0.04 + t^2)*Cos[4*a]])], 
@@ -12,7 +11,7 @@ cont[t_] := ParametricPlot3D[-slice[t, a, 1.001], {a, 0, 2 Pi},
 hyp[x_, r_] := ParametricPlot3D[{r(x + h), r(x - h), 
 		-Sqrt[0.01 + (x - h)^2] -Sqrt[0.01 + (x + h)^2], 
                {Thickness[0.01]}}, {h, -0.5, 0.5},ViewPoint -> {1.3, 0, 3}];
-Show[Join[{%4}, Table[cont[t], {t, 0.2, 1, 0.04}], 
+Show[Join[{%3}, Table[cont[t], {t, 0.2, 1, 0.04}], 
     Table[hyp[x, 1.001], {x, 0, 0.4, 0.1}]], 
     PlotRange -> {Automatic, Automatic, {0, -1}}];
 Show[Graphics3D[{
@@ -38,4 +37,4 @@ ParametricPlot[{slice[1, a, 1][[2]] + 2, -slice[1, a, 1][[1]]}, {a, 0, 2 Pi},
   PlotPoints -> 100, Axes -> False];
 Show[{%, %%}, AspectRatio -> Automatic];
 Show[GraphicsArray[{%%%%, %}]];
-Display["junk_ma.eps",%, "EPS"];
+Export["junk_ma.eps",%, "EPS"];

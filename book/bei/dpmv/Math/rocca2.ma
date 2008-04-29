@@ -10,5 +10,5 @@ Show[{%%%, %%, %,
     Graphics[{Text["-h", {-0.8, 0.1}], Text["h", {0.8, 0.1}]}]}, 
     AspectRatio -> Automatic, AxesLabel -> {"y", None}, 
     AxesOrigin -> {-1.5, 0}, Ticks -> None];
-Display["junk_ma.eps",%, "EPS"];
+Export["junk_ma.eps",%, "EPS"];
 
