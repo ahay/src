@@ -43,7 +43,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,expl; 
-    int  jsnap;
+    int  jsnap,ntsnap;
     int  jdata;
 
     /* I/O files */
@@ -181,7 +181,11 @@ int main(int argc, char* argv[])
 
 	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
 
-	sf_setn(at,nt/jsnap);
+	ntsnap=0;
+	for(it=0; it<nt; it++) {
+	    if(it%jsnap==0) ntsnap++;
+	}
+	sf_setn(at,  ntsnap);
 	sf_setd(at,dt*jsnap);
 
 	sf_oaxa(Fwfl,ac1,1);
@@ -351,7 +355,7 @@ int main(int argc, char* argv[])
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
 
-	if(snap && (it+1)%jsnap==0) {
+	if(snap && it%jsnap==0) {
 	    cut2d(uo,uc,fdm,ac1,ac2);
 	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 	}

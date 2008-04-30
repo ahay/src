@@ -526,9 +526,9 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     twfl = imag+'_tur'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % par['nt'],par)
+    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
 
-    Flow(imag,twfl,'window n3=1')
+    Flow(imag,twfl,'window n3=1 f3=1')
 
 # ------------------------------------------------------------
 # wavefield-over-model plot
