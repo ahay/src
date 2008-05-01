@@ -79,3 +79,16 @@ def agrey(custom,par):
     return ciggrey(' label2="\F10 q\F3 " unit2="\^o\_" '%par+custom,par)
 # ------------------------------------------------------------
 
+def egrey(custom,par):
+    return '''
+    byte gainpanel=a pclip=100 %s|
+    grey3 title=""  labelsz=6 labelfat=3 titlesz=12 titlefat=3
+    frame1=%d frame2=%d frame3=%d
+    label1="z" unit1=%s
+    label2="\F10 l\F3 " unit2=%s
+    label3="\F10 t\F3 " unit3=%s
+    %s
+    ''' % ( custom,
+            par['nz']/2, par['nhx'], par['nht']/2,
+            par['uz'],par['ux'],par['ut'],
+            custom)

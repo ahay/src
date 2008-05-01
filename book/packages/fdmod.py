@@ -233,7 +233,7 @@ def ssplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=o plotcol=6 plotfat=10 wantaxis=n %s' % custom,par)
+    ''' + cgraph('symbol=x plotcol=6 plotfat=25 wantaxis=n %s' % custom,par)
 
 def rrplot(custom,par):
     return '''
