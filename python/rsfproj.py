@@ -52,7 +52,8 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
+dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
+# ftp://egl.beg.utexas.edu
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
