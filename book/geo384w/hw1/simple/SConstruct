@@ -61,7 +61,7 @@ Plot('wave',
 
 # Favorite time moment
 ##########
-time = 1 # !!!!!!!! MODIFY ME
+time = 1.5 # !!!!!!!! MODIFY ME
 ##########
 
 # Wavefield snapshot
