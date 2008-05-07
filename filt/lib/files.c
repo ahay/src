@@ -34,6 +34,7 @@
 #include "alloc.h"
 
 #include "_bool.h"
+#include "_largeint.h"
 #include "file.h"
 /*^*/
 
@@ -49,6 +50,26 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     for (i=0; i < SF_MAX_DIM; i++) {
 	(void) snprintf(key,3,"n%d",i+1);
 	if (!sf_histint(file,key,n+i)) {
+	    n[i]=1;
+	} else if (n[i] > 1) {
+	    dim=i+1;
+	}
+    }
+    return dim;
+}
+
+int sf_fileulargedims (sf_file file, /*@out@*/ sf_ulargeint *n) 
+/*< Find file dimensions.
+--- 
+Outputs the number of dimensions dim and a dimension array n[dim] >*/
+{
+    int i, dim;
+    char key[3];
+
+    dim = 1;
+    for (i=0; i < SF_MAX_DIM; i++) {
+	(void) snprintf(key,3,"n%d",i+1);
+	if (!sf_histulargeint(file,key,n+i)) {
 	    n[i]=1;
 	} else if (n[i] > 1) {
 	    dim=i+1;

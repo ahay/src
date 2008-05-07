@@ -43,14 +43,15 @@ standard deviation = sqrt [ variance ]
 
 #include <rsf.h>
 
-static void location(size_t loc, size_t dim, const int *n);
+static void location(size_t loc, size_t dim, const sf_ulargeint *n);
 
 int main(int argc, char* argv[])
 {
     sf_file in;
     char *want, buf[BUFSIZ];
-    int n[SF_MAX_DIM], nzero, lval;
-    size_t i, nsiz, nbuf, nleft, dim, minloc=0, maxloc=0;
+    sf_ulargeint n[SF_MAX_DIM];
+    int lval;
+    size_t i, nsiz, nzero, nbuf, nleft, dim, minloc=0, maxloc=0;
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float f, fmin, fmax;
     double fsum, fsqr, flval, frms, fmean, fnorm, fvar, fstd;
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
  
     in = sf_input("in");
 
-    dim = (size_t) sf_filedims (in,n);
+    dim = (size_t) sf_fileulargedims (in,n);
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }
@@ -217,9 +218,9 @@ int main(int argc, char* argv[])
 	}
     }
     if(NULL==want || 0==strcmp(want,"nonzero"))
-	printf("number of nonzero samples = %d \n",(int) nsiz-nzero);
+	printf("number of nonzero samples = %lu \n",(sf_ulargeint) (nsiz-nzero));
     if(NULL==want || 0==strcmp(want,"samples"))
-	printf("total number of samples = %d \n",(int) nsiz);
+	printf("total number of samples = %lu \n",(sf_ulargeint) nsiz);
     if(NULL==want) {
 	printf("******************************************* \n");
     }
@@ -233,14 +234,14 @@ int main(int argc, char* argv[])
 
 static void location(size_t loc   /* liner location index */, 
 		     size_t dim   /* number of dimensions */, 
-		     const int *n /* hypercube dimensions [dim] */)
+		     const sf_ulargeint *n /* hypercube dimensions [dim] */)
 /* print out an event location */
 {
     size_t i;
-    int ni;
+    sf_ulargeint ni;
 
     for (ni=1, i=0; i < dim; ni *= n[i], i++) {
-      printf("%d ",(int) (1+(loc/ni)%n[i]));
+      printf("%lu ",(sf_ulargeint) (1+(loc/ni)%n[i]));
     }
     printf("\n");
 }
