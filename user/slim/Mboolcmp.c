@@ -30,7 +30,8 @@ Created: Nov 2007
 
 int main(int argc, char *argv[])
 {
-    int n[SF_MAX_DIM],n_r[SF_MAX_DIM],qq[BUFSIZ];
+    sf_ulargeint n[SF_MAX_DIM],n_r[SF_MAX_DIM];
+    int qq[BUFSIZ];
     char buf[BUFSIZ],buf_r[BUFSIZ],*right=0,*sign;
     float eps,fl=0,fr;
     size_t bufsiz=BUFSIZ,nsiz,nsiz_r=0,dim,dim_r,nleft,i,nbuf;
@@ -66,12 +67,12 @@ int main(int argc, char *argv[])
     out = sf_output("out");
     sf_settype(out,SF_INT);
 
-    dim = (size_t) sf_filedims(in,n);
+    dim = (size_t) sf_fileulargedims(in,n);
     for (nsiz=1, i=0; i < dim; i++) nsiz *= n[i];
 
     if (!cmp_num) {
       in_r = sf_input(right);
-      dim_r = (size_t) sf_filedims(in_r,n_r);
+      dim_r = (size_t) sf_fileulargedims(in_r,n_r);
       for (nsiz_r=1, i=0; i < dim_r; i++) nsiz_r *= n_r[i];
     }
 

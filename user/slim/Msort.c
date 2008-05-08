@@ -62,8 +62,8 @@ static float *dataloader(sf_file in, int n, bool complex_data)
 
 int main(int argc, char* argv[])
 {
-  int n1, n, nbchunks, nfit, i, j;
-  off_t memsize;
+  int n, nbchunks, nfit, i, j;
+  off_t n1, memsize;
   int mem; /* for avoiding int to off_t typecast warning */
   float *data;
   float *tmp;

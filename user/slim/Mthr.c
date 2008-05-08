@@ -34,13 +34,13 @@ static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
 
 int main(int argc, char* argv[])
 {
-  int n1, n2, i;
+  sf_ulargeint n1, n2, i;
+  sf_ulargeint n1fthr, n2fthr;
   float thr, thrvalue;
   bool thrflag;
   bool fthrflag;
   float *fthrsample;
   sf_file fthr = NULL;
-  int n1fthr, n2fthr;
   bool complex_data = false;/* true if input data is complex */
   char* mode;
   sf_file in, out; /* Input and output files */
@@ -59,10 +59,10 @@ int main(int argc, char* argv[])
     sf_error("Need float or complex input");
   
   /* number of time samples/trace */
-  if (!sf_histint(in,"n1",&n1)) 
+  if (!sf_histulargeint(in,"n1",&n1)) 
     sf_error("No n1= in input");
   /* number of traces */
-  n2 = sf_leftsize(in,1);
+  n2 = sf_leftulargesize(in,1);
   
   /* read threshold level from the command line */
   thrflag = sf_getfloat("thr",&thr);
@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
     fthr = sf_input("fthr");
     if (SF_FLOAT != sf_gettype(fthr))
       sf_error("Need float varying threshold level");
-    if (!sf_histint(fthr,"n1",&n1fthr)) 
+    if (!sf_histulargeint(fthr,"n1",&n1fthr)) 
       sf_error("No n1= in fthr");
-    n2fthr = sf_leftsize(fthr,1);
+    n2fthr = sf_leftulargesize(fthr,1);
     if ( n1 != n1fthr || n2 != n2fthr)
       sf_error("Size mismatch: fthr & input must be of same size");
     if (!thrflag)
