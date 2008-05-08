@@ -29,11 +29,11 @@
 
 #ifndef _sf_pweno_h
 
-typedef struct Pweno *sf_eno;
+typedef struct Pweno *sf_pweno;
 /* abstract data type */
 /*^*/
 
-typedef enum {FUNC, DER, BOTH} der;
+typedef enum {FUNC, DER, BOTH} derr;
 /* flag values */
 /*^*/
 
@@ -45,14 +45,14 @@ struct Pweno {
 };
 /* concrete data type */
 
-sf_eno sf_pweno_init (int order /* interpolation order */,
+sf_pweno sf_pweno_init (int order /* interpolation order */,
               int n     /* data size */)
 /*< Initialize interpolation object >*/
 {
-    sf_eno ent;
+    sf_pweno ent;
     int i;
     
-    ent = (sf_eno) sf_alloc(1,sizeof(*ent));
+    ent = (sf_pweno) sf_alloc(1,sizeof(*ent));
     ent->order = order;
     ent->n = n;
     ent->diff = (float**) sf_alloc(order+1,sizeof(float*));
@@ -64,7 +64,7 @@ sf_eno sf_pweno_init (int order /* interpolation order */,
     return ent;
 }
 
-void sf_pweno_close (sf_eno ent)
+void sf_pweno_close (sf_pweno ent)
 /*< Free internal storage >*/
 {
     int i;
@@ -89,7 +89,7 @@ float powerpeno (float x, float y, int p /* power order */)
     return (mins * power);
 }
 
-void sf_pweno_set (sf_eno ent, float* c /* data [n] */, int p /* power order */)
+void sf_pweno_set (sf_pweno ent, float* c /* data [n] */, int p /* power order */)
 /*< Set the interpolation undivided difference table. c can be changed or freed afterwards >*/
 {
     int i, j;
@@ -110,12 +110,12 @@ void sf_pweno_set (sf_eno ent, float* c /* data [n] */, int p /* power order */)
     ent->diff[ent->order-1][i] = powerpeno(ent->diff[ent->order][i+1],ent->diff[ent->order][i],p);
 }
 
-void sf_pweno_apply (sf_eno ent, 
+void sf_pweno_apply (sf_pweno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 
 		float *f1 /* output derivative */, 
-		der what  /* flag of what to compute */) 
+		derr what  /* flag of what to compute */) 
 /*< Apply interpolation >*/
 {
     int j, k, i1, i2, n;
