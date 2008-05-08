@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-wile
+wile fwefd
 '''
 
 try:  # distributed version
