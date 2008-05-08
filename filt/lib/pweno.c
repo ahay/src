@@ -33,7 +33,7 @@ typedef struct Pweno *sf_pweno;
 /* abstract data type */
 /*^*/
 
-typedef enum {FUNC, DER, BOTH} derr;
+typedef enum {FUNC1, DER1, BOTH1} derr;
 /* flag values */
 /*^*/
 
@@ -142,17 +142,17 @@ void sf_pweno_apply (sf_pweno ent,
 	
 	/* Loop to compute the polynomial */
 	for (s = 1., s1 = 0., k=0; k < ent->order; k++) {
-	    if (what != FUNC) {
+	    if (what != FUNC1) {
 		g1 += s1*ent->diff[k][j];
 		s1 = (s + s1*(y-k))/(k+1.);
 	    }
-	    if (what != DER) g += s*((k != (ent->order-1) || j != i) ?  ent->diff[k][j] : ent->diff[ent->order][i] );
+	    if (what != DER1) g += s*((k != (ent->order-1) || j != i) ?  ent->diff[k][j] : ent->diff[ent->order][i] );
 	    s *= (y-k)/(k+1.);
 	}
     }
     
-    if (what != DER) *f = g/n;
-    if (what != FUNC) *f1 = g1/n;
+    if (what != DER1) *f = g/n;
+    if (what != FUNC1) *f1 = g1/n;
 }
 
 
