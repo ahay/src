@@ -104,6 +104,12 @@ off_t sf_filesize (sf_file file)
     return sf_leftsize (file, 0);
 }
 
+sf_ulargeint sf_fileulargesize (sf_file file) 
+/*< Find file size (product of all dimensions) >*/
+{    
+    return sf_leftulargesize (file, 0);
+}
+
 off_t sf_leftsize (sf_file file, int dim) 
 /*< Find file size for dimensions greater than dim >*/
 {
@@ -114,6 +120,20 @@ off_t sf_leftsize (sf_file file, int dim)
     for (size=1; dim < SF_MAX_DIM; dim++, size *= ni) {
 	(void) snprintf(key,3,"n%d",dim+1);
 	if (!sf_histint(file,key,&ni)) break;
+    }
+    return size;
+}
+
+sf_ulargeint sf_leftulargesize (sf_file file, int dim) 
+/*< Find file size for dimensions greater than dim >*/
+{
+    sf_ulargeint ni;
+    sf_ulargeint size;
+    char key[3];
+
+    for (size=1; dim < SF_MAX_DIM; dim++, size *= (sf_ulargeint) ni) {
+	(void) snprintf(key,3,"n%d",dim+1);
+	if (!sf_histulargeint(file,key,&ni)) break;
     }
     return size;
 }
