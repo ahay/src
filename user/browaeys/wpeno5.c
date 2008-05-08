@@ -21,26 +21,22 @@
 #include <float.h>
 #include <stdlib.h>
 
-#include "wpeno.h"
+#include "wpen05.h"
 #include "alloc.h"
 
 #include "_defs.h"
 /*^*/
 
-#ifndef _sf_wpeno_h
+#ifndef _sf_wpeno5_h
 
 typedef struct Weno *sf_eno;
 /* abstract data type */
 /*^*/
 
-typedef enum {FUNC, DER, BOTH} der;
-/* flag values */
-/*^*/
-
 #endif
 
 #define NWORDER 4
-#define SICONST 13/14
+#define SICONST 13.0/12.0
 
 struct Weno {
     int n;
@@ -77,25 +73,23 @@ void sf_wpeno5_close (sf_eno ent)
     free (ent);
 }
 
-float pweno3 (float x, float y) 
+float pweno3 (float x, float y)
 /*< Powereno3 limiter. >*/
 {
-    float a, b, mins, pw;
+    float a, b, mins;
 
-    if (fabsf(y) >= fabsf(x)) {
-	a = fabsf(x);
-	b = fabsf(y);
-	mins = SF_SIG(x);
-    } else {
+    a = fabsf(x);
+    b = fabsf(y);
+    mins = SF_SIG(x);
+    if (a > b) {
         b = fabsf(x);
 	a = fabsf(y);
 	mins = SF_SIG(y);
     }
-    pw = mins * a * (pow(a,2) + 3.0*pow(b,2)) / pow((a+b),2) );
-    return pw;
+    return (mins * a * (pow(a,2) + 3.0*pow(b,2)) / pow((a+b),2) );
 }
 
-void sf_eno_set (sf_eno ent, float* c /* data [n] */)
+void sf_pweno5_set (sf_eno ent, float* c /* data [n] */)
 /*< Set the interpolation undivided difference table. c can be changed or freed afterwards >*/
 {
     int i, j;
@@ -115,60 +109,70 @@ void sf_eno_set (sf_eno ent, float* c /* data [n] */)
     ent->diff[NWORDER-1][i] = pweno3(ent->diff[NWORDER-2][i+1],ent->diff[NWORDER-2][i]);
 }
 
-void sf_eno_apply (sf_eno ent, 
+void sf_pweno5_apply (sf_eno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 
 		float *f1 /* output derivative */, 
-		der what  /* flag of what to compute */) 
+		float eps /* regularisation factor for weighted eno coefficients */) 
 /*< Apply interpolation >*/
 {
     int j, k, i1, i2, n, order;
-    float s, s1, y, w, g, g1;
-    float a0, a1, a2, eps, si0, si1, si2;
+    float s, s1, y, w, g, p0, p1, p2;
+    float a0, a1, a2, aa, eps, si0, si1, si2, w0, w1, w2;
     
+    /* Stencil */
     order = NWORDER-1;
     i2 = SF_MAX(0,SF_MIN(i,ent->n-order));
     i1 = SF_MIN(i2,SF_MAX(0,i-order+2));
     
+    /* Classical ENO selection */  
     w = fabsf(ent->diff[NWORDER-1][i1]);
     for (j=i1+1; j <=i2; j++) {
 	g = fabsf(ent->diff[NWORDER-1][j]);
 	if (w > g) w = g;
     }
+
+
+    /* Smoothness indicators at grid point i */
+    si0 = SICONST * pow(ent->diff[NWORDER-1][i-2], 2) + 0.25 * pow(2*ent->diff[1][i-1] + ent->diff[NWORDER-1][i-2], 2);
+    si1 = SICONST * pow(ent->diff[1][i] - ent->diff[1][i-1], 2) + 0.25 * pow(ent->diff[0][i+1] - ent->diff[0][i-1], 2);
+    si2 = SICONST * pow(ent->diff[NWORDER-1][i-1], 2) + 0.25 * pow(2*ent->diff[1][i] - ent->diff[NWORDER-1][i-1], 2);
+
+    /* Weights at point i */
+    a0 = 0.2/pow(eps+si0,2);
+    a1 = 0.2/pow(eps+si1,2);
+    a2 = 0.6/pow(eps+si2,2);
+    aa = a0 + a1 + a2;
     
+
     /* loop over starting points */
-    for (g = 0., g1 = 0., n = 0, j = i1; j <= i2; j++) {
-	if (fabsf(ent->diff[NWORDER-1][j]) > w) continue;
+    for (g = 0., n = 0, j = i1; j <= i2; j++) {
+	/* if (fabsf(ent->diff[NWORDER-1][j]) > w) continue;*/
 	n++;
         
+        /* Position in the stencil */
 	y = x + i - j;
 	
-	/* loop to compute the polynomial */
+	/* Compute the 3 polynomials */
 	for (s = 1., s1 = 0., k=0; k < ent->order; k++) {
-	    if (what != FUNC) {
-		g1 += s1*ent->diff[k][j];
-		s1 = (s + s1*(y-k))/(k+1.);
-	    }
-	    if (what != DER) g += s*ent->diff[k][j];
+	    g += s*ent->diff[k][j];
 	    s *= (y-k)/(k+1.);
 	}
 
-        /* Smoothness indicators */
-	si0 = SICONST;
-	si1 = SICONST;
-	si2 = SICONST;
 
-        /* Weights */
-	a0 = 0.2/(eps+si0);
-	a1 = 0.2/(eps+si1);
-	a2 = 0.6/(eps+si2);
 
-	/* loop to create convex combination of polynomials */
+	/* Compute the 3 polynomials */
+
+ 
+
+
     }
+
+    /* Create convex combination of polynomials for right cell interface */
+    g = a0/aa*p0 + a1/aa*p1 + a2/aa*p2;
     
-    if (what != DER) *f = g/n;
-    if (what != FUNC) *f1 = g1/n;
+    *f = g/n;
 }
 
 
