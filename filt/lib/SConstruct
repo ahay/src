@@ -14,7 +14,7 @@ decart dottest edge eno eno2 error file files freqfilt getpar helicon
 helix igrad1 impl2 int1 int2 int3 interp interp_spline irls komplex
 llist mask math1 point pqueue prefilter randn recfilt runge quantile
 quadratic segy sharpen sharpinv simtab stack stretch system tent2
-tinysolver triangle triangle1 tridiagonal vector weight
+tinysolver triangle triangle1 tridiagonal vector weight wpeno
 '''
 
 try: # distribution version
