@@ -73,23 +73,20 @@ void sf_wpeno_close (sf_eno ent)
     free (ent);
 }
 
-float pweno3 (float x, float y)
-/*< Powereno3 limiter. >*/
+float powereno3 (float x, float y)
+/*< Limiter power3 ENO >*/
 {
-    float a, b, mins;
+    float s, d, mins, pow;
 
-    a = fabsf(x);
-    b = fabsf(y);
-    mins = SF_SIG(x);
-    if (a > b) {
-        b = fabsf(x);
-	a = fabsf(y);
-	mins = SF_SIG(y);
-    }
-    return (mins * a * (pow(a,2) + 3.0*pow(b,2)) / pow((a+b),2) );
+    s = fabsf(x+y);
+    d = fabsf(x-y);
+    mins = ((fabs(y) >= fabs(x)) ? SF_SIG(x) : SF_SIG(y));
+    pow = 0.0;
+    if (s > 0.0) pow = 0.5*SF_SIG(x+y)*(s*s*s - d*d*d)/(s*s);
+    return (mins * pow);
 }
 
-void sf_pweno_set (sf_eno ent, float* c /* data [n] */)
+void sf_wpeno_set (sf_eno ent, float* c /* data [n] */)
 /*< Set the interpolation undivided difference table. c can be changed or freed afterwards >*/
 {
     int i, j;
@@ -106,10 +103,10 @@ void sf_pweno_set (sf_eno ent, float* c /* data [n] */)
 	}
     }
     /* Last column is powereno3 limiter of undivided difference */
-    ent->diff[NWORDER-1][i] = pweno3(ent->diff[NWORDER-2][i+1],ent->diff[NWORDER-2][i]);
+    ent->diff[NWORDER-1][i] = powereno3(ent->diff[NWORDER-2][i+1],ent->diff[NWORDER-2][i]);
 }
 
-void sf_pweno_apply (sf_eno ent, 
+void sf_wpeno_apply (sf_eno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 
@@ -132,6 +129,9 @@ void sf_pweno_apply (sf_eno ent,
 	g = fabsf(ent->diff[NWORDER-1][j]);
 	if (w > g) w = g;
     }
+
+
+    /* Compute the 3 polynomials */
 
 
     /* Smoothness indicators at grid point i */
@@ -162,7 +162,6 @@ void sf_pweno_apply (sf_eno ent,
 
 
 
-	/* Compute the 3 polynomials */
 
  
 
