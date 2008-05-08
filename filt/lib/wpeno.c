@@ -29,7 +29,7 @@
 
 #ifndef _sf_wpeno_h
 
-typedef struct Weno *sf_eno;
+typedef struct Weno *sf_wpeno;
 /* abstract data type */
 /*^*/
 
@@ -44,13 +44,13 @@ struct Weno {
 };
 /* concrete data type */
 
-sf_eno sf_wpeno_init (int n     /* data size */)
+sf_wpeno sf_wpeno_init (int n     /* data size */)
 /*< Initialize interpolation object. >*/
 {
-    sf_eno ent;
+    sf_wpeno ent;
     int i;
     
-    ent = (sf_eno) sf_alloc(1,sizeof(*ent));
+    ent = (sf_wpeno) sf_alloc(1,sizeof(*ent));
     ent->n = n;
     ent->diff = (float**) sf_alloc(NWORDER,sizeof(float*));
     for (i = 0; i < NWORDER-1; i++) {
@@ -61,7 +61,7 @@ sf_eno sf_wpeno_init (int n     /* data size */)
     return ent;
 }
 
-void sf_wpeno_close (sf_eno ent)
+void sf_wpeno_close (sf_wpeno ent)
 /*< Free internal storage >*/
 {
     int i;
@@ -86,7 +86,7 @@ float powereno3 (float x, float y)
     return (mins * pow);
 }
 
-void sf_wpeno_set (sf_eno ent, float* c /* data [n] */)
+void sf_wpeno_set (sf_wpeno ent, float* c /* data [n] */)
 /*< Set the interpolation undivided difference table. c can be changed or freed afterwards >*/
 {
     int i, j;
@@ -106,7 +106,7 @@ void sf_wpeno_set (sf_eno ent, float* c /* data [n] */)
     ent->diff[NWORDER-1][i] = powereno3(ent->diff[NWORDER-2][i+1],ent->diff[NWORDER-2][i]);
 }
 
-void sf_wpeno_apply (sf_eno ent, 
+void sf_wpeno_apply (sf_wpeno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 
