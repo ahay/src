@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(tin,n1,in);
 	sf_pweno_set (map,tin,p);
+        /* */
 
 	for (i1=0; i1 < nn1; i1++) {
 	    f = (oo1+i1*dd1-o1)/d1; i=f; f -= i;
