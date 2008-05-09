@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
 	for (i1=0; i1 < nn1; i1++) {
 	    f = (oo1+i1*dd1-o1)/d1; i=f; f -= i;
-	    sf_pweno_apply(map, i, f, tout+i1, &f1, FUNC);
+	    sf_pweno_apply(map, i, f, tout+i1, &f1, FUNC1);
 	}
 	sf_floatwrite(tout,nn1,out);
     }
