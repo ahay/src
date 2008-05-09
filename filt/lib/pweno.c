@@ -117,7 +117,7 @@ void sf_pweno_apply (sf_pweno ent,
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 
 		float *f1 /* output derivative */, 
-		derr what  /* flag of what to compute */) 
+		derr what /* flag of what to compute */) 
 /*< Apply interpolation >*/
 {
     int j, k, i1, i2, n;
