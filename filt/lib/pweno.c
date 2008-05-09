@@ -99,17 +99,18 @@ void sf_pweno_set (sf_pweno ent, float* c /* data [n] */, int p /* power order *
 	ent->diff[0][i] = c[i];
     }
     
-    for (j=1; j < ent->order-1; j++) {
+    for (j=1; j < ent->order; j++) {
 	for (i=0; i < ent->n-j; i++) {
 	    /* compute undivided difference tables */
 	    ent->diff[j][i] = ent->diff[j-1][i+1] - ent->diff[j-1][i];
 	}
     }
+
     for (i=0; i < ent->n-ent->order+1; i++) {
-        ent->diff[ent->order][i] = ent->diff[ent->order-2][i+1] - ent->diff[ent->order-2][i];
-        /* Power-p eno limiter of highest order undivided difference */
-        ent->diff[ent->order-1][i] = powerpeno(ent->diff[ent->order][i+1],ent->diff[ent->order][i],p);
-    }
+        ent->diff[ent->order][i] = ent->diff[ent->order-1][i];}
+    /* Power-p eno limiter of highest order undivided difference */
+    for (i=0; i < ent->n-ent->order+1; i++) {
+        ent->diff[ent->order-1][i] = powerpeno(ent->diff[ent->order][i+1],ent->diff[ent->order][i],p);}
 }
 
 void sf_pweno_apply (sf_pweno ent, 
