@@ -69,7 +69,7 @@ void sf_pweno_close (sf_pweno ent)
 {
     int i;
 
-    for (i = 0; i < ent->order; i++) {
+    for (i = 0; i < ent->order + 1; i++) {
 	free(ent->diff[i]);
     }
     free (ent->diff);
