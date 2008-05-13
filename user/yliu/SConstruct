@@ -3,8 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-difference dwt97 initial lumsmoother mf mlm mlwm
-saltpepper seislet97 snr svddenoise swell tvmf
+difference dwt97 initial lum lumsmoother lumsharpener
+mf mlm mlwm saltpepper seislet97 snr svddenoise swell
+tvmf
 '''
 
 try:  # distributed version
