@@ -22,6 +22,7 @@
 
 #include "recfilt.h"
 
+#include "_defs.h"
 #include "adjnull.h"
 #include "alloc.h"
 
