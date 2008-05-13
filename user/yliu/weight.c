@@ -48,4 +48,4 @@ void weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     }
 }
 
-/* 	$Id: weight.c 1131 2005-04-20 18:19:10Z fomels $	 */
+/* 	$Id$	 */

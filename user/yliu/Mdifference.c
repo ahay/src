@@ -68,4 +68,4 @@ int main(int argc, char *argv[])
 		
     exit(0);
 }
-/* 	$Id: Mdifference.c 3251 2008-01-13 23:58:10Z yang $	 */
+/* 	$Id$	 */

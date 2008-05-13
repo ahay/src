@@ -1,7 +1,7 @@
-/* 1D median filtering. */
+/* 1D LUM smoother filter*/
 /*
   Copyright (C) 2007 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -21,16 +21,19 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "median.h"
+#include "lumsmoother.h"
 #include "boundary.h"
 
 void bound1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);
+float lumsmoother(float *temp, int nfw, int nclip);
 float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
 
 int main (int argc, char* argv[]) 
 {
     int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
     int nfw;    /*nfw is the filter-window length*/
+    int nclip;  /*nclip is tuning parameter(<=nfw)*/
+    
     int m;
     int i,j,k,ii;
     bool boundary;
@@ -53,19 +56,24 @@ int main (int argc, char* argv[])
     if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
     /* filter-window length (positive and odd integer)*/
     
-    if (!sf_getbool("boundary",&boundary)) boundary=false;
-    /* if y, boundary is data, whereas zero*/
-    
     if (nfw < 1)  sf_error("Need positive integer input"); 
     if (nfw%2 == 0)  nfw = (nfw+1);
     m=(nfw-1)/2;
+    
+    if (!sf_getint("nclip",&nclip)) nclip=(nfw+1)/2;
+    /* tuning parameter (1 <= nclip <= (nfw+1)/2, the default is (nfw+1)/2)*/
+
+    if (!sf_getbool("boundary",&boundary)) boundary=false;
+    /* if y, boundary is data, whereas zero*/
+
+    if(nclip<1 || nclip>((nfw+1)/2)) sf_error("Need a value between 0 and (nfw+1)/2");
     
     trace = sf_floatalloc(n1*n2);
     tempt = sf_floatalloc(n1*n2);
     temp1 = sf_floatalloc(nfw);
     extendt = sf_floatalloc((n1+2*m)*n2);
     
-    for(ii=0;ii<n3;ii++){
+    for(ii=0;ii<n3;ii++) {
 	sf_floatread(trace,n1*n2,in);
 	
 	for(i=0;i<n1*n2;i++){
@@ -74,14 +82,14 @@ int main (int argc, char* argv[])
 	
 	bound1(tempt,extendt,nfw,n1,n2,boundary);
 	
-	/************1D median filter****************/
+	/************1D LUM smoother filter****************/
 	
 	for(i=0;i<n2;i++){
-	    for(j=0;j<n1;j++){
+	    for(j=0;j<n1;j++) {
 		for(k=0;k<nfw;k++){
 		    temp1[k]=extendt[(n1+2*m)*i+j+k];
 		}
-		trace[n1*i+j]=medianfilter(temp1,nfw);
+		trace[n1*i+j]=lumsmoother(temp1,nfw,nclip);
 	    }
 	}
 	

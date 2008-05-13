@@ -45,6 +45,6 @@ float medianfilter(float *temp,int nfw)
 	return median;
 }
 
-/* 	$Id: median.c 1131 2007-10-09 23:25:10Z yang $	 */
+/* 	$Id$	 */
 
 

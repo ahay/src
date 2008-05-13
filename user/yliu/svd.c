@@ -405,4 +405,4 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
     return(1);
 }
 
-/* 	$Id: svd.c 3491 2008-04-03 18:10:05Z yliu $	 */
+/* 	$Id$	 */

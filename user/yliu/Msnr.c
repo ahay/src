@@ -118,4 +118,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msnr.c 3405 2008-03-15 20:42:10Z yang $	 */
+/* 	$Id$	 */

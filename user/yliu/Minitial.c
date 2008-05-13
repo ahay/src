@@ -63,4 +63,4 @@ int main(int argc, char *argv[])
 		
     exit(0);
 }
-/* 	$Id: Minitial.c 3280 2008-01-28 18:43:10Z yang $	 */
+/* 	$Id$	 */

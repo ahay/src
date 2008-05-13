@@ -22,276 +22,136 @@
 #include <math.h>
 
 #include "median.h"
+#include "boundary.h"
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);/*extend seismic data*/
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary);/*extend temporary seismic data*/
+void bound1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);/*extend seismic data*/
+void bound2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary);/*extend temporary seismic data*/
 float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
 
 int main (int argc, char* argv[]) 
 {
-	int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
-	int i,j,k,kk,ii;
-	int nfw;    /*nfw is the reference filter-window length*/
-	int tempnfw;  /*temporary variable*/
-	int m;
-	float medianv; /*temporary median variable*/
-        bool boundary;
-	int alpha,beta,gamma,delta; /*time-varying window coefficients*/
-
-	float *trace;
-	float *tempt; /*temporary array*/
-	float *result; /*output array*/
-	float *extendt;
-	float *medianarray;   /*1D median filtered array*/
-	float *temp1,*temp2,*temp3; /*temporary array*/
-	sf_file in, out;
-
-	sf_init (argc, argv); 
-	in = sf_input("in");
-	out = sf_output("out");
+    int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
+    int i,j,k,kk,ii;
+    int nfw;    /*nfw is the reference filter-window length*/
+    int tempnfw;  /*temporary variable*/
+    int m;
+    float medianv; /*temporary median variable*/
+    bool boundary;
+    int alpha,beta,gamma,delta; /*time-varying window coefficients*/
     
-	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-	n3 = sf_leftsize(in,2);
-	/* get the trace length (n1) and the number of traces (n2) and n3*/
-
-        if (!sf_getbool("boundary",&boundary)) boundary=false;
-        /* if y, boundary is data, whereas zero*/
-
-	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
-	/* reference filter-window length (>delta, positive and odd integer)*/
-
-	if (!sf_getint("alpha",&alpha)) alpha=2;
-	/* time-varying window parameter "alpha" (default=2)*/
-
-	if (!sf_getint("beta",&beta)) beta=0;
-	/* time-varying window parameter "beta" (default=0)*/
-
-	if (!sf_getint("gamma",&gamma)) gamma=2;
-	/* time-varying window parameter "gamma" (default=2)*/
-
-	if (!sf_getint("delta",&delta)) delta=4;
-	/* time-varying window parameter "delta" (default=4)*/
-
-	if (alpha<beta || delta<gamma) sf_error("Need alpha>=beta && delta>=gamma"); 
-	if ((alpha%2)!=0) alpha = alpha+1;
-	if ((beta%2)!=0) beta = beta+1;
-	if ((gamma%2)!=0) gamma = gamma+1;
-	if ((delta%2)!=0) delta = delta+1;
-
-	if (nfw <=delta)  sf_error("Need nfw > delta"); 
-	if (nfw%2 == 0)  nfw = (nfw+1);
-	m=(nfw-1)/2;
-	tempnfw=nfw;
-
-	trace = sf_floatalloc(n1*n2);
-	tempt = sf_floatalloc(n1*n2);
-	result = sf_floatalloc(n1*n2);
-	extendt = sf_floatalloc((n1+2*m)*n2);
-	medianarray =sf_floatalloc(n1*n2);
-	temp1 = sf_floatalloc(nfw);
-	temp2 = sf_floatalloc(n1);
-	/*set the data space*/
-
-        for(ii=0;ii<n3;ii++)
-        {
-  	        sf_floatread(trace,n1*n2,in);
-	        for(i=0;i<n1*n2;i++)
-	        {
-		        tempt[i]=trace[i];
-	        }
-
-	        extenddata1(tempt,extendt,nfw,n1,n2,boundary);
-
-	        /************1D reference median filtering****************/
-
-	        for(i=0;i<n2;i++)	        {
-		        for(j=0;j<n1;j++)
-		        {
-			        for(k=0;k<nfw;k++)
-			        {
-				        temp1[k]=extendt[(n1+2*m)*i+j+k];
-			        }
-			        medianarray[n1*i+j]=medianfilter(temp1,nfw);
-		        }
-                }
-	        medianv=0.0;
-	        for(i=0;i<n1*n2;i++)
-	        {
-		        medianv=medianv+fabs(medianarray[i]);
-	        }
-	        medianv=medianv/(1.0*n1*n2);
-
-	        /************1D time-varying median filter****************/
-	        for(i=0;i<n2;i++)
-	        {
-		        for(kk=0;kk<n1;kk++)
-		        {
-			        temp2[kk]=trace[n1*i+kk];
-		        }
-		        for(j=0;j<n1;j++)
-		        {
-			        if(fabs(medianarray[n1*i+j])<medianv)
-			        {
-				        if(fabs(medianarray[n1*i+j])<medianv/2.0)
-				        {
-					        tempnfw=nfw+alpha;
-				        }
-				        else
-				        {
-					        tempnfw=nfw+beta;
-				        }
-			        }
-			        else
-			        {
-				        if(fabs(medianarray[n1*i+j])>=(medianv*2.0))
-				        {
-					        tempnfw=nfw-delta;
-				        }
-				        else
-				        {
-					        tempnfw=nfw-gamma;
-				        }
-			        }
-			        temp3 = sf_floatalloc(tempnfw);
-			        extenddata2(temp2,temp3,n1,tempnfw,j,boundary);
-			        result[n1*i+j]=medianfilter(temp3,tempnfw);
-			        tempnfw=nfw;
-		        }
-                }
-	        sf_floatwrite(result,n1*n2,out);
-        }
-
+    float *trace;
+    float *tempt; /*temporary array*/
+    float *result; /*output array*/
+    float *extendt;
+    float *medianarray;   /*1D median filtered array*/
+    float *temp1,*temp2,*temp3; /*temporary array*/
+    sf_file in, out;
+    
+    sf_init (argc, argv); 
+    in = sf_input("in");
+    out = sf_output("out");
+    
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    n3 = sf_leftsize(in,2);
+    /* get the trace length (n1) and the number of traces (n2) and n3*/
+    
+    if (!sf_getbool("boundary",&boundary)) boundary=false;
+    /* if y, boundary is data, whereas zero*/
+    
+    if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
+    /* reference filter-window length (>delta, positive and odd integer)*/
+    
+    if (!sf_getint("alpha",&alpha)) alpha=2;
+    /* time-varying window parameter "alpha" (default=2)*/
+    
+    if (!sf_getint("beta",&beta)) beta=0;
+    /* time-varying window parameter "beta" (default=0)*/
+    
+    if (!sf_getint("gamma",&gamma)) gamma=2;
+    /* time-varying window parameter "gamma" (default=2)*/
+    
+    if (!sf_getint("delta",&delta)) delta=4;
+    /* time-varying window parameter "delta" (default=4)*/
+    
+    if (alpha<beta || delta<gamma) sf_error("Need alpha>=beta && delta>=gamma"); 
+    if ((alpha%2)!=0) alpha = alpha+1;
+    if ((beta%2)!=0) beta = beta+1;
+    if ((gamma%2)!=0) gamma = gamma+1;
+    if ((delta%2)!=0) delta = delta+1;
+    
+    if (nfw <=delta)  sf_error("Need nfw > delta"); 
+    if (nfw%2 == 0)  nfw = (nfw+1);
+    m=(nfw-1)/2;
+    tempnfw=nfw;
+    
+    trace = sf_floatalloc(n1*n2);
+    tempt = sf_floatalloc(n1*n2);
+    result = sf_floatalloc(n1*n2);
+    extendt = sf_floatalloc((n1+2*m)*n2);
+    medianarray =sf_floatalloc(n1*n2);
+    temp1 = sf_floatalloc(nfw);
+    temp2 = sf_floatalloc(n1);
+    /*set the data space*/
+    
+    for(ii=0;ii<n3;ii++){
+	sf_floatread(trace,n1*n2,in);
+	for(i=0;i<n1*n2;i++){
+	    tempt[i]=trace[i];
+	}
+	
+	bound1(tempt,extendt,nfw,n1,n2,boundary);
+	
+	/************1D reference median filtering****************/
+	
+	for(i=0;i<n2;i++){
+	    for(j=0;j<n1;j++){
+		for(k=0;k<nfw;k++){
+		    temp1[k]=extendt[(n1+2*m)*i+j+k];
+		}
+		medianarray[n1*i+j]=medianfilter(temp1,nfw);
+	    }
+	}
+	medianv=0.0;
+	for(i=0;i<n1*n2;i++){
+	    medianv=medianv+fabs(medianarray[i]);
+	}
+	medianv=medianv/(1.0*n1*n2);
+	
+	/************1D time-varying median filter****************/
+	for(i=0;i<n2;i++){
+	    for(kk=0;kk<n1;kk++){
+		temp2[kk]=trace[n1*i+kk];
+	    }
+	    for(j=0;j<n1;j++){
+		if(fabs(medianarray[n1*i+j])<medianv){
+		    if(fabs(medianarray[n1*i+j])<medianv/2.0){
+			tempnfw=nfw+alpha;
+		    }
+		    else{
+			tempnfw=nfw+beta;
+		    }
+		}
+		else{
+		    if(fabs(medianarray[n1*i+j])>=(medianv*2.0)){
+			tempnfw=nfw-delta;
+		    }
+		    else{
+			tempnfw=nfw-gamma;
+		    }
+		}
+		temp3 = sf_floatalloc(tempnfw);
+		bound2(temp2,temp3,n1,tempnfw,j,boundary);
+		result[n1*i+j]=medianfilter(temp3,tempnfw);
+		tempnfw=nfw;
+	    }
+	}
+	sf_floatwrite(result,n1*n2,out);
+    }
+    
     exit (0);
 }
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
-/*extend seismic data*/
-{
-	int m=(nfw-1)/2;
-	int i,j;
-
-	for(i=0;i<(n1+2*m)*(n2);i++)
-	{
-		extendt[i]=0.0;
-	}
-	/*extend the number of samples*/
-	for(i=0;i<n2;i++)
-	{
-		for(j=0;j<m;j++)
-		{
-                        if (boundary)
-			{
-			    extendt[(n1+2*m)*i+j]=tempt[n1*i+0];
-			}
-                        else
-                        {
-                            extendt[(n1+2*m)*i+j+m]=0.0;
-                        }
-
-		}
-	}
-	for(i=0;i<n2;i++)
-	{
-		for(j=0;j<n1;j++)
-		{
-			extendt[(n1+2*m)*i+j+m]=tempt[n1*i+j];
-		}
-	}
-	for(i=0;i<n2;i++)
-	{
-		for(j=0;j<m;j++)
-		{
-                        if (boundary)
-			{
-			    extendt[(n1+2*m)*i+j+n1+m]=tempt[n1*i+n1-1];
-			}
-                        else
-                        {
-                            extendt[(n1+2*m)*i+j+n1+m]=0.0;
-                        }
-		}
-	}
-}
-
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary)/*extend temporary seismic data*/
-{
-	int k;
-	/*extend trace*/
-	if((j-tempnfw/2)>=0&&(j+tempnfw/2)<n1)
-	{
-		for(k=0;k<tempnfw;k++)
-		{
-			temp3[k]=temp2[(j-tempnfw/2+k)];
-		}
-	}
-	else if((j-tempnfw/2)<0&&(j+tempnfw/2)<n1)
-	{
-		for(k=0;k<(abs(j-tempnfw/2));k++)
-		{
-                        if (boundary)
-			{
-			    temp3[k]=temp2[0];
-			}
-                        else
-                        {
-			    temp3[k]=0.0;
-			}
-
-		}
-		for(k=(abs(j-tempnfw/2));k<tempnfw;k++)
-		{
-			temp3[k]=temp2[k-abs(j-tempnfw/2)];
-		}
-	}
-	else if((j-tempnfw/2)>=0&&(j+tempnfw/2)>=n1)
-	{
-		for(k=0;k<(tempnfw-abs(j+tempnfw/2-n1+1));k++)
-		{
-			temp3[k]=temp2[j-tempnfw/2+k];
-		}
-		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
-		{
-                        if (boundary)
-			{
-			    temp3[k]=temp2[n1];
-			}
-                        else
-                        {
-			    temp3[k]=0.0;
-			}
-		}
-	}
-	else
-	{
-		for(k=0;k<(abs(j-tempnfw/2));k++)
-		{
-                        if (boundary)
-			{
-			    temp3[k]=temp2[0];
-			}
-                        else
-                        {
-			    temp3[k]=0.0;
-			}
-		}
-		for(k=(abs(j-tempnfw/2));k<(tempnfw-abs(j+tempnfw/2-n1+1));k++)
-		{
-			temp3[k]=temp2[k-abs(j-tempnfw/2)];
-		}
-		for(k=(tempnfw-abs(j+tempnfw/2-n1+1));k<tempnfw;k++)
-		{
-                        if (boundary)
-			{
-			    temp3[k]=temp2[n1];
-			}
-                        else
-                        {
-			    temp3[k]=0.0;
-			}
-		}
-	}	
-}
 
 /* 	$Id: Mtvmf.c 3368 2008-03-09 20:42:10Z yang	 */
 

@@ -64,4 +64,4 @@ void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
     free(pxt);
 }
 
-/* 	$Id: svddenoise.c 3491 2008-04-03 18:10:05Z yliu $	 */
+/* 	$Id$	 */

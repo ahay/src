@@ -95,4 +95,4 @@ void aderfilter (int nw   /* size */,
     }
 }
 
-/* 	$Id: apfilt.c 1131 2005-04-20 18:19:10Z fomels $	 */
+/* 	$Id$	 */

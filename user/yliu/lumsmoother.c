@@ -1,4 +1,4 @@
-/* 1-D weighted median filtering. */
+/* 1D LUM smoother operator */
 /*
   Copyright (C) 2007 University of Texas at Austin
   
@@ -21,49 +21,22 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "weightmf.h"
+#include "lumsmoother.h"
+#include "median.h"
 
-float wmedianfilter(float *odata, float *oweights, int nfw)
-/*< get a weighted median value >*/
+float lumsmoother(float *temp, int nfw, int nclip)
+/*< get a LUM smoother value >*/
 {   
-  int i,j,k;
-  float *data, *weights;
-  float temp,average,wm,sum;
-
-  data = sf_floatalloc(nfw);
-  weights = sf_floatalloc(nfw);
-
-  for(i=0;i<nfw;i++){
-    data[i]=odata[i];
-    weights[i]=oweights[i];
-  }
-
-  for(i=1;i<nfw;i++){
-    for(j=0;j<nfw-i;j++){
-      if(data[j]>data[j+1]){
-	temp=data[j];
-	data[j]=data[j+1];
-	data[j+1]=temp;
-	temp=weights[j];
-	weights[j]=weights[j+1];
-	weights[j+1]=temp;
-      }
-    }
-  }
-  sum=0.;
-  for(i=0;i<nfw;i++){
-    sum+=weights[i];
-  }
-  average=sum/2.;
-  k=0;
-  sum=weights[0];
-  while (sum<average){
-    k++;
-    sum+=weights[k];
-  }
-  wm=data[k];
-  return wm;
-
+    float smoother,low,upper,center;
+    float lum[3];
+    center=temp[nfw/2];
+    low=sf_quantile(nclip-1,nfw,temp);
+    upper=sf_quantile(nfw-nclip,nfw,temp);
+    lum[0]=low;
+    lum[1]=center;
+    lum[2]=upper;
+    smoother=medianfilter(lum,3);
+    return smoother;
 }
 
 /* 	$Id$	 */

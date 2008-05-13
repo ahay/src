@@ -111,4 +111,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msaltpepper.c 3303 2008-02-06 15:10:30Z yliu $	 */
+/* 	$Id$	 */
