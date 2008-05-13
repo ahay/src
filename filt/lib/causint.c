@@ -39,7 +39,7 @@ void sf_causint_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
 	    xx[i] += t;
 	}
     } else {
-	for (i=0; i < nx; i++) {
+	for (i=0; i <= nx-1; i++) {
 	    t += xx[i];
 	    yy[i] += t;
 	}

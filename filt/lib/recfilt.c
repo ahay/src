@@ -52,9 +52,8 @@ void sf_recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
     if (adj) {
 	for (ix = nx-1; ix >= 0; ix--) {  
 	    tt[ix] = yy[ix];
-	    for (ia = 0; ia < na; ia++) {
+	    for (ia = 0; ia < SF_MIN(na,ny-ix-1); ia++) {
 		iy = ix + ia + 1;
-		if( iy >= ny) break;
 		tt[ix] -= aa[ia] * tt[iy];
 	    }
 	}
@@ -64,9 +63,8 @@ void sf_recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
     } else {
 	for (iy = 0; iy < ny; iy++) { 
 	    tt[iy] = xx[iy];
-	    for (ia = 0; ia < na; ia++) {
+	    for (ia = 0; ia < SF_MIN(na,iy); ia++) {
 		ix = iy - ia - 1;
-		if( ix < 0) break;
 		tt[iy] -= aa[ia] * tt[ix];
 	    }
 	}

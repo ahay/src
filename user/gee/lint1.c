@@ -44,7 +44,7 @@ void lint1_lop  (bool adj, bool add, int nm, int nd, float *mm, float *dd)
 
     for (id=0; id < nd; id++) {
         f = (coord[id]-o1)/d1;     
-	im=f;
+	im=floorf(f);
         if (0 <= im && im < nm-1) {   
 	    fx=f-im;   
 	    gx=1.-fx;

@@ -22,12 +22,12 @@
 
 #include "matmult.h"
 
-static float** Bb;
+static float** B;
 
 void matmult_init (float** bb) 
 /*< initialize with a pointer to a matrix >*/
 {
-    Bb = bb;
+    B = bb;
 }
 
 void matmult_lop (bool adj, bool add, 
@@ -38,8 +38,8 @@ void matmult_lop (bool adj, bool add,
     sf_adjnull (adj, add, nx, ny, x, y);
     for (ix = 0; ix < nx; ix++) {
 	for (iy = 0; iy < ny; iy++) {
-	    if (adj) x[ix] += Bb[iy][ix] * y[iy];
-	    else     y[iy] += Bb[iy][ix] * x[ix];
+	    if (adj) x[ix] += B[iy][ix] * y[iy];
+	    else     y[iy] += B[iy][ix] * x[ix];
 	}
     }
 }
