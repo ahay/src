@@ -130,12 +130,16 @@ def report_toc(target=None,source=None,env=None):
          '%% start entries\n'],'\n'))
     sections = env.get('sections',{})
     authors = env.get('authors',{})
+    book = env.get('book')
+    if book:
+        author = '\ '
     for src in source:
         tag = paper_tag(str(src))
         paper = src.get_contents()
         # remove comments
         paper = re.sub(r'[%][^\n]+','',paper)
-        author = get_author(src,authors,tag)
+        if not book:
+            author = get_author(src,authors,tag)
         title = re_title.search(paper)
         if sections.has_key(tag[1]):
             toc.write('\n\\geosection*{%s}\n' % sections[tag[1]])
@@ -460,7 +464,8 @@ class RSFReport(Environment):
                 chapters[i] = chapter + '/paper.tex'
         # make table of contents
         kw.update({'action':Action(report_toc),
-                   'varlist':['year','sections','authors']})
+                   'varlist':['year','sections','book'],
+                   'book':1})
         apply(self.Command,('toc.tex',chapters),kw)
         rsftex.Paper('toc',lclass='georeport',scons=0)
         # make title page

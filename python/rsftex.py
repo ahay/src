@@ -257,7 +257,6 @@ def latex2mediawiki(target=None,source=None,env=None):
     texfile = str(source[0])
     tex = open(texfile,"r")
     bblfile = re.sub('\.[^\.]+$','.bbl',texfile)
-    print bblfile
     try:
         bbl = open(bblfile,"r")
         latex2wiki.parse_bbl(bbl)
@@ -293,7 +292,7 @@ def use(target=None,source=None,env=None):
     os.system('scons -s ' + what)
     os.chdir('..')
 
-    uses = os.path.join(os.path.dirname(trg),project,'.sf_uses')
+    uses = os.path.join(os.path.dirname(trg),project,'.sf_' + what)
 
     if os.path.isfile(uses):
         usesfile = open(uses,'r')
@@ -468,22 +467,26 @@ def colorize(target=None,source=None,env=None):
 
      out.write('</font></pre></table>')
 
-     for case in range(1,3):
-         uses = str(source[case])
-         sout = open(uses)
-         progs = sout.read()
-         sout.close()
+     for case in ('uses','data'):
 
-         items = string.split(progs)
-         if items:
-             if case==1:
-                 out.write('</div><p><div class="progs">')
-                 out.write(rsfdoc.multicolumn(items,_proglink))
-             else:
-                 while 'PRIVATE' in items:
-                     items.remove('PRIVATE')
-                 out.write('</div><p><div class="dsets">')
-                 out.write(rsfdoc.multicolumn(items,_datalink))
+         uses = os.path.join(os.path.dirname(str(source[1])),
+                             os.path.dirname(str(source[0])),'.sf_' + case)
+
+         if os.path.isfile(uses):
+             sout = open(uses)
+             progs = sout.read()
+             sout.close()
+
+             items = string.split(progs)
+             if items:
+                 if case=='uses':
+                     out.write('</div><p><div class="progs">')
+                     out.write(rsfdoc.multicolumn(items,_proglink))
+                 else:
+                     while 'PRIVATE' in items:
+                         items.remove('PRIVATE')
+                         out.write('</div><p><div class="dsets">')
+                         out.write(rsfdoc.multicolumn(items,_datalink))
  
      out.write('''
      </div>
