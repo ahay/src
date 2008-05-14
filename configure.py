@@ -166,7 +166,7 @@ def identify_platform(context):
              plat['cpu'] = uname()[5] # i386 / powerpc
         elif plat['OS'] == 'irix':
              plat['distro'] = uname()[2]
-        elif plat['OS'] == 'hp-ux':
+        elif plat['OS'] == 'hp-ux' or plat['OS'] == 'hpux':
              plat['distro'] = uname()[2].split('.')[-2]
         del architecture, uname
     except: # "platform" not installed. Python < 2.3
@@ -256,7 +256,7 @@ def libs(context):
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    if plat['OS'] == 'sunos' or plat['OS'] == 'hp-ux':
+    if plat['OS'] == 'sunos' or plat['OS'] == 'hp-ux' or plat['OS'] == 'hpux':
         LIBS.append('nsl')
     elif plat['OS'] == 'cygwin':
         LIBS.append('rpc')

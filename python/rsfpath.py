@@ -67,8 +67,4 @@ def sconsign(env):
             import gdbm 	 
             env.SConsignFile(env.path+ '.sconsign.gdbm',gdbm)
         except:
-            try:
-                import anydbm
-                env.SConsignFile(env.path+ '.sconsign.db',anydbm)
-            except:
-                env.SConsignFile(env.path+ '.sconsign')
+            env.SConsignFile(env.path+ '.sconsign')

@@ -229,6 +229,47 @@ float hypotf(float x, float y)
  return (float) hypot(x,y);}
 
 #if defined(hpux) || defined(__hpux)
+/*^*/
+
+static char	*digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+long long
+strtoll(const char *ptr, const char **endptr, int base)
+/*< strtoll replacement >*/
+{
+	const char	*cp;
+	long long	 ret;
+	char		*dig;
+	int		 d;
+
+	for (ret = 0, cp = ptr ; *cp && (dig = strchr(digits, *cp)) != NULL  && (d = (int)(dig - digits)) < base ; cp++) {
+		ret = (ret * base) + d;
+	}
+	if (endptr != NULL) {
+		*endptr = cp;
+	}
+	return ret;
+}
+
+unsigned long long
+strtoull(const char *ptr, const char **endptr, int base)
+/*< strtoull replacement >*/
+{
+	const char	*cp;
+	unsigned long long	 ret;
+	char		*dig;
+	int		 d;
+
+	for (ret = 0, cp = ptr ; *cp && (dig = strchr(digits, *cp)) != NULL  && (d = (unsigned int)(dig - digits)) < base ; cp++) {
+		ret = (ret * base) + d;
+	}
+	if (endptr != NULL) {
+		*endptr = cp;
+	}
+	return ret;
+}
+
+
 #define finite(x) isfinite(x)
 #endif
 /*^*/
