@@ -447,8 +447,8 @@ a floating-point variable $z$.
 Conversion from the counting variable to the floating-point variable
 is exact and is often seen in a computer idiom
 such as either of \begin{verbatim}
-            do iz= 1, nz {   z = z0 + (iz-1) * dz 
-            do i3= 1, n3 {  x3 = o3 + (i3-1) * d3
+            for (iz=0; iz < nz; iz++) {   z = z0 + iz * dz; 
+            for (i3=0; i3 < n3; i3++) {  x3 = o3 + i3 * d3;
 \end{verbatim}
 %{\tt
 %   \begin{tabbing}  indent \= \kill
@@ -462,15 +462,16 @@ The easiest thing is to place it at the nearest neighbor.
 This is done by solving for {\tt iz}, then adding one half,
 and then rounding down to the nearest integer.
 The familiar computer idioms are:\begin{verbatim}
-        iz =  .5 + 1 + ( z - z0) / dz
-        iz = 1.5 +     ( z - z0) / dz
-        i3 = 1.5 +     (x3 - o3) / d3
+        iz = 0.5 + ( z - z0) / dz
+        i3 = 0.5 + (x3 - o3) / d3
 \end{verbatim}
 A small warning is in order:
 People generally use positive counting variables.
 If you also include negative ones,
 then to get the nearest integer,
-you should do your rounding with the Fortran function {\tt NINT()}.
+you should do your rounding with the 
+C function \texttt{floor}.
+%Fortran function {\tt NINT()}.
 
 \subsection{Data-push binning}
 \sx{nearest neighbor binning}
