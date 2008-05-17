@@ -299,7 +299,7 @@ u( t    ,z) &=& u(     t,z=0) \ast \delta( t+z/v) \\
 U(\omega,z) &=& U(\omega,z=0) \ e^{-i\omega z/v}
 \end{eqnarray}
 Sign conventions must be attended to,
-and that is explained more fully in chapter~\ref{ft1/paper:ft1}.
+and that is explained more fully in chapter~\ref{paper:ft1}.
 
 \subsection{Continuation of a dipping plane wave.}
 Next consider a plane wave \bx{dip}ping at some angle $\theta$.
@@ -334,7 +334,7 @@ U( \omega , \theta ,z) \
 \end{eqnarray}
 Equation~(\ref{eqn:dctheta})
 is a downward continuation formula for any angle $\theta$.
-Following methods of chapter~\ref{wvs/paper:wvs} we can generalize
+Following methods of chapter~\ref{paper:wvs} we can generalize
 the method to media where the velocity is a function of depth.
 Evidently we can apply equation~(\ref{eqn:dctheta})
 for each layer of thickness $\Delta z$,
@@ -397,7 +397,7 @@ that initialize the reflection seismic experiment.
 Likewise observed upcoming waves can be Fourier transformed over $t$ and $x$.
 
 \par
-Recall in chapter~\ref{wvs/paper:wvs}, a plane wave carrying
+Recall in chapter~\ref{paper:wvs}, a plane wave carrying
 an arbitrary waveform, specified by
 equation~(\ref{wvs/eqn:mvwv}).
 Specializing the arbitrary function to be
@@ -426,7 +426,7 @@ For each axis and Fourier kernel there is the question of the
 sign before the $i$.
 The sign convention used here is the one used in most physics books,
 namely, the one that agrees with equation~(\ref{eqn:2iei5}).
-Reasons for the choice are given in chapter~\ref{ft1/paper:ft1}.
+Reasons for the choice are given in chapter~\ref{paper:ft1}.
 With this convention, a wave moves in the
 {\em  positive}
 direction along the space axes.
@@ -606,7 +606,7 @@ is generally ameliorated by padding zeros around the data and the model.
 \sx{migration!phase-shift}
 The phase-shift method of migration
 begins with a two-dimensional Fourier transform (2D-FT) of the dataset.
-(See chapter \ref{ft1/paper:ft1}.)
+(See chapter \ref{paper:ft1}.)
 This transformed data is downward continued
 with  $\exp(ik_z z)$  and subsequently evaluated
 at $t=0$ (where the reflectors explode).
@@ -765,26 +765,26 @@ however, since this tutorial program uses
 a velocity $v$ that is a constant function of depth,
 I speeded it by a large factor by putting the $z$-loop on the inside
 and pulling the complex exponential out of the inner loop.
-%Figure~\ref{fig:stormhole} was made with subroutine~\texttt{phasemod()} \vpageref{/prog:phasemod}.
+%Figure~\ref{fig:stormhole} was made with subroutine~\texttt{phasemod()} \vpageref{lst:phasemod}.
 
 \subsection{Kirchhoff versus phase-shift migration}
 \inputdir{sigmoid}
-In chapter~\ref{krch/paper:krch}, we were introduced to the Kirchhoff
+In chapter~\ref{paper:krch}, we were introduced to the Kirchhoff
 migration and modeling method by means of subroutines
-\texttt{kirchslow()} \vpageref{/prog:kirchslow} and \texttt{kirchfast()} \vpageref{/prog:kirchfast}.
-From chapter~\ref{ft1/paper:ft1} we know that these routines should be
+\texttt{kirchslow()} \vpageref{lst:kirchslow} and \texttt{kirchfast()} \vpageref{lst:kirchfast}.
+From chapter~\ref{paper:ft1} we know that these routines should be
 supplemented by a $\sqrt{-i\omega}$
-filter such as subroutine \texttt{halfdifa()} \vpageref{/prog:halfdifa}.
+filter such as subroutine \texttt{halfdifa()} \vpageref{lst:halfdifa}.
 Here, however,
-we will compare results of the unadorned subroutine \texttt{kirchfast()} \vpageref{/prog:kirchfast}
-with our new programs, \texttt{phasemig()} \vpageref{/prog:phasemig} and \texttt{phasemod()} \vpageref{/prog:phasemod}.
+we will compare results of the unadorned subroutine \texttt{kirchfast()} \vpageref{lst:kirchfast}
+with our new programs, \texttt{phasemig()} \vpageref{lst:phasemig} and \texttt{phasemod()} \vpageref{lst:phasemod}.
 Figure~\ref{fig:comrecon} shows the result of modeling data and then migrating it.
 Kirchhoff and phase-shift migration methods both work well.
 As expected, the Kirchhoff method lacks some of the higher frequencies
 that could be restored by $\sqrt{-i\omega}$.
 Another problem is the irregularity of the shallow bedding.
 This is an operator aliasing problem
-addressed in chapter~\ref{trimo/paper:trimo}.
+addressed in chapter~\ref{paper:trimo}.
 
 \plot{comrecon}{width=6.00in,height=2.25in}{
         Reconstruction after modeling.
@@ -809,7 +809,7 @@ Figure~\ref{fig:commod} shows the effect of coarsening the space axis.
 Synthetic data is generated from an increasingly subsampled model.
 Again we notice that the phase-shift method of this chapter
 produces more plausible results than
-the simple Kirchhoff programs of chapter~\ref{krch/paper:krch}.
+the simple Kirchhoff programs of chapter~\ref{paper:krch}.
 
 \plot{commod}{width=6.00in,height=6.75in}{
         Modeling with increasing amounts of lateral subsampling.
@@ -920,7 +920,7 @@ might be rendered in Fortran as
 {\tt cmplx(qi,-omega)}
 where
 {\tt qi=1./tmax}
-and the whole concept implemented as in function~\texttt{eiktau()} \vpageref{/prog:eiktau}.
+and the whole concept implemented as in function~\texttt{eiktau()} \vpageref{lst:eiktau}.
 Do not set {\tt qi=0} because then the {\tt csqrt()} function
 cannot decipher positive from negative frequencies.
 
@@ -980,11 +980,11 @@ Such theory is most easily understood beginning from here.
 \subsection{Adjointness and ordinary differential equations}
 
 It is straightforward to adapt the simple programs
-\texttt{phasemig()} \vpageref{/prog:phasemig} and
-\texttt{phasemod()} \vpageref{/prog:phasemod}
+\texttt{phasemig()} \vpageref{lst:phasemig} and
+\texttt{phasemod()} \vpageref{lst:phasemod}
 to depth variable velocity.
 As you might suspect, the two processes are adjoint to each other,
-and for reasons given at the end of chapter~\ref{conj/paper:conj}
+and for reasons given at the end of chapter~\ref{paper:conj}
 it is desirable to code them to be so.
 With differential equations and their boundary conditions,
 the concept of adjoint is more subtle than previous examples.
@@ -1181,7 +1181,7 @@ A final feature of the migration application
 is that the image is formed from $\tilde \bold s$
 by summing over all frequencies.
 Although I believe the mathematics above
-%and the code in subroutine \texttt{gazadj()} \vpageref{/prog:gazadj},
+%and the code in subroutine \texttt{gazadj()} \vpageref{lst:gazadj},
 I ran the dot product test to be sure!
 %\progdex{gazadj}{phase shift mig.}
 \noindent
@@ -1238,7 +1238,7 @@ but deeper the vertical exaggeration is less than unity
         }
 %\newslide
 
-Applying %subroutine \texttt{gazadj()} \vpageref{/prog:gazadj}
+Applying %subroutine \texttt{gazadj()} \vpageref{lst:gazadj}
 the points spray out into hyperboloids (like hyperbolas, but not exactly)
 shown in Figure~\ref{fig:sagdat}.
 The obvious feature of this synthetic data is that the hyperboloids
@@ -1352,7 +1352,7 @@ It cannot sharpen a deep focus.
 %as less-steep asymptotes on the deeper hyperboloids.
 
 \subsection{Field data migration}
-Application of subroutine~\texttt{gazadj()} \vpageref{/prog:gazadj}
+Application of subroutine~\texttt{gazadj()} \vpageref{lst:gazadj}
 to the Gulf of Mexico data set processed in earlier chapters
 yields the result in Figure~\ref{fig:wgphase}.
 \plot{wgphase}{width=6.20in,height=8.5in}{

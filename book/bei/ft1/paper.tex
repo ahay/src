@@ -34,7 +34,7 @@ http://sepwww.stanford.edu/sep/prof/.
 The second half of this chapter
 uses Fourier transformation
 to explain the Hankel waveform we observed
-in chapter~\ref{vela/paper:vela} and chapter~\ref{krch/paper:krch}.
+in chapter~\ref{paper:vela} and chapter~\ref{paper:krch}.
 Interestingly,
 it is the Fourier transform of $\sqrt{-i\omega}$,
 which is half the derivative operator.
@@ -356,14 +356,14 @@ Since I almost never need the scale factor,
 it simplifies life to omit it from the subroutine argument list.
 \begin{comment}
 When a scaling program is desired,
-we can use a simple one like \texttt{scale()} \vpageref{/prog:scale}.
+we can use a simple one like \texttt{scale()} \vpageref{lst:scale}.
 Complex-valued data can be scaled with {\tt scale()}
 merely by doubling the value of {\tt n}.
 
 \progdex{scale}{scale an array}
 
 \subsection{The simple FT code}
-Subroutine \texttt{simpleft()} \vpageref{/prog:simpleft} exhibits features
+Subroutine \texttt{simpleft()} \vpageref{lst:simpleft} exhibits features
 found in many physics and engineering programs.
 For example, the time-domain signal (which is denoted ``{\tt tt()}"),
 has {\tt nt} values subscripted, from {\tt tt(1)} to {\tt tt(nt)}.
@@ -629,13 +629,13 @@ Others that do not transform data on top of itself
 may be faster with specialized computer architectures.
 
 \subsection{Shifted spectrum}
-Subroutine \texttt{simpleft()} \vpageref{/prog:simpleft}
+Subroutine \texttt{simpleft()} \vpageref{lst:simpleft}
 sets things up in a convenient manner:
 The frequency range runs from minus Nyquist
 up to (but not including) plus Nyquist.
 Thus there is no problem with the many (but not all)
 user programs that have trouble with aliased frequencies.
-Subroutine \texttt{ftu()} \vpageref{/prog:ftu}, however has a frequency range
+Subroutine \texttt{ftu()} \vpageref{lst:ftu}, however has a frequency range
 from zero to double the Nyquist.
 Let us therefore define a friendlier ``front end'' to {\tt ftu()}
 which looks more like {\tt simpleft()}.
@@ -646,7 +646,7 @@ the Fourier domain by multiplication by
 $e^{-i\omega t_0}$.
 Likewise, in the Fourier domain,
 the frequency interval, 
-% used by subroutine~\texttt{ftu()} \vpageref{/prog:ftu},
+% used by subroutine~\texttt{ftu()} \vpageref{lst:ftu},
 namely, $ 0 \le \omega < 2\pi$,
 can be shifted to the friendlier interval
 $ -\pi \le \omega < \pi$
@@ -1356,7 +1356,7 @@ we obtain
 Thus, we will see the way to overcome
 the principal artifact of hyperbola summation
 is to apply the filter of equation~(\ref{eqn:huygens}).
-In chapter~\ref{dwnc/paper:dwnc}
+In chapter~\ref{paper:dwnc}
 we will learn more exact methods of migration.
 There we will observe that an impulse in the earth
 creates not a hyperbola with an impulsive waveform
@@ -1391,7 +1391,7 @@ has a \bx{45 degree phase angle}.
 \par
 In practice, it is easiest to represent
 and to apply the 2-D Huygen's wavelet in the frequency domain.
-Subroutine \texttt{halfint()} \vpageref{/prog:halfint} is provided for that purpose.
+Subroutine \texttt{halfint()} \vpageref{lst:halfint} is provided for that purpose.
 Instead of using $\sqrt{-i\omega}$ which
 has a discontinuity at the Nyquist frequency
 and a noncausal time function,
@@ -1400,7 +1400,7 @@ of a finite difference, i.e.~$\sqrt{1-Z}$,
 which is well behaved at the Nyquist frequency
 and has the advantage that the modeling operator is causal
 (vanishes when $t<t_0$).
-Fourier transform is done using subroutine \texttt{ftu()} \vpageref{/prog:ftu}.
+Fourier transform is done using subroutine \texttt{ftu()} \vpageref{lst:ftu}.
 Passing an impulse function into subroutine {\tt halfint()}
 gives the response seen in Figure~\ref{fig:hankel}.
 \sideplot{hankel}{width=2.0in}{
@@ -1439,7 +1439,7 @@ spectrum should be such that the final waveform is causal
 as it appears in Figure~\ref{fig:hankel},
 indicating the validity of representation
 of the numerical representation of $\sqrt{-i\omega}$
-found in subroutine \texttt{halfint()} \vpageref{/prog:halfint}.
+found in subroutine \texttt{halfint()} \vpageref{lst:halfint}.
 More theoretical details are found in IEI.
 
 \subsection{Huygen's secondary source in two dimensions}
@@ -1612,11 +1612,11 @@ of the maximum of the cosine.
 You might fear that analysis of weights and waveshapes
 would be a big chore in stratified media $v(z)$.
 Luckily it is all made easy by Fourier domain
-methods in chapters~\ref{ft1/paper:ft1} and~\ref{dwnc/paper:dwnc}.
+methods in chapters~\ref{paper:ft1} and~\ref{paper:dwnc}.
 
 \begin{exer}
 \item	If we input a one layer model $\delta(t-t_0)\,{\rm const}(x)$
-	to subroutine \texttt{kirchslow()} \vpageref{/prog:kirchslow},
+	to subroutine \texttt{kirchslow()} \vpageref{lst:kirchslow},
 	we find an impulse function followed by a
 	${\rm step}(t-t_0)/\sqrt{t}$ waveform.
 	What data would result from

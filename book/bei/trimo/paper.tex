@@ -335,7 +335,7 @@ but first we look at some implementation details for rectangles.
 
 \par
 
-A subroutine for causal summation is subroutine \texttt{causint()} \vpageref{/prog:causint}.
+A subroutine for causal summation is subroutine \texttt{causint()} \vpageref{lst:causint}.
 Recall that the
 adjoint of causal integration is anticausal integration.
 For each reflector,
@@ -422,7 +422,7 @@ An easy way to assure time alignment
 of the triangle center with
 the triplet center is to integrate
 once causally and once anticausally
-as done in subroutine \texttt{doubint()} \vpageref{/prog:doubint}.
+as done in subroutine \texttt{doubint()} \vpageref{lst:doubint}.
 \progdex{doubint}{double integration} %
 
 \par
@@ -430,9 +430,9 @@ You can imagine placing the ends and apex of each triangle
 at a nearest neighbor mesh point as we did with the rectangles.
 Instead I place these ends more precisely on the mesh with
 linear interpolation.
-Subroutine \texttt{lint1()} \vpageref{/prog:lint1} does linear interpolation,
+Subroutine \texttt{lint1()} \vpageref{lst:lint1} does linear interpolation,
 but here we need weighted results
-as provided by \texttt{spotw()} \vpageref{/prog:spotw}.
+as provided by \texttt{spotw()} \vpageref{lst:spotw}.
 \progdex{spotw}{weighted linear interp.}
 
 \par
@@ -534,8 +534,8 @@ all the needed traces for the quality of our field arrays.
 \par
 The horizontal layer in Figure~\ref{fig:aad1}
 has a waveform that resembles a damped step function
-which is related to the Hankel tail we studied in chapter~\ref{ft1/paper:ft1}
-where subroutine \texttt{halfdifa()} \vpageref{/prog:halfdifa} was introduced
+which is related to the Hankel tail we studied in chapter~\ref{paper:ft1}
+where subroutine \texttt{halfdifa()} \vpageref{lst:halfdifa} was introduced
 to provide the filter required to convert
 the waveform on the  horizontal layer in Figure~\ref{fig:aad1} back to an impulse.
 This was done in Figure~\ref{fig:aad1h}.
@@ -863,7 +863,7 @@ Subroutine {\tt veltran()} does the work.
 \begin{exer}
 \item
 	What circumstances would suggest that the
-	linear interpolation in subroutine \texttt{trimo()} \vpageref{/prog:trimo}
+	linear interpolation in subroutine \texttt{trimo()} \vpageref{lst:trimo}
 	be replaced by nearest-neighbor interpolation?
 \item
 	Show how to adapt the programs of this chapter

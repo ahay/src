@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 	    for (iz=0; iz < nz; iz++) { /* Add hyperbola */
 		iy = (ny-1-is)+(ih-1);  /* y = midpoint */
 		iy = (iy+1)%ny;         /* periodic midpoint */
-		it = sqrtf(depth[iz]*depth[iz] + 25.*ih*ih);   
+		it = hypotf(depth[iz],5.*ih);   
 		if (it < nt) data[it] += refl[iy][iz];
 	    }
 	    sf_floatwrite(data,nt,out);

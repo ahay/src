@@ -623,8 +623,8 @@ which should result in ``{\tt Stack}''
 being a good approximation to ``{\tt Model}.''
 I experimented with various weighting functions until
 I came up with
-subroutines \texttt{nmo1()} \vpageref{/prog:nmo1}
-and {\tt stack1()} (like \texttt{stack0()} \vpageref{/prog:stack0})
+subroutines \texttt{nmo1()} \vpageref{lst:nmo1}
+and {\tt stack1()} (like \texttt{stack0()} \vpageref{lst:stack0})
 %\sx{subroutine!{\tt stack1}, weighted NMO stack}
 which embodies the \bx{weighting function} $(\tau/t)(1/\sqrt{t})$
 and which produces the result in Figure~\ref{fig:nmo1alfa.5}.
@@ -646,8 +646,8 @@ It has muted away much of the energy in the shallow asymptote.
 I think this energy near the asymptote is harmful
 because the waveform stretch is so large there.
 Perhaps a similar good result could be found by experimenting
-with muting programs such as \texttt{mutter()} \vpageref{/prog:mutter}.
-However, subroutine \texttt{nmo1()} \vpageref{/prog:nmo1} differs from {\tt mutter()}
+with muting programs such as \texttt{mutter()} \vpageref{lst:mutter}.
+However, subroutine \texttt{nmo1()} \vpageref{lst:nmo1} differs from {\tt mutter()}
 in two significant respects:
 (1) {\tt nmo1()} is based on a theoretical concept
 whereas {\tt mutter()} requires observational parameters
@@ -680,8 +680,8 @@ because it is the topic of so many other studies.
 
 \subsection{Ideal weighting functions for stacking}
 The difference between \bx{stack}ing as defined by
-\texttt{nmo0()} \vpageref{/prog:nmo0} and by
-\texttt{nmo1()} \vpageref{/prog:nmo1}
+\texttt{nmo0()} \vpageref{lst:nmo0} and by
+\texttt{nmo1()} \vpageref{lst:nmo1}
 is in the weighting function $(\tau/t)(1/\sqrt{t})$.
 This weight made a big difference in the resolution of the stacks
 but I cannot explain
@@ -747,7 +747,7 @@ A divisor for the data is found by smoothing the absolute
 values of the data over a moving window.
 To make Figure~\ref{fig:agcstack} I made the divisor by smoothing
 in triangle shaped windows about a half second long.
-To do this, I used subroutine \texttt{triangle()} \vpageref{/prog:triangle}.
+To do this, I used subroutine \texttt{triangle()} \vpageref{lst:triangle}.
 
 \plot{agcstack}{width=6.00in,height=3.6in}{
   Stack of Figure~\protect\ref{fig:wgstack} after AGC.
@@ -845,13 +845,13 @@ into account.  A third weight arises because in creating a velocity space,
 the near offsets are less important than the wide offsets
 and we do not even need the zero-offset data.
 A fourth weight is a frequency dependent one
-which is explained in chapter~\ref{ft1/paper:ft1}.
+which is explained in chapter~\ref{paper:ft1}.
 Basically, the summations in the velocity transformation are like integrations,
 thus they tend to boost low frequencies.
 This could be compensated by scaling
 in the frequency domain
 with frequency as $\sqrt{-i\omega}$
-with subroutine \texttt{halfdifa()} \vpageref{/prog:halfdifa}.
+with subroutine \texttt{halfdifa()} \vpageref{lst:halfdifa}.
 % To remove reference to halfdifa if Section 6.5.2 is removed - Biondo 4/96
 
 \par
@@ -881,7 +881,7 @@ and then back and forth again.
 There is one final complication relating to weighting.
 The most symmetrical approach is to put
 $w$ into both $\bold A$ and $\bold A'$.
-%This is what subroutine \texttt{velsimp()} \vpageref{/prog:velsimp} does.
+%This is what subroutine \texttt{velsimp()} \vpageref{lst:velsimp} does.
 Thus, because of the weighting by $\sqrt{x}$,
 the synthetic data in Figure~\ref{fig:velvel} is
 nonphysical.
@@ -893,7 +893,7 @@ use $w^2\bold A'$.
 %\progdex{velsimp}{velocity spectra}
 
 \par
-An example %of applying subroutine \texttt{velsimp()} \vpageref{/prog:velsimp}
+An example %of applying subroutine \texttt{velsimp()} \vpageref{lst:velsimp}
 %to field data 
 is shown in Figure~\ref{fig:mutvel}.
 
@@ -955,7 +955,7 @@ the desired result is near the guessed center of the range.
 Otherwise, the moment is biased towards the initial guess.
 This bias can be reduced in stages.
 At each stage we shrink the width of the zone used to compute the moment.
-%This procedure is used in subroutine \texttt{slowfit()} \vpageref{/prog:slowfit}
+%This procedure is used in subroutine \texttt{slowfit()} \vpageref{lst:slowfit}
 %which
 %after smoothing to be described,
 %gives the oscillatory curve you see in Figure~\ref{fig:slowfit}.
@@ -1019,12 +1019,12 @@ An example is shown on the right side of Figure~\ref{fig:slowfit}.
 With velocity analysis, we estimate the \RMS\ velocity.
 Later we will need both the \RMS\ velocity and the \bx{interval velocity}.
 (The word ``interval'' designates an interval between two reflectors.)
-Recall from chapter~\ref{wvs/paper:wvs} equation~(\ref{wvs/eqn:vrmshyp})
+Recall from chapter~\ref{paper:wvs} equation~(\ref{eqn:vrmshyp})
 $$
 t^2 \eq \tau^2 + \frac{4h^2}{V^2(\tau)}  \nonumber
 $$
 \par
-%Routine~\texttt{vint2rms()} \vpageref{/prog:vint2rms}
+%Routine~\texttt{vint2rms()} \vpageref{lst:vint2rms}
 %converts from interval velocity to \RMS\ velocity
 %and vice versa.
 %\progdex{vint2rms}{interval to/from RMS vel}
@@ -1045,7 +1045,7 @@ roughening the function further.
 We soon find ourselves taking square roots of negative numbers,
 which requires judgement to proceed.
 \begin{comment}
-The technique used in \texttt{vint2rms()} \vpageref{/prog:vint2rms}
+The technique used in \texttt{vint2rms()} \vpageref{lst:vint2rms}
 is to average the squared interval velocity
 in ever expanding neighborhoods until there are no longer
 any negative squared interval velocities.
@@ -1061,7 +1061,7 @@ were derived from the velocity scans in Figure~\ref{fig:slowfit}. %
 	and one constrained to have realistic interval velocities.
 	}%
 Figure~\ref{fig:rufsmo} shows the \RMS\ velocity before and after
-a trip backward and forward through routine~\texttt{vint2rms()} \vpageref{/prog:vint2rms}.
+a trip backward and forward through routine~\texttt{vint2rms()} \vpageref{lst:vint2rms}.
 The interval velocity associated with the smoothed velocity
 is in figure~\ref{fig:vrmsint}.
 	

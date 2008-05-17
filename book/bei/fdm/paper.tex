@@ -21,7 +21,7 @@ you will need to find a copy of IEI
 }
 \sx{finite difference}
 \par
-In chapter \ref{dwnc/paper:dwnc} we learned how
+In chapter \ref{paper:dwnc} we learned how
 to extrapolate wavefields down into the earth.
 The process proceeded simply, since it is just a multiplication in the
 frequency domain by  $\exp [ ik_z ( \omega , k_x ) z ]$.
@@ -110,7 +110,7 @@ k_z  \eq
 \end{equation}
 The dispersion relation above is the foundation
 for downward continuing wavefields by Fourier
-methods in chapter~\ref{dwnc/paper:dwnc}.
+methods in chapter~\ref{paper:dwnc}.
 Recall that nature extrapolates forward in time from $t=0$
 whereas a geophysicist extrapolates information
 in depth from $z=0$.
@@ -138,7 +138,7 @@ would immediately have equation~(\ref{eqn:gapdisper}).
 Why do we believe the introduction of $v(z)$ in
 equation~(\ref{eqn:gapphase}) has any validity?
 We can think about the phase shift migration method
-in chapter~\ref{dwnc/paper:dwnc}.
+in chapter~\ref{paper:dwnc}.
 It handled $v(z)$ by having the earth velocity
 being a staircase function of depth.
 Inside a layer we had the solution to
@@ -153,7 +153,7 @@ equation~(\ref{eqn:gapphase}).
 be the transition from one layer to the next.
 Then $\Delta P=0$ since $\partial P/\partial z$ is finite.)
 Although equation~(\ref{eqn:gapphase}) is consistent
-with chapter~\ref{dwnc/paper:dwnc},
+with chapter~\ref{paper:dwnc},
 it is an approximation of limited validity.
 It assumes there is no reflection at a layer boundary.
 Reflection would change part of a downgoing wave
@@ -912,7 +912,7 @@ and hence the name {\em  \bx{explicit method}}.
 \par
 Equation (\ref{eqn:two9}) can be interpreted geometrically
 as a computational
-star in the $(x,t)$-plane, as depicted in Table~\ref{fdm/paper:fdm}.1.
+star in the $(x,t)$-plane, as depicted in Table~\ref{paper:fdm}.1.
 By moving the star around in the data table
 you will note that it
 can be positioned so that only one number at a time (the 1)
@@ -1484,7 +1484,7 @@ By alternating between (\ref{eqn:three4}) and (\ref{eqn:three6}),
 which are derived from (\ref{eqn:three2}) and (\ref{eqn:three5}),
 the program solves (\ref{eqn:three1}) by a \bx{splitting} method.
 The program uses the \bx{tridiagonal} solver discussed earlier,
-like subroutine~\texttt{rtris()} \vpageref{/prog:rtris}
+like subroutine~\texttt{rtris()} \vpageref{lst:rtris}
 except that version needed here, {\tt ctris()},
 has all the real variables declared complex.
 \par
@@ -2138,7 +2138,7 @@ which are extrapolation equations for when velocity depends only on depth.
 
 \par
 The differential equations above
-in Table~\ref{fdm/paper:fdm}.4
+in Table~\ref{paper:fdm}.4
 were based on a dispersion relation
 that in turn was based on an assumption of constant velocity.
 Surprisingly, these equations also have validity and great utility
@@ -2166,7 +2166,7 @@ $\displaystyle {\strut 1\over\Delta x^2\,\Delta z}$ &
 So other than modifying the six coefficients on the star,
 it adds nothing to the computational cost.
 Using this extra term allows in programs like
-subroutine \texttt{wavemovie()} \vpageref{/prog:wavemovie} yields wider angles.
+subroutine \texttt{wavemovie()} \vpageref{lst:wavemovie} yields wider angles.
 
 \par
 \activesideplot{Mfortyfive90}{width=3in}{movies}{
@@ -2377,8 +2377,8 @@ Q(z, \omega ) \  { i \omega   \over  \bar v (z) }
 \label{eqn:one11b}
 \end{eqnarray}
 Next, substitute (\ref{eqn:one11a}) and (\ref{eqn:one11b})
-into Table~\ref{fdm/paper:fdm}.4
-to obtain the retarded equations in Table~\ref{fdm/paper:fdm}.5.
+into Table~\ref{paper:fdm}.4
+to obtain the retarded equations in Table~\ref{paper:fdm}.5.
 \begin{table}
 \begin{center}
 \begin{tabular}{|r|ll|}     \hline
@@ -2417,7 +2417,7 @@ $45^\circ$ & $\displaystyle {\strut\partial Q\over
 \subsection{Lateral velocity variation again}
 \par
 Having approximated the square root by a polynomial ratio,
-Table \ref{fdm/paper:fdm}.4 or Table \ref{fdm/paper:fdm}.5 can be inverse transformed
+Table \ref{paper:fdm}.4 or Table \ref{fdm/paper:fdm}.5 can be inverse transformed
 from the horizontal wavenumber domain  $ k_x $  to the
 horizontal space domain  $x$  by substituting
 $ \  (ik_x )^2  =  \partial^2 / \partial x^2$.
@@ -2434,7 +2434,7 @@ unknown hazards.
 So $\bar v$ is usually taken to depend on $z$ but not $x$.
 \subsection{Splitting again}
 The customary numerical solution to the  $x$-domain forms of the equations
-in Tables \ref{fdm/paper:fdm}.4 and \ref{fdm/paper:fdm}.5 is arrived at by \bx{splitting}.
+in Tables \ref{paper:fdm}.4 and \ref{paper:fdm}.5 is arrived at by \bx{splitting}.
 That is, you march forward a small  $ \Delta z $-step alternately
 with the two extrapolators
 \begin{eqnarray}
@@ -2467,12 +2467,12 @@ Migration that omits this term is called
 } migration.
 \par
 Observe that the diffraction parts
-of Tables~\ref{fdm/paper:fdm}.4 and \ref{fdm/paper:fdm}.5 are the same.
+of Tables~\ref{paper:fdm}.4 and \ref{paper:fdm}.5 are the same.
 Let us use them and equation (\ref{eqn:one12b}) to
 define a table of diffraction equations.
 Substitute  $  \partial / \partial x $  for  $ i k_x $  and
 clear  $  \partial / \partial x  $  from the denominators to
-get Table~\ref{fdm/paper:fdm}.6.
+get Table~\ref{paper:fdm}.6.
 \begin{table}
 \begin{center}
 \begin{tabular}{|r|l|}     \hline
@@ -2627,7 +2627,7 @@ To put the above equations in the time domain, it is necessary only to
 get  $ \omega $  into the numerator and
 then replace  $ -i \omega $  by  $ \partial / \partial t $.
 For example, the 15$^\circ$,  retarded, $ v  =  \bar v $  equation
-from Table \ref{fdm/paper:fdm}.6 becomes
+from Table \ref{paper:fdm}.6 becomes
 \begin{equation}
 { \partial^2   \over  \partial z \  \partial t } \  Q  \eq
 {v \over 2 }\  { \partial^2 \    \over  \partial x^2 } \  Q
@@ -2649,7 +2649,7 @@ Letting  $D$  denote a
 wavefield and  $U$  an
 {\em  upcoming}
 wavefield, equation (\ref{eqn:one14}), for example,
-is found in Table~\ref{fdm/paper:fdm}.7.
+is found in Table~\ref{paper:fdm}.7.
 \begin{table}
 \begin{center}
 \begin{tabular}{|l|}     \hline
@@ -3049,10 +3049,10 @@ dispersion relation of the two-dimensional scalar wave equation:
 { \omega^2   \over  K / \rho } \eq k_x^2 \ +\  k_z^2
 \label{eqn:acoustic10}
 \end{equation}
-In chapter~\ref{dwnc/paper:dwnc} equation~(\ref{dwnc/eqn:wavedisp})
+In chapter~\ref{paper:dwnc} equation~(\ref{eqn:wavedisp})
 we found an equation like (\ref{eqn:acoustic10})
 by considering only the geometrical behavior of waves.
-In equation~(\ref{dwnc/eqn:wavedisp})
+In equation~(\ref{eqn:wavedisp})
 the wave velocity squared is found
 where $ K / \rho $ stands in equation (\ref{eqn:acoustic10}).
 Thus physics and geometry are reconciled by the association

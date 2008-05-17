@@ -20,9 +20,9 @@ some serious complications arise.
 For many years it was common industry practice
 to ignore these complications and to handle dip and offset separately.  
 Thus offset was handled by velocity analysis, 
-normal moveout and stack (chapter~\ref{vela/paper:vela}).
+normal moveout and stack (chapter~\ref{paper:vela}).
 And dip was handled by zero-offset 
-migration after stack (chapters~\ref{krch/paper:krch} and \ref{dwnc/paper:dwnc}).
+migration after stack (chapters~\ref{paper:krch} and \ref{paper:dwnc}).
 This practice is a good approximation only when
 the dips on the section are small.
 We need to handle large offset angles at the same
@@ -221,8 +221,8 @@ t  \eq   {1 \over 2}\
 Considering $h$ in equation~(\ref{eqn:dsryhtau})
 to be a constant,
 enables us to write a subroutine for migrating constant-offset sections.
-%Subroutine \texttt{flathyp()} \vpageref{/prog:flathyp} is easily prepared
-%from subroutine \texttt{kirchfast()} \vpageref{/prog:kirchfast} by
+%Subroutine \texttt{flathyp()} \vpageref{lst:flathyp} is easily prepared
+%from subroutine \texttt{kirchfast()} \vpageref{lst:kirchfast} by
 %replacing its hyperbola equation with equation~(\ref{eqn:dsryhtau}).
 %\progdex{flathyp}{const offset migration}
 %The amplitude in subroutine {\tt flathyp()}
@@ -666,7 +666,7 @@ and as we will see,
 The ``standard process'' is NMO, stack, and zero-offset migration.
 Its major shortcoming is the failure of NMO and stack
 to produce a section that resembles the true zero-offset section.
-In chapter~\ref{vela/paper:vela} we derived
+In chapter~\ref{paper:vela} we derived
 the NMO equations for a stratified earth,
 but then applied them to seismic field data 
 that was not really stratified.
@@ -691,13 +691,13 @@ which we now wish to understand more quantitatively.
 \subsection{Gulf of Mexico example}
 \inputdir{krchdmo}
 \par
-Recall the Gulf of Mexico dataset presented in chapter~\ref{vela/paper:vela}.
+Recall the Gulf of Mexico dataset presented in chapter~\ref{paper:vela}.
 We did a reasonably careful job of NMO velocity analysis
 in order to produce the stack shown in Figure~\ref{vela/fig:agcstack}.
 But is this the best possible stack?
 To begin to answer this question, Figure~\ref{fig:cvstacks} shows
 some constant-velocity stacks of this dataset done with subroutine
-\texttt{velsimp()} \vpageref{/prog:velsimp}.
+\texttt{velsimp()} \vpageref{lst:velsimp}.
 This figure clearly shows that
 there are some very steeply-dipping reflections
 that are missing in Figure~\ref{vela/fig:agcstack}.
@@ -721,7 +721,7 @@ Another way of seeing the same conflict in the data
 is to look at a velocity-analysis panel
 at a single common-midpoint location
 such as the panel shown in Figure~\ref{fig:velscan}
-made by subroutine~\texttt{velsimp()} \vpageref{/prog:velsimp}.
+made by subroutine~\texttt{velsimp()} \vpageref{lst:velsimp}.
 In this figure it is easy to see that the velocity
 which is good for the dipping event at 1.5 sec is too high
 for the horizontal events in its vicinity.
@@ -807,7 +807,7 @@ Fabio \bx{Rocca} developed
 a clear conceptual model for Sherwood's dip corrections.
 Start with an impulse on a common offset section,
 and migrate it getting ellipses like in Figure~\ref{fig:Cos1}.
-%We did this with subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp}
+%We did this with subroutine~\texttt{flathyp()} \vpageref{lst:flathyp}
 %using some constant-offset  {\tt h}.
 Although the result is an ellipsoidal curve,
 think of it as a row of many points along an ellipsoidal curve.
@@ -980,7 +980,7 @@ As before, to make the hyperbolas more distinct,
 I broke the circle into dots along the circle
 and show the result in Figure \ref{fig:sergey}.
 The whole truth is a little more complicated.
-Subroutine %\texttt{flathyp()} \vpageref{/prog:flathyp} 
+Subroutine %\texttt{flathyp()} \vpageref{lst:flathyp} 
 implements $\bold H$ and $\bold H'$.
 Since I had no subroutine for $\bold C$,
 figures \ref{fig:frocca} and \ref{fig:sergey}
@@ -1030,7 +1030,7 @@ A summary of the meaning of the Rocca smile
 and its adjoint is found in Figures
 \ref{fig:yalei2} and \ref{fig:yalei1}.
 %which were computed using subroutine
-%\texttt{flathyp()} \vpageref{/prog:flathyp}.
+%\texttt{flathyp()} \vpageref{lst:flathyp}.
 
 \plot{yalei2}{width=6.in,height=1.5in}{ 
 	Impulses on a zero-offset section migrate
@@ -1207,9 +1207,9 @@ Backsolving equation~(\ref{eqn:dmoeq}) for $t_n$ gives
 	{t_0^2 \over 1-b^2/h^2 } .
 \end{equation}
 
-%Like subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp},
-%our \bx{DMO} subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch} is based on
-%subroutine~\texttt{kirchfast()} \vpageref{/prog:kirchfast}.
+%Like subroutine~\texttt{flathyp()} \vpageref{lst:flathyp},
+%our \bx{DMO} subroutine~\texttt{dmokirch()} \vpageref{lst:dmokirch} is based on
+%subroutine~\texttt{kirchfast()} \vpageref{lst:kirchfast}.
 %It is just the same,
 %except where {\tt kirchfast()} has a hyperbola
 %we put equation~(\ref{eqn:dmoprog}).
@@ -1223,7 +1223,7 @@ Backsolving equation~(\ref{eqn:dmoeq}) for $t_n$ gives
 %\progdex{dmokirch}{fast Kirchhoff dip-moveout}
 
 In figures ~\ref{fig:dmatt} and ~\ref{fig:coffs},
-%were made with subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch}. 
+%were made with subroutine~\texttt{dmokirch()} \vpageref{lst:dmokirch}. 
 notice the big noise reduction over Figure~\ref{fig:frocca}.
 \sideplot{dmatt}{width=3.in}{
 	Impulse response of DMO and NMO
@@ -1297,7 +1297,7 @@ equation (\ref{eqn:fourR}).
 \par
 We now return to the field data from the Gulf of Mexico,
 which we have processed earlier
-in this chapter and in chapter~\ref{vela/paper:vela}.  
+in this chapter and in chapter~\ref{paper:vela}.  
 
 %Figure~\ref{fig:cvdmostks} is a repeat of Figure~\ref{fig:cvstacks} except that
 %the data has now been processed

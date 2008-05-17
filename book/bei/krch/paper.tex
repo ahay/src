@@ -11,7 +11,7 @@
 \sx{migration!Kirchhoff}
 
 \par
-In chapter~\ref{vela/paper:vela} we discussed
+In chapter~\ref{paper:vela} we discussed
 methods of imaging horizontal reflectors
 and of estimating velocity $v(z)$
 from the offset dependence of seismic recordings.
@@ -29,7 +29,7 @@ for forming images from hypothetical
 Although there is usually ample data recorded near zero-offset,
 we never record purely zero-offset seismic data.
 However, when we 
-consider offset and dip together in chapter~\ref{dpmv/paper:dpmv} we will encounter
+consider offset and dip together in chapter~\ref{paper:dpmv} we will encounter
 a widely-used technique (dip-moveout) that often 
 converts finite-offset data into a useful estimate of the equivalent 
 zero-offset data.
@@ -156,7 +156,7 @@ $t$, $v$, and $\theta$.
 Of these, the event time $t$ is readily measured on the zero-offset section.
 The velocity $v$ is usually {\em not} measurable on the zero offset section
 and must be estimated from finite-offset data,
-as was shown in chapter~\ref{vela/paper:vela}.
+as was shown in chapter~\ref{paper:vela}.
 That leaves the dip angle $\theta$.
 This can be related to the reflection slope $p$ of the observed event,
 which is measurable on the zero-offset section: 
@@ -171,7 +171,7 @@ The slope $p_0$ is sometimes called the {\em ``time-dip of the event''} or
 more loosely 
 as the {\em ``dip of the event''}.
 It is obviously closely related to Snell's parameter,
-which we discussed in chapter~\ref{wvs/paper:wvs}.   
+which we discussed in chapter~\ref{paper:wvs}.   
 The relationship between the measurable time-dip $p_0$ 
 and the dip angle $\theta$ is called
 ``\bx{Tuchel's law}'':
@@ -296,7 +296,7 @@ Drilling may be about 3 kilometers deep.
 So in practice the angles are big.
 Therein lie both new problems and new opportunities,
 none of which will be considered until 
-chapter~\ref{dpmv/paper:dpmv}.
+chapter~\ref{paper:dpmv}.
 \par
 Furthermore, even at zero offset,
 the exploding-reflector concept is not quantitatively correct.
@@ -495,7 +495,7 @@ if we had extended the model to the sides with some empty space.
 
 \subsection{Kirchhoff artifacts}
 \sx{artifacts}
-Reconstructing the earth model with the adjoint option in \texttt{kirchfast()} \vpageref{/prog:kirchfast}
+Reconstructing the earth model with the adjoint option in \texttt{kirchfast()} \vpageref{lst:kirchfast}
 yields the result in Figure~\ref{fig:skmig}. %
 \plot{skmig}{width=6.00in,height=2.25in}{
   Left is the original model.
@@ -520,7 +520,7 @@ but on a video screen I see some semicircles.
 Next is the problem of the spectrum.
 Notice in Figure~\ref{fig:skmig} that the reconstruction
 lacks the sharp crispness of the original.
-It is shown in chapter~\ref{ft1/paper:ft1}
+It is shown in chapter~\ref{paper:ft1}
 that the spectrum of our reconstruction
 loses high frequencies by a scale of $1/ | \omega |$.
 Philosophically, we can think of the hyperbola summation
@@ -544,7 +544,7 @@ migrated model by frequency, $f$, brought the important
 part of the spectral bands into agreement.
 This suggests applying an $|\omega |$ filter to our reconstruction,
 or $\sqrt{-i\omega}$ operator to both the modeling and the reconstruction,
-an idea implemented in subroutine \texttt{halfdifa()} \vpageref{/prog:halfdifa}.
+an idea implemented in subroutine \texttt{halfdifa()} \vpageref{lst:halfdifa}.
 
 \par
 Neither of these Kirchhoff codes addresses the issue of spatial \bx{alias}ing.
@@ -561,11 +561,11 @@ with an $x$ mesh of 50 and 100 points. %
 } %
 (Previous figures used 200 points on space.
 All use 200 mesh points on the time.)
-Subroutine \texttt{kirchfast()} \vpageref{/prog:kirchfast} does interpolation by moving values
+Subroutine \texttt{kirchfast()} \vpageref{lst:kirchfast} does interpolation by moving values
 to the nearest neighbor of the theoretical location.
 Had we taken the trouble to interpolate the two nearest points,
 our results would have been a little better,
-but the basic problem (resolved in chapter~\ref{trimo/paper:trimo}) would remain.
+but the basic problem (resolved in chapter~\ref{paper:trimo}) would remain.
 
 \subsection{Sampling and aliasing}
 \inputdir{alias}
