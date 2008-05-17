@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i1, i2, n1, n2, n12, **nr, nbox, niter, iter, nliter;
+    int i1, i2, n1, n2, n12, **nr, **ns, nbox, niter, iter, nliter;
     float *data, *modl, *wght, eps;
     bool verb;
     sf_file in, out, rect;
@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
     modl = sf_floatalloc(n12);
     wght = sf_floatalloc(n12);
     nr = sf_intalloc2(n1,n2);
+    ns = sf_intalloc2(n1,n2);
 
     sf_floatread(data,n12,in);
     sf_intread(nr[0],n12,rect);
@@ -53,6 +54,7 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    if (nbox < nr[i2][i1]) nbox = nr[i2][i1];
+	    ns[i2][i1]=0;
 	}
     }
 
@@ -72,7 +74,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
 
-    ntriangle1_init(nbox,n1,n2,nr);
+    ntriangle1_init(nbox,n1,n2,nr,ns);
     sf_weight_init(wght);
     hilbert_init(n1, 10, 1.);
 

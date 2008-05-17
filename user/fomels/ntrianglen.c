@@ -24,14 +24,15 @@
 
 #include "ntriangle.h"
 
-static int *n, s[SF_MAX_DIM], nd, dim, **tlen;
+static int *n, s[SF_MAX_DIM], nd, dim, **tlen, **tsft;
 static ntriangle *tr;
 static float *tmp;
 
 void ntrianglen_init (int ndim  /* number of dimensions */, 
 		      int *nbox /* triangle radius [ndim] */, 
 		      int *ndat /* data dimensions [ndim] */,
-		      int **len /* triangle lengths [ndim][nd] */)
+		      int **len /* triangle lengths [ndim][nd] */,
+                      int **sft /* triangle shifts [ndim][nd] */)
 /*< initialize >*/
 {
     int i;
@@ -48,6 +49,7 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
 	nd *= ndat[i];
     }
     tlen = len; 
+    tsft = sft;
 
     tmp = sf_floatalloc(nd);
 }
@@ -78,7 +80,7 @@ void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		nsmooth (tr[i], i0, s[i], false, tlen[i], tmp);
+		nsmooth (tr[i], i0, s[i], false, tlen[i], tsft[i], tmp);
 	    }
 	}
     }

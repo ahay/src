@@ -23,17 +23,13 @@
 
 #include "repeat.h"
 #include "trianglen.h"
-#include "ntrianglen.h"
 
 static float *tmp;
-static bool nonstat;
-static sf_operator oper;
 
 void smoothder_init(int n     /* data size */, 
 		    int ndim  /* number of dimensions */, 
 		    int *rect /* smoothing radius [ndim] */, 
-		    int *ndat /* data size [ndim] */,
-		    int **len /* radius for nonstat smoothing [ndim][nd] */)
+		    int *ndat /* data size [ndim] */)
 /*< initialize >*/
 {
     int n1, n2;
@@ -43,15 +39,7 @@ void smoothder_init(int n     /* data size */,
     
     repeat_init(n1,n2,sf_causint_lop);
 
-    nonstat = (bool) (NULL != len);
-
-    if (nonstat) {
-	ntrianglen_init(ndim,rect,ndat,len);
-	oper = ntrianglen_lop;
-    } else {
-	trianglen_init(ndim,rect,ndat);
-	oper = trianglen_lop;
-    }
+    trianglen_init(ndim,rect,ndat);
 
     tmp = sf_floatalloc(n);
     sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, false);    
@@ -62,11 +50,7 @@ void smoothder_close(void)
 {
     free(tmp);
     sf_conjgrad_close();
-    if (nonstat) {
-	ntrianglen_close();
-    } else {
-	trianglen_close();
-    }
+    trianglen_close();
 }
 
 void smoothder(int niter     /* number of iterations */, 
@@ -77,8 +61,8 @@ void smoothder(int niter     /* number of iterations */,
 { 
     if (NULL != weight) {
 	sf_weight_init(weight);
-	sf_conjgrad(sf_weight_lop,repeat_lop,oper,tmp,der,data,niter);
+	sf_conjgrad(sf_weight_lop,repeat_lop,trianglen_lop,tmp,der,data,niter);
     } else {
-	sf_conjgrad(NULL,repeat_lop,oper,tmp,der,data,niter);
+	sf_conjgrad(NULL,repeat_lop,trianglen_lop,tmp,der,data,niter);
     }
 }

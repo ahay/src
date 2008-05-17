@@ -40,9 +40,9 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 		   float *x, const float* tmp);
 static void doubint (int nx, float *x, bool der);
 static void triple (int o, int d, int nx, int nb, 
-		    const int* t, float* x, const float* tmp);
+		    const int* t, const int* s, float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, 
-		     const int* t, const float* x, float* tmp);
+		     const int* t, const int* s, const float* x, float* tmp);
 
 ntriangle ntriangle_init (int nbox /* maximum triangle length */, 
 			  int ndat /* data length */)
@@ -139,23 +139,28 @@ static void doubint (int nx, float *xx, bool der)
     }
 }
 
-static void triple (int o, int d, int nx, int nb, const int* t, 
+static void triple (int o, int d, int nx, int nb, 
+		    const int* t,
+		    const int* s,
 		    float* x, const float* tmp)
 {
-    int i, nb1;
+    int i, nt, ns;
     float wt;
 
     for (i=0; i < nx; i++) {
-	nb1 = t[i];
-	wt = 1./(nb1*nb1);
-	x[o+i*d] = (2.*tmp[i+nb] - tmp[i+nb-nb1] - tmp[i+nb+nb1])*wt;
+	nt = t[i];
+	ns = nb + s[i];
+	wt = 1./(nt*nt);
+	x[o+i*d] = (2.*tmp[i+ns] - tmp[i+ns-nt] - tmp[i+ns+nt])*wt;
     }
 }
 
-static void triple2 (int o, int d, int nx, int nb, const int* t, 
+static void triple2 (int o, int d, int nx, int nb, 
+		     const int* t,
+		     const int* s,
 		     const float* x, float* tmp)
 {
-    int i, nb1;
+    int i, nt, ns;
     float wt;
 
     for (i=0; i < nx + 2*nb; i++) {
@@ -163,11 +168,12 @@ static void triple2 (int o, int d, int nx, int nb, const int* t,
     }
 
     for (i=0; i < nx; i++) {
-	nb1 = t[i];
-	wt = x[o+i*d]/(nb1*nb1);
-	tmp[i+nb-nb1] -= wt; 
-	tmp[i+nb]     += 2.*wt;
-	tmp[i+nb+nb1] -= wt;
+	nt = t[i];
+	ns = nb + s[i];
+	wt = x[o+i*d]/(nt*nt);
+	tmp[i+ns-nt] -= wt; 
+	tmp[i+ns]     += 2.*wt;
+	tmp[i+ns+nt] -= wt;
     }
 }
 
@@ -175,22 +181,24 @@ void nsmooth (ntriangle tr /* smoothing object */,
 	      int o, int d /* sampling */, 
 	      bool der     /* derivative flag */, 
 	      const int *t /* triangle lengths */, 
+	      const int *s /* triangle shifts */,
 	      float *x     /* data (smoothed in place) */)
 /*< smooth >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp); 
     doubint (tr->np,tr->tmp,der);
-    triple (o,d,tr->nx,tr->nb,t,x,tr->tmp);
+    triple (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
 }
 
 void nsmooth2 (ntriangle tr /* smoothing object */, 
 	       int o, int d /* sampling */, 
 	       bool der     /* derivative flag */, 
-	       const int *t /* triangle lengths */, 
+	       const int *t /* triangle lengths */,
+	       const int *s /* triangle shifts */,
 	       float *x     /* data (smoothed in place) */)
 /*< alternative smooth >*/
 {
-    triple2 (o,d,tr->nx,tr->nb,t,x,tr->tmp);
+    triple2 (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
     doubint (tr->np,tr->tmp,der);
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }

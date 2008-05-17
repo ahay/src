@@ -23,19 +23,21 @@
 #include <rsf.h>
 /*^*/
 
-static int n1, n2, nd, **nr;
+static int n1, n2, nd, **nr, **ns;
 static ntriangle tr;
 static float *tmp;
 
 void ntriangle1_init (int nbox1            /* maximum triangle size */, 
 		      int ndat1, int ndat2 /* data size */,
-		      int **rect           /* triangle sizes */)
+		      int **rect           /* triangle sizes */,
+                      int **shift          /* triangle shifts */)
 /*< initialize >*/
 {
     n1 = ndat1;
     n2 = ndat2;
     nd = n1*n2;
     nr = rect;
+    ns = shift;
 
     tr = ntriangle_init (nbox1,ndat1);
     tmp = sf_floatalloc (n1);
@@ -58,7 +60,7 @@ void ntriangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		tmp[i1] = y[i1+i2*n1];
 	    }
   
-	    nsmooth2 (tr, 0, 1, false, nr[i2], tmp);
+	    nsmooth2 (tr, 0, 1, false, nr[i2], ns[i2], tmp);
 
 	    for (i1=0; i1 < n1; i1++) {
 		x[i1+i2*n1] += tmp[i1];
@@ -68,7 +70,7 @@ void ntriangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		tmp[i1] = x[i1+i2*n1];
 	    }
   
-	    nsmooth (tr, 0, 1, false, nr[i2], tmp);
+	    nsmooth (tr, 0, 1, false, nr[i2], ns[i2], tmp);
 
 	    for (i1=0; i1 < n1; i1++) {
 		y[i1+i2*n1] += tmp[i1];

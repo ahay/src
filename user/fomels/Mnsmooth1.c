@@ -23,7 +23,7 @@
 
 int main (int argc, char* argv[]) 
 {
-    int **rct, nrep, irep, n1, n2, i1, i2, rect1;
+    int **rct, **sft, nrep, irep, n1, n2, i1, i2, rect1;
     float* data;
     ntriangle tr;
     sf_file in, out, rect;
@@ -41,6 +41,7 @@ int main (int argc, char* argv[])
 
     if (SF_INT != sf_gettype(rect)) sf_error("Need int rect");
     rct = sf_intalloc2(n1,n2);
+    sft = sf_intalloc2(n1,n2);
 
     if (!sf_getint("repeat",&nrep)) nrep=1;
     /* repeat filtering several times */
@@ -51,6 +52,7 @@ int main (int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    if (rct[i2][i1] > rect1) rect1=rct[i2][i1];
+	    sft[i2][i1] = 0;
 	}
     }
 
@@ -60,7 +62,7 @@ int main (int argc, char* argv[])
 	sf_floatread(data,n1,in);
 
 	for (irep=0; irep < nrep; irep++) {
-	    nsmooth (tr,0,1,false,rct[i2],data);
+	    nsmooth (tr,0,1,false,rct[i2],sft[i2],data);
 	}
 	
 	sf_floatwrite(data,n1,out);

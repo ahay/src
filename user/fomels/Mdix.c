@@ -31,12 +31,10 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main(int argc, char* argv[])
 {
-    int i, j, niter, nd, dim, n1, n2, i1, i2;
-    int n[SF_MAX_DIM], box[SF_MAX_DIM], **rct;
+    int i, niter, nd, dim, n1, n2, i1, i2;
+    int n[SF_MAX_DIM], box[SF_MAX_DIM];
     float **vr, **vi, **wt, **v0, wti;
-    char key[6];
-    bool nonstat;
-    sf_file vrms, vint, weight, vout, rect[SF_MAX_DIM];
+    sf_file vrms, vint, weight, vout;
 
     sf_init(argc,argv);
     vrms = sf_input("in");
@@ -52,35 +50,7 @@ int main(int argc, char* argv[])
     n1 = n[0];
     n2 = nd/n1;
     
-    if (!sf_getbool("nonstat",&nonstat)) nonstat=false;
-    /* if y, use nonstationary smoothing */
-
-    rct = nonstat? sf_intalloc2(nd,dim): NULL;
-
-    for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
-	if (nonstat) {
-	    box[i]=1;
-	    if (NULL != sf_getstring(key)) {
-		rect[i] = sf_input(key);
-		if (SF_INT != sf_gettype(rect[i])) 
-		    sf_error("Need int %s",key);
-		sf_intread(rct[i],nd,rect[i]);
-		sf_fileclose(rect[i]);
-		for (j=0; j < nd; j++) {
-		    if (rct[i][j] > box[i]) box[i] = rct[i][j];
-		}
-	    } else {
-		for (j=0; j < nd; j++) {
-		    rct[i][j]=1;
-		}
-	    }
-	} else {		
-	    if (!sf_getint(key,box+i)) box[i]=1;
-	}
-    }
-
-    smoothder_init(nd, dim, box, n, rct);
+    smoothder_init(nd, dim, box, n);
 
     vr = sf_floatalloc2(n1,n2);
     vi = sf_floatalloc2(n1,n2);
