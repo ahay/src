@@ -300,19 +300,19 @@ as soft sediments compress.
 To do \bx{linear moveout} (\bx{LMO}) correction, we need to time-shift data.
 Shifting data requires us to interpolate it.
 The easiest interpolation method is the nearest-neighbor method.
-We begin with a signal given at times {\tt t = t0+dt*(it-1)}
+We begin with a signal given at times {\tt t = t0+dt*it}
 where {\tt it} is an integer.
 Then we can use equation~(\ref{eqn:lmo}),
 namely $\tau=t-px$.
 Given the location {\tt tau} of the desired value
 we backsolve for an integer, say {\tt itau}.
-In Fortran, conversion of a real value to an integer is done by
+In C, conversion of a real value to an integer is done by
 truncating the fractional part of the real value.
 To get rounding up as well as down,
 we add
 {\tt 0.5}
 before conversion to an integer,
-namely {\tt itau=int(1.5+(tau-tau0)/dt)}.
+namely {\tt itau=0.5+(tau-tau0)/dt}.
 This gives the nearest neighbor.
 The
 way the program works is to identify two points,
@@ -330,7 +330,7 @@ Nearest neighbor rounding is crude but ordinarily very reliable.
 I discovered a very rare numerical roundoff problem
 peculiar to signal time-shifting, a problem
 which arises in the linear moveout application
-when the water velocity, about 1.48km/sec is approximated by 1.5=3/2.
+when the water velocity, about 1.48~km/sec is approximated by 1.5=3/2.
 The problem arises only where the amount of the time shift
 is a numerical value (like 12.5000001 or 12.499999)
 and the fractional part should be exactly 1/2 but
@@ -343,10 +343,10 @@ Then the output signal has places which are empty while
 adjacent places contain the sum of two values.
 Linear moveout is the only application
 where I have ever encountered this difficulty.
-A simple fix here was to modify the
-\texttt{lmo()} \vpageref{lst:lmo}
-subroutine changing
-the ``1.5'' to ``1.5001''.
+%A simple fix here was to modify the
+%\texttt{lmo()} \vpageref{lst:lmo}
+%subroutine changing
+%the ``1.5'' to ``1.5001''.
 The problem disappears if we use a more accurate sound velocity
 or if we switch from nearest-neighbor interpolation
 to linear interpolation.
