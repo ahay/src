@@ -5,7 +5,7 @@ import configure
 progs = '''
 difference dwt97 initial lum lumsmoother lumsharpener
 mf mlm mlwm saltpepper seislet97 snr svddenoise swell
-tvmf
+tvmf twofreq2mask
 '''
 
 try:  # distributed version
