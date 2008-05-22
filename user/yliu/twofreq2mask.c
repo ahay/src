@@ -107,7 +107,6 @@ void twofreq2(int niter  /* number of iterations */,
 	    for(i=0; i < n; i++) {
 		if (mask[i]) {
 		    u1[i] = 0.;
-//		    u1[1][i] = 0.;
 		    u2[i] = 0.;
 		}
 	    }
@@ -121,4 +120,4 @@ void twofreq2(int niter  /* number of iterations */,
     } /* iter */
 }
 
-/* 	$Id: twofreq2.c 3605 2008-05-19 18:22:06Z yang_liu $	 */
+/* 	$Id$	 */
