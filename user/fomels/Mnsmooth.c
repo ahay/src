@@ -23,10 +23,11 @@
 
 int main (int argc, char* argv[]) 
 {
-    int *rct[SF_MAX_DIM], *sft[SF_MAX_DIM], box[SF_MAX_DIM], n[SF_MAX_DIM], s[SF_MAX_DIM];
+    int *rct[SF_MAX_DIM], *sft[SF_MAX_DIM];
+    int box[SF_MAX_DIM], n[SF_MAX_DIM], s[SF_MAX_DIM];
     int dim, dim1, i, n1, n2, i1, i2, b;
     float *data, *smoo;
-    char key[6];
+    char key[8];
     sf_file in, out, rect[SF_MAX_DIM], shift[SF_MAX_DIM];
 
     sf_init (argc, argv);
@@ -46,7 +47,7 @@ int main (int argc, char* argv[])
 	    rect[i] = sf_input(key);
 	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
 	    dim1 = i;
-	    snprintf(key,6,"shift%d",i+1);
+	    snprintf(key,8,"shift%d",i+1);
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension 
 		  (auxiliary input file) )*/
