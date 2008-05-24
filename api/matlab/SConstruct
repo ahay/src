@@ -43,5 +43,5 @@ if 'matlab' in env.get('API',[]):
                                       'install_name_tool -change '
                                       'build/filt/lib/libdrsf.dylib '
                                       '%s/libdrsf.dylib %s/%s' % \
-                                          (libdir,libdir,mfile))
+                                          (libdir,libdir,mfile[0]))
     
