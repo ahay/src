@@ -1,21 +1,28 @@
 /* Plot Assembler - convert ascii to vplot. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
-  
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ Copyright 1987 the Board of Trustees of the Leland Stanford Junior
+ University. The official license for this software is included in the
+ Madagascar source distribution, in the "COPYRIGHT" section of 
+ pens/docs/vplot.mn , readable as such or formatted with "nroff -man vplot.mn" .
+
+ This file (plas.c) has been heavily modified by Sergey Fomel in 2003. Subsequent
+ changes have been logged by the version control system and are visible at
+ http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/plot/main/pldb.c . The previous
+ proprietary notices that must be preserved as requested by the license are:
+
+ ***************************************************************
+ * Joe Dellinger (SEP), June 11 1987
+ *      Inserted this sample edit history entry.
+ *      Please log any further modifications made to this file:
+ *
+ * Martin Karrenbach 11-3-92  ifdef CRAY
+ *
+ * Stewart A. Levin (Mobil), Feb 15 1993
+ *     Support for SGI (sys-v) terminal handling
+ *
+ * Stewart A. Levin (Mobil)  May 8, 1996
+ *     Added LINUX terminal handling support == SGI
+ ***************************************************************/
 
 #include <stdio.h>
 #include <math.h>
@@ -312,7 +319,7 @@ int main (int argc, char* argv[])
 		}
 		break;
 	    default:
-		break;  /* Treat unknown charactors as comments */
+		break;  /* Treat unknown characters as comments */
 	}
     }
 
@@ -322,7 +329,7 @@ int main (int argc, char* argv[])
 static void text (void)
 {
     char c;
-    
+
     while ('\n' != (c = getchar ())) {
 	if ('\\' != c) {
 	    putchar (c);
@@ -369,6 +376,3 @@ static void setunits(char c) {
 	    break;
     }
 }
-
-/* 	$Id$	 */
-

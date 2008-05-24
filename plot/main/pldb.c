@@ -28,8 +28,7 @@
  *  Departments of Geophysics and Geology.
  *
  *  Anybody want to clean this mess up?
- ***************************************************************
- */
+ ****************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
