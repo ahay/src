@@ -357,36 +357,53 @@ void plot_rays_passive_motion (int x, int y) {
     plot_rays_draw_cross (cross_x, cross_y, cross_z);
 }
 
+void write_eps(void) 
+{
+    char * eps;
+
+    eps = sf_getstring("eps");
+    /* name of EPS file for hard copy */
+    if (NULL == eps) {
+	eps = sf_charalloc(12);
+	strncpy(eps,"sfrays.eps",12);
+    }
+    
+    FILE *fp = fopen (eps, "wb");
+    free(eps);
+    
+    GLint buffsize = 0, state = GL2PS_OVERFLOW;
+    GLint viewport[4];
+    
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    
+    is_rendering_eps = 1;
+    while (state == GL2PS_OVERFLOW) { 
+	buffsize += 1024*1024;
+	gl2psBeginPage ("3D Rays", "Madagascar 3D ray visualizer", 
+			viewport,
+			GL2PS_EPS, GL2PS_BSP_SORT, GL2PS_SILENT |
+			GL2PS_SIMPLE_LINE_OFFSET | GL2PS_NO_BLENDING |
+			GL2PS_OCCLUSION_CULL | GL2PS_BEST_ROOT,
+			GL_RGBA, 0, NULL, 0, 0, 0, buffsize,
+			fp, "sfrays");
+	plot_rays_redraw ();
+	state = gl2psEndPage ();
+    }
+    is_rendering_eps = 0;
+}    
+
 void plot_rays_menu (int value) {
     switch (value) {
+        case 1: 
+	    write_eps ();
+	    break;
         case -1:
+	    write_eps ();
             exit (0);
             break;
         case 0:
             glutFullScreen ();
             break;
-        case 1: {
-            FILE *fp = fopen ("sfrays.eps", "wb");
-            GLint buffsize = 0, state = GL2PS_OVERFLOW;
-            GLint viewport[4];
-
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            is_rendering_eps = 1;
-            while (state == GL2PS_OVERFLOW) { 
-                buffsize += 1024*1024;
-                gl2psBeginPage ("3D Rays", "Madagascar 3D ray visualizer", viewport,
-                                GL2PS_EPS, GL2PS_BSP_SORT, GL2PS_SILENT |
-                                GL2PS_SIMPLE_LINE_OFFSET | GL2PS_NO_BLENDING |
-                                GL2PS_OCCLUSION_CULL | GL2PS_BEST_ROOT,
-                                GL_RGBA, 0, NULL, 0, 0, 0, buffsize,
-                                fp, "sfrays");
-                plot_rays_redraw ();
-                state = gl2psEndPage ();
-            }
-            is_rendering_eps = 0;
-            break;
-        }
         default:
             break;    
     }

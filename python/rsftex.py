@@ -274,10 +274,20 @@ def pstexpen(target=None,source=None,env=None):
     vpl = str(source[0])
     eps = str(target[0])
 
-    try:
-        vplot2eps.convert(vpl,eps)
-    except:
-        return 1
+    if vpl[-len(pssuffix):]==pssuffix:
+        try:
+            vplfile = open(vpl,'r')
+            epsfile = open(eps,'w')
+            epsfile.write(vplfile.read())
+            vplfile.close()
+            epsfile.close()
+        except:
+            return 1
+    else:
+        try:
+            vplot2eps.convert(vpl,eps)
+        except:
+            return 1
     return 0
 
 def use(target=None,source=None,env=None):
@@ -797,23 +807,28 @@ class TeXPaper(Environment):
         # reproducible figures
         erfigs = []
         eps = {}
+        
 
         # check figure repository
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
                         figdir+'/\\1',os.path.abspath(topdir))
-        for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
-            eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
-                              r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),fig)
+        for suffix in (vpsuffix,pssuffix):
+            for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,suffix)):
+                eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
+                                  r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),
+                                  fig)
         
         # follow symbolic links
         for pdir in filter(os.path.islink,glob.glob(topdir+'/[a-z]*')):
             vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                             figdir+'/\\1',
                             os.path.abspath(os.path.realpath(pdir)))
-            for fig in glob.glob('%s/*%s' % (vpldir,vpsuffix)):
-                eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
-                                  r'%s/%s/\2%s' % (pdir,resdir,pssuffix),fig)
-                      
+            for suffix in (vpsuffix,pssuffix):
+                for fig in glob.glob('%s/*%s' % (vpldir,suffix)):
+                    eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
+                                      r'%s/%s/\2%s' % (pdir,resdir,pssuffix),
+                                      fig)
+
         for fig in eps.keys():
             ps = eps[fig]
             resdir2 = os.path.join(self.doc,os.path.dirname(ps))

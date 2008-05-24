@@ -507,6 +507,7 @@ class Project(Environment):
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
+        kw.update({'suffix':suffix})
         plot = apply(self.Plot,(target2,source,flow),kw)
         target2 = target2 + suffix
         self.Default (plot),

@@ -509,28 +509,27 @@ def jpeg(context):
 pkg['opengl'] = {'generic':'mesa-libGL-devel',
                  'fedora': 'mesa-libGL-devel + freeglut + freeglut-devel'}
 
-# If this test is failed, no writing to jpeg files
+# If this test is failed, no opengl programs
 def opengl(context):
     global plat
     context.Message("checking for OpenGL ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    ogl = context.env.get('OPENGL')
-    if type(ogl) is not types.ListType:
-        ogl = string.split(ogl)
-    context.env['LIBS'] = LIBS + ogl
-    LIBPATH = context.env.get('LIBPATH',[])
+    LINKFLAGS = context.env.get('LINKFLAGS','')
+    
     if plat['OS'] == 'darwin':
-        glpath = '/usr/X11R6/lib'
+        oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
+        context.env['LINKFLAGS'] = LINKFLAGS + oglflags
+        ogl = []
     else:
-        glpath = '/none'
-    if os.path.isdir(glpath):
-        context.env['LIBPATH'] = LIBPATH+[glpath]
-        context.env['OPENGLPATH'] = glpath
+        oglflags = None
+        ogl = context.env.get('OPENGL')
+        if type(ogl) is not types.ListType:
+            ogl = string.split(ogl)
+    context.env['LIBS'] = LIBS + ogl
 
     text = '''
-    #include <stdio.h>
     #ifdef __APPLE__
     #include <OpenGL/glu.h>
     #include <GLUT/glut.h>
@@ -545,15 +544,52 @@ def opengl(context):
 
     res = context.TryLink(text,'.c')
     if res:
-        context.Result(res)
-        context.env['OPENGL'] = ogl
+        context.Result(res)    
+        context.env['OPENGL'] = ogl 
+        context.env['OPENGLFLAGS'] = oglflags
     else:
         context.Result(context_failure)
         need_pkg('opengl', fatal=False)
-        context.env['OPENGL'] = None
+
+    if res:
+        glew(context,LIBS,ogl)
 
     context.env['LIBS'] = LIBS
-    context.env['LIBPATH'] = LIBPATH
+    context.env['LINKFLAGS'] = LINKFLAGS
+
+pkg['glew'] = {'generic':'glew + glew-devel',
+               'fedora': 'glew + glew-devel'}
+
+# If this test is failed, no GLEW programs
+def glew(context,LIBS,ogl):
+    context.Message("checking for GLEW ... ")
+
+    text = '''
+    #include <GL/glew.h>
+    #ifdef __APPLE__
+    #include <GLUT/glut.h>
+    #else
+    #include <GL/glut.h>
+    #endif
+    int main(int argc,char* argv[]) {
+    GLenum err;
+    glutInit(&argc, argv);
+    err = glewInit();
+    return 0;
+    }\n'''
+
+    GLEW = context.env.get('GLEW','GLEW')
+    context.env['LIBS'] =  LIBS + [GLEW] + ogl 
+        
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.Result(res)
+        context.env['GLEW'] = GLEW
+    else:
+        
+        context.Result(context_failure)
+        need_pkg('glew', fatal=False)
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -984,7 +1020,8 @@ def options(opts):
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries','GL GLU glut')
-    opts.Add('OPENGLPATH','Path for OpenGL libraries')
+    opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
+    opts.Add('GLEW','GLEW library','GLEW')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('OMP','OpenMP support')
     opts.Add('BLAS','The BLAS library')

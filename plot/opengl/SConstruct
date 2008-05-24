@@ -35,14 +35,18 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=['rsf'])
 
 ogl = env.get('OPENGL')
+oglflags = env.get('OPENGLFLAGS')
 
 if ogl:
     if type(ogl) is not types.ListType:
         ogl = Split(ogl)
     env.Prepend(LIBS=ogl)
-    oglpath = env.get('OPENGLPATH')
-    if oglpath:
-        env.Append(LIBPATH=[oglpath])
+
+if oglflags:
+    if type(oglflags) is not types.ListType:
+        oglflags = Split(oglflags)
+    env.Append(LINKFLAGS=oglflags)
+
 
 # Treat OpenGL sources differently
 for source in Split(oglsrc):
@@ -56,7 +60,7 @@ for source in src:
 
 mains = Split(progs)
 for prog in mains:
-    if ogl:
+    if ogl or oglflags:
         sources = ['M' + prog]
         configure.depends(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
