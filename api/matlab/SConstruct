@@ -10,7 +10,7 @@ try: # distribution version
     incdir = os.path.join(root,'include')
 except: # local version
     root = None
-hehejust    env = Environment()
+    env = Environment()
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
@@ -19,7 +19,7 @@ hehejust    env = Environment()
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=['drsf'])
-a
+
 if 'matlab' in env.get('API',[]):
     mex = env.get('MEX')
     suffix = env.get('MEXSUFFIX')
@@ -35,13 +35,13 @@ if 'matlab' in env.get('API',[]):
                                 (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
                                  env['_LIBDIRFLAGS'], env['_LIBFLAGS']))
 
-        if root:
-            install = env.Install(libdir,mfile)
+            if root:
+                install = env.Install(libdir,mfile)
 
-            if env['PLATFORM'] == 'darwin':
-                env.AddPostAction(install,
-                                  'install_name_tool -change '
-                                  'build/filt/lib/libdrsf.dylib '
-                                  '%s/libdrsf.dylib %s/%s' % \
-                                      (libdir,libdir,mfile))
+                if env['PLATFORM'] == 'darwin':
+                    env.AddPostAction(install,
+                                      'install_name_tool -change '
+                                      'build/filt/lib/libdrsf.dylib '
+                                      '%s/libdrsf.dylib %s/%s' % \
+                                          (libdir,libdir,mfile))
     
