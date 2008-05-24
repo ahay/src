@@ -1644,7 +1644,7 @@ Because of the massive increase in the number of filter coefficients,
 allowing these many filters
 takes us from overdetermined to very undetermined.
 We can estimate all these filter coefficients
-by the usual deconvolution fitting goal (\ref{mda/eqn:pefregression})
+by the usual deconvolution fitting goal (\ref{eqn:pefregression})
 \begin{equation}
 \bold 0 \quad\approx\quad
 \bold r \eq \bold Y \bold K \bold a +\bold r_0
@@ -1660,7 +1660,7 @@ but we need to supplement it with some damping goals, say
 where $\bold R$ is a roughening operator to be chosen.
 
 \par
-Experience with missing data in Chapter \ref{iin/paper:iin}
+Experience with missing data in Chapter \ref{paper:iin}
 shows that when the roughening operator $\bold R$ is a differential operator,
 the number of iterations can be large.
 We can speed the calculation immensely by ``preconditioning''.

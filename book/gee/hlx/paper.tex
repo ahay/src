@@ -345,7 +345,7 @@ where we have wrapped and truncated.
 
 %\begin{notforlecture}
 \par
-Chapter \ref{prc/paper:prc} explains the important practical role
+Chapter \ref{paper:prc} explains the important practical role
 to be played by a multidimensional operator for which
 we know the exact inverse.  
 Other than multidimensional Fourier transformation,
@@ -558,7 +558,7 @@ so \texttt{polydiv} never references \verb#aa->mis[ia]#.
 
 \begin{exer}
 \item
-Observe the matrix (\ref{ajt/eqn:contran1})
+Observe the matrix (\ref{eqn:contran1})
 which corresponds to
 subroutine
 \texttt{tcai1} \vpageref{lst:tcai1}.
@@ -739,7 +739,7 @@ $\mathcal{H}$
 be denoted
 $\mathcal {H}'$.
 This notation is consistant with an idea from
-Chapter \ref{ajt/paper:ajt} that the adjoint of a filter matrix
+Chapter \ref{paper:ajt} that the adjoint of a filter matrix
 is another filter matrix with a reversed filter.
 In engineering it is conventional to use the asterisk symbol
 ``$\ast$'' to denote convolution.
@@ -1243,7 +1243,7 @@ Once a matrix has been factored into upper and lower triangles,
 solving simultaneous equations
 is simply a matter of two backsubstitutions:
 (We looked at a special case of backsubstitution
-with equation (\ref{ajt/eqn:polydiv}).)
+with equation (\ref{eqn:polydiv}).)
 For example, we often encounter simultaneous equations of the form
 $\bold B'\bold B\bold m=\bold B'\bold d$.
 Suppose the positive-definite matrix
@@ -1619,12 +1619,12 @@ Usually, however, you don't have a very good model for the hill.
 As an 
 expedient you could apply a low-cut filter to remove all
 slowly variable functions of altitude.
-In chapter \ref{ajt/paper:ajt} we found the Sea of Galilee
-in Figure \ref{ajt/fig:galbin} to be too smooth for viewing pleasure
+In chapter \ref{paper:ajt} we found the Sea of Galilee
+in Figure \ref{fig:galbin} to be too smooth for viewing pleasure
 so we made the roughened versions
-in Figure \ref{ajt/fig:galocut}
+in Figure \ref{fig:galocut}
 using a filter based
-on equation (\ref{ajt/eqn:lowcut}),
+on equation (\ref{eqn:lowcut}),
 a one-dimensional filter that we could apply
 over the $x$-axis or the $y$-axis.
 In Fourier space such a filter has a response function of $k_x$
@@ -1650,9 +1650,9 @@ It is nice having the 2-D helix derivative,
 but we can imagine even nicer 2-D low-cut filters.
 In one dimension,
 equation 
-(\ref{ajt/eqn:lowcut})
+(\ref{eqn:lowcut})
 and
-(\ref{lsq/eqn:lowcut})
+(\ref{eqn:lowcut})
 we designed a filters with an adjustable parameter,
 a cutoff frequency.
 We don't have such an object in 2-D so
@@ -2046,7 +2046,7 @@ although the 1.0 is the origin in the one-dimensional coordinate system.
 
 \par
 Even in one dimension
-(see the matrix in equation (\ref{ajt/eqn:contran1})),
+(see the matrix in equation (\ref{eqn:contran1})),
 to define a filter {\it operator} we need to know
 not only filter coefficients and a filter length,
 but we also need to know the data length.

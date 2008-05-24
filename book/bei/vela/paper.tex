@@ -272,7 +272,7 @@ differs from an identity matrix merely by a scaling.
 
 \section{THE NORMAL MOVEOUT MAPPING}
 \inputdir{stretch}
-Recall the traveltime equation~(\ref{wvs/eqn:hyper}).
+Recall the traveltime equation~(\ref{eqn:hyper}).
 \begin{eqnarray}
 v^2 \, t^2
 &=&
@@ -589,9 +589,9 @@ The polarity reversal on the first arrival of the wide offset trace
 in Figure~\ref{fig:nmoalfa0.5}
 is evidence that in practice traveltime curves do cross.
 (As was plainly evident in Figures
-\ref{wvs/fig:wzl.34},
-\ref{wvs/fig:wzl.20} and
-\ref{wvs/fig:wzl.32}
+\ref{fig:wzl.34},
+\ref{fig:wzl.20} and
+\ref{fig:wzl.32}
 crossing traveltime curves are even more significant elsewhere in the world.)
 Comparing Figure~\ref{fig:nmoalfa0} to Figure~\ref{fig:nmoalfa1}
 we see that an effect of the velocity gradient
@@ -660,7 +660,7 @@ which is good where a shallow event asymptote
 crosses a deeper event far from its own asymptote.
 In practice the problem of crossing traveltime curves is severe,
 as evidenced by
-Figures \ref{wvs/fig:wzl.34}-\ref{wvs/fig:wzl.32}
+Figures \ref{fig:wzl.34}-\ref{fig:wzl.32}
 and both weighting during NMO and muting should be used.
 
 \progdex{nmo1}{weighted NMO}
@@ -712,7 +712,7 @@ before and after \bx{NMO} and stack.
 \par
 Next we create a ``CDP stack'' of our the Gulf of Mexico data set.
 Recall the moved out common-midpoint (CMP) gather
-Figure~\ref{wvs/fig:nmogath}.
+Figure~\ref{fig:nmogath}.
 At each midpoint there is one of these CMP gathers.
 Each gather is summed over its offset axis.
 Figure~\ref{fig:wgstack} shows the result of stacking over offset,
@@ -726,7 +726,7 @@ In Figure~\ref{fig:wgstack} the early signals are too weak to see.
 This results from the small number of traces
 at early times because of the mute function.
 (Notice missing information at wide offset and early time
-on Figure~\ref{wvs/fig:nmogath}.)
+on Figure~\ref{fig:nmogath}.)
 To make the stack properly, we should divide by the number of nonzero traces.
 The fact that the mute function is tapered rather than cut off abruptly
 complicates the decision of what is a nonzero trace.
@@ -940,10 +940,10 @@ by universal or regional experience.
 It is sensible to begin from a one-parameter equation
 for velocity increasing with depth where the form of the equation
 allows a ray tracing solution
-such as equation~(\ref{wvs/eqn:Vrms}).
+such as equation~(\ref{eqn:Vrms}).
 Experience with Gulf of Mexico data shows that
 $\alpha\approx 1/2\  {\rm sec}^{-1}$ is reasonable there
-for equation~(\ref{wvs/eqn:Vrms}),
+for equation~(\ref{eqn:Vrms}),
 and that is the smooth curve
 in Figure~\ref{fig:slowfit}.
 

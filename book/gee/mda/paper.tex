@@ -390,7 +390,7 @@ we write
 Let us move from this specific fitting goal to the general case.
 (Notice the similarity of the free-mask matrix $\bold K$
 in this filter estimation problem with the
-free-mask matrix $\bold J$ in missing data goal (\ref{iin/eqn:migraine}).)
+free-mask matrix $\bold J$ in missing data goal (\ref{eqn:migraine}).)
 The fitting goal is,
 \begin{eqnarray}
 \bold 0  &\approx & \bold Y                          \bold a            \\
@@ -1234,20 +1234,20 @@ produces no outputs where missing inputs would spoil it.
 
 \par
 Recall there are two ways of writing convolution,
-equation (\ref{ajt/eqn:contran1})
+equation (\ref{eqn:contran1})
 when we are interested in finding the filter
 {\em inputs}, and
-equation (\ref{ajt/eqn:contran2})
+equation (\ref{eqn:contran2})
 when we are interested in finding the
 {\em filter itself}.
 We have already coded
-equation (\ref{ajt/eqn:contran1}),
+equation (\ref{eqn:contran1}),
 operator
 \texttt{helicon} \vpageref{lst:helicon}.
 That operator was useful in missing data problems.
 Now we want to find a prediction-error filter
 so we need the other case,
-equation (\ref{ajt/eqn:contran2}),
+equation (\ref{eqn:contran2}),
 and we need to ignore the outputs
 that will be broken because of missing inputs.
 The operator module
@@ -1667,8 +1667,8 @@ you should encounter the error exit from \texttt{cgstep()}
 \section{TWO-STAGE LINEAR LEAST SQUARES}
 \sx{Two-stage linear least squares}
 \sx{two-stage ! least squares}
-In Chapter \ref{iin/paper:iin} and
-Chapter    \ref{prc/paper:prc}
+In Chapter \ref{paper:iin} and
+Chapter    \ref{paper:prc}
 we filled empty bins
 by minimizing the energy output from the filtered mesh.
 In each case there was arbitrariness in the choice of the filter.
@@ -1745,7 +1745,7 @@ we will examine another gap-filling strategy.
 \subsection{Adding noise (Geostat)}
 \inputdir{morgan}
 \sx{geostatistics}
-In chapter \ref{iin/paper:iin} we restored missing data
+In chapter \ref{paper:iin} we restored missing data
 by adopting the philosopy of minimizing the energy in filtered output.
 In this chapter we learned about an optimum filter
 for this task, the prediction-error filter (PEF).
@@ -1824,7 +1824,7 @@ the data space $\bold d$ (both known and missing)
 \end{equation}
 \par\noindent
 keeping in mind that known data is constrained
-(as detailed in chapter \ref{iin/paper:iin}).
+(as detailed in chapter \ref{paper:iin}).
 
 \par
 To understand why this works,
@@ -1982,7 +1982,7 @@ Figure \ref{fig:bobsea} shows a result on the SeaBeam data.
 }
 \bx{Bob Clapp} developed this idea at SEP and also
 applied it to interval velocity estimation,
-the example of Figures \ref{prc/fig:clapp}-\ref{prc/fig:flex}.
+the example of Figures \ref{fig:clapp}-\ref{fig:flex}.
 
 
 \subsection{Infill of 3-D seismic data from a quarry blast}
@@ -2306,7 +2306,7 @@ as described in a later chapter.
 \inputdir{misif}
 \sx{missing data}
 \sx{filter ! unknown}
-Recall the missing-data figures beginning with Figure~\ref{iin/fig:mlines90}.
+Recall the missing-data figures beginning with Figure~\ref{fig:mlines90}.
 There the filters were taken as known,
 and the only unknowns were the missing data.
 Now, instead of having a predetermined filter,
@@ -2329,7 +2329,7 @@ to be of the form $(1,a_1,a_2)$.
 The result is pleasing in that the interpolated traces
 have the same general character as the given values.
 The filter came out slightly different from the $(1,0,-1)$
-that I guessed and tried in Figure~\ref{iin/fig:mbest90}.
+that I guessed and tried in Figure~\ref{fig:mbest90}.
 Curiously, constraining the filter to be of the form $(a_{-2},a_{-1},1)$
 in Figure~\ref{fig:man3}
 yields the same interpolated missing data as in Figure~\ref{fig:man1}.
@@ -2702,7 +2702,7 @@ are much better behaved than polynomials when extrapolating data,
 methods which behave acceptably when faced with contradictory data values,
 and methods which also apply in two and three dimensions.
 \par
-In Chapter \ref{iin/paper:iin},
+In Chapter \ref{paper:iin},
 subroutine \texttt{invint1()} \vpageref{lst:invint2}
 solved the problem of inverse linear interpolation,
 which is,
@@ -2734,8 +2734,8 @@ tends to have the spectrum of given data.
 \subsection{Test results for leveled inverse interpolation }
 Figures \ref{fig:subsine3} and \ref{fig:subsine5}
 show the same example as in Figures
-\ref{iin/fig:im1-2+1} and
-\ref{iin/fig:im1-1a}.
+\ref{fig:im1-2+1} and
+\ref{fig:im1-1a}.
 What is new here is that the proper PEF
 is not given but is determined from the data.
 Figure \ref{fig:subsine3} was made with a three-coefficient filter $(1,a_1,a_2)$ and
@@ -2747,7 +2747,7 @@ The main difference in the figures is where the data is sparse.
 %it does something like that, a high-frequency sinusoid on the left
 %and a lower one on the right.
 The data points in Figures
-\ref{iin/fig:im1-2+190},
+\ref{fig:im1-2+190},
 \ref{fig:subsine3} and
 \ref{fig:subsine5} are samples from a sinusoid.
 \sideplot{subsine3}{width=3in,height=1.5in}{
@@ -2761,8 +2761,8 @@ The data points in Figures
 \par
 \boxit{
         Comparing Figures
-        \ref{iin/fig:im1-2+1} and
-        \ref{iin/fig:im1-1a} to
+        \ref{fig:im1-2+1} and
+        \ref{fig:im1-1a} to
         Figures \ref{fig:subsine3} and \ref{fig:subsine5}
         we conclude that by finding and imposing
         the prediction-error filter
@@ -2817,7 +2817,7 @@ that a good way to find missing parts of a function
 (the model space)
 is to solve for the function and its PEF at the same time.
 We are merging the fitting goal
-(\ref{iin/eqn:tworegexam}) for irregularly sampled data with the fitting goal
+(\ref{eqn:tworegexam}) for irregularly sampled data with the fitting goal
 (\ref{eqn:bigmissif}) for finding the prediction-error filter.
 \par
 \begin{eqnarray}
@@ -3254,7 +3254,7 @@ without dropping into a local minimum.
 Another important practical problem remains,
 that of nonstationarity.
 We'll see the beginnings of the solution
-to that problem in chapter \ref{pch/paper:pch}.
+to that problem in chapter \ref{paper:pch}.
 
 
 

@@ -29,7 +29,7 @@ When I first realized that practical imaging methods in widespread
 industrial use amounted merely to the adjoint of forward modeling,
 I (and others) thought an easy way to achieve fame and fortune
 would be to introduce the first steps towards inversion
-along the lines of Chapter \ref{lsq/paper:lsq}.
+along the lines of Chapter \ref{paper:lsq}.
 Although inversion generally requires a prohibitive number
 of steps, I felt that moving in the gradient direction,
 the direction of steepest descent, would move us rapidly
@@ -42,7 +42,7 @@ method of steepest descents.
 I came to realize that it was still too slow.
 I learned this by watching the convergence in Figure
 \ref{fig:conv}.
-This led me to the helix method in Chapter \ref{hlx/paper:hlx}.
+This led me to the helix method in Chapter \ref{paper:hlx}.
 Here we'll see how it speeds many applications.
 
 \par
@@ -289,7 +289,7 @@ More generally,
 the model goal $\bold 0 \approx \bold A \bold m$
 introduces a roughening operator like a gradient,
 Laplacian
-(and in chapter \ref{mda/paper:mda}
+(and in chapter \ref{paper:mda}
 a Prediction-Error Filter (PEF)).
 Thus the model goal is usually a filter,
 unlike the data-fitting goal
@@ -407,7 +407,7 @@ and create the statistical ideal random streams.
 The identity matrix required for the ``second miracle'',
 and our search for a good preconditioning transformation
 are related ideas.
-The relationship will become more clear in chapter \ref{mda/paper:mda}
+The relationship will become more clear in chapter \ref{paper:mda}
 when we learn how to estimate the best roughening operator $\bold A$
 as a prediction-error filter.
 
@@ -1051,7 +1051,7 @@ though they differ in important details.
 
 \par
 The original way in
-Chapter \ref{iin/paper:iin} is to
+Chapter \ref{paper:iin} is to
 restore missing data
 by ensuring that the restored data,
 after specified filtering,
@@ -1164,7 +1164,7 @@ according to various aspects
 of the ship's navigation and the geometry of the SeaBeam sonic antenna.
 Figure \ref{fig:seabin} was made by binning with
 \texttt{bin2()} \vpageref{lst:bin2}
-and equation (\ref{ajt/eqn:dpbin}).
+and equation (\ref{eqn:dpbin}).
 The spatial spectra of the noise in the data
 could be estimated where tracks cross over themselves.
 This might be worth while, but we do not pursue it now.
@@ -1216,15 +1216,15 @@ the gradient and the previous step.
 We could add a third direction,
 the smart direction of equation (\ref{eqn:newdirection}).
 Instead of having a $2\times 2$ matrix
-solution like equation (\ref{lsq/eqn:twobytwosln}) for two distances,
+solution like equation (\ref{eqn:twobytwosln}) for two distances,
 we would need to solve a $3\times 3$ matrix for three.
 
 \par
 Figure \ref{fig:prcfill} has a few artifacts connected with the
 use of the helix derivative.
-Examine equation (\ref{hlx/eqn:lapfac}) to notice the shape of the helix derivative.
+Examine equation (\ref{eqn:lapfac}) to notice the shape of the helix derivative.
 In principle, it is infinitely long in the horizontal axis
-in both equation (\ref{hlx/eqn:lapfac}) and Figure \ref{fig:prcfill}.
+in both equation (\ref{eqn:lapfac}) and Figure \ref{fig:prcfill}.
 In practice, it is truncated.  The truncation is visible as bands
 along the sides of Figure \ref{fig:prcfill}.
 
@@ -1234,7 +1234,7 @@ with helix derivative for the roughener
 because it is theoretically equivalent to the gradient operator
 $\bold \nabla$ which has many fewer coefficients.
 Later, in Chapter
-\ref{mda/paper:mda}
+\ref{paper:mda}
 we'll find a much smarter roughening operator $\bold A$
 called the Prediction Error Filter (PEF)
 which gives better results.
@@ -1303,7 +1303,7 @@ data modeling equation (\ref{eqn:theordata}) and notice
 that the estimate $\bold m_0$ predicts the correct data.
 Notice that equation
 (\ref{eqn:underdetest}) is not the same
-as equation (\ref{lsq/eqn:sln}) which we derived much earlier.
+as equation (\ref{eqn:sln}) which we derived much earlier.
 What's the difference?
 The central issue is which matrix of
 $\bold F \bold F'$ and
@@ -1693,7 +1693,7 @@ You might notice this approach nicely incorporates
 both residual weighting and preconditioning
 while yet evading the issue of where we get the matrices
 $\sigma_m^2$ and $\sigma_d^2$ or how we invert them.
-Fortunately, upcoming chapter \ref{mda/paper:mda}
+Fortunately, upcoming chapter \ref{paper:mda}
 suggests how,
 in image estimation problems,
 to obtain sensible estimates of the elusive operators $\bold M$ and $\bold D$.
