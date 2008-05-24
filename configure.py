@@ -548,6 +548,8 @@ def opengl(context):
         context.env['OPENGL'] = ogl 
         context.env['OPENGLFLAGS'] = oglflags
     else:
+        context.env['OPENGL'] = None 
+        context.env['OPENGLFLAGS'] = None
         context.Result(context_failure)
         need_pkg('opengl', fatal=False)
 
