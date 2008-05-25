@@ -663,7 +663,8 @@ as evidenced by
 Figures \ref{fig:wzl.34}-\ref{fig:wzl.32}
 and both weighting during NMO and muting should be used.
 
-\progdex{nmo1}{weighted NMO}
+%\progdex{nmo1}{weighted NMO}
+\opdex{nmo1}{weighted normal moveout}{52}{62}{user/gee}
 
 It is important to realize that the most accurate possible
 physical \bx{amplitude}s are not necessarily those for which
@@ -747,7 +748,7 @@ A divisor for the data is found by smoothing the absolute
 values of the data over a moving window.
 To make Figure~\ref{fig:agcstack} I made the divisor by smoothing
 in triangle shaped windows about a half second long.
-To do this, I used subroutine \texttt{triangle()} \vpageref{lst:triangle}.
+%To do this, I used subroutine \texttt{triangle()} \vpageref{lst:triangle}.
 
 \plot{agcstack}{width=6.00in,height=3.6in}{
   Stack of Figure~\protect\ref{fig:wgstack} after AGC.
@@ -814,7 +815,7 @@ has a name.   In $(\tau, s)$-space it is an ellipse
 \par
 Look carefully in the model spaces of
 Figure~\ref{fig:velvel} and
-Figure~\ref{fig:mutevel}.
+Figure~\ref{fig:mutvel}.
 Can you detect any ellipses?
 For each ellipse,
 does it come from a large $x_0$ or a small one?
@@ -850,8 +851,8 @@ Basically, the summations in the velocity transformation are like integrations,
 thus they tend to boost low frequencies.
 This could be compensated by scaling
 in the frequency domain
-with frequency as $\sqrt{-i\omega}$
-with subroutine \texttt{halfdifa()} \vpageref{lst:halfdifa}.
+with frequency as $\sqrt{-i\omega}$.
+ with subroutine \texttt{halfint()} \vpageref{lst:halfint}.
 % To remove reference to halfdifa if Section 6.5.2 is removed - Biondo 4/96
 
 \par
@@ -943,9 +944,9 @@ allows a ray tracing solution
 such as equation~(\ref{eqn:Vrms}).
 Experience with Gulf of Mexico data shows that
 $\alpha\approx 1/2\  {\rm sec}^{-1}$ is reasonable there
-for equation~(\ref{eqn:Vrms}),
-and that is the smooth curve
-in Figure~\ref{fig:slowfit}.
+for equation~(\ref{eqn:Vrms}).
+%and that is the smooth curve
+%in Figure~\ref{fig:slowfit}.
 
 \par
 Experience with moments,
