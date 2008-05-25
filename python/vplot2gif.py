@@ -1,33 +1,31 @@
 #!/usr/bin/env python
 
+# Copyright 1987 the Board of Trustees of the Leland Stanford Junior
+# University. The official license for this software is included in the
+# Madagascar source distribution, in the "COPYRIGHT" section of 
+# pens/docs/vplot.mn , readable as such or formatted with "nroff -man vplot.mn" .
+
 # Copyright (C) 2007 University of Texas at Austin
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# This file (vplot2gif.py) has been rewritten by Sergey Fomel based on vplot2gif.csh
+# from the original distribution. Some capabilities have been added and some removed, and 
+# the entire script was translated from csh to python. The extent of the modifications 
+# warrant making Fomel's employer (UT Austin) a co-holder of copyright on this derivative work.
+
+# The original did not contain any author acknowledgment notices
 
 import sys, os, time, string, re, shutil
- 
+
 def convert(infile,outfile):
     spacing = float(os.environ.get('GIFBORDER',0.001))
     ppi = int(os.environ.get('PPI',75))
     delay = int(os.environ.get('GIFDELAY',100))
-    
+
     # Use vppen to find out how big and where on the page the plot is.
     stats = os.popen('vppen size=a stat=l < %s' % infile)
     lines = stats.readlines()
     stats.close()
-    
+
     stat = string.split(lines[0])
 
     # find the number of frames
@@ -37,7 +35,7 @@ def convert(infile,outfile):
         frames = int(match.group(1))
     else:
         frames = 1
-    
+
     xmin = float(stat[7]) - spacing
     xmax = float(stat[9]) + spacing
     xcen = (xmin+xmax)/2.
@@ -48,12 +46,12 @@ def convert(infile,outfile):
 
     width  = int((xmax-xmin)*ppi+0.9999)
     height = int((ymax-ymin)*ppi+0.9999)
-    
+
     sys.stderr.write('''
     %s will be %d pixels wide, %d pixels tall,
     at %d pixels per inch, with borders %g inches wide.
     ''' % (outfile,width,height,ppi,spacing))
-    
+
     random = time.time()
     run = 'vppen size=a outN=vppen.%%d.%s < %s >/dev/null' % (random,infile)
     os.system(run)
@@ -115,7 +113,7 @@ if __name__ == "__main__":
         If the output file is a directory, the individual frames are
         not combined into an animation.
         '''
-        
+
         sys.exit(1)
 
     infile = sys.argv[1]
