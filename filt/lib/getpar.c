@@ -47,8 +47,6 @@ bool sf_stdin(void)
 
     if (isatty(fileno(stdin))) return false;
  
-    /* Thanks to Iulian Musat for fixing this! */
-
     c = fgetc(stdin);
     if (EOF == c) return false;
     ungetc(c,stdin);
