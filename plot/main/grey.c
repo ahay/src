@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
     if (!sf_histfloat(in,"d3",&d3)) d3=1.;
-    
+
     if (!sf_getbool("transp",&transp)) transp=true;
     /* if y, transpose the display axes */
     if (!sf_getbool("yreverse",&yreverse)) yreverse=true;
@@ -85,7 +85,6 @@ int main(int argc, char* argv[])
     if (!sf_getbool("xreverse",&xreverse)) xreverse=false;
     /* if y, reverse the horizontal axis */
 
-    /* I don't understand this */
     if (transp) {
 	orient = 3;
     } else {	
@@ -129,7 +128,7 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("gainstep",&gainstep)) gainstep=0.5+n1/256.;
 	    /* subsampling for gpow and clip estimation */
 	    if (gainstep <= 0) gainstep=1;
-	    
+
 	    gainpanel = sf_getstring("gainpanel");
 	    /* gain reference: 'a' for all, 'e' for each, or number */
 	    if (NULL != gainpanel) {
@@ -393,7 +392,7 @@ int main(int argc, char* argv[])
 
 	if (byte) {
 	    sf_ucharwrite(buf[0],n1*n2,out);
-	} else {	    
+	} else {
 	    vp_purge();
 	} 
     } /* i3 loop */
@@ -401,5 +400,3 @@ int main(int argc, char* argv[])
     sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */
