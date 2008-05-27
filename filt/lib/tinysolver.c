@@ -20,31 +20,35 @@
 #include "alloc.h"
 #include "tinysolver.h"
 
-void sf_tinysolver (sf_operator oper   /* linear operator */, 
-		    sf_solverstep solv /* stepping function */, 
-		    int nx             /* size of x */, 
-		    int ny             /* size of dat */, 
-		    float* x           /* estimated model */, 
-		    const float* dat   /* data */, 
-		    int niter          /* number of iterations */)
+void sf_tinysolver (sf_operator Fop       /* linear operator */, 
+		    sf_solverstep stepper /* stepping function */, 
+		    int nm                /* size of model */, 
+		    int nd                /* size of data */, 
+		    float* m              /* estimated model */,
+		    const float* m0       /* starting model */,
+		    const float* d        /* data */, 
+		    int niter             /* number of iterations */)
 /*< Generic linear solver. Solves oper{x} =~ dat >*/
 {
     int i, iter;
     float *g, *rr, *gg;
-    bool forget = false;
 
-    g =  sf_floatalloc (nx);
-    rr = sf_floatalloc (ny);
-    gg = sf_floatalloc (ny);
+    g =  sf_floatalloc (nm);
+    rr = sf_floatalloc (nd);
+    gg = sf_floatalloc (nd);
 
-    for (i=0; i < ny; i++) rr[i] = - dat[i];
-    for (i=0; i < nx; i++) x[i] = 0.0;
+    for (i=0; i < nd; i++) rr[i] = - d[i];
+    if (NULL==m0) {
+	for (i=0; i < nm; i++) m[i] = 0.0;
+    } else {
+	for (i=0; i < nm; i++) m[i] = m0[i];
+    }
 
     for (iter=0; iter < niter; iter++) {
-	oper (true, false, nx, ny, g, rr);
-	oper (false, false, nx, ny, g, gg);
+	Fop (true, false, nm, nd, g, rr);
+	Fop (false, false, nm, nd, g, gg);
 
-	solv (forget, nx, ny, x, g, rr, gg);
+	stepper (false, nm, nd, m, g, rr, gg);
     }
 
     free (g);

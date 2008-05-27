@@ -55,6 +55,7 @@ if dnum=0., an optimal linear scale is estimated
     const float pad = 0.15; /* between tic and number, number and label */
     const float aspect = 0.8;
 
+    vp_bgroup("simple axis");
     vp_color (VP_WHITE); /* white */
 
     /* draw axis */
@@ -98,6 +99,7 @@ if dnum=0., an optimal linear scale is estimated
     otic = (onum-num1)*dist/(num2-num1);
     dtic = dnum*dist/(num2-num1); 
 
+    vp_bgroup("tic marks");
     /* move to each tic mark location, draw the tic and the number */
     for (i=0; i < nopt; i++) {
 	num = onum + i*dnum;
@@ -110,11 +112,15 @@ if dnum=0., an optimal linear scale is estimated
 	vp_gtext(xpos+dxtic+pad*sinth,
 		 ypos+dytic-pad*costh,xpath,ypath,xup,yup,string);
     }
+    vp_egroup();
     
-    /* now the axis label */
+    vp_bgroup("axis label");
     xpos = x1 + dist/2. * costh + dxtic + size * sinth + 2. * pad * sinth;
     ypos = y1 + dist/2. * sinth + dytic - size * costh - 2. * pad * costh;
     vp_gtext(xpos,ypos,xpath,ypath,xup,yup,label);
+    vp_egroup();
+
+    vp_egroup(); /* simple axis */
 }
 
 int vp_optimal_scale(int chars                /* characters */, 		

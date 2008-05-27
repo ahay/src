@@ -1675,7 +1675,7 @@ The conjugate vectors $G$ and $S$ in the program are denoted by
 The inner part of the conjugate-direction task is in
 function {\tt cgstep()}.%
 %\moddex[f90]{cgstep}{one step of CD}
-\moddex{cgstep}{one step of CD}{38}{84}{filt/lib}
+\moddex{cgstep}{one step of CD}{51}{85}{filt/lib}
 \par
 Observe the \texttt{cgstep()} function has a logical parameter
 called \texttt{forget}.
@@ -1687,7 +1687,7 @@ there is no previous step,
 so the conjugate direction method
 is reduced to the steepest descent method.
 At any iteration, however, you have the option to set
-\texttt{forget=.true.}
+\texttt{forget=true}
 which amounts to restarting the calculation
 from the current location,
 something we rarely find reason to do.
@@ -1729,7 +1729,7 @@ to achieve this design goal by means of generic function interfaces.
 \par
 A basic solver is \texttt{tinysolver}.
 
-\moddex{tinysolver}{tiny solver}{23}{53}{filt/lib}
+\moddex{tinysolver}{tiny solver}{23}{57}{filt/lib}
 
 \par
 The two most important arguments in \texttt{tinysolver()}
@@ -1766,6 +1766,7 @@ We will watch how the list of optional parameters
 to the generic solver routine grows
 as we attack more and more complex problems in later chapters.
 
+\begin{comment}
 \subsection{Why C is much better than Fortran 77}
 I'd like to digress from our geophysics-mathematics themes
 to explain why C has been a great step forward
@@ -1786,7 +1787,7 @@ But the definitions are not difficult to understand,
 and they are a clutter that we must see once and never again.
 Another benefit is that the book in F77 had no easy way to switch
 from the \texttt{cgstep} solver to other solvers.
-
+\end{comment}
 
 \subsection{Test case: solving some simultaneous equations}
 \par
@@ -1892,7 +1893,7 @@ you can deduce that,
 except for a scale factor,
 the output at {\tt niter=0} is identical to the stack $\bold M' \bold d$.
 All the signals in Figure~\ref{fig:invstack} are intrinsically the same scale.%
-\moddex{invstack}{inversion stacking}{23}{33}{filt/proc}
+\moddex{invstack}{inversion stacking}{24}{34}{filt/proc}
 \par
 This simple inversion is inexpensive.
 Has anything been gained over conventional stack?

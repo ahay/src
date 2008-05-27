@@ -231,11 +231,13 @@ int main (int argc, char* argv[])
 	    range = (hi>lo)? 1./(hi-lo): 1./eps;
 	    zerosignal = axis +  tracehigh * (0.-av)*range;
 	    
+	    vp_bgroup("labels");
 	    if(NULL != labels[0] && NULL != labels[i2]) {
 		vp_color(VP_CYAN);
 		text(0.03*screenwide, zerosignal+.2*dd2, 
 		     labelsz, 0, labels[i2]);
 	    }
+	    vp_egroup();
 	    
 	    if (silk) {
 		for (i1=0; i1<n1; i1++) {
@@ -263,13 +265,16 @@ int main (int argc, char* argv[])
 		}
 
 		if(seemean) {
+		    vp_bgroup("axis");
 		    vp_color(VP_BLUE);
 		    move(marginl, zerosignal);
 		    draw(-marginr+screenwide, zerosignal);
+		    vp_egroup();
 		}
 
 		if (connect) {
 		    vp_color(VP_WHITE);
+		    vp_bgroup("connectors");
 		    for(i1=0; i1<n1; i1++) {
 			y = axis +  tracehigh * (data[i2][i1]-av)*range;
 			switch (connect) {
@@ -308,8 +313,10 @@ int main (int argc, char* argv[])
 				break;
 			}
 		    }
+		    vp_egroup();
 		}
 
+		vp_bgroup("data");
 		for (i1=0; i1<n1; i1++) {
 		    y = axis +  tracehigh * (data[i2][i1]-av)*range;
 		    x = marginl + dd1/2 + i1*dd1;
@@ -325,6 +332,7 @@ int main (int argc, char* argv[])
 		    if (1==dots || (2==dots && data[i2][i1] != 0.))
 			circle (corners, cx, cy, x, y, radius);
 		}	
+		vp_egroup();
 	    }
 	} /* i2 */
 
@@ -339,10 +347,12 @@ int main (int argc, char* argv[])
 	    x = marginl + .5*( screenwide-marginl-marginr);
 	    y = screenhigh - margint;
 
+	    vp_bgroup("title");
 	    vp_color(VP_CYAN);
 	    vp_tjust(TH_CENTER,TV_NORMAL);
 	    text (x, y, newsize, 0, title);
 	    vp_tjust(TH_NORMAL,TV_NORMAL);
+	    vp_egroup();
 	}
 
     } /* i3 */

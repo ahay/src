@@ -1016,6 +1016,7 @@ void vp_simpleframe(void)
     float xc, yc, num;
 
     if (NULL != grid1 || NULL != grid2 || NULL != grid3) {
+	vp_bgroup("grid");
 	vp_color (gridcol);
 	vp_fat (gridfat);
 
@@ -1054,9 +1055,12 @@ void vp_simpleframe(void)
 		vp_udraw (max1, yc);
 	    }
 	}
+
+	vp_egroup();
     }
 
     /* draw outline */   
+    vp_bgroup("frame");
     vp_color(framecol);
     vp_umove(min1, min2);
 
@@ -1089,6 +1093,8 @@ void vp_simpleframe(void)
 	vp_udraw(max1, min2);
 	vp_udraw(min1, min2);
     }
+
+    vp_egroup();
 }
 
 void vp_framenum(float num)
@@ -1112,6 +1118,7 @@ void vp_simplebarframe (void)
 
 /*    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2); */
 
+    vp_bgroup("scalebar frame");
     vp_color(framecol);
     vp_fat (gridfat);
 
@@ -1140,6 +1147,8 @@ void vp_simplebarframe (void)
 	vp_draw(max,barmin);
 	vp_draw(min,barmin);
     }
+
+    vp_egroup();
 }
 
 void vp_frame(void)
@@ -1440,6 +1449,7 @@ void vp_frame(void)
 
 	yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(l2min-l2max);
 
+	vp_bgroup("colored lines");
 	vp_color(cubelinecol);
 	vp_umove(min1,yc);
 	
@@ -1470,6 +1480,7 @@ void vp_frame(void)
 		vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
 	    }
 	}
+	vp_egroup();
 
 	xc = min1+(mid1-min1)*(frame2+0.5)*d2/(l1max-l1min);
 
