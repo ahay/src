@@ -16,18 +16,25 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <rsf.h>
 
 #define C0  1.125 /*  9/8  */	
 #define C1  0.04166666666666666667 /* 1/24 */
 
 /* centered FD derivative stencils */
-#define DZ(a,i3,i2,i1,h) (C0 * (a[i3][i2][i1 + 1] - a[i3][i2][i1 - 1]) -  \
-                          C1 * (a[i3][i2][i1 + 2] - a[i3][i2][i1 - 2])) * h
-#define DX(a,i3,i2,i1,h) (C0 * (a[i3][i2 + 1][i1] - a[i3][i2 - 1][i1]) -  \
-                          C1 * (a[i3][i2 + 2][i1] - a[i3][i2 - 2][i1])) * h
-#define DY(a,i3,i2,i1,h) (C0 * (a[i3 + 1][i2][i1] - a[i3 - 1][i2][i1]) -  \
-                          C1 * (a[i3 + 2][i2][i1] - a[i3 - 2][i2][i1])) * h
+#define DZA(a,i3,i2,i1,h) (C0 * (a[i3][i2][i1 + 1] - a[i3][i2][i1]) -  \
+                           C1 * (a[i3][i2][i1 + 2] - a[i3][i2][i1 - 1])) * h
+#define DXA(a,i3,i2,i1,h) (C0 * (a[i3][i2 + 1][i1] - a[i3][i2][i1]) -  \
+                           C1 * (a[i3][i2 + 2][i1] - a[i3][i2 - 1][i1])) * h
+#define DYA(a,i3,i2,i1,h) (C0 * (a[i3 + 1][i2][i1] - a[i3][i2][i1]) -  \
+                           C1 * (a[i3 + 2][i2][i1] - a[i3 - 1][i2][i1])) * h
+#define DZB(a,i3,i2,i1,h) (C0 * (a[i3][i2][i1] - a[i3][i2][i1 - 1]) -  \
+                           C1 * (a[i3][i2][i1 + 1] - a[i3][i2][i1 - 2])) * h
+#define DXB(a,i3,i2,i1,h) (C0 * (a[i3][i2][i1] - a[i3][i2 - 1][i1]) -  \
+                           C1 * (a[i3][i2 + 1][i1] - a[i3][i2 - 2][i1])) * h
+#define DYB(a,i3,i2,i1,h) (C0 * (a[i3][i2][i1] - a[i3 - 1][i2][i1]) -  \
+                           C1 * (a[i3 + 1][i2][i1] - a[i3 - 2][i2][i1])) * h
 
 
 int main (int argc, char* argv[]) {
@@ -94,7 +101,7 @@ int main (int argc, char* argv[]) {
     ax = sf_iaxa (Fvp, 2); sf_setlabel (ax, "x"); if (verb) sf_raxa (ax); /* space - x */
     ay = sf_iaxa (Fvp, 3); sf_setlabel (ax, "y"); if (verb) sf_raxa (ay); /* space - y */
 
-    nt = sf_n (at); dt = sf_d(at);
+    nt = sf_n (at); dt = sf_d (at);
 //    ns = sf_n (as);
 //    nr = sf_n (ar);
     nz = sf_n (az); dz = sf_d (az);
@@ -134,6 +141,10 @@ int main (int argc, char* argv[]) {
     txz = sf_floatalloc3 (nz, nx, ny);
     tyz = sf_floatalloc3 (nz, nx, ny);
 
+    sf_oaxa (Fwfl, az, 1);
+    sf_oaxa (Fwfl, ax, 2);
+    sf_oaxa (Fwfl, ay, 3);
+
     /* Recalculate them into Lame constants and buoyancy + initialize wavefield arrays */
     for (iy = 0; iy < ny; iy++) {
         for (ix = 0; ix < ny; ix++) {
@@ -153,56 +164,76 @@ int main (int argc, char* argv[]) {
             }
         }
     }
-
+    /* Main loop over time */
     for (it = 0; it < nt; it++) {
         if (verb)
-            sf_warning ("Calculating time stamp: %f\n", it * dt);
+            sf_warning ("Calculating time stamp: %f", it * dt);
         for (iy = 2; iy < (ny - 2); iy++) {
-            buoy = 0.5 * (buo[iy][ix][iz] + buo[iy + 1][ix][iz]);
             for (ix = 2; ix < (nx - 2); ix++) {
-                buox = 0.5 * (buo[iy][ix][iz] + buo[iy][ix + 1][iz]);
                 for (iz = 2; iz < (nz - 2); iz++) {
-                    buoz = 0.5 * (buo[iy][ix][iz] + buo[iy][ix][iz + 1]);
+                    buox = 0.5 * (buo[iy][ix][iz] + buo[iy][ix - 1][iz]);
+                    buoy = 0.5 * (buo[iy][ix][iz] + buo[iy - 1][ix][iz]);
+                    buoz = 0.5 * (buo[iy][ix][iz] + buo[iy][ix][iz - 1]);
+                    vx[iy][ix][iz] = vx[iy][ix][iz] + dt * buox *
+                                     (DXB (txx, iy, ix, iz, 1.0 / dx) + 
+                                      DYB (txy, iy, ix, iz, 1.0 / dy) + 
+                                      DZB (txz, iy, ix, iz, 1.0 / dz));
+                    vy[iy][ix][iz] = vy[iy][ix][iz] + dt * buoy *
+                                     (DXB (txy, iy, ix, iz, 1.0 / dx) + 
+                                      DYB (tyy, iy, ix, iz, 1.0 / dy) + 
+                                      DZB (tyz, iy, ix, iz, 1.0 / dz));
+                    vz[iy][ix][iz] = vz[iy][ix][iz] + dt * buoz *
+                                     (DXB (txz, iy, ix, iz + 1, 1.0 / dx) + 
+                                      DYB (tyz, iy, ix, iz + 1, 1.0 / dy) + 
+                                      DZB (tzz, iy, ix, iz + 1, 1.0 / dz));
+                }
+            }
+        }
+        /* Temporary - inject one source */
+        buoy = 0.5 * (buo[ny / 2][nx / 2][100] + buo[ny / 2 - 1][nx / 2][100]);
+        buox = 0.5 * (buo[ny / 2][nx / 2][100] + buo[ny / 2][nx / 2 - 1][100]);
+        buoz = 0.5 * (buo[ny / 2][nx / 2][100] + buo[ny / 2][nx / 2][99]);
+        vx[ny / 2][nx / 2][100] += dt * buox * wav[it][0];
+        vy[ny / 2][nx / 2][100] += dt * buoy * wav[it][1];
+        vz[ny / 2][nx / 2][100] += dt * buoz * wav[it][2];
+sf_warning ("Source: %f %f %f", vy[ny / 2][nx / 2][100], vx[ny / 2][nx / 2][100], vz[ny / 2][nx / 2][100]);
+        for (iy = 2; iy < (ny - 2); iy++) {
+            for (ix = 2; ix < (nx - 2); ix++) {
+                for (iz = 2; iz < (nz - 2); iz++) {
                     muxy = 1.0 / (0.25 * (1.0 / mu[iy][ix][iz] + 1.0 / mu[iy][ix + 1][iz]) + 
                                           1.0 / mu[iy + 1][ix][iz] + 1.0 / mu[iy + 1][ix + 1][iz]);
                     muxz = 1.0 / (0.25 * (1.0 / mu[iy][ix][iz] + 1.0 / mu[iy][ix + 1][iz]) + 
                                           1.0 / mu[iy][ix][iz + 1] + 1.0 / mu[iy][ix + 1][iz + 1]);
                     muyz = 1.0 / (0.25 * (1.0 / mu[iy][ix][iz] + 1.0 / mu[iy + 1][ix][iz]) + 
                                           1.0 / mu[iy][ix][iz + 1] + 1.0 / mu[iy + 1][ix][iz + 1]);
-                    vx[iy][ix][iz] = vx[iy][ix][iz] + dt * buox *
-                                     (DX (txx, iy, ix, iz, 1.0 / dx) + 
-                                      DY (txy, iy, ix, iz, 1.0 / dy) + 
-                                      DZ (txz, iy, ix, iz, 1.0 / dz));
-                    vy[iy][ix][iz] = vy[iy][ix][iz] + dt * buoy *
-                                     (DX (txy, iy, ix, iz, 1.0 / dx) + 
-                                      DY (tyy, iy, ix, iz, 1.0 / dy) + 
-                                      DZ (tyz, iy, ix, iz, 1.0 / dz));
-                    vz[iy][ix][iz] = vz[iy][ix][iz] + dt * buoz *
-                                     (DX (txz, iy, ix, iz, 1.0 / dx) + 
-                                      DY (tyz, iy, ix, iz, 1.0 / dy) + 
-                                      DZ (tzz, iy, ix, iz, 1.0 / dz));
-                    /* Temporary - inject one source */
-                    vx[ny / 2][nx / 2][2] += dt * buox * wav[it][0];
-                    vy[ny / 2][nx / 2][2] += dt * buox * wav[it][1];
-                    vz[ny / 2][nx / 2][2] += dt * buox * wav[it][2];
-
                     txx[iy][ix][iz] = txx[iy][ix][iz] + dt * ((lam[iy][ix][iz] + 2 * mu[iy][ix][iz]) *
-                                      DX (vx, iy, ix, iz, 1.0 / dx) + lam[iy][ix][iz] * 
-                                      (DY (vy, iy, ix, iz, 1.0 / dy) + DZ (vz, iy, ix, iz, 1.0 / dz)));
-                    txy[iy][ix][iz] = txy[iy][ix][iz] + dt * ((lam[iy][ix][iz] + 2 * mu[iy][ix][iz]) *
-                                      DY (vy, iy, ix, iz, 1.0 / dy) + lam[iy][ix][iz] * 
-                                      (DX (vx, iy, ix, iz, 1.0 / dx) + DZ (vz, iy, ix, iz, 1.0 / dz)));
+                                      DXB (vx, iy + 1, ix + 1, iz + 1, 1.0 / dx) + lam[iy][ix][iz] * 
+                                      (DYB (vy, iy + 1, ix + 1, iz + 1, 1.0 / dy) + DZB (vz, iy + 1, ix + 1, iz + 1, 1.0 / dz)));
+                    tyy[iy][ix][iz] = tyy[iy][ix][iz] + dt * ((lam[iy][ix][iz] + 2 * mu[iy][ix][iz]) *
+                                      DYB (vy, iy + 1, ix + 1, iz + 1, 1.0 / dy) + lam[iy][ix][iz] * 
+                                      (DXB (vx, iy, ix, iz, 1.0 / dx) + DZB (vz, iy, ix, iz, 1.0 / dz)));
                     tzz[iy][ix][iz] = tzz[iy][ix][iz] + dt * ((lam[iy][ix][iz] + 2 * mu[iy][ix][iz]) *
-                                      DZ (vz, iy, ix, iz, 1.0 / dz) + lam[iy][ix][iz] * 
-                                      (DX (vx, iy, ix, iz, 1.0 / dx) + DY (vy, iy, ix, iz, 1.0 / dy)));
+                                      DZB (vz, iy + 1, ix + 1, iz + 1, 1.0 / dz) + lam[iy][ix][iz] * 
+                                      (DXB (vx, iy + 1, ix + 1, iz + 1, 1.0 / dx) + DYB (vy, iy + 1, ix + 1, iz + 1, 1.0 / dy)));
                     txy[iy][ix][iz] = txy[iy][ix][iz] + dt * muxy *
-                                      (DY (vz, iy, ix, iz, 1.0 / dy) + DX (vy, iy, ix, iz, 1.0 / dx));
+                                      (DYB (vx, iy + 1, ix + 1, iz + 1, 1.0 / dy) + DXB (vy, iy + 1, ix + 1, iz + 1, 1.0 / dx));
                     txz[iy][ix][iz] = txz[iy][ix][iz] + dt * muxz *
-                                      (DZ (vx, iy, ix, iz, 1.0 / dz) + DX (vz, iy, ix, iz, 1.0 / dx));
+                                      (DZB (vx, iy + 1, ix + 1, iz + 1, 1.0 / dz) + DXB (vz, iy + 1, ix + 1, iz + 1, 1.0 / dx));
                     tyz[iy][ix][iz] = tyz[iy][ix][iz] + dt * muyz *
-                                      (DZ (vy, iy, ix, iz, 1.0 / dz) + DY (vz, iy, ix, iz, 1.0 / dy));
+                                      (DZB (vy, iy + 1, ix + 1, iz + 1, 1.0 / dz) + DYB (vz, iy + 1, ix + 1, iz + 1, 1.0 / dy));
                 }
             }
+        }
+        if (50 == it) {
+            for (iy = 0; iy < ny ; iy++) {
+                for (ix = 0; ix < nx; ix++) {
+                    for (iz = 0; iz < nz; iz++) {
+                        vx[iy][ix][iz] = 1.0 / 3.0 * (txx[iy][ix][iz] + tyy[iy][ix][iz] + tzz[iy][ix][iz]);
+                    }
+                }
+            }
+            sf_floatwrite (vx[0][0], nx * ny * nz, Fwfl);
+            exit (0);
         }
     }
 }

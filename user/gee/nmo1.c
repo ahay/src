@@ -53,7 +53,7 @@ void nmo1_lop(bool adj, bool add, int nz, int nt, float *zz,  float *tt)
 	z = t0 + dt*iz;            /* Travel-time depth */
 	xs= x * slow[iz];
 	t = hypotf(z,xs) + 1.e-20; /* Hypotenuse */
-	wt = z/t * (1./sqrt(t))    /* Weighting function */
+	wt = z/t * (1./sqrt(t));   /* Weighting function */
 	it = 0.5 + (t - t0) / dt;  /* Round to nearest neighbor. */
 	if( it < n ) {
 	    if( adj ) zz[iz] += tt[it] * wt;
