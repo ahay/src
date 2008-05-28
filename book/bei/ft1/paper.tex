@@ -628,6 +628,7 @@ frequency functions in the interval $0 \le \omega < \pi$.
 Others that do not transform data on top of itself
 may be faster with specialized computer architectures.
 
+\begin{comment}
 \subsection{Shifted spectrum}
 Subroutine \texttt{simpleft()} \vpageref{lst:simpleft}
 sets things up in a convenient manner:
@@ -654,7 +655,7 @@ by a weighting function in the time domain.
 That weighting function is $e^{-i\omega_0 t}$
 where $\omega_0$ happens to be the Nyquist frequency,
 i.e.~alternate points on the time axis are to be multiplied by $-1$.
-\begin{comment}
+
 A subroutine for this purpose is {\tt fth()}.
 \progdex{fth}{FT, Hale style}
 \newslide
@@ -1385,7 +1386,7 @@ has a 90 degree phase angle and
 $\sqrt{-i\omega}= |\omega |^{1/2} e ^ {-i45^\circ}$
 has a \bx{45 degree phase angle}.
 
-\opdex{halfint}{half derivative}{52}{68}{filt/imag}
+\opdex{halfint}{half derivative}{53}{75}{filt/imag}
 %\newslide
 
 \par
@@ -1400,7 +1401,7 @@ of a finite difference, i.e.~$\sqrt{1-Z}$,
 which is well behaved at the Nyquist frequency
 and has the advantage that the modeling operator is causal
 (vanishes when $t<t_0$).
-Fourier transform is done using subroutine \texttt{ftu()} \vpageref{lst:ftu}.
+% Fourier transform is done using subroutine \texttt{ftu()} \vpageref{lst:ftu}.
 Passing an impulse function into subroutine {\tt halfint()}
 gives the response seen in Figure~\ref{fig:hankel}.
 \sideplot{hankel}{width=2.0in}{
