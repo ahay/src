@@ -28,7 +28,7 @@ void invstack(int nt, float *model, int nx, const float *gather,
 {
     imospray_init( slow, x0,dx, t0,dt, nt, nx);
     sf_tinysolver( imospray_lop, sf_cgstep, 
-		   nt, nt*nx, model, gather, niter);
+		   nt, nt*nx, model, NULL, gather, niter);
     sf_cgstep_close ();  
     imospray_close ();  /* garbage collection */
 }
