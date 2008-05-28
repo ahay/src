@@ -195,12 +195,16 @@ int main(int argc, char* argv[])
 
 	    /* yreverse and xreverse */
 
+	    vp_bgroup("wiggles");
 	    vp_umove(x[0],y[0]);	    
 	    for (i1=1; i1 < n1; i1++) {
 		vp_udraw(x[i1],y[i1]);
 	    }
+	    vp_egroup();
 
 	    if (seemean) {
+		vp_bgroup("mean");
+
 		x0 = x1;
 		y0 = zero;
 		check(&x0,&y0);
@@ -212,9 +216,11 @@ int main(int argc, char* argv[])
 		check(&x0,&y0);
 
 		vp_udraw(x0,y0);
+		vp_egroup();
 	    }
 
 	    if (poly) {
+		vp_bgroup("polygons");
 		i = 0;
 		if (q[0] > 0.) { /* start polygon */
 		    x0 = x1;
@@ -273,6 +279,7 @@ int main(int argc, char* argv[])
 		    i++;
 		    vp_uarea (px, py, i, fatp, xmask, ymask);
 		}
+		vp_egroup();
 	    } /* if poly */
 	} /* i2 */
 

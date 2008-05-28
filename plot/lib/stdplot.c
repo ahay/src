@@ -1103,12 +1103,14 @@ void vp_framenum(float num)
     char string[80];
     float x, y;
 
+    vp_bgroup("frame number");
     vp_umove(min1,min2);
     vp_where(&x,&y);
 
     sprintf (string, "%g", num);
     vp_tjust (TH_CENTER, TV_TOP);
     vp_gtext (x, y-4.*labelsz, labelsz, 0., 0., labelsz, string);
+    vp_egroup();
 }
 
 void vp_simplebarframe (void)
@@ -1159,7 +1161,10 @@ void vp_frame(void)
     float num, xc, yc, vs, xp[4], yp[4];
     char string[32];
 
+    vp_bgroup("plot frame");
+
     if (cube) {
+	vp_bgroup("corner");
 	if (flat) {
 	    /* remove rectange */
 	    vp_color(VP_BLACK);
@@ -1180,11 +1185,13 @@ void vp_frame(void)
 	    xp[2] = max1;      yp[2] = max2-mid2;
 	    vp_ufill(xp,yp,3);
 	}
+	vp_egroup();
     }
 
     vp_simpleframe();
     
     if (NULL != label1) {
+	vp_bgroup("axis 1");
 	vp_fat (label1->fat);
 
 	/* plot label */
@@ -1255,9 +1262,11 @@ void vp_frame(void)
 		}
 	    }
 	}
+	vp_egroup();
     }    
 
     if (NULL != label2) {
+	vp_bgroup("axis 2");
 	vp_fat (label2->fat);
 
 	/* plot label */
@@ -1329,9 +1338,11 @@ void vp_frame(void)
 		vp_gtext(xc+ticksep*vs, yc, labelsz, 0., 0., labelsz, string);
 	    }
 	}
+	vp_egroup();
     }
 
     if (NULL != label3) {
+	vp_bgroup("axis 3");
 	vp_fat (label3->fat);
 
 	/* plot label */
@@ -1427,9 +1438,11 @@ void vp_frame(void)
 		}
 	    }
 	}
+	vp_egroup();
     }
     
     if (NULL != title) {
+	vp_bgroup("title");
 	vp_fat (title->fat);
 	if (title->where == 't' || 
 	    (title->where == 'r' && labelrot) ||
@@ -1441,6 +1454,7 @@ void vp_frame(void)
 	vp_gtext(title->x, title->y, 
 		 title->xpath, title->ypath, 
 		 title->xup, title->yup, title->text);
+	vp_egroup();
     }
     
     if (cube) {
@@ -1562,6 +1576,7 @@ void vp_frame(void)
     } /* if cube */
     
     vp_uclip (min1, min2, max1, max2);
+    vp_egroup();
 }
 
 void vp_barframe(void)
