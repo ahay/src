@@ -328,7 +328,7 @@ int             ii, jj;
 
 	case BEGIN_GROUP:
 	    if (value > 0)
-g		vp_bgroup (group_name);
+		vp_bgroup (group_name);
 	    break;
 
 	case END_GROUP:
