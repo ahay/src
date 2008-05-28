@@ -19,9 +19,11 @@ Jia Yan <jyan@mines.edu>
 
 Vplot authors:
 
+Jon Claerbout
 Steve Cole
 Joe Dellinger
 Dave Nichols
+Shuki Ronen
 
 Includes kiss_fft by Mark Borgerding
 Includes mt19937ar by Takuji Nishimura and Makoto Matsumoto

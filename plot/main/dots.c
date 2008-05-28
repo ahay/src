@@ -3,6 +3,7 @@
 Takes: > plot.vpl
 */
 /*
+  Copyright (C) 1987 The Board of Trustees of Stanford University
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
@@ -19,7 +20,7 @@ Takes: > plot.vpl
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+/* Modified from the original version by Jon F. Claerbout */
 
 #include <math.h>
 

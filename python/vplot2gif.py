@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
-# Copyright 1987 the Board of Trustees of the Leland Stanford Junior
-# University. The official license for this software is included in the
-# Madagascar source distribution, in the "COPYRIGHT" section of 
-# pens/docs/vplot.mn , readable as such or formatted with "nroff -man vplot.mn" .
+##   Copyright (C) 1987 The Board of Trustees of Stanford University
+##   Copyright (C) 2004 University of Texas at Austin
+##  
+##   This program is free software; you can redistribute it and/or modify
+##   it under the terms of the GNU General Public License as published by
+##   the Free Software Foundation; either version 2 of the License, or
+##   (at your option) any later version.
+##  
+##   This program is distributed in the hope that it will be useful,
+##   but WITHOUT ANY WARRANTY; without even the implied warranty of
+##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##   GNU General Public License for more details.
+##  
+##   You should have received a copy of the GNU General Public License
+##   along with this program; if not, write to the Free Software
+##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Copyright (C) 2007 University of Texas at Austin
-
-# This file (vplot2gif.py) has been rewritten by Sergey Fomel based on vplot2gif.csh
-# from the original distribution. Some capabilities have been added and some removed, and 
-# the entire script was translated from csh to python. The extent of the modifications 
-# warrant making Fomel's employer (UT Austin) a co-holder of copyright on this derivative work.
-
-# The original did not contain any author acknowledgment notices
+# Modified from the original C-shell version by Joe Dellinger
 
 import sys, os, time, string, re, shutil
 

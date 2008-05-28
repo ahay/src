@@ -2,33 +2,24 @@
 
 Takes: > plot.vpl */
 /*
- Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- University. The official license for this software is included in the
- Madagascar source distribution, in the "COPYRIGHT" section of 
- pens/docs/vplot.mn , readable as such or formatted with "nroff -man vplot.mn" .
-
- Copyright (C) 2004 University of Texas at Austin
-
- This file (thplot.c) has been extensively (approx. 75%) rewritten by Sergey Fomel
- based on Thplot.c from the original distribution. The extent of the modifications
- warrant making Fomel's employer (UT Austin) a co-holder of copyright on this
- derivative work. Subsequent changes have been logged by the version control system
- and are visible at
- http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/plot/main/thplot.c . The previous
- proprietary notices that must be preserved as requested by the license are:
-
- ***************************************************************
- * Author: Shuki Ronen, July 1982.
- * Edit History:
- * Added Movie capabilities and centered plot. JAD 9-21-84
- * Added Script and fastplot JAD 10-3-84
- * Added axis - shuki, 11-15-85
- * Made "norm" actually do what it says it does in the documentation. JAD 3-24-87
- * Installed revisions from Shuki about axis 2.
- * 30 Jan. 1995 - Ray Abma
-         Changed fetch to getch when getting an override for plotting parms.
- * 7/4/96 Bob  Changed fsize to ssize
- ****************************************************************/
+  Copyright (C) 1987 The Board of Trustees of Stanford University
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+/* Modified from the original version by Shuki Ronen. */
 
 #include <math.h>
 #include <float.h>
