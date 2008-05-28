@@ -25,7 +25,7 @@ void cgtest(int nx, int ny, float *x,
 /*< testing conjugate gradients with matrix multiplication >*/
 {
     matmult_init( fff);
-    sf_tinysolver( matmult_lop, sf_cgstep, nx, ny, x, yy, niter);
+    sf_tinysolver( matmult_lop, sf_cgstep, nx, ny, x, NULL, yy, niter);
     sf_cgstep_close();
 }
 
