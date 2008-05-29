@@ -27,7 +27,9 @@ typedef struct {
     float     *table;
 } fftTables;
 
-void fft(float *real, float *imag, fftTables *ffttables, int transform)
+static fftTables *ffttables;
+
+void fft(float *real, float *imag, bool transform)
 /*<*************************************************************
  *
  *  fft : Fast fourier transform. Input data must be
@@ -56,7 +58,7 @@ void fft(float *real, float *imag, fftTables *ffttables, int transform)
      int   sines;
      
      npoints = ffttables->number_points; 
-     sines = ( ( transform < 0 ? npoints: npoints*3 ) ) >> 2;
+     sines = ( ( transform ? npoints: npoints*3 ) ) >> 2;
      npt = npoints;
      l = npoints >> 1;
      m = l;
@@ -123,7 +125,7 @@ void fft(float *real, float *imag, fftTables *ffttables, int transform)
      
      /* fft is completed. Unscramble the results */
      /*  normalize on positive transforms */
-     if( transform >= 0 )
+     if(! transform )
      {
 	 x = 1./npoints;
 	 for( i = 0; i < npoints; ++i )
@@ -151,7 +153,15 @@ void fft(float *real, float *imag, fftTables *ffttables, int transform)
      }
  } /* end of fft */
 
-void FftTables( fftTables *ffttables)
+void fft_close(void)
+/*< deallocate tables >*/
+{
+    free (ffttables->unscr);
+    free (ffttables->table);
+    free (ffttables);
+}
+
+int fft_init(int n1)
 /*<***************************************************************************
  *
  *  FftTables : precompute tables for Fast fourier transform. 
@@ -162,10 +172,20 @@ void FftTables( fftTables *ffttables)
 {
     float cosa, cosb, sina, sinb;
     float r1, r2, x;
-    int   i, j;
+    int   i, j, npow, base;
     int   k, n, npp, npt;
     int   q1, q2, q3, q4, q5, q6, q7;
     
+    base=1;
+    for (npow=0; base < n1; npow++) {
+	base *= 2;
+    }
+    
+    ffttables  = (fftTables *) sf_alloc(1,sizeof(fftTables ));
+    ffttables->number_points = base;
+    ffttables->power = npow;
+    ffttables->table = sf_floatalloc(base + 3*base/4 + 1);
+    ffttables->unscr = sf_intalloc(base);
     
     /* Now build a table of values from 0 to npoints where the low
      * order logn bits are reversed. This is an unscramble table and
@@ -247,28 +267,20 @@ void FftTables( fftTables *ffttables)
 	--q6;
     }
     
-} /* end FftTables.c */
+    return base;
+
+} /* end fft_init */
 
 #ifdef TEST
 int main(void) 
 {
-    int i, base=16, base_max, npow=4;
+    int i, base=16;
     float a[16]={4.,1.,8.,-4.,2.,-9.,1.,-2.,6.,-6.,-3.,2.,-7.,5.,-2.,8.};
     float b[16]={7.,-2.,-5.,-2.,9.,2.,4.,-8.,-1.,6.,3.,7.,4.,-2.,-9.,1.};
-    fftTables *ffttables;
-    
-    void fft( float *real, float *imag, fftTables *ffttables, int transform );
-    void FftTables( fftTables *ffttables);
     
 /* allocate and precompute fft tables */
     
-    base_max = base + 3*base/4 + 1;
-    ffttables  = (fftTables *) sf_alloc(1,sizeof(fftTables ));
-    ffttables->number_points = base;
-    ffttables->power = npow;
-    ffttables->table = sf_floatalloc(base_max);
-    ffttables->unscr = sf_intalloc(base);
-    FftTables(ffttables);
+    fft_init(base);
     
 /* print em out */
     
@@ -288,7 +300,7 @@ int main(void)
     
 /* FFT them - direction */ 
     
-    fft( a, b, ffttables, -1);
+    fft( a, b, true);
     
 /* print em out */
     
@@ -308,7 +320,7 @@ int main(void)
     
 /* FFT them + direction */ 
     
-    fft( a, b, ffttables, +1);
+    fft( a, b, false);
     
 /* print em out */
     

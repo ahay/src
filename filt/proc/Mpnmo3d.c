@@ -27,7 +27,7 @@
 int main (int argc, char* argv[])
 {
     map4 nmo;
-    bool half,offpar;
+    bool half;
     int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw, CDPtype;
     float dt, t0, hx,hy, h0x, h0y, t, f, dhx, dhy, eps;
     float *trace, *px, *py, *offx, *offy,  *str, *out, *vtr;
@@ -54,43 +54,42 @@ int main (int argc, char* argv[])
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
-      offset = sf_input("offset");
-      offpar=true;
+	offset = sf_input("offset");
+	offx = NULL;
+	offy = NULL;
     } else {
-      if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
-      if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
-      if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
-      if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
-
-
-      if (!sf_getbool("half",&half)) half=true;
-      /* if y, the second axis is half-offset instead of full offset */
+	offset = NULL;
 	
-      if (half) {
-	dhx *= 2.;
-	h0x *= 2.;
-	dhy *= 2.;
-	h0y *= 2.;
-      }
+	if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
+	if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
+	if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
+	if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
 	
-      offx = sf_floatalloc(nhx*nhy);
-      offy = sf_floatalloc(nhy*nhx);
-      ih=0;
-      for (ihx = 0; ihx < nhx; ihx++) {
-	for (ihy = 0; ihy < nhy; ihy++) {
-	  offx[ih] = h0x + ihx*dhx; 
-	  offy[ih] = h0y + ihy*dhy;
-	  ih++;
+	
+	if (!sf_getbool("half",&half)) half=true;
+	/* if y, the second axis is half-offset instead of full offset */
+	
+	if (half) {
+	    dhx *= 2.;
+	    h0x *= 2.;
+	    dhy *= 2.;
+	    h0y *= 2.;
 	}
-      }
+	
+	offx = sf_floatalloc(nhx*nhy);
+	offy = sf_floatalloc(nhy*nhx);
+	ih=0;
+	for (ihx = 0; ihx < nhx; ihx++) {
+	    for (ihy = 0; ihy < nhy; ihy++) {
+		offx[ih] = h0x + ihx*dhx; 
+		offy[ih] = h0y + ihy*dhy;
+		ih++;
+	    }
+	}
     }
-
-
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
-
-
 
     trace = sf_floatalloc(nt);
     px = sf_floatalloc(nt);

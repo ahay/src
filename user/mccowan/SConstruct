@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-dmeig kernel
+dmeig fastft kernel
 '''
 
 try:  # distributed version
