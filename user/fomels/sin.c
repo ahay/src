@@ -27,7 +27,6 @@ void sin_init(sf_complex z1)
 /*< initialize >*/
 {
     z0 = z1;
-    z0 = 0.;
 }
 
 void sin_destruct(bool adj, bool add, int nx, int ny, 

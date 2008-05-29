@@ -64,14 +64,27 @@ int main(int argc, char* argv[])
 	for( theta = -180.; theta<180.1; theta=theta + 360./ntheta )  {
 	    rads = 2. * SF_PI * theta / 360.;
 	    cz = cexpf( sf_cmplx(0.,rads) );
+#ifdef SF_HAS_COMPLEX_H	 
 	    cs = (1.+eps - cz )/2.;
+#else
+	    cs = sf_crmul(sf_cadd(sf_cmplx(1.+eps,0.),sf_cneg(cz)),0.5);
+#endif
 	    
 	    switch (job) {
 		case 0: cs = sf_cmplx( .05, .8*theta/180.); break;
 		case 1: break;
-		case 2: cs = cs * cs; break;
+#ifdef SF_HAS_COMPLEX_H	 
+		case 2: cs *= cs; break;
 		case 3: cs = cs*cs + k2; break;
 		case 4: cs = csqrtf( cs*cs + k2 ); break;
+#else
+		case 2: cs = sf_cmul(cs,cs); 
+		    break;
+		case 3: cs = sf_cadd(sf_cmul(cs,cs),sf_cmplx(k2,0.)); 
+		    break;
+		case 4: cs = csqrtf(sf_cadd(sf_cmul(cs,cs),sf_cmplx(k2,0.))); 
+		    break;
+#endif 
 		default: break;
 	    }
 
