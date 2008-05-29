@@ -777,7 +777,8 @@ supplemented by a $\sqrt{-i\omega}$
 filter such as subroutine \texttt{halfint()} \vpageref{lst:halfint}.
 Here, however,
 we will compare results of the unadorned subroutine \texttt{kirchfast()} \vpageref{lst:kirchfast}
-with our new programs, \texttt{phasemig()} \vpageref{lst:phasemig} and \texttt{phasemod()} \vpageref{lst:phasemod}.
+with our new programs.
+%, \texttt{phasemig()} \vpageref{lst:phasemig} and \texttt{phasemod()} \vpageref{lst:phasemod}.
 Figure~\ref{fig:comrecon} shows the result of modeling data and then migrating it.
 Kirchhoff and phase-shift migration methods both work well.
 As expected, the Kirchhoff method lacks some of the higher frequencies
@@ -850,7 +851,6 @@ Thus we have disentangled the damping from the direction of propagation.
 %we want damping even when we extrapolate backwards.
 %Imaging is not inversion.
 
-\begin{comment}
 \par
 Let us see why $\Re R>0$ is positive
 for all real values of $\omega$ and $k_x$.
@@ -859,7 +859,7 @@ $e^{i\omega\Delta t}$ rotates around the unit circle
 in the complex plane.
 Examine Figure \ref{fig:francis}
 which shows the complex functions:
-\newslide
+%\newslide
 \begin{enumerate}
 \item       $f(\omega)= \epsilon - i\omega$,
 \item       $ -i\hat\omega = (1+\epsilon) -e^{i\omega\Delta t}$,
@@ -867,10 +867,11 @@ which shows the complex functions:
 \item       $(ik_z)^2 =(-i \hat\omega)^2+k_x^2$, and
 \item       $ik_z = [(-i \hat\omega)^2+k_x^2]^{1/2}$
 \end{enumerate}
-\activeplot{francis}{width=6.0in,height=1.15in}{ER} {
-        Some functions in the complex plane.
-        }
-\newslide
+\inputdir{complexkz}
+\plot{francis}{width=6.0in,height=1.15in}{
+  Some functions in the complex plane.
+}
+%\newslide
 The first two panels are explained by the first two functions.
 The first two functions and the first two panels look different
 but they become the same in the practical limit
@@ -908,6 +909,7 @@ any $k_x^2>0$ shifts the cardioid to the right.
 The additional issue of time causality in forward modeling
 is covered in IEI.
 \par
+\begin{comment}
 Luckily the Fortran {\tt csqrt()} function assumes the phase of
 the argument is between $\pm 180^\circ$
 exactly as we need here.
@@ -980,8 +982,8 @@ Such theory is most easily understood beginning from here.
 \subsection{Adjointness and ordinary differential equations}
 
 It is straightforward to adapt the simple programs
-\texttt{phasemig()} \vpageref{lst:phasemig} and
-\texttt{phasemod()} \vpageref{lst:phasemod}
+%\texttt{phasemig()} \vpageref{lst:phasemig} and
+%\texttt{phasemod()} \vpageref{lst:phasemod}
 to depth variable velocity.
 As you might suspect, the two processes are adjoint to each other,
 and for reasons given at the end of chapter~\ref{paper:conj}
@@ -1184,6 +1186,7 @@ Although I believe the mathematics above
 %and the code in subroutine \texttt{gazadj()} \vpageref{lst:gazadj},
 I ran the dot product test to be sure!
 %\progdex{gazadj}{phase shift mig.}
+\begin{comment}
 \noindent
 Finally, a few small details about the code.
 The loop on spatial frequency {\tt ikx}
@@ -1205,6 +1208,7 @@ Omitting negative frequencies simply gives an imaginary part
 that can be thrown away,
 and gives the same real image, scaled by a half.
 The factor of two speed up makes these tiny compromises well worthwhile.
+\end{comment}
 
 \subsection{Vertical exaggeration example}
 \inputdir{vofz}
@@ -1352,7 +1356,7 @@ It cannot sharpen a deep focus.
 %as less-steep asymptotes on the deeper hyperboloids.
 
 \subsection{Field data migration}
-Application of subroutine~\texttt{gazadj()} \vpageref{lst:gazadj}
+Application % of subroutine~\texttt{gazadj()} \vpageref{lst:gazadj}
 to the Gulf of Mexico data set processed in earlier chapters
 yields the result in Figure~\ref{fig:wgphase}.
 \plot{wgphase}{width=6.20in,height=8.5in}{

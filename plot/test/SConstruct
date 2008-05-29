@@ -3,8 +3,8 @@ sys.path.append('../..')
 import configure
 
 plots = '''
-7ab cmp croshyp csp dc dcretard ellipse
-headray hyplay nmotraj reflector reflexpt reflkine sg vrms whitepruf
+7ab cmp croshyp csp dc dcretard ellipse francis headray hyplay nmotraj
+reflector reflexpt reflkine sg vrms whitepruf
 '''
 
 try:
