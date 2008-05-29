@@ -77,7 +77,10 @@ int main (int argc, char *argv[])
 		f[i] = 0;
 	    }
 	}
-	if (f[i] < 0) sf_error("Negative f%d=%d",i+1,f[i]);
+	if (f[i] < 0) {
+	    f[i] = n[i]+f[i];
+	    if (f[i] < 0) sf_error("Negative f%d=%d",i+1,f[i]);
+	}
 
 	/* new values for o and d */
 	o[i] += f[i]*d[i]; 	
