@@ -53,7 +53,7 @@ env.Append(BUILDERS={'Include':configure.Header,
                      'Docmerge':configure.Docmerge},
            SCANNERS=[configure.Include])
 
-SConscript(dirs='python',name='SConstruct')
+SConscript(dirs='framework',name='SConstruct')
 
 ##########################################################################
 # FILT BUILD
