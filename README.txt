@@ -26,6 +26,9 @@ Compiling
 =========
 See the INSTALL.txt document for build instructions.
 
+Testing
+=======
+
 History
 =======
 While being written from scratch, madagascar borrows ideas from the
