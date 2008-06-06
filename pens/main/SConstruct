@@ -117,7 +117,7 @@ if root:
                     'cat $SOURCES > $TARGET')
     
     docs = map(lambda prog: env.Doc(prog,'M'+prog),pens)
-    env.Depends(docs,'#/python/rsfdoc.py')
+    env.Depends(docs,'#/framework/rsfdoc.py')
     doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
  

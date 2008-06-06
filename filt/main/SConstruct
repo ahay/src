@@ -66,6 +66,9 @@ else:
 if root:
     env.Install(bindir,prog[0])
 
+if root:
+    env.Install(bindir,'sfunits')
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -73,7 +76,7 @@ if root:
     main = 'sfmain.py'
     
     docs = map(lambda prog: env.Doc(prog),mains)
-    env.Depends(docs,'#/python/rsfdoc.py')
+    env.Depends(docs,'#/framework/rsfdoc.py')
     doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
  

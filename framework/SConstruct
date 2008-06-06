@@ -24,7 +24,7 @@ def py_install(source):
     env.Pycompile(pyc,py)
     env.Install(libdir,[py,pyc])
 
-for src in Split('path doc proj prog tex book bak'):
+for src in Split('path doc proj prog tex book'):
     py_install('rsf' + src)
 py_install('suproj')
 
@@ -33,7 +33,7 @@ for src in Split('latex2wiki vplot2eps vplot2gif vplot2avi sftour'):
         py_install(src)
         env.InstallAs(os.path.join(bindir,src),src+'.py')
 
-for src in Split('doc units top kill'):
+for src in Split('doc top kill'):
     env.Install(bindir,'sf'+src)
 env.Install(bindir,'pscons')
 
@@ -50,8 +50,8 @@ repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
 env.Command(htm,None,
-            '%s python/sfdoc -w %s -r %s' % (python,docdir,repos))
-env.Command(txt,None,'%s python/sfdoc -t %s' % (python,txtdir))
+            '%s framework/sfdoc -w %s -r %s' % (python,docdir,repos))
+env.Command(txt,None,'%s framework/sfdoc -t %s' % (python,txtdir))
 Depends(htm,use)
 Depends(txt,use)
 

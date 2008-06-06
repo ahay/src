@@ -53,7 +53,7 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/python/rsfdoc.py')	
+    env.Depends(docs,'#/framework/rsfdoc.py')	
     doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
 #####################################################################

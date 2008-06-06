@@ -23,6 +23,10 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
+if root:
+    env.Pycompile('rsfbak.pyc','rsfbak.py')
+    env.Install(libdir,['rsfbak.py','rsfbak.pyc'])
+
 if 'python' in env.get('API',[]):
     try:
         EnsureSConsVersion(0,96,95)

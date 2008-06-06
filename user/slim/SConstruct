@@ -95,7 +95,7 @@ if root:
            map(lambda prog: env.Doc(prog+'.cc'),cpp_mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
                py_mains)
-    env.Depends(docs,'#/python/rsfdoc.py')
+    env.Depends(docs,'#/framework/rsfdoc.py')
     doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
 #####################################################################

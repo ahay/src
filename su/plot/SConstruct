@@ -62,7 +62,7 @@ if root:
 
     if xinc and xlib:
         docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
-        env.Depends(docs,'#/python/rsfdoc.py')
+        env.Depends(docs,'#/framework/rsfdoc.py')
     else:
         docs = []
 
