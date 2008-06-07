@@ -17,11 +17,6 @@
 import os, stat, sys, types, copy
 import re, string, urllib, ftplib
 
-try:
-    import filecmp
-except:
-    import cmp
-
 import rsfdoc
 import rsfprog
 import rsfconf
@@ -82,15 +77,12 @@ def test(target=None,source=None,env=None):
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
     print "Comparing %s and %s" % (locked,src)
     if os.path.isfile(locked):
-        try:
-            if not filecmp.cmp(locked,src,shallow=0):
-                return 1
-        except:
-            if not cmp.cmp(locked,src):
-                return 1
+        diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
+                                   locked,src]))
+        return diff
     else:
         print 'No locked file "%s" ' % locked
-    return 0
+        return 0
 
 def echo(target,source,env):
     obj = env.get('out','')

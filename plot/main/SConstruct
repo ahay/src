@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 box contour contour3 dots graph graph3 grey grey3 plas pldb plotrays
-thplot wiggle
+thplot vplotdiff wiggle
 '''
 
 try:

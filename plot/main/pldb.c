@@ -1,4 +1,6 @@
-/* Plot Debugger - convert vplot to ascii. */
+/* Plot Debugger - convert vplot to ascii. 
+
+See also vplotdiff. */
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
   
@@ -22,6 +24,8 @@
  *  Jon Claerbout (long long ago!),
  *  Jeff Thorson (1980-81?),  Michel Debiche (1982-84),
  *  Chuck Karish (1985),  and Joe Dellinger (1986-1987)
+ *
+ * If you make changes here, please also update vplotdiff.
  */
 
 #include <stdio.h>

@@ -742,8 +742,6 @@ def api_options(context):
         context.Result(str(api))
     context.env['API'] = api
 
-    context.env['APIFORCE'] = bool(context.env.get('APIFORCE',''))
-
     return api
 
 pkg['c++'] = {'fedora':'gcc-c++',
@@ -1061,7 +1059,6 @@ def options(opts):
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
     opts.Add('PYMODULES','List of Python modules available')
-    opts.Add('APIFORCE','Install API components that have no dependencies')
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
