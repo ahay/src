@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 /*
- * Author Joe Dellinger, 23 May 2008.
+ * Author Joe Dellinger, 23 May 2008  -- 8 June 2008.
  * Vplotdiff is extensively modified from pldb.c in Madagascar,
  * which was in turn slightly modified from the pldb.c in
  * the 1994 revision of SEPlib. pldb.c was originally written
@@ -35,7 +35,12 @@
  * Also, whenever a pattern or color table is needed, vplotdiff
  * checks ALL the patterns and the COMPLETE color table, not just
  * the ones that are used. I think this is a feature and not a bug,
- * but others might disagree. -- Joe Dellinger, 6 June 2008.
+ * but others might disagree.
+ * Should a text command leave the current pen position "undefined",
+ * or set to "an unknown but defined location, i.e. the end of the
+ * text"? I have it the latter, and it is legal to allow one text
+ * command to follow another without a move in between.
+ * -- Joe Dellinger, 7 June 2008.
  */
 
 #include <stdio.h>
@@ -47,13 +52,16 @@
 #include <rsfplot.h>
 #include "../../pens/include/params.h"
 
-/* This value must be well outside what is possible for a short integer */
+/* This values must be well outside what is possible for a short integer */
 #define VPLOTDIFF_NOT_INITIALIZED 99999
+#define VPLOTDIFF_TEXT_INITIALIZED 99990
 
 /* After this many errors stop complaining */
 #define ENOUGH_ERRORS	10
 #define SLOP_FACTOR 1.15
 #define MAX_TXT 40
+
+enum {NTC_NONEED, NTC_NEED, NTC_TEXT, NTC_EOF};
 
 /*
  * All the attributes that define the current vplot
@@ -238,8 +246,14 @@ main (int argc, char *argv[])
     };
     struct warn_state warn = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 /* setstyle, origin, window, and coltab start out and forever stay set. */
-    struct warn_state needtocheck1 = { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
-    struct warn_state needtocheck2 = { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct warn_state needtocheck1 = { NTC_NEED, NTC_NEED, NTC_NEED, NTC_NEED,
+				       NTC_NONEED, NTC_NONEED, NTC_NONEED, NTC_NONEED,
+				       NTC_NONEED, NTC_NONEED,
+				       NTC_NONEED, NTC_NONEED };
+    struct warn_state needtocheck2 = { NTC_NEED, NTC_NEED, NTC_NEED, NTC_NEED,
+				       NTC_NONEED, NTC_NONEED, NTC_NONEED, NTC_NONEED,
+				       NTC_NONEED, NTC_NONEED,
+				       NTC_NONEED, NTC_NONEED };
 
 /*
  * If these are turned on, then on stdout you get a pldb-format
@@ -517,11 +531,15 @@ main (int argc, char *argv[])
 		    check_vplot2text (debug1, argv[1], c1, stream1, &count1,
 				      debug2, argv[2], c2, stream2, &count2);
 
-		state1.move1 = VPLOTDIFF_NOT_INITIALIZED;
-		state1.move2 = VPLOTDIFF_NOT_INITIALIZED;
+                /*
+		 * OK if the next command is another text command,
+		 * not OK otherwise.
+		 */
+		state1.move1 = VPLOTDIFF_TEXT_INITIALIZED;
+		state1.move2 = VPLOTDIFF_TEXT_INITIALIZED;
 		state1.move_count = count1;
-		state2.move1 = VPLOTDIFF_NOT_INITIALIZED;
-		state2.move2 = VPLOTDIFF_NOT_INITIALIZED;
+		state2.move1 = VPLOTDIFF_TEXT_INITIALIZED;
+		state2.move2 = VPLOTDIFF_TEXT_INITIALIZED;
 		state2.move_count = count2;
 		break;
 		/* Two different ways to make raster */
@@ -688,14 +706,14 @@ check_vplot1 (const int debug,
  * everything.
  * For the others, until we find out otherwise, assume they don't matter.
  */
-    needtocheck->move = 0;
-    needtocheck->txalign = 0;
-    needtocheck->txfontprec = 0;
-    needtocheck->overlay = 0;
-    needtocheck->color = 0;
-    needtocheck->fat = 0;
-    needtocheck->dash = 0;
-    needtocheck->pattern = 0;
+    needtocheck->move = NTC_NONEED;
+    needtocheck->txalign = NTC_NONEED;
+    needtocheck->txfontprec = NTC_NONEED;
+    needtocheck->overlay = NTC_NONEED;
+    needtocheck->color = NTC_NONEED;
+    needtocheck->fat = NTC_NONEED;
+    needtocheck->dash = NTC_NONEED;
+    needtocheck->pattern = NTC_NONEED;
     sprintf (command, " not set");
 
 /*
@@ -727,15 +745,17 @@ check_vplot1 (const int debug,
  * Someone may concatenate this vplot file onto the start of another,
  * and who knows what they may use in that file. Potentially the entire
  * state may matter.
+ * The next command may be a "text" command so allow the pen position
+ * to be left set by a text command, though.
  */
-	    needtocheck->move = 1;
-	    needtocheck->txalign = 1;
-	    needtocheck->txfontprec = 1;
-	    needtocheck->overlay = 1;
-	    needtocheck->color = 1;
-	    needtocheck->fat = 1;
-	    needtocheck->dash = 1;
-	    needtocheck->pattern = 1;
+	    needtocheck->move = NTC_EOF;
+	    needtocheck->txalign = NTC_NEED;
+	    needtocheck->txfontprec = NTC_NEED;
+	    needtocheck->overlay = NTC_NEED;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->fat = NTC_NEED;
+	    needtocheck->dash = NTC_NEED;
+	    needtocheck->pattern = NTC_NEED;
 	    strcpy (command, "");
 	    return 1;
 	    break;
@@ -744,56 +764,62 @@ check_vplot1 (const int debug,
 	     * The draw command has its own special check
 	     * that the current pen position matches.
 	     * So turn OFF the generic check!
+	     * Since this is so counterintuitive I am making
+	     * it explicit here.
 	     */
-	    needtocheck->move = 0;
+	    needtocheck->move = NTC_NONEED;
 
-	    needtocheck->color = 1;
-	    needtocheck->fat = 1;
-	    needtocheck->dash = 1;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->fat = NTC_NEED;
+	    needtocheck->dash = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_PLINE:
-	    needtocheck->color = 1;
-	    needtocheck->fat = 1;
-	    needtocheck->dash = 1;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->fat = NTC_NEED;
+	    needtocheck->dash = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_PMARK:
-	    needtocheck->txfontprec = 1;
-	    needtocheck->color = 1;
-	    needtocheck->fat = 1;
+	    needtocheck->txfontprec = NTC_NEED;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->fat = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_GTEXT:
 	case VP_OLDTEXT:
 	case VP_TEXT:
-	    needtocheck->move = 1;
-	    needtocheck->txalign = 1;
-	    needtocheck->txfontprec = 1;
-	    needtocheck->color = 1;
-	    needtocheck->fat = 1;
+	    /*
+	     * This special value indicates the command asking for
+	     * the check is a text command, which has special rules.
+	     */
+	    needtocheck->move = NTC_TEXT;
+	    needtocheck->txalign = NTC_NEED;
+	    needtocheck->txfontprec = NTC_NEED;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->fat = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_BIT_RASTER:
 	case VP_BYTE_RASTER:
-	    needtocheck->overlay = 1;
+	    needtocheck->overlay = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_OLDAREA:
-	    needtocheck->overlay = 1;
-	    needtocheck->color = 1;
+	    needtocheck->overlay = NTC_NEED;
+	    needtocheck->color = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
 	case VP_AREA:
-	    needtocheck->overlay = 1;
-	    needtocheck->color = 1;
-	    needtocheck->pattern = 1;
+	    needtocheck->overlay = NTC_NEED;
+	    needtocheck->color = NTC_NEED;
+	    needtocheck->pattern = NTC_NEED;
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
@@ -1960,28 +1986,88 @@ check_state (const char *command1, const char *command2,
 	}
     }
 
-    if (warn->move == 1 && (needtocheck1->move != 0 || needtocheck2->move != 0))
+    if (warn->move == 1 && (needtocheck1->move != NTC_NONEED || 
+			    needtocheck2->move != NTC_NONEED))
     {
+	/*
+	 * If needtocheck is set to NTC_TEXT it indicates it is a
+	 * text command asking for the check.
+	 * If the move value is VPLOTDIFF_TEXT_INITIALIZED
+	 * it indicates the pen position was left unknown by
+	 * a text command.
+	 * It is OK to follow one text command immediately by another;
+	 * the text just continues from where it left off.
+	 *
+	 * If needtocheck is set to NTC_EOF it indicates it is an
+	 * EOF command asking for the check.
+	 * At the EOF it is OK if the pen position is undefined,
+	 * so long as it's undefined CONSISTENTLY.
+	 */
+	if (needtocheck1->move != NTC_EOF)
+	{
+	    if (((state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
+		 || (state1->move2 == VPLOTDIFF_NOT_INITIALIZED))
+		|| (needtocheck1->move == NTC_NEED &&
+		    ((state1->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		     || (state1->move2 == VPLOTDIFF_TEXT_INITIALIZED))))
+	    {
+		fprintf (stderr,
+			 "vplotdiff: Coordinate problem: pen position undefined\n");
+		fprintf (stderr,
+			 "\tFile %s, line %s%s: position undefined from line %d.\n",
+			 file1, count1, command1, state1->move_count);
+
+		got_error = 1;
+		warn->move = 0;
+	    }
+	}
+	if (needtocheck2->move != NTC_EOF)
+	{
+	    if (((state2->move1 == VPLOTDIFF_NOT_INITIALIZED)
+		 || (state2->move2 == VPLOTDIFF_NOT_INITIALIZED))
+		|| (needtocheck2->move == NTC_NEED &&
+		    ((state2->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		     || (state2->move2 == VPLOTDIFF_TEXT_INITIALIZED))))
+	    {
+		fprintf (stderr,
+			 "vplotdiff: Coordinate problem: pen position undefined\n");
+		fprintf (stderr,
+			 "\tFile %s, line %s%s: position undefined from line %d.\n",
+			 file2, count2, command2, state2->move_count);
+
+		got_error = 1;
+		warn->move = 0;
+	    }
+	}
+
 	if ((abs (state1->move1 - state2->move1) > 1) ||
 	    (abs (state1->move2 - state2->move2) > 1))
 	{
 	    if (state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
-		strcpy (string1, "defaulted");
+		strcpy (string1, "undefined");
+	    else if (state1->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		strcpy (string1, "end of text");
 	    else
 		sprintf (string1, "%d", state1->move1);
 
 	    if (state1->move2 == VPLOTDIFF_NOT_INITIALIZED)
-		strcpy (string1a, "defaulted");
+		strcpy (string1a, "undefined");
+	    else if (state1->move2 == VPLOTDIFF_TEXT_INITIALIZED)
+		strcpy (string1a, "end of text");
 	    else
 		sprintf (string1a, "%d", state1->move2);
 
 	    if (state2->move1 == VPLOTDIFF_NOT_INITIALIZED)
-		strcpy (string2, "defaulted");
+		strcpy (string2, "undefined");
+	    else if (state2->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		strcpy (string2, "end of text");
 	    else
 		sprintf (string2, "%d", state2->move1);
 
 	    if (state2->move2 == VPLOTDIFF_NOT_INITIALIZED)
-		strcpy (string2a, "defaulted");
+		strcpy (string2a, "undefined");
+	    else if (state2->move2 == VPLOTDIFF_TEXT_INITIALIZED)
+		strcpy (string2a, "end of text");
 	    else
 		sprintf (string2a, "%d", state2->move2);
 
@@ -2001,7 +2087,8 @@ check_state (const char *command1, const char *command2,
     }
 
     if (warn->txalign == 1 &&
-	(needtocheck1->txalign != 0 || needtocheck2->txalign != 0))
+	(needtocheck1->txalign != NTC_NONEED || 
+	 needtocheck2->txalign != NTC_NONEED))
     {
 	if ((state1->txalign1 != state2->txalign1) ||
 	    (state1->txalign2 != state2->txalign2))
@@ -2042,7 +2129,8 @@ check_state (const char *command1, const char *command2,
     }
 
     if (warn->txfontprec == 1 &&
-	(needtocheck1->txfontprec != 0 || needtocheck2->txfontprec != 0))
+	(needtocheck1->txfontprec != NTC_NONEED || 
+	 needtocheck2->txfontprec != NTC_NONEED))
     {
 	if ((state1->txfontprec1 != state2->txfontprec1) ||
 	    (state1->txfontprec2 != state2->txfontprec2) ||
@@ -2094,7 +2182,8 @@ check_state (const char *command1, const char *command2,
     }
 
     if (warn->overlay == 1 &&
-	(needtocheck1->overlay != 0 || needtocheck2->overlay != 0))
+	(needtocheck1->overlay != NTC_NONEED || 
+	 needtocheck2->overlay != NTC_NONEED))
     {
 	if ((state1->overlay != state2->overlay))
 	{
@@ -2122,7 +2211,8 @@ check_state (const char *command1, const char *command2,
     }
 
     if (warn->color == 1 &&
-	(needtocheck1->color != 0 || needtocheck2->color != 0))
+	(needtocheck1->color != NTC_NONEED || 
+	 needtocheck2->color != NTC_NONEED))
     {
 	if ((state1->color != state2->color))
 	{
@@ -2149,7 +2239,8 @@ check_state (const char *command1, const char *command2,
 	}
     }
 
-    if (warn->fat == 1 && (needtocheck1->fat != 0 || needtocheck2->fat != 0))
+    if (warn->fat == 1 && (needtocheck1->fat != NTC_NONEED || 
+			   needtocheck2->fat != NTC_NONEED))
     {
 	if ((state1->fat != state2->fat))
 	{
@@ -2238,7 +2329,8 @@ check_state (const char *command1, const char *command2,
 	}
     }
 
-    if (warn->dash == 1 && (needtocheck1->dash != 0 || needtocheck2->dash != 0))
+    if (warn->dash == 1 && (needtocheck1->dash != NTC_NONEED || 
+			    needtocheck2->dash != NTC_NONEED))
     {
 	if (dstate1->dashon != dstate2->dashon)
 	{
@@ -2282,7 +2374,8 @@ check_state (const char *command1, const char *command2,
     }
 
     if (warn->pattern == 1 &&
-	(needtocheck1->pattern != 0 || needtocheck2->pattern != 0))
+	(needtocheck1->pattern != NTC_NONEED || 
+	 needtocheck2->pattern != NTC_NONEED))
     {
 /*
  * LOTS of ways patterns can fail to match!
@@ -2428,8 +2521,15 @@ check_state (const char *command1, const char *command2,
 	}
     }
 
+/*
+ * Currently needtocheck.coltab is initialized to NTC_NEED and never changed.
+ * We'll leave the needtocheck check in for coltab, however,
+ * in case someone later comes up with a case where
+ * it doesn't need to be checked.
+ */
     if (warn->coltab == 1 &&
-	(needtocheck1->coltab != 0 || needtocheck2->coltab != 0))
+	(needtocheck1->coltab != NTC_NONEED || 
+	 needtocheck2->coltab != NTC_NONEED))
     {
 	enough_already = 0;
 	for (ii = 0; ii <= MAX_COL; ii++)
@@ -2614,25 +2714,29 @@ check_vplot2simple (int c,
 /*
  * Is the "current pen position" set?
  */
-	    if ((state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
-		|| (state1->move2 == VPLOTDIFF_NOT_INITIALIZED))
+	    if (((state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
+		|| (state1->move2 == VPLOTDIFF_NOT_INITIALIZED)) ||
+		((state1->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		 || (state1->move2 == VPLOTDIFF_TEXT_INITIALIZED)))
 	    {
 		fprintf (stderr,
 			 "vplotdiff: Coordinate problem: draw from unknown location\n");
 		fprintf (stderr,
-			 "\tFile %s, lines %d and %d: draw from (defaulted,defaulted) to (%d,%d)\n",
+			 "\tFile %s, lines %d and %d: draw from (undefined,undefined) to (%d,%d)\n",
 			 name1, state1->move_count, *count1, x1, y1);
 
 		errorcount++;
 	    }
 
-	    if ((state2->move1 == VPLOTDIFF_NOT_INITIALIZED)
-		|| (state2->move2 == VPLOTDIFF_NOT_INITIALIZED))
+	    if (((state2->move1 == VPLOTDIFF_NOT_INITIALIZED)
+		|| (state2->move2 == VPLOTDIFF_NOT_INITIALIZED)) ||
+		((state2->move1 == VPLOTDIFF_TEXT_INITIALIZED)
+		 || (state2->move2 == VPLOTDIFF_TEXT_INITIALIZED)))
 	    {
 		fprintf (stderr,
 			 "vplotdiff: Coordinate problem: draw from unknown location\n");
 		fprintf (stderr,
-			 "\tFile %s, lines %d and %d: draw from (defaulted,defaulted) to (%d,%d)\n",
+			 "\tFile %s, lines %d and %d: draw from (undefined,undefined) to (%d,%d)\n",
 			 name2, state2->move_count, *count2, x2, y2);
 
 		errorcount++;
