@@ -595,7 +595,7 @@ elif acroread and ps2eps:
     if gs:
         PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
                           ' junk.ps && %s -q -sDEVICE=epswrite -sOutputFile=$TARGET'
-                          ' -r600 input.ps && rm junk.ps' % \
+                          ' -r600 -dNOPAUSE junk.ps && rm junk.ps' % \
                           (acroread,gs),
                           suffix=pssuffix,src_suffix='.pdf')
     else:
