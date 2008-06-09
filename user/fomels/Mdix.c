@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
     int i, niter, nd, dim, n1, n2, i1, i2;
     int n[SF_MAX_DIM], box[SF_MAX_DIM];
     float **vr, **vi, **wt, **v0, wti;
+    char key[6];
     sf_file vrms, vint, weight, vout;
 
     sf_init(argc,argv);
@@ -49,7 +50,13 @@ int main(int argc, char* argv[])
     }
     n1 = n[0];
     n2 = nd/n1;
-    
+
+    for (i=0; i < dim; i++) { 	 
+	snprintf(key,6,"rect%d",i+1); 	 	 
+	if (!sf_getint(key,box+i)) box[i]=1; 	 
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
+    } 	 
+	 
     smoothder_init(nd, dim, box, n);
 
     vr = sf_floatalloc2(n1,n2);

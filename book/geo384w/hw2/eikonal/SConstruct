@@ -92,7 +92,7 @@ for sample in range(1,nz/30):
     
     Flow(eik,vel,
          '''
-         eikonal yshot=0 order=1 br1=%g br2=%g
+         eikonal yshot=0 order=2 br1=%g br2=%g
          ''' % (20*dz,20*dx))
 
     # Compute error

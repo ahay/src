@@ -601,10 +601,12 @@ static void make_baraxis (float min, float max)
 	baraxis->ntic = (vertbar? inch2: inch1)/(aspect*labelsz);
     /* nbartic number of scalebar ticmarks */
 
-    if (NULL == (baraxis->format = sf_getstring("formatbar"))) 
-	baraxis->format="%1.5g";
-    /* format for ticmark labels in the scalebar */
-
+    if (NULL == (baraxis->format = sf_getstring("formatbar"))) {
+	/* format for ticmark labels in the scalebar */
+	if ((vertbar  && NULL == (baraxis->format = sf_getstring("format2"))) ||
+	    (!vertbar && NULL == (baraxis->format = sf_getstring("format1"))))
+	    baraxis->format="%1.5g";
+    }
 
     modify = (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
 	      !sf_getfloat ("obarnum", &(baraxis->num0)));
@@ -1656,7 +1658,7 @@ void vp_barframe(void)
 	    if (fabsf(baraxis->dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 
-	    snprintf (string,32,"%1.5g", num);	    
+	    snprintf (string,32,baraxis->format, num);	    
 	    
 	    if (vertbar) {
 		yc = bar0 + i*dbar;
