@@ -498,7 +498,7 @@ Fortran 77 has no pointers (or everything is a pointer).
 %C and C++ also have a second type of pointer denoted by ``\texttt{->}''.
 The behavior of pointers is somewhat different in each language.
 Never-the-less, the idea is simple.
-In module \texttt{helicon} \vpageref{lst:helicon}
+In module \texttt{helicon} %\vpageref{lst:helicon}
 you see the expression
 \verb#aa->flt[ia]#.
 It refers to the filter named \texttt{aa}.
@@ -521,7 +521,7 @@ Our first convolution operator
 was limited to one dimension and a particular choice of end conditions.
 With the helix and C pointers,
 the operator
-\texttt{helicon} \vpageref{lst:helicon}
+\texttt{helicon} %\vpageref{lst:helicon}
 is a {\it multidimensional} filter
 with considerable flexibility (because of the \texttt{mis} vector)
 to work around boundaries and missing data.
@@ -563,7 +563,7 @@ which corresponds to
 subroutine
 \texttt{tcai1} \vpageref{lst:tcai1}.
 What is the matrix corresponding to
-\texttt{helicon} \vpageref{lst:helicon}?
+\texttt{helicon}? % \vpageref{lst:helicon}?
 \end{exer}
 
 \subsection{Causality in two-dimensions}
@@ -2074,7 +2074,7 @@ The lags are the same as the fortran linear index
 except for the overall shift of the 1.0 of a cube of 
 data dimension \texttt{nd}.
 Our module for convolution on a helix,
-\texttt{helicon} \vpageref{lst:helicon},
+\texttt{helicon}. % \vpageref{lst:helicon},
 has already an implicit
 ``1.0'' at the filter's zero lag so we do not store it.
 (It is an error to do so.)
