@@ -52,7 +52,7 @@
 #include <rsfplot.h>
 #include "../../pens/include/params.h"
 
-/* This values must be well outside what is possible for a short integer */
+/* These values must be well outside what is possible for a short integer */
 #define VPLOTDIFF_NOT_INITIALIZED 99999
 #define VPLOTDIFF_TEXT_INITIALIZED 99990
 
@@ -745,8 +745,11 @@ check_vplot1 (const int debug,
  * Someone may concatenate this vplot file onto the start of another,
  * and who knows what they may use in that file. Potentially the entire
  * state may matter.
- * The next command may be a "text" command so allow the pen position
- * to be left set by a text command, though.
+ * It is OK to leave the pen position undefined at the end of a file, so
+ * long as it is done CONSISTENTLY between the two files. The three
+ * possibilities are "it was left undefined", "it was left pointing at
+ * the end of a text string", and "it was left set to some particular
+ * coordinate position".
  */
 	    needtocheck->move = NTC_EOF;
 	    needtocheck->txalign = NTC_NEED;
@@ -2003,7 +2006,7 @@ check_state (const char *command1, const char *command2,
 	 * At the EOF it is OK if the pen position is undefined,
 	 * so long as it's undefined CONSISTENTLY.
 	 */
-	if (needtocheck1->move != NTC_EOF)
+	if (needtocheck1->move != NTC_EOF && needtocheck1->move != NTC_NONEED)
 	{
 	    if (((state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
 		 || (state1->move2 == VPLOTDIFF_NOT_INITIALIZED))
@@ -2021,7 +2024,7 @@ check_state (const char *command1, const char *command2,
 		warn->move = 0;
 	    }
 	}
-	if (needtocheck2->move != NTC_EOF)
+	if (needtocheck2->move != NTC_EOF && needtocheck2->move != NTC_NONEED)
 	{
 	    if (((state2->move1 == VPLOTDIFF_NOT_INITIALIZED)
 		 || (state2->move2 == VPLOTDIFF_NOT_INITIALIZED))
