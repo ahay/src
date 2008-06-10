@@ -64,3 +64,4 @@ for prog in rsfdoc.progs.keys():
                                 uses[book][chapter]))
     env.Command(prog+'.test',None,
                 Action(progtest,varlist=['projects']),projects=projects)
+    env.Alias('test',prog+'.test')
