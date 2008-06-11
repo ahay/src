@@ -178,7 +178,7 @@ Flow('img cig','stra rtra slow',
      srmig3 nrmax=20 dtmax=5e-05 eps=0.01 readwrite=y verb=y ompnth=1
      tmx=16 rwf=${SOURCES[1]} slo=${SOURCES[2]} cig=${TARGETS[1]}
      itype=o
-     ''',split=[0,1],axis=[4,20],reduce='add')
+     ''',split=[4,20,[0,1]],reduce='add')
 
 # IMAGE
 # x, y, z

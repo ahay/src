@@ -294,7 +294,7 @@ class Project(Environment):
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
-             split=[],axis=[3,1],reduce='cat',local=0):
+             split=[],reduce='cat',local=0):
 
         if not flow:
             return None     
@@ -312,14 +312,20 @@ class Project(Environment):
         else:
             sfiles = []
 
+        if split:
+            if len(split) < 2:
+                split.append(1)
+            if len(split) < 3:
+                split.append(range(len(sfiles)))
+
         if split and self.jobs > 1 and rsf and sfiles:
             # Split the flow into parallel flows
 
-            if self.jobs < axis[1]:
+            if self.jobs < split[1]:
                 jobs = self.jobs            
-                w = int(0.5+float(axis[1])/jobs) # length of one chunk
+                w = int(0.5+float(split[1])/jobs) # length of one chunk
             else:
-                jobs = axis[1]
+                jobs = split[1]
                 w = 1
                 
             par_sfiles = copy.copy(sfiles)
@@ -327,7 +333,7 @@ class Project(Environment):
             for tfile in tfiles:
                 par_targets[tfile] = []
 
-            bigjobs = axis[1] - jobs*(w-1)
+            bigjobs = split[1] - jobs*(w-1)
             for i in range(jobs):
                 if i < bigjobs:
                     chunk=w
@@ -336,13 +342,13 @@ class Project(Environment):
                     chunk=w-1
                     skip=bigjobs*w+(i-bigjobs)*chunk
                 
-                for j in split:
+                for j in split[2]:
                     source = sfiles[j] + '__' + str(i)
                     par_sfiles[j] = source
 
                     self.Flow(source,sfiles[j],
                               'window n%d=%d f%d=%d squeeze=n' % 
-                              (axis[0],chunk,axis[0],skip))
+                              (split[0],chunk,split[0],skip))
 
                 par_tfiles = []
                 for j in range(len(tfiles)):
@@ -361,7 +367,7 @@ class Project(Environment):
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
                           '%s axis=%d ${SOURCES[1:%d]}' % \
-                          (reduce,axis[0],jobs),local=1)
+                          (reduce,split[0],jobs),local=1)
             return
 
         sources = []
