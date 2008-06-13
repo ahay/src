@@ -68,17 +68,39 @@ par = Par(['self','-'])
 datatype = ['uchar','char','int','float','complex']
 dataform = ['ascii','xdr','native']
 
-class File:
+class File(object):
     def __init__(self):
         self.type = datatype[c_rsf.sf_gettype(self.file)]
         self.form = dataform[c_rsf.sf_getform(self.file)]
     def __add__(self,other):
+        'Overload addition'
         add = Output(None)
         if os.path.isfile(self.tag) and os.path.isfile(other.tag):
-            os.system('sfadd %s %s > %s' % (self.tag,other.tag,add.tag))
+            if os.system('sfadd %s %s > %s' % (self.tag,other.tag,add.tag)):
+                raise TypeError, 'Could not run sfadd'
         else:
             raise TypeError, 'Cannot add %s and %s' % (self.tag,other.tag)
         return add
+    def __mul__(self,other):
+        'Overload multiplication'
+        mul = Output(None)
+        if isinstance(other,File):
+            if os.path.isfile(self.tag) and os.path.isfile(other.tag):
+                if os.system('sfadd mode=p %s %s > %s' % (self.tag,other.tag,mul.tag)):
+                    raise TypeError, 'Could not run sfadd'
+            else:
+                raise TypeError, 'Cannot multiply %s and %s' % (self.tag,other.tag)
+        else:
+            try:
+                fmul = float(other)
+            except:
+                raise TypeError, 'Cannot cast to float'
+            if os.path.isfile(self.tag):
+                if os.system('sfscale < %s dscale=%g > %s' % (self.tag,fmul,mul.tag)):
+                    raise TypeError, 'Could not run sfscale'
+            else:
+                raise TypeError, 'No file "%s" ' % self.tag
+        return mul
     def size(self,dim=0):
         return c_rsf.sf_leftsize(self.file,dim)
     def settype(self,type):
@@ -132,9 +154,12 @@ class File:
 
 class Input(File):
     def __init__(self,tag='in'):
-        self.tag = tag
-        self.file = c_rsf.sf_input(self.tag)
-        File.__init__(self)
+        if isinstance(tag,File):
+            self.__init__(tag.tag)
+        else:
+            self.tag = tag
+            self.file = c_rsf.sf_input(self.tag)
+            File.__init__(self)
     def read(self,data):
         if self.type == 'float':
             c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
@@ -161,7 +186,33 @@ class Output(File):
             c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
-            
+
+
+class Filter(object):
+    def __init__(self,name,prefix='sf'):
+        self.prog = name
+        rsfroot = os.environ.get('RSFROOT')
+        if rsfroot:
+            lp = len(prefix)
+            if name[:lp] != prefix:
+                name = prefix+name
+            prog = os.path.join(rsfroot,'bin',name)
+            if os.path.isfile(prog):
+                self.prog = prog
+    def __call__(self,inp=None,pars={}):
+        out = Output(None)
+        params = ' '.join([key+'='+str(val) for (key,val) in pars.items()])
+        if inp:
+            if os.isfile(inp.tag):
+                command = '< %s %s %s > %s' % (inp.tag,self.prog,params,out.tag)
+            else:
+                raise TypeError, 'No file "%s" ' % inp.tag
+        else:
+            command = '%s %s > %s' % (self.prog,params,out.tag)
+        if os.system(command):
+            raise TypeError, 'Could not run %s' % self.prog
+        return out                                   
+
 if __name__ == "__main__":
     import numpy
     

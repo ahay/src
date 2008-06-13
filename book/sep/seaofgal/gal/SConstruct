@@ -41,8 +41,10 @@ for case in range(3):
 
 Result('galpat','pat0 pat1 pat2','SideBySideAniso')
 
+Flow('tens lags',None,'tspline tension=0 eps=5.e-3 lag=${TARGETS[1]}')
 Galilee('int',100,100,interp=2,xmin=x,xmax=x+w,ymin=y,ymax=y+w,
-        shape='shape',extra='shape=y filt1=5 niter=100')
+        shape='inv',extra='filt=tens.rsf niter=100 verb=y')
+Depends('int.rsf','tens.rsf')
 
 Flow('lag.asc',None,
      'echo 101 n1=1 n=100,100 in=$TARGET data_format=ascii_int')
@@ -53,6 +55,10 @@ Flow('flt.asc','lag',
 Flow('flt','flt.asc','dd form=native type=float')
 
 Flow('illum','int flt','helicon filt=${SOURCES[1]}')
+
+
+
+
 
 for case in ('pat2','int','illum'):
     Plot(case+'-win',case,
