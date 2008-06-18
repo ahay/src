@@ -271,6 +271,7 @@ def latex2mediawiki(target=None,source=None,env=None):
 
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
+    
     vpl = str(source[0])
     eps = str(target[0])
 
@@ -948,7 +949,7 @@ class TeXPaper(Environment):
             self.Alias(paper+'.install',dochtml)
             self.Depends(paper+'.install','figinstall')
     def End(self,paper='paper',**kw):
-         if os.path.isfile(paper+'.tex'):
+        if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)
             self.Alias('pdf',paper+'.pdf')
             self.Alias('wiki',paper+'.wiki')
@@ -958,14 +959,14 @@ class TeXPaper(Environment):
             self.Alias('install',paper+'.install')
             self.Alias('figs',paper+'.figs')
             self.Default('pdf')
-         self.Command('dummy.tex',self.figs,Action(dummy))
+        self.Command('dummy.tex',self.figs,Action(dummy))
 
-         uses = os.path.join(self.path,'.sf_uses2')
-         if self.uses:
-             self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
-         else:
-             self.Command(uses,None,'touch $TARGET')
-         self.Alias('uses',uses)
+        uses = os.path.join(self.path,'.sf_uses2')
+        if self.uses:
+            self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
+        else:
+            self.Command(uses,None,'touch $TARGET')
+        self.Alias('uses',uses)
 
 default = TeXPaper()
 def Dir(**kw):
