@@ -1,7 +1,5 @@
 from rsftex import *
 
-os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
-
 #Paper('total',lclass='article',use='graphicx,subfigure,natbib')
 
 #Paper('seg2006',lclass='segabs')
@@ -9,4 +7,5 @@ os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
 #Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
 #Paper('paper-revised',options='manuscript,revised')
 
-End() #options='manuscript')
+End(color='panel bei-dip bei-pik gom-dip gom-pik zovel xdip',
+    hires='panel zomig pwmig') #options='manuscript')

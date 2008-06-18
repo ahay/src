@@ -269,8 +269,12 @@ def latex2mediawiki(target=None,source=None,env=None):
     tex.close()
     return 0
 
+colorfigs = []
+hiresfigs = []
+
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
+    global colorfigs
     
     vpl = str(source[0])
     eps = str(target[0])
@@ -286,7 +290,11 @@ def pstexpen(target=None,source=None,env=None):
             return 1
     else:
         try:
-            vplot2eps.convert(vpl,eps)
+            options = 'color=n fat=1 fatmult=1.5 invras=y'
+            name = os.path.splitext(os.path.basename(eps))[0]
+            if name in colorfigs:
+                options += ' color=y'
+            vplot2eps.convert(vpl,eps,options)
         except:
             return 1
     return 0
@@ -511,15 +519,39 @@ def colorize(target=None,source=None,env=None):
 plotoption = {}
 
 def eps2png(target=None,source=None,env=None):
-     png = str(target[0])
-     eps = str(source[0])
-     option = plotoption.get(os.path.basename(eps),'')
-     command =  'PAPERSIZE=ledger %s %s -out %s' \
-               + ' -type %s -interlaced -antialias -crop a %s'
-     command = command % (pstoimg,eps,png,itype,option)
-     print command
-     os.system(command)
-     return 0
+    global plotoption
+    
+    png = str(target[0])
+    eps = str(source[0])
+    option = plotoption.get(os.path.basename(eps),'')
+    command =  'PAPERSIZE=ledger %s %s -out %s' \
+              + ' -type %s -interlaced -antialias -crop a %s'
+    command = command % (pstoimg,eps,png,itype,option)
+    print command
+    os.system(command)
+    return 0
+
+def eps2pdf(target=None,source=None,env=None):
+    global hiresfigs
+
+    pdf = str(target[0])
+    eps = str(source[0])
+
+    gs_options = os.environ.get('GS_OPTIONS','')
+    if not gs_options:
+        name = os.path.splitext(os.path.basename(eps))[0]
+        if name in hiresfigs:
+            gs_options = '-dAutoFilterColorImages=false -dColorImageFilter=/LZWEncode ' + \
+                         '-dAutoFilterGrayImages=false  -dGrayImageFilter=/LZWEncode'
+    if gs_options:
+        gs_options = "GS_OPTIONS='%s'" % gs_options
+
+    command = "LD_LIBRARY_PATH=%s %s %s %s" % \
+              (os.environ.get('LD_LIBRARY_PATH',''),gs_options,epstopdf,eps)
+    
+    print command
+    os.system(command)
+    return 0
 
 def dummy(target=None,source=None,env=None):
      tex = open(str(target[0]),'w')
@@ -569,14 +601,8 @@ Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
 Uses = Builder(action = Action(use),varlist=['tree'])
 
-
-gs_options_defaults = '-dAutoFilterColorImages=false -dColorImageFilter=/LZWEncode -dAutoFilterGrayImages=false -dGrayImageFilter=/LZWEncode'
-
 if epstopdf:
-    epstopdf = "LD_LIBRARY_PATH=%s GS_OPTIONS='%s' %s" % (os.environ.get('LD_LIBRARY_PATH',''),
-                                                          os.environ.get('GS_OPTIONS',gs_options_defaults),
-                                                          epstopdf)
-    PDFBuild = Builder(action = epstopdf +" $SOURCES",
+    PDFBuild = Builder(action = Action(eps2pdf),
 		       src_suffix=pssuffix,suffix='.pdf')
 
 if fig2dev:
@@ -652,6 +678,8 @@ Color = Builder(action = Action(colorize),suffix='.html')
 #############################################################################
 
 def latexscan(node,env,path):
+    global plotoption
+    
     top = str(node)
     if top[-4:] != '.tex':
         return []
@@ -913,7 +941,10 @@ class TeXPaper(Environment):
                     self.Alias('figinstall',resdir2)
         self.figs.extend(nrfigs)
     def Paper(self,paper,lclass='geophysics',scons=1,
-              use=None,include=None,options=None,resdir='Fig'):
+              use=None,include=None,options=None,resdir='Fig',color='',hires=''):
+        global colorfigs, hiresfigs
+        colorfigs.extend(string.split(color))
+        hiresfigs.extend(string.split(hires))
         ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)

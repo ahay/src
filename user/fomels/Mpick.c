@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
 	if (n[i] > 1) {
 	    snprintf(key,6,"rect%d",i+1);
 	    if (!sf_getint(key,rect+i)) rect[i]=1;
+	    /*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	} else {
 	    rect[i]=1;
 	}

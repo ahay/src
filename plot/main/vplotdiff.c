@@ -58,10 +58,12 @@
 
 /* After this many errors stop complaining */
 #define ENOUGH_ERRORS	10
-#define SLOP_FACTOR 1.15
+/* #define SLOP_FACTOR 1.15 */
+#define SLOP_FACTOR 1.25
 #define MAX_TXT 40
 
-#define RASTER_TOL 2
+#define RASTER_TOL 4 /* raster tolerance */
+#define VECTOR_TOL 2 /* vector tolerance */
 
 enum {NTC_NONEED, NTC_NEED, NTC_TEXT, NTC_EOF};
 
@@ -2045,8 +2047,8 @@ check_state (const char *command1, const char *command2,
 	    }
 	}
 
-	if ((abs (state1->move1 - state2->move1) > 1) ||
-	    (abs (state1->move2 - state2->move2) > 1))
+	if ((abs (state1->move1 - state2->move1) > VECTOR_TOL) ||
+	    (abs (state1->move2 - state2->move2) > VECTOR_TOL))
 	{
 	    if (state1->move1 == VPLOTDIFF_NOT_INITIALIZED)
 		strcpy (string1, "undefined");

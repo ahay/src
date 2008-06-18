@@ -28,8 +28,7 @@ def convert(vplot,eps,
             ):
     "Convert vplot to EPS"
     space = float(os.environ.get('PSBORDER',psborder))
-    opts = os.environ.get(os.path.splitext(os.path.basename(eps))[0]+'.pspen',
-                          os.environ.get('PSTEXPENOPTS',options))
+    opts = os.environ.get('PSTEXPENOPTS',options)
     print opts
     # get bounding box
     getbb = vppen + ' big=n stat=l %s < %s | head -1' % (opts,vplot)

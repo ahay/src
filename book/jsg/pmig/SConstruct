@@ -1,7 +1,3 @@
-import os
-
-os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
-
 from rsftex import *
 
 #Paper('seg2005',lclass='segabs')
@@ -14,5 +10,5 @@ from rsftex import *
 
 #Paper('paper-revised',options='manuscript,revised')
 
-End() #options='manuscript')
+End(color='synt svsc pnmo bvsc svin hdip ydip') #options='manuscript')
 

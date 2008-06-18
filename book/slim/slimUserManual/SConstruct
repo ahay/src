@@ -7,7 +7,7 @@ sfdoc  = os.path.join(bindir,'sfdoc')
 run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
       (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
 
-os.environ['PSTEXPENOPTS'] = 'color=y fat=7 famult=7 invras=y'
+os.environ['PSTEXPENOPTS'] = 'color=y fat=7 fatmult=7 invras=y'
 
 output = {'.tex':'l',
           '.wiki':'m'}

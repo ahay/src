@@ -1,7 +1,5 @@
 from rsftex import *
 
-os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
-
 #Paper('dummy')
 
 #Paper('seg2006',lclass='segabs')
@@ -14,4 +12,4 @@ os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
 
 #Paper('paper-revised',options='manuscript,revised')
 
-End() #options='manuscript')
+End(color='pi si vec-sc-0') #options='manuscript')
