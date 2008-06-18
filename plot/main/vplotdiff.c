@@ -61,6 +61,8 @@
 #define SLOP_FACTOR 1.15
 #define MAX_TXT 40
 
+#define RASTER_TOL 2
+
 enum {NTC_NONEED, NTC_NEED, NTC_TEXT, NTC_EOF};
 
 /*
@@ -1741,14 +1743,15 @@ check_vplot2ras (const int debug1,
 			    }
 			    if ((abs
 				 ((int) red1[icount] -
-				  cstate2->red[icolno]) > 1)
+				  cstate2->red[icolno]) > RASTER_TOL)
 				||
 				(abs
 				 ((int) green1[icount] -
-				  cstate2->green[icolno]) > 1)
+				  cstate2->green[icolno]) > RASTER_TOL)
 				||
 				(abs
-				 ((int) blue1[icount] - cstate2->blue[icolno]) > 1))
+				 ((int) blue1[icount] - 
+				  cstate2->blue[icolno]) > RASTER_TOL))
 			    {
 				if (rasmismatch == ENOUGH_ERRORS)
 				{
@@ -1858,16 +1861,15 @@ check_vplot2ras (const int debug1,
 					     "\tFile %s, line %d: color=(%d,%d,%d).\n",
 					     name1,
 					     line1[icount],
-					     (int)
-					     red1[icount],
-					     (int) green1[icount], (int) blue1[icount]);
+					     (int) red1[icount],
+					     (int) green1[icount], 
+					     (int) blue1[icount]);
 				    fprintf (stderr,
 					     "\tFile %s, line %d: color=(%d,%d,%d).\n",
 					     name2, *count2,
-					     cstate2->
-					     red[icolno],
-					     cstate2->
-					     green[icolno], cstate2->blue[icolno]);
+					     cstate2->red[icolno],
+					     cstate2->green[icolno], 
+					     cstate2->blue[icolno]);
 				}
 				
 				rasmismatch++;
