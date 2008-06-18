@@ -2775,9 +2775,10 @@ check_vplot2simple (int c,
 		    (abs (x1 - state2->move1) + abs (y1 - state2->move2) +
 		     abs (state1->move1 - x2) + abs (state1->move2 - y2)))
 		{
-		    if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1) ||
-			(abs (state1->move1 - state2->move1) > 1) ||
-			(abs (state1->move2 - state2->move2) > 1))
+		    if ((abs (x1 - x2) > VECTOR_TOL) || 
+			(abs (y1 - y2) > VECTOR_TOL) ||
+			(abs (state1->move1 - state2->move1) > VECTOR_TOL) ||
+			(abs (state1->move2 - state2->move2) > VECTOR_TOL))
 		    {
 			fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
 			fprintf (stderr,
@@ -2794,9 +2795,10 @@ check_vplot2simple (int c,
 		}
 		else
 		{
-		    if ((abs (x1 - state2->move1) > 1) || (abs (y1 - state2->move2) > 1)
-			|| (abs (state1->move1 - x2) > 1)
-			|| (abs (state1->move2 - y2) > 1))
+		    if ((abs (x1 - state2->move1) > VECTOR_TOL) || 
+			(abs (y1 - state2->move2) > VECTOR_TOL)
+			|| (abs (state1->move1 - x2) > VECTOR_TOL)
+			|| (abs (state1->move2 - y2) > VECTOR_TOL))
 		    {
 			fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
 			fprintf (stderr,
@@ -2857,7 +2859,8 @@ check_vplot2simple (int c,
 		if (debug2)
 		    printf ("%d %d\n", x2, y2);
 
-		if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1))
+		if ((abs (x1 - x2) > VECTOR_TOL) || 
+		    (abs (y1 - y2) > VECTOR_TOL))
 		{
 		    fprintf (stderr, "vplotdiff: Coordinate mismatch: pline\n");
 		    fprintf (stderr,
@@ -2921,7 +2924,8 @@ check_vplot2simple (int c,
 		if (debug2)
 		    printf ("%d %d\n", x2, y2);
 
-		if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1))
+		if ((abs (x1 - x2) > VECTOR_TOL) || 
+		    (abs (y1 - y2) > VECTOR_TOL))
 		{
 		    fprintf (stderr, "vplotdiff: Coordinate mismatch: pmark\n");
 		    fprintf (stderr,
@@ -2976,7 +2980,8 @@ check_vplot2simple (int c,
 		if (debug2)
 		    printf ("%d %d\n", x2, y2);
 
-		if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1))
+		if ((abs (x1 - x2) > VECTOR_TOL) || 
+		    (abs (y1 - y2) > VECTOR_TOL))
 		{
 		    fprintf (stderr, "vplotdiff: Coordinate mismatch: area\n");
 		    fprintf (stderr,
@@ -3057,7 +3062,8 @@ check_vplot2simple (int c,
 		if (debug2)
 		    printf ("%d %d\n", x2, y2);
 
-		if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1))
+		if ((abs (x1 - x2) > VECTOR_TOL) || 
+		    (abs (y1 - y2) > VECTOR_TOL))
 		{
 		    fprintf (stderr, "vplotdiff: Coordinate mismatch: oldarea\n");
 		    fprintf (stderr,
