@@ -58,8 +58,7 @@
 
 /* After this many errors stop complaining */
 #define ENOUGH_ERRORS	10
-/* #define SLOP_FACTOR 1.15 */
-#define SLOP_FACTOR 1.25
+#define SLOP_FACTOR 1.15 
 #define MAX_TXT 40
 
 #define RASTER_TOL 8 /* raster tolerance */
@@ -2751,7 +2750,8 @@ check_vplot2simple (int c,
 
 	    if (errorcount > 0)
 	    {
-		if ((abs (x1 - x2) > 1) || (abs (y1 - y2) > 1))
+		if ((abs (x1 - x2) > VECTOR_TOL) || 
+		    (abs (y1 - y2) > VECTOR_TOL))
 		{
 		    fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
 		    fprintf (stderr,
