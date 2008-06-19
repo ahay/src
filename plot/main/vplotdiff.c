@@ -61,8 +61,8 @@
 #define SLOP_FACTOR 1.15 
 #define MAX_TXT 40
 
-#define RASTER_TOL 8 /* raster tolerance */
-#define VECTOR_TOL 2 /* vector tolerance */
+#define RASTER_TOL 10 /* raster tolerance */
+#define VECTOR_TOL 2  /* vector tolerance */
 
 enum {NTC_NONEED, NTC_NEED, NTC_TEXT, NTC_EOF};
 
