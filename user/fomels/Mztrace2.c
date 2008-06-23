@@ -26,24 +26,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     bool vel, straight;
-    int nz,nx, iz, na, nax, ix, order, is, iorder, k;
-    float **slow, *slicez[NS];
+    int nz,nx, iz, na, nax, ix, order, iorder;
+    float **slow;
     float dz,dx,da,x0,z0,a0;
-    sf_file in, out[NS];
+    sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     /* velocity or slowness */
 
-    out[0] = sf_output("out");
+    out = sf_output("out");
     /* escape time */
-
-    out[1] = sf_output("place");
-    out[2] = sf_output("depth");
-    /* escape position */
-
-    out[3] = sf_output("angle");
-    /* escape angle */
 
     if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -63,20 +56,20 @@ int main(int argc, char* argv[])
 
     /* default range from -90 to +90 from the vertical */
 
-    for (is=0; is < NS; is++) {
-	sf_putint(out[is],"n3",nz);
-	sf_putfloat(out[is],"d3",dz);
-	sf_putfloat(out[is],"o3",z0);
-
-	sf_putint(out[is],"n2",nx);
-	sf_putfloat(out[is],"d2",dx);
-	sf_putfloat(out[is],"o2",x0);
-
-	sf_putint(out[is],"n1",na);
-	sf_putfloat(out[is],"d1",da);
-	sf_putfloat(out[is],"o1",a0);
-    }
+    sf_putint(out,"n4",nz);
+    sf_putfloat(out,"d4",dz);
+    sf_putfloat(out,"o4",z0);
     
+    sf_putint(out,"n3",nx);
+    sf_putfloat(out,"d3",dx);
+    sf_putfloat(out,"o3",x0);
+    
+    sf_putint(out,"n2",na);
+    sf_putfloat(out,"d2",da);
+    sf_putfloat(out,"o2",a0);
+
+    sf_putint(out,"n1",NS+1);
+
     /* convert degrees to radians */
     da *= (SF_PI/180.);
     a0 *= (SF_PI/180.);
@@ -105,28 +98,17 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    
-    for (is = 0; is < NS; is++) {
-	slicez[is] = sf_floatalloc(nax);
-	for (k = 0; k < nax; k++) {
-	    slicez[is][k] = 0.;
-	}
-    }
 
-    ztrace2_init (straight, order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0, slow, slicez);
+    ztrace2_init (order, iorder, nx, nz, na,
+		  dx, dz, da, x0, z0, a0, slow);
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);
-
 	ztrace2_step (iz);
-
-	for (is=0; is < NS; is++) {
-	    sf_floatwrite (slicez[is],nax,out[is]);
-	}
+	ztrace2_write(out);
     }
 
-    ztrace_close();
+    ztrace2_close();
 
     exit (0);
 }
