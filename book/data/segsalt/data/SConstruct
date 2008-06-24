@@ -1,0 +1,17 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+# replace with your own data server
+
+for case in ('a1','a2','b1'):
+    segy = 'salt-%s.segy' % case
+    Fetch(segy,'segsalt',private)
+
+    Flow([case,'t'+case,case+'.asc',case+'.bin'],segy,
+         '''
+         segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+         ''') 
+
+End()
