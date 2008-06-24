@@ -29,7 +29,6 @@ typedef struct Grid1 *grid1;
 #endif
 
 struct Grid1 {
-    int level;
     float x[2];
     float *val[2];
     grid1 child[2];
@@ -42,7 +41,6 @@ grid1 grid1_init (void)
     grid1 grid;
 
     grid = (grid1) sf_alloc (1,sizeof(struct Grid1));
-    grid->level = 0;
     grid->x[0] = -SF_HUGE;
     grid->x[1] = +SF_HUGE;
     grid->val[0] = (float*) NULL;
@@ -53,16 +51,15 @@ grid1 grid1_init (void)
     return grid;
 }
 
-static grid1 grid1_locate(grid1 grid, float coord, bool increment)
+static grid1 grid1_locate(grid1 grid, float coord)
 /* locate an interval by binary search */
 {
     grid1 left;
 
-    if (increment) grid->level++;
     left =  grid->child[0];
     if (NULL == left) return grid;
-    if (coord < left->x[1]) return grid1_locate(left,coord,increment);
-    return grid1_locate(grid->child[1],coord,increment);
+    if (coord < left->x[1]) return grid1_locate(left,coord);
+    return grid1_locate(grid->child[1],coord);
 }
 
 void grid1_insert (grid1 grid, float coord, int nv, const float *value)
@@ -71,7 +68,7 @@ void grid1_insert (grid1 grid, float coord, int nv, const float *value)
     float *val;
     grid1 node, left, right;
 
-    node = grid1_locate(grid,coord,true);
+    node = grid1_locate(grid,coord);
     val = sf_floatalloc(nv);
     memcpy(val,value,nv*sizeof(float));
 
@@ -94,8 +91,7 @@ void grid1_close (grid1 grid)
     if (NULL != grid->child[0]) {
 	grid1_close(grid->child[0]);
 	grid1_close(grid->child[1]);
-    }
-    if (0 == grid->level && NULL != grid->val[0]) {
+    } else if (NULL != grid->val[0]) {
 	free (grid->val[0]);
 	grid->val[0] = NULL;
     }
@@ -108,8 +104,7 @@ void grid1_write (grid1 grid, int nv, sf_file out)
     if (NULL != grid->child[0]) {
 	grid1_write(grid->child[0],nv,out);
 	grid1_write(grid->child[1],nv,out);
-    }
-    if (0 == grid->level && NULL != grid->val[0]) {
+    } else if (NULL != grid->val[0]) {
 	sf_floatwrite(grid->x,1,out);
 	sf_floatwrite(grid->val[0],nv,out);
     }
@@ -122,7 +117,7 @@ void grid1_interpolate (grid1 grid, float coord, int nv, float *value)
     float fl, fr, *vl, *vr;
     grid1 node;
 
-    node = grid1_locate(grid,coord,false);
+    node = grid1_locate(grid,coord);
 
     vl = node->val[0];
     vr = node->val[1];

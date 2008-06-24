@@ -1,4 +1,4 @@
-/* Multiple arrivals by depth marching. */
+/* First-arrival traveltime table using analytical traveltimes */
 /*
 Copyright (C) 2008 University of Texas at Austin
 
@@ -16,18 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <math.h>
-
 #include <rsf.h>
 
-#include "ztrace2.h"
+#include "analytical.h"
 
 int main(int argc, char* argv[])
 {
+    int nz,nx, iz,ix, order;
     bool vel;
-    int nz,nx, iz, na, nax, ix, order, iorder;
-    float **slow, dz,dx,da,x0,z0,a0,s;
+    float x1,x2,z1,z2,v1,v2,x0,dx,z0,dz,fx,fz;
+    float **slow, *time, g1[2],g2[2],p1[2],p2[2];
+    sf_eno2 cvel;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -35,7 +34,7 @@ int main(int argc, char* argv[])
     /* velocity or slowness */
 
     out = sf_output("out");
-    /* escape time */
+    /* traveltime */
 
     if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -45,71 +44,60 @@ int main(int argc, char* argv[])
   
     if (!sf_histfloat(in,"o1",&z0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
-
-    if (!sf_getint("na",&na)) na=362;
-    /* number of angles */
-    if (!sf_getfloat("da",&da)) da=0.5;
-    /* angle increment (in degrees) */
-    if (!sf_getfloat("a0",&a0)) a0=-90.;
-    /* starting angle (in degrees) */
-
-    /* default range from -90 to +90 from the vertical */
-
-    sf_putint(out,"n4",nz);
-    sf_putfloat(out,"d4",dz);
-    sf_putfloat(out,"o4",z0);
     
-    sf_putint(out,"n3",nx);
-    sf_putfloat(out,"d3",dx);
-    sf_putfloat(out,"o3",x0);
-    
-    sf_putint(out,"n2",na);
-    sf_putfloat(out,"d2",da);
-    sf_putfloat(out,"o2",a0);
-
-    sf_putint(out,"n1",NS+1);
-
-    /* convert degrees to radians */
-    da *= (SF_PI/180.);
-    a0 *= (SF_PI/180.);
-
-    nax = na*nx;
-    /* size of one depth slice */
-
-    /* additional parameters */
     if(!sf_getbool("vel",&vel)) vel=true;
     /* y, input is velocity; n, slowness */
 
     if(!sf_getint("order",&order)) order=3;
     /* interpolation accuracy for velocity */
-    if(!sf_getint("iorder",&iorder)) iorder=4;
-    /* interpolation accuracy for grid */
+
+    if (!sf_getfloat("yshot",&x1)) x1=x0 + 0.5*(nx-1)*dx;
+    if (!sf_getfloat("zshot",&z1)) z1=z0; 
 
     /* read velocity or slowness */
     slow  = sf_floatalloc2(nz,nx);
-    sf_floatread(slow[0],nz*nx,in);
+    sf_floatread(slow[0],nz*nx,in);    
 
     /* convert to slowness squared */
     for(ix = 0; ix < nx; ix++){
 	for (iz = 0; iz < nz; iz++) {
-	    s = slow[ix][iz];
-	    s *= s;
-	    slow[ix][iz] = vel? 1/s:s;
+	    v1 = slow[ix][iz];
+	    v1 *= v1;
+	    slow[ix][iz] = vel? 1/v1:v1;
 	}
     }
 
-    ztrace2_init (order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0, slow);
+    cvel = sf_eno2_init (order, nz, nx);
+    sf_eno2_set (cvel, slow);
 
-    for (iz = 0; iz < nz; iz++) {
-	sf_warning("depth %d of %d", iz+1, nz);
-	ztrace2_step (iz);
-	ztrace2_write(out);
+    time = sf_floatalloc(nz);
+
+    fx = (x1-x0)/dx;
+    ix = floorf(fx);
+    fx -= ix;
+    
+    fz = (z1-z0)/dz;
+    iz = floorf(fz);
+    fz -= iz;
+
+    sf_eno2_apply(cvel,iz,ix,fz,fx,&v1,g1,BOTH);
+    g1[1] /= dx;
+    g1[0] /= dz;
+    
+    for(ix = 0; ix < nx; ix++){
+	x2 = x0+ix*dx;
+	for (iz = 0; iz < nz; iz++) {
+	    z2 = z0+iz*dz;
+
+	    sf_eno2_apply(cvel,iz,ix,0.,0.,&v2,g2,BOTH);
+	    g2[1] /= dx;
+	    g2[0] /= dz;
+
+	    time[iz] = analytical(x1,z1,v1,g1,p1,
+				  x2,z2,v2,g2,p2);
+	}
+	sf_floatwrite(time,nz,out);
     }
 
-    ztrace2_close();
-
-    exit (0);
+    exit(0);
 }
-
-/* 	$Id$	 */

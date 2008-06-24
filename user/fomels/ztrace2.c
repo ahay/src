@@ -35,7 +35,7 @@
 #endif
 
 static int nx, nz, na, nax;
-static float dx,dz,da, x0,z0,a0, xm,zm,am;
+static float dx,dz,da, x0,z0,a0, xm,zm,am, r2a;
 static sf_eno2 cvel;
 static enogrid slice;
 static grid1 *prev, *curr;
@@ -77,6 +77,8 @@ void ztrace2_init (int order        /* interpolation order for velocity */,
 	curr[ix] = grid1_init();
     }
 
+    r2a = 180./SF_PI; /* radian to degree */
+
     for (kx=0; kx < nx; kx++) { /* loop in x */
 	for (ka=0; ka < na; ka++) { /* loop in angle */
 	    a = a0+ka*da;
@@ -84,7 +86,7 @@ void ztrace2_init (int order        /* interpolation order for velocity */,
 	    f[0] = 0.;
 	    f[1] = x0+kx*dx; 
 	    f[2] = z0;
-	    f[3] = a*180./SF_PI;
+	    f[3] = a*r2a;
 	    
 	    grid1_insert(curr[kx],a,4,f);
 	}
@@ -129,7 +131,7 @@ void ztrace2_step (int kz)
     
     for (kx=0; kx < nx; kx++) { /* loop in x */
 
-	/* get slowness and gradient */
+	/* get slowness squared and gradient */
 	sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH);
 	g1[0] /= dz;
 	g1[1] /= dx;
@@ -140,7 +142,7 @@ void ztrace2_step (int kz)
 	    a1 = a0+ka*da;
 	    p1[1] = sinf(a1);
 	    p1[0] = -cosf(a1);
-	    /* p0 is dimensionless */
+	    /* p1 is dimensionless */
 
 	    x1 = x0+kx*dx; 
 	    z1 = z0+kz*dz; 
@@ -153,17 +155,23 @@ void ztrace2_step (int kz)
 		f[0] = 0.;
 		f[1] = x1;
 		f[2] = z1;
-		f[3] = a1*180./SF_PI;
+		f[3] = a1*r2a;
 		grid1_insert(curr[kx],a1,4,f);
 		continue;
 	    } 
 
 	    /* find the nearest intersection of ray and box */
+	    /*
 	    sx1 = sf_quadratic_solve (g1[1],p1[1],2*(x1-x0)/v1);
 	    sx2 = sf_quadratic_solve (g1[1],p1[1],2*(x1-xm)/v1);
 	    sz1 = sf_quadratic_solve (g1[0],p1[0],2*dz/v1);
 	    sz2 = sf_quadratic_solve (g1[0],p1[0],2*(z1-zm)/v1);
-	    
+	    */
+	    sx1 = (x0-x1)/p1[1]; if (sx1 <= 0.) sx1 = SF_HUGE;
+	    sx2 = (xm-x1)/p1[1]; if (sx2 <= 0.) sx2 = SF_HUGE;
+	    sz1 = -dz/p1[0];     if (sz1 <= 0.) sz1 = SF_HUGE;
+	    sz2 = (zm-z1)/p1[0]; if (sz2 <= 0.) sz2 = SF_HUGE;
+
 	    sx = SF_MIN(sx1,sx2);
 	    sz = SF_MIN(sz1,sz2);
 	    s = SF_MIN(sx,sz);
@@ -177,7 +185,7 @@ void ztrace2_step (int kz)
 		    x2 = xm;
 		}
 		fx = 0.;
-		z2 = z1 + (p1[0]+v1*g1[0]*s*0.5)*s;
+		z2 = z1 + p1[0]*s;
 		fz = (z2-z0)/dz;
 		iz = snap(&fz,nz);
 	    } else {
@@ -189,12 +197,12 @@ void ztrace2_step (int kz)
 		    z2 = zm;
 		}
 		fz = 0.;
-		x2 = x1 + (p1[1]+v1*g1[0]*s*0.5)*s;
+		x2 = x1 + p1[1]*s;
 		fx = (x2-x0)/dx;
 		ix = snap(&fx,nx);
 	    }
 
-	    /* slowness and gradient at new location */
+	    /* slowness squared and gradient at new location */
 	    sf_eno2_apply(cvel,iz,ix,fz,fx,&v2,g2,BOTH);
 	    g2[1] /= dx;
 	    g2[0] /= dz;
@@ -202,10 +210,11 @@ void ztrace2_step (int kz)
 	    t = analytical(x1,z1,v1,g1,p1,
 			   x2,z2,v2,g2,p2);
 
+	    a1 = sf_cell_p2a(p1);
+	    a2 = sf_cell_p2a(p2);
+
 	    if (s == sz1) { /* to previous level */
 		/* interpolate */
-		a1 = (sf_cell_p2a(p1)-a0)/da;
-		a2 = (sf_cell_p2a(p2)-a0)/da;
 		enogrid_apply(slice,ix,fx,a2,f);
 		if (f[0] < 0.) f[0]=0.;
 		f[0] += t;
@@ -213,14 +222,15 @@ void ztrace2_step (int kz)
 		if (f[1] > xm) f[1]=xm;
 		if (f[2] < z0) f[2]=z0;
 		if (f[2] > zm) f[2]=zm;
-		if (f[3] < a0*180./SF_PI) f[3]=a0*180./SF_PI;
-		if (f[3] > am*180./SF_PI) f[3]=am*180./SF_PI;
+		if (f[3] < a0*r2a) f[3]=a0*r2a;
+		if (f[3] > am*r2a) f[3]=am*r2a;
 	    } else {
 		f[0] = t;
 		f[1] = x2;
 		f[2] = z2;
-		f[3] = a2*180./SF_PI;
+		f[3] = a2*r2a;
 	    }
+	    
 	    grid1_insert(curr[kx],a1,4,f);
 	} /* ka */
     } /* kx */
