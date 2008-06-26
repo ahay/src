@@ -43,6 +43,9 @@ int main(int argc, char* argv[])
     sf_complexread(z0,n2,root);
     sf_fileclose(root);
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     if (NULL == (oper = sf_getstring("oper"))) oper="destruct";
     /* operation to perform */
 

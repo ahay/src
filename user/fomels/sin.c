@@ -41,7 +41,7 @@ void sin_destruct(bool adj, bool add, int nx, int ny,
 	if(adj) {
 #ifdef SF_HAS_COMPLEX_H	 
 	    xx[i]   += yy[i];
-	    xx[i-1] -= yy[i] * z0;
+	    xx[i-1] -= yy[i] * conjf(z0);
 #else
 	    xx[i-1] = sf_cadd(xx[i-1],sf_cmul(yy[i],sf_cneg(sf_conjf(z0))));
 #endif
