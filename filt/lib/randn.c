@@ -20,9 +20,10 @@
 
 #include "randn.h"
 #include "_defs.h"
+#include "_bool.h"
 #include "mt19937ar.h"
 
-static int    iset = 0;
+static bool   iset = true;
 static float  vset = 0.0;
 
 float sf_randn_one_bm (void)
@@ -30,8 +31,7 @@ float sf_randn_one_bm (void)
 {
     double x1, x2, y1, y2, z1, z2;
     
-    if (iset ==0)
-    {
+    if (iset) {
         x1 = genrand_real1 ();
         x2 = genrand_real1 ();
         
@@ -41,14 +41,12 @@ float sf_randn_one_bm (void)
         y1 = z1*cos(z2);
         y2 = z1*sin(z2);
         
-        iset = 1;
+        iset = false;
         vset = y1;
         return ((float) y2);
-    }
-    else
-    {
-        iset = 0;
-        return (vset);
+    } else {
+        iset = true;
+        return vset;
     }
 }
 
