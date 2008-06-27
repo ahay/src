@@ -30,9 +30,11 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
-    lim = sf_input("in");
+    lim = sf_input("limit");
+    /* limiter */
 
-    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(inp) ||
+	SF_FLOAT != sf_gettype(lim)) sf_error("Need float input");
     dim = sf_filedims (inp,n);
 
     nm = 1;
