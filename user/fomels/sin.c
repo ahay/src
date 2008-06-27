@@ -74,7 +74,8 @@ void sin_construct(bool adj, bool add, int nx, int ny,
 	    t = yy[i] + t * conjf(z0);
 	    xx[i] += t;  
 #else
-	    sf_error("test");
+	    t = sf_cadd(yy[i],sf_cmul(t,sf_conjf(z0)));
+	    xx[i] = sf_cadd(xx[i],t);
 #endif
 	}
     } else {
@@ -83,9 +84,9 @@ void sin_construct(bool adj, bool add, int nx, int ny,
 	    t = xx[i] + t * z0;
 	    yy[i] += t;
 #else
-	    sf_error("test");
+	    t = sf_cadd(xx[i],sf_cmul(t,z0));
+	    yy[i] = sf_cadd(yy[i],t);
 #endif
-
 	}
     }
 }
