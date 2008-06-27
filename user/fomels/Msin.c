@@ -53,6 +53,9 @@ int main(int argc, char* argv[])
 	case 'd':
 	    coper = sin_destruct;
 	    break;
+	case 'c':
+	    coper = sin_construct;
+	    break;
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
     }

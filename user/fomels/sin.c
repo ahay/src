@@ -35,22 +35,57 @@ void sin_destruct(bool adj, bool add, int nx, int ny,
 {
     int i;
 
-    sf_cadjnull(adj, add, nx, nx, xx, yy);
-    
+    if (nx != ny) sf_error("%s: wrong dimensions %d != %d",__FILE__,nx,ny);
+
+    ccopy_lop(adj,add,nx,nx,xx,yy);
+
     for (i = 1; i < nx; i++) {
 	if(adj) {
 #ifdef SF_HAS_COMPLEX_H	 
-	    xx[i]   += yy[i];
 	    xx[i-1] -= yy[i] * conjf(z0);
 #else
 	    xx[i-1] = sf_cadd(xx[i-1],sf_cmul(yy[i],sf_cneg(sf_conjf(z0))));
 #endif
 	} else {
 #ifdef SF_HAS_COMPLEX_H	 
-	    yy[i] += xx[i] - xx[i-1] * z0;
+	    yy[i] -= xx[i-1] * z0;
 #else
 	    yy[i] = sf_cadd(yy[i],sf_cmul(xx[i-1],sf_cneg(z0)));
 #endif
+	}
+    }
+}
+
+void sin_construct(bool adj, bool add, int nx, int ny, 
+		   sf_complex *xx, sf_complex *yy)
+/*< construction operator >*/
+{
+    int i;
+    sf_complex t;
+
+    if (nx != ny) sf_error("%s: wrong dimensions %d != %d",__FILE__,nx,ny);
+
+    sf_cadjnull(adj, add, nx, nx, xx, yy);
+
+    t = sf_cmplx(0.0,0.0);
+    if(adj) {	
+	for (i = nx-1; i >= 0; i--) {
+#ifdef SF_HAS_COMPLEX_H
+	    t = yy[i] + t * conjf(z0);
+	    xx[i] += t;  
+#else
+	    sf_error("test");
+#endif
+	}
+    } else {
+	for (i = 0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H	    
+	    t = xx[i] + t * z0;
+	    yy[i] += t;
+#else
+	    sf_error("test");
+#endif
+
 	}
     }
 }
