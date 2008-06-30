@@ -1,9 +1,10 @@
 from rsfproj import *
 
 Flow('one',None,'spike n1=1 label1=" " ')
+Flow('two',None,'spike n1=1 label1=" " mag=2')
 
-Flow('lag1','one','dd type=int    | put n=10')
-Flow('lag2','lag1','scale dscale=2| put n=10')
+Flow('lag1','one','dd type=int | put n=10')
+Flow('lag2','two','dd type=int | put n=10')
 
 Flow('oscil',['one','lag1'],'put a0=1 lag=${SOURCES[1]}')
 Flow('lines','oscil','scale dscale=-1')

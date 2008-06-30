@@ -72,11 +72,11 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < n2; i2++) {	
-	niter = (n2==1) + i2*diter;
+	if (1 != n2) niter = i2*diter;
         mis1 (niter, xx, known, step);
 	sf_floatwrite (xx,n1,out);
     }
-
+    
     exit(0);
 }
 

@@ -1,6 +1,6 @@
 from rsfproj import *
 
-#Fetch('gravel2D.H','mideast')
+Fetch('gravel2D.H','mideast')
 Flow('gravel2D','gravel2D.H','dd form=native')
 Result('gravel2D','gravel2D',
        '''
@@ -9,7 +9,7 @@ Result('gravel2D','gravel2D',
        ''')
 
 
-#Fetch('dune3D.H','mideast')
+Fetch('dune3D.H','mideast')
 Flow('dune3D','dune3D.H','dd form=native | tpow tpow=-2 | byte gainpanel=e')
 frames = []
 for frame in range(6):

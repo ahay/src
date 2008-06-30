@@ -19,7 +19,7 @@ Flow('in','in0.asc','dd form=native')
 for case in filters.keys():
     name = 'm'+case
     Flow(case+'0.asc',None,filter(filters[case]))
-    Flow(case,case+'0.asc','dd data_format=native_float')
+    Flow(case,case+'0.asc','dd form=native')
     Flow(name,['in',case],'miss1 filtin=${SOURCES[1]}')
     Result(name,[case,name,'in'],
            '''
