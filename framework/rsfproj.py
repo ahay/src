@@ -318,6 +318,11 @@ class Project(Environment):
             if len(split) < 3:
                 split.append(range(len(sfiles)))
 
+            if reduce.find('axis=') < 0:
+                reduction = '%s axis=%d' % (reduce,split[0])
+            else:
+                reduction = reduce
+
         if split and self.jobs > 1 and rsf and sfiles:
             # Split the flow into parallel flows
 
@@ -366,8 +371,8 @@ class Project(Environment):
             # Reduce parallel TARGETS down to original TARGETS:
             for tfile in tfiles:
                 self.Flow(tfile,par_targets[tfile],
-                          '%s axis=%d ${SOURCES[1:%d]}' % \
-                          (reduce,split[0],jobs),local=1)
+                          '%s ${SOURCES[1:%d]}' % (reduction,jobs),
+                          local=1)
             return
 
         sources = []
