@@ -155,7 +155,6 @@ float cblas_scnrm2 (int n, const void* x, int sx)
 #else
 	xn += crealf(sf_cmul(c[ix],conjf(c[ix])));
 #endif
-	ix += sx;
     }
     return xn;
 }

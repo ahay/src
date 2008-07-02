@@ -1,4 +1,4 @@
-/* Convenience allocation programs. */
+ /* Convenience allocation programs. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   Copyright (C) 2007 Colorado School of Mines  

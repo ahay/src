@@ -20,9 +20,11 @@
 #include "mask.h"
 
 #include "_bool.h"
+#include "c99.h"
 /*^*/
 
 #include "adjnull.h"
+#include "komplex.h"
 #include "error.h"
 
 static const bool *m;
@@ -47,6 +49,28 @@ void sf_mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	    if (adj) x[ix] += y[ix];
 	    else     y[ix] += x[ix];
 	}
+    }
+}
+
+void sf_cmask_lop(bool adj, bool add, int nx, int ny, sf_complex *x, sf_complex *y)
+/*< linear operator >*/
+{
+    int ix;
+
+    if (nx != ny) sf_error("%s: wrong size: %d != %d",nx,ny);
+
+    sf_cadjnull (adj,add,nx,ny,x,y);
+
+    for (ix=0; ix < nx; ix++) {
+	if (m[ix]) {
+#ifdef SF_HAS_COMPLEX_H	
+	    if (adj) x[ix] += y[ix];
+	    else     y[ix] += x[ix];
+#else
+	    if (adj) x[ix] = sf_cadd(x[ix],y[ix]);
+	    else     y[ix] = sf_cadd(y[ix],x[ix]);
+#endif
+	} 
     }
 }
 
