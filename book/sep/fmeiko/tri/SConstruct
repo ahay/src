@@ -26,7 +26,7 @@ Flow('nd2 ed2','nd1 ed1 smooth',
      egdein=${SOURCES[1]} edgeout=${TARGETS[1]} nodeout=${TARGETS[0]}
      ''',stdout=0)
 
-Flow(['subs','ed0'],'abdomen','reg2tri nt=2000 edgeout=${TARGETS[1]}')
+Flow('subs ed0','abdomen','reg2tri nt=2000 edgeout=${TARGETS[1]}')
 Plot('tris','ed0',
      '''
      graph plotcol=7 min1=0 max1=255 min2=0 max2=255

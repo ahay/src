@@ -21,14 +21,15 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ix, it;
-    float dt, dx, w;
-    float *old, *new, *cur, *sig, *v;
-    sf_file inp, out, vel;
+    float dt, dx, w, g;
+    float *old, *new, *cur, *sig, *v, *vx, *a, *b;
+    sf_file inp, out, vel, grad;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
-    vel = sf_input("vel");
+    vel = sf_input("vel");   /* velocity */
+    grad = sf_input("grad"); /* velocity gradient */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&nx)) sf_error("No n1= in input");
@@ -41,18 +42,32 @@ int main(int argc, char* argv[])
     new = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v = sf_floatalloc(nx);
+    vx = sf_floatalloc(nx);
+    a = sf_floatalloc(nx);
+    b = sf_floatalloc(nx);
 
     sf_floatread(v,nx,vel);
+    sf_floatread(vx,nx,grad);
+
+    sf_fileclose(vel);
+    sf_fileclose(grad);
 
     for (ix=0; ix < nx; ix++) {
 	/* dimensionless velocity */
 	w = v[ix] * dt/dx;
-	v[ix] = w * w;
+	/* dimensionless gradient */
+	g = 0.5 * vx[ix] * dt;
+
+	a[ix] = w*w * (1.0 + g*g);
+	b[ix] = g*w;
 
 	/* initial conditions */
 	cur[ix] = 0.;
 	new[ix] = 0.;
     }
+
+    free(v);
+    free(vx);
 
     /* propagation in time */
     for (it=0; it < nt; it++) {
@@ -63,15 +78,21 @@ int main(int argc, char* argv[])
 	    cur[ix] = new[ix];
 	}
 
-	/* Laplacian */
-	new[0] = cur[0] - cur[1];
+	/* Stencil */
+	new[0] = 
+	    a[0]*(cur[0] - cur[1]) +
+	    b[0]*(cur[0] - cur[1]);
 	for (ix=1; ix < nx-1; ix++) {
-	    new[ix] = 2*cur[ix] - cur[ix-1] - cur[ix+1];
+	    new[ix] = 
+		a[ix]*(2*cur[ix] - cur[ix-1] - cur[ix+1]) + 
+		b[ix]*(            cur[ix-1] - cur[ix+1]);
 	}
-	new[nx-1] = cur[nx-1] - cur[nx-2];
+	new[nx-1] = 
+	    a[nx-1]*(cur[nx-1] - cur[nx-2]) +
+	    b[nx-1]*(cur[nx-2] - cur[nx-1]);
 	
 	for (ix=0; ix < nx; ix++) {
-	    new[ix] = sig[ix] + 2*cur[ix] - v[ix]*new[ix] - old[ix];
+	    new[ix] = sig[ix] + 2*cur[ix] - new[ix] - old[ix];
 	}
 
 	sf_floatwrite(new,nx,out);
