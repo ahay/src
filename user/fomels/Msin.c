@@ -74,44 +74,62 @@ int main(int argc, char* argv[])
 
     if (niter > 0) { /* do inversion */
 	if (NULL != sf_getstring ("mask")) {
+	    /* missing data interpolation */
+	    
 	    mask = sf_input("mask");
 	    if (SF_FLOAT != sf_gettype(mask)) sf_error("Need float mask");
 	    m = sf_floatalloc(n1);
-	}
-
-	for (i1=0; i1 < n1; i1++) {
-	    y[i1] = 0.;
+	 
+	    switch (oper[0]) {
+		case 'd':
+		    for (i1=0; i1 < n1; i1++) {
+			x[i1] = 0.;
+		    }
+		    break;
+		case 'c':
+		    sf_mask_init(known);
+		    break;
+	    }
 	}
     }
 
     for (i2=0; i2 < n2; i2++) {
-	sf_complexread(x,n1,in);
 	sin_init(z0[i2]);
 
 	if (niter > 0) {
-	    if (NULL != mask) {
+	    if (NULL != mask) { /* missing data interpolation */
 		sf_floatread(m,n1,mask);
 		for (i1=0; i1 < n1; i1++) {
 		    known[i1] = (bool) (m[i1] != 0.);
 		}
-	    } else {
-		for (i1=0; i1 < n1; i1++) {
-		    known[i1] = (bool) (crealf(x[i1]) != 0. && cimagf(x[i1]) != 0.);
-		}
-	    }
+		sf_complexread(y,n1,in);
 
-	    sf_csolver(coper, sf_ccgstep, n1, n1, x, y, niter,
-		       "known", known, "x0", x, "verb", verb, "end");
-	    sf_complexwrite(x,n1,out);
+		switch (oper[0]) {
+		    case 'd':
+			sf_csolver(coper, sf_ccgstep, n1, n1, y, x, niter,
+				   "known", known, "x0", y, "verb", verb, "end");
+			break;
+		    case 'c':	
+			
+			sf_csolver_prec(sf_cmask_lop, sf_ccgstep, coper, 
+					n1, n1, n1, y, y, niter, 0.,
+					"verb", verb,"end");
+			break;
+		}
+	    } else {
+		sf_error("Unknown operation");
+	    }
 	} else {
+	    sf_complexread(x,n1,in);
+
 	    if (adj) {
 		coper(true,false,n1,n1,y,x);
 	    } else {
 		coper(false,false,n1,n1,x,y);
 	    }
-
-	    sf_complexwrite(y,n1,out);
 	}
+
+	sf_complexwrite(y,n1,out);
     }
 
     exit(0);
