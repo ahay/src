@@ -478,14 +478,19 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
+            
+        flow = self.Command(targets,sources,command)
+
         if suffix == sfsuffix and \
                sys.platform[:6] != 'cygwin' and \
                sys.platform[:7] != 'interix':            
-            targets = targets + \
-                      map(lambda x, self=self: self.path + x + '@',
-                          filter(lambda x, suffix=suffix:
-                                 x[-4:] == suffix,targets))
-        return self.Command(targets,sources,command)
+            binaries = map(lambda x, self=self: self.path + x + '@',
+                           filter(lambda x, suffix=suffix:
+                                  x[-len(suffix):] == suffix,targets))
+            if binaries:
+                Clean(flow,binaries)
+                
+        return flow
 
         
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
