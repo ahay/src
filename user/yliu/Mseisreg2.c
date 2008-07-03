@@ -24,10 +24,10 @@
 int main(int argc, char* argv[])
 {
     int niter, nw, n1, i3, n3, nt, nd, nm, interp, i, i1, ncycle;
-    float *mm, *dd, *output, **pp, *ww, *offset, x0, dx, eps;
+    float *mm, *dd, *output, **pp, *q, *ww, *offset, x0, dx, eps, perc;
     char *header;
     char *type;
-    bool verb;
+    bool verb, sharpen;
     sf_file in, out, dip, head;
 
     sf_init (argc,argv);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
 
-    if (!sf_getint("ncycle",&ncycle)) niter=1;
+    if (!sf_getint("ncycle",&ncycle)) ncycle=1;
     /* number of IRLS iterations */
 
     if (!sf_getint("order",&nw)) nw=1;
@@ -88,17 +88,31 @@ int main(int argc, char* argv[])
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
 
-    if (ncycle > 0) {
-	ww = sf_floatalloc(nt*nm);
-	sf_weight_init(ww);
-    } else {
-	ww = NULL;
-    }
+    if (!sf_getbool("sharpen",&sharpen)) sharpen = true;
+    /* sharpen flag */
+
+    if (!sf_getfloat("perc",&perc)) perc=50.0;
+    /* percentage for sharpening */
 
     pp = sf_floatalloc2(nt,nm);
     output = sf_floatalloc(nt*nm);
     mm = sf_floatalloc(nt*nm);
     dd = sf_floatalloc(nt*nd);
+    q = sf_floatalloc(nt*nm);
+    ww = sf_floatalloc(nt*nm);
+
+    if (sharpen) {
+	if (ncycle > 0) {
+	    sf_conjgrad_init(nt*nm,nt*nm,nt*nd,nt*nd,eps,1.e-6,true,false);
+	    sf_sharpen_init(nt*nm,perc);
+	} 
+    } else {
+	if (ncycle > 0) {
+	    sf_weight_init(ww);
+	} else {
+	    ww = NULL;
+	}	
+    }
 
     seisreg_init (offset, x0,dx,nm, nt, sf_spline_int, interp, nd, true, true, eps, type[0], pp);
 
@@ -118,19 +132,26 @@ int main(int argc, char* argv[])
         /* apply adjoint */
         seisreg_lop(true,false,nt*nm,nt*nd,mm,dd);
 
+	if (sharpen) {
 
-
-        /* do inversion if ncycle > 0 */
-	for (i=0; i < ncycle; i++) {
-           /* weight by absolute value */
-	    for (i1=0; i1 < (nt*nm); i1++) {
-		ww[i1] = abs(mm[i1]);
+	    /* do inversion if ncycle > 0 */
+	    for (i=0; i < ncycle; i++) {
+		sf_conjgrad(NULL,seisreg_lop,sf_weight_lop,q,mm,dd,niter);
+		sf_sharpen(mm);
+	    } 
+	} else {
+	    /* do inversion if ncycle > 0 */
+	    for (i=0; i < ncycle; i++) {
+		/* weight by absolute value */
+		for (i1=0; i1 < (nt*nm); i1++) {
+		    ww[i1] = abs(mm[i1]);
+		}
+		
+		/* sparse inverse */
+		sf_solver_prec(seisreg_lop, sf_cgstep, sf_weight_lop, nt*nm, nt*nm, 
+			       nt*nd, mm, dd, niter, eps, "verb", verb, "end");
+		sf_cgstep_close();
 	    }
-
-            /* sparse inverse */
-	    sf_solver_reg(seisreg_lop, sf_cgstep, sf_weight_lop, nt*nm, nt*nm, 
-			  nt*nd, mm, dd, niter, eps, "verb", verb, "end");
-	    sf_cgstep_close();
 	}
 
         /* reconstruct regular data */
