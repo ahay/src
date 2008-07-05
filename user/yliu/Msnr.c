@@ -1,6 +1,6 @@
 /* Display dataset signal-noise-ratio.*/
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2008 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
                         }
                     }
                     en=temp-es;
-                    snr=20*log(es/en);
+                    snr=10*log(es/en);
                             
                     printf("***************************************\n");
                     printf("signal energy at n3=%d      = %f \n", (k+1),es);
