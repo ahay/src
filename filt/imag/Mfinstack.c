@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(stk,"o2",w0);
 	sf_putfloat(stk,"d2",dw);
     } else {
-	sf_putint(stk,"n2",(n2-n1+ns)/ns);
+	sf_putint(stk,"n2",(n2-n1+ns+1)/ns);
 	sf_putfloat(stk,"o2",h0+(n2-n1)*dh);
     }
 
