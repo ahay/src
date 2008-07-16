@@ -120,59 +120,65 @@ void bound2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary)
     }	
 }
 
-void bound3(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
+void bound3(float* tempt,
+	    float* extendt,
+	    int nfw1        /* Sample direction*/,
+	    int nfw2        /* Trace direction */,
+	    int n1,int n2,
+	    bool boundary)
 /*extend seismic data*/
 {
-    int m=(nfw-1)/2;
+    int m1=(nfw1-1)/2;
+    int m2=(nfw2-1)/2;
     int i,j;
     
-    for(i=0;i<(n1+2*m)*(n2+2*m);i++){
+    for(i=0;i<(n1+2*m1)*(n2+2*m2);i++){
 	extendt[i]=0.0;
     }
     /*extend trace*/
-    for(i=0;i<m;i++){
+    for(i=0;i<m2;i++){
 	for(j=0;j<n1;j++){
 	    if (boundary){
-		extendt[(n1+2*m)*i+j+m]=tempt[n1*0+j];
+		extendt[(n1+2*m1)*i+j+m1]=tempt[n1*0+j];
 	    }
 	    else{
-		extendt[(n1+2*m)*i+j+m]=0.0;
+		extendt[(n1+2*m1)*i+j+m1]=0.0;
 	    }
 	}
     }
     for(i=0;i<n2;i++){
 	for(j=0;j<n1;j++){
-	    extendt[(n1+2*m)*(i+m)+j+m]=tempt[n1*i+j];
+	    extendt[(n1+2*m1)*(i+m2)+j+m1]=tempt[n1*i+j];
 	}
     }
-    for(i=0;i<m;i++){
+    for(i=0;i<m2;i++){
 	for(j=0;j<n1;j++){
 	    if (boundary){
-		extendt[(n1+2*m)*(i+m+n2)+j+m]=tempt[n1*(n2-1)+j];
+		extendt[(n1+2*m1)*(i+m2+n2)+j+m1]=tempt[n1*(n2-1)+j];
 	    }
 	    else{
-		extendt[(n1+2*m)*(i+m+n2)+j+m]=0.0;
+		extendt[(n1+2*m1)*(i+m2+n2)+j+m1]=0.0;
 	    }
 	}
     }
     /*extend the number of samples*/
-    for(i=0;i<(n2+2*m);i++){
-	for(j=0;j<m;j++){
+    for(i=0;i<(n2+2*m2);i++){
+	for(j=0;j<m1;j++){
 	    if (boundary){
-		extendt[(n1+2*m)*i+j]=extendt[(n1+2*m)*i+m];
+		extendt[(n1+2*m1)*i+j]=extendt[(n1+2*m1)*i+m1];
 	    }
 	    else{
-		extendt[(n1+2*m)*i+j]=0.0;
+		extendt[(n1+2*m1)*i+j]=0.0;
 	    }
 	}
     }
-    for(i=0;i<(n2+2*m);i++){
-	for(j=0;j<m;j++){
+    for(i=0;i<(n2+2*m2);i++){
+	for(j=0;j<m1;j++){
 	    if (boundary){
-		extendt[(n1+2*m)*i+j+n1+m]=extendt[(n1+2*m)*i+n1+m-1];
+		extendt[(n1+2*m1)*i+j+n1+m1]=extendt[(n1+2*m1)*i+n1+m1-1];
 	    }
 	    else{
-		extendt[(n1+2*m)*i+j+n1+m]=0.0;
+		extendt[(n1+2*m1)*i+j+n1+m1]=0.0;
 	    }
 	}
     }

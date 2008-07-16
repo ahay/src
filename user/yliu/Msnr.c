@@ -35,11 +35,10 @@ int main (int argc, char* argv[])
 	float *trace;
 	float *tempt; /*temporary array*/
         float en, es, snr; /*en is noise energy, es is signal energy, snr is signal-noise-ratio*/
-	sf_file in, out;
+	sf_file in;
 
 	sf_init (argc, argv); 
 	in = sf_input("in");
-	out = sf_output("out");
     
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");

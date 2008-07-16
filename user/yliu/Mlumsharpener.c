@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
     if (!sf_getbool("boundary",&boundary)) boundary=false;
     /* if y, boundary is data, whereas zero*/
 
-    if(nclip<1 || nclip>((nfw+1)/2)) sf_error("Need a value between 0 and (nfw+1)/2");
+    if(nclip<1 || nclip>((nfw+1)/2)) sf_error("Need a value between 1 and (nfw+1)/2");
     
     trace = sf_floatalloc(n1*n2);
     tempt = sf_floatalloc(n1*n2);
