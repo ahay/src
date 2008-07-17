@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
                 }
 	        break;
 	    default:
-	        sf_error("Unknown method type=%c",type);
+	        sf_error("Unknown method type=%c",type[0]);
 	        break;
         }
 

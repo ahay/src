@@ -25,7 +25,7 @@
 #include "weightmf.h"
 #include "boundary.h"
 
-void bound3(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);
+void bound3(float* tempt,float* extendt,int nfw1,int nfw2,int n1,int n2,bool boundary);
 /*extend seismic data*/
 
 int main (int argc, char* argv[]) 
@@ -95,8 +95,8 @@ int main (int argc, char* argv[])
 	tempw[i]=fabs(wei[i]);
     }
     
-    bound3(tempt,extendt,nfw,n1,n2,boundary);
-    bound3(tempw,extendw,nfw,n1,n2,boundary);
+    bound3(tempt,extendt,nfw,nfw,n1,n2,boundary);
+    bound3(tempw,extendw,nfw,nfw,n1,n2,boundary);
     
     /************2D multistage weighted median filter****************/
     for(i=m;i<(n2+m);i++){
