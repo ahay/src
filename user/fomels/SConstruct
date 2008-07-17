@@ -14,7 +14,7 @@ pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk pwdsmooth2
 roots rsin seislet seisigk shape shapebin shapebin1 shapesigk sharpen
 shearer similarity sin threshold timeshift tomo tree trismooth2
 tristack twodip2 twofreq2 velcon warp1 warpadd warpscan wave1
-zoeppritz ztrace ztrace2
+ztrace ztrace2
 '''
 
 pyprogs = 'rcat'

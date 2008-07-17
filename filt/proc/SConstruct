@@ -14,7 +14,7 @@ prestolt ptaupmo pveltran radial radon randrefl refer reshape ricker
 shot2cmp shot2cmp3 shotholes shotprop slice smooth smoothder smoothreg
 smoothreg2 spectra spectra2 spicks spline splinefilter stolt stolt2
 stoltstretch stretch taupmo time2depth tlagtoang2d tpow tan2ang tshift
-vscan velmod xlagtoang2d
+vscan velmod xlagtoang2d zoeppritz
 '''
 
 # shot2cmp3

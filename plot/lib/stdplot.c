@@ -1446,13 +1446,15 @@ void vp_frame(void)
     if (NULL != title) {
 	vp_bgroup("title");
 	vp_fat (title->fat);
-	if (title->where == 't' || 
-	    (title->where == 'r' && labelrot) ||
-	    (title->where == 'l' && !labelrot)) {
+
+	if ((title->where == 't') || 
+	    ((title->where == 'r') && labelrot) ||
+	    ((title->where == 'l') && !labelrot)) {
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 	} else {
 	    vp_tjust (TH_CENTER, TV_TOP);
-	}
+	} 
+
 	vp_gtext(title->x, title->y, 
 		 title->xpath, title->ypath, 
 		 title->xup, title->yup, title->text);

@@ -1,7 +1,7 @@
 /* Normal reflectivity modeling. 
 
 In this version, the input contains Vp, Vs, and density into one file. 
-The output contains approximate PP and PS tau-p seismograms.
+The output contains PP and PS tau-p seismograms.
 
 */
 /*
@@ -25,13 +25,16 @@ The output contains approximate PP and PS tau-p seismograms.
 
 #include <rsf.h>
 
-#include "spline.h"
+#include "stretch4.h"
+#include "zoeppritz.h"
 
 int main(int argc, char* argv[])
 {
-    int nt, n1, i1, i2, n2, nw, ip, np, three;
+    int nt, n1, i1, i2, n2, ip, np, three;
     float *a, *b, *r, *tpp, *tps, *app, *aps, *spline, **pp, **ps;
-    float dt, tp,ts, a1,a2, b1,b2, r1,r2, d1, dr, da, db, ab, p0, dp, p, as, bs, ad1, bd1; 
+    float dt, tp,ts, a1,a2, b1,b2, r1,r2, eps, rc[4], ang[4];
+    float d1, p0, dp, p, as, bs, ad1, bd1; 
+    map4 map;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -39,7 +42,8 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&three) || three != 3) sf_error("Need n2=3 in input");
+    if (!sf_histint(in,"n2",&three) || three != 3) 
+	sf_error("Need n2=3 in input");
     n2 = sf_leftsize(in,2);
 
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
@@ -56,8 +60,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
     /* slope origin */
 
-    if (!sf_getint("nw",&nw)) nw=4;
-    /* interpolation length */
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* stretch regularization */
 
     sf_putint(out,"n1",nt);
     sf_putfloat(out,"d1",dt);
@@ -82,7 +86,11 @@ int main(int argc, char* argv[])
     pp = sf_floatalloc2(nt,np);
     ps = sf_floatalloc2(nt,np);
 
+    map = stretch4_init (nt, 0., dt, n1, eps);
+
     for (i2=0; i2 < n2; i2++) {
+	sf_warning("CMP %d of %d",i2+1,n2);
+
 	sf_floatread(a,n1,in); /* Vp */
 	sf_floatread(b,n1,in); /* Vs */
 	sf_floatread(r,n1,in); /* rho */
@@ -95,11 +103,19 @@ int main(int argc, char* argv[])
 	    b2 = b[0];
 	    r2 = r[0];
 	    for (i1=1; i1 < n1; i1++) {
-		as = a2*p; if (fabsf(as) > 1.) sf_error("p=%g is postcritical (vp=%g)",p,a2);
-		bs = b2*p; if (fabsf(bs) > 1.) sf_error("p=%g is postcritical (vs=%g)",p,b2);
+		as = a2*p; 
+		if (fabsf(as) > 1.) 
+		    sf_error("p=%g is postcritical (vp=%g)",p,a2);
+
+		bs = b2*p; 
+		if (fabsf(bs) > 1.) 
+		    sf_error("p=%g is postcritical (vs=%g)",p,b2);
 		
 		ad1 = d1*sqrtf(1.-as*as)/a2;
 		bd1 = d1*sqrtf(1.-bs*bs)/b2;
+		
+		tpp[i1] = tp;
+		tps[i1] = ts;
 
 		tp += 2.*ad1;
 		ts += ad1 + bd1;
@@ -110,31 +126,22 @@ int main(int argc, char* argv[])
 		b2 = b[i1];
 		r1 = r2;
 		r2 = r[i1];
-		
-		tpp[i1] = tp;
-		tps[i1] = ts;
-		
-		da = (a2-a1)/(a2+a1);
-		db = (b2-b1)/(b2+b1);
-		dr = (r2-r1)/(r2+r1);
-		ab = (a2+a1)/(b2+b1);
 
-		app[i1] = (da + dr) + (da - 4.*(2.*db+dr)/(ab*ab))*as*as;
-		aps[i1] = (4.*db/ab + (1.+2./ab)*dr)*sinf((asinf(as)+asinf(bs))*0.5);
+		zoeppritz (1,a1,a2,b1,b2,r1,r2,true,p,rc,ang);
+		app[i1] = rc[0];
+		aps[i1] = rc[1];
 	    }
-	    
-	    sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
-	    sf_int1_lop (true,false,nt,n1,spline,app);
-	    spline_post(nw, 0, 1, nt, spline,pp[ip]);
-	    
-	    sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1);
-	    sf_int1_lop (true,false,nt,n1,spline,aps);
-	    spline_post(nw, 0, 1, nt, spline,ps[ip]);
+
+	    stretch4_define (map,tpp);
+	    stretch4_apply (map,app,pp[ip]);
+
+	    stretch4_define (map,tps);
+	    stretch4_apply (map,aps,ps[ip]);
 	}
 
 	sf_floatwrite(pp[0],nt*np,out);
 	sf_floatwrite(ps[0],nt*np,out);
-    }    
+    }
 
     exit(0);
 }

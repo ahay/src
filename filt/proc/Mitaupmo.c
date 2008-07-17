@@ -26,7 +26,7 @@
 int main (int argc, char* argv[])
 {
     map4 nmo; /* using cubic spline interpolation */
-    int it,ix,ip, nt,nx, np, nw;
+    int it,ix,ip, nt,nx, np;
     float dt, t0, p, p0, f, ft, dp, eps;
     float *trace, *vel, *str, *out;
     sf_file cmp, nmod, velocity;
@@ -54,9 +54,6 @@ int main (int argc, char* argv[])
     vel = sf_floatalloc(nt);
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
-
-    if (!sf_getint("extend",&nw)) nw=8;
-    /* trace extension */
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
     

@@ -81,6 +81,8 @@ int main(int argc, char* argv[])
 
     for (ia=0; ia < na; ia++) {
 	a = a0 + ia*da;
+	a = incp? sinf(a)/vp1: sinf(a)/vs1;
+
 	zoeppritz (icoef,vp1,vp2,vs1,vs2,rho1,rho2,incp,a,rc,ang);
 	r[ia] = rc[j];
     }

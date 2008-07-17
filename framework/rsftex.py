@@ -228,7 +228,7 @@ def listoffigs(target=None,source=None,env=None):
 
     for line in log.readlines():
         fil = logfigure.match(line)
-        if fil:
+        if fil and figs:
             fig = figs.pop(0)
             for ext in ('eps','pdf'):
                 src = suffix.sub('.'+ext,fil.group(1))
