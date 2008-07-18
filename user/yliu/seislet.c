@@ -1,4 +1,4 @@
-/* Seislet transform */
+/* Seislet transform for data interpolation */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -673,6 +673,7 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j, i1;
+    inv=adj;
 
     sf_adjnull (adj,add,nx,ny,x,y);
 
@@ -714,7 +715,7 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	}
     }
 
-    transform(adj);
+    transform(!adj);
 
     if (adj) {
 	if (unit) {
@@ -744,3 +745,6 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	}
     }
 }
+
+
+/* 	$Id: seislet.c  */
