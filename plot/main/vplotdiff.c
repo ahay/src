@@ -49,6 +49,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <rsf.h>
 #include <rsfplot.h>
 #include "../../pens/include/params.h"
 
@@ -274,23 +275,15 @@ main (int argc, char *argv[])
 	exit (0);
     }
 
-    if (argc < 3)
-    {
-	fprintf (stderr, "vplotdiff requires 2 input files.\n");
-	exit (-1);
-    }
+    sf_init(argc,argv);
+
+    if (argc < 3) sf_error("Need 2 input files.");
 
     if (NULL == (stream1 = fopen (argv[1], "r")))
-    {
-	fprintf (stderr, "vplotdiff: Cannot open 1st file %s.\n", argv[1]);
-	exit (-1);
-    }
+	sf_error("Cannot open 1st file %s:", argv[1]);
 
     if (NULL == (stream2 = fopen (argv[2], "r")))
-    {
-	fprintf (stderr, "vplotdiff: Cannot open 2nd file %s.\n", argv[2]);
-	exit (-1);
-    }
+	sf_error("Cannot open 2nd file %s:", argv[2]);
 
 /*
  *  Initialize plot state
@@ -383,16 +376,8 @@ main (int argc, char *argv[])
     c1 = getc (stream1);
     c2 = getc (stream2);
 
-    if (c1 == EOF)
-    {
-	fprintf (stderr, "vplotdiff: %s is empty!\n", argv[1]);
-	exit (-1);
-    }
-    if (c2 == EOF)
-    {
-	fprintf (stderr, "vplotdiff: %s is empty!\n", argv[2]);
-	exit (-1);
-    }
+    if (c1 == EOF) sf_error("%s is empty!", argv[1]);
+    if (c2 == EOF) sf_error("%s is empty!", argv[2]);
 
 /* Now we can be sure we won't try to push back an EOF. */
     if (c1 == VP_ERASE && c2 != VP_ERASE)
@@ -471,11 +456,7 @@ main (int argc, char *argv[])
 			 &dstate2, &pstate2, &warn, &needtocheck1, &needtocheck2))
 	    error_count1++;
 
-	if (error_count1 > ENOUGH_ERRORS)
-	{
-	    fprintf (stderr, "vplotdiff: maximum error count reached.\n");
-	    exit (1);
-	}
+	if (error_count1 > ENOUGH_ERRORS) sf_error("maximum error count reached.");
 
 /*
  * Both hit the end at the same time. We are done,
@@ -500,7 +481,7 @@ main (int argc, char *argv[])
 	    case VP_ERASE:
 		if (c1 != c2)
 		{
-		    fprintf (stderr, "vplotdiff: command mismatch.\n");
+		    sf_warning("command mismatch.");
 		    fprintf (stderr, "\tFile %s, line %s, command: ",
 			     argv[1], count_string1);
 		    vplot_debug (c1, stream1);
@@ -521,7 +502,7 @@ main (int argc, char *argv[])
 	    case VP_TEXT:
 		if (c2 != VP_GTEXT && c2 != VP_TEXT && c2 != VP_OLDTEXT)
 		{
-		    fprintf (stderr, "vplotdiff: command mismatch.\n");
+		    sf_warning ("command mismatch.");
 		    fprintf (stderr, "\tFile %s, line %s, command: ",
 			     argv[1], count_string1);
 		    vplot_debug (c1, stream1);
@@ -550,7 +531,7 @@ main (int argc, char *argv[])
 	    case VP_BIT_RASTER:
 		if (c2 != VP_BYTE_RASTER && c2 != VP_BIT_RASTER)
 		{
-		    fprintf (stderr, "vplotdiff: command mismatch.\n");
+		    sf_warning ("command mismatch.");
 		    fprintf (stderr, "\tFile %s, line %s, command: ",
 			     argv[1], count_string1);
 		    vplot_debug (c1, stream1);
@@ -572,18 +553,13 @@ main (int argc, char *argv[])
 		state2.move_count = count2;
 		break;
 	    default:
-		fprintf (stderr,
-			 "vplotdiff: %s, line %s: unknown command %c (%o octal)\n",
+		sf_error("%s, line %s: unknown command %c (%o octal)",
 			 argv[1], count_string1, c1, c1);
-		exit (-1);
 		break;
 	}
 
 	if (error_count1 > ENOUGH_ERRORS)
-	{
-	    fprintf (stderr, "vplotdiff: maximum error count reached.\n");
-	    exit (1);
-	}
+	    sf_error ("maximum error count reached.");
     }
 
     if (error_count1 > 0)
@@ -605,12 +581,8 @@ text (const int debug, char *name, int count, FILE * stream)
     while ('\0' != (c = getc (stream)))
     {
 	if (c == EOF)
-	{
-	    fprintf (stderr,
-		     "vplotdiff: %s, line %d: Unexpected EOF in text!\n",
-		     name, count);
-	    exit (-1);
-	}
+	    sf_error("%s, line %d: Unexpected EOF in text!",name, count);
+	    
 	if (debug)
 	    putchar (c);
     }
@@ -631,23 +603,12 @@ vp_getint2 (char *name, int count, FILE * stream)
     unsigned short w;
 
     w1 = getc (stream);
-
     if (w1 == EOF)
-    {
-	fprintf (stderr,
-		 "vplotdiff: %s, line %d: Unexpected EOF in integer!\n",
-		 name, count);
-	exit (-1);
-    }
+	sf_error ("%s, line %d: Unexpected EOF in integer!",name, count);
 
     w2 = getc (stream);
     if (w2 == EOF)
-    {
-	fprintf (stderr,
-		 "vplotdiff: %s, line %d: Unexpected EOF in integer!\n",
-		 name, count);
-	exit (-1);
-    }
+	sf_error("%s, line %d: Unexpected EOF in integer!",name, count);
 
     w = ((unsigned short) w1) + (((unsigned short) w2) << 8);
 
@@ -662,18 +623,10 @@ vp_getint3 (FILE * stream)
     unsigned short w;
 
     w1 = getc (stream);
-    if (w1 == EOF)
-    {
-	fprintf (stderr, "EOF\n");
-	exit (-1);
-    }
+    if (w1 == EOF) sf_error("EOF");
 
     w2 = getc (stream);
-    if (w2 == EOF)
-    {
-	fprintf (stderr, "EOF\n");
-	exit (-1);
-    }
+    if (w2 == EOF) sf_error("EOF");
 
     w = ((unsigned short) w1) + (((unsigned short) w2) << 8);
 
@@ -735,13 +688,9 @@ check_vplot1 (const int debug,
  */
 	case EOF:
 	    /* Make sure no groups left open at End Of File */
-	    if (*group != 0)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s: %d unclosed group(s) at EOF.\n",
+	    if (*group != 0) 
+		sf_error("%s: %d unclosed group(s) at EOF.",
 			 name, *group);
-		exit (-1);
-	    }
 
 /*
  * At the end of the file, check EVERYTHING.
@@ -833,12 +782,9 @@ check_vplot1 (const int debug,
 	    (*count)++;
 	    /* Make sure no groups left open at an erase */
 	    if (*group != 0)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s: %d unclosed group(s) at erase at line %d.\n",
+		sf_error("%s: %d unclosed group(s) at erase at line %d.",
 			 name, *group, *count);
-		exit (-1);
-	    }
+
 	    /* An erase command resets much of the plot state */
 	    *state = reset_state;
 	    state->setstyle_count = *count;
@@ -899,11 +845,7 @@ check_vplot1 (const int debug,
 	    (*count)++;
 	    (*group)--;
 	    if (*group < 0)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s: No group to end at line %d!\n", name, *count);
-		exit (-1);
-	    }
+		sf_error("%s: No group to end at line %d!", name, *count);
 	    break;
 /*
  * Finally, commands that change the vplot state.
@@ -911,10 +853,7 @@ check_vplot1 (const int debug,
 	case VP_SETSTYLE:
 	    a = getc (stream);
 	    if (EOF == a)
-	    {
-		fprintf (stderr, "vplotdiff: %s: Unexpected EOF in setstyle!\n", name);
-		exit (-1);
-	    }
+		sf_error("%s: Unexpected EOF in setstyle!", name);
 	    a = tolower (a);
 	    if (debug)
 		printf ("%c %c\n", c, a);
@@ -978,12 +917,8 @@ check_vplot1 (const int debug,
 	    (*count)++;
 	    npts = vp_getint2 (name, *count, stream);
 	    if (npts > MAXDASH)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s: Dash pattern of %d parts is too complex.\n",
+		sf_error("%s: Dash pattern of %d parts is too complex.",
 			 name, npts);
-		exit (-1);
-	    }
 	    if (debug)
 		printf ("%c %d\n", c, npts);
 	    dstate->dashon = npts;
@@ -1027,25 +962,19 @@ check_vplot1 (const int debug,
 	    if (debug)
 		printf ("%c %d %d %d %d\n", c, col_tab_no, red, green, blue);
 	    if (col_tab_no > MAX_COL)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s line %d: Illegal color table number %d\n",
+		sf_error("%s line %d: Illegal color table number %d",
 			 name, *count, col_tab_no);
-		exit (-1);
-	    }
+
 	    if (col_tab_no > cstate->largest)
 	    {
 		cstate->largest = col_tab_no;
 	    }
 
-	    if ((red < 0) || (red > MAX_GUN) ||
-		(green < 0) || (green > MAX_GUN) || (blue < 0) || (blue > MAX_GUN))
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s line %d: color table %d=(%d,%d,%d) out of range\n",
+	    if ((red   < 0) || (red   > MAX_GUN) ||
+		(green < 0) || (green > MAX_GUN) || 
+		(blue  < 0) || (blue  > MAX_GUN))
+		sf_error("%s line %d: color table %d=(%d,%d,%d) out of range",
 			 name, *count, col_tab_no, red, green, blue);
-		exit (-1);
-	    }
 
 	    cstate->red[col_tab_no] = red;
 	    cstate->green[col_tab_no] = green;
@@ -1087,11 +1016,9 @@ check_vplot1 (const int debug,
 		printf ("%c %d %d %d %d\n", c, nmul, nx, ny, ipat);
 
 	    if (ipat < 1 || ipat > NPAT)
-	    {
-		fprintf (stderr, "vplotdiff: %s: ipat = %d out of bounds.\n",
+		sf_error("%s: ipat = %d out of bounds.",
 			 name, ipat);
-		exit (-1);
-	    }
+
 	    if (ipat > pstate->largest)
 	    {
 		pstate->largest = ipat;
@@ -1112,12 +1039,9 @@ check_vplot1 (const int debug,
 		n0 = (pstate->dim[ipat] > 0) ? pstate->dim[ipat] : 1;
 		if ((pstate->patbits[ipat] = (int *) malloc ((unsigned) n0 *
 							     sizeof (int))) == NULL)
-		{
-		    fprintf (stderr,
-			     "vplotdiff: %s: Cannot allocate memory for pattern %d.\n",
+		    sf_error("%s: Cannot allocate memory for pattern %d.",
 			     name, ipat);
-		    exit (-1);
-		}
+		
 		for (i = 0; i < ny * 2; i++)
 		{
 		    (*count)++;
@@ -1137,14 +1061,8 @@ check_vplot1 (const int debug,
 	    {
 		pstate->dim[ipat] = nx * ny;
 		n0 = (pstate->dim[ipat] > 0) ? pstate->dim[ipat] : 1;
-		if ((pstate->patbits[ipat] = (int *) malloc ((unsigned) n0 *
-							     sizeof (int))) == NULL)
-		{
-		    fprintf (stderr,
-			     "vplotdiff: %s: Cannot allocate memory for pattern %d.\n",
-			     name, ipat);
-		    exit (-1);
-		}
+		pstate->patbits[ipat] = sf_intalloc ((unsigned) n0);
+
 		ii = 0;
 		for (i = 0; i < nx; i++)
 		{
@@ -1171,10 +1089,8 @@ check_vplot1 (const int debug,
 	    warn->pattern = 1;
 	    break;
 	default:
-	    fprintf (stderr,
-		     "vplotdiff: %s, line %d: unknown command %c (%o octal)\n",
+	    sf_error("%s, line %d: unknown command %c (%o octal)",
 		     name, (*count) + 1, c, c);
-	    exit (-1);
 	    break;
     }
 
@@ -1303,7 +1219,7 @@ check_vplot2text (const int debug1,
 	(fabs (xfup1 - xfup2) > (float) TEXTVECSCALE * SLOP_FACTOR) ||
 	(fabs (yfup1 - yfup2) > (float) TEXTVECSCALE * SLOP_FACTOR))
     {
-	fprintf (stderr, "vplotdiff: Coordinate mismatch: text\n");
+	sf_warning ("Coordinate mismatch: text");
 	fprintf (stderr,
 		 "\tFile %s, line %d: command: %s\n", name1, *count1, command1);
 	fprintf (stderr,
@@ -1328,24 +1244,16 @@ check_vplot2text (const int debug1,
 	{
 	    c1 = getc (stream1);
 	    if (c1 == EOF)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s, line %d: Unexpected EOF in text!\n",
+		sf_error("%s, line %d: Unexpected EOF in text!",
 			 name1, *count1);
-		exit (-1);
-	    }
 	}
 	
 	if (c2 != '\0')
 	{
 	    c2 = getc (stream2);
 	    if (c2 == EOF)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s, line %d: Unexpected EOF in text!\n",
+		sf_error("%s, line %d: Unexpected EOF in text!",
 			 name2, *count2);
-		exit (-1);
-	    }
 	}
 	
 	if (ii < MAX_TXT - 1)
@@ -1379,7 +1287,7 @@ check_vplot2text (const int debug1,
     
     if (texterror > 0)
     {
-	fprintf (stderr, "vplotdiff: Text string mismatch\n");
+	sf_warning ("Text string mismatch");
 	fprintf (stderr, "\tFile %s, line %d: %s\n", name1, *count1, textstring1);
 	fprintf (stderr, "\tFile %s, line %d: %s\n", name2, *count2, textstring2);
 	
@@ -1438,7 +1346,7 @@ check_vplot2ras (const int debug1,
     
     if (ras_orient1 != ras_orient2)
     {
-	fprintf (stderr, "vplotdiff: Command mismatch: Raster orientation\n");
+	sf_warning ("Command mismatch: Raster orientation");
 	fprintf (stderr, "\tFile %s, line %d: %c %d %d\n", name1, *count1,
 		 c1, ras_orient1, ras_offset1);
 	fprintf (stderr, "\tFile %s, line %d: %c %d %d\n", name2, *count2,
@@ -1471,7 +1379,7 @@ check_vplot2ras (const int debug1,
     if ((abs (xll1 - xll2) > 1) || (abs (yll1 - yll2) > 1) ||
 	(abs (xur1 - xur2) > 1) || (abs (yur1 - yur2) > 1))
     {
-	fprintf (stderr, "vplotdiff: Coordinate mismatch: Raster\n");
+	sf_warning ("Coordinate mismatch: Raster");
 	fprintf (stderr,
 		 "\tFile %s, line %d: (%d,%d,%d,%d)\n",
 		 name1, *count1 - 1, xll1, yll1, xur1, yur1);
@@ -1495,7 +1403,7 @@ check_vplot2ras (const int debug1,
     
     if ((xpix1 != xpix2) || (ypix1 != ypix2))
     {
-	fprintf (stderr, "vplotdiff: Command mismatch: Raster size\n");
+	sf_warning ("Command mismatch: Raster size");
 	fprintf (stderr,
 		 "\tFile %s, line %d: %d %d\n", name1, *count1, xpix1, ypix1);
 	fprintf (stderr,
@@ -1508,20 +1416,10 @@ check_vplot2ras (const int debug1,
  * Read the two rasters into memory as RGB triplets.
  */
 
-    red1 = (unsigned char *) malloc (xpix1 * ypix1 * sizeof (unsigned char));
-    green1 = (unsigned char *) malloc (xpix1 * ypix1 * sizeof (unsigned char));
-    blue1 = (unsigned char *) malloc (xpix1 * ypix1 * sizeof (unsigned char));
-    line1 = (int *) malloc (xpix1 * ypix1 * sizeof (int));
-    
-    if (red1 == NULL || green1 == NULL || blue1 == NULL || line1 == NULL)
-    {
-	fprintf (stderr,
-		 "vplotdiff: %s line %d, %s line %d: "
-		 "Cannot allocate memory for raster.\n",
-		 name1, *count1, name2, *count2);
-	
-	exit (-1);
-    }
+    red1   = sf_ucharalloc (xpix1 * ypix1);
+    green1 = sf_ucharalloc (xpix1 * ypix1);
+    blue1 =  sf_ucharalloc (xpix1 * ypix1);
+    line1 = sf_intalloc (xpix1 * ypix1);
     
     for (i1 = 0; i1 < ypix1; i1 += num_rep1)
     {
@@ -1536,12 +1434,9 @@ check_vplot2ras (const int debug1,
 	    num_pat1 = vp_getint2 (name1, *count1, stream1);
 	    num_byte1 = vp_getint2 (name1, *count1, stream1);
 	    if (num_pat1 < 0 || num_byte1 < 0)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s, line %d: Error in raster field\n",
+		sf_error("%s, line %d: Error in raster field",
 			 name1, *count1);
-		exit (-1);
-	    }
+
 	    if (debug1)
 		printf ("%d %d  -- start byte %d in y_line %d\n",
 			num_pat1, num_byte1, pos1, i1);
@@ -1553,33 +1448,23 @@ check_vplot2ras (const int debug1,
 		    (*count1)++;
 		    byte1 = getc (stream1);
 		    if (EOF == byte1)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: "
-				 "Unexpected EOF in byte raster!\n",
+			sf_error("%s, line %d: "
+				 "Unexpected EOF in byte raster!",
 				 name1, *count1);
-			exit (-1);
-		    }
+
 		    if (debug1)
 			printf ("%d\n", byte1);
 		    
 		    icolno = ras_offset1 + byte1;
 		    if (icolno < 0 || icolno > MAX_COL)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: "
-				 "Attempt to use out of range color number in byte raster!\n",
+			sf_error("%s, line %d: "
+				 "Attempt to use out of range color number in byte raster!",
 				 name1, *count1);
-			exit (-1);
-		    }
+
 		    if (cstate1->red[icolno] == VPLOTDIFF_NOT_INITIALIZED)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: "
-				 "Attempt to use undefined color in byte raster!\n",
+			sf_error("%s, line %d: "
+				 "Attempt to use undefined color in byte raster!",
 				 name1, *count1);
-			exit (-1);
-		    }
 		    
 		    for (iline = 0; iline < num_rep1; iline++)
 		    {
@@ -1589,13 +1474,10 @@ check_vplot2ras (const int debug1,
 				(i1 + iline) * xpix1 + irep * num_byte1 + pos1 + ii1;
 			    
 			    if (icount < 0 || icount >= xpix1 * ypix1)
-			    {
-				fprintf (stderr,
-					 "vplotdiff: %s, line %d: "
-					 "Raster line not length promised!\n",
+				sf_error("%s, line %d: "
+					 "Raster line not length promised!",
 					 name1, *count1);
-				exit (-1);
-			    }
+
 			    red1[icount] = cstate1->red[icolno];
 			    green1[icount] = cstate1->green[icolno];
 			    blue1[icount] = cstate1->blue[icolno];
@@ -1613,13 +1495,9 @@ check_vplot2ras (const int debug1,
 		    {
 			ibyte1 = getc (stream1);
 			if (EOF == ibyte1)
-			{
-			    fprintf (stderr,
-				     "vplotdiff: %s, line %d: "
-				     "Unexpected EOF in bit raster!\n",
+			    sf_error("%s, line %d: "
+				     "Unexpected EOF in bit raster!",
 				     name1, *count1);
-			    exit (-1);
-			}
 		    }
 		    else
 		    {
@@ -1630,21 +1508,14 @@ check_vplot2ras (const int debug1,
 		    
 		    icolno = ras_offset1 * ((ibyte1 >> 7) & 001);
 		    if (icolno < 0 || icolno > MAX_COL)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: "
-				 "Attempt to use out of range color number in bit raster!\n",
+			sf_error("%s, line %d: "
+				 "Attempt to use out of range color number in bit raster!",
 				 name1, *count1);
-			exit (-1);
-		    }
+
 		    if (cstate1->red[icolno] == VPLOTDIFF_NOT_INITIALIZED)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: "
-				 "Attempt to use undefined color in bit raster!\n",
+			sf_error("%s, line %d: "
+				 "Attempt to use undefined color in bit raster!",
 				 name1, *count1);
-			exit (-1);
-		    }
 		    
 		    for (iline = 0; iline < num_rep1; iline++)
 		    {
@@ -1654,13 +1525,10 @@ check_vplot2ras (const int debug1,
 				(i1 + iline) * xpix1 + irep * num_byte1 + pos1 + ii1;
 		    
 			    if (icount < 0 || icount >= xpix1 * ypix1)
-			    {
-				fprintf (stderr,
-					 "vplotdiff: %s, line %d: "
-					 "Raster line not length promised!\n",
+				sf_error("%s, line %d: "
+					 "Raster line not length promised!",
 					 name1, *count1);
-				exit (-1);
-			    }
+			    
 			    red1[icount] = cstate1->red[icolno];
 			    green1[icount] = cstate1->green[icolno];
 			    blue1[icount] = cstate1->blue[icolno];
@@ -1685,12 +1553,9 @@ check_vplot2ras (const int debug1,
 	    num_pat2 = vp_getint2 (name2, *count2, stream2);
 	    num_byte2 = vp_getint2 (name2, *count2, stream2);
 	    if (num_pat2 < 0 || num_byte2 < 0)
-	    {
-		fprintf (stderr,
-			 "vplotdiff: %s, line %d: Error in raster field\n",
+		sf_error("%s, line %d: Error in raster field",
 			 name2, *count2);
-		exit (-1);
-	    }
+
 	    if (debug2)
 		printf ("%d %d  -- start byte %d in y_line %d\n",
 			num_pat2, num_byte2, pos2, i2);
@@ -1702,31 +1567,20 @@ check_vplot2ras (const int debug1,
 		    (*count2)++;
 		    byte2 = getc (stream2);
 		    if (EOF == byte2)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: Unexpected EOF in byte raster!\n",
+			sf_error("%s, line %d: Unexpected EOF in byte raster!",
 				 name2, *count2);
-			exit (-1);
-		    }
+
 		    if (debug2)
 			printf ("%d\n", byte2);
 		    
 		    icolno = ras_offset2 + byte2;
 		    if (icolno < 0 || icolno > MAX_COL)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: Attempt to use out of range color number in byte raster!\n",
+			sf_error("%s, line %d: Attempt to use out of range color number in byte raster!",
 				 name2, *count2);
-			exit (-1);
-		    }
+
 		    if (cstate2->red[icolno] == VPLOTDIFF_NOT_INITIALIZED)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: Attempt to use undefined color in byte raster!\n",
+			sf_error("%s, line %d: Attempt to use undefined color in byte raster!",
 				 name2, *count2);
-			exit (-1);
-		    }
-		    
 		    
 		    for (iline = 0; iline < num_rep2; iline++)
 		    {
@@ -1736,12 +1590,9 @@ check_vplot2ras (const int debug1,
 				(i2 + iline) * xpix2 + irep * num_byte2 + pos2 + ii2;
 			    
 			    if (icount < 0 || icount >= xpix2 * ypix2)
-			    {
-				fprintf (stderr,
-					 "vplotdiff: %s, line %d: Raster line not length promised!\n",
+				sf_error("%s, line %d: Raster line not length promised!",
 					 name2, *count2);
-				exit (-1);
-			    }
+
 			    if ((abs
 				 ((int) red1[icount] -
 				  cstate2->red[icolno]) > RASTER_TOL)
@@ -1756,13 +1607,11 @@ check_vplot2ras (const int debug1,
 			    {
 				if (rasmismatch == ENOUGH_ERRORS)
 				{
-				    fprintf (stderr,
-					     "vplotdiff: Further raster color mismatches suppressed.\n");
+				    sf_warning("Further raster color mismatches suppressed.");
 				}
 				else if (rasmismatch < ENOUGH_ERRORS)
 				{
-				    fprintf (stderr,
-					     "vplotdiff: Byte raster color mismatch\n");
+				    sf_warning ("Byte raster color mismatch");
 				    fprintf (stderr,
 					     "\tFile %s, line %d: color=(%d,%d,%d).\n",
 					     name1,
@@ -1794,12 +1643,8 @@ check_vplot2ras (const int debug1,
 		    {
 			ibyte2 = getc (stream2);
 			if (EOF == ibyte2)
-			{
-			    fprintf (stderr,
-				     "vplotdiff: %s, line %d: Unexpected EOF in bit raster!\n",
+			    sf_error("%s, line %d: Unexpected EOF in bit raster!",
 				     name2, *count2);
-			    exit (-1);
-			}
 		    }
 		    else
 		    {
@@ -1810,19 +1655,12 @@ check_vplot2ras (const int debug1,
 		    
 		    icolno = ras_offset2 * ((ibyte2 >> 7) & 001);
 		    if (icolno < 0 || icolno > MAX_COL)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: Attempt to use out of range color number in bit raster!\n",
+			sf_error("%s, line %d: Attempt to use out of range color number in bit raster!",
 				 name2, *count2);
-			exit (-1);
-		    }
+
 		    if (cstate2->red[icolno] == VPLOTDIFF_NOT_INITIALIZED)
-		    {
-			fprintf (stderr,
-				 "vplotdiff: %s, line %d: Attempt to use undefined color in bit raster!\n",
+			sf_error("%s, line %d: Attempt to use undefined color in bit raster!",
 				 name2, *count2);
-			exit (-1);
-		    }
 		    
 		    for (iline = 0; iline < num_rep2; iline++)
 		    {
@@ -1832,12 +1670,9 @@ check_vplot2ras (const int debug1,
 				(i2 + iline) * xpix2 + irep * num_byte2 + pos2 + ii2;
 			    
 			    if (icount < 0 || icount >= xpix2 * ypix2)
-			    {
-				fprintf (stderr,
-					 "vplotdiff: %s, line %d: Raster line not length promised!\n",
+				sf_error("s, line %d: Raster line not length promised!",
 					 name2, *count2);
-				exit (-1);
-			    }
+
 			    if ((abs
 				 ((int) red1[icount] -
 				  cstate2->red[icolno]) > 1)
@@ -1851,13 +1686,11 @@ check_vplot2ras (const int debug1,
 			    {
 				if (rasmismatch == ENOUGH_ERRORS)
 				{
-				    fprintf (stderr,
-					     "vplotdiff: Further raster color mismatches suppressed.\n");
+				    sf_warning ("Further raster color mismatches suppressed.");
 				}
 				else if (rasmismatch < ENOUGH_ERRORS)
 				{
-				    fprintf (stderr,
-					     "vplotdiff: Bit raster color mismatch\n");
+				    sf_warning ("Bit raster color mismatch");
 				    fprintf (stderr,
 					     "\tFile %s, line %d: color=(%d,%d,%d).\n",
 					     name1,
@@ -1940,7 +1773,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2, "%c", state2->setstyle);
 	    
-	    fprintf (stderr, "vplotdiff: State mismatch: setstyle\n");
+	    sf_warning ("State mismatch: setstyle");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: style=%s from line %d.\n",
 		     file1, count1, command1, string1, state1->setstyle_count);
@@ -1978,7 +1811,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2a, "%d", state2->origin2);
 	    
-	    fprintf (stderr, "vplotdiff: State mismatch: origin\n");
+	    sf_warning ("State mismatch: origin");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: origin=(%s,%s) from line %d.\n",
 		     file1, count1, command1, string1, string1a,
@@ -2017,8 +1850,7 @@ check_state (const char *command1, const char *command2,
 		    ((state1->move1 == VPLOTDIFF_TEXT_INITIALIZED)
 		     || (state1->move2 == VPLOTDIFF_TEXT_INITIALIZED))))
 	    {
-		fprintf (stderr,
-			 "vplotdiff: Coordinate problem: pen position undefined\n");
+		sf_warning ("Coordinate problem: pen position undefined");
 		fprintf (stderr,
 			 "\tFile %s, line %s%s: position undefined from line %d.\n",
 			 file1, count1, command1, state1->move_count);
@@ -2035,8 +1867,7 @@ check_state (const char *command1, const char *command2,
 		    ((state2->move1 == VPLOTDIFF_TEXT_INITIALIZED)
 		     || (state2->move2 == VPLOTDIFF_TEXT_INITIALIZED))))
 	    {
-		fprintf (stderr,
-			 "vplotdiff: Coordinate problem: pen position undefined\n");
+		sf_warning ("Coordinate problem: pen position undefined");
 		fprintf (stderr,
 			 "\tFile %s, line %s%s: position undefined from line %d.\n",
 			 file2, count2, command2, state2->move_count);
@@ -2077,7 +1908,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2a, "%d", state2->move2);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: move\n");
+	    sf_warning ("State mismatch: move");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: move=(%s,%s) from line %d.\n",
 		     file1, count1, command1, string1, string1a,
@@ -2119,7 +1950,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2a, "%d", state2->txalign2);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: txalign\n");
+	    sf_warning ("State mismatch: txalign");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: txalign=(%s,%s) from line %d.\n",
 		     file1, count1, command1, string1, string1a,
@@ -2172,7 +2003,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2b, "%d", state2->txfontprec3);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: txfontprec\n");
+	    sf_warning ("State mismatch: txfontprec");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: txfontprec=(%s,%s,%s) from line %d.\n",
 		     file1, count1, command1, string1, string1a, string1b,
@@ -2203,7 +2034,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2, "%d", state2->overlay);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: overlay\n");
+	    sf_warning ("State mismatch: overlay");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: overlay=%s from line %d.\n",
 		     file1, count1, command1, string1, state1->overlay_count);
@@ -2232,7 +2063,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2, "%d", state2->color);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: color\n");
+	    sf_warning ("State mismatch: color");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: color=%s from line %d.\n",
 		     file1, count1, command1, string1, state1->color_count);
@@ -2260,7 +2091,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2, "%d", state2->fat);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: fat\n");
+	    sf_warning ("State mismatch: fat");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: fat=%s from line %d.\n",
 		     file1, count1, command1, string1, state1->fat_count);
@@ -2320,7 +2151,7 @@ check_state (const char *command1, const char *command2,
 	    else
 		sprintf (string2c, "%d", state2->window4);
 
-	    fprintf (stderr, "vplotdiff: State mismatch: window\n");
+	    sf_warning ("State mismatch: window");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: window=(%s,%s,%s,%s) from line %d.\n",
 		     file1, count1, command1, string1, string1a, string1b,
@@ -2340,7 +2171,7 @@ check_state (const char *command1, const char *command2,
     {
 	if (dstate1->dashon != dstate2->dashon)
 	{
-	    fprintf (stderr, "vplotdiff: State mismatch: dash\n");
+	    sf_warning ("State mismatch: dash");
 	    fprintf (stderr,
 		     "\tFile %s, line %s%s: pattern of %d dashes from line %d.\n",
 		     file1, count1, command1, dstate1->dashon, dstate1->count);
@@ -2363,7 +2194,7 @@ check_state (const char *command1, const char *command2,
 		     (dstate1->dashes[2 * ii + 1] -
 		      dstate2->dashes[2 * ii + 1]) > 1))
 		{
-		    fprintf (stderr, "vplotdiff: State mismatch: dash\n");
+		    sf_warning ("State mismatch: dash");
 		    fprintf (stderr,
 			     "\tFile %s, line %s%s: discrepancy in dash pattern from line %d.\n",
 			     file1, count1, command1, dstate1->count);
@@ -2390,7 +2221,7 @@ check_state (const char *command1, const char *command2,
 /* Largest pattern is different; that's a mismatch right there */
 	if (pstate1->largest != pstate2->largest)
 	{
-	    fprintf (stderr, "vplotdiff: State mismatch: pattern\n");
+	    sf_warning ("State mismatch: pattern");
 	    if (pstate1->largest < 0)
 	    {
 		fprintf (stderr,
@@ -2458,7 +2289,7 @@ check_state (const char *command1, const char *command2,
 			(pstate1->nx[ii] != pstate2->nx[ii]) ||
 			(pstate1->ny[ii] != pstate2->ny[ii]))
 		    {
-			fprintf (stderr, "vplotdiff: State mismatch: pattern\n");
+			sf_warning ("State mismatch: pattern");
 			fprintf (stderr,
 				 "\tFile %s, line %s%s: pattern %d from line %d.\n",
 				 file1, count1, command1, ii, pstate1->count[ii]);
@@ -2477,8 +2308,7 @@ check_state (const char *command1, const char *command2,
 			{
 			    if (pstate1->patbits[ii][jj] != pstate2->patbits[ii][jj])
 			    {
-				fprintf (stderr,
-					 "vplotdiff: State mismatch: pattern\n");
+				sf_warning ("State mismatch: pattern");
 				fprintf (stderr,
 					 "\tFile %s, line %s%s: pattern %d from line %d.\n",
 					 file1, count1, command1, ii,
@@ -2498,7 +2328,7 @@ check_state (const char *command1, const char *command2,
 		else if (pstate1->patbits[ii] != NULL)
 		{
 /* Pattern 1 set, but the other is not. */
-		    fprintf (stderr, "vplotdiff: State mismatch: pattern\n");
+		    sf_warning ("State mismatch: pattern");
 		    fprintf (stderr,
 			     "\tFile %s, line %s%s: pattern %d from line %d set.\n",
 			     file1, count1, command1, ii, pstate1->count[ii]);
@@ -2512,7 +2342,7 @@ check_state (const char *command1, const char *command2,
 		else
 		{
 /* Pattern 2 set, but the other is not. */
-		    fprintf (stderr, "vplotdiff: State mismatch: pattern\n");
+		    sf_warning ("State mismatch: pattern");
 		    fprintf (stderr,
 			     "\tFile %s, line %s%s: pattern %d not set.\n",
 			     file1, count1, command1, ii);
@@ -2579,7 +2409,7 @@ check_state (const char *command1, const char *command2,
 			     cstate2->red[ii], cstate2->green[ii],
 			     cstate2->blue[ii], cstate2->count[ii]);
 
-		fprintf (stderr, "vplotdiff: State mismatch: color table\n");
+		sf_warning ("State mismatch: color table");
 		fprintf (stderr,
 			 "\tFile %s, line %s%s: color table entry %d%s.\n",
 			 file1, count1, command1, ii, string1);
@@ -2593,8 +2423,7 @@ check_state (const char *command1, const char *command2,
 		enough_already++;
 		if (enough_already >= ENOUGH_ERRORS)
 		{
-		    fprintf (stderr,
-			     "vplotdiff: Further color table mismatches suppressed.\n");
+		    sf_warning ("Further color table mismatches suppressed.");
 		    break;
 		}
 	    }
@@ -2725,8 +2554,7 @@ check_vplot2simple (int c,
 		((state1->move1 == VPLOTDIFF_TEXT_INITIALIZED)
 		 || (state1->move2 == VPLOTDIFF_TEXT_INITIALIZED)))
 	    {
-		fprintf (stderr,
-			 "vplotdiff: Coordinate problem: draw from unknown location\n");
+		sf_warning ("Coordinate problem: draw from unknown location");
 		fprintf (stderr,
 			 "\tFile %s, lines %d and %d: draw from (undefined,undefined) to (%d,%d)\n",
 			 name1, state1->move_count, *count1, x1, y1);
@@ -2739,8 +2567,7 @@ check_vplot2simple (int c,
 		((state2->move1 == VPLOTDIFF_TEXT_INITIALIZED)
 		 || (state2->move2 == VPLOTDIFF_TEXT_INITIALIZED)))
 	    {
-		fprintf (stderr,
-			 "vplotdiff: Coordinate problem: draw from unknown location\n");
+		sf_warning ("Coordinate problem: draw from unknown location");
 		fprintf (stderr,
 			 "\tFile %s, lines %d and %d: draw from (undefined,undefined) to (%d,%d)\n",
 			 name2, state2->move_count, *count2, x2, y2);
@@ -2753,7 +2580,7 @@ check_vplot2simple (int c,
 		if ((abs (x1 - x2) > VECTOR_TOL) || 
 		    (abs (y1 - y2) > VECTOR_TOL))
 		{
-		    fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
+		    sf_warning ("Coordinate mismatch: draw");
 		    fprintf (stderr,
 			     "\tFile %s, line %d: draw to (%d,%d)\n",
 			     name1, *count1, x1, y1);
@@ -2780,7 +2607,7 @@ check_vplot2simple (int c,
 			(abs (state1->move1 - state2->move1) > VECTOR_TOL) ||
 			(abs (state1->move2 - state2->move2) > VECTOR_TOL))
 		    {
-			fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
+			sf_warning ("Coordinate mismatch: draw");
 			fprintf (stderr,
 				 "\tFile %s, lines %d and %d: draw from (%d,%d) to (%d,%d)\n",
 				 name1, state1->move_count, *count1,
@@ -2800,7 +2627,7 @@ check_vplot2simple (int c,
 			|| (abs (state1->move1 - x2) > VECTOR_TOL)
 			|| (abs (state1->move2 - y2) > VECTOR_TOL))
 		    {
-			fprintf (stderr, "vplotdiff: Coordinate mismatch: draw\n");
+			sf_warning ("Coordinate mismatch: draw");
 			fprintf (stderr,
 				 "\tFile %s, lines %d and %d: (%d,%d) to (%d,%d)\n",
 				 name1, state1->move_count, *count1,
@@ -2835,7 +2662,7 @@ check_vplot2simple (int c,
 
 	    if (npts1 != npts2)
 	    {
-		fprintf (stderr, "vplotdiff: Command mismatch: pline\n");
+		sf_warning ("Command mismatch: pline");
 		fprintf (stderr,
 			 "\tFile %s, line %d: %c %d\n", name1, *count1, c, npts1);
 		fprintf (stderr,
@@ -2862,7 +2689,7 @@ check_vplot2simple (int c,
 		if ((abs (x1 - x2) > VECTOR_TOL) || 
 		    (abs (y1 - y2) > VECTOR_TOL))
 		{
-		    fprintf (stderr, "vplotdiff: Coordinate mismatch: pline\n");
+		    sf_warning ("Coordinate mismatch: pline");
 		    fprintf (stderr,
 			     "\tFile %s, line %d: %d %d\n", name1, *count1, x1, y1);
 		    fprintf (stderr,
@@ -2899,7 +2726,7 @@ check_vplot2simple (int c,
 
 	    if (npts1 != npts2 || mtype1 != mtype2 || msize1 != msize2)
 	    {
-		fprintf (stderr, "vplotdiff: Command mismatch: pmark\n");
+		sf_warning ("Command mismatch: pmark");
 		fprintf (stderr,
 			 "\tFile %s, line %d: %c %d %d %d\n",
 			 name1, *count1, c, npts1, mtype1, msize1);
@@ -2927,7 +2754,7 @@ check_vplot2simple (int c,
 		if ((abs (x1 - x2) > VECTOR_TOL) || 
 		    (abs (y1 - y2) > VECTOR_TOL))
 		{
-		    fprintf (stderr, "vplotdiff: Coordinate mismatch: pmark\n");
+		    sf_warning ("Coordinate mismatch: pmark");
 		    fprintf (stderr,
 			     "\tFile %s, line %d: %d %d\n", name1, *count1, x1, y1);
 		    fprintf (stderr,
@@ -2957,7 +2784,7 @@ check_vplot2simple (int c,
 
 	    if (npts1 != npts2)
 	    {
-		fprintf (stderr, "vplotdiff: Command mismatch: area\n");
+		sf_warning ("Command mismatch: area");
 		fprintf (stderr,
 			 "\tFile %s, line %d: %c %d\n", name1, *count1, c, npts1);
 		fprintf (stderr,
@@ -2983,7 +2810,7 @@ check_vplot2simple (int c,
 		if ((abs (x1 - x2) > VECTOR_TOL) || 
 		    (abs (y1 - y2) > VECTOR_TOL))
 		{
-		    fprintf (stderr, "vplotdiff: Coordinate mismatch: area\n");
+		    sf_warning ("Coordinate mismatch: area");
 		    fprintf (stderr,
 			     "\tFile %s, line %d: %d %d\n", name1, *count1, x1, y1);
 		    fprintf (stderr,
@@ -3012,7 +2839,7 @@ check_vplot2simple (int c,
 
 	    if (npts1 != npts2)
 	    {
-		fprintf (stderr, "vplotdiff: Command mismatch: oldarea\n");
+		sf_warning ("Command mismatch: oldarea");
 		fprintf (stderr,
 			 "\tFile %s, line %d: %c %d\n", name1, *count1, c, npts1);
 		fprintf (stderr,
@@ -3037,7 +2864,7 @@ check_vplot2simple (int c,
 
 	    if (fat1 != fat2 || xmask1 != xmask2 || ymask1 != ymask2)
 	    {
-		fprintf (stderr, "vplotdiff: Command mismatch: oldarea\n");
+		sf_warning ("Command mismatch: oldarea");
 		fprintf (stderr,
 			 "\tFile %s, line %d: %d %d %d\n",
 			 name1, *count1, fat1, xmask1, ymask1);
@@ -3065,7 +2892,7 @@ check_vplot2simple (int c,
 		if ((abs (x1 - x2) > VECTOR_TOL) || 
 		    (abs (y1 - y2) > VECTOR_TOL))
 		{
-		    fprintf (stderr, "vplotdiff: Coordinate mismatch: oldarea\n");
+		    sf_warning ("Coordinate mismatch: oldarea");
 		    fprintf (stderr,
 			     "\tFile %s, line %d: %d %d\n", name1, *count1, x1, y1);
 		    fprintf (stderr,
@@ -3091,13 +2918,10 @@ check_vplot2simple (int c,
 	    (*count2)++;
 	    break;
 	default:
-	    fprintf (stderr,
-		     "vplotdiff: %s, line %d: unknown command %c (%o octal)\n",
-		     name1, *count1, c, c);
-	    fprintf (stderr,
-		     "vplotdiff: %s, line %d: unknown command %c (%o octal)\n",
-		     name2, *count2, c, c);
-	    exit (-1);
+	    sf_warning ("%s, line %d: unknown command %c (%o octal)",
+			name1, *count1, c, c);
+	    sf_error   ("%s, line %d: unknown command %c (%o octal)",
+			name2, *count2, c, c);
 	    break;
     }
 

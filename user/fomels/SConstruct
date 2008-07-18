@@ -67,7 +67,7 @@ if root:
 
 for prog in Split(
     '''
-    gauss2 gaussshape2 grid1 matmult ntriangle1 predict predict2 pwdsl
+    burg cburg gauss2 gaussshape2 grid1 matmult ntriangle1 predict predict2 pwdsl
     triangle2 trianglen trisl
     '''):
     sources = ['Test' + prog,prog]
