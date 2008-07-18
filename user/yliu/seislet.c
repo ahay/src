@@ -673,7 +673,6 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j, i1;
-    inv=adj;
 
     sf_adjnull (adj,add,nx,ny,x,y);
 

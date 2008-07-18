@@ -11,10 +11,10 @@ infill inmo inmo3 intbin intshow inttest1 inttest2 isin2ang itaupmo
 iwarp linefit lpad map2list migsteep3 modrefl modrefl2 modrefl3 nmo
 noise ofsemb pmig pnmo pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic
 prestolt ptaupmo pveltran radial radon randrefl refer reshape ricker
-shot2cmp shot2cmp3 shotholes shotprop slice smooth smoothder smoothreg
-smoothreg2 spectra spectra2 spicks spline splinefilter stolt stolt2
-stoltstretch stretch taupmo time2depth tlagtoang2d tpow tan2ang tshift
-vscan velmod xlagtoang2d zoeppritz
+shot2cmp shot2cmp3 shotholes shotprop sin slice smooth smoothder
+smoothreg smoothreg2 spectra spectra2 spicks spline splinefilter stolt
+stolt2 stoltstretch stretch taupmo time2depth tlagtoang2d tpow tan2ang
+tshift vscan velmod xlagtoang2d zoeppritz
 '''
 
 # shot2cmp3

@@ -19,14 +19,15 @@
 #include <rsf.h>
 
 #include "sin.h"
+#include "freqlet.h"
 
 int main(int argc, char* argv[])
 {
-    int i1, n1, i2, n2, niter;
+    int i1, n1, i2, n2, niter, iter;
     bool adj, verb, *known;
-    char *oper;
-    sf_complex *z0, *x, *y;
-    float *m=NULL;
+    char *oper, *type;
+    sf_complex *z0, *x, *y, *y2=NULL;
+    float *m=NULL, perc;
     sf_coperator coper=NULL;
     sf_file in, out, root, mask=NULL;
 
@@ -63,6 +64,14 @@ int main(int argc, char* argv[])
 	case 'c':
 	    coper = sin_construct;
 	    break;
+	case 't':
+	    coper = freqlet_lop;
+
+	    if (NULL == (type = sf_getstring("type"))) type="haar";
+	    /* [haar,linear,biortho] type of the seislet transform */
+
+	    freqlet_init(n1, true, true, type[0]);
+	    break;
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
     }
@@ -81,6 +90,13 @@ int main(int argc, char* argv[])
 	    m = sf_floatalloc(n1);
 	 
 	    switch (oper[0]) {
+		case 't':
+		    y2 = sf_complexalloc(n1);
+
+		    if (!sf_getfloat("perc",&perc)) perc=50.;
+		    /* percentage for thresholding (used when oper=t and niter > 0) */
+
+		    sf_sharpen_init(n1,perc);
 		case 'd':
 		    for (i1=0; i1 < n1; i1++) {
 			x[i1] = 0.;
@@ -94,7 +110,11 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < n2; i2++) {
-	sin_init(z0[i2]);
+	if ('t'==oper[0]) {
+	    freqlet_setz(z0[i2]);
+	} else {
+	    sin_init(z0[i2]);
+	}
 
 	if (niter > 0) {
 	    if (NULL != mask) { /* missing data interpolation */
@@ -114,6 +134,18 @@ int main(int argc, char* argv[])
 			sf_csolver_prec(sf_cmask_lop, sf_ccgstep, coper, 
 					n1, n1, n1, y, y, niter, 0.,
 					"verb", verb,"end");
+			break;
+		    case 't':
+			for (iter=0; iter < niter; iter++) {
+			    coper(false,false,n1,n1,x,y2);
+			    for (i1=0; i1 < n1; i1++) {
+				if (known[i1]) y2[i1]=y[i1];
+			    }
+			    coper(true,false,n1,n1,x,y2);
+			    sf_csharpen(x);
+			    sf_cweight_apply(n1,x);
+			}
+			coper(false,false,n1,n1,x,y);
 			break;
 		}
 	    } else {
