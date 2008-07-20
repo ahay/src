@@ -714,7 +714,7 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	}
     }
 
-    transform(!adj);
+    transform(adj);
 
     if (adj) {
 	if (unit) {

@@ -22,11 +22,11 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i3, n3; 
-    float *mm, *dd, **pp, eps;
+    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
+    float *mm, *dd, *dd2=NULL, **pp, eps, perc1, perc2;
     char *type;
-    bool verb, *known, prec;
-    sf_file in, out, dip, mask;
+    bool verb, *known;
+    sf_file in, out, dip, mask=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -49,19 +49,23 @@ int main(int argc, char* argv[])
     if (NULL == (type=sf_getstring("type"))) type="biorthogonal";
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
-    if (!sf_getbool("prec",&prec)) prec = false;
-    /* if y, apply preconditioning */
-
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
 
+    if (!sf_getfloat("perc1",&perc1)) perc1=99.;
+    /* percentage for thresholding */
+    
+    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
+    /* percentage for output */
+   
     pp = sf_floatalloc2(n1,n2);
-
+    
     mm = sf_floatalloc(n12);
     dd = sf_floatalloc(n12);
+    dd2 = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
 
     if (NULL != sf_getstring ("mask")) {
@@ -76,51 +80,59 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
-    if (prec) {
-        /* initialize inverse seislet transform */
-
-	sf_mask_init(known);
-    } else {
-	seislet_init(n1,n2,false,true,eps,type[0]);
-	seislet_set(pp);
-    }
+    sf_sharpen_init(n12,perc1);
+    seislet_init(n1,n2,true,true,eps,type[0]);
+    seislet_set(pp);
+    
 
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
 
-	sf_floatread(mm,n12,in);
+	sf_floatread(dd,n12,in);
 
 	if (NULL != mask) {
-	    sf_floatread(dd,n12,mask);
+	    sf_floatread(mm,n12,mask);
 
 	    for (i=0; i < n12; i++) {
-		known[i] = (bool) (dd[i] != 0.);
-		dd[i] = 0.;
+		known[i] = (bool) (mm[i] != 0.);
+		mm[i] = 0.;
 	    }
 	} else {
 	    for (i=0; i < n12; i++) {
-		known[i] = (bool) (mm[i] != 0.);
-		dd[i] = 0.;
+		known[i] = (bool) (dd[i] != 0.);
+		mm[i] = 0.;
 	    }
 	}
 
 	sf_floatread(pp[0],n12,dip);
 	
-	if (prec) {
-//	    sf_solver_prec(sf_mask_lop, sf_cgstep, predict_lop, 
-//			   n12, n12, n12, 
-//			   mm, mm, niter, 0.,"verb", verb,"end");
-	} else {
-	    sf_solver(seislet_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		      "known", known, "x0", mm, "verb", verb, "end");
+	for (iter=0; iter < niter-1; iter++) {
+	    if (verb)
+		sf_warning("iteration %d of %d",iter+1,niter);
+	    seislet_lop(false,false,n12,n12,mm,dd2);
+	    for (i1=0; i1 < n12; i1++) {
+		if (known[i1]) dd2[i1]=dd[i1];
+	    }
+	    seislet_lop(true,false,n12,n12,mm,dd2);
+	    sf_sharpen(mm);
+	    sf_weight_apply(n12,mm);
 	}
 	
-	sf_cgstep_close();
+	if (verb)
+	    sf_warning("iteration %d of %d",niter,niter);
+	seislet_lop(false,false,n12,n12,mm,dd2);
+	for (i1=0; i1 < n12; i1++) {
+	    if (known[i1]) dd2[i1]=dd[i1];
+	}
+	sf_sharpen_init(n12,perc2);
+	seislet_lop(true,false,n12,n12,mm,dd2);
+	sf_sharpen(mm);
+	sf_weight_apply(n12,mm);
+	seislet_lop(false,false,n12,n12,mm,dd2);
 	
-	sf_floatwrite (mm,n12,out);
+	sf_floatwrite (dd2,n12,out);
     }
-    
-    
+       
     exit(0);
 }
 
