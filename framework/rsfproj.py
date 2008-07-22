@@ -348,7 +348,7 @@ class Project(Environment):
                     skip=bigjobs*w+(i-bigjobs)*chunk
                 
                 for j in split[2]:
-                    source = sfiles[j] + '__' + str(i)
+                    source = sfiles[j] + '_' + str(i)
                     par_sfiles[j] = source
 
                     self.Flow(source,sfiles[j],
