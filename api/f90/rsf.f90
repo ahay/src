@@ -3,11 +3,20 @@
 module RSF
   implicit none
 
+! Set kinds to support 64 bits pointers and file offsets
+! This corresponds to the definition in fortran.c
+! This might need to be more general. -- JTK
+  integer, parameter :: PTRKIND=8
+  integer, parameter :: OFFKIND=8
+! External string functions cannot return LEN=* strings
+! Choose something large enough for most functions -- JTK
+  integer, parameter :: FSTRLEN=256
+
   integer, parameter :: sf_uchar=0, sf_char=1, sf_int=2, sf_float=3, sf_complex=4
 
   type file
      private
-     integer tag
+     integer(kind=PTRKIND) :: tag
   end type file
   
   type, public :: axa
@@ -102,7 +111,7 @@ contains
     integer,     intent (in) :: dim
     optional                 :: dim
 
-    integer sf_filesize, sf_leftsize
+    integer(kind=OFFKIND) sf_filesize, sf_leftsize
     external sf_filesize, sf_leftsize
 
     if (present (dim)) then
@@ -117,7 +126,7 @@ contains
     character (len=*), intent (in) :: tag
     optional                       :: tag
 
-    integer sf_input
+    integer(kind=PTRKIND) sf_input
     external sf_input
 
     if (present (tag)) then
@@ -132,7 +141,7 @@ contains
     character (len=*), intent (in) :: tag
     optional                       :: tag
 
-    integer sf_output
+    integer(kind=PTRKIND) sf_output
     external sf_output
 
     if (present (tag)) then
@@ -281,7 +290,7 @@ contains
     character (len = *), intent (out) :: value
     character (len = *), intent (in), optional :: default
 
-    character sf_histstring
+    character(len=FSTRLEN) sf_histstring
     external sf_histstring
     
     if (present (default)) value = default
@@ -503,7 +512,7 @@ contains
     character (len = *), intent (out) :: value
     optional                          :: default
 
-    character sf_getstring
+    character(len=FSTRLEN) sf_getstring
     external sf_getstring
 
     value = sf_getstring(name)
