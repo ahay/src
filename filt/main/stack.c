@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     off_t i, n, i3, n3;
     sf_file in, out;
     char key1[7];
-    bool norm, rms, min, max;
+    bool norm, rms, min, max, prod;
     float *trace, *stack;
     double *dstack;
     sf_datatype type;
@@ -75,9 +75,12 @@ int main(int argc, char* argv[])
     /* If y, find minimum instead of stack.  Ignores rms and norm. */
     if (!sf_getbool("max",&max)) max = false;
     /* If y, find maximum instead of stack.  Ignores rms and norm. */
+    if (!sf_getbool("prod",&prod)) prod = false;
+    /* If y, find product instead of stack.  Ignores rms and norm. */
     
-    if (min || max) { rms = false; norm = false; }
-    if (min && max) sf_error("Cannot have both min=y and max=y.");
+    if (min || max || prod) { rms = false; norm = false; }
+    if ((min && max) || (min && prod) || (max && prod)) 
+	sf_error("Cannot have min=y max=y prod=y");
 
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
@@ -89,7 +92,9 @@ int main(int argc, char* argv[])
             if (min) for (i=0; i<n; i++) stack[i] =  FLT_MAX;
             if (max) for (i=0; i<n; i++) stack[i] = -FLT_MAX;
         } else {
-	    memset (dstack,0,n*sizeof(double));
+	    for (i=0; i < n; i++) {
+		dstack[i] = prod? 1.0:0.0;
+	    }
 	}
         if (norm) memset (fold,0,n*sizeof(int));
         
@@ -99,7 +104,9 @@ int main(int argc, char* argv[])
                 if (min || max) {
                     if (min) stack[i] = SF_MIN(stack[i],trace[i]);
                     if (max) stack[i] = SF_MAX(stack[i],trace[i]);
-                } else {
+                } else if (prod) {
+		    dstack[i] *= trace[i];
+		} else {
 		    dstack[i] += rms? (double) trace[i]*trace[i]: trace[i];
 		}
                 if (norm && (0.0 != trace[i])) fold[i]++; 

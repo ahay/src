@@ -5,6 +5,12 @@
 %{
 #include <stdio.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+
 #include <rsf.h>
 
 #define SWIG_FILE_WITH_INIT
@@ -214,7 +220,7 @@ free ((char*) $1);
 
 typedef struct sf_File *sf_file;
 
-typedef enum {SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
+typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 
 sf_file sf_input (/*@null@*/ char* tag);
@@ -266,8 +272,49 @@ bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
 int sf_filedims (sf_file file, /*@out@*/ int *n);
-int sf_filesize (sf_file file);
-int sf_leftsize (sf_file file, int dim);
+off_t sf_filesize (sf_file file);
+off_t sf_leftsize (sf_file file, int dim);
 void sf_cp(sf_file in, sf_file out);
 void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 
+%inline %{
+    PyObject* rsf_array(sf_file file)
+    {
+	PyObject *array;
+	char *filename, *data;
+	int fd, nd, n[SF_MAX_DIM], type;
+	struct stat statbuf;
+	
+	/* memory map */
+	if (NULL == (filename = sf_histstring(file,"in"))) return NULL;
+	if (0 > (fd = open(filename,O_RDONLY))) return NULL;
+	if (0 > (fstat(fd,&statbuf))) return NULL;
+	data = mmap(0,statbuf.st_size,PROT_READ,MAP_FILE | MAP_SHARED,fd,0);
+	
+	/* dimensions and type */
+	nd = sf_filedims (file, n);
+	switch (sf_gettype(file)) {
+	    case SF_FLOAT:
+		type = PyArray_FLOAT;
+		break;
+	    case SF_INT:
+		type = PyArray_INT;
+		break;
+	    case SF_COMPLEX:
+		type = PyArray_CFLOAT;
+		break;
+	    case SF_CHAR:
+		type = PyArray_CHAR;
+		break;
+	    case SF_UCHAR:
+		type = PyArray_UBYTE;
+		break;
+	    default:
+		type = PyArray_FLOAT;
+		break;
+	}
+	
+	array = PyArray_FromDimsAndData(nd,n,type,data);
+	return array;
+    }
+%}

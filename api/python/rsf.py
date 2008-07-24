@@ -25,7 +25,7 @@ if not datapath:
         datapath = './' # the ultimate fallback
 tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
 
-class Par:
+class Par(object):
     def __init__(self,argv=sys.argv):
         c_rsf.sf_init(len(argv),argv)
         self.prog = c_rsf.sf_getprog()
@@ -101,6 +101,8 @@ class File(object):
             else:
                 raise TypeError, 'No file "%s" ' % self.tag
         return mul
+    def __array__(self):
+        return c_rsf.rsf_array(self.file)
     def size(self,dim=0):
         return c_rsf.sf_leftsize(self.file,dim)
     def settype(self,type):
