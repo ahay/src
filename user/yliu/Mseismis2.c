@@ -18,13 +18,13 @@
 */
 
 #include <rsf.h>
-#include "seislet.h"
+#include "seisletoper.h"
 
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
-    float *mm, *dd, *dd2=NULL, **pp, eps, perc1, perc2;
-    char *type;
+    float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc1, perc2;
+    char *type, *oper;
     bool verb, *known;
     sf_file in, out, dip, mask=NULL;
 
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     n12 = n1*n2;
     n3 = sf_leftsize(in,2);
 
-    if (!sf_getint("niter",&niter)) niter=100;
+    if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
 
     if (!sf_getint("order",&nw)) nw=1;
@@ -49,24 +49,21 @@ int main(int argc, char* argv[])
     if (NULL == (type=sf_getstring("type"))) type="biorthogonal";
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
+    if (NULL == (oper=sf_getstring("oper"))) oper="thresholding";
+    /* [destruction,preconditioning,thresholding] method, the default is thresholding  */
+
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
 
-    if (!sf_getfloat("perc1",&perc1)) perc1=99.;
-    /* percentage for thresholding */
-    
-    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
-    /* percentage for output */
-   
+
     pp = sf_floatalloc2(n1,n2);
-    
     mm = sf_floatalloc(n12);
     dd = sf_floatalloc(n12);
-    dd2 = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
+    m = sf_floatalloc(n12);
 
     if (NULL != sf_getstring ("mask")) {
 	mask = sf_input("mask");
@@ -74,63 +71,107 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
-    if (NULL != sf_getstring ("mask")) {
-	mask = sf_input("mask");
+    if (NULL != mask) {
+	sf_floatread(m,n12,mask);
+	
+	for (i=0; i < n12; i++) {
+	    known[i] = (bool) (m[i] != 0.);
+	}
     } else {
-	mask = NULL;
+	for (i=0; i < n12; i++) {
+	    known[i] = (bool) (dd[i] != 0.);
+	}
     }
-
-    sf_sharpen_init(n12,perc1);
-    seislet_init(n1,n2,true,true,eps,type[0]);
-    seislet_set(pp);
     
+    switch (oper[0]) {
+	case 'd':
+	    for (i1=0; i1 < n12; i1++) {
+		mm[i1] = 0.;
+	    }
+	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    break;
+	case 'p':
+	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    sf_mask_init(known);
+	    break;
+
+	case 't':
+	    if (!sf_getfloat("perc1",&perc1)) perc1=99.;
+	    /* percentage for thresholding */
+	    
+	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
+	    /* percentage for output */
+	    
+	    sf_sharpen_init(n12,perc1);
+	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    dd2 = sf_floatalloc(n12);
+	    break;
+	default:
+	    sf_error("Unknown operator \"%s\"",oper);
+
+    }
+
+    seislet_set(pp);
+    sf_floatread(pp[0],n12,dip);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
 
 	sf_floatread(dd,n12,in);
 
-	if (NULL != mask) {
-	    sf_floatread(mm,n12,mask);
 
-	    for (i=0; i < n12; i++) {
-		known[i] = (bool) (mm[i] != 0.);
-		mm[i] = 0.;
-	    }
-	} else {
-	    for (i=0; i < n12; i++) {
-		known[i] = (bool) (dd[i] != 0.);
-		mm[i] = 0.;
-	    }
-	}
+        switch (oper[0]) {
+	case 'd':
+          /* Seislet destruct */
+	    sf_solver(seislet_destruct, sf_cgstep, n12, n12, dd, mm, niter,
+		      "known", known, "x0", dd, "verb", verb, "end"); 
+	    for(i=0; i < n12; i++) {
+		if ( !known[i] ) {
+		    dd[i] = - dd[i];
+		}
+	    } 
+	    break;
+	case 'p': 
+          /* Seislet construct */
+	    sf_solver_prec(sf_mask_lop, sf_cgstep, seislet_construct, n12, n12, n12, dd, dd, niter,
+			   0., "verb", verb, "end"); 
+	    for(i=0; i < n12; i++) {
+		if ( !known[i] ) {
+		    dd[i] = - dd[i];
+		}
+	    } 
+	    break;
 
-	sf_floatread(pp[0],n12,dip);
-	
-	for (iter=0; iter < niter-1; iter++) {
+	case 't':
+          /* Thresholding for shaping */
+	    for (iter=0; iter < niter-1; iter++) {
+		if (verb)
+		    sf_warning("iteration %d of %d",iter+1,niter);
+		seislet_lop(false,false,n12,n12,mm,dd2);
+		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd2[i1]=dd[i1];
+		}
+		seislet_lop(true,false,n12,n12,mm,dd2);
+		sf_sharpen(mm);
+		sf_weight_apply(n12,mm);
+	    }
+	    
 	    if (verb)
-		sf_warning("iteration %d of %d",iter+1,niter);
+		sf_warning("iteration %d of %d",niter,niter);
 	    seislet_lop(false,false,n12,n12,mm,dd2);
 	    for (i1=0; i1 < n12; i1++) {
 		if (known[i1]) dd2[i1]=dd[i1];
 	    }
+	    sf_sharpen_init(n12,perc2);
 	    seislet_lop(true,false,n12,n12,mm,dd2);
 	    sf_sharpen(mm);
 	    sf_weight_apply(n12,mm);
-	}
-	
-	if (verb)
-	    sf_warning("iteration %d of %d",niter,niter);
-	seislet_lop(false,false,n12,n12,mm,dd2);
-	for (i1=0; i1 < n12; i1++) {
-	    if (known[i1]) dd2[i1]=dd[i1];
-	}
-	sf_sharpen_init(n12,perc2);
-	seislet_lop(true,false,n12,n12,mm,dd2);
-	sf_sharpen(mm);
-	sf_weight_apply(n12,mm);
-	seislet_lop(false,false,n12,n12,mm,dd2);
-	
-	sf_floatwrite (dd2,n12,out);
+	    seislet_lop(false,false,n12,n12,mm,dd);
+	    
+	    break;
+	} 
+	sf_cgstep_close();
+	sf_floatwrite (dd,n12,out);
     }
        
     exit(0);

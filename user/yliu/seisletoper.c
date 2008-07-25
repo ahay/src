@@ -1,4 +1,4 @@
-/* Seislet transform for data interpolation */
+/* Seislet operator for data interpolation */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "seislet.h"
+#include "seisletoper.h"
 #include "predict.h"
 
 static int nt, n;
@@ -745,5 +745,181 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 }
 
+void seislet_destruct(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< linear operator >*/
+{
+    int it, i, j, i1;
+    inv=!adj;
 
-/* 	$Id: seislet.c  */
+    sf_adjnull (adj,add,nx,ny,x,y);
+
+    if (adj) {
+	for (i1=0; i1 < n; i1++) {
+	    t[0][i1] = y[i1];
+	}
+	it = n;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    if (it < ny) {
+			t[i+j][i1]=y[it];
+			it++;
+		    } else {
+			t[i+j][i1]=0.;
+		    }
+		}
+	    }	    	    
+	}
+
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    if (inv) {
+			t[it][i1] /= w[it];
+		    } else {
+			t[it][i1] *= w[it];
+		    }
+		}
+	    }
+	}
+
+    } else {
+	for (it=0; it < nx; it++) {
+	    t[0][it] = x[it];
+	}
+	for (it=nx; it < n*nt; it++) {
+	    t[0][it] = 0.;
+	}
+
+    }
+
+    transform(!adj);
+
+    if (adj) {
+	for (it=0; it < nx; it++) {
+	    x[it] += t[0][it];
+	}
+    } else {
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    t[it][i1] *= w[it];
+		}
+	    }
+	}
+
+	for (i1=0; i1 < n; i1++) {
+	    y[i1] += t[0][i1];
+	}
+	it = n;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    y[it] += t[i+j][i1];
+		    it++;
+		    if (it >= ny) return;
+		}
+	    }	    	    
+	}
+
+    }
+}
+
+
+
+
+void seislet_construct(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< linear operator >*/
+{
+    int it, i, j, i1;
+    inv=!adj; 
+
+    sf_adjnull (adj,add,nx,ny,x,y);
+
+    if (adj) {
+	for (it=0; it < nx; it++) {
+	    t[0][it] = y[it];
+	}
+	for (it=nx; it < n*nt; it++) {
+	    t[0][it] = 0.;
+	}
+    } else {
+	for (i1=0; i1 < n; i1++) {
+	    t[0][i1] = x[i1];
+	}
+	it = n;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    if (it < ny) {
+			t[i+j][i1]=x[it];
+			it++;
+		    } else {
+			t[i+j][i1]=0.;
+		    }
+		}
+	    }	    	    
+	}
+
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    if (inv) {
+			t[it][i1] /= w[it];
+		    } else {
+			t[it][i1] *= w[it];
+		    }
+		}
+	    }
+	}
+    }
+
+    transform(adj);
+
+    if (adj) {
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		for (i1=0; i1 < n; i1++) {
+		    t[it][i1] *= w[it];
+		}
+	    }
+	}
+
+	for (i1=0; i1 < n; i1++) {
+	    x[i1] += t[0][i1];
+	}
+	it = n;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    x[it] += t[i+j][i1];
+		    it++;
+		    if (it >= ny) return;
+		}
+	    }	    	    
+	}
+    } else {
+	for (it=0; it < nx; it++) {
+	    y[it] += t[0][it];
+	}
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 	$Id$    */

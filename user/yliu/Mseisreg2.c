@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 #include "seisreg2.h"
-#include "seislet.h"
+#include "seisletoper.h"
 
 int main(int argc, char* argv[])
 {
@@ -138,6 +138,7 @@ int main(int argc, char* argv[])
 	    for (i=0; i < ncycle; i++) {
 		sf_conjgrad(NULL,seisreg_lop,sf_weight_lop,q,mm,dd,niter);
 		sf_sharpen(mm);
+		sf_weight_apply(nt*nm,mm);
 	    } 
 	} else {
 	    /* do inversion if ncycle > 0 */
@@ -155,7 +156,7 @@ int main(int argc, char* argv[])
 	}
 
         /* reconstruct regular data */
-	seislet_lop(true,false,nt*nm,nt*nm,output,mm);
+	seislet_construct(false,false,nt*nm,nt*nm,mm,output);
 	sf_floatwrite (output,nt*nm,out);
     }
     exit(0);

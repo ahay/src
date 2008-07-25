@@ -19,7 +19,7 @@
 #include <rsf.h>
 
 #include "seisreg2.h"
-#include "seislet.h"
+#include "seisletoper.h"
  
 static int nm, nt, nd, ntm;
 static float *mod, *dat, *temp;
@@ -56,13 +56,11 @@ void seisreg_lop(bool adj, bool add, int nx, int ny,
 /*< linear operator >*/
 {
     int id, im, it;
-    bool adj1;
     
     if (ny != nd*nt) sf_error("%s: wrong data size: %d != %d",__FILE__,ny,nd*nt);
     if (nx != nm*nt) sf_error("%s: wrong data size: %d != %d",__FILE__,nx,nm*nt);
 
     sf_adjnull (adj,add,nx,ny,x,y);
-    adj1=!adj;
 
     if (adj) {
 	for (it=0; it < nt; it++) { /* loop over time slices */
@@ -72,13 +70,13 @@ void seisreg_lop(bool adj, bool add, int nx, int ny,
 	    /* apply interpolation */
 	    sf_int1_lop(adj,false,nm,nd,mod,dat);
 	    for (im=0; im < nm; im++) {
-		temp[im*nt+it] += mod[im];
+		temp[im*nt+it] = mod[im];
 	    }
 	}
-	seislet_lop(adj1,false,ntm,ntm,temp,x);
+	seislet_construct(adj,false,ntm,ntm,x,temp);
 
     } else {
-	seislet_lop(adj1,false,ntm,ntm,temp,x);
+	seislet_construct(adj,false,ntm,ntm,x,temp);
 	for(it=0; it < nt; it++) { /* loop over time slices */
 	    for (im=0; im < nm; im++) {
 		mod[im] = temp[im*nt+it];
@@ -86,7 +84,7 @@ void seisreg_lop(bool adj, bool add, int nx, int ny,
 	    /* apply interpolation */
 	    sf_int1_lop(adj,false,nm,nd,mod,dat);
 	    for (id=0; id < nd; id++) {
-		y[id*nt+it] += dat[id];
+		y[id*nt+it] = dat[id];
 	    }
 	} 
     }
