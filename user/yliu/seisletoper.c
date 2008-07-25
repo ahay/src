@@ -825,9 +825,6 @@ void seislet_destruct(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 }
 
-
-
-
 void seislet_construct(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
@@ -905,21 +902,5 @@ void seislet_construct(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* 	$Id$    */
