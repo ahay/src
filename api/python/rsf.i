@@ -272,8 +272,8 @@ bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
 int sf_filedims (sf_file file, /*@out@*/ int *n);
-off_t sf_filesize (sf_file file);
-off_t sf_leftsize (sf_file file, int dim);
+int sf_filesize (sf_file file);
+int sf_leftsize (sf_file file, int dim);
 void sf_cp(sf_file in, sf_file out);
 void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 
@@ -287,7 +287,7 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 	
 	/* memory map */
 	if (NULL == (filename = sf_histstring(file,"in"))) return NULL;
-	if (0 > (fd = open(filename,O_RDONLY))) return NULL;
+	if (0 > (fd = open(filename,O_RDWR))) return NULL;
 	if (0 > (fstat(fd,&statbuf))) return NULL;
 	data = mmap(0,statbuf.st_size,PROT_READ,MAP_FILE | MAP_SHARED,fd,0);
 	

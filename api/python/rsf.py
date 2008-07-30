@@ -2,29 +2,6 @@ import os, sys, types, tempfile, re
 import c_rsf
 import numpy
 
-#      a=100 Xa=5
-#      float=5.625 cc=fgsg
-#      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
-
-datapath = os.environ.get('DATAPATH')
-if not datapath:
-    try:
-        pathfile = open('.datapath','r')
-    except:
-        try:
-            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
-        except:
-            pathfile = None
-    if pathfile:
-        for line in pathfile.readlines():
-            check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
-            if check:
-                datapath = check.group(1)
-        pathfile.close()
-    if not datapath:
-        datapath = './' # the ultimate fallback
-tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
-
 class Par(object):
     def __init__(self,argv=sys.argv):
         c_rsf.sf_init(len(argv),argv)
@@ -65,79 +42,123 @@ class Par(object):
 # default parameters for interactive runs
 par = Par(['self','-'])
 
-datatype = ['uchar','char','int','float','complex']
-dataform = ['ascii','xdr','native']
+class Temp(str):
+    'Temporaty file name'
+    datapath = os.environ.get('DATAPATH')
+    if not datapath:
+        try:
+            pathfile = open('.datapath','r')
+        except:
+            try:
+                pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+            except:
+                pathfile = None
+        if pathfile:
+            for line in pathfile.readlines():
+                check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
+                if check:
+                    datapath = check.group(1)
+            pathfile.close()
+        if not datapath:
+            datapath = './' # the ultimate fallback
+    tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
+    def __new__(cls):
+        return str.__new__(cls,tempfile.mktemp(dir=Temp.tmpdatapath))
 
 class File(object):
+    type = ['uchar','char','int','float','complex']
+    form = ['ascii','xdr','native']
     def __init__(self):
         'Constructor'
         if not self.file:
             raise TypeError, 'Use Input or Output instead of File'
-        self.type = datatype[c_rsf.sf_gettype(self.file)]
-        self.form = dataform[c_rsf.sf_getform(self.file)]
+        self.type = File.type[c_rsf.sf_gettype(self.file)]
+        self.form = File.form[c_rsf.sf_getform(self.file)]
         self.narray = None
+    def __str__(self):
+        'String representation'
+        if self.tag:
+            tag = str(self.tag)
+            if os.path.isfile(tag):
+                return tag
+            else:
+                raise TypeError, 'Cannot find "%s" ' % tag
+        else:
+            raise TypeError, 'Cannot find tag'
     def __del__(self):
         'Destructor'
         if self.temp:
-            os.system('sfrm ' + self.tag)
-    def __str__(self):
-        'String representation'
-        if os.path.isfile(self.tag):
-            sfin = os.popen('sfin ' + self.tag)
-            sfin_str = sfin.read()
-            sfin.close()
-            return sfin_str
-        else:
-            raise TypeError, 'Cannot find "%s" ' % (self.tag)
+            os.system('sfrm %s' % self)
+    def sfin(self):
+        'Output of sfin'
+        p = os.popen('sfin %s' % self)
+        p_str = p.read()
+        p.close()
+        print p_str
     def attr(self):
-        if os.path.isfile(self.tag):
-            sfin = os.popen('sfattr < ' + self.tag)
-            sfin_str = sfin.read()
-            sfin.close()
-            return sfin_str
-        else:
-            raise TypeError, 'Cannot find "%s" ' % (self.tag)
+        'Output of sfattr'
+        p = os.popen('sfattr < %s' % self)
+        p_str = p.read()
+        p.close()
+        print p_str
     def __add__(self,other):
         'Overload addition'
-        add = tempfile.mktemp(dir=tmpdatapath)
-        if os.path.isfile(self.tag) and os.path.isfile(other.tag):
-            if os.system('sfadd %s %s > %s' % (self.tag,other.tag,add)):
-                raise TypeError, 'Could not run sfadd'
-        else:
-            raise TypeError, 'Cannot add %s and %s' % (self.tag,other.tag)
+        add = Temp()
+        if os.system('sfadd %s %s > %s' % (self,other,add)):
+            raise TypeError, 'Could not run sfadd'
         return Input(add)
     def __mul__(self,other):
         'Overload multiplication'
-        mul = tempfile.mktemp(dir=tmpdatapath)
+        mul = Temp()
         if isinstance(other,File):
-            if os.path.isfile(self.tag) and os.path.isfile(other.tag):
-                if os.system('sfadd mode=p %s %s > %s' % 
-                             (self.tag,other.tag,mul)):
-                    raise TypeError, 'Could not run sfadd'
-            else:
-                raise TypeError, \
-                    'Cannot multiply %s and %s' % (self.tag,other.tag)
+            if os.system('sfadd mode=p %s %s > %s' % 
+                         (self,other,mul)):
+                raise TypeError, 'Could not run sfadd'
         else:
             try:
                 fmul = float(other)
             except:
                 raise TypeError, 'Cannot cast to float'
-            if os.path.isfile(self.tag):
-                if os.system('sfscale < %s dscale=%g > %s' % 
-                             (self.tag,fmul,mul)):
-                    raise TypeError, 'Could not run sfscale'
-            else:
-                raise TypeError, 'No file "%s" ' % self.tag
+
+            if os.system('sfscale < %s dscale=%g > %s' % 
+                         (self,fmul,mul)):
+                raise TypeError, 'Could not run sfscale'
         return Input(mul)
-    def __array__(self):
-        if not self.narray:
+    def __div__(self,other):
+        'Overload division'
+        mul = Temp()
+        if isinstance(other,File):
+            if os.system('sfadd mode=d %s %s > %s' % 
+                         (self,other,mul)):
+                raise TypeError, 'Could not run sfadd'
+        else:
+            try:
+                fmul = float(other)
+            except:
+                raise TypeError, 'Cannot cast to float'
+            if os.system('sfscale < %s dscale=%g > %s' % 
+                         (self,1.0/fmul,mul)):
+                raise TypeError, 'Could not run sfscale'
+        return Input(mul)
+    def __array__(self,context=None):
+        if None == self.narray:
             self.narray = c_rsf.rsf_array(self.file)
         return self.narray
+    def __array_wrap__(self,array,context=None):
+        return Input(array)
+    def __getitem__(self,i):
+        array = self.__array__()
+        return array[i]
+    def __setitem__(self,index,value):
+        array = self.__array__()
+        array.__setitem__(index,value)
     def size(self,dim=0):
         return c_rsf.sf_leftsize(self.file,dim)
+    def __len__(self):
+        return self.size()
     def settype(self,type):
-        for i in xrange(len(datatype)):
-            if type == datatype[i]:
+        for i in xrange(len(File.type)):
+            if type == File.type[i]:
                 self.type = type
                 c_rsf.sf_settype (self.file,i)
     def setformat(self,format):
@@ -189,6 +210,7 @@ class Input(File):
         if isinstance(tag,File):
             # copy file
             self.__init__(tag.tag)
+            self.old = tag # to increase refcount
         elif isinstance(tag,numpy.ndarray):
             # numpy array
             out = Output(None)
@@ -214,14 +236,14 @@ class Input(File):
 class Output(File):
     def __init__(self,tag='out',src=None):
         if not tag:
-            self.tag = tempfile.mktemp(dir=tmpdatapath)
+            self.tag = Temp()
             self.temp = True
         else:
             self.tag = tag
             self.temp = False
         self.file = c_rsf.sf_output(self.tag)
         if src: # clone source file
-            c_rsf.sf_settype(self.file,datatype.index(src.type))
+            c_rsf.sf_settype(self.file,File.type.index(src.type))
             c_rsf.sf_fileflush(self.file,src.file)
         File.__init__(self)
     def write(self,data):
@@ -243,22 +265,35 @@ class Filter(object):
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
                 self.prog = prog
-    def __call__(self,inp=None,pars={}):
-        out = Output(None)
-        params = ' '.join([key+'='+str(val) for (key,val) in pars.items()])
+    def __call__(self,inp,**kw):
+        out = Temp()
+        params = ' '.join([key+'='+str(val) for (key,val) in kw.items()])
         if inp:
-            if os.isfile(inp.tag):
-                command = '< %s %s %s > %s' % (inp.tag,self.prog,params,out.tag)
-            else:
-                raise TypeError, 'No file "%s" ' % inp.tag
+            command = '< %s %s %s > %s' % (inp,self.prog,params,out)
         else:
-            command = '%s %s > %s' % (self.prog,params,out.tag)
+            command = '%s %s > %s' % (self.prog,params,out)
         if os.system(command):
             raise TypeError, 'Could not run %s' % self.prog
-        return out                                   
+        return Input(out)
+
+class Wrap(object):
+     def __init__(self, wrapped):
+         self.wrapped = wrapped
+     def __getattr__(self, name):
+         try:
+             return getattr(self.wrapped, name)
+         except AttributeError:
+             return Filter(name)
+
+sys.modules[__name__] = Wrap(sys.modules[__name__])
+
 
 if __name__ == "__main__":
     import numpy
+
+#      a=100 Xa=5
+#      float=5.625 cc=fgsg
+#      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
     
     # Testing getpar
     par = Par(["prog","a=5","b=as","a=100","par=%s" % sys.argv[0]])
