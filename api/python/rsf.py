@@ -40,7 +40,7 @@ class Par(object):
         return self.__gets(c_rsf.getbools,key,num,default)
 
 # default parameters for interactive runs
-par = Par(['self','-'])
+par = Par(['python','-'])
 
 class Temp(str):
     'Temporaty file name'
@@ -267,7 +267,14 @@ class Filter(object):
                 self.prog = prog
     def __call__(self,inp,**kw):
         out = Temp()
-        params = ' '.join([key+'='+str(val) for (key,val) in kw.items()])
+        pars = []
+        for (key,val) in kw.items():
+            if isinstance(val,str):
+                val = '\''+val+'\''
+            else:
+                val = str(val)
+            pars.append('='.join([key,val]))
+        params = ' '.join(pars)
         if inp:
             command = '< %s %s %s > %s' % (inp,self.prog,params,out)
         else:

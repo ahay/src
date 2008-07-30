@@ -27,19 +27,21 @@
 
 char* sf_getprog (void); /* provided by getpar */
 
-void sf_error( const char *format, ... )
+int sf_error( const char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 
 ---
 Format and variable arguments follow printf convention. Additionally, a ':' at
 the end of format adds system information for system errors. >*/
 {
     va_list args;
+    char *prog;
 
     (void) fflush(stdout);
     va_start(args,format);
 
     /* print out name of program causing error */
-    fprintf (stderr,"%s: ",sf_getprog());
+    prog = sf_getprog();
+    fprintf (stderr,"%s: ",prog);
 
     /* print out remainder of message */
     (void) vfprintf( stderr, format, args );
@@ -53,7 +55,9 @@ the end of format adds system information for system errors. >*/
     if (format[0] == '\0' || format[strlen(format)-1] != ';')
 	fprintf (stderr, "\n");
     
-    exit(EXIT_FAILURE); 
+    if (strcmp(prog,"python")) exit(EXIT_FAILURE);
+    sf_warning("did not exit");
+    return 1;
 }
 
 void sf_warning( const char *format, ... )
