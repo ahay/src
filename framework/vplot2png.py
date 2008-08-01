@@ -14,19 +14,23 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import vplot2eps, tempfile, os, sys
+import vplot2eps, tempfile, os, sys, re
 
 def convert(vpl,png,**kw):
+    'Vplot to PNG'
     eps = tempfile.mktemp()
-    vplot2eps.convert(vpl,eps,kw)
+    vplot2eps.convert(vpl,eps,
+                      options=kw.get('options','color=y fat=1 fatmult=1.5'))
 
     option = kw.get('plotoption','')
     pstoimg = kw.get('pstoimg','pstoimg')
     command = 'PAPERSIZE=ledger %s %s -out %s' \
-              + ' -type png -interlaced -antialias -crop a %s' 
-    fail = os.system(command % (pstoimg,eps,png,itype,option))
+              + ' -type png -interlaced -antialias -quiet -crop a %s' 
+    command = command % (pstoimg,eps,png,option)
+    fail = os.system(command)
     os.unlink(eps)
-    return fail
+    if fail:
+        raise RuntimeError, 'cannot run "%s" ' % pstoimg
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -49,11 +53,10 @@ if __name__ == "__main__":
         vpl = png
         png = re.sub('\.[^\.]+$','.png',vpl)
 
-    try:
-        if sys.argv:
-            fail = convert(vpl,png,options=string.join(sys.argv,' '))
-        else:
-            fail = convert(vpl,png)
-        sys.exit(fail)
-    except:
-        sys.exit(1)
+
+    if sys.argv:
+        convert(vpl,png,options=string.join(sys.argv,' '))
+    else:
+        convert(vpl,png)
+    sys.exit(0)
+  

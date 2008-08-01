@@ -346,9 +346,10 @@ class Vplot(object):
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
-    def image(self,format='png'):
-        name = Temp()
-        self.export(name,format)
+    def image(self):
+        'Convert to PNG in the current directory (for use with SAGE)'
+        self.png = os.path.basename(self.name)+'.png'
+        self.export(self.png,'png')
     def export(self,name,format=None):
         'Export to different formats'
         if not format:
