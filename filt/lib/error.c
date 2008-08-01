@@ -27,7 +27,7 @@
 
 char* sf_getprog (void); /* provided by getpar */
 
-int sf_error( const char *format, ... )
+void sf_error( const char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 
 ---
 Format and variable arguments follow printf convention. Additionally, a ':' at
@@ -55,9 +55,7 @@ the end of format adds system information for system errors. >*/
     if (format[0] == '\0' || format[strlen(format)-1] != ';')
 	fprintf (stderr, "\n");
     
-    if (strcmp(prog,"python")) exit(EXIT_FAILURE);
-    sf_warning("did not exit");
-    return 1;
+    exit(EXIT_FAILURE);
 }
 
 void sf_warning( const char *format, ... )
