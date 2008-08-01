@@ -346,14 +346,18 @@ class Vplot(object):
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
-    def export(self,name):
+    def image(self,format='png'):
+        name = Temp()
+        self.export(name,format)
+    def export(self,name,format=None):
         'Export to different formats'
-        if len(name) > 3:
-            suffix = name[-3:].lower()
-        else:
-            suffix = 'vpl'
-        if suffix in ('eps','gif','avi'):
-            os.system('vplot2%s %s %s' % (suffix,self.name,name))
+        if not format:
+            if len(name) > 3:
+                format = name[-3:].lower()
+            else:
+                format = 'vpl'
+        if format in ('eps','gif','avi','png'):
+            os.system('vplot2%s %s %s' % (format,self.name,name))
         else:
             os.system('cp %s %s' % (self.name,name))
 
