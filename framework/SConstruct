@@ -28,7 +28,7 @@ for src in Split('path doc proj prog tex book'):
     py_install('rsf' + src)
 py_install('suproj')
 
-for src in Split('latex2wiki vplot2eps vplot2gif vplot2avi sftour'):
+for src in Split('latex2wiki vplot2eps vplot2png vplot2gif vplot2avi sftour'):
     if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
         py_install(src)
         env.InstallAs(os.path.join(bindir,src),src+'.py')

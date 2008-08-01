@@ -180,9 +180,9 @@ combine ={
     'OverUnderIso': lambda n:
         vppen + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
     'TwoRows': lambda n:
-        vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % (round(n/2.)),
+        vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % ((n+1)/2),
     'TwoColumns': lambda n:
-        vppen + " size=r vpstyle=n gridnum=2,%d $SOURCES" % (round(n/2.)),
+        vppen + " size=r vpstyle=n gridnum=2,%d $SOURCES" % ((n+1)/2),
     'Overlay': lambda n:
         vppen + " erase=o vpstyle=n $SOURCES",
     'Movie': lambda n:
