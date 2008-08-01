@@ -216,12 +216,6 @@ free ((char*) $1);
 %apply (float*  IN_ARRAY1, size_t DIM1) {(float*  arr, size_t size)};
 %apply (sf_complex*  IN_ARRAY1, size_t DIM1) {(sf_complex*  arr, size_t size)};
 
-%exception sf_error {
-    $action
-    PyErr_SetString(PyExc_RuntimeError,"sf_error");
-    return NULL;
-} int sf_error( const char *format, ... );
-
 #define SF_MAX_DIM 9
 
 typedef struct sf_File *sf_file;

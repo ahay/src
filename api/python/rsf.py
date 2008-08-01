@@ -75,6 +75,8 @@ class File(object):
         self.type = File.type[c_rsf.sf_gettype(self.file)]
         self.form = File.form[c_rsf.sf_getform(self.file)]
         self.narray = None
+        for plot in Filter.plots:
+            setattr(self,plot,Filter(plot,inp=self)) 
     def __str__(self):
         'String representation'
         if self.tag:
@@ -106,7 +108,7 @@ class File(object):
         add = Temp()
         if os.system('sfadd %s %s > %s' % (self,other,add)):
             raise TypeError, 'Could not run sfadd'
-        return Input(add)
+        return Input(add,temp=True)
     def __mul__(self,other):
         'Overload multiplication'
         mul = Temp()
@@ -123,7 +125,7 @@ class File(object):
             if os.system('sfscale < %s dscale=%g > %s' % 
                          (self,fmul,mul)):
                 raise TypeError, 'Could not run sfscale'
-        return Input(mul)
+        return Input(mul,temp=True)
     def __div__(self,other):
         'Overload division'
         mul = Temp()
@@ -139,7 +141,7 @@ class File(object):
             if os.system('sfscale < %s dscale=%g > %s' % 
                          (self,1.0/fmul,mul)):
                 raise TypeError, 'Could not run sfscale'
-        return Input(mul)
+        return Input(mul,temp=True)
     def __array__(self,context=None):
         if None == self.narray:
             self.narray = c_rsf.rsf_array(self.file)
@@ -255,9 +257,11 @@ class Output(File):
             raise TypeError, 'Unsupported file type %s' % self.type
 
 class Filter(object):
-    def __init__(self,name,prefix='sf'):
+    plots = ('grey','contour','graph','contour3','dots','graph3','thplot','wiggle')
+    def __init__(self,name,prefix='sf',inp=None):
         self.prog = name
         rsfroot = os.environ.get('RSFROOT')
+        self.plot = False
         if rsfroot:
             lp = len(prefix)
             if name[:lp] != prefix:
@@ -265,7 +269,9 @@ class Filter(object):
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
                 self.prog = prog
-    def __call__(self,inp,**kw):
+                self.plot = name[lp:] in Filter.plots
+        self.inp = inp
+    def __call__(self,*inp,**kw):
         out = Temp()
         pars = []
         for (key,val) in kw.items():
@@ -276,14 +282,82 @@ class Filter(object):
             pars.append('='.join([key,val]))
         params = ' '.join(pars)
         if inp:
-            command = '< %s %s %s > %s' % (inp,self.prog,params,out)
+            command = '< %s %s %s > %s' % (inp[0],self.prog,params,out)
+        elif self.inp:
+            command = '< %s %s %s > %s' % (self.inp,self.prog,params,out)
         else:
             command = '%s %s > %s' % (self.prog,params,out)
         if os.system(command):
             raise TypeError, 'Could not run %s' % self.prog
-        return Input(out)
+        if self.plot:
+            return Vplot(out,temp=True)
+        else:
+            return Input(out,temp=True)
 
-class Wrap(object):
+
+def Vppen(plots,args):
+    name = Temp()
+    os.system('vppen %s %s > %s' % (args,' '.join(map(str,plots)),name))
+    return Vplot(name,temp=True)
+
+def Overlay(*plots):
+    return Vppen(plots,'erase=o vpstyle=n')
+
+def Movie(*plots):
+    return Vppen(plots,'vpstyle=n')
+
+def SideBySide(*plots,**kw):
+    n = len(plots)
+    iso = kw.get('iso')
+    if iso:
+        return Vppen(plots,'size=r vpstyle=n gridnum=%d,1' % n)
+    else:
+        return Vppen(plots,'yscale=%d vpstyle=n gridnum=%d,1' % (n,n))
+
+def OverUnder(*plots,**kw):
+    n = len(plots)
+    iso = kw.get('iso')
+    if iso:
+        return Vppen(plots,'size=r vpstyle=n gridnum=1,%d' % n)
+    else:
+        return Vppen(plots,'xscale=%d vpstyle=n gridnum=1,%d' % (n,n))
+
+class Vplot(object):
+    def __init__(self,name,temp=False):
+        'Constructor'
+        self.name = name
+        self.temp = temp
+    def __del__(self):
+        'Destructor'
+        if self.temp:
+            try:
+                os.unlink(self.name)
+            except:
+                raise RuntimeError, 'Could not remove "%s" ' % self
+    def __str__(self):
+        return self.name
+    def __mul__(self,other):
+        return Overlay(self,other)
+    def __add__(self,other):
+        return Movie(self,other)
+    def show(self):
+        'Show on screen'
+        os.system('xtpen %s' % self.name)
+    def hard(self,printer='printer'):
+        'Send to printer'
+        os.system('PRINTER=%s pspen %s' % (printer,self.name))
+    def export(self,name):
+        'Export to different formats'
+        if len(name) > 3:
+            suffix = name[-3:].lower()
+        else:
+            suffix = 'vpl'
+        if suffix in ('eps','gif','avi'):
+            os.system('vplot2%s %s %s' % (suffix,self.name,name))
+        else:
+            os.system('cp %s %s' % (self.name,name))
+
+class _Wrap(object):
      def __init__(self, wrapped):
          self.wrapped = wrapped
      def __getattr__(self, name):
@@ -292,7 +366,7 @@ class Wrap(object):
          except AttributeError:
              return Filter(name)
 
-sys.modules[__name__] = Wrap(sys.modules[__name__])
+sys.modules[__name__] = _Wrap(sys.modules[__name__])
 
 
 if __name__ == "__main__":
