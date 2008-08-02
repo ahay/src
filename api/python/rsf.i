@@ -9,11 +9,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <setjmp.h>
 
 
 #include <rsf.h>
 
 #define SWIG_FILE_WITH_INIT
+
+extern jmp_buf python_except;
+extern int exception_status;
 %}
 
 /* Get the Numeric typemaps */
@@ -222,6 +226,15 @@ typedef struct sf_File *sf_file;
 
 typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
+
+%exception {
+    if ((exception_status = setjmp(python_except)) == 0) {
+	$action
+    } else {
+	PyErr_SetString(PyExc_RuntimeError,"sf_error");
+	return NULL;
+    }
+}
 
 sf_file sf_input (/*@null@*/ char* tag);
 sf_file sf_output (/*@null@*/ char* tag);
