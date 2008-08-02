@@ -50,12 +50,14 @@ class Temp(str):
             pathfile = open('.datapath','r')
         except:
             try:
-                pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+                pathfile = open(os.path.join(os.environ.get('HOME'),
+                                             '.datapath'),'r')
             except:
                 pathfile = None
         if pathfile:
             for line in pathfile.readlines():
-                check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
+                check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],
+                                 line)
                 if check:
                     datapath = check.group(1)
             pathfile.close()
@@ -257,7 +259,8 @@ class Output(File):
             raise TypeError, 'Unsupported file type %s' % self.type
 
 class Filter(object):
-    plots = ('grey','contour','graph','contour3','dots','graph3','thplot','wiggle')
+    plots = ('grey','contour','graph','contour3',
+             'dots','graph3','thplot','wiggle')
     def __init__(self,name,prefix='sf',inp=None):
         self.prog = name
         rsfroot = os.environ.get('RSFROOT')
@@ -271,12 +274,22 @@ class Filter(object):
                 self.prog = prog
                 self.plot = name[lp:] in Filter.plots
         self.inp = inp
+        self.pars = {}
+    def __getitem__(self,**kw):
+        self.pars.update(kw) 
+        return self
     def __call__(self,*inp,**kw):
         out = Temp()
+        self.pars.update(kw)
         pars = []
-        for (key,val) in kw.items():
+        for (key,val) in self.pars.items():
             if isinstance(val,str):
                 val = '\''+val+'\''
+            elif isinstance(val,bool):
+                if val:
+                    val = 'y'
+                else:
+                    val = 'n'
             else:
                 val = str(val)
             pars.append('='.join([key,val]))
