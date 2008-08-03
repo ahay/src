@@ -398,7 +398,7 @@ class Project(Environment):
         else:
             remote = ''
             
-        lines = string.split(flow,'&&')
+        lines = string.split(str(flow),'&&')
         steps = []
         for line in lines:
             substeps = []
@@ -489,9 +489,8 @@ class Project(Environment):
                                   x[-len(suffix):] == suffix,targets))
             if binaries:
                 Clean(flow,binaries)
-                
-        return flow
 
+        return flow
         
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
               view=None,**kw):

@@ -17,6 +17,7 @@ twodip2 twofreq2 velcon warp1 warpadd warpscan wave1 ztrace ztrace2
 '''
 
 pyprogs = 'rcat'
+pymods = 'dottest conjgrad'
 
 try:  # distributed version
     Import('env')
@@ -67,8 +68,8 @@ if root:
 
 for prog in Split(
     '''
-    burg cburg gauss2 gaussshape2 grid1 matmult ntriangle1 predict predict2 pwdsl
-    triangle2 trianglen trisl
+    burg cburg gauss2 gaussshape2 grid1 matmult ntriangle1 predict
+    predict2 pwdsl triangle2 trianglen trisl
     '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
@@ -84,6 +85,8 @@ if root: # no compilation but rename
     pymains = Split(pyprogs)
     for prog in pymains:
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+    for mod in Split(pymods):
+        env.Install(libdir,mod+'.py')
 
 ######################################################################
 # SELF-DOCUMENTATION

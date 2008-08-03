@@ -77,8 +77,8 @@ class File(object):
         self.type = File.type[c_rsf.sf_gettype(self.file)]
         self.form = File.form[c_rsf.sf_getform(self.file)]
         self.narray = None
-        for plot in Filter.plots:
-            setattr(self,plot,Filter(plot,inp=self)) 
+        for plot in Filter.plots + Filter.diagnostic:
+            setattr(self,plot,Filter(plot,srcs=[self],run=True)) 
     def __str__(self):
         'String representation'
         if self.tag:
@@ -95,55 +95,41 @@ class File(object):
             os.system('sfrm %s' % self)
     def sfin(self):
         'Output of sfin'
-        p = os.popen('sfin %s' % self)
-        p_str = p.read()
-        p.close()
-        print p_str
-    def attr(self):
-        'Output of sfattr'
-        p = os.popen('sfattr < %s' % self)
-        p_str = p.read()
-        p.close()
-        print p_str
+        return Filter('in',run=True)(0,self)
     def __add__(self,other):
         'Overload addition'
-        add = Temp()
-        if os.system('sfadd %s %s > %s' % (self,other,add)):
-            raise TypeError, 'Could not run sfadd'
-        return Input(add,temp=True)
+        add = Filter('add')
+        return add[self,other]
+    def __sub__(self,other):
+        'Overload subtraction'
+        sub = Filter('add')(scale=[1,-1])
+        return sub[self,other]
     def __mul__(self,other):
         'Overload multiplication'
-        mul = Temp()
-        if isinstance(other,File):
-            if os.system('sfadd mode=p %s %s > %s' % 
-                         (self,other,mul)):
-                raise TypeError, 'Could not run sfadd'
-        else:
-            try:
-                fmul = float(other)
-            except:
-                raise TypeError, 'Cannot cast to float'
-
-            if os.system('sfscale < %s dscale=%g > %s' % 
-                         (self,fmul,mul)):
-                raise TypeError, 'Could not run sfscale'
-        return Input(mul,temp=True)
+        try:
+            mul = Filter('scale')(dscale=float(other))
+            return mul[self]
+        except:
+            mul = Filter('add')(mode='product')
+            return mul[self,other]
     def __div__(self,other):
         'Overload division'
-        mul = Temp()
-        if isinstance(other,File):
-            if os.system('sfadd mode=d %s %s > %s' % 
-                         (self,other,mul)):
-                raise TypeError, 'Could not run sfadd'
-        else:
-            try:
-                fmul = float(other)
-            except:
-                raise TypeError, 'Cannot cast to float'
-            if os.system('sfscale < %s dscale=%g > %s' % 
-                         (self,1.0/fmul,mul)):
-                raise TypeError, 'Could not run sfscale'
-        return Input(mul,temp=True)
+        try:
+            div = Filter('scale')(dscale=1.0/float(other))
+            return div[self]
+        except:
+            div = Filter('add')(mode='divide')
+            return div[self,other]
+    def __neg__(self):
+        neg = Filter('scale')(dscale=-1.0) 
+        return neg[self]
+    def dot(self,other):
+        'Dot product'
+        prod = self.__mul__(other).reshape()
+        stack = Filter('stack')(norm=False,axis=1)[prod]
+        dp = numpy.zeros(1,'f')
+        stack.read(dp)
+        return dp[0]
     def __array__(self,context=None):
         if None == self.narray:
             self.narray = c_rsf.rsf_array(self.file)
@@ -158,6 +144,38 @@ class File(object):
         array.__setitem__(index,value)
     def size(self,dim=0):
         return c_rsf.sf_leftsize(self.file,dim)
+    def shape(self):
+        s = []
+        dim = 1
+        for i in range(1,10):
+            ni = self.int('n%d' % i,1)
+            if ni > 1:
+                dim = i
+            s.append(ni)
+        return tuple(s[:dim])
+    def reshape(self,shape=None):
+        if not shape:
+            shape = self.size()
+        try:
+            shape = tuple(shape)
+        except:
+            shape = (shape,)
+        old = self.shape()
+        lold = len(old)
+        lshape = len(shape)
+        puts = {}
+        for i in range(max(lold,lshape)):
+            ni = 'n%d' % (i+1)
+            if i < lold and i < lshape:
+                if old[i] != shape[i]:
+                    puts[ni] = shape[i]
+            elif i < lold:
+                puts[ni] = 1
+            else:
+                puts[ni] = shape[i]
+        put = Filter('put')
+        put.setcommand(puts)
+        return put[self]
     def __len__(self):
         return self.size()
     def settype(self,type):
@@ -219,11 +237,14 @@ class Input(File):
             # numpy array
             out = Output(None)
             shape = tag.shape
-            for axis in range(len(shape)):
-                out.put('n%d' % (axis+1),shape[axis])
+            dims = len(shape)
+            for axis in range(1,dims+1):
+                out.put('n%d' % axis,shape[dims-axis])
             out.write(tag)
             out.close()
             self.__init__(out,temp=True)
+        elif isinstance(tag,list):
+            self.__init__(numpy.array(tag,'f'))
         else:
             self.tag = tag
             self.file = c_rsf.sf_input(self.tag)
@@ -261,28 +282,28 @@ class Output(File):
 class Filter(object):
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle')
-    def __init__(self,name,prefix='sf',inp=None):
-        self.prog = name
+    diagnostic = ('attr','disfil')
+    def __init__(self,name,prefix='sf',srcs=[],run=False):
         rsfroot = os.environ.get('RSFROOT')
         self.plot = False
+        self.stdout = True
         if rsfroot:
             lp = len(prefix)
             if name[:lp] != prefix:
                 name = prefix+name
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
-                self.prog = prog
-                self.plot = name[lp:] in Filter.plots
-        self.inp = inp
-        self.pars = {}
-    def __getitem__(self,**kw):
-        self.pars.update(kw) 
-        return self
-    def __call__(self,*inp,**kw):
-        out = Temp()
-        self.pars.update(kw)
-        pars = []
-        for (key,val) in self.pars.items():
+                self.plot   = name[lp:] in Filter.plots
+                self.stdout = name[lp:] not in Filter.diagnostic
+                name = prog
+        self.srcs = srcs
+        self.run=run
+        self.command = name
+    def __str__(self):
+        return self.command
+    def setcommand(self,kw,args=[]):
+        parstr = []
+        for (key,val) in kw.items():
             if isinstance(val,str):
                 val = '\''+val+'\''
             elif isinstance(val,bool):
@@ -290,23 +311,53 @@ class Filter(object):
                     val = 'y'
                 else:
                     val = 'n'
+            elif isinstance(val,list):
+                val = ','.join(map(str,val))
             else:
                 val = str(val)
-            pars.append('='.join([key,val]))
-        params = ' '.join(pars)
-        if inp:
-            command = '< %s %s %s > %s' % (inp[0],self.prog,params,out)
-        elif self.inp:
-            command = '< %s %s %s > %s' % (self.inp,self.prog,params,out)
-        else:
-            command = '%s %s > %s' % (self.prog,params,out)
-        if os.system(command):
-            raise TypeError, 'Could not run %s' % self.prog
-        if self.plot:
-            return Vplot(out,temp=True)
-        else:
-            return Input(out,temp=True)
+            parstr.append('='.join([key,val]))
+        self.command = ' '.join([self.command,
+                                 ' '.join(map(str,args)),
+                                 ' '.join(parstr)])
+    def __getitem__(self,srcs):
+        'Apply to data'
+        mysrcs = self.srcs[:]
+        if isinstance(srcs,tuple):
+            mysrcs.extend(srcs)
+        elif srcs:
+            mysrcs.append(srcs)
 
+        if self.stdout:
+            out = Temp()
+            command = '%s > %s' % (self.command,out)
+        else:
+            command = self.command
+            
+        if mysrcs:    
+            command += ' < ' +' '.join(map(str,mysrcs))  
+                
+        fail = os.system(command)
+        if fail:
+            raise RuntimeError, 'Could not run "%s" ' % command
+
+        if self.stdout:
+            if self.plot:
+                return Vplot(out,temp=True)
+            else:
+                return Input(out,temp=True)
+    def __call__(self,*args,**kw):
+        if args:
+            self.stdout = args[0]
+        self.setcommand(kw,args[1:])
+        if self.run:
+            return self[0]
+        else:
+            return self
+    def __getattr__(self,attr):
+        'Making pipes'
+        other = Filter(attr)
+        self.command = '%s | %s' % (self,other) 
+        return self
 
 def Vppen(plots,args):
     name = Temp()
