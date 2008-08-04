@@ -26,8 +26,7 @@
 
 #include "error.h"
 
-jmp_buf python_except;
-int exception_status;
+jmp_buf python_except={};
 
 char* sf_getprog (void); /* provided by getpar */
 

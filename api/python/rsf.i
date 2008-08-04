@@ -17,7 +17,7 @@
 #define SWIG_FILE_WITH_INIT
 
 extern jmp_buf python_except;
-extern int exception_status;
+int exception_status;
 %}
 
 /* Get the Numeric typemaps */
