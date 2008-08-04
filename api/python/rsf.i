@@ -16,8 +16,8 @@
 
 #define SWIG_FILE_WITH_INIT
 
-extern jmp_buf python_except;
-int exception_status;
+jmp_buf jump_buffer;
+extern jmp_buf *python_except;
 %}
 
 /* Get the Numeric typemaps */
@@ -172,15 +172,16 @@ free ((char*) $1);
 %inline %{
 	struct farray* getfloats(const char* key,size_t n) {
 	       struct farray* a;
+
 	       a = sf_alloc(1,sizeof(struct farray));
 	       a->n = n;
 	       a->arr = sf_floatalloc(n);
 	       if (sf_getfloats (key,a->arr,n)) {
-		  return a;
+		   return a;
 	       } else {
-                  free (a->arr);
-		  free (a);
-                  return NULL;
+		   free (a->arr);
+		   free (a);
+		   return NULL;
                }
          }
 
@@ -228,7 +229,8 @@ typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 
 %exception {
-    if ((exception_status = setjmp(python_except)) == 0) {
+    python_except = &jump_buffer;
+    if (!setjmp(*python_except)) {
 	$action
     } else {
 	PyErr_SetString(PyExc_RuntimeError,"sf_error");

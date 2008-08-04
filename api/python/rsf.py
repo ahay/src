@@ -1,4 +1,4 @@
-import os, sys, types, tempfile, re
+import os, sys, tempfile, re
 import c_rsf
 import numpy
 
@@ -6,38 +6,35 @@ class Par(object):
     def __init__(self,argv=sys.argv):
         c_rsf.sf_init(len(argv),argv)
         self.prog = c_rsf.sf_getprog()
+        for type in ('int','float','bool'):
+            setattr(self,type,self.__get(type))
+            setattr(self,type+'s',self.__gets(type))
     def close(self):
         c_rsf.sf_parclose()
-    def __get(self,func,key,default):
-        get,par = func(key)
-        if get:
-            return par
-        elif default:
-            return default
-        else:
-            return None
-    def __gets(self,func,key,num,default):
-        pars = func(key,num)
-        if pars:
-            return pars
-        elif default:
-            return default
-        else:
-            return None
+    def __get(self,type):
+        func = getattr(c_rsf,'sf_get'+type)
+        def _get(key,default=None):
+            get,par = func(key)
+            if get:
+                return par
+            elif default:
+                return default
+            else:
+                return None
+        return _get
+    def __gets(self,type):
+        func = getattr(c_rsf,'get'+type+'s')
+        def _gets(key,num,default=None):
+            pars = func(key,num)
+            if pars:
+                return pars
+            elif default:
+                return default
+            else:
+                return None
+        return _gets
     def string(self,key):
         return c_rsf.sf_getstring(key)
-    def int(self,key,default=None):
-        return self.__get(c_rsf.sf_getint,key,default)
-    def float(self,key,default=None):
-        return self.__get(c_rsf.sf_getfloat,key,default)
-    def bool(self,key,default=None):
-        return self.__get(c_rsf.sf_getbool,key,default)
-    def ints(self,key,num,default=None):
-        return self.__gets(c_rsf.getints,key,num,default)
-    def floats(self,key,num,default=None):
-        return self.__gets(c_rsf.getfloats,key,num,default)
-    def bools(self,key,num,default=None):
-        return self.__gets(c_rsf.getbools,key,num,default)
 
 # default parameters for interactive runs
 par = Par(['python','-'])
@@ -70,6 +67,7 @@ class Temp(str):
 class File(object):
     type = ['uchar','char','int','float','complex']
     form = ['ascii','xdr','native']
+    attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples','short']
     def __init__(self):
         'Constructor'
         if not self.file:
@@ -77,8 +75,10 @@ class File(object):
         self.type = File.type[c_rsf.sf_gettype(self.file)]
         self.form = File.form[c_rsf.sf_getform(self.file)]
         self.narray = None
-        for plot in Filter.plots + Filter.diagnostic:
-            setattr(self,plot,Filter(plot,srcs=[self],run=True)) 
+        for filt in Filter.plots + Filter.diagnostic:
+            setattr(self,filt,Filter(filt,srcs=[self],run=True))
+        for attr in File.attrs:
+            setattr(self,attr,self.want(attr))
     def __str__(self):
         'String representation'
         if self.tag:
@@ -92,10 +92,24 @@ class File(object):
     def __del__(self):
         'Destructor'
         if self.temp:
-            os.system('sfrm %s' % self)
+            Filter('rm',run=True)(0,self)
     def sfin(self):
         'Output of sfin'
         return Filter('in',run=True)(0,self)
+    def want(self,attr):
+        'Attributes from sfattr'
+        def wantattr():
+            try:
+                val = os.popen('%s want=%s < %s' % (Filter('attr'),attr,self)).read()
+            except:
+                raise RuntimeError, 'trouble running sfattr'
+            m = re.search('=\s*(\S+)',val)
+            if m:
+                val = float(m.group(1))
+            else:
+                raise RuntimeError, 'no match'
+            return val
+        return wantattr
     def __add__(self,other):
         'Overload addition'
         add = Filter('add')
@@ -215,16 +229,14 @@ class File(object):
     def close(self):
         return c_rsf.sf_fileclose(self.file)
     def put(self,key,val):
-        what = type(val)
-        if what is types.IntType:
+        if isinstance(val,int):
             c_rsf.sf_putint(self.file,key,val)
-        elif what is types.FloatType:
+        elif isinstance(val,float):
             c_rsf.sf_putfloat(self.file,key,val)
-        elif what is types.StringType:
+        elif isinstance(val,str):
             c_rsf.sf_putstring(self.file,key,val)
-        elif what is types.ListType:
-            what = type(val[0])
-            if what is types.IntType:
+        elif isinstance(val,list):
+            if isinstance(val[0],int):
                 c_rsf.sf_putints(self.file,key,val)
 
 class Input(File):

@@ -26,7 +26,7 @@
 
 #include "error.h"
 
-jmp_buf python_except={};
+jmp_buf *python_except=NULL;
 
 char* sf_getprog (void); /* provided by getpar */
 
@@ -58,7 +58,7 @@ the end of format adds system information for system errors. >*/
     if (format[0] == '\0' || format[strlen(format)-1] != ';')
 	fprintf (stderr, "\n");
    
-    if (0==strcmp("python",prog)) longjmp(python_except,1);
+    if (0==strcmp("python",prog)) longjmp(*python_except,1);
     exit(EXIT_FAILURE);
 }
 

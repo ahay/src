@@ -270,7 +270,7 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 			  /*@out@*/ float* par,size_t n)
 /*< extract a float array parameter from the table >*/
 {
-    size_t i;
+    size_t i, clen;
     long num;
     char *val, *fval, *cnum, *fvali;
     double fi=0.;
@@ -278,7 +278,7 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
-    
+  
     cnum = sf_charalloc(strlen(val));
     result = true;
     for (i = 0; i < n; i++) {
@@ -288,16 +288,20 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 	} else {
 	    fvali = strpbrk(fval,"x*");
 	    if (NULL != fvali) {
-		strncpy(cnum,fval,(size_t) (fvali-fval));
+		clen = fvali-fval;
+		strncpy(cnum,fval,clen);
+		cnum[clen]='\0';
 
 		num = strtol(cnum,NULL,10);
 		if (ERANGE == errno) 
-		    sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
+		    sf_error ("%s: Wrong counter in %s='%s':",__FILE__,
+			      key,fval);
 		fvali++;
-		
+
 		fi = strtod(fvali,NULL);
 		if (ERANGE == errno || fi < -FLT_MAX || fi > FLT_MAX ) 
-		    sf_error ("%s: %s='%s' is out of range:",__FILE__,key,fvali);
+		    sf_error ("%s: %s='%s' is out of range:",__FILE__,
+			      key,fvali);
 		
 		for (; i < n && i < (size_t) num; i++) {
 		    par[i] = (float) fi;
@@ -312,7 +316,8 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 		} else {
 		    fi = strtod(fval,NULL);
 		    if (ERANGE == errno || fi < -FLT_MAX || fi > FLT_MAX ) 
-			sf_error("%s: %s='%s' is out of range:",__FILE__,key,fval);
+			sf_error("%s: %s='%s' is out of range:",
+				 __FILE__,key,fval);
 		}
 	    }
 	}
@@ -366,7 +371,7 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 /*< extract a bool array parameter from the table >*/
 {
     bool test=false;
-    size_t i;
+    size_t i, clen;
     long num;
     char *val, *cnum, *fval, *fvali;
 
@@ -378,7 +383,10 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
 	fvali = strpbrk(fval,"x*");
 	if (NULL != fvali) {
-	    strncpy(cnum,fval,(size_t) (fvali-fval));
+	    clen = fvali-fval;
+	    strncpy(cnum,fval,clen);
+	    cnum[clen]='\0';
+
 	    num = strtol(cnum,NULL,10);
 	    if (ERANGE == errno) 
 		sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
@@ -410,7 +418,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 			/*@out@*/ int *par,size_t n)
 /*< extract an int array parameter from the table >*/
 {    
-    size_t i;
+    size_t i, clen;
     long num, j=0;
     char *val, *cnum, *fval, *fvali;
 
@@ -425,7 +433,10 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 	} else {
 	    fvali = strpbrk(fval,"x*");
 	    if (NULL != fvali) {
-		strncpy(cnum,fval,(size_t) (fvali-fval));
+		clen = fvali-fval;
+		strncpy(cnum,fval,clen);
+		cnum[clen]='\0';
+
 		num = strtol(cnum,NULL,10);
 		if (ERANGE == errno) 
 		    sf_error ("%s: Wrong counter in %s='%s':",
