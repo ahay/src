@@ -16,6 +16,7 @@
 import string, sys, os, re
 
 import rsfdoc
+import rsfprog
 
 top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
