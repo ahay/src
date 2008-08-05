@@ -67,7 +67,7 @@ class Temp(str):
 class File(object):
     type = ['uchar','char','int','float','complex']
     form = ['ascii','xdr','native']
-    attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples','short']
+    attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples']
     def __init__(self):
         'Constructor'
         if not self.file:
