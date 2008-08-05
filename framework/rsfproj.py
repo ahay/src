@@ -21,6 +21,7 @@ import rsfdoc
 import rsfprog
 import rsfconf
 import rsfpath
+import rsfflow
 
 import SCons
 
@@ -398,74 +399,9 @@ class Project(Environment):
         else:
             remote = ''
             
-        lines = string.split(str(flow),'&&')
-        steps = []
-        for line in lines:
-            substeps = []
-            sublines = string.split(line,'|')
-            for subline in sublines:           
-                pars = string.split(subline)
-                # command is assumed to be always first in line
-                command = pars.pop(0)
-                # check if this command is in our list
-                if rsf:
-                    if command[:2]==prefix:
-                        # assuming prefix is two chars (sf)
-                        rsfprog = command
-                    else:
-                        rsfprog = prefix + command            
-                    if rsfdoc.progs.has_key(rsfprog):
-                        if self.checkpar:
-                            for par in pars:
-                                if rsfdoc.progs[rsfprog].check(par):
-                                    sys.stderr.write('Failed on "%s"\n' % 
-                                                     subline)
-                                    sys.exit(1)
-                        command = os.path.join(bindir,rsfprog+self.progsuffix) 
-                        sources.append(command)
-                        if rsfprog not in self.coms:
-                            self.coms.append(rsfprog)
-                else:
-                    rsfprog = None
-                    if re.match(r'[^/]+\.exe$',command): # local program
-                        command = os.path.join('.',command)
-                pars.insert(0,command)
-                # special rule for solvers
-                if rsfprog == prefix+'conjgrad' or \
-                       rsfprog == prefix+'cconjgrad':
-                    command = pars.pop(1)
-                    # check if this command is in our list
-                    if rsf:
-                        if command[:2]==prefix:
-                            # assuming prefix is two chars
-                            rsfprog = command
-                        else:
-                            rsfprog = prefix + command            
-                        if rsfdoc.progs.has_key(rsfprog):
-                            command = os.path.join(bindir,
-                                                   rsfprog+self.progsuffix) 
-                            sources.append(command)
-                            if rsfprog not in self.coms:
-                                self.coms.append(rsfprog)
-                    else:
-                        rsfprog = None
-                        if re.match(r'[^/]+\.exe$',command): # local program
-                            command = os.path.join('.',command)                 
-                    pars.insert(1,command)
-                #<- assemble the command line
-                substep = remote + string.join(pars,' ')
-                substeps.append(substep)
-            #<-
-            steps.append(string.join(substeps," | "))
-        #<- assemble the pipeline
-        command = string.join(steps," && ")
-        if stdout==1:
-            command = command + " > $TARGET"
-        elif stdout==0:
-            command = command + " >/dev/null"
-        if stdin:
-            command = "< $SOURCE " + command
-        command = self.timer + command
+        command = rsfflow.Flow(sources,flow,rsf,
+                               self.checkpar,self.coms,prefix,self.progsuffix,
+                               remote,stdout,stdin,self.timer)
 
         # May need to do it remotely
         if remote:

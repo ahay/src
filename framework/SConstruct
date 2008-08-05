@@ -24,7 +24,7 @@ def py_install(source):
     env.Pycompile(pyc,py)
     env.Install(libdir,[py,pyc])
 
-for src in Split('path doc proj prog tex book'):
+for src in Split('path doc flow proj prog tex book'):
     py_install('rsf' + src)
 py_install('suproj')
 
