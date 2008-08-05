@@ -32,7 +32,7 @@ static const float flt8[] = {1191./5040., 120./5040., 1./5040.};
 static const float mom8[] = {2741./11520., 298./11520., 3./11520.};
 
 sf_bands spline_init (int nw /* interpolator length */, 
-		   int nd /* data length */)
+		      int nd /* data length */)
 /*< initialize a banded matrix >*/
 {
     sf_bands slv;

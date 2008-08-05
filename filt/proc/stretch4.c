@@ -188,6 +188,37 @@ void stretch4_apply (map4 str,
     }
 }
 
+void stretch4_invert (map4 str, 
+		      float* ord       /* [nd] */, 
+		      const float* mod /* [n1] */)
+/*< convert model to ordinates by spline interpolation >*/
+{
+    int id, it, i, nt, i1, i2;
+    float *w, *mm;
+
+    mm = str->diag;
+    nt = str->nt;
+
+    for (it = 0; it < nt; it++) {
+	mm[it] = mod[it];
+    }
+
+    sf_banded_solve (str->slv, mm);
+    for (id = 0; id < str->nd; id++) {
+	if (str->m[id]) continue;
+	
+	it = str->x[id]; 
+	w = str->w[id]; 
+	
+	i1 = SF_MAX(0,-it);
+	i2 = SF_MIN(4,nt-it);
+
+	for (i=i1; i < i2; i++) {
+	    ord[id] = w[i]*mm[it+i];
+	}
+    } 
+}
+
 void stretch4_close (map4 str)
 /*< free allocated storage >*/
 {

@@ -24,6 +24,7 @@
 int main(int argc, char* argv[])
 {
     map4 mo;
+    bool inv;
     int nt, n1, i2, n2;
     float o1, d1, eps;
     float *trace, *str, *trace2;
@@ -40,6 +41,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("n1",&n1)) n1=nt;
     if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
+
+    if (!sf_getbool("inv",&inv)) inv=true;
+    /* inversion flag */
 
     sf_putint(out,"n1",n1);
     sf_putfloat(out,"d1",d1);
@@ -59,7 +63,11 @@ int main(int argc, char* argv[])
 	sf_floatread(str,nt,warp);
 
 	stretch4_define (mo,str);
-	stretch4_apply (mo,trace,trace2);
+	if (inv) {
+	    stretch4_apply (mo,trace,trace2);
+	} else {
+	    stretch4_invert (mo,trace2,trace);
+	}
 	sf_floatwrite (trace2,n1,out);
     }
 
