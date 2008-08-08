@@ -201,7 +201,7 @@ def multicolumn(list, format, cols=4):
         result = result + '</td>'
     return '<table width="100%%" summary="list"><tr>%s</tr></table>' % result
 
-class rsfpar:
+class rsfpar(object):
     def __init__(self,type,default='',range='',desc=''):
         self.type = type + ' ' * (len('strings')-len(type))
         if (type == 'bool'):
@@ -243,7 +243,7 @@ class rsfpar:
               (self.type,name,self.default,self.range)
         return tex + self.desc + '\\\\ \n'
 
-class rsfdata:
+class rsfdata(object):
     def __init__(self,name):
         self.name = name
         self.uses = {}
@@ -254,7 +254,7 @@ class rsfdata:
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
         
-class rsfprog:
+class rsfprog(object):
     def __init__(self,name,file,desc=None):
         self.name = name
         self.file = file
@@ -297,7 +297,7 @@ class rsfprog:
         if not self.uses[book].has_key(chapter):
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
-    def document(self):
+    def docstring(self):
         doc = section('name',self.name)
         if self.desc:
             doc = doc + section('description',self.desc)
@@ -330,6 +330,9 @@ class rsfprog:
             doc = doc + section('documentation',underline(self.wiki))
         if self.vers:
             doc = doc + section('version',self.vers)
+        return doc
+    def document(self):
+        doc = self.docstring()
         pydoc.pager(doc)
     def mwiki(self,dir,name=None):
         if not name:

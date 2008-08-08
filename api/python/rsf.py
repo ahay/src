@@ -2,6 +2,9 @@ import os, sys, tempfile, re
 import c_rsf
 import numpy
 
+import rsfdoc
+import rsfprog
+
 class Par(object):
     def __init__(self,argv=sys.argv):
         c_rsf.sf_init(len(argv),argv)
@@ -292,17 +295,20 @@ class Output(File):
             raise TypeError, 'Unsupported file type %s' % self.type
 
 class Filter(object):
+    'Madgagascar filter'
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle')
     diagnostic = ('attr','disfil')
-    def __init__(self,name,prefix='sf',srcs=[],run=False):
+    def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False):
         rsfroot = os.environ.get('RSFROOT')
         self.plot = False
         self.stdout = True
+        self.prog = None
         if rsfroot:
             lp = len(prefix)
             if name[:lp] != prefix:
                 name = prefix+name
+            self.prog = rsfdoc.progs.get(name)   
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
                 self.plot   = name[lp:] in Filter.plots
@@ -311,11 +317,16 @@ class Filter(object):
         self.srcs = srcs
         self.run=run
         self.command = name
+        self.checkpar = checkpar
+        if self.prog:
+            self.__doc__ =  self.prog.docstring()
     def __str__(self):
         return self.command
     def setcommand(self,kw,args=[]):
         parstr = []
         for (key,val) in kw.items():
+            if self.checkpar and self.prog and not self.prog.pars.get(key):
+                sys.stderr.write('checkpar: No %s= parameter in %s\n' % (key,self.prog.name))
             if isinstance(val,str):
                 val = '\''+val+'\''
             elif isinstance(val,bool):
@@ -340,7 +351,10 @@ class Filter(object):
             mysrcs.append(srcs)
 
         if self.stdout:
-            out = Temp()
+            if isinstance(self.stdout,str):
+                out = self.stdout
+            else:
+                out = Temp()
             command = '%s > %s' % (self.command,out)
         else:
             command = self.command
@@ -445,7 +459,10 @@ class _Wrap(object):
          try:
              return getattr(self.wrapped, name)
          except AttributeError:
-             return Filter(name)
+             if name in rsfdoc.progs.keys() or 'sf'+name in rsfdoc.progs.keys():
+                 return Filter(name)
+             else:
+                 raise
 
 sys.modules[__name__] = _Wrap(sys.modules[__name__])
 
