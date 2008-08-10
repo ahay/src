@@ -399,7 +399,7 @@ class Project(Environment):
         else:
             remote = ''
             
-        command = rsfflow.Flowx_(sources,flow,rsf,
+        command = rsfflow.Flow(sources,flow,rsf,
                                self.checkpar,self.coms,prefix,self.progsuffix,
                                remote,stdout,stdin,self.timer)
 

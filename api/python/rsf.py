@@ -103,7 +103,8 @@ class File(object):
         'Attributes from sfattr'
         def wantattr():
             try:
-                val = os.popen('%s want=%s < %s' % (Filter('attr'),attr,self)).read()
+                val = os.popen('%s want=%s < %s' % 
+                               (Filter('attr'),attr,self)).read()
             except:
                 raise RuntimeError, 'trouble running sfattr'
             m = re.search('=\s*(\S+)',val)
@@ -360,7 +361,8 @@ class Filter(object):
             command = self.command
             
         if mysrcs:    
-            command += ' < ' +' '.join(map(str,mysrcs))  
+            command = '< %s %s %s' % \
+                (mysrcs[0],command,' '.join(map(str,mysrcs[1:])))  
                 
         fail = os.system(command)
         if fail:

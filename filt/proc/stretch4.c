@@ -205,6 +205,7 @@ void stretch4_invert (map4 str,
 
     sf_banded_solve (str->slv, mm);
     for (id = 0; id < str->nd; id++) {
+	ord[id] = 0.;
 	if (str->m[id]) continue;
 	
 	it = str->x[id]; 
@@ -214,7 +215,7 @@ void stretch4_invert (map4 str,
 	i2 = SF_MIN(4,nt-it);
 
 	for (i=i1; i < i2; i++) {
-	    ord[id] = w[i]*mm[it+i];
+	    ord[id] += w[i]*mm[it+i];
 	}
     } 
 }
