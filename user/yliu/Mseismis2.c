@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
-    float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc1, perc2;
+    float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL, eps, perc1, perc2;
     char *type, *oper;
     bool verb, *known;
     sf_file in, out, dip, mask=NULL;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
     if (NULL == (oper=sf_getstring("oper"))) oper="thresholding";
-    /* [destruction,preconditioning,thresholding] method, the default is thresholding  */
+    /* [destruction,preconditioning,thresholding,shaping,bregman] method, the default is thresholding  */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
 	    break;
 
 	case 't':
-	    if (!sf_getfloat("perc1",&perc1)) perc1=99.;
-	    /* percentage for thresholding */
+	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
+	    /* percentage for thresholding in model space*/
 	    
 	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
 	    /* percentage for output */
@@ -106,6 +106,26 @@ int main(int argc, char* argv[])
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
+
+	case 's':
+	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
+	    /* percentage for thresholding in data space */
+	    
+	    sf_sharpen_init(n12,perc1);
+	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    dd2 = sf_floatalloc(n12);
+	    break;
+
+	case 'b':
+	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
+	    /* percentage for thresholding in Bregman iteration */
+	    
+	    sf_sharpen_init(n12,perc1);
+	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    dd2 = sf_floatalloc(n12);
+	    dd3 = sf_floatalloc(n12);
+	    break;
+
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
 
@@ -146,7 +166,7 @@ int main(int argc, char* argv[])
           /* Thresholding for shaping */
 	    for (iter=0; iter < niter-1; iter++) {
 		if (verb)
-		    sf_warning("iteration %d of %d",iter+1,niter);
+		    sf_warning("Model iteration %d of %d",iter+1,niter);
 		seislet_lop(false,false,n12,n12,mm,dd2);
 		for (i1=0; i1 < n12; i1++) {
 		    if (known[i1]) dd2[i1]=dd[i1];
@@ -157,7 +177,7 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    if (verb)
-		sf_warning("iteration %d of %d",niter,niter);
+		sf_warning("Model space iteration %d of %d",niter,niter);
 	    seislet_lop(false,false,n12,n12,mm,dd2);
 	    for (i1=0; i1 < n12; i1++) {
 		if (known[i1]) dd2[i1]=dd[i1];
@@ -167,7 +187,58 @@ int main(int argc, char* argv[])
 	    sf_sharpen(mm);
 	    sf_weight_apply(n12,mm);
 	    seislet_lop(false,false,n12,n12,mm,dd);
-	    
+	    break;
+
+	case 's':
+	    for (i1=0; i1 < n12; i1++) {
+		dd2[i1]= dd[i1];
+	    }
+	    for (iter=0; iter < niter; iter++) {
+		if (verb)
+		    sf_warning("Data space iteration %d of %d",iter+1,niter);
+		seislet_lop(true,false,n12,n12,mm,dd2);
+		sf_sharpen(mm);
+		sf_weight_apply(n12,mm);
+		seislet_lop(false,false,n12,n12,mm,dd2);
+		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd2[i1]= dd[i1];
+		}
+	    }
+	    for (i1=0; i1 < n12; i1++) {
+		dd[i1] = dd2[i1];
+	    }
+	    break;
+
+	case 'b':
+	    for (iter=0; iter < niter; iter++) {
+		if (verb)
+		    sf_warning("Bregman iteration %d of %d",iter+1,niter);
+		seislet_lop(false,false,n12,n12,mm,dd3);
+		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd3[i1]=dd[i1];
+		}
+		seislet_lop(true,false,n12,n12,mm,dd3);
+		if (iter != 0) {
+		    sf_sharpen(mm);
+		    sf_weight_apply(n12,mm);
+		}
+
+		seislet_lop(false,false,n12,n12,mm,dd2);
+/*		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd2[i1]= dd[i1];
+		}
+*/		for (i1=0; i1 < n12; i1++) {
+		    if (!known[i1]) dd2[i1]= 0.;
+		}
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1]= dd[i1]+dd3[i1]-dd2[i1];
+		}
+
+	    }
+	    for (i1=0; i1 < n12; i1++) {
+		dd[i1] = dd2[i1];
+	    }
+
 	    break;
 	} 
 	sf_cgstep_close();
