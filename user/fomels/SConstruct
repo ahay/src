@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 abalance agmig analytical angle angle2 approx bandpass bdix beamform
-bessel blur cflow chebvc cpef dealias deblur deriv dijkstra dip diplet
+blur cflow chebvc cpef dealias deblur deriv dijkstra dip diplet
 dips divn dix dixshape dwt envelope equal erf exgr explanesignoi
 expsignoi fern flat focus freqest gaussmooth green heat iphase jacobi
 jacobi2 kron lapfill locov lpf mandelbrot matmult max1 mig3 miss2
