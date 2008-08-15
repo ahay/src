@@ -67,7 +67,7 @@ class Temp(str):
     def __new__(cls):
         return str.__new__(cls,tempfile.mktemp(dir=Temp.tmpdatapath))
 
-class File(object):
+class _File(object):
     type = ['uchar','char','int','float','complex']
     form = ['ascii','xdr','native']
     attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples']
@@ -75,12 +75,12 @@ class File(object):
         'Constructor'
         if not self.file:
             raise TypeError, 'Use Input or Output instead of File'
-        self.type = File.type[c_rsf.sf_gettype(self.file)]
-        self.form = File.form[c_rsf.sf_getform(self.file)]
+        self.type = _File.type[c_rsf.sf_gettype(self.file)]
+        self.form = _File.form[c_rsf.sf_getform(self.file)]
         self.narray = None
         for filt in Filter.plots + Filter.diagnostic:
             setattr(self,filt,Filter(filt,srcs=[self],run=True))
-        for attr in File.attrs:
+        for attr in _File.attrs:
             setattr(self,attr,self.want(attr))
     def __str__(self):
         'String representation'
@@ -197,13 +197,13 @@ class File(object):
     def __len__(self):
         return self.size()
     def settype(self,type):
-        for i in xrange(len(File.type)):
-            if type == File.type[i]:
+        for i in xrange(len(_File.type)):
+            if type == _File.type[i]:
                 self.type = type
                 c_rsf.sf_settype (self.file,i)
     def setformat(self,format):
         c_rsf.sf_setformat(self.file,format)
-        File.__init__(self)
+        _File.__init__(self)
     def __get(self,func,key,default):
         get,par = func(self.file,key)
         if get:
@@ -243,9 +243,9 @@ class File(object):
             if isinstance(val[0],int):
                 c_rsf.sf_putints(self.file,key,val)
 
-class Input(File):
+class Input(_File):
     def __init__(self,tag='in',temp=False):
-        if isinstance(tag,File):
+        if isinstance(tag,_File):
             # copy file
             self.__init__(tag.tag)
             self.old = tag # to increase refcount
@@ -264,7 +264,7 @@ class Input(File):
         else:
             self.tag = tag
             self.file = c_rsf.sf_input(self.tag)
-            File.__init__(self)
+            _File.__init__(self)
         self.temp=temp
     def read(self,data):
         if self.type == 'float':
@@ -274,7 +274,10 @@ class Input(File):
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
-class Output(File):
+# Cube as alias for Input
+Cube = Input
+
+class Output(_File):
     def __init__(self,tag='out',src=None):
         if not tag:
             self.tag = Temp()
@@ -284,9 +287,9 @@ class Output(File):
             self.temp = False
         self.file = c_rsf.sf_output(self.tag)
         if src: # clone source file
-            c_rsf.sf_settype(self.file,File.type.index(src.type))
+            c_rsf.sf_settype(self.file,_File.type.index(src.type))
             c_rsf.sf_fileflush(self.file,src.file)
-        File.__init__(self)
+        _File.__init__(self)
     def write(self,data):
         if self.type == 'float':
             c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
