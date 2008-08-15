@@ -30,14 +30,14 @@ def dottest(oper,mod,dat):
 
 if __name__ == "__main__":
     # Create random matrix
-    matrix = rsf.spike(n1=10,n2=5,d1=1,d2=1).random[0]
+    matrix = rsf.spike(n1=10,n2=5,d1=1,d2=1).random()
     # Matrix multiplication operator
     oper = rsf.matmult(mat=matrix)
     # Model space and data space vectors
     model  = rsf.window(n2=1)[matrix]
     data   = rsf.window(n1=1)[matrix]
     # Using sfdottest
-    rsf.dottest(0,oper,mod=model,dat=data)[0]
+    rsf.dottest(0,oper,mod=model,dat=data)
     # Using function above
     dottest(oper,model,data)
 

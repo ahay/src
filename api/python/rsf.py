@@ -323,6 +323,10 @@ class Filter(object):
             self.__doc__ =  self.prog.docstring()
     def __str__(self):
         return self.command
+    def __or__(self,other):
+        'pipe overload'
+        self.command = '%s | %s' % (self,other) 
+        return self
     def setcommand(self,kw,args=[]):
         parstr = []
         for (key,val) in kw.items():
@@ -376,6 +380,9 @@ class Filter(object):
     def __call__(self,*args,**kw):
         if args:
             self.stdout = args[0]
+            self.run = True
+        elif not kw:
+            self.run = True
         self.setcommand(kw,args[1:])
         if self.run:
             return self[0]

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     matmult = rsf.matmult(mat=matrix)
 
     # Using sfconjgrad
-    x = rsf.conjgrad(1,matmult,mod=x0,niter=6)[y]
+    x = rsf.conjgrad(mod=x0,niter=6)[y,matmult]
     y1 = matmult[x]
     print x[:]
     print y1[:]

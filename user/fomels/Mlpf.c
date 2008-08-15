@@ -1,4 +1,4 @@
-/* Local prefiction filter (n-dimensional). */
+/* Local prediction filter (n-dimensional). */
 /*
   Copyright (C) 2006 University of Texas at Austin
    
@@ -40,12 +40,14 @@ int main(int argc, char* argv[])
     ndim = sf_filedims(dat,n);
     mdim = sf_filedims(mat,m);
 
-    if (mdim > ndim) sf_error("Wrong dimensions: %d > %d",mdim,ndim);
+    if (mdim > ndim) 
+	sf_error("Wrong dimensions: %d > %d",mdim,ndim);
  
     nd = 1;
     for (j=0; j < mdim; j++) {
 	if (m[j] != n[j]) 
-	    sf_error("Size mismatch [n%d]: %d != %d",j+1,m[j],n[j]);
+	    sf_error("Size mismatch [n%d]: %d != %d",
+		     j+1,m[j],n[j]);
 	nd *= m[j];
 	snprintf(key,6,"rect%d",j+1);
 	if (!sf_getint(key,rect+j)) rect[j]=1;
@@ -65,7 +67,8 @@ int main(int argc, char* argv[])
 	aa = NULL;
     } else {
 	pef = sf_input(peffile);
-	if (!sf_histint(pef,"n1",&na)) sf_error("No n1= in pef");
+	if (!sf_histint(pef,"n1",&na)) 
+	    sf_error("No n1= in pef");
 	aa = sf_allocatehelix (na);
 	
 	if (!sf_histfloat(pef,"a0",&a0)) a0=1.;
@@ -74,9 +77,9 @@ int main(int argc, char* argv[])
 	    aa->flt[ia] /= a0;
 	}
 	if (NULL != (lagfile = sf_getstring("lag")) 
-            /* file with PEF lags (optional) */
 	    || 
 	    NULL != (lagfile = sf_histstring(pef,"lag"))) {
+            /* file with PEF lags (optional) */
 	    lag = sf_input(lagfile);
 	    sf_intread(aa->lag,na,lag);
 	    sf_fileclose(lag);

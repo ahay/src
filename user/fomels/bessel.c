@@ -34,8 +34,7 @@ static float cheb_eval(float x, const double *cs, int n)
     int i, ni;
     float c, b0, b1, b2, twox;
 
-    b1 = 0.;
-    b0 = 0.;
+    b0 = b1 = b2 = 0.;
     twox = 2.*x;
     
     for (i=0; i < n; i++) {

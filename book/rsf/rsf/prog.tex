@@ -16,7 +16,7 @@ usage with examples.
 \section{Main programs}
 
 The source files for these programs can be found under
-\href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/}{filt/main}
+\href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/filt/main/}{filt/main}
 in the RSF distribution.
 
 \noindent\doublebox{\parbox{\textwidth}{
@@ -46,7 +46,7 @@ In both cases, the size and shape of \texttt{data1.rsf} and
 message is printed out if the the axis sampling parameters (such as
 \texttt{o1} or \texttt{d1}) in these files are different.
 
-\subsubsection{Implementation: \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/add.c?view=markup}{filt/main/add.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/filt/main/add.c?view=markup}{filt/main/add.c}}
 
 The first input file is either in the list or in the standard input.
 \moddex{add}{add}{101}{108}{filt/main}
@@ -88,7 +88,7 @@ deviation is the square root of the variance. Using \texttt{sfattr}
 is a quick way to see the distribution of data values and check it for
 anomalies.
 
-\subsubsection{Implementation: \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/attr.c?view=markup}{filt/main/attr.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/filt/main/attr.c?view=markup}{filt/main/attr.c}}
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
@@ -153,7 +153,7 @@ bash$ sfcat one.rsf two.rsf > three.rsf
 sfcat: n2 mismatch: need 3
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/add.c?view=markup}{filt/main/cat.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/filt/main/cat.c?view=markup}{filt/main/cat.c}}
 
 The first input file is either in the list or in the standard input.
 \moddex{cat}{cat}{48}{55}{filt/main}

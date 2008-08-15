@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf;
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
-    char *x, *R, *g, *s, *S;
+    char *x, *R, *g, *s, *S, *prog;
     sf_file mod, dat, out, from, to;
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
@@ -74,10 +74,21 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(mod) ||
 	SF_FLOAT != sf_gettype(dat)) 
 	sf_error("Need float type in mod and dat");
-  
+
     for (i=0; i < argc-1; i++) {
 	argv[i]=argv[i+1];
     }
+    for (i=0; i < argc-1; i++) {	
+	/* find the program to run */
+	if (NULL == strchr(argv[i],'=')) {
+	    /* first one without the '=' */
+	    prog = argv[0];
+	    argv[0] = argv[i];
+	    argv[i] = prog;
+	    break;
+	}
+    }
+
     argv[argc-1] = sf_charalloc(6);
     snprintf(argv[argc-1],6,"adj=X");
 
