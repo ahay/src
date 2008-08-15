@@ -720,6 +720,7 @@ Prepares file for writing binary data >*/
     }    
     
     sf_simtab_output(file->pars,file->stream);
+    (void) fflush(file->stream);
 
     if (0==strcmp(file->dataname,"stdout")) { 
 	/* keep stream, write the header end code */

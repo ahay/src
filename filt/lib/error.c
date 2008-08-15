@@ -59,6 +59,7 @@ the end of format adds system information for system errors. >*/
 	fprintf (stderr, "\n");
    
     if (0==strcmp("python",prog)) longjmp(*python_except,1);
+    (void) fflush(stderr);
     exit(EXIT_FAILURE);
 }
 
@@ -87,6 +88,7 @@ the end of format adds system information for system errors. >*/
     /* if format ends with ';', do not end line */
     if (format[0] == '\0' || format[strlen(format)-1] != ';')
 	fprintf (stderr, "\n");
+    (void) fflush(stderr);
 }
 
 /* 	$Id$	 */
