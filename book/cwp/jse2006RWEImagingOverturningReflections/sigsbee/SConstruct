@@ -115,14 +115,14 @@ Flow('rs','edge mask',
      window
      ''' % (par['nz']*par['nx']))
 
-Flow('ss',['xs','zs','rs'],
+Flow('ss',['xs','zs'],
      '''
      cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
+     ${SOURCES[0]} ${SOURCES[1]} | transp |
      window j2=2
      ''', stdin=0)
 
-Plot('ss',fdmod.ssplot('',par))
+Plot(  'ss',fdmod.ssplot('',par))
 Result('ss',['velo','ss'],'Overlay')
 
 # ------------------------------------------------------------
@@ -130,17 +130,8 @@ Result('ss',['velo','ss'],'Overlay')
 # ------------------------------------------------------------
 # receiver (flat)
 
-Flow('ro',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-
-Flow('zo','ro','math output="%g"' % par['oz'])
-Flow('xo','ro','math output="x1"')
-Flow('oo',['xo','zo'],
-     '''
-     cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} | transp
-     ''', stdin=0)
-
-Plot('oo',fdmod.rrplot('',par))
+fdmod.horizontal('oo',par['oz'],par)
+Plot(  'oo',fdmod.rrplot('',par))
 Result('oo',['velo','oo'],'Overlay')
 
 Result('model','velo ss oo','Overlay')
@@ -153,17 +144,13 @@ Flow('surf',None,
 
 # ------------------------------------------------------------
 # wavelet
-Flow('wav',None,
-     '''
-     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-     ricker1 frequency=20 | 
-     put label1=t label2=x label3=y 
-     ''' % par)    
-Result('wav','wav','window n1=1000 | graph title=" "')
+fdmod.wavelet('wav_',20,par)
+Flow(  'wav', 'wav_','transp')
+Result('wav','window n2=1000 |' + fdmod.waveplot('',par))
 
 # ------------------------------------------------------------
 # modeling
-fdmod.awefd('do','wo','wav','velo','dens','ss','oo','free=n',par)
+fdmod.awefd1('do','wo','wav','velo','dens','ss','oo','free=n',par)
 
 # ------------------------------------------------------------
 

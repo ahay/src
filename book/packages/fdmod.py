@@ -626,7 +626,6 @@ def wframe(frame,movie,index,custom,par):
 
     Flow([movie+'_plt',movie+'_bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
-
     Plot  (frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index
            + wgrey(custom,par))
@@ -674,11 +673,14 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
         Plot(frame+'-'+str(i),movie+'-plt',
              'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
              + cgrey('',par))
+        Result(frame+'-'+str(i),movie+'-plt',
+             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
+             + cgrey('',par))
 
     if(axis==1):
-        pplot.p2x1(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
+        pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
     else:
-        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
+        pplot.p1x2(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
 
 # ------------------------------------------------------------
 # elastic wavefield movie
@@ -690,7 +692,37 @@ def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.2
         
     allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
     Result(movie,allframes,'Movie')
+
+# ------------------------------------------------------------
+# elastic data
+def edata(plot,data,custom,par):
+
+    Flow([plot+'_plt',plot+'_bar'],data,
+         'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
     
+    for i in range(2):
+        Plot(  plot+str(i+1),[plot+'_plt',plot+'_bar'],
+               'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
+               + dgrey('%s' % custom,par))
+        Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
+               'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
+               + dgrey('%s' % custom,par))
+
+# ------------------------------------------------------------
+# elastic image
+def eimage(plot,imag,custom,par):
+
+    Flow([plot+'_plt',plot+'_bar'],imag,
+         'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s ' % custom)        
+
+    for i in range(4):        
+        Plot  (plot+str(i+1),[plot+'_plt',plot+'_bar'],
+               'window n3=1 f3=%d bar=${SOURCES[1]} |'% i
+               + cgrey('%s'% custom,par))
+        Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
+               'window n3=1 f3=%d bar=${SOURCES[1]} |'% i
+               + cgrey('%s'% custom,par))
+        
 # ------------------------------------------------------------
 # plot elastic wavelet
 def ewavelet(wavelet,custom,par):
@@ -700,4 +732,74 @@ def ewavelet(wavelet,custom,par):
              'window n2=1 f2=%d | transp | window |'%i +
              waveplot('%d %s'% (i,custom) ,par))
     pplot.p1x2(wavelet,wavelet+'-1',wavelet+'-2',0.5,0.5,-11)
+
+# ------------------------------------------------------------
+# acoustic RTM
+def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
+    
+    swfl = imag+'_us' #   source wavefield
+    rwfl = imag+'_ur' # receiver wavefield
+    twfl = imag+'_ut' #     temp wavefield
+    sout = imag+'_ds' #   source data (not the input sdat!)
+    rout = imag+'_dr' # receiver data (not the input rdat!)
+    
+    iwindow = ' ' + \
+              '''
+              nq1=%(nqz)d oq1=%(oqz)g
+              nq2=%(nqx)d oq2=%(oqx)g
+              jsnap=%(jdata)d jdata=%(jdata)d
+              ''' % par + ' '
+    
+    # source wavefield (z,x,t)
+    awefd(sout,swfl,sdat,velo,dens,sacq,iacq,custom+iwindow,par)
+    
+    # receiver wavefield (z,x,t)
+    tdat = imag+'_tds'
+    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
+    awefd(rout,twfl,tdat,velo,dens,racq,iacq,custom+iwindow,par)
+    Flow(rwfl,twfl,'reverse which=4 opt=i verb=y')
+    
+    # conventional (cross-correlation zero-lag) imaging condition
+    Flow(imag,[swfl,rwfl],'xcor uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
+    
+# ------------------------------------------------------------
+# elastic RTM
+def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
+    
+    swfl = imag+'_us' #   source wavefield
+    rwfl = imag+'_ur' # receiver wavefield
+    twfl = imag+'_ut' #     temp wavefield
+    sout = imag+'_ds' #   source data (not the input sdat!)
+    rout = imag+'_dr' # receiver data (not the input rdat!)
+    
+    iwindow = ' ' + \
+              '''
+              nq1=%(nqz)d oq1=%(oqz)g
+              nq2=%(nqx)d oq2=%(oqx)g
+              jsnap=%(jdata)d jdata=%(jdata)d
+              ''' % par + ' '
+    
+    # source wavefield (z,x,t)
+    ewefd2(sout,swfl,sdat,cccc,dens,sacq,iacq," ssou=y opot=n" + custom+iwindow,par)
+    
+    # receiver wavefield (z,x,t)
+    tdat = imag+'_tds'
+    Flow(tdat,rdat,'reverse which=4 opt=i verb=y')
+    ewefd2(rout,twfl,tdat,cccc,dens,racq,iacq," ssou=n opot=n" + custom+iwindow,par)
+
+    # ------------------------------------------------------------
+    Flow(swfl+'1',swfl,'window n3=1 f3=0')
+    Flow(swfl+'2',swfl,'window n3=1 f3=1')
+
+    Flow(rwfl+'1',twfl,'window n3=1 f3=0 | reverse which=4 opt=i verb=y')
+    Flow(rwfl+'2',twfl,'window n3=1 f3=1 | reverse which=4 opt=i verb=y')
+
+    # conventional (cross-correlation zero-lag) imaging condition
+    for     i in ('1','2'):
+        for j in ('1','2'):
+            Flow(imag+i+j,[swfl+i,rwfl+j],
+                 'xcor uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
+            
+    Flow(imag,[imag+'11',imag+'12',imag+'21',imag+'22'],
+         'cat axis=3 space=n ${SOURCES[1:4]}')
 
