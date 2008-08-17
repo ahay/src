@@ -6,6 +6,7 @@ progs = '''
 afac 
 convolve convolve2
 ewefd2
+ederiv
 '''
 
 try:  # distributed version
