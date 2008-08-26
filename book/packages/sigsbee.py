@@ -16,6 +16,8 @@ def param():
     par['dx']=par['dx']*par['ft2km']
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
+
+    par['nb']=250
     
     return par
 
@@ -92,6 +94,33 @@ def getstrvel(velo,par):
                 0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
                 10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
                 ))
+
+# ------------------------------------------------------------
+def getrefl(refl,par):
+
+    reffile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'
+
+    Flow([refl+'-raw',refl+'-t','./'+refl+'-h','./'+refl+'-b'],
+         reffile,
+         '''
+         segyread
+         tape=$SOURCE
+         tfile=${TARGETS[1]}
+         hfile=${TARGETS[2]}
+         bfile=${TARGETS[3]}
+         ''',stdin=0)
+
+    Flow(refl,
+         refl+'-raw',
+         '''
+         put 
+         o1=%g d1=%g label1=%s unit1=%s
+         o2=%g d2=%g label2=%s unit2=%s
+         ''' % (
+                0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
+                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
+                ))
+
 
 # ------------------------------------------------------------
 def makeshots(shot,data,par):

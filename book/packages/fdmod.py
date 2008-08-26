@@ -53,7 +53,6 @@ def param(par):
     if(not par.has_key('oq2')): par['oq2']=par['ox']
     if(not par.has_key('dq2')): par['dq2']=par['dx']
     
-    
     par['labelattr']=' '+par['labelattr']+' '
 # ------------------------------------------------------------
 # plotting functions
