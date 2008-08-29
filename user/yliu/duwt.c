@@ -26,191 +26,435 @@ static void (*transform)(bool);
 static float *t, *w;
 
 static void biorthogonal(bool adj) 
-/* Lifting CDF 9/7 biorthogonal wavelet transform in place */
+/* Lifting CDF 9/7 biorthogonal undecimated wavelet transform in place */
 {
-    int i,j;
     float a;
+    int i, j, shift, k, shiftt;
+    float *temp, *tempt;
+    temp = sf_floatalloc(nt);
+    tempt = sf_floatalloc(nt);
 
     if (adj) {
-	for (j=nt/2; j >= 1; j /= 2) {
-	    if (inv) {                            /*reverse dwt9/7 transform*/
-                a= 1.230174105f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i]  /= a;
-	        }
-	        t[0] /= a;                         /*left boundary*/
-	        for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i+j] *= a;
-		    /* Undo Scale */
-	        }
-	        if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
+	shift = 0;
+	shiftt = 1;
+	for (j=(scale-1); j>= 1; j--) {
+	    shift = pow(2,(j-1));
+	    shiftt = pow(2,j);
+	    if (inv) {                            /*reverse UWT 9/7 transform*/
+		a= 1.230174105f;
+		for (i=0; i< nt; i++) {
+		    t[(j-1)*nt+i] *=a;
+		    t[j*nt+i] /=a;
+		}
+		/* Undo Scale */
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    temp[i] = t[j*nt+k];
+		}
+		a= -0.4435068522f;		
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[k] + tempt[k];
+		}
+		a = -0.8829110762f;
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] += tempt[k];
+		}
+		/* Undo Step2 */
 
-                a= -0.4435068522f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i]   += (t[i+j]+t[i-j])*a;
-		    /* Undo Update 2 */
-	        }
-	        t[0] += 2*a*t[j];                  /*left boundary*/
+		for (i=0; i< nt; i++) {
+		    temp[i] = t[j*nt+i];
+		}
+		a= 0.05298011854f;		
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[i] + tempt[k];
+		}
+		a = 1.586134342f;
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] += tempt[k];
+		}
+		/* Undo Step1 */
 
-	        a = -0.8829110762f;
-	        for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i+j] += (t[i]+t[i+2*j])*a;
-		    /* Undo Predict 2 */
-	        }	 
-	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
-                    /* Undo Step 2 */
+	    } else {                               /*adjoint UWT 9/7 transform*/
+		a= 1.230174105f;
+		for (i=0; i< nt; i++) {
+		    t[(j-1)*nt+i] /=a;
+		    t[j*nt+i] *=a;
+		}
+		/* Adjoint Scale */
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    temp[i] = t[j*nt+k];
+		}
 
-                a= 0.05298011854f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i]   += (t[i+j]+t[i-j])*a;
-		    /* Undo Update 1 */
-	        }
-	        t[0] += 2*a*t[j];                  /*left boundary*/ 
+		a= -0.4435068522f;	
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] += tempt[k];
+		}
 
-	        a = 1.586134342f;
-	        for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i+j] += (t[i]+t[i+2*j])*a;
-		    /* Undo Predict 1 */
-	        }	 
-	        if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
-                    /* Undo Step 1 */
+		a = -0.8829110762f;
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[k] + tempt[k];
+		}
+		/* Adjoint Step2 */
 
+		for (i=0; i< nt; i++) {
+		    temp[i] = t[j*nt+i];
+		}
 
-	    } else {                               /*adjoint transform*/
-                a= 1.230174105f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i]  *= a;
-	        }
-	        t[0] *= a;                         /*left boundary*/
-	        for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i+j] /= a;
-		    /* Undo Scale */
-	        }
-	        if (i+j < nt) t[i+j] /= a;         /*right boundary*/  
+		a= 0.05298011854f;		
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] += tempt[k];
+		}
 
-                a= -0.4435068522f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i+j]   -= t[i]*a;
-                    t[i-j]   -= t[i]*a;
-		    /* Undo Update 2 */
-	        }
-	        t[j] -= 2*a*t[0];                  /*left boundary*/
-
-	        a = -0.8829110762f;
-	        for (i=0; i < nt-2*j; i += 2*j) {
-                    t[i]     -= t[i+j]*a;
-                    t[i+2*j] -= t[i+j]*a;
-		    /* Undo Predict 2 */
-	        }	 
-	        if (i+j < nt) t[i] -= 2*a*t[i+j];  /*right boundary*/  
-                    /* Undo Step 2 */
-
-                a= 0.05298011854f;
-	        for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i+j]   -= t[i]*a;
-                    t[i-j]   -= t[i]*a;
-		    /* Undo Update 1 */
-	        }
-	        t[j] -= 2*a*t[0];                  /*left boundary*/ 
-
-	        a = 1.586134342f;
-	        for (i=0; i < nt-2*j; i += 2*j) {
-                    t[i]     -= t[i+j]*a;
-                    t[i+2*j] -= t[i+j]*a;
-		    /* Undo Predict 1 */
-	        }	 
-	        if (i+j < nt) t[i] -= 2*a*t[i+j];  /*right boundary*/  
-                    /* Undo Step 1 */
-
+		a = 1.586134342f;
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[i] + tempt[k];
+		}
+		/* Adjoint Step1 */
 	    }
 	}
     } else {
-	for (j=1; j <= nt/2; j *= 2) {        /*different scale*/
-	    a = -1.586134342f;
-	    for (i=0; i < nt-2*j; i += 2*j) {
-		t[i+j] += (t[i]+t[i+2*j])*a;
-		/* Predict 1 */
-	    }	 
-	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
- 
-            a= -0.05298011854f;
-	    t[0] += 2*a*t[j];                  /*left boundary*/
-	    for (i=2*j; i < nt-j; i += 2*j) {
-		t[i]   += (t[i+j]+t[i-j])*a;
-		/* Update 1 */
+	shift = 0;
+	shiftt = 1;
+	for (j=1; j< scale; j++) {
+	    shift = pow(2,(j-1));
+	    shiftt = pow(2,j);
+	    for (i=0; i< nt; i++) {
+		t[j*nt+i] = t[(j-1)*nt+i];
 	    }
-                /* Step 1 */
+	    a = -1.586134342f;
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i+shift) > (nt-1)) {
+		    k = i + shift - nt;
+		} else {
+		    k = i + shift;
+		}
+		t[(j-1)*nt+i] += tempt[k];
+	    }
+	    a = -0.05298011854f;
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i-shift) < 0) {
+		    k = i - shift + nt;
+		} else {
+		    k = i - shift;
+		}
+		t[j*nt+i] = t[j*nt+i] + tempt[k];
+	    }
+              /* Step 1 */
 
 	    a = 0.8829110762f;
-	    for (i=0; i < nt-2*j; i += 2*j) {
-		t[i+j] += (t[i]+t[i+2*j])*a;
-		/* Predict 2 */
-	    }	 
-	    if (i+j < nt) t[i+j] += 2*a*t[i];  /*right boundary*/  
- 
-            a= 0.4435068522f;
-	    t[0] += 2*a*t[j];                  /*left boundary*/
-	    for (i=2*j; i < nt-j; i += 2*j) {
-		t[i]   += (t[i+j]+t[i-j])*a;
-		/* Update 2 */
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[j*nt+i] + t[j*nt+k])*a;
 	    }
-                /* Step 2 */
+	    for (i=0; i< nt; i++) {
+		if ((i+shift) > (nt-1)) {
+		    k = i + shift - nt;
+		} else {
+		    k = i + shift;
+		}
+		t[(j-1)*nt+i] += tempt[k];
+	    }
+            a= 0.4435068522f;
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])*a;
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i-shift) < 0) {
+		    k = i - shift + nt;
+		} else {
+		    k = i - shift;
+		}
+		temp[k] = t[j*nt+i] + tempt[k];
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i-shift) < 0) {
+		    k = i - shift + nt;
+		} else {
+		    k = i - shift;
+		}
+		t[j*nt+k]=temp[i];
+	    }
+             /* Step 2 */
 
             a= 1/(1.230174105f);
-	    for (i=0; i < nt-2*j; i += 2*j) {
-		t[i+j] *= a;
-	    }	 
-	    if (i+j < nt) t[i+j] *= a;         /*right boundary*/  
-	    t[0] /= a;                         /*left boundary*/
-	    for (i=2*j; i < nt-j; i += 2*j) {
-		t[i]  /= a;
-		/* Scale */
+	    for (i=0; i< nt; i++) {
+		t[(j-1)*nt+i] *=a;
+		t[j*nt+i] /=a;
 	    }
+		/* Scale */
 	}
     }
-
 }
 
 static void linear(bool adj) 
 /* Lifting linear-interpolation transform in place */
 {
-    int i, j;
+    int i, j, shift, k, shiftt;
+    float *temp, *tempt;
+    temp = sf_floatalloc(nt);
+    tempt = sf_floatalloc(nt);
 
     if (adj) {
-	for (j=nt/2; j >= 1; j /= 2) {
+	shift = 0;
+	shiftt = 1;
+	for (j=(scale-1); j>= 1; j--) {
+	    shift = pow(2,(j-1));
+	    shiftt = pow(2,j);
+
+	    for (i=0; i< nt; i++) {
+		temp[i]=t[j*nt+i];
+	    }
 	    if (inv) {
-		for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i]   -= (t[i+j]+t[i-j])/4;
+
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])/2;
 		}
-		t[0] -= t[j]/2;
-		for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i+j] += (t[i]+t[i+2*j])/2;
-		}	 
-		if (i+j < nt) t[i+j] += t[i];
+		for (i=0; i< nt; i++) {
+		    if ((i-shift) < 0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[k] - tempt[k]/2;
+		}
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])/2;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] = tempt[k] + t[(j-1)*nt+i];
+		}
 	    } else {
-		for (i=2*j; i < nt-j; i += 2*j) {
-		    t[i+j] += t[i]/4;
-		    t[i-j] += t[i]/4;
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[j*nt+i] + t[j*nt+k])/2;
 		}
-		t[j] += t[0]/2;
-		for (i=0; i < nt-2*j; i += 2*j) {
-		    t[i]     -= t[i+j]/2;
-		    t[i+2*j] -= t[i+j]/2;
-		}	 
-		if (i+j < nt) t[i] -= t[i+j];
+		for (i=0; i< nt; i++) {
+		    if ((i+shift) > (nt-1)) {
+			k = i + shift - nt;
+		    } else {
+			k = i + shift;
+		    }
+		    t[(j-1)*nt+i] += tempt[k]/2;
+		}
+		for (i=0; i<nt; i++) {
+		    if ((i-shiftt) < 0) {
+			k = i -shiftt + nt;
+		    } else {
+			k = i - shiftt;
+		    }
+		    tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])/2;
+		}
+		for (i=0; i< nt; i++) {
+		    if ((i-shift)<0) {
+			k = i - shift + nt;
+		    } else {
+			k = i - shift;
+		    }
+		    t[j*nt+i] = temp[k] - tempt[k];
+		}
 	    }
 	}
+
     } else {
-	for (j=1; j <= nt/2; j *= 2) {
-	    for (i=0; i < nt-2*j; i += 2*j) {
-		t[i+j] -= (t[i]+t[i+2*j])/2;
-		/* d = o - P e */
-	    }	 
-	    if (i+j < nt) t[i+j] -= t[i];    
-	    t[0] += t[j]/2;
-	    for (i=2*j; i < nt-j; i += 2*j) {
-		t[i]   += (t[i+j]+t[i-j])/4;
-		/* s = e + U d */
+	shift = 0;
+	shiftt = 1;
+	for (j=1; j< scale; j++) {
+	    shift = pow(2,(j-1));
+	    shiftt = pow(2,j);
+	    for (i=0; i< nt; i++) {
+		t[j*nt+i] = t[(j-1)*nt+i];
+	    }
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[j*nt+i] + t[j*nt+k])/2;
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i+shift) > (nt-1)) {
+		    k = i + shift - nt;
+		} else {
+		    k = i + shift;
+		}
+		t[(j-1)*nt+i] -= tempt[k];
+	    }
+	    for (i=0; i<nt; i++) {
+		if ((i-shiftt) < 0) {
+		    k = i -shiftt + nt;
+		} else {
+		    k = i - shiftt;
+		}
+		tempt[i] = (t[(j-1)*nt+i] + t[(j-1)*nt+k])/2;
+	    }
+	    for (i=0; i< nt; i++) {
+		if ((i-shift) < 0) {
+		    k = i - shift + nt;
+		} else {
+		    k = i - shift;
+		}
+		temp[k] = t[j*nt+i] + tempt[k]/2;
+	    }
+	    for (i=0; i< nt; i++) {
+		t[j*nt+i]=temp[i];
 	    }
 	}
     }
@@ -222,7 +466,6 @@ static void haar(bool adj)
     int i, j, shift, k;
     float *temp;
     temp = sf_floatalloc(nt);
-
 
     if (adj) {
 	shift = 0;
@@ -249,7 +492,6 @@ static void haar(bool adj)
 		    }
 		    t[(j-1)*nt+i] += t[j*nt+k];
 		}
-
 	    } else {
 		for (i=0; i< nt; i++) {
 		    if ((i+shift) > (nt-1)) {
@@ -259,7 +501,6 @@ static void haar(bool adj)
 		    }
 		    t[(j-1)*nt+i] +=  t[j*nt+k]/2;
 		}
-
 		for (i=0; i< nt; i++) {
 		    if ((i-shift)<0) {
 			k = i - shift + nt;
@@ -270,7 +511,6 @@ static void haar(bool adj)
 		}
 	    }
 	}
-
     } else {
 	shift = 0;
 	for (j=1; j< scale; j++) {
@@ -320,11 +560,9 @@ void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type, int m
 	    break;
 	case 'l':
 	    transform = linear;
-	    sf_error("Type=%c is unavailable now!",type);
 	    break;
 	case 'b':
 	    transform = biorthogonal;
-	    sf_error("Type=%c is unavailable now!",type);
 	    break;
 
 	default:
@@ -375,8 +613,6 @@ void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 		}
 	    }
 	}
-
-
     } else {
 	for (it=0; it < nx; it++) {
 	    t[it]=x[it];
