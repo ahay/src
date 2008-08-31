@@ -679,7 +679,7 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
     if(axis==1):
         pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
     else:
-        pplot.p1x2(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
+        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
 
 # ------------------------------------------------------------
 # elastic wavefield movie
