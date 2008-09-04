@@ -1,0 +1,46 @@
+from rsfproj import *
+
+# Download data
+Fetch('bay.h','bay')
+
+# Window and taper
+Flow('bay','bay.h',
+     '''
+     dd form=native |
+     window f2=500 n2=1600 f1=50 n1=1050 |
+     reverse which=1 |
+     costaper nw1=50 nw2=50
+     ''')
+
+# Convert to byte form
+Flow('byte','bay','byte pclip=99.9 allpos=y')
+
+# Display
+Result('bay','byte',
+       '''
+       grey crowd=0.85 title="Elevation of San Francisco Bay"
+       ''')
+
+# Histogram
+Flow('hist','byte',
+     '''
+     dd type=float |
+     histogram n1=256 o1=0 d1=1 |
+     dd type=float
+     ''')
+Plot('hist',
+     'graph label1=Value label2=Occurence title=Histogram')
+
+# Cumulative histogram
+Flow('cumu','hist','causint')
+
+Result('hist','hist cumu',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 |
+       graph label1=Value label2="Normalized Occurence"
+       title=Histogram dash=0,1
+       ''')
+
+# ADD HISTOGRAM EQUALIZATION
+
+End()
