@@ -20,10 +20,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "median.h"
-
-float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
-
 int main (int argc, char* argv[]) 
 {
 	int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
