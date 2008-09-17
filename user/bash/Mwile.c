@@ -12,7 +12,7 @@ GIMP plugin is capable of working with greyscale input.
 
 Examples:
 
-sfwile < in.rsf command="gimp-equlize TRUE" > out.rsf
+sfwile < in.rsf command="gimp-equalize TRUE" > out.rsf
 sfwile < in.rsf command="plug-in-spread 5 5" > out.rsf
 sfwile < in.rsf command="plug-in-gauss-rle 4.0 TRUE TRUE" > out.rsf
 sfwile < in.rsf command="plug-in-sobel TRUE TRUE TRUE" > out.rsf
