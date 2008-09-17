@@ -12,6 +12,7 @@ GIMP plugin is capable of working with greyscale input.
 
 Examples:
 
+sfwile < in.rsf command="gimp-equlize TRUE" > out.rsf
 sfwile < in.rsf command="plug-in-spread 5 5" > out.rsf
 sfwile < in.rsf command="plug-in-gauss-rle 4.0 TRUE TRUE" > out.rsf
 sfwile < in.rsf command="plug-in-sobel TRUE TRUE TRUE" > out.rsf
@@ -212,7 +213,13 @@ int main (int argc, char* argv[]) {
     fprintf (scm_file, "   (let* ((image (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))\n");
     fprintf (scm_file, "          (drawable (car (gimp-image-get-active-layer image))))\n");
     fprintf (scm_file, "     (");
-    fprintf (scm_file, "%s RUN-NONINTERACTIVE image drawable", cmd);
+
+    /* Plugin or not plugin command? */
+    if (0 == strncmp (cmd, "plug-in", 7))
+        fprintf (scm_file, "%s RUN-NONINTERACTIVE image drawable", cmd);
+    else
+        fprintf (scm_file, "%s drawable", cmd);
+
     for (i = 0; i < arg_num; i++) {
         fprintf (scm_file, " arg%d", i);
     }
