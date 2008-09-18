@@ -44,13 +44,13 @@ def conjgrad(oper,dat,x0,niter):
 
 if __name__ == "__main__":
     # test matrix and data
-    matrix = rsf.Input([[1,1,1,0],
-                        [1,2,0,0],
-                        [1,3,1,0],
-                        [1,4,0,1],
-                        [1,5,1,1]])
-    y = rsf.Input([3,3,5,7,9])
-    x0 = rsf.Input([0,0,0,0])
+    matrix = rsf.Cube([[1,1,1,0],
+                       [1,2,0,0],
+                       [1,3,1,0],
+                       [1,4,0,1],
+                       [1,5,1,1]])
+    y = rsf.Cube([3,3,5,7,9])
+    x0 = rsf.Cube([0,0,0,0])
     # matrix multiplication operator
     matmult = rsf.matmult(mat=matrix)
 

@@ -1,0 +1,188 @@
+\author{Joseph Fourier}
+%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 2}
+
+\begin{abstract}
+  This homework has four parts. 
+  \begin{enumerate}
+  \item Theoretical questions related to digital filtering.
+  \item Analyzing data by applying a running median filter.
+  \item Analyzing data by applying Fourier compression.
+  \item Applying one of these algorithms to your own data.
+  \end{enumerate}
+\end{abstract}
+
+\section{Digital filtering}
+
+You can either write your answers on paper or edit them in the file
+\verb#hw2/paper.tex#. Please show all the mathematical
+derivations that you perform.
+
+\begin{enumerate}
+
+\item You are given a table of numbers $x_1, x_2, \ldots, x_N$ and $y_1, y_2, \ldots, y_N$ and 
+want to fit a parabolic model $y(x) = a + b\,x + c\,x^2$ to them.
+
+\begin{enumerate}
+\item Using the method of least squares, find a set of liner equations for coefficients $a$, $b$, and $c$.
+\item Using the method of least squares, find $a$, $b$, and $c$ for the case of $N=2$.
+\end{enumerate}
+
+\item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
+\begin{equation}
+\label{eq:conv}
+\mathbf{F} = \left[\begin{array}{llllll}
+f_1 & f_0 & 0   & 0   & 0   & 0   \\
+f_2 & f_1 & f_0 & 0   & 0   & 0   \\
+f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
+0   & f_3 & f_2 & f_1 & f_0 & 0   \\
+0   & 0   & f_3 & f_2 & f_1 & f_0 \\
+0   & 0   & 0   & f_3 & f_2 & f_1 \\
+\end{array}\right]\;.
+\end{equation}
+
+The operator is implemented in the C code below.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=15]{conv.c}
+
+\begin{enumerate}
+\item Modify the matrix and the program to implement periodic boundary conditions.
+\item Add the code for the adjoint (matrix transpose) operator.
+\end{enumerate}
+
+\item Consider the parabolic filter $F(Z)$ defines as
+\begin{equation}
+\label{eq:parab}
+F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^N\;.
+\end{equation} 
+
+\begin{enumerate}
+\item Show that this filter can be implemented with recursive filtering (polynomial division).
+\item What is the advantage of recursive filtering? Does it depend on $N$?
+\end{enumerate}
+
+\item Using helical boundary conditions, a two-dimensional filter $F_2(Z_1,Z_2)$ can be mapped 
+to a one-dimensional filter $H(Z)$ according to equation
+\begin{equation}
+\label{eq:helix}
+F_2(Z_1,Z_2) = H\left(Z_1 + Z_2\,Z_1^{N_1}\right)\;,
+\end{equation} 
+where $N_1$ is the length of the first (fast) axis. How would you map
+a three-dimensional filter $F_3(Z_1,Z_2,Z_3)$?
+
+\end{enumerate}
+
+\newpage
+
+\section{Running median and running mean filters}
+\inputdir{running}
+
+\plot{bay}{width=\textwidth}{Digital elevation map of the San Francisco
+  Bay Area.}
+
+We return the digital elevation map of the San Francisco Bay Area, shown in Figure~\ref{fig:bay}.
+
+In this exercise, we will separate the data into ``signal'' and
+``noise'' by applying running mean and median filters.  The result of
+applying a running median filter is shown in
+figure~\ref{fig:med,res}. Running median effectively smooths the data
+by removing local outliers.
+
+\multiplot{2}{med,res}{width=0.45\textwidth}{Data separated into signal (a) and noise (b) by applying a running median filter.}
+
+\plot{time}{width=\textwidth}{CPU time for computing the running median with different algorithms as a function of the window size. 
+The dashed line corresponds to slow sorting in program \texttt{running.c}, the solid line corresponds to the fast \emph{quantile} algorithm.}
+
+The algorithm is implemented in program \texttt{running.c}.
+
+\lstinputlisting[frame=single]{running/running.c}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw2/running#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{running.c} program and the \texttt{SConstruct} file to compute running mean instead of running median. Compare the results.
+\item \textbf{EXTRA CREDIT} for improving the efficiency of the running median algorithm. Figure~\ref{fig:time} compares the efficiency of running median computations using the slow sorting from function \texttt{median} in program \texttt{running.c} and the fast quantile algorithm (library function \verb#sf_quantile# ). Your goal is to make the algorithm even faster. Consider parallelization, reusing previous window results, other fast sorting strategies, etc.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{running/SConstruct}
+
+\section{Fourier compression}
+\inputdir{fourier}
+
+\plot{fft}{width=\textwidth}{Absolute value of the Fourier transform of the digital elevation data. The frame inside shows a window selected for compression.}
+
+The goal of your next assignment is to find a compressed
+representation of the data in the Fourier transform
+domain. Figure~\ref{fig:fft} shows the Fourier transform of the
+digital elevation data from Figure~\ref{fig:bay}. We can see that most
+of the energy gets concentrated near the center (zero frequency). 
+
+There are two alternative ways to compress data in the Fourier domain:
+\begin{itemize}
+\item One approach is to
+select a range of frequencies that contain the most important
+information. An advantage of this approach is the ability to subsample
+the original data by transforming back from a windowed range of frequencies.
+The results from this method are shown in Figure~\ref{fig:sig,cut}.
+\item Another approach is to zero all Fourier coefficients below a certain threshold value, regardless of which frequencies they represent.  
+ The results from this method are shown in Figure~\ref{fig:thr,noi}. Figure~\ref{fig:hist} shows a selected threshold plotted against the histogram of Fourier coefficients.
+\end{itemize}
+
+\multiplot{2}{sig,cut}{width=0.45\textwidth}{Data separated into signal (a) and noise (b) by applying Fourier compression with windowing.}
+\multiplot{2}{thr,noi}{width=0.45\textwidth}{Data separated into signal (a) and noise (b) by applying Fourier compression with thresholding.}
+
+\sideplot{hist}{width=0.8\textwidth}{Normalized histogram of Fourier coefficients (by absolute value). The vertical line shows a selected threshold.}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw2/fourier#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to decrease the size of the window so that the noise level increases in Figure~\ref{fig:cut}. How do you measure the noise level? Find a level that you find negligibly small.
+\item Modify the \texttt{SConstruct} file to increase the threshold value so that the compression achieves the same quality as in the previous case. The noise level in Figure~\ref{fig:noi} should match that in Figure~\ref{fig:cut}.
+\item Compare the number of nonzero Fourier coefficients in both cases. Which method achieves a better compression?
+\item \textbf{EXTRA CREDIT} for finding a way for a better compression of the data in the Fourier domain. Your data reconstruction should have 
+the same noise level, yet the number of non-zero coefficients in the Fourier domain should be smaller.
+\end{enumerate}
+
+\lstinputlisting[frame=single]{fourier/SConstruct}
+
+\newpage
+
+\section{Your own data}
+
+Your final task is to apply one of the data analysis techniques of the
+previous sections to your own data:
+\begin{enumerate}
+\item Select a dataset suitable for
+running mean/median filters or for Fourier compression.
+\item Apply one the algorithm of the previous sections and choose
+  appropriate parameters.
+\item Include the results in your homework.
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw2#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+first line to have your name instead of Fourier's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+and
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+\item Submit your result (file \texttt{paper.pdf}) by printing it out
+  or by e-mail.
+\end{enumerate}

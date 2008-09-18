@@ -1,0 +1,113 @@
+from rsfproj import *
+
+# Download data
+Fetch('bay.h','bay')
+
+# Window and taper
+Flow('bay','bay.h',
+     '''
+     dd form=native |
+     window f2=500 n2=1600 f1=50 n1=1050 |
+     costaper nw1=50 nw2=50
+     ''')
+
+# Display
+Result('bay',
+       '''
+       grey crowd=0.85 clip=1111 allpos=y yreverse=n
+       title="Elevation of San Francisco Bay"
+       ''')
+
+# 2-D Fourier Transform
+Flow('fft','bay',
+     'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Plot('fft',
+     '''
+     math output="abs(input)" | real | 
+     grey title="Fourier Transform" allpos=y screenratio=1
+     ''')
+
+# A. Compression by Windowing
+#############################
+
+cut = 0.1 # Fixed
+
+# Plot a frame
+Flow('frame.asc',None,
+     'echo %s n1=10 in=$TARGET data_format=ascii_float' % 
+     ' '.join(map(str,[cut]*3+[-cut]*4+[cut]*3)))
+Plot('frame','frame.asc',
+     '''
+     dd type=complex form=native |
+     graph plotfat=5 plotcol=0
+     min1=-0.5 min2=-0.5 max1=0.5 max2=0.5 screenratio=1
+     wantaxis=n wanttitle=n pad=n transp=y yreverse=y
+     ''')
+
+Result('fft','fft frame','Overlay')
+
+# Cut a square hole
+Flow('fcut','fft',
+     '''
+     cut min1=%g max1=%g min2=%g max2=%g
+     ''' % (-cut,cut,-cut,cut))
+
+# Inverse FFT
+Flow('cut','fcut',
+     'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
+Result('cut',
+       '''
+       grey crowd=0.85 clip=1111 yreverse=n
+       title="Compression Noise"
+       ''')
+
+Flow('sig','bay cut','add scale=1,-1 ${SOURCES[1]}')
+Result('sig',
+       '''
+       grey crowd=0.85 clip=1111 allpos=y yreverse=n
+       title="Compression Signal"
+       ''')
+
+# B. Compression by Thresholding
+################################
+
+thr = 10000 # Change Me
+
+# Plot histogram
+Plot('hist','fft',
+     '''
+     math output="abs(input)" | real |
+     histogram o1=0 d1=%g n1=101 |
+     dd type=float | scale axis=1 |
+     graph title="Scaled Histogram" 
+     ''' % (3*thr/100))
+Flow('line.asc',None,
+     'echo 0 0 0 1 n1=4 data_format=ascii_float in=$TARGET')
+Plot('line','line.asc',
+     '''
+     dd type=complex form=native | 
+     graph min1=-1 max1=2 plotcol=5 wantaxis=n wanttitle=n
+     ''')
+Result('hist','hist line','Overlay')
+
+# Thresholding
+Flow('fthr','fft','thr thr=%g' % thr)
+
+# Inverse FFT
+Flow('thr','fthr',
+     'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
+Result('thr',
+       '''
+       grey crowd=0.85 clip=1111 allpos=y yreverse=n
+       title="Compression Signal"
+       ''')
+
+# Subtract from Data
+Flow('noi','bay thr','add scale=1,-1 ${SOURCES[1]}')
+Result('noi',
+       '''
+       grey crowd=0.85 clip=1111 yreverse=n
+       title="Compression Noise"
+       ''')
+
+End()

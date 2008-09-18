@@ -1,0 +1,92 @@
+from rsfproj import *
+
+from rsfproj import *
+
+# Download data
+Fetch('bay.h','bay')
+
+# Window and taper
+Flow('bay','bay.h',
+     '''
+     dd form=native |
+     window f2=500 n2=1600 f1=50 n1=1050 |
+     costaper nw1=50 nw2=50
+     ''')
+
+# Display
+def plot(title):
+    return '''
+    grey crowd=0.85 clip=1111 allpos=y yreverse=n
+    title="%s"
+    ''' % title
+
+Result('bay',plot('Elevation of San Francisco Bay'))
+
+# Running median program
+run = Program('running.c')
+
+###########
+# MODIFY ME
+###########
+Flow('med','bay %s' % run[0],
+     './${SOURCES[1]} w1=20 w2=20 what=0')
+Result('med',plot('Signal'))
+
+# Difference
+Flow('res','bay med','add scale=1,-1 ${SOURCES[1]}')
+Result('res',plot('Noise') + ' allpos=n')
+
+# slow or fast
+for case in range(2):
+
+    ts = []
+    ws = []
+
+    time = 'time%d' % case
+    wind = 'wind%d' % case
+    
+    # loop over window size
+    for w in range(3,16,2):
+        itime = '%s-%d' % (time,w)
+        ts.append(itime)
+
+        iwind = '%s-%d' % (wind,w)
+        ws.append(iwind)
+
+        # measure CPU time
+        Flow(iwind,None,'spike n1=1 mag=%d' % (w*w)) 
+        Flow(itime,'bay %s' % run[0],
+             '''
+             ( (/usr/bin/time -f "%%S %%U"
+             ./${SOURCES[1]} < ${SOURCES[0]} 
+              w1=%d w2=%d what=%d > /dev/null ) 2>&1 )
+              > time.out &&
+             (tail -1 time.out; 
+              echo in=time0.asc n1=2 data_format=ascii_float)
+              > time0.asc &&
+             dd form=native < time0.asc | stack axis=1 norm=n
+             > $TARGET &&
+             /bin/rm time0.asc time.out
+             ''' % (w,w,case),stdin=0,stdout=-1)
+        
+    Flow(time,ts,'cat axis=1 ${SOURCES[1:%d]}' % len(ts))
+    Flow(wind,ws,'cat axis=1 ${SOURCES[1:%d]}' % len(ws))
+
+    # complex numbers for plotting
+    Flow('c'+time,[wind,time],
+         '''
+         cat axis=2 ${SOURCES[1]} |
+         transp |
+         dd type=complex
+         ''')
+
+# Display CPU time
+Result('time','ctime0 ctime1',
+       '''
+       cat axis=1 ${SOURCES[1]} | transp |
+       graph dash=0,1 wanttitle=n
+       label2="CPU Time" unit2=s
+       label1="Window Size" unit1=
+       ''')
+
+End()
