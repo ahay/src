@@ -81,7 +81,7 @@ counit:   coordinate units code:
 for previoius four entries
 1 = length (meters or feet)
 2 = seconds of arc (in this case, the
-X values are unsigned intitude and the Y values
+X values are unsigned longitude and the Y values
 are latitude, a positive value designates
 the number of seconds east of Greenwich
 or north of the equator 88 
