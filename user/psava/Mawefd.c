@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
 	    cut2d(uo,uc,fdm,ac1,ac2);
 	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 	}
-	if(        it    %jdata==0) 
+	if(        it%jdata==0) 
 	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    

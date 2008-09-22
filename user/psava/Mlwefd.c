@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
 	lint2d_extract(buo,bdd,cr);
 	lint2d_extract(suo,sdd,cr);
 
-	if(snap && (it+1)%jsnap==0) {
+	if(snap && it%jsnap==0) {
 	    cut2d(buo,uc,fdm,ac1,ac2);
 	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 

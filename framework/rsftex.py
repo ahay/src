@@ -709,7 +709,6 @@ def latexscan(node,env,path):
                  plots.append(os.path.join(resdir2,plot + ressuffix))
                  if re.search('angle=90',line):
                       plotoption[plot+pssuffix] = '-flip r90'
-
             
             check = ismplot.search(line)
             if check:

@@ -165,8 +165,8 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
         if(i=='F45'): method='method=0 c1=0.50   c2=0.25'
         if(i=='F60'): method='method=0 c1=0.4761 c2=0.3767'
         if(i=='SSF'): method='method=1'
-        if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
-        if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
+        if(i=='FFD'): method='method=2 c1=0.50   c2=0.25'
+        if(i=='PSC'): method='method=3 c1=0.50   c2=0.25'
 
         Flow(migRC+sfx,[frqRC,abmRC,abrRC],
              '''
@@ -203,8 +203,8 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
         if(i=='F45'): method='method=0 c1=0.50   c2=0.25'
         if(i=='F60'): method='method=0 c1=0.4761 c2=0.3767'
         if(i=='SSF'): method='method=1'
-        if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
-        if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
+        if(i=='FFD'): method='method=2 c1=0.50   c2=0.25'
+        if(i=='PSC'): method='method=3 c1=0.50   c2=0.25'
         
         Flow(modRC+sfx,[migRC+sfx,abmRC,abrRC],
              '''
