@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, np, i3, n3;
+    int i, niter, nw, n1, n2, n12, np, i3, n3, nj1, nj2;
     float *mm, *dd, **pp, **qq;
     bool *known, verb, prec;
     sf_file in, out, dip, mask;
@@ -47,6 +47,10 @@ int main(int argc, char* argv[])
     /* [1,2,3] accuracy order */
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+    if (!sf_getint("nj1",&nj1)) nj1=1;
+    /* antialiasing for first dip */
+    if (!sf_getint("nj2",&nj2)) nj2=1;
+    /* antialiasing for second dip */
 
     if (!sf_getbool("prec",&prec)) prec = false;
     /* if y, apply preconditioning */
@@ -79,7 +83,7 @@ int main(int argc, char* argv[])
 	    predict2_init(n1,n2,0.0001,pp,qq);
 	    sf_mask_init(known);
 	} else {
-	    twoplane2_init(nw, 1,1, n1,n2, pp, qq);
+	    twoplane2_init(nw, nj1,nj2, n1,n2, pp, qq);
 	}
     } else {
 	if (prec) {
@@ -87,7 +91,7 @@ int main(int argc, char* argv[])
 	    predict_set(pp);
 	    sf_mask_init(known);
 	} else {
-	    allpass22_init(allpass2_init(nw, 1, n1,n2, pp));
+	    allpass22_init(allpass2_init(nw, nj1, n1,n2, pp));
 	}
     }
 
