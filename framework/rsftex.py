@@ -21,8 +21,8 @@ import rsfconf, rsfdoc, rsfprog, rsfpath, latex2wiki, vplot2eps
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.'))
-if version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
+version = map(int,string.split(SCons.__version__,'.')[:3])
+if version[0] == 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:
     import SCons.Script.SConscript
