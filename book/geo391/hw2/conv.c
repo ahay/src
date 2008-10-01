@@ -22,8 +22,8 @@ void conv_lop (bool adj, bool add,
     sf_adjnull (adj, add, nx, ny, xx, yy);
     
     for (f=0; f < nf; f++) {
-	for (y = f-1; y < nx + f-1; y++) {
-	    x = y - f + 1;
+	for (y = SF_MAX(0,f-1); y < nx + f-1; y++) {
+	    x = y - f + 1;	    
 	    if( adj) {
 		/* add code */
 	    } else {

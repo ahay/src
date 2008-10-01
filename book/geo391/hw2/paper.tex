@@ -54,7 +54,7 @@ The operator is implemented in the C code below.
 \item Consider the parabolic filter $F(Z)$ defines as
 \begin{equation}
 \label{eq:parab}
-F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^N\;.
+F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^{N-1}\;.
 \end{equation} 
 
 \begin{enumerate}
@@ -66,7 +66,7 @@ F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^N\;.
 to a one-dimensional filter $H(Z)$ according to equation
 \begin{equation}
 \label{eq:helix}
-F_2(Z_1,Z_2) = H\left(Z_1 + Z_2\,Z_1^{N_1}\right)\;,
+H(Z) = F_2\left(Z,Z^{N_1}\right)\;,
 \end{equation} 
 where $N_1$ is the length of the first (fast) axis. How would you map
 a three-dimensional filter $F_3(Z_1,Z_2,Z_3)$?
