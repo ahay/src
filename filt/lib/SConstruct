@@ -5,7 +5,7 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr mt19937ar'
+src = 'kiss_fft kiss_fftr mt19937ar ctmf'
 
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
