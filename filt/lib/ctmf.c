@@ -58,14 +58,10 @@ typedef UINT32 uint32_t;
 #define USE_MMX 1
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && __GNUC__ >= 4
 /* gcc 3.4 lacks mm_malloc.h */
-#  if __GNUC__ >= 4
-#    include <mm_malloc.h>
-#  else
-#    include "an_mm_malloc.h"
-#  endif
-#  define HAVE_MM_MALLOC 1
+#include "an_mm_malloc.h"
+#define HAVE_MM_MALLOC 1
 #elif defined(_MSC_VER)
 #include <malloc.h>
 #else
