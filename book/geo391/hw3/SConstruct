@@ -1,0 +1,3 @@
+from rsftex import *
+
+End(use='hyperref,listings',color='horizon hole pocs',hires='nearest linear')

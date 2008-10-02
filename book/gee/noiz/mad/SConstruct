@@ -52,8 +52,9 @@ Result('jesse5','tris',
 
 for case in range(2):
     bin = 'bin%d' % case
+    fld = 'fld%d' % case
     
-    Flow(bin,'tris',
+    Flow([bin,fld],'tris',
          '''
          window n1=1 f1=2 |
          bin fold=${TARGETS[1]} xkey=0 ykey=1 head=$SOURCE

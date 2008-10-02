@@ -1,0 +1,91 @@
+from rsfproj import *
+
+# Download data
+Fetch('horizon.asc','hall')
+
+# Convert format
+Flow('horizon','horizon.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=57036 | 
+     dd form=native | window n1=1 f1=-1 |
+     put 
+     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
+     n1=196 o1=33.139 d1=0.01 label1=x unit1=km
+     ''')
+
+# Display
+def plot(title):
+    return '''
+    grey color=j bias=65 title="%s" 
+    transp=y yreverse=n clip=14
+    ''' % title
+Result('horizon',plot('Horizon'))
+
+# Cut three square holes (!!! MODIFY !!!)
+cut = '''
+cut n1=10 n2=10 f1=100 f2=150 | 
+cut n1=10 n2=10 f1=150 f2=100 | 
+cut n1=10 n2=10 f1=50 f2=200
+'''
+
+Flow('hole','horizon',cut)
+Flow('mask','horizon',
+     'math output=1 | %s | math output=1-input' % cut)
+Plot('hole',plot('Input'))
+Result('hole','Overlay')
+
+# Fourier transform
+for data in ('horizon','hole'):
+    fft = 'fft-'+data
+    Flow(fft,data,'fft1 | fft3 axis=2')
+    Plot(fft,
+         '''
+         math output="abs(input)" | real | 
+         grey allpos=y title="Fourier Transform (%s)" 
+         ''' % data.capitalize())
+
+# Create Fourier mask
+Flow('fmask','fft-hole',
+     '''
+     real | math output="x1*x1+x2*x2" | mask min=100 |
+     dd type=float | cut n1=1 | cut min2=-0.5 max2=0.5 |
+     math output=1-input | smooth rect1=5 rect2=5 repeat=3 | 
+     rtoc
+     ''')
+Plot('fmask','real | grey allpos=y title="Fourier Mask" ')
+Result('fft','fft-horizon fmask fft-hole','SideBySideIso')
+
+# POCS iterations
+niter=30 # !!! MODIFY !!!
+
+data = 'hole'
+plots = ['hole']
+for iter in range(niter): 
+    old = data
+    data = 'data%d' % iter
+
+    # 1. Forward FFT
+    # 2. Multiply by Fourier mask
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'fmask','mask','hole'],
+         '''
+         fft1 | fft3 axis=2 | 
+         add mode=p ${SOURCES[1]} |
+         fft3 axis=2 inv=y | fft1 inv=y |
+         add mode=p ${SOURCES[2]} | 
+         add ${SOURCES[3]}
+         ''')
+    # Display every 5th iteration
+    if (iter+1)%5==0:
+        Plot(data,plot('Iteration %d' % (iter+1)))
+        plots.append(data)
+# Put frames in a movie
+Plot('pocs',plots,'Movie',view=1)
+
+# Last frame
+Result('pocs',data,
+       plot('POCS interpolation (%d iterations)' % niter))
+
+End()
