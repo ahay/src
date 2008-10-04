@@ -3,10 +3,16 @@
 
 #ifndef _fdutil_h
 
-typedef struct fdm *fdm2d;
+typedef struct fdm2 *fdm2d;
 /*^*/
 
-typedef struct lcoef *lint2d;
+typedef struct fdm3 *fdm3d;
+/*^*/
+
+typedef struct lcoef2 *lint2d;
+/*^*/
+
+typedef struct lcoef3 *lint3d;
 /*^*/
 
 typedef struct abcone *abcone2d;
@@ -18,10 +24,10 @@ typedef struct sponge *sponge2d;
 typedef struct ofg *ofg2d;
 /*^*/
 
-struct fdm{
-    int n1,n1pad;
-    int n2,n2pad;
+struct fdm2{
     int nb;
+    int   n1,n1pad;
+    int   n2,n2pad;
     float o1,o1pad;
     float o2,o2pad;
     float d1;
@@ -32,7 +38,24 @@ struct fdm{
 };
 /*^*/
 
-struct lcoef{
+struct fdm3{
+    int nb;
+    int   n1,n1pad;
+    int   n2,n2pad;
+    int   n3,n3pad;
+    float o1,o1pad;
+    float o2,o2pad;
+    float o3,o3pad;
+    float d1;
+    float d2;
+    float d3;
+    bool verb;
+    bool free;
+    int ompchunk;
+};
+/*^*/
+
+struct lcoef2{
     int n;
     float *w00;
     float *w01;
@@ -40,6 +63,22 @@ struct lcoef{
     float *w11;
     int *j1;
     int *j2;
+};
+/*^*/
+
+struct lcoef3{
+    int n;
+    float *w000;
+    float *w001;
+    float *w010;
+    float *w011;
+    float *w100;
+    float *w101;
+    float *w110;
+    float *w111;
+    int *j1;
+    int *j2;
+    int *j3;
 };
 /*^*/
 
@@ -66,6 +105,7 @@ struct ofg{
 #endif
 
 static float** bell;
+static float***bell3d;
 static int    nbell;
 
 /*------------------------------------------------------------*/
@@ -104,6 +144,49 @@ fdm2d fdutil_init(bool verb_,
 
     return fdm;
 }
+
+fdm3d fdutil3d_init(bool verb_, 
+		    bool free_,
+		    sf_axis a1_, 
+		    sf_axis a2_, 
+		    sf_axis a3_, 
+		    int     nb_,
+		    int ompchunk_) 
+/*< init fdm utilities >*/
+{ 
+    fdm3d fdm;
+    fdm = (fdm3d) sf_alloc(1,sizeof(*fdm));
+
+    fdm->free=free_;
+    fdm->verb=verb_;
+
+    fdm->nb=nb_;
+
+    fdm->n1=sf_n(a1_);
+    fdm->n2=sf_n(a2_);
+    fdm->n3=sf_n(a3_);
+
+    fdm->d1=sf_d(a1_);
+    fdm->d2=sf_d(a2_);
+    fdm->d3=sf_d(a3_);
+
+    fdm->o1=sf_o(a1_);
+    fdm->o2=sf_o(a2_);
+    fdm->o3=sf_o(a3_);
+
+    fdm->n1pad=sf_n(a1_)+2*fdm->nb;
+    fdm->n2pad=sf_n(a2_)+2*fdm->nb;
+    fdm->n3pad=sf_n(a3_)+2*fdm->nb;
+	
+    fdm->o1pad=sf_o(a1_)-fdm->nb*fdm->d1;
+    fdm->o2pad=sf_o(a2_)-fdm->nb*fdm->d2;
+    fdm->o3pad=sf_o(a3_)-fdm->nb*fdm->d3;
+
+    fdm->ompchunk=ompchunk_;
+
+    return fdm;
+}
+
 
 /*------------------------------------------------------------*/
 ofg2d offgrid_init(fdm2d fdm)
@@ -211,6 +294,52 @@ void expand(float** a,
     }
 }
 
+void expand3d(float ***a, 
+	      float ***b, 
+	      fdm3d  fdm)
+/*< expand domain >*/
+{
+    int i1,i2,i3;
+
+    for         (i3=0;i3<fdm->n3;i3++) {
+	for     (i2=0;i2<fdm->n2;i2++) {
+	    for (i1=0;i1<fdm->n1;i1++) {
+		b[fdm->nb+i3][fdm->nb+i2][fdm->nb+i1] = a[i3][i2][i1];
+	    }
+	}
+    }
+
+    for         (i3=0; i3<fdm->n3pad; i3++) {
+	for     (i2=0; i2<fdm->n2pad; i2++) {
+	    for (i1=0; i1<fdm->nb;    i1++) {
+		b[i3][i2][           i1  ] = b[i3][i2][           fdm->nb  ];
+		b[i3][i2][fdm->n1pad-i1-1] = b[i3][i2][fdm->n1pad-fdm->nb-1];
+	    }
+	}
+    }
+
+
+    for         (i3=0; i3<fdm->n3pad; i3++) {
+	for     (i2=0; i2<fdm->nb;    i2++) {
+	    for (i1=0; i1<fdm->n1pad; i1++) {
+		b[i3][           i2  ][i1] = b[i3][           fdm->nb  ][i1];
+		b[i3][fdm->n2pad-i2-1][i1] = b[i3][fdm->n2pad-fdm->nb-1][i1];
+	    }
+	}
+    }
+
+    for         (i3=0; i3<fdm->nb;    i3++) {
+	for     (i2=0; i2<fdm->n2pad; i2++) {
+	    for (i1=0; i1<fdm->n1pad; i1++) {
+		b[           i3  ][i2][i1] = b[           fdm->nb  ][i2][i1];
+		b[fdm->n3pad-i3-1][i2][i1] = b[fdm->n3pad-fdm->nb-1][i2][i1];
+	    }
+	}
+    }
+
+}
+
+
 /*------------------------------------------------------------*/
 void cut2d(float**  a,
 	   float**  b,
@@ -228,6 +357,31 @@ void cut2d(float**  a,
     for     (i2=0;i2<sf_n(c2);i2++) {
 	for (i1=0;i1<sf_n(c1);i1++) {
 	    b[i2][i1] = a[f2+i2][f1+i1];
+	}
+    }
+}
+
+/*------------------------------------------------------------*/
+void cut3d(float*** a,
+	   float*** b,
+	   fdm3d  fdm,
+	   sf_axis c1, 
+	   sf_axis c2,
+	   sf_axis c3)
+/*< cut a rectangular wavefield subset >*/
+{
+    int i1,i2,i3;
+    int f1,f2,f3;
+
+    f1 = (floor)((sf_o(c1)-fdm->o1pad)/fdm->d1);
+    f2 = (floor)((sf_o(c2)-fdm->o2pad)/fdm->d2);
+    f3 = (floor)((sf_o(c3)-fdm->o3pad)/fdm->d3);
+
+    for         (i3=0;i3<sf_n(c3);i3++) {
+	for     (i2=0;i2<sf_n(c2);i2++) {
+	    for (i1=0;i1<sf_n(c1);i1++) {
+		b[i3][i2][i1] = a[f3+i3][f2+i2][f1+i1];
+	    }
 	}
     }
 }
@@ -281,7 +435,7 @@ lint2d lint2d_make(int    na,
 	if(aa[ia].z >= fdm->o1pad && 
 	   aa[ia].z <  fdm->o1pad + (fdm->n1pad-1)*fdm->d1 &&
 	   aa[ia].x >= fdm->o2pad && 
-	   aa[ia].x <  fdm->o2pad + (fdm->n2pad-1)*fdm->d2) {
+	   aa[ia].x <  fdm->o2pad + (fdm->n2pad-1)*fdm->d2   ) {
 	    
 	    ca->j1[ia] = (int)( (aa[ia].z-fdm->o1pad)/fdm->d1);
 	    ca->j2[ia] = (int)( (aa[ia].x-fdm->o2pad)/fdm->d2);
@@ -304,6 +458,75 @@ lint2d lint2d_make(int    na,
 
     return ca;
 }
+
+/*------------------------------------------------------------*/
+lint3d lint3d_make(int    na, 
+		   pt3d*  aa, 
+		   fdm3d fdm)
+/*< init 3D linear interpolation >*/
+{
+    lint3d ca;
+    int    ia;
+    float f1,f2,f3;
+    
+    ca = (lint3d) sf_alloc(1,sizeof(*ca));
+
+    ca->n = na;
+
+    ca->w000 = sf_floatalloc(na);
+    ca->w001 = sf_floatalloc(na);
+    ca->w010 = sf_floatalloc(na);
+    ca->w011 = sf_floatalloc(na);
+    ca->w100 = sf_floatalloc(na);
+    ca->w101 = sf_floatalloc(na);
+    ca->w110 = sf_floatalloc(na);
+    ca->w111 = sf_floatalloc(na);
+
+    ca->j1  = sf_intalloc(na);
+    ca->j2  = sf_intalloc(na);
+    ca->j3  = sf_intalloc(na);
+
+    for (ia=0;ia<na;ia++) {
+	
+	if(aa[ia].z >= fdm->o1pad && 
+	   aa[ia].z <  fdm->o1pad + (fdm->n1pad-1)*fdm->d1 &&
+	   aa[ia].x >= fdm->o2pad && 
+	   aa[ia].x <  fdm->o2pad + (fdm->n2pad-1)*fdm->d2 &&   
+	   aa[ia].y >= fdm->o3pad && 
+	   aa[ia].y <  fdm->o3pad + (fdm->n3pad-1)*fdm->d3  ) {
+	    
+	    ca->j1[ia] = (int)( (aa[ia].z-fdm->o1pad)/fdm->d1);
+	    ca->j2[ia] = (int)( (aa[ia].x-fdm->o2pad)/fdm->d2);
+	    ca->j3[ia] = (int)( (aa[ia].y-fdm->o3pad)/fdm->d3);
+	    
+	    f1 = (aa[ia].z-fdm->o1pad)/fdm->d1 - ca->j1[ia];
+	    f2 = (aa[ia].x-fdm->o2pad)/fdm->d2 - ca->j2[ia];
+	    f3 = (aa[ia].y-fdm->o3pad)/fdm->d3 - ca->j3[ia];
+
+	} else {
+	    ca->j1[ia] = 0; 
+	    ca->j2[ia] = 0;
+	    ca->j3[ia] = 0;
+	    
+	    f1 = 1; 
+	    f2 = 0;
+	    f3 = 0;
+	}
+
+	ca->w000[ia] = (1-f3)*(1-f1)*(1-f2);
+	ca->w001[ia] = (1-f3)*(  f1)*(1-f2);
+	ca->w010[ia] = (1-f3)*(1-f1)*(  f2);
+	ca->w011[ia] = (1-f3)*(  f1)*(  f2);
+
+	ca->w100[ia] = (  f3)*(1-f1)*(1-f2);
+	ca->w101[ia] = (  f3)*(  f1)*(1-f2);
+	ca->w110[ia] = (  f3)*(1-f1)*(  f2);
+	ca->w111[ia] = (  f3)*(  f1)*(  f2);
+    }
+
+    return ca;
+}
+
 
 /*------------------------------------------------------------*/
 void lint2d_hold(float**uu,
@@ -389,6 +612,30 @@ void lint2d_extract(float**uu,
     }
 }  
 
+void lint3d_extract(float***uu,
+		    float  *dd,
+		    lint3d  ca)
+/*< extract from wavefield >*/
+{
+    int ia;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)
+#endif
+    for (ia=0;ia<ca->n;ia++) {
+	dd[ia] =
+	    uu[ ca->j3[ia]  ][ ca->j2[ia]  ][ ca->j1[ia]  ] * ca->w000[ia] +
+	    uu[ ca->j3[ia]  ][ ca->j2[ia]  ][ ca->j1[ia]+1] * ca->w001[ia] +
+	    uu[ ca->j3[ia]  ][ ca->j2[ia]+1][ ca->j1[ia]  ] * ca->w010[ia] +
+	    uu[ ca->j3[ia]  ][ ca->j2[ia]+1][ ca->j1[ia]+1] * ca->w011[ia] +
+	    uu[ ca->j3[ia]+1][ ca->j2[ia]  ][ ca->j1[ia]  ] * ca->w100[ia] +
+	    uu[ ca->j3[ia]+1][ ca->j2[ia]  ][ ca->j1[ia]+1] * ca->w101[ia] +
+	    uu[ ca->j3[ia]+1][ ca->j2[ia]+1][ ca->j1[ia]  ] * ca->w110[ia] +
+	    uu[ ca->j3[ia]+1][ ca->j2[ia]+1][ ca->j1[ia]+1] * ca->w111[ia];
+    }
+}  
+
+
 /*------------------------------------------------------------*/
 void fdbell_init(int n)
 /*< init bell taper >*/
@@ -406,6 +653,27 @@ void fdbell_init(int n)
 	    bell[nbell+i2][nbell+i1] = exp(-(i1*i1+i2*i2)/s);
 	}
     }    
+}
+
+/*------------------------------------------------------------*/
+void fdbell3d_init(int n)
+/*< init bell taper >*/
+{
+    int   i1,i2,i3;
+    float s;
+
+    nbell = n;
+    s = 0.5*nbell;
+
+    bell3d=sf_floatalloc3(2*nbell+1,2*nbell+1,2*nbell+1);
+
+    for        (i3=-nbell;i3<=nbell;i3++) {
+	for    (i2=-nbell;i2<=nbell;i2++) {
+	    for(i1=-nbell;i1<=nbell;i1++) {
+		bell3d[nbell+i3][nbell+i2][nbell+i1] = exp(-(i1*i1+i2*i2+i3*i3)/s);
+	    }
+	}    
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -431,7 +699,37 @@ void lint2d_bell(float**uu,
 
 	}
     }
+}
 
+/*------------------------------------------------------------*/
+void lint3d_bell(float***uu,
+		 float  *ww,
+		 lint3d  ca)
+/*< apply bell taper >*/
+{
+    int   ia,i1,i2,i3;
+    float wa;
+
+    for        (i3=-nbell;i3<=nbell;i3++) {
+	for    (i2=-nbell;i2<=nbell;i2++) {
+	    for(i1=-nbell;i1<=nbell;i1++) {
+		
+		for (ia=0;ia<ca->n;ia++) {
+		    wa = ww[ia] * bell3d[nbell+i3][nbell+i2][nbell+i1];
+		    
+		    uu[ i3+ca->j3[ia]   ][ i2+ca->j2[ia]   ][ i1+ca->j1[ia]   ] -= wa * ca->w000[ia];
+		    uu[ i3+ca->j3[ia]   ][ i2+ca->j2[ia]   ][ i1+ca->j1[ia]+1 ] -= wa * ca->w001[ia];
+		    uu[ i3+ca->j3[ia]   ][ i2+ca->j2[ia]+1 ][ i1+ca->j1[ia]   ] -= wa * ca->w010[ia];
+		    uu[ i3+ca->j3[ia]   ][ i2+ca->j2[ia]+1 ][ i1+ca->j1[ia]+1 ] -= wa * ca->w011[ia];
+		    uu[ i3+ca->j3[ia]+1 ][ i2+ca->j2[ia]   ][ i1+ca->j1[ia]   ] -= wa * ca->w100[ia];
+		    uu[ i3+ca->j3[ia]+1 ][ i2+ca->j2[ia]   ][ i1+ca->j1[ia]+1 ] -= wa * ca->w101[ia];
+		    uu[ i3+ca->j3[ia]+1 ][ i2+ca->j2[ia]+1 ][ i1+ca->j1[ia]   ] -= wa * ca->w110[ia];
+		    uu[ i3+ca->j3[ia]+1 ][ i2+ca->j2[ia]+1 ][ i1+ca->j1[ia]+1 ] -= wa * ca->w111[ia];
+		}
+		
+	    }
+	}
+    }
 }
 
 /*------------------------------------------------------------*/
