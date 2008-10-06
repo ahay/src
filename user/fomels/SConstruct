@@ -60,12 +60,16 @@ for prog in mains:
 
 jpeg = env.get('JPEG')
 if jpeg:
-    libs=env.get('LIBS')+[jpeg]
-    prog = env.Program('sfbyte2jpg',['_byte2jpg.c','_jpeg.c'],LIBS=libs)
-else:
-    prog = env.Place('sfbyte2jpg',None,var='JPEG',package='libjpeg-devel')
-if root:
-    env.Install(bindir,prog)
+    jpeg_o = env.StaticObject('_jpeg.c')
+
+for conv in ('byte2jpg','jpg2byte'):
+    if jpeg:
+        libs=env.get('LIBS')+[jpeg]
+        prog = env.Program('sf'+conv,['_%s.c' % conv,jpeg_o],LIBS=libs)
+    else:
+        prog = env.Place('sf'+conv,None,var='JPEG',package='libjpeg-devel')
+    if root:
+        env.Install(bindir,prog)
 
 for prog in Split(
     '''
