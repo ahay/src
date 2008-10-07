@@ -26,7 +26,7 @@ void filter_lop (bool adj, bool add,
 	t = a*xx[0];
 	yy[0] += t;
 	for (i = 1; i < nx; i++) {
-	    t = a*xx[x] + b*xx[x-1] + c*t;
+	    t = a*xx[i] + b*xx[i-1] + c*t;
 	    yy[i] += t;
 	}
     }
