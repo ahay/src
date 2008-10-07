@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
     char *label, *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
-    const char *type[] = {"uchar","char","int","float","complex"};
+    const char *type[] = {"uchar","char","int","float","complex","short"};
     const char *form[] = {"ascii","xdr","native"};
     char pad[] = "              ", out[15];
 

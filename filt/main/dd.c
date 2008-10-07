@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
     char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
     sf_datatype itype, otype;
     float *fbuf;
+    short *sbuf;
     sf_complex *cbuf;
     unsigned char *ubuf;
 
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     form = sf_getstring("form");
     /* ascii, native, xdr */
     type = sf_getstring("type");
-    /* int, float, complex */
+    /* int, float, complex, short */
     if (NULL == form && NULL == type) sf_error("Specify form= or type=");
 	
     if (NULL != form) {
@@ -81,6 +82,8 @@ int main(int argc, char *argv[])
 	    case 'c':
 		otype = SF_COMPLEX;
 		break;
+            case 's':
+                otype = SF_SHORT;
 	    default:
 		sf_error("Unsupported type=\"%s\"",type);
 		break;
@@ -103,6 +106,40 @@ int main(int argc, char *argv[])
 	nin = (bufsiz < size)? bufsiz:size;
 	nout = nin*ein/eout;
 	switch (itype) {
+            case SF_SHORT:
+		sbuf = (short*) bufin;
+		sf_shortread(sbuf,nin,in);
+		switch (otype) {
+                    case SF_SHORT:
+                        sf_shortwrite(sbuf,nout,out);
+			break;
+		    case SF_INT:
+                        ibuf = (short*) bufout;
+                        for (i=j=0; i < nin && j < nout; i++, j++) {
+			    ibuf[j] = sbuf[i]; 
+			}
+                        sf_intwrite(ibuf, nout, out);
+		    case SF_FLOAT:
+			fbuf = (float*) bufout;
+			for (i=j=0; i < nin && j < nout; i++, j++) {
+			    fbuf[j] = sbuf[i]; 
+			}
+			sf_floatwrite(fbuf,nout,out);
+			break;
+		    case SF_COMPLEX:
+			cbuf = (sf_complex*) bufout;
+			for (i=j=0; i < nin && j < nout; i+=2, j++) {
+			    cbuf[j] = sf_cmplx(sbuf[i],sbuf[i+1]); 
+			}
+			sf_complexwrite(cbuf,nout,out);
+			break;
+		    case SF_UCHAR:
+		    case SF_CHAR:
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
 	    case SF_INT:
 		ibuf = (int*) bufin;
 		sf_intread(ibuf,nin,in);
@@ -110,6 +147,12 @@ int main(int argc, char *argv[])
 		    case SF_INT:
 			sf_intwrite(ibuf,nout,out);
 			break;
+                    case SF_SHORT:
+                        sbuf = (short*) bufout;
+                        for (i=j=0; i < nin && j < nout; i++, j++) {
+			    sbuf[j] = ibuf[i]; 
+			}
+                        sf_shortwrite(sbuf, nout, out);
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
 			for (i=j=0; i < nin && j < nout; i++, j++) {
@@ -145,6 +188,12 @@ int main(int argc, char *argv[])
 			}
 			sf_intwrite(ibuf,nout,out);
 			break;
+                    case SF_SHORT:
+                        sbuf = (short*) bufout;
+                        for (i=j=0; i < nin && j < nout; i++, j++) {
+			    sbuf[j] = fbuf[i]; 
+			}
+                        sf_shortwrite(sbuf, nout, out);
 		    case SF_COMPLEX:
 			cbuf = (sf_complex*) bufout;
 			for (i=j=0; i < nout && j < nin; i++, j+=2) {

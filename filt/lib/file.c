@@ -85,7 +85,7 @@
 typedef struct sf_File *sf_file;
 /*^*/
 
-typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
+typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 /*^*/
 
@@ -308,12 +308,14 @@ size_t sf_esize(sf_file file)
 	case SF_COMPLEX:
 	    return 2*sizeof(float);
 	    break;
+        case SF_SHORT:
+            return sizeof(short);
+            break;
 	default:
 	    return sizeof(char);
 	    break;
     }
 }
-
 
 void sf_settype (sf_file file, sf_datatype type)
 /*< set file type >*/
@@ -401,7 +403,9 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
 	sf_settype(file,SF_COMPLEX);
     } else if (NULL != strstr(format,"uchar") || 
 	       NULL != strstr(format,"byte")) {
-	sf_settype(file,SF_UCHAR);	
+	sf_settype(file,SF_UCHAR);
+    } else if (NULL != strstr(format,"short")) {
+	sf_settype(file,SF_SHORT);
     } else {
 	sf_settype(file,SF_CHAR);
     }
@@ -684,6 +688,19 @@ Prepares file for writing binary data >*/
 		    break;
 		default:
 		    sf_putstring(file,"data_format","native_int");
+		    break;
+	    }
+	    break;
+        case SF_SHORT:
+	    switch (file->form) {
+		case SF_ASCII:		    
+		    sf_putstring(file,"data_format","ascii_short");
+		    break;
+		case SF_XDR:
+		    sf_putstring(file,"data_format","xdr_short");
+		    break;
+		default:
+		    sf_putstring(file,"data_format","native_short");
 		    break;
 	    }
 	    break;
@@ -1125,6 +1142,83 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 	    got = fread(arr,sizeof(int),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_shortread (/*@out@*/ short* arr, size_t size, sf_file file)
+/*< read a short array arr[size] from file >*/
+{
+    char* buf;
+    size_t i, left, nbuf, got, bufsiz;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		if (EOF==fscanf(file->stream,"%d",arr+i))
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(int);
+	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (bufsiz < left)? bufsiz : left;
+		(void) xdr_setpos(&(file->xdr),0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(&(file->xdr),buf-left,
+				nbuf/sizeof(short),sizeof(short),
+				(xdrproc_t) xdr_int))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(short),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_shortwrite (short* arr, size_t size, sf_file file)
+/*< write a short array arr[size] to file >*/
+{
+    char* buf;
+    size_t i, left, nbuf, bufsiz;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    if (EOF==fprintf(file->stream,
+				     (NULL != aformat)? aformat:"%d ",
+				     arr[i]))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(short);
+	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (bufsiz < left)? bufsiz : left;
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_vector(&(file->xdr),buf-left,
+				nbuf/sizeof(short),sizeof(short),
+				(xdrproc_t) xdr_int))
+		    sf_error ("sf_file: trouble writing xdr");
+		fwrite(file->buf,1,nbuf,file->stream);
+	    }
+	    break;
+	default:
+	    fwrite(arr,sizeof(short),size,file->stream);
 	    break;
     }
 }

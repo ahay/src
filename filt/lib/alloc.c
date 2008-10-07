@@ -81,6 +81,15 @@ void *sf_realloc (void* ptr   /* previous data */,
 }
 
 /*------------------------------------------------------------*/
+/*@out@*/ short *sf_shortalloc (size_t n /* number of elements */)
+	  /*< short allocation >*/  
+{
+    short *ptr;
+    ptr = (short*) sf_alloc (n,sizeof(short));
+    return ptr;
+}
+
+/*------------------------------------------------------------*/
 /*@out@*/ int *sf_intalloc (size_t n /* number of elements */)
 	  /*< int allocation >*/  
 {

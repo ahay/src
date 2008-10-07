@@ -26,6 +26,7 @@ static void head(int i, int cols, bool number);
 int main (int argc, char* argv[])
 {
     int cols, *ibuf, esize, i;
+    short *sbuf;
     size_t bufsiz = BUFSIZ, nbuf, j;
     off_t size;
     char* format, *buf;
@@ -93,6 +94,20 @@ int main (int argc, char* argv[])
 		for (j=0; j < nbuf; j++, i++) {
 		    head(i,cols,number);
 		    printf(format,buf[j]);
+		}
+	    }
+	    printf("\n");
+	    break;
+        case SF_SHORT:
+	    if (0==cols) cols=10;
+	    if (NULL==format) format = "%4d ";
+	    sbuf = sf_shortalloc (bufsiz);
+	    for (i=0; size > 0; size -= nbuf) {
+		nbuf = (bufsiz < size)? bufsiz: size;
+		sf_shortread (sbuf,nbuf,in);
+		for (j=0; j < nbuf; j++, i++) {
+		    head(i,cols,number);
+		    printf(format,sbuf[j]);
 		}
 	    }
 	    printf("\n");
