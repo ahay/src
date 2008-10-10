@@ -23,8 +23,8 @@ def stderr_write(message):
 def pycompile(target, source, env):
     "convert py to pyc "
     for i in range(0,len(source)):
-        py_compile.compile(source[i].abspath,target[i].abspath) 
-    return py_success  
+        py_compile.compile(source[i].abspath,target[i].abspath)
+    return py_success
 
 Pycompile = Builder(action=pycompile)
 
@@ -170,8 +170,14 @@ def identify_platform(context):
              plat['distro'] = uname()[2].split('.')[-2]
         del architecture, uname
     except: # "platform" not installed. Python < 2.3
-        pass # For each OS with Python < 2.3, should use specific
-             # commands through os.system to find distro/version
+        # For each OS with Python < 2.3, should use specific
+        # commands through os.system to find distro/version
+        # Not known if what follows works everywhere:
+        plat_nm = os.uname()[4]
+        if plat_nm == 'x86_64':
+            plat['arch'] = '64bit'
+        elif plat_nm == 'i686':
+            plat['arch'] = '32bit'
     context.Result('%(OS)s [%(distro)s]' % plat)
 
 pkg['gcc'] = {'fedora':'gcc'}
@@ -835,6 +841,28 @@ def f77(context):
 pkg['f90'] = {'fedora':'gcc-gfortran',
               'generic':'gfortran'}
 
+def f90_write_ptr_range(where_write_files):
+    'Tell poor Fortran the range of vals (in powers of 10) of a ptr'
+    f90_lib = os.path.join(where_write_files,'rsf.f90')
+    if plat['arch'] == '32bit':
+        str_insert_f90 = '9'
+        str_insert_c   = '32'
+    elif plat['arch'] == '64bit':
+        str_insert_f90 = '12'
+        str_insert_c   = '64'
+    str_to_replace = 'PTRKIND=8'
+    replacement_str = 'PTRKIND=selected_int_kind(%s)' % str_insert_f90
+    import fileinput
+    for line in fileinput.FileInput(f90_lib,inplace=1):
+        if str_to_replace in line:
+            line = line.replace(str_to_replace,replacement_str)
+	sys.stdout.write(line)
+    c_hdr_nm = os.path.join(where_write_files,'ptr_sz.h')
+    handle_c = open(c_hdr_nm,'w')
+    s = '/* File created by config */\n#define RSF%sBIT\n' % str_insert_c
+    handle_c.write(s)
+    handle_c.close()
+
 def f90(context):
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
@@ -881,7 +909,8 @@ def f90(context):
     context.Message("checking F90 module extension ... ")
     f90module = re.compile(r'(?:testf90|TESTF90)(\.\w+)$')
     suffix = ''
-    for file in os.listdir(os.getcwd()):
+    here = os.getcwd()
+    for file in os.listdir(here):
         gotit = f90module.match(file)
         if gotit:
             suffix = gotit.group(1)
@@ -889,6 +918,7 @@ def f90(context):
             break
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
+    f90_write_ptr_range(os.path.join(here,'api','f90'))
 
 def matlab(context):
     context.Message("checking for Matlab ... ")
@@ -1108,7 +1138,7 @@ def docmerge(target=None,source=None,env=None):
     return py_success
 
 def pycompile_emit(target, source, env):
-    target.append(str(target[0])+'c')              
+    target.append(str(target[0])+'c')
     return target,source 
 
 Docmerge = Builder(action=Action(docmerge,varlist=['alias']),
@@ -1132,5 +1162,3 @@ def placeholder(target=None,source=None,env=None):
     return py_success
 
 Place = Builder (action = Action(placeholder,varlist=['var','package']))
-
-#	$Id$

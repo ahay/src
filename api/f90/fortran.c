@@ -1,19 +1,18 @@
 #include <string.h>
 
-/* Define these to support 64 bit pointers  (for the sf_file structure) */
-/* and 64 BIT offset types. (off_t == long long) -- JTK                 */
-#define RSF64BIT
-#define OFFSET64BIT
+/* This file (created by config) defines either RSF64BIT or RSF32BIT */
+#include "ptr_sz.h"
 
-
-
-/* To handle 64 bit architectures sf_file is really a pointer -- JTK */
+/* Handle 32/64 bit architectures; sf_file is really a pointer */
 #ifdef  RSF64BIT
 #define RSFFILE LONGLONG
 #else
 #define RSFFILE INT
 #endif
-/* To handle 64 bit file offsets -- JTK */
+
+/* Support 64 bit file offsets (off_t == long long) */
+#define OFFSET64BIT
+
 #ifdef  OFFSET64BIT
 #define OFFSETT LONGLONG
 #else
