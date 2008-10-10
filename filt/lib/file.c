@@ -1155,7 +1155,7 @@ void sf_shortread (/*@out@*/ short* arr, size_t size, sf_file file)
     switch (file->form) {
 	case SF_ASCII:
 	    for (i = 0; i < size; i++) {
-		if (EOF==fscanf(file->stream,"%d",arr+i))
+		if (EOF==fscanf(file->stream,"%hd",arr+i))
 		    sf_error ("%s: trouble reading ascii:",__FILE__);
 	    }
 	    break;
