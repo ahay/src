@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "stretch4.h"
-#include "spline.h"
 
 #ifndef _stretch4_h
 
@@ -177,7 +176,7 @@ void stretch4_apply (map4 str,
 	mm[it] = 0.;
     }
 
-    spline4_post(nt,0,nt,mm,mod);
+    sf_spline4_post(nt,0,nt,mm,mod);
 
     for (it = 0; it <= str->ib; it++) {
 	mod[it] = 0.;

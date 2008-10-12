@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	/* half-offset */
     } else {
 	if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3= in input");
-	if (!sf_histfloat(in,"o3",&dh)) sf_error("No d3= in input");
+	if (!sf_histfloat(in,"d3",&dh)) sf_error("No d3= in input");
 
 	if (!sf_getbool("half",&half)) half=true;
 	/* if y, the third axis is half-offset instead of full offset */

@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "spline.h"
-
 int main (int argc, char* argv[])
 {
     bool half, inter;
@@ -139,10 +137,10 @@ int main (int argc, char* argv[])
 	/* from spline coefficients to model */
 	if (nw > 2) { 
 	    for (iv=0; iv < nv; iv++) {
-		spline_post (nw, iv*nt, 1, nt, vtr, vtr2);
+		sf_spline_post (nw, iv*nt, 1, nt, vtr, vtr2);
 	    }
 	    for (it=0; it < nt; it++) {
-		spline_post (nw, it, nt, nv, vtr2, vtr);
+		sf_spline_post (nw, it, nt, nv, vtr2, vtr);
 	    }
 	}
 	

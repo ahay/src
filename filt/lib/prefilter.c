@@ -30,11 +30,19 @@ static float flt4[1] = {0.2679492};
 static float flt6[2] = {0.4736716, 0.01855619};
 static float flt8[3] = {0.6669837, 0.07161941, 0.0006001561};
 
-static float a2 = 1.; 
-static float a3 = 1.372583;
-static float a4 = 1.607695;
-static float a6 = 2.226744;
-static float a8 = 3.024829;
+static float mom4[1] = {0.3333333};
+static float mom6[2] = {0.5123022, 0.02460497};
+static float mom8[3] = {0.6942507, 0.08103156, .00082147488};
+
+static const float a2 = 1.; 
+static const float a3 = 1.372583;
+static const float a4 = 1.607695;
+static const float a6 = 2.226744;
+static const float a8 = 3.024829;
+
+static const float m4 = 1.777778;
+static const float m6 = 2.362086;
+static const float m8 = 3.154546;
 
 static float *tmp1, *tmp2 /* temporary storage */;
 static float a0 /* normalization */;
@@ -71,6 +79,18 @@ void sf_prefilter_init (int nw     /* spline order */,
 	case 2:
 	    a0 = a2;
 	    sf_recfilt_init (nt, 1, flt2);
+	    break;
+	case -4:
+	    a0 = m4;
+	    sf_recfilt_init (nt, 1, mom4);
+	    break;
+	case -6:
+	    a0 = m6;
+	    sf_recfilt_init (nt, 1, mom6);
+	    break;
+	case -8:
+	    a0 = m8;
+	    sf_recfilt_init (nt, 1, mom8);
 	    break;
 	default:
 	    sf_error ("%s: spline length %d not implemented",__FILE__,nw); 

@@ -22,6 +22,7 @@
 
 #include "interp_cube.h"
 #include "interp_sinc.h"
+#include "interp_mom.h"
 
 int main(int argc, char* argv[])
 {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o1",oo);
 
     intp = sf_getstring("interp");
-    /* interpolation (lagrange,cubic,kaiser,lanczos,cosine,welch,spline) */
+    /* interpolation (lagrange,cubic,kaiser,lanczos,cosine,welch,spline,mom) */
     if (NULL == intp) sf_error("Need interp=");
 
     if (!sf_getint("nw",&nw)) sf_error("Need nw=");
@@ -95,6 +96,10 @@ int main(int argc, char* argv[])
 	    sf_prefilter_init (nw, n, 3*n);
 	    interp = sf_spline_int;
 	    break;
+	case 'm':
+	    sf_prefilter_init (-nw, n, 3*n);
+	    interp = mom_int;
+	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
@@ -107,7 +112,9 @@ int main(int argc, char* argv[])
  
     for (i2=0; i2 < n2; i2++) {
         sf_floatread (mm,n,in);
-        if ('s' == intp[0]) sf_prefilter_apply (n,mm);
+
+        if ('s' == intp[0] || 'm' == intp[0]) 
+	    sf_prefilter_apply (n,mm);
 	
 	sf_int1_lop (false,false,n,nd,mm,z);
      

@@ -25,8 +25,6 @@ The output contains PP intercept, PP gradient, and PS gradient.
 
 #include <rsf.h>
 
-#include "spline.h"
-
 int main(int argc, char* argv[])
 {
     int nt, n1, i1, i2, n2, nw, three;
@@ -39,7 +37,8 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&three) || three != 3) sf_error("Need n2=3 in input");
+    if (!sf_histint(in,"n2",&three) || three != 3) 
+	sf_error("Need n2=3 in input");
     n2 = sf_leftsize(in,2);
 
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
@@ -102,15 +101,15 @@ int main(int argc, char* argv[])
     
 	sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
 	sf_int1_lop (true,false,nt,n1,spline,app);
-	spline_post(nw, 0, 1, nt, spline, trace);
+	sf_spline_post(nw, 0, 1, nt, spline, trace);
 	sf_floatwrite(trace,nt,out);
 	sf_int1_lop (true,false,nt,n1,spline,bpp);
-	spline_post(nw, 0, 1, nt, spline, trace);
+	sf_spline_post(nw, 0, 1, nt, spline, trace);
 	sf_floatwrite(trace,nt,out);
 
 	sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1);
 	sf_int1_lop (true,false,nt,n1,spline,aps);
-	spline_post(nw, 0, 1, nt, spline, trace);
+	sf_spline_post(nw, 0, 1, nt, spline, trace);
 	sf_floatwrite(trace,nt,out);
     }    
 

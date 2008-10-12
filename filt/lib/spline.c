@@ -16,10 +16,15 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
+#include <stdlib.h>
 
 #include "spline.h"
+
+#include "error.h"
+
+#include "banded.h"
+#include "tridiagonal.h"
+/*^*/
 
 static const float s3 = 0.75, s4 = 2./3., s6 = 11./20., s8 = 151./315.;
 static const float m4 = 0.625, m6 = 77./144., m8 = 151./320.;  
@@ -31,8 +36,8 @@ static const float flt6[] = {26./120., 1./120.};
 static const float flt8[] = {1191./5040., 120./5040., 1./5040.};
 static const float mom8[] = {2741./11520., 298./11520., 3./11520.};
 
-sf_bands spline_init (int nw /* interpolator length */, 
-		      int nd /* data length */)
+sf_bands sf_spline_init (int nw /* interpolator length */, 
+			 int nd /* data length */)
 /*< initialize a banded matrix >*/
 {
     sf_bands slv;
@@ -71,7 +76,7 @@ sf_bands spline_init (int nw /* interpolator length */,
     return slv;
 }
 
-sf_tris spline4_init (int nd /* data length */)
+sf_tris sf_spline4_init (int nd /* data length */)
 /*< initialize a tridiagonal matrix for cubic splines >*/
 {
     sf_tris slv;
@@ -82,11 +87,11 @@ sf_tris spline4_init (int nd /* data length */)
     return slv;
 }
 
-void spline4_post (int n            /* total trace length */, 
-		   int n1           /* start point */, 
-		   int n2           /* end point */, 
-		   const float* inp /* spline coefficients */, 
-		   float* out       /* function values */)
+void sf_spline4_post (int n            /* total trace length */, 
+		      int n1           /* start point */, 
+		      int n2           /* end point */, 
+		      const float* inp /* spline coefficients */, 
+		      float* out       /* function values */)
 /*< cubic spline post-filtering >*/
 {
     int i;
@@ -106,7 +111,8 @@ void spline4_post (int n            /* total trace length */,
 }
 
 
-void spline_post (int nw, int o, int d, int n, float *modl, float *datr)
+void sf_spline_post (int nw, int o, int d, int n, 
+		     const float *modl, float *datr)
 /*< post-filtering to convert spline coefficients to model >*/
 {
     const float *flt;
@@ -161,8 +167,8 @@ void spline_post (int nw, int o, int d, int n, float *modl, float *datr)
     }
 }
 
-void spline2 (sf_bands slv1, sf_bands slv2, 
-	      int n1, int n2, float** dat, float* tmp)
+void sf_spline2 (sf_bands slv1, sf_bands slv2, 
+		 int n1, int n2, float** dat, float* tmp)
 /*< 2-D spline pre-filtering >*/
 {
     int i1, i2;

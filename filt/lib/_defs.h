@@ -1,6 +1,8 @@
 #ifndef _sf_defs_h
 #define _sf_defs_h
 
+#include <float.h>
+
 #define SF_MAX(a,b) ((a) < (b) ? (b) : (a))
 #define SF_MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -13,5 +15,8 @@
 #define SF_EVEN(n) (!(SF_ODD(n)))
 
 #define SF_PI (3.141592653589793)
+
+#define SF_EPS FLT_EPSILON
+#define SF_HUGE FLT_MAX
 
 #endif

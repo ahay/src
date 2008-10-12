@@ -60,9 +60,12 @@ int main(int argc, char* argv[])
 	sf_intread(ss->lag,ns,lag0);
     }
  
-    maxlag = 0;
-    for( ia=0; ia < ns; ia++) {
-	if (ss->lag[ia] > maxlag) maxlag = ss->lag[ia];
+    if (!sf_getint("maxlag",&maxlag)) {
+	/* maximum lag */
+	maxlag = 0;
+	for( ia=0; ia < ns; ia++) {
+	    if (ss->lag[ia] > maxlag) maxlag = ss->lag[ia];
+	}
     }
 
     if(!sf_histfloat(in,"a0",&s0)) s0 = 1.; 

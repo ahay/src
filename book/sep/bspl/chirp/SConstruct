@@ -26,7 +26,7 @@ Flow('coord500',None,coord(500))
 Result('chirp','ideal decim','OverUnderAniso')
 
 for size in (1,2,4,8):
-    for interp in ('lag','cub','spl','kai'):
+    for interp in ('lag','cub','spl','kai','mom'):
         test = 'int%d_%s' % (size,interp)
         Flow(test,'alias50 coord500 alias500',
              '''
@@ -37,13 +37,13 @@ for size in (1,2,4,8):
 
         show = 'imp%d_%s' % (size,interp)
         spec = 'spc%d_%s' % (size,interp)
-        if interp=='spl':
+        if interp=='spl' or interp=='mom':
             Flow(show,None,
              '''
              intshow interp=%s nw=%d x=0.7 |
              pad n1=%d | reverse which=1 | pad n1=64 | reverse which=1 |
              splinefilter nw=%d
-             ''' % (interp,size,32+size/2,size))
+             ''' % (interp,size,32+size/2,(size,-size)[interp=='mom']))
         else:
             Flow(show,None,
                  '''
@@ -60,6 +60,7 @@ alias = {
     'lin': ('2_lag', 'Linear'),
     'cub': ('4_cub', 'Cubic Convolution'),
     'spl4': ('4_spl', 'Spline-4'),
+    'mom4': ('4_mom', 'Mom-4'),
     'spl8': ('8_spl', 'Spline-8'),
     'kai': ('8_kai', 'Sinc-8')
     }
@@ -74,6 +75,7 @@ error('lin cub')
 error('cub spl4')
 error('cub kai')
 error('kai spl8')
+error('spl4 mom4')
 
 def spec(name):
     first,second =Split(name)
@@ -92,5 +94,6 @@ spec('lin cub')
 spec('cub kai')
 spec('cub spl4')
 spec('kai spl8')
+spec('spl4 mom4')
 
 End()

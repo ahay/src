@@ -18,13 +18,11 @@
 */
 #include <rsf.h>
 
-#include "spline.h"
-
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, n12, i3, i2, i1, nw;
     float *slice, *slice2;
-    bool vert;
+    bool vert, horz;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -41,6 +39,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("vert",&vert)) vert=true;
     /* include filter on the first axis */
+    if (!sf_getbool("horz",&horz)) horz=true;
+    /* include filter on the second axis */
+
 
     slice = sf_floatalloc(n12);
     slice2 = sf_floatalloc(n12);
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
 	if (nw > 2) { 
 	    if (vert) {
 		for (i2=0; i2 < n2; i2++) {
-		    spline_post (nw, i2*n1, 1, n1, slice, slice2);
+		    sf_spline_post (nw, i2*n1, 1, n1, slice, slice2);
 		}
 	    } else {
 		for (i1=0; i1 < n12; i1++) {
@@ -59,8 +60,14 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    for (i1=0; i1 < n1; i1++) {
-		spline_post (nw, i1, n1, n2, slice2, slice);
+	    if (horz) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_spline_post (nw, i1, n1, n2, slice2, slice);
+		}
+	    } else {
+		for (i1=0; i1 < n12; i1++) {
+		    slice[i1] = slice2[i1];
+		}
 	    }
 	}
 

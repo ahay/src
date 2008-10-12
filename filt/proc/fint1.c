@@ -22,7 +22,6 @@
 
 #include "fint1.h"
 #include "extend.h"
-#include "spline.h"
 
 #ifndef _fint1_h
 
@@ -79,7 +78,7 @@ vint1 vint1_init (int nw  /* trace extension */,
     fnt->n1 = n1; 
     fnt->dim = dim;
     fnt->spl = sf_floatalloc2 (n1+2*nw,dim);
-    fnt->slv = spline4_init (n1+2*nw);
+    fnt->slv = sf_spline4_init (n1+2*nw);
     
     return fnt;
 }
@@ -98,7 +97,7 @@ fint1 fint1_init (int nw /* trace extension */,
     fnt->nw = nw; 
     fnt->n1 = n1; 
     fnt->spl = sf_floatalloc (n1+2*nw);
-    fnt->slv = spline4_init (n1+2*nw);
+    fnt->slv = sf_spline4_init (n1+2*nw);
     fnt->nt = mute;
     if (mute > 0) {
 	fnt->t = sf_floatalloc(mute);

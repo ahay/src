@@ -18,19 +18,9 @@
 */
 #include <math.h>
 
-#include <float.h>
-/*^*/
-
 #include "quadratic.h"
 #include "c99.h"
-
-#ifndef _quadratic_h
-
-#define SF_EPS FLT_EPSILON
-#define SF_HUGE FLT_MAX
-/*^*/
-
-#endif
+#include "_defs.h"
 
 float sf_quadratic_solve (float a, float b, float c) 
 /*< solves a x^2 + 2 b x + c == 0 for smallest positive x >*/

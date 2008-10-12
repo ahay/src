@@ -23,6 +23,9 @@
 
 #ifndef _sf_tridiagonal_h
 
+#include "_bool.h"
+/*^*/
+
 typedef struct sf_Tris *sf_tris;
 /* abstract data type */
 /*^*/

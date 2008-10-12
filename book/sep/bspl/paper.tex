@@ -32,7 +32,7 @@ B-splines provide an accurate and efficient method for interpolating
 The problem of interpolating irregularly sampled data to regular grid
 (data regularization) can be recast as the inverse process with
 respect to interpolating regularly sampled data to irregular
-locations.  \longcite{gee} describes an iterative least-squares
+locations.  \cite{gee} describes an iterative least-squares
 optimization approach to data regularization. The optimization is
 centered around two goals. The first goal is to minimize the power of
 the residual difference between the observed and predicted data. The
@@ -43,17 +43,17 @@ The ability of inverse interpolation to reach the data fitting goal
 depends on the accuracy of the forward interpolation operator. Forward
 interpolation is one of the classic problems in numerical analysis and
 has been studied extensively by generations of theoreticians and
-practitioners \cite{Fomel.sep.94.sergey2}. The two simplest and most
+practitioners \cite[]{Fomel.sep.94.sergey2}. The two simplest and most
 widely used methods are the nearest neighbor interpolation and linear
 interpolation.  There are several approaches for constructing more
 accurate (albeit more expensive) linear forward interpolation
-operators: cubic convolution \cite{keys}, local Lagrange, tapered sinc
-\cite{Harlan.sep.30.103}, etc. \longcite{wolberg} presents a detailed
+operators: cubic convolution \cite[]{keys}, local Lagrange, tapered sinc
+\cite[]{Harlan.sep.30.103}, etc. \cite{wolberg} presents a detailed
 review of different conventional approaches.
 \par
 Spline interpolation, based on representing the interpolated function
 by smooth piece-wise polynomials, has been in use for a long time
-\cite{deBoor}, but only recently \longcite{unser1,unser2} have
+\cite[]{deBoor}, but only recently \cite{unser1,unser2} have
 discovered a way of implementing forward B-spline interpolation with
 an arbitrary order of accuracy in an efficient signal-processing
 fashion. The key idea is to implement the B-spline transform with
@@ -62,15 +62,15 @@ transforms regularly spaced data into spline coefficients, then the
 spline coefficients are interpolated onto irregular locations.
 B-spline interpolants exhibit a superior performance for any given
 order of accuracy in comparison with other methods of similar
-efficiency \cite{handbook}.
+efficiency \cite[]{handbook}.
 \par
 In this paper, I study the applicability of B-spline interpolation in
 the context of the inverse interpolation method. In the first section,
 I review the forward interpolation problem and confirm the
-observations of \longcite{handbook} about the superior performance of
+observations of \cite{handbook} about the superior performance of
 B-splines. The second section introduces a constructive method of
 creating discrete regularization operators from B-splines and helical
-filtering \cite{Claerbout.geo.98}. The method performance is evaluated
+filtering \cite[]{GEO63-05-15321541}. The method performance is evaluated
 with a simple numerical test. In conclusion, I summarize the benefits
 of using B-splines for data regularization.
 
@@ -129,7 +129,7 @@ sinc interpolant:
 \begin{equation}\label{eqn:sinc}
   W (x, n) = \frac{\sin \left[\pi (x - n) \right]}{\pi (x - n)} \;.
 \end{equation}
-According to the sampling theorem \cite{kotelnikov,shannon},
+According to the sampling theorem \cite[]{kotelnikov,shannon},
 equation~(\ref{eqn:sinc}) provides an optimal interpolation for any
 band-limited signal. In practice, it is not directly applicable
 because of a prohibitively expensive computation. The shape of the sinc
@@ -141,11 +141,11 @@ spectrum is identically equal to one in the Nyquist frequency band.
 \par
 Several approaches exist for extending the nearest neighbor and linear
 interpolation to more accurate (albeit more expensive) methods. One
-example is the 4-point cubic convolution suggested by \longcite{keys}.
+example is the 4-point cubic convolution suggested by \cite{keys}.
 The cubic convolution interpolant is a local piece-wise cubic
 function, which approximates the ideal sinc equation~(\ref{eqn:sinc}).
 Another popular approach is to taper the ideal sinc function in a
-local window. For example, one can use the Kaiser window \cite{kaiser}
+local window. For example, one can use the Kaiser window \cite[]{kaiser}
 \begin{equation}
   \label{eqn:kais}
   W (x, n) = \left\{\begin{array}{lcr} \displaystyle
@@ -210,7 +210,7 @@ the method increases.
 
 \subsection{Interpolation and convolution}
 
-As I discussed in an earlier paper \cite{Fomel.sep.94.sergey2}, a
+As I discussed in an earlier paper \cite[]{Fomel.sep.94.sergey2}, a
 general approach for constructing the interpolant function $W(x,n)$ in
 equation~(\ref{eqn:linear}) is to select an appropriate function basis
 for representing the function $f(x)$. The functional basis
@@ -222,7 +222,7 @@ where $\psi_k(x)$ are basis function, and $c_k$ are the corresponding
 coefficients. Once an appropriate basis is selected, one can define
 the $W(x,n)$ function by means of the least squares method.
 \par
-\longcite{unser1} noticed that the function basis idea has an
+\cite{unser1} noticed that the function basis idea has an
 especially simple implementation if the basis is
 convolutional and satisfies the equation
 \begin{equation}
@@ -268,7 +268,7 @@ among different variables in Figure~\ref{fig:scheme}.
 B-splines represent a particular example of a convolutional basis.
 Because of their compact support and other attractive numerical
 properties, B-splines are a good basis choice for the forward
-interpolation problem and related signal processing problems \cite{unser}.
+interpolation problem and related signal processing problems \cite[]{unser}.
 \par
 B-splines of the order 0 and 1 coincide with the nearest neighbor and
 linear interpolants~(\ref{eqn:bin}) and~(\ref{eqn:lin}) respectively.
@@ -311,9 +311,9 @@ B-spline $\beta^3(x)$ has the expression
 The corresponding discrete filter $\beta^3(n)$ is a centered 3-point
 filter with coefficients 1/6, 2/3, and 1/6. According to the
 traditional method, a deconvolution with this filter is performed as a
-tridiagonal matrix inversion \cite{deBoor}. One can accomplish it more
+tridiagonal matrix inversion \cite[]{deBoor}. One can accomplish it more
 efficiently by spectral factorization and recursive filtering
-\cite{unser1}. The recursive filtering approach generalizes
+\cite[]{unser1}. The recursive filtering approach generalizes
 straightforwardly to B-splines of higher orders.
 \par
 Both the support length and the smoothness of B-splines increase with
@@ -355,8 +355,8 @@ In practice, the recursive filtering step adds only marginally to the
 total interpolation cost. Therefore, an $n$-th order B-spline
 interpolation is comparable in cost with any other method with an
 $(n+1)$-point interpolant. The comparison in accuracy usually turns
-out in favor of B-splines. Figures~\ref{fig:cubspl}
-and~\ref{fig:kaispl} compare interpolation errors of B-splines and
+out in favor of B-splines. Figures~\ref{fig:cubspl4}
+and~\ref{fig:kaispl8} compare interpolation errors of B-splines and
 other similar-cost methods on the example from Figure~\ref{fig:chirp}.
 
 \sideplot{cubspl4}{height=2.5in}{Interpolation error of the cubic
@@ -370,7 +370,7 @@ other similar-cost methods on the example from Figure~\ref{fig:chirp}.
 Similarly to Figures~\ref{fig:speclincub} and~\ref{fig:speccubkai}, we
 can also compare the discrete responses of B-spline interpolation with
 those of other methods. The right plots in
-Figures~\ref{fig:speccubspl} and~\ref{fig:speckaispl} show that the
+Figures~\ref{fig:speccubspl4} and~\ref{fig:speckaispl8} show that the
 discrete spectra of the effective B-spline interpolants are genuinely
 flat at low frequencies and wider than those of the competitive
 methods. Although the B-spline responses are infinitely long because
@@ -421,6 +421,7 @@ squares when going from 1-D to 2-D.
   the center of the images.}
 
 \subsection{Beyond B-splines}
+\inputdir{chirp}
 
 It is not too difficult to construct a convolutional basis with better
 interpolation properties than those of B-splines, for example by
@@ -437,32 +438,32 @@ but slightly better interpolation behavior:
 \end{array}\right.
 \end{equation}
 \par
-Figures \ref{fig:splmom4} and \ref{fig:specsplmom4} compare the test
+Figures \ref{fig:spl4mom4} and \ref{fig:specspl4mom4} compare the test
 interpolation errors and discrete responses of methods based on the
 B-spline function $\beta^3(x)$ and the lower smoothness function
 $\mu^3(x)$. The latter method has a slight but visible performance
 advantage and a slightly wider discrete spectrum.
 
-\sideplot{splmom4}{height=2.5in}{Interpolation error of the
+\sideplot{spl4mom4}{height=2.5in}{Interpolation error of the
   third-order B-spline interpolant (dashed line) compared to that of
   the lower smoothness spline interpolant (solid line).}
-\sideplot{specsplmom4}{height=2.5in}{Discrete interpolation responses
+\sideplot{specspl4mom4}{height=2.5in}{Discrete interpolation responses
   of third-order B-spline and lower smoothness spline interpolants
   (left) and their discrete spectra (right) for $x=0.7$.}
 \par
-\longcite{mom} have developed a general approach for constructing
+\cite{mom} have developed a general approach for constructing
 non-smooth piece-wise functions with optimal interpolation properties.
 However, the gain in accuracy is often negligible in practice. In the
 rest of this paper, I use the classic B-spline method.
 
 \subsection{Seismic applications of forward interpolation}
-
+\inputdir{stolt}
 For completeness, I conclude this section with two simple examples of
 forward interpolation in seismic data processing.
 Figure~\ref{fig:stolt} shows a 3-D impulse response of Stolt migration
-\cite{GEO43.01.00230048}, computed by using 2-point linear
+\cite[]{GEO43-01-00230048}, computed by using 2-point linear
 interpolation and 8-point B-spline interpolation. As noted by
-\longcite{Ronen.sep.30.95} and \longcite{Harlan.sep.30.103},
+\cite{Ronen.sep.30.95} and \cite{Harlan.sep.30.103},
 inaccurate interpolation may lead to spurious artifact events in
 Stolt-migrated image. Indeed, we see several artifacts for the image
 with linear interpolation (the left plots in Figure~\ref{fig:stolt}.)
@@ -474,12 +475,12 @@ right plots in Figure~\ref{fig:stolt}.)
   interpolation. Migration artifacts are removed by a more accurate
   forward interpolation method.}
 
-\par
+\inputdir{radial}
 Another simple example is radial trace transform
-\cite{Ottolini.sepphd.33} Figure~\ref{fig:radialdat} shows a land shot
+\cite[]{Ottolini.sepphd.33} Figure~\ref{fig:radialdat} shows a land shot
 gather contaminated by nearly radial ground-roll. As discussed by
-\longcite{Claerbout.sep.35.43}, \longcite{SEG-1999-0601}, and
-\longcite{Brown.sep.103.morgan1}, one can effectively eliminate
+\cite{Claerbout.sep.35.43}, \cite{SEG-1999-12041207}, and
+\cite{Brown.sep.103.morgan1}, one can effectively eliminate
 ground-roll noise by applying radial trace transform, followed by
 high-pass filtering and the inverse radial transform.
 Figure~\ref{fig:radial} shows the result of the forward radial
@@ -501,65 +502,65 @@ scheme.
 
 \section{Inverse Interpolation and Data Regularization}
 
-In the notation of \longcite{gee}, inverse interpolation amounts to a
+In the notation of \cite{gee}, inverse interpolation amounts to a
 least-squares solution of the system
 \begin{eqnarray}
   \label{eqn:fit}
-  \bold{L m} & \approx & \bold{d}\;; \\
+  \mathbf{L m} & \approx & \mathbf{d}\;; \\
   \label{eqn:reg}
-  \epsilon \bold{A m} & \approx & \bold{0}\;, 
+  \epsilon \mathbf{A m} & \approx & \mathbf{0}\;, 
 \end{eqnarray}
-where $\bold{d}$ is a vector of known data $f(x_i)$ at irregular
-locations $x_i$, $\bold{m}$ is a vector of unknown function values
-$f(n)$ at a regular grid $n$, $\bold{L}$ is a linear interpolation
-operator of the general form~(\ref{eqn:linear}), $\bold{A}$ is an
+where $\mathbf{d}$ is a vector of known data $f(x_i)$ at irregular
+locations $x_i$, $\mathbf{m}$ is a vector of unknown function values
+$f(n)$ at a regular grid $n$, $\mathbf{L}$ is a linear interpolation
+operator of the general form~(\ref{eqn:linear}), $\mathbf{A}$ is an
 appropriate regularization (model styling) operator, and $\epsilon$ is
 a scaling parameter. In the case of B-spline interpolation, the
-forward interpolation operator $\bold{L}$ becomes a cascade of two
-operators: recursive deconvolution $\bold{B}^{-1}$, which converts the
-model vector $\bold{m}$ to the vector of spline coefficients
-$\bold{c}$, and a spline basis construction operator $\bold{F}$.
+forward interpolation operator $\mathbf{L}$ becomes a cascade of two
+operators: recursive deconvolution $\mathbf{B}^{-1}$, which converts the
+model vector $\mathbf{m}$ to the vector of spline coefficients
+$\mathbf{c}$, and a spline basis construction operator $\mathbf{F}$.
 System~(\ref{eqn:fit}-\ref{eqn:reg}) transforms to
 \begin{eqnarray}
   \label{eqn:bfit}
-  \bold{F B^{-1} m} & \approx & \bold{d}\;; \\
+  \mathbf{F B^{-1} m} & \approx & \mathbf{d}\;; \\
   \label{eqn:breg}
-  \epsilon \bold{A m} & \approx & \bold{0}\;. 
+  \epsilon \mathbf{A m} & \approx & \mathbf{0}\;. 
 \end{eqnarray}
 We can rewrite (\ref{eqn:bfit}-\ref{eqn:breg}) in the form that
 involves only spline coefficients:
 \begin{eqnarray}
   \label{eqn:cfit}
-  \bold{W c} & \approx & \bold{d}\;; \\
+  \mathbf{W c} & \approx & \mathbf{d}\;; \\
   \label{eqn:creg}
-  \epsilon \bold{A B c} & \approx & \bold{0}\;. 
+  \epsilon \mathbf{A B c} & \approx & \mathbf{0}\;. 
 \end{eqnarray}
 After we find a solution of system~(\ref{eqn:cfit}-\ref{eqn:creg}),
-the model $\bold{m}$ will be reconstructed by the simple convolution
+the model $\mathbf{m}$ will be reconstructed by the simple convolution
 \begin{equation}
   \label{eqn:post}
-  \bold{m = B c}\;.
+  \mathbf{m = B c}\;.
 \end{equation}
 This approach resembles a more general method of model preconditioning
-\cite{Fomel.sep.94.sergey1}.
+\cite[]{Fomel.sep.94.sergey1}.
 \par
 The inconvenient part of system~(\ref{eqn:cfit}-\ref{eqn:creg}) is the
-complex regularization operator $\bold{A B}$. Is it possible to avoid
-the cascade of $\bold{B}$ and $\bold{A}$ and to construct a
+complex regularization operator $\mathbf{A B}$. Is it possible to avoid
+the cascade of $\mathbf{B}$ and $\mathbf{A}$ and to construct a
 regularization operator directly applicable to the spline coefficients
-$\bold{c}$? In the following subsection, I develop a method for
+$\mathbf{c}$? In the following subsection, I develop a method for
 constructing spline regularization operators from differential
 equations.
 
 \subsection{Spline regularization}
-
+\inputdir{plane3}
 In many cases, the regularization (styling) condition originates in a
 continuous differential operator. For example, one can think of the
 gradient or Laplacian operator for regularizing smooth functions
-\cite{Fomel.sep.103.sergey1}, plane-wave destructor for regularizing
-local plane waves \cite{Fomel.sep.105.sergey1}, or the offset
+\cite[]{Fomel.sep.103.sergey1}, plane-wave destructor for regularizing
+local plane waves \cite[]{Fomel.sep.105.sergey1}, or the offset
 continuation equation for regularizing seismic reflection data
-\cite{Fomel.sep.103.sergey2}. 
+\cite[]{Fomel.sep.103.sergey2}. 
 \par
 Let us denote the continuous regularization operator by $D$.
 Regularization implies seeking a function $f(x)$ such that the
@@ -596,7 +597,7 @@ equation~(\ref{eqn:dc}). To transform the system~(\ref{eqn:norm}) to a
 regularization condition of the form
 \begin{equation}
   \label{eqn:dtd}
-  \bold{D c} \approx \bold{0}\;,
+  \mathbf{D c} \approx \mathbf{0}\;,
 \end{equation}
 we need to treat the digital filter $d_j$ as an autocorrelation and
 find its minimum-phase factor. Equation~(\ref{eqn:dtd}) replaces
@@ -610,12 +611,12 @@ The continuous operator $D$ in this case comes from the theoretical
 plane-wave differential equation.  I constructed the auto-correlation
 filter $d_j$ according to formula~(\ref{eqn:dc}) and factorized it
 with the efficient Wilson-Burg method on a helix
-\cite{Sava.sep.97.paul1}. The figure shows three plane waves
+\cite[]{Sava.sep.97.paul1}. The figure shows three plane waves
 constructed from three distant spikes by applying an inverse recursive
 filtering with two different plane-wave regularizers. The left plot
 corresponds to using first-order B-splines (equivalent to linear
 interpolation). This type of regularizer is identical to Clapp's
-steering filters \cite{Clapp.sep.95.bob1} and suffers from numerical
+steering filters \cite[]{Clapp.sep.95.bob1} and suffers from numerical
 dispersion effects. The right plot was obtained with third-order
 splines. Most of the dispersion is suppressed by using a more accurate
 interpolation.
@@ -626,6 +627,7 @@ interpolation.
   interpolation). Right: using third-order B-splines.}
 
 \subsection{Test example}
+\inputdir{bintest}
 
 Now that we have all the problem pieces together, we can test the
 performance gain in the inverse interpolation
@@ -651,10 +653,10 @@ regular bins.
 \par
 I solved system~(\ref{eqn:cfit})-(\ref{eqn:dtd}) by the iterative
 conjugate-gradient method, utilizing a recursive filter
-preconditioning \cite{Fomel.sep.94.sergey1} for faster convergence.
-The regularization operator $\bold{D}$ was constructed by using the
+preconditioning \cite[]{Fomel.sep.94.sergey1} for faster convergence.
+The regularization operator $\mathbf{D}$ was constructed by using the
 method of the previous subsection with the tension-spline differential
-equation \cite{GEO55.03.02930305,Fomel.sep.103.sergey1} and the
+equation \cite[]{GEO55-03-02930305,Fomel.sep.103.sergey1} and the
 tension parameter of $0.01$.
 \par
 The least-squares differences between the true and the estimated model
@@ -685,12 +687,13 @@ the estimated model is well constrained by the available data.
   interpolation. Solid line: using third-order B-spline.}
 
 \subsection{Application to 3-D seismic data regularization}
+\inputdir{sei3d}
 
 In this subsection, I demonstrate an application of B-spline inverse
 interpolation for regularizing three-dimensional seismic reflection
 data. The dataset of this example comes from the North Sea and was
-used before for testing AMO \cite{Biondi.geo.amo98} and common-azimuth
-migration \cite{Biondi.sep.93.1}. Figure~\ref{fig:cmpfold} shows the
+used before for testing AMO \cite[]{GEO63-02-05740588} and common-azimuth
+migration \cite[]{Biondi.sep.93.1}. Figure~\ref{fig:cmpfold} shows the
 midpoint geometry and the corresponding bin fold for a selected range
 of offsets and azimuths. The goal of data regularization is to create
 a regular data cube at the specified bins from the irregular input
@@ -715,11 +718,11 @@ interpolation improves the accuracy even further
 constant time slices, using recursive filter preconditioning with
 plane-wave destructor filters analogous to those in
 Figure~\ref{fig:sthree}. The plane wave slope was estimated from the
-binned data with the method of \longcite{Fomel.sep.105.sergey1}.  The
+binned data with the method of \cite{Fomel.sep.105.sergey1}.  The
 inverse interpolation results preserve both flat reflection events in
 the data and steeply-dipping diffractions. When data regularization is
 used as a preprocessing step for common-azimuth migration
-\cite{Biondi.geo.comaz96}, preserving diffractions is important for
+\cite[]{GEO61-06-18221832}, preserving diffractions is important for
 correct imaging of sharp edges in the subsurface structure.
 
 \plot{int2}{width=6in}{3-D data after inverse interpolation with
@@ -731,7 +734,7 @@ correct imaging of sharp edges in the subsurface structure.
 \section{Conclusions}
 
 I have reviewed the B-spline forward interpolation method and
-confirmed the observation of \longcite{handbook} about its superior
+confirmed the observation of \cite{handbook} about its superior
 performance in comparison with other methods of similar cost. Whenever
 an accurate forward interpolation scheme is desired, B-splines can be
 an extremely valuable tool. B-spline forward interpolation involves
@@ -762,8 +765,8 @@ understanding of different forward interpolation methods.
 The 3-D North Sea dataset was released to SEP by Conoco and its
 partners, BP and Mobil.
 
-\bibliographystyle{sep}
-\bibliography{MISC,SEP,GEOTLE,spline}
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,spline}
 
 %\APPENDIX{A}
 
