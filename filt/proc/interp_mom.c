@@ -38,7 +38,7 @@ void mom_int (float x, int n, float* w)
 	    mom4_int (x, w); 
 	    break;
 	default: 
-	    error ("%s: mom_int length %d not implemented",
+	    sf_error ("%s: mom_int length %d not implemented",
 		      __FILE__,n); 
 	    break;
     }
