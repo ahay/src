@@ -51,6 +51,14 @@ int main (int argc, char *argv[])
     predict_init (n1, n2, eps*eps, 1);
 
     u = sf_floatalloc3(n1,ns2,n2);
+    for (i2=0; i2 < n2; i2++) {
+	for (is=0; is < ns2; is++) {
+	    for (i1=0; i1 < n1; i1++) {
+		u[i2][is][i1] = 0.;
+	    }
+	}
+    }
+
     p = sf_floatalloc2(n1,n2);
     trace = sf_floatalloc(n1);
 

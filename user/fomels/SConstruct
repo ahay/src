@@ -72,9 +72,9 @@ for conv in ('byte2jpg','jpg2byte'):
         env.Install(bindir,prog)
 
 for prog in Split(
-    '''
-    burg cburg gauss2 gaussshape2 grid1 matmult ntriangle1 predict
-    predict2 pwdsl triangle2 trianglen trisl
+    '''    
+    burg cburg gauss2 gaussel gaussshape2 grid1 matmult ntriangle1
+    predict predict2 pwdsl triangle2 trianglen trisl
     '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
