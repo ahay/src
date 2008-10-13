@@ -841,27 +841,25 @@ def f77(context):
 pkg['f90'] = {'fedora':'gcc-gfortran',
               'generic':'gfortran'}
 
-def f90_write_ptr_range(where_write_files):
-    'Tell poor Fortran the range of vals (in powers of 10) of a ptr'
-    f90_lib = os.path.join(where_write_files,'rsf.f90')
+def f90_write_autofile(extension,content):
+    filename=os.path.join('api','f90','ptr_sz.'+extension)
+    handle = open(filename,'w')
+    handle.write(content)
+    handle.close()
+
+def f90_write_ptr_sz():
+    'Tell poor Fortran whether platform is 32 or 64 bit'
     if plat['arch'] == '32bit':
         str_insert_f90 = '9'
         str_insert_c   = '32'
     elif plat['arch'] == '64bit':
         str_insert_f90 = '12'
         str_insert_c   = '64'
-    str_to_replace = 'PTRKIND=8'
-    replacement_str = 'PTRKIND=selected_int_kind(%s)' % str_insert_f90
-    import fileinput
-    for line in fileinput.FileInput(f90_lib,inplace=1):
-        if str_to_replace in line:
-            line = line.replace(str_to_replace,replacement_str)
-	sys.stdout.write(line)
-    c_hdr_nm = os.path.join(where_write_files,'ptr_sz.h')
-    handle_c = open(c_hdr_nm,'w')
-    s = '/* File created by config */\n#define RSF%sBIT\n' % str_insert_c
-    handle_c.write(s)
-    handle_c.close()
+    msg = 'File created by config'
+    f90_write_autofile('h',
+        '/* %s */\n#define RSF%sBIT\n' % (msg,str_insert_c) )
+    f90_write_autofile('f90',
+        '! %s\ninteger, parameter :: PTRKIND=selected_int_kind(%s)\n' % (msg,str_insert_f90) )
 
 def f90(context):
     context.Message("checking for F90 compiler ... ")
@@ -881,7 +879,6 @@ def f90(context):
     else:
         context.Result(context_failure)
         need_pkg('f90')
-
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
         context.env.Append(F90FLAGS=' -Vaxlib')
@@ -918,7 +915,7 @@ def f90(context):
             break
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
-    f90_write_ptr_range(os.path.join(here,'api','f90'))
+    f90_write_ptr_sz()
 
 def matlab(context):
     context.Message("checking for Matlab ... ")

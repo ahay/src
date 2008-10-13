@@ -3,16 +3,22 @@
 module RSF
   implicit none
 
-! Set kinds to support 64 bits pointers and file offsets
-! This corresponds to the definition in fortran.c
-! This might need to be more general. -- JTK
-  integer, parameter :: PTRKIND=8
+  ! File below to be created by config. Defines integer PTRKIND (kind of
+  ! integer used for pointers. Necessary to do it this way because F90
+  ! cannot figure out if platform is 32-bit or 62-bit
+  include "ptr_sz.f90"
+
+  ! Kind of integer for representing positions (offsets) inside a file
+  ! Equivalent in C defined in fortran.c
   integer, parameter :: OFFKIND=8
-! External string functions cannot return LEN=* strings
-! Choose something large enough for most functions -- JTK
+
+  ! External string functions cannot return LEN=* strings
+  ! Choose something large enough for most functions
   integer, parameter :: FSTRLEN=256
 
-  integer, parameter :: sf_uchar=0, sf_char=1, sf_int=2, sf_float=3, sf_complex=4
+  ! Types of data in RSF binary. Correspond to sf_datatype in filt/lib/file.c
+  integer, parameter :: sf_uchar=0, sf_char   =1, sf_int=2
+  integer, parameter :: sf_float=3, sf_complex=4, sf_short=5
 
   type file
      private
