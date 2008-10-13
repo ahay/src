@@ -27,8 +27,8 @@
 int main (int argc, char* argv[])
 {
     bool norm;
-    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp;
-    float *mm, *count=NULL, *dd, **xy, *hdr;
+    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp, i4, n4;
+    float *mm, *count, *dd, ***xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, clip;
     char *xk, *yk, *header;
     sf_file in, out, head, fold;
@@ -37,12 +37,14 @@ int main (int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&nd)) sf_error("Need n1= in in");
-    if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
+    if (!sf_histint(in,"n1",&nd)) sf_error("Need n1= in in");
+    if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
+    n4 = sf_leftsize(in,2);
+
     /* create coordinates */
-    xy = sf_floatalloc2(2,nd);
+    xy = sf_floatalloc3(2,nd,n4);
 
     header = sf_getstring("head");
     if (NULL == header) { 
@@ -81,18 +83,19 @@ int main (int argc, char* argv[])
 
     ymin = xmin = +FLT_MAX;
     ymax = xmax = -FLT_MAX;
-    for (id=0; id<nd; id++) {	
-	sf_floatread (hdr,nk,head);
-	f = hdr[xkey]; 
-	if (f < xmin) xmin=f;
-	if (f > xmax) xmax=f;
-	xy[id][0] = f;
-	f = hdr[ykey]; 
-	if (f < ymin) ymin=f;
-	if (f > ymax) ymax=f;
-	xy[id][1] = f;
+    for (i4=0; i4 < n4; i4++) {
+	for (id=0; id<nd; id++) {	
+	    sf_floatread (hdr,nk,head);
+	    f = hdr[xkey]; 
+	    if (f < xmin) xmin=f;
+	    if (f > xmax) xmax=f;
+	    xy[i4][id][0] = f;
+	    f = hdr[ykey]; 
+	    if (f < ymin) ymin=f;
+	    if (f > ymax) ymax=f;
+	    xy[i4][id][1] = f;
+	}
     }
-
     sf_fileclose (head);
 
     if (sf_histfloat(in,"o2",&t0)) sf_putfloat(out,"o3",t0);
@@ -123,7 +126,7 @@ int main (int argc, char* argv[])
 
     sf_putint(out,"n1",nx);
     sf_putint(out,"n2",ny);
-    sf_putint(out,"n3",nt);
+    sf_shiftdim(in, out, 2);
 
     if (!sf_getfloat("dx",&dx)) {
 	/* bin size in x */
@@ -147,40 +150,20 @@ int main (int argc, char* argv[])
     if (!sf_getint("interp",&interp)) interp=1;
     /* [0,1,2] interpolation method;
        0: median, 1: nearest neighbor, 2: bi-linear,  */
-    
-    switch (interp) {
-	case 0:
-	    medbin_init (xy, x0,y0,dx,dy,nx,ny, nd);
-	    sf_warning("Using median interpolation");
-	    break;
-	case 1:
-	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
-	    sf_warning("Using nearest-neighbor interpolation");
-	    break;
-	case 2:
-	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
-	    sf_warning("Using linear interpolation");
-	    break;
-	default:
-	    sf_error("Unsupported interp=%d",interp);
-	    break;
-    }
 
     if (!sf_getbool("norm",&norm)) norm=true;
     /* if normalize */
+    if (norm) {
+	if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
+	/* clip for fold normalization */
+    }
 
     nm = nx*ny;
     mm = sf_floatalloc(nm);
-    dd = sf_floatalloc(nd);
-    if (interp) { /* compute fold */
+    dd = sf_floatalloc(nd);    
+
+    if (interp) {
 	count  = sf_floatalloc(nm);
-
-	for (id=0; id<nd; id++) {
-	    dd[id]=1.;
-	}
-
-	sf_int2_lop (true, false,nm,nd,count,dd);
- 
 	if (NULL != sf_getstring("fold")) {
 	    /* output file for fold (optional) */ 
 	    fold = sf_output("fold");
@@ -191,35 +174,63 @@ int main (int argc, char* argv[])
 	    sf_putfloat(fold,"o2",y0);
 	    sf_putfloat(fold,"d1",dx);
 	    sf_putfloat(fold,"d2",dy);
-	    sf_floatwrite (count,nm,fold);
-	    sf_fileclose (fold);
+	} else {
+	    fold = NULL;
 	}
-	
-	if (norm) {
-	    if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
-	    /* clip for fold normalization */
-	    
-	    for (im=0; im<nm; im++) {
-		if (clip < count[im]) count[im]=1./fabsf(count[im]);
-		else                  count[im]=0.;
-	    }
-	}
+    } else {
+	count = NULL;
+	fold = NULL;
     }
 
-    for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_floatread (dd,nd,in);
-	if (interp) {
-	    sf_int2_lop (true,false,nm,nd,mm,dd);
+    for (i4=0; i4 < n4; i4++) {
+	switch (interp) {
+	    case 0:
+		medbin_init (xy[i4], x0,y0,dx,dy,nx,ny, nd);
+		sf_warning("Using median interpolation");
+		break;
+	    case 1:
+		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
+		sf_warning("Using nearest-neighbor interpolation");
+		break;
+	    case 2:
+		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
+		sf_warning("Using linear interpolation");
+		break;
+	    default:
+		sf_error("Unsupported interp=%d",interp);
+		break;
+	}
+
+	if (interp) { /* compute fold */
+	    for (id=0; id<nd; id++) {
+		dd[id]=1.;
+	    }
+	    sf_int2_lop (true, false,nm,nd,count,dd); 
+	    if (NULL != fold) sf_floatwrite (count,nm,fold);
+	
 	    if (norm) {
 		for (im=0; im<nm; im++) {
-		    mm[im] *= count[im];
+		    if (clip < count[im]) count[im]=1./fabsf(count[im]);
+		    else                  count[im]=0.;
 		}
 	    }
-	} else {
-	    medbin (dd,mm);
 	}
-	sf_floatwrite (mm,nm,out);
-    }
+
+	for (it=0; it < nt; it++) { /* loop over time slices */
+	    sf_floatread (dd,nd,in);
+	    if (interp) {
+		sf_int2_lop (true,false,nm,nd,mm,dd);
+		if (norm) {
+		    for (im=0; im<nm; im++) {
+			mm[im] *= count[im];
+		    }
+		}
+	    } else {
+		medbin (dd,mm);
+	    }
+	    sf_floatwrite (mm,nm,out);
+	}
+    } /* i4 */
 
     exit(0);
 }
