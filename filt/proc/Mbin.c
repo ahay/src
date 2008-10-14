@@ -169,7 +169,7 @@ int main (int argc, char* argv[])
 	    fold = sf_output("fold");
 	    sf_putint(fold,"n1",nx);
 	    sf_putint(fold,"n2",ny);
-	    sf_putint(fold,"n3",1);
+	    sf_putint(fold,"n3",n4);
 	    sf_putfloat(fold,"o1",x0);
 	    sf_putfloat(fold,"o2",y0);
 	    sf_putfloat(fold,"d1",dx);
@@ -186,15 +186,15 @@ int main (int argc, char* argv[])
 	switch (interp) {
 	    case 0:
 		medbin_init (xy[i4], x0,y0,dx,dy,nx,ny, nd);
-		sf_warning("Using median interpolation");
+		sf_warning("Using median interpolation (i4= %d of %d)", i4+1,n4);
 		break;
 	    case 1:
 		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
-		sf_warning("Using nearest-neighbor interpolation");
+		sf_warning("Using nearest-neighbor interpolation (i4= %d of %d)", i4+1,n4);
 		break;
 	    case 2:
 		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
-		sf_warning("Using linear interpolation");
+		sf_warning("Using linear interpolation (i4= %d of %d)", i4+1,n4);
 		break;
 	    default:
 		sf_error("Unsupported interp=%d",interp);
