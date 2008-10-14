@@ -35,8 +35,6 @@ int main(int argc, char* argv[])
     /* check that the input is float */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    n = sf_filesize(in);
-
     if (!sf_getfloat("clip",&clip)) sf_error("Need clip=");
     /* clip value */
 
