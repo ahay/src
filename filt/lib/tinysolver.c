@@ -27,7 +27,7 @@ void sf_tinysolver (sf_operator Fop       /* linear operator */,
 		    float* m              /* estimated model */,
 		    const float* m0       /* starting model */,
 		    const float* d        /* data */, 
-		    int niter             /* number of iterations */)
+		    int niter             /* iterations */)
 /*< Generic linear solver. Solves oper{x} =~ dat >*/
 {
     int i, iter;
