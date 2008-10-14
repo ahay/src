@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
 	    sf_putint(out,"n4",n4);
 	    for (j=3; j < dim; j++) {
 		snprintf(key,4,"n%d",j+2);
-		sf_putint(in,key,n[j]);
+		sf_putint(out,key,n[j]);
 	    }
 	}
     }

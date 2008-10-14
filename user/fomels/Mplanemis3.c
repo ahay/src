@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n3, n123, nj1, nj2, seed;
+    int i, niter, nw, n1, n2, n3, n123, nj1, nj2, seed, i4, n4;
     float *mm, *dd, *pp, *qq, a, var;
     bool *known, verb;
     sf_file in, out, dip, mask;
@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
     n123 = n1*n2*n3;
+    n4 = sf_leftsize(in,3);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -64,38 +65,41 @@ int main(int argc, char* argv[])
     pp = sf_floatalloc(n123);
     qq = sf_floatalloc(n123);
 
-    sf_floatread(pp,n123,dip);
-    sf_floatread(qq,n123,dip);
-
     mm = sf_floatalloc(n123);
     dd = sf_floatalloc(2*n123);
     known = sf_boolalloc(n123);
 
-    sf_floatread(mm,n123,in);
-    
-    if (NULL != sf_getstring ("mask")) {
-	mask = sf_input("mask");
-	sf_floatread(dd,n123,mask);
-
-	for (i=0; i < n123; i++) {
-	    known[i] = (bool) (dd[i] != 0.);
+    for (i4=0; i4 < n4; i4++) {
+	sf_warning("slice i4= %d of %d",i4+1,n4);
+	sf_floatread(pp,n123,dip);
+	sf_floatread(qq,n123,dip);
+	
+	sf_floatread(mm,n123,in);
+	
+	if (NULL != sf_getstring ("mask")) {
+	    mask = sf_input("mask");
+	    sf_floatread(dd,n123,mask);
+	    
+	    for (i=0; i < n123; i++) {
+		known[i] = (bool) (dd[i] != 0.);
+	    }
+	} else {
+	    for (i=0; i < n123; i++) {
+		known[i] = (bool) (mm[i] != 0.);
+	    }
 	}
-    } else {
-	for (i=0; i < n123; i++) {
-	    known[i] = (bool) (mm[i] != 0.);
+	
+	for (i=0; i < 2*n123; i++) {
+	    dd[i] = a*sf_randn_one_bm();
 	}
+	
+	allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
+		      allpass_init(nw, nj2, n1,n2,n3, qq));
+	sf_solver(allpass3_lop, sf_cgstep, n123, 2*n123, mm, dd, niter,
+		  "known", known, "x0", mm, "verb", verb, "end");
+
+	sf_floatwrite (mm,n123,out);
     }
-
-    for (i=0; i < 2*n123; i++) {
-	dd[i] = a*sf_randn_one_bm();
-    }
-
-    allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
-		  allpass_init(nw, nj2, n1,n2,n3, qq));
-    sf_solver(allpass3_lop, sf_cgstep, n123, 2*n123, mm, dd, niter,
-	      "known", known, "x0", mm, "verb", verb, "end");
-
-    sf_floatwrite (mm,n123,out);
 
     exit(0);
 }
