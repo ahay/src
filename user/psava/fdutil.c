@@ -1,6 +1,10 @@
 #include <rsf.h>
 #include "fdutil.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #ifndef _fdutil_h
 
 typedef struct fdm2 *fdm2d;

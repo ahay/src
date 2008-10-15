@@ -1,6 +1,7 @@
 import os, string
 import rsfdoc
 import rsfprog
+import rsfpath
 import sftour
 
 books = '''
@@ -25,14 +26,11 @@ def publicproj(project):
     if ARGUMENTS.get('all', 'n') == 'y':
         return 1
     # OK if no PRIVATE data
-    sin, sout, serr = os.popen3('scons -s .sf_data')
-    sin.close()
-    status = serr.read()
-    serr.close()
-    if not status:    
-        data = sout.read()
-        sout.close()
-        items = string.split(data)
+    path = rsfpath.getpath(os.getcwd())
+    data = os.path.join(path,'.sf_data')
+    if os.path.isfile(data):
+        os.system('scons -s %s' % data)
+        items = open(data).read().split()
         if 'PRIVATE' in items:
             return 0
     return 1

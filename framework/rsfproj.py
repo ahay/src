@@ -209,18 +209,8 @@ class Project(Environment):
         self.cwd = cwd
 
         # path for binary files
-        datapath = rsfpath.datapath()
-        tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
-
-        self.path = os.path.dirname(datapath)
-        if datapath[:2] != './':
-            # create a hierarcical structure
-            tree = rsfpath.dirtree(cwd)
-            for level in tree:
-                if level:
-                    self.path = os.path.join(self.path,level)
-            rsfpath.mkdir(self.path)
-        self.path = os.path.join(self.path,os.path.basename(datapath))
+        self.path = rsfpath.getpath(cwd)
+        tmpdatapath = os.environ.get('TMPDATAPATH',self.path)
         rsfpath.sconsign(self)
 
         self.resdir = resdir

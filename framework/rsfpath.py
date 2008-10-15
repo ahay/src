@@ -68,3 +68,16 @@ def sconsign(env):
             env.SConsignFile(env.path+ '.sconsign.gdbm',gdbm)
         except:
             env.SConsignFile(env.path+ '.sconsign')
+
+def getpath(cwd):
+    top = datapath()
+    path = os.path.dirname(top)
+    if top[:2] != './':
+        # create a hierarcical structure
+        tree = dirtree(cwd)
+        for level in tree:
+            if level:
+                path = os.path.join(path,level)
+        mkdir(path)
+    path = os.path.join(path,os.path.basename(top))
+    return path

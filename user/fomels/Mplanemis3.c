@@ -69,17 +69,24 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc(2*n123);
     known = sf_boolalloc(n123);
 
+    if (NULL != sf_getstring ("mask")) {
+	mask = sf_input("mask");
+    } else {
+	mask = NULL;
+    }
+
+    allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
+		  allpass_init(nw, nj2, n1,n2,n3, qq));
+
     for (i4=0; i4 < n4; i4++) {
-	sf_warning("slice i4= %d of %d",i4+1,n4);
+	sf_warning("slice %d of %d",i4+1,n4);
 	sf_floatread(pp,n123,dip);
 	sf_floatread(qq,n123,dip);
 	
 	sf_floatread(mm,n123,in);
 	
-	if (NULL != sf_getstring ("mask")) {
-	    mask = sf_input("mask");
-	    sf_floatread(dd,n123,mask);
-	    
+	if (NULL != mask) {
+	    sf_floatread(dd,n123,mask);	    
 	    for (i=0; i < n123; i++) {
 		known[i] = (bool) (dd[i] != 0.);
 	    }
@@ -93,10 +100,9 @@ int main(int argc, char* argv[])
 	    dd[i] = a*sf_randn_one_bm();
 	}
 	
-	allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
-		      allpass_init(nw, nj2, n1,n2,n3, qq));
 	sf_solver(allpass3_lop, sf_cgstep, n123, 2*n123, mm, dd, niter,
 		  "known", known, "x0", mm, "verb", verb, "end");
+	sf_cgstep_close();
 
 	sf_floatwrite (mm,n123,out);
     }
