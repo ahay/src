@@ -37,7 +37,7 @@ void gaussel_close (void)
     free(d);
 }
 
-void gaussel_solve (const float **a /* matrix [size][size] */, 
+void gaussel_solve (float **a       /* matrix [size][size] */, 
 		    const float *b  /* rhs [size] */, 
 		    float *x        /* solution [size] */)
 /*< solve a*x = b >*/
