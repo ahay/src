@@ -88,6 +88,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 /*< Initializing standard plot >*/
 {
     bool pad, set;
+    int font;
     float mid, off, crowd, barwd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
     char* bartype;
@@ -134,6 +135,9 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     if (yreverse) swap(&min2,&max2);
     
     vp_style (VP_STANDARD);
+
+    if (!sf_getint("font",&font)) font=-1; /* font to use in text */
+    if (-1 != font) vp_tfont (font,VP_NO_CHANGE,VP_NO_CHANGE);
 
     /* get screen size */
     if (!sf_getfloat ("screenratio",&screenratio))
@@ -637,7 +641,7 @@ static void make_baraxis (float min, float max)
 static void make_axes (void)
 /* put tickmarks */
 {
-    char* where;
+    char *where;
     bool modify;
 
     if (label1 != NULL) { /* horizontal axis */ 

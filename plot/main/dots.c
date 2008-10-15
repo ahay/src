@@ -43,7 +43,7 @@ static void circle(int corners,
 
 int main (int argc, char* argv[])
 {
-    int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize;
+    int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize, font;
     size_t len;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
     float epsilon, dd1, dd2, axis, hi=0., lo=0., av, maxab, range;
@@ -182,10 +182,13 @@ int main (int argc, char* argv[])
 
     tracehigh = overlap * (dots? dd2 - 3*radius: dd2); 
     
+    if (!sf_getint("font",&font)) font=-1; /* font to use in text */
+    
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(data[0],n1*n2,in);
 	
 	vp_erase();
+	if (-1 != font) vp_tfont (font,VP_NO_CHANGE,VP_NO_CHANGE);
     
 	if(!gaineach) {
 	    hi = lo = data[0][0];
