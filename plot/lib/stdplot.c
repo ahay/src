@@ -1182,13 +1182,13 @@ void vp_frame(void)
 	} else {
 	    /* remove two triangles */
 	    vp_color(VP_BLACK);
-	    xp[0] = min1;      yp[0] = mid2;
-	    xp[1] = min1;      yp[1] = max2;
-	    xp[2] = max1-mid1; yp[2] = max2;
+	    xp[0] = min1-1;    yp[0] = mid2;
+	    xp[1] = min1-1;    yp[1] = max2+1;
+	    xp[2] = max1-mid1; yp[2] = max2+1;
 	    vp_ufill(xp,yp,3);
-	    xp[0] = mid1;      yp[0] = min2;
-	    xp[1] = max1;      yp[1] = min2;
-	    xp[2] = max1;      yp[2] = max2-mid2;
+	    xp[0] = mid1;      yp[0] = min2-1;
+	    xp[1] = max1+1;    yp[1] = min2-1;
+	    xp[2] = max1+1;    yp[2] = max2-mid2;
 	    vp_ufill(xp,yp,3);
 	}
 	vp_egroup();
@@ -1495,11 +1495,16 @@ void vp_frame(void)
 		fabsf(num) < 0.001*fabsf(d1)) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
-	    vp_tjust (TH_CENTER, TV_TOP);
-	    if (labelrot) {
-		vp_gtext(xc+3.0*vs,yc,0.,-labelsz,labelsz,0.,string);
+	    if (NULL != label2 && axis2->parallel) {
+		vp_tjust (TH_CENTER, TV_BASE);
+		if (labelrot) {
+		    vp_gtext(xc+0.5*vs,yc,0.,-labelsz,labelsz,0.,string);
+		} else {
+		    vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		}
 	    } else {
-		vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		vp_tjust (TH_LEFT, TV_HALF);
+		vp_gtext(xc+0.5*vs, yc, labelsz, 0., 0., labelsz, string);
 	    }
 	}
 	vp_egroup();

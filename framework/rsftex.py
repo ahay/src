@@ -948,6 +948,7 @@ class TeXPaper(Environment):
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
+        self.Depends(pdf,self.figs)
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
         pdf[0].target_scanner = LaTeX

@@ -37,7 +37,7 @@ int main (int argc, char* argv[])
     float xarray[3], yarray[3], tx_height, xout, yout, zout;
     float xpath, ypath, xup, yup, scalet, length, norm;
     float xdis, ydis, pscale, x,y;
-    int color, fat, ii;
+    int color, fat, ii, font;
     bool pointer, rev, boxit;
     char *string;
 
@@ -104,6 +104,9 @@ int main (int argc, char* argv[])
 
     if (NULL == (string=sf_getstring("label"))) string=" ";
     /* text for label */
+
+    if (!sf_getint("font",&font)) font=VP_NO_CHANGE;
+    /* text font */
 
     proj (tx_height * cosf(angle),
           tx_height * sinf(angle),
@@ -183,11 +186,11 @@ int main (int argc, char* argv[])
     vp_color (color);
     vp_fat (fat);
 
-    vp_tfont (VP_NO_CHANGE, VP_NO_CHANGE, boxit? OVLY_SHADE_BOX: OVLY_NORMAL);
+    vp_tfont (font, VP_NO_CHANGE, boxit? OVLY_SHADE_BOX: OVLY_NORMAL);
     vp_gtext (xt, yt, xpath, ypath, xup, yup, string);
 
     vp_tjust (TH_NORMAL, TV_NORMAL);
-    vp_tfont (VP_NO_CHANGE, VP_NO_CHANGE, OVLY_NORMAL);
+    vp_tfont (font, VP_NO_CHANGE, OVLY_NORMAL);
     vp_color (VP_WHITE);
     vp_fat (0);
 
