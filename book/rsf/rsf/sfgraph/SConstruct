@@ -16,11 +16,13 @@ plots = {'def':'Default',
          'par':'parallel2=n',
          'man':'parallel2=n n2tic=3 o2num=-1 d2num=1',
          'for':'parallel2=n format2=%3.1f',
-         'all':'parallel2=n n2tic=3 o2num=-1 d2num=1 format2=%3.1f'}
+         'fnt':'parallel2=n format2=%3.1f font=2'}
 
 for plot in plots.keys():
     Plot(plot,'t10','graph title="\s75 %s" %s' % tuple([plots[plot],]*2))
 
 Result('def','def par man for','TwoRows')
+
+Result('geo','def fnt','OverUnderIso')
 
 End()
