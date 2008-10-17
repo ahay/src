@@ -1,0 +1,212 @@
+\author{Magnus Hestenes}
+%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+  This homework has four parts. 
+  \begin{enumerate}
+  \item Theoretical questions related to the conjugate-gradients algorithm.
+  \item Compression of sand dune images.
+  \item Attenuation of surface-wave noise in 
+    seismic data collected over sand dunes using match filtering.
+  \item Predicting data patterns using match filtering.
+  \end{enumerate}
+\end{abstract}
+
+\section{Conjugate Gradients}
+The following algorithm finds a solution to
+  the least-squares optimization problem $\min
+  \|\mathbf{F}\,\mathbf{m} - \mathbf{d}\|^2$, where $\mathbf{d}$ is
+  data, $\mathbf{m}$ is the model we want to estimate, and
+  $\mathbf{F}$ is a linear operator that connects them.
+
+ \begin{algorithm}{Conjugate gradients}{\mathbf{F},\mathbf{d},N}
+  \mathbf{m \= 0} \\
+  \mathbf{r \= - d} \\
+  \begin{FOR}{n \= 1, 2, \ldots, N} \\
+    \mathbf{g}_m \= \mathbf{F}^T\,\mathbf{r} \\
+    \mathbf{g}_r \= \mathbf{F}\,\mathbf{g}_m \\
+    \rho \= \mathbf{g}_m^T\,\mathbf{g}_m \\
+    \begin{IF}{n = 1} 
+      \beta \= 0 
+      \ELSE 
+      \beta \= \rho/\hat{\rho} 
+    \end{IF} \\
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \= 
+    \left[\begin{array}{l}
+        \mathbf{g}_m \\
+        \mathbf{g}_r
+      \end{array}\right] + \beta\,
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \\
+    \alpha \= - \rho/(\mathbf{s}_r^T\,\mathbf{s}_r) \\
+    \left[\begin{array}{l}
+        \mathbf{m} \\
+        \mathbf{r}
+      \end{array}\right] \= 
+    \left[\begin{array}{l}
+        \mathbf{m} \\
+        \mathbf{r}
+      \end{array}\right] + \alpha\,
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \\
+    \hat{\rho} \= \rho
+  \end{FOR} \\        
+  \RETURN \mathbf{m}
+\end{algorithm}
+\begin{enumerate}
+\item How much storage does this algorithm require? If the model size is $N_m$ and the data size is $N_d$, 
+how much additional storage do we need to allocate?
+\item  In applications, it is often advantageous to apply \emph{model
+    reparameterization} or \emph{preconditioning}. Suppose that,
+  instead of solving for $\mathbf{m}$ directly, you first solve for
+  $\mathbf{x}$ such that $\mathbf{m} = \mathbf{P}\,\mathbf{x}$. Show
+  how to incorporate the linear preconditioning operator $\mathbf{P}$
+  in the algorithm above.
+\item Prove that the output of the algorithm after $N$ iterations is
+\begin{equation}
+\label{eq:mres}
+\mathbf{m}_N = \sum\limits_{n=1}^{N} \frac{\mathbf{s}_n\,\mathbf{s}_n^T}{\mathbf{s}_n^T\,\mathbf{F}^T\,\mathbf{F}\,\mathbf{s}_n}\,\mathbf{F}^T\,\mathbf{d}\;,
+\end{equation}
+where $\mathbf{s}_n$ is the model step $\mathbf{s}_m$ at $n$-th iteration.
+\end{enumerate}
+
+\section{Compression of Sand Dune Images}
+\inputdir{dunes}
+
+\sideplot{dune}{width=\textwidth}{Image of sand dunes in a river.}
+
+Figure~\ref{fig:dune} shows an image of sand dunes at the bottom of a
+river\footnote{courtesy of Ryan Ewing}. In this part of the assignment, you
+will try to compress the image by applying different transforms.
+
+\multiplot{2}{cos,sort}{width=0.45\textwidth}{(a) Sand dunes image in the cosine Fourier domain. (b) Fourier coefficients sorted by absolute value and displayed on the logarithmic (decibel) scale.}
+
+Figure~\ref{fig:cos} shows the image after applying the \emph{cosine
+transform} (a version of the Fourier transform that keeps coefficients
+real). Notice both compactness and sparsity in the Fourier domain. To
+analyze the sparsity pattern, Figure~\ref{fig:sort} shows Fourier
+coefficients after sorting them by absolute value. The rate 
+of coefficient decay is a measure of sparsity.
+
+\plot{inv}{width=\textwidth}{(a) Sand dunes image reconstructed after thresholding. (b) Compression noise.}
+
+Figure~\ref{fig:inv} shows the result of shrinkage (soft thresholding)
+of Fourier coefficients using 1\% threshold and the difference between
+the reconstructed image and the true image.
+
+\newpage
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw4/dunes#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to adjust the threshold percentage to the level that makes noise negligible.
+\item  Modify the \texttt{SConstruct} file to use DWT (the \emph{digital wavelet transform}) instead of the cosine transform. 
+Compare the results. Which transform has more sparsity and provides better compression? 
+\item \textbf{EXTRA CREDIT} for finding and implementing a transform with an even better compression.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{dunes/SConstruct}
+
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
+
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
+
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
+
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
+
+A look at the data spectrum (Figure~\ref{fig:spec0} shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
+
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
+
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}_0\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $d$ is the data, $f$ is a \emph{matching filter}, and
+$\mathbf{N}_0$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}_0\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in program \texttt{match.c}. Some parts of this program
+are left out for you to fill.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=19]{match/match.c}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw4/match#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Test your modifications by running the dot product test.
+\begin{verbatim}
+scons dot.test
+\end{verbatim}
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by either finding better parameters or by finding a better algorithm. 
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{match/SConstruct}
+
+\section{Match Filtering Continued}
+
+Both the sand dune image and the seismic record are sections from 3-D
+data (time-lapse measurements in one case and 3-D seismic acquisition
+in the other).
+\begin{enumerate}
+\item In either of the examples, try using match filtering to
+predict one 3-D frame from another. You may need to modify the program
+to make the filter two-dimensional. 
+\item Include your results in the paper.
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw4#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Hestenes's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+sftour scons -c
+\end{verbatim}
+and
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+\item Submit your result (file \texttt{paper.pdf}) by printing it out
+  or by e-mail.
+\end{enumerate}
