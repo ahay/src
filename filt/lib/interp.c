@@ -71,4 +71,18 @@ void sf_lg_int (float x, int n, float* w)
     }
 }
 
+void sf_taylor (float x, int n, float* w) 
+/*< Taylor >*/
+{
+    int i;
+    float xi;
+
+    xi = 1.;
+    for (i=0; i < n; i++) {
+	if (i > 0) xi *= (x + 1. -i)/i;
+	w[i] = xi;
+    }
+}
+
+
 /* 	$Id$	 */

@@ -55,7 +55,7 @@ void pade_zip (int n, const float *d, float *c)
     k[0] = 1;
 
     for (i=0; i < n; i++) {
-	for (j=1; j <= i; j++) {
+	for (j=i; j > 0; j--) {
 	    k[j] += k[j-1];
 	}
 	for (j=0; j <= i; j++) {
@@ -66,6 +66,7 @@ void pade_zip (int n, const float *d, float *c)
 }
 
 void pade_unzip (int n, float *d)
+/*< unzip >*/
 {
     float *c;
     int *k, i, j, s;
@@ -81,7 +82,7 @@ void pade_unzip (int n, float *d)
 
     for (i=0, s=1; i < n; i++, s=-s) {
 	if (i > 0) {
-	    for (j=1; j <= i; j++) {
+	    for (j=i; j > 0; j--) {
 		k[j] -= k[j-1];
 	    }
 	}
@@ -99,6 +100,7 @@ void pade_unzip (int n, float *d)
 }
 
 void pade_apply (int n, const float *c /* [n] */, float * a, float *b)
+/*< apply >*/
 {
     int i, j;
 
@@ -108,9 +110,9 @@ void pade_apply (int n, const float *c /* [n] */, float * a, float *b)
     /* form the matrix */
     for (i=0; i < m; i++) {
 	for (j=0; j < m; j++) {
-	    w[i][j] = c[n-i+j];
+	    w[i][j] = c[n-i+j-1];
 	}
-	w1[i] = - c[n+j];
+	w1[i] = - c[n+i-1];
     }
 
     /* actually, a toeplitz matrix, but we are too lazy */

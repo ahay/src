@@ -62,7 +62,7 @@ int main (int argc, char* argv[])
 	sf_floatread(data,n1,in);
 
 	for (irep=0; irep < nrep; irep++) {
-	    nsmooth (tr,0,1,false,rct[i2],sft[i2],data);
+	    nsmooth2 (tr,0,1,false,rct[i2],sft[i2],data);
 	}
 	
 	sf_floatwrite(data,n1,out);

@@ -106,8 +106,11 @@ def latexscan(node,env,path):
     'Scan LaTeX file for extra dependencies'
     global plotoption, geomanuscript
     lclass = env.get('lclass','geophysics')
-    options = env.get('options','')
-    geomanuscript = lclass == 'geophysics' and options.rfind('manuscript') >= 0
+    options = env.get('options')
+    if not options:
+        geomanuscript = 0
+    else:
+        geomanuscript = lclass == 'geophysics' and string.rfind(options,'manuscript') >= 0
 
     top = str(node)
     if top[-4:] != '.tex':
