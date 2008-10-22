@@ -58,18 +58,19 @@ static func functable[] = {
 
 static sf_complex myabs(sf_complex c)
 {
-#ifdef SF_HAS_COMPLEX_H
-    c = cabsf(c);
-#else
-    c.r = cabsf(c);
-    c.i = 0.;
-#endif
+    c = sf_cmplx(cabsf(c),0.);
     return c;
 }
 
 static sf_complex myconj(sf_complex c)
 {
     c = conjf(c);
+    return c;
+}
+
+static sf_complex myarg(sf_complex c)
+{
+    c = sf_cmplx(cargf(c),0.);
     return c;
 }
 
@@ -91,6 +92,7 @@ static cfunc cfunctable[] = {
     clogf,
     csqrtf,
     myabs,
+    myarg,
     myconj
 };
 
@@ -405,7 +407,8 @@ size_t sf_math_parse (char*       output /* expression */,
 		} else if (0==strcmp(key,"abs"))   { *indx = 15;
 		} else if (0==strcmp(key,"erf")  && SF_FLOAT==datatype)   { *indx = 16;
 		} else if (0==strcmp(key,"erfc") && SF_FLOAT==datatype)   { *indx = 17;
-		} else if (0==strcmp(key,"conj") && SF_COMPLEX==datatype) { *indx = 16;
+		} else if (0==strcmp(key,"arg") && SF_COMPLEX==datatype) { *indx = 16;
+		} else if (0==strcmp(key,"conj") && SF_COMPLEX==datatype) { *indx = 17;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",
