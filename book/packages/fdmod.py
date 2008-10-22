@@ -305,7 +305,7 @@ def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
 
 # ------------------------------------------------------------
 # isotropic stiffness tensor
-def isotropic(cc,vp,vs,ro,par):
+def retiredisotropic(cc,vp,vs,ro,par):
     
     # Lame parameters
     # lambda = ro * (vp^2 - 2 vs^2)
@@ -342,7 +342,7 @@ def isotropic(cc,vp,vs,ro,par):
 
 # ------------------------------------------------------------
 # anisotropic stiffness tensor
-def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
+def retiredanisotropic(cc,vp,vs,ro,epsilon,delta,par):
     Flow(cc+'33',[vp,ro],
          '''
          math output="ro*vp*vp"
@@ -488,7 +488,7 @@ def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
 
 # ------------------------------------------------------------
 # shot-record reverse-time migration
-def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
+def retiredrtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
@@ -672,9 +672,9 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
         Plot(frame+'-'+str(i),movie+'-plt',
              'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
              + cgrey('',par))
-        Result(frame+'-'+str(i),movie+'-plt',
-             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
-             + cgrey('',par))
+#        Result(frame+'-'+str(i),movie+'-plt',
+#             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
+#             + cgrey('',par))
 
     if(axis==1):
         pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
