@@ -31,16 +31,39 @@ def param(par):
     if(not par.has_key('nt')):       par['nt']=1
     if(not par.has_key('dt')):       par['dt']=1.
 
+    if(not par.has_key('oy')):       par['oy']=0.
+    if(not par.has_key('ny')):       par['ny']=1
+    if(not par.has_key('dy')):       par['dy']=1.
+
     if(not par.has_key('tmin')):     par['tmin']=par['ot']
     if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
     if(not par.has_key('xmin')):     par['xmin']=par['ox']
     if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+    if(not par.has_key('ymin')):     par['ymin']=par['oy']
+    if(not par.has_key('ymax')):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
-    if(not par.has_key('height')):   par['height']=par['ratio']*14
-    if(par['height']>10): par['height']=10
+
+    if(par['ratio']>=1):
+        par['height']=10
+    else:
+        par['height']=14*par['ratio']
+
+    dx=par['xmax']-par['xmin'];
+    dy=par['ymax']-par['ymin'];
+    dz=par['zmax']-par['zmin'];
+    yxratio=dx/(dx+dy);
+    yzratio=dz/(dz+dy);
+    
+    par['ratio3d']=(dz+dy)/(dx+dy);
+    par['pointz']=yzratio;
+    par['pointx']=yxratio;
+    if(par['ratio3d']>=1):
+        par['height3d']=10
+    else:
+        par['height3d']=13*par['ratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
@@ -67,6 +90,27 @@ def cgrey(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
+           par['labelattr']+' '+custom)
+def cgrey3d(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |
+    byte gainpanel=a pclip=100 %s |
+    grey3 title="" framelabel=n
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    label3=%s unit3=%s
+    frame1=%d frame2=%d frame3=%d
+    flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    %s
+    ''' % (par['zmin'],par['zmax'],
+           par['xmin'],par['xmax'],
+           par['ymin'],par['ymax'],
+           custom,
+           par['lz'],par['uz'],
+           par['lx'],par['ux'],
+           par['ly'],par['uy'],
+           par['nz']/2,par['nx']/2,par['ny']/2,
+           par['ratio3d'],par['height3d'],par['pointz'],par['pointx'],
            par['labelattr']+' '+custom)
 
 def wgrey(custom,par):
@@ -120,6 +164,27 @@ def dgrey(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['labelattr']+' '+custom)
+def dgrey3d(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |
+    byte gainpanel=a pclip=100 %s |
+    grey3 title="" framelabel=n
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    label3=%s unit3=%s
+    frame1=%d frame2=%d frame3=%d
+    flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    %s
+    ''' % (par['tmin'],par['tmax'],
+           par['xmin'],par['xmax'],
+           par['ymin'],par['ymax'],
+           custom,
+           par['lt'],par['ut'],
+           par['lx'],par['ux'],
+           par['ly'],par['uy'],
+           par['nt']/2,par['nx']/2,par['ny']/2,
+           par['ratio3d'],par['height3d'],par['pointz'],par['pointx'],
+           par['labelattr']+' '+custom)
 
 def egrey(custom,par):
     return '''
@@ -131,6 +196,15 @@ def egrey(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['labelattr']+' '+custom)
+
+
+# ------------------------------------------------------------
+def center3d(x,y,z,par):
+    return '''
+    frame1=%d frame2=%d frame3=%d
+    ''' % ( (float(z)-par['oz'])/par['dz']+1,
+            (float(x)-par['ox'])/par['dx']+1,
+            (float(y)-par['oy'])/par['dy']+1 )
 
 # ------------------------------------------------------------
 # plot wavelet
@@ -168,7 +242,18 @@ def horizontal(cc,coord,par):
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
-
+def horizontal3d(cc,coord,par):
+    Flow(cc+'_',None,
+         'math n1=%(nx)d d1=%(dx)g o1=%(ox)g n2=%(ny)d d2=%(dy)g o2=%(oy)g output=0' % par)
+    Flow(cc+'_z',cc+'_','math output="%g" | put n1=%d n2=1' % (coord,par['nx']*par['ny']) )
+    Flow(cc+'_x',cc+'_','math output="x1" | put n1=%d n2=1' % (      par['nx']*par['ny']) )
+    Flow(cc+'_y',cc+'_','math output="x2" | put n1=%d n2=1' % (      par['nx']*par['ny']) )
+    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0:3]} | transp
+         ''', stdin=0)
+    
 def vertical(cc,coord,par):
     Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
     Flow(cc+'_x',cc+'_','math output="%g" '% coord)
@@ -188,7 +273,18 @@ def point(cc,xcoord,zcoord,par):
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
+def point3d(cc,xcoord,ycoord,zcoord,par):
+    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
+    Flow(cc+'_y',cc+'_','math output="%g"' % ycoord)
+    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
 
+    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0:3]} | transp
+         ''', stdin=0)
+    
 def point3(cc,xcoord,zcoord,magn,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
@@ -468,7 +564,7 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 
 # ------------------------------------------------------------    
 # F-D modeling from arbitrary source/receiver geometry
-def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
+def retiredawe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
     Flow( [odat,wfld],[idat,velo,dens,sou,rec],

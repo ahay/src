@@ -2,7 +2,7 @@ from rsfproj import *
 from math import *
 
 # ------------------------------------------------------------
-def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
+def retiredplane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
 
     min1=o1
     max1=o1+(n1-1)*d1
@@ -34,6 +34,54 @@ def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
     Flow(mod+'lay1',mod+'inp1','dd form=native | spline %s fp=%s' % (dim1,drvs))
     Flow(mod+'lay2',mod+'inp2','dd form=native | spline %s fp=%s' % (dim1,drvs))
 
+    Flow(    mod+'layers',[mod+'lay1',mod+'lay2'],'cat axis=2 ${SOURCES[1:2]}')
+
+    Flow(mod+'1',mod+'layers',
+         '''
+         unif2 v00=%s n1=%d d1=%g o1=%g
+         ''' % (vels,n1,d1,o1) )
+    Flow(mod+'2',mod+'1',
+         '''
+         pad beg1=1 | window n1=%d
+         ''' % (n1) )
+    Flow(mod,[mod+'1',mod+'2'],'add ${SOURCES[1]} scale=1,-1 | scale axis=123')
+
+# ------------------------------------------------------------
+def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
+
+    min1=o1
+    max1=o1+(n1-1)*d1
+    min2=o2
+    max2=o2+(n2-1)*d2
+
+    e2 = max2
+    e1 = s1 + aa * (e2-s2)
+
+    vels = "%s,%s,%s" %(vi,vt,vt)
+    drvs = "%s,%s" %(aa,aa)
+
+    dim1 = 'd1=%g o1=%g n1=%d' % (d2,o2,n2)
+    dim2 = 'd2=%g o2=%g n2=%d' % (d1,o1,n1)
+
+
+    Flow(mod+'lay2',None,
+         '''
+         spike nsp=4 mag=%g,%g,%g,%g
+               n1=4 n2=1 k1=1,2,3,4 |
+         put n1=2 n2=2 |
+         dd form=native |
+         spline %s fp=%s
+         '''%(min2,min1,max2,max1,dim1,drvs))
+
+    Flow(mod+'lay1',None,
+         '''
+         spike nsp=4 mag=%g,%g,%g,%g
+               n1=4 n2=1 k1=1,2,3,4 |
+         put n1=2 n2=2 |
+         dd form=native |
+         spline %s fp=%s
+         '''%(s2,s1,e2,e1,dim1,drvs))
+     
     Flow(    mod+'layers',[mod+'lay1',mod+'lay2'],'cat axis=2 ${SOURCES[1:2]}')
 
     Flow(mod+'1',mod+'layers',

@@ -6,15 +6,15 @@ from rsfproj import *
 # input:  z-h-x       OR z-t-x
 # output: z-tan(a)-x  OR z-dt/dx-x
 
-#def cig2ssk(np,op,dp):
-#    return '''
-#    slant adj=y np=%d p0=%g dp=%g verb=y
-#    ''' % (np,op,dp) 
-
 def cig2ssk(np,op,dp):
     return '''
-    radon adj=y np=%d p0=%g dp=%g verb=y niter=10
+    slant adj=y np=%d p0=%g dp=%g verb=y
     ''' % (np,op,dp) 
+
+#def cig2ssk(np,op,dp):
+#    return '''
+#    radon adj=y np=%d p0=%g dp=%g verb=y niter=10
+#    ''' % (np,op,dp) 
 
 # ------------------------------------------------------------
 # slant-stacks to angle
@@ -91,4 +91,18 @@ def egrey(custom,par):
     ''' % ( custom,
             par['nz']/2, par['nhx'], par['nht']/2,
             par['uz'],par['ux'],par['ut'],
-            custom)
+            custom )
+
+def sgrey(custom,par):
+    return '''
+    byte gainpanel=a pclip=100 %s |
+    grey3 title=""  labelsz=6 labelfat=3 titlesz=12 titlefat=3
+    frame1=%d frame2=%d frame3=%d
+    label1="z" unit1=%s
+    label2="\F10 l\F3 x" unit2=%s
+    label3="\F10 l\F3 z" unit3=%s
+    %s
+    ''' % ( custom,
+            par['nz']/2, par['nhx'], par['nhz'],
+            par['uz'],par['ux'],par['uz'],
+            custom )
