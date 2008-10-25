@@ -107,6 +107,7 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 
     free(q0);
     if (NULL != p0) free(p0);
+    sf_sharpen_close();
 }
 
 void sf_sharpinv(sf_operator oper  /* inverted operator */, 
@@ -177,4 +178,5 @@ void sf_sharpinv(sf_operator oper  /* inverted operator */,
 
     free(q0);
     if (NULL != p0) free(p0);
+    sf_sharpen_close();
 }

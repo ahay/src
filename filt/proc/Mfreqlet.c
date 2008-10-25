@@ -23,11 +23,11 @@
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, nw, n1w, ncycle;
+    int i1, n1, i2, n2, nw, n1w, ncycle, iter, niter;
     bool inv, verb;
     float *w0, d1, perc;
     char *type;
-    sf_complex *pp, *qq, *z0;
+    sf_complex *pp, *qq, *z0, *pre, *new;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -61,6 +61,9 @@ int main(int argc, char *argv[])
 
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of iterations */
+
+    if (!sf_getint("niter",&niter)) niter=1;
+    /* number of Bregman iterations */
     
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
@@ -75,8 +78,12 @@ int main(int argc, char *argv[])
 	(void) sf_shiftdim(in, out, 2);
     }
 
-    pp = sf_complexalloc(n1);
-    qq = sf_complexalloc(n1w);
+    pp = sf_complexalloc(n1);   /* data space */
+    qq = sf_complexalloc(n1w);  /* model space */
+
+    new = sf_complexalloc(n1);   /* new step data space for Bregman iteration */
+    pre = sf_complexalloc(n1);   /* previous step data space Bregman iteration*/
+
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     /* sampling in the input file */
@@ -100,10 +107,33 @@ int main(int argc, char *argv[])
 	    sf_complexread(pp,n1,in);
 	} 
 
-	freqlets_lop(!inv,false,n1w,n1,qq,pp);
-	if (!inv && ncycle > 0) 
-	    sf_csharpinv(freqlets_lop,1./nw,ncycle,perc,verb,n1w,n1,qq,pp); 
+	if (!inv && ncycle > 0 && niter > 0) {
+	    /* Bregman iteration */
 
+	    for (i1=0; i1 < n1; i1++) {
+		new[i1] = pp[i1];
+	    } 
+	    /* Intialize Bregman Data space */
+	    
+	    for (iter=0; iter < niter; iter++) {
+		sf_warning("Bregman iteration %d of %d", iter+1, niter);
+		
+		freqlets_lop(!inv,false,n1w,n1,qq,new);
+		sf_csharpinv(freqlets_lop,1./nw,ncycle,perc,verb,n1w,n1,qq,new); /* Shrinkage iteration */
+
+		freqlets_lop(inv,false,n1w,n1,qq,pre);
+		
+		for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+		    new[i1] += pp[i1] - pre[i1] / nw;
+#else
+		    new[i1] += pp[i1] - sf_crmul(pre[i1],1.0f/nw);
+#endif
+		}
+	    } 
+	} else {
+	    freqlets_lop(!inv,false,n1w,n1,qq,pp);
+	}
 	if (inv) {
 	    for (i1=0; i1 < n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H

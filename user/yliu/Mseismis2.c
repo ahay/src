@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
+    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter, ibreg, nbreg; 
     float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL, eps, perc1, perc2;
     char *type, *oper;
     bool verb, *known;
@@ -40,6 +40,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
+
+    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
+    /* percentage for shrinkage and Bregman iteration */
+
 
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy order */
@@ -96,11 +100,8 @@ int main(int argc, char* argv[])
 	    break;
 
 	case 't':
-	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
-	    /* percentage for thresholding in model space*/
-	    
 	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
-	    /* percentage for output */
+	    /* percentage for output in model space shrinkage*/
 	    
 	    sf_sharpen_init(n12,perc1);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
@@ -108,17 +109,14 @@ int main(int argc, char* argv[])
 	    break;
 
 	case 's':
-	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
-	    /* percentage for thresholding in data space */
-	    
 	    sf_sharpen_init(n12,perc1);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
 	case 'b':
-	    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
-	    /* percentage for thresholding in Bregman iteration */
+	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
+	    /* number of iterations for Bregman iteration */
 	    
 	    sf_sharpen_init(n12,perc1);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
@@ -166,7 +164,7 @@ int main(int argc, char* argv[])
           /* Thresholding for shaping */
 	    for (iter=0; iter < niter-1; iter++) {
 		if (verb)
-		    sf_warning("Model iteration %d of %d",iter+1,niter);
+		    sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
 		seislet_lop(false,false,n12,n12,mm,dd2);
 		for (i1=0; i1 < n12; i1++) {
 		    if (known[i1]) dd2[i1]=dd[i1];
@@ -177,7 +175,7 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    if (verb)
-		sf_warning("Model space iteration %d of %d",niter,niter);
+		sf_warning("Model space shrinkage iteration %d of %d",niter,niter);
 	    seislet_lop(false,false,n12,n12,mm,dd2);
 	    for (i1=0; i1 < n12; i1++) {
 		if (known[i1]) dd2[i1]=dd[i1];
@@ -195,7 +193,7 @@ int main(int argc, char* argv[])
 	    }
 	    for (iter=0; iter < niter; iter++) {
 		if (verb)
-		    sf_warning("Data space iteration %d of %d",iter+1,niter);
+		    sf_warning("Data space shrinkage iteration %d of %d",iter+1,niter);
 		seislet_lop(true,false,n12,n12,mm,dd2);
 		sf_sharpen(mm);
 		sf_weight_apply(n12,mm);
@@ -210,34 +208,37 @@ int main(int argc, char* argv[])
 	    break;
 
 	case 'b':
-	    for (iter=0; iter < niter; iter++) {
-		if (verb)
-		    sf_warning("Bregman iteration %d of %d",iter+1,niter);
-		seislet_lop(false,false,n12,n12,mm,dd3);
-		for (i1=0; i1 < n12; i1++) {
-		    if (known[i1]) dd3[i1]=dd[i1];
-		}
-		seislet_lop(true,false,n12,n12,mm,dd3);
-		if (iter != 0) {
-		    sf_sharpen(mm);
-		    sf_weight_apply(n12,mm);
-		}
 
-		seislet_lop(false,false,n12,n12,mm,dd2);
-/*		for (i1=0; i1 < n12; i1++) {
-		    if (known[i1]) dd2[i1]= dd[i1];
-		}
-*/		for (i1=0; i1 < n12; i1++) {
-		    if (!known[i1]) dd2[i1]= 0.;
-		}
-		for (i1=0; i1 < n12; i1++) {
-		    dd2[i1]= dd[i1]+dd3[i1]-dd2[i1];
-		}
-
-	    }
 	    for (i1=0; i1 < n12; i1++) {
-		dd[i1] = dd2[i1];
+		dd2[i1] = dd[i1];
 	    }
+	    for (ibreg=0; ibreg < nbreg; ibreg++) {
+		if (verb)
+		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
+		for (iter=0; iter < niter; iter++) {
+		if (verb)
+		    sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
+		    seislet_lop(false,false,n12,n12,mm,dd3);
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) dd3[i1]=dd2[i1];
+		    }
+		    seislet_lop(true,false,n12,n12,mm,dd3);
+		    if (iter != 0) {
+			sf_sharpen(mm);
+			sf_weight_apply(n12,mm);
+		    }
+		}
+
+		seislet_lop(false,false,n12,n12,mm,dd3);
+
+		for (i1=0; i1 < n12; i1++) {
+		    if (!known[i1]) dd3[i1]= 0.;
+		}
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
+		}
+	    }
+	    seislet_lop(false,false,n12,n12,mm,dd);
 
 	    break;
 	} 
