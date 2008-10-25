@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, nw, n1w, ncycle, iter, niter;
     bool inv, verb;
-    float *w0, d1, perc;
+    float *w0, d1, perc, scale;
     char *type;
-    sf_complex *pp, *qq, *z0, *pre, *new;
+    sf_complex *pp, *qq, *z0;
     sf_file in, out, w;
 
     sf_init(argc,argv);
@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 	z0 = NULL;
     }
     n1w = n1*nw;
+    scale = 1./nw;
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
@@ -81,10 +82,6 @@ int main(int argc, char *argv[])
     pp = sf_complexalloc(n1);   /* data space */
     qq = sf_complexalloc(n1w);  /* model space */
 
-    new = sf_complexalloc(n1);   /* new step data space for Bregman iteration */
-    pre = sf_complexalloc(n1);   /* previous step data space Bregman iteration*/
-
-
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     /* sampling in the input file */
 
@@ -107,39 +104,18 @@ int main(int argc, char *argv[])
 	    sf_complexread(pp,n1,in);
 	} 
 
-	if (!inv && ncycle > 0 && niter > 0) {
-	    /* Bregman iteration */
-
-	    for (i1=0; i1 < n1; i1++) {
-		new[i1] = pp[i1];
-	    } 
-	    /* Intialize Bregman Data space */
-	    
-	    for (iter=0; iter < niter; iter++) {
-		sf_warning("Bregman iteration %d of %d", iter+1, niter);
-		
-		freqlets_lop(!inv,false,n1w,n1,qq,new);
-		sf_csharpinv(freqlets_lop,1./nw,ncycle,perc,verb,n1w,n1,qq,new); /* Shrinkage iteration */
-
-		freqlets_lop(inv,false,n1w,n1,qq,pre);
-		
-		for (i1=0; i1 < n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		    new[i1] += pp[i1] - pre[i1] / nw;
-#else
-		    new[i1] += pp[i1] - sf_crmul(pre[i1],1.0f/nw);
-#endif
-		}
-	    } 
+	if (!inv && niter > 0) {
+	    sf_csharpinv(freqlets_lop,
+			 scale,niter,ncycle,perc,verb,n1w,n1,qq,pp);
 	} else {
 	    freqlets_lop(!inv,false,n1w,n1,qq,pp);
 	}
 	if (inv) {
 	    for (i1=0; i1 < n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-		pp[i1] /= nw;
+		pp[i1] *= scale;
 #else
-		pp[i1] = sf_crmul(pp[i1],1.0f/nw);
+		pp[i1] = sf_crmul(pp[i1],scale);
 #endif
 	    }
 	    sf_complexwrite(pp,n1,out);

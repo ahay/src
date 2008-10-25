@@ -29,6 +29,7 @@
 
 void sf_csharpinv(sf_coperator oper /* inverted operator */, 
 		  float scale       /* extra operator scaling */,
+		  int niter         /* number of outer iterations */,
 		  int ncycle        /* number of iterations */,
 		  float perc        /* sharpening percentage */,
 		  bool verb         /* verbosity flag */,
@@ -37,76 +38,107 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 		  sf_complex *pp    /* data */)
 /*< sharp inversion for complex-valued operators >*/
 {
-    int i, i1;
-    sf_complex *q0, *p0=NULL;
+    int iter, i, i1;
+    sf_complex *q0, *p0, *p1;
     float qdif0=0., pdif0=0., qdif, pdif, pi;
 
     sf_sharpen_init(nq,perc);
     q0 = sf_complexalloc(nq);
+    p0 = sf_complexalloc(np);
+    p1 = sf_complexalloc(np);
 
-    for (i1=0; i1 < nq; i1++) {
-	q0[i1] = qq[i1];
+    for (i1=0; i1 < np; i1++) {
+	p0[i1] = pp[i1];
     }
 
-    if (verb) {
-	p0 = sf_complexalloc(np);
-	for (i1=0; i1 < np; i1++) {
-	    p0[i1] = pp[i1];
-	}
-    }
-
-    for (i=0; i < ncycle; i++) {
-	oper(false,false,nq,np,qq,pp);
-	for (i1=0; i1 < np; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-	    pp[i1] *= (-scale);
-#else
-	    pp[i1] = sf_crmul(pp[i1],-scale);
-#endif
-	}
-	oper(true,true,nq,np,qq,pp);
-
+    for (iter=0; iter < niter; iter++) { /* outer iteration */
+	oper(true,false,nq,np,qq,p0);
+	
 	for (i1=0; i1 < nq; i1++) {
+	    q0[i1] = qq[i1];
+	}
+	for (i1=0; i1 < np; i1++) {
+	    p1[i1] = p0[i1];
+	}
+
+	for (i=0; i < ncycle; i++) { /* inner iteration */
+	    oper(false,false,nq,np,qq,p1);	    
+	    for (i1=0; i1 < np; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-	    qq[i1] += q0[i1];
+		p1[i1] *= (-scale);
 #else
-	    qq[i1] = sf_cadd(qq[i1],q0[i1]);
+		p1[i1] = sf_crmul(pp[i1],-scale);
+#endif
+	    }
+	    oper(true,true,nq,np,qq,p1);
+
+	    for (i1=0; i1 < nq; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+		qq[i1] += q0[i1];
+#else
+		qq[i1] = sf_cadd(qq[i1],q0[i1]);
+#endif
+	    }
+	    sf_csharpen(qq);
+	    sf_cweight_apply(nq,qq);
+
+	    if (verb) {		  	    
+		qdif = 0.;
+		for (i1=0; i1 < nq; i1++) {
+		    qdif += cabsf(qq[i1]);
+		}
+
+		if (0==i) {
+		    qdif0 = qdif;
+		    qdif=1.;
+		} else {
+		    qdif /= qdif0;
+		}
+
+		sf_warning("inner iteration %d mnorm: %f",i,qdif);
+	    }
+	} /* inner iteration */
+	
+	oper(false,false,nq,np,qq,p1);
+	for (i1=0; i1 < np; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+	    p1[i1] *= (-scale);
+#else
+	    p1[i1] = sf_crmul(pp[i1],-scale);
+#endif	
+	}
+
+	for (i1=0; i1 < np; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+	    p0[i1] += pp[i1] + p1[i1];
+#else
+	    p0[i1] = sf_cadd(p0[i1],sf_cadd(pp[i1],p1[i1]));
 #endif
 	}
-	sf_csharpen(qq);
-	sf_cweight_apply(nq,qq);
 
-	if (verb) {		  
+	if (verb) {
 	    pdif = 0.;
 	    for (i1=0; i1 < np; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-		pi = cabsf(pp[i1]-p0[i1]);
+		pi = cabsf(pp[i1]+p1[i1]);
 #else
-		pi = cabsf(sf_cadd(pp[i1],sf_cneg(p0[i1])));
+		pi = cabsf(sf_cadd(pp[i1],p1[i1]));
 #endif
 		pdif += pi*pi;
 	    }
-	    qdif = 0.;
-	    for (i1=0; i1 < nq; i1++) {
-		qdif += cabsf(qq[i1]);
-	    }
-
-	    if (0==i) {
+	    if (0==iter) {
 		pdif0 = pdif;
-		qdif0 = qdif;
 		pdif=1.;
-		qdif=1.;
 	    } else {
 		pdif /= pdif0;
-		qdif /= qdif0;
 	    }
-
-	    sf_warning("iteration %d dres: %f mnorm: %f",i,pdif,qdif);
+	    sf_warning("outer iteration %d dres: %f",iter,pdif);
 	}
-    }
+    } /* outer iteration */
 
     free(q0);
-    if (NULL != p0) free(p0);
+    free(p0);
+    free(p1);
     sf_sharpen_close();
 }
 
