@@ -67,11 +67,11 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o3",&o3)) o3=0.;
 
     if (!sf_getint("sem",&sem)) sem=0;
-    /* =0 stack along beam steering trajectory.
+    /* stack along beam steering trajectory.
        =1 semblance computed over beam steering trajectory. */
 
     if (!sf_getint("mode",&mode)) mode=0;
-    /* =0  beams are computed as a function of apparent slowness and azimuth angle. 
+    /* beams are computed as a function of apparent slowness and azimuth angle. 
        =1  changes to px and py. nslo, slomin, slomax, nazim, azmin, azmax are 
            interpreted as npx, pxmin, pxmax, npy, pymin, pymax. This is effectively
            a slant stack. Default parameter not appropriate. */

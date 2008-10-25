@@ -19,6 +19,8 @@
 */
 
 #include <rsf.h>
+#include <float.h>
+#include <math.h>
 
 #include "bsteer.h"
 
@@ -79,7 +81,11 @@ void bsteer(float ***data,
 			    /* the time shift necessary to align the current trace */
                             /* with the reference trace */
                             /* For mode=1, azim is px and slo is py */
-			    tshift = azim*x + slo*y;
+			    if (mode == 1) {
+				tshift = azim*x + slo*y;
+			    } else {
+				tshift = slo*( cos(SF_PI*azim/180.)*x + sin(SF_PI*azim/180.)*y );
+			    }
 
                             /* Nearest integer */
 			    itshift = (tshift/d1);
