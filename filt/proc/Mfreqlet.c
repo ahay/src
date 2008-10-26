@@ -23,7 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, nw, n1w, ncycle, iter, niter;
+    int i1, n1, i2, n2, nw, n1w, ncycle, niter;
     bool inv, verb;
     float *w0, d1, perc, scale;
     char *type;

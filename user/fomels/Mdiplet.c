@@ -1,4 +1,4 @@
-/* Seislet frame */
+/* 2-D Seislet frame */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -23,10 +23,10 @@
 
 int main(int argc, char *argv[])
 {
-    int i, n1, n2, i3, n3, n12, np, n12p, ncycle;
+    int i, n1, n2, i3, n3, n12, np, n12p, ncycle, niter;
     bool inv, verb;
     char *type;
-    float *pp, *qq, ***dd, eps, perc;
+    float *pp, *qq, ***dd, eps, perc, scale;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
 
     if (!sf_histint(dip,"n3",&np)) np=1;
     n12p = n12*np;
+    scale = 1./np;
 
     pp = sf_floatalloc(n12);
     qq = sf_floatalloc(n12p);
@@ -57,6 +58,9 @@ int main(int argc, char *argv[])
 
     if (!sf_getint("niter",&ncycle)) ncycle=0;
     /* number of iterations */
+
+    if (!sf_getint("niter",&niter)) niter=1;
+    /* number of Bregman iterations */
 
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
@@ -81,19 +85,18 @@ int main(int argc, char *argv[])
 	if (!inv) {
     	    sf_floatread(pp,n12,in);
 	    diplet_lop(true,false,n12p,n12,qq,pp);
-	    sf_floatwrite(qq,n12p,out);
-
 	    if (ncycle > 0) 
-		sf_sharpinv(diplet_lop,1./np,ncycle,perc,verb,n12p,n12,qq,pp); 
+		sf_sharpinv(diplet_lop,
+			    scale,niter,ncycle,perc,verb,n12p,n12,qq,pp); 
+	    sf_floatwrite(qq,n12p,out);
 
 	} else {
 	    sf_floatread(qq,n12p,in);
 	    diplet_lop(false,false,n12p,n12,qq,pp);
 
 	    for (i=0; i < n12; i++) {
-		pp[i] /= np;
+		pp[i] *= scale;
 	    }
-
 	    sf_floatwrite(pp,n12,out);
 	}
     }
