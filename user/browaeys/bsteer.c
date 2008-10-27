@@ -33,7 +33,7 @@ void bsteer(float ***data,
 	    float slomin, float dslo, float azmin, float dazim, 
 	    float d1, float d2, float d3, float o2, float o3,
 	    int **live,
-	    int mode, int n1, int npad, int nlive, int sem,
+	    int mode, int n1, int npad, int nlive,
 	    float pmax, 
             int lwind, int n1out,
             float xref, float yref,
@@ -44,24 +44,20 @@ void bsteer(float ***data,
     int istart,istop;
     int i1,i2,i3,itshift,islo,iazim,j1;
     float tshift,p;
-    float *beam,*pow;                                 
+    float *beam;                                 
 
     /* loop over azimuth and apparent surface slowness */
 
     beam = (float*)malloc(n1pad*sizeof(float));
-    pow = (float*)malloc(n1pad*sizeof(float));
 
-    for (iazim = 0; iazim < nazim; iazim++) {
-	azim = azmin + iazim*dazim;
+    for (islo = 0; islo < nslo; islo++) {
+	slo = slomin + islo*dslo;
 
-	for (islo = 0; islo < nslo; islo++) {
-	    slo = slomin + islo*dslo;
+	for (iazim = 0; iazim < nazim; iazim++) {
+	    azim = azmin + iazim*dazim;
 
-	    for (i1 = 0; i1 < n1pad; i1++){
-		beam[i1] = 0.;
-		pow[i1] = 0.;
-	    }
-            for (i1 = 0; i1 < n1out; i1++) semb[islo][iazim][i1] = 0.;
+	    for (i1 = 0; i1 < n1pad; i1++) beam[i1] = 0.;
+            for (i1 = 0; i1 < n1out; i1++) semb[i1][islo][iazim] = 0.;
 
             /* do not do this beam if it is for too big a p */
 	    p = sqrt(slo*slo + azim*azim);
@@ -77,12 +73,11 @@ void bsteer(float ***data,
 			    x = i2*d2 + o2 - xref;
 			    y = i3*d3 + o3 - yref;
 
-                            /* Given azimuth, slowness, and receiver location, compute */
-			    /* the time shift necessary to align the current trace */
-                            /* with the reference trace */
-                            /* For mode=1, azim is px and slo is py */
+                            /* Given azimuth, slowness, and receiver location, compute the time shift */
+			    /* necessary to align the current trace with the reference trace */
 			    if (mode == 1) {
-				tshift = azim*x + slo*y;
+                                /* slo is px and azim is py */
+				tshift = slo*x + azim*y;
 			    } else {
 				tshift = slo*( cos(SF_PI*azim/180.)*x + sin(SF_PI*azim/180.)*y );
 			    }
@@ -96,31 +91,23 @@ void bsteer(float ***data,
 			    istop = MIN(n1pad+itshift,n1pad);
 
 			    for (i1 = istart; i1 < istop; i1++){
-				beam[i1] += data[i1-itshift][i2][i3];
-				pow[i1] += data[i1-itshift][i2][i3]*data[i1-itshift][i2][i3];
+				beam[i1] += data[i3][i2][i1-itshift];
 			    }
 			}
 		    }
 		}
 
-		if (sem == 0) {
-                    /* normalize stack */
-		    for (i1 = 0; i1 < n1out; i1++){
-			for (j1 = 0; j1 < lwind; j1++){
-			    semb[islo][iazim][i1] = beam[npad+i1*lwind+j1]/nlive;
-  			}
-		    }
-		} else {
-                    /* compute semblance */
-		    for (i1 = 0; i1 < n1out; i1++){
-			semb[islo][iazim][i1] = beam[npad+i1-1]*beam[npad+i1-1] / (nlive * pow[npad+i1-1] + 0.000000001);
+                /* normalize stack */
+		for (i1 = 0; i1 < n1out; i1++){
+		    for (j1 = 0; j1 < lwind; j1++){
+			semb[i1][islo][iazim] = beam[npad+i1*lwind+j1]/nlive;
 		    }
 		}
+
 	    }
 	}
     }
 
-    free(pow);
     free(beam);
 
 }
