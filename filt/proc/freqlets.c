@@ -48,6 +48,13 @@ void freqlets_close(void)
     freqlet_close();
 }
 
+void freqlets_set(float *w1, sf_complex *z1)
+/*< set frequency >*/
+{
+    w = w1;
+    z = z1;
+}
+
 void freqlets_lop(bool adj, bool add, int nx, int ny, 
 		  sf_complex *x, sf_complex *y)
 /*< linear operator >*/

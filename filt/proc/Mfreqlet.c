@@ -21,10 +21,12 @@
 
 #include "freqlets.h"
 
+static void datawrite(int n1, float scale, sf_complex *pp, sf_file out);
+
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, nw, n1w, ncycle, niter;
-    bool inv, verb;
+    int n1, i2, n2, iw, nw, n1w, ncycle, niter;
+    bool inv, verb, decomp;
     float *w0, d1, perc, scale;
     char *type;
     sf_complex *pp, *qq, *z0;
@@ -60,6 +62,9 @@ int main(int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
+    if (!sf_getbool("decomp",&decomp)) decomp=false;
+    /* do decomposition */
+
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of iterations */
 
@@ -71,8 +76,10 @@ int main(int argc, char *argv[])
 
     if (inv) {
 	n2 = sf_leftsize(in,2);
-	sf_unshiftdim(in, out, 2);
-	sf_putint(out,"n3",1);
+	if (!decomp) {
+	    sf_unshiftdim(in, out, 2);
+	    sf_putint(out,"n3",1);
+	}
     } else {
 	n2 = sf_leftsize(in,1);
 	sf_putint(out,"n2",nw);
@@ -88,8 +95,12 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    freqlets_init(n1,d1,true,true,type[0],nw,w0,z0);
-    
+    if (decomp) {
+	freqlets_init(n1,d1,true,true,type[0],1,w0,z0);
+    } else {
+	freqlets_init(n1,d1,true,true,type[0],nw,w0,z0);
+    }   
+ 
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 	if (NULL != w0) {
@@ -104,25 +115,42 @@ int main(int argc, char *argv[])
 	    sf_complexread(pp,n1,in);
 	} 
 
-	if (!inv && niter > 0) {
+	if (inv) {
+	    if (decomp) {
+		for (iw=0; iw < nw; iw++) {
+		    if (NULL != w0) {
+			freqlets_set(w0+iw,NULL);
+		    } else {
+			freqlets_set(NULL,z0+iw);
+		    }
+		    freqlets_lop(false,false,n1,n1,qq+iw*n1,pp);
+		    datawrite(n1,scale,pp,out);
+		}
+	    } else {
+		freqlets_lop(false,false,n1w,n1,qq,pp);
+		datawrite(n1,scale,pp,out);
+	    }
+	} else {
 	    sf_csharpinv(freqlets_lop,
 			 scale,niter,ncycle,perc,verb,n1w,n1,qq,pp);
-	} else {
-	    freqlets_lop(!inv,false,n1w,n1,qq,pp);
-	}
-	if (inv) {
-	    for (i1=0; i1 < n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		pp[i1] *= scale;
-#else
-		pp[i1] = sf_crmul(pp[i1],scale);
-#endif
-	    }
-	    sf_complexwrite(pp,n1,out);
-	} else {
 	    sf_complexwrite(qq,n1w,out);
 	} 
     }
 		
     exit(0);
+}
+
+
+static void datawrite(int n1, float scale, sf_complex *pp, sf_file out) 
+{
+    int i1;
+
+    for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+	pp[i1] *= scale;
+#else
+	pp[i1] = sf_crmul(pp[i1],scale);
+#endif
+    }
+    sf_complexwrite(pp,n1,out);    
 }
