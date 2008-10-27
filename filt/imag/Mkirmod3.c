@@ -289,6 +289,7 @@ int main(int argc, char* argv[])
 
 	/* loop over offsets */
 	for (ih=0; ih < nh; ih++) { 
+            sf_warning("source %d of %d, receiver %d of %d",is+1,ns,ih+1,nh);
 	    if (NULL == head) { /* regular */		
 		ihy = ih/nhx;
 		ihx = ih - ihy*nhx;
