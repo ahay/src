@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
-    if (!sf_getint("niter",&ncycle)) ncycle=0;
+    if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of iterations */
 
     if (!sf_getint("niter",&niter)) niter=1;
