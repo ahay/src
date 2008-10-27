@@ -28,10 +28,9 @@ int main(int argc, char* argv[])
     bool hyp;
     float p, s, s0, *bb, *dd, *a, *b;
     char title[10], *lagfile;
-    sf_file in, out, lg;
+    sf_file out, lg;
 
     sf_init(argc,argv);
-    in = sf_input("in");
     out = sf_output("out");
     lg = sf_output("lag");
 
@@ -80,14 +79,13 @@ int main(int argc, char* argv[])
     for (ia=b1-1; ia < na; ia++) {
 	lag[ia] = n1+ia+1-p0-b1;
     }
-    n[0] = na;
-    n[1] = nx;
+    n[0] = n1;
+    n[1] = n2;
 
     sf_setformat(lg,"native_int");
     sf_putints(lg,"n",n,2);
     sf_putint(lg,"n1",na);
-    sf_putint(lg,"n2",1);
-    sf_intwrite(lag,na,lg);
+    sf_putint(lg,"n2",nx);
 
     sf_setformat(out,"native_float");
     sf_putint(out,"n1",na);
@@ -106,7 +104,7 @@ int main(int argc, char* argv[])
 		sf_lg_int(p,na,bb);
 	    } else {
 		sf_taylor (p,na,dd);
-		pade_apply (na,dd,a,b+1);
+		pade_apply (na,dd,a1,a,b+1);
 		b[0] = 1.;
 		pade_unzip(b1,b);
 		pade_unzip(a1,a);
@@ -114,7 +112,7 @@ int main(int argc, char* argv[])
 		    bb[i] = b[i+1]/b[0];
 		}
 		for (i=b1-1, ia=0; i < na; i++, ia++) {
-		    b[i] = a[ia]/b[0];
+		    bb[i] = a[ia]/b[0];
 		}
 	    }
 	    for (i=b1-1; i < na; i++) {
@@ -122,6 +120,7 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    sf_floatwrite(bb,na,out);
+	    sf_intwrite(lag,na,lg);
 	}
     }
     

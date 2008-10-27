@@ -3,13 +3,32 @@ from rsfproj import *
 Flow('spike',None,'spike n1=30 n2=30 k1=5 k2=1 d1=1 label1= label2= label3=')
 
 for nw in (2,3,8,13):
-    plane = 'plane%d' % nw
-    filt = 'filt%d' % nw
-    Flow(filt,None,'plane n1=30 n2=30 a1=%d' % nw)
-    Flow(plane,['spike',filt],'nhelicon div=y filt=${SOURCES[1]}')
-    Plot('g'+plane,'grey pclip=100 wantaxis=n wheretitle=t titlesz=18 crowd=0.88')
-    Plot('w'+plane,'wiggle pclip=100 wantaxis=n transp=1 yreverse=1 poly=y crowd=0.88  titlesz=18')
-    Plot('s'+plane,'spectra |  graph crowd=0.88 labelsz=16 titlesz=18 wheretitle=t title=Spectrum')
-    Plot(plane,['g'+plane,'w'+plane,'s'+plane],'SideBySideAniso')
+    for case in ('','i'):
+        plane = '%splane%d' % (case,nw)
+        flt = '%sflt%d' % (case,nw)
+        lag = '%slag%d' % (case,nw)
+
+        Flow([flt,lag],None,
+             'plane n1=30 n2=30 a1=%d b1=%d lag=${TARGETS[1]}' % \
+                 (nw,(1,2)[case=='i']))
+        Flow(plane,['spike',flt],'nhelicon div=y filt=${SOURCES[1]}')
+        Plot('g'+plane,plane,
+             '''
+             grey pclip=100 title="Lagrange-%d" wantaxis=n wheretitle=t 
+             titlesz=18 crowd=0.88
+             ''' % nw)
+        Plot('w'+plane,plane,
+             '''
+             wiggle pclip=100 wanttitle=n wantaxis=n transp=1 yreverse=1 
+             poly=y crowd=0.88  titlesz=18
+             ''')
+        Plot('s'+plane,plane,
+             '''
+             spectra all=y |  
+             graph crowd=0.88 labelsz=16 titlesz=18 wheretitle=t title=Spectrum
+             ''')
+        Plot(plane,['g'+plane,'w'+plane,'s'+plane],'SideBySideAniso')
+
+Result('steer-lagrange','plane2 plane3 plane8 plane13','OverUnderAniso')
 
 End()

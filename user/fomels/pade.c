@@ -99,20 +99,20 @@ void pade_unzip (int n, float *d)
     free(c);
 }
 
-void pade_apply (int n, const float *c /* [n] */, float * a, float *b)
+void pade_apply (int n, const float *c /* [n] */, int na, float * a, float *b)
 /*< apply >*/
 {
     int i, j;
 
     n -= m;
-    if (m + 1 > n) sf_error("Wrong dimensions");
+    if (na < n || m + 1 > n) sf_error("Wrong dimensions");
 
     /* form the matrix */
     for (i=0; i < m; i++) {
 	for (j=0; j < m; j++) {
-	    w[i][j] = c[n-i+j-1];
+	    w[i][j] = c[n-i+j];
 	}
-	w1[i] = - c[n+i-1];
+	w1[i] = - c[n+i];
     }
 
     /* actually, a toeplitz matrix, but we are too lazy */
@@ -123,8 +123,8 @@ void pade_apply (int n, const float *c /* [n] */, float * a, float *b)
 	a[i] = c[i];
     }
     for (i=0; i < m; i++) {
-	for (j=i+1; j < n; j++) {
-	    a[j] += b[i] * c[j-i];
+	for (j=i+1; j < na; j++) {
+	    a[j] += b[i] * c[n-i+j-na];
 	}
     }
 }

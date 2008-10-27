@@ -20,7 +20,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <float.h>
 
 #include <rsf.h>
 /*^*/
@@ -103,6 +102,9 @@ if dnum=0., an optimal linear scale is estimated
     /* move to each tic mark location, draw the tic and the number */
     for (i=0; i < nopt; i++) {
 	num = onum + i*dnum;
+	if (fabsf(dnum) > SF_EPS && 
+	    fabsf(num)  < SF_EPS) num=0.;
+
         snprintf(string,32,"%1.5g",num);
 	loc = otic + i*dtic;
 	xpos = x1 + loc * costh;
@@ -149,8 +151,8 @@ int vp_optimal_scale(int chars                /* characters */,
 	    num = *onum + i*(*dnum);
             /* number on a tickmark */
 
-	    if (fabsf(*dnum) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(*dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 	    /* set it to zero if it is close to zero */
 
 	    snprintf(string,1024,format,num);
@@ -193,19 +195,19 @@ static int optimal_scale(int n, float min, float max,
 
     if (min <= max) {
 	lo = (int) ceilf (min/nice);
-	if ((lo-1)*nice+FLT_EPSILON >= min) lo--;
+	if ((lo-1)*nice+SF_EPS >= min) lo--;
 	
 	hi = (int) floorf (max/nice);
-	if ((hi+1)*nice <= max+FLT_EPSILON) hi++;
+	if ((hi+1)*nice <= max+SF_EPS) hi++;
 
 	*onum = lo * nice;
 	*dnum = nice;
     } else {
 	lo = (int) ceilf (max/nice);
-	if ((lo-1)*nice+FLT_EPSILON >= max) lo--;
+	if ((lo-1)*nice+SF_EPS >= max) lo--;
 	
 	hi = (int) floorf (min/nice);
-	if ((hi+1)*nice <= min+FLT_EPSILON) hi++;
+	if ((hi+1)*nice <= min+SF_EPS) hi++;
 
 	*onum = hi * nice;
 	*dnum = -nice;

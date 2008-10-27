@@ -17,7 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -623,8 +622,8 @@ static void make_baraxis (float min, float max)
 				     &(baraxis->num0), 
 				     &(baraxis->dnum),
 				     &(baraxis->maxstrlen));
-    bar0 = (baraxis->num0-0.5*(min+max))/(max-min+FLT_EPSILON);
-    dbar = (baraxis->dnum)/(max-min+FLT_EPSILON);
+    bar0 = (baraxis->num0-0.5*(min+max))/(max-min+SF_EPS);
+    dbar = (baraxis->dnum)/(max-min+SF_EPS);
 
     if (vertbar) {
 	bar0 = orig2 + inch2*bar0;
@@ -1029,8 +1028,8 @@ void vp_simpleframe(void)
 	if (NULL != grid1) {
 	    for (i=0; i < grid1->ntic; i++) {
 		num = grid1->num0 + i*(grid1->dnum);
-		if (fabsf(grid1->dnum) > FLT_EPSILON && 
-		    fabsf(num) < FLT_EPSILON) num=0.;
+		if (fabsf(grid1->dnum) > SF_EPS && 
+		    fabsf(num) < SF_EPS) num=0.;
 		
 		if (cube) {
 		    xc = (num-label1->min)*(mid1-min1)/
@@ -1047,8 +1046,8 @@ void vp_simpleframe(void)
 	if (NULL != grid2) {
 	    for (i=0; i < grid2->ntic; i++) {
 		num = grid2->num0 + i*(grid2->dnum);
-		if (fabsf(grid2->dnum) > FLT_EPSILON && 
-		    fabsf(num) < FLT_EPSILON) num=0.;
+		if (fabsf(grid2->dnum) > SF_EPS && 
+		    fabsf(num) < SF_EPS) num=0.;
 
 		if (cube) {
 		    yc = mid2+(num-label2->max)*(mid2-min2)/
@@ -1235,8 +1234,8 @@ void vp_frame(void)
 
 	for (i=0; i < axis1->ntic; i++) {
 	    num = axis1->num0 + i*(axis1->dnum);
-	    if (fabsf(axis1->dnum) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(axis1->dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 	    
 	    if (cube) {
 		xc = (num-label1->min)*(mid1-min1)/(label1->max-label1->min);
@@ -1310,8 +1309,8 @@ void vp_frame(void)
 
 	for (i=0; i < axis2->ntic; i++) {
 	    num = axis2->num0 + i*(axis2->dnum);
-	    if (fabsf(axis2->dnum) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(axis2->dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 
 	    if (cube) {
 		yc = mid2+(num-label2->max)*(mid2-min2)/
@@ -1382,8 +1381,8 @@ void vp_frame(void)
 
 	for (i=0; i < axis3->ntic; i++) {
 	    num = axis3->num0 + i*(axis3->dnum);
-	    if (fabsf(axis3->dnum) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(axis3->dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 
 	    if (flat) {
 		xc = mid1+(num-label3->min)*(max1-mid1)/
@@ -1491,7 +1490,7 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 	    
 	    num = l2max+(frame1+0.5)*d1;
-	    if (fabsf(d1) > FLT_EPSILON && 
+	    if (fabsf(d1) > SF_EPS && 
 		fabsf(num) < 0.001*fabsf(d1)) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
@@ -1530,8 +1529,8 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 	    
 	    num = l1min+(frame2+0.5)*d2;
-	    if (fabsf(d2) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(d2) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
@@ -1568,8 +1567,8 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 	    
 	    num = label3->min+(frame3+0.5)*d3;
-	    if (fabsf(d3) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(d3) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
@@ -1666,8 +1665,8 @@ void vp_barframe(void)
 
 	for (i=0; i < baraxis->ntic; i++) {
 	    num = baraxis->num0 + i*(baraxis->dnum);
-	    if (fabsf(baraxis->dnum) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+	    if (fabsf(baraxis->dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
 
 	    snprintf (string,32,baraxis->format, num);	    
 	    
@@ -1763,7 +1762,7 @@ void vp_barline (int nc     /* number of contours */,
     float level, c0, dc, ci;
 
     c0 = 0.5*(cmax+cmin);
-    dc = cmax-cmin+FLT_EPSILON;
+    dc = cmax-cmin+SF_EPS;
 
     vp_barframe();
     for (ic = 0; ic < nc; ic++) {
