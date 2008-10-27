@@ -22,7 +22,7 @@
 import sys, os, time, string, re, shutil
 
 def convert(infile,outfile):
-    spacing = float(os.environ.get('GIFBORDER',0.01))
+    spacing = float(os.environ.get('GIFBORDER',0.1))
     ppi = int(os.environ.get('PPI',75))
     delay = int(os.environ.get('GIFDELAY',100))
     interlace = ('','-interlace')[int(os.environ.get('INTERLACE',1))]
