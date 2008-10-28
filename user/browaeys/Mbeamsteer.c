@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     bsteer(data,nt,nx,ny,npx,npy,opx,dpx,opy,dpy,dt,dx,dy,ox,oy,live,mode,nlive,xref,yref,semb);
 
     /* output beam stack */
-    sf_floatwrite (semb[0],npy*npx,out);
+    sf_floatwrite(semb[0],npy*npx,out);
 
     exit(0);
 }
