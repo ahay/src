@@ -22,8 +22,6 @@
 
 #include "bsteer.h"
 
-#define MAX(a,b) (a > b ? a : b)
-
 int main(int argc, char* argv[])
 {
     int nt,it;                     /* number of time samples, time counter */
@@ -31,22 +29,19 @@ int main(int argc, char* argv[])
     int ny,iy;                     /* number of receivers in y, receivers counter */
     int nlive;                     /* number of non zero traces */
     int npx,npy;                   /* number of slopes in x, number of slopes in y */
-    int n1out,lwind;               /* number of time windows in output, time window length */
 
     float dt,ot;                   /* time increment, starting time */
     float dx,ox;                   /* increment in x, starting position */
     float dy,oy;                   /* increment in y, starting position */
     float xref,yref;               /* coordinates where beams are computed */
-    float dpx,opx,pxmax;           /* slope increment, starting slope, ending slope in x */
-    float dpy,opy,pymax;           /* slope increment, starting slope, ending slope in y */
-    float d1out;                   /* time length of time windows in ouput */
-    float pmax;                    /* maximum slope */
+    float dpx,opx;                 /* slope increment, starting slope in x */
+    float dpy,opy;                 /* slope increment, starting slope in y */
     float sum;                     /* test sum for zero traces */
 
-    bool mode;                     /* 2-D slope vectors, or slowness and azimuth*/ 
-    bool **live;                   /* non zero traces 2-D array flag*/
+    bool mode;                     /* 2-D slope vectors, or slowness and azimuth */ 
+    bool **live;                   /* non zero traces flag */
     float ***data;                 /* 2-D surface seismic data */
-    float ***semb;                 /* focused slant stack */
+    float **semb;                  /* focused slant stack */
     sf_file in,out;
    
     sf_init (argc,argv);
@@ -55,9 +50,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("mode",&mode)) mode=true;
     /* if n, beams computed as a function of apparent slowness and azimuth angle. */
-
-    if (!sf_getint("lwind",&lwind)) sf_error("Need lwind=");
-    /* Stack values computed over time windows lwind samples long. */
       
     if (!sf_getfloat("xref",&xref)) sf_error("Need xref=");
     /* x coordinate where beams are computed */
@@ -92,32 +84,18 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&dy)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"o3",&oy)) oy=0.;
 
-    /* Maximum p value in computation */
-    pxmax = opx + dpx*(npx-1);
-    pymax = opy + dpy*(npy-1);
-    pmax = 1000000.0;
-    if (mode) pmax = MAX(pxmax,pymax);
-  
-    /* Time windows in output */
-    n1out = nt/lwind;
-    d1out = dt*lwind;
-
     /* output file parameters */ 
-    sf_putint(out,"n1",n1out);
-    sf_putfloat(out,"d1",d1out);
-    sf_putfloat(out,"o1",ot);
+    sf_putint(out,"n1",npx);
+    sf_putfloat(out,"d1",dpx);
+    sf_putfloat(out,"o1",opx);
 
-    sf_putint(out,"n2",npx);
-    sf_putfloat(out,"d2",dpx);
-    sf_putfloat(out,"o2",opx);
-
-    sf_putint(out,"n3",npy);
-    sf_putfloat(out,"d3",dpy);
-    sf_putfloat(out,"o3",opy);
+    sf_putint(out,"n2",npy);
+    sf_putfloat(out,"d2",dpy);
+    sf_putfloat(out,"o2",opy);
 
     /* memory allocations */
     data = sf_floatalloc3(nt,nx,ny);
-    semb = sf_floatalloc3(n1out,npx,npy);
+    semb = sf_floatalloc2(npx,npy);
     live = sf_boolalloc2(nx,ny);
 
     /* clear data array and read the data */
@@ -148,10 +126,10 @@ int main(int argc, char* argv[])
     }
 
     /* beam steering */
-    bsteer(data,nt,nx,ny,npx,npy,opx,dpx,opy,dpy,dt,dx,dy,ox,oy,live,mode,nlive,pmax,lwind,n1out,xref,yref,semb);
+    bsteer(data,nt,nx,ny,npx,npy,opx,dpx,opy,dpy,dt,dx,dy,ox,oy,live,mode,nlive,xref,yref,semb);
 
-    /* output beam */
-    sf_floatwrite (semb[0][0],npy*npx*n1out,out);
+    /* output beam stack */
+    sf_floatwrite (semb[0],npy*npx,out);
 
     exit(0);
 }
