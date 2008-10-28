@@ -1,4 +1,4 @@
-/* 2-D gradient operator. */
+/* 2-D finite-difference gradient */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -25,7 +25,7 @@
 static int n1, n2, n12; 
 
 void igrad2_init (int n1_in, int n2_in)
-/*< intialize dimensions >*/
+/*< initialize with data dimensions >*/
 {
     n1 = n1_in; 
     n2 = n2_in;
@@ -37,7 +37,8 @@ void igrad2_lop (bool adj, bool add, int np, int nr, float* p, float* r)
 {
     int i1,i2,i;
 
-    if (np != n12 || nr != 2*n12) sf_error("%s: wrong dimensions",__FILE__);
+    if (np != n12) sf_error("%s: %d != %d",__FILE__,np,n12);
+    if (nr != 2*n12) sf_error("%s: %d != 2*%d",__FILE__,nr,n12);
 
     sf_adjnull (adj,add,np,nr,p,r);
 
