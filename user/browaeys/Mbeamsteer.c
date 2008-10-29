@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
     int ny,iy;                     /* number of receivers in y, receivers counter */
     int nlive;                     /* number of non zero traces */
     int npx,npy;                   /* number of slopes in x, number of slopes in y */
+    int nref;                      /* number of points where beams are computed */
 
     float dt,ot;                   /* time increment, starting time */
     float dx,ox;                   /* increment in x, starting position */
@@ -45,7 +46,7 @@ int main(int argc, char* argv[])
     bool mode;                     /* 2-D slope vectors, or slowness and azimuth */ 
     bool **live;                   /* non zero traces flag */
     float ***data;                 /* 2-D surface seismic data */
-    float **semb;                  /* focused beam stack */
+    float ***semb;                 /* focused beam stack */
 
     float x,y;                     /* receiver positions */
     float px,py;                   /* slopes in x and y */
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
     int ipx,ipy;                   /* slopes counters */
     int itshift;                   /* time shift in samples */
     
-    sf_axis apx,apy;
+    sf_axis apx,apy,aref;
     sf_file in,out;
 
     sf_init(argc,argv);
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
     /* Axis label 1:t, 2:x, 3:y */
     in = sf_input("in");
 
-    /* Axis label 1:px, 2:py */
+    /* Axis label 1:px, 2:py 3:ref*/
     out = sf_output("out");
 
     if (!sf_getbool("mode",&mode)) mode=true;
@@ -105,6 +106,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&dy)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"o3",&oy)) oy=0.;
 
+    /* number of points where beams are computed. */
+    nref =1;
+
     /* output file parameters */ 
     apx = sf_maxa(npx,opx,dpx);
     sf_oaxa(out,apx,1);
@@ -112,12 +116,16 @@ int main(int argc, char* argv[])
     apy = sf_maxa(npy,opy,dpy);
     sf_oaxa(out,apy,2);
 
+    aref = sf_maxa(nref,0,1);
+    sf_oaxa(out,aref,3);
+
     sf_putstring(out,"label1","px");
     sf_putstring(out,"label2","py");
+    sf_putstring(out,"label3","ref");
 
     /* memory allocations */
     data = sf_floatalloc3(nt,nx,ny);
-    semb = sf_floatalloc2(npx,npy);
+    semb = sf_floatalloc3(npx,npy,nref);
     live = sf_boolalloc2(nx,ny);
 
     /* clear data array and read the data */
@@ -157,7 +165,7 @@ int main(int argc, char* argv[])
 	    px = opx + ipx*dpx;
 
             /* clear arrays */
-	    semb[ipy][ipx] = 0.;
+	    semb[0][ipy][ipx] = 0.;
 	    beam = 0.;
 	    
 	    /* loop over receivers */
@@ -197,13 +205,13 @@ int main(int argc, char* argv[])
 	    }
 
             /* normalize stack */
-	    semb[ipy][ipx] = beam/nlive;
+	    semb[0][ipy][ipx] = beam/nlive;
 
 	}
     }
 
     /* output beam stack */
-    sf_floatwrite(semb[0],npx*npy,out);
+    sf_floatwrite(semb[0][0],npx*npy*1,out);
 
     exit(0);
 }
