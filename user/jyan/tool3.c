@@ -176,7 +176,7 @@ void wfsep(float **zdel,
     fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
     for(    jx=0;jx<nx;jx++){
 	for(jz=0;jz<nz;jz++){
-	    zdel[jx][jz]=wfs->temp[0][jx][jz];
+	    zdel[jx][jz]=crealf(wfs->temp[0][jx][jz]);
 	}
     }
     /*------------------------------------------------------------*/
@@ -198,7 +198,7 @@ void wfsep(float **zdel,
     fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
     for(    jx=0;jx<nx;jx++){
 	for(jz=0;jz<nz;jz++){
-	    xdel[jx][jz]=wfs->temp[0][jx][jz];
+	    xdel[jx][jz]=crealf(wfs->temp[0][jx][jz]);
 	}
     }
     /*------------------------------------------------------------*/
