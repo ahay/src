@@ -19,6 +19,8 @@
 */
 
 #include <math.h>
+#include <float.h>
+
 #include <rsf.h>
 
 #define MAX(a,b) (a > b ? a : b)
@@ -43,7 +45,7 @@ int main(int argc, char* argv[])
     bool mode;                     /* 2-D slope vectors, or slowness and azimuth */ 
     bool **live;                   /* non zero traces flag */
     float ***data;                 /* 2-D surface seismic data */
-    float **semb;                  /* focused slant stack */
+    float **semb;                  /* focused beam stack */
 
     float x,y;                     /* receiver positions */
     float px,py;                   /* slopes in x and y */
@@ -55,10 +57,13 @@ int main(int argc, char* argv[])
     int itshift;                   /* time shift in samples */
 
     sf_file in,out;
-   
+    sf_axis apx,apy;
+
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
+
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (!sf_getbool("mode",&mode)) mode=true;
     /* if n, beams computed as a function of apparent slowness and azimuth angle. */
@@ -97,13 +102,14 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o3",&oy)) oy=0.;
 
     /* output file parameters */ 
-    sf_putint(out,"n1",npx);
-    sf_putfloat(out,"d1",dpx);
-    sf_putfloat(out,"o1",opx);
+    apx = sf_maxa(npx,opx,dpx);
+    sf_oaxa(out,apx,1);
 
-    sf_putint(out,"n2",npy);
-    sf_putfloat(out,"d2",dpy);
-    sf_putfloat(out,"o2",opy);
+    apy = sf_maxa(npy,opy,dpy);
+    sf_oaxa(out,apy,2);
+
+    sf_putstring(out,"label1","px");
+    sf_putstring(out,"label2","py");
 
     /* memory allocations */
     data = sf_floatalloc3(nt,nx,ny);
@@ -118,7 +124,7 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    sf_floatread(data[0][0],ny*nx*nt,in);
+    sf_floatread(data[0][0],nt*nx*ny,in);
 
     /* determine if this is a dead or live trace */
     nlive = 0;
@@ -170,7 +176,7 @@ int main(int argc, char* argv[])
 			    tshift = py*( cosf(SF_PI*px/180.)*x + sinf(SF_PI*px/180.)*y );
 			}
 
-                        /* Nearest integer */
+                        /* nearest integer */
 			itshift = floorf(tshift/dt);
 			if ( (2.*tshift) > ((2*itshift+1)*dt) ) itshift += 1;
 
@@ -193,7 +199,7 @@ int main(int argc, char* argv[])
     }
 
     /* output beam stack */
-    sf_floatwrite(semb[0],npy*npx,out);
+    sf_floatwrite(semb[0],npx*npy,out);
 
     exit(0);
 }
