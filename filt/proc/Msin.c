@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 		    sf_sharpen_init(n1,perc);
 		case 'd':
 		    for (i1=0; i1 < n1; i1++) {
-			x[i1] = 0.;
+			x[i1] = sf_cmplx(0.,0.);
 		    }
 		    break;
 		case 'c':

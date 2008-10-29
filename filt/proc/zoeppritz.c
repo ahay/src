@@ -42,7 +42,7 @@ void zoeppritz (int icoef /* (1, 2, 3)
     int j;
     float fac1,fac2,fac3,fac4,thetasq,qa,t1,t2,t3,t4;
     float a1,b1,a2,b2,a3,b3,a4,b4,x,y,z,z1,fe[4],fp[4];
-    sf_complex p1,p2,p3,p4, d,r[4];
+    sf_complex p1,p2,p3,p4, d, r[4];
 
     thetasq = theta * theta;
     qa = 2.0 * (rho2*vs2*vs2 - rho1*vs1*vs1);
@@ -106,16 +106,25 @@ void zoeppritz (int icoef /* (1, 2, 3)
     p3 = sf_cmplx(a3,b3);
     p4 = sf_cmplx(a4,b4);
 
+#ifdef SF_HAS_COMPLEX_H	 
     d = vp1*vp2*vs1*vs2*thetasq*z*z + vp2*vs2*p1*p2*x*x + 
 	vp1*vs1*p3*p4*y*y + rho1*rho2*(vs1*vp2*p1*p4+vp1*vs2*p2*p3) + 
 	qa*qa*thetasq*p1*p2*p3*p4;
+#else
+    d = sf_cmplx(0.,0.);
+    sf_error("No complex support yet");
+#endif
 
     /* compute the coefficients */
     if (incp) {
+#ifdef SF_HAS_COMPLEX_H	 
 	r[0] = -1.0 + 2.0*p1*(vp2*vs2*p2*x*x + vs1*vp2*rho1*rho2*p4 + qa*qa*thetasq*p2*p3*p4)/d;
 	r[1] = -2.0*vp1*theta*p1*(qa*p3*p4*y + vp2*vs2*x*z)*fac2/d;
 	r[2] =  2.0*vp1*rho1*p1*(vs2*p2*x + vs1*p4*y)*fac3/d;
 	r[3] = -2.0*vp1*rho1*theta*p1*(qa*p2*p3 - vs1*vp2*z)*fac4/d;
+#else
+	sf_error("No complex support yet");
+#endif
 
 	if (icoef > 1) {
 	    fp[0] = 1.0;
@@ -124,17 +133,24 @@ void zoeppritz (int icoef /* (1, 2, 3)
 	    fp[3] = vs2 / vp1;
 	    if (icoef > 2) {
 		fe[0] = 1.0;
+#ifdef SF_HAS_COMPLEX_H	 
 		fe[1] = p2*vp1 / (p1*vs1);
 		fe[2] = rho2*p3*vp1 / (p1*vp2*rho1);
 		fe[3] = rho2*p4*vp1 / (rho1*p1*vs2);
+#else
+		sf_error("No complex support yet");
+#endif
 	    }
 	}
     } else {
+#ifdef SF_HAS_COMPLEX_H	 
 	r[0] = -2.0*vs1*theta*p2*(qa*p3*p4*y + vp2*vs2*x*z)*fac1/d;
 	r[1] = 1.0 - 2.0*p2*(vp2*vs2*p1*x*x + vp1*vs2*rho1*rho2*p3 + qa*qa*thetasq*p1*p3*p4)/d;
 	r[2] = 2.0*vs1*rho1*theta*p2*(qa*p1*p4 - vp1*vs2*z)*fac3/d;
 	r[3] = 2.0*vs1*rho1*p2*(vp1*p3*y + vp2*p1*x)*fac4/d;
-
+#else
+	sf_error("No complex support yet");
+#endif
 
 	if (icoef > 1) {
 	    fp[0] = vp1 / vs1;
@@ -142,10 +158,14 @@ void zoeppritz (int icoef /* (1, 2, 3)
 	    fp[2] = vp2 / vs1;
 	    fp[3] = vs2 / vs1;
 	    if (icoef > 2) {
+#ifdef SF_HAS_COMPLEX_H	 
 		fe[0] = vs1*p1 / (vp1*p2);
 		fe[1] = 1.0;
 		fe[2] = rho2*vs1*p3 / (rho1*vp2*p2);
 		fe[3] = rho2*vs1*p4 / (rho1*vs2*p2);
+#else
+		sf_error("No complex support yet");
+#endif
 	    }
 	}
     }
@@ -156,10 +176,19 @@ void zoeppritz (int icoef /* (1, 2, 3)
 		rc[j] = cabsf(r[j]);
 		break;
 	    case 2:
+#ifdef SF_HAS_COMPLEX_H
 		rc[j] = cabsf(r[j]*fp[j]);
+#else
+		rc[j] = cabsf(sf_crmul(r[j],fp[j]));
+#endif
 		break;
 	    case 3:
+#ifdef SF_HAS_COMPLEX_H
 		rc[j] = crealf(r[j]*fp[j]*conjf(r[j]*fp[j]))*fe[j];
+#else
+		rc[j] = crealf(sf_cmul(sf_crmul(r[j],fp[j]),
+				       conjf(sf_crmul(r[j],fp[j]))))*fe[j];
+#endif
 		break;
 	    default:
 		sf_error("%s: wrong icoef",__FILE__);
