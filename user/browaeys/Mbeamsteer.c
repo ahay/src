@@ -182,10 +182,10 @@ int main(int argc, char* argv[])
                         /* compute the necessary time shift to align */
 			/* the current trace with the reference trace */
 			if (mode) {
-			    tshift = px*x + py*y;
+			    tshift = - px*x - py*y;
 			} else {
                             /* py is apparent slowness, px is azimuth */
-			    tshift = py*( cosf(SF_PI*px/180.)*x + sinf(SF_PI*px/180.)*y );
+			    tshift = -py*( cosf(SF_PI*px/180.)*x + sinf(SF_PI*px/180.)*y );
 			}
 
                         /* nearest integer */
