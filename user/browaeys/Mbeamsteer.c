@@ -1,4 +1,4 @@
-/* Beam steering for 2D surface seismic array. */
+/* Beam steering for 2D surface array. */
 /*
   Copyright (C) 2008 University of Texas at Austin
   Adapted from Steve Cole, Stanford University, 1995
@@ -18,9 +18,11 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <math.h>
 #include <rsf.h>
 
-#include "bsteer.h"
+#define MAX(a,b) (a > b ? a : b)
+#define MIN(a,b) (a < b ? a : b)
 
 int main(int argc, char* argv[])
 {
@@ -42,6 +44,16 @@ int main(int argc, char* argv[])
     bool **live;                   /* non zero traces flag */
     float ***data;                 /* 2-D surface seismic data */
     float **semb;                  /* focused slant stack */
+
+    float x,y;                     /* receiver positions */
+    float px,py;                   /* slopes in x and y */
+    float tshift;                  /* time shift */
+    float beam;                    /* beam stack */
+
+    int istart,istop;              /* time integration start and end indices */
+    int ipx,ipy;                   /* slopes counters */
+    int itshift;                   /* time shift in samples */
+
     sf_file in,out;
    
     sf_init (argc,argv);
@@ -126,7 +138,59 @@ int main(int argc, char* argv[])
     }
 
     /* beam steering */
-    bsteer(data,nt,nx,ny,npx,npy,opx,dpx,opy,dpy,dt,dx,dy,ox,oy,live,mode,nlive,xref,yref,semb);
+
+    /* loop over 2-D slopes */
+    for (ipy = 0; ipy < npy; ipy++) {
+	py = opy + ipy*dpy;
+
+	for (ipx = 0; ipx < npx; ipx++) {
+	    px = opx + ipx*dpx;
+
+            /* clear arrays */
+	    semb[ipy][ipx] = 0.;
+	    beam = 0.;
+	    
+	    /* loop over receivers */
+	    for (iy = 0; iy < ny; iy++) {
+
+		for (ix = 0; ix < nx; ix++) {
+
+		    if (live[iy][ix]) {
+
+                        /* position compared to reference trace */
+			y = iy*dy + oy - yref;
+			x = ix*dx + ox - xref;
+
+                        /* compute the necessary time shift to align */
+			/* the current trace with the reference trace */
+			if (mode) {
+			    tshift = px*x + py*y;
+			} else {
+                            /* py is apparent slowness, px is azimuth */
+			    tshift = py*( cosf(SF_PI*px/180.)*x + sinf(SF_PI*px/180.)*y );
+			}
+
+                        /* Nearest integer */
+			itshift = floorf(tshift/dt);
+			if ( (2.*tshift) > ((2*itshift+1)*dt) ) itshift += 1;
+
+                        /* loop over samples of beam */
+			istart = MAX(itshift,0);
+			istop = MIN(nt+itshift,nt);
+			for (it = istart; it < istop; it++){
+                            /* sum the shifted input into the beam */
+			    beam += data[iy][ix][it-itshift];
+			}
+
+		    }
+		}
+	    }
+
+            /* normalize stack */
+	    semb[ipy][ipx] = beam/nlive;
+
+	}
+    }
 
     /* output beam stack */
     sf_floatwrite(semb[0],npy*npx,out);
