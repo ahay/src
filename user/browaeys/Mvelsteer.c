@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
 
 int main(int argc, char* argv[])
 {
