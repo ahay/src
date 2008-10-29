@@ -10,6 +10,7 @@ zoimg3
 radonslope2
 powereno
 beamsteer
+velsteer
 '''
 
 try:  # distributed version
