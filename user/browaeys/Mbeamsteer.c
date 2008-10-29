@@ -55,15 +55,17 @@ int main(int argc, char* argv[])
     int istart,istop;              /* time integration start and end indices */
     int ipx,ipy;                   /* slopes counters */
     int itshift;                   /* time shift in samples */
-
-    sf_file in,out;
+    
     sf_axis apx,apy;
+    sf_file in,out;
 
-    sf_init (argc,argv);
+    sf_init(argc,argv);
+
+    /* Axis label 1:t, 2:x, 3:y */
     in = sf_input("in");
-    out = sf_output("out");
 
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    /* Axis label 1:px, 2:py */
+    out = sf_output("out");
 
     if (!sf_getbool("mode",&mode)) mode=true;
     /* if n, beams computed as a function of apparent slowness and azimuth angle. */
@@ -89,6 +91,8 @@ int main(int argc, char* argv[])
     /* py origin (if mode=y) */  
 
     /* read input file parameters */
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&ot)) ot=0.;
