@@ -198,7 +198,7 @@ equation~(\ref{eq:aniso}) can be understood as a regularized
 least-squares inversion problem. First, approximate the equation with
 \begin{equation}
 \label{eq:aniso}
-\frac{\mathbf{U}_k-\mathbf{U}_{k-1}}{\Delta t} = a\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\,\mathbf{U}_k\;,
+\frac{\mathbf{U}_k-\mathbf{U}_{k-1}}{\Delta t} = - a\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\,\mathbf{U}_k\;,
 \end{equation}
 where $\mathbf{U}_t$ is the discretized image at time step $k$,
 $\mathbf{D}$ approximates the gradient operator, and $\mathbf{W}$ is a
