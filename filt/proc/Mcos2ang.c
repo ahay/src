@@ -1,4 +1,4 @@
-/* inverse cos to angle transformation */
+/* Inverse cos to angle transformation */
 /*
   Copyright (C) 2008 University of Texas at Austin
   
