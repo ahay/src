@@ -1,0 +1,41 @@
+from rsfproj import *
+
+# Download data
+Fetch('horizon.asc','hall')
+
+# Convert format
+Flow('horizon','horizon.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=57036 | 
+     dd form=native | window n1=1 f1=-1 |
+     put 
+     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
+     n1=196 o1=33.139 d1=0.01 label1=x unit1=km
+     ''')
+
+# Triangle smoothing
+Flow('smooth','horizon','smooth rect1=20 rect2=20')
+
+# Anisotropic diffusion
+Flow('anisod','horizon','impl2 rect1=50 rect2=50 tau=1')
+
+# Rotate program
+program = Program('diffuse.c')
+diffuse = str(program[0])
+
+# Smoothing by regularized inversion
+Flow('diffuse',['horizon',diffuse],
+     './${SOURCES[1]} niter=10 repeat=1 eps=1')
+
+# Display results
+for horizon in ('horizon','smooth','anisod'):
+    Plot(horizon,
+         '''
+         grey color=j bias=65 clip=14 yreverse=n wanttitle=n
+         ''')
+    edge = 'edge-'+horizon
+    Flow(edge,horizon,'canny max=98 | dd type=float')
+    Plot(edge,'grey allpos=y yreverse=n wanttitle=n')
+    Result(horizon,[horizon,edge],'SideBySideIso')
+
+End()

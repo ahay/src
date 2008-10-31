@@ -1,0 +1,260 @@
+\author{Thomas Bayes}
+%%%%%%%%%%%%%%%%%%%%
+\title{Homework 5}
+
+\begin{abstract}
+  This homework has three parts. 
+  \begin{enumerate}
+  \item Theoretical questions related to Bayesian inversion.
+  \item Missing data interpolation for ocean floor topography.
+  \item Extracting a channel structure from a seismic horizon.
+  \end{enumerate}
+\end{abstract}
+
+\section{Bayesian inversion}
+
+Assuming the model $\mathbf{m}$ has the probability distribution function 
+\begin{equation}
+\label{eq:pm}
+P(\mathbf{m}) = \frac{1}{\sqrt{\pi\,\det[\mathbf{C}_m]}}\,e^{-(\mathbf{m}-\mathbf{m}_0)^T\,\mathbf{C}_m^{-1}\,(\mathbf{m}-\mathbf{m}_0)}\;,
+\end{equation}
+where $\mathbf{C}_m$ is the model covariance matrix,
+and the conditional probability of data $\mathbf{d}$ (given model $\mathbf{m}$) is
+\begin{equation}
+\label{eq:pdm}
+P(\mathbf{d}|\mathbf{m}) = \frac{1}{\sqrt{\pi\,\det[\mathbf{C}_n]}}\,e^{-(\mathbf{d}-\mathbf{F}\,\mathbf{m})^T\,\mathbf{C}_n^{-1}\,(\mathbf{d}-\mathbf{F}\,\mathbf{m})}\;,
+\end{equation}
+where $\mathbf{C}_n$ is the noise covariance matrix, Bayesian inversion suggests the model estimate (given data $\mathbf{d}$) of the form
+\begin{equation}
+\label{eq:mest}
+\mathbf{m}_{*} = \mathbf{m}_0 + 
+\mathbf{C}_m\,\mathbf{F}^T\,\left(\mathbf{F}\,\mathbf{C}_m\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)
+\end{equation} 
+
+\begin{enumerate}
+\item Prove that estimate~(\ref{eq:mest}) is \emph{unbiased}, i.e. prove that, for the true model $\mathbf{m}=\mathbf{m}_1$ the mathematical expectation of $\mathbf{m}_{*}$ is $\mathbf{m}_1$.
+\item Find the covariance of estimate~(\ref{eq:mest}) (the mathematical expectation of $\mathbf{m}_{*}\,\mathbf{m}_{*}^T$).
+\end{enumerate}
+
+Shaping regularization applied in the data space suggests an estimate
+\begin{equation}
+\label{eq:shape}
+\mathbf{m}_{*} = \mathbf{m}_0 + \mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{I} - \mathbf{F}\,\mathbf{B})\right]^{-1}\,
+\mathbf{S}_d\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)
+\end{equation}
+where $\mathbf{B}$ is the ``backward'' operator, $\mathbf{S}_d$ is the ``data shaping'' operator, and $\mathbf{I}$ is the identity operator. 
+
+\begin{enumerate}
+\item Find the connection between $\mathbf{B}$,  $\mathbf{S}_d$, $\mathbf{F}$, $\mathbf{C}_m$, and $\mathbf{C}_n$ that makes equations~(\ref{eq:mest}) and~(\ref{eq:shape})
+equivalent.
+\item Suppose that the data vector $\mathbf{d}$ consists of two signal components $\mathbf{d}_1$ and $\mathbf{d}_2$, which are uncorrelated and 
+have zero mean and covariances $\mathbf{C}_1$ and $\mathbf{C}_2$ respectively. Use Bayesian inversion to formulate a separation of
+$\mathbf{d}$ into $\mathbf{d}_1$ and $\mathbf{d}_2$.
+\end{enumerate}
+
+\section{Missing ocean floor data interpolation}
+\inputdir{seabeam}
+
+SeaBeam is an apparatus for measuring water depth both directly under
+a boat and somewhat off to the sides of the boat's track. In this part
+of the assignment, we will use a benchmark dataset from \cite{gee}:
+SeaBeam data from a single day of acquisition. The original data are
+shown in Figure~\ref{fig:mesh}a.
+
+\plot{mesh}{width=\textwidth}{(a) Water depth measurements from one day
+  of SeaBeam acquisition. (b) Random initial model with covariance specified by the inverse Laplacian filter.}
+
+To find missing data, we will use estimate~(\ref{eq:mest}), where
+$\mathbf{F}$ is the mask operator (a diagonal matrix with ones and
+zeros on the diagonal using ones to mask the known data locations),
+$\mathbf{C}_m$ is a stationary filter, and $\mathbf{C}_n$ is close to
+zero,
+
+Our first choice for $\mathbf{C}_m$ is the inverse of a five-point
+Laplacian filter
+\begin{equation}
+\label{eq:lap2}
+L_2(Z_1,Z_2) = 4 - Z_1 - 1/Z_1 - Z_2 - 1/Z_2
+\end{equation} 
+To build the inverse, we put the Laplacian
+filter on a helix, where it takes the form
+\begin{equation}
+\label{eq:lap1}
+L_1(Z) = 4 - Z - 1/Z - Z^{N_1} - 1/Z^{N_1}
+\end{equation} 
+and factor it into two parts $L_1(Z) = D(Z)\,D(1/Z)$ using the
+Wilson-Burg algorithm \cite[]{burg}. The factorization is tested in
+Figure~\ref{fig:laplace}, where the impulse response of the Laplacian
+filter gets inverted by recursive filtering (polynomial division) on a
+helix. 
+
+\plot{laplace}{width=\textwidth}{Impulse response of the five-point Laplacian filter (a) gets inverted by recursive filtering (polynomial division) on a helix. 
+(b) Division by $D(Z)$. (c) Division by $D(1/Z)$. (d) Division by $D(Z)\,D(1/Z)$.}
+
+The Laplacian filter is a common a priori choice for enforcing
+smoothness in the estimated model. Figure~\ref{fig:mesh}b shows a
+random model created by dividing random normally distributed noise by
+$D(Z)$. We will use it as an initial model for the missing data
+reconstruction problem. 
+
+There are two alternative formulations of Bayesian least-squares inversion:
+\begin{description}
+\item[Overdetermined least-squares] Minimize the power (least-squares length) of the data misfit $\widehat{\mathbf{d}} - \widehat{\mathbf{F}}_m\,\mathbf{m}$, where
+\begin{equation}
+\label{eq:dhat}
+\widehat{\mathbf{d}} = \left[\begin{array}{l} \mathbf{D_n}\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right) \\
+\mathbf{0}\,\end{array}\right]\;,
+\end{equation} 
+\begin{equation}
+\label{eq:fmhat}
+\widehat{\mathbf{F}}_m = \left[\begin{array}{l} \mathbf{D_n}\,\mathbf{F} \\
+\mathbf{D_m}\,\end{array}\right]\;,
+\end{equation} 
+with $\mathbf{C}_m^{-1} = \mathbf{D_m}^T\,\mathbf{D_m}$ and $\mathbf{C}_n^{-1} =
+\mathbf{D_n}^T\,\mathbf{D_n}$. In our case, $\mathbf{D_n}$ is multiplication
+by a large number, and $\mathbf{D_m}$ is convolution with $D(Z)$ (polynomial \emph{multiplication} on a helix).
+\item[Underdetermined least-squares] Minimize the power (least-squares length) of the extended model $\widehat{\mathbf{m}}$ provided 
+that $\mathbf{d} = \mathbf{F}\,\mathbf{m}_0 + \widehat{\mathbf{F}}_d\,\widehat{\mathbf{m}}$, where
+\begin{equation}
+\label{eq:mhat}
+\widehat{\mathbf{m}} = \left[\begin{array}{l} \mathbf{p} \\
+\mathbf{q}\,\end{array}\right]\;,
+\end{equation} 
+\begin{equation}
+\label{eq:fdhat}
+\widehat{\mathbf{F}}_d = \left[\begin{array}{cc} \mathbf{F}\,\mathbf{P_m} &
+\mathbf{P_n}\,\end{array}\right]\;
+\end{equation}
+with $\mathbf{m} = \mathbf{P_m}\,\mathbf{p}$, $\mathbf{C}_m = \mathbf{P_m}^T\,\mathbf{P_m}$ and $\mathbf{C}_n =
+\mathbf{P_n}^T\,\mathbf{P_n}$. In our case, $\mathbf{P_n}$ is multiplication
+by a small number, and $\mathbf{P_m}$ is convolution with $1/D(Z)$ (polynomial \emph{division} on a helix).
+\end{description}
+
+The results of missing data reconstruction from both methods after 10 conjugate-gradient iterations are shown in Figure~\ref{fig:interp}.
+
+\plot{interp}{width=\textwidth}{Result of missing data interpolation after 10 iterations using (a) polynomial multiplication and (b) polynomial division on a helix.}
+
+\newpage
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw5/seabeam#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modifying the \texttt{SConstruct} file to accomplish the following tasks
+\begin{enumerate}
+\item Find out the number of conjugate-gradient iterations, when the ``multiplication'' and ``division'' methods produce visually similar results.
+\item Find out which of the two methods converges to this solution faster.
+\item Replace the five-point Laplacian filter with the more isotropic nine-point filter 
+\begin{eqnarray}
+\nonumber
+\hat{L}_2(Z_1,Z_2) = 20 & - & 4\,Z_1 - 4/Z_1 - 4\,Z_2 - 4/Z_2 \\
+& - & Z_1\,Z_2 - Z_1/Z_2 - Z_2/Z_1 - 1/(Z_1\,Z_2)
+\label{eq:lap9}
+\end{eqnarray}
+and repeat the experiment.
+\end{enumerate}
+\item \textbf{EXTRA CREDIT} for finding and implementing a more appropriate filter for this problem than the Laplacian.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{seabeam/SConstruct}
+
+\section{Channel extraction}
+\inputdir{channel}
+
+In this part of the assignment, we return to the seismic horizon slice
+from a previous homework. Our task is to extract the geometry of a
+sand channel, which is the most prominent geological feature in this
+slice. To perform the extraction, we use an edge detection algorithm
+from the image processing literature \cite[]{canny}. In a nutshell,
+Canny's edge detector picks areas of high gradient that seem to be
+aligned along an edge. The original horizon and extracted channel
+edges are shown in Figure~\ref{fig:horizon}.
+
+\plot{horizon}{width=\textwidth}{Horizon slice from 3-D seismic (left) and the result of edge detection (right).}
+
+The initial result is not very clear, because it is affected by random
+noise (fluctuations in seismic amplitude). The general method of
+removing the noise is smoothing. Figure~\ref{fig:smooth} shows the
+original horizon after smoothing with a triangle filter. The channel
+can be extracted more reliably. However, its width is enlarged by smoothing.
+
+\plot{smooth}{width=\textwidth}{Horizon smoothed by a triangle smoothing filter (left) and the result of edge detection (right).}
+
+To preserve the original channel shape while removing random noise, we
+need a more sophisticated method. Figure~\ref{fig:anisod} shows
+the result of \emph{anisotropic diffusion} \cite[]{weickert}:
+non-stationary smoothing by solving the nonlinear partial differential equation
+\begin{equation}
+\label{eq:aniso}
+\frac{\partial U}{\partial t} = \frac{a}{|\nabla U|}\,\nabla \cdot \left(\frac{\nabla U}{|\nabla U|}\right)\;,
+\end{equation}
+where $U(\mathbf{x},t)$ is the image evolving in artificial time $t$,
+and $a$ is a scaling coefficient. One finite-difference step with
+equation~(\ref{eq:aniso}) can be understood as a regularized
+least-squares inversion problem. First, approximate the equation with
+\begin{equation}
+\label{eq:aniso}
+\frac{\mathbf{U}_k-\mathbf{U}_{k-1}}{\Delta t} = a\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\,\mathbf{U}_k\;,
+\end{equation}
+where $\mathbf{U}_t$ is the discretized image at time step $k$,
+$\mathbf{D}$ approximates the gradient operator, and $\mathbf{W}$ is a
+diagonal weight approximating $1/|\nabla U|$. Solving for $\mathbf{U}_k$ produces
+\begin{equation}
+\label{eq:diffuse}
+\mathbf{U}_k = \left(\mathbf{I} + \epsilon^2\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\right)^{-1}\,\mathbf{U}_{k-1}\,
+\end{equation}
+where $\epsilon=a\,\Delta t$. Equation~(\ref{eq:diffuse}) has the form
+of equation~(\ref{eq:mest}) with $\mathbf{F}=\mathbf{I}$ and
+$\mathbf{C}_m^{-1} =
+\epsilon^2\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}$. In this homework, we are going to implement both stationary and
+non-stationary diffusion by regularized least-squares inversion with
+equation~(\ref{eq:diffuse}).
+
+\plot{anisod}{width=\textwidth}{Horizon smoothed by anisotropic diffusion (left) and the result of edge detection (right).}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=19]{channel/diffuse.c}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw5/channel#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{diffuse.c} file to fill in the missing part.
+\item Compare the result of smoothing by regularized inversion with other results. Select the values of critical parameters \texttt{niter=}, \texttt{eps=}, and \texttt{repeat=} that produce the best result.
+\item Modify the \texttt{diffuse.c} program to introduce a weight function in the gradient computation. The weight should scale down gradient values near the edge. 
+Compare your results with other results and select the best values for critical parameters.
+\item \textbf{EXTRA CREDIT} for finding and implementing a better method for channel extraction.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{channel/SConstruct}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw5#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Bayes's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+sftour scons -c
+\end{verbatim}
+and
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+\item Submit your result (file \texttt{paper.pdf}) by printing it out
+  or by e-mail.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{bayes}

@@ -1,0 +1,3 @@
+from rsftex import *
+
+End(use='hyperref,listings,newalg',color='horizon smooth anisod',hires='laplace')
