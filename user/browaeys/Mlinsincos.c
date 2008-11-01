@@ -1,4 +1,4 @@
-/* Convert (vx,vy) to angle d using equation vx*sin(d) + vy*cos(d) = 1/s0. */
+/* Solve for angle in equation vx*sin(d) + vy*cos(d) = 1/s0. */
 /*
   Copyright (C) 2008 University of Texas at Austin
 
@@ -70,11 +70,11 @@ int main(int argc, char* argv[])
     /* reference slowness */
 
     if (!sf_getint("na",&na)) sf_error("Need na=");
-    /* number of output angle values. */
+    /* number of angle values. */
     if (!sf_getfloat("da",&da)) sf_error("Need da=");
-    /* output angle sampling. */
+    /* angle sampling. */
     if (!sf_getfloat("oa",&oa)) sf_error("Need oa=");
-    /* output angle origin */
+    /* angle origin */
 
     if (!sf_getint("nt",&nt)) nt=180;
     /* number of polar angle for integration. */
@@ -84,9 +84,9 @@ int main(int argc, char* argv[])
     /* polar angle origin */
 
     if (!sf_getint("nr",&nr)) nr=nvx/2;
-    /* number of radii on radial lines */
+    /* number of radius on radial lines */
     if (!sf_getfloat("dr",&dr)) dr=dvx;
-    /* radii sampling. */
+    /* radius sampling. */
 
     or = 1./s0 + 0.5*dr;
    /* radius greater than or equal to 1/s0 */
@@ -141,30 +141,30 @@ int main(int argc, char* argv[])
 	for (ivx = 0; ivx < nvx; ivx++) {
 	    vx = ovx + ivx*dvx;
 	    r[ivy][ivx] = 1./(s0*sqrtf(vx*vx + vy*vy));
-	    s[ivy][ivx] = atan2f(vy,vx); /* radians */
+	    s[ivy][ivx] = atan2f(vy,vx);
 	}
     }
     
     /* read data in velocity array */
     sf_floatread(v[0],nvx*nvy,in);
 
-    /* inverse radius values on radial line */
-    sft = fint1_init(ext,nr, 0);
-    for (ir = 0; ir < nr; ir++) {
-	tmp[ir] = 1./(or + ir*dr);
-    }
-
     /* initialize */
     for (ia = 0; ia < na; ia++) {
 	a[0][ia] = 0.;
     }
+    sft = fint1_init(ext,nr, 0);
+
+    /* inverse radius values on radial line */
+    for (ir = 0; ir < nr; ir++) {
+	tmp[ir] = 1./(or + ir*dr);
+    }
 
     /* Loop on polar angle directions */
     for (it = 0; it < nt; it++) {
-	t = ot + it*dt; /* degree */
+	t = ot + it*dt;
 
 	for (ia = 0; ia < na; ia++) {
-	    d = oa + ia*da; /* degree */
+	    d = oa + ia*da;
 
             /* cos(d-t) for radial line equals inverse radius */
 	    ri = cosf((d-t)/180.*SF_PI);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     }
 	
     /* output on angle grid */
-    sf_floatwrite(a[0],na*npos,out);
+    sf_floatwrite(a[0],na*nref,out);
 
     exit(0);
 }
