@@ -97,13 +97,13 @@ int main(int argc, char* argv[])
     /* read input file parameters */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"nvx",&nvx)) sf_error("No nvx= in input");
-    if (!sf_histfloat(in,"dvx",&dvx)) sf_error("No dvx= in input");
-    if (!sf_histfloat(in,"ovx",&ovx)) sf_error("No ovx= in input");
+    if (!sf_histint(in,"n1",&nvx)) sf_error("No nvx= in input");
+    if (!sf_histfloat(in,"d1",&dvx)) sf_error("No dvx= in input");
+    if (!sf_histfloat(in,"o1",&ovx)) sf_error("No ovx= in input");
 
-    if (!sf_histint(in,"nvy",&nvy)) sf_error("No nvy= in input");
-    if (!sf_histfloat(in,"dvy",&dvy)) sf_error("No dvy= in input");
-    if (!sf_histfloat(in,"ovy",&ovy)) sf_error("No ovy= in input");
+    if (!sf_histint(in,"n2",&nvy)) sf_error("No nvy= in input");
+    if (!sf_histfloat(in,"d2",&dvy)) sf_error("No dvy= in input");
+    if (!sf_histfloat(in,"o2",&ovy)) sf_error("No ovy= in input");
 
     if ((nvx != nvy) || (dvx != dvy)) sf_error("Need squared grid for vx-vy plane");
 
