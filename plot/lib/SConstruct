@@ -27,8 +27,7 @@ except: # local version
                SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=['rsf'])
+            LIBPATH=['../../lib'])
 
 ##############################################################################
 # INCLUDES
@@ -79,15 +78,8 @@ if 'f77' in api:
 ##############################################################################
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
-    env.Program([test,slib],PROGSUFFIX='.x',PROGPREFIX='')
-
-#############################################################################
-# LINT
-##############################################################################
-
-env.Command('../plint/lint',map(lambda x: x+'.c',psrc),
-            'splint +posixlib -I%s $SOURCES' % env['CPPPATH'][0])
-env.Alias('plint','../plint')
+    env.Program([test,slib],PROGSUFFIX='.x',PROGPREFIX='',
+                LIBS=['rsf']+env.get('LIBS'))
         
 if root:
     main = 'sflibplot.py'
