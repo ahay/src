@@ -31,15 +31,14 @@ static kiss_fftr_cfg forw, invs;
 
 void halfint_init (bool inv  /* differentiation or integration */, 
 		   int n1    /* trace length */, 
-		   int m     /* order */,
 		   float rho /* regularization */)
 /*< Initialize >*/
 {
-    int i, j;
-    float om, z;
+    int i;
+    float om;
     kiss_fft_cpx cw, cz, cz2;
 
-    n = n1;
+    n = 2*kiss_fft_next_fast_size((n1+1)/2);
     nw = n/2+1;
 
     cx = (kiss_fft_cpx*) sf_complexalloc(nw);
@@ -51,23 +50,17 @@ void halfint_init (bool inv  /* differentiation or integration */,
 	sf_error("%s: KISS FFT allocation error");
 
     for (i=0; i < nw; i++) {
-	om = 2.*SF_PI*i/n;
+	om = -2.*SF_PI*i/n;
 	cw.r = cosf(om);
 	cw.i = sinf(om);
 
+	cz.r = 1.-rho*cw.r;
+	cz.i = -rho*cw.i;
 	if (inv) {
-	    z = 1.;
-	    for (j=m; j >= 1; j--) {
-		z = 1.+z*j/(2*j+1)*(1-cw.r);
-	    }
-	    cz.r=0;
-	    cz.i=cw.i*z;
 	    cz = sf_csqrtf(cz);
 	} else {
-	    cz.r = 1.-rho*cw.r;
-	    cz.i = rho*cw.i;
 	    cz2.r = 0.5*(1.+rho*cw.r);
-	    cz2.i = -0.5*rho*cw.i;
+	    cz2.i = 0.5*rho*cw.i;
 	    cz = sf_csqrtf(sf_cdiv(cz2,cz));
 	}
 	cf[i].r = cz.r/n;

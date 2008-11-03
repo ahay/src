@@ -36,22 +36,30 @@ env.Prepend(CPPPATH=['../../include'],
 includes = map(lambda x: x+'.h',psrc)
 
 objects = []
+dobjects = []
 for source in psrc:
     env.Include(source,prefix='vp_')
+
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
 
+    obj = env.SharedObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    dobjects.append(obj)
+
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('rsfplot',objects)
+slib = env.StaticLibrary('rsfplot',objects)
+dlib = env.SharedLibrary('rsfplot',dobjects,SHLIBPREFIX='libd')
+
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
-env.Install('../../lib',lib)
+env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)
 
 if root:
-    env.Install(libdir,lib)
+    env.Install(libdir,[slib,dlib])
     env.Install(incdir,inc)
 
 api = env.get('API',[])
@@ -71,7 +79,7 @@ if 'f77' in api:
 ##############################################################################
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
+    env.Program([test,slib],PROGSUFFIX='.x',PROGPREFIX='')
 
 #############################################################################
 # LINT

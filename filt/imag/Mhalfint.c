@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj, inv;
-    int nn,n1,n2,i1,i2,m;
+    int nn,n1,n2,i1,i2;
     float rho, *pp;
     sf_file in, out;
 
@@ -41,8 +41,6 @@ int main(int argc, char* argv[])
     /* If y, do differentiation instead of integration */
     if (!sf_getfloat("rho",&rho)) rho = 1.-1./n1;
     /* Leaky integration constant */
-    if (!sf_getint("order",&m)) m=6;
-    /* order for derivative filter */
 
     if (adj) {
 	sf_warning("%s half-order differentiation",inv? "anticausal":"causal");
@@ -53,7 +51,7 @@ int main(int argc, char* argv[])
     nn = 2*kiss_fft_next_fast_size((n1+1)/2);
     pp = sf_floatalloc(nn);
 
-    halfint_init (inv, nn, m, rho);
+    halfint_init (inv, nn, rho);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (pp,n1,in);

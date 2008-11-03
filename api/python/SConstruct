@@ -2,23 +2,21 @@ import sys, os, string, re
 sys.path.append('../..')
 import configure
 
+modules = Split('rsf vplot')
+
 try: # distribution version
     Import('env')
     env = env.Clone()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
-
-    ifile = '#/api/python/rsf.i'
 except: # local version
     root = None
     env = Environment()
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    SConscript('../../filt/lib/SConstruct')
-
-    ifile = 'rsf.i'
+    SConscript('../../plot/lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
@@ -60,30 +58,37 @@ if 'python' in env.get('API',[]):
     if env['PLATFORM'] == 'cygwin':
         python = 'python%s' % sys.version[:3]
         env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
-                    LIBS = ['librsf',python])
+                    LIBS = ['librsfplot','librsf',python])
     else:
-        env.Append(LIBS=['drsf'])
+        env.Append(LIBS=['drsfplot','drsf'])
 
         if env['PLATFORM'] == 'darwin':
             env['SHLINKFLAGS'] = '$LINKFLAGS -bundle' + \
                                  ' -flat_namespace -undefined suppress'
             env['SHLIBSUFFIX'] = '.so'
 
-    wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
-    python = env.SharedLibrary('rsf',wrap[0],SHLIBPREFIX='_c_')
+    for module in modules:
+        ifile = module+'.i'
+        if root:
+            ifile = '#/api/python/' + ifile
+        wrap = env.CFile(module,ifile,SWIGFLAGS='-python')
+        python = env.SharedLibrary(module,wrap[0],SHLIBPREFIX='_c_')
 
-    # Hack for darwin to force dependence on libdrsf.dylib instead of libdrsf.so
-    if env['PLATFORM'] == 'darwin': 
-        env.Depends(python,'../../lib/libdrsf.dylib')
+        # Hack for darwin to force dependence on libdrsf.dylib 
+        if env['PLATFORM'] == 'darwin': 
+            env.Depends(python,'../../lib/libdrsf.dylib')
+            env.Depends(python,'../../lib/libdrsfplot.dylib')
 
-    pfiles = [python,wrap[1],'rsf.py']
-    env.Install('../../lib',pfiles)
+        pfiles = [python,wrap[1],module+'.py']
+        env.Install('../../lib',pfiles)
 
-    if root:
-        install = env.Install(libdir,pfiles)
-        if env['PLATFORM'] == 'darwin':
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/filt/lib/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s/%s' % \
-                                  (libdir,libdir,python[0]))
+        if root:
+            install = env.Install(libdir,pfiles)
+            if env['PLATFORM'] == 'darwin':
+                for lib in ('rsf','rsfplot'):
+                    env.AddPostAction(install,
+                                      'install_name_tool -change '
+                                      'build/filt/lib/libd%s.dylib '
+                                      '%s/libd%s.dylib %s/%s' % \
+                                          (lib,libdir,lib,libdir,python[0]))
+
