@@ -14,9 +14,15 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import pydoc #, datetime
+import pydoc
 import re, sys, os, string, glob, string, signal
 import rsfpath
+
+try:
+    import datetime
+    have_datetime_module = True
+except:
+    have_datetime_module = False
 
 progs = {}
 data = {}
@@ -474,20 +480,27 @@ def link(name):
     return '%s<a href="%s.html" title="%s">%s</a>' %\
     (prefix, progs[name].name, progs[name].desc, inlink)
 
-#def get_svn_revision_nr():
-#    proc = os.popen('svn stat -v SConstruct')
-#    raw = proc.read()
-#    proc.close()
-#    return raw[13:].rsplit()[0]
-
 def html(dir):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     file = open (os.path.join(dir,'index.html'),'w')
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
-#    content += 'Generated on ' + str(datetime.date.today()) 
-#    content += ' from r' + get_svn_revision_nr()
+    # Read subversion version number, if possible
+    proc = os.popen('svn stat -v SConstruct')
+    raw  = proc.read()
+    proc.close()
+    if len(raw) > 0: # SConstruct is under version control
+        revnr = raw[13:].rsplit()[0]
+        know_revnr = True
+    else:
+        know_revnr = False
+    if have_datetime_module or know_revnr:
+        content += 'Generated'
+        if have_datetime_module:
+            content += ' on ' + str(datetime.date.today())
+        if know_revnr:
+            content += ' from development version revision ' + revnr
     dirs = {}
     for prog in progs.keys():
         dir = os.path.dirname(progs[prog].file)
