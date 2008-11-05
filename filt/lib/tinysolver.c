@@ -43,18 +43,15 @@ void sf_tinysolver (sf_operator Fop       /* linear operator */,
     } else {
 	for (i=0; i < nm; i++) m[i] = m0[i];
 	Fop (false, true, nm, nd, m, rr);
-	}
     }
     
-     
-     
     for (iter=0; iter < niter; iter++) {
 	Fop (true, false, nm, nd, g, rr);
 	Fop (false, false, nm, nd, g, gg);
-
+	
 	stepper (false, nm, nd, m, g, rr, gg);
     }
-
+    
     free (g);
     free (rr);
     free (gg);
