@@ -42,9 +42,7 @@ void sf_tinysolver (sf_operator Fop       /* linear operator */,
 	for (i=0; i < nm; i++) m[i] = 0.0;
     } else {
 	for (i=0; i < nm; i++) m[i] = m0[i];
-	Fop (false, false, nm, nd, m, rr);
-	for (i = 0; i < nd; i++){
-	      rr[i] -=  d[i];
+	Fop (false, true, nm, nd, m, rr);
 	}
     }
     

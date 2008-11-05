@@ -898,10 +898,6 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	    nloper (false, true, nx, ny, x, rr); 
 	} else {
 	    oper (false, true, nx, ny, x, rr); 
-	    //guochang added
-	    for (i=0; i < ny; i++) {
-	    rr[i] -= dat[i];
-            }
 	}
 	if (nlreg != NULL) {
 	    nlreg  (false, false, nx, nreg, x, rr+ny);
@@ -1163,10 +1159,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	    nloper (false, true, nx, ny, x, rr);
 	} else {
 	    oper (false, true, nx, ny, x, rr);
-            //guochang added
-	    for (i=0; i < ny; i++) {
-	        rr[i] -= dat[i];
-	     }
+            
 	}
     } else {
 	for (i=0; i < nx; i++) {
