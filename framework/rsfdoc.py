@@ -500,7 +500,7 @@ def html(dir):
         if have_datetime_module:
             content += ' on ' + str(datetime.date.today())
         if know_revnr:
-            content += ' from development version revision ' + revnr
+            content += ' from development version r' + revnr
     dirs = {}
     for prog in progs.keys():
         dir = os.path.dirname(progs[prog].file)
