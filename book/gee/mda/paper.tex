@@ -1253,7 +1253,7 @@ that will be broken because of missing inputs.
 The operator module
 \texttt{hconest} does the job.
 
-\opdex{hconest}{helix convolution, adjoint is the filter}{47}{56}{user/gee}
+\opdex{hconest}{helix convolution, adjoint is the filter}{44}{53}{user/gee}
 
 %\par
 %Now identify the broken regression equations,
@@ -1493,7 +1493,7 @@ Where any are missing, we want zero weights $w_i=0$.
 The desired residual under partially missing inputs is computed
 by module \texttt{misinput}
 \vpageref{lst:misinput}.
-\moddex{misinput}{mark bad regression equations}{26}{59}{user/gee}
+\moddex{misinput}{mark bad regression equations}{23}{56}{user/gee}
 
 
 
@@ -1600,7 +1600,7 @@ and wherever we see a nonzero value of \texttt{yy}
 in the output,
 we designate the output as depending on missing inputs by setting
 \verb#aa->mis# to \texttt{true}.
-\moddex{bound}{out of bounds dependency}{30}{74}{user/gee}
+\moddex{bound}{out of bounds dependency}{28}{73}{user/gee}
 
 \par
 In reality one would set up the boundary conditions
@@ -1640,7 +1640,7 @@ With things as they are,
 if there is not enough data to specify a prediction-error filter,
 you should encounter the error exit from \texttt{cgstep()} 
 \vpageref{lst:cgstep}.
-\moddex{pef}{estimate PEF on a helix}{28}{38}{user/gee}
+\moddex{pef}{estimate PEF on a helix}{25}{35}{user/gee}
 
 %Results are shown in Figures
 %\ref{fig:wood-hole}- \ref{fig:brick-hole}.
@@ -2306,7 +2306,7 @@ as described in a later chapter.
 \inputdir{misif}
 \sx{missing data}
 \sx{filter ! unknown}
-Recall the missing-data figures beginning with Figure~\ref{fig:mlines90}.
+Recall the missing-data figures beginning with Figure~\ref{fig:mlines}.
 There the filters were taken as known,
 and the only unknowns were the missing data.
 Now, instead of having a predetermined filter,

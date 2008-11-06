@@ -56,7 +56,8 @@ void bound (int dim         /* number of dimensions */,
     sf_helicon_init( aa);		  
     regrid(dim, nold, nb, aa);  
     for (i=0; i < aa->nh; i++) aa->flt[i] = 1.;		
-    sf_helicon_lop(false, false, mb, mb, xx, yy);	/* apply filter */
+    /* apply filter */
+    sf_helicon_lop(false, false, mb, mb, xx, yy); 
     regrid(dim, nb, nd, aa);  
     for (i=0; i < aa->nh; i++) aa->flt[i] = 0.;
 
