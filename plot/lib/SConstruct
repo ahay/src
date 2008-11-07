@@ -51,7 +51,8 @@ for source in psrc:
 # MAIN LIBRARY
 ##############################################################################
 slib = env.StaticLibrary('rsfplot',objects)
-dlib = env.SharedLibrary('rsfplot',dobjects,SHLIBPREFIX='libd')
+dlib = env.SharedLibrary('rsfplot',dobjects,
+                         SHLIBPREFIX='libd',LIBS=['drsf']+env.get('LIBS'))
 
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
 env.Install('../../lib',[slib,dlib])
