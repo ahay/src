@@ -1,13 +1,5 @@
 from rsftex import *
 
-Command2('revised.tex','paper.tex','cp $SOURCE $TARGET')
-Paper('revised',
-      options='manuscript,a4paper,revised',
-      use='amsmath',
-      include='\\bibpunct{(}{)}{;}{a}{}{\\,}')
-
-End(options='manuscript,a4paper',
-    use='amsmath',
-    include='\\bibpunct{(}{)}{;}{a}{}{\\,}',
+End(use='amsmath',
     color='scn avoscn attr scan4 nmo4',
     hires='gath4 scan4 nmo4')
