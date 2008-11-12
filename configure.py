@@ -599,6 +599,8 @@ def glew(context,LIBS,ogl):
         context.Result(context_failure)
         need_pkg('glew', fatal=False)
 
+pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel'}
+
 def blas(context):
     context.Message("checking for BLAS ... ")
     LIBS = context.env.get('LIBS','m')
@@ -606,6 +608,8 @@ def blas(context):
         LIBS = string.split(LIBS)
     blas = context.env.get('BLAS','blas')
     LIBS.append(blas)
+    LIBS.append('cblas')
+    LIBS.append('atlas')
     text = '''
     #ifdef __APPLE__
     #include <vecLib/vBLAS.h>
@@ -632,6 +636,7 @@ def blas(context):
         context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
         LIBS.pop()
         context.env['BLAS'] = None
+        need_pkg('blas', fatal=False)
 
 pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
