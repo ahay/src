@@ -151,7 +151,7 @@ def identify_platform(context):
         from platform import architecture, uname
         plat['arch'] = architecture()[0]
         name = uname()[2].split('.')[-1]
-        if plat['OS'] == 'linux' or plat['OS'] == 'posix':
+        if plat['OS'] in ('linux', 'posix'):
             if name[:2] == 'fc':
                 plat['distro'] = 'fedora'
             elif name[:2] == 'EL' or name[:2] == 'el':
@@ -166,7 +166,7 @@ def identify_platform(context):
              plat['cpu'] = uname()[5] # i386 / powerpc
         elif plat['OS'] == 'irix':
              plat['distro'] = uname()[2]
-        elif plat['OS'] == 'hp-ux' or plat['OS'] == 'hpux':
+        elif plat['OS'] in ('hp-ux', 'hpux'):
              plat['distro'] = uname()[2].split('.')[-2]
         del architecture, uname
     except: # "platform" not installed. Python < 2.3
@@ -668,9 +668,26 @@ def mpi(context):
         need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
 
+def ncpus():
+    'Detects number of CPUs'
+    if plat['OS'] in ('linux','posix'):
+        if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+            nr_cpus = os.sysconf("SC_NPROCESSORS_ONLN")
+            if type(nr_cpus) is int:
+                if nr_cpus > 0:
+                    return nr_cpus
+    elif plat['OS'] == 'darwin':
+        nr_cpus = int(os.popen2('sysctl -n hw.ncpu')[1].read())
+        if nr_cpus > 0:
+            return nr_cpus
+    return 2 # default number of processors
+
 pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
+    if ncpus() == 1:
+        context.env['OMP'] = False
+        return # only 1 cpu. OMP not needed
     context.Message("checking for OpenMP ... ")
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
