@@ -25,7 +25,6 @@ def convert(infile,outfile):
     spacing = float(os.environ.get('GIFBORDER',0.1))
     ppi = int(os.environ.get('PPI',75))
     delay = int(os.environ.get('GIFDELAY',100))
-    interlace = ('','-interlace')[int(os.environ.get('INTERLACE',1))]
     
     # Use vppen to find out how big and where on the page the plot is.
     stats = os.popen('vppen size=a stat=l < %s' % infile)
@@ -70,8 +69,8 @@ def convert(infile,outfile):
 
         run = 'ppmpen break=i n1=%d n2=%d ppi=%d size=a ' \
               'xcenter=%g ycenter=%g %s | ' \
-              'ppmquant 256 | ppmtogif %s > %s' % \
-              (width,height,ppi,xcen,ycen,vppen,interlace,gif)
+              'ppmquant 256 | ppmtogif > %s' % \
+              (width,height,ppi,xcen,ycen,vppen,gif)
         os.system (run)
         os.unlink(vppen)
 
