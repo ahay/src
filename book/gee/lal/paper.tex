@@ -416,7 +416,7 @@ We need to sweep across the whole filter
 and ``stretch'' its lags on the 1-axis.
 We do not need to stretch its lags on the 2-axis
 because the data has not yet been interlaced by zero traces.
-\moddex{lace}{fill missing traces by rescaling PEF}{31}{69}{user/gee}
+\moddex{lace}{fill missing traces by rescaling PEF}{27}{65}{user/gee}
 The line \texttt{ii[0] *= jump}
 means we interlace the 1-axis but not the 2-axis because
 the data has not yet been interlaced with zero traces.
@@ -760,7 +760,7 @@ extracts our usual helix filter
 of one particular scale
 from the multiscale filter.
 
-\moddex{mshelix}{multiscale helix filter definition}{27}{45}{user/gee}
+\moddex{mshelix}{multiscale helix filter definition}{25}{43}{user/gee}
 
 We create a multscale helix with module
 \texttt{createmshelix} \vpageref{lst:createmshelix}.
@@ -807,7 +807,7 @@ This is like
 \texttt{mshconest} \vpageref{lst:mshconest}
 except the adjoint is not the filter but the input.
 
-\opdex{mshelicon}{multiscale convolution, adjoint is the input}{27}{31}{user/gee}
+\opdex{mshelicon}{multiscale convolution, adjoint is the input}{26}{30}{user/gee}
 The multiscale missing-data module \texttt{msmis2}
 is just like the usual missing-data module 
 \texttt{mis2} \vpageref{lst:mis2}
