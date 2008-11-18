@@ -447,7 +447,7 @@ The output of this subroutine is an array of helix-type filters,
 which can be used, for example,
 in a local convolution operator
 \texttt{loconvol} %\vpageref{lst:loconvol}.
-\moddex{lopef}{local PEF}{61}{85}{user/gee}
+\moddex{lopef}{local PEF}{58}{81}{user/gee}
 We notice that when a patch has fewer regression equations
 than the filter has coefficients, then the filter is taken
 to be that of the previous patch.
@@ -1135,7 +1135,7 @@ Let us express the fitting goal in the form needed in computation.
 %$\Delta \bold s$.
 %Finally, it defines noise by $\bold n = \bold d - \bold s$.
 
-\opdex{signoi}{signal and noise separation}{51}{67}{user/gee}
+\opdex{signoi}{signal and noise separation}{46}{62}{user/gee}
 As with the missing-data subroutines,
 the potential number of iterations is large,
 because the dimensionality of the space of unknowns
@@ -1604,7 +1604,7 @@ The data type for nonstationary filters
 is introduced in module
 	\texttt{nhelix}, which is a simple modification of module
 	\texttt{helix} \vpageref{lst:helix}.
-	\moddex{nhelix}{non-stationary convolution}{12}{17}{user/gee}
+	\moddex{nhelix}{non-stationary convolution}{10}{15}{user/gee}
 What is new is the integer valued vector \texttt{pch(nd)}
 the size of the one-dimensional (helix) output data space.
 Every filter output point is to be assigned to a patch.
