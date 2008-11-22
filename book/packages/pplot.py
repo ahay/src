@@ -23,8 +23,6 @@ def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
     Result(plot,alljnk,'Overlay')
 # ------------------------------------------------------------
 
-
-
 def p2x2(plot,p0,p1,p2,p3,ys,xs,yc,xc):
     j0 = '_' + p0
     j1 = '_' + p1

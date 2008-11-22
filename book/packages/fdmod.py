@@ -49,7 +49,7 @@ def param(par):
     if(par['ratio']>=1):
         par['height']=10
     else:
-        par['height']=14*par['ratio']
+        par['height']=13*par['ratio']
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];

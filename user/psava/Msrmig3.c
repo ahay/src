@@ -338,7 +338,7 @@ int main (int argc, char *argv[])
 	    break;
 	case 'o':
 	default:
-	    if(verb) sf_warning("zero-lag I.C.");
+	    if(verb) sf_warning("C.I.C.");
 	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img=img3o_init(cub,imag,cigs,jcx,jcy,jcz);

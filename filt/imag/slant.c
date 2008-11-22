@@ -29,6 +29,7 @@ static float x0, dx, s0, ds, s1, t0, dt, anti;
 static float *tmp, *amp, *str, *tx;
 static bool pull, rho;
 
+/*------------------------------------------------------------*/
 void slant_init (bool pull1                     /* pull or push mode */, 
 		 bool rho1                      /* use rho filter */,
 		 float x01, float dx1, int nx1  /* offset axis */, 
@@ -38,10 +39,12 @@ void slant_init (bool pull1                     /* pull or push mode */,
 		 float anti1                    /* antialiasing */) 
 /*< initialize >*/
 {
-    pull = pull1, rho = rho1;
+    pull = pull1;
+    rho = rho1;
+
     x0 = x01; dx = dx1; nx = nx1;
     s0 = s01; ds = ds1; ns = ns1;
-    nt = nt1; dt = dt1; nt = nt1; 
+    t0 = t01; dt = dt1; nt = nt1; 
     s1 = s11; 
 
     aastretch_init (nt, t0, dt, nt);
@@ -55,6 +58,7 @@ void slant_init (bool pull1                     /* pull or push mode */,
     tx   = sf_floatalloc(nt);
 }
 
+/*------------------------------------------------------------*/
 void slant_close (void)
 /*< free allocated storage >*/
 {
@@ -69,6 +73,7 @@ void slant_close (void)
     }
 }
 
+/*------------------------------------------------------------*/
 void slant_lop (bool adj, 
 		bool add, 
 		int   nm, 
