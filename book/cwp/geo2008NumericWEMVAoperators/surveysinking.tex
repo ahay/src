@@ -1,0 +1,166 @@
+% ------------------------------------------------------------
+\subsection{Survey-sinking migration and velocity analysis}
+
+Wavefield reconstruction for multi-offset migration based on the
+one-way wave-equation under the survey-sinking framework
+\cite[]{Claerbout.iei} is implemented similarly to the zero-offset
+case by recursive phase-shift of prestack wavefields
+%
+\beq \label{eqn:PHS-SS}
+\UU_{z+\dz}\ofmh = \PS{-}\UU_z\ofmh \;,
+\eeq
+%
+followed by extraction of the image at time $t=0$. Here, $\mm$ and
+$\ho$ stand for midpoint and half-offset coordinates, respectively,
+defined according to the relations
+%
+\bea
+\mm &=& \frac{\rr+\ss}{2}
+\\
+\ho &=& \frac{\rr-\ss}{2} \;,
+\eea
+%
+where $\ss$ and $\rr$ are coordinates of sources and receivers on the
+acquisition surface. In \req{PHS-SS}, $\UU_z\ofmh$ represents the
+acoustic wavefield for a given frequency $\ww$ at all midpoint
+positions $\mm$ and half-offsets $\ho$ at depth $z$, and
+$\UU_{z+\dz}\ofmh$ represents the same wavefield extrapolated to depth
+$z+\dz$. The phase shift operation uses the depth wavenumber $\kz$
+which is defined by the double square-root (DSR) equation
+%
+\bea
+\kz &=& \SSR{\ws\ofmm}{\frac{\km-\kh}{2}} \nonumber \\  \label{eqn:DSR}
+    &+& \SSR{\ws\ofmp}{\frac{\km+\kh}{2}} \;.
+\eea
+%
+The image is obtained from this extrapolated wavefield by selection of
+time $t=0$, which is usually implemented as summation over
+frequencies:
+%
+\beq \label{eqn:IMC-SS}
+\RR_z\ofmh = \sum_\ww \UU_z\ofmhw \;.
+\eeq
+%
+
+Similarly to the derivation done in the zero-offset case, we can
+assume the separation of the extrapolation slowness $s\ofm$ into a
+background component $s_0\ofm$ and an unknown perturbation component
+$\ds\ofm$. Then we can construct a wavefield perturbation $\dUU\ofmh$
+at depth $z$ and frequency $\ww$ related linearly to the slowness
+perturbation $\ds\ofm$. Linearizing the depth wavenumber given by the
+DSR equation \ren{DSR} relative to the background slowness $s_0\ofm$,
+we obtain
+%
+\beq \label{eqn:DSR-taylor}
+\kz \approx \kz_0 + \dkzdsm \ds\ofmm + \dkzdsp \ds\ofmp \;,
+\eeq
+where the depth wavenumber in the background medium is
+%
+\bea
+\kz_0 &=& \SSR{\ws_0\ofmm}{\frac{\km-\kh}{2}} \nonumber \\
+      &+& \SSR{\ws_0\ofmp}{\frac{\km+\kh}{2}} \;.
+\eea
+%
+Here, $s_0\ofm$ represents the spatially-variable {\it background}
+slowness at depth level $z$. Using the wavenumber linearization given
+by \req{DSR-taylor}, we can reconstruct the acoustic wavefields in the
+background model using a phase-shift operation
+%
+\beq
+\UU_{z+\dz}\ofmh = \PSo{-}\UU_z\ofmh \;.
+\eeq
+%
+We can represent wavefield extrapolation using a generic solution to
+the one-way wave-equation using the notation
+$\UU_{z+\dz}\ofmh=\PSop{-}{SSM}{{s_0}_z\ofm,\UU_z\ofmh}$.  This
+notation indicates that the wavefield $\UU_{z+\dz}\ofmh$ is
+reconstructed from the wavefield $\UU_z\ofmh$ using the background
+slowness $s_0\ofm$. This operation is repeated independently for all
+frequencies $\ww$.  A typical implementation of survey-sinking
+wave-equation migration uses the following algorithm:
+% ------------------------------------------------------------
+%\newpage
+\ssmig
+% ------------------------------------------------------------
+This algorithm is similar to the one described in the preceding
+section for zero-offset migration, except that the wavefield and image
+are parametrized by midpoint and half-offset coordinates and that the
+depth wavenumber used in the extrapolation operator is given by the
+DSR equation using the background slowness $s_0\ofm$. Wavefield
+extrapolation is usually implemented in a mixed domain
+(space-wavenumber), as briefly summarized in Appendix A.
+
+Similarly to the derivation of the wavefield perturbation in the
+zero-offset migration case, we can write the linearized wavefield
+perturbation for survey-sinking migration as
+%
+\bea
+\dUU\ofmh 
+\approx &-&i \dkzdsm \ds\ofmm \dz \; \UU\ofmh
+\nonumber \\ 
+        &-&i \dkzdsp \ds\ofmp \dz \; \UU\ofmh
+\nonumber \\ 
+\approx &-&i\dz \SQREXP{\ww\UU\ofmh \ds\ofmm}{2\ws_0\ofmm}{\km-\kh}
+\nonumber \\ \label{eqn:SSFSOP}
+        &-&i\dz \SQREXP{\ww\UU\ofmh \ds\ofmp}{2\ws_0\ofmp}{\km+\kh} \;.
+\eea
+%
+\rEq{SSFSOP} defines the forward scattering operator
+$\FSop{-}{SSM}{\UU\ofmh,s_0\ofm,\ds\ofmh}$, producing the scattered
+wavefield $\dUU\ofmh$ from the slowness perturbation $\ds\ofm$, based
+on the background slowness $s_0\ofm$ and background wavefield
+$\UU\ofmh$. The image perturbation at depth $z$ is obtained from the
+scattered wavefield using the time $t=0$ imaging condition, similar to
+the procedure used for imaging in the background medium:
+\beq
+\dR\ofmh = \sum_\ww \dUU\ofmhw \;.
+\eeq
+
+Given an image perturbation $\dR\ofmh$, we can construct the scattered
+wavefield by the adjoint of the imaging condition
+\beq
+\dUU\ofmhw = \dR\ofmh \;,
+\eeq
+for every frequency $\ww$. Then, similarly to the procedure used in
+the zero-offset case, the slowness perturbation at depth $z$ caused by
+a wavefield perturbation at depth $z$ under the influence of the
+background wavefield at the same depth $z$ can be written as
+%
+\bea
+\ds\ofmm 
+\approx &+&i \dkzdsm \dz \; \CONJ{\UU\ofmh} \dUU\ofmh
+\nonumber \\  \label{eqn:SSASOPs}
+\approx &+&i\dz \SQREXP{\ww\CONJ{\UU\ofmh} \dUU\ofmh}{2\ws_0\ofmm}{\km-\kh} \;,
+\eea
+and
+\bea
+\ds\ofmp 
+\approx &+&i \dkzdsp \dz \; \CONJ{\UU\ofmh} \dUU\ofmh
+\nonumber \\  \label{eqn:SSASOPr}
+\approx &+&i\dz \SQREXP{\ww\CONJ{\UU\ofmh} \dUU\ofmh}{2\ws_0\ofmp}{\km+\kh} \;.
+\eea
+%
+\rEqs{SSASOPs}-\ren{SSASOPr} define the adjoint scattering operator
+$\ASop{+}{SSM}{\UU\ofmh,s_0\ofm,\dUU\ofmh}$, producing the slowness
+perturbation $\ds\ofm$ from the scattered wavefield $\dUU\ofmh$, based
+on the background slowness $s_0\ofm$ and background wavefield
+$\UU\ofmh$. A typical implementation of survey-sinking forward and
+adjoint scattering follows the algorithms:
+% ------------------------------------------------------------
+%\newpage
+\ssfor 
+%\newpage
+\ssadj
+% ------------------------------------------------------------
+These algorithms are similar to the ones described in the preceding
+section for zero-offset migration, except that the wavefield and image
+are parametrized by midpoint and half-offset coordinates.
+Furthermore, the two square-roots corresponding to the DSR equation
+update the slowness model separately, thus characterizing the source
+and receiver propagation paths to the image positions.  
+%
+Both forward and adjoint scattering algorithms require the background
+wavefield, $\UU\ofmh$, to be precomputed at all depth levels.
+%
+Scattering and wavefield extrapolation are implemented in the mixed
+space-wavenumber domain, as briefly explained in Appendix A.

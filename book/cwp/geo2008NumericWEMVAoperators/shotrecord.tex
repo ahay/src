@@ -1,0 +1,153 @@
+% ------------------------------------------------------------
+\subsection{Shot-record migration and velocity analysis}
+
+Wavefield reconstruction for multi-offset migration based on the
+one-way wave-equation under the shot-record framework is performed by
+separate recursive extrapolation of the source and receiver
+wavefields, $\US$ and $\UR$. The wavefield extrapolation progresses
+forward in time (causal) for the source wavefield and backward in time
+(anti-causal) for the receiver wavefield:
+\bea \label{eqn:PHSs-SR}
+\US_{z+\dz}\ofm &=& \PS{+}\US_z\ofm
+\\   \label{eqn:PHSr-SR}
+\UR_{z+\dz}\ofm &=& \PS{-}\UR_z\ofm
+\eea
+In \reqs{PHSs-SR}-\ren{PHSr-SR}, $\US_z\ofm$ and $\UR_z\ofm$ represent
+the source and receiver acoustic wavefield for a given frequency $\ww$
+at all positions in space $\mm$ at depth $z$, and $\US_{z+\dz}\ofm$
+and $\UR_{z+\dz}\ofm$ represent the same wavefields extrapolated to
+depth $z+\dz$. The phase shift operation uses the depth wavenumber
+$\kz$ which is defined by the single square-root (SSR) equation
+\beq \label{eqn:SSR-SR}
+\kz = \SSR{\ws\ofm}{\km}
+\eeq
+%
+The image is obtained from the extrapolated wavefields by selection of
+the zero cross-correlation lags in space of time between the source
+and receiver wavefields, an operation which is usually implemented as
+summation over frequencies:
+%
+\beq \label{eqn:IMC-SR}
+\RR_z\ofm = \sum_\ww \CONJ{\US_z\ofmw} \UR_z\ofmw \;.
+\eeq
+An alternative imaging condition \cite[]{SavaFomel.geo.tsic} preserves
+the space and time cross-correlation lags in the image.
+
+
+Linearizing the depth wavenumber given by the equation \ren{SSR-SR}
+relative to the background slowness $s_0\ofm$ similarly to the case
+case of zero-offset migration, we can reconstruct the acoustic
+wavefields in the background model using a phase-shift operation
+%
+\bea
+\US_{z+\dz}\ofm &=& \PSo{+}\US_z\ofm \;,
+\\
+\UR_{z+\dz}\ofm &=& \PSo{-}\UR_z\ofm \;,
+\eea
+%
+which define the causal $\PSop{+}{SRM}{{s_0}_z\ofm,\UU_z\ofm}$ and the
+anti-causal $\PSop{-}{SRM}{{s_0}_z\ofm,\UU_z\ofm}$ wavefield
+extrapolation operators for shot-record migration constructed using
+the background slowness $s_0\ofm$ and producing the wavefields
+$\US_{z+\dz}\ofm$ and $\UR_{z+\dz}\ofm$ at depth $z+\dz$ from the
+wavefields $\US_z\ofm$ and $\UR_z\ofm$ at depth $z$, respectively. A
+typical implementation of shot-record wave-equation migration follows
+the algorithm:
+% ------------------------------------------------------------
+%\newpage
+\srmig
+% ------------------------------------------------------------
+This algorithm is similar to the one used for zero-offset or survey
+sinking migration, except that the source and receiver wavefields are
+reconstructed separately using wavefield extrapolation. Unlike the
+zero-offset extrapolation operator, the shot-record extrapolation
+operator uses the background slowness $s_0$ since the operation
+involves sinking of the source and receiver wavefields from the
+surface toward the image positions. Wavefield extrapolation is usually
+implemented in a mixed domain (space-wavenumber), as briefly
+summarized in Appendix A.
+
+Similarly to the derivation of the wavefield perturbation in the
+zero-offset migration case, we can write the linearized wavefield
+perturbation for shot-record migration as
+%
+\bea
+\dUS\ofm &\approx& +i \dkzds \dz \;                   \US\ofm \ds\ofm
+\nonumber \\  \label{eqn:SRFSOPs}
+         &\approx& +i\dz \SQREXP{\ww\US\ofm \ds\ofm}{\ws_0\ofm}{\km} \;,
+\eea
+and
+\bea
+\dUR\ofm &\approx& -i \dkzds \dz \;                   \UR\ofm \ds\ofm
+\nonumber \\  \label{eqn:SRFSOPr}
+         &\approx& -i\dz \SQREXP{\ww\UR\ofm \ds\ofm}{\ws_0\ofm}{\km} \;.
+\eea
+%
+\rEqs{SRFSOPs}-\ren{SRFSOPr} define the forward scattering operators 
+$\FSop{\pm}{SRM}{\UU\ofm,s_0\ofm,\ds\ofm}$ producing the scattered
+wavefields $\dUU\ofm$ from the slowness perturbation $\ds\ofm$, based
+on the background slowness $s_0\ofm$ and background wavefield
+$\UU\ofm$. In this case, the symbol $\UU$ stands for either $\US$ or
+$\UR$, given the appropriate choice of sign in the forward scattering
+operator. The image perturbation at depth $z$ is obtained from the
+source and receiver scattered wavefields using the relation
+\beq
+\dR\ofm = \sum_\ww \lp \CONJ{\US\ofmw} \dUR\ofmw + 
+                       \CONJ{\dUS\ofmw} \UR\ofmw \rp \;,
+\eeq
+which corresponds to the frequency-domain zero-lag cross-correlation
+of the source and receiver wavefields required by the imaging
+condition.
+
+Given an image perturbation $\dR$, we can construct the scattered
+source and receiver wavefields by the adjoint of the imaging condition
+\bea
+\dUS\ofm = \UR\ofm \CONJ{\dR\ofm}\;,
+\\
+\dUR\ofm = \US\ofm       \dR\ofm \;,
+\eea
+for every frequency $\ww$. Then, the slowness perturbations due to the
+source and receiver wavefields at depth $z$ under the influence of the
+background source and receiver wavefields at the same depth $z$ can be
+written as
+%
+\bea
+\ds_s\ofm &\approx& -i \dkzds \dz \;                    \CONJ{\US\ofm} \dUS\ofm
+\nonumber \\   \label{eqn:SRASOPs}
+          &\approx& -i\dz \SQREXP{\ww\CONJ{\US\ofm} \dUS\ofm}{\ws_0\ofm}{\km} \;,
+\eea
+and
+\bea 
+\ds_r\ofm &\approx& -i \dkzds \dz \;                    \CONJ{\UR\ofm} \dUR\ofm 
+\nonumber \\  \label{eqn:SRASOPr}
+          &\approx& -i\dz \SQREXP{\ww\CONJ{\UR\ofm} \dUR\ofm}{\ws_0\ofm}{\km} \;.
+\eea
+%
+\rEqs{SRASOPs}-\ren{SRASOPr} define the adjoint scattering operators
+$\ASop{\pm}{SRM}{\UU\ofm,s_0\ofm,\dUU\ofm}$, producing the slowness
+perturbation $\ds\ofm$ from the scattered wavefield $\dUU\ofm$, based
+on the background slowness $s_0\ofm$ and background wavefield
+$\UU\ofm$. In this case, $\UU$ stands for either $\US$ or $\UR$, given
+the appropriate choice of sign in the adjoint scattering operator. A
+typical implementation of shot-record forward and adjoint scattering
+follows the algorithms:
+% ------------------------------------------------------------
+%\newpage
+\srfor 
+%\newpage
+\sradj
+% ------------------------------------------------------------
+These algorithms are similar to the one used for zero-offset or survey
+sinking migration, except that the source and receiver wavefields are
+reconstructed separately using wavefield extrapolation. Unlike the
+zero-offset scattering operators, the shot-record scattering operators
+use the background slowness $s_0$ since the operation involves sinking
+of the source and receiver wavefields from the surface toward the
+image positions. 
+%
+Both forward and adjoint scattering algorithms require the background
+wavefields, $\US\ofm$ and $\UR\ofm$, to be precomputed at all depth
+levels.
+% 
+Scattering and wavefield extrapolation are implemented in the mixed
+space-wavenumber domain, as briefly explained in Appendix A.
