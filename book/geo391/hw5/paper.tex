@@ -32,14 +32,14 @@ where $\mathbf{C}_n$ is the noise covariance matrix, Bayesian inversion suggests
 \end{equation} 
 
 \begin{enumerate}
-\item Prove that estimate~(\ref{eq:mest}) is \emph{unbiased}, i.e. prove that, for the true model $\mathbf{m}=\mathbf{m}_1$ the mathematical expectation of $\mathbf{m}_{*}$ is $\mathbf{m}_1$.
+\item Find the \emph{bias} in estimate~(\ref{eq:mest}), i.e. for the true model $\mathbf{m}=\mathbf{m}_1$, find the mathematical expectation of $\mathbf{m}_{*}-\mathbf{m}_1$.
 \item Find the covariance of estimate~(\ref{eq:mest}) (the mathematical expectation of $\mathbf{m}_{*}\,\mathbf{m}_{*}^T$).
 \end{enumerate}
 
 Shaping regularization applied in the data space suggests an estimate
 \begin{equation}
 \label{eq:shape}
-\mathbf{m}_{*} = \mathbf{m}_0 + \mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{I} - \mathbf{F}\,\mathbf{B})\right]^{-1}\,
+\mathbf{m}_{*} = \mathbf{m}_0 + \mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{F}\,\mathbf{B} - \mathbf{I})\right]^{-1}\,
 \mathbf{S}_d\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)
 \end{equation}
 where $\mathbf{B}$ is the ``backward'' operator, $\mathbf{S}_d$ is the ``data shaping'' operator, and $\mathbf{I}$ is the identity operator. 
