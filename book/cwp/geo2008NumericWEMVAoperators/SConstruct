@@ -66,4 +66,4 @@ for eageabs in glob.glob('eageabs*.tex'):
           use='times,mathptm,natbib,color,amssymb,mathrsfs')
 # ------------------------------------------------------------
 
-End(lclass='geophysics',use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem,setspace,color')
+End(lclass='geophysics',use='color,amssymb,mathrsfs,amsbsy,lineno,ulem,setspace,color')
