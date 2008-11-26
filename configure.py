@@ -635,6 +635,8 @@ def blas(context):
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
         context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
         LIBS.pop()
+        LIBS.pop()
+        LIBS.pop()
         context.env['BLAS'] = None
         need_pkg('blas', fatal=False)
 

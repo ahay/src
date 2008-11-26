@@ -69,20 +69,32 @@ class Temp(str):
     def __new__(cls):
         return str.__new__(cls,tempfile.mktemp(dir=Temp.tmpdatapath))
 
-class _File(object):
-    type = ['uchar','char','int','float','complex']
-    form = ['ascii','xdr','native']
+class File(object):
     attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples']
-    def __init__(self):
+    def __init__(self,tag,temp=False):
         'Constructor'
-        if not self.file:
-            raise TypeError, 'Use Input or Output instead of File'
-        self.type = _File.type[c_rsf.sf_gettype(self.file)]
-        self.form = _File.form[c_rsf.sf_getform(self.file)]
+        if isinstance(tag,File):
+            # copy file
+            self.__init__(tag.tag)
+        elif isinstance(tag,numpy.ndarray):
+            # numpy array
+            out = Output(Temp())
+            shape = tag.shape
+            dims = len(shape)
+            for axis in range(1,dims+1):
+                out.put('n%d' % axis,shape[dims-axis])
+            out.write(tag)
+            out.close()
+            self.__init__(out,temp=True)
+        elif isinstance(tag,list):
+            self.__init__(numpy.array(tag,'f'))
+        else:
+            self.tag = tag
+        self.temp = temp
         self.narray = None
         for filt in Filter.plots + Filter.diagnostic:
             setattr(self,filt,Filter(filt,srcs=[self],run=True))
-        for attr in _File.attrs:
+        for attr in File.attrs:
             setattr(self,attr,self.want(attr))
     def __str__(self):
         'String representation'
@@ -94,10 +106,6 @@ class _File(object):
                 raise TypeError, 'Cannot find "%s" ' % tag
         else:
             raise TypeError, 'Cannot find tag'
-    def __del__(self):
-        'Destructor'
-        if self.temp:
-            Filter('rm',run=True)(0,self)
     def sfin(self):
         'Output of sfin'
         return Filter('in',run=True)(0,self)
@@ -146,12 +154,17 @@ class _File(object):
     def dot(self,other):
         'Dot product'
         prod = self.__mul__(other).reshape()
-        stack = Filter('stack')(norm=False,axis=1)[prod]
+        stack = Input(Filter('stack')(norm=False,axis=1)[prod])
         dp = numpy.zeros(1,'f')
         stack.read(dp)
+        stack.close()
         return dp[0]
     def __array__(self,context=None):
+        'numpy array'
+        # danger: dangling open file descriptor
         if None == self.narray:
+            if not hasattr(self,'file'):
+                self.file = c_rsf.sf_input(self.tag)
             self.narray = c_rsf.rsf_array(self.file)
         return self.narray
     def __array_wrap__(self,array,context=None):
@@ -163,7 +176,31 @@ class _File(object):
         array = self.__array__()
         array.__setitem__(index,value)
     def size(self,dim=0):
-        return c_rsf.sf_leftsize(self.file,dim)
+        if hasattr(self,'file'):
+            f = self.file
+        else:
+            f = c_rsf.sf_input(self.tag)
+        s = c_rsf.sf_leftsize(f,dim)
+        if not hasattr(self,'file'):
+            c_rsf.sf_fileclose(f)
+        return s
+    def int(self,key,default=None):
+        try:
+            inp, out, err = os.popen3('%s %s parform=n < %s' % 
+                                      (Filter('get'),key,self))
+            get = out.read()
+        except:
+            raise RuntimeError, 'trouble running sfget'
+        inp.close()
+        out.close()
+        err.close()
+        if get:
+            val = int(get)
+        elif default:
+            val = default
+        else:
+            val = None
+        return val
     def shape(self):
         s = []
         dim = 1
@@ -198,14 +235,33 @@ class _File(object):
         return put[self]
     def __len__(self):
         return self.size()
+    def close(self):
+        if self.temp:
+            Filter('rm',run=True)(0,self)
+    def __del__(self):
+        self.close()
+
+class _File(File):
+    type = ['uchar','char','int','float','complex']
+    form = ['ascii','xdr','native']
+    def __init__(self,tag):
+        if not self.file:
+            raise TypeError, 'Use Input or Output instead of File'
+        File.__init__(self,tag)
+        self.type = _File.type[c_rsf.sf_gettype(self.file)]
+        self.form = _File.form[c_rsf.sf_getform(self.file)]
+    def close(self):
+        c_rsf.sf_fileclose(self.file)
+    def __del__(self):
+        self.close()
+        File.close(self)
     def settype(self,type):
-        for i in xrange(len(_File.type)):
-            if type == _File.type[i]:
+        for i in xrange(len(File.type)):
+            if type == File.type[i]:
                 self.type = type
                 c_rsf.sf_settype (self.file,i)
     def setformat(self,format):
         c_rsf.sf_setformat(self.file,format)
-        _File.__init__(self)
     def __get(self,func,key,default):
         get,par = func(self.file,key)
         if get:
@@ -232,8 +288,6 @@ class _File(object):
         return self.__gets(c_rsf.histints,key,num,default)    
     def bytes(self):
         return c_rsf.sf_bytes(self.file)
-    def close(self):
-        return c_rsf.sf_fileclose(self.file)
     def put(self,key,val):
         if isinstance(val,int):
             c_rsf.sf_putint(self.file,key,val)
@@ -244,30 +298,15 @@ class _File(object):
         elif isinstance(val,list):
             if isinstance(val[0],int):
                 c_rsf.sf_putints(self.file,key,val)
-
+        
 class Input(_File):
-    def __init__(self,tag='in',temp=False):
-        if isinstance(tag,_File):
+    def __init__(self,tag='in'):
+        if isinstance(tag,File):
             # copy file
             self.__init__(tag.tag)
-            self.old = tag # to increase refcount
-        elif isinstance(tag,numpy.ndarray):
-            # numpy array
-            out = Output(None)
-            shape = tag.shape
-            dims = len(shape)
-            for axis in range(1,dims+1):
-                out.put('n%d' % axis,shape[dims-axis])
-            out.write(tag)
-            out.close()
-            self.__init__(out,temp=True)
-        elif isinstance(tag,list):
-            self.__init__(numpy.array(tag,'f'))
         else:
-            self.tag = tag
-            self.file = c_rsf.sf_input(self.tag)
-            _File.__init__(self)
-        self.temp=temp
+            self.file = c_rsf.sf_input(tag)
+            _File.__init__(self,tag)
     def read(self,data):
         if self.type == 'float':
             c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
@@ -275,9 +314,6 @@ class Input(_File):
             c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
-
-# Cube as alias for Input
-Cube = Input
 
 class Output(_File):
     def __init__(self,tag='out',src=None):
@@ -289,9 +325,9 @@ class Output(_File):
             self.temp = False
         self.file = c_rsf.sf_output(self.tag)
         if src: # clone source file
-            c_rsf.sf_settype(self.file,_File.type.index(src.type))
+            c_rsf.sf_settype(self.file,File.type.index(src.type))
             c_rsf.sf_fileflush(self.file,src.file)
-        _File.__init__(self)
+        _File.__init__(self,self.tag)
     def write(self,data):
         if self.type == 'float':
             c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
@@ -381,7 +417,7 @@ class Filter(object):
             if self.plot:
                 return Vplot(out,temp=True)
             else:
-                return Input(out,temp=True)
+                return File(out,temp=True)
     def __call__(self,*args,**kw):
         if args:
             self.stdout = args[0]

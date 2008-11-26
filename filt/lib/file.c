@@ -93,7 +93,7 @@ typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 
 struct sf_File {
     FILE *stream, *head; 
-    char *dataname, *buf;
+    char *dataname, *buf, *headname;
     sf_simtab pars;
     XDR xdr;
     enum xdr_op op;
@@ -142,7 +142,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 
     /* create a parameter table */
     file->pars = sf_simtab_init (tabsize);
-    file->head = tmpfile();
+    file->head = sf_tempfile(&file->headname,"w+");
 
     /* read the parameter table from the file */
     sf_simtab_input (file->pars,file->stream,file->head);
@@ -218,6 +218,7 @@ Should do output after sf_input. >*/
 
     file->pars = sf_simtab_init (tabsize);
     file->head = NULL;
+    file->headname = NULL;
 
     file->pipe = (bool) (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
@@ -552,6 +553,13 @@ void sf_fileclose (sf_file file)
     if (file->stream != stdin && 
 	file->stream != stdout && 
 	file->stream != NULL) (void) fclose (file->stream);
+    if (file->head != NULL) {
+	(void) unlink (file->headname);
+	(void) fclose (file->head);
+	file->head = NULL;
+	free(file->headname);
+	file->headname = NULL;
+    }
     if (NULL != file->pars) sf_simtab_close (file->pars);
     if (NULL != file->buf) {
 	free (file->buf);
