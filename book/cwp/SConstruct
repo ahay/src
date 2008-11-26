@@ -10,14 +10,18 @@ report = (('2006',
            '''
            geo2007StereographicImagingCondition
            gpr2007RWEHighOrderKernels
-           '''))
+           '''),
+          ('2008',
+           'geo2008NumericWEMVAoperators')
+          )
 
 Papers(papers=report,
        copyr='Colorado School of Mines',group='Center for Wave Phenomena',
        authors={'seg2006ConvertedWavesTSIC': 'Paul Sava and Sergey Fomel',
                 'jse2006RWEImagingOverturningReflections':'Paul Sava',
                 'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
-                'geo2007StereographicImagingCondition':'Paul Sava'},
+                'geo2007StereographicImagingCondition':'Paul Sava',
+                'geo2008NumericWEMVAoperators':'Paul Sava and Ioan Vlad'},
        line='Example Report, October 2007',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))

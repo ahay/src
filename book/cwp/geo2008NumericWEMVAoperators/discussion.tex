@@ -43,20 +43,21 @@ preceding sections.
 
 % ------------------------------------------------------------
 \begin{center}
+\tiny
 %\begin{singlespace}
 \begin{table*}
 \begin{tabular} { c || ccc | c | c | } 
                         & \multicolumn{3}{c|}{\EOP}                    & \IOP                       & \SOP           \\
 \cline{2-6}
-                        & equation & velocity & time extrapolation     & type                       & equation       \\ \hline \hline
+                        & equation & velocity & extrapolation     & type                       & equation       \\ \hline \hline
 \textbf{zero-offset}    & SSR      & half     & backward               & zero time                  & linearized SSR \\
 \cline{2-6}
                         & \multicolumn{3}{c|}{\EOPzo}                  & \IOPzo                     & \SOPzo         \\ \hline \hline
 \textbf{survey-sinking} & DSR      & full     & backward               & zero time                  & linearized DSR \\
-                        &          &          &                        & implicit cross-correlation &                \\ 
+                        &          &          &                        & implicit cross-corr. &                \\ 
                         & \multicolumn{3}{c|}{\EOPss}                  & \IOPss                     & \SOPss         \\ \hline \hline
-\textbf{shot-record}    & SSR      & full     & forward  (source)      & zero time                  & linearized SSR \\
-                        &          &          & backward  (receiver)   & explicit cross-correlation &                \\
+\textbf{shot-record}    & SSR      & full     & forward       & zero time                  & linearized SSR \\
+                        &          &          & backward     & explicit cross-corr. &                \\
 \cline{2-6}
                         & \multicolumn{3}{c|}{\EOPsr}                  & \IOPsr                     & \SOPsr         \\
 \end{tabular}
