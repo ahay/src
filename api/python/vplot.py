@@ -10,3 +10,25 @@ class Vplot(object):
             os.dup2(vfile,sys.stdout.fileno())
             os.close(vfile)
         c_vplot.vp_init()
+    def uorig(self,x,y):
+        c_vplot.vp_uorig(x,y)
+    def uclip(self,xmin,ymin,xmax,ymax):
+        c_vplot.vp_uclip (xmin,ymin,xmax,ymax)
+    def umove(self,x,y):
+        c_vplot.vp_umove(x,y)
+    def udraw(self,x,y):
+        c_vplot.vp_udraw(x,y)
+    def move(self,x,y):
+        c_vplot.vp_move(x,y)
+    def draw(self,x,y):
+        c_vplot.vp_draw(x,y)
+    def fat(self,f):
+        c_vplot.vp_fat(f)
+    def color(self,col):
+        c_vplot.vp_color(col)
+    def penup(self):
+        c_vplot.vp_penup()
+    def pendn(self,x,y):
+        c_vplot.vp_pendn(x,y)
+    def text (self,x,y,size,orient,string):
+        c_vplot.vp_text(x,y,size,orient,string)
