@@ -1,0 +1,176 @@
+from rsfproj import *
+
+# Download data
+Fetch(['border.hh','elevation.HH',
+       'alldata.hh','obsdata.hh',
+       'coord.hh','predict.hh'],'rain')
+
+# Plot limits
+box = '''
+min1=-185.556 max1=193.18275
+min2=-127.262 max2=127.25044
+'''
+
+# Switzerland map
+#################
+
+# Border
+Flow('border','border.hh','dd form=native')
+
+
+f2 = 0
+def border(name,n2):
+    global f2
+    Flow(name,'border',
+         '''
+         window n2=%d f2=%d |
+         dd type=complex | window
+         ''' % (n2,f2))
+    Plot(name,'graph wanttitle=n plotcol=6 plotfat=8 ' + box)
+    f2 = f2 + n2
+
+border('border1',338)
+border('border2',234)
+border('border3',717)
+Plot('border','border1 border2 border3','Overlay')
+
+# Elevation
+Flow('elev','elevation.HH','dd form=native')
+Plot('elev',
+     '''
+     igrad |
+     grey title="Switzerland Elevation" transp=n yreverse=n
+     wantaxis=n wantlabel=n wheretitle=t wherexlabel=b
+     ''')
+Result('elev','elev border','Overlay')
+
+Flow('alldata','alldata.hh',
+     'window n1=2 | dd type=complex form=native | window')
+Plot('alldata',
+     '''
+     graph symbol=x symbolsz=4
+     title="All data locations" plotcol=7
+     ''' + box)
+Plot('data','alldata border','Overlay')
+
+Flow('obs','obsdata.hh',
+     'window n1=2 | dd type=complex form=native | window')
+Plot('obs',
+     '''
+     graph symbol=o symbolsz=4
+     title="Observed data locations" plotcol=5
+     ''' + box)
+Plot('obsdata','obs border','Overlay')
+
+Result('raindata','obsdata data','SideBySideIso')
+
+Flow('coord','coord.hh','dd form=native')
+Flow('obsdata','obsdata.hh','dd form=native')
+Flow('raindata','obsdata','window f1=2 | put head=$SOURCE')
+
+# Triangulation
+###############
+Flow('trian edges','obsdata elev',
+     'tri2reg pattern=${SOURCES[1]} edgeout=${TARGETS[1]}')
+Plot('edges',
+     '''
+     graph plotcol=7 plotfat=8
+     wanttitle=n wantaxis=n
+     ''' + box)
+Plot('trian',
+     '''
+     grey yreverse=n transp=n allpos=y
+     color=j clip=500 title="Delaunay Triangulation"
+     label1="W-E (km)" label2="N-S (km)"
+     ''' + box)
+Result('trian','trian edges','Overlay')
+
+# Regularized inverse interpolation
+###################################
+
+def contour(cont):
+    return '''
+    contour nc=6 c0=-0.001 dc=100
+    minval=0 maxval=525
+    scalebar=y yreverse=n transp=n barlabel=' '
+    wanttitle=n plotcol=%d plotfat=%d wantframe=y wantaxis=n
+    ''' % (((0,10),(7,1))[cont])
+
+# Maximum number of iterations
+#############
+nmax = 1000 # CHANGE ME!!!
+
+# Smoothing radius
+##################
+radius = 25
+
+for shape in range(2):
+    inter = ('laplace','shape')[shape]
+    iters = []
+    for niter in [10,nmax]:
+        iter = inter+str(niter)
+        Flow(iter,'raindata',
+             '''
+             shapebin niter=%d shape=%d filt1=%d
+             xkey=0 ykey=1 nx=376 ny=253
+             dx=1.00997 dy=1.00997
+             x0=-185.556 y0=-127.262
+             ''' % (niter,shape,radius))
+        Plot('g'+iter,iter,
+             '''
+             grey scalebar=y yreverse=n transp=n allpos=y
+             minval=0 maxval=525 color=j clip=500
+             title="%s regularization (%d iterations)" 
+             ''' % (('Laplacian','Shaping')[shape],niter))
+        for cont in range(2):
+            Plot('c'+str(cont)+iter,iter,contour(cont))
+        Plot(iter,['g'+iter,'c0'+iter,'c1'+iter],'Overlay')
+        iters.append(iter)
+    Result(inter,iters,'SideBySideIso')
+
+# Prediction comparisons
+########################
+
+Flow('predict','predict.hh','dd form=native')
+Flow('norm','predict',
+     'add mode=p $SOURCE | stack axis=1 norm=n')
+
+Plot('line',None,
+     '''
+     math n1=2 o1=0 d1=500 output=x1 |
+     graph plotcol=7 wanttitle=n wantaxis=n
+     screenratio=1 min1=0 max1=500 min2=0 max2=500
+     ''')
+
+for case in ('trian','laplace'+str(nmax),'shape'+str(nmax)):
+    pred = case+'-pred'
+    Flow(pred,[case,'coord'],
+         'extract head=${SOURCES[1]} xkey=0 ykey=1')
+    Plot(pred,['predict',pred],
+         '''
+         cmplx ${SOURCES[1]} |
+         graph symbol="*" wanttitle=n
+         screenratio=1 min1=0 max1=500 min2=0 max2=500
+         label1=Measured label2=Predicted
+         ''')
+
+    num = case+'-num'
+    den = case+'-den'
+    cor = case+'-cor'
+
+    Flow(num,['predict',pred],
+         'add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+    Flow(den,pred,'add mode=p $SOURCE | stack axis=1 norm=n')
+    Flow(cor+'.asc',[num,den,'norm'],
+         '''
+         math a1=${SOURCES[1]} a2=${SOURCES[2]}
+         output="input/sqrt(a1*a2)" |
+         dd form=ascii out=$TARGET
+         format="label=correlation=%g"
+         ''',stdout=0)
+    Plot(cor,cor+'.asc',
+         'box x0=5.5 y0=9 xt=0 par=$SOURCE',stdin=0)
+    
+    Result(pred,[pred,'line',cor],'Overlay')
+
+End()

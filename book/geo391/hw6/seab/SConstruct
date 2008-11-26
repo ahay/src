@@ -1,0 +1,57 @@
+from rsfproj import *
+
+# Download data
+Fetch('apr18.h','seab')
+Flow('data','apr18.h','dd form=native')
+
+def grey(title):
+    return '''
+    grey pclip=100 labelsz=10 titlesz=12
+    transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+# Bin to regular grid
+Flow('bin','data',
+     '''
+     window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1
+     ''')
+
+# Mask for known data
+Flow('mask','bin',
+     '''
+     math output="abs(input)" |
+     mask min=0.001 | dd type=float
+     ''')
+
+Plot('bin',grey('Binned'))
+Plot('mask',grey('Mask') + ' allpos=y')
+
+Result('data','bin mask','SideBySideAniso')
+
+# Estimate PEF
+Flow('pef lag','bin mask',
+     '''
+     pef maskin=${SOURCES[1]} lag=${TARGETS[1]}
+     a=5,3 niter=50
+     ''')
+
+# Missing data interpolation
+
+niter=20 # CHANGE ME!!!
+
+program = Program('interpolate.c')
+
+for prec in (0,1):
+    interp='interp%d' % prec
+    Flow(interp,'bin mask pef %s' % program[0],
+         '''
+         ./${SOURCES[3]} prec=%d niter=%d
+         mask=${SOURCES[1]} filt=${SOURCES[2]}
+         ''' % (prec,niter))
+    Plot(interp,grey('%s preconditioning' %
+                     ('Without','With')[prec]))
+Result('seabeam','interp0 interp1','SideBySideAniso')
+
+End()

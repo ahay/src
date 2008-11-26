@@ -1,0 +1,239 @@
+\author{Boris Delaunay}
+%%%%%%%%%%%%%%%%%%%%
+\title{Homework 6}
+
+\begin{abstract}
+  This homework has three computational parts. 
+  \begin{enumerate}
+  \item Spatial interpolation contest using rainfall data from Switzerland.
+  \item Stochastic simulation of natural patterns.
+  \item Revisiting missing data interpolation for ocean floor topography.
+  \end{enumerate}
+\end{abstract}
+
+\section{Spatial interpolation contest}
+\inputdir{rain}
+
+In 1997, the European Communities organized a Spatial Interpolation
+Comparison. Many different organizations participated with the results
+published in a special issue of the \emph{Journal of Geographic
+Information and Decision Analysis} \cite[]{dubois} and a separate
+report \cite[]{rain}.
+
+\sideplot{elev}{width=\textwidth}{Digital elevation map of Switzerland.}
+
+The comparison used a dataset from rainfall measurements in
+Switzerland on the 8th of May 1986, the day of the Chernobyl disaster.
+Figure~\ref{fig:elev} shows the data area: the Digital Elevation Model
+of Switzerland with superimposed country's borders.  A total of 467
+rainfall measurements were taken that day. A randomly selected subset
+of 100 measurements was used as the input data the 1997 Spatial
+Interpolation Comparison in order to interpolate other measurements
+using different techniques and to compare the results with the known
+data. Figure~\ref{fig:raindata} shows the spatial locations of the
+selected data samples and the full dataset.
+
+\plot{raindata}{width=\textwidth}{Left: locations of weather stations used as input data in the spatial interpolation contest.
+Right: all weather stations locations.}
+
+In this assignment, you will try different techniques of spatial data
+interpolation and will participate in the interpolation contest.
+
+\subsection{Delaunay triangulation}
+
+The first technique we are going to try is Delaunay triangulation with
+linear interpolation of rainfall values inside each triangle. The
+result is shown in Figure~\ref{fig:trian}. Does it succeed in hiding
+the acquisition footprint? Figure~\ref{fig:trian-pred} provides a
+comparison between interpolated and known data values. It also
+indicates the value of the correlation coefficient.
+
+\multiplot{2}{trian,trian-pred}{width=0.45\textwidth}{(a) Rainfall data
+interpolated using Delaunay triangulation. (b) Correlation between
+interpolated and true data values.}
+
+\subsection{Laplacian regularization}
+
+An alternative technique is a solution of the regularized
+least-squares optimization problem
+\begin{equation}
+\label{eq:laplace}
+\min\left( \|\mathbf{L}\,\mathbf{m} - \mathbf{d}\|^2 + \epsilon^2 \|\mathbf{R}\,\mathbf{m}\|^2\right)\;,
+\end{equation}
+where $\mathbf{d}$ is irregular data, $\mathbf{m}$ is model estimated
+on a regular grid, $\mathbf{L}$ is forward interpolation from the
+regular grid to irregular locations, $\epsilon$ is a scaling
+parameter, and $\mathbf{R}$ is the regularization operator related to
+the inverse of the assumed model covariance. In this experiment,
+$\mathbf{R}$ is the finite-difference approximation of the Laplacian operator.
+
+\plot{laplace}{width=\textwidth}{Rainfall data
+interpolated using regularization with the Laplacian filter.}
+
+Figure~\ref{fig:laplace} shows the interpolation result after 10 and
+1,000 iterations. Even 1,000 iterations are not enough to converge to
+an acceptable solution, as is evident from the correlation analysis in Figure~\ref{fig:laplace1000-pred}.
+
+\sideplot{laplace1000-pred}{width=\textwidth}{Correlation between
+  interpolated and true data values for Laplacian regularization with 1,000 iterations.}
+
+\subsection{Shaping regularization}
+
+The next approach is shaping regularization: an iterative solution of the inverse problem
+\begin{equation}
+\widehat{\mathbf{m}} = 
+  \left(\mathbf{L}^T\,\mathbf{L} + \mathbf{S}^{-1} -
+    \mathbf{I}\right)^{-1}\,\mathbf{L}^T\,\mathbf{d}
+  = \left[\mathbf{I} + 
+    \mathbf{S}\,\left(\mathbf{L}^T\,\mathbf{L} - \mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{L}^T\,\mathbf{d}\;,
+  \label{eqn:shape}  
+\end{equation}
+where $\mathbf{S}$ is the shaping operator, which, in this experiment,
+is taken as a two-dimensional triangle smoothing.
+
+\plot{shape}{width=\textwidth}{Rainfall data
+interpolated using shaping regularization with a triangle filter.}
+
+Figure~\ref{fig:laplace} shows the interpolation result after 10 and
+the maximum number of iterations. The correlation analysis with the
+ground-truth data is shown in Figure~\ref{fig:shape1000-pred}.
+
+\sideplot{shape1000-pred}{width=\textwidth}{Correlation between
+  interpolated and true data values for Shaping regularization.}
+
+\subsection{Your task}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw6/rain#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to find the number of iterations required by the Laplacian regularization to converge.
+\item What can you conclude about the three methods used in this comparison?
+\item Participate in the Spatial Interpolation Contest. Find and
+implement a method that would provide a better interpolation of the
+missing values than either of the methods we tried so far. You can change any of the parameters in the existing methods or 
+write your own program but you can use only the 100 original data points as input.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{rain/SConstruct}
+
+\section{Natural patterns}
+\inputdir{pattern}
+
+In this section we will extract multidimensional spatial patterns from
+natural images using the method of \cite{textures}. Four examples,
+shown in Figures~\ref{fig:horizon}-\ref{fig:your}, contain:
+\begin{enumerate}
+\item Seismic horizon slice.
+\item A slice from a CT-scan of a rock sample.
+\item A remote-sensing satellite image.
+\item Your own data (to be replaced by you).
+\end{enumerate}
+In each of the cases, we follow the same workflow:
+\begin{enumerate}
+\item Remove a linear trend from the data.
+\item Estimate a multi-dimensional prediction-error filter (PEF) on a helix.
+\item Apply the inverse of the estimated PEF to random normally-distributed numbers
+  to create a random spatial texture, which shares the covariance with the input. 
+\end{enumerate}
+
+\plot{horizon}{width=0.8\textwidth}{Pattern extraction from a seismic time horizon.}
+\plot{square}{width=0.8\textwidth}{Pattern extraction from a CT-scan of a rock sample.}
+\plot{sat}{width=0.8\textwidth}{Pattern extraction from a satellite image.}
+\plot{your}{width=0.8\textwidth}{Pattern extraction from your own data.}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{pattern/SConstruct}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw6/pattern#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to replace Figure~\ref{fig:your} with the figure containing your own data.
+\item Why does the method fail in extracting some of the patterns? Did it succeed in extracting patterns from your data?
+\end{enumerate}
+
+\section{Revisiting ocean floor data}
+\inputdir{seab}
+
+In this section, we return to the problem of interpolating ocean floor
+data, discussed in Homework 5. Program~\texttt{interpolate.c}
+implements two alternative methods: regularized inversion (similar to
+equation~\ref{eq:laplace} but using a multi-dimensional PEF for
+$\mathbf{R}$) and preconditioning, which uses the inverse of
+$\mathbf{R}$ (recursive deconvolution or polynomial division on a
+helix) for model reparameterization.
+
+\plot{data}{width=0.8\textwidth}{Left: input data. Right: mask for known data values.}
+
+The input data and a mask for known values are shown in
+Figure~\ref{fig:data}. Results from the two methods are shown in Figure~\ref{fig:seabeam}.
+
+\plot{seabeam}{width=0.8\textwidth}{Left: missing data interpolation using regularization by convolution with a prediction-error filter. 
+Right: missing data interpolation using model reparameterization by deconvolution (polynomial division) with a prediction-error filter.}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=19]{seab/interpolate.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{seab/SConstruct}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw6/seab#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to implement the following tasks
+\begin{enumerate}
+\item Plot the PEF-based texture simulation of the ocean floor topography similar to the previous section.
+\item Find the number of iterations required for both methods to achieve similar results.
+\item Generate multiple interpolation realizations using the method of Homework~5.
+\end{enumerate}
+\item \textbf{EXTRA CREDIT:} To provide a more quantitative comparison, modify the
+\texttt{interpolate.c} program to output a measure of convergence
+(such as the least-squares model misfit) as a function of the number
+of iterations. Generate figures comparing convergence with and without
+preconditioning.
+
+You can study the interfaces to the \texttt{sf\_solver} and
+\texttt{sf\_solver\_prec} programs\footnote{See
+\url{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/filt/lib/bigsolver.c?view=markup}}
+to find appropriate parameters.
+\item Include your results in the paper.
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw6#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Delaunay's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+sftour scons -c
+\end{verbatim}
+and
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+\item Submit your result (file \texttt{paper.pdf}) by printing it out
+  or by e-mail.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{pattern}
+
+
