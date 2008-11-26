@@ -7,6 +7,7 @@ Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>
 Jim Jennings <jenningsjwj@mac.com>
 Long Jin <jinlong@utig.ig.utexas.edu>
+Guochang Liu <guochang.liu@yahoo.com>
 Yang Liu <yangliu1979@gmail.com> 
 Doug McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
@@ -21,7 +22,9 @@ Vplot authors:
 
 Jon Claerbout
 Steve Cole
+Dave Hale
 Joe Dellinger
+Chuck Karish
 Dave Nichols
 Shuki Ronen
 
