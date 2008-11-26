@@ -22,7 +22,7 @@ Papers(papers=report,
                 'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
                 'geo2007StereographicImagingCondition':'Paul Sava',
                 'geo2008NumericWEMVAoperators':'Paul Sava and Ioan Vlad'},
-       line='Example Report, October 2007',
+       line='Example Report, November 2008',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))
 
