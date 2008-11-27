@@ -12,7 +12,10 @@ report = (('2006',
            gpr2007RWEHighOrderKernels
            '''),
           ('2008',
-           'geo2008NumericWEMVAoperators')
+           '''
+	   geo2008NumericWEMVAoperators
+	   geo2008InterferometricImagingCondition
+ 	   ''')
           )
 
 Papers(papers=report,
@@ -22,6 +25,7 @@ Papers(papers=report,
                 'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
                 'geo2007StereographicImagingCondition':'Paul Sava',
                 'geo2008NumericWEMVAoperators':'Paul Sava and Ioan Vlad'},
+                'geo2008InterferometricImagingCondition':'Paul Sava and Oleg Poliannikov'},
        line='Example Report, November 2008',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))
