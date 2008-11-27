@@ -197,6 +197,16 @@ def egrey(custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['labelattr']+' '+custom)
 
+def fgrey(custom,par):
+    return '''
+    window | real | transp |
+    grey labelrot=n wantaxis=y title=""
+    pclip=100 gainpanel=a
+    min2=%g max2=%g label2=%s unit2=%s
+    label1="f" unit1="Hz"
+    %s
+    ''' % (par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['labelattr']+' '+custom)
 
 # ------------------------------------------------------------
 def center3d(x,y,z,par):

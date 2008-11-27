@@ -77,14 +77,14 @@ def tgrey(custom,par):
     return ciggrey(' label2="\F10 t\F3 " unit2=%(ut)s '%par+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3 " unit2="\^o\_"'%par+custom,par)
+    return ciggrey(' label2="\F10 q\F3 " unit2="\^o\_" '%par+custom,par)
 # ------------------------------------------------------------
 
 # lz-lx-tau
 def egrey(custom,par):
     return '''
     byte gainpanel=a pclip=100 %s |
-    grey3 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
+    grey3 pclip=100 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
     frame1=%d frame2=%d frame3=%d
     label1="\F10 l\F3 z" unit1=%s
     label2="\F10 l\F3 x" unit2=%s
