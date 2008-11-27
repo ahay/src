@@ -608,8 +608,6 @@ def blas(context):
         LIBS = string.split(LIBS)
     blas = context.env.get('BLAS','blas')
     LIBS.append(blas)
-    LIBS.append('cblas')
-    LIBS.append('atlas')
     text = '''
     #ifdef __APPLE__
     #include <vecLib/vBLAS.h>
@@ -631,14 +629,23 @@ def blas(context):
             context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
                                          ':/lib/lapack'
     else:
-        context.Result(context_failure)
-        context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
-        context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
-        LIBS.pop()
-        LIBS.pop()
-        LIBS.pop()
-        context.env['BLAS'] = None
-        need_pkg('blas', fatal=False)
+        # some systems require cblas and atlas
+        LIBS.append('cblas')
+        LIBS.append('atlas')
+        res = context.TryLink(text,'.c')
+        if res:
+            context.Result(res)
+            context.env['LIBS'] = LIBS
+            context.env['BLAS'] = blas
+        else:
+            context.Result(context_failure)
+            context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
+            context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
+            LIBS.pop()
+            LIBS.pop()
+            LIBS.pop()
+            context.env['BLAS'] = None
+            need_pkg('blas', fatal=False)
 
 pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
