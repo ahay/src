@@ -659,7 +659,7 @@ def wom(wom,wfld,velo,vmean,par):
          spray axis=3 n=%d o=%g d=%g |
          math w=${SOURCES[1]} output="input+%g*w"
          ''' % (vmean,
-                par['nt']/par['jsnap']+1,
+                (par['nt']+1)/par['jsnap'],
                 par['ot'],
                 par['dt']*par['jsnap'],
                 par['wweight']))

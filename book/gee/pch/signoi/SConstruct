@@ -4,7 +4,7 @@ def plot(title):
     return 'grey crowd=.85  wantaxis=0 title="%s" ' % title
 
 Flow('make',None,'make n1=75 n2=25 t1=2')
-Plot('make',plot('original'))
+Plot('make',plot('signal'))
 
 Flow('noiz','make',
      'noise rep=y type=n seed=1993 range=0.145 | smooth rect1=3')
