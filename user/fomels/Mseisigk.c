@@ -1,6 +1,6 @@
 /* Signal component separation using seislet transforms. 
 
-The program works with 2-D data.
+The program works with 2-D data. The second dimension should be a power of 2.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
