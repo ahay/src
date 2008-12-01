@@ -410,7 +410,7 @@ def movie(wfl,vel,par):
 
     for i in range(0,par['nt']/par['jsnap'],1):
         fdmod.wframe(wfl+'-'+str(i),wfl+'m',i,'pclip=99',par)
-    Result(wfl+'-0',wfl+'-0','Overlay')
+        Result(wfl+'-'+str(i),'Overlay')
         
 # ------------------------------------------------------------
 # active array modeling
