@@ -5,8 +5,8 @@ private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
            'server':os.environ.get('BEG_SERVER')}
 
-Fetch('cmp.hh','acig',private)
-Flow('cmp','cmp.hh','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
+Fetch('cmp.HH','acig',private)
+Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 
 def grey(title,other=''):
