@@ -21,16 +21,6 @@ for notes in glob.glob('notes*.tex'):
           use='multicol,color,overpic,listings')
     
 # ------------------------------------------------------------
-for article in glob.glob('article*.tex'):
-    name = os.path.splitext(article)[0]
-    Paper(name,
-          lclass='geophysics',
-          options='manuscript',
-          use='amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace',
-          include=r'''
-          \linenumbers*[1]
-          ''')
-
 for report in glob.glob('report*.tex'):
     name = os.path.splitext(report)[0]
     Paper(name,lclass='cwpreport',
