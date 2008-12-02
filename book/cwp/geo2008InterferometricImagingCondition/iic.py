@@ -406,7 +406,7 @@ def movie(wfl,vel,par):
     if(not par.has_key('vbias')): par['vbias']=1.5
 
     fdmod.wom(wfl+'m',wfl,vel,par['vbias'],par)
-    Result(   wfl+'m',fdmod.wgrey('pclip=99',par))
+    Plot(   wfl+'m',fdmod.wgrey('pclip=99',par))
 
     for i in range(0,par['nt']/par['jsnap'],1):
         fdmod.wframe(wfl+'-'+str(i),wfl+'m',i,'pclip=99',par)
@@ -666,7 +666,7 @@ def wdfic(cii,
         # velocity (overlay)
         Plot(vel+ktag,[vel,rec+ktag,ico],'Overlay')
     allvxx = map(lambda x: vel+'-%04d' % x,receivers)
-    Result('allvxx',allvxx,'Movie')
+    Plot('allvxx',allvxx,'Movie')
 
     # ------------------------------------------------------------ 
     iwindow = ' ' + \
