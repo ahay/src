@@ -26,7 +26,7 @@ for article in glob.glob('article*.tex'):
     Paper(name,
           lclass='geophysics',
           options='manuscript',
-          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace',
+          use='amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace',
           include=r'''
           \linenumbers*[1]
           ''')
@@ -34,7 +34,7 @@ for article in glob.glob('article*.tex'):
 for report in glob.glob('report*.tex'):
     name = os.path.splitext(report)[0]
     Paper(name,lclass='cwpreport',
-          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace,mathrsfs',
           include=r'''
           \setlength{\paperwidth}{8.5in}
           \setlength{\paperheight}{11.0in}
