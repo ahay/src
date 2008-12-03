@@ -36,3 +36,4 @@ Includes gl2ps by Christophe Geuzaine and contributors
 Includes numpy.i by Eric Jones, John Hunter, and Bill Spotz
 Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
 includes ctmf by Simon Perreault
+invludes vfsr by Lester Ingber
