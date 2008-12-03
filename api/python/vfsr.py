@@ -6,7 +6,7 @@ class VFSR_defines:
         self.this.COST_PRECISION = 1.0E-18
         self.this.USER_INITIAL_PARAMETERS = 0
         self.this.ACCEPTED_TO_GENERATED_RATIO = 1.0E-4
-        self.this.LIMIT_ACCEPTANCES = 10000
+        self.this.LIMIT_ACCEPTANCES = 1000
         self.this.TEMPERATURE_RATIO_SCALE = 1.0E-5
         self.this.TEMPERATURE_ANNEAL_SCALE = 100.0
         self.this.COST_PARAMETER_SCALE = 1.0
