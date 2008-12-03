@@ -5,7 +5,8 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr mt19937ar ctmf'
+src = 'kiss_fft kiss_fftr mt19937ar ctmf vfsr'
+hdrs = 'vfsr_defs'
 
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
@@ -39,7 +40,7 @@ except: # local version
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src2)+Split(src))
+includes = map(lambda x: x+'.h',Split(src2)+Split(hdrs)+Split(src))
 
 sobjs = []
 dobjs = []
