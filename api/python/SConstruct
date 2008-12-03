@@ -2,7 +2,7 @@ import sys, os, string, re
 sys.path.append('../..')
 import configure
 
-modules = Split('rsf vplot')
+modules = Split('rsf vplot vfsr')
 
 try: # distribution version
     Import('env')
