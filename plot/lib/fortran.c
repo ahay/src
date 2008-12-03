@@ -1,4 +1,4 @@
-#include "cfortran.h"
+#include "../../api/f90/cfortran.h"
 
 #include <rsf.h>
 
