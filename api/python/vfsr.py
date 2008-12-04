@@ -1,3 +1,4 @@
+import numpy
 import c_vfsr
 
 class VFSR_defines:
@@ -62,14 +63,17 @@ class VFSR_defines:
         self.this.LIMIT_INVALID_GENERATED_STATES = val
 
 
-def run(cost_func, parameter_type,
-        parameter_initial_final,
-        parameter_minimum, parameter_maximum,
-        tangents, curvature,
-        exit_status,
-        OPTIONS):
-    return c_vfsr.run(cost_func,
-                      parameter_type, parameter_initial_final,
-                      parameter_minimum, parameter_maximum,
-                      tangents, curvature,
-                      exit_status, OPTIONS.this)
+def anneal(cost_func, parameter_type,
+           parameter_initial_final,
+           parameter_minimum, parameter_maximum,
+           tangents, curvature,
+           options):
+
+    exit_status = numpy.zeros(1, dtype=numpy.int32)
+
+    final_cost = c_vfsr.run(cost_func,
+                            parameter_type, parameter_initial_final,
+                            parameter_minimum, parameter_maximum,
+                            tangents, curvature,
+                            exit_status, options.this)
+    return (final_cost, exit_status)
