@@ -36,7 +36,7 @@ void seisletk_init(int nk      /* number of components */,
     p=pk;
     n12=n1*n2;
 
-    seislet_init(n1,n2,inv,eps,false,type);
+    seislet_init(n1,n2,inv,false,eps,type);
 }
 
 void seisletk_close(void)
