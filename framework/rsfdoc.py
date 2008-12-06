@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc
-import re, sys, os, string, glob, string, signal
+import re, sys, os, string, glob, string, signal, datetime
 import rsfpath
 
 try:
@@ -359,6 +359,17 @@ class rsfprog(object):
             for par in pars:
                 contents = contents + self.pars[par].mwiki(par)
         contents = contents+'|}\n'
+        file.write(contents)
+        file.close()
+    def man(self,dir,name=None):
+        if not name:
+            name = self.name
+        day = datetime.datetime.now()
+        month = day.strftime('%B %Y').upper()
+        file = open (os.path.join(dir,name + '.1'),'w')
+        contents = '.TH %s 1  "%s" Madagascar "Madagascar Manuals"\n' % (name,month)
+        desc = '.SH NAME\n%s \- %s\n' % (name,self.desc)
+        contents = contents + desc
         file.write(contents)
         file.close()
     def latex(self,dir,name=None):
@@ -780,17 +791,17 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:t:m:l:r:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:t:m:g:l:r:')
         dir = None
         typ = None
         rep = os.getcwd()
         for opt, val in opts:
-            if opt == '-w' or opt == '-t' or opt == '-m' or opt == '-l':
+            if opt[0] == '-' and opt[1] in 'wtmgl':
                 dir = val
                 typ = opt[1]
-            if opt == '-r':
+            elif opt == '-r':
                 rep = val
-            if opt == '-k':
+            elif opt == '-k':
                 val = val.lower()
                 doc = ''
                 for prog in progs.keys():
@@ -829,6 +840,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     main.text(dir,prog)
                 elif typ == 'm':
                     main.mwiki(dir,prog)
+                elif typ == 'g':
+                    main.man(dir,prog)
                 elif typ == 'l':
                     main.latex(dir,prog)
                 else:
@@ -850,6 +863,9 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 
 %(prog)s -m <dir>  <prog1> <prog2> ...
     Write program documentaton in MediaWiki format in <dir> directory.
+
+%(prog)s -g <dir>  <prog1> <prog2> ...
+    Write program documentaton in groff (man page) format in <dir> directory.
 
 %(prog)s -l <dir> <prog1> <prog2> ... 
     Write program LaTeX documentaton in <dir> directory.
