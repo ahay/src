@@ -5,84 +5,12 @@ Madagascar Installation
 Prerequisites
 =============
 
-   0. Development environment: X Windows
-
-      MS Windows installation: you will require the cygwin environment, 
-	available. Binary downloads of recommended components are available 
-	through cygwin unless otherwise noted.
-
-	http://www.cygwin.com
-
-	You will also need an X Windows client. We use Xming successfully.
-	It is available from:
-
-	http://sourceforge.net/projects/xming
-
-	NOTE: If you use XMing, you need to ensure that your DISPLAY environment
-	variable is set to :0 when you run Madagascar. 
-
-	Additional installs are needed for Windows, available through cygwin:
-
-		Devel:		gcc
-				libnetpbm-devel	
-				swig
-
-		Libs: 		sunrpc
-
-		Interpreters: 	numpy
-				python
-
-	see http://rsf.sourceforge.net/Windows
-
-      Mac OS X installation: you will need to have installed the developer
-	tools. 
-	
-	http://developer.apple.com/tools/xcode/
-
-	XWindows installation is optional from the point of view of the Apple
-	developer but is required from the point of view of Madagascar. If you
-	have already installed the developer tools you will need to go back to 
-	the install process and add the optional X Windows install.
-
-      Linux: most Linux systems run X Windows as standard practice. 
-
-   1. C compiler. ANSI-compliant compiler such as GCC should work. 
-
-	Linux: GCC usually comes pre-installed on Linux machines. 
-	OS X: GCC is included as part of the developer toolkit for OS X. 
-	MS Windows: download from cygwin as described above. 
+   1. C compiler. ANSI-compliant compiler such as GCC should work. GCC
+   usually comes pre-installed on Linux machines.
 
    2. Python interpreter. Python is an interpretable programming
-	language. Any version from 2.2 onward is supported, with the exception of
-	Python 3, which is not yet available pending updates of dependencies.
-	Python is used by RSF in installation scripts and project
-	management scripts. 
-
-	Python is pre-installed on some versions of Linux. 
-	Python is pre-installed on recent versions of Mac OS X. 
-	Python must be downloaded for Windows.
-
-	Source and binary installs may be obtained from
-
-	http://python.org
-
-	and Windows binaries may be alternatively be installed through cygwin 
-	as described above.
-
-   3. SCons. A standard Madagascar installation will install the SCons build
-	management system on which much of Madagascar relies. If you have a
-	pre-existing SCons installation which you would prefer to keep using,
-	remove or rename the following files in /usr/local/rsf/bin :
-
-		scons
-		scons-<version>
-		scons-time
-		scons-time-<version>
-		sconsign
-		sconsign-<version>
-
-	where "<version>" represents a version string such as "0.98.3"
-
+   language. It is used in Madagascar installation scripts and project
+   management scripts. Python comes pre-installed on some platforms.
 
 Environmental variables
 =======================
@@ -103,7 +31,7 @@ your shell-specific user configuration file.
 If you do not know which shell you are using, type the following at the
 command line:
 
-	echo $SHELL
+	printenv SHELL
 
 If you do not know how to find and/or edit your configuration file, you should
 learn this. In brief, 
@@ -132,8 +60,8 @@ endif
 set path = ($path $RSFROOT/bin)
 setenv DATAPATH /var/tmp/
 
-Example configuration for bash (including cygwin):
-===================================================
+Example configuration for bash:
+===============================
 
 export RSFROOT=/usr/local/rsf
 if [ -n "$PYTHONPATH" ]; then
@@ -170,8 +98,8 @@ package, run
       make 
       make install
 
-      If you need "root" privileges for installing under $RSFROOT,
-you may need to run
+      If you need "root" privileges for installing under $RSFROOT, you
+may need to run
 
       make
       su
@@ -195,7 +123,7 @@ you may need to run
 Testing Your Installation
 =========================
 
-ere are a few simple tests and and a brief introduction to Madagascar:
+Here are a few simple tests and and a brief introduction to Madagascar:
 
 Typing any Madagascar command in a terminal window without parameters should
 generate a brief documentation on that command. Try one of the following:
@@ -314,5 +242,4 @@ the RSF-user mailing list
 
 https://lists.sourceforge.net/lists/listinfo/rsf-user
 
-Suggestions for improvement of this document may also be sent to that list.
-
+You can also send suggestions for improvement of this document to the list.

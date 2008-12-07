@@ -2,11 +2,12 @@ Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@beg.utexas.edu>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
-Sergey Fomel <sergey.fomel@beg.utexas.edu> 
+Joseph Dellinger <<geojoe@freeusp.org>
+Sergey Fomel <sergey.fomel@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>
 Jim Jennings <jenningsjwj@mac.com>
-Long Jin <jinlong@utig.ig.utexas.edu>
+Long Jin <long.jin@shell.com>
 Guochang Liu <guochang.liu@yahoo.com>
 Yang Liu <yangliu1979@gmail.com> 
 Doug McCowan <dwmccowan@windstream.net>

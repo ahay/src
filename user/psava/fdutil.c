@@ -196,8 +196,12 @@ fdm3d fdutil3d_init(bool verb_,
 int omp_init()
 /*< init OMP parameters >*/
 {
-    int ompnth,ompath;
+    int ompnth;
     int ompchunk;
+
+#ifdef _OPENMP
+    int ompath;
+#endif
     
     /* OMP data chunk size */
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;

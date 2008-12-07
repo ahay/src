@@ -2,7 +2,7 @@
 Madagascar - A package for reproducible geophysical data processing
 ===================================================================
 
-http://rsf.sf.net
+http://www.ahay.org
 
 What is Madagascar?
 ===================
@@ -65,7 +65,7 @@ Where to get more information about Madagascar
 ==============================================
 The primary source of information is the web site:
 
-	http://rsf.sf.net
+	http://www.ahay.org/
 
 Additional information:
 
@@ -76,7 +76,7 @@ developers' mailing list ("RSF-devel"):
 	https://lists.sourceforge.net/lists/listinfo/rsf-devel
 
 development blog:
-	http://www.reproducibility.org/rsflog/
+	http://www.ahay.org/rsflog/
 
 Compiling, Building, Installing and Testing
 ===========================================
