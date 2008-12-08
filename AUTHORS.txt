@@ -2,7 +2,7 @@ Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@beg.utexas.edu>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
-Joseph Dellinger <<geojoe@freeusp.org>
+Joseph Dellinger <geojoe@freeusp.org>
 Sergey Fomel <sergey.fomel@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>
