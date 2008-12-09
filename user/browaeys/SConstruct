@@ -3,14 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-karman
-karman2
-karmans
-zoimg3
-radonslope2
-powereno
-beamsteer
-velsteer
+beamsteer hdtrace
+karman karmans karman2
+powereno radonslope2
+velsteer zoimg3
 '''
 
 try:  # distributed version
