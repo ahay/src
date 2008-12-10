@@ -20,7 +20,7 @@ import os, sys, time
 import vplot2gif
 
 def convert(infile,outfile):
-    gif = 'gif.%s' %  time.time()    
+    gif = 'tmp%s.gif' %  time.time()    
     vplot2gif.convert(infile,gif)
     run = 'ffmpeg -f gif -i %s %s' % (gif,outfile)
     os.system(run)
