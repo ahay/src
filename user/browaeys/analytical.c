@@ -18,6 +18,18 @@
 */
 #include <rsf.h>
 
+
+
+
+/* Neri and Candy simplectic algorithm (step in sigma) */
+
+/* Variable metrics transformation from sigma to z */
+
+/* Traveltime integration */
+
+
+
+
 float analytical(float x1, float z1, float v1, const float *g1, float *p1,
 		 float x2, float z2, float v2, const float *g2, float *p2)
 /*< return traveltime >*/
