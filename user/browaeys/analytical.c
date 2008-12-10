@@ -1,4 +1,4 @@
-/* Analytical traveltime */
+/* Neri and Candy 4th order symplectic algorithm and traveltime integration */
 /*
   Copyright (C) 2008 University of Texas at Austin
   

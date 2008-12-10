@@ -132,7 +132,7 @@ void hdtrace_step (int kz)
     
     for (kx=0; kx < nx; kx++) { /* loop in x */
 
-	/* get slowness squared and gradient */
+	/* get slowness and gradient */
 	sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH);
 	g1[0] /= dz;
 	g1[1] /= dx;
@@ -216,7 +216,11 @@ void hdtrace_step (int kz)
 		ia = snap(&fa,na);
                 
                 /* integrate dT/dz */
-		t = cvel*stepz;
+		t = -v1*stepz;
+
+                /* Neri and Candy 4th order symplectic algorithm */
+		/* traveltime integration */
+                /* t = analytical */
 	    }
 
 	    a1 = sf_cell_p2a(p1);
