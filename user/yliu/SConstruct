@@ -5,7 +5,7 @@ import configure
 progs = '''
 difference dominantf duwt dwt97 initial lum lum2 lumsmoother
 lumsharpener mean mf mlm mlwm saltpepper seislet97 seismis2
-seisreg2 snr svddenoise swell tvmf twofreq2mask zcwt
+seispocs seisreg2 snr svddenoise swell tvmf twofreq2mask zcwt
 '''
 
 try:  # distributed version
