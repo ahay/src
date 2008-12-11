@@ -223,6 +223,7 @@ void hdtrace_step (int kz)
                 /* t = analytical */
 	    }
 
+            /* convert ray parameter to angle (filt/lib/cell.c) */
 	    a1 = sf_cell_p2a(p1);
 	    a2 = sf_cell_p2a(p2);
 

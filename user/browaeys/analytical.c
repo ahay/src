@@ -16,19 +16,141 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+#include <math.h>
 #include <rsf.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct pqvector
+{
+    float p[2];
+    float q[2];
+    float time;
+    float sigma;
+};
+
+typedef struct pqvector *hvec;
+
+static float a[4];
+static float b[4];
+
+hvec hvec_init(float sigma /* evolution variable */,
+               float time  /* traveltime */,
+               float x     /* x position */,
+               float z     /* depth position */,
+               float px    /* px position */,
+               float pz    /* pz position */)
+/*< initialize phase space vector object >*/
+{
+    hvec pqvec;
+
+    pqvec = (hvec)malloc(sizeof(struct pqvector));
+    pqvec->sigma = sigma;
+    pqvec->time = time;
+    pqvec->q[0] = z;
+    pqvec->q[1] = x;
+    pqvec->p[0] = pz;
+    pqvec->p[1] = px;
+
+    return (pqvec);
+}
+
+void nc4_init(void)
+/*< initialize Candi and Neri algorithm coefficients >*/
+{
+    a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
+    a[1] = ( 1. - pow(2,1./3.) - pow(2,-1./3.) )/6.;
+    a[2] = a[1];
+    a[3] = a[0];
+
+    b[0] = 0.;
+    b[1] = 1./(2.-pow(2,1./3.));
+    b[2] = 1./(1.-pow(2,2./3.));
+    b[3] = b[1];
+}
 
 
+hvec nc4_step(hvec pqvec, float ds, float **slow,
+              const int nx, const int nz, const float ox, const float oz, const float dx, const float dz)
+/*< 4th order symplectic 2-D algorithm (Neri and Candy) marching in sigma >*/
+{
+    int i, ixm, izm;
+    float qi[2], pi[2], ssg[2], ss, tx, tz;
 
+    for (i=0; i < 4; i++) {
 
-/* Neri and Candy simplectic algorithm (step in sigma) */
+        /* update for next step */
+	pi[0] = pqvec->p[0]; /* pz */
+	pi[1] = pqvec->p[1]; /* px */
 
-/* Variable metrics transformation from sigma to z */
+	qi[0] = pqvec->q[0]; /* z */
+	qi[1] = pqvec->q[1]; /* x */
 
-/* Traveltime integration */
+        /* slowness and gradient interpolations in q space */
+	ss = 0.;
+	ssg[0] = 0.;
+	ssg[1] = 0.;
 
+	izm = floorf((qi[0]-oz)/dz);
+	ixm = floorf((qi[1]-ox)/dx);
 
+	if ( (ixm >= 0) && (izm >= 0) && (ixm < (nx-1)) && (izm < (nz-1)) ) {
+	    
+	    tz = (qi[0]-izm*dz-oz)/dz;
+	    tx = (qi[1]-ixm*dx-ox)/dx;
 
+            /* slowness bilinear interpolation */
+	    ss += slow[izm][ixm]*(1.-tx)*(1.-tz);
+	    ss += slow[izm][ixm+1]*tx*(1.-tz);
+	    ss += slow[izm+1][ixm+1]*tx*tz;
+	    ss += slow[izm+1][ixm]*(1.-tx)*tz;
+
+            /* slowness z-gradient linear interpolation */
+	    ssg[0] += (slow[izm+1][ixm]-slow[izm][ixm])/dz*(1.-tz);
+	    ssg[0] += (slow[izm+1][ixm+1]-slow[izm][ixm+1])/dz*tz;
+
+            /* slowness x-gradient linear interpolation */
+	    ssg[1] += (slow[izm][ixm+1]-slow[izm][ixm])/dx*(1.-tx);
+	    ssg[1] += (slow[izm+1][ixm+1]-slow[izm+1][ixm])/dx*tx;
+
+	}
+
+        /* advance p */
+	pqvec->p[0] = pi[0] + b[i]*ss*ssg[0]*ds;
+	pqvec->p[1] = pi[1] + b[i]*ss*ssg[1]*ds;
+
+        /* advance q */
+	pqvec->q[0] = qi[0] + a[i]*ds*(pqvec->p[0]);
+	pqvec->q[1] = qi[1] + a[i]*ds*(pqvec->p[1]);
+
+        /* advance traveltime */
+	pqvec->time += b[i]*ss*ss*ds;
+
+    }
+    pqvec->sigma += ds;
+
+    return (pqvec);
+
+}
+
+float dsigmaz(float dz, float pz)
+/*< metrics transformation dz -> dsigma >*/
+{
+    return (dz/pz);
+}
+
+float dsigmax(float dx, float px)
+/*< metrics transformation dx -> dsigma >*/
+{
+    return (dx/px);
+}
+
+float dsigmap(float dpx, float ssx)
+/*< metrics transformation dpx -> dsigma >*/
+{
+    return (dpx/ssx);
+}
 
 float analytical(float x1, float z1, float v1, const float *g1, float *p1,
 		 float x2, float z2, float v2, const float *g2, float *p2)
