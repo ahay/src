@@ -30,7 +30,12 @@ struct pqvector
     float sigma;
 };
 
+#ifndef _analytical_h
+
 typedef struct pqvector *hvec;
+/*^*/
+
+#endif
 
 static float a[4];
 static float b[4];
