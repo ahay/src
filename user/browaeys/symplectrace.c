@@ -20,34 +20,21 @@
 #include <math.h>
 #include <rsf.h>
 
-
-struct pqvector
-{
+struct pqvector {
     float p[2];
     float q[2];
-    float time;
-    float sigma;
-    int step;  /* step flag 0=undefined 1=dz 2=dx 3=dpz 4=dpx*/
+    float time, sigma;
+    int step;  /* step flag is undefined(0), dz(1), dx(2), dpz(3), dpx(4) */
 };
 
-
-#ifndef _analytical_h
-
-typedef struct pqvector *hvec;
-/*^*/
-
-#endif
-
-
-static int nx,nz;
-static float dx,dz,ox,oz;
-static float dpx,dpz;
-static float **slow;
+typedef struct pqvector *pqv;
 static float a[4];
 static float b[4];
 
 
-hvec hvec_init(float sigma /* evolution variable */,
+
+
+pqv hvec_init(float sigma /* evolution variable */,
                float time  /* traveltime */,
                float x     /* x position */,
                float z     /* depth position */,
@@ -55,9 +42,8 @@ hvec hvec_init(float sigma /* evolution variable */,
                float pz    /* pz position */)
 /*< initialize phase space vector object >*/
 {
-    hvec pqvec;
+    pqv pqvec;
 
-    pqvec = (hvec)malloc(sizeof(struct pqvector));
     pqvec->step = 0;
     pqvec->sigma = sigma;
     pqvec->time = time;
@@ -85,7 +71,7 @@ void nc4_init(void)
 }
 
 
-void slowg_lininterp(float *ssg, float x, float z)
+void slowg_lininterp(float *ssg, float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< slowness gradient linear interpolation */
 {
     int ixm, izm;
@@ -116,7 +102,7 @@ void slowg_lininterp(float *ssg, float x, float z)
 }
 
 
-float slow_bilininterp(float x, float z)
+float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< slowness bilinear interpolation */
 {
     int ixm, izm;
@@ -143,7 +129,7 @@ float slow_bilininterp(float x, float z)
 }
 
 
-hvec nc4_sigmastep(hvec pqvec, float ds)
+hvec nc4_sigmastep(hvec pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< 4th order symplectic 2-D algorithm (Neri and Candy) marching in sigma >*/
 {
     int i;
@@ -160,12 +146,12 @@ hvec nc4_sigmastep(hvec pqvec, float ds)
 
         /* slowness interpolations in q space */
 	ss = 0.;
-	ss = slow_bilininterp(qi[1],qi[0]);
+	ss = slow_bilininterp(qi[1],qi[0],slow,nx,nz,dx,dz,ox,oz);
 
         /* slowness gradient interpolations in q space */
 	ssg[0] = 0.;
 	ssg[1] = 0.;
-	slowg_lininterp(ssg,qi[1],qi[0]);
+	slowg_lininterp(ssg,qi[1],qi[0],slow,nx,nz,dx,dz,ox,oz);
 
         /* advance p */
 	pqvec->p[0] = pi[0] + b[i]*ss*ssg[0]*ds;
@@ -185,7 +171,7 @@ hvec nc4_sigmastep(hvec pqvec, float ds)
 }
 
 
-float nc4_cellstep(hvec pqvec)
+float nc4_cellstep(hvec pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
 /*< sigma step from phase space cells step >*/
 {
     float ds, dsz, dsx, dspz, dspx, ssg[2];
@@ -200,7 +186,7 @@ float nc4_cellstep(hvec pqvec)
     ssg[0] = 0.;
     ssg[1] = 0.;
 
-    slowg_lininterp(ssg,pqvec->q[1],pqvec->q[0]);
+    slowg_lininterp(ssg,pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
     dspz = dpz/fabs(ssg[0]);
     dspx = dpx/fabs(ssg[1]);

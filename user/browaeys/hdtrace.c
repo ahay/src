@@ -1,4 +1,4 @@
-/* Multiple arrivals by marching down using Hamiltonian dynamics. */
+/* Multiple arrivals by marching down/up using Hamiltonian dynamics. */
 /*
   Copyright (C) 2008 University of Texas at Austin
   
@@ -25,7 +25,7 @@
 
 #include "enogrid.h"
 #include "grid1.h"
-#include "analytical.h"
+#include "symplectrace.h"
 
 #ifndef _hdtrace_h
 
@@ -35,7 +35,7 @@
 #endif
 
 static int nx, nz, na, nax;
-static float dx,dz,da, x0,z0,a0, xm,zm,am, r2a;
+static float dx,dz,da,x0,z0,a0,xm,zm,am,r2a;
 static sf_eno2 cvel;
 static enogrid slice;
 static grid1 *prev, *curr;
@@ -119,6 +119,8 @@ void hdtrace_write (sf_file out)
 void hdtrace_step (int kz) 
 /*< Step in depth >*/
 {
+
+
     float v2, v1, g1[2], g2[2], t, z1, x1, z2, x2, a1, a2, p2[2], p1[2], f[4];
     float s, sx, sz, sx1, sx2, sz1, sz2, fx, fz, fa, stepz;
     int kx, ka, k, ix, iz, ia;
@@ -129,6 +131,8 @@ void hdtrace_step (int kz)
 	prev[ix] = curr[ix];
 	curr[ix] = grid1_init();
     }
+
+    nc4_init();
     
     for (kx=0; kx < nx; kx++) { /* loop in x */
 
@@ -143,7 +147,7 @@ void hdtrace_step (int kz)
             /* initial angle */
 	    a1 = a0+ka*da;
 
-	    /* p1 is dimensionless */
+	    /* dimensionless slowness vector p1 for one-way vertical propagation */
 	    p1[0] = -cosf(a1); /* pz */
 	    p1[1] =  sinf(a1); /* px */
 
@@ -164,20 +168,25 @@ void hdtrace_step (int kz)
 		continue;
 	    } 
 
+            /* Hamiltonian vector */
+	    pqvec = hvec_init(0.,0.,x1,z1,p1[1],p1[0]);
+
 	    /* find the nearest intersection of ray and box */
+	    /* prediction of sigma step size to the next depth level */
+	    ds = nc4_cellstep(pqvec,slow,nx,nz,dx,dz,x0,z0, float dpx, float dpz);
+
 	    /*
 	    sx1 = sf_quadratic_solve (g1[1],p1[1],2*(x1-x0)/v1);
 	    sx2 = sf_quadratic_solve (g1[1],p1[1],2*(x1-xm)/v1);
 	    sz1 = sf_quadratic_solve (g1[0],p1[0],2*dz/v1);
 	    sz2 = sf_quadratic_solve (g1[0],p1[0],2*(z1-zm)/v1);
 	    */
-
-
-
+            /*
 	    sx1 = (x0-x1)/p1[1]; if (sx1 <= 0.) sx1 = SF_HUGE;
 	    sx2 = (xm-x1)/p1[1]; if (sx2 <= 0.) sx2 = SF_HUGE;
 	    sz1 = -dz/p1[0];     if (sz1 <= 0.) sz1 = SF_HUGE;
 	    sz2 = (zm-z1)/p1[0]; if (sz2 <= 0.) sz2 = SF_HUGE;
+            */
 
 	    sx = SF_MIN(sx1,sx2);
 	    sz = SF_MIN(sz1,sz2);
@@ -203,29 +212,21 @@ void hdtrace_step (int kz)
 		    iz = nz-1;
 		    z2 = zm;
 		}
-		fz = 0.;
-		stepz = dz/p1[0];
-                /* integrate dx/dz */
-		x2 = x1 + p1[1]*stepz;
-		fx = (x2-x0)/dx;
-		ix = snap(&fx,nx);
-                
-                /* integrate dpx/dz */
-		a2 = a1 + g1[1]*stepz;
-		fa = (a2-a0)/da;
-		ia = snap(&fa,na);
-                
-                /* integrate dT/dz */
-		t = -v1*stepz;
-
-                /* Neri and Candy 4th order symplectic algorithm */
-		/* traveltime integration */
-                /* t = analytical */
+		fz = 0.;             
 	    }
 
+            /* Neri and Candy 4th order symplectic algorithm and traveltime integration */
+	    pqvec = nc4_sigmastep(pqvec,ds,slow,nx,nz,dx,dz,ox,oz);
+
+            /* space grid position */
+	    fx = (pqvec->q[1]-x0)/dx;
+	    ix = snap(&fx,nx);
+
+            /* angle grid position */
             /* convert ray parameter to angle (filt/lib/cell.c) */
-	    a1 = sf_cell_p2a(p1);
-	    a2 = sf_cell_p2a(p2);
+	    a2 = sf_cell_p2a(pqvec->p[1]);
+	    fa = (a2-a0)/da;
+	    ia = snap(&fa,na);
 
 	    if (s == sz1) { /* to previous level */
 		/* interpolate */
@@ -249,6 +250,7 @@ void hdtrace_step (int kz)
 	} /* ka */
     } /* kx */
 }
+
 
 static int snap(float *f, int n)
 {
