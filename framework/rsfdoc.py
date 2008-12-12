@@ -248,7 +248,10 @@ class rsfpar(object):
         tex = '\\underline{%s} & \\textbf{%s%s} & %s & ' % \
               (self.type,name,self.default,self.range)
         return tex + self.desc + '\\\\ \n'
-
+    def man(self,name):
+        troff = '.TP\n.I %s\n.B %s\n.B %s\n.R %s%s\n' % \
+            (self.type,name,self.default,self.range,self.desc)
+        return troff
 class rsfdata(object):
     def __init__(self,name):
         self.name = name
@@ -367,15 +370,35 @@ class rsfprog(object):
         day = datetime.datetime.now()
         month = day.strftime('%B %Y').upper()
         file = open (os.path.join(dir,name + '.1'),'w')
-        contents = '.TH %s 1  "%s" Madagascar "Madagascar Manuals"\n' % (name,month)
+        contents = '.TH %s 1  "%s" Madagascar "Madagascar Manuals"\n' \
+            % (name,month)
         desc = '.SH NAME\n%s \- %s\n' % (name,self.desc)
         contents = contents + desc
         if self.snps:
             contents = contents + '.SH SYNOPSIS\n.B %s\n' % self.snps
         if self.cmts:
             contents = contents + '.SH COMMENTS\n%s\n' % self.cmts
+        pars =  self.pars.keys()
+        if pars:
+            pars.sort()
+            for par in pars:
+                contents = contents + self.pars[par].man(par)
+        books = self.uses.keys()
+        if books:
+            usedoc = '' 
+            books.sort()
+            for book in books:
+                chapters = self.uses[book].keys()
+                chapters.sort()
+                for chapter in chapters:
+                    for project in self.uses[book][chapter]:
+                        usedoc = usedoc + \
+                            '.TP\n.I %s/%s/%s\n' % (book,chapter,project)
+            if usedoc:
+                contents = contents + '.SH USED IN\n%s' % usedoc
+        contents = contents + '.SH SOURCE\n.I %s\n' % self.file
         if self.wiki:
-            contents = contents + '.SH SEE ALSO\n.BR %s\n' % self.wiki
+            contents = contents + '.SH DOCUMENTATION\n.BR %s\n' % self.wiki
         if self.vers:
             contents = contents + '.SH VERSION\n%s\n' % self.vers
         file.write(contents)
@@ -536,10 +559,10 @@ def html(dir):
     file.write(page('all programs',content))
     file.close()
 
-def text(dir):
+def text(dir,name):
     if not os.path.isdir(dir):
         os.mkdir(dir)
-    file = open (os.path.join(dir,'INDEX.txt'),'w')
+    file = open (os.path.join(dir,name),'w')
     file.write('Madagascar Programs\n')
     dirs = {}
     for prog in progs.keys():
@@ -827,11 +850,17 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     if main:
                         main.html(dir,rep)
             elif typ == 't':
-                text(dir)
+                text(dir,'INDEX.txt')
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
                         main.text(dir)
+            elif typ == 'g':
+                text(dir,'index.man')
+                for prog in progs.keys():
+                    main = progs.get(prog)
+                    if main:
+                        main.man(dir)
             else:
                 raise BadUsage
 
@@ -855,7 +884,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 else:
                     main.document()
             else:
-                print "No program %s in RSF." % prog
+                print "No program %s in Madagascar." % prog
 
     except (getopt.error, BadUsage):
         print '''sfdoc - the RSF documentation tool

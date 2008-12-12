@@ -9,6 +9,7 @@ bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
+mandir = os.path.join(root,'man')
 
 env = Environment()
 
@@ -130,7 +131,7 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 rsfuser = os.path.join(libdir,'rsfuser')
 env.Install(rsfuser,'__init__.py')
 
-env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir])
+env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,mandir])
 env.Clean('install', rsfuser)
 
 # 	$Id$
