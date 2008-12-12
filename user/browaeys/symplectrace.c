@@ -20,19 +20,21 @@
 #include <math.h>
 #include <rsf.h>
 
-struct pqvector {
+#ifndef _symplectrace_h
+
+typedef struct pqvector {
     float p[2];
     float q[2];
     float time, sigma;
     int step;  /* step flag is undefined(0), dz(1), dx(2), dpz(3), dpx(4) */
-};
+} *pqv;
 
-typedef struct pqvector *pqv;
+/*^*/
+
+#endif
+
 static float a[4];
 static float b[4];
-
-
-
 
 pqv hvec_init(float sigma /* evolution variable */,
                float time  /* traveltime */,
@@ -70,9 +72,8 @@ void nc4_init(void)
     b[3] = b[1];
 }
 
-
 void slowg_lininterp(float *ssg, float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
-/*< slowness gradient linear interpolation */
+/*< slowness gradient linear interpolation >*/
 {
     int ixm, izm;
     float tz, tx;
@@ -103,7 +104,7 @@ void slowg_lininterp(float *ssg, float x, float z, float **slow, int nx, int nz,
 
 
 float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
-/*< slowness bilinear interpolation */
+/*< slowness bilinear interpolation >*/
 {
     int ixm, izm;
     float ss, tz, tx;
@@ -129,7 +130,7 @@ float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx,
 }
 
 
-hvec nc4_sigmastep(hvec pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
+pqv nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< 4th order symplectic 2-D algorithm (Neri and Candy) marching in sigma >*/
 {
     int i;
@@ -171,7 +172,7 @@ hvec nc4_sigmastep(hvec pqvec, float ds, float **slow, int nx, int nz, float dx,
 }
 
 
-float nc4_cellstep(hvec pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
+float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
 /*< sigma step from phase space cells step >*/
 {
     float ds, dsz, dsx, dspz, dspx, ssg[2];

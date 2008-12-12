@@ -119,11 +119,11 @@ void hdtrace_write (sf_file out)
 void hdtrace_step (int kz) 
 /*< Step in depth >*/
 {
-
-
     float v2, v1, g1[2], g2[2], t, z1, x1, z2, x2, a1, a2, p2[2], p1[2], f[4];
     float s, sx, sz, sx1, sx2, sz1, sz2, fx, fz, fa, stepz;
     int kx, ka, k, ix, iz, ia;
+    pqv pqvec;
+    float ds, **slow, ox, oz, dpx, dpz;
 
     /* assign the previous slice for interpolation */
     for (ix=0; ix < nx; ix++) {
@@ -173,7 +173,7 @@ void hdtrace_step (int kz)
 
 	    /* find the nearest intersection of ray and box */
 	    /* prediction of sigma step size to the next depth level */
-	    ds = nc4_cellstep(pqvec,slow,nx,nz,dx,dz,x0,z0, float dpx, float dpz);
+	    ds = nc4_cellstep(pqvec,slow,nx,nz,dx,dz,x0,z0, dpx, dpz);
 
 	    /*
 	    sx1 = sf_quadratic_solve (g1[1],p1[1],2*(x1-x0)/v1);
@@ -224,7 +224,7 @@ void hdtrace_step (int kz)
 
             /* angle grid position */
             /* convert ray parameter to angle (filt/lib/cell.c) */
-	    a2 = sf_cell_p2a(pqvec->p[1]);
+	    a2 = sf_cell_p2a(pqvec->p);
 	    fa = (a2-a0)/da;
 	    ia = snap(&fa,na);
 

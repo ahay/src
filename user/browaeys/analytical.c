@@ -86,7 +86,7 @@ void nc4_init(void)
 
 
 void slowg_lininterp(float *ssg, float x, float z)
-/*< slowness gradient linear interpolation */
+/*< slowness gradient linear interpolation >*/
 {
     int ixm, izm;
     float tz, tx;
@@ -117,7 +117,7 @@ void slowg_lininterp(float *ssg, float x, float z)
 
 
 float slow_bilininterp(float x, float z)
-/*< slowness bilinear interpolation */
+/*< slowness bilinear interpolation >*/
 {
     int ixm, izm;
     float ss, tz, tx;
