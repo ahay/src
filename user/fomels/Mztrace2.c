@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     bool vel;
     int nz,nx, iz, na, nax, ix, order, iorder;
-    float **slow, dz,dx,da,x0,z0,a0,s;
+    float **slow, dz,dx,da,x0,z0,a0;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -89,17 +89,19 @@ int main(int argc, char* argv[])
     slow  = sf_floatalloc2(nz,nx);
     sf_floatread(slow[0],nz*nx,in);
 
-    /* convert to slowness squared */
-    for(ix = 0; ix < nx; ix++){
-	for (iz = 0; iz < nz; iz++) {
-	    s = slow[ix][iz];
-	    s *= s;
-	    slow[ix][iz] = vel? 1/s:s;
+    /* convert to slowness */
+    if (vel) {
+	for(ix = 0; ix < nx; ix++){
+	    for (iz = 0; iz < nz; iz++) {
+		slow[ix][iz] = 1./slow[ix][iz];
+	    }
 	}
     }
 
-    ztrace2_init (order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0, slow);
+    ztrace2_init (order, iorder, slow, 
+		  nx, nz, na,
+		  dx, dz, da, 
+		  x0, z0, a0);
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);

@@ -25,7 +25,6 @@
 
 #include "enogrid.h"
 #include "grid1.h"
-#include "analytical.h"
 
 #ifndef _ztrace_h
 
@@ -44,6 +43,7 @@ static int snap(float *f, int n);
 
 void ztrace2_init (int order        /* interpolation order for velocity */, 
 		   int iorder       /* interpolation order for values */,
+		   float** vel      /* slowness [nx][nz] */,
 		   int nx1          /* lateral samples */, 
 		   int nz1          /* depth samples */, 
 		   int na1          /* angle samples */, 
@@ -52,8 +52,7 @@ void ztrace2_init (int order        /* interpolation order for velocity */,
 		   float da1        /* angle sampling */,
 		   float x01        /* lateral origin */, 
 		   float z01        /* depth origin */, 
-		   float a01        /* angle origin */,
-		   float** vel      /* slowness [nx][nz] */)
+		   float a01        /* angle origin */)
 /*< Initialize >*/
 {
     int ix, kx, ka;
@@ -118,9 +117,8 @@ void ztrace2_write (sf_file out)
 void ztrace2_step (int kz) 
 /*< Step in depth >*/
 {
-    float v2, v1, g1[2], g2[2], t, z1, x1, z2, x2, a1, a2, p2[2], p1[2], f[4];
-    float s, sx, sz, sx1, sx2, sz1, sz2, fx, fz;
-    int kx, ka, k, ix, iz;
+    float v, g[2], t, z1, x1, x2, a1, a2, delz, tn, cs, f[4], s, fx;
+    int kx, ka, k, ix;
 
     /* assign the previous slice for interpolation */
     for (ix=0; ix < nx; ix++) {
@@ -132,106 +130,71 @@ void ztrace2_step (int kz)
     for (kx=0; kx < nx; kx++) { /* loop in x */
 
 	/* get slowness squared and gradient */
-	sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH);
-	g1[0] /= dz;
-	g1[1] /= dx;
+	sf_eno2_apply(cvel,kz,kx,0.,0.,&v,g,BOTH);
+	g[0] /= dz;
+	g[1] /= dx;
 	
 	for (ka=0; ka < na; ka++) { /* loop in angle */
 	    k = ka + kx*na; /* index in a slice */
-
 	    a1 = a0+ka*da;
-	    p1[1] = sinf(a1);
-	    p1[0] = -cosf(a1);
-	    /* p1 is dimensionless */
+
+	    tn = tanf(a1);
+	    cs = cosf(a1);
 
 	    x1 = x0+kx*dx; 
 	    z1 = z0+kz*dz; 
 
 	    /* decide if we are out already */
-	    if ((kz == 0    && p1[0] < 0.) ||
-		(kz == nz-1 && p1[0] > 0.) ||
-		(kx == 0    && p1[1] < 0.) ||
-		(kx == nx-1 && p1[1] > 0.)) {
+	    if ((kz == 0    && cs > 0.) ||
+		(kz == nz-1 && cs < 0.) ||
+		(kx == 0    && tn < 0.) ||
+		(kx == nx-1 && tn > 0.)) {
 		f[0] = 0.;
 		f[1] = x1;
 		f[2] = z1;
 		f[3] = a1*r2a;
-		grid1_insert(curr[kx],a1,4,f);
-		continue;
-	    } 
-
-	    /* find the nearest intersection of ray and box */
-	    /*
-	    sx1 = sf_quadratic_solve (g1[1],p1[1],2*(x1-x0)/v1);
-	    sx2 = sf_quadratic_solve (g1[1],p1[1],2*(x1-xm)/v1);
-	    sz1 = sf_quadratic_solve (g1[0],p1[0],2*dz/v1);
-	    sz2 = sf_quadratic_solve (g1[0],p1[0],2*(z1-zm)/v1);
-	    */
-	    sx1 = (x0-x1)/p1[1]; if (sx1 <= 0.) sx1 = SF_HUGE;
-	    sx2 = (xm-x1)/p1[1]; if (sx2 <= 0.) sx2 = SF_HUGE;
-	    sz1 = -dz/p1[0];     if (sz1 <= 0.) sz1 = SF_HUGE;
-	    sz2 = (zm-z1)/p1[0]; if (sz2 <= 0.) sz2 = SF_HUGE;
-
-	    sx = SF_MIN(sx1,sx2);
-	    sz = SF_MIN(sz1,sz2);
-	    s = SF_MIN(sx,sz);
-
-	    if (s == sx) { /* exited from the side */
-		if (s == sx1) {
-		    ix = 0;
-		    x2 = x0;
-		} else {
-		    ix = nx-1;
-		    x2 = xm;
-		}
-		fx = 0.;
-		z2 = z1 + p1[0]*s;
-		fz = (z2-z0)/dz;
-		iz = snap(&fz,nz);
 	    } else {
-		if (s == sz1) {
-		    iz = kz-1;
-		    z2 = z1 - dz;
+		x2 = x1+tn*dz;
+		if (x2 < x0) {
+		    /* exit from the left side */
+		    delz = (x0-x1)/tn;
+		    t = s*delz/cs;
+		    a2 = a1 + (g[1]-g[0]*tn)*delz/v;
+		    
+		    enogrid_apply(slice,0,0.,a2,f);
+		    f[1]=x0;
+		    f[2]=z1-delz;
+		} else if (x2 > xm) {
+		    /* exit from the right side */
+		    delz = (xm-x1)/tn;
+		    t = s*delz/cs;
+		    a2 = a1 + (g[1]-g[0]*tn)*delz/v;
+		    
+		    enogrid_apply(slice,nx-1,0.,a2,f);
+		    f[1]=xm;
+		    f[2]=z1-delz;
 		} else {
-		    iz = nz-1;
-		    z2 = zm;
-		}
-		fz = 0.;
-		x2 = x1 + p1[1]*s;
-		fx = (x2-x0)/dx;
-		ix = snap(&fx,nx);
-	    }
-
-	    /* slowness squared and gradient at new location */
-	    sf_eno2_apply(cvel,iz,ix,fz,fx,&v2,g2,BOTH);
-	    g2[1] /= dx;
-	    g2[0] /= dz;
-
-	    t = analytical(x1,z1,v1,g1,p1,
-			   x2,z2,v2,g2,p2);
-
-	    a1 = sf_cell_p2a(p1);
-	    a2 = sf_cell_p2a(p2);
-
-	    if (s == sz1) { /* to previous level */
-		/* interpolate */
-		enogrid_apply(slice,ix,fx,a2,f);
+		    /* exit on previous level */
+		    t = s*dz/cs;
+		    a2 = a1 + (g[1]-g[0]*tn)*dz/v;
+		    
+		    fx = (x2-x0)/dx;
+		    ix = snap(&x2,nx);
+		    enogrid_apply(slice,ix,fx,a2,f);
+		    
+		    if (f[1] < x0) f[1]=x0;
+		    if (f[1] > xm) f[1]=xm;
+		    if (f[2] < z0) f[2]=z0;
+		    if (f[2] > zm) f[2]=zm;
+		} 
+		
 		if (f[0] < 0.) f[0]=0.;
 		f[0] += t;
-		if (f[1] < x0) f[1]=x0;
-		if (f[1] > xm) f[1]=xm;
-		if (f[2] < z0) f[2]=z0;
-		if (f[2] > zm) f[2]=zm;
 		if (f[3] < a0*r2a) f[3]=a0*r2a;
 		if (f[3] > am*r2a) f[3]=am*r2a;
-	    } else {
-		f[0] = t;
-		f[1] = x2;
-		f[2] = z2;
-		f[3] = a2*r2a;
 	    }
-	    
-	    grid1_insert(curr[kx],a1,4,f);
+
+	    grid1_insert(curr[kx],a1,4,f);		
 	} /* ka */
     } /* kx */
 }

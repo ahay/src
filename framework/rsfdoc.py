@@ -370,6 +370,14 @@ class rsfprog(object):
         contents = '.TH %s 1  "%s" Madagascar "Madagascar Manuals"\n' % (name,month)
         desc = '.SH NAME\n%s \- %s\n' % (name,self.desc)
         contents = contents + desc
+        if self.snps:
+            contents = contents + '.SH SYNOPSIS\n.B %s\n' % self.snps
+        if self.cmts:
+            contents = contents + '.SH COMMENTS\n%s\n' % self.cmts
+        if self.wiki:
+            contents = contents + '.SH SEE ALSO\n.BR %s\n' % self.wiki
+        if self.vers:
+            contents = contents + '.SH VERSION\n%s\n' % self.vers
         file.write(contents)
         file.close()
     def latex(self,dir,name=None):
