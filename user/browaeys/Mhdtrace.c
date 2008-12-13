@@ -23,11 +23,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "hdtrace.h"
 
+
 int main(int argc, char* argv[])
 {
     bool vel;
-    int nz,nx, iz, na, nax, ix, order, iorder;
-    float **slow, dz,dx,da,x0,z0,a0,s;
+    int nz, nx, iz, na, nax, ix, order, iorder;
+    float **slow, dz, dx, da, x0, z0, a0, s;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
     slow  = sf_floatalloc2(nz,nx);
     sf_floatread(slow[0],nz*nx,in);
 
-    /* convert to slowness squared */
+    /* convert to slowness */
     for(ix = 0; ix < nx; ix++){
 	for (iz = 0; iz < nz; iz++) {
 	    s = slow[ix][iz];

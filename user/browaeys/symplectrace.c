@@ -20,23 +20,30 @@
 #include <math.h>
 #include <rsf.h>
 
+#include "symplectrace.h"
+
+
 #ifndef _symplectrace_h
 
-typedef struct pqvector {
-    float p[2];
-    float q[2];
-    float time, sigma;
-    int step;  /* step flag is undefined(0), dz(1), dx(2), dpz(3), dpx(4) */
-} *pqv;
-
+typedef struct pqvector *pqv;
+/* abstract data type */
 /*^*/
 
 #endif
 
+struct pqvector {
+    float p[2];
+    float q[2];
+    float time, sigma;
+    int step;  /* step type is undefined(0), dz(1), dx(2), dpz(3), dpx(4) */
+};
+/* concrete data type */
+
 static float a[4];
 static float b[4];
 
-pqv hvec_init(float sigma /* evolution variable */,
+
+pqv  hvec_init(float sigma /* evolution variable */,
                float time  /* traveltime */,
                float x     /* x position */,
                float z     /* depth position */,
@@ -44,7 +51,10 @@ pqv hvec_init(float sigma /* evolution variable */,
                float pz    /* pz position */)
 /*< initialize phase space vector object >*/
 {
+
     pqv pqvec;
+
+    pqvec = (pqv)sf_alloc(1,sizeof(struct pqvector));
 
     pqvec->step = 0;
     pqvec->sigma = sigma;
@@ -54,9 +64,16 @@ pqv hvec_init(float sigma /* evolution variable */,
     pqvec->p[0] = pz;
     pqvec->p[1] = px;
 
-    return (pqvec);
+    return pqvec;
 }
 
+void hvec_close (pqv pqvec)
+/*< Free internal storage >*/
+{
+    free (pqvec);
+
+    return;
+}
 
 void nc4_init(void)
 /*< initialize Candi and Neri algorithm coefficients >*/
@@ -70,6 +87,8 @@ void nc4_init(void)
     b[1] = 1./(2.-pow(2,1./3.));
     b[2] = 1./(1.-pow(2,2./3.));
     b[3] = b[1];
+
+    return;
 }
 
 void slowg_lininterp(float *ssg, float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
@@ -90,18 +109,17 @@ void slowg_lininterp(float *ssg, float x, float z, float **slow, int nx, int nz,
 	tx = (x-ixm*dx-ox)/dx;
 
         /* slowness z-gradient linear interpolation */
-	ssg[0] += (slow[izm+1][ixm]-slow[izm][ixm])/dz*(1.-tz);
-	ssg[0] += (slow[izm+1][ixm+1]-slow[izm][ixm+1])/dz*tz;
+	ssg[0] += (slow[ixm][izm+1]-slow[ixm][izm])/dz*(1.-tz);
+	ssg[0] += (slow[ixm+1][izm+1]-slow[ixm+1][izm])/dz*tz;
 
         /* slowness x-gradient linear interpolation */
-	ssg[1] += (slow[izm][ixm+1]-slow[izm][ixm])/dx*(1.-tx);
-	ssg[1] += (slow[izm+1][ixm+1]-slow[izm+1][ixm])/dx*tx;
+	ssg[1] += (slow[ixm+1][izm]-slow[ixm][izm])/dx*(1.-tx);
+	ssg[1] += (slow[ixm+1][izm+1]-slow[ixm][izm+1])/dx*tx;
 
     }
 
     return;
 }
-
 
 float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< slowness bilinear interpolation >*/
@@ -119,18 +137,17 @@ float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx,
 	tz = (z-izm*dz-oz)/dz;
 	tx = (x-ixm*dx-ox)/dx;
 
-	ss += slow[izm][ixm]*(1.-tx)*(1.-tz);
-	ss += slow[izm][ixm+1]*tx*(1.-tz);
-	ss += slow[izm+1][ixm+1]*tx*tz;
-	ss += slow[izm+1][ixm]*(1.-tx)*tz;       
+	ss += slow[ixm][izm]*(1.-tx)*(1.-tz);
+	ss += slow[ixm+1][izm]*tx*(1.-tz);
+	ss += slow[ixm+1][izm+1]*tx*tz;
+	ss += slow[ixm][izm+1]*(1.-tx)*tz;       
 
 	}
 
     return (ss);
 }
 
-
-pqv nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
+void nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< 4th order symplectic 2-D algorithm (Neri and Candy) marching in sigma >*/
 {
     int i;
@@ -154,6 +171,11 @@ pqv nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, f
 	ssg[1] = 0.;
 	slowg_lininterp(ssg,qi[1],qi[0],slow,nx,nz,dx,dz,ox,oz);
 
+        /* slowness and gradient eno interpolation */
+	/* sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH); 
+	g1[0] /= dz;
+	g1[1] /= dx; */
+	
         /* advance p */
 	pqvec->p[0] = pi[0] + b[i]*ss*ssg[0]*ds;
 	pqvec->p[1] = pi[1] + b[i]*ss*ssg[1]*ds;
@@ -162,28 +184,27 @@ pqv nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, f
 	pqvec->q[0] = qi[0] + a[i]*ds*(pqvec->p[0]);
 	pqvec->q[1] = qi[1] + a[i]*ds*(pqvec->p[1]);
 
-        /* advance traveltime (equivalent to Liouville transport equation) */
+        /* advance traveltime (i.e. Liouville transport equation) */
 	pqvec->time += b[i]*ss*ss*ds;
 
     }
     pqvec->sigma += ds;
 
-    return (pqvec);
+    return;
 }
-
 
 float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
 /*< sigma step from phase space cells step >*/
 {
     float ds, dsz, dsx, dspz, dspx, ssg[2];
 
-    /* Step size to exit from bottom or top */
+    /* linear step size to exit from bottom or top */
     dsz = dz/fabs(pqvec->p[0]);
 
-    /* Step size to exit from sides */
+    /* linear step size to exit from sides */
     dsx = dx/fabs(pqvec->p[1]);
 
-    /* Step sizes to exit from slowness cell */ 
+    /* linear step sizes to exit from slownesses cell */ 
     ssg[0] = 0.;
     ssg[1] = 0.;
 
@@ -192,7 +213,7 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
     dspz = dpz/fabs(ssg[0]);
     dspx = dpx/fabs(ssg[1]);
 
-    /* Minimum sigma step size */
+    /* select minimum sigma step size */
 
     /* step dz */
     ds = dsz;
@@ -217,4 +238,3 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
     return (ds);
 
 }
-
