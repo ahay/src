@@ -145,6 +145,7 @@ int main (int argc, char* argv[]) {
     out = sf_output ("out");
 
     if (!sf_histint (in, "n1", &nd)) sf_error ("Need n1= in in");
+    if (nd < 3) sf_error ("Need n1 >= 3");
     if (!sf_histint (in, "n2", &nt)) sf_error ("Need n2= in in");
     if (SF_FLOAT != sf_gettype (in)) sf_error ("Need float input");
 
@@ -250,7 +251,7 @@ int main (int argc, char* argv[]) {
     grid = sf_floatalloc (nm);
     dd = sf_floatalloc (nd);
 
-    if (!sf_getint ("niter", &niter)) niter = nm;
+    if (!sf_getint ("niter", &niter)) niter = 100;
     /* number of iterations */
 
     if (!sf_getfloat ("eps", &eps)) eps = 1./ (float)nd;
