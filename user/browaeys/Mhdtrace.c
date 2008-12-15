@@ -18,7 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
 
 #include "hdtrace.h"
@@ -99,7 +98,7 @@ int main(int argc, char* argv[])
     }
 
     hdtrace_init (order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0, slow);
+		  dx, dz, da, x0, z0, a0);
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);

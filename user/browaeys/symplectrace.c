@@ -18,10 +18,10 @@
 */
 
 #include <math.h>
+
 #include <rsf.h>
 
 #include "symplectrace.h"
-
 
 #ifndef _symplectrace_h
 
@@ -34,16 +34,13 @@ typedef struct pqvector *pqv;
 struct pqvector {
     float p[2];
     float q[2];
-    float time, sigma;
-    int step;  /* step type is undefined(0), dz(1), dx(2), dpz(3), dpx(4) */
+    float time;
+    int step;  /* step type is undefined(0), dz(1), dx(2), dp(3) */
 };
 /* concrete data type */
 
-static float a[4];
-static float b[4];
 
-
-pqv  hvec_init(float sigma /* evolution variable */,
+void hvec_init(pqv pqvec,
                float time  /* traveltime */,
                float x     /* x position */,
                float z     /* depth position */,
@@ -51,31 +48,17 @@ pqv  hvec_init(float sigma /* evolution variable */,
                float pz    /* pz position */)
 /*< initialize phase space vector object >*/
 {
-
-    pqv pqvec;
-
-    pqvec = (pqv)sf_alloc(1,sizeof(struct pqvector));
-
     pqvec->step = 0;
-    pqvec->sigma = sigma;
     pqvec->time = time;
     pqvec->q[0] = z;
     pqvec->q[1] = x;
     pqvec->p[0] = pz;
     pqvec->p[1] = px;
 
-    return pqvec;
-}
-
-void hvec_close (pqv pqvec)
-/*< Free internal storage >*/
-{
-    free (pqvec);
-
     return;
 }
 
-void nc4_init(void)
+void nc4_init(float *a, float *b)
 /*< initialize Candi and Neri algorithm coefficients >*/
 {
     a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
@@ -188,7 +171,6 @@ void nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, 
 	pqvec->time += b[i]*ss*ss*ds;
 
     }
-    pqvec->sigma += ds;
 
     return;
 }
@@ -199,10 +181,10 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
     float ds, dsz, dsx, dspz, dspx, ssg[2];
 
     /* linear step size to exit from bottom or top */
-    dsz = dz/fabs(pqvec->p[0]);
+    dsz = dz/(pqvec->p[0]);
 
     /* linear step size to exit from sides */
-    dsx = dx/fabs(pqvec->p[1]);
+    dsx = dx/(pqvec->p[1]);
 
     /* linear step sizes to exit from slownesses cell */ 
     ssg[0] = 0.;
@@ -210,8 +192,8 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 
     slowg_lininterp(ssg,pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
-    dspz = dpz/fabs(ssg[0]);
-    dspx = dpx/fabs(ssg[1]);
+    dspz = dpz/(ssg[0]);
+    dspx = dpx/(ssg[1]);
 
     /* select minimum sigma step size */
 
@@ -219,22 +201,31 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
     ds = dsz;
     pqvec->step = 1;
 
-    if (dsx < ds) {
+    if (fabs(dsx) < fabs(ds)) {
         /* step dx */
 	ds = dsx;
 	pqvec->step = 2;
     }
-    if (dspz < ds){
-        /* step dpz */
-	ds = dspz;
-	pqvec->step = 3;
-    }
-    if (dspx < ds){
+    if (fabs(dspx) < fabs(ds)){
         /* step dpx */
 	ds = dspx;
-	pqvec->step = 4;
+	pqvec->step = 3;
     }
 
     return (ds);
 
+}
+
+
+void value_exitlevel(pqv pqvec, int step, float x2, float z2, float p2, float t)
+/*< exiting values from computational step >*/
+{
+    step = hvec->step;
+    t = hvec->time;
+
+    x2 = hvec->q[1];
+    z2 = hvec->q[0];
+    p2 = hvec->p[1];
+
+    return;
 }
