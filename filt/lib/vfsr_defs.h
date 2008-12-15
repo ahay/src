@@ -59,4 +59,6 @@ typedef struct {
     int LIMIT_INVALID_GENERATED_STATES;
 } VFSR_DEFINES;
 
+VFSR_DEFINES *vfsr_get_new_defines (void);
+
 #endif /* _VFSR_DEFS_H_ */

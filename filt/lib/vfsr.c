@@ -1388,7 +1388,7 @@ double random_array[SHUFFLE];        /* random variables */
 * Author: Lester Ingber, Bruce Rosen (copyright) (c)
 * Date         5 Nov 92
 * Procedure:
-*        double myrand(void) - returns a random number between 0 and 1
+*        double vfsr_myrand (void) - returns a random number between 0 and 1
 * Parameters: None
 * Inputs:
 * Outputs:
@@ -1403,7 +1403,7 @@ double random_array[SHUFFLE];        /* random variables */
 * Other:
 ***********************************************************************/
 
-static double vfsr_myrand(void)
+static double vfsr_myrand (void)
 /* returns random number in {0,1} */
 {
     seed = (MULT * seed + INCR) % MOD;
@@ -1414,14 +1414,14 @@ static double vfsr_myrand(void)
 * Author: Lester Ingber, Bruce Rosen (copyright) (c)
 * Date         5 Nov 92
 * Procedure:
-*        double randflt(void) - Shuffles random numbers in random_array[]
+*        double vfsr_randflt (void) - Shuffles random numbers in random_array[]
 * Parameters: None
 * Inputs:
 * Outputs:
 * Global Variables: None
 * Returns: None
 * Calls:
-*        myrand()
+*        vfsr_myrand ()
 * Description:
 *        This routine initializes the random number generator
 * Local Variables: None
@@ -1429,15 +1429,15 @@ static double vfsr_myrand(void)
 * Other:
 ***********************************************************************/
 
-static double vfsr_randflt(void)
+static double vfsr_randflt (void)
 /* shuffles random numbers in random_array[SHUFFLE] array */
 {
     double rranf;
     int kranf;
 
-    kranf = (int) (vfsr_myrand() * SHUFFLE) % SHUFFLE;
+    kranf = (int) (vfsr_myrand () * SHUFFLE) % SHUFFLE;
     rranf = *(random_array + kranf);
-    *(random_array + kranf) = vfsr_myrand();
+    *(random_array + kranf) = vfsr_myrand ();
 
     return (rranf);
 }
@@ -1446,15 +1446,15 @@ static double vfsr_randflt(void)
 * Author: Lester Ingber, Bruce Rosen (copyright) (c)
 * Date         5 Nov 92
 * Procedure:
-*        initialize_rng() - to initialize the random number generator
+*        vfsr_initialize_rng () - to initialize the random number generator
 * Parameters: None
 * Inputs:
 * Outputs:
 * Global Variables: None
 * Returns: None
 * Calls:
-*        myrand()
-*        randflt()
+*        vfsr_myrand ()
+*        vfsr_randflt ()
 * Description:
 *        This routine initializes the random number generator
 * Local Variables: None
@@ -1462,13 +1462,45 @@ static double vfsr_randflt(void)
 * Other:
 ***********************************************************************/
 
-static void vfsr_initialize_rng(void)
+static void vfsr_initialize_rng (void)
 {
     int n;
     double x;
 
     for (n = 0; n < SHUFFLE; ++n)
-        random_array[n] = vfsr_myrand();
+        random_array[n] = vfsr_myrand ();
     for (n = 0; n < 1000; ++n)        /* warm up random generator */
-        x = vfsr_randflt();
+        x = vfsr_randflt ();
+}
+
+/***********************************************************************
+* Procedure:
+*        vfsr_get_new_defines () - allocates, initializes and returns
+                                   pointer to a new VFSR_DEFINES structure
+***********************************************************************/
+
+VFSR_DEFINES *vfsr_get_new_defines (void) {
+    VFSR_DEFINES *user_options = (VFSR_DEFINES *)calloc (1, sizeof (VFSR_DEFINES));
+
+    user_options->COST_PRECISION = (double)1.0E-18;
+    user_options->USER_INITIAL_PARAMETERS = TRUE;
+    user_options->ACCEPTED_TO_GENERATED_RATIO = 1.0E-4;
+    user_options->LIMIT_ACCEPTANCES = 1000;
+    user_options->TEMPERATURE_RATIO_SCALE = 1.0E-5;
+    user_options->TEMPERATURE_ANNEAL_SCALE = 100.0;
+    user_options->COST_PARAMETER_SCALE = 1.0;
+    user_options->TESTING_FREQUENCY_MODULUS = 100;
+    user_options->MAXIMUM_REANNEAL_INDEX = 100000000;
+    user_options->REANNEAL_RESCALE = 10.0;
+    user_options->INITIAL_PARAMETER_TEMPERATURE = 1.0;
+    user_options->USER_INITIAL_PARAMETERS_TEMPS = FALSE;
+    user_options->USER_INITIAL_COST_TEMP = FALSE;
+    user_options->NUMBER_COST_SAMPLES = 5;
+    user_options->MAXIMUM_COST_REPEAT = 8;
+    user_options->DELTA_X = 0.001;
+    user_options->INCLUDE_INTEGER_PARAMETERS = FALSE;
+    user_options->ACTIVATE_REANNEAL = TRUE;
+    user_options->LIMIT_INVALID_GENERATED_STATES = 1000;
+
+    return user_options;
 }
