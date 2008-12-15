@@ -223,12 +223,12 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 void value_exitlevel(pqv pqvec, int step, float x2, float z2, float p2, float t)
 /*< exiting values from computational step >*/
 {
-    step = hvec->step;
-    t = hvec->time;
+    step = pqvec->step;
+    t = pqvec->time;
 
-    x2 = hvec->q[1];
-    z2 = hvec->q[0];
-    p2 = hvec->p[1];
+    x2 = pqvec->q[1];
+    z2 = pqvec->q[0];
+    p2 = pqvec->p[1];
 
     return;
 }
