@@ -36,10 +36,7 @@
 
 static int snap(float *f, int n);
 
-static float a[4];
-static float b[4];
 static float **slow;   /* slowness [nx][nz] */
-
 static int nx, nz, np, npx;
 static float dx,dz,dp,x0,z0,p0,xm,zm,pm;
 static sf_eno2 cvel;
@@ -98,7 +95,7 @@ void hdtrace_init (int order        /* interpolation order for velocity */,
 
     slice = enogrid_init (iorder, nx, NS, prev);
     hvec = (pqv)malloc(sizeof(pqv));
-    nc4_init(a,b);
+    nc4_init();
 }
 
 void hdtrace_close (void)

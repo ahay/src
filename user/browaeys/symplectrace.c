@@ -39,6 +39,9 @@ struct pqvector {
 };
 /* concrete data type */
 
+static float a[4];
+static float b[4];
+
 
 void hvec_init(pqv pqvec,
                float time  /* traveltime */,
@@ -58,7 +61,7 @@ void hvec_init(pqv pqvec,
     return;
 }
 
-void nc4_init(float *a, float *b)
+void nc4_init()
 /*< initialize Candi and Neri algorithm coefficients >*/
 {
     a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
