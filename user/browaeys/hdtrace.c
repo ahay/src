@@ -186,7 +186,7 @@ void hdtrace_step (int kz)
                 /* symplectic cell step and traveltime integration */
 		nc4_sigmastep(hvec,fabs(ds),slow,nx,nz,dx,dz,x0,z0);
 
-		value_exitlevel(hvec,step,x2,z2,p2,t);
+		value_exitlevel(hvec,&step,&x2,&z2,&p2,&t);
 
                 /* exit at previous/next depth level */
 		if (step == 1) {
@@ -244,7 +244,7 @@ void hdtrace_step (int kz)
 	    }
 
 
-	    value_exitlevel(hvec,step,x2,z2,p2,t);
+	    value_exitlevel(hvec,&step,&x2,&z2,&p2,&t);
 
 	    if (step == 1) {/* to previous level */
 		/* interpolate */

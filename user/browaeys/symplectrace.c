@@ -183,11 +183,17 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 {
     float ds, dsz, dsx, dspz, dspx, ssg[2];
 
+    dsz = SF_HUGE;
+    dsx = SF_HUGE;
+
+    dspz = SF_HUGE;
+    dspx = SF_HUGE;
+
     /* linear step size to exit from bottom or top */
-    dsz = dz/(pqvec->p[0]);
+    if (pqvec->p[0] != 0.0) dsz = dz/(pqvec->p[0]);
 
     /* linear step size to exit from sides */
-    dsx = dx/(pqvec->p[1]);
+    if (pqvec->p[1] != 0.0) dsx = dx/(pqvec->p[1]);
 
     /* linear step sizes to exit from slownesses cell */ 
     ssg[0] = 0.;
@@ -195,8 +201,8 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 
     slowg_lininterp(ssg,pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
-    dspz = dpz/(ssg[0]);
-    dspx = dpx/(ssg[1]);
+    if (ssg[0] != 0.0) dspz = dpz/(ssg[0]);
+    if (ssg[1] != 0.0) dspx = dpx/(ssg[1]);
 
     /* select minimum sigma step size */
 
@@ -219,15 +225,15 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 
 }
 
-void value_exitlevel(pqv pqvec, int step, float x2, float z2, float p2, float t)
+void value_exitlevel(pqv pqvec, int *step, float *x2, float *z2, float *p2, float *t)
 /*< exiting values from computational step >*/
 {
-    step = pqvec->step;
-    t = pqvec->time;
+    *step = pqvec->step;
+    *t = pqvec->time;
 
-    x2 = pqvec->q[1];
-    z2 = pqvec->q[0];
-    p2 = pqvec->p[1];
+    *x2 = pqvec->q[1];
+    *z2 = pqvec->q[0];
+    *p2 = pqvec->p[1];
 
     return;
 }
