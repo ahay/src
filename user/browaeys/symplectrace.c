@@ -43,6 +43,22 @@ static float a[4];
 static float b[4];
 
 
+void nc4_init()
+/*< initialize Candi and Neri algorithm coefficients >*/
+{
+    a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
+    a[1] = ( 1. - pow(2,1./3.) - pow(2,-1./3.) )/6.;
+    a[2] = a[1];
+    a[3] = a[0];
+
+    b[0] = 0.;
+    b[1] = 1./(2.-pow(2,1./3.));
+    b[2] = 1./(1.-pow(2,2./3.));
+    b[3] = b[1];
+
+    return;
+}
+
 void hvec_init(pqv pqvec,
                float time  /* traveltime */,
                float x     /* x position */,
@@ -57,22 +73,6 @@ void hvec_init(pqv pqvec,
     pqvec->q[1] = x;
     pqvec->p[0] = pz;
     pqvec->p[1] = px;
-
-    return;
-}
-
-void nc4_init()
-/*< initialize Candi and Neri algorithm coefficients >*/
-{
-    a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
-    a[1] = ( 1. - pow(2,1./3.) - pow(2,-1./3.) )/6.;
-    a[2] = a[1];
-    a[3] = a[0];
-
-    b[0] = 0.;
-    b[1] = 1./(2.-pow(2,1./3.));
-    b[2] = 1./(1.-pow(2,2./3.));
-    b[3] = b[1];
 
     return;
 }
@@ -179,7 +179,7 @@ void nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, 
 }
 
 float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
-/*< sigma step from phase space cells step >*/
+/*< signed sigma step from phase space cells step >*/
 {
     float ds, dsz, dsx, dspz, dspx, ssg[2];
 
@@ -218,7 +218,6 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
     return (ds);
 
 }
-
 
 void value_exitlevel(pqv pqvec, int step, float x2, float z2, float p2, float t)
 /*< exiting values from computational step >*/

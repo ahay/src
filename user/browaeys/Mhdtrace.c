@@ -26,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     bool vel;
-    int nz, nx, iz, na, nax, ix, order, iorder;
-    float **slow, dz, dx, da, x0, z0, a0, s;
+    int nz, nx, iz, np, npx, ix, order, iorder;
+    float **slow, dz, dx, dp, x0, z0, p0, s;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -46,14 +46,14 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&z0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
 
-    if (!sf_getint("na",&na)) na=362;
-    /* number of angles */
-    if (!sf_getfloat("da",&da)) da=0.5;
-    /* angle increment (in degrees) */
-    if (!sf_getfloat("a0",&a0)) a0=-90.;
-    /* starting angle (in degrees) */
+    if (!sf_getint("np",&np)) np=201;
+    /* number of horizontal slownesses */
+    if (!sf_getfloat("dp",&dp)) dp=0.01;
+    /* slowness increment (non dimensional) */
+    if (!sf_getfloat("p0",&p0)) p0=-1.;
+    /* starting horizontal slowness */
 
-    /* default range from -90 to +90 from the vertical */
+    /* default range from -1.0 to +1.0 (-90 to +90 from the vertical) */
 
     sf_putint(out,"n4",nz);
     sf_putfloat(out,"d4",dz);
@@ -63,17 +63,13 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d3",dx);
     sf_putfloat(out,"o3",x0);
     
-    sf_putint(out,"n2",na);
-    sf_putfloat(out,"d2",da);
-    sf_putfloat(out,"o2",a0);
+    sf_putint(out,"n2",np);
+    sf_putfloat(out,"d2",dp);
+    sf_putfloat(out,"o2",p0);
 
     sf_putint(out,"n1",NS+1);
 
-    /* convert degrees to radians */
-    da *= (SF_PI/180.);
-    a0 *= (SF_PI/180.);
-
-    nax = na*nx;
+    npx = np*nx;
     /* size of one depth slice */
 
     /* additional parameters */
@@ -97,8 +93,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    hdtrace_init (order, iorder, nx, nz, na,
-		  dx, dz, da, x0, z0, a0);
+    hdtrace_init (order, iorder, nx, nz, np, dx, dz, dp, x0, z0, p0, slow);
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);

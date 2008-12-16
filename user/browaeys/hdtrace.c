@@ -55,11 +55,14 @@ void hdtrace_init (int order        /* interpolation order for velocity */,
 		   float dp1        /* horizontal slowness sampling */,
 		   float x01        /* lateral origin */, 
 		   float z01        /* depth origin */, 
-		   float p01        /* horizontal slowness origin */)
+		   float p01        /* horizontal slowness origin */,
+                   float **vel     /* slowness [nx][nz] */)
 /*< Initialize >*/
 {
     int ix, kx, kp;
     float p, f[NS];
+
+    slow = vel;
 
     nx = nx1; nz = nz1; np = np1;
     dx = dx1; dz = dz1; dp = dp1;
@@ -164,6 +167,7 @@ void hdtrace_step (int kz)
 		f[2] = z1;
 		f[3] = p1[1];
 		grid1_insert(curr[kx],p1[1],4,f);
+		incell = 0;
 		continue;
 	    } else {
 		incell = 1;
@@ -219,7 +223,7 @@ void hdtrace_step (int kz)
 		}
 
 		if (step == 3) {
-                    /*exit from slowness grid sides */
+                    /* exit from slowness grid sides (overturning ray) */
 		    if (((pm-p2) <= dp && ds > 0.) ||			  
 			(p2 <= dp && ds < 0.)) {
 			f[0] += t;
