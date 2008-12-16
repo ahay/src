@@ -22,9 +22,9 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
-    SConscript('../../filt/lib/SConstruct')
+    SConscript('../../api/c/SConstruct')
 
-env.Append(CPPPATH=['../../filt/lib'])
+env.Append(CPPPATH=['../../api/c'])
 
 
 ccflags = ' ' + env.get('CCFLAGS','')

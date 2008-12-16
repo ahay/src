@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 #include "tool3.h"
-#include "quantile.h"
 
 #ifdef _OPENMP
 #include <omp.h>

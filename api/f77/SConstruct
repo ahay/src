@@ -15,7 +15,7 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    SConscript('../../filt/lib/SConstruct')
+    SConscript('../c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

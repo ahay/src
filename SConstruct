@@ -57,25 +57,13 @@ env.Append(BUILDERS={'Include':configure.Header,
 SConscript(dirs='framework',name='SConstruct')
 
 ##########################################################################
-# FILT BUILD
-##########################################################################
-Export('env')
-dirs = ('lib','main','proc','imag')
-
-Default('build/include')
-Default('build/lib')
-for dir in map(lambda x: os.path.join('filt',x), dirs):
-    build = os.path.join('build',dir)
-    BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
-    Default(build)
-
-
-##########################################################################
 # API BUILD
 ##########################################################################
 api = env.get('API',[])
+api.insert(0,'c')
 
+Default('build/include')
+Default('build/lib')
 for dir in map(lambda x: os.path.join('api',x), api):
     build = os.path.join('build',dir)
     BuildDir(build,dir)

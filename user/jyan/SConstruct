@@ -25,7 +25,7 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    SConscript('../../filt/lib/SConstruct')
+    SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])

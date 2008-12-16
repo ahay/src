@@ -14,7 +14,7 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    SConscript('../../filt/lib/SConstruct')
+    SConscript('../c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -41,7 +41,7 @@ if 'matlab' in env.get('API',[]):
                 if env['PLATFORM'] == 'darwin':
                     env.AddPostAction(install,
                                       'install_name_tool -change '
-                                      'build/filt/lib/libdrsf.dylib '
+                                      'build/api/c/libdrsf.dylib '
                                       '%s/libdrsf.dylib %s/%s' % \
                                           (libdir,libdir,mfile[0]))
     

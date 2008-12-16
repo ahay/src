@@ -23,7 +23,7 @@ except: # local version
     if  env['PLATFORM'] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),
                                         '-xO2','-g')
-    SConscript('../../filt/lib/SConstruct')
+    SConscript('../../api/c/SConstruct')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
     libdir = '../../lib'

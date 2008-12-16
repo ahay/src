@@ -29,7 +29,7 @@
   $1 = $input;
 }
 
-%include ../../filt/lib/vfsr_defs.h
+%include ../c/vfsr_defs.h
 
 %inline %{
 

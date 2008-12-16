@@ -18,7 +18,7 @@ except:
 	opts.Update(env)
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
 	env.Append(CPPPATH=['../../include'],
-		   LIBPATH=['../../filt/lib','../lib'],
+		   LIBPATH=['../../api/c','../lib'],
 		   LIBS=['rsfcairo','rsf'])
 	SConscript('../lib/SConstruct')
 
