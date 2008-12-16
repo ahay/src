@@ -30,7 +30,7 @@ class VFSR_defines:
     def accepted_to_generated_ratio(self,val):
         self.this.ACCEPTED_TO_GENERATED_RATIO = val
     def limit_acceptances(self,val):
-        self.this.LIMIT_ACCEPTANCES = 10000
+        self.this.LIMIT_ACCEPTANCES = val
     def temperature_ratio_scale(self,val):
         self.this.TEMPERATURE_RATIO_SCALE = val
     def temperature_anneal_scale(self,val):
@@ -56,7 +56,7 @@ class VFSR_defines:
     def delta_x(self,val):
         self.this.DELTA_X = val
     def include_integer_parameters(self,val):
-        self.this.INCLUDE_INTEGER_PARAMETERS = 0
+        self.this.INCLUDE_INTEGER_PARAMETERS = val
     def activate_reanneal(self,val):
         self.this.ACTIVATE_REANNEAL = val
     def limit_invalid_generated_states(self,val):
