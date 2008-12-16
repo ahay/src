@@ -1483,7 +1483,7 @@ VFSR_DEFINES *vfsr_get_new_defines (void) {
     VFSR_DEFINES *user_options = (VFSR_DEFINES *)calloc (1, sizeof (VFSR_DEFINES));
 
     user_options->COST_PRECISION = (double)1.0E-18;
-    user_options->USER_INITIAL_PARAMETERS = TRUE;
+    user_options->USER_INITIAL_PARAMETERS = FALSE;
     user_options->ACCEPTED_TO_GENERATED_RATIO = 1.0E-4;
     user_options->LIMIT_ACCEPTANCES = 1000;
     user_options->TEMPERATURE_RATIO_SCALE = 1.0E-5;
@@ -1496,7 +1496,7 @@ VFSR_DEFINES *vfsr_get_new_defines (void) {
     user_options->USER_INITIAL_PARAMETERS_TEMPS = FALSE;
     user_options->USER_INITIAL_COST_TEMP = FALSE;
     user_options->NUMBER_COST_SAMPLES = 5;
-    user_options->MAXIMUM_COST_REPEAT = 8;
+    user_options->MAXIMUM_COST_REPEAT = 5;
     user_options->DELTA_X = 0.001;
     user_options->INCLUDE_INTEGER_PARAMETERS = FALSE;
     user_options->ACTIVATE_REANNEAL = TRUE;
