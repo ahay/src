@@ -2,7 +2,7 @@ from rsfproj import *
 
 def param(par):
     p  = ' '
-    p = p + ' readwrite=y'
+    p = p + ' --readwrite=y'
     if(par.has_key('verb')):
         p = p + ' verb='  +     par['verb']
     if(par.has_key('incore')):

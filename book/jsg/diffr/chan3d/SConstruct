@@ -81,8 +81,8 @@ Flow('over','over.HH','dd form=native')
 
 Flow('mig','dat slo over',
      '''
-     zomig mode=d inv=y causal=y twoway=y readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
-     zomig mode=m inv=n readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
+     zomig mode=d inv=y causal=y twoway=y --readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
+     zomig mode=m inv=n --readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
      ''')
 
 Result('zomig','mig',
@@ -99,8 +99,8 @@ Result('zomig','mig',
 Flow('pwdat','xpwd','fft1 | transp memsize=512 plane=12 | transp memsize=512 plane=23')
 Flow('pwmig','pwdat slo over',
      '''
-     zomig mode=d inv=y causal=y twoway=y readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
-     zomig mode=m inv=n readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
+     zomig mode=d inv=y causal=y twoway=y --readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
+     zomig mode=m inv=n --readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
      ''')
 Result('pwmig',
        '''

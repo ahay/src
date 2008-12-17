@@ -90,6 +90,7 @@ int main (int argc, char* argv[])
 	if (NULL == eq) continue; /* not a parameter */
 	if (0 == strncmp(arg,"output",6) ||
 	    0 == strncmp(arg,  "type",4) ||
+	    0 == strncmp(arg,    "--",2) ||
 	    (eq-arg == 2 &&
 	     (arg[0] == 'n' || 
 	      arg[0] == 'd' || 

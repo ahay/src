@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
     /* sf_warning("end parallel job"); */
 
     ofile = sf_tempfile(&oname,"w+b");
-    snprintf(command2,CMDLEN,"%s dryrun=y < %s > %s",command,iname2,oname);
+    snprintf(command2,CMDLEN,"%s --dryrun=y < %s > %s",command,iname2,oname);
     sf_system(command2);
     sf_rm(iname2,true,false,false);
 

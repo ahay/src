@@ -170,7 +170,7 @@ for vel in ('vxz2','vdx'):
     img = 'img-'+vel
     Flow(img,['dat',slo],
          '''
-         zomig3 ompnth=1 mode=m readwrite=y verb=y
+         zomig3 ompnth=1 mode=m --readwrite=y verb=y
          nrmax=10 slo=${SOURCES[1]}
          ''',
          split=[3,nw],reduce='add')

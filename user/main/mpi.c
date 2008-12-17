@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 	iname = sf_getstring("input");
 	ofile = sf_tempfile(&oname,"w+b");
 
-	snprintf(cmdline,CMDLEN,"%s dryrun=y < %s > %s",command,iname,oname);
+	snprintf(cmdline,CMDLEN,"%s --dryrun=y < %s > %s",command,iname,oname);
 	sf_system(cmdline);
 
 	inp = sf_input(oname);

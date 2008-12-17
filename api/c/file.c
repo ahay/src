@@ -225,6 +225,8 @@ Should do output after sf_input. >*/
 	sf_error ("%s: pipe problem:",__FILE__);
 
     dataname = sf_getstring("out");
+    if (NULL == dataname)
+	dataname = sf_getstring("--out");
 
     if (file->pipe) {
 	file->dataname = sf_charalloc (7);
@@ -275,8 +277,8 @@ Should do output after sf_input. >*/
 
     if (NULL != headname) free(headname);
 
-    if (!sf_getbool("readwrite",&(file->rw))) file->rw=false;
-    if (!sf_getbool("dryrun",&(file->dryrun))) file->dryrun=false;
+    if (!sf_getbool("--readwrite",&(file->rw))) file->rw=false;
+    if (!sf_getbool("--dryrun",&(file->dryrun))) file->dryrun=false;
 
     return file;
 }

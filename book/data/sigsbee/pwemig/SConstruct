@@ -168,7 +168,7 @@ Result('rwav',
 # PSPI migration
 Flow('img cig','stra rtra slow',
      '''
-     srmig3 nrmax=20 dtmax=5e-05 eps=0.01 readwrite=y verb=y ompnth=1
+     srmig3 nrmax=20 dtmax=5e-05 eps=0.01 --readwrite=y verb=y ompnth=1
      tmx=16 rwf=${SOURCES[1]} slo=${SOURCES[2]} cig=${TARGETS[1]}
      itype=o
      ''',split=[4,500,[0,1]],reduce='add')
@@ -182,6 +182,6 @@ Result('agc','img2','agc rect1=600 rect2=400 | grey title="PSPI wave equation im
 
 # STORE BY PACKING DATA AND HEADER
 
-Flow('imgsigsbee','img','window out=stdout',local=1)
+Flow('imgsigsbee','img','window --out=stdout',local=1)
 
 End()

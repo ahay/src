@@ -54,7 +54,8 @@ int main(int argc, char* argv[])
 	arg = argv[i];
 	eq =  strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
-	if (0 == strncmp(arg,"output",6)) continue; /* not a key */
+	if (0 == strncmp(arg,"output",6) ||
+	    0 == strncmp(arg,    "--",2)) continue; /* not a key */
 	
 	len = (size_t) (eq-arg);
 	key = sf_charalloc(len+1);
