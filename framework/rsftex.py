@@ -818,6 +818,7 @@ class TeXPaper(Environment):
         self.scons = []
         self.figs = []
         self.uses = []
+        self.data = []
         self.Dir()
     def Install2(self,dir,fil):
         dir2 = rsfpath.mkdir(dir)
@@ -833,6 +834,7 @@ class TeXPaper(Environment):
 
             data = os.path.join(self.path,dir+'.data')
             self.Uses(data,scons,tree=self.tree)
+            self.data.append(data)
 
             html = dir+'.html'
             self.Color(html,[scons,uses,data])
@@ -1006,6 +1008,13 @@ class TeXPaper(Environment):
         else:
             self.Command(uses,None,'touch $TARGET')
         self.Alias('uses',uses)
+
+        data = os.path.join(self.path,'.sf_data2')
+        if self.data:
+            self.Command(data,self.data,'cat $SOURCES > $TARGET')
+        else:
+            self.Command(data,None,'touch $TARGET')
+        self.Alias('data',data)
 
 default = TeXPaper()
 def Dir(**kw):

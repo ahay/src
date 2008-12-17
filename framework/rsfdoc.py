@@ -95,7 +95,7 @@ def use(target=None,source=None,env=None):
                 os.chdir(chapter)
                 print "...%s" % chapter
 
-                syswait('scons -s uses')
+                syswait('scons -s uses data')
 
                 datapath = rsfpath.datapath()
                 path = os.path.dirname(datapath)
