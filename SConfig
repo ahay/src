@@ -1,0 +1,43 @@
+
+from os.path import join
+import os, sys
+
+EnsureSConsVersion( 0, 98 )
+
+#root = os.environ.get('RSFROOT',os.getcwd())
+
+SConsignFile( join("config-etc/sconfig-signatures" ) )
+
+sys.path.append('framework')
+import sfconfigure
+
+sfconfigure.add_to_default_toolpath( 'framework/sfconfigure/existing_tools' )
+env = Environment( )
+
+tooldir='framework/sfconfigure/tools'
+Mkdir(tooldir)
+for item in env.Glob( 'framework/sfconfigure/existing_tools/*.py'):
+    env.Install(tooldir, item )
+opts = Options('config.py')
+
+sfconfigure.StdInstall( env, 'rsfroot', 'framework/sfconfigure/tools' )
+
+sfconfigure.options(opts)
+opts.Update(env)
+
+
+conf = Configure(env, custom_tests={'CheckAll':sfconfigure.check_all},
+                    conf_dir="#/config-etc/tests",log_file="#/config.log",
+                    clean=False,help=False)
+conf.CheckAll()
+env = conf.Finish()
+
+Help(opts.GenerateHelpText(env))
+import pdb
+#pdb.set_trace()
+
+if not GetOption('clean') and not GetOption('help'):
+    opts.Save('config.py',env)
+
+
+Clean('.', ['#/config-etc','#/config.log','#/config.py',tooldir])
