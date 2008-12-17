@@ -123,7 +123,7 @@ void hdtrace_write (sf_file out)
     }
 }
 
-void hdtrace_step (int kz) 
+void hdtrace_step (int kz, int up) 
 /*< Step in depth >*/
 {
     int incell, step;
@@ -134,6 +134,9 @@ void hdtrace_step (int kz)
     /* grid dimension restrictions */
     /* dx.dp > 1/(4.pi.f) */
     /* dz.dp > 1/(4.pi.f) */
+
+    if (up == -1) sf_warning("marching up in depth");
+    if (up ==  1) sf_warning("marching down in depth");
 
     /* assign the previous slice for interpolation */
     for (ix=0; ix < nx; ix++) {
@@ -151,7 +154,7 @@ void hdtrace_step (int kz)
 	    p1[1] = p0+kp*dp;
 
             /* initial dimensionless vertical one-way slowness */
-	    p1[0] = -sqrt(1-p1[1]*p1[1]);
+	    p1[0] = up*sqrt(1-p1[1]*p1[1]);
 
             /* initial position */
 	    x1 = x0+kx*dx; 

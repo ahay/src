@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     for (iz = 0; iz < nz; iz++) {
 	sf_warning("depth %d of %d", iz+1, nz);
-	hdtrace_step (iz);
+	hdtrace_step (iz,-1);
 	hdtrace_write(out);
     }
 
