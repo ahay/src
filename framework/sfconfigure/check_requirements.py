@@ -39,6 +39,8 @@ def check( mains ):
             pass
         else:
             sources = source.sources
+            if source in sources:
+                return failed_tools
             failed_tools = check( sources )
             if failed_tools:
                 break

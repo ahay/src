@@ -67,6 +67,13 @@ class ToolCreator(object):
     def Exists(self,val=True):
         self.exists = val
         
+    def UpdateExists(self, val ):
+        if not self.exists:
+            return
+        if not val:
+            self.exists = False
+        return
+        
     def CreateTool( self, env ):
         from sfconfigure import DoConfig
         tool_p = _join( self.dest,"%(name)s.py" %self.__dict__)

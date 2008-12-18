@@ -22,9 +22,9 @@ import sfconfigure
 def AliasIfExists( env, alias_name, source=None, **kw ):
     
     env.Replace( **kw )
-    failed = sconfig.check_requirements.check( source )
+    failed = sfconfigure.check_requirements.check( source )
     
-    failed.update( sconfig.check_requirements.check_env(env) )
+    failed.update( sfconfigure.check_requirements.check_env(env) )
     
     failed = list(failed)
 

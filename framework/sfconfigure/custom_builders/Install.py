@@ -99,7 +99,8 @@ def InstallPythonModule( env, source, **kw):
     
     python_prefix = nenv['python_prefix']
     
-    inst = nenv.Install( target=python_prefix, source=source )
+    source_c = env.Pycompile( source )
+    inst = nenv.Install( target=python_prefix, source=source_c )
     
 
     nenv.AliasIfExists( ["buildlib","build","buildpython"], source )

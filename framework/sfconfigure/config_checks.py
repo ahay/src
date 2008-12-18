@@ -38,10 +38,16 @@ def check_all(context):
     context.env.Tool('rsfroot')
     context.env.Tool('platform_ext')
     
+    cctool = ToolCreator('rsfcc', dest=context.env['tool_dest'])
+    cctool.Exists(True)
+    context.env['RSFCC'] = cctool
+    
     cc  (context)
     ar  (context)
     libs(context)
     c99 (context) # FDNSI
+    
+    
     x11 (context) # FDNSI
     ppm (context) # FDNSI
     jpeg(context) # FDNSI
@@ -63,12 +69,14 @@ def check_all(context):
     if 'python' in api:
         python(context)
 
+    cctool.CreateTool( context.env )
+
 
 
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
 def cc(context):
-    cctool = ToolCreator('rsfcc', dest=context.env['tool_dest'])
+    cctool = context.env['RSFCC']
 
     plat = context.env['PLAT']
     pkg = context.env['PKG']
@@ -93,13 +101,18 @@ def cc(context):
     if not res:
         need_pkg( context.env, 'libc')
     if string.rfind(CC,'gcc') >= 0:
-        oldflag = context.env.get('CCFLAGS')
-        for flag in ('-std=gnu99 -Wall -pedantic',
-                     '-std=gnu9x -Wall -pedantic',
-                     '-Wall -pedantic'):
+        
+        oldflag = context.env.get('CCFLAGS',[])
+        oldflag = Split( oldflag )
+        context.env['CCFLAGS']= oldflag
+#        print "oldflag",oldflag
+        for flag in (['-std=gnu99','-Wall','-pedantic'],
+                     ['-std=gnu9x', '-Wall','-pedantic'],
+                     ['-Wall','-pedantic']):
+            
             context.Message("checking if gcc accepts '%s' ... " % flag)
             
-            context.env['CCFLAGS'] = oldflag + ' ' + flag
+            context.env['CCFLAGS'] = oldflag + flag
             
             res = context.TryCompile(text,'.c')
             context.Result(res)
@@ -108,13 +121,14 @@ def cc(context):
         if not res:
             context.env['CCFLAGS'] = oldflag
         else:
+            
             cctool.Append( CCFLAGS=flag )
         # large file support
         (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
         if not status:
             oldflag = context.env.get('CCFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
-            context.env['CCFLAGS'] = oldflag + ' ' + lfs
+            context.env['CCFLAGS'] = oldflag + Split(lfs)
             res = context.TryCompile(text,'.c')
             context.Result(res)
             if not res:
@@ -136,13 +150,16 @@ def cc(context):
                            LINKFLAGS=' -framework Accelerate')
             
     elif plat['OS'] == 'sunos':
-        context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
-                                                '-O2','-xO2')
-        cctool.Append( CCFLAGS=['-x02'] )
-        
-    cctool.Exists(True)
+        if '-O2' in context.env.get('CCFLAGS',[]):
+            context.env['CCFLAGS'].remove( '-O2' )
+            context.env.Append(CCFLAGS=['-xO2'])
+            cctool.Append( CCFLAGS=['-x02'] )
+            
+    # remove duplicates
+    CCFLAGS = dict.fromkeys( context.env.get('CCFLAGS',[]) ).keys()
+    context.env['CCFLAGS'] = CCFLAGS
+    cctool.UpdateExists(True)
     
-    cctool.CreateTool( context.env )
 
 # Used for building libraries.
 def ar(context):
@@ -154,42 +171,66 @@ def ar(context):
     else:
         context.Result(context_failure)
         need_pkg( context.env, 'ar')
-
+        
+    cctool = context.env['RSFCC']
+    cctool.UpdateExists(bool(AR))
 
 # Failing this check stops the installation.
 def libs(context):
     plat = context.env['PLAT']
 
+    cctool = context.env['RSFCC']
+
     context.Message("checking for libraries ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+#    LIBS = context.env.get('LIBS','m')
+#    if type(LIBS) is not types.ListType:
+#        LIBS = string.split(LIBS)
+    LIB = None
+    
     if plat['OS'] == 'sunos' or plat['OS'] == 'hp-ux' or plat['OS'] == 'hpux':
-        LIBS.append('nsl')
+        LIB = 'nsl'
     elif plat['OS'] == 'cygwin':
         LIBS.append('rpc')
     elif plat['OS'] == 'darwin':
-        LIBS.append('mx')
+        LIB = 'mx'
     elif plat['OS'] == 'interix':
-        LIBS.append('rpclib')
+        LIB = 'rpclib'
+        
     text = '''
     #include <rpc/types.h>
     #include <rpc/xdr.h>
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
+    
+    
+    if LIB:
+        LIBS = [LIB,'m']
+    else:
+        LIBS = ['m']
+
+    cctool.Append( LIBS=LIBS )
+    context.env.Append( LIBS=LIBS )
 
     res = context.TryLink(text,'.c')
     if res:
-        context.Result(str(LIBS))
+        context.Result(str(LIB))
         context.env['LIBS'] = LIBS
+        
+        cctool.UpdateExists(True)
+        
     else:
         context.Result(context_failure)
         need_pkg( context.env, 'libs')
+        
+        cctool.UpdateExists(False)
 
 
 # Complex number support according to ISO C99 standard
 def c99(context):
+    
+    cctool = context.env['RSFCC']
+
     context.Message("checking complex support ... ")
     text = '''
     #include <complex.h>
@@ -205,7 +246,8 @@ def c99(context):
     if res:
         context.Result(res)
     else:
-        context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
+        context.env.Append(CCFLAGS=['-DNO_COMPLEX'] )
+        cctool.Append(CCFLAGS=['-DNO_COMPLEX'] )
         context.Result(context_failure)
         need_pkg( context.env, 'c99', fatal=False)
 
@@ -283,7 +325,10 @@ def x11(context):
     return 0;
     }\n'''
     plat = context.env['PLAT']
-
+    
+    x11tool  = ToolCreator('x11', dest=context.env['tool_dest'])
+    x11tool.Exists(True)
+    
     context.Message("checking for X11 headers ... ")
     INC = context.env.get('XINC','')
     if type(INC) is not types.ListType:
@@ -305,10 +350,14 @@ def x11(context):
 
     if not res:
         context.Result(context_failure)
+        x11tool.Exists(False)
         stderr_write('xtpen (for displaying .vpl images) will not be built.')
         need_pkg( context.env, 'xaw', fatal=False)
         context.env['XINC'] = None
         return
+    else:
+        x11tool.Replace( XINC=[path])
+        x11tool.Append( CPPPATH=[path])
 
     context.Message("checking for X11 libraries ... ")
     LIB = context.env.get('XLIBPATH','')
@@ -341,49 +390,82 @@ def x11(context):
             context.env['XLIBS'] = XLIBS
             break
     if not res:
+        x11tool.Exists(False)
         context.Result(context_failure)
         context.env['XLIBPATH'] = None
+    else:
+        x11tool.Replace(XLIBPATH = [path] )
+        x11tool.Replace(XLIBS = XLIBS )
+        x11tool.Append( LIBS = XLIBS )
+        x11tool.Append( LIBPATH = [path] )
+#        context.env.Append( LIBS=XLIBS )
+        
 
     context.env['CPPPATH'] = oldpath
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
+    
+    x11tool.CreateTool( context.env )
+    
 
 
 def ppm(context):
+    
+    ppmtool  = ToolCreator('ppm', dest=context.env['tool_dest'])
+    ppmtool.Exists(True)
+
     context.Message("checking for ppm ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = context.env.get('LIBS',['m'])
+#    if type(LIBS) is not types.ListType:
+    LIBS = Split(LIBS)
+
     text = '''
     #include <ppm.h>
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
+    
     for ppm in [context.env.get('PPM','netpbm'),'netpbm.10']:
+        
 	LIBS.append(ppm)
 	res = context.TryLink(text,'.c')
 	
 	if res:
 	    context.Result(res)
 	    context.env['PPM'] = ppm
+        
 	    break
 	else:
+
 	    LIBS.pop()
 
     if res:
+        ppmtool.Append(LIBS=ppm)
+        ppmtool.Exists(True)
+        ppmtool.Replace( PPM=ppm)
         LIBS.pop()
     else:
+        
+        ppmtool.Exists(False)
+        ppmtool.Replace( PPM=None)
+        
         context.Result(context_failure)
         need_pkg( context.env, 'netpbm', fatal=False)
         context.env['PPM'] = None
 
+    ppmtool.CreateTool( context.env )
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
+    
+    jpgtool  = ToolCreator('jpeg', dest=context.env['tool_dest'])
+    jpgtool.Exists(True)
+
     context.Message("checking for jpeg ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    
+    LIBS = context.env.get('LIBS',['m'])
+    LIBS = Split(LIBS)
+    
     jpeg = context.env.get('JPEG','jpeg')
     LIBS.append(jpeg)
     text = '''
@@ -397,39 +479,54 @@ def jpeg(context):
     if res:
         context.Result(res)
         context.env['JPEG'] = jpeg
+        jpgtool.Exists(True)
+        jpgtool.Replace( JPEG=jpeg)
+        jpgtool.Append( LIBS=jpeg)
+        
     else:
         context.Result(context_failure)
         stderr_write('sfbyte2jpg will not be built.')
         need_pkg( context.env, 'jpeg', fatal=False)
         context.env['JPEG'] = None
+        jpgtool.Exists(False)
+        jpgtool.Replace( JPEG=None)
 
     LIBS.pop()
+    jpgtool.CreateTool( context.env )
 
 
 # If this test is failed, no opengl programs
 def opengl(context):
+    
+    
     plat = context.env['PLAT']
     pkg = context.env['PKG']
     
     pkg['opengl'] = {'generic':'mesa-libGL-devel',
                      'fedora': 'mesa-libGL-devel + freeglut + freeglut-devel'}
 
+    ogltool  = ToolCreator('opengl', dest=context.env['tool_dest'])
+#    ogltool.Exists(True)
+
     context.Message("checking for OpenGL ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
-    LINKFLAGS = context.env.get('LINKFLAGS','')
+    
+    LIBS = context.env.get('LIBS',['m'])
+    LIBS = Split(LIBS)
+    
+    LINKFLAGS = context.env.get('LINKFLAGS',[])
     
     if plat['OS'] == 'darwin':
-        oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
-        context.env['LINKFLAGS'] = LINKFLAGS + oglflags
+        
+        FRAMEWORKS = ['AGL','OpenGL','GLUT']
+        context.env.Append(FRAMEWORKS=FRAMEWORKS)
+#        oglflags = [' -framework AGL -framework OpenGL -framework GLUT']
+#        context.env['LINKFLAGS'] = LINKFLAGS + oglflags
         ogl = []
     else:
         oglflags = None
         ogl = context.env.get('OPENGL')
         if ogl:
-            if isinstance(ogl,str):
-                ogl = string.split(ogl)
+            ogl = Split(ogl)
         else:
             ogl = []
     context.env['LIBS'] = LIBS + ogl
@@ -452,17 +549,34 @@ def opengl(context):
         context.Result(res)    
         context.env['OPENGL'] = ogl 
         context.env['OPENGLFLAGS'] = oglflags
+        ogltool.Exists(True)
+        ogltool.Append( LIBS=ogl )
+        ogltool.Append( LINKFLAGS=oglflags )
+        
+        ogltool.Replace( OPENGL=ogl )
+        ogltool.Replace( OPENGLFLAGS=oglflags )
     else:
         context.env['OPENGL'] = None 
         context.env['OPENGLFLAGS'] = None
         context.Result(context_failure)
         need_pkg( context.env, 'opengl', fatal=False)
 
+        ogltool.Exists(False)
+        
+        ogltool.Replace( OPENGL=None )
+        ogltool.Replace( OPENGLFLAGS=None )
+
     if res:
         glew(context,LIBS,ogl)
+    else:
+        glewtool  = ToolCreator('glew', dest=context.env['tool_dest'])
+        glewtool.Exists(False)
+        glewtool.CreateTool( context.env )
 
     context.env['LIBS'] = LIBS
     context.env['LINKFLAGS'] = LINKFLAGS
+    
+    ogltool.CreateTool( context.env )
 
 
 # If this test is failed, no GLEW programs
@@ -483,29 +597,39 @@ def glew(context,LIBS,ogl):
     return 0;
     }\n'''
 
+    glewtool  = ToolCreator('glew', dest=context.env['tool_dest'])
+
     GLEW = context.env.get('GLEW','GLEW')
     context.env['LIBS'] =  LIBS + [GLEW] + ogl 
         
     res = context.TryLink(text,'.c')
 
     if res:
+        glewtool.Exists(True)
+        glewtool.Replace( GLEW=GLEW )
+        glewtool.Append( LIBS=GLEW )
         context.Result(res)
         context.env['GLEW'] = GLEW
     else:
-        
+        glewtool.Exists(False)
         context.Result(context_failure)
         need_pkg( context.env, 'glew', fatal=False)
 
+    glewtool.CreateTool( context.env )
 
 def blas(context):
     pkg = context.env['PKG']
     pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel'}
     
+    blastool  = ToolCreator('blas', dest=context.env['tool_dest'])
+
     context.Message("checking for BLAS ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    
+    LIBS = context.env.get('LIBS',['m'])
+    LIBS = Split(LIBS)
+    
     blas = context.env.get('BLAS','blas')
+    
     LIBS.append(blas)
     text = '''
     #ifdef __APPLE__
@@ -524,6 +648,10 @@ def blas(context):
         context.Result(res)
         context.env['LIBS'] = LIBS
         context.env['BLAS'] = blas
+        
+        blastool.Append( LIBS=blas)
+        blastool.Replace( BLAS=blas)
+        
         if plat['OS'] == 'cygwin':
             context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
                                          ':/lib/lapack'
@@ -532,20 +660,28 @@ def blas(context):
         LIBS.append('cblas')
         LIBS.append('atlas')
         res = context.TryLink(text,'.c')
+        
         if res:
+            blastool.Append( LIBS=[blas,'cblas','atlas'])
+            blastool.Replace( BLAS=blas)
+            blastool.Exists(True)
             context.Result(res)
             context.env['LIBS'] = LIBS
             context.env['BLAS'] = blas
         else:
             context.Result(context_failure)
-            context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
-            context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
+            context.env.Append(CCFLAGS='-DNO_BLAS')
+            context.env.Append(CXXFLAGS= ['-DNO_BLAS'] )
             LIBS.pop()
             LIBS.pop()
             LIBS.pop()
             context.env['BLAS'] = None
             need_pkg( context.env, 'blas', fatal=False)
 
+            context.env['RSFCC'].Append( CPPDEFINES='NO_BLAS' )
+            blastool.Exists( False )
+    
+    blastool.CreateTool( context.env )
 
 def mpi(context):
     pkg = context.env['PKG']
@@ -609,11 +745,11 @@ def omp(context):
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
         LIBS.append('gomp')
-        CCFLAGS = flags + ' -fopenmp'
+        CCFLAGS = flags + [' -fopenmp']
     elif icc:
         LIBS.append('guide')
         LIBS.append('pthread')
-        CCFLAGS = flags + ' -openmp -D_OPENMP'
+        CCFLAGS = flags + [' -openmp', '-D_OPENMP']
     else:
         CCFLAGS = flags
 
@@ -688,13 +824,23 @@ def api_options(context):
 
 # For the C++ API
 def cxx(context):
+    
+    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
+    
     context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
     if CXX:
+        cxxtool.Exists(True)
         context.Result(CXX)
     else:
+        cxxtool.Exists(False)
         context.Result(context_failure)
         need_pkg( context.env, 'c++')
+        
+    oldflag = context.env.get('CXXFLAGS',[])
+    oldflag = Split(oldflag)
+    context.env['CXXFLAGS'] = oldflag
+    
     context.Message("checking if %s works ... " % CXX)
     text = '''
     #include <valarray>
@@ -706,17 +852,19 @@ def cxx(context):
     if not res:
         del context.env['CXX']
         sys.exit(unix_failure)
+        
     if CXX[-3:]=='g++':
-        oldflag = context.env.get('CXXFLAGS')
-        for flag in ['-Wall -pedantic']:
+        for flag in [['-Wall'],['-pedantic']]:
             context.Message("checking if g++ accepts '%s' ... " % flag)
-            context.env['CXXFLAGS'] = oldflag + ' ' + flag
+            context.env['CXXFLAGS'] = oldflag + flag
             res = context.TryCompile(text,'.cc')
             context.Result(res)
             if res:
                 break
+            
         if not res:
             context.env['CXXFLAGS'] = oldflag
+            
 
 
 def f77(context):
@@ -954,7 +1102,7 @@ def intel(context):
             context.env.Append(ENV={key:license})
 
 def options(opts):
-    opts.Add('ENV','SCons environment',{})
+    opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries','GL GLU glut')
@@ -966,7 +1114,7 @@ def options(opts):
     opts.Add('PPM','The netpbm library')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
-             '-O2')
+             ['-O2'])
     opts.Add('CPPPATH',
              'The list of directories that the C preprocessor will search')
     opts.Add('LIBPATH',

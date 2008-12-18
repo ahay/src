@@ -3,6 +3,11 @@ import sys, os, string, re, commands, types, py_compile
 import SCons
 
 
+# CONSTANTS -- DO NOT CHANGE
+context_success = 1
+context_failure = 0
+py_success = 0 # user-defined
+unix_failure = 1
 
 # Make sure error messages stand out visually
 def stderr_write(message):
