@@ -9,6 +9,7 @@
 %}
 
 void vp_init(void);
+void vp_orig (float x,float  y);
 void vp_uorig (float x,float  y);
 void vp_uclip (float xmin, float ymin, float xmax, float ymax);
 void vp_umove (float x,float  y);
@@ -24,3 +25,11 @@ void vp_text (float x, float y    /* coordinate of the reference point */,
 	      int orient          /* text drawing direction ( in degrees counter-clockwise
 				     from horizontal, right-facing) */, 
 	      const char *string /* test */);
+void vp_utext (float x, float y    /* coordinate of the reference point */, 
+	       int size            /* height of character */, 
+	       int orient          /* text drawing direction ( in degrees counter-clockwise
+				      from horizontal, right-facing) */, 
+	       const char *string /* test */);
+void vp_scale (float xscale, float  yscale);
+void vp_uarrow (float x1, float y1, float x, float y, float r);
+void vp_tjust (int xjust1, int yjust1);

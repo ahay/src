@@ -12,6 +12,8 @@ class Vplot(object):
         c_vplot.vp_init()
     def uorig(self,x,y):
         c_vplot.vp_uorig(x,y)
+    def orig(self,x,y):
+        c_vplot.vp_orig(x,y)
     def uclip(self,xmin,ymin,xmax,ymax):
         c_vplot.vp_uclip (xmin,ymin,xmax,ymax)
     def umove(self,x,y):
@@ -32,3 +34,11 @@ class Vplot(object):
         c_vplot.vp_pendn(x,y)
     def text (self,x,y,size,orient,string):
         c_vplot.vp_text(x,y,size,orient,string)
+    def utext (self,x,y,size,orient,string):
+        c_vplot.vp_utext(x,y,size,orient,string)
+    def scale(self,xscale,yscale):
+        c_vplot.vp_scale(xscale,yscale)
+    def uarrow(self,x1,y1,x,y,r):
+        c_vplot.vp_uarrow(x1,y1,x,y,r)
+    def tjust(self,xjust,yjust):
+        c_vplot.vp_tjust(xjust,yjust)

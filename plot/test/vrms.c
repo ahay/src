@@ -210,7 +210,7 @@ int main(void)
 	vp_color(7);
 	vp_fat(1);
 	vp_umove(xmin,zmin);
-	vp_udraw(xmin,zmax);;
+	vp_udraw(xmin,zmax);
 	vp_udraw(xmax,zmax);
 	vp_udraw(xmax,zmin);
 	vp_udraw(xmin,zmin);
