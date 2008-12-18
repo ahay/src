@@ -127,16 +127,16 @@ void hdtrace_step (int kz, int up)
 /*< Step in depth >*/
 {
     int incell, step;
-    int kx, kp, k, ix, iz, ip;
-    float x1, z1, p1[2], f[4], ss, ds, fx, fz, fp;
+    int kx, kp, k, ix;
+    float x1, z1, p1[2], f[4], ss, ds, fx;
     float x2, z2, p2, t;
 
     /* grid dimension restrictions */
     /* dx.dp > 1/(4.pi.f) */
     /* dz.dp > 1/(4.pi.f) */
 
-    if (up == -1) sf_warning("marching up in depth");
-    if (up ==  1) sf_warning("marching down in depth");
+    if (up == -1) sf_warning("upgoing rays");
+    if (up ==  1) sf_warning("downgoing rays");
 
     /* assign the previous slice for interpolation */
     for (ix=0; ix < nx; ix++) {
@@ -145,8 +145,16 @@ void hdtrace_step (int kz, int up)
 	curr[ix] = grid1_init();
     }
 
+    z1 = z0+kz*dz;
+
     for (kx=0; kx < nx; kx++) { /* loop in x */
-	
+
+        /* initial position */
+	x1 = x0+kx*dx;
+
+        /* initial slowness */
+	ss = slow_bilininterp(x1,z1,slow,nx,nz,dx,dz,x0,z0);
+
 	for (kp=0; kp < np; kp++) { /* loop in horizontal slowness */
 	    k = kp + kx*np; /* index in a slice */
 
@@ -156,11 +164,8 @@ void hdtrace_step (int kz, int up)
             /* initial dimensionless vertical one-way slowness */
 	    p1[0] = up*sqrt(1-p1[1]*p1[1]);
 
-            /* initial position */
-	    x1 = x0+kx*dx; 
-	    z1 = z0+kz*dz; 
-	 
 	    /* decide if we are out already */
+	    incell = 1;
 	    if ((kz == 0    && p1[0] < 0.) ||
 	        (kz == nz-1 && p1[0] > 0.) ||
 	        (kx == 0    && p1[1] < 0.) ||
@@ -170,14 +175,10 @@ void hdtrace_step (int kz, int up)
 		f[2] = z1;
 		f[3] = p1[1];
 		grid1_insert(curr[kx],p1[1],4,f);
-		incell = 0;
 		continue;
-	    } else {
-		incell = 1;
 	    }
 
             /* Hamiltonian vector */
-	    ss = slow_bilininterp(x1,z1,slow,nx,nz,dx,dz,x0,z0);
 	    hvec_init(hvec,0.,x1,z1,ss*p1[1],ss*p1[0]);
 
             /* predict sigma step size to the next cell */
@@ -187,86 +188,72 @@ void hdtrace_step (int kz, int up)
 	    while (incell == 1) {
 
                 /* symplectic cell step and traveltime integration */
-		nc4_sigmastep(hvec,fabs(ds),slow,nx,nz,dx,dz,x0,z0);
+		nc4_sigmastep(hvec,fabs(ds),&ss,slow,nx,nz,dx,dz,x0,z0);
 
-		value_exitlevel(hvec,&step,&x2,&z2,&p2,&t);
+		value_exitlevel(hvec,ss,&step,&x2,&z2,&p2,&t);
 
                 /* exit at previous/next depth level */
 		if (step == 1) {
-		    iz = kz-1;
-		    fz = 0.;
 		    fx = (x2-x0)/dx;
-		    fp = (p2-p0)/dp;
-		    ix = snap(&fx,nx);
-		    ip = snap(&fp,np);
+		    ix = snap(&x2,nx);
+		    enogrid_apply(slice,ix,fx,p2,f);
+                    f[2] = z1 - dz;
 		    incell = 0;
 		    break;
+		}
+
+                /* exit from spatial grid sides */
+		if (step == 2) {
+                    if ((xm-x2) <= dx && p2 > 0.) {
+                        /* exit from the right side */
+			enogrid_apply(slice,nx-1,0.,p2,f);
+			f[2] = z1;
+			incell = 0;
+			break;
+		    }
+		    else if (x2 <= dx && p2 < 0.) {
+                        /* exit from the left side */
+			enogrid_apply(slice,0,0.,p2,f);
+			f[2] = z1;
+			incell = 0;
+			break;
+		    }	        
 		}
 
                 /* update for next sigma step */
 		ds = nc4_cellstep(hvec,slow,nx,nz,dx,dz,x0,z0,dp,dp);
 
-		if (step == 2) {
-                    /* exit from spatial grid sides */
-		    if (((xm-x2) <= dx && p2 > 0.) || (x2 <= dx && p2 < 0.)) {
-			f[0] += t;
-			f[1] = x2;
-			f[2] = z2;
-			f[3] = p2;
-			grid1_insert(curr[kx],p2,4,f);
-			ix = floor((x2-x0)/dx);
-			fx = 0.;
-			fz = (z2-z0)/dz;
-			fp = (p2-p0)/dp;
-			iz = snap(&fz,nz);
-			ip = snap(&fp,np);
+                /* exit from slowness grid sides (overturning ray) */
+		if (step == 3) {
+		    if ((pm-p2) <= dp && ds > 0.) {
+			fx = (x2-x0)/dx;
+			ix = snap(&x2,nx);
+			enogrid_apply(slice,ix,fx,p2,f);
+			f[2] = z1;
 			incell = 0;
 			break;
-		    }       
-		}
-
-		if (step == 3) {
-                    /* exit from slowness grid sides (overturning ray) */
-		    if (((pm-p2) <= dp && ds > 0.) ||			  
-			(p2 <= dp && ds < 0.)) {
-			f[0] += t;
-			f[1] = x2;
-			f[2] = z2;
-			f[3] = p2;
-			grid1_insert(curr[kx],p2,4,f);
-			ip = floor((p2)/dp);
-			fp = 0.;
-			fz = (z2-z0)/dz;
+		    }
+                    else if (p2 <= dp && ds < 0.) {
 			fx = (x2-x0)/dx;
-			iz = snap(&fz,nz);
-			ix = snap(&fx,nx);
+			ix = snap(&x2,nx);
+			enogrid_apply(slice,ix,fx,p2,f);
+			f[2] = z1;
 			incell = 0;
 			break;
 		    }
 		}
 	    }
 
+	    f[0] += t;
 
-	    value_exitlevel(hvec,&step,&x2,&z2,&p2,&t);
+	    if (f[0] < 0.) f[0]=0.;
+	    if (f[1] < x0) f[1]=x0;
+	    if (f[1] > xm) f[1]=xm;
+	    if (f[2] < z0) f[2]=z0;
+	    if (f[2] > zm) f[2]=zm;
+	    if (f[3] < p0) f[3]=p0;
+	    if (f[3] > pm) f[3]=pm;
 
-	    if (step == 1) {/* to previous level */
-		/* interpolate */
-		enogrid_apply(slice,ix,fx,p2,f);
-		if (f[0] < 0.) f[0]=0.;
-		f[0] += t;
-		if (f[1] < x0) f[1]=x0;
-		if (f[1] > xm) f[1]=xm;
-		if (f[2] < z0) f[2]=z0;
-		if (f[2] > zm) f[2]=zm;
-		if (f[3] < p0) f[3]=p0;
-		if (f[3] > pm) f[3]=pm;
-	    } else {
-		f[0] += t;
-		f[1] = x2;
-		f[2] = z2;
-		f[3] = p2;
-	    }
-	    
 	    grid1_insert(curr[kx],p1[1],4,f);
 
 	} /* kp */

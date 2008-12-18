@@ -133,47 +133,42 @@ float slow_bilininterp(float x, float z, float **slow, int nx, int nz, float dx,
     return (ss);
 }
 
-void nc4_sigmastep(pqv pqvec, float ds, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
+void nc4_sigmastep(pqv pqvec, float ds, float *ssi, float **slow, int nx, int nz, float dx, float dz, float ox, float oz)
 /*< 4th order symplectic 2-D algorithm (Neri and Candy) marching in sigma >*/
 {
     int i;
-    float qi[2], pi[2], ssg[2], ss;
+    float ssg[2], ss;
 
     for (i=0; i < 4; i++) {
 
-        /* update for next step */
-	pi[0] = pqvec->p[0]; /* pz */
-	pi[1] = pqvec->p[1]; /* px */
-
-	qi[0] = pqvec->q[0]; /* z */
-	qi[1] = pqvec->q[1]; /* x */
+	/* pqvec->p[0] is pz */
+	/* pqvec->p[1] is px */
+	/* pqvec->q[0] is z  */
+	/* pqvec->q[1] is x  */
 
         /* slowness interpolations in q space */
-	ss = 0.;
-	ss = slow_bilininterp(qi[1],qi[0],slow,nx,nz,dx,dz,ox,oz);
+	ss = slow_bilininterp(pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
         /* slowness gradient interpolations in q space */
-	ssg[0] = 0.;
-	ssg[1] = 0.;
-	slowg_lininterp(ssg,qi[1],qi[0],slow,nx,nz,dx,dz,ox,oz);
+	slowg_lininterp(ssg, pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
         /* slowness and gradient eno interpolation */
-	/* sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH); 
-	g1[0] /= dz;
-	g1[1] /= dx; */
+	/* sf_eno2_apply(cvel,kz,kx,0.,0.,&v1,g1,BOTH); */
 	
         /* advance p */
-	pqvec->p[0] = pi[0] + b[i]*ss*ssg[0]*ds;
-	pqvec->p[1] = pi[1] + b[i]*ss*ssg[1]*ds;
+	pqvec->p[0] += b[i]*ss*ssg[0]*ds;
+	pqvec->p[1] += b[i]*ss*ssg[1]*ds;
 
         /* advance q */
-	pqvec->q[0] = qi[0] + a[i]*ds*(pqvec->p[0]);
-	pqvec->q[1] = qi[1] + a[i]*ds*(pqvec->p[1]);
+	pqvec->q[0] += a[i]*ds*(pqvec->p[0]);
+	pqvec->q[1] += a[i]*ds*(pqvec->p[1]);
 
         /* advance traveltime (i.e. Liouville transport equation) */
 	pqvec->time += b[i]*ss*ss*ds;
 
     }
+
+    *ssi = ss;
 
     return;
 }
@@ -225,7 +220,7 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 
 }
 
-void value_exitlevel(pqv pqvec, int *step, float *x2, float *z2, float *p2, float *t)
+void value_exitlevel(pqv pqvec, float ss, int *step, float *x2, float *z2, float *p2, float *t)
 /*< exiting values from computational step >*/
 {
     *step = pqvec->step;
@@ -233,7 +228,7 @@ void value_exitlevel(pqv pqvec, int *step, float *x2, float *z2, float *p2, floa
 
     *x2 = pqvec->q[1];
     *z2 = pqvec->q[0];
-    *p2 = pqvec->p[1];
+    *p2 = pqvec->p[1]/ss;
 
     return;
 }
