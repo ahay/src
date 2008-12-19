@@ -1,0 +1,61 @@
+import os
+
+#############################################################################
+# MAIN LIBRARY
+#############################################################################
+src = 'kiss_fft kiss_fftr mt19937ar ctmf vfsr'
+hdrs = 'vfsr_defs'
+
+src2 = '''
+adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
+cconjgrad cell cdstep cgstep chain clist conjgrad conjprec copy cosft
+decart dottest edge eno eno2 error file files freqfilt getpar helicon
+helix igrad1 impl2 int1 int2 int3 interp interp_spline irls komplex
+llist mask math1 point pqueue prefilter pweno randn recfilt runge
+quantile quadratic segy sharpen sharpinv simtab spline stack stretch
+system tent2 tinysolver triangle triangle1 tridiagonal vector weight
+'''
+
+Import('env')
+
+env = env.Clone()
+
+env.Tool('rsfcc')
+##############################################################################
+# INCLUDES
+##############################################################################
+sources  = map(lambda x: x+'.c',Split(src))
+includes = map(lambda x: x+'.h',Split(src2)+Split(hdrs)+Split(src))
+
+sobjs = []
+dobjs = []
+for source in Split(src2):
+    env.Include(source,prefix='sf_')
+
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    sobjs.append(obj)
+
+    obj = env.SharedObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    dobjs.append(obj)
+
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
+slib = env.StaticLibrary('rsf',sobjs+sources)
+dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
+
+inc = env.Merge('rsf.h',includes)
+
+env.InstallLibrary([slib,dlib])
+env.InstallInclude( inc )
+
+##############################################################################
+# TESTING
+##############################################################################
+for file in Split('banded eno2 fft file getpar quantile simtab'):
+    test = env.StaticObject('Test' + file + '.c')
+    prog = env.Program(file,[test,slib],PROGSUFFIX='.x',PROGPREFIX='Test')
+
+
