@@ -1,0 +1,34 @@
+import  os
+#sys.path.append('../..')
+#import configure
+
+Import('env')
+env = env.Clone()
+
+env.Tool('rsff77')
+
+#env.Prepend(CPPPATH=['../../include'],
+#            LIBPATH=['../../lib'],
+#            LIBS=['rsf'])
+
+F77 = env.get('F77')
+F77base =  os.path.basename(F77)
+
+env.Append(CPPDEFINES='$CFORTRAN')
+
+if F77base[:8] == 'gfortran' or F77base[:3] == 'gfc':
+    env.Append(CPPDEFINES='GFORTRAN')
+    
+env.Object('fortran.o','fortran.c')
+
+lib = env.StaticLibrary('rsff','fortran.o')
+
+env.InstallLibrary(lib)
+
+for file in ['getpar','file']:
+    test = 'Test' + file + '.f'
+    env.Program(file,[test,lib],
+                PROGPREFIX='Test',
+                PROGSUFFIX='.x')
+
+    

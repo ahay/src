@@ -1,0 +1,39 @@
+import sys, os
+sys.path.append('../..')
+import configure
+
+Import('env')
+env = env.Clone()
+
+env.Tool('rsff90')
+
+env.Append(CPPDEFINES=['$CFORTRAN90'])
+
+F90 = env.get('F90')
+if F90:
+    F90base =  os.path.basename(F90)
+
+    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
+        env.Append(CPPDEFINES=['GFORTRAN'],F90FLAGS=' -J${SOURCE.dir}')
+        
+    elif F90base == 'ifort':
+        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
+
+env.Object('fortran.o','fortran.c')
+obj = env.Object('rsf.f90')
+
+lib = env.StaticLibrary('rsff90',[obj[0],'fortran.o'])
+mod = obj[1]
+
+env.InstallLibrary(lib)
+env.InstallInclude(mod)
+
+
+env['LINKFLAGS']=env.get('F90FLAGS')
+
+for file in ['getpar','file']:
+    test = 'Test' + file + '.f90'
+    env.Program(file,[test,lib],
+                PROGSUFFIX='.x',
+                PROGPREFIX='Test',
+                )

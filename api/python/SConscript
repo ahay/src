@@ -1,0 +1,71 @@
+import sys, os, string, re
+
+modules = Split('rsf vplot vfsr')
+
+Import('env')
+env = env.Clone()
+
+env.Tool('rsfpython')
+env.InstallPythonModule(['rsfbak.py'])
+
+pythinc = []
+
+try:
+    import numpy
+except:
+    numpy_loc = os.path.split(numpy.__file__)[0]
+    pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
+    pythinc.append(os.path.join(numpy_loc,'core','include'))
+    for path in sys.path:
+        if string.find(path,'python') >= 0:
+            dir = os.path.join(string.replace(path,'lib','include'),
+                               'numarray')
+            if os.path.isdir(dir):
+                pythinc.append(dir)
+
+for path in sys.path:
+    if string.find(path,'python') >= 0:
+        pydir = re.sub('lib(?:64)?','include',path)
+        if os.path.isdir(pydir):
+            pythinc.append(pydir)
+
+env.Append(CPPPATH=pythinc)
+
+if env['PLATFORM'] == 'cygwin':
+    python = 'python%s' % sys.version[:3]
+    env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
+                LIBS = ['librsfplot','librsf',python])
+else:
+    env.Append(LIBS=['drsfplot','drsf'])
+
+    if env['PLATFORM'] == 'darwin':
+        env['SHLINKFLAGS'] = '$LINKFLAGS -bundle' + \
+                             ' -flat_namespace -undefined suppress'
+        env['SHLIBSUFFIX'] = '.so'
+
+for module in modules:
+    ifile = module+'.i'
+#    if root:
+#        ifile = '#/api/python/' + ifile
+    wrap = env.CFile(module,ifile,SWIGFLAGS='-python')
+    python = env.SharedLibrary(module,wrap[0],SHLIBPREFIX='_c_')
+
+    # Hack for darwin to force dependence on libdrsf.dylib 
+    if env['PLATFORM'] == 'darwin': 
+        env.Depends(python,'../../lib/libdrsf.dylib')
+        env.Depends(python,'../../lib/libdrsfplot.dylib')
+
+    pfiles = [python,wrap[1],module+'.py']
+#    env.Install('../../lib',pfiles)
+
+#    if root:
+        
+    install = env.InstallPythonModule(pfiles)
+    if env['PLATFORM'] == 'darwin':
+        for lib in ('rsf','rsfplot'):
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libd%s.dylib '
+                              '${lib_prefix}/libd%s.dylib ${lib_prefix}/%s' % \
+                                  (lib,lib,python[0]))
+
