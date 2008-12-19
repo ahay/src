@@ -71,6 +71,21 @@ def InstallExecutable( nenv, source, **kw):
     
     return inst 
 
+def InstallInclude( nenv, source, **kw):
+    
+    env = nenv.Clone()
+    env.Replace( **kw )
+    
+    prefix = env['include_prefix']
+    
+    inst = env.Install( target=prefix, source=source )
+    
+#    env.Depends(source,"install")
+    env.AliasIfExists( "buildlib", source )
+    env.AliasIfExists( ["lib","install"], inst )
+    
+    return inst 
+
 def InstallPythonExecutable( nenv, source, **kw):
     
     env = nenv.Clone()
@@ -93,13 +108,16 @@ def InstallPythonExecutable( nenv, source, **kw):
 
 
 def InstallPythonModule( env, source, **kw):
-    
+#    qq = env.subst(source)
+#    
+#    if qq == 'rsf.py':
+#        import pdb;pdb.set_trace()
     nenv = env.Clone()
     nenv.Replace( **kw )
     
     python_prefix = nenv['python_prefix']
     
-    source_c = env.Pycompile( source )
+    source_c = nenv.Pycompile( source )
     inst = nenv.Install( target=python_prefix, source=source_c )
     
 

@@ -39,10 +39,13 @@ def check_all(context):
     context.env.Tool('platform_ext')
     
     cctool = ToolCreator('rsfcc', dest=context.env['tool_dest'])
+    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
     cctool.Exists(True)
     context.env['RSFCC'] = cctool
-    
+    context.env['RSFCXX']  = cxxtool
     cc  (context)
+    ccdebug( context )
+
     ar  (context)
     libs(context)
     c99 (context) # FDNSI
@@ -56,6 +59,7 @@ def check_all(context):
     mpi (context) # FDNSI
     omp (context) # FDNSI
     api = api_options(context)
+    
     if 'c++' in api:
         cxx(context)
     if 'f77' in api:
@@ -70,8 +74,31 @@ def check_all(context):
         python(context)
 
     cctool.CreateTool( context.env )
+    cxxtool.CreateTool( context.env )
 
+def ccdebug(context):
+    dbtool = ToolCreator('rsfcc_debug', dest=context.env['tool_dest'])
+    
+    CCFLAGS = context.env['CCFLAGS']
+    CCFLAGS.append( '-g')
+    
+    text = '''
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
 
+    context.Message("checking if '-g' works ... ")
+    
+    res = context.TryLink(text,'.c')
+    context.Result(res)
+    if res:
+        dbtool.Append(CCFLAGS='-g')
+    
+    dbtool.Exists(True)    
+    
+    dbtool.CreateTool( context.env )
+    
+    CCFLAGS.pop()
 
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
@@ -679,6 +706,7 @@ def blas(context):
             need_pkg( context.env, 'blas', fatal=False)
 
             context.env['RSFCC'].Append( CPPDEFINES='NO_BLAS' )
+            context.env['RSFCXX'].Append( CPPDEFINES='NO_BLAS' )
             blastool.Exists( False )
     
     blastool.CreateTool( context.env )
@@ -687,6 +715,9 @@ def mpi(context):
     pkg = context.env['PKG']
     pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
     
+    
+    mpitool  = ToolCreator('mpi', dest=context.env['tool_dest'])
+
     context.Message("checking for MPI ... ")
     mpicc = context.env.get('MPICC',WhereIs('mpicc'))
     if mpicc:
@@ -709,10 +740,18 @@ def mpi(context):
     if res:
         context.Result(res)
         context.env['MPICC'] = mpicc
+        
+        mpitool.Exists(True)
+        mpitool.Append(CC=mpicc)
+        
     else:
         context.Result(context_failure)
         need_pkg( context.env, 'mpi', fatal=False)
         context.env['MPICC'] = None
+
+        mpitool.Exists(False)
+    
+    mpitool.CreateTool( context.env )
 
 def ncpus(env):
     'Detects number of CPUs'
@@ -731,12 +770,18 @@ def ncpus(env):
 
 
 def omp(context):
+    
+    omptool  = ToolCreator('omp', dest=context.env['tool_dest'])
+
     pkg = context.env['PKG']
     pkg['omp'] = {'fedora':'libgomp'}
     
     if ncpus(context.env) == 1:
         context.env['OMP'] = False
+        omptool.Exists(False)
+        omptool.CreateTool(context.env)
         return # only 1 cpu. OMP not needed
+    
     context.Message("checking for OpenMP ... ")
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
@@ -783,6 +828,14 @@ def omp(context):
         context.env['OMP'] = False
 
 def api_options(context):
+    
+    cppapitool  = ToolCreator('cppapi', dest=context.env['tool_dest'])
+    f77apitool  = ToolCreator('f77api', dest=context.env['tool_dest'])
+    f90apitool  = ToolCreator('f90api', dest=context.env['tool_dest'])
+    pythonapitool  = ToolCreator('pythonapi', dest=context.env['tool_dest'])
+    matlabapitool  = ToolCreator('matlabapi', dest=context.env['tool_dest'])
+    octaveapitool  = ToolCreator('octaveapi', dest=context.env['tool_dest'])
+
     context.Message("checking API options ... ")
     api = context.env.get('API')
     if api:
@@ -819,18 +872,42 @@ def api_options(context):
         context.Result(str(api))
     context.env['API'] = api
 
+    if 'c++' in api:
+        cppapitool.Exists(True)
+    if 'f77' in api:
+        f77apitool.Exists(True)
+    if 'f90' in api:
+        f90apitool.Exists(True)
+    if 'python' in api:
+        pythonapitool.Exists(True)
+    if 'matlab' in api:
+        matlabapitool.Exists(True)
+    if 'octave' in api:
+        octaveapitool.Exists(True)
+    
+    cppapitool.CreateTool(context.env)
+    f77apitool.CreateTool(context.env)
+    f90apitool.CreateTool(context.env)
+    pythonapitool.CreateTool(context.env)
+    matlabapitool.CreateTool(context.env)
+    octaveapitool.CreateTool(context.env)
+
     return api
 
 
 # For the C++ API
 def cxx(context):
     
-    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
+    cxxtool = context.env['RSFCXX']
     
     context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
+    
     if CXX:
         cxxtool.Exists(True)
+        cxxtool.Replace( CXX=CXX )
+        
+        
         context.Result(CXX)
     else:
         cxxtool.Exists(False)
@@ -838,6 +915,8 @@ def cxx(context):
         need_pkg( context.env, 'c++')
         
     oldflag = context.env.get('CXXFLAGS',[])
+#    import pdb; pdb.set_trace()
+    
     oldflag = Split(oldflag)
     context.env['CXXFLAGS'] = oldflag
     
@@ -860,13 +939,16 @@ def cxx(context):
             res = context.TryCompile(text,'.cc')
             context.Result(res)
             if res:
+                cxxtool.Append(CXXFLAGS=flag )
                 break
             
         if not res:
             context.env['CXXFLAGS'] = oldflag
-            
+    
+    CXXFLAGS = dict.fromkeys( context.env.get('CXXFLAGS',[]) ).keys()
+    context.env['CXXFLAGS'] = CXXFLAGS
 
-
+    cxxtool.CreateTool( context.env )
 def f77(context):
     context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')

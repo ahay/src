@@ -30,7 +30,7 @@ from sfconfigure.custom_builders.Install import InstallPythonPackage,\
 from sfconfigure.custom_builders.Install import InstallPythonModule
 from sfconfigure.custom_builders.Install import InstallLibrary
 from sfconfigure.custom_builders.Install import InstallExecutable
-
+from sfconfigure.custom_builders.Install import InstallInclude
 
 #from sfconfigure.custom_builders.MainDoc import SelfDocBuilder
 #from sfconfigure.custom_builders.MainDoc import SelfDocEmitter
@@ -63,6 +63,7 @@ def generate( env ):
     env.AddMethod(  InstallPythonPackage , "InstallPythonPackage" )
     env.AddMethod(  InstallPythonModule , "InstallPythonModule" )
     env.AddMethod(  InstallLibrary , "InstallLibrary" )
+    env.AddMethod(  InstallInclude , "InstallInclude" )
     env.AddMethod(  InstallExecutable , "InstallExecutable" )
     env.AddMethod(  InstallTool , "InstallTool" )
     env.AddMethod(  InstallPythonExecutable , "InstallPythonExecutable" )

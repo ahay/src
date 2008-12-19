@@ -20,7 +20,7 @@ from os.path import split,join,isfile
 from os.path import isdir,abspath
 
 import os
-from SCons.Script import AddOption,SConscript,Environment
+from SCons.Script import AddOption,SConscript,Environment,Dir
 from glob import glob
 import distutils.sysconfig
 
@@ -153,7 +153,9 @@ def StdInstall( env, toolname, dest ):
                 bin_prefix=bin_prefix,
                 python_prefix=python_prefix,
                 include_prefix=include_prefix,
-                tool_dest = dest
+                tool_dest = dest,
+                RSFSRC=Dir('#').abspath
+                
                 )
     tc.Exists(True)
     
