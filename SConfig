@@ -1,5 +1,5 @@
 
-from os.path import join
+from os.path import join,isdir,isfile
 import os, sys
 
 EnsureSConsVersion( 0, 98 )
@@ -8,22 +8,48 @@ EnsureSConsVersion( 0, 98 )
 
 SConsignFile( join("config-etc/sconfig-signatures" ) )
 
-sys.path.append('framework')
+#sys.path.append('framework')
 import sfconfigure
 
-sfconfigure.add_to_default_toolpath( 'framework/sfconfigure/existing_tools' )
+sfconfigure.add_to_default_toolpath( 'sfconfigure/existing_tools' )
 env = Environment( )
 
-tooldir='framework/sfconfigure/tools'
-Mkdir(tooldir)
-for item in env.Glob( 'framework/sfconfigure/existing_tools/*.py'):
-    env.Install(tooldir, item )
-opts = Options('config.py')
+tooldir='sfconfigure/tools'
+if not isdir(tooldir):
+    Execute(Mkdir(tooldir))
 
-sfconfigure.StdInstall( env, 'rsfroot', 'framework/sfconfigure/tools' )
+for item in env.Glob( 'sfconfigure/existing_tools/*.py'):
+    env.Install(tooldir, item )
+    
+AddOption( '--config-file',
+       dest='configfile',
+       nargs=1, type='string',
+       action='store',
+       metavar='FILE',
+       default='config.py',
+       help='use configure file FILE' )
+
+
+configfile=GetOption('configfile')
+
+if not isfile(configfile):
+    msg = "SConfig: got invalid value for option '--config-file', file '%s' does not exist" %configfile
+    raise Exception(msg)
+opts = Options(  )
+
+sfconfigure.StdInstall( env, 'rsfroot', 'sfconfigure/tools' )
 
 sfconfigure.options(opts)
 opts.Update(env)
+
+AddOption( '--disable',
+       dest='disabled',
+       nargs=1, type='string',
+       action='append',
+       metavar='API',
+       default=[],
+       help='disable packages in API' )
+
 
 
 conf = Configure(env, custom_tests={'CheckAll':sfconfigure.check_all},
@@ -33,11 +59,11 @@ conf.CheckAll()
 env = conf.Finish()
 
 Help(opts.GenerateHelpText(env))
-import pdb
-#pdb.set_trace()
 
 if not GetOption('clean') and not GetOption('help'):
     opts.Save('config.py',env)
 
 
+
 Clean('.', ['#/config-etc','#/config.log','#/config.py',tooldir])
+
