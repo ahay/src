@@ -18,7 +18,6 @@
 */
 
 #include <math.h>
-
 #include <rsf.h>
 
 #include "symplectrace.h"
@@ -42,9 +41,8 @@ struct pqvector {
 static float a[4];
 static float b[4];
 
-
 void nc4_init()
-/*< initialize Candi and Neri algorithm coefficients >*/
+/*< initialize Neri and Candi algorithm coefficients >*/
 {
     a[0] = ( 2. + pow(2,1./3.) + pow(2,-1./3.) )/6.;
     a[1] = ( 1. - pow(2,1./3.) - pow(2,-1./3.) )/6.;

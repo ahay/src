@@ -18,32 +18,28 @@
 */
 
 #include <math.h>
-
 #include <rsf.h>
 
 #include "hdtrace.h"
-
-#include "enogrid.h"
-#include "grid1.h"
 #include "symplectrace.h"
+#include "grad2fill.h"
 
 #ifndef _hdtrace_h
 
-#define NS 4 /* number of outputs */
+#define NS 4
 /*^*/
 
 #endif
 
-static int snap(float *f, int n);
-
-static float **slow;   /* slowness [nx][nz] */
 static int nx, nz, np, npx;
-static float dx,dz,dp,x0,z0,p0,xm,zm,pm;
-static sf_eno2 cvel;
-static enogrid slice;
-static grid1 *prev, *curr;
+static float dx, dz, dp, x0, z0, p0, xm, zm, pm;
+static sf_eno2 cvel, fslc[NS];
+static float **slice;
+static bool *known;
 static pqv hvec;
 
+static const float eps = 1.e-5;
+static void psnap (float* p, float* q, int* iq);
 
 void hdtrace_init (int order        /* interpolation order for velocity */, 
 		   int iorder       /* interpolation order for values */,
@@ -56,80 +52,55 @@ void hdtrace_init (int order        /* interpolation order for velocity */,
 		   float x01        /* lateral origin */, 
 		   float z01        /* depth origin */, 
 		   float p01        /* horizontal slowness origin */,
-                   float **vel     /* slowness [nx][nz] */)
+                   float** vel      /* slowness [nx][nz] */,
+                   float** slice_in /* depth slice [nx][np][NS] */)
 /*< Initialize >*/
 {
-    int ix, kx, kp;
-    float p, f[NS];
+    int is;
 
-    slow = vel;
+    slice = slice_in;
 
-    nx = nx1; nz = nz1; np = np1;
-    dx = dx1; dz = dz1; dp = dp1;
-    x0 = x01; z0 = z01; p0 = p01;
+    nx = nx1; 
+    nz = nz1; 
+    np = np1;
+
+    dx = dx1;
+    dz = dz1;
+    dp = dp1;
+
+    x0 = x01; 
+    z0 = z01;
+    p0 = p01;
+
     npx = np*nx; 
+
     xm = x0 + (nx-1)*dx;
     zm = z0 + (nz-1)*dz;
     pm = p0 + (np-1)*dp;
 
-    cvel = sf_eno2_init (order, nz, nx);
-    sf_eno2_set (cvel, slow);
+    cvel = sf_eno2_init (order,nz,nx);
+    sf_eno2_set (cvel,vel);
 
-    prev = (grid1*) sf_alloc(nx,sizeof(grid1));
-    curr = (grid1*) sf_alloc(nx,sizeof(grid1));
-    for (ix=0; ix < nx; ix++) {
-	prev[ix] = grid1_init();
-	curr[ix] = grid1_init();
+    known = sf_boolalloc (npx);
+
+    grad2fill_init (np,nx);
+
+    for (is=0; is < NS; is++) {
+        fslc[is] = sf_eno2_init (iorder,np,nx);
     }
 
-    for (kx=0; kx < nx; kx++) { /* loop in x */
-	for (kp=0; kp < np; kp++) { /* loop in horizontal slowness */
-	    p = p0+kp*dp;
-
-            /* f is vector (traveltime, x, z, p) for one way dynamic rays */
-	    f[0] = 0.;
-	    f[1] = x0+kx*dx; 
-	    f[2] = z0;
-	    f[3] = p;
-	    
-	    grid1_insert(curr[kx],p,4,f);
-	}
-    } 
-
-    slice = enogrid_init (iorder, nx, NS, prev);
-    hvec = (pqv)malloc(sizeof(pqv));
     nc4_init();
+    hvec = (pqv)malloc(sizeof(pqv));
 }
 
-void hdtrace_close (void)
-/*< Free allocated storage >*/
-{
-    free(hvec);
-
-    sf_eno2_close (cvel);
-    enogrid_close(slice);
-
-    /* close grid */
-    free(prev);
-    free(curr);
-}
-
-void hdtrace_write (sf_file out)
-/*< Write it out >*/
-{
-    int ix;
-    for (ix=0; ix < nx; ix++) {
-	grid1_write(curr[ix],NS,out);
-    }
-}
-
-void hdtrace_step (int kz, int up) 
+void hdtrace_step (int kz, int up, float **slow) 
 /*< Step in depth >*/
 {
-    int incell, step;
-    int kx, kp, k, ix;
-    float x1, z1, p1[2], f[4], ss, ds, fx;
-    float x2, z2, p2, t;
+    int incell, is, nk, kx, kp, k, ix, iz, step;
+    float z, x, p[2], t, ds;
+    float ssi, gi[2], ss, g[2];
+    float fx, fz, fp;
+    bool onx, onz;
 
     /* grid dimension restrictions */
     /* dx.dp > 1/(4.pi.f) */
@@ -138,48 +109,62 @@ void hdtrace_step (int kz, int up)
     if (up == -1) sf_warning("upgoing rays");
     if (up ==  1) sf_warning("downgoing rays");
 
-    /* assign the previous slice for interpolation */
-    for (ix=0; ix < nx; ix++) {
-	grid1_close(prev[ix]);
-	prev[ix] = curr[ix];
-	curr[ix] = grid1_init();
+    for (is=0; is < NS; is++) {    
+        sf_eno2_set1 (fslc[is],slice[is]);
     }
 
-    z1 = z0+kz*dz;
+    nk = 0; /* number of known */
 
-    for (kx=0; kx < nx; kx++) { /* loop in x */
+    z = z0 + kz*dz;
 
-        /* initial position */
-	x1 = x0+kx*dx;
+    for (kx = 0; kx < nx; kx++) {
 
-        /* initial slowness */
-	ss = slow_bilininterp(x1,z1,slow,nx,nz,dx,dz,x0,z0);
+	x = x0 + kx*dx;
 
-	for (kp=0; kp < np; kp++) { /* loop in horizontal slowness */
-	    k = kp + kx*np; /* index in a slice */
+        sf_eno2_apply(cvel,kz,kx,0.,0.,&ssi,gi,BOTH);
+        gi[1] /= dx;
+        gi[0] /= dz;
 
-            /* initial dimensionless horizontal slowness */
-	    p1[1] = p0+kp*dp;
+        for (kp = 0; kp < np; kp++) {
+
+            k = kp + kx*np;
+
+           /* initial dimensionless horizontal slowness */
+	    p[1] = p0 + kp*dp;
 
             /* initial dimensionless vertical one-way slowness */
-	    p1[0] = up*sqrt(1-p1[1]*p1[1]);
+	    p[0] = up*sqrt(1.-p[1]*p[1]);
 
-	    /* decide if we are out already */
+            ss = ssi;
+            g[0] = gi[0];
+            g[1] = gi[1];
+
+            ix = kx; 
+	    onx = true;
+
+            iz = kz; 
+	    onz = true;
+
 	    incell = 1;
-	    if ((kz == 0    && p1[0] < 0.) ||
-	        (kz == nz-1 && p1[0] > 0.) ||
-	        (kx == 0    && p1[1] < 0.) ||
-	        (kx == nx-1 && p1[1] > 0.)) {
-		f[0] = 0.;
-		f[1] = x1;
-		f[2] = z1;
-		f[3] = p1[1];
-		grid1_insert(curr[kx],p1[1],4,f);
-		continue;
-	    }
+
+            /* decide if we are out already */
+            if ((iz == 0    && p[0] < 0.) ||
+                (iz == nz-1 && p[0] > 0.) ||
+                (ix == 0    && p[1] < 0.) ||
+                (ix == nx-1 && p[1] > 0.)) {
+                slice[0][k] = 0.;
+                slice[1][k] = x0 + ix*dx;
+                slice[2][k] = z0 + iz*dz;
+                slice[3][k] = p[1];
+                known[k] = true;
+                nk++;
+                continue;
+            } else {
+                known[k] = false;
+            }
 
             /* Hamiltonian vector */
-	    hvec_init(hvec,0.,x1,z1,ss*p1[1],ss*p1[0]);
+	    hvec_init(hvec,0.,x,z,ss0*p[1],ss0*p[0]);
 
             /* predict sigma step size to the next cell */
 	    ds = nc4_cellstep(hvec,slow,nx,nz,dx,dz,x0,z0,dp,dp);
@@ -190,28 +175,29 @@ void hdtrace_step (int kz, int up)
                 /* symplectic cell step and traveltime integration */
 		nc4_sigmastep(hvec,fabs(ds),&ss,slow,nx,nz,dx,dz,x0,z0);
 
-		value_exitlevel(hvec,ss,&step,&x2,&z2,&p2,&t);
+		value_exitlevel(hvec,ss,&step,&fx,&fz,&fp,&t);
 
                 /* exit at previous/next depth level */
 		if (step == 1) {
-		    fx = (x2-x0)/dx;
-		    ix = snap(&x2,nx);
-		    enogrid_apply(slice,ix,fx,p2,f);
-                    f[2] = z1 - dz;
+		    onz = true;
+                    onx = sf_cell_snap (&fx,&ix,eps);
 		    incell = 0;
 		    break;
 		}
 
                 /* exit from spatial grid sides */
 		if (step == 2) {
-                    if ((xm-x2) <= dx && p2 > 0.) {
+		    onx = true;
+		    onz = sf_cell_snap (&z,&iz,eps);
+                    if ((xm-fx) <= dx && fp > 0.) {
                         /* exit from the right side */
+
 			enogrid_apply(slice,nx-1,0.,p2,f);
 			f[2] = z1;
 			incell = 0;
 			break;
 		    }
-		    else if (x2 <= dx && p2 < 0.) {
+		    else if (fx <= dx && fp < 0.) {
                         /* exit from the left side */
 			enogrid_apply(slice,0,0.,p2,f);
 			f[2] = z1;
@@ -219,6 +205,19 @@ void hdtrace_step (int kz, int up)
 			break;
 		    }	        
 		}
+
+      ix < 0 || ix > nx-1 ||
+                    (onx && ix == 0 && p[1] < 0.) ||
+                    (ix == nx-1 && (!onx || p[1] > 0.))) {
+                    slice[0][k] = t;
+                    slice[1][k] = x0+(x+ix)*dx;
+                    slice[2][k] = z0+(z+iz)*dz;
+                    slice[3][k] = sf_cell_p2a(p)*180./SF_PI;
+                    known[k] = true;
+                    nk++;
+                    break;
+
+
 
                 /* update for next sigma step */
 		ds = nc4_cellstep(hvec,slow,nx,nz,dx,dz,x0,z0,dp,dp);
@@ -244,37 +243,57 @@ void hdtrace_step (int kz, int up)
 		}
 	    }
 
-	    f[0] += t;
 
-	    if (f[0] < 0.) f[0]=0.;
-	    if (f[1] < x0) f[1]=x0;
-	    if (f[1] > xm) f[1]=xm;
-	    if (f[2] < z0) f[2]=z0;
-	    if (f[2] > zm) f[2]=zm;
-	    if (f[3] < p0) f[3]=p0;
-	    if (f[3] > pm) f[3]=pm;
-
-	    grid1_insert(curr[kx],p1[1],4,f);
+	    slice[0][k] = t;
+	    slice[1][k] = x0+(x+ix)*dx;
+	    slice[2][k] = z0+(z+iz)*dz;
+	    slice[3][k] = p[1];
+	    known[k] = true;
+	    nk++;
 
 	} /* kp */
     } /* kx */
-}
 
-
-static int snap(float *f, int n)
-{
-    int i;
-
-    i = floorf(*f);
-    if (i < 0) {
-	i=0;
-	*f=0.;
-    } else if (i >= n-1) {
-	i=n-1;
-	*f=0.;
-    } else {
-	*f -= i;
+    if (nk < npx) {
+        fprintf(stderr,"known=%d (%d)\n",nk,npx);
+        nk = SF_MIN(SF_MIN(np,nx),npx-nk);
+        for (is=0; is < NS; is++) {
+            grad2fill (nk, slice[is], known):
+        }
     }
 
-    return i;
 }
+
+
+
+
+
+static void psnap (float* p, float* q, int* iq)
+/* snap to the grid (non dimensional horizontal slowness) */
+{
+    int ip;
+    float fp2, fp;
+
+    fp = (p-p0)/dp;
+    ip = floor (fp); 
+    fp2 = fp-ip;
+    sf_cell_snap (&fp2,&ip,eps);
+
+    if (ip < 0) {
+        ip = 0; 
+	fp2 = 0.;
+	fp = p0;
+    } else if (ip >= np || (ip == np-1 && fp2 > 0.)) {
+        ip = np-1;
+	fp2 = 0.;
+	fp = f0+(np-1)*dp;
+    }
+
+    p[1] = fp;              /* px is  sin(a) */
+    p[0] = -sqrt(1.-fp*fp); /* pz is -cos(a) */
+
+    *q = fp2;
+    *iq = ip;
+}
+
+
