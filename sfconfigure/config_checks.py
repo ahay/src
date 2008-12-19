@@ -43,17 +43,29 @@ def check_all(context):
     context.env.Tool('platform_ext')
     
     cctool = ToolCreator('rsfcc', dest=context.env['tool_dest'])
-    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
     cctool.Exists(True)
+    
+    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
+    f77tool = ToolCreator('rsff77',dest=context.env['tool_dest'])
+    f90tool = ToolCreator('rsff90',dest=context.env['tool_dest'])
+    mattool = ToolCreator('rsfmatlab',dest=context.env['tool_dest'])
+    octtool = ToolCreator('rsfoctave',dest=context.env['tool_dest'])
+    pyttool = ToolCreator('rsfpython',dest=context.env['tool_dest'])
+    
     context.env['RSFCC'] = cctool
     context.env['RSFCXX']  = cxxtool
+    context.env['RSFF77']  = f77tool
+    context.env['RSFF90']  = f90tool
+    context.env['RSFMATLAB']  = mattool
+    context.env['RSFOCTAVE']  = octtool
+    context.env['RSFPYTHON']  = pyttool
+
     cc  (context)
     ccdebug( context )
 
     ar  (context)
     libs(context)
     c99 (context) # FDNSI
-    
     
     x11 (context) # FDNSI
     ppm (context) # FDNSI
@@ -73,14 +85,14 @@ def check_all(context):
         cxx(context)
         
     if 'f77' in disabled:
-        CreateFalseTool('rsff77',context)
+        f77tool.Exists(False)
         context.Message("checking f77 API ... ")
         context.Result('no (explicitly disabled)')
     else:
         f77(context)
         
     if 'f90' in disabled:
-        CreateFalseTool('rsff90',context)
+        f90tool.Exists(False)
         context.Message("checking f90PI ... ")
         context.Result('no (explicitly disabled)')
 
@@ -88,7 +100,7 @@ def check_all(context):
         f90(context)
         
     if 'matlab' in disabled:
-        CreateFalseTool('rsfmatlab',context)
+        mattool.Exists(False)
         context.Message("checking matlab API ... ")
         context.Result('no (explicitly disabled)')
 
@@ -96,7 +108,7 @@ def check_all(context):
         matlab(context)
         
     if 'octave' in disabled:
-        CreateFalseTool('rsfoctave',context)
+        octtool.Exists(False)
         context.Message("checking octave API ... ")
         context.Result('no (explicitly disabled)')
 
@@ -104,7 +116,7 @@ def check_all(context):
         octave(context)
         
     if 'python' in disabled:
-        CreateFalseTool('rsfpython',context)
+        pyttool.Exists(False)
         context.Message("checking python APl ...")
         context.Result('no (explicitly disabled)')
 
@@ -113,6 +125,12 @@ def check_all(context):
 
     cctool.CreateTool( context.env )
     cxxtool.CreateTool( context.env )
+    f77tool.CreateTool( context.env )
+    f90tool.CreateTool( context.env )
+    mattool.CreateTool( context.env )
+    octtool.CreateTool( context.env )
+    pyttool.CreateTool( context.env )
+
 
 def ccdebug(context):
     dbtool = ToolCreator('rsfcc_debug', dest=context.env['tool_dest'])
@@ -713,7 +731,13 @@ def blas(context):
         context.Result(res)
         context.env['LIBS'] = LIBS
         context.env['BLAS'] = blas
-        
+
+        context.env['RSFCC'].Append( LIBS=blas )
+        context.env['RSFCXX'].Append( LIBS=blas )
+        context.env['RSFMATLAB'].Append( LIBS=blas )
+        context.env['RSFF77'].Append( LIBS=blas )
+        context.env['RSFF90'].Append( LIBS=blas )
+
         blastool.Append( LIBS=blas)
         blastool.Replace( BLAS=blas)
         
@@ -745,6 +769,10 @@ def blas(context):
 
             context.env['RSFCC'].Append( CPPDEFINES='NO_BLAS' )
             context.env['RSFCXX'].Append( CPPDEFINES='NO_BLAS' )
+            context.env['RSFMATLAB'].Append( CPPDEFINES='NO_BLAS' )
+            context.env['RSFF77'].Append( CPPDEFINES='NO_BLAS' )
+            context.env['RSFF90'].Append( CPPDEFINES='NO_BLAS' )
+
             blastool.Exists( False )
     
     blastool.CreateTool( context.env )
@@ -999,7 +1027,7 @@ fortran = {'g77':'f2cFortran',
 def f77(context):
     
 #    import pdb;pdb.set_trace()
-    f77tool  = ToolCreator('rsff77', dest=context.env['tool_dest'])
+    f77tool  = context.env['RSFF77']
 
     context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')
@@ -1022,7 +1050,7 @@ def f77(context):
             need_pkg( context.env, 'f77',False)
             
             f77tool.Exists(False)
-            f77tool.CreateTool( context.env)
+#            f77tool.CreateTool( context.env)
             return
     else:
         context.Result(F77)
@@ -1050,7 +1078,7 @@ def f77(context):
         del context.env['F77']
 #        sys.exit(unix_failure)
         f77tool.Exists(False)
-        f77tool.CreateTool( context.env)
+#        f77tool.CreateTool( context.env)
         return
     else:
         f77tool.Exists(True)
@@ -1065,7 +1093,7 @@ def f77(context):
     context.Message("checking %s type ... " % F77)
     context.Result(cfortran)
     
-    f77tool.CreateTool( context.env)
+#    f77tool.CreateTool( context.env)
 
 def f90_write_autofile(extension,content):
     filename=os.path.join('api','f90','ptr_sz.'+extension)
@@ -1089,8 +1117,9 @@ def f90_write_ptr_sz():
 
 def f90(context):
     
-    f90tool  = ToolCreator('rsff90', dest=context.env['tool_dest'])
-
+#    f90tool  = ToolCreator('rsff90', dest=context.env['tool_dest'])
+    f90tool = context.env['RSFF90']
+    
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
@@ -1112,7 +1141,7 @@ def f90(context):
             need_pkg( context.env, 'f90',False)
             
             f90tool.Exists(False)
-            f90tool.CreateTool(context.env)
+#            f90tool.CreateTool(context.env)
             
             return
         
@@ -1141,7 +1170,7 @@ def f90(context):
     if not res1 or not res2:
         del context.env['F90']
         f90tool.Exists(False)
-        f90tool.CreateTool(context.env)
+#        f90tool.CreateTool(context.env)
         
         return
     
@@ -1172,12 +1201,13 @@ def f90(context):
     context.Result(suffix)
     f90_write_ptr_sz()
     f90tool.Exists(True)
-    f90tool.CreateTool(context.env)
+#    f90tool.CreateTool(context.env)
 
 def matlab(context):
     
-    mtool  = ToolCreator('rsfmatlab', dest=context.env['tool_dest'])
-
+#    mtool  = ToolCreator('rsfmatlab', dest=context.env['tool_dest'])
+    mtool  = context.env['RSFMATLAB']
+    
     context.Message("checking for Matlab ... ")
     matlab = WhereIs('matlab')
     if matlab:
@@ -1200,7 +1230,7 @@ def matlab(context):
         context.env['MATLAB'] = None
         mtool.Replace(MATLAB=None)
         mtool.Exists(False)
-        mtool.CreateTool(context.env)
+#        mtool.CreateTool(context.env)
         return
 #        sys.exit(unix_failure)
 
@@ -1216,7 +1246,7 @@ def matlab(context):
         context.env['MEX'] = None
         
         mtool.Exists(False)
-        mtool.CreateTool(context.env)
+#        mtool.CreateTool(context.env)
         
         return
 
@@ -1239,11 +1269,12 @@ def matlab(context):
 
     mtool.Replace(MEXSUFFIX='.mex' + suffix)
 
-    mtool.CreateTool(context.env)
+#    mtool.CreateTool(context.env)
 
 def octave(context):
     
-    otool  = ToolCreator('rsfoctave', dest=context.env['tool_dest'])
+#    otool  = ToolCreator('rsfoctave', dest=context.env['tool_dest'])
+    otool = context.env['RSFOCTAVE']
     
     context.Message("checking for Octave ... ")
     octave = WhereIs('octave')
@@ -1273,17 +1304,18 @@ def octave(context):
         otool.Exists(False)
 
 
-    otool.CreateTool(context.env)
+#    otool.CreateTool(context.env)
 
 def python(context):
     
-    pytool  = ToolCreator('rsfpython', dest=context.env['tool_dest'])
+#    pytool  = ToolCreator('rsfpython', dest=context.env['tool_dest'])
+    pytool = context.env['RSFPYTHON']
 
     context.Message("checking for SWIG ... ")
     
     if not Tool('swig').exists(context.env):
         pytool.Exists(False)
-        pytool.CreateTool( context.env )
+#        pytool.CreateTool( context.env )
         context.Result( False )
         return
     else:
@@ -1297,7 +1329,7 @@ def python(context):
         need_pkg( context.env, 'numpy',False)
 
         pytool.Exists(False)
-        pytool.CreateTool( context.env )
+#        pytool.CreateTool( context.env )
         context.Result( False )
         return
 
@@ -1326,6 +1358,9 @@ def python(context):
         context.Result(context_success)
         context.env.Append(PYMODULES='pyct')
         pytool.Append(PYMODULES='pyct')
+        
+    pytool.Exists(True)
+        
 
 def intel(context):
     '''Trying to fix weird intel setup.'''

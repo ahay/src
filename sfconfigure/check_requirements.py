@@ -28,6 +28,8 @@ def check( mains ):
     
     if not mains:
         return failed_tools
+
+#    mains = _Split(mains)
     
     for source in mains:
         if not (hasattr(source,'env') and source.env):

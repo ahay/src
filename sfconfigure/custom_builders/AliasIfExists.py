@@ -18,9 +18,10 @@
 #
 
 import sfconfigure
-
+from SCons.Script import Split as _Split
 def AliasIfExists( env, alias_name, source=None, **kw ):
     
+    source = _Split(source)
     env.Replace( **kw )
     failed = sfconfigure.check_requirements.check( source )
     
