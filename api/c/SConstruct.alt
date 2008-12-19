@@ -12,5 +12,5 @@ env.Tool('rsfutil')
 env.Tool('sfdoc')
 env.Tool('rsfdebug')
 
-
+Export('env')
 env.SConscript('SConscript')
