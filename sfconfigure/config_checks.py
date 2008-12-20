@@ -93,7 +93,7 @@ def check_all(context):
         
     if 'f90' in disabled:
         f90tool.Exists(False)
-        context.Message("checking f90PI ... ")
+        context.Message("checking f90 API ... ")
         context.Result('no (explicitly disabled)')
 
     else:
@@ -193,7 +193,7 @@ def cc(context):
                      ['-std=gnu9x', '-Wall','-pedantic'],
                      ['-Wall','-pedantic']):
             
-            context.Message("checking if gcc accepts '%s' ... " % flag)
+            context.Message("checking if gcc accepts '%s' ... " % ' '.join(flag))
             
             context.env['CCFLAGS'] = oldflag + flag
             
@@ -208,7 +208,7 @@ def cc(context):
             cctool.Append( CCFLAGS=flag )
         # large file support
         (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
-        if not status:
+        if not status and lfs:
             oldflag = context.env.get('CCFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
             context.env['CCFLAGS'] = oldflag + Split(lfs)
@@ -1001,7 +1001,7 @@ def cxx(context):
         
     if CXX[-3:]=='g++':
         for flag in [['-Wall'],['-pedantic']]:
-            context.Message("checking if g++ accepts '%s' ... " % flag)
+            context.Message("checking if g++ accepts '%s' ... " % ' '.join(flag))
             context.env['CXXFLAGS'] = oldflag + flag
             res = context.TryCompile(text,'.cc')
             context.Result(res)
@@ -1101,7 +1101,7 @@ def f90_write_autofile(extension,content):
     handle.write(content)
     handle.close()
 
-def f90_write_ptr_sz():
+def f90_write_ptr_sz(plat):
     'Tell poor Fortran whether platform is 32 or 64 bit'
     if plat['arch'] == '32bit':
         str_insert_f90 = '9'
@@ -1199,7 +1199,7 @@ def f90(context):
     f90tool.Replace( F90MODSUFFIX=suffix)
     
     context.Result(suffix)
-    f90_write_ptr_sz()
+    f90_write_ptr_sz(context.env['PLAT'])
     f90tool.Exists(True)
 #    f90tool.CreateTool(context.env)
 
@@ -1251,6 +1251,8 @@ def matlab(context):
         return
 
     # See http://www.mathworks.com/access/helpdesk/help/techdoc/ref/mex.html
+    plat = context.env['PLAT']
+    
     if plat['OS'] == 'linux' or plat['OS'] == 'posix':
         if plat['arch'] == '32bit':
             suffix = 'glx'
