@@ -108,18 +108,16 @@ def InstallPythonExecutable( nenv, source, **kw):
 
 
 def InstallPythonModule( env, source, **kw):
-#    qq = env.subst(source)
-#    
-#    if qq == 'rsf.py':
-#        import pdb;pdb.set_trace()
     nenv = env.Clone()
     nenv.Replace( **kw )
     
     python_prefix = nenv['python_prefix']
-    
-    source_c = nenv.Pycompile( source )
-    inst = nenv.Install( target=python_prefix, source=source_c )
-    
+
+    if source[-3:] == '.py':
+        source_c = nenv.Pycompile( source )
+        inst = nenv.Install( target=python_prefix, source=source_c )
+    else:
+        inst = nenv.Install( target=python_prefix, source=source )
 
     nenv.AliasIfExists( ["buildlib","build","buildpython"], source )
     nenv.AliasIfExists( ["lib","python","install"], inst )

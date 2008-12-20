@@ -46,8 +46,8 @@ SConscript(dirs='framework',name='SConstruct')
 # API BUILD
 ##########################################################################
 
-env.Append( CPPPATH=['#/build/api/c'],
-            LIBPATH=['#/build/api/c'],
+env.Append( CPPPATH=['#/build/api/c','#/build/plot/lib'],
+            LIBPATH=['#/build/api/c','#/build/plot/lib'],
             LIBS=['rsf'])
 
 api = filter(lambda x: x[0] != '.' and x != 'c', os.listdir('api'))

@@ -16,7 +16,8 @@ def stderr_write(message):
 def pycompile(target, source, env):
     "convert py to pyc "
     for i in range(0,len(source)):
-        py_compile.compile(source[i].abspath,target[i].abspath)
+        if source[i][-3:] == '.py':
+            py_compile.compile(source[i].abspath,target[i].abspath)
     return py_success
 
 

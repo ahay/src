@@ -12,10 +12,10 @@ pythinc = []
 
 try:
     import numpy
-except:
     numpy_loc = os.path.split(numpy.__file__)[0]
     pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
     pythinc.append(os.path.join(numpy_loc,'core','include'))
+except:
     for path in sys.path:
         if string.find(path,'python') >= 0:
             dir = os.path.join(string.replace(path,'lib','include'),
@@ -60,7 +60,8 @@ for module in modules:
 
 #    if root:
         
-    install = env.InstallPythonModule(pfiles)
+    install = env.InstallPythonModule(pfiles)    
+
     if env['PLATFORM'] == 'darwin':
         for lib in ('rsf','rsfplot'):
             env.AddPostAction(install,
