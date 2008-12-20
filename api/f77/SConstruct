@@ -42,8 +42,6 @@ if 'f77' in env.get('API',[]):
         test = 'Test' + file + '.f'
         env.Program(file,[test,lib],
                     PROGPREFIX='Test',
-                    PROGSUFFIX='.x',
-                    LINK=env.get('F77'),
-                    LINKFLAGS=env.get('F77FLAGS'))
+                    PROGSUFFIX='.x')
 
         

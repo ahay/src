@@ -16,13 +16,12 @@ unix_failure = 1
 
 # Make sure error messages stand out visually
 def stderr_write(message):
-    sys.stderr.write('\n  %s\n' % message)
-
+    sys.stderr.write('\t%s\n' % message)
 
 def need_pkg(env,type,fatal=True):
     mypkg = env['PKG'][type].get( env['PLAT']['distro'])
     if mypkg:
-        stderr_write('Needed package: ' + mypkg)
+        stderr_write('Optional package: ' + mypkg)
         
     if fatal:
         stderr_write('Fata Error: Needed package: ' + type)
@@ -45,7 +44,7 @@ def check_all(context):
     cctool = ToolCreator('rsfcc', dest=context.env['tool_dest'])
     cctool.Exists(True)
     
-    cxxtool = ToolCreator('rsfcxx', dest=context.env['tool_dest'])
+    cxxtool = ToolCreator('rsfcxx',dest=context.env['tool_dest'])
     f77tool = ToolCreator('rsff77',dest=context.env['tool_dest'])
     f90tool = ToolCreator('rsff90',dest=context.env['tool_dest'])
     mattool = ToolCreator('rsfmatlab',dest=context.env['tool_dest'])
@@ -178,6 +177,9 @@ def cc(context):
     return 0;
     }\n'''
 
+    pkg['libc'] = {'fedora':'glibc',
+                   'generic':'libc6-dev'}
+
     context.Message("checking if %s works ... " % CC)
     res = context.TryLink(text,'.c')
     context.Result(res)
@@ -246,6 +248,10 @@ def cc(context):
 
 # Used for building libraries.
 def ar(context):
+    pkg = context.env['PKG']
+
+    pkg['ar']={'fedora':'binutils'}
+
     context.Message("checking for ar ... ")
     AR = context.env.get('AR',WhereIs('ar'))
     if AR:
@@ -1000,8 +1006,9 @@ def cxx(context):
         sys.exit(unix_failure)
         
     if CXX[-3:]=='g++':
-        for flag in [['-Wall'],['-pedantic']]:
-            context.Message("checking if g++ accepts '%s' ... " % ' '.join(flag))
+        for flag in [['-Wall','-pedantic'],['-pedantic']]:
+            context.Message("checking if g++ accepts '%s' ... " % 
+                            ' '.join(flag))
             context.env['CXXFLAGS'] = oldflag + flag
             res = context.TryCompile(text,'.cc')
             context.Result(res)
@@ -1050,14 +1057,10 @@ def f77(context):
             need_pkg( context.env, 'f77',False)
             
             f77tool.Exists(False)
-#            f77tool.CreateTool( context.env)
             return
     else:
         context.Result(F77)
-#        f77tool.Replace(LINK=f77)
-
-        
-        
+                
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
@@ -1082,6 +1085,7 @@ def f77(context):
         return
     else:
         f77tool.Exists(True)
+        f77tool.Replace(LINK=F77)
         
     F77base = os.path.basename(F77)
     if F77base[:3] == 'f77' and plat['OS'] == 'sunos':
@@ -1116,8 +1120,6 @@ def f90_write_ptr_sz(plat):
         '! %s\ninteger, parameter :: PTRKIND=selected_int_kind(%s)\n' % (msg,str_insert_f90) )
 
 def f90(context):
-    
-#    f90tool  = ToolCreator('rsff90', dest=context.env['tool_dest'])
     f90tool = context.env['RSFF90']
     
     context.Message("checking for F90 compiler ... ")
@@ -1141,8 +1143,6 @@ def f90(context):
             need_pkg( context.env, 'f90',False)
             
             f90tool.Exists(False)
-#            f90tool.CreateTool(context.env)
-            
             return
         
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
@@ -1212,16 +1212,14 @@ def matlab(context):
     matlab = WhereIs('matlab')
     if matlab:
         context.Result(matlab)
-        RSFROOT_lib = os.path.join(context.env.get('RSFROOT'),'lib')
         MATLABPATH = os.environ.get('MATLABPATH')
         if MATLABPATH:
-            MATLABPATH += ':' + RSFROOT_lib
+            MATLABPATH += ':${lib_prefix}'
         else:
-            MATLABPATH = RSFROOT_lib
+            MATLABPATH = '${lib_prefix}'
             
-        MATCOM = 'MATLABPATH=%s %s ' \
-                                '-nosplash -nojvm -nodesktop' %(MATLABPATH,
-                                                                matlab)
+        MATCOM = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' % \
+            (MATLABPATH,matlab)
         context.env['MATLAB'] = MATCOM
         mtool.Replace(MATLAB=MATCOM)
     else:
@@ -1301,7 +1299,7 @@ def octave(context):
             
     else: # octave not found
         context.Result(context_failure)
-        stderr_write('Please install Octave.')
+#        stderr_write('Please install Octave.')
         need_pkg( context.env, 'octave',False)
         otool.Exists(False)
 

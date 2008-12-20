@@ -31,5 +31,4 @@ def add_to_default_tools( atool ):
         _scons_defaults.ConstructionEnvironment[ 'TOOLS' ] = [ 'default', atool ]
 
 
-#add_to_default_tools( 'slabroot' )
 

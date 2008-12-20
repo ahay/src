@@ -1,6 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import os, sys
+import os, sys, glob
 from os.path import abspath,join
 #sys.path.append(abspath('framework'))
 import sfconfigure
@@ -11,10 +11,6 @@ try:
     env.Tool('rsfroot')
 except:
     raise SystemExit('Please run ./configure first.')
-
-
-
-
 
 root = env['INSTALL_PREFIX']
 env['RSFROOT']=root
@@ -43,38 +39,18 @@ Export('env')
 env.Tool('rsfutil')
 env.Tool('sfdoc')
 env.Append(LIBS=[])
-#env.Tool('rsfcc')
-
-#opts = Options('config.py')
-#sfconfigure.options(opts)
-#opts.Update(env)
 
 SConscript(dirs='framework',name='SConstruct')
 
 ##########################################################################
 # API BUILD
 ##########################################################################
-#api = env.get('API',[])
-#api.insert(0,'c')
-
-
-#Default('build/include')
-#Default('build/lib')
-
-#import pdb
-#pdb.set_trace()
-#for dir in map(lambda x: os.path.join('api',x), api):
-
-api = [ os.path.join('api',d) for d in os.listdir( 'api' ) if not d.startswith('.')]
-
-#LIB_INCLUDE_PATHS=[ join('build',dir) for dir in api]
 
 env.Append( CPPPATH=['#/build/api/c'],
             LIBPATH=['#/build/api/c'],
             LIBS=['rsf'])
 
-#env.Append( LIBPATH ) 
-for dir in api:
+for dir in glob.glob('api/[a-z]*'):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConscript')

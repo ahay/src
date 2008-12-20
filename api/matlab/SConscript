@@ -11,24 +11,22 @@ env.Prepend(LIBS=['drsf'])
 env.Tool('rsfmatlab')
 
 mex = env.get('MEX')
-#suffix = env.get('MEXSUFFIX')
 
 for inp in Split('par dim read write create'):
     cfile = 'rsf_' + inp
 
-#    if mex:
-    mfile = env.Command( cfile+"$MEXSUFFIX", cfile+'.c',
-                        "${MEX} CFLAGS='%s %s -fPIC' "
-                        "$SOURCE ${_LIBDIRFLAGS} ${_LIBFLAGS} -output $TARGET" %
-                        (env['_CPPINCFLAGS'],env['CCFLAGS'])
-                        )
+    if mex:
+        mfile = env.Command( cfile+"$MEXSUFFIX", cfile+'.c',
+                             "${MEX} CFLAGS='${_CPPINCFLAGS} ${CCFLAGS} -fPIC' "
+                             "$SOURCE ${_LIBDIRFLAGS} ${_LIBFLAGS} "
+                             "-output $TARGET")
 
-    install = env.InstallLibrary(mfile)
+        install = env.InstallLibrary(mfile)
 
-    if env['PLATFORM'] == 'darwin':
-        env.AddPostAction(install,
-                          'install_name_tool -change '
-                          'build/api/c/libdrsf.dylib '
-                          '${lib_prefix}/libdrsf.dylib ${lib_prefix}/%s' % \
-                              (mfile[0]))
+        if env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '${lib_prefix}/libdrsf.dylib ${lib_prefix}/%s' % \
+                                  (mfile[0]))
 
