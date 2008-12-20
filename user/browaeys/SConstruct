@@ -3,11 +3,13 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-beamsteer hdtrace
+beamsteer 
 karman karmans karman2
 powereno radonslope2
 velsteer zoimg3
 '''
+
+#hdtrace
 
 try:  # distributed version
     Import('env')

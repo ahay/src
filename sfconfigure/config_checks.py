@@ -116,7 +116,7 @@ def check_all(context):
         
     if 'python' in disabled:
         pyttool.Exists(False)
-        context.Message("checking python APl ...")
+        context.Message("checking python API ...")
         context.Result('no (explicitly disabled)')
 
     else:

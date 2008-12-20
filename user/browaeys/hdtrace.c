@@ -22,6 +22,9 @@
 
 #include "hdtrace.h"
 #include "symplectrace.h"
+
+#ifdef _it_does_not_compile
+
 #include "grad2fill.h"
 
 #ifndef _hdtrace_h
@@ -40,6 +43,7 @@ static pqv hvec;
 
 static const float eps = 1.e-5;
 static void psnap (float* p, float* q, int* iq);
+
 
 void hdtrace_init (int order        /* interpolation order for velocity */, 
 		   int iorder       /* interpolation order for values */,
@@ -296,4 +300,4 @@ static void psnap (float* p, float* q, int* iq)
     *iq = ip;
 }
 
-
+#endif
