@@ -50,7 +50,7 @@
 #define MAX_FLOAT (1.0/SMALL_FLOAT)
 #endif
 
-VFSR_DEFINES *OPTIONS;
+static VFSR_DEFINES *OPTIONS;
 
 /* essential MACROS */
 
@@ -133,7 +133,7 @@ static LONG_INT number_acceptances_saved, best_number_accepted_saved;
 /* Flag indicates that the parameters generated were
    invalid according to the cost function validity criteria. */
 static int valid_state_generated_flag;
-LONG_INT number_invalid_generated_states, repeated_invalid_states;
+static LONG_INT number_invalid_generated_states, repeated_invalid_states;
 
 /* parameter type is real or integer */
 static int *parameter_type;
@@ -1382,7 +1382,7 @@ static void cost_derivatives(double (*user_cost_function) ())
 #define FMOD ((double) 65536.0)
 
 static long int seed = 696969;
-double random_array[SHUFFLE];        /* random variables */
+static double random_array[SHUFFLE];        /* random variables */
 
 /***********************************************************************
 * Author: Lester Ingber, Bruce Rosen (copyright) (c)
