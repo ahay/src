@@ -18,7 +18,15 @@ def param():
     par['dz']=par['dz']*par['ft2km']
 
     par['nb']=250
-    
+
+    # source coordinates
+    par['os']=10.95*par['ft2km']
+    par['ds']=0.150*par['ft2km']
+
+    # receiver coordinates
+    par['or']=10.95*par['ft2km']
+    par['dr']=0.075*par['ft2km']
+
     return par
 
 # ------------------------------------------------------------
@@ -124,9 +132,6 @@ def getrefl(refl,par):
 
 # ------------------------------------------------------------
 def makeshots(shot,data,par):
-
-    par['os']=10.95*par['ft2km']
-    par['ds']=0.150*par['ft2km']
 
     Flow(shot+'-ss',data+'-t','dd type=float | headermath output="10925+fldr*150" | window')
     Flow(shot+'-oo',data+'-t','dd type=float | headermath output="offset"         | window')

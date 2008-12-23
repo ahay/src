@@ -162,6 +162,9 @@ struct img{
     int LOy,HIy;
     int LOz,HIz;            /* space-lags I.C. */
     float vpvs;             /*    abs-lag I.C. */
+    int CLOx,CHIx;
+    int CLOy,CHIy;
+    int CLOz,CHIz;
 };
 /*^*/
 

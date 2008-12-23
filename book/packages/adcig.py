@@ -80,6 +80,8 @@ def agrey(custom,par):
     return ciggrey(' label2="\F10 q\F3 " unit2="\^o\_" '%par+custom,par)
 # ------------------------------------------------------------
 
+
+# ------------------------------------------------------------
 def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
 
     hxmin=ohx
@@ -124,6 +126,32 @@ def egrey(custom,par):
             par['eratio3'],par['eheight3'],par['epointz'],par['epointx'],
             custom )
 
+# ------------------------------------------------------------
+def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
+
+    hxmin=ohx
+    hxmax=ohx+(nhx-1)*dhx
+
+    hzmin=oz
+    hzmax=oz+(nz-1)*dz
+
+    hymin=v*(oht)
+    hymax=v*(oht+(nht-1)*dht)
+
+    dx=hxmax-hxmin
+    dy=hymax-hymin
+    dz=hzmax-hzmin
+    yxratio=dx/(dx+dy);
+    yzratio=dz/(dz+dy);
+    
+    par['sratio3']=(dz+dy)/(dx+dy);
+    par['spointz']=yzratio;
+    par['spointx']=yxratio;
+    if(par['sratio3']>=1):
+        par['sheight3']=10
+    else:
+        par['sheight3']=13*par['sratio3']
+
 # z-lx-tau
 def sgrey(custom,par):
     return '''
@@ -133,12 +161,14 @@ def sgrey(custom,par):
     label1="z" unit1=%s
     label2="\F10 l\F3 x" unit2=%s
     label3="\F10 t\F3  " unit3=%s
+    screenratio=%g screenht=%g point1=%g point2=%g
     %s
     ''' % ( custom,
             par['nz']/2, par['nhx'], par['nht']/2,
             par['uz'],
             par['ux'],
             par['ut'],
+            par['sratio3'],par['sheight3'],par['spointz'],par['spointx'],
             custom )
 
 
