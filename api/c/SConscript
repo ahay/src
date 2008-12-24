@@ -3,8 +3,9 @@ import os
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr mt19937ar ctmf vfsr'
+src = 'kiss_fft kiss_fftr mt19937ar ctmf'
 hdrs = 'vfsr_defs'
+
 
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep

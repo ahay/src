@@ -5,7 +5,7 @@ EnsureSConsVersion( 0, 98 )
 
 #root = os.environ.get('RSFROOT',os.getcwd())
 
-SConsignFile( join("config-etc/sconfig-signatures" ) )
+SConsignFile( "config-etc/sconfig-signatures" )
 
 #sys.path.append('framework')
 import sfconfigure
@@ -31,9 +31,9 @@ AddOption( '--config-file',
 
 configfile=GetOption('configfile')
 
-if not isfile(configfile):
-    msg = "SConfig: got invalid value for option '--config-file', file '%s' does not exist" %configfile
-    raise Exception(msg)
+#if not isfile(configfile):
+#    msg = "SConfig: got invalid value for option '--config-file', file '%s' does not exist" %configfile
+#    raise Exception(msg)
 opts = Options(  )
 
 sfconfigure.StdInstall( env, 'rsfroot', 'sfconfigure/tools' )

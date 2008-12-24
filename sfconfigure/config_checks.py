@@ -1,5 +1,5 @@
 import sys, os, string, re, commands, types, py_compile
-
+from os.path import join
 import SCons
 
 
@@ -32,7 +32,31 @@ def CreateFalseTool( name, context ):
     newtool = ToolCreator( name, dest=context.env['tool_dest'])
     newtool.Exists(False)
     newtool.CreateTool( context.env )
+
+def AllChecks( context ):
+    return {
+    'CheckCC': cc,
+    'CheckCCDebug':ccdebug,
+    'CheckAR':ar,
+    'CheckLIBS':libs,
+    'CheckC99':c99 ,
+    'CheckX11':x11,
+    'CheckPPM':ppm,
+    'CheckJPEG':jpeg,
+    'CheckOPENGL':opengl,
+    'CheckBLAS':blas,
+    'CheckMPI':mpi ,
+    'CheckOMP':omp ,
+    'CheckCXX':cxx,
+    'CheckF77':f77,
+    'CheckF90':f90,
+    'CheckMATLAB':matlab,
+    'CheckOCTAVE':octave,
+    'CheckPYTHON':python,
+    }
     
+
+
 def check_all(context):
     
 
@@ -50,6 +74,7 @@ def check_all(context):
     mattool = ToolCreator('rsfmatlab',dest=context.env['tool_dest'])
     octtool = ToolCreator('rsfoctave',dest=context.env['tool_dest'])
     pyttool = ToolCreator('rsfpython',dest=context.env['tool_dest'])
+    numpytool = ToolCreator('numpytool',dest=context.env['tool_dest'])
     
     context.env['RSFCC'] = cctool
     context.env['RSFCXX']  = cxxtool
@@ -58,6 +83,7 @@ def check_all(context):
     context.env['RSFMATLAB']  = mattool
     context.env['RSFOCTAVE']  = octtool
     context.env['RSFPYTHON']  = pyttool
+    context.env['NUMPYTOOL']  = numpytool
 
     cc  (context)
     ccdebug( context )
@@ -129,7 +155,7 @@ def check_all(context):
     mattool.CreateTool( context.env )
     octtool.CreateTool( context.env )
     pyttool.CreateTool( context.env )
-
+    numpytool.CreateTool( context.env )
 
 def ccdebug(context):
     dbtool = ToolCreator('rsfcc_debug', dest=context.env['tool_dest'])
@@ -224,15 +250,15 @@ def cc(context):
         if plat['OS'] == 'darwin' and os.path.isdir('/sw'):
             context.env['CPPPATH'] = context.env.Append(CPPPATH=['/sw/include',])
             
-                          
             context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
                                          ['/sw/lib',]
                                          
             context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
                                          ' -framework Accelerate'
             
-            cctool.Append( CCFLAGS=['/sw/include'] ,LIBPATH=['/sw/lib',],
-                           LINKFLAGS=' -framework Accelerate')
+            cctool.Append( CPPPATH=['/sw/include'] ,LIBPATH=['/sw/lib'],
+                           FRAMEWORKS=['Accelerate'])
+#                           LINKFLAGS=' -framework Accelerate')
             
     elif plat['OS'] == 'sunos':
         if '-O2' in context.env.get('CCFLAGS',[]):
@@ -425,10 +451,14 @@ def x11(context):
 
     oldpath = context.env.get('CPPPATH',[])
 
+    if not oldpath:
+        oldpath = []        
     res = None
     for path in filter(lambda x:
                        os.path.isfile(os.path.join(x,'X11/Xaw/Label.h')),
                        INC+xinc):
+#        import pdb;
+#        pdb.set_trace()
         context.env['CPPPATH'] = oldpath + [path,] 
         res = context.TryCompile(text,'.c')
 
@@ -611,6 +641,7 @@ def opengl(context):
 #        oglflags = [' -framework AGL -framework OpenGL -framework GLUT']
 #        context.env['LINKFLAGS'] = LINKFLAGS + oglflags
         ogl = []
+        oglflags = []
     else:
         oglflags = None
         ogl = context.env.get('OPENGL')
@@ -707,6 +738,8 @@ def glew(context,LIBS,ogl):
     glewtool.CreateTool( context.env )
 
 def blas(context):
+    
+    plat = context.env['PLAT']
     pkg = context.env['PKG']
     pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel'}
     
@@ -1322,21 +1355,28 @@ def python(context):
         context.Result( 'yes' )
     
     context.Message("checking for numpy ... ")
+    
+    numpytool = context.env['NUMPYTOOL'] 
+    
     try:
         import numpy
     except ImportError:
+        
         context.Result(context_failure)
         need_pkg( context.env, 'numpy',False)
 
         pytool.Exists(False)
 #        pytool.CreateTool( context.env )
         context.Result( False )
+        numpytool.Exists( False )
         return
 
     else:
         context.Result(context_success)
         context.env['PYMODULES'] = ['numpy']
         pytool.Append(PYMODULES='numpy')
+        numpytool.Append( CPPPATH=join( numpy.__path__[0], 'core/include/' ))
+        numpytool.Exists(True)
 
     context.Message("checking for scipy ... ")
     try:
@@ -1388,7 +1428,7 @@ def options(opts):
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              ['-O2'])
     opts.Add('CPPPATH',
-             'The list of directories that the C preprocessor will search')
+             'The list of directories that the C preprocessor will search',[])
     opts.Add('LIBPATH',
              'The list of directories that will be searched for libraries')
     opts.Add('LIBS',
@@ -1401,14 +1441,14 @@ def options(opts):
     opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, octave, python')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
-             '-O2')
+             ['-O2'])
     opts.Add('F77','The Fortran-77 compiler')
     opts.Add('F77FLAGS','General options that are passed to the F77 compiler',
-             '-O2')
+             ['-O2'])
     opts.Add('CFORTRAN','Type of the Fortran-77 compiler (for cfortran.h)')
     opts.Add('F90','The Fortran-90 compiler')
     opts.Add('F90FLAGS','General options that are passed to the F90 compiler',
-             '-O2')
+             ['-O2'])
     opts.Add('CFORTRAN90','Type of the Fortran-90 compiler (for cfortran.h)')
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
     opts.Add('MEXSUFFIX','Suffix for mex files')
