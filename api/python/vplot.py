@@ -42,3 +42,5 @@ class Vplot(object):
         c_vplot.vp_uarrow(x1,y1,x,y,r)
     def tjust(self,xjust,yjust):
         c_vplot.vp_tjust(xjust,yjust)
+    def clip(self,xmin,ymin,xmax,ymax):
+        c_vplot.vp_clip (xmin,ymin,xmax,ymax)

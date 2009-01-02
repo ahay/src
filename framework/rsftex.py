@@ -752,7 +752,10 @@ class TeXPaper(Environment):
     def __init__(self,**kw):
         kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
-        opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        if version[0] < 1 or version[1] < 2:
+            opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        else:
+            opts = Variables(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
         self.Append(ENV={'XAUTHORITY':

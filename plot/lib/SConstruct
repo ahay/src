@@ -59,8 +59,15 @@ env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)
 
 if root:
-    env.Install(libdir,[slib,dlib])
+    install = env.Install(libdir,[slib,dlib])
     env.Install(incdir,inc)
+
+    if env['PLATFORM'] == 'darwin':                
+        env.AddPostAction(install,
+                          'install_name_tool -change '
+                          'build/api/c/libdrsf.dylib '
+                          '%s/libdrsf.dylib %s/%s' % \
+                              (libdir,libdir,dlib[0]))
 
 api = env.get('API',[])
 

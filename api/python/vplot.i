@@ -33,3 +33,4 @@ void vp_utext (float x, float y    /* coordinate of the reference point */,
 void vp_scale (float xscale, float  yscale);
 void vp_uarrow (float x1, float y1, float x, float y, float r);
 void vp_tjust (int xjust1, int yjust1);
+void vp_clip (float xmin, float ymin, float xmax, float ymax);

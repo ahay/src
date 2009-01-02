@@ -178,7 +178,6 @@ if __name__ == "__main__":
     vp.utext(xtxt,ztxt,8,60,
 	     "\\F9 D\\F3 t\\s60 \\_i\\^\\s100 v\\s60 \\_i\\^\\s100 /2")
 
-
     wantframe=False
     if wantframe:
 	vp.umove(xmin,zmin)

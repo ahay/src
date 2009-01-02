@@ -198,7 +198,10 @@ class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
-        opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        if version[0] < 1 or version[1] < 2:
+            opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        else:
+            opts = Variables(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Add('TIMER','Whether to time execution')
         opts.Add('CHECKPAR','Whether to check parameters')

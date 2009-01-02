@@ -84,11 +84,18 @@ if 'python' in env.get('API',[]):
 
         if root:
             install = env.Install(libdir,pfiles)
-            if env['PLATFORM'] == 'darwin':
-                for lib in ('rsf','rsfplot'):
+            if env['PLATFORM'] == 'darwin':      
+                env.AddPostAction(install,
+                                  'install_name_tool -change '
+                                  'build/api/c/libdrsf.dylib '
+                                  '%s/libdrsf.dylib %s/%s' % \
+                                      (libdir,libdir,python[0]))          
+                if module == 'vplot':
                     env.AddPostAction(install,
                                       'install_name_tool -change '
-                                      'build/api/c/libd%s.dylib '
-                                      '%s/libd%s.dylib %s/%s' % \
-                                          (lib,libdir,lib,libdir,python[0]))
+                                      'build/plot/lib/libdrsfplot.dylib '
+                                      '%s/libdrsfplot.dylib %s/%s' % \
+                                          (libdir,libdir,python[0]))
+                   
+                   
 

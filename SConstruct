@@ -17,7 +17,12 @@ env = Environment()
 # CONFIGURATION
 ##########################################################################
 
-opts = Options('config.py')
+try:
+    EnsureSConsVersion(1,2)
+    opts = Variables('config.py')
+except:
+    opts = Options('config.py')
+
 configure.options(opts)
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
