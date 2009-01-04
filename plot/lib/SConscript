@@ -75,7 +75,7 @@ if env.get('root'):
     env.Depends(docs,'#/framework/rsfdoc.py')
 
     doc = env.Docmerge(main,docs)
-    env.Install("library_prefix", doc)
+    env.Install("$library_prefix", doc)
     
 #     $Id: SConstruct 3987 2008-12-16 19:52:35Z srossross $    
 

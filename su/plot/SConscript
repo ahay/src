@@ -1,0 +1,78 @@
+import os, sys, glob, string
+
+progs = '''
+wigb
+'''
+
+Import('env')
+env = env.Clone()
+#try:
+#    root = env.get('RSFROOT')
+#    libdir = os.path.join(root,'lib')
+#    bindir = os.path.join(root,'bin')
+#
+#    dir = string.replace(os.getcwd(),'/build','')
+src = Glob('[a-z]*.c')
+#except:
+#    root = None
+#    env = Environment()
+#    opts=Options('../../config.py')
+#    configure.options(opts)
+#    opts.Update(env)
+#    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+#    if  env['PLATFORM'] == 'sunos':
+#    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+#    SConscript('../lib/SConstruct')
+#    src = glob.glob('[a-z]*.c')
+#    env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
+#               SCANNERS=[configure.Include])
+
+#xinc = env.get('XINC')
+#xlib = env.get('XLIBPATH')
+
+#env.Tool('x11')
+
+
+if Tool('x11').exists( env ):  
+    env.Tool('x11')
+    env.Append( LIBS=['su','rsfplot'],
+                LIBPATH=['../lib'],
+                CPPPATH=['../lib'] )
+                
+
+    for source in src:
+        inc = env.Include(source,prefix='')
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+
+mains = Split(progs)
+
+for prog in mains:
+    if Tool('x11').exists( env ):
+        sources = ['X' + prog]
+#        Depends(env,sources,'X'+prog)
+        main = env.Program(prog,map(lambda x: x + '.c',sources))
+    else:
+        main = env.Place(prog,None,var='XINC and XLIBPATH')
+        
+    
+    env.InstallExecutable(main[0])
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if env.get('root',True):
+    main = 'sfsuplot.py'
+
+    if Tool('x11').exists( env ):
+        docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
+        env.Depends(docs,'#/framework/rsfdoc.py')
+    else:
+        docs = []
+
+    doc = env.Docmerge(main,docs)
+    env.InstallLibrary(doc)
+#####################################################################
+
+#     $Id$
+

@@ -3,7 +3,9 @@ import os
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr mt19937ar ctmf'
+#src = 'kiss_fft kiss_fftr mt19937ar ctmf'
+src = 'kiss_fft kiss_fftr mt19937ar ctmf vfsr'
+
 hdrs = 'vfsr_defs'
 
 

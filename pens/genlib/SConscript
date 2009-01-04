@@ -1,0 +1,32 @@
+import os, sys, string
+sys.path.append('../..')
+import configure
+
+src = '''
+genarea genhatch geninteract genmarker genmessage genpatarea genpoint
+genraster1 genraster gentext genvector nulldev polyfix polysubs vecarea
+'''
+Import('env')
+env = env.Clone()
+
+env.Prepend(CPPPATH=['../../include','../'])
+
+sources  = map(lambda x: x+'.c',Split(src))
+includes = map(lambda x: x+'.h',Split(src))
+
+incdir = os.environ.get('VPLOTFONTDIR',"${include_prefix}"+os.sep)
+
+objects = []
+env = env.Clone()
+env.Append( CPPDEFINES=['VPLOT_FONT_DIR=\'\"%s\"\''% incdir] ,
+            CPPPATH=['../fonts'] )
+#CPPFLAGS=env.get('CPPFLAGS',[])+['-DVPLOT_FONT_DIR=\'\"%s\"\'' % incdir,]
+for source in Split(src):
+    env.Include(source,prefix='pen_')
+    obj = env.StaticObject(source+'.c' )
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+inc = env.Command('genpen.h',includes,Action(configure.merge))
+lib = env.StaticLibrary('genpen',objects)
+

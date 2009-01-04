@@ -1,0 +1,12 @@
+import os
+
+pages = 'libvplot pen vplot vplotraster vplottext'
+
+Import('env')
+
+root = env.get('RSFROOT')
+mandir = os.path.join(root,'man','man9')
+
+for page in Split(pages):
+    env.InstallAs(os.path.join(mandir,page+'.9'),page+'.mn')
+

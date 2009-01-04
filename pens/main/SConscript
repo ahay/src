@@ -1,0 +1,112 @@
+import os, sys, string
+sys.path.append('../..')
+import configure
+
+src = 'do  init_  main_ proc_'
+
+Import('env')
+env = env.Clone()
+
+    
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../utilities','../genlib','../../lib'],
+            LIBS=['genpen','penutil','rsfplot','rsf'])
+
+env['PROGPREFIX'] = ''
+
+sources = map(lambda x: x+'vplot',Split(src))
+
+objects = []
+for source in sources:
+    env.Include(source,prefix='pen_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+docalias = {}
+
+# vppen
+#######
+
+env.Include('vppen',prefix='pen_')
+obj = env.StaticObject('vppen.c')
+env.Depends(obj,'vppen.h')
+main = env.Program('vppen',[obj,]+objects)
+
+env.InstallExecutable( main[0] )
+        
+pens = ['vppen']
+
+# xtpen
+#######
+
+inc = env.get('XINC')
+lib = env.get('XLIBPATH')
+
+xenv = env.Clone()
+
+if Tool('x11').exists(xenv):
+    xenv.Tool('x11')
+    xenv.Include('xtpen',prefix='pen_')
+    obj = xenv.StaticObject('xtpen.c')
+    xenv.Depends(obj,'xtpen.h')
+    main = xenv.Program('xtpen', [obj,]+objects )
+    pens.append('xtpen')
+else:
+    main = env.Place('xtpen',None,
+                     var='XINC and XLIBPATH',package='libXaw-devel')
+    
+
+env.InstallExecutable(main[0])
+
+# pspen
+#######
+
+env.Include('pspen',prefix='pen_')
+obj = env.StaticObject('pspen.c')
+env.Depends(obj,'pspen.h')
+main = env.Program('pspen',[obj,]+objects)
+
+
+env.InstallExecutable( main[0] )
+
+pens.append('pspen')
+
+# raspen
+#######
+
+ppm = env.get('PPM')
+
+penv = env.Clone()
+if Tool('ppm').exists(penv):
+    
+    penv.Include('raspen',prefix='pen_')
+    obj = penv.StaticObject('raspen.c')
+    penv.Depends(obj,'raspen.h')
+    main = penv.Program('ppmpen',[obj,]+objects )
+    
+    docalias['sfppmpen']='sfraspen'
+    pens.append('raspen')
+else:
+    main = env.Place('ppmpen',None,var='PPM',package='netpbm-devel')
+    
+env.InstallExecutable( main[0] )
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if env.get('root'):
+    main = 'sfpens.py'
+
+    for pen in pens:
+        env.Command('M'+pen+'.c',[pen+'.c','init_vplot.c'],
+                    'cat $SOURCES > $TARGET')
+    
+    docs = map(lambda prog: env.Doc(prog,'M'+prog),pens)
+    env.Depends(docs,'#/framework/rsfdoc.py')
+    doc = env.Docmerge(main,docs,alias=docalias)
+    env.Install(libdir,doc)
+ 
+#####################################################################
+
+#     $Id$    

@@ -19,12 +19,13 @@ lib = env.StaticLibrary('rsff','fortran.o')
 
 env.InstallLibrary(lib)
 
-for file in ['getpar','file']:
-    test = 'Test' + file + '.f'
-    env.Program(file,[test,lib],
-                PROGPREFIX='Test',
-                PROGSUFFIX='.x',
-                LINK=F77,
-                LINKFLAGS=env.get('F77FLAGS'))
-
-    
+#for file in ['getpar','file']:
+#    test = 'Test' + file + '.f'
+#    env.Program(file,[test,lib],
+#                PROGPREFIX='Test',
+#                PROGSUFFIX='.x',
+#                LINK=F77,
+#                LINKFLAGS=env.get('F77FLAGS'))
+#    
+#
+#    

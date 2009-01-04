@@ -30,10 +30,10 @@ env.InstallInclude(mod)
 
 
 env['LINKFLAGS']=env.get('F90FLAGS')
-
-for file in ['getpar','file']:
-    test = 'Test' + file + '.f90'
-    env.Program(file,[test,lib],
-                PROGSUFFIX='.x',
-                PROGPREFIX='Test',
-                )
+#
+#for file in ['getpar','file']:
+#    test = 'Test' + file + '.f90'
+#    env.Program(file,[test,lib],
+#                PROGSUFFIX='.x',
+#                PROGPREFIX='Test',
+#                )

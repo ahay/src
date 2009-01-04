@@ -1,0 +1,41 @@
+import os, sys, string, re
+#sys.path.append('../..')
+#import configure
+
+#############################################################################
+# SU LIBRARY
+#############################################################################
+src = 'intsinc8 inttable8 mksinc sinc toeplitz'
+
+Import('env')
+env = env.Clone()
+
+#env.Prepend(CPPPATH=['../../include'],
+#            LIBPATH=['../../lib'],
+#            LIBS=['rsf'])
+
+
+##############################################################################
+# INCLUDES
+##############################################################################
+
+objects = []
+includes = []
+for source in Split(src):
+    inc = env.Include(source,prefix='sf_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,inc)
+    objects.append(obj)
+    includes.append(inc)
+
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
+lib = env.StaticLibrary('su',objects)
+inc = env.Merge('su.h',includes)
+
+env.InstallLibrary(lib)
+env.InstallInclude(inc)
+
+
+

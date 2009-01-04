@@ -1,0 +1,45 @@
+
+#Not implemented yet
+import os
+#
+#import os
+Import('env')
+env = env.Clone()
+
+#
+prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
+
+attr = ('check','header','dim','addr','widthl','widthr','symbol','svec','lig')
+
+src = Glob('[a-z]*.vplot_font')
+
+command = "LD_LIBRARY_PATH=%s ${SOURCES[0].abspath} ${SOURCES[1].filebase} < ${SOURCES[1]} > ${TARGETS[0]} && cat ${AUX} > ${TARGETS[1]} && rm ${AUX} " 
+
+for font in src:
+    
+
+#else:
+#    top = ''
+#  
+#for font in src:
+#    print dir( font )
+#    import pdb
+#    pdb.set_trace()
+    base = os.path.splitext(font.name)[0]
+    include = base+'.include'
+    bin = base+'.bin'
+#       
+#    command % (os.environ.get('LD_LIBRARY_PATH',''),base,aux,aux)
+    aux = map(lambda x: '%s_%s' % (base,x),attr)
+    env.Command( [include,bin],[prog,font], command, AUX=aux )
+#    env.Command([include,bin],[prog,font],
+#                'LD_LIBRARY_PATH=%s ${SOURCES[0].abspath} %s '
+#                '< ${SOURCES[1]} > ${TARGETS[0]} && '
+#                'cat %s > ${TARGETS[1]} && '
+#                'rm %s' % (os.environ.get('LD_LIBRARY_PATH',''),base,aux,aux))
+#
+    env.InstallInclude( include )
+    env.InstallInclude( bin )
+#
+#
+#        
