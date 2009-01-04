@@ -6,44 +6,25 @@ wigb
 
 Import('env')
 env = env.Clone()
-#try:
-#    root = env.get('RSFROOT')
-#    libdir = os.path.join(root,'lib')
-#    bindir = os.path.join(root,'bin')
-#
-#    dir = string.replace(os.getcwd(),'/build','')
+
+
+env.Tool('rsfc')
+env.Tool('rsfcc')
+
 src = Glob('[a-z]*.c')
-#except:
-#    root = None
-#    env = Environment()
-#    opts=Options('../../config.py')
-#    configure.options(opts)
-#    opts.Update(env)
-#    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-#    if  env['PLATFORM'] == 'sunos':
-#    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-#    SConscript('../lib/SConstruct')
-#    src = glob.glob('[a-z]*.c')
-#    env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
-#               SCANNERS=[configure.Include])
-
-#xinc = env.get('XINC')
-#xlib = env.get('XLIBPATH')
-
-#env.Tool('x11')
-
 
 if Tool('x11').exists( env ):  
     env.Tool('x11')
-    env.Append( LIBS=['su','rsfplot'],
+    env.Append( LIBS=['su'],
                 LIBPATH=['../lib'],
                 CPPPATH=['../lib'] )
                 
-
+    objects = []
     for source in src:
         inc = env.Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
+        objects.append( obj )
 
 mains = Split(progs)
 
@@ -51,7 +32,8 @@ for prog in mains:
     if Tool('x11').exists( env ):
         sources = ['X' + prog]
 #        Depends(env,sources,'X'+prog)
-        main = env.Program(prog,map(lambda x: x + '.c',sources))
+        
+        main = env.Program(prog,[map(lambda x: x + '.c',sources)+objects], PROGPREFIX='sf' )
     else:
         main = env.Place(prog,None,var='XINC and XLIBPATH')
         
@@ -74,5 +56,4 @@ if env.get('root',True):
     env.InstallLibrary(doc)
 #####################################################################
 
-#     $Id$
 
