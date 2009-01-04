@@ -296,6 +296,7 @@ def c99(context):
     int main(int argc,char* argv[]) {
     float complex c;
     float f;
+    c = 0.0;
     f = cabsf(ccosf(c));
     return (int) f;
     }\n'''
