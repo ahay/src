@@ -4,29 +4,9 @@ box = '''
       box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=3
       '''
 #Get data
+Fetch('dragon.HH','dragon')
 
-#sgy = 'ALL-gathers.sgy'
-
-#Flow('dragon tdragon dragon.asc dragon.bin',sgy,
-#     '''
-#    segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
-#     ''')
-# Extract CMPs
-
-#Flow('cmp','dragon tdragon','intbin head=${SOURCES[1]} xk=cdpt yk=cdp')
-
-Fetch(['cmp.HH','dragon.HH'],'dragon')
-
-Flow('cmp1','cmp.HH','dd form=native')
-Flow('gather','cmp1','stack axis=3')
-Result('gather','wiggle poly=y transp=y yreverse=y poly=y title=Supergather')
-
-Flow('denoise2','cmp1','tvmf nfw=11')
-
-Flow('gather1','denoise2','stack axis=3')
-Result('gather1','wiggle poly=y transp=y yreverse=y poly=y title="Denoise supergather"')
-
-Flow('dragon1','dragon.HH','dd form=native') # | swell den=30 inten=0.3 slope=0.1 num=30')
+Flow('dragon1','dragon.HH','dd form=native')
 Plot('dragon1',
      '''
      window min1=4. |
@@ -57,25 +37,20 @@ Plot('label03',None,box % (12.0,6.0,"C",-0.5,0.5))
 Result('dragon1','dragon1 frame label0 label01 label02 label03','Overlay')
 
 Flow('dspec','dragon1','window n2=1 f2=20 | spectra ')
-Result('dspec','graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('dspec',
+       '''
+       graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3
+       gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 # Filters
-transf = {'3mf':'mf nfw=3 | bandpass flo=5 ',
-          '11mf':'mf nfw=11 |bandpass flo=5 fhi=70 ' ,
-          '11mlm':'mlm nfw=11 |bandpass flo=5 fhi=70',
+transf = {'11mf':'mf nfw=11 |bandpass flo=5 fhi=70 ' ,
           '11tvmf':'tvmf nfw=7 |bandpass flo=5 fhi=70'}
 
-# Figure Capitions
-caption = {'3mf':'stationary MF',
-           '11mf':'Result after stationary MF filtering',
-           '11mlm':'Result after stationary MLM',
-           '11tvmf':'Result after TVMF filtering'}
-
 # Apply Filters to white noise
-for tt in range(4):
+for tt in range(2):
     t = transf.keys()[tt]
-    title = caption[t]
-    
+
     # Apply filter
     Flow(t,'dragon1',transf[t])
     Result(t,
@@ -87,10 +62,18 @@ for tt in range(4):
            ''' )
 
 Flow('fspec','11tvmf','window n2=1 f2=20 | spectra ')
-Result('fspec','graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('fspec',
+       '''
+       graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 
+       gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 Flow('mfspec','11mf','window n2=1 f2=20 | spectra ')
-Result('mfspec','graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('mfspec',
+       '''
+       graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 Flow('band','dragon1','bandpass flo=5 fhi=60 ')
 Result('band',
@@ -101,47 +84,11 @@ Result('band',
        label1=Time label2=Distance unit1=s unit2=km
        ''')
 Flow('bspec','band','window n2=1 f2=20 | spectra ')
-Result('bspec','graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
-
-######################
-# LUM and MLM
-#####################
-# Apply PWD
-Flow('dip0','dragon1','dip order=3 rect1=10 rect2=4 pmin=0 ')
-Result('dip0',
+Result('bspec',
        '''
-       window min1=4. |
-       grey color=j title="Seismic Slope" 
-       allpos=y clip=2 maxval=2 scalebar=y 
-       label1=Time label2=Distance unit1=s unit2=m 
+       graph wanttitle=n max2=6 parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
        ''')
-Flow('dip1','dip0','math output="10*input" ')
-
-Flow('lum2','dragon1','lum2 nfw1=11 nfw2=1 type=r smnclip=5 shnclip=5 ')
-Result('lum2',
-       '''
-       window min1=4. |
-       wiggle transp=y yreverse=y color=n title="LUM2" 
-       wherexlabel=top wheretitle=b poly=y
-       label1=Time label2=Distance unit1=s unit2=km 
-       ''' )
-Flow('mlwm','dragon1 dip1','mlwm weights=${SOURCES[1]} nfw=11')
-Result('mlwm',
-       '''
-       window min1=4. |
-       wiggle transp=y yreverse=y color=n title="MLWM" 
-       wherexlabel=top wheretitle=b poly=y
-       label1=Time label2=Distance unit1=s unit2=km 
-       ''' )
-
-Flow('mlm','dragon1','mlm nfw=11')
-Result('mlm',
-       '''
-       window min1=4. |
-       wiggle transp=y yreverse=y color=n title="MLM" 
-       wherexlabel=top wheretitle=b poly=y
-       label1=Time label2=Distance unit1=s unit2=km 
-       ''' )
 
 Flow('diff','dragon1 11tvmf','add scale=1,-1 ${SOURCES[1]}')
 Result('diff',
@@ -153,18 +100,7 @@ Result('diff',
        label1=Time label2=Distance unit1=s unit2=km
        ''')
 
-Flow('diff1','dragon1 11mf','add scale=1,-1 ${SOURCES[1]}')
-Result('diff1',
-       '''
-       window min1=4. |
-       put d2=0.04238 |
-       wiggle transp=y yreverse=y color=n title="Difference section" 
-       wherexlabel=top wheretitle=b poly=y
-       label1=Time label2=Distance unit1=s unit2=km
-       ''')
-
 #Get NMO+stack+AGC data and TVMF+NMO+stack+AGC data
-
 oldsgy = 'nmo_stack_agc.sgy'
 newsgy = 'tvmf_agc.sgy'
 
@@ -181,7 +117,6 @@ Flow('newstack tnewstack newstack.asc newstack.bin',newsgy,
     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
      ''')
 
-#Flow('stack1','oldstack','window n2=100 min1=2 max1=4')
 Plot('stack1','oldstack',
      '''
      window n2=100 min1=2 max1=4 | 
@@ -209,36 +144,8 @@ Plot('label00',None,box % (5.2,7.1,"H",0.,0.))
 Plot('label1',None,box % (7,7.3,"E",-0.5,0.5))
 Plot('label2',None,box % (4.8,5.8,"F",-0.5,-0.5))
 Plot('label3',None,box % (10.8,7.7,"G",0.5,-0.5))
-
 Result('stack1','stack1 frame1 label00 label1 label2 label3','Overlay')
 
-
-#Flow('sstack1','stack1','window n2=1 f2=20 | spectra ')
-#Result('sstack1','graph title="Amplitude spectra after stack" max2=8 label2=Amplitude label1=Frequency unit2= unit1=Hz')
-
-Flow('stack1tvmf','oldstack','tvmf nfw=5 alpha=0 gamma=4| bandpass flo=5 fhi=60')
-Plot('stack1tvmf',
-     '''
-     window n2=100 min1=2 max1=4 | 
-     put d2=0.04238 |
-     wiggle transp=y yreverse=y color=n title="Poststack Result after TVMF" 
-     wherexlabel=top wheretitle=b poly=y
-     label1=Time label2=Distance unit1=s unit2=km
-     ''')
-Result('stack1tvmf','stack1tvmf label1 label2 label3','Overlay')
-
-Flow('stack1band','oldstack','bandpass flo=5 fhi=60')
-Plot('stack1band',
-     '''
-     window n2=100 min1=2 max1=4 | 
-     put d2=0.04238 |
-     wiggle transp=y yreverse=y color=n title="Poststack Result after low-pass filter" 
-     wherexlabel=top wheretitle=b poly=y
-     label1=Time label2=Distance unit1=s unit2=km
-     ''')
-Result('stack1band','stack1band label1 label2 label3','Overlay')
-
-#Flow('stack2','newstack','window n2=100 min1=2 max1=4')
 Plot('stack2','newstack',
      '''
      window n2=100 min1=2 max1=4 |
@@ -249,50 +156,6 @@ Plot('stack2','newstack',
      ''')
 
 Result('stack2','stack2 label1 label2 label3','Overlay')
-
-
-#Flow('sstack2','stack2','window n2=1 f2=20 | spectra ')
-#Result('sstack2','graph title="Amplitude spectra after TVMF and stack" max2=8 label2=Amplitude label1=Frequency unit2= unit1=Hz')
-
-
-#Result('comp','stack1 stack2',
-#       '''
-#       cat axis=3 ${SOURCES[1]} |
-#       wiggle transp=y yreverse=y poly=y
-#       ''')
-
-#Flow('diff1','stack1 stack2','add scale=1,-1 ${SOURCES[1]}')
-#Result('diff1',
-#       '''
-#       wiggle transp=y yreverse=y color=n title="Difference section after stack" 
-#       wherexlabel=top wheretitle=b poly=y
-#       label1=Time label2=Distance unit1=s unit2=km |
-#       put d2=0.04238 
-#       ''')
-
-
-for yy in range(20):
-    title = 'mf%d' % (3+yy*2)
-    
-    # Apply filter
-    Flow(title,'dragon1','window min1=4. | mf nfw=%d ' % (3+yy*2))
-    Result(title,
-           '''
-           window min1=4. |
-           put d2=0.04238 | 
-           wiggle transp=y yreverse=y color=n title="window=%d" 
-           wherexlabel=top wheretitle=b poly=y
-           label1=Time label2=Distance unit1=s unit2=km
-           ''' % (3+yy*2))
-
-# noise density=5% intensity=0.5
-Flow('snr05',None,
-     '''
-     spike n1=19 d1=2 o1=3 nsp=19
-     k1=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 mag=-1.340496,1.022463,1.805268,2.776231,1.550669,-0.610514,-3.097309,-4.678415,-6.556440,-6.893130,-8.699457,-9.638499,-9.645640,-8.877913,-7.809942,-6.903600,-6.979525,-7.292358, -7.653257
-     ''')
-Result('snr05','graph title="Noise intensity is 0.5" label2=SNR unit2=dB label1="Filter-window length C" unit1=point')
-
 
 End()
 

@@ -8,21 +8,27 @@ Fetch('model0.dat','bgp',private)
 
 # Convert to RSF Model
 Flow('model','model0.dat',
-     'echo in=$SOURCE n1=1500 n2=160 data_format=native_float | put d1=0.002 o1=0 d2=0.05 o2=0',stdin=0)
+     '''
+     echo in=$SOURCE n1=1500 n2=160 data_format=native_float | 
+     put d1=0.002 o1=0 d2=0.05 o2=0
+     ''',stdin=0)
 Result('model',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n 
        clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
        label1="\F-1 Time" label2="\F-1 Distance" unit1="\F-1 s" unit2="\F-1 km"
-
        ''' )
 
 # Amplitude spectra of 80th trace in model
 Flow('smodel','model','window n2=1 j2=80 | spectra')
-Result('smodel','graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('smodel',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 
+       gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 # Add saltpepper white noise
-Flow('noise0','model','transp | saltpepper den=5 inten=2 |  transp')
+Flow('noise0','model','transp | saltpepper den=5 inten=2 | transp')
 Result('noise0',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n 
@@ -32,10 +38,15 @@ Result('noise0',
 
 # Amplitude spectra of 80th trace in model
 Flow('snoise0','noise0','window n2=1 j2=80 | spectra')
-Result('snoise0','graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('snoise0',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 # Add saltpepper color noise ()
-Flow('noise1','model','transp | saltpepper den=5 inten=2 |  transp | bandpass fhi=100  ')
+Flow('noise1','model',
+     'transp | saltpepper den=5 inten=2 | transp | bandpass fhi=100')
 Result('noise1',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n
@@ -43,93 +54,31 @@ Result('noise1',
        label1=Time label2=Distance unit1=s unit2=km
        ''' )
 
-######################################################
-# Add electric disturbation
-
-Flow('ed',None,
-     '''
-     spike n1=1500 d1=0.002 |
-     math output="0.132105*0.5*sin(2*3.14159*60*x1)" |
-     spray n=160 d=0.05 o=0 | cut n2=79 | cut f2=80 n2=80
-     ''')
-Result('ed',
-       '''
-       wiggle transp=y yreverse=y color=n title="Result after band-pass filtering" 
-       clip=0.05 wherexlabel=top wheretitle=b  
-       label1=Time label2=Lateral unit1=s unit2=km
-       ''' )
-
-Flow('noise3','noise0 ed','add scale=1,1 ${SOURCES[1]}')
-Result('noise3',
-       '''
-       wiggle transp=y yreverse=y color=n title="Result after band-pass filtering" 
-       clip=0.05 wherexlabel=top wheretitle=b  
-       label1=Time label2=Lateral unit1=s unit2=km
-       ''' )
-
-######################################################
-
-####################################################################################
-# Add swell noise
-Flow('noise2','model',
-     '''
-     swell den=20 inten=0.3 slope=0.03 num=200 length=1500| 
-     swell den=30 inten=0.5 slope=0.01 num=200 length=1500 |
-     noise type=n range=0.01 | 
-     window n2=79 f2=78
-     ''')
-Result('noise2',
-       '''
-       wiggle transp=y yreverse=y color=n title="Noisy model" 
-       clip=0.05 wherexlabel=top wheretitle=b
-       label1=Time label2=Lateral unit1=s unit2=km clip=0.0635096
-       ''' )
-
-####################################################################################
-
 # Amplitude spectra of 80th trace in noisy model
 Flow('snoise1','noise1','window n2=1 j2=80 | spectra')
-Result('snoise1','graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
+Result('snoise1',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
-# Filters
-transf = {'3mf':'mf nfw=3 | bandpass flo=5 ',
-          '11mf':'mf nfw=11 | bandpass flo=5 ',
-          '11mlm':'mlm nfw=11 | bandpass flo=5 ',
-          '11tvmf':'tvmf nfw=11 | bandpass flo=5 '}
-
-# Figure Capitions
-caption = {'3mf':'3-point MF',
-          '11mf':'Result after MF filtering',
-          '11mlm':'11-point MLM',
-          '11tvmf':'Result after TVMF filtering'}
-
-# Apply Filters to white noise
-for tt in range(4):
-    t = transf.keys()[tt]
-    title = caption[t]
-    
-    # Apply filter
-    Flow('w'+t,'noise0',transf[t])
-    Result('w'+t,
-           '''
-           wiggle transp=y yreverse=y color=n wanttitle=n 
-           clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
-           label1=Time label2=Distance unit1=s unit2=km
-           ''' )
+# Apply Filters to white noise    
+Flow('w11tvmf','noise0','tvmf nfw=11 | bandpass flo=5')
+Result('w11tvmf',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
 
 # Apply Filters to color noise
-for tt in range(4):
-    t = transf.keys()[tt]
-    title = caption[t]
-    
-    # Apply filter
-    Flow('c'+t,'noise1',transf[t])
-    Result('c'+t,
-           '''
-           wiggle transp=y yreverse=y color=n wanttitle=n 
-           clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
-           label1=Time label2=Distance unit1=s unit2=km
-           ''' )
+Flow('c11tvmf','noise1','tvmf nfw=11 | bandpass flo=5')
+Result('c11tvmf',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
 
 Flow('cb11tvmf','c11tvmf','bandpass fhi=110')
 Result('cb11tvmf',
@@ -138,42 +87,13 @@ Result('cb11tvmf',
        clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
        label1=Time label2=Distance unit1=s unit2=km
        ''')
+
 # Amplitude spectra of 80th trace in model
 Flow('scb11tvmf','cb11tvmf','window n2=1 j2=80 | spectra')
-Result('scb11tvmf','graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz')
-
-# Apply Filters to swell noise
-Flow('swtvmf','noise2','tvmf nfw=7')
-Result('swtvmf',
+Result('scb11tvmf',
        '''
-       wiggle transp=y yreverse=y color=n title="%s" 
-       clip=0.05 wherexlabel=top wheretitle=b
-       label1=Time label2=Lateral unit1=s unit2=km clip=0.1
-       ''' % "Result after TVMF filtering")
-
-
-for tt in range(4):
-    t = transf.keys()[tt]
-    title = caption[t]
-    Flow('s'+t,'c'+t,'window n2=1 j2=80 | spectra')
-    Result('s'+t,'graph color=n title="%s" label2=Amplitude label1=Frequency unit2= unit1=Hz' % title)
-
-Flow('diff','noise2 swtvmf','add scale=1,-1 ${SOURCES[1]}')
-Result('diff','wiggle transp=y yreverse=y title="Difference section" poly=y label1=Time label2=Lateral unit1=s unit2=km \
-        clip=0.05 wheretitle=bottom wherexlabel=top')
-
-#Apply F-K filter to noise1
-fft3 = 'fft1 | fft3 axis=2 '
-ifft3 = 'fft3 axis=2 inv=y | fft1 inv=y'
-Flow('fk','noise1',fft3 + \
-     ' | dipfilter ang1=-80 ang2=-70 ang3=70 ang4=80 angle=y taper=1 pass=0 dim=2 | ' \
-     + ifft3)
-
-Result('fk',
-       '''
-       wiggle transp=y yreverse=y color=n wanttitle=n
-       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
-       label1=Time label2=Lateral unit1=s unit2=km
-       ''' )
+       graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
 
 End()
