@@ -5,7 +5,8 @@ Papers(copyr='The University of Texas at Austin',
        line='Selected papers',
        authors={'diffr':'Sergey Fomel, Evgeny Landa, and M.~Turhan Taner',
                 'pwc':'Sergey Fomel and Antoine Guitton',
-                'time2depth':'Maria Cameron, Sergey Fomel, and James Sethian'},
+                'time2depth':'Maria Cameron, Sergey Fomel, and James Sethian',
+                'medianfilter': 'Yang Liu, Cai Liu, and Dian Wang'},
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
 End(use='amsmath,newalg')
