@@ -533,8 +533,11 @@ def html(dir):
     raw  = proc.read()
     proc.close()
     if len(raw) > 0: # SConstruct is under version control
-        revnr = raw[13:].rsplit()[0]
-        know_revnr = True
+        try:
+            revnr = raw[13:].rsplit()[0]
+            know_revnr = True
+        except: # Python < 2.4 or strange svn output
+            know_revnr = False
     else:
         know_revnr = False
     if have_datetime_module or know_revnr:
