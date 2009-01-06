@@ -72,15 +72,15 @@ Result('w11tvmf',
        ''' )
 
 # Apply Filters to color noise
-Flow('c11tvmf','noise1','tvmf nfw=11 | bandpass flo=5')
-Result('c11tvmf',
+Flow('c11mf','noise1','mf nfw=11 | bandpass flo=5')
+Result('c11mf',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n 
        clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
        label1=Time label2=Distance unit1=s unit2=km
        ''' )
 
-Flow('cb11tvmf','c11tvmf','bandpass fhi=110')
+Flow('cb11tvmf','noise1','tvmf nfw=11 | bandpass flo=5 | bandpass fhi=110')
 Result('cb11tvmf',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n
