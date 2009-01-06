@@ -162,9 +162,9 @@ the noise energy can be calculated by
       \end{equation}
 Finally, a decibel expression of the SNR is estimated as
       \begin{equation}
+          SNR = \frac{E_S}{E_N} = 
+	  10\,\log_{10}{\left(\frac{\displaystyle\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2}{\displaystyle M\sum_{j=1}^{N}\! \sum_{i=1}^{M}x_{i,j}^2-\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2}\right)}\;.
         \label{eq:eq10}
-          SNR = \frac{E_S}{E_N} = 10log_{10}\left(\frac{\displaystyle\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2} 
-         {\displaystyle M\sum_{j=1}^{N}\! \sum_{i=1}^{M}x_{i,j}^2-\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2}\right)\;.
       \end{equation}
 
  \subsection{1-D time-varying median filter (TVMF)}
@@ -189,8 +189,8 @@ Using the reference median filter with its large filter-window length, we proces
 the seismic data first to find $Y_{m,n}^C$. Then we applied the absolute mean value 
 to calculate the threshold value, which is shown as
       \begin{equation}
+          T = {\frac{1}{N_x \times N_t}}\,{\sum_{i=1}^{N_x}\! \sum_{j=1}^{N_t}|Y_{i,j}^C|}\;,
         \label{eq:eq3}
-          T = \frac{1}{N_x \times N_t} \sum_{i=1}^{N_x}\! \sum_{j=1}^{N_t}|Y_{i,j}^C|\;,
       \end{equation}
 We can evaluate random-noise data versus useful signal data by using the threshold 
 value. When $|Y_{i,j}^C|< T$, the point is judged to be random noise, whereas when 
