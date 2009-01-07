@@ -15,13 +15,13 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc
-import re, sys, os, string, glob, string, signal, datetime
+import re, sys, os, string, glob, string, signal
 import rsfpath
 
 try:
     import datetime
     have_datetime_module = True
-except:
+except: # Python < 2.3
     have_datetime_module = False
 
 progs = {}
