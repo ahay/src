@@ -17,11 +17,14 @@ env = Environment()
 # CONFIGURATION
 ##########################################################################
 
-try:
-    EnsureSConsVersion(1,2)
-    opts = Variables('config.py')
-except:
+import SCons, string
+
+version = map(int,string.split(SCons.__version__,'.')[:3])
+
+if version[0] < 1 or version[1] < 2:
     opts = Options('config.py')
+else:
+    opts = Variables('config.py')
 
 configure.options(opts)
 opts.Add('RSFROOT','RSF installation root',root)
