@@ -367,11 +367,13 @@ class rsfprog(object):
     def man(self,dir,name=None):
         if not name:
             name = self.name
-        day = datetime.datetime.now()
-        month = day.strftime('%B %Y').upper()
         file = open (os.path.join(dir,name + '.1'),'w')
-        contents = '.TH %s 1  "%s" Madagascar "Madagascar Manuals"\n' \
-            % (name,month)
+        contents = '.TH %s 1  ' % name
+        if have_datetime_module:
+            day = datetime.datetime.now()
+            month = day.strftime('%B %Y').upper()
+            contents += '"%s" ' % month
+        contents += 'Madagascar "Madagascar Manuals"\n'
         desc = '.SH NAME\n%s \- %s\n' % (name,self.desc)
         contents = contents + desc
         if self.snps:
