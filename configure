@@ -16,17 +16,19 @@ findprog ()
 
 findprog python
 python=$prog
-echo "Checking for Python ... $python"
+echo "checking for Python ... $python"
 if test "$python" = "no"; then
     echo "Please install Python before proceeding: http://www.python.org"
     exit 1
 fi
+python_v=`python -V 2>&1 | awk '{print $2}'`
+echo "             Python version is $python_v"
 
 root=${RSFROOT}
 if test ! -n "$root"; then
     root="no"
 fi
-echo "Checking for RSFROOT ... $root"
+echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
     root=$HOME/RSF
     if test ! -d $root; then
@@ -48,7 +50,7 @@ export PYTHONPATH
 
 findprog scons
 scons=$prog
-echo "Checking for SCons ... $scons"
+echo "checking for SCons ... $scons"
 if test "$scons" = "no"; then
     here=`pwd`
     cd scons
@@ -69,6 +71,8 @@ if test "$scons" = "no"; then
 	exit 2
     fi
 fi
+scons_v=`scons -v 2>&1 | awk 'NR==2 {sub(/,/,"",$2); print $2}'`
+echo "             SCons version is $scons_v"
 
 echo "Running $scons $* config..."
 rm -rf .scon* config.py
