@@ -70,6 +70,20 @@ if inc and lib:
 else:
     main = env.Place('xtpen',None,
                      var='XINC and XLIBPATH',package='libXaw-devel')
+
+# x11pen
+#######
+
+if inc and lib:
+    env.Include('x11pen',prefix='pen_')
+    obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
+    env.Depends(obj,'x11pen.h')
+    main = env.Program('x11pen',[obj,]+objects,
+                       LIBPATH=env.get('LIBPATH',[])+lib,
+                       LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
+    pens.append('x11pen')
+else:
+    main = env.Place('x11pen',None,var='XINC and XLIBPATH')
     
 if root:
     env.Install(bindir,main[0])

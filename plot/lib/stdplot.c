@@ -1494,16 +1494,19 @@ void vp_frame(void)
 		fabsf(num) < 0.001*fabsf(d1)) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
-	    if (NULL != label2 && axis2->parallel) {
-		vp_tjust (TH_CENTER, TV_BASE);
-		if (labelrot) {
-		    vp_gtext(xc+0.5*vs,yc,0.,-labelsz,labelsz,0.,string);
+	    if (NULL != label2) {
+		if (axis2->parallel) {
+		    if (labelrot) {
+			vp_tjust (TH_CENTER, TV_BASE);
+			vp_gtext(xc+0.5*vs,yc,0.,-labelsz,labelsz,0.,string);
+		    } else {
+			vp_tjust (TH_CENTER, TV_CAP);
+			vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		    }
 		} else {
-		    vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		    vp_tjust (TH_LEFT, TV_HALF);
+		    vp_gtext(xc+0.5*vs, yc, labelsz, 0., 0., labelsz, string);
 		}
-	    } else {
-		vp_tjust (TH_LEFT, TV_HALF);
-		vp_gtext(xc+0.5*vs, yc, labelsz, 0., 0., labelsz, string);
 	    }
 	}
 	vp_egroup();
