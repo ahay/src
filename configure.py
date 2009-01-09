@@ -766,12 +766,9 @@ def api_options(context):
             api[i] = 'f90'
 
     # Eliminate duplicates if user was redundant
-    try: # sets module was introduced in Py 2.3
-        import sets
-        api = list(sets.Set(api))
-        del sets
-    except:
-        pass # Not a big deal if this is not done
+    api_dict = {}
+    for i in api: api_dict[i] = 0
+    api = api_dict.keys()
 
     # Improve output readability
     if api == ['']:
