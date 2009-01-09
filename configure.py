@@ -1,5 +1,11 @@
 import sys, os, string, re, commands, types, py_compile
 
+try: # The subprocess module was introduced in Python 2.4
+    import subprocess
+    have_subprocess=True
+except: # Python < 2.4
+    have_subprocess=False
+
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -687,7 +693,11 @@ def ncpus():
                 if nr_cpus > 0:
                     return nr_cpus
     elif plat['OS'] == 'darwin':
-        nr_cpus = int(os.popen2('sysctl -n hw.ncpu')[1].read())
+        if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
+            pipe = subprocess.Popen('sysctl -n hw.ncpu', shell=True, stdout=subprocess.PIPE).stdout
+            nr_cpus = int(pipe.read())
+        else: # otherwise use os.popen2(), deprecated in Py 2.6
+            nr_cpus = int(os.popen2('sysctl -n hw.ncpu')[1].read())
         if nr_cpus > 0:
             return nr_cpus
     return 2 # default number of processors
