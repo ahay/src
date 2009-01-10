@@ -11,6 +11,19 @@ Prerequisites
    2. Python interpreter. Python is an interpretable programming
    language. It is used in Madagascar installation scripts and project
    management scripts. Python comes pre-installed on some platforms.
+   
+Madagascar currently attempts to support Python versions 2.2 through
+2.6. Versions before 2.2 are probably not common, but if you experience
+problems and you have an earlier version you should probably upgrade.
+   
+SCons is also required, but it is included with Madagascar and the
+configure scripts will attempt to install it for you if you don't have
+it already.
+
+For more information see:
+http://reproducibility.org/wiki/Main_Page
+http://reproducibility.org/wiki/Installation
+http://reproducibility.org/wiki/Advanced_Installation
 
 Environmental variables
 =======================
@@ -238,7 +251,7 @@ Bugs
 ====
 
 Please report all problems encountered during software construction to
-the RSF-user mailing list
+the RSF-user mailing list:
 
 https://lists.sourceforge.net/lists/listinfo/rsf-user
 
