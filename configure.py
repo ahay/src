@@ -775,7 +775,9 @@ def api_options(context):
         elif api[i] == 'fortran-90':
             api[i] = 'f90'
 
-    # Eliminate duplicates if user was redundant
+    # Eliminate duplicates if user was redundant.
+    # For Py 2.4 and up this can be done more elegantly with:
+    # api = list(set(api))
     api_dict = {}
     for i in api: api_dict[i] = 0
     api = api_dict.keys()
