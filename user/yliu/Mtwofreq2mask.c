@@ -12,7 +12,7 @@ Takes: < data.rsf > dip.rsf
 
 int main (int argc, char *argv[])
 {
-    int n1,n2, n12, niter, nj, i;
+    int n1,n2, n12, niter, i;
     float eps, lam, p0, q0, p1, q1, *u, **p;
     bool verb, gauss, *m;
     sf_file in, out, mask;
@@ -48,9 +48,6 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("q1",&q1)) q1=1.;
     /* initial second component */
 
-    if (!sf_getint("nj",&nj)) nj=1;
-    /* antialiasing for local frequency */
-
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
     if (!sf_getbool("gauss",&gauss)) gauss = false;
@@ -74,7 +71,7 @@ int main (int argc, char *argv[])
     /* initialize mask */
     if (NULL != mask) {
 	sf_floatread(u,n12,mask);
-	mask4freq (2, nj, n1, n2, u, m);
+	mask4freq (2, 1, n1, n2, u, m);
     }
     /* read data */
     sf_floatread(u,n12,in);
