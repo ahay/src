@@ -17,7 +17,11 @@ try:
 except:
 	root = None
 	env = Environment()
-	opts=Options('../../config.py')
+	try:
+		EnsureSConsVersion(1,2)
+		opts=Variables('../../config.py')
+	except:
+		opts=Options('../../config.py')
 	configure.options(opts)
 	opts.Update(env)
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')

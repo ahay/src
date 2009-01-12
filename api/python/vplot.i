@@ -2,6 +2,9 @@
 
 %module c_vplot
 
+%include carrays.i
+%array_functions(float,floatp);
+
 %{
 
 #include <rsfplot.h>
@@ -34,3 +37,7 @@ void vp_scale (float xscale, float  yscale);
 void vp_uarrow (float x1, float y1, float x, float y, float r);
 void vp_tjust (int xjust1, int yjust1);
 void vp_clip (float xmin, float ymin, float xmax, float ymax);
+void vp_dash (float dash1, float gap1, float dash2, float gap2);
+void vp_upline (const float *xp /* [np] */, 
+		const float *yp /* [np] */, 
+		int np          /* number of points */);

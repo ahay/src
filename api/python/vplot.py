@@ -44,3 +44,17 @@ class Vplot(object):
         c_vplot.vp_tjust(xjust,yjust)
     def clip(self,xmin,ymin,xmax,ymax):
         c_vplot.vp_clip (xmin,ymin,xmax,ymax)
+    def dash(self,dash1,gap1,dash2,gap2):
+        c_vplot.vp_dash(dash1,gap1,dash2,gap2)
+    def upline(self,xp,yp,np):
+        # create arrays
+        x = c_vplot.new_floatp(np)
+        y = c_vplot.new_floatp(np)
+	for i in range(np):
+            c_vplot.floatp_setitem(x,i,xp[i])
+            c_vplot.floatp_setitem(y,i,yp[i])
+        # pass to upline
+        c_vplot.vp_upline(x,y,np)
+        # free memory
+        c_vplot.delete_floatp(x)
+        c_vplot.delete_floatp(y)
