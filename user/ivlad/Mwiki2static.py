@@ -270,7 +270,7 @@ def inspect_doc_dir(docdir_url, docdir_local, docs_to_download):
     s2 = after(s1,just_before_section)
     s3 = before(s2,just_after_section)
     list1 = s3.split('<a href="')
-    list2 = map(lambda x: x.split('">')[0].strip(),list1)
+    list2 = map(lambda x: before(x,'">').strip(),list1)
     list2.remove('-')
     for entry in list2:
         local_node = os.path.join(docdir_local, entry)
