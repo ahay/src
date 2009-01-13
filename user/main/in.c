@@ -57,7 +57,7 @@ int main (int argc, char* argv[])
     /* If n, skip trailing dimensions of  one */
 
     memset(zero,0,BUFSIZ);
-    
+
     for (i = 1; i < argc; i++) {
 	filename = argv[i];
 	if (NULL != strchr (filename, '=')) continue;
@@ -67,6 +67,7 @@ int main (int argc, char* argv[])
 
 	if (!info) {
 	    printf("%s ",dataname);
+            sf_fileclose(file);
 	    continue;
 	}
 
@@ -136,9 +137,10 @@ int main (int argc, char* argv[])
 	}
 
 	check_zeros (file, esize, size, ncheck, buf, zero);
+        sf_fileclose(file);
     }
     if (!info) printf("\n");
-    
+
     exit (0);
 }
 
@@ -166,7 +168,7 @@ static void check_zeros (sf_file file, int esize, long long size, int ncheck,
 	     nleft -= nbuf, nzero += nbuf) {
 	    if (nbuf > nleft) nbuf = nleft;
 	    sf_charread(buf,nbuf,file);
-	    
+
 	    if (0 != memcmp(buf,zero,nbuf)) break;
 	}
 	
@@ -182,6 +184,3 @@ static void check_zeros (sf_file file, int esize, long long size, int ncheck,
 	}
     }
 }
-
-/* 	$Id$	 */
-
