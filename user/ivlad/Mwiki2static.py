@@ -32,6 +32,19 @@ except: # Madagascar's Python API not installed
 
 ###############################################################################
 
+def before(str,sep):
+    '''
+    return part before the separator
+    '''
+    return str.split(sep)[0]
+
+def after(str,sep):
+    '''
+    return part after the separator
+    '''
+    strs = str.split(sep)+['']
+    return strs[1]
+
 def generate_hard_coded_paths(outdir):
     h = {}
 
@@ -74,8 +87,8 @@ def read_page_section(hcp, pagenm, just_before_section, just_after_section):
     f = urlopen(hcp['wiki_url'] + pagenm + hcp['printable'])
     s = f.read()
     f.close()
-    s2 = s.partition(just_before_section)[2]
-    return s2.partition(just_after_section)[0]
+    s2 = after(s,just_before_section)
+    return before(s2,just_after_section)
 
 ###############################################################################
 
@@ -91,7 +104,7 @@ def get_page_list(hcp, verb):
     p0 = '<a href="'
     p1 = '" title="'
     p2 = '/%s/' % hcp['wiki_basenm']
-    list2 = map(lambda x: x.lstrip(p0).partition(p1)[0].partition(p2)[2], list1)
+    list2 = map(lambda x: after(before(x.lstrip(p0),p1),p2), list1)
     if verb:
         print '...done'
     return sorted(list2)
@@ -132,7 +145,7 @@ def get_wiki_image_dict(hcp, verb):
     p2 = '">file</a>)</td>'
     p3 = '(<a href="/%s/%s/'%(hcp['wiki_basenm'],hcp['imgdir_basenm'])
     for item in list1:
-	s = item.partition(p1)[2].partition(p2)[0].partition(p3)[2]
+	s = after(before(after(item,p1),p2),p3)
 	if s != '':
 	    (filepath, filename) = os.path.split(s)
 	    imgdict[filename] = filepath
@@ -254,10 +267,10 @@ def inspect_doc_dir(docdir_url, docdir_local, docs_to_download):
     f = urlopen(docdir_url)
     s1 = f.read()
     f.close()
-    s2 = s1.partition(just_before_section)[2]
-    s3 = s2.partition(just_after_section)[0]
+    s2 = after(s1,just_before_section)
+    s3 = before(s2,just_after_section)
     list1 = s3.split('<a href="')
-    list2 = map(lambda x: x.partition('">')[0].strip(),list1)
+    list2 = map(lambda x: x.split('">')[0].strip(),list1)
     list2.remove('-')
     for entry in list2:
         local_node = os.path.join(docdir_local, entry)
