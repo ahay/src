@@ -1,6 +1,7 @@
 import os, sys, string
 sys.path.append('../..')
 import configure
+import SCons
 
 #############################################################################
 # MAIN LIBRARY
@@ -25,20 +26,7 @@ try: # distribution version
     incdir = os.path.join(root,'include')
 except: # local version
     root = None
-    env = Environment()
-    try:
-        EnsureSConsVersion(1,2)
-        opts=Variables('../../config.py')
-    except:
-        opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    if env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),
-                                        '-xO2','-g')
-    env.Append(BUILDERS={'Include':configure.Header},
-               SCANNERS=[configure.Include])
+    env = configure.Debug()
 
 ##############################################################################
 # INCLUDES

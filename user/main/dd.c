@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
                         sf_shortwrite(sbuf,nout,out);
 			break;
 		    case SF_INT:
-                        ibuf = (short*) bufout;
+                        ibuf = (int*) bufout;
                         for (i=j=0; i < nin && j < nout; i++, j++) {
 			    ibuf[j] = sbuf[i]; 
 			}

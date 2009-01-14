@@ -13,10 +13,7 @@ try: # distribution version
 
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
+    env = configure.Debug()
     SConscript('../c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],

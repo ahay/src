@@ -27,15 +27,9 @@ try:  # distributed version
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    env = configure.Debug()
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')
-    env.Append(BUILDERS={'Include':configure.Header},
-               SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

@@ -16,15 +16,7 @@ try:
 	bindir = os.path.join(root,'bin')
 except:
 	root = None
-	env = Environment()
-	try:
-		EnsureSConsVersion(1,2)
-		opts=Variables('../../config.py')
-	except:
-		opts=Options('../../config.py')
-	configure.options(opts)
-	opts.Update(env)
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+	env = configure.Debug()
 	SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],

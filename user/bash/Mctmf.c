@@ -20,7 +20,7 @@
 
 int main (int argc, char* argv[])
 {
-    int i3, n3, n1, n2, n12, i, r;
+    int i3, n3, n1, n2, n12, r;
     unsigned char* input;
     unsigned char* output;
     sf_file in, out;

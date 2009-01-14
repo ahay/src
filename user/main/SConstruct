@@ -22,15 +22,8 @@ try: # distributed version
              'segywrite':'suwrite'}
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    if  env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-    env.Append(BUILDERS={'Place':configure.Place})
-    SConscript('../lib/SConstruct')
+    env = configure.Debug()
+    SConscript('../../api/c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

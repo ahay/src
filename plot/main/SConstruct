@@ -16,13 +16,7 @@ try:
     alias = {'grey':'byte','grey3':'cubeplot'}
 except:
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
-    if  env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env = configure.Debug()
     SConscript('../lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],

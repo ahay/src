@@ -12,14 +12,7 @@ try:
 	incdir = os.path.join(root,'include')
 except:
 	root = None
-	env = Environment()
-	opts=Options('../../config.py')
-	configure.options(opts)
-	opts.Update(env)
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-	env.Append(CPPPATH=['../../include'],
-		   LIBPATH=['../../api/c','../lib'],
-		   LIBS=['rsfcairo','rsf'])
+	env = configure.Debug()
 	SConscript('../lib/SConstruct')
 
 #vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')

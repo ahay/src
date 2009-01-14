@@ -15,18 +15,10 @@ try: # distribution version
     incdir = os.path.join(root,'include')    
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    if  env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env = configure.Debug()
     incdir = os.path.join(os.environ.get('RSFROOT','/usr'),'include')        
     SConscript('../fonts/SConstruct')
     SConscript('../utilities/SConstruct')
-    env.Append(BUILDERS={'Include':configure.Header},
-               SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'])
 

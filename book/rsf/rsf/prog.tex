@@ -53,16 +53,16 @@ The first input file is either in the list or in the standard input.
 
 Collect input files in the \texttt{in} array from all command-line
 parameters that don't contain an ``\texttt{=}'' sign. The total number
-of input files in \texttt{nin}.
+of input files is \texttt{nin}.
 \moddex{add}{add}{110}{116}{user/main}
 
 A helper function \texttt{check\_compat} checks the compatibility of
 input files.
 \moddex{add}{add}{412}{450}{user/main}
 
-Finally, we enter the main loop, where input data are getting read
+Finally, we enter the main loop, where the input data are getting read
 buffer by buffer and combined in the total product depending on the
-data type.
+data type.  
 \moddex{add}{add}{173}{194}{user/main}
 
 The data combination program for floating point numbers is
@@ -92,7 +92,7 @@ anomalies.
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
-\moddex{attr}{attr}{78}{81}{user/main}
+\moddex{attr}{attr}{79}{82}{user/main}
 
 In the main loop, we read the input data buffer by buffer.
 \moddex{attr}{attr}{95}{114}{user/main}

@@ -10,10 +10,7 @@ try: # distributed version
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.vplot_font')))
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
+    env = configure.Debug()
     src = glob.glob('[a-z]*.vplot_font')
 
 prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')

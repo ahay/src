@@ -16,11 +16,7 @@ try:  # distributed version
     dir = string.replace(os.getcwd(),'/build','')
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    env = configure.Debug()
     SConscript('../../api/f90/SConstruct')
 
 F90 = env.get('F90')

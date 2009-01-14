@@ -14,15 +14,8 @@ try: # distributed version
     bindir = os.path.join(root,'bin')
 except: # local version
     root = None
-    env = Environment()
-    opts=Options('../../config.py')
-    configure.options(opts)
-    opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    if  env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env = configure.Debug()
     SConscript('../lib/SConstruct')
-
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

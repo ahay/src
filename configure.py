@@ -1083,7 +1083,14 @@ def intel(context):
         if license:
             context.env.Append(ENV={key:license})
 
-def options(opts):
+def options(file):
+    global version
+
+    if version[0] < 1 or version[1] < 2:
+        opts=Options(file)
+    else:
+        opts=Variables(file)
+
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
@@ -1127,6 +1134,24 @@ def options(opts):
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
     opts.Add('PYMODULES','List of Python modules available')
+
+    return opts
+
+def Debug():
+    'Environment for debugging'
+    env = Environment()
+    srcroot = os.environ.get('RSFSRC', '../..')
+    opts = options(os.path.join(srcroot,'config.py'))
+    opts.Update(env)
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    if  env['PLATFORM'] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    env.SConsignFile(None)
+    env.Append(BUILDERS={'Include':Header,
+                         'Place':Place},
+               SCANNERS=[Include])
+    return env
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
