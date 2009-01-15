@@ -41,3 +41,4 @@ void vp_dash (float dash1, float gap1, float dash2, float gap2);
 void vp_upline (const float *xp /* [np] */, 
 		const float *yp /* [np] */, 
 		int np          /* number of points */);
+void vp_upendn (float x, float y);

@@ -58,3 +58,5 @@ class Vplot(object):
         # free memory
         c_vplot.delete_floatp(x)
         c_vplot.delete_floatp(y)
+    def upendn(self,x,y):
+        c_vplot.vp_upendn(x,y)
