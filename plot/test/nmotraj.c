@@ -56,7 +56,7 @@ int main (void)
 	    t = hypotf(z,x/v);
 	    it = t / dt;
 	    t = t0+it*dt;
-      
+
 	    for (i = (it< itlast+1)? it: itlast+1; i <= it; i++) {
 		t = t0+i*dt;
 		if( t < tmax ) {

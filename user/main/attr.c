@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
     
     sf_init (argc,argv);
     want = sf_getstring("want");
-    /* 'all'(default),'rms','mean','norm','var','std','max','min','nonzero','samples','short' 
+    /* 'all'(default), 'rms', 'mean', 'norm', 'var', 
+       'std', 'max', 'min', 'nonzero', 'samples', 'short' 
         want=   'rms' displays the root mean square
         want=   'norm' displays the square norm, otherwise specified by lval.
         want=   'var' displays the variance
