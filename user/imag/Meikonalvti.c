@@ -102,6 +102,7 @@ int main (int argc,char* argv[])
   
 	s = sf_floatalloc2 (ndim,nshot);
 	sf_floatread(s[0],nshot*ndim,shots);
+	sf_fileclose(shots);
     
 	sf_putint (time,"n4",nshot);
 	free (sfile);
@@ -140,6 +141,7 @@ int main (int argc,char* argv[])
     
     if (NULL != vxf) {
 	sf_floatread(vx,n123,vxf);
+	sf_fileclose(vxf);
 	/* transform velocity to slowness squared */
 	if (isvel) {
 	    for(i = 0; i < n123; i++) {
@@ -155,6 +157,7 @@ int main (int argc,char* argv[])
 
     if(NULL != eta) {
 	sf_floatread(q,n123,eta);
+	sf_fileclose(eta);
 	/* transform eta to q */
 	for(i = 0; i < n123; i++) {
 	    q[i] = 1.+2.*q[i];
@@ -182,6 +185,9 @@ int main (int argc,char* argv[])
 	sf_floatwrite (t,n123,time);
     }
     
+    /* close input */
+    sf_fileclose(vzf);
+
     exit (0);
 }
 
