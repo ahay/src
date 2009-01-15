@@ -88,9 +88,10 @@ int main (int argc, char* argv[])
 	arg = argv[i];
 	eq  = strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
-	if (0 == strncmp(arg,"output",6) ||
-	    0 == strncmp(arg,  "type",4) ||
-	    0 == strncmp(arg,    "--",2) ||
+	if (0 == strncmp(arg,"output=",7) ||
+	    0 == strncmp(arg,  "type=",5) ||
+	    0 == strncmp(arg,   "out=",4) ||
+	    0 == strncmp(arg,     "--",2) ||
 	    (eq-arg == 2 &&
 	     (arg[0] == 'n' || 
 	      arg[0] == 'd' || 
@@ -260,6 +261,9 @@ int main (int argc, char* argv[])
 	}
     }
     
+    /* close inputs */
+    for (i=0; i<nin; i++) sf_fileclose(in[i]);
+
     exit(0);
 }
 
