@@ -28,5 +28,6 @@ int main (int argc, char* argv[])
     sf_setpars(out);
 
     sf_cp(in, out);
+    sf_fileclose(in);
     exit(0);
 }
