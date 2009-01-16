@@ -25,7 +25,7 @@ Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
-Paper('adding',options='short',use='hyperref')
+#Paper('adding',options='short',use='hyperref')
 
 Paper('prog',use='hyperref,amsmath,fancybox,listings,jfc',
       include='\\newcommand{\\RSF}{../../..}',color='rose')

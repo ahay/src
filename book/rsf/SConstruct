@@ -10,7 +10,6 @@ Papers(copyr='Madagascar Community',
        rsf/tour.tex
        rsf/api.tex
        rsf/demo.tex
-       rsf/adding.tex
        scons/paper.tex
        '''),
        authors={'scons':'Sergey Fomel and Gilles Hennenfent'},
