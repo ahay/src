@@ -79,7 +79,7 @@ int main (void)
     /* LOOP on theta (ith) to generate ellipse */
     for (ith = 0; ith < NARRAY; ith++) {
 	thtmp = 90. - ith * dth;
-        thtmp = thtmp*acosf(-1.)/180.;
+        thtmp = thtmp*SF_PI/180.;
         tanth = tanf(thtmp);
         sinth = sinf(thtmp);
 	costh = cosf(thtmp);
@@ -106,7 +106,7 @@ int main (void)
 	for (ith = 0; ith < NARRAY; ith +=5) {
 	    iflag++;
 	    thtmp = 90. - ith * dth;
-	    thtmp = thtmp*acosf(-1.)/180.;
+	    thtmp = thtmp*SF_PI/180.;
 	    tanth = tanf(thtmp);
 	    sinth = sinf(thtmp);
 	    costh = cosf(thtmp);
@@ -179,7 +179,7 @@ int main (void)
 
     } else {
 /*					Begin work for drawing dipping layer */
-        theta *= acosf(-1.)/180.;
+        theta *= SF_PI/180.;
         tanth = tanf(theta);
         sinth = sinf(theta);
 	costh = cosf(theta);
