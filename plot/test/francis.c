@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	vp_fat(0);
 	vp_penup();
 
-	for( theta = -180.; theta<180.1; theta=theta + 360./ntheta )  {
+	for( theta = -180.; theta<180.1; theta += 360./ntheta )  {
 	    rads = 2. * SF_PI * theta / 360.;
 	    cz = cexpf( sf_cmplx(0.,rads) );
 #ifdef SF_HAS_COMPLEX_H	 
