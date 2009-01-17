@@ -10,19 +10,16 @@ segyheader segyread segywrite spike spray stack transp window
 '''
 
 try: # distributed version
-    Import('env')
+    Import('env root libdir bindir')
     env = env.Clone()
-    root = env.get('RSFROOT')
-    libdir = os.path.join(root,'lib')
-    bindir = os.path.join(root,'bin')
     alias = {'cat':'merge',
              'real':'imag',
              'cp':'mv',
              'segyread':'suread',
              'segywrite':'suwrite'}
 except: # local version
-    root = None
     env = configure.Debug()
+    root = None
     SConscript('../../api/c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
@@ -72,9 +69,5 @@ if root:
     env.Depends(docs,'#/framework/rsfdoc.py')
     doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
- 
-#    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
-#####################################################################
 
-# 	$Id$
 

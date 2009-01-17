@@ -1,6 +1,6 @@
 try: # distribution version
-    Import('env')
-    root = env.get('RSFROOT')
+    Import('env root')
+    env = env.Clone()
 except: # local version
     root = None
 

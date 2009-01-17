@@ -8,14 +8,11 @@ import configure
 psrc = Split('axis coltab contour gainpar plot stdplot vplot')
 
 try: # distribution version
-    Import('env')
+    Import('env root libdir incdir')
     env = env.Clone()
-    root = env.get('RSFROOT')
-    libdir = os.path.join(root,'lib')
-    incdir = os.path.join(root,'include')
 except: # local version
-    root = None
     env = configure.Debug()
+    root = None
     SConscript('../../api/c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
@@ -44,7 +41,8 @@ for source in psrc:
 ##############################################################################
 slib = env.StaticLibrary('rsfplot',objects)
 dlib = env.SharedLibrary('rsfplot',dobjects,
-                         SHLIBPREFIX='libd',LIBS=['drsf']+env.get('LIBS'))
+                         SHLIBPREFIX='libd',
+                         LIBS=['drsf']+env.get('LIBS',[]))
 
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
 env.Install('../../lib',[slib,dlib])
@@ -79,7 +77,7 @@ if 'f77' in api:
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
     env.Program([test,slib],PROGSUFFIX='.x',PROGPREFIX='',
-                LIBS=['rsf']+env.get('LIBS'))
+                LIBS=['rsf']+env.get('LIBS',[]))
         
 if root:
     main = 'sflibplot.py'

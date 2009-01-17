@@ -1,15 +1,8 @@
 import os, rsfdoc
 
-Import('env')
+Import('env root bindir libdir docdir mandir')
 
-root = env.get('RSFROOT')
-
-bindir = os.path.join(root,'bin')
-libdir = os.path.join(root,'lib')
-docdir = os.path.join(root,'doc')
 txtdir = os.path.join(docdir,'txt')
-mandir = os.path.join(root,'man','man1')
-
 python = WhereIs('python')
 
 dirs = Split('main proc imag plot opengl libplot pens sumain suplot')

@@ -3,14 +3,11 @@ sys.path.append('../..')
 import configure
 
 try: # distribution version
-    Import('env')
+    Import('env root libdir incdir')
     env = env.Clone()
-    root = env.get('RSFROOT')
-    libdir = os.path.join(root,'lib')
-    incdir = os.path.join(root,'include')
 except: # local version
-    root = None
     env = configure.Debug()
+    root = None
     SConscript('../c/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
@@ -41,4 +38,3 @@ if 'matlab' in env.get('API',[]):
                                       'build/api/c/libdrsf.dylib '
                                       '%s/libdrsf.dylib %s/%s' % \
                                           (libdir,libdir,mfile[0]))
-    

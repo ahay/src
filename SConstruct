@@ -3,6 +3,8 @@ EnsureSConsVersion(0, 96)
 import os
 import configure
 
+env = Environment()
+
 root = os.environ.get('RSFROOT',os.getcwd())
 
 bindir = os.path.join(root,'bin')
@@ -10,8 +12,6 @@ libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
 mandir = os.path.join(root,'man')
-
-env = Environment()
 
 ##########################################################################
 # CONFIGURATION
@@ -38,13 +38,8 @@ Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 env.Alias('config',config)
 
 ##########################################################################
-# PYTHON BUILD
+# CUSTOM BUILDERS
 ##########################################################################
-
-user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
-env['USERS']=user
-
-Export('env')
 
 env.Append(BUILDERS={'Include':configure.Header,
                      'Place':configure.Place,
@@ -52,7 +47,15 @@ env.Append(BUILDERS={'Include':configure.Header,
                      'Docmerge':configure.Docmerge},
            SCANNERS=[configure.Include])
 
-SConscript(dirs='framework',name='SConstruct')
+##########################################################################
+# FRAMEWORK BUILD
+##########################################################################
+
+user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
+env['USERS']=user
+
+SConscript(dirs='framework',name='SConstruct',
+           exports='env root bindir libdir docdir mandir')
 
 ##########################################################################
 # API BUILD
@@ -65,7 +68,7 @@ Default('build/lib')
 for dir in map(lambda x: os.path.join('api',x), api):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
+    SConscript(dirs=build,name='SConstruct',exports='env root libdir incdir')
     Default(build)
 
 ##########################################################################
@@ -74,7 +77,7 @@ for dir in map(lambda x: os.path.join('api',x), api):
 for dir in map(lambda x: os.path.join('user',x), user):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
+    SConscript(dirs=build,name='SConstruct',exports='env root bindir libdir')
     Default(build)
 
 ##########################################################################
@@ -85,7 +88,8 @@ pdirs = ('lib','main','test','opengl')
 for dir in map(lambda x: os.path.join('plot',x), pdirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
+    SConscript(dirs=build,name='SConstruct',
+               exports='env root libdir bindir incdir')
     Default(build)
 
 ##########################################################################
@@ -96,7 +100,8 @@ pdirs = ('fonts','include','utilities','genlib','main','docs')
 for dir in map(lambda x: os.path.join('pens',x), pdirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
+    SConscript(dirs=build,name='SConstruct',
+               exports='env root incdir libdir bindir')
     Default(build)
 
 ##########################################################################
@@ -107,7 +112,8 @@ sudirs = ('lib','main','plot')
 for dir in map(lambda x: os.path.join('su',x), sudirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct')
+    SConscript(dirs=build,name='SConstruct',
+               exports='env root libdir bindir incdir')
     Default(build)
 
 ##########################################################################

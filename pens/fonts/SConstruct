@@ -3,14 +3,13 @@ sys.path.append('../..')
 import configure
 
 try: # distributed version
-    Import('env')
-    root = env.get('RSFROOT')
-    incdir = os.path.join(root,'include')
+    Import('env root incdir')
+    env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.vplot_font')))
 except: # local version
-    root = None
     env = configure.Debug()
+    root = None
     src = glob.glob('[a-z]*.vplot_font')
 
 prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
@@ -40,6 +39,3 @@ for font in src:
     if root:
         env.Install(incdir,include)
         env.Install(incdir,bin)
-
-
-        

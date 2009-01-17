@@ -20,13 +20,10 @@ system tent2 tinysolver triangle triangle1 tridiagonal vector weight
 '''
 
 try: # distribution version
-    Import('env')
-    root = env.get('RSFROOT')
-    libdir = os.path.join(root,'lib')
-    incdir = os.path.join(root,'include')
+    Import('env root libdir incdir')
 except: # local version
-    root = None
     env = configure.Debug()
+    root = None
 
 ##############################################################################
 # INCLUDES
@@ -68,13 +65,5 @@ if root:
 for file in Split('banded eno2 fft file getpar quantile simtab'):
     test = env.StaticObject('Test' + file + '.c')
     prog = env.Program(file,[test,slib],PROGSUFFIX='.x',PROGPREFIX='Test')
-
-##############################################################################
-# LINT
-##############################################################################
-
-env.Command('../lint/lint',map(lambda x: x+'.c',Split(src2)),
-            'splint +posixlib $SOURCES')
-env.Alias('lint','../lint')
 
 

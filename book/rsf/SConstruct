@@ -3,8 +3,6 @@ from rsfbook import *
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',
        papers=Split('''
-       rsf/paper.tex
-       rsf/install.tex
        rsf/prog.tex
        rsf/format.tex
        rsf/tour.tex
