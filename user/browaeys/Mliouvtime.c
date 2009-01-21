@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	fx = signadj*0.5*(ov + iv*dv)/dx;
 	b[k] = fx*t[k+1] + fv*ox*(t[k-nx]-t[k+nx]);
 	for (ix = 1; ix < (nx-1); ix++){
-	    i = k + ix;
+    i = k + ix;
 	    b[i] = fx*(t[i+1]-t[i-1]) + fv*(ox + ix*dx)*(t[i-nx]-t[i+nx]);
 	}
 	b[k+nx-1] = -fx*t[k+nx-2] + fv*(ox + (nx-1)*dx)*(t[k-1]-t[k+2*nx-1]);
