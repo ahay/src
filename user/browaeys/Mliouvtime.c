@@ -2,7 +2,7 @@
 /*
    Equation is v.dt/dx - c.x.dt/dv = 1 with c > 0 
    Analytical solution is t = 1/sqrt(c).arctan[sqrt(c).x/v] 
-   for initial condition t=0 at x=0 and any nonzero v
+   for initial condition x=0 and any nonzero v at t=0 
 */
 /*
   Copyright (C) 2009 University of Texas at Austin
@@ -30,10 +30,8 @@
 
 int main(int argc, char* argv[])
 {
-    int np,nin;                    /* linear system matrix dimension */
-    int i;                         /* matrix row counters */
-
-    bool adj;                      /* adjoint */
+    int np,n1,i,k;                 /* matrix dimension, matrix row counters, block counter */
+    bool adj;                      /* adjoint flag */
 
     int nx,ix;                     /* number of grid points in x, counter */
     int nv,iv;                     /* number of grid points in v, counter */
@@ -41,16 +39,17 @@ int main(int argc, char* argv[])
     float dx,ox;                   /* increment in x, starting position */
     float dv,ov;                   /* increment in v, starting position */ 
 
-    float signadj;                 /* sign for adjoint implementation */
     float fx,fv;                   /* factors in the system matrix */
+    float c;                       /* harmonic oscillator constant */
+    float signadj;                 /* adjoint factors sign */
 
-    float c;                       /* harmonic oscillator stiffness constant */
-
-    float *b, *t;
+    float *t;                      /* input vector */
+    float *b;                      /* output vector */
 
     sf_file in,out;
 
     sf_init(argc,argv);
+
     in = sf_input("in");
     out = sf_output("out");
 
@@ -77,53 +76,59 @@ int main(int argc, char* argv[])
 
     np = nv*nx;
 
-    /* read input file parameters */
-    if (!sf_histint(in,"n1",&nin)) sf_error("No n1= in input");
-    if (nin != np) sf_error("Incorrect size of input vector");
-
-    /* adjoint is a^t = -a */
-    if (adj) {
-	signadj = -1.;
-    } else { 
-	signadj = 1.;
-    }
-
     /* memory allocations */
-    b = sf_floatalloc(np);
     t = sf_floatalloc(np);
-    sf_floatread(b,np,in);
+    b = sf_floatalloc(np);
+    for (i = 0; i < np; i++) b[i] = 0.0;
 
+    /* read input file parameters */
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (n1 != np) sf_error("Incorrect size of input vector");
+
+    /* read input right hand side vector */
+    sf_floatread(t,np,in);
  
-    /* ------------------------------------ */
-    /* SQUARE LINEAR SYSTEM MATRIX b = A.t  */
-    /* ------------------------------------ */
+    /* Square linear system b = L.t(ix,iv) */
+    /* Indexing t(ix,iv) : t^T = [t(1,1), ..., t(nx,1), ...., t(1,nv), ..., t(nx,nv)] */
+    /* Centered FD stencil */
+    /* Boundary conditions in x and v */
 
-    /* Linear system depends on stencils and indexing of t(ix,iv) vector */
-    /* t^T = [t(1,1), ..., t(nx,1), ...., t(1,nv), ..., t(nx,nv)] */
-    /* FD centered stencil */
+    signadj = 1.0;
+    /* adjoint is a^T = -a */
+    if (adj) signadj = -1.0;
 
     fv = signadj*0.5*c/dv;
+
+    /* Upper block */
     fx = signadj*0.5*ov/dx;
-
     b[0] = fx*t[1] - fv*ox*t[nx];
+    for (i = 1; i < (nx-1); i++) {
+	b[i] = fx*(t[i+1] - t[i-1]) - fv*(ox + i*dx)*t[i+nx];
+    }
+    b[nx-1] = -fx*t[nx-2] - fv*(ox + (nx-1)*dx)*t[2*nx-1];
 
-    for (i = 1; i < nx; i++) b[i] = fx*(t[i+1] - t[i-1]) - fv*(ox + ix*dx)*t[i+nx];
-
+    /* Inner blocks */
     for (iv = 1; iv < (nv-1); iv++) {
+	k = iv*nx;
 	fx = signadj*0.5*(ov + iv*dv)/dx;
-	for (ix = 0; ix < nx; ix++){
-	    i = iv*nx + ix;
-	    b[i] = fv*(ox + ix*dx)*(t[i-nx]-t[i+nx]) + fx*(t[i+1]-t[i-1]);
+	b[k] = fx*t[k+1] + fv*ox*(t[k-nx]-t[k+nx]);
+	for (ix = 1; ix < (nx-1); ix++){
+	    i = k + ix;
+	    b[i] = fx*(t[i+1]-t[i-1]) + fv*(ox + ix*dx)*(t[i-nx]-t[i+nx]);
 	}
-    }
+	b[k+nx-1] = -fx*t[k+nx-2] + fv*(ox + (nx-1)*dx)*(t[k-1]-t[k+2*nx-1]);
+    }				 
 
-    fx = signadj*0.5*(ov+(nv-1)*dv)/dx;
-    for (ix = 0; ix < nx; ix++){
-	i = (nv-1)*nx + ix;
-	b[i] = fv*(ox + ix*dx)*t[i-nx] + fx*(t[i+1]-t[i-1]);
+    /* Lower block */
+    k = (nv-1)*nx;
+    fx = signadj*0.5*(ov + (nv-1)*dv)/dx;
+    b[k] = fx*t[k+1] + fv*ox*t[k-nx];
+    for (ix = 1; ix < (nx-1); ix++){
+	i = k + ix;
+	b[i] = fx*(t[i+1]-t[i-1]) + fv*(ox + ix*dx)*t[i-nx];
     }
+    b[np-1] = -fx*t[np-2] + fv*(ox + (nx-1)*dx)*(t[np-1-nx]);
 
-    b[np-1] = fv*(ox + (nx-1)*dx)*t[np-1-nx] - fx*t[np-2];
 
     /* output */
     sf_floatwrite(b,np,out);

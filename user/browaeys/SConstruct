@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-beamsteer harmsyst
+beamsteer
 karman karmans karman2
 liouvtime
 powereno radonslope2
