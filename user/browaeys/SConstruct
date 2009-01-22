@@ -5,8 +5,7 @@ import configure
 progs = '''
 beamsteer
 karman karmans karman2
-liouvtime
-powereno radonslope2
+radonslope2
 velsteer zoimg3
 '''
 
