@@ -23,7 +23,6 @@
 #include <rsf.h>
 
 #include "celltrace.h"
-#include "fzero.h"
 
 static celltrace ct;
 static float xs[2], xr, t;
@@ -173,7 +172,7 @@ int main(int argc, char* argv[])
 		if (ir < 0) continue;
 		xr = r0+ir*dr; /* target */
 
-		b = fzero(shooting,a-da,a,r1-xr,r2-xr,tol,false);
+		b = sf_zero(shooting,a-da,a,r1-xr,r2-xr,tol,false);
 		fb = shooting(b);
 
 		if (fabsf(fb) > 0.5*dr) 

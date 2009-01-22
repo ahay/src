@@ -22,8 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "fzero.h"
-
 static sf_eno tfnt, pfnt;
 static int it;
 static float sx, sz;
@@ -88,7 +86,7 @@ int main (int argc, char* argv[])
 		if ((a <= 0. && b > 0.) ||
 		    (a >= 0. && b < 0.)) {
 
-		    t = fzero(func_eno,0.,1.,a,b,1.e-3,false);
+		    t = sf_zero(func_eno,0.,1.,a,b,1.e-3,false);
 		    sf_eno_apply (tfnt,it,t,&f,&g,FUNC);
 	  
 		    tx[ig] = f;

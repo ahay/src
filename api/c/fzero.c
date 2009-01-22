@@ -21,21 +21,18 @@
 #include <string.h>
 #include <math.h>
 
-#include "fzero.h"
-
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
-#define SIGN(a) ((a)>= 0.) 
-#ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
+#include "fzero.h"
+#include "_defs.h"
+#include "error.h"
 
-float fzero (float (*func)(float) /* function f(x) */, 
-	     float a, float b     /* interval */, 
-	     float fa, float fb   /* f(a) and f(b) */,
-	     float toler          /* tolerance */, 
-	     bool verb            /* verbosity flag */)
+float sf_zero (float (*func)(float) /* function f(x) */, 
+	       float a, float b     /* interval */, 
+	       float fa, float fb   /* f(a) and f(b) */,
+	       float toler          /* tolerance */, 
+	       bool verb            /* verbosity flag */)
 /*< Return c such that f(c)=0 (within tolerance). 
   fa and fb should have different signs. >*/
 {
@@ -45,7 +42,7 @@ float fzero (float (*func)(float) /* function f(x) */,
     if (0. == fa) return a;
     if (0. == fb) return b;
 
-    if (SIGN(fa) == SIGN(fb)) 
+    if (SF_SIG(fa) == SF_SIG(fb)) 
 	sf_error("%s: need different sign for zero finding, "
 		 "got %f and %f",__FILE__,fa,fb);
 
@@ -57,7 +54,7 @@ float fzero (float (*func)(float) /* function f(x) */,
     while (fb != 0.) {
 	/* Insure that b is the best result so far, a is the previous
 	   value of b, and c is on the opposite of the zero from b. */
-	if (SIGN(fb) == SIGN(fc)) {
+	if (SF_SIG(fb) == SF_SIG(fc)) {
 	    c = a;  fc = fa;
 	    e = d = b - a;  
 	}
