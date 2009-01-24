@@ -149,6 +149,37 @@ img3d img3_init(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
+int cipmin(int nn,
+	   int jc,
+	   int nc,
+	   int nh)
+/*< find min eCIP index >*/
+{
+    int ic;
+    for(ic=nc;ic*jc-nh>0;ic--) {
+	;
+    }
+    ic++;
+/*    i = (1.0*nh/jc)+1;*/
+    return ic;
+}
+
+int cipmax(int nn,
+	   int jc,
+	   int nc,
+	   int nh)
+/*< find max eCIP index >*/
+{
+    int ic;
+    for(ic=0;ic*jc+nh<nn-1;ic++) {
+	;
+    }
+    ic--;
+/*    i = (1.0*(nn-1-nh)/jc)+1;*/
+    return ic;
+}
+
+/*------------------------------------------------------------*/
 img3d img3o_init(cub3d cub,
 		 fslice imag,
 		 fslice cigs,
@@ -193,20 +224,24 @@ img3d img3x_init(cub3d cub,
     img->LOz = floor(img->ahz.o/img->ahz.d); img->HIz = img->LOz + img->ahz.n;
 
     nhmax = SF_MAX(SF_ABS(img->LOx),SF_ABS(img->HIx));
-    img->CLOx = cipmin(cub->amx.n,img->jcx,nhmax); img->CLOx = MM(img->CLOx,img->acx);
-    img->CHIx = cipmax(cub->amx.n,img->jcx,nhmax); img->CHIx = MM(img->CHIx,img->acx);
+    img->CLOx = cipmin(cub->amx.n,img->jcx,img->acx.n,nhmax); img->CLOx = MM(img->CLOx,img->acx);
+    img->CHIx = cipmax(cub->amx.n,img->jcx,img->acx.n,nhmax); img->CHIx = MM(img->CHIx,img->acx);
 
     nhmax = SF_MAX(SF_ABS(img->LOy),SF_ABS(img->HIy));    
-    img->CLOy = cipmin(cub->amy.n,img->jcy,nhmax); img->CLOy = MM(img->CLOy,img->acy);
-    img->CHIy = cipmax(cub->amy.n,img->jcy,nhmax); img->CHIy = MM(img->CHIy,img->acy);
+    img->CLOy = cipmin(cub->amy.n,img->jcy,img->acy.n,nhmax); img->CLOy = MM(img->CLOy,img->acy);
+    img->CHIy = cipmax(cub->amy.n,img->jcy,img->acy.n,nhmax); img->CHIy = MM(img->CHIy,img->acy);
 
-    nhmax = SF_MAX(SF_ABS(img->LOz),SF_ABS(img->HIz)); 
-    img->CLOz = cipmin(cub->amz.n,img->jcz,nhmax); img->CLOz = MM(img->CLOz,img->acz);
-    img->CHIz = cipmax(cub->amz.n,img->jcz,nhmax); img->CHIz = MM(img->CHIz,img->acz);
+    nhmax = SF_MAX(SF_ABS(img->LOz),SF_ABS(img->HIz));
+    img->CLOz = cipmin(cub->amz.n,img->jcz,img->acz.n,nhmax); img->CLOz = MM(img->CLOz,img->acz);
+    img->CHIz = cipmax(cub->amz.n,img->jcz,img->acz.n,nhmax); img->CHIz = MM(img->CHIz,img->acz);
 
-    sf_warning("CLOx=%d CHIx=%d",img->CLOx,img->CHIx);
-    sf_warning("CLOy=%d CHIy=%d",img->CLOy,img->CHIy);
-    sf_warning("CLOz=%d CHIz=%d",img->CLOz,img->CHIz);
+    img->CHIx = SF_MAX(1,img->CHIx);
+    img->CHIy = SF_MAX(1,img->CHIy);
+    img->CHIz = SF_MAX(1,img->CHIz);
+
+/*    sf_warning("CLOx=%d CHIx=%d",img->CLOx,img->CHIx);*/
+/*    sf_warning("CLOy=%d CHIy=%d",img->CLOy,img->CHIy);*/
+/*    sf_warning("CLOz=%d CHIz=%d",img->CLOz,img->CHIz);*/
 
     HLOOP(
 	fslice_put(img->cigs,IND(ihx,ihy,ihz),img->qc[0][0][0]);
@@ -214,28 +249,6 @@ img3d img3x_init(cub3d cub,
 
     return img;
 }
-
-/*------------------------------------------------------------*/
-int cipmin(int nn,
-	   int jc,
-	   int nh)
-/*< find min eCIP index >*/
-{
-    int i;
-    i = (1.0*nh/jc + 0.5)+1;
-    return i;
-}
-
-int cipmax(int nn,
-	   int jc,
-	   int nh)
-/*< find max eCIP index >*/
-{
-    int i;
-    i = (1.0*(nn-1-nh)/jc - 0.5)+1;
-    return i;
-}
-
 
 /*------------------------------------------------------------*/
 img3d img3t_init(cub3d cub,
@@ -290,6 +303,7 @@ img3d img3e_init(cub3d cub,
     int ihx,ihy,ihz,iht,iw;
     float ht, w;
     img3d img;
+    int nhmax;
     img=img3_init(cub,imag,cigs,jcx_,jcy_,jcz_);
 
     img->ahx = sf_nod(ahx_);
@@ -301,6 +315,22 @@ img3d img3e_init(cub3d cub,
     img->LOy = floor(img->ahy.o/img->ahy.d); img->HIy = img->LOy + img->ahy.n;
     img->LOz = floor(img->ahz.o/img->ahz.d); img->HIz = img->LOz + img->ahz.n;
     
+    nhmax = SF_MAX(SF_ABS(img->LOx),SF_ABS(img->HIx));
+    img->CLOx = cipmin(cub->amx.n,img->jcx,img->acx.n,nhmax); img->CLOx = MM(img->CLOx,img->acx);
+    img->CHIx = cipmax(cub->amx.n,img->jcx,img->acx.n,nhmax); img->CHIx = MM(img->CHIx,img->acx);
+
+    nhmax = SF_MAX(SF_ABS(img->LOy),SF_ABS(img->HIy));    
+    img->CLOy = cipmin(cub->amy.n,img->jcy,img->acy.n,nhmax); img->CLOy = MM(img->CLOy,img->acy);
+    img->CHIy = cipmax(cub->amy.n,img->jcy,img->acy.n,nhmax); img->CHIy = MM(img->CHIy,img->acy);
+
+    nhmax = SF_MAX(SF_ABS(img->LOz),SF_ABS(img->HIz));
+    img->CLOz = cipmin(cub->amz.n,img->jcz,img->acz.n,nhmax); img->CLOz = MM(img->CLOz,img->acz);
+    img->CHIz = cipmax(cub->amz.n,img->jcz,img->acz.n,nhmax); img->CHIz = MM(img->CHIz,img->acz);
+
+    img->CHIx = SF_MAX(1,img->CHIx);
+    img->CHIy = SF_MAX(1,img->CHIy);
+    img->CHIz = SF_MAX(1,img->CHIz);
+
     for( iht=0; iht<img->aht.n; iht++) {
 	HLOOP(
 	    fslice_put(img->cigs,EICIND(ihx,ihy,ihz,iht),img->qc[0][0][0]);
@@ -399,7 +429,7 @@ void img3o(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
-void img3x(cub3d cub,
+void oldimg3x(cub3d cub,
 	   img3d img,
 	   int iw,
 	   int ompith)
@@ -457,6 +487,55 @@ void img3x(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
+void img3x(cub3d cub,
+	   img3d img,
+	   int iw,
+	   int ompith)
+/*< apply x-lag I.C. >*/
+{
+    int imx, imy, imz;
+    int icx, icy, icz;
+    int ihx, ihy, ihz;
+    int imys,imyr,imzs;
+    int imxs,imxr,imzr;
+
+    /* imag */
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx], 
+	       img->qr[ompith][imz][imy][imx]);
+	);
+
+    for        ( ihz=img->LOz; ihz<img->HIz; ihz++){ 
+	for    ( ihy=img->LOy; ihy<img->HIy; ihy++){
+	    for( ihx=img->LOx; ihx<img->HIx; ihx++){
+		
+		for( icz=img->CLOz; icz<img->CHIz; icz++){ 
+		    imzs = icz*img->jcz - ihz;
+		    imzr = icz*img->jcz + ihz;
+
+			for( icy=img->CLOy; icy<img->CHIy; icy++){
+			    imys = icy*img->jcy - ihy;
+			    imyr = icy*img->jcy + ihy;
+				
+				for( icx=img->CLOx; icx<img->CHIx; icx++){
+				    imxs = icx*img->jcx - ihx;
+				    imxr = icx*img->jcx + ihx;
+
+					;        img->qc[ompith][icz] [icy] [icx] =
+					    corr(img->qs[ompith][imzs][imys][imxs], 
+						 img->qr[ompith][imzr][imyr][imxr]);
+				} /* cx */
+			}         /* cy */
+		}                 /* cz */
+		
+		img3_cout(img,IND(ihx,ihy,ihz),ompith);
+
+	    } /* hx */
+	}     /* hy */
+    }         /* hz */
+}
+
+/*------------------------------------------------------------*/
 void img3t(cub3d cub,
 	   img3d img,
 	   int iw,
@@ -488,7 +567,7 @@ void img3t(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
-void img3e(cub3d cub,
+void oldimg3e(cub3d cub,
 	   img3d img,
 	   int iw,
 	   int ompith)
@@ -543,6 +622,63 @@ void img3e(cub3d cub,
 				}
 			    }         /* cy */
 			}
+		    }                 /* cz */
+		    
+		    img3_cout(img,EICIND(ihx,ihy,ihz,iht),ompith);
+		    
+		} /* hx */
+	    }     /* hy */
+	}         /* hz */
+    }             /* ht */
+}
+
+/*------------------------------------------------------------*/
+void img3e(cub3d cub,
+	   img3d img,
+	   int iw,
+	   int ompith)
+/*< apply E.I.C. >*/
+{
+    int imx,imy,imz,iht;
+    int icx,icy,icz;
+
+    int ihx, ihy, ihz;
+    int imys,imyr,imzs;
+    int imxs,imxr,imzr;
+
+    sf_complex wt;
+
+    /* imag */
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx], 
+	       img->qr[ompith][imz][imy][imx]);
+	);
+    
+    for (iht=0; iht<img->aht.n; iht++) {
+	wt = img->tt[iw][iht];
+
+	for        ( ihz=img->LOz; ihz<img->HIz; ihz++){ 
+	    for    ( ihy=img->LOy; ihy<img->HIy; ihy++){
+		for( ihx=img->LOx; ihx<img->HIx; ihx++){
+		    
+		    for( icz=img->CLOz; icz<img->CHIz; icz++){ 
+			imzs = icz*img->jcz - ihz;
+			imzr = icz*img->jcz + ihz;
+			    
+			    for( icy=img->CLOy; icy<img->CHIy; icy++){
+				imys = icy*img->jcy - ihy;
+				imyr = icy*img->jcy + ihy;
+				    
+				for( icx=img->CLOx; icx<img->CHIx; icx++){
+					imxs = icx*img->jcx - ihx;
+					imxr = icx*img->jcx + ihx;
+					    
+					    img->qc[ompith][icz] [icy] [icx] =
+						wcorr(img->qs[ompith][imzs][imys][imxs], 
+						      img->qr[ompith][imzr][imyr][imxr],
+						      wt);
+				    } /* cx */
+			    }         /* cy */
 		    }                 /* cz */
 		    
 		    img3_cout(img,EICIND(ihx,ihy,ihz,iht),ompith);

@@ -49,9 +49,9 @@ int main(int argc, char* argv[])
     Fr = sf_input ("rr" );
 
     /* read axes */
-    a1=sf_iaxa(Fi,1); if(verb) sf_raxa(a1); n3=sf_n(a3);
+    a1=sf_iaxa(Fi,1); if(verb) sf_raxa(a1); n1=sf_n(a1);
     a2=sf_iaxa(Fi,2); if(verb) sf_raxa(a2); n2=sf_n(a2);
-    a3=sf_iaxa(Fi,3); if(verb) sf_raxa(a3); n1=sf_n(a1);
+    a3=sf_iaxa(Fi,3); if(verb) sf_raxa(a3); n3=sf_n(a3);
     ar=sf_iaxa(Fr,1); if(verb) sf_raxa(ar); nr=sf_n(ar);
 
     /*------------------------------------------------------------*/
@@ -60,9 +60,10 @@ int main(int argc, char* argv[])
 
     rr=sf_intalloc(nr);
     sf_intread(rr,nr,Fr);
-
+    /*------------------------------------------------------------*/
     switch(axis) {
 	case 3:
+	    if(verb) sf_warning("cut on axis 3");
 	    sf_oaxa(Fo,ar,3);
 	    uo=sf_floatalloc3(n1,n2,nr);
 
@@ -77,6 +78,7 @@ int main(int argc, char* argv[])
     
 	    break;
 	case 2:
+	    if(verb) sf_warning("cut on axis 2");
 	    sf_oaxa(Fo,ar,2);
 	    uo=sf_floatalloc3(n1,nr,n3);
 
@@ -92,6 +94,7 @@ int main(int argc, char* argv[])
 	    break;
 	case 1:
 	default:
+	    if(verb) sf_warning("cut on axis 1");
 	    sf_oaxa(Fo,ar,1);
 	    uo=sf_floatalloc3(nr,n2,n3);
     

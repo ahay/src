@@ -210,3 +210,18 @@ def remap(iout,iinp,imap):
     Flow(iout,[iout+'-temp',imap],
          'remap1 pattern=${SOURCES[1]}')
     
+
+# ------------------------------------------------------------
+def makemask(velo,smask,wmask,lmask,par):
+
+    # salt mask
+    Flow(  smask,velo,'mask min=4.499 | dd type=float')
+    Result(smask,fdmod.cgrey('allpos=y',par))
+    
+    # water mask
+    Flow(  wmask,velo,'mask max=1.5 | dd type=float')
+    Result(wmask,fdmod.cgrey('allpos=y',par))
+
+    # sediment mask
+    Flow(lmask,[smask,wmask],'add ${SOURCES[1]} | math output="1-input"')
+    Result(lmask,fdmod.cgrey('allpos=y',par))
