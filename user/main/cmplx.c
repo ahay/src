@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     int resize, iesize;
     off_t nleft, nbuf, i, rsize, isize;
     sf_file real=NULL, imag=NULL, cmplx;
-    char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf, *rformat, *cformat;
+    char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf;
 
     sf_init(argc,argv);
 
@@ -59,13 +59,7 @@ int main(int argc, char* argv[])
 	SF_FLOAT != sf_gettype(imag))
 	sf_error("wrong input type");
     
-    rformat = sf_histstring(real,"data_format");
-    cformat = sf_charalloc(strlen(rformat)+1
-			   -strlen("float")
-			   +strlen("complex"));
-    memcpy(cformat,rformat,strlen(rformat));
-    strcpy(strstr(cformat,"float"),"complex");
-    sf_setformat(cmplx,cformat);
+    sf_settype(cmplx,SF_COMPLEX);
 
     resize = sf_esize(real);
     iesize = sf_esize(imag);

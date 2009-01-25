@@ -1,14 +1,14 @@
-\title{Guide to RSF programs}
+\title{Guide to Madagascar programs}
 \email{sergey.fomel@beg.utexas.edu}
 \author{Sergey Fomel}
 \lefthead{Fomel}
-\righthead{RSF programs}
+\righthead{Madagascar programs}
 
 \maketitle
 
 \begin{abstract}
 
-This guide introduces some of the most used RSF programs and illustrates their
+This guide introduces some of the most used \texttt{madagascar} programs and illustrates their
 usage with examples.
 
 \end{abstract}
@@ -17,7 +17,7 @@ usage with examples.
 
 The source files for these programs can be found under
 \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/}{user/main}
-in the RSF distribution.
+in the Madagascar distribution.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfadd}
@@ -158,7 +158,7 @@ sfcat: n2 mismatch: need 3
 The first input file is either in the list or in the standard input.
 \moddex{cat}{cat}{48}{55}{user/main}
 
-Everything on command line that does not contain a ``='' sign is
+Everything on the command line that does not contain a ``='' sign is
 treated as a file name, and the corresponding file object is added to the list.
 \moddex{cat}{cat}{57}{63}{user/main}
 
@@ -207,6 +207,14 @@ cmplx.rsf:
     n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 48 bytes
 \end{verbatim}
+
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/cmplx.c?view=markup}{user/main/cmplx.c}}
+
+The program flow is simple. First, get the names of the input files.
+\moddex{cmplx}{cmplx}{39}{55}{user/main}
+
+The main part of the program reads the real and imaginary parts buffer by buffer and assembles and writes out the complex input. 
+\moddex{cmplx}{cmplx}{79}{88}{user/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfconjgrad}
@@ -383,9 +391,8 @@ bash$ sfdisfil < test2.rsf
    0:          1,         2i         3,         4i         5,         6i
 \end{verbatim}
 
-To learn more about the data format in RSF, consult the
-\href{http://www.reproducibility.org/RSF/book/rsf/rsf/format_html/}{guide to RSF
-  format}.
+To learn more about the RSF data format, consult the
+\href{http://www.reproducibility.org/RSF/book/rsf/rsf/format_html/}{guide to RSF format}.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfdisfil}
