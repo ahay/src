@@ -494,8 +494,8 @@ def Plot (target,source,flow=None,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow=None,**kw):
     return apply(project.Result,(target,source,flow),kw)
-def Fetch(file,dir,private=0):
-    return project.Fetch(file,dir,private)
+def Fetch(file,dir,private=0,**kw):
+    return apply(project.Fetch,(file,dir,private),kw)
 def Exe(source,**kw):
     return apply(project.Exe,[source],kw)
 def End(**kw):

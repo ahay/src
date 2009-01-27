@@ -60,6 +60,9 @@ else:
     main = env.Place('xtpen',None,
                      var='XINC and XLIBPATH',package='libXaw-devel')
 
+if root:
+    env.Install(bindir,main[0])
+
 # x11pen
 #######
 
