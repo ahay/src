@@ -26,8 +26,6 @@ Rays and wavefronts can be displayed with sfplotrays.
 
 #include <rsf.h>
 
-#include "celltrace.h"
-
 int main(int argc, char* argv[])
 {
     bool velocity;
@@ -35,7 +33,7 @@ int main(int argc, char* argv[])
     int nt, nr, ir, it;
     float da=0., a0, amax, *t;
     float x[2], p[2], dz, dx, z0, x0, **trj, *slow, **s, *a;
-    celltrace ct;
+    sf_celltrace ct;
     char *trajname;
     FILE *traj;
     sf_file shots, vel, angles, time;
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize ray tracing object */
-    ct = celltrace_init (order, nt, nz, nx, dz, dx, z0, x0, slow);
+    ct = sf_celltrace_init (order, nt, nz, nx, dz, dx, z0, x0, slow);
     
     free (slow);
 
@@ -166,7 +164,7 @@ int main(int argc, char* argv[])
 	    p[0] = -cosf(a[ir]);
 	    p[1] = sinf(a[ir]);
 
-	    t[ir] = cell_trace (ct, x, p, &it, trj);
+	    t[ir] = sf_cell_trace (ct, x, p, &it, trj);
 
 	    if (NULL != traj) {
 		if (it < 0) it = -it; /* keep side-exiting rays */

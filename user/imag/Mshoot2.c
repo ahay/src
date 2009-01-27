@@ -22,9 +22,7 @@
 
 #include <rsf.h>
 
-#include "celltrace.h"
-
-static celltrace ct;
+static sf_celltrace ct;
 static float xs[2], xr, t;
 
 static float shooting(float a);
@@ -118,7 +116,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize ray tracing object */
-    ct = celltrace_init (order, nt, nz, nx, dz, dx, z0, x0, slow);
+    ct = sf_celltrace_init (order, nt, nz, nx, dz, dx, z0, x0, slow);
     
     free (slow);
 
@@ -203,7 +201,7 @@ static float shooting(float a)
     p[0] = -cosf(a);
     p[1] = sinf(a);
 
-    t = cell_trace (ct, x, p, &it, NULL);
+    t = sf_cell_trace (ct, x, p, &it, NULL);
 
     return (x[1]-xr);
 }

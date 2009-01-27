@@ -19,39 +19,40 @@
 
 #include <math.h>
 
-#include <rsf.h>
-
 #include "celltrace.h"
+#include "eno2.h"
+#include "alloc.h"
+#include "cell.h"
 
-#ifndef _celltrace_h
+#ifndef _sf_celltrace_h
 
-typedef struct CellTrace *celltrace;
+typedef struct sf_CellTrace *sf_celltrace;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct CellTrace {
+struct sf_CellTrace {
     int nt, nx, nz;
     float dx, dz, x0, z0;
     sf_eno2 pnt;
 };  
 
 
-celltrace celltrace_init (int order   /* interpolation accuracy */, 
-			  int nt      /* maximum time steps */,
-			  int nz      /* depth samples */, 
-			  int nx      /* lateral samples */, 
-			  float dz    /* depth sampling */, 
-			  float dx    /* lateral sampling */, 
-			  float z0    /* depth origin */, 
-			  float x0    /* lateral origin */, 
-			  float* slow /* slowness [nz*nx] */)
+sf_celltrace sf_celltrace_init (int order   /* interpolation accuracy */, 
+				int nt      /* maximum time steps */,
+				int nz      /* depth samples */, 
+				int nx      /* lateral samples */, 
+				float dz    /* depth sampling */, 
+				float dx    /* lateral sampling */, 
+				float z0    /* depth origin */, 
+				float x0    /* lateral origin */, 
+				float* slow /* slowness [nz*nx] */)
 /*< Initialize ray tracing object >*/
 {
-    celltrace ct;
+    sf_celltrace ct;
 
-    ct = (celltrace) sf_alloc (1,sizeof(*ct));
+    ct = (sf_celltrace) sf_alloc (1,sizeof(*ct));
 
     ct->nt = nt;
     ct->dx = dx; ct->dz = dz;
@@ -63,18 +64,18 @@ celltrace celltrace_init (int order   /* interpolation accuracy */,
     return ct;
 } 
 
-void celltrace_close (celltrace ct)
+void sf_celltrace_close (sf_celltrace ct)
 /*< Free allocated storage >*/
 {
     sf_eno2_close (ct->pnt);
     free (ct);
 }
 
-float cell_trace (celltrace ct, 
-		  float* xp    /* position */, 
-		  float* p     /* ray parameter */, 
-		  int* it      /* steps till boundary */, 
-		  float** traj /* trajectory */)
+float sf_cell_trace (sf_celltrace ct, 
+		     float* xp    /* position */, 
+		     float* p     /* ray parameter */, 
+		     int* it      /* steps till boundary */, 
+		     float** traj /* trajectory */)
 /*< ray trace >*/
 {
     const float eps = 1.e-5;
