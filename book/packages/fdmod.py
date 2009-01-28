@@ -334,6 +334,61 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
+
+
+# ------------------------------------------------------------
+
+def hline(cc,sx,ex,coord,par):
+    
+    nx=(ex-sx)/par['dx']+1
+    dx=par['dx']
+
+    Flow(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nx,dx,sx))
+    Flow(cc+'_z',cc+'_','math output="%g" ' % coord)
+    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
+def vline(cc,sz,ez,coord,par):
+
+    nz=(ez-sz)/par['dz']+1
+    dz=par['dz']
+    
+    Flow(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nz,dz,sz))
+    Flow(cc+'_x',cc+'_','math output="%g" ' % coord)
+    Flow(cc+'_z',cc+'_','math output="x1" ')
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
+
+def box(cc,sx,ex,sz,ez,par):
+   
+   
+    hline(cc+'h1',sx,ex,sz,par)
+    hline(cc+'h2',sx,ex,ez,par)
+
+    vline(cc+'v1',sz,ez,sx,par)
+    vline(cc+'v2',sz,ez,ex,par)
+
+    Flow(cc,[cc+'h1',cc+'h2',cc+'v1',cc+'v2'],'cat ${SOURCES[1:4]} space=n axis=2')
+
+#    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
+#    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
+#    Flow(cc,[cc+'_x',cc+'_z'],
+#         '''
+#         cat axis=2 space=n
+#         ${SOURCES[0]} ${SOURCES[1]} | transp
+#         ''', stdin=0)
+#
+
+# ------------------------------------------------------------
+
 def ssplot(custom,par):
     return '''
     window n1=2 |

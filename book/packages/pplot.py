@@ -1,5 +1,5 @@
 from rsfproj import *
-
+import fdmod 
 
 # ------------------------------------------------------------
 def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
@@ -237,3 +237,5 @@ def p1x9(plot,p0,p1,p2,p3,p4,p5,p6,p7,p8,ys,xs,yc):
     Plot(j8,p8,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=0'% (ys,xs,8*yc))
 
     Result(plot,[j0,j1,j2,j3,j4,j5,j6,j7,j8],'Overlay')
+
+
