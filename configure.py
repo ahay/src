@@ -513,7 +513,7 @@ def jpeg(context):
         context.env['JPEG'] = jpeg
     else:
         context.Result(context_failure)
-        stderr_write('sfbyte2jpg will not be built.')
+        stderr_write('sfbyte2jpg and sfjpg2byte will not be built.')
         need_pkg('jpeg', fatal=False)
         context.env['JPEG'] = None
 
