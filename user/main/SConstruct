@@ -38,6 +38,9 @@ for prog in mains:
         if prog in alias.keys():
 	       other = string.replace(str(main[0]),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,other),main[0])
+
+               if env['PLATFORM'] == 'cygwin':
+                   other = string.replace(other,'.exe','')
                docalias[other] = 'sf'+prog
 
 mpicc = env.get('MPICC')
