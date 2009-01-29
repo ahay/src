@@ -87,6 +87,6 @@ if __name__ == "__main__":
             convert(vpl,eps,string.join(sys.argv,' '))
         else:
             convert(vpl,eps)
-        sys.exit(0)
     except:
+        print 'Failed to convert %s to %s' % (vpl,eps)
         sys.exit(1)

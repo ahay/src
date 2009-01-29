@@ -96,7 +96,7 @@ static cfunc cfunctable[] = {
     myconj
 };
 
-enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
+enum {GRP, NUM, INDX, FUN, POW, MULDIV, UNARY, PLUSMIN};
 
 static sf_stack st1, st2;
 
