@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -303,7 +304,23 @@ off_t sf_unshiftdim(sf_file in, sf_file out, int axis)
     return n3;
 }
 
+bool sf_endian (void)
+/*< Endianness test, returns true for little-endian machines >*/
+{
+    bool little_endian;
 
+    union {
+	unsigned char c[4];
+	int i;
+    } test;
 
+    test.i=0;
+    test.c[0] = (unsigned char) 1;
+    
+    assert (2 == sizeof(short) && 4 == sizeof(int)); /* fix this later */
+    little_endian = (bool) (0 != (test.i << 8));
+    
+    return little_endian;
+}
 
 /* 	$Id$	 */

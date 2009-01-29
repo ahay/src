@@ -644,6 +644,7 @@ void xraster (int count, int out_of, int xpos, int ypos, int length, int orient,
     
     switch ( orient ) { 
 	case 0 :
+	default:
 	    xxpos = xpos; yypos = ypos; w = length; h = 1;
 	    xpix =0 ; xinc =1; ypix=0, yinc=0;
 	    break;

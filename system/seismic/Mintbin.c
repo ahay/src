@@ -22,6 +22,8 @@
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
@@ -52,17 +54,17 @@ int main (int argc, char* argv[])
 
     if (NULL != (xk = sf_getstring("xk"))) {
 	/* x key name */
-	xkey = sf_segykey(xk);
+	xkey = segykey(xk);
     }  else if (!sf_getint("xkey",&xkey)) {
 	/* x key number (if no xk), default is fldr */
-	xkey = sf_segykey("fldr");
+	xkey = segykey("fldr");
     }
     if (NULL != (yk = sf_getstring("yk"))) {
 	/* y key name */
-	ykey = sf_segykey(yk);
+	ykey = segykey(yk);
     }  else if (!sf_getint("ykey",&ykey)) {
 	/* y key number (if no yk), default is tracf */
-	ykey = sf_segykey("tracf");
+	ykey = segykey("tracf");
     }
     
     if (xkey < 0 || xkey >= nk) 

@@ -51,7 +51,7 @@ env.Append(BUILDERS={'Include':configure.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
-system = filter(lambda x: x[0] != '.' and x != 'seis', os.listdir('system'))
+system = filter(lambda x: x[0] != '.', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 
 SConscript(dirs='framework',name='SConstruct',

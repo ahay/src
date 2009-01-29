@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int niter, nw, n1, n2, n123, nj1, nj2, nk, xkey, ykey, nx, ny;
     int n3, i3, interp, nt, id, nd;
     float *mm, *dd, *pp, *qq, **xy, x0, dx, y0, dy, eps, *hdr;
-    char *header, *xk, *yk;
+    char *header;
     bool verb;
     sf_file in, out, dip, head;
 
@@ -57,20 +57,10 @@ int main(int argc, char* argv[])
     if (!sf_histint(head,"n2",&n2) || n2 != nd) 
 	sf_error("Wrong n2= in head");
 
-    if (NULL != (xk = sf_getstring("xk"))) {
-	/* x key name */
-	xkey = sf_segykey(xk);
-    }  else if (!sf_getint("xkey",&xkey)) {
-	/* x key number (if no xk), default is sx */
-	xkey = sf_segykey("sx");
-    }
-    if (NULL != (yk = sf_getstring("yk"))) {
-	/* y key name */
-	ykey = sf_segykey(yk);
-    }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is sy */
-	ykey = sf_segykey("sy");
-    }
+    if (!sf_getint("xkey",&xkey)) sf_error("Need xkey=");
+    /* x key number */
+    if (!sf_getint("ykey",&ykey)) sf_error("Need ykey=");
+    /* y key number */
 
     hdr = sf_floatalloc(nk);
     for (id=0; id<nd; id++) {	

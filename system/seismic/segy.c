@@ -17,19 +17,15 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <assert.h>
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
 
+#include <rsf.h>
+
 #include "segy.h"
-#include "getpar.h"
-#include "error.h"
 
-#include "_bool.h"
-/*^*/
-
-#ifndef _sf_segy_h
+#ifndef _segy_h
 
 #define SF_SEGY_FORMAT  24
 #define SF_SEGY_NS      20
@@ -222,7 +218,7 @@ static const segy bheadkey[] = {
 		     8	293.5 to 337.5 degrees */
 };
 
-static const segy segykey[] = {
+static const segy segy_key[] = {
     {"tracl",  4},  /* trace sequence number within line 0 */
 
     {"tracr",  4},  /* trace sequence number within reel 4 */
@@ -554,24 +550,7 @@ static void finsert4(float y, char* buf)
     memcpy(buf,x.b,4);
 }
 
-bool sf_endian (void)
-/*< Endianness test, returns true for little-endian machines >*/
-{
-    union {
-	byte c[4];
-	int i;
-    } test;
-
-    test.i=0;
-    test.c[0] = (byte) 1;
-    
-    assert (2 == sizeof(short) && 4 == sizeof(int)); /* fix this later */
-    little_endian = (bool) (0 != (test.i << 8));
-    
-    return little_endian;
-}
-
-void sf_ebc2asc (int narr, char* arr)
+void ebc2asc (int narr, char* arr)
 /*< Convert char array arrr[narr]: EBC to ASCII >*/
 {
     int i;
@@ -583,7 +562,7 @@ void sf_ebc2asc (int narr, char* arr)
     }
 }
 
-void sf_asc2ebc (int narr, char* arr)
+void asc2ebc (int narr, char* arr)
 /*< Convert char array arrr[narr]: ASCII to EBC >*/
 {
     int i;
@@ -595,37 +574,37 @@ void sf_asc2ebc (int narr, char* arr)
     }
 }
 
-int sf_segyformat (const char* bhead)
+int segyformat (const char* bhead)
 /*< extracts SEGY format from binary header >*/
 {
     return convert2(bhead+SF_SEGY_FORMAT);
 }
 
-void sf_set_segyformat (char* bhead, int format)
+void set_segyformat (char* bhead, int format)
 /*< set SEGY format in binary header >*/
 {
     insert2(format,bhead+SF_SEGY_FORMAT);
 }
 
-int sf_segyns (const char* bhead)
+int segyns (const char* bhead)
 /*< extracts ns (number of samples) from binary header >*/
 {
     return convert2(bhead+SF_SEGY_NS);
 }
 
-void sf_set_segyns(char* bhead, int ns)
+void set_segyns(char* bhead, int ns)
 /*< set ns (number of samples) in binary header >*/
 {
     insert2(ns,bhead+SF_SEGY_NS);
 }
 
-float sf_segydt (const char* bhead)
+float segydt (const char* bhead)
 /*< extracts dt (sampling) from binary header >*/
 {
     return (float) (convert2(bhead+SF_SEGY_DT)/1000000.);
 }
 
-void sf_set_segydt(char* bhead, float dt)
+void set_segydt(char* bhead, float dt)
 /*< set dt (sampling) in binary header >*/    
 {
     insert2((int) 1000000.*dt,bhead+SF_SEGY_DT);
@@ -732,7 +711,7 @@ static float ibm2float (const char* num)
     return y;
 }
 
-void sf_segy2trace(const char* buf, float* trace, int ns, int format)
+void segy2trace(const char* buf, float* trace, int ns, int format)
 /*< Extract a floating-point trace[nt] from buffer buf.
 ---
 format: 1: IBM, 2: int4, 3: int2, 5: IEEE
@@ -753,7 +732,7 @@ format: 1: IBM, 2: int4, 3: int2, 5: IEEE
     }
 }
 
-void sf_trace2segy(char* buf, const float* trace, int ns, int format)
+void trace2segy(char* buf, const float* trace, int ns, int format)
 /*< Convert a floating-point trace[ns] to buffer buf.
 ---
 format: 1: IBM, 2: int4, 3: int2, 5: IEEE
@@ -774,7 +753,7 @@ format: 1: IBM, 2: int4, 3: int2, 5: IEEE
     }
 }
 
-void sf_segy2head(const char* buf, int* trace, int nk)
+void segy2head(const char* buf, int* trace, int nk)
 /*< Create an integer trace header trace[nk] from buffer buf >*/
 {
     int i, byte;
@@ -783,9 +762,9 @@ void sf_segy2head(const char* buf, int* trace, int nk)
     buf0 = buf;
     for (i=0; i < nk; i++) {
 	/* allow to remap header keys */
-	bufi = sf_getint(segykey[i].name,&byte)? buf0+byte:buf;
+	bufi = sf_getint(segy_key[i].name,&byte)? buf0+byte:buf;
 
-	switch (segykey[i].size) {
+	switch (segy_key[i].size) {
 	    case 2:
 		trace[i] = convert2(bufi);
 		buf += 2;
@@ -795,38 +774,38 @@ void sf_segy2head(const char* buf, int* trace, int nk)
 		buf += 4;
 		break;
 	    default:
-		sf_error("Unknown size %d",segykey[i].size);
+		sf_error("Unknown size %d",segy_key[i].size);
 		break;
 	}
     }
 }
 
-int sf_segykey (const char* key) 
+int segykey (const char* key) 
 /*< Extract a SEGY key value >*/
 {
     
     int i;
 
     for (i=0; i < SF_NKEYS; i++) {
-	if (0==strcmp(key,segykey[i].name)) return i;
+	if (0==strcmp(key,segy_key[i].name)) return i;
     }
     sf_error("no such key %s",key);
     return 0;
 }
 
-char* sf_segykeyword (int k) 
+char* segykeyword (int k) 
 /*< Find a SEGY key from its number >*/
 {
-    return segykey[k].name;
+    return segy_key[k].name;
 }
 
-void sf_head2segy(char* buf, const int* trace, int nk)
+void head2segy(char* buf, const int* trace, int nk)
 /*< Convert an integer trace[nk] to buffer buf >*/
 {
     int i;
 
     for (i=0; i < nk; i++) {
-	if (i < SF_NKEYS && 2 == segykey[i].size) {
+	if (i < SF_NKEYS && 2 == segy_key[i].size) {
 	    insert2(trace[i],buf);
 	    buf += 2;
 	} else {
@@ -836,7 +815,7 @@ void sf_head2segy(char* buf, const int* trace, int nk)
     }
 }
 
-void sf_bhead(char* buf)
+void binary_head(char* buf)
 /*< Create a binary header for SEGY >*/
 {
     int i, val, size;
@@ -855,5 +834,13 @@ void sf_bhead(char* buf)
     }
 
 }
+
+bool endian (void)
+/*< Set endianness >*/
+{
+    little_endian = sf_endian();    
+    return little_endian;
+}
+
 
 /* 	$Id$	 */

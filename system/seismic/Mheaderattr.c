@@ -24,6 +24,8 @@ Only nonzero values are reported.
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main(int argc, char* argv[])
 {
     int i1, i2, n1, n2, *max, *min, *inp, imax, imin;
@@ -72,7 +74,7 @@ int main(int argc, char* argv[])
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
 	    snprintf(out,21,"key[%d]=\"%s\"",i1,
-		     i1 < SF_NKEYS? sf_segykeyword(i1): "?");
+		     i1 < SF_NKEYS? segykeyword(i1): "?");
 	    printf("%s%s",out,pad+strlen(out));
 	    snprintf(out,21,"min[%d]=%d",imin,min[i1]);
 	    printf("%s%s",out,pad+strlen(out));

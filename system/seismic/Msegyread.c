@@ -235,6 +235,8 @@ otrav:     overtravel taper code:
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main(int argc, char *argv[])
 {
     bool verbose, su, xdr, suxdr;
@@ -276,7 +278,7 @@ int main(int argc, char *argv[])
 
     if (!sf_getbool("endian",&xdr)) xdr=true;
     /* Whether to automatically estimate endianness or not */
-    if (xdr) sf_endian();
+    if (xdr) endian();
 
     if (NULL == (filename = sf_getstring("tape"))) {
 	/* input data */ 
@@ -300,9 +302,9 @@ int main(int argc, char *argv[])
 	    sf_error ("Error reading first trace header");
 	fseeko(file,0,SEEK_SET);
 
-	sf_segy2head(trace, itrace, SF_NKEYS);
-	ns = itrace[sf_segykey("ns")];
-	dt = itrace[sf_segykey("dt")]/1000000.;
+	segy2head(trace, itrace, SF_NKEYS);
+	ns = itrace[ segykey("ns")];
+	dt = itrace[ segykey("dt")]/1000000.;
 	free (trace);
 
 	nsegy = SF_HDRBYTES + ns*4;
@@ -313,7 +315,7 @@ int main(int argc, char *argv[])
 	if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error reading ebcdic header");
 	
-	sf_ebc2asc (SF_EBCBYTES, ahead);
+	ebc2asc (SF_EBCBYTES, ahead);
 	
 	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
 	/* output text data header file */
@@ -344,7 +346,7 @@ int main(int argc, char *argv[])
 
 	if (verbose) sf_warning("Binary header written to \"%s\"",headname);
 
-	if (!sf_getint("format",&format)) format = sf_segyformat (bhead);
+	if (!sf_getint("format",&format)) format = segyformat (bhead);
 	/* [1,2,3,5] Data format. The default is taken from binary header.
 	   1 is IBM floating point
 	   2 is 4-byte integer
@@ -370,13 +372,13 @@ int main(int argc, char *argv[])
 		break;
 	}
 
-	if (!sf_getint("ns",&ns)) ns = sf_segyns (bhead);
+	if (!sf_getint("ns",&ns)) ns = segyns (bhead);
 	/* Number of samples. The default is taken from binary header */
 	if (0>=ns) sf_error("Number of samples is not set in binary header");
 
 	if (verbose) sf_warning("Detected trace length of %d",ns);
 
-	dt = sf_segydt (bhead);
+	dt = segydt (bhead);
 	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
 	ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
     } 
@@ -441,7 +443,7 @@ int main(int argc, char *argv[])
 		}
 		fseeko(file,nsegy,SEEK_CUR);
 
-		sf_segy2head(trace, itrace, SF_NKEYS);
+		segy2head(trace, itrace, SF_NKEYS);
 		sf_intwrite(itrace,SF_NKEYS,hdr);
 	    }
 
@@ -460,7 +462,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (suxdr) {
-		    sf_segy2trace(trace, ftrace, ns,format);
+		    segy2trace(trace, ftrace, ns,format);
 		    sf_floatwrite (ftrace,ns,out);
 		} else {
 		    sf_charwrite (trace,ns*sizeof(float),out);
@@ -479,11 +481,11 @@ int main(int argc, char *argv[])
 		    sf_error ("Error reading trace header %d",itr+1);
 		}
 
-		sf_segy2head(trace, itrace, SF_NKEYS);
+		segy2head(trace, itrace, SF_NKEYS);
 		sf_intwrite(itrace,SF_NKEYS,hdr);
 
 		if (suxdr) {
-		    sf_segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
+		    segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
 		    sf_floatwrite (ftrace,ns,out);
 		} else {
 		    sf_charwrite (trace + SF_HDRBYTES,ns*sizeof(float),out);

@@ -52,7 +52,7 @@ main (int argc, char *argv[])
     xdr = true;
   /* Whether to automatically estimate endianness or not */
   if (xdr)
-    sf_endian ();
+    endian ();
 
   if (NULL == (filename = sf_getstring ("tape")))	/* input data */
     sf_error ("Need to specify tape=");
@@ -70,9 +70,9 @@ main (int argc, char *argv[])
     sf_error ("Error reading first trace header");
   fseeko (file, 0, SEEK_SET);
 
-  sf_segy2head (trace, itrace, SF_NKEYS);
-  ns = itrace[sf_segykey ("ns")];
-  dt = itrace[sf_segykey ("dt")] / 1000000.;
+  segy2head (trace, itrace, SF_NKEYS);
+  ns = itrace[segykey ("ns")];
+  dt = itrace[segykey ("dt")] / 1000000.;
   free (trace);
 
   nsegy = SF_HDRBYTES + ns * 4;

@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include <rsf.h>
 
+#include "segy.h"
+/*^*/
+
 off_t
 readfilesize (FILE * file)
 /*< Returns file size in bytes. Cannot be used on stdin. >*/
@@ -155,7 +158,7 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
 	    }
 	  fseeko (file, nsegy, SEEK_CUR);
 
-	  sf_segy2head (trace, itrace, SF_NKEYS);
+	  segy2head (trace, itrace, SF_NKEYS);
 	  sf_intwrite (itrace, SF_NKEYS, hdr);
 	}
 
@@ -183,7 +186,7 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
 	    }
 	  else
 	    {
-	      sf_segy2trace (trace, ftrace, ns, format);
+	      segy2trace (trace, ftrace, ns, format);
 	      sf_floatwrite (ftrace, ns, out);
 	    }
 	}
@@ -204,7 +207,7 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
 	      sf_error ("Error reading trace header %d", itr + 1);
 	    }
 
-	  sf_segy2head (trace, itrace, SF_NKEYS);
+	  segy2head (trace, itrace, SF_NKEYS);
 	  sf_intwrite (itrace, SF_NKEYS, hdr);
 
 	  if (su)
@@ -213,7 +216,7 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
 	    }
 	  else
 	    {
-	      sf_segy2trace (trace + SF_HDRBYTES, ftrace, ns, format);
+	      segy2trace (trace + SF_HDRBYTES, ftrace, ns, format);
 	      sf_floatwrite (ftrace, ns, out);
 	    }
 	}

@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     int interp, niter, nliter;
     float *pp, *mm, *mm0=NULL, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
-    char *xk, *yk, *header;
+    char *header;
     sf_file in, out, head, pattern=NULL, pin=NULL, pout=NULL;
     sf_operator shaping=NULL;
 
@@ -46,20 +46,10 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (NULL != (xk = sf_getstring("xk"))) {
-	/* x key name */
-	xkey = sf_segykey(xk);
-    }  else if (!sf_getint("xkey",&xkey)) {
-	/* x key number (if no xk), default is sx */
-	xkey = sf_segykey("sx");
-    }
-    if (NULL != (yk = sf_getstring("yk"))) {
-	/* y key name */
-	ykey = sf_segykey(yk);
-    }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is sy */
-	ykey = sf_segykey("sy");
-    }
+    if (!sf_getint("xkey",&xkey)) sf_error("Need xkey=");
+    /* x key number */
+    if (!sf_getint("ykey",&ykey)) sf_error("Need ykey=");
+    /* y key number */
 
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);

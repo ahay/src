@@ -26,6 +26,8 @@ Merges trace headers with data.
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main(int argc, char *argv[])
 {
     bool verbose, su, xdr;
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
     
     if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
-    if (!sf_getbool("endian",&xdr)) xdr = sf_endian();
+    if (!sf_getbool("endian",&xdr)) xdr = endian();
     /* big/little endian flag. The default is estimated automatically */
 
     if (!sf_getbool("su",&su)) {
@@ -88,7 +90,7 @@ int main(int argc, char *argv[])
 	    if (verbose) sf_warning("ASCII header created on the fly");
 	}
   	
-	sf_asc2ebc (SF_EBCBYTES, ahead);   
+	asc2ebc (SF_EBCBYTES, ahead);   
 
 	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error writing ebcdic header");
@@ -98,7 +100,7 @@ int main(int argc, char *argv[])
 
 	if (NULL == (head = fopen(headname,"rb"))) {
 	    memset(bhead,0,SF_BNYBYTES);
-	    sf_set_segyformat(bhead,1);
+	    set_segyformat(bhead,1);
 
 	    if (verbose) sf_warning("Binary header created on the fly");
 	} else {
@@ -109,15 +111,15 @@ int main(int argc, char *argv[])
 	    if (verbose) sf_warning("Binary header read from \"%s\"",headname);
 	}
 
-	if (sf_histint(in,"n1",&ns)) sf_set_segyns(bhead,ns);
-	if (sf_histfloat(in,"d1",&dt)) sf_set_segydt(bhead,dt);
+	if (sf_histint(in,"n1",&ns)) set_segyns(bhead,ns);
+	if (sf_histfloat(in,"d1",&dt)) set_segydt(bhead,dt);
 	
-	sf_bhead(bhead);
+	binary_head(bhead);
 
 	if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, file))
 	    sf_error("Error writing binary header");
 
-	format = sf_segyformat (bhead);
+	format = segyformat (bhead);
 
 	switch (format) {
 	    case 1:
@@ -138,7 +140,7 @@ int main(int argc, char *argv[])
 	}
     }
     
-    if (!sf_histint(in,"n1",&ns)) ns = su? 0: sf_segyns (bhead); 
+    if (!sf_histint(in,"n1",&ns)) ns = su? 0: segyns (bhead); 
     if (0 >= ns) sf_error("Failed to determine trace length");
 
     if (verbose) sf_warning("Detected trace length of %d",ns);
@@ -170,13 +172,13 @@ int main(int argc, char *argv[])
 
     for (itr=0; itr < ntr; itr++) {
 	sf_intread(itrace,SF_NKEYS,hdr);	
-	sf_head2segy(trace, itrace, SF_NKEYS);
+	head2segy(trace, itrace, SF_NKEYS);
 	
 	if (su) {
 	    sf_charread(trace + SF_HDRBYTES,ns*sizeof(float),in);
 	} else {
 	    sf_floatread (ftrace,ns,in);
-	    sf_trace2segy(trace + SF_HDRBYTES, ftrace, ns,format);
+	    trace2segy(trace + SF_HDRBYTES, ftrace, ns,format);
 	}
 
 	if (nsegy != fwrite(trace, 1, nsegy, file))

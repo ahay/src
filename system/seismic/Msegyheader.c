@@ -23,6 +23,8 @@
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main(int argc, char* argv[])
 {
     int i, i2, n1, nbuf, *buf[SF_NKEYS], buf2[SF_NKEYS];
@@ -50,7 +52,7 @@ int main(int argc, char* argv[])
     memset(zero,0,BUFSIZ);
 
     for (i=0; i < SF_NKEYS; i++) {
-	key = sf_segykeyword(i);
+	key = segykeyword(i);
 	if (0==strcmp(key,"ns")) {
 	    keys[i] = NULL;
 	    buf[i] = sf_intalloc(nbuf);

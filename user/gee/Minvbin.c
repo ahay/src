@@ -33,7 +33,7 @@ int main (int argc, char* argv[])
     int n[2], m[2], interp, np, *nh, *ph, ip;
     float *mm, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, a0, eps;
-    char *xk, *yk, *lagfile, *nhfile, *header;
+    char *lagfile, *nhfile, *header;
     bool stat, der;
     sf_filter aa;
     nfilter naa=NULL;
@@ -63,20 +63,10 @@ int main (int argc, char* argv[])
     if (!sf_histint(head,"n2",&n2) || n2 != nd) 
 	sf_error("Wrong n2= in head");
 
-    if (NULL != (xk = sf_getstring("xk"))) {
-	/* x key name */
-	xkey = sf_segykey(xk);
-    }  else if (!sf_getint("xkey",&xkey)) {
-	/* x key number (if no xk), default is fldr */
-	xkey = sf_segykey("fldr");
-    }
-    if (NULL != (yk = sf_getstring("yk"))) {
-	/* y key name */
-	ykey = sf_segykey(yk);
-    }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is tracf */
-	ykey = sf_segykey("tracf");
-    }
+    if (!sf_getint("xkey",&xkey)) sf_error("Need xkey=");
+    /* x key number */
+    if (!sf_getint("ykey",&ykey)) sf_error("Need ykey=");
+    /* y key number */
 
     if (xkey < 0 || xkey >= nk) 
 	sf_error("xkey=%d is out of the range [0,%d]",xkey,nk-1);

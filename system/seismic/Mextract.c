@@ -22,6 +22,8 @@
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nm, nt, it, nx, ny, xkey, ykey, interp;
@@ -40,17 +42,17 @@ int main (int argc, char* argv[])
 
     if (NULL != (xk = sf_getstring("xk"))) {
 	/* x key name */
-	xkey = sf_segykey(xk);
+	xkey = segykey(xk);
     }  else if (!sf_getint("xkey",&xkey)) {
 	/* x key number (if no xk), default is sx */
-	xkey = sf_segykey("sx");
+	xkey = segykey("sx");
     }
     if (NULL != (yk = sf_getstring("yk"))) {
 	/* y key name */
-	ykey = sf_segykey(yk);
+	ykey = segykey(yk);
     }  else if (!sf_getint("ykey",&ykey)) {
 	/* y key number (if no yk), default is sy */
-	ykey = sf_segykey("sy");
+	ykey = segykey("sy");
     }
 
     /* create coordinates */

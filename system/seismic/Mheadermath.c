@@ -29,6 +29,8 @@ An addition operation can be performed by sfstack.
 
 #include <rsf.h>
 
+#include "segy.h"
+
 int main(int argc, char* argv[])
 {
     int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
@@ -47,7 +49,7 @@ int main(int argc, char* argv[])
     sf_putint(out,"input",2);
 
     for (i=0; i < SF_NKEYS; i++) {
-	sf_putint(out,sf_segykeyword(i),i+3);
+	sf_putint(out,segykeyword(i),i+3);
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */

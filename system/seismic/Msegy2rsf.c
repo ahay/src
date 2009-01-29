@@ -52,7 +52,7 @@ main (int argc, char *argv[])
     xdr = true;
   /* Whether to automatically estimate endianness or not */
   if (xdr)
-    sf_endian ();
+    endian ();
 
   if (NULL == (filename = sf_getstring ("tape")))	/* input data */
     sf_error ("Need to specify tape=");
@@ -65,7 +65,7 @@ main (int argc, char *argv[])
   if (SF_EBCBYTES != fread (ahead, 1, SF_EBCBYTES, file))
     sf_error ("Error reading ebcdic header");
 
-  sf_ebc2asc (SF_EBCBYTES, ahead);
+  ebc2asc (SF_EBCBYTES, ahead);
 
   if (NULL == (headname = sf_getstring ("hfile")))
     headname = "header";
@@ -99,7 +99,7 @@ main (int argc, char *argv[])
     sf_warning ("Binary header written to \"%s\"", headname);
 
   if (!sf_getint ("format", &format))
-    format = sf_segyformat (bhead);
+    format = segyformat (bhead);
   /* [1,2,3,5] Data format. The default is taken from binary header.
      1 is IBM floating point
      2 is 4-byte integer
@@ -131,7 +131,7 @@ main (int argc, char *argv[])
     }
 
   if (!sf_getint ("ns", &ns))
-    ns = sf_segyns (bhead);
+    ns = segyns (bhead);
   /* Number of samples. The default is taken from binary header */
   if (0 >= ns)
     sf_error ("Number of samples is not set in binary header");
@@ -139,7 +139,7 @@ main (int argc, char *argv[])
   if (verb)
     sf_warning ("Detected trace length of %d", ns);
 
-  dt = sf_segydt (bhead);
+  dt = segydt (bhead);
   nsegy = SF_HDRBYTES + ((3 == format) ? ns * 2 : ns * 4);
   ntr = (pos - SF_EBCBYTES - SF_BNYBYTES) / nsegy;
 
