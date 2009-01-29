@@ -71,7 +71,7 @@ int main (int argc, char* argv[])
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    sf_smooth (tr,i0,s[i],diff[i],data);
+		    sf_smooth (tr,i0,s[i],diff[i],false,data);
 		    /* smooth2 (tr,i0,s[i],diff[i],data); */
 		}
 	    }

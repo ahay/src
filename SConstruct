@@ -51,11 +51,11 @@ env.Append(BUILDERS={'Include':configure.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
+system = filter(lambda x: x[0] != '.' and x != 'seis', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
-env['USERS']=user
 
 SConscript(dirs='framework',name='SConstruct',
-           exports='env root bindir libdir docdir mandir')
+           exports='env root bindir libdir docdir mandir system user')
 
 ##########################################################################
 # API BUILD
@@ -69,6 +69,16 @@ for dir in map(lambda x: os.path.join('api',x), api):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct',exports='env root libdir incdir')
+    Default(build)
+
+
+##########################################################################
+# SYSTEM BUILD
+##########################################################################
+for dir in map(lambda x: os.path.join('system',x), system):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct',exports='env root bindir libdir')
     Default(build)
 
 ##########################################################################

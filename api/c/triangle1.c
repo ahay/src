@@ -53,7 +53,7 @@ void sf_triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (i=0; i < nd; i++) {
 	    tmp[i] = y[i];
 	}
-	sf_smooth (tr, 0, 1, false, tmp);
+	sf_smooth (tr, 0, 1, false, false, tmp);
 	for (i=0; i < nd; i++) {
 	    x[i] += tmp[i];
 	}
@@ -61,7 +61,7 @@ void sf_triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (i=0; i < nd; i++) {
 	    tmp[i] = x[i];
 	}
-	sf_smooth (tr, 0, 1, false, tmp);
+	sf_smooth (tr, 0, 1, false, false, tmp);
 	for (i=0; i < nd; i++) {
 	    y[i] += tmp[i];
 	}

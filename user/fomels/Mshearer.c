@@ -88,8 +88,8 @@ int main (int argc, char* argv[])
 	    hilb[i1] = trace[i1];
 	}
 
-	sf_smooth (ts, 0, 1, false, trace);
-	sf_smooth (tl, 0, 1, false, hilb);
+	sf_smooth (ts, 0, 1, false, false, trace);
+	sf_smooth (tl, 0, 1, false, false, hilb);
 	
 	for (i1=0; i1 < nh; i1++) {
 	    trace[i1] = 0.;

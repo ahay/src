@@ -1,12 +1,12 @@
 import os, rsfdoc
 
-Import('env root bindir libdir docdir mandir')
+Import('env root bindir libdir docdir mandir system user')
 
 txtdir = os.path.join(docdir,'txt')
 python = WhereIs('python')
 
-dirs = Split('main proc imag plot opengl libplot pens sumain suplot')
-dirs = dirs + env['USERS']
+dirs = Split('plot opengl libplot pens sumain suplot')
+dirs = dirs + system + user
 
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
