@@ -23,7 +23,7 @@ int main (int argc, char* argv[])
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
     int nrep, irep, n1, n2, i2, i0;
-    bool diff[SF_MAX_DIM];
+    bool diff[SF_MAX_DIM], box[SF_MAX_DIM];
     char key[6];
     float* data;
     sf_triangle tr;
@@ -44,7 +44,10 @@ int main (int argc, char* argv[])
 	if (rect[i] > 1) dim1 = i;
 	snprintf(key,6,"diff%d",i+1);
 	if (!sf_getbool(key,diff+i)) diff[i]=false;
-	/*( diff#=(n,n,...) differentiation on #-th axis )*/  
+	/*( diff#=(n,n,...) differentiation on #-th axis )*/
+	snprintf(key,5,"box%d",i+1);
+	if (!sf_getbool(key,box+i)) box[i]=false;
+	/*( box#=(n,n,...) box (rather than triangle) on #-th axis )*/
     }
 
     n1 = n2 = 1;
@@ -71,8 +74,7 @@ int main (int argc, char* argv[])
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    sf_smooth (tr,i0,s[i],diff[i],false,data);
-		    /* smooth2 (tr,i0,s[i],diff[i],data); */
+		    sf_smooth (tr,i0,s[i],diff[i],box[i],data);
 		}
 	    }
 	    sf_triangle_close(tr);
@@ -84,4 +86,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Msmooth.c 4092 2009-01-29 21:16:20Z sfomel $	 */

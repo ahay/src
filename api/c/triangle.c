@@ -170,17 +170,19 @@ static void triple (int o, int d, int nx, int nb, float* x, const float* tmp, bo
     int i;
     const float *tmp1, *tmp2;
     float wt;
-
-    tmp1 = tmp + nb;
-    tmp2 = tmp + 2*nb;
     
     if (box) {
-	wt = 0.5/nb;
+	tmp2 = tmp + 2*nb;
+
+	wt = 1.0/(2*nb-1);
 	for (i=0; i < nx; i++) {
-	    x[o+i*d] = (tmp[i] - tmp2[i])*wt;
+	    x[o+i*d] = (tmp[i+1] - tmp2[i])*wt;
 	}
     } else {
-	wt = 1./(nb*nb);
+	tmp1 = tmp + nb;
+	tmp2 = tmp + 2*nb;
+
+	wt = 1.0/(nb*nb);
 	for (i=0; i < nx; i++) {
 	    x[o+i*d] = (2.*tmp1[i] - tmp[i] - tmp2[i])*wt;
 	}
@@ -192,16 +194,18 @@ static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, b
     int i;
     float wt;
 
-    wt = 1./(nb*nb);
-    
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
     }
 
     if (box) {
-	cblas_saxpy(nx,  +wt,x+o,d,tmp     ,1);
+	wt = 1.0/(2*nb-1);
+
+	cblas_saxpy(nx,  +wt,x+o,d,tmp+1   ,1);
 	cblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
     } else {
+	wt = 1.0/(nb*nb);
+    
 	cblas_saxpy(nx,  -wt,x+o,d,tmp     ,1);
 	cblas_saxpy(nx,2.*wt,x+o,d,tmp+nb  ,1);
 	cblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);

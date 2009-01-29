@@ -16,7 +16,7 @@ usage with examples.
 \section{Main programs}
 
 The source files for these programs can be found under
-\href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/}{user/main}
+\href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/}{system/main}
 in the Madagascar distribution.
 
 \noindent\doublebox{\parbox{\textwidth}{
@@ -46,28 +46,28 @@ In both cases, the size and shape of \texttt{data1.rsf} and
 message is printed out if the the axis sampling parameters (such as
 \texttt{o1} or \texttt{d1}) in these files are different.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/add.c?view=markup}{user/main/add.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/add.c?view=markup}{system/main/add.c}}
 
 The first input file is either in the list or in the standard input.
-\moddex{add}{add}{101}{108}{user/main}
+\moddex{add}{add}{101}{108}{system/main}
 
 Collect input files in the \texttt{in} array from all command-line
 parameters that don't contain an ``\texttt{=}'' sign. The total number
 of input files is \texttt{nin}.
-\moddex{add}{add}{110}{116}{user/main}
+\moddex{add}{add}{110}{116}{system/main}
 
 A helper function \texttt{check\_compat} checks the compatibility of
 input files.
-\moddex{add}{add}{412}{450}{user/main}
+\moddex{add}{add}{412}{450}{system/main}
 
 Finally, we enter the main loop, where the input data are getting read
 buffer by buffer and combined in the total product depending on the
 data type.  
-\moddex{add}{add}{173}{194}{user/main}
+\moddex{add}{add}{173}{194}{system/main}
 
 The data combination program for floating point numbers is
 \texttt{add\_float}.  
-\moddex{add}{add}{253}{294}{user/main}
+\moddex{add}{add}{253}{294}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfattr}
@@ -88,22 +88,22 @@ deviation is the square root of the variance. Using \texttt{sfattr}
 is a quick way to see the distribution of data values and check it for
 anomalies.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/attr.c?view=markup}{user/main/attr.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/attr.c?view=markup}{system/main/attr.c}}
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
-\moddex{attr}{attr}{80}{83}{user/main}
+\moddex{attr}{attr}{80}{83}{system/main}
 
 In the main loop, we read the input data buffer by buffer.
-\moddex{attr}{attr}{97}{116}{user/main}
+\moddex{attr}{attr}{97}{116}{system/main}
 
 The data attributes are accumulated in corresponding double-precision
 variables. 
-\moddex{attr}{attr}{137}{138}{user/main}
+\moddex{attr}{attr}{137}{138}{system/main}
 
 Finally, the attributes are reduced and printed out.
-\moddex{attr}{attr}{170}{177}{user/main}
-\moddex{attr}{attr}{184}{193}{user/main}
+\moddex{attr}{attr}{170}{177}{system/main}
+\moddex{attr}{attr}{184}{193}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
@@ -153,32 +153,32 @@ bash$ sfcat one.rsf two.rsf > three.rsf
 sfcat: n2 mismatch: need 3
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/cat.c?view=markup}{user/main/cat.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cat.c?view=markup}{system/main/cat.c}}
 
 The first input file is either in the list or in the standard input.
-\moddex{cat}{cat}{48}{55}{user/main}
+\moddex{cat}{cat}{48}{55}{system/main}
 
 Everything on the command line that does not contain a ``='' sign is
 treated as a file name, and the corresponding file object is added to the list.
-\moddex{cat}{cat}{57}{63}{user/main}
+\moddex{cat}{cat}{57}{63}{system/main}
 
 As explained above, if the \texttt{space=} parameter is not set, it is
 inferred from the program name: \texttt{sfmerge} corresponds to
 \texttt{space=y} and \texttt{sfcat} corresponds to \texttt{space=n}.
-\moddex{cat}{cat}{67}{80}{user/main}
+\moddex{cat}{cat}{67}{80}{system/main}
 
 Find the axis for the merging (from the command line \texttt{axis=}
 argument) and figure out two sizes: \texttt{n1} for everything after
 the axis and \texttt{n2} for everything before the axis.
-\moddex{cat}{cat}{94}{99}{user/main}
+\moddex{cat}{cat}{94}{99}{system/main}
 
 In the output, the selected axis will get extended.
-\moddex{cat}{cat}{111}{125}{user/main}
+\moddex{cat}{cat}{111}{125}{system/main}
 
 The rest is simple: loop through the datasets reading and writing the
 data in buffer-size chunks and adding extra empty chunks if
 \texttt{space=y}.
-\moddex{cat}{cat}{134}{149}{user/main}
+\moddex{cat}{cat}{134}{149}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcmplx}
@@ -208,13 +208,13 @@ cmplx.rsf:
         6 elements 48 bytes
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/cmplx.c?view=markup}{user/main/cmplx.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cmplx.c?view=markup}{system/main/cmplx.c}}
 
 The program flow is simple. First, get the names of the input files.
-\moddex{cmplx}{cmplx}{39}{55}{user/main}
+\moddex{cmplx}{cmplx}{39}{55}{system/main}
 
 The main part of the program reads the real and imaginary parts buffer by buffer and assembles and writes out the complex input. 
-\moddex{cmplx}{cmplx}{79}{88}{user/main}
+\moddex{cmplx}{cmplx}{79}{88}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfconjgrad}
@@ -302,7 +302,7 @@ norm value = 5.73563
 In 10 iterations, the misfit decreased by an order of magnitude. The
 result can be improved by running the program for more iterations.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/user/main/conjgrad.c?view=markup}{user/main/conjgrad.c}}
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/conjgrad.c?view=markup}{system/main/conjgrad.c}}
 
 
 
