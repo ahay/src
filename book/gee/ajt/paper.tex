@@ -424,7 +424,7 @@ Equation~(\ref{eqn:ruff1}) is implemented by the code
 in module \texttt{igrad1}
 which does the operator itself (the forward operator)
 and its adjoint.
-\opdex{igrad1}{first difference}{25}{40}{filt/lib}
+\opdex{igrad1}{first difference}{25}{40}{api/c}
 
 \par \noindent
 The adjoint code may seem strange.
@@ -1312,7 +1312,7 @@ To understand the adjoint, you need to inspect
 the detailed form of the expression $\tilde{\bold x} = \bold C' \bold y$
 and take care to get the ends correct.
 Figure \ref{fig:causint} illustrates the program for $\rho = 1$.
-\opdex{causint}{causal integral}{35}{46}{filt/lib}
+\opdex{causint}{causal integral}{35}{46}{api/c}
 \par
 %\activesideplot{causint}{width=3.00in,height=3.2in}{}
 \sideplot{causint}{width=3.00in}{
@@ -1497,7 +1497,7 @@ as we did with leaky integration.
 
 \par
 A module to backsolve~(\ref{eqn:polydiv}) is \texttt{recfilt}.
-\opdex{recfilt}{deconvolve}{48}{74}{filt/lib}
+\opdex{recfilt}{deconvolve}{48}{74}{api/c}
 
 \par
 The more complicated an operator, the more complicated is its adjoint.
@@ -2049,8 +2049,8 @@ such as subroutine \texttt{array}
 also in module \texttt{chain}.
 
 
-\moddex{chain}{operator chain and array}{26}{46}{filt/lib}
-\moddex{chain}{operator chain and array}{70}{90}{filt/lib}
+\moddex{chain}{operator chain and array}{26}{46}{api/c}
+\moddex{chain}{operator chain and array}{70}{90}{api/c}
 
 %\moddex{solver_tiny}{}
 
@@ -2224,7 +2224,7 @@ the operator can be used properly for accumulating the result like
 $\bold y \leftarrow \bold y+\bold B\bold x$.
 
 %\begin{notforlecture}
-\moddex{dottest}{dot-product test}{50}{60}{filt/lib}
+\moddex{dottest}{dot-product test}{50}{60}{api/c}
 %\end{notforlecture}
 
 \par
