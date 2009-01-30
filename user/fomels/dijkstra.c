@@ -34,10 +34,12 @@ static float **cost, **udc, **lrc;
 static step **path, here;
 static const float big_number = FLT_MAX;
 
-void dijkstra_init(int m1, int m2, float **udcost, float ** lrcost)
+void dijkstra_init(int m1, int m2, 
+		   float **udcost  /* up-down cost */, 
+		   float ** lrcost /* left-right cost */)
 /*< initialize with model size >*/
 {
-    int i2, i1;
+    int i2;
 
     n1=m1;
     n2=m2;
@@ -49,11 +51,6 @@ void dijkstra_init(int m1, int m2, float **udcost, float ** lrcost)
     path[0] = (step*) sf_alloc(n1*n2,sizeof(step));
     for (i2=0; i2 < n2; i2++) {
 	if (i2) path[i2] = path[0] + i2*n1;
-	for (i1=0; i1 < n1; i1++) {
-	    cost[i2][i1] = big_number;
-	    status[i2][i1] = SF_OUT;
-	    path[i2][i1] = NULL;
-	}
     }
     sf_pqueue_init (2*(n1+n2));
 
@@ -118,8 +115,16 @@ static void fix_neighbor(int s1, int s2 /* location */,
 static void neighbors(int s1, int s2)
 /* process neighbors */
 {
-    if (s1 < n1-1) { fix_neighbor(s1,s2,+1,0,udc[s2][s1  ]); }
-    if (s1 > 0)    { fix_neighbor(s1,s2,-1,0,udc[s2][s1-1]); }
+    if (s1 < n1-1) { 
+	fix_neighbor(s1,s2,+1,0,udc[s2][s1  ]); 
+	if (s2 < n2-1) { fix_neighbor(s1,s2,+1,+1,udc[s2][s1  ] + lrc[s2  ][s1]); }
+	if (s2 > 0)    { fix_neighbor(s1,s2,+1,-1,udc[s2][s1  ] + lrc[s2-1][s1]); }
+    }
+    if (s1 > 0)    { 
+	fix_neighbor(s1,s2,-1,0,udc[s2][s1-1]); 
+	if (s2 < n2-1) { fix_neighbor(s1,s2,-1,+1,udc[s2][s1-1] + lrc[s2  ][s1]); }
+	if (s2 > 0)    { fix_neighbor(s1,s2,-1,-1,udc[s2][s1-1] + lrc[s2-1][s1]); }
+    }
     if (s2 < n2-1) { fix_neighbor(s1,s2,0,+1,lrc[s2  ][s1]); }
     if (s2 > 0)    { fix_neighbor(s1,s2,0,-1,lrc[s2-1][s1]); }
 }
@@ -127,10 +132,20 @@ static void neighbors(int s1, int s2)
 void dijkstra_source(int s1, int s2) 
 /*< initialize source >*/
 {
+    int i1, i2;
+
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    cost[i2][i1] = big_number;
+	    status[i2][i1] = SF_OUT;
+	    path[i2][i1] = NULL;
+	}
+    }
+
     cost[s2][s1] = 0.;
     status[s2][s1] = SF_IN;
     sf_pqueue_start (); 
-    np = 0.;
+    np = 0;
     neighbors(s1,s2);
 }
 

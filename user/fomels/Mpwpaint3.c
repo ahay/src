@@ -79,18 +79,16 @@ int main (int argc, char *argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    trace[i1] = dat[i3-lr][i2-ud][i1];
 	} 
-	if (0==lr) {
-	    if (ud > 0) {
-		predict_step(false,true,trace,p[i3][i2-ud]);
-	    } else {
-		predict_step(false,false,trace,p[i3][i2]);
-	    }
-	} else if (0==ud) {
-	    if (lr > 0) {
-		predict_step(false,true,trace,q[i3-lr][i2]);
-	    } else {
-		predict_step(false,false,trace,q[i3][i2]);
-	    }
+	if (ud > 0) {
+	    predict_step(false,true,trace,p[i3][i2-ud]);
+	} else if (ud < 0) {
+	    predict_step(false,false,trace,p[i3][i2]);
+	}
+
+	if (lr > 0) {
+	    predict_step(false,true,trace,q[i3-lr][i2]);
+	} else if (lr < 0) {
+	    predict_step(false,false,trace,q[i3][i2]);
 	}
     }
 	

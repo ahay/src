@@ -70,25 +70,22 @@ int main (int argc, char *argv[])
     paths = (char**) sf_alloc(nf,sizeof(char*));
     if (!sf_getstrings("paths",paths,nf)) sf_error("Need paths=");
     
-    for (i=0; i < nf; i++) {
+    for (i=0; i < nf; i++) { /* loop over final points */
 	dijkstra_start(fin1[i],fin2[i]);
 	j1 = fin1[i];
 	j2 = fin2[i];
 	jj[0][0]=j1;
 	jj[0][1]=j2;
 	for (j=1; dijkstra_next(&ud,&lr); j++) {
-	    if (0==lr) {
-		if (ud > 0) {
-		    j1 -= ud;
-		} else {
-		    j1 -= ud;
-		}
-	    } else if (0==ud) {
-		if (lr > 0) {
-		    j2 -= lr;
-		} else {
-		    j2 -= lr;
-		}
+	    if (ud > 0) {
+		j1 -= ud;
+	    } else {
+		j1 -= ud;
+	    }
+	    if (lr > 0) {
+		j2 -= lr;
+	    } else {
+		j2 -= lr;
 	    }
 	    jj[j][0]=j1;
 	    jj[j][1]=j2;
