@@ -51,8 +51,6 @@ if 'python' in env.get('API',[]):
 
     for module in modules:
         ifile = module+'.i'
-        if root:
-            ifile = '#/api/python/' + ifile
         wrap = env.CFile(module,ifile,SWIGFLAGS='-python')
         python = env.LoadableModule(module,wrap[0],
                                     LDMODULEPREFIX='_c_',
