@@ -180,7 +180,7 @@ for \bx{matrix multiply} and its adjoint is found below.
 The first step is a subroutine, \texttt{adjnull()},
 for optionally erasing the output.
 With the option {\tt add=true}, results accumulate like {\tt y=y+B*x}.
-\moddex{adjnull}{erase output}{26}{48}{filt/lib}
+\moddex{adjnull}{erase output}{26}{48}{api/c}
 The subroutine \texttt{matmult()}
 for matrix multiply and its adjoint
 exhibits the style that we will use repeatedly.
@@ -305,7 +305,7 @@ is a collection of $N$ assignments.
 This is done in subroutine \texttt{igrad1()},
 which implements equation~(\ref{eqn:ruff1})
 and its adjoint.
-\moddex{igrad1}{first difference}{25}{40}{filt/lib}
+\moddex{igrad1}{first difference}{25}{40}{api/c}
 \par
 \noindent
 Notice that the do loop in the code
@@ -682,7 +682,7 @@ learned earlier.
 To understand the adjoint, you need to inspect
 the detailed form of the expression $\tilde{\bold x} = \bold C' \bold y$
 and take care to get the ends correct.
-\opdex{causint}{causal integral}{35}{46}{filt/lib}
+\opdex{causint}{causal integral}{35}{46}{api/c}
 \par
 %\activesideplot{causint}{width=3.00in,height=3.2in}{ER}{
 \inputdir{causint}
