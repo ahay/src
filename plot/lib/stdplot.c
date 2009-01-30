@@ -366,7 +366,7 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (sf_getbool ("wantaxis", &want) && !want) {
-	/* if draw axes */
+	/*( wantaxis if draw axes )*/
 	label1 = NULL;
 	label2 = NULL;
 	if (cube) label3 = NULL;
@@ -374,14 +374,14 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (sf_getbool ("wantaxis1",&want) && !want) {
-	/* if draw first axis */
+	/*( wantaxis1 if draw first axis )*/
 	label1 = NULL;
     } else if (NULL == label1) { 
 	label1 = (struct Label*) sf_alloc(1,sizeof(struct Label));
     }
 
     if (sf_getbool ("wantaxis2",&want) && !want) {
-	/* if draw second axis */
+	/*( wantaxis2 if draw second axis )*/
 	label2 = NULL;
 	if (!cube && NULL == label1) return;
     } else if (NULL == label2) {
@@ -390,7 +390,7 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (cube) {
 	if (sf_getbool ("wantaxis3",&want) && !want) {
-	    /* if draw third axis (in cube plots) */
+	    /*( wantaxis3 if draw third axis in cube plots )*/
 	    label3 = NULL;
 	    if (NULL == label1 && NULL == label2) return;
 	} else if (NULL == label3) {
