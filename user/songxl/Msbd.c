@@ -17,11 +17,11 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-
+#include <math.h>
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ix, it, what;
-    float dt, dx, w, g, a1, a2, a3, a4;
+    float dt, dx, w, g, a0, a1, a2, a3, a4, a5;
     float *old, *new, *cur, *sig, *v, *vx, **a; 
     sf_file inp, out, vel, grad;
 
@@ -162,7 +162,76 @@ int main(int argc, char* argv[])
 
 	      sf_floatwrite(new,nx,out);
               } 
-    
-    } 
-    exit(0);
-}
+        break;
+ 
+        case 8:
+        /* 4th order FD*/
+          a = sf_floatalloc2(7,nx);
+     
+          for (ix=0; ix < nx; ix++) {
+	   /* dimensionless velocity */
+	      w = v[ix] * dt/dx;
+	   /* dimensionless gradient */
+	      g = vx[ix] * dt;
+              a0 = w*g;
+	      a1 = w*w*(4.0 + g*g);
+              a2 = w*w*w*g*(12.0+g*g);	
+              a3 = pow(w,4)*(16.0+24.0*g*g+pow(g,4));
+              a4 = pow(w,5)*g*(80.0+40.0*g*g+pow(g,4));
+              a5 = pow(w,6)*(64.0+240.0*g*g+60.0*pow(g,4)+pow(g,6));
+
+              a[ix][0] = (384.0*a0+64.0*a1-120.0*a2-20.0*a3+6.0*a4+a5)/23040.0;  
+              a[ix][1] = -(576.0*a0+144.0*a1-160.0*a2-40.0*a3+4.0*a4+a5)/3840.0;
+              a[ix][2] = (1152.0*a0+576.0*a1-104.0*a2-52.0*a3+2.0*a4+a5)/1536.0;
+              a[ix][3] = -(784.0*a1-56.0*a3+a5)/1152.0;
+              a[ix][4] = (-1152.0*a0+576.0*a1+104.0*a2-52.0*a3-2.0*a4+a5)/1536.0;
+              a[ix][5] = -(-576.0*a0+144.0*a1+160.0*a2-40.0*a3-4.0*a4+a5)/3840.0;
+              a[ix][6] = (-384.0*a0+64.0*a1+120.0*a2-20.0*a3-6.0*a4+a5)/23040.0;  
+
+	      /* initial conditions */
+	      cur[ix] = 0.;
+	      new[ix] = 0.;
+              }
+
+          free(v);
+          free(vx);
+
+
+          /* propagation in time */
+          for (it=0; it < nt; it++) {
+
+	  for (ix=0; ix < nx; ix++) {
+	      old[ix] = cur[ix];
+	      cur[ix] = new[ix];
+	      }  
+
+	     /* Stencil */
+	      new[0] = sig[it]; 
+	      new[1] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[0]*a[1][4] +cur[1]*a[1][3] +cur[2]*a[1][2] 
+                 + cur[3]*a[1][1] + cur[4]*a[1][0];
+	      new[2] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[1]*a[1][4] +cur[2]*a[1][3] +cur[3]*a[1][2] 
+                 + cur[4]*a[1][1] + cur[5]*a[1][0];
+	      for (ix=3; ix < nx-3; ix++) {
+	          new[ix] = cur[ix+3]*a[ix][0] +cur[ix+2]*a[ix][1] + cur[ix+1]*a[ix][2] + cur[ix]*a[ix][3]
+                      + cur[ix-1]*a[ix][4] + cur[ix-2]*a[ix][5]+ cur[ix-3]*a[ix][6];
+
+	          }
+	      new[nx-3] = cur[nx-6]*a[nx-3][6] + cur[nx-5]*a[nx-3][5] + cur[nx-4]*a[nx-3][4] + cur[nx-3]*a[nx-3][3]
+	            + cur[nx-2]*a[nx-3][2]+ cur[nx-1]*a[nx-3][1] + cur[nx-1]*a[nx-3][0];
+	      new[nx-2] = cur[nx-5]*a[nx-2][6] + cur[nx-4]*a[nx-2][5] + cur[nx-3]*a[nx-2][4] + cur[nx-2]*a[nx-2][3]
+	            + cur[nx-1]*a[nx-2][2] + cur[nx-1]*a[nx-2][1] + cur[nx-1]*a[nx-2][0];
+	      new[nx-1] = cur[nx-4]*a[nx-1][6] + cur[nx-3]*a[nx-1][5] + cur[nx-2]*a[nx-1][4] + cur[nx-1]*a[nx-1][3]
+	            + cur[nx-1]*a[nx-1][2] + cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0];
+	      for (ix=1; ix < nx; ix++) {
+	          new[ix] += 2*cur[ix] - old[ix];
+	          }  
+
+	      sf_floatwrite(new,nx,out);
+              } 
+
+
+
+ }         
+    exit(0); 
+}           
+           
