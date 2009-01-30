@@ -49,7 +49,7 @@ static double vfsr_cost_function_cb (double *cost_parameters,
     PyObject *params, *lower_bound, *upper_bound, *flag;
     PyObject *result;
     int dims[1] = { ((VFSR_USER_DATA*)user_data)->number_parameters };
-    int flagdims[1] = { 1 };
+    int flagdims[1] = { 2 };
     double dres = 0;
 
     func = (PyObject *)((VFSR_USER_DATA*)user_data)->cost_func;

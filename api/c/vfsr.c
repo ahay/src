@@ -130,9 +130,10 @@ static LONG_INT recent_number_generated, number_parameters, number_accepted;
 static LONG_INT recent_number_acceptances, index_cost_acceptances;
 static LONG_INT number_acceptances_saved, best_number_accepted_saved;
 
-/* Flag indicates that the parameters generated were
-   invalid according to the cost function validity criteria. */
-static int valid_state_generated_flag;
+/* Flag[0] indicates that the parameters generated were
+   invalid according to the cost function validity criteria,
+   flag[1] indicates, that the previous solution was accepted */
+static int valid_state_generated_flag[2];
 static LONG_INT number_invalid_generated_states, repeated_invalid_states;
 
 /* parameter type is real or integer */
@@ -328,6 +329,8 @@ double vfsr(                        /* return final_cost */
     /* do not calculate curvatures initially */
     curvature_flag = FALSE;
 
+    valid_state_generated_flag[1] = FALSE;
+
     /* allocate storage for all parameters */
     current_generated_state.parameter =
         (double *) calloc(number_parameters, sizeof(double));
@@ -392,14 +395,14 @@ double vfsr(                        /* return final_cost */
             do {
                 ++number_invalid_generated_states;
                 ++repeated_invalid_states;
-                valid_state_generated_flag = TRUE;
+                valid_state_generated_flag[0] = TRUE;
                 generate_new_state(user_random_generator);
                 current_generated_state.cost =
                     (*user_cost_function)
                     (current_generated_state.parameter,
                      parameter_minimum,
                      parameter_maximum,
-                     &valid_state_generated_flag,
+                     valid_state_generated_flag,
                      OPTIONS,
                      user_data);
                 if (repeated_invalid_states >
@@ -411,7 +414,7 @@ double vfsr(                        /* return final_cost */
                               exit_status);
                     return (final_cost);
                 }
-            } while (valid_state_generated_flag == FALSE);
+            } while (valid_state_generated_flag[0] == FALSE);
             --number_invalid_generated_states;
             sampled_cost_sum += fabs(current_generated_state.cost);
         }
@@ -430,13 +433,13 @@ double vfsr(                        /* return final_cost */
     }
 
     if (USER_INITIAL_PARAMETERS) {        /* if using user's initial parameters */
-        valid_state_generated_flag = TRUE;
+        valid_state_generated_flag[0] = TRUE;
         current_generated_state.cost =
             (*user_cost_function)
             (current_generated_state.parameter,
              parameter_minimum,
              parameter_maximum,
-             &valid_state_generated_flag,
+             valid_state_generated_flag,
              OPTIONS,
              user_data);
     } else {                        /* let vfsr generate valid initial parameters */
@@ -444,14 +447,14 @@ double vfsr(                        /* return final_cost */
         do {
             ++number_invalid_generated_states;
             ++repeated_invalid_states;
-            valid_state_generated_flag = TRUE;
+            valid_state_generated_flag[0] = TRUE;
             generate_new_state(user_random_generator);
             current_generated_state.cost =
                 (*user_cost_function)
                 (current_generated_state.parameter,
                  parameter_minimum,
                  parameter_maximum,
-                 &valid_state_generated_flag,
+                 valid_state_generated_flag,
                  OPTIONS,
                  user_data);
             if (repeated_invalid_states >
@@ -463,7 +466,7 @@ double vfsr(                        /* return final_cost */
                           exit_status);
                 return (final_cost);
             }
-        } while (valid_state_generated_flag == FALSE);
+        } while (valid_state_generated_flag[0] == FALSE);
         --number_invalid_generated_states;
     } /* USER_INITIAL_PARAMETERS */
 
@@ -577,14 +580,14 @@ double vfsr(                        /* return final_cost */
         do {
             ++number_invalid_generated_states;
             ++repeated_invalid_states;
-            valid_state_generated_flag = TRUE;
+            valid_state_generated_flag[0] = TRUE;
             generate_new_state(user_random_generator);
             current_generated_state.cost =
                 (*user_cost_function)
                 (current_generated_state.parameter,
                  parameter_minimum,
                  parameter_maximum,
-                 &valid_state_generated_flag,
+                 valid_state_generated_flag,
                  OPTIONS,
                  user_data);
             if (repeated_invalid_states >
@@ -596,7 +599,7 @@ double vfsr(                        /* return final_cost */
                           exit_status);
                 return (final_cost);
             }
-        } while (valid_state_generated_flag == FALSE);
+        } while (valid_state_generated_flag[0] == FALSE);
         --number_invalid_generated_states;
 
         /* ACCEPT/REJECT NEW PARAMETERS */
@@ -617,6 +620,7 @@ double vfsr(                        /* return final_cost */
             fprintf (stderr, "T = %f, cost = %f, dE = %f\n",
                      current_cost_temperature, current_generated_state.cost,
                      (current_generated_state.cost - best_generated_state.cost));
+            valid_state_generated_flag[1] = TRUE;
 
             /* reset the recent acceptances and generated counts */
             recent_number_acceptances = recent_number_generated = 0;
@@ -1156,18 +1160,18 @@ static void cost_derivatives(double (*user_cost_function) ())
     /* set parameters (& possibly constraints) to best state */
     saved_number_invalid_generated_states =
         number_invalid_generated_states;
-    valid_state_generated_flag = TRUE;
+    valid_state_generated_flag[0] = TRUE;
     current_generated_state.cost =
         (*user_cost_function)
         (current_generated_state.parameter,
          parameter_minimum,
          parameter_maximum,
-         &valid_state_generated_flag,
+         valid_state_generated_flag,
          OPTIONS,
          user_data);
     number_invalid_generated_states =
         saved_number_invalid_generated_states;
-    valid_state_generated_flag = TRUE;
+    valid_state_generated_flag[0] = TRUE;
 
     VFOR(index_v) {
         /* skip parameters with too small range or integer parameters */
@@ -1202,11 +1206,11 @@ static void cost_derivatives(double (*user_cost_function) ())
             (current_generated_state.parameter,
              parameter_minimum,
              parameter_maximum,
-             &valid_state_generated_flag,
+             valid_state_generated_flag,
              OPTIONS,
              user_data);
         new_cost_state_1 = current_generated_state.cost;
-        valid_state_generated_flag = TRUE;
+        valid_state_generated_flag[0] = TRUE;
 
         /* restore the parameter state */
         current_generated_state.parameter[index_v] = parameter_v;
@@ -1227,11 +1231,11 @@ static void cost_derivatives(double (*user_cost_function) ())
                 (current_generated_state.parameter,
                  parameter_minimum,
                  parameter_maximum,
-                 &valid_state_generated_flag,
+                 valid_state_generated_flag,
                  OPTIONS,
                  user_data);
             new_cost_state_2 = current_generated_state.cost;
-            valid_state_generated_flag = TRUE;
+            valid_state_generated_flag[0] = TRUE;
 
             /* restore the parameter state */
             current_generated_state.parameter[index_v] =
@@ -1296,11 +1300,11 @@ static void cost_derivatives(double (*user_cost_function) ())
                     (current_generated_state.parameter,
                      parameter_minimum,
                      parameter_maximum,
-                     &valid_state_generated_flag,
+                     valid_state_generated_flag,
                      OPTIONS,
                      user_data);
                 new_cost_state_1 = current_generated_state.cost;
-                valid_state_generated_flag = TRUE;
+                valid_state_generated_flag[0] = TRUE;
 
                 /* restore the v_th parameter */
                 current_generated_state.parameter[index_v] =
@@ -1312,11 +1316,11 @@ static void cost_derivatives(double (*user_cost_function) ())
                     (current_generated_state.parameter,
                      parameter_minimum,
                      parameter_maximum,
-                     &valid_state_generated_flag,
+                     valid_state_generated_flag,
                      OPTIONS,
                      user_data);
                 new_cost_state_2 = current_generated_state.cost;
-                valid_state_generated_flag = TRUE;
+                valid_state_generated_flag[0] = TRUE;
 
                 /* restore the vv_th parameter */
                 current_generated_state.parameter[index_vv] =
@@ -1331,11 +1335,11 @@ static void cost_derivatives(double (*user_cost_function) ())
                     (current_generated_state.parameter,
                      parameter_minimum,
                      parameter_maximum,
-                     &valid_state_generated_flag,
+                     valid_state_generated_flag,
                      OPTIONS,
                      user_data);
                 new_cost_state_3 = current_generated_state.cost;
-                valid_state_generated_flag = TRUE;
+                valid_state_generated_flag[0] = TRUE;
 
                 /* restore the v_th parameter */
                 current_generated_state.parameter[index_v] =
