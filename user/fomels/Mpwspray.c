@@ -46,6 +46,8 @@ int main (int argc, char *argv[])
     ns2 = 2*ns+1;
 
     sf_putint(out,"n2",ns2);
+    sf_putfloat(out,"o2",-ns);
+    sf_putfloat(out,"d2",1.0);
     sf_shiftdim(inp, out, 2);
 
     predict_init (n1, n2, eps*eps, 1);

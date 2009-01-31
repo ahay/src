@@ -4,17 +4,16 @@ import configure
 
 progs = '''
 absoffdip agc ai2refl aliasp avo bin1 boxsmooth cascade canny causint
-clip cmatmult costaper cos2ang cmp2shot cosft depth2time dimag
-dipfilter enoint2 fft1 fft3 fourvc fourvc0 fourvc2 freqint freqlet
-grad2 grad3 histogram hslice igrad imospray impl1 impl2 impl3 infill
-inmo inmo3 intshow inttest1 inttest2 isin2ang itaupmo iwarp linefit
-linsincos lpad map2list migsteep3 modrefl modrefl2 modrefl3 nmo noise
-ofsemb pmig pnmo pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic
-prestolt ptaupmo pveltran radial radon randrefl refer reshape ricker
-shot2cmp shot2cmp3 shotholes shotprop sin slice smoothder spectra
-spectra2 spicks spline splinefilter stolt stolt2 stoltstretch stretch
-swtdenoise taupmo time2depth tlagtoang2d tpow tan2ang tshift vscan
-velmod xlagtoang2d zoeppritz
+clip cmatmult costaper cos2ang cmp2shot depth2time dimag dipfilter
+enoint2 fourvc fourvc0 fourvc2 freqint freqlet grad2 grad3 histogram
+hslice igrad imospray impl1 impl2 impl3 infill inmo inmo3 intshow
+inttest1 inttest2 isin2ang itaupmo iwarp linefit linsincos lpad
+map2list migsteep3 modrefl modrefl2 modrefl3 nmo ofsemb pmig pnmo
+pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic prestolt ptaupmo
+pveltran radial radon randrefl refer reshape ricker shot2cmp shot2cmp3
+shotholes shotprop sin slice smoothder spicks spline splinefilter
+stolt stolt2 stoltstretch stretch swtdenoise taupmo time2depth
+tlagtoang2d tpow tan2ang tshift vscan velmod xlagtoang2d zoeppritz
 '''
 
 # shot2cmp3
