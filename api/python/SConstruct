@@ -21,9 +21,9 @@ if root:
 
 if 'python' in env.get('API',[]):
     try:
-        EnsureSConsVersion(0,96,95)
+        EnsureSConsVersion(1,0)
     except:
-        print "\n\n\tPlease upgrade SCons to version >= 0.96.95\n\n"
+        print "\n\n\tPlease upgrade SCons to version >= 1.0\n\n"
         sys.exit(1)
 
     # Python includes for SWIG
