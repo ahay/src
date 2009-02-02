@@ -238,7 +238,11 @@ def latex2dvi(target=None,source=None,env=None):
     "Convert LaTeX to DVI/PDF"
     tex = str(source[0])
     dvi = str(target[0])
-    stem = suffix.sub('',dvi)    
+    stem = suffix.sub('',dvi)   
+    if not latex:
+        print '\n\tLaTeX is missing. ' \
+            'Please install a TeX package (teTeX or TeX Live)\n'
+        return 1
     run = string.join([latex,tex],' ')
     # First latex run
     if os.system(run):
@@ -247,6 +251,9 @@ def latex2dvi(target=None,source=None,env=None):
     aux = open(stem + '.aux',"r")    
     for line in aux.readlines():
         if re.search("bibdata",line):
+            if not bibtex:
+                print '\n\tBibTeX is missing. ' 
+                return 1
             os.system(string.join([bibtex,stem],' '))
             os.system(run)
             os.system(run)
@@ -601,6 +608,10 @@ def eps2png(target=None,source=None,env=None):
     option = plotoption.get(os.path.basename(eps),'')
     command =  'PAPERSIZE=ledger %s %s -out %s' \
               + ' -type %s -interlaced -antialias -crop a %s'
+    if not pstoimg:
+        print '\n\t"pstoimg" is missing. ' \
+            'Please install latex2html.\n'
+        return 1
     command = command % (pstoimg,eps,png,itype,option)
     print command
     os.system(command)
@@ -684,10 +695,8 @@ if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
                    suffix='.pdf',src_suffix='.fig')
 
-
-if pstoimg:
-     PNGBuild = Builder(action = Action(eps2png),
-                        suffix='.'+itype,src_suffix=pssuffix)
+PNGBuild = Builder(action = Action(eps2png),
+                   suffix='.'+itype,src_suffix=pssuffix)
 
 if pdftops:
     PSBuild = Builder(action = pdftops + ' -eps $SOURCE $TARGET',
@@ -804,10 +813,8 @@ class TeXPaper(Environment):
         if fig2dev:
             self.Append(BUILDERS={'XFig':XFig})
         if latex2html:
-            self.Append(BUILDERS={'HTML':HTML})
-            if pstoimg:
-                self.Append(BUILDERS={'PNGBuild':PNGBuild})
-                self.imgs = []
+            self.Append(BUILDERS={'HTML':HTML,'PNGBuild':PNGBuild})
+            self.imgs = []
         if (acroread and ps2eps) or pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
         if epstopdf:
