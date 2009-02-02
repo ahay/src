@@ -4,7 +4,6 @@ import configure
 
 progs = '''
 beamsteer
-combjvar
 karman karmans karman2
 radonslope2
 velsteer zoimg3
