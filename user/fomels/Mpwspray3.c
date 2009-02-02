@@ -61,6 +61,7 @@ int main (int argc, char *argv[])
     }
 
     dijkstra_init(np2,np3,cost,cost);
+    predict_init (n1, n2, eps*eps, 1);
 
     u = sf_floatalloc4(n1,np,n2,n3);
     for (i3=0; i3 < n3; i3++) {
