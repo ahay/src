@@ -3,8 +3,8 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-bin extract headerattr headermath intbin segy2rsf segyheader segyread
-segywrite su2rsf
+bin extract headerattr headermath intbin mutter segy2rsf segyheader
+segyread segywrite su2rsf
 '''
 
 try:  # distributed version
