@@ -31,6 +31,7 @@ int main (int argc, char *argv[])
     sf_init(argc,argv);
     inp = sf_input("in");
     dip = sf_input("dip");
+    out = sf_output("out");
 
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
