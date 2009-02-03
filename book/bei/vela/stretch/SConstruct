@@ -5,7 +5,7 @@ Fetch(data,'wz')
 
 Flow('data',data,
      '''
-     dd form=native | window n1=400 n2=24 j1=2 | tpow tpow=2 | reverse which=2
+     dd form=native | window n1=400 n2=24 j1=2 | pow pow1=2 | reverse which=2
      ''')
 Flow('nmo','data','nmostretch v0=1.44 half=n')
 

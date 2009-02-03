@@ -8,7 +8,7 @@ for case in ('02','20'):
     Fetch(data,'wz')
     Result('yc'+case,data,
            '''
-           dd form=native | window n1=625 | tpow tpow=%g | grey gpow=%g 
+           dd form=native | window n1=625 | pow pow1=%g | grey gpow=%g 
            ''' % (tpow[case],gpow[case]))
 
 ###########################################################################

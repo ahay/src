@@ -6,7 +6,7 @@ def impulse(h0,h1,f1,tpow,title):
     preconstkirch vel=2 |
     math output="cos(40*(abs(x2)&x1))^6*input" |
     preconstkirch vel=2 inv=y zero=y nh=1 h0=%g dh=0.25 |
-    window n1=120 f1=%d | tpow tpow=%g |
+    window n1=120 f1=%d | pow pow1=%g |
     grey pclip=99 title="%s"
     ''' % (h0,h1,f1,tpow,title)
 

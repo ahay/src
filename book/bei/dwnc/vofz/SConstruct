@@ -36,7 +36,7 @@ for case in range(2):
     Plot(mod,[mod,vel],
          '''
          cosft sign2=1 | gazdag velocity=${SOURCES[1]} inv=1 | 
-         tpow tpow=0.5 | gazdag velocity=${SOURCES[1]} inv=0 |
+         pow pow1=0.5 | gazdag velocity=${SOURCES[1]} inv=0 |
          cosft sign2=-1 | grey pclip=100 wanttitle=n
          ''')
 

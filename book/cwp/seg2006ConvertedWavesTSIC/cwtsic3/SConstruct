@@ -187,7 +187,7 @@ for case in ('pp','ps'):
          nt=%d dt=%g t0=%g     freq=15
          nh=%d dh=%g h0=%g
          ns=%d ds=%g s0=%g |
-         tpow tpow=1 |
+         pow pow1=1 |
          window f2=100 | pad beg2=100 |
          put label1=t label2=h
          ''' %

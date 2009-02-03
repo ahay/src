@@ -11,7 +11,7 @@ for case in ('34','32','20'):
     Fetch(data,'wz')
     Flow(case,data,'dd form=native')
     
-    window = 'window n1=%d | tpow xpow=1 tpow=0' % n1[case]
+    window = 'window n1=%d | pow pow2=1' % n1[case]
     raw = 'raw'+case
     lmo = 'lmo'+case
     

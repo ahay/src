@@ -60,7 +60,8 @@ static void check_compat (size_t      nin,
 
 int main (int argc, char* argv[])
 {
-    int nin, i, j, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf, nsiz;
+    int nin, i, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf;
+    off_t j, nsiz;
     size_t len;
     sf_file *in, out;
     char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;

@@ -27,7 +27,7 @@ Result('skmig', 'mod3 kir ','SideBySideAniso')
 
 Flow('smod','mod3','spectra all=y | scale axis=1')
 Flow('skir','kir','spectra all=y | scale axis=1')
-Flow('skir2','skir','tpow tpow=1 | scale axis=1')
+Flow('skir2','skir','pow pow1=1 | scale axis=1')
 Result('kirspec','smod skir2 skir',
        '''
        cat axis=2 ${SOURCES[1:3]} |
