@@ -24,7 +24,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, np, i4, n4, k2, k3, ud, lr;
+    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, np, i4, n4, k2, k3, j2, j3, ud, lr;
     float eps, ****u, ***p1, ***p2, **cost, *trace;
     sf_file inp, out, dip;
 
@@ -76,7 +76,6 @@ int main (int argc, char *argv[])
 
     p1 = sf_floatalloc3(n1,n2,n3);
     p2 = sf_floatalloc3(n1,n2,n3);
-    trace = sf_floatalloc(n1);
 
     sf_floatread(p1[0][0],n1*n2*n3,dip);
     sf_floatread(p2[0][0],n1*n2*n3,dip);
@@ -91,23 +90,30 @@ int main (int argc, char *argv[])
 		    
 		    /* predict k3,k2 from k3-lr,k2-ud */
 		    
-		    ip = (ns3+i3-k3)*np2+ns2+i2-k2;
-		    
-		    trace = u[k3][k2][ip];
-		    
+		    ip = k3*np2+k2;		    
+		    j2 = i2+k2-ns2;
+		    j3 = i3+k3-ns3;
+
+		    if (j2 < 0 || j2 >= n2 || 
+			j3 < 0 || j3 >= n3 ||
+			j2-ud < 0 || j2-ud >= n2 || 
+			j3-lr < 0 || j3-lr >= n3) continue;
+
+		    trace = u[j3][j2][ip];		    
 		    for (i1=0; i1 < n1; i1++) {
-			trace[i1] = u[k3-lr][k2-ud][ip+lr*np2+ud][i1];
+			trace[i1] = u[j3-lr][j2-ud][ip-lr*np2-ud][i1];
 		    } 
+
 		    if (ud > 0) {
-			predict_step(false,true,trace,p1[k3][k2-ud]);
+			predict_step(false,true,trace,p1[j3][j2-ud]);
 		    } else if (ud < 0) {
-			predict_step(false,false,trace,p1[k3][k2]);
+			predict_step(false,false,trace,p1[j3][j2]);
 		    }
 		    
 		    if (lr > 0) {
-			predict_step(false,true,trace,p2[k3-lr][k2]);
+			predict_step(false,true,trace,p2[j3-lr][j2]);
 		    } else if (lr < 0) {
-			predict_step(false,false,trace,p2[k3][k2]);
+			predict_step(false,false,trace,p2[j3][j2]);
 		    }
 		}
 	    }
