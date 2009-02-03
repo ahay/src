@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-bandpass cosft fft1 fft3 noise pow smooth spectra spectra2 threshold
+bandpass cosft fft1 fft3 noise pow remap1 smooth spectra spectra2 threshold
 '''
 
 try:  # distributed version

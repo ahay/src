@@ -66,9 +66,11 @@ int main (int argc, char *argv[])
     /* number of linear iterations */
 
     if (!sf_getint("rect1",&rect[0])) rect[0]=1;
+    /* dip smoothness on 1st axis */
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
+    /* dip smoothness on 2nd axis */
     if (!sf_getint("rect3",&rect[2])) rect[2]=1;
-    /* dip smoothness */
+    /* dip smoothness on 3rd axuis */
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */

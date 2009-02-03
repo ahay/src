@@ -106,17 +106,22 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o3",&o3)) o3=0.;
 
     if (!sf_getbool("poly",&poly)) poly=false;
+    /* if draw polygons */
 
     if (poly) {
 	if (!sf_getint("fatp",&fatp)) fatp = 1;
+	/* polygon border fatness */
 	if (!sf_getint("xmask",&xmask)) xmask = 1;
+	/* polygon filling */
 	if (!sf_getint("ymask",&ymask)) ymask = 1;
+	/* polygon filling */
     }
 
     if (!sf_getfloat("pclip",&pclip)) pclip = 98.;
     /* clip percentile */
 
     if (!sf_getfloat("zplot",&zplot)) zplot = 0.75;
+    /* vertical separation */
     d2 = (n2>1)? (xmax-xmin)/(n2-1): 1.0;
     zplot *= d2;
 

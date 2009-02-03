@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 	egpow = false;
 	if (!sf_getfloat("gpow",&gpow)) {
 	    gpow=1.;
-	    /*< gpow=1 raise data to gpow power for display >*/
+	    /*( gpow=1 raise data to gpow power for display )*/
 	} else if (gpow <= 0.) {
 	    gpow=0.;
 	    egpow = true;
@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
 	
 	pclip=99.;
 	eclip = !sf_getfloat("clip",&clip);
-	if (eclip) {
-	    /* data clip */
+	/* data clip */
+	if (eclip) {	    
 	    clip = 0.;
 	    sf_getfloat("pclip",&pclip);
 	    /* data clip percentile (default is 99) */
@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
     } else {
 	if (!sf_getbool ("wantscalebar",&scalebar) && 
 	    !sf_getbool ("scalebar",&scalebar)) scalebar = false;
+	/* if y, draw scalebar */	
     }
-    /* if y, draw scalebar */
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&barmin);
 	/* minimum value for scalebar (default is the data minimum) */
