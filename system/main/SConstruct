@@ -14,9 +14,7 @@ try: # distributed version
     env = env.Clone()
     alias = {'cat':'merge',
              'real':'imag',
-             'cp':'mv',
-             'segyread':'suread',
-             'segywrite':'suwrite'}
+             'cp':'mv'}
 except: # local version
     env = configure.Debug()
     root = None

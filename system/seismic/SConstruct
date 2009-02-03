@@ -3,9 +3,13 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-bin cgscan dmo extract halfint headerattr headermath intbin kirchinv
-kirchnew kirmod kirmod3 layer mutter preconstkirch ricker1 segy2rsf
-segyheader segyread segywrite shotconstkirch slant su2rsf veltran
+bin cgscan depth2time dimag dmo extract fourvc fourvc0 fourvc2 halfint
+headerattr headermath inmo inmo3 intbin itaupmo iwarp kirchinv
+kirchnew kirmod kirmod3 layer modrefl3 mutter nmo pnmo pnmo3d
+pp2pstsic preconstkirch prestolt ptaupmo refer ricker1 segy2rsf
+segyheader segyread segywrite shotconstkirch slant stolt stoltstretch
+stretch su2rsf tan2ang taupmo time2depth tlagtoang2d tshift velmod
+veltran vscan xlagtoang2d zoeppritz
 '''
 
 try:  # distributed version
@@ -13,6 +17,10 @@ try:  # distributed version
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+    alias = {'segyread': ['suread'],
+             'segywrite': ['suwrite'],
+             'stretch': map(lambda x: x+ 'stretch',
+                            Split('log t2 t2cheb lmo nmo rad dat'))}
 except: # local version
     env = configure.Debug()
     root = None
@@ -30,12 +38,22 @@ for source in src:
 
 mains = Split(progs)
 
+docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,prog)
+        env.Install(bindir,main[0])
+
+        if prog in alias.keys():
+            for al in Split(alias[prog]):
+                other = string.replace(str(main[0]),prog,al)
+                env.InstallAs(os.path.join(bindir,other),main[0])
+
+                if env['PLATFORM'] == 'cygwin':
+                    other = string.replace(other,'.exe','')
+                docalias[other] = 'sf'+prog
 
 for prog in ('veltran',):
     sources = ['Test' + prog,prog]
@@ -52,8 +70,5 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/framework/rsfdoc.py')	
-    doc = env.Docmerge(main,docs)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
-
-
-

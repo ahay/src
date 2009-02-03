@@ -4,19 +4,13 @@ import configure
 
 progs = '''
 absoffdip agc ai2refl aliasp avo bin1 boxsmooth cascade canny causint
-clip cmatmult costaper cos2ang cmp2shot depth2time dimag dipfilter
-enoint2 fourvc fourvc0 fourvc2 freqint freqlet grad2 grad3 histogram
-hslice igrad imospray impl1 impl2 impl3 infill inmo inmo3 intshow
-inttest1 inttest2 isin2ang itaupmo iwarp linefit linsincos lpad
-map2list migsteep3 modrefl modrefl2 modrefl3 nmo ofsemb pmig pnmo
-pnmo3d postfilter2 pp2psang pp2psang2 pp2pstsic prestolt ptaupmo
-pveltran radial radon randrefl refer reshape ricker shot2cmp shot2cmp3
-shotholes shotprop sin slice smoothder spicks spline splinefilter
-stolt stolt2 stoltstretch stretch swtdenoise taupmo time2depth
-tlagtoang2d tpow tan2ang tshift vscan velmod xlagtoang2d zoeppritz
+clip cmatmult costaper cmp2shot dipfilter enoint2 freqint freqlet
+grad2 grad3 histogram igrad imospray impl1 impl2 impl3 infill intshow
+inttest1 inttest2 linefit linsincos lpad map2list migsteep3 modrefl
+modrefl2 ofsemb pmig postfilter2 pp2psang pp2psang2 pveltran radial
+radon randrefl reshape ricker shot2cmp shotholes shotprop sin slice
+smoothder spicks spline splinefilter stolt2 swtdenoise tpow 
 '''
-
-# shot2cmp3
 
 try: # distributed version
     Import('env root libdir bindir')
@@ -40,19 +34,12 @@ for source in src:
  
 mains = Split(progs)
 
-docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
     main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,main[0])
-	if prog=='stretch':
-	    for stretch in ('log','t2','t2cheb','lmo','nmo','rad','dat'):
-                copy = string.replace(str(main[0]),'stretch',stretch+'stretch')
-                env.InstallAs(os.path.join(bindir,copy),main[0])
-		doc = os.path.splitext(copy)[0]
-                docalias[doc] = 'sf'+prog
 
 for prog in Split('cbanded cmatmult'):
     sources = ['Test' + prog,prog]
@@ -70,5 +57,5 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/framework/rsfdoc.py')
-    doc = env.Docmerge(main,docs,alias=docalias)
+    doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)

@@ -3,11 +3,11 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-abalance agmig analytical angle angle2 approx bdix beamform
-blur cflow chebvc cpef dealias deblur deriv dijkstra dip diplet dips
-divn dix dixshape dwt envelope equal erf exgr explanesignoi expsignoi
-fern flat focus freqest gaussmooth green heat iphase jacobi jacobi2
-kron lapfill locov lpf mandelbrot matmult max1 mig3 miss2 miss3 monof
+abalance agmig analytical angle angle2 approx bdix beamform blur cflow
+chebvc cpef dealias deblur deriv dijkstra dip diplet dips divn dix
+dixshape dwt envelope equal erf exgr explanesignoi expsignoi fern flat
+focus freqest gaussmooth green heat interpt iphase jacobi jacobi2 kron
+lapfill locov lpf mandelbrot matmult max1 mig3 miss2 miss3 monof
 monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 patch
 pick pick0 pick2 plane planemis2 planemis3 planereg2 planereg3
 planesignoi pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk
