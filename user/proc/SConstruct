@@ -3,13 +3,13 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-absoffdip agc ai2refl aliasp avo bin1 boxsmooth cascade canny causint
-clip cmatmult costaper cmp2shot dipfilter enoint2 freqint freqlet
-grad2 grad3 histogram igrad imospray impl1 impl2 impl3 infill intshow
+absoffdip ai2refl aliasp avo bin1 boxsmooth cascade canny causint clip
+cmatmult costaper cmp2shot dipfilter enoint2 freqint freqlet grad2
+grad3 histogram igrad imospray impl1 impl2 impl3 infill intshow
 inttest1 inttest2 linefit linsincos lpad map2list migsteep3 modrefl
 modrefl2 ofsemb pmig postfilter2 pp2psang pp2psang2 pveltran radial
-radon randrefl reshape ricker shot2cmp shotholes shotprop sin slice
-smoothder spicks spline splinefilter stolt2 swtdenoise tpow 
+radon randrefl reshape ricker shot2cmp shotholes shotprop sin
+smoothder spicks spline splinefilter stolt2 swtdenoise tpow
 '''
 
 try: # distributed version
