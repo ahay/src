@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-ctmf tpsint wile
+ctmf eikfswp tpsint wile
 '''
 
 try:  # distributed version
