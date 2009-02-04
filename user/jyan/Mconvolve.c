@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel \
-    private(k2,k1,j3,j2,j1,i3,i2,i1,) \
+    private(k2,k1,j3,j2,j1,i3,i2,i1) \
     shared(k3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)
 #endif	
 	for(    k2=0; k2<sf_n(f2); k2++) {
