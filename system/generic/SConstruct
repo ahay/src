@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-agc bandpass cosft fft1 fft3 igrad linefit noise pow remap1 slice
+agc bandpass clip cosft fft1 fft3 igrad linefit noise pow remap1 slice
 smooth spectra spectra2 spline threshold
 '''
 
