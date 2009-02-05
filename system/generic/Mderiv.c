@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "hilbert.h"
-
 int main (int argc, char* argv[])
 {
     int n1,n2, i2, n;
@@ -41,11 +39,11 @@ int main (int argc, char* argv[])
     if (!sf_getint("order",&n)) n=6;
     /* Filter order */
 
-    hilbert_init(n1, n, 0.);
+    sf_deriv_init(n1, n, 0.);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,in);
-	deriv(dat,der);
+	sf_deriv(dat,der);
 	sf_floatwrite(der,n1,out);
     }
 

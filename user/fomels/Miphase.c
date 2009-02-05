@@ -78,6 +78,7 @@ int main (int argc, char* argv[])
     /* if y, compute instantaneous bandwidth */
 
     hilbert_init(n1, nh, c);
+    sf_deriv_init(n1, nh, c);
 
     mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
@@ -89,10 +90,10 @@ int main (int argc, char* argv[])
 		/* find envelope */
 		trace[i1] = hypotf(trace[i1],hilb[i1]);
 	    }
-	    deriv(trace,hilb);
+	    sf_deriv(trace,hilb);
 	} else {
-	    deriv(trace,dtrace);
-	    deriv(hilb,dhilb);
+	    sf_deriv(trace,dtrace);
+	    sf_deriv(hilb,dhilb);
 	}
 
 	for (i1=0; i1 < nh; i1++, i++) {

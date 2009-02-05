@@ -12,8 +12,8 @@ hdrs = 'vfsr_defs'
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
 cconjgrad cell celltrace cdstep cgstep chain clist conjgrad conjprec
-copy cosft decart dottest edge eno eno2 error file files freqfilt
-fzero getpar helicon helix igrad1 impl2 int1 int2 int3 interp
+copy cosft decart deriv dottest edge eno eno2 error file files
+freqfilt fzero getpar helicon helix igrad1 impl2 int1 int2 int3 interp
 interp_spline irls komplex llist mask math1 point pqueue prefilter
 pweno randn recfilt runge quantile quadratic sharpen sharpinv simtab
 spline stack stretch system tent2 tinysolver triangle triangle1

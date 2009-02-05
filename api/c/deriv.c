@@ -1,4 +1,4 @@
-/* Hilbert transform FIR filter. */
+/* First derivative FIR filter. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,16 +24,15 @@
 
 #include <math.h>
 
-#include <rsf.h>
-
-#include "hilbert.h"
+#include "deriv.h"
+#include "alloc.h"
 
 static float c, c2, *h;
 static int n, nt;
 
-void hilbert_init(int nt1  /* transform length */, 
-		  int n1   /* trace length */, 
-		  float c1 /* filter parameter */)
+void sf_deriv_init(int nt1  /* transform length */, 
+		int n1   /* trace length */, 
+		float c1 /* filter parameter */)
 /*< initialize >*/
 {
     n = n1;
@@ -43,44 +42,14 @@ void hilbert_init(int nt1  /* transform length */,
     h = sf_floatalloc(nt);
 }
 
-void hilbert_free(void)
+void sf_deriv_free(void)
 /*< free allocated storage >*/
 {
     free(h);
 }
 
-void hilbert (const float* trace, float* trace2)
-/*< transform >*/
-{
-    int i, it;
-    
-    for (it=0; it < nt; it++) {
-	h[it] = trace[it];
-    }
-
-    for (i=n; i >= 1; i--) {
-	trace2[0] = h[0] + (h[2]-2*h[1]+h[0])*c2;
-	trace2[1] = h[1] + (h[3]-3*h[1]+2*h[0])*c2;
-	for (it=2; it < nt-2; it++) {
-	    trace2[it] = h[it]+(h[it+2]-2.*h[it]+h[it-2])*c2;
-	}
-	trace2[nt-2] = h[nt-2] + (h[nt-4]-3*h[nt-2]+2*h[nt-1])*c2;
-	trace2[nt-1] = h[nt-1] + (h[nt-3]-2*h[nt-2]+h[nt-1])*c2;
-
-	for (it=0; it < nt; it++) {
-	    h[it] = trace[it] + trace2[it]*(2*i-1)/(2*i);
-	}
-    }
-
-    trace2[0] = 2.*(h[0]-h[1])*c;
-    for (it=1; it < nt-1; it++) {
-	trace2[it] = (h[it-1]-h[it+1])*c;
-    }
-    trace2[nt-1] = 2.*(h[nt-2]-h[nt-1])*c;
-}
-
-void hilbert4 (const float* trace, float* trace2)
-/*< transform - kind 4 filter >*/
+void sf_deriv (const float* trace, float* trace2)
+/*< derivative operator >*/
 {
     int i, it;
     
@@ -90,19 +59,19 @@ void hilbert4 (const float* trace, float* trace2)
 
     for (i=n; i >= 1; i--) {
 	for (it=1; it < nt-1; it++) {
-	    trace2[it] = h[it]+(h[it+1]-2.*h[it]+h[it-1])*c2;
+	    trace2[it] = h[it]-0.5*(h[it+1]+h[it-1]);
 	}
 	trace2[0] = trace2[1];
 	trace2[nt-1] = trace2[nt-2];
 
 	for (it=0; it < nt; it++) {
-	    h[it] = trace[it] + trace2[it]*(2*i-1)/(2*i);
+	    h[it] = trace[it] + trace2[it]*i/(2*i+1);
 	}
     }
 
-    for (it=0; it < nt-1; it++) {
-	trace2[it] = (h[it]-h[it+1])*c;
+    trace2[0] = h[1]-h[0];
+    for (it=1; it < nt-1; it++) {
+	trace2[it] = 0.5*(h[it+1]-h[it-1]);
     }
-    trace2[nt-1] = trace2[nt-2];
+    trace2[nt-1] = h[nt-1]-h[nt-2];
 }
-
