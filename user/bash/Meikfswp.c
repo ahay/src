@@ -83,7 +83,73 @@ static void sf_fast_sweep_2d_stencil (float *t, float *s,
         t[j * n1 + i] = ttemp;
 }
 
-void sf_run_fast_sweep (float *t, float *s2, int niter,
+#define SWAPF(a,b,t) t = b; b = a; a = t;
+
+static void sf_fast_sweep_3d_stencil (float *t, float *s,
+                                      int i, int j, int k,
+                                      int n1, int n2, int n3,
+                                      float d1, float d2, float d3) {
+    int n12 = n1 * n2;
+    float Ukmin = 0 == k ? t[n12 + j * n1 + i] : ((n3 - 1) == k ? t[(n3 - 2) * n12 + j * n1 + i] :
+                   (t[(k - 1) * n12 + n1 * j + i] < t[(k + 1) * n12 + n1 * j + i] ?
+                    t[(k - 1) * n12 + n1 * j + i] : t[(k + 1) * n12 + n1 * j + i]));
+    float Ujmin = 0 == j ? t[k * n12 + n1 + i] : ((n2 - 1) == j ? t[k * n12 + (n2 - 2) * n1 + i] :
+                   (t[k * n12 + (j - 1) * n1 + i] < t[k * n12 + (j + 1) * n1 + i] ?
+                    t[k * n12 + (j - 1) * n1 + i] : t[k * n12 + (j + 1) * n1 + i]));
+    float Uimin = 0 == i ? t[k * n12 + j * n1 + 1] : ((n1 - 1) == i ? t[k * n12 + j * n1 + n1 - 2] :
+                   (t[k * n12 + j * n1 + i - 1] < t[k * n12 + j * n1 + i + 1] ?
+                    t[k * n12 + j * n1 + i - 1] : t[k * n12 + j * n1 + i + 1]));
+    float d12, d22, d32, u[3], d[3];
+    float sl = s[k * n12 + j * n1 + i];
+    float tij = t[k * n12 + j * n1 + i], ttemp = tij, swap;
+
+    if (SF_HUGE == Ukmin && SF_HUGE == Ujmin && SF_HUGE == Uimin)
+        return;
+
+    u[0] = Uimin;
+    u[1] = Ujmin;
+    u[2] = Ukmin;
+    d[0] = d1;
+    d[1] = d2;
+    d[2] = d3;
+
+    if (u[0] > u[2]) {
+        SWAPF (u[0], u[2], swap)
+        SWAPF (d[0], d[2], swap)
+    }
+    if (u[0] > u[1]) {
+        SWAPF (u[0], u[1], swap)
+        SWAPF (d[0], d[1], swap)
+    }
+    if (u[1] > u[2]) {
+        SWAPF (u[1], u[2], swap)
+        SWAPF (d[1], d[2], swap)
+    }
+    ttemp = u[0] + d[0] * sl;
+    if (ttemp > u[1]) {
+        d12 = d[0] * d[0];
+        d22 = d[1] * d[1];
+        ttemp = (d[0] * d[1] * sqrt ((d12 + d22) * sl * sl - (u[0] - u[1]) * (u[0] - u[1])) +
+                 u[0] * d22 + u[1] * d12) / (d12 + d22);
+        if (ttemp > u[2]) {
+            d32 = d[2] * d[2];
+            ttemp = (d[0] * d[1] * d[2] * sqrt ((d22 * d32 + d12 * d32 + d12 * d22) * sl * sl
+                                                 + 2.0 * d32 * u[0] * u[1]
+                                                 + 2.0 * d22 * u[0] * u[2]
+                                                 + 2.0 * d12 * u[1] * u[2] 
+                                                 - (d32 + d22) * u[0] * u[0]
+                                                 - (d32 + d12) * u[1] * u[1]
+                                                 - (d22 + d12) * u[2] * u[2])
+                     + d12 * d22 * u[2] + d12 * d32 * u[1] + d22 * d32 * u[0])
+                    / (d22 * d32 + d12 * d32 + d12 * d22);
+        }
+    }
+
+    if (ttemp < tij)
+        t[k * n12 + j * n1 + i] = ttemp;
+}
+
+void sf_run_fast_sweep (float *t, float *s, int niter,
                         int n3, int n2, int n1,
                         float o3, float o2, float o1,
                         float d3, float d2, float d1) {
@@ -93,30 +159,107 @@ void sf_run_fast_sweep (float *t, float *s2, int niter,
         for (l = 0; l < niter; l++) {
             for (j = 0; j < n2; j++) {
                 for (i = 0; i < n1; i++) {
-                    sf_fast_sweep_2d_stencil (t, s2, i, j, n1, n2,
+                    sf_fast_sweep_2d_stencil (t, s, i, j, n1, n2,
                                               d1, d2);
                 }
             }
             for (j = n2 - 1; j >= 0; j--) {
                 for (i = 0; i < n1; i++) {
-                    sf_fast_sweep_2d_stencil (t, s2, i, j, n1, n2,
+                    sf_fast_sweep_2d_stencil (t, s, i, j, n1, n2,
                                               d1, d2);
                 }
             }
             for (j = n2 - 1; j >= 0; j--) {
                 for (i = n1 - 1; i >= 0; i--) {
-                    sf_fast_sweep_2d_stencil (t, s2, i, j, n1, n2,
+                    sf_fast_sweep_2d_stencil (t, s, i, j, n1, n2,
                                               d1, d2);
                 }
             }
             for (j = 0; j < n2; j++) {
                 for (i = n1 - 1; i >= 0; i--) {
-                    sf_fast_sweep_2d_stencil (t, s2, i, j, n1, n2,
+                    sf_fast_sweep_2d_stencil (t, s, i, j, n1, n2,
                                               d1, d2);
                 }
             }
         }
-    } /* 3-D */
+    } else { /* 3-D */
+        for (l = 0; l < niter; l++) {
+            if (niter > 1)
+                sf_warning ("Iteration %d of %d", l + 1, niter);
+            for (k = 0; k < n3; k++) {
+                for (j = 0; j < n2; j++) {
+                    for (i = 0; i < n1; i++) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 1 */
+            for (k = n3 - 1; k >= 0; k--) {
+                for (j = 0; j < n2; j++) {
+                    for (i = 0; i < n1; i++) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 2 */
+            for (k = 0; k < n3; k++) {
+                for (j = n2 - 1; j >= 0; j--) {
+                    for (i = 0; i < n1; i++) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 3 */
+            for (k = n3 - 1; k >= 0; k--) {
+                for (j = n2 - 1; j >= 0; j--) {
+                    for (i = 0; i < n1; i++) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 4 */
+            for (k = 0; k < n3; k++) {
+                for (j = 0; j < n2; j++) {
+                    for (i = n1 - 1; i >= 0; i--) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 5 */
+            for (k = n3 - 1; k >= 0; k--) {
+                for (j = 0; j < n2; j++) {
+                    for (i = n1 - 1; i >= 0; i--) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 6 */
+            for (k = 0; k < n3; k++) {
+                for (j = n2 - 1; j >= 0; j--) {
+                    for (i = n1 - 1; i >= 0; i--) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 7 */
+            for (k = n3 - 1; k >= 0; k--) {
+                for (j = n2 - 1; j >= 0; j--) {
+                    for (i = n1 - 1; i >= 0; i--) {
+                        sf_fast_sweep_3d_stencil (t, s, i, j, k,
+                                                  n1, n2, n3,
+                                                  d1, d2, d3);
+                    }
+                }
+            } /* 8 */
+        }
+    }
 }
 
 int main (int argc,char* argv[]) {
@@ -197,9 +340,12 @@ int main (int argc,char* argv[]) {
         }
     }
 
+    sf_warning ("Performing %d-D sweeps", 2 + (n3 > 1));
+
     /* loop over shots */
     for (is = 0; is < nshot; is++) {
-        sf_warning ("Calculating shot %d of %d", is + 1, nshot);
+        if (nshot > 1)
+            sf_warning ("Calculating shot %d of %d", is + 1, nshot);
         if (false == sf_init_fast_sweep (t,
                                          n3, n2, n1,
                                          o3, o2, o1,
