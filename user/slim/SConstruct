@@ -2,7 +2,7 @@ import os, sys, re, string, glob, shutil
 sys.path.append('../..')
 import configure
 
-progs = 'boolcmp thr sort'
+progs = 'boolcmp thr sort set2zero'
 cpp_progs = ''
 py_progs = 'fdct killtraces jitter'
 py_mods = 'hegilles'
