@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
     if(!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
 
     if (NULL == (label1 = sf_getstring("label1"))) 
-	/* label for the axis */
+	/*( label1 label for the axis )*/
 	label1 = sf_histstring(in,"label1");
     if (label1 != NULL &&
 	(*label1 == '\0' || (*label1 == ' ' && *(label1+1) == '\0'))) {
@@ -76,7 +76,7 @@ int main (int argc, char* argv[])
     }
 
     if (NULL == (unit1 = sf_getstring("unit1"))) 
-	/* unit for the axis */
+	/*( unit1 unit for the axis )*/
 	unit1 = sf_histstring(in,"unit1");
     if (unit1 != NULL &&
 	(*unit1 == '\0' || (*unit1 == ' ' && *(unit1+1) == '\0'))) {
@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
     }
  
     if (NULL == (title = sf_getstring("title")))
-	/* plot title */ 
+	/*( title plot title )*/ 
 	title = sf_histstring(in,"title");
     if (title != NULL &&
 	(*title == '\0' || (*title == ' ' && *(title+1) == '\0'))) {

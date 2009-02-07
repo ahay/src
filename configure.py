@@ -463,6 +463,14 @@ pkg['netpbm'] = {'fedora':'netpbm-devel',
 
 def ppm(context):
     context.Message("checking for ppm ... ")
+
+    oldpath = context.env.get('CPPPATH',[])
+    ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
+    if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
+        context.env['CPPPATH'] = oldpath + [ppmpath]
+    else:
+        ppmpath = None
+    
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -478,6 +486,7 @@ def ppm(context):
 	if res:
 	    context.Result(res)
 	    context.env['PPM'] = ppm
+            context.env['PPMPATH'] = ppmpath    
 	    break
 	else:
 	    LIBS.pop()
@@ -488,6 +497,7 @@ def ppm(context):
         context.Result(context_failure)
         need_pkg('netpbm', fatal=False)
         context.env['PPM'] = None
+    context.env['CPPPATH'] = oldpath
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
                'generic':'libjpeg62-dev'}
@@ -1101,6 +1111,7 @@ def options(file):
     opts.Add('OMP','OpenMP support')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
+    opts.Add('PPMPATH','Path to netpbm header files')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

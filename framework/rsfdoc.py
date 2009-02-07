@@ -73,6 +73,7 @@ def getprogs(target=None,source=None,env=None):
 try:
    import rsfuse
 except:
+   print "Ignoring rsfuse"
    pass\n''')
     out.write('\ndef selfdoc():\n')
     out.write('   prog = rsfdoc.progs.get(os.path.basename(sys.argv[0]))\n')

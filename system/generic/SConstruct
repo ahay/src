@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 agc bandpass clip cosft deriv fft1 fft3 igrad linefit noise pow remap1
-slice smooth spectra spectra2 spline threshold
+slice smooth smoothder spectra spectra2 spline threshold unif2
 '''
 
 try:  # distributed version
