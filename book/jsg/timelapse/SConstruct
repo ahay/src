@@ -1,0 +1,7 @@
+from rsftex import *
+
+End(color='''
+    scan100 time2_over mdif-time2_over
+    scan-time2_over pick-time2_over
+    b2 t2
+    ''')

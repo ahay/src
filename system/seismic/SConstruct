@@ -6,9 +6,9 @@ progs = '''
 ai2refl bin cgscan cos2ang depth2time dimag dmo extract fourvc fourvc0
 fourvc2 halfint headerattr headermath inmo inmo3 intbin isin2ang
 itaupmo iwarp kirchinv kirchnew kirmod kirmod3 layer modrefl3 mutter
-nmo pnmo pnmo3d pp2pstsic preconstkirch prestolt ptaupmo refer ricker1
-segy2rsf segyheader segyread segywrite shotconstkirch slant srsyn
-stolt stoltstretch stretch su2rsf tan2ang taupmo time2depth
+nmo pnmo pnmo3d pp2pstsic preconstkirch prestolt ptaupmo radon refer
+ricker1 segy2rsf segyheader segyread segywrite shotconstkirch slant
+srsyn stolt stoltstretch stretch su2rsf tan2ang taupmo time2depth
 tlagtoang2d tshift velmod veltran vscan xlagtoang2d zoeppritz
 '''
 
