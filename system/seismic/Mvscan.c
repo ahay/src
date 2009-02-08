@@ -139,8 +139,8 @@ int main(int argc, char* argv[])
     /* if y, the slowness or velocity is squared */
 
     if (!sf_getfloat("v1",&v1)) {
+	/*( v1 reference velocity )*/
 	nmofunc = squared? curved: hyperb;
-	/* reference velocity */
     } else {
 	nmofunc = squared? curved1: hyperb1;
 	if (!slow) v1 = 1./v1;

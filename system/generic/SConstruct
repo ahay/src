@@ -3,9 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-agc bandpass causint clip cosft costaper deriv fft1 fft3 igrad linefit
-noise pow remap1 slice smooth smoothder spectra spectra2 spline
-threshold unif2
+agc bandpass bin1 causint clip cosft costaper deriv dwt fft1 fft3
+igrad impl2 linefit noise pow remap1 slice smooth smoothder spectra
+spectra2 spline threshold unif2
 '''
 
 try:  # distributed version

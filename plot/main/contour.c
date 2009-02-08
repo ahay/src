@@ -50,11 +50,10 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 
-    if (!sf_getfloat("min1",&min1)) min1=o1;
-    if (!sf_getfloat("min2",&min2)) min2=o2;
-    if (!sf_getfloat("max1",&max1)) max1=o1+(n1-1)*d1;
-    if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2;
-    /* data window to plot */
+    if (!sf_getfloat("min1",&min1)) min1=o1;           /* minimum on 1st axis */
+    if (!sf_getfloat("min2",&min2)) min2=o2;           /* minimum on 2nd axis */
+    if (!sf_getfloat("max1",&max1)) max1=o1+(n1-1)*d1; /* maximum on 1st axis */
+    if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2; /* maximum on 2nd axis */
 
     hasc = (NULL != (cfilename = sf_getstring("cfile")));
     /* contours in a file */
@@ -96,6 +95,7 @@ int main (int argc, char* argv[])
     if ((!sf_getbool ("wantscalebar",&scalebar) &&
 	 !sf_getbool ("scalebar",&scalebar)) ||
 	NULL == sf_getstring("barlabel")) scalebar = false;
+    /* scale bar label */
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&bmin);
 	/* minimum value for scalebar (default is the data minimum) */
