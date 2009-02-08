@@ -13,6 +13,7 @@ try:  # distributed version
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+    alias = {'pow':'tpow'}
 except: # local version
     env = configure.Debug()
     root = None
@@ -30,12 +31,21 @@ for source in src:
 
 mains = Split(progs)
 
+docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,prog)
+        env.Install(bindir,main[0])
+
+        if prog in alias.keys():
+            other = string.replace(str(main[0]),prog,alias[prog])
+            env.InstallAs(os.path.join(bindir,other),main[0])
+
+            if env['PLATFORM'] == 'cygwin':
+                other = string.replace(other,'.exe','')
+            docalias[other] = 'sf'+prog
  
 ######################################################################
 # SELF-DOCUMENTATION
@@ -45,7 +55,7 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/framework/rsfdoc.py')	
-    doc = env.Docmerge(main,docs)
+    doc = env.Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
 
 

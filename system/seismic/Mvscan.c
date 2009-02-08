@@ -140,6 +140,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("v1",&v1)) {
 	nmofunc = squared? curved: hyperb;
+	/* reference velocity */
     } else {
 	nmofunc = squared? curved1: hyperb1;
 	if (!slow) v1 = 1./v1;

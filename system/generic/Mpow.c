@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     int n[SF_MAX_DIM], ii[SF_MAX_DIM], j, nd, id, ix, nx, nbuf;
     off_t i, nsiz;
     float d, o, p, *gain[SF_MAX_DIM], *buf;
-    char key[6];
+    char key[6], *prog;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	(void) snprintf(key,5,"pow%d",id+1);
 	if (!sf_getfloat(key,&p)) p = 0.;
-	    /*( tpow#=(0,0,...) power on #-th axis */
+	/*( pow#=(0,0,...) power on #-th axis )*/
 	        
 	if (p != 0.) {
 	    nx = n[id];
@@ -63,6 +63,26 @@ int main(int argc, char *argv[])
 	    }
 	} else {
 	    gain[id] = NULL;
+	}
+    }
+
+    prog = sf_getprog();
+    if (NULL != strstr(prog,"tpow")) {
+	if (!sf_getfloat("tpow",&p)) p = 0.;
+	/* power on the first axis */
+	        
+	if (p != 0. && NULL == gain[0]) {
+	    nx = n[0];
+	    gain[0] = sf_floatalloc(nx);
+
+	    if (!sf_histfloat(in,"d1",&d)) d = 1.;
+	    if (!sf_histfloat(in,"o1",&o)) o = 0.;
+
+	    for (ix=0; ix < nx; ix++) {
+		gain[0][ix] = powf(o+(ix+1)*d,p);
+	    }
+	} else {
+	    gain[0] = NULL;
 	}
     }
 
