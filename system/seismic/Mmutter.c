@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
 	offset = NULL;
     }
     
-    if (!sf_getfloat("tp",&tp)) tp=0.150;
-    if (!sf_getfloat("t0",&t0)) t0=0.;
-    if (!sf_getfloat("v0",&v0)) v0=1.45; 
-    if (!sf_getfloat("slope0",&slope0)) slope0=1./v0;
-    if (!sf_getfloat("slopep",&slopep)) slopep=slope0;
-    if (!sf_getfloat("x0",&x1)) x1=0.;
+    if (!sf_getfloat("tp",&tp)) tp=0.150; /* end time */
+    if (!sf_getfloat("t0",&t0)) t0=0.;    /* starting time */
+    if (!sf_getfloat("v0",&v0)) v0=1.45;  /* velocity */
+    if (!sf_getfloat("slope0",&slope0)) slope0=1./v0; /* slope */
+    if (!sf_getfloat("slopep",&slopep)) slopep=slope0; /* end slope */
+    if (!sf_getfloat("x0",&x1)) x1=0.; /* starting space */
 
     if (!sf_getbool("abs",&abs)) abs=true;
     /* if y, use absolute value |x-x0| */

@@ -51,9 +51,11 @@ int main(int argc, char* argv[])
     /* fraction of the horizontal axis for front face */
     
     if (!sf_getint("frame1",&frame1)) frame1=0;
+    /* top frame number */
     if (!sf_getint("frame2",&frame2)) frame2=n2-1;
+    /* side frame number */
     if (!sf_getint("frame3",&frame3)) frame3=0;
-    /* frame numbers for cube faces */
+    /* front frame number */
 
     /* sanity check */
     if (frame1 < 0) frame1 = 0;

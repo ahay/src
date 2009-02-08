@@ -3,10 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-born2d c2r cell2 cell3 constfdmig2 cube2list dsr dsr2 eikonalvti
-fincon finstack fkamo fkdmo gazdag hwt2d hwtex mig45 rays2 rays2a
-rays3 reg2tri rwemete2d rweab rwesrmig rwezomig s2ofz s2ofz2 shoot2
-srmva sstep2 trapez tri2reg trirand unif3 voft vofz zomig zomva
+born2d c2r cell2 cell3 cube2list dsr dsr2 eikonalvti fkamo fkdmo
+gazdag hwt2d hwtex rays2 rays2a rays3 reg2tri rwemete2d rweab rwesrmig
+rwezomig s2ofz s2ofz2 shoot2 srmva sstep2 trapez tri2reg trirand unif3
+voft vofz zomig zomva
 '''
 
 try:  # distributed version
@@ -39,13 +39,6 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
-
-for prog in ('ctridiagonal',):
-    sources = ['Test' + prog,prog]
-    configure.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
-    env.Object('Test' + prog + '.c')
-    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
  
 ######################################################################
 # SELF-DOCUMENTATION
