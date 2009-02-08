@@ -366,6 +366,7 @@ void lpick(float*** tt, float*** ll,
     }
 }
 
+/*------------------------------------------------------------*/
 void hwt3d_lint(float*** tt, /* traveltime cube */
 		float*** ll, /*     length cube */
 		pt3d     P,  /* coordinates (x,y,z) */
@@ -409,7 +410,6 @@ void hwt3d_lint(float*** tt, /* traveltime cube */
 }
 
 /*------------------------------------------------------------*/
-
 void tpick(float*** tt, float*** ll,
 	   float     t, float     l,
 	   int iy,int ix,int iz) {
@@ -419,6 +419,7 @@ void tpick(float*** tt, float*** ll,
 	tt[iy][ix][iz] = t;
 }
 
+/*------------------------------------------------------------*/
 void hwt3d_tint(float*** tt, /* traveltime cube */
 		float*** ll, /*     length cube */
 		pt3d     P,  /* coordinates (x,y,z) */
@@ -462,7 +463,6 @@ void hwt3d_tint(float*** tt, /* traveltime cube */
 }
 
 /*------------------------------------------------------------*/
-
 void hwt3d_nint(float*** tt, /* traveltime cube */
 		float*** ll, /*     length cube */
 		pt3d     P,  /* coordinates (x,y,z) */
@@ -507,7 +507,6 @@ void hwt3d_nint(float*** tt, /* traveltime cube */
 
 
 /*------------------------------------------------------------*/
-
 void hwt3d_fill(float*** tt, /* traveltime cube */
 		int n)
 /*< fill holes >*/
