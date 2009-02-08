@@ -1,4 +1,5 @@
 from rsfproj import *
+import string
 
 # Vs and density
 Flow('vs','time1','math output=0')
@@ -18,9 +19,11 @@ nt = int(1.75/dt+1.5)
 # anisotropy for picking
 an = 1000
 
+under = string.maketrans('_','-')
 for c in range(4):
     case = ('time1','time2','time2_over','time2_over_compaction')[c]
     src = 'vel_%s.rsf' % case
+    case = case.translate(under)
 
     # get model from data server
     Fetch(src,'long')

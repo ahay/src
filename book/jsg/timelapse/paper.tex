@@ -62,8 +62,8 @@ proposed method with synthetic and real data examples.
 The correlation coefficient between two data sequences $a_t$ and $b_t$
 is defined as 
 \begin{equation}
-  \label{eq:c}
-  c = \frac{\displaystyle \sum_t a_t\,b_t}{\displaystyle \sqrt{ \sum_t a_t^2\,\sum_t b_t^2}}
+  {c} = {\frac{\displaystyle \sum_t a_t\,b_t}{\displaystyle \sqrt{ \sum_t a_t^2\,\sum_t b_t^2}}}
+\label{eq:c}
 \end{equation}
 and ranges between 1 (perfect correlation) and -1 (perfect correlation
 of signals with different polarity). The definition of the local
@@ -158,8 +158,8 @@ In a situation where the change of $\Delta t$ with $t$ can be neglected,
 $w(t)$ detected by the local similarity analysis provides an estimate
 of the local ratio of the velocities:
 \begin{equation}
+{\frac{d w}{d t}} \approx {\frac{\hat{v}_0(t)}{\hat{v}_1(t)}}\;.
 \label{eq:rat}
-\frac{d w}{d t} \approx \frac{\hat{v}_0(t)}{\hat{v}_1(t)}\;.
 \end{equation}
 If the registration is correct, the estimated velocity ratio outside
 of the reservoir should be close to one. One can connect
@@ -207,23 +207,23 @@ We demonstrate the proposed procedure in the next section using several
 \subsection{2-D synthetic data} 
 \inputdir{long1}  
  
-\multiplot{4}{time2_over,mdif-time2_over,dif-time2_over,dif2-time2_over}{width=0.47\columnwidth}{(a) Synthetic
+\multiplot{4}{time2-over,mdif-time2-over,dif-time2-over,dif2-time2-over}{width=0.47\columnwidth}{(a) Synthetic
   model. (b) Time-lapse change containing differences in both the
   reservoir interval and the shallow overburden. (c) Initial
   time-lapse difference image. (d) Time-lapse difference image
   after registration.}
 
-\plot{scan-time2_over}{width=0.7\columnwidth}{Local similarity
+\plot{scan-time2-over}{width=0.7\columnwidth}{Local similarity
   scan for the 2-D synthetic model.}
 
-Figure~\ref{fig:time2_over} shows a more complicated 2-D synthetic
+Figure~\ref{fig:time2-over} shows a more complicated 2-D synthetic
 example. In this experiment, we assume that the changes occur both in
 the reservoir and in the shallow subsurface
-[Figure~\ref{fig:mdif-time2_over}]. The synthetic data were generated
+[Figure~\ref{fig:mdif-time2-over}]. The synthetic data were generated
 by convolution modeling. After computing local similarity between the
-two synthetic time-lapse images [Figure~\ref{fig:scan-time2_over}], we
+two synthetic time-lapse images [Figure~\ref{fig:scan-time2-over}], we
 apply the extracted stretch factor to register the images.
-Figures~\ref{fig:dif-time2_over} and~\ref{fig:dif2-time2_over} compare
+Figures~\ref{fig:dif-time2-over} and~\ref{fig:dif2-time2-over} compare
 time-lapse difference images before and after
 registration. Similarity-based registration effectively removes
 artifact differences both above and below the synthetic reservoir. As
