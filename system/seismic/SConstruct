@@ -4,14 +4,14 @@ import configure
 
 progs = '''
 ai2refl bin cgscan cmp2shot constfdmig2 cos2ang depth2time dimag dmo
-extract fincon finstack fourvc fourvc0 fourvc2 freqint freqlet halfint
-headerattr headermath inmo inmo3 intbin isin2ang itaupmo iwarp
-kirchinv kirchnew kirmod kirmod3 layer mig45 modrefl3 mutter nmo pnmo
-pnmo3d pp2pstsic preconstkirch prestolt ptaupmo radon refer ricker1
-segy2rsf segyheader segyread segywrite shot2cmp shotconstkirch sin
-slant srsyn stolt stoltstretch stretch su2rsf tan2ang taupmo
-time2depth tlagtoang2d tshift velmod veltran vscan xlagtoang2d
-zoeppritz
+dsr extract fincon finstack fourvc fourvc0 fourvc2 freqint freqlet
+gazdag halfint headerattr headermath inmo inmo3 intbin isin2ang
+itaupmo iwarp kirchinv kirchnew kirmod kirmod3 layer mig45 modrefl3
+mutter nmo pnmo pnmo3d pp2pstsic preconstkirch prestolt ptaupmo radon
+refer ricker1 segy2rsf segyheader segyread segywrite shot2cmp
+shotconstkirch sin slant srsyn stolt stoltstretch stretch su2rsf
+tan2ang taupmo time2depth tlagtoang2d tshift velmod veltran vscan
+xlagtoang2d zoeppritz
 '''
 
 try:  # distributed version

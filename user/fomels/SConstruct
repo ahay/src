@@ -6,12 +6,12 @@ progs = '''
 abalance agmig analytical angle angle2 approx bdix beamform blur cflow
 chebvc cpef dealias deblur dijkstra dip diplet dips distance divn dix
 dixshape eikonal envelope equal erf exgr explanesignoi expsignoi fern
-flat focus freqest gaussmooth green heat interpt iphase jacobi jacobi2
-kron lapfill locov lpf mandelbrot matmult max1 mig3 miss2 miss3 monof
+flat focus freqest gaussmooth green heat interpt iphase jacobi kron
+lapfill locov lpf mandelbrot matmult max1 mig3 miss2 miss3 monof
 monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 patch
 pick pick0 pick2 plane planemis2 planemis3 planereg2 planereg3
 planesignoi pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk
-pwdsmooth2 pwspray pwspray3 roots rsin seislet seisigk shape shapebin
+pwdsmooth2 pwspray pwspray3 rsin seislet seisigk shape shapebin
 shapebin1 shapesigk sharpen shearer similarity smoothreg smoothreg2
 timecont timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon
 warp1 warpadd warpscan ztrace ztrace2
