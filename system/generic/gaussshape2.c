@@ -23,7 +23,6 @@
 
 #include "gaussshape2.h"
 #include "monof2.h"
-#include "freqfilt2.h"
 
 static int nfft, nw, nk;
 static float **shape, **shape2, dw, dk, k0;
@@ -44,8 +43,8 @@ void gaussshape2_init(int n1, int n2)
     shape  = sf_floatalloc2(n2,nw);
     shape2 = sf_floatalloc2(n2,nw);
 
-    freqfilt2_init(n1, n2, nw);
-    freqfilt2_set(shape);
+    sf_freqfilt2_init(n1, n2, nw);
+    sf_freqfilt2_set(shape);
 }
 
 void gaussshape2_set(float* a             /* shaper */, 
@@ -54,7 +53,7 @@ void gaussshape2_set(float* a             /* shaper */,
 		     int nliter           /* number of reweighting iterations */)
 /*< estimate shaping >*/
 {
-    freqfilt2_spec(pattern,shape);
+    sf_freqfilt2_spec(pattern,shape);
     monof2(shape,shape2,nliter,niter, a, nk, dk, k0, nw, dw, 0., true);
     gaussshape2_set2(a);
 }
@@ -83,7 +82,7 @@ void gaussshape2_close(void)
 {
     free(shape[0]);
     free(shape);
-    freqfilt2_close();
+    sf_freqfilt2_close();
 }
 
 /* 	$Id$	 */

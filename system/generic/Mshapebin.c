@@ -24,8 +24,6 @@
 
 #include "laplac2.h"
 #include "gaussshape2.h"
-#include "triangle2.h"
-#include "freqfilt2.h"
 
 int main (int argc, char* argv[])
 {
@@ -179,10 +177,10 @@ int main (int argc, char* argv[])
 		pattern = NULL;
 		gaussshape2_set2(a);
 	    }
-	    shaping = freqfilt2_lop;
+	    shaping = sf_freqfilt2_lop;
 	} else {
-	    triangle2_init((int) filt1, (int) filt2, nx, ny, 1);
-	    shaping = triangle2_lop;
+	    sf_triangle2_init((int) filt1, (int) filt2, nx, ny, 1);
+	    shaping = sf_triangle2_lop;
 	}
 
 	pp = sf_floatalloc(nm);

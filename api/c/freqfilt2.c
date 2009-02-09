@@ -19,10 +19,17 @@
 
 #include <math.h>
 
-#include <rsf.h>
+#include "freqfilt2.h"
+
+#include "_bool.h"
 /*^*/
 
-#include "freqfilt2.h"
+#include "kiss_fft.h"
+#include "kiss_fftr.h"
+#include "error.h"
+#include "alloc.h"
+#include "adjnull.h"
+#include "komplex.h"
 
 static int nfft, nw, m1, m2;
 static kiss_fft_cpx *ctrace, *ctrace2, **fft;
@@ -30,8 +37,8 @@ static float *trace, **shape;
 kiss_fftr_cfg tfor, tinv;
 kiss_fft_cfg  xfor, xinv;
 
-void freqfilt2_init(int n1, int n2 /* data dimensions */, 
-		    int nw1        /* number of frequencies */)
+void sf_freqfilt2_init(int n1, int n2 /* data dimensions */, 
+		       int nw1        /* number of frequencies */)
 /*< initialize >*/
 {
     m1 = n1;
@@ -52,13 +59,13 @@ void freqfilt2_init(int n1, int n2 /* data dimensions */,
     fft = (kiss_fft_cpx**) sf_complexalloc2(nw,n2);
 }
 
-void freqfilt2_set(float **filt)
+void sf_freqfilt2_set(float **filt)
 /*< set the filter >*/
 {
     shape = filt;
 }
 
-void freqfilt2_close(void) 
+void sf_freqfilt2_close(void) 
 /*< free allocated storage >*/
 {
     free (tfor);
@@ -72,7 +79,7 @@ void freqfilt2_close(void)
     free (fft);
 }
 
-void freqfilt2_spec (const float* x /* input */, float** y /* spectrum */) 
+void sf_freqfilt2_spec (const float* x /* input */, float** y /* spectrum */) 
 /*< compute 2-D spectrum >*/
 {
     int ik, iw;
@@ -99,7 +106,7 @@ void freqfilt2_spec (const float* x /* input */, float** y /* spectrum */)
     }
 }
 
-void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+void sf_freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< linear filtering operator >*/
 {
     int iw, ik;
@@ -147,4 +154,4 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id$	 */
+/* 	$Id: freqfilt2.c 2262 2006-09-15 04:50:52Z sfomel $	 */

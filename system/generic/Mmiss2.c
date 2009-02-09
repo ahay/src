@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "gaussshape2.h"
-#include "freqfilt2.h"
 
 int main(int argc, char* argv[])
 {
@@ -99,11 +98,11 @@ int main(int argc, char* argv[])
 	    }
 	}
  
-	sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+	sf_conjgrad(NULL, sf_mask_lop, sf_freqfilt2_lop, pp, mm, mm, niter);
 
 	if (shape) {
 	    gaussshape2_set(a, mm, 100, nliter);
-	    sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+	    sf_conjgrad(NULL, sf_mask_lop, sf_freqfilt2_lop, pp, mm, mm, niter);
 	}
 
 	if (force) {
