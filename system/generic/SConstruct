@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 agc bandpass bin1 causint clip cosft costaper deriv dipfilter dwt fft1
-fft3 igrad impl2 jacobi2 lapfill linefit miss2 monof2 noise
+fft3 histogram igrad impl2 jacobi2 lapfill linefit miss2 monof2 noise
 postfilter2 pow remap1 roots shapebin slice smooth smoothder
 smoothreg2 spectra spectra2 spline threshold unif2 unif3
 '''
