@@ -9,9 +9,9 @@ fourvc2 freqint freqlet gazdag halfint headerattr headermath hwt2d
 hwtex infill inmo inmo3 intbin isin2ang itaupmo iwarp kirchinv
 kirchnew kirmod kirmod3 layer mig45 modrefl2 modrefl3 mutter nmo pnmo
 pnmo3d pp2psang2 pp2pstsic preconstkirch prestolt ptaupmo radon rays2
-rays2a rays3 refer ricker1 rweab segy2rsf segyheader segyread
-segywrite shoot2 shot2cmp shotconstkirch shotprop sin slant srsyn
-stolt stoltstretch stretch su2rsf tan2ang taupmo time2depth
+rays2a rays3 refer ricker1 rweab rwesrmig rwezomig segy2rsf segyheader
+segyread segywrite shoot2 shot2cmp shotconstkirch shotprop sin slant
+srsyn stolt stoltstretch stretch su2rsf tan2ang taupmo time2depth
 tlagtoang2d tshift velmod veltran vscan xlagtoang2d zoeppritz
 '''
 
