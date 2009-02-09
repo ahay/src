@@ -3,9 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = ''' 
-born2d cube2list dsr2 eikonalvti fkamo fkdmo reg2tri rwemete2d
-rwesrmig rwezomig s2ofz s2ofz2 srmva sstep2 trapez tri2reg trirand
-voft vofz zomig zomva
+born2d cube2list dsr2 eikonalvti fkamo fkdmo rwemete2d rwesrmig
+rwezomig s2ofz s2ofz2 srmva sstep2 trapez trirand voft vofz zomig
+zomva
 '''
 
 try:  # distributed version
@@ -22,8 +22,6 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=['rsf'])
-
-src.remove('predicates.c')
 
 for source in src:
     inc = env.Include(source,prefix='')

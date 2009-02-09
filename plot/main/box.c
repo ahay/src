@@ -55,18 +55,21 @@ int main (int argc, char* argv[])
     if (!sf_getbool("pointer",&pointer)) pointer=true;
     /* if y, create arrow pointer */
     if (!sf_getbool("reverse",&rev)) rev=false;
+    /* if reverse */
 
     if (!sf_getfloat("lat",&lati)) lati=0.;
+    /* latitude of viewpoint in 3-D */
     if (!sf_getfloat("long",&longi)) longi=90.;
-    /* latitude and longitude of viewpoint in 3-D */
+    /* longitude of viewpoint in 3-D */
 
     if (!sf_getfloat("angle",&angle)) angle=0.;
     /* longitude of floating label in 3-D */
     angle *= SF_PI / 180.;
 
     if (!sf_getfloat("x0",&x0)) x0=0.;
+    /* x position of the pointer tip */
     if (!sf_getfloat("y0",&y0)) y0=0.;
-    /* position of the pointer tip */
+    /* y position of the pointer tip */
 
     if (!sf_getfloat("scale0",&scale0)) scale0=1.;
     /* scale factor for x0 and y0 */
@@ -74,12 +77,14 @@ int main (int argc, char* argv[])
     y0 *= scale0;
 
     if (!sf_getfloat("xt",&xt)) xt=2.;
+    /* relative position of text in x */
     if (!sf_getfloat("yt",&yt)) yt=0.;
-    /* relative position of text */
+    /* relative position of text in y */
 
     if (!sf_getfloat("x_oval",&x_oval)) x_oval=0.;
+    /* x size of the oval around pointer */
     if (!sf_getfloat("y_oval",&y_oval)) y_oval=0.;
-    /* size of the oval around pointer */
+    /* y size of the oval around pointer */
 
     if (!sf_getbool("boxit",&boxit)) boxit=true;
     /* if y, create a box around text */
@@ -89,8 +94,8 @@ int main (int argc, char* argv[])
             /* normalization for xt and yt */
             scalet = length / hypotf(xt,yt);
         } else if (!sf_getfloat ("scalet",&scalet)) {
+            /*( scalet scale factor for xt and yt (if length is not set) )*/
             scalet=1.;
-            /* scale factor for xt and yt (if length is not set) */
         }
         xt *= scalet;
         yt *= scalet;

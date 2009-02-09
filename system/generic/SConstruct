@@ -4,10 +4,10 @@ import configure
 
 progs = '''
 agc bandpass bin1 canny causint clip cosft costaper deriv dipfilter
-dwt fft1 fft3 histogram igrad impl2 jacobi2 lapfill linefit max1 miss2
-monof2 noise postfilter2 pow remap1 roots shapebin sharpen slice
-smooth smoothder smoothreg2 spectra spectra2 spline threshold unif2
-unif3
+dwt equal fft1 fft3 histogram igrad impl2 jacobi2 lapfill linefit max1
+miss2 monof2 noise postfilter2 pow reg2tri remap1 roots shapebin
+sharpen slice smooth smoothder smoothreg2 spectra spectra2 spline
+threshold tri2reg unif2 unif3
 '''
 
 try:  # distributed version
@@ -21,6 +21,8 @@ except: # local version
     root = None
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')
+
+src.remove('predicates.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
