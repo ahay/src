@@ -3,10 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-absoffdip aliasp avo boxsmooth cascade cmatmult enoint2 grad2 grad3
-imospray impl1 impl3 linsincos lpad map2list migsteep3 modrefl ofsemb
-pmig pp2psang pveltran randrefl reshape ricker shotholes spicks
-splinefilter stolt2 swtdenoise
+absoffdip aliasp avo cascade cmatmult enoint2 grad2 grad3 imospray
+impl1 impl3 linsincos lpad map2list migsteep3 modrefl ofsemb pmig
+pp2psang randrefl reshape ricker shotholes spicks splinefilter stolt2
+swtdenoise
 '''
 
 try: # distributed version

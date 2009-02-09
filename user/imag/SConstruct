@@ -3,8 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = ''' 
-born2d cube2list eikonalvti fkamo fkdmo rwemete2d s2ofz s2ofz2 trapez
-trirand voft vofz 
+born2d fkamo fkdmo rwemete2d s2ofz s2ofz2 trapez trirand voft vofz
 '''
 
 try:  # distributed version
