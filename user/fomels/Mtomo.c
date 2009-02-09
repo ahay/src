@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "tomo.h"
-#include "triangle2.h"
 
 int main(int argc, char* argv[]) {
     bool adj;
@@ -117,13 +116,13 @@ int main(int argc, char* argv[]) {
 	sf_floatread(t, nt, time);
 
 	/* initializtion for shaping (smoothing) */ 
-	triangle2_init(rect1,rect2,nz,nx,1);
+	sf_triangle2_init(rect1,rect2,nz,nx,1);
 
 	/* intitialize conjugate gradients */
 	sf_conjgrad_init(ns, ns, nt, nt, eps, tol, true, false);
     
 	/* invert */
-	sf_conjgrad(NULL, tomo_lop, triangle2_lop, p, s, t, niter);
+	sf_conjgrad(NULL, tomo_lop, sf_triangle2_lop, p, s, t, niter);
     
 	sf_floatwrite(s, ns, slow);
 

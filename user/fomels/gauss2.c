@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "gauss2.h"
-#include "freqfilt2.h"
 
 static float **shape;
 
@@ -60,8 +59,8 @@ void gauss2_init(int n1, int n2     /* data size */,
 	}
     }
 
-    freqfilt2_init(n1,n2,nw);
-    freqfilt2_set(shape);
+    sf_freqfilt2_init(n1,n2,nw);
+    sf_freqfilt2_set(shape);
 }
 
 void gauss2_close(void)
@@ -69,7 +68,7 @@ void gauss2_close(void)
 {
     free(shape[0]);
     free(shape);
-    freqfilt2_close();
+    sf_freqfilt2_close();
 }
 
 /* 	$Id$	 */

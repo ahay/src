@@ -22,7 +22,7 @@
 #include "smoothpwd.h"
 #include "repeat.h"
 #include "predict.h"
-#include "triangle2.h"
+
 
 static int n;
 static float *w, *p, *t;
@@ -41,7 +41,7 @@ void smoothpwd_init(int n1, int n2 /* data size */,
     repeat_init(n1,n2,sf_causint_lop);
     predict_init (n1,n2,eps,1);
     predict_set(dip);
-    triangle2_init (rect1,1,n1,n2,1);
+    sf_triangle2_init (rect1,1,n1,n2,1);
 
     w = sf_floatalloc(n);
     p = sf_floatalloc(n);
@@ -96,10 +96,10 @@ static void predict_smooth_lop(bool adj, bool add,
     sf_adjnull(adj,add,nx,ny,x,y);
 
     if (adj) {
-	triangle2_lop (true, false, nx, nx, t, y);
+	sf_triangle2_lop (true, false, nx, nx, t, y);
 	predict_lop (true, add, nx, nx, x, t);
     } else {
 	predict_lop (false, false, nx, nx, x, t);
-	triangle2_lop (false, add, nx, nx, t, y);
+	sf_triangle2_lop (false, add, nx, nx, t, y);
     }
 }

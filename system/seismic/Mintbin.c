@@ -40,6 +40,7 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&nd)) sf_error("Need n2= in in");
 
     header = sf_getstring("head");
+    /* header file */
     if (NULL == header) { 
 	header = sf_histstring(in,"head");
 	if (NULL == header) sf_error("Need head=");
@@ -93,11 +94,10 @@ int main (int argc, char* argv[])
     sf_fileclose (head);
 
     /* let user overwrite */
-    sf_getint ("xmin",&xmin);
-    sf_getint ("xmax",&xmax);
-    sf_getint ("ymin",&ymin);
-    /* Grid dimensions */
-    sf_getint ("ymax",&ymax);
+    sf_getint ("xmin",&xmin); /* x minimum */
+    sf_getint ("xmax",&xmax); /* x maximum */
+    sf_getint ("ymin",&ymin); /* y minimum */
+    sf_getint ("ymax",&ymax); /* y maximum */
 
     if (xmax < xmin) sf_error ("xmax=%d < xmin=%d",xmax,xmin);
     if (ymax < ymin) sf_error ("ymax=%d < ymin=%d",xmax,xmin);

@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "triangle2.h"
-
 int main(int argc, char* argv[])
 {
     bool adj, inv, spk;
@@ -73,7 +71,7 @@ int main(int argc, char* argv[])
 	p = NULL;
     }
 
-    triangle2_init(rect,rect,n1,n2,nr);
+    sf_triangle2_init(rect,rect,n1,n2,nr);
     sf_floatread(x,n,in);
 
     if (adj) {
@@ -82,21 +80,21 @@ int main(int argc, char* argv[])
 		sf_conjgrad_init(n,n,n,n,eps,1.e-6,true,false);
 		
 		for (ic=0; ic < nc; ic++) {
-		    sf_conjgrad(NULL,triangle2_lop,sf_weight_lop,p,y,x,niter);
+		    sf_conjgrad(NULL,sf_triangle2_lop,sf_weight_lop,p,y,x,niter);
 		    sf_sharpen(y);
 		} 
 	    } else {
 		sf_impl2_init (rect2, rect2, n1, n2, 0.1, 50., 
 			       false, true, NULL, 1, NULL);
-		sf_solver_prec (triangle2_lop,sf_cgstep,sf_impl2_lop,
+		sf_solver_prec (sf_triangle2_lop,sf_cgstep,sf_impl2_lop,
 				n,n,n,y,x,niter,eps,"verb",true,"end");
 		sf_cgstep_close();
 	    }
 	} else {
-	    triangle2_lop(true,false,n,n,y,x);
+	    sf_triangle2_lop(true,false,n,n,y,x);
 	} 
     } else {
-	triangle2_lop(false,false,n,n,x,y);
+	sf_triangle2_lop(false,false,n,n,x,y);
     }
 
     sf_floatwrite(y,n,out);

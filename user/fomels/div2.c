@@ -21,8 +21,6 @@
 
 #include "div2.h"
 #include "gauss2.h"
-#include "freqfilt2.h"
-#include "triangle2.h"
 
 static int n, niter;
 static float *p;
@@ -42,7 +40,7 @@ void div2_init(int n1, int n2     /* data dimensions */,
     if (gauss) {
 	gauss2_init(n1,n2,f1,f2);
     } else {
-	triangle2_init((int) f1, (int) f2, n1, n2, 1);
+	sf_triangle2_init((int) f1, (int) f2, n1, n2, 1);
     }
     sf_conjgrad_init(n, n, n, n, 1., 1.e-6, verb, false);
     p = sf_floatalloc (n);
@@ -54,7 +52,7 @@ void div2_close (void)
     if (gauss) {
 	gauss2_close();
     } else { 
-	triangle2_close();
+	sf_triangle2_close();
     }
     sf_conjgrad_close();
     free (p);
@@ -65,9 +63,9 @@ void div2 (float* num, float* den,  float* rat)
 {
     sf_weight_init(den);
     if (gauss) {
-	sf_conjgrad(NULL, sf_weight_lop,freqfilt2_lop,p,rat,num,niter);
+	sf_conjgrad(NULL, sf_weight_lop,sf_freqfilt2_lop,p,rat,num,niter);
     } else {
-	sf_conjgrad(NULL, sf_weight_lop,triangle2_lop,p,rat,num,niter); 
+	sf_conjgrad(NULL, sf_weight_lop,sf_triangle2_lop,p,rat,num,niter); 
     }
 }
 

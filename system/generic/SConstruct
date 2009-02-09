@@ -3,9 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-agc bandpass bin1 causint clip cosft costaper deriv dwt fft1 fft3
-igrad impl2 jacobi2 linefit noise pow remap1 roots slice smooth
-smoothder spectra spectra2 spline threshold unif2 unif3
+agc bandpass bin1 causint clip cosft costaper deriv dipfilter dwt fft1
+fft3 igrad impl2 jacobi2 lapfill linefit miss2 monof2 noise
+postfilter2 pow remap1 roots shapebin slice smooth smoothder
+smoothreg2 spectra spectra2 spline threshold unif2 unif3
 '''
 
 try:  # distributed version
@@ -46,7 +47,14 @@ for prog in mains:
             if env['PLATFORM'] == 'cygwin':
                 other = string.replace(other,'.exe','')
             docalias[other] = 'sf'+prog
- 
+
+for prog in Split('gaussshape2'):
+    sources = ['Test' + prog,prog]
+    configure.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################

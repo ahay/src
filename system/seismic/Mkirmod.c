@@ -159,6 +159,7 @@ int main(int argc, char* argv[])
 	    sf_fileclose(refl);
 	} else {
 	    if (!sf_getfloat("r0",&r0)) r0=1.;
+	    /* normal reflectivity (if constant) */
 	    for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
 		    rfl[ic][ix] = r0;
@@ -167,8 +168,8 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /* AVO gradient (B/A) */
     if (NULL != sf_getstring("rgrad")) {
+	/* AVO gradient file (B/A) */
 	refl = sf_input("rgrad");
 	sf_floatread(rgd[0],nxc,refl);
 	sf_fileclose(refl);
@@ -180,8 +181,8 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /* reflector dip */
     if (NULL != sf_getstring("dip")) {
+	/* reflector dip file */
 	refl = sf_input("dip");
 	sf_floatread(dip[0],nxc,refl);
 	sf_fileclose(refl);
@@ -238,6 +239,7 @@ int main(int argc, char* argv[])
     /* converted velocity gradient */
 
     type2 = sf_getstring("type2");
+    /* type of the receiver side branch */
     if (NULL==type2) {	
 	type2=type;
     } else if ((vel2->gx)==0. && (vel2->gz)==0.) {

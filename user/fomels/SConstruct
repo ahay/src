@@ -7,14 +7,13 @@ abalance agmig analytical angle angle2 approx bdix beamform blur cflow
 chebvc cpef dealias deblur dijkstra dip diplet dips distance divn dix
 dixshape eikonal envelope equal erf exgr explanesignoi expsignoi fern
 flat focus freqest gaussmooth green heat interpt iphase jacobi kron
-lapfill locov lpf mandelbrot matmult max1 mig3 miss2 miss3 monof
-monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 patch
-pick pick0 pick2 plane planemis2 planemis3 planereg2 planereg3
-planesignoi pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk
-pwdsmooth2 pwspray pwspray3 rsin seislet seisigk shape shapebin
-shapebin1 shapesigk sharpen shearer similarity smoothreg smoothreg2
-timecont timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon
-warp1 warpadd warpscan ztrace ztrace2
+locov lpf mandelbrot matmult max1 mig3 miss3 monof nsmooth nsmooth1
+ocparcel octentwt ofilp ofpwd ofpwd2 patch pick pick0 pick2 plane
+planemis2 planemis3 planereg2 planereg3 planesignoi pmshape2 predict
+pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk pwdsmooth2 pwspray pwspray3
+rsin seislet seisigk shape shapebin1 shapesigk sharpen shearer
+similarity smoothreg timecont timeshift tomo trismooth2 tristack
+twodip2 twofreq2 velcon warp1 warpadd warpscan
 '''
 
 pyprogs = 'rcat'
@@ -63,8 +62,8 @@ for conv in ('byte2jpg','jpg2byte'):
 
 for prog in Split(
     '''    
-    burg cburg gauss2 gaussel gaussshape2 grid1 matmult ntriangle1
-    predict predict2 pwdsl triangle2 trianglen trisl
+    burg cburg gauss2 gaussel grid1 matmult ntriangle1 predict
+    predict2 pwdsl trianglen trisl
     '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
