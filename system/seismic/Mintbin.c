@@ -159,6 +159,7 @@ int main (int argc, char* argv[])
     }
 
     header = sf_getstring("mask");
+    /* output mask file */
     if (NULL != header) {
 	mask = sf_output(header);
 	sf_putint(mask,"n1",nx);

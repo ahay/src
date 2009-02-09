@@ -4,10 +4,10 @@ import configure
 
 progs = '''
 absoffdip aliasp avo boxsmooth cascade canny cmatmult enoint2 grad2
-grad3 imospray impl1 impl3 infill intshow inttest1 inttest2 linsincos
-lpad map2list migsteep3 modrefl modrefl2 ofsemb pmig pp2psang pveltran
-radial randrefl reshape ricker shotholes shotprop spicks splinefilter
-stolt2 swtdenoise
+grad3 imospray impl1 impl3 intshow inttest1 inttest2 linsincos lpad
+map2list migsteep3 modrefl modrefl2 ofsemb pmig pp2psang pveltran
+radial randrefl reshape ricker shotholes spicks splinefilter stolt2
+swtdenoise
 '''
 
 try: # distributed version
@@ -39,7 +39,7 @@ for prog in mains:
     if root:
         env.Install(bindir,main[0])
 
-for prog in Split('cbanded cmatmult'):
+for prog in Split('cmatmult'):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

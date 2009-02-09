@@ -4,8 +4,8 @@ import configure
 
 progs = ''' 
 born2d cube2list dsr2 eikonalvti fkamo fkdmo reg2tri rwemete2d rweab
-rwesrmig rwezomig s2ofz s2ofz2 shoot2 srmva sstep2 trapez tri2reg
-trirand voft vofz zomig zomva
+rwesrmig rwezomig s2ofz s2ofz2 srmva sstep2 trapez tri2reg trirand
+voft vofz zomig zomva
 '''
 
 try:  # distributed version
