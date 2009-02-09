@@ -3,10 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-absoffdip aliasp avo boxsmooth cascade canny cmatmult enoint2 grad2
-grad3 imospray impl1 impl3 intshow inttest1 inttest2 linsincos lpad
-map2list migsteep3 modrefl modrefl2 ofsemb pmig pp2psang pveltran
-radial randrefl reshape ricker shotholes spicks splinefilter stolt2
+absoffdip aliasp avo boxsmooth cascade cmatmult enoint2 grad2 grad3
+imospray impl1 impl3 intshow inttest1 inttest2 linsincos lpad map2list
+migsteep3 modrefl modrefl2 ofsemb pmig pp2psang pveltran radial
+randrefl reshape ricker shotholes spicks splinefilter stolt2
 swtdenoise
 '''
 
