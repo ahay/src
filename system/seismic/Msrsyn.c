@@ -50,14 +50,14 @@ int main (int argc, char *argv[])
     Fsw= sf_output("swf"); sf_settype(Fsw,SF_COMPLEX);
     Frw= sf_output("out"); sf_settype(Frw,SF_COMPLEX);
     
-    if (!sf_getint  ("nx",&nx)) sf_error ("Need nx=");
-    if (!sf_getfloat("dx",&dx)) sf_error ("Need dx=");
-    if (!sf_getfloat("ox",&ox)) sf_error ("Need ox=");
+    if (!sf_getint  ("nx",&nx)) sf_error ("Need nx="); /* x samples */
+    if (!sf_getfloat("dx",&dx)) sf_error ("Need dx="); /* x sampling */
+    if (!sf_getfloat("ox",&ox)) sf_error ("Need ox="); /* x origin */
     ax = sf_maxa(nx,ox,dx); sf_setlabel(ax,"x");
 
-    if (!sf_getint  ("ny",&ny)) ny=1;
-    if (!sf_getfloat("dy",&dy)) dy=1;
-    if (!sf_getfloat("oy",&oy)) oy=0;
+    if (!sf_getint  ("ny",&ny)) ny=1; /* y samples */
+    if (!sf_getfloat("dy",&dy)) dy=1; /* y sampling */
+    if (!sf_getfloat("oy",&oy)) oy=0; /* y origin */
     ay = sf_maxa(ny,oy,dy); sf_setlabel(ay,"y");
 
     aw  = sf_iaxa(Fr,1); nw =sf_n(aw) ; sf_setlabel(aw, "w");

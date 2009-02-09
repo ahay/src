@@ -4,10 +4,11 @@ import configure
 
 progs = '''
 agc bandpass bin1 canny causint clip cosft costaper deriv dipfilter
-dwt equal fft1 fft3 histogram igrad intshow inttest1 inttest2 impl2
-jacobi jacobi2 lapfill linefit max1 miss2 monof2 noise postfilter2 pow
-reg2tri remap1 roots shapebin sharpen slice smooth smoothder
-smoothreg2 spectra spectra2 spline threshold tri2reg unif2 unif3
+dwt equal fern fft1 fft3 histogram igrad intshow inttest1 inttest2
+impl2 jacobi jacobi2 lapfill linefit max1 miss2 monof2 noise
+postfilter2 pow reg2tri remap1 roots shapebin sharpen slice smooth
+smoothder smoothreg2 spectra spectra2 spline threshold tri2reg unif2
+unif3
 '''
 
 try:  # distributed version
