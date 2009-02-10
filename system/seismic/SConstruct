@@ -3,18 +3,18 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-ai2refl bin c2r cell2 cell3 cgscan cmp2shot constfdmig2 cos2ang
-depth2time dimag dmo dsr dsr2 extract fincon finstack fkamo fourvc
-fourvc0 fourvc2 freqint freqlet gazdag halfint headerattr headermath
-hwt2d hwtex infill inmo inmo3 intbin isin2ang itaupmo iwarp kirchinv
-kirchnew kirmod kirmod3 layer mig45 modrefl modrefl2 modrefl3 mutter
-nmo pnmo pnmo3d pp2psang pp2psang2 pp2pstsic preconstkirch prestolt
-ptaupmo pveltran radial radon rays2 rays2a rays3 refer ricker1 rweab
-rwesrmig rwezomig s2ofz s2ofz2 segy2rsf segyheader segyread segywrite
-shoot2 shot2cmp shotconstkirch shotprop sin slant srmva srsyn sstep2
-stolt stoltstretch stretch su2rsf tan2ang taupmo time2depth
-tlagtoang2d tshift velmod veltran vscan vofz xlagtoang2d zoeppritz
-zomig zomva
+agmig ai2refl bin c2r cell2 cell3 cgscan cmp2shot constfdmig2 cos2ang
+depth2time dimag dmo dsr dsr2 extract fincon finstack fkamo fkdmo
+fourvc fourvc0 fourvc2 freqint freqlet gazdag halfint headerattr
+headermath hwt2d hwtex infill inmo inmo3 intbin isin2ang itaupmo iwarp
+kirchinv kirchnew kirmod kirmod3 layer mig45 modrefl modrefl2 modrefl3
+mutter nmo pnmo pnmo3d pp2psang pp2psang2 pp2pstsic preconstkirch
+prestolt ptaupmo pveltran radial radon randrefl rays2 rays2a rays3
+refer ricker1 rweab rwesrmig rwezomig s2ofz s2ofz2 segy2rsf segyheader
+segyread segywrite shoot2 shot2cmp shotconstkirch shotprop sin slant
+srmva srsyn sstep2 stolt stoltstretch stretch su2rsf tan2ang taupmo
+time2depth tlagtoang2d tshift velmod veltran vscan vofz xlagtoang2d
+zoeppritz zomig zomva
 '''
 
 try:  # distributed version
