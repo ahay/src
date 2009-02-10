@@ -2,7 +2,7 @@ import os, sys, re, string, glob, types
 sys.path.append('../..')
 import configure
 
-progs = 'born2d rwemete2d trapez trirand voft'
+progs = 'born2d rwemete2d trapez'
 
 try:  # distributed version
     Import('env root libdir bindir')
