@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
 	aa->flt[ia] /= a0;
     }
 
-    if (NULL != (lagfile = sf_getstring("lag")) /* file with filter lags */
+    if (NULL != (lagfile = sf_getstring("lag")) 
+	/*( lag file with filter lags )*/
 	|| 
 	NULL != (lagfile = sf_histstring(filt,"lag"))) {
 	lag = sf_input(lagfile);
