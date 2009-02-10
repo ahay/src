@@ -4,8 +4,8 @@ import configure
 
 progs = '''
 absoffdip avo cmatmult enoint2 grad2 grad3 impl1 impl3 linsincos
-map2list migsteep3 ofsemb pmig reshape ricker shotholes spicks
-splinefilter stolt2 swtdenoise
+map2list migsteep3 ofsemb pmig reshape spicks splinefilter stolt2
+swtdenoise
 '''
 
 try: # distributed version
