@@ -48,6 +48,7 @@ int main (int argc, char* argv[])
     xy = sf_floatalloc3(2,nd,n4);
 
     header = sf_getstring("head");
+    /* header file */
     if (NULL == header) { 
 	header = sf_histstring(in,"head");
 	if (NULL == header) sf_error("Need head=");
@@ -103,18 +104,16 @@ int main (int argc, char* argv[])
     if (sf_histfloat(in,"d2",&dt)) sf_putfloat(out,"d3",dt);
 
     /* let user overwrite */
-    sf_getfloat ("xmax",&xmax);
-    sf_getfloat ("xmin",&xmin);
-    sf_getfloat ("ymax",&ymax);
-    sf_getfloat ("ymin",&ymin);
-    /* Grid dimensions */
-    
+    sf_getfloat ("xmax",&xmax); /* x maximum */
+    sf_getfloat ("xmin",&xmin); /* x minimum */
+    sf_getfloat ("ymax",&ymax); /* y maximum */
+    sf_getfloat ("ymin",&ymin); /* y minimum */
+     
     if (xmax < xmin) sf_error ("xmax=%f < xmin=%f",xmax,xmin);
     if (ymax < ymin) sf_error ("ymax=%f < ymin=%f",xmax,xmin);
 
-    if (!sf_getfloat("x0",&x0)) x0=xmin; 
-    if (!sf_getfloat("y0",&y0)) y0=ymin; 
-    /* grid origin */
+    if (!sf_getfloat("x0",&x0)) x0=xmin; /* x origin */
+    if (!sf_getfloat("y0",&y0)) y0=ymin; /* y origin */
 
     sf_putfloat (out,"o1",x0);
     sf_putfloat (out,"o2",y0);
