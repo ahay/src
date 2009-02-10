@@ -21,107 +21,25 @@
 
 #include <rsf.h>
 #include <math.h>
-
-#define IA 16807
-#define IM 2147483647 
-#define AM (1.0/IM)
-#define NTAB 32
-#define IQ 127773
-#define IR 2836
-#define NDIV (1+(IM-1)/NTAB)
-#define EPS 1.2e-7
-#define RNMX (1.0-EPS)
-#define PI 3.141592653589793
-
-float rand1_gen(int *idum)
-{
-/* Minimal random number generator of Park & Miller */
-/* with Bays-Durham shuffle and added safeguards */
-/* Returns a uniform random deviates between in [0.0,1.0[ (exclusive) */
-/* Initial call with idum to any negative integer value */
-/* idum must not be altered in successive calls in a sequence */
-
-    int j;
-    int k;
-    static int iy=0;
-    static int iv[NTAB];
-    float temp;
-
-    if (*idum <= 0 || !iy) {
-
-	if (-(*idum) < 1) {
-	    *idum = 1;
-	} else {
-	    *idum = -(*idum);
-	}
-
-	for (j = NTAB+7; j>=0; j--) {
-	    k = (*idum)/IQ;
-	    *idum = IA*(*idum-k*IQ)-IR*k;
-	    if (*idum < 0) *idum += IM;
-	    if (j < NTAB) iv[j] = *idum;
-	}
-
-	iy = iv[0];
-    }
-
-    k = (*idum)/IQ;
-    *idum = IA*(*idum-k*IQ)-IR*k;
-    if (*idum < 0) *idum += IM;
-    j = iy/NDIV;
-    iy = iv[j];
-    iv[j] = *idum;
-
-    if ((temp = AM*iy) > RNMX) {
-	return RNMX;
-    } else {
-	return temp;
-    }
-
-}
-
-static void gauss_joint (float *x, float r, float m1, float s1, float m2, float s2, int *iseed) 
-{
-/* Generates one pair of correlated Gaussian distributed random deviates */
-/* Computed with modified Box Mulller algorithm */
-
-    float rsq,v1,v2,fac,gd1,gd2;
-
-    rsq = 0.0;
-
-    while ((rsq >= 1.0) || (rsq == 0.0)) {
-	v1 = 2.*rand1_gen(&iseed) - 1.0;
-	v2 = 2.*rand1_gen(&iseed) - 1.0;
-	rsq = v1*v1 + v2*v2;
-    }
-
-    fac = sqrt(-2.*log(rsq)/rsq);
-    gd1 = v1*fac;
-    gd2 = v2*fac*sqrtf(1.-r*r);
-
-    x[1] = gd1*s1 + m1;
-    x[2] = (gd2 + r*gd1)*s2 + m2;
-    
-    return;
-}
-
+#include "bmgauss.h"
 
 int main(int argc, char* argv[])
 {
     int i,k;
+    int nbin,nbh;          /* number of bins for histogram */ 
+    int n;                 /* number of random deviates pairs */ 
+    int iseed;             /* random generator seed */
 
     int nr;
     float dr,or,r;         /* correlation coefficient */
+    float m1,s1;           /* mean and standard deviation */
+    float m2,s2;           /* mean and standard deviation */
 
-    int n;                 /* number of pairs of random deviates */
-    int iseed;             /* random generator seed */
-    float mm,ss;           /* mean and standard deviation */
-
+    float dbin,cs12;
+    float inrm1,inrm2;
     float x1,y1,x2,y2;
-    float inrm1,inrm2,cs12;
-
     float **x,**y;         /* Gaussian distributed correlated random deviates */
-    float *mc;
+    float *mc,**hist;
 
     sf_file in, out;
 
@@ -140,39 +58,64 @@ int main(int argc, char* argv[])
     if (!sf_getint("n",&n)) n=100;
     /* number of random deviates pairs */
 
-    if (!sf_getfloat("mm",&mm)) mm=0.0;
-    /* mean for deviates */
+    if (!sf_getint("nbh",&nbh)) nbh=50;
+    /* half number of bins for histogram */
 
-    if (!sf_getfloat("ss",&ss)) ss=1.0;
-    /* standard deviation for deviates */
+    if (!sf_getfloat("r",&r)) r=0.7;
+    /* histogram correlation coefficient */
 
-   if (!sf_getint("iseed",&iseed)) iseed=-33;
+    if (!sf_getfloat("m1",&m1)) m1=0.0;
+    /* mean for deviate 1 */
+
+    if (!sf_getfloat("s1",&s1)) s1=2.0;
+    /* standard deviation for deviate 1 */
+
+    if (!sf_getfloat("m2",&m2)) m2=2.0;
+    /* mean for deviate 2 */
+
+    if (!sf_getfloat("s2",&s2)) s2=1.0;
+    /* standard deviation for deviate 2 */
+
+    if (!sf_getfloat("dbin",&dbin)) dbin=0.1;
+    /* histogram bin size */
+
+    if (!sf_getint("iseed",&iseed)) iseed=-33;
     /* random generator seed */
-   if (iseed >= 0) sf_error("Need strictly negative iseed");
+    if (iseed >= 0) sf_error("Need strictly negative iseed");
 
-   /* memory allocations */
+    /* memory allocations */
     mc = sf_floatalloc(nr);
 
     /* read input */
     sf_floatread(mc,nr,in);
 
+    /* Histogram */
+    nbin = 2*nbh + 1;
+    hist = sf_floatalloc2(nbin,nbin);
+    for (k = 0; k < nbin; k++) {
+	for (i = 0; i < nbin; i++) {
+	    hist[k][i] = 0.0;
+	}
+    }
+    hist_gauss(hist,n,r,m1,m2,s1,s2,nbh,dbin,&iseed);
+
     /* Correlated Gaussian deviates */
     x = sf_floatalloc2(2,n);
     y = sf_floatalloc2(2,n);
 
-    for (k=0; k<nr; k++) {
+    for (k = 0; k < nr; k++) {
 
 	r = or + k*dr;
 
         /* Generates n pairs of Gaussian distributed correlated deviates */
 	for (i=0; i<n; i++) {
-	    gauss_joint(x[i],r,mm,ss,mm,ss,&iseed);
+	    gauss_joint(x[i],r,m1,s1,m1,s1,&iseed);
 	}
 	for (i=0; i<n; i++) {
-	    gauss_joint(y[i],r,mm,ss,mm,ss,&iseed);
+	    gauss_joint(y[i],r,m1,s1,m1,s1,&iseed);
 	}
 
-        /* estimates <cos(2t)> = <2*cos^2(t)-1> */
+        /* Estimates <cos(2t)> = <2*cos^2(t)-1> */
 	mc[k] = 0.0;
 
 	for (i=0; i<n; i++) {

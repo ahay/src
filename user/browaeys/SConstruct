@@ -5,7 +5,6 @@ import configure
 progs = '''
 beamsteer
 bmcgauss
-combinatory
 djackknife
 karman karmans karman2
 radonslope2

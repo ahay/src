@@ -19,6 +19,7 @@ Result('tpow','data tpow','SideBySideAniso')
 
 # Compute objective function
 prog = Program('objective.c')
+print prog
 Flow('ofunc','data %s' % prog[0],
      './${SOURCES[1]} na=21 da=0.1 a0=1')
 
