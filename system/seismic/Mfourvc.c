@@ -45,9 +45,10 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n3",&nx)) sf_error("No n3= in input");
     if (!sf_histint(in,"n4",&ny)) ny=1;
 
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    if (!sf_getint("pad",&n2)) n2=n1;
+    if (!sf_getfloat("eps",&eps)) eps=0.01; /* regularization */
+    if (!sf_getint("pad",&n2)) n2=n1; /* padding for stretch */
     if (!sf_getint("pad2",&n3)) n3=2*kiss_fft_next_fast_size((n2+1)/2);
+    /* padding for FFT */
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -66,9 +67,12 @@ int main(int argc, char* argv[])
     d2 = (d2*d2 - o2)/(n2-1);
     
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");
+    /* velocity steps */
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
+    /* velocity step size */
     if (!sf_getfloat("v0",&v0) && 
 	!sf_histfloat(in,"v0",&v0)) sf_error("Need v0=");
+    /*( v0 starting velocity )*/
 
     if(!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
     if(!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
