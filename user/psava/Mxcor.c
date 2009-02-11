@@ -106,6 +106,12 @@ int main(int argc, char* argv[])
 	    break;
     }
 
+    for    (i2=0; i2<sf_n(a2); i2++) {
+	for(i1=0; i1<sf_n(a1); i1++) {
+	    ii[i2][i1]=0.;
+	}
+    }
+
     us = sf_floatalloc3(sf_n(a1),sf_n(a2),nbuf);
     ur = sf_floatalloc3(sf_n(a1),sf_n(a2),nbuf);
 
@@ -120,8 +126,8 @@ int main(int argc, char* argv[])
 	switch(axis) {
 	    case 3:
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) \
-    private(ibuf,i1,i2)			   \
+#pragma omp parallel for schedule(dynamic)	\
+    private(ibuf,i1,i2)				\
     shared( nbuf,a1,a2,ii,us,ur,scale)
 #endif
 		for(ibuf=0; ibuf<nbuf; ibuf++) {
