@@ -4,13 +4,13 @@ import configure
 
 progs = '''
 beamsteer
-bmcgauss
-djackknife
 karman karmans karman2
 radonslope2
 velsteer zoimg3
 '''
 
+# bmcgauss
+# djackknife
 # hdtrace
 
 try:  # distributed version
