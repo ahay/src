@@ -89,6 +89,12 @@ int main(int argc, char* argv[])
 	    if(norm) {
 		fld=sf_intalloc2(sf_n(a1),sf_n(a2)); 
 	    }
+	    for    (i2=0; i2<sf_n(a2); i2++) {
+		for(i1=0; i1<sf_n(a1); i1++) {
+		    stk[i2][i1] =0.0;
+		    if(norm) fld[i2][i1]=0;
+		}
+	    }
 	    break;
 	case 2:
 	    sf_oaxa(Fo,a1,1);
