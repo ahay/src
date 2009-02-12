@@ -139,7 +139,6 @@ int main(int argc, char* argv[])
         /* done = 1 as long as there are more combinations to compute */
         /* done = 0 when the list is exhausted. */
 	for (i = 0; i < k; i++) {
-	    /* sf_warning(" %3d",a[i]);*/
 	    fprintf(stderr," %3d",a[i]);
 	    c[j][i] = a[i];
 	}
