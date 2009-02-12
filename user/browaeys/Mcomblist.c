@@ -50,6 +50,10 @@ static int binomial (int n, int k)
 
 static void comb_next (int n, int k, int *a, int *done)
 /* Computes combinations of k elements out of n, computed one at a time, in lexicographical order. */
+/* Set done to FALSE before the first call.
+   Use output value from previous call on subsequent calls.
+   Output value will be TRUE as long as there are more
+   combinations to compute, and FALSE when the list is exhausted. */
 /* This code is distributed under the GNU LGPL license. Modified from original author John Burkardt */
 {
     int i;
@@ -58,6 +62,7 @@ static void comb_next (int n, int k, int *a, int *done)
     if (*done) {
 
 	for (i = 0; i < k; i++) a[i] = i+1;
+
 	if ( 1 < k ) {
 	    *done = 0;
 	} else {
@@ -67,14 +72,11 @@ static void comb_next (int n, int k, int *a, int *done)
     } else {
 
 	if (a[k-1] < n) {
-
 	    a[k-1] += 1;
 	    return;
-
 	}
 
 	for (i = k; i > 1; i--) {
-
 	    if (a[i-2] < (n-k+i-1)) {
 		a[i-2] += 1;
 		for (j = i; j < (k+1); j++) a[j-1] = a[i-2] + j - (i-1);
@@ -83,8 +85,8 @@ static void comb_next (int n, int k, int *a, int *done)
 	}
 
 	*done = 1;
-
     }
+
     return;
 }
 
@@ -92,7 +94,7 @@ int main(int argc, char* argv[])
 {
     int n,k,nc,i,j;
 
-    int done = 1;   /* boolean for more combinations to compute */
+    int done;       /* boolean for more combinations to compute */
     int *a;         /* list of elements in the current combination (not needed at startup) */
     int **c;
 
@@ -127,11 +129,13 @@ int main(int argc, char* argv[])
     a = sf_intalloc(k);
     c = sf_intalloc2(nc,k);
 
+    done = 1;
     j = 0;
 
-    while (done) {
+    while (1) {
         /* Combination of k elements out of n */
 	comb_next(n,k,a,&done);
+	if (done) break;
         /* done = 1 as long as there are more combinations to compute */
         /* done = 0 when the list is exhausted. */
 	for (i = 0; i < k; i++) {
