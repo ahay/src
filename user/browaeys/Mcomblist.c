@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     /* combination of k elements */
 
     /* input file */
-    if (!sf_histint(in,"n",&n)) sf_error("No n=");
+    if (!sf_histint(in,"n1",&n)) sf_error("No n1=");
 
     nc = binomial(n,k);
     sf_warning("Number of combinations is %3d",nc);
