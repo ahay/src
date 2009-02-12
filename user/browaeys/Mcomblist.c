@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 
     /* memory allocations */
     a = sf_intalloc(k);
-    c = sf_intalloc2(nc,k);
+    c = sf_intalloc2(k,nc);
 
     done = 1;
     j = 0;
@@ -139,9 +139,11 @@ int main(int argc, char* argv[])
         /* done = 1 as long as there are more combinations to compute */
         /* done = 0 when the list is exhausted. */
 	for (i = 0; i < k; i++) {
-	    sf_warning("  %3d",a[i]);
+	    /* sf_warning(" %3d",a[i]);*/
+	    fprintf(stderr," %3d",a[i]);
 	    c[j][i] = a[i];
 	}
+	fprintf(stderr," \n");
 	j++;
     }
 
