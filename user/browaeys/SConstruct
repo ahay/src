@@ -11,7 +11,6 @@ velsteer zoimg3
 '''
 
 # bmcgauss
-# djackknife
 # hdtrace
 
 try:  # distributed version
