@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
     j = 0;
 
-    while (done) {
+    while (!done) {
         /* Combination of k elements out of n */
 	comb_next(n,k,a,&done);
         /* done = 1 as long as there are more combinations to compute */
