@@ -333,7 +333,7 @@ int main (int argc,char* argv[]) {
     v  = sf_floatalloc (n123);
 
     sf_floatread (v, n123, vel);
-   /* transform velocity to slowness squared */
+   /* transform velocity to slowness */
     if (isvel) {
         for (i = 0; i < n123; i++) {
             v[i] = 1. / v[i];
