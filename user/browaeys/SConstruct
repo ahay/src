@@ -5,6 +5,7 @@ import configure
 progs = '''
 beamsteer bmcgauss comblist
 karman karmans
+mcbmcgauss
 radonslope2
 velsteer zoimg3
 '''
