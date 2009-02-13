@@ -1,4 +1,4 @@
-/* Create masks for combinations of k elements out of n */
+/* Create masks to remove combinations of k elements out of n */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -92,13 +92,13 @@ static void comb_next (int n, int k, int *a, int *done)
 
 int main(int argc, char* argv[])
 {
-    int n,k,nc,i,j,nss;
+    int n,k,nc,i,j;
 
     int done;       /* boolean for more combinations to compute */
     int *a;         /* list of elements in the current combination (not needed at startup) */
     int **mask;
 
-    sf_axis arep, asize;
+    sf_axis arep;
     sf_file in,out;
 
     sf_init(argc,argv);
@@ -114,21 +114,16 @@ int main(int argc, char* argv[])
 
     nc = binomial(n,k);
     sf_warning("Number of combinations is %3d",nc);
-    nss = n - k;
 
     /* output file parameters */
     arep = sf_maxa(nc,0,1);
-    sf_oaxa(out,arep,1);
+    sf_oaxa(out,arep,2);
 
-    asize = sf_maxa(nss,0,1);
-    sf_oaxa(out,asize,2);
-
-    sf_putstring (out,"label1", "replication");
-    sf_putstring (out,"label2", "mvalue");
+    sf_putstring (out,"label2", "replication");
 
     /* memory allocations */
     a = sf_intalloc(k);
-    mask = sf_intalloc2(nss,nc);
+    mask = sf_intalloc2(nc,n);
 
     done = 1;
     j = 0;
@@ -145,7 +140,7 @@ int main(int argc, char* argv[])
 	for (i = 0; i < k; i++) fprintf(stderr," %3d",a[i]);
 	fprintf(stderr," \n");
 
-	for (i = 0; i < nss; i++) mask[j][i] = 1;
+	for (i = 0; i < n; i++) mask[j][i] = 1;
 	for (i = 0; i < k; i++) mask[j][a[i]-1] = 0;
 
 	j++;
@@ -153,7 +148,7 @@ int main(int argc, char* argv[])
     }
 
     /* output */ 
-    sf_intwrite (mask[0],nss*nc,out);
+    sf_intwrite (mask[0],n*nc,out);
 
     exit(0);
 }
