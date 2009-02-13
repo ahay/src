@@ -151,6 +151,7 @@ int main(int argc, char* argv[])
     }
 
     /* output */ 
+    sf_warning("Number of combinations is %3d",nc);
     sf_intwrite(mask[0],n*nc,out);
 
     exit(0);
