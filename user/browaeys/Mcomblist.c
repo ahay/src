@@ -1,4 +1,4 @@
-/* Combinations */
+/* Create masks for combinations of k elements out of n */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -92,13 +92,13 @@ static void comb_next (int n, int k, int *a, int *done)
 
 int main(int argc, char* argv[])
 {
-    int n,k,nc,i,j;
+    int n,k,nc,i,j,nss;
 
     int done;       /* boolean for more combinations to compute */
     int *a;         /* list of elements in the current combination (not needed at startup) */
-    int **c;
+    int **mask;
 
-    sf_axis acb, ake;
+    sf_axis arep, asize;
     sf_file in,out;
 
     sf_init(argc,argv);
@@ -114,40 +114,46 @@ int main(int argc, char* argv[])
 
     nc = binomial(n,k);
     sf_warning("Number of combinations is %3d",nc);
+    nss = n - k;
 
     /* output file parameters */
-    acb = sf_maxa(nc,0,1);
-    sf_oaxa(out,acb,1);
+    arep = sf_maxa(nc,0,1);
+    sf_oaxa(out,arep,1);
 
-    ake = sf_maxa(k,0,1);
-    sf_oaxa(out,ake,2);
+    asize = sf_maxa(nss,0,1);
+    sf_oaxa(out,asize,2);
 
-    sf_putstring (out,"label1", "combination");
-    sf_putstring (out,"label2", "elements");
+    sf_putstring (out,"label1", "replication");
+    sf_putstring (out,"label2", "mvalue");
 
     /* memory allocations */
     a = sf_intalloc(k);
-    c = sf_intalloc2(k,nc);
+    mask = sf_intalloc2(nss,nc);
 
     done = 1;
     j = 0;
 
     while (1) {
+
         /* Combination of k elements out of n */
 	comb_next(n,k,a,&done);
+
 	if (done) break;
-        /* done = 1 as long as there are more combinations to compute */
+        /* done = 1 if more combinations to compute */
         /* done = 0 when the list is exhausted. */
-	for (i = 0; i < k; i++) {
-	    fprintf(stderr," %3d",a[i]);
-	    c[j][i] = a[i];
-	}
+
+	for (i = 0; i < k; i++) fprintf(stderr," %3d",a[i]);
 	fprintf(stderr," \n");
+
+	for (i = 0; i < nss; i++) mask[j][i] = 1;
+	for (i = 0; i < k; i++) mask[j][a[i]-1] = 0;
+
 	j++;
+
     }
 
     /* output */ 
-    sf_intwrite (c[0],k*nc,out);
+    sf_intwrite (mask[0],nss*nc,out);
 
     exit(0);
 }
