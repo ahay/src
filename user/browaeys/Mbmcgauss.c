@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 
     for (j = 0; j < nbin; j++) {
 	for (i = 0; i < nbin; i++) {
-	    hist[j][i] = 0.0;
+	    hist[j][i] = 100.;
 	}
     }
     hist_jgauss(hist,n,r,m1,m2,s1,s2,nbh,dbin,&iseed);
