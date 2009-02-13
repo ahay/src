@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     float m1,m2,s1,s2,r;
     float **hist;
 
-    sf_axis axis;
+    sf_axis axis_1,axis_2;
     sf_file out;
 
     sf_init (argc,argv);
@@ -67,13 +67,16 @@ int main(int argc, char* argv[])
     /* random generator seed */
     if (iseed >= 0) sf_error("Need strictly negative iseed");
 
+    nbin = 2*nbh + 1;
+
     /* output file parameters */
-    axis = sf_maxa(nbin,0,dbin);
-    sf_oaxa(out,axis,1);
-    sf_oaxa(out,axis,2);
+    axis_1 = sf_maxa(nbin,0.0,dbin);
+    axis_2 = sf_maxa(nbin,0.0,dbin);
+
+    sf_oaxa(out,axis_1,1);
+    sf_oaxa(out,axis_2,2);
 
     /* Histogram */
-    nbin = 2*nbh + 1;
     hist = sf_floatalloc2(nbin,nbin);
 
     for (j = 0; j < nbin; j++) {
