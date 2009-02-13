@@ -107,11 +107,10 @@ int main(int argc, char* argv[])
 
     float m1,s1;           /* mean and standard deviation */
     float dr,or,r;         /* correlation coefficient */
-    float x1,y1,x2,y2;
+    float x1,y1,x2,y2;     /* Gaussian distributed correlated random deviates */
     float cs12,irm1,irm2;
 
     float *mc;
-    float **x,**y;         /* Gaussian distributed correlated random deviates */
 
     sf_file in, out;
 
@@ -141,37 +140,30 @@ int main(int argc, char* argv[])
     /* memory allocations */
     mc = sf_floatalloc(nr);
 
-    /* Correlated Gaussian deviates */
-    x = sf_floatalloc2(2,n);
-    y = sf_floatalloc2(2,n);
-
     for (k = 0; k < nr; k++) {
 
 	r = or + k*dr;
 
 	mc[k] = 0.0;
 
+	x1 = 0.; x2 = 0.;
+	y1 = 0.; y2 = 0.;
+
         /* Generates n pairs of Gaussian distributed correlated deviates */
 	for (i=0; i<n; i++) {
-
-	    gauss_joint(&iseed,m1,m1,s1,s1,r,&x[i][0],&x[i][1]);
-	    gauss_joint(&iseed,m1,m1,s1,s1,r,&y[i][0],&y[i][1]);
+   
+            /* Correlated Gaussian deviates */
+	    gauss_joint(&iseed,m1,m1,s1,s1,r,&x1,&x2);
+	    gauss_joint(&iseed,m1,m1,s1,s1,r,&y1,&y2);
 
             /* Estimates <cos(2t)> = <2*cos^2(t)-1> */
-	    x1 = x[i][1];
-	    y1 = y[i][1];
-	    x2 = x[i][2];
-	    y2 = y[i][2];
-
 	    irm1 = 1.0/sqrtf(x1*x1 + y1*y1);
 	    irm2 = 1.0/sqrtf(x2*x2 + y2*y2);
 
 	    cs12 = (x1*x2 + y1*y2)*irm1*irm2;
-	    mc[k] += 2.*cs12*cs12 - 1.0;
+	    mc[k] += (2.*cs12*cs12 - 1.0)/n;
 
 	}
-
-	mc[k] /= n;
     }
 
     /* output */
