@@ -17,6 +17,8 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <float.h>
+
 #include <rsf.h>
 
 static int binomial (int n, int k)
@@ -105,6 +107,7 @@ int main(int argc, char* argv[])
 
     in = sf_input("in");
     out = sf_output("out");
+    sf_settype(out,SF_INT);
 
     if (!sf_getint("k",&k)) sf_error("Need k=");
     /* combination of k elements */
