@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
     }
 
     /* output */ 
-    sf_intwrite (mask[0],n*nc,out);
+    sf_intwrite(mask[0],n*nc,out);
 
     exit(0);
 }
