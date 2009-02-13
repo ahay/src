@@ -3,8 +3,11 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-wave1 wave4 wave24 sbd waveab integral rfilter
+wave1 wave4 wave24 sbd
 '''
+#integral
+#rfilter
+#waveab
 
 try:  # distributed version
     Import('env root libdir bindir')
