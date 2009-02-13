@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     int *a;         /* list of elements in the current combination (not needed at startup) */
     int **mask;
 
-    sf_axis arep;
+    sf_axis areplic;
     sf_file in,out;
 
     sf_init(argc,argv);
@@ -116,14 +116,14 @@ int main(int argc, char* argv[])
     sf_warning("Number of combinations is %3d",nc);
 
     /* output file parameters */
-    arep = sf_maxa(nc,0,1);
-    sf_oaxa(out,arep,2);
+    areplic = sf_maxa(nc,0,1);
+    sf_oaxa(out,areplic,2);
 
     sf_putstring (out,"label2", "replication");
 
     /* memory allocations */
     a = sf_intalloc(k);
-    mask = sf_intalloc2(nc,n);
+    mask = sf_intalloc2(n,nc);
 
     done = 1;
     j = 0;
