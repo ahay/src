@@ -3,15 +3,11 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-beamsteer
-comblist
-karman karmans karman2
+beamsteer comblist
+karman karmans
 radonslope2
 velsteer zoimg3
 '''
-
-# bmcgauss
-# hdtrace
 
 try:  # distributed version
     Import('env root libdir bindir')
