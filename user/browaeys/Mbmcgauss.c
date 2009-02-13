@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
 {
     int i,j;
     int n,iseed;
-    int nbh,nbin;
+    int nbin;
 
-    float dbin;
+    float dbin,obin;
     float m1,m2,s1,s2,r;
     float **hist;
 
@@ -57,21 +57,22 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("r",&r)) r=0.0;
     /* correlation coefficient */
 
-    if (!sf_getint("nbh",&nbh)) nbh=50;
-    /* half number of bins for histogram */
+    if (!sf_getint("nbin",&nbin)) nbin=51;
+    /* number of bins for histogram */
 
     if (!sf_getfloat("dbin",&dbin)) dbin=0.1;
     /* histogram bin size */
+
+    if (!sf_getfloat("obin",&obin)) obin=0.0;
+    /* histogram origin */
 
     if (!sf_getint("iseed",&iseed)) iseed=-33;
     /* random generator seed */
     if (iseed >= 0) sf_error("Need strictly negative iseed");
 
-    nbin = 2*nbh + 1;
-
     /* output file parameters */
-    axis_1 = sf_maxa(nbin,0.0,dbin);
-    axis_2 = sf_maxa(nbin,0.0,dbin);
+    axis_1 = sf_maxa(nbin,obin,dbin);
+    axis_2 = sf_maxa(nbin,obin,dbin);
 
     sf_oaxa(out,axis_1,1);
     sf_oaxa(out,axis_2,2);
@@ -81,10 +82,10 @@ int main(int argc, char* argv[])
 
     for (j = 0; j < nbin; j++) {
 	for (i = 0; i < nbin; i++) {
-	    hist[j][i] = 100.;
+	    hist[j][i] = 0.0;
 	}
     }
-    hist_jgauss(hist,n,r,m1,m2,s1,s2,nbh,dbin,&iseed);
+    hist_jgauss(hist,n,r,m1,m2,s1,s2,nbin,dbin,obin,iseed);
 
     /* output */
     sf_floatwrite(hist[0],nbin*nbin,out);

@@ -87,8 +87,8 @@ static void gauss_joint(int *iseed, float m1, float m2, float s1, float s2, floa
  float g1,g2,fac,rsq,v1,v2;
  do
  {
-  v1 = 2.0*rand1_gen(&iseed)-1.0;
-  v2 = 2.0*rand1_gen(&iseed)-1.0;
+  v1 = 2.0*rand1_gen(iseed)-1.0;
+  v2 = 2.0*rand1_gen(iseed)-1.0;
   rsq = v1*v1 + v2*v2;
  }
  while (rsq >= 1.0 || rsq == 0.0);
@@ -100,24 +100,25 @@ static void gauss_joint(int *iseed, float m1, float m2, float s1, float s2, floa
  return;
 }
 
-void hist_jgauss(float **hist, int n, float r, float m1, float m2, float s1, float s2, int nhalfbin, float dbin, int *iseed) 
+void hist_jgauss(float **hist, int n, float r, float m1, float m2, float s1, float s2, int nbin, float dbin, float obin, int iseed) 
 {
 /* Joint Gaussian distribution histogram */
 
-    int i,i1,i2;
-    float x1,x2,norm;        
-
+    int i,i1,i2,isd;
+    float x1,x2,norm;   
+     
+    isd = iseed;
     norm = 1.0/(dbin*dbin*n);
 
     for (i = 0; i < n; i++) {
 
-	gauss_joint(&iseed,m1,m2,s1,s2,r,&x1,&x2);
+	gauss_joint(&isd,m1,m2,s1,s2,r,&x1,&x2);
 
-	i1 = floorf((x1-m1)/dbin);
-	i2 = floorf((x2-m2)/dbin);
+	i1 = floorf((x1-obin)/dbin);
+	i2 = floorf((x2-obin)/dbin);
 
-	if ( (fabsf(i1) <= nhalfbin) && (fabsf(i2) <= nhalfbin) ) {
-	    hist[i1+nhalfbin+1][i2+nhalfbin+1] += norm;
+	if ( (i1 >= 0) && (i1 < nbin) && (i2 >= 0) && (i2 < nbin) ) {
+	    hist[i1][i2] += norm;
 	}
 
     }
