@@ -3,8 +3,8 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-absoffdip avo enoint2 grad2 grad3 impl1 impl3 map2list migsteep3
-ofsemb reshape spicks splinefilter swtdenoise
+absoffdip avo enoint2 grad3 impl1 impl3 map2list migsteep3 spicks
+swtdenoise
 '''
 
 try: # distributed version
