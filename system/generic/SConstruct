@@ -4,12 +4,13 @@ import configure
 
 progs = '''
 agc aliasp bandpass bin1 boxsmooth canny causint clip cmatmult cosft
-costaper deriv dipfilter dwt equal fern fft1 fft3 grad2 heat histogram
-igrad intshow inttest1 inttest2 impl1 impl2 impl3 jacobi jacobi2
-lapfill linefit lpad mandelbrot matmult max1 miss2 monof monof2 noise
-postfilter2 pow reg2tri remap1 roots shapebin shapebin1 sharpen slice
-smooth smoothder smoothreg2 spectra spectra2 spline splinefilter
-threshold trapez tri2reg trirand unif2 unif3
+costaper deriv dipfilter dwt enoint2 equal fern fft1 fft3 grad2 grad3
+heat histogram igrad intshow inttest1 inttest2 impl1 impl2 impl3
+jacobi jacobi2 lapfill linefit lpad mandelbrot matmult max1 miss2
+monof monof2 noise postfilter2 pow reg2tri remap1 roots shapebin
+shapebin1 sharpen slice smooth smoothder smoothreg2 spectra spectra2
+spline splinefilter swtdenoise threshold trapez tri2reg trirand unif2
+unif3
 '''
 
 try:  # distributed version
@@ -53,7 +54,7 @@ for prog in mains:
                 other = string.replace(other,'.exe','')
             docalias[other] = 'sf'+prog
 
-for prog in Split('gaussshape2'):
+for prog in Split('gaussshape2 cmatmult'):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
