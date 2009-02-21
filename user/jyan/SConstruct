@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 afac 
-convolve convolve2
+boxfilter convolve2
 ewefd2
 ederiv
 '''
