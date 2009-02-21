@@ -23,7 +23,7 @@
 #include "polydiv.h"
 
 static sf_filter aa, bb;
-static float* tt;
+static float *t1, *t2, wt;
 
 void hshape_init( int nd       /* data size */,
 		  int ns       /* scaling */,
@@ -41,8 +41,11 @@ void hshape_init( int nd       /* data size */,
     for (ia=0; ia < na; ia++) {
 	bb->lag[ia] = ns * aa->lag[ia];
     }
+    wt = 1.0/ns;
 
-    tt = sf_floatalloc (nd);
+    t1 = sf_floatalloc (nd);
+    t2 = sf_floatalloc (nd);
+
     polydiv_init(nd,aa);
     sf_helicon_init(bb);
 }
@@ -51,13 +54,34 @@ void hshape_lop( bool adj, bool add,
 		 int nx, int ny, float* xx, float*yy)
 /*< linear operator >*/
 {
-    sf_chain(sf_helicon_lop,polydiv_lop,adj,add,nx,ny,nx,xx,yy,tt);
+    int i;
+
+    if (ny != nx) sf_error("%s: Different size",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    if (adj) {
+	for (i=0; i < nx; i++) {
+	    t2[i] = wt*yy[i];
+	}
+
+	polydiv_lop (true, false, nx, nx, t1, t2);
+	sf_helicon_lop(true, true, nx, nx, xx, t1);	
+    } else {
+	sf_helicon_lop(false, false, nx, nx, xx, t1);
+	polydiv_lop (false, false, nx, nx, t1, t2);
+	
+	for (i=0; i < nx; i++) {
+	    yy[i] += wt*t2[i];
+	}
+    }
 }
 
 void hshape_close (void) 
 /*< free allocated storage >*/
 {
-    free (tt);
+    free (t1);
+    free (t2);
     free (bb->lag);
     free (bb);
     polydiv_close();

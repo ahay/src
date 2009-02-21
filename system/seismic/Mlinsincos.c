@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     }
 	
     /* output on angle grid */
-    sf_floatwrite(a[0],na*nref,out);
+    sf_floatwrite(a[0],na*npos,out);
 
     exit(0);
 }

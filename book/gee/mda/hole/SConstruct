@@ -2,13 +2,13 @@ from rsfproj import *
 
 Flow('make',None,'make n1=100 n2=20')
 Flow('hole','make','hole')
-Flow(['pef','mask0','lag'],'hole',
+Flow('pef mask0 lag','hole',
      '''
      pef maskin=$SOURCE maskout=${TARGETS[1]}
      a=5,3 niter=100 lag=${TARGETS[2]}
      ''')
 Flow('mask','mask0','dd type=float')
-Flow('miss',['hole','pef'],
+Flow('miss','hole pef',
      'miss padin=10 filt=${SOURCES[1]} niter=100')
 
 title = {
