@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 
     float dt,dx,ot,ox;
     float t,ts,cm,pm,m,phi;
-    float *trc1,*trc2,*t1,*t2;
+    float *t1,*t2;
     float **trc,**cc; 
 
     sf_file in,out;
@@ -122,22 +122,29 @@ int main(int argc, char* argv[])
 
     /* 2-D section traces contain instantaneous seismic phase */
     trc = sf_floatalloc2(nt,nx);
+
     sf_floatread(trc[0],nt*nx,in);
+
+    t1 = sf_floatalloc(2*ntw+1);
+    t2 = sf_floatalloc(2*ntw+1);
 
     ntcc = nt - 2*(nts + ntw);
 
     cc = sf_floatalloc2(ntcc,nx-1);
 
-    for (i = 0; i < nx-1; i++) { /* traces loop */
+    for (j = 0; j < 2*ntw+1; j++) {
+	t1[j] = 0.0;
+	t2[j] = 0.0;
+    }
 
-	trc1 = trc[i]; trc2 = trc[i+1];
+    for (i = 0; i < nx-1; i++) { /* traces loop */
 
 	for (k = nts+ntw; k < nt-nts-ntw; k++) { /* time position loop */
 
 	    t = ot + k*dt;
 
-            /* second trace time window */
-	    for (j = -ntw; j < ntw+1; j++) t2[j] = trc2[k+j];
+            /* trace 2 time window */
+	    for (j = -ntw; j < ntw+1; j++) t2[j] = trc[i+1][k+j];
 
 	    cm = 0.0; pm = 0.0;
 
@@ -145,8 +152,8 @@ int main(int argc, char* argv[])
 
 		ts = it*dt; 
 
-                /* first trace time window */
-		for (j = 0; j < 2*ntw+1; j++) t1[j] = trc1[k+j+it];
+                /* trace 1 time window */
+		for (j = 0; j < 2*ntw+1; j++) t1[j] = trc[i][k+j+it];
 
                 /* cross-correlation modulus and phase */
 		circ_corr(t1,t2,2*ntw+1,&m,&phi);
