@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     buf  = sf_charalloc(n1*esize);
     buf2 = sf_charalloc(n1*esize);
 
-    if (n1>1) {
+    if (n1>=1) {
 	k1 = (size_t*) sf_alloc(n1,sizeof(size_t));
 	mirror(n1,dim1,n,f,k1);
     }
