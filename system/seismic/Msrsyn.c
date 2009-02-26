@@ -41,8 +41,7 @@ int main (int argc, char *argv[])
     float ox,dx,oy,dy;
     float  sx, sy, rx, ry,xx,yy;
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
 
     Fr = sf_input ( "in");
@@ -74,8 +73,7 @@ int main (int argc, char *argv[])
     sf_oaxa(Fsw, ay,3); sf_oaxa(Frw, ay,3);
     sf_oaxa(Fsw, ae,4); sf_oaxa(Frw, ae,4);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     ss = sf_complexalloc (nw);
     rr = sf_complexalloc (nw);
     sw = sf_complexalloc3(nw,nx,ny);
@@ -84,13 +82,11 @@ int main (int argc, char *argv[])
     /* SOURCE wavefield */
     sf_complexread(ss,nw,Fs);
 
-    for( isy=0;isy<nsy;isy++) {             
-	sy = sf_o(asy) + isy * sf_d(asy);
-	for( isx=0;isx<nsx;isx++) {         
-	    sx = sf_o(asx) + isx * sf_d(asx);
+    for(    isy=0;isy<nsy;isy++) { sy = sf_o(asy) + isy * sf_d(asy);
+	for(isx=0;isx<nsx;isx++) { sx = sf_o(asx) + isx * sf_d(asx);
 	    
-	    for(iy=0;iy<ny;iy++) {
-		for(ix=0;ix<nx;ix++) {
+	    for        (iy=0;iy<ny;iy++) {
+		for    (ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
 			sw[iy][ix][iw] = sf_cmplx(0.,0.);
 		    }
@@ -111,23 +107,19 @@ int main (int argc, char *argv[])
     }
 
     /* RECEIVER wavefield */
-    for( isy=0;isy<nsy;isy++) {	      
-	sy = sf_o(asy) + isy * sf_d(asy);
-	for( isx=0;isx<nsx;isx++) {         
-	    sx = sf_o(asx) + isx * sf_d(asx);
+    for(    isy=0;isy<nsy;isy++) { sy = sf_o(asy) + isy * sf_d(asy);
+	for(isx=0;isx<nsx;isx++) { sx = sf_o(asx) + isx * sf_d(asx);
 	    
-	    for(iy=0;iy<ny;iy++) {
-		for(ix=0;ix<nx;ix++) {
+	    for        (iy=0;iy<ny;iy++) {
+		for    (ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
 			rw[iy][ix][iw] = sf_cmplx(0.,0.);
 		    }
 		}
 	    }
 	    
-	    for( iry=0;iry<nry;iry++) {     
-		ry = sf_o(ary) + iry * sf_d(ary);
-		for( irx=0;irx<nrx;irx++) { 
-		    rx = sf_o(arx) + irx * sf_d(arx);
+	    for(    iry=0;iry<nry;iry++) { ry = sf_o(ary) + iry * sf_d(ary);
+		for(irx=0;irx<nrx;irx++) { rx = sf_o(arx) + irx * sf_d(arx);
 
 		    sf_complexread(rr,nw,Fr);
 		    
@@ -144,7 +136,7 @@ int main (int argc, char *argv[])
 	    sf_complexwrite(rw[0][0],nx*ny*nw,Frw);
 	}
     }
-/*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
     
     ;         ;            free(ss);
     ;         ;            free(rr);

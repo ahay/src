@@ -32,13 +32,13 @@ int main(int argc, char* argv[])
     
     float     **idat = NULL;
     float     **odat = NULL;
-    float      *dels = NULL;
+    float     **dels = NULL;
 
     sf_complex ***tmp = NULL;
 
     /* cube axes */
-    sf_axis at,ax,as;
-    int     it,ix,is;
+    sf_axis at,ax,as,ae,aa;
+    int     it,ix,is,ie;
 
     fft3d fft=NULL;	 /* FT structure*/
     sft3d sft=NULL;	 /* SF structure*/
@@ -49,22 +49,25 @@ int main(int argc, char* argv[])
     if(! sf_getbool("verb",&verb)) verb=false;	/* verbosity flag */
     
     Fi = sf_input ("in");
-    Fd = sf_input ("del");	/* auxiliary input file */
+    Fd = sf_input ("del"); /* delay file */
     Fo = sf_output("out");
         
     /* input axes */
     at = sf_iaxa(Fi,1);
     ax = sf_iaxa(Fi,2);
     as = sf_iaxa(Fi,3);
+    ae = sf_iaxa(Fd,2);
     if (verb){
 	sf_raxa(at);
 	sf_raxa(ax);
 	sf_raxa(as);
     }
+    aa = sf_maxa(1,0,1);
+
     /* output axes */
     sf_oaxa(Fo,at,1);
     sf_oaxa(Fo,ax,2);
-    sf_oaxa(Fo,as,3);
+    sf_oaxa(Fo,ae,3);
 
     /*-----------------------------------------------------------------*/
     /* allocate arrays */
@@ -72,38 +75,51 @@ int main(int argc, char* argv[])
     odat = sf_floatalloc2(sf_n(at),sf_n(ax));
 
     /* delays */
-    dels = sf_floatalloc (sf_n(as));
-    sf_floatread (dels,sf_n(as),Fd); 
+    dels = sf_floatalloc2(sf_n(as),sf_n(ae));
+    sf_floatread (dels[0],sf_n(as)*sf_n(ae),Fd); 
 
     /* init FFT */
     fft = fft3a1_init    (sf_n(at),sf_n(ax),1); 
     tmp= sf_complexalloc3(sf_n(at),sf_n(ax),1);
+    
+    for(ie=0; ie<sf_n(ae); ie++) { /* loop over encodings */
 
-    for(is=0; is<sf_n(as); is++) { /* loop over sources */
-	sf_warning("is=%d del=%g",is,dels[is]);
+	sf_seek(Fi,0,SEEK_SET);	/* seek to the begining	*/
 
-	sf_floatread (idat[0],sf_n(at)*sf_n(ax),Fi); 
 	for     (ix=0;ix<sf_n(ax);ix++){
 	    for (it=0;it<sf_n(at);it++){
-		tmp[0][ix][it] = sf_cmplx(idat[ix][it],0);
+		odat[ix][it] = 0.0;
 	    }
 	}
 	
-	fft3a1(false,(kiss_fft_cpx***) tmp,fft);
-
-	sft = sft3_init(sf_n(at),-dels[is],sf_d(at));
-	sft3a1(tmp,sft,fft);
-	sft3_close(sft);
-
-	fft3a1( true,(kiss_fft_cpx***) tmp,fft);
-
-	for     (ix=0;ix<sf_n(ax);ix++){
-	    for (it=0;it<sf_n(at);it++){
-		odat[ix][it] = crealf(tmp[0][ix][it]);
+	for(is=0; is<sf_n(as); is++) { /* loop over sources */
+	    sf_warning("ie=%d is=%d del=%g",ie,is,dels[ie][is]);
+	    
+	    sf_floatread (idat[0],sf_n(at)*sf_n(ax),Fi); 
+	    for     (ix=0;ix<sf_n(ax);ix++){
+		for (it=0;it<sf_n(at);it++){
+		    tmp[0][ix][it] = sf_cmplx(idat[ix][it],0);
+		}
 	    }
+	    
+	    fft3a1(false,(kiss_fft_cpx***) tmp,fft);
+	    
+	    sft = sft3_init(sf_n(at),-dels[ie][is],sf_d(at));
+	    sft3a1(tmp,sft,fft);
+	    sft3_close(sft);
+	    
+	    fft3a1( true,(kiss_fft_cpx***) tmp,fft);
+	    
+	    for     (ix=0;ix<sf_n(ax);ix++){
+		for (it=0;it<sf_n(at);it++){
+		    odat[ix][it] += crealf(tmp[0][ix][it]);
+		}
+	    }
+	    
 	}
 	sf_floatwrite(odat[0],sf_n(at)*sf_n(ax),Fo); 
+	
     }
-
+    
     exit(0);
 }		

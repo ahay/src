@@ -14,7 +14,7 @@ stack3
 hwt3d int3d rrt3d
 shift fft3d
 randcut
-encode
+encode shot2grid
 '''
 
 try:  # distributed version
