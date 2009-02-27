@@ -20,11 +20,12 @@
 #include <rsf.h>
 
 #include "hshape.h"
-#include "regrid.h"
+#include "bound.h"
 
 int main(int argc, char* argv[])
 {
-    int i, ia, na, nx, ns, dim, n[SF_MAX_DIM], m[SF_MAX_DIM], niter;
+    int i, ia, na, nx, ns, dim, niter;
+    int n[SF_MAX_DIM], m[SF_MAX_DIM], a[SF_MAX_DIM];
     float a0, eps, *mm, *pp;
     bool verb, *known;
     sf_filter aa;
@@ -42,9 +43,10 @@ int main(int argc, char* argv[])
     aa = sf_allocatehelix (na);
 
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
-    sf_floatread (aa->flt,na,filt);
-    for( ia=0; ia < na; ia++) {
-	aa->flt[ia] /= a0;
+    if (!sf_histints(filt,"a",a,dim)) {
+	for (i=0; i < dim; i++) {
+	    a[i]=1;
+	}
     }
 
     if (NULL != (lagfile = sf_getstring("lag")) /* file with filter lags */
@@ -60,8 +62,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_fileclose(filt);
-
     
     if (!sf_getints ("n",m,dim) && (NULL == lag ||
 				    !sf_histints (lag,"n",m,dim))) {
@@ -72,7 +72,14 @@ int main(int argc, char* argv[])
  
     if (NULL != lag) sf_fileclose(lag);
 
-    regrid (dim, m, n, aa);
+    bound (dim, m, n, a, aa);
+
+    sf_floatread (aa->flt,na,filt);
+    sf_fileclose(filt);
+    
+    for( ia=0; ia < na; ia++) {
+	aa->flt[ia] /= a0;
+    }
 
     if (!sf_getint ("ns",&ns)) sf_error("Need ns=");
     /* scaling */
