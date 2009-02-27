@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 	    }
 
             /* coherency is phase of cross-correlation with maximum modulus */
+            /* stability with local analysis based on several traces */
 	    cc[i][k] = pm;
 
 	}
