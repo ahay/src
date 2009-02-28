@@ -300,7 +300,10 @@ int main(int argc, char* argv[])
 
 	
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
+#pragma omp parallel for \
+    schedule(dynamic,fdm->ompchunk) \
+    private(i2,i1) \
+    shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
 #endif
 	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
 	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
@@ -331,7 +334,10 @@ int main(int argc, char* argv[])
 
 	/* step forward in time */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,um,up,vt,dt2)
+#pragma omp parallel for \
+    schedule(dynamic,fdm->ompchunk) \
+    private(i2,i1) \
+    shared(fdm,ua,uo,um,up,vt,dt2)
 #endif
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->n1pad; i1++) {
