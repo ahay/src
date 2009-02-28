@@ -27,7 +27,6 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int  ompchunk; 
 
     sf_file Fx=NULL; /* input  */
     sf_file Fy=NULL; /* output */
@@ -46,11 +45,28 @@ int main(int argc, char* argv[])
     int k1,k2,k3;
     int m1,m2,m3;
 
+    int  ompchunk; 
+#ifdef _OPENMP
+    int ompnth,ompath;
+#endif
+    
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
+    
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
+    /* OpenMP available threads */
+    
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1; /* OpenMP chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;        /* verbosity flag */
 
     Fx = sf_input ("in" );
@@ -129,8 +145,12 @@ int main(int argc, char* argv[])
 				for(j1=0; j1<sf_n(a1); j1++) {
 				    i1=j1-k1+m1;
 				    if( INBOUND(0,sf_n(a1),i1)) {   
-
-					y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+					y[j3][j2][j1] 
+					    += x[i3][i2][i1] 
+					    *  f[k3][k2][k1];
 
 				    }
 				} /* j1 loop */				
