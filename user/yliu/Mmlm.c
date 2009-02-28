@@ -24,9 +24,6 @@
 #include "median.h"
 #include "boundary.h"
 
-void bound3(float* tempt,float* extendt,int nfw1,int nfw2,int n1,int n2,bool boundary);
-/*extend seismic data*/
-
 int main (int argc, char* argv[]) 
 {
     int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/

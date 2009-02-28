@@ -23,8 +23,6 @@
 
 #include "boundary.h"
 
-void bound1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary);
-
 static float mean(float *a, int n)
 /* 1-D mean filter */
 {

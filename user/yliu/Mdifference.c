@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
 
     if (n1!=sn1 || n2!=sn2) sf_error("Different size in two data");
 
-    data1 = sf_floatalloc(n1*n2);    data2 = sf_floatalloc(n1*n2);
+    data1 = sf_floatalloc(n1*n2);
+    data2 = sf_floatalloc(n1*n2);
     difference = sf_floatalloc(n1*n2);
 
     sf_floatread(data1,n1*n2,in);

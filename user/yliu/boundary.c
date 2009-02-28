@@ -24,7 +24,7 @@
 #include "boundary.h"
 
 void bound1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
-/*extend seismic data*/
+/*<extend seismic data>*/
 {
     int m=(nfw-1)/2;
     int i,j;
@@ -62,7 +62,7 @@ void bound1(float* tempt,float* extendt,int nfw,int n1,int n2,bool boundary)
 }
 
 void bound2(float* temp2,float* temp3,int n1,int tempnfw,int j,bool boundary)
-/*extend temporary seismic data*/
+/*<extend temporary seismic data>*/
 {
     int k;
     /*extend trace*/
@@ -126,7 +126,7 @@ void bound3(float* tempt,
 	    int nfw2        /* Trace direction */,
 	    int n1,int n2,
 	    bool boundary)
-/*extend seismic data*/
+/*<extend seismic data>*/
 {
     int m1=(nfw1-1)/2;
     int m2=(nfw2-1)/2;

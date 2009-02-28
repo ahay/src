@@ -24,6 +24,7 @@
 static float *a, *u, *v, *mid, *pxt;
 
 void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
+/*< SVD denoise operator >*/
 {
     int i, j, max, ka;
     int nclip;

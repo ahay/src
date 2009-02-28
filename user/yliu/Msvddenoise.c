@@ -21,7 +21,6 @@
 
 #include "svddenoise.h"
 
-void svddenoise_lop(int m, int n, float pclip, float *x, float *y);
 int main(int argc, char *argv[])
 {
     int i, n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/

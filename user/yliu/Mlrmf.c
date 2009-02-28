@@ -23,8 +23,6 @@
 
 #include "median.h"
 
-float medianfilter(float* temp,int nfw); 
-
 int main (int argc, char* argv[]) 
 {
     int n3, i3, nfw, nt, i1, nx, i2, iw, m, tempn1;
