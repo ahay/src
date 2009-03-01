@@ -1,4 +1,4 @@
-/* 2-D FFT encapsulated (OpenMP version) */
+/* 3-D FFT encapsulated for wavefield extrapolation (OpenMP) */
 /*
   Copyright (C) 2007 Colorado School of Mines
   

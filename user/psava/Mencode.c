@@ -19,6 +19,9 @@
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "ftutil.h"
 
@@ -31,21 +34,41 @@ int main(int argc, char* argv[])
     sf_file Fo = NULL;	/* output*/
     
     float     **idat = NULL;
-    float     **odat = NULL;
+    float    ***odat = NULL;
     float     **dels = NULL;
 
-    sf_complex ***tmp = NULL;
+    sf_complex****tmp = NULL;
+    sf_complex ***bak = NULL;
 
     /* cube axes */
     sf_axis at,ax,as,ae,aa;
     int     it,ix,is,ie;
 
-    fft3d fft=NULL;	 /* FT structure*/
-    sft3d sft=NULL;	 /* SF structure*/
-    
+    int ompchunk, ompith;
+#ifdef _OPENMP
+    int ompnth,ompath;
+#endif
+
+    ompfft3d ompfft=NULL; 	 /* FT structure*/
+    ompsft3d ompsft=NULL;	 /* SF structure*/
+
     /*-----------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);    
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OpenMP available threads */
+
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
+
     if(! sf_getbool("verb",&verb)) verb=false;	/* verbosity flag */
     
     Fi = sf_input ("in");
@@ -72,54 +95,78 @@ int main(int argc, char* argv[])
     /*-----------------------------------------------------------------*/
     /* allocate arrays */
     idat = sf_floatalloc2(sf_n(at),sf_n(ax));
-    odat = sf_floatalloc2(sf_n(at),sf_n(ax));
+    odat = sf_floatalloc3(sf_n(at),sf_n(ax),sf_n(ae));
 
     /* delays */
     dels = sf_floatalloc2(sf_n(as),sf_n(ae));
     sf_floatread (dels[0],sf_n(as)*sf_n(ae),Fd); 
 
     /* init FFT */
-    fft = fft3a1_init    (sf_n(at),sf_n(ax),1); 
-    tmp= sf_complexalloc3(sf_n(at),sf_n(ax),1);
-    
-    for(ie=0; ie<sf_n(ae); ie++) { /* loop over encodings */
+    ompfft = ompfft3a1_init(sf_n(at),sf_n(ax),1,ompnth);
+    /* init SFT */
+    ompsft = ompsft3_init(sf_n(at),0.0,sf_d(at),ompnth);
 
-	sf_seek(Fi,0,SEEK_SET);	/* seek to the begining	*/
+    tmp = sf_complexalloc4(sf_n(at),sf_n(ax),1,ompnth);
+    bak = sf_complexalloc3(sf_n(at),sf_n(ax),1);
+
+    /* zero output */
+    for         (ie=0;ie<sf_n(ae);ie++){
+	for     (ix=0;ix<sf_n(ax);ix++){
+	    for (it=0;it<sf_n(at);it++){
+		odat[ie][ix][it] = 0.0;
+	    }
+	}
+    }
+	
+    for(is=0; is<sf_n(as); is++) { /* loop over sources */
+	if(verb) fprintf(stderr,"%03d: ",is);	
+
+	sf_floatread (idat[0],sf_n(at)*sf_n(ax),Fi); 
 
 	for     (ix=0;ix<sf_n(ax);ix++){
 	    for (it=0;it<sf_n(at);it++){
-		odat[ix][it] = 0.0;
+		bak[0][ix][it] = sf_cmplx(idat[ix][it],0);
 	    }
 	}
-	
-	for(is=0; is<sf_n(as); is++) { /* loop over sources */
-	    sf_warning("ie=%d is=%d del=%g",ie,is,dels[ie][is]);
-	    
-	    sf_floatread (idat[0],sf_n(at)*sf_n(ax),Fi); 
+	ompfft3a1(false,(kiss_fft_cpx***) bak,ompfft,0);
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+    private(ie,ix,it,ompith) \
+    shared (is,ae,ax,at,tmp,bak,dels,ompsft,ompfft,odat)
+#endif
+	for         (ie=0;ie<sf_n(ae);ie++){
+#ifdef _OPENMP
+            ompith=omp_get_thread_num();
+#pragma omp critical
+#endif
+	    if(verb) fprintf(stderr,"%02d.%d ",ie,ompith);
+
 	    for     (ix=0;ix<sf_n(ax);ix++){
 		for (it=0;it<sf_n(at);it++){
-		    tmp[0][ix][it] = sf_cmplx(idat[ix][it],0);
+		    tmp[ompith][0][ix][it] = bak[0][ix][it];
+		}
+	    }
+
+	    ompsft3_reset(sf_n(at),-dels[ie][is],sf_d(at),ompsft,ompith);  
+	    ompsft3a1(tmp[ompith],ompsft,ompfft,ompith);
+	    ompfft3a1( true,(kiss_fft_cpx***) tmp[ompith],ompfft,ompith);
+
+	    for     (ix=0;ix<sf_n(ax);ix++){
+		for (it=0;it<sf_n(at);it++){
+		    odat[ie][ix][it] += crealf(tmp[ompith][0][ix][it]);
 		}
 	    }
 	    
-	    fft3a1(false,(kiss_fft_cpx***) tmp,fft);
-	    
-	    sft = sft3_init(sf_n(at),-dels[ie][is],sf_d(at));
-	    sft3a1(tmp,sft,fft);
-	    sft3_close(sft);
-	    
-	    fft3a1( true,(kiss_fft_cpx***) tmp,fft);
-	    
-	    for     (ix=0;ix<sf_n(ax);ix++){
-		for (it=0;it<sf_n(at);it++){
-		    odat[ix][it] += crealf(tmp[0][ix][it]);
-		}
-	    }
-	    
-	}
-	sf_floatwrite(odat[0],sf_n(at)*sf_n(ax),Fo); 
-	
-    }
-    
+	} /* e loop */
+	if(verb) fprintf(stderr,"\n");    
+
+    } /* s loop */
+
+    sf_floatwrite(odat[0][0],sf_n(at)*sf_n(ax)*sf_n(ae),Fo); 
+ 
+    ompfft3a1_close(ompfft);
+    ompsft3_close  (ompsft);    
+
     exit(0);
 }		

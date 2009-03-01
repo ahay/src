@@ -28,9 +28,7 @@ typedef struct fft *fft3d;
 /*^*/
 
 struct fft{
-    int n1;
-    int n2;
-    int n3;
+    int n1,n2,n3;
     kiss_fft_cfg forw; /* forward transform */
     kiss_fft_cfg invs; /* inverse transform */
     float scale;
@@ -38,20 +36,43 @@ struct fft{
 };
 /*^*/
 
+typedef struct ompfft *ompfft3d;
+/*^*/
+
+struct ompfft{
+    int n1,n2,n3;
+    int ompnth;
+    kiss_fft_cfg *forw; /* forward transform */
+    kiss_fft_cfg *invs; /* inverse transform */
+    float scale;
+    kiss_fft_cpx **trace;
+};
+/*^*/
+
 typedef struct sft *sft3d;
 /*^*/
 
 struct sft{
-    float o;
-    float d;
+    float o,d;
     sf_complex *www;
+};
+/*^*/
+
+typedef struct ompsft *ompsft3d;
+/*^*/
+
+struct ompsft{
+    float o,d;
+    sf_complex **www;
 };
 /*^*/
 
 #endif
 
 /*------------------------------------------------------------*/
-fft3d fft3a1_init(int n1_, int n2_, int n3_)
+fft3d fft3a1_init(int n1_, 
+		  int n2_, 
+		  int n3_)
 /*< initialize FFT on axis 1 >*/
 {
     fft3d fft;
@@ -73,7 +94,44 @@ fft3d fft3a1_init(int n1_, int n2_, int n3_)
 }
 
 /*------------------------------------------------------------*/
-fft3d fft3a2_init(int n1_, int n2_, int n3_)
+ompfft3d ompfft3a1_init(int n1_, 
+			int n2_, 
+			int n3_, 
+			int ompnth_)
+/*< initialize FFT on axis 1 >*/
+{
+    int ompith;
+
+    ompfft3d fft;
+    fft = (ompfft3d) sf_alloc(1,sizeof(*fft));
+
+    fft->n1 = n1_;
+    fft->n2 = n2_;
+    fft->n3 = n3_;
+    fft->ompnth=ompnth_;
+
+    fft->forw = (kiss_fft_cfg*) sf_alloc(fft->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs = (kiss_fft_cfg*) sf_alloc(fft->ompnth,sizeof(kiss_fft_cfg));
+
+    for(ompith=0; ompith<fft->ompnth; ompith++) {
+	fft->forw[ompith] = kiss_fft_alloc(fft->n1,0,NULL,NULL);
+	fft->invs[ompith] = kiss_fft_alloc(fft->n1,1,NULL,NULL);
+
+	if (NULL == fft->forw[ompith] || NULL == fft->invs[ompith]) 
+	    sf_error("%s: KISS FFT allocation error",__FILE__);
+    }
+
+    fft->scale = 1./sqrtf(fft->n1);
+
+    return fft;
+}
+
+
+
+/*------------------------------------------------------------*/
+fft3d fft3a2_init(int n1_, 
+		  int n2_, 
+		  int n3_)
 /*< initialize FFT on axis 2 >*/
 {
     fft3d fft;
@@ -97,7 +155,9 @@ fft3d fft3a2_init(int n1_, int n2_, int n3_)
 }
 
 /*------------------------------------------------------------*/
-fft3d fft3a3_init(int n1_, int n2_, int n3_)
+fft3d fft3a3_init(int n1_, 
+		  int n2_, 
+		  int n3_)
 /*< initialize FFT on axis 3 >*/
 {    
     fft3d fft;
@@ -126,6 +186,14 @@ void fft3a1_close(fft3d fft)
 {
     free (fft->forw);
     free (fft->invs);
+}
+
+/*------------------------------------------------------------*/
+void ompfft3a1_close(ompfft3d fft)
+/*< free allocated storage for FFT on axis 1 >*/
+{
+    free (*fft->forw); free (fft->forw);
+    free (*fft->invs); free (fft->invs);
 }
 
 /*------------------------------------------------------------*/
@@ -188,6 +256,55 @@ void fft3a1(bool inv           /* inverse/forward flag */,
 	for    (i3=0; i3 < fft->n3; i3++) {
 	    for(i2=0; i2 < fft->n2; i2++) {
 		kiss_fft(fft->forw,pp[i3][i2],pp[i3][i2]);
+	    }
+	}
+
+    }
+}
+
+/*------------------------------------------------------------*/
+void ompfft3a1(bool inv           /* inverse/forward flag */, 
+	       kiss_fft_cpx ***pp /* [n1][n2][n3] */,
+	       ompfft3d fft,
+	       int ompith) 
+/*< apply FFT on axis 1 >*/
+{
+    int i1, i2, i3;
+    
+    if (inv) {
+
+	/* IFT 1 */
+	for    (i3=0; i3 < fft->n3; i3++) {
+	    for(i2=0; i2 < fft->n2; i2++) {
+#pragma omp critical
+		kiss_fft(fft->invs[ompith],pp[i3][i2],pp[i3][i2]);
+	    }
+	}
+
+	/* scaling */
+	for        (i3=0; i3 < fft->n3; i3++) {
+	    for    (i2=0; i2 < fft->n2; i2++) {
+		for(i1=0; i1 < fft->n1; i1++) {
+		    pp[i3][i2][i1] = sf_crmul(pp[i3][i2][i1],fft->scale);
+		}
+	    }
+	}
+	
+    } else {
+	/* scaling */
+	for        (i3=0; i3 < fft->n3; i3++) {
+	    for    (i2=0; i2 < fft->n2; i2++) {
+		for(i1=0; i1 < fft->n1; i1++) {
+		    pp[i3][i2][i1] = sf_crmul(pp[i3][i2][i1],fft->scale);
+		}
+	    }
+	}
+
+	/* FFT 1 */
+	for    (i3=0; i3 < fft->n3; i3++) {
+	    for(i2=0; i2 < fft->n2; i2++) {
+#pragma omp critical
+		kiss_fft(fft->forw[ompith],pp[i3][i2],pp[i3][i2]);
 	    }
 	}
 
@@ -381,7 +498,6 @@ sft3d sft3_init(int n,
 	s = w * i;
 	sft->www[i]   = sf_cmplx(cosf(s),sinf(s));
 	
-	s = w * (-k-1+i);
 	s = w * (-k+i);
 	sft->www[k+i] = sf_cmplx(cosf(s),sinf(s));
     }
@@ -390,10 +506,96 @@ sft3d sft3_init(int n,
 }
 
 /*------------------------------------------------------------*/
+ompsft3d ompsft3_init(int n,
+		      float o,
+		      float d,
+		      int ompnth)
+/*< origin shift (assumes no centering) >*/
+{
+    int ompith;
+
+    int k,i;
+    float w,s;
+    
+    ompsft3d sft;
+    sft = (ompsft3d) sf_alloc(1,sizeof(*sft));
+    
+    w=2.0*SF_PI/(n*d) * o;
+    k=n/2;
+    
+    sft->www = sf_complexalloc2(n,ompnth);
+    for(ompith=0; ompith<ompnth; ompith++) {
+	for(i=0; i<n; i++) { sft->www[ompith][i]=sf_cmplx(1.0,0.0); }
+    }
+
+    for(ompith=0; ompith<ompnth; ompith++) {
+	for(i=0; i<k; i++) {
+	    s = w * i;
+	    sft->www[ompith][i]   = sf_cmplx(cosf(s),sinf(s));
+	    
+	    s = w * (-k+i);
+	    sft->www[ompith][k+i] = sf_cmplx(cosf(s),sinf(s));
+	}
+    }
+    
+    return sft;
+}
+
+/*------------------------------------------------------------*/
+void sft3_reset(int n,
+		float o,
+		float d,
+		sft3d sft)
+/*< reset shift parameters >*/
+{
+    int k,i;
+    float w,s;
+    
+    w=2.0*SF_PI/(n*d) * o;
+    k=n/2;
+    
+    for(i=0; i<k; i++) {
+	s = w * i;
+	sft->www[i]   = sf_cmplx(cosf(s),sinf(s));
+	s = w * (-k+i);
+	sft->www[k+i] = sf_cmplx(cosf(s),sinf(s));
+    }
+}
+
+/*------------------------------------------------------------*/
+void ompsft3_reset(int n,
+		   float o,
+		   float d,
+		   ompsft3d sft,
+		   int ompith)
+/*< reset shift parameters >*/
+{
+    int k,i;
+    float w,s;
+    
+    w=2.0*SF_PI/(n*d) * o;
+    k=n/2;
+    
+    for(i=0; i<k; i++) {
+	s = w * i;
+	sft->www[ompith][i]   = sf_cmplx(cosf(s),sinf(s));
+	s = w * (-k+i);
+	sft->www[ompith][k+i] = sf_cmplx(cosf(s),sinf(s));
+    }
+}
+
+/*------------------------------------------------------------*/
 void sft3_close(sft3d sft)
 /*< close shift >*/
 {
     free(sft->www);
+}
+
+/*------------------------------------------------------------*/
+void ompsft3_close(ompsft3d sft)
+/*< close shift >*/
+{
+    free(*sft->www); free(sft->www);
 }
 
 /*------------------------------------------------------------*/
@@ -458,4 +660,26 @@ void sft3a1(sf_complex ***pp,
 	}    
     }
 }
+
+/*------------------------------------------------------------*/
+void ompsft3a1(sf_complex ***pp,
+	       ompsft3d sft,
+	       ompfft3d fft,
+	       int ompith)
+/*< apply shift on axis 1 >*/
+{
+    int i1,i2,i3;
     
+    for        (i3=0; i3<fft->n3; i3++) {
+	for    (i2=0; i2<fft->n2; i2++) {
+	    for(i1=0; i1<fft->n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+		pp[i3][i2][i1] *= sft->www[ompith][i1];
+#else
+		pp[i3][i2][i1] = sf_cmul(pp[i3][i2][i1],sft->www[ompith][i1]);
+#endif
+	    }
+	}    
+    }
+}
+
