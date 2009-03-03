@@ -850,7 +850,6 @@ static void ocbiorthogonal(bool adj)
 
 void oclet_init(int nx_in      /* midpoint number   */, 
 		int nh_in      /* offset number     */, 
-		float dx_in    /* midpoint interval */,
 		float dh_in    /* offset interval   */,
 		float dw_in    /* freqency interval */,
 		float h0_in    /* minumum offset    */,
@@ -1010,3 +1009,4 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	}
     }
 }
+/* 	$Id$	 */
