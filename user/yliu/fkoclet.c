@@ -43,7 +43,7 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
 	    h1 = h0 + (i+j+1)*dh;
 	    h2 = h0 + (i+1)*dh;
 	}
-	if (fabsf(w) > FLT_EPSILON) {
+	if (fabsf(w) > 2*dw && fabsf(w) > FLT_EPSILON) {
 	
 	    eps1 = 2.*k*h1/w;
 	    eps1 = sqrtf (1+eps1*eps1);
