@@ -82,7 +82,7 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
     }
     ic += jc;
     a = fm+fp-2.*f0;
-    if (a <= 0.) {
+    if (a <= 0.) { /* no minimum */
 	if (fm < f0 && fm < fp) {
 	    *pick = ic-1;
 	    return fm;
@@ -161,6 +161,8 @@ void dynprog_traj(float *traj /* [n1] */)
 
     c = FLT_MAX;
     fc = 0;
+
+    /* minimum at the bottom */
     for (i2=0; i2 < n2; i2++) {
 	d = next[i2];
 	if (d < c) {
@@ -168,6 +170,8 @@ void dynprog_traj(float *traj /* [n1] */)
 	    fc = i2;
 	}
     }
+
+    /* coming up */
     for (i1=n1-1; i1 >= 0; i1--) {
 	traj[i1]=fc;
 	fc = interpolate(fc,i1);

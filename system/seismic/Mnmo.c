@@ -26,7 +26,7 @@ Compatible with sfvscan.
 
 #include "fint1.h"
 
-static float *vel, h;
+static float *vel, *par, h;
 static bool slow, squared;
 
 static float nmo_map(float t, int it) {
@@ -40,6 +40,23 @@ static float nmo_map(float t, int it) {
     return t;
 }
 
+static float shifted_nmo_map(float t, int it) {
+    float v, q, s;
+    
+    v = vel[it];
+    s = par[it];
+
+    if (!squared) v *= v;
+    v = slow ? h*v : h/v;
+    q = t*t + s*v;
+    if (q > 0.) {
+	t=t*(1.-1./s)+sqrtf(q)/s;
+	return t;
+    } else {
+	return q;
+    }
+}
+
 int main (int argc, char* argv[])
 {
     fint1 nmo;
@@ -47,12 +64,21 @@ int main (int argc, char* argv[])
     int ix,ih, nt,nx,nw, nh, nh2, CDPtype, mute, *mask;
     float dt, t0, h0, dh, dy, str;
     float *trace, *off;
-    sf_file cmp, nmod, velocity, offset, msk;
+    mapfunc nmofunc;
+    sf_file cmp, nmod, velocity, offset, msk, het;
 
     sf_init (argc,argv);
     cmp      = sf_input("in");
     velocity = sf_input("velocity");
     nmod     = sf_output("out");
+
+    if (NULL == sf_getstring("s")) {
+	het = NULL;
+	nmofunc =  nmo_map;
+    } else {
+	het = sf_input("s");
+	nmofunc = shifted_nmo_map;	
+    } 
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint  (cmp,"n1",&nt)) sf_error("No n1= in input");
@@ -123,6 +149,11 @@ int main (int argc, char* argv[])
 
     trace = sf_floatalloc(nt);
     vel   = sf_floatalloc(nt);
+    if (NULL != het) {
+	par = sf_floatalloc(nt);
+    } else {
+	par = NULL;
+    }
 
     nmo = fint1_init (nw, nt, mute);
     
@@ -130,6 +161,7 @@ int main (int argc, char* argv[])
 	sf_warning("CMP %d of %d",ix+1,nx);
 
 	sf_floatread (vel,nt,velocity);	
+	if (NULL != het) sf_floatread(par,nt,het);
 	if (NULL != msk) sf_intread(mask,nh,msk);
 
 	for (ih = 0; ih < nh; ih++) {
@@ -148,7 +180,7 @@ int main (int argc, char* argv[])
 	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
-	    stretch(nmo,nmo_map,nt,dt,t0,nt,dt,t0,trace,str);
+	    stretch(nmo,nmofunc,nt,dt,t0,nt,dt,t0,trace,str);
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
