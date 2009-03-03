@@ -7,6 +7,7 @@ afac
 boxfilter convolve2
 ewefd2
 ederiv
+ewefd2d ewefd3d
 '''
 
 try:  # distributed version
