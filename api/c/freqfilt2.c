@@ -34,8 +34,8 @@
 static int nfft, nw, m1, m2;
 static kiss_fft_cpx *ctrace, *ctrace2, **fft;
 static float *trace, **shape;
-kiss_fftr_cfg tfor, tinv;
-kiss_fft_cfg  xfor, xinv;
+static kiss_fftr_cfg tfor, tinv;
+static kiss_fft_cfg  xfor, xinv;
 
 void sf_freqfilt2_init(int n1, int n2 /* data dimensions */, 
 		       int nw1        /* number of frequencies */)

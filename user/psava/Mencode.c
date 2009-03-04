@@ -44,9 +44,9 @@ int main(int argc, char* argv[])
     sf_axis at,ax,as,ae,aa;
     int     it,ix,is,ie;
 
-    int ompchunk, ompith;
+    int ompchunk, ompith, ompnth=1;
 #ifdef _OPENMP
-    int ompnth,ompath;
+    int ompath;
 #endif
 
     ompfft3d ompfft=NULL; 	 /* FT structure*/
