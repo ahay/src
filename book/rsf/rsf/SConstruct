@@ -21,7 +21,7 @@ for prog in rsfdoc.progs.keys():
     Depends('prog.wiki',prog+'.wiki')
 
 #Paper('install',use=['[bookmarks=true]hyperref','color','listings'])
-Paper('tour',use='listings,color,hyperref')
+Paper('tour',use='listings,color,hyperref',color='mona monacap monaclip')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
@@ -85,4 +85,4 @@ Depends2('install',map(lambda x: x+'.install',
 #               \end{textblock}}
 #               ''')
 
-End(color='mona monacap monaclip')
+End()
