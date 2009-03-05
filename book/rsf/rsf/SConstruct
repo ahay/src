@@ -85,4 +85,4 @@ Depends2('install',map(lambda x: x+'.install',
 #               \end{textblock}}
 #               ''')
 
-End()
+End(color='mona monacap monaclip')
