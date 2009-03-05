@@ -157,8 +157,8 @@ int main(int argc, char* argv[])
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 
     /* initialize color table */
-    if (NULL == (color = sf_getstring("color"))) color="I";
-    /* color scheme */
+    if (NULL == (color = sf_getstring("color"))) color="i";
+	/* color scheme (default is i) */
     if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
     /* reserved colors */
     vp_rascoltab (nreserve, color);
