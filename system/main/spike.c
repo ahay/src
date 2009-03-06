@@ -22,9 +22,9 @@
 int main(int argc, char* argv[])
 { 
     int i, j, is, ip, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
-    int nsp, **k, **l, n1, n2, i1, i2, kk, ll;
+    int nsp, **k=NULL, **l=NULL, n1, n2, i1, i2, kk, ll;
     char key[7], *label, *unit;
-    float f, *trace, *mag, **p, pp;
+    float f, *trace, *mag=NULL, **p=NULL, pp;
     sf_file spike;
 
     sf_init (argc,argv);
@@ -75,53 +75,56 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nsp",&nsp)) nsp=1;
     /* Number of spikes */
-    mag = sf_floatalloc (nsp);
-    k = sf_intalloc2 (nsp,dim);
-    l = sf_intalloc2 (nsp,dim);
-    p = sf_floatalloc2 (nsp,dim);
 
-    for (i=0; i < dim; i++) {
-	snprintf(key,3,"k%d",i+1);
-	if (!sf_getints(key,k[i],nsp)) {
-	    /*( k#=[0,...] spike starting position )*/
-	    for (is=0; is < nsp; is++) {
-		k[i][is]=-1;
+    if (nsp >= 1) { 
+	mag = sf_floatalloc (nsp);
+	k = sf_intalloc2 (nsp,dim);
+	l = sf_intalloc2 (nsp,dim);
+	p = sf_floatalloc2 (nsp,dim);
+    
+	for (i=0; i < dim; i++) {
+	    snprintf(key,3,"k%d",i+1);
+	    if ( !sf_getints(key,k[i],nsp)) {
+		/*( k#=[0,...] spike starting position )*/
+		for (is=0; is < nsp; is++) {
+		    k[i][is]=-1;
+		}
+	    } else {
+		for (is=0; is < nsp; is++) {
+		    if (k[i][is] > n[i]) 
+			sf_error("Invalid k%d[%d]=%d > n%d=%d",
+				 i+1,is+1,k[i][is],i+1,n[i]);
+		    k[i][is]--; /* C notation */
+		}
 	    }
-	} else {
-	    for (is=0; is < nsp; is++) {
-	      if (k[i][is] > n[i]) 
-		sf_error("Invalid k%d[%d]=%d > n%d=%d",
-			 i+1,is+1,k[i][is],i+1,n[i]);
-	      k[i][is]--; /* C notation */
+	    snprintf(key,3,"l%d",i+1);
+	    if (!sf_getints(key,l[i],nsp)) {
+		/*( l#=[k1,k2,...] spike ending position )*/
+		for (is=0; is < nsp; is++) {
+		    l[i][is]=k[i][is];
+		}
+	    } else {
+		for (is=0; is < nsp; is++) {
+		    if (l[i][is] > n[i]) 
+			sf_error("Invalid l%d[%d]=%d > n%d=%d",
+				 i+1,is+1,l[i][is],i+1,n[i]);
+		    l[i][is]--; /* C notation */
+		}
+	    }	
+	    snprintf(key,3,"p%d",i+1);
+	    if (!sf_getfloats(key,p[i],nsp)) {
+		/*( p#=[0,...] spike inclination (in samples) )*/
+		for (is=0; is < nsp; is++) {
+		    p[i][is]=0.;
+		}
 	    }
 	}
-	snprintf(key,3,"l%d",i+1);
-	if (!sf_getints(key,l[i],nsp)) {
-	    /*( l#=[k1,k2,...] spike ending position )*/
+	
+	if (!sf_getfloats("mag",mag,nsp)) {
+	    /* spike magnitudes */
 	    for (is=0; is < nsp; is++) {
-	      l[i][is]=k[i][is];
+		mag[is]=1.;
 	    }
-	} else {
-	    for (is=0; is < nsp; is++) {
-	      if (l[i][is] > n[i]) 
-		sf_error("Invalid l%d[%d]=%d > n%d=%d",
-			 i+1,is+1,l[i][is],i+1,n[i]);
-	      l[i][is]--; /* C notation */
-	    }
-	}	
-	snprintf(key,3,"p%d",i+1);
-	if (!sf_getfloats(key,p[i],nsp)) {
-	    /*( p#=[0,...] spike inclination (in samples) )*/
-	    for (is=0; is < nsp; is++) {
-		p[i][is]=0.;
-	    }
-	}
-    }
-
-    if (!sf_getfloats("mag",mag,nsp)) {
-	/* spike magnitudes */
-	for (is=0; is < nsp; is++) {
-	    mag[is]=1.;
 	}
     }
 
