@@ -24,7 +24,7 @@ Flow('mam5','jbreast5.asci',
      ''',stdin=0)
 
 def plot(title):
-    return 'grey color=I crowd=.9 pclip=99.8 title="%s" ' % title
+    return 'grey color=i crowd=.9 pclip=99.8 title="%s" ' % title
 
 Helderiv('hel',na=10)
 

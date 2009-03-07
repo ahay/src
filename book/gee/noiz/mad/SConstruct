@@ -74,7 +74,7 @@ Helderiv('hder',na=30)
 Flow('hbin1','bin1 hder','helicon filt=${SOURCES[1]}')
 Result('jesse2','hbin1',
        '''
-       grey pclip=90 color=IC yreverse=n wanttitle=n
+       grey pclip=90 color=iC yreverse=n wanttitle=n
        label1=latitude label2=longitude crowd=.9
        ''')
 
