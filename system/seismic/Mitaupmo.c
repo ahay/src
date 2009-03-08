@@ -27,14 +27,20 @@ int main (int argc, char* argv[])
 {
     map4 nmo; /* using cubic spline interpolation */
     int it,ix,ip, nt,nx, np;
-    float dt, t0, p, p0, f, ft, dp, eps;
-    float *trace, *vel, *str, *out;
-    sf_file cmp, nmod, velocity;
+    float dt, t0, p, p0, f, ft, dp, eps, at;
+    float *trace, *vel, *str, *out, *n;
+    sf_file cmp, nmod, velocity, eta;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
     velocity = sf_input("velocity");
     nmod = sf_output("out");
+
+    if (NULL == sf_getstring("eta")) {
+	eta = NULL;
+    } else {
+	eta = sf_input("eta");
+    }
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
@@ -55,10 +61,13 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
 
+    n = (NULL == eta)? NULL: sf_floatalloc(nt);
+
     nmo = stretch4_init (nt, t0, dt, nt, eps);
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
+	if (NULL != eta) sf_floatread (n,nt,eta);	
 
 	for (ip = 0; ip < np; ip++) {
 	    p = p0 + ip*dp;
@@ -71,7 +80,14 @@ int main (int argc, char* argv[])
 		str[it] = t0+f*dt;
 
 		ft = vel[it];
-		ft = 1.-p*ft*ft;
+		ft *= ft;
+		
+		if (NULL == n) {
+		    ft = 1.-p*ft;
+		} else {
+		    at = n[it];
+		    ft = (1.-(1.+2.*at)*p*ft)/(1.-2.*at*p*ft);
+		}
 
 		if (ft < 0.) {
 		    for (; it < nt; it++) {
