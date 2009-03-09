@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 		if (fabsf (w) > FLT_EPSILON) {
 		    eps = 2.*k*h/w;
 		    eps = sqrtf (1+eps*eps);
-		    amp = sqrtf(0.5*(1/eps+eps))*expf(0.5*(1-eps));
+		    amp = sqrtf(0.5*(1/eps+1.))*expf(0.5*(1-eps));
 		    phase = 1-eps+logf(0.5*(1+eps));
 		    phase *= -SF_PI*w;
 
