@@ -133,6 +133,7 @@ def check_all(context):
     blas(context) # FDNSI
     mpi (context) # FDNSI
     omp (context) # FDNSI
+    pthreads (context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -763,6 +764,43 @@ def omp(context):
         context.env['CCFLAGS'] = flags
         context.env['OMP'] = False
 
+def pthreads(context):
+    context.Message("checking for Posix threads ... ")
+
+    flags = context.env.get('LINKFLAGS','')
+    LIBS  = context.env.get('LIBS',[])
+    CC    = context.env.get('CC','gcc')
+    gcc = (string.rfind(CC,'gcc') >= 0)
+    icc = (string.rfind(CC,'icc') >= 0)
+    if gcc:
+        LINKFLAGS = flags + ' -pthread'
+    elif icc:
+        LIBS.append('pthread')
+
+    text = '''
+    #include <pthread.h>
+    #include <stdlib.h>
+    int main(void) {
+    pthread_t peers;
+    pthread_create(&peers, NULL, NULL, NULL);
+    return 0;
+    }
+    '''
+    context.env['LIBS'] = LIBS
+    context.env['LINKFLAGS'] = LINKFLAGS
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+        context.env['PTHREADS'] = True
+    else:
+        context.Result(context_failure)
+        need_pkg('pthreads', fatal=False)
+        if icc:
+            LIBS.pop()
+        context.env['LIBS'] = LIBS
+        context.env['LINKFLAGS'] = flags
+        context.env['PTHREADS'] = False
+
 def api_options(context):
     context.Message("checking API options ... ")
     api = context.env.get('API')
@@ -1109,6 +1147,7 @@ def options(file):
     opts.Add('GLEW','GLEW library','GLEW')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('OMP','OpenMP support')
+    opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
     opts.Add('PPMPATH','Path to netpbm header files')

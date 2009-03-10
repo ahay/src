@@ -63,6 +63,7 @@ def tour(dirs=[],comm='',verbose=1):
         os.environ['PWD'] = os.path.join(cwd,subdir)
         sys.stderr.write(string.join(['+' * 44,subdir,'\n'],' '))
         if mycomm:
+            mycomm = mycomm.replace('%',subdir,1)
             syswait(mycomm)
         sys.stderr.write(string.join(['-' * 44,subdir,'\n'],' '))
     sys.stderr.write('Done.\n')
@@ -78,6 +79,8 @@ if __name__ == "__main__":
         Usage: %s [-q] command
         visits lower-case subdirectories and executes command
         -q     quiet (suppress stdout)
+
+        The '%%' character is replaced with the current directory
         ''' % sys.argv[0]
         sys.exit(0)
 
