@@ -27,7 +27,7 @@ void circ_mean (float *d, int n, float *v, float *t)
     int i;
     float r,c,s;
 
-    r = SF_PI/180.0;
+    r = 1.0;
 
     c = 0.0; s = 0.0;
 
@@ -53,7 +53,7 @@ void circ_corr (float *d1, float *d2, int n, float *m, float *p)
     float r,v1,v2,t1,t2;
     float c,s,d,r1r2,rm,cm;
 
-    r = SF_PI/180.0;
+    r = 1.0;
 
     circ_mean(d1,n,&v1,&t1);
     circ_mean(d2,n,&v2,&t2);
@@ -83,17 +83,19 @@ void circ_corr (float *d1, float *d2, int n, float *m, float *p)
     return;
 }
 
+
 int main(int argc, char* argv[])
 {
-    int i,j,k,it;
-
-    int nt,nx,itype,nts,ntw,ntcc;
+    int i,k,j;
+    int nt,nx,nw,ntcc;
 
     float dt,dx,ot,ox;
-    float t,ts,cm,pm,m,phi;
-    float *t1,*t2;
-    float **trc,**cc; 
+    float t,c,p;
 
+    float *t1,*t2;
+    float **data,**cc,**cd; 
+
+    sf_axis xaxis,taxis;
     sf_file in,out;
 
     sf_init (argc,argv);
@@ -111,63 +113,56 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
-    
-    if (!sf_getint("itype",&itype)) itype=0;
 
-    if (!sf_getint("nts",&nts)) sf_error("No nts= in input"); 
-    /* maximum time-lag */
-
-    if (!sf_getint("ntw",&ntw)) sf_error("No ntw= in input");
+    if (!sf_getint("nw",&nw)) sf_error("No nw= in input");
     /* half time-window size */
 
-    /* 2-D section traces contain instantaneous seismic phase */
-    trc = sf_floatalloc2(nt,nx);
+    ntcc = nt - 2*nw;
 
-    sf_floatread(trc[0],nt*nx,in);
+    /* output file parameters */
+    xaxis = sf_maxa (nx-1, ox, dx);
+    sf_oaxa(out,xaxis,1);
 
-    t1 = sf_floatalloc(2*ntw+1);
-    t2 = sf_floatalloc(2*ntw+1);
+    taxis = sf_maxa(ntcc,nw,dt);
+    sf_oaxa(out,taxis,2);
 
-    ntcc = nt - 2*(nts + ntw);
-
+    data = sf_floatalloc2(nt,nx);
     cc = sf_floatalloc2(ntcc,nx-1);
+    cd = sf_floatalloc2(ntcc,nx-1);
 
-    for (j = 0; j < 2*ntw+1; j++) {
-	t1[j] = 0.0;
-	t2[j] = 0.0;
+    sf_floatread(data[0],nt*nx,in);
+
+    t1 = sf_floatalloc(2*nw+1);
+    t2 = sf_floatalloc(2*nw+1);
+
+    for (i = 0; i < 2*nw+1; i++) {
+	t1[i] = 0.0;
+	t2[i] = 0.0;
     }
 
-    for (i = 0; i < nx-1; i++) { /* traces loop */
+    for (i = 0; i < nx-1; i++) { 
 
-	for (k = nts+ntw; k < nt-nts-ntw; k++) { /* time position loop */
+	for (k = nw; k < nt-nw; k++) { 
 
-	    t = ot + k*dt;
+	    t = ot + k*dt; /* time location */
 
-            /* trace 2 time window */
-	    for (j = -ntw; j < ntw+1; j++) t2[j] = trc[i+1][k+j];
-
-	    cm = 0.0; pm = 0.0;
-
-	    for (it = -nts; it < nts+1; it++) { /* time-lags loop */
-
-		ts = it*dt; 
-
-                /* trace 1 time window */
-		for (j = 0; j < 2*ntw+1; j++) t1[j] = trc[i][k+j+it];
-
-                /* cross-correlation modulus and phase */
-		circ_corr(t1,t2,2*ntw+1,&m,&phi);
-
-                /* extract phase when modulus is maximum */
-		if (m > cm) {
-		    cm = m; pm = phi;
-		}
-
+	    for (j = -nw; j < nw+1; j++) {
+                /* time window */
+		t1[j] = data[i][k+j];
+		t2[j] = data[i+1][k+j];
 	    }
 
-            /* coherency is phase of cross-correlation with maximum modulus */
-            /* stability with local analysis based on several traces */
-	    cc[i][k] = pm;
+	    c = 0.0;  /* coherency = modulus*/
+	    p = 0.0;  /* dip = phase */
+
+            /* cross-correlation modulus and phase */
+	    circ_corr(t1,t2,2*nw+1,&c,&p);
+
+            /* coherency = modulus*/
+	    cc[i][k] = c;
+
+            /* dip = phase */
+	    cd[i][k] = p;
 
 	}
 
@@ -178,5 +173,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id$	 */
 

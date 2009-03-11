@@ -7,9 +7,12 @@
 # University of Texas at Austin
 # mailto:jules.browaeys@beg.utexas.edu
 
-
 from rsfproj import *
 from math import pi
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
 
 
 # ----------------------------------------------------------------------
@@ -19,6 +22,8 @@ from math import pi
 # WELLS C
 # DATA (04): z(col=0), rho(col=1), VP(col=2), VS(col=3)
 dfile = '04-02-37-10.txt'
+
+Fetch(dfile,'apache',private)
 
 # Grid 1-D 
 pgrid = {'nx':6921, 'ny':4, 'ox':142.5, 'dx':0.125}
