@@ -21,7 +21,7 @@
 #include "fkoclet.h"
 
 static int h, nk, nh;
-static float dh, k, dk, h0, k0, w, dw;
+static float dh, k, dk, h0, k0, w, dw, epsilon;
 static bool inv, unit, dwt;
 static sf_complex *t, t1, t2;
 static float *wei;
@@ -33,8 +33,8 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
     if (dwt) {
 	return(tt);
     } else {
-	float h1, h2, eps1, amp1, phase1, eps2, amp2, phase2;
-	sf_complex oper1, oper2;
+	float h1, h2, eps1, amp1, eps2, amp2, amp, phase;
+	sf_complex oper;
 	
 	if (forw) {
 	    h1 = h0 + (i+1)*dh;
@@ -43,26 +43,26 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
 	    h1 = h0 + (i+j+1)*dh;
 	    h2 = h0 + (i+1)*dh;
 	}
-	if (fabsf(w) > 2*dw && fabsf(w) > FLT_EPSILON) {
+	if (fabsf(w) > FLT_EPSILON) {
 	
 	    eps1 = 2.*k*h1/w;
 	    eps1 = sqrtf (1+eps1*eps1);
-	    amp1 = sqrtf(0.5*(1/eps1+eps1))*expf(0.5*(1-eps1));
-	    phase1 = 1-eps1+logf(0.5*(1+eps1));
-	    phase1 *= -SF_PI*w;
-	    oper1 = sf_cmplx(amp1*cosf(phase1),amp1*sinf(phase1));
+	    amp1 = sqrtf(0.5*(1/eps1+1.))*expf(0.5*(1-eps1));
 	    
 	    eps2 = 2.*k*h2/w;
 	    eps2 = sqrtf (1+eps2*eps2);
-	    amp2 = sqrtf(0.5*(1/eps2+eps2))*expf(0.5*(1-eps2));
-	    phase2 = 1-eps2+logf(0.5*(1+eps2));
-	    phase2 *= -SF_PI*w;
-	    oper2 = sf_cmplx(amp2*cosf(phase2),amp2*sinf(phase2));
+	    amp2 = sqrtf(0.5*(1/eps2+1.))*expf(0.5*(1-eps2));
+
+	    phase = 1-eps2+logf(0.5*(1+eps2)) - (1-eps1+logf(0.5*(1+eps1))) ;
+	    phase *= -SF_PI*w;
+
+	    amp = 1.; /*amp2/(amp1+epsilon);*/
 	    
+	    oper = sf_cmplx(amp*cosf(phase),amp*sinf(phase));
 #ifdef SF_HAS_COMPLEX_H
-	    tt = tt*oper2/oper1;
+	    tt = tt*oper;
 #else
-	    tt = sf_cmul(tt,sf_cdiv(oper2,oper1));
+	    tt = sf_cmul(tt,oper);
 #endif
 	} else {
 	    tt = tt;
@@ -133,7 +133,6 @@ static void fkochaar(bool adj)
 	}
     }
 }
-
 
 static void fkoclinear(bool adj) 
 /* Lifting linear-interpolation transform in offset */
@@ -623,6 +622,7 @@ void fkoclet_init(int nh_in /* data size */,
 		  bool inv1, 
 		  bool unit1, 
 		  bool dwt1,
+		  float e,
 		  char type) 
 /*< allocate space >*/
 {
@@ -639,6 +639,7 @@ void fkoclet_init(int nh_in /* data size */,
     dw = dw_in;
     h0 = h0_in;
     k0 = k0_in;
+    epsilon = e;
 
     for (h=1; h < nh; h *= 2) ;
     t = sf_complexalloc(h);

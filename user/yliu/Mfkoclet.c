@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     int nk, nh, iw, nw, i4, n4, ik;
-    float k0, dk, h0, dh, w0, dw, w, k; 
+    float k0, dk, h0, dh, w0, dw, w, k, eps; 
     bool inv, verb, dwt;
 
     char *type;
@@ -61,13 +61,16 @@ int main(int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* regularization */
+
     pp = sf_complexalloc(nh);   /* data space */
     qq = sf_complexalloc(nh);   /* model space */
 
     if (NULL == (type=sf_getstring("type"))) type="biorthogonal";
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
-    fkoclet_init(nh,nk,dh,dk,dw,h0,k0,inv,true,dwt,type[0]);
+    fkoclet_init(nh,nk,dh,dk,dw,h0,k0,inv,false,dwt,eps*eps,type[0]);
 
     /* loop over n4 */
     for (i4=0; i4 < n4; i4++) {
