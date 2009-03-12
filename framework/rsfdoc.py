@@ -32,7 +32,7 @@ docprogs = string.split('''
 add attr cat cmplx conjgrad cp cut dd disfil dottest get headerattr
 headercut headermath headersort headerwindow in interleave mask math
 pad prep4plot put real remap1 reverse rm rotate rtoc scale segyread
-segywrite spike spray stack stretch transp window
+segywrite spike spray stack stretch transp window sizes
 ''')
 
 def handler(signum, frame):
