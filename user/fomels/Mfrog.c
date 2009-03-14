@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 	/* inject wavelet */
 	for (ix=0; ix<nx; ix++) {
 	    for (iz=0; iz<nz; iz++) {
-		ud[ix][iz] -= ww[it] * rr[ix][iz];
+		ud[ix][iz] += ww[it] * rr[ix][iz];
 	    }
 	}
 
