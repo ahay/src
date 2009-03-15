@@ -109,14 +109,16 @@ plat = {'OS': 'unknown',
         'cpu': 'unknown'}
 pkg = {}
 
-def need_pkg(type,fatal=True):
+def need_pkg(pkgtype,fatal=True):
     global pkg, plat
-    mypkg = pkg[type].get(plat['distro'])
-    if mypkg:
-        stderr_write('Needed package: ' + mypkg)
+    pkgnm = 'unknown'
+    if pkg.has_key(pkgtype):
+        if pkg[pkgtype].has_key(plat['distro']):
+            pkgnm = pkg[pkgtype].get(plat['distro'])
+    stderr_write('Needed package: ' + pkgnm)
     if fatal:
+        stderr_write('Fatal missing dependency')
         sys.exit(unix_failure)
-
 
 def check_all(context):
 
@@ -155,7 +157,7 @@ def identify_platform(context):
 
     # Check for distributions / OS versions
     try:
-        from platform import architecture, uname
+        from platform import architecture, uname, dist
         plat['arch'] = architecture()[0]
         name = uname()[2].split('.')[-1]
         if plat['OS'] in ('linux', 'posix'):
@@ -165,6 +167,8 @@ def identify_platform(context):
                 plat['distro'] = 'RedHat EL' # Redhat Enterprise
             elif name[-7:] == 'generic':
                 plat['distro'] = 'generic' # Ubuntu
+	    elif dist()[0] == 'SuSE':
+                plat['distro'] = 'SuSE'
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
@@ -175,7 +179,7 @@ def identify_platform(context):
              plat['distro'] = uname()[2]
         elif plat['OS'] in ('hp-ux', 'hpux'):
              plat['distro'] = uname()[2].split('.')[-2]
-        del architecture, uname
+        del architecture, uname, dist
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
         # commands through os.system to find distro/version
