@@ -115,7 +115,7 @@ def need_pkg(pkgtype,fatal=True):
     if pkg.has_key(pkgtype):
         if pkg[pkgtype].has_key(plat['distro']):
             pkgnm = pkg[pkgtype].get(plat['distro'])
-    stderr_write('Needed package: ' + pkgnm)
+            stderr_write('Needed package: ' + pkgnm)
     if fatal:
         stderr_write('Fatal missing dependency')
         sys.exit(unix_failure)
@@ -771,13 +771,13 @@ def omp(context):
 def pthreads(context):
     context.Message("checking for Posix threads ... ")
 
-    flags = context.env.get('LINKFLAGS','')
+    flags = context.env.get('LINKFLAGS')
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
-        LINKFLAGS = flags + ' -pthread'
+        context.env.Append(LINKFLAGS='-pthread')
     elif icc:
         LIBS.append('pthread')
 
@@ -791,7 +791,6 @@ def pthreads(context):
     }
     '''
     context.env['LIBS'] = LIBS
-    context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
@@ -802,7 +801,7 @@ def pthreads(context):
         if icc:
             LIBS.pop()
         context.env['LIBS'] = LIBS
-        context.env['LINKFLAGS'] = flags
+        context.env.Replace(LINKFLAGS=flags)
         context.env['PTHREADS'] = False
 
 def api_options(context):
