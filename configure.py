@@ -771,7 +771,7 @@ def omp(context):
 def pthreads(context):
     context.Message("checking for Posix threads ... ")
 
-    flags = context.env.get('LINKFLAGS')
+    flags = context.env.get('LINKFLAGS','')
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
     gcc = (string.rfind(CC,'gcc') >= 0)
