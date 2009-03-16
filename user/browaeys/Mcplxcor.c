@@ -40,10 +40,11 @@ void circ_mean (float *d, int n, float *v, float *t)
     c /= n; 
     s /= n;
 
+    /* variance */
     *v = 1.0 - (c*c + s*s);
 
+    /* mean phase */
     *t = atan2(s,c);
-    if (*t < 0.0) *t += 2.0*SF_PI;
 
     return;
 }
@@ -55,13 +56,14 @@ void circ_corr (float *d1, float *d2, int n, float *m, float *p)
     float r,v1,v2,t1,t2;
     float c,s,d,r1r2,rm,cm;
 
-    r = SF_PI/180.0;
 
     circ_mean(d1,n,&v1,&t1);
     circ_mean(d2,n,&v2,&t2);
 
     c = 0.0;
     s = 0.0;
+
+    r = SF_PI/180.0;
 
     for (i = 0; i < n; i++) {
 	d = r*(d1[i] - d2[i]);
@@ -78,11 +80,10 @@ void circ_corr (float *d1, float *d2, int n, float *m, float *p)
     cm = s - r1r2*sin(t1 - t2);
 
     /* modulus */
-    *m = sqrt((rm*rm + cm*cm)/(v1*v2 + 1e-10));
+    *m = sqrt((rm*rm + cm*cm)/(v1*v2));
 
     /* phase */
     *p = atan2(cm,rm);
-    if (*p < 0.0) *p += 2.0*SF_PI;
 
     return;
 }
@@ -100,7 +101,6 @@ int main(int argc, char* argv[])
     float **data,**cc; 
 
     sf_axis taxis,xaxis;
-
     sf_file in,out;
 
     sf_init (argc,argv);
@@ -129,6 +129,7 @@ int main(int argc, char* argv[])
     data = sf_floatalloc2(nt,nx);
     cc = sf_floatalloc2(2,nx-1);
 
+    /* input phase in degree */
     sf_floatread(data[0],nt*nx,in);
 
     t1 = sf_floatalloc(nt);
