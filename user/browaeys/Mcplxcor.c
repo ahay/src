@@ -1,4 +1,4 @@
-/* Complex correlation for circular data. */
+/* Statistical complex correlation for circular data. */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -17,12 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
 #include <math.h>
+#include <float.h>
+#include <rsf.h>
 
 #define SIGN(a) (a > 0 ? 1 : (a < 0 ? -1 : 0))
 
-void circ_mean (float *d, int n, float *v, float *t)
+void circ_mean(float *d, int n, float *v, float *t)
 {
     int i;
     float r,c,s;
@@ -49,41 +50,36 @@ void circ_mean (float *d, int n, float *v, float *t)
     return;
 }
 
-void circ_corr (float *d1, float *d2, int n, float *m, float *p)
+
+void circ_corr(float *d1, float *d2, int n, float *corr, float *shift)
 {
     int i;
 
-    float r,v1,v2,t1,t2;
-    float c,s,d,r1r2,rm,cm;
-
+    float v1,v2,vd,t1,t2,td;
+    float m1,m2,md,rm,im;
+    float *d;
 
     circ_mean(d1,n,&v1,&t1);
+    m1 = sqrt(1.0 - v1);
+
     circ_mean(d2,n,&v2,&t2);
+    m2 = sqrt(1.0 - v2);
 
-    c = 0.0;
-    s = 0.0;
+    d = sf_floatalloc(n);
 
-    r = SF_PI/180.0;
+    for (i = 0; i < n; i++) d[i] = d2[i]-d1[i];
 
-    for (i = 0; i < n; i++) {
-	d = r*(d1[i] - d2[i]);
-	c += cos(d);
-	s += sin(d);
-    }
+    circ_mean(d,n,&vd,&td);
+    md = sqrt(1.0 - vd);
 
-    c /= n; 
-    s /= n;
+    rm = md*cos(td) - m1*m2*cos(t2 - t1);
+    im = md*sin(td) - m1*m2*sin(t2 - t1);
+            
+    /* correlation */
+    *corr = sqrt((rm*rm + im*im)/(v1*v2));
 
-    r1r2 = sqrt(1.0 - v1)*sqrt(1.0 - v2);
-
-    rm = c - r1r2*cos(t1 - t2);
-    cm = s - r1r2*sin(t1 - t2);
-
-    /* modulus */
-    *m = sqrt((rm*rm + cm*cm)/(v1*v2));
-
-    /* phase */
-    *p = atan2(cm,rm);
+    /* phase shift */
+    *shift = atan2(im,rm);
 
     return;
 }
@@ -91,16 +87,13 @@ void circ_corr (float *d1, float *d2, int n, float *m, float *p)
 
 int main(int argc, char* argv[])
 {
-    int i,j;
-    int nt,nx;
+    int i,j,nt,nx;
 
     float c,p;
     float dt,dx,ot,ox;
+    float **data,**cc,*t1,*t2; 
 
-    float *t1,*t2;
-    float **data,**cc; 
-
-    sf_axis taxis,xaxis;
+    sf_axis caxis,xaxis;
     sf_file in,out;
 
     sf_init (argc,argv);
@@ -108,38 +101,40 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
+    /* input file parameters */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-
+    if (!sf_histint(in,"n1",&nt))   sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&ot)) sf_error("No o1= in input");
 
+    if (!sf_histint(in,"n2",&nx))   sf_error("No n2= in input");
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
 
     /* output file parameters */
-    taxis = sf_maxa(2,0,1);
-    sf_oaxa(out,taxis,1);
+    caxis = sf_maxa(2,0,1);
+    sf_oaxa(out,caxis,1);
 
     xaxis = sf_maxa (nx-1,ox,dx);
     sf_oaxa(out,xaxis,2);
 
+    /* memory allocations */
     data = sf_floatalloc2(nt,nx);
     cc = sf_floatalloc2(2,nx-1);
-
-    /* input phase in degree */
-    sf_floatread(data[0],nt*nx,in);
-
     t1 = sf_floatalloc(nt);
     t2 = sf_floatalloc(nt);
+
+    /* input in degree */
+    sf_floatread(data[0],nt*nx,in);
 
     for (i = 0; i < nx-1; i++) { 
 
 	for (j = 0; j < nt; j++) {
+
 	    t1[j] = data[i][j];
 	    t2[j] = data[i+1][j];
+	
 	}
 
 	c = 0.0;  
@@ -148,14 +143,12 @@ int main(int argc, char* argv[])
         /* cross-correlation modulus and phase */
 	circ_corr(t1,t2,nt,&c,&p);
 
-	cc[i][0] = c;             /* coherency modulus*/
-	cc[i][1] = p*180.0/SF_PI; /* phase shift */
+	cc[i][0] = p*180.0/SF_PI;            
+	cc[i][1] = c;
 
     }
 
-    sf_floatwrite (cc[0],2*(nx-1),out);
+    sf_floatwrite(cc[0],2*(nx-1),out);
     
     exit (0);
 }
-
-

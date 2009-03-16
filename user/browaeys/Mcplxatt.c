@@ -21,7 +21,7 @@
 #include <float.h>
 #include <rsf.h>
 
-void circ_mean (float *d, int n, float *v, float *t)
+void circ_mean(float *d, int n, float *v, float *t)
 {
     int i;
     float r,c,s;
