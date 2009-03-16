@@ -6,17 +6,17 @@ Rays can be plotted with sfplotrays.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     bool velocity, sym;
     int is, n[2], im, nm, order, nshot, ndim;
     int nt, nt1, nr, ir, it, i;
-    float dt, da=0., a0, amax, v0;
+    float dt, da=0., a0, amax, v0, deg2rad;
     float x[2], p[2], d[2], o[2], **traj, *slow, **s, *a;
     raytrace rt;
     sf_file shots, vel, rays, angles;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 	shots = sf_input("shotfile");
 	if (!sf_histint(shots,"n1",&ndim) || 2 != ndim) 
 	    sf_error("Must have n1=2 in shotfile");
-	if (!sf_histint(shots,"n2",&nshot)) 
+	if (!sf_histint(shots,"n2",&nshot))
 	    sf_error("No n2= in shotfile");
   
 	s = sf_floatalloc2 (ndim,nshot);
@@ -105,8 +105,9 @@ int main(int argc, char* argv[])
 	/* maximum angle (if no anglefile) */
 
 	/* convert degrees to radians */
-	a0 = a0*SF_PI/180.;
-	amax = amax*SF_PI/180.;
+        deg2rad = SF_PI/180.;
+	a0   *= deg2rad;
+	amax *= deg2rad;
 
 	/* figure out angle spacing */
 	da = (nr > 1)? (amax - a0)/(nr-1) : 0.;
@@ -117,12 +118,21 @@ int main(int argc, char* argv[])
     /* specify output dimensions */
     nt1 = nt+1;
     sf_putint (rays,"n1",nt1);
-    sf_putint (rays,"n2",nr);
-    sf_putint (rays,"n3",nshot);
+    sf_putint (rays,"n2",nr );
+    if( nshot > 1 ) sf_putint (rays,"n3",nshot);
+    sf_putfloat(rays,"o1",0.);
+    sf_putfloat(rays,"d1",dt);
+    if (NULL == angles) {
+        sf_putfloat(rays,"o2",a0/deg2rad);
+        sf_putfloat(rays,"d2",da/deg2rad);
+    }
+    sf_putstring(rays,"label1","time");
+    sf_putstring(rays,"label2","angle");
+    sf_putstring(rays,"unit2","deg");
     sf_settype (rays,SF_COMPLEX);
     sf_fileflush (rays,NULL);
     sf_settype (rays,SF_FLOAT);
-	    
+
     /* get slowness squared */
     nm = n[0]*n[1];
     slow = sf_floatalloc(nm);
@@ -136,7 +146,7 @@ int main(int argc, char* argv[])
 
     /* initialize ray tracing object */
     rt = raytrace_init (2, sym, nt, dt, n, o, d, slow, order);
-    
+
     free (slow);
 
     traj = sf_floatalloc2 (sym? ndim: 2*ndim,nt1);
@@ -172,8 +182,6 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    
+
     exit (0);
 }
-
-/* 	$Id$	 */
