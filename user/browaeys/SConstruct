@@ -3,9 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-beamsteer bmcgauss catan2 comblist
+beamsteer bmcgauss
+catan2 comblist
 cplxatt cplxcoh cplxcor
-karman karman2 karmans
+karman karmans karman2 
 mcbmcgauss
 radonslope2
 velsteer zoimg3

@@ -23,67 +23,7 @@
 
 #define SIGN(a) (a > 0 ? 1 : (a < 0 ? -1 : 0))
 
-void circ_mean(float *d, int n, float *v, float *t)
-{
-    int i;
-    float r,c,s;
-
-    r = SF_PI/180.0;
-
-    c = 0.0;
-    s = 0.0;
-
-    for (i = 0; i < n; i++) {
-	c += cos(r*d[i]);
-	s += sin(r*d[i]);
-    }
-
-    c /= n; 
-    s /= n;
-
-    /* variance */
-    *v = 1.0 - (c*c + s*s);
-
-    /* mean phase */
-    *t = atan2(s,c);
-
-    return;
-}
-
-
-void circ_corr(float *d1, float *d2, int n, float *corr, float *shift)
-{
-    int i;
-
-    float v1,v2,vd,t1,t2,td;
-    float m1,m2,md,rm,im;
-    float *d;
-
-    circ_mean(d1,n,&v1,&t1);
-    m1 = sqrt(1.0 - v1);
-
-    circ_mean(d2,n,&v2,&t2);
-    m2 = sqrt(1.0 - v2);
-
-    d = sf_floatalloc(n);
-
-    for (i = 0; i < n; i++) d[i] = d2[i]-d1[i];
-
-    circ_mean(d,n,&vd,&td);
-    md = sqrt(1.0 - vd);
-
-    rm = md*cos(td) - m1*m2*cos(t2 - t1);
-    im = md*sin(td) - m1*m2*sin(t2 - t1);
-            
-    /* correlation */
-    *corr = sqrt((rm*rm + im*im)/(v1*v2));
-
-    /* phase shift */
-    *shift = atan2(im,rm);
-
-    return;
-}
-
+#include "cplxstat.h"
 
 int main(int argc, char* argv[])
 {

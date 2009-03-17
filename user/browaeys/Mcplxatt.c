@@ -21,32 +21,7 @@
 #include <float.h>
 #include <rsf.h>
 
-void circ_mean(float *d, int n, float *v, float *t)
-{
-    int i;
-    float r,c,s;
-
-    r = SF_PI/180.0;
-
-    c = 0.0;
-    s = 0.0;
-
-    for (i = 0; i < n; i++) {
-	c += cos(r*d[i]);
-	s += sin(r*d[i]);
-    }
-
-    c /= n; 
-    s /= n;
-
-    /* variance */
-    *v = 1.0 - (c*c + s*s);
-
-    /* mean phase */
-    *t = atan2(s,c);
-
-    return;
-}
+#include "cplxstat.h"
 
 int main(int argc, char* argv[])
 {
