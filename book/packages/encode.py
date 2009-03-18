@@ -117,6 +117,39 @@ def linear(delay,ns,os,ds,ne,dtmax,dtlag,par):
                 ))
     
 # ------------------------------------------------------------
+def linrand(delay,ns,os,ds,ne,dtmax,dtlag,perc,par):
+
+    dt = 2*dtmax*perc/(ne-1)
+    dd = 0.5*ns*ds
+    mm = os+dd
+
+    op = - dtmax*perc / dd
+    dp = dt/dd
+
+    Flow(delay+'-lin',None,
+         '''
+         math
+         n1=%d o1=%g d1=%g
+         n2=%d o2=0  d2=1
+         output="%g+(%g+x2*%g)*(x1-%g)"
+         ''' % (ns,os,ds,ne,
+                dtlag,
+                op,dp,
+                mm
+                ))
+
+    Flow(delay+'-rnd',None,
+         '''
+         spike nsp=1 mag=0 n1=%d o1=%g d1=%g n2=%d |
+         noise type=n |
+         scale axis=123 |
+         scale rscale=%g |
+         add add=%g
+         ''' % (ns,os,ds,ne,(1-perc)*dtmax,0) )
+
+    Flow(delay,[delay+'-lin',delay+'-rnd'],'add ${SOURCES[1]}')
+
+# ------------------------------------------------------------
 # construct harmonic delays
 def harmonic(delay,ns,os,ds,ne,dtmax,dtlag,par):
 
