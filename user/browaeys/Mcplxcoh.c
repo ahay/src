@@ -1,4 +1,4 @@
-/* Complex coherency based on circular statistics cross-correlation. */
+/* Coherency based on complex statistical correlation. */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -29,14 +29,13 @@ int main(int argc, char* argv[])
 {
     int i,j,k,iw;
     int nt,nx,nw,ntw;
-    int ntt,nti,ntf;
+    int nti,ntf,ntt;
 
-    float dt,dx,ot,ox;
-    float c,p;
+    float dt,dx,ot,ox,c,p;
 
-    float **cc,**data,*t1,*t2; 
+    float ***cc,**data,*t1,*t2; 
 
-    sf_axis taxis,xaxis,caxis;
+    sf_axis caxis,taxis,xaxis;
     sf_file in,out;
 
     sf_init (argc,argv);
@@ -66,10 +65,10 @@ int main(int argc, char* argv[])
     ntt = nt - 2*nw;
 
     /* output file parameters */
-    taxis = sf_maxa(ntt,ot+nti*dt,dt);
+    taxis = sf_maxa(ntt,ot + nw*dt,dt);
     sf_oaxa(out,taxis,1);
 
-    xaxis = sf_maxa (nx-1,ox,dx);
+    xaxis = sf_maxa(nx-1,ox + 0.5*dx,dx);
     sf_oaxa(out,xaxis,2);
 
     caxis = sf_maxa(2,0,1);
@@ -77,7 +76,9 @@ int main(int argc, char* argv[])
 
     /* memory allocations */
     data = sf_floatalloc2(nt,nx);
-    cc = sf_floatalloc2(ntt,2);
+
+    cc = sf_floatalloc3(ntt,nx-1,2);
+
     t1 = sf_floatalloc(ntw);
     t2 = sf_floatalloc(ntw);
 
@@ -103,15 +104,15 @@ int main(int argc, char* argv[])
             /* cross-correlation modulus and phase */
 	    circ_corr(t1,t2,ntw,&c,&p);
 
-	    cc[0][j] = p*180.0/SF_PI;       
-	    cc[1][j] = c;
+	    cc[0][i][j] = p*180.0/SF_PI;       
+	    cc[1][i][j] = c;
 
 	}
 
-	sf_floatwrite(cc[0],ntt*2,out);
-
     }
-    
+
+    sf_floatwrite(cc[0][0],ntt*nx*2,out);
+
     exit (0);
 
 }
