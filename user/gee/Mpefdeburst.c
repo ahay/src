@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, i1, na, ia, niter, center=0;
+    int n1, i1, n2, i2, na, tempna, ia, niter, center=0;
     float *data;
     sf_filter aa;
     sf_file in, out;
@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    n2 = sf_leftsize(in,1);
     
     if (!sf_getint("na",&na)) na=3; 
     /* PEF length */
@@ -46,30 +47,34 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc(n1);
     aa = sf_allocatehelix(na);
+    tempna = na;
 
-    sf_floatread(data,n1,in);
-
-    aa->flt[0]=-2;
-    aa->flt[1]=1;
-
-    for (ia=0; ia < na; ia++) {
-	aa->lag[ia] = ia+1;
+    for (i2=0; i2 < n2; i2++) {
+	sf_floatread(data,n1,in);
+	
+	aa->flt[0]=-2;
+	aa->flt[1]=1;
+	
+	for (ia=0; ia < na; ia++) {
+	    aa->lag[ia] = ia+1;
+	}
+	
+	bound (1, &n1, &n1, &na, aa);
+	pefest (na * 2, n1, data, aa);
+	
+	for (i1=0; i1 < n1; i1++) {
+	    aa->mis[i1] = false;
+	}
+	
+	na++;
+	print (1, &n1, &center, &na, aa);
+	
+	fixbad (niter, aa, n1, data);
+	
+	sf_floatwrite(data,n1,out);
+	na = tempna;
     }
-
-    bound (1, &n1, &n1, &na, aa);
-    pefest (na * 2, n1, data, aa);
-
-    for (i1=0; i1 < n1; i1++) {
-	aa->mis[i1] = false;
-    }
-
-    na++;
-    print (1, &n1, &center, &na, aa);
-  
-    fixbad (niter, aa, n1, data);
-
-    sf_floatwrite(data,n1,out);
-
+    
     exit(0);
 }
 
