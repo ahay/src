@@ -91,7 +91,7 @@ Flow(  'sdip','sone','transp | dip rect1=20 rect2=20 order=1')
 Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
 
 Flow(  'spwd','sone sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
-Result('spwd',grey('Seismic Residual',0) + ' clip=34.4275')
+Result('spwd',fdmod.cgrey('pclip=100',par))
 
 Flow('seis','sone sdip',
      'transp | seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y | transp')
@@ -99,11 +99,11 @@ Result('seis',grey('Seislet Transform',0))
 
 Flow('sinv','seis sdip',
      'transp | seislet dip=${SOURCES[1]} eps=0.01 | transp')
-Result('sinv',grey('Inverse Seislet Transform',0))
+Result('sinv',fdmod.cgrey('pclip=100',par))
 
 # ------------------------------------------------------------
 for scale in (2,4,8,16,32,64,128,256):
-    sone = 'sone%03d' % scale
+    sone = 'sinv%03d' % scale
     Flow(sone,'seis sdip',
          '''
          transp |
@@ -111,7 +111,7 @@ for scale in (2,4,8,16,32,64,128,256):
          seislet dip=${SOURCES[1]} |
          transp
          ''' % scale)
-    Result(sone,grey('Scale=%d' % scale,0))
+    Result(sone,fdmod.cgrey('pclip=100',par))
 
 # ------------------------------------------------------------
 
