@@ -9,7 +9,7 @@ cplxatt cplxcoh cplxcor
 karman karmans karman2 
 mcbmcgauss
 radonslope2
-velsteer zoimg3
+velmap velsteer zoimg3
 '''
 
 try:  # distributed version
