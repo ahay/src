@@ -94,8 +94,8 @@ void karman(float *data                /* input [nk] */,
     eps = 10.*FLT_EPSILON;
     eps *= eps;
 
-    dk = 2.*acos(-1.)*dk;
-    k0 = 2.*acos(-1.)*k0;
+    dk = 2.*SF_PI*dk;
+    k0 = 2.*SF_PI*k0;
 
     if (verb) sf_warning("got x0=%g y0=%g z0=%g\n"
 			 "nk=%d dk=%g k0=%g",

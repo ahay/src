@@ -18,11 +18,13 @@
 */
 #include <rsf.h>
 
+static float newton(float bi, int imin, int imax, const float* spec, const float *w, float *db);
+
 int main(int argc, char* argv[])
 {
-    int n1, n2, i1, i2, imin, imax, iter, niter, ib, nb;
-    float fmin, fmax, d1, *spec, bi, *b, *w, semb, db, b0, bmin, bmax;
-    float s,s2,sl,s2l,sl2,s2l2, omega, rho, f, l, eps, tol, smax;
+    int n1, n2, i1, i2, imin, imax, iter, niter, ib, nb, i;
+    float fmin, fmax, d1, *spec, bi, *b, *w, semb, db, deltab, b0, bmin, bmax, oldsemb;
+    float omega, rho, eps, tol, smax;
     sf_file inp, out, beta;
 
     eps = 0.01;
@@ -82,15 +84,7 @@ int main(int argc, char* argv[])
 	for (ib=0; ib < nb; ib++) {
 	    bi = bmin + ib*db;
 
-	    s=s2=0.0;
-
-	    for (i1=imin; i1 < imax; i1++) {
-		f = spec[i1]*powf(w[i1],bi);
-		s += f;
-		s2 += f*f;
-	    }
-
-	    semb = s*s/(s2*(imax-imin));
+	    semb = newton(bi, imin, imax, spec, w, NULL);
 	    if (semb > smax) {
 		smax = semb;
 		b0 = bi;
@@ -100,37 +94,35 @@ int main(int argc, char* argv[])
 	/* Newton optimization */
 
 	bi=b0;
+	deltab=0.;
+	oldsemb=0.;
 
 	for (iter=0; iter < niter; iter++) {
+	    semb = newton(bi+deltab, imin, imax, spec, w, &deltab);
 
-	    s=s2=sl=s2l=sl2=s2l2=0.0;
-
-	    for (i1=imin; i1 < imax; i1++) {
-		f = spec[i1]*powf(w[i1],bi);
-		l = logf(w[i1]);
-		s += f;
-		s2 += f*f;
-		sl += f*l;
-		s2l += f*f*l;
-		sl2 += f*l*l;
-		s2l2 += f*f*l*l;
+	    if (semb < oldsemb) {
+		/* try decresing or reversing step */
+		for (i=0; i < 10 && semb < oldsemb; i++) {
+		    if (i%2) {
+			deltab = -deltab;
+		    } else {
+			deltab *= 0.5;
+		    }
+		    semb = newton(bi+deltab, imin, imax, spec, w, NULL);
+		}
 	    }
 
-	    semb = s*s/(s2*(imax-imin));
+	    bi += deltab;
+	    oldsemb = semb;
 
 	    sf_warning("beta=%g semb=%g",bi,semb);
-
-	    db = (s*s2*(s*s2l - s2*sl))/
-		(s*s*(4*s2l*s2l - 2*s2*s2l2) + s2*s2*sl*sl + s*s2*(s2*sl2-4*s2l*sl));
-	    bi += db;
-
-	    if (fabsf(db) < tol) break;
+	    if (fabsf(deltab) < tol) break;
 	}
 
 	b[i2] = bi;
 	
 	for (i1=0; i1 < n1; i1++) {
-	    spec[i1] *= powf(w[i1],bi);
+	    spec[i1] = powf(w[i1],bi);
 	}
 
 	sf_floatwrite(spec,n1,out);
@@ -139,4 +131,32 @@ int main(int argc, char* argv[])
     sf_floatwrite(b,n2,beta);
 
     exit(0);
+}
+
+static float newton(float bi, int imin, int imax, const float* spec, const float *w, float *db) 
+/* Newton step */
+{
+    int i1;
+    float s, s2, sl, s2l, sl2, s2l2, f, l, semb;
+
+    s=s2=sl=s2l=sl2=s2l2=0.0;
+    
+    for (i1=imin; i1 < imax; i1++) {
+	f = spec[i1]*powf(w[i1],bi);
+	l = logf(w[i1]);
+	s += f;
+	s2 += f*f;
+	sl += f*l;
+	s2l += f*f*l;
+	sl2 += f*l*l;
+	s2l2 += f*f*l*l;
+    }
+
+    semb = s*s/(s2*(imax-imin));
+
+    if (NULL != db) 
+	*db = (s*s2*(s*s2l - s2*sl))/
+	    (s*s*(4*s2l*s2l - 2*s2*s2l2) + s2*s2*sl*sl + s*s2*(s2*sl2-4*s2l*sl));
+
+    return semb;
 }

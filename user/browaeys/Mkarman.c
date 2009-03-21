@@ -26,8 +26,8 @@
 
 int main(int argc, char* argv[])
 {
-    int nk, niter, nliter;
-    float k0, dk, x[3], *data, *pred;
+    int nk, i2, n2, niter, nliter;
+    float k0, dk, x0, x[3], *data, *pred;
 
     bool verb;
     sf_file in, out;
@@ -38,11 +38,12 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&nk)) sf_error("No n1= in input");
+    n2 = sf_leftsize(in,1);
 
     if (!sf_histfloat(in,"d1",&dk)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&k0)) sf_error("No o1= in input");
 
-    if (!sf_getfloat("x0",&x[0])) x[0]=1.;
+    if (!sf_getfloat("x0",&x0)) x0=1.;
     /* initial squared length scale */
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -51,16 +52,19 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    x[1] = x[2] = 1.;
-
     data = sf_floatalloc(nk);
     pred = sf_floatalloc(nk);
 
-    sf_floatread(data,nk,in);
+    for (i2=0; i2 < n2; i2++) {
+	sf_floatread(data,nk,in);
 
-    karman(data,pred,nliter,niter,x,nk,dk,k0,verb);
+	x[0] = x0;
+	x[1] = x[2] = 1.;
+	
+	karman(data,pred,nliter,niter,x,nk,dk,k0,verb);
         
-    sf_floatwrite (pred,nk,out);
+	sf_floatwrite (pred,nk,out);
+    }
     
     exit (0);
 }

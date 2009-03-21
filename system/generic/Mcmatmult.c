@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
 {
     bool adj;
     int n1, n2, i1, i2;
+    float d2, o2;
     sf_complex *x, *y, **a;
     sf_file in, out, mat;
 
@@ -42,14 +43,20 @@ int main(int argc, char* argv[])
     if (adj) {
 	if (!sf_histint(mat,"n2",&n2) || n2 != n1) sf_error("Need n2=%d in mat",n1);
 	if (!sf_histint(mat,"n1",&n2)) sf_error("No n1= in mat");
+	if (!sf_histfloat(mat,"d1",&d2)) d2=1.;
+	if (!sf_histfloat(mat,"o1",&o2)) o2=0.;
 	a = sf_complexalloc2(n2,n1);
     } else {
 	if (!sf_histint(mat,"n1",&n2) || n2 != n1) sf_error("Need n1=%d in mat",n1);
 	if (!sf_histint(mat,"n2",&n2)) sf_error("No n2= in mat");
+	if (!sf_histfloat(mat,"d2",&d2)) d2=1.;
+	if (!sf_histfloat(mat,"o2",&o2)) o2=0.;
 	a = sf_complexalloc2(n1,n2);
     }
 
     sf_putint(out,"n1",n2);
+    sf_putfloat(out,"d1",d2);
+    sf_putfloat(out,"o1",o2);
 
     x = sf_complexalloc(n1);
     y = sf_complexalloc(n2);

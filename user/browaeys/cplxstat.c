@@ -27,6 +27,7 @@
 #define SIGN(a) (a > 0 ? 1 : (a < 0 ? -1 : 0))
 
 void circ_mean(float *d, int n, float *v, float *t)
+/*< circular mean >*/
 {
     int i;
     float r,c,s;
@@ -55,6 +56,7 @@ void circ_mean(float *d, int n, float *v, float *t)
 
 
 void circ_corr(float *d1, float *d2, int n, float *corr, float *shift)
+/*< circular correlation >*/
 {
     int i;
 
