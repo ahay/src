@@ -304,7 +304,7 @@ char            string[MAXFLEN + 1];
 
 
     while (((c = getc (pltin)) == VP_ERASE) || 
-	   ((c == VP_BREAK) && (brake == BREAK_ERASE)))
+	   ((c == VP_BREAK) && (dev.brake == BREAK_ERASE)))
     {
 	/*
 	 * This is a baby version of the main switch that takes up most of
@@ -333,20 +333,20 @@ char            string[MAXFLEN + 1];
 /*
  * Device is now officially open for orders.
  */
-	if (dev_xmax <= dev_xmin ||
-	    dev_ymax <= dev_ymin ||
-	    pixels_per_inch == 0. ||
-	    aspect_ratio == 0. ||
-	    num_col == -1)
+	if (dev.xmax <= dev.xmin ||
+	    dev.ymax <= dev.ymin ||
+	    dev.pixels_per_inch == 0. ||
+	    dev.aspect_ratio == 0. ||
+	    dev.num_col == -1)
 	    ERR (FATAL, name, "Critical variables left unset by device!");
 
 /*
  * Set maximum clipping window for dev.attributes(SET_WINDOW)
  */
-	xwmax_last = dev_xmax;
-	xwmin_last = dev_xmin;
-	ywmax_last = dev_ymax;
-	ywmin_last = dev_ymin;
+	xwmax_last = dev.xmax;
+	xwmin_last = dev.xmin;
+	ywmax_last = dev.ymax;
+	ywmin_last = dev.ymin;
 
 /*
  * Set up color maps
@@ -586,8 +586,8 @@ char            string[MAXFLEN + 1];
 	    free ((char *) marker_vec);
 	    break;
 	case VP_ORIGIN:	/* set origin */
-	    xorigin = geth (pltin);
-	    yorigin = geth (pltin);
+	    dev.xorigin = geth (pltin);
+	    dev.yorigin = geth (pltin);
 	    break;
 	case VP_BEGIN_GROUP:
 	    ii = ftell (pltin) - 1;
@@ -858,7 +858,7 @@ char            string[MAXFLEN + 1];
 	    dev.close (CLOSE_FLUSH);
 	    break;
 	case VP_BREAK:		/* break */
-	    if (brake == BREAK_IGNORE)
+	    if (dev.brake == BREAK_IGNORE)
 		break;
 	    /* NOTE break IS IN AN "if": WE USUALLY FALL THROUGH HERE! */
 	case VP_ERASE:		/* erase (and break falls through here too) */
@@ -878,7 +878,7 @@ char            string[MAXFLEN + 1];
 	    {
 		if (erase & DO_LITERALS)
 		{
-		    if (c == VP_ERASE || brake)
+		    if (c == VP_ERASE || dev.brake)
 			dev.attributes (END_GROUP, group_number, ERASE_EGROUP, 0, 0);
 		    else
 			dev.attributes (END_GROUP, group_number, BREAK_EGROUP, 0, 0);
@@ -918,7 +918,7 @@ char            string[MAXFLEN + 1];
 	    }
 
 	    if (erase & DO_LITERALS) {
-		if ((c == VP_ERASE) || brake)
+		if ((c == VP_ERASE) || dev.brake)
 		{
 		    dev.erase (ERASE_MIDDLE);
 		    nplots++;
@@ -1020,19 +1020,19 @@ char            string[MAXFLEN + 1];
             }
 
 	    if (ii >= 0)
-		txfont = ii;
+		dev.txfont = ii;
 	    else
 		ii = -1;
 
 	    jj = geth (pltin);
 	    if (jj >= 0)
-		txprec = jj;
+		dev.txprec = jj;
 	    else
 		jj = -1;
 
 	    kk = geth (pltin);
 	    if (kk >= 0)
-		txovly = kk;
+		dev.txovly = kk;
 	    else
 		kk = -1;
 
@@ -1057,11 +1057,11 @@ char            string[MAXFLEN + 1];
 	    {
 		/* Raster */
 		/* nmul gives pixels_per_inch pattern is designed for */
-		ny_mult = ny * (pixels_per_inch / nmul) * patternmult / aspect_ratio;
+		ny_mult = ny * (dev.pixels_per_inch / nmul) * patternmult / dev.aspect_ratio;
 		if (ny_mult == 0 && ny > 0)
 		    ny_mult = 1;
 		nx = geth (pltin);
-		nx_mult = nx * (pixels_per_inch / nmul) * patternmult;
+		nx_mult = nx * (dev.pixels_per_inch / nmul) * patternmult;
 		if (nx_mult == 0 && nx > 0)
 		    nx_mult = 1;
 
@@ -1176,7 +1176,7 @@ char            string[MAXFLEN + 1];
 			k = DEFAULT_COLOR;
 		    }
 		    hacol[i] = COLOR_MAP (k);
-		    haoff[i] = geth (pltin) * patternmult * pixels_per_inch / RPERIN;
+		    haoff[i] = geth (pltin) * patternmult * dev.pixels_per_inch / RPERIN;
 		    hasiz[i] = geth (pltin);
 		}
 		/*
@@ -1195,7 +1195,7 @@ char            string[MAXFLEN + 1];
 		    if (hasiz[i] > 0 && hasiz[i] < k)
 			k = hasiz[i];
 		}
-		j = k * (patternmult * pixels_per_inch / RPERIN) / 2.;
+		j = k * (patternmult * dev.pixels_per_inch / RPERIN) / 2.;
 		if (j < 1)
 		    j = 1;
 		for (i = 0; i < nx * 2; i++)
@@ -1308,7 +1308,7 @@ char            string[MAXFLEN + 1];
 		    break;
 	    }
 
-	    if (wantras && smart_raster)
+	    if (wantras && dev.smart_raster)
 	    {
 		rasterline  = sf_ucharalloc(xpix + 7 + 2);
 		rasterline2 = sf_ucharalloc(xpix + 7 + 2);
@@ -1848,20 +1848,20 @@ int             ii, jj, kk;
     ii = -1;
     jj = -1;
     kk = -1;
-    if (txfont != default_txfont)
+    if (dev.txfont != default_txfont)
     {
-	txfont = default_txfont;
-	ii = txfont;
+	dev.txfont = default_txfont;
+	ii = dev.txfont;
     }
-    if (txprec != default_txprec)
+    if (dev.txprec != default_txprec)
     {
-	txprec = default_txprec;
-	jj = txprec;
+	dev.txprec = default_txprec;
+	jj = dev.txprec;
     }
-    if (txovly != default_txovly)
+    if (dev.txovly != default_txovly)
     {
-	txovly = default_txovly;
-	kk = txovly;
+	dev.txovly = default_txovly;
+	kk = dev.txovly;
     }
     dev.attributes (NEW_FONT, ii, jj, kk, 0);
 
@@ -2052,10 +2052,10 @@ void getapoint (void)
 {
     while (1)
     {
-	xret = dev_xmax + 1;
-	yret = dev_ymax + 1;
+	xret = dev.xmax + 1;
+	yret = dev.ymax + 1;
 	if ((int) dev.getpoint (&xret, &yret) ||
-	    (xret > dev_xmax - 5 && yret > dev_ymax - 5))
+	    (xret > dev.xmax - 5 && yret > dev.ymax - 5))
 	    break;
 	devtovpxy (xret, yret, &xret, &yret);
 	add_a_cor (interact, xret, yret);
@@ -2203,7 +2203,7 @@ void set_table(void){
      * Process the new color table value
      */
 
-    if (col_tab_no < num_col)
+    if (col_tab_no < dev.num_col)
     {
 	/*
 	 * A settable color.
@@ -2275,7 +2275,7 @@ void set_table(void){
 	     * we ran out of colors, for example) find the best color
 	     * that IS set and use that instead.
 	     */
-	    for (ii = num_col; ii <= MAX_COL; ii++)
+	    for (ii = dev.num_col; ii <= MAX_COL; ii++)
 	    {
 		if (color_set[ii][STATUS] & MAPPED)
 		{

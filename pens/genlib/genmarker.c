@@ -57,9 +57,9 @@ char           *txbuffer = txbuf;
     savealign.hor = txalign.hor;
     savealign.ver = txalign.ver;
 
-    savetxfont = txfont;
-    savetxprec = txprec;
-    savetxovly = txovly;
+    savetxfont = dev.txfont;
+    savetxprec = dev.txprec;
+    savetxovly = dev.txovly;
     savefat = fat;
 
 /*
@@ -73,7 +73,7 @@ char           *txbuffer = txbuf;
     fat += fatmult * (float) fatbase;
     txalign.hor = TH_SYMBOL;
     txalign.ver = TV_SYMBOL;
-    txovly = OVLY_NORMAL;
+    dev.txovly = OVLY_NORMAL;
 
     if ((type > 32) && (type < 127))	/* is it a printing character? */
     {
@@ -101,49 +101,49 @@ char           *txbuffer = txbuf;
 	    }
 	    break;
 	case 2:		/* '+' */
-	    txfont = MATH;
+	    dev.txfont = MATH;
 	    *txbuffer = (char) 57;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 3:		/* '*' */
-	    txfont = MATH;
+	    dev.txfont = MATH;
 	    *txbuffer = (char) 33;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 4:		/* circle */
-	    txfont = MISC;
+	    dev.txfont = MISC;
 	    *txbuffer = (char) 105;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 5:		/* 'X' */
-	    txfont = MATH;
+	    dev.txfont = MATH;
 	    *txbuffer = (char) 60;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 20:		/* square */
-	    txfont = MISC;
+	    dev.txfont = MISC;
 	    *txbuffer = (char) 72;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 21:		/* triangle */
-	    txfont = MISC;
+	    dev.txfont = MISC;
 	    *txbuffer = (char) 73;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 22:		/* diamond */
-	    txfont = MISC;
+	    dev.txfont = MISC;
 	    *txbuffer = (char) 74;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
 	    break;
 	case 23:		/* star */
-	    txfont = MISC;
+	    dev.txfont = MISC;
 	    *txbuffer = (char) 75;
 	    *(txbuffer + 1) = '\0';
 	    text_marker (txbuffer, size, npts, pvec);
@@ -160,9 +160,9 @@ char           *txbuffer = txbuf;
 
     txalign.hor = savealign.hor;
     txalign.ver = savealign.ver;
-    txfont = savetxfont;
-    txprec = savetxprec;
-    txovly = savetxovly;
+    dev.txfont = savetxfont;
+    dev.txprec = savetxprec;
+    dev.txovly = savetxovly;
     fat = savefat;
 }
 
@@ -173,11 +173,11 @@ static void text_marker (char *txbuffer, int size, int npts, int *pvec)
     {
 	xold = *pvec;
 	yold = *(pvec + 1);
-	if (txfont < NUMGENFONT)
+	if (dev.txfont < NUMGENFONT)
 	{
 	    gentext (txbuffer,
 	    /* Character path direction */
-		     (float) size * aspect_ratio,
+		     (float) size * dev.aspect_ratio,
 		     (float) 0,
 	    /* Character up vector direction */
 		     (float) 0,
@@ -187,7 +187,7 @@ static void text_marker (char *txbuffer, int size, int npts, int *pvec)
 	{
 	    dev.text (txbuffer,
 	    /* Character path direction */
-		      (float) size * aspect_ratio,
+		      (float) size * dev.aspect_ratio,
 		      (float) 0,
 	    /* Character up vector direction */
 		      (float) 0,

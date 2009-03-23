@@ -112,6 +112,7 @@
 #include "../include/extern.h"
 #include "../include/params.h"
 #include "../include/erasecom.h"
+#include "../include/enum.h"
 
 #include "../genlib/genpen.h"
 #include "../utilities/util.h"
@@ -125,40 +126,13 @@
 char            name[] = "raspen";
 #include "rasdoc.h"
 
-struct device   dev =
-{
-
-    /* control routines */
-    rasopen,		/* open */
-    rasreset,		/* reset */
-    genmessage,		/* message */
-    raserase,		/* erase */
-    rasclose,		/* close */
-    
-    /* high level output */
-    rasvector,		/* vector */
-    genmarker,		/* marker */
-    gentext,		/* text */
-    genpatarea,		/* area */
-    genraster,		/* raster */
-    genpoint,		/* point */
-    rasattr,		/* attributes */
-    
-    /* input */
-    gen_dovplot,            /* reader */
-    nullgetpoint,		/* getpoint */
-    nullinteract,		/* interact */
-    
-    /* low level output */
-    nullplot,		/* plot */
-    nullclose,		/* startpoly */
-    nullmidpoly,		/* midpoly */
-    nullclose		/* endpoly */
-};
+#include "_device.h"
 
 extern FILE    *pltout;
 
 int             color_table[NCOLOR][3], rascolor;
+
+extern char     colfile[];
 
 unsigned char  *image;
 extern float    aspect_ratio;
@@ -166,7 +140,6 @@ extern float    pixels_per_inch;
 int             rasor = 0;
 char            colfile[60];
 
-float           o_pixels_per_inch, o_aspect_ratio;
 static bool     default_out = true;
 
 extern int      num_col;
@@ -188,9 +161,6 @@ void rasattr (int command, int value, int v1, int v2, int v3)
 	    break;
     }
 }
-
-extern int      color_table[NCOLOR][3];
-extern char     colfile[];
 
 void rasclose (int status)
 /*< close >*/
@@ -246,65 +216,68 @@ void ras_write (void)
     if(called) return;
     called=true;
     
-    ppm_writeppminit( pltout, dev_xmax, dev_ymax, (pixval)255, 0);
-    pixrow = ppm_allocrow( dev_xmax );
-    for ( row = 0, ptr=image;  row < dev_ymax; ++row )
+    ppm_writeppminit( pltout, dev.xmax, dev.ymax, (pixval)255, 0);
+    pixrow = ppm_allocrow( dev.xmax );
+    for ( row = 0, ptr=image;  row < dev.ymax; ++row )
     {
-        for ( col = 0, pP = pixrow; col < dev_xmax; ++col, ++pP ){
+        for ( col = 0, pP = pixrow; col < dev.xmax; ++col, ++pP ){
 	    r = *(ptr++);
 	    g = *(ptr++);
 	    b = *(ptr++);
 	    PPM_ASSIGN( *pP, r, g, b );
 	}
-        ppm_writeppmrow( pltout, pixrow, dev_xmax, (pixval)255, 0 );
+        ppm_writeppmrow( pltout, pixrow, dev.xmax, (pixval)255, 0 );
     }
     pm_close( pltout );
 }
 
-
-void rasopen (int argc, char* argv[])
+void opendev (int argc, char* argv[])
 /*< open >*/
 {
     char newpath[60];
-
-    txfont = DEFAULT_HARDCOPY_FONT;
-    txprec = DEFAULT_HARDCOPY_PREC;
+    float pixels_per_inch, aspect_ratio;
 
     ppm_init(&argc,argv);
 
+    dev.txfont = DEFAULT_HARDCOPY_FONT;
+    dev.txprec = DEFAULT_HARDCOPY_PREC;
+    dev.brake = BREAK_IGNORE;
 
-/*
- * physical device parameters for ppm format output
- */
-    o_pixels_per_inch = pixels_per_inch = 100.;
-    dev_xmax = 10 * pixels_per_inch;
-    dev_ymax = 7.5 * pixels_per_inch;
-    dev_xmin = 0;
-    dev_ymin = 0;
-    o_aspect_ratio = aspect_ratio = 1.;
+    dev.reset = rasreset;
+    dev.erase = raserase;
+    dev.close = rasclose;
 
-/*
- * device capabilities
- */
-    need_end_erase = true;
-    smart_clip = false;
-    num_col = NCOLOR;
+    dev.area = genpatarea;
+    dev.vector = rasvector;
+    dev.attributes = rasattr;
 
-    sf_getfloat ("aspect", &aspect_ratio);
+    /* physical device parameters for ppm format output */
+    pixels_per_inch = dev.pixels_per_inch = 100.;
+    dev.xmax = 10 * dev.pixels_per_inch;
+    dev.ymax = 7.5 * dev.pixels_per_inch;
+    dev.xmin = 0;
+    dev.ymin = 0;
+    aspect_ratio = dev.aspect_ratio = 1.;
+
+    /* device capabilities */
+    dev.need_end_erase = true;
+    dev.num_col = NCOLOR;
+
+    sf_getfloat ("aspect", &dev.aspect_ratio);
     /* aspect ratio */
-    sf_getfloat ("ppi", &pixels_per_inch);
+    sf_getfloat ("ppi", &dev.pixels_per_inch);
     /* pixels per inch */
-    dev_xmax *= pixels_per_inch / o_pixels_per_inch;
-    dev_ymax *= (o_aspect_ratio / aspect_ratio) *
-     (pixels_per_inch / o_pixels_per_inch);
-    sf_getint ("n1", &dev_xmax);
-    sf_getint ("n2", &dev_ymax);
+    dev.xmax *= dev.pixels_per_inch / pixels_per_inch;
+    dev.ymax *= (aspect_ratio / dev.aspect_ratio) *
+     (dev.pixels_per_inch / pixels_per_inch);
+    sf_getint ("n1", &dev.xmax);
+    sf_getint ("n2", &dev.ymax);
     /* image size */
 
     /*
      * Allocate space for image 
      */
-    image = sf_ucharalloc (dev_xmax * dev_ymax * 3);
+    image = sf_ucharalloc (dev.xmax * dev.ymax * 3);
 
     default_out = (bool) isatty(fileno(pltout));
 
@@ -341,7 +314,7 @@ void zap (void)
 /*< Zero image >*/
 {
     unsigned char  *p;
-    for (p = image; p < &image[dev_xmax * dev_ymax * 3]; p++)
+    for (p = image; p < &image[dev.xmax * dev.ymax * 3]; p++)
 	*p = 0;
 }
 

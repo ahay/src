@@ -115,7 +115,10 @@ def need_pkg(pkgtype,fatal=True):
     if pkg.has_key(pkgtype):
         if pkg[pkgtype].has_key(plat['distro']):
             pkgnm = pkg[pkgtype].get(plat['distro'])
-            stderr_write('Needed package: ' + pkgnm)
+            if fatal:
+                stderr_write('Needed package: ' + pkgnm)
+            else:
+                stderr_write('Optional package: ' + pkgnm)
     if fatal:
         stderr_write('Fatal missing dependency')
         sys.exit(unix_failure)
@@ -130,6 +133,7 @@ def check_all(context):
     c99 (context) # FDNSI
     x11 (context) # FDNSI
     ppm (context) # FDNSI
+    gd  (context) # FDNSI
     jpeg(context) # FDNSI
     opengl(context) # FDNSI
     blas(context) # FDNSI
@@ -503,6 +507,32 @@ def ppm(context):
         need_pkg('netpbm', fatal=False)
         context.env['PPM'] = None
     context.env['CPPPATH'] = oldpath
+
+pkg['libgd'] = {'generic':'libgd2-noxpm-dev'}
+
+def gd(context):
+    context.Message("checking for GD ... ")
+
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    text = '''
+    #include <gd.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
+    gd = context.env.get('GD','gd')
+    LIBS.append(gd)
+    res = context.TryLink(text,'.c')
+	
+    if res:
+        context.Result(res)
+        context.env['GD'] = gd
+    else:
+        context.Result(context_failure)
+        need_pkg('libgd', fatal=False)
+        context.env['GD'] = None
+    LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
                'generic':'libjpeg62-dev'}
@@ -1153,6 +1183,7 @@ def options(file):
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
+    opts.Add('GD','The GD library')
     opts.Add('PPMPATH','Path to netpbm header files')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',

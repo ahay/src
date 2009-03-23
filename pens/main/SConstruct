@@ -118,11 +118,24 @@ else:
 if root:
     env.Install(bindir,main[0])
 
-# gdben
+# gdpen
 #######
 
-env.Include('gdpen',prefix='pen_')
+gd = env.get('GD')
 
+if gd:
+    env.Include('gdpen',prefix='gd_')
+
+    obj = env.StaticObject('gdpen.c')
+    env.Depends(obj,'gdpen.h')
+    main = env.Program('gdpen',[obj,]+objects,
+                       LIBS=[gd]+env.get('LIBS',[]))
+    pens.append('gdpen')
+else:
+    main = env.Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
+    
+if root:
+    env.Install(bindir,main[0])
 
 ######################################################################
 # SELF-DOCUMENTATION

@@ -43,15 +43,15 @@ void vptodevxy (int x, int y, int *outx, int *outy)
 float           tempx, tempy, temp;
 
 
-    tempx = (float) (x - xorigin) * xscale;
-    tempy = (float) (y - yorigin) * yscale;
+    tempx = (float) (x - dev.xorigin) * xscale;
+    tempy = (float) (y - dev.yorigin) * yscale;
 
     temp = mxx * tempx + mxy * tempy;
     tempy = myx * tempx + myy * tempy;
     tempx = temp;
 
-    tempx = tempx * hdevscale + dev_xmin + hshift;
-    tempy = tempy * vdevscale + dev_ymin + vshift;
+    tempx = tempx * hdevscale + dev.xmin + hshift;
+    tempy = tempy * vdevscale + dev.ymin + vshift;
 
     *outx = ROUND (tempx);
     *outy = ROUND (tempy);
@@ -90,15 +90,15 @@ void devtovpxy (int x, int y, int *outx, int *outy)
 {
 float           tempx, tempy, temp;
 
-    tempx = (float) (x - dev_xmin - hshift) / hdevscale;
-    tempy = (float) (y - dev_ymin - vshift) / vdevscale;
+    tempx = (float) (x - dev.xmin - hshift) / hdevscale;
+    tempy = (float) (y - dev.ymin - vshift) / vdevscale;
 
     temp = mxx * tempx - mxy * tempy;
     tempy = -myx * tempx + myy * tempy;
     tempx = temp;
 
-    tempx = tempx / xscale + xorigin;
-    tempy = tempy / yscale + yorigin;
+    tempx = tempx / xscale + dev.xorigin;
+    tempy = tempy / yscale + dev.yorigin;
 
     *outx = ROUND (tempx);
     *outy = ROUND (tempy);

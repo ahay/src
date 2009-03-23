@@ -19,12 +19,9 @@
 
 #include "../include/extern.h"
 
-extern int dev_xmin, dev_xmax;
-extern int dev_ymin, dev_ymax;
-
 /* inline coordinate transforms;  Xpen origin- upper left, pen origin- lower left */
 #define	XCORD(x)	x
-#define	YCORD(y)	(dev_ymax-y-TBORDER)
+#define	YCORD(y)	(dev.ymax-y-TBORDER)
 
 /* global definitions */
 #define	TBORDER 0

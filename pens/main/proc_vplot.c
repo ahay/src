@@ -104,7 +104,7 @@ void proc_vplot (int infileno, FILE *pltinarray[], char *pltinname[])
 	{
 	    sleep ((unsigned) epause);
 	}
-	if (need_end_erase)
+	if (dev.need_end_erase)
 	{
 	    dev.erase (ERASE_END);
 	}

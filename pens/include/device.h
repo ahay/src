@@ -6,6 +6,21 @@
  */
 
 struct device{
+    int xmax, ymax, xmin, ymin;
+    float pixels_per_inch;
+    float aspect_ratio;
+    int num_col;
+    int lost;
+    bool need_end_erase; /* Does device need erase at end? */
+    bool smart_clip;     /* Can the device do its own clipping? (of vectors and polygons.) */
+    bool smart_raster;   /* Can the device stretch AND clip its own raster? */
+    bool cachepipe;
+    /* Setting cachepipe = YES will copy any piped files to a temporary file,
+     * this may get done in dev.open.
+     * This is useful if the program may want to reverse seek. */
+    int txfont,txprec,txovly;
+    int xorigin, yorigin;	/* global "origin" */
+    int brake;
 
     /* control routines */
     void (*open)(int argc, char* argv[]);

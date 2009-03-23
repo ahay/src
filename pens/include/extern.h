@@ -20,10 +20,12 @@ extern char name[];
  * these MUST be initialized in either dev.open or dev.reset
  * (Not setting them will cause a fatal error.)
  */
+/*
 extern int dev_xmax, dev_ymax, dev_xmin, dev_ymin;
 extern float pixels_per_inch;
 extern float aspect_ratio;
 extern int num_col;
+*/
 
 /*
  * options and variables that may also need to be reset in dev.open
@@ -40,17 +42,18 @@ extern int rotate;
 extern float  hshift, vshift;
 extern int dither;
 extern bool endpause;
-extern int txfont,txprec,txovly;
+/* extern int txfont,txprec,txovly; */
 extern float pixc, greyc;
 
 /*
  * these can also be set in dev.open or dev.reset if dovplot gets them wrong,
  * but can usually be left at their default values.
- */
+
 extern bool need_end_erase;
 extern bool smart_clip;
 extern bool smart_raster;
 extern bool cachepipe;
+*/
 
 /*
  * These variables may be useful for referring to in dev.open,
@@ -87,7 +90,6 @@ extern bool serifs_OK;
 extern int xold,yold;
 extern int xnew,ynew;
 extern int xwmin,xwmax,ywmin,ywmax;
-extern int xorigin,yorigin;
 extern int fat,fatbase,dashon;
 extern int afat;
 extern int ipat;

@@ -232,7 +232,7 @@ int main (int argc, char* argv[])
 	    ERR (FATAL, name, "too many input files (%d max)", MAXIN);
 	}
 
-  	if( cachepipe )
+  	if( dev.cachepipe )
         {
             if( (pltinarray[infileno] = tempcopy( stdin,string) ) == NULL )
             {

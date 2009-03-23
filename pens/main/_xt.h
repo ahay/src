@@ -58,11 +58,8 @@ extern unsigned long *pen_colors;
 extern int xt_endframe;
 
 /* picture scaling info */
-extern int dev_xmin, dev_xmax;
-extern int dev_ymin, dev_ymax;
 extern void xt_size_n_scale();
 
-extern int num_col;
 extern unsigned long color;
 extern int x_num_col;
 extern int xmono;
@@ -122,9 +119,9 @@ extern Pixmap MyCreatePixmap();
 
 /* inline coordinate transforms;  X origin- upper left, pen origin- lower left */
 #define	XCORD(x)	x
-#define	YCORD(y)	(dev_ymax - y)
+#define	YCORD(y)	(dev.ymax - y)
 #define	IXCORD(x)	x
-#define	IYCORD(y)	(dev_ymax - y)
+#define	IYCORD(y)	(dev.ymax - y)
  
 extern Colormap pen_colormap;
 

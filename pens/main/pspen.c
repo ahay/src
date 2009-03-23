@@ -382,34 +382,7 @@ extern int mkstemp (char *template);
 
 char            name[] = "pspen";
 
-struct device   dev = {
-    /* control routines */
-    psopen,	/* open */
-    psreset,	/* reset */
-    genmessage,	/* message */
-    pserase,	/* erase */
-    psclose,	/* close */
-    
-    /* high level output */
-    psvector,	/* vector */
-    genmarker,	/* marker */
-    pstext,	/* text */
-    psarea,	/* area */
-    smart_psraster,	/* raster */
-    genpoint,	/* point */
-    psattributes,	/* attributes */
-
-    /* input */
-    gen_dovplot,   /* reader */
-    nullgetpoint,   /* getpoint */
-    nullinteract,   /* interact */
-    
-    /* low level output */
-    psplot,	/* plot */
-    nullclose,	/* startpoly */
-    nullmidpoly,	/* midpoly */
-    nullclose,	/* endpoly */
-};
+#include "_device.h"
 
 extern int      ipat;
 extern struct pat pat[];
@@ -1063,11 +1036,11 @@ void psclose (int status)
 
 #ifndef NOCOMMENTS
 	if ((strcmp (psprintertype, "default") != 0)
-	    || (pixels_per_inch != DEFAULT_PIXELS_PER_INCH))
+	    || (dev.pixels_per_inch != DEFAULT_PIXELS_PER_INCH))
 	{
 	    ERR (COMMENT, name,
 		 "Printer is of type \"%s\", with %g pixels per inch.",
-		 psprintertype, pixels_per_inch);
+		 psprintertype, dev.pixels_per_inch);
 	}
 #endif
 
@@ -1221,7 +1194,7 @@ static int      page_count = 1;
 	    fprintf (pltout, "grestore gsave\n");
 	    fprintf (pltout, "/labelshow\n");
 	    fprintf (pltout, " {dup stringwidth pop\n");
-	    fprintf (pltout, "  dup dup %d exch sub\n", dev_xmax - 50);
+	    fprintf (pltout, "  dup dup %d exch sub\n", dev.xmax - 50);
 	    fprintf (pltout, "  newpath %d m\n", TEXT_YPOS);
 	    fprintf (pltout, "  gsave 0 %d rlineto\n", -TEXT_PAD);
 	    fprintf (pltout, "  0 rlineto\n");
@@ -1324,7 +1297,7 @@ int             ps_set_papersize = NO;
 float           ps_ypapersize;
 char            psprintertype[80] = "default";
 
-void psopen (int argc, char* argv[])
+void opendev (int argc, char* argv[])
 /*< open >*/
 {
     char           *user_name;
@@ -1342,6 +1315,18 @@ void psopen (int argc, char* argv[])
     
     size_t len;
 
+    dev.reset = psreset;
+    dev.erase = pserase;
+    dev.close = psclose;
+
+    dev.vector = psvector;
+    dev.text = pstext;
+    dev.area = psarea;
+    dev.raster = smart_psraster;
+    dev.attributes = psattributes;
+
+    dev.plot = psplot;
+
     strcpy (psprintertype, "default");
 
 /*
@@ -1353,7 +1338,7 @@ void psopen (int argc, char* argv[])
     pixc = 0.6;
     greyc = -0.5;
 
-    pixels_per_inch = DEFAULT_PIXELS_PER_INCH;
+    dev.pixels_per_inch = DEFAULT_PIXELS_PER_INCH;
 
     strcpy (ps_paper, DEFAULT_PAPER_SIZE);
 
@@ -1361,7 +1346,7 @@ void psopen (int argc, char* argv[])
  * For now, elsewhere in the code we just ignore aspect_ratio,
  * implicitly assuming it will always be 1.
  */
-    aspect_ratio = 1.0;
+    dev.aspect_ratio = 1.0;
 
 
 /*
@@ -1369,7 +1354,7 @@ void psopen (int argc, char* argv[])
  * GETPAR here it would also search the incoming history file... I think
  * it's safer to require them to be on the command line.)
  */
-    sf_getfloat ("ppi",&pixels_per_inch); /* pixels per inch */
+    sf_getfloat ("ppi",&dev.pixels_per_inch); /* pixels per inch */
 
 
 /*
@@ -1377,7 +1362,7 @@ void psopen (int argc, char* argv[])
  * of length, we compute a PostScript scale factor here that will allow us to
  * send vplot coordinates (integers) directly to PostScript.
  */
-    psscale = PSPERIN / ((float) pixels_per_inch);
+    psscale = PSPERIN / ((float) dev.pixels_per_inch);
 
 
 /*
@@ -1409,19 +1394,19 @@ void psopen (int argc, char* argv[])
     if (strcmp (ps_paper, "letter") == 0)
     {
 /* Empirically determined limits for SPARC printers with letter-size paper */
-	dev_xmin = .19 * pixels_per_inch + .5;
-	dev_ymin = .26666 * pixels_per_inch + .5;
-	dev_xmax = 10.88333 * pixels_per_inch + .5;
-	dev_ymax = 8.23333 * pixels_per_inch + .5;
+	dev.xmin = .19 * dev.pixels_per_inch + .5;
+	dev.ymin = .26666 * dev.pixels_per_inch + .5;
+	dev.xmax = 10.88333 * dev.pixels_per_inch + .5;
+	dev.ymax = 8.23333 * dev.pixels_per_inch + .5;
 	ps_ypapersize = 8.5;
     }
     else if (strcmp (ps_paper, "legal") == 0)
     {
 /* Empirically determined limits for SPARC printers with legal-size paper */
-	dev_xmin = .50333 * pixels_per_inch + .5;
-	dev_ymin = .89 * pixels_per_inch + .5;
-	dev_xmax = 13.49666 * pixels_per_inch + .5;
-	dev_ymax = 7.61 * pixels_per_inch + .5;
+	dev.xmin = .50333 * dev.pixels_per_inch + .5;
+	dev.ymin = .89 * dev.pixels_per_inch + .5;
+	dev.xmax = 13.49666 * dev.pixels_per_inch + .5;
+	dev.ymax = 7.61 * dev.pixels_per_inch + .5;
 	ps_ypapersize = 8.5;
     }
     else if (strcmp (ps_paper, "a5") == 0 || strcmp (ps_paper, "A5") == 0)
@@ -1433,10 +1418,10 @@ void psopen (int argc, char* argv[])
 	 * nonimageable area at the edges of the paper all around.
 	 */
 
-	dev_xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_xmax = (21.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymax = (14.85 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
+	dev.xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.xmax = (21.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymax = (14.85 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
 	ps_ypapersize = 14.85 * (1. / CMPERIN);
     }
     else if (strcmp (ps_paper, "a4") == 0 || strcmp (ps_paper, "A4") == 0)
@@ -1448,10 +1433,10 @@ void psopen (int argc, char* argv[])
 	 * nonimageable area at the edges of the paper all around.
 	 */
 
-	dev_xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_xmax = (29.7 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymax = (21.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
+	dev.xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.xmax = (29.7 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymax = (21.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
 	ps_ypapersize = 21.0 * (1. / CMPERIN);
     }
     else if (strcmp (ps_paper, "a3") == 0 || strcmp (ps_paper, "A3") == 0)
@@ -1463,10 +1448,10 @@ void psopen (int argc, char* argv[])
 	 * nonimageable area at the edges of the paper all around.
 	 */
 
-	dev_xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_xmax = (42.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
-	dev_ymax = (29.7 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * pixels_per_inch + .5;
+	dev.xmin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymin = (DEFAULT_BORDER * CMPERIN) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.xmax = (42.0 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
+	dev.ymax = (29.7 - (DEFAULT_BORDER * CMPERIN)) * (1. / CMPERIN) * dev.pixels_per_inch + .5;
 	ps_ypapersize = 29.7 * (1. / CMPERIN);
     }
     else
@@ -1577,13 +1562,13 @@ void psopen (int argc, char* argv[])
 	}
 
 
-	dev_xmin = ps_xmin * pixels_per_inch + .5;
-	dev_ymin = ps_ymin * pixels_per_inch + .5;
-	dev_xmax = ps_xmax * pixels_per_inch + .5;
-	dev_ymax = ps_ymax * pixels_per_inch + .5;
+	dev.xmin = ps_xmin * dev.pixels_per_inch + .5;
+	dev.ymin = ps_ymin * dev.pixels_per_inch + .5;
+	dev.xmax = ps_xmax * dev.pixels_per_inch + .5;
+	dev.ymax = ps_ymax * dev.pixels_per_inch + .5;
 	ps_ypapersize = ps_ylength;
 
-	if (dev_xmin >= dev_xmax || dev_ymin >= dev_ymax)
+	if (dev.xmin >= dev.xmax || dev.ymin >= dev.ymax)
 	{
 	    ERR (FATAL, name,
 		 "Custom paper size has no plotting area.");
@@ -1621,22 +1606,20 @@ void psopen (int argc, char* argv[])
     if (ps_color)
     {
 	mono = false;
-	num_col = 256;
+	dev.num_col = 256;
     }
     else
     {
 	mono = true;
-	num_col = 0;
+	dev.num_col = 0;
     }
 
-    smart_raster = true;
-
-    need_end_erase = true;
-    smart_clip = false;
+    dev.smart_raster = true;
+    dev.need_end_erase = true;
 
     dither = 3;
-    txfont = default_ps_font;
-    txprec = DEFAULT_HARDCOPY_PREC;
+    dev.txfont = default_ps_font;
+    dev.txprec = DEFAULT_HARDCOPY_PREC;
 
     if (NULL == (label = sf_getstring ("label")))
 	/*( label for pages (default is user name and date) )*/
@@ -1745,10 +1728,10 @@ char           *spooldirnm;
 	 * tex=y is specified this plot will be scaled by TeX to fit whatever
 	 * size we want, so don't clip it to page boundaries.
 	 */
-	dev_xmax = VP_MAX * RPERIN;
-	dev_ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
-	dev_xmin = 0;
-	dev_ymin = 0;
+	dev.xmax = VP_MAX * RPERIN;
+	dev.ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
+	dev.xmin = 0;
+	dev.ymin = 0;
 	size = VP_ABSOLUTE;
 	label[0] = '\0';
     }
@@ -1900,8 +1883,6 @@ void dateget (char *date)
     sprintf (date, "%.16s", asctime (localtime (&clock)));
 }
 
-
-int             lost = 1;
 static int      where = -1;
 static int      ps_oldx = 0, ps_oldy = 0;
 
@@ -1911,7 +1892,7 @@ void psplot (int x, int y, int draw)
     if (draw == 0)
     {
 	startpath ();
-	lost = 0;
+	dev.lost = 0;
     }
     addpath (x, y);
 }
@@ -1984,7 +1965,7 @@ void endpath (void)
 	fprintf (pltout, "s\n");
 	where = -1;
     }
-    lost = 1;
+    dev.lost = 1;
 }
 
 extern int      ps_grey_ras[];
@@ -2177,12 +2158,12 @@ static char     last_size = 0, last_font;
     if (*string == '\0')
 	return;
 
-    if (txfont > psmaxfont)
+    if (dev.txfont > psmaxfont)
     {
-	txfont = default_ps_font;
+	dev.txfont = default_ps_font;
     }
 
-    if (txfont < 100)
+    if (dev.txfont < 100)
     {
 	gentext (string, pathx, pathy, upx, upy);
 	return;
@@ -2215,12 +2196,12 @@ static char     last_size = 0, last_font;
 /*
  *   Set the font and size
  */
-    if ((size != last_size) || (txfont != last_font))
+    if ((size != last_size) || (dev.txfont != last_font))
     {
 	fprintf (pltout, "/%s findfont %d scalefont setfont\n",
-		 psfonts[txfont - 100], size);
+		 psfonts[dev.txfont - 100], size);
 	last_size = size;
-	last_font = txfont;
+	last_font = dev.txfont;
     }
 
     /*
@@ -2394,7 +2375,7 @@ static int      xlst, ylst;
 	}
     }
 
-    if ((x1 != xlst) || (y1 != ylst) || lost == 1)
+    if ((x1 != xlst) || (y1 != ylst) || dev.lost == 1)
     {
 	/* Make sure it is a move, not a draw */
 	psplot (x1, y1, 0);

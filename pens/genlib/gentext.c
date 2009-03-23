@@ -249,7 +249,7 @@ int             linecount;
 	     ERRFONT);
     }
 
-    txfont_checked = txfont;
+    txfont_checked = dev.txfont;
 
     if (txfont_checked >= 0)
     {
@@ -437,7 +437,7 @@ int             linecount;
     string_length = ii;
 
 /* Ligatures */
-    if (txprec > 1)
+    if (dev.txprec > 1)
     {
 	ttxfont = txfont_checked;
 /*
@@ -893,7 +893,7 @@ int             linecount;
     xorigin_f = xold_f;
     yorigin_f = yold_f;
 
-    if (txovly)
+    if (dev.txovly)
     {
 	mov (-widthl_1st_char - hspace, minbot - vline * (linecount - 1) - vspace);
 	xxx[0] = ROUND (xold_f);
@@ -908,7 +908,7 @@ int             linecount;
 	xxx[3] = ROUND (xold_f);
 	yyy[3] = ROUND (yold_f);
 
-	if (txovly == 2 || txovly == 3)
+	if (dev.txovly == 2 || dev.txovly == 3)
 	{
 	    if (cur_color != 0 || need_devcolor)
 	    {
@@ -925,7 +925,7 @@ int             linecount;
 	    }
 	}
 
-	if (txovly == 1 || txovly == 3)
+	if (dev.txovly == 1 || dev.txovly == 3)
 	{
 	    dev.vector (xxx[0], yyy[0], xxx[1], yyy[1], ROUND (tfat), 0);
 	    dev.vector (xxx[1], yyy[1], xxx[2], yyy[2], ROUND (tfat), 0);

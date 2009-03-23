@@ -245,7 +245,7 @@ class Project(Environment):
                     CPPPATH=[incdir],
                     LIBS=[libs],
                     PROGSUFFIX=exe)
-        self.Prepend(LIBS=['rsf'])
+        self.Prepend(LIBS=['rsf','m'])
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')

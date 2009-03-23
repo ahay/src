@@ -1,10 +1,12 @@
 /*
  * command passed to dev.erase()
  */
-#define ERASE_START		0
-#define ERASE_MIDDLE		1
-#define ERASE_END		2
-#define ERASE_BREAK		3
+enum {
+    ERASE_START, 
+    ERASE_MIDDLE, 
+    ERASE_END,
+    ERASE_BREAK
+    };
 
 /*
  * Types of erases: (Who would believe that there are 4 kinds?)

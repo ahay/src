@@ -64,6 +64,8 @@ will draw the same thing.
 
 #include "vppen.h"
 
+#include "_device.h"
+
 extern int      allow_pipe;
 extern int      first_time;
 extern FILE *pltout;
@@ -84,38 +86,7 @@ int             vpframe = -1;
 
 int             vpsetflag;
 
-int             lost = YES;
-
 char            name[] = "vppen";
-
-struct device dev = {
-    /* control routines */
-    vpopen,		/* open */
-    vpreset,		/* reset */
-    vpmessage,		/* message */
-    vperase,		/* erase */
-    nullclose,            /* close */
-    
-    /* high level output */
-    vpvector,		/* vector */
-    vpmarker,		/* marker */
-    vptext,		/* text */
-    genarea,		/* area */
-    vpraster,		/* raster */
-    genpoint,		/* point */
-    vpattributes,		/* attributes */
-    
-    /* input */
-    vp_do_dovplot,               /* reader */
-    nullgetpoint,		/* getpoint */
-    nullinteract,		/* interact */
-    
-    /* low level output */
-    vpplot,		/* plot */
-    vpstartpoly,		/* startpoly */
-    vpmidpoly,		/* midpoly */
-    vpendpoly		/* endpoly */
-};
 
 int             vpcolor = VP_WHITE;
 int             vpfat = 0;
@@ -140,7 +111,7 @@ static int      vpcolt1, vpcolt2, vpcolt3, vpcolt4;
 static int      vpovly;
 int             ii, jj;
 
-    lost = YES;
+    dev.lost = YES;
 
     if (!vpdumb)
     {
@@ -393,8 +364,8 @@ char            format_string[80];
 	/*
 	 * Turn on automatic processing 
 	 */
-	smart_clip = false;
-	smart_raster = false;
+	dev.smart_clip = false;
+	dev.smart_raster = false;
 
 	/*
 	 * Just outline polygons and raster with vectors 
@@ -426,10 +397,10 @@ char            format_string[80];
  * Now do the trial pass
  */
 
-	vpxmaxs = dev_xmin;
-	vpxmins = dev_xmax;
-	vpymaxs = dev_ymin;
-	vpymins = dev_ymax;
+	vpxmaxs = dev.xmin;
+	vpxmins = dev.xmax;
+	vpymaxs = dev.ymin;
+	vpymins = dev.ymax;
 
 	it_got_clipped = NO;
 
@@ -449,10 +420,10 @@ char            format_string[80];
 
 	for (ii = 0; ii < nn; ii++)
 	{
-	    vpxmax = dev_xmin;
-	    vpxmin = dev_xmax;
-	    vpymax = dev_ymin;
-	    vpymin = dev_ymax;
+	    vpxmax = dev.xmin;
+	    vpxmin = dev.xmax;
+	    vpymax = dev.ymin;
+	    vpymin = dev.ymax;
 
 	    pltin = inpltin[ii];
 	    strcpy (pltname, innames[ii]);
@@ -493,10 +464,10 @@ char            format_string[80];
 			    (float) vpymax / RPERIN);
 		}
 
-		if (vpxmax == dev_xmin || vpxmax == dev_xmax ||
-		    vpxmin == dev_xmax || vpxmin == dev_xmin ||
-		    vpymax == dev_ymin || vpymax == dev_ymax ||
-		    vpymin == dev_ymax || vpymin == dev_ymin)
+		if (vpxmax == dev.xmin || vpxmax == dev.xmax ||
+		    vpxmin == dev.xmax || vpxmin == dev.xmin ||
+		    vpymax == dev.ymin || vpymax == dev.ymax ||
+		    vpymin == dev.ymax || vpymin == dev.ymin)
 		{
 		    printf ("*\n");
 		    it_got_clipped = YES;
@@ -693,13 +664,13 @@ char            format_string[80];
 	dev.text = gentext;
 	dev.area = vecarea;
 	dev.raster = genraster;
-	smart_clip = false;
-	smart_raster = false;
+	dev.smart_clip = false;
+	dev.smart_raster = false;
     }
     else
     {
-	smart_clip = true;
-	smart_raster = true;
+	dev.smart_clip = true;
+	dev.smart_raster = true;
     }
 
 /* Second (or first) pass */
@@ -736,7 +707,7 @@ void vperase (int command)
 	    {
 		vp_style (VP_ABSOLUTE);
 	    }
-	    lost = YES;
+	    dev.lost = YES;
 	    vpsetflag = NO;
 
 	    if (!vpdumb && newout)
@@ -758,7 +729,7 @@ void vperase (int command)
 		}
 		vpsetcoltabanyway = NO;
 
-		lost = YES;
+		dev.lost = YES;
 		vpsetflag = NO;
             }
 
@@ -769,7 +740,7 @@ void vperase (int command)
 	    {
 		vp_style (VP_ABSOLUTE);
 	    }
-	    lost = YES;
+	    dev.lost = YES;
 	    vpsetflag = NO;
 	    break;
 	default:
@@ -782,26 +753,26 @@ void vperase (int command)
 	{
 	case ERASE_START:
 	    vpframecount = 0;
-	    dev_ymin = VP_STANDARD_HEIGHT * RPERIN;
+	    dev.ymin = VP_STANDARD_HEIGHT * RPERIN;
 	case ERASE_MIDDLE:
 	    if (vpframecount < 0)
 		ERR (FATAL, name, "Must have initial erase with gridnum");
 	    if ((vpframecount % vparray[0]) == 0)
 	    {
-		dev_xmin = 0;
-		dev_ymin -= vpasize[1];
+		dev.xmin = 0;
+		dev.ymin -= vpasize[1];
 	    }
 	    else
 	    {
-		dev_xmin += vpasize[0];
+		dev.xmin += vpasize[0];
 	    }
-	    dev_xmax = dev_xmin + vpasize[0];
-	    dev_ymax = dev_ymin + vpasize[1];
+	    dev.xmax = dev.xmin + vpasize[0];
+	    dev.ymax = dev.ymin + vpasize[1];
 
 	    if (command == ERASE_MIDDLE)
 		vp_break ();
 
-	    lost = YES;
+	    dev.lost = YES;
 	    vpsetflag = NO;
 	    reset_parameters ();
 	    vpframecount++;
@@ -811,11 +782,11 @@ void vperase (int command)
 		vp_color (VP_WHITE);
 		vp_fat (vpframe);
 
-		vp_move ((float) dev_xmin / RPERIN, (float) dev_ymin / RPERIN);
-		vp_draw ((float) dev_xmax / RPERIN, (float) dev_ymin / RPERIN);
-		vp_draw ((float) dev_xmax / RPERIN, (float) dev_ymax / RPERIN);
-		vp_draw ((float) dev_xmin / RPERIN, (float) dev_ymax / RPERIN);
-		vp_draw ((float) dev_xmin / RPERIN, (float) dev_ymin / RPERIN);
+		vp_move ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
+		vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymin / RPERIN);
+		vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymax / RPERIN);
+		vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymax / RPERIN);
+		vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
 
 		vp_color (vpcolor);
 		vp_fat (ROUND (vpfat * FATPERIN / RPERIN));
@@ -906,7 +877,7 @@ float          *yp;
 int             ii;
 
     vpsetflag = NO;
-    lost = YES;
+    dev.lost = YES;
 
     xp = (float *) malloc ((unsigned) (npts * sizeof (float)));
     yp = (float *) malloc ((unsigned) (npts * sizeof (float)));
@@ -965,13 +936,30 @@ void vpmessage (int command, char *string)
     }
 }
 
-void vpopen (int argc, char* argv[])
+void opendev (int argc, char* argv[])
 /*< open >*/
 {
     float           atemp[2];
     char            *vpstat_string;
     int		ii;
     
+    dev.reset = vpreset;
+    dev.message = vpmessage;
+    dev.erase = vperase;
+
+    dev.vector = vpvector;
+    dev.marker = vpmarker;
+    dev.text = vptext;
+    dev.raster = vpraster;	
+    dev.attributes = vpattributes;
+
+    dev.reader = vp_do_dovplot;
+
+    dev.plot = vpplot;
+    dev.startpoly = vpstartpoly;
+    dev.midpoly = vpmidpoly;
+    dev.endpoly =vpendpoly;
+
     first_time = YES;
     
     
@@ -1083,26 +1071,26 @@ void vpopen (int argc, char* argv[])
 
     if (vpbig)
     {
-	dev_xmax = VP_MAX * RPERIN;
-	dev_ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
-	dev_xmin = -dev_xmax;
-	dev_ymin = -dev_ymax;
-	default_hshift = -dev_xmin;
-	default_vshift = -dev_ymin;
+	dev.xmax = VP_MAX * RPERIN;
+	dev.ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
+	dev.xmin = -dev.xmax;
+	dev.ymin = -dev.ymax;
+	default_hshift = -dev.xmin;
+	default_vshift = -dev.ymin;
     }
     else
     {
-	dev_xmax = VP_STANDARD_HEIGHT * RPERIN / VP_SCREEN_RATIO;
-	dev_ymax = VP_STANDARD_HEIGHT * RPERIN;
-	dev_xmin = 0;
-	dev_ymin = 0;
+	dev.xmax = VP_STANDARD_HEIGHT * RPERIN / VP_SCREEN_RATIO;
+	dev.ymax = VP_STANDARD_HEIGHT * RPERIN;
+	dev.xmin = 0;
+	dev.ymin = 0;
 	default_hshift = 0;
 	default_vshift = 0;
     }
 
-    pixels_per_inch = RPERIN;
-    aspect_ratio = 1.;
-    num_col = VPPEN_NUM_COL;
+    dev.pixels_per_inch = RPERIN;
+    dev.aspect_ratio = 1.;
+    dev.num_col = VPPEN_NUM_COL;
     if (vparray[0] == 0)
 	size = VP_ABSOLUTE;
 
@@ -1111,31 +1099,14 @@ void vpopen (int argc, char* argv[])
  * Since font gets hard-wired in after first pass,
  * make it a nice one if they don't specify it.
  */
-    txfont = DEFAULT_HARDCOPY_FONT;
-    txprec = DEFAULT_HARDCOPY_PREC;
+    dev.txfont = DEFAULT_HARDCOPY_FONT;
+    dev.txprec = DEFAULT_HARDCOPY_PREC;
 
 /*
  * Make vplib routines more useful to be included in other programs
  * besides just vppen
  */
-    dev.open = vpopen;
-    dev.reset = vpreset;
-    dev.message = vpmessage;
-    dev.erase = vperase;
-    dev.close = nullclose;
-    dev.vector = vpvector;
-    dev.marker = vpmarker;
-    dev.text = vptext;
-    dev.area = genarea;
-    dev.raster = vpraster;
-    dev.point = genpoint;
-    dev.attributes = vpattributes;
-    dev.getpoint = nullgetpoint;
-    dev.interact = nullinteract;
-    dev.plot = vpplot;
-    dev.startpoly = vpstartpoly;
-    dev.midpoly = vpmidpoly;
-    dev.endpoly = vpendpoly;
+
 
 /*
  * To keep messages from being lost
@@ -1148,7 +1119,7 @@ void vpopen (int argc, char* argv[])
  * output file or not; we'd have to initialize everything in any case!
  */
 
-    cachepipe = true;
+    dev.cachepipe = true;
 }
 
 static int vpopen_name (int num)
@@ -1249,7 +1220,7 @@ void vpplot (int x, int y, int draw)
     else
 	vp_move ((float) x / RPERIN, (float) y / RPERIN);
 
-    lost = NO;
+    dev.lost = NO;
 }
 
 static float   *xp;
@@ -1260,7 +1231,7 @@ void vpstartpoly (int npts)
 /*< start polygon >*/
 {
     vpsetflag = NO;
-    lost = YES;
+    dev.lost = YES;
     vnpts = 0;
 
     xp = (float *) malloc ((unsigned) (npts * sizeof (float)));
@@ -1304,7 +1275,7 @@ void vpraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 /*< raster >*/
 {
     vpsetflag = NO;
-    lost = YES;
+    dev.lost = YES;
 
     vp_raster (raster_block, (bool) (vpbit > 0), vpbit, 
 	       xpix, ypix, 
@@ -1336,11 +1307,11 @@ void vpreset (void)
 
     if (!vpdumb)
     {
-	dev.attributes (SET_WINDOW, dev_xmin, dev_ymin, dev_xmax, dev_ymax);
+	dev.attributes (SET_WINDOW, dev.xmin, dev.ymin, dev.xmax, dev.ymax);
 	dev.attributes (SET_COLOR, VP_WHITE, 0, 0, 0);
 	dev.attributes (NEW_FAT, 0, 0, 0, 0);
 	dev.attributes (NEW_DASH, 0, 0, 0, 0);
-	dev.attributes (NEW_FONT, txfont, txprec, txovly, 0);
+	dev.attributes (NEW_FONT, dev.txfont, dev.txprec, dev.txovly, 0);
 	dev.attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
 	dev.attributes (NEW_OVERLAY, overlay, 0, 0, 0);
     }
@@ -1354,7 +1325,7 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
     void (*savearea)(int npts, struct vertex  *head);
 
     vpsetflag = NO;
-    lost = YES;
+    dev.lost = YES;
 
     if (*string == '\0')
 	return;
@@ -1368,7 +1339,7 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
  *   Now reset the pen position to the end of the text.
  *   Do a dummy run through (if this indeed a gentext font)
  */
-    if (txfont < NUMGENFONT)
+    if (dev.txfont < NUMGENFONT)
     {
 	savevector = dev.vector;
 	saveattributes = dev.attributes;
@@ -1397,8 +1368,6 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
 #define MOVE 0
 #define DRAW 1
 
-extern int      lost;
-
 void vpvector (int x1, int y1, int x2, int y2, int nfat, int vpdashon)
 /*< vector >*/
 {
@@ -1412,7 +1381,7 @@ int             d1, d2;
      * Important special case: Zero-length vector at the end of what you've
      * already plotted. Don't need to do anything. 
      */
-    if (x1 == x2 && y1 == y2 && !lost && x1 == xlst && y1 == ylst)
+    if (x1 == x2 && y1 == y2 && !dev.lost && x1 == xlst && y1 == ylst)
     {
 	return;
     }
@@ -1426,7 +1395,7 @@ int             d1, d2;
     if (nfat != fat)
     {
 	vp_fat (ROUND ((float) nfat * FATPERIN / RPERIN));
-	lost = YES;
+	dev.lost = YES;
     }
 
     if (vpdashon != dashon)
@@ -1438,7 +1407,7 @@ int             d1, d2;
      * Minimize movement of "pen" Don't turn around dashed lines, since order
      * of drawing matters. 
      */
-    if (!lost && !vpdashon)
+    if (!dev.lost && !vpdashon)
     {
 	d1 = abs (x1 - xlst) + abs (y1 - ylst);
 	d2 = abs (x2 - xlst) + abs (y2 - ylst);
@@ -1453,7 +1422,7 @@ int             d1, d2;
 	}
     }
 
-    if ((x1 != xlst) || (y1 != ylst) || lost)
+    if ((x1 != xlst) || (y1 != ylst) || dev.lost)
     {
 	/* Make sure it is a move, not a draw */
 	dev.plot (x1, y1, MOVE);
@@ -1468,7 +1437,7 @@ int             d1, d2;
     if (nfat != fat)
     {
 	vp_fat (ROUND ((float) fat * FATPERIN / RPERIN));
-	lost = YES;
+	dev.lost = YES;
     }
 
     if (vpdashon != dashon)

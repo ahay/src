@@ -164,7 +164,7 @@ void polystart (void)
 
     /* Now we have our polygon stored as a circular double-linked list! */
 
-    if (smart_clip)
+    if (dev.smart_clip)
 	goto skip_it;		/* smart device can handle it from here */
 
 

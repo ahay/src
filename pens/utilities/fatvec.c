@@ -42,13 +42,13 @@ static int      lastdir = 0;
 
     lastdir = 1 - lastdir;
 
-    if (aspect_ratio != 1. && (y2 != y1 || x2 != x1) && nfat)
+    if (dev.aspect_ratio != 1. && (y2 != y1 || x2 != x1) && nfat)
     {
-nfat = (float) nfat *sqrt (
-	                    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1))
-			     /               (aspect_ratio * aspect_ratio)) /
-	                   ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1)))
-	);
+	nfat = (float) nfat *sqrt (
+	    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1))
+	     /               (dev.aspect_ratio * dev.aspect_ratio)) /
+	    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1)))
+	    );
     }
 
     fminus = (nfat / 2);

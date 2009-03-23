@@ -99,37 +99,13 @@ extern FILE * fdopen (int fd, const char *mode);
 
 #define		OPEN_ERROR	-1
 
-/* 
- * The following variables must ALWAYS
- * be set in the device open or device reset file.
- * All their defaults are set to absurd values so that
- * we'll crash quickly it they're not set as required.
- */
-/* Screen dimensions */
-int             dev_xmax = 0, dev_ymax = 0, dev_xmin = 0, dev_ymin = 0;
-/* Number of pixels per inch in the horizontal (X) direction on the device */
-float           pixels_per_inch = 0.;
-/* vertical height (on screen) / horizontal width for a single pixel */
-float           aspect_ratio = 0.;
-/*
- * Number of SETTABLE COLORS that the device has.
- * Non settable colors don't count.
- */
-int             num_col = -1;
-
 /*
  * Other things that may need to be reset in dev.open
  * (Can't reset them some of them in dev.reset, because the user may
  * override from the command line.)
  */
-/* Does device need erase at end? */
-bool             need_end_erase = false;
 /* should pipes be allowed for input? */
 int             allow_pipe = YES;
-/* Can the device do its own clipping? (of vectors and polygons.) */
-bool             smart_clip = false;
-/* Can the device stretch AND clip its own raster? */
-bool             smart_raster = false;
 
 /*
  * These may be reset to device-dependent defaults.
@@ -162,7 +138,6 @@ bool             no_stretch_text = true;	/* Don't allow stretched text? */
 int             xwmax, xwmin, ywmax, ywmin;	/* window */
 int             xnew, ynew;	/* new pen location */
 int             xold, yold;	/* old pen location */
-int             xorigin = 0, yorigin = 0;	/* global "origin" */
 char           *txbuffer;
 int             txbuflen, vxbuflen;
 struct vertex  *vxbuffer;
@@ -184,9 +159,6 @@ int             cur_color = DEFAULT_COLOR;
 int             pat_color = DEFAULT_COLOR + 1;
 int             next_color;
 
-int             txfont = DEFAULT_FONT;
-int             txprec = DEFAULT_PREC;
-int             txovly = OVLY_NORMAL;
 int             default_txfont, default_txprec, default_txovly;
 int             fat = 0;
 int             afat = 0;
@@ -213,14 +185,8 @@ int             num_col_8;
 bool             invras = true;
 bool             window = true;
 bool             shade = true;
-int             brake = BREAK_BREAK;
 bool             framewindows = false;
 bool             endpause = false;
-bool             cachepipe = false;
-/* Setting cachepipe = YES will copy any piped files to a temporary file,
- * this may get done in dev.open.
- * This is useful if the program may want to reverse seek. e.g. Xvpen, Sunpen
- */
 
 bool             wantras = true;
 bool             colormask[5];
@@ -389,7 +355,7 @@ void init_vplot (int argc, char* argv[])
     out_isatty = isatty (pltoutfd);
 
     sf_getbool ("endpause", &endpause);
-    sf_getbool ("cachepipe",&cachepipe);
+    sf_getbool ("cachepipe",&dev.cachepipe);
     sf_getbool ("shade", &shade);
     sf_getbool ("wantras", &wantras);
     sf_getbool ("window", &window);
@@ -420,19 +386,19 @@ void init_vplot (int argc, char* argv[])
     sf_getfloat ("greyc",  &greyc);
     sf_getfloat ("pixc",  &pixc);
 
-    sf_getint ("txfont",  &txfont);
-    sf_getint ("txprec",  &txprec);
-    sf_getint ("txovly",  &txovly);
+    sf_getint ("txfont",  &dev.txfont);
+    sf_getint ("txprec",  &dev.txprec);
+    sf_getint ("txovly",  &dev.txovly);
 
     if (! serifs_OK)
     {
-        if (txfont == DEFAULT_HARDCOPY_FONT) txfont = DEFAULT_SANSSERIF_FONT;
-        if (txfont == GREEK_SERIF_FONT) txfont = GREEK_SANSSERIF_FONT;
+        if (dev.txfont == DEFAULT_HARDCOPY_FONT) dev.txfont = DEFAULT_SANSSERIF_FONT;
+        if (dev.txfont == GREEK_SERIF_FONT) dev.txfont = GREEK_SANSSERIF_FONT;
     }
 
-    default_txfont = txfont;
-    default_txprec = txprec;
-    default_txovly = txovly;
+    default_txfont = dev.txfont;
+    default_txprec = dev.txprec;
+    default_txovly = dev.txovly;
 
     if (NULL != (string = sf_getstring ("erase")))
     {
@@ -451,12 +417,12 @@ void init_vplot (int argc, char* argv[])
     if (NULL != (string = sf_getstring ("break")))
     {
 	if (string[0] == 'b')
-	    brake = BREAK_BREAK;
+	    dev.brake = BREAK_BREAK;
 	else
 	if (string[0] == 'e')
-	    brake = BREAK_ERASE;
+	    dev.brake = BREAK_ERASE;
 	else
-	    brake = BREAK_IGNORE;
+	    dev.brake = BREAK_IGNORE;
     }
 
     xcenter = 0;
@@ -602,10 +568,10 @@ int             ii;
     if (mono)
     {
 	/* Monochrome devices are assumed to have no settable colors */
-	num_col = 0;
+	dev.num_col = 0;
     }
 
-    num_col_8 = (num_col > 8) ? num_col : 8;
+    num_col_8 = (dev.num_col > 8) ? dev.num_col : 8;
 
     if (mono)
     {
@@ -664,12 +630,12 @@ void setstyle (vp_plotstyle new_style)
 void reset_parameters (void)
 /*< reset parameters >*/
 {
-float           inches;	/* scaling base for y axis */
-float           screenheight, screenwidth;	/* true size of the screen */
-int             ix, iy;
+    float           inches;	/* scaling base for y axis */
+    float           screenheight, screenwidth;	/* true size of the screen */
+    int             ix, iy;
 
-    xorigin = 0;
-    yorigin = 0;
+    dev.xorigin = 0;
+    dev.yorigin = 0;
 
     rotate = default_rotate;
     rotate += user_rotate;
@@ -722,15 +688,15 @@ int             ix, iy;
     else
 	rotate = ((rotate % 360) + 360) % 360;
 
-    mxx = cos (2. * 3.14159 * rotate / 360.);
-    myy = cos (2. * 3.14159 * rotate / 360.);
-    mxy = sin (2. * 3.14159 * rotate / 360.);
-    myx = -sin (2. * 3.14159 * rotate / 360.);
+    mxx = cosf (SF_PI * rotate / 180.);
+    myy = cosf (SF_PI * rotate / 180.);
+    mxy = sinf (SF_PI * rotate / 180.);
+    myx = -sinf (SF_PI * rotate / 180.);
 
     if (size == VP_ABSOLUTE)
     {
-	vdevscale = pixels_per_inch / (float) (RPERIN * aspect_ratio);
-	hdevscale = pixels_per_inch / (float) RPERIN;
+	vdevscale = dev.pixels_per_inch / (float) (RPERIN * dev.aspect_ratio);
+	hdevscale = dev.pixels_per_inch / (float) RPERIN;
     }
     else
     {
@@ -738,19 +704,19 @@ int             ix, iy;
 	 * Fit the inches x inches unit square into a displayable box with
 	 * aspect ratio SCREEN_RATIO 
 	 */
-	screenwidth = (dev_xmax - dev_xmin) * pixels_per_inch;
+	screenwidth = (dev.xmax - dev.xmin) * dev.pixels_per_inch;
 	screenheight =
-	 (dev_ymax - dev_ymin) * pixels_per_inch * aspect_ratio;
+	 (dev.ymax - dev.ymin) * dev.pixels_per_inch * dev.aspect_ratio;
 	if ((screenheight / screenwidth) > VP_SCREEN_RATIO)
 	{
-	    vdevscale = (VP_SCREEN_RATIO * ((dev_xmax - dev_xmin) / aspect_ratio)) /
+	    vdevscale = (VP_SCREEN_RATIO * ((dev.xmax - dev.xmin) / dev.aspect_ratio)) /
 	     (inches * RPERIN);
-	    hdevscale = vdevscale * aspect_ratio;
+	    hdevscale = vdevscale * dev.aspect_ratio;
 	}
 	else
 	{
-	    vdevscale = (dev_ymax - dev_ymin) / (inches * RPERIN);
-	    hdevscale = vdevscale * aspect_ratio;
+	    vdevscale = (dev.ymax - dev.ymin) / (inches * RPERIN);
+	    hdevscale = vdevscale * dev.aspect_ratio;
 	}
     }
 
@@ -759,7 +725,7 @@ int             ix, iy;
 
     if (style == VP_ROTATED)
     {
-	vshift += dev_ymax - dev_ymin;
+	vshift += dev.ymax - dev.ymin;
     }
 
     yscale *= scale;
@@ -780,21 +746,21 @@ int             ix, iy;
 	vptodevxy (xcenter, ycenter, &ix, &iy);
 	if (xcenterflag)
 	{
-	    hshift += (dev_xmax + dev_xmin) / 2 - ix;
+	    hshift += (dev.xmax + dev.xmin) / 2 - ix;
 	}
 	if (ycenterflag)
 	{
-	    vshift += (dev_ymax + dev_ymin) / 2 - iy;
+	    vshift += (dev.ymax + dev.ymin) / 2 - iy;
 	}
     }
 
-    hshift += user_hshift * pixels_per_inch;
-    vshift += user_vshift * pixels_per_inch / aspect_ratio;
+    hshift += user_hshift * dev.pixels_per_inch;
+    vshift += user_vshift * dev.pixels_per_inch / dev.aspect_ratio;
 
 /* plot window parameters defaulted */
 /* to maximum size */
 
-    devtovpw (dev_xmin, dev_ymin, dev_xmax, dev_ymax,
+    devtovpw (dev.xmin, dev.ymin, dev.xmax, dev.ymax,
 	      &xWmin, &yWmin, &xWmax, &yWmax);
 
     if (user_xwmax_flag)
@@ -808,8 +774,8 @@ int             ix, iy;
 
     vptodevw (xWmin, yWmin, xWmax, yWmax, &xWmin, &yWmin, &xWmax, &yWmax);
 
-    wlimit (dev_xmin, dev_xmax, &xWmin, &xWmax);
-    wlimit (dev_ymin, dev_ymax, &yWmin, &yWmax);
+    wlimit (dev.xmin, dev.xmax, &xWmin, &xWmax);
+    wlimit (dev.ymin, dev.ymax, &yWmin, &yWmax);
 
     xwmax = xWmax;		/* plot window parameters defaulted */
     xwmin = xWmin;		/* to maximum size 		 */

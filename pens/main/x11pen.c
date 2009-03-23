@@ -165,6 +165,7 @@
 #include "../include/mesgcom.h"
 #include "../include/erasecom.h"
 #include "../include/enum.h"
+#include "../include/params.h"
 
 #include "dovplot.h"
 #include "init_vplot.h"
@@ -179,37 +180,10 @@
 
 char name[] = "x11pen";
 
+#include "_device.h"
+
 /* physical device size */
 int             version = 1;
-
-/* device routine table */
-struct device   dev = {
-    /* control routines */
-    xopen,	/* open */
-    nulldev,	/* reset */
-    genmessage,	/* message */
-    xerase,	/* erase */
-    xclose,	/* close */
-    /* high level output */
-    genvector,	/* vector */
-    genmarker,	/* marker */
-    gentext,	/* text */
-    xarea,	/* area */
-    xraster,	/* raster */
-    xpoint,	/* point */
-    xattributes,	/* attributes */
-    /* input */
-    gen_dovplot,               /* reader */
-    xgetpoint,	/* getpoint */
-    nullinteract,	/* interact */
-    /* low level output */
-    xplot,	/* plot */
-    nullclose,	/* startpoly */
-    nullmidpoly,	/* midpoly */
-    nullclose	/* endpoly */
-};
-
-int             lost;
 
 #define MAXVERT 1000
 XPoint vlist[MAXVERT];
@@ -279,7 +253,7 @@ void xattributes (int command, int v, int v1, int v2, int v3)
     switch (command)
     {
 	case SET_COLOR:
-	    if (!num_col)
+	    if (!dev.num_col)
 	    {
 		if (v)
 		    color = 1;
@@ -288,7 +262,7 @@ void xattributes (int command, int v, int v1, int v2, int v3)
 	    }
 	    else
 	    {
-		if (v < num_col)
+		if (v < dev.num_col)
 		    color = map[v];
 	    }
 	    XSetForeground(pen_display, pen_gc, color);
@@ -301,7 +275,7 @@ void xattributes (int command, int v, int v1, int v2, int v3)
 		imap--;
 	    }
 	    
-	    if (++imap >= num_col)
+	    if (++imap >= dev.num_col)
 		break;
 	    def.red = v1 << 8;
 	    def.green = v2 << 8;
@@ -413,14 +387,14 @@ void xerase (int command)
 	case ERASE_START:
 	case ERASE_MIDDLE:
 	case ERASE_BREAK:
-	    if (!num_col)
+	    if (!dev.num_col)
 		erase_color = 0;
 	    else
 		erase_color = look_em_up.background;
 	    prev_color = look_em_up.foreground;
 	    XSetForeground(pen_display, pen_gc, erase_color);
 	    XFillRectangle (pen_display, pen_win, pen_gc, 0, 0,
-			    dev_xmax, dev_ymax);
+			    dev.xmax, dev.ymax);
 	    XSetForeground(pen_display, pen_gc, prev_color);
 	    break;
     }
@@ -457,7 +431,7 @@ float           win_xfrac = .77;
 float           win_yfrac = .56;
 char            *align;
 
-void xopen (int argc, char* argv[])
+void opendev (int argc, char* argv[])
 /*< open >*/
 {
     int             win_x, win_y, i;
@@ -466,14 +440,22 @@ void xopen (int argc, char* argv[])
     Display        *OpenDisplay ();
     XEvent		event;
 
-    dev_xmin = 0;
-    dev_ymin = 0;
-    pixels_per_inch = 72.;
-    aspect_ratio = 1.;
+    dev.erase = xerase;
+    dev.close = xclose;
+    dev.area = xarea;
+    dev.raster = xraster;
+    dev.point = xpoint;
+    dev.attributes = xattributes;
+    dev.getpoint = xgetpoint;
+    dev.plot = xplot;
+
+    dev.xmin = 0;
+    dev.ymin = 0;
+    dev.pixels_per_inch = 72.;
+    dev.aspect_ratio = 1.;
 
     /* device capabilities */
-    need_end_erase = YES;
-    smart_clip = NO;
+    dev.need_end_erase = true;
 
     /* find a display server */
     pen_display = OpenDisplay ();
@@ -488,8 +470,8 @@ void xopen (int argc, char* argv[])
 	win_yfrac = (float) atof (option);
     sf_getfloat("width",&win_xfrac);
     sf_getfloat ("height",&win_yfrac);
-    dev_xmax = win_xfrac * (DisplayWidth (pen_display,pen_screen) - 2 * BORDER);
-    dev_ymax = win_yfrac * (DisplayHeight (pen_display,pen_screen) - TBORDER - BORDER);
+    dev.xmax = win_xfrac * (DisplayWidth (pen_display,pen_screen) - 2 * BORDER);
+    dev.ymax = win_yfrac * (DisplayHeight (pen_display,pen_screen) - TBORDER - BORDER);
 
     /* pen window alignment- win_x & win_y */
     align = sf_getstring("align");
@@ -501,7 +483,7 @@ void xopen (int argc, char* argv[])
 	}
     }
     
-    win_x = DisplayWidth (pen_display,pen_screen) - dev_xmax - 2 * BORDER;	/* right default */
+    win_x = DisplayWidth (pen_display,pen_screen) - dev.xmax - 2 * BORDER;	/* right default */
     win_y = 0;			/* top default */
     for (ap = align; *ap != '\0'; ap++)
 	switch (*ap)
@@ -510,27 +492,27 @@ void xopen (int argc, char* argv[])
 		win_y = 0;
 		break;
 	    case 'm':		/* middle vertical */
-		win_y = (DisplayHeight (pen_display,pen_screen) - dev_ymax - TBORDER - BORDER) / 2;
+		win_y = (DisplayHeight (pen_display,pen_screen) - dev.ymax - TBORDER - BORDER) / 2;
 		break;
 	    case 'b':		/* bottom */
-		win_y = DisplayHeight (pen_display,pen_screen) - dev_ymax - TBORDER - BORDER;
+		win_y = DisplayHeight (pen_display,pen_screen) - dev.ymax - TBORDER - BORDER;
 		break;
 	    case 'l':		/* left */
 		win_x = 0;
 		break;
 	    case 'c':		/* center horizontal */
-		win_x = (DisplayWidth (pen_display,pen_screen) - dev_xmax - 2 * BORDER) / 2;
+		win_x = (DisplayWidth (pen_display,pen_screen) - dev.xmax - 2 * BORDER) / 2;
 		break;
 	    case 'r':		/* right horizontal */
-		win_x = DisplayWidth (pen_display,pen_screen) - dev_xmax - 2 * BORDER;
+		win_x = DisplayWidth (pen_display,pen_screen) - dev.xmax - 2 * BORDER;
 		break;
 	}
     
     pen_visual = DefaultVisual(pen_display, pen_screen);
     
     /* color support */
-    num_col = DisplayCells(pen_display, pen_screen);
-    if( num_col <= 2 ) mono=1;
+    dev.num_col = DisplayCells(pen_display, pen_screen);
+    if( dev.num_col <= 2 ) mono=1;
 
     if ( pen_visual->class == PseudoColor ){
 	pen_colormap = XCreateColormap(pen_display,
@@ -543,9 +525,9 @@ void xopen (int argc, char* argv[])
     
     
     /* spawn window */
-    sprintf (title, "XPEN %d x %d", dev_xmax, dev_ymax);
+    sprintf (title, "XPEN %d x %d", dev.xmax, dev.ymax);
     pen_win = XCreateSimpleWindow (pen_display, RootWindow(pen_display,pen_screen),
-				   win_x, win_y, dev_xmax, dev_ymax, BORDER, None, None);
+				   win_x, win_y, dev.xmax, dev.ymax, BORDER, None, None);
     XSetWindowBackground(pen_display, pen_win,
 			 BlackPixel(pen_display,pen_screen));
     XSetWindowColormap( pen_display, pen_win, pen_colormap );
@@ -564,7 +546,7 @@ void xopen (int argc, char* argv[])
     /* color support */
     xattributes (SET_COLOR, 1, 0, 0, 0);
     
-    if( num_col > 2){
+    if( dev.num_col > 2){
     	for (i = 0; i < 8; i++)
 	    xattributes (SET_COLOR_TABLE, i, red[i], green[i], blue[i]);
     }

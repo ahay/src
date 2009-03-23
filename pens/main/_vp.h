@@ -23,7 +23,6 @@ extern float xsize, ysize;
 extern bool vpbig;
 extern bool vpstyle;
 extern char *vpaligns;
-extern int lost;
 extern int vpcolor, vpfat;
 extern int vpsetflag;
 extern bool vpblast;

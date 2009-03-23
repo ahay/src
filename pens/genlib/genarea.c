@@ -45,7 +45,7 @@ struct vertex  *v;
 int             firstpoint, i;
 
     Allgone = 1;		/* Assume none left unless polyfix tells us */
-    if (!smart_clip)
+    if (!dev.smart_clip)
     {
 	firstpoint = 2;
 	xminclip (0, 0, &firstpoint);	/* Tell them all to get ready */
@@ -56,7 +56,7 @@ int             firstpoint, i;
     v = head;
     for (i = 0; i < npts; i++)
     {
-	if (!smart_clip)
+	if (!dev.smart_clip)
 	{
 	    xminclip (v->x, v->y, &firstpoint);
 	}
@@ -66,7 +66,7 @@ int             firstpoint, i;
 	}
 	v++;
     }
-    if (!smart_clip)
+    if (!dev.smart_clip)
     {
 	firstpoint = -1;	/* Means this was the last point! */
 	xminclip (0, 0, &firstpoint);

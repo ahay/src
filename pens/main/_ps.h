@@ -16,7 +16,6 @@ extern int file_created;
 extern int ncopies_document;
 extern char scratch_file[];
 extern int hold;
-extern int lost;
 extern int ps_dash_pattern_set;
 extern int ps_dash_pattern_exists;
 extern int ps_last_fat;

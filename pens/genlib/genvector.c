@@ -42,8 +42,6 @@
 #define MOVE 0
 #define DRAW 1
 
-extern int      lost;
-
 #define ABS(a)   ((a) >= 0  ? (a) : (-(a)))
 
 void genvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
@@ -70,14 +68,14 @@ int             d1, d2;
     /*
      * Do clipping
      */
-    if (!smart_clip)
+    if (!dev.smart_clip)
 	if (clip (&x1, &y1, &x2, &y2))
 	    return;
     /*
      * Important special case: Zero-length vector at the end of what you've
      * already plotted. Don't need to do anything.
      */
-    if (x1 == x2 && y1 == y2 && !lost && x1 == xlst && y1 == ylst)
+    if (x1 == x2 && y1 == y2 && !dev.lost && x1 == xlst && y1 == ylst)
     {
 	return;
     }
@@ -85,7 +83,7 @@ int             d1, d2;
     /*
      * Minimize movement of "pen"
      */
-    if (!lost)
+    if (!dev.lost)
     {
 	d1 = ABS (x1 - xlst) + ABS (y1 - ylst);
 	d2 = ABS (x2 - xlst) + ABS (y2 - ylst);
@@ -100,10 +98,10 @@ int             d1, d2;
 	}
     }
 
-    if ((x1 != xlst) || (y1 != ylst) || lost)
+    if ((x1 != xlst) || (y1 != ylst) || dev.lost)
     {
 	/* Make sure it is a move, not a draw */
-	if (!lost && ABS (x1 - xlst) <= 1 && ABS (y1 - ylst) <= 1)
+	if (!dev.lost && ABS (x1 - xlst) <= 1 && ABS (y1 - ylst) <= 1)
 	{
 	    /*
 	     * We're within one pixel, so go ahead and draw a vector to the
@@ -118,7 +116,7 @@ int             d1, d2;
 	     * unfortunate unlikely case, and fix it. (I've since learned why
 	     * a plethora of externals isn't good programming style...)
 	     */
-	    if (lost)
+	    if (dev.lost)
 		dev.plot (x1, y1, MOVE);
 	    /*
 	     * If the device is STILL lost it's a BUG!

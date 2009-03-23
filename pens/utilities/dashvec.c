@@ -77,8 +77,8 @@ int             xv1, xv2, yv1, yv2;
  */
     deltax = x2 - x1;
     deltay = y2 - y1;
-    lambda1 = 1. / pixels_per_inch;
-    lambda2 = aspect_ratio / pixels_per_inch;
+    lambda1 = 1. / dev.pixels_per_inch;
+    lambda2 = dev.aspect_ratio / dev.pixels_per_inch;
     dist = sqrt (lambda1 * lambda1 * deltax * deltax + lambda2 * lambda2 * deltay * deltay);
     sine = deltay / dist;
     cosine = deltax / dist;

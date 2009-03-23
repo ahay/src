@@ -262,6 +262,8 @@ extern void bcopy (const void *src, void *dst, size_t len);
 
 #include "xtpen.h"
 
+#include "_device.h"
+
 AppData app_data;
 
 #define XtNstretchy "stretchy"
@@ -474,32 +476,6 @@ static XtActionsRec window_actions[] = {
 extern int xt_next_num;
 
 char            name[] = "xtpen";
-
-struct device   dev = {
-    /* control routines */
-    xtopen,		/* open */
-    nulldev,		/* reset */
-    xtmessage,	/* message */
-    xterase,		/* erase */
-    xtclose,		/* close */
-    /* high level output */
-    genvector,	/* vector */
-    genmarker,	/* marker */
-    gentext,		/* text */
-    xtarea,		/* area */
-    xtraster,	/* raster */
-    xtpoint,		/* point */
-    xtattributes,	/* attributes */
-    /* input */
-    xt_dovplot,               /* reader */
-    nullgetpoint,		/* getpoint */
-    xtinteract,	/* interact */
-    /* low level output */
-    xtplot,		/* plot */
-    nullclose,		/* startpoly */
-    nullmidpoly,	/* midpoly */
-    nullclose		/* endpoly */
-};
 
 int xt_app_data( app )
 Widget  app;
@@ -860,7 +836,7 @@ void xtattributes (int command, int v, int v1, int v2, int v3)
 	clip_rect.y = YCORD( v3 );
 	clip_rect.width = XCORD( v2 ) - XCORD( v ) + 1;
 	clip_rect.height = YCORD( v1 ) - YCORD( v3 ) + 1;
-	clip_xorigin = XCORD(dev_xmin); clip_yorigin =  YCORD(dev_ymax);
+	clip_xorigin = XCORD(dev.xmin); clip_yorigin =  YCORD(dev.ymax);
 	XSetClipRectangles( pen_display, pen_gc, clip_xorigin, clip_yorigin,
 			 &clip_rect, 1, Unsorted );
 	break;
@@ -1050,7 +1026,7 @@ int i;
 
     if( mono ) return;
 
-    for( i=0; i < num_col ; i++ ){
+    for( i=0; i < dev.num_col ; i++ ){
      frame->cmap.map[i] = map[i];
      frame->cmap.red[i] = red[i];
      frame->cmap.green[i] = green[i];
@@ -1068,9 +1044,9 @@ int i;
 
     if( mono ) return;
 
-    pen_color = (XColor*)XtMalloc( num_col*sizeof(XColor) );
+    pen_color = (XColor*)XtMalloc( dev.num_col*sizeof(XColor) );
 
-    for( i=0; i < num_col ; i++ ){
+    for( i=0; i < dev.num_col ; i++ ){
         map[i] = frame->cmap.map[i];
         red[i] = frame->cmap.red[i] ;
         green[i] = frame->cmap.green[i];
@@ -1085,7 +1061,7 @@ int i;
     }
 
     if( ! xtruecol ) {
-       XStoreColors(pen_display,pen_colormap,pen_color, num_col);
+       XStoreColors(pen_display,pen_colormap,pen_color, dev.num_col);
     }
 	
     XSetWindowBackground( pen_display, pen_window, map[0]);
@@ -1538,8 +1514,6 @@ int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doST
     }
 
 }
-
-int             lost;
 
 FileInfo       *inFiles;
 int		num_files;
@@ -2268,7 +2242,7 @@ void xtmessage (int command, char *text)
 
 static void choose_visual();
 
-void xtopen (int argc, char* argv[])
+void opendev (int argc, char* argv[])
 /*< open >*/
 {
     extern int      brake;
@@ -2292,6 +2266,20 @@ void xtopen (int argc, char* argv[])
 #endif
     char ** myxargv;
     
+    dev.message = xtmessage;
+    dev.erase = xterase;
+    dev.close = xtclose;
+
+    dev.area = xtarea;
+    dev.raster = xtraster;
+    dev.point = xtpoint;
+    dev.attributes = xtattributes;
+
+    dev.reader = xt_dovplot;
+    dev.interact = xtinteract;
+
+    dev.plot = xtplot;
+
     /*
      * save the command line arguments
      */
@@ -2301,12 +2289,12 @@ void xtopen (int argc, char* argv[])
     bcopy ((char *) argv, (char *) myxargv, myxargc * sizeof (char *));
     
     /* device capabilities */
-    txfont = DEFAULT_HARDCOPY_FONT;
-    txprec = DEFAULT_HARDCOPY_PREC;
-    brake = BREAK_IGNORE;
+    dev.txfont = DEFAULT_HARDCOPY_FONT;
+    dev.txprec = DEFAULT_HARDCOPY_PREC;
+    dev.brake = BREAK_IGNORE;
     endpause = false;
-    smart_clip = false;
-    cachepipe = true;
+    dev.smart_clip = false;
+    dev.cachepipe = true;
 
     /* initialize the first app (we will delete this one later ) */
     xtargc = argc;
@@ -2343,14 +2331,14 @@ void xtopen (int argc, char* argv[])
     /* Height and Width of the screen in Millimeters */
     mwidth = DisplayWidthMM( pen_display,pen_screen);
     mheight = DisplayHeightMM( pen_display,pen_screen);
-    pixels_per_inch = ((float)dwidth/(float)mwidth)*25.4 ;
-    aspect_ratio = (((float)dheight/(float)mheight)*25.4 )/pixels_per_inch ;
+    dev.pixels_per_inch = ((float)dwidth/(float)mwidth)*25.4 ;
+    dev.aspect_ratio = (((float)dheight/(float)mheight)*25.4 )/dev.pixels_per_inch ;
 
     /*
      * Since X rounds values to integer millimeters, the aspect ratio
      * has some error in it. Push aspect ratio to nearest round percent.
      */
-    aspect_ratio = ((int)((aspect_ratio * 100.) + .5)) / 100.;
+    dev.aspect_ratio = ((int)((dev.aspect_ratio * 100.) + .5)) / 100.;
 
     if (!sf_getbool("x_screen_info", &tellme_resolution)) 
 	/* output the default screen information */
@@ -2360,12 +2348,12 @@ void xtopen (int argc, char* argv[])
 	    "display width=%d, height=%d (pixels);  width=%d, height=%d (mm)",
 	    dwidth, dheight, mwidth, mheight);
 	ERR(COMMENT, name, "pixels_per_inch=%f,  aspect_ratio=%f",
-	    pixels_per_inch, aspect_ratio);
+	    dev.pixels_per_inch, dev.aspect_ratio);
     }
 
-    sf_getfloat("aspect",&aspect_ratio);
+    sf_getfloat("aspect",&dev.aspect_ratio);
     /* aspect ratio */
-    sf_getfloat("ppi",&pixels_per_inch);
+    sf_getfloat("ppi",&dev.pixels_per_inch);
     /* pixels per inch */
  
     if ( !sf_getint("numcol",&num_col_req) ) num_col_req = app_data.num_col;
@@ -2399,13 +2387,13 @@ void xtopen (int argc, char* argv[])
    }
 
     if(  mono  ){
-	num_col = x_num_col;
+	dev.num_col = x_num_col;
     }else{
 	if( xtruecol ){
-	    num_col = num_col_max;
+	    dev.num_col = num_col_max;
         }else{
 	    /* NB may change pen_colormap ! */
-            num_col = xtnumcol( num_col_min, num_col_max );
+            dev.num_col = xtnumcol( num_col_min, num_col_max );
 	}
     }
 
@@ -2592,16 +2580,16 @@ Dimension *width,*height;
     static float old_xstretch = 1.;
     static float old_ystretch = 1.;
 
-    /* now get the size of the actual picture and set dev_xmax etc. */
+    /* now get the size of the actual picture and set dev.xmax etc. */
 
     XtVaGetValues(pen_picture,XtNwidth,width,XtNheight,height,
 		XtNx,&left,XtNy,&top,NULL);
   
     /* set VPLOT plotting window */
-    dev_xmin = left;
-    dev_xmax = dev_xmin + *width - 1;
-    dev_ymin = top;
-    dev_ymax = dev_ymin + *height - 1;  
+    dev.xmin = left;
+    dev.xmax = dev.xmin + *width - 1;
+    dev.ymin = top;
+    dev.ymax = dev.ymin + *height - 1;  
 
     /* attempt to create pixmap  to speed redraws */
     create_pixmap( *width, *height );
