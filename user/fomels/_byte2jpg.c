@@ -22,7 +22,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2;
+    bool color;
+    int n1, n2, nc;
     unsigned char *grey;
     sf_file in;
 
@@ -30,12 +31,22 @@ int main(int argc, char* argv[])
     in = sf_input("in");
 
     if (SF_UCHAR != sf_gettype(in)) sf_error("Need unsigned char in input");
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
 
-    grey = sf_ucharalloc (n1*n2);
-    sf_ucharread(grey,n1*n2,in);    
-    write_JPEG_file (grey, n2, n1, 1);
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_getbool("color",&color)) color=(3==n1);
+
+    if (color) {
+	nc = n1;
+	if (!sf_histint(in,"n2",&n1)) sf_error("No n2= in input");
+	if (!sf_histint(in,"n3",&n2)) sf_error("No n3= in input");
+    } else {
+	nc = 1;
+	if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    }
+
+    grey = sf_ucharalloc (n1*n2*nc);
+    sf_ucharread(grey,n1*n2*nc,in);    
+    write_JPEG_file (grey, n2, n1, nc);
 
     exit(0);
 }

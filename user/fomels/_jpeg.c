@@ -297,13 +297,21 @@ GLOBAL(void)
    */ 
   /* JSAMPLEs per row in output buffer */
   row_stride = cinfo.output_width * cinfo.output_components;
+
   /* Make a one-row-high sample array that will go away when done with image */
   buffer = (*cinfo.mem->alloc_sarray)
-		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+      ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-  if (1 != cinfo.output_components) sf_error("Color image");
-  sf_putint(out,"n1",cinfo.output_width);
-  sf_putint(out,"n2",cinfo.output_height);
+  if (1==cinfo.output_components) {
+      sf_warning("Grayscale image");
+      sf_putint(out,"n1",cinfo.output_width);
+      sf_putint(out,"n2",cinfo.output_height);
+  } else {
+      sf_warning("Color image");
+      sf_putint(out,"n1",cinfo.output_components);
+      sf_putint(out,"n2",cinfo.output_width);
+      sf_putint(out,"n3",cinfo.output_height);
+  }
 
   /* Step 6: while (scan lines remain to be read) */
   /*           jpeg_read_scanlines(...); */
