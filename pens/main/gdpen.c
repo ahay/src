@@ -85,8 +85,6 @@ void opendev (int argc, char* argv[])
     sf_getint ("n2", &dev.ymax);
     /* image size */
     
-    dev.yorigin = dev.ymax;
-
     dev.need_end_erase = true;
     dev.smart_clip= true; 
     dev.num_col = NCOLOR;

@@ -198,11 +198,7 @@ class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
-        if version[0] < 1 or version[1] < 2:
-            opts = Options(os.path.join(libdir,'rsfconfig.py'))
-        else:
-            opts = Variables(os.path.join(libdir,'rsfconfig.py'))
-        rsfconf.options(opts)
+        opts = rsfconf.options(os.path.join(libdir,'rsfconfig.py'))
         opts.Add('TIMER','Whether to time execution')
         opts.Add('CHECKPAR','Whether to check parameters')
         opts.Add('ENVIRON','Additional environment settings')
@@ -245,7 +241,7 @@ class Project(Environment):
                     CPPPATH=[incdir],
                     LIBS=[libs],
                     PROGSUFFIX=exe)
-        self.Prepend(LIBS=['rsf','m'])
+        self.Prepend(LIBS=['rsf'])
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
