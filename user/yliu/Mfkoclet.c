@@ -1,4 +1,8 @@
-/* 1-D seislet transform using omega-wavenumber offset continuation */
+/* 1-D seislet transform using omega-wavenumber offset continuation 
+Forward transform (adj=n inv=y/n)
+Inverse transform (adj=y inv=y)
+Adjoint transform (adj=y inv=n)
+*/
 /*
   Copyright (C) 2009 University of Texas at Austin
    
@@ -25,7 +29,7 @@ int main(int argc, char *argv[])
 {
     int nk, nh, iw, nw, i4, n4, ik;
     float k0, dk, h0, dh, w0, dw, w, k, eps; 
-    bool inv, verb, dwt;
+    bool inv, verb, adj, dwt;
 
     char *type;
     sf_complex *pp, *qq;
@@ -55,6 +59,9 @@ int main(int argc, char *argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* if y, do adjoint transform */
+
     if (!sf_getbool("dwt",&dwt)) dwt=false;
     /* if y, do wavelet transform */
 
@@ -79,13 +86,13 @@ int main(int argc, char *argv[])
 	    w = w0 + iw*dw;
 	    for (ik=0; ik < nk; ik++) { /* loop over wavenumber */
 		k = k0 + ik*dk;
-		if (inv) {
+		if (adj) {
 		    sf_complexread(qq,nh,in);
 		} else {
 		    sf_complexread(pp,nh,in);
 		} 
 
-		if (inv) {
+		if (adj) {
 		    fkoclet_lop(false,false,nh,nh,qq,pp,w,k);
 		    sf_complexwrite(pp,nh,out);
 		} else {
