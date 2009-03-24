@@ -2245,7 +2245,6 @@ static void choose_visual();
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    extern int      brake;
     int 		dwidth,dheight, mwidth,mheight;
     int             default_width,default_height;
     bool		want_buttons,want_labels,want_text;

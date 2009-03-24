@@ -44,9 +44,9 @@ char            name[] = "gdpen";
 #define NCOLOR 256 /* number of colors */
 #define MAXVERT 1000
 
-static gdImagePtr image;
+static gdImagePtr image, oldimage;
 static bool default_out = true;
-static int color_table[NCOLOR], gdcolor, black;
+static int color_table[NCOLOR], gdcolor, black, delay;
 static char *image_type;
 
 void opendev (int argc, char* argv[])
@@ -84,7 +84,7 @@ void opendev (int argc, char* argv[])
     sf_getint ("n1", &dev.xmax);
     sf_getint ("n2", &dev.ymax);
     /* image size */
-    
+
     dev.need_end_erase = true;
     dev.smart_clip= true; 
     dev.num_col = NCOLOR;
@@ -109,7 +109,10 @@ void opendev (int argc, char* argv[])
 
     if (NULL == (image_type = sf_getstring("type"))) 
 	image_type = "png";
-    /* image type (png or jpeg) */
+    /* image type (png, jpeg, gif) */
+
+    if (!sf_getint("delay",&delay)) delay=10;
+    /* GIF animation delay (if type=="gif") */
 }
 
 void gdreset (void)
@@ -146,20 +149,33 @@ static void gd_write (void)
 {
     static bool called=false;
 
-    if(called) return;
-    called=true;
-
     switch (image_type[0]) {
 	case 'j':
 	case 'J':
+	    if(called) return;
 	    gdImageJpeg(image, pltout, -1);
+	    break;
+	case 'g':
+	case 'G':
+	    if (called) {
+		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, oldimage);
+	    } else {
+		gdImageGifAnimBegin(image, pltout, 1, 0);
+		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, NULL);
+	    }
+	    oldimage = image;
+	    image = gdImageCreate(dev.xmax,dev.ymax);
+	    gdImagePaletteCopy(image, oldimage);
 	    break;
 	case 'p':
 	case 'P':
 	default:
+	    if(called) return;
 	    gdImagePng(image, pltout);
+	    break;
     }
-    fclose(pltout);
+
+    called=true;
 }
 
 void gderase (int command)
@@ -169,17 +185,21 @@ void gderase (int command)
     {
 	case ERASE_START:
 	    gdImageFilledRectangle(image, 0, 0, dev.xmax, dev.ymax, black);
-	default:
 	    break;
 	case ERASE_MIDDLE:
-	case ERASE_END:
-	    /* Output raster file, and then CLEAR it out (erase) */
 	    gd_write();
 	    gdImageFilledRectangle(image, 0, 0, dev.xmax, dev.ymax, black);
 	    break;
-	case ERASE_BREAK:
-	    /* Output raster file, but don't CLEAR it! */
+	case ERASE_END:
 	    gd_write();
+	    if (image_type[0]=='g' || image_type[0]=='G') 
+		gdImageGifAnimEnd(pltout);
+	    fclose(pltout);
+	    break;
+	case ERASE_BREAK:
+	    gd_write();
+	    break;
+	default:
 	    break;
     }
 }
