@@ -46,7 +46,7 @@ char            name[] = "gdpen";
 
 static gdImagePtr image, oldimage;
 static bool default_out = true;
-static int color_table[NCOLOR], gdcolor, black, delay;
+static int color_table[NCOLOR], gdcolor, black, delay, nx, ny;
 static char *image_type;
 
 void opendev (int argc, char* argv[])
@@ -67,6 +67,7 @@ void opendev (int argc, char* argv[])
 
     dev.area = gdarea;
     dev.attributes = gdattr;
+    dev.vector = gdvector; 
     dev.plot = gdplot;
 
     pixels_per_inch = dev.pixels_per_inch = PPI;
@@ -89,7 +90,10 @@ void opendev (int argc, char* argv[])
     dev.smart_clip= true; 
     dev.num_col = NCOLOR;
 
-    image = gdImageCreate(dev.xmax,dev.ymax);
+    nx = dev.xmax+1;
+    ny = dev.ymax+1;
+
+    image = gdImageCreate(nx,ny);
     black = gdImageColorAllocate(image, 0, 0, 0);
 
     default_out = (bool) isatty(fileno(pltout));
@@ -164,7 +168,7 @@ static void gd_write (void)
 		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, NULL);
 	    }
 	    oldimage = image;
-	    image = gdImageCreate(dev.xmax,dev.ymax);
+	    image = gdImageCreate(nx,ny);
 	    gdImagePaletteCopy(image, oldimage);
 	    break;
 	case 'p':
@@ -184,11 +188,11 @@ void gderase (int command)
     switch (command)
     {
 	case ERASE_START:
-	    gdImageFilledRectangle(image, 0, 0, dev.xmax, dev.ymax, black);
+	    gdImageFilledRectangle(image, 0, 0, nx, ny, black);
 	    break;
 	case ERASE_MIDDLE:
 	    gd_write();
-	    gdImageFilledRectangle(image, 0, 0, dev.xmax, dev.ymax, black);
+	    gdImageFilledRectangle(image, 0, 0, nx, ny, black);
 	    break;
 	case ERASE_END:
 	    gd_write();
@@ -233,10 +237,10 @@ void gdattr (int command, int value, int v1, int v2, int v3)
 	    color_table[value] = gdImageColorAllocate(image, v1, v2, v3);
 	    break;
 	case SET_WINDOW:
-	    xmin = value;
-	    ymin = dev.ymax - v3;
-	    xmax = v2;
-	    ymax = dev.ymax - v1;
+	    xmin = value-1;
+	    ymin = dev.ymax - v3-1;
+	    xmax = v2+1;
+	    ymax = dev.ymax - v1+1;
 	    gdImageSetClip(image, xmin, ymin, xmax, ymax);
 	    break;
 	default:
@@ -275,4 +279,17 @@ void gdarea (int npts, struct vertex *head)
     }
 
     gdImageFilledPolygon(image, vlist, npts, gdcolor);
+}
+
+void gdvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
+/*< vector >*/
+{
+    if (nfat < 0)
+	return;
+
+    if (nfat > 1) gdImageSetThickness(image, nfat);
+
+    genvector(x1,y1,x2,y2,0,dashon);
+
+    if (nfat > 1) gdImageSetThickness(image, 1);
 }
