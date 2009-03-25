@@ -120,7 +120,12 @@
 #include "dovplot.h"
 #include "init_vplot.h"
 
-#include "_ras.h"
+#define	Image(IX,IY)		image[(IX)+xmax*(ymax-1-(IY))]
+#define	Image3(IX,IY,RGB)	image[(RGB)+(IX)*3+xmax*3*(ymax-1-(IY))]
+#define	Min(IX,IY)		((IX) < (IY) ? (IX) : (IY))
+#define	Max(IX,IY)		((IX) > (IY) ? (IX) : (IY))
+#define NCOLOR 256		/* number of colors */
+
 #include "raspen.h"
 
 char            name[] = "raspen";
@@ -141,8 +146,7 @@ int             rasor = 0;
 char            colfile[60];
 
 static bool     default_out = true;
-
-extern int      num_col;
+static int xmax, ymax;
 
 void rasattr (int command, int value, int v1, int v2, int v3)
 /*< attr >*/
@@ -216,17 +220,17 @@ void ras_write (void)
     if(called) return;
     called=true;
     
-    ppm_writeppminit( pltout, dev.xmax, dev.ymax, (pixval)255, 0);
-    pixrow = ppm_allocrow( dev.xmax );
-    for ( row = 0, ptr=image;  row < dev.ymax; ++row )
+    ppm_writeppminit( pltout, xmax, ymax, (pixval)255, 0);
+    pixrow = ppm_allocrow( xmax );
+    for ( row = 0, ptr=image;  row < ymax; ++row )
     {
-        for ( col = 0, pP = pixrow; col < dev.xmax; ++col, ++pP ){
+        for ( col = 0, pP = pixrow; col < xmax; ++col, ++pP ){
 	    r = *(ptr++);
 	    g = *(ptr++);
 	    b = *(ptr++);
 	    PPM_ASSIGN( *pP, r, g, b );
 	}
-        ppm_writeppmrow( pltout, pixrow, dev.xmax, (pixval)255, 0 );
+        ppm_writeppmrow( pltout, pixrow, xmax, (pixval)255, 0 );
     }
     pm_close( pltout );
 }
@@ -248,15 +252,13 @@ void opendev (int argc, char* argv[])
     dev.close = rasclose;
 
     dev.area = genpatarea;
-    dev.vector = rasvector;
+    dev.plot = rasplot;
     dev.attributes = rasattr;
 
     /* physical device parameters for ppm format output */
     pixels_per_inch = dev.pixels_per_inch = 100.;
-    dev.xmax = 10 * dev.pixels_per_inch;
-    dev.ymax = 7.5 * dev.pixels_per_inch;
-    dev.xmin = 0;
-    dev.ymin = 0;
+    dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    dev.ymax = VP_SCREEN_RATIO * dev.xmax;
     aspect_ratio = dev.aspect_ratio = 1.;
 
     /* device capabilities */
@@ -274,10 +276,13 @@ void opendev (int argc, char* argv[])
     sf_getint ("n2", &dev.ymax);
     /* image size */
 
+    xmax = dev.xmax+1;
+    ymax = dev.ymax+1;
+
     /*
      * Allocate space for image 
      */
-    image = sf_ucharalloc (dev.xmax * dev.ymax * 3);
+    image = sf_ucharalloc (xmax * ymax * 3);
 
     default_out = (bool) isatty(fileno(pltout));
 
@@ -314,7 +319,7 @@ void zap (void)
 /*< Zero image >*/
 {
     unsigned char  *p;
-    for (p = image; p < &image[dev.xmax * dev.ymax * 3]; p++)
+    for (p = image; p < &image[xmax * ymax * 3]; p++)
 	*p = 0;
 }
 
@@ -325,43 +330,17 @@ Image3 (A, B, 0) = color_table[rascolor][0]; \
 Image3 (A, B, 1) = color_table[rascolor][1]; \
 Image3 (A, B, 2) = color_table[rascolor][2]
 
-void rasvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
-/*< vector >*/
+
+static void rasline (int x1, int y1, int x2, int y2)
+/*< Rasterizes the line defined by the endpoints (x1,y1) and (x2,y2). >*/
 {
     int             test, tmp, x, y;
     double          slope, fx, fx3, fy, fy3;
 
-/*
- * Vector rasterizes the line defined by the endpoints (x1,y1) and (x2,y2).
- * If 'nfat' is nonzero then draw parallel lines to fatten the line, by
- * recursive calls to vector.
- */
-
-    if (nfat < 0)
-	return;
-
-    if (dashon)
-    {
-	dashvec (x1, y1, x2, y2, nfat, dashon);
-	return;
-    }
-
-    if (nfat)
-    {
-	if (clip (&x1, &y1, &x2, &y2))
-	    return;
-
-	fatvec (x1, y1, x2, y2, nfat, dashon);
-	return;
-    }
-
-    if (clip (&x1, &y1, &x2, &y2))
-	return;
-
-/* Beware checks out of bounds, since the coordinate system may have rotated */
+    /* Beware checks out of bounds, since the coordinate system may have rotated */
 
     test = (abs (x2 - x1) >= abs (y2 - y1));
-
+    
     if (test)
     {
 	if (x1 == x2)
@@ -370,8 +349,7 @@ void rasvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 	    WRITEIT (x1, y1);
 	    return;
 	}
-	else
-	if (x1 > x2)
+	else if (x1 > x2)
 	{
 	    tmp = x1;
 	    x1 = x2;
@@ -405,7 +383,7 @@ void rasvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 	}
 	slope = (double) (x2 - x1) / (double) (y2 - y1);
 	fx3 = x1;
-
+	
 	for (y = y1, fx = fx3; y < y2; y++, fx += slope)
 	{
 	    x = fx + .5;
@@ -414,4 +392,20 @@ void rasvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 	WRITEIT (x2, y2);
 	return;
     }
+}
+
+void rasplot(int x, int y, int draw)
+/*< plot >*/
+{
+    static int oldx = 0, oldy = 0;
+
+    if (draw)
+    {
+	rasline(oldx, oldy, x, y);
+    } else {
+	dev.lost = 0;
+    }
+
+    oldx = x;
+    oldy = y;
 }
