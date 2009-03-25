@@ -99,6 +99,7 @@ int main(int argc, char* argv[])
     if(stat) {
 	/* read filter*/
 	sf_floatread(f[0],sf_n(f1)*sf_n(f2),Ff);
+
 	for    (j2=0; j2<sf_n(a2); j2++) {	    
 	    for(j1=0; j1<sf_n(a1); j1++) {
 		if(verb) fprintf(stderr,"%5d %5d",j1,j2);

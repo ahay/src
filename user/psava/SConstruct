@@ -3,7 +3,6 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-awefd lwefd ewefd hdefd
 off2abs off2abs3
 icor xcor tcor ucor laps
 ic sic sic3d lstk
@@ -15,6 +14,7 @@ hwt3d int3d rrt3d
 shift fft3d
 randcut
 encode shot2grid
+awefd2d awefd3d ewefd2d ewefd3d
 '''
 
 try:  # distributed version

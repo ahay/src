@@ -35,11 +35,11 @@ int main(int argc, char* argv[])
     sf_file Fzdel=NULL; /* z derivative */
     sf_file Fxdel=NULL; /* x derivative */
     
-    sf_axis ax,az;      /* cube axes */
-    sf_axis sx,sz;      /* cube axes */
+    sf_axis ax,ay,az;      /* cube axes */
+    sf_axis sx,sy,sz;      /* cube axes */
     
-    float **c11,**c13,**c15,**c33,**c35,**c55; /* input file */
-    float  mc11, mc13, mc15, mc33, mc35, mc55;
+    float **c11,**c13,**c33,**c55; /* input file */
+    float  mc11, mc13, mc33, mc55;
     float **xdel,**zdel;                /* output derivative */
 
     int ix,iz,nn;
@@ -56,55 +56,60 @@ int main(int argc, char* argv[])
     Fccc = sf_input ("ccc");      
     az = sf_iaxa(Fccc,1);
     ax = sf_iaxa(Fccc,2);
+    ay = sf_maxa(1,0.,1.);
 
     Fspk = sf_input ("in");
     sz = sf_iaxa(Fspk,1);
     sx = sf_iaxa(Fspk,2);
+    sy = sf_maxa(1,0.,1.);
 
     /*------------------------------------------------------------*/
     /* output files*/
     Fzdel = sf_output ("zdel");
     sf_oaxa(Fzdel,sz,1);
     sf_oaxa(Fzdel,sx,2);
+    sf_oaxa(Fzdel,sy,3);
 
     if(!stat) {
-	sf_oaxa(Fzdel,az,3);
-	sf_oaxa(Fzdel,ax,4);
+	sf_oaxa(Fzdel,az,4);
+	sf_oaxa(Fzdel,ax,5);
+	sf_oaxa(Fzdel,ay,6);
     }
 
     Fxdel = sf_output ("xdel");
     sf_oaxa(Fxdel,sz,1);
     sf_oaxa(Fxdel,sx,2);
+    sf_oaxa(Fxdel,sy,3);
     
     if(!stat) {
-	sf_oaxa(Fxdel,az,3);
-	sf_oaxa(Fxdel,ax,4);
+	sf_oaxa(Fxdel,az,4);
+	sf_oaxa(Fxdel,ax,5);
+	sf_oaxa(Fxdel,ay,6);
     }
 
     /*------------------------------------------------------------*/
     if(verb) { 
 	sf_raxa(sz); 
 	sf_raxa(sx); 
+	sf_raxa(sy);
+
 	sf_raxa(az); 
 	sf_raxa(ax); 
+	sf_raxa(ay); 
     }
 
     /*------------------------------------------------------------*/
     /* read model params */
     c11=sf_floatalloc2(sf_n(az),sf_n(ax));
-    c13=sf_floatalloc2(sf_n(az),sf_n(ax));
-    c15=sf_floatalloc2(sf_n(az),sf_n(ax));
     c33=sf_floatalloc2(sf_n(az),sf_n(ax));
-    c35=sf_floatalloc2(sf_n(az),sf_n(ax));
     c55=sf_floatalloc2(sf_n(az),sf_n(ax));
+    c13=sf_floatalloc2(sf_n(az),sf_n(ax));
     
     nn = sf_n(az)*sf_n(ax);
-    sf_floatread(c11[0],nn,Fccc); 
-    sf_floatread(c13[0],nn,Fccc);
-    sf_floatread(c15[0],nn,Fccc);
+    sf_floatread(c11[0],nn,Fccc);
     sf_floatread(c33[0],nn,Fccc);
-    sf_floatread(c35[0],nn,Fccc);
     sf_floatread(c55[0],nn,Fccc);
+    sf_floatread(c13[0],nn,Fccc);
 
     /*------------------------------------------------------------*/
     /* allocate arrays for derivatives */
@@ -117,19 +122,17 @@ int main(int argc, char* argv[])
 
     if(stat) {
 	mc11 = sf_quantile(nn/2,nn,c11[0]);
-	mc13 = sf_quantile(nn/2,nn,c13[0]);
-	mc15 = sf_quantile(nn/2,nn,c15[0]);
 	mc33 = sf_quantile(nn/2,nn,c33[0]);
-	mc35 = sf_quantile(nn/2,nn,c35[0]);
 	mc55 = sf_quantile(nn/2,nn,c55[0]);
+	mc13 = sf_quantile(nn/2,nn,c13[0]);
 
 	if(verb) {
-	    sf_warning("c11=%g c13=%g c15=%g c33=%g c35=%g c55=%g",
-		       mc11,  mc13,  mc15,  mc33,  mc35,  mc55);
+	    sf_warning("c11=%g c33=%g c55=%g c13=%g",
+		       mc11,  mc33,  mc55,  mc13);
 	}
 
 	wfsep(zdel,xdel,sx,sz,
-	      mc11,mc13,mc15,mc33,mc35,mc55,
+	      mc11,mc33,mc55,mc13,
 	      wfs);
 	
 	sf_floatwrite(zdel[0],sf_n(sz)*sf_n(sx),Fzdel);
@@ -142,7 +145,7 @@ int main(int argc, char* argv[])
 		if(verb) fprintf(stderr,"%5d %5d",iz,ix);
 		
 		wfsep(zdel,xdel,sx,sz,
-		      c11[ix][iz],c13[ix][iz],c15[ix][iz],c33[ix][iz],c35[ix][iz],c55[ix][iz],
+		      c11[ix][iz],c33[ix][iz],c55[ix][iz],c13[ix][iz],
 		      wfs);
 		
 		sf_floatwrite(zdel[0],sf_n(sz)*sf_n(sx),Fzdel);

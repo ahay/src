@@ -17,17 +17,23 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-
 #ifdef _OPENMP
 #include <omp.h>
+#include "omputil.h"
 #endif
 
 #define INBOUND(imin,imax,i) ((i>=imin && i<imax)?true:false)
 
 int main(int argc, char* argv[])
 {
-    bool verb;
+    bool verb,stat;
 
+    /* OMP parameters */
+    int  ompchunk; 
+#ifdef _OPENMP
+    int ompnth;
+#endif
+    
     sf_file Fx=NULL; /* input  */
     sf_file Fy=NULL; /* output */
     sf_file Ff=NULL; /* filter - assumes centered filter */
@@ -45,29 +51,17 @@ int main(int argc, char* argv[])
     int k1,k2,k3;
     int m1,m2,m3;
 
-    int  ompchunk; 
-#ifdef _OPENMP
-    int ompnth,ompath;
-#endif
-    
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
     
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
-    /* OpenMP data chunk size */
+    /* OMP parameters */
 #ifdef _OPENMP
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
-    /* OpenMP available threads */
-    
-#pragma omp parallel
-    ompath=omp_get_num_threads();
-    if(ompnth<1) ompnth=ompath;
-    omp_set_num_threads(ompnth);
-    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+    ompnth=omp_init();
 #endif
 
-    if(! sf_getbool("verb",&verb)) verb=false;        /* verbosity flag */
+    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+    if(! sf_getbool("stat",&stat)) stat=true;  /* stationary flag */
 
     Fx = sf_input ("in" );
     Fy = sf_output("out");
@@ -105,7 +99,7 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* read filter*/
-    sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
+/*    sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);*/
     /*------------------------------------------------------------*/
 
     /* zero output */
@@ -121,51 +115,97 @@ int main(int argc, char* argv[])
     m1=(sf_n(f1)+1)/2-1; m1=sf_n(f1)>1?m1:0;
     m2=(sf_n(f2)+1)/2-1; m2=sf_n(f2)>1?m2:0;
     m3=(sf_n(f3)+1)/2-1; m3=sf_n(f3)>1?m3:0;
-    if(verb) sf_warning("m1=%d m2=%d m3=%d",m1,m2,m3);
+    if(verb) sf_warning("m3=%d m2=%d m1=%d",m3,m2,m1);
 
     /*------------------------------------------------------------*/
-    for(        k3=0; k3<sf_n(f3); k3++) {
+    if(verb) fprintf(stderr,"%5d %5d %5d\n",sf_n(a3)-1,sf_n(a2)-1,sf_n(a1)-1);
+    if(stat) {
+	/* read filter*/
+	sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
 
-#ifdef _OPENMP
-#pragma omp parallel \
-    private(k2,k1,j3,j2,j1,i3,i2,i1) \
-    shared(k3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)
-#endif	
-	for(    k2=0; k2<sf_n(f2); k2++) {
-	    for(k1=0; k1<sf_n(f1); k1++) {
-		
-		for(j3=0; j3<sf_n(a3); j3++) {
-		    i3=j3-k3+m3;
-		    if( INBOUND(0,sf_n(a3),i3)) {
-			
-			for(j2=0; j2<sf_n(a2); j2++) {
-			    i2=j2-k2+m2;
-			    if( INBOUND(0,sf_n(a2),i2)) {
-				
-				for(j1=0; j1<sf_n(a1); j1++) {
-				    i1=j1-k1+m1;
-				    if( INBOUND(0,sf_n(a1),i1)) {   
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-					y[j3][j2][j1] 
-					    += x[i3][i2][i1] 
-					    *  f[k3][k2][k1];
+	for        (j3=0; j3<sf_n(a3); j3++) {
+	    for    (j2=0; j2<sf_n(a2); j2++) {	    
+		for(j1=0; j1<sf_n(a1); j1++) {
+		    if(verb) fprintf(stderr,"%5d %5d %5d",j3,j2,j1);
+		    
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel	       \*/
+/*    private(k3,k2,k1,i3,i2,i1)			\*/
+/*    shared (j3,j2,j1,f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)*/
+/*#endif*/
+		    for(    k3=0; k3<sf_n(f3); k3++) {
+			i3=j3-k3+m3;
+			if( INBOUND(0,sf_n(a3),i3)) {	
+			    
+			    for(    k2=0; k2<sf_n(f2); k2++) {
+				i2=j2-k2+m2;
+				if( INBOUND(0,sf_n(a2),i2)) {			
+				    
+				    for(k1=0; k1<sf_n(f1); k1++) {
+					i1=j1-k1+m1;
+					if( INBOUND(0,sf_n(a1),i1)) {   
+/*#ifdef _OPENMP*/
+/*#pragma omp critical*/
+/*#endif*/
+					    y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+  
+					}
+				    } /* k1 loop */				    
+				}
+			    } /* k2 loop */						    
+		    	}
+		    } /* k3 loop */
+		    
+		    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+		} /* j1 loop */
+	    } /* j2 loop */	
+	} /* j3 loop */	
+	
+    } else {
+	
+	for        (j3=0; j3<sf_n(a3); j3++) {
+	    for    (j2=0; j2<sf_n(a2); j2++) {	    
+		for(j1=0; j1<sf_n(a1); j1++) {
+		    if(verb) fprintf(stderr,"%5d %5d %5d",j3,j2,j1);
+		    
+		    /* read filter*/
+		    sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
 
-				    }
-				} /* j1 loop */				
-				
-			    }
-			} /* j2 loop */
-			
-		    }
-		} /* j3 loop */
-		
-	    } /* k1 loop */
-	} /* k2 loop */
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel	       \*/
+/*    private(k3,k2,k1,i3,i2,i1)			\*/
+/*    shared (j3,j2,j1,f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)*/
+/*#endif*/
 
+		    for(    k3=0; k3<sf_n(f3); k3++) {
+			i3=j3-k3+m3;
+			if( INBOUND(0,sf_n(a3),i3)) {	
+			    
+			    for(    k2=0; k2<sf_n(f2); k2++) {
+				i2=j2-k2+m2;
+				if( INBOUND(0,sf_n(a2),i2)) {			
+				    
+				    for(k1=0; k1<sf_n(f1); k1++) {
+					i1=j1-k1+m1;
+					if( INBOUND(0,sf_n(a1),i1)) {   
+/*#ifdef _OPENMP*/
+/*#pragma omp critical*/
+/*#endif  */
+					    y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+  
+					}
+				    } /* k1 loop */	    
+				}
+			    } /* k2 loop */	    
+		    	}
+		    } /* k3 loop */
+		    
+		    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+		} /* j1 loop */
+	    } /* j2 loop */	
+	} /* j3 loop */	
 
-    } /* k3 loop */
+    }
 
     /*------------------------------------------------------------*/
     /* write data */

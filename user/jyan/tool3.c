@@ -85,11 +85,9 @@ void wfsep(float **zdel,
 	   sf_axis  ax,
 	   sf_axis  az,
 	   float   c11,
-	   float   c13,
-	   float   c15,
 	   float   c33,
-	   float   c35,
 	   float   c55,
+	   float   c13,
 	   wfs2d   wfs
     )
 /*< wavefield separator >*/
@@ -118,15 +116,11 @@ void wfsep(float **zdel,
 	    k=sqrt(kz*kz+kx*kx);
 
 	    a11=  c11*kx*kx+
-		2*c15*kx*kz +
 		  c55*kz*kz;
 	    
-	    a12= c15     *kx*kx +
-		(c13+c55)*kx*kz +
-		 c35     *kz*kz;
+	    a12= (c13+c55)*kx*kz;
 
 	    a22=  c55*kx*kx+
-		2*c35*kx*kz +
 		  c33*kz*kz;
 
 	    wfs->ctfl[0][0] = a11;
