@@ -3,6 +3,7 @@
 
 #ifdef _OPENMP
 #include <omp.h>
+#include "omputil.h"
 #endif
 
 #ifndef _fdutil_h
@@ -203,29 +204,6 @@ fdm3d fdutil3d_init(bool verb_,
     fdm->ompchunk=ompchunk_;
 
     return fdm;
-}
-
-/*------------------------------------------------------------*/
-int omp_init()
-/*< init OMP parameters >*/
-{
-    int ompnth,ompath;
-    int ompchunk;
-    
-    /* OMP data chunk size */
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
-
-#ifdef _OPENMP
-    /* OMP available threads */
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
-#pragma omp parallel
-    ompath=omp_get_num_threads();
-    if(ompnth<1) ompnth=ompath;
-    omp_set_num_threads(ompnth);
-    sf_warning("using %d threads of a total of %d",ompnth,ompath);
-#endif
-
-    return ompnth;
 }
 
 /*------------------------------------------------------------*/

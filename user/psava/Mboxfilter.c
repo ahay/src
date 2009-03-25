@@ -29,9 +29,8 @@ int main(int argc, char* argv[])
     bool verb,stat;
 
     /* OMP parameters */
-    int  ompchunk; 
 #ifdef _OPENMP
-    int ompnth;
+    int ompnth,ompith;
 #endif
     
     sf_file Fx=NULL; /* input  */
@@ -40,7 +39,8 @@ int main(int argc, char* argv[])
 
     float ***x=NULL; /* data in  */
     float ***y=NULL; /* data out */
-    float ***f=NULL; /* filter   */
+    float ***fs=NULL; /*     stationary filter */
+    float****fn=NULL; /* non-stationary filter */
     
     /* cube axes */
     sf_axis a1,a2,a3;
@@ -50,6 +50,8 @@ int main(int argc, char* argv[])
     int j1,j2,j3;
     int k1,k2,k3;
     int m1,m2,m3;
+    
+    off_t start;
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -88,9 +90,13 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* allocate arrays */
-    x=sf_floatalloc3(sf_n(a1),sf_n(a2),sf_n(a3)); /* data in  */
-    y=sf_floatalloc3(sf_n(a1),sf_n(a2),sf_n(a3)); /* data out */ 
-    f=sf_floatalloc3(sf_n(f1),sf_n(f2),sf_n(f3)); /* filter */
+    x =sf_floatalloc3(sf_n(a1),sf_n(a2),sf_n(a3)); /* data in  */
+    y =sf_floatalloc3(sf_n(a1),sf_n(a2),sf_n(a3)); /* data out */ 
+
+    if(stat) 
+	fs=sf_floatalloc3(       sf_n(f1),sf_n(f2),sf_n(f3)); /* filter */
+    else
+	fn=sf_floatalloc4(ompnth,sf_n(f1),sf_n(f2),sf_n(f3)); /* filter */
 
     /*------------------------------------------------------------*/
     /* read data  */
@@ -98,10 +104,6 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
-    /* read filter*/
-/*    sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);*/
-    /*------------------------------------------------------------*/
-
     /* zero output */
     for        (i3=0; i3<sf_n(a3); i3++) {
 	for    (i2=0; i2<sf_n(a2); i2++) {
@@ -110,7 +112,8 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    
+    /*------------------------------------------------------------*/
+
     /*------------------------------------------------------------*/
     m1=(sf_n(f1)+1)/2-1; m1=sf_n(f1)>1?m1:0;
     m2=(sf_n(f2)+1)/2-1; m2=sf_n(f2)>1?m2:0;
@@ -118,21 +121,20 @@ int main(int argc, char* argv[])
     if(verb) sf_warning("m3=%d m2=%d m1=%d",m3,m2,m1);
 
     /*------------------------------------------------------------*/
-    if(verb) fprintf(stderr,"%5d %5d %5d\n",sf_n(a3)-1,sf_n(a2)-1,sf_n(a1)-1);
     if(stat) {
 	/* read filter*/
-	sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
+	sf_floatread(fs[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
 
 	for        (j3=0; j3<sf_n(a3); j3++) {
+
+#ifdef _OPENMP
+#pragma omp parallel	       \
+    private(j2,j1,k3,k2,k1,i3,i2,i1)			\
+    shared (j3,   f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,fs)
+#endif
 	    for    (j2=0; j2<sf_n(a2); j2++) {	    
 		for(j1=0; j1<sf_n(a1); j1++) {
-		    if(verb) fprintf(stderr,"%5d %5d %5d",j3,j2,j1);
 		    
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel	       \*/
-/*    private(k3,k2,k1,i3,i2,i1)			\*/
-/*    shared (j3,j2,j1,f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)*/
-/*#endif*/
 		    for(    k3=0; k3<sf_n(f3); k3++) {
 			i3=j3-k3+m3;
 			if( INBOUND(0,sf_n(a3),i3)) {	
@@ -144,10 +146,8 @@ int main(int argc, char* argv[])
 				    for(k1=0; k1<sf_n(f1); k1++) {
 					i1=j1-k1+m1;
 					if( INBOUND(0,sf_n(a1),i1)) {   
-/*#ifdef _OPENMP*/
-/*#pragma omp critical*/
-/*#endif*/
-					    y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+
+					    y[j3][j2][j1] += x[i3][i2][i1] * fs[k3][k2][k1];
   
 					}
 				    } /* k1 loop */				    
@@ -156,26 +156,35 @@ int main(int argc, char* argv[])
 		    	}
 		    } /* k3 loop */
 		    
-		    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 		} /* j1 loop */
 	    } /* j2 loop */	
 	} /* j3 loop */	
 	
     } else {
 	
-	for        (j3=0; j3<sf_n(a3); j3++) {
-	    for    (j2=0; j2<sf_n(a2); j2++) {	    
-		for(j1=0; j1<sf_n(a1); j1++) {
-		    if(verb) fprintf(stderr,"%5d %5d %5d",j3,j2,j1);
-		    
-		    /* read filter*/
-		    sf_floatread(f[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
+	start = sf_tell(Ff);
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel	       \*/
-/*    private(k3,k2,k1,i3,i2,i1)			\*/
-/*    shared (j3,j2,j1,f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,f)*/
-/*#endif*/
+	for        (j3=0; j3<sf_n(a3); j3++) {
+
+#ifdef _OPENMP
+#pragma omp parallel	       \
+    private(j2,j1,k3,k2,k1,i3,i2,i1)			\
+    shared (j3,   f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,fn)
+#endif
+	    for    (j2=0; j2<sf_n(a2); j2++) {	    
+		ompith = omp_get_thread_num();
+		for(j1=0; j1<sf_n(a1); j1++) {
+		    
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif
+		    {
+			/* read filter*/
+			sf_seek(Ff,start+(j3*sf_n(a1)*sf_n(a2)+
+					  j2*sf_n(a1)         +
+					  j1)*sizeof(float),SEEK_SET);
+			sf_floatread(fn[ompith][0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
+		    }
 
 		    for(    k3=0; k3<sf_n(f3); k3++) {
 			i3=j3-k3+m3;
@@ -188,10 +197,8 @@ int main(int argc, char* argv[])
 				    for(k1=0; k1<sf_n(f1); k1++) {
 					i1=j1-k1+m1;
 					if( INBOUND(0,sf_n(a1),i1)) {   
-/*#ifdef _OPENMP*/
-/*#pragma omp critical*/
-/*#endif  */
-					    y[j3][j2][j1] += x[i3][i2][i1] * f[k3][k2][k1];
+
+					    y[j3][j2][j1] += x[i3][i2][i1] * fn[ompith][k3][k2][k1];
   
 					}
 				    } /* k1 loop */	    
@@ -200,7 +207,6 @@ int main(int argc, char* argv[])
 		    	}
 		    } /* k3 loop */
 		    
-		    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 		} /* j1 loop */
 	    } /* j2 loop */	
 	} /* j3 loop */	
