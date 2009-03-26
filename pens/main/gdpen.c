@@ -45,15 +45,15 @@ char            name[] = "gdpen";
 #define MAXVERT 1000
 
 static gdImagePtr image, oldimage;
-static bool default_out = true;
-static int color_table[NCOLOR], gdcolor, black, delay, nx, ny;
+static bool default_out = true, light = false;
+static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
 static char *image_type;
 
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
     float pixels_per_inch, aspect_ratio;
-    char newpath[60];
+    char newpath[60], *color;
     int value;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
@@ -69,6 +69,7 @@ void opendev (int argc, char* argv[])
     dev.attributes = gdattr;
     dev.vector = gdvector; 
     dev.plot = gdplot;
+    dev.point = gdpoint;
 
     pixels_per_inch = dev.pixels_per_inch = PPI;
     dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
@@ -94,7 +95,27 @@ void opendev (int argc, char* argv[])
     ny = dev.ymax+1;
 
     image = gdImageCreate(nx,ny);
-    black = gdImageColorAllocate(image, 0, 0, 0);
+
+    if (NULL == (color = sf_getstring("bgcolor"))) color="black";
+    /* background color (black,white,light,dark) 
+       'light' and 'dark' cause the background to be transparent (in PNG and GIF) */
+
+    switch (color[0]) {
+	case 'b': /* black */
+	case 'd': /* dark */
+	default:
+	    light = false;
+	    bgcolor = gdImageColorAllocate(image, 0, 0, 0);
+	    break;
+	case 'w': /* white */
+	case 'l': /* light */
+	    light = true;
+	    bgcolor = gdImageColorAllocate(image, 255, 255, 255);
+	    break;
+    }
+
+    if (color[0]=='l' || color[0]=='d')
+	gdImageColorTransparent(image,bgcolor);
 
     default_out = (bool) isatty(fileno(pltout));
 
@@ -122,21 +143,26 @@ void opendev (int argc, char* argv[])
 void gdreset (void)
 /*< reset >*/
 {
-    int value, color;
+    int value, color, r, g, b;
 
     /* reset color table */
     color = color_table[0];
     if (-1 != color) gdImageColorDeallocate(image, color);
-    color_table[0] = black;
+    color_table[0] = bgcolor;
 
     for (value = 1; value < 8; value++)
     {
 	color = color_table[value];
 	if (-1 != color) gdImageColorDeallocate(image, color);
-	color_table[value] = gdImageColorAllocate(image, 
-						  MAX_GUN * ((value & 2) / 2),
-						  MAX_GUN * ((value & 4) / 4),
-						  MAX_GUN * ((value & 1) / 1));
+	r = MAX_GUN * ((value & 2) / 2);
+	g = MAX_GUN * ((value & 4) / 4);
+	b = MAX_GUN * ((value & 1) / 1);
+
+	if (light) {
+	    color_table[value] = gdImageColorAllocate(image,255-r,255-g,255-b);
+	} else {
+	    color_table[value] = gdImageColorAllocate(image,r,g,b);
+	}
     }
  
     for (value = 8; value < NCOLOR; value++)
@@ -188,11 +214,11 @@ void gderase (int command)
     switch (command)
     {
 	case ERASE_START:
-	    gdImageFilledRectangle(image, 0, 0, nx, ny, black);
+	    gdImageFilledRectangle(image, 0, 0, nx, ny, color_table[0]);
 	    break;
 	case ERASE_MIDDLE:
 	    gd_write();
-	    gdImageFilledRectangle(image, 0, 0, nx, ny, black);
+	    gdImageFilledRectangle(image, 0, 0, nx, ny, color_table[0]);
 	    break;
 	case ERASE_END:
 	    gd_write();
@@ -262,6 +288,12 @@ void gdplot(int x, int y, int draw)
 
     oldx = x;
     oldy = y;
+}
+
+void gdpoint(int x, int y)
+/*< point >*/
+{
+    gdImageSetPixel(image, x, dev.ymax-y, gdcolor);
 }
 
 void gdarea (int npts, struct vertex *head)

@@ -4,9 +4,11 @@ import configure
 
 progs = '''
 afac 
-boxfilter convolve2
+convolve2
 ederiv
 '''
+
+# boxfilter 
 
 try:  # distributed version
     Import('env root libdir bindir')
