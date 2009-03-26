@@ -2529,7 +2529,7 @@ void opendev (int argc, char* argv[])
  */
     pen_gc = XCreateGC(pen_display,pen_window,0,NULL);
     XSetLineAttributes(pen_display,pen_gc, 0, LineSolid, CapButt, JoinRound);
-    XSetFillRule(pen_display, pen_gc, WindingRule);
+    XSetFillRule(pen_display, pen_gc, EvenOddRule);
     XSetClipMask(pen_display, pen_gc, None );
  
     /* set standard colors */

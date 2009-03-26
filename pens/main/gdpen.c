@@ -261,6 +261,7 @@ void gdattr (int command, int value, int v1, int v2, int v3)
 	    break;
 	case SET_COLOR_TABLE:
 	    color_table[value] = gdImageColorAllocate(image, v1, v2, v3);
+	    if (0==value) dev.erase(ERASE_START);		
 	    break;
 	case SET_WINDOW:
 	    xmin = value-1;
