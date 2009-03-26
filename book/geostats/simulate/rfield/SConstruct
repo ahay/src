@@ -127,4 +127,8 @@ for i in (plots[2]):
                      grid_par[2]['ny']/2) , stdout=0
            )
 
+Flow (  'total_size.txt',map(str,BUILD_TARGETS),
+        'sizes files=n *.rsf',stdin=0)
+Default ('total_size.txt')
+
 End ()
