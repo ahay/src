@@ -67,7 +67,7 @@ void opendev (int argc, char* argv[])
 
     dev.area = gdarea;
     dev.attributes = gdattr;
-    dev.vector = gdvector; 
+/*    dev.vector = gdvector; */
     dev.plot = gdplot;
     dev.point = gdpoint;
 
@@ -314,15 +314,4 @@ void gdarea (int npts, struct vertex *head)
     gdImageFilledPolygon(image, vlist, npts, gdcolor);
 }
 
-void gdvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
-/*< vector >*/
-{
-    if (nfat < 0)
-	return;
 
-    if (nfat > 1) gdImageSetThickness(image, nfat);
-
-    genvector(x1,y1,x2,y2,0,dashon);
-
-    if (nfat > 1) gdImageSetThickness(image, 1);
-}
