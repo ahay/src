@@ -59,8 +59,11 @@ int main(int argc, char *argv[])
     pp = sf_complexalloc(nxh);
     qq = sf_complexalloc(nxh);
 
-    if (!sf_getbool("inv",&inv)) inv=false;
+    if (!sf_getbool("inv",&inv)) inv=true;
     /* if y, do inverse transform */
+
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* if y, do adjoint transform */
 
     if (!sf_getbool("unit",&unit)) unit=false;
     /* if y, use unitary scaling */
@@ -70,8 +73,6 @@ int main(int argc, char *argv[])
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
-
-    adj=inv;
 
     oclet_init(nx,nh,dh,x0,h0,inv,unit,type[0]);
 
