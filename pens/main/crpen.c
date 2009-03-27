@@ -162,10 +162,6 @@ static void cr_write (void)
     } else {
 	cairo_surface_write_to_png_stream (surface,cr_fwrite,NULL);
     }
-    
-    cairo_surface_destroy(surface);
-    cairo_destroy(cr);
-
     called=true;
 }
 
@@ -183,6 +179,8 @@ void crerase (int command)
 	case ERASE_END:
 	    cr_write();
 	    fclose(pltout);
+	    cairo_surface_destroy(surface);
+	    cairo_destroy(cr);
 	    break;
 	case ERASE_BREAK:
 	    cr_write();
@@ -210,6 +208,8 @@ void crclose (int status)
 void crattr (int command, int value, int v1, int v2, int v3)
 /*< attr >*/
 {
+    int x0, y0, width, height;
+
     switch (command)
     {
 	case SET_COLOR:
@@ -227,7 +227,24 @@ void crattr (int command, int value, int v1, int v2, int v3)
 	case SET_WINDOW:
 	    cairo_reset_clip(cr);
 	    cairo_new_path(cr);
-	    cairo_rectangle (cr,value,dev.ymax-v3,v2-value+1,v3-v1+1);
+
+	    if (v2 > value) {
+		x0 = value;
+		width = v2-value+1;
+	    } else {
+		x0 = v2;
+		width = value-v2+1;
+	    }
+
+	    if (v3 > v1) {
+		y0 = dev.ymax-v3;
+		height=v3-v1+1;
+	    } else {
+		y0 = dev.ymax-v1;
+		height=v1-v3+1;
+	    }
+
+	    cairo_rectangle (cr,x0,y0,width,height);
 	    cairo_clip(cr);
 	default:
 	    break;
@@ -240,7 +257,6 @@ void crplot(int x, int y, int draw)
     static int oldx, oldy;
     
     if (draw) {
-	cairo_new_path(cr);
 	cairo_move_to (cr,oldx,dev.ymax-oldy);
 	cairo_line_to (cr,x,dev.ymax-y);
 	cairo_stroke(cr);
@@ -269,3 +285,10 @@ void crarea (int npts, struct vertex *head)
     cairo_fill(cr);
 }
 
+void crvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
+/*< device-dependent vector >*/
+{
+    cairo_new_path(cr);
+    genvector(x1,y1,x2,y2,nfat,dashon);
+    cairo_stroke(cr);
+}

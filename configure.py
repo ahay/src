@@ -542,11 +542,15 @@ def cairo(context):
 
     oldpath = context.env.get('CPPPATH',[])
 
-    cairopath = context.env.get('CAIROPATH','/usr/include/cairo')
-    if os.path.isfile(os.path.join(cairopath,'cairo.h')):
+    cairopath = context.env.get('CAIROPATH')
+    if cairopath and os.path.isfile(os.path.join(cairopath,'cairo.h')):
         context.env['CPPPATH'] = oldpath + [cairopath]
     else:
-        cairopath = None
+        for top in ('/usr/include','/usr/local/include'):
+            cairopath = os.path.join(top,'cairo')
+            if os.path.isfile(os.path.join(cairopath,'cairo.h')):
+                context.env['CPPPATH'] = oldpath + [cairopath]
+                break
 
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
