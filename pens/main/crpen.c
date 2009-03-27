@@ -42,15 +42,14 @@ char            name[] = "crpen";
 
 #include "_device.h"
 
-#define PPI 100.0  /* pixels per inch */
+#define PPI 72.0  /* pixels per inch */
 #define NCOLOR 256 /* number of colors */
 #define MAXVERT 1000
 
 static cairo_surface_t *surface;
 static cairo_t *cr;
 
-static float color_table[NCOLOR][3], nx, ny;
-static int type;
+static int color_table[NCOLOR][3], nx, ny, type, crcolor=7;
 
 static cairo_status_t cr_fwrite(void *closure, const unsigned char *data, unsigned int length)
 {
@@ -61,7 +60,7 @@ static cairo_status_t cr_fwrite(void *closure, const unsigned char *data, unsign
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    float pixels_per_inch, aspect_ratio;
+    int value;
     char newpath[60], *image_type;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
@@ -75,21 +74,13 @@ void opendev (int argc, char* argv[])
 
     dev.attributes = crattr;
     dev.plot = crplot;
+    dev.area = crarea;
 
-    pixels_per_inch = dev.pixels_per_inch = PPI;
-    dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
-    dev.ymax = VP_SCREEN_RATIO * dev.xmax;
-    aspect_ratio = dev.aspect_ratio = 1.;
+    dev.pixels_per_inch = PPI;
+    dev.aspect_ratio = 1.;
 
-    sf_getfloat ("aspect", &dev.aspect_ratio);
-    /* aspect ratio */
-    sf_getfloat ("ppi", &dev.pixels_per_inch);
-    /* pixels per inch */
-    dev.xmax *= dev.pixels_per_inch / pixels_per_inch;
-    dev.ymax *= (aspect_ratio / dev.aspect_ratio) *
-     (dev.pixels_per_inch / pixels_per_inch);
-    sf_getint ("n1", &dev.xmax);
-    sf_getint ("n2", &dev.ymax);
+    if (!sf_getint ("n1", &dev.xmax)) dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    if (!sf_getint ("n2", &dev.ymax)) dev.ymax = VP_SCREEN_RATIO * VP_STANDARD_HEIGHT * dev.pixels_per_inch;
     /* image size */
 
     dev.need_end_erase = true;
@@ -123,6 +114,7 @@ void opendev (int argc, char* argv[])
     }
 
     cr = cairo_create (surface);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
 
     if (isatty(fileno(pltout)))
     {
@@ -131,32 +123,26 @@ void opendev (int argc, char* argv[])
 	if (pltout == NULL)
 	    ERR (FATAL, name, "can't open file %s\n", newpath);
     }
-}
 
-static void cr_clear(void)
-{
-    cairo_set_source_rgb (cr, 
-			  color_table[0][0], 
-			  color_table[0][1], 
-			  color_table[0][2]);
-    cairo_rectangle (cr, 0, 0, nx, ny);
-    cairo_fill(cr);
+    for (value = 0; value < NCOLOR; value++)
+    {
+	color_table[value][0] = -1;
+    } 
 }
 
 void crreset (void)
 /*< reset >*/
 {
     int value;
+    const int red[]   = {255, 255,   0,   0, 255, 255,   0, 0};
+    const int green[] = {255, 255, 255, 255,   0,   0,   0, 0};
+    const int blue[]  = {255,   0, 255,   0, 255,   0, 255, 0};
 
-    cr_clear();
-    color_table[0][0] =0.0;
-    color_table[0][1] =0.0;
-    color_table[0][2] =0.0;
-    for (value = 1; value < 8; value++)
+    for (value = 0; value < 8; value++)
     {
-	color_table[value][0] = ((value & 2) / 2);
-	color_table[value][1] = ((value & 4) / 4);
-	color_table[value][2] = ((value & 1) / 1);
+	color_table[value][0] = red[value];
+	color_table[value][1] = green[value];
+	color_table[value][2] = blue[value];
     }
     for (value = 8; value < NCOLOR; value++)
     {
@@ -190,20 +176,15 @@ void crerase (int command)
     switch (command)
     {
 	case ERASE_START:
-	    cr_clear();
 	    break;
 	case ERASE_MIDDLE:
-	    cairo_stroke(cr);
 	    cr_write();
-	    cr_clear();
 	    break;
 	case ERASE_END:
-	    cairo_stroke(cr);
 	    cr_write();
 	    fclose(pltout);
 	    break;
 	case ERASE_BREAK:
-	    cairo_stroke(cr);
 	    cr_write();
 	    break;
 	default:
@@ -232,17 +213,22 @@ void crattr (int command, int value, int v1, int v2, int v3)
     switch (command)
     {
 	case SET_COLOR:
-	    cairo_stroke(cr);
+	    crcolor=value;
 	    cairo_set_source_rgb (cr, 
-				  color_table[value][0], 
-				  color_table[value][1], 
-				  color_table[value][2]);
+				  color_table[value][0]/255.0, 
+				  color_table[value][1]/255.0, 
+				  color_table[value][2]/255.0);
 	    break;
 	case SET_COLOR_TABLE:
-	    color_table[value][0] = v1/255.0;
-	    color_table[value][1] = v2/255.0;
-	    color_table[value][2] = v3/255.0;
+	    color_table[value][0] = v1;
+	    color_table[value][1] = v2;
+	    color_table[value][2] = v3;
 	    break;
+	case SET_WINDOW:
+	    cairo_reset_clip(cr);
+	    cairo_new_path(cr);
+	    cairo_rectangle (cr,value,dev.ymax-v3,v2-value+1,v3-v1+1);
+	    cairo_clip(cr);
 	default:
 	    break;
     }
@@ -251,11 +237,35 @@ void crattr (int command, int value, int v1, int v2, int v3)
 void crplot(int x, int y, int draw)
 /*< plot >*/
 {
+    static int oldx, oldy;
+    
     if (draw) {
+	cairo_new_path(cr);
+	cairo_move_to (cr,oldx,dev.ymax-oldy);
 	cairo_line_to (cr,x,dev.ymax-y);
+	cairo_stroke(cr);
     } else {
 	cairo_move_to (cr,x,dev.ymax-y);
 	dev.lost = 0;
     }
+    
+    oldx=x;
+    oldy=y;
+}
+
+void crarea (int npts, struct vertex *head)
+/*< area >*/
+{
+    int i;
+
+    cairo_new_path(cr);
+    cairo_move_to (cr,head->x,dev.ymax - head->y);
+    head = head->next;
+    for (i = 1; i < npts; i++)
+    {
+	cairo_line_to (cr,head->x,dev.ymax - head->y);
+	head = head->next;
+    }
+    cairo_fill(cr);
 }
 

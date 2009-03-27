@@ -134,6 +134,7 @@ def check_all(context):
     x11 (context) # FDNSI
     ppm (context) # FDNSI
     gd  (context) # FDNSI
+    cairo(context) # FDNSI
     jpeg(context) # FDNSI
     opengl(context) # FDNSI
     blas(context) # FDNSI
@@ -532,6 +533,45 @@ def gd(context):
         context.Result(context_failure)
         need_pkg('libgd', fatal=False)
         context.env['GD'] = None
+    LIBS.pop()
+
+pkg['cairo'] = {}
+
+def cairo(context):
+    context.Message("checking for Cairo ... ")
+
+    oldpath = context.env.get('CPPPATH',[])
+
+    cairopath = context.env.get('CAIROPATH','/usr/include/cairo')
+    if os.path.isfile(os.path.join(cairopath,'cairo.h')):
+        context.env['CPPPATH'] = oldpath + [cairopath]
+    else:
+        cairopath = None
+
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    text = '''
+    #include <cairo.h>
+    #include <cairo-svg.h> 
+    #include <cairo-pdf.h> 
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
+    cairo = context.env.get('CAIRO','cairo')
+    LIBS.append(cairo)
+    res = context.TryLink(text,'.c')
+	
+    if res:
+        context.Result(res)
+        context.env['CAIRO'] = cairo
+        context.env['CAIROPATH'] = cairopath   
+    else:
+        context.Result(context_failure)
+        need_pkg('cairo', fatal=False)
+        context.env['CAIRO'] = None
+
+    context.env['CPPPATH'] = oldpath    
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
@@ -1184,7 +1224,9 @@ def options(file):
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
     opts.Add('GD','The GD library')
+    opts.Add('CAIRO','The cairo library')
     opts.Add('PPMPATH','Path to netpbm header files')
+    opts.Add('CAIROPATH','Path to cairo header files')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

@@ -69,7 +69,7 @@ def convert(infile,outfile):
 
         run = 'ppmpen break=i n1=%d n2=%d ppi=%d size=a ' \
               'xcenter=%g ycenter=%g %s | ' \
-              'ppmtogif > %s' % \
+              'ppmquant 256 | ppmtogif > %s' % \
               (width,height,ppi,xcen,ycen,vppen,gif)
         os.system (run)
         os.unlink(vppen)

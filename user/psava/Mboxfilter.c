@@ -29,10 +29,8 @@ int main(int argc, char* argv[])
     bool verb,stat;
 
     /* OMP parameters */
-#ifdef _OPENMP
-    int ompnth,ompith;
-#endif
-    
+    int ompith=0, ompnth=1;
+
     sf_file Fx=NULL; /* input  */
     sf_file Fy=NULL; /* output */
     sf_file Ff=NULL; /* filter - assumes centered filter */
@@ -171,8 +169,10 @@ int main(int argc, char* argv[])
     private(j2,j1,k3,k2,k1,i3,i2,i1)			\
     shared (j3,   f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,fn)
 #endif
-	    for    (j2=0; j2<sf_n(a2); j2++) {	    
+	    for    (j2=0; j2<sf_n(a2); j2++) {
+#ifdef _OPENMP	    
 		ompith = omp_get_thread_num();
+#endif
 		for(j1=0; j1<sf_n(a1); j1++) {
 		    
 #ifdef _OPENMP	    
