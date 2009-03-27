@@ -300,19 +300,19 @@ void rasreset (void)
 {
     int             value;
     zap ();
-    for (value = 0; value < NCOLOR; value++)
-    {
-	color_table[value][0] = -1;
-    }
-    for (value = 0; value < 8; value++)
+    color_table[0][0] =0;
+    color_table[0][1] =0;
+    color_table[0][2] =0;
+    for (value = 1; value < 8; value++)
     {
 	color_table[value][0] = MAX_GUN * ((value & 2) / 2);
 	color_table[value][1] = MAX_GUN * ((value & 4) / 4);
 	color_table[value][2] = MAX_GUN * ((value & 1) / 1);
     }
-    color_table[0][0] =256;
-    color_table[0][1] =0;
-    color_table[0][2] =0;
+    for (value = 8; value < NCOLOR; value++)
+    {
+	color_table[value][0] = -1;
+    }   
 }
 
 void zap (void)

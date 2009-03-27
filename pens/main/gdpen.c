@@ -45,7 +45,7 @@ char            name[] = "gdpen";
 #define MAXVERT 1000
 
 static gdImagePtr image, oldimage;
-static bool default_out = true, light = false;
+static bool light = false;
 static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
 static char *image_type;
 
@@ -117,9 +117,7 @@ void opendev (int argc, char* argv[])
     if (color[0]=='l' || color[0]=='d')
 	gdImageColorTransparent(image,bgcolor);
 
-    default_out = (bool) isatty(fileno(pltout));
-
-    if (default_out)
+    if (isatty(fileno(pltout)))
     {
 	sprintf (newpath, "%s", "image_file");
 	pltout = fopen (newpath, "wb");
@@ -261,7 +259,6 @@ void gdattr (int command, int value, int v1, int v2, int v3)
 	    break;
 	case SET_COLOR_TABLE:
 	    color_table[value] = gdImageColorAllocate(image, v1, v2, v3);
-	    if (0==value) dev.erase(ERASE_START);		
 	    break;
 	case SET_WINDOW:
 	    xmin = value-1;
