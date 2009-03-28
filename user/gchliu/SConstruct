@@ -1,0 +1,48 @@
+import os, sys, re, string, glob
+sys.path.append('../..')
+import configure
+
+progs = '''
+ricker2 
+'''
+
+try:  # distributed version
+    Import('env root libdir bindir')
+    env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+except: # local version
+    env = configure.Debug()
+    root = None
+    SConscript('../../api/c/SConstruct')
+    src = glob.glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
+for source in src:
+    inc = env.Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]
+    configure.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    env.Depends(docs,'#/framework/rsfdoc.py')	
+    doc = env.Docmerge(main,docs)
+    env.Install(libdir,doc)
+#####################################################################
