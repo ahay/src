@@ -133,6 +133,7 @@ def check_all(context):
     c99 (context) # FDNSI
     x11 (context) # FDNSI
     ppm (context) # FDNSI
+    tiff (context) # FDNSI
     gd  (context) # FDNSI
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
@@ -321,7 +322,8 @@ def c99(context):
     if res:
         context.Result(res)
     else:
-        context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
+        context.env['CPPDEFINES'] = \
+            context.env.get('CPPDEFINES',[])+['NO_COMPLEX']
         context.Result(context_failure)
         need_pkg('c99', fatal=False)
 
@@ -509,6 +511,33 @@ def ppm(context):
         context.env['PPM'] = None
     context.env['CPPPATH'] = oldpath
 
+pkg['libtiff'] = {}
+
+def tiff(context):
+    context.Message("checking for tiff ... ")
+    
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    text = '''
+    #include <tiffio.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
+    tiff = context.env.get('TIFF','tiff')
+    LIBS.append(tiff)
+    res = context.TryLink(text,'.c')
+	
+    if res:
+        context.Result(res)
+        context.env['TIFF'] = tiff   
+    else:
+        context.Result(context_failure)
+        context.env['TIFF'] = None
+        need_pkg('libtiff', fatal=False)
+
+    LIBS.pop()
+
 pkg['libgd'] = {'generic':'libgd2-noxpm-dev'}
 
 def gd(context):
@@ -538,7 +567,7 @@ def gd(context):
 pkg['cairo'] = {}
 
 def cairo(context):
-    context.Message("checking for Cairo ... ")
+    context.Message("checking for cairo ... ")
 
     oldpath = context.env.get('CPPPATH',[])
 
@@ -735,8 +764,8 @@ def blas(context):
             context.env['BLAS'] = blas
         else:
             context.Result(context_failure)
-            context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
-            context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
+            context.env['CPPDEFINES'] = \
+                context.env.get('CPPDEFINES',[]) + ['NO_BLAS']
             LIBS.pop()
             LIBS.pop()
             LIBS.pop()
@@ -850,7 +879,7 @@ def pthreads(context):
     CC    = context.env.get('CC','gcc')
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
-    if gcc:
+    if gcc and plat['OS'] != 'darwin':
         context.env.Append(LINKFLAGS='-pthread')
     elif icc:
         LIBS.append('pthread')
@@ -1227,6 +1256,7 @@ def options(file):
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
+    opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
     opts.Add('CAIRO','The cairo library')
     opts.Add('PPMPATH','Path to netpbm header files')

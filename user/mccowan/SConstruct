@@ -44,7 +44,7 @@ if root:
 
 for cfile in Split('dmeig fastfft'):
     test = env.StaticObject('Test' + cfile + '.o', cfile + '.c',
-                            CCFLAGS=env.get('CCFLAGS','')+' -DTEST')
+                            CPPDEFINES=env.get('CPPDEFINES',[])+['TEST'])
     prog = env.Program(test,PROGSUFFIX='.x',PROGPREFIX='')
 
 ######################################################################

@@ -96,27 +96,35 @@ pens.append('pspen')
 # raspen
 #######
 
-ppm = env.get('PPM')
+env.Include('raspen',prefix='pen_')
+pens.append('raspen')
 
-if ppm:
-    env.Include('raspen',prefix='pen_')
+for pen in ('ppm','tiff'):
+    cap = pen.upper()
+    name = pen+'pen'
+    lib = env.get(cap)
 
-    ppmpath = env.get('PPMPATH')
-    if ppmpath:    
-        obj = env.StaticObject('raspen.c',
-                               CPPPATH=env.get('CPPPATH',[])+[ppmpath])
+    if lib:
+        path = env.get(cap+'PATH')
+        defines = env.get('CPPDEFINES',[])+['_'+cap]
+        if path:    
+            obj = env.StaticObject(name+'.o','raspen.c',
+                                   CPPPATH=env.get('CPPPATH',[])+[path],
+                                   CPPDEFINES=defines)
+        else:
+            obj = env.StaticObject(name+'.o','raspen.c',
+                                   CPPDEFINES=defines)
+        env.Depends(obj,'raspen.h')
+        main = env.Program(name,[obj,]+objects,
+                           LIBS=[lib]+env.get('LIBS',[]))
+        docalias['sf'+name]='sfraspen'
     else:
-        obj = env.StaticObject('raspen.c')
-    env.Depends(obj,'raspen.h')
-    main = env.Program('ppmpen',[obj,]+objects,
-                       LIBS=[ppm]+env.get('LIBS',[]))
-    docalias['sfppmpen']='sfraspen'
-    pens.append('raspen')
-else:
-    main = env.Place('ppmpen',None,var='PPM',package='libnetpbm-devel')
-    
-if root:
-    env.Install(bindir,main[0])
+        main = env.Place(name,None,var=cap,
+                         package={'ppm':'libnetpbm-devel',
+                                  'tiff':'libtiff'}[pen])
+
+    if root:
+        env.Install(bindir,main[0])
 
 # gdpen
 #######

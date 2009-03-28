@@ -17,10 +17,10 @@ env.Prepend(CPPPATH=['../../include'],
 if 'f90' in env.get('API',[]) and env.has_key('F90'):
     F90 = env.get('F90')
     F90base =  os.path.basename(F90)
-    env.Append(CCFLAGS=' -D$CFORTRAN90')
+    env.Append(CPPDEFINES=['$CFORTRAN90'])
 
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
-        env.Append(CCFLAGS=' -DGFORTRAN',F90FLAGS=' -J${SOURCE.dir}')
+        env.Append(CPPDEFINES=['GFORTRAN'],F90FLAGS=' -J${SOURCE.dir}')
     elif F90base == 'ifort':
         env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 

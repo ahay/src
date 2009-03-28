@@ -104,7 +104,13 @@
 #include <math.h>
 #include <string.h>
 
+#ifdef _PPM
 #include <ppm.h>
+#endif
+
+#ifdef _TIFF
+#include <tiffio.h>
+#endif
 
 #include "../include/attrcom.h"
 #include "../include/closestat.h"
@@ -147,6 +153,11 @@ char            colfile[60];
 
 static bool     default_out = true;
 static int xmax, ymax;
+
+#ifdef _TIFF
+static TIFF *tiffout;
+static char *tiffname;
+#endif
 
 void rasattr (int command, int value, int v1, int v2, int v3)
 /*< attr >*/
@@ -207,6 +218,8 @@ void raserase (int command)
     }
 }
 
+#ifdef _PPM
+
 void ras_write (void)
 /*< write >*/
 {
@@ -235,13 +248,55 @@ void ras_write (void)
     pm_close( pltout );
 }
 
+#endif
+
+#ifdef _TIFF
+
+void ras_write (void)
+/*< write >*/
+{
+    static bool called=false;
+    int y, nbuf;
+    unsigned char *p;
+    FILE *tiffin;
+    char buf[BUFSIZ];
+
+    if(called) return;
+    called=true;
+
+    p = image;
+    for (y = 0; y < ymax; y++) {
+	if (TIFFWriteScanline(tiffout, p, y, 0) < 0) 
+	    ERR (FATAL, name, "Trouble writing TIFF file");
+	p += xmax * 3;
+    }
+
+    TIFFClose(tiffout);
+    tiffin = fopen(tiffname,"rb");
+
+    while (1) {
+	nbuf = fread(buf,1,BUFSIZ,tiffin);
+	if (nbuf <= 0) break;
+	fwrite(buf,1,nbuf,pltout);
+    }
+
+    fclose(tiffin);
+    fclose(pltout);
+    
+    unlink(tiffname);
+}
+
+#endif
+
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
     char newpath[60];
     float pixels_per_inch, aspect_ratio;
 
+#ifdef _PPM
     ppm_init(&argc,argv);
+#endif
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
@@ -255,7 +310,6 @@ void opendev (int argc, char* argv[])
     dev.plot = rasplot;
     dev.attributes = rasattr;
 
-    /* physical device parameters for ppm format output */
     pixels_per_inch = dev.pixels_per_inch = 100.;
     dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
     dev.ymax = VP_SCREEN_RATIO * dev.xmax;
@@ -293,6 +347,24 @@ void opendev (int argc, char* argv[])
 	if (pltout == NULL)
 	    ERR (FATAL, name, "can't open file %s\n", newpath);
     }
+
+#ifdef _TIFF
+    fclose(sf_tempfile(&tiffname,"w"));
+    tiffout = TIFFOpen(tiffname,"wb");
+
+    if (tiffout == NULL)
+	ERR (FATAL, name, "can't open file %s\n", tiffname);
+
+    TIFFSetField(tiffout,TIFFTAG_IMAGEWIDTH,xmax);
+    TIFFSetField(tiffout,TIFFTAG_IMAGELENGTH,ymax);
+    TIFFSetField(tiffout,TIFFTAG_SAMPLESPERPIXEL,3);
+    TIFFSetField(tiffout,TIFFTAG_BITSPERSAMPLE,8);
+    TIFFSetField(tiffout,TIFFTAG_ORIENTATION,ORIENTATION_TOPLEFT);
+    TIFFSetField(tiffout,TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+    TIFFSetField(tiffout,TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    TIFFSetField(tiffout, TIFFTAG_ROWSPERSTRIP, 1);
+#endif
+
 }
 
 void rasreset (void)

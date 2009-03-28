@@ -28,8 +28,8 @@ mains = []
 for plot in Split(plots):
 	if plot in ['reflexpt','reflkine']:
 		env.Object(plot+'.o','reflector.c',
-			   CCFLAGS=env.get('CCFLAGS','') +
-			   ' -D%s' % string.upper(plot))
+			   CPPDEFINES=env.get('CPPDEFINES',[]) +
+			   [string.upper(plot)])
 		prog = env.Program(plot+'.o')
 	else:
 		prog = env.Program(plot+'.c')

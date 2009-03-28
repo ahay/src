@@ -163,11 +163,6 @@ extern int      nplots;
 extern bool      cachepipe;
 
 /*
- * file and terminal control variables
- */
-extern int      pltoutfd;
-
-/*
  * This routine is responsible for finding the input files,
  * setting up the input and output, and calling init_vplot
  * and proc_vplot. You can link to vplot without using this

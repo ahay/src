@@ -17,18 +17,17 @@ except: # local version
     SConscript('../fonts/SConstruct')
     SConscript('../utilities/SConstruct')
 
-env.Prepend(CPPPATH=['../../include'])
+incdir = os.environ.get('VPLOTFONTDIR',incdir+os.sep)
+env.Prepend(CPPPATH=['../../include'],
+            CPPDEFINES={'VPLOT_FONT_DIR':'\'\"%s\"\'' % incdir})
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
 
-incdir = os.environ.get('VPLOTFONTDIR',incdir+os.sep)
-
 objects = []
 for source in Split(src):
     env.Include(source,prefix='pen_')
-    obj = env.StaticObject(source+'.c',
-                           CPPFLAGS=env.get('CPPFLAGS',[])+['-DVPLOT_FONT_DIR=\'\"%s\"\'' % incdir,])
+    obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
 

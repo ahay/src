@@ -75,7 +75,6 @@ extern int      nplots;
 extern bool      endpause;
 extern int      epause;
 extern char     interact[];
-extern int      pltoutfd;
 extern FILE    *pltin;
 extern FILE    *controltty;
 extern char     pltname[];
