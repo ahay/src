@@ -6,7 +6,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 */
 /*
   Copyright (C) 2009 China University of Petroleum-Beijing
-                 and University of Texas at Austin
+            and University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,13 +33,14 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main(int argc, char* argv[])
 {
     int niter, nd, n1, n2, rect1, rect2, i1, i2; 
-    float **uw, **rf, **dw, **dp, lam;  
-    sf_file upgw, refl, dwgw, dip; 
+    float **uw, **rf, **dw, **dp, lam, **wt;  
+    sf_file upgw, refl, dwgw, dip, weight; 
 
     sf_init(argc,argv);
     upgw = sf_input("in");
     refl = sf_output("out");
     dwgw = sf_input("down");
+    weight = sf_input("weight");
     dip = sf_input("dip");
 
     if (!sf_histint(upgw,"n1",&n1)) sf_error("No n1= in input");
@@ -56,11 +57,14 @@ int main(int argc, char* argv[])
     uw = sf_floatalloc2(n1,n2);
     dw = sf_floatalloc2(n1,n2);
     rf = sf_floatalloc2(n1,n2);
+    wt = sf_floatalloc2(n1,n2);
     dp = sf_floatalloc2(n1,n2);
    
 
     sf_floatread(uw[0],nd,upgw);
     sf_floatread(dw[0],nd,dwgw); 
+    
+    sf_floatread(wt[0],nd,weight);
     sf_floatread(dp[0],nd,dip);
     //sf_warning("lllllllllllll");
     for (i2=0; i2 < n2; i2++) {
@@ -73,13 +77,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
-
 	
-    smoothshape(niter, NULL, uw[0], rf[0]);
+    smoothshape(niter, wt[0], uw[0], rf[0]);
     sf_floatwrite(rf[0],nd,refl);
  
-
     exit(0);
 }
 
 /* 	$Id: Mdixshape.c 1131 2005-04-20 18:19:10Z fomels $	 */
+
