@@ -40,3 +40,5 @@ Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School 
 Includes ctmf by Simon Perreault
 Includes vfsr by Lester Ingber
 Includes cfortran.h by Burkhard Burow
+Includes einspline by Kenneth P. Esler, Jr.
+
