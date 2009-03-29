@@ -1,4 +1,4 @@
-/* Row of identity operators */
+/* Division by downgoing wave operators */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-static int nn3, nn1, nn2, nwav, ori_wav;
+static int nn3, nn1, nn2;
 float* dowav;
 
 

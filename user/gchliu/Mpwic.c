@@ -27,8 +27,8 @@
 
 int main(int argc, char* argv[])
 {   
-    int i, n1, n2, n12, n3, nk, nf, reg, n12k, niter, nliter, iter, i3;
-    float eps, d1, of, maxweight, minweight, *d, *s, *dwave, ***pp, *w=NULL, *p=NULL, *ww=NULL;
+    int i, n1, n2, n12, n3, nk, reg, n12k, niter, nliter, iter, i3;
+    float eps, maxweight, *d, *s, *dwave, ***pp, *w=NULL, *p=NULL, *ww=NULL;
     bool verb, sparse, cut_p;
     sf_file in, out, dips, down, weight=NULL;
 
