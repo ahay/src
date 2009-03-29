@@ -99,7 +99,7 @@ pens.append('pspen')
 env.Include('raspen',prefix='pen_')
 pens.append('raspen')
 
-for pen in ('ppm','tiff'):
+for pen in ('ppm','tiff','jpeg'):
     cap = pen.upper()
     name = pen+'pen'
     lib = env.get(cap)
@@ -121,7 +121,8 @@ for pen in ('ppm','tiff'):
     else:
         main = env.Place(name,None,var=cap,
                          package={'ppm':'libnetpbm-devel',
-                                  'tiff':'libtiff'}[pen])
+                                  'tiff':'libtiff-devel',
+                                  'jpeg':'libjpeg-devel'}[pen])
 
     if root:
         env.Install(bindir,main[0])

@@ -112,6 +112,10 @@
 #include <tiffio.h>
 #endif
 
+#ifdef _JPEG
+#include <jpeglib.h>
+#endif
+
 #include "../include/attrcom.h"
 #include "../include/closestat.h"
 #include "../include/err.h"
@@ -157,6 +161,11 @@ static int xmax, ymax;
 #ifdef _TIFF
 static TIFF *tiffout;
 static char *tiffname;
+#endif
+
+#ifdef _JPEG
+static struct jpeg_compress_struct *jpeg;
+static struct jpeg_error_mgr jpeg_err;
 #endif
 
 void rasattr (int command, int value, int v1, int v2, int v3)
@@ -288,15 +297,35 @@ void ras_write (void)
 
 #endif
 
+#ifdef _JPEG
+
+void ras_write (void)
+/*< write >*/
+{
+    static bool called=false;
+    JSAMPROW scan;
+
+    if(called) return;
+    called=true;
+
+    jpeg_start_compress(jpeg, TRUE);
+    while (jpeg->next_scanline < ymax) {
+	scan = image + jpeg->next_scanline * xmax * 3;
+	jpeg_write_scanlines(jpeg, &scan, 1);
+    }
+    jpeg_finish_compress(jpeg);
+
+    jpeg_destroy_compress(jpeg);
+    fclose(pltout);
+}
+
+#endif
+
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
     char newpath[60];
     float pixels_per_inch, aspect_ratio;
-
-#ifdef _PPM
-    ppm_init(&argc,argv);
-#endif
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
@@ -348,6 +377,10 @@ void opendev (int argc, char* argv[])
 	    ERR (FATAL, name, "can't open file %s\n", newpath);
     }
 
+#ifdef _PPM
+    ppm_init(&argc,argv);
+#endif
+
 #ifdef _TIFF
     fclose(sf_tempfile(&tiffname,"w"));
     tiffout = TIFFOpen(tiffname,"wb");
@@ -365,6 +398,17 @@ void opendev (int argc, char* argv[])
     TIFFSetField(tiffout, TIFFTAG_ROWSPERSTRIP, 1);
 #endif
 
+#ifdef _JPEG
+    jpeg = sf_alloc(1,sizeof(*jpeg));
+    jpeg->err = jpeg_std_error(&jpeg_err);
+    jpeg_create_compress(jpeg);
+    jpeg_stdio_dest(jpeg, pltout);
+    jpeg->image_width = xmax;
+    jpeg->image_height = ymax;
+    jpeg->input_components = 3;
+    jpeg->in_color_space = JCS_RGB;
+    jpeg_set_defaults(jpeg);
+#endif
 }
 
 void rasreset (void)
