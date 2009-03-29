@@ -1,4 +1,4 @@
-/* Deconvolution with known wavelelt using pwc. 
+/* Least square imaging condition with pwc regularization. 
 
 */
 /*
