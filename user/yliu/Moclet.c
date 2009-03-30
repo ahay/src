@@ -1,4 +1,8 @@
-/* Seislet transform in log-stretched frequency-offset-midpoint domain */
+/* Seislet transform in log-stretched frequency-offset-midpoint domain 
+Forward transform (adj=y inv=y)   m=T[d]
+Adjoint transform (adj=y inv=n)   m=T^(-1)'[d]
+Inverse transform (adj=n inv=y/n) d=T^(-1)[m]
+*/
 /*
   Copyright (C) 2009 University of Texas at Austin
    
@@ -74,7 +78,7 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    oclet_init(nx,nh,dh,x0,h0,inv,unit,type[0]);
+    oclet_init(nx,nh,dh,dw,h0,inv,unit,type[0]);
 
     for (i4=0; i4 < n4; i4++) {
 	for (iw=0; iw < nw; iw++) {

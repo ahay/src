@@ -41,11 +41,11 @@ void ocpredict_step(bool adj           /* adjoint flag */,
     w2 = w*w;
 
     if (fabsf(w) < dw) {
-	for (ix=0; ix < nx; ix++) {
+	return;
+/*	for (ix=0; ix < nx; ix++) {
 	    trace[ix]=sf_cmplx(0.,0.);
-	    return;
 	}
-    }
+*/   }    
     
 #ifdef SF_HAS_COMPLEX_H		
     c1 = 3.*sf_cmplx(9. + w2,4.*w)/(w2*sf_cmplx(3.,- w));

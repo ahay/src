@@ -208,7 +208,7 @@ static void biorthogonal(bool adj)
                 }
 	        for (i=2*j; i < nt-j; i += 2*j) {
 		    for (i1=0; i1 < n; i1++) {
-		        t[i+j][i1] /= a;
+		        t[i][i1] /= a;
                     }
 	        }
 		       /* Scale */
@@ -318,7 +318,7 @@ static void biorthogonal(bool adj)
                 }
 	        for (i=2*j; i < nt-j; i += 2*j) {
 		    for (i1=0; i1 < n; i1++) {
-		        t[i+j][i1] /= a;
+		        t[i][i1] /= a;
                     }
 	        }
   		       /* Scale */
@@ -376,7 +376,7 @@ static void biorthogonal(bool adj)
             a= 1.230174105f;
 	    for (i=2*j; i < nt-j; i += 2*j) {
 		for (i1=0; i1 < n; i1++) {
-		    t[i+j][i1] /= a;
+		    t[i][i1] /= a;
                 }
 	    }
             for (i1=0; i1 < n; i1++) {

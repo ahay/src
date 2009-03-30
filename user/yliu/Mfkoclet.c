@@ -1,7 +1,7 @@
 /* 1-D seislet transform using omega-wavenumber offset continuation 
-Forward transform (adj=n inv=y/n)
-Inverse transform (adj=y inv=y)
-Adjoint transform (adj=y inv=n)
+Forward transform (adj=n inv=y/n) m=T[d]
+Inverse transform (adj=y inv=y)   d=T^(-1)[d]
+Adjoint transform (adj=y inv=n)   d=T'[d]
 */
 /*
   Copyright (C) 2009 University of Texas at Austin
