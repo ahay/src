@@ -600,7 +600,7 @@ def cairo(context):
     else:
         context.Result(context_failure)
         need_pkg('cairo', fatal=False)
-        context.env['CAIRO-PNG'] = None
+        context.env['CAIROPNG'] = None
 
     if res:
         for format in ('svg','pdf'):
