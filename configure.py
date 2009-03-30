@@ -1286,6 +1286,8 @@ def options(file):
              '-O2')
     opts.Add('CPPPATH',
              'The list of directories that the C preprocessor will search')
+    opts.Add('CPPDEFINES',
+             'List of defines for the C preprocessor')
     opts.Add('LIBPATH',
              'The list of directories that will be searched for libraries')
     opts.Add('LIBS',
