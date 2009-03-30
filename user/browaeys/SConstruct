@@ -5,7 +5,7 @@ import configure
 progs = '''
 beamsteer bmcgauss
 catan2 comblist
-cplxatt cplxcoh cplxcor
+cplxatt cplxcoh cplxcor cplxloc
 karman karmans karman2 
 mcbmcgauss
 radonslope2
