@@ -1887,6 +1887,7 @@ extern int      xwmax_last, ywmax_last, xwmin_last, ywmin_last;
     ywmax_last = ywmax;
 }
 
+
 static void outline_window (void)
 {
     if (need_devcolor == YES || cur_color != COLOR_MAP (DEFAULT_COLOR))

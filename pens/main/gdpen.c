@@ -261,10 +261,10 @@ void gdattr (int command, int value, int v1, int v2, int v3)
 	    color_table[value] = gdImageColorAllocate(image, v1, v2, v3);
 	    break;
 	case SET_WINDOW:
-	    xmin = value-1;
-	    ymin = dev.ymax - v3-1;
-	    xmax = v2+1;
-	    ymax = dev.ymax - v1+1;
+	    xmin = value;
+	    ymin = dev.ymax - v3;
+	    xmax = v2;
+	    ymax = dev.ymax - v1;
 	    gdImageSetClip(image, xmin, ymin, xmax, ymax);
 	    break;
 	default:

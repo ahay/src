@@ -567,7 +567,7 @@ def gd(context):
 pkg['cairo'] = {}
 
 def cairo(context):
-    context.Message("checking for cairo ... ")
+    context.Message("checking for cairo (PNG) ... ")
 
     oldpath = context.env.get('CPPPATH',[])
 
@@ -575,7 +575,7 @@ def cairo(context):
     if cairopath and os.path.isfile(os.path.join(cairopath,'cairo.h')):
         context.env['CPPPATH'] = oldpath + [cairopath]
     else:
-        for top in ('/usr/include','/usr/local/include'):
+        for top in ('/usr/include','/usr/local/include','/sw/include'):
             cairopath = os.path.join(top,'cairo')
             if os.path.isfile(os.path.join(cairopath,'cairo.h')):
                 context.env['CPPPATH'] = oldpath + [cairopath]
@@ -586,8 +586,6 @@ def cairo(context):
         LIBS = string.split(LIBS)
     text = '''
     #include <cairo.h>
-    #include <cairo-svg.h> 
-    #include <cairo-pdf.h> 
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
@@ -597,13 +595,32 @@ def cairo(context):
 	
     if res:
         context.Result(res)
-        context.env['CAIRO'] = cairo
+        context.env['CAIROPNG'] = cairo
         context.env['CAIROPATH'] = cairopath   
     else:
         context.Result(context_failure)
         need_pkg('cairo', fatal=False)
-        context.env['CAIRO'] = None
+        context.env['CAIRO-PNG'] = None
 
+    if res:
+        for format in ('svg','pdf'):
+            cap = format.upper()
+            context.Message("checking for cairo (%s) ... " % cap)
+            text = '''
+            #include <cairo.h>
+            #include <cairo-%s.h>
+            int main(int argc,char* argv[]) {
+            return 0;
+            }\n''' % format
+            res2 = context.TryLink(text,'.c')
+            
+            if res2:
+                context.Result(res2)
+                context.env['CAIRO' + cap] = cairo
+            else:
+                context.Result(context_failure)
+                context.env['CAIRO' + cap] = None
+            
     context.env['CPPPATH'] = oldpath    
     LIBS.pop()
 
@@ -1259,6 +1276,9 @@ def options(file):
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
     opts.Add('CAIRO','The cairo library')
+    opts.Add('CAIROPNG','The cairo library (PNG support)')
+    opts.Add('CAIROSVG','The cairo library (SVG support)')
+    opts.Add('CAIROPDF','The cairo library (PDF support)')
     opts.Add('PPMPATH','Path to netpbm header files')
     opts.Add('CAIROPATH','Path to cairo header files')
     opts.Add('CC','The C compiler')

@@ -149,26 +149,33 @@ if root:
 # crpen
 #######
 
-cairo = env.get('CAIRO')
+env.Include('crpen',prefix='pen_')
+pens.append('crpen')
+path = env.get('CAIROPATH')
 
-if cairo:
-    env.Include('crpen',prefix='pen_')
+for pen in ('png','pdf','svg'):
+    cap = pen.upper()
+    name = pen+'pen'
+    lib = env.get('CAIRO'+cap)
 
-    cairopath = env.get('CAIROPATH')
-    if cairopath:    
-        obj = env.StaticObject('crpen.c',
-                               CPPPATH=env.get('CPPPATH',[])+[cairopath])
+    if lib:
+        defines = env.get('CPPDEFINES',[])+['_'+cap]
+        if path:    
+            obj = env.StaticObject(name+'.o','crpen.c',
+                                   CPPPATH=env.get('CPPPATH',[])+[path],
+                                   CPPDEFINES=defines)
+        else:
+            obj = env.StaticObject(name+'o','crpen.c',
+                                   CPPDEFINES=defines)
+        env.Depends(obj,'crpen.h')
+        main = env.Program(name,[obj,]+objects,
+                           LIBS=[lib]+env.get('LIBS',[]))
+        docalias['sf'+name]='sfcrpen'
     else:
-        obj = env.StaticObject('crpen.c')
-    env.Depends(obj,'crpen.h')
-    main = env.Program('crpen',[obj,]+objects,
-                       LIBS=[cairo]+env.get('LIBS',[]))
-    pens.append('crpen')
-else:
-    main = env.Place('crpen',None,var='CAIRO')
+        main = env.Place(name,None,var='CAIRO-'+cap,pakage='cairo')
     
-if root:
-    env.Install(bindir,main[0])
+    if root:
+        env.Install(bindir,main[0])
 
 ######################################################################
 # SELF-DOCUMENTATION

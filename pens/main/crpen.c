@@ -18,8 +18,14 @@
 */
 
 #include <cairo/cairo.h>
-#include <cairo/cairo-svg.h> 
+
+#ifdef _SVG
+#include <cairo/cairo-svg.h>
+#endif
+ 
+#ifdef _PDF
 #include <cairo/cairo-pdf.h> 
+#endif
 
 #include "../include/attrcom.h"
 #include "../include/extern.h"
@@ -49,7 +55,7 @@ char            name[] = "crpen";
 static cairo_surface_t *surface;
 static cairo_t *cr;
 
-static int color_table[NCOLOR][3], nx, ny, type, crcolor=7;
+static int color_table[NCOLOR][3], nx, ny, crcolor=7;
 
 static cairo_status_t cr_fwrite(void *closure, const unsigned char *data, unsigned int length)
 {
@@ -61,7 +67,7 @@ void opendev (int argc, char* argv[])
 /*< open >*/
 {
     int value;
-    char newpath[60], *image_type;
+    char newpath[60];
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
@@ -90,28 +96,17 @@ void opendev (int argc, char* argv[])
     nx = dev.xmax+1;
     ny = dev.ymax+1;
 
-    if (NULL == (image_type = sf_getstring("type"))) 
-	image_type = "png";
-    /* image type (png, pdf, svg) */
+#ifdef _PDF
+    surface = cairo_pdf_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
+#endif
 
-    switch (image_type[0]) {
-	case 'p':
-	case 'P':
-	default:
-	    if ('d'==image_type[1] || 'D'==image_type[1]) {
-		type=1;
-		surface = cairo_pdf_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
-	    } else {
-		type=0;
-		surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, nx, ny);
-	    } 
-	    break;
-	case 's':
-	case 'S':
-	    type=2;
-	    surface = cairo_svg_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
-	    break;
-    }
+#ifdef _PNG
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, nx, ny);
+#endif
+	    
+#ifdef _SVG
+    surface = cairo_svg_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
+#endif
 
     cr = cairo_create (surface);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -157,11 +152,12 @@ static void cr_write (void)
 
     if(called) return;
 
-    if (type) {
-	cairo_show_page(cr);
-    } else {
-	cairo_surface_write_to_png_stream (surface,cr_fwrite,NULL);
-    }
+#ifdef _PNG
+    cairo_surface_write_to_png_stream (surface,cr_fwrite,NULL);
+#else
+    cairo_show_page(cr);
+#endif
+
     called=true;
 }
 
@@ -228,21 +224,10 @@ void crattr (int command, int value, int v1, int v2, int v3)
 	    cairo_reset_clip(cr);
 	    cairo_new_path(cr);
 
-	    if (v2 > value) {
-		x0 = value;
-		width = v2-value+1;
-	    } else {
-		x0 = v2;
-		width = value-v2+1;
-	    }
-
-	    if (v3 > v1) {
-		y0 = dev.ymax-v3;
-		height=v3-v1+1;
-	    } else {
-		y0 = dev.ymax-v1;
-		height=v1-v3+1;
-	    }
+	    x0 = value;
+	    width = SF_MAX(v2-value+1,0);
+	    y0 = dev.ymax-v3;
+	    height = SF_MAX(v3-v1+1,0);
 
 	    cairo_rectangle (cr,x0,y0,width,height);
 	    cairo_clip(cr);
@@ -255,7 +240,7 @@ void crplot(int x, int y, int draw)
 /*< plot >*/
 {
     static int oldx, oldy;
-    
+ 
     if (draw) {
 	cairo_move_to (cr,oldx,dev.ymax-oldy);
 	cairo_line_to (cr,x,dev.ymax-y);
