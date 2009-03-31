@@ -26,6 +26,8 @@
 
 #define SIGN(a) (a > 0 ? 1 : (a < 0 ? -1 : 0))
 
+static const float eps = 1.e-5;
+
 void circ_mean(float *d, int n, float *v, float *t)
 /*< circular mean >*/
 {
@@ -81,7 +83,7 @@ void circ_corr(float *d1, float *d2, int n, float *corr, float *shift)
     im = md*sin(td) - m1*m2*sin(t2 - t1);
             
     /* correlation */
-    *corr = sqrt((rm*rm + im*im)/(v1*v2));
+    *corr = sqrt((rm*rm + im*im)/(v1*v2 + eps));
 
     /* phase shift */
     *shift = atan2(im,rm);
