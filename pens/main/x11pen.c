@@ -595,11 +595,11 @@ Display  *OpenDisplay ()
     return(display);
 }
 
-static int oldx = 0, oldy = 0;
-
 void xplot (int x, int y, int draw)
 /*< plot >*/
 {
+    static int oldx = 0, oldy = 0;
+
     if (draw)
     {
 	XDrawLine (pen_display, pen_win, pen_gc,

@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
     fdm2d    fdm;
     abcone2d abc;     /* abc */
-    sponge2d spo;
+    sponge spo;
 
     /* FD operator size */
     float co,ca2,cb2,ca1,cb1;
@@ -154,8 +154,8 @@ int main(int argc, char* argv[])
 
     fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
 
-    sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
-    sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
+    sf_setn(a1,fdm->nzpad); sf_seto(a1,fdm->ozpad); if(verb) sf_raxa(a1);
+    sf_setn(a2,fdm->nxpad); sf_seto(a2,fdm->oxpad); if(verb) sf_raxa(a2);
     /*------------------------------------------------------------*/
 
     /* setup output data header */
@@ -226,16 +226,16 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/ 
     /* input density */
     roin=sf_floatalloc2(n1,   n2   ); 
-    ro  =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    ro1 =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    ro2 =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    ro1 =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    ro2 =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
     sf_floatread(roin[0],n1*n2,Fden); 
     expand(roin,ro,fdm);
 
     /* normalized density derivatives */
-    for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-	for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+    for    (i2=NOP; i2<fdm->nxpad-NOP; i2++) {
+	for(i1=NOP; i1<fdm->nzpad-NOP; i1++) {
 	    ro1[i2][i1] = D1(ro,i2,i1,id1) / ro[i2][i1];
 	    ro2[i2][i1] = D2(ro,i2,i1,id2) / ro[i2][i1];
 	}
@@ -246,21 +246,21 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* input velocity */
     vpin=sf_floatalloc2(n1,   n2   ); 
-    vp  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
-    vt  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
+    vp  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+    vt  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
     sf_floatread(vpin[0],n1*n2,Fvel);
     expand(vpin,vp,fdm);
     free(*vpin); free(vpin);
 
-    for    (i2=0; i2<fdm->n2pad; i2++) {
-	for(i1=0; i1<fdm->n1pad; i1++) {
+    for    (i2=0; i2<fdm->nxpad; i2++) {
+	for(i1=0; i1<fdm->nzpad; i1++) {
 	    vt[i2][i1] = vp[i2][i1] * vp[i2][i1] * dt2;
 	}
     }
 
     /* free surface */
     if(fsrf) {
-	for    (i2=0; i2<fdm->n2pad; i2++) {
+	for    (i2=0; i2<fdm->nxpad; i2++) {
 	    for(i1=0; i1<fdm->nb; i1++) {
 		vt[i2][i1]=0;
 	    }
@@ -269,13 +269,13 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* allocate wavefield arrays */
-    um=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    uo=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    up=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    ua=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    um=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    uo=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    up=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    ua=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
-    for    (i2=0; i2<fdm->n2pad; i2++) {
-	for(i1=0; i1<fdm->n1pad; i1++) {
+    for    (i2=0; i2<fdm->nxpad; i2++) {
+	for(i1=0; i1<fdm->nzpad; i1++) {
 	    um[i2][i1]=0;
 	    uo[i2][i1]=0;
 	    up[i2][i1]=0;
@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
     /* one-way abc setup */
     abc = abcone2d_make(NOP,dt,vp,fsrf,fdm);
     /* sponge abc setup */
-    spo = sponge2d_make(fdm);
+    spo = sponge_make(fdm->nb);
 
     /*------------------------------------------------------------*/
     /* 
@@ -305,8 +305,8 @@ int main(int argc, char* argv[])
     private(i2,i1) \
     shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
 #endif
-	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	for    (i2=NOP; i2<fdm->nxpad-NOP; i2++) {
+	    for(i1=NOP; i1<fdm->nzpad-NOP; i1++) {
 		
 		/* 4th order Laplacian operator */
 		ua[i2][i1] = 
@@ -339,8 +339,8 @@ int main(int argc, char* argv[])
     private(i2,i1) \
     shared(fdm,ua,uo,um,up,vt,dt2)
 #endif
-	for    (i2=0; i2<fdm->n2pad; i2++) {
-	    for(i1=0; i1<fdm->n1pad; i1++) {
+	for    (i2=0; i2<fdm->nxpad; i2++) {
+	    for(i1=0; i1<fdm->nzpad; i1++) {
 		up[i2][i1] = 2*uo[i2][i1] 
 		    -          um[i2][i1] 
 		    +          ua[i2][i1] * vt[i2][i1];
