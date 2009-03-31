@@ -17,11 +17,12 @@ def param(par):
     if(not par.has_key('tz')):       par['tz']=0.0035
     if(not par.has_key('tx')):       par['tx']=0.0035
 
-    if(not par.has_key('nbell')):    par['nbell']=1
+    if(not par.has_key('nbell')):    par['nbell']=5
 
     if(not par.has_key('snap')):     par['snap']='y'
     if(not par.has_key('jsnap')):    par['jsnap']=100
     if(not par.has_key('jdata')):    par['jdata']=1
+    if(not par.has_key('dabc')):     par['dabc']='y'
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
     if(not par.has_key('ompnth')):   par['ompnth']=0
@@ -77,6 +78,7 @@ def param(par):
     if(not par.has_key('dq2')): par['dq2']=par['dx']
     
     par['labelattr']=' '+par['labelattr']+' '
+    
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):
@@ -366,9 +368,7 @@ def vline(cc,sz,ez,coord,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
-
 def box(cc,sx,ex,sz,ez,par):
-   
    
     hline(cc+'h1',sx,ex,sz,par)
     hline(cc+'h2',sx,ex,ez,par)
@@ -377,15 +377,6 @@ def box(cc,sx,ex,sz,ez,par):
     vline(cc+'v2',sz,ez,ex,par)
 
     Flow(cc,[cc+'h1',cc+'h2',cc+'v1',cc+'v2'],'cat ${SOURCES[1:4]} space=n axis=2')
-
-#    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
-#    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
-#    Flow(cc,[cc+'_x',cc+'_z'],
-#         '''
-#         cat axis=2 space=n
-#         ${SOURCES[0]} ${SOURCES[1]} | transp
-#         ''', stdin=0)
-#
 
 # ------------------------------------------------------------
 
@@ -426,113 +417,44 @@ def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
   
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
-def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
-    par['fdcustom'] = custom
-    
-    Flow( [data,wfld],[wavl,velo,dens,sou,rec],
-          '''
-          afmod ompchunk=%(ompchunk)d
-          verb=y abc=y free=n dens=y
-          snap=%(snap)s jsnap=%(jsnap)d
-          nbz=%(nbz)d tz=%(tz)g
-          nbx=%(nbx)d tx=%(tx)g
-          vel=${SOURCES[1]}
-          den=${SOURCES[2]}
-          sou=${SOURCES[3]}
-          rec=${SOURCES[4]}
-          wfl=${TARGETS[1]}
-          %(fdcustom)s
-          ''' % par)
+#def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
+#    par['fdcustom'] = custom
+#    
+#    Flow( [data,wfld],[wavl,velo,dens,sou,rec],
+#          '''
+#          afmod ompchunk=%(ompchunk)d
+#          verb=y abc=y free=n dens=y
+#          snap=%(snap)s jsnap=%(jsnap)d
+#          nbz=%(nbz)d tz=%(tz)g
+#          nbx=%(nbx)d tx=%(tx)g
+#          vel=${SOURCES[1]}
+#          den=${SOURCES[2]}
+#          sou=${SOURCES[3]}
+#          rec=${SOURCES[4]}
+#          wfl=${TARGETS[1]}
+#          %(fdcustom)s
+#          ''' % par)
+#
+#def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
+#    par['fdcustom'] = custom
+#
+#    Flow([ data,wfld,ldata,lwfld],[wavl,velo,refl,sou,rec],
+#         '''
+#         aborn ompchunk=%(ompchunk)d
+#         verb=y abc=y free=n
+#         snap=%(snap)s jsnap=%(jsnap)d
+#         nbz=%(nbz)d tz=%(tz)g
+#         nbx=%(nbx)d tx=%(tx)g
+#         vel=${SOURCES[1]}
+#         ref=${SOURCES[2]}
+#         sou=${SOURCES[3]}
+#         rec=${SOURCES[4]}
+#         wfl=${TARGETS[1]}
+#         lid=${TARGETS[2]}
+#         liw=${TARGETS[3]}
+#         %(fdcustom)s
+#         ''' % par)
 
-def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
-    par['fdcustom'] = custom
-
-    Flow([ data,wfld,ldata,lwfld],[wavl,velo,refl,sou,rec],
-         '''
-         aborn ompchunk=%(ompchunk)d
-         verb=y abc=y free=n
-         snap=%(snap)s jsnap=%(jsnap)d
-         nbz=%(nbz)d tz=%(tz)g
-         nbx=%(nbx)d tx=%(tx)g
-         vel=${SOURCES[1]}
-         ref=${SOURCES[2]}
-         sou=${SOURCES[3]}
-         rec=${SOURCES[4]}
-         wfl=${TARGETS[1]}
-         lid=${TARGETS[2]}
-         liw=${TARGETS[3]}
-         %(fdcustom)s
-         ''' % par)
-
-# ------------------------------------------------------------
-# isotropic stiffness tensor
-def retiredisotropic(cc,vp,vs,ro,par):
-    
-    # Lame parameters
-    # lambda = ro * (vp^2 - 2 vs^2)
-    Flow(cc+'lambda',[ro,vp,vs],
-         '''
-         math output="ro*(vp*vp-2*vs*vs)"
-         ro=${SOURCES[0]}
-         vp=${SOURCES[1]}
-         vs=${SOURCES[2]}     
-         ''')
-    
-    #     mu = ro *           vs^2
-    Flow(cc+'mu',[ro,vs],
-         '''
-         math output="ro*vs*vs"
-         ro=${SOURCES[0]}
-         vs=${SOURCES[1]}
-         ''')
-    
-    # c11 = lambda + 2 mu
-    # c33 = lambda + 2 mu
-    # c13 = lambda
-    # c44 = mu
-    Flow(cc+'11',[cc+'lambda',cc+'mu'],
-         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l+2*m"')
-    Flow(cc+'13',[cc+'lambda',cc+'mu'],
-         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l"')
-    Flow(cc+'33',[cc+'lambda',cc+'mu'],
-         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l+2*m"')
-    Flow(cc+'44',[cc+'lambda',cc+'mu'],
-         'math l=${SOURCES[0]} m=${SOURCES[1]} output="m"')
-    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
-         'cat axis=3 space=n ${SOURCES[1:4]}')
-
-# ------------------------------------------------------------
-# anisotropic stiffness tensor
-def retiredanisotropic(cc,vp,vs,ro,epsilon,delta,par):
-    Flow(cc+'33',[vp,ro],
-         '''
-         math output="ro*vp*vp"
-         vp=${SOURCES[0]}
-         ro=${SOURCES[1]}
-         ''')    
-    Flow(cc+'44',[vs,ro],
-         '''
-         math output="ro*vs*vs"
-         vs=${SOURCES[0]}
-         ro=${SOURCES[1]}
-         ''')
-    Flow(cc+'11',[cc+'33',epsilon],
-         '''
-         math output="2*epsilon*c33+c33"
-         c33=${SOURCES[0]}
-         epsilon=${SOURCES[1]}
-         ''')
-    Flow(cc+'13',[cc+'33',cc+'44',delta],
-         '''
-         math output="sqrt(2*c33*(c33-c44)*delta+(c33-c44)*(c33-c44))-c44"
-         c33=${SOURCES[0]}
-         c44=${SOURCES[1]}
-         delta=${SOURCES[2]}
-         ''')
-    
-    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
-         'cat axis=3 space=n ${SOURCES[1:4]}')
-    
 # ------------------------------------------------------------
 # acoustic modeling
 def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
@@ -540,10 +462,10 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     
     Flow([odat,owfl],[idat,velo,dens,sou,rec],
          '''
-         awefd
+         awefd2d
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
-         nb=%(nb)d
+         dabc=%(dabc)s nb=%(nb)d
          vel=${SOURCES[1]}
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
@@ -584,7 +506,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
-         ewefd
+         ewefd2d
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
@@ -600,7 +522,7 @@ def ewefd2(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
-         ewefd2
+         ewefd2d
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
@@ -628,53 +550,6 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
           ''' % par)
 
 # ------------------------------------------------------------    
-# F-D modeling from arbitrary source/receiver geometry
-def retiredawe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
-    par['fdcustom'] = custom
-    
-    Flow( [odat,wfld],[idat,velo,dens,sou,rec],
-          '''
-          awe ompchunk=%(ompchunk)d
-          verb=y abc=y free=n dens=y
-          snap=%(snap)s jsnap=%(jsnap)d
-          nbz=%(nbz)d tz=%(tz)g
-          nbx=%(nbx)d tx=%(tx)g
-          vel=${SOURCES[1]}
-          den=${SOURCES[2]}
-          sou=${SOURCES[3]}
-          rec=${SOURCES[4]}
-          wfl=${TARGETS[1]}
-          %(fdcustom)s
-          ''' % par)
-
-# ------------------------------------------------------------
-# shot-record reverse-time migration
-def retiredrtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
-
-    swfl = imag+'_us' #   source wavefield
-    rwfl = imag+'_ur' # receiver wavefield
-    sout = imag+'_ds' #   source data (not the input sdat!)
-    rout = imag+'_dr' # receiver data (not the input rdat!)
-
-    # source wavefield (z,x,t)
-    awefd(sout,swfl,sdat,velo,dens,sacq,iacq,custom,par)
-
-    # receiver wavefield (z,x,t)
-    tdat = imag+'_tds'
-    tout = imag+'_tdr'
-
-    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awefd(tout,rwfl,tdat,velo,dens,racq,iacq,custom,par)
-    Flow(rout,tout,'reverse which=2 opt=i verb=y')
-
-    # conventional (cross-correlation zero-lag) imaging condition
-    Flow(imag,[sout,rout],'xcor uu=${SOURCES[1]} axis=2 verb=y nbuf=500')
-    
-#    corr = imag+'_cor'
-#    Flow(corr,[sout,rout],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
-#    Flow(imag,corr,'stack axis=2')
-
-# ------------------------------------------------------------
 # exploding-reflector reverse-time migration
 def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 
@@ -791,38 +666,6 @@ def wframe(frame,movie,index,custom,par):
            + wgrey(custom,par))
     
 # ------------------------------------------------------------
-# elastic wavefield movie
-#def emovieold(wfld,custom,axis,par):
-#
-#    # loop over wavefield components
-#    for i in range(2):
-#        Flow(wfld+str(i+1),wfld,
-#             '''
-#             window n3=1 f3=%d |
-#             window min1=%g max1=%g min2=%g max2=%g
-#             ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
-#
-#    # join component wavefields
-#    Flow(wfld+'all',[wfld+'1',wfld+'2'],
-#         'cat axis=%d space=n ${SOURCES[1:2]}' % axis)
-#
-#    if(axis==1):        
-#        height=2*par['height']
-#        if(height>10): height=10
-#        ratio =2*par['ratio']
-#    if(axis==2):
-#        height=par['height']
-#        if(height>10): height=10
-#        ratio =0.5*par['ratio']
-#    
-#    Result(wfld,wfld+'all',
-#           '''
-#           grey title="" wantaxis=y screenratio=%f screenht=%f
-#           gainpanel=a pclip=99 %s
-#           %s
-#           ''' % (ratio,height,par['labelattr'],custom) )
-
-# ------------------------------------------------------------
 # elastic wavefield movie frames
 def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25):
 
@@ -833,9 +676,9 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
         Plot(frame+'-'+str(i),movie+'-plt',
              'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
              + cgrey('',par))
-        Result(frame+'-'+str(i),movie+'-plt',
-             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
-             + cgrey('',par))
+#        Result(frame+'-'+str(i),movie+'-plt',
+#             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
+#             + cgrey('',par))
 
     if(axis==1):
         pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
@@ -892,7 +735,14 @@ def ewavelet(wavelet,custom,par):
              'window n2=1 f2=%d | transp | window |'%i +
              waveplot('%d %s'% (i,custom) ,par))
     pplot.p1x2(wavelet,wavelet+'-1',wavelet+'-2',0.5,0.5,-11)
-
+def ewavelet3d(wavelet,custom,par):
+    
+    for i in range(3):
+        Plot(wavelet+'-'+str(i+1),wavelet,
+             'window n2=1 f2=%d | transp | window |'%i +
+             waveplot('%d %s'% (i,custom) ,par))
+    pplot.p1x3(wavelet,wavelet+'-1',wavelet+'-2',wavelet+'-3',0.35,0.35,-11)
+    
 # ------------------------------------------------------------
 # acoustic RTM
 def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
@@ -971,3 +821,71 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
     Flow(imag,[imag+'11',imag+'12',imag+'21',imag+'22'],
          'cat axis=3 space=n ${SOURCES[1:4]}')
 
+# ------------------------------------------------------------
+def awefd2d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         awefd2d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d dabc=%(dabc)s
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+    
+def awefd3d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         awefd3d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d dabc=%(dabc)s
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+
+def ewefd2d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
+         '''
+         ewefd2d
+         ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nbell=%(nbell)d
+         nb=%(nb)d  dabc=%(dabc)s
+         ccc=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+
+def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
+         '''
+         ewefd3d
+         ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nbell=%(nbell)d
+         nb=%(nb)d  dabc=%(dabc)s
+         ccc=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
