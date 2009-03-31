@@ -164,6 +164,7 @@ int cipmin(int nn,
     return ic;
 }
 
+/*------------------------------------------------------------*/
 int cipmax(int nn,
 	   int jc,
 	   int nc,
@@ -239,9 +240,11 @@ img3d img3x_init(cub3d cub,
     img->CHIy = SF_MAX(1,img->CHIy);
     img->CHIz = SF_MAX(1,img->CHIz);
 
-/*    sf_warning("CLOx=%d CHIx=%d",img->CLOx,img->CHIx);*/
-/*    sf_warning("CLOy=%d CHIy=%d",img->CLOy,img->CHIy);*/
-/*    sf_warning("CLOz=%d CHIz=%d",img->CLOz,img->CHIz);*/
+    if(cub->verb) {
+	sf_warning("CLOx=%3d CHIx=%3d",img->CLOx,img->CHIx);
+	sf_warning("CLOy=%3d CHIy=%3d",img->CLOy,img->CHIy);
+	sf_warning("CLOz=%3d CHIz=%3d",img->CLOz,img->CHIz);
+    }
 
     HLOOP(
 	fslice_put(img->cigs,IND(ihx,ihy,ihz),img->qc[0][0][0]);
@@ -330,6 +333,12 @@ img3d img3e_init(cub3d cub,
     img->CHIx = SF_MAX(1,img->CHIx);
     img->CHIy = SF_MAX(1,img->CHIy);
     img->CHIz = SF_MAX(1,img->CHIz);
+
+    if(cub->verb) {
+	sf_warning("CLOx=%3d CHIx=%3d",img->CLOx,img->CHIx);
+	sf_warning("CLOy=%3d CHIy=%3d",img->CLOy,img->CHIy);
+	sf_warning("CLOz=%3d CHIz=%3d",img->CLOz,img->CHIz);
+    }
 
     for( iht=0; iht<img->aht.n; iht++) {
 	HLOOP(
@@ -509,7 +518,7 @@ void img3x(cub3d cub,
 	for    ( ihy=img->LOy; ihy<img->HIy; ihy++){
 	    for( ihx=img->LOx; ihx<img->HIx; ihx++){
 		
-		for( icz=img->CLOz; icz<img->CHIz; icz++){ 
+		for( icz=img->CLOz; icz<=img->CHIz; icz++){ 
 		    imzs = icz*img->jcz - ihz;
 		    imzr = icz*img->jcz + ihz;
 
@@ -517,7 +526,7 @@ void img3x(cub3d cub,
 			    imys = icy*img->jcy - ihy;
 			    imyr = icy*img->jcy + ihy;
 				
-				for( icx=img->CLOx; icx<img->CHIx; icx++){
+				for( icx=img->CLOx; icx<=img->CHIx; icx++){
 				    imxs = icx*img->jcx - ihx;
 				    imxr = icx*img->jcx + ihx;
 
@@ -661,7 +670,7 @@ void img3e(cub3d cub,
 	    for    ( ihy=img->LOy; ihy<img->HIy; ihy++){
 		for( ihx=img->LOx; ihx<img->HIx; ihx++){
 		    
-		    for( icz=img->CLOz; icz<img->CHIz; icz++){ 
+		    for( icz=img->CLOz; icz<=img->CHIz; icz++){ 
 			imzs = icz*img->jcz - ihz;
 			imzr = icz*img->jcz + ihz;
 			    
@@ -669,7 +678,7 @@ void img3e(cub3d cub,
 				imys = icy*img->jcy - ihy;
 				imyr = icy*img->jcy + ihy;
 				    
-				for( icx=img->CLOx; icx<img->CHIx; icx++){
+				for( icx=img->CLOx; icx<=img->CHIx; icx++){
 					imxs = icx*img->jcx - ihx;
 					imxr = icx*img->jcx + ihx;
 					    

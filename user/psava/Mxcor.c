@@ -23,6 +23,7 @@
 
 #ifdef _OPENMP
 #include <omp.h>
+#include "omputil.h"
 #endif
 
 int main(int argc, char* argv[])
@@ -44,22 +45,15 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
     int ompnth=0;
-    int ompath=1; 
 #endif
 
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
 
+    /* OMP parameters */
 #ifdef _OPENMP
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
-    /* OpenMP available threads */
-    
-#pragma omp parallel
-    ompath=omp_get_num_threads();
-    if(ompnth<1) ompnth=ompath;
-    omp_set_num_threads(ompnth);
-    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+    ompnth=omp_init();
 #endif
     
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */

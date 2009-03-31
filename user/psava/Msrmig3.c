@@ -249,6 +249,10 @@ int main (int argc, char *argv[])
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 	    sf_oaxa(Fc,aht,7); sf_raxa(aht);
 
+	    sf_raxa(acx);
+	    sf_raxa(acy);
+	    sf_raxa(acz);
+
 	    cigs = fslice_init(n,
 			       sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),
 			       sizeof(float));
