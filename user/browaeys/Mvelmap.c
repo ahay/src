@@ -22,10 +22,12 @@
 
 #include <rsf.h>
 
+static const float eps = 1.e-5;
+
 int main(int argc, char* argv[])
 {
     int isx,isy,it;                /* loop counters */
-    int ivxm,ivym;
+    int ivxm,ivym;                 /* cell indices for bilinear interpolation */
 
     int nsx,nsy;                   /* number of slowness in x and y */
     int nvx,nvy;                   /* number of velocity in x and y */
@@ -63,27 +65,34 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dvy)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&ovy)) sf_error("No o2= in input");
 
-    if ((nvx != nvy) || (dvx != dvy)) sf_error("Need squared grid for vx-vy plane");
+    if ((nvx != nvy) || (dvx != dvy) || (ovx != ovy)) sf_error("Need centered squared grid for vx-vy plane");
 
-    if (!sf_getint("nt",&nt)) nt=360;
-    /* number of line parameter for integration. */
-    if (!sf_getfloat("dt",&dt)) dt=1.;
-    /* line parameter increment */
-    if (!sf_getfloat("ot",&ot)) ot=0.;
-    /* line parameter origin */
-
-    /* slowness grid */
     vxmax = ovx + (nvx-1)*dvx;
     vymax = ovy + (nvy-1)*dvy;
 
-    nsx = nvx;
-    nsy = nvy;
-
+    /* slowness grid */
     dsx = 1./vxmax;
     dsy = 1./vymax;
 
-    osx = -1./dvx;
-    osy = -1./dvy;
+    if (!sf_getfloat("osx",&osx)) osx = -0.5/dvx;
+    if (!sf_getfloat("osy",&osy)) osy = -0.5/dvy;
+
+    if ((osx != osy) || (osx >= 0.0) || (osy >= 0.0)) sf_error("Need centered squared grid for sx-sy plane");
+
+    nsx = 2*floorf(fabs(osx)/dsx);
+    nsy = 2*floorf(fabs(osy)/dsy);
+
+    /* slowness grid do not contain zero */
+    osx = osx + 0.5*dsx;
+    osy = osy + 0.5*dsy;
+
+    /* line trigonometric parametrization */
+    if (!sf_getint("nt",&nt)) nt=360;
+    /* number of line parameter for integration in [0,180]. */
+    if (!sf_getfloat("dt",&dt)) dt=0.5;
+    /* line parameter increment */
+    if (!sf_getfloat("ot",&ot)) ot=0.;
+    /* line parameter origin */
 
     /* output file parameters */ 
     asx = sf_maxa(nsx,osx,dsx);
@@ -120,12 +129,13 @@ int main(int argc, char* argv[])
             /* loop on velocity in the line */
 	    for (it = 0; it < nt; it++) {
 
-		t = (ot + it*dt)*SF_PI/180.0; 
+                /* line parameter */
+		t = (ot + it*dt)*SF_PI/180.0;
 
 		c = cos(t);
 		s = sin(t);
 
-		dn = 1.0/(c*sx + s*sy);
+		dn = 1.0/(c*sx + s*sy + eps);
 		vx = c*dn;
 		vy = s*dn;
 
@@ -147,7 +157,7 @@ int main(int argc, char* argv[])
 
 	    }
 
-	    sv[isy][isx] = line;
+	    sv[isy][isx] = line/nt;
 
 	}
 

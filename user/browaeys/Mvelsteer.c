@@ -1,4 +1,4 @@
-/* Velocity beam steering for 2D receivers surface array. */
+/* Velocity steering for 2D receivers array. */
 /*
   Copyright (C) 2008 University of Texas at Austin
 
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int nx,ix;                     /* number of receivers in x, receivers counter */
     int ny,iy;                     /* number of receivers in y, receivers counter */
     int nvx,nvy;                   /* number of velocity in x, number of velocity in y */
-    int nref;                      /* number of points where beams are computed */
+    int nref;                      /* number of points where steering is preformed */
     int nlive;                     /* number of summed samples in the beam */
 
     float dt,ot;                   /* time increment, starting time */
