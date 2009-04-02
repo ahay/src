@@ -19,74 +19,34 @@
 
 #include <math.h>
 #include <float.h>
-
 #include <rsf.h>
-
 
 int main(int argc, char* argv[])
 {
-    int nt,it;                     /* number of time samples, time counter */
-    int nx,ix;                     /* number of receivers in x, receivers counter */
-    int ny,iy;                     /* number of receivers in y, receivers counter */
-    int nvx,nvy;                   /* number of velocity in x, number of velocity in y */
-    int nref;                      /* number of points where steering is preformed */
-    int nlive;                     /* number of summed samples in the beam */
+    int i,ivx,ivy,it;
+    int ixm,iym;
 
-    float dt,ot;                   /* time increment, starting time */
-    float dx,ox;                   /* increment in x, starting position */
-    float dy,oy;                   /* increment in y, starting position */
-    float xref,yref;               /* coordinates where beams are computed */
-    float dvx,ovx;                 /* velocity increment, starting velocity in x */
-    float dvy,ovy;                 /* velocity increment, starting velocity in y */
+    int nt,nx,ny;
+    int nvx,nvy;
+    int iypi,iyps,nlive;
 
-    bool mode;                     /* 2-D velocity vectors, or velocity and angle */ 
-    float ***data;                 /* 2-D surface seismic data */
-    float ***semb;                 /* focused beam stack */
+    float dt,ot,dx,ox,dy,oy;           
+    float dvx,ovx,dvy,ovy;
+    float xp,yp,vx,vy;
+    float beam,t,x,y;
+    float tx,ty;
 
-    float t;                       /* time position */
-    float vx,vy;                   /* velocity along x and y */
-    float x,y;                     /* x,y positions */
-    float tx,ty;                   /* x,y position inside cell for interpolation */
-    float beam;                    /* beam trajectory stack */
+    float ***data, **semb;
 
-    int ivx,ivy;                   /* velocity counters */
-    int ixm,iym;                   /* shifted space positions in samples */
-    
-    sf_axis avx,avy,aref;
+    sf_axis avx,avy,ay;
     sf_file in,out;
 
     sf_init(argc,argv);
 
-    /* Axis label 1:t, 2:x, 3:y */
     in = sf_input("in");
-
-    /* Axis label 1:vx, 2:vy 3:ref*/
     out = sf_output("out");
 
-    if (!sf_getbool("mode",&mode)) mode=true;
-    /* if n, beams computed as a function of apparent velocity and angle. */
-      
-    if (!sf_getfloat("xref",&xref)) sf_error("Need xref=");
-    /* x coordinate where beams are computed */
-
-    if (!sf_getfloat("yref",&yref)) sf_error("Need yref=");
-    /* y coordinate where beams are computed */
-
-    if (!sf_getint("nvx",&nvx)) sf_error("Need nvx=");
-    /* number of vx values (if mode=y). */
-    if (!sf_getfloat("dvx",&dvx)) sf_error("Need dvx=");
-    /* vx sampling (if mode=y). */
-    if (!sf_getfloat("ovx",&ovx)) sf_error("Need ovx=");
-    /* vx origin (if mode=y) */
-
-    if (!sf_getint("nvy",&nvy)) sf_error("Need nvy=");
-    /* number of vy values (if mode=y). */
-    if (!sf_getfloat("dvy",&dvy)) sf_error("Need dvy=");
-    /* vy sampling (if mode=y). */
-    if (!sf_getfloat("ovy",&ovy)) sf_error("Need ovy=");
-    /* vy origin (if mode=y) */  
-
-    /* read input file parameters */
+    /* input file */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
@@ -101,93 +61,112 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&dy)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"o3",&oy)) oy=0.;
 
-    /* number of points where beams are computed. */
-    nref =1;
+    /* output file */
+    sf_settype(out,SF_FLOAT);
 
-    /* output file parameters */ 
+    if (!sf_getint("nvx",&nvx)) sf_error("Need nvx=");
+    /* number of vx values */
+    if (!sf_getfloat("dvx",&dvx)) sf_error("Need dvx=");
+    /* vx sampling */
+    if (!sf_getfloat("ovx",&ovx)) sf_error("Need ovx=");
+    /* vx origin */
+
+    if (!sf_getint("nvy",&nvy)) sf_error("Need nvy=");
+    /* number of vy values */
+    if (!sf_getfloat("dvy",&dvy)) sf_error("Need dvy=");
+    /* vy sampling */
+    if (!sf_getfloat("ovy",&ovy)) sf_error("Need ovy=");
+    /* vy origin */
+
+    if (!sf_getint("iypi",&iypi)) iypi = 0;
+    /* first depth position where velocity steering is computed */
+
+    if (!sf_getint("iyps",&iyps)) iyps = ny-1;  
+    /* last depth position where velocity steering is computed */
+    iyps = SF_MIN(iyps,ny-1);
+
     avx = sf_maxa(nvx,ovx,dvx);
     sf_oaxa(out,avx,1);
 
     avy = sf_maxa(nvy,ovy,dvy);
     sf_oaxa(out,avy,2);
 
-    aref = sf_maxa(nref,0,1);
-    sf_oaxa(out,aref,3);
+    ay = sf_maxa(iyps-iypi+1,oy+iypi*dy,dy);
+    sf_oaxa(out,ay,3);
 
     sf_putstring(out,"label1","vx");
     sf_putstring(out,"label2","vy");
-    sf_putstring(out,"label3","ref");
+    sf_putstring(out,"label3","y");
+
+    if (!sf_getfloat("xp",&xp)) sf_error("Need xp=");
+    /* lateral position where velocity steering is computed */
 
     /* memory allocations */
     data = sf_floatalloc3(nt,nx,ny);
-    semb = sf_floatalloc3(nvx,nvy,nref);
+    semb = sf_floatalloc2(nvx,nvy);
 
-    /* clear data array and read the data */
-    for (iy = 0; iy < ny; iy++) {
-	for (ix = 0; ix < nx; ix++) {
-	    for (it = 0; it < nt; it++) {
-		data[iy][ix][it] = 0.;
-	    }
-	}
-    }
     sf_floatread(data[0][0],nt*nx*ny,in);
 
-    /* velocity beam steering */
+    for (i = iypi; i < iyps + 1; i++) {
 
-    /* loop over 2-D velocity */
-    for (ivy = 0; ivy < nvy; ivy++) {
-	vy = ovy + ivy*dvy;
+	yp = oy + i*dy;
 
-	for (ivx = 0; ivx < nvx; ivx++) {
-	    vx = ovx + ivx*dvx;
+	for (ivy = 0; ivy < nvy; ivy++) {
+	    for (ivx = 0; ivx < nvx; ivx++) {
+		semb[ivy][ivx] = 0.0;
+	    }
+	}
 
-            /* clear arrays */
-	    semb[0][ivy][ivx] = 0.;
-	    beam = 0.;
-	    
-	    /* loop over time samples */
-	    nlive = 0;
-	    for (it = 0; it < nt; it++) {
+	for (ivy = 0; ivy < nvy; ivy++) {
 
-                /* time position */
-		t = it*dt;
+	    vy = ovy + ivy*dvy;
 
-                /* compute shifted position at current time */
-		if (mode) {
-		    x = xref - vx*t;
-		    y = yref - vy*t;
-		} else {
-                    /* vy is velocity, vx is dip angle */
-		    x = xref - vy*cosf(SF_PI*vx/180.)*t;
-		    y = yref - vy*sinf(SF_PI*vx/180.)*t;
-		}
+	    for (ivx = 0; ivx < nvx; ivx++) {
 
-                /* bilinear interpolation */
-		ixm = floorf((x-ox)/dx);
-		iym = floorf((y-oy)/dy);
+		vx = ovx + ivx*dvx;
 
-		if ( (ixm >= 0) && (iym >= 0) && (ixm < (nx-1)) && (iym < (ny-1)) ) {
+		beam = 0.0;
+		nlive = 0;
 
-                       tx = (x-ixm*dx-ox)/dx;
-                       ty = (y-iym*dy-oy)/dy;
+		for (it = 0; it < nt; it++) {
+
+		    t = it*dt;
+
+                    /* shifted position at current time */
+		    x = xp - vx*t;
+		    y = yp - vy*t;
+
+                    /* bilinear interpolation */
+		    ixm = floorf((x-ox)/dx);
+		    iym = floorf((y-oy)/dy);
+
+		    if ( (ixm >= 0) && (iym >= 0) && (ixm < (nx-1)) && (iym < (ny-1)) ) {
+
+			tx = (x-ixm*dx-ox)/dx;
+			ty = (y-iym*dy-oy)/dy;
 
                        /* sum the directional input at t into the beam */
-                       beam += data[iym][ixm][it]*(1.-tx)*(1.-ty);
-                       beam += data[iym][ixm+1][it]*tx*(1.-ty);
-                       beam += data[iym+1][ixm+1][it]*tx*ty;
-                       beam += data[iym+1][ixm][it]*(1.-tx)*ty;
-		       nlive += 1;
-		}
-	    }
+			beam += data[iym][ixm][it]*(1.-tx)*(1.-ty);
+			beam += data[iym][ixm+1][it]*tx*(1.-ty);
+			beam += data[iym+1][ixm+1][it]*tx*ty;
+			beam += data[iym+1][ixm][it]*(1.-tx)*ty;
+			nlive += 1;
 
-            /* normalize stack */
-	    semb[0][ivy][ivx] = beam/nlive;
+		    }
 
-	}
-    }
+		} /* it */
 
-    /* output velocity beam stack */
-    sf_floatwrite(semb[0][0],nvx*nvy*1,out);
+                /* normalize stack */
+		if (nlive > 0) semb[ivy][ivx] = beam/nlive;
+
+	    } /* vx */
+
+	} /* vy */
+
+	sf_floatwrite(semb[0],nvx*nvy,out);
+	sf_warning("i = %d", i);
+
+    } /* y */
 
     exit(0);
 }
