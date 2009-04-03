@@ -19,7 +19,6 @@
 
 #include <math.h>
 #include <float.h>
-
 #include <rsf.h>
 
 static const float eps = 1.e-5;
@@ -31,12 +30,14 @@ int main(int argc, char* argv[])
 
     int nsx,nsy;                   /* number of slowness in x and y */
     int nvx,nvy;                   /* number of velocity in x and y */
+    int nz,i;
 
     int nt;                        /* number of line parameters */
 
     float dt,ot;                   /* increment of parameter, starting parameter */
     float dvx,ovx;                 /* increment of velocity in x, starting velocity */
     float dvy,ovy;                 /* increment of velocity in y, starting velocity */
+    float oz,dz;
 
     float vxmax,vymax;
     float osx,osy,dsx,dsy;
@@ -64,6 +65,10 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&nvy)) sf_error("No n2= in input");
     if (!sf_histfloat(in,"d2",&dvy)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&ovy)) sf_error("No o2= in input");
+
+    if (!sf_histint(in,"n3",&nz)) sf_error("No n3= in input");
+    if (!sf_histfloat(in,"d3",&dz)) sf_error("No d3= in input");
+    if (!sf_histfloat(in,"o3",&oz)) oz=0.;
 
     if ((nvx != nvy) || (dvx != dvy) || (ovx != ovy)) sf_error("Need centered squared grid for vx-vy plane");
 
@@ -104,67 +109,72 @@ int main(int argc, char* argv[])
     sf_putstring(out,"label1","sx");
     sf_putstring(out,"label2","sy");
 
-    /* memory allocations */
+     /* memory allocations */
     vv = sf_floatalloc2(nvx,nvy);
     sv = sf_floatalloc2(nsx,nsy);
 
-    /* clear array and read data */
-    for (isy = 0; isy < nsy; isy++) {
-	for (isx = 0; isx < nsx; isx++) {
+    for (i = 0; i < nz; i++) {
+
+        /* clear array and read data */
+	for (isy = 0; isy < nsy; isy++) {
+	    for (isx = 0; isx < nsx; isx++) {
                 sv[isy][isx] = 0.;
-        }
-    }
-    sf_floatread(vv[0],nvx*nvy,in);
-
-    for (isy = 0; isy < nsy; isy++) {
-
-	sy = osy + isy*dsy;
-
-	for (isx = 0; isx < nsx; isx++) {
-
-	    sx = osx + isx*dsx;
-
-	    line = 0.0;
-
-            /* loop on velocity in the line */
-	    for (it = 0; it < nt; it++) {
-
-                /* line parameter */
-		t = (ot + it*dt)*SF_PI/180.0;
-
-		c = cos(t);
-		s = sin(t);
-
-		dn = 1.0/(c*sx + s*sy + eps);
-		vx = c*dn;
-		vy = s*dn;
-
-                /* bilinear interpolation */
-                ivxm = floorf((vx-ovx)/dvx);
-                ivym = floorf((vy-ovy)/dvy);
-
-                if ( (ivxm >= 0) && (ivym >= 0) && (ivxm < (nvx-1)) && (ivym < (nvy-1)) ) {
-
-                       tvx = (vx-ivxm*dvx-ovx)/dvx;
-                       tvy = (vy-ivym*dvy-ovy)/dvy;
-
-                       /* add contribution from this velocity into line sum */
-                       line += vv[ivym][ivxm]*(1.-tvx)*(1.-tvy);
-                       line += vv[ivym][ivxm+1]*tvx*(1.-tvy);
-                       line += vv[ivym+1][ivxm+1]*tvx*tvy;
-                       line += vv[ivym+1][ivxm]*(1.-tvx)*tvy;
-                }
-
 	    }
-
-	    sv[isy][isx] = line/nt;
-
 	}
 
-    }
+	sf_floatread(vv[0],nvx*nvy,in);
 
-    /* output on slowness grid */
-    sf_floatwrite(sv[0],nsx*nsy,out);
+	for (isy = 0; isy < nsy; isy++) {
+
+	    sy = osy + isy*dsy;
+
+	    for (isx = 0; isx < nsx; isx++) {
+
+		sx = osx + isx*dsx;
+
+		line = 0.0;
+
+                /* loop on velocity in the line */
+		for (it = 0; it < nt; it++) {
+
+                    /* line parameter */
+		    t = (ot + it*dt)*SF_PI/180.0;
+
+		    c = cos(t);
+		    s = sin(t);
+
+		    dn = 1.0/(c*sx + s*sy + eps);
+		    vx = c*dn;
+		    vy = s*dn;
+
+                    /* bilinear interpolation */
+		    ivxm = floorf((vx-ovx)/dvx);
+		    ivym = floorf((vy-ovy)/dvy);
+
+		    if ( (ivxm >= 0) && (ivym >= 0) && (ivxm < (nvx-1)) && (ivym < (nvy-1)) ) {
+
+			tvx = (vx-ivxm*dvx-ovx)/dvx;
+			tvy = (vy-ivym*dvy-ovy)/dvy;
+
+                        /* add contribution from this velocity into line sum */
+			line += vv[ivym][ivxm]*(1.-tvx)*(1.-tvy);
+			line += vv[ivym][ivxm+1]*tvx*(1.-tvy);
+			line += vv[ivym+1][ivxm+1]*tvx*tvy;
+			line += vv[ivym+1][ivxm]*(1.-tvx)*tvy;
+		    }
+
+		}
+
+		sv[isy][isx] = line/nt;
+
+	    }
+	}
+
+        /* output on slowness grid */
+	sf_floatwrite(sv[0],nsx*nsy,out);
+	sf_warning("i = %d", i);
+
+    }
 
     exit(0);
 }

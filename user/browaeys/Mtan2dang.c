@@ -18,21 +18,23 @@
 */
 
 #include <math.h>
+#include <float.h>
 #include <rsf.h>
 
 int main (int argc, char* argv[])
 {
-    int iz,i,j,ia;
-    int nsx,nsy,nz,na;
-    int nr,nlive,isxm,isym;
+    int k,ia,i;
 
-    float osx,dsx,osy,dsy,oa,da;
-    float or,dr,r,a,line;
-    float sx,sy,tsx,tsy;
+    int nsx,nsy,nz;
+    int na,nr,nlive,isxm,isym;
 
-    float ***slw, **tmp, **dan;
+    float osx,dsx,osy,dsy,oz,dz;
+    float oa,da,or,dr;
+    float a,sum,r,sx,sy,tsx,tsy;
 
-    sf_axis asx,asy,az,aa;
+    float **slw, *dip;
+
+    sf_axis az,aa,ad;
     sf_file in,out;
 
     sf_init (argc,argv);
@@ -40,73 +42,66 @@ int main (int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
+    /* input file */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    /* input file */
-    asx = sf_iaxa(in,1); 
-    nsx = sf_n(asx);
-    osx = sf_o(asx);
-    dsx = sf_d(asx);
+    if (!sf_histint(in,"n1",&nsx)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&dsx)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&osx)) sf_error("No o1= in input");
 
-    asy = sf_iaxa(in,2); 
-    nsy = sf_n(asy);
-    osy = sf_o(asy);
-    dsy = sf_d(asy);
+    if (!sf_histint(in,"n2",&nsy)) sf_error("No n2= in input");
+    if (!sf_histfloat(in,"d2",&dsy)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"o2",&osy)) sf_error("No o2= in input");
 
-    az = sf_iaxa(in,3); 
-    nz = sf_n(az);
+    if (!sf_histint(in,"n3",&nz)) sf_error("No n3= in input");
+    if (!sf_histfloat(in,"d3",&dz)) sf_error("No d3= in input");
+    if (!sf_histfloat(in,"o3",&oz)) sf_error("No o3= in input");
 
     /* output file */
     sf_settype(out,SF_FLOAT);
 
-    if (!sf_getint("na",&na)) na = 2*floorf(nsx/2) + 1;
-    if (!sf_getfloat("da",&da)) da = 90.0/floorf(nsx/2);
-    if (!sf_getfloat("oa",&oa)) oa = -90.0;
+    if (!sf_getint("na",&na)) na = 360;
+    if (!sf_getfloat("da",&da)) da = 0.5;
+    if (!sf_getfloat("oa",&oa)) oa = 0.0;
 
     aa = sf_maxa(na,oa,da);
     sf_oaxa(out,aa,1);
 
-    sf_oaxa(out,az,2);
+    ad = sf_maxa(1,0,1);
+    sf_oaxa(out,ad,2);
+
+    az = sf_maxa(nz,oz,dz);
+    sf_oaxa(out,az,3);
 
     sf_putstring(out,"label1","angle");
     sf_putstring(out,"label2","z");
 
-    /* line summation */
-    nr = nsx; 
-    or = osx;
-    dr = dsx;
+    if (!sf_getint("nr",&nr)) nr = 2*nsx;
+    /* line summation samples */
+    if (!sf_getfloat("dr",&dr)) dr = 0.5*dsx;
+    /* line summation sampling */
+    if (!sf_getfloat("or",&or)) or = osx;
+    /* line summation origin */
 
     /* memory allocations */
-    slw = sf_floatalloc3(nsx,nsy,nz);
-    tmp = sf_floatalloc2(nsx,nsy);
-    dan = sf_floatalloc2(na,nz);
+    slw = sf_floatalloc2(nsx,nsy);
+    dip = sf_floatalloc(na);
 
-    sf_floatread(slw[0][0],nsx*nsy*nz,in);
+    for (k = 0; k < nz; k++) {
 
-    for (iz = 0; iz < nz; iz++) {
+	sf_floatread(slw[0],nsx*nsy,in);
 
-	for (i = 0; i < nsx; i++) { 
-
-	    for (j = 0; j < nsy; j++) {
-
-		tmp[j][i] = slw[iz][j][i];
-
-	    }
-
-	}
+	for (ia = 0; ia < na; ia++) dip[ia] = 0.0;
 
 	for (ia = 0; ia < na; ia++) {
 
 	    a = (oa + ia*da)*SF_PI/180.0;
 
-	    line = 0.0;
+	    sum = 0.0;
             nlive = 0;
 
-	    dan[iz][ia] = 0.0;
+	    for (i = 0; i < nr; i++) { /* line sum */
 
-	    for (i = 0; i < nr; i++) {
-
-                /* sum on line */
 		r = or + i*dr;
 
 		sx = -r*sin(a);
@@ -122,23 +117,23 @@ int main (int argc, char* argv[])
                        tsy = (sy-isym*dsy-osy)/dsy;
 
                        /* add contribution from this slowness point into line sum */
-                       line += tmp[isym][isxm]*(1.-tsx)*(1.-tsy);
-                       line += tmp[isym][isxm+1]*tsx*(1.-tsy);
-                       line += tmp[isym+1][isxm+1]*tsx*tsy;
-                       line += tmp[isym+1][isxm]*(1.-tsx)*tsy;
+                       sum += slw[isym][isxm]*(1.-tsx)*(1.-tsy);
+                       sum += slw[isym][isxm+1]*tsx*(1.-tsy);
+                       sum += slw[isym+1][isxm+1]*tsx*tsy;
+                       sum += slw[isym+1][isxm]*(1.-tsx)*tsy;
 
-		       nlive +=1;
+		       nlive += 1;
                 }
 
-	    } /* sum */
+	    } /* line sum */
 
-	    if (nlive > 0) dan[iz][ia] = line/nlive;
+	    if (nlive > 0) dip[ia] = sum/nlive;
 
 	} /* a */
 
-    } /* z */
+	sf_floatwrite(dip,na,out);
 
-    sf_floatwrite(dan[0],nz*na,out);
+    } /* z */
 	
     exit (0);
 }
