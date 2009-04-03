@@ -51,11 +51,11 @@ int main(int argc, char* argv[])
 {
     fint1 str;
     bool inv, half;
-    int i2, n1,n2, i3, n3, n, dens, nw, CDPtype, mute;
+    int i2, n1,n2, i3, n3, n, dens, nw, CDPtype, mute, rlen;
     float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3, maxstr;
     float **datum = NULL;
     mapfunc forward = NULL, inverse = NULL;
-    char *rule, *prog;
+    char *rule, *nin, *prog;
     sf_file in, out, dat;
 
     sf_init (argc,argv);
@@ -195,15 +195,20 @@ int main(int argc, char* argv[])
 	    break;
     }
 
+    rlen = strlen(rule);
+    nin = (char*) sf_alloc(rlen+4,sizeof(char));
+    snprintf(nin,rlen+4,"%snin",rule);
+
     if (inv) {
-	if (!sf_histint(in,"nin",&n)) n=n1/dens;
+	if (!sf_histint(in,nin,&n)) n=n1/dens;
 
 	o2 = inverse(o1,0);
 	d2 = (inverse(o1+(n1-1)*d1,0) - o2)/(n-1);
     } else {
 	if (!sf_getint("nout",&n)) n=dens*n1;
 	/* output axis length (if inv=n) */
-	sf_putint(out,"nin",n1);
+
+	sf_putint(out,nin,n1);
 
 	o2 = forward(o1,0);
 	d2 = o1+(n1-1)*d1;
