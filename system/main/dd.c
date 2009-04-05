@@ -84,6 +84,7 @@ int main(int argc, char *argv[])
 		break;
             case 's':
                 otype = SF_SHORT;
+		break;
 	    default:
 		sf_error("Unsupported type=\"%s\"",type);
 		break;
@@ -119,6 +120,7 @@ int main(int argc, char *argv[])
 			    ibuf[j] = sbuf[i]; 
 			}
                         sf_intwrite(ibuf, nout, out);
+			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
 			for (i=j=0; i < nin && j < nout; i++, j++) {
@@ -153,6 +155,7 @@ int main(int argc, char *argv[])
 			    sbuf[j] = ibuf[i]; 
 			}
                         sf_shortwrite(sbuf, nout, out);
+			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
 			for (i=j=0; i < nin && j < nout; i++, j++) {
@@ -194,6 +197,7 @@ int main(int argc, char *argv[])
 			    sbuf[j] = fbuf[i]; 
 			}
                         sf_shortwrite(sbuf, nout, out);
+			break;
 		    case SF_COMPLEX:
 			cbuf = (sf_complex*) bufout;
 			for (i=j=0; i < nout && j < nin; i++, j+=2) {

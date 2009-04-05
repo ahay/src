@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
     }
 
     rlen = strlen(rule);
-    nin = (char*) sf_alloc(rlen+4,sizeof(char));
+    nin = sf_charalloc(rlen+4);
     snprintf(nin,rlen+4,"%snin",rule);
 
     if (inv) {
