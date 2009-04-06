@@ -46,6 +46,10 @@ int main (int argc, char* argv[])
 
     off = sf_floatalloc(nh);
 
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
+
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
@@ -54,21 +58,16 @@ int main (int argc, char* argv[])
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
-
-	if (!sf_getbool("half",&half)) half=true;
-	/* if y, the second axis is half-offset instead of full offset */
-	
-	if (half) {
-	    dh *= 2.;
-	    h0 *= 2.;
-	}
 	
 	if (sf_histfloat(cmp,"d3",&dy)) {
-	    CDPtype=0.5+0.5*dh/dy;
-	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
-	} 	   
-	if (1 > CDPtype) CDPtype=1;
-	sf_warning("CDPtype=%d",CDPtype);
+	    CDPtype=half? 0.5+dh/dy : 0.5+0.5*dh/dy;
+	    if (CDPtype < 1) {
+		CDPtype=1;
+	    } else if (1 != CDPtype) {
+		sf_histint(cmp,"CDPtype",&CDPtype);
+	    	sf_warning("CDPtype=%d",CDPtype);
+	    }
+	} 
 
 	for (ih = 0; ih < nh; ih++) {
 	    off[ih] = h0 + ih*dh; 
@@ -82,6 +81,7 @@ int main (int argc, char* argv[])
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
     /* reference offset */
+    if (half) h0 *= 2.;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
@@ -99,6 +99,7 @@ int main (int argc, char* argv[])
 	    sf_floatread (trace,nt,cmp);
 	    
 	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
+	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
 	    for (it=0; it < nt; it++) {

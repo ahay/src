@@ -20,13 +20,12 @@
 
 #include <rsf.h>
 
-static size_t setfiledims (sf_file in, sf_file out);
-
 static void ddbreak (sf_datatype itype, sf_datatype otype);
 
 int main(int argc, char *argv[])
 {
-    size_t size, nin, nout, bufsiz=BUFSIZ, ein, eout;
+    off_t size;
+    size_t nin, nout, bufsiz=BUFSIZ, ein, eout;
     int line, n1, i, j, *ibuf;
     sf_file in, out;
     char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
@@ -39,7 +38,7 @@ int main(int argc, char *argv[])
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output ("out");
-    size = setfiledims(in,out);
+    size = sf_filesize(in);
     
     form = sf_getstring("form");
     /* ascii, native, xdr */
@@ -98,7 +97,9 @@ int main(int argc, char *argv[])
     /* optimize buffer size */
     bufsiz /= ein;
 
-    if (SF_UCHAR != itype && ein != eout && sf_histint(in,"n1",&n1)) {
+    if (SF_UCHAR != itype && SF_CHAR != itype && 
+	SF_SHORT != itype && SF_SHORT != otype &&
+	ein != eout && sf_histint(in,"n1",&n1)) {
 	n1 = (n1*ein)/eout;
 	sf_putint(out,"n1",n1);
     }
@@ -108,35 +109,29 @@ int main(int argc, char *argv[])
 	nout = nin*ein/eout;
 	switch (itype) {
             case SF_SHORT:
+		nin = bufsiz*ein/eout;
+		if (nin > size) nin=size;
+
 		sbuf = (short*) bufin;
 		sf_shortread(sbuf,nin,in);
 		switch (otype) {
                     case SF_SHORT:
-                        sf_shortwrite(sbuf,nout,out);
+                        sf_shortwrite(sbuf,nin,out);
 			break;
 		    case SF_INT:
                         ibuf = (int*) bufout;
-                        for (i=j=0; i < nin && j < nout; i++, j++) {
-			    ibuf[j] = sbuf[i]; 
+                        for (i=0; i < nin; i++) {
+			    ibuf[i] = sbuf[i]; 
 			}
-                        sf_intwrite(ibuf, nout, out);
+                        sf_intwrite(ibuf, nin, out);
 			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
-			for (i=j=0; i < nin && j < nout; i++, j++) {
-			    fbuf[j] = sbuf[i]; 
+			for (i=0; i < nin; i++) {
+			    fbuf[i] = sbuf[i]; 
 			}
-			sf_floatwrite(fbuf,nout,out);
+			sf_floatwrite(fbuf,nin,out);
 			break;
-		    case SF_COMPLEX:
-			cbuf = (sf_complex*) bufout;
-			for (i=j=0; i < nin && j < nout; i+=2, j++) {
-			    cbuf[j] = sf_cmplx(sbuf[i],sbuf[i+1]); 
-			}
-			sf_complexwrite(cbuf,nout,out);
-			break;
-		    case SF_UCHAR:
-		    case SF_CHAR:
 		    default:
 			ddbreak (itype,otype);
 			break;
@@ -150,11 +145,12 @@ int main(int argc, char *argv[])
 			sf_intwrite(ibuf,nout,out);
 			break;
                     case SF_SHORT:
+			nout = nin;
                         sbuf = (short*) bufout;
-                        for (i=j=0; i < nin && j < nout; i++, j++) {
-			    sbuf[j] = ibuf[i]; 
+                        for (i=0; i < nin; i++) {
+			    sbuf[i] = (short) ibuf[i]; 
 			}
-                        sf_shortwrite(sbuf, nout, out);
+                        sf_shortwrite(sbuf, nin, out);
 			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
@@ -170,8 +166,6 @@ int main(int argc, char *argv[])
 			}
 			sf_complexwrite(cbuf,nout,out);
 			break;
-		    case SF_UCHAR:
-		    case SF_CHAR:
 		    default:
 			ddbreak (itype,otype);
 			break;
@@ -193,10 +187,10 @@ int main(int argc, char *argv[])
 			break;
                     case SF_SHORT:
                         sbuf = (short*) bufout;
-                        for (i=j=0; i < nin && j < nout; i++, j++) {
-			    sbuf[j] = fbuf[i]; 
+                        for (i=0; i < nin; i++) {
+			    sbuf[i] = (short) fbuf[i]; 
 			}
-                        sf_shortwrite(sbuf, nout, out);
+                        sf_shortwrite(sbuf, nin, out);
 			break;
 		    case SF_COMPLEX:
 			cbuf = (sf_complex*) bufout;
@@ -205,8 +199,6 @@ int main(int argc, char *argv[])
 			}
 			sf_complexwrite(cbuf,nout,out);
 			break;		
-		    case SF_UCHAR:
-		    case SF_CHAR:
 		    default:
 			ddbreak (itype,otype);
 			break;
@@ -284,23 +276,6 @@ static void ddbreak (sf_datatype itype, sf_datatype otype)
 
     sf_error("Conversion from %s to %s"
 	     " is unsupported",types[itype],types[otype]);
-}
-
-static size_t setfiledims (sf_file in, sf_file out) 
-{
-    size_t size;
-    int i, ni;
-    char key[3];
-
-    for (size=1, i=1; i <= SF_MAX_DIM; i++, size *= ni) {
-	(void) snprintf(key,3,"n%d",i);
-	if (!sf_getint(key,&ni)) {
-	    if (!sf_histint(in,key,&ni)) break;
-	} else {
-	    sf_putint(out,key,ni);
-	}
-    }
-    return size;
 }
 
 /* 	$Id$	 */
