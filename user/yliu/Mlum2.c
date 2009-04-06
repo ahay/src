@@ -56,10 +56,10 @@ int main (int argc, char* argv[])
     /* get the trace length (n1) and the number of traces (n2) and n3*/
     
     if (!sf_getint("nfw1",&nfw1)) sf_error("Need integer input");
-    /* filter-window length in sample direction (positive and odd integer)*/
+    /* filter-window length in n1 direction (positive and odd integer)*/
     
     if (!sf_getint("nfw2",&nfw2)) nfw2=nfw1;
-    /* filter-window length in trace direction (default=nfw1)*/
+    /* filter-window length in n2 direction (default=nfw1)*/
     
     if (nfw1 < 1 || nfw2 < 1)  sf_error("Need positive integer input"); 
     if (nfw1%2 == 0)  nfw1 = (nfw1+1);
