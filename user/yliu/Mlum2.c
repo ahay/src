@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
     int shnclip;  /*shnclip is sharpener tuning parameter(<=(nfw+1)/2)*/
     
     int i,j,k,ii,kk,jj;
-    bool boundary;
+    bool boundary, verb;
     
     float *trace;
     float *tempt;
@@ -79,6 +79,8 @@ int main (int argc, char* argv[])
     if (NULL == (type=sf_getstring("type"))) type="rectangular";
     /* [rectangular,cross] 2-D window type, the default is rectangular  */
 
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     if(smnclip<1 || smnclip>((nfw1*nfw2+1)/2)) sf_error("Smnclip need a value between 1 and (nfw1*nfw2+1)/2");
     if(shnclip<1 || shnclip>((nfw1*nfw2+1)/2)) sf_error("Shnclip need a value between 1 and (nfw1*nfw2+1)/2");
@@ -90,18 +92,16 @@ int main (int argc, char* argv[])
 
     switch(type[0]) {
 	case 'r':
-
 	    temp1 = sf_floatalloc(nfw1*nfw2);
-
 	    for(ii=0;ii<n3;ii++) {
+		if (verb) sf_warning("slice %d of %d",ii+1,n3);
 		sf_floatread(trace,n1*n2,in);
-		
 		for(i=0;i<n1*n2;i++){
 		    tempt[i]=trace[i];
 		}
-		
+
 		bound3(tempt,extendt,nfw1,nfw2,n1,n2,boundary);
-		
+
 		/************2D LUM smoother filter****************/
 		for(i=0;i<n2;i++){
 		    for(j=0;j<n1;j++) {
@@ -115,21 +115,20 @@ int main (int argc, char* argv[])
 			trace[n1*i+j]=lum(temp1,nfw1*nfw2,smnclip,shnclip);
 		    }
 		}
-		
 		sf_floatwrite(trace,n1*n2,out);
 	    }
 	    break;
 	case 'c':
 	    temp1 = sf_floatalloc(nfw1+nfw2-1);
 	    for(ii=0;ii<n3;ii++) {
+		if (verb) sf_warning("slice %d of %d",ii+1,n3);
 		sf_floatread(trace,n1*n2,in);
-		
 		for(i=0;i<n1*n2;i++){
 		    tempt[i]=trace[i];
 		}
-		
+
 		bound3(tempt,extendt,nfw1,nfw2,n1,n2,boundary);
-		
+
 		/************2D LUM smoother filter****************/
 		for(i=0;i<n2;i++){
 		    for(j=0;j<n1;j++) {
@@ -146,19 +145,15 @@ int main (int argc, char* argv[])
 			if(jj!=(nfw1+nfw2-1)) {
 			    sf_error("Window calculation error, number(%d)!=nfw1+nwf2-1(%d)",jj,(nfw1+nfw2-1));
 			}
-
-
 			trace[n1*i+j]=lum(temp1,nfw1+nfw2-1,smnclip,shnclip);
 		    }
 		}
-		
 		sf_floatwrite(trace,n1*n2,out);
 	    }
 	    break;
 	default:
 	    sf_error("Unknown method type=%c",type[0]);
 	    break;
-	    
     }	    
     exit (0);
 }
