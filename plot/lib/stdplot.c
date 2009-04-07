@@ -295,6 +295,7 @@ void vp_cubecoord (int side /* 1=top, 2=side, 3=front */,
     /* setup the coordinate system */
     vp_scale (scale1, scale2);
     vp_uorig (umin1, umin2);
+    vp_uclip (umin1, umin2, umax1, umax2);
 }
 
 
@@ -1012,6 +1013,7 @@ void vp_plot_unset (void)
     vp_fat (gridfat);
     vp_color (gridcol);
     vp_set_dash (0);
+    vp_clip(orig1-inch1,orig2-inch2,orig1+inch1,orig2+inch2);
 }
 
 void vp_simpleframe(void)
@@ -1122,8 +1124,6 @@ void vp_simplebarframe (void)
 /*< Drawing simple frame for the bar label >*/
 {
     float min, max;
-
-/*    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2); */
 
     vp_bgroup("scalebar frame");
     vp_color(framecol);
