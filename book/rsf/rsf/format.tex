@@ -277,7 +277,7 @@ bash$ < sin.rsf sfdisfil
 \end{verbatim}
 Converting the data to the integer type:
 \begin{verbatim}
-bash$ < sin.rsf type=int > isin.rsf
+bash$ < sin.rsf sfdd type=int > isin.rsf
 bash$ sfin isin.rsf
 isin.rsf:
     in="/tmp/isin.rsf@"
@@ -421,12 +421,12 @@ The  \texttt{bfile} is the binary header file.
 To convert files back from RSF to SEG-Y or SU, use the \texttt{sfsegywrite}
 program and reverse the input and output:
 \begin{verbatim}
-bash$ sfsuwrite > spike.su tfile=tfile.rsf endian=0 < spike.rsf
+bash$ sfsuwrite > plane.su tfile=tfile.rsf endian=0 < plane.rsf
 \end{verbatim}
 or
 \begin{verbatim}
-bash$ sfsegywrite > spike.segy tfile=tfile.rsf \
-hfile=hfile bfile=bfile endian=0 < spike.rsf
+bash$ sfsegywrite > plane.segy tfile=tfile.rsf \
+hfile=hfile bfile=bfile endian=0 < plane.rsf
 \end{verbatim}
 
 If \texttt{hfile=} and \texttt{bfile=} are not supplied to
@@ -436,9 +436,9 @@ from the default locations (files named \texttt{header} and
 generated with \texttt{sfsegyheader}. Here is an example:
 \begin{verbatim}
 bash$ rm header binary
-bash$ sfheadermath < spike.rsf output=N+1 | sfdd type=int > tracl.rsf
-bash$ sfsegyheader < spike.rsf tracl=tracl.rsf > tfile.rsf
-bash$ sfsegywrite  < spike.rsf tfile=tfile.rsf > spike.segy
+bash$ sfheadermath < plane.rsf output=N+1 | sfdd type=int > tracl.rsf
+bash$ sfsegyheader < plane.rsf tracl=tracl.rsf > tfile.rsf
+bash$ sfsegywrite  < plane.rsf tfile=tfile.rsf > plane.segy
 \end{verbatim}
 
 
