@@ -340,8 +340,8 @@ void opendev (int argc, char* argv[])
     dev.attributes = rasattr;
 
     pixels_per_inch = dev.pixels_per_inch = 100.;
-    dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
-    dev.ymax = VP_SCREEN_RATIO * dev.xmax;
+    xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    ymax = VP_SCREEN_RATIO * xmax;
     aspect_ratio = dev.aspect_ratio = 1.;
 
     /* device capabilities */
@@ -352,15 +352,15 @@ void opendev (int argc, char* argv[])
     /* aspect ratio */
     sf_getfloat ("ppi", &dev.pixels_per_inch);
     /* pixels per inch */
-    dev.xmax *= dev.pixels_per_inch / pixels_per_inch;
-    dev.ymax *= (aspect_ratio / dev.aspect_ratio) *
-     (dev.pixels_per_inch / pixels_per_inch);
-    sf_getint ("n1", &dev.xmax);
-    sf_getint ("n2", &dev.ymax);
+    xmax *= dev.pixels_per_inch / pixels_per_inch;
+    ymax *= (aspect_ratio / dev.aspect_ratio) *
+	(dev.pixels_per_inch / pixels_per_inch);
+    sf_getint ("n1", &xmax);
+    sf_getint ("n2", &ymax);
     /* image size */
 
-    xmax = dev.xmax+1;
-    ymax = dev.ymax+1;
+    dev.xmax = xmax-1;
+    dev.ymax = ymax-1;
 
     /*
      * Allocate space for image 

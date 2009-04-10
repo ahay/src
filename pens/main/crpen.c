@@ -85,16 +85,16 @@ void opendev (int argc, char* argv[])
     dev.pixels_per_inch = PPI;
     dev.aspect_ratio = 1.;
 
-    if (!sf_getint ("n1", &dev.xmax)) dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
-    if (!sf_getint ("n2", &dev.ymax)) dev.ymax = VP_SCREEN_RATIO * VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    if (!sf_getint ("n1", &nx)) nx = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    if (!sf_getint ("n2", &ny)) ny = VP_SCREEN_RATIO * VP_STANDARD_HEIGHT * dev.pixels_per_inch;
     /* image size */
 
     dev.need_end_erase = true;
     dev.smart_clip= true; 
     dev.num_col = NCOLOR;
 
-    nx = dev.xmax+1;
-    ny = dev.ymax+1;
+    dev.xmax = nx-1;
+    dev.ymax = ny-1;
 
 #ifdef _PDF
     surface = cairo_pdf_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
@@ -110,6 +110,8 @@ void opendev (int argc, char* argv[])
 
     cr = cairo_create (surface);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+
+    cairo_set_line_width (cr, 1);
 
     if (isatty(fileno(pltout)))
     {

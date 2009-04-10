@@ -72,27 +72,27 @@ void opendev (int argc, char* argv[])
     dev.point = gdpoint;
 
     pixels_per_inch = dev.pixels_per_inch = PPI;
-    dev.xmax = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
-    dev.ymax = VP_SCREEN_RATIO * dev.xmax;
+    nx = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    ny = VP_SCREEN_RATIO * nx;
     aspect_ratio = dev.aspect_ratio = 1.;
 
     sf_getfloat ("aspect", &dev.aspect_ratio);
     /* aspect ratio */
     sf_getfloat ("ppi", &dev.pixels_per_inch);
     /* pixels per inch */
-    dev.xmax *= dev.pixels_per_inch / pixels_per_inch;
-    dev.ymax *= (aspect_ratio / dev.aspect_ratio) *
+    nx *= dev.pixels_per_inch / pixels_per_inch;
+    ny *= (aspect_ratio / dev.aspect_ratio) *
      (dev.pixels_per_inch / pixels_per_inch);
-    sf_getint ("n1", &dev.xmax);
-    sf_getint ("n2", &dev.ymax);
+    sf_getint ("n1", &nx);
+    sf_getint ("n2", &ny);
     /* image size */
 
     dev.need_end_erase = true;
     dev.smart_clip= true; 
     dev.num_col = NCOLOR;
 
-    nx = dev.xmax+1;
-    ny = dev.ymax+1;
+    dev.xmax = nx-1;
+    dev.ymax = ny-1;
 
     image = gdImageCreate(nx,ny);
 
