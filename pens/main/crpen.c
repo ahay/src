@@ -56,6 +56,7 @@ static cairo_surface_t *surface;
 static cairo_t *cr;
 
 static int color_table[NCOLOR][3], nx, ny, crcolor=7;
+static float magnify;
 
 static cairo_status_t cr_fwrite(void *closure, 
 				const unsigned char *data, unsigned int length)
@@ -81,14 +82,28 @@ void opendev (int argc, char* argv[])
     dev.close = crclose;
 
     dev.attributes = crattr;
+    dev.vector = crvector;
     dev.plot = crplot;
     dev.area = crarea;
 
     dev.pixels_per_inch = PPI;
+    nx = VP_STANDARD_HEIGHT * dev.pixels_per_inch; 
+    ny = VP_SCREEN_RATIO * VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    /* image size */
+
     dev.aspect_ratio = 1.;
 
-    if (!sf_getint ("n1", &nx)) nx = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
-    if (!sf_getint ("n2", &ny)) ny = VP_SCREEN_RATIO * VP_STANDARD_HEIGHT * dev.pixels_per_inch;
+    sf_getfloat ("aspect", &dev.aspect_ratio);
+    /* aspect ratio */
+    sf_getfloat ("ppi", &dev.pixels_per_inch);
+    /* pixels per inch */
+    
+    magnify = dev.pixels_per_inch / PPI;
+    nx *= magnify;
+    ny *= (1.0 / dev.aspect_ratio) * magnify;
+
+    sf_getint ("n1", &nx);    
+    sf_getint ("n2", &ny); 
     /* image size */
 
     dev.need_end_erase = true;
@@ -113,7 +128,8 @@ void opendev (int argc, char* argv[])
     cr = cairo_create (surface);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
 
-    cairo_set_line_width (cr, 1);
+    cairo_set_line_width (cr, magnify);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND); 
 
     if (isatty(fileno(pltout)))
     {
@@ -277,7 +293,13 @@ void crarea (int npts, struct vertex *head)
 void crvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 /*< device-dependent vector >*/
 {
-    cairo_new_path(cr);
-    genvector(x1,y1,x2,y2,nfat,dashon);
-    cairo_stroke(cr);
+    if (nfat < 0)
+	return;
+    
+    if (nfat > 1) cairo_set_line_width (cr, nfat*magnify);
+    
+    genvector(x1,y1,x2,y2,0,dashon);
+    
+    if (nfat > 1) cairo_set_line_width (cr, magnify);
 }
+

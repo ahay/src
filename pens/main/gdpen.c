@@ -52,7 +52,6 @@ static char *image_type;
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    float pixels_per_inch, aspect_ratio;
     char newpath[60], *color;
     int value;
 
@@ -71,18 +70,18 @@ void opendev (int argc, char* argv[])
     dev.plot = gdplot;
     dev.point = gdpoint;
 
-    pixels_per_inch = dev.pixels_per_inch = PPI;
+    dev.pixels_per_inch = PPI;
     nx = VP_STANDARD_HEIGHT * dev.pixels_per_inch;
     ny = VP_SCREEN_RATIO * nx;
-    aspect_ratio = dev.aspect_ratio = 1.;
+    dev.aspect_ratio = 1.;
 
     sf_getfloat ("aspect", &dev.aspect_ratio);
     /* aspect ratio */
     sf_getfloat ("ppi", &dev.pixels_per_inch);
     /* pixels per inch */
-    nx *= dev.pixels_per_inch / pixels_per_inch;
-    ny *= (aspect_ratio / dev.aspect_ratio) *
-     (dev.pixels_per_inch / pixels_per_inch);
+    nx *= dev.pixels_per_inch / PPI;
+    ny *= (1.0 / dev.aspect_ratio) *
+	(dev.pixels_per_inch / PPI);
     sf_getint ("n1", &nx);
     sf_getint ("n2", &ny);
     /* image size */
