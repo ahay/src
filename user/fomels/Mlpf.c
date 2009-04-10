@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 	exit(0);
     }
 
-    mean = sqrtf (mean/nd);
+    mean = sqrtf (mean/n12);
     
     for(i=0; i < n12; i++) {
 	d[i] /= mean;

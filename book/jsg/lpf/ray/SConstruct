@@ -42,7 +42,7 @@ for c in ('','d'):
     Flow([filt,pred],[c+'shifts',data,'pef'],
          '''
          lpf match=${SOURCES[1]} pred=${TARGETS[1]} pef=${SOURCES[2]}
-         rect1=3 rect2=3 niter=400
+         rect1=5 rect2=3 niter=400
          ''')
     Flow(prim,[data,pred],'add scale=1,-1 ${SOURCES[1]}')
 

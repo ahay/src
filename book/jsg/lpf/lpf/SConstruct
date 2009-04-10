@@ -47,7 +47,7 @@ for s in range(1,na):
 Flow('shift',shifts,'cat axis=2 ${SOURCES[1:%d]}' % len(shifts))
 
 Flow('pef pre','shift in',
-     'lpf match=${SOURCES[1]} rect1=5 pred=${TARGETS[1]}')
+     'lpf match=${SOURCES[1]} rect1=7 pred=${TARGETS[1]}')
 Flow('err','pre in','add scale=-1,1 ${SOURCES[1]}')
 
 Result('lpf','in err',

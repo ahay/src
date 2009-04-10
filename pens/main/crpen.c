@@ -57,10 +57,12 @@ static cairo_t *cr;
 
 static int color_table[NCOLOR][3], nx, ny, crcolor=7;
 
-static cairo_status_t cr_fwrite(void *closure, const unsigned char *data, unsigned int length)
+static cairo_status_t cr_fwrite(void *closure, 
+				const unsigned char *data, unsigned int length)
 {
-    if (length != fwrite(data,1,length,pltout)) ERR(FATAL, name, "trouble writing");
-    return 0;
+    if (length == fwrite(data,1,length,pltout))
+	return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_WRITE_ERROR;
 }
 
 void opendev (int argc, char* argv[])
@@ -176,9 +178,9 @@ void crerase (int command)
 	    break;
 	case ERASE_END:
 	    cr_write();
-	    fclose(pltout);
 	    cairo_surface_destroy(surface);
 	    cairo_destroy(cr);
+	    fclose(pltout); 
 	    break;
 	case ERASE_BREAK:
 	    cr_write();
