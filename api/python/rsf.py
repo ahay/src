@@ -38,8 +38,14 @@ class Par(object):
             else:
                 return None
         return _gets
-    def string(self,key):
-        return c_rsf.sf_getstring(key)
+    def string(self,key,default=None):
+        par = c_rsf.sf_getstring(key)
+        if par:
+            return par
+        elif default:
+            return default
+        else:
+            return None
 
 # default parameters for interactive runs
 par = Par(['python','-'])
@@ -372,7 +378,8 @@ class Filter(object):
         parstr = []
         for (key,val) in kw.items():
             if self.checkpar and self.prog and not self.prog.pars.get(key):
-                sys.stderr.write('checkpar: No %s= parameter in %s\n' % (key,self.prog.name))
+                sys.stderr.write('checkpar: No %s= parameter in %s\n' % 
+                                 (key,self.prog.name))
             if isinstance(val,str):
                 val = '\''+val+'\''
             elif isinstance(val,bool):
@@ -535,6 +542,9 @@ if __name__ == "__main__":
     no = par.bools("false",2)
     assert no and not no[0] and not no[1]
     assert "Time (sec)" == par.string("label")
+    assert "Time (sec)" == par.string("label","Depth")
+    assert not par.string("nolabel")
+    assert "Depth" == par.string("nolabel","Depth")
     par.close()
     # Testing file
     # Redirect input and output
