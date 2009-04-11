@@ -76,10 +76,7 @@ int main(int argc, char *argv[])
 
     if (inv) {
 	n2 = sf_leftsize(in,2);
-	if (!decomp) {
-	    sf_unshiftdim(in, out, 2);
-	    sf_putint(out,"n3",1);
-	}
+	if (!decomp) sf_unshiftdim(in, out, 2);	
     } else {
 	n2 = sf_leftsize(in,1);
 	sf_putint(out,"n2",nw);
@@ -95,11 +92,7 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    if (decomp) {
-	freqlets_init(n1,d1,true,true,type[0],1,w0,z0);
-    } else {
-	freqlets_init(n1,d1,true,true,type[0],nw,w0,z0);
-    }   
+    freqlets_init(n1,d1,true,true,type[0],decomp? 1: nw,w0,z0);
  
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
@@ -111,11 +104,7 @@ int main(int argc, char *argv[])
 
 	if (inv) {
 	    sf_complexread(qq,n1w,in);
-	} else {
-	    sf_complexread(pp,n1,in);
-	} 
 
-	if (inv) {
 	    if (decomp) {
 		for (iw=0; iw < nw; iw++) {
 		    if (NULL != w0) {
@@ -124,13 +113,14 @@ int main(int argc, char *argv[])
 			freqlets_set(NULL,z0+iw);
 		    }
 		    freqlets_lop(false,false,n1,n1,qq+iw*n1,pp);
-		    datawrite(n1,scale,pp,out);
+		    datawrite(n1,1.,pp,out);
 		}
 	    } else {
 		freqlets_lop(false,false,n1w,n1,qq,pp);
 		datawrite(n1,scale,pp,out);
 	    }
 	} else {
+	    sf_complexread(pp,n1,in);
 	    sf_csharpinv(freqlets_lop,
 			 scale,niter,ncycle,perc,verb,n1w,n1,qq,pp);
 	    sf_complexwrite(qq,n1w,out);
