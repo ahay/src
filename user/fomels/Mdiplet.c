@@ -20,11 +20,14 @@
 #include <rsf.h>
 
 #include "diplet.h"
+#include "seislet.h"
+
+static void datawrite(int n1, float scale, float *pp, sf_file out);
 
 int main(int argc, char *argv[])
 {
-    int i, n1, n2, i3, n3, n12, np, n12p, ncycle, niter;
-    bool inv, verb;
+    int n1, n2, i3, n3, n12, ip, np, n12p, ncycle, niter;
+    bool inv, verb, decomp;
     char *type;
     float *pp, *qq, ***dd, eps, perc, scale;
     sf_file in, out, dip;
@@ -56,6 +59,9 @@ int main(int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
+    if (!sf_getbool("decomp",&decomp)) decomp=false;
+    /* do decomposition */
+
     if (!sf_getint("ncycle",&ncycle)) ncycle=0;
     /* number of iterations */
 
@@ -67,39 +73,51 @@ int main(int argc, char *argv[])
 
     if (inv) {
 	n3 = sf_leftsize(in,3);
-	sf_putint(out,"n3",n3);
+	if (!decomp) sf_unshiftdim(in, out, 3);
     } else {
 	n3 = sf_leftsize(in,2);
 	sf_putint(out,"n3",np);
-	sf_putint(out,"n4",n3);
+	(void) sf_shiftdim(in, out, 3);
     } 
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type (haar,linear,biorthogonal), default is linear */
     
-    diplet_init(n1,n2,np,dd,true,eps,type[0]);
-    
+    diplet_init(n1,n2,decomp? 1: np, dd,true,eps,type[0]);
+ 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dd[0][0],n12p,dip);	
 	
-	if (!inv) {
-    	    sf_floatread(pp,n12,in);
-	    diplet_lop(true,false,n12p,n12,qq,pp);
-	    if (ncycle > 0) 
-		sf_sharpinv(diplet_lop,
-			    scale,niter,ncycle,perc,verb,n12p,n12,qq,pp); 
-	    sf_floatwrite(qq,n12p,out);
-
-	} else {
+	if (inv) {
 	    sf_floatread(qq,n12p,in);
-	    diplet_lop(false,false,n12p,n12,qq,pp);
 
-	    for (i=0; i < n12; i++) {
-		pp[i] *= scale;
+	    if (decomp) {
+		for (ip=0; ip < np; ip++) {
+		    seislet_set(dd[ip]);
+		    seislet_lop(false,false, n12, n12,qq+ip*n12, pp);
+		    datawrite(n1,1.,pp,out);
+		}
+	    } else {
+		diplet_lop(false,false, n12p, n12,qq, pp);
+		datawrite(n12,scale,pp,out);
 	    }
-	    sf_floatwrite(pp,n12,out);
-	}
+	} else {
+    	    sf_floatread(pp,n12,in);
+	    sf_sharpinv(diplet_lop,
+			scale,niter,ncycle,perc,verb,n12p,n12,qq,pp); 
+	    sf_floatwrite(qq,n12p,out);
+	} 
     }
     
     exit(0);
+}
+
+static void datawrite(int n1, float scale, float *pp, sf_file out) 
+{
+    int i1;
+
+    for (i1=0; i1 < n1; i1++) {
+	pp[i1] *= scale;
+    }
+    sf_floatwrite(pp,n1,out);    
 }
