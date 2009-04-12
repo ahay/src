@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		for (ip=0; ip < np; ip++) {
 		    seislet_set(dd[ip]);
 		    seislet_lop(false,false, n12, n12,qq+ip*n12, pp);
-		    datawrite(n1,1.,pp,out);
+		    datawrite(n12,1.,pp,out);
 		}
 	    } else {
 		diplet_lop(false,false, n12p, n12,qq, pp);
