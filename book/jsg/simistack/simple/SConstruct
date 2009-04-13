@@ -25,7 +25,7 @@ Flow('stack','syn','stack')
 Plot('stack','stack','put o2=0 | wiggle  transp=y yreverse=y poly=y label2=Amplitude labelsz=12 title="c)" screenratio=0.8')
 
 ## SNR stack
-Flow('snrstack','syn','snrstack  w=45')
+Flow('snrstack','syn','snrstack  w=45 eps=5000')
 Plot('snrstack','snrstack','wiggle  transp=y yreverse=y poly=y label2=Amplitude labelsz=12 title="e)" screenratio=0.8')
 
 ## 
@@ -36,7 +36,7 @@ Flow('weights', 'syn stacks',
      ''')
 Flow('tweights','weights','threshold pclip=100')
 Plot('weights','tweights','wiggle  transp=y yreverse=y poly=y label2=Trace labelsz=12 title="b)" screenratio=0.8')
-Flow('smstack','syn','smstack s=7 ifwt=y ee=500 esp=0.1')
+Flow('smstack','syn','smstack s=7 ifwt=y ee=5000 esp=0.1')
 Plot('smstack','smstack','wiggle  transp=y yreverse=y poly=y label2=Amplitude labelsz=12 title="d)" screenratio=0.8')
 
 Flow('simistack','tweights syn',
