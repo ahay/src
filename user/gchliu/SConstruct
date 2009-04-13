@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-ricker2 pwshapeic pwic pwdecon
+ricker2 pwshapeic pwic pwdecon smstack snrstack wcorr
 '''
 
 try:  # distributed version
