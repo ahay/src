@@ -1,4 +1,4 @@
-\title{Stacking seismic data using local correlationy}
+\title{Stacking seismic data using local correlation}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
@@ -28,7 +28,7 @@ Austin, TX, USA, 78713-8924
 
 \begin{abstract}
 
-Stacking plays an important role in improving signal-tonoise ratio and imaging 
+Stacking plays an important role in improving signal-to-noise ratio and imaging 
 quality of seismic data. However, for low-fold-coverage seismic profiles, the 
 result of conventional stacking is not always satisfactory. To address this 
 problem, we have developed a method of stacking in which we use local 
@@ -45,7 +45,7 @@ than other stacking methods.
 Stacking as one of the three crucial techniques (deconvolution,
 stacking, and migration) plays an important role in improving 
 signal-to-noise ratio (S/R) in seismic data processing \cite[]{Yilmaz01}.
-Conventional stacking, which is performed by averaging an NMOcorrected
+Conventional stacking, which is performed by averaging an NMO-corrected
 data set or migrated data set, is optimal only when noise
 components in all traces are uncorrelated, normally distributed, stationary,
 and of equal magnitude \cite[]{Mayne62,Neelamani06}. Therefore, different 
@@ -54,17 +54,17 @@ along with improvements in optimizing weights of seismic
 traces.
 
 \cite{Robinson70} proposes using an S/N-based weighted stack to
-further minimize noise. Using crosscorrelation of seismic traces and
-normalized crosscorrelation processing, \cite{Chang96} proposes
+further minimize noise. Using cross-correlation of seismic traces and
+normalized cross-correlation processing, \cite{Chang96} proposes
 preserved frequency stacking. \cite{Schoenberger96} proposes optimum
 weighted stack for multiple suppression, with weight determined
 by solving a set of optimization equations. \cite{Neelamani06} 
 propose a stack-and-denoise method called SAD, which exploits
 the structure of seismic signals to obtain an enhanced stack.
 \cite{Zhang06} present a high-order correlative weighted
-stacking technique on the basis of wavelet transformation and highorder
+stacking technique on the basis of wavelet transformation and high-order
 statistics. By estimating the probability distribution of noise,
-\cite{Trickett07} applies amaximum-likelihood estimator to stacking.
+\cite{Trickett07} applies a maximum-likelihood estimator to stacking.
 To eliminate artifacts in angle-domain common-image gathers
 (CIGs) caused by sparsely sampled wavefields, \cite{Tang07} presents
 a selective stacking approach that applies local smoothing of
@@ -75,7 +75,7 @@ stack and applying larger weight to the central part of the sample
 population.
 
 The global correlation coefficient can measure the similarity of
-two signals, but it is not a local attribute. Not only does the slidingwindow
+two signals, but it is not a local attribute. Not only does the sliding-window
 global-correlation approach need many parameters to be
 specified, but this approach cannot smoothly characterize thin layers
 well. \cite{Fomel07a} uses shaping regularization, which controls locality
@@ -103,18 +103,18 @@ signals $\mathbf{a}_i$ and $\mathbf{b}_i$ can be defined as the functional
           \gamma = \frac{\displaystyle\sum_{i=1}^{N}\mathbf{a}_i \mathbf{b}_i}{\sqrt{\displaystyle\sum_{i=1}^{N}\mathbf{a}^2_i \sum_{i=1}^{N}\mathbf{b}^2_i}}\;,
         \label{eq:eq1}
       \end{equation}
-whereN is the length of a signal. The global correlation in equation~\ref{eq:eq1}
+where N is the length of a signal. The global correlation in equation~\ref{eq:eq1}
 supplies only one number for the whole signal. For measuring the
-similarity between two signals locally, one can define the slidingwindow
+similarity between two signals locally, one can define the sliding-window
 correlation coefficient
       \begin{equation}
           \gamma_w(t) = \frac{\displaystyle\sum_{i=t-w/2}^{t+w/2} \mathbf{a}_i \mathbf{b}_i}{\sqrt{\displaystyle\sum_{i=t-w/2}^{t+w/2} \mathbf{a}_i^2 \displaystyle\sum_{i=t-w/2}^{t+w/2} \mathbf{b}_i^2 }}\;,
         \label{eq:eq2}
       \end{equation}
-wherew is window length.
+where $w$ is window length.
 
 \cite{Fomel07b} proposes the local correlation attribute that identifies
-local changes in signal similarity in amore elegant way. In a linear
+local changes in signal similarity in a more elegant way. In a linear
 algebra notation, the correlation coefficient in equation 1 can be
 represented as a product of two least-squares inverses $\gamma_1$ and $\gamma_2$:
       \begin{equation}
@@ -146,15 +146,15 @@ and $\gamma_2$ turn into vectors $\mathbf{c}_1$ and $\mathbf{c}_2$, defined as
 where $\lambda$ scaling controls relative scaling of operators $\mathbf{A}$ 
 and $\mathbf{B}$ and
 where $\mathbf{S}$ is a shaping operator such as Gaussian smoothing with an
-adjustable radius. The componentwise product of vectors $\mathbf{c}_1$ and 
+adjustable radius. The component-wise product of vectors $\mathbf{c}_1$ and 
 $\mathbf{c}_2$
-defines the local correlation measure. Local correlation is ameasure
+defines the local correlation measure. Local correlation is a measure
 of the similarity between two signals.
 An iterative, conjugate-gradient inversion for computing the inverse
 operators can be applied in equations~\ref{eq:eq6} and \ref{eq:eq7}. 
 Interestingly, the output of the first iteration is equivalent to the 
 algorithm of fast local
-crosscorrelation proposed by \cite{Hale06}.
+cross-correlation proposed by \cite{Hale06}.
 
 \subsection{Stacking using local correlation}
 
@@ -176,12 +176,12 @@ proposes weighted stacking of seismic data:
           \bar{a}_j(t) = \frac{1}{\displaystyle\sum_{i=1}^{N} w_{i,j}}\displaystyle\sum_{i=1}^{N} w_{i,j} \cdot a_{i,j}(t), \qquad j=(1,2,3,\dots,M) \;,
         \label{eq:eq9}
       \end{equation}
-where $w_{i,j}$ denotes the weight of the ith trace from the $j$th CMPgather,
+where $w_{i,j}$ denotes the weight of the $i$th trace from the $j$th CMP gather,
 which is determined by noise variances $w_{i,j}=1/\sigma^2_{i,j}$. However, it
 is difficult to estimate noise variances reliably in practice. 
 \cite{Neelamani06} use an iterative algorithm called ``leave me out'' (LMO) to 
 estimate noise variances from data. The desired signal is assumed to be flat 
-with constant amplitude across all the traces within a gather in theLMO method.
+with constant amplitude across all the traces within a gather in the LMO method.
 
 For using time-dependent smooth weights in the stacking process, we choose the 
 local correlation coefficient from the previous section as weights to stack 
@@ -248,7 +248,7 @@ $K_j = \displaystyle\sum_{t=0}^{t}\sum_{i=0}^{N}w_{i,j}(t)$
 is the sum of weights of the $j$th CMP gather, $H_j(t)$ is the number of 
 samples with $w_{i,j}\cdot a_{i,j}(t)\ne0$ for a given two-way time, and 
 $\eta_{i,j}(t)$ is the local correlation
-between the $i$th prestack trace from jth gather and the reference
+between the $i$th prestack trace from $j$th gather and the reference
 trace. The local correlation $\eta_{i,j}(t)$ can be computed using equations
 \ref{eq:eq6} and \ref{eq:eq7}. The reference trace is derived from averaging 
 all the traces of one CMP gather. Here we assume that the equal-weight
@@ -266,19 +266,19 @@ below a specified threshold are discarded, and the rest, with values above the
 threshold, are included. We thus stack only those parts of prestack data whose 
 similarity to the reference trace is comparatively large. 
 Equations~\ref{eq:eq10} and \ref{eq:eq11} implicitly estimate the noise 
-variance by analyzing local crosscorrelations between prestack trace and the 
+variance by analyzing local cross-correlations between prestack trace and the 
 reference trace. This operation can be understood as a nonlinear filter that 
 enhances the coherency of events. We perform this operation for all gathers 
 using this method to improve the stack profile.
 
 When applied after angle-domain migration, normalization provided by soft 
 thresholding is analogous to true-amplitude illumination compensation from the 
-socalled Beylkin determinant \cite[]{Albertin99,Audebert05}. Local correlation 
+so-called Beylkin determinant \cite[]{Albertin99,Audebert05}. Local correlation 
 normalizes the image by the number of strongly illuminated angles in 
 angle-domain CIGs.
 
 In the following, we discuss the distinctions between seismic
-stacking using local correlation and other methods. Ourmethod creates
+stacking using local correlation and other methods. Our method creates
 time-dependent smooth weights without depending on sliding
 windows, as compared to other weighted stacking methods such as
 statistically optimal stacking \cite[]{Robinson70,Neelamani06} and 
@@ -331,7 +331,7 @@ wing distortion.
 To judge the effect of denoising quantitatively between different
 methods, we apply equal-weight stacking on the last four traces
 without any noise to get the exact desired stacked trace $d_j(t)$, which
-can be regarded as a signal trace. The S/N of the $j$th CMPcan therefore
+can be regarded as a signal trace. The S/N of the $j$th CMP can therefore
 be estimated as
       \begin{equation}
           \textrm{S/N}_j = 10 \log_{10} \left(\frac{\displaystyle\sum_t[d^2_j(t)]}{\displaystyle\sum_t[d_j(t)-\bar{a}_j(t)]^2} \right) \;,
@@ -386,7 +386,7 @@ by stacking prestack traces without any
 noise. But for field data, the S/N is difficult to estimate
 using equation~\ref{eq:eq12}. We therefore use singular
 value decomposition (SVD) \cite{Andrews76} to evaluate different stacking
-methods. The SVD of stacked section metrix gives
+methods. The SVD of stacked section matrix gives
       \begin{equation}
           \mathbf{M} = \mathbf{U} \Sigma \mathbf{V}^T\;.
         \label{eq:eq13}
@@ -432,11 +432,11 @@ preserve physically meaningful amplitudes.
 We would like to thank Yang Liu and Jingye Li for inspiring discussions and 
 three reviewers for helpful suggestions. G. Liu would like to thank the China 
 Scholarship Council (grant 2007U44003) for partial support of this work. X.
-Chen’s research was supported partially by the National Basic Research Program 
+Chen's research was supported partially by the National Basic Research Program 
 of China (973 program, grant 2007CB209606) and by the National High Technology 
 Research and Development Program of China (863 program, grant 2006AA09A102-09).
 Publication was authorized by the Director, Bureau of Economic Geology, The 
-University ofTexas at Austin.
+University of Texas at Austin.
 
 \bibliographystyle{seg}
 \bibliography{paper}
