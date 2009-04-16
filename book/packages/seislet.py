@@ -28,7 +28,7 @@ def seislet(data,              # data name
     dip = data+'dip'
     Flow(dip,data,
          'dip rect1=%d rect2=%d p0=%g pmin=%g' % (rect1,rect2,p0,pmin))
-    Result(dip,'grey  color=j title=Slope scalebar=y')
+    Result(dip,'grey color=j title=Slope scalebar=y')
 
     seis = data+'seis'
     Flow(seis,[data,dip],
@@ -68,14 +68,17 @@ def seislet(data,              # data name
            put o2=0 d2=1 | grey  title="Wavelet Transform" label2=Scale unit2=
            ''')
 
-    Result(coef,[coef,scoef],
+    Flow(coef+'temp',[coef,scoef],
+         '''
+         cat axis=2 ${SOURCES[1]} | window n1=%d | scale axis=1 |
+         math output="%g*log(input)" | put o1=0 d1=%g
+         ''' % ((n1*n2/2),10/math.log(10),(100./(n1*n2-1))))
+    Result(coef,coef+'temp',
            '''
-           cat axis=2 ${SOURCES[1]} |
-           window n1=%d |
-           scale axis=1 |
-           math output="log(input)" |
-           graph dash=1,0 label1=n label2="log(a\_n\^)" wanttitle=n 
-           ''' % (n1*n2/2))
+           graph dash=1,0 label1="Percentage"
+           label2="a\_\s75 n \s100 (dB)" plotcol=7,7
+           unit1="%" unit2= title="Compression Ratio"
+           ''')
 
     four = data+'four'
     Flow(four,data,'cosft sign2=1')
