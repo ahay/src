@@ -1,5 +1,11 @@
 /* Spread surface(s) with analytic expressions in a data volume
 
+This program has two modes:
+
+1. conv=y (default) - convolves every surface with Ricker
+   wavelet; it is useful for fast creation of fake CMP volumes,
+   for instance.
+
 Example:
 sfaspread n1=501 n2=101 n3=101 o2=-0.5 o3=-0.5 d2=0.01 d3=0.01
           nsp=2 pos1="sqrt (0.25 + x2*x2 + x3*x3)"
@@ -9,6 +15,21 @@ nsp defines number of surfaces, pos# defines an expression
 for the #th surface, amp# defines an expression for the
 amplitude of the #th surface (it is optional and assumed
 to be "1" by default).
+
+2. conv=n - no convolution; instead, every amplitude value is
+   propagated down below from its surface to the next one;
+   useful for creation of layered velocity models, for instance.
+
+Example:
+sfaspread n1=501 n2=101 n3=101 o2=-0.5 o3=-0.5 d2=0.01 d3=0.01
+          nsp=2 pos1="sqrt (0.25 + x2*x2 + x3*x3)"
+                pos2="1.5 + 0.5*x2 + 0.5*x3" conv=n
+                amp0="1" amp1="2" amp2="3" > out.rsf
+
+pos# and amp# are the same as above, amp0 defines the value in
+the top layer; if grad=y, then all values are calculated
+according to a linear gradient between surfaces; amp[nsp+1]
+defines the amplitude at the very bottom.
 
 See sfmath for the details about the syntax of expressions. */
 /*
