@@ -896,7 +896,7 @@ def pthreads(context):
     CC    = context.env.get('CC','gcc')
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
-    if gcc and plat['OS'] != 'darwin':
+    if gcc and plat['OS'] != 'darwin' and plat['OS'] != 'cygwin':
         context.env.Append(LINKFLAGS='-pthread')
     elif icc:
         LIBS.append('pthread')

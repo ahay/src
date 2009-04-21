@@ -85,7 +85,7 @@ static void fkochaar(bool adj)
 #ifdef SF_HAS_COMPLEX_H
 		    t[i] -= t2/2;
 #else
-		    t[i] = sf_cadd(t[i],sf_cmul(t2,-0.5));
+		    t[i] = sf_cadd(t[i],sf_crmul(t2,-0.5));
 #endif
 		    t1 = t[i];
 		    t1 = fkocpredict(true,t1,i,j);
@@ -107,7 +107,7 @@ static void fkochaar(bool adj)
 #ifdef SF_HAS_COMPLEX_H
 		    t[i] -= t2;
 #else
-		    t[i] = sf_cadd(t[i],sf_cmul(t2,-1.));
+		    t[i] = sf_cadd(t[i],sf_crmul(t2,-1.));
 #endif
 		}
 	    }
@@ -120,7 +120,7 @@ static void fkochaar(bool adj)
 #ifdef SF_HAS_COMPLEX_H
 		t[i+j] -= t1;
 #else
-		t[i+j] = sf_cadd(t[i+j],sf_cmul(t1,-1.));
+		t[i+j] = sf_cadd(t[i+j],sf_crmul(t1,-1.));
 #endif
 		t2 = t[i+j];
 		t2 = fkocpredict(false,t2,i,j);
@@ -158,7 +158,7 @@ static void fkoclinear(bool adj)
 #ifdef SF_HAS_COMPLEX_H
 		t[0] -= t1/2;
 #else
-		t[0] = sf_cadd(t[0],sf_cmul(t1,-0.5));
+		t[0] = sf_cadd(t[0],sf_crmul(t1,-0.5));
 #endif
 		for (i=0; i < h-2*j; i += 2*j) {
 		    t1 = t[i];

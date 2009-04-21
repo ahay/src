@@ -931,7 +931,7 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	    t[0][it] = y[it];
 	}
 	for (it=nx1; it < nx*h; it++) {
-	    t[0][it] = 0.;
+	    t[0][it] = sf_cmplx(0.,0.);
 	}
     } else {
 	for (i1=0; i1 < nx; i1++) {
@@ -945,7 +945,7 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 			t[i+j][i1]=x[it];
 			it++;
 		    } else {
-			t[i+j][i1]=0.;
+			t[i+j][i1]=sf_cmplx(0.,0.);
 		    }
 		}
 	    }	    	    
@@ -988,7 +988,11 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	}
 
 	for (i1=0; i1 < nx; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[i1] += t[0][i1];
+#else
+	    x[i1] = sf_cadd(x[i1],t[0][i1]);
+#endif
 	}
 	it = nx;
 	for (j=h/2; j >= 1; j /= 2) {
