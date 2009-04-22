@@ -59,6 +59,8 @@ int main(int argc, char* argv[]) {
 	sf_intwrite(ibuf,nbuf,out);
     }
 
+    sf_fileclose(in);
+
     exit(0);
 }
 	    
