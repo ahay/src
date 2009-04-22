@@ -267,7 +267,9 @@ int main(int argc, char *argv[])
 	size -= nin;
     }
     
-    exit (0);
+    sf_fileclose(in);
+
+    exit(0);
 }
 
 static void ddbreak (sf_datatype itype, sf_datatype otype)
