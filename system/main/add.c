@@ -116,7 +116,7 @@ int main (int argc, char* argv[])
     /* nin = no of input files*/
 
     nbuf = sf_bufsiz(in[0]);
-    buf = sf_charalloc(nbuf);
+    buf  = sf_charalloc(nbuf);
     bufi = sf_charalloc(nbuf);
     
     /* default coefficients and flags */
@@ -247,7 +247,9 @@ int main (int argc, char* argv[])
 	
     }
     
-    exit (0);
+    for (i=0; i<nin; i++) sf_fileclose(in[i]);
+
+    exit(0);
 }
 
 static void add_float (bool   collect,    /* if collect */
