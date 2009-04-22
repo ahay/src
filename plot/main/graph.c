@@ -180,7 +180,9 @@ int main(int argc, char* argv[])
 	}
     } 
    
-    exit (0);
+    sf_fileclose(in);
+
+    exit(0);
 }
 
 static void getminmax(const float* f, float* min, float* max)
