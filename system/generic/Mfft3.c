@@ -211,5 +211,7 @@ int main (int argc, char **argv)
 	}
     }
     
+    sf_fileclose(in);
+
     exit (0);
 }
