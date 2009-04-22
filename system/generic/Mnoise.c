@@ -93,7 +93,9 @@ int main (int argc, char* argv[])
 	sf_floatwrite(dat,nbuf,out);  
     }
 
-    exit (0);
+    sf_fileclose(in);
+
+    exit(0);
 }
 
 /* 	$Id$	 */
