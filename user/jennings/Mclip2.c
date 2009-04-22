@@ -80,5 +80,7 @@ int main(int argc, char* argv[])
         sf_floatwrite(trace,nbuf,out);
     }
     
+    sf_fileclose(in);
+
     exit(0);
 }
