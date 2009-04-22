@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
 	sf_charwrite(rbuf,nbuf,real);
     }
     
+    sf_fileclose(cmplx);
     sf_fileclose(real);
     
     exit (0);
