@@ -199,6 +199,8 @@ int main(int argc, char* argv[])
 	sf_close();
     }
 
+    sf_fileclose(in);
+
     exit (0);
 }
 
