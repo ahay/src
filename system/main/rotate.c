@@ -38,10 +38,10 @@ int main(int argc, char* argv[])
     bool verb;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+    in  = sf_input("in");
     out = sf_output("out");
 
-    dim = sf_filedims(in,n);
+    dim   = sf_filedims(in,n);
     esize = sf_esize(in);
 
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
     }
     
     if (n2 > 1) sf_close();
+    sf_fileclose(in);
     exit (0);
 }
 
@@ -156,4 +157,4 @@ static void rotate (size_t n1, int dim,
     }
 }
 
-/* 	$Id: reverse.c 1729 2006-03-12 10:00:32Z fomels $	 */
+/* 	$Id: rotate.c 1729 2006-03-12 10:00:32Z fomels $	 */

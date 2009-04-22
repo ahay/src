@@ -114,9 +114,9 @@ int main(int argc, char* argv[])
     if (n2front >= n2pix) n2front=n2pix-1;
 
     front = sf_ucharalloc2(n1,n2);
-    top = sf_ucharalloc2(n3,n2);
-    side = sf_ucharalloc2(n1,n3);
-    buf = sf_ucharalloc2(n1pix,n2pix);
+    top   = sf_ucharalloc2(n3,n2);
+    side  = sf_ucharalloc2(n1,n3);
+    buf   = sf_ucharalloc2(n1pix,n2pix);
 
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
@@ -301,7 +301,9 @@ int main(int argc, char* argv[])
     } /* frame loop */
 
     sf_close();
-    exit(0);
+    sf_fileclose(bar);
+    sf_fileclose(in);
+    exit (0);
 }
 
 /* 	$Id$	 */
