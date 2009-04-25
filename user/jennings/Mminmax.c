@@ -88,6 +88,9 @@ int main(int argc, char* argv[])
         sf_floatwrite(v3,nbuf,out);     /* Write the output         */
     }
     
+    sf_fileclose(file1);
+    sf_fileclose(file2);
+    
     exit(0);
 }
 
