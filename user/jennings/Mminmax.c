@@ -94,4 +94,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mminmax.c 1032 2005-03-09 16:44:37Z jennings $	 */
+/* 	$Id$	 */
