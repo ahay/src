@@ -149,4 +149,4 @@ int main(int argc, char **argv)
     exit(0);
 }
 
-/* 	$Id: Munif2.c 811 2004-09-27 12:57:46Z fomels $	 */
+/* 	$Id$	 */
