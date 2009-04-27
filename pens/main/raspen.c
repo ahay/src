@@ -155,7 +155,7 @@ extern float    pixels_per_inch;
 int             rasor = 0;
 char            colfile[60];
 
-static bool     default_out = true;
+static bool     default_out = true, light = false;
 static int xmax, ymax;
 
 #ifdef _TIFF
@@ -324,7 +324,7 @@ void ras_write (void)
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    char newpath[60];
+    char newpath[60], *color;
     float pixels_per_inch, aspect_ratio;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
@@ -361,6 +361,10 @@ void opendev (int argc, char* argv[])
 
     dev.xmax = xmax-1;
     dev.ymax = ymax-1;
+
+    if (NULL == (color = sf_getstring("bgcolor"))) color="black";
+    /* background color */
+    light = (color[0] == 'w' || color[0] == 'l');
 
     /*
      * Allocate space for image 
@@ -414,16 +418,32 @@ void opendev (int argc, char* argv[])
 void rasreset (void)
 /*< reset >*/
 {
-    int             value;
+    int             value, r, g, b;
     zap ();
-    color_table[0][0] =0;
-    color_table[0][1] =0;
-    color_table[0][2] =0;
+    if (light) {
+	color_table[0][0] =255;
+	color_table[0][1] =255;
+	color_table[0][2] =255;
+    } else {
+	color_table[0][0] =0;
+	color_table[0][1] =0;
+	color_table[0][2] =0;
+    }
     for (value = 1; value < 8; value++)
     {
-	color_table[value][0] = MAX_GUN * ((value & 2) / 2);
-	color_table[value][1] = MAX_GUN * ((value & 4) / 4);
-	color_table[value][2] = MAX_GUN * ((value & 1) / 1);
+	r = MAX_GUN * ((value & 2) / 2);
+	g = MAX_GUN * ((value & 4) / 4);
+	b = MAX_GUN * ((value & 1) / 1);
+
+	if (light) {
+	    color_table[value][0] = 255-r;
+	    color_table[value][1] = 255-g;
+	    color_table[value][2] = 255-b;
+	} else {
+	    color_table[value][0] = r;
+	    color_table[value][1] = g;
+	    color_table[value][2] = b;
+	}
     }
     for (value = 8; value < NCOLOR; value++)
     {
@@ -436,7 +456,7 @@ void zap (void)
 {
     unsigned char  *p;
     for (p = image; p < &image[xmax * ymax * 3]; p++)
-	*p = 0;
+	*p = light? 255:0;
 }
 
 #define  RGB
