@@ -51,8 +51,8 @@ def mkdir(dir):
     'Recursive directory making'
     while os.path.basename(dir) == '.':
         dir = os.path.dirname(dir)
-    if not os.path.isdir(dir):
-        mkdir(os.path.dirname(dir))        
+    if dir and not os.path.isdir(dir):
+        mkdir(os.path.dirname(dir))
         os.mkdir(dir)
     return dir
 
