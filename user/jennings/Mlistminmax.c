@@ -82,7 +82,9 @@ int main(int argc, char* argv[])
         sf_floatwrite(list,n1,out);     /* Write the output         */
     }
     
-    exit(0);
+    sf_fileclose(in);
+
+    exit (0);
 }
 
 /* 	$Id: Mlistminmax.c 1032 2005-03-09 16:44:37Z jennings $	 */
