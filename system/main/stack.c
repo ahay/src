@@ -127,6 +127,8 @@ int main(int argc, char* argv[])
         sf_floatwrite(stack, n, out); 
     }
 
+    sf_fileclose(in);
+
     exit (0);
 }
 
