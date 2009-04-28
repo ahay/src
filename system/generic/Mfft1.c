@@ -32,7 +32,7 @@ int main (int argc, char *argv[])
     kiss_fftr_cfg cfg;
 
     sf_init(argc, argv);
-    in = sf_input("in");
+    in  = sf_input("in");
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv=false;
@@ -153,6 +153,8 @@ int main (int argc, char *argv[])
 	}
     }
     
+    sf_fileclose(in);
+
     exit (0);
 }
 
