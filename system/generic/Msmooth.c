@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
     sf_file in, out;
 
     sf_init (argc, argv);
-    in = sf_input ("in");
+    in  = sf_input ("in");
     out = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -83,7 +83,9 @@ int main (int argc, char* argv[])
 	sf_floatwrite(data,n1,out);
     }    
 
+    sf_fileclose(in);
+
     exit (0);
 }
 
-/* 	$Id: Msmooth.c 4092 2009-01-29 21:16:20Z sfomel $	 */
+/* 	$Id$	 */
