@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(    "tmy",&tmy   ))   tmy =     0; /* taper on y */
 
     /* slowness parameters */
-    Fs = sf_input ("slo");
+    Fs  = sf_input ("slo");
     alx = sf_iaxa(Fs,1); sf_setlabel(alx,"lx");
     aly = sf_iaxa(Fs,2); sf_setlabel(aly,"ly");
     az  = sf_iaxa(Fs,3); sf_setlabel(az ,"z" );
@@ -233,5 +233,12 @@ int main (int argc, char *argv[])
     }
     fslice_close(slow);
     
+    if (Fs != NULL) sf_fileclose(Fs);
+    if (Fi != NULL) sf_fileclose(Fi);
+    if (Fd != NULL) sf_fileclose(Fd);
+    if (Fw != NULL) sf_fileclose(Fw);
+
     exit (0);
 }
+
+/* 	$Id$	 */
