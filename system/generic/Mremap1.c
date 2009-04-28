@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     sf_file in, out, pattern;
 
     sf_init (argc, argv);
-    in = sf_input ("in");
+    in  = sf_input ("in");
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");    
@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
 	sf_floatwrite(tout,nn1,out);
     }
 
+    if (pattern != NULL) sf_fileclose(pattern);
+    sf_fileclose(in);
     exit (0);
 }
 
