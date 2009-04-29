@@ -34,9 +34,9 @@ int main (int argc, char *argv[])
     sf_file in, out, velocity;
 
     sf_init(argc, argv);
-    in = sf_input("in");
+    in       = sf_input("in");
     velocity = sf_input("velocity");
-    out = sf_output("out");
+    out      = sf_output("out");
 
     if (!sf_histint (in,"n1",&nz)) sf_error ("No n1= in input");
     if (!sf_histfloat (in,"d1",&dz)) sf_error ("No d1= in input");
@@ -91,6 +91,9 @@ int main (int argc, char *argv[])
 	sf_stretch_apply (str, depth, time);
 	sf_floatwrite (time,nt,out);
     }
+
+    sf_fileclose(in);
+    sf_fileclose(velocity);
 
     exit (0);
 }
