@@ -31,9 +31,9 @@ int main(int argc, char* argv[])
     sf_file in, out, ma;
 
     sf_init (argc,argv);
-    in = sf_input("in");
+    in  = sf_input("in");
     out = sf_output("out");
-    ma = sf_output("ma");
+    ma  = sf_output("ma");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&na)) sf_error("No n1= in input");
@@ -129,6 +129,8 @@ int main(int argc, char* argv[])
 	sf_floatwrite (data,na,out);
     }
     
+    sf_fileclose(in);
+
     exit (0);
 }
 

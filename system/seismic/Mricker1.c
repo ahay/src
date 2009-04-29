@@ -54,6 +54,9 @@ int main(int argc, char* argv[])
 	sf_floatwrite(trace,n1,out);
     }
 
-    exit(0);
+    sf_fileclose(in);
+
+    exit (0);
 }
 
+/* 	$Id$	 */
