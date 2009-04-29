@@ -230,7 +230,9 @@ int main(int argc, char* argv[])
 	       100.*((double)nzero)/((double)nsiz),fmin,fmax);  
     }
     
-    exit(0);
+    sf_fileclose(in);
+
+    exit (0);
 }
 
 static void location(size_t loc   /* liner location index */, 
