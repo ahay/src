@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
     sf_file ai, mod;
 
     sf_init (argc,argv);
-    ai = sf_input("in");
+    ai  = sf_input("in");
     mod = sf_output("out");
 
     if (!sf_histint(ai,"n1",&nt)) sf_error("No n1= in input");
@@ -55,6 +55,8 @@ int main (int argc, char* argv[])
 
 	sf_floatwrite(sig,nt,mod);
     }
+
+    sf_fileclose(ai);
 
     exit (0);
 }
