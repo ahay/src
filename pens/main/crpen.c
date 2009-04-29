@@ -55,7 +55,8 @@ char            name[] = "crpen";
 static cairo_surface_t *surface;
 static cairo_t *cr;
 
-static int color_table[NCOLOR][3], nx, ny, crcolor=7;
+static bool light, fill;
+static int color_table[NCOLOR][3], nx, ny;
 static float magnify;
 
 static cairo_status_t cr_fwrite(void *closure, 
@@ -70,7 +71,7 @@ void opendev (int argc, char* argv[])
 /*< open >*/
 {
     int value;
-    char newpath[60];
+    char newpath[60], *color;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
@@ -113,6 +114,13 @@ void opendev (int argc, char* argv[])
     dev.xmax = nx-1;
     dev.ymax = ny-1;
 
+    if (NULL == (color = sf_getstring("bgcolor"))) color="light";
+    /* background color (black,white,light,dark) 
+       'light' and 'dark' cause the background to be transparent (in PNG and GIF) */
+
+    fill = ('l' != color[0] && 'd' != color[0]);
+    light = ('b' != color[0] && 'd' != color[0]);
+ 
 #ifdef _PDF
     surface = cairo_pdf_surface_create_for_stream(cr_fwrite, NULL, nx, ny);
 #endif
@@ -155,16 +163,21 @@ void crreset (void)
 
     for (value = 0; value < 8; value++)
     {
-	color_table[value][0] = red[value];
-	color_table[value][1] = green[value];
-	color_table[value][2] = blue[value];
+	if (light) {
+	    color_table[value][0] = red[value];
+	    color_table[value][1] = green[value];
+	    color_table[value][2] = blue[value];
+	} else {
+	    color_table[value][0] = 255-red[value];
+	    color_table[value][1] = 255-green[value];
+	    color_table[value][2] = 255-blue[value];
+	}
     }
     for (value = 8; value < NCOLOR; value++)
     {
 	color_table[value][0] = -1;
     }   
 }
-
 
 static void cr_write (void)
 {
@@ -181,6 +194,16 @@ static void cr_write (void)
     called=true;
 }
 
+static void fillall(void)
+{
+    cairo_new_path(cr);
+    cairo_rectangle (cr,0,0,dev.xmax+1,dev.ymax+1);
+    cairo_set_source_rgb (cr, 
+			  color_table[0][0]/255.0, 
+			  color_table[0][1]/255.0, 
+			  color_table[0][2]/255.0);
+    cairo_fill(cr);
+}
 
 void crerase (int command)
 /*< erase >*/
@@ -188,9 +211,11 @@ void crerase (int command)
     switch (command)
     {
 	case ERASE_START:
+	    if (fill) fillall();
 	    break;
 	case ERASE_MIDDLE:
 	    cr_write();
+	    if (fill) fillall();
 	    break;
 	case ERASE_END:
 	    cr_write();
@@ -229,7 +254,6 @@ void crattr (int command, int value, int v1, int v2, int v3)
     switch (command)
     {
 	case SET_COLOR:
-	    crcolor=value;
 	    cairo_set_source_rgb (cr, 
 				  color_table[value][0]/255.0, 
 				  color_table[value][1]/255.0, 
@@ -289,6 +313,8 @@ void crarea (int npts, struct vertex *head)
     }
     cairo_fill(cr);
 }
+
+
 
 void crvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 /*< device-dependent vector >*/
