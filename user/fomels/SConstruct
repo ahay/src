@@ -11,7 +11,7 @@ miss3 nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
 ofsemb patch pick pick3 plane planemis2 planemis3 planereg2 planereg3
 planesignoi pmig pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3
 pwdsigk pwdsmooth2 pwspray pwspray3 reshape rsin seislet seisigk shape
-shapesigk shearer similarity smoothreg timecont timeshift tomo
+shapesigk shearer similarity smoothreg thin timecont timeshift tomo
 trismooth2 tristack twodip2 twofreq2 velcon warp1 warpadd warpscan
 '''
 
@@ -60,9 +60,9 @@ for conv in ('byte2jpg','jpg2byte'):
         env.Install(bindir,prog)
 
 for prog in Split(
-    '''    
-    burg cburg gauss2 gaussel grid1 matmult ntriangle1 predict
-    predict2 pwdsl trianglen trisl
+    '''
+    burg cburg gauss2 gaussel grid1 matmult matmult2 ntriangle1
+    predict predict2 pwdsl trianglen trisl
     '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)

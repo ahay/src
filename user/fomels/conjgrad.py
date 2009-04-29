@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'Dot product test'
+'Conjugate-gradient method'
 
 ##   Copyright (C) 2008 University of Texas at Austin
 ##  

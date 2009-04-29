@@ -1308,6 +1308,273 @@ void sf_solver (sf_operator oper   /* linear operator */,
     }
 }
 
+void sf_left_solver (sf_operator oper   /* linear operator */, 
+		     sf_solverstep solv /* stepping function */, 
+		     int nx             /* size of x and dat */, 
+		     float* x           /* estimated model */, 
+		     const float* dat   /* data */, 
+		     int niter          /* number of iterations */, 
+		     ...                /* variable number of arguments */)
+/*< Generic linear solver for non-symmetric operators.
+  ---
+  Solves
+  oper{x}    =~ dat
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_left_solver (oper_lop,sf_cdstep,nx,ny,x,y,100,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  ---
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator
+  "mwt":    float*:         model weight
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  >*/ 
+{
+
+    va_list args;
+    char* par;
+    float* wt = NULL;
+    sf_weight wght = NULL;
+    float* x0 = NULL;
+    sf_operator nloper = NULL;
+    float* mwt = NULL;
+    bool verb = false;
+    bool* known = NULL;
+    int nmem = -1;
+    int nfreq = 0;
+    float** xmov = NULL;
+    float** rmov = NULL;
+    float* err = NULL;
+    float* res = NULL;
+    float* wht = NULL;
+    float *g, *rr, *gg;
+    float dpr, dpg, dpr0, dpg0;
+    int i, iter; 
+    bool forget = false;
+
+    va_start (args, niter);
+    for (;;) {
+	par = va_arg (args, char *);
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"wt"))      
+	{                    wt = va_arg (args, float*);}
+	else if (0 == strcmp (par,"wght"))      
+	{                    wght = va_arg (args, sf_weight);}
+	else if (0 == strcmp (par,"x0"))      
+	{                    x0 = va_arg (args, float*);}
+	else if (0 == strcmp (par,"nloper"))      
+	{                    nloper = va_arg (args, sf_operator);}
+	else if (0 == strcmp (par,"mwt"))      
+	{                    mwt = va_arg (args, float*);}
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
+	{                    known = va_arg (args, bool*);}  
+	else if (0 == strcmp (par,"nmem"))      
+	{                    nmem = va_arg (args, int);}
+	else if (0 == strcmp (par,"nfreq"))      
+	{                    nfreq = va_arg (args, int);}
+	else if (0 == strcmp (par,"xmov"))      
+	{                    xmov = va_arg (args, float**);}
+	else if (0 == strcmp (par,"rmov"))      
+	{                    rmov = va_arg (args, float**);}
+	else if (0 == strcmp (par,"err"))      
+	{                    err = va_arg (args, float*);}
+	else if (0 == strcmp (par,"res"))      
+	{                    res = va_arg (args, float*);}
+	else 
+	{ sf_error("solver: unknown argument %s",par);}
+    }
+    va_end (args);
+ 
+    g =  sf_floatalloc (nx);
+    rr = sf_floatalloc (nx);
+    gg = sf_floatalloc (nx);
+
+    if (wt != NULL || wght != NULL) {
+	if (wt != NULL) {
+	    wht = wt;
+	} else {
+	    wht = sf_floatalloc (nx);
+	    for (i=0; i < nx; i++) {
+		wht[i] = 1.0;
+	    }
+	} 
+    }
+
+    for (i=0; i < nx; i++) {
+	rr[i] = - dat[i];
+    }
+    if (x0 != NULL) {
+	for (i=0; i < nx; i++) {
+	    x[i] = x0[i];
+	} 	
+	if (mwt != NULL) {
+	    for (i=0; i < nx; i++) {
+		x[i] *= mwt[i];
+	    }
+	} 
+	if (nloper != NULL) {
+	    nloper (false, true, nx, nx, x, rr);
+	} else {
+	    oper (false, true, nx, nx, x, rr);
+            
+	}
+    } else {
+	for (i=0; i < nx; i++) {
+	    x[i] = 0.0;
+	} 
+    }
+
+    dpr0 = cblas_snrm2(nx, rr, 1);
+    dpg0 = 1.;
+
+    for (iter=0; iter < niter; iter++) {
+	if ( nmem >= 0) {  /* restart */
+	    forget = (bool) (iter >= nmem);
+	}
+	if (wght != NULL && forget) {
+	    wght (nx, rr, wht);
+	}
+	if (wht != NULL) {
+	    for (i=0; i < nx; i++) {
+		rr[i] *= wht[i];
+		g[i] = rr[i]*wht[i];
+	    }
+	} else {
+	    for (i=0; i < nx; i++) {
+		g[i] = rr[i];
+	    }
+	} 
+
+	if (mwt != NULL) {
+	    for (i=0; i < nx; i++) {
+		g[i] *= mwt[i];
+	    }
+	}
+	if (known != NULL) {
+	    for (i=0; i < nx; i++) {
+		if (known[i]) g[i] = 0.0;
+	    }
+	} 
+
+	if (mwt != NULL) {
+	    for (i=0; i < nx; i++) {
+		g[i] *= mwt[i];
+	    }
+	}
+	
+	oper (false, false, nx, nx, g, gg);
+
+	if (wht != NULL) {
+	    for (i=0; i < nx; i++) {
+		gg[i] *= wht[i];
+	    }
+	}
+ 
+	if (forget && nfreq != 0) { /* periodic restart */
+	    forget = (0 == (iter+1)%nfreq); 
+	}
+
+
+	if (iter == 0) {
+	    dpg0  = cblas_snrm2 (nx, g, 1);
+	    dpr = 1.;
+	    dpg = 1.;
+	} else {
+	    dpr = cblas_snrm2 (nx, rr, 1)/dpr0;
+	    dpg = cblas_snrm2 (nx, g , 1)/dpg0;
+	}    
+
+	if (verb) 
+	    sf_warning ("iteration %d res %f mod %f grad %f",
+			iter+1, dpr, cblas_snrm2 (nx, x, 1), dpg);
+	
+
+	if (dpr < TOLERANCE || dpg < TOLERANCE) {
+	    if (verb) 
+		sf_warning("convergence in %d iterations",iter+1);
+
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    x[i] *= mwt[i];
+		}
+	    }
+	    break;
+	}
+
+	solv (forget, nx, nx, x, g, rr, gg);
+	forget = false;
+
+	if (nloper != NULL) {
+	    for (i=0; i < nx; i++) {
+		rr[i] = -dat[i]; 
+	    }
+
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    x[i] *= mwt[i];
+		}
+	    }
+	    nloper (false, true, nx, nx, x, rr);
+	} else if (wht != NULL) {
+	    for (i=0; i < nx; i++) {
+		rr[i] = -dat[i]; 
+	    }
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    x[i] *= mwt[i];
+		}
+	    }
+	    oper (false, true, nx, nx, x, rr);
+	}  else if (mwt != NULL && (xmov != NULL || iter == niter-1)) {
+	    for (i=0; i < nx; i++) {
+		x[i] *= mwt[i];
+	    }
+	}
+
+	if (xmov != NULL) {
+	    for (i=0; i < nx; i++) {
+		xmov[iter][i] =  x[i];
+	    }
+	}
+	if (rmov != NULL) {
+	    for (i=0; i < nx; i++) {
+		rmov[iter][i] =  rr[i];
+	    }
+	}
+    
+	if (err != NULL) {
+	    err[iter] = cblas_snrm2(nx, rr, 1);
+	}
+    }
+
+    if (res != NULL) {
+	for (i=0; i < nx; i++) {
+	    res[i] = rr[i];
+	}
+    }
+  
+    free (g);
+    free (rr);
+    free (gg);
+
+    if (wht != NULL && wt == NULL) free (wht);
+}
+
+
 void sf_csolver (sf_coperator oper        /* linear operator */, 
 		 sf_csolverstep solv      /* stepping function */, 
 		 int nx                   /* size of x */, 
