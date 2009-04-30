@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
 
     sf_init (argc,argv);
     
-    in = sf_input ("in");
+    in   = sf_input("in");
     type = sf_gettype(in);
 
     if (!sf_getbool("number",&number)) number=true;
@@ -160,6 +160,8 @@ int main (int argc, char* argv[])
     }
 
     if (trailer != NULL) printf ("%s\n",trailer);   /* print trailer string */
+
+    sf_fileclose(in);
 
     exit (0);
 }
