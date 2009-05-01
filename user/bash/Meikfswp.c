@@ -70,7 +70,7 @@ int main (int argc,char* argv[]) {
         s = sf_floatalloc2 (ndim, nshot);
         sf_floatread (s[0], nshot * ndim, shots);
 
-        sf_putint (time, "n4", nshot);
+        sf_putint (time, 1 == n3 ? "n3" : "n4", nshot);
         free (sfile);
     } else {
         nshot = 1;
