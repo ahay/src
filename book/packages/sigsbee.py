@@ -27,6 +27,14 @@ def param():
     par['or']=10.95*par['ft2km']
     par['dr']=0.075*par['ft2km']
 
+    par['nzdtm']=244 # number of redatuming steps through water
+    par['nzpad']=100
+
+    # all shots parameters
+    par['nsall']=500
+    par['dsall']=0.04572
+    par['osall']=3.33756
+
     return par
 
 # ------------------------------------------------------------
@@ -225,3 +233,31 @@ def makemask(velo,smask,wmask,lmask,par):
     # sediment mask
     Flow(lmask,[smask,wmask],'add ${SOURCES[1]} | math output="1-input"')
     Result(lmask,fdmod.cgrey('allpos=y',par))
+
+# ------------------------------------------------------------
+# low velocity (in sediments only)
+def makevlow(vlow,velo,smask,wmask,lmask,coef):
+    Flow(vlow,[velo,smask,wmask,lmask],
+         '''
+         math
+         v=${SOURCES[0]}
+         s=${SOURCES[1]}
+         w=${SOURCES[2]}
+         l=${SOURCES[3]}
+         output="(%f)*v*l+1.5*w+4.5*s"
+         ''' % coef)
+
+# high velocity (in sediments only)
+def makevhig(vlow,velo,smask,wmask,lmask,coef):    
+    Flow('vhig',['velo','smask','wmask','lmask'],
+         '''
+         math
+         v=${SOURCES[0]}
+         s=${SOURCES[1]}
+         w=${SOURCES[2]}
+         l=${SOURCES[3]}
+         output="(%f)*v*l+1.5*w+4.5*s" |
+         add add=-11.5 |
+         clip clip=10 |
+         add add=11.5
+         ''' % coef)

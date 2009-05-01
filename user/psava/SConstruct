@@ -16,9 +16,8 @@ randcut
 encode shot2grid
 boxfilter
 awefd lwefd
+awefd2d awefd3d ewefd2d ewefd3d
 '''
-
-# awefd2d awefd3d ewefd2d ewefd3d
 
 try:  # distributed version
     Import('env root libdir bindir')
