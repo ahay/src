@@ -206,8 +206,10 @@ def fgrey(custom,par):
     pclip=100 gainpanel=a
     min2=%g max2=%g label2=%s unit2=%s
     label1="f" unit1="Hz"
+    screenratio=%g screenht=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['ratio'],par['height'],
            par['labelattr']+' '+custom)
 
 # ------------------------------------------------------------

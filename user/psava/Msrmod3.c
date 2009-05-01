@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
     ae  = sf_iaxa(Fw_s,4); sf_setlabel(ae, "e"); /* experiments */
 
     n  = sf_n(amx)*sf_n(amy);
-    nw = sf_n(aw);
+    nw = sf_n(aw)*sf_n(ae);
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */

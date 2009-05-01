@@ -121,91 +121,95 @@ void srmod3(ssroperator3d weop,
     )
 /*< apply SR modeling >*/
 {
-    int imz,iw,imx,imy;
+    int imz,iw,imx,imy,ie;
     sf_complex w;
     int ompith=0;
     int kth;
     
+    for (ie=0; ie<cub->ae.n; ie++) {
+	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)		\
     private(ompith,iw,w,imx,imy,imz,kth)		\
-    shared(swfl,rwfl,weop,cub,ssr,tap,s_s,s_r)
+    shared(swfl,rwfl,ie,weop,cub,ssr,tap,s_s,s_r)
 #endif
-    for (iw=0; iw<cub->aw.n; iw++) {
+	for (iw=0; iw<cub->aw.n; iw++) {
 #ifdef _OPENMP	    
-	ompith=omp_get_thread_num();
+	    ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning("(ith=%d) ... <iw=%3d of %3d>",
-				 ompith,iw+1,cub->aw.n);
-
-	kth = ompith*cub->amz.n; /* tmp file thread I/O shift */
-	w = sf_cmplx(cub->eps*cub->aw.d,cub->aw.o+iw*cub->aw.d);
-	
-	/*------------------------------------------------------------*/
-	/* source wavefield */
+	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
+				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
+	    
+	    kth = ompith*cub->amz.n; /* tmp file thread I/O shift */
+	    w = sf_cmplx(cub->eps*cub->aw.d,cub->aw.o+iw*cub->aw.d);
+	    
+	    /*------------------------------------------------------------*/
+	    /* source wavefield */
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	fslice_get(swfl,iw,weop->ww_s[ompith][0]); 
-	taper2d(weop->ww_s[ompith],tap);
+	    fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]); 
+	    taper2d(weop->ww_s[ompith],tap);
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
-	
-	fslice_get(s_s->slice,0,s_s->so[ompith][0]);
-	for (imz=0; imz<cub->amz.n-1; imz++) {
-	    fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
+	    fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
 	    
-	    ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
-	    
-	    slow3_advance(cub,s_s,ompith);
-
+	    fslice_get(s_s->slice,0,s_s->so[ompith][0]);
+	    for (imz=0; imz<cub->amz.n-1; imz++) {
+		fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
+		
+		ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
+		
+		slow3_advance(cub,s_s,ompith);
+		
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	    fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
-	} /* z (down-going) */
-	
-	/*------------------------------------------------------------*/
-	/* receiver wavefield */
-	LOOP( weop->ww_r[ompith][imy][imx] = sf_cmplx(0.,0.); );
-
-	fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
-	for (imz=cub->amz.n-1; imz>0; imz--) {
-	    fslice_get(s_r->slice,imz-1,s_r->ss[ompith][0]);
+		fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
+	    } /* z (down-going) */
 	    
+	    /*------------------------------------------------------------*/
+	    /* receiver wavefield */
+	    LOOP( weop->ww_r[ompith][imy][imx] = sf_cmplx(0.,0.); );
+	    
+	    fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
+	    for (imz=cub->amz.n-1; imz>0; imz--) {
+		fslice_get(s_r->slice,imz-1,s_r->ss[ompith][0]);
+		
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif   
-	    fslice_get(weop->wtmp,kth+imz,weop->ww_s[ompith][0]); 
-
-	    fslice_get(refl,imz,weop->rr[ompith][0]);
-	    
+		fslice_get(weop->wtmp,kth+imz,weop->ww_s[ompith][0]); 
+		
+		fslice_get(refl,imz,weop->rr[ompith][0]);
+		
 #ifdef SF_HAS_COMPLEX_H
-	    LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
-		  weop->ww_r[ompith][imy][imx] += weop->ww_s[ompith][imy][imx]; );
+		LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
+		      weop->ww_r[ompith][imy][imx] += weop->ww_s[ompith][imy][imx]; );
 #else
-	    LOOP( weop->ww_s[ompith][imy][imx] = 
-		  sf_crmul(weop->ww_s[ompith][imy][imx],
-			   weop->rr[ompith][imy][imx]);
-		  weop->ww_r[ompith][imy][imx] = 
-		  sf_cadd(weop->ww_r[ompith][imy][imx],
-			  weop->ww_s[ompith][imy][imx]); );
+		LOOP( weop->ww_s[ompith][imy][imx] = 
+		      sf_crmul(weop->ww_s[ompith][imy][imx],
+			       weop->rr[ompith][imy][imx]);
+		      weop->ww_r[ompith][imy][imx] = 
+		      sf_cadd(weop->ww_r[ompith][imy][imx],
+			      weop->ww_s[ompith][imy][imx]); );
 #endif
+		
+		ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
+		
+		slow3_advance(cub,s_r,ompith);
+	    } /* z (up-going) */
 	    
-	    ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
+	    taper2d(weop->ww_r[ompith],tap);
 	    
-	    slow3_advance(cub,s_r,ompith);
-	} /* z (up-going) */
-	
-	taper2d(weop->ww_r[ompith],tap);
-
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif  
-	fslice_put(rwfl,iw,weop->ww_r[ompith][0]);
-    } /* w */
+	    fslice_put(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
+	} /* w */
+	
+    } /* e */
 }
 

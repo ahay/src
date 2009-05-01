@@ -28,7 +28,7 @@ def param():
     par['dr']=0.075*par['ft2km']
 
     par['nzdtm']=244 # number of redatuming steps through water
-    par['nzpad']=100
+    par['nzpad']=142
 
     # all shots parameters
     par['nsall']=500
