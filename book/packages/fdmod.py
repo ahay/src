@@ -47,10 +47,10 @@ def param(par):
 
     if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
 
-    if(par['ratio']>=1):
+    if(par['ratio']>1):
         par['height']=10
     else:
-        par['height']=13*par['ratio']
+        par['height']=11*par['ratio']
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
@@ -61,10 +61,10 @@ def param(par):
     par['ratio3d']=(dz+dy)/(dx+dy);
     par['pointz']=yzratio;
     par['pointx']=yxratio;
-    if(par['ratio3d']>=1):
+    if(par['ratio3d']>1):
         par['height3d']=10
     else:
-        par['height3d']=13*par['ratio3d']
+        par['height3d']=11*par['ratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
