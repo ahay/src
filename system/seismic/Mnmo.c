@@ -57,6 +57,19 @@ static float shifted_nmo_map(float t, int it) {
     }
 }
 
+static float taner_nmo_map(float t, int it) {
+    float v, a;
+    
+    v = vel[it];
+    a = par[it];
+
+    if (!squared) v *= v;
+    v = slow ? h*v : h/v;
+    t = t*t + v/(1+a*v);
+    if (t > 0.) t=sqrtf(t);
+    return t;
+}
+
 int main (int argc, char* argv[])
 {
     fint1 nmo;
@@ -72,12 +85,15 @@ int main (int argc, char* argv[])
     velocity = sf_input("velocity");
     nmod     = sf_output("out");
 
-    if (NULL == sf_getstring("s")) {
+    if (NULL != sf_getstring("s")) {
+      	het = sf_input("s");
+	nmofunc = shifted_nmo_map;	
+    } else if (NULL != sf_getstring("a")) {
+        het = sf_input("a");
+        nmofunc = taner_nmo_map;
+    } else {
 	het = NULL;
 	nmofunc =  nmo_map;
-    } else {
-	het = sf_input("s");
-	nmofunc = shifted_nmo_map;	
     } 
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");

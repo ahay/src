@@ -1,4 +1,4 @@
-/*Least-squares fitting of t^2-t_0^2 surfaces for elliptical slowness matrix, W.*/
+/*Least-squares fitting of t^2-t_0^2 surfaces for isotropic V_{nmo}.*/
 
 /*
   Copyright (C) 2009 University of Texas at Austin
@@ -24,21 +24,19 @@ int main(int argc, char* argv[])
 {
   /*Declare variables*/
   int nx, ny, nt, N, ix, iy, it, j, nw;
-  float dx, dy, dt, x0, y0, t0, x, y, detM;
-  float g1, g2, g3;
-  float M11, M12, M13, M21, M22, M23, M31, M32, M33; 
-  float M11i, M12i, M13i, M21i, M22i, M23i, M31i, M32i, M33i; 
-  float *dT, *Mat, *w;
-  
+  float dx, dy, dt, x0, y0, t0, x, y, h;
+  float g1;
+  float M11, M11i;
+  float *dT, *w;
+
   /*Declare and initialize Madagascar files*/
-  sf_file inp, out, GTG;
+  sf_file inp, out;
   sf_init(argc, argv);
   inp = sf_input("in");
   /*Axes: 1-->x, 2-->y, 3-->t.*/
   out = sf_output("out");
-  GTG = sf_output("M");
 
-
+  /*Read in input file dimensions*/
   /* input dT vector (t^2-t0^2), output w vector (Wx, Wy, Wxy)' */
   if (!sf_histint(inp,"n1",&nx)) sf_error("No n1=");
   if (!sf_histint(inp,"n2",&ny)) sf_error("No n2=");
@@ -51,101 +49,52 @@ int main(int argc, char* argv[])
   if (!sf_histfloat(inp,"o3",&t0)) sf_error("No o3=");
   
   /*Set size of output file (w is model vector at each time-slice)*/
-  if (!sf_getint("nw",&nw)) nw=3;
+  nw=1;
   sf_putint(out,"n1",nw);
   sf_putint(out,"n2",nt);
   sf_putint(out,"n3",1);
-
-  /*Output GTG matrix for troubleshooting.*/
-  sf_putint(GTG,"n1",10);
-  sf_putint(GTG,"n2",1);
-  sf_putint(GTG,"n3",1);
 
   /*Allocate memory for model and data vectors*/
   N=nx*ny;
   w = sf_floatalloc(nw);
   dT = sf_floatalloc(N);
 
-  /*M=GTG (In W case, size(GTG)=3x3)*/
+  /*M=GTG (In this case size=1x1)*/
   M11=0;
-  M12=0;
-  M13=0;
-  M21=0;
-  M22=0;
-  M23=0;
-  M31=0;
-  M32=0;
-  M33=0;
+
   for (iy=0; iy < ny; iy++){
-    y=2*(y0+iy*dy);
+    y=(y0+iy*dy);
     for (ix=0; ix < nx; ix++){
-      x=2*(x0+ix*dx);
-      M11=M11+x*x*x*x;
-      M12=M12+x*x*y*y;
-      M13=M13+x*x*x*y;
-      M22=M22+y*y*y*y;
-      M23=M23+x*y*y*y;
+      x=(x0+ix*dx);
+      h=sqrt(x*x+y*y);
+      M11=M11+h*h*h*h;
     }
   }
-  M13=2*M13;
-  M21=M12;
-  M23=2*M23;
-  M31=M13;
-  M32=M23;
-  M33=4*M12;
 
 
-  /*Minv: Inverse of M using cascaded determinants*/
-  detM=1.0/((M11*M22*M33)-(M11*M23*M32)-(M12*M21*M33)+(M12*M23*M31)+(M13*M21*M32)-(M13*M22*M31));
-  M11i=detM*(M33*M22-M23*M32);
-  M12i=detM*(M32*M13-M33*M12);
-  M13i=detM*(M23*M12-M22*M13);
-  M21i=detM*(M31*M23-M33*M21);
-  M22i=detM*(M33*M11-M31*M13);
-  M23i=detM*(M21*M13-M23*M11);
-  M31i=detM*(M32*M21-M31*M22);
-  M32i=detM*(M31*M12-M32*M11);
-  M33i=detM*(M22*M11-M21*M12);
+  /*Minv: Inverse of 1x1 is just reciprocal.*/
+  M11i=1.0/M11;
 
-  /*Output for troubleshooting*/
-  Mat = sf_floatalloc(10);
-  Mat[0]=M11i;
-  Mat[1]=M12i;
-  Mat[2]=M13i;
-  Mat[3]=M21i;
-  Mat[4]=M22i;
-  Mat[5]=M23i;
-  Mat[6]=M31i;
-  Mat[7]=M32i;
-  Mat[8]=M33i;
-  Mat[9]=detM;
-  sf_floatwrite(Mat,10,GTG);
-
-  /* Loop through t0 coordinate*/
+   /* Loop through t0 coordinate*/
   for (it=0; it < nt; it++) {
     sf_floatread(dT,N,inp);
     g1=0;
-    g2=0;
-    g3=0;
     j=0;
     for (iy=0; iy < ny; iy++){
-      y=2*(y0+iy*dy);
+      y=(y0+iy*dy);
       for (ix=0; ix < nx; ix++){
-	x=2*(x0+ix*dx);
+	x=(x0+ix*dx);
+	h=sqrt(x*x+y*y);
 	/*g=GTd*/
-	g1=g1+dT[j]*x*x;
-	g2=g2+dT[j]*y*y;
-	g3=g3+dT[j]*2*x*y;
+	g1=g1+h*h*dT[j];
 	j++;
       }
     }
+    
+    /*Computed value is actually slowness; take reciprocal to get velocity.*/
+    w[0]=1.0/(M11i*g1);
 
-    /*Compute W model vector at each t_0 (slowness-squared values)*/
-    w[0]=M11i*g1+M12i*g2+M13i*g3;
-    w[1]=M21i*g1+M22i*g2+M23i*g3;
-    w[2]=M31i*g1+M32i*g2+M33i*g3;
-
-    /*Write 3 W values to output at every time coordinate*/
+    /*Output velocity at each time value.*/
     sf_floatwrite(w,nw,out);
   }
 
