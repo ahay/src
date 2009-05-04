@@ -2264,6 +2264,7 @@ void opendev (int argc, char* argv[])
     Cardinal        myxargc;
 #endif
     char ** myxargv;
+    char *color;
     
     dev.message = xtmessage;
     dev.erase = xterase;
@@ -2543,14 +2544,27 @@ void opendev (int argc, char* argv[])
 	    map[0] = screen_black;
         }
     }else{
-    	xtattributes (SET_COLOR_TABLE, 0, 0, 0, 0);
-    	xtattributes (SET_COLOR_TABLE, 1, 0, 0, MAX_GUN);
-    	xtattributes (SET_COLOR_TABLE, 2, MAX_GUN, 0, 0);
-    	xtattributes (SET_COLOR_TABLE, 3, MAX_GUN, 0, MAX_GUN);
-    	xtattributes (SET_COLOR_TABLE, 4, 0, MAX_GUN, 0);
-    	xtattributes (SET_COLOR_TABLE, 5, 0, MAX_GUN, MAX_GUN);
-    	xtattributes (SET_COLOR_TABLE, 6, MAX_GUN, MAX_GUN, 0);
-    	xtattributes (SET_COLOR_TABLE, 7, MAX_GUN, MAX_GUN, MAX_GUN);
+	if (NULL == (color = sf_getstring("bgcolor"))) color="black";
+	/* background color */
+	if (color[0] == 'w' || color[0] == 'l') {
+	    xtattributes (SET_COLOR_TABLE, 0, MAX_GUN, MAX_GUN, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 1, MAX_GUN, MAX_GUN, 0);
+	    xtattributes (SET_COLOR_TABLE, 2, 0, MAX_GUN, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 3, 0, MAX_GUN, 0);
+	    xtattributes (SET_COLOR_TABLE, 4, MAX_GUN, 0, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 5, MAX_GUN, 0, 0);
+	    xtattributes (SET_COLOR_TABLE, 6, 0, 0, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 7, 0, 0, 0);
+	} else { 
+	    xtattributes (SET_COLOR_TABLE, 0, 0, 0, 0);
+	    xtattributes (SET_COLOR_TABLE, 1, 0, 0, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 2, MAX_GUN, 0, 0);
+	    xtattributes (SET_COLOR_TABLE, 3, MAX_GUN, 0, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 4, 0, MAX_GUN, 0);
+	    xtattributes (SET_COLOR_TABLE, 5, 0, MAX_GUN, MAX_GUN);
+	    xtattributes (SET_COLOR_TABLE, 6, MAX_GUN, MAX_GUN, 0);
+	    xtattributes (SET_COLOR_TABLE, 7, MAX_GUN, MAX_GUN, MAX_GUN);
+	}
     }
 
     /* tell which entry in the colormap is the background color */
