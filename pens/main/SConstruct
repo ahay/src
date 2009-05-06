@@ -1,4 +1,4 @@
-import os, sys, string
+import os, sys, string, types
 sys.path.append('../..')
 import configure
 
@@ -176,6 +176,32 @@ for pen in ('png','pdf','svg'):
     
     if root:
         env.Install(bindir,main[0])
+
+# oglpen
+#######
+
+ogl = env.get('OPENGL')
+oglflags = env.get('OPENGLFLAGS')
+
+if ogl:
+    if type(ogl) is not types.ListType:
+        ogl = Split(ogl)
+    if oglflags:
+        if type(oglflags) is not types.ListType:
+            oglflags = Split(oglflags)
+    env.Include('oglpen',prefix='ogl_')
+    obj = env.StaticObject('oglpen.c')
+    env.Depends(obj,'oglpen.h')
+    main = env.Program('oglpen',[obj,]+objects,
+                       LIBS=[ogl]+env.get('LIBS',[]),
+                       LINKFLAGS=[oglflags]+env.get('LINK_FLAGS',[]))
+    pens.append('oglpen')
+else:
+    main = env.Place('oglpen',None,var='OPENGL',package='freeglut-devel')
+
+if root:
+    env.Install(bindir,main[0])
+
 
 ######################################################################
 # SELF-DOCUMENTATION
