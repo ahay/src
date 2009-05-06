@@ -305,7 +305,6 @@ result can be improved by running the program for more iterations.
 \subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/conjgrad.c?view=markup}{system/main/conjgrad.c}}
 
 
-
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcp}
 }}
@@ -331,6 +330,16 @@ two.rsf:
     n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 \end{verbatim}
+
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cp.c?view=markup}{system/main/cp.c}}
+
+First, we look for the two first command-line arguments that don't
+have the ``='' character in them and consider them as the names of the
+input and the output files.  
+\moddex{cp}{cp}{37}{50}{system/main}
+
+Next, we use library functions \verb#sf_cp# and \verb#sf_mv# to do the actual work.
+\moddex{cp}{cp}{52}{54}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcut}

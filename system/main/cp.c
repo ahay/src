@@ -49,10 +49,9 @@ int main(int argc, char* argv[])
     if (NULL == in || NULL == out)
 	sf_error ("not enough input");
 
-    sf_setformat(out,sf_histstring(in,"data_format"));
-
     sf_cp(in,out);
-    if (NULL != strstr (sf_getprog(),"mv")) sf_rm(infile,false,false,false);
+    if (NULL != strstr (sf_getprog(),"mv")) 
+	sf_rm(infile,false,false,false);
     exit (0);
 }
 
