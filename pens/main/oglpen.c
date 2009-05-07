@@ -50,13 +50,32 @@ char            name[] = "oglpen";
 #define NCOLOR 256 /* number of colors */
 #define MAXVERT 1000
 #define TEX_SIZE 256 /* Texture size  - should be a power of two */
+#define LIST_CHUNK 1000 /* Define how many display lists generate at once */
+#define MAX_CHUNKS 100000 /* How many chunks of display lists to have */
 #define WIN_HEIGHT 760 /* Default window height */
+#define MIN_DELAY 50 /* Maximum animation delay */
+#define MAX_DELAY 10000 /* Minimum animation delay */
 
 static float *color_table = NULL;
 static bool light = false;
-static int oglcolor, delay, nx, ny;
-static unsigned int ogllist;
-static unsigned char *tex_buf = NULL;
+static bool stretchy = false;
+static int oglcolor, nx, ny;
+static unsigned int *ogllists = NULL; /* Bases of every LIST_CHUNK display lists */
+static unsigned char *tex_buf = NULL; /* Temporary buffer for loading textures */
+static unsigned int frames_num = 0;
+static unsigned int curr_frame = 0;
+static unsigned int delay = 50; /* milliseconds */
+static int direction = 0; /* Animation direction */
+static int dirway = 0; /* Animation direction for both ways */
+static bool animate = false; /* Animatio flag */
+static int menu_tag = 0; /* GLUT menu tag */
+static bool has_menu = false;
+
+enum {
+    MENU_STRETCHY,
+    MENU_FULLSCREEN,
+    MENU_QUIT
+    };
 
 void opendev (int argc, char* argv[])
 /*< open >*/
@@ -86,6 +105,7 @@ void opendev (int argc, char* argv[])
 
     color_table = (float*)malloc (3 * NCOLOR * sizeof (float));
     tex_buf = (unsigned char*)malloc (TEX_SIZE * TEX_SIZE * sizeof (unsigned char));
+    ogllists = (unsigned int*)malloc (MAX_CHUNKS * sizeof (unsigned int));
 
     glutInit (&argc, argv);
     glutInitWindowSize (WIN_HEIGHT / VP_SCREEN_RATIO, WIN_HEIGHT);
@@ -96,10 +116,6 @@ void opendev (int argc, char* argv[])
     glutIdleFunc (NULL);
 
     glutReshapeFunc (oglreshape);
-    glutCreateMenu (oglmenu);
-    glutAddMenuEntry ("Full Screen", 0);
-    glutAddMenuEntry ("Quit", -1);
-    glutAttachMenu (GLUT_RIGHT_BUTTON);
 
     dwidth = glutGet (GLUT_SCREEN_WIDTH);
     dheight = glutGet (GLUT_SCREEN_HEIGHT);
@@ -138,8 +154,23 @@ void opendev (int argc, char* argv[])
             break;
     }
 
-    if (!sf_getint ("delay", &delay)) delay = 10;
-    /* animation delay */
+    if (!sf_getbool ("stretchy", &stretchy))
+	stretchy = false;
+}
+
+void oglbuildmenu (void)
+/*< menu builder >*/
+{
+    if (has_menu)
+        glutDestroyMenu (menu_tag);
+    else
+        has_menu = true;
+
+    menu_tag = glutCreateMenu (oglmenu);
+    glutAddMenuEntry (stretchy ? "Rigid" : "Stretchy", MENU_STRETCHY);
+    glutAddMenuEntry ("Full Screen", MENU_FULLSCREEN);
+    glutAddMenuEntry ("Quit", MENU_QUIT);
+    glutAttachMenu (GLUT_RIGHT_BUTTON);
 }
 
 void oglreset (void)
@@ -192,11 +223,19 @@ void oglerase (int command)
 {
     switch (command) {
         case ERASE_START:
-            ogllist = glGenLists (1);
-            glNewList (ogllist, GL_COMPILE_AND_EXECUTE);
+            ogllists[0] = glGenLists (LIST_CHUNK);
+            glNewList (ogllists[0], GL_COMPILE_AND_EXECUTE);
+            frames_num++;
             glClear (GL_COLOR_BUFFER_BIT);
             break;
         case ERASE_MIDDLE:
+            glFlush ();
+            glEndList ();
+            if (!(frames_num % LIST_CHUNK))
+                ogllists[frames_num / LIST_CHUNK] = glGenLists (LIST_CHUNK);
+            glNewList (ogllists[frames_num / LIST_CHUNK] + frames_num % LIST_CHUNK,
+                       GL_COMPILE_AND_EXECUTE);
+            frames_num++;
             glClear (GL_COLOR_BUFFER_BIT);
             break;
         case ERASE_END:
@@ -208,6 +247,41 @@ void oglerase (int command)
     }
 }
 
+void oglanimate (int value)
+/*< animation >*/
+{
+    if (!animate)
+        return;
+
+    switch (direction) {
+        case 0: /* Forwards */
+            if (curr_frame == (frames_num - 1))
+                curr_frame = 0;
+            else
+                curr_frame++;
+            break;
+        case 1: /* Backwards */
+            if (curr_frame == 0)
+                curr_frame = frames_num - 1;
+            else
+                curr_frame--;
+            break;
+        case 2: /* Both ways */
+            if (dirway == 0 && curr_frame == (frames_num - 1)) {
+                dirway = 1;
+                curr_frame = frames_num - 2;
+            } if (dirway == 1 && curr_frame == 0) {
+                dirway = 0;
+                curr_frame = 1;
+            } else
+                curr_frame += dirway ? -1 : 1;
+            break;
+    }
+
+    glutPostRedisplay ();
+    glutTimerFunc (delay, oglanimate, 0);
+}
+
 void oglclose (int status)
 /*< close >*/
 {
@@ -217,6 +291,11 @@ void oglclose (int status)
         case CLOSE_ERROR:
         case CLOSE_INTERRUPT:
         case CLOSE_NORMAL:
+            if (frames_num > 1) {
+                animate = true;
+                glutTimerFunc (delay, oglanimate, 0);
+            }
+            oglbuildmenu ();
             glutMainLoop ();
             break;
         case CLOSE_FLUSH:
@@ -411,7 +490,7 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 void oglredraw (void)
 /*< OpenGL redraw >*/
 {
-    glCallList (ogllist);
+    glCallList (ogllists[curr_frame / LIST_CHUNK] + curr_frame % LIST_CHUNK);
     glFlush ();
     glutSwapBuffers ();
 }
@@ -424,15 +503,19 @@ void oglreshape (int width, int height)
     glViewport (0, 0, width, height);
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
-    if (width <= height) {
-        wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
-        glOrtho (0, nx,
-                 0, ny * wh, -1, 1);
-    } else {
-        wh = (GLfloat)width / (GLfloat)height * VP_SCREEN_RATIO;
-        glOrtho (0, nx * wh,
-                 0, ny, -1, 1);
-    }
+    if (!stretchy) {
+        if (width * VP_SCREEN_RATIO <= height) {
+            wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
+            glOrtho (0, nx,
+                     0, ny * wh, -1, 1);
+        } else {
+            wh = (GLfloat)width / (GLfloat)height * VP_SCREEN_RATIO;
+            glOrtho (0, nx * wh,
+                     0, ny, -1, 1);
+        }
+    } else
+            glOrtho (0, nx,
+                     0, ny, -1, 1);
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
@@ -443,11 +526,16 @@ void oglmenu (int value)
 /*< OpenGL menu >*/
 {
     switch (value) {
-        case -1:
+        case MENU_QUIT:
             exit (0);
             break;
-        case 0:
+        case MENU_FULLSCREEN:
             glutFullScreen ();
+            break;
+        case MENU_STRETCHY:
+            stretchy = !stretchy;
+            oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
+            oglbuildmenu ();
             break;
         default:
             break;    
