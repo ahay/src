@@ -49,11 +49,14 @@ char            name[] = "oglpen";
 #define PPI 100.0  /* pixels per inch */
 #define NCOLOR 256 /* number of colors */
 #define MAXVERT 1000
+#define TEX_SIZE 256 /* Texture size  - should be a power of two */
+#define WIN_HEIGHT 760 /* Default window height */
 
 static float *color_table = NULL;
 static bool light = false;
 static int oglcolor, delay, nx, ny;
 static unsigned int ogllist;
+static unsigned char *tex_buf = NULL;
 
 void opendev (int argc, char* argv[])
 /*< open >*/
@@ -71,18 +74,21 @@ void opendev (int argc, char* argv[])
     dev.close = oglclose;
 
     dev.area = oglarea;
+    dev.raster = oglraster;
     dev.attributes = oglattr;
     dev.plot = oglplot;
     dev.point = oglpoint;
 
     dev.need_end_erase = true;
     dev.smart_clip = false;
+    dev.smart_raster = true;
     dev.num_col = NCOLOR;
 
     color_table = (float*)malloc (3 * NCOLOR * sizeof (float));
+    tex_buf = (unsigned char*)malloc (TEX_SIZE * TEX_SIZE * sizeof (unsigned char));
 
     glutInit (&argc, argv);
-    glutInitWindowSize (760 / VP_SCREEN_RATIO, 760);
+    glutInitWindowSize (WIN_HEIGHT / VP_SCREEN_RATIO, WIN_HEIGHT);
 
     glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
     glutCreateWindow ("OpenGL pen");
@@ -143,8 +149,8 @@ void oglreset (void)
 
     /* reset color table */
     color_table[0] = 1.0 * light;
-    color_table[1] = 1.0 * light;
-    color_table[2] = 1.0 * light;
+    color_table[NCOLOR] = 1.0 * light;
+    color_table[NCOLOR * 2] = 1.0 * light;
 
     for (value = 1; value < 8; value++) {
 	r = MAX_GUN * ((value & 2) / 2);
@@ -152,20 +158,20 @@ void oglreset (void)
 	b = MAX_GUN * ((value & 1) / 1);
 
 	if (light) {
-	    color_table[value * 3] = (255 - r) / 255.0;
-	    color_table[value * 3 + 1] = (255 - g) / 255.0;
-	    color_table[value * 3 + 2] = (255 - b) / 255.0;
+	    color_table[value] = (255 - r) / 255.0;
+	    color_table[NCOLOR + value] = (255 - g) / 255.0;
+	    color_table[NCOLOR * 2 + value] = (255 - b) / 255.0;
 	} else {
-	    color_table[value * 3] = r / 255.0;
-	    color_table[value * 3 + 1] = g / 255.0;
-	    color_table[value * 3 + 2] = b / 255.0;
+	    color_table[value] = r / 255.0;
+	    color_table[NCOLOR + value] = g / 255.0;
+	    color_table[NCOLOR * 2 + value] = b / 255.0;
 	}
     }
  
     for (value = 8; value < NCOLOR; value++) {
-        color_table[value * 3] = 1.0 * light;
-        color_table[value * 3 + 1] = 1.0 * light;
-        color_table[value * 3 + 2] = 1.0 * light;
+        color_table[value] = 1.0 * light;
+        color_table[NCOLOR + value] = 1.0 * light;
+        color_table[NCOLOR * 2 + value] = 1.0 * light;
     }
 
     glShadeModel (GL_SMOOTH);
@@ -174,8 +180,11 @@ void oglreset (void)
     glDisable (GL_LIGHTING);
     glDisable (GL_SCISSOR_TEST);
     glClearColor (color_table[0],
-                  color_table[1],
-                  color_table[2], 0);
+                  color_table[NCOLOR],
+                  color_table[NCOLOR * 2], 0);
+    glDisable (GL_CULL_FACE);
+    glPixelStorei (GL_PACK_ALIGNMENT, 1);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 }
 
 void oglerase (int command)
@@ -184,7 +193,7 @@ void oglerase (int command)
     switch (command) {
         case ERASE_START:
             ogllist = glGenLists (1);
-            glNewList (ogllist, GL_COMPILE);
+            glNewList (ogllist, GL_COMPILE_AND_EXECUTE);
             glClear (GL_COLOR_BUFFER_BIT);
             break;
         case ERASE_MIDDLE:
@@ -226,12 +235,14 @@ void oglattr (int command, int value, int v1, int v2, int v3)
     switch (command) {
         case SET_COLOR:
             oglcolor = value;
-            glColor3fv (&color_table[oglcolor * 3]);
+            glColor3f (color_table[oglcolor],
+                       color_table[NCOLOR + oglcolor],
+                       color_table[NCOLOR * 2 + oglcolor]);
             break;
         case SET_COLOR_TABLE:
-            color_table[value * 3] = v1 / 255.0;
-            color_table[value * 3 + 1] = v2 / 255.0;
-            color_table[value * 3 + 2] = v3 / 255.0;
+            color_table[value] = v1 / 255.0;
+            color_table[NCOLOR + value] = v2 / 255.0;
+            color_table[NCOLOR * 2 + value] = v3 / 255.0;
             break;
 /*
         case SET_WINDOW:
@@ -289,6 +300,114 @@ void oglarea (int npts, struct vertex *head)
     glEnd ();
 }
 
+void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax, 
+		unsigned char **raster_block, int orient, int dither_it)
+{
+/*< raster >*/
+    int i, j, k, l, hnum, wnum, kmax, lmax, width, height;
+    GLuint *tex_id;
+    float stepy, stepx;
+    float xtex, ytex;
+    float x_min, x_max, y_min, y_max;
+
+    /* Colormap table */
+    glPixelTransferi (GL_MAP_COLOR, GL_TRUE);
+    glPixelMapfv (GL_PIXEL_MAP_I_TO_R, NCOLOR, color_table);
+    glPixelMapfv (GL_PIXEL_MAP_I_TO_G, NCOLOR, &color_table[NCOLOR]);
+    glPixelMapfv (GL_PIXEL_MAP_I_TO_B, NCOLOR, &color_table[NCOLOR * 2]);
+
+    height = orient % 2 ? xpix : ypix;
+    width = orient % 2 ? ypix : xpix;
+
+    wnum = width / TEX_SIZE + ((width % TEX_SIZE) != 0);
+    hnum = height / TEX_SIZE + ((height % TEX_SIZE) != 0);
+    stepy = (ymax - ymin + 1) / (height / (float)TEX_SIZE);
+    stepx = (xmax - xmin + 1) / (width / (float)TEX_SIZE);
+
+    tex_id = (GLuint*)malloc (hnum * wnum * sizeof (GLuint));
+    glGenTextures (hnum * wnum, tex_id);
+
+    /* Loop over tiles and make textures */
+    for (i = 0; i < wnum; i++) {
+        kmax = i != (wnum - 1) ? TEX_SIZE : width - i * TEX_SIZE;
+        for (j = 0; j < hnum; j++) {
+            lmax = j != (hnum - 1) ? TEX_SIZE : height - j * TEX_SIZE;
+            /* Copy samples to the local buffer */
+            switch (orient) {
+                case 0:
+                    for (l = 0; l < lmax; l++) {
+                        for (k = 0; k < kmax; k++) {
+                            tex_buf[k * TEX_SIZE + l] =
+                            raster_block[height - j * TEX_SIZE - l - 1][i * TEX_SIZE + k];
+                        }
+                    }
+                    break;
+                case 1:
+                    for (k = 0; k < kmax; k++) {
+                        for (l = 0; l < lmax; l++) {
+                            tex_buf[k * TEX_SIZE + l] =
+                            raster_block[height - i * TEX_SIZE - k - 1][width - j * TEX_SIZE - l - 1];
+                        }
+                    }
+                case 2:
+                    for (l = 0; l < lmax; l++) {
+                        for (k = 0; k < kmax; k++) {
+                            tex_buf[k * TEX_SIZE + l] =
+                            raster_block[j * TEX_SIZE + l][width - i * TEX_SIZE - k - 1];
+                        }
+                    }
+                    break;
+                case 3:
+                    for (k = 0; k < kmax; k++) {
+                        for (l = 0; l < lmax; l++) {
+                            tex_buf[k * TEX_SIZE + l] =
+                            raster_block[i * TEX_SIZE + k][j * TEX_SIZE + l];
+                        }
+                    }
+                    break;
+            }
+
+            glBindTexture (GL_TEXTURE_2D, tex_id[i * hnum + j]);
+            glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            /* Send texture samples to OpenGL */
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0,
+                                         GL_COLOR_INDEX, GL_UNSIGNED_BYTE, tex_buf);
+            glBindTexture (GL_TEXTURE_2D, 0);
+        }
+    }
+    /* Loop over tiles and render textures */
+    for (i = 0; i < wnum; i++) {
+        x_min = xmin + i * stepx;
+        x_max = i != (wnum - 1) ? xmin + (i + 1) * stepx : xmax;
+        xtex = i != (wnum - 1) ? 1.0 : 1.0 * (width - i * TEX_SIZE) / (float)TEX_SIZE;
+        for (j = 0; j < hnum; j++) {
+            y_min = ymin + j * stepy;
+            y_max = j != (hnum - 1) ? ymin + (j + 1) * stepy : ymax;
+            ytex = j != (hnum - 1) ? 1.0 : 1.0 * (height - j * TEX_SIZE) / (float)TEX_SIZE;
+            glEnable (GL_TEXTURE_2D);
+            glBindTexture (GL_TEXTURE_2D, tex_id[i * hnum + j]);
+            glBegin (GL_QUADS);
+            glTexCoord2f (0, 0);
+            glVertex2i (x_min, y_min);
+            glTexCoord2f (0, xtex);
+            glVertex2i (x_max, y_min);
+            glTexCoord2f (ytex, xtex);
+            glVertex2i (x_max, y_max);
+            glTexCoord2f (ytex, 0);
+            glVertex2i (x_min, y_max);
+            glEnd ();
+            glBindTexture (GL_TEXTURE_2D, 0);
+            glDisable (GL_TEXTURE_2D);
+        }
+    }
+
+    free (tex_id);
+}
+
 void oglredraw (void)
 /*< OpenGL redraw >*/
 {
@@ -306,7 +425,7 @@ void oglreshape (int width, int height)
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
     if (width <= height) {
-        wh = (GLfloat)height / (GLfloat)width * VP_SCREEN_RATIO;
+        wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
         glOrtho (0, nx,
                  0, ny * wh, -1, 1);
     } else {
