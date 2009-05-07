@@ -101,7 +101,7 @@ def use(target=None,source=None,env=None):
                 path = os.path.dirname(datapath)
                 if datapath[:2] != './':
                     path = os.path.join(path,book,chapter)
-                uses = os.path.join(path,'.sf_uses2')
+                uses = os.path.join(path,'.sf_uses')
 
                 if os.path.isfile(uses):
                     sout = open(uses,'r')

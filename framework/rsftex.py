@@ -392,23 +392,20 @@ def use(target=None,source=None,env=None):
     out = open(trg,'w')
     what = os.path.basename(trg)[-4:] # uses or data
 
-    os.chdir(project)
-    os.system('scons -s ' + what)
-    os.chdir('..')
+    info = os.path.join(project,'.rsfproj')
 
-    uses = os.path.join(os.path.dirname(trg),project,'.sf_' + what)
-
-    if os.path.isfile(uses):
-        usesfile = open(uses,'r')
-        progs = usesfile.readline()
+    if os.path.isfile(info):
+        usesfile = open(info,'r')
+        contents = usesfile.read()
         usesfile.close()
 
-        if string.find(progs,'scons') < 0:
-            tree = env.get('tree')
-            doc = map(lambda prog:
-                          'rsfdoc.progs["%s"].use("%s","%s","%s")' %
-                      (prog,tree[1],tree[2],project),string.split(progs))
-            out.write(string.join(doc,'\n') + '\n')
+        exec contents in locals() 
+
+        tree = env.get('tree')
+        doc = map(lambda prog:
+                  'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+                  (prog,tree[1],tree[2],project),eval(what))
+        out.write(string.join(doc,'\n') + '\n')
 
     out.close()
     return 0
@@ -571,26 +568,24 @@ def colorize(target=None,source=None,env=None):
 
      out.write('</font></pre></table>')
 
-     for case in ('uses','data'):
+     info = str(source[1])
+     
+     if os.path.isfile(info):
+         sout = open(info)
+         progs = sout.read()
+         sout.close()
 
-         uses = os.path.join(os.path.dirname(str(source[1])),
-                             os.path.dirname(str(source[0])),'.sf_' + case)
+         exec progs in locals()
 
-         if os.path.isfile(uses):
-             sout = open(uses)
-             progs = sout.read()
-             sout.close()
+         if uses:
+             out.write('</div><p><div class="progs">')
+             out.write(rsfdoc.multicolumn(uses,_proglink))
 
-             items = string.split(progs)
-             if items:
-                 if case=='uses':
-                     out.write('</div><p><div class="progs">')
-                     out.write(rsfdoc.multicolumn(items,_proglink))
-                 else:
-                     while 'PRIVATE' in items:
-                         items.remove('PRIVATE')
-                         out.write('</div><p><div class="dsets">')
-                         out.write(rsfdoc.multicolumn(items,_datalink))
+         if data:
+             while 'PRIVATE' in data:
+                 data.remove('PRIVATE')
+                 out.write('</div><p><div class="dsets">')
+                 out.write(rsfdoc.multicolumn(data,_datalink))
  
      out.write('''
      </div>
@@ -837,6 +832,7 @@ class TeXPaper(Environment):
         # reproducible directories
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
             dir = os.path.dirname(scons)
+            info = os.path.join(dir,'.rsfproj')
 
             uses = os.path.join(self.path,dir+'.uses')
             self.Uses(uses,scons,tree=self.tree)
@@ -847,7 +843,7 @@ class TeXPaper(Environment):
             self.data.append(data)
 
             html = dir+'.html'
-            self.Color(html,[scons,uses,data])
+            self.Color(html,[scons,info])
             self.scons.append(html)
 
         if self.scons:
@@ -1012,14 +1008,14 @@ class TeXPaper(Environment):
             self.Default('pdf')
         self.Command('dummy.tex',self.figs,Action(dummy))
 
-        uses = os.path.join(self.path,'.sf_uses2')
+        uses = os.path.join(self.path,'.sf_uses')
         if self.uses:
             self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
         else:
             self.Command(uses,None,'touch $TARGET')
         self.Alias('uses',uses)
 
-        data = os.path.join(self.path,'.sf_data2')
+        data = os.path.join(self.path,'.sf_data')
         if self.data:
             self.Command(data,self.data,'cat $SOURCES > $TARGET')
         else:

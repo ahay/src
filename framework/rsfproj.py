@@ -165,7 +165,7 @@ Print = Builder(action = pspen + " printer=%s $SOURCES" % printer,src_suffix=vps
 Retrieve = Builder(action = Action(retrieve,
                                    varlist=['dir','private','top','server']))
 Test = Builder(action=Action(test))
-Echo = Builder(action=Action(echo),varlist=['out'])
+Echo = Builder(action=Action(echo),varlist=['out','err'])
 
 #############################################################################
 # PLOTTING COMMANDS
@@ -457,6 +457,8 @@ class Project(Environment):
         self.Alias(target + '.test',test)
         return plot
     def End(self):
+        self.Command('.rsfproj',None,action=Action(self.Info))
+        self.lock.append('.rsfproj')
         if self.view: # if any results
             self.Alias('view',self.view)
             self.Alias('print',self.prnt)
@@ -464,12 +466,13 @@ class Project(Environment):
             self.Alias('test',self.test)
         else:
             self.Echo('test',None,err='Nothing to test')
-        uses = os.path.join(self.path,'.sf_uses')
-        data = os.path.join(self.path,'.sf_data')
-        self.Echo(uses,'SConstruct',out=self.coms)
-        self.Echo(data,'SConstruct',out=self.data)
-        self.Alias('uses',uses)
-        self.Alias('data',data)
+    def Info(self,target=None,source=None,env=None):
+        'Store project information in a file'
+        info = open(str(target[0]),'w')
+        info.write('uses=' + str(self.coms) + '\n')
+        info.write('data=' + str(self.data) + '\n')
+        info.close()
+        return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:
             self.data.append('PRIVATE')

@@ -93,12 +93,6 @@ class SUProject(rsfproj.Project):
             self.Alias('view',map(lambda x: x+'.view',self.views))
         else:
             self.Command('view',None,'echo "There is nothing to view" ')
-        uses = os.path.join(self.path,'.sf_uses')
-        data = os.path.join(self.path,'.sf_data')
-        self.Echo(uses,'SConstruct',out=self.coms)
-        self.Echo(data,'SConstruct',out=self.data)
-        self.Alias('uses',uses)
-        self.Alias('data',data)
 
 def little_endian():
     "check for endianness"
