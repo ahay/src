@@ -710,9 +710,9 @@ def opengl(context):
     context.env['LIBS'] = LIBS
     context.env['LINKFLAGS'] = LINKFLAGS
 
-pkg['glew'] = {'ubuntu':'libglew + libglew-dev',
+pkg['glew'] = {'ubuntu':'libglew1.5-dev',
                'suse'  :'glew-devel',
-               'fedora': 'glew + glew-devel'}
+               'fedora':'glew + glew-devel'}
 
 # If this test is failed, no GLEW programs
 def glew(context,LIBS,ogl):
