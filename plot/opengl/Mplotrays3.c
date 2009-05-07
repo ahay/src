@@ -26,7 +26,7 @@ Run "sfdoc stdplot" for more parameters.
 
 
 #include <rsf.h>
-#if defined(__APPLE__)&& defined(__MACH__)
+#ifdef __APPLE__
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>
 #else
@@ -34,7 +34,7 @@ Run "sfdoc stdplot" for more parameters.
 #include <GL/glut.h>
 #endif
 #ifdef FREEGLUT
-#if defined(__APPLE__)&& defined(__MACH__)
+#ifdef __APPLE__
 #include <GLUT/freeglut_ext.h>
 #else
 #include <GL/freeglut_ext.h>
