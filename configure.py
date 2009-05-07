@@ -170,11 +170,11 @@ def identify_platform(context):
             if name[:2] == 'fc':
                 plat['distro'] = 'fedora'
             elif name[:2] == 'EL' or name[:2] == 'el':
-                plat['distro'] = 'RedHat EL' # Redhat Enterprise
+                plat['distro'] = 'rhel' # Red Hat Enterprise Linux
             elif name[-7:] == 'generic':
-                plat['distro'] = 'generic' # Ubuntu
+                plat['distro'] = 'ubuntu'
 	    elif dist()[0] == 'SuSE':
-                plat['distro'] = 'SuSE'
+                plat['distro'] = 'suse'
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
@@ -199,7 +199,7 @@ def identify_platform(context):
 
 pkg['gcc'] = {'fedora':'gcc'}
 pkg['libc'] = {'fedora':'glibc',
-               'generic':'libc6-dev'}
+               'ubuntu':'libc6-dev'}
 
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
@@ -392,7 +392,7 @@ xlib = [
     ]
 
 pkg['xaw']={'fedora':'libXaw-devel',
-            'generic':'libxaw7-dev'}
+            'ubuntu':'libxaw7-dev'}
 
 # If this check is failed
 # you may not be able to display .vpl images on the screen
@@ -468,10 +468,11 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
-pkg['netpbm'] = {'fedora':'netpbm-devel',
-                 'generic':'libnetpbm10-dev',
+pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'darwin':'netpbm (fink)',
-                 'cygwin':'libnetpbm-devel (Setup...Devel)'}
+                 'fedora':'netpbm-devel',
+                 'suse'  :'libnetpbm-devel',
+                 'ubuntu':'libnetpbm10-dev'}
 
 def ppm(context):
     context.Message("checking for ppm ... ")
@@ -482,7 +483,7 @@ def ppm(context):
         context.env['CPPPATH'] = oldpath + [ppmpath]
     else:
         ppmpath = None
-    
+
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -511,11 +512,11 @@ def ppm(context):
         context.env['PPM'] = None
     context.env['CPPPATH'] = oldpath
 
-pkg['libtiff'] = {}
+pkg['libtiff'] = {'suse':'libtiff-devel'}
 
 def tiff(context):
     context.Message("checking for tiff ... ")
-    
+
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -538,7 +539,8 @@ def tiff(context):
 
     LIBS.pop()
 
-pkg['libgd'] = {'generic':'libgd2-noxpm-dev'}
+pkg['libgd'] = {'suse':'gd-devel',
+                'ubuntu':'libgd2-noxpm-dev'}
 
 def gd(context):
     context.Message("checking for GD ... ")
@@ -564,7 +566,7 @@ def gd(context):
         context.env['GD'] = None
     LIBS.pop()
 
-pkg['cairo'] = {}
+pkg['cairo'] = {'suse':'cairo-devel'}
 
 def cairo(context):
     context.Message("checking for cairo (PNG) ... ")
@@ -613,19 +615,19 @@ def cairo(context):
             return 0;
             }\n''' % format
             res2 = context.TryLink(text,'.c')
-            
+
             if res2:
                 context.Result(res2)
                 context.env['CAIRO' + cap] = cairo
             else:
                 context.Result(context_failure)
                 context.env['CAIRO' + cap] = None
-            
+
     context.env['CPPPATH'] = oldpath    
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
-               'generic':'libjpeg62-dev'}
+               'ubuntu':'libjpeg62-dev'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -654,8 +656,9 @@ def jpeg(context):
 
     LIBS.pop()
 
-pkg['opengl'] = {'generic':'mesa-libGL-devel',
-                 'fedora': 'mesa-libGL-devel + freeglut + freeglut-devel'}
+pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut + freeglut-devel',
+                 'suse'  :'freeglut-devel',
+                 'ubuntu':'mesa-libGL-devel'}
 
 # If this test is failed, no opengl programs
 def opengl(context):
@@ -665,7 +668,7 @@ def opengl(context):
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     LINKFLAGS = context.env.get('LINKFLAGS','')
-    
+
     if plat['OS'] == 'darwin':
         oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
         context.env['LINKFLAGS'] = LINKFLAGS + oglflags
@@ -707,7 +710,8 @@ def opengl(context):
     context.env['LIBS'] = LIBS
     context.env['LINKFLAGS'] = LINKFLAGS
 
-pkg['glew'] = {'generic':'libglew + libglew-dev',
+pkg['glew'] = {'ubuntu':'libglew + libglew-dev',
+               'suse'  :'glew-devel',
                'fedora': 'glew + glew-devel'}
 
 # If this test is failed, no GLEW programs
@@ -730,14 +734,14 @@ def glew(context,LIBS,ogl):
 
     GLEW = context.env.get('GLEW','GLEW')
     context.env['LIBS'] =  LIBS + [GLEW] + ogl 
-        
+
     res = context.TryLink(text,'.c')
 
     if res:
         context.Result(res)
         context.env['GLEW'] = GLEW
     else:
-        
+
         context.Result(context_failure)
         need_pkg('glew', fatal=False)
 
@@ -963,7 +967,8 @@ def api_options(context):
     return api
 
 pkg['c++'] = {'fedora':'gcc-c++',
-              'generic':'g++'}
+              'suse'  :'gcc-c++',
+              'ubuntu':'g++'}
 
 # For the C++ API
 def cxx(context):
@@ -1005,7 +1010,7 @@ fortran = {'g77':'f2cFortran',
            'f2c':'f2cFortran'}
 
 pkg['f77'] = {'fedora':'gcc-gfortran',
-              'generic':'g77'}
+              'ubuntu':'g77'}
 
 def f77(context):
     context.Message("checking for F77 compiler ... ")
@@ -1051,7 +1056,8 @@ def f77(context):
     context.Result(cfortran)
 
 pkg['f90'] = {'fedora':'gcc-gfortran',
-              'generic':'gfortran'}
+              'suse'  :'gcc-fortran',
+              'ubuntu':'gfortran'}
 
 def f90_write_autofile(extension,content):
     filename=os.path.join('api','f90','ptr_sz.'+extension)
@@ -1178,10 +1184,10 @@ def matlab(context):
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
 pkg['octave'] = {'fedora':'octave',
-                 'generic':'octave'}
+                 'ubuntu':'octave'}
 
 pkg['mkoctave'] = {'fedora':'octave-devel',
-                   'generic':'octave-headers'}
+                   'ubuntu':'octave-headers'}
 
 def octave(context):
     context.Message("checking for Octave ... ")
@@ -1204,9 +1210,9 @@ def octave(context):
         need_pkg('octave')
 
 pkg['swig'] = {'fedora':'swig',
-               'generic':'swig'}
+               'ubuntu':'swig'}
 pkg['numpy'] = {'fedora':'numpy',
-                'generic':'python-scipy, python-numpy-dev'}
+                'ubuntu':'python-scipy, python-numpy-dev'}
 pkg['scipy'] = {'fedora':'scipy'}
 
 def python(context):
