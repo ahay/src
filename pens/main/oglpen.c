@@ -53,8 +53,8 @@ char            name[] = "oglpen";
 #define LIST_CHUNK 1000 /* Define how many display lists generate at once */
 #define MAX_CHUNKS 100000 /* How many chunks of display lists to have */
 #define WIN_HEIGHT 760 /* Default window height */
-#define MIN_DELAY 50 /* Maximum animation delay */
-#define MAX_DELAY 10000 /* Minimum animation delay */
+#define MIN_DELAY 50.0 /* Maximum animation delay */
+#define MAX_DELAY 10000.0 /* Minimum animation delay */
 
 static float *color_table = NULL;
 static bool light = false;
@@ -64,7 +64,7 @@ static unsigned int *ogllists = NULL; /* Bases of every LIST_CHUNK display lists
 static unsigned char *tex_buf = NULL; /* Temporary buffer for loading textures */
 static unsigned int frames_num = 0;
 static unsigned int curr_frame = 0;
-static unsigned int delay = 50; /* milliseconds */
+static float delay = 50; /* milliseconds */
 static int direction = 0; /* Animation direction */
 static int dirway = 0; /* Animation direction for both ways */
 static bool animate = false; /* Animatio flag */
@@ -72,6 +72,12 @@ static int menu_tag = 0; /* GLUT menu tag */
 static bool has_menu = false;
 
 enum {
+    MENU_NEXT,
+    MENU_PREV,
+    MENU_RESTART,
+    MENU_RUN,
+    MENU_STOP,
+    MENU_DIRECTION,
     MENU_STRETCHY,
     MENU_FULLSCREEN,
     MENU_QUIT
@@ -96,6 +102,9 @@ void opendev (int argc, char* argv[])
     dev.raster = oglraster;
     dev.attributes = oglattr;
     dev.plot = oglplot;
+    dev.startpoly = oglstartpoly;
+    dev.midpoly = oglmidpoly;
+    dev.endpoly = oglendpoly;
     dev.point = oglpoint;
 
     dev.need_end_erase = true;
@@ -113,6 +122,7 @@ void opendev (int argc, char* argv[])
     glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
     glutCreateWindow ("OpenGL pen");
     glutDisplayFunc (oglredraw);
+    glutKeyboardFunc (oglkeyboard);
     glutIdleFunc (NULL);
 
     glutReshapeFunc (oglreshape);
@@ -167,6 +177,17 @@ void oglbuildmenu (void)
         has_menu = true;
 
     menu_tag = glutCreateMenu (oglmenu);
+    if (frames_num > 1) {
+        if (!animate) {
+            glutAddMenuEntry ("Next", MENU_NEXT);
+            glutAddMenuEntry ("Prev", MENU_PREV);
+            glutAddMenuEntry ("Restart", MENU_RESTART);
+            glutAddMenuEntry ("Run", MENU_RUN);
+        } else
+            glutAddMenuEntry ("Stop", MENU_STOP);
+        glutAddMenuEntry (direction == 2 ? "Forwards" :
+                          direction == 1 ? "Both ways" : "Backwards", MENU_DIRECTION);
+    }
     glutAddMenuEntry (stretchy ? "Rigid" : "Stretchy", MENU_STRETCHY);
     glutAddMenuEntry ("Full Screen", MENU_FULLSCREEN);
     glutAddMenuEntry ("Quit", MENU_QUIT);
@@ -355,6 +376,24 @@ void oglplot(int x, int y, int draw)
     oldy = y;
 }
 
+void oglstartpoly (int npts)
+/*< startploy >*/
+{
+    glBegin (GL_LINE_STRIP);
+}
+
+void oglmidpoly (int x, int y)
+/*< midploy >*/
+{
+    glVertex2i (x, y);
+}
+
+void oglendpoly (int last)
+/*< midploy >*/
+{
+    glEnd ();
+}
+
 void oglpoint(int x, int y)
 /*< point >*/
 {
@@ -526,16 +565,139 @@ void oglmenu (int value)
 /*< OpenGL menu >*/
 {
     switch (value) {
-        case MENU_QUIT:
-            exit (0);
+        case MENU_NEXT:
+            if (!animate) {
+                if (curr_frame == (frames_num - 1))
+                    curr_frame = 0;
+                else
+                    curr_frame++;
+                break;
+            }
             break;
-        case MENU_FULLSCREEN:
-            glutFullScreen ();
+        case MENU_PREV:
+            if (!animate) {
+                if (curr_frame == 0)
+                    curr_frame = frames_num - 1;
+                else
+                    curr_frame--;
+            }
+            break;
+        case MENU_RESTART:
+            if (!animate) {
+                if (direction == 1)
+                    curr_frame = frames_num - 1;
+                else
+                    curr_frame = 0;
+            }
+            break;
+        case MENU_RUN:
+            animate = true;
+            glutTimerFunc (delay, oglanimate, 0);
+            oglbuildmenu ();
+            break;
+        case MENU_STOP:
+            animate = false;
+            oglbuildmenu ();
+            break;
+        case MENU_DIRECTION:
+            direction++;
+            if (direction > 2)
+                direction = 0;
+            oglbuildmenu ();
             break;
         case MENU_STRETCHY:
             stretchy = !stretchy;
             oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
             oglbuildmenu ();
+            break;
+        case MENU_FULLSCREEN:
+            glutFullScreen ();
+            break;
+        case MENU_QUIT:
+            exit (0);
+            break;
+        default:
+            break;    
+    }
+    glutPostRedisplay ();
+}
+
+void oglkeyboard (unsigned char key, int x, int y)
+/*< OpenGL keyboard callback >*/
+{
+    switch (key) {
+        case 'F': /* Fast */
+        case 'f':
+            if (frames_num > 1) {
+                delay *= 0.5;
+                if (delay < MIN_DELAY)
+                    delay = MIN_DELAY;
+                fprintf (stderr, "Animation delay [ms]: %f\n", delay);
+            }
+            break;
+        case 'S': /* Slow */
+        case 's':
+            if (frames_num > 1) {
+                delay *= 2.0;
+                if (delay > MAX_DELAY)
+                    delay = MAX_DELAY;
+                fprintf (stderr, "Animation delay [ms]: %f\n", delay);
+            }
+            break;
+        case 'N': /* Next */
+        case 'n':
+            if (!animate && frames_num > 1) {
+                if (curr_frame == (frames_num - 1))
+                    curr_frame = 0;
+                else
+                    curr_frame++;
+                break;
+            }
+            break;
+        case 'm': /* Prev */
+        case 'M':
+            if (!animate && frames_num > 1) {
+                if (curr_frame == 0)
+                    curr_frame = frames_num - 1;
+                else
+                    curr_frame--;
+            }
+            break;
+        case 'R': /* Run */
+        case 'r':
+            if (!animate && frames_num > 1) {
+                animate = true;
+                glutTimerFunc (delay, oglanimate, 0);
+                oglbuildmenu ();
+            }
+            break;
+        case '.': /* Stop */
+            if (animate && frames_num > 1) {
+                animate = false;
+                oglbuildmenu ();
+            }
+            break;
+        case 'D': /* Direction */
+        case 'd':
+            if (frames_num > 1) {
+                direction++;
+                if (direction > 2)
+                    direction = 0;
+                fprintf (stderr, "Animation direction: %s\n",
+                         direction == 2 ? "Both ways" :
+                         direction == 1 ? "Backwards" : "Forwards");
+                oglbuildmenu ();
+            }
+            break;
+        case 'T': /* Stretchy */
+        case 't':
+            stretchy = !stretchy;
+            oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
+            oglbuildmenu ();
+            break;
+        case 'Q': /* Quit */
+        case 'q':
+            exit (0);
             break;
         default:
             break;    
