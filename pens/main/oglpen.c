@@ -464,9 +464,10 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
                     for (k = 0; k < kmax; k++) {
                         for (l = 0; l < lmax; l++) {
                             tex_buf[k * TEX_SIZE + l] =
-                            raster_block[height - i * TEX_SIZE - k - 1][width - j * TEX_SIZE - l - 1];
+                            raster_block[width - i * TEX_SIZE - k - 1][height - j * TEX_SIZE - l - 1];
                         }
                     }
+                    break;
                 case 2:
                     for (l = 0; l < lmax; l++) {
                         for (k = 0; k < kmax; k++) {
