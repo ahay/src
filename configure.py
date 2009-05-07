@@ -658,7 +658,7 @@ def jpeg(context):
 
 pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut + freeglut-devel',
                  'suse'  :'freeglut-devel',
-                 'ubuntu':'mesa-libGL-devel'}
+                 'ubuntu':'freeglut3-dev'}
 
 # If this test is failed, no opengl programs
 def opengl(context):
