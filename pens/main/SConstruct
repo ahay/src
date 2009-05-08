@@ -183,7 +183,7 @@ for pen in ('png','pdf','svg'):
 ogl = env.get('OPENGL')
 oglflags = env.get('OPENGLFLAGS')
 
-if ogl:
+if ogl is not False:
     if type(ogl) is not types.ListType:
         ogl = Split(ogl)
     if oglflags:
