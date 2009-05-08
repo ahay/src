@@ -231,9 +231,6 @@ void oglreset (void)
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
     glDisable (GL_LIGHTING);
     glDisable (GL_SCISSOR_TEST);
-    glClearColor (color_table[0],
-                  color_table[NCOLOR],
-                  color_table[NCOLOR * 2], 0);
     glDisable (GL_CULL_FACE);
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
@@ -247,6 +244,9 @@ void oglerase (int command)
             ogllists[0] = glGenLists (LIST_CHUNK);
             glNewList (ogllists[0], GL_COMPILE_AND_EXECUTE);
             frames_num++;
+            glClearColor (color_table[0],
+                          color_table[NCOLOR],
+                          color_table[NCOLOR * 2], 0.0f);
             glClear (GL_COLOR_BUFFER_BIT);
             break;
         case ERASE_MIDDLE:
@@ -257,6 +257,9 @@ void oglerase (int command)
             glNewList (ogllists[frames_num / LIST_CHUNK] + frames_num % LIST_CHUNK,
                        GL_COMPILE_AND_EXECUTE);
             frames_num++;
+            glClearColor (color_table[0],
+                          color_table[NCOLOR],
+                          color_table[NCOLOR * 2], 0.0f);
             glClear (GL_COLOR_BUFFER_BIT);
             break;
         case ERASE_END:
