@@ -329,9 +329,6 @@ void oglclose (int status)
 void oglattr (int command, int value, int v1, int v2, int v3)
 /*< attr >*/
 {
-/*
-    int xmin, ymin, xmax, ymax;
-*/
     switch (command) {
         case SET_COLOR:
             oglcolor = value;
@@ -344,15 +341,6 @@ void oglattr (int command, int value, int v1, int v2, int v3)
             color_table[NCOLOR + value] = v2 / 255.0;
             color_table[NCOLOR * 2 + value] = v3 / 255.0;
             break;
-/*
-        case SET_WINDOW:
-            xmin = value;
-            ymin = dev.ymax - v3;
-            xmax = v2;
-            ymax = dev.ymax - v1;
-            glEnable (GL_SCISSOR_TEST);
-            glScissor (xmin, ymin, xmax - xmin, ymin - ymax);
-            break;*/
         default:
             break;
     }
@@ -406,6 +394,32 @@ void oglarea (int npts, struct vertex *head)
 /*< area >*/
 {
     int i;
+    GLdouble eqnx[4] = { 1.0, 0.0, 0.0, 0.0 };
+    GLdouble eqny[4] = { 0.0, 1.0, 0.0, 0.0 };
+
+    /* Clipping */
+    /* xmin */
+    eqnx[3] = -xwmin;
+    glClipPlane (GL_CLIP_PLANE0, eqnx);
+    glEnable (GL_CLIP_PLANE0);
+    /* xmax */
+    eqnx[3] = xwmax;
+    glPushMatrix ();
+    glRotatef (180, 0, 0, 1);
+    glClipPlane (GL_CLIP_PLANE1, eqnx);
+    glEnable (GL_CLIP_PLANE1);
+    glPopMatrix ();
+    /* ymin */
+    eqny[3] = -ywmin;
+    glClipPlane (GL_CLIP_PLANE2, eqny);
+    glEnable (GL_CLIP_PLANE2);
+    /* ymax */
+    eqny[3] = ywmax;
+    glPushMatrix ();
+    glRotatef (180, 0, 0, 1);
+    glClipPlane (GL_CLIP_PLANE3, eqny);
+    glEnable (GL_CLIP_PLANE3);
+    glPopMatrix ();
 
     glBegin (GL_POLYGON);
 
@@ -416,6 +430,11 @@ void oglarea (int npts, struct vertex *head)
     }
 
     glEnd ();
+
+    glDisable (GL_CLIP_PLANE0);
+    glDisable (GL_CLIP_PLANE1);
+    glDisable (GL_CLIP_PLANE2);
+    glDisable (GL_CLIP_PLANE3);
 }
 
 void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax, 
