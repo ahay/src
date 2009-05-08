@@ -20,11 +20,15 @@ module RSF
   integer, parameter :: sf_uchar=0, sf_char   =1, sf_int=2
   integer, parameter :: sf_float=3, sf_complex=4, sf_short=5
 
+  ! For calling sf_seek. For portability, these should actually be extracted
+  ! from stdio.h during the configure step of the installation
+  integer, parameter :: sf_seek_set=0, sf_seek_cur=1, sf_seek_end=2
+
   type file
      private
      integer(kind=PTRKIND) :: tag
   end type file
-  
+
   type, public :: axa
      integer   :: n
      real      :: o,d
