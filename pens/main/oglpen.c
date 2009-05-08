@@ -293,12 +293,13 @@ void oglanimate (int value)
         case 2: /* Both ways */
             if (dirway == 0 && curr_frame == (frames_num - 1)) {
                 dirway = 1;
-                curr_frame = frames_num - 2;
+                curr_frame = frames_num - 1;
             } if (dirway == 1 && curr_frame == 0) {
                 dirway = 0;
                 curr_frame = 1;
-            } else
+            } else {
                 curr_frame += dirway ? -1 : 1;
+            }
             break;
     }
 
