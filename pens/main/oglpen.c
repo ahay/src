@@ -210,13 +210,13 @@ void oglreset (void)
 	b = MAX_GUN * ((value & 1) / 1);
 
 	if (light) {
-	    color_table[value] = (255 - r) / 255.0;
-	    color_table[NCOLOR + value] = (255 - g) / 255.0;
-	    color_table[NCOLOR * 2 + value] = (255 - b) / 255.0;
+	    color_table[value] = (MAX_GUN - r) / (float)MAX_GUN;
+	    color_table[NCOLOR + value] = (MAX_GUN - g) / (float)MAX_GUN;
+	    color_table[NCOLOR * 2 + value] = (MAX_GUN - b) / (float)MAX_GUN;
 	} else {
-	    color_table[value] = r / 255.0;
-	    color_table[NCOLOR + value] = g / 255.0;
-	    color_table[NCOLOR * 2 + value] = b / 255.0;
+	    color_table[value] = r / (float)MAX_GUN;
+	    color_table[NCOLOR + value] = g / (float)MAX_GUN;
+	    color_table[NCOLOR * 2 + value] = b / (float)MAX_GUN;
 	}
     }
  
@@ -341,9 +341,9 @@ void oglattr (int command, int value, int v1, int v2, int v3)
                        color_table[NCOLOR * 2 + oglcolor]);
             break;
         case SET_COLOR_TABLE:
-            color_table[value] = v1 / 255.0;
-            color_table[NCOLOR + value] = v2 / 255.0;
-            color_table[NCOLOR * 2 + value] = v3 / 255.0;
+            color_table[value] = v1 / (float)MAX_GUN;
+            color_table[NCOLOR + value] = v2 / (float)MAX_GUN;
+            color_table[NCOLOR * 2 + value] = v3 / (float)MAX_GUN;
             break;
         default:
             break;
