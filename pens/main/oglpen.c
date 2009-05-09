@@ -124,11 +124,11 @@ void opendev (int argc, char* argv[])
     glutInit (&argc, argv);
     glutInitWindowSize (win_width, win_height);
 
-    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL);
+    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
     if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
         fprintf (stderr, "OpenGL device does not support stencil buffer: using genpatarea ()\n");
         dev.area = genpatarea;
-        glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
+        glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
         if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
             fprintf (stderr, "OpenGL device does not support double buffer: trying single buffer\n");
             glutInitDisplayMode (GLUT_RGBA | GLUT_SINGLE);
@@ -243,7 +243,8 @@ void oglreset (void)
         color_table[NCOLOR * 2 + value] = 1.0 * light;
     }
 
-    glDisable (GL_DEPTH_TEST);
+    glEnable (GL_DEPTH_TEST);
+    glDepthFunc (GL_ALWAYS);
     glShadeModel (GL_FLAT);
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
     glDisable (GL_CULL_FACE);
@@ -266,7 +267,7 @@ void oglerase (int command)
             glClearColor (color_table[0],
                           color_table[NCOLOR],
                           color_table[NCOLOR * 2], 0.0f);
-            glClear (GL_COLOR_BUFFER_BIT);
+            glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             break;
         case ERASE_MIDDLE:
             glFlush ();
@@ -279,7 +280,7 @@ void oglerase (int command)
             glClearColor (color_table[0],
                           color_table[NCOLOR],
                           color_table[NCOLOR * 2], 0.0f);
-            glClear (GL_COLOR_BUFFER_BIT);
+            glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             break;
         case ERASE_END:
             glFlush ();
@@ -363,6 +364,26 @@ void oglattr (int command, int value, int v1, int v2, int v3)
             color_table[value] = v1 / (float)MAX_GUN;
             color_table[NCOLOR + value] = v2 / (float)MAX_GUN;
             color_table[NCOLOR * 2 + value] = v3 / (float)MAX_GUN;
+            if (value == 0) { /* Background color has been changed */
+                /* Redraw background */
+                glDepthFunc (GL_LEQUAL);
+                glColor3f (color_table[0],
+                           color_table[NCOLOR],
+                           color_table[NCOLOR * 2]);
+                glBegin (GL_QUADS);
+                glVertex3f (dev.xmin, dev.ymin, -0.5);
+                glVertex3f (dev.xmax, dev.ymin, -0.5);
+                glVertex3f (dev.xmax, dev.ymax, -0.5);
+                glVertex3f (dev.xmin, dev.ymax, -0.5);
+                glEnd ();
+                glColor3f (color_table[oglcolor],
+                           color_table[NCOLOR + oglcolor],
+                           color_table[NCOLOR * 2 + oglcolor]);
+                glDepthFunc (GL_ALWAYS);
+            } else if (value == oglcolor)
+                glColor3f (color_table[oglcolor],
+                           color_table[NCOLOR + oglcolor],
+                           color_table[NCOLOR * 2 + oglcolor]);
             break;
         default:
             break;
