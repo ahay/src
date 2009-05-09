@@ -53,6 +53,7 @@ char            name[] = "oglpen";
 #define LIST_CHUNK 1000 /* Define how many display lists generate at once */
 #define MAX_CHUNKS 100000 /* How many chunks of display lists to have */
 #define WIN_HEIGHT 760 /* Default window height */
+#define DEV_SCALE 10 /* Scale factor between OpenGL and window coordinate systems */
 #define MIN_DELAY 50.0 /* Maximum animation delay */
 #define MAX_DELAY 10000.0 /* Minimum animation delay */
 
@@ -88,6 +89,7 @@ void opendev (int argc, char* argv[])
 {
     char *color;
     int dwidth, dheight, mwidth, mheight;
+    int win_width, win_height;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
@@ -116,10 +118,27 @@ void opendev (int argc, char* argv[])
     tex_buf = (unsigned char*)malloc (TEX_SIZE * TEX_SIZE * sizeof (unsigned char));
     ogllists = (unsigned int*)malloc (MAX_CHUNKS * sizeof (unsigned int));
 
-    glutInit (&argc, argv);
-    glutInitWindowSize (WIN_HEIGHT / VP_SCREEN_RATIO, WIN_HEIGHT);
+    win_width = WIN_HEIGHT / VP_SCREEN_RATIO;
+    win_height = WIN_HEIGHT;
 
-    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
+    glutInit (&argc, argv);
+    glutInitWindowSize (win_width, win_height);
+
+    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL);
+    if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
+        fprintf (stderr, "OpenGL device does not support stencil buffer: using genpatarea ()\n");
+        dev.area = genpatarea;
+        glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
+        if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
+            fprintf (stderr, "OpenGL device does not support double buffer: trying single buffer\n");
+            glutInitDisplayMode (GLUT_RGBA | GLUT_SINGLE);
+            if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
+                fprintf (stderr, "OpenGL device device initialization failed\n");
+                exit (-1);
+            }
+        }
+    }
+
     glutCreateWindow ("OpenGL pen");
     glutDisplayFunc (oglredraw);
     glutKeyboardFunc (oglkeyboard);
@@ -131,15 +150,13 @@ void opendev (int argc, char* argv[])
     dheight = glutGet (GLUT_SCREEN_HEIGHT);
     mwidth = glutGet (GLUT_SCREEN_WIDTH_MM);
     mheight = glutGet (GLUT_SCREEN_HEIGHT_MM);
-    dev.pixels_per_inch = ((float)dwidth / (float)mwidth) * 25.4 ;
-    dev.aspect_ratio = (((float)dheight / (float)mheight) * 25.4) / dev.pixels_per_inch;
-    /*
-     * Since X rounds values to integer millimeters, the aspect ratio
-     * has some error in it. Push aspect ratio to nearest round percent.
-     */
-    dev.aspect_ratio = ((int)((dev.aspect_ratio * 100.) + .5)) / 100.;
 
-    nx = dheight * 10; ny = VP_SCREEN_RATIO * dheight * 10;
+    ny = win_height * DEV_SCALE;
+    nx = ny / VP_SCREEN_RATIO;
+
+    dev.pixels_per_inch = (float)nx / 
+                          ((float)win_width / (float)dwidth * mwidth / 25.4);
+    dev.aspect_ratio = 1.0;
 
     sf_getfloat ("aspect", &dev.aspect_ratio);
     /* aspect ratio */
@@ -226,14 +243,16 @@ void oglreset (void)
         color_table[NCOLOR * 2 + value] = 1.0 * light;
     }
 
-    glShadeModel (GL_SMOOTH);
     glDisable (GL_DEPTH_TEST);
+    glShadeModel (GL_FLAT);
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+    glDisable (GL_CULL_FACE);
     glDisable (GL_LIGHTING);
     glDisable (GL_SCISSOR_TEST);
-    glDisable (GL_CULL_FACE);
+    glDisable (GL_STENCIL_TEST);
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glClearStencil (0);
 }
 
 void oglerase (int command)
@@ -398,47 +417,32 @@ void oglarea (int npts, struct vertex *head)
 /*< area >*/
 {
     int i;
-    GLdouble eqnx[4] = { 1.0, 0.0, 0.0, 0.0 };
-    GLdouble eqny[4] = { 0.0, 1.0, 0.0, 0.0 };
 
-    /* Clipping */
-    /* xmin */
-    eqnx[3] = -xwmin;
-    glClipPlane (GL_CLIP_PLANE0, eqnx);
-    glEnable (GL_CLIP_PLANE0);
-    /* xmax */
-    eqnx[3] = xwmax;
-    glPushMatrix ();
-    glRotatef (180, 0, 0, 1);
-    glClipPlane (GL_CLIP_PLANE1, eqnx);
-    glEnable (GL_CLIP_PLANE1);
-    glPopMatrix ();
-    /* ymin */
-    eqny[3] = -ywmin;
-    glClipPlane (GL_CLIP_PLANE2, eqny);
-    glEnable (GL_CLIP_PLANE2);
-    /* ymax */
-    eqny[3] = ywmax;
-    glPushMatrix ();
-    glRotatef (180, 0, 0, 1);
-    glClipPlane (GL_CLIP_PLANE3, eqny);
-    glEnable (GL_CLIP_PLANE3);
-    glPopMatrix ();
-
-    glBegin (GL_POLYGON);
-
-    /* translate data structures */
+    /* Use stencil buffer to implement the even-odd rule */
+    glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glEnable (GL_STENCIL_TEST);
+    glClear (GL_STENCIL_BUFFER_BIT);
+    glStencilMask (0x01);
+    glStencilFunc(GL_ALWAYS, 0, 0);
+    /* First - calculate self-intersections in the stencil buffer */
+    glStencilOp (GL_KEEP, GL_KEEP, GL_INVERT);
+    glBegin (GL_TRIANGLE_FAN);
     for (i = 0; i < npts && i < MAXVERT; i++) {
-        head = head->next;
         glVertex2i (head->x, head->y);
+        head = head->next;
     }
-
     glEnd ();
-
-    glDisable (GL_CLIP_PLANE0);
-    glDisable (GL_CLIP_PLANE1);
-    glDisable (GL_CLIP_PLANE2);
-    glDisable (GL_CLIP_PLANE3);
+    glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
+    /* Second - draw polygons only where stencil is 1 - odd number of intersection */
+    glStencilFunc(GL_EQUAL, 1, 1);
+    glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glBegin (GL_QUADS);
+    glVertex2i (xwmin - DEV_SCALE * 0.5, ywmin - DEV_SCALE * 0.5);
+    glVertex2i (xwmax + DEV_SCALE * 0.5, ywmin - DEV_SCALE * 0.5);
+    glVertex2i (xwmax + DEV_SCALE * 0.5, ywmax + DEV_SCALE * 0.5);
+    glVertex2i (xwmin - DEV_SCALE * 0.5, ywmax + DEV_SCALE * 0.5);
+    glEnd ();
+    glDisable (GL_STENCIL_TEST);
 }
 
 void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax, 
