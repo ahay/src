@@ -118,10 +118,32 @@ void opendev (int argc, char* argv[])
     tex_buf = (unsigned char*)malloc (TEX_SIZE * TEX_SIZE * sizeof (unsigned char));
     ogllists = (unsigned int*)malloc (MAX_CHUNKS * sizeof (unsigned int));
 
-    win_width = WIN_HEIGHT / VP_SCREEN_RATIO;
-    win_height = WIN_HEIGHT;
-
     glutInit (&argc, argv);
+
+    dwidth = glutGet (GLUT_SCREEN_WIDTH);
+    dheight = glutGet (GLUT_SCREEN_HEIGHT);
+    mwidth = glutGet (GLUT_SCREEN_WIDTH_MM);
+    mheight = glutGet (GLUT_SCREEN_HEIGHT_MM);
+
+    win_height = WIN_HEIGHT;
+    if (win_height > 0.85 * dheight)
+        win_height = 0.85 * dheight;
+    win_width = win_height / VP_SCREEN_RATIO;
+
+    ny = win_height * DEV_SCALE;
+    nx = ny / VP_SCREEN_RATIO;
+
+    dev.pixels_per_inch = (float)nx / 
+                          ((float)win_width / (float)dwidth * mwidth / 25.4);
+    dev.aspect_ratio = 1.0;
+    sf_getfloat ("aspect", &dev.aspect_ratio);
+    /* aspect ratio */
+    sf_getfloat ("ppi", &dev.pixels_per_inch);
+    /* pixels per inch */
+
+    dev.xmax = nx - 1;
+    dev.ymax = ny - 1;
+
     glutInitWindowSize (win_width, win_height);
 
     glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
@@ -143,28 +165,7 @@ void opendev (int argc, char* argv[])
     glutDisplayFunc (oglredraw);
     glutKeyboardFunc (oglkeyboard);
     glutIdleFunc (NULL);
-
     glutReshapeFunc (oglreshape);
-
-    dwidth = glutGet (GLUT_SCREEN_WIDTH);
-    dheight = glutGet (GLUT_SCREEN_HEIGHT);
-    mwidth = glutGet (GLUT_SCREEN_WIDTH_MM);
-    mheight = glutGet (GLUT_SCREEN_HEIGHT_MM);
-
-    ny = win_height * DEV_SCALE;
-    nx = ny / VP_SCREEN_RATIO;
-
-    dev.pixels_per_inch = (float)nx / 
-                          ((float)win_width / (float)dwidth * mwidth / 25.4);
-    dev.aspect_ratio = 1.0;
-
-    sf_getfloat ("aspect", &dev.aspect_ratio);
-    /* aspect ratio */
-    sf_getfloat ("ppi", &dev.pixels_per_inch);
-    /* pixels per inch */
-
-    dev.xmax = nx - 1;
-    dev.ymax = ny - 1;
 
     if (NULL == (color = sf_getstring ("bgcolor"))) color= "black";
     /* background color (black,white,light,dark) */
@@ -272,6 +273,10 @@ void oglerase (int command)
         case ERASE_MIDDLE:
             glFlush ();
             glEndList ();
+            if (1 == frames_num)
+                fprintf (stderr, "Preparing animation\n");
+            else if (frames_num % 50 == 0)
+                fprintf (stderr, "Finished %d frames\n", frames_num);
             if (!(frames_num % LIST_CHUNK))
                 ogllists[frames_num / LIST_CHUNK] = glGenLists (LIST_CHUNK);
             glNewList (ogllists[frames_num / LIST_CHUNK] + frames_num % LIST_CHUNK,
