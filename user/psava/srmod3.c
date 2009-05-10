@@ -156,8 +156,14 @@ void srmod3(ssroperator3d weop,
 #endif    
 	    fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
 	    
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
 	    fslice_get(s_s->slice,0,s_s->so[ompith][0]);
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
 		fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
 		
 		ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
@@ -173,9 +179,15 @@ void srmod3(ssroperator3d weop,
 	    /*------------------------------------------------------------*/
 	    /* receiver wavefield */
 	    LOOP( weop->ww_r[ompith][imy][imx] = sf_cmplx(0.,0.); );
-	    
+
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
 	    fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
 		fslice_get(s_r->slice,imz-1,s_r->ss[ompith][0]);
 		
 #ifdef _OPENMP	    

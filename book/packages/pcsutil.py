@@ -57,12 +57,14 @@ def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
     e2 = max2
     e1 = s1 + aa * (e2-s2)
 
+#    print min1,min2,max1,max2
+#    print s1,s2,e1,e2,aa,aa*(e2-s2)
+
     vels = "%s,%s,%s" %(vi,vt,vt)
     drvs = "%s,%s" %(aa,aa)
 
     dim1 = 'd1=%g o1=%g n1=%d' % (d2,o2,n2)
     dim2 = 'd2=%g o2=%g n2=%d' % (d1,o1,n1)
-
 
     Flow(mod+'lay2',None,
          '''
