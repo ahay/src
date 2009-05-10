@@ -71,6 +71,7 @@ static int dirway = 0; /* Animation direction for both ways */
 static bool animate = false; /* Animatio flag */
 static int menu_tag = 0; /* GLUT menu tag */
 static bool has_menu = false;
+static int window_id; /* GLUT window identificator */
 
 enum {
     MENU_NEXT,
@@ -83,6 +84,12 @@ enum {
     MENU_FULLSCREEN,
     MENU_QUIT
     };
+
+
+static void oglquit (int status) {
+    glutDestroyWindow (window_id);
+    exit (status);
+}
 
 void opendev (int argc, char* argv[])
 /*< open >*/
@@ -146,11 +153,11 @@ void opendev (int argc, char* argv[])
 
     glutInitWindowSize (win_width, win_height);
 
-    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
+    glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL);
     if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
         fprintf (stderr, "OpenGL device does not support stencil buffer: using genpatarea ()\n");
         dev.area = genpatarea;
-        glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+        glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE);
         if (!glutGet (GLUT_DISPLAY_MODE_POSSIBLE)) {
             fprintf (stderr, "OpenGL device does not support double buffer: trying single buffer\n");
             glutInitDisplayMode (GLUT_RGBA | GLUT_SINGLE);
@@ -161,7 +168,7 @@ void opendev (int argc, char* argv[])
         }
     }
 
-    glutCreateWindow ("OpenGL pen");
+    window_id = glutCreateWindow ("OpenGL pen");
     glutDisplayFunc (oglredraw);
     glutKeyboardFunc (oglkeyboard);
     glutIdleFunc (NULL);
@@ -244,8 +251,7 @@ void oglreset (void)
         color_table[NCOLOR * 2 + value] = 1.0 * light;
     }
 
-    glEnable (GL_DEPTH_TEST);
-    glDepthFunc (GL_ALWAYS);
+    glDisable (GL_DEPTH_TEST);
     glShadeModel (GL_FLAT);
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
     glDisable (GL_CULL_FACE);
@@ -262,33 +268,45 @@ void oglerase (int command)
 {
     switch (command) {
         case ERASE_START:
-            ogllists[0] = glGenLists (LIST_CHUNK);
+            ogllists[0] = glGenLists (LIST_CHUNK * 2);
             glNewList (ogllists[0], GL_COMPILE_AND_EXECUTE);
+            glClear (GL_COLOR_BUFFER_BIT);
             frames_num++;
-            glClearColor (color_table[0],
-                          color_table[NCOLOR],
-                          color_table[NCOLOR * 2], 0.0f);
-            glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             break;
         case ERASE_MIDDLE:
             glFlush ();
+            glEndList ();
+            /* Generate another display list - for color background */
+            glNewList (ogllists[frames_num / LIST_CHUNK] +
+                       (frames_num % LIST_CHUNK) * 2 - 1,
+                       GL_COMPILE_AND_EXECUTE);
+            glClearColor (color_table[0],
+                          color_table[NCOLOR],
+                          color_table[NCOLOR * 2], 0.0f);
             glEndList ();
             if (1 == frames_num)
                 fprintf (stderr, "Preparing animation\n");
             else if (frames_num % 50 == 0)
                 fprintf (stderr, "Finished %d frames\n", frames_num);
             if (!(frames_num % LIST_CHUNK))
-                ogllists[frames_num / LIST_CHUNK] = glGenLists (LIST_CHUNK);
-            glNewList (ogllists[frames_num / LIST_CHUNK] + frames_num % LIST_CHUNK,
+                ogllists[frames_num / LIST_CHUNK] = glGenLists (LIST_CHUNK * 2);
+            /* Main display list - all plotting */
+            glNewList (ogllists[frames_num / LIST_CHUNK] +
+                       (frames_num % LIST_CHUNK) * 2,
                        GL_COMPILE_AND_EXECUTE);
+            glClear (GL_COLOR_BUFFER_BIT);
             frames_num++;
-            glClearColor (color_table[0],
-                          color_table[NCOLOR],
-                          color_table[NCOLOR * 2], 0.0f);
-            glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             break;
         case ERASE_END:
             glFlush ();
+            glEndList ();
+            /* Generate another display list - for color background */
+            glNewList (ogllists[frames_num / LIST_CHUNK] +
+                       (frames_num % LIST_CHUNK) * 2 - 1,
+                       GL_COMPILE_AND_EXECUTE);
+            glClearColor (color_table[0],
+                          color_table[NCOLOR],
+                          color_table[NCOLOR * 2], 0.0f);
             glEndList ();
             break;
         default:
@@ -369,23 +387,7 @@ void oglattr (int command, int value, int v1, int v2, int v3)
             color_table[value] = v1 / (float)MAX_GUN;
             color_table[NCOLOR + value] = v2 / (float)MAX_GUN;
             color_table[NCOLOR * 2 + value] = v3 / (float)MAX_GUN;
-            if (value == 0) { /* Background color has been changed */
-                /* Redraw background */
-                glDepthFunc (GL_LEQUAL);
-                glColor3f (color_table[0],
-                           color_table[NCOLOR],
-                           color_table[NCOLOR * 2]);
-                glBegin (GL_QUADS);
-                glVertex3f (dev.xmin, dev.ymin, -0.5);
-                glVertex3f (dev.xmax, dev.ymin, -0.5);
-                glVertex3f (dev.xmax, dev.ymax, -0.5);
-                glVertex3f (dev.xmin, dev.ymax, -0.5);
-                glEnd ();
-                glColor3f (color_table[oglcolor],
-                           color_table[NCOLOR + oglcolor],
-                           color_table[NCOLOR * 2 + oglcolor]);
-                glDepthFunc (GL_ALWAYS);
-            } else if (value == oglcolor)
+            if (value == oglcolor)
                 glColor3f (color_table[oglcolor],
                            color_table[NCOLOR + oglcolor],
                            color_table[NCOLOR * 2 + oglcolor]);
@@ -442,7 +444,9 @@ void oglpoint(int x, int y)
 void oglarea (int npts, struct vertex *head)
 /*< area >*/
 {
-    int i;
+    int i, x, y;
+    int xvmin = dev.xmax, xvmax = dev.xmin,
+        yvmin = dev.ymax, yvmax = dev.ymin;
 
     /* Use stencil buffer to implement the even-odd rule */
     glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -454,19 +458,46 @@ void oglarea (int npts, struct vertex *head)
     glStencilOp (GL_KEEP, GL_KEEP, GL_INVERT);
     glBegin (GL_TRIANGLE_FAN);
     for (i = 0; i < npts && i < MAXVERT; i++) {
-        glVertex2i (head->x, head->y);
+        x = head->x;
+        y = head->y;
+        glVertex2i (x, y);
         head = head->next;
+        if (x < xvmin)
+            xvmin = x;
+        if (x > xvmax)
+            xvmax = x;
+        if (y < yvmin)
+            yvmin = y;
+        if (y > yvmax)
+            yvmax = y;
     }
     glEnd ();
     glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
+    /* Determine optimal window */
+    if (xwmin > xvmin)
+        xvmin = xwmin;
+    if (xwmax < xvmax)
+        xvmax = xwmax;
+    if (ywmin > yvmin)
+        yvmin = ywmin;
+    if (ywmax < yvmax)
+        yvmax = ywmax;
     /* Second - draw polygons only where stencil is 1 - odd number of intersection */
     glStencilFunc(GL_EQUAL, 1, 1);
     glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    /* First - fill inside */
     glBegin (GL_QUADS);
-    glVertex2i (xwmin - DEV_SCALE * 0.5, ywmin - DEV_SCALE * 0.5);
-    glVertex2i (xwmax + DEV_SCALE * 0.5, ywmin - DEV_SCALE * 0.5);
-    glVertex2i (xwmax + DEV_SCALE * 0.5, ywmax + DEV_SCALE * 0.5);
-    glVertex2i (xwmin - DEV_SCALE * 0.5, ywmax + DEV_SCALE * 0.5);
+    glVertex2i (xvmin, yvmin);
+    glVertex2i (xvmax, yvmin);
+    glVertex2i (xvmax, yvmax);
+    glVertex2i (xvmin, yvmax);
+    glEnd ();
+    /* Second - outline border */
+    glBegin (GL_LINE_LOOP);
+    glVertex2i (xvmin, yvmin);
+    glVertex2i (xvmax, yvmin);
+    glVertex2i (xvmax, yvmax);
+    glVertex2i (xvmin, yvmax);
     glEnd ();
     glDisable (GL_STENCIL_TEST);
 }
@@ -583,8 +614,12 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 void oglredraw (void)
 /*< OpenGL redraw >*/
 {
-    glCallList (ogllists[curr_frame / LIST_CHUNK] + curr_frame % LIST_CHUNK);
-    glFlush ();
+    /* Set background color */
+    glCallList (ogllists[curr_frame / LIST_CHUNK] +
+                (curr_frame % LIST_CHUNK) * 2 + 1);
+    /* Plotting */
+    glCallList (ogllists[curr_frame / LIST_CHUNK] +
+                (curr_frame % LIST_CHUNK) * 2);
     glutSwapBuffers ();
 }
 
@@ -607,8 +642,8 @@ void oglreshape (int width, int height)
                      0, ny, -1, 1);
         }
     } else
-            glOrtho (0, nx,
-                     0, ny, -1, 1);
+        glOrtho (0, nx,
+                 0, ny, -1, 1);
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
@@ -668,7 +703,7 @@ void oglmenu (int value)
             glutFullScreen ();
             break;
         case MENU_QUIT:
-            exit (0);
+            oglquit (0);
             break;
         default:
             break;    
@@ -751,7 +786,7 @@ void oglkeyboard (unsigned char key, int x, int y)
             break;
         case 'Q': /* Quit */
         case 'q':
-            exit (0);
+            oglquit (0);
             break;
         default:
             break;    
