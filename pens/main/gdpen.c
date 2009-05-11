@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <gd.h>
+ #include <gd.h>
 
 #include "../include/attrcom.h"
 #include "../include/extern.h"
@@ -32,6 +32,10 @@
 
 #include "dovplot.h"
 #include "init_vplot.h"
+
+#ifdef FFMPEG
+#include <ffmpeg/avcodec.h>
+#endif
 
 #include "gdpen.h"
 
@@ -48,6 +52,22 @@ static gdImagePtr image, oldimage;
 static bool light = false;
 static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
 static char *image_type;
+
+#ifdef FFMPEG
+static AVCodec *codec = NULL;
+static AVCodecContext *codec_ctx = NULL;
+static AVFrame *mpeg_frame = NULL;
+static int frame_out_size, frame_size, frame_outbuf_size;
+static uint8_t *frame_outbuf, *frame_buf;
+static int bitrate;
+static int frame_num = 0;
+static int frame_mark = 0; /* Current time mark */
+static int frame_delay = 4; /* 25 fps */
+
+static void ffmpeg_init (void);
+static void ffmpeg_finish (void);
+static void ffmpeg_write (void);
+#endif
 
 void opendev (int argc, char* argv[])
 /*< open >*/
@@ -87,7 +107,7 @@ void opendev (int argc, char* argv[])
     /* image size */
 
     dev.need_end_erase = true;
-    dev.smart_clip= true; 
+    dev.smart_clip = true; 
     dev.num_col = NCOLOR;
 
     dev.xmax = nx-1;
@@ -131,10 +151,23 @@ void opendev (int argc, char* argv[])
 
     if (NULL == (image_type = sf_getstring("type"))) 
 	image_type = "png";
-    /* image type (png, jpeg, gif) */
+    /* image type (png, jpeg, gif, mpeg) */
 
     if (!sf_getint("delay",&delay)) delay=10;
-    /* GIF animation delay (if type=="gif") */
+    /* GIF animation delay (if type=="gif" or "mpeg") */
+
+#ifndef FFMPEG
+    if (image_type[0] == 'm' || image_type[0] == 'M') {
+        ERR (FATAL, name, "This pen has not been compiled with MPEG support.\n");
+    }
+#else
+    if (!sf_getint ("bitrate", &bitrate)) bitrate=400000;
+    /* MPEG bitrate */
+    if (image_type[0] == 'm' || image_type[0] == 'M')
+        ffmpeg_init ();
+    if (delay < frame_delay)
+        delay = frame_delay; /* Can't have more than 25 fps */
+#endif
 }
 
 void gdreset (void)
@@ -176,6 +209,9 @@ static void gd_write (void)
 {
     static bool called=false;
 
+    /* Reset clipping, otherwise GD will write a partial frame */
+    gdImageSetClip(image, dev.xmin, dev.ymin, dev.xmax - 1, dev.ymax - 1);
+
     switch (image_type[0]) {
 	case 'j':
 	case 'J':
@@ -186,6 +222,7 @@ static void gd_write (void)
 	case 'G':
 	    if (called) {
 		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, oldimage);
+                gdImageDestroy (oldimage);
 	    } else {
 		gdImageGifAnimBegin(image, pltout, 1, 0);
 		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, NULL);
@@ -194,6 +231,20 @@ static void gd_write (void)
 	    image = gdImageCreate(nx,ny);
 	    gdImagePaletteCopy(image, oldimage);
 	    break;
+#ifdef FFMPEG
+	case 'm':
+	case 'M':
+            frame_num++;
+            /* Since MPEG has a very limited set of frame rates,
+               we create a lot of dummy frames to "slow" it down */
+            while (frame_mark < frame_num * delay) {
+                ffmpeg_write ();
+                frame_mark += frame_delay;
+                if ((frame_mark % 500) == 0)
+                    fprintf (stderr, "Encoding video: finished %d seconds.\n", frame_mark / 100);
+            }
+	    break;
+#endif
 	case 'p':
 	case 'P':
 	default:
@@ -221,7 +272,11 @@ void gderase (int command)
 	    gd_write();
 	    if (image_type[0]=='g' || image_type[0]=='G') 
 		gdImageGifAnimEnd(pltout);
-	    fclose(pltout);
+#ifdef FFMPEG
+	    if (image_type[0] == 'm' || image_type[0] == 'M')
+                ffmpeg_finish ();
+#endif
+	    fclose (pltout);
 	    break;
 	case ERASE_BREAK:
 	    gd_write();
@@ -264,7 +319,7 @@ void gdattr (int command, int value, int v1, int v2, int v3)
 	    ymin = dev.ymax - v3;
 	    xmax = v2;
 	    ymax = dev.ymax - v1;
-	    gdImageSetClip(image, xmin, ymin, xmax, ymax);
+ 	    gdImageSetClip(image, xmin, ymin, xmax, ymax);
 	    break;
 	default:
 	    break;
@@ -310,4 +365,140 @@ void gdarea (int npts, struct vertex *head)
     gdImageFilledPolygon(image, vlist, npts, gdcolor);
 }
 
+#ifdef FFMPEG
+/* Open and initialize codec + buffers */
+static void ffmpeg_init (void) {
+    /* must be called before using avcodec lib */
+    avcodec_init ();
+    /* register all the codecs */
+    avcodec_register_all ();
 
+    /* find the mpeg1 video encoder */
+    codec = avcodec_find_encoder (CODEC_ID_MPEG2VIDEO);
+    if (!codec) {
+        ERR (FATAL, name, "Could not initialize MPEG1 codec\n");
+    }
+
+    codec_ctx = avcodec_alloc_context ();
+    mpeg_frame = avcodec_alloc_frame ();
+
+    codec_ctx->bit_rate = bitrate;
+    /* resolution must be a multiple of two */
+    codec_ctx->width = (nx / 2) * 2;
+    codec_ctx->height = (ny / 2) * 2;
+    /* frames per second */
+    codec_ctx->time_base= (AVRational){1,100/frame_delay};
+    codec_ctx->gop_size = 10; /* number of frames in a group */
+    codec_ctx->has_b_frames = 0;
+    codec_ctx->max_b_frames = 0;
+    codec_ctx->pix_fmt = PIX_FMT_YUV420P;
+
+    /* open it */
+    if (avcodec_open (codec_ctx, codec) < 0) {
+        ERR (FATAL, name, "Could not open MPEG1 codec\n");
+    }
+
+    /* alloc image and output buffer */
+    frame_outbuf_size = 1000000;
+    frame_outbuf = malloc (frame_outbuf_size);
+    frame_size = codec_ctx->width * codec_ctx->height;
+    frame_buf = malloc ((frame_size * 3) / 2); /* size for YUV 420 */
+
+    mpeg_frame->data[0] = frame_buf;
+    mpeg_frame->data[1] = mpeg_frame->data[0] + frame_size;
+    mpeg_frame->data[2] = mpeg_frame->data[1] + frame_size / 4;
+    mpeg_frame->linesize[0] = codec_ctx->width;
+    mpeg_frame->linesize[1] = codec_ctx->width / 2;
+    mpeg_frame->linesize[2] = codec_ctx->width / 2;
+}
+
+#define SCALEBITS 10
+#define ONE_HALF  (1 << (SCALEBITS - 1))
+#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
+/* Convert RGB to YUP420P and do encoding */
+static void ffmpeg_write (void) {
+    int wrap, x, y, index;
+    int r, g, b, r1, g1, b1;
+    uint8_t *lum, *cb, *cr;
+
+    lum = mpeg_frame->data[0];
+    cb = mpeg_frame->data[1];
+    cr = mpeg_frame->data[2];
+
+    wrap = codec_ctx->width;
+    for (y = 0; y < codec_ctx->height; y += 2) {
+        for (x = 0; x < codec_ctx->width; x += 2) {
+            index = gdImageGetPixel (image, x, y);
+            r = gdImageRed (image, index);
+            g = gdImageGreen (image, index);
+            b = gdImageBlue (image, index);
+            r1 = r;
+            g1 = g;
+            b1 = b;
+            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +
+                      FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            index = gdImageGetPixel (image, x + 1, y);
+            r = gdImageRed (image, index);
+            g = gdImageGreen (image, index);
+            b = gdImageBlue (image, index);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = (FIX(0.29900) * r + FIX(0.58700) * g +
+                      FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            lum += wrap;
+
+            index = gdImageGetPixel (image, x, y + 1);
+            r = gdImageRed (image, index);
+            g = gdImageGreen (image, index);
+            b = gdImageBlue (image, index);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +
+                      FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            index = gdImageGetPixel (image, x + 1, y + 1);
+            r = gdImageRed (image, index);
+            g = gdImageGreen (image, index);
+            b = gdImageBlue (image, index);
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[1] = (FIX(0.29900) * r + FIX(0.58700) * g +
+                      FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            cb[0] = ((- FIX(0.16874) * r1 - FIX(0.33126) * g1 +
+                      FIX(0.50000) * b1 + 4 * ONE_HALF - 1) >> (SCALEBITS + 2)) + 128;
+            cr[0] = ((FIX(0.50000) * r1 - FIX(0.41869) * g1 -
+                     FIX(0.08131) * b1 + 4 * ONE_HALF - 1) >> (SCALEBITS + 2)) + 128;
+            cb++;
+            cr++;
+            lum += -wrap + 2;
+        }
+        lum += wrap;
+    }
+
+    /* encode the image */
+    frame_out_size = avcodec_encode_video (codec_ctx, frame_outbuf,
+                                           frame_outbuf_size, mpeg_frame);
+    fwrite (frame_outbuf, 1, frame_out_size, pltout);
+}
+
+static void ffmpeg_finish (void) {
+    int i = 0;
+    /* get the delayed frames */
+    for (; frame_out_size; i++) {
+        fflush (pltout);
+        frame_out_size = avcodec_encode_video (codec_ctx,
+                                               frame_outbuf,
+                                               frame_outbuf_size,
+                                               NULL);
+        fwrite (frame_outbuf, 1, frame_out_size, pltout);
+    }
+    /* add sequence end code to have a real mpeg file */
+    frame_outbuf[0] = 0x00;
+    frame_outbuf[1] = 0x00;
+    frame_outbuf[2] = 0x01;
+    frame_outbuf[3] = 0xb7;
+    fwrite (frame_outbuf, 1, 4, pltout);
+}
+#endif

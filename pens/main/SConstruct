@@ -131,14 +131,24 @@ for pen in ('ppm','tiff','jpeg'):
 #######
 
 gd = env.get('GD')
+# Will have the ability to save MPEG movies,
+# if ffmpeg library is installed
+ffmpeg = env.get('FFMPEG')
 
 if gd:
     env.Include('gdpen',prefix='gd_')
-
-    obj = env.StaticObject('gdpen.c')
+    if (ffmpeg):
+        obj = env.StaticObject('gdpen.o','gdpen.c',
+                               CPPDEFINES=['FFMPEG']+env.get('CPPDEFINES',[]))
+    else:
+        obj = env.StaticObject('gdpen.o','gdpen.c')
     env.Depends(obj,'gdpen.h')
-    main = env.Program('gdpen',[obj,]+objects,
-                       LIBS=[gd]+env.get('LIBS',[]))
+    if (ffmpeg):
+        main = env.Program('gdpen',[obj,]+objects,
+                           LIBS=[ffmpeg]+[gd]+env.get('LIBS',[]))
+    else:
+        main = env.Program('gdpen',[obj,]+objects,
+                           LIBS=[gd]+env.get('LIBS',[]))
     pens.append('gdpen')
 else:
     main = env.Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
@@ -165,7 +175,7 @@ for pen in ('png','pdf','svg'):
                                    CPPPATH=env.get('CPPPATH',[])+[path],
                                    CPPDEFINES=defines)
         else:
-            obj = env.StaticObject(name+'o','crpen.c',
+            obj = env.StaticObject(name+'.o','crpen.c',
                                    CPPDEFINES=defines)
         env.Depends(obj,'crpen.h')
         main = env.Program(name,[obj,]+objects,

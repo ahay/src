@@ -135,6 +135,7 @@ def check_all(context):
     ppm (context) # FDNSI
     tiff (context) # FDNSI
     gd  (context) # FDNSI
+    ffmpeg  (context) # FDNSI
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
     opengl(context) # FDNSI
@@ -565,6 +566,37 @@ def gd(context):
         need_pkg('libgd', fatal=False)
         context.env['GD'] = None
     LIBS.pop()
+
+pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
+                 'suse':'ffmpeg-devel',
+                 'ubuntu':'libavcodec-dev'}
+
+def ffmpeg(context):
+    context.Message("checking for ffmpeg ... ")
+
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    text = '''
+    #include <ffmpeg/avcodec.h>
+    int main (int argc, char *argv[]) {
+    avcodec_init ();
+    avcodec_register_all ();
+    return 0;
+    }\n'''
+    ffmpeg = context.env.get('FFMPEG','avcodec')
+    LIBS.append(ffmpeg)
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.Result(res)
+        context.env['FFMPEG'] = ffmpeg
+    else:
+        context.Result(context_failure)
+        need_pkg('ffmpeg', fatal=False)
+        context.env['FFMPEG'] = None
+    LIBS.pop()
+
 
 pkg['cairo'] = {'suse':'cairo-devel'}
 
@@ -1281,6 +1313,7 @@ def options(file):
     opts.Add('PPM','The netpbm library')
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
+    opts.Add('FFMPEG','The ffmpeg library')
     opts.Add('CAIRO','The cairo library')
     opts.Add('CAIROPNG','The cairo library (PNG support)')
     opts.Add('CAIROSVG','The cairo library (SVG support)')
