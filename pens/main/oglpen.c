@@ -23,6 +23,9 @@
 #else
 #include <GL/glu.h>
 #include <GL/glut.h>
+#ifdef FREEGLUT
+#include <GL/freeglut_ext.h>
+#endif
 #endif
 
 #include "../include/attrcom.h"
@@ -202,7 +205,7 @@ void oglbuildmenu (void)
         has_menu = true;
 
     menu_tag = glutCreateMenu (oglmenu);
-    if (frames_num > 1) {
+    if (frames_num > 1 || animate) {
         if (!animate) {
             glutAddMenuEntry ("Next", MENU_NEXT);
             glutAddMenuEntry ("Prev", MENU_PREV);
@@ -263,6 +266,23 @@ void oglreset (void)
     glClearStencil (0);
 }
 
+/* Process queued events from the event loop */
+static void oglprocessevents (void) {
+#if defined(__APPLE__) && (GLUT_MACOSX_IMPLEMENTATION >= 2)
+    if (!animate && frames_num == 1) {
+        oglstartanimation ();
+        oglbuildmenu ();
+    }
+    glutCheckLoop ();
+#elif defined(FREEGLUT)
+    if (!animate && frames_num == 1) {
+        oglstartanimation ();
+        oglbuildmenu ();
+    }
+    glutMainLoopEvent ();
+#endif
+}
+
 void oglerase (int command)
 /*< erase >*/
 {
@@ -288,6 +308,7 @@ void oglerase (int command)
                 fprintf (stderr, "Preparing animation\n");
             else if (frames_num % 50 == 0)
                 fprintf (stderr, "Finished %d frames\n", frames_num);
+            oglprocessevents ();
             if (!(frames_num % LIST_CHUNK))
                 ogllists[frames_num / LIST_CHUNK] = glGenLists (LIST_CHUNK * 2);
             /* Main display list - all plotting */
@@ -308,10 +329,19 @@ void oglerase (int command)
                           color_table[NCOLOR],
                           color_table[NCOLOR * 2], 0.0f);
             glEndList ();
+            if (frames_num > 1)
+                fprintf (stderr, "Finished all frames\n");
             break;
         default:
             break;
     }
+}
+
+void oglstartanimation ()
+{
+/*< start animation >*/
+    animate = true;
+    glutTimerFunc (delay, oglanimate, 0);
 }
 
 void oglanimate (int value)
@@ -359,10 +389,8 @@ void oglclose (int status)
         case CLOSE_ERROR:
         case CLOSE_INTERRUPT:
         case CLOSE_NORMAL:
-            if (frames_num > 1) {
-                animate = true;
-                glutTimerFunc (delay, oglanimate, 0);
-            }
+            if (frames_num > 1 && !animate)
+                oglstartanimation ();
             oglbuildmenu ();
             glutMainLoop ();
             break;
@@ -691,8 +719,7 @@ void oglmenu (int value)
             }
             break;
         case MENU_RUN:
-            animate = true;
-            glutTimerFunc (delay, oglanimate, 0);
+            oglstartanimation ();
             oglbuildmenu ();
             break;
         case MENU_STOP:
@@ -766,8 +793,7 @@ void oglkeyboard (unsigned char key, int x, int y)
         case 'R': /* Run */
         case 'r':
             if (!animate && frames_num > 1) {
-                animate = true;
-                glutTimerFunc (delay, oglanimate, 0);
+                oglstartanimation ();
                 oglbuildmenu ();
             }
             break;
