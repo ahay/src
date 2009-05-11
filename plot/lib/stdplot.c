@@ -34,6 +34,7 @@ static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3, frame1, l1min, l1max, l2min, l2max, l3min, l3max;
 static int framecol, frame2, frame3, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
+static int framelabelcol=VP_YELLOW;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat, xreverse, yreverse;
 static char blank[]=" ";
@@ -261,6 +262,12 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 
     if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
     /* axes color */
+
+    if (!sf_getint ("framelabelcol",&framelabelcol)) framelabelcol=VP_YELLOW;
+    /* frame labels color */
+
+    if (!sf_getint ("cubelinecol",&cubelinecol)) cubelinecol=VP_WHITE;
+    /* cube lines color */
 
     vp_coordinates();
 }
@@ -1486,7 +1493,7 @@ void vp_frame(void)
 	/* to put numbers at frame ends */
 
 	if (need) {
-	    vp_color(VP_YELLOW);
+	    vp_color(framelabelcol);
 	    vp_where(&xc,&yc);
 	    
 	    num = l2max+(frame1+0.5)*d1;
@@ -1528,7 +1535,7 @@ void vp_frame(void)
 	/* to put numbers at frame ends */
 	 
 	if (need) {
-	    vp_color(VP_YELLOW);
+	    vp_color(framelabelcol);
 	    vp_where(&xc,&yc);
 	    
 	    num = l1min+(frame2+0.5)*d2;
@@ -1566,7 +1573,7 @@ void vp_frame(void)
 	/* to put numbers at frame ends */
 
 	if (need) {
-	    vp_color(VP_YELLOW);
+	    vp_color(framelabelcol);
 	    vp_where(&xc,&yc);
 	    
 	    num = label3->min+(frame3+0.5)*d3;
@@ -1742,7 +1749,8 @@ void vp_cuberaster(int n1, int n2,
 /*< Filling 3-D cube with rasters >*/
 {
     vp_uraster (buf, false, 256, n1, n2, min1,min2,max1,max2, 3);
-    cubelinecol = VP_YELLOW;
+/*    cubelinecol = VP_YELLOW;*/
+    if (!sf_getint ("cubelinecol",&cubelinecol)) cubelinecol=framelabelcol;
     vp_cubeframe(f1,f2,f3);
 }
 
