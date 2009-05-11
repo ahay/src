@@ -25,6 +25,7 @@
  * bspline_base.h
  */
 
+#ifndef NO_COMPLEX
 #ifndef SF_HAS_COMPLEX_H
 #ifndef KISS_FFT_H
 #ifdef __cplusplus
@@ -35,9 +36,10 @@ typedef std::complex<double> sf_double_complex;
 #include <complex.h>
 typedef complex float  sf_complex;
 typedef complex double sf_double_complex;
-#endif
-#endif
-#endif
+#endif /* __cplusplus */
+#endif /* KISS_FFT_H */
+#endif /* SF_HAS_COMPLEX_H */
+#endif /* NO_COMPLEX */
 
 typedef enum { PERIODIC, DERIV1, DERIV2, FLAT, NATURAL } bc_code;
 typedef enum { U1D, U2D, U3D } spline_code;
@@ -155,6 +157,7 @@ typedef struct
   BCtype_d xBC, yBC, zBC;
 } UBspline_3d_d;
 
+#ifndef NO_COMPLEX
 /****************************
  * Single precision complex *
  ****************************/
@@ -225,6 +228,7 @@ typedef struct
 /*
  * bspline_eval_std_s|d|c|z.h
  */
+#endif /* NO_COMPLEX */
 
 /************************************************************/
 /* 1D single-precision, real evaulation functions           */
@@ -361,6 +365,7 @@ void eval_UBspline_3d_d_vgh (UBspline_3d_d * spline,
                              double x, double y, double z,
                              double* val, double* grad, double* hess);
 
+#ifndef NO_COMPLEX
 /************************************************************/
 /* 1D single-precision, complex evaulation functions        */
 /************************************************************/
@@ -511,6 +516,7 @@ void eval_UBspline_3d_z_vgh (UBspline_3d_z * spline,
                              sf_double_complex* val, 
                              sf_double_complex* grad, 
                              sf_double_complex* hess);
+#endif /* NO_COMPLEX */
 
 /*
  * bspline_create.h
@@ -572,6 +578,7 @@ void recompute_UBspline_2d_d (UBspline_2d_d* spline, double *data);
 
 void recompute_UBspline_3d_d (UBspline_3d_d* spline, double *data);
 
+#ifndef NO_COMPLEX
 /****************************************
  ****************************************
  ** Uniform, single precision, complex **
@@ -621,5 +628,6 @@ void recompute_UBspline_1d_z (UBspline_1d_z* spline, sf_double_complex *data);
 void recompute_UBspline_2d_z (UBspline_2d_z* spline, sf_double_complex *data);
 
 void recompute_UBspline_3d_z (UBspline_3d_z* spline, sf_double_complex *data);
+#endif /* NO_COMPLEX */
 
-#endif
+#endif /* EINSPLINE_H */

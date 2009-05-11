@@ -484,6 +484,7 @@ void recompute_UBspline_3d_s (UBspline_3d_s* spline, float *data) {
     }
 }
 
+#ifndef NO_COMPLEX
 /***********************************************************
 
         Single-Precision, Complex Creation Routines
@@ -820,6 +821,7 @@ void recompute_UBspline_3d_c (UBspline_3d_c* spline, sf_complex *data) {
                        ((float*)spline->coefs)+coffset+1, 2);
     }
 }
+#endif /* NO_COMPLEX */
 
 /***********************************************************
 
@@ -1218,6 +1220,7 @@ void recompute_UBspline_3d_d (UBspline_3d_d* spline, double *data) {
     }
 }
 
+#ifndef NO_COMPLEX
 /***********************************************************
 
         Double-Precision, Complex Creation Routines
@@ -1559,6 +1562,7 @@ void recompute_UBspline_3d_z (UBspline_3d_z* spline, sf_double_complex *data) {
                        ((double*)spline->coefs)+coffset+1, 2);
     }
 }
+#endif /* NO_COMPLEX */
 
 void
 destroy_UBspline (Bspline *spline) {
@@ -3293,6 +3297,7 @@ void eval_UBspline_3d_d_vgh (UBspline_3d_d * spline,
 
 }
 
+#ifndef NO_COMPLEX
 /************************************************************/
 /* 1D single-precision, complex evaulation functions        */
 /************************************************************/
@@ -5048,3 +5053,4 @@ void eval_UBspline_3d_z_vgh (UBspline_3d_z * spline,
 #undef P
 
 }
+#endif /* NO_COMPLEX */
