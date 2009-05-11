@@ -34,7 +34,7 @@
 #include "init_vplot.h"
 
 #ifdef FFMPEG
-#include <ffmpeg/avcodec.h>
+#include <avcodec.h>
 #endif
 
 #include "gdpen.h"

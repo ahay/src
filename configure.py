@@ -574,11 +574,28 @@ pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
 def ffmpeg(context):
     context.Message("checking for ffmpeg ... ")
 
+    oldpath = context.env.get('CPPPATH',[])
+    ffmpegpath = context.env.get('FFMPEGPATH')
+    if ffmpegpath and os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
+        context.env['CPPPATH'] = oldpath + [ffmpegpath]
+    else:
+        for top in ('/usr/include','/usr/local/include','/sw/include'):
+            ffmpegpath = os.path.join(top,'ffmpeg')
+            if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
+                context.env['CPPPATH'] = oldpath + [ffmpegpath]
+                break
+            ffmpegshortpath = ffmpegpath
+            ffmpegpath = os.path.join(ffmpegshortpath,'libavcodec')
+            if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
+                context.env['CPPPATH'] = oldpath + [ffmpegshortpath,ffmpegpath]
+                ffmpegpath = [ffmpegshortpath,ffmpegpath]
+                break
+
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     text = '''
-    #include <ffmpeg/avcodec.h>
+    #include <avcodec.h>
     int main (int argc, char *argv[]) {
     avcodec_init ();
     avcodec_register_all ();
@@ -591,10 +608,12 @@ def ffmpeg(context):
     if res:
         context.Result(res)
         context.env['FFMPEG'] = ffmpeg
+        context.env['FFMPEGPATH'] = ffmpegpath
     else:
         context.Result(context_failure)
         need_pkg('ffmpeg', fatal=False)
         context.env['FFMPEG'] = None
+    context.env['CPPPATH'] = oldpath    
     LIBS.pop()
 
 
@@ -1314,6 +1333,7 @@ def options(file):
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
     opts.Add('FFMPEG','The ffmpeg library')
+    opts.Add('FFMPEGPATH','Path to ffmpeg codec headers')
     opts.Add('CAIRO','The cairo library')
     opts.Add('CAIROPNG','The cairo library (PNG support)')
     opts.Add('CAIROSVG','The cairo library (SVG support)')
