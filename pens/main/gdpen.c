@@ -154,7 +154,7 @@ void opendev (int argc, char* argv[])
     /* image type (png, jpeg, gif, mpeg) */
 
     if (!sf_getint("delay",&delay)) delay=10;
-    /* GIF animation delay (if type=="gif" or "mpeg") */
+    /* animation delay (if type=="gif" or "mpeg") */
 
 #ifndef FFMPEG
     if (image_type[0] == 'm' || image_type[0] == 'M') {
