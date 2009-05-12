@@ -63,6 +63,8 @@ char            name[] = "oglpen";
 static float *color_table = NULL;
 static bool light = false;
 static bool stretchy = false;
+static bool aalias = false;
+static int aawidth = 1;
 static int oglcolor, nx, ny;
 static unsigned int *ogllists = NULL; /* Bases of every LIST_CHUNK display lists */
 static unsigned char *tex_buf = NULL; /* Temporary buffer for loading textures */
@@ -154,6 +156,8 @@ void opendev (int argc, char* argv[])
     dev.xmax = nx - 1;
     dev.ymax = ny - 1;
 
+    invras = false;
+
     glutInitWindowSize (win_width, win_height);
 
     glutInitDisplayMode (GLUT_RGBA | GLUT_DOUBLE | GLUT_STENCIL);
@@ -192,8 +196,13 @@ void opendev (int argc, char* argv[])
             break;
     }
 
-    if (!sf_getbool ("stretchy", &stretchy))
-	stretchy = false;
+    if (!sf_getbool ("stretchy", &stretchy)) stretchy = false;
+    /* y - stretch plot to all borders of the drawing area */
+
+    if (!sf_getbool ("aalias", &aalias)) aalias = false;
+    /* y - draw lines, points, polygons with antialialing */
+    if (!sf_getint ("aawidth", &aawidth)) aawidth = 1;
+    /* width of transition areas when aalias=y */
 }
 
 void oglbuildmenu (void)
@@ -233,19 +242,19 @@ void oglreset (void)
     color_table[NCOLOR * 2] = 1.0 * light;
 
     for (value = 1; value < 8; value++) {
-	r = MAX_GUN * ((value & 2) / 2);
-	g = MAX_GUN * ((value & 4) / 4);
-	b = MAX_GUN * ((value & 1) / 1);
+        r = MAX_GUN * ((value & 2) / 2);
+        g = MAX_GUN * ((value & 4) / 4);
+        b = MAX_GUN * ((value & 1) / 1);
 
-	if (light) {
-	    color_table[value] = (MAX_GUN - r) / (float)MAX_GUN;
-	    color_table[NCOLOR + value] = (MAX_GUN - g) / (float)MAX_GUN;
-	    color_table[NCOLOR * 2 + value] = (MAX_GUN - b) / (float)MAX_GUN;
-	} else {
-	    color_table[value] = r / (float)MAX_GUN;
-	    color_table[NCOLOR + value] = g / (float)MAX_GUN;
-	    color_table[NCOLOR * 2 + value] = b / (float)MAX_GUN;
-	}
+        if (light) {
+            color_table[value] = (MAX_GUN - r) / (float)MAX_GUN;
+            color_table[NCOLOR + value] = (MAX_GUN - g) / (float)MAX_GUN;
+            color_table[NCOLOR * 2 + value] = (MAX_GUN - b) / (float)MAX_GUN;
+        } else {
+            color_table[value] = r / (float)MAX_GUN;
+            color_table[NCOLOR + value] = g / (float)MAX_GUN;
+            color_table[NCOLOR * 2 + value] = b / (float)MAX_GUN;
+        }
     }
  
     for (value = 8; value < NCOLOR; value++) {
@@ -264,6 +273,13 @@ void oglreset (void)
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glClearStencil (0);
+    if (aalias) {
+        glEnable (GL_LINE_SMOOTH);
+        glEnable (GL_POINT_SMOOTH);
+        glEnable (GL_POLYGON_SMOOTH);
+        glLineWidth (aawidth);
+        glPointSize (aawidth);
+    }
 }
 
 /* Process queued events from the event loop */
@@ -542,7 +558,7 @@ void oglarea (int npts, struct vertex *head)
 }
 
 void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax, 
-		unsigned char **raster_block, int orient, int dither_it)
+                unsigned char **raster_block, int orient, int dither_it)
 {
 /*< raster >*/
     int i, j, k, l, hnum, wnum, kmax, lmax, width, height;
@@ -552,10 +568,12 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
     float x_min, x_max, y_min, y_max;
 
     /* Colormap table */
-    glPixelTransferi (GL_MAP_COLOR, GL_TRUE);
-    glPixelMapfv (GL_PIXEL_MAP_I_TO_R, NCOLOR, color_table);
-    glPixelMapfv (GL_PIXEL_MAP_I_TO_G, NCOLOR, &color_table[NCOLOR]);
-    glPixelMapfv (GL_PIXEL_MAP_I_TO_B, NCOLOR, &color_table[NCOLOR * 2]);
+    if (!dither_it) {
+        glPixelTransferi (GL_MAP_COLOR, GL_TRUE);
+        glPixelMapfv (GL_PIXEL_MAP_I_TO_R, NCOLOR, color_table);
+        glPixelMapfv (GL_PIXEL_MAP_I_TO_G, NCOLOR, &color_table[NCOLOR]);
+        glPixelMapfv (GL_PIXEL_MAP_I_TO_B, NCOLOR, &color_table[NCOLOR * 2]);
+    }
 
     height = orient % 2 ? xpix : ypix;
     width = orient % 2 ? ypix : xpix;
@@ -617,7 +635,9 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
             glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             /* Send texture samples to OpenGL */
             glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, TEX_SIZE, TEX_SIZE, 0,
-                                         GL_COLOR_INDEX, GL_UNSIGNED_BYTE, tex_buf);
+                                         dither_it ? GL_LUMINANCE : 
+                                                     GL_COLOR_INDEX,
+                                         GL_UNSIGNED_BYTE, tex_buf);
             glBindTexture (GL_TEXTURE_2D, 0);
         }
     }
@@ -646,6 +666,9 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
             glDisable (GL_TEXTURE_2D);
         }
     }
+
+    if (!dither_it)
+        glPixelTransferi (GL_MAP_COLOR, GL_FALSE);
 
     free (tex_id);
 }
