@@ -579,7 +579,7 @@ def ffmpeg(context):
     if ffmpegpath and os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
         context.env['CPPPATH'] = oldpath + [ffmpegpath]
     else:
-        for top in ('/usr/include','/usr/local/include','/sw/include'):
+        for top in ('/usr/include','/usr/local/include','/sw/include','/opt/local/include'):
             ffmpegpath = os.path.join(top,'ffmpeg')
             if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
                 context.env['CPPPATH'] = oldpath + [ffmpegpath]
