@@ -709,7 +709,8 @@ def jpeg(context):
 
 pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut + freeglut-devel',
                  'suse'  :'freeglut-devel',
-                 'ubuntu':'freeglut3-dev'}
+                 'ubuntu':'freeglut3-dev',
+                 'cygwin':'opengl (Setup...Graphics)'}
 
 # If this test is failed, no opengl programs
 def opengl(context):
@@ -719,16 +720,23 @@ def opengl(context):
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     LINKFLAGS = context.env.get('LINKFLAGS','')
+    CPPPATH = context.env.get('CPPPATH',[])
+    oglflags = None
+    oglpath = None
 
     if plat['OS'] == 'darwin':
+        ogl = []
         oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
         context.env['LINKFLAGS'] = LINKFLAGS + oglflags
-        ogl = []
+    elif plat['OS'] == 'cygwin':
+        ogl = context.env.get('OPENGL','opengl32 glu32 glut32')
+        oglpath = '/usr/include/opengl'
+        context.env['CPPPATH'] = CPPPATH + [oglpath]
     else:
-        oglflags = None
-        ogl = context.env.get('OPENGL')
-        if type(ogl) is not types.ListType:
-            ogl = string.split(ogl)
+        ogl = context.env.get('OPENGL','GL GLU glut')
+
+    if type(ogl) is not types.ListType:
+        ogl = string.split(ogl)
     context.env['LIBS'] = LIBS + ogl
 
     text = '''
@@ -749,9 +757,11 @@ def opengl(context):
         context.Result(res)    
         context.env['OPENGL'] = ogl 
         context.env['OPENGLFLAGS'] = oglflags
+        context.env['OPENGLPATH'] = oglpath
     else:
         context.env['OPENGL'] = None 
         context.env['OPENGLFLAGS'] = None
+        context.env['OPENGLPATH'] = None
         context.Result(context_failure)
         need_pkg('opengl', fatal=False)
 
@@ -760,6 +770,7 @@ def opengl(context):
 
     context.env['LIBS'] = LIBS
     context.env['LINKFLAGS'] = LINKFLAGS
+    context.env['CPPPATH'] = CPPPATH
 
 pkg['glew'] = {'ubuntu':'libglew1.5-dev',
                'suse'  :'glew-devel',
@@ -1322,8 +1333,9 @@ def options(file):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
-    opts.Add('OPENGL','OpenGL libraries','GL GLU glut')
+    opts.Add('OPENGL','OpenGL libraries')
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
+    opts.Add('OPENGLPATH','Path to OpenGL headers')
     opts.Add('GLEW','GLEW library','GLEW')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('OMP','OpenMP support')

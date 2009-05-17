@@ -26,6 +26,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 ogl = env.get('OPENGL')
 oglflags = env.get('OPENGLFLAGS')
+oglpath = env.get('OPENGLPATH')
 
 if ogl:
     if type(ogl) is not types.ListType:
@@ -37,6 +38,10 @@ if oglflags:
         oglflags = Split(oglflags)
     env.Append(LINKFLAGS=oglflags)
 
+if oglpath:
+    if type(oglpath) is not types.ListType:
+        oglpath = Split(oglpath)
+    env.Append(CPPPATH=oglpath)
 
 # Treat OpenGL sources differently
 for source in Split(oglsrc):

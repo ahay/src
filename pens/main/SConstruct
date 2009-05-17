@@ -196,6 +196,7 @@ for pen in ('png','pdf','svg'):
 
 ogl = env.get('OPENGL')
 oglflags = env.get('OPENGLFLAGS')
+oglpath = env.get('OPENGLPATH')
 
 if ogl or oglflags:
     if type(ogl) is not types.ListType:
@@ -204,7 +205,8 @@ if ogl or oglflags:
         if type(oglflags) is not types.ListType:
             oglflags = Split(oglflags)
     env.Include('oglpen',prefix='ogl_')
-    obj = env.StaticObject('oglpen.c')
+    obj = env.StaticObject('oglpen.c',
+                           CPPPATH=[oglpath]+env.get('CPPPATH',[]))
     env.Depends(obj,'oglpen.h')
     main = env.Program('oglpen',[obj,]+objects,
                        LIBS=[ogl]+env.get('LIBS',[]),
