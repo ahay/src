@@ -129,7 +129,8 @@ int main(int argc, char* argv[])
 	    }
 	}
 	 
-	if (NULL != err && iter > 0) sf_warning("iter=%d err=%g",iter,err[iter]/err[0]);
+	if (NULL != err && iter > 0) 
+	    sf_warning("iter=%d err=%g",iter,err[iter]/err[0]);
 
 	/* later change thresholding to sharpening */
 	clip = sf_quantile(nclip,n12,ar[0]);

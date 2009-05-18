@@ -1,4 +1,4 @@
-/* Convert byte RSF to a JPEG image. */
+/* Convert byte RSF to a TIFF image. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -61,7 +61,8 @@ int main(int argc, char* argv[])
     TIFFSetField(tiffout,TIFFTAG_SAMPLESPERPIXEL,nc);
     TIFFSetField(tiffout,TIFFTAG_BITSPERSAMPLE,8);
     TIFFSetField(tiffout,TIFFTAG_ORIENTATION,ORIENTATION_TOPLEFT);
-    if (3==nc) TIFFSetField(tiffout,TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+    TIFFSetField(tiffout,TIFFTAG_PHOTOMETRIC, 
+		 (3==nc)? PHOTOMETRIC_RGB: PHOTOMETRIC_MINISBLACK);
     TIFFSetField(tiffout,TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
     TIFFSetField(tiffout, TIFFTAG_ROWSPERSTRIP, 1);
 

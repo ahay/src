@@ -68,8 +68,7 @@ int             d1, d2;
     /*
      * Do clipping
      */
-    if (!dev.smart_clip)
-	if (clip (&x1, &y1, &x2, &y2))
+    if (!dev.smart_clip && clip (&x1, &y1, &x2, &y2))
 	    return;
     /*
      * Important special case: Zero-length vector at the end of what you've

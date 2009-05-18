@@ -60,13 +60,15 @@ for conv in ('byte2jpg','jpg2byte'):
         env.Install(bindir,prog)
 
 tiff = env.get('TIFF')
-if tiff:
-    libs=env.get('LIBS')+[tiff]
-    prog = env.Program('sfbyte2tif','_byte2tif.c',LIBS=libs)
-else:
-    prog = env.Place('sfbyte2tif',None,var='JPEG',package='libtiff-devel')
-if root:
-    env.Install(bindir,prog)
+
+for conv in ('byte2tif','tif2byte'):
+    if tiff:
+        libs=env.get('LIBS')+[tiff]
+        prog = env.Program('sf'+conv,'_%s.c' % conv,LIBS=libs)
+    else:
+        prog = env.Place('sf'+conv,None,var='TIFF',package='libtiff-devel')
+    if root:
+        env.Install(bindir,prog)
 
 for prog in Split(
     '''
