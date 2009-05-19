@@ -98,7 +98,7 @@ int main (int argc, char* argv[])
 
 		bound3(tempt,extendt,nfw1,nfw2,n1,n2,boundary);
 
-		/************2D alpha-trimmied-mean filter****************/
+		/************modified-trimmied-mean filter****************/
 		for(i=0;i<n2;i++){
 		    for(j=0;j<n1;j++) {
 
@@ -125,7 +125,7 @@ int main (int argc, char* argv[])
 
 		bound3(tempt,extendt,nfw1,nfw2,n1,n2,boundary);
 
-		/************2D alpha-trimmied-mean filter****************/
+		/************modified-trimmied-mean filter****************/
 		for(i=0;i<n2;i++){
 		    for(j=0;j<n1;j++) {
 
