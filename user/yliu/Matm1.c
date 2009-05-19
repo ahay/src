@@ -1,6 +1,6 @@
-/* 1-D sliding-window mean filtering */
+/* 1D alpha-trimmed-mean filtering. */
 /*
-  Copyright (C) 2008 University of Texas at Austin
+  Copyright (C) 2009 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "boundary.h"
 #include "mean.h"
+#include "boundary.h"
 
 int main (int argc, char* argv[]) 
 {
@@ -30,6 +30,7 @@ int main (int argc, char* argv[])
     int nfw;    /*nfw is the filter-window length*/
     int m;
     int i,j,k,ii;
+    float alpha;
     bool boundary;
     
     float *trace;
@@ -48,8 +49,12 @@ int main (int argc, char* argv[])
     /* get the trace length (n1) and the number of traces (n2) and n3*/
     
     if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
-    /* filter-window length (positive integer)*/
+    /* filter-window length (positive and odd integer)*/
     
+    if (!sf_getfloat("alpha",&alpha)) sf_error("Need float input");
+    /* 0.0 <= alpha <= 0.5 */
+    if (alpha < 0 || alpha > 0.5)  sf_error("Need input is in range (0.0,0.5)"); 
+
     if (!sf_getbool("boundary",&boundary)) boundary=false;
     /* if y, boundary is data, whereas zero*/
     
@@ -71,14 +76,14 @@ int main (int argc, char* argv[])
 	
 	bound1(tempt,extendt,nfw,n1,n2,boundary);
 	
-	/************1-D mean filter****************/
+	/************1D alpha-trimmied-mean filter****************/
 	
 	for(i=0;i<n2;i++){
 	    for(j=0;j<n1;j++){
 		for(k=0;k<nfw;k++){
 		    temp1[k]=extendt[(n1+2*m)*i+j+k];
 		}
-		trace[n1*i+j]=mean(temp1,nfw);
+		trace[n1*i+j]=alphamean(temp1,nfw,alpha);
 	    }
 	}
 	

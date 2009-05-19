@@ -1,4 +1,4 @@
-/* median filtering. */
+/* Mean filtering. */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -21,13 +21,26 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "median.h"
+#include "mean.h"
 
-float medianfilter(float *temp,int nfw)
-/*< get a median value >*/
-{   
-    int i,pass;
-    float median,a;
+float mean(float *a, int n)
+/*< get a mean value >*/
+{
+    int i;
+    float t=0;
+
+    for (i=0; i < n; i++) 
+	t+=a[i];
+    t = t/n;
+
+    return t;
+}
+
+float alphamean(float *temp, int nfw, float alpha)
+/*< get a alpha-trimmed-mean value >*/
+{
+    int i,j,pass,lowc,higc;
+    float mean,a;
     for(pass=1;pass<nfw;pass++){
 	for(i=0;i<nfw-pass;i++){
 	    if(temp[i]>temp[i+1]){
@@ -36,9 +49,17 @@ float medianfilter(float *temp,int nfw)
 		temp[i+1]=a;
 	    }
 	}
-    }
-    median=temp[nfw/2];
-    return median;
+    }  
+    lowc=alpha*nfw;
+    higc=(1-alpha)*nfw;
+    mean=0.;
+    j=lowc;
+    do {
+	mean+=temp[j];
+	j++;
+    }while(j<higc);
+    mean/=(1-2*alpha)*(nfw-1)+1;
+    return mean;
 }
 
 /* 	$Id$	 */
