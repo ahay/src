@@ -1,6 +1,7 @@
-/* 2D alpha-trimmed-mean filtering. 
+/* 1-D and 2-D modified-trimmed-mean (MTM) filtering. 
+Also called range-trimmed-mean filter
 1D filter (nfw2=1); 2D filter (otherwise)
-median filter (alpha=0.5); mean filter (alpha=0.)
+median filter (pclip=0.); mean filter (pclip=100.)
 */
 /*
   Copyright (C) 2009 University of Texas at Austin
@@ -35,7 +36,7 @@ int main (int argc, char* argv[])
     int m1;
     int nfw2;    /*nfw is the filter-window length in trace direction*/
     int m2;
-    float alpha;
+    float pclip;
     char *type;
    
     int i,j,k,ii,kk,jj;
@@ -59,8 +60,8 @@ int main (int argc, char* argv[])
     if (!sf_getint("nfw1",&nfw1)) sf_error("Need integer input");
     /* filter-window length in n1 direction (positive and odd integer)*/
     
-    if (!sf_getint("nfw2",&nfw2)) nfw2=nfw1;
-    /* filter-window length in n2 direction (default=nfw1)*/
+    if (!sf_getint("nfw2",&nfw2)) nfw2=1;
+    /* filter-window length in n2 direction (default=1, 1D case)*/
     
     if (nfw1 < 1 || nfw2 < 1)  sf_error("Need positive integer input"); 
     if (nfw1%2 == 0)  nfw1 = (nfw1+1);
@@ -68,9 +69,9 @@ int main (int argc, char* argv[])
     m1=(nfw1-1)/2;
     m2=(nfw2-1)/2;
     
-    if (!sf_getfloat("alpha",&alpha)) sf_error("Need float input");
-    /* 0.0 <= alpha <= 0.5: median filter (alpha=0.5); mean filter (alpha=0.)*/
-    if (alpha < 0 || alpha > 0.5)  sf_error("Need input is in range [0.0,0.5]"); 
+    if (!sf_getfloat("pclip",&pclip)) sf_error("Need pclip=");
+    /* 0.0 <= pclip <= 100.0: median filter (pclip=0.); mean filter (pclip=100.) */
+    if (pclip < 0. || pclip > 100.)  sf_error("Need input is in range [0.0,100.0]"); 
 
     if (!sf_getbool("boundary",&boundary)) boundary=false;
     /* if y, boundary is data, whereas zero*/
@@ -107,7 +108,7 @@ int main (int argc, char* argv[])
 			    }
 			}
 			/*square window choosing*/
-			trace[n1*i+j]=alphamean(temp1,nfw1*nfw2,alpha);
+			trace[n1*i+j]=rangemean(temp1,nfw1*nfw2,pclip);
 		    }
 		}
 		sf_floatwrite(trace,n1*n2,out);
@@ -140,7 +141,7 @@ int main (int argc, char* argv[])
 			if(jj!=(nfw1+nfw2-1)) {
 			    sf_error("Window calculation error, number(%d)!=nfw1+nwf2-1(%d)",jj,(nfw1+nfw2-1));
 			}
-			trace[n1*i+j]=alphamean(temp1,nfw1+nfw2-1,alpha);
+			trace[n1*i+j]=rangemean(temp1,nfw1+nfw2-1,pclip);
 		    }
 		}
 		sf_floatwrite(trace,n1*n2,out);

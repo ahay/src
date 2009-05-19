@@ -1,4 +1,6 @@
-/* 1D alpha-trimmed-mean filtering. */
+/* 1D alpha-trimmed-mean filtering. 
+median filter (alpha=0.5); mean filter (alpha=0.)
+*/
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -52,8 +54,8 @@ int main (int argc, char* argv[])
     /* filter-window length (positive and odd integer)*/
     
     if (!sf_getfloat("alpha",&alpha)) sf_error("Need float input");
-    /* 0.0 <= alpha <= 0.5 */
-    if (alpha < 0 || alpha > 0.5)  sf_error("Need input is in range (0.0,0.5)"); 
+    /* 0.0 <= alpha <= 0.5: median filter (alpha=0.5); mean filter (alpha=0.) */
+    if (alpha < 0 || alpha > 0.5)  sf_error("Need input is in range [0.0,0.5]"); 
 
     if (!sf_getbool("boundary",&boundary)) boundary=false;
     /* if y, boundary is data, whereas zero*/

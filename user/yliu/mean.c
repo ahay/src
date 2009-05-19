@@ -62,6 +62,49 @@ float alphamean(float *temp, int nfw, float alpha)
     return mean;
 }
 
+float rangemean(float *temp, int nfw, float pclip)
+/*< get a modified-trimmed-mean value >*/
+{
+    int i,pass,n;
+    float median,mean,a,dis1,dis2,*data,*weight;
+    data = sf_floatalloc(nfw);
+    weight = sf_floatalloc(nfw);
+    for(pass=0;pass<nfw;pass++){
+	data[pass]=temp[pass];
+    }
+    for(pass=1;pass<nfw;pass++){
+	for(i=0;i<nfw-pass;i++){
+	    if(temp[i]>temp[i+1]){
+		a=temp[i];
+		temp[i]=temp[i+1];
+		temp[i+1]=a;
+	    }
+	}
+    }  
+    median=temp[nfw/2];
+    dis1=fabs(temp[0]-median);
+    dis2=fabs(temp[nfw-1]-median);
+    mean=0.;
+    n=0;
+    if (dis1 >= dis2){
+	pclip*=dis1*0.01;
+    } else {
+	pclip*=dis2*0.01;
+    }
+    for(pass=0;pass<nfw;pass++){
+	if (data[pass]>=(median-pclip) && data[pass]<=(median+pclip)){
+	    weight[pass]=1.;
+	    n++;
+	} else{
+	    weight[pass]=0.;
+	}
+	mean+=data[pass]*weight[pass];
+    }
+    if (n==0) n=1;
+    mean/=n;
+    return mean;
+}
+
 /* 	$Id$	 */
 
 
