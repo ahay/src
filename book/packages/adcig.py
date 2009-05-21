@@ -149,7 +149,7 @@ def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
 # lz-lx-tau
 def egrey(custom,par):
     return '''
-    grey3 title="" labelsz=3 labelfat=2 titlesz=12 titlefat=3
+    grey3 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
     frame1=%d frame2=%d frame3=%d framelabel=n
     label1="\F10 l\F3 \_z\^" unit1=%s
     label2="\F10 l\F3 \_x\^" unit2=%s
@@ -169,7 +169,7 @@ def egrey(custom,par):
 # z-lx-tau
 def sgrey(custom,par):
     return '''
-    grey3  title="" labelsz=3 labelfat=2 titlesz=12 titlefat=3
+    grey3  title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
     frame1=%d frame2=%d frame3=%d framelabel=n
     label1="z" unit1=%s
     label2="\F10 l\F3 \_x\^" unit2=%s
