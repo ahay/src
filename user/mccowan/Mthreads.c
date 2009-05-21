@@ -67,14 +67,14 @@ int main(int argc, char **argv)
     int         amps=0;
     int         input_number_samples=0;
     int         digi=0, ntimes=0, onetwo;
-    float       a,b;
+    float       a,b=1.0;
     float       *temp1=NULL, *temp2=NULL, *temp;
 
     unsigned int delay=1000;
     tpool_t tpool;
     pthread_t *peers;
     pthread_attr_t attr;
-    mig_work_order_t *work_order;
+    mig_work_order_t *work_order=NULL;
 
     void   post_work_order(tpool_t tpool, mig_work_order_t *work_order);
     void   peer_mig(tpool_t tpool);
@@ -156,8 +156,10 @@ int main(int argc, char **argv)
 /* fill out the new work order for this batch */
 
 		k=kcalls%MAX_THREAD_FOLD;
+
+		work_order = (mig_work_order_t*) sf_alloc(1,sizeof(mig_work_order_t));
+
 		if(!k) {
-		    work_order = (mig_work_order_t*) sf_alloc(1,sizeof(mig_work_order_t));
 		    work_order->id = (nread-1)*1000+kcalls; 
 		    work_order->ntodo = 0; 
 		    work_order->next = NULL; 
