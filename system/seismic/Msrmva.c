@@ -116,7 +116,8 @@ int main (int argc, char *argv[])
 	sf_oaxa(Ps,amy,2);
 	sf_oaxa(Ps,amz,3);
 
-	Pslow = fslice_init(n,nz, sizeof(sf_complex));	
+	Pslow = fslice_init(n,nz, sizeof(sf_complex));
+
 	Pimag = fslice_init(n,nz, sizeof(sf_complex));
 	fslice_load(Pi,Pimag,SF_COMPLEX);
     } else {
