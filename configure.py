@@ -590,6 +590,10 @@ def ffmpeg(context):
                 context.env['CPPPATH'] = oldpath + [ffmpegshortpath,ffmpegpath]
                 ffmpegpath = [ffmpegshortpath,ffmpegpath]
                 break
+            ffmpegpath = os.path.join(top,'libavcodec')
+            if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
+                context.env['CPPPATH'] = oldpath + [ffmpegpath]
+                break
 
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
