@@ -23,9 +23,10 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, fold;
-    float eps, ***u, **p, *trace;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, fold, niter, nit;
+    float eps, perc, ***u, **p, *trace, **xk, **yk;
     sf_file inp, out, dip;
+    char *type;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -45,6 +46,28 @@ int main (int argc, char *argv[])
     /* spray radius */
     ns2 = 2*ns+1;
 
+    if (NULL == (type=sf_getstring("type"))) type="difference";
+    /* [difference,sharpen_similarity] calculation type, the default is difference  */
+
+
+    switch (type[0]) {
+	case 'd':
+	    break;
+	case 's':
+	    if (!sf_getint("niter",&niter)) niter=20;
+	    /* number of iterations */
+	    
+	    if (!sf_getfloat("perc",&perc)) perc=98.;
+	    /* percentage for sharpen, default is 98*/
+	    
+	    if (perc < 0. || perc > 100.)  sf_error("Need perc in range [0.0,100.0]"); 
+	    sf_sharpen_init(n1*n2,perc);
+
+	    break;
+	default:
+	    sf_error("Unknown operator \"%s\"",type);
+    }
+
     predict_init (n1, n2, eps*eps, 1);
 
     u = sf_floatalloc3(n1,ns2,n2);
@@ -57,10 +80,12 @@ int main (int argc, char *argv[])
     }
 
     p = sf_floatalloc2(n1,n2);
+    xk = sf_floatalloc2(n1,n2);
+    yk = sf_floatalloc2(n1,n2);
     trace = sf_floatalloc(n1);
 
     for (i3=0; i3 < n3; i3++) {
-	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
+	if (verb) fprintf(stderr,"slice %d of %d\n",i3+1,n3);
 	sf_floatread(p[0],n1*n2,dip);
 
 	for (i2=0; i2 < n2; i2++) { /* loop over traces */
@@ -112,10 +137,49 @@ int main (int argc, char *argv[])
 		    p[is][i1] +=u[is][ip][i1];
 		    if (0!=u[is][ip][i1]) fold++;
 		}
-		p[is][i1] = (p[is][i1]/(fold+FLT_EPSILON)-u[is][ns][i1])*
-		    (p[is][i1]/(fold+FLT_EPSILON)-u[is][ns][i1]);
+		p[is][i1] = p[is][i1]/(fold+FLT_EPSILON);
 	    }
 	}
+
+	switch (type[0]) {
+	    case 'd':
+		for(is=0; is < n2; is++) {
+		    for(i1=0; i1 < n1; i1++) {
+			p[is][i1] = (p[is][i1] - u[is][ns][i1])*
+			    (p[is][i1] - u[is][ns][i1]);
+		    }
+		}
+		break;
+	    case 's':
+		for(is=0; is < n2; is++) {
+		    for(i1=0; i1 < n1; i1++) {
+			xk[is][i1] = 0.;
+			yk[is][i1] = 0.;
+		    }
+		}
+		for(nit=0; nit < niter; nit++) {
+		    if (verb) sf_warning("Iteration %d of %d",nit+1,niter);
+
+		    for(is=0; is < n2; is++) {
+			for(i1=0; i1 < n1; i1++) {
+			    xk[is][i1] = ((p[is][i1]-u[is][ns][i1])*u[is][ns][i1] + eps*eps*xk[is][i1])/(u[is][ns][i1]*u[is][ns][i1]+eps*eps);
+			    yk[is][i1] = ((u[is][ns][i1]-p[is][i1])*p[is][i1] + eps*eps*yk[is][i1])/(p[is][i1]*p[is][i1]+eps*eps);
+			}
+		    }
+		    sf_sharpen(xk[0]);
+		    sf_weight_apply(n1*n2,xk[0]);
+		    sf_sharpen(yk[0]);
+		    sf_weight_apply(n1*n2,yk[0]);
+		}
+		for(is=0; is < n2; is++) {
+		    for(i1=0; i1 < n1; i1++) {
+			
+			p[is][i1] = (1+xk[is][i1])*(1+yk[is][i1]);
+		    }
+		}
+		break;
+	}
+
 	sf_floatwrite(p[0],n1*n2,out);
     }	    
 
