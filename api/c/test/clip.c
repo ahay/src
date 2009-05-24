@@ -42,10 +42,11 @@ int main(int argc, char* argv[])
 	    if      (trace[i1] >  clip) trace[i1]= clip;
 	    else if (trace[i1] < -clip) trace[i1]=-clip;
 	}
-    
+
 	/* write a trace */
 	sf_floatwrite(trace,n1,out);
     }
 
+    sf_fileclose(in);
     exit(0);
 }
