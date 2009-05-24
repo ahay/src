@@ -1,17 +1,17 @@
 /* Generic conjugate-gradient solver for linear inversion */
 /*
   Copyright (C) 2005 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -63,7 +63,11 @@ int main(int argc, char* argv[])
     size_t nbuf, mbuf, dbuf;
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
     char *x, *R, *g, *s, *S, *prog;
-    sf_file mod, dat, out, from, to;
+    sf_file mod=NULL;  /* input */
+    sf_file dat=NULL;  /* input */
+    sf_file from=NULL; /* input */
+    sf_file out=NULL; /* output */
+    sf_file to=NULL;  /* output */
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
 
@@ -362,13 +366,13 @@ int main(int argc, char* argv[])
 	for (i=0; i < 6; i++) { 
 	    if (0 == pid[i]) sf_error("A child alive");
 	    waitpid(pid[i],&status,0);
-	}    
+	}
     }
 	
     /* write x to out */  
     out = sf_output("out");
     sf_fileflush(out,mod);
-  
+
     xfile = fopen(x,"rb");
     MLOOP( MREAD(xfile); sf_floatwrite(buf,mbuf,out); );
     fclose(xfile);
@@ -378,6 +382,10 @@ int main(int argc, char* argv[])
     unlink(g);
     unlink(s);
     unlink(S);
+
+    if (mod  != NULL) sf_fileclose(mod);
+    if (dat  != NULL) sf_fileclose(dat);
+    if (from != NULL) sf_fileclose(from);
 
     exit(0);
 }

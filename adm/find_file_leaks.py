@@ -89,14 +89,21 @@ def main():
     system/generic/Munif3.c
     system/main/add.c
     system/main/attr.c
+    system/main/cconjgrad.c
+    system/main/cmplx.c
+    system/main/conjgrad.c
+    system/main/cp.c
+    system/main/cut.c
     system/main/dd.c
     system/main/disfil.c
+    system/main/get.c
     system/main/mask.c
     system/main/pad.c
     system/main/real.c
     system/main/reverse.c
     system/main/rotate.c
     system/main/rtoc.c
+    system/main/scale.c
     system/main/spray.c
     system/main/stack.c
     system/main/transp.c

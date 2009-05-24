@@ -33,7 +33,9 @@ int main(int argc, char* argv[])
     float *buf;
     double dp;
     pid_t pid[6]={1,1,1,1,1,1};
-    sf_file mod, dat, pip;
+    sf_file mod=NULL;
+    sf_file dat=NULL;
+    sf_file pip=NULL;
 
     sf_init(argc,argv);
 
@@ -184,7 +186,7 @@ int main(int argc, char* argv[])
 	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	    if (msiz < mbuf) mbuf=msiz;
 
-	    sf_floatread(buf,mbuf,pip);	    
+	    sf_floatread(buf,mbuf,pip);
 	    for (im=0; im < mbuf; im++) {
 		dp += buf[im]*genrand_real1 ();
 	    }	
@@ -196,7 +198,7 @@ int main(int argc, char* argv[])
 
     for (i=0; i < 6; i++) { 
 	if (0 == pid[i]) break;
-    }    
+    }
 
     if (6==i) {
 	/* parent waits */

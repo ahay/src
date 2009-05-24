@@ -30,14 +30,14 @@ int main (int argc, char* argv[])
     int i;
     char *string, *key;
     bool parform;
-    sf_file in;
-    
+    sf_file in=NULL;
+
     sf_init (argc,argv);
     in = sf_input ("in");
-    
+
     if(!sf_getbool("parform",&parform)) parform=true;
     /* If y, print out parameter=value. If n, print out value. */
-    
+
     for (i = 1; i < argc; i++) {
 	key = argv[i];
 	if (NULL != strchr(key,'=')) continue;
@@ -49,6 +49,7 @@ int main (int argc, char* argv[])
 	    printf("%s\n",string);
 	} 
     }
-    
+
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }

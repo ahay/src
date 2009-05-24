@@ -1,19 +1,19 @@
-/* Zero a portion of the dataset. 
+/* Zero a portion of the dataset.
 
 Reverse of window. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,8 @@ int main (int argc, char *argv[])
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *buf, buf0[BUFSIZ], *zero;
     bool verb;
-    sf_file in, out;
+    sf_file in=NULL;
+    sf_file out=NULL;
 
     sf_init (argc,argv);
     in = sf_input ("in");
@@ -119,7 +120,7 @@ int main (int argc, char *argv[])
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
-    
+
     /* Now do the actual work */
     n2 = n3 = 1;
     for (i=1; i < dim; i++) {
@@ -161,7 +162,8 @@ int main (int argc, char *argv[])
 	    sf_charwrite(zero,n1,out);
 	}
     }
-    
+
+    if (in != NULL) sf_fileclose(in);
     exit (0);
 }
 
@@ -189,8 +191,6 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
 	table[i2] = (t-t2)*n[0]-n1; 
 	t2 = t;
     }
-    
+
     table[n2] = (n3-t2)*n[0]-f[0]-n1;
 }
-
-/* 	$Id: cut.c 691 2004-07-04 19:28:08Z fomels $	 */

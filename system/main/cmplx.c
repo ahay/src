@@ -31,7 +31,9 @@ int main(int argc, char* argv[])
 {
     int resize, iesize;
     off_t nleft, nbuf, i, rsize, isize;
-    sf_file real=NULL, imag=NULL, cmplx;
+    sf_file real=NULL;   /* input */
+    sf_file imag=NULL;   /* input */
+    sf_file cmplx=NULL; /* output */
     char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf;
 
     sf_init(argc,argv);
@@ -54,17 +56,17 @@ int main(int argc, char* argv[])
 	real = sf_input("in");
     }
     cmplx = sf_output ("out");
-    
+
     if (SF_FLOAT != sf_gettype(real) ||
 	SF_FLOAT != sf_gettype(imag))
 	sf_error("wrong input type");
-    
+
     sf_settype(cmplx,SF_COMPLEX);
 
     resize = sf_esize(real);
     iesize = sf_esize(imag);
     if (resize != iesize) sf_error("esize mismatch: %d != %d",resize,iesize);
-    
+
     rsize = sf_filesize (real);
     isize = sf_filesize (imag);
     if (rsize != isize) sf_error("size mismatch: %d != %d",rsize,isize);
@@ -86,10 +88,9 @@ int main(int argc, char* argv[])
 	}
 	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
-    
+
+    if (real != NULL) sf_fileclose(real);
+    if (imag != NULL) sf_fileclose(imag);
+
     exit (0);
 }
-
-/* 	$Id$	 */
-
-
