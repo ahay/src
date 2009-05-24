@@ -26,7 +26,7 @@ main (int argc, char *argv[])
 {
     int n;
     int i;
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
 
@@ -45,5 +45,6 @@ main (int argc, char *argv[])
 
     printf( "%d\n", n );
 
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }

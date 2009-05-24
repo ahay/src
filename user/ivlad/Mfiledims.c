@@ -24,10 +24,11 @@ Wrapper for sf_filedims. */
 int
 main (int argc, char *argv[])
 {
-    int i, ndims;
+    int i;
+    int ndims;
     int n[SF_MAX_DIM];
     bool parform;
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
 
@@ -54,5 +55,6 @@ main (int argc, char *argv[])
 
     printf( "\n" );
 
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }

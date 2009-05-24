@@ -22,12 +22,16 @@ Wrapper for sf_fileflush (copy RSF header of a file to another) */
 
 int main (int argc, char*argv[]) {
 
-    sf_file in, out;
+    sf_file in=NULL;
+    sf_file out=NULL;
 
     sf_init(argc, argv);
+
     in  = sf_input("in");
     out = sf_output("out");
+
     sf_fileflush(out,in);
 
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }
