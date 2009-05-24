@@ -1,5 +1,5 @@
 /* Plot rays in 3D with OpenGL.
-   
+
 Takes: < rays.bin
 
 rays.bin should be in the special binary format for variable length rays
@@ -420,7 +420,8 @@ int main (int argc, char **argv) {
     float scale_max;
     int nsr;
     GLubyte ri, gi, bi;
-    sf_file in, frame;
+    sf_file in=NULL;
+    sf_file frame=NULL;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -593,7 +594,7 @@ int main (int argc, char **argv) {
         scale_max = scale_y;
     if (scale_z > scale_max)
         scale_max = scale_z;
- 
+
     scale_x /= scale_max;
     scale_y /= scale_max;
     scale_z /= scale_max;
@@ -603,5 +604,8 @@ int main (int argc, char **argv) {
     scale_z *= 0.7;
 
     glutMainLoop ();
+
+    if (in    != NULL) sf_fileclose(in);
+    if (frame != NULL) sf_fileclose(frame);
     return 0;
 }

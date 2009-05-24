@@ -80,6 +80,7 @@ def main():
     plot/main/graph.c
     plot/main/grey.c
     plot/main/grey3.c
+    plot/opengl/Mplotrays3.c
     system/generic/Mfft1.c
     system/generic/Mfft3.c
     system/generic/Mnoise.c
