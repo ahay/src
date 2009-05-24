@@ -106,6 +106,10 @@ def main():
     system/seismic/Mricker1.c
     system/seismic/Mtime2depth.c
     system/seismic/Mzomig.c
+    user/ivlad/Mfiledims.c
+    user/ivlad/Mfileflush.c
+    user/ivlad/Mleftsize.c
+    user/ivlad/Mquantile.c
     user/jennings/Mclip2.c
     user/jennings/Mlistminmax.c
     user/jennings/Mminmax.c
