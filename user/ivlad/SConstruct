@@ -33,10 +33,17 @@ except: # local version
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.{c,f90}')
 
+F90 = env.get('F90')
+api = env.get('API',[])
+if 'f90' in api and F90:
+    mylibs=['rsff90','rsf']
+    env.Prepend(F90PATH=['../../include'])
+else:
+    mylibs=['rsf']
+
 env.Prepend(CPPPATH=['../../include'],
-            F90PATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsff90','rsf'])
+            LIBS=mylibs)
 
 for source in src:
     inc = env.Include(source,prefix='')
@@ -54,8 +61,6 @@ for prog in mains:
 ###############
 # Fortran 90
 ###############
-F90 = env.get('F90')
-api = env.get('API',[])
 
 mains_f90 = Split(progs_f90)
 if 'f90' in api and F90:
