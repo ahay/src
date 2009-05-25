@@ -32,7 +32,7 @@ memsize=1 command-line parameter to force out-of-core operation.
 
 #include <rsf.h>
 
-static int make_map (int dim1, int dim2, const int* n, int i2);
+static int make_map (int dim1, int dim2, const off_t* n, int i2);
 
 int main(int argc, char* argv[])
 {
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-static int make_map (int dim1, int dim2, const int* n, int i2)
+static int make_map (int dim1, int dim2, const off_t* n, int i2)
 {
     int i, j;
     int ii[SF_MAX_DIM];
