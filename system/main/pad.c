@@ -29,7 +29,8 @@ n#out is equivalent to n#, both of them overwrite end#.
 int main (int argc, char* argv[])
 {
     int i, j, nj, dim, ntr, itr, esize;
-    int n[SF_MAX_DIM], n2[SF_MAX_DIM], beg[SF_MAX_DIM], end[SF_MAX_DIM];
+    int beg[SF_MAX_DIM], end[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM], n2[SF_MAX_DIM];
     size_t n0, n20, beg0, end0;
     sf_file in, out;
     float o, d;

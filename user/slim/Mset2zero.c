@@ -36,9 +36,8 @@ int main (int argc, char *argv[])
     int i;
     sf_file fpt;
     char *iname;
-    sf_ulargeint ecount;
+    off_t ecount, eleft;
     int esize;
-    sf_ulargeint eleft;
     char buffer[BUFFER];
 
     sf_init(argc,argv);
@@ -50,10 +49,10 @@ int main (int argc, char *argv[])
         if (NULL != strchr(fname,'=')) continue;
         fpt=sf_input(fname);
         iname = sf_histstring(fpt,"in");
-        ecount = sf_fileulargesize(fpt);
+        ecount = sf_filesize(fpt);
         sf_histint(fpt,"esize",&esize);
         eleft=ecount*esize;
-        if (DBG) printf("%s %s %lu %d %lu\n",argv[i],iname,ecount,esize,eleft);
+        if (DBG) sf_warning("%s %s %lu %d %llu\n",argv[i],iname,ecount,esize,(long long) eleft);
         if (strcmp(iname,"stdin")==0)
         {
             sf_file FPT;

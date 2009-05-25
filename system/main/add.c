@@ -47,7 +47,7 @@ static void check_compat(sf_datatype type,
 			 size_t     nin, 
 			 sf_file*   in, 
 			 int        dim, 
-			 const int *n);
+			 const off_t *n);
 static void add_float (bool   collect, 
 		       size_t nbuf, 
 		       float* buf, 
@@ -84,8 +84,9 @@ static void add_complex (bool        collect,
 
 int main (int argc, char* argv[])
 {
-    int i, dim, n[SF_MAX_DIM];
-    size_t j, nin, nbuf, nsiz;
+    int i, dim;
+    off_t n[SF_MAX_DIM], nsiz;
+    size_t j, nin, nbuf;
     sf_file *in, out;
     float *scale, *add;
     bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
@@ -416,7 +417,7 @@ check_compat (sf_datatype type /* data type */,
 	      size_t      nin  /* number of files */, 
 	      sf_file*    in   /* input files [nin] */, 
 	      int         dim  /* file dimensionality */, 
-	      const int*  n    /* dimensions [dim] */)
+	      const off_t*  n  /* dimensions [dim] */)
 /* Check that the input files are compatible. 
    Issue error for type mismatch or size mismatch.
    Issue warning for grid parameters mismatch. */
@@ -433,7 +434,7 @@ check_compat (sf_datatype type /* data type */,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
-		sf_error("%s mismatch: need %d",key,n[id-1]);
+		sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&d)) {
 		if (!sf_histfloat(in[i],key,&di) || 

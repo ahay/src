@@ -32,7 +32,6 @@
 #include "error.h"
 
 #include "_bool.h"
-#include "_largeint.h"
 /*^*/
 
 #ifndef _sf_simtab_h
@@ -198,7 +197,7 @@ bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par)
     return true;
 }
 
-bool sf_simtab_getlargeint (sf_simtab table, const char* key,/*@out@*/ sf_largeint* par)
+bool sf_simtab_getlargeint (sf_simtab table, const char* key,/*@out@*/ off_t* par)
 /*< extract a sf_largeint parameter from the table >*/
 {
     char* val;
@@ -211,24 +210,7 @@ bool sf_simtab_getlargeint (sf_simtab table, const char* key,/*@out@*/ sf_largei
     i = strtoll(val,NULL,10);
     if (ERANGE == errno || i < LONG_MIN || i > LONG_MAX) return false;
 
-    *par = (sf_largeint) i;
-    return true;
-}
-
-bool sf_simtab_getulargeint (sf_simtab table, const char* key,/*@out@*/ sf_ulargeint* par)
-/*< extract a sf_ulargeint parameter from the table >*/
-{
-    char* val;
-    unsigned long long int i;
-
-    val = sf_simtab_get(table,key);
-    if (NULL == val) return false;
-    
-    errno = 0;
-    i = strtoull(val,NULL,10);
-    if (ERANGE == errno || i > ULONG_MAX) return false;
-
-    *par = (sf_ulargeint) i;
+    *par = (off_t) i;
     return true;
 }
 

@@ -32,13 +32,13 @@ sfmerge inserts additional space between merged data.
 #include <rsf.h>
 
 static void check_compat (int esize, int nin, sf_file *in, int axis, 
-			  int dim, const int *n, /*@out@*/ int *naxis);
+			  int dim, const off_t *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
-    int i, j, axis, *naxis, n[SF_MAX_DIM], nin;
+    int i, j, axis, *naxis, nin;
     int dim, dim1, esize, nspace;
-    off_t ni, nbuf, n1, n2, i2;
+    off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
     sf_file *in, out;
     char* prog, key[3], buf[BUFSIZ];
     bool space;
@@ -154,7 +154,7 @@ int main (int argc, char* argv[])
 }
 
 static void check_compat (int esize, int nin, sf_file *in, int axis, int dim, 
-			  const int *n, /*@out@*/ int *naxis) 
+			  const off_t *n, /*@out@*/ int *naxis) 
 /*< check if the file dimensions are compatible >*/
 {
     int i, ni, id;
@@ -169,7 +169,7 @@ static void check_compat (int esize, int nin, sf_file *in, int axis, int dim,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || (id != axis && ni != n[id-1]))
-		sf_error("%s mismatch: need %d",key,n[id-1]);
+		sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
 	    if (id == axis) naxis[i] = ni;
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&d)) {

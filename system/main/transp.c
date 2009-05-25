@@ -36,10 +36,10 @@ static int make_map (int dim1, int dim2, const int* n, int i2);
 
 int main(int argc, char* argv[])
 {
-    int i, dim, n[SF_MAX_DIM], n1, n3, nbuf;
+    int i, dim, n1, n3, nbuf;
     int dim1, dim2, i2, i3, *map;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t pos, memsize, n2, nsiz;
+    off_t n[SF_MAX_DIM], pos, memsize, n2, nsiz;
     char key1[7], key2[7], *val, **dat1, **dat2, *buf, *mapf;
     sf_file in, out;
     FILE *mapfile;

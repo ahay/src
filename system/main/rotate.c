@@ -23,7 +23,7 @@
 #include <rsf.h>
 
 static void rotate (size_t n1, int dim, 
-		    const int* n, const int* rot, /*@out@*/ size_t *k);
+		    const off_t* n, const int* rot, /*@out@*/ off_t *k);
 
 int main(int argc, char* argv[])
 {
@@ -31,10 +31,10 @@ int main(int argc, char* argv[])
     char *buf, *buf2, key[5];
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int i, dim, dim1, dim2, n[SF_MAX_DIM], rot[SF_MAX_DIM], esize;
+    int i, dim, dim1, dim2, rot[SF_MAX_DIM], esize;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t pos=0, pos3=0, memsize;
-    size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL;
+    off_t n[SF_MAX_DIM], pos=0, pos3=0, memsize, *k1 = NULL, *k2 = NULL;
+    size_t n1, i1, i2, i3, n2, n3, size;
     bool verb;
 
     sf_init(argc,argv);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     buf2 = sf_charalloc(n1*esize);
 
     if (n1>1) {
-	k1 = (size_t*) sf_alloc(n1,sizeof(size_t));
+	k1 = sf_largeintalloc(n1);
 	rotate(n1,dim1,n,rot,k1);
     }
 
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 	sf_unpipe(in,n1*n2*n3*esize); /* prepare for random access */
 	pos = sf_tell(in);
 
-	k2 = (size_t*) sf_alloc(n2,sizeof(size_t));
+	k2 = sf_largeintalloc(n2);
 	rotate(n2,dim2-dim1,n+dim1,rot+dim1,k2);
     } 
 
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	if (n2 > 1) pos3 = pos+(off_t) i3*n2*n1*esize;
 	for (i2=0; i2 < n2; i2++) {
 	    if (n2 > 1) /* if out of core */
-		sf_seek(in,pos3+(off_t) k2[i2]*n1*esize,SEEK_SET);
+		sf_seek(in,pos3+k2[i2]*n1*esize,SEEK_SET);
 
 	    sf_charread(buf,n1*esize,in);
 	    for (i1=0; i1 < n1; i1++) {
@@ -137,10 +137,10 @@ int main(int argc, char* argv[])
 }
 
 static void rotate (size_t n1, int dim, 
-		    const int* n, const int* rot, /*@out@*/ size_t *k)
+		    const off_t* n, const int* rot, /*@out@*/ off_t *k)
 /* compute map of rotations k */
 {
-    size_t i, m, ii;
+    off_t i, m, ii;
     int j, nj, r1, r2;
     
     for (i=0; i < n1; i++) {

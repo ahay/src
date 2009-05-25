@@ -25,7 +25,6 @@
 #include "error.h"
 
 #include "_bool.h"
-#include "_largeint.h"
 #include "c99.h"
 /*^*/
 
@@ -99,20 +98,11 @@ void *sf_realloc (void* ptr   /* previous data */,
 }
 
 /*------------------------------------------------------------*/
-/*@out@*/ int *sf_largeintalloc (size_t n /* number of elements */)
+/*@out@*/ off_t *sf_largeintalloc (size_t n /* number of elements */)
 	  /*< sf_largeint allocation >*/  
 {
-    int *ptr;
-    ptr = (int*) sf_alloc (n,sizeof(sf_largeint));
-    return ptr;
-}
-
-/*------------------------------------------------------------*/
-/*@out@*/ int *sf_ulargeintalloc (size_t n /* number of elements */)
-	  /*< sf_ulargeint allocation >*/  
-{
-    int *ptr;
-    ptr = (int*) sf_alloc (n,sizeof(sf_ulargeint));
+    off_t *ptr;
+    ptr = (off_t*) sf_alloc (n,sizeof(off_t));
     return ptr;
 }
 

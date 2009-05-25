@@ -35,11 +35,10 @@
 #include "alloc.h"
 
 #include "_bool.h"
-#include "_largeint.h"
 #include "file.h"
 /*^*/
 
-int sf_filedims (sf_file file, /*@out@*/ int *n) 
+int sf_filedims (sf_file file, /*@out@*/ off_t *n) 
 /*< Find file dimensions.
 --- 
 Outputs the number of dimensions dim and a dimension array n[dim] >*/
@@ -50,27 +49,7 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     dim = 1;
     for (i=0; i < SF_MAX_DIM; i++) {
 	(void) snprintf(key,3,"n%d",i+1);
-	if (!sf_histint(file,key,n+i)) {
-	    n[i]=1;
-	} else if (n[i] > 1) {
-	    dim=i+1;
-	}
-    }
-    return dim;
-}
-
-int sf_fileulargedims (sf_file file, /*@out@*/ sf_ulargeint *n) 
-/*< Find file dimensions.
---- 
-Outputs the number of dimensions dim and a dimension array n[dim] >*/
-{
-    int i, dim;
-    char key[3];
-
-    dim = 1;
-    for (i=0; i < SF_MAX_DIM; i++) {
-	(void) snprintf(key,3,"n%d",i+1);
-	if (!sf_histulargeint(file,key,n+i)) {
+	if (!sf_histlargeint(file,key,n+i)) {
 	    n[i]=1;
 	} else if (n[i] > 1) {
 	    dim=i+1;
@@ -105,36 +84,15 @@ off_t sf_filesize (sf_file file)
     return sf_leftsize (file, 0);
 }
 
-sf_ulargeint sf_fileulargesize (sf_file file) 
-/*< Find file size (product of all dimensions) >*/
-{    
-    return sf_leftulargesize (file, 0);
-}
-
 off_t sf_leftsize (sf_file file, int dim) 
 /*< Find file size for dimensions greater than dim >*/
 {
-    int ni;
-    off_t size;
+    off_t ni, size;
     char key[3];
 
     for (size=1; dim < SF_MAX_DIM; dim++, size *= ni) {
 	(void) snprintf(key,3,"n%d",dim+1);
-	if (!sf_histint(file,key,&ni)) break;
-    }
-    return size;
-}
-
-sf_ulargeint sf_leftulargesize (sf_file file, int dim) 
-/*< Find file size for dimensions greater than dim >*/
-{
-    sf_ulargeint ni;
-    sf_ulargeint size;
-    char key[3];
-
-    for (size=1; dim < SF_MAX_DIM; dim++, size *= (sf_ulargeint) ni) {
-	(void) snprintf(key,3,"n%d",dim+1);
-	if (!sf_histulargeint(file,key,&ni)) break;
+	if (!sf_histlargeint(file,key,&ni)) break;
     }
     return size;
 }

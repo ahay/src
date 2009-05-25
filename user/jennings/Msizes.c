@@ -31,10 +31,9 @@ int main (int argc, char* argv[])
 {
     char            *filename, *prefix=" KMGT";
     int             i, j, esize, dim;
-    long long       size, bytes, total, p1024[5];
+    off_t           size, bytes, total, p1024[5], n[SF_MAX_DIM];
     float           size_human;
     bool            files, human;
-    sf_ulargeint    n[SF_MAX_DIM];
     sf_file         file;
 
     sf_init (argc,argv);
@@ -64,7 +63,7 @@ int main (int argc, char* argv[])
         file = sf_input(filename);
         if (sf_histint(file,"esize",&esize));
         else esize = sf_esize(file);
-        dim = sf_fileulargedims(file,n);
+        dim = sf_filedims(file,n);
         sf_fileclose(file);
             
         size = 1;               /* Calculate file size          */

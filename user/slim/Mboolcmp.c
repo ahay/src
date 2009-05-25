@@ -30,11 +30,11 @@ Created: Nov 2007
 
 int main(int argc, char *argv[])
 {
-    sf_ulargeint n[SF_MAX_DIM],n_r[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM],n_r[SF_MAX_DIM], nsiz,nsiz_r=0,nleft;
     int qq[BUFSIZ];
     char buf[BUFSIZ],buf_r[BUFSIZ],*right=0,*sign;
     float eps,fl=0,fr;
-    size_t bufsiz=BUFSIZ,nsiz,nsiz_r=0,dim,dim_r,nleft,i,nbuf;
+    size_t bufsiz=BUFSIZ,dim,dim_r,i,nbuf;
     sf_complex c;
     sf_file in,in_r=0,out;
     sf_datatype type;
@@ -67,12 +67,12 @@ int main(int argc, char *argv[])
     out = sf_output("out");
     sf_settype(out,SF_INT);
 
-    dim = (size_t) sf_fileulargedims(in,n);
+    dim = sf_filedims(in,n);
     for (nsiz=1, i=0; i < dim; i++) nsiz *= n[i];
 
     if (!cmp_num) {
       in_r = sf_input(right);
-      dim_r = (size_t) sf_fileulargedims(in_r,n_r);
+      dim_r = (size_t) sf_filedims(in_r,n_r);
       for (nsiz_r=1, i=0; i < dim_r; i++) nsiz_r *= n_r[i];
     }
 

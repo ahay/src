@@ -24,14 +24,14 @@ Reverse of window. */
 
 #include <rsf.h>
 
-static void seektable (int dim, int *n, int *m, int *f, int *j, 
+static void seektable (int dim, off_t *n, int *m, off_t *f, int *j, 
 		       int n1, int n2, int n3, off_t *table);
 
 int main (int argc, char *argv[])
 {
-    off_t *table, nleft, nbuf;
+    off_t *table, nleft, nbuf, n[SF_MAX_DIM], f[SF_MAX_DIM];
     int i, esize, dim, n1, n2, n3, m1, i2, i1, j1, jump;
-    int n[SF_MAX_DIM], m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
+    int m[SF_MAX_DIM], j[SF_MAX_DIM]; 
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *buf, buf0[BUFSIZ], *zero;
     bool verb;
@@ -71,7 +71,7 @@ int main (int argc, char *argv[])
 
 	/* get f's */	
 	snprintf(key,3,"f%d",i+1);
-	if (!sf_getint(key,f+i)) {
+	if (!sf_getlargeint(key,f+i)) {
 	    /*( f#=(0,...) window start in #-th dimension )*/
 	    snprintf(key,5,"min%d",i+1);
 	    if (sf_getfloat(key,&a)) {
@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
 	}
 	if (f[i] < 0) {
 	    f[i] = n[i]+f[i];
-	    if (f[i] < 0) sf_error("Negative f%d=%d",i+1,f[i]);
+	    if (f[i] < 0) sf_error("Negative f%d=%lld",i+1,(long long int) f[i]);
 	}
 
 	/* new values for o and d */
@@ -167,13 +167,13 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-static void seektable(int dim, int *n, int *m, int *f, int *j, 
+static void seektable(int dim, off_t *n, int *m, off_t *f, int *j, 
 		      int n1, int n2, int n3, off_t *table)
 {
     off_t t, t2;
     int i2, i, ii[SF_MAX_DIM];
 
-    t2 = sf_cart2line (dim-1, n+1, f+1);
+    t2 = sf_large_cart2line (dim-1, n+1, f+1);
     table[0] = t2*n[0] + f[0];
 
     for (i2=1; i2 < n2; i2++) {

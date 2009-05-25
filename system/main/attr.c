@@ -43,15 +43,15 @@ standard deviation = sqrt [ variance ]
 
 #include <rsf.h>
 
-static void location(size_t loc, size_t dim, const sf_ulargeint *n);
+static void location(size_t loc, size_t dim, const off_t *n);
 
 int main(int argc, char* argv[])
 {
     sf_file in;
     char *want, buf[BUFSIZ];
-    sf_ulargeint n[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM], nsiz, nzero;
     int lval;
-    size_t i, nsiz, nzero, nbuf, nleft, dim, minloc=0, maxloc=0;
+    size_t i, nbuf, nleft, dim, minloc=0, maxloc=0;
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float f, fmin, fmax;
     double fsum, fsqr, flval, frms, fmean, fnorm, fvar, fstd;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
  
     in = sf_input("in");
 
-    dim = (size_t) sf_fileulargedims (in,n);
+    dim = (size_t) sf_filedims (in,n);
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }
@@ -219,9 +219,9 @@ int main(int argc, char* argv[])
 	}
     }
     if(NULL==want || 0==strcmp(want,"nonzero"))
-	printf("number of nonzero samples = %lu \n",(sf_ulargeint) (nsiz-nzero));
+	printf("number of nonzero samples = %lld \n",(long long int) (nsiz-nzero));
     if(NULL==want || 0==strcmp(want,"samples"))
-	printf("total number of samples = %lu \n",(sf_ulargeint) nsiz);
+	printf("total number of samples = %lld \n",(long long int) nsiz);
     if(NULL==want) {
 	printf("******************************************* \n");
     }
@@ -235,16 +235,16 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-static void location(size_t loc   /* liner location index */, 
-		     size_t dim   /* number of dimensions */, 
-		     const sf_ulargeint *n /* hypercube dimensions [dim] */)
+static void location(size_t loc     /* liner location index */, 
+		     size_t dim     /* number of dimensions */, 
+		     const off_t *n /* hypercube dimensions [dim] */)
 /* print out an event location */
 {
     size_t i;
-    sf_ulargeint ni;
+    off_t ni;
 
     for (ni=1, i=0; i < dim; ni *= n[i], i++) {
-      printf("%lu ",(sf_ulargeint) (1+(loc/ni)%n[i]));
+	printf("%lld ",(long long int) (1+(loc/ni)%n[i]));
     }
     printf("\n");
 }

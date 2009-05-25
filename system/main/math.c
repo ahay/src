@@ -50,18 +50,18 @@ See also: sfheadermath.
 
 #include <rsf.h>
 
-static void check_compat (size_t      nin, 
-			  sf_file*    in, 
-			  int         dim, 
-			  const int*  n, 
-			  float*      d, 
-			  float*      o, 
-			  sf_datatype type);
+static void check_compat (size_t       nin, 
+			  sf_file*     in, 
+			  int          dim, 
+			  const off_t* n, 
+			  float*       d, 
+			  float*       o, 
+			  sf_datatype  type);
 
 int main (int argc, char* argv[])
 {
-    int nin, i, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf;
-    off_t j, nsiz;
+    int nin, i, k, dim, nbuf;
+    off_t j, nsiz, ii[SF_MAX_DIM], n[SF_MAX_DIM]; 
     size_t len;
     sf_file *in, out;
     char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;
@@ -140,7 +140,7 @@ int main (int argc, char* argv[])
 	dim = 1;
 	for (i=0; i < SF_MAX_DIM; i++) {
 	    (void) snprintf(xkey,3,"n%d",i+1);
-	    if (!sf_getint(xkey,n+i)) break;
+	    if (!sf_getlargeint(xkey,n+i)) break;
             /*( n# size of #-th axis )*/
 	    if (n[i] > 0) dim=i+1;
 	    sf_putint(out,xkey,n[i]);
@@ -230,7 +230,7 @@ int main (int argc, char* argv[])
 		sf_floatread(fbuf[i],nbuf,in[i]);
 	    }
 	    for (k=0; k < nbuf; k++, j++) {
-		sf_line2cart(dim,n,j,ii);
+		sf_large_line2cart(dim,n,j,ii);
 		for (i=0; i < dim; i++) {
 		    fbuf[nin+i][k] = o[i]+ii[i]*d[i];
 		}
@@ -248,7 +248,7 @@ int main (int argc, char* argv[])
 	    }
 	    /* fill x1, x2, etc */
 	    for (k=0; k < nbuf; k++, j++) {
-		sf_line2cart(dim,n,j,ii);
+		sf_large_line2cart(dim,n,j,ii);
 		for (i=0; i < dim; i++) {
 		    cbuf[nin+i][k] = sf_cmplx(o[i]+ii[i]*d[i],0.);
 		}
@@ -269,13 +269,13 @@ int main (int argc, char* argv[])
 }
 
 /*------------------------------------------------------------*/
-static void check_compat (size_t      nin, 
-			  sf_file*    in, 
-			  int         dim, 
-			  const int*  n, 
-			  float*      d, 
-			  float*      o, 
-			  sf_datatype type) 
+static void check_compat (size_t       nin, 
+			  sf_file*     in, 
+			  int          dim, 
+			  const off_t* n, 
+			  float*       d, 
+			  float*       o, 
+			  sf_datatype  type) 
 {
     int ni, id;
     size_t i;

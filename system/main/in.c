@@ -34,9 +34,8 @@ static void check_zeros (sf_file file, int esize, long long size,
 
 int main (int argc, char* argv[])
 {
-    int i, j, ncheck, esize, n[SF_MAX_DIM], dim=SF_MAX_DIM;
-    sf_ulargeint nj;
-    long long size;
+    int i, j, ncheck, esize, dim=SF_MAX_DIM;
+    off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
     char *label, *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
@@ -101,9 +100,9 @@ int main (int argc, char* argv[])
 	size = 1;
 	for (j=0; j < dim; j++) {
 	    snprintf(key,8,"n%d",j+1);
-	    if (!sf_histulargeint(file,key,&nj)) break;
+	    if (!sf_histlargeint(file,key,&nj)) break;
 
-	    snprintf(out,25,"%s=%lu",key,nj);
+	    snprintf(out,25,"%s=%llu",key,nj);
 	    printf("%s%s%s",pad+10,out,pad+strlen(out));
 	    size *= nj;
 

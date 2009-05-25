@@ -13,12 +13,13 @@ Takes: [< file0.rsf] file1.rsf file2.rsf ...
 #include <rsf.h>
 
 static void check_compat (size_t esize, 
-			  int nin, sf_file* in, int dim, const int *n);
+			  int nin, sf_file* in, int dim, const off_t *n);
 
 int main (int argc, char* argv[])
 {
-    int i, nin, axis, n1, n2, i2, dim, n[SF_MAX_DIM];
-    size_t nbuf, nleft, esize;
+    int i, nin, axis, dim;
+    off_t n[SF_MAX_DIM], n1, i2, n2, nleft;
+    size_t nbuf, esize;
     sf_file *in, out;
     char key[3], buf[BUFSIZ];
     
@@ -69,7 +70,7 @@ int main (int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (i=0; i < nin; i++) {
-	    for (nleft=(size_t) n1; nleft > 0; nleft -= nbuf) {
+	    for (nleft=n1; nleft > 0; nleft -= nbuf) {
 		nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
 		sf_charread  (buf,nbuf,in[i]);
 		sf_charwrite (buf,nbuf,out);
@@ -81,7 +82,7 @@ int main (int argc, char* argv[])
 }
 
 static void check_compat (size_t esize, 
-			  int nin, sf_file *in, int dim, const int *n)
+			  int nin, sf_file *in, int dim, const off_t *n)
 {
     int ni, id, i;
     char key[3];

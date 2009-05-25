@@ -17,9 +17,16 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
+#include <unistd.h>
+/*^*/
+
 #include "decart.h"
 
-void sf_line2cart(int dim       /* number of dimensions */, 
+void sf_line2cart(int dim         /* number of dimensions */, 
 		  const int* nn /* box size [dim] */, 
 		  int i         /* line coordinate */, 
 		  int* ii       /* cartesian coordinates [dim] */)
@@ -33,7 +40,7 @@ void sf_line2cart(int dim       /* number of dimensions */,
     }
 }
 
-int sf_cart2line(int dim       /* number of dimensions */, 
+int sf_cart2line(int dim         /* number of dimensions */, 
 		 const int* nn /* box size [dim] */, 
 		 const int* ii /* cartesian coordinates [dim] */) 
 /*< Convert Cartesian to line >*/
@@ -49,14 +56,67 @@ int sf_cart2line(int dim       /* number of dimensions */,
     return i;
 }
 
-int sf_first_index (int i        /* dimension [0...dim-1] */, 
+int sf_first_index (int i          /* dimension [0...dim-1] */, 
 		    int j        /* line coordinate */, 
-		    int dim      /* number of dimensions */, 
+		    int dim        /* number of dimensions */, 
 		    const int *n /* box size [dim] */, 
 		    const int *s /* step [dim] */)
 /*< Find first index for multidimensional transforms >*/
 {
-    int i0, n123, k, ii;
+    int i0, n123, ii;
+    int k;
+
+    n123 = 1;
+    i0 = 0;
+    for (k=0; k < dim; k++) {
+	if (k == i) continue;
+	ii = (j/n123)%n[k]; /* to cartesian */
+	n123 *= n[k];	
+	i0 += ii*s[k];      /* back to line */
+    }
+
+    return i0;
+}
+
+void sf_large_line2cart(int dim         /* number of dimensions */, 
+			const off_t* nn /* box size [dim] */, 
+			off_t i         /* line coordinate */, 
+			off_t* ii       /* cartesian coordinates [dim] */)
+/*< Convert line to Cartesian >*/
+{
+    int axis;
+ 
+    for (axis = 0; axis < dim; axis++) {
+	ii[axis] = i%nn[axis];
+	i /= nn[axis];
+    }
+}
+
+off_t sf_large_cart2line(int dim         /* number of dimensions */, 
+			 const off_t* nn /* box size [dim] */, 
+			 const off_t* ii /* cartesian coordinates [dim] */) 
+/*< Convert Cartesian to line >*/
+{
+    int i, axis;
+
+    if (dim < 1) return 0;
+
+    i = ii[dim-1];
+    for (axis = dim-2; axis >= 0; axis--) {
+	i = i*nn[axis] + ii[axis];
+    }
+    return i;
+}
+
+off_t sf_large_first_index (int i          /* dimension [0...dim-1] */, 
+			    off_t j        /* line coordinate */, 
+			    int dim        /* number of dimensions */, 
+			    const off_t *n /* box size [dim] */, 
+			    const off_t *s /* step [dim] */)
+/*< Find first index for multidimensional transforms >*/
+{
+    off_t i0, n123, ii;
+    int k;
 
     n123 = 1;
     i0 = 0;

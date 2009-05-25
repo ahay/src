@@ -172,6 +172,12 @@ bool sf_getint (const char* key,/*@out@*/ int* par)
     return sf_simtab_getint (pars,key,par);
 }
 
+bool sf_getlargeint (const char* key,/*@out@*/ off_t* par) 
+/*< get a large int parameter from the command line >*/
+{
+    return sf_simtab_getlargeint (pars,key,par);
+}
+
 bool sf_getints (const char* key,/*@out@*/ int* par,size_t n) 
 /*< get an int array parameter (comma-separated) from the command line >*/
 {
