@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+'''
+Finds in how many projects each Madagascar program is used.
+Can be run anywhere, with no arguments.
+I.e. "./document.py >results.asc"
+will produce something like
+"sfbyte is used in 568 projects
+    clip is not documented
+    scalebar is not documented
+    gpow is not documented
+etc..."
+Note: private projects are also included
+'''
+
 from rsfdoc import progs
 import rsfprog
 
@@ -20,7 +33,3 @@ for prog in programs:
     for par in pars.keys():
         if not pars[par].desc.strip():
             print '\t%s is not documented' % par 
-
-
-    
-
