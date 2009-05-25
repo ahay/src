@@ -11,7 +11,8 @@ Flow('dmo','ndmo','nmostretch v0=2 half=n inv=y mute=12 maxstr=0.5')
 
 def vscan(title):
     return '''
-    window f3=174 n3=1 | vscan v0=%g nv=100 dv=%g half=n slowness=y |
+    window f3=174 n3=1 |
+    vscan v0=%g nv=100 dv=%g half=n slowness=y |
     grey title="%s"
     ''' % (1/2.8,(1/1.7-1/2.8)/99,title)
 
