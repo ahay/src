@@ -21,14 +21,14 @@
 
 #include <rsf.h>
 
-static off_t seektable (int dim, int *n, int *m, int *f, int *j, 
+static off_t seektable (int dim, off_t *n, off_t *m, off_t *f, int *j, 
 			int n1, int n2, off_t *table);
 
 int main (int argc, char *argv[])
 {
     int i, esize, dim, n1, n2, m1, i2, i1, j1, jump;
-    int i0, m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
-    off_t n[SF_MAX_DIM], *table, maxsize;
+    int i0, j[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM], m[SF_MAX_DIM], f[SF_MAX_DIM], *table, maxsize;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *label[SF_MAX_DIM], *unit[SF_MAX_DIM], *buf;
     bool squeeze, verb;
@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 
 	/* get f's */	
 	snprintf(key,3,"f%d",i+1);
-	if (!sf_getint(key,f+i)) {
+	if (!sf_getlargeint(key,f+i)) {
 	    /*( f#=(0,...) window start in #-th dimension )*/
 	    snprintf(key,5,"min%d",i+1);
 	    if (sf_getfloat(key,&a)) {
@@ -88,7 +88,7 @@ int main (int argc, char *argv[])
 
 	/* get n's */
 	snprintf(key,3,"n%d",i+1);
-	if (!sf_getint(key,m+i)) {
+	if (!sf_getlargeint(key,m+i)) {
 	    /*( n#=(0,...) window size in #-th dimension )*/
 	    snprintf(key,5,"max%d",i+1);
 	    if (sf_getfloat(key,&a)) {
@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
 	    }
 	}
 	if (f[i]+(m[i]-1)*j[i] > n[i]) 
-	    sf_error ("m%d=%d is too big",i+1,m[i]);
+	    sf_error ("m%d=%lld is too big",i+1,(long long) m[i]);
 
 	/* get labels */
 	snprintf(key,7,"label%d",i+1);
@@ -116,8 +116,8 @@ int main (int argc, char *argv[])
     if (verb) {
 	for (i=0; i < dim; i++) {
 	    if (m[i] != n[i]) 
-		sf_warning("Windowing f%d=%d j%d=%d n%d=%d min%d=%g max%d=%g",
-			   i+1,f[i],i+1,j[i],i+1,m[i],
+		sf_warning("Windowing f%d=%lld j%d=%d n%d=%lld min%d=%g max%d=%g",
+			   i+1,(long long) f[i],i+1,j[i],i+1,(long long) m[i],
 			   i+1,o[i],i+1,o[i]+(m[i]-1)*d[i]);
 	}
     }
@@ -128,7 +128,7 @@ int main (int argc, char *argv[])
     for (i=i0=0; i0 < dim; i0++) {
 	if (squeeze && 1==m[i0]) continue;
 	snprintf(key,3,"n%d",i+1);
-	sf_putint(out,key,m[i0]);
+	sf_putlargeint(out,key,m[i0]);
 	snprintf(key,3,"o%d",i+1);
 	sf_putfloat(out,key,o[i0]);
 	snprintf(key,3,"d%d",i+1);
@@ -148,7 +148,7 @@ int main (int argc, char *argv[])
 	for (i0=0; i0 < dim; i0++) {
 	    if (1 != m[i0]) continue;
 	    snprintf(key,3,"n%d",i+1);
-	    sf_putint(out,key,m[i0]);
+	    sf_putlargeint(out,key,m[i0]);
 	    snprintf(key,3,"o%d",i+1);
 	    sf_putfloat(out,key,o[i0]);
 	    snprintf(key,3,"d%d",i+1);
@@ -170,7 +170,7 @@ int main (int argc, char *argv[])
     sf_setform(out,SF_NATIVE);
     
     /* Now do the actual work */
-    n2 = sf_filesize(out)/(off_t) m[0];
+    n2 = sf_filesize(out)/m[0];
     m1 = m[0]*esize;
     n1 = (1+(m[0]-1)*j[0])*esize;
     jump = (j[0]-1) * esize;
@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
     f[0] *= esize;
 
     buf = sf_charalloc (n1);
-    table = (off_t*) sf_alloc (n2,sizeof(off_t));
+    table = sf_largeintalloc (n2);
 
     maxsize = seektable(dim,n,m,f,j,n1,n2,table);
 
@@ -205,13 +205,13 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-static off_t seektable(int dim, int *n, int *m, int *f, int *j, 
+static off_t seektable(int dim, off_t *n, off_t *m, off_t *f, int *j, 
 		       int n1, int n2, off_t *table)
 {
     int i2, i, ii[SF_MAX_DIM];
     off_t t, t2;
 
-    t2 = sf_cart2line (dim-1, n+1, f+1);
+    t2 = sf_large_cart2line (dim-1, n+1, f+1);
     table[0] = t2*n[0] + f[0];
 
     for (i2=1; i2 < n2; i2++) {
