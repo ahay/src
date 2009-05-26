@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	inp = sf_input("input");
 	out = sf_output("output");
 
-	ndim = sf_filedims (inp,n);
+	ndim = sf_largefiledims (inp,n);
 	size = sf_esize(inp);
 	for (i=0; i < ndim-1; i++) {
 	    size *= n[i];
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 	sf_system(cmdline);
 
 	inp = sf_input(oname);
-	ndim = sf_filedims (inp,n);
+	ndim = sf_largefiledims (inp,n);
 	if (last != n[ndim-1]) {
 	    sf_warning("Wrong dimensionality %d != %d",last,n[ndim-1]);
 	    MPI_Finalize();

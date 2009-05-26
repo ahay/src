@@ -95,14 +95,14 @@ int main (int argc, char* argv[])
 
 	printf("\n");
 
-	if (!trail) dim = sf_filedims(file,n);
+	if (!trail) dim = sf_largefiledims(file,n);
 
 	size = 1;
 	for (j=0; j < dim; j++) {
 	    snprintf(key,8,"n%d",j+1);
 	    if (!sf_histlargeint(file,key,&nj)) break;
 
-	    snprintf(out,25,"%s=%llu",key,nj);
+	    snprintf(out,25,"%s=%llu",key,(long long) nj);
 	    printf("%s%s%s",pad+10,out,pad+strlen(out));
 	    size *= nj;
 

@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
  
     in = sf_input("in");
 
-    dim = (size_t) sf_filedims (in,n);
+    dim = (size_t) sf_largefiledims (in,n);
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }

@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     in  = sf_input("in");
     out = sf_output("out");
 
-    dim   = sf_filedims(in,n);
+    dim   = sf_largefiledims(in,n);
     esize = sf_esize(in);
 
     if (!sf_getbool("verb",&verb)) verb=false;

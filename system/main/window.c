@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
     if (!sf_histint (in,"esize",&esize) || esize <= 0)
 	sf_error("Need esize > 0 in in");
 
-    dim = sf_filedims(in,n);
+    dim = sf_largefiledims(in,n);
 
     for (i=0; i < dim; i++) {
 	/* get o's */

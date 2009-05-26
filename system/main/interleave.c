@@ -40,7 +40,7 @@ int main (int argc, char* argv[])
     }
     if (0==nin) sf_error ("no input");
    
-    dim = sf_filedims(in[0],n);
+    dim = sf_largefiledims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
     /* Axis for interleaving */
     if (axis > dim && axis <=0) 

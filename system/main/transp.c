@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     /* Max amount of RAM (in Mb) to be used */
     memsize = (off_t) mem * (1<<20); /* convert Mb to bytes */
 
-    dim = sf_filedims(in,n);
+    dim = sf_largefiledims(in,n);
 
     if (!sf_getint("plane",&dim1)) {
 	/* Two-digit number with axes to transpose. The default is 12 */

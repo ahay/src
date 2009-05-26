@@ -52,7 +52,7 @@ void ocpatch_init(int dim     /* number of dimensions */,
     table = tmpfile();
     if (NULL == table) 
 	sf_error("%s: trouble with temporary storage",__FILE__);
-    tab = (off_t*) sf_alloc(n2,sizeof(off_t));
+    tab = sf_largeintalloc(n2);
 
     for (ip=0; ip < np; ip++) {
 	t = ip;

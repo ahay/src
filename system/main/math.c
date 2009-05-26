@@ -120,7 +120,7 @@ int main (int argc, char* argv[])
 	if (SF_FLOAT != type && SF_COMPLEX != type) 
 	    sf_error("Need float or complex input");
 	
-	dim = sf_filedims(in[0],n);
+	dim = sf_largefiledims(in[0],n);
 	for (i=0; i < dim; i++) {
 	    (void) snprintf(xkey,3,"d%d",i+1);
 	    if (!sf_histfloat(in[0],xkey,d+i)) d[i] = 1.;

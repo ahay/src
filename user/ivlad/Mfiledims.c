@@ -26,14 +26,24 @@ main (int argc, char *argv[])
 {
     int i;
     int ndims;
+    off_t nlarge[SF_MAX_DIM];
     int n[SF_MAX_DIM];
-    bool parform;
+    bool parform, large;
     sf_file in=NULL;
 
     sf_init(argc,argv);
 
     in = sf_input("in");
-    ndims = sf_filedims(in, n);
+
+    if (!sf_getbool("large", &large))
+        large = false;
+    /* if y, file with large dimensions. */
+
+    if (large) {
+	ndims = sf_largefiledims(in, nlarge);
+    } else {
+	ndims = sf_filedims(in, n);
+    }
 
     if (!sf_getbool("parform", &parform))
         parform = true;
@@ -49,7 +59,11 @@ main (int argc, char *argv[])
         printf( ":" );
 
     for (i=0; i<ndims; i++) {
-        printf( "%d", n[i] );
+	if (large) {
+	    printf( "%lld", (long long) n[i] );
+	} else {
+	    printf( "%d", n[i] );
+	}
         if (i<ndims-1) printf(",");
     }
 

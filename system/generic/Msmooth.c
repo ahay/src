@@ -21,8 +21,7 @@
 
 int main (int argc, char* argv[]) 
 {
-    off_t n[SF_MAX_DIM];
-    int dim, dim1, i, j, rect[SF_MAX_DIM], s[SF_MAX_DIM];
+    int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
     int nrep, irep, n1, n2, i2, i0;
     bool diff[SF_MAX_DIM], box[SF_MAX_DIM];
     char key[6];

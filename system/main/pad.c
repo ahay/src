@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    dim = sf_filedims(in,n);
+    dim = sf_largefiledims(in,n);
     
     ntr=1;
     for (j=0; j < SF_MAX_DIM; j++) {

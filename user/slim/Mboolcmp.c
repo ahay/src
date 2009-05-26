@@ -67,12 +67,12 @@ int main(int argc, char *argv[])
     out = sf_output("out");
     sf_settype(out,SF_INT);
 
-    dim = sf_filedims(in,n);
+    dim = sf_largefiledims(in,n);
     for (nsiz=1, i=0; i < dim; i++) nsiz *= n[i];
 
     if (!cmp_num) {
       in_r = sf_input(right);
-      dim_r = (size_t) sf_filedims(in_r,n_r);
+      dim_r = (size_t) sf_largefiledims(in_r,n_r);
       for (nsiz_r=1, i=0; i < dim_r; i++) nsiz_r *= n_r[i];
     }
 

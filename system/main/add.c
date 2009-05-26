@@ -160,7 +160,7 @@ int main (int argc, char* argv[])
     cmode = (NULL==mode)? 'a':mode[0];
 
     /* verify file compatibility */
-    dim = sf_filedims(in[0],n); /* input files dimensions */
+    dim = sf_largefiledims(in[0],n); /* input files dimensions */
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }                           /* number of elements in input files */

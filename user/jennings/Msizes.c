@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
         file = sf_input(filename);
         if (sf_histint(file,"esize",&esize));
         else esize = sf_esize(file);
-        dim = sf_filedims(file,n);
+        dim = sf_largefiledims(file,n);
         sf_fileclose(file);
             
         size = 1;               /* Calculate file size          */

@@ -26,8 +26,7 @@ Input and output are complex data. The input is padded by factor pad.
 
 int main (int argc, char **argv)
 {
-    off_t n[SF_MAX_DIM];     /* dimensions */
-    int n1, nx, n3, dim; 
+    int n1, nx, n3, dim, n[SF_MAX_DIM];     /* dimensions */ 
     int i1, ix, i3, j;       /* loop counters */
     int nk;                  /* number of wavenumbers */   
     int npad;                /* padding */

@@ -28,8 +28,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    off_t n[SF_MAX_DIM];
-    int taglen, status, argc=2, dim, i;
+    int taglen, status, argc=2, dim, n[SF_MAX_DIM], i;
     char *tag, *argv[] = {"matlab","-"};
     double *p;
     sf_file file;

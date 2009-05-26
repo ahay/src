@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     inp = sf_input("in");
     out = sf_output("out");
 
-    ndim = sf_filedims (inp,n);
+    ndim = sf_largefiledims (inp,n);
     size = sf_esize(inp);
     for (i=0; i < ndim-1; i++) {
 	size *= n[i];
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     sf_rm(iname2,true,false,false);
 
     inp = sf_input(oname);
-    ndim = sf_filedims (inp,n);
+    ndim = sf_largefiledims (inp,n);
     if (last != n[ndim-1]) 
 	sf_error("Wrong dimensionality %d != %d",last,n[ndim-1]);
 

@@ -79,7 +79,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    dim = sf_filedims(in[0],n);
+    dim = sf_largefiledims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
     /* Axis being merged */
     if (1 > axis) sf_error("axis=%d < 1",axis);

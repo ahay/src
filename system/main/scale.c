@@ -48,7 +48,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("rscale",&dscale)) dscale=0.;
     /* Scale by this factor. */
 
-    ndim = sf_filedims (in, n);
+    ndim = sf_largefiledims (in, n);
 
     n1=1;
     n2=1;
