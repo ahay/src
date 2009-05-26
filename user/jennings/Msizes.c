@@ -78,10 +78,10 @@ int main (int argc, char* argv[])
                 for (j=0; j<5; j++) if (p1024[j] > bytes) break;
                 size_human = ((float) bytes)/((float) p1024[j-1]);
                 printf ("%d  %10lld  %6.1f %cB  %s\n",
-                        esize,size,size_human,prefix[j-1],filename);
+                        esize,(long long) size,size_human,prefix[j-1],filename);
             }
                                 /* ... or simple byte count     */
-            else printf ("%d  %10lld  %10lld  %s\n",esize,size,bytes,filename);
+            else printf ("%d  %10lld  %10lld  %s\n",esize,(long long) size,(long long) bytes,filename);
         }
     }
 
@@ -93,7 +93,7 @@ int main (int argc, char* argv[])
         printf ("               %6.1f %cB  total\n",size_human,prefix[j-1]);
     }
                                 /* ... or simple byte count     */
-    else printf ("               %10lld  total\n",total);
+    else printf ("               %10lld  total\n",(long long) total);
 
     exit (0);
 }
