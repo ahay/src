@@ -28,7 +28,8 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main(int argc, char* argv[])
 {
     int dim, dim1, i, n1, i1, i2, n2, niter;
-    int n[SF_MAX_DIM], rect[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM]; 
+    int rect[SF_MAX_DIM];
     char key[6];	
     float done, dtwo;
     float *one, *two, *rat1, *rat2;

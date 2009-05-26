@@ -18,16 +18,14 @@ if 'matlab' in env.get('API',[]):
     mex = env.get('MEX')
     suffix = env.get('MEXSUFFIX')
 
+    if mex:
+        mexcom = mex + " CFLAGS='$CCFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
+
     for inp in Split('par dim read write create'):
         cfile = 'rsf_' + inp
 
         if mex:
-            mfile = env.Command(cfile+suffix,
-                                cfile+'.c',
-                                "%s CFLAGS='%s %s -fPIC' "
-                                "$SOURCE %s %s -output $TARGET" %
-                                (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
-                                 env['_LIBDIRFLAGS'], env['_LIBFLAGS']))
+            mfile = env.Command(cfile+suffix,cfile+'.c',mexcom)
 
             if root:
                 install = env.Install(libdir,mfile)

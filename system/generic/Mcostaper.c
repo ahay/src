@@ -23,7 +23,8 @@
 
 int main(int argc, char* argv[])
 {
-    int dim, dim1, n[SF_MAX_DIM], nw[SF_MAX_DIM], s[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM];
+    int dim, dim1, nw[SF_MAX_DIM], s[SF_MAX_DIM];
     int i, j, iw, n1, n2, i0, i2;
     float *data, *w[SF_MAX_DIM], wi;
     char key[4];

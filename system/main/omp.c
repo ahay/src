@@ -28,8 +28,8 @@
 
 int main(int argc, char* argv[])
 {
-    int rank, nodes, node,ndim,n[SF_MAX_DIM],last,extra,chunk,i,j,len,nc;
-    off_t size, left,nbuf;
+    int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
+    off_t n[SF_MAX_DIM], size, left,nbuf;
     char command[CMDLEN], command2[CMDLEN], *iname, *oname, *iname2, key[5];
     char **inames, **onames, **cmdline, buffer[BUFSIZ];
     FILE *ifile=NULL, *ofile=NULL;

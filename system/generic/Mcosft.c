@@ -27,7 +27,8 @@ Pad the data if you need to suppress wrap-around effects.
 
 int main (int argc, char* argv[]) 
 {
-    int dim, dim1, i, j, n[SF_MAX_DIM], sign[SF_MAX_DIM], s[SF_MAX_DIM];
+    off_t n[SF_MAX_DIM];
+    int dim, dim1, i, j, sign[SF_MAX_DIM], s[SF_MAX_DIM];
     int n1, n2, i2, i0;
     char key[20], key2[20], *label;
     float *data, o[SF_MAX_DIM], d[SF_MAX_DIM];

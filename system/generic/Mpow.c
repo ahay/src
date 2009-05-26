@@ -23,7 +23,8 @@
 
 int main(int argc, char *argv[])
 {
-    int n[SF_MAX_DIM], ii[SF_MAX_DIM], j, nd, id, ix, nx, nbuf;
+    off_t n[SF_MAX_DIM];
+    int ii[SF_MAX_DIM], j, nd, id, ix, nx, nbuf;
     off_t i, nsiz;
     float d, o, p, *gain[SF_MAX_DIM], *buf;
     char key[6], *prog;
