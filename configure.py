@@ -153,13 +153,14 @@ def check_all(context):
     libs(context)
     c99 (context) # FDNSI
     x11 (context) # FDNSI
+    opengl(context) # FDNSI
+    sfpen(context) # FDNSI
     ppm (context) # FDNSI
     tiff (context) # FDNSI
     gd  (context) # FDNSI
     ffmpeg  (context) # FDNSI
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
-    opengl(context) # FDNSI
     blas(context) # FDNSI
     mpi (context) # FDNSI
     omp (context) # FDNSI
@@ -447,7 +448,6 @@ def x11(context):
 
     if not res:
         context.Result(context_failure)
-        stderr_write('xtpen (for displaying .vpl images) will not be built.','bold')
         need_pkg('xaw', fatal=False)
         context.env['XINC'] = None
         return
@@ -489,6 +489,37 @@ def x11(context):
     context.env['CPPPATH'] = oldpath
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
+
+def check_pen(env,pen):
+    if pen == 'xtpen' and (env.get('XINC') and env.get('XLIBPATH')):
+        return 1
+    if pen == 'oglpen' and (env.get('OPENGL') or env.get('OPENGLFLAGS')):
+        return 1
+    return 0
+
+def sfpen(context):
+    context.Message("checking for sfpen ... ")
+    sfpen = context.env.get('SFPEN')
+    
+    if not sfpen:
+        if plat['OS'] == 'cygwin' or plat['OS'] == 'darwin':
+            pens = ('oglpen','xtpen')
+        else:
+            pens = ('xtpen','oglpen')
+        for pen in pens:
+            if check_pen(context.env,pen):
+                sfpen = pen
+                break
+    else:
+        if not check_pen(context.env,sfpen):
+            sfpen = None
+
+    if not sfpen:
+        context.Result(context_failure)
+        stderr_write('sfpen (for displaying .vpl images) will not be built.','bold')
+    else:
+        context.Result(sfpen)
+        context.env['SFPEN'] = sfpen
 
 pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'darwin':'netpbm (fink)',
@@ -1375,8 +1406,9 @@ def options(file):
     opts.Add('CAIROPNG','The cairo library (PNG support)')
     opts.Add('CAIROSVG','The cairo library (SVG support)')
     opts.Add('CAIROPDF','The cairo library (PDF support)')
-    opts.Add('PPMPATH','Path to netpbm header files')
     opts.Add('CAIROPATH','Path to cairo header files')
+    opts.Add('PPMPATH','Path to netpbm header files')
+    opts.Add('SFPEN','Preference for sfpen')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

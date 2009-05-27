@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
         sf_solver_reg(divk_lop,sf_cgstep,sf_copy_lop,
                       n12k,n12k,n12,s,d,niter,eps,
                       "verb",verb,"end");
-        sf_cgstep_close;
+        sf_cgstep_close();
         sf_floatwrite(s,n12k,out);
  
     }

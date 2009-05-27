@@ -154,10 +154,10 @@ def retrieve(target=None,source=None,env=None):
     return 0
 
 vppen = os.path.join(bindir,'vppen')
-xtpen = os.path.join(bindir,'xtpen')
+sfpen = os.path.join(bindir,'sfpen')
 pspen = os.path.join(bindir,'pspen')
 
-View  = Builder(action = xtpen + " $SOURCES",src_suffix=vpsuffix)
+View  = Builder(action = sfpen + " $SOURCES",src_suffix=vpsuffix)
 
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
@@ -430,7 +430,7 @@ class Project(Environment):
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % xtpen
+            flow = flow + ' | %s pixmaps=y' % sfpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})        
         return apply(self.Flow,(target,source,flow),kw)
@@ -451,7 +451,7 @@ class Project(Environment):
         self.Alias(target + '.lock',lock2)
         self.lock.append(lock2)
         self.Command(target + '.flip',target2,
-                     '%s $SOURCE %s' % (xtpen,locked))
+                     '%s $SOURCE %s' % (sfpen,locked))
         test = self.Test('.test_'+target,target2)
         self.test.append(test)
         self.Alias(target + '.test',test)
