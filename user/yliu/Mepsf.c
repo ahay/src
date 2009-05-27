@@ -36,9 +36,9 @@ int main (int argc, char* argv[])
     char *type;
    
     int i,j,k,p,ii,kk,pp; /* loop index */
-    bool boundary, verb;
+    bool boundary, verb, weight;
     
-    float tindex,*trace,*tempt,*temp1,*extendt,*sdev,*result;
+    float tindex,*trace,*tempt,*temp1,*extendt,*sdev,*result,sigma,*w;
     sf_file in, out;
     
     sf_init (argc, argv); 
@@ -71,11 +71,22 @@ int main (int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
+    if ('s'==type[0]) {
+	if (!sf_getbool("weight",&weight)) weight=false;
+	/* Gaussian weight flag (only for stack) */
+	
+	if (!sf_getfloat("sigma",&sigma)) sigma=3.;
+	/* Gaussian weight radius (only for stack) */
+
+	if (0==sigma) sf_error("Need non-zero float input");
+    }
+
     trace = sf_floatalloc(n1*n2);
     tempt = sf_floatalloc(n1*n2);
     extendt = sf_floatalloc((n1+2*m1)*(n2+2*m2));
 
     temp1 = sf_floatalloc(nfw1*nfw2);
+    w = sf_floatalloc(nfw1*nfw2);
     sdev = sf_floatalloc(nfw1*nfw2);
     result = sf_floatalloc(nfw1*nfw2);
     nindex = sf_intalloc(nfw1*nfw2);
@@ -99,11 +110,19 @@ int main (int argc, char* argv[])
 			for(k=0;k<nfw2;k++){
 			    for(kk=0;kk<nfw1;kk++) {
 				temp1[k*nfw1+kk]=extendt[(n1+2*m1)*(i+p+k)+j+pp+kk];
+				if (weight) {
+				    w[k*nfw1+kk] = exp(-1*((p+k-m2)*(p+k-m2)+(pp+kk-m1)*(pp+kk-m1))/(2*sigma*sigma+FLT_EPSILON));
+				}
 			    }
 			}
 			sdev[p*nfw1+pp]=sdeviation(temp1,nfw1*nfw2);
 			switch(type[0]) {
 			    case 's':
+				if (weight) {
+				    for (k=0;k<nfw1*nfw2;k++) {
+					temp1[k] = temp1[k]*w[k];
+				    }
+				}
 				result[p*nfw1+pp]=mean(temp1,nfw1*nfw2);
 				break;
 			    case 'm':
