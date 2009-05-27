@@ -1,5 +1,19 @@
 #!/bin/sh
 
+warning()
+{
+    echo -en "\E[1m" # bold
+    echo -n $1
+    echo -e "\E[0m" # end highlighting
+}
+
+fatal_error()
+{
+    echo -en "\E[41m\E[93m " # yellow on red background
+    echo -n $1
+    echo -e " \E[0m" # end highlighting
+}
+
 findprog ()
 {
     sifs=$IFS
@@ -18,7 +32,7 @@ findprog python
 python=$prog
 echo "checking for Python ... $python"
 if test "$python" = "no"; then
-    echo "Please install Python before proceeding: http://www.python.org"
+    fatal_error "Please install Python before proceeding: http://www.python.org"
     exit 1
 fi
 python_v=`python -V 2>&1 | awk '{print $2}'`
@@ -34,8 +48,8 @@ if test "$root" = "no"; then
     if test ! -d $root; then
 	mkdir $root
     fi
-    echo "I am temporarily setting RSFROOT to \"$root\"."
-    echo "Please adjust your shell settings to set it permanently!"
+    warning "I am temporarily setting RSFROOT to \"$root\"."
+    warning "Please adjust your shell settings to set it permanently!"
     export RSFROOT=$root
 fi
 
@@ -66,8 +80,8 @@ if test "$scons" = "no"; then
     fi
     echo "Installing SCons ... $scons"
     if test "$scons" = "failed"; then
-	echo "SCons installation failed."
-	echo "Please check your Python installation!"
+	fatal_error "SCons installation failed."
+	fatal_error "Please check your Python installation!"
 	exit 2
     fi
 fi
