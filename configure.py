@@ -22,8 +22,29 @@ context_failure = 0
 py_success = 0 # user-defined
 unix_failure = 1
 
-# Make sure error messages stand out visually
-def stderr_write(message):
+def escape_seq(keyword):
+    'A few ANSI escape sequences for highlighting warnings and errors'
+    # Bold for warnings, and yellow on red background for fatal errors
+    # These are independent from user-selected terminal emulator background
+    # Details at http://en.wikipedia.org/wiki/ANSI_escape_code
+    ansi_codes = {
+        'bold'  :1,
+        'redbg' :41,
+        'yellow':93,
+        'end'   :0
+        }
+    return '\033[%dm' % ansi_codes[keyword]
+
+def stderr_write(message, highlight_mode=None):
+    'Make sure error messages stand out visually'
+
+    if highlight_mode != None:
+        if highlight_mode == 'bold':
+            prependix = escape_seq('bold')
+        elif highlight_mode == 'yellow_on_red':
+            prependix = escape_seq('redbg') + escape_seq('yellow')
+        message =  prependix + message + escape_seq('end')
+
     sys.stderr.write('\n  %s\n' % message)
 
 def pycompile(target, source, env):
@@ -116,11 +137,11 @@ def need_pkg(pkgtype,fatal=True):
         if pkg[pkgtype].has_key(plat['distro']):
             pkgnm = pkg[pkgtype].get(plat['distro'])
             if fatal:
-                stderr_write('Needed package: ' + pkgnm)
+                stderr_write('Needed package: ' + pkgnm,'yellow_on_red')
             else:
-                stderr_write('Optional package: ' + pkgnm)
+                stderr_write('Optional package: ' + pkgnm,'bold')
     if fatal:
-        stderr_write('Fatal missing dependency')
+        stderr_write('Fatal missing dependency','yellow_on_red')
         sys.exit(unix_failure)
 
 def check_all(context):
@@ -426,7 +447,7 @@ def x11(context):
 
     if not res:
         context.Result(context_failure)
-        stderr_write('xtpen (for displaying .vpl images) will not be built.')
+        stderr_write('xtpen (for displaying .vpl images) will not be built.','bold')
         need_pkg('xaw', fatal=False)
         context.env['XINC'] = None
         return
@@ -705,7 +726,7 @@ def jpeg(context):
         context.env['JPEG'] = jpeg
     else:
         context.Result(context_failure)
-        stderr_write('sfbyte2jpg and sfjpg2byte will not be built.')
+        stderr_write('sfbyte2jpg and sfjpg2byte will not be built.','bold')
         need_pkg('jpeg', fatal=False)
         context.env['JPEG'] = None
 
@@ -1217,7 +1238,7 @@ def matlab(context):
                                                                 matlab)
     else:
         context.Result(context_failure)
-        stderr_write('Please install Matlab.')
+        stderr_write('Please install Matlab.','yellow_on_red')
         context.env['MATLAB'] = None
         sys.exit(unix_failure)
 
@@ -1228,7 +1249,7 @@ def matlab(context):
         context.env['MEX'] = mex
     else:
         context.Result(context_failure)
-        stderr_write('Please install mex.')
+        stderr_write('Please install mex.','yellow_on_red')
         context.env['MEX'] = None
         sys.exit(unix_failure)
 
@@ -1268,11 +1289,11 @@ def octave(context):
             context.env['MKOCTFILE'] = mkoctfile
         else:
             context.Result(context_failure)
-            stderr_write('Please install mkoctfile.')
+            stderr_write('Please install mkoctfile.','bold')
             need_pkg('mkoctfile')
     else: # octave not found
         context.Result(context_failure)
-        stderr_write('Please install Octave.')
+        stderr_write('Please install Octave.','bold')
         need_pkg('octave')
 
 pkg['swig'] = {'fedora':'swig',
