@@ -36,9 +36,8 @@ int main(int argc, char* argv[])
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int i, dim, dim1, dim2, esize, which;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t n[SF_MAX_DIM], pos=0, pos3=0, memsize, *k1 = NULL, *k2 = NULL;
-    size_t n1, n2, n3, size;
-    size_t i1, i2, i3;
+    off_t n[SF_MAX_DIM], pos=0, pos3=0, memsize, size, *k1 = NULL, *k2 = NULL;
+    size_t n1, n2, n3, i1, i2, i3;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;
 /* Flags; 0=leave alone, 1=reverse this dimension */
