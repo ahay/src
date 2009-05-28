@@ -160,12 +160,8 @@ int main(int argc, char* argv[])
 			vp_where (&xc, &yc);
 			vp_tjust (TH_SYMBOL, TV_SYMBOL);
 			vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
-		    } else if (i1==0 ||
-			       (xi < min1 && x[i2][i1-1] > max1) ||
-			       (xi > max1 && x[i2][i1-1] < min1) ||
-			       (yi < min2 && y[i2][i1-1] > max2) ||
-			       (yi > max2 && y[i2][i1-1] < min2)) {
-			vp_umove(xi,yi);	    
+		    } else if (i1==0) {
+			vp_umove(xi,yi);
 		    } else {
 			vp_udraw(xi,yi);
 		    }
