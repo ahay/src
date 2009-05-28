@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     sf_axis at,ax,as,ae,aa;
     int     it,ix,is,ie;
 
-    int ompchunk, ompith, ompnth=1;
+    int ompchunk, ompith=0, ompnth=1;
 #ifdef _OPENMP
     int ompath;
 #endif

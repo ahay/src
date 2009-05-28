@@ -85,13 +85,15 @@ int sf_memsize()
   >*/
 {
     char *memenv;
+    long longsize;
     int memsize;
     const int def=100; /* default value (Mbytes) */
 
     if (NULL != (memenv = getenv("RSFMEMSIZE"))) {
-	memsize = strtol(memenv,NULL,10);
-	if (ERANGE == errno || memsize < 0 || memsize > INT_MAX) 
+	longsize = strtol(memenv,NULL,10);
+	if (ERANGE == errno || longsize < 0 || longsize > INT_MAX) 
 	    sf_error("wrong value in RSFMEMSIZE environmental variable");
+	memsize = longsize;
     } else {
 	memsize = def;
     }

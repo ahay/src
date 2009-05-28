@@ -247,6 +247,7 @@ def cc(context):
     if string.rfind(CC,'gcc') >= 0:
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
+                     '-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):
             context.Message("checking if gcc accepts '%s' ... " % flag)
@@ -254,7 +255,7 @@ def cc(context):
             res = context.TryCompile(text,'.c')
             context.Result(res)
             if res:
-                break
+                break        
         if not res:
             context.env['CCFLAGS'] = oldflag
         # large file support
@@ -275,7 +276,6 @@ def cc(context):
                                      ['/sw/lib',]
             context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
                                      ' -framework Accelerate'
-
     elif plat['OS'] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
@@ -543,6 +543,7 @@ def ppm(context):
     text = '''
     #include <ppm.h>
     int main(int argc,char* argv[]) {
+    ppm_init(&argc,argv);
     return 0;
     }\n'''
     for ppm in [context.env.get('PPM','netpbm'),'netpbm.10']:
@@ -576,6 +577,7 @@ def tiff(context):
     text = '''
     #include <tiffio.h>
     int main(int argc,char* argv[]) {
+    TIFF *tiffout;
     return 0;
     }\n'''
     tiff = context.env.get('TIFF','tiff')
@@ -588,6 +590,8 @@ def tiff(context):
     else:
         context.Result(context_failure)
         context.env['TIFF'] = None
+        stderr_write('sfbyte2tif, sftif2byte, and tiffpen will not be built.',
+                     'bold')
         need_pkg('libtiff', fatal=False)
 
     LIBS.pop()
@@ -604,6 +608,8 @@ def gd(context):
     text = '''
     #include <gd.h>
     int main(int argc,char* argv[]) {
+    gdImagePtr image;
+    image = gdImageCreate(10,10);
     return 0;
     }\n'''
     gd = context.env.get('GD','gd')
@@ -696,6 +702,8 @@ def cairo(context):
     text = '''
     #include <cairo.h>
     int main(int argc,char* argv[]) {
+    cairo_surface_t *surface;
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
     return 0;
     }\n'''
     cairo = context.env.get('CAIRO','cairo')
@@ -719,6 +727,8 @@ def cairo(context):
             #include <cairo.h>
             #include <cairo-%s.h>
             int main(int argc,char* argv[]) {
+            cairo_surface_t *surface;
+            surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
             return 0;
             }\n''' % format
             res2 = context.TryLink(text,'.c')
@@ -748,6 +758,9 @@ def jpeg(context):
     #include <stdio.h>
     #include <jpeglib.h>
     int main(int argc,char* argv[]) {
+    struct jpeg_compress_struct jpeg;
+    struct jpeg_error_mgr jpeg_err;
+    jpeg.err = jpeg_std_error(&jpeg_err);
     return 0;
     }\n'''
 
@@ -757,7 +770,8 @@ def jpeg(context):
         context.env['JPEG'] = jpeg
     else:
         context.Result(context_failure)
-        stderr_write('sfbyte2jpg and sfjpg2byte will not be built.','bold')
+        stderr_write('sfbyte2jpg, sfjpg2byte, and jpegpen will not be built.',
+                     'bold')
         need_pkg('jpeg', fatal=False)
         context.env['JPEG'] = None
 
