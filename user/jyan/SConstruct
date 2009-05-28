@@ -6,6 +6,7 @@ progs = '''
 afac 
 convolve2
 ederiv
+ewefd2dd
 '''
 
 # boxfilter 

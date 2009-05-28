@@ -26,30 +26,22 @@
 #define NOP 4 /* derivative operator half-size */
 
 /* Muir's derivative operator: staggered grids */ 
-#define C1 +0.598144 /*  1225/ 1024      /2 */
-#define C2 -0.039876 /* -1225/(1024*  15)/2 */
-#define C3 +0.004785 /*  1225/(1024* 125)/2 */
-#define C4 -0.000348 /* -1225/(1024*1715)/2 */
+#define C1 +0.800000    /* +4/5    */
+#define C2 -0.200000    /* -1/5    */
+#define C3 +0.038095    /* +4/105  */
+#define C4 -0.003571   /* -5/280  */
 
 /*  forward FD derivative stencils */
-#define Fz(a,ix,iz,s) (C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +	\
-		       C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +	\
-		       C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +	\
-                       C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
-#define Fx(a,ix,iz,s) (C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +	\
-		       C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +	\
-		       C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +	\
-                       C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
+#define Dz(a,ix,iz,s) (C4*(a[ix  ][iz+4] - a[ix  ][iz-4]) +	\
+		       C3*(a[ix  ][iz+3] - a[ix  ][iz-3]) +	\
+		       C2*(a[ix  ][iz+2] - a[ix  ][iz-2]) +	\
+                       C1*(a[ix  ][iz+1] - a[ix  ][iz-1])  )*s
+#define Dx(a,ix,iz,s) (C4*(a[ix+4][iz  ] - a[ix-4][iz  ]) +	\
+		       C3*(a[ix+3][iz  ] - a[ix-3][iz  ]) +	\
+		       C2*(a[ix+2][iz  ] - a[ix-2][iz  ]) +	\
+                       C1*(a[ix+1][iz  ] - a[ix-1][iz  ])  )*s
 
-/* backward FD derivative stencils */
-#define Bz(a,ix,iz,s) (C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +	\
-		       C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +	\
-		       C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +	\
-                       C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
-#define Bx(a,ix,iz,s) (C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +	\
-		       C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +	\
-		       C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +	\
-                       C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
+
 
 int main(int argc, char* argv[])
 {
@@ -251,8 +243,8 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     dt2 = dt*dt;
-    idz = 2/d1;
-    idx = 2/d2;
+    idz = 1/d1;
+    idx = 1/d2;
 
     /*------------------------------------------------------------*/ 
     /* input density */
@@ -369,12 +361,12 @@ int main(int argc, char* argv[])
 	for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
 	    for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 		
-		tzz[ix][iz] = Fz(uoz,ix,iz,idz);
+		tzz[ix][iz] = Dz(uoz,ix,iz,idz);
 		
-		txx[ix][iz] = Fx(uox,ix,iz,idx);
+		txx[ix][iz] = Dx(uox,ix,iz,idx);
 
-	        txz[ix][iz] = Bx(uoz,ix,iz,idx) 
-		    +         Bz(uox,ix,iz,idz);
+	        txz[ix][iz] = Dx(uoz,ix,iz,idx) 
+		    +         Dz(uox,ix,iz,idz);
 	    }
 	}		
 
@@ -449,11 +441,11 @@ int main(int argc, char* argv[])
 	for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
 	    for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 
-		ua1[ix][iz] = Fx( txz,ix,iz,idx ) 
-		    +         Bz( tzz,ix,iz,idz );
+		ua1[ix][iz] = Dx( txz,ix,iz,idx ) 
+		    +         Dz( tzz,ix,iz,idz );
 
-		uax[ix][iz] = Bx( txx,ix,iz,idx ) 
-		    +         Fz( txz,ix,iz,idz );
+		uax[ix][iz] = Dx( txx,ix,iz,idx ) 
+		    +         Dz( txz,ix,iz,idz );
 	    }
 	}
 
@@ -531,11 +523,11 @@ int main(int argc, char* argv[])
 	    for    (ix=NOP; ix<fdm->n2pad-NOP; ix++) {
 		for(iz=NOP; iz<fdm->n1pad-NOP; iz++) {
 		    
-		    qp[ix][iz] = Fz( uoz,ix,iz,idz ) 
-			+        Fx( uox,ix,iz,idx );
+		    qp[ix][iz] = Dz( uoz,ix,iz,idz ) 
+			+        Dx( uox,ix,iz,idx );
 		    
-		    qs[ix][iz] = Bz( uox,ix,iz,idz ) 
-			-        Bx( uoz,ix,iz,idx );
+		    qs[ix][iz] = Dz( uox,ix,iz,idz ) 
+			-        Dx( uoz,ix,iz,idx );
 		}
 	    }
 
