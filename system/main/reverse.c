@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     if (n2>1) {
 	if (verb) sf_warning("Going out of core...");
 
-	sf_unpipe(in,n1*n2*n3*esize); /* prepare for random access */
+	sf_unpipe(in,(off_t) n1*n2*n3*esize); /* prepare for random access */
 	pos = sf_tell(in);
 
 	k2 = sf_largeintalloc(n2);
