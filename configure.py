@@ -1342,6 +1342,7 @@ def octave(context):
         need_pkg('octave')
 
 pkg['swig'] = {'fedora':'swig',
+               'suse'  :'swig',
                'ubuntu':'swig'}
 pkg['numpy'] = {'fedora':'numpy',
                 'ubuntu':'python-scipy, python-numpy-dev'}
