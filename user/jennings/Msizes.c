@@ -30,8 +30,8 @@ for a list of RSF files.  Non-RSF files are ignored.
 int main (int argc, char* argv[])
 {
     char            *filename, *prefix=" KMGT";
-    int             i, j, esize, dim;
-    off_t           size, bytes, total, p1024[5], n[SF_MAX_DIM];
+    int             i, j, esize;
+    off_t           bytes, total, p1024[5];
     float           size_human;
     bool            files, human;
     sf_file         file;
@@ -50,6 +50,8 @@ int main (int argc, char* argv[])
 
     total = 0;
 
+    sf_file_error(false);
+
     for (i=1; i<argc; i++)      /* Loop over argument list      */
     {
         filename = argv[i];
@@ -61,14 +63,17 @@ int main (int argc, char* argv[])
         
                                 /* Get file properties          */
         file = sf_input(filename);
-        if (sf_histint(file,"esize",&esize));
-        else esize = sf_esize(file);
-        dim = sf_largefiledims(file,n);
+	if (NULL == file) continue;
+
+	bytes = sf_bytes(file);
+	if (bytes < 0) { /* reading from "stdin" */
+	    bytes = sf_filesize (file);
+	    if (!sf_histint(file,"esize",&esize) || esize <= 0)
+		sf_error("%s: need esize > 0 in input",__FILE__);
+	    bytes *= esize;
+	}
         sf_fileclose(file);
             
-        size = 1;               /* Calculate file size          */
-        for (j=0; j < dim; j++) size *= n[j];    
-        bytes  = size*esize;
         total += bytes;
     
         if (files)              /* Print file size              */
@@ -77,11 +82,11 @@ int main (int argc, char* argv[])
             {
                 for (j=0; j<5; j++) if (p1024[j] > bytes) break;
                 size_human = ((float) bytes)/((float) p1024[j-1]);
-                printf ("%d  %10lld  %6.1f %cB  %s\n",
-                        esize,(long long) size,size_human,prefix[j-1],filename);
+                printf ("%s: \t %6.1f %cB\n",
+                        filename,size_human,prefix[j-1]);
             }
                                 /* ... or simple byte count     */
-            else printf ("%d  %10lld  %10lld  %s\n",esize,(long long) size,(long long) bytes,filename);
+            else printf ("%s: \t %10lld\n",filename,(long long) bytes);
         }
     }
 
@@ -90,10 +95,10 @@ int main (int argc, char* argv[])
     {
         for (j=0; j<5; j++) if (p1024[j] > total) break;
         size_human = ((float) total)/((float) p1024[j-1]);
-        printf ("               %6.1f %cB  total\n",size_human,prefix[j-1]);
+        printf ("size= %6.1f %cB\n",size_human,prefix[j-1]);
     }
                                 /* ... or simple byte count     */
-    else printf ("               %10lld  total\n",(long long) total);
+    else printf ("size= %10lld\n",(long long) total);
 
     exit (0);
 }

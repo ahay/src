@@ -432,7 +432,7 @@ static void make_labels (sf_file in, char where1, char where2)
 	    label1->where = where1;
 	}
 	if (!sf_getint ("labelfat",&(label1->fat))) label1->fat=0;
-	/* label fatness */
+	/*( labelfat label fatness )*/
 	if ((NULL == (labl=sf_getstring(transp? "label2":"label1"))) &&
 	    (NULL == (labl=sf_histstring(in,
 					 transp? "label2":"label1")))) {

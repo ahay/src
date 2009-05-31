@@ -105,11 +105,26 @@ struct sf_File {
 static const int tabsize=10;
 /*@null@*/ static char *aformat = NULL;
 static size_t aline=8;
+static bool error=true;
 
 static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
 static char* gettmpdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
+static void sf_input_error(sf_file file, const char* message, const char* name);
+
+void sf_file_error(bool err)
+/*< set error on opening files >*/
+{
+    error = err;
+}
+
+static void sf_input_error(sf_file file, const char* message, const char* name)
+{
+   if (error) 
+       sf_error ("%s: %s %s:",__FILE__,message,name);
+   sf_fileclose(file);
+}
 
 sf_file sf_input (/*@null@*/ const char* tag)
 /*< Create an input file structure >*/
@@ -121,6 +136,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     extern off_t ftello (FILE *stream);
 
     file = (sf_file) sf_alloc(1,sizeof(*file));
+    file->dataname = NULL;
     
     if (NULL == tag || 0 == strcmp(tag,"in")) {
 	file->stream = stdin;
@@ -134,8 +150,10 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	}
 
 	file->stream = fopen(filename,"r");
-	if (NULL == file->stream) 
-	    sf_error ("%s: Cannot read header file %s:",__FILE__,filename);
+	if (NULL == file->stream) {
+	    sf_input_error(file,"Cannot read header file",filename);
+	    return NULL;
+	}
     }
 /*    setbuf(file->stream,file->buf); */
 
@@ -153,15 +171,20 @@ sf_file sf_input (/*@null@*/ const char* tag)
     }
 
     filename = sf_histstring(file,"in");
-    if (NULL == filename) sf_error ("%s: No in= in file %s",__FILE__,tag);
+    if (NULL == filename) {
+	sf_input_error (file,"No in= in file",tag);
+	return NULL;
+    }
     len = strlen(filename)+1;
     file->dataname = sf_charalloc(len);
     memcpy(file->dataname,filename,len);
 
     if (0 != strcmp(filename,"stdin")) {
 	file->stream = freopen(filename,"rb",file->stream);
-	if (NULL == file->stream) 
-	    sf_error("%s: Cannot read data file %s:",__FILE__,filename);
+	if (NULL == file->stream) {
+	    sf_input_error(file,"Cannot read data file",filename);
+	    return NULL;
+	}
     }
     free (filename);
 
@@ -174,8 +197,10 @@ sf_file sf_input (/*@null@*/ const char* tag)
 
     format = sf_histstring(file,"data_format");
     if (NULL == format) {
-	if (!sf_histint(file,"esize",&esize) || 0 != esize)
-	    sf_error ("%s: Unknown format in %s",__FILE__,tag);
+	if (!sf_histint(file,"esize",&esize) || 0 != esize) {
+	    sf_input_error (file,"Unknown format in",tag);
+	    return NULL;
+	}
 	sf_setformat(file,"ascii_float");
     } else {    
 	sf_setformat(file,format);

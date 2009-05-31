@@ -468,10 +468,14 @@ class Project(Environment):
             self.Echo('test',None,err='Nothing to test')
     def Info(self,target=None,source=None,env=None):
         'Store project information in a file'
-        info = open(str(target[0]),'w')
+        global bindir
+        infofile = str(target[0])
+        info = open(infofile,'w')
         info.write('uses=' + str(self.coms) + '\n')
-        info.write('data=' + str(self.data) + '\n')
+        info.write('data=' + str(self.data) + '\n')        
         info.close()
+        sizes = os.path.join(bindir,'sfsizes')
+        os.system('%s files=n *%s >> %s' % (sizes,sfsuffix,infofile))
         return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:
