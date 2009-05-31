@@ -21,7 +21,12 @@ def convert(infile,outfile,format,args):
     if not os.path.isfile(infile):
         print "\"%s\" is not a file" % infile
         sys.exit(1)
-    print infile, outfile, format, args
+    if format == 'vpl':
+        run = 'vppen %s %s > %s' % (args,infile,outfile)
+        print run
+        os.system(run)
+    else:
+        print 'unsupported format "%s" ' % format
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API

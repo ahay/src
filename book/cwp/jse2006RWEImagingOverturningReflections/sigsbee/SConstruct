@@ -27,14 +27,13 @@ fdmod.param(par)
 velo = 'sigsbee2a_migvel.sgy'
 Fetch(velo,'sigsbee')
 
-Flow('zvelo tzvelo',velo,
+Flow('zvelo tzvelo zvelo.asc zvelo.bin',velo,
      '''
      segyread
-     tape=$SOURCE
      tfile=${TARGETS[1]}
      hfile=${TARGETS[2]}
      bfile=${TARGETS[3]}
-     ''',stdin=0)
+     ''')
 
 # ------------------------------------------------------------
 par['nxcut']=1600

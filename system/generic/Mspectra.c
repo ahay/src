@@ -50,9 +50,9 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
     /* fix label */
-    if (NULL != (label = sf_histstring(in,"label1"))) {
-	(void) fix_label(1,label,out);
-    }
+    if (NULL != (label = sf_histstring(in,"label1")) &&
+	!fix_label(1,label,out)) 
+	sf_putstring(out,"label1","Wavenumber");
     fix_unit(1,in,out);
 
     /* determine frequency sampling (for real to complex FFT) */
