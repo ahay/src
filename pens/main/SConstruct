@@ -135,28 +135,33 @@ for pen in ('ppm','tiff','jpeg'):
 #######
 
 gd = env.get('GD')
-# Will have the ability to save MPEG movies,
-# if ffmpeg library is installed
+# Ability to save animated GIFS
+gifanim = env.get('GIFANIM')
+# Ability to save MPEG movies
 ffmpeg = env.get('FFMPEG')
 
 if gd:
     env.Include('gdpen',prefix='gd_')
-    if (ffmpeg):
+    path =  env.get('CPPPATH',[])
+    defines = env.get('CPPDEFINES',[])
+    libs = [gd]+env.get('LIBS',[])
+
+    if gifanim:
+        defines += ['GIFANIM']
+    
+    if ffmpeg:
         ffmpegpath = env.get('FFMPEGPATH',[])
         if type(ffmpegpath) is not types.ListType:
             ffmpegpath = Split(ffmpegpath)
-        obj = env.StaticObject('gdpen.o','gdpen.c',
-                               CPPPATH=[ffmpegpath]+env.get('CPPPATH',[]),
-                               CPPDEFINES=['FFMPEG']+env.get('CPPDEFINES',[]))
-    else:
-        obj = env.StaticObject('gdpen.o','gdpen.c')
+        path += ffmpegpath
+        defines += ['FFMPEG']
+        libs += [ffmpeg]
+        
+    obj = env.StaticObject('gdpen.o','gdpen.c',
+                           CPPPATH=path,
+                           CPPDEFINES=defines)
     env.Depends(obj,'gdpen.h')
-    if (ffmpeg):
-        main = env.Program('gdpen',[obj,]+objects,
-                           LIBS=[ffmpeg]+[gd]+env.get('LIBS',[]))
-    else:
-        main = env.Program('gdpen',[obj,]+objects,
-                           LIBS=[gd]+env.get('LIBS',[]))
+    main = env.Program('gdpen',[obj,]+objects,LIBS=libs)
     pens.append('gdpen')
 else:
     main = env.Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')

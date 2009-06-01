@@ -218,6 +218,7 @@ static void gd_write (void)
 	    if(called) return;
 	    gdImageJpeg(image, pltout, -1);
 	    break;
+#ifdef GIFANIM
 	case 'g':
 	case 'G':
 	    if (called) {
@@ -231,6 +232,7 @@ static void gd_write (void)
 	    image = gdImageCreate(nx,ny);
 	    gdImagePaletteCopy(image, oldimage);
 	    break;
+#endif
 #ifdef FFMPEG
 	case 'm':
 	case 'M':
@@ -270,8 +272,10 @@ void gderase (int command)
 	    break;
 	case ERASE_END:
 	    gd_write();
+#ifdef GIFANIM
 	    if (image_type[0]=='g' || image_type[0]=='G') 
 		gdImageGifAnimEnd(pltout);
+#endif
 #ifdef FFMPEG
 	    if (image_type[0] == 'm' || image_type[0] == 'M')
                 ffmpeg_finish ();

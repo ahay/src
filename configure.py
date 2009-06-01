@@ -619,6 +619,25 @@ def gd(context):
     if res:
         context.Result(res)
         context.env['GD'] = gd
+
+        context.Message("checking for GD (GIF)... ")
+        text = '''
+        #include <stdio.h>
+        #include <gd.h>
+        int main(int argc,char* argv[]) {
+        gdImagePtr image;
+        image = gdImageCreate(10,10);
+        gdImageGifAnimBegin(image, stdout, 1, 0);
+        return 0;
+        }\n'''        
+        res2 = context.TryLink(text,'.c')
+
+        if res2:
+            context.Result(res2)
+            context.env['GIFANIM'] = True
+        else:
+            context.Result(context_failure)
+            context.env['GIFANIM'] = None
     else:
         context.Result(context_failure)
         need_pkg('libgd', fatal=False)
@@ -1415,6 +1434,7 @@ def options(file):
     opts.Add('PPM','The netpbm library')
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
+    opts.Add('GIFANIM','Support for GIF animation in the GD library')
     opts.Add('FFMPEG','The ffmpeg library')
     opts.Add('FFMPEGPATH','Path to ffmpeg codec headers')
     opts.Add('CAIRO','The cairo library')
