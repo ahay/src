@@ -600,7 +600,7 @@ pkg['libgd'] = {'suse':'gd-devel',
                 'ubuntu':'libgd2-noxpm-dev'}
 
 def gd(context):
-    context.Message("checking for GD ... ")
+    context.Message("checking for GD (PNG) ... ")
 
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
@@ -620,7 +620,7 @@ def gd(context):
         context.Result(res)
         context.env['GD'] = gd
 
-        context.Message("checking for GD (GIF)... ")
+        context.Message("checking for GD (GIF) ... ")
         text = '''
         #include <stdio.h>
         #include <gd.h>
