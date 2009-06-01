@@ -78,11 +78,11 @@ catRules ='cat ${SOURCES[0:2]} axis=3' #- Enter number of files at sources
  #             Import Data             #
  #######################################
 
-#for file in segyFiles:
-#	Fetch(file,source)
+for file in segyFiles:
+	Fetch(file,source)
 
-#for file in nativeFiles:
-#	Fetch(file,source)
+for file in nativeFiles:
+	Fetch(file,source)
 
  #######################################
  #        Convert Data to RSF          #
