@@ -939,15 +939,17 @@ static void make_barlabel (sf_file in)
     }
     vs = 2.5*barlabelsz;
     
-    if (!sf_getint ("barlabelfat",&(barlabel->fat))) barlabel->fat=0;
-    /* bar label fatness */
+    if (!sf_getint ("barlabelfat",&(barlabel->fat)) &&
+	!sf_getint ("labelfat",&(barlabel->fat))) barlabel->fat=0;
+    /*( barlabelfat bar label fatness )*/
     if (NULL == (labl=sf_getstring("barlabel")) && 
 	NULL == (labl=sf_histstring(in,"label"))) { 
-	/* bar label */
+	/*( barlabel bar label )*/
 	barlabel->text = blank;
     } else if ((NULL == (unit=sf_getstring("barunit")) && 
 		NULL == (unit=sf_histstring(in,"unit"))) ||
 	       *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
+	/*( barunit bar unit )*/
 	barlabel->text = labl;
     } else {
 	len = strlen(labl)+strlen(unit)+4;
