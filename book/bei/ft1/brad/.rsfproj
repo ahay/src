@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfpow', 'sfbyte', 'sfpad', 'sfrtoc', 'sffft3', 'sfmath', 'sfreal', 'sfmerge', 'sfgrey']
+data=['data/bp/data-BP2.HH']
+size=  139214916

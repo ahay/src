@@ -4,8 +4,8 @@ import fdmod
 # Fetch Files from repository
 modelFiles=['vp_marmousi-ii.segy'] #,'density_marmousi-ii.segy']
 outputFiles=['vp'] #,'density']
-#for file in modelFiles:
-#    Fetch(file,"marm2")
+for file in modelFiles:
+    Fetch(file,"marm2")
 # Convert Files to RSF
 counter=0
 for file in modelFiles:

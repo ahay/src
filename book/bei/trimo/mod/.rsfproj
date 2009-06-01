@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfspray', 'sftransp', 'sfhalfint', 'sfpreconstkirch', 'sfwindow', 'sfdots']
+data=[]
+size=      32000

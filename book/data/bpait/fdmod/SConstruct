@@ -3,7 +3,7 @@ import fdmod
 # Fetch Files from repository
 data='bpaitvel.hh'
 source='bpait'
-## Fetch(data,source)
+Fetch(data,source)
 ## # Convert Files to RSF
 Flow('velmodel',data, '''dd form=native | scale
     rscale=.001 | put

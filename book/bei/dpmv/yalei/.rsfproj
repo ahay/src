@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfcat', 'sfsmooth', 'sfgrey', 'sfpreconstkirch']
+data=[]
+size=    1551000

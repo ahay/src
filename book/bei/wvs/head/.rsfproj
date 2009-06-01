@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfpow', 'sfgrey', 'sflmostretch', 'sfwiggle']
+data=['data/wz/wz.34.H', 'data/wz/wz.32.H', 'data/wz/wz.20.H', 'data/midpts/midpts.hh']
+size=    2911200
