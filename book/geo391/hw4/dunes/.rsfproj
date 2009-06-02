@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgrey', 'sfcosft', 'sfput', 'sfmath', 'sfsort', 'sfscale', 'sfgraph', 'sfthreshold', 'sfadd']
+data=['data/dunes/dunes3.HH']
+size=   28392912

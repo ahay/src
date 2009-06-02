@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpad', 'sfadd', 'sfmask', 'sfgrey', 'sfwilson', 'sfspike', 'sfhelicon', 'sfnoise', 'sfmiss']
+data=['data/seab/seabin.hh']
+size=     646532

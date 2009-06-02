@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfmath', 'sfwindow', 'sfpad', 'sfadd', 'sfcat', 'sftransp', 'sfgraph', 'sflpf', 'sfdots']
+data=[]
+size=      43200
