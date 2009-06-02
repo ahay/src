@@ -358,7 +358,7 @@ hiresfigs = []
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
     global colorfigs, geomanuscript
-    
+
     vpl = str(source[0])
     eps = str(target[0])
 
@@ -375,7 +375,7 @@ def pstexpen(target=None,source=None,env=None):
         try:
             options = 'color=n fat=1 fatmult=1.5 invras=y'
             name = os.path.splitext(os.path.basename(eps))[0]
-            if name in colorfigs:
+            if colorfigs == ['ALL'] or name in colorfigs:
                 options += ' color=y'
             if geomanuscript:
                 options += ' serifs=n'
