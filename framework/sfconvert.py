@@ -17,16 +17,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
 
-def convert(infile,outfile,format,args):
+def convert(infile,outfile,format,pen,args):
+    pens = {
+        'vpl': 'vppen',
+        'eps': 'pspen',
+        'ps': 'pspen'
+        }
+    bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
     if not os.path.isfile(infile):
         print "\"%s\" is not a file" % infile
         sys.exit(1)
-    if format == 'vpl':
-        run = 'vppen %s %s > %s' % (args,infile,outfile)
+    if not format in pens.keys():
+        print 'Unknown format "%s" ' % format
+        sys.exit(2)
+    if not pen:
+        pen = pens[format]
+    pen = os.path.join(bindir,pen)
+    if format == 'vpl' or format == 'eps':
+        run = '%s %s %s > %s' % (pen,args,infile,outfile)
         print run
         os.system(run)
     else:
-        print 'unsupported format "%s" ' % format
+        print 'Unsupported format "%s" ' % format
+        sys.exit(3)
+    sys.exit(0)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -39,6 +53,8 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
     ''' % sys.argv[0]
 
     format = None
+    pen = None
+
     files = []
     args = []
 
@@ -46,6 +62,8 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
         if '=' in arg:
             if arg[:7] == 'format=':
                 format = arg[7:].lower()
+            elif arg[:4] == 'pen=':
+                pen = arg[4:]
             else:
                 args.append(arg)
         else:
@@ -53,13 +71,14 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
     args = ' '.join(args)
 
     if format:
+
         if not files:
             print usage
             sys.exit(1)
         for infile in files:
             # attach format as suffix
             outfile = os.path.splitext(infile)[0]+'.'+format
-            convert(infile,outfile,format,args)
+            convert(infile,outfile,format,pen,args)
     else:
         if len(files) !=2:
             print usage
@@ -68,6 +87,6 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
         outfile = files[1]
         # get format from suffix
         format = os.path.splitext(outfile)[1][1:].lower()
-        convert(infile,outfile,format,args)
+        convert(infile,outfile,format,pen,args)
 
     sys.exit(0)
