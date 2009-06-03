@@ -35,7 +35,12 @@ int main(int argc, char* argv[])
     dat = sf_input("in");
     mat = sf_input("match");
     flt = sf_output("out");
-    pre = sf_output("pred");
+
+    if (NULL != sf_getstring("pred")) {
+	pre = sf_output("pred");
+    } else {
+	pre = NULL;
+    }
 
     ndim = sf_filedims(dat,n);
     mdim = sf_filedims(mat,m);
@@ -54,8 +59,10 @@ int main(int argc, char* argv[])
     }
     for (ns = 1; j < ndim; j++) {
 	ns *= n[j];
-	snprintf(key,6,"n%d",j+1);
-	sf_putint(pre,key,1);
+	if (pre) {
+	    snprintf(key,6,"n%d",j+1);
+	    sf_putint(pre,key,1);
+	}
     }
     n12 = nd*ns;
 
@@ -120,12 +127,14 @@ int main(int argc, char* argv[])
     multidivn (g,f,niter);
     sf_floatwrite(f,n12,flt);
 
-    for(i=0; i < n12; i++) {
-	d[i] *= mean;
+    if (pre) {
+	for(i=0; i < n12; i++) {
+	    d[i] *= mean;
+	}
+	
+	weight2_lop(false,false,n12,nd,f,g);
+	sf_floatwrite(g,nd,pre);
     }
-
-    weight2_lop(false,false,n12,nd,f,g);
-    sf_floatwrite(g,nd,pre);
 
     exit(0);
 }

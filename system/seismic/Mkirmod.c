@@ -107,7 +107,8 @@ int main(int argc, char* argv[])
 	sf_putint  (modl,"n1",nt);
 	sf_putfloat(modl,"d1",dt);
 	sf_putfloat(modl,"o1",t0);
-
+	sf_putstring(modl,"label1","Time");
+	sf_putstring(modl,"unit1","s");
 
 	/*** Initialize shots ***/
 	
