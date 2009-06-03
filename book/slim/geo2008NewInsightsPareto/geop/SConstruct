@@ -23,7 +23,7 @@ if not matlab:
     sys.stderr.write('\nCannot find Matlab.\n')
     sys.exit(1)
 
-matROOT = '../matfcts'
+matROOT = '../Matfcts'
 
 # define customized plotting function
 def mygrey(title,label1="Time",label2="Offset",unit1="s",unit2="m"):
