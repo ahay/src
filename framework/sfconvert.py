@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
+import vplot2png
 
 def exists(pen):
     '''check if a given pen exists'''
@@ -56,28 +57,42 @@ def convert(infile,outfile,format,pen,args):
     if not exe:
         print 'Unsupported program "%s" ' % pen
         if format == 'png':
-            # multiple options
-            pass
+            for other in ('gd','png','ps'):
+                if other != pen:
+                    exe = exists(other)
+                    if exe:
+                        break
+            pen = other
         elif format == 'jpeg' or format == 'jpg':
-            # multiple options
-            pass
+            for other in ('jpeg','gd'):
+                if other != pen:
+                    exe = exists(other)
+                    if exe:
+                        break
+            if not exe:
+                print 'Cannot execute %spen' % pen
+                sys.exit(4)
+            pen = other
         elif format == 'pdf':
             # multiple options
             pass
         else:
             sys.exit(3)
+            
     if pen == 'gd':
         args += ' type=%s' % format
 
     if format == 'eps':
         # special cases
         pass
+    elif format == 'png' and pen == 'ps':
+        vplot2png.convert(infile,outfile,
+                          options=' color=y fat=1 fatmult=1.5' + args)
     else:
         # default behavior
         run = '%s %s %s > %s' % (exe,args,infile,outfile)
-
-    print run
-    os.system(run)
+        print run
+        os.system(run)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
