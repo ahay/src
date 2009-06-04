@@ -78,10 +78,14 @@ def get_author(source,default,tag):
             author = author.group(1)
     if author:
         author = re.sub(r'(?:\,|\;|\\\&)',' and ',author)
-        author = re.sub(r'\s+and\s+and\s+',' and ',author)
+        author = re.sub(r'\s+and(?:\s+and)*\s+',' and ',author)
         author = re.sub(r'^\s+','',author)
         author = re.sub(r'\s+$','',author)
-    return author
+    authors = author.split(' and ')
+    if len(authors) < 3:
+        return author
+    else:
+        return ', '.join(authors[:-1]) + ', and ' + authors[-1]
 
 def get_authors(source,default):
     authors = {}
@@ -90,7 +94,7 @@ def get_authors(source,default):
         author = get_author(src,default,tag)
         if author:
             print "%s: '%s'" % (tag[1],author)
-            for person in re.split(r'\s*\band\b\s*',author):
+            for person in re.split(r'\s*(?:[\,]|[\,]?\s*\band\b)\s*',author):
                 names = string.split(person)
                 if names:
                     person = names.pop(0) # first name

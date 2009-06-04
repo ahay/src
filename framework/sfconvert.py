@@ -17,11 +17,31 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
 
+def exists(pen):
+    '''check if a given pen exists'''
+    exe = os.path.join(bindir,pen+'pen')
+    binary = os.popen('file -bi ' + exe, 'r')
+    if f.read().startswith('application'):
+        return exe
+    else:
+        return None
+
 def convert(infile,outfile,format,pen,args):
     pens = {
-        'vpl': 'vppen',
-        'eps': 'pspen',
-        'ps': 'pspen'
+        'vpl': 'vp',
+        'eps': 'ps',
+        'ps': 'ps',
+        'ppm': 'ppm',
+        'tiff': 'tiff',
+        'tif': 'tiff',
+        'jpeg': 'jpeg',
+        'jpg': 'jpeg',
+        'png': 'gd',
+        'gif': 'gd',
+        'mpeg': 'gd',
+        'mpg': 'gd',
+        'pdf': 'ps',
+        'svg': 'svg'
         }
     bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
     if not os.path.isfile(infile):
@@ -32,15 +52,32 @@ def convert(infile,outfile,format,pen,args):
         sys.exit(2)
     if not pen:
         pen = pens[format]
-    pen = os.path.join(bindir,pen)
-    if format == 'vpl' or format == 'eps':
-        run = '%s %s %s > %s' % (pen,args,infile,outfile)
-        print run
-        os.system(run)
+    exe = exists(pen)
+    if not exe:
+        print 'Unsupported program "%s" ' % pen
+        if format == 'png':
+            # multiple options
+            pass
+        elif format == 'jpeg' or format == 'jpg':
+            # multiple options
+            pass
+        elif format == 'pdf':
+            # multiple options
+            pass
+        else:
+            sys.exit(3)
+    if pen == 'gd':
+        args += ' type=%s' % format
+
+    if format == 'eps':
+        # special cases
+        pass
     else:
-        print 'Unsupported format "%s" ' % format
-        sys.exit(3)
-    sys.exit(0)
+        # default behavior
+        run = '%s %s %s > %s' % (exe,args,infile,outfile)
+
+    print run
+    os.system(run)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
