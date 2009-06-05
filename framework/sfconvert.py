@@ -69,12 +69,12 @@ def convert(vpl,out,format,pen,args):
         pen = pens[format]
 
     exe = exists(pen)
+    convert = None
 
     if not exe:
-        print 'Unsupported program "%s" ' % exe
+        print 'Unsupported program "%spen".' % pen
 
         # Offer alternatives
-        convert = None
         if format == 'png':
             pens = ('png','gd','ps')
         elif format == 'gif':
@@ -121,6 +121,9 @@ def convert(vpl,out,format,pen,args):
     elif format == 'gif' and pen == 'ppm':
         vplot2gif.convert(vpl,out)
     elif format == 'avi':
+        if not which('ffmpeg'):
+            print "Conversion failed. Please install ffmpeg."
+            sys.exit(5)
         vplot2avi.convert(vpl,out)
     elif format == 'pdf' and pen == 'ps':
         eps = tempfile.mktemp(suffix='.eps')
@@ -139,7 +142,7 @@ def convert(vpl,out,format,pen,args):
         os.unlink(eps)
 
         if fail:
-            raise RuntimeError, 'Cannot convert eps to pdf' 
+            raise RuntimeError, 'Cannot convert eps to pdf.' 
     else:
         # default behavior
         run = '%s %s %s > %s' % (exe,args,vpl,out)
@@ -188,6 +191,9 @@ Supported formats: %s
             sys.exit(1)
         for infile in files:
             # attach format as suffix
+            if format == os.path.splitext(infile)[1][1:]:
+                print usage
+                sys.exit(1)
             outfile = os.path.splitext(infile)[0]+'.'+format
     else:
         if len(files) !=2:
