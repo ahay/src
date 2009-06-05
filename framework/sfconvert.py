@@ -23,23 +23,23 @@ import vplot2avi
 
 def exists(pen):
     '''check if a given pen exists'''
+    bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
     exe = os.path.join(bindir,pen+'pen')
     binary = os.popen('file -bi ' + exe, 'r')
-    if f.read().startswith('application'):
+    if binary.read().startswith('application'):
         return exe
     else:
         return None
 
 def which(prog):
-    import stat
-
+    '''find a program in path'''
     path = os.environ.get('PATH','')
-    path = string.split(path, os.pathsep)
+    path = path.split(os.pathsep)
     
     for d in path:
         exe = os.path.join(d, prog)
-        if os.path.isfile(f):
-            return os.path.normpath(f)
+        if os.path.isfile(exe):
+            return os.path.normpath(exe)
     return None
 
 def convert(vpl,out,format,pen,args):
@@ -60,7 +60,6 @@ def convert(vpl,out,format,pen,args):
         'svg': 'svg',
         'avi': 'ppm'
         }
-    bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
     if not os.path.isfile(vpl):
         print "\"%s\" is not a file" % vpl
         sys.exit(1)
@@ -76,6 +75,7 @@ def convert(vpl,out,format,pen,args):
         print 'Unsupported program "%s" ' % exe
 
         # Offer alternatives
+        convert = None
         if format == 'png':
             pens = ('png','gd','ps')
         elif format == 'gif':
@@ -84,6 +84,12 @@ def convert(vpl,out,format,pen,args):
             pens = ('jpeg','gd')
         elif format == 'pdf':
             pens = ('ps','pdf')
+        else:
+            convert = which('convert')
+            if convert:
+                pens = ('tiff','ppm','png','jpeg','ps')
+            else:
+                pens = ()
 
         for other in pens:
             if other != pen:
@@ -92,6 +98,16 @@ def convert(vpl,out,format,pen,args):
                     break
         if not exe:
             sys.exit(4)
+
+        if convert:
+            format2 = format
+            if other == 'ps':
+                format = 'eps'
+            else:
+                format = other
+            out2 = out
+            out = tempfile.mktemp(suffix='.'+format)
+
         pen = other
             
     if pen == 'gd':
@@ -108,14 +124,14 @@ def convert(vpl,out,format,pen,args):
     elif format == 'avi':
         vplot2avi.convert(vpl,out)
     elif format == 'pdf' and pen == 'ps':
-        eps = tempfile.mktemp()
+        eps = tempfile.mktemp(suffix='.eps')
         vplot2eps.convert(vpl,eps,
                           options='color=y fat=1 fatmult=1.5 ' + args)
         epstopdf = which('epstopdf') or which('a2ping')
         if epstopdf:
-            command = "LD_LIBRARY_PATH=%s %s %s %s" % \
+            command = 'LD_LIBRARY_PATH=%s %s %s %s --outfile=%s' % \
                 (os.environ.get('LD_LIBRARY_PATH',''),
-                 os.environ.get('GS_OPTIONS',''),epstopdf,eps)
+                 os.environ.get('GS_OPTIONS',''),epstopdf,eps,out)
             print command
             fail = os.system(command)
         else:
@@ -128,6 +144,11 @@ def convert(vpl,out,format,pen,args):
     else:
         # default behavior
         run = '%s %s %s > %s' % (exe,args,vpl,out)
+        print run
+        os.system(run)
+
+    if convert:
+        run = '%s %s %s:%s' % (convert,out,format2,out2)
         print run
         os.system(run)
 
