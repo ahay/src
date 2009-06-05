@@ -55,6 +55,8 @@ def which(prog):
     path = path.split(os.pathsep)
     
     for d in path:
+        if sys.platform == 'cygwin' and d.find('WINDOWS') >= 0:
+            continue
         exe = os.path.join(d, prog)
         if os.path.isfile(exe):
             return os.path.normpath(exe)
@@ -113,7 +115,7 @@ def convert(vpl,out,format,pen,args):
         args += ' type=%s' % format
 
     if format == 'eps':
-        vplot2png.convert(vpl,out,
+        vplot2eps.convert(vpl,out,
                           options='color=n fat=1 fatmult=1.5 ' + args)
     elif format == 'png' and pen == 'ps':
         vplot2png.convert(vpl,out,
