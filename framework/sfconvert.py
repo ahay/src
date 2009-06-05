@@ -21,6 +21,24 @@ import vplot2png
 import vplot2gif
 import vplot2avi
 
+pens = {
+    'vpl': 'vp',
+    'eps': 'ps',
+    'ps': 'ps',
+    'ppm': 'ppm',
+    'tiff': 'tiff',
+    'tif': 'tiff',
+    'jpeg': 'jpeg',
+    'jpg': 'jpeg',
+    'png': 'png',
+    'gif': 'gd',
+    'mpeg': 'gd',
+    'mpg': 'gd',
+    'pdf': 'ps',
+    'svg': 'svg',
+    'avi': 'ppm'
+    }
+
 def exists(pen):
     '''check if a given pen exists'''
     bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
@@ -43,29 +61,10 @@ def which(prog):
     return None
 
 def convert(vpl,out,format,pen,args):
-    pens = {
-        'vpl': 'vp',
-        'eps': 'ps',
-        'ps': 'ps',
-        'ppm': 'ppm',
-        'tiff': 'tiff',
-        'tif': 'tiff',
-        'jpeg': 'jpeg',
-        'jpg': 'jpeg',
-        'png': 'png',
-        'gif': 'gd',
-        'mpeg': 'gd',
-        'mpg': 'gd',
-        'pdf': 'ps',
-        'svg': 'svg',
-        'avi': 'ppm'
-        }
+    global pens
     if not os.path.isfile(vpl):
         print "\"%s\" is not a file" % vpl
         sys.exit(1)
-    if not format in pens.keys():
-        print 'Unknown format "%s" ' % format
-        sys.exit(2)
     if not pen:
         pen = pens[format]
 
@@ -156,11 +155,14 @@ if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
     # because this script may have users that do not have RSF
 
+    formats = pens.keys()
+    formats.sort()
+
     usage = '''
 Usage: %s [format=] file.vpl [file2.vpl file3.vpl | file.other]
 
-Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
-    ''' % sys.argv[0]
+Supported formats: %s
+    ''' % (sys.argv[0],' '.join(formats))
 
     format = None
     pen = None
@@ -181,14 +183,12 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
     args = ' '.join(args)
 
     if format:
-
         if not files:
             print usage
             sys.exit(1)
         for infile in files:
             # attach format as suffix
             outfile = os.path.splitext(infile)[0]+'.'+format
-            convert(infile,outfile,format,pen,args)
     else:
         if len(files) !=2:
             print usage
@@ -197,6 +197,11 @@ Supported formats: vpl, ps, eps, pdf, svg, ppm, png, jpeg, tiff
         outfile = files[1]
         # get format from suffix
         format = os.path.splitext(outfile)[1][1:].lower()
-        convert(infile,outfile,format,pen,args)
+    
+    if not format in formats:
+        print 'Unknown format "%s" ' % format
+        sys.exit(1)
+    
+    convert(infile,outfile,format,pen,args)
 
     sys.exit(0)
