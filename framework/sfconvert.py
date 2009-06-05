@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys
+import os, sys, tempfile
+import vplot2eps
 import vplot2png
+import vplot2gif
+import vplot2avi
 
 def exists(pen):
     '''check if a given pen exists'''
@@ -27,7 +30,19 @@ def exists(pen):
     else:
         return None
 
-def convert(infile,outfile,format,pen,args):
+def which(prog):
+    import stat
+
+    path = os.environ.get('PATH','')
+    path = string.split(path, os.pathsep)
+    
+    for d in path:
+        exe = os.path.join(d, prog)
+        if os.path.isfile(f):
+            return os.path.normpath(f)
+    return None
+
+def convert(vpl,out,format,pen,args):
     pens = {
         'vpl': 'vp',
         'eps': 'ps',
@@ -37,60 +52,82 @@ def convert(infile,outfile,format,pen,args):
         'tif': 'tiff',
         'jpeg': 'jpeg',
         'jpg': 'jpeg',
-        'png': 'gd',
+        'png': 'png',
         'gif': 'gd',
         'mpeg': 'gd',
         'mpg': 'gd',
         'pdf': 'ps',
-        'svg': 'svg'
+        'svg': 'svg',
+        'avi': 'ppm'
         }
     bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
-    if not os.path.isfile(infile):
-        print "\"%s\" is not a file" % infile
+    if not os.path.isfile(vpl):
+        print "\"%s\" is not a file" % vpl
         sys.exit(1)
     if not format in pens.keys():
         print 'Unknown format "%s" ' % format
         sys.exit(2)
     if not pen:
         pen = pens[format]
+
     exe = exists(pen)
+
     if not exe:
-        print 'Unsupported program "%s" ' % pen
+        print 'Unsupported program "%s" ' % exe
+
+        # Offer alternatives
         if format == 'png':
-            for other in ('gd','png','ps'):
-                if other != pen:
-                    exe = exists(other)
-                    if exe:
-                        break
-            pen = other
+            pens = ('png','gd','ps')
+        elif format == 'gif':
+            pens = ('gd','ppm')
         elif format == 'jpeg' or format == 'jpg':
-            for other in ('jpeg','gd'):
-                if other != pen:
-                    exe = exists(other)
-                    if exe:
-                        break
-            if not exe:
-                print 'Cannot execute %spen' % pen
-                sys.exit(4)
-            pen = other
+            pens = ('jpeg','gd')
         elif format == 'pdf':
-            # multiple options
-            pass
-        else:
-            sys.exit(3)
+            pens = ('ps','pdf')
+
+        for other in pens:
+            if other != pen:
+                exe = exists(other)
+                if exe:
+                    break
+        if not exe:
+            sys.exit(4)
+        pen = other
             
     if pen == 'gd':
         args += ' type=%s' % format
 
     if format == 'eps':
-        # special cases
-        pass
+        vplot2png.convert(vpl,out,
+                          options='color=n fat=1 fatmult=1.5 ' + args)
     elif format == 'png' and pen == 'ps':
-        vplot2png.convert(infile,outfile,
-                          options=' color=y fat=1 fatmult=1.5' + args)
+        vplot2png.convert(vpl,out,
+                          options='color=y fat=1 fatmult=1.5 ' + args)
+    elif format == 'gif' and pen == 'ppm':
+        vplot2gif.convert(vpl,out)
+    elif format == 'avi':
+        vplot2avi.convert(vpl,out)
+    elif format == 'pdf' and pen == 'ps':
+        eps = tempfile.mktemp()
+        vplot2eps.convert(vpl,eps,
+                          options='color=y fat=1 fatmult=1.5 ' + args)
+        epstopdf = which('epstopdf') or which('a2ping')
+        if epstopdf:
+            command = "LD_LIBRARY_PATH=%s %s %s %s" % \
+                (os.environ.get('LD_LIBRARY_PATH',''),
+                 os.environ.get('GS_OPTIONS',''),epstopdf,eps)
+            print command
+            fail = os.system(command)
+        else:
+            fail = true
+
+        os.unlink(eps)
+
+        if fail:
+            raise RuntimeError, 'Cannot convert eps to pdf' 
     else:
         # default behavior
-        run = '%s %s %s > %s' % (exe,args,infile,outfile)
+        run = '%s %s %s > %s' % (exe,args,vpl,out)
         print run
         os.system(run)
 
