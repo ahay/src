@@ -386,28 +386,26 @@ def pstexpen(target=None,source=None,env=None):
 
 def use(target=None,source=None,env=None):
     "Collect RSF program uses"
-    project = os.path.dirname(str(source[0]))
+    info = str(source[0])
 
     trg = str(target[0])
     out = open(trg,'w')
     what = os.path.basename(trg)[-4:] # uses or data
 
-    info = os.path.join(project,'.rsfproj')
+    usesfile = open(info,'r')
+    contents = usesfile.read()
+    usesfile.close()
 
-    if os.path.isfile(info):
-        usesfile = open(info,'r')
-        contents = usesfile.read()
-        usesfile.close()
+    exec contents in locals() 
 
-        exec contents in locals() 
-
-        tree = env.get('tree')
-        doc = map(lambda prog:
-                  'rsfdoc.progs["%s"].use("%s","%s","%s")' %
-                  (prog,tree[1],tree[2],project),eval(what))
-        out.write(string.join(doc,'\n') + '\n')
-
+    project = os.path.dirname(info)
+    tree = env.get('tree')
+    doc = map(lambda prog:
+              'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+              (prog,tree[1],tree[2],project),eval(what))
+    out.write(string.join(doc,'\n') + '\n')
     out.close()
+    
     return 0
 
 _KEYWORD = token.NT_OFFSET + 1
@@ -830,16 +828,16 @@ class TeXPaper(Environment):
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories
-        for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
-            dir = os.path.dirname(scons)
-            info = os.path.join(dir,'.rsfproj')
+        for info in glob.glob('%s/[a-z]*/.rsfproj' % topdir):
+            dir = os.path.dirname(info)
+            scons = os.path.join(dir,'SConstruct')
 
             uses = os.path.join(self.path,dir+'.uses')
-            self.Uses(uses,scons,tree=self.tree)
+            self.Uses(uses,info,tree=self.tree)
             self.uses.append(uses)
 
             data = os.path.join(self.path,dir+'.data')
-            self.Uses(data,scons,tree=self.tree)
+            self.Uses(data,info,tree=self.tree)
             self.data.append(data)
 
             html = dir+'.html'
