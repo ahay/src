@@ -15,6 +15,7 @@ Henryk Modzelewski <henryk_modzelewski@mac.com>
 Colin Russell <crussell@eos.ubc.ca>
 Paul Sava <psava@mines.edu>
 Jeffrey Shragge <jshragge@gmail.com>
+Xiaolei Song <songxl1984@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Ioan Vlad <i.vlad@yahoo.com>
 Jia Yan <jyan@mines.edu>
