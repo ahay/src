@@ -13,7 +13,8 @@ for main in glob.glob('M*.c'):
     grep = os.popen('grep %s %s/*/*/*/SConstruct %s/packages/*.py' %
                     (name,book,book), 'r').read()
     if not grep:
-        os.system('svn delete --force %s' % main)
+        #        os.system('svn delete --force %s' % main)
+        print "NO"
     else:
         print grep
 

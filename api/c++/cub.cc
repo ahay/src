@@ -23,7 +23,7 @@ CUB::~CUB()
 //------------------------------------------------------------
 void CUB::headin()
 {
-    off_t nn[SF_MAX_DIM];
+    int nn[SF_MAX_DIM];
     char key[3];
 
     nd = sf_filedims(file_,nn);
