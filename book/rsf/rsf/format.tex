@@ -67,7 +67,7 @@ parameter-value pairs separated by the ``='' sign. The ``in''
 parameter points to the location of the binary data. Before we discuss
 the meaning of parameters in more detail, let us plot the data.
 \begin{verbatim}
-bash$ < sin.rsf  sfwiggle title='One Trace' | xtpen
+bash$ < sin.rsf  sfwiggle title='One Trace' | sfpen
 \end{verbatim}
 On your screen, you should see a plot similar to Figure~\ref{fig:sin1}.
 
@@ -78,11 +78,11 @@ thousand samples, it contains twenty traces with fifty samples each. Try
 running
 \begin{verbatim}
 bash$ < sin.rsf sed 's/n1=1000/n1=100 n2=10/' > sin10.rsf 
-bash$ < sin10.rsf sfwiggle title=Traces | xtpen
+bash$ < sin10.rsf sfwiggle title=Traces | sfpen
 \end{verbatim}
 or (using pipes)
 \begin{verbatim}
-bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' | sfwiggle title=Traces | xtpen
+bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' | sfwiggle title=Traces | sfpen
 \end{verbatim}
 On your screen, you should see a plot similar to Figure~\ref{fig:sin2}.
 
@@ -98,7 +98,7 @@ RSF files include \texttt{cat}, \texttt{echo}, \texttt{grep}, etc.
 An alternative way to obtain the previous result is to run
 \begin{verbatim}
 bash$ ( cat sin.rsf; echo n1=50 n2=20 ) > sin10.rsf 
-bash$ < sin10.rsf sfwiggle title=Traces | xtpen
+bash$ < sin10.rsf sfwiggle title=Traces | sfpen
 \end{verbatim}
 In this case, the \texttt{cat} utility simply copies the contents of the
 previous file, and the \texttt{echo} utility appends new line ``\texttt{n1=50

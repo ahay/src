@@ -1,4 +1,4 @@
-\title{Revisiting SEP tour with RSF and SCons}
+\title{Revisiting SEP tour with Madagascar and SCons}
 
 \email{sergey.fomel@beg.utexas.edu}
 
@@ -15,7 +15,7 @@
 Many appreciative users were introduced to SEPlib
 \cite[]{Claerbout.sep.70.413} by an excellent article of
 \cite{Dellinger.sep.73.461}. In this paper, I show how to create a similar
-experience using RSF and SCons.
+experience using Madagascar and SCons.
 
 \end{abstract}
 
@@ -26,7 +26,7 @@ command line, for example:
 
 \begin{verbatim}
 bash$ sfspike n1=1000 k1=300 title="\s200 Welcome to \c2 RSF" | \
-sfbandpass fhi=2 phase=1 | sfwiggle | xtpen
+sfbandpass fhi=2 phase=1 | sfwiggle | sfpen
 \end{verbatim}
 
 If you are already familiar with SEPlib, you can find most of the familiar
@@ -92,7 +92,7 @@ scons: done reading SConscript files.
 scons: Building targets ...
 retrieve(["Txx.HH"], [])
 < Txx.HH /path/to/RSF/bin/sfwiggle > Fig/wiggle0.vpl
-/path/to/RSF/bin/xtpen Fig/wiggle0.vpl
+/path/to/RSF/bin/sfpen Fig/wiggle0.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:wiggle0} appearing on your screen.
 
@@ -130,7 +130,7 @@ bash$ scons -Q wiggle.view
 < Txx.HH /path/to/RSF/bin/sfwindow n2=10 n1=200 f1=200 > windowed.rsf
 < windowed.rsf /path/to/RSF/bin/sfwiggle transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/wiggle.vpl
-/path/to/RSF/bin/xtpen Fig/wiggle.vpl
+/path/to/RSF/bin/sfpen Fig/wiggle.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:wiggle} appearing on your
 screen. The \texttt{-Q} switch tells SCons to run in a quiet mode,
@@ -141,21 +141,21 @@ keyboard or by hitting the ``quit'' button.
 Run \texttt{scons -Q view}, and you should see simply
 \begin{verbatim}
 bash$ scons -Q view
-/path/to/RSF/bin/xtpen Fig/wiggle.vpl
+/path/to/RSF/bin/sfpen Fig/wiggle.vpl
 \end{verbatim}
 Since the \texttt{wiggle.vpl} figure is up to date, SCons does not rebuild
 it. After quitting the figure, SCons will resume processing with
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfcontour transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/contour.vpl
-/path/to/RSF/bin/xtpen Fig/contour.vpl
+/path/to/RSF/bin/sfpen Fig/contour.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:contour} appearing on your
 screen. Quitting the figure, produces
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfgrey transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/grey.vpl
-/path/to/RSF/bin/xtpen Fig/grey.vpl
+/path/to/RSF/bin/sfpen Fig/grey.vpl
 \end{verbatim}
 and Figure~\ref{fig:grey}.
 
@@ -182,7 +182,7 @@ We can verify that the size of the first axis has decreased by running
 sfin windowed.rsf subsampled.rsf. 
 \end{verbatim}
 
-Try also \texttt{sfwiggle < subsampled.rsf | xtpen} to quickly inspect the subsampled data on the screen.
+Try also \texttt{sfwiggle < subsampled.rsf | sfpen} to quickly inspect the subsampled data on the screen.
 
 To interpolate the data back to the original sampling, the following sequence
 of steps can be applied:
@@ -220,7 +220,7 @@ Running \texttt{scons -Q nmo.view} produces
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfnmostretch v0=2.05 half=n | 
 /path/to/RSF/bin/sfwiggle pclip=100 max1=0.6 poly=y > Fig/nmo.vpl
-/path/to/RSF/bin/xtpen Fig/nmo.vpl
+/path/to/RSF/bin/sfpen Fig/nmo.vpl
 \end{verbatim}
 and Figure~\ref{fig:nmo}. Note that SCons does not recreate the
 \texttt{windowed.rsf} file if that file is up to date. You can
@@ -265,7 +265,7 @@ Running \texttt{scons -Q overplot.view} produces
 < windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=0 plotfat=10 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle1.vpl
 < windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=7 plotfat=3 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle2.vpl
 /path/to/RSF/bin/vppen erase=o vpstyle=n grey.vpl wiggle1.vpl wiggle2.vpl > Fig/overplot.vpl
-/path/to/RSF/bin/xtpen Fig/overplot.vpl
+/path/to/RSF/bin/sfpen Fig/overplot.vpl
 \end{verbatim}
 \end{comment}
 

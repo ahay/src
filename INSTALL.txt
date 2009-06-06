@@ -187,13 +187,13 @@ The following command makes a graphics file from filter.rsf:
 If you have an X11 display program running, and your DISPLAY
 environment variable is set correctly, you can display the graphics file with:
 
-	xtpen < filter.vpl
+	sfpen < filter.vpl
 
 You can pipe Madagascar commands together and do the whole thing at once like
 this:
 
 	sfspike n1=1000 k1=300 | sfbandpass fhi=2 phase=1 | \
-	sfwiggle clip=0.02 title="Welcome to Madagascar" | xtpen
+	sfwiggle clip=0.02 title="Welcome to Madagascar" | sfpen
 
 If you have SCons installed, you can use it to automate Madagascar processing.
 Here is a simple SConstruct file to make filter.rsf and filter.vpl :
@@ -227,7 +227,7 @@ cd to that directory, and issue the command:
 The graphics file is now stored in the Fig subdirectory.  You can
 view it manually with:
 
-	xtpen Fig/filter.vpl
+	sfpen Fig/filter.vpl
 
 ... or you can use:
 
