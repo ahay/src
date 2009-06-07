@@ -3552,7 +3552,7 @@ void eval_UBspline_2d_c_vg (UBspline_2d_c * spline,
                             sf_complex* val, sf_complex* grad) {
     float ux, uy;
   float ipartx, iparty, tx, ty;
-  int ix, iy, xs, ys;
+  int ix, iy, xs;
   float dxInv, dyInv;
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
