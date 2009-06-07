@@ -1019,14 +1019,15 @@ void find_coefs_1d_d (Ugrid grid, BCtype_d bc,
 
 UBspline_1d_d* create_UBspline_1d_d (Ugrid x_grid, BCtype_d xBC, double *data) {
   /* Create new spline */
+    int M, N;
+
   UBspline_1d_d* spline = malloc (sizeof(UBspline_1d_d));
   spline->spcode = U1D;
   spline->tcode  = DOUBLE_REAL;
   spline->xBC = xBC; 
 
   /* Setup internal variables */
-  int M = x_grid.num;
-  int N;
+  M = x_grid.num;
 
   if (xBC.lCode == PERIODIC) {
     x_grid.delta     = (x_grid.end-x_grid.start)/(double)(x_grid.num);
@@ -1053,6 +1054,9 @@ void recompute_UBspline_1d_d (UBspline_1d_d* spline, double *data) {
 UBspline_2d_d* create_UBspline_2d_d (Ugrid x_grid, Ugrid y_grid,
                                      BCtype_d xBC, BCtype_d yBC, double *data) {
   /* Create new spline */
+    int Mx, My;
+    int Nx, Ny, ix, iy;
+
   UBspline_2d_d* spline = malloc (sizeof(UBspline_2d_d));
   spline->spcode = U2D;
   spline->tcode  = DOUBLE_REAL;
@@ -1060,9 +1064,8 @@ UBspline_2d_d* create_UBspline_2d_d (Ugrid x_grid, Ugrid y_grid,
   spline->yBC = yBC; 
 
   /* Setup internal variables */
-  int Mx = x_grid.num;
-  int My = y_grid.num;
-  int Nx, Ny, ix, iy;
+  Mx = x_grid.num;
+  My = y_grid.num;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
@@ -1130,6 +1133,9 @@ UBspline_3d_d* create_UBspline_3d_d (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
                                      BCtype_d xBC, BCtype_d yBC, BCtype_d zBC,
                                      double *data) {
   /* Create new spline */
+    int Mx, My, Mz;
+    int Nx, Ny, Nz, ix, iy, iz;
+
   UBspline_3d_d* spline = malloc (sizeof(UBspline_3d_d));
   spline->spcode = U3D;
   spline->tcode  = DOUBLE_REAL;
@@ -1138,8 +1144,7 @@ UBspline_3d_d* create_UBspline_3d_d (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->zBC = zBC; 
 
   /* Setup internal variables */
-  int Mx = x_grid.num;  int My = y_grid.num; int Mz = z_grid.num;
-  int Nx, Ny, Nz, ix, iy, iz;
+  Mx = x_grid.num;  My = y_grid.num; Mz = z_grid.num;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
@@ -1250,6 +1255,8 @@ void recompute_UBspline_3d_d (UBspline_3d_d* spline, double *data) {
   On exit, coefs with contain interpolating B-spline coefs */
 
 UBspline_1d_z* create_UBspline_1d_z (Ugrid x_grid, BCtype_z xBC, sf_double_complex *data) {
+    int M, N;
+
   /* Create new spline */
   UBspline_1d_z* spline = malloc (sizeof(UBspline_1d_z));
   spline->spcode = U1D;
@@ -1257,8 +1264,7 @@ UBspline_1d_z* create_UBspline_1d_z (Ugrid x_grid, BCtype_z xBC, sf_double_compl
   spline->xBC = xBC; 
 
   /* Setup internal variables */
-  int M = x_grid.num;
-  int N;
+  M = x_grid.num;
 
   if (xBC.lCode == PERIODIC) {
     x_grid.delta     = (x_grid.end-x_grid.start)/(double)(x_grid.num);
@@ -1310,6 +1316,9 @@ void recompute_UBspline_1d_z (UBspline_1d_z* spline, sf_double_complex *data) {
 
 UBspline_2d_z* create_UBspline_2d_z (Ugrid x_grid, Ugrid y_grid,
                                      BCtype_z xBC, BCtype_z yBC, sf_double_complex *data) {
+    int Mx, My;
+    int Nx, Ny, ix, iy;
+
   /* Create new spline */
   UBspline_2d_z* spline = malloc (sizeof(UBspline_2d_z));
   spline->spcode = U2D;
@@ -1318,9 +1327,8 @@ UBspline_2d_z* create_UBspline_2d_z (Ugrid x_grid, Ugrid y_grid,
   spline->yBC = yBC; 
 
   /* Setup internal variables */
-  int Mx = x_grid.num;
-  int My = y_grid.num;
-  int Nx, Ny, ix, iy;
+  Mx = x_grid.num;
+  My = y_grid.num;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
@@ -1423,6 +1431,9 @@ UBspline_3d_z* create_UBspline_3d_z (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
                                      BCtype_z xBC, BCtype_z yBC, BCtype_z zBC,
                                      sf_double_complex *data) {
   /* Create new spline */
+    int Mx, My, Mz;
+    int Nx, Ny, Nz, ix, iy, iz;
+
   UBspline_3d_z* spline = malloc (sizeof(UBspline_3d_z));
   spline->spcode = U3D;
   spline->tcode  = DOUBLE_COMPLEX;
@@ -1431,8 +1442,7 @@ UBspline_3d_z* create_UBspline_3d_z (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->zBC = zBC;
 
   /* Setup internal variables */
-  int Mx = x_grid.num;  int My = y_grid.num; int Mz = z_grid.num;
-  int Nx, Ny, Nz, ix, iy, iz;
+  Mx = x_grid.num;  My = y_grid.num; Mz = z_grid.num;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
