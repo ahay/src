@@ -1617,7 +1617,7 @@ void eval_UBspline_1d_s (UBspline_1d_s * spline,
                          double x, float* val) {
   float u;
   float ipart, t;
-  int i = (int) ipart;
+  int i; 
 
   float tp[4];
   float* coefs = spline->coefs;
@@ -1626,6 +1626,8 @@ void eval_UBspline_1d_s (UBspline_1d_s * spline,
 
   u = x*spline->x_grid.delta_inv;
   t = modff (u, &ipart);
+  i = (int) ipart;
+
   tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
@@ -1638,15 +1640,19 @@ void eval_UBspline_1d_s (UBspline_1d_s * spline,
 /* Value and first derivative */
 void eval_UBspline_1d_s_vg (UBspline_1d_s * spline, double x, 
                             float* val, float* grad) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u;
   float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
+
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -1664,15 +1670,19 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s * spline, double x,
 void eval_UBspline_1d_s_vgl (UBspline_1d_s * spline, double x, 
                              float* val, float* grad,
                              float* lapl) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u;
   float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
+
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -1704,20 +1714,25 @@ void eval_UBspline_1d_s_vgh (UBspline_1d_s * spline, double x,
 /* Value only */
 void eval_UBspline_2d_s (UBspline_2d_s * spline, 
                          double x, double y, float* val) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+  float ux; 
+  float uy; 
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix; 
+  int iy; 
 
   float tpx[4], tpy[4], a[4], b[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1743,20 +1758,25 @@ void eval_UBspline_2d_s (UBspline_2d_s * spline,
 void eval_UBspline_2d_s_vg (UBspline_2d_s * spline, 
                             double x, double y, 
                             float* val, float* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+  float ux; 
+  float uy; 
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix; 
+  int iy; 
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1801,20 +1821,25 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s * spline,
 void eval_UBspline_2d_s_vgl (UBspline_2d_s * spline, 
                              double x, double y, float* val, 
                              float* grad, float* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+  float ux; 
+  float uy; 
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix; 
+  int iy; 
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1879,20 +1904,25 @@ void eval_UBspline_2d_s_vgl (UBspline_2d_s * spline,
 void eval_UBspline_2d_s_vgh (UBspline_2d_s * spline, 
                              double x, double y, float* val, 
                              float* grad, float* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+  float ux; 
+  float uy; 
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix; 
+  int iy; 
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1966,25 +1996,26 @@ void eval_UBspline_2d_s_vgh (UBspline_2d_s * spline,
 void eval_UBspline_3d_s (UBspline_3d_s * spline, 
                          double x, double y, double z,
                          float* val) {
+  float ux; 
+  float uy; 
+  float uz; 
+  float ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  float* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
-
-
-
-
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;
+  ty = modff (uy, &iparty);  iy = (int) iparty;
+  tz = modff (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2028,23 +2059,26 @@ void eval_UBspline_3d_s (UBspline_3d_s * spline,
 void eval_UBspline_3d_s_vg (UBspline_3d_s * spline, 
                             double x, double y, double z,
                             float* val, float* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
+    float ux, uy, uz;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
+  int ix, iy, iz;
 
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     cP[16], bcP[4], dbcP[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modff (uy, &iparty);  iy = (int) iparty; 
+  tz = modff (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2133,23 +2167,26 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s * spline,
 void eval_UBspline_3d_s_vgl (UBspline_3d_s * spline, 
                              double x, double y, double z,
                              float* val, float* grad, float* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
+    float ux, uy, uz;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
+  int ix, iy, iz;
 
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4], cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modff (uy, &iparty);  iy = (int) iparty; 
+  tz = modff (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2290,27 +2327,29 @@ void eval_UBspline_3d_s_vgl (UBspline_3d_s * spline,
 void eval_UBspline_3d_s_vgh (UBspline_3d_s * spline, 
                              double x, double y, double z,
                              float* val, float* grad, float* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;  
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
-  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
-  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+    float ux, uy, uz;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
 
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4], cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
     d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;  
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
+  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
+  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
+  ty = modff (uy, &iparty);  int iy = (int) iparty;
+  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2475,15 +2514,17 @@ void eval_UBspline_3d_s_vgh (UBspline_3d_s * spline,
 /* Value only */
 void eval_UBspline_1d_d (UBspline_1d_d * spline, 
                          double x, double* val) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
-
+  int i;
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -2495,15 +2536,18 @@ void eval_UBspline_1d_d (UBspline_1d_d * spline,
 /* Value and first derivative */
 void eval_UBspline_1d_d_vg (UBspline_1d_d * spline, double x, 
                             double* val, double* grad) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -2521,15 +2565,18 @@ void eval_UBspline_1d_d_vg (UBspline_1d_d * spline, double x,
 void eval_UBspline_1d_d_vgl (UBspline_1d_d * spline, double x, 
                              double* val, double* grad,
                              double* lapl) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i  = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -2561,20 +2608,23 @@ void eval_UBspline_1d_d_vgh (UBspline_1d_d * spline, double x,
 /* Value only */
 void eval_UBspline_2d_d (UBspline_2d_d * spline, 
                          double x, double y, double* val) {
+  double ux; 
+  double uy; 
+  double ipartx, iparty, tx, ty;
+  int ix, iy;
+  double tpx[4], tpy[4], a[4], b[4];
+  double* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double ipartx, iparty, tx, ty;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
   tx = modf (ux, &ipartx);
   ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
-
-  double tpx[4], tpy[4], a[4], b[4];
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0] = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1] = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2600,20 +2650,24 @@ void eval_UBspline_2d_d (UBspline_2d_d * spline,
 void eval_UBspline_2d_d_vg (UBspline_2d_d * spline, 
                             double x, double y, 
                             double* val, double* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+  double ux; 
+  double uy; 
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4], da[4], db[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]  = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]  = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2658,20 +2712,24 @@ void eval_UBspline_2d_d_vg (UBspline_2d_d * spline,
 void eval_UBspline_2d_d_vgl (UBspline_2d_d * spline, 
                              double x, double y, double* val, 
                              double* grad, double* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+  double ux; 
+  double uy; 
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2736,20 +2794,23 @@ void eval_UBspline_2d_d_vgl (UBspline_2d_d * spline,
 void eval_UBspline_2d_d_vgh (UBspline_2d_d * spline, 
                              double x, double y, double* val, 
                              double* grad, double* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+    double ux, uy;
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2823,25 +2884,25 @@ void eval_UBspline_2d_d_vgh (UBspline_2d_d * spline,
 void eval_UBspline_3d_d (UBspline_3d_d * spline, 
                          double x, double y, double z,
                          double* val) {
+    double ux, uy, uz;
+  double ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+
+  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  double* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
-  double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modf (uy, &iparty);  int iy = (int) iparty;
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz;
-
-
-
-
-  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;
+  ty = modf (uy, &iparty);  iy = (int) iparty;
+  tz = modf (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0] = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1] = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2885,23 +2946,26 @@ void eval_UBspline_3d_d (UBspline_3d_d * spline,
 void eval_UBspline_3d_d_vg (UBspline_3d_d * spline, 
                             double x, double y, double z,
                             double* val, double* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
+    double ux, uy, uz;
   double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modf (uy, &iparty);  int iy = (int) iparty; 
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz; 
+  int ix, iy, iz;
 
   double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     cP[16], bcP[4], dbcP[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modf (uy, &iparty);  iy = (int) iparty; 
+  tz = modf (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -2990,23 +3054,26 @@ void eval_UBspline_3d_d_vg (UBspline_3d_d * spline,
 void eval_UBspline_3d_d_vgl (UBspline_3d_d * spline, 
                              double x, double y, double z,
                              double* val, double* grad, double* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
+    double ux, uy, uz;
   double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modf (uy, &iparty);  int iy = (int) iparty; 
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz; 
+  int ix, iy, iz;
 
   double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4], cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modf (uy, &iparty);  iy = (int) iparty; 
+  tz = modf (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -3147,27 +3214,30 @@ void eval_UBspline_3d_d_vgl (UBspline_3d_d * spline,
 void eval_UBspline_3d_d_vgh (UBspline_3d_d * spline, 
                              double x, double y, double z,
                              double* val, double* grad, double* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;  
-  z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
-  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
-  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
-  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+    double ux, uy, uz;
   double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modf (uy, &iparty);  int iy = (int) iparty;
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz;
+  int ix, iy, iz;
 
   double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4], cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
     d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  double* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;  
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
+  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
+  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;
+  ty = modf (uy, &iparty);  iy = (int) iparty;
+  tz = modf (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  double* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -3333,15 +3403,18 @@ void eval_UBspline_3d_d_vgh (UBspline_3d_d * spline,
 /* Value only */
 void eval_UBspline_1d_c (UBspline_1d_c * spline, 
                          double x, sf_complex* val) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u; 
   float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
+  int i;
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -3353,17 +3426,20 @@ void eval_UBspline_1d_c (UBspline_1d_c * spline,
 /* Value and gradient */
 void eval_UBspline_1d_c_vg (UBspline_1d_c * spline, double x, 
                             sf_complex* val, sf_complex* grad) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u; 
   float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   sf_complex* coefs = spline->coefs;
 
   float dxInv = spline->x_grid.delta_inv;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -3381,17 +3457,20 @@ void eval_UBspline_1d_c_vg (UBspline_1d_c * spline, double x,
 void eval_UBspline_1d_c_vgl (UBspline_1d_c * spline, double x, 
                              sf_complex* val, sf_complex* grad,
                              sf_complex* lapl) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u; 
   float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
+  int i;
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   float dxInv = spline->x_grid.delta_inv;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
+  sf_complex* coefs = spline->coefs;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -3425,20 +3504,23 @@ void eval_UBspline_1d_c_vgh (UBspline_1d_c * spline, double x,
 /* Value only */
 void eval_UBspline_2d_c (UBspline_2d_c * spline, 
                          double x, double y, sf_complex* val) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+    float ux, uy;
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   float tpx[4], tpy[4], a[4], b[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3464,20 +3546,24 @@ void eval_UBspline_2d_c (UBspline_2d_c * spline,
 void eval_UBspline_2d_c_vg (UBspline_2d_c * spline, 
                             double x, double y, 
                             sf_complex* val, sf_complex* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+    float ux, uy;
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
+
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3524,20 +3610,23 @@ void eval_UBspline_2d_c_vg (UBspline_2d_c * spline,
 void eval_UBspline_2d_c_vgl (UBspline_2d_c * spline, 
                              double x, double y, sf_complex* val, 
                              sf_complex* grad, sf_complex* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+    float ux, uy;
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3606,20 +3695,23 @@ void eval_UBspline_2d_c_vgl (UBspline_2d_c * spline,
 void eval_UBspline_2d_c_vgh (UBspline_2d_c * spline, 
                              double x, double y, sf_complex* val, 
                              sf_complex* grad, sf_complex* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
+  float ux; 
+  float uy; 
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
   int ix = (int) ipartx;
   int iy = (int) iparty;
 
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modff (ux, &ipartx);
+  ty = modff (uy, &iparty);
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3695,25 +3787,26 @@ void eval_UBspline_2d_c_vgh (UBspline_2d_c * spline,
 void eval_UBspline_3d_c (UBspline_3d_c * spline, 
                          double x, double y, double z,
                          sf_complex* val) {
+  float ux; 
+  float uy; 
+  float uz; 
+  float ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  sf_complex* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
-
-
-
-
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;
+  ty = modff (uy, &iparty);  iy = (int) iparty;
+  tz = modff (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3757,23 +3850,26 @@ void eval_UBspline_3d_c (UBspline_3d_c * spline,
 void eval_UBspline_3d_c_vg (UBspline_3d_c * spline, 
                             double x, double y, double z,
                             sf_complex* val, sf_complex* grad) {
+    float ux, uy, uz;
+  float ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4];
+  sf_complex cP[16], bcP[4], dbcP[4];
+  sf_complex* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
-
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4];
-  sf_complex cP[16], bcP[4], dbcP[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modff (uy, &iparty);  iy = (int) iparty; 
+  tz = modff (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
+
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -3868,24 +3964,26 @@ void eval_UBspline_3d_c_vgl (UBspline_3d_c * spline,
                              double x, double y, double z,
                              sf_complex* val, sf_complex* grad, 
                              sf_complex* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
+    float ux, uy, uz;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
-
+  int ix, iy, iz;
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4];
   sf_complex cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modff (uy, &iparty);  iy = (int) iparty; 
+  tz = modff (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -4032,28 +4130,31 @@ void eval_UBspline_3d_c_vgh (UBspline_3d_c * spline,
                              double x, double y, double z,
                              sf_complex* val, sf_complex* grad, 
                              sf_complex* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;  
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
-  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
-  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+    float ux, uy, uz;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
+  int ix, iy, iz;
 
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4];
   sf_complex cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
     d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  sf_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;  
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
+  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
+  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+  tx = modff (ux, &ipartx);  ix = (int) ipartx;
+  ty = modff (uy, &iparty);  iy = (int) iparty;
+  tz = modff (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_complex* coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -4222,15 +4323,18 @@ void eval_UBspline_3d_c_vgh (UBspline_3d_c * spline,
 /* Value only */
 void eval_UBspline_1d_z (UBspline_1d_z * spline, 
                          double x, sf_double_complex* val) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
+  int i;
 
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -4243,15 +4347,18 @@ void eval_UBspline_1d_z (UBspline_1d_z * spline,
 void eval_UBspline_1d_z_vg (UBspline_1d_z * spline, double x, 
                             sf_double_complex* val, 
                             sf_double_complex* grad) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -4269,15 +4376,18 @@ void eval_UBspline_1d_z_vg (UBspline_1d_z * spline, double x,
 void eval_UBspline_1d_z_vgl (UBspline_1d_z * spline, double x, 
                              sf_double_complex* val, sf_double_complex* grad,
                              sf_double_complex* lapl) {
-  x -= spline->x_grid.start;
-  double u = x*spline->x_grid.delta_inv;
+  double u; 
   double ipart, t;
-  t = modf (u, &ipart);
-  int i = (int) ipart;
+  int i; 
 
   double tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  u = x*spline->x_grid.delta_inv;
+  t = modf (u, &ipart);
+  i = (int) ipart;
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Ad[ 0]*tp[0] + Ad[ 1]*tp[1] + Ad[ 2]*tp[2] + Ad[ 3]*tp[3])+
@@ -4311,20 +4421,23 @@ void eval_UBspline_1d_z_vgh (UBspline_1d_z * spline, double x,
 /* Value only */
 void eval_UBspline_2d_z (UBspline_2d_z * spline, 
                          double x, double y, sf_double_complex* val) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+    double ux, uy;
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4];
+  sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0] = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1] = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4351,20 +4464,23 @@ void eval_UBspline_2d_z_vg (UBspline_2d_z * spline,
                             double x, double y, 
                             sf_double_complex* val, 
                             sf_double_complex* grad) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+    double ux, uy;
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4], da[4], db[4];
+  sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]  = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]  = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4410,20 +4526,23 @@ void eval_UBspline_2d_z_vgl (UBspline_2d_z * spline,
                              double x, double y, sf_double_complex* val, 
                              sf_double_complex* grad, 
                              sf_double_complex* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
+    double ux, uy;
   double ipartx, iparty, tx, ty;
-  tx = modf (ux, &ipartx);
-  ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  int ix, iy;
 
   double tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  tx = modf (ux, &ipartx);
+  ty = modf (uy, &iparty);
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4489,20 +4608,22 @@ void eval_UBspline_2d_z_vgh (UBspline_2d_z * spline,
                              double x, double y, sf_double_complex* val, 
                              sf_double_complex* grad, 
                              sf_double_complex* hess) {
+    double ux, uy;
+  double ipartx, iparty, tx, ty;
+  int ix, iy;
+  double tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_double_complex* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double ipartx, iparty, tx, ty;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
   tx = modf (ux, &ipartx);
   ty = modf (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
-
-  double tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  ix = (int) ipartx;
+  iy = (int) iparty;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4576,22 +4697,24 @@ void eval_UBspline_2d_z_vgh (UBspline_2d_z * spline,
 void eval_UBspline_3d_z (UBspline_3d_z * spline, 
                          double x, double y, double z,
                          sf_double_complex* val) {
+    double ux, uy, uz;
+  double ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  sf_double_complex* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
-  double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modf (uy, &iparty);  int iy = (int) iparty;
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz;
-
-  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;
+  ty = modf (uy, &iparty);  iy = (int) iparty;
+  tz = modf (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0] = (Ad[ 0]*tpx[0] + Ad[ 1]*tpx[1] + Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1] = (Ad[ 4]*tpx[0] + Ad[ 5]*tpx[1] + Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4636,23 +4759,25 @@ void eval_UBspline_3d_z_vg (UBspline_3d_z * spline,
                             double x, double y, double z,
                             sf_double_complex* val, 
                             sf_double_complex* grad) {
+    double ux, uy, uz;
+  double ipartx, iparty, ipartz, tx, ty, tz;
+  int ix, iy, iz;
+  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4];
+  sf_double_complex cP[16], bcP[4], dbcP[4];
+  sf_double_complex* coefs = spline->coefs;
+
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
-  double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modf (uy, &iparty);  int iy = (int) iparty; 
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz; 
-
-  double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4];
-  sf_double_complex cP[16], bcP[4], dbcP[4];
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modf (uy, &iparty);  iy = (int) iparty; 
+  tz = modf (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4743,24 +4868,27 @@ void eval_UBspline_3d_z_vgl (UBspline_3d_z * spline,
                              sf_double_complex* val, 
                              sf_double_complex* grad, 
                              sf_double_complex* lapl) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
+    double ux, uy, uz;
   double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modf (uy, &iparty);  int iy = (int) iparty; 
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz; 
+  int ix, iy, iz;
 
   double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4];
   sf_double_complex cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+  sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;  
+  ty = modf (uy, &iparty);  iy = (int) iparty; 
+  tz = modf (uz, &ipartz);  iz = (int) ipartz; 
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
@@ -4903,28 +5031,31 @@ void eval_UBspline_3d_z_vgh (UBspline_3d_z * spline,
                              sf_double_complex* val, 
                              sf_double_complex* grad, 
                              sf_double_complex* hess) {
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;  
-  z -= spline->z_grid.start;
-  double ux = x*spline->x_grid.delta_inv;
-  double uy = y*spline->y_grid.delta_inv;
-  double uz = z*spline->z_grid.delta_inv;
-  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
-  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
-  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+    double ux, uy, uz;
   double ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modf (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modf (uy, &iparty);  int iy = (int) iparty;
-  tz = modf (uz, &ipartz);  int iz = (int) ipartz;
+  int ix, iy, iz;
 
   double tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     d2a[4], d2b[4], d2c[4];
   sf_double_complex cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
     d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  sf_double_complex* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+  y -= spline->y_grid.start;  
+  z -= spline->z_grid.start;
+  ux = x*spline->x_grid.delta_inv;
+  uy = y*spline->y_grid.delta_inv;
+  uz = z*spline->z_grid.delta_inv;
+  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
+  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
+  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
+  tx = modf (ux, &ipartx);  ix = (int) ipartx;
+  ty = modf (uy, &iparty);  iy = (int) iparty;
+  tz = modf (uz, &ipartz);  iz = (int) ipartz;
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  sf_double_complex* coefs = spline->coefs;
 
   a[0]   = (  Ad[ 0]*tpx[0] +   Ad[ 1]*tpx[1] +  Ad[ 2]*tpx[2] + Ad[ 3]*tpx[3]);
   a[1]   = (  Ad[ 4]*tpx[0] +   Ad[ 5]*tpx[1] +  Ad[ 6]*tpx[2] + Ad[ 7]*tpx[3]);
