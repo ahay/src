@@ -1615,15 +1615,18 @@ void destroy_Bspline (void *spline) {
 /* Value only */
 void eval_UBspline_1d_s (UBspline_1d_s * spline, 
                          double x, float* val) {
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
+  float u;
   float ipart, t;
-  t = modff (u, &ipart);
   int i = (int) ipart;
 
   float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
   float* coefs = spline->coefs;
+
+  x -= spline->x_grid.start;
+
+  u = x*spline->x_grid.delta_inv;
+  t = modff (u, &ipart);
+  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
