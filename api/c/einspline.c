@@ -899,8 +899,11 @@ void solve_deriv_interp_1d_d (double bands[], double coefs[],
 void  solve_periodic_interp_1d_d (double bands[], double coefs[],
                                   int M, int cstride)
 {
-  double lastCol[M];
+  double *lastCol;
   int row;
+
+  lastCol = (double*) sf_alloc(M,sizeof(double));
+
   /* Now solve:
      First and last rows are different */
   bands[4*(0)+2] /= bands[4*(0)+1];
@@ -943,7 +946,7 @@ void  solve_periodic_interp_1d_d (double bands[], double coefs[],
   coefs[(M+1)*cstride] = coefs[1*cstride];
   coefs[(M+2)*cstride] = coefs[2*cstride];
 
-
+  free(lastCol);
 }
 
 void find_coefs_1d_d (Ugrid grid, BCtype_d bc, 
