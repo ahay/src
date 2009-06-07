@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     
     sf_floatread(wt[0],nd,weight);
     sf_floatread(dp[0],nd,dip);
-    //sf_warning("lllllllllllll");
+    /* sf_warning("lllllllllllll"); */
     for (i2=0; i2 < n2; i2++) {
     	for (i1=0; i1 < n1; i1++) { 
 	    rf[i2][i1] = uw[i2][i1];

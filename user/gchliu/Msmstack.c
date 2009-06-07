@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 {
     int nt, nh, ncmp, it, icmp, ih, zero, s, l;
     bool ifwt;
-    float *indata, *outdata, *stack; //*win1, *win2;
+    float *indata, *outdata, *stack; /*win1, *win2; */
     float dt, esp, ee, dh, dcmp,cmp0, t0, h0, weight, sumweight;
     sf_file in, out;
     
@@ -96,14 +96,14 @@ int main(int argc, char* argv[])
               stack[it]=stack[it];
          }
             
-         //compute weights
+         /* compute weights */
 	 for (it=0; it < nt; it++){
               zero = 0;
 	      sumweight = 0;
 	      for (ih=0; ih < nh; ih++){
 	            if (indata[ih*nt+it]*stack[it]>0){
                         if (indata[ih*nt+it]!=0)
-                            zero++;   // number of non-zero values
+                            zero++;   /* number of non-zero values */
 		        if (ifwt)
 		            weight=1.0/(pow(fabs(indata[ih*nt+it]-stack[it]),s)+esp);
 			else {

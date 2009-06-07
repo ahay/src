@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
          }
 	 
 	 
-         // computer the directly stack trace
+         /* computer the directly stack trace */
          for (it=0; it < nt; it++){
               zero=0;
               for(ih=0; ih < nh; ih++){
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
               else 
               stack[it]=stack[it]/zero;
          }         
-         // estimate the noise variances
+         /* estimate the noise variances */
          for (it=0; it < nt; it++){ 
               zero = 0;
 	       sumweight=0;

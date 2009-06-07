@@ -159,10 +159,10 @@ int main(int argc, char* argv[])
                         
                         if ((reg == 1) && cut_p) {
                             maxweight = sf_quantile(n12k-1000,n12k,ww);
-                            //minweight = sf_quantile(n12k-40,n12k,ww);
+                            /* minweight = sf_quantile(n12k-40,n12k,ww); */
                             for (i=0; i < n12k; i++) {
 			        if (w[i] > maxweight) w[i]=maxweight;
-                            //if (w[i] > minweight) w[i]=minweight;
+				/* if (w[i] > minweight) w[i]=minweight; */
                            }
 		        }
 	    
