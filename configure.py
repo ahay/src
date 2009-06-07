@@ -610,6 +610,7 @@ def gd(context):
     int main(int argc,char* argv[]) {
     gdImagePtr image;
     image = gdImageCreate(10,10);
+    gdImageSetClip(image,0,0,1,1);
     return 0;
     }\n'''
     gd = context.env.get('GD','gd')
