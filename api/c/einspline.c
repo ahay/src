@@ -954,8 +954,10 @@ void find_coefs_1d_d (Ugrid grid, BCtype_d bc,
                       double *coefs, intptr_t cstride) {
   int M = grid.num, i, j;
   double basis[4] = {1.0/6.0, 2.0/3.0, 1.0/6.0, 0.0};
+  double *bands;
+
   if (bc.lCode == PERIODIC) {
-    double *bands = malloc (4*M*sizeof(double));
+    bands = (double*) sf_alloc (4*M,sizeof(double));
     for (i=0; i<M; i++) {
       bands[4*i+0] = basis[0];
       bands[4*i+1] = basis[1];
@@ -999,7 +1001,7 @@ void find_coefs_1d_d (Ugrid grid, BCtype_d bc,
       abcd_right[2] = 1.0 *grid.delta_inv * grid.delta_inv;
       abcd_right[3] = bc.rVal;
     }
-    double *bands = malloc ((M+2)*4*sizeof(double));
+    bands = (double*) sf_alloc ((M+2)*4,sizeof(double));
     for (i=0; i<4; i++) {
       bands[4*( 0 )+i] = abcd_left[i];
       bands[4*(M+1)+i] = abcd_right[i];
