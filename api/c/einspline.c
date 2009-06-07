@@ -390,6 +390,9 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
                                      BCtype_s xBC, BCtype_s yBC, BCtype_s zBC,
                                      float *data) {
   /* Create new spline */
+    int Mx, My, Mz;
+    int Nx, Ny, Nz, iy, ix, iz;
+    
   UBspline_3d_s* spline = malloc (sizeof(UBspline_3d_s));
   spline->spcode = U3D;
   spline->tcode  = SINGLE_REAL;
@@ -397,8 +400,6 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->yBC = yBC; 
   spline->zBC = zBC; 
   /* Setup internal variables */
-  int Mx = x_grid.num;  int My = y_grid.num; int Mz = z_grid.num;
-  int Nx, Ny, Nz, iy, ix, iz;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
