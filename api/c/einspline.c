@@ -314,15 +314,18 @@ void recompute_UBspline_1d_s (UBspline_1d_s* spline, float *data) {
 UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
                                      BCtype_s xBC, BCtype_s yBC, float *data) {
   /* Create new spline */
+    int Mx, My;
+    int Nx, Ny, iy, ix;
+
   UBspline_2d_s* spline = malloc (sizeof(UBspline_2d_s));
   spline->spcode = U2D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; 
   spline->yBC = yBC; 
   /* Setup internal variables */
-  int Mx = x_grid.num;
-  int My = y_grid.num;
-  int Nx, Ny, iy, ix;
+  Mx = x_grid.num;
+  My = y_grid.num;
+
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;
