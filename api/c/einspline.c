@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include "einspline.h"
-#include "alloc.h"
 
 #ifndef __USE_ISOC99
 static double einspl_fmin (double x, double y) {
@@ -151,7 +150,7 @@ void  solve_periodic_interp_1d_s (float bands[], float coefs[],
   float *lastCol;
   int row;
 
-  lastCol = sf_floatalloc(M);
+  lastCol = (float*) malloc(M*sizeof(float));
 
   /* Now solve:
      First and last rows are different */
@@ -206,7 +205,7 @@ void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
   float *bands;
 
   if (bc.lCode == PERIODIC) {
-      bands = sf_floatalloc(4*M);
+      bands = (float*) malloc(4*M*sizeof(float));
       for (i=0; i<M; i++) {
 	  bands[4*i+0] = basis[0];
 	  bands[4*i+1] = basis[1];
@@ -250,7 +249,7 @@ void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
       abcd_right[2] = 1.0 *grid.delta_inv * grid.delta_inv;
       abcd_right[3] = bc.rVal;
     }
-    bands = sf_floatalloc ((M+2)*4);
+    bands = (float*) malloc ((M+2)*4*sizeof(float));
     for (i=0; i<4; i++) {
       bands[4*( 0 )+i]   = abcd_left[i];
       bands[4*(M+1)+i] = abcd_right[i];
@@ -902,7 +901,7 @@ void  solve_periodic_interp_1d_d (double bands[], double coefs[],
   double *lastCol;
   int row;
 
-  lastCol = (double*) sf_alloc(M,sizeof(double));
+  lastCol = (double*) malloc(M*sizeof(double));
 
   /* Now solve:
      First and last rows are different */
@@ -957,7 +956,7 @@ void find_coefs_1d_d (Ugrid grid, BCtype_d bc,
   double *bands;
 
   if (bc.lCode == PERIODIC) {
-    bands = (double*) sf_alloc (4*M,sizeof(double));
+    bands = (double*) malloc (4*M*sizeof(double));
     for (i=0; i<M; i++) {
       bands[4*i+0] = basis[0];
       bands[4*i+1] = basis[1];
@@ -1001,7 +1000,7 @@ void find_coefs_1d_d (Ugrid grid, BCtype_d bc,
       abcd_right[2] = 1.0 *grid.delta_inv * grid.delta_inv;
       abcd_right[3] = bc.rVal;
     }
-    bands = (double*) sf_alloc ((M+2)*4,sizeof(double));
+    bands = (double*) malloc ((M+2)*4*sizeof(double));
     for (i=0; i<4; i++) {
       bands[4*( 0 )+i] = abcd_left[i];
       bands[4*(M+1)+i] = abcd_right[i];
