@@ -281,14 +281,14 @@ void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
 
 UBspline_1d_s* create_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, float *data) {
   /* Create new spline */
+    int M, N;
   UBspline_1d_s* spline = malloc (sizeof(UBspline_1d_s));
   spline->spcode = U1D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; spline->x_grid = x_grid;
 
   /* Setup internal variables */
-  int M = x_grid.num;
-  int N;
+  M = x_grid.num;
 
   if (xBC.lCode == PERIODIC) {
     x_grid.delta     = (x_grid.end-x_grid.start)/(double)(x_grid.num);
