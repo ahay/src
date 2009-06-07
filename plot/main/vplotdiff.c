@@ -1112,8 +1112,8 @@ check_vplot2text (const int debug1,
     int key1, size1, orient1;
     int key2, size2, orient2;
     char command1[80], command2[80];
-    float xfpath1, yfpath1, xfup1, yfup1;
-    float xfpath2, yfpath2, xfup2, yfup2;
+    float xfpath1=0., yfpath1=0., xfup1=0., yfup1=0.;
+    float xfpath2=0., yfpath2=0., xfup2=0., yfup2=0.;
     float fsize, forient;
     char textstring1[MAX_TXT], textstring2[MAX_TXT];
     int ii;
@@ -2523,10 +2523,10 @@ check_vplot2simple (int c,
 {
     int npts1, mtype1, i1;
     int ii1, xmask1, ymask1;
-    int x1, y1, fat1, msize1;
+    int x1=0, y1=0, fat1, msize1;
     int npts2, mtype2;
     int xmask2, ymask2;
-    int x2, y2, fat2, msize2;
+    int x2=0, y2=0, fat2, msize2;
     int errorcount = 0;
 
 /* Only handle commands that plot something */
