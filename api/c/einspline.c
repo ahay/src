@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "einspline.h"
+#include "alloc.h"
 
 #ifndef __USE_ISOC99
 static double einspl_fmin (double x, double y) {
@@ -147,8 +148,11 @@ void  solve_deriv_interp_1d_s (float bands[], float coefs[],
    On exit, coefs with contain interpolating B-spline coefs */
 void  solve_periodic_interp_1d_s (float bands[], float coefs[],
                                   int M, int cstride) {
-  float lastCol[M];
+  float *lastCol;
   int row;
+
+  lastCol = sf_floatalloc(M);
+
   /* Now solve:
      First and last rows are different */
   bands[4*(0)+2] /= bands[4*(0)+1];
@@ -191,7 +195,7 @@ void  solve_periodic_interp_1d_s (float bands[], float coefs[],
   coefs[(M+1)*cstride] = coefs[1*cstride];
   coefs[(M+2)*cstride] = coefs[2*cstride];
 
-
+  free(lastCol);
 }
 
 void find_coefs_1d_s (Ugrid grid, BCtype_s bc, 
@@ -199,16 +203,18 @@ void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
                       float *coefs, intptr_t cstride) {
   int M = grid.num, i, j;
   float basis[4] = {1.0/6.0, 2.0/3.0, 1.0/6.0, 0.0};
+  float *bands;
+
   if (bc.lCode == PERIODIC) {
-    float *bands = malloc(4*M*sizeof(float));
-    for (i=0; i<M; i++) {
-      bands[4*i+0] = basis[0];
-      bands[4*i+1] = basis[1];
-      bands[4*i+2] = basis[2];
-      bands[4*i+3] = data[i*dstride];
-    }
-    solve_periodic_interp_1d_s (bands, coefs, M, cstride);
-    free (bands);
+      bands = sf_floatalloc(4*M);
+      for (i=0; i<M; i++) {
+	  bands[4*i+0] = basis[0];
+	  bands[4*i+1] = basis[1];
+	  bands[4*i+2] = basis[2];
+	  bands[4*i+3] = data[i*dstride];
+      }
+      solve_periodic_interp_1d_s (bands, coefs, M, cstride);
+      free (bands);
   }
   else {
     /* Setup boundary conditions */
@@ -244,7 +250,7 @@ void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
       abcd_right[2] = 1.0 *grid.delta_inv * grid.delta_inv;
       abcd_right[3] = bc.rVal;
     }
-    float *bands = malloc ((M+2)*4*sizeof(float));
+    bands = sf_floatalloc ((M+2)*4);
     for (i=0; i<4; i++) {
       bands[4*( 0 )+i]   = abcd_left[i];
       bands[4*(M+1)+i] = abcd_right[i];
