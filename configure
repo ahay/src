@@ -85,7 +85,7 @@ if test "$scons" = "no"; then
 	exit 2
     fi
 fi
-scons_v=`scons -v 2>&1 | awk 'NR==2 {sub(/,/,"",$2); print $2}'`
+scons_v=`scons -v 2>&1 | awk 'NR==2 {print $2}' | sed s/,//`
 echo "checking SCons version ... $scons_v"
 
 echo "Running $scons $* config ..."
