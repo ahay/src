@@ -22,11 +22,24 @@
 #include "ccopy.h"
 
 static sf_complex z0;
+static int n2, k2;
 
-void sin_init(sf_complex z1)
+void sin_init(sf_complex z1) 
 /*< initialize >*/
 {
     z0 = conjf(z1);
+    
+}
+
+void sinpred_init(sf_complex z1, 
+		  int n /* data size */,
+		  int k /* radius */)
+/*< initialize >*/
+{
+    z0 = conjf(z1);
+    n2 = n;
+    k2 = k;
+    if (k2 > n2-1) sf_error("%s: k2=%d > n2-1=%d",__FILE__,k2,n2-1);
 }
 
 void sin_destruct(bool adj, bool add, int nx, int ny, 
@@ -87,6 +100,111 @@ void sin_construct(bool adj, bool add, int nx, int ny,
 	    t = sf_cadd(xx[i],sf_cmul(t,z0));
 	    yy[i] = sf_cadd(yy[i],t);
 #endif
+	}
+    }
+}
+
+void sinpredicter_lop(bool adj, bool add, int nx, int ny, 
+		      sf_complex *xx, sf_complex *yy)
+/*< linear operator >*/
+{
+    int i2;
+    sf_complex t;
+
+    if (nx != ny || nx != n2+2*k2) 
+	sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_cadjnull(adj,add,nx,ny,xx,yy);
+
+    t = sf_cmplx(0.0,0.0);
+    if (adj) {
+	for (i2=n2+2*k2-1; i2 >= 0; i2--) {
+#ifdef SF_HAS_COMPLEX_H
+	    t = yy[i2] + t * conjf(z0);
+	    xx[i2] += t;  
+#else
+	    t = sf_cadd(yy[i2],sf_cmul(t,sf_conjf(z0)));
+	    xx[i2] = sf_cadd(xx[i2],t);
+#endif
+	}
+    } else {
+	for (i2=0; i2 < n2+2*k2; i2++) {
+#ifdef SF_HAS_COMPLEX_H	    
+	    t = xx[i2] + t * z0;
+	    yy[i2] += t;
+#else
+	    t = sf_cadd(xx[i2],sf_cmul(t,z0));
+	    yy[i2] = sf_cadd(yy[i2],t);
+#endif
+	}
+    }
+}
+
+void sinsubtracter_lop(bool adj, bool add, int nx, int ny, 
+		       sf_complex *xx, sf_complex *yy)
+/*< linear operator >*/
+{
+    int i2, j2, m2;
+    sf_complex c;
+
+    if (nx != ny || nx != n2+2*k2) 
+	sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_cadjnull(adj,add,nx,ny,xx,yy);
+
+    if (adj) {
+	for (j2=0; j2 < n2+2*k2; j2++) {
+	    i2=j2+k2;
+	    if (i2 < n2+2*k2) {
+		c = sf_cmplx(1.,0.);
+		for (m2=i2-1; m2 >= j2; m2--) {
+#ifdef SF_HAS_COMPLEX_H	 
+		    c *= conjf(z0);
+#else
+		    c = sf_cmul(c,sf_conjf(z0));
+#endif
+		}
+#ifdef SF_HAS_COMPLEX_H	 
+		xx[j2] += yy[j2] - yy[i2] * c;
+#else 
+		xx[j2] = sf_cadd(xx[j2],
+				 sf_cadd(yy[j2],
+					 sf_cneg(sf_cmul(yy[i2],c))));
+#endif
+	    } else {
+#ifdef SF_HAS_COMPLEX_H
+		xx[j2] += yy[j2];
+#else	
+		xx[j2] = sf_cadd(xx[j2],yy[j2]);
+#endif
+	    }
+	}
+    } else {
+	for (i2=0; i2 < n2+2*k2; i2++) { 
+	    j2=i2-k2;
+	    if (j2 >=0) {
+		c = sf_cmplx(1.,0.);
+		for (m2=j2; m2 < i2; m2++) {
+#ifdef SF_HAS_COMPLEX_H	 
+		    c *= z0;
+#else
+		    c = sf_cmul(c,z0);
+#endif
+		}
+#ifdef SF_HAS_COMPLEX_H	 
+		yy[i2] += xx[i2] - xx[j2] * c;
+#else 
+		yy[i2] = sf_cadd(yy[i2],
+				 sf_cadd(xx[i2],
+					 sf_cneg(sf_cmul(xx[j2],c))));
+#endif
+	    } else {
+#ifdef SF_HAS_COMPLEX_H	 
+		yy[i2] += xx[i2];
+#else 
+		yy[i2] = sf_cadd(yy[i2],xx[i2]);
+#endif
+	    }
 	}
     }
 }

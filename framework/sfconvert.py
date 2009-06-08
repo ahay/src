@@ -39,6 +39,9 @@ pens = {
     'avi': 'ppm'
     }
 
+formats = pens.keys()
+formats.sort()
+
 def exists(pen):
     '''check if a given pen exists'''
     bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
@@ -63,7 +66,11 @@ def which(prog):
     return None
 
 def convert(vpl,out,format,pen,args):
-    global pens
+    global pens, formats
+                       
+    if not format in formats:
+        print 'Unknown format "%s" ' % format
+        sys.exit(1)
     if not os.path.isfile(vpl):
         print "\"%s\" is not a file" % vpl
         sys.exit(1)
@@ -78,21 +85,21 @@ def convert(vpl,out,format,pen,args):
 
         # Offer alternatives
         if format == 'png':
-            pens = ('png','gd','ps')
+            mypens = ('png','gd','ps')
         elif format == 'gif':
-            pens = ('gd','ppm')
+            mypens = ('gd','ppm')
         elif format == 'jpeg' or format == 'jpg':
-            pens = ('jpeg','gd')
+            mypens = ('jpeg','gd')
         elif format == 'pdf':
-            pens = ('ps','pdf')
+            mypens = ('ps','pdf')
         else:
             convert = which('convert')
             if convert:
-                pens = ('tiff','ppm','png','jpeg','ps')
+                mypens = ('tiff','ppm','png','jpeg','ps')
             else:
-                pens = ()
+                mypens = ()
 
-        for other in pens:
+        for other in mypens:
             if other != pen:
                 exe = exists(other)
                 if exe:
@@ -160,9 +167,6 @@ if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
     # because this script may have users that do not have RSF
 
-    formats = pens.keys()
-    formats.sort()
-
     usage = '''
 Usage: %s [format=] file.vpl [file2.vpl file3.vpl | file.other]
 
@@ -197,6 +201,7 @@ Supported formats: %s
                 print usage
                 sys.exit(1)
             outfile = os.path.splitext(infile)[0]+'.'+format
+            convert(infile,outfile,format,pen,args)
     else:
         if len(files) !=2:
             print usage
@@ -205,11 +210,6 @@ Supported formats: %s
         outfile = files[1]
         # get format from suffix
         format = os.path.splitext(outfile)[1][1:].lower()
+        convert(infile,outfile,format,pen,args)
     
-    if not format in formats:
-        print 'Unknown format "%s" ' % format
-        sys.exit(1)
-    
-    convert(infile,outfile,format,pen,args)
-
     sys.exit(0)

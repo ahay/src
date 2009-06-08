@@ -19,15 +19,16 @@
 #include <rsf.h>
 
 #include "sin.h"
+#include "sinsl.h"
 #include "freqlet.h"
 
 int main(int argc, char* argv[])
 {
-    int i1, n1, i2, n2, niter, iter;
+    int i1, n1, i2, n2, niter, iter, rect=1;
     bool adj, verb, *known;
     char *oper, *type;
     sf_complex *z0, *x, *y, *y2=NULL;
-    float *m=NULL, perc;
+    float *m=NULL, perc, eps;
     sf_coperator coper=NULL;
     sf_file in, out, root, mask=NULL;
 
@@ -72,6 +73,11 @@ int main(int argc, char* argv[])
 
 	    freqlet_init(n1, true, true, type[0]);
 	    break;
+	case 's':
+	    coper = sinsl_lop;
+
+	    if (!sf_getint("rect",&rect)) rect=1;
+	    break;
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
     }
@@ -97,6 +103,7 @@ int main(int argc, char* argv[])
 		    /* percentage for thresholding (used when oper=t and niter > 0) */
 
 		    sf_sharpen_init(n1,perc);
+		    break;
 		case 'd':
 		    for (i1=0; i1 < n1; i1++) {
 			x[i1] = sf_cmplx(0.,0.);
@@ -105,15 +112,34 @@ int main(int argc, char* argv[])
 		case 'c':
 		    sf_mask_init(known);
 		    break;
+		case 's':
+		    sf_mask_init(known);
+		    y2 = sf_complexalloc(n1);
+
+		    if (!sf_getfloat("eps",&eps)) eps=1./n1;
+		    /* scaling for shaping inversion */
+
+		    sf_cconjgrad_init(n1,n1,n1,n1, 
+				      eps,
+				      1.e-7,
+				      true,false);
+		    break;
 	    }
 	}
     }
 
     for (i2=0; i2 < n2; i2++) {
-	if ('t'==oper[0]) {
-	    freqlet_setz(z0[i2]);
-	} else {
-	    sin_init(z0[i2]);
+	switch(oper[0]) {
+	    case 'd':
+	    case 'c':
+		sin_init(z0[i2]);
+		break;
+	    case 't':
+		freqlet_setz(z0[i2]);
+		break;
+	    case 's':
+		sinsl_init(n1,rect,z0[i2]);
+		break;
 	}
 
 	if (niter > 0) {
@@ -130,10 +156,13 @@ int main(int argc, char* argv[])
 				   "known", known, "x0", y, "verb", verb, "end");
 			break;
 		    case 'c':	
-			
 			sf_csolver_prec(sf_cmask_lop, sf_ccgstep, coper, 
 					n1, n1, n1, y, y, niter, 0.,
 					"verb", verb,"end");
+			break;
+		    case 's':
+			sf_cconjgrad(NULL, sf_cmask_lop, coper, 
+				     y2, y, y, niter);
 			break;
 		    case 't':
 			for (iter=0; iter < niter; iter++) {
