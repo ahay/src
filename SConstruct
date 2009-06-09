@@ -53,6 +53,8 @@ env.Append(BUILDERS={'Include':configure.Header,
 
 system = filter(lambda x: x[0] != '.', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
+# Avoid crashing when user places some files in RSFSRC/user
+user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 
 SConscript(dirs='framework',name='SConstruct',
            exports='env root bindir libdir docdir mandir system user')
