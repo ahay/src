@@ -502,7 +502,7 @@ def sfpen(context):
     sfpen = context.env.get('SFPEN')
     
     if not sfpen:
-        if plat['OS'] == 'cygwin' or plat['OS'] == 'darwin':
+        if plat['OS'] == 'cygwin':
             pens = ('oglpen','xtpen')
         else:
             pens = ('xtpen','oglpen')
