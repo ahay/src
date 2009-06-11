@@ -1,17 +1,17 @@
 /* Fast Fourier Transform along the first axis. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     float dw, *p, d1, o1, wt, shift;
     kiss_fft_cpx *pp, ce;
     char *label;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
     kiss_fftr_cfg cfg;
 
     sf_init(argc, argv);
@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
 	}
     }	
     fix_unit(1,in,out);
-    
+
     p = sf_floatalloc(nt);
     pp = (kiss_fft_cpx*) sf_complexalloc(nw);
 
@@ -114,13 +114,13 @@ int main (int argc, char *argv[])
 		    p[i1] *= wt;
 		}
 	    }
-	    
+
 	    for (i1=n1; i1 < nt; i1++) {
 		p[i1]=0.0;
 	    }
-	    
+
 	    kiss_fftr (cfg,p,pp);
-	    
+
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
 		    shift = -2.0*SF_PI*i1*dw*o1;
@@ -129,8 +129,8 @@ int main (int argc, char *argv[])
 		    pp[i1]=sf_cmul(pp[i1],ce);
 		}
 	    }
-	    
-	    sf_floatwrite((float*) pp,2*nw,out);	    
+
+	    sf_floatwrite((float*) pp,2*nw,out);
 	} else {
 	    sf_floatread((float*) pp,2*nw,in);
 
@@ -152,9 +152,8 @@ int main (int argc, char *argv[])
 	    sf_floatwrite (p,n1,out);
 	}
     }
-    
-    sf_fileclose(in);
 
+    if (in != NULL) sf_fileclose(in);
     exit (0);
 }
 

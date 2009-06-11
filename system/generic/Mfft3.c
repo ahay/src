@@ -4,7 +4,7 @@ Input and output are complex data. The input is padded by factor pad.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -14,7 +14,7 @@ Input and output are complex data. The input is padded by factor pad.
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,9 +26,9 @@ Input and output are complex data. The input is padded by factor pad.
 
 int main (int argc, char **argv)
 {
-    int n1, nx, n3, dim, n[SF_MAX_DIM];     /* dimensions */ 
+    int n1, nx, n3, dim, n[SF_MAX_DIM];     /* dimensions */
     int i1, ix, i3, j;       /* loop counters */
-    int nk;                  /* number of wavenumbers */   
+    int nk;                  /* number of wavenumbers */
     int npad;                /* padding */
 
     float dx;                /* space sampling interval */
@@ -48,39 +48,39 @@ int main (int argc, char **argv)
     char varname[12];        /* variable name */
     char *label;             /* transformed axis label */
     kiss_fft_cfg cfg;
-    
-    sf_file in, out;
-    
+
+    sf_file in=NULL, out=NULL;
+
     sf_init(argc,argv);
     in  = sf_input ( "in");
     out = sf_output("out");
-    
+
     if (SF_COMPLEX != sf_gettype(in)) sf_error ("Need complex input");
-    
+
     if (!sf_getbool("inv",&inv)) inv = false;
     /* if y, perform inverse transform */
-    
+
     if (!sf_getbool("sym",&sym)) sym=false;
     /* if y, apply symmetric scaling to make the FFT operator Hermitian */
-    
+
     if (!sf_getint("sign",&sign)) sign = inv? 1: 0;
     /* transform sign (0 or 1) */
-    
+
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
-    
+
     if (!sf_getint("axis",&axis)) axis=2;
     /* Axis to transform */
-    
+
     dim = sf_filedims(in,n);
-    
+
     n1=n3=1;
     for (j=0; j < dim; j++) {
 	if      (j < axis-1) n1 *= n[j];
 	else if (j > axis-1) n3 *= n[j]; 
     }
-    
-    if (inv) { 
+
+    if (inv) {
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint  (in,varname,&nk)) sf_error("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
@@ -107,7 +107,7 @@ int main (int argc, char **argv)
 	} else if (NULL != (label = sf_histstring(in,varname))) {
 	    (void) fix_label(axis,label,out);
 	}
-    } else { 
+    } else {
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
@@ -148,19 +148,19 @@ int main (int argc, char **argv)
 	}
     }
     fix_unit(axis,in,out);
-    
+
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
-    
+
     cp     = (kiss_fft_cpx**) sf_complexalloc2(n1,nk);
     ctrace = (kiss_fft_cpx*)  sf_complexalloc(nk);
-    
+
     /* FFT scaling */
     wt = sym? 1./sqrtf((float) nk): 1./nk;
-    
+
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
 	    sf_floatread((float*) cp[0],n1*nk*2,in);
-	    
+
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform k to x */
 		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
@@ -169,18 +169,18 @@ int main (int argc, char **argv)
 		    cp[ix][i1] = sf_crmul(ctrace[ix],ix%2? -wt: wt);
 		}
 	    }
-	    
+
 	    sf_floatwrite((float*) cp[0],n1*nx*2,out);
 	} else {
 	    sf_floatread((float*) cp[0],n1*nx*2,in);
-	    
+
 	    /* FFT centering */
 	    for (ix=1; ix<nx; ix+=2) {
 		for (i1=0; i1<n1; i1++) {
 		    cp[ix][i1] = sf_cneg(cp[ix][i1]);
 		}
 	    }
-	    
+
 	    if (sym) {
 		for (ix=0; ix<nx; ix++) {
 		    for (i1=0; i1 < n1; i1++) {
@@ -188,7 +188,7 @@ int main (int argc, char **argv)
 		    }
 		}
 	    }
-	    
+
 	    /* pad with zeros */
 	    for (ix=nx; ix<nk; ix++) {
 		for (i1=0; i1<n1; i1++) {
@@ -196,7 +196,7 @@ int main (int argc, char **argv)
 		    cp[ix][i1].i = 0.;
 		}
 	    }
-	    
+
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform x to k */
 		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
@@ -206,14 +206,12 @@ int main (int argc, char **argv)
 		    cp[ix][i1] = ctrace[ix];
 		}
 	    }
-	    
+
 	    sf_floatwrite((float*) cp[0],n1*nk*2,out);
 	}
     }
-    
-    sf_fileclose(in);
+
+    if (in != NULL) sf_fileclose(in);
 
     exit (0);
 }
-
-/* 	$Id$	 */

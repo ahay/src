@@ -1,12 +1,12 @@
 /* Multi-dimensional smoothing with boxes.
 
-Takes: rect1=1 rect2=1 ... 
+Takes: rect1=1 rect2=1 ...
 
 rectN defines the size of the smoothing stencil in N-th dimension.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
     int nrep, irep, n1, n2, i2, i0, rmax;
     char key[6];
     float *data, *data2;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc, argv);
     in = sf_input ("in");
@@ -86,9 +86,7 @@ int main (int argc, char* argv[])
 	}
 	
 	sf_floatwrite(data,n1,out);
-    }    
-
+    }
+    if (in != NULL) sf_fileclose(in);
     exit (0);
 }
-
-/* 	$Id$	 */

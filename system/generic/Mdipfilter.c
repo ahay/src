@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float x0,dx,x, y0,dy,y, w0,dw,w, vel,v, minx;
     float ang1, ang2, ang3, ang4, v1, v2, v3, v4, factor, *ctrace;
     bool angle, pass, compl;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -39,12 +39,12 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-    
+
     if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o1",&w0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
-    
+
     if (!sf_getint("dim",&dim)) dim=2;
     /* [2,3] Dimensionality: filter 2-D planes or 3-D cubes */
     if (3==dim) {
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("v4",&v4)) v4=999999.;
 	/* Velocity gate */
     }
-    
+
     if ((v1>=v2)||(v2>=v3)||(v3>=v4)) 
 	sf_error("Need v1 < v2 < v3 < v4, got %g ? %g ? %g ? %g",v1,v2,v3,v4); 
 
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	    } /* ix */
 	} /* iy */
     } /* i3 */
-
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }
 
