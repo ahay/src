@@ -7,9 +7,9 @@ It will print a list of affected files, sorted in a few categories.
 
 To eliminate the file leak, make sure all file pointers are initialized with
 NULL, i.e.:
-    sf_file foo=NULL;
+    sf_file in=NULL;
 Then close the file only if the pointer has been allocated:
-    if (foo != NULL) sf_fileclose(foo);
+    if (in != NULL) sf_fileclose(in);
 Keep in mind that this script checks for occurences of sf_input and
 sf_fileclose in a file, not in a procedure. Multi-procedure files, or
 procedures created especially to handle input, can easily "fool" this filter.
@@ -81,8 +81,23 @@ def main():
     plot/main/grey.c
     plot/main/grey3.c
     plot/opengl/Mplotrays3.c
+    system/generic/Magc.c
+    system/generic/Mbandpass.c
+    system/generic/Mboxsmooth.c
+    system/generic/Mcanny.c
+    system/generic/Mcausint.c
+    system/generic/Mcmatmult.c
+    system/generic/Mcosft.c
+    system/generic/Mcostaper.c
+    system/generic/Mderiv.c
+    system/generic/Mdipfilter.c
+    system/generic/Mdwt.c
+    system/generic/Mequal.c
     system/generic/Mfft1.c
     system/generic/Mfft3.c
+    system/generic/Mgrad2.c
+    system/generic/Mgrad3.c
+    system/generic/Mhistogram.c
     system/generic/Mnoise.c
     system/generic/Mremap1.c
     system/generic/Msmooth.c
