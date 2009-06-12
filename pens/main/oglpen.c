@@ -408,7 +408,12 @@ void oglclose (int status)
             if (frames_num > 1 && !animate)
                 oglstartanimation ();
             oglbuildmenu ();
+#if defined(__APPLE__) && (GLUT_MACOSX_IMPLEMENTATION >= 2)
+            for (;;)
+                glutCheckLoop ();
+#else
             glutMainLoop ();
+#endif
             break;
         case CLOSE_FLUSH:
             glFlush ();
