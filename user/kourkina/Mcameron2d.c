@@ -4,17 +4,17 @@ Input in (x0,t0), output in (x,z).
 */
 /*
   Copyright (C) 2008 New York University
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -86,7 +86,7 @@ static void chebyshev_init(void)
 {
     int i,j,ind,k,klo,khi;
     float yp1,ypn, *u, *b, *b2,a1,a2,un,qn,x,aux;
-    
+
     u = sf_floatalloc(nx);
     b = sf_floatalloc(nx);
     b2 = sf_floatalloc(nx);
@@ -129,7 +129,7 @@ static void chebyshev_init(void)
 		((a1*a1*a1-a1)*b2[klo]+(a2*a2*a2-a2)*b2[khi])*hx*hx/6.0;
 	}
     }
-    
+
     free(u);
     free(b);
     free(b2);
@@ -291,14 +291,14 @@ int main(int argc, char* argv[])
 {
     float xmin;
     char *method, meth;
-    sf_file fv,fv2,fx,ft;
+    sf_file fv=NULL,fv2=NULL,fx=NULL,ft=NULL;
 
     sf_init(argc,argv);
     fv = sf_input("in");
     fv2 = sf_output("out");
     fx = sf_output("x0");
     ft = sf_output("t0");
-    
+
     if (SF_FLOAT != sf_gettype(fv)) sf_error("Need float input");
     if (!sf_histint(fv,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histint(fv,"n2",&nt)) sf_error("No n2= in input");
@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
     } 
 
     sf_floatread(f,nxt,fv);
-    
+
     /* three parts of the algorithm */
     init(meth);
 
@@ -385,7 +385,6 @@ int main(int argc, char* argv[])
     sf_floatwrite(v,nxz,fv2);
     sf_floatwrite(x0,nxz,fx);
     sf_floatwrite(t0,nxz,ft);
-    
+    if (fv != NULL) sf_fileclose(fv);
     exit(0);
-}  
-	   			
+}

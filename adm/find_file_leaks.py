@@ -105,13 +105,16 @@ def main():
     system/main/add.c
     system/main/attr.c
     system/main/cconjgrad.c
+    system/main/cdottest.c
     system/main/cmplx.c
     system/main/conjgrad.c
     system/main/cp.c
     system/main/cut.c
     system/main/dd.c
     system/main/disfil.c
+    system/main/dottest.c
     system/main/get.c
+    system/main/interleave.c
     system/main/mask.c
     system/main/pad.c
     system/main/real.c
@@ -129,6 +132,7 @@ def main():
     system/seismic/Mricker1.c
     system/seismic/Mtime2depth.c
     system/seismic/Mzomig.c
+    user/effsilva/Mkhshot.c
     user/ivlad/Mfiledims.c
     user/ivlad/Mfileflush.c
     user/ivlad/Mleftsize.c
@@ -136,6 +140,10 @@ def main():
     user/jennings/Mclip2.c
     user/jennings/Mlistminmax.c
     user/jennings/Mminmax.c
+    user/kourkina/Mcameron2d.c
+    user/kourkina/Mve2d.c
+    user/mccowan/Mdmeig.c
+    user/mccowan/Mfastft.c
     user/psava/Msrmig3.c
     user/psava/Msrmod3.c
     '''

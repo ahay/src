@@ -21,7 +21,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
 	if (0 == pid[i]) break;
     }
 
-    if (0 == pid[0]) {	
+    if (0 == pid[0]) {
 	/* makes random model and writes it to p[0] */
 
 	close(p[0][0]);
@@ -92,7 +91,7 @@ int main(int argc, char* argv[])
 	    }
 	    sf_complexwrite(buf,mbuf,pip);
 	}
-    } 
+    }
 
     if (0 == pid[1]) {
 	/* reads from p[0], runs the program, and writes to p[1] */
@@ -134,7 +133,7 @@ int main(int argc, char* argv[])
 #else
 		dp = sf_dcadd(dp,sf_dcdmul(rd,buf[id]));
 #endif
-	    }	
+	    }
 	}
 	sf_warning(" L[m]*d=(%g,%g)",creal(dp),cimag(dp));
 
@@ -194,7 +193,7 @@ int main(int argc, char* argv[])
 	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	    if (msiz < mbuf) mbuf=msiz;
 
-	    sf_complexread(buf,mbuf,pip);	    
+	    sf_complexread(buf,mbuf,pip);
 	    for (im=0; im < mbuf; im++) {
 		rd = sf_dcmplx(genrand_real1(),-genrand_real1());
 #ifdef SF_HAS_COMPLEX_H		
@@ -202,7 +201,7 @@ int main(int argc, char* argv[])
 #else
 		dp = sf_dcadd(dp,sf_dcdmul(rd,buf[im]));
 #endif
-	    }	
+	    }
 	}
 	sf_warning("L'[d]*m=(%g,%g)",creal(dp),-cimag(dp));
 	
@@ -211,12 +210,14 @@ int main(int argc, char* argv[])
 
     for (i=0; i < 6; i++) { 
 	if (0 == pid[i]) break;
-    }    
+    }
 
     if (6==i) {
 	/* parent waits */
 	waitpid(pid[2],&status,0);
-	waitpid(pid[5],&status,0); 
+	waitpid(pid[5],&status,0);
+        if (mod != NULL) sf_fileclose(mod);
+        if (dat != NULL) sf_fileclose(dat);
 	exit(0);
     }
 }

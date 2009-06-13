@@ -7,7 +7,7 @@
 #include "hilbert.h"
 #include "migzrots.h"
 
-/* 
+/*
 improvements do be done:
  i.   use the correct weight function,
  ii.  review anti-aliasing filtering.
@@ -68,7 +68,7 @@ int main (int argc, char ** argv)
    if (!sf_getint("nz",&nz))   nz=n1t;
    if(!sf_getfloat("oz",&oz))  oz=o1t;
    if(!sf_getfloat("dz",&dz))  dz=d1t;
-   
+
    /* checking dimensions */
    if((dx!=d2t)||(dz!=d1t)) 
      sf_error("sampling interval have to be the same in:\n"
@@ -93,7 +93,7 @@ int main (int argc, char ** argv)
    tg    = tan(SF_PI*theta/180);
    tgtap = tan(SF_PI*(theta-dtheta)/180);
    if(verb) sf_warning("tgmax=%f tgtap=%f",tg,tgtap);
-   
+
    /* allocating */
    dat   = sf_floatalloc(n1);
    image = sf_floatalloc2(nz,nx);
@@ -103,7 +103,7 @@ int main (int argc, char ** argv)
    trs   = sf_floatalloc2(n1t,n2t);
    px    = sf_floatalloc2(n1t,n2t);
    pz    = sf_floatalloc2(n1t,n2t);
-    
+
    if(verb) sf_warning("initializing traveltime loading");
    /* initializing traveltime maps */
    tabtt = fslice_init(n1t*n2t,n3t,sizeof(float));
@@ -132,8 +132,8 @@ int main (int argc, char ** argv)
        itt = floor((xr+eps-o3t)/d3t);
        fslice_get(tabtt,itt,tr[0]);
 
-       for(i2t=0;i2t<n2t;i2t++) 
-         for(i1=0;i1<n1t;i1++) 
+       for(i2t=0;i2t<n2t;i2t++)
+         for(i1=0;i1<n1t;i1++)
             trs[i2t][i1]=ts[i2t][i1]+tr[i2t][i1];
 
        derive_1(n1t,n2t,d1t,trs,pz);
@@ -151,8 +151,8 @@ int main (int argc, char ** argv)
    }
 
    sf_floatwrite(image[0],n1*n2,Fout);
-   fprintf( stderr," \n terminou processamento \n");
-
+   fprintf( stderr," \n finished processing \n");
+   if (Fin != NULL) sf_fileclose(Fin);
+   if (Ftt != NULL) sf_fileclose(Ftt);
    exit(0);
 }
-/*--------------------------------------------------------------------------*/

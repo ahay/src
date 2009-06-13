@@ -1,17 +1,17 @@
 /* Convert interval velocity to Dix velocity */
 /*
   Copyright (C) 2008 New York University
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -45,7 +45,7 @@ static void shooting(void)
     int i, j, ind;
     float xs, ys, as, ts;
     struct darr arr;
-    
+
     for( i=0; i<nx; i++ ) {
 	*(w+i)=sc[0][i];
 	*(xr+i)=i*hx;
@@ -87,7 +87,7 @@ static void shooting(void)
 		    w[ind]=v;
 		}
 	    }
-	}	
+	}
     }
 }
 
@@ -133,7 +133,7 @@ static void s( float xs, float ys )
 
     xs /= hx; ix = floorf(xs); xs -= ix;
     ys /= hy; iy = floorf(ys); ys -= iy;
-    
+
     sf_eno2_apply (pnt, ix, iy, xs, ys, &v, gradv, BOTH);
 }
 
@@ -141,7 +141,7 @@ static void s( float xs, float ys )
 
 int main(int argc, char* argv[]) 
 {
-    sf_file fid, fx, fy, fsc;
+    sf_file fid=NULL, fx=NULL, fy=NULL, fsc=NULL;
     int i, j, ind, order;
     int nx1, ny1, ntx;
     float q;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
     fid = sf_output("out");
     fx = sf_output("x");
     fy = sf_output("z");
-    
+
     if (!sf_histint(fsc,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histint(fsc,"n2",&ny)) sf_error("No n2= in input");
     if (!sf_histfloat(fsc,"d1",&hx)) sf_error("No d1= in input");
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
     sf_putint(fid,"n2",nt);
     sf_putfloat(fid,"d2",ht);
-    
+
     sf_putint(fx,"n2",nt);
     sf_putfloat(fx,"d2",ht);
 
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(w,ntx,fid);
     sf_floatwrite(xr,ntx,fx);
     sf_floatwrite(yr,ntx,fy);
-
+    if (fsc != NULL) sf_fileclose(fsc);
     exit(0);
 }
 
