@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     int n1, n2, i1, i2, order;
     float **dat, ***der;
     sf_eno2 ent;
-    sf_file in, out, deriv;
+    sf_file in=NULL, out=NULL, deriv=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -41,8 +41,6 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(dat[0],   n1*n2,out);
     sf_floatwrite(der[0][0],n1*n2*2,deriv);
-
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }
-
-/* 	$Id$	 */

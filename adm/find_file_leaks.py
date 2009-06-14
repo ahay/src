@@ -77,6 +77,10 @@ def main():
     dirs_to_check = 'api pens plot su system user'
 
     already_checked_files = '''
+    api/c/Testeno2.c
+    api/c/test/afdm.c
+    api/matlab/rsf_dim.c
+    api/matlab/rsf_par.c
     plot/main/graph.c
     plot/main/grey.c
     plot/main/grey3.c

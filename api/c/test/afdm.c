@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
     float c0=-30./12.,c1=+16./12.,c2=- 1./12.;
 
     bool verb;           /* verbose flag */
-    sf_file Fw,Fv,Fr,Fo; /* I/O files */
+    sf_file Fw=NULL,Fv=NULL,Fr=NULL,Fo=NULL; /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
     int it,iz,ix;        /* index variables */
     int nt,nz,nx;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     uo=sf_floatalloc2(nz,nx);
     up=sf_floatalloc2(nz,nx);
     ud=sf_floatalloc2(nz,nx);
-    
+
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
 	    um[ix][iz]=0;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 	    ud[ix][iz]=0;
 	}
     }
-    
+
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
@@ -104,7 +104,9 @@ int main(int argc, char* argv[])
 	/* write wavefield to output */
 	sf_floatwrite(uo[0],nz*nx,Fo);
     }
-    if(verb) fprintf(stderr,"\n");    
-
+    if(verb) fprintf(stderr,"\n");
+    if (Fw != NULL) sf_fileclose(Fw);
+    if (Fv != NULL) sf_fileclose(Fv);
+    if (Fr != NULL) sf_fileclose(Fr);
     exit (0);
 }
