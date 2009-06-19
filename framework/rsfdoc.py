@@ -531,7 +531,7 @@ def html(dir):
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
     # Read subversion version number, if possible
-    proc = os.popen('svn stat -v SConstruct')
+    proc = os.popen('svn stat -v SConstruct 2>/dev/null')
     raw  = proc.read()
     proc.close()
     if len(raw) > 0: # SConstruct is under version control
