@@ -15,7 +15,7 @@ Flow('horizon2','horizon.asc',
 Result('horizon2','grey  yreverse=n color=j title=Input')
 
 # Spray
-Flow('spray','horizon',
+Flow('spray','horizon2',
      '''
      spray axis=3 n=21 o=-0.1 d=0.01 |
      spray axis=4 n=21 o=-0.1 d=0.01
