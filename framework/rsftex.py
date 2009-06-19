@@ -659,6 +659,14 @@ def dummy(target=None,source=None,env=None):
      tex.close()    
      return 0
 
+def pylab(target=None,source=None,env=None):
+    global epstopdf
+    pycomm = open(str(source[0]),'r').read()
+    exec pycomm in locals()
+    os.system('%s junk_py.eps -o=%s' % (epstopdf,target[0]))
+    os.unlink('junk_py.eps')
+    return 0
+    
 Latify = Builder(action = Action(latify,
                                  varlist=['lclass','options','use',
                                           'include','resdir']),
@@ -743,11 +751,9 @@ if epstopdf:
                          (matlabpath,matlab,epstopdf),
                          suffix='.pdf',src_suffix='.ml')
     if haspylab:
-        Pylab = Builder(action = '%s $SOURCE && '
-                        '%s junk_py.eps -o=$TARGET && rm junk_py.eps' %
-                        (WhereIs('python'),epstopdf),
+        Pylab = Builder(action = Action(pylab),
                         suffix='.pdf',src_suffix='.py')
-     
+
 Color = Builder(action = Action(colorize),suffix='.html')
 
 class TeXPaper(Environment):

@@ -1,0 +1,4 @@
+from rsftex import *
+
+End(use='hyperref,listings',
+    color='horizon smoothed mona smoothed2')
