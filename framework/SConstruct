@@ -34,7 +34,7 @@ for src in Split('doc top kill'):
 env.Install(bindir,'pscons')
 
 use = env.Command('rsfuse.py',None,
-                  action=Action(rsfdoc.use,varlist=['book,scons']),
+                  action=Action(rsfdoc.use,varlist=['book','scons']),
                   book='book',scons=sys.argv[0])
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
 for case in Split('vpplot suproj vplot2eps rsftex rsfproj'):
