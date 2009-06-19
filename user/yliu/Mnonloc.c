@@ -23,9 +23,10 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2, i1,i2, is, ns;
-    float *trace, *trace2, ax, bx, t, norm;
+    int n1,n2, i1,i2, is, ns, irep, nrep;
+    float *trace, ax, bx, t, norm;
     sf_file inp, out;
+    bool gauss;
 
     /* initialize */
     sf_init(argc,argv);
@@ -44,38 +45,49 @@ int main (int argc, char *argv[])
     /* spray radius */
 
     if (!sf_getfloat("ax",&ax)) sf_error("Need ax=");
-    /* exponential weight for the range distance */
+    /* triangle/Gaussian weight for the range distance */
 
     if (!sf_getfloat("bx",&bx)) sf_error("Need bx=");
     /* exponential weight for the domain distance */
+
+    if (!sf_getbool("gauss",&gauss)) gauss=false;
+    /* if y, Gaussian weight, whereas Triangle weight */
+
+    if (!sf_getint("repeat",&nrep)) nrep=1;
+    /* repeat filtering several times */
+
     trace = sf_floatalloc(n1);
-    trace2 = sf_floatalloc(n1);
 
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 	/* read input */
 	sf_floatread(trace,n1,inp);
 
-	/* loop over samples */
-	for (i1=0; i1 < n1; i1++) {	    
-	    t = 0.;
-	    norm = 0.;
-
-	    /* accumulate shifts */
-	    for (is=-ns; is <= ns; is++) {
-		if (i1+is >= 0 && i1+is < n1) {
-		    t += trace[i1+is]*(1-is*is/(ax+FLT_EPSILON))*expf(-bx*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1]));
-		    norm += (1-is*is/(ax+FLT_EPSILON))*expf(-bx*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1]));
-/*		    t += trace[i1+is]*expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1])/(bx*bx+FLT_EPSILON));
-		    norm += expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1])/(bx*bx+FLT_EPSILON));
-*/		} 
+	for (irep=0; irep < nrep; irep++) {
+	    /* loop over samples */
+	    for (i1=0; i1 < n1; i1++) {	    
+		t = 0.;
+		norm = 0.;
+		
+		/* accumulate shifts */
+		for (is=-ns; is <= ns; is++) {
+		    if (i1+is >= 0 && i1+is < n1) {
+			if (gauss) {
+			    t += trace[i1+is]*expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1])/(bx*bx+FLT_EPSILON));
+			    norm += expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1])/(bx*bx+FLT_EPSILON));
+			} else {
+			    t += trace[i1+is]*(1-is*is/(ax+FLT_EPSILON))*expf(-bx*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1]));
+			    norm += (1-is*is/(ax+FLT_EPSILON))*expf(-bx*(trace[i1+is]-trace[i1])*(trace[i1+is]-trace[i1]));
+			}
+		    } 
+		}
+		/* Nomalize */
+		trace[i1] = t / (norm+FLT_EPSILON);
 	    }
-	    /* Nomalize */
-	    trace2[i1] = t / (norm+FLT_EPSILON);
 	}
 
 	/* write output */
-	sf_floatwrite(trace2,n1,out);
+	sf_floatwrite(trace,n1,out);
     }
 
     /* clean up */
