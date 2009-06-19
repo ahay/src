@@ -84,6 +84,7 @@ def use(target=None,source=None,env=None):
     doc = 'import rsfdoc\n'
     cwd = os.getcwd()
     bookdir = env.get('book')
+    scons = env.get('scons')
     if os.path.isdir(bookdir):
         os.chdir(bookdir)
         cwtop = os.getcwd()
@@ -95,7 +96,7 @@ def use(target=None,source=None,env=None):
                 os.chdir(chapter)
                 print "...%s" % chapter
 
-                syswait('scons -s uses data')
+                syswait(scons + ' -s uses data')
 
                 datapath = rsfpath.datapath()
                 path = os.path.dirname(datapath)

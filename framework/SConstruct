@@ -1,4 +1,5 @@
-import os, rsfdoc
+import os, sys
+import rsfdoc
 
 Import('env root bindir libdir docdir mandir system user')
 
@@ -33,7 +34,8 @@ for src in Split('doc top kill'):
 env.Install(bindir,'pscons')
 
 use = env.Command('rsfuse.py',None,
-                  action=Action(rsfdoc.use,varlist=['book']),book='book')
+                  action=Action(rsfdoc.use,varlist=['book,scons']),
+                  book='book',scons=sys.argv[0])
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
 for case in Split('vpplot suproj vplot2eps rsftex rsfproj'):
     Depends(use,os.path.join(libdir,case+'.py'))
