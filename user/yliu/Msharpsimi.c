@@ -84,7 +84,9 @@ int main (int argc, char* argv[])
 	    for(i1=0; i1 < n12; i1++) {
 		xk[i1] = ((t1[i1]-t2[i1])*t2[i1] + eps*eps*xk[i1])/(t2[i1]*t2[i1]+eps*eps);
 		yk[i1] = ((t2[i1]-t1[i1])*t1[i1] + eps*eps*yk[i1])/(t1[i1]*t1[i1]+eps*eps);
-	    }
+/*		xk[i1] = (t1[i1]*t2[i1] + eps*eps*xk[i1])/(t2[i1]*t2[i1]+eps*eps);
+		yk[i1] = (t2[i1]*t1[i1] + eps*eps*yk[i1])/(t1[i1]*t1[i1]+eps*eps);
+ */	    }
 	    sf_sharpen(xk);
 	    sf_weight_apply(n12,xk);
 	    sf_sharpen(yk);
@@ -92,7 +94,8 @@ int main (int argc, char* argv[])
 	}
 	for(i1=0; i1 < n12; i1++) {
 	    simi[i1] = (1+xk[i1])*(1+yk[i1]);
-	}
+/*	    simi[i1] = xk[i1]*yk[i1];
+ */	}
 	sf_floatwrite (simi,n12,out);	
     }
     exit (0);
