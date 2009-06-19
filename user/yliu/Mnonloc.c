@@ -1,4 +1,8 @@
-/* Non-local (Bilateral) smoothing. */
+/* Non-local (Bilateral) smoothing. 
+Tomasi, C., and R. Manduchi, 1998, Bilateral filtering 
+for gray and color images: Proceedings of the 1998 
+IEEE International Conference on Computer Vision, 
+IEEE, 836-846*/
 /*
   Copyright (C) 2009 University of Texas at Austin
 
