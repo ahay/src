@@ -56,7 +56,7 @@ def which(prog):
     '''find a program in path'''
     path = os.environ.get('PATH','')
     path = path.split(os.pathsep)
-    
+
     for d in path:
         if sys.platform == 'cygwin' and d.find('WINDOWS') >= 0:
             continue
@@ -67,7 +67,7 @@ def which(prog):
 
 def convert(vpl,out,format,pen,args):
     global pens, formats
-                       
+
     if not format in formats:
         print 'Unknown format "%s" ' % format
         sys.exit(1)
@@ -117,7 +117,7 @@ def convert(vpl,out,format,pen,args):
             out = tempfile.mktemp(suffix='.'+format)
 
         pen = other
-            
+
     if pen == 'gd':
         args += ' type=%s' % format
 
@@ -191,7 +191,7 @@ Supported formats: %s
             files.append(arg)
     args = ' '.join(args)
 
-    if format:
+    if format != None:
         if not files:
             print usage
             sys.exit(1)
@@ -210,6 +210,10 @@ Supported formats: %s
         outfile = files[1]
         # get format from suffix
         format = os.path.splitext(outfile)[1][1:].lower()
-        convert(infile,outfile,format,pen,args)
-    
+        if format == 'vpl':
+            print 'Trying to convert vpl to vpl will only destroy the input'
+            sys.exit(3)
+        else:
+            convert(infile,outfile,format,pen,args)
+
     sys.exit(0)
