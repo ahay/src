@@ -10,7 +10,7 @@ quantile leftsize filedims fileflush create
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-pclip prep4plot wiki2static
+pclip prep4plot wiki2static invalid
 '''
 
 # Python modules that do not need SWIG+numpy
