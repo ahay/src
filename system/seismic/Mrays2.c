@@ -89,6 +89,8 @@ int main(int argc, char* argv[])
 	sf_warning("Shooting from z=%f, x=%f",s[0][0],s[0][1]);
     }
 
+    deg2rad = SF_PI/180.;
+
     if (NULL != sf_getstring("anglefile")) {
 	/* file with initial angles */
 	angles = sf_input("anglefile");
@@ -105,7 +107,6 @@ int main(int argc, char* argv[])
 	/* maximum angle (if no anglefile) */
 
 	/* convert degrees to radians */
-        deg2rad = SF_PI/180.;
 	a0   *= deg2rad;
 	amax *= deg2rad;
 

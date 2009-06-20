@@ -399,6 +399,9 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->yBC = yBC; 
   spline->zBC = zBC; 
   /* Setup internal variables */
+  Mx = x_grid.num;
+  My = y_grid.num;
+  Mz = z_grid.num;
 
   if (xBC.lCode == PERIODIC)     Nx = Mx+3;
   else                           Nx = Mx+2;

@@ -43,6 +43,9 @@ int main(int argc, char* argv[])
     sf_floatread(c0,n2,root);
     sf_fileclose(root);
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     if (NULL == (op = sf_getstring("oper"))) op="destruct";
     /* operation to perform */
 

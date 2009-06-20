@@ -23,7 +23,7 @@
 #include "comblist.h"
 
 int binomial (int n, int k)
-/* Computes the binomial coefficient C(n,k) = n! / k!*(n-k)! */
+/*< Computes the binomial coefficient C(n,k) = n! / k!*(n-k)! >*/
 /* This code is distributed under the GNU LGPL license. Modified from original author John Burkardt */
 {
     int i, icnk, mn, mx;
@@ -52,7 +52,7 @@ int binomial (int n, int k)
 }
 
 void comb_next (int n, int k, int *a, int *done)
-/* Computes combinations of k elements out of n, computed one at a time, in lexicographical order. */
+/*< Computes combinations of k elements out of n, computed one at a time, in lexicographical order. >*/
 /* Set done to FALSE before the first call.
    Use output value from previous call on subsequent calls.
    Output value will be TRUE as long as there are more

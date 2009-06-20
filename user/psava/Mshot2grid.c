@@ -74,10 +74,12 @@ int main (int argc, char *argv[])
 	aw  = sf_iaxa(Fr,1); sf_setlabel(aw,"w");
 	sf_oaxa(Fsou,aw,1); 
 	sf_oaxa(Frec,aw,1);
+	at = NULL;
     } else {
 	at  = sf_iaxa(Fr,1); sf_setlabel(at,"t");
 	sf_oaxa(Fsou,at,1); 
 	sf_oaxa(Frec,at,1);
+	aw = NULL;
     }
 
     if (!sf_getint  ("nx",&nx)) sf_error ("Need nx="); /* x samples */

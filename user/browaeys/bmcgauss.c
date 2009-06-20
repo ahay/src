@@ -80,7 +80,7 @@ float rand1_gen(int *idum)
 }
 
 void gauss_joint(int *iseed, float m1, float m2, float s1, float s2, float r, float *y1, float *y2)
-/* Returns two Gaussian positive distributed deviates y1 and y2 with correlation r */
+/*< Returns two Gaussian positive distributed deviates y1 and y2 with correlation r >*/
 /* using a modified Box Mulller algorithm and rand1_gen(idum) */
 /* Expectations = m1,m2 */ 
 /* Standard deviation = s1,s2 */

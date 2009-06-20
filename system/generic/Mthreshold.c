@@ -21,8 +21,8 @@
 int main(int argc, char* argv[])
 {
     int i, n, n1;
-    float *dat, *adat, t, pclip, d;
-    sf_complex *cdat;
+    float *dat=NULL, *adat, t, pclip, d;
+    sf_complex *cdat=NULL;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -44,14 +44,12 @@ int main(int argc, char* argv[])
 	for (i=0; i < n; i++) {
 	    adat[i] = fabsf(dat[i]);
 	}
-	cdat = NULL;
     } else if (SF_COMPLEX == sf_gettype(in)) {
 	cdat = sf_complexalloc(n);
 	sf_complexread(cdat,n,in);
 	for (i=0; i < n; i++) {
 	    adat[i] = cabsf(cdat[i]);
 	}
-	dat = NULL;
     } else {
 	sf_error("Need float or complex input");
     }
