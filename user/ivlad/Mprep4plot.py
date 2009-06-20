@@ -5,7 +5,7 @@ If prar=n, no action will be taken on axis for which h/w was not specified
 If prar=y and only one par (h or w) is specified, the picture will scale
 along both axes until it is of the specified dimension.'''
 
-# Copyright (C) 2007 Ioan Vlad
+# Copyright (C) 2007, 2009 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,39 +29,38 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    from ivlad import send_to_os, readaxis
+    import ivlad
 except: # Use distributed version
-    from rsfuser.ivlad import send_to_os, readaxis
+    import rsfuser.ivlad as ivlad
 
+###############################################################################
 
 def main(argv=sys.argv):
 
-    success = 0
-    error   = 1
     par = rsf.Par(argv)
 
     inp = par.string('inp') # input file
     out = par.string('out') # output file
     if None in (inp, out):
         rsfprog.selfdoc()
-        return error
+        return ivlad.unix_error
 
     verb = par.bool('verb', False) # if y, print system commands, outputs
 
-    leftsize = int(send_to_os('sfleftsize', arg='i=2', stdin=inp,
+    leftsize = int(ivlad.send_to_os('sfleftsize', arg='i=2', stdin=inp,
                               want='stdout', verb=verb))
 
     if leftsize > 1:
         sys.stderr.write('Input must be 2-D file\n')
-        return error
+        return ivlad.unix_error
     del leftsize
 
-    n1 = send_to_os('sfget',
+    n1 = ivlad.send_to_os('sfget',
                     arg = ['parform=n','n1'],
                     stdin = inp,
                     want = 'stdout',
                     verb = verb)
-    n2 = send_to_os('sfget',
+    n2 = ivlad.send_to_os('sfget',
                     arg = ['parform=n','n2'],
                     stdin = inp,
                     want = 'stdout',
@@ -81,7 +80,7 @@ def main(argv=sys.argv):
     if w==impossible:
         if h==impossible:
             sys.stderr.write('Either w or h must be specified!!\n')
-            return error
+            return ivlad.unix_error
         else: # h was read from the command line
             w = None
     else: # w was read from the command line
@@ -90,14 +89,14 @@ def main(argv=sys.argv):
         else: # both w and h were read. Check for sanity:
             if w <= 0:
                 sys.stderr.write('w is a width, must be >0\n')
-                return error
+                return ivlad.unix_error
             if h <= 0:
                 sys.stderr.write('h is a height, must be >0\n')
-                return error
+                return ivlad.unix_error
             if (h,w)==(n1,n2):
                 sys.stderr.write('Change h or w if you want out!=inp\n')
-                send_to_os('sfcp', arg=[inp, out], verb=verb)
-                return success
+                ivlad.send_to_os('sfcp', arg=[inp, out], verb=verb)
+                return ivlad.unix_success
             if h==n1:
                 h = None # No interp needed on axis 1
             if w==n2:
@@ -111,12 +110,12 @@ def main(argv=sys.argv):
     if unit: # something was read from command line
         if unit not in ('mm','cm','in','px'):
             sys.stderr.write('unit must be: mm/cm/in/px\n')
-            return error
+            return ivlad.unix_error
         if unit != 'px':
             ppi = par.int('ppi') # output resolution (px/in). Necessary when unit!=px
             if ppi <= 0:
                 sys.stderr.write('ppi must be > 0\n')
-                return error
+                return ivlad.unix_error
             # Transform w and h to px
             if unit == 'in':
                 scale = 1
@@ -158,7 +157,7 @@ def main(argv=sys.argv):
         w = None # Same for axis 2
     if h < 2 or w < 2:
         sys.stderr.write('sanity check failed\n')
-        return error
+        return ivlad.unix_error
 
     # Put tmp files together with the binaries,
     # so that if prep4plot crashes, user is not
@@ -169,7 +168,7 @@ def main(argv=sys.argv):
 
     # Interpolation and, if needed, bandpass 
     if h:
-        d1 = send_to_os('sfget',
+        d1 = ivlad.send_to_os('sfget',
                    arg = ['parform=n','d1'],
                    stdin = inp,
                    want = 'stdout',
@@ -177,7 +176,7 @@ def main(argv=sys.argv):
         d1 = float(d1) * (n1-1)/float(h-1)
         if h < n1:
             ready_for_remap_1 = tmp + '1'
-            send_to_os('sfbandpass',
+            ivlad.send_to_os('sfbandpass',
                        arg='fhi='+str(0.5/d1),
                        stdin=inp,
                        stdout=ready_for_remap_1,
@@ -192,13 +191,13 @@ def main(argv=sys.argv):
         else:
             out_remap1 = out
             rem2del_junk2 = False
-        send_to_os('sfremap1',
+        ivlad.send_to_os('sfremap1',
                    arg=['n1='+str(h), 'd1='+str(d1)],
                    stdin=ready_for_remap_1,
                    stdout=out_remap1,
                    verb=verb)
         if rem2del_junk1:
-            send_to_os('sfrm',
+            ivlad.send_to_os('sfrm',
                        arg=ready_for_remap_1,
                        verb=verb)
     else: # no action on axis 1
@@ -206,24 +205,24 @@ def main(argv=sys.argv):
         rem2del_junk2 = False
 
     if w:
-        d2 = send_to_os('sfget',
+        d2 = ivlad.send_to_os('sfget',
                    arg = ['parform=n','d2'],
                    stdin = inp,
                    want = 'stdout',
                    verb = verb)
         d2 = float(d2) * (n2-1)/float(w-1)
         out_transp1 = tmp + '3'
-        send_to_os('sftransp',
+        ivlad.send_to_os('sftransp',
                    stdin=out_remap1,
                    stdout=out_transp1,
                    verb=verb)
         if rem2del_junk2:
-            send_to_os('sfrm',
+            ivlad.send_to_os('sfrm',
                        arg=out_remap1,
                        verb=verb)
         if w < n2:
             ready_for_remap_2 = tmp + '4'
-            send_to_os('sfbandpass',
+            ivlad.send_to_os('sfbandpass',
                        arg='fhi='+str(0.5/d2),
                        stdin=out_transp1,
                        stdout=ready_for_remap_2,
@@ -233,26 +232,28 @@ def main(argv=sys.argv):
             ready_for_remap_2 = out_transp1
             rem2del_junk4 = False
         ready_for_transp2 = tmp + '5'
-        send_to_os('sfremap1',
+        ivlad.send_to_os('sfremap1',
                    arg=['n1='+str(w), 'd1='+str(d2)],
                    stdin=ready_for_remap_2,
                    stdout=ready_for_transp2,
                    verb=verb)
-        send_to_os('sfrm',
+        ivlad.send_to_os('sfrm',
                    arg=out_transp1,
                    verb=verb)
         if rem2del_junk4:
-            send_to_os('sfrm',
+            ivlad.send_to_os('sfrm',
                        arg=ready_for_remap_2,
                        verb=verb)
-        send_to_os('sftransp',
+        ivlad.send_to_os('sftransp',
                    stdin=ready_for_transp2,
                    stdout=out,
                    verb=verb)
-        send_to_os('sfrm',
+        ivlad.send_to_os('sfrm',
                    arg=ready_for_transp2,
                    verb=verb)
-    return success
+    return ivlad.unix_success
+
+###############################################################################
 
 if __name__ == '__main__':
     sys.exit(main()) # Exit with the success or error code returned by main

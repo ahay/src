@@ -6,7 +6,7 @@ to avoid accumulation of dead wiki pages. To save bandwidth cost and
 download time, images and linked documents are downloaded only if a
 local copy is not present.'''
 
-# Copyright (C) 2008 Ioan Vlad
+# Copyright (C) 2008, 2009 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,6 +30,11 @@ try:
 except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
+try: # Give precedence to local version
+    import ivlad
+except: # Use distributed version
+    import rsfuser.ivlad as ivlad
+
 ###############################################################################
 
 def before(str,sep):
@@ -44,6 +49,8 @@ def after(str,sep):
     '''
     strs = str.split(sep)+['']
     return strs[1]
+
+###############################################################################
 
 def generate_hard_coded_paths(outdir):
     h = {}
@@ -128,6 +135,7 @@ def clean_and_mkdir_local(hcp, pagelist):
         os.mkdir(hcp['imgdir_local'])
     if not os.path.isdir(hcp['docdir_local']):
         os.mkdir(hcp['docdir_local'])
+
 ###############################################################################
 
 def get_wiki_image_dict(hcp, verb):
@@ -261,6 +269,7 @@ def download_imgs(imgs_to_download, wikiroot, imgdir):
         os.system('curl ' + img_url + '>' + img_file)
 
 ###############################################################################
+
 def inspect_doc_dir(docdir_url, docdir_local, docs_to_download):
     just_before_section = '/">Parent Directory</a>'
     just_after_section = '<hr></pre>'
@@ -301,8 +310,6 @@ def inspect_docs(hcp, verb):
 
 def main(argv=sys.argv):
 
-    unix_success = 0
-    unix_error   = 1
     par = rsf.Par(argv)
 
     verb = par.bool('verb', False) # verbosity flag
@@ -310,7 +317,7 @@ def main(argv=sys.argv):
     outdir = par.string('outdir')
     if outdir is None:
         rsfprog.selfdoc()
-        return unix_error
+        return ivlad.unix_error
 
     hcp = generate_hard_coded_paths(outdir)
 
@@ -334,7 +341,7 @@ def main(argv=sys.argv):
     if not os.path.isfile(hcp['css_local']):
         download_file(hcp['css_url'], hcp['css_local'], verb, 'stylesheet', textmode=True)
 
-    return unix_success
+    return ivlad.unix_success
 
 ###############################################################################
 

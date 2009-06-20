@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 'Percentile clip. Shell for sfclip(sfquantile(input)).'
 
-# Copyright (C) 2007 Ioan Vlad
+# Copyright (C) 2007, 2009 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,9 +25,11 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    from ivlad import send_to_os
+    import ivlad
 except: # Use distributed version
-    from rsfuser.ivlad import send_to_os
+    import rsfuser.ivlad as ivlad
+
+###############################################################################
 
 # Use exceptions for elegant unit testing
 
@@ -46,15 +48,13 @@ class NoReturnFromQuantile(Error):
     def __init__(self):
         self.message = 'sfquantile did not return anything'
 
-# Unix return codes
-os_success = 0
-os_error   = 1
-
 # Find programs in RSF
 RSFROOT = os.environ.get('RSFROOT')
 bindir = os.path.join(RSFROOT,'bin')
 sfquantile = os.path.join(bindir,'sfquantile')
 sfclip = os.path.join(bindir,'sfclip')
+
+###############################################################################
 
 def main(argv=sys.argv):
 
@@ -81,7 +81,9 @@ def main(argv=sys.argv):
 
     send_to_os(sfclip, arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
 
-    return os_success
+    return ivlad.unix_success
+
+###############################################################################
 
 if __name__ == '__main__':
 
@@ -89,6 +91,6 @@ if __name__ == '__main__':
         status = main()
     except Error, e:
         print e.message
-        status = os_error
+        status = ivlad.unix_error
 
     sys.exit(status)

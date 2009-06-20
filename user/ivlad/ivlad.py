@@ -7,7 +7,7 @@ DESCRIPTION
 SOURCE
 	user/ivlad/ivlad.py
 """
-# Copyright (C) 2007 Ioan Vlad
+# Copyright (C) 2007, 2009 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,8 +24,10 @@ SOURCE
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import sys
-error = 1
-success = 0
+
+# Operating system return codes
+unix_success = 0
+unix_error   = 1
 
 # Try to avoid old platform-dependent modules that will be deprecated.
 # See http://docs.python.org/dev/lib/module-subprocess.html
@@ -37,6 +39,7 @@ except: # Python < 2.4
     from os import system
     from commands import getoutput
 
+###############################################################################
 
 def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
     '''Sends command to the operating system. Arguments:
@@ -102,6 +105,8 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
         elif stdout:
             system(command)
             return None
+
+###############################################################################
 
 def readaxis( inp, axisnr, verb=False ):
     '''Reads n,o,d for one axis of a Madagascar hypercube
