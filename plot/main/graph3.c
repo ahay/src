@@ -1,20 +1,20 @@
 /* Generate 3-D cube plot for surfaces.
-   
+
 Takes: > plot.vpl
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     off_t esize;
     bool flat;
     vp_contour cnt;
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("orient",&orient)) orient=1;
     /* function orientation */
-    
+
     switch(orient) {
 	case 1:
 	    front = sf_floatalloc2(n1,1);
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     /* fraction of the vertical axis for front face */
     if (!sf_getfloat("point2",&point2)) point2=0.5;
     /* fraction of the horizontal axis for front face */
-    
+
     if (!sf_getfloat("frame1",&frame1)) frame1=0.5*(min+max);
     if (!sf_getint("frame2",&frame2)) frame2=n1-1;
     if (!sf_getint("frame3",&frame3)) frame3=0;
@@ -196,17 +196,17 @@ int main(int argc, char* argv[])
 	    sf_error("movie=%d is outside [0,3]",movie);
 	    break;
     }
-    
+
     if (sf_getint("nframe",&iframe) && iframe < nframe) nframe=iframe;
     /* number of frames in a movie */
 
     if (nframe < 1) nframe=1;
-    
+
     if (!sf_getint("n1pix",&n1pix)) n1pix = n1/point1+n3/(1.-point1);
     /* number of vertical pixels */
     if (!sf_getint("n2pix",&n2pix)) n2pix = n2/point2+n3/(1.-point2);
     /* number of horizontal pixels */
-    
+
     m1pix = VP_STANDARD_HEIGHT*72;
     m2pix = VP_STANDARD_HEIGHT*72/VP_SCREEN_RATIO;
 
@@ -254,12 +254,12 @@ int main(int argc, char* argv[])
 	    for (i1=1; i1 < n1; i1++) {
 		vp_udraw(x[i1],front[0][i1]);
 	    }
-	    
+
 	    for (i2=0; i2 < n2; i2++) {
 		sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
 		sf_floatread(side[i2],1,in);
 	    }
-	    
+
 	    vp_cubecoord(2,y[0],y[n2-1],min,max);
 	    vp_umove(y[0],side[0][0]);
 	    for (i2=1; i2 < n2; i2++) {
@@ -267,8 +267,8 @@ int main(int argc, char* argv[])
 	    }
 
 	    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
-	    sf_floatread(top[0],n1*n2,in);		
-	    
+	    sf_floatread(top[0],n1*n2,in);
+
 	    vp_cubecoord(1,x[0],x[n1-1],y[0],y[n2-1]);
 	    vp_contour_draw(cnt,false,top,frame1);
 	}
@@ -293,9 +293,8 @@ int main(int argc, char* argv[])
 
 	vp_purge(); 
     } /* frame loop */
-    
+
+    if (in != NULL) sf_fileclose(in);
     sf_close();
     exit(0);
 }
-
-/* 	$Id: grey3.c 1055 2005-03-16 21:18:43Z savap $	 */

@@ -4,17 +4,17 @@ Takes: > plot.vpl */
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     size_t len;
     char *label, *unit, *labels[3], *title, key[8];
     bool uflag, dflag, norm, axis, axis1, axis2, axis3;
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("sz",&sz)) sz=6.;
     /* vertical scale */
-    
+
     scalez = sz / (zmax - zmin);
     dz = dy * sina / scalez;
     vp_scale (scalex, scalez);
@@ -401,7 +401,6 @@ int main(int argc, char* argv[])
 	}
     } /* i3 */
 
+    if (in != NULL) sf_fileclose(in);
     exit (0);
 }
-
-/* 	$Id$	 */

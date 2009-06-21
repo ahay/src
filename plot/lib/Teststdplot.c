@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -30,5 +30,6 @@ int main(int argc, char* argv[])
     vp_barframe_init (in,0.,1.);
     vp_barframe ();
 
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }

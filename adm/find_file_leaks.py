@@ -38,9 +38,7 @@ This script has grep as a dependency.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-unix_success = 0
-unix_error   = 1
-
+from rsfuser.ivlad import unix_success, unix_error
 import os, sys
 
 if not hasattr(os, 'walk'):
@@ -53,6 +51,8 @@ except:
     print 'Please get Python 2.4 or greater, or just the subprocess module'
     sys.exit(unix_error)
 
+###############################################################################
+
 def grep_from_py(filename, string):
     'Runs "grep string filename", and returns the result'
     proc = subprocess.Popen('grep ' + string + ' ' + filename,
@@ -60,6 +60,8 @@ def grep_from_py(filename, string):
                             stdout=subprocess.PIPE)
     stdout_val = proc.communicate()[0]
     return stdout_val
+
+###############################################################################
 
 def print_list(file_list, what_is_list):
     'Formated display of list of suspect files'
@@ -72,6 +74,8 @@ def print_list(file_list, what_is_list):
         for file in file_list:
             print file
 
+###############################################################################
+
 def main():
 
     dirs_to_check = 'api pens plot su system user'
@@ -81,9 +85,16 @@ def main():
     api/c/test/afdm.c
     api/matlab/rsf_dim.c
     api/matlab/rsf_par.c
+    plot/main/contour.c
+    plot/main/contour3.c
+    plot/main/dots.c
     plot/main/graph.c
+    plot/main/graph3.c
     plot/main/grey.c
     plot/main/grey3.c
+    plot/main/plotrays.c
+    plot/main/thplot.c
+    plot/lib/Teststdplot.c
     plot/opengl/Mplotrays3.c
     system/generic/Magc.c
     system/generic/Mbandpass.c
@@ -148,6 +159,7 @@ def main():
     user/kourkina/Mve2d.c
     user/mccowan/Mdmeig.c
     user/mccowan/Mfastft.c
+    user/nobody/log.c
     user/psava/Msrmig3.c
     user/psava/Msrmod3.c
     '''

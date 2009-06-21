@@ -13,7 +13,7 @@ int main (int argc, char* argv[])
     float range, *data, di, avg=0., big;
     int esize, centered;
     size_t i, size;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input ("in");
@@ -22,7 +22,7 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float data type");
     if(!sf_histint(in,"esize",&esize)) esize=4;
     size = (size_t) sf_filesize (in);
-  
+
     if(!sf_getint("centered",&centered)) centered=2;
     /* [0,1,2] defines method of shifting mean */
     if(!sf_getfloat("range",&range)) range=3.;
@@ -43,7 +43,7 @@ int main (int argc, char* argv[])
 	di = data[i];
 	if (di < big-range) di = big-range;
     }
-    
+
     switch (centered) {
 	case 0:
 	    avg=big;
@@ -72,7 +72,6 @@ int main (int argc, char* argv[])
 
     sf_floatwrite (data,size,out);
 
+    if (in != NULL) sf_fileclose(in);
     exit (0);
 }
-
-/* 	$Id$	 */

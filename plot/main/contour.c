@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     float  min1, min2, max1, max2, bmin, bmax, o1, o2, d1, d2;
     bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false, pos, transp;
     vp_contour cnt;
-    sf_file in, cfile;
+    sf_file in=NULL, cfile=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -63,7 +63,6 @@ int main (int argc, char* argv[])
 	nc = sf_filesize(cfile);
 	nc0 = nc;
     } else {
-	cfile = NULL;
 	if (!sf_getint("nc",&nc0)) nc0=50;
 	/* number of contours */
 	nc=nc0;
@@ -175,5 +174,6 @@ int main (int argc, char* argv[])
 
     } /* i3 */
 
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }

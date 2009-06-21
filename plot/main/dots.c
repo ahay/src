@@ -5,17 +5,17 @@ Takes: > plot.vpl
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
     float d, full, abs, sgn, signal, *cx, *cy;
     char *label, *label1, *unit1, *title, **labels;
     bool seemean, strings, silk, gaineach, yreverse, constsep, seedead;
-    sf_file in;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -181,15 +181,15 @@ int main (int argc, char* argv[])
     if(radius > dd2/15) radius = dd2/15;
 
     tracehigh = overlap * (dots? dd2 - 3*radius: dd2); 
-    
+
     if (!sf_getint("font",&font)) font=-1; /* font to use in text */
-    
+
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(data[0],n1*n2,in);
 	
 	vp_erase();
 	if (-1 != font) vp_tfont (font,VP_NO_CHANGE,VP_NO_CHANGE);
-    
+
 	if(!gaineach) {
 	    hi = lo = data[0][0];
 	    for(i2=0; i2<n2; i2++) {
@@ -207,7 +207,7 @@ int main (int argc, char* argv[])
 	for(i2=0; i2<n2; i2++) {
 	    ir = yreverse? n2-1-i2: i2;
 	    axis = marginb + dd2*(ir + 0.5*overlap);
-	    
+
 	    if (clip > 0.) {
 		hi =  clip;
 		lo = -clip;
@@ -230,11 +230,11 @@ int main (int argc, char* argv[])
 		    lo = -maxab;
 		}
 	    }
-	    
+
 	    av = (hi + lo) / 2.;
 	    range = (hi>lo)? 1./(hi-lo): 1./eps;
 	    zerosignal = axis +  tracehigh * (0.-av)*range;
-	    
+
 	    vp_bgroup("labels");
 	    if(NULL != labels[0] && NULL != labels[i2]) {
 		vp_color(VP_CYAN);
@@ -242,7 +242,7 @@ int main (int argc, char* argv[])
 		     labelsz, 0, labels[i2]);
 	    }
 	    vp_egroup();
-	    
+
 	    if (silk) {
 		for (i1=0; i1<n1; i1++) {
 		    d = 2. * data[i2][i1] * range;
@@ -360,7 +360,8 @@ int main (int argc, char* argv[])
 	}
 
     } /* i3 */
-    
+
+    if (in != NULL) sf_fileclose(in);
     exit(0);
 }
 
@@ -407,5 +408,3 @@ static void circle(int corners,
     vp_color(VP_PURPLE);
     vp_area(vx,vy,corners,1,1,1);
 }
-
-/* 	$Id$	 */

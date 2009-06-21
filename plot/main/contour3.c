@@ -1,20 +1,20 @@
 /* Generate 3-D contour plot.
-   
+
 Takes: > plot.vpl
 */
 /*
   Copyright (C) 2008 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     float min1,min2,min3,max1,max2,max3, zmin, zmax;
     float **front, **top, **side;
     vp_contour cfront, ctop, cside;
-    sf_file in, cfile;
+    sf_file in=NULL, cfile=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -79,14 +79,13 @@ int main(int argc, char* argv[])
 	nc = sf_filesize(cfile);
 	nc0 = nc;
     } else {
-	cfile = NULL;
 	if (!sf_getint("nc",&nc0)) nc0=50;
 	/* number of contours */
 	nc=nc0;
     }
 
     c = sf_floatalloc(nc);
-    
+
     if (hasc) {
 	sf_floatread(c,nc,cfile);
 	sf_fileclose(cfile);
@@ -106,7 +105,7 @@ int main(int argc, char* argv[])
     /* fraction of the vertical axis for front face */
     if (!sf_getfloat("point2",&point2)) point2=0.5;
     /* fraction of the horizontal axis for front face */
-    
+
     if (!sf_getint("frame1",&frame1)) frame1=0;
     if (!sf_getint("frame2",&frame2)) frame2=n2-1;
     if (!sf_getint("frame3",&frame3)) frame3=0;
@@ -133,7 +132,7 @@ int main(int argc, char* argv[])
 	case 0:
 	    nframe = 1;
 	    break;
-	case 1:	    
+	case 1:
 	    nframe = (n1-frame1)/dframe;
 	    break;
 	case 2:
@@ -146,17 +145,17 @@ int main(int argc, char* argv[])
 	    sf_error("movie=%d is outside [0,3]",movie);
 	    break;
     }
-    
+
     if (sf_getint("nframe",&iframe) && iframe < nframe) nframe=iframe;
     /* number of frames in a movie */
 
     if (nframe < 1) nframe=1;
-    
+
     if (!sf_getint("n1pix",&n1pix)) n1pix = n1/point1+n3/(1.-point1);
     /* number of vertical pixels */
     if (!sf_getint("n2pix",&n2pix)) n2pix = n2/point2+n3/(1.-point2);
     /* number of horizontal pixels */
-    
+
     m1pix = VP_STANDARD_HEIGHT*72;
     m2pix = VP_STANDARD_HEIGHT*72/VP_SCREEN_RATIO;
 
@@ -197,7 +196,7 @@ int main(int argc, char* argv[])
 	if (!hasdc || !hasc0) {
 	    sf_seek(in,(off_t) frame3*n1*n2*sizeof(float),SEEK_SET);
 	    sf_floatread(front[0],n1*n2,in);
-	    
+
 	    zmin=front[0][0];
 	    zmax=front[0][0];
 	    for (i2=0; i2 < n2; i2++) {
@@ -221,7 +220,7 @@ int main(int argc, char* argv[])
 	    c[ic] = c0 + dc*ic;
 	}
     }
-    
+
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
@@ -296,7 +295,7 @@ int main(int argc, char* argv[])
 	    } else {
 		vp_barframe_init (in,barmin,barmax);
 	    }
-	}	    
+	}
 
 	switch (movie) {
 	    case 1:
@@ -314,9 +313,8 @@ int main(int argc, char* argv[])
 
 	vp_purge(); 
     } /* frame loop */
-    
+
+    if (in != NULL) sf_fileclose(in);
     sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

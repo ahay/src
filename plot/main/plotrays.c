@@ -1,22 +1,22 @@
 /* Plot rays.
-   
+
 Takes: < rays.rsf > plot.vpl
 
 Run "sfdoc stdplot" for more parameters.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,16 +30,12 @@ int main(int argc, char* argv[])
     int n1, n2, ir, jr;
     float o1, d1, o2, d2, **traj;
     int nsr, it, nt;
-    sf_file frame;
+    sf_file frame=NULL;
 
     sf_init (argc,argv);
     vp_init ();
 
-    if (NULL != sf_getstring("frame")) {
-	frame = sf_input("frame");
-    } else {
-	frame = NULL;
-    }
+    if (NULL != sf_getstring("frame")) frame = sf_input("frame");
 
     if (!sf_getint("n1",&n1) && 
 	(NULL == frame || 
@@ -89,8 +85,6 @@ int main(int argc, char* argv[])
 
     vp_frame();
 
+    if (frame != NULL) sf_fileclose(frame);
     exit(0);
 }
-
-/* 	$Id$	 */
-
