@@ -9,7 +9,7 @@
 \maketitle
 
 \begin{abstract}
-  In this tutorial, you will go through the steps required for writing a research paper with reproducible examples. In particular, you will
+  In this tutorial, you will go through different steps required for writing a research paper with reproducible examples. In particular, you will
   \begin{enumerate}
     \item identify a research problem,
     \item suggest a solution,
@@ -29,7 +29,8 @@ Completing this tutorial requires
 \url{http://www.ahay.org/SEGTeX}
 \end{itemize}
 To do the assignment on your personal computer, you need to install
-the required environments. 
+the required environments. An Internet connection is required for
+access to the data repository.
 
 %The tutorial itself is available from the \textsc{Madagascar} repository
 %by running
@@ -117,7 +118,7 @@ How many different \textsc{Madagascar} modules were used to create this file? Wh
 bash$ scons smoothed.rsf
 \end{verbatim}
 Notice that the \texttt{horizon.rsf} file is not being rebuilt.
-\item What does the \texttt{sfsmooth} module do? Try to find it out by running
+\item What does the \texttt{sfsmooth} module do? Find it out by running
 \begin{verbatim}
 bash$ sfsmooth
 \end{verbatim}
@@ -131,13 +132,15 @@ To improve the scale, find the mean value of the data by running
 \begin{verbatim}
 bash$ sfattr < horizon.rsf
 \end{verbatim}
-and by inserting it as a new value for the \texttt{bias=} parameter in the \texttt{SConstruct} file. Does smoothing by \texttt{sfsmooth} change the mean value?
+and insert it as a new value for the \texttt{bias=} parameter in the
+\texttt{SConstruct} file. Does smoothing by \texttt{sfsmooth} change
+the mean value?
 \item Save the \texttt{SConstruct} file and run 
 \begin{verbatim}
 bash$ scons view
 \end{verbatim}
 to view improved images. Notice that \texttt{horizon.rsf} and \texttt{smoothed.rsf} files are not being rebuilt. SCons is smart enough to know that only the 
-part affected by your change needs to be updated.
+part affected by your changes needs to be updated.
 \end{enumerate}
 
 As shown in Figure~\ref{fig:smoothed}, smoothing removes random
@@ -200,17 +203,18 @@ W_T(x) = 1-\frac{|x|}{x_0}
 to Gaussian
 \begin{equation}
 \label{eq:gaussian}
-W_G(x) = \exp{\left(-\alpha\,\frac{|x|}{x_0}\right)}
+W_G(x) = \exp{\left(-\alpha\,\frac{|x|^2}{x_0^2}\right)}
 \end{equation}
 Repeat the previous computation. Does the result change? What is a good value for $\alpha$? 
-\item Thinking about this problem, you invent an idea\footnote{In fact, you reinvent the idea of \emph{bilateral} or \emph{non-local} filters
+\item Thinking about this problem, you invent an idea\footnote{Actually, you reinvent the idea of \emph{bilateral} or \emph{non-local} filters
 \cite[]{tomasi,gilboa}.}. Why not apply non-linear filter weights that would discriminate between points not only based on their distance
-from the center point but also on the difference in function values between the two points. That is, instead of filtering by
+from the center point but also on the difference in function values
+between the points. That is, instead of filtering by
 \begin{equation}
 \label{eq:local}
 g(x) = \int f(y)\,W(x-y)\,dy\;,
 \end{equation}
-where $f(x)$ is input, $g(y)$ is output, and $W(x)$ is a linear weight, filter by
+where $f(x)$ is input, $g(y)$ is output, and $W(x)$ is a linear weight, you decide to filter by
 \begin{equation}
 \label{eq:nonlocal}
 g(x) = \int f(y)\,\hat{W}\left(x-y,f(x)-f(y)\right)\,dy\;,
@@ -224,7 +228,7 @@ The results should look similar to Figure~\ref{fig:triangle,similarity}.
 \item \textbf{EXTRA CREDIT} If you are familiar with programming in C, add 1-D non-local filtering as a new \textsc{Madagascar} module \texttt{sfnonloc}. Ask the instructor for further instructions. 
 \end{enumerate}
 
-\multiplot{2}{triangle,similarity}{width=0.45\textwidth}{(a) Linear and stationary triangle weights. (b) Non-linear weights reflecting both distance
+\multiplot{2}{triangle,similarity}{width=0.45\textwidth}{(a) Linear and stationary triangle weights. (b) Non-linear and non-stationary weights reflecting both distance
 between data points and similarity in data values.}
 
 \sideplot{nlsmooth}{width=\textwidth}{Output of non-local smoothing}
@@ -295,17 +299,23 @@ The \texttt{sftour} command visits all subdirectories and runs \texttt{scons loc
 bash$ sftour scons -c
 \end{verbatim}
 to clean intermediate results.
-\item Edit the file \texttt{paper.tex} to include your additional results. If you have not used \LaTeX\ before, no worries. It is a descriptive language. Study the file, and it should become evident how to include figures.
+\item Edit the file \texttt{paper.tex} to include your additional results. If you have not used \LaTeX\ before, no worries. It is a descriptive language. Study the file, and it should become evident by example how to include figures.
 \item Run
 \begin{verbatim}
 bash$ scons paper.pdf
 \end{verbatim}
-and open \texttt{paper.pdf} with an PDF viewing program such as \textbf{Acrobat Reader}. Enjoy your new paper?
-\item Want to submit your paper to \emph{Geophysics}? Edit \texttt{SConstruct} in the paper directory to add \texttt{option=manuscript} to the \texttt{End} statement. Then run
+and open \texttt{paper.pdf} with a PDF viewing program such as \textbf{Acrobat Reader}. 
+\item Want to submit your paper to \emph{Geophysics}? Edit \texttt{SConstruct} in the 
+paper directory to add \texttt{option=manuscript} to the \texttt{End} statement. Then run
 \begin{verbatim}
 bash$ scons paper.pdf
 \end{verbatim}
 again and display the result.
+\item If you have \LaTeX2HTML installed, you can also generate an HTML version of your paper by running
+\begin{verbatim}
+bash$ scons html
+\end{verbatim}
+and opening \verb#paper_html/index.html# in a web browser.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}

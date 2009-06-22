@@ -722,12 +722,21 @@ elif pdf2ps:
 if latex2html:
     l2hdir = os.environ.get('LATEX2HTML','')
     inputs = os.environ.get('TEXINPUTS','')
+
+    if not l2hdir:
+        init = ''
+        proc = os.popen(WhereIs('kpsewhich') + ' -show-path ls-R 2>/dev/null')
+        raw  = proc.read()
+        if raw:
+            for dir in raw.split(':'):
+                ldir = os.path.join(dir,'latex2html')
+                if os.path.isdir(ldir):
+                    l2hdir = ldir
+                    break
     if l2hdir:
         init = '-init_file ' + os.path.join(l2hdir,'.latex2html-init')
         css0 = os.path.join(l2hdir,'style.css')
         icons0 = os.path.join(l2hdir,'icons')
-    else:
-        init = ''
 
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir -image_type %s %s' %

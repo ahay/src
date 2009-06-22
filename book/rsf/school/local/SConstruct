@@ -7,11 +7,11 @@ Flow('step',None,
      causint |
      noise seed=62009 var=0.001
      ''')
-Result('step','dots title=Input')
+Result('step','dots')
 
 # Conventional smoothing
 Flow('smooth','step','smooth rect1=10')
-Result('smooth','dots title="Triangle Smoothing" ')
+Result('smooth','dots')
 
 # Spray by repeating the input
 Flow('spray','step','spray axis=2 d=1 o=-10 n=21')
@@ -51,6 +51,6 @@ Flow('nlsmooth','local similarity nlnorm',
      stack |
      add mode=d ${SOURCES[2]}
      ''')
-Result('nlsmooth','dots title="Nonlocal Smoothing" ')
+Result('nlsmooth','dots')
 
 End()
