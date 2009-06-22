@@ -1,0 +1,173 @@
+\pgfdeclareimage[height=1.0in]{logo}{mad}
+
+\title[]{seismic imaging tutorial}
+\subtitle{``exploding reflector'' modeling/migration}
+\author[]{Paul Sava}
+\institute{
+Center for Wave Phenomena \\
+Colorado School of Mines \\
+psava@mines.edu
+}
+\date{}
+\logo{WSI}
+\large
+
+\def\big#1{\begin{center} \LARGE \textbf{#1} \end{center}}
+
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+% ------------------------------------------------------------
+\inputdir{sigsbee}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{assignment}
+
+\big{modify the acquisition parameters to explore the illumination at
+different locations in the subsurface}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{import packages}
+\normalsize 
+\lstinputlisting[firstline=1,lastline=2]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup main parameters}
+\normalsize 
+\lstinputlisting[firstline=5,lastline=10]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{source coordinates}
+\normalsize 
+\lstinputlisting[firstline=13,lastline=17]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{receiver coordinates}
+\normalsize 
+\lstinputlisting[firstline=20,lastline=31]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{velocity/density models}
+\normalsize 
+\lstinputlisting[firstline=34,lastline=45]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+% ------------------------------------------------------------
+\begin{frame} \plot{velo}{width=\textwidth}{} \end{frame} \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{source wavelet}
+\normalsize 
+\lstinputlisting[firstline=48,lastline=56]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+% ------------------------------------------------------------
+\begin{frame} \plot{wav}{width=\textwidth}{} \end{frame} \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{FD modeling}
+\normalsize 
+\lstinputlisting[firstline=59,lastline=63]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot wavefield}
+\normalsize 
+\lstinputlisting[firstline=65,lastline=74]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+% ------------------------------------------------------------
+\begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-03}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-06}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-09}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-12}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-15}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-18}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-21}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-24}{width=\textwidth}{} \end{frame} \cwpnote{}
+\begin{frame} \plot{wfld-27}{width=\textwidth}{} \end{frame} \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot data}
+\normalsize 
+\lstinputlisting[firstline=76,lastline=86]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+% ------------------------------------------------------------
+\begin{frame} \plot{data}{width=\textwidth}{} \end{frame} \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{FD migration}
+\normalsize 
+\lstinputlisting[firstline=89,lastline=93]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot image}
+\normalsize 
+\lstinputlisting[firstline=95,lastline=98]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+% ------------------------------------------------------------
+\begin{frame} \plot{imag}{width=\textwidth}{} \end{frame} \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{closing rules}
+\normalsize 
+\lstinputlisting[firstline=101,lastline=101]
+		{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{the contest}
+
+\begin{itemize}
+   \item random sources in the subsurface
+   \item random receivers on the surface
+\end{itemize}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+\big{http://www.reproducibility.org}
+
+\vfill
+
+\begin{center}
+\pgfuseimage{logo}
+\end{center}
+
+\end{frame}
+\cwpnote{}
+

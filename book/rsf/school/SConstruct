@@ -1,4 +1,11 @@
 from rsftex import *
 
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+
+
 End(use='hyperref,listings',
     color='horizon smoothed mona smoothed2')
