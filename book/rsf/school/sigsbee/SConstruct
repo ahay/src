@@ -63,7 +63,7 @@ fdmod.awefd1('temp','wfld',
              'free=n',par)
 
 # generate wavefield movie
-Result('wfld',fdmod.wgrey('pclip=99',par))
+Plot('wfld',fdmod.wgrey('pclip=99',par),view=1)
 
 # plot wavefield frames
 for i in range(10):

@@ -1,11 +1,13 @@
 from rsftex import *
 
-for slides in glob.glob('slides*.tex'):
-    slidesname = os.path.splitext(slides)[0]
-    Paper(slidesname,
-          lclass='cwpslides',
-          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
-
+Paper('slides',
+      lclass='cwpslides',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
+      color='''
+      velo wav
+      wfld-00 wfld-03 wfld-06 wfld-09 wfld-12
+      wfld-15 wfld-18 wfld-21 wfld-24 wfld-27
+      ''')
 
 End(use='hyperref,listings',
     color='horizon smoothed mona smoothed2')
