@@ -25,7 +25,7 @@ if not os.path.isfile('config.py'):
     conf.CheckAll()
     env = conf.Finish()
 
-Help(opts.GenerateHelpText(env))
+Help(opts.GenerateHelpText(env,cmp))
 opts.Save('config.py',env)
 
 config = env.Command('config.py','configure.py','')
