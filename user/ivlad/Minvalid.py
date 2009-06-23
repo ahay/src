@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-'Finds rsf files in a directory with missing or incomplete binaries or headers'
+'Finds RSF files with missing or incomplete binaries or headers'
 
 # Copyright (C) 2009 Ioan Vlad
 #
@@ -18,6 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import sys, os, glob, commands
+import rsfprog
 
 try:
     import rsf
@@ -35,9 +36,10 @@ def main(argv=sys.argv):
 
     par = rsf.Par(argv)
     verb = par.bool('verb', False) # verbosity flag
-    mydir = par.string('dir') # directory with files. Default is current directory
+    mydir = par.string('dir') # directory with files
     if mydir == None:
-        mydir = '.'
+        rsfprog.selfdoc()
+        return ivlad.unix_error
     else:
         if not os.path.isdir(mydir):
             print mydir + ' is not a valid directory'
