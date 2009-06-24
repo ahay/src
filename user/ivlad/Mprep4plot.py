@@ -21,7 +21,7 @@ along both axes until it is of the specified dimension.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys, rsfprog
+import os, sys, rsfprog
 
 try:
     import rsf
