@@ -677,6 +677,8 @@ void vp_rascoltab (int nreserve, const char *colname)
     }
 }
 
+#define MAXSHORT 32767
+
 void vp_raster (unsigned char **array, 
 		bool bit               /* one bit/byte per pixel */, 
 		int offset             /* add offset for bytes */, 
@@ -702,6 +704,9 @@ void vp_raster (unsigned char **array,
     vp_putfloat (yll);
     vp_putfloat (xur);
     vp_putfloat (yur);
+
+    if (xpix > MAXSHORT) sf_error("%s: xpix=%d is too large\n",__FILE__,xpix);
+    if (ypix > MAXSHORT) sf_error("%s: ypix=%d is too large\n",__FILE__,ypix);
 
     vp_putint (xpix);
     vp_putint (ypix);
