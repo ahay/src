@@ -5,9 +5,9 @@ import configure
 progs = '''
 atm1 atm2 difference dominantf duwt dwt97 epsf fkoclet fkoclet3
 initial kuwahara lrmf lum lum2 lumsmoother lumsharpener mean mf mlm
-mtm mlwm nonloc oclet pwcsemb pwsfault pwsfault3 saltpepper seislet97
-seismis2 seispocs seisreg2 sharpsimi snr svddenoise swell tvmf
-twofreq2mask zcwt
+mtm mlwm nonloc oclet pwcsemb pwsfault pwsfault3 pwsmooth pwsmooth3
+saltpepper seislet97 seismis2 seispocs seisreg2 sharpsimi snr
+svddenoise swell tvmf twofreq2mask zcwt
 '''
 
 try:  # distributed version

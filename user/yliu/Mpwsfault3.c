@@ -45,8 +45,8 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
     
-    if (!sf_getint("ns2",&ns2)) sf_error("Need ns1=");
-    if (!sf_getint("ns3",&ns3)) sf_error("Need ns2=");
+    if (!sf_getint("ns2",&ns2)) sf_error("Need ns2=");
+    if (!sf_getint("ns3",&ns3)) sf_error("Need ns3=");
     /* spray radius */
     np2 = 2*ns2+1;
     np3 = 2*ns3+1;
@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
     p2 = sf_floatalloc3(n1,n2,n3);
     xk = sf_floatalloc3(n1,n2,n3);
     yk = sf_floatalloc3(n1,n2,n3);
-
+    trace = sf_floatalloc(n1);
 
     for (i4=0; i4 < n4; i4++) {
 	if (verb) fprintf(stderr,"slice %d of %d\n",i4+1,n4);
