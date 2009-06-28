@@ -153,14 +153,15 @@ def imagePW(imag,cigs,slow,swlf,rwfl,par):
          cig=${TARGETS[1]}
          ''' % param(par))
 
-def imagePW3(imag,cigs,slow,swlf,rwfl,par):
+def imagePW3(imag,cigs,slow,swlf,rwfl,par,custom=' '):
     Flow(   [imag,cigs],   [swlf,rwfl,slow],
          '''
          srmig3 %s
          rwf=${SOURCES[1]}
          slo=${SOURCES[2]}
          cig=${TARGETS[1]}
-         ''' % param(par))
+         %s
+         ''' % (param(par),custom))
 
 def imageCW(imag,cigs,sslo,rslo,swlf,rwfl,par):
     Flow([imag,cigs],[swlf,sslo,rslo,rwfl],

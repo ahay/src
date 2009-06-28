@@ -22,7 +22,8 @@ def param():
     # source coordinates
     par['os']=10.95*par['ft2km']
     par['ds']=0.150*par['ft2km']
-
+    # source index: o=39, d=6, n=500
+    
     # receiver coordinates
     par['or']=10.95*par['ft2km']
     par['dr']=0.075*par['ft2km']
@@ -37,6 +38,35 @@ def param():
 
     return par
 
+# ------------------------------------------------------------
+def modpar(par):
+
+    par['kt']=100
+    par['nt']=12001
+    par['dt']=0.001
+    par['nb']=150
+    par['jsnap']=1000
+    par['jdata']=4
+    par['wweight']=50
+    par['wclip']=0.5
+ 
+# ------------------------------------------------------------   
+def migpar(par):
+
+    par['verb']='y'
+    par['eps']=0.1
+    par['nrmax']=5
+    par['dtmax']=0.00005
+    par['tmx']=16
+    
+    par['fw']=36
+    par['jw']=1
+    par['dw']=1/(par['nt']*par['dt'])
+    par['kw']=par['nt']/2+1
+    par['ow']=par['fw']*par['dw']
+    par['nw']=240
+    par['eic']='itype=o'
+    
 # ------------------------------------------------------------
 def getdata(data,par):
 
@@ -248,8 +278,8 @@ def makevlow(vlow,velo,smask,wmask,lmask,coef):
          ''' % coef)
 
 # high velocity (in sediments only)
-def makevhig(vlow,velo,smask,wmask,lmask,coef):    
-    Flow('vhig',['velo','smask','wmask','lmask'],
+def makevhig(vhig,velo,smask,wmask,lmask,coef):    
+    Flow(vhig,[velo,smask,wmask,lmask],
          '''
          math
          v=${SOURCES[0]}
@@ -261,3 +291,18 @@ def makevhig(vlow,velo,smask,wmask,lmask,coef):
          clip clip=10 |
          add add=11.5
          ''' % coef)
+    
+# ------------------------------------------------------------
+# density by Gardner's relation
+def makedensity(velo,dens,smask,wmask,lmask,par):
+
+    Flow(dens,[velo,smask,wmask,lmask],
+         '''
+         math
+         v=${SOURCES[0]}
+         s=${SOURCES[1]}
+         w=${SOURCES[2]}
+         l=${SOURCES[3]}
+         output="0.23*((v*l)*3280.0)^0.25+1.0*w+1.23*s"
+         ''')
+    

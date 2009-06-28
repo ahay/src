@@ -225,11 +225,23 @@ def center3d(x,y,z,par):
 def waveplot(custom,par):
     return '''
     graph min2=-1 max2=+1 title=""
-    plotfat=5 plotcol=2
-    label1=%s unit1=%s label2="" unit2=""
+    plotfat=5 plotcol=5
+    label1=%s unit1=%s
+    label2="" unit2=""
     %s
     ''' % (par['lt'],par['ut'],
            par['labelattr']+' '+custom)
+
+def spectrum(custom,par):
+    return '''
+    spectra |
+    scale axis=123 |
+    graph title="" plotfat=5 plotcol=5
+    label1="f" unit1="Hz"
+    min2=0 max2=1 label2=""
+    %s
+    ''' %(par['labelattr']+' '+custom)
+
 
 # ------------------------------------------------------------
 # create wavelet
