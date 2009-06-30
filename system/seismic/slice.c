@@ -42,6 +42,7 @@ typedef struct FSlice *fslice;
 
 #endif
 
+/*------------------------------------------------------------*/
 struct Slice {
     off_t start;
     sf_file file;
@@ -54,8 +55,9 @@ struct FSlice {
     off_t n1;
     int   n2;
 };
+/*------------------------------------------------------------*/
 
-
+/*------------------------------------------------------------*/
 slice slice_init(sf_file file, int n1, int n2, int n3)
 /*< initialize a sliceable file object >*/
 {
@@ -72,6 +74,7 @@ slice slice_init(sf_file file, int n1, int n2, int n3)
     return sl;
 }
 
+/*------------------------------------------------------------*/
 void slice_get(slice sl, int i3, float* data)
 /*< get a slice at level i3 >*/
 {
@@ -79,6 +82,7 @@ void slice_get(slice sl, int i3, float* data)
     sf_floatread(data,sl->n12,sl->file);
 }
 
+/*------------------------------------------------------------*/
 void slice_put(slice sl, int i3, float* data)
 /*< put a slice at level i3 >*/
 {
@@ -86,6 +90,7 @@ void slice_put(slice sl, int i3, float* data)
     sf_floatwrite(data,sl->n12,sl->file);
 }
 
+/*------------------------------------------------------------*/
 void cslice_get(slice sl, int i3, sf_complex* data)
 /*< get a slice at level i3 >*/
 {
@@ -93,6 +98,7 @@ void cslice_get(slice sl, int i3, sf_complex* data)
     sf_complexread(data,sl->n12,sl->file);
 }
 
+/*------------------------------------------------------------*/
 void cslice_put(slice sl, int i3, sf_complex* data)
 /*< put a slice at level i3 >*/
 {
@@ -101,7 +107,6 @@ void cslice_put(slice sl, int i3, sf_complex* data)
 }
 
 /*------------------------------------------------------------*/
-
 fslice fslice_init(int n1, int n2, size_t size)
 /*< initialize a sliceable file object >*/
 {
@@ -115,24 +120,31 @@ fslice fslice_init(int n1, int n2, size_t size)
     return sl;
 }
 
+/*------------------------------------------------------------*/
 void fslice_get(fslice sl, int i2, void* data)
 /*< get a slice at level i2 >*/
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
 
-    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
-    fread(data,sl->n1,1,sl->file);
+    if (0 > fseeko(sl->file,i2*(sl->n1),SEEK_SET))
+	sf_error ("%s: seek problem:",__FILE__);
+    if (sl->n1 != fread(data,1,sl->n1,sl->file))
+	sf_error ("%s: read problem:",__FILE__);
 }
 
+/*------------------------------------------------------------*/
 void fslice_put(fslice sl, int i2, void* data)
 /*< put a slice at level i2 >*/
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
 
-    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
-    fwrite(data,sl->n1,1,sl->file);
+    if (0 > fseeko(sl->file,i2*(sl->n1),SEEK_SET))
+	sf_error ("%s: seek problem:",__FILE__);
+    if (sl-> n1 != fwrite(data,1,sl->n1,sl->file))
+	sf_error ("%s: write problem:",__FILE__);
 }
 
+/*------------------------------------------------------------*/
 void fslice_close(fslice sl)
 /*< remove the file and free allocated storage >*/
 {
@@ -140,6 +152,7 @@ void fslice_close(fslice sl)
     free(sl);
 }
 
+/*------------------------------------------------------------*/
 void fslice_load(sf_file in, fslice sl, sf_datatype type)
 /*< load the contents of in into a slice file >*/
 {
@@ -174,6 +187,7 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
     }
 }
 
+/*------------------------------------------------------------*/
 void fslice_dump(sf_file out, fslice sl, sf_datatype type)
 /*< dump the contents of a slice file to out >*/
 {
@@ -207,5 +221,3 @@ void fslice_dump(sf_file out, fslice sl, sf_datatype type)
 	}
     }
 }
-
-/*------------------------------------------------------------*/
