@@ -1,0 +1,496 @@
+/* Missing data interpolation in 2-D using Fourier transform and compressive sensing. */
+/*
+  Copyright (C) 2009 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+
+int main(int argc, char* argv[])
+{
+    int i, niter, nfft, nw, nk, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg; 
+    float dw, dk, k0, d1, o1, d2, o2, wt, wk, shift, *dd, *dd2, *d, *dd3, *m=NULL, perc1, perc2;
+    char *oper;
+    bool verb, *known;
+    sf_complex *mt;
+    kiss_fft_cpx **mm, ce, **fft, *ctrace, *ctrace2;
+    kiss_fftr_cfg tfft, itfft;
+    kiss_fft_cfg  xfft, ixfft;
+    sf_file in, out, mask=NULL;
+
+    sf_init (argc,argv);
+    in = sf_input("in");
+    out = sf_output("out");
+
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    n12 = n1*n2;
+    n3 = sf_leftsize(in,2);
+
+    if (!sf_histfloat(in,"d1",&d1)) d1=0.004;
+    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+
+    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+    if (!sf_histfloat(in,"o2",&o2)) o2=0.;
+
+    /* determine frequency sampling (for real to complex FFT) */
+    nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
+    nw = nfft/2+1;
+    dw = 1./(nfft*d1);
+
+    /* determine wavenumber sampling (for complex FFT) */
+    nk = kiss_fft_next_fast_size(n2*2);
+    dk = 1./(nk*d2);
+    k0 = -0.5/d2;
+
+    if (!sf_getint("niter",&niter)) niter=20;
+    /* number of iterations */
+
+    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
+    /* percentage for shrinkage and Bregman iteration */
+
+    if (NULL == (oper=sf_getstring("oper"))) oper="thresholding";
+    /* [thresholding,bregman] method, the default is thresholding  */
+
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
+
+    dd = sf_floatalloc(n12);
+    dd2 = sf_floatalloc(n12);
+    dd3 = sf_floatalloc(n12);
+    d = sf_floatalloc(nfft);
+    ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
+    ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
+    mm = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
+    fft = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
+    mt = sf_complexalloc(nw*nk);
+    known = sf_boolalloc(n12);
+    m = sf_floatalloc(n12);
+
+    tfft = kiss_fftr_alloc(nfft,0,NULL,NULL);
+    xfft = kiss_fft_alloc(nk,0,NULL,NULL);
+    itfft = kiss_fftr_alloc(nfft,1,NULL,NULL);
+    ixfft = kiss_fft_alloc(nk,1,NULL,NULL);
+
+    switch (oper[0]) {
+	case 't':
+	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
+	    /* percentage for output in model space shrinkage*/
+	    
+	    sf_sharpen_init(nw*nk,perc1);
+	    break;
+	case 'b':
+	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
+	    /* number of iterations for Bregman iteration */
+	    
+	    sf_sharpen_init(nw*nk,perc1);
+	    break;
+
+	default:
+	    sf_error("Unknown operator \"%s\"",oper);
+
+    }
+
+    wt = 1.0/nfft; /* FFT time scaling */ 
+    wk = 1.0/nk;   /* FFT distance scaling */ 
+
+    for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+	sf_floatread(dd,n12,in);
+
+	if (NULL != mask) {
+	    sf_floatread(m,n12,mask);
+	    for (i=0; i < n12; i++) {
+		known[i] = (bool) (m[i] != 0.);
+	    }
+	} else {
+	    for (i=0; i < n12; i++) {
+		known[i] = (bool) (dd[i] != 0.);
+	    }
+	}
+
+        switch (oper[0]) {
+	case 't':
+
+	    for (i1=0; i1 < n12; i1++) {
+		dd3[i1] = dd[i1];
+	    }
+
+          /* Thresholding for shaping */
+	    for (iter=0; iter < niter-1; iter++) {
+		if (verb)
+		    sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
+
+		/* Inverse 2-D FFT */
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform k to x */
+		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		    for (i2=0; i2 < nk; i2++) {
+			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		    }
+		}
+		for (i2=0; i2 < n2; i2++) {
+		    if (0. != o1) {
+			for (i1=0; i1 < nw; i1++) {
+			    shift = +2.0*SF_PI*i1*dw*o1;
+			    ce.r = cosf(shift);
+			    ce.i = sinf(shift);
+			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			}
+		    }
+		    kiss_fftri(itfft,fft[i2],d);
+		    for (i1=0; i1 < n1; i1++) {
+			dd2[i2*n1+i1] = d[i1]*wt;
+		    }
+		} /* Inverse 2-D FFT end */
+
+		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd2[i1]=dd[i1];
+		}
+
+		/* Forward 2-D FFT */
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			d[i1] = dd2[i2*n1+i1];
+		    }
+		    for (i1=n1; i1 < nfft; i1++) {
+			d[i1] = 0.;
+		    }		    
+		    kiss_fftr (tfft,d,ctrace);
+	       
+		    for (i1=0; i1 < nw; i1++) {
+			fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+		    }
+		    if (0. != o1) {
+			for (i1=0; i1 < nw; i1++) {
+			    shift = -2.0*SF_PI*i1*dw*o1;
+			    ce.r = cosf(shift);
+			    ce.i = sinf(shift);
+			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			}
+		    }
+		}
+
+		for (i2=n2; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			fft[i2][i1].r = 0.;
+			fft[i2][i1].i = 0.;
+		    }
+		}
+
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform x to k */
+		    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+		    for (i2=0; i2 < nk; i2++) {
+			mm[i2][i1] = ctrace2[i2];
+		    }
+		} /* Forward 2-D FFT end */
+		for (i2=0; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+		    }
+		}
+
+		/* Thresholding */
+		sf_csharpen(mt);
+		sf_cweight_apply(nw*nk, mt);
+
+		for (i2=0; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+			mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+		    }
+		}
+	    }
+
+	    if (verb)
+		sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
+	    
+	    /* Inverse 2-D FFT */
+	    for (i1=0; i1 < nw; i1++) {
+		/* Fourier transform k to x */
+		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		
+		for (i2=0; i2 < nk; i2++) {
+		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		}
+	    }
+	    for (i2=0; i2 < n2; i2++) {
+		if (0. != o1) {
+		    for (i1=0; i1 < nw; i1++) {
+			shift = +2.0*SF_PI*i1*dw*o1;
+			ce.r = cosf(shift);
+			ce.i = sinf(shift);
+			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+		    }
+		}
+		kiss_fftri(itfft,fft[i2],d);
+		for (i1=0; i1 < n1; i1++) {
+		    dd2[i2*n1+i1] = d[i1]*wt;
+		}
+	    } /* Inverse 2-D FFT end */
+	    
+	    for (i1=0; i1 < n12; i1++) {
+		if (known[i1]) dd2[i1]=dd[i1];
+	    }
+
+	    sf_sharpen_init(nw*nk,perc2);
+	    
+	    /* Forward 2-D FFT */
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    d[i1] = dd2[i2*n1+i1];
+		}
+		for (i1=n1; i1 < nfft; i1++) {
+		    d[i1] = 0.;
+		}		    
+		kiss_fftr (tfft,d,ctrace);
+		
+		for (i1=0; i1 < nw; i1++) {
+		    fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+		}
+		if (0. != o1) {
+		    for (i1=0; i1 < nw; i1++) {
+			shift = -2.0*SF_PI*i1*dw*o1;
+			ce.r = cosf(shift);
+			ce.i = sinf(shift);
+			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+		    }
+		}
+	    }
+	    for (i2=n2; i2 < nk; i2++) {
+		for (i1=0; i1 < nw; i1++) {
+		    fft[i2][i1].r = 0.;
+		    fft[i2][i1].i = 0.;
+		}
+	    }
+
+	    for (i1=0; i1 < nw; i1++) {
+		/* Fourier transform x to k */
+		kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+		for (i2=0; i2 < nk; i2++) {
+		    mm[i2][i1] = ctrace2[i2];
+		}
+	    } /* Forward 2-D FFT end */
+	
+	    for (i2=0; i2 < nk; i2++) {
+		for (i1=0; i1 < nw; i1++) {
+		    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+		}
+	    }
+	    sf_csharpen(mt);
+	    sf_cweight_apply(nw*nk, mt);	    
+
+	    for (i2=0; i2 < nk; i2++) {
+		for (i1=0; i1 < nw; i1++) {
+		    mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+		    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+		}
+	    }	    
+	    /* Inverse 2-D FFT */
+	    for (i1=0; i1 < nw; i1++) {
+		/* Fourier transform k to x */
+		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		
+		for (i2=0; i2< nk; i2++) {
+		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		}
+	    }
+
+	    for (i2=0; i2 < n2; i2++) {
+		if (0. != o1) {
+		    for (i1=0; i1 < nw; i1++) {
+			shift = +2.0*SF_PI*i1*dw*o1;
+			ce.r = cosf(shift);
+			ce.i = sinf(shift);
+			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+		    }
+		}
+		/* Fourier transform f to t */
+		kiss_fftri(itfft,fft[i2],d);
+		for (i1=0; i1 < n1; i1++) {
+		    dd[i2*n1+i1] = d[i1]*wt;
+		}
+	    } /* Inverse 2-D FFT end */	 
+
+	    for (i1=0; i1 < n12; i1++) {
+		if (known[i1]) dd[i1]=dd3[i1];
+	    }
+   
+
+	    break;
+	case 'b':
+
+	    for (i1=0; i1 < n12; i1++) {
+		dd2[i1] = dd[i1];
+	    }
+
+	    for (ibreg=0; ibreg < nbreg; ibreg++) {
+		if (verb)
+		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
+		for (iter=0; iter < niter; iter++) {
+		    if (verb)
+			sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
+		    
+		    /* Inverse 2-D FFT */
+		    for (i1=0; i1 < nw; i1++) {
+			/* Fourier transform k to x */
+			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			for (i2=0; i2 < nk; i2++) {
+			    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			}
+		    }
+		    for (i2=0; i2 < n2; i2++) {
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = +2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+			kiss_fftri(itfft,fft[i2],d);
+			for (i1=0; i1 < n1; i1++) {
+			    dd3[i2*n1+i1] = d[i1]*wt;
+			}
+		    } /* Inverse 2-D FFT end */
+
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) dd3[i1]=dd2[i1];
+		    }
+
+		    /* Forward 2-D FFT */
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    d[i1] = dd3[i2*n1+i1];
+			}
+			for (i1=n1; i1 < nfft; i1++) {
+			    d[i1] = 0.;
+			}		    
+			kiss_fftr (tfft,d,ctrace);
+			
+			for (i1=0; i1 < nw; i1++) {
+			    fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+			}
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = -2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+		    }
+		    
+		    for (i2=n2; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    fft[i2][i1].r = 0.;
+			    fft[i2][i1].i = 0.;
+			}
+		    }
+		    
+		    for (i1=0; i1 < nw; i1++) {
+			/* Fourier transform x to k */
+			kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+			for (i2=0; i2 < nk; i2++) {
+			    mm[i2][i1] = ctrace2[i2];
+			}
+		    } /* Forward 2-D FFT end */
+		    for (i2=0; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+			}
+		    }
+		    
+		    if (iter != 0) {
+			/* Thresholding */
+			sf_csharpen(mt);
+			sf_cweight_apply(nw*nk, mt);
+		    }
+		    for (i2=0; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+			    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+			}
+		    }
+		}
+
+		/* Inverse 2-D FFT */
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform k to x */
+		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		    
+		    for (i2=0; i2 < nk; i2++) {
+			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		    }
+		}
+		for (i2=0; i2 < n2; i2++) {
+		    if (0. != o1) {
+			for (i1=0; i1 < nw; i1++) {
+			    shift = +2.0*SF_PI*i1*dw*o1;
+			    ce.r = cosf(shift);
+			    ce.i = sinf(shift);
+			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			}
+		    }
+		    kiss_fftri(itfft,fft[i2],d);
+		    for (i1=0; i1 < n1; i1++) {
+			dd3[i2*n1+i1] = d[i1]*wt;
+		    }
+		} /* Inverse 2-D FFT end */
+
+		for (i1=0; i1 < n12; i1++) {
+		    if (!known[i1]) dd3[i1]= 0.;
+		}
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
+		}
+	    }
+
+	    /* Inverse 2-D FFT */
+	    for (i1=0; i1 < nw; i1++) {
+		/* Fourier transform k to x */
+		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		
+		for (i2=0; i2 < nk; i2++) {
+		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		}
+	    }
+	    for (i2=0; i2 < n2; i2++) {
+		if (0. != o1) {
+		    for (i1=0; i1 < nw; i1++) {
+			shift = +2.0*SF_PI*i1*dw*o1;
+			ce.r = cosf(shift);
+			ce.i = sinf(shift);
+			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+		    }
+		}
+		kiss_fftri(itfft,fft[i2],d);
+		for (i1=0; i1 < n1; i1++) {
+		    dd[i2*n1+i1] = d[i1]*wt;
+		}
+	    } /* Inverse 2-D FFT end */
+
+	    break;
+	} 
+	sf_cgstep_close();
+	sf_floatwrite (dd,n12,out);
+    }
+       
+    exit(0);
+}
+
+/* 	$Id$	 */

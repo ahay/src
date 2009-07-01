@@ -74,19 +74,7 @@ int main(int argc, char* argv[])
     } else {
 	mask = NULL;
     }
-
-    if (NULL != mask) {
-	sf_floatread(m,n12,mask);
-	
-	for (i=0; i < n12; i++) {
-	    known[i] = (bool) (m[i] != 0.);
-	}
-    } else {
-	for (i=0; i < n12; i++) {
-	    known[i] = (bool) (dd[i] != 0.);
-	}
-    }
-    
+ 
     switch (oper[0]) {
 	case 'd':
 	    for (i1=0; i1 < n12; i1++) {
@@ -134,9 +122,19 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
-
 	sf_floatread(dd,n12,in);
 
+	if (NULL != mask) {
+	    sf_floatread(m,n12,mask);
+	    
+	    for (i=0; i < n12; i++) {
+		known[i] = (bool) (m[i] != 0.);
+	    }
+	} else {
+	    for (i=0; i < n12; i++) {
+		known[i] = (bool) (dd[i] != 0.);
+	    }
+	}
 
         switch (oper[0]) {
 	case 'd':
