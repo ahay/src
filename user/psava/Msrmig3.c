@@ -121,8 +121,9 @@ int main (int argc, char *argv[])
     }
 
     if (NULL == (itype = sf_getstring("itype"))) itype = "o";
-    /* imaging condition type 
+    /* imaging condition type
        o = zero lag (default)
+       e = extended
        x = space-lags
        h = space-lags magnitude
        t = time-lag
