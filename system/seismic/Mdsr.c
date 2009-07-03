@@ -212,7 +212,7 @@ int main (int argc, char **argv)
     dsr_init(eps, nt2, dt, nz, dz, vt, depth, rule[0], na, da);
 
     /* migrate each wavenumber */
-    for (ik=0; ik<nk; ik++) {
+    for (ik=0; ik<nk; ik++) { /* midpoint wavenumber */
 	sf_warning("wavenumber %d of %d",ik+1,nk);
 	
 	k = k0+ik*dk;
@@ -220,6 +220,7 @@ int main (int argc, char **argv)
 	if (inv) {
 	    sf_floatread(q[0],nz*na,in);
 	} else {
+	    /* initialize image to zero */
 	    for (iz=0; iz < nz; iz++) {
 		for (ia=0; ia < na; ia++) {
 		    q[iz][ia] = 0.;
@@ -227,7 +228,7 @@ int main (int argc, char **argv)
 	    }
 	}
 
-	for (im=0; im<nm; im++) {	    
+	for (im=0; im<nm; im++) { /* half-offset wavenumber */
 	    m = im*dm;      
 
 	    if (!inv) {
@@ -240,6 +241,7 @@ int main (int argc, char **argv)
 	    if (inv) sf_floatwrite(p,nt,out);
 	}
  
+	/* output image */
 	if (!inv) sf_floatwrite(q[0],nz*na,out);
     }
 

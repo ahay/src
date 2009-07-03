@@ -131,6 +131,18 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
     Default(build)
 
 ##########################################################################
+# TRIP BUILD
+##########################################################################
+tripdirs = ('lib','main')
+
+for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct',
+               exports='env root libdir bindir incdir')
+    Default(build)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 

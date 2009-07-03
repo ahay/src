@@ -80,6 +80,8 @@ void dsr (bool inv /* modeling or migration */,
     float s, r, a;
     sf_complex w, k;
 
+    /* convert from midpoint/offset wavenumbers to
+       source/receiver wavenumbers */
     s = 0.5*(kx-kh);
     r = 0.5*(kx+kh);
     s *= s;
@@ -111,6 +113,8 @@ void dsr (bool inv /* modeling or migration */,
 
 	kiss_fftri(invs,(const kiss_fft_cpx *) pp, p);
     } else { /* migration */
+
+	/* FFT time -> frequency */
 	kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
 
 	/* loop over migrated times z */
@@ -133,6 +137,8 @@ void dsr (bool inv /* modeling or migration */,
 						  sf_cmplx(kx*kx,0.)))));
 #endif
 
+#ifdef DEBUG_LATER
+
 		if (a >= 0. && a <= 1.) {
 		    a = acosf(a)/da;
 		    ia = a;
@@ -143,6 +149,11 @@ void dsr (bool inv /* modeling or migration */,
 			q[iz][ia+1] += a*crealf(pp[iw]);
 		    }
 		}
+#endif
+
+		q[iz][0] += crealf(pp[iw]);
+
+
 #ifdef SF_HAS_COMPLEX_H
 		pp[iw] *= conjf(cexpf(-k*dz));
 #else
