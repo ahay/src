@@ -27,22 +27,24 @@ try:  # distributed version
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.{c,f90}')))
+    bldroot = '../..' # aka RSFSRC/build
 except: # local version
     env = configure.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     src = glob.glob('[a-z]*.{c,f90}')
+    bldroot = os.environ.get('RSFROOT')
 
 F90 = env.get('F90')
 api = env.get('API',[])
 if 'f90' in api and F90:
     mylibs=['rsff90','rsf']
-    env.Prepend(F90PATH=['../../include'])
+    env.Prepend(F90PATH=[os.path.join(bldroot,'include')])
 else:
     mylibs=['rsf']
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
+env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
+            LIBPATH=[os.path.join(bldroot,'lib')],
             LIBS=mylibs)
 
 for source in src:
