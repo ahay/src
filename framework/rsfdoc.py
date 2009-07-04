@@ -348,7 +348,8 @@ class rsfprog(object):
         if not name:
             name = self.name
         file = open (os.path.join(dir,name + '.wiki'),'w')
-        contents = '==%s==\n{| class="wikitable" align="center"\n' % name
+        contents = '==%s==\n{| class="wikitable" ' % name
+        contents += 'align="center" cellspacing="0" border="1"\n'
         desc = '! colspan="4" style="background:#ffdead;" | %s\n' % self.desc
         contents = contents + desc
         if self.snps:
@@ -929,5 +930,3 @@ if __name__ == "__main__":
     #
     os.unlink("junk.py")
     os.unlink("junk.pyc")
-
-# 	$Id$
