@@ -22,7 +22,7 @@ def makeshots(shots,ddata,tdata,par):
     Flow('sraw',[ddata, 'tos'],'intbin head=${SOURCES[1]} xkey=0 ykey=1',local=1)
     # t,o,s
 
-    # Prepare shots by mutting and windowing
+    # Prepare shots by muting and windowing
     Flow(shots,'sraw',
          '''
          put label1=Time unit1=s
