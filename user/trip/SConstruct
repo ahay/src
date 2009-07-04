@@ -1,0 +1,63 @@
+import os, sys, re, string, glob
+sys.path.append('../..')
+import configure
+
+waves = '''
+wave
+'''
+other = '''
+vam
+'''
+
+try:  # distributed version
+    Import('env root libdir bindir')
+    env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+except: # local version
+    env = configure.Debug()
+    root = None
+    SConscript('../../api/c/SConstruct')
+    src = glob.glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['rsf'])
+
+for source in src:
+    inc = env.Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(waves+other)
+for prog in mains:
+    sources = ['M' + prog]
+    configure.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+
+    # translate wi->par to par to enable selfdoc
+    env.Command('Mwavedoc.c','wavefun.c',
+                r'''
+    sed < $SOURCE 's/&(wi->\([^\)]*\))/\&\1/' | sed 's/wi->//g' > $TARGET
+                ''')
+
+
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),
+               Split(other)+['wavedoc'])    
+    env.Depends(docs,'#/framework/rsfdoc.py')
+
+    alias = {}
+    for wave in Split(waves):
+        alias['sf'+wave] = 'sfwavedoc'
+    doc = env.Docmerge(main,docs,alias=alias)
+    env.Install(libdir,doc)
+#####################################################################

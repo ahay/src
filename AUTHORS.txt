@@ -37,8 +37,10 @@ Includes predicates by Jonathan Richard Shewchuk
 Includes trackball (c) Silicon Graphics
 Includes gl2ps by Christophe Geuzaine and contributors
 Includes numpy.i by Eric Jones, John Hunter, and Bill Spotz
-Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
 Includes vfsr by Lester Ingber
 Includes cfortran.h by Burkhard Burow
 Includes einspline by Kenneth P. Esler, Jr.
+
+Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
+Includes selected codes from TRIP by William Symes and others (c) Rice University
 

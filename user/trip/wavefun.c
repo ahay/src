@@ -38,7 +38,7 @@ copyright holder.
 
 #include "wavefun.h"
 
-#ifndef _sf_wavefun_h
+#ifndef _wavefun_h
 
 typedef struct {
     int nz;          /* number of gridpoints in z */
@@ -118,9 +118,9 @@ void getinputs(bool mod,  /* modeling or migration */
     }
     if (NULL != sf_getstring("receiver")) {
 	/* receiver movie file */
-	wi->tfile = sf_output("receiver");
+	wi->rmfile = sf_output("receiver");
     } else {
-	wi->tfile = NULL;
+	wi->rmfile = NULL;
     }
     if (NULL != sf_getstring("image")) {
 	wi->imfile= sf_output("image");
@@ -225,6 +225,12 @@ void getinputs(bool mod,  /* modeling or migration */
 	sf_putfloat(wi->tfile,"d3",wi->dx);
 	sf_putfloat(wi->tfile,"o3",wi->isxbeg*wi->dx);
 	sf_putstring(wi->tfile,"label3","Source");
+    }
+
+    if (NULL != wi->mfile && wi->nm) {
+	sf_putint(wi->mfile,"n3",wi->nt/wi->nm);
+	sf_putfloat(wi->mfile,"o3",0.);
+	sf_putfloat(wi->mfile,"d3",wi->nm*wi->dt);
     }
 }
 

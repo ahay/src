@@ -6,7 +6,7 @@ Import('env root bindir libdir docdir mandir system user')
 txtdir = os.path.join(docdir,'txt')
 python = WhereIs('python')
 
-dirs = Split('plot opengl libplot pens sumain suplot tripmain')
+dirs = Split('plot opengl libplot pens sumain suplot')
 dirs = dirs + system + user
 
 env.Command('rsfprog.py',None,

@@ -36,10 +36,9 @@ copyright holder.
 
 
 #include <rsf.h>
-#include <trip.h>
 
-/* constant velocity constant */
-#define VCONST 1.5
+#include "step.h"
+#include "wavefun.h"
 
 /* cfl number appropriate for scheme */
 #define CFL 0.7
@@ -96,14 +95,8 @@ int main(int argc, char ** argv) {
     v =sf_floatalloc(nxz);
     tr=sf_floatalloc(nsam);
     
-    /* assign velocity: either constant */
-    if (NULL == wi.vfile) 
-	fassign(v,VCONST,nxz);
-    /* else read from file */
-    else {
-	sf_floatread(v,nxz,wi.vfile);
-	sf_fileclose(wi.vfile);
-    }
+    /* read velocity */
+    sf_floatread(v,nxz,wi.vfile);
     
     /* CFL, sanity checks */
     vmax=fgetmax(v,nxz);
@@ -175,6 +168,7 @@ int main(int argc, char ** argv) {
 	isx += wi.iskip;
 	isrc++;
     } 
-    
+
+    sf_fileclose(wi.vfile);
     exit(0);
 }
