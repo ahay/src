@@ -428,46 +428,6 @@ def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
          + cgraph('plotcol=5 squeeze=n wantaxis=n symbol=. '+custom,par))
 
     Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
-  
-# ------------------------------------------------------------
-# execute acoustic finite-differences modeling
-#def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
-#    par['fdcustom'] = custom
-#    
-#    Flow( [data,wfld],[wavl,velo,dens,sou,rec],
-#          '''
-#          afmod ompchunk=%(ompchunk)d
-#          verb=y abc=y free=n dens=y
-#          snap=%(snap)s jsnap=%(jsnap)d
-#          nbz=%(nbz)d tz=%(tz)g
-#          nbx=%(nbx)d tx=%(tx)g
-#          vel=${SOURCES[1]}
-#          den=${SOURCES[2]}
-#          sou=${SOURCES[3]}
-#          rec=${SOURCES[4]}
-#          wfl=${TARGETS[1]}
-#          %(fdcustom)s
-#          ''' % par)
-#
-#def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
-#    par['fdcustom'] = custom
-#
-#    Flow([ data,wfld,ldata,lwfld],[wavl,velo,refl,sou,rec],
-#         '''
-#         aborn ompchunk=%(ompchunk)d
-#         verb=y abc=y free=n
-#         snap=%(snap)s jsnap=%(jsnap)d
-#         nbz=%(nbz)d tz=%(tz)g
-#         nbx=%(nbx)d tx=%(tx)g
-#         vel=${SOURCES[1]}
-#         ref=${SOURCES[2]}
-#         sou=${SOURCES[3]}
-#         rec=${SOURCES[4]}
-#         wfl=${TARGETS[1]}
-#         lid=${TARGETS[2]}
-#         liw=${TARGETS[3]}
-#         %(fdcustom)s
-#         ''' % par)
 
 # ------------------------------------------------------------
 # acoustic modeling
