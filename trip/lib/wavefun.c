@@ -71,19 +71,26 @@ typedef struct {
 
 #endif
 
-void getinputs(WINFO * wi) {
-    /*< get input parameters >*/
-
-    if (NULL != sf_getstring("velocity")) {
+void getinputs(bool mod,  /* modeling or migration */ 
+	       WINFO * wi /* parameters */) 
+/*< get input parameters >*/
+{
+    if (mod) {
+	wi->vfile = sf_input("in");
+    } else if (NULL != sf_getstring("velocity")) {
 	/* velocity file - defines space grid */
 	wi->vfile = sf_input("velocity");
+    } else {
+	wi->vfile = NULL;
+    }
+
+    if (NULL != wi->vfile) { 
 	if (!sf_histint(wi->vfile,"n1",&(wi->nz)) ||
 	    !sf_histint(wi->vfile,"n2",&(wi->nx)) ||
 	    !sf_histfloat(wi->vfile,"d1",&(wi->dz))||
 	    !sf_histfloat(wi->vfile,"d2",&(wi->dx)))
 	    sf_error("Need to specify n1=, n2=, d1=, d2= in velocity");
     } else {
-	wi->vfile = NULL;
 	if (!sf_getint("nz",&(wi->nz))) sf_error("Need nz=");
 	/* number of gridpoints in z */
 	if (!sf_getint("nx",&(wi->nx))) sf_error("Need nx=");
@@ -93,13 +100,17 @@ void getinputs(WINFO * wi) {
 	if (!sf_getfloat("dx",&(wi->dx))) sf_error("Need dx=");
 	/* step in x */
     }
+
     if (NULL != sf_getstring("source")) {
 	/* source movie file */
 	wi->mfile = sf_output("source");
     } else {
 	wi->mfile = NULL;
     }
-    if (NULL != sf_getstring("trace")) {
+
+    if (mod) {
+	wi->tfile = sf_output("out");
+    } else if (NULL != sf_getstring("trace")) {
 	/* trace output file */
 	wi->tfile = sf_output("trace");
     } else {
@@ -123,82 +134,98 @@ void getinputs(WINFO * wi) {
     if (!sf_getfloat("dt",&(wi->dt))) sf_error("Need dt=");
     /* step in t */
 
-  if (!sf_getint("nm",&(wi->nm))) wi->nm=0;
-  /* number of time steps to skip between movie frames
-     (<=0 for no movie) */
+    if (!sf_getint("nm",&(wi->nm))) wi->nm=0;
+    /* number of time steps to skip between movie frames
+       (<=0 for no movie) */
+    
+    if (!sf_getint("isz",&(wi->isz))) wi->isz=1;
+    /* source depth, in units of dz */
+    
+    if (!sf_getint("isxbeg",&(wi->isxbeg))) wi->isxbeg=(wi->nx)/2;
+    /* far left source x coord in units of dx */
+    
+    if (!sf_getint("isxend",&(wi->isxend))) wi->isxend=(wi->nx)/2;
+    /* far right source x coord in units of dx */
+    
+    if (!sf_getint("iskip",&(wi->iskip))) wi->iskip=1;
+    /* interval between sources in units of dx */
+    
+    if (!sf_getint("igz",&(wi->igz))) wi->igz=1;
+    /* recvr depth, in units of dz */
+    
+    if (!sf_getint("igxbeg",&(wi->igxbeg))) wi->igxbeg=1;
+    /* far left receiver x coord in units of dx */
+    
+    if (!sf_getint("igxend",&(wi->igxend))) wi->igxend=0;
+    /* far right receiver x coord in units of dx */
+    
+    if (!sf_getfloat("fpeak",&(wi->freq))) wi->freq=0.01;
+    /* center frequency of Ricker wavelet */
+    
+    /* default is zero offset */
+    
+    if (!sf_getint("ihmax",&(wi->ihmax))) wi->ihmax=0;
+    /* offset radius, units of dx */
+    
+    if (!sf_getint("imbeg",&(wi->imbeg))) wi->imbeg=wi->ihmax;
+    /* midpoint begin */
+    
+    if (!sf_getint("imend",&(wi->imend))) wi->imend=wi->nx-wi->ihmax-1;
+    /* midpoint end */
+    
+    if (!sf_getint("imskip",&(wi->imskip))) wi->imskip=1;
+    /* midpoint skip */
+ 
+    /* sanity-check */
+    if (wi->iskip<1 || wi->imskip<1) 
+	sf_error("either source or midpoint skip is "
+		 "nonpositive - ABORT");
+    
+    if (wi->imbeg<wi->ihmax) 
+	sf_error("first midpoint located within "
+		 "offset radius of domain boundary - ABORT");
+    
+    if (wi->imend>wi->nx-wi->ihmax-1) 
+	sf_error("first midpoint located within "
+		 "offset radius of domain boundary - ABORT");
+    
+    if (wi->nx<1||wi->nz<1) 
+	sf_error("number of spatial samples input is "
+		 "nonpositive - ABORT");
+    
+    if (wi->isxbeg<1 || wi->isxend>wi->nx-2 ||
+	wi->isz<1 || wi->isz>wi->nz-2) {
+	sf_warning("source indices isz=%d, isxbeg=%d isxend=%d place source",
+		   wi->isz,wi->isxbeg,wi->isxend);
+	sf_error("outside of wavefield update region [1,%d] x [1,%d]",
+		 wi->nz-1,wi->nx-1);
+    }
+    
+    if (wi->igz<1 || wi->igz>wi->nz-2 ||
+	wi->igxbeg<1 || wi->igxbeg > wi->nx-2 ||
+	wi->igxend<1 || wi->igxend > wi->nx-2) {
+	sf_warning("receiver depth index igz=%d or cable endpoint",wi->igz);
+	sf_warning("indices igxbeg=%d, igxend=%d place receivers outside of",
+		   wi->igxbeg,wi->igxend);
+	sf_error("wavefield update region [1,%d] x [1,%d]",
+		 wi->nz-1,wi->nx-1);
+    }
 
-  if (!sf_getint("isz",&(wi->isz))) wi->isz=1;
-  /* source depth, in units of dz */
-
-  if (!sf_getint("isxbeg",&(wi->isxbeg))) wi->isxbeg=(wi->nx)/2;
-  /* far left source x coord in units of dx */
-
-  if (!sf_getint("isxend",&(wi->isxend))) wi->isxend=(wi->nx)/2;
-  /* far right source x coord in units of dx */
-
-  if (!sf_getint("iskip",&(wi->iskip))) wi->iskip=1;
-  /* interval between sources in units of dx */
-
-  if (!sf_getint("igz",&(wi->igz))) wi->igz=1;
-  /* recvr depth, in units of dz */
-
-  if (!sf_getint("igxbeg",&(wi->igxbeg))) wi->igxbeg=1;
-  /* far left receiver x coord in units of dx */
-
-  if (!sf_getint("igxend",&(wi->igxend))) wi->igxend=0;
-  /* far right receiver x coord in units of dx */
-
-  if (!sf_getfloat("fpeak",&(wi->freq))) wi->freq=0.01;
-  /* center frequency of Ricker wavelet */
-  
-  /* default is zero offset */
-
-  if (!sf_getint("ihmax",&(wi->ihmax))) wi->ihmax=0;
-  /* offset radius, units of dx */
-
-  if (!sf_getint("imbeg",&(wi->imbeg))) wi->imbeg=wi->ihmax;
-  /* midpoint begin */
-
-  if (!sf_getint("imend",&(wi->imend))) wi->imend=wi->nx-wi->ihmax-1;
-  /* midpoint end */
-
-  if (!sf_getint("imskip",&(wi->imskip))) wi->imskip=1;
-  /* midpoint skip */
-
-  /* sanity-check */
-  if (wi->iskip<1 || wi->imskip<1) 
-      sf_error("either source or midpoint skip is "
-	       "nonpositive - ABORT");
-
-  if (wi->imbeg<wi->ihmax) 
-      sf_error("first midpoint located within "
-	       "offset radius of domain boundary - ABORT");
-
-  if (wi->imend>wi->nx-wi->ihmax-1) 
-      sf_error("first midpoint located within "
-	       "offset radius of domain boundary - ABORT");
-
-  if (wi->nx<1||wi->nz<1) 
-      sf_error("number of spatial samples input is "
-	       "nonpositive - ABORT");
-
-  if (wi->isxbeg<1 || wi->isxend>wi->nx-2 ||
-      wi->isz<1 || wi->isz>wi->nz-2) {
-      sf_warning("source indices isz=%d, isxbeg=%d isxend=%d place source",
-		 wi->isz,wi->isxbeg,wi->isxend);
-      sf_error("outside of wavefield update region [1,%d] x [1,%d]",
-	       wi->nz-1,wi->nx-1);
-  }
-
-  if (wi->igz<1 || wi->igz>wi->nz-2 ||
-      wi->igxbeg<1 || wi->igxbeg > wi->nx-2 ||
-      wi->igxend<1 || wi->igxend > wi->nx-2) {
-      sf_warning("receiver depth index igz=%d or cable endpoint",wi->igz);
-      sf_warning("indices igxbeg=%d, igxend=%d place receivers outside of",
-		 wi->igxbeg,wi->igxend);
-      sf_error("wavefield update region [1,%d] x [1,%d]",
-	       wi->nz-1,wi->nx-1);
-  }
+    if (NULL != wi->tfile) {
+	sf_putint(wi->tfile,"n1",wi->nt);
+	sf_putfloat(wi->tfile,"d1",wi->dt);
+	sf_putfloat(wi->tfile,"o1",0.);
+	sf_putstring(wi->tfile,"label1","Time");
+	sf_putstring(wi->tfile,"unit1","s");
+	sf_putint(wi->tfile,"n2",wi->igxend-wi->igxbeg+1);
+	sf_putfloat(wi->tfile,"d2",wi->dx);
+	sf_putfloat(wi->tfile,"o2",wi->igxbeg*wi->dx);
+	sf_putstring(wi->tfile,"label2","Receiver");
+	sf_putint(wi->tfile,"n3",wi->isxend-wi->isxbeg+1);
+	sf_putfloat(wi->tfile,"d3",wi->dx);
+	sf_putfloat(wi->tfile,"o3",wi->isxbeg*wi->dx);
+	sf_putstring(wi->tfile,"label3","Source");
+    }
 }
 
 void fassign(float * a, float c, int n) 

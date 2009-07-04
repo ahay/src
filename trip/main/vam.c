@@ -53,35 +53,41 @@ int main(int argc, char ** argv){
   if (!sf_getint("nx",&nx)) sf_error("Need nx=");
   /* distance grid */
   if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
-  /* depth grid */
+  /* depth sampling */
   if (!sf_getfloat("dx",&dx)) sf_error("Need dx=");
-  /* distance grid */
+  /* distance sampling */
   
   sf_putint(vfile,"n1",nz);
   sf_putint(vfile,"n2",nx);
   sf_putfloat(vfile,"d1",dz);
   sf_putfloat(vfile,"d2",dx);
+  sf_putfloat(vfile,"o1",0.);
+  sf_putfloat(vfile,"o2",0.);
   sf_putstring(vfile,"label1","Depth");
   sf_putstring(vfile,"label2","Offset");
   sf_putstring(vfile,"unit1","km");
   sf_putstring(vfile,"unit2","km");
 
-  v = sf_floatalloc(nx*nz);
+  sf_putstring(vfile,"label","Velocity");
+  sf_putstring(vfile,"unit","km/s");
+
+  v = sf_floatalloc(nz);
   
   for (ix=0;ix<nx;ix++){
       iz=0;
       while(iz<nz/3){
-	  v[nz*ix+iz]=1.5;
+	  v[iz]=1.5;
 	  iz++;
       }
       while(iz<nz*2/3){
-	  v[nz*ix+iz]=1.6;
+	  v[iz]=1.6;
 	  iz++;
       }
       while(iz<nz){
-	  v[nz*ix+iz]=1.55;
+	  v[iz]=1.55;
 	  iz++;
       }
+      sf_floatwrite(v,nz,vfile);
   }
   
   exit(0);

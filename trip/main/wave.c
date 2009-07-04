@@ -78,7 +78,7 @@ int main(int argc, char ** argv) {
     sf_init(argc,argv);
     
     /* read inputs from command line */
-    getinputs(&wi);
+    getinputs(true,&wi);
     
     /* compute number of shots */
     nsrc = (wi.isxend-wi.isxbeg)/(wi.iskip); nsrc++;
