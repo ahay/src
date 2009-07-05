@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 off2abs off2abs3
-icor xcor tcor ucor laps
+icor xcor2d tcor ucor laps2d
 ic sic sic3d lstk
 paradd
 wigner wdf
