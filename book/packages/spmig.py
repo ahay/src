@@ -33,6 +33,18 @@ def freqs(par):
     f = f + ' '
     return f
 
+def migpar(par):
+    if(not par.has_key('verb')):    par['verb']='y'
+    if(not par.has_key('eps')):     par['eps']=0.1
+
+    if(not par.has_key('nrmax')):   par['nrmax']=1
+    if(not par.has_key('dtmax')):   par['dtmax']=0.00005
+
+    if(not par.has_key('tmx')):     par['tmx']=16
+    if(not par.has_key('tmy')):     par['tmy']=16
+    
+    if(not par.has_key('incore')):  par['incore']='y'
+
 # ------------------------------------------------------------
 # create surface wavefield files
 def wflds(swfl,rwfl,wave,shot,par):

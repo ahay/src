@@ -38,11 +38,15 @@ def freqs(par):
     return f
 
 def migpar(par):
-    if(not par.has_key('tmx')):     par['tmx']=10
-    if(not par.has_key('epsilon')): par['epsilon']=0.000001
-
     if(not par.has_key('verb')):    par['verb']='y'
+    if(not par.has_key('eps')):     par['eps']=0.1
+
     if(not par.has_key('nrmax')):   par['nrmax']=1
+    if(not par.has_key('dtmax')):   par['dtmax']=0.00005
+
+    if(not par.has_key('tmx')):     par['tmx']=16
+    if(not par.has_key('tmy')):     par['tmy']=16
+    
     if(not par.has_key('incore')):  par['incore']='y'
 
 # ------------------------------------------------------------
@@ -57,14 +61,25 @@ def wflds(wfld,data,par):
          put label1=mx label2=my label3=w
          ''' % par )
 
-def slow(slow,velo,par):
+# ------------------------------------------------------------
+def slowness(slow,velo,par):
     Flow(slow,velo,
          '''
-         math output="1/input" |
-         transp plane=12 memsize=500|
-         transp plane=23 memsize=500|
-         put label1=mx label2=my label3=z
+         window |
+         math "output=1/input" |
+         transp |
+         spray axis=2 n=1 o=0 d=1 |
+         put label2=y unit2=""
          ''')
+
+#def slow(slow,velo,par):
+#    Flow(slow,velo,
+#         '''
+#         math output="1/input" |
+#         transp plane=12 memsize=500|
+#         transp plane=23 memsize=500|
+#         put label1=mx label2=my label3=z
+#         ''')
 
 # ------------------------------------------------------------
 
