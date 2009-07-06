@@ -45,6 +45,7 @@ int main (int argc, char *argv[])
     bool  cw;             /* converted waves flag */
     char *itype;          /* imaging type 
 			     o = zero lag (default)
+                             e = extended
 			     x = space-lags
 			     h = absolute space-lag
 			     t = time-lag
@@ -141,7 +142,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(    "tmx",&tmx  ))   tmx =     0; /* taper on x   */
     if (!sf_getint(    "tmy",&tmy  ))   tmy =     0; /* taper on y   */
 
-    if (!sf_getfloat( "vpvs",&vpvs))   vpvs =    1.;
+    if (!sf_getfloat( "vpvs",&vpvs))   vpvs =    1.; /* Vp/Vs ratio */
 
     /*------------------------------------------------------------*/
     /* slowness parameters */
@@ -201,10 +202,17 @@ int main (int argc, char *argv[])
     acz = sf_maxa(SF_MAX(1,nz/jcz),sf_o(amz),dz*jcz); sf_setlabel(acz,"cz");
     n = sf_n(acx)*sf_n(acy)*sf_n(acz);
 
-    Fc = sf_output("cig"); sf_settype(Fc,SF_FLOAT);
+    Fc = sf_output("cig");
+    /* Output file with Common Image Gathers */
+    sf_settype(Fc,SF_FLOAT);
     sf_oaxa(Fc,acx,1);
     sf_oaxa(Fc,acy,2);
     sf_oaxa(Fc,acz,3);
+
+    /* A file with CIGs will be written even when itype=o and CIGs are the same
+    as the image. This is in order to allow switching between imaging
+    conditions without changing SConstruct files. Changing this will break
+    several SConstruct files in RSFSRC/book . */
 
     /*------------------------------------------------------------*/
     /* wavefield hypercube */
