@@ -106,7 +106,6 @@ int main(int argc, char* argv[])
 
     /* CIP coordinates */
     ac = sf_iaxa(Fc,2); sf_setlabel(ac,"cc"); sf_setunit(ac,"");
-    if(verb) sf_raxa(ac); 
     nc = sf_n(ac);
 
     if(! sf_getint("nhz",&nhz)) nhz=0; /* number of lags on the z axis */
