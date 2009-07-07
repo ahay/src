@@ -37,7 +37,7 @@ copyright holder.
 
 #include <rsf.h>
 
-#include "step.h"
+#include "step24.h"
 #include "wavefun.h"
 
 /* cfl number appropriate for scheme */
@@ -83,7 +83,8 @@ int main(int argc, char ** argv) {
     nsrc = (wi.isxend-wi.isxbeg)/(wi.iskip); nsrc++;
     
     /* compute number of spatial grid points */
-    nxz=wi.nx * wi.nz;
+    /* 2,4 FEATURE: nz->nz+2, nx->nx+2 */
+    nxz=(wi.nx+2) * (wi.nz+2);
     
     /* compute number of traces, samples in each record */
     ntr=wi.igxend-wi.igxbeg+1;
@@ -96,7 +97,20 @@ int main(int argc, char ** argv) {
     tr=sf_floatalloc(nsam);
     
     /* read velocity */
-    sf_floatread(v,nxz,wi.vfile);
+    /* 2,4 FEATURE: nz->nz+2, etc: read interior from file, extend by const */
+    /* read into interior in x */
+    for (ix=1;ix<wi.nx+1;ix++) {
+	/* read into interior of each column */
+	sf_floatread(v+ix*(wi.nz+2)+1,wi.nz,wi.vfile);
+	/* extend by const */
+	v[ix*(wi.nz+2)]=v[ix*(wi.nz+2)+1];
+	v[(ix+1)*(wi.nz+2)-1]=v[(ix+1)*(wi.nz+2)-2];
+    }
+    /* extend to 1st and last cols */
+    for (ix=0;ix<wi.nz+2;ix++) {
+	v[ix]=v[ix+wi.nz+2];
+	v[ix+(wi.nx+1)*(wi.nz+2)]=v[ix+(wi.nx)*(wi.nz+2)];
+    }
     
     /* CFL, sanity checks */
     vmax=fgetmax(v,nxz);
@@ -137,10 +151,12 @@ int main(int argc, char ** argv) {
 	    
 	    /* construct next time step, overwrite on p0 */
 	    
-	    step_forward(p0,p1,v,wi.nz,wi.nx,rz,rx,s);
+	    /* 2,4 FEATURE: nz->nz+2, nx->nx+2 */
+	    step24_forward(p0,p1,v,wi.nz+2,wi.nx+2,rz,rx,s);
 	    
 	    /* tack on source */
-	    p0[wi.isz+isx*wi.nz]+=fgetrick(it*wi.dt,wi.freq);
+	    /* 2,4 FEATURE: nz->nz+2, isz->isz+1, isx->isx+1 */
+	    p0[(wi.isz+1)+(isx+1)*(wi.nz+2)]+=fgetrick(it*wi.dt,wi.freq);
 	    
 	    /* swap pointers */
 	    tmp=p0;
@@ -150,11 +166,14 @@ int main(int argc, char ** argv) {
 	    /* store trace samples if necessary */
 	    if (NULL != wi.tfile) 
 		for (ix=0;ix<ntr;ix++) 
-		    tr[ix*wi.nt+it]=p1[(wi.igxbeg+ix)*wi.nz+wi.igz];
+                    /* 2,4 FEATURE: nz->nz+2, igz->igz+1 */
+		    tr[ix*wi.nt+it]=p1[(wi.igxbeg+ix+1)*(wi.nz+2)+wi.igz+1];
 	    
 	    /* write movie snap to file if necessary */
 	    if (NULL != wi.mfile && wi.nm && !(it%wi.nm)) {
-		sf_floatwrite(p1,nxz,wi.mfile);
+                /* 2,4 FEATURE: write interior of each interior column */
+		for (ix=1;ix<wi.nx+1;ix++) 
+		    sf_floatwrite(p1+ix*(wi.nz+2)+1,wi.nz,wi.mfile);
 		imf++;
 	    }
 	    

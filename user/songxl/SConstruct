@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-wave1 wave4 wave24 sbd
+wave1 wave4 wave124 sbd
 '''
 #integral
 #rfilter

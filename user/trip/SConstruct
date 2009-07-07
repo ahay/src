@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 waves = '''
-wave
+rtm wave wave24 
 '''
 other = '''
 vam

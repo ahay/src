@@ -75,31 +75,14 @@ void getinputs(bool mod,  /* modeling or migration */
 	       WINFO * wi /* parameters */) 
 /*< get input parameters >*/
 {
-    if (mod) {
-	wi->vfile = sf_input("in");
-    } else if (NULL != sf_getstring("velocity")) {
-	/* velocity file - defines space grid */
-	wi->vfile = sf_input("velocity");
-    } else {
-	wi->vfile = NULL;
-    }
+    wi->vfile = sf_input("in");
+    /* velocity file - defines space grid */
 
-    if (NULL != wi->vfile) { 
-	if (!sf_histint(wi->vfile,"n1",&(wi->nz)) ||
-	    !sf_histint(wi->vfile,"n2",&(wi->nx)) ||
-	    !sf_histfloat(wi->vfile,"d1",&(wi->dz))||
-	    !sf_histfloat(wi->vfile,"d2",&(wi->dx)))
-	    sf_error("Need to specify n1=, n2=, d1=, d2= in velocity");
-    } else {
-	if (!sf_getint("nz",&(wi->nz))) sf_error("Need nz=");
-	/* number of gridpoints in z */
-	if (!sf_getint("nx",&(wi->nx))) sf_error("Need nx=");
-	/* number of gridpoints in x */
-	if (!sf_getfloat("dz",&(wi->dz))) sf_error("Need dz=");
-	/* step in z */
-	if (!sf_getfloat("dx",&(wi->dx))) sf_error("Need dx=");
-	/* step in x */
-    }
+    if (!sf_histint(wi->vfile,"n1",&(wi->nz)) ||
+	!sf_histint(wi->vfile,"n2",&(wi->nx)) ||
+	!sf_histfloat(wi->vfile,"d1",&(wi->dz))||
+	!sf_histfloat(wi->vfile,"d2",&(wi->dx)))
+	sf_error("Need to specify n1=, n2=, d1=, d2= in velocity");
 
     if (NULL != sf_getstring("source")) {
 	/* source movie file */
@@ -110,29 +93,32 @@ void getinputs(bool mod,  /* modeling or migration */
 
     if (mod) {
 	wi->tfile = sf_output("out");
-    } else if (NULL != sf_getstring("trace")) {
-	/* trace output file */
-	wi->tfile = sf_output("trace");
-    } else {
-	wi->tfile = NULL;
+	if (!sf_getint("nt",&(wi->nt))) sf_error("Need nt=");
+	/* number of time steps */
+	if (!sf_getfloat("dt",&(wi->dt))) sf_error("Need dt=");
+	/* step in t */	
+    } else { 
+	wi->tfile = sf_input("trace");
+	if (!sf_histint(wi->tfile,"n1",&(wi->nt))) 
+	    sf_error("Need n1= in trace");
+	if (!sf_histfloat(wi->tfile,"d1",&(wi->dt))) 
+	    sf_error("Need d1= in trace");
     }
+
     if (NULL != sf_getstring("receiver")) {
 	/* receiver movie file */
 	wi->rmfile = sf_output("receiver");
     } else {
 	wi->rmfile = NULL;
     }
-    if (NULL != sf_getstring("image")) {
-	wi->imfile= sf_output("image");
-	/* image file */
-    } else {
-	wi->imfile= NULL;
-    }
 
-    if (!sf_getint("nt",&(wi->nt))) sf_error("Need nt=");
-    /* number of time steps */
-    if (!sf_getfloat("dt",&(wi->dt))) sf_error("Need dt=");
-    /* step in t */
+    if (mod) {
+	wi->imfile= NULL;
+    } else {
+	wi->imfile= sf_output("out");
+	/* image file */
+    } 
+
 
     if (!sf_getint("nm",&(wi->nm))) wi->nm=0;
     /* number of time steps to skip between movie frames
@@ -211,7 +197,7 @@ void getinputs(bool mod,  /* modeling or migration */
 		 wi->nz-1,wi->nx-1);
     }
 
-    if (NULL != wi->tfile) {
+    if (mod) {
 	sf_putint(wi->tfile,"n1",wi->nt);
 	sf_putfloat(wi->tfile,"d1",wi->dt);
 	sf_putfloat(wi->tfile,"o1",0.);
@@ -221,16 +207,26 @@ void getinputs(bool mod,  /* modeling or migration */
 	sf_putfloat(wi->tfile,"d2",wi->dx);
 	sf_putfloat(wi->tfile,"o2",wi->igxbeg*wi->dx);
 	sf_putstring(wi->tfile,"label2","Receiver");
-	sf_putint(wi->tfile,"n3",wi->isxend-wi->isxbeg+1);
-	sf_putfloat(wi->tfile,"d3",wi->dx);
+	sf_putint(wi->tfile,"n3",(wi->isxend-wi->isxbeg)/wi->iskip+1);
+	sf_putfloat(wi->tfile,"d3",wi->iskip*wi->dx);
 	sf_putfloat(wi->tfile,"o3",wi->isxbeg*wi->dx);
 	sf_putstring(wi->tfile,"label3","Source");
-    }
+    } 
 
     if (NULL != wi->mfile && wi->nm) {
 	sf_putint(wi->mfile,"n3",wi->nt/wi->nm);
 	sf_putfloat(wi->mfile,"o3",0.);
 	sf_putfloat(wi->mfile,"d3",wi->nm*wi->dt);
+	sf_putstring(wi->mfile,"label3","Time");
+	sf_putstring(wi->mfile,"unit3","s");
+    }
+
+    if (NULL != wi->rmfile) {
+	sf_putint(wi->rmfile,"n3",wi->nt);
+	sf_putfloat(wi->rmfile,"o3",0.);
+	sf_putfloat(wi->rmfile,"d3",wi->dt);
+	sf_putstring(wi->rmfile,"label3","Time");
+	sf_putstring(wi->rmfile,"unit3","s");
     }
 }
 
