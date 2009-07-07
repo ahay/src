@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
     } else {
 	c_us=sf_complexalloc2(nz,nx);
 	c_ur=sf_complexalloc2(nz,nx);
-	tt  =sf_complexalloc2(2*nht+1,nw);
+	tt  =sf_complexalloc2(nw,2*nht+1);
 	jj  =sf_complexalloc3(nc,2*nhz+1,2*nhx+1);
 
 	/* precompute phase shift */

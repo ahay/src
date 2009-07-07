@@ -268,53 +268,70 @@ def i2s3(dimag,dslow,bwfld,bslow,par):
          ''' % param(par))
 
 # ------------------------------------------------------------
-# simulate shot-record migration
-def wem(imag,sdat,rdat,velo,custom,par):
-
-    sfrq = imag + sdat + '_f'
-    rfrq = imag + rdat + '_f'
-
-    swfl = imag + sdat + '_w'
-    rwfl = imag + rdat + '_w'
-
-    slow = imag + velo + '_s'
+def wem(imag,sdat,rdat,slow,custom,par):
     
-    Flow(sfrq,sdat,
-         '''
-         transp |
-         fft1 inv=n opt=n |
-         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-         transp plane=12 |
-         transp plane=23
-         ''' % par )
-
-    Flow(rfrq,rdat,
-         '''
-         transp |
-         fft1 inv=n opt=n |
-         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-         transp plane=12 |
-         transp plane=23
-         ''' % par )
-
-    Flow(slow,velo,
-         '''
-         math output=1/input |
-         transp plane=12 |
-         transp plane=23
-         ''')
-
-    Cwfone(swfl,sfrq,slow,par)
-    Awfone(rwfl,rfrq,slow,par)
-
+    swfl = imag+'_us' #   source wavefield
+    rwfl = imag+'_ur' # receiver wavefield
+    
+    Cwfone3(imag+'_ws',sdat,slow,par)
+    Awfone3(imag+'_wr',rdat,slow,par)
+    
+    # source and receiver wavefield (z,x,w)
+    Flow(swfl,imag+'_ws','window | transp')
+    Flow(rwfl,imag+'_wr','window | transp')
+    
+    # conventional (cross-correlation zero-lag) imaging condition
     Flow(imag,[swfl,rwfl],
-         '''
-         math s=${SOURCES[0]} r=${SOURCES[1]} output="r*conj(s)" |
-         window |
-         stack axis=3 |
-         real |
-         transp
-         ''',stdin=0)
+         'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=10 ompnth=%(ompnth)d' % par)
+    
+# ------------------------------------------------------------
+# simulate shot-record migration
+#def wem(imag,sdat,rdat,velo,custom,par):
+
+#    sfrq = imag + sdat + '_f'
+#    rfrq = imag + rdat + '_f'
+
+#    swfl = imag + sdat + '_w'
+#    rwfl = imag + rdat + '_w'
+
+#    slow = imag + velo + '_s'
+    
+#    Flow(sfrq,sdat,
+#         '''
+#         transp |
+#         fft1 inv=n opt=n |
+#         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+#         transp plane=12 |
+#         transp plane=23
+#         ''' % par )
+
+#    Flow(rfrq,rdat,
+#         '''
+#         transp |
+#         fft1 inv=n opt=n |
+#         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+#         transp plane=12 |
+#         transp plane=23
+#         ''' % par )
+
+#    Flow(slow,velo,
+#         '''
+#         math output=1/input |
+#         transp plane=12 |
+#         transp plane=23
+#         ''')
+
+#    Cwfone(swfl,sfrq,slow,par)
+#    Awfone(rwfl,rfrq,slow,par)
+
+#    Flow(imag,[swfl,rwfl],
+#         '''
+#         math s=${SOURCES[0]} r=${SOURCES[1]} output="r*conj(s)" |
+#         window |
+#         stack axis=3 |
+#         real |
+#         transp
+#         ''',stdin=0)
 
 # ------------------------------------------------------------
 # zero-offset migration
