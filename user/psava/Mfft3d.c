@@ -290,6 +290,11 @@ int main(int argc, char* argv[])
 	    fft3a3_close(ft3);
 	    break;
     }
-    
+    /*------------------------------------------------------------*/
+
+    if (Fi!=NULL) sf_fileclose(Fi);
+    if (Fo!=NULL) sf_fileclose(Fo);
+
+    /*------------------------------------------------------------*/ 
     exit (0);
 }

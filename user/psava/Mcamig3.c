@@ -300,6 +300,13 @@ int main (int argc, char *argv[])
 	    break;
     }
     fslice_close(slow);
-    
+    /*------------------------------------------------------------*/
+
+    if (Fs!=NULL) sf_fileclose(Fs);
+    if (Fi!=NULL) sf_fileclose(Fi);
+    if (Fd!=NULL) sf_fileclose(Fd);
+    if (Fw!=NULL) sf_fileclose(Fw);
+
+    /*------------------------------------------------------------*/
     exit (0);
 }

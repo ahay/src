@@ -250,6 +250,14 @@ int main (int argc, char *argv[])
 	free(**r_osou); free(*r_osou); free(r_osou);
 	free(**r_orec); free(*r_orec); free(r_orec);
     }
+    /*------------------------------------------------------------*/
     
+    if (Fs  !=NULL) sf_fileclose(Fs);
+    if (Fr  !=NULL) sf_fileclose(Fr);
+    if (Fsou!=NULL) sf_fileclose(Fsou);
+    if (Frec!=NULL) sf_fileclose(Frec);
+    
+    /*------------------------------------------------------------*/
     exit (0);
 }
+

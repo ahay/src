@@ -218,5 +218,10 @@ int main(int argc, char* argv[])
     sf_floatwrite(y[0][0],sf_n(a1)*sf_n(a2)*sf_n(a3),Fy);
     /*------------------------------------------------------------*/
 
+    if (Fx!=NULL) sf_fileclose(Fx);
+    if (Fy!=NULL) sf_fileclose(Fy);
+    if (Ff!=NULL) sf_fileclose(Ff);
+
+    /*------------------------------------------------------------*/
     exit (0);
 }

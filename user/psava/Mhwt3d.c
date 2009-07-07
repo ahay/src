@@ -226,5 +226,11 @@ int main(int argc, char* argv[])
     ;           free(*wp); free(wp);
     ;           free(*kk); free(kk);
 
+    /*------------------------------------------------------------*/
+
+    if (Fv!=NULL) sf_fileclose(Fv);
+    if (Fw!=NULL) sf_fileclose(Fw);
+
+    /*------------------------------------------------------------*/
     exit (0);
 }

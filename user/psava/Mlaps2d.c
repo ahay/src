@@ -346,6 +346,13 @@ int main(int argc, char* argv[])
      free(cciz);
      free(ccin);
 
+     /*------------------------------------------------------------*/
+
+     if (Fs!=NULL) sf_fileclose(Fs);
+     if (Fr!=NULL) sf_fileclose(Fr);
+     if (Fc!=NULL) sf_fileclose(Fc);
+     if (Fi!=NULL) sf_fileclose(Fi);
+
     /*------------------------------------------------------------*/
     exit (0);
 }

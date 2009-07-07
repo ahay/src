@@ -47,11 +47,12 @@ def param(par):
 
     if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
 
-    if(par['ratio']>1):
-        par['height']=10
-    else:
-        par['height']=13*par['ratio']
-
+    if(not par.has_key('height')):
+        if(par['ratio']>1):
+            par['height']=10
+        else:
+            par['height']=13*par['ratio']
+            
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
@@ -410,7 +411,7 @@ def qqplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=. plotcol=1 plotfat=3 wantaxis=n %s' % custom,par)
+    ''' + cgraph('symbol=. plotcol=1 plotfat=5 wantaxis=n %s' % custom,par)
 
 def qqwin(par):
     return '''

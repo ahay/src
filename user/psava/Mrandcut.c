@@ -112,7 +112,13 @@ int main(int argc, char* argv[])
 
     free(**ui); free(*ui); free(ui);
     free(**uo); free(*uo); free(uo);
+    /*------------------------------------------------------------*/
 
+    if (Fi!=NULL) sf_fileclose(Fi);
+    if (Fo!=NULL) sf_fileclose(Fo);
+    if (Fr!=NULL) sf_fileclose(Fr);
+
+    /*------------------------------------------------------------*/
     exit (0);
 }
 

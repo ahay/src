@@ -752,7 +752,17 @@ int main(int argc, char* argv[])
 	free(**qsy); free(*qsy); free(qsy);
 	free(**qsz); free(*qsz); free(qsz);
     }
+    /*------------------------------------------------------------*/
 
+    if (Fwav!=NULL) sf_fileclose(Fwav);
+    if (Fsou!=NULL) sf_fileclose(Fsou);
+    if (Frec!=NULL) sf_fileclose(Frec);
+    if (Fccc!=NULL) sf_fileclose(Fccc);
+    if (Fden!=NULL) sf_fileclose(Fden);
+    if (Fdat!=NULL) sf_fileclose(Fdat);
+    if (Fwfl!=NULL) sf_fileclose(Fwfl);
+
+    /*------------------------------------------------------------*/
     exit (0);
 }
 

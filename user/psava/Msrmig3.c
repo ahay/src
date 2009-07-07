@@ -431,10 +431,13 @@ int main (int argc, char *argv[])
     fslice_close(imag);
     fslice_close(cigs);
 
+    /*------------------------------------------------------------*/
+
     if (Fw_s!=NULL) sf_fileclose(Fw_s);
     if (Fw_r!=NULL) sf_fileclose(Fw_r);
     if (Fs_s!=NULL) sf_fileclose(Fs_s);
     if (Fs_r!=NULL) sf_fileclose(Fs_r);
 
+    /*------------------------------------------------------------*/
     exit (0);
 }
