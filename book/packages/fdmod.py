@@ -475,6 +475,34 @@ def lwefd1(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom+' expl=y ',par)
 
 # ------------------------------------------------------------
+def animodel(v,vv,eta,delta,theta):
+    Flow(v+'_vv',[vv],           'window')
+    Flow(v+'_vn',[v+'_vv',delta],'math del=${SOURCES[1]} output="input*sqrt(1+2*del)"')
+    Flow(v+'_vh',[v+'_vn',eta  ],'math eta=${SOURCES[1]} output="input*sqrt(1+2*eta)"')
+    Flow(v,[v+'_vv',v+'_vn',v+'_vh',theta],'cat axis=3 space=n ${SOURCES[1:4]}')
+
+# ------------------------------------------------------------
+# acoustic anisotropic modeling
+def anifd2d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    par['anifdcustom'] = custom
+
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         anifd2d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d dabc=%(dabc)s
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(anifdcustom)s
+         ''' % par)
+
+
+
+# ------------------------------------------------------------
 # elastic modeling
 def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     par['fdcustom'] = custom

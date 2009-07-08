@@ -268,23 +268,6 @@ def i2s3(dimag,dslow,bwfld,bslow,par):
          ''' % param(par))
 
 # ------------------------------------------------------------
-def wem(imag,sdat,rdat,slow,custom,par):
-    
-    swfl = imag+'_us' #   source wavefield
-    rwfl = imag+'_ur' # receiver wavefield
-    
-    Cwfone3(imag+'_ws',sdat,slow,par)
-    Awfone3(imag+'_wr',rdat,slow,par)
-    
-    # source and receiver wavefield (z,x,w)
-    Flow(swfl,imag+'_ws','window | transp')
-    Flow(rwfl,imag+'_wr','window | transp')
-    
-    # conventional (cross-correlation zero-lag) imaging condition
-    Flow(imag,[swfl,rwfl],
-         'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=10 ompnth=%(ompnth)d' % par)
-    
-# ------------------------------------------------------------
 # simulate shot-record migration
 #def wem(imag,sdat,rdat,velo,custom,par):
 

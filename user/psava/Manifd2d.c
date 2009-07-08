@@ -87,7 +87,6 @@ int main(int argc, char* argv[])
     sf_file Fvel=NULL; /* velocity  */
     sf_file Fdat=NULL; /* data      */
     sf_file Fwfl=NULL; /* wavefield */
-    sf_file Fang=NULL; /* tilt angle */
 
     /* cube axes */
     sf_axis at,az,ax;
@@ -187,9 +186,6 @@ int main(int argc, char* argv[])
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
     
-    if(atype[0] == 't')
-	Fang = sf_input ("ang"); /* tilt angle */
-
     /*------------------------------------------------------------*/
     /* axes */
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
@@ -359,7 +355,7 @@ int main(int argc, char* argv[])
 	sia =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 	coa =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 	
-	sf_floatread(tt[0],nz*nx,Fang );    expand(tt,ang,fdm);
+	sf_floatread(tt[0],nz*nx,Fvel );    expand(tt,ang,fdm);
 	
 	for    (ix=0; ix<fdm->nxpad; ix++) {
 	    for(iz=0; iz<fdm->nzpad; iz++) {	    
@@ -621,8 +617,7 @@ int main(int argc, char* argv[])
     if (Fvel!=NULL) sf_fileclose(Fvel);
     if (Fdat!=NULL) sf_fileclose(Fdat);
     if (Fwfl!=NULL) sf_fileclose(Fwfl);
-    if (Fang!=NULL) sf_fileclose(Fang);
-
+ 
     /*------------------------------------------------------------*/
     exit (0);
 }
