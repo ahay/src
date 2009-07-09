@@ -28,7 +28,7 @@ Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 #Paper('adding',options='short',use='hyperref')
 
 Paper('prog',use='hyperref,amsmath,fancybox,listings,jfc',
-      include='\\newcommand{\\RSF}{../../..}',color='rose')
+      include='\\newcommand{\\RSF}{../../..}',color='rose const rand')
 
 Paper('abstract',lclass='eage',
       include=r'''
@@ -85,18 +85,18 @@ Depends2('install',map(lambda x: x+'.install',
 #               \end{textblock}}
 #               ''')
 
-Paper('delft',
-      lclass='beamer',
-      use='helvet,hyperref,listings',
-      include=r'''
-               \mode<presentation>{\usetheme{Szeged}}
-               \usepackage[absolute,overlay]{textpos}
-               \setlength{\TPHorizModule}{1mm}
-               \setlength{\TPVertModule}{1mm}
-               \newcommand{\MadLogo}{%
-               \begin{textblock}{30}(115,-25)
-               \includegraphics[width=30\TPHorizModule]{Fig/Madagascar}
-               \end{textblock}}
-               ''')
+#Paper('delft',
+#      lclass='beamer',
+#      use='helvet,hyperref,listings',
+#      include=r'''
+#               \mode<presentation>{\usetheme{Szeged}}
+#               \usepackage[absolute,overlay]{textpos}
+#               \setlength{\TPHorizModule}{1mm}
+#               \setlength{\TPVertModule}{1mm}
+#               \newcommand{\MadLogo}{%
+#               \begin{textblock}{30}(115,-25)
+#               \includegraphics[width=30\TPHorizModule]{Fig/Madagascar}
+#               \end{textblock}}
+#               ''')
 
 End(color='const rand')
