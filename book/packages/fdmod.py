@@ -475,6 +475,38 @@ def lwefd1(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom+' expl=y ',par)
 
 # ------------------------------------------------------------
+# anisotropic stiffness tensor
+def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
+    Flow(cc+'33',[vp,ro],
+         '''
+         math output="ro*vp*vp"
+         vp=${SOURCES[0]}
+         ro=${SOURCES[1]}
+         ''')    
+    Flow(cc+'44',[vs,ro],
+         '''
+         math output="ro*vs*vs"
+         vs=${SOURCES[0]}
+         ro=${SOURCES[1]}
+         ''')
+    Flow(cc+'11',[cc+'33',epsilon],
+         '''
+         math output="2*epsilon*c33+c33"
+         c33=${SOURCES[0]}
+         epsilon=${SOURCES[1]}
+         ''')
+    Flow(cc+'13',[cc+'33',cc+'44',delta],
+         '''
+         math output="sqrt(2*c33*(c33-c44)*delta+(c33-c44)*(c33-c44))-c44"
+         c33=${SOURCES[0]}
+         c44=${SOURCES[1]}
+         delta=${SOURCES[2]}
+         ''')
+    
+    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
+         'cat axis=3 space=n ${SOURCES[1:4]}')
+
+# ------------------------------------------------------------
 def animodel(v,vv,eta,delta,theta):
     Flow(v+'_vv',[vv],           'window')
     Flow(v+'_vn',[v+'_vv',delta],'math del=${SOURCES[1]} output="input*sqrt(1+2*del)"')
