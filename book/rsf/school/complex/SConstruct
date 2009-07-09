@@ -437,31 +437,31 @@ for i in range(2):
          scale axis=123
          ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
     
-    Result('we'+str(i+1),
-           fdmod.wgrey('title=u%s pclip=99' % str(i+1),par))
-    Result('def'+str(i+1),'def',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
-
-Flow(  'weall','we1 we2','cat axis=1 space=n ${SOURCES[1]}')
-Result('weall',
-       '''
-       grey title="Vector components" wantaxis=y screenratio=%f screenht=8
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.25 g2num=0.25
-       ''' % (2*par['ratio']) )
+    Plot('we'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('def'+str(i+1),'def',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    
+Flow('weall','we1 we2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
 
 Flow('wall','we1 we2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wall',
-       '''
-       grey title="" wantaxis=y screenratio=%f screenht=10
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.1 g2num=0.1
-       ''' % (3*par['ratio']) )
+Plot('wall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
 
 #
 #
@@ -484,22 +484,22 @@ for i in range(2):
          scale axis=123
          ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
     
-    Result('weo'+str(i+1),
-           fdmod.wgrey('title=u%s pclip=99' % str(i+1),par))
-    Result('deof'+str(i+1),'deof',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
-    Result('desf'+str(i+1),'desf',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+    Plot('weo'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('deof'+str(i+1),'deof',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('desf'+str(i+1),'desf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
 ##
 # pressure fields
@@ -518,31 +518,31 @@ for i in range(2):
          scale axis=123
          ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
     
-    Result('wep'+str(i+1),
-           fdmod.wgrey('title=u%s pclip=99' % str(i+1),par))
-    Result('depf'+str(i+1),'depf',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+    Plot('wep'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('depf'+str(i+1),'depf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
-Flow(  'wepall','wep1 wep2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wepall',
-       '''
-       grey title="Vector components" wantaxis=y screenratio=%f screenht=8
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.25 g2num=0.25
-       ''' % (2*par['ratio']) )
+Flow('wepall','wep1 wep2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wepall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
 
 Flow('wpall','wep1 wep2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wpall',
-       '''
-       grey title="" wantaxis=y screenratio=%f screenht=10
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.1 g2num=0.1
-       ''' % (3*par['ratio']) )
+Plot('wpall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
 
 #
 #
@@ -565,22 +565,22 @@ for i in range(2):
          scale axis=123
          ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
     
-    Result('wepo'+str(i+1),
-           fdmod.wgrey('title=u%s pclip=99' % str(i+1),par))
-    Result('depof'+str(i+1),'depof',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
-    Result('depsf'+str(i+1),'depsf',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+    Plot('wepo'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('depof'+str(i+1),'depof',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('depsf'+str(i+1),'depsf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
 
 ## SECOND RECEIVER
@@ -600,31 +600,31 @@ for i in range(2):
          scale axis=123
          ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
     
-    Result('wer'+str(i+1),
-           fdmod.wgrey('title=u%s pclip=99' % str(i+1),par))
-    Result('derf'+str(i+1),'derf',
-           '''
-           window n3=1 f3=%d squeeze=n |
-           transp plane=34 | transp plane=23 | transp plane=12 |
-           window f1=%d | put o1=%g | pad end1=%d |
-           ''' % (i,par['kt'],par['ot'],par['kt'])
-           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+    Plot('wer'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('derf'+str(i+1),'derf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
-Flow(  'werall','wer1 wer2','cat axis=1 space=n ${SOURCES[1]}')
-Result('werall',
-       '''
-       grey title="Vector components" wantaxis=y screenratio=%f screenht=8
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.25 g2num=0.25
-       ''' % (2*par['ratio']) )
+Flow('werall','wer1 wer2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('werall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
 
 Flow('wrall','wer1 wer2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wrall',
-       '''
-       grey title="" wantaxis=y screenratio=%f screenht=10
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.1 g2num=0.1
-       ''' % (3*par['ratio']) )
+Plot('wrall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
 
 #
 #
@@ -691,21 +691,21 @@ for i in range(2):
          ''' % (i,par['kt'],par['ot'],par['kt'])
          + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
-Flow(  'weprall','wepr1 wepr2','cat axis=1 space=n ${SOURCES[1]}')
-Result('weprall',
-       '''
-       grey title="Vector components" wantaxis=y screenratio=%f screenht=8
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.25 g2num=0.25
-       ''' % (2*par['ratio']) )
+Flow('weprall','wepr1 wepr2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weprall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
 
 Flow('wprall','wepr1 wepr2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wprall',
-       '''
-       grey title="" wantaxis=y screenratio=%f screenht=10
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.1 g2num=0.1
-       ''' % (3*par['ratio']) )
+Plot('wprall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
 
 #
 #
@@ -773,21 +773,21 @@ for i in range(2):
 #         ''' % (i,par['kt'],par['ot'],par['kt'])
 #         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
 
-Flow(  'weptall','wept1 wept2','cat axis=1 space=n ${SOURCES[1]}')
-Result('weptall',
-       '''
-       grey title="Vector components" wantaxis=y screenratio=%f screenht=8
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.25 g2num=0.25
-       ''' % (2*par['ratio']) )
+Flow('weptall','wept1 wept2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weptall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
 
 Flow('wptall','wept1 wept2','cat axis=1 space=n ${SOURCES[1]}')
-Result('wptall',
-       '''
-       grey title="" wantaxis=y screenratio=%f screenht=10
-       gainpanel=a pclip=99
-       grid1=y grid2=y g1num=0.1 g2num=0.1
-       ''' % (3*par['ratio']) )
+Plot('wptall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
 
 #
 #
@@ -1295,7 +1295,7 @@ for i in range(5):
 	# sum terms
 	Flow('full_Integrand_bot_'+str(i+2),['full_pAS_vB0_bott_'+str(i+2),'full_vAS_pB0_bott_'+str(i+2)],'add ${SOURCES[1]} mode=a scale=1,1')
 
-	Result('full_full_Integrand_bot_'+str(i+2),
+	Result('full_Integrand_bot_'+str(i+2),
 	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))

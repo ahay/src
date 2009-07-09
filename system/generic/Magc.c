@@ -1,9 +1,4 @@
-/* Automatic gain control.
-
-Takes: rect1=125 rect2=1 ...
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Automatic gain control. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -45,6 +40,7 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]= i? 1: 125;
+        /*( rect#=(125,1,1,...) smoothing radius on #-th axis )*/ 
 	if (rect[i] > 1) dim1 = i;
     }
 
