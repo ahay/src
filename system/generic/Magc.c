@@ -16,8 +16,13 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <math.h>
 
+/* Uses smoothing with triangle filtering as described in the "Smoothing
+   with a triangle" section in the "Z-plane, causality and feedback" chapter
+   of EARTH SOUNDINGS ANALYSIS: Processing versus Inversion (PVI) by Jon
+   Claerbout, Blackwell, London 1992 */
+
+#include <math.h>
 #include <rsf.h>
 
 int main (int argc, char* argv[]) 
