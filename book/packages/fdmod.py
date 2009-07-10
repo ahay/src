@@ -70,13 +70,14 @@ def param(par):
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     # parallel2=n
-    if(not par.has_key('nq1')): par['nq1']=par['nz']
-    if(not par.has_key('oq1')): par['oq1']=par['oz']
-    if(not par.has_key('dq1')): par['dq1']=par['dz']
+    
+    if(not par.has_key('nqz')): par['nqz']=par['nz']
+    if(not par.has_key('oqz')): par['oqz']=par['oz']
+    if(not par.has_key('dqz')): par['dqz']=par['dz']
 
-    if(not par.has_key('nq2')): par['nq2']=par['nx']
-    if(not par.has_key('oq2')): par['oq2']=par['ox']
-    if(not par.has_key('dq2')): par['dq2']=par['dx']
+    if(not par.has_key('nqx')): par['nqx']=par['nx']
+    if(not par.has_key('oqx')): par['oqx']=par['ox']
+    if(not par.has_key('dqx')): par['dqx']=par['dx']
     
     par['labelattr']=' '+par['labelattr']+' '
     
