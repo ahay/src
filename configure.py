@@ -196,7 +196,7 @@ def identify_platform(context):
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
             elif name[-7:] == 'generic':
                 plat['distro'] = 'ubuntu'
-	    elif dist()[0] == 'SuSE':
+            elif dist()[0] == 'SuSE':
                 plat['distro'] = 'suse'
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
@@ -268,14 +268,22 @@ def cc(context):
             context.Result(res)
             if not res:
                 context.env['CCFLAGS'] = oldflag
-	# if Mac OS X and fink installed, update CPPPATH and LIBPATH
-	if plat['OS'] == 'darwin' and os.path.isdir('/sw'):
-	    context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                                     ['/sw/include',]
-	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                                     ['/sw/lib',]
+
+        # Mac OS X include path, library path, and link flags
+        if plat['OS'] == 'darwin':
             context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
-                                     ' -framework Accelerate'
+                                       ' -framework Accelerate'
+            if os.path.isdir('/sw'):    # paths for Fink
+                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                                         ['/sw/include',]
+                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                                         ['/sw/lib',]
+            if os.path.isdir('/opt'):   # paths for MacPorts
+                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                                         ['/opt/local/include',]
+                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                                         ['/opt/local/lib',]
+
     elif plat['OS'] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
@@ -547,16 +555,16 @@ def ppm(context):
     return 0;
     }\n'''
     for ppm in [context.env.get('PPM','netpbm'),'netpbm.10']:
-	LIBS.append(ppm)
-	res = context.TryLink(text,'.c')
-	
-	if res:
-	    context.Result(res)
-	    context.env['PPM'] = ppm
+        LIBS.append(ppm)
+        res = context.TryLink(text,'.c')
+
+        if res:
+            context.Result(res)
+            context.env['PPM'] = ppm
             context.env['PPMPATH'] = ppmpath    
-	    break
-	else:
-	    LIBS.pop()
+            break
+        else:
+            LIBS.pop()
 
     if res:
         LIBS.pop()
@@ -583,7 +591,7 @@ def tiff(context):
     tiff = context.env.get('TIFF','tiff')
     LIBS.append(tiff)
     res = context.TryLink(text,'.c')
-	
+
     if res:
         context.Result(res)
         context.env['TIFF'] = tiff   
@@ -616,7 +624,7 @@ def gd(context):
     gd = context.env.get('GD','gd')
     LIBS.append(gd)
     res = context.TryLink(text,'.c')
-	
+
     if res:
         context.Result(res)
         context.env['GD'] = gd
@@ -729,7 +737,7 @@ def cairo(context):
     cairo = context.env.get('CAIRO','cairo')
     LIBS.append(cairo)
     res = context.TryLink(text,'.c')
-	
+
     if res:
         context.Result(res)
         context.env['CAIROPNG'] = cairo
@@ -1491,7 +1499,7 @@ def Debug():
     opts.Update(env)
     env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
     if  env['PLATFORM'] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+        env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env.SConsignFile(None)
     env.Append(BUILDERS={'Include':Header,
