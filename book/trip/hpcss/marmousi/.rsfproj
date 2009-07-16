@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwave', 'sfgrey']
-data=['data/marm/marmvel.hh']
-size=  571274912
