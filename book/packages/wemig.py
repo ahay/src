@@ -32,13 +32,27 @@ def slowness(slow,velo,par):
 
 # WR: forward in time
 def fWRwem(data,wfld,slow,par):
-    zomig.Cwfone3(wfld+'_tmp',data,slow,par)
-    Flow(wfld,wfld+'_tmp','window | transp')
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=y twoway=n %s slo=${SOURCES[1]} |
+         window |
+         transp
+         ''' % zomig.param(par))
+
+#    zomig.Cwfone3(wfld+'_tmp',data,slow,par)
+#    Flow(wfld,wfld+'_tmp','window | transp')
 
 # WR: backward in time
 def bWRwem(data,wfld,slow,par):
-    zomig.Awfone3(wfld+'_tmp',data,slow,par)
-    Flow(wfld,wfld+'_tmp','window | transp')
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=n twoway=n %s slo=${SOURCES[1]} |
+         window |
+         transp
+         ''' % zomig.param(par))
+
+#    zomig.Awfone3(wfld+'_tmp',data,slow,par)
+#    Flow(wfld,wfld+'_tmp','window | transp')
 
 # ------------------------------------------------------------
 # RTM
