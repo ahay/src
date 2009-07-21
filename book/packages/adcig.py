@@ -157,7 +157,7 @@ def egrey(custom,par):
     screenratio=%g screenht=%g
     point1=%g point2=%g
     %s
-    ''' % ( par['nhz'], par['nhx'], par['nht']/2,
+    ''' % ( par['nhz'], par['nhx'], par['nht'],
             par['uz'],
             par['ux'],
             par['ut'],
@@ -177,7 +177,7 @@ def sgrey(custom,par):
     screenratio=%g screenht=%g
     point1=%g point2=%g
     %s
-    ''' % ( par['nz']/2, par['nhx'], par['nht']/2,
+    ''' % ( par['nz']/2, par['nhx'], par['nht'],
             par['uz'],
             par['ux'],
             par['ut'],

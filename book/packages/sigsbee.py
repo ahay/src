@@ -142,6 +142,23 @@ def getstrvel(velo,par):
                 ))
 
 # ------------------------------------------------------------
+# replace bottom salt and pad with sediment velocity
+def replace(vpad,velo,par):
+
+    # padding in z
+    par['nreplace']=21
+    Flow(velo+'_pad',velo,
+         '''
+         window n1=1 f1=%d | 
+         spray axis=1 n=%d |
+         smooth rect2=250 repeat=5
+         ''' % (par['nz']-par['nreplace'],par['nreplace']+par['nzpad']) )
+    
+    Flow(velo+'_sed',velo,'window n1=%d' % (par['nz']-par['nreplace']) )
+    
+    Flow(vpad,[velo+'_sed',velo+'_pad'],'cat axis=1 ${SOURCES[1]}')
+
+# ------------------------------------------------------------
 def getrefl(refl,par):
 
     reffile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'
