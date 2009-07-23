@@ -57,9 +57,7 @@ int main (int argc, char *argv[])
     fslice data=NULL;
     fslice wfld=NULL;
 
-#ifdef _OPENMP
     int ompnth;
-#endif
 
     wexcub3d cub; /* wavefield hypercube */
     wextap3d tap; /* tapering */
@@ -72,10 +70,12 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
-    
+
     /* OMP parameters */
 #ifdef _OPENMP
     ompnth=omp_init();
+#else
+    ompnth=1;
 #endif
     
     /* default mode is migration/modeling */

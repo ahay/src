@@ -137,9 +137,11 @@ void wex(wexop3d weop,
     shared(data,wfld,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<cub->aw.n; iw++) {
-	ompith = omp_get_thread_num();
 #ifdef _OPENMP
+	ompith = omp_get_thread_num();
 #pragma omp critical
+#else
+        ompith = 0;
 #endif
 	{
 	    if(cub->verb) sf_warning ("(ith=%2d) ... <iw=%3d of %3d>",
