@@ -18,6 +18,7 @@ boxfilter
 awefd lwefd
 awefd2d awefd3d ewefd2d ewefd3d
 anifd2d
+wex
 '''
 
 try:  # distributed version

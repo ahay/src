@@ -1,6 +1,29 @@
 from rsfproj import *
 import spmig, sgmig, zomig,fdmod
 
+def param(par):
+    p  = ' '
+    p = p + ' --readwrite=y'
+    if(par.has_key('verb')):
+        p = p + ' verb='  +     par['verb']
+    if(par.has_key('nrmax')):
+        p = p + ' nrmax=' + str(par['nrmax'])
+    if(par.has_key('dtmax')):
+        p = p + ' dtmax=' + str(par['dtmax'])
+    if(par.has_key('eps')):
+        p = p + ' eps='   + str(par['eps'])
+    if(par.has_key('tmx')):
+        p = p + ' tmx='   + str(par['tmx'])
+    if(par.has_key('tmy')):
+        p = p + ' tmy='   + str(par['tmy'])
+    if(par.has_key('pmx')):
+        p = p + ' pmx='   + str(par['pmx'])
+    if(par.has_key('pmy')):
+        p = p + ' pmy='   + str(par['pmy'])
+    if(par.has_key('misc')):
+        p = p + ' '       +     par['misc']
+    p = p + ' '
+    return p
 
 # ------------------------------------------------------------
 def wempar(par):
@@ -34,25 +57,19 @@ def slowness(slow,velo,par):
 def fWRwem(data,wfld,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig3 mode=w inv=n causal=y twoway=n %s slo=${SOURCES[1]} |
+         wex causal=y %s slo=${SOURCES[1]} |
          window |
          transp
-         ''' % zomig.param(par))
-
-#    zomig.Cwfone3(wfld+'_tmp',data,slow,par)
-#    Flow(wfld,wfld+'_tmp','window | transp')
+         ''' % param(par))
 
 # WR: backward in time
 def bWRwem(data,wfld,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig3 mode=w inv=n causal=n twoway=n %s slo=${SOURCES[1]} |
+         wex causal=n %s slo=${SOURCES[1]} |
          window |
          transp
-         ''' % zomig.param(par))
-
-#    zomig.Awfone3(wfld+'_tmp',data,slow,par)
-#    Flow(wfld,wfld+'_tmp','window | transp')
+         ''' % param(par))
 
 # ------------------------------------------------------------
 # RTM
