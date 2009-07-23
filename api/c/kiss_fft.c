@@ -227,38 +227,44 @@ static void kf_bfly_generic(
     kiss_fft_cpx t;
     int Norig = st->nfft;
 
-    CHECKBUF(scratchbuf,nscratchbuf,p);
+    /* PCS 7/22/2009 */
+    kiss_fft_cpx *buf=NULL;
+    buf  = (kiss_fft_cpx*)KISS_FFT_MALLOC(sizeof(kiss_fft_cpx)*(p));
+    /*    CHECKBUF(scratchbuf,nscratchbuf,p);*/
 
     for ( u=0; u<m; ++u ) {
         k=u;
         for ( q1=0 ; q1<p ; ++q1 ) {
-            scratchbuf[q1] = Fout[ k  ];
-            C_FIXDIV(scratchbuf[q1],p);
+            buf[q1] = Fout[ k  ];
+            C_FIXDIV(buf[q1],p);
             k += m;
         }
 
         k=u;
         for ( q1=0 ; q1<p ; ++q1 ) {
             int twidx=0;
-            Fout[ k ] = scratchbuf[0];
+            Fout[ k ] = buf[0];
             for (q=1;q<p;++q ) {
                 twidx += fstride * k;
                 if (twidx>=Norig) twidx-=Norig;
-                C_MUL(t,scratchbuf[q] , twiddles[twidx] );
+                C_MUL(t,buf[q] , twiddles[twidx] );
                 C_ADDTO( Fout[ k ] ,t);
             }
             k += m;
         }
     }
+
+    /* PCS 7/22/2009 */
+    free(buf);
 }
 
 /*------------------------------------------------------------*/
 static void kf_work(
-        kiss_fft_cpx * Fout,
+              kiss_fft_cpx * Fout,
         const kiss_fft_cpx * f,
         const size_t fstride,
-        int in_stride,
-        int * factors,
+              int in_stride,
+              int * factors,
         const kiss_fft_cfg st
         )
 {
@@ -358,7 +364,10 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
 }
 
 /*------------------------------------------------------------*/
-void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
+void kiss_fft_stride(      kiss_fft_cfg st,
+		     const kiss_fft_cpx *fin,
+			   kiss_fft_cpx *fout,
+			   int in_stride)
 {
     if (fin == fout) {
         CHECKBUF(tmpbuf,ntmpbuf,st->nfft);
@@ -370,7 +379,9 @@ void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,
 }
 
 /*------------------------------------------------------------*/
-void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+void kiss_fft(      kiss_fft_cfg cfg,
+	      const kiss_fft_cpx *fin,
+		    kiss_fft_cpx *fout)
 {
     kiss_fft_stride(cfg,fin,fout,1);
 }
