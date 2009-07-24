@@ -140,17 +140,15 @@ void wex(wexop3d weop,
 #ifdef _OPENMP
 	ompith = omp_get_thread_num();
 #pragma omp critical
-#else
-        ompith = 0;
 #endif
 	{
 	    if(cub->verb) sf_warning ("(ith=%2d) ... <iw=%3d of %3d>",
 				      ompith,iw+1,cub->aw.n);
-	    w = sf_cmplx( cub->eps*cub->aw.d, wexsign * (cub->aw.o+iw*cub->aw.d) );
 	    
 	    /* read wavefield */
 	    fslice_get(data,iw,weop->ww[ompith][0]);
 	}
+	    w = sf_cmplx( cub->eps*cub->aw.d, wexsign * (cub->aw.o+iw*cub->aw.d) );
 
 	    /* store wavefield */
 	    wextap(weop->ww[ompith],tap);
