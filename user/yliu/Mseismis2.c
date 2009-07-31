@@ -213,6 +213,9 @@ int main(int argc, char* argv[])
 	    for (ibreg=0; ibreg < nbreg; ibreg++) {
 		if (verb)
 		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
+		for (i1=0; i1 < n12; i1++) {
+		    mm[i1]= 0.;
+		}		
 		for (iter=0; iter < niter; iter++) {
 		if (verb)
 		    sf_warning("Shrinkage iteration %d of %d",iter+1,niter);

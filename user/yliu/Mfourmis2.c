@@ -374,6 +374,12 @@ int main(int argc, char* argv[])
 	    for (ibreg=0; ibreg < nbreg; ibreg++) {
 		if (verb)
 		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
+		for (i1=0; i1 < nw; i1++) {
+		    for (i2=0; i2 < nk; i2++) {
+			mm[i2][i1].r = 0.;
+			mm[i2][i1].i = 0.;
+		    }
+		}
 		for (iter=0; iter < niter; iter++) {
 		    if (verb)
 			sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
@@ -513,9 +519,13 @@ int main(int argc, char* argv[])
 		}
 		kiss_fftri(itfft,fft[i2],d);
 		for (i1=0; i1 < n1; i1++) {
-		    dd[i2*n1+i1] = d[i1]*wt;
+		    dd2[i2*n1+i1] = d[i1]*wt;
 		}
 	    } /* Inverse 2-D FFT end */
+	    for (i1=0; i1 < n12; i1++) {
+		if (!known[i1]) dd[i1] = dd2[i1];
+	    }
+	    
 	    break;
 
 	case 'c':
