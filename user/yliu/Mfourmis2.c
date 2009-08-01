@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, nfft, nw, nk, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, intk, intf, nk0, nf0; 
-    float dw, dk, k0, f0, d1, o1, d2, o2, wt, wk, shift, *dd, *dd2, *d, *dd3, *m=NULL, perc1, perc2, parf, parw, orderf, orderw;
+    float dw, dk, k0, f0, d1, o1, d2, o2, wt, wk, shift, *dd, *dd2, *d, *dd3, *m=NULL, perc1, perc2, parf, parw, orderf, orderw, ordert, iperc;
     char *oper;
     bool verb,  *known;
     sf_complex *mt;
@@ -93,8 +93,9 @@ int main(int argc, char* argv[])
 	case 't':
 	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
 	    /* percentage for output in model space shrinkage*/
-	    
-	    sf_sharpen_init(nw*nk,perc1);
+
+	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
+	    /* Curve order for thresholding parameter, default is linear */
 	    break;
 	case 'b':
 	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
@@ -161,7 +162,12 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n12; i1++) {
 		dd3[i1] = dd[i1];
 	    }
-
+	    for (i1=0; i1 < nw; i1++) {
+		for (i2=0; i2 < nk; i2++) {
+		    mm[i2][i1].r = 0.;
+		    mm[i2][i1].i = 0.;
+		}
+	    }
 	    /* Thresholding for shaping */
 	    for (iter=0; iter < niter-1; iter++) {
 		if (verb)
@@ -236,8 +242,14 @@ int main(int argc, char* argv[])
 			mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
 		    }
 		}
-
+		if(ordert==0.) {
+		    iperc = perc1;
+		} else {
+		    iperc = perc1-(perc1*pow(iter,ordert)*1.)/pow(niter,ordert);
+		    if(iperc<0.) iperc=0.;
+		}
 		/* Thresholding */
+		sf_sharpen_init(nw*nk,iperc);
 		sf_csharpen(mt);
 		sf_cweight_apply(nw*nk, mt);
 
