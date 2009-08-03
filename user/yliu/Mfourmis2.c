@@ -89,6 +89,12 @@ int main(int argc, char* argv[])
     intf = 0;
     intk = 0;
 
+    if (NULL != sf_getstring ("mask")) {
+	mask = sf_input("mask");
+    } else {
+	mask = NULL;
+    }
+
     switch (oper[0]) {
 	case 't':
 	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
