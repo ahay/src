@@ -21,15 +21,15 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nfft, nw, nk, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, intk, intf, nk0, nf0; 
-    float dw, dk, k0, f0, d1, o1, d2, o2, wt, wk, shift, *dd, *dd2, *d, *dd3, *m=NULL, perc1, perc2, parf, parw, orderf, orderw, ordert, iperc;
+    int i, niter, nfft, nw, nk, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, intk, intf, nk0, nf0, nerr; 
+    float dw, dk, k0, f0, d1, o1, d2, o2, wt, wk, shift, *dd, *dd2, *d, *dd3, *m, perc1, perc2, parf, parw, orderf, orderw, ordert, iperc, ddif0, ddif, *err=NULL;
     char *oper;
-    bool verb,  *known;
+    bool verb, *known, error;
     sf_complex *mt;
     kiss_fft_cpx **mm, ce, **fft, *ctrace, *ctrace2;
     kiss_fftr_cfg tfft, itfft;
     kiss_fft_cfg  xfft, ixfft;
-    sf_file in, out, mask=NULL;
+    sf_file in, out, mask=NULL, res=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
     nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
+    nerr = 1;
 
     /* determine wavenumber sampling (for complex FFT) */
     nk = kiss_fft_next_fast_size(n2*2);
@@ -68,9 +69,13 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
+    if (!sf_getbool("error",&error)) error = false;
+    /* error verbosity flag */
+
     dd = sf_floatalloc(n12);
     dd2 = sf_floatalloc(n12);
     dd3 = sf_floatalloc(n12);
+
     d = sf_floatalloc(nfft);
     ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
     ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
@@ -95,13 +100,21 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
+    if (error && (NULL != sf_getstring ("res"))) {
+	res = sf_output("res");
+    } else {
+	res = NULL;
+    }
+    
     switch (oper[0]) {
 	case 't':
 	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
 	    /* percentage for output in model space shrinkage*/
-
+ 
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
+	    sf_sharpen_init(nw*nk,perc1);
+	    
 	    break;
 	case 'b':
 	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
@@ -146,7 +159,21 @@ int main(int argc, char* argv[])
 
     wt = 1.0/nfft; /* FFT time scaling */ 
     wk = 1.0/nk;   /* FFT distance scaling */ 
-
+    if (error && (NULL != sf_getstring ("res"))) {
+	switch (oper[0]) {
+	    case 't':	
+		nerr = niter;
+		break;
+	    case 'b':
+		nerr = nbreg;
+	    break;
+	}
+	err = sf_floatalloc(nerr);
+	sf_putint(res,"n1",nerr);
+	sf_putint(res,"d1",1);
+	sf_putint(res,"o1",0);	
+	sf_putint(res,"n2",1);
+    }
     for (i3=0; i3 < n3; i3++) {
 	if (verb) sf_warning("slice %d of %d",i3+1,n3);
 	sf_floatread(dd,n12,in);
@@ -161,13 +188,11 @@ int main(int argc, char* argv[])
 		known[i] = (bool) (dd[i] != 0.);
 	    }
 	}
-
+	ddif0 = 0.;
+	ddif = 0.;
         switch (oper[0]) {
 	case 't':
 
-	    for (i1=0; i1 < n12; i1++) {
-		dd3[i1] = dd[i1];
-	    }
 	    for (i1=0; i1 < nw; i1++) {
 		for (i2=0; i2 < nk; i2++) {
 		    mm[i2][i1].r = 0.;
@@ -175,7 +200,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    /* Thresholding for shaping */
-	    for (iter=0; iter < niter-1; iter++) {
+	    for (iter=0; iter < niter; iter++) {
 		if (verb)
 		    sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
 
@@ -251,13 +276,14 @@ int main(int argc, char* argv[])
 		if(ordert==0.) {
 		    iperc = perc1;
 		} else {
-		    iperc = perc1-(perc1*pow(iter,ordert)*1.)/pow(niter,ordert);
+		    iperc = perc1-((perc1-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
 		    if(iperc<0.) iperc=0.;
 		}
 		/* Thresholding */
 		sf_sharpen_init(nw*nk,iperc);
 		sf_csharpen(mt);
 		sf_cweight_apply(nw*nk, mt);
+		sf_sharpen_close();
 
 		for (i2=0; i2 < nk; i2++) {
 		    for (i1=0; i1 < nw; i1++) {
@@ -265,11 +291,44 @@ int main(int argc, char* argv[])
 			mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
 		    }
 		}
+
+		if (error) {
+		    /* Inverse 2-D FFT */
+		    for (i1=0; i1 < nw; i1++) {
+			/* Fourier transform k to x */
+			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			
+			for (i2=0; i2 < nk; i2++) {
+			    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			}
+		    }
+		    for (i2=0; i2 < n2; i2++) {
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = +2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+			kiss_fftri(itfft,fft[i2],d);
+			for (i1=0; i1 < n1; i1++) {
+			    dd3[i2*n1+i1] = d[i1]*wt;
+			}
+		    } /* Inverse 2-D FFT end */
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) dd3[i1]=dd[i1];
+		    }		    
+
+		    ddif0 = cblas_snrm2(n12, dd3, 1);
+		    err[iter] = ddif0 - ddif;
+		    ddif = ddif0;
+		    
+		    sf_warning("Total iteration %d derr: %f",iter,err[iter]);
+		}
+		
 	    }
 
-	    if (verb)
-		sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
-	    
 	    /* Inverse 2-D FFT */
 	    for (i1=0; i1 < nw; i1++) {
 		/* Fourier transform k to x */
@@ -298,8 +357,6 @@ int main(int argc, char* argv[])
 		if (known[i1]) dd2[i1]=dd[i1];
 	    }
 
-	    sf_sharpen_init(nw*nk,perc2);
-	    
 	    /* Forward 2-D FFT */
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
@@ -342,8 +399,10 @@ int main(int argc, char* argv[])
 		    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
 		}
 	    }
+	    sf_sharpen_init(nw*nk,perc2);
 	    sf_csharpen(mt);
-	    sf_cweight_apply(nw*nk, mt);	    
+	    sf_cweight_apply(nw*nk, mt);
+	    sf_sharpen_close();
 
 	    for (i2=0; i2 < nk; i2++) {
 		for (i1=0; i1 < nw; i1++) {
@@ -373,12 +432,12 @@ int main(int argc, char* argv[])
 		/* Fourier transform f to t */
 		kiss_fftri(itfft,fft[i2],d);
 		for (i1=0; i1 < n1; i1++) {
-		    dd[i2*n1+i1] = d[i1]*wt;
+		    dd2[i2*n1+i1] = d[i1]*wt;
 		}
 	    } /* Inverse 2-D FFT end */	 
 
 	    for (i1=0; i1 < n12; i1++) {
-		if (known[i1]) dd[i1]=dd3[i1];
+		if (!known[i1]) dd[i1]=dd2[i1];
 	    }
 
 	    break;
@@ -390,6 +449,7 @@ int main(int argc, char* argv[])
 
 	    /* Bregman iteration */
 	    for (ibreg=0; ibreg < nbreg; ibreg++) {
+
 		if (verb)
 		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
 		for (i1=0; i1 < nw; i1++) {
@@ -471,18 +531,24 @@ int main(int argc, char* argv[])
 			    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
 			}
 		    }
-		    
-		    if (iter != 0) {
-			/* Thresholding */
-			sf_csharpen(mt);
-			sf_cweight_apply(nw*nk, mt);
+
+		    if(ordert==0.) {
+			iperc = perc1;
+		    } else {
+			iperc = perc1-((perc1-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			if(iperc<0.) iperc=0.;
 		    }
+		    /* Thresholding */
+		    sf_csharpen(mt);
+		    sf_cweight_apply(nw*nk, mt);
+		    
 		    for (i2=0; i2 < nk; i2++) {
 			for (i1=0; i1 < nw; i1++) {
 			    mm[i2][i1].r = crealf(mt[i2*nw+i1]);
 			    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
 			}
 		    }
+    
 		}
 
 		/* Inverse 2-D FFT */
@@ -514,6 +580,40 @@ int main(int argc, char* argv[])
 		}
 		for (i1=0; i1 < n12; i1++) {
 		    dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
+		}
+		if (error) {
+		    
+		    for (i1=0; i1 < nw; i1++) {
+			
+			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			
+			for (i2=0; i2 < nk; i2++) {
+			    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			}
+		    }
+		    for (i2=0; i2 < n2; i2++) {
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = +2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+			kiss_fftri(itfft,fft[i2],d);
+			for (i1=0; i1 < n1; i1++) {
+			    dd3[i2*n1+i1] = d[i1]*wt;
+			}
+		    } 
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) dd3[i1] = dd[i1];
+		    }		    
+		    
+		    ddif0 = cblas_snrm2(n12, dd3, 1);
+		    err[ibreg] = ddif0 - ddif;
+		    ddif = ddif0;
+		    
+		    sf_warning("Total iteration %d derr: %f",ibreg,err[ibreg]);
 		}
 	    }
 
@@ -696,14 +796,14 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n12; i1++) {
 		if (known[i1]) dd[i1]=dd3[i1];
 	    }
-   
-
 	    break;
-
-
 	} 
-	sf_cgstep_close();
+
 	sf_floatwrite (dd,n12,out);
+	
+	if (error && (NULL != sf_getstring ("res"))) {
+	    sf_floatwrite (err,nerr,res);
+	}
     }
        
     exit(0);
