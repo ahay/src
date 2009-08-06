@@ -191,276 +191,18 @@ int main(int argc, char* argv[])
 	ddif0 = 0.;
 	ddif = 0.;
         switch (oper[0]) {
-	case 't':
-
-	    for (i1=0; i1 < nw; i1++) {
-		for (i2=0; i2 < nk; i2++) {
-		    mm[i2][i1].r = 0.;
-		    mm[i2][i1].i = 0.;
-		}
-	    }
-	    /* Thresholding for shaping */
-	    for (iter=0; iter < niter; iter++) {
-		if (verb)
-		    sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
-
-		/* Inverse 2-D FFT */
-		for (i1=0; i1 < nw; i1++) {
-		    /* Fourier transform k to x */
-		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-		    for (i2=0; i2 < nk; i2++) {
-			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-		    }
-		}
-		for (i2=0; i2 < n2; i2++) {
-		    if (0. != o1) {
-			for (i1=0; i1 < nw; i1++) {
-			    shift = +2.0*SF_PI*i1*dw*o1;
-			    ce.r = cosf(shift);
-			    ce.i = sinf(shift);
-			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-			}
-		    }
-		    kiss_fftri(itfft,fft[i2],d);
-		    for (i1=0; i1 < n1; i1++) {
-			dd2[i2*n1+i1] = d[i1]*wt;
-		    }
-		} /* Inverse 2-D FFT end */
-
-		for (i1=0; i1 < n12; i1++) {
-		    if (known[i1]) dd2[i1]=dd[i1];
-		}
-
-		/* Forward 2-D FFT */
-		for (i2=0; i2 < n2; i2++) {
-		    for (i1=0; i1 < n1; i1++) {
-			d[i1] = dd2[i2*n1+i1];
-		    }
-		    for (i1=n1; i1 < nfft; i1++) {
-			d[i1] = 0.;
-		    }		    
-		    kiss_fftr (tfft,d,ctrace);
-	       
-		    for (i1=0; i1 < nw; i1++) {
-			fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
-		    }
-		    if (0. != o1) {
-			for (i1=0; i1 < nw; i1++) {
-			    shift = -2.0*SF_PI*i1*dw*o1;
-			    ce.r = cosf(shift);
-			    ce.i = sinf(shift);
-			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-			}
-		    }
-		}
-
-		for (i2=n2; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			fft[i2][i1].r = 0.;
-			fft[i2][i1].i = 0.;
-		    }
-		}
-
-		for (i1=0; i1 < nw; i1++) {
-		    /* Fourier transform x to k */
-		    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
-		    for (i2=0; i2 < nk; i2++) {
-			mm[i2][i1] = ctrace2[i2];
-		    }
-		} /* Forward 2-D FFT end */
-		for (i2=0; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
-		    }
-		}
-		if(ordert==0.) {
-		    iperc = perc1;
-		} else {
-		    iperc = perc1-((perc1-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
-		    if(iperc<0.) iperc=0.;
-		}
-		/* Thresholding */
-		sf_sharpen_init(nw*nk,iperc);
-		sf_csharpen(mt);
-		sf_cweight_apply(nw*nk, mt);
-		sf_sharpen_close();
-
-		for (i2=0; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			mm[i2][i1].r = crealf(mt[i2*nw+i1]);
-			mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
-		    }
-		}
-
-		if (error) {
-		    /* Inverse 2-D FFT */
-		    for (i1=0; i1 < nw; i1++) {
-			/* Fourier transform k to x */
-			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-			
-			for (i2=0; i2 < nk; i2++) {
-			    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-			}
-		    }
-		    for (i2=0; i2 < n2; i2++) {
-			if (0. != o1) {
-			    for (i1=0; i1 < nw; i1++) {
-				shift = +2.0*SF_PI*i1*dw*o1;
-				ce.r = cosf(shift);
-				ce.i = sinf(shift);
-				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-			    }
-			}
-			kiss_fftri(itfft,fft[i2],d);
-			for (i1=0; i1 < n1; i1++) {
-			    dd3[i2*n1+i1] = d[i1]*wt;
-			}
-		    } /* Inverse 2-D FFT end */
-		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd3[i1]=dd[i1];
-		    }		    
-
-		    ddif0 = cblas_snrm2(n12, dd3, 1);
-		    err[iter] = ddif0 - ddif;
-		    ddif = ddif0;
-		    
-		    sf_warning("Total iteration %d derr: %f",iter,err[iter]);
-		}
+	    case 't':
 		
-	    }
-
-	    /* Inverse 2-D FFT */
-	    for (i1=0; i1 < nw; i1++) {
-		/* Fourier transform k to x */
-		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-		
-		for (i2=0; i2 < nk; i2++) {
-		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-		}
-	    }
-	    for (i2=0; i2 < n2; i2++) {
-		if (0. != o1) {
-		    for (i1=0; i1 < nw; i1++) {
-			shift = +2.0*SF_PI*i1*dw*o1;
-			ce.r = cosf(shift);
-			ce.i = sinf(shift);
-			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-		    }
-		}
-		kiss_fftri(itfft,fft[i2],d);
-		for (i1=0; i1 < n1; i1++) {
-		    dd2[i2*n1+i1] = d[i1]*wt;
-		}
-	    } /* Inverse 2-D FFT end */
-	    
-	    for (i1=0; i1 < n12; i1++) {
-		if (known[i1]) dd2[i1]=dd[i1];
-	    }
-
-	    /* Forward 2-D FFT */
-	    for (i2=0; i2 < n2; i2++) {
-		for (i1=0; i1 < n1; i1++) {
-		    d[i1] = dd2[i2*n1+i1];
-		}
-		for (i1=n1; i1 < nfft; i1++) {
-		    d[i1] = 0.;
-		}		    
-		kiss_fftr (tfft,d,ctrace);
-		
-		for (i1=0; i1 < nw; i1++) {
-		    fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
-		}
-		if (0. != o1) {
-		    for (i1=0; i1 < nw; i1++) {
-			shift = -2.0*SF_PI*i1*dw*o1;
-			ce.r = cosf(shift);
-			ce.i = sinf(shift);
-			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-		    }
-		}
-	    }
-	    for (i2=n2; i2 < nk; i2++) {
-		for (i1=0; i1 < nw; i1++) {
-		    fft[i2][i1].r = 0.;
-		    fft[i2][i1].i = 0.;
-		}
-	    }
-
-	    for (i1=0; i1 < nw; i1++) {
-		/* Fourier transform x to k */
-		kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
-		for (i2=0; i2 < nk; i2++) {
-		    mm[i2][i1] = ctrace2[i2];
-		}
-	    } /* Forward 2-D FFT end */
-	
-	    for (i2=0; i2 < nk; i2++) {
-		for (i1=0; i1 < nw; i1++) {
-		    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
-		}
-	    }
-	    sf_sharpen_init(nw*nk,perc2);
-	    sf_csharpen(mt);
-	    sf_cweight_apply(nw*nk, mt);
-	    sf_sharpen_close();
-
-	    for (i2=0; i2 < nk; i2++) {
-		for (i1=0; i1 < nw; i1++) {
-		    mm[i2][i1].r = crealf(mt[i2*nw+i1]);
-		    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
-		}
-	    }	    
-	    /* Inverse 2-D FFT */
-	    for (i1=0; i1 < nw; i1++) {
-		/* Fourier transform k to x */
-		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-		
-		for (i2=0; i2< nk; i2++) {
-		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-		}
-	    }
-
-	    for (i2=0; i2 < n2; i2++) {
-		if (0. != o1) {
-		    for (i1=0; i1 < nw; i1++) {
-			shift = +2.0*SF_PI*i1*dw*o1;
-			ce.r = cosf(shift);
-			ce.i = sinf(shift);
-			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-		    }
-		}
-		/* Fourier transform f to t */
-		kiss_fftri(itfft,fft[i2],d);
-		for (i1=0; i1 < n1; i1++) {
-		    dd2[i2*n1+i1] = d[i1]*wt;
-		}
-	    } /* Inverse 2-D FFT end */	 
-
-	    for (i1=0; i1 < n12; i1++) {
-		if (!known[i1]) dd[i1]=dd2[i1];
-	    }
-
-	    break;
-	case 'b':
-
-	    for (i1=0; i1 < n12; i1++) {
-		dd2[i1] = dd[i1];
-	    }
-
-	    /* Bregman iteration */
-	    for (ibreg=0; ibreg < nbreg; ibreg++) {
-
-		if (verb)
-		    sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
 		for (i1=0; i1 < nw; i1++) {
 		    for (i2=0; i2 < nk; i2++) {
 			mm[i2][i1].r = 0.;
 			mm[i2][i1].i = 0.;
 		    }
 		}
+		/* Thresholding for shaping */
 		for (iter=0; iter < niter; iter++) {
 		    if (verb)
-			sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
+			sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
 		    
 		    /* Inverse 2-D FFT */
 		    for (i1=0; i1 < nw; i1++) {
@@ -481,18 +223,18 @@ int main(int argc, char* argv[])
 			}
 			kiss_fftri(itfft,fft[i2],d);
 			for (i1=0; i1 < n1; i1++) {
-			    dd3[i2*n1+i1] = d[i1]*wt;
+			    dd2[i2*n1+i1] = d[i1]*wt;
 			}
 		    } /* Inverse 2-D FFT end */
-
+		    
 		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd3[i1]=dd2[i1];
+			if (known[i1]) dd2[i1]=dd[i1];
 		    }
-
+		    
 		    /* Forward 2-D FFT */
 		    for (i2=0; i2 < n2; i2++) {
 			for (i1=0; i1 < n1; i1++) {
-			    d[i1] = dd3[i2*n1+i1];
+			    d[i1] = dd2[i2*n1+i1];
 			}
 			for (i1=n1; i1 < nfft; i1++) {
 			    d[i1] = 0.;
@@ -531,7 +273,6 @@ int main(int argc, char* argv[])
 			    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
 			}
 		    }
-
 		    if(ordert==0.) {
 			iperc = perc1;
 		    } else {
@@ -539,8 +280,10 @@ int main(int argc, char* argv[])
 			if(iperc<0.) iperc=0.;
 		    }
 		    /* Thresholding */
+		    sf_sharpen_init(nw*nk,iperc);
 		    sf_csharpen(mt);
 		    sf_cweight_apply(nw*nk, mt);
+		    sf_sharpen_close();
 		    
 		    for (i2=0; i2 < nk; i2++) {
 			for (i1=0; i1 < nw; i1++) {
@@ -548,9 +291,44 @@ int main(int argc, char* argv[])
 			    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
 			}
 		    }
-    
+		    
+		    if (error) {
+			/* Inverse 2-D FFT */
+			for (i1=0; i1 < nw; i1++) {
+			    /* Fourier transform k to x */
+			    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			    
+			    for (i2=0; i2 < nk; i2++) {
+				fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			    }
+			}
+			for (i2=0; i2 < n2; i2++) {
+			    if (0. != o1) {
+				for (i1=0; i1 < nw; i1++) {
+				    shift = +2.0*SF_PI*i1*dw*o1;
+				    ce.r = cosf(shift);
+				    ce.i = sinf(shift);
+				    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+				}
+			    }
+			    kiss_fftri(itfft,fft[i2],d);
+			    for (i1=0; i1 < n1; i1++) {
+				dd3[i2*n1+i1] = d[i1]*wt;
+			    }
+			} /* Inverse 2-D FFT end */
+			for (i1=0; i1 < n12; i1++) {
+			    if (known[i1]) dd3[i1]=dd[i1];
+			}		    
+			
+			ddif0 = cblas_snrm2(n12, dd3, 1);
+			err[iter] = ddif0 - ddif;
+			ddif = ddif0;
+			
+			sf_warning("Total iteration %d derr: %f",iter,err[iter]);
+		    }
+		    
 		}
-
+		
 		/* Inverse 2-D FFT */
 		for (i1=0; i1 < nw; i1++) {
 		    /* Fourier transform k to x */
@@ -571,20 +349,204 @@ int main(int argc, char* argv[])
 		    }
 		    kiss_fftri(itfft,fft[i2],d);
 		    for (i1=0; i1 < n1; i1++) {
-			dd3[i2*n1+i1] = d[i1]*wt;
+			dd2[i2*n1+i1] = d[i1]*wt;
 		    }
 		} /* Inverse 2-D FFT end */
-
+		
 		for (i1=0; i1 < n12; i1++) {
-		    if (!known[i1]) dd3[i1]= 0.;
+		    if (known[i1]) dd2[i1]=dd[i1];
 		}
-		for (i1=0; i1 < n12; i1++) {
-		    dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
-		}
-		if (error) {
+		
+		/* Forward 2-D FFT */
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			d[i1] = dd2[i2*n1+i1];
+		    }
+		    for (i1=n1; i1 < nfft; i1++) {
+			d[i1] = 0.;
+		    }		    
+		    kiss_fftr (tfft,d,ctrace);
 		    
 		    for (i1=0; i1 < nw; i1++) {
+			fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+		    }
+		    if (0. != o1) {
+			for (i1=0; i1 < nw; i1++) {
+			    shift = -2.0*SF_PI*i1*dw*o1;
+			    ce.r = cosf(shift);
+			    ce.i = sinf(shift);
+			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			}
+		    }
+		}
+		for (i2=n2; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			fft[i2][i1].r = 0.;
+			fft[i2][i1].i = 0.;
+		    }
+		}
+		
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform x to k */
+		    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+		    for (i2=0; i2 < nk; i2++) {
+			mm[i2][i1] = ctrace2[i2];
+		    }
+		} /* Forward 2-D FFT end */
+		
+		for (i2=0; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+		    }
+		}
+		sf_sharpen_init(nw*nk,perc2);
+		sf_csharpen(mt);
+		sf_cweight_apply(nw*nk, mt);
+		sf_sharpen_close();
+		
+		for (i2=0; i2 < nk; i2++) {
+		    for (i1=0; i1 < nw; i1++) {
+			mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+			mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+		    }
+		}	    
+		/* Inverse 2-D FFT */
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform k to x */
+		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		    
+		    for (i2=0; i2< nk; i2++) {
+			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		    }
+		}
+		
+		for (i2=0; i2 < n2; i2++) {
+		    if (0. != o1) {
+			for (i1=0; i1 < nw; i1++) {
+			    shift = +2.0*SF_PI*i1*dw*o1;
+			    ce.r = cosf(shift);
+			    ce.i = sinf(shift);
+			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			}
+		    }
+		    /* Fourier transform f to t */
+		    kiss_fftri(itfft,fft[i2],d);
+		    for (i1=0; i1 < n1; i1++) {
+			dd2[i2*n1+i1] = d[i1]*wt;
+		    }
+		} /* Inverse 2-D FFT end */	 
+		
+		for (i1=0; i1 < n12; i1++) {
+		    if (!known[i1]) dd[i1]=dd2[i1];
+		}
+		
+		break;
+	    case 'b':
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1] = dd[i1];
+		}
+		
+		/* Bregman iteration */
+		for (ibreg=0; ibreg < nbreg; ibreg++) {
+		    
+		    if (verb)
+			sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
+		    for (i1=0; i1 < nw; i1++) {
+			for (i2=0; i2 < nk; i2++) {
+			    mm[i2][i1].r = 0.;
+			    mm[i2][i1].i = 0.;
+			}
+		    }
+		    for (iter=0; iter < niter; iter++) {
+			if (verb)
+			    sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
 			
+			/* Inverse 2-D FFT */
+			for (i1=0; i1 < nw; i1++) {
+			    /* Fourier transform k to x */
+			    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			    for (i2=0; i2 < nk; i2++) {
+				fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			    }
+			}
+			for (i2=0; i2 < n2; i2++) {
+			    if (0. != o1) {
+				for (i1=0; i1 < nw; i1++) {
+				    shift = +2.0*SF_PI*i1*dw*o1;
+				    ce.r = cosf(shift);
+				    ce.i = sinf(shift);
+				    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+				}
+			    }
+			    kiss_fftri(itfft,fft[i2],d);
+			    for (i1=0; i1 < n1; i1++) {
+				dd3[i2*n1+i1] = d[i1]*wt;
+			    }
+			} /* Inverse 2-D FFT end */
+			
+			for (i1=0; i1 < n12; i1++) {
+			    if (known[i1]) dd3[i1]=dd2[i1];
+			}
+			
+			/* Forward 2-D FFT */
+			for (i2=0; i2 < n2; i2++) {
+			    for (i1=0; i1 < n1; i1++) {
+				d[i1] = dd3[i2*n1+i1];
+			    }
+			    for (i1=n1; i1 < nfft; i1++) {
+				d[i1] = 0.;
+			    }		    
+			    kiss_fftr (tfft,d,ctrace);
+			    
+			    for (i1=0; i1 < nw; i1++) {
+				fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+			    }
+			    if (0. != o1) {
+				for (i1=0; i1 < nw; i1++) {
+				    shift = -2.0*SF_PI*i1*dw*o1;
+				    ce.r = cosf(shift);
+				    ce.i = sinf(shift);
+				    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+				}
+			    }
+			}
+			
+			for (i2=n2; i2 < nk; i2++) {
+			    for (i1=0; i1 < nw; i1++) {
+				fft[i2][i1].r = 0.;
+				fft[i2][i1].i = 0.;
+			    }
+			}
+			
+			for (i1=0; i1 < nw; i1++) {
+			    /* Fourier transform x to k */
+			    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+			    for (i2=0; i2 < nk; i2++) {
+				mm[i2][i1] = ctrace2[i2];
+			    }
+			} /* Forward 2-D FFT end */
+			for (i2=0; i2 < nk; i2++) {
+			    for (i1=0; i1 < nw; i1++) {
+				mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+			    }
+			}
+			
+			/* Thresholding */
+			sf_csharpen(mt);
+			sf_cweight_apply(nw*nk, mt);
+			
+			for (i2=0; i2 < nk; i2++) {
+			    for (i1=0; i1 < nw; i1++) {
+				mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+				mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+			    }
+			}
+		    }
+		    
+		    /* Inverse 2-D FFT */
+		    for (i1=0; i1 < nw; i1++) {
+			/* Fourier transform k to x */
 			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
 			
 			for (i2=0; i2 < nk; i2++) {
@@ -604,63 +566,55 @@ int main(int argc, char* argv[])
 			for (i1=0; i1 < n1; i1++) {
 			    dd3[i2*n1+i1] = d[i1]*wt;
 			}
-		    } 
+		    } /* Inverse 2-D FFT end */
+		    
 		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd3[i1] = dd[i1];
-		    }		    
-		    
-		    ddif0 = cblas_snrm2(n12, dd3, 1);
-		    err[ibreg] = ddif0 - ddif;
-		    ddif = ddif0;
-		    
-		    sf_warning("Total iteration %d derr: %f",ibreg,err[ibreg]);
-		}
-	    }
-
-	    /* Inverse 2-D FFT */
-	    for (i1=0; i1 < nw; i1++) {
-		/* Fourier transform k to x */
-		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-		
-		for (i2=0; i2 < nk; i2++) {
-		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-		}
-	    }
-	    for (i2=0; i2 < n2; i2++) {
-		if (0. != o1) {
-		    for (i1=0; i1 < nw; i1++) {
-			shift = +2.0*SF_PI*i1*dw*o1;
-			ce.r = cosf(shift);
-			ce.i = sinf(shift);
-			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			if (!known[i1]) dd3[i1]= 0.;
+		    }
+		    for (i1=0; i1 < n12; i1++) {
+			dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
+		    }
+		    if (error) {
+			
+			for (i1=0; i1 < nw; i1++) {
+			    
+			    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			    
+			    for (i2=0; i2 < nk; i2++) {
+				fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			    }
+			}
+			for (i2=0; i2 < n2; i2++) {
+			    if (0. != o1) {
+				for (i1=0; i1 < nw; i1++) {
+				    shift = +2.0*SF_PI*i1*dw*o1;
+				    ce.r = cosf(shift);
+				    ce.i = sinf(shift);
+				    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+				}
+			    }
+			    kiss_fftri(itfft,fft[i2],d);
+			    for (i1=0; i1 < n1; i1++) {
+				dd3[i2*n1+i1] = d[i1]*wt;
+			    }
+			} 
+			for (i1=0; i1 < n12; i1++) {
+			    if (known[i1]) dd3[i1] = dd[i1];
+			}		    
+			
+			ddif0 = cblas_snrm2(n12, dd3, 1);
+			err[ibreg] = ddif0 - ddif;
+			ddif = ddif0;
+			
+			sf_warning("Total iteration %d derr: %f",ibreg,err[ibreg]);
 		    }
 		}
-		kiss_fftri(itfft,fft[i2],d);
-		for (i1=0; i1 < n1; i1++) {
-		    dd2[i2*n1+i1] = d[i1]*wt;
-		}
-	    } /* Inverse 2-D FFT end */
-	    for (i1=0; i1 < n12; i1++) {
-		if (!known[i1]) dd[i1] = dd2[i1];
-	    }
-	    
-	    break;
-
-	case 'c':
-
-	    for (i1=0; i1 < n12; i1++) {
-		dd3[i1] = dd[i1];
-	    }
-
-	    /* Linear cutting */
-	    for (iter=0; iter < niter; iter++) {
-		if (verb)
-		    sf_warning("Model space linear cutting iteration %d of %d",iter+1,niter);
-
+		
 		/* Inverse 2-D FFT */
 		for (i1=0; i1 < nw; i1++) {
 		    /* Fourier transform k to x */
 		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		    
 		    for (i2=0; i2 < nk; i2++) {
 			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
 		    }
@@ -679,133 +633,172 @@ int main(int argc, char* argv[])
 			dd2[i2*n1+i1] = d[i1]*wt;
 		    }
 		} /* Inverse 2-D FFT end */
-
 		for (i1=0; i1 < n12; i1++) {
-		    if (known[i1]) dd2[i1]=dd[i1];
+		    if (!known[i1]) dd[i1] = dd2[i1];
 		}
-
-		/* Forward 2-D FFT */
-		for (i2=0; i2 < n2; i2++) {
-		    for (i1=0; i1 < n1; i1++) {
-			d[i1] = dd2[i2*n1+i1];
-		    }
-		    for (i1=n1; i1 < nfft; i1++) {
-			d[i1] = 0.;
-		    }		    
-		    kiss_fftr (tfft,d,ctrace);
-	       
+		
+		break;
+		
+	    case 'c':
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd3[i1] = dd[i1];
+		}
+		
+		/* Linear cutting */
+		for (iter=0; iter < niter; iter++) {
+		    if (verb)
+			sf_warning("Model space linear cutting iteration %d of %d",iter+1,niter);
+		    
+		    /* Inverse 2-D FFT */
 		    for (i1=0; i1 < nw; i1++) {
-			fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+			/* Fourier transform k to x */
+			kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+			for (i2=0; i2 < nk; i2++) {
+			    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+			}
 		    }
+		    for (i2=0; i2 < n2; i2++) {
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = +2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+			kiss_fftri(itfft,fft[i2],d);
+			for (i1=0; i1 < n1; i1++) {
+			    dd2[i2*n1+i1] = d[i1]*wt;
+			}
+		    } /* Inverse 2-D FFT end */
+		    
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) dd2[i1]=dd[i1];
+		    }
+		    
+		    /* Forward 2-D FFT */
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    d[i1] = dd2[i2*n1+i1];
+			}
+			for (i1=n1; i1 < nfft; i1++) {
+			    d[i1] = 0.;
+			}		    
+			kiss_fftr (tfft,d,ctrace);
+			
+			for (i1=0; i1 < nw; i1++) {
+			    fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+			}
+			if (0. != o1) {
+			    for (i1=0; i1 < nw; i1++) {
+				shift = -2.0*SF_PI*i1*dw*o1;
+				ce.r = cosf(shift);
+				ce.i = sinf(shift);
+				fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
+			    }
+			}
+		    }
+		    
+		    for (i2=n2; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    fft[i2][i1].r = 0.;
+			    fft[i2][i1].i = 0.;
+			}
+		    }
+		    
+		    for (i1=0; i1 < nw; i1++) {
+			/* Fourier transform x to k */
+			kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
+			for (i2=0; i2 < nk; i2++) {
+			    mm[i2][i1] = ctrace2[i2];
+			}
+		    } /* Forward 2-D FFT end */
+		    for (i2=0; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
+			}
+		    }
+		    
+		    /* Cutting */
+		    intf = (int) (nf0+powf(iter,orderf)*parf*(nw-nf0)/pow((niter-1),orderf));
+		    intk = (int) (nk0+powf(iter,orderw)*parw*(nk/2-nk0)/pow((niter-1),orderf));
+		    
+		    for (i2=0; i2 < (nk/2-intk); i2++) {
+			for (i1=0; i1 < nw; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+			    mt[i2*nw+i1] *= 0.;
+#else
+			    mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
+#endif
+			}
+		    }
+		    for (i2=(nk/2-intk); i2 < (nk/2+intk) ; i2++) {
+			for (i1=intf; i1 < nw; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+			    mt[i2*nw+i1] *= 0.;
+#else
+			    mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
+#endif
+			}
+		    }	
+		    for (i2=(nk/2+intk); i2 < nk ; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+			    mt[i2*nw+i1] *= 0.;
+#else
+			    mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
+#endif
+			}
+		    }
+		    
+		    for (i2=0; i2 < nk; i2++) {
+			for (i1=0; i1 < nw; i1++) {
+			    mm[i2][i1].r = crealf(mt[i2*nw+i1]);
+			    mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
+			}
+		    }
+		}
+		
+		/* Inverse 2-D FFT */
+		for (i1=0; i1 < nw; i1++) {
+		    /* Fourier transform k to x */
+		    kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
+		    
+		    for (i2=0; i2< nk; i2++) {
+			fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
+		    }
+		}
+		
+		for (i2=0; i2 < n2; i2++) {
 		    if (0. != o1) {
 			for (i1=0; i1 < nw; i1++) {
-			    shift = -2.0*SF_PI*i1*dw*o1;
+			    shift = +2.0*SF_PI*i1*dw*o1;
 			    ce.r = cosf(shift);
 			    ce.i = sinf(shift);
 			    fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
 			}
 		    }
-		}
-
-		for (i2=n2; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			fft[i2][i1].r = 0.;
-			fft[i2][i1].i = 0.;
+		    /* Fourier transform f to t */
+		    kiss_fftri(itfft,fft[i2],d);
+		    for (i1=0; i1 < n1; i1++) {
+			dd[i2*n1+i1] = d[i1]*wt;
 		    }
-		}
-
-		for (i1=0; i1 < nw; i1++) {
-		    /* Fourier transform x to k */
-		    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
-		    for (i2=0; i2 < nk; i2++) {
-			mm[i2][i1] = ctrace2[i2];
-		    }
-		} /* Forward 2-D FFT end */
-		for (i2=0; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			mt[i2*nw+i1] = sf_cmplx(mm[i2][i1].r,mm[i2][i1].i);
-		    }
-		}
-
-		/* Cutting */
-		intf = (int) (nf0+powf(iter,orderf)*parf*(nw-nf0)/pow((niter-1),orderf));
-		intk = (int) (nk0+powf(iter,orderw)*parw*(nk/2-nk0)/pow((niter-1),orderf));
+		} /* Inverse 2-D FFT end */	 
 		
-		for (i2=0; i2 < (nk/2-intk); i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-			mt[i2*nw+i1] *= 0.;
-#else
-			mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
-#endif
-		    }
+		for (i1=0; i1 < n12; i1++) {
+		    if (known[i1]) dd[i1]=dd3[i1];
 		}
-		for (i2=(nk/2-intk); i2 < (nk/2+intk) ; i2++) {
-		    for (i1=intf; i1 < nw; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-			mt[i2*nw+i1] *= 0.;
-#else
-			mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
-#endif
-		    }
-		}	
-		for (i2=(nk/2+intk); i2 < nk ; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-			mt[i2*nw+i1] *= 0.;
-#else
-			mt[i2*nw+i1] = sf_crmul(mt[i2*nw+i1],0.);
-#endif
-		    }
-		}
-
-		for (i2=0; i2 < nk; i2++) {
-		    for (i1=0; i1 < nw; i1++) {
-			mm[i2][i1].r = crealf(mt[i2*nw+i1]);
-			mm[i2][i1].i = cimagf(mt[i2*nw+i1]);
-		    }
-		}
-	    }
-	    
-	    /* Inverse 2-D FFT */
-	    for (i1=0; i1 < nw; i1++) {
-		/* Fourier transform k to x */
-		kiss_fft_stride(ixfft,mm[0]+i1,ctrace2,nw);
-		
-		for (i2=0; i2< nk; i2++) {
-		    fft[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wk: wk);
-		}
-	    }
-
-	    for (i2=0; i2 < n2; i2++) {
-		if (0. != o1) {
-		    for (i1=0; i1 < nw; i1++) {
-			shift = +2.0*SF_PI*i1*dw*o1;
-			ce.r = cosf(shift);
-			ce.i = sinf(shift);
-			fft[i2][i1]=sf_cmul(fft[i2][i1],ce);
-		    }
-		}
-		/* Fourier transform f to t */
-		kiss_fftri(itfft,fft[i2],d);
-		for (i1=0; i1 < n1; i1++) {
-		    dd[i2*n1+i1] = d[i1]*wt;
-		}
-	    } /* Inverse 2-D FFT end */	 
-
-	    for (i1=0; i1 < n12; i1++) {
-		if (known[i1]) dd[i1]=dd3[i1];
-	    }
-	    break;
+		break;
 	} 
-
+	
 	sf_floatwrite (dd,n12,out);
 	
 	if (error && (NULL != sf_getstring ("res"))) {
 	    sf_floatwrite (err,nerr,res);
 	}
     }
-       
+    
     exit(0);
 }
 
