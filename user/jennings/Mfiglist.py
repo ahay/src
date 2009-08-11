@@ -8,7 +8,7 @@ Parameter lockdir is path to Lock directory:
         then default lockdir is $RSFALTFIGS/[book]/[chapter]/[section].
 
 Parameter list controls files to list, default is all.
-Parameter show controls files to flip with xtpen, default is none.
+Parameter show controls files to flip with sfpen, default is none.
 
 list|show = none    No files, print only summary.
 list|show = diff    Files that are different, determined by sfvplotdiff.
@@ -38,7 +38,7 @@ number  is return code from sfvplotdiff indicating different files.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, copy, sys, rsfprog
+import os, copy, sys, signal, rsfprog
 
 try:
     import rsf
@@ -52,10 +52,32 @@ vpsuffix = '.vpl'               # suffix for vplot files
 
 ###############################################################################
 
+def handler(signum, frame):
+    'signal handler for abortion [Ctrl-C]'
+
+    sys.stderr.write('\n[Ctrl-C] Aborting...\n')
+    if child:
+        os.kill (child,signal.SIGINT)
+    sys.exit(-1)
+
+signal.signal(signal.SIGINT,handler) # handle interrupt
+
+child = None
+def syswait(comm):
+    'Interruptable system command'
+
+    global child
+    child = os.fork()
+    if child:
+        (pid,exit) = os.waitpid(child,0)
+        child = 0
+        return exit
+    else:
+        os.system(comm)
+        os._exit(0)
+
 def book_path_split(figdir):
-    '''
-    split rsf fig path into book location, book tree, and fig directory
-    '''
+    'split rsf fig path into book location, book tree, and fig directory'
     
     tuple4 = os.path.split(figdir)
     tuple3 = os.path.split(tuple4[0])
@@ -69,9 +91,7 @@ def book_path_split(figdir):
     return (book_location,book_tree,fig_dir)
     
 def vpl_list(list):
-    '''
-    remove non-vplot filenames from a list
-    '''
+    'remove non-vplot filenames from a list'
         
     newlist = []
     for item in list:
@@ -217,7 +237,7 @@ def main(argv=sys.argv):
 
     n_same = 0
     print ""
-    command = os.path.join(binpath,'xtpen')
+    command = os.path.join(binpath,'sfpen')
     for item in filelist:
         miss_check =     (files[item] != '  ')
 
@@ -240,7 +260,8 @@ def main(argv=sys.argv):
         else:                   lockfile = os.path.join(lockpath,item)
         
         if list_check: print " %s %s" % (files[item],item)
-        if show_check: os.system(' '.join([command,figfile,lockfile]))
+#        if show_check: os.system(' '.join([command,figfile,lockfile]))
+        if show_check: syswait(' '.join([command,figfile,lockfile]))
         if files[item] == '  ': n_same = n_same+1
         
     print ""
