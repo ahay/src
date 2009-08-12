@@ -3,7 +3,6 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-gtest
 '''
 
 try:  # distributed version
