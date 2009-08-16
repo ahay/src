@@ -68,16 +68,16 @@ def ciggrey(custom,par):
         par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
-    return ciggrey(' label2="\F10 l \F3 \_x\^" unit2=%(ux)s '%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s '%par+custom,par)
 
 def zgrey(custom,par):
-    return ciggrey(' label2="\F10 l \F3 \_z\^" unit2=%(uz)s '%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s '%par+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3       " unit2=%(ut)s '%par+custom,par)
+    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s '%par+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3       " unit2="\^o\_" '%par+custom,par)
+    return ciggrey(' label2="\F10 q\F3      " unit2="\^o\_" '%par+custom,par)
 # ------------------------------------------------------------
 
 

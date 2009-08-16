@@ -19,6 +19,8 @@ def param(par):
         p = p + ' pmx='  + str(par['pmx'])
     if(par.has_key('pmy')):
         p = p + ' pmy='  + str(par['pmy'])
+    if(par.has_key('ompnth')):
+        p = p + ' ompnth='  + str(par['ompnth'])
     if(par.has_key('misc')):
         p = p + ' '      +     par['misc']
     p = p + ' '
