@@ -79,9 +79,9 @@ int main (int argc, char *argv[])
     /* default mode is migration/modeling */
     if (!sf_getbool(  "verb",&verb  ))  verb = false; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps   ))   eps =  0.01; /* stability parameter */
-    if (!sf_getbool("causal",&causal)) causal= false; /* y=causal; n=anti-causal */
+    if (!sf_getbool("causal",&causal)) causal= false; /* causality flag */
     if (!sf_getint(  "nrmax",&nrmax )) nrmax =     1; /* maximum references */
-    if (!sf_getfloat("dtmax",&dtmax )) dtmax = 0.004; /* time error */
+    if (!sf_getfloat("dtmax",&dtmax )) dtmax = 0.004; /* max time error */
 
     if (!sf_getint(    "pmx",&pmx   ))   pmx =     0; /* padding on x */
     if (!sf_getint(    "pmy",&pmy   ))   pmy =     0; /* padding on y*/
