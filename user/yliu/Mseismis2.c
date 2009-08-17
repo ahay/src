@@ -121,11 +121,11 @@ int main(int argc, char* argv[])
     }
 
     seislet_set(pp);
-    sf_floatread(pp[0],n12,dip);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
 	sf_floatread(dd,n12,in);
+	sf_floatread(pp[0],n12,dip);
 
 	if (NULL != mask) {
 	    sf_floatread(m,n12,mask);
