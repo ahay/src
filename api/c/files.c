@@ -199,6 +199,7 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
 	if (0 != remove(in)) 
 	    sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
     }
+    (void) fclose (query);
     sf_simtab_close (tab);
 }
 
