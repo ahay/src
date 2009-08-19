@@ -29,6 +29,10 @@ import sys
 unix_success = 0
 unix_error   = 1
 
+# Other constants
+pipe = ' | '
+ext  = '.rsf'
+
 # Try to avoid old platform-dependent modules that will be deprecated.
 # See http://docs.python.org/dev/lib/module-subprocess.html
 try:
