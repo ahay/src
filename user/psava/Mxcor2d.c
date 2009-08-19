@@ -28,9 +28,9 @@
 #define rCOR(a,b) (a*b)
 
 #ifdef SF_HAS_COMPLEX_H
-#define cCOR(a,b) (-1.*crealf(conj(a)*b))
+#define cCOR(a,b) (-1.*crealf(conjf(a)*b))
 #else
-#define cCOR(a,b) (-1*.crealf(sf_cmul(conj(a),b)))
+#define cCOR(a,b) (-1.*crealf(sf_cmul(conjf(a),b)))
 #endif
 
 int main(int argc, char* argv[])

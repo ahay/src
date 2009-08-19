@@ -33,12 +33,12 @@
 #define rCOR(a,b) (a*b)
 
 #ifdef SF_HAS_COMPLEX_H
-#define cWGH(a,b,c) (-1.*(conj(a)*b)*c)
-#define cCOR(a,b) (conj(a)*b) 
+#define cWGH(a,b,c) (-1.*(conjf(a)*b)*c)
+#define cCOR(a,b) (conjf(a)*b) 
 #define cMUL(a,b) (a*b) 
 #else
-#define cWGH(a,b,c) (-1.*sf_cmul((sf_cmul(conj(a),b)),c))
-#define cCOR(a,b) (sf_cmul(conj(a),b))
+#define cWGH(a,b,c) (-1.*sf_cmul((sf_cmul(conjf(a),b)),c))
+#define cCOR(a,b) (sf_cmul(conjf(a),b))
 #define cMUL(a,b) (sf_cmul(a,b))
 #endif
 
@@ -328,7 +328,7 @@ int main(int argc, char* argv[])
 	    for        (ihx=0; ihx<nhx2; ihx++) {
 		for    (ihz=0; ihz<nhz2; ihz++) {
 		    for(iht=0; iht<nht2; iht++) {
-			jf[ic][ihx][ihz][iht] = 0;
+			jf[ic][ihx][ihz][iht] = sf_cmplx(0.,0.);
 		    }
 		}
 	    }
@@ -356,7 +356,11 @@ int main(int argc, char* argv[])
 			    uu = cCOR( c_us[mcx][mcz], c_ur[pcx][pcz]);
 
 			    for(iht=0; iht<nht2; iht++) { wt = tt[iw][iht];
+#ifdef SF_HAS_COMPLEX_H
 				jf[ic][ihx][ihz][iht] += cMUL(uu,wt);
+#else
+				jf[ic][ihx][ihz][iht] = sf_cadd(jf[ic][ihx][ihz][iht],cMUL(uu,wt));
+#endif
 			    }
 			}
 		    }
