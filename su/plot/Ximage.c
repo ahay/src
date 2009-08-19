@@ -357,9 +357,9 @@ main (int argc,char **argv)
     if (!sf_getbool("legend", &legend)) legend = false; 
     /* if display the color scale */
 
-    if (NULL == (units = sf_getstring("units"))) units=""; /* BEREND */
+    if (NULL == (units = sf_getstring("units"))) units=""; 
     /* unit label for legend */
-    if (NULL == (legendfont = sf_getstring("legendfont"))) legendfont="times_roman10"; /* BEREND */
+    if (NULL == (legendfont = sf_getstring("legendfont"))) legendfont="times_roman10"; 
     /* font name for legend */
 
     if (!sf_getfloat("blank",&blank)) blank = 0.0f;
