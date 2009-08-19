@@ -3,6 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
+image
 wigb
 '''
 
