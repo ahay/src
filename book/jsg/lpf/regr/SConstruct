@@ -107,8 +107,6 @@ for i in range(100):
     spike = 'spike%d' % i
     Flow(spike,None,'spike n1=100 o1=1 d1=1 k1=%d' % (i+1))
 
-matlab = WhereIs('matlab')
-
 for j in range(3):
     for i in range(100):
         spike = 'spike%d' % i

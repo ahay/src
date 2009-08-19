@@ -1,9 +1,4 @@
-/* Smooth estimate of instantaneous frequency. 
-
-Takes: rect1=1 rect2=1 ... 
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Smooth estimate of instantaneous frequency. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -48,6 +43,7 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	n12 *= n[i];
     }
     n2 = n12/n1;
