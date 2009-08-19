@@ -38,7 +38,7 @@ for prog in mains:
         configure.depends(env,sources,'X'+prog)
         main = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
-        main = env.Place(prog,None,var='XINC and XLIBPATH')
+        main = env.Place('sf'+prog,None,var='XINC and XLIBPATH')
         
     if root:
         env.Install(bindir,main[0])
