@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "sin.h"
-#include "ccopy.h"
 
 static sf_complex z0;
 static int n2, k2;
@@ -50,7 +49,7 @@ void sin_destruct(bool adj, bool add, int nx, int ny,
 
     if (nx != ny) sf_error("%s: wrong dimensions %d != %d",__FILE__,nx,ny);
 
-    ccopy_lop(adj,add,nx,nx,xx,yy);
+    sf_ccopy_lop(adj,add,nx,nx,xx,yy);
 
     for (i = 1; i < nx; i++) {
 	if(adj) {

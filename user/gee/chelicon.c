@@ -1,4 +1,4 @@
-/* Simple identity (copy) operator */
+/* Helical convolution. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,33 +18,38 @@
 */
 #include <rsf.h>
 
-#include "ccopy.h"
+#include "chelicon.h"
 
-void ccopy_lop (bool adj, bool add, int nx, int ny, 
-		sf_complex* xx, sf_complex* yy)
+#include "chelix.h"
+/*^*/
+
+static cfilter aa;
+
+void chelicon_init( cfilter bb) 
+/*<  Initialized with the filter. >*/
+{
+    aa = bb;
+}
+
+void chelicon_lop( bool adj, bool add, 
+		   int nx, int ny, sf_complex* xx, sf_complex* yy) 
 /*< linear operator >*/
 {
-    int i;
+    int ia, iy, ix;
     
-    if (ny!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__,ny,nx);
+    sf_ccopy_lop(adj, add, nx, nx, xx, yy);
 
-    sf_cadjnull (adj, add, nx, ny, xx, yy);
-  
-    for (i=0; i < nx; i++) {
-	if (adj) {
-#ifdef SF_HAS_COMPLEX_H
-	    xx[i] += yy[i];
-#else
-	    xx[i] = sf_cadd(xx[i],yy[i]);
-#endif
-	} else {
-#ifdef SF_HAS_COMPLEX_H
-	    yy[i] += xx[i];
-#else
-	    yy[i] = sf_cadd(yy[i],xx[i]);
-#endif
+    for (ia = 0; ia < aa->nh; ia++) {
+	for (iy = aa->lag[ia]; iy < nx; iy++) {
+	    if( aa->mis != NULL && aa->mis[iy]) continue;
+	    ix = iy - aa->lag[ia];
+	    if(adj) {
+		xx[ix] += yy[iy] * conjf(aa->flt[ia]);
+	    } else {
+		yy[iy] += xx[ix] * aa->flt[ia];
+	    }
 	}
     }
 }
 
-/* 	$Id$	 */
+/* 	$Id: helicon.c 2523 2007-02-02 16:45:29Z sfomel $	 */

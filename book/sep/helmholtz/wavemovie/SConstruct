@@ -1,0 +1,12 @@
+from rsfproj import *
+
+#graph = Graph wantaxis=n title=' ' $(dn)
+
+#${RESDIR}/impresp.v: 
+#	$(MAKE) ./Wavemovie.x
+#	./Wavemovie.x nx=128 impresp=y imp=imp.H >junk.H
+#	< imp.H Window n2=1 f2=0 | Cabs | $(graph) out=junk1.v
+#	< imp.H Window n2=1 f2=1 | Cabs | $(graph) out=junk2.v
+#	vp_OverUnderAniso junk1.v junk2.v  >$@
+
+End()
