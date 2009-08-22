@@ -50,20 +50,41 @@ void cpolydiv_lop( bool adj, bool add,
 	    for (ia = 0; ia < aa->nh; ia++) {
 		iy = ix + aa->lag[ia];
 		if( iy >= ny) continue;
+#ifdef SF_HAS_COMPLEX_H
 		tt[ix] -= conjf(aa->flt[ia]) * tt[iy];
+#else
+		tt[ix] = sf_cadd(tt[ix],
+				 sf_cmul(conjf(aa->flt[ia]),sf_cneg(tt[iy])));
+#endif
 	    }
 	}
-	for (ix=0; ix < nx; ix++) xx[ix] += tt[ix];
+	for (ix=0; ix < nx; ix++) { 
+#ifdef SF_HAS_COMPLEX_H
+	    xx[ix] += tt[ix];
+#else
+	    xx[ix] = sf_cadd(xx[ix],tt[ix]);
+#endif
+	}
     } else {
 	for (iy = 0; iy < ny; iy++) { 
 	    tt[iy] = xx[iy];
 	    for (ia = 0; ia < aa->nh; ia++) {
 		ix = iy - aa->lag[ia];
 		if( ix < 0) continue;
+#ifdef SF_HAS_COMPLEX_H
 		tt[iy] -= aa->flt[ia] * tt[ix];
+#else
+		tt[iy] = sf_cadd(tt[iy],sf_cmul(aa->flt[ia],sf_cneg(tt[ix])));
+#endif
 	    }
 	}
-	for (iy=0; iy < ny; iy++) yy[iy] += tt[iy];
+	for (iy=0; iy < ny; iy++) {
+#ifdef SF_HAS_COMPLEX_H
+	    yy[iy] += tt[iy];
+#else
+	    yy[iy] = sf_cadd(yy[iy],tt[iy]);
+#endif
+	}
     }
 }
 

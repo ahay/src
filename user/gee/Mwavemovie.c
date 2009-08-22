@@ -72,7 +72,11 @@ static void init_wave(int init,
     amp *= amp;
 
     for (ix=0; ix < nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H
 	pp[ix] *= amp;
+#else
+	pp[ix] = sf_crmul(pp[ix],amp);
+#endif
     }
 }
   
@@ -163,8 +167,12 @@ int main(int argc, char* argv[])
 	if (impresp) w=dw*nw/2;
 
 	wov = w/v;
-	wov2 = wov*sf_cmplx(0.,1.)+epsdamp;
+	wov2 = sf_cmplx(epsdamp,wov);
+#ifdef SF_HAS_COMPLEX_H
 	wov2 = -wov2*wov2;
+#else
+	wov2 = sf_cneg(sf_cmul(wov2,wov2));
+#endif
 
 	sf_warning("%g %g (%d of %d)",crealf(wov2),cimagf(wov2),iw,nw);
 
@@ -175,16 +183,34 @@ int main(int argc, char* argv[])
 	}
 
 	/* isotropic laplacian = 5-point laplacian */
-	a= gamma*0.;
+	a= sf_cmplx(0.,0.);
+#ifdef SF_HAS_COMPLEX_H
 	b= gamma*(1+sixth*wov2)* (-1./(dz*dz));
 	c= gamma*(1+sixth*wov2)* (-1./(dx*dx));
 	d= gamma*(1+sixth*wov2)* (2/(dx*dx) + 2/(dz*dz))  -wov2;
+#else
+	b = sf_crmul(sf_cadd(sf_cmplx(1.,0.),sf_crmul(wov2,sixth)),
+		     gamma*(-1./(dz*dz)));
+	c = sf_crmul(sf_cadd(sf_cmplx(1.,0.),sf_crmul(wov2,sixth)),
+		     gamma*(-1./(dx*dx)));
+	d = sf_cadd(sf_crmul(sf_cadd(sf_cmplx(1.,0.),sf_crmul(wov2,sixth)),
+			     gamma*(2/(dx*dx) + 2/(dz*dz))),sf_cneg(wov2));
+#endif
 
 	/* + rotated 5-point laplacian */
+#ifdef SF_HAS_COMPLEX_H
 	a += (1-gamma)*(1+sixth*wov2)* (-0.5/(dx*dz));
 	b += (1-gamma)*(1+sixth*wov2)*0.;
 	c += (1-gamma)*(1+sixth*wov2)*0.;
 	d += (1-gamma)*(1+sixth*wov2)* 2.0/(dx*dz);
+#else
+	a = sf_cadd(a,sf_crmul(sf_cadd(sf_cmplx(1.0,0.0),
+				       sf_crmul(wov2,sixth)),
+			       (1-gamma)*(-0.5/(dx*dz))));
+	d = sf_cadd(d,sf_crmul(sf_cadd(sf_cmplx(1.0,0.0),
+				       sf_crmul(wov2,sixth)),
+			       (1-gamma)*(2.0/(dx*dz))));
+#endif
 
 	aa->flt[0] = a; aa->lag[0] = -nx-1;
 	aa->flt[1] = b; aa->lag[1] = -nx;
@@ -201,14 +227,19 @@ int main(int argc, char* argv[])
 	xkolmog_helix(aa,fac1,fac2);
 
 	for (i=0; i < nfilt; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    fac1->flt[i]=0.5*(fac2->flt[i]+conjf(fac1->flt[i]));
+#else
+	    fac1->flt[i]=sf_crmul(sf_cadd(fac2->flt[i],conjf(fac1->flt[i])),
+				  0.5);
+#endif
 	}
 
 	if (impresp) {
 	    for (iz=0; iz < nx*nz; iz++) {
 		pp[iz]=sf_cmplx(0.,0.);
 	    }	    
-	    pp[nx/2-1]=1.;
+	    pp[nx/2-1]=sf_cmplx(1.,0.);
 	    sf_complexwrite(pp,2*nx,imp);
 	}
 
@@ -226,7 +257,11 @@ int main(int argc, char* argv[])
 	    cshift = cexpf(sf_cmplx( 0.,-w*it*dt));
 	    for (ix=0; ix < nx; ix++) {
 		for (iz=0; iz < nz; iz++) {
-		    ppp[it][ix][iz] += qq[ix+iz*nx]*cshift;
+#ifdef SF_HAS_COMPLEX_H
+		    ppp[it][ix][iz] += crealf(qq[ix+iz*nx]*cshift);
+#else
+		    ppp[it][ix][iz] += crealf(sf_cmul(qq[ix+iz*nx],cshift));
+#endif
 		}
 	    }
 	}

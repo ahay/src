@@ -61,18 +61,28 @@ void xkolmog(sf_complex *trace1, sf_complex *trace2)
     const double eps=1.e-32;
 
     for (i1=0; i1 < nk; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	fft1[i1] = clogf(trace1[i1]+eps)/nk;
+#else
+	fft1[i1] = sf_crmul(clogf(sf_cadd(trace1[i1],sf_cmplx(eps,0.))),
+			    1.0/nk);
+#endif
     }
 
     /* Inverse transform */
     kiss_fft(invs,(const kiss_fft_cpx *) fft1, (kiss_fft_cpx *) trace1);
 
+#ifdef SF_HAS_COMPLEX_H
     trace1[0]    *= 0.5; trace2[0]    = trace1[0];
     trace1[nk/2] *= 0.5; trace2[nk/2] = trace1[nk/2];
+#else
+    trace1[0]    = sf_crmul(trace1[0],   0.5); trace2[0]    = trace1[0];
+    trace1[nk/2] = sf_crmul(trace1[nk/2],0.5); trace2[nk/2] = trace1[nk/2];
+#endif
     for (i1=1+nk/2; i1 < nk; i1++) {
 	trace2[nk-i1] = trace1[i1];
-	trace1[i1] = 0.;
-	trace2[i1] = 0.;
+	trace1[i1] = sf_cmplx(0.,0.);
+	trace2[i1] = sf_cmplx(0.,0.);
     }
 
     /* Fourier transform */
@@ -112,10 +122,19 @@ void xkolmog_helix(cfilter cross, cfilter fac1, cfilter fac2)
 	w = dw*ik;
 
 	for (ih=0; ih < cross->nh; ih++) {
+#ifdef SF_HAS_COMPLEX_H
 	    fft1[ik] += cross->flt[ih]*cexpf(sf_cmplx(0.,cross->lag[ih]*w));
+#else
+	    fft1[ik] = sf_cadd(fft1[ik],
+			       sf_cmul(cross->flt[ih],
+				       cexpf(sf_cmplx(0.,cross->lag[ih]*w))));
+#endif
 	}
-
+#ifdef SF_HAS_COMPLEX_H
 	fft1[ik] /= nk;
+#else
+	fft1[ik] = sf_crmul(fft1[ik],1.0/nk);	
+#endif
     }
 
     xkolmog(fft1,fft2);

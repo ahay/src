@@ -44,9 +44,17 @@ void chelicon_lop( bool adj, bool add,
 	    if( aa->mis != NULL && aa->mis[iy]) continue;
 	    ix = iy - aa->lag[ia];
 	    if(adj) {
+#ifdef SF_HAS_COMPLEX_H
 		xx[ix] += yy[iy] * conjf(aa->flt[ia]);
+#else
+		xx[ix] = sf_cadd(xx[ix],sf_cmul(yy[iy],conjf(aa->flt[ia])));
+#endif
 	    } else {
+#ifdef SF_HAS_COMPLEX_H
 		yy[iy] += xx[ix] * aa->flt[ia];
+#else
+		yy[iy] = sf_cadd(yy[iy],sf_cmul(xx[ix],aa->flt[ia]));
+#endif
 	    }
 	}
     }
