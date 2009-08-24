@@ -3,11 +3,12 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-atm1 atm2 difference dominantf duwt dwt97 epsf fkoclet fkoclet3
-fourmis2 initial kuwahara lrmf lum lum2 lumsmoother lumsharpener mean
-mf mlm mtm mlwm nonloc oclet pwcsemb pwsfault pwsfault3 pwsmooth
-pwsmooth3 saltpepper seisavf seislet97 seismis2 seispocs seisreg2
-sharpsimi snr svddenoise swell tvmf twofreq2mask wavemis2 zcwt
+atm1 atm2 bilstack difference dominantf duwt dwt97 epsf fkoclet
+fkoclet3 fourmis2 initial kuwahara lrmf lum lum2 lumsmoother
+lumsharpener mean mf mlm mtm mlwm nonloc oclet pwcsemb pwsfault
+pwsfault3 pwsmooth pwsmooth3 saltpepper seisavf seislet97 seismis2
+seispocs seisreg2 sharpsimi snr svddenoise swell tvmf twofreq2mask
+wavemis2 zcwt
 '''
 
 try:  # distributed version
