@@ -49,7 +49,7 @@ void dip3_init(int m1, int m2, int m3       /* dimensions */,
     nn[1]=n2;
     nn[2]=n3;
 
-    divn_init (3, n, nn, rect, niter);
+    divn_init (3, n, nn, rect, niter, true);
 }
 
 void dip3_close(void)

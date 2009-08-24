@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     
-    divn_init(dim1, n12, n, rect, niter);
+    divn_init(dim1, n12, n, rect, niter,true);
     
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dat,n12,in);

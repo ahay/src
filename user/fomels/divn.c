@@ -29,13 +29,14 @@ void divn_init(int ndim   /* number of dimensions */,
 	       int nd     /* data size */, 
 	       int *ndat  /* data dimensions [ndim] */, 
 	       int *nbox  /* smoothing radius [ndim] */, 
-	       int niter1 /* number of iterations */) 
+	       int niter1 /* number of iterations */,
+	       bool verb  /* verbosity */) 
 /*< initialize >*/
 {
     niter = niter1;
 
     trianglen_init(ndim, nbox, ndat);
-    sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, true, false);
+    sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
     p = sf_floatalloc (nd);
 }
 

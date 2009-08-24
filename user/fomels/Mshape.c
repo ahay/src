@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     
-    divn_init(dim,nm,n,rect,niter);
+    divn_init(dim,nm,n,rect,niter,true);
     
     rough = sf_floatalloc(nm);
     smooth = sf_floatalloc(nm);

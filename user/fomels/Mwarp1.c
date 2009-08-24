@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     
     if (verb) sf_warning("Initialization completed");
   
-    divn_init(dim, nd, n, rect, niter);
+    divn_init(dim, nd, n, rect, niter,true);
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 
 	if (!noamp) {
 	    divn_close();
-	    divn_init(dim, nd, n, rect2, niter);
+	    divn_init(dim, nd, n, rect2, niter,true);
 
 	    mean = 0.;
 	    for (i=0; i < nd; i++) {
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    divn_close();
-	    divn_init(dim, nd, n, rect, niter);
+	    divn_init(dim, nd, n, rect, niter, true);
 	} /* if amp */
 
 	error = 0.;

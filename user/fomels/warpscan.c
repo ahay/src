@@ -61,7 +61,7 @@ void warpscan_init(int m1     /* input trace length */,
     den = sf_floatalloc (n2g);
 
     sf_prefilter_init (order, n1, order*10);     
-    divn_init(dim, n2g, m, rect, niter);
+    divn_init(dim, n2g, m, rect, niter, true);
 }
 
 void warpscan(float** inp /* input data [ntr][n1] */, 

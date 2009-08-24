@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
 	den[i] *= mean;
     }
 
-    divn_init(dim, n12, n, rect, niter);
+    divn_init(dim, n12, n, rect, niter, true);
     divn (num, den, phase);
 
     sf_floatwrite(phase,n12,out);

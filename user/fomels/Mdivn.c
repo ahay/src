@@ -27,6 +27,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int i, id, dim, n[SF_MAX_DIM], nd, rect[SF_MAX_DIM], niter;
     float *num, *den, *rat, norm;
     char key[6];
@@ -55,7 +56,10 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    divn_init(dim, nd, n, rect, niter);
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity */
+
+    divn_init(dim, nd, n, rect, niter, verb);
 
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);

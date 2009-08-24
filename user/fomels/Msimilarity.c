@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* maximum number of iterations */
 
-    divn_init(dim1, n1, n, rect, niter);
+    divn_init(dim1, n1, n, rect, niter, true);
 	
     one = sf_floatalloc(n1);
     two = sf_floatalloc(n1);

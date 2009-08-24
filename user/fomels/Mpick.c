@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 	pick2 = sf_floatalloc(nm);	
 	ampl = sf_floatalloc(nm);
 
-	divn_init(dim,nm,n,rect,niter);
+	divn_init(dim,nm,n,rect,niter,true);
     } else {
 	pick = NULL;
 	pick2 = sf_floatalloc(n1);
