@@ -69,8 +69,10 @@ int main(int argc, char* argv[])
     sf_floatwrite(sig,nx,out);
 
     v0=0.0;
-    for (ix=0; ix < nx; ix++) v0 += v[ix];
+    for (ix=0; ix < nx; ix++) v0 += v[ix]*v[ix];
     v0 /= (float)nx;
+    /* v0 RMS velocity*/
+    v0 = sqrt(v0);
     tv0 = v0*v0*dt*dt;
 
     for (ix=0; ix < nx; ix++){
