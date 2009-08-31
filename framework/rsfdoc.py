@@ -239,6 +239,72 @@ class rsfpar(object):
     def text(self,name):
         return string.join([self.type,name,self.default,self.range,self.desc],
                            ' | ')
+    def spec(self,name):
+        type = self.type.rstrip()
+        range = self.range
+        default = self.default
+        desc = self.desc
+
+        DescriptionIsLong = desc.count('\n') > 1
+        desc = desc.rstrip('\n') # save trailing line feeds for later
+
+        isPort = False
+        if type.endswith('s'):
+            typesuff = '-list'
+            type = type.rstrip('s')
+        else:
+            typesuff = ''
+
+        if type=='file':
+            isPort = True
+        elif type=='bool':
+            type = 'enum-'+type
+            range = ' - '
+        elif type=='int':
+            range = ' - ' # TO DO: int range detection; 'enum-' type for non-trivial int ranges
+        """TO DO: float range detection"""
+
+        """Parse invalid defaults to long description"""
+        LHS, default = string.split(default,'=',1)
+        try:
+            if type=='enum-bool':
+                if default not in ['y','n']:
+                    raise TypeError
+            else:
+                DefaultIsValid = isinstance(eval(default),eval(type))
+        except (SyntaxError,NameError,TypeError): # exception when default contains expressions
+            if default:
+                desc = '%s\n(defaults to: %s)' % (desc,default)
+                DescriptionIsLong = True
+            default = ' - '
+        finally:
+            if len(default)==0:
+                default = ' - '
+
+        if DescriptionIsLong:
+            desc = desc.replace('\n','\nLDesc:  ') # translate additional info into long description
+        if (isPort):
+            try:
+                data, ext = default.split('.') # assume 'default' carries the filename stated in synopsis
+            except:
+                data = 'unspecified'
+                ext = 'rsf'
+            if (desc.find('input')>=0):
+                rw = 'r'
+            elif (desc.find('output')>=0):
+                rw = 'w'
+            unspec = {'r':'in', 'w':'out'}
+            if (data == unspec[rw]):
+                data = '(no hint on content)'
+            else:
+                data = '(containing %s data)' % data
+            line = 'Port:   %s %s %s %s \t%s %s\n' % (name,ext,rw,default,desc,data)
+        else:
+            type = type + typesuff
+            if range.isspace():
+                range=' - '
+            line = 'Param:  %s %s %s %s \t%s\n' % (name,type,range,default,desc)
+        return line
     def mwiki(self,name):
         desc = string.replace(self.desc,'\n','<br>')
         desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
@@ -450,6 +516,50 @@ class rsfprog(object):
             contents = contents + '[DIRECTORY]\n%s\n' % filedir            
         file.write(contents)
         file.close()
+    def spec(self,dir,name=None):
+        if not name:
+            name = self.name
+        file = open (os.path.join(dir,name + '.spec'),'w')
+        filedir = os.path.split(self.file)[0]
+        doccmd = '%s | cat' % name
+        contents = '''[%s]
+Cat:    RSF/%s
+Desc:   %s
+DocCmd: %s
+''' % (name,filedir,self.desc.rstrip(' .'),doccmd)
+        """ process stdin and stdout ports hidden in synopsis """
+        if self.snps: 
+            tokens = self.snps.split()
+            for cue in ['<','>']:
+                try:
+                    filename = tokens[tokens.index(cue)+1]
+                except:
+                    continue
+                data, ext  = filename.split('.')
+                if data in ['in','out']:
+                    data = '(no hint on content)'
+                else:
+                    data = '(containing %s data)' % data
+                if cue=='<':
+                    line = 'Port:   stdin  %s r req \t%s standard input %s\n' % (ext,ext.upper(),data)
+                else:
+                    line = 'Port:   stdout %s w req \t%s standard output %s\n' % (ext,ext.upper(),data)
+                contents = contents + line
+        """TO DO: process comments."""
+        pars =  self.pars.keys()
+        ParamLines = '' 
+        if pars:
+            pars.sort()
+            for par in pars:
+                line = self.pars[par].spec(par)
+                head, sep, tail = line.partition(':')
+                if head=='Port':
+                    contents = contents + line
+                else:
+                    ParamLines = ParamLines + line
+        contents = contents + ParamLines + '\n'
+        file.write(contents)
+        file.close()
     def html(self,dir,rep):
         file = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
@@ -584,6 +694,29 @@ def text(dir,name):
         names.sort()
         file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
     file.close()
+
+def spec(dir):
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
+    file = open (os.path.join(dir,'RSF_enum.sections'),'w')
+    file.write('# Madagascar Sections\n')
+    # TO DO: Define tksu sections from most common parameters
+    
+    # below remains untouched from 'def text(dir,name)'
+    dirs = {}
+    for prog in progs.keys():
+        dir = os.path.dirname(progs[prog].file)
+        if not dirs.has_key(dir):
+            dirs[dir] = []
+        dirs[dir].append(prog)
+    keys = dirs.keys()
+    keys.sort()
+    for dir in keys:
+        names = dirs[dir]
+        names.sort()
+        file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
+    file.close()
+    # TO DO: Write the tksu specs for madagascar related enumerations and filetypes
 
 # regular expressions
 comment = {}
@@ -829,12 +962,12 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:t:m:g:l:r:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:')
         dir = None
         typ = None
         rep = os.getcwd()
         for opt, val in opts:
-            if opt[0] == '-' and opt[1] in 'wtmgl':
+            if opt[0] == '-' and opt[1] in 'wtsmgl':
                 dir = val
                 typ = opt[1]
             elif opt == '-r':
@@ -862,6 +995,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     main = progs.get(prog)
                     if main:
                         main.text(dir)
+            elif typ == 's':
+                spec(dir)
             elif typ == 'g':
                 text(dir,'index.man')
                 for prog in progs.keys():
@@ -882,6 +1017,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     main.html(dir,rep)
                 elif typ == 't':
                     main.text(dir,prog)
+                elif typ == 's':
+                    main.spec(dir,prog)
                 elif typ == 'm':
                     main.mwiki(dir,prog)
                 elif typ == 'g':
@@ -901,6 +1038,9 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 
 %(prog)s -t <dir> [<prog1> <prog2> ... ]
     Write plain text documentation in <dir> directory
+
+%(prog)s -s <dir> [<prog1> <prog2> ... ]
+    Write TKSU block specs in <dir> directory
 
 %(prog)s -w <dir> [-r <rep>] [<prog1> <prog2> ...] 
     Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
