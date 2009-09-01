@@ -1,12 +1,12 @@
 from rsfproj import *
 
-#graph = Graph wantaxis=n title=' ' $(dn)
+Flow('imp',None,'wavemovie nx=128 impresp=y imp=$TARGET',stdout=0)
 
-#${RESDIR}/impresp.v: 
-#	$(MAKE) ./Wavemovie.x
-#	./Wavemovie.x nx=128 impresp=y imp=imp.H >junk.H
-#	< imp.H Window n2=1 f2=0 | Cabs | $(graph) out=junk1.v
-#	< imp.H Window n2=1 f2=1 | Cabs | $(graph) out=junk2.v
-#	vp_OverUnderAniso junk1.v junk2.v  >$@
+for c in range(2):
+    imp = 'imp%d' % c
+    Flow(imp,'imp','window n2=1 f2=%d | math output="abs(input)" | real' % c)
+    Plot(imp,'graph wantaxis=n wanttitle=n')
+
+Result('impresp','imp0 imp1','OverUnderAniso')
 
 End()

@@ -25,6 +25,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool taper;
     int large, n1, n2, i1, i2, it, is;
     float *imp1, *imp2;
     float **dipper, **earth, **refl, **sig1, **sig2, **fault;
@@ -52,6 +53,9 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("d1",&d1)) d1=0.004; sf_putfloat(mod,"d1",d1);
     if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
     /* sampling */
+
+    if (!sf_getbool("taper",&taper)) taper=true;
+    /* if taper the edges */
 
     sf_putstring(mod,"label1","Time");    
     sf_putstring(mod,"label2","Lateral");
@@ -150,17 +154,20 @@ int main (int argc, char* argv[])
 	}
     }
 
-    for (i2= 0; i2 < 10; i2++) {
-	for (i1= 0; i1 < n1; i1++) {
-	    refl[i2][i1] *= (i2/10.);
-	    refl[n2-i2-1][i1] *= (i2/10.);
-	}
-    }
+    if (taper) {
 
-    for (i2= 0; i2 < 5; i2++) {
-	for (i1= 0; i1 < n1; i1++) {
-	    refl[i2][i1] *= (i2/5.);
-	    refl[n2-i2-1][i1] *= (i2/5.);
+	for (i2= 0; i2 < 10; i2++) {
+	    for (i1= 0; i1 < n1; i1++) {
+		refl[i2][i1] *= (i2/10.);
+		refl[n2-i2-1][i1] *= (i2/10.);
+	    }
+	}
+
+	for (i2= 0; i2 < 5; i2++) {
+	    for (i1= 0; i1 < n1; i1++) {
+		refl[i2][i1] *= (i2/5.);
+		refl[n2-i2-1][i1] *= (i2/5.);
+	    }
 	}
     }
 
