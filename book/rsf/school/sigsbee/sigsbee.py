@@ -6,7 +6,7 @@ import fdmod
 def paramwin():
     par = {
         'nx':1601, 'ox':25.000,'dx':0.025,  'lx':'x', 'ux':'km',
-        'nz':801,  'oz':4.5,   'dz':0.025,  'lz':'z', 'uz':'km',
+        'nz':601,  'oz':4.5,   'dz':0.025,  'lz':'z', 'uz':'km',
         'nt':1500, 'ot':0,     'dt':0.008,  'lt':'t', 'ut':'s'
         }
     
@@ -17,13 +17,16 @@ def paramwin():
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
 
+    par['jsnap']=300
+
     return par
 
 # ------------------------------------------------------------
 def getstrvelwin(velo,par):
 
-    strvelfile = 'sigsbee2a_stratigraphy.sgy'
-    Fetch(strvelfile,'sigsbee')
+    strvelfile = 'data/sigsbee/sigsbee2a_stratigraphy.sgy'
+    #strvelfile = 'sigsbee2a_stratigraphy.sgy'
+    #Fetch(strvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
          strvelfile,

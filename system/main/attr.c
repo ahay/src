@@ -2,16 +2,16 @@
    
 Sample output from "sfspike n1=100 | sfbandpass fhi=60 | sfattr"
 ******************************************* 
-rms = 0.992354 
-mean value = 0.987576 
-2-norm value = 9.92354 
-variance = 0.00955481 
-standard deviation = 0.0977487 
-maximum value = 1.12735 at 97 
-minimum value = 0.151392 at 100 
-number of nonzero samples = 100 
-total number of samples = 100 
-******************************************* 
+     rms =      0.992354 
+    mean =      0.987576 
+  2-norm =       9.92354 
+variance =    0.00955481 
+ std dev =     0.0977487 
+     max =       1.12735 at 97 
+     min =      0.151392 at 100 
+nonzero samples = 100 
+  total samples = 100 
+*******************************************
 
 rms                = sqrt[ sum(data^2) / n ]
 mean               = sum(data) / n
@@ -21,6 +21,7 @@ standard deviation = sqrt [ variance ]
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2009 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -182,51 +183,51 @@ int main(int argc, char* argv[])
 	    printf("   rms, mean, norm, var, and std refer to amplitude\n\n");
     }
     if(NULL==want || 0==strcmp(want,"rms"))
-	printf("rms = %g \n",(float) frms);
+	printf("     rms = %13.6g \n",(float) frms);
     if(NULL==want || 0==strcmp(want,"mean"))
-	printf("mean value = %g \n",(float) fmean);
+	printf("    mean = %13.6g \n",(float) fmean);
     if(NULL==want || 0==strcmp(want,"norm"))
-	printf("%d-norm value = %g \n",lval,(float) fnorm);
+	printf("  %d-norm = %13.6g \n",lval,(float) fnorm);
     if(NULL==want || 0==strcmp(want,"var"))
-	printf("variance = %g \n",(float) fvar);
+	printf("variance = %13.6g \n",(float) fvar);
     if(NULL==want || 0==strcmp(want,"std"))
-	printf("standard deviation = %g \n",(float) fstd);
+	printf(" std dev = %13.6g \n",(float) fstd);
     if(SF_COMPLEX==type) {
 	if (NULL==want || 0==strcmp(want,"max")) {
-	    printf("maximum real value      = (%g,%g) at ",
+	    printf("max real = (%g,%g) at ",
 		   crealf(cmax1),cimagf(cmax1));
 	    location(maxloc1,dim,n);
-	    printf("maximum imaginary value = (%g,%g) at ",
+	    printf("max imag = (%g,%g) at ",
 		   crealf(cmax2),cimagf(cmax2));
 	    location(maxloc2,dim,n);
 	}
 	if (NULL==want || 0==strcmp(want,"min")) {
-	    printf("minimum real value      = (%g,%g) at ",
+	    printf("min real = (%g,%g) at ",
 		   crealf(cmin1),cimagf(cmin1));
 	    location(minloc1,dim,n);
-	    printf("minimum imaginary value = (%g,%g) at ",
+	    printf("min imag = (%g,%g) at ",
 		   crealf(cmin2),cimagf(cmin2));
 	    location(minloc2,dim,n);
 	}
     } else {
 	if(NULL==want || 0==strcmp(want,"max")) {
-	    printf("maximum value = %g at ",fmax);
+	    printf("     max = %13.6g at ",fmax);
 	    location(maxloc,dim,n);
 	}
 	if(NULL==want || 0==strcmp(want,"min")) {
-	    printf("minimum value = %g at ",fmin);
+	    printf("     min = %13.6g at ",fmin);
 	    location(minloc,dim,n);
 	}
     }
     if(NULL==want || 0==strcmp(want,"nonzero"))
-	printf("number of nonzero samples = %lld \n",(long long int) (nsiz-nzero));
+	printf("nonzero samples = %lld \n",(long long int) (nsiz-nzero));
     if(NULL==want || 0==strcmp(want,"samples"))
-	printf("total number of samples = %lld \n",(long long int) nsiz);
+	printf("  total samples = %lld \n",(long long int) nsiz);
     if(NULL==want) {
 	printf("******************************************* \n");
     }
     if(NULL != want && 0==strcmp(want,"short")) {
-	printf("%6.2f%% zeros min: %g max: %g \n",
+	printf("%6.2f%% zeros; min: %g; max: %g \n",
 	       100.*((double)nzero)/((double)nsiz),fmin,fmax);  
     }
     
@@ -248,5 +249,3 @@ static void location(size_t loc     /* liner location index */,
     }
     printf("\n");
 }
-
-/* 	$Id$	 */

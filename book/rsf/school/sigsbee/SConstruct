@@ -3,7 +3,7 @@ import sigsbee,fdmod
 
 # ------------------------------------------------------------
 par=sigsbee.paramwin() # Sigsbee2A parameters
-par['nt']=3001      # time steps (samples)
+par['nt']=2001      # time steps (samples)
 par['kt']=100       # wavelet delay (samples) 
 par['dt']=0.001     # time sampling (ms)
 par['nb']=100       # boundary size (grid points)
@@ -11,15 +11,15 @@ fdmod.param(par)    # plotting parameters
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
-fdmod.boxarray('ss',6,2,1,12,8,1,par)
+fdmod.boxarray('ss',5,2,1,12,8,1,par)
 
 # plot sources
-Plot('ss',fdmod.ssplot('plotfat=1 symbol=.',par))
+Plot('ss',fdmod.ssplot('plotfat=10 symbol=.',par))
 
 # ------------------------------------------------------------
-par['jr']=4    # receiver jump (grid points)
-par['nr']=120  # number of receivers
-par['fr']=100  # receivers origin (grid points)
+par['jr']=4   # receiver jump (grid points)
+par['nr']=100 # number of receivers
+par['fr']=500 # receivers origin (grid points)
 
 # receiver coordinates
 fdmod.horizontal('tt',par['oz']+par['dz'],par)
@@ -28,7 +28,7 @@ Flow('rr',
      'window n2=%(nr)d j2=%(jr)d f2=%(fr)d'%par)
 
 # plot receivers
-Plot('rr',fdmod.rrplot('',par)) 
+Plot('rr',fdmod.rrplot('plotfat=10',par)) 
 
 # ------------------------------------------------------------
 # get velocity
@@ -41,7 +41,7 @@ Flow(  'velo',
 Plot(  'velo',fdmod.cgrey('allpos=y bias=1.43',par))
 Result('velo',['velo','ss','rr'],'Overlay')
 
-# plot density
+# density
 Flow('dens','velo','math output=1')
 
 # ------------------------------------------------------------
@@ -66,10 +66,10 @@ fdmod.awefd1('temp','wfld',
 Plot('wfld',fdmod.wgrey('pclip=99',par),view=1)
 
 # plot wavefield frames
-for i in range(10):
-    tag = '-%02d' %(i*3)
+for i in range(7):
+    tag = '-%02d' %(i)
     fdmod.wframe('wfld'+tag,
-                 'wfld',i*3,'pclip=99',par)
+                 'wfld',i,'pclip=99',par)
     Result( 'wfld'+tag,
            ['wfld'+tag,'ss','rr'],'Overlay')
 
@@ -94,7 +94,7 @@ fdmod.zom('imag','jdat',
 
 # plot image
 Plot(  'imag','bandpass flo=2 |'
-       + fdmod.cgrey('pclip=99.9',par))
+       + fdmod.cgrey('pclip=99.99',par))
 Result('imag',['imag','rr'],'Overlay')
 
 # ------------------------------------------------------------
