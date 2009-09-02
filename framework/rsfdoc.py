@@ -267,16 +267,17 @@ class rsfpar(object):
         """Parse invalid defaults to long description"""
         LHS, default = string.split(default,'=',1)
         try:
-            if type=='enum-bool':
-                if default not in ['y','n']:
-                    raise TypeError
-            else:
-                DefaultIsValid = isinstance(eval(default),eval(type))
-        except (SyntaxError,NameError,TypeError): # exception when default contains expressions
-            if default:
-                desc = '%s\n(defaults to: %s)' % (desc,default)
-                DescriptionIsLong = True
-            default = ' - '
+            try:
+                if type=='enum-bool':
+                    if default not in ['y','n']:
+                        raise TypeError
+                else:
+                    DefaultIsValid = isinstance(eval(default),eval(type))
+            except (SyntaxError,NameError,TypeError): # exception when default contains expressions
+                if default:
+                    desc = '%s\n(defaults to: %s)' % (desc,default)
+                    DescriptionIsLong = True
+                default = ' - '
         finally:
             if len(default)==0:
                 default = ' - '
