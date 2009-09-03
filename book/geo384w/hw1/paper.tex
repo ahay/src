@@ -71,9 +71,10 @@ derivations that you perform.
 \item The so-called ``parabolic'' or $15^{\circ}$ eikonal
   equation \cite[]{tappert,iei,bamberger} has the form
   \begin{equation}
+    {\frac{\partial T}{\partial x_1}} + 
+    {\frac{1}{2\,S(\mathbf{x})}\,\left(\frac{\partial T}{\partial x_2}\right)^2} =
+    {S(\mathbf{x})}
     \label{eq:pareik}
-    \frac{\partial T}{\partial x_1} + \frac{1}{2\,S(\mathbf{x})}\,\left(\frac{\partial T}{\partial x_2}\right)^2 =
-    S(\mathbf{x})
   \end{equation}
   where $\mathbf{x}=\{x_1,x_2\}$ is a point in space, $T(\mathbf{x})$
   is the traveltime, and $S(\mathbf{x})$ is slowness. 
@@ -180,9 +181,9 @@ For extra credit, you can modify the wave modeling program to include
 anisotropic wave propagation effects. The program below implements
 wave modeling with the constant-density acoustic wave equation
 \begin{equation}
-  \label{eq:cdens}
-   \frac{1}{V^2(\mathbf{x})}\,\frac{\partial^2 P}{\partial t^2} =
-   \nabla^2 P + F(\mathbf{x},t)\;,
+   {{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 P}{\partial t^2}}} =
+   {\nabla^2 P} + {F(\mathbf{x},t)}\;,
+   \label{eq:cdens}
 \end{equation} 
 where $F(\mathbf{x},t)$ is the source term. The implementation uses
 finite-difference discretization (second-order in time and fourth-order in space). 
@@ -198,10 +199,10 @@ where $\mathbf{P}$ represents the propagating wavefield discretized at different
 
 Your task is to modify the code to implement the variable-density acoustic wave equation
 \begin{equation}
+  {{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 P}{\partial t^2}}} =
+  {\rho(\mathbf{x})\, \nabla \cdot 
+  \left(\frac{1}{\rho(\mathbf{x})}\,\nabla P\right)}\;.
   \label{eq:vdens}
-  \frac{1}{V^2(\mathbf{x})}\,\frac{\partial^2 P}{\partial t^2} =
-  \rho(\mathbf{x})\, \nabla \cdot 
-  \left(\frac{1}{\rho(\mathbf{x})}\,\nabla P\right)\;.
 \end{equation} 
 
 Test your implementation by modifying the \texttt{SConstruct} file to
