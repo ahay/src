@@ -3,6 +3,7 @@ from rsfbook import *
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',
        papers=Split('''
+       school/paper.tex
        rsf/prog.tex
        rsf/format.tex
        rsf/tour.tex
@@ -11,7 +12,7 @@ Papers(copyr='Madagascar Community',
        scons/paper.tex
        '''),
        authors={'scons':'Sergey Fomel and Gilles Hennenfent'},
-       line='\\url{http://rsf.sourceforge.net/}',
+       line='\\url{http://www.ahay.org/}',
        fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
 End(use='hyperref,color,amsmath,fancybox,jfc',
