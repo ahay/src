@@ -6,8 +6,8 @@ progs = '''
 abalance analytical angle angle2 approx bdix beamform blur cflow
 chebvc cpef dealias deblur dijkstra dip diplet dips distance divn dix
 dixshape eikonal eikonalvti envelope erf exgr explanesignoi expsignoi
-flat focus fpow freqest gaussmooth interpt iphase kron locov lpf mig3
-miss3 nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
+flat focus fpow freqest gaussmooth interpt iphase kron l1 locov lpf
+mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
 ofsemb patch pick pick3 plane planemis2 planemis3 planereg2 planereg3
 planesignoi pmig pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3
 pwdsigk pwdsmooth2 pwspray pwspray3 reshape rsin seislet seisigk shape

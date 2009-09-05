@@ -40,8 +40,11 @@ int main(int argc, char* argv[])
 	dw = 1./(nt*d1);
 	w0 = 0.;
     } else {
-	if (!sf_getfloat("dw",&dw)) sf_error("Need dw=");
-	/* frequency step */
+	if (!sf_getfloat("dw",&dw)) {
+	    /* frequency step */
+	    nt = 2*kiss_fft_next_fast_size((n1+1)/2);
+	    dw = 1./(nt*d1);
+	}
 	if (!sf_getfloat("w0",&w0)) w0=0.;
 	/* first frequency */
     }
