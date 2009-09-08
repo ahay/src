@@ -55,9 +55,6 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
 
-    dt2 =    dt*dt;
-    laplacian_init(type,nz,nx,dz,dx);
-
     /* read wavelet, velocity & reflectivity */
     ww=sf_floatalloc(nt);     sf_floatread(ww   ,nt   ,Fw);
     vv=sf_floatalloc2(nz,nx); sf_floatread(vv[0],nz*nx,Fv);
@@ -68,7 +65,8 @@ int main(int argc, char* argv[])
     uo=sf_floatalloc2(nz,nx);
     up=sf_floatalloc2(nz,nx);
     ud=sf_floatalloc2(nz,nx);
-    
+ 
+    dt2 = dt*dt;   
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
 	    um[ix][iz]=0;
@@ -78,7 +76,8 @@ int main(int argc, char* argv[])
 	    vv[ix][iz] *= vv[ix][iz]*dt2;
 	}
     }
-    
+    laplacian_init(type,nz,nx,dz,dx,vv);
+
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
