@@ -330,7 +330,7 @@ class rsfdata(object):
         if not self.uses[book].has_key(chapter):
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
-        
+
 class rsfprog(object):
     def __init__(self,name,file,desc=None):
         self.name = name
@@ -352,11 +352,11 @@ class rsfprog(object):
         val = pair[1]
         mypar = self.pars.get(key)
         if mypar:
-            return mypar.check(key,val)    
+            return mypar.check(key,val)
         if key[-1] in '123456789':
             mypar = self.pars.get(key[:-1]+'#')
             if mypar:
-                return mypar.check(key,val) 
+                return mypar.check(key,val)
         sys.stderr.write('No parameter "%s" in %s\n' % (key,self.name))
         return 1
     def weblink(self,wiki):
@@ -393,7 +393,7 @@ class rsfprog(object):
             doc = doc + section('see also',self.also)
         books = self.uses.keys()
         if books:
-            usedoc = '' 
+            usedoc = ''
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
@@ -456,7 +456,7 @@ class rsfprog(object):
                 contents = contents + self.pars[par].man(par)
         books = self.uses.keys()
         if books:
-            usedoc = '' 
+            usedoc = ''
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
@@ -483,7 +483,7 @@ class rsfprog(object):
         contents = contents + name
         if self.snps:
             contents = contents + '\\texttt{%s}\n' % self.snps
-        if self.cmts:            
+        if self.cmts:
             contents = contents + '\\begin{verbatim}%s\\end{verbatim}\n' % \
                        self.cmts
         pars =  self.pars.keys()
@@ -504,7 +504,7 @@ class rsfprog(object):
         contents = 'Program %s | %s\n' % (name,self.desc)
         if self.snps:
             contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
-        if self.cmts:            
+        if self.cmts:
             contents = contents + '[COMMENTS]\n%s\n' % self.cmts
         pars =  self.pars.keys()
         if pars:
@@ -514,7 +514,7 @@ class rsfprog(object):
                 contents = contents + self.pars[par].text(par)
         filedir = os.path.split(self.file)[0]
         if filedir:
-            contents = contents + '[DIRECTORY]\n%s\n' % filedir            
+            contents = contents + '[DIRECTORY]\n%s\n' % filedir
         file.write(contents)
         file.close()
     def spec(self,dir,name=None):
@@ -529,7 +529,7 @@ Desc:   %s
 DocCmd: %s
 ''' % (name,filedir,self.desc.rstrip(' .'),doccmd)
         """ process stdin and stdout ports hidden in synopsis """
-        if self.snps: 
+        if self.snps:
             tokens = self.snps.split()
             for cue in ['<','>']:
                 try:
@@ -548,12 +548,12 @@ DocCmd: %s
                 contents = contents + line
         """TO DO: process comments."""
         pars =  self.pars.keys()
-        ParamLines = '' 
+        ParamLines = ''
         if pars:
             pars.sort()
             for par in pars:
                 line = self.pars[par].spec(par)
-                head, sep, tail = line.partition(':')
+                head, tail = line.split(':',1)
                 if head=='Port':
                     contents = contents + line
                 else:
@@ -600,7 +600,7 @@ DocCmd: %s
                        bigsection('Parameters','#ffffff', '#ee77aa',pardoc)
         books = self.uses.keys()
         if books:
-            usedoc = '' 
+            usedoc = ''
             books.sort()
             for book in books:
                 bookdoc = ''
@@ -702,7 +702,7 @@ def spec(dir):
     file = open (os.path.join(dir,'RSF_enum.sections'),'w')
     file.write('# Madagascar Sections\n')
     # TO DO: Define tksu sections from most common parameters
-    
+
     # below remains untouched from 'def text(dir,name)'
     dirs = {}
     for prog in progs.keys():
@@ -733,7 +733,7 @@ version = {}
 comment['python'] = re.compile(r'[^\'\"]*[\'\"]+([^\'\"]+)')
 param['python'] = re.compile(r'par\.(?P<type>bool|int|float|string)'
                              '\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
-                             '(?:\,\s*(?P<default>[^\)]+))?\)' 
+                             '(?:\,\s*(?P<default>[^\)]+))?\)'
                              '(?:\s*\#\s*(?P<range>[\[][^\]]+[\]])?\s*'
                              '(?P<desc>[^#\n]+\S))?')
 synopsis['python'] = re.compile(r'\s*\#\s*Takes\s*\:\s*'
@@ -746,9 +746,9 @@ version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 comment['f90'] = re.compile(r'(?:\!([^!\n]+)\n)+')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                           '\s*(?P<var>[\w\_]+)\s*'
-                          '(?:\,\s*(?P<default>[^\)]+))?\)' 
+                          '(?:\,\s*(?P<default>[^\)]+))?\)'
                           '(?:\s*\!\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                          '(?P<desc>[^!\n]+\S))?') 
+                          '(?P<desc>[^!\n]+\S))?')
 synopsis['f90'] = re.compile(r'\s*\!\s*Takes\s*\:\s*'
                              '((?:[^\n]|\n\![^\n])+)((?:.|\n)*)$')
 inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
@@ -756,13 +756,13 @@ inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
 version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
 
-comment['c'] = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')      
+comment['c'] = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
                         '(?P<type>bool|int|float)'
                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                         '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'
                         '(?:[\{]|' # either \{ or
-                        '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|' 
+                        '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
                         'sf_[^\;]+)?' # or sf_error
                         '[\;])\s*' # ending with ;
                         '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
@@ -780,7 +780,7 @@ param2['c'] = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*'
                     '\s*(?P<desc>[^\)]+)\)\*\/')
 params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                      '\s*\([^\,]+\,[^\,]+\,'
-                     '\s*(?P<size>[\w\_]+)\s*\)[^/]+'             
+                     '\s*(?P<size>[\w\_]+)\s*\)[^/]+'
                      '\/\*\(\s*(?P<name>[\w\#]+)'
                      '(?:=(?P<default>\S+))?'
                      '\s*(?P<desc>[^\)]+)\)\*\/')
@@ -791,7 +791,7 @@ synopsis['c'] = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                       '((?:.|\n)*)$')
 inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     'sf_(?P<io>input|output)'
-                    '\s*\(\s*\"(?P<tag>\w+)\"')            
+                    '\s*\(\s*\"(?P<tag>\w+)\"')
 version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
 
 
@@ -883,7 +883,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
                 default = 'y'
             elif default == 'false' or default == 'False':
                 default = 'n'
-                
+
         prog.par(parname,rsfpar(type,default,range,desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                   (name,parname,type,default,range,desc))
@@ -897,20 +897,20 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             default = par[3]
             range = '' # for now
             desc = par[4] + ' [%s]' % size
-        
+
             prog.par(parname,rsfpar(type,default,range,desc))
             out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                       (name,parname,type,default,range,desc))
             parline = parline + " %s=%s" % (parname,default)
     pars = param2.get(lang)
-    if pars: 
+    if pars:
         for par in pars.findall(text):
             type = par[0]
             parname = par[1]
             default = par[2]
             range = '' # for now
             desc = par[3]
-            
+
             prog.par(parname,rsfpar(type,default,range,desc))
             out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                       (name,parname,type,default,range,desc))
@@ -982,7 +982,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                         doc = doc + "%s: %s\n" % (bold(prog),desc)
                 pydoc.pager(doc)
                 return
-    
+
         if not args:
             if typ == 'w':
                 html(dir)
@@ -1033,8 +1033,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 
     except (getopt.error, BadUsage):
         print '''sfdoc - the RSF documentation tool
-        
-%(prog)s <prog1> <prog2> ... 
+
+%(prog)s <prog1> <prog2> ...
     Show documentation on programs.
 
 %(prog)s -t <dir> [<prog1> <prog2> ... ]
@@ -1043,7 +1043,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s -s <dir> [<prog1> <prog2> ... ]
     Write TKSU block specs in <dir> directory
 
-%(prog)s -w <dir> [-r <rep>] [<prog1> <prog2> ...] 
+%(prog)s -w <dir> [-r <rep>] [<prog1> <prog2> ...]
     Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
 
 %(prog)s -m <dir>  <prog1> <prog2> ...
@@ -1052,7 +1052,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s -g <dir>  <prog1> <prog2> ...
     Write program documentaton in groff (man page) format in <dir> directory.
 
-%(prog)s -l <dir> <prog1> <prog2> ... 
+%(prog)s -l <dir> <prog1> <prog2> ...
     Write program LaTeX documentaton in <dir> directory.
 
 %(prog)s -k <keyword>
