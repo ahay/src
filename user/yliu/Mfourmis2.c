@@ -485,12 +485,8 @@ int main(int argc, char* argv[])
 			    }
 			} /* Inverse 2-D FFT end */
 			
-//			for (i1=0; i1 < n12; i1++) {
-//			    if (known[i1]) dd3[i1]=dd2[i1];
-//			}
 			for (i1=0; i1 < n12; i1++) {
-			    if (known[i1]) dd3[i1]=0.;
-			    dd3[i1] += dd2[i1];
+			    if (known[i1]) dd3[i1] = dd2[i1];
 			}
 			
 			/* Forward 2-D FFT */
