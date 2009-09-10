@@ -22,10 +22,10 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, cnum, cut, num; 
-    float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL, eps, perc1, perc2, ordert, iperc, orderc, inum;
+    int i, niter, nw, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, cnum, cutting, num; 
+    float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL, eps, perc, ordert, iperc, orderc, inum;
     char *type, *oper;
-    bool verb, *known;
+    bool verb, *known, cut;
     sf_file in, out, dip, mask=NULL;
 
     sf_init (argc,argv);
@@ -41,27 +41,26 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
 
-    if (!sf_getfloat("perc1",&perc1)) perc1=98.;
-    /* percentage for shrinkage and Bregman iteration */
-
-
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy order */
+
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
 
     if (NULL == (type=sf_getstring("type"))) type="biorthogonal";
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
-    if (NULL == (oper=sf_getstring("oper"))) oper="thresholding";
-    /* [destruction,preconditioning,thresholding,shaping,bregman,cutting] method, the default is thresholding  */
+    if (NULL == (oper=sf_getstring("oper"))) oper="shaping";
+    /* [destruction,construction,shaping,pocs,bregman] method, the default is shaping  */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
+    if (!sf_getbool("cut",&cut)) cut = false;
+    /* cutting flag, the default is shaping */
+
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
-
 
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
@@ -74,6 +73,20 @@ int main(int argc, char* argv[])
     } else {
 	mask = NULL;
     }
+
+    if (cut) {
+	if (!sf_getint("cnum",&cnum)) cnum=n2;
+	/* Max cutting in cutting operator, default is n2 */
+	
+	if (!sf_getfloat("orderc",&orderc)) orderc=1.;
+	/* Curve order for cutting operator, default is linear */
+	
+	seislet_init(n1,n2,true,true,eps,type[0]);
+	if (cnum > n2 || (cnum-1) <0) sf_error("need cnum in [1,n2].");
+    } else {
+	if (!sf_getfloat("perc",&perc)) perc=99.;
+	/* percentage for soft-thresholding */ 
+    }
  
     switch (oper[0]) {
 	case 'd':
@@ -82,46 +95,35 @@ int main(int argc, char* argv[])
 	    }
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    break;
-	case 'p':
+
+	case 'c':
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    sf_mask_init(known);
 	    break;
 
-	case 't':
-	    if (!sf_getfloat("perc2",&perc2)) perc2=90.;
-	    /* percentage for output in model space shrinkage*/
-
+	case 's':
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding operator, default is linear */
 	    
-	    sf_sharpen_init(n12,perc1);
+	    sf_sharpen_init(n12,perc);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
-	case 'c':
-	    if (!sf_getint("cnum",&cnum)) cnum=n2;
-	    /* Max cutting in cutting operator, default is n2 */
+	case 'p':
+	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
+	    /* Curve order for thresholding operator, default is linear */
 
-	    if (!sf_getfloat("orderc",&orderc)) orderc=1.;
-	    /* Curve order for cutting operator, default is linear */
-
-	    seislet_init(n1,n2,true,true,eps,type[0]);
-	    dd2 = sf_floatalloc(n12);
-	    if (cnum > n2 || (cnum-1) <0) sf_error("need cnum in [1,n2].");
-	    break;
-
-	case 's':
-	    sf_sharpen_init(n12,perc1);
+	    sf_sharpen_init(n12,perc);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
 	case 'b':
-	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
+	    if (!sf_getint("nbreg",&nbreg)) nbreg=1;
 	    /* number of iterations for Bregman iteration */
 	    
-	    sf_sharpen_init(n12,perc1);
+	    sf_sharpen_init(n12,perc);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    dd3 = sf_floatalloc(n12);
@@ -157,162 +159,195 @@ int main(int argc, char* argv[])
 		sf_solver(seislet_destruct, sf_cgstep, n12, n12, dd, mm, niter,
 			  "known", known, "x0", dd, "verb", verb, "end"); 
 		for(i=0; i < n12; i++) {
-		    if ( !known[i] ) {
-			dd[i] = - dd[i];
-		    }
+		    if (!known[i]) dd[i] = - dd[i];
 		} 
 		break;
-	    case 'p': 
+
+	    case 'c': 
 		/* Seislet construct */
 		sf_solver_prec(sf_mask_lop, sf_cgstep, seislet_construct, n12, n12, n12, dd, dd, niter,
 			       0., "verb", verb, "end"); 
 		for(i=0; i < n12; i++) {
-		    if ( !known[i] ) dd[i] = - dd[i];
+		    if (!known[i]) dd[i] = - dd[i];
 		} 
-		break;
-		
-	    case 't':
-		/* Thresholding for shaping */
-		for (iter=0; iter < niter; iter++) {
-		    if (verb)
-			sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
-		    seislet_lop(false,false,n12,n12,mm,dd2);
-		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd2[i1]=dd[i1];
-		    }
-		    
-		    seislet_lop(true,false,n12,n12,mm,dd2);
-		    if(ordert==0.) {
-			iperc = perc1;
-		    } else {
-			iperc = perc1-((perc1-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
-			if(iperc<0.) iperc=0.;
-		    }
-		    /* Thresholding */
-		    sf_sharpen_init(n12,iperc);
-		    sf_sharpen(mm);
-		    sf_weight_apply(n12,mm);
-		    sf_sharpen_close();
-		}
-		
-		seislet_lop(false,false,n12,n12,mm,dd2);
-		for (i1=0; i1 < n12; i1++) {
-		    if (known[i1]) dd2[i1]=dd[i1];
-		}
-		sf_sharpen_init(n12,perc2);
-		seislet_lop(true,false,n12,n12,mm,dd2);
-		sf_sharpen(mm);
-		sf_weight_apply(n12,mm);
-		sf_sharpen_close();
-		seislet_lop(false,false,n12,n12,mm,dd2);
-		
-		for (i1=0; i1 < n12; i1++) {
-		    if (0.==perc2) {
-			if (!known[i1]) dd[i1] = dd2[i1];
-		    } else {
-			dd[i1] = dd2[i1];
-		    }
-		}
-		
-		break;
-		
-	    case 'c':
-		/* Cutting for linear inversion */
-		for (iter=0; iter < niter; iter++) {
-		    if (verb)
-			sf_warning("Model space cutting iteration %d of %d",iter+1,niter);
-		    seislet_lop(false,false,n12,n12,mm,dd2);
-		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd2[i1]=dd[i1];
-		    }
-		    
-		    seislet_lop(true,false,n12,n12,mm,dd2);
-		    
-		    if(orderc==0.) {
-			inum = (float)cnum;
-		    } else {
-			inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
-			if(inum<0.) inum = 0.;
-		    }
-		    cut = (int)inum;
-		    
-		    for (num=1; num < cut; num *= 2) ;
-		    num /= 2;		
-		    
-		    for (i1=0; i1 < n1; i1++) {
-			for (i2=num; i2 < n2; i2++) {
-			    mm[i2*n1+i1] = 0.;
-			}
-		    }
-		}
-		
-		seislet_lop(false,false,n12,n12,mm,dd2);
-		
-		for (i1=0; i1 < n12; i1++) {
-		    if (!known[i1]) dd[i1] = dd2[i1];
-		}
-		
 		break;
 		
 	    case 's':
 		for (i1=0; i1 < n12; i1++) {
-		    dd2[i1]= dd[i1];
+		    dd2[i1] = dd[i1];
 		}
-		for (iter=0; iter < niter; iter++) {
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
 		    if (verb)
-			sf_warning("Data space shrinkage iteration %d of %d",iter+1,niter);
-		    seislet_lop(true,false,n12,n12,mm,dd2);
-		    sf_sharpen(mm);
-		    sf_weight_apply(n12,mm);
-		    seislet_lop(false,false,n12,n12,mm,dd2);
+			sf_warning("Shaping iteration %d of %d",iter+1,niter);
+
 		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd2[i1]= dd[i1];
+			if (known[i1]) dd2[i1] = 0.;
 		    }
-		}
+		    for (i1=0; i1 < n12; i1++) {
+			dd2[i1] += dd[i1];
+		    }
+		    
+		    seislet_lop(true,false,n12,n12,mm,dd2);
+
+		    if (cut) {
+			/* Cutting */
+			if(orderc==0.) {
+			    inum = (float)cnum;
+			} else {
+			    inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
+			    if(inum<0.) inum = 0.;
+			}
+			cutting = (int)inum;
+			
+			for (num=1; num < cutting; num *= 2) ;
+			num /= 2;		
+			
+			for (i1=0; i1 < n1; i1++) {
+			    for (i2=num; i2 < n2; i2++) {
+				mm[i2*n1+i1] = 0.;
+			    }
+			}
+		    } else {
+			/* Thresholding */
+			if(ordert==0.) {
+			    iperc = perc;
+			} else {
+			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			    if(iperc<0.) iperc=0.;
+			}
+			sf_sharpen_init(n12,iperc);
+			sf_sharpen(mm);
+			sf_weight_apply(n12, mm);
+			sf_sharpen_close();
+		    }
+
+		    seislet_lop(false,false,n12,n12,mm,dd2);		    
+		} /* End outer interation */
+		
 		for (i1=0; i1 < n12; i1++) {
 		    dd[i1] = dd2[i1];
 		}
 		break;
-		
-	    case 'b':
-		
+
+	    case 'p':
 		for (i1=0; i1 < n12; i1++) {
 		    dd2[i1] = dd[i1];
 		}
-		for (ibreg=0; ibreg < nbreg; ibreg++) {
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
+		    
 		    if (verb)
-			sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
-		    for (i1=0; i1 < n12; i1++) {
-			mm[i1]= 0.;
-		    }		
-		    for (iter=0; iter < niter; iter++) {
-			if (verb)
-			    sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
-			seislet_lop(false,false,n12,n12,mm,dd3);
-			for (i1=0; i1 < n12; i1++) {
-			    if (known[i1]) dd3[i1]=dd2[i1];
+			sf_warning("POCS iteration %d of %d",iter+1,niter);
+
+		    seislet_lop(true,false,n12,n12,mm,dd2);
+
+		    if (cut) {
+			/* Cutting */
+			if(orderc==0.) {
+			    inum = (float)cnum;
+			} else {
+			    inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
+			    if(inum<0.) inum = 0.;
 			}
-			seislet_lop(true,false,n12,n12,mm,dd3);
-			if (iter != 0) {
-			    sf_sharpen(mm);
-			    sf_weight_apply(n12,mm);
+			cutting = (int)inum;
+			
+			for (num=1; num < cutting; num *= 2) ;
+			num /= 2;		
+			
+			for (i1=0; i1 < n1; i1++) {
+			    for (i2=num; i2 < n2; i2++) {
+				mm[i2*n1+i1] = 0.;
+			    }
 			}
+		    } else {
+			/* Thresholding */
+			if(ordert==0.) {
+			    iperc = perc;
+			} else {
+			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			    if(iperc<0.) iperc=0.;
+			}
+			sf_sharpen_init(n12,iperc);
+			sf_sharpen(mm);
+			sf_weight_apply(n12, mm);
+			sf_sharpen_close();
 		    }
 		    
-		    seislet_lop(false,false,n12,n12,mm,dd3);
-		    
+		    seislet_lop(false,false,n12,n12,mm,dd2);
+
 		    for (i1=0; i1 < n12; i1++) {
-			if (!known[i1]) dd3[i1]= 0.;
+			if (known[i1]) dd2[i1] = 0.;
 		    }
 		    for (i1=0; i1 < n12; i1++) {
-			dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
+			dd2[i1] += dd[i1];
 		    }
-		}
-		seislet_lop(false,false,n12,n12,mm,dd2);
-		for (i1=0; i1 < n12; i1++) {
-		    if (!known[i1]) dd[i1] = dd2[i1];
-		}
+		} /* End outer interation */
 		
+		for (i1=0; i1 < n12; i1++) {
+		    dd[i1] = dd2[i1];
+		}
+		break;
+
+	    case 'b':
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1] = dd[i1];
+		    dd3[i1] = dd[i1];
+		}
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
+		    if (verb)
+			sf_warning("Outer iteration %d of %d",iter+1,niter);
+		    
+		    for (ibreg=0; ibreg < nbreg; ibreg++) { /* Inner iteration */
+			if (verb)
+			    sf_warning("Inner iteration %d of %d",ibreg+1,nbreg);
+
+			for (i1=0; i1 < n12; i1++) {
+			    if (known[i1]) dd2[i1] = 0.;
+			}
+			for (i1=0; i1 < n12; i1++) {
+			    dd2[i1] += dd3[i1];
+			}
+
+			seislet_lop(true,false,n12,n12,mm,dd2);
+
+			if (cut) {
+			    /* Cutting */
+			    if(orderc==0.) {
+				inum = (float)cnum;
+			    } else {
+				inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
+				if(inum<0.) inum = 0.;
+			    }
+			    cutting = (int)inum;
+			    
+			    for (num=1; num < cutting; num *= 2) ;
+			    num /= 2;		
+			    
+			    for (i1=0; i1 < n1; i1++) {
+				for (i2=num; i2 < n2; i2++) {
+				    mm[i2*n1+i1] = 0.;
+				}
+			    }
+			} else {
+			    /* Thresholding */
+			    sf_sharpen(mm);
+			    sf_weight_apply(n12, mm);
+			}
+			
+			seislet_lop(false,false,n12,n12,mm,dd2);
+		    } /* End inner interation */
+
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) {
+			    dd3[i1]= dd[i1]+dd3[i1]-dd2[i1]; 
+			} else {
+			    dd3[i1] = 0.;
+			}
+		    }
+		} /* End outer interation */
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd[i1] = dd2[i1];
+		}
 		break;
 	} 
 	sf_cgstep_close();

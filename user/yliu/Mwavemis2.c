@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, j; 
-    float *dd, *dd2, *d1, *d2, *m1, *m2, *dd3, *m, perc, ordert, iperc, *mm;
+    float *dd, *dd2=NULL, *d1, *d2, *m1, *m2, *dd3=NULL, *m, perc, ordert, iperc, *mm;
     char *oper, *type;;
     bool verb, *known;
     sf_file in, out, mask=NULL;
@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
 
-    if (!sf_getfloat("perc",&perc)) perc=98.;
-    /* percentage for shrinkage and Bregman iteration */
+    if (!sf_getfloat("perc",&perc)) perc=99.;
+    /* percentage for soft-thresholding */
 
-    if (NULL == (oper=sf_getstring("oper"))) oper="thresholding";
-    /* [thresholding,bregman] method, the default is thresholding  */
+    if (NULL == (oper=sf_getstring("oper"))) oper="shaping";
+    /* [shaping,pocs,bregman] method, the default is shaping  */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -53,8 +53,6 @@ int main(int argc, char* argv[])
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
     dd = sf_floatalloc(n12);
-    dd2 = sf_floatalloc(n12);
-    dd3 = sf_floatalloc(n12);
     mm = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
     m = sf_floatalloc(n12);
@@ -71,22 +69,30 @@ int main(int argc, char* argv[])
     }
    
     switch (oper[0]) {
-	case 't':
+	case 's':
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
+
 	    sf_sharpen_init(n12,perc);
-	    
+	    dd2 = sf_floatalloc(n12);
+	    break;
+	case 'p':
+	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
+	    /* Curve order for thresholding parameter, default is linear */
+
+	    sf_sharpen_init(n12,perc);
+	    dd2 = sf_floatalloc(n12);
 	    break;
 	case 'b':
-	    if (!sf_getint("nbreg",&nbreg)) nbreg=100;
+	    if (!sf_getint("nbreg",&nbreg)) nbreg=1;
 	    /* number of iterations for Bregman iteration */
 	    
 	    sf_sharpen_init(n12,perc);
+	    dd2 = sf_floatalloc(n12);
+	    dd3 = sf_floatalloc(n12);
 	    break;
-
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
-
     }
 
     for (i3=0; i3 < n3; i3++) {
@@ -104,44 +110,20 @@ int main(int argc, char* argv[])
 	    }
 	}
         switch (oper[0]) {
-	    case 't':
-		
+	    case 's':
 		for (i1=0; i1 < n12; i1++) {
-		    mm[i1] = 0.;
+		    dd2[i1] = dd[i1];
 		}
-		/* Thresholding for shaping */
-		for (iter=0; iter < niter; iter++) {
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
+		    
 		    if (verb)
-			sf_warning("Model space shrinkage iteration %d of %d",iter+1,niter);
-		    
-		    /* Inverse 2-D DWT */
-		    for (i1=0; i1 < n1; i1++) { 
-			/* Horizontal direction */
-			wavelet_init(n2,true,true,type[0]);
-			for (j=0; j < n2; j++) {
-			    m2[j] = mm[j*n1+i1];
-			}
-			wavelet_lop(true,false,n2,n2,d2,m2);
-			for (j=0; j < n2; j++) {
-			    dd2[j*n1+i1] = d2[j];
-			}
-			wavelet_close();
-		    }
-		    for (i2=0; i2 < n2; i2++) {
-			/* Vertical direction */
-			wavelet_init(n1,true,true,type[0]);
-			for (j=0; j < n1; j++) {
-			    m1[j] = dd2[i2*n1+j];
-			}
-			wavelet_lop(true,false,n1,n1,d1,m1);
-			for (j=0; j < n1; j++) {
-			    dd2[i2*n1+j] = d1[j];
-			}
-			wavelet_close();
-		    } /* Inverse 2-D DWT end */		    
-		    
+			sf_warning("Shaping iteration %d of %d",iter+1,niter);
+
 		    for (i1=0; i1 < n12; i1++) {
-			if (known[i1]) dd2[i1] = dd[i1];
+			if (known[i1]) dd2[i1] = 0.;
+		    }
+		    for (i1=0; i1 < n12; i1++) {
+			dd2[i1] += dd[i1];
 		    }
 		    
 		    /* Forward 2-D DWT */
@@ -169,8 +151,8 @@ int main(int argc, char* argv[])
 			}
 			wavelet_close();
 		    } /* Forward 2-D DWT end */	
-		    
-		    
+
+		    /* Thresholding */
 		    if(ordert==0.) {
 			iperc = perc;
 		    } else {
@@ -182,149 +164,6 @@ int main(int argc, char* argv[])
 		    sf_sharpen(mm);
 		    sf_weight_apply(n12,mm);
 		    sf_sharpen_close();
-		    
-		}
-		/* Inverse 2-D DWT */
-		for (i1=0; i1 < n1; i1++) { 
-		    /* Horizontal direction */
-		    wavelet_init(n2,true,true,type[0]);
-		    for (j=0; j < n2; j++) {
-			m2[j] = mm[j*n1+i1];
-		    }
-		    wavelet_lop(true,false,n2,n2,d2,m2);
-		    for (j=0; j < n2; j++) {
-			dd2[j*n1+i1] = d2[j];
-		    }
-		    wavelet_close();
-		}
-		for (i2=0; i2 < n2; i2++) {
-		    /* Vertical direction */
-		    wavelet_init(n1,true,true,type[0]);
-		    for (j=0; j < n1; j++) {
-			m1[j] = dd2[i2*n1+j];
-		    }
-		    wavelet_lop(true,false,n1,n1,d1,m1);
-		    for (j=0; j < n1; j++) {
-			dd2[i2*n1+j] = d1[j];
-		    }
-		    wavelet_close();
-		} /* Inverse 2-D DWT end */		    
-		
-		for (i1=0; i1 < n12; i1++) {
-		    if (!known[i1]) dd[i1]=dd2[i1];
-		}
-		
-		break;
-	    case 'b':
-		for (i1=0; i1 < n12; i1++) {
-		    dd2[i1] = dd[i1];
-		}
-		
-		/* Bregman iteration */
-		for (ibreg=0; ibreg < nbreg; ibreg++) {
-		    
-		    if (verb)
-			sf_warning("Bregman iteration %d of %d",ibreg+1,nbreg);
-		    for (i1=0; i1 < n12; i1++) {
-			mm[i1] = 0.;
-		    }
-		    for (iter=0; iter < niter; iter++) {
-			if (verb)
-			    sf_warning("Shrinkage iteration %d of %d",iter+1,niter);
-			
-			/* Inverse 2-D DWT */
-			for (i1=0; i1 < n1; i1++) { 
-			    /* Horizontal direction */
-			    wavelet_init(n2,true,true,type[0]);
-			    for (j=0; j < n2; j++) {
-				m2[j] = mm[j*n1+i1];
-			    }
-			    wavelet_lop(true,false,n2,n2,d2,m2);
-			    for (j=0; j < n2; j++) {
-				dd3[j*n1+i1] = d2[j];
-			    }
-			    wavelet_close();
-			}
-			for (i2=0; i2 < n2; i2++) {
-			    /* Vertical direction */
-			    wavelet_init(n1,true,true,type[0]);
-			    for (j=0; j < n1; j++) {
-				m1[j] = dd3[i2*n1+j];
-			    }
-			    wavelet_lop(true,false,n1,n1,d1,m1);
-			    for (j=0; j < n1; j++) {
-				dd3[i2*n1+j] = d1[j];
-			    }
-			    wavelet_close();
-			} /* Inverse 2-D DWT end */	
-			
-			for (i1=0; i1 < n12; i1++) {
-			    if (known[i1]) dd3[i1]=dd2[i1];
-			}
-
-			/* Forward 2-D DWT */
-			for (i2=0; i2 < n2; i2++) {
-			    /* Vertical direction */
-			    wavelet_init(n1,true,true,type[0]);
-			    for (j=0; j < n1; j++) {
-				d1[j] = dd3[i2*n1+j];
-			    }
-			    wavelet_lop(false,false,n1,n1,d1,m1);
-			    for (j=0; j < n1; j++) {
-				mm[i2*n1+j] = m1[j];
-			    }
-			    wavelet_close();
-			} 
-			for (i1=0; i1 < n1; i1++) { 
-			    /* Horizontal direction */
-			    wavelet_init(n2,true,true,type[0]);
-			    for (j=0; j < n2; j++) {
-				d2[j] = mm[j*n1+i1];
-			    }
-			    wavelet_lop(false,false,n2,n2,d2,m2);
-			    for (j=0; j < n2; j++) {
-				mm[j*n1+i1] = m2[j];
-			    }
-			    wavelet_close();
-			} /* Forward 2-D DWT end */	
-			
-			/* Thresholding */
-			sf_sharpen(mm);
-			sf_weight_apply(n12, mm);
-
-			/* Inverse 2-D DWT */
-			for (i1=0; i1 < n1; i1++) { 
-			    /* Horizontal direction */
-			    wavelet_init(n2,true,true,type[0]);
-			    for (j=0; j < n2; j++) {
-				m2[j] = mm[j*n1+i1];
-			    }
-			    wavelet_lop(true,false,n2,n2,d2,m2);
-			    for (j=0; j < n2; j++) {
-				dd3[j*n1+i1] = d2[j];
-			    }
-			    wavelet_close();
-			}
-			for (i2=0; i2 < n2; i2++) {
-			    /* Vertical direction */
-			    wavelet_init(n1,true,true,type[0]);
-			    for (j=0; j < n1; j++) {
-				m1[j] = dd3[i2*n1+j];
-			    }
-			    wavelet_lop(true,false,n1,n1,d1,m1);
-			    for (j=0; j < n1; j++) {
-				dd3[i2*n1+j] = d1[j];
-			    }
-			    wavelet_close();
-			} /* Inverse 2-D DWT end */	
-		    
-			for (i1=0; i1 < n12; i1++) {
-			    if (!known[i1]) dd3[i1]= 0.;
-			}
-			for (i1=0; i1 < n12; i1++) {
-			    dd2[i1]= dd[i1]+dd2[i1]-dd3[i1];
-			}
-		    }
 		
 		    /* Inverse 2-D DWT */
 		    for (i1=0; i1 < n1; i1++) { 
@@ -351,10 +190,191 @@ int main(int argc, char* argv[])
 			}
 			wavelet_close();
 		    } /* Inverse 2-D DWT end */	
+		} /* End outer interation */
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd[i1] = dd2[i1];
+		}
+		break;
+
+	    case 'p':
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1] = dd[i1];
+		}
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
 		    
+		    if (verb)
+			sf_warning("POCS iteration %d of %d",iter+1,niter);
+
+		    /* Forward 2-D DWT */
+		    for (i2=0; i2 < n2; i2++) {
+			/* Vertical direction */
+			wavelet_init(n1,true,true,type[0]);
+			for (j=0; j < n1; j++) {
+			    d1[j] = dd2[i2*n1+j];
+			}
+			wavelet_lop(false,false,n1,n1,d1,m1);
+			for (j=0; j < n1; j++) {
+			    mm[i2*n1+j] = m1[j];
+			}
+			wavelet_close();
+		    } 
+		    for (i1=0; i1 < n1; i1++) { 
+			/* Horizontal direction */
+			wavelet_init(n2,true,true,type[0]);
+			for (j=0; j < n2; j++) {
+			    d2[j] = mm[j*n1+i1];
+			}
+			wavelet_lop(false,false,n2,n2,d2,m2);
+			for (j=0; j < n2; j++) {
+			    mm[j*n1+i1] = m2[j];
+			}
+			wavelet_close();
+		    } /* Forward 2-D DWT end */	
+
+		    /* Thresholding */
+		    if(ordert==0.) {
+			iperc = perc;
+		    } else {
+			iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			if(iperc<0.) iperc=0.;
+		    }
+		    /* Thresholding */
+		    sf_sharpen_init(n12,iperc);
+		    sf_sharpen(mm);
+		    sf_weight_apply(n12,mm);
+		    sf_sharpen_close();
+
+		    /* Inverse 2-D DWT */
+		    for (i1=0; i1 < n1; i1++) { 
+			/* Horizontal direction */
+			wavelet_init(n2,true,true,type[0]);
+			for (j=0; j < n2; j++) {
+			    m2[j] = mm[j*n1+i1];
+			}
+			wavelet_lop(true,false,n2,n2,d2,m2);
+			for (j=0; j < n2; j++) {
+			    dd2[j*n1+i1] = d2[j];
+			}
+			wavelet_close();
+		    }
+		    for (i2=0; i2 < n2; i2++) {
+			/* Vertical direction */
+			wavelet_init(n1,true,true,type[0]);
+			for (j=0; j < n1; j++) {
+			    m1[j] = dd2[i2*n1+j];
+			}
+			wavelet_lop(true,false,n1,n1,d1,m1);
+			for (j=0; j < n1; j++) {
+			    dd2[i2*n1+j] = d1[j];
+			}
+			wavelet_close();
+		    } /* Inverse 2-D DWT end */	
+
 		    for (i1=0; i1 < n12; i1++) {
-			if (!known[i1]) dd[i1] = dd2[i1];
-		    }		
+			if (known[i1]) dd2[i1] = 0.;
+		    }
+		    for (i1=0; i1 < n12; i1++) {
+			dd2[i1] += dd[i1];
+		    }
+		} /* End outer interation */
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd[i1] = dd2[i1];
+		}
+		break;
+
+	    case 'b':
+		for (i1=0; i1 < n12; i1++) {
+		    dd2[i1] = dd[i1];
+		    dd3[i1] = dd[i1];
+		}
+		for (iter=0; iter < niter; iter++) { /* Outer iteration */
+		    
+		    if (verb)
+			sf_warning("Outer iteration %d of %d",iter+1,niter);
+		    
+		    for (ibreg=0; ibreg < nbreg; ibreg++) { /* Inner iteration */
+			if (verb)
+			    sf_warning("Inner iteration %d of %d",ibreg+1,nbreg);
+
+			for (i1=0; i1 < n12; i1++) {
+			    if (known[i1]) dd2[i1] = 0.;
+			}
+			for (i1=0; i1 < n12; i1++) {
+			    dd2[i1] += dd3[i1];
+			}
+
+			/* Forward 2-D DWT */
+			for (i2=0; i2 < n2; i2++) {
+			    /* Vertical direction */
+			    wavelet_init(n1,true,true,type[0]);
+			    for (j=0; j < n1; j++) {
+				d1[j] = dd2[i2*n1+j];
+			    }
+			    wavelet_lop(false,false,n1,n1,d1,m1);
+			    for (j=0; j < n1; j++) {
+				mm[i2*n1+j] = m1[j];
+			    }
+			    wavelet_close();
+			} 
+			for (i1=0; i1 < n1; i1++) { 
+			    /* Horizontal direction */
+			    wavelet_init(n2,true,true,type[0]);
+			    for (j=0; j < n2; j++) {
+				d2[j] = mm[j*n1+i1];
+			    }
+			    wavelet_lop(false,false,n2,n2,d2,m2);
+			    for (j=0; j < n2; j++) {
+				mm[j*n1+i1] = m2[j];
+			    }
+			    wavelet_close();
+			} /* Forward 2-D DWT end */	
+			
+
+			/* Thresholding */
+			sf_sharpen(mm);
+			sf_weight_apply(n12,mm);
+
+			/* Inverse 2-D DWT */
+			for (i1=0; i1 < n1; i1++) { 
+			    /* Horizontal direction */
+			    wavelet_init(n2,true,true,type[0]);
+			    for (j=0; j < n2; j++) {
+				m2[j] = mm[j*n1+i1];
+			    }
+			    wavelet_lop(true,false,n2,n2,d2,m2);
+			    for (j=0; j < n2; j++) {
+				dd2[j*n1+i1] = d2[j];
+			    }
+			    wavelet_close();
+			}
+			for (i2=0; i2 < n2; i2++) {
+			    /* Vertical direction */
+			    wavelet_init(n1,true,true,type[0]);
+			    for (j=0; j < n1; j++) {
+				m1[j] = dd2[i2*n1+j];
+			    }
+			    wavelet_lop(true,false,n1,n1,d1,m1);
+			    for (j=0; j < n1; j++) {
+				dd2[i2*n1+j] = d1[j];
+			    }
+			    wavelet_close();
+			} /* Inverse 2-D DWT end */	
+			
+		    } /* End inner interation */
+
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) {
+			    dd3[i1]= dd[i1]+dd3[i1]-dd2[i1]; 
+			} else {
+			    dd3[i1] = 0.;
+			}
+		    }
+		} /* End outer interation */
+		
+		for (i1=0; i1 < n12; i1++) {
+		    dd[i1] = dd2[i1];
 		}
 		break;
 	} 
