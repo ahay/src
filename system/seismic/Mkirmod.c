@@ -1,4 +1,4 @@
-/* Kirchhoff 2.5-D modeling with analytical Green's functions. */
+/* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0;
     char *type, *type2;
-    bool twod, verb, adj, lin;
+    bool twod, verb, adj, lin, cmp;
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg, **tss, **tgs;
@@ -113,11 +113,11 @@ int main(int argc, char* argv[])
 	/*** Initialize shots ***/
 	
 	if (!sf_getint("ns",&ns)) ns=nx;
-	/* number of shots */
+	/* number of shots (midpoints if cmp=y) */
 	if (!sf_getfloat("s0",&s0)) s0=x0;
-	/* first shot */
+	/* first shot (midpoint if cmp=y) */
 	if (!sf_getfloat("ds",&ds)) ds=dx;
-	/* shot increment */
+	/* shot/midpoint increment */
 	
 	sf_putfloat(modl,"o3",s0);
 	sf_putfloat(modl,"d3",ds);
@@ -263,15 +263,18 @@ int main(int argc, char* argv[])
     /* reference coordinates for converted velocity */
     
     /*** Allocate space ***/
+
+    if (!sf_getbool("cmp",&cmp)) cmp=false;
+    /* compute CMP instead of shot gathers */
     
-    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
+    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp);
     if (strcmp(type,type2) ||
 	(vel2->v0) != (vel->v0) || 
 	(vel2->gz) != (vel->gz) ||
 	(vel2->gx) != (vel->gx) ||
 	(vel2->z0) != (vel->z0) ||
 	(vel2->x0) != (vel->x0)) {
-	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
+	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp);
     } else {
 	ref = inc;
     }
@@ -313,14 +316,19 @@ int main(int argc, char* argv[])
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
-	if (verb) sf_warning("shot %d of %d",is+1,ns);
+	if (verb) sf_warning("%s %d of %d",cmp?"cmp":"shot",is+1,ns);
 
 	for (ih=0; ih < nh; ih++) {
 
 	    for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
-		    ts = kirmod2_map(inc,is,nh,ix,ic);
-		    tg = kirmod2_map(ref,is,ih,ix,ic);
+		    if (cmp) {
+			ts = kirmod2_map(inc,is,2*ih,  ix,ic);
+			tg = kirmod2_map(ref,is,2*ih+1,ix,ic);
+		    } else {
+			ts = kirmod2_map(inc,is,nh,ix,ic);
+			tg = kirmod2_map(ref,is,ih,ix,ic);
+		    }
 
 		    time[ic][ix] = ts->t + tg->t;
 		    delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx;

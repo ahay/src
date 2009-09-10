@@ -61,10 +61,11 @@ static int surface_comp(const void *a, const void *b)
     return 1;
 }
 
-surface kirmod2_init(int ns,  float s0,  float ds  /* source axis */,
+surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 		     int nh,  float h0,  float dh  /* offset axis */,
 		     int nx1, float x01, float dx1 /* reflector axis */,
-		     int nc1                       /* number of reflectors */)
+		     int nc1                       /* number of reflectors */,
+                     bool cmp                      /* if CMP instead of shot gather */)
 /*< Initialize surface locations >*/ 
 {
     int is, ih, iy;
@@ -76,21 +77,40 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source axis */,
     x0 = x01;
     nc = nc1;
 
-    ny = ns*(nh+1);
+    if (cmp) {
+	ny = 2*ns*nh;
+	map = sf_intalloc2(2*nh,ns);
+    } else {
+	ny = ns*(nh+1);
+	map = sf_intalloc2(nh+1,ns);
+    }	
+
     y = (surface) sf_alloc(ny,sizeof(*y));
-    map = sf_intalloc2(nh+1,ns);
 
     yi = y;
+
     for (is=0; is < ns; is++, yi++) {
-	s = s0 + is*ds;
-	for (ih=0; ih < nh; ih++, yi++) {
-	    yi->x = s + h0 + ih*dh;
+	if (cmp) {
+	    for (ih=0; ih < nh; ih++, yi++) {
+		yi->x = s - 0.5*(h0 + ih*dh);
+		yi->is = is;
+		yi->ih = 2*ih;
+		yi++;
+		yi->x = s + 0.5*(h0 + ih*dh);
+		yi->is = is;
+		yi->ih = 2*ih+1;
+	    }
+	} else {
+	    s = s0 + is*ds;
+	    for (ih=0; ih < nh; ih++, yi++) {
+		yi->x = s + h0 + ih*dh;
+		yi->is = is;
+		yi->ih = ih;
+	    }
+	    yi->x = s;
 	    yi->is = is;
-	    yi->ih = ih;
+	    yi->ih = nh;	
 	}
-	yi->x = s;
-	yi->is = is;
-	yi->ih = nh;	
     }
 
     qsort(y,ny,sizeof(*y),surface_comp);
