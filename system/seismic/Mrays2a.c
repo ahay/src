@@ -205,7 +205,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mrays2a.c 1850 2006-05-18 10:06:45Z fomels $	 */
+/* 	$Id$	 */

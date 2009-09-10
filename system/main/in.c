@@ -136,7 +136,7 @@ int main (int argc, char* argv[])
 	}
 
 	check_zeros (file, esize, size, ncheck, buf, zero);
-        if (file!=NULL) sf_fileclose(file);
+	sf_fileclose(file);
     }
     if (!info) printf("\n");
 

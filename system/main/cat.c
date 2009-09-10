@@ -148,8 +148,7 @@ int main (int argc, char* argv[])
 	}
     }
     
-    for (i=0; i<nin; i++) sf_fileclose(in[i]);
-
+    sf_close();
     exit(0);
 }
 

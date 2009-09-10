@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
     int i;
     char *string, *key;
     bool parform;
-    sf_file in=NULL;
+    sf_file in;
 
     sf_init (argc,argv);
     in = sf_input ("in");
@@ -50,6 +50,6 @@ int main (int argc, char* argv[])
 	} 
     }
 
-    if (in != NULL) sf_fileclose(in);
+    sf_fileclose(in);
     exit(0);
 }

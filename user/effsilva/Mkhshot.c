@@ -152,7 +152,7 @@ int main (int argc, char ** argv)
 
    sf_floatwrite(image[0],n1*n2,Fout);
    fprintf( stderr," \n finished processing \n");
-   if (Fin != NULL) sf_fileclose(Fin);
-   if (Ftt != NULL) sf_fileclose(Ftt);
+
+   sf_close();
    exit(0);
 }

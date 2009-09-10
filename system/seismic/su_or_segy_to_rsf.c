@@ -223,5 +223,6 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
       break;
     }
 
+  sf_close();
   exit (0);
 }

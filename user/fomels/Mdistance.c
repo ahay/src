@@ -126,7 +126,8 @@ int main (int argc,char* argv[])
 	     order);
 	
     sf_floatwrite (dd,n123,dist);
-    
+
+    sf_close();
     exit (0);
 }
 

@@ -168,6 +168,8 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
+    sf_fileclose(in);
+
     fmean = fsum/nsiz;
     if (lval==2)      fnorm = sqrt(fsqr);
     else if (lval==0) fnorm = nsiz-nzero;
@@ -231,8 +233,6 @@ int main(int argc, char* argv[])
 	       100.*((double)nzero)/((double)nsiz),fmin,fmax);  
     }
     
-    sf_fileclose(in);
-
     exit (0);
 }
 

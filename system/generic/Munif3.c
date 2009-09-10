@@ -144,8 +144,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    sf_fileclose(surface);
-
+    sf_close();
     exit(0);
 }
 

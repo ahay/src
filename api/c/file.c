@@ -101,7 +101,8 @@ struct sf_File {
     bool pipe, rw, dryrun;
 };
 
-/*@null@*/ static sf_file infile=NULL;
+/*@null@*/ static sf_file *infiles = NULL;
+static size_t nfile=0, ifile=0;
 static const int tabsize=10;
 /*@null@*/ static char *aformat = NULL;
 static size_t aline=8;
@@ -164,10 +165,24 @@ sf_file sf_input (/*@null@*/ const char* tag)
     /* read the parameter table from the file */
     sf_simtab_input (file->pars,file->stream,file->head);
 
+    if (NULL == infiles) {
+	infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));
+	infiles[0] = NULL;
+	nfile=1;
+    }
+
     if (NULL == filename) {
-	infile = file;
+	infiles[0] = file;
     } else {
 	free (filename);
+	ifile++;
+	if (ifile >= nfile) {
+	    /* grow array */
+	    nfile *= 2;
+	    infiles = (sf_file *) realloc(infiles, nfile * sizeof(sf_file));
+	    if (NULL == infiles) sf_error("%s: reallocation error",__FILE__);
+	}
+	infiles[ifile] = file;
     }
 
     filename = sf_histstring(file,"in");
@@ -291,8 +306,14 @@ Should do output after sf_input. >*/
     file->op = XDR_ENCODE;
     file->buf = NULL;
 
-    if (NULL != infile && 
-	NULL != (format = sf_histstring(infile,"data_format"))) {
+    if (NULL == infiles) {
+	infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));
+	infiles[0] = NULL;
+	nfile=1;
+    } 
+
+    if (NULL != infiles[0] && 
+	NULL != (format = sf_histstring(infiles[0],"data_format"))) {
 	sf_setformat(file,format);
 	free (format);
     } else {
@@ -576,9 +597,15 @@ static bool readpathfile (const char* filename, char* datapath)
 void sf_fileclose (sf_file file) 
 /*< close a file and free allocated space >*/
 {
+    if (NULL == file) return;
+    
     if (file->stream != stdin && 
 	file->stream != stdout && 
-	file->stream != NULL) (void) fclose (file->stream);
+	file->stream != NULL) {
+	(void) fclose (file->stream);
+	file->stream = NULL;
+    }
+
     if (file->head != NULL) {
 	(void) unlink (file->headname);
 	(void) fclose (file->head);
@@ -586,13 +613,21 @@ void sf_fileclose (sf_file file)
 	free(file->headname);
 	file->headname = NULL;
     }
-    if (NULL != file->pars) sf_simtab_close (file->pars);
+
+    if (NULL != file->pars) {
+	sf_simtab_close (file->pars);
+	file->pars = NULL;
+    }
+
     if (NULL != file->buf) {
 	free (file->buf);
 	file->buf = NULL;
     }
-    if (NULL != file->dataname) free (file->dataname);
-    free (file);
+
+    if (NULL != file->dataname) {
+	free (file->dataname);
+	file->dataname = NULL;
+    }
 }
 
 bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par)
@@ -867,7 +902,7 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
     size_t i, left, nbuf, bufsiz;
     sf_complex c;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
     switch(file->form) {
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
@@ -948,7 +983,7 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
     char* buf;
     size_t i, left, nbuf, bufsiz;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
 
     switch(file->form) {
 	case SF_ASCII:
@@ -985,7 +1020,7 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
     char* buf;
     size_t i, left, nbuf, bufsiz;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
 
     switch(file->form) {
 	case SF_ASCII:
@@ -1094,7 +1129,7 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
     char* buf;
     size_t i, left, nbuf, bufsiz;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
     switch(file->form) {
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
@@ -1207,7 +1242,7 @@ void sf_shortwrite (short* arr, size_t size, sf_file file)
     char* buf;
     size_t i, left, nbuf, bufsiz;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
     switch(file->form) {
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
@@ -1248,7 +1283,7 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
     char* buf;
     size_t i, left, nbuf, bufsiz;
 
-    if (NULL != file->dataname) sf_fileflush (file,infile);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
     switch(file->form) {
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
@@ -1416,13 +1451,27 @@ void sf_unpipe (sf_file file, off_t size)
 } 
 
 void sf_close(void)
-/*< Remove temporary file, created by sf_unpipe >*/
+/*< Remove temporary files >*/
 {
-    if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
+    int i;
+    sf_file file;
     
-    if (0 != strcmp("stdin",infile->dataname) && 
-	0 != unlink(infile->dataname))
-	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
+    for (i=0; i <= ifile; i++) {
+	file = infiles[i];
+
+	if (NULL != file && 
+	    NULL != file->dataname && 
+	    file->pipe &&
+	    0 != strcmp("stdin",file->dataname) && 
+	    0 != unlink(file->dataname))
+	    sf_warning ("%s: trouble removing %s:",__FILE__,file->dataname);
+	    
+	sf_fileclose(file);
+	free(file);
+    }
+    free(infiles);
+    infiles=NULL;
+    ifile=nfile=0;
 }
 
 /* 	$Id$	 */

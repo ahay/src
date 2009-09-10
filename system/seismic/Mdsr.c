@@ -245,6 +245,7 @@ int main (int argc, char **argv)
 	if (!inv) sf_floatwrite(q[0],nz*na,out);
     }
 
+    sf_close();
     exit (0);
 }
 

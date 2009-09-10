@@ -85,8 +85,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(tout,nn1,out);
     }
 
-    if (pattern != NULL) sf_fileclose(pattern);
-    sf_fileclose(in);
+    sf_close();
     exit (0);
 }
 

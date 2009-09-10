@@ -198,6 +198,7 @@ int main (int argc, char* argv[])
     sf_floatwrite(ps,nt,mod);
     sf_floatwrite(ss,nt,mod);
 
+    sf_close();
     exit (0);
 }
 

@@ -211,7 +211,8 @@ int main(int argc, char* argv[])
 	sf_floatwrite(t,nr,time);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcell2.c 1482 2005-09-30 10:04:55Z fomels $	 */
+/* 	$Id$	 */

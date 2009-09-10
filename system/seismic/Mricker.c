@@ -129,8 +129,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (data,na,out);
     }
     
-    sf_fileclose(in);
-
+    sf_close();
     exit (0);
 }
 

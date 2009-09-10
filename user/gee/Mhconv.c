@@ -63,5 +63,6 @@ int main(int argc, char* argv[])
     sf_putstring(out,"lag",file);
     sf_floatwrite(ss->flt,ns,out);
 
+    sf_close();
     exit(0);
 }

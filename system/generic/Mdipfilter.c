@@ -131,7 +131,8 @@ int main(int argc, char* argv[])
 	    } /* ix */
 	} /* iy */
     } /* i3 */
-    if (in != NULL) sf_fileclose(in);
+
+    sf_close();
     exit(0);
 }
 

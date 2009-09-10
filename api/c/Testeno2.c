@@ -41,6 +41,7 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(dat[0],   n1*n2,out);
     sf_floatwrite(der[0][0],n1*n2*2,deriv);
-    if (in != NULL) sf_fileclose(in);
+    
+    sf_close();
     exit(0);
 }

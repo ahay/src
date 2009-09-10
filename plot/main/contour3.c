@@ -314,7 +314,6 @@ int main(int argc, char* argv[])
 	vp_purge(); 
     } /* frame loop */
 
-    if (in != NULL) sf_fileclose(in);
     sf_close();
     exit(0);
 }

@@ -114,6 +114,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(vr[0],n12,vout);
     }
 
+    sf_close();
     exit(0);
 }
 

@@ -101,5 +101,6 @@ int main (int argc, char *argv[])
 	sf_fileclose(path);
     }
 
+    sf_close();
     exit(0);
 }

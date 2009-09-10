@@ -78,7 +78,8 @@ int main(int argc, char* argv[])
 	sf_putstring(out,"lag",lagfile);
 
     sf_floatwrite (ss->flt,ns,out);
-  
+
+    sf_close();
     exit (0);
 }
 

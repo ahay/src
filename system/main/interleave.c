@@ -77,9 +77,8 @@ int main (int argc, char* argv[])
 	    }
 	}
     }
-    for (i=0; i < nin; i++) {
-        if (in[i] != NULL) sf_fileclose(in[i]);
-    }
+
+    sf_close();
     exit(0);
 }
 

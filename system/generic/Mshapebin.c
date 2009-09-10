@@ -246,6 +246,7 @@ int main (int argc, char* argv[])
 	if (NULL != pout) sf_floatwrite(pp,nm,pout);
     }
 
+    sf_close();
     exit(0);
 }
 

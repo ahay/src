@@ -101,6 +101,6 @@ int main(int argc, char* argv[])
 	}
     }
     
-    sf_fileclose(time);
+    sf_close();
     exit(0);
 }

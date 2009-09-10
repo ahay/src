@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     }
 
     sf_complexwrite(y,n2,out);
-    if (in  != NULL) sf_fileclose(in);
-    if (mat != NULL) sf_fileclose(mat);
+
+    sf_close();
     exit(0);
 }

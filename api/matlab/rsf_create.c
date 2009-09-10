@@ -93,5 +93,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     sf_setformat(newfile,"native_float");
     sf_fileflush(newfile,oldfile); /* The actual writing to disk */
-    if (newfile != NULL) sf_fileclose(newfile);
+    sf_close();
 }

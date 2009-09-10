@@ -232,6 +232,7 @@ int main (int argc, char* argv[])
 	}
     } /* i4 */
 
+    sf_close();
     exit(0);
 }
 

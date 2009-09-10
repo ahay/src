@@ -83,11 +83,7 @@ int main(int argc, char* argv[])
     nmis2(niter,ntxy,x,pfilt,mm,true);
 
     sf_floatwrite(x,ntxy,out);
-  
+
+    sf_close();
     exit(0);
 }
-
-
-
-
-

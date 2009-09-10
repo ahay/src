@@ -301,8 +301,6 @@ int main(int argc, char* argv[])
     } /* frame loop */
 
     sf_close();
-    if (bar != NULL) sf_fileclose(bar);
-    sf_fileclose(in);
     exit (0);
 }
 

@@ -129,5 +129,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     shift = sf_tell(file) - pos;
-    sf_fileclose(file);
+    sf_close();
 }

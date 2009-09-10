@@ -133,9 +133,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite (depth,nz,out);
     }
 
-    sf_fileclose(in);
-    sf_fileclose(velocity);
-
+    sf_close();
     exit (0);
 }
 

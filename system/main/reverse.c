@@ -167,8 +167,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    if (n2 > 1) sf_close();
-    sf_fileclose(in);
+    sf_close();
     exit (0);
 }
 

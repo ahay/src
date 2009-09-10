@@ -481,9 +481,6 @@ int main(int argc, char* argv[])
     unlink(s);
     unlink(S);
 
-    if (from != NULL) sf_fileclose(from);
-    if (dat  != NULL) sf_fileclose(dat);
-    if (mod  != NULL) sf_fileclose(mod);
-
+    sf_close();
     exit(0);
 }

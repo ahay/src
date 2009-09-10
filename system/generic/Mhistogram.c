@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     }
 
     sf_intwrite(hist,n1,out);
-    if (in != NULL) sf_fileclose(in);
+
+    sf_close();
     exit(0);
 }

@@ -186,8 +186,7 @@ int main (int argc,char* argv[])
     }
     
     /* close input */
-    sf_fileclose(vzf);
-
+    sf_close();
     exit (0);
 }
 

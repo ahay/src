@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
 	}
     }
 
-    if (in != NULL) sf_fileclose(in);
+    sf_close();
     exit (0);
 }
 

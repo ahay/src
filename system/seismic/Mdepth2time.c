@@ -92,9 +92,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite (time,nt,out);
     }
 
-    sf_fileclose(in);
-    sf_fileclose(velocity);
-
+    sf_close();
     exit (0);
 }
 

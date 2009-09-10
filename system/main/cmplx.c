@@ -89,8 +89,6 @@ int main(int argc, char* argv[])
 	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
 
-    if (real != NULL) sf_fileclose(real);
-    if (imag != NULL) sf_fileclose(imag);
-
+    sf_close();
     exit (0);
 }

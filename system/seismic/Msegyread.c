@@ -494,6 +494,7 @@ int main(int argc, char *argv[])
 	    break;
     }
 
+    sf_close();
     exit (0);
 }
 

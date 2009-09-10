@@ -204,8 +204,7 @@ int main(int argc, char* argv[])
 	/* parent waits */
 	waitpid(pid[2],&status,0);
 	waitpid(pid[5],&status,0);
-        if (mod != NULL) sf_fileclose(mod);
-        if (dat != NULL) sf_fileclose(dat);
+        sf_close();
 	exit(0);
     }
 }

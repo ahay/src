@@ -85,6 +85,6 @@ int main(int argc, char* argv[])
 
     vp_frame();
 
-    if (frame != NULL) sf_fileclose(frame);
+    sf_close();
     exit(0);
 }

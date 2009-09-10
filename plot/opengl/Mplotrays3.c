@@ -605,7 +605,6 @@ int main (int argc, char **argv) {
 
     glutMainLoop ();
 
-    if (in    != NULL) sf_fileclose(in);
-    if (frame != NULL) sf_fileclose(frame);
+    sf_close();
     return 0;
 }

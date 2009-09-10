@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
 	sf_sobel2(n1,n2,pp,qq);
 	sf_floatwrite(qq[0],n1*n2,out);
     }
-    if (in != NULL) sf_fileclose(in);
+
+    sf_close();
     exit(0);
 }
