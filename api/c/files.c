@@ -152,12 +152,12 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
 {
     int c, c2;
     char cc, *in;
-    FILE *file, *query;
+    FILE *file=NULL, *query=NULL;
     sf_simtab tab;
     struct stat buf;
     mode_t mod;
     const int tabsize=10;
-    
+
     tab = sf_simtab_init (tabsize);
     query = fopen ("/dev/tty","w+");
     if (inquire) {
@@ -179,7 +179,7 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
     if (NULL == in) sf_error ("%s:  File %s has no in=",__FILE__,filename);
     if (0 != remove(filename)) 
 	sf_error ("%s: Trouble removing header file %s:",__FILE__,filename);
-	    
+
     if (0 != strcmp(in,"stdin")) {
 	if (verb) sf_warning("sf_rm: Removing data %s",in);
 	if (!force) {
@@ -199,7 +199,8 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
 	if (0 != remove(in)) 
 	    sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
     }
-    (void) fclose (query);
+    if (NULL != query)
+        (void) fclose (query);
     sf_simtab_close (tab);
 }
 
