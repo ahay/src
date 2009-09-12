@@ -252,12 +252,7 @@ int main (int argc, char *argv[])
     }
     /*------------------------------------------------------------*/
     
-    if (Fs  !=NULL) sf_fileclose(Fs);
-    if (Fr  !=NULL) sf_fileclose(Fr);
-    if (Fsou!=NULL) sf_fileclose(Fsou);
-    if (Frec!=NULL) sf_fileclose(Frec);
-    
-    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }
 

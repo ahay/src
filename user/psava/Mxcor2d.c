@@ -313,10 +313,6 @@ int main(int argc, char* argv[])
     }
     /*------------------------------------------------------------*/
     
-    if (Fs!=NULL) sf_fileclose(Fs);
-    if (Fr!=NULL) sf_fileclose(Fr);
-    if (Fi!=NULL) sf_fileclose(Fi);
-
-    /*------------------------------------------------------------*/    
+    sf_close();
     exit (0);
 }

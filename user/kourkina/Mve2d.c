@@ -213,7 +213,8 @@ int main(int argc, char* argv[])
     sf_floatwrite(w,ntx,fid);
     sf_floatwrite(xr,ntx,fx);
     sf_floatwrite(yr,ntx,fy);
-    if (fsc != NULL) sf_fileclose(fsc);
+
+    sf_close();
     exit(0);
 }
 

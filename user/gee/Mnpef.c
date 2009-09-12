@@ -232,6 +232,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (aa->hlx[ip]->flt,nf,flt);
     }
 
+    sf_close();
     exit(0);
 }
 

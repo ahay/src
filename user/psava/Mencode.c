@@ -169,10 +169,6 @@ int main(int argc, char* argv[])
     ompsft3_close  (ompsft);    
     /*------------------------------------------------------------*/
 
-    if (Fi!=NULL) sf_fileclose(Fi);
-    if (Fd!=NULL) sf_fileclose(Fd);
-    if (Fo!=NULL) sf_fileclose(Fo);
-
-    /*------------------------------------------------------------*/
+    sf_close();
     exit(0);
 }		

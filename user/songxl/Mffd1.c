@@ -132,8 +132,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_fileclose(vel);
-    sf_fileclose(in);
-    sf_fileclose(out);
+    sf_close();
     exit(0);
 }

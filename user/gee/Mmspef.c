@@ -158,6 +158,7 @@ int main(int argc, char* argv[])
     sf_intwrite(msaa->lag[0],nh*ns,lag);
     sf_floatwrite(msaa->flt,nh,pef);
 
+    sf_close();
     exit (0);
 }
 

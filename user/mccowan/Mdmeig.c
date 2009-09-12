@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(eval,n, evals);
 	sf_floatwrite(evec,n2,evecs);
     }
-    if (mat != NULL) sf_fileclose(mat);
+
+    sf_close();
     exit(0);
 }

@@ -611,14 +611,7 @@ int main(int argc, char* argv[])
     free(dd);
     /*------------------------------------------------------------*/
 
-    if (Fwav!=NULL) sf_fileclose(Fwav);
-    if (Fsou!=NULL) sf_fileclose(Fsou);
-    if (Frec!=NULL) sf_fileclose(Frec);
-    if (Fvel!=NULL) sf_fileclose(Fvel);
-    if (Fdat!=NULL) sf_fileclose(Fdat);
-    if (Fwfl!=NULL) sf_fileclose(Fwfl);
- 
-    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }
 

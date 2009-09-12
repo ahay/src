@@ -301,11 +301,6 @@ int main (int argc, char *argv[])
     
     /*------------------------------------------------------------*/
 
-    if (Fs!=NULL) sf_fileclose(Fs);
-    if (Fd!=NULL) sf_fileclose(Fd);
-    if (Fw!=NULL) sf_fileclose(Fw);
-    if (Fi!=NULL) sf_fileclose(Fi);
-
-    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }

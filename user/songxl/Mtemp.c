@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
     float dt, dx, dz, w1, w2, h1, h2, a1, a2, a3, a4,  pi=3.14159, lmd;
     float **old, **new, **cur, *sig, **v, **vx, **vz, **a, **b10, **b20, **b01, **b02; 
     sf_file inp, out, vel, grad1, grad2;
-    #ifdef _OPENMP
+#ifdef _OPENMP
     int nth;
-    #endif
+#endif
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -78,141 +78,138 @@ int main(int argc, char* argv[])
             v[iz][ix] = v[iz][ix-nb1];
             vx[iz][ix] = vx[iz][ix-nb1];
             vz[iz][ix] = vz[iz][ix-nb1];
-         } 
+	} 
     
-    for (ix=0; ix < nb1; ix++){
-        v[iz][ix] = v[iz][nb1];
-        vx[iz][ix] = vx[iz][nb1];
-        vz[iz][ix] = vz[iz][nb1];
-        v[iz][ix+nx+nb1] = v[iz][nx+nb1-1];
-        vx[iz][ix+nx+nb1] = vx[iz][nx+nb1-1];
-        vz[iz][ix+nx+nb1] = vz[iz][nx+nb1-1];
+	for (ix=0; ix < nb1; ix++){
+	    v[iz][ix] = v[iz][nb1];
+	    vx[iz][ix] = vx[iz][nb1];
+	    vz[iz][ix] = vz[iz][nb1];
+	    v[iz][ix+nx+nb1] = v[iz][nx+nb1-1];
+	    vx[iz][ix+nx+nb1] = vx[iz][nx+nb1-1];
+	    vz[iz][ix+nx+nb1] = vz[iz][nx+nb1-1];
         }
     }
 
-  /*  sf_fileclose(vel);
-    sf_fileclose(grad1);
-    sf_fileclose(grad2);
-  */
     for (iz=nz; iz < nbz; iz++) {
-       for (ix=0; ix < nbx; ix++) {
-        v[iz][ix]  = v[nz-1][ix];
-        vx[iz][ix] = vx[nz-1][ix];
-        vz[iz][ix] = vz[nz-1][ix];
-       }
-     }  
+	for (ix=0; ix < nbx; ix++) {
+	    v[iz][ix]  = v[nz-1][ix];
+	    vx[iz][ix] = vx[nz-1][ix];
+	    vz[iz][ix] = vz[nz-1][ix];
+	}
+    }  
 
 
     sf_floatread(sig,nt,inp);		
     
-        /* 2nd order FD*/
-          a   = sf_floatalloc2(nbx,nbz);
-          b10 = sf_floatalloc2(nbx,nbz);
-          b20 = sf_floatalloc2(nbx,nbz);
-          b01 = sf_floatalloc2(nbx,nbz);
-          b02 = sf_floatalloc2(nbx,nbz);
+    /* 2nd order FD*/
+    a   = sf_floatalloc2(nbx,nbz);
+    b10 = sf_floatalloc2(nbx,nbz);
+    b20 = sf_floatalloc2(nbx,nbz);
+    b01 = sf_floatalloc2(nbx,nbz);
+    b02 = sf_floatalloc2(nbx,nbz);
            
-    #ifdef _OPENMP
-    #pragma omp parallel
+#ifdef _OPENMP
+#pragma omp parallel
     nth = omp_get_num_threads();
     sf_warning("using %d threads",nth);
-    #pragma omp for private(iz,ix,w1,w2,h1,h2,a1,a2,a3,a4) \
-                    shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,new)
-    #endif        
-          for (iz=0; iz < nbz; iz++) {
+#pragma omp for private(iz,ix,w1,w2,h1,h2,a1,a2,a3,a4)		\
+    shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,new)
+#endif        
+    for (iz=0; iz < nbz; iz++) {
           
-              for (ix=0; ix < nbx; ix++) {
-	          /* dimensionless velocity */
-	           w1 = v[iz][ix] * dt/dx;
-	           w2 = v[iz][ix] * dt/dz;
-	          /* dimensionless gradient */
-	           h1 = 0.5 * vx[iz][ix] * dt;
-	           h2 = 0.5 * vz[iz][ix] * dt;
+	for (ix=0; ix < nbx; ix++) {
+	    /* dimensionless velocity */
+	    w1 = v[iz][ix] * dt/dx;
+	    w2 = v[iz][ix] * dt/dz;
+	    /* dimensionless gradient */
+	    h1 = 0.5 * vx[iz][ix] * dt;
+	    h2 = 0.5 * vz[iz][ix] * dt;
 
-	      a1 = w1*w1 * (1.0 + h1*h1);
-	      a2 = w2*w2 * (1.0 + h2*h2);
-	      a3= h1*w1;
-	      a4= h2*w2;
+	    a1 = w1*w1 * (1.0 + h1*h1);
+	    a2 = w2*w2 * (1.0 + h2*h2);
+	    a3= h1*w1;
+	    a4= h2*w2;
 	
-              a[iz][ix] = 2.0-2.0*a1-2.0*a2;
-              b10[iz][ix] = a1-a3; 
-              b20[iz][ix] = a1+a3; 
-              b01[iz][ix] = a2-a4; 
-              b02[iz][ix] = a2+a4; 
+	    a[iz][ix] = 2.0-2.0*a1-2.0*a2;
+	    b10[iz][ix] = a1-a3; 
+	    b20[iz][ix] = a1+a3; 
+	    b01[iz][ix] = a2-a4; 
+	    b02[iz][ix] = a2+a4; 
 
-	      /* initial conditions */
-	      cur[iz][ix] = 0.;
-	      new[iz][ix] = 0.;
-              }
-           }
-           free(v);
-           free(vx);
+	    /* initial conditions */
+	    cur[iz][ix] = 0.;
+	    new[iz][ix] = 0.;
+	}
+    }
+    free(v);
+    free(vx);
 
-          /* propagation in time */
-          for (it=0; it < nt; it++) {
+    /* propagation in time */
+    for (it=0; it < nt; it++) {
 
-          #ifdef _OPENMP
-          #pragma omp parallel for private(iz,ix) \
-                    shared(nbz,nbx,old,cur,new)
-          #endif        
-              for (iz=0; iz < nbz; iz++) { 
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix)		\
+    shared(nbz,nbx,old,cur,new)
+#endif        
+	for (iz=0; iz < nbz; iz++) { 
           
-	         for (ix=0; ix < nbx; ix++) {
-	              old[iz][ix] = cur[iz][ix];
-	              cur[iz][ix] = new[iz][ix];
-                     }   
-                  }  
+	    for (ix=0; ix < nbx; ix++) {
+		old[iz][ix] = cur[iz][ix];
+		cur[iz][ix] = new[iz][ix];
+	    }   
+	}  
             
-	  /* Stencil */
-          new[0][0] = 0.;
-          new[0][nbx-1] = 0.;
-          new[nbz-1][0] = 0.;
-          new[nbz-1][nbx-1] = 0.;
-	  for (ix=1; ix < nbx-1; ix++) 
-             { new[0][ix] = cur[0][ix]*a[0][ix] + cur[0][ix-1]*b10[0][ix] +
-                            cur[0][ix+1]*b20[0][ix] + cur[1][ix]*b02[0][ix] - old[0][ix]; 
-               new[nbz-1][ix] = cur[nbz-1][ix]*a[nbz-1][ix] + cur[nbz-1][ix-1]*b10[nbz-1][ix] +
-                                cur[nbz-1][ix+1]*b20[nbz-1][ix] + cur[nbz-2][ix]*b01[nbz-1][ix] -                                old[nbz-1][ix];
-              }
-          new[0][nx/2] += sig[it];
+	/* Stencil */
+	new[0][0] = 0.;
+	new[0][nbx-1] = 0.;
+	new[nbz-1][0] = 0.;
+	new[nbz-1][nbx-1] = 0.;
+	for (ix=1; ix < nbx-1; ix++) 
+	{ new[0][ix] = cur[0][ix]*a[0][ix] + cur[0][ix-1]*b10[0][ix] +
+		cur[0][ix+1]*b20[0][ix] + cur[1][ix]*b02[0][ix] - old[0][ix]; 
+	    new[nbz-1][ix] = cur[nbz-1][ix]*a[nbz-1][ix] + cur[nbz-1][ix-1]*b10[nbz-1][ix] +
+		cur[nbz-1][ix+1]*b20[nbz-1][ix] + cur[nbz-2][ix]*b01[nbz-1][ix] -                                old[nbz-1][ix];
+	}
+	new[0][nx/2] += sig[it];
 
-          #ifdef _OPENMP
-          #pragma omp parallel for private(iz,ix) \
-                    shared(nbz,nbx,old,cur,new,a,b10,b20,b01,b02)
-          #endif        
-          for (iz=1; iz < nbz-1; iz++) { 
-          new[iz][0] = 0.;
-          new[iz][nbx-1] = 0.;
-	  for (ix=1; ix < nbx-1; ix++) {
-	      new[iz][ix] = cur[iz][ix]*a[iz][ix] + cur[iz][ix-1]*b10[iz][ix] + 
-                            cur[iz][ix+1]*b20[iz][ix] + cur[iz-1][ix]*b01[iz][ix] + 
-                            cur[iz+1][ix]*b02[iz][ix] - old[iz][ix];
-              } 
-	  }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix)			\
+    shared(nbz,nbx,old,cur,new,a,b10,b20,b01,b02)
+#endif        
+	for (iz=1; iz < nbz-1; iz++) { 
+	    new[iz][0] = 0.;
+	    new[iz][nbx-1] = 0.;
+	    for (ix=1; ix < nbx-1; ix++) {
+		new[iz][ix] = cur[iz][ix]*a[iz][ix] + cur[iz][ix-1]*b10[iz][ix] + 
+		    cur[iz][ix+1]*b20[iz][ix] + cur[iz-1][ix]*b01[iz][ix] + 
+		    cur[iz+1][ix]*b02[iz][ix] - old[iz][ix];
+	    } 
+	}
 	
-          for (iz=0; iz < nb2; iz++) {
-          for (ix=0; ix < nbx; ix++) {
+	for (iz=0; iz < nb2; iz++) {
+	    for (ix=0; ix < nbx; ix++) {
 
-               new[nz+iz][ix] *= exp(-lmd*iz*iz);
-              }
-          }
-          #ifdef _OPENMP
-          #pragma omp parallel for private(iz,ix) \
-                    shared(nbz,nb1,nx,lmd,new)
-          #endif        
-          for (iz=0; iz < nbz; iz++) {
-          for (ix=0; ix < nb1; ix++) {
-              new[iz][nb1-1-ix] *= exp(-lmd*ix*ix);
-              new[iz][nb1+nx+ix] *= exp(-lmd*ix*ix);
-              }
-          }
-	 //if (it < 500) {new[nb] = sig[it];} 
+		new[nz+iz][ix] *= exp(-lmd*iz*iz);
+	    }
+	}
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix)		\
+    shared(nbz,nb1,nx,lmd,new)
+#endif        
+	for (iz=0; iz < nbz; iz++) {
+	    for (ix=0; ix < nb1; ix++) {
+		new[iz][nb1-1-ix] *= exp(-lmd*ix*ix);
+		new[iz][nb1+nx+ix] *= exp(-lmd*ix*ix);
+	    }
+	}
+	//if (it < 500) {new[nb] = sig[it];} 
          
-	 for (iz=0; iz < nz; iz++) {
-         sf_floatwrite(new[iz]+nb1,nx,out);
-         }
-       }
-        
+	for (iz=0; iz < nz; iz++) {
+	    sf_floatwrite(new[iz]+nb1,nx,out);
+	}
+    }
+
+    sf_close();
     exit(0); 
 }           
            

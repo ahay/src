@@ -385,6 +385,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(v,nxz,fv2);
     sf_floatwrite(x0,nxz,fx);
     sf_floatwrite(t0,nxz,ft);
-    if (fv != NULL) sf_fileclose(fv);
+
+    sf_close();
     exit(0);
 }

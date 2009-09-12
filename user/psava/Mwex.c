@@ -166,10 +166,6 @@ int main (int argc, char *argv[])
     wextap_close(tap);
     /*------------------------------------------------------------*/
 
-    if (Fs!=NULL) sf_fileclose(Fs);
-    if (Fd!=NULL) sf_fileclose(Fd);
-    if (Fw!=NULL) sf_fileclose(Fw);
-
-    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }

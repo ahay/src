@@ -219,10 +219,8 @@ int main(int argc, char* argv[])
    free(uktmp);     
    free(sig);
    free(weight);
-sf_fileclose(vel);
-sf_fileclose(inp);
-sf_fileclose(out);
- 
+
+   sf_close();
    exit(0); 
 }           
            

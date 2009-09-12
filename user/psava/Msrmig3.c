@@ -433,11 +433,6 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
 
-    if (Fw_s!=NULL) sf_fileclose(Fw_s);
-    if (Fw_r!=NULL) sf_fileclose(Fw_r);
-    if (Fs_s!=NULL) sf_fileclose(Fs_s);
-    if (Fs_r!=NULL) sf_fileclose(Fs_r);
-
-    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }
