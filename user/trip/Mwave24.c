@@ -188,6 +188,6 @@ int main(int argc, char ** argv) {
 	isrc++;
     } 
 
-    sf_fileclose(wi.vfile);
+    sf_close();
     exit(0);
 }

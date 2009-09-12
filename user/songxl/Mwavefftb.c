@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
     sf_file inp, out, vel, grad;
     bool opt;    /* optimal padding */
     int npad;  /* padding */
-    #ifdef _OPENMP
+#ifdef _OPENMP
     int nth;
-    #endif
+#endif
      
     dt=0.001;
     nt=500;
@@ -52,8 +52,8 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
+    //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getint("pad",&npad)) npad=1;
@@ -88,79 +88,76 @@ int main(int argc, char* argv[])
     sf_floatread(sig,nx,inp);		
     sf_floatwrite(sig,nx,out);
     for (ix=0; ix < nx; ix++) {
-     cur[ix] =  sf_cmplx(sig[ix],0.0);
-     old[ix] =  0.0; 
-              }
+	cur[ix] =  sf_cmplx(sig[ix],0.0);
+	old[ix] =  0.0; 
+    }
 
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();}
+#ifdef _OPENMP
+#pragma omp parallel
+    {nth = omp_get_num_threads();}
     sf_warning("using %d threads",nth);
-    #endif
+#endif
 
-   /* dt=0.0;  DEBUG */
+    /* dt=0.0;  DEBUG */
     /* propagation in time */
     for (it=0; it < nt; it++) {
 
 
 	kiss_fft_stride(cfg,(kiss_fft_cpx *)cur,(kiss_fft_cpx *)uk,1);/*compute  u(k) */
-    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
-    #endif
+#ifdef _OPENMP
+#pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
+#endif
 
-	  for (ix=0; ix < nx; ix++) {
-              new[ix] = 0.0;
-                 // x = x0 + ix * dx;
-                  x =  ix * dx;
+	for (ix=0; ix < nx; ix++) {
+	    new[ix] = 0.0;
+	    // x = x0 + ix * dx;
+	    x =  ix * dx;
 #ifdef SF_HAS_COMPLEX_H
-              for (ik=0; ik < nk/2+1; ik++) {
-                 // k = (k0 + ik * dk)*2.0*pi;
-                  k =  ik * dk*2.0*pi;
-                  tmpdt = v[ix]*fabs(k)*dt;
-                  tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
-                  tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
-                  if (ik == 0 || ik == nk/2) {new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
-                  else { new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
-                  }
+	    for (ik=0; ik < nk/2+1; ik++) {
+		// k = (k0 + ik * dk)*2.0*pi;
+		k =  ik * dk*2.0*pi;
+		tmpdt = v[ix]*fabs(k)*dt;
+		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
+		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
+		if (ik == 0 || ik == nk/2) {new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
+		else { new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
+	    }
 
 #else
-              for (ik=0; ik < nk/2+1; ik++) {
-                  //k = (k0 + ik * dk)*2.0*pi;
-                  k =  ik * dk*2.0*pi;
-                  tmpdt = v[ix]*fabs(k)*dt;
-                  tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
-                  tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
+	    for (ik=0; ik < nk/2+1; ik++) {
+		//k = (k0 + ik * dk)*2.0*pi;
+		k =  ik * dk*2.0*pi;
+		tmpdt = v[ix]*fabs(k)*dt;
+		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
+		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
                 if (ik == 0 || ik == nk/2){new[ix] += sf_crealr(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*2.0));}
                 else {new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*4.0));}
-                  }
+	    }
 #endif
-               new[ix] /= nk;
-               new[ix] -= old[ix];
-              }
-         sf_floatwrite(new,nx,out);
+	    new[ix] /= nk;
+	    new[ix] -= old[ix];
+	}
+	sf_floatwrite(new,nx,out);
 
-            for(ix=0; ix<nx; ix++){
+	for(ix=0; ix<nx; ix++){
 #ifdef SF_HAS_COMPLEX_H
-	     old[ix] = creal(cur[ix]);
+	    old[ix] = creal(cur[ix]);
 #else
-             old[ix] =  sf_crealf(cur[ix]);
+	    old[ix] =  sf_crealf(cur[ix]);
 #endif
-	     cur[ix] =sf_cmplx(new[ix],0.0);
-              }
-         }
+	    cur[ix] =sf_cmplx(new[ix],0.0);
+	}
+    }
 
-   free(v);     
-   free(vx);     
-   free(new);     
-   free(cur);     
-   free(old);     
-   free(uk);     
-   free(sig);
-sf_fileclose(vel);
-sf_fileclose(grad);
-sf_fileclose(inp);
-sf_fileclose(out);
- 
-   exit(0); 
+    free(v);     
+    free(vx);     
+    free(new);     
+    free(cur);     
+    free(old);     
+    free(uk);     
+    free(sig);
+
+    sf_close();
+    exit(0); 
 }           
            

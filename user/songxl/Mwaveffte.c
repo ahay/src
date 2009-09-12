@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
     sf_file inp, out, vel, grad;
     bool opt;    /* optimal padding */
     int npad;  /* padding */
-    #ifdef _OPENMP
+#ifdef _OPENMP
     int nth;
-    #endif
+#endif
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -84,93 +84,90 @@ int main(int argc, char* argv[])
     cfg = kiss_fft_alloc(nk,0,NULL,NULL); 
 
     for (ix=0; ix < nx; ix++) {
-     new[ix] =  0.0;
-     cur[ix] =  sf_cmplx(0.0,0.0);
-              }
+	new[ix] =  0.0;
+	cur[ix] =  sf_cmplx(0.0,0.0);
+    }
 
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();
-    sf_warning("using %d threads",nth);}
-    #endif
+#ifdef _OPENMP
+#pragma omp parallel
+    {nth = omp_get_num_threads();
+	sf_warning("using %d threads",nth);}
+#endif
 
-   /* dt=0.0;  DEBUG */
+    /* dt=0.0;  DEBUG */
     /* propagation in time */
     for (it=0; it < nt; it++) {
 
-             //     new[sl] += sig[it];
+	//     new[sl] += sig[it];
         
         for (ix=0; ix < nx; ix++) {
 #ifdef SF_HAS_COMPLEX_H
-	     old[ix] = creal(cur[ix]);
+	    old[ix] = creal(cur[ix]);
 #else
-             old[ix] =  sf_crealf(cur[ix]);
+	    old[ix] =  sf_crealf(cur[ix]);
 #endif
-	     cur[ix] =sf_cmplx(new[ix],0.0);
-              }
+	    cur[ix] =sf_cmplx(new[ix],0.0);
+	}
 
 	kiss_fft_stride(cfg,(kiss_fft_cpx *)cur,(kiss_fft_cpx *)uk,1);/*compute  u(k) */
-    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
-    #endif
+#ifdef _OPENMP
+#pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
+#endif
 
-	  for (ix=0; ix < nx; ix++) {
-              new[ix] = 0.0;
-                  x = x0 + ix * dx;
+	for (ix=0; ix < nx; ix++) {
+	    new[ix] = 0.0;
+	    x = x0 + ix * dx;
 #ifdef SF_HAS_COMPLEX_H
-              for (ik=0; ik < nk/2+1; ik++) {
-                  k = (k0 + ik * dk)*2.0*pi;
-                  tmpdt = v[ix]*fabs(k)*dt;
-                  tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
-                  tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
-                  if (ik == 0 || ik == nk/2) {new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
-                  else { new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
-                  }
+	    for (ik=0; ik < nk/2+1; ik++) {
+		k = (k0 + ik * dk)*2.0*pi;
+		tmpdt = v[ix]*fabs(k)*dt;
+		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
+		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
+		if (ik == 0 || ik == nk/2) {new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
+		else { new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
+	    }
 
 #else
-              for (ik=0; ik < nk/2+1; ik++) {
-                  k = (k0 + ik * dk)*2.0*pi;
-                  tmpdt = v[ix]*fabs(k)*dt;
-                  tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
-                  tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
+	    for (ik=0; ik < nk/2+1; ik++) {
+		k = (k0 + ik * dk)*2.0*pi;
+		tmpdt = v[ix]*fabs(k)*dt;
+		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
+		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
                 if (ik == 0 || ik == nk/2){new[ix] += sf_crealr(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*2.0));}
                 else {new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*4.0));}
-                  }
+	    }
 #endif
-               new[ix] /= nk;
-               new[ix] -= old[ix];
-              }
-           new[sl] = sig[it];
+	    new[ix] /= nk;
+	    new[ix] -= old[ix];
+	}
+	new[sl] = sig[it];
 /*
-#ifdef SF_HAS_COMPLEX_H
-                  new[sl] += sf_cmplx(sig[it],0.0);
-#else
-	  new[sl] = sf_cadd(new[0],sf_cmplx(sig[it],0.0)); 
-#endif
+  #ifdef SF_HAS_COMPLEX_H
+  new[sl] += sf_cmplx(sig[it],0.0);
+  #else
+  new[sl] = sf_cadd(new[0],sf_cmplx(sig[it],0.0)); 
+  #endif
 */
 /*
-#ifdef SF_HAS_COMPLEX_H
-             for(ix=0;ix<nx;ix++) wav[ix]=creal(new[ix]);
-#else
-             for(ix=0;ix<nx;ix++) wav[ix]=sf_crealf(new[ix]);
-#endif
+  #ifdef SF_HAS_COMPLEX_H
+  for(ix=0;ix<nx;ix++) wav[ix]=creal(new[ix]);
+  #else
+  for(ix=0;ix<nx;ix++) wav[ix]=sf_crealf(new[ix]);
+  #endif
 */
-      //  for (ix=0; ix < nx; ix++) new[ix] = sf_cmplx(wav[ix],0.0);
-         sf_floatwrite(new,nx,out);
-         }
+	//  for (ix=0; ix < nx; ix++) new[ix] = sf_cmplx(wav[ix],0.0);
+	sf_floatwrite(new,nx,out);
+    }
 
-   free(v);     
-   free(vx);     
-   free(new);     
-   free(cur);     
-   free(old);     
-   free(uk);     
-   free(sig);
-sf_fileclose(vel);
-sf_fileclose(grad);
-sf_fileclose(inp);
-sf_fileclose(out);
- 
-   exit(0); 
+    free(v);     
+    free(vx);     
+    free(new);     
+    free(cur);     
+    free(old);     
+    free(uk);     
+    free(sig);
+
+    sf_close();
+    exit(0); 
 }           
            

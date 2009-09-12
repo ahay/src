@@ -111,6 +111,8 @@ int main(int argc, char* argv[])
 	sf_cgstep_close();
 	sf_floatwrite (mm,nt*nm,out);
     }
+
+    sf_close();
     exit(0);
 }
 

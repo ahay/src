@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
     sf_file inp, out, vel, grad;
     bool opt;    /* optimal padding */
     int npad;  /* padding */
-    #ifdef _OPENMP
+#ifdef _OPENMP
     int nth;
-    #endif
+#endif
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -82,84 +82,81 @@ int main(int argc, char* argv[])
     cfg = kiss_fft_alloc(nk,0,NULL,NULL); 
 
     for (ix=0; ix < nx; ix++) {
-     new[ix] =  sf_cmplx(0.0,0.0);
-     cur[ix] =  sf_cmplx(0.0,0.0);
-              }
+	new[ix] =  sf_cmplx(0.0,0.0);
+	cur[ix] =  sf_cmplx(0.0,0.0);
+    }
 
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();}
+#ifdef _OPENMP
+#pragma omp parallel
+    {nth = omp_get_num_threads();}
     sf_warning("using %d threads",nth);
-    #endif
-     /* dt=0.0;  DEBUG */
+#endif
+    /* dt=0.0;  DEBUG */
     /* propagation in time */
     for (it=0; it < nt; it++) {
 
-             //     new[sl] += sig[it];
+	//     new[sl] += sig[it];
         
         for (ix=0; ix < nx; ix++) {
-	     old[ix] =  cur[ix];
-	     cur[ix] =  new[ix];
-              }
+	    old[ix] =  cur[ix];
+	    cur[ix] =  new[ix];
+	}
 
 	kiss_fft_stride(cfg,(kiss_fft_cpx *)cur,(kiss_fft_cpx *)uk,1);/*compute  u(k) */
 
-    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpdt,tmpex) 
-    #endif
-	  for (ix=0; ix < nx; ix++) {
-              new[ix] = sf_cmplx(0.0,0.0);
-              for (ik=0; ik < nk; ik++) {
-                  x = ix * dx;
-                  k = (k0 + ik * dk)*2.0*pi;
-                  tmpdt = v[ix]*fabs(k)*dt;
-                  tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
-                  tmpex = sf_cmplx(cos(tmp),sin(tmp))*cos(tmpdt)*2.0;
-#ifdef SF_HAS_COMPLEX_H
-                  tmpex = sf_cmplx(cos(tmp),sin(tmp))*cos(tmpdt)*2.0;
-                  new[ix] += tmpex*uk[ik];
-#else
-                  tmpex = sf_crmul(sf_cmplx(cos(tmp),sin(tmp)),cos(tmpdt)*2.0);
-                  new[ix] = sf_cadd(new[ix],sf_cmul(tmpex,uk[ik]));
+#ifdef _OPENMP
+#pragma omp parallel for private(ik,ix,x,k,tmp,tmpdt,tmpex) 
 #endif
-	         }
+	for (ix=0; ix < nx; ix++) {
+	    new[ix] = sf_cmplx(0.0,0.0);
+	    for (ik=0; ik < nk; ik++) {
+		x = ix * dx;
+		k = (k0 + ik * dk)*2.0*pi;
+		tmpdt = v[ix]*fabs(k)*dt;
+		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
+		tmpex = sf_cmplx(cos(tmp),sin(tmp))*cos(tmpdt)*2.0;
 #ifdef SF_HAS_COMPLEX_H
-              new[ix] /= (float)nk;
-              new[ix] -= old[ix];
+		tmpex = sf_cmplx(cos(tmp),sin(tmp))*cos(tmpdt)*2.0;
+		new[ix] += tmpex*uk[ik];
 #else
-              new[ix] = sf_crmul(new[ix],1.0/nk);
-              new[ix] = sf_cadd(new[ix],sf_crmul(old[ix],-1.0));
+		tmpex = sf_crmul(sf_cmplx(cos(tmp),sin(tmp)),cos(tmpdt)*2.0);
+		new[ix] = sf_cadd(new[ix],sf_cmul(tmpex,uk[ik]));
 #endif
-           }
+	    }
+#ifdef SF_HAS_COMPLEX_H
+	    new[ix] /= (float)nk;
+	    new[ix] -= old[ix];
+#else
+	    new[ix] = sf_crmul(new[ix],1.0/nk);
+	    new[ix] = sf_cadd(new[ix],sf_crmul(old[ix],-1.0));
+#endif
+	}
 
 #ifdef SF_HAS_COMPLEX_H
-                  new[sl] += sf_cmplx(sig[it],0.0);
+	new[sl] += sf_cmplx(sig[it],0.0);
 #else
-	  new[sl] = sf_cadd(new[0],sf_cmplx(sig[it],0.0)); 
+	new[sl] = sf_cadd(new[0],sf_cmplx(sig[it],0.0)); 
 #endif
 
 #ifdef SF_HAS_COMPLEX_H
-             for(ix=0;ix<nx;ix++) wav[ix]=creal(new[ix]);
+	for(ix=0;ix<nx;ix++) wav[ix]=creal(new[ix]);
 #else
-             for(ix=0;ix<nx;ix++) wav[ix]=sf_crealf(new[ix]);
+	for(ix=0;ix<nx;ix++) wav[ix]=sf_crealf(new[ix]);
 #endif
-             for(ix=0;ix<nx;ix++) new[ix]=sf_cmplx(wav[ix],0.0);
+	for(ix=0;ix<nx;ix++) new[ix]=sf_cmplx(wav[ix],0.0);
         sf_floatwrite(wav,nx,out);
-         }
+    }
 
-   free(v);     
-   free(vx);     
-   free(new);     
-   free(cur);     
-   free(old);     
-   free(uk);     
-   free(sig);
-   free(wav);
-sf_fileclose(vel);
-sf_fileclose(grad);
-sf_fileclose(inp);
-sf_fileclose(out);
- 
-   exit(0); 
+    free(v);     
+    free(vx);     
+    free(new);     
+    free(cur);     
+    free(old);     
+    free(uk);     
+    free(sig);
+    free(wav);
+
+    sf_close();
+    exit(0); 
 }           
            

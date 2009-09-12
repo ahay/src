@@ -263,7 +263,6 @@ int main(int argc, char ** argv) {
     sf_floatwrite(imag,nxz,ri.imfile);
 
     /* clean up */
-    sf_fileclose(ri.vfile);
-    sf_fileclose(ri.tfile);
+    sf_close();
     exit(0);
 }     
