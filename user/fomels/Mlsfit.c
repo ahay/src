@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
 
     gaussel_init(nc);
     sol = sf_floatalloc(nc);
+    rhs = sf_floatalloc(nc);
     mat = sf_floatalloc2(nc,nc);
 
     /* compute A'A matrix */
@@ -96,7 +97,7 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    dat[i1] = 0.;
 	    for (ic=0; ic < nc; ic++) {
-		dat[i1] += func[ic][i1]*sol[i1];
+		dat[i1] += func[ic][i1]*sol[ic];
 	    }
 	}
 
