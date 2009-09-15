@@ -69,7 +69,7 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 /*< Initialize surface locations >*/ 
 {
     int is, ih, iy;
-    float s;
+    float s, h;
     surface yi, y;
 
     nx = nx1;
@@ -89,19 +89,20 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 
     yi = y;
 
-    for (is=0; is < ns; is++, yi++) {
+    for (is=0; is < ns; is++) {
+	s = s0 + is*ds;
 	if (cmp) {
 	    for (ih=0; ih < nh; ih++, yi++) {
-		yi->x = s - 0.5*(h0 + ih*dh);
+		h = 0.5*(h0 + ih*dh);
+		yi->x = s - h;
 		yi->is = is;
 		yi->ih = 2*ih;
 		yi++;
-		yi->x = s + 0.5*(h0 + ih*dh);
+		yi->x = s + h;
 		yi->is = is;
 		yi->ih = 2*ih+1;
 	    }
 	} else {
-	    s = s0 + is*ds;
 	    for (ih=0; ih < nh; ih++, yi++) {
 		yi->x = s + h0 + ih*dh;
 		yi->is = is;
@@ -109,7 +110,8 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 	    }
 	    yi->x = s;
 	    yi->is = is;
-	    yi->ih = nh;	
+	    yi->ih = nh;
+	    yi++;
 	}
     }
 

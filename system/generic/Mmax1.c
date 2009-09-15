@@ -1,4 +1,7 @@
-/* Picking local maxima on the first axis */
+/* Picking local maxima on the first axis. 
+
+Outputs complex numbers (time,amplitude) sorted by amplitude.
+*/
 /*
   Copyright (C) 2007 University of Texas at Austin
   
@@ -18,19 +21,23 @@
 */
 #include <rsf.h>
 
+static int pick_compare (const void *p1, const void *p2)
+{
+    float f1 = cimagf(* (sf_complex*) p1);
+    float f2 = cimagf(* (sf_complex*) p2);
+    return (f1 < f2)? 1: (f1 > f2)? -1: 0;
+}
+
 int main(int argc, char* argv[])
 {
-    int i1, n1, i2, n2, ip, np, *npick;
-    float o1, d1, t0, t1, t2, t, a, *trace, *pick, *ampl;
-    sf_file in, picks, npicks, ampls;
+    int i1, n1, i2, n2, ip, np;
+    float o1, d1, t0, t1, t2, t, a, *trace;
+    sf_complex *pick;
+    sf_file in, out;
 
     sf_init(argc, argv);
     in = sf_input("in");
-    picks = sf_output("out");
-    ampls = sf_output("ampl");
-    npicks = sf_output("picks");
-    
-    /* number of picks at each trace */
+    out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
@@ -41,16 +48,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("np",&np)) np=n1;
     /* maximum number of picks */
 
-    sf_putint(picks,"n1",np);
-    sf_putint(ampls,"n1",np);
-
-    sf_putint(npicks,"n1",1);
-    sf_settype(npicks,SF_INT);
+    sf_putint(out,"n1",np);
+    sf_settype(out,SF_COMPLEX);
 
     trace = sf_floatalloc(n1);
-    pick = sf_floatalloc(np);
-    ampl = sf_floatalloc(np);
-    npick = sf_intalloc(n2);
+    pick = sf_complexalloc(np);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
@@ -74,30 +76,27 @@ int main(int argc, char* argv[])
 		    a=t2;
 		} 
 
-		pick[ip] = o1+(i1-1+t)*d1;
-		ampl[ip] = a;
+		pick[ip] = sf_cmplx(o1+(i1-1+t)*d1,a);
 		ip++;
 	    }
 
 	    t0 = t1;
 	    t1 = t2;
 	}
-	npick[i2] = ip;
 
 	if (0==ip) {
-	    pick[0] = o1-d1;
+	    pick[0] = sf_cmplx(o1-d1,0.);
 	    ip++;
 	}
+
+	qsort(pick,ip,sizeof(sf_complex),pick_compare);
 	
 	for (i1=ip; i1 < np; i1++) {
-	    pick[i1] = pick[ip-1];
-	    ampl[i1] = 0.;
+	    pick[i1] = sf_cmplx(pick[ip-1],0.);
 	}
 
-	sf_floatwrite(pick,np,picks);
-	sf_floatwrite(ampl,np,ampls);
+	sf_complexwrite(pick,np,out);
     }
-    sf_intwrite(npick,n2,npicks);
 
     exit(0);
 }
