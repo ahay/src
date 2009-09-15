@@ -32,16 +32,16 @@ int main(int argc, char* argv[])
     float  **v; 
     sf_file inp, out, vel;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
+    // #ifdef _OPENMP
+    // int nth;
+    // #endif
      
 
     sf_init(argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
-  //  grad = sf_input("grad"); /* velocity gradient */
+    //  grad = sf_input("grad"); /* velocity gradient */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
+    //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
@@ -102,94 +102,90 @@ int main(int argc, char* argv[])
         for (ix=0; ix < nx; ix++) {
             curcmp[iz][ix] =  sf_cmplx(sig[iz][ix],0.0);
             old[iz][ix] =  0.0; 
-           }
-         }
+	}
+    }
 /*
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();}
-    sf_warning("using %d threads",nth);
-    #endif
+  #ifdef _OPENMP
+  #pragma omp parallel
+  {nth = omp_get_num_threads();}
+  sf_warning("using %d threads",nth);
+  #endif
 */
     /* propagation in time */
     for (it=1; it < nt; it++) {
 
-         for (iz=0; iz < nz; iz++){
-             for (ix=0; ix < nx; ix++){ 
-                  new[iz][ix] = 0.0; 
-                }
-           }  
+	for (iz=0; iz < nz; iz++){
+	    for (ix=0; ix < nx; ix++){ 
+		new[iz][ix] = 0.0; 
+	    }
+	}  
 /* compute u(kx,kz) */
-         for (iz=0; iz < nz; iz++){
-             /* Fourier transform x to kx */
-                kiss_fft_stride(cfgx,(kiss_fft_cpx *)curcmp[iz],(kiss_fft_cpx *)ctracex,1); 
-                for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ikx]; 
-             }
-         for (ikx=0; ikx < nkx; ikx++){
-             /* Fourier transform z to kz */
-                kiss_fft_stride(cfgz,(kiss_fft_cpx *)uk[0]+ikx,(kiss_fft_cpx *)ctracez,nkx); 
-                for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ikz]; 
-             }
+	for (iz=0; iz < nz; iz++){
+	    /* Fourier transform x to kx */
+	    kiss_fft_stride(cfgx,(kiss_fft_cpx *)curcmp[iz],(kiss_fft_cpx *)ctracex,1); 
+	    for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ikx]; 
+	}
+	for (ikx=0; ikx < nkx; ikx++){
+	    /* Fourier transform z to kz */
+	    kiss_fft_stride(cfgz,(kiss_fft_cpx *)uk[0]+ikx,(kiss_fft_cpx *)ctracez,nkx); 
+	    for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ikz]; 
+	}
 
 /*    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
-    #endif
+      #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
+      #endif
 */
 
-              for (ikz=0; ikz < nkz; ikz++) {
-                   kz = (kz0 +  ikz * dkz)*2.0*pi;
+	for (ikz=0; ikz < nkz; ikz++) {
+	    kz = (kz0 +  ikz * dkz)*2.0*pi;
 
+	    for (ikx=0; ikx < nkx; ikx++) {
+		kx = (kx0 +  ikx * dkx)*2.0*pi;
+		tmpdt = vc*sqrt(kx*kx+kz*kz)*dt;
 #ifdef SF_HAS_COMPLEX_H
-                   for (ikx=0; ikx < nkx; ikx++) {
-                        kx = (kx0 +  ikx * dkx)*2.0*pi;
-                        tmpdt = vc*sqrt(kx*kx+kz*kz)*dt;
-                        uktmp[ikz][ikx] = uk[ikz][ikx] *2.0*cosf(tmpdt);
-                  }
-
+		uktmp[ikz][ikx] = uk[ikz][ikx] *2.0*cosf(tmpdt);
 #else
-                   for (ikx=0; ikx < nkx; ikx++) {
-                        kx = kx0 +  ikx * dkx*2.0*pi;
-                        tmpdt = vc[iv]*sqrt(kx*kx+kz*kz)*dt;
-                        uktmp[ikz][ikx] = sf_crmul(uk[ikz][ikx],2.0*cosf(tmpdt));
-                  }
-#endif
-               }   
+		uktmp[ikz][ikx] = sf_crmul(uk[ikz][ikx],2.0*cosf(tmpdt));
+#endif			
+	    }
+
+	}   
 /* Inverse FFT*/
-         for (ikx=0; ikx < nkx; ikx++){
-             /* Inverse Fourier transform kz to z */
-                kiss_fft_stride(cfgzi,(kiss_fft_cpx *)uktmp[0]+ikx,(kiss_fft_cpx *)ctracez,nkx); 
-                for (ikz=0; ikz < nkz; ikz++) uktmp[ikz][ikx] = ctracez[ikz]; 
-             }
-         for (ikz=0; ikz < nkz; ikz++){
-             /* Inverse Fourier transform kx to x */
-                kiss_fft_stride(cfgxi,(kiss_fft_cpx *)uktmp[ikz],(kiss_fft_cpx *)ctracex,1); 
-                for (ikx=0; ikx < nkx; ikx++) uktmp[ikz][ikx] = ctracex[ikx]; 
-             }
-	      for (iz=0; iz < nz; iz++) {  
-	           for (ix=0; ix < nx; ix++) {  
-                         new[iz][ix]  = creal(uktmp[iz][ix]);
-                         new[iz][ix] /= (nkx * nkz); 
-		         new[iz][ix] -= old[iz][ix];
-                   }
-               }  
-	      for (iz=0; iz < nz; iz++) {  
-                  for(ix=0; ix<nx; ix++){
-	             old[iz][ix] = creal(curcmp[iz][ix]);
-	             curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
-                   }
-              }
-         sf_floatwrite(new[0],nz*nx,out);
-  }
+	for (ikx=0; ikx < nkx; ikx++){
+	    /* Inverse Fourier transform kz to z */
+	    kiss_fft_stride(cfgzi,(kiss_fft_cpx *)uktmp[0]+ikx,(kiss_fft_cpx *)ctracez,nkx); 
+	    for (ikz=0; ikz < nkz; ikz++) uktmp[ikz][ikx] = ctracez[ikz]; 
+	}
+	for (ikz=0; ikz < nkz; ikz++){
+	    /* Inverse Fourier transform kx to x */
+	    kiss_fft_stride(cfgxi,(kiss_fft_cpx *)uktmp[ikz],(kiss_fft_cpx *)ctracex,1); 
+	    for (ikx=0; ikx < nkx; ikx++) uktmp[ikz][ikx] = ctracex[ikx]; 
+	}
+	for (iz=0; iz < nz; iz++) {  
+	    for (ix=0; ix < nx; ix++) {  
+		new[iz][ix]  = crealf(uktmp[iz][ix]);
+		new[iz][ix] /= (nkx * nkz); 
+		new[iz][ix] -= old[iz][ix];
+	    }
+	}  
+	for (iz=0; iz < nz; iz++) {  
+	    for(ix=0; ix<nx; ix++){
+		old[iz][ix] = crealf(curcmp[iz][ix]);
+		curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
+	    }
+	}
+	sf_floatwrite(new[0],nz*nx,out);
+    }
 
-   free(v);     
-   free(new);     
-   free(curcmp);     
-   free(old);     
-   free(uk);     
-   free(uktmp);     
-   free(sig);
+    free(v);     
+    free(new);     
+    free(curcmp);     
+    free(old);     
+    free(uk);     
+    free(uktmp);     
+    free(sig);
 
-   sf_close();
-   exit(0); 
+    sf_close();
+    exit(0); 
 }           
            

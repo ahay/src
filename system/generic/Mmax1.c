@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 	qsort(pick,ip,sizeof(sf_complex),pick_compare);
 	
 	for (i1=ip; i1 < np; i1++) {
-	    pick[i1] = sf_cmplx(pick[ip-1],0.);
+	    pick[i1] = sf_cmplx(crealf(pick[ip-1]),0.);
 	}
 
 	sf_complexwrite(pick,np,out);

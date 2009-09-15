@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
              }
 	      for (iz=0; iz < nz; iz++) {  
 	           for (ix=0; ix < nx; ix++) {  
-                         newc[iz][ix]  = creal(uktmp[iz][ix]);
+                         newc[iz][ix]  = crealf(uktmp[iz][ix]);
                          newc[iz][ix] /= nkx * nkz; 
 		         newc[iz][ix] -= old[iz][ix];
 		         newc[iz][ix] *= weight[iv][iz][ix];
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
       }
 	      for (iz=0; iz < nz; iz++) {  
                   for(ix=0; ix<nx; ix++){
-	             old[iz][ix] = creal(curcmp[iz][ix]);
+	             old[iz][ix] = crealf(curcmp[iz][ix]);
 	             curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
                    }
               }

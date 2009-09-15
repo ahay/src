@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		tmpdt = v[ix]*fabs(k)*dt;
 		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
 		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
-                if (ik == 0 || ik == nk-1) new[ix] += sf_crealr(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)));
+                if (ik == 0 || ik == nk-1) new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)));
                 else new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*2.0));
 	    }
 #endif
