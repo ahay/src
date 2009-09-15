@@ -66,8 +66,9 @@ int main (int argc, char* argv[])
 
     for(i3=0; i3 < nfw; i3 ++) {
 	fixd[0*nfw+i3] = 1.;
-	fixd[1*nfw+i3] = i3+1.;
+	fixd[1*nfw+i3] = (i3+1.)/sqrtf((nfw+1.)*(2.*nfw+1.)/6.); /* normalize by RMS=1 (sqrt(sum_N(t-tau)^2)/N=1) */
     }
+ 
     aa = NULL;
 
     for(i3=0; i3 < SF_MAX_DIM; i3 ++) {
