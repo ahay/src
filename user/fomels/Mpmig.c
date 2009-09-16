@@ -18,8 +18,6 @@
 */
 
 #include <math.h>
-#include <float.h>
-
 #include <rsf.h>
 
 int main (int argc, char* argv[])
@@ -99,13 +97,13 @@ int main (int argc, char* argv[])
 		if (mzo) {
 		    coord[it][0] = 
 			sqrtf(fabsf(t*tq*tq)/
-			      (fabsf(tm*tm*tm)+FLT_EPSILON));
-		    coord[it][1] = x - h*tx/(tm+FLT_EPSILON);
+			      (fabsf(tm*tm*tm)+SF_EPS));
+		    coord[it][1] = x - h*tx/(tm+SF_EPS);
 		} else {
 		    coord[it][0] = 
 			sqrtf(fabsf(t*ph[it]*tq*tq)/
-			      (fabsf(tm*tm*tp)+FLT_EPSILON));
-		    coord[it][1] = x - t*h*px[it]/(tp+FLT_EPSILON);
+			      (fabsf(tm*tm*tp)+SF_EPS));
+		    coord[it][1] = x - t*h*px[it]/(tp+SF_EPS);
 		}
 	    }
 
@@ -125,7 +123,8 @@ int main (int argc, char* argv[])
 	
 	sf_floatwrite (img,ntx,mig);
     }
-	
+
+    sf_close();
     exit (0);
 }
 
