@@ -110,7 +110,7 @@ void pade_apply (int n, const float *c /* [n] */, int na, float * a, float *b)
     /* form the matrix */
     for (i=0; i < m; i++) {
 	for (j=0; j < m; j++) {
-	    w[i][j] = c[n-i+j];
+	    w[i][j] = c[n-i+j-1];
 	}
 	w1[i] = - c[n+i];
     }
@@ -124,7 +124,7 @@ void pade_apply (int n, const float *c /* [n] */, int na, float * a, float *b)
     }
     for (i=0; i < m; i++) {
 	for (j=i+1; j < na; j++) {
-	    a[j] += b[i] * c[n-i+j-na];
+	    a[j] += b[i] * c[n-i+j-na-1];
 	}
     }
 }
