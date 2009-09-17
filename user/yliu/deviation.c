@@ -38,7 +38,7 @@ float sdeviation(float *temp, int nfw)
 	data[i]=(data[i]-m)*(data[i]-m);
     }
     sd=mean(data,nfw);
-    sd=sqrt(sd);
+    sd=sqrtf(sd);
     return sd;
 }
 
