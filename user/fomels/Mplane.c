@@ -21,18 +21,19 @@
 #include <rsf.h>
 
 #include "pade.h"
+#include "contran.h"
 
 int main(int argc, char* argv[])
 {
-    int i, i1, i2, ia, n1,n2, na, a1, b1, p0, nx, *lag, n[2];
+    int i, i1, i2, ia, n1,n2, na, a1, b1, p0, nx, *lag;
     bool hyp;
-    float p, s, s0, *bb, *dd, *a, *b;
+    float p, s, s0, *bb, *dd, *a, *b, *pp, *qq, **aa;
     char title[10], *lagfile;
-    sf_file out, lg;
+    sf_file inp, out;
 
     sf_init(argc,argv);
+    inp = sf_input("in");
     out = sf_output("out");
-    lg = sf_output("lag");
 
     if (!sf_getfloat("p",&p)) p=0.7;
     /* plane wave slope */
@@ -52,15 +53,15 @@ int main(int argc, char* argv[])
     na = a1+b1-1;
     p0 = (a1-1)/2;
 
-    if (!sf_getint("n1",&n1)) sf_error("No n1= in input");
-    if (!sf_getint("n2",&n2)) sf_error("No n2= in input");
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
+    nx = n1*n2;
 
     if (!sf_getbool("hyp",&hyp)) hyp=false;
     /* generate hyperbolas */
 
-    nx = n1*n2;
     lag = sf_intalloc(na);
-    bb = sf_floatalloc(na);
+    aa = sf_floatalloc2(na,nx);
 
     if (b1 > 1) {
 	a = sf_floatalloc(a1);
@@ -79,22 +80,13 @@ int main(int argc, char* argv[])
     for (ia=b1-1; ia < na; ia++) {
 	lag[ia] = n1+ia+1-p0-b1;
     }
-    n[0] = n1;
-    n[1] = n2;
-
-    sf_setformat(lg,"native_int");
-    sf_putints(lg,"n",n,2);
-    sf_putint(lg,"n1",na);
-    sf_putint(lg,"n2",nx);
-
-    sf_setformat(out,"native_float");
-    sf_putint(out,"n1",na);
-    sf_putint(out,"n2",nx);
 
     s = p*p; 
     s0 = p;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
+	    bb = aa[i2*n1+i1];
+
 	    if (hyp) {
 		p = s*i2/(i1+1);
 		if (p > s0) p = s0;
@@ -118,12 +110,19 @@ int main(int argc, char* argv[])
 	    for (i=b1-1; i < na; i++) {
 		bb[i] = - bb[i];
 	    }
-	    
-	    sf_floatwrite(bb,na,out);
-	    sf_intwrite(lag,na,lg);
 	}
     }
-    
+
+    pp = sf_floatalloc(nx);
+    qq = sf_floatalloc(nx);
+
+    contran_init (na, aa, nx, lag, true);
+
+    sf_floatread(pp,nx,inp);
+    contran_lop (false,false,nx,nx,pp,qq);
+    sf_floatwrite(qq,nx,out);
+
+    sf_close();
     exit(0);
 }
 

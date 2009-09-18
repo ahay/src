@@ -24,5 +24,6 @@ except ImportError:
 
 setup(name='rsf',
       version='0.9.8',
-      py_modules=['rsfproj','rsftex','rsfbook'],
+      py_modules=['rsfpath','rsfproj','rsftex','rsfbook'],
+      scripts=['latex2wiki','sftour','vpconvert']
       )

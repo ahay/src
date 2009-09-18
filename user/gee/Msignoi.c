@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	NULL == (lagfile = sf_getstring("nlag"))) 
 	sf_error("Need nlag=");
     nlag = sf_input(lagfile);
-    if (!sf_histints(slag,"n",m,dim)) sf_error("No n= in %s",lagfile);
+    if (!sf_histints(nlag,"n",m,dim)) sf_error("No n= in %s",lagfile);
     sf_intread(naa->lag,na,nlag);
     regrid(dim,m,n,naa);
     sf_fileclose(nlag);

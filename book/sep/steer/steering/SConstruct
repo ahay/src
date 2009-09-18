@@ -1,22 +1,21 @@
 from rsfproj import *
 
-Flow('spike',None,'spike n1=30 n2=30 k1=5 k2=1 d1=1 label1= label2= label3=')
+Flow('spike',None,'spike n1=100 n2=100 k1=5 k2=1 d1=1 label1= label2= label3=')
 
-for nw in (2,3,8,13):
+for nw in (2,3,4,8,13):
     for case in ('','i'):
         plane = '%splane%d' % (case,nw)
         flt = '%sflt%d' % (case,nw)
         lag = '%slag%d' % (case,nw)
 
-        Flow([flt,lag],None,
-             'plane n1=30 n2=30 a1=%d b1=%d lag=${TARGETS[1]}' % \
-                 (nw,(1,2)[case=='i']))
-        Flow(plane,['spike',flt],'nhelicon div=y filt=${SOURCES[1]}')
+        Flow(plane,'spike',
+             'plane n1=100 n2=100 a1=%d b1=%d lag=${TARGETS[1]}' % \
+             (nw,(1,2)[case=='i']))
         Plot('g'+plane,plane,
              '''
-             grey pclip=100 title="Lagrange-%d" wantaxis=n wheretitle=t 
+             grey pclip=100 title="%s-%d" wantaxis=n wheretitle=t 
              titlesz=18 crowd=0.88
-             ''' % nw)
+             ''' % (('Lagrange','Page')[case=='i'],nw))
         Plot('w'+plane,plane,
              '''
              wiggle pclip=100 wanttitle=n wantaxis=n transp=1 yreverse=1 
@@ -30,5 +29,6 @@ for nw in (2,3,8,13):
         Plot(plane,['g'+plane,'w'+plane,'s'+plane],'SideBySideAniso')
 
 Result('steer-lagrange','plane2 plane3 plane8 plane13','OverUnderAniso')
+Result('steer-other','iplane2 iplane4 plane8 plane13','OverUnderAniso')
 
 End()
