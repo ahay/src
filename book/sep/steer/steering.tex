@@ -1,6 +1,8 @@
+\inputdir{steering}
+
 At this point a discussion of steering filters is appropriate.
 Plane waves with a given slope on a discrete grid can be predicted
-(destroyed) with compact filters \cite{Schwab.sep.94.matt2}. Inverting
+(destroyed) with compact filters \cite[]{Schwab.sep.94.matt2}. Inverting
 such a filter by the helix method, we can create a signal with a given
 arbitrary slope extremely quickly. If this slope is expected in the
 model, the described procedure gives us a very efficient method of
@@ -14,7 +16,7 @@ the number of points on the $t$ trace, and $\sigma = \frac{p \triangle
 \footnote{In
   computational physics, the dimensionless number $\sigma$ is
   sometimes referred to as the CFL (Courant, Friedrichs, and Lewy)
-  number \cite{sod}.} 
+  number \cite[]{sod}.} 
 and $\triangle
 x$ and $\triangle t$ correspond to the mesh size.
 If we design a filter that is two columns long
@@ -25,16 +27,16 @@ signal by $T$, interpolate it, and subtract the result from the
 original signal. Therefore, we can formally write
 \begin{equation}
   \label{eqn:pfilter}
-  \bold{P} = I - \bold{S}(\sigma)\;,
+  \mathbf{P} = I - \mathbf{S}(\sigma)\;,
 \end{equation}
-where $\bold{P}$ denotes the steering filter, $\bold{S}$ is
-the shift-and-interpolation operator, and $\bold{I}$ is the identity
+where $\mathbf{P}$ denotes the steering filter, $\mathbf{S}$ is
+the shift-and-interpolation operator, and $\mathbf{I}$ is the identity
 operator.
 \par
-Different choices for the operator $\bold{S}$ in (\ref{eqn:pfilter})
+Different choices for the operator $\mathbf{S}$ in (\ref{eqn:pfilter})
 produce filters with different length and prediction power.
 A shifting operation corresponds to the filter with the $Z$-transform
-$\Sigma(Z) = Z^T$, while the operator $\bold{S}$ corresponds to an
+$\Sigma(Z) = Z^T$, while the operator $\mathbf{S}$ corresponds to an
 approximation of $\Sigma(Z)$ with integer powers of $Z$. One possible
 approach is to expand $\Sigma(Z) Z^{-N_t}$ using the Taylor series around
 the zero frequency ($Z=1$). For example, the first-order approximation
@@ -45,7 +47,7 @@ is
   \sigma Z^{T+1}\;,
 \end{equation}
 which corresponds to linear interpolation and leads in the
-two-dimensional space to the steering filter $\bold{P}$ of the
+two-dimensional space to the steering filter $\mathbf{P}$ of the
 form
 \begin{equation}
   \label{eqn:p1}
@@ -67,7 +69,7 @@ lead to unstable inversion. For negative $\sigma$, the filter is
 reflected:
 \begin{equation}
   \label{eqn:p1p}
-  \bold{P}_1 =
+  \mathbf{P}_1 =
   \begin{array}{|c|c|}
     \hline
      & 1 \\ \hline
@@ -103,7 +105,7 @@ The second-order Taylor approximation yields
 which corresponds to the 2-D filter
 \begin{equation}
   \label{eqn:p2}
-  \bold{P}_2 =
+  \mathbf{P}_2 =
   \begin{array}{|c|c|c|}
     \hline
     & 1 & \\ \hline
@@ -125,10 +127,10 @@ where the $k$ and $i$ range from $0$ to $N$. Such a filter has a
 stable inverse for $-\frac{N}{2} \le \sigma \le \frac{N+1}{2}$ and
 additionally produces an exact answer for all integer $\sigma$'s in
 that range. We would have arrived at the same conclusion if instead of
-expanding the $Z$-transform of the filter $\bold{S}$ around $Z=1$,
+expanding the $Z$-transform of the filter $\mathbf{S}$ around $Z=1$,
 expanded its Fourier transform around the zero frequency. The latter
 case corresponds to the ``self-similar'' construction of
-\longcite{Karrenbach.sepphd.83}. The impulse responses for the helix
+\cite{Karrenbach.sepphd.83}. The impulse responses for the helix
 inverses of different-order Lagrangian filters are shown in Figure
 \ref{fig:steer-lagrange}.
 \par
@@ -147,33 +149,35 @@ For example, the $[1/1]$ Pad\`{e} approximation is
 which leads to the filter
 \begin{equation}
   \label{eqn:p11}
-  \bold{P}_1^1 =
+  \mathbf{P}_1^1 =
   \begin{array}{|c|c|}
     \hline
     1 & \frac{1-\sigma}{1+\sigma} \\ \hline
     \frac{\sigma-1}{1+\sigma} & -1 \\ \hline
   \end{array}
 \end{equation}
-and corresponds to the Crank-Nicolson implicit scheme. The
-impulse response for the inverse of filter (\ref{eqn:p11}) is shown in
-the top plot of Figure \ref{fig:steer-other}. It shows some mild
-improvements in comparison with the explicit Lagrangian filter of the
-same order. In our experience, filters with more than one additional
-coefficient in the first column behave unstably when inverted.
+and corresponds to the Crank-Nicolson implicit scheme. 
 
-\plot{steer-other}{width=6in,height=7.5in}{Steering filters with
-  different types of interpolation. The left and middle plots show the
-  impulse responses of the steering filters: the top panel
-  corresponds to first-order Pad\`{e} interpolation (Crank-Nicolson
-  scheme); the second top plot, the (8/2) Pad\`{e} approximation; the two
-  bottom plots, the 8-point and 12-point Lagrange filters. The right
-  plots in each panel show the corresponding average spectrum.}
-\par
-Other types of interpolations could be used for the steering 
-filters \cite{Fomel.sep.94.sergey2} The two bottom panels of Figure
-\ref{fig:steer-other} show the impulse responses for the filters, based on
-the tapered sinc interpolation. The filters suffer from high-frequency
-oscillations, but otherwise also perform well.
+%The impulse response for the inverse of filter (\ref{eqn:p11}) is
+%shown in the top plot of Figure \ref{fig:steer-other}. It shows some
+%mild improvements in comparison with the explicit Lagrangian filter of
+%the same order. In our experience, filters with more than one
+%additional coefficient in the first column behave unstably when
+%inverted.
+
+%\plot{steer-other}{width=6in,height=7.5in}{Steering filters with
+%  different types of interpolation. The left and middle plots show the
+%  impulse responses of the steering filters: the top panel
+%  corresponds to first-order Pad\`{e} interpolation (Crank-Nicolson
+%  scheme); the second top plot, the (8/2) Pad\`{e} approximation; the two
+%  bottom plots, the 8-point and 12-point Lagrange filters. The right
+%  plots in each panel show the corresponding average spectrum.}
+%\par
+%Other types of interpolations could be used for the steering 
+%filters \cite[]{Fomel.sep.94.sergey2} The two bottom panels of Figure
+%\ref{fig:steer-other} show the impulse responses for the filters, based on
+%the tapered sinc interpolation. The filters suffer from high-frequency
+%oscillations, but otherwise also perform well.
 \par
 It is interesting to note that a space-variant convolution with
 inverse plane filters can create signals with different shape, which
