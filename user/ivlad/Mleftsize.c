@@ -45,6 +45,6 @@ main (int argc, char *argv[])
 
     printf( "%d\n", n );
 
-    if (in != NULL) sf_fileclose(in);
+    sf_close();
     exit(0);
 }

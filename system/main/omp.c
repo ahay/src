@@ -30,17 +30,17 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
     off_t n[SF_MAX_DIM], size, left,nbuf;
-    char command[CMDLEN], command2[CMDLEN], *iname, *oname, *iname2, key[5];
-    char **inames, **onames, **cmdline, buffer[BUFSIZ];
+    char command[CMDLEN], command2[CMDLEN], *iname=NULL, *oname=NULL, *iname2=NULL, key[5];
+    char **inames=NULL, **onames=NULL, **cmdline=NULL, buffer[BUFSIZ];
     FILE *ifile=NULL, *ofile=NULL;
-    sf_file inp, out, in, inp2;
+    sf_file inp=NULL, out=NULL, in=NULL, inp2=NULL;
 
 #pragma omp parallel
     {
 	nodes = omp_get_num_threads();
 	if (1 >= nodes) nodes = omp_get_num_procs(); 
     }
-  
+
     /* master node */
     sf_init(argc,argv);
     sf_warning("Running %d threads",nodes);
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
     sf_fileflush(out,inp);
     sf_setform(out,SF_NATIVE);
-    
+
     sf_setform(inp,SF_NATIVE);
 
     for (node=0; node < nodes; node++) {
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 		sf_charwrite(buffer,nbuf,inp2);
 	    }
 	}
-	    
+
 	sf_fileclose(in);
 
 	cmdline[node] = sf_charalloc(CMDLEN);
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     for (node=0; node < nodes; node++) {
 	iname = inames[node];
 	oname = onames[node];
-	    
+
 	in = sf_input(oname);
 	sf_setform(in,SF_NATIVE);
 

@@ -7,17 +7,17 @@ for a list of RSF files.  Non-RSF files are ignored.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,12 +29,12 @@ for a list of RSF files.  Non-RSF files are ignored.
 
 int main (int argc, char* argv[])
 {
-    char            *filename, *prefix=" KMGT";
+    char            *filename=NULL, *prefix=" KMGT";
     int             i, j, esize;
     off_t           bytes, total, p1024[5];
     float           size_human;
     bool            files, human;
-    sf_file         file;
+    sf_file         file=NULL;
 
     sf_init (argc,argv);
 
@@ -43,7 +43,7 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("human",&human)) human=false;
     /* If y, print human-readable file size.  If n, print byte count. */
-    
+
     /* Set up powers of 1024 */
     p1024[0] = 1;
     for (i=1; i<5; i++) p1024[i] = p1024[i-1]*1024;
@@ -57,10 +57,10 @@ int main (int argc, char* argv[])
         filename = argv[i];
                                 /* Skip if parameter            */
         if (NULL != strchr(filename,'=')) continue;
-        
+
                                 /* Skip if not rsf file         */
         if (strcmp(&filename[strlen(filename)-4],".rsf") != 0) continue;
-        
+
                                 /* Get file properties          */
         file = sf_input(filename);
 	if (NULL == file) continue;
@@ -73,9 +73,9 @@ int main (int argc, char* argv[])
 	    bytes *= esize;
 	}
         sf_fileclose(file);
-            
+
         total += bytes;
-    
+
         if (files)              /* Print file size              */
         {
             if (human)          /* ... in human readable format */
@@ -102,5 +102,3 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
-
-/* 	$Id$	 */

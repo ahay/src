@@ -5,17 +5,17 @@
  */
 /*
   Copyright (C) 2004  University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,19 +31,19 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		 int nrhs, const mxArray *prhs[])
 {
     int taglen, status, argc=2, i, ndim, len;
-    const int *dim;
+    const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *tag, *argv[] = {"matlab","-"}, *par, *filename;
-    double *dr;
-    float *p;
+    char *tag=NULL, *argv[] = {"matlab","-"}, *par=NULL, *filename=NULL;
+    double *dr=NULL;
+    float *p=NULL;
     char buf[BUFSIZ], key[5];
     bool same;
-    FILE *file2;
-    sf_file file;
+    FILE *file2=NULL;
+    sf_file file=NULL;
 
     /* Check for proper number of arguments. */
     if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
-    
+
     /* First input must be a string. */
     if (!mxIsChar(prhs[1]))
 	mexErrMsgTxt("First input must be a string.");
@@ -51,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* First input must be a row vector. */
     if (mxGetM(prhs[1]) != 1)
 	mexErrMsgTxt("First input must be a row vector.");
-    
+
     /* Get the length of the input string. */
     taglen = mxGetN(prhs[1]) + 1;
 
@@ -106,10 +106,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     /* Input 2 must be a number. */
     if (!mxIsDouble(prhs[0])) mexErrMsgTxt("Input 2 must be double.");
-    
+
     /* data pointers */
     dr = mxGetPr(prhs[0]);
-    
+
     /* get data dimensions */
     ndim=mxGetNumberOfDimensions(prhs[0]);
     dim=mxGetDimensions(prhs[0]);
@@ -119,14 +119,14 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     if (!same) {
 	sf_setformat(file,mxIsComplex(prhs[0])?"native_complex":"native_float");
-   
+
 	/* Output */
 	for (i=0; i < ndim; i++) {
 	    sprintf(key,"n%d",i+1);
 	    sf_putint(file,key,dim[i]);
 	}
     }
-	
+
     p = (float*) buf;
 
     for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {

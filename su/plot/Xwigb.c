@@ -48,7 +48,7 @@ X Functionality:
  * Modified by Sergey Fomel for including with Madagascar.
  */
 /*
-  Copyright © 2007, Colorado School of Mines,
+  Copyright ï¿½ 2007, Colorado School of Mines,
   All rights reserved.
   
   
@@ -189,7 +189,7 @@ int main (int argc, char *argv[])
 			 * 8=one eighths of the window size */
     char  *msg="";		/* message on screen */
     
-    sf_file in;
+    sf_file in=NULL;
 
     /* initialize getpar */
     sf_init(argc,argv);
@@ -749,6 +749,7 @@ int main (int argc, char *argv[])
 	XCloseDisplay(dpy);
 
 	free(z);
+        sf_close();
 	exit(0);
 }
 			

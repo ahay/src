@@ -202,12 +202,12 @@ main (int argc,char **argv)
 			 * 8=one eighths of the window size */
     char  *msg="";		/* message on screen */
 
-     sf_file in;
+     sf_file in=NULL;
 
     /* initialize getpar */
     sf_init(argc,argv);
     in = sf_input("in");
-    
+
     /* get parameters describing 1st dimension sampling */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&d1)) d1 = 1.0;
@@ -231,7 +231,7 @@ main (int argc,char **argv)
     if (NULL == mpicksfp) sf_error("Cannot open \"%s\" for writing:",mpicks);
 
     /* set up curve plotting */
-    
+
     if (!sf_getint("ncurve",&curve)) curve=0;
     /* number of curves to draw */
 
@@ -382,7 +382,7 @@ main (int argc,char **argv)
     if (!sf_getfloat("d1num",&d1num)) d1num = 0.0; /* numbered tic interval on axis 1 (0.0 for automatic) */
     if (!sf_getfloat("f1num",&f1num)) f1num = x1min; /* first numbered tic on axis 1 (used if d1num not 0.0) */
     if (!sf_getint("n1tic",&n1tic)) n1tic = 1; /* number of tics per numbered tic on axis 1 */
-    
+
     if (NULL == (grid1s = sf_getstring("grid1"))) grid1s="none"; /* grid lines on axis 1 (none, dot, dash, or solid) */ 
     if (STREQ("dot",grid1s)) grid1 = DOT;
     else if (STREQ("dash",grid1s)) grid1 = DASH;
@@ -1048,7 +1048,7 @@ main (int argc,char **argv)
 	    } else if (keysym==XK_H) {
 
 		Colormap mycp=xCreateHSVColormap(dpy,win,"hsv_down",verbose);
-                                
+
 		XSetWindowColormap(dpy,win,mycp);
 		XInstallColormap(dpy,mycp);
 
@@ -1072,7 +1072,7 @@ main (int argc,char **argv)
 			
 		/* if new box has tiny width or height */
 		if (wb<4 || hb<4) {
-				
+
 		    /* reset box to initial values */
 		    x1begb = x1beg;
 		    x1endb = x1end;
@@ -1162,6 +1162,7 @@ main (int argc,char **argv)
 
     /* close connection to X server */
     XCloseDisplay(dpy);
+    sf_close();
     exit(0);
 }
 
@@ -1355,11 +1356,6 @@ Author: Zhaobo Meng, ConocoPhillips, Feb. 03,2004
     i00 = ix1 + n1*ix2;
     temp = zfrac *( xfrac*zz[i00+1+n1] + xfrac0*zz[i00+n1])
 	+ zfrac0*( xfrac*zz[i00+1   ] + xfrac0*zz[i00   ]);
-
-    /*
-      if (verbose) warn("x1=%g x2=%g,value=%g,ix1=%d,ix2=%d f1=%g d1=%g n1=%d f2=%g d2=%g n2=%d",
-      x1,x2,temp,ix1,ix2,f1,d1,n1,f2,d2,n2);
-    */
 
     return(temp);
 }

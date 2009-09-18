@@ -2,7 +2,7 @@
 '''
 Finds C source code files that call sf_input for a given file, but forget to
 call sf_fileclose. Call this program from the upper directory (RSFSRC) with no arguments, i.e.:
-    ./adm/find_file_leaks.py > results.asc
+    ./admin/find_file_leaks.py > results.asc
 It will print a list of affected files, sorted in a few categories.
 
 To eliminate the file leak, make sure all file pointers are initialized with
@@ -80,96 +80,8 @@ def main():
 
     dirs_to_check = 'api pens plot su system user'
 
-    already_checked_files = '''
-    api/c/Testeno2.c
-    api/c/test/afdm.c
-    api/matlab/rsf_dim.c
-    api/matlab/rsf_par.c
-    plot/main/contour.c
-    plot/main/contour3.c
-    plot/main/dots.c
-    plot/main/graph.c
-    plot/main/graph3.c
-    plot/main/grey.c
-    plot/main/grey3.c
-    plot/main/plotrays.c
-    plot/main/thplot.c
-    plot/lib/Teststdplot.c
-    plot/opengl/Mplotrays3.c
-    system/generic/Magc.c
-    system/generic/Mbandpass.c
-    system/generic/Mboxsmooth.c
-    system/generic/Mcanny.c
-    system/generic/Mcausint.c
-    system/generic/Mcmatmult.c
-    system/generic/Mcosft.c
-    system/generic/Mcostaper.c
-    system/generic/Mderiv.c
-    system/generic/Mdipfilter.c
-    system/generic/Mdwt.c
-    system/generic/Mequal.c
-    system/generic/Mfft1.c
-    system/generic/Mfft3.c
-    system/generic/Mgrad2.c
-    system/generic/Mgrad3.c
-    system/generic/Mhistogram.c
-    system/generic/Mnoise.c
-    system/generic/Mremap1.c
-    system/generic/Msmooth.c
-    system/generic/Munif3.c
-    system/main/add.c
-    system/main/attr.c
-    system/main/cconjgrad.c
-    system/main/cdottest.c
-    system/main/cmplx.c
-    system/main/conjgrad.c
-    system/main/cp.c
-    system/main/cut.c
-    system/main/dd.c
-    system/main/disfil.c
-    system/main/dottest.c
-    system/main/get.c
-    system/main/interleave.c
-    system/main/mask.c
-    system/main/pad.c
-    system/main/real.c
-    system/main/reverse.c
-    system/main/rotate.c
-    system/main/rtoc.c
-    system/main/scale.c
-    system/main/spray.c
-    system/main/stack.c
-    system/main/transp.c
-    system/main/window.c
-    system/seismic/Mdepth2time.c
-    system/seismic/Mai2refl.c
-    system/seismic/Mricker.c
-    system/seismic/Mricker1.c
-    system/seismic/Mtime2depth.c
-    system/seismic/Mzomig.c
-    user/effsilva/Mkhshot.c
-    user/ivlad/Mfiledims.c
-    user/ivlad/Mfileflush.c
-    user/ivlad/Mleftsize.c
-    user/ivlad/Mquantile.c
-    user/jennings/Mclip2.c
-    user/jennings/Mlistminmax.c
-    user/jennings/Mminmax.c
-    user/kourkina/Mcameron2d.c
-    user/kourkina/Mve2d.c
-    user/mccowan/Mdmeig.c
-    user/mccowan/Mfastft.c
-    user/nobody/log.c
-    user/psava/Msrmig3.c
-    user/psava/Msrmod3.c
-    '''
-
-    already_checked_list = already_checked_files.split()
-
     primary_suspects    = [] # Main progs with sf_input, but no sf_fileclose
     secondary_suspects  = [] # other files with sf_input, but no sf_fileclose
-    tertiary_suspects   = [] # files w. mismatch between input and close calls
-    quaternary_suspects = [] # Files with both sf_input and sf_fileclose
 
     for d in dirs_to_check.split():
         for root,dirs,files in os.walk(d):
@@ -177,25 +89,17 @@ def main():
             if '.svn' not in root:
                 for file in files:
                     (shortname, extension) = os.path.splitext(file)
-                    if extension == '.c' and file not in already_checked_list:
+                    if extension == '.c':
                         c_file = os.path.join(root, file)
                         grep_4_sf_input = grep_from_py(c_file, 'sf_input')
                         if grep_4_sf_input != '': # file_c has sf_input
-                            grep_4_sf_fileclose = \
-                            grep_from_py(c_file, 'sf_fileclose')
-                            if grep_4_sf_fileclose == '': # no sf_fileclose
+                            grep_4_sf_close = \
+                            grep_from_py(c_file, 'sf_close')
+                            if grep_4_sf_close == '': # no sf_fileclose
                                 if shortname[0] == 'M' or 'system/main/' in c_file:
                                     primary_suspects.append(c_file)
                                 else:
                                     secondary_suspects.append(c_file)
-                            else: # file has both sf_input and sf_fileclose
-                                # Assumption: only one sf_input per line and
-                                #             only one sf_fileclose per line
-                                if grep_4_sf_input.count    ('\n') == \
-                                   grep_4_sf_fileclose.count('\n'):
-                                    quaternary_suspects.append(c_file)
-                                else:
-                                    tertiary_suspects.append(c_file)
 
     print_list(primary_suspects,
     'main program C files containing sf_input, but not sf_fileclose')
@@ -203,16 +107,9 @@ def main():
     print_list(secondary_suspects,
     'other C files containing sf_input, but not sf_fileclose')
 
-    print_list(tertiary_suspects,
-    'C files with a mismatch between the number of sf_input and sf_fileclose calls')
-
-    print_list(quaternary_suspects,
-    'C files with as many sf_input as sf_fileclose calls')
-
-    print_list(already_checked_list,
-    'already checked files')
-
     return unix_success
+
+###############################################################################
 
 if __name__ == '__main__':
     sys.exit(main()) # Exit with the success or error code returned by main

@@ -4,17 +4,17 @@ Specify either n1= o1= d1= or pattern=
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,13 +26,13 @@ Specify either n1= o1= d1= or pattern=
 int main(int argc, char* argv[])
 {
     int nd, n1, i1, n2, i2;
-    float o1, d1, *table1, *trace, *xout, x0, dx;
-    sf_file in, out, pattern;
+    float o1, d1, *table1=NULL, *trace=NULL, *xout=NULL, x0, dx;
+    sf_file in=NULL, out=NULL, pattern=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&nd)) sf_error("Need n1= in input");
     if (!sf_histfloat(in,"d1",&dx)) sf_error("Need d1= in input");
@@ -75,7 +75,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(trace,n1,out);
     }
 
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

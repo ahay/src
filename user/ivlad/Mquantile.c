@@ -28,7 +28,7 @@ main (int argc, char *argv[])
     float pclip;
     int nclip;
     float q; /* Quantile */
-    float *d; /* Array to hold THE ENTIRE DATASET */
+    float *d=NULL; /* Array to hold THE ENTIRE DATASET */
     sf_file in=NULL; /* Input file */
     int mem; /* For avoiding int to off_t typecast warning */
     off_t memsize;
@@ -69,6 +69,6 @@ main (int argc, char *argv[])
 
     printf( "%f\n", q );
 
-    if (in != NULL) sf_fileclose(in);
+    sf_close();
     exit(0);
 }

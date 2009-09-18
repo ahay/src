@@ -15,7 +15,7 @@ sfclip < in.rsf > out.rsf clip=x
 
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -25,7 +25,7 @@ sfclip < in.rsf > out.rsf clip=x
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,8 +37,8 @@ sfclip < in.rsf > out.rsf clip=x
 int main(int argc, char* argv[])
 {
     int i, n, nbuf;
-    float upper, lower, *trace;
-    sf_file in, out; /* Input and output files */
+    float upper, lower, *trace=NULL;
+    sf_file in=NULL, out=NULL; /* Input and output files */
 
     /* Initialize RSF */
     sf_init(argc,argv);
@@ -66,21 +66,19 @@ int main(int argc, char* argv[])
     for (n = sf_filesize(in); n > 0; n -= nbuf)
     {
         if (nbuf > n) nbuf=n;
-    
+
         sf_floatread(trace,nbuf,in);
-    
+
         for (i=0; i < nbuf; i++)
         {
             if (trace[i] > upper) trace[i] = upper;
             if (trace[i] < lower) trace[i] = lower;
         }
-        
+
         sf_floatwrite(trace,nbuf,out);
     }
-    
-    sf_fileclose(in);
+
+    sf_close();
 
     exit(0);
 }
-
-/* 	$Id$	 */

@@ -1,17 +1,17 @@
 /* MPI wrapper for embarassingly parallel jobs. */
 /*
   Copyright (C) 2007 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,21 +30,21 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc,sys;
     off_t size, left,nbuf, n[SF_MAX_DIM];
-    char cmdline[CMDLEN], command[CMDLEN], *iname, *oname, key[5];
-    char **inames, **onames, buffer[BUFSIZ];
-    FILE *ifile, *ofile;
-    sf_file inp, out, in;
+    char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5];
+    char **inames=NULL, **onames=NULL, buffer[BUFSIZ];
+    FILE *ifile=NULL, *ofile=NULL;
+    sf_file inp=NULL, out=NULL, in=NULL;
     MPI_Status stat;
 
     MPI_Init(&argc,&argv);
-    
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nodes);
     if (nodes < 2) {
 	fprintf(stderr,"Need at least two nodes!\n");
 	MPI_Finalize();
     }
-    
+
     if (!rank) { /* master node */
 	sf_init(argc,argv);
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 		    sf_charwrite(buffer,nbuf,in);
 		}
 	    }
-	    
+
 	    sf_fileclose(in);
 
 	    snprintf(cmdline,CMDLEN,"%s < %s > %s",command,iname,oname);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 
 	    iname = inames[node-1];
 	    oname = onames[node-1];
-	    
+
 	    in = sf_input(oname);
 	    sf_setform(in,SF_NATIVE);
 

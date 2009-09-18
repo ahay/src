@@ -1,16 +1,16 @@
 /* Display dataset attributes.
-   
+
 Sample output from "sfspike n1=100 | sfbandpass fhi=60 | sfattr"
-******************************************* 
-     rms =      0.992354 
-    mean =      0.987576 
-  2-norm =       9.92354 
-variance =    0.00955481 
- std dev =     0.0977487 
-     max =       1.12735 at 97 
-     min =      0.151392 at 100 
-nonzero samples = 100 
-  total samples = 100 
+*******************************************
+     rms =      0.992354
+    mean =      0.987576
+  2-norm =       9.92354
+variance =    0.00955481
+ std dev =     0.0977487
+     max =       1.12735 at 97
+     min =      0.151392 at 100
+nonzero samples = 100
+  total samples = 100
 *******************************************
 
 rms                = sqrt[ sum(data^2) / n ]
@@ -22,17 +22,17 @@ standard deviation = sqrt [ variance ]
 /*
   Copyright (C) 2004 University of Texas at Austin
   Copyright (C) 2009 Colorado School of Mines
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,8 +48,8 @@ static void location(size_t loc, size_t dim, const off_t *n);
 
 int main(int argc, char* argv[])
 {
-    sf_file in;
-    char *want, buf[BUFSIZ];
+    sf_file in=NULL;
+    char *want=NULL, buf[BUFSIZ];
     off_t n[SF_MAX_DIM], nsiz, nzero;
     int lval;
     size_t i, nbuf, nleft, dim, minloc=0, maxloc=0;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     double fsum, fsqr, flval, frms, fmean, fnorm, fvar, fstd;
     sf_complex c, cmin1, cmin2, cmax1, cmax2;
     sf_datatype type;
-    
+
     sf_init (argc,argv);
     want = sf_getstring("want");
     /* 'all'(default), 'rms', 'mean', 'norm', 'var', 
@@ -70,12 +70,12 @@ int main(int argc, char* argv[])
         want=   'nonzero' displays number of nonzero samples
         want=   'samples' displays total number of samples
         want=   'short' displays a short one-line version
-     */ 
+     */
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
-    
+
     if (!sf_getint("lval",&lval)) lval=2;
     /* norm option, lval is a non-negative integer, computes the vector lval-norm */
- 
+
     in = sf_input("in");
 
     dim = (size_t) sf_largefiledims (in,n);
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
     cmin1 = sf_cmplx(+FLT_MAX,0.); cmin2 = sf_cmplx(0.,+FLT_MAX);
     cmax1 = sf_cmplx(-FLT_MAX,0.); cmax2 = sf_cmplx(0.,-FLT_MAX);
-    
+
     fsum = fsqr = flval = 0.0;
     fmin = +FLT_MAX;
     fmax = -FLT_MAX;
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
 	printf("%6.2f%% zeros; min: %g; max: %g \n",
 	       100.*((double)nzero)/((double)nsiz),fmin,fmax);  
     }
-    
+
     exit (0);
 }
 

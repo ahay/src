@@ -1,5 +1,5 @@
 /* Display basic information about RSF files.
-   
+
 Takes: file1.rsf file2.rsf ...
 
 n1,n2,... are data dimensions
@@ -37,7 +37,7 @@ int main (int argc, char* argv[])
     int i, j, ncheck, esize, dim=SF_MAX_DIM;
     off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
-    char *label, *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
+    char *label=NULL, *filename=NULL, *dataname=NULL, key[8], *val=NULL, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file=NULL;
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex","short"};

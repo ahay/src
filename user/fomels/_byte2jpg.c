@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     bool color;
     int n1, n2, nc;
-    unsigned char *grey;
-    sf_file in;
+    unsigned char *grey=NULL;
+    sf_file in=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -47,6 +47,6 @@ int main(int argc, char* argv[])
     grey = sf_ucharalloc (n1*n2*nc);
     sf_ucharread(grey,n1*n2*nc,in);    
     write_JPEG_file (grey, n2, n1, nc);
-
+    sf_close();
     exit(0);
 }

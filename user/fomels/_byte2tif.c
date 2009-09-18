@@ -25,11 +25,11 @@ int main(int argc, char* argv[])
 {
     bool color;
     int n1, i2, n2, nc, nbuf;
-    unsigned char *grey;
-    sf_file in;
-    TIFF *tiffout;
-    FILE *tiffin;
-    char *tiffname, buf[BUFSIZ];
+    unsigned char *grey=NULL;
+    sf_file in=NULL;
+    TIFF *tiffout=NULL;
+    FILE *tiffin=NULL;
+    char *tiffname=NULL, buf[BUFSIZ];
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -82,6 +82,6 @@ int main(int argc, char* argv[])
 
     fclose(tiffin);
     unlink(tiffname);
-
+    sf_close();
     exit(0);
 }

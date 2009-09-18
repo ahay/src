@@ -105,8 +105,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(uo[0],nz*nx,Fo);
     }
     if(verb) fprintf(stderr,"\n");
-    if (Fw != NULL) sf_fileclose(Fw);
-    if (Fv != NULL) sf_fileclose(Fv);
-    if (Fr != NULL) sf_fileclose(Fr);
+    sf_close();
     exit (0);
 }

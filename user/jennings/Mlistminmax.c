@@ -38,53 +38,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    char        *mode;                  /* Standard types           */
-    int         i1,i2,n1,n2;         
-    float       *list;
-    
-    sf_file     in,out;                 /* RSF types                */
-    
+    char        *mode=NULL;             /* Standard types           */
+    int         i1,i2,n1,n2;
+    float       *list=NULL;
+
+    sf_file     in=NULL,out=NULL;       /* RSF types                */
+
     sf_init(argc,argv);                 /* Initialize RSF           */
-    
+
     in  = sf_input("in");               /* Open files               */
     out = sf_output("out");
-    
+
     sf_fileflush(out,in);               /* Copy header to output    */
 
                                         /* Check input data type    */
     if (sf_gettype(in) != SF_FLOAT) sf_error("Input must be float.");
-    
+
                                         /* Get the file sizes       */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
-    
+
     n2 = sf_leftsize(in,1);
-    
+
                                         /* Check mode               */
     if ((mode = sf_getstring("mode")) == NULL) mode = "min";
-    /* 'min' (default) or 'max' */ 
+    /* 'min' (default) or 'max' */
 
     if (strcmp(mode,"min")!=0 && strcmp(mode,"max")!=0)
         sf_error ("Unknown mode %s.",mode);
-    
+
     list = sf_floatalloc(n1);           /* Allocate list            */
-    
+
     for (i2=0; i2<n2; i2++)             /* Process each list        */
     {
         sf_floatread(list,n1,in);       /* Read a list              */
-        
+
                                         /* Find the min or max      */
         if (strcmp(mode,"min")==0)
             for (i1=1; i1<n1; i1++) list[i1] = SF_MIN(list[i1],list[i1-1]);
-    
+
         if (strcmp(mode,"max")==0)
             for (i1=1; i1<n1; i1++) list[i1] = SF_MAX(list[i1],list[i1-1]);
-    
+
         sf_floatwrite(list,n1,out);     /* Write the output         */
     }
-    
-    sf_fileclose(in);
+
+    sf_close();
 
     exit (0);
 }
-
-/* 	$Id$	 */
