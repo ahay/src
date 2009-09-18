@@ -1,0 +1,123 @@
+from rsfproj import *
+import math
+
+# Velocity model
+########################################
+v0 = 0.5        # velocity at the origin
+gz = 0.8        # vertical gradient
+gx = 0.6        # horizontal gradient
+nz = 601        # depth samples
+nx = 1201       # lateral samples
+dz = 0.5/(nz-1) # depth sampling
+dx = 1.0/(nx-1) # lateral sampling
+
+# v(z,x) = v0 + gz*z + gx*x
+###########################
+Flow('vel',None,
+     '''
+     math n1=%d d1=%g n2=%d d2=%g
+     output="%g+%g*x1+%g*x2"
+     ''' % (nz,dz,nx,dx,v0,gz,gx))
+Plot('vel',
+     '''
+     grey color=j allpos=y screenht=6 screenratio=%g
+     bias=%g wanttitle=n barreverse=y
+     label1=Depth unit1=km label2=Lateral unit2=km
+     scalebar=y barlabel=Velocity barunit=km/s 
+     ''' % ((nz-1.)/(nx-1.),v0))
+
+# Analytical ray tracing
+##############################################
+angle = 130                # shooting angle
+angle2 = angle*math.pi/180 # in radians
+g = math.hypot(gx,gz)      # length of g
+px =  math.sin(angle2)     # initial direction
+pz = -math.cos(angle2)
+nt = 1201                  # time steps
+dt = 0.001                 # time samplin
+
+Flow('gt',None,
+     'math n1=%d d1=%g output="%g*x1" ' % (nt,dt,g))
+Flow('den','gt',
+     '''
+     math output="%g*cosh(input)-%g*sinh(input)"
+     ''' % (g,gx*px + gz*pz))
+Flow('x','gt den',
+     '''
+     math den=${SOURCES[1]}
+     output="(%g*(1-cosh(input))+%g*sinh(input))/den"
+     ''' % (gx*v0/g,px*v0))
+Flow('z','gt den',
+     '''
+     math den=${SOURCES[1]}
+     output="(%g*(1-cosh(input))+%g*sinh(input))/den"
+     ''' % (gz*v0/g,pz*v0))
+Flow('ray','z x','cmplx ${SOURCES[:2]}',stdin=0)
+
+Plot('ray',
+     '''
+     window j1=100 |
+     graph scalebar=y plotcol=7 plotfat=5 wanttitle=n
+     transp=y yreverse=y screenht=6 screenratio=%g 
+     wantaxis=n min1=0 max1=0.5 min2=0 max2=1 pad=n
+     ''' % ((nz-1.)/(nx-1.)))
+Result('ray','vel ray','Overlay')
+
+errs = []
+steps = []
+
+samples = range(1,nt/3,3)
+
+for sample in samples:
+    nt2 = (nt-1)/sample  # number of steps
+    dt2 = dt*sample      # time step
+
+    # Subsample exact ray
+    eray = 'eray%d' % sample
+    Flow(eray,'ray','window j1=%d' % sample)
+    
+    # Define time step
+    ####################
+    step = 'stp%d' % sample
+    Flow(step,None,'spike n1=1 mag=%g' % dt2)
+    steps.append(step)
+
+    # Numerical ray tracing
+    #######################
+    ray = 'ray%d' % sample
+    Flow(ray,'vel',
+         '''
+         rays2 sym=n yshot=0 nr=1 a0=%g nt=%d dt=%g 
+         ''' % (angle,nt2,dt2))
+
+    # Compute error
+    ###############
+    err = 'err%d' % sample
+    Flow(err,[ray,eray],
+         '''
+         add scale=1,-1 ${SOURCES[1]} |
+         math output="abs(input)" |
+         real | 
+         stack axis=1 
+         ''')
+    errs.append(err)
+
+# Concatenate results
+#####################
+cat = 'rcat axis=1 ${SOURCES[1:%d]}' % len(samples)
+
+Flow('err',errs,cat)
+Flow('step',steps,cat)
+
+graph = 'cmplx ${SOURCES[0:2]} | graph wanttitle=n '
+for case in (0,1):
+    Plot('err'+str(case),'step err',graph + '''
+    label1="Time step" unit1=s label2=Error unit2=km
+    ''',stdin=0)
+    graph = graph + 'symbol=x plotcol=2 '
+
+# Plot error
+###########################
+Result('rayerr','err0 err1','Overlay')
+
+End()

@@ -1,0 +1,320 @@
+\author{Pierre dB Fermat} 
+%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 2}
+
+\begin{abstract}
+  This homework has two parts. In the theoretical part, you will
+  derive special analytical solutions to one-point and two-point ray
+  tracing problems. In the computational part, you will investigate
+  the numerical accuracy of a finite-difference eikonal solver and
+  a Runge-Kutta ray tracer.
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+\end{verbatim}
+
+\section{Theoretical part}
+\inputdir{XFig}
+
+You can either write your answers on paper or edit them in the file
+\verb#hw2/paper.tex#. Please show all the mathematical
+derivations that you perform.
+
+\begin{enumerate}
+\item In class, we derived analytical solutions for one-point and
+two-point ray tracing problems for the special case of a constant
+gradient of slowness squared 
+\begin{equation}
+  \label{eq:s2}
+  S^2(\mathbf{x}) =
+  S^2(\mathbf{x_0})+2\,\mathbf{g} \cdot (\mathbf{x}-\mathbf{x_0})\;.
+\end{equation}
+In this homework, you will consider another special case, that of a
+constant gradient of velocity
+\begin{equation}
+  \label{eq:s2}
+  V(\mathbf{x}) = \frac{1}{S(\mathbf{x})} =
+  V(\mathbf{x_0})+\mathbf{G} \cdot (\mathbf{x}-\mathbf{x_0})\;.
+\end{equation}
+Recall the ray tracing system from Homework 1
+\begin{eqnarray}
+  \label{eq:plin}
+  \frac{d\,\mathbf{p}}{d\,\xi} & = & -\nabla V\;, \\
+  \label{eq:xlin}
+  \frac{d\,\mathbf{x}}{d\,\xi} & = &
+  \mathbf{p}\,V^3(\mathbf{x})\;, \\
+  \label{eq:tlin}
+  \frac{d\,T}{d\,\xi} & = & V(\mathbf{x})\;.
+\end{eqnarray}
+and consider the one-point ray tracing problem with the initial conditions
+$\mathbf{x}(0)= \mathbf{x}_0$ and $\mathbf{p}(0)=\mathbf{p}_0$.
+\begin{enumerate}
+\item  Show that the solution of
+equation~(\ref{eq:plin}) for the constant gradient of velocity is
+\begin{equation}
+  \label{eq:pcir}
+  \mathbf{p}(\xi) =  \mathbf{p}_0 - \mathbf{G}\,\xi\;.
+\end{equation}
+and express velocity along the ray as a function of
+  $\mathbf{p}_0$, $\mathbf{G}$, and $\xi$:
+  \begin{equation}
+\label{eq:vsol}
+V(\mathbf{x}) = \frac{1}{\sqrt{\mathbf{p} \cdot \mathbf{p}}} = 
+\end{equation}
+\item Let $a = \mathbf{p} \cdot (\mathbf{x} - \mathbf{x}_0)$. Using
+  the chain rule, find the expression for
+  \begin{equation}
+    \frac{d\,a}{d\,\xi} = 
+  \end{equation}
+  and solve it to show it that 
+  \begin{equation}
+    \label{eq:asol}
+    a(\xi) = V(\mathbf{x}_0)\,\xi
+  \end{equation}
+  and
+  \begin{equation}
+    \label{eq:a0sol}
+    a_0(\xi) = \mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) = V(\mathbf{x})\,\xi
+  \end{equation}
+\item One way to seek the solution for the one-point ray tracing
+  problem is to look for scalars $\alpha$ and $\beta$ in the representation
+\begin{equation}
+  \label{eq:xsol}
+  \mathbf{x}(\xi) = \mathbf{x}_0 + \alpha(\xi)\,\mathbf{p}_0 + \beta(\xi)\,\mathbf{G}\;.
+\end{equation}
+Under what condition does the linear system of equations
+\begin{eqnarray}
+  \label{eq:linsys1}
+  V(\mathbf{x})\,\xi = \mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) & = & 
+  \alpha\,\mathbf{p}_0 \cdot \mathbf{p}_0 + \beta\,\mathbf{p}_0 \cdot \mathbf{G} \\
+  \label{eq:linsys2}
+  V(\mathbf{x}) - V(\mathbf{x}_0) = \mathbf{G} \cdot (\mathbf{x} - \mathbf{x}_0) & = &
+  \alpha\,\mathbf{p}_0 \cdot \mathbf{G} + \beta\,\mathbf{G} \cdot \mathbf{G}
+\end{eqnarray}
+have a unique solution for $\alpha$ and $\beta$? Solve the system to
+find $\alpha$ and $\beta$ and obtain an analytical expression for
+the ray trajectory $\mathbf{x}(\xi)$.
+\item Express the squared distance between the ray end points
+  \begin{eqnarray}
+  \nonumber
+    (\mathbf{x} - \mathbf{x}_0) \cdot (\mathbf{x} - \mathbf{x}_0) & = &
+    \alpha^2\,\mathbf{p}_0 \cdot \mathbf{p}_0 + 2 \alpha\,\beta\,\mathbf{p}_0 \cdot \mathbf{G} +
+    \beta^2\,\mathbf{G} \cdot \mathbf{G} \\
+    & = & 
+    \label{eq:d2} 
+  \end{eqnarray}
+  in terms of $\mathbf{G}$, $\mathbf{p}_0$, and $\xi$. 
+\item In the two-point problem, the unknown
+  parameters are $(\mathbf{p}_0 \cdot \mathbf{G})$ and $\xi$.
+  Express $(\mathbf{p}_0 \cdot \mathbf{G})$ from your
+  equation~(\ref{eq:vsol}) and substitute it into your
+  equation~(\ref{eq:d2}). Solve for $\xi$. 
+\item Finally, use $\xi$ and $(\mathbf{p}_0 \cdot \mathbf{G})$ 
+  expressed in terms of $|\mathbf{x} - \mathbf{x}_0|$,
+  $\mathbf{G}$, $V(\mathbf{x}_0)$, and $V(\mathbf{x})$ and
+  substitute them into the one-point traveltime solution obtained by
+  integrating equation~(\ref{eq:tlin})\footnote{$\mbox{arccosh}(x)$ is
+  the inverse hyperbolic cosine function defined as $\mbox{arccosh}(x)
+  = \ln\left(x + \sqrt{x^2-1}\right)$.}  
+  \begin{equation}
+  \label{eq:t1} T(\xi) =
+  \frac{1}{|\mathbf{G}|}\,\mbox{arccosh}\left(1 +
+  \frac{|\mathbf{G}|^2\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi^2}
+  {V(\mathbf{x})+V(\mathbf{x}_0) - (\mathbf{p}_0 \cdot
+  \mathbf{G})\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi}\right)\;.
+  \end{equation} 
+  Your result will be the analytical two-point
+  traveltime 
+  \begin{eqnarray} 
+  \label{eq:t2}
+    \widehat{T}(\mathbf{x}_0,\mathbf{x}) = & & \hfill \ 
+  \end{eqnarray}
+\end{enumerate}
+
+\item Consider the source point $s$ and the receiver point $r$ at the
+  surface $z=0$ above a 2-D constant-velocity medium and a curved
+  reflector defined by the equation $z = z(x)$ with a twice
+  differentiable function $z(x)$ (Figure~\ref{fig:curve}).
+
+  \plot{curve}{width=0.7\textwidth}{Geometry of reflection in a
+    constant-velocity medium with a curved reflector.}
+
+  Note that the two-point ray trajectory can be parametrized by the
+  reflection point $y$ with the following expression for the
+  reflection traveltime (using the Pythagoras theorem):
+  \begin{equation}
+    \label{eq:dsr}
+      T(s,r) = \frac{\sqrt{(s-y)^2+z^2(y)}+\sqrt{(r-y)^2+z^2(y)}}{V}\;.
+  \end{equation}
+
+  \begin{enumerate}
+  \item Apply Fermat's principle to specify $F(y)$ in the equation
+    \begin{equation}
+	\label{eq:fermat}
+	    F(y) = 0
+      \end{equation}
+      required for finding the reflection point $y$.
+      \item Newton's method (successive linearization) solves nonlinear
+    equations like~(\ref{eq:fermat}) iteratively by starting with some
+    $y_0$ and repeating the iteration
+      \begin{equation}
+      \label{eq:newton}
+        y_{n+1} = y_n - \frac{F(y_n)}{F'(y_n)}
+      \end{equation}
+      for $n=0,1,2,\ldots$ Specify $F'(y)$ for the problem of finding the reflection point.
+
+    \item Consider the special case of a dipping plane boundary $z(x)
+    = x\,\tan{\alpha}$, where $\alpha$ is the dip angle. Show that, in
+    this case, equation~(\ref{eq:fermat}) reduces to a linear equation
+    for $y$ and has the following solution:
+
+    \begin{equation}
+      y = {\frac{2\,r\,s\,\cos^2\,\alpha}{r + s}}\;.
+      \label{eq:y}
+    \end{equation}
+    Substitute equation~(\ref{eq:y}) into~(\ref{eq:dsr}) to find the 
+    reflection traveltime.
+  \end{enumerate}
+\end{enumerate}
+
+\section{Computational part}
+
+\begin{enumerate}
+
+\item In the first part of the computational assignment, you will
+  investigate the numerical accuracy of a finite-difference eikonal solver.
+
+  \inputdir{eikonal}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{eikonal/SConstruct}
+
+  Figure~\ref{fig:exact} shows wavefronts in a medium with a constant
+  gradient of slowness squared computed with an analytical two-point
+  ray tracing formula from the class.
+ 
+  \plot{exact}{width=\textwidth}{Wavefronts in a constant velocity
+    gradient medium computed with an analytical formula.}
+
+  By computing traveltimes numerically at different sampling intervals
+  and comparing the numerical result with the analytical one, we can
+  get an experimental estimate of the numerical error behavior. The
+  error is shown in Figure~\ref{fig:err}. The right plot in
+  Figure~\ref{fig:err} displays the error in logarithmic coordinates. The
+  slope of the line in these coordinates shows directly the rate of
+  convergence of the numerical method. For example, a first-order
+  accurate method should have a slope of one.
+
+  \plot{err}{width=\textwidth}{Left: average error of the
+    finite-difference eikonal solver as a function of grid spacing.
+    Right: the same on a log-log plot. The slope of the curve on the
+    log-log plot indicates the order of the numerical accuracy.}
+
+  \begin{enumerate}
+  \item Change directory
+\begin{verbatim}
+> cd ~/geo384w/hw2/eikonal
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+    to generate figures and display them on your screen.  
+
+  \item In the \texttt{SConstruct} file, find the parameter that
+    defines the order of accuracy for the eikonal solver. Change the
+    order from $1$ to $2$ and recompute the results. Does the
+    numerical accuracy change? What is the experimental order of
+    accuracy? 
+  \item Instead of an analytical solution for a constant 
+    gradient of slowness squared, let us try an analytical solution for a constant
+    gradient of velocity. 
+    \begin{itemize}
+    \item Uncomment the part of the
+    \texttt{SConstruct} file that defines a velocity model with the
+    constant velocity gradient. 
+    \item Modify the program \texttt{analytical.c} to implement your equation~(\ref{eq:t2}).
+    \item Recompute the figures and check your results.
+    \end{itemize}
+  \end{enumerate}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{eikonal/analytical.c}
+
+
+\item In the second-part of the computational assignment, you will investigate the numerical accuracy of one-point ray tracing.
+
+\inputdir{raytracing}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{raytracing/SConstruct}
+
+  Figure~\ref{fig:ray} shows the same constant velocity gradient model
+  and one ray computed by analytical one-point ray tracing. The ray has the shape of a circular arc.
+
+  \plot{ray}{width=\textwidth}{Analytical ray tracing in a constant
+    velocity gradient medium. A single ray is displayed.}
+
+  Figure~\ref{fig:rayerr} displays errors of numerical ray tracing for
+  different sizes of the time step. 
+
+  \sideplot{rayerr}{width=\textwidth}{Average error of the
+    one-point ray tracer as a function of the time step size.}
+
+    \begin{enumerate}
+  \item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw2/raytracing
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+    to generate figures and display them on your screen.  
+  \item Edit the \texttt{SConstruct} file to plot the numerical error
+    on a log-log scale similarly to Figure~\ref{fig:err}. What is the
+    order of accuracy of this numerical method?
+  \end{enumerate}
+  
+\end{enumerate}
+
+\newpage
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#~/geo384w/hw2#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Fermat's.
+\item Run
+\begin{verbatim}
+  > sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+  > sftour scons -c
+\end{verbatim}
+  to remove intermediate files.
+\item Run
+ \begin{verbatim} 
+  > scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. 
+\end{enumerate}
