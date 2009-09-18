@@ -15,7 +15,7 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
         s=.0003048
         l='Migration\ Velocity'
         a='y'
-        u='\(km\/s\)'
+        u='km/s'
     if(c=='stratigraphy'):
         v='vstr2A'
         o=3.048
@@ -23,7 +23,7 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
         s=.0003048
         l='Stratigraphic\ Velocity'
         a='y'
-        u='\(km\/s\)'
+        u='km/s'
     if(c=='reflection_coefficients'):
         v='reflectionCoefficients'
         o=3.048
@@ -38,14 +38,14 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
 
     Flow([v,h],t,
          '''
-         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         segyread tape=$SOURCE tfile=${TARGETS[1]} hfile=/dev/null bfile=/dev/null |
          put
          o1=0  d1=.00762   label1=Depth    unit1=km
          o2=%f d2=%f       label2=Distance unit2=km
          | scale rscale=%f
          ''' %(o,d,s) ,stdin=0)
 
-    Result(v,v,'''grey color=i scalebar=y allpos=%s screenratio=.375 screenht=3 
-                  wheretitle=t title=%s labelsz=4 titlesz=6 barlabel=%s''' % (a,l,u))
+    Result(v,v,'''window f1=1 | grey color=i scalebar=y allpos=%s screenratio=.375 screenht=3 barreverse=y
+    wheretitle=t title=%s labelsz=4 titlesz=6 barlabel=Velocity barunit=%s''' % (a,l,u))
 
 End()

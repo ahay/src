@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], dim, dim1, n1, n2, i, i2, i1, ic, id, nc;
-    float *dat, **func, **mat, *rhs, *sol;
-    sf_file inp, fit, coef, out;
+    float *dat, **func, **wfunc, **mat, *rhs, *sol, *weight;
+    sf_file inp, fit, coef, out, wht;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -61,6 +61,25 @@ int main(int argc, char* argv[])
     sf_floatread(func[0],n1*nc,fit);
     sf_fileclose(fit);
 
+    if (NULL != sf_getstring("weight")) {
+	wht = sf_input("weight");
+	weight = sf_floatalloc(n1);
+	wfunc = sf_floatalloc2(n1,nc);
+
+	sf_floatread(weight,n1,wht);
+	sf_fileclose(wht);
+
+	for (ic=0; ic < nc; ic++) {
+	    for (i1=0; i1 < n1; i1++) {
+		wfunc[ic][i1] = func[ic][i1]*weight[i1];
+	    }
+	}
+
+    } else {
+	weight = NULL;
+	wfunc = func;
+    }
+
     gaussel_init(nc);
     sol = sf_floatalloc(nc);
     rhs = sf_floatalloc(nc);
@@ -71,7 +90,7 @@ int main(int argc, char* argv[])
 	for (id=0; id <= ic; id++) {
 	    mat[ic][id] = 0.;
 	    for (i1=0; i1 < n1; i1++) {
-		mat[ic][id] += func[ic][i1]*func[id][i1];
+		mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
 	    }
 	    mat[id][ic] = mat[ic][id];
 	}
@@ -80,11 +99,17 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,inp);
 	
+	if (NULL != weight) {
+	    for (i1=0; i1 < n1; i1++) {
+		dat[i1] *= weight[i1];
+	    }
+	}	
+
 	/* compute A'd */
 	for (ic=0; ic < nc; ic++) {
 	    rhs[ic] = 0.;
 	    for (i1=0; i1 < n1; i1++) {
-		rhs[ic] += func[ic][i1]*dat[i1];
+		rhs[ic] += wfunc[ic][i1]*dat[i1];
 	    }
 	}
 
