@@ -5,8 +5,8 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, i1, i2;
-    float clip, *trace=NULL;
-    sf_file in=NULL, out=NULL; /* Input and output files */
+    float clip, *trace;
+    sf_file in, out; /* Input and output files */
 
     /* Initialize RSF */
     sf_init(argc,argv);
