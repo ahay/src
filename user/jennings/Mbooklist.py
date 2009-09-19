@@ -119,7 +119,7 @@ def main(argv=sys.argv):
     size = size*1024**2
     
     data = par.string('data')
-    # external data filter [none,public,private,any], default = none
+    # external data filter [none,public,none+public,private,any], default = none
     
     command = par.string('command')
     # command to execute in each directory, default = none
@@ -136,7 +136,7 @@ def main(argv=sys.argv):
         return unix_error
 
     if data is None: data='none'
-    if data not in ['none','public','private','any']:
+    if data not in ['none','public','none+public','private','any']:
         sys.stderr.write('Unknown data option: %s\n' % data)
         return unix_error
 
@@ -163,7 +163,7 @@ def main(argv=sys.argv):
 ################    search directory tree
 
     if (list == 'all') or (list == 'filter'):
-        sys.stdout.write('command  rsfproj     size    data     directory\n')
+        sys.stdout.write('command   rsfproj     size    data        directory\n')
         sys.stdout.flush()
 
     total_list   = 0
@@ -215,8 +215,9 @@ def main(argv=sys.argv):
             if (data_size > size): filter = False
             if (data == 'none'   ) and ((data_type == 'public ') or (data_type == 'private')):
                 filter = False
-            if (data == 'public' ) and  (data_type != 'public '): filter = False
-            if (data == 'private') and  (data_type != 'private'): filter = False
+            if (data == 'public'      ) and  (data_type != 'public '): filter = False
+            if (data == 'none+public' ) and  (data_type == 'private'): filter = False
+            if (data == 'private'     ) and  (data_type != 'private'): filter = False
             if filter==True:
                 pass_list = pass_list+1
                 pass_size = pass_size+data_size
@@ -238,14 +239,20 @@ def main(argv=sys.argv):
                 if data_type == 'public ' : data_public  = data_public+1
                 if data_type == 'private' : data_private = data_private+1
                 
-                sys.stdout.write('%s      %s      %9s  %s  %s\n' % (filter_command,rsfproj_exist,size_string(data_size),data_type,root))
+                sys.stdout.write('%s       %s      %9s  %s     %s\n' % (filter_command,rsfproj_exist,size_string(data_size),data_type,root))
                 sys.stdout.flush()
             
                                         # execute command in directory
             if (filter is True) and (command is not None): 
-                sys.stderr.write("     +++  running command  +++        %s\n" % root)
+                sys.stderr.write("   +++++++++  running command  +++++++++  %s\n" % root)
+                t0 = os.times()
                 syswait(' '.join(['cd',root,';',command]))
-                sys.stderr.write("     ---   command done    ---        %s\n" % root)
+                t1 = os.times()
+                t_user = t1[2]-t0[2]
+                t_sys  = t1[3]-t0[3]
+                t_real = t1[4]-t0[4]
+                sys.stderr.write("   user %6.2f   sys %6.2f  real %6.2f  %s\n" % (t_user,t_sys,t_real,root))
+                sys.stderr.write("   +++++++++   command  done   +++++++++  %s\n" % root)
 
     sys.stderr.write("\n")
     sys.stderr.write("Directories listed : %3d\n" % total_list)
