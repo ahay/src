@@ -1,4 +1,4 @@
-/* Pad and interleave traces. 
+/* Pad and interleave traces.
 
 Each initial trace is followed by I<jump> zero traces, the same for planes.
 */
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int n1,n2,n3, jump, i1,i2,i3, j;
-    float d, *pp, *zero, *one;
-    sf_file in, out, mask;
+    float d, *pp=NULL, *zero=NULL, *one=NULL;
+    sf_file in=NULL, out=NULL, mask=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -85,8 +85,6 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

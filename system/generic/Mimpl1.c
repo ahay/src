@@ -25,9 +25,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int n1, n2, i2;
-    float r, tau, pclip, *dat;
+    float r, tau, pclip, *dat=NULL;
     bool up;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -54,8 +54,6 @@ int main(int argc, char* argv[])
 	impl1_apply (dat);
 	sf_floatwrite (dat,n1,out);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

@@ -1,12 +1,12 @@
 /* Frequency spectra. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,11 +27,11 @@
 int main (int argc, char* argv[]) 
 {
     int n1, n2, ni, nfft, nw, i, i1, i2;
-    float d1, o1, dw, *spec, *trace, scale;
-    kiss_fft_cpx *fft;
-    char key[3], *label;
+    float d1, o1, dw, *spec=NULL, *trace=NULL, scale;
+    kiss_fft_cpx *fft=NULL;
+    char key[3], *label=NULL;
     bool sum;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
     kiss_fftr_cfg cfg;
 
     sf_init (argc, argv); 
@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
     trace = sf_floatalloc (nfft);
     fft = (kiss_fft_cpx*) sf_complexalloc (nw);
     spec = sf_floatalloc (nw);
- 	
+
     sf_putint(out,"n1",nw);
     sf_putfloat(out,"d1",dw);
     sf_putfloat(out,"o1",0.);
@@ -78,7 +78,7 @@ int main (int argc, char* argv[])
 	    spec[i1] = 0.;
 	}
     }
-    
+
     for (i1=n1; i1 < nfft; i1++) {
 	trace[i1] = 0.; /* pad with zeros */
     }
@@ -112,8 +112,6 @@ int main (int argc, char* argv[])
 	}
 	sf_floatwrite(spec,nw,out);
     }
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id: Mspectra.c 691 2004-07-04 19:28:08Z fomels $	 */

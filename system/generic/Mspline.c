@@ -4,17 +4,17 @@ Specify either n1= o1= d1= or pattern=
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,14 +37,14 @@ static int compare_table (const void *a, const void *b)
 int main(int argc, char* argv[])
 {
     int nd, n1, i1, n2, i2, two, id, *index=NULL;
-    float x, o1, d1, *table1=NULL, *trace, x0, dx, *fp;
+    float x, o1, d1, *table1=NULL, *trace=NULL, x0, dx, *fp=NULL;
     bool reginput, sort;
-    sf_file in, out, pattern;
+    sf_file in=NULL, out=NULL, pattern=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (!sf_histint(in,"n1",&two)) sf_error("Need n1= in input");
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	    fp = NULL;
 	}
     }
-    
+
     if (NULL != sf_getstring("pattern")) {
 	pattern = sf_input("pattern");
     } else {
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	if (reginput) {
 	    sf_floatread(table1,nd,in);
 	    spline_coeffs1(table1);
-	    
+
 	    for (i1=0; i1 < n1; i1++) {
 		x = o1 + i1*d1;
 		trace[i1] = spline_eval1(x);
@@ -145,8 +145,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(trace,n1,out);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

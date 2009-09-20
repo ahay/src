@@ -80,6 +80,17 @@ def main():
 
     dirs_to_check = 'api pens plot su system user'
 
+    exceptions = '''
+        api/matlab/rsf_write.c
+        system/main/attr.c
+        system/main/in.c
+        system/main/mpi.c
+        system/main/omp.c
+        user/trip/wavefun.c
+    '''
+
+    exceptions_list = exceptions.split()
+
     primary_suspects    = [] # Main progs with sf_input, but no sf_fileclose
     secondary_suspects  = [] # other files with sf_input, but no sf_fileclose
 
@@ -91,15 +102,16 @@ def main():
                     (shortname, extension) = os.path.splitext(file)
                     if extension == '.c':
                         c_file = os.path.join(root, file)
-                        grep_4_sf_input = grep_from_py(c_file, 'sf_input')
-                        if grep_4_sf_input != '': # file_c has sf_input
-                            grep_4_sf_close = \
-                            grep_from_py(c_file, 'sf_close')
-                            if grep_4_sf_close == '': # no sf_fileclose
-                                if shortname[0] == 'M' or 'system/main/' in c_file:
-                                    primary_suspects.append(c_file)
-                                else:
-                                    secondary_suspects.append(c_file)
+                        if c_file not in exceptions_list:
+                            grep_4_sf_input = grep_from_py(c_file, 'sf_input')
+                            if grep_4_sf_input != '': # file_c has sf_input
+                                grep_4_sf_close = \
+                                grep_from_py(c_file, 'sf_close')
+                                if grep_4_sf_close == '': # no sf_fileclose
+                                    if shortname[0] == 'M' or 'system/main/' in c_file:
+                                        primary_suspects.append(c_file)
+                                    else:
+                                        secondary_suspects.append(c_file)
 
     print_list(primary_suspects,
     'main program C files containing sf_input, but not sf_fileclose')

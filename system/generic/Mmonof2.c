@@ -1,17 +1,17 @@
 /* Gaussian wavelet estimation in 2-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,15 +19,13 @@
 
 #include <float.h>
 #include <math.h>
-
 #include <rsf.h>
-
 #include "monof2.h"
 
 int main(int argc, char* argv[])
 {
     int n2, i2, nx, ny, niter, nliter;
-    float x0, dx, y0, dy, a[3], **data, **pred;
+    float x0, dx, y0, dy, a[3], **data=NULL, **pred=NULL;
 
     bool verb;
     sf_file in, out, ma;
@@ -78,13 +76,11 @@ int main(int argc, char* argv[])
 	sf_floatread(data[0],nx*ny,in);
 
 	monof2(data,pred,nliter,niter,a,nx,dx,x0,ny,dy,y0,verb);
-         
+
 	sf_floatwrite(a,3,ma);
-        
+
 	sf_floatwrite (pred[0],nx*ny,out);
     }
-    
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

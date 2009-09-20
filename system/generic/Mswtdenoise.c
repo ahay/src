@@ -1,17 +1,17 @@
 /* Denoising using stationary wavelet transform. */
 /*
   Copyright (C) 2006 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,16 +21,16 @@
 #include "swt.h"
 
 int main(int argc, char* argv[])
-{   
+{
     int i,k,len_filter,n_layer,j;
 
-    float *s,*ainverse;
-    float *ch,*cl,*ch2,*cl2;
-    float *s_orgi;
-    
+    float *s=NULL,*ainverse=NULL;
+    float *ch=NULL,*cl=NULL,*ch2=NULL,*cl2=NULL;
+    float *s_orgi=NULL;
+
     int n_trace,n_number;
     float ratio;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -54,16 +54,16 @@ int main(int argc, char* argv[])
     cl=sf_floatalloc(n_number);
     ch2=sf_floatalloc(n_layer*n_number);
     cl2=sf_floatalloc(n_number);
-    
+
     s=sf_floatalloc(n_number);
     s_orgi=sf_floatalloc(n_number);
     ainverse=sf_floatalloc(n_number);
-    
+
     /* loop over traces */
     for(k=0;k<n_trace;k++)
     {
         sf_floatread(s,n_number,in);        /* read data from file */
-		
+
 	for(j=0;j<n_number;j++)
 	    s_orgi[j]=s[j];
 
@@ -79,7 +79,6 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite(ainverse,n_number,out);
     }
-
+    sf_close();
     exit(0);
 }
-

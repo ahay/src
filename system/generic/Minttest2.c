@@ -1,35 +1,34 @@
 /* Testing forward interpolation in 2-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <string.h>
- 
-#include <rsf.h>
 
+#include <string.h>
+#include <rsf.h>
 #include "interp_cube.h"
 #include "interp_sinc.h"
 
 int main(int argc, char* argv[])
 {
     int m[2], n, n3, nd1, nd2, nd, nw, i3, two;
-    float *mm, **coord, *z, o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
-    char *intp;
+    float *mm=NULL, **coord=NULL, *z=NULL, o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
+    char *intp=NULL;
     sf_interpolator interp=NULL;
-    sf_file in, out, crd;
+    sf_file in=NULL, out=NULL, crd=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -116,20 +115,18 @@ int main(int argc, char* argv[])
     }
 
     sf_int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
-    
+
     z = sf_floatalloc(nd);
     mm = sf_floatalloc(n);
- 
+
     for (i3=0; i3 < n3; i3++) {
         sf_floatread (mm,n,in);
         if ('s' == intp[0]) sf_prefilter(2,m,mm);
-	
+
 	sf_int2_lop (false,false,n,nd,mm,z);
-     
+
 	sf_floatwrite (z,nd,out);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

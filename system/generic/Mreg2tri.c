@@ -21,14 +21,14 @@
 #include "list_struct.h"
 #include "delaunay.h"
 #include "heap.h"
-    
+
 int main(int argc, char* argv[])
 {
     int n1, n2, n12, i1, i2, i, it, nt, ne, b1, e1, b2, e2;
-    float o1, o2, d1, d2, zero, **data, **xyz, *e;
+    float o1, o2, d1, d2, zero, **data=NULL, **xyz=NULL, *e=NULL;
     double BBox[4], error;
-    Point *heap, *h;
-    sf_file in, out, edge;
+    Point *heap=NULL, *h=NULL;
+    sf_file in=NULL, out=NULL, edge=NULL;
     Node q;
 
     sf_init(argc,argv);
@@ -135,9 +135,7 @@ int main(int argc, char* argv[])
 
 	sf_settype(edge,SF_FLOAT);
 	sf_floatwrite(e,4*ne,edge);
-    }    
-
+    }
+    sf_close();
     exit (0);
 }
-
-/* $Id$ */

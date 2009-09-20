@@ -6,7 +6,7 @@ Inspired by SU's unif2.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@ Inspired by SU's unif2.
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,9 +27,9 @@ Inspired by SU's unif2.
 int main(int argc, char **argv)
 {
     int n1, n2, ninf, i1, i2, i;
-    float o1, d1, o2, d2, *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter, x, z;
-    sf_file model, surface;
-    
+    float o1, d1, o2, d2, *v0=NULL, *dvdx=NULL, *dvdz=NULL, *x0=NULL, *z0=NULL, *trace=NULL, **inter=NULL, x, z;
+    sf_file model=NULL, surface=NULL;
+
     sf_init(argc, argv);
     surface = sf_input("in");
     model = sf_output("out");
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     /* Sampling of the depth axis */
     if (!sf_getfloat("o1",&o1)) o1=0.;
     /* Origin of the depth axis */
-	 	
+
     sf_putint(model,"n1",n1);
     sf_putfloat(model,"d1",d1);
     sf_putfloat(model,"o1",o1);
@@ -97,8 +97,6 @@ int main(int argc, char **argv)
 	}
 	sf_floatwrite(trace,n1,model);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

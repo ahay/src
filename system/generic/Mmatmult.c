@@ -1,17 +1,17 @@
 /* Simple matrix multiplication */
 /*
   Copyright (C) 2005 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,15 +23,15 @@ int main(int argc, char* argv[])
 {
     bool adj;
     int n1, n2, i1, i2;
-    float *x, *y, **a;
-    sf_file in, out, mat;
+    float *x=NULL, *y=NULL, **a=NULL;
+    sf_file in=NULL, out=NULL, mat=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     mat = sf_input("mat");
-    
+
     if (SF_FLOAT != sf_gettype(in) ||
 	SF_FLOAT != sf_gettype(mat)) sf_error("Need float input");
 
@@ -69,6 +69,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(y,n2,out);
-
+    sf_close();
     exit(0);
 }

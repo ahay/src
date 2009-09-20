@@ -20,18 +20,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <float.h>
 #include <math.h>
-
 #include <rsf.h>
-
 #include "monof.h"
 
 int main(int argc, char* argv[])
 {
     int n2, i2, nk, ik, niter, i0;
-    float k0, dk, k, a0, f, *data, a;
+    float k0, dk, k, a0, f, *data=NULL, a;
 
     bool verb;
-    sf_file in, out, ma;
+    sf_file in=NULL, out=NULL, ma=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -76,14 +74,12 @@ int main(int argc, char* argv[])
 	a = monof(data,i0,niter,a0,nk,2.*SF_PI*dk,verb);
 
 	k = (float) i0;
-         
+
 	sf_floatwrite(&a,1,ma);
 	sf_floatwrite(&k,1,ma);
-        
+
 	sf_floatwrite (data,nk,out);
     }
-    
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

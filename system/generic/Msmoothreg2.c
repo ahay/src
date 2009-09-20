@@ -19,16 +19,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "igrad2.h"
 
 int main(int argc, char* argv[])
-{ 
+{
     int i1, n1, n2, n12, ir, nr;
-    float *trace, eps, *out;
-    sf_file in, smooth;
+    float *trace=NULL, eps, *out=NULL;
+    sf_file in=NULL, smooth=NULL;
 
     sf_init (argc, argv);
     in = sf_input("in");
@@ -65,8 +63,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(trace,n12,smooth);
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

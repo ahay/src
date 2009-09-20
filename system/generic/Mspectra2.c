@@ -1,17 +1,17 @@
 /* Frequency spectra in 2-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,19 +19,18 @@
 
 #include <stdio.h>
 #include <math.h>
-
 #include <rsf.h>
 
 int main (int argc, char* argv[]) 
 {
     int nw, n1, n2, nk, n3, ni, nfft, i, i1, i2, i3;
-    float d1, o1, d2, o2, dw, dk, k0, **spec, scale, *trace;
-    kiss_fft_cpx **fft, *ctrace, *ctrace2;
+    float d1, o1, d2, o2, dw, dk, k0, **spec=NULL, scale, *trace=NULL;
+    kiss_fft_cpx **fft=NULL, *ctrace=NULL, *ctrace2=NULL;
     char key[3];
     bool sum;
     kiss_fftr_cfg tfft;
     kiss_fft_cfg  xfft;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc, argv); 
     in = sf_input("in");
@@ -67,7 +66,7 @@ int main (int argc, char* argv[])
     ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
     fft = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
     spec = sf_floatalloc2(nw,nk);
- 	
+
     tfft = kiss_fftr_alloc(nfft,0,NULL,NULL);
     xfft = kiss_fft_alloc(nk,0,NULL,NULL);
 
@@ -91,8 +90,8 @@ int main (int argc, char* argv[])
 	    }
 	}
     }
-    
-    scale = sqrtf(1./(nfft*nk)); /* FFT scaling */ 
+
+    scale = sqrtf(1./(nfft*nk)); /* FFT scaling */
 
     for (i1=n1; i1 < nfft; i1++) {
 	trace[i1]=0.;
@@ -144,8 +143,6 @@ int main (int argc, char* argv[])
 	}
 	sf_floatwrite(spec[0],nw*nk,out);
     }
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

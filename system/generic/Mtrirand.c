@@ -1,17 +1,17 @@
 /* Edit points for triangulation by removing similar and randomizing. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,8 +26,8 @@ static void Shuffle(float **xyz, int n);
 int main(int argc, char* argv[])
 {
     int nd, three, i, j, id;
-    float **xyz, **xyz1, xi, yi, xj, yj;
-    sf_file in, out;
+    float **xyz=NULL, **xyz1=NULL, xi, yi, xj, yj;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     for (i=0; i < nd; i++) {
 	sf_floatwrite(xyz1[i],3,out);
     }
-
+    sf_close();
     exit(0);
 }
 
@@ -115,7 +115,7 @@ static void Shuffle(float **xyz, int n)
 {
     int lh, rh;
     float *temp;
-    
+
     for (lh = 0; lh < n; lh++) {
 	rh = RandomInteger(lh, n - 1);
 	temp = xyz[lh]; 
