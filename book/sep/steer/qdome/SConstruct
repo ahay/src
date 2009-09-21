@@ -1,0 +1,27 @@
+from rsfproj import *
+
+Flow('qdome',None,'qdome n1=200 d1=0.008 | window n3=1 f3=45')
+Flow('slope','qdome','dip rect1=5 rect2=5')
+
+Plot('qdome','grey title=Input')
+Plot('slope','grey scalebar=y title=Slope')
+
+Result('reflectors','qdome slope','SideBySideAniso')
+
+Flow('mask',None,
+     'spike n1=200 n2=100 nsp=9 k2=40,52,65,10,75,88,15,20,24')
+Flow('wells','qdome mask','add mode=p ${SOURCES[1]}')
+
+Plot('wells','grey allpos=y title="Well Logs" ')
+
+Flow('fill','wells mask slope',
+     '''
+     planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=200 verb=y |
+     bandpass fhi=30
+     ''')
+
+Plot('fill','grey title=Interpolated')
+
+Result('combo1','qdome wells fill','SideBySideAniso')
+
+End()

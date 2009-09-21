@@ -37,7 +37,7 @@ void fastmarch_init (int n3,int n2,int n1)
 }
 
 void fastmarch (float* time                /* time */, 
-		float* v                   /* slowness */, 
+		float* v                   /* slowness squared */, 
 		int* in                    /* in/front/out flag */, 
 		bool* plane                /* if plane source */,
 		int   n3,  int n2,  int n1 /* dimensions */,

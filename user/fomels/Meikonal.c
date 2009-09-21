@@ -29,7 +29,7 @@ int main (int argc,char* argv[])
     float br1, br2, br3, o1, o2, o3, d1, d2, d3, slow;
     float **s, *t, *v;
     char *sfile;
-    bool isvel, plane[3];
+    bool isvel, sweep, plane[3];
     sf_file vel, time, shots;
 
     sf_init (argc, argv);
@@ -55,6 +55,9 @@ int main (int argc,char* argv[])
 
     if(!sf_getint("order",&order)) order=2;
     /* [1,2] Accuracy order */
+
+    if (!sf_getbool("sweep",&sweep)) sweep=false;
+    /* if y, use fast sweeping instead of fast marching */
 
     if(!sf_getfloat("br1",&br1)) br1=d1;    
     if(!sf_getfloat("br2",&br2)) br2=d2; 
@@ -90,6 +93,7 @@ int main (int argc,char* argv[])
   
 	s = sf_floatalloc2 (ndim,nshot);
 	sf_floatread(s[0],nshot*ndim,shots);
+	sf_fileclose(shots);
     
 	sf_putint (time,"n4",nshot);
 	free (sfile);
@@ -115,26 +119,30 @@ int main (int argc,char* argv[])
     p  = sf_intalloc   (n123);
 
     sf_floatread(v,n123,vel);
-   /* transform velocity to slowness squared */
     if (isvel) {
+	/* transform velocity to slowness squared */
 	for(i = 0; i < n123; i++) {
 	    slow = v[i];
 	    v[i] = 1./(slow*slow);
 	}
     } 
     
-    fastmarch_init (n3,n2,n1);
-  
+    if (!sweep) fastmarch_init (n3,n2,n1);
+ 
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
-	fastmarch(t,v,p, plane,
-		  n3,n2,n1,
-		  o3,o2,o1,
-		  d3,d2,d1,
-		  s[is][2],s[is][1],s[is][0], 
-		  b3,b2,b1,
-		  order);
-	
+	if (sweep) {
+	    continue;
+	} else {
+	    fastmarch(t,v,p, plane,
+		      n3,n2,n1,
+		      o3,o2,o1,
+		      d3,d2,d1,
+		      s[is][2],s[is][1],s[is][0], 
+		      b3,b2,b1,
+		      order);
+	}	
+
 	sf_floatwrite (t,n123,time);
     }
     
