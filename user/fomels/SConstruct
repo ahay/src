@@ -88,8 +88,9 @@ for prog in Split(
 
 if root: # no compilation but rename
     pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
     for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
     for mod in Split(pymods):
         env.Install(libdir,mod+'.py')
 
