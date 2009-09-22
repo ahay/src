@@ -6,7 +6,7 @@ In this homework, you will write code for time-domain acoustic
 finite-differences modeling. This is one of the most basic programs
 employed in seismic imaging. I used in class for this program the name
 of ``Hello World!'' of seismic imaging. Everyone involved in seismic
-imaging must write this program once in their life. This is what you
+imaging should write this program once in their life. This is what you
 will do in this homework.
 
 Your assignment is to modify an acoustic finite-differences modeling
@@ -14,8 +14,6 @@ program and compute wavefields and data recorded on the surface. You
 will use the constant-density and the variable-density acoustic
 wave-equations.
 
-\textbf{This is an individual assignment and absolutely no collaboration
-on code is allowed}.
 % ------------------------------------------------------------
 
 \section{Prerequisites}
@@ -26,32 +24,26 @@ Log into your class account and prepare for the assignment:
 
 \item Update the Madagascar library and 
 
-\texttt{cd $RSF/book/gpgn658}.
+\texttt{cd \$RSF/book/gpgn658}.
 
 You should have in your directory the
 following files:
 
-\texttt{hw02/SConstruct} \\
-\texttt{hw02/handout.tex} \\
-\texttt{hw02/exercise/SConstruct} \\
-\texttt{hw02/exercise/AFDM.c} \\
-\texttt{hw02/bashrc}
-
-\item
-Copy the file \texttt{bashrc} to \texttt{$\sim$/.bashrc}, or if
-\texttt{$\sim$/.bashrc} exists add the content of \texttt{bashrc} to your original
-\texttt{$\sim$/.bashrc}.
-
-\item 
-\texttt{cd $\sim$/gpgn658/hw02} \par
-to change directory to your current homework.
+\texttt{fdmod/SConstruct} \\
+\texttt{fdmod/handout.tex} \\
+\texttt{fdmod/exercise/SConstruct} \\
+\texttt{fdmod/exercise/AFDM.c} \\
+\texttt{fdmod/exercise/fdutil.c} \\
+\texttt{fdmod/exercise/fdutil.h} \\
+\texttt{fdmod/exercise/omputil.c} \\
+\texttt{fdmod/exercise/omputil.h}
 
 \item 
 Open the file \texttt{handout.tex} in your favorite text editor and
 change the author name at the top of the file.
 
 \item 
-\texttt{cd $\sim$/gpgn658/hw02/exercise} \par
+\texttt{cd exercise} \par
 to change directory to the programming exercise.
 
 \item 
@@ -70,7 +62,7 @@ Run \texttt{scons lock} to prepare your figures to be included in the
 main document.
 
 \item 
-\texttt{cd $\sim$/gpgn658/hw02} and run \texttt{scons read} to build and 
+\texttt{cd gpgn658/fdmod} and run \texttt{scons read} to build and 
 read your answer. The following figures are included in your document:
 the source wavelet (Figure~\ref{fig:wava}), the velocity
 (Figure~\ref{fig:vp}),the density (Figure~\ref{fig:ro}), the
@@ -92,7 +84,7 @@ data recorded at the surface (Figure~\ref{fig:da}).
 
 \begin{enumerate}
 \item 
-\texttt{cd $\sim$/gpgn658/hw02/exercise} to begin your exercise.
+\texttt{cd exercise} to begin your exercise.
 
 \item 
 The program \texttt{AFDM.c} implements time-domain finite-differences
@@ -115,7 +107,7 @@ data and wavefields. Are your results expected? Describe the data and
 wavefield figures indicating what the various events represent.
 
 \item 
-\texttt{cd $\sim$/gpgn658/hw02}, run \texttt{scons handout.read} to build 
+\texttt{cd gpgn658/fdmod}, run \texttt{scons handout.read} to build 
 your answer. A PDF file is constructed using your newly created
 figures and modifications to the text. The modified code is
 automatically added to the document.
