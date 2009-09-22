@@ -1,0 +1,129 @@
+\author{Carl Friedrich Gauss}
+\title{GPGN658: Seismic migration}{Reverse-time migration}
+
+% ------------------------------------------------------------
+In this homework, you will use a finite-differences modeling code
+to implement
+basic reverse time migration. I do not expect you to be concerned with
+the efficiency of your implementation at this time. This
+implementation of reverse-time migration does not require that you
+write any new C code. You will use pre-existing Madagascar programs,
+but you will modify the \texttt{SConstruct} file to combine those
+programs.
+
+% ------------------------------------------------------------
+
+\section{Prerequisites}
+
+Log into your class account and prepare for the assignment:
+
+\begin{enumerate}
+
+\item Update the Madagascar library and
+
+\texttt{cd \$RSF/book/gpgn658/rtmig}.
+
+You should have in your 
+account the following files:\\
+\texttt{rtmig/SConstruct} \\
+\texttt{rtmig/handout.tex} \\
+\texttt{rtmig/exercise/SConstruct} \\
+\texttt{rtmig/exercise/fdm.py}
+
+\item 
+Open the file \texttt{handout.tex} in your favorite text editor
+and change the author name at the top of the file.
+
+\item 
+\texttt{cd exercise} \par
+to change directory to the programming exercise.
+
+\item 
+Run \texttt{scons view} to build all targets described in the
+\texttt{SConstruct} file. Watch for figures popping-up on your screen.
+Close each figure by typing \texttt{q} with the cursor inside the window.
+
+\item
+Run \texttt{scons lock} to prepare your figures to be included in the
+main document.
+
+\item 
+\texttt{cd rtmig} and run \texttt{scons read} to build and 
+read your answer. The following figures are included in your document:
+
+% ------------------------------------------------------------
+\inputdir{exercise}
+% ------------------------------------------------------------
+
+\begin{itemize}
+
+\item The velocity model (Figure~\ref{fig:vo}).
+\sideplot{vo}{width=\textwidth}{Velocity.}
+
+\item The density model (Figure~\ref{fig:ra}).
+\sideplot{ra}{width=\textwidth}{Density.}
+
+\item The recorded data (Figures~\ref{fig:dr0} and \ref{fig:dr1}).
+\sideplot{dr0}{width=\textwidth}{Receiver data (case 0).}
+\sideplot{dr1}{width=\textwidth}{Receiver data (case 1).}
+
+\end{itemize}
+
+\end{enumerate}
+% ------------------------------------------------------------
+\section{Exercise}
+
+Using the finite-differences modeling function \texttt{awefd2d},
+construct an image of the subsurface. This function takes the
+following parameters: \\
+\texttt{awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par)}
+\begin{itemize}
+\item \texttt{odat}: output data $d\left( x,t \right)$
+\item \texttt{owfl}: output wavefield $u \left( z,x,t \right)$
+\item \texttt{idat}: input data (wavelet)
+\item \texttt{velo}: velocity model $v \left( z,x \right)$
+\item \texttt{dens}: density model $\rho \left( z,x \right)$
+\item \texttt{sou}: source coordinates
+\item \texttt{rec}: receiver coordinates
+\item \texttt{custom}: custom parameters
+\item\texttt{par}: parameter dictionary
+\end{itemize}
+
+Design an imaging procedure following the generic scheme developed in
+class. Your task is to identify the useful Madagascar programs for
+this task and generate the appropriate Flows in the
+\texttt{SConstruct} to build an image. Explain in detail how your 
+imaging procedure works. What processing steps do you take? Why do you
+do that?
+
+Your assignment has two parts:
+\begin{enumerate}
+\item 
+Use your imaging procedure to generate images based on recorded data
+in Figures~\ref{fig:dr0} and \ref{fig:dr1}. For this exercise, use the
+constant density \texttt{rb.rsf} for imaging. Include those two images
+in this document. Are the images different from each-other? Why?
+
+\item
+Use your imaging procedure to generate images based on recorded data
+in Figures~\ref{fig:dr0} and \ref{fig:dr1}. For this exercise, use the
+constant density \texttt{ra.rsf} for imaging. Include those two images
+in this document. Are the images different from each-other? Why? How
+do your images compare with the ones from the preceding exercise?
+
+\end{enumerate}
+
+% ------------------------------------------------------------
+\section{Wrap-up}
+
+After you are satisfied that your document looks ok, print it from the
+PDF viewer and bring it to class.
+
+% ------------------------------------------------------------
+\newpage
+\section{SConstruct}
+\tiny
+\lstinputlisting{exercise/SConstruct}
+\normalsize
+
+
