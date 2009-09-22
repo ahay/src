@@ -36,7 +36,7 @@ class Par:
         args = {}
         for a in argv:
             key = a.split('=')[0]
-            val = a.split('=')[1]
+            val = a.lstrip(key+'=')
             args[key] = val
         return args
 
