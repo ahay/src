@@ -252,7 +252,7 @@ def main(argv=sys.argv):
                 t_sys  = t1[3]-t0[3]
                 t_real = t1[4]-t0[4]
                 sys.stderr.write("   user %6.2f   sys %6.2f  real %6.2f  %s\n" % (t_user,t_sys,t_real,root))
-                sys.stderr.write("   +++++++++   command  done   +++++++++  %s\n" % root)
+                sys.stderr.write("   ---------   command  done   ---------  %s\n" % root)
 
     sys.stderr.write("\n")
     sys.stderr.write("Directories listed : %3d\n" % total_list)
