@@ -1,0 +1,57 @@
+\def\basedir{psava/gpgn302}
+
+% ------------------------------------------------------------
+\section{Prerequisites}
+% ------------------------------------------------------------
+
+\begin{enumerate}
+
+% ------------------------------------------------------------
+\item One-time stuff (do not need to repeat for every homework):
+
+\bea
+\texttt{cd} && \sim \non
+\texttt{cp} && \sim\texttt{\basedir/bashrc .} 
+\eea
+Add the content of \texttt{bashrc} to your $\sim$/\texttt{.bashrc} and
+source your modified configuration file.
+\bea
+\texttt{source}&& \sim/\texttt{.bashrc}
+\non \non
+\texttt{ln -s} && \sim\texttt{psava/texmf .}
+\non \non
+\texttt{cd}    && \sim \non
+\texttt{mkdir} && \texttt{gpgn302} \non
+\texttt{cd}    && \texttt{gpgn302} \non
+\texttt{ln -s} && \sim\texttt{psava/rsf/book/packages .}
+\non \non
+\texttt{cp   } && \sim\texttt{\basedir/SConstruct .} \non
+\texttt{cp -r} && \sim\texttt{\basedir/main .} \non
+\texttt{cp -r} && \sim\texttt{\basedir/XFig .}
+\non \non
+\texttt{mkdir} && \texttt{hmwk09} \non
+\texttt{cd}    && \texttt{hmwk09} \non
+\texttt{cp}    && \sim\texttt{\basedir/hmwk09/* .} 
+\eea
+
+% ------------------------------------------------------------
+\item Homework-specific stuff:
+
+\bea
+\texttt{cd}    && \sim\texttt{/gpgn302/hmwk09} \non
+\texttt{cp -r} && \sim\texttt{\basedir/hmwk09/\thisdoc} \; . 
+\non \non
+\texttt{cd}    && \texttt{ example} \non
+\texttt{mkdir} && \texttt{/tmp/\$USER} \non 
+\texttt{ln -s} && \texttt{/tmp/\$USER Fig}
+\eea
+
+\end{enumerate}
+
+Open the file \texttt{handout.tex} with your favorite text editor and
+change the name at the top of the file. Then, if necessary, go to the
+\texttt{example} directory and build all figures, i.e. run
+\[ \texttt{scons lock} \] 
+Then return to the homework directory and rebuild this document by
+running the command
+\[ \texttt{scons handout.read} \]
