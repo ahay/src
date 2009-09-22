@@ -1,17 +1,17 @@
 /* Slope-based velocity transform. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,7 +19,6 @@
 
 #include <math.h>
 #include <float.h>
-
 #include <rsf.h>
 
 int main (int argc, char* argv[])
@@ -27,8 +26,8 @@ int main (int argc, char* argv[])
     bool half, inter;
     int it,ix,ih,iv, nt,nx, nh, CDPtype, nv, ntv, nw;
     float dt, t0, h, h0, t, f, g, dh, dy, v0, dv;
-    float *p, *pt, **coord, *ord, *vtr, *vtr2;
-    sf_file cmp, vel, dip, dipt;
+    float *p=NULL, *pt=NULL, **coord=NULL, *ord=NULL, *vtr=NULL, *vtr2=NULL;
+    sf_file cmp=NULL, vel=NULL, dip=NULL, dipt=NULL;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -43,10 +42,10 @@ int main (int argc, char* argv[])
     if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
     if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
     if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
-    
+
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
-	
+
     if (half) {
 	dh *= 2.;
 	h0 *= 2.;
@@ -56,7 +55,7 @@ int main (int argc, char* argv[])
     if (sf_histfloat(cmp,"d3",&dy)) {
 	CDPtype=0.5+0.5*dh/dy;
 	if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
-    } 	    
+    }
     if (CDPtype < 1) CDPtype=1;
     sf_warning("CDPtype=%d",CDPtype);
 
@@ -66,7 +65,7 @@ int main (int argc, char* argv[])
     /* velocity origin */
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
     /* velocity sampling */
-    
+
     sf_putint(vel,"n2",nv);
     sf_putfloat(vel,"o2",v0);
     sf_putfloat(vel,"d2",dv);
@@ -102,8 +101,8 @@ int main (int argc, char* argv[])
 	}
 
 	for (ih = 0; ih < nh; ih++) {
-	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
-	    	
+	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype);
+
 	    sf_floatread (ord, nt, cmp);
 	    sf_floatread (p, nt, dip);
 	    if (inter) sf_floatread (pt, nt, dipt);
@@ -131,7 +130,7 @@ int main (int argc, char* argv[])
 	    }
 
 	    sf_int2_init (coord, t0,v0, dt,dv, nt,nv, sf_spline_int, nw, nt);
-	    sf_int2_lop (true,true,ntv,nt,vtr,ord);	    
+	    sf_int2_lop (true,true,ntv,nt,vtr,ord);
 	}
 
 	/* from spline coefficients to model */
@@ -146,8 +145,6 @@ int main (int argc, char* argv[])
 	
 	sf_floatwrite (vtr,ntv,vel);
     }
-	
+    sf_close();
     exit (0);
 }
-
-/* 	$Id: Minmo.c 729 2004-07-29 18:22:16Z fomels $	 */

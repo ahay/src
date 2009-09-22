@@ -6,43 +6,42 @@ The output contains PP and PS tau-p seismograms.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <math.h>
-
 #include <rsf.h>
-
 #include "stretch4.h"
 #include "zoeppritz.h"
 
 int main(int argc, char* argv[])
 {
     int nt, n1, i1, i2, n2, ip, np, three;
-    float *a, *b, *r, *tpp, *tps, *app, *aps, *spline, **pp, **ps;
+    float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, *spline=NULL, **pp=NULL, **ps=NULL;
     float dt, tp,ts, a1,a2, b1,b2, r1,r2, eps, rc[4], ang[4];
     float d1, p0, dp, p, as, bs, ad1, bd1; 
     map4 map;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&three) || three != 3) 
+    if (!sf_histint(in,"n2",&three) || three != 3)
 	sf_error("Need n2=3 in input");
     n2 = sf_leftsize(in,2);
 
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 	    b2 = b[0];
 	    r2 = r[0];
 	    for (i1=1; i1 < n1; i1++) {
-		as = a2*p; 
+		as = a2*p;
 		if (fabsf(as) > 1.) 
 		    sf_error("p=%g is postcritical (vp=%g)",p,a2);
 
@@ -142,7 +141,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(pp[0],nt*np,out);
 	sf_floatwrite(ps[0],nt*np,out);
     }
-
+    sf_close();
     exit(0);
 }
-

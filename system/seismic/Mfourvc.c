@@ -1,26 +1,24 @@
 /* Velocity continuation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fint1.h"
-
 #include <math.h>
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -29,12 +27,12 @@ int main(int argc, char* argv[])
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t, x0, y0;
-    float *trace, *strace;
-    sf_complex *ctrace, **cstack, shift;
-    char *time, *space, *unit;
+    float *trace=NULL, *strace=NULL;
+    sf_complex *ctrace=NULL, **cstack=NULL, shift;
+    char *time=NULL, *space=NULL, *unit=NULL;
     size_t len;
     kiss_fftr_cfg forw, invs;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -61,11 +59,11 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
     o2 = o1*o1;
- 
+
     if(!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     d2 = o1+(n1-1)*d1;
     d2 = (d2*d2 - o2)/(n2-1);
-    
+
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");
     /* velocity steps */
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
@@ -98,10 +96,10 @@ int main(int argc, char* argv[])
 	free(space);
     }
 
-    dx *= 2.*SF_PI; 
-    dy *= 2.*SF_PI; 
-    x0 *= 2.*SF_PI; 
-    y0 *= 2.*SF_PI; 
+    dx *= 2.*SF_PI;
+    dy *= 2.*SF_PI;
+    x0 *= 2.*SF_PI;
+    y0 *= 2.*SF_PI;
 
     trace = sf_floatalloc(n1);
     strace = sf_floatalloc(n3);
@@ -155,8 +153,8 @@ int main(int argc, char* argv[])
 		for (i2=n2; i2 < n3; i2++) {
 		    strace[i2] = 0.;
 		}
-		
-		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);       	
+
+		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
 		ctrace[0]=sf_cmplx(0.,0.); /* dc */
 
 		for (iv=0; iv < nv; iv++) {
@@ -184,7 +182,7 @@ int main(int argc, char* argv[])
 		    w = i2*SF_PI/(d2*n3);
 		    w *= o2;
 		    shift = sf_cmplx(cosf(w),sinf(w));
-		    
+
 #ifdef SF_HAS_COMPLEX_H
 		    ctrace[i2] = cstack[iv][i2] * shift;
 #else
@@ -211,8 +209,6 @@ int main(int argc, char* argv[])
 	    } /* v 2 */
 	} /* x */
     } /* y */
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

@@ -1,26 +1,24 @@
 /* DMO and stack by finite-difference offset continuation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "ctridiagonal.h"
 
 int main(int argc, char* argv[])
@@ -30,8 +28,8 @@ int main(int argc, char* argv[])
     int nw,nh,nx,iw,ix,ih,n1,n2,ns;
     float w0,dw, h0,dh,dx,w,w2,h,h2;
     sf_complex diag,diag2, c1,c2,offd,offd2;
-    sf_complex *in, *out, **dat;
-    sf_file cmp, stk;
+    sf_complex *in=NULL, *out=NULL, **dat=NULL;
+    sf_file cmp=NULL, stk=NULL;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -91,7 +89,7 @@ int main(int argc, char* argv[])
 	    out[ix] = sf_cmplx(0.,0.);
 	}
 
-	if (fabsf(w) < dw) {	    
+	if (fabsf(w) < dw) {
 	    if (stack) {
 		sf_complexwrite(out,nx,stk);
 	    } else {
@@ -114,7 +112,7 @@ int main(int argc, char* argv[])
 
 	for (ih=n1; ih != n2; ih += ns) {
 	    for (ix=0; ix < nx; ix++) {
-		if (ih >=0 && ih < nh) {		    
+		if (ih >=0 && ih < nh) {
 		    if (stack) {
 #ifdef SF_HAS_COMPLEX_H
 		    in[ix] = dat[ih][ix] + out[ix];
@@ -152,7 +150,7 @@ int main(int argc, char* argv[])
 
 	    ctridiagonal_const_define (slv,diag2,offd2);
 
-#ifdef SF_HAS_COMPLEX_H	
+#ifdef SF_HAS_COMPLEX_H
 	    out[0] = diag*in[0] + offd*in[1];
 #else
 	    out[0] = sf_cadd(sf_cmul(diag,in[0]),
@@ -179,8 +177,6 @@ int main(int argc, char* argv[])
 	}
 	if (stack) sf_complexwrite (out,nx,stk);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

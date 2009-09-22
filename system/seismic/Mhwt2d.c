@@ -3,17 +3,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,11 +32,11 @@ int main (int argc, char *argv[])
     int it,ig;
     int nz,nx,nt,ng;
     float dt,dg,ot,og;
-    
+
     float xsou,zsou; /* source coordinates */
 
-    sf_file Fv; /* velocity file */
-    sf_file Fw; /* wavefronfs file */
+    sf_file Fv=NULL; /* velocity file */
+    sf_file Fw=NULL; /* wavefronfs file */
 
     float **vv=NULL; /* velocity       */
     pt2d   *wm=NULL; /* wavefront it-1 */
@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     pt2d    Ro;    /* point  on wft it-1 */
     pt2d Pm,Po,Pp; /* points on wft it   */
     pt2d    Qo;    /* point  on wft it+1 */
-    
+
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
@@ -62,7 +62,7 @@ int main (int argc, char *argv[])
     /* source location */
     if(! sf_getfloat("xsou",&xsou)) xsou=sf_o(ax) + nx*sf_d(ax)/2;
     if(! sf_getfloat("zsou",&zsou)) zsou=sf_o(az) + nz*sf_d(az)/2;
-    if(verb) fprintf(stderr,"xsou=%f zsou=%f\n",xsou,zsou);    
+    if(verb) fprintf(stderr,"xsou=%f zsou=%f\n",xsou,zsou);
 
     /* time axis */
     if(! sf_getint  ("nt",&nt)) nt=100;
@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
     wm = pt2dalloc1(ng);
     wo = pt2dalloc1(ng);
     wp = pt2dalloc1(ng);
-    
+
     /* initialize wavefronts */
     for( ig=0; ig<ng; ig++) {
 	wm[ig].x=wo[ig].x=wp[ig].x=0;
@@ -170,9 +170,7 @@ int main (int argc, char *argv[])
 	}
     } /* end it */
 
-    /*------------------------------------------------------------*/    
+    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }
-
-
-

@@ -2,17 +2,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,6 @@
 
 #include <math.h>
 #include <rsf.h>
-
 #include "c2r.h"
 
 #define LOOPCC(a) for(iz=0;iz<nz;iz++){ for(ix=0;ix<nx;ix++){  {a} }}
@@ -28,21 +27,21 @@
 
 int main(int argc, char* argv[])
 {
-    sf_file Fi, Fo, Fr; /* I/O files */
+    sf_file Fi=NULL, Fo=NULL, Fr=NULL; /* I/O files */
     bool adj, verb, linear;
-    
+
     sf_axis ax,az,at,ag;
     int ix,iz,it,ig;
     int nx,nz,nt,ng;
     float dx,dz,x0,z0;
 
-    float  **mapCC,  **mapRC;
-    float ***comCC, ***comRC;
-    sf_complex **rays;
+    float  **mapCC=NULL,  **mapRC=NULL;
+    float ***comCC=NULL, ***comRC=NULL;
+    sf_complex **rays=NULL;
 
     int nn,ii;
     bool comp; /* complex input */
- 
+
     /* init RSF */
     sf_init(argc,argv);
 
@@ -82,7 +81,7 @@ int main(int argc, char* argv[])
 
     rays =sf_complexalloc2(ng,nt);
     sf_complexread(rays[0],ng*nt,Fr);
-    
+
     c2r_init(ax,az,ag,at,verb);
 
 /*------------------------------------------------------------*/
@@ -132,7 +131,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-    } else {	
+    } else {
 
 	for(ii=0;ii<nn;ii++) {
 	    sf_warning("%d of %d",ii,nn);
@@ -148,5 +147,6 @@ int main(int argc, char* argv[])
 	}
 
     }
+    sf_close();
     exit(0);
 }

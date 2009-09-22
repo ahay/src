@@ -1,17 +1,17 @@
 /* Inverse normal moveout in tau-p-x domain. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,8 +24,8 @@ int main (int argc, char* argv[])
 {
     int it,iy,ip,ix, nt,nx,ny, np, nw, ntx;
     float dt, t0, p, p0, f0, f1, ft, dp, x0, dx, p2, v2;
-    float *plane, *vel, **coord, *plane2, *trace;
-    sf_file cmp, nmod, velocity;
+    float *plane=NULL, *vel=NULL, **coord=NULL, *plane2=NULL, *trace=NULL;
+    sf_file cmp=NULL, nmod=NULL, velocity=NULL;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -100,7 +100,7 @@ int main (int argc, char* argv[])
 	    }
 
 	    sf_floatread (trace,nt,cmp);
-	    
+
 	    sf_int2_init (coord, t0,x0, dt,dx, nt,nx, sf_spline_int, nw, nt);
 	    sf_int2_lop (true,false,ntx,nt,plane,trace);	 
 	
@@ -113,12 +113,10 @@ int main (int argc, char* argv[])
 		    sf_spline_post (nw, it, nt, nx, plane2, plane);
 		}
 	    }
-    
+
 	    sf_floatwrite (plane,ntx,nmod);
 	}
     }
-	
+    sf_close();
     exit (0);
 }
-
-

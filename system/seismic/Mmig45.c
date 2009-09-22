@@ -1,26 +1,24 @@
 /* Finite-difference modeling/migration: 15- and 45-degree approximation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "ctridiagonal.h"
 
 int main(int argc, char* argv[])
@@ -28,10 +26,10 @@ int main(int argc, char* argv[])
     bool inv, hi;
     int nw,nz,nx, iw,ix,iz;
     float dw,dz,dx, vel0, beta, w, w1, w2, omega;
-    sf_complex aa, *cu, *cd, *diag, *offd;
-    float **depth, **vel, **voff;
+    sf_complex aa, *cu=NULL, *cd=NULL, *diag=NULL, *offd=NULL;
+    float **depth=NULL, **vel=NULL, **voff=NULL;
     ctris slv;
-    sf_file in, out, velocity;
+    sf_file in=NULL, out=NULL, velocity=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -123,7 +121,7 @@ int main(int argc, char* argv[])
 	    /* 2 from post-stack exploding reflector */
 	}
     }
-    
+
     /* symmetrize for stability */
     for (ix=0; ix < nx-1; ix++) {
 	for (iz=0; iz < nz; iz++) {
@@ -150,7 +148,7 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    
+
     slv = ctridiagonal_init (nx);
 
     /* d.c. */
@@ -180,7 +178,7 @@ int main(int argc, char* argv[])
 		    diag[ix].r = omega - 2.*aa.r;
 		    diag[ix].i = - 2.*aa.i;
 #endif
-		}           
+		}
 		for (ix=0; ix < nx-1; ix++) {
 		    w1 = w*voff[ix][iz];
 		    w2 = w*voff[ix][iz+1];
@@ -194,11 +192,11 @@ int main(int argc, char* argv[])
 		    offd[ix] = aa;
 		}
 		/* worry about boundary conditions later */
-		
+
 		cd[0] = sf_cmplx(0.,0.);
 		for (ix=1; ix < nx-1; ix++) {
 #ifdef SF_HAS_COMPLEX_H
-		    cd[ix] = 
+		    cd[ix] =
 			conjf(offd[ix-1])*cu[ix-1] +
 			conjf(diag[ix])*cu[ix] +
 			conjf(offd[ix])*cu[ix+1];
@@ -264,7 +262,7 @@ int main(int argc, char* argv[])
 		    diag[ix].r = omega - 2.*aa.r;
 		    diag[ix].i = - 2.*aa.i;
 #endif
-		}           
+		}
 		for (ix=0; ix < nx-1; ix++) {
 		    w1 = w*voff[ix][iz];
 		    w2 = w*voff[ix][iz+1];
@@ -278,11 +276,11 @@ int main(int argc, char* argv[])
 		    offd[ix] = aa;
 		}
 		/* worry about boundary conditions later */
-		
+
 		cu[0] = sf_cmplx(0.,0.);
 		for (ix=1; ix < nx-1; ix++) {
 #ifdef SF_HAS_COMPLEX_H
-		    cu[ix] = 
+		    cu[ix] =
 			conjf(offd[ix-1])*cd[ix-1] +
 			conjf(diag[ix])*cd[ix] +
 			conjf(offd[ix])*cd[ix+1];
@@ -304,10 +302,8 @@ int main(int argc, char* argv[])
 	    }
 	} /* if inverse */
     } /* iw frequency loop */
-  
-    if (!inv) sf_floatwrite (depth[0],nz*nx,out);
 
+    if (!inv) sf_floatwrite (depth[0],nz*nx,out);
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

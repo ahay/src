@@ -1,36 +1,36 @@
 /* Velocity partitioning for cascaded migrations. */
 /*
   Copyright (C) 2007 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
-int main(int argc, char* argv[]) 
-{    
-    int n1, n2, i1, i2, *ntcut, ncut, ic, nt;
-    float dt, o1, *tcut, *vint, *vtmp, vt;
-    sf_file in, out;
+int main(int argc, char* argv[])
+{
+    int n1, n2, i1, i2, *ntcut=NULL, ncut, ic, nt;
+    float dt, o1, *tcut=NULL, *vint=NULL, *vtmp=NULL, vt;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&o1) || 0. != o1) 
+    if (!sf_histfloat(in,"o1",&o1) || 0. != o1)
 	sf_error("Need o1=0 in input");
 
     n2 = sf_leftsize(in,1);
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
     vint = sf_floatalloc(n1);
     vtmp = sf_floatalloc(n1);
-    
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(vint,n1,in);
 
@@ -90,38 +90,7 @@ int main(int argc, char* argv[])
 	}
 
 	sf_floatwrite(vtmp,n1,out);
-
     }
-
+    sf_close();
     exit(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

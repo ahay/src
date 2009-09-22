@@ -4,35 +4,34 @@ Only nonzero values are reported.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <stdio.h>
 #include <string.h>
-
 #include <rsf.h>
-
 #include "segy.h"
 
 int main(int argc, char* argv[])
 {
-    int i1, i2, n1, n2, *max, *min, *inp, imax, imin;
-    double *mean;
+    int i1, i2, n1, n2, *max=NULL, *min=NULL, *inp=NULL, imax, imin;
+    double *mean=NULL;
     char pad[] = "                    ", out[21];
-    sf_file head;
-    
+    sf_file head=NULL;
+
     sf_init (argc,argv);
     head = sf_input("in");
 
@@ -54,7 +53,6 @@ int main(int argc, char* argv[])
 	min[i1] = max[i1] = inp[i1];
 	mean[i1] = inp[i1];
     }
-
 
     for (i2=1; i2 < n2; i2++) {
 	sf_intread(inp,n1,head);
@@ -83,16 +81,8 @@ int main(int argc, char* argv[])
 	    printf("mean=%lg\n",mean[i1]/n2);
 	}
     }
-   
-    printf("******************************************* \n");
 
+    printf("******************************************* \n");
+    sf_close();
     exit(0);
 }
-
-
-
-
-
-
-
-

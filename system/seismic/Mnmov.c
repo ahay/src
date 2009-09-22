@@ -2,17 +2,17 @@
 
 /*
   Copyright (C) 2009 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,10 +27,11 @@ int main(int argc, char* argv[])
   float dx, dy, dt, x0, y0, t0, x, y, h;
   float g1;
   float M11, M11i;
-  float *dT, *w;
+  float *dT=NULL, *w=NULL;
 
   /*Declare and initialize Madagascar files*/
-  sf_file inp, out;
+  sf_file inp=NULL, out=NULL;
+
   sf_init(argc, argv);
   inp = sf_input("in");
   /*Axes: 1-->x, 2-->y, 3-->t.*/
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
   if (!sf_histfloat(inp,"o1",&x0)) sf_error("No o1=");
   if (!sf_histfloat(inp,"o2",&y0)) sf_error("No o2=");
   if (!sf_histfloat(inp,"o3",&t0)) sf_error("No o3=");
-  
+
   /*Set size of output file (w is model vector at each time-slice)*/
   nw=1;
   sf_putint(out,"n1",nw);
@@ -71,7 +72,6 @@ int main(int argc, char* argv[])
     }
   }
 
-
   /*Minv: Inverse of 1x1 is just reciprocal.*/
   M11i=1.0/M11;
 
@@ -90,13 +90,13 @@ int main(int argc, char* argv[])
 	j++;
       }
     }
-    
+
     /*Computed value is actually slowness; take reciprocal to get velocity.*/
     w[0]=1.0/(M11i*g1);
 
     /*Output velocity at each time value.*/
     sf_floatwrite(w,nw,out);
   }
-
+  sf_close();
   exit(0);
 }

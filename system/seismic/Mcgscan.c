@@ -1,23 +1,23 @@
 /* Hyperbolic Radon transform with conjugate-directions inversion */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
+#include <rsf.h>
 #include "veltran.h"
 
 int main(int argc, char* argv[])
@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
     int niter, miter, psun1, psun2;
     bool adj;
     float o1,d1, x0,dx, v0,dv, anti, s02,s0,ds, perc;
-    float *cmp, *vscan, *error, *mask;
-    sf_file in, out, err, msk;
+    float *cmp=NULL, *vscan=NULL, *error=NULL, *mask=NULL;
+    sf_file in=NULL, out=NULL, err=NULL, msk=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     /* amplitude type for forward */
     if (!sf_getfloat("anti",&anti)) anti=1.;
     /* antialiasing */
- 
+
     if(niter > 0)  adj=false;
 
     if (adj) {
@@ -148,9 +148,7 @@ int main(int argc, char* argv[])
     veltran_init (true, x0, dx, nx, s0, ds, nv, o1, d1, nt, 
 		  s02, anti, psun1, psun2);
 
-    
-
-    for (i3=0; i3 < n3; i3++) { 
+    for (i3=0; i3 < n3; i3++) {
 	if( adj) {
 	    sf_floatread(vscan,ntv,in);
 	} else {		
@@ -183,6 +181,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(vscan,ntv,out);
 	}
     }
-
+    sf_close();
     exit(0);
 }

@@ -1,17 +1,17 @@
 /* Offset continuation by log-stretch F-K operator. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,15 +19,14 @@
 
 #include <math.h>
 #include <float.h>
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     int nw, nk, iw, ik, nh, ih;
-    sf_complex *oper;
+    sf_complex *oper=NULL;
     float dw,dk, ow,ok, k,w,h, h0, dh, eps,amp,phase;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -61,7 +60,7 @@ int main(int argc, char* argv[])
 
 	for (ik = 0; ik < nk; ik++) {
 	    k = ok+ik*dk;
-  
+
 	    for (iw = 0; iw < nw; iw++) {
 		w = ow + iw*dw;
 
@@ -81,8 +80,6 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(oper,nw,out);
 	}
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

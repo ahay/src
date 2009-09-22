@@ -1,26 +1,24 @@
 /* Velocity continuation with semblance computation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 int main(int argc, char* argv[])
@@ -28,12 +26,12 @@ int main(int argc, char* argv[])
     fint1 str, istr;
     int i1,i2, n1,n2,n3, ix,iv,ih, ib, ie, nb, nx,nv,nh, nw, next;
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t;
-    float *trace, *strace, ***stack, ***stack2, ***cont, **image;
-    sf_complex *ctrace, *ctrace0, shift;
-    char *time, *space, *unit;
+    float *trace=NULL, *strace=NULL, ***stack=NULL, ***stack2=NULL, ***cont=NULL, **image=NULL;
+    sf_complex *ctrace=NULL, *ctrace0=NULL, shift;
+    char *time=NULL, *space=NULL, *unit=NULL;
     size_t len;
     static kiss_fftr_cfg forw, invs;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -54,9 +52,9 @@ int main(int argc, char* argv[])
     if (NULL == forw || NULL == invs) 
 	sf_error("KISS FFT allocation error");
 
-    if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
+    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
     o2 = o1*o1;
- 
+
     if(!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     d2 = o1+(n1-1)*d1;
     d2 = (d2*d2 - o2)/(n2-1);
@@ -69,7 +67,7 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"o3",&h0)) sf_error("No o2= in input");
     if(!sf_histfloat(in,"d3",&dh)) sf_error("No d2= in input");
     if(!sf_histfloat(in,"d2",&dx)) sf_error("No d3= in input");
-    
+
     sf_putfloat(out,"o3",v0+dv);
     sf_putfloat(out,"d3",dv);
     sf_putint(out,"n3",nv);
@@ -85,7 +83,7 @@ int main(int argc, char* argv[])
 	free(time);
 	free(space);
     }
-    
+
     dx = SF_PI/(kiss_fft_next_fast_size(nx-1)*dx);
 
     stack = sf_floatalloc3(n1,nx,nv);
@@ -140,11 +138,11 @@ int main(int argc, char* argv[])
 		    strace[i2] = 0.;
 		}
 	    }
-	    
+
 	    for (i2=n2; i2 < n3; i2++) {
 		strace[i2] = 0.;
 	    }
-		
+
 	    kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace0);   
 
 	    for (iv=0; iv < nv; iv++) {
@@ -224,8 +222,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (trace,n1,out);
 	}
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

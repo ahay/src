@@ -1,34 +1,33 @@
 /* Offset continuation by finite differences */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
-
 #include "ctridiagonal.h"
 
 int main(int argc, char* argv[])
 {
     int nw,nh,nx, iw,ix,ih, k;
     float dw, h0,dh,dx, w0,w,w2, h,h2;
-    sf_complex diag, diag2, *in, *out, offd, offd2, c1, c2;
+    sf_complex diag, diag2, *in=NULL, *out=NULL, offd, offd2, c1, c2;
     bool all;
     ctris slv;
-    sf_file input, output;
+    sf_file input=NULL, output=NULL;
 
     sf_init (argc,argv);
     input = sf_input("in");
@@ -60,7 +59,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(output,"d3",dw);
 	sf_putfloat(output,"o3",w0);
     }
-    
+
     dh /= dx;
     h0 /= dx;
 
@@ -93,7 +92,7 @@ int main(int argc, char* argv[])
 	    continue;
 	}
 
-#ifdef SF_HAS_COMPLEX_H		
+#ifdef SF_HAS_COMPLEX_H
 	c1 = 3.*sf_cmplx(9. + w2,4.*w)/(w2*sf_cmplx(3.,- w));
 	c2 = 3.*sf_cmplx(w2 - 27.,8.*w)/(w2*sf_cmplx(3.,- w));
 #else
@@ -157,8 +156,6 @@ int main(int argc, char* argv[])
 	}
 	sf_complexwrite (out,nx,output);
     }
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

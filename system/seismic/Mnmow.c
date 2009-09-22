@@ -2,17 +2,17 @@
 
 /*
   Copyright (C) 2009 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,16 +28,16 @@ int main(int argc, char* argv[])
   float g1, g2, g3;
   float M11, M12, M13, M21, M22, M23, M31, M32, M33; 
   float M11i, M12i, M13i, M21i, M22i, M23i, M31i, M32i, M33i; 
-  float *dT, *Mat, *w;
-  
+  float *dT=NULL, *Mat=NULL, *w=NULL;
+
   /*Declare and initialize Madagascar files*/
-  sf_file inp, out, GTG;
+  sf_file inp=NULL, out=NULL, GTG=NULL;
+
   sf_init(argc, argv);
   inp = sf_input("in");
   /*Axes: 1-->x, 2-->y, 3-->t.*/
   out = sf_output("out");
   GTG = sf_output("M");
-
 
   /* input dT vector (t^2-t0^2), output w vector (Wx, Wy, Wxy)' */
   if (!sf_histint(inp,"n1",&nx)) sf_error("No n1=");
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
   if (!sf_histfloat(inp,"o1",&x0)) sf_error("No o1=");
   if (!sf_histfloat(inp,"o2",&y0)) sf_error("No o2=");
   if (!sf_histfloat(inp,"o3",&t0)) sf_error("No o3=");
-  
+
   /*Set size of output file (w is model vector at each time-slice)*/
   if (!sf_getint("nw",&nw)) nw=3;
   sf_putint(out,"n1",nw);
@@ -93,7 +93,6 @@ int main(int argc, char* argv[])
   M31=M13;
   M32=M23;
   M33=4*M12;
-
 
   /*Minv: Inverse of M using cascaded determinants*/
   detM=1.0/((M11*M22*M33)-(M11*M23*M32)-(M12*M21*M33)+(M12*M23*M31)+(M13*M21*M32)-(M13*M22*M31));
@@ -148,6 +147,6 @@ int main(int argc, char* argv[])
     /*Write 3 W values to output at every time coordinate*/
     sf_floatwrite(w,nw,out);
   }
-
+  sf_close();
   exit(0);
 }

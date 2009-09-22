@@ -1,26 +1,24 @@
 /* Inverse normal moveout in tau-p domain. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "stretch4.h"
 
 int main (int argc, char* argv[])
@@ -28,8 +26,8 @@ int main (int argc, char* argv[])
     map4 nmo; /* using cubic spline interpolation */
     int it,ix,ip, nt,nx, np;
     float dt, t0, p, p0, f, ft, dp, eps, at;
-    float *trace, *vel, *str, *out, *n;
-    sf_file cmp, nmod, velocity, eta;
+    float *trace=NULL, *vel=NULL, *str=NULL, *out=NULL, *n=NULL;
+    sf_file cmp=NULL, nmod=NULL, velocity=NULL, eta=NULL;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -64,7 +62,7 @@ int main (int argc, char* argv[])
     n = (NULL == eta)? NULL: sf_floatalloc(nt);
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
-    
+
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
 	if (NULL != eta) sf_floatread (n,nt,eta);	
@@ -74,7 +72,7 @@ int main (int argc, char* argv[])
 	    p *= p;
 
 	    sf_floatread (trace,nt,cmp);
-	    
+
 	    f = 0.;
 	    for (it=0; it < nt; it++) {
 		str[it] = t0+f*dt;
@@ -91,7 +89,7 @@ int main (int argc, char* argv[])
 
 		if (ft < 0.) {
 		    for (; it < nt; it++) {
-			str[it]=t0-10.*dt;			
+			str[it]=t0-10.*dt;
 		    }
 		    break;
 		}
@@ -101,12 +99,10 @@ int main (int argc, char* argv[])
 
 	    stretch4_define (nmo,str);
 	    stretch4_apply (nmo,trace,out);
-	    
+
 	    sf_floatwrite (out,nt,nmod);
 	}
     }
-	
+    sf_close();
     exit (0);
 }
-
-

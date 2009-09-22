@@ -5,9 +5,9 @@ int main(int argc, char* argv[])
   bool adj;
   int nx, nt, ix, it, i, nm, im;
   float dx, dt, x0, t0, x;
-  float *dT, *X, *m;
+  float *dT=NULL, *X=NULL, *m=NULL;
 
-  sf_file inp, out, gather;
+  sf_file inp=NULL, out=NULL, gather=NULL;
 
   sf_init(argc, argv);
   inp = sf_input("in");
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     } else {
       for(i=0; i < nx; i++) dT[i]=0.0;
     }
-    
+
     /* Loop through x-coordinates*/
 
     for (ix=0; ix < nx; ix++){
@@ -88,11 +88,10 @@ int main(int argc, char* argv[])
 	  }
       }
     }
-    
+
     if (adj) sf_floatwrite(m,nm,out);
     if (!adj) sf_floatwrite(dT,nx,out);
   }
-
+  sf_close();
   exit(0);
 }
-

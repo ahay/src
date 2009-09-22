@@ -1,24 +1,23 @@
 /* 2-D implicit finite-difference migration in constant velocity. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
-
 #include "fdmig.h"
 
 int main(int argc, char* argv[])
@@ -26,9 +25,9 @@ int main(int argc, char* argv[])
     int nx, nz, nw;
     bool hi;
     float dx, dz, dw, vel, beta;
-    sf_complex **dat;
-    float **img;
-    sf_file data, imag, movie;
+    sf_complex **dat=NULL;
+    float **img=NULL;
+    sf_file data=NULL, imag=NULL, movie=NULL;
 
     sf_init(argc, argv);
     data = sf_input("in");
@@ -58,7 +57,7 @@ int main(int argc, char* argv[])
     } else {
 	movie = NULL;
     }
-    
+
     if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
     /* constant velocity */
 
@@ -69,14 +68,13 @@ int main(int argc, char* argv[])
     /* one-sixth trick */
 
     fdmig_init(hi, nx, nz, nw, dx, dz, dw, vel, beta);
-    
+
     dat = sf_complexalloc2(nx,nw);
     img = sf_floatalloc2(nx,nz);
 
     sf_complexread(dat[0],nx*nw,data);
     fdmig (dat, img, movie);
     sf_floatwrite(img[0],nx*nz,imag);
-
+    sf_close();
     exit(0);
 }
-    

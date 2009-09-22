@@ -4,31 +4,32 @@ Combine with sfmig3 antialias=flat for the complete response.
 */
 /*
   Copyright (C) 2007 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     int nt, nx, ny, ix, iy, n1, it, iz, ntr, itr;
-    float hdr[3], *trace, *x1, *x2, *amp, *xmod, *ymod, ***out;
+    float hdr[3], *trace=NULL, *x1=NULL, *x2=NULL, *amp=NULL, *xmod=NULL, *ymod=NULL, ***out=NULL;
     float h_in, x_in, y_in, vel, vel2;
     float x,y, z, t, dx, dy, ox, oy, ry, h, sq, tx, ot, dt, ty, rx;
     sf_map xstr, ystr;
-    sf_file in, mig, head;
+    sf_file in=NULL, mig=NULL, head=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -40,11 +41,11 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"o1",&ot)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
-    
+
     if (!sf_getint("n2",&nx))   sf_error("Need n2="); sf_putint(mig,"n2",nx);
     if (!sf_getfloat("d2",&dx)) sf_error("Need d2="); sf_putfloat(mig,"d2",dx);
     if (!sf_getfloat("o2",&ox)) sf_error("Need o2="); sf_putfloat(mig,"o2",ox);
-   
+
     if (!sf_getint("n3",&ny))   sf_error("Need n3="); sf_putint(mig,"n3",ny);
     if (!sf_getfloat("d3",&dy)) sf_error("Need d3="); sf_putfloat(mig,"d3",dy);
     if (!sf_getfloat("o3",&oy)) sf_error("Need o3="); sf_putfloat(mig,"o3",oy);
@@ -82,7 +83,7 @@ int main(int argc, char* argv[])
 	h = h_in * h_in * vel2;
 
 	for (iz=0; iz < n1; iz++) {
-	    z = ot + iz*dt;              
+	    z = ot + iz*dt;
 	    z *= z;
 
 	    for (iy=0; iy < ny; iy++) {
@@ -99,11 +100,11 @@ int main(int argc, char* argv[])
 		    t = ot + it*dt;
 		    sq = t*t - h; 
 		    if (sq <= y) continue;
-              
+
 		    x = t*sqrtf((sq - y)/sq);
 		    ty = t*dt*(sq*sq+ h*y)/(sq*sq*x);
 		    tx = SF_MAX(ty, t*ry/sqrtf(sq*(sq - y)));
-              
+
 		    if (tx >= dx*vel) continue;
 
 		    x1[it] = x_in+x/vel;
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
 		x = ox + ix*dx - x_in;
 		rx = fabsf(x*dx) * vel2;
 		x *= x * vel2;
-        
+
 		for (it=0; it < nt; it++) {
 		    x1[it] = oy - 10.*dy;
 		    x2[it] = oy - 10.*dy;
@@ -139,11 +140,11 @@ int main(int argc, char* argv[])
 		    if (t <= 0.) continue;
 		    sq = t + x*h/t - h - z - x; 
 		    if (sq <= 0.) continue;
-              
+
 		    y = sqrtf(sq);
 		    ty = ry*fabsf(1.-x*h/(t*t))/y;
 		    tx = SF_MAX(ty, rx*fabsf(1.-h/t)/y);
-              
+
 		    if (tx >= dy*vel) continue;
 
 		    x1[it] = y_in+y/vel;
@@ -164,7 +165,8 @@ int main(int argc, char* argv[])
 	} /* iz */
     } /* itr */
 
-    sf_floatwrite(out[0][0],n1*nx*ny,mig);        
+    sf_floatwrite(out[0][0],n1*nx*ny,mig);
+    sf_close();
     exit(0);
 }
 

@@ -1,31 +1,31 @@
 /* Normal reflectivity modeling. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <math.h>
 
+#include <math.h>
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     int nt, n1, i1, nw;
-    float *z, *a, *b, *r, *tpp, *tps, *app, *aps, *spline, *trace;
-    float dt, tp,ts, a1,a2, b1,b2, r1,r2; 
-    sf_file depth, vp, vs, rho, dat;
+    float *z=NULL, *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, *spline=NULL, *trace=NULL;
+    float dt, tp,ts, a1,a2, b1,b2, r1,r2;
+    sf_file depth=NULL, vp=NULL, vs=NULL, rho=NULL, dat=NULL;
 
     sf_init(argc,argv);
 
@@ -88,16 +88,16 @@ int main(int argc, char* argv[])
 
     spline = sf_floatalloc(nt);
     trace = sf_floatalloc(nt);
-    
+
     sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
     sf_int1_lop (true,false,nt,n1,spline,app);
     sf_spline_post(nw, 0, 1, nt, spline, trace);
     sf_floatwrite(trace,nt,dat);
-    
+
     sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1);
     sf_int1_lop (true,false,nt,n1,spline,aps);
     sf_spline_post(nw, 0, 1, nt, spline, trace);
     sf_floatwrite(trace,nt,dat);
-    
+    sf_close();
     exit(0);
 }

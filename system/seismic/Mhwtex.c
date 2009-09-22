@@ -2,21 +2,22 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <math.h>
 #include <rsf.h>
 #include "hwt2d.h"
@@ -29,18 +30,18 @@ int main (int argc, char *argv[])
     int       it,ig;
     int nz,nx,nt,ng;
     float ot,dt;
-    
-    sf_file Fv,Fs,Fw;
 
-    float **vv; /* velocity       */
-    pt2d   *wm; /* wavefront it-1 */
-    pt2d   *wo; /* wavefront it   */
-    pt2d   *wp; /* wavefront it+1 */
+    sf_file Fv=NULL,Fs=NULL,Fw=NULL;
+
+    float **vv=NULL; /* velocity       */
+    pt2d   *wm=NULL; /* wavefront it-1 */
+    pt2d   *wo=NULL; /* wavefront it   */
+    pt2d   *wp=NULL; /* wavefront it+1 */
 
     pt2d    Ro;    /* point  on wft it-1 */
     pt2d Pm,Po,Pp; /* points on wft it   */
     pt2d    Qo;    /* point  on wft it+1 */
-    
+
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
@@ -168,9 +169,7 @@ int main (int argc, char *argv[])
 	    wo[ig] = wp[ig];
 	}
     }
-    /*------------------------------------------------------------*/    
+    /*------------------------------------------------------------*/
+    sf_close();
     exit (0);
 }
-
-
-

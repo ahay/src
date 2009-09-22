@@ -6,38 +6,38 @@ The output contains PP intercept, PP gradient, and PS gradient.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <math.h>
 
+#include <math.h>
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     int nt, n1, i1, i2, n2, nw, three;
-    float *a, *b, *r, *tpp, *tps, *app, *aps, *bpp, *spline, *trace;
+    float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, *bpp=NULL, *spline=NULL, *trace=NULL;
     float dt, tp,ts, a1,a2, b1,b2, r1,r2, d1, dr, da, db, ab; 
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
+
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&three) || three != 3) 
+    if (!sf_histint(in,"n2",&three) || three != 3)
 	sf_error("Need n2=3 in input");
     n2 = sf_leftsize(in,2);
 
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 	    bpp[i1] = da - 4.*(2.*db+dr)/(ab*ab);
 	    aps[i1] = 4.*db/ab + (1.+2./ab)*dr;
 	}
-    
+
 	sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
 	sf_int1_lop (true,false,nt,n1,spline,app);
 	sf_spline_post(nw, 0, 1, nt, spline, trace);
@@ -111,8 +111,7 @@ int main(int argc, char* argv[])
 	sf_int1_lop (true,false,nt,n1,spline,aps);
 	sf_spline_post(nw, 0, 1, nt, spline, trace);
 	sf_floatwrite(trace,nt,out);
-    }    
-
+    }
+    sf_close();
     exit(0);
 }
-

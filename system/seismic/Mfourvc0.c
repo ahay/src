@@ -1,26 +1,24 @@
 /* Velocity continuation after NMO. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fint1.h"
-
 #include <math.h>
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -29,12 +27,12 @@ int main(int argc, char* argv[])
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,dv, dx,dy, x0,y0,t;
-    float *trace, *strace;
-    sf_complex *ctrace, *ctrace2, shift;
-    char *time, *space, *unit;
+    float *trace=NULL, *strace=NULL;
+    sf_complex *ctrace=NULL, *ctrace2=NULL, shift;
+    char *time=NULL, *space=NULL, *unit=NULL;
     size_t len;
     kiss_fftr_cfg forw, invs;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -64,7 +62,7 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     d2 = o1+(n1-1)*d1;
     d2 = (d2*d2 - o2)/(n2-1);
-    
+
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
     if (!sf_getfloat("v0",&v0) && 
@@ -148,9 +146,9 @@ int main(int argc, char* argv[])
 		for (i2=n2; i2 < n3; i2++) {
 		    strace[i2] = 0.;
 		}
-		
+
 		/* FFT */
-		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);       	
+		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
 		ctrace2[0]=sf_cmplx(0.,0.); /* dc */
 
 		for (iv=0; iv < nv; iv++) {
@@ -168,7 +166,7 @@ int main(int argc, char* argv[])
 			ctrace2[i2] = sf_cmul(ctrace[i2],shift);
 #endif
 		    } /* w */
-		    
+
 		    /* inverse FFT */
 		    kiss_fftri(invs,(const kiss_fft_cpx *) ctrace2, strace);
 		    fint1_set(istr,strace);
@@ -191,8 +189,6 @@ int main(int argc, char* argv[])
 	    } /* x */
 	} /* y */
     } /* h */
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id: Mfourvc.c 2262 2006-09-15 04:50:52Z sfomel $	 */

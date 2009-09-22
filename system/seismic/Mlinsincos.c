@@ -6,21 +6,19 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 int main(int argc, char* argv[])
@@ -65,7 +63,7 @@ int main(int argc, char* argv[])
 
     in = sf_input("in");
     out = sf_output("out");
-      
+
     if (!sf_getfloat("s0",&s0)) sf_error("Need s0=");
     /* reference slowness */
 
@@ -91,7 +89,7 @@ int main(int argc, char* argv[])
     or = 1./s0 + 0.5*dr;
    /* radius greater than or equal to 1/s0 */
 
-    if (!sf_getint("extend",&ext)) ext=4;       
+    if (!sf_getint("extend",&ext)) ext=4;
     /* tmp extension */
 
     /* read input file parameters */
@@ -116,7 +114,7 @@ int main(int argc, char* argv[])
 
     apos = sf_maxa(npos,0,1);
     sf_oaxa(out,apos,2);
-    
+
     sf_putstring(out,"label1","angle");
     sf_putstring(out,"label2","pos");
 
@@ -144,7 +142,7 @@ int main(int argc, char* argv[])
 	    s[ivy][ivx] = atan2f(vy,vx);
 	}
     }
-    
+
     /* read data in velocity array */
     sf_floatread(v[0],nvx*nvy,in);
 
@@ -181,6 +179,6 @@ int main(int argc, char* argv[])
 	
     /* output on angle grid */
     sf_floatwrite(a[0],na*npos,out);
-
+    sf_close();
     exit(0);
 }
