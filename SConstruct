@@ -11,6 +11,7 @@ bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
+spcdir = os.path.join(root,'spec')
 mandir = os.path.join(root,'man')
 
 ##########################################################################
@@ -57,7 +58,7 @@ user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 
 SConscript(dirs='framework',name='SConstruct',
-           exports='env root bindir libdir docdir mandir system user')
+           exports='env root bindir libdir docdir spcdir mandir system user')
 
 ##########################################################################
 # API BUILD
@@ -137,7 +138,7 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 rsfuser = os.path.join(libdir,'rsfuser')
 env.Install(rsfuser,'__init__.py')
 
-env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,mandir])
+env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,spcdir,mandir])
 env.Clean('install', rsfuser)
 
 # 	$Id$

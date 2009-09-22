@@ -1,15 +1,15 @@
 ##   Copyright (C) 2004 University of Texas at Austin
-##  
+##
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
 ##   the Free Software Foundation; either version 2 of the License, or
 ##   (at your option) any later version.
-##  
+##
 ##   This program is distributed in the hope that it will be useful,
 ##   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##   GNU General Public License for more details.
-##  
+##
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -243,7 +243,7 @@ class rsfpar(object):
         type = self.type.rstrip()
         range = self.range
         default = self.default
-        desc = self.desc
+        desc = self.desc.replace('"',"'")
 
         DescriptionIsLong = desc.count('\n') > 1
         desc = desc.rstrip('\n') # save trailing line feeds for later
@@ -696,28 +696,32 @@ def text(dir,name):
         file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
     file.close()
 
-def spec(dir):
+def spec(dir,name='extend.spec'):
     if not os.path.isdir(dir):
         os.mkdir(dir)
-    file = open (os.path.join(dir,'RSF_enum.sections'),'w')
-    file.write('# Madagascar Sections\n')
-    # TO DO: Define tksu sections from most common parameters
+    file = open (os.path.join(dir,name),'w')
+    file.write('''
+# Madagascar Enumerations
 
-    # below remains untouched from 'def text(dir,name)'
-    dirs = {}
-    for prog in progs.keys():
-        dir = os.path.dirname(progs[prog].file)
-        if not dirs.has_key(dir):
-            dirs[dir] = []
-        dirs[dir].append(prog)
-    keys = dirs.keys()
-    keys.sort()
-    for dir in keys:
-        names = dirs[dir]
-        names.sort()
-        file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
+[enum-bool]
+Desc:	boolean values
+y	yes
+n	no
+
+[enum-file]
+#Desc:	Known file/data types
+rsf	Madagascar Regularly Sampled Format file
+vpl	(unknown description)
+
+[enum-color]
+#Desc:	Port colors (#RRGGBB) to assign to file types
+rsf	#5f5fc0
+vpl	#c05f5f
+''')
+
+    # TO DO: Define tksu sections from most common parameters
     file.close()
-    # TO DO: Write the tksu specs for madagascar related enumerations and filetypes
+
 
 # regular expressions
 comment = {}
@@ -997,7 +1001,11 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     if main:
                         main.text(dir)
             elif typ == 's':
-                spec(dir)
+                spec(dir,'extend.spec')
+                for prog in progs.keys():
+                    main = progs.get(prog)
+                    if main:
+                        main.spec(dir)
             elif typ == 'g':
                 text(dir,'index.man')
                 for prog in progs.keys():
