@@ -8,20 +8,26 @@ Plot('slope','grey scalebar=y title=Slope')
 
 Result('reflectors','qdome slope','SideBySideAniso')
 
-Flow('mask',None,
+Flow('mask1',None,
      'spike n1=200 n2=100 nsp=9 k2=40,52,65,10,75,88,15,20,24')
-Flow('wells','qdome mask','add mode=p ${SOURCES[1]}')
+Flow('mask4',None,
+     'spike n1=200 n2=100 nsp=4 k2=5,25,40,70 k1=1,1,1,1 l1=103,190,44,187')
 
-Plot('wells','grey allpos=y title="Well Logs" ')
+for case in ('1','4'):
+    mask = 'mask'+case
+    well = 'well'+case
+    fill = 'fill'+case
 
-Flow('fill','wells mask slope',
-     '''
-     planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=200 verb=y |
-     bandpass fhi=30
-     ''')
+    Flow(well,['qdome',mask],'add mode=p ${SOURCES[1]}')
+    Plot(well,'grey allpos=y title="Well Logs" ')
 
-Plot('fill','grey title=Interpolated')
+    Flow(fill,[well,mask,'slope'],
+         '''
+         planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} verb=y |
+         bandpass fhi=30
+         ''')
 
-Result('combo1','qdome wells fill','SideBySideAniso')
+    Plot(fill,'grey title=Interpolated')
+    Result('combo'+case,['qdome',well,fill],'SideBySideAniso')
 
 End()

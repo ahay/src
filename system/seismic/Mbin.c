@@ -57,7 +57,7 @@ int main (int argc, char* argv[])
     head = sf_input(header);
 
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float header");
-    if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");
+    if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");    
     if (!sf_histint(head,"n2",&n2) || n2 != nd) 
 	sf_error("Wrong n2= in head");
 

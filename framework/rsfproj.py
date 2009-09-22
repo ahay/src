@@ -457,12 +457,11 @@ class Project(Environment):
         self.Alias(target + '.test',test)
         return plot
     def End(self):
-        self.Command('.rsfproj',None,action=Action(self.Info))
-        self.lock.append('.rsfproj')
+        self.Command('.rsfproj',self.lock,action=Action(self.Info))
         if self.view: # if any results
             self.Alias('view',self.view)
             self.Alias('print',self.prnt)
-            self.Alias('lock',self.lock)
+            self.Alias('lock',self.lock+['.rsfproj'])
             self.Alias('test',self.test)
         else:
             self.Echo('test',None,err='Nothing to test')
