@@ -21,11 +21,11 @@
 
 int main(int argc, char *argv[])
 {
-    int nw, n1, n2, n4, iw, i1, i2, i4, s1, x1, s2, x2, m;
+    int nw, n1, n2, n4, iw, i1, i2, i4, s1, x1, s2, x2, m, fold;
     float d1;
-    bool verb;
+    bool verb, stack;
 
-    sf_complex *dd, *mm;
+    sf_complex *dd, *mm, *mu=NULL;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -42,15 +42,24 @@ int main(int argc, char *argv[])
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
 
     n4 = sf_leftsize(in,3);
+    fold = 0;
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    sf_putint(out,"n1",(2*n1-1));
-    sf_putfloat(out,"d1",d1);
-    sf_putfloat(out,"o1",(1-n1)*d1);
-    (void) sf_shiftdim(in, out, 1);
+    if (!sf_getbool("stack",&stack)) stack=false;
+    /* stack flag, if y, no common multiple gather */ 
 
+    if (!stack) {
+	
+	sf_putint(out,"n1",(2*n1-1));
+	sf_putfloat(out,"d1",d1);
+	sf_putfloat(out,"o1",(1-n1)*d1);
+	(void) sf_shiftdim(in, out, 1);
+    } else {
+	mu = sf_complexalloc(n1*n2);        /* multiple space */
+    }	
+    
     dd = sf_complexalloc(n1*n2);            /* data space */
     mm = sf_complexalloc((2*n1-1)*n1*n2);   /* multiple space */
 
@@ -93,7 +102,23 @@ int main(int argc, char *argv[])
 		    }
 		}
 	    }
-	    sf_complexwrite(mm,(2*n1-1)*n1*n2,out);
+
+	    if (!stack) {
+		sf_complexwrite(mm,(2*n1-1)*n1*n2,out);
+	    } else {
+		for (i2=0; i2 < n2*n1; i2++) {
+		    mu[i2] = 0.;
+		}
+		for (i2=0; i2 < n2*n1; i2++) {
+		    fold = 0;
+		    for (i1=0; i1 < (2*n1-1); i1++) {
+			mu[i2] += mm[i2*(2*n1-1)+i1];
+			if (0!=mm[i2*(2*n1-1)+i1]) fold++;
+		    }
+		    mu[i2] /= fold+FLT_EPSILON;
+		}
+		sf_complexwrite(mu,n1*n2,out);
+	    }
 	}       
     }
 		
