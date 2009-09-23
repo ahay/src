@@ -337,7 +337,7 @@ def warp2(name,       # name prefix
         return '''
         cat axis=2 ${SOURCES[1]} |
         graph title="%s" max1=%g label1="Frequency (Hz)"
-        dash=0,1 plotfat=7
+        dash=0,1 plotfat=7 label2=
         ''' % (title,4*fmax)
 
     def giplot(title):
