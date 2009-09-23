@@ -2,17 +2,17 @@
 
 /*
   Copyright (C) 2007 Colorado School of Mines
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 #include <rsf.h>
 #include "fint1.h"
 
-/* 
+/*
  * input:  z-SS(h,z)-x [SS=slant-stack]
  * output: z-a-x
  */
@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     sf_file Fgam=NULL; /* vpvs ratio file */
     sf_file Fdip=NULL; /*  dip field file */
 
-    float **stk, *gam, *dip, **ang; /* I/O arrays */
-    float *tmp;                     /* mapping arrays */
+    float **stk=NULL, *gam=NULL, *dip=NULL, **ang=NULL; /* I/O arrays */
+    float *tmp=NULL;                     /* mapping arrays */
 
     sf_axis az; /* depth axis */
     sf_axis as; /*    SS axis */
@@ -103,12 +103,12 @@ int main(int argc, char* argv[])
 	sf_floatread(dip   ,sf_n(az)         ,Fdip);
 
 	/*------------------------------------------------------------*/
-	for (iz=0; iz < sf_n(az); iz++) { 
+	for (iz=0; iz < sf_n(az); iz++) {
 	    /* loop over depth */
 
 	    g = gam[iz];
 	    d = dip[iz];
-	    
+
 	    d*=(g*g-1.);
 
 	    for (is = 0; is < sf_n(as); is++) { 
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 		a = sf_o(aa)+ia*sf_d(aa);          /* ang */
 		t = tanf(a/180*SF_PI);             /* tan */
 		
-		/* 
+		/*
 		 * mapping from tan(a) to slant-stack value (n)
 		 */
 		n = (4*g*t+d*(t*t+1.)) / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
@@ -141,5 +141,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(ang[0],sf_n(az)*sf_n(aa),Fang);
     }
+    sf_close();
     exit(0);
 }

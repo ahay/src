@@ -4,26 +4,24 @@ Requires the input to be in (time,cmp x,cmp y,offset)
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "aastretch.h"
 
 int main(int argc, char* argv[])
@@ -31,8 +29,8 @@ int main(int argc, char* argv[])
     bool inv, zero, aal;
     int nt,nx,ny, nh, ix,iy,it,ih, ixin,iyin, n123, ix1, ix2, iy1, iy2;
     float dt,dx,dy, t0,x,y, vel0, rx,ry, dh, h0, h, hx, t, sq, ti, t1,t2;
-    float *time, *str, *add, *tx, *amp, ***cinp, ***cout, ***stack=NULL;
-    sf_file in, out;
+    float *time=NULL, *str=NULL, *add=NULL, *tx=NULL, *amp=NULL, ***cinp=NULL, ***cout=NULL, ***stack=NULL;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -213,10 +211,8 @@ int main(int argc, char* argv[])
 	}
     } /* h */
 
-    if (!inv && zero) 
+    if (!inv && zero)
 	sf_floatwrite (stack[0][0],n123,out);
- 
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

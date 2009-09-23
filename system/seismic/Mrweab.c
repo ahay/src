@@ -2,17 +2,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,14 +27,14 @@ int main(int argc, char* argv[])
 
     sf_file Fi=NULL, Fo=NULL, Fr=NULL, Fs=NULL; /* I/O files */
 
-    sf_complex **rays;
-    sf_complex **ab;
+    sf_complex **rays=NULL;
+    sf_complex **ab=NULL;
 
-    float **x, **z;
-    float **h1, **h2;
-    float  *qq, *gg;
-    float **ss, **aa, **bb;
-    float **ma, **mb, **mm;
+    float **x=NULL, **z=NULL;
+    float **h1=NULL, **h2=NULL;
+    float  *qq=NULL, *gg=NULL;
+    float **ss=NULL, **aa=NULL, **bb=NULL;
+    float **ma=NULL, **mb=NULL, **mm=NULL;
 
     sf_axis at,ag,ar;
     int it,ig;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     sf_complexread(rays[0],ng*nt,Fi);  /* rays */
     LOOPRC( z[it][ig] = cimagf(rays[it][ig]);
 	    x[it][ig] = crealf(rays[it][ig]); );
-    
+
     /* h1=alpha */
     for(it=0;it<nt-1;it++) {
 	for(ig=0;ig<ng;ig++) {
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     ii=0; LOOPRC( qq[ii] = SF_ABS(h2[it][ig]); ii++; );
 /*    eps = peps * sf_quantile(nt*ng/2,nt*ng,qq);*/
     eps = peps * (
-	sf_quantile(      0,nt*ng,qq) + 
+	sf_quantile(      0,nt*ng,qq) +
 	sf_quantile(nt*ng-1,nt*ng,qq)
 	) /2.;
     LOOPRC( if(SF_ABS(h2[it][ig]) < eps) h2[it][ig]=eps; );
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 		ii++;
 	    }
 	}
-	
+
 	/* mask for a */
 	for(ia=0;ia<naref;ia++) {
 	    a0 = mina + 0.5*dela + ia*dela;
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     ii=0;
     for(ia=0;ia<naref;ia++) {
 	for(ib=0;ib<nbref;ib++) {
-	    
+
 	    LOOPRC(
 		if( ma[it][ig]==ia &&
 		    mb[it][ig]==ib  ) mm[it][ig]=ii;
@@ -214,12 +214,15 @@ int main(int argc, char* argv[])
 	mb[it][ig] +=1;
 	mm[it][ig] +=1;
 	);
-    
+
     sf_floatwrite(aa[0],ng*nt,Fo);
     sf_floatwrite(bb[0],ng*nt,Fo);
-    sf_floatwrite(mm[0],ng*nt,Fo);    
+    sf_floatwrite(mm[0],ng*nt,Fo);
     sf_floatwrite(ma[0],ng*nt,Fo);
     sf_floatwrite(mb[0],ng*nt,Fo);
-    
+
     sf_complexwrite(ab[0],naref*nbref*nt,Fr);
+
+    sf_close();
+    exit(0);
 }

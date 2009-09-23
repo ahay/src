@@ -8,12 +8,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,22 +34,22 @@ int main(int argc, char* argv[])
     bool  verb;
     bool   adj;
 
-    sf_complex **dat_s, *wfl_s;
-    sf_complex **dat_r, *wfl_r;
-    float      **img;
-    float      **aa,**bb,**mm;
+    sf_complex **dat_s=NULL, *wfl_s=NULL;
+    sf_complex **dat_r=NULL, *wfl_r=NULL;
+    float      **img=NULL;
+    float      **aa=NULL,**bb=NULL,**mm=NULL;
 
-    sf_complex **ab;
-    float      **a0,**b0;
+    sf_complex **ab=NULL;
+    float      **a0=NULL,**b0=NULL;
 
     float w,ws,wr,w0,dw;
     char *met="";
-    
+
     sf_init(argc,argv);
 
     if(! sf_getbool("verb", &verb))     verb=false;
     if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
-    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration */			
+    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration */
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
@@ -63,11 +63,11 @@ int main(int argc, char* argv[])
 
     /* 'position axis' (could be angle) */
     ag = sf_iaxa(Fw_s,1); ng=sf_n(ag); sf_setlabel(ag,"g"); 
-    
+
     /* 'extrapolation axis' (could be time) */
     at = sf_iaxa(Fw_s,2); nt=sf_n(at); sf_setlabel(at,"t");
     aw = sf_iaxa(Fw_s,3); sf_setlabel(aw,"w"); /* frequency */
-    
+
     if(adj) { /* modeling */
 	Fw_r = sf_output("out"); 
 	sf_settype(Fw_r,SF_COMPLEX);
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     dat_r = sf_complexalloc2(ng,nt);
     wfl_s = sf_complexalloc (ng);
     wfl_r = sf_complexalloc (ng);
-    
+
     if(verb) {
 	sf_raxa(ag);
 	sf_raxa(at);
@@ -213,18 +213,18 @@ int main(int argc, char* argv[])
 
 	    sf_complexwrite(dat_r[0],ng*nt,Fw_r);
 
-	} else {	
+	} else {
 	    ws = -w; /*      causal */
 	    wr = +w; /* anti-causal */
-	    
+
 	    sf_complexread(dat_s[0],ng*nt,Fw_s);
 	    sf_complexread(dat_r[0],ng*nt,Fw_r);
-	    
+
 	    for(ig=0;ig<ng;ig++) {
 		wfl_s[ig] = sf_cmplx(0,0);
 		wfl_r[ig] = sf_cmplx(0,0);
 	    }
-	    
+
 	    for(it=0;it<=nt-2;it++) {
 		for(ig=0;ig<ng;ig++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 		    wfl_r[ig] = sf_cadd(wfl_r[ig],dat_r[it][ig]);
 #endif
 		}
-		
+
 		rweone_spi(wfl_s,wfl_r,img[it]);
 		
 		if(method!=0) {
@@ -252,5 +252,6 @@ int main(int argc, char* argv[])
 
     if(!adj)  sf_floatwrite  (img[0],ng*nt,Fi);
 /*------------------------------------------------------------*/
-
+    sf_close();
+    exit(0);
 }

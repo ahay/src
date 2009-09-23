@@ -1,26 +1,24 @@
 /* Prestack Stolt modeling/migration. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 int main(int argc, char* argv[])
@@ -29,8 +27,8 @@ int main(int argc, char* argv[])
     bool inv, stack, depth;
     int nt,nw,nx,ny,nh,nf, it,iw,ix,iy,ih, iw2;
     float dw,dx,dy,dh, x,y,h,xh, vel, w0, wh, w2, sq;
-    float *trace, *keep=NULL;
-    sf_file in, out;
+    float *trace=NULL, *keep=NULL;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -38,10 +36,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* y: modeling, n: migration */
- 
+
     if (!sf_getbool("depth",&depth)) depth=false;
     /* y: depth migration, n: time migration */
- 
+
     if (inv) { /* modelling */
 	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nx)) nx=1;
@@ -81,11 +79,11 @@ int main(int argc, char* argv[])
 	    sf_putint(out,"n4",1);
 	}
     }
-    
+
     if (!sf_getfloat ("vel",&vel)) sf_error("Need vel=");
     /* constant velocity */
 
-    if (!sf_histfloat(in,"o1",&w0)) w0=0.; 
+    if (!sf_histfloat(in,"o1",&w0)) w0=0.;
     if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
 
     if (!sf_getint ("pad",&nw)) nw=nt;
@@ -113,8 +111,6 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(nw);
 
     if (stack) keep = sf_floatalloc(nw);
-
-/*  w2 = (/ (((iw-1)*dw)**2, iw = 1, nw) /) */
 
     if (!sf_getint("extend",&nf)) nf=4;
     /* trace extension */
@@ -152,7 +148,7 @@ int main(int argc, char* argv[])
 		    sf_floatread(trace,nt,in);
 		    for (it=nt; it < nw; it++) { /* pad */
 			trace[it]=0.;
-		    }		
+		    }
 
 		    sf_cosft_frw (trace,0,1);
 		    fint1_set(str,trace);
@@ -201,8 +197,6 @@ int main(int argc, char* argv[])
 	    }
 	} /* x */
     } /* y */
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

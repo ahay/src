@@ -23,28 +23,26 @@ Merges trace headers with data.
 */
 
 #include <stdio.h>
-
 #include <rsf.h>
-
 #include "segy.h"
 
 int main(int argc, char *argv[])
 {
     bool verbose, su, xdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *headname, *filename, *trace, count[4], *prog;
+    char *headname=NULL, *filename=NULL, *trace=NULL, count[4], *prog=NULL;
     const char *myheader[] = {"      This dataset was created",
 			      "     with the Madagascar package",
 			      "     http://rsf.sourceforge.net/"};
-    sf_file in, hdr;
-    int format=1, i, ns, nk, nsegy, itr, ntr, *itrace;
-    FILE *head, *file;
-    float *ftrace, dt;
+    sf_file in=NULL, hdr=NULL;
+    int format=1, i, ns, nk, nsegy, itr, ntr, *itrace=NULL;
+    FILE *head=NULL, *file=NULL;
+    float *ftrace=NULL, dt;
 
     sf_init(argc, argv);
     in = sf_input("in");
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    
+
     if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
     if (!sf_getbool("endian",&xdr)) xdr = endian();
@@ -89,12 +87,12 @@ int main(int argc, char *argv[])
 	    }
 	    if (verbose) sf_warning("ASCII header created on the fly");
 	}
-  	
-	asc2ebc (SF_EBCBYTES, ahead);   
+
+	asc2ebc (SF_EBCBYTES, ahead);
 
 	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error writing ebcdic header");
- 
+
 	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
 	/* input binary data header file */
 
@@ -107,7 +105,7 @@ int main(int argc, char *argv[])
 	    if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, head)) 
 		sf_error("Error reading binary header");
 	    fclose (head);
-    
+
 	    if (verbose) sf_warning("Binary header read from \"%s\"",headname);
 	}
 
@@ -139,7 +137,7 @@ int main(int argc, char *argv[])
 		break;
 	}
     }
-    
+
     if (!sf_histint(in,"n1",&ns)) ns = su? 0: segyns (bhead); 
     if (0 >= ns) sf_error("Failed to determine trace length");
 
@@ -153,9 +151,9 @@ int main(int argc, char *argv[])
 	}
 	sf_setform(in,SF_NATIVE);
     }
-    
-    nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
- 
+
+    nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);
+
     ntr = sf_leftsize(in,1);
 
     if (verbose) sf_warning("Expect %d traces",ntr);
@@ -165,7 +163,7 @@ int main(int argc, char *argv[])
 	sf_error ("Need n1=%d keys in tfile",SF_NKEYS);
     if (SF_NKEYS*ntr != sf_filesize(hdr))
 	sf_error ("Wrong number of traces in tfile");
-    
+
     trace = sf_charalloc (nsegy);
     ftrace = sf_floatalloc (ns);
     itrace = sf_intalloc (SF_NKEYS); 
@@ -184,8 +182,6 @@ int main(int argc, char *argv[])
 	if (nsegy != fwrite(trace, 1, nsegy, file))
 	    sf_error ("Error writing trace %d",itr+1);
     }
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

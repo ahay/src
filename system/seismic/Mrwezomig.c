@@ -2,17 +2,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,13 +33,13 @@ int main(int argc, char* argv[])
     bool  verb;
     bool   adj;
 
-    sf_complex **dat;
-    float         **img;
-    sf_complex  *wfl;
-    float         **aa,**bb,**mm;
+    sf_complex **dat=NULL;
+    float         **img=NULL;
+    sf_complex  *wfl=NULL;
+    float         **aa=NULL,**bb=NULL,**mm=NULL;
 
-    sf_complex **ab;
-    float         **a0,**b0;
+    sf_complex **ab=NULL;
+    float         **a0=NULL,**b0=NULL;
 
     float w;
     char *met="";
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     }
 
     /* from hertz to radian */
-    dw *= 2.*SF_PI; 
+    dw *= 2.*SF_PI;
     ow *= 2.*SF_PI;
 
     rweone_init(ag,at,aw,ar,method,verb);
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 	case 1: ; /* SSF */                   break;
 	case 0: rweone_xfd_coef(aa,bb);       break;
     }
-    
+
     if(adj) { /* modeling */
 	for(it=0;it<nt;it++) {
 	    for(ig=0;ig<ng;ig++) { 
@@ -162,14 +162,14 @@ int main(int argc, char* argv[])
 
 /*------------------------------------------------------------*/
     if( adj) sf_floatread  (img[0],ng*nt,Fi);
-    
+
     for(iw=0;iw<nw;iw++) {
 	w=ow+iw*dw;
 	sf_warning("%s %d %d",met,iw,nw);
 	
 	if(adj) {  /* modeling */
 	    w*=-2; /*      causal, two-way time */
-	    
+
 	    for(ig=0;ig<ng;ig++) {
 		wfl[ig] = sf_cmplx(0.,0.);
 	    }
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    sf_complexwrite(dat[0],ng*nt,Fd);
-	    
+
 	} else {   /* migration */
 	    w*=+2; /* anti-causal, two-way time */
 
@@ -215,5 +215,6 @@ int main(int argc, char* argv[])
 
     if(!adj) sf_floatwrite  (img[0],ng*nt,Fi);
 /*------------------------------------------------------------*/
-
+    sf_close();
+    exit(0);
 }

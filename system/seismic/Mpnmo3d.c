@@ -1,17 +1,17 @@
 /* Slope-based normal moveout for 3-D CMP geometry. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,9 +19,7 @@
 
 #include <math.h>
 #include <float.h>
-
 #include <rsf.h>
-
 #include "stretch4.h"
 
 int main (int argc, char* argv[])
@@ -30,9 +28,9 @@ int main (int argc, char* argv[])
     bool half;
     int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw, CDPtype;
     float dt, t0, hx,hy, h0x, h0y, t, f, dhx, dhy, eps;
-    float *trace, *px, *py, *offx, *offy,  *str, *out, *vtr;
+    float *trace=NULL, *px=NULL, *py=NULL, *offx=NULL, *offy=NULL,  *str=NULL, *out=NULL, *vtr=NULL;
 
-    sf_file cmp, nmod, dipx, dipy, offset, vel;
+    sf_file cmp=NULL, nmod=NULL, dipx=NULL, dipy=NULL, offset=NULL, vel=NULL;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -49,8 +47,8 @@ int main (int argc, char* argv[])
 
     if (!sf_histint(cmp,"n2",&nhx)) sf_error("No n2= in input");
     if (!sf_histint(cmp,"n3",&nhy)) sf_error("No n2= in input");
-    
-    nx = sf_leftsize(cmp,3);  
+
+    nx = sf_leftsize(cmp,3);
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
@@ -97,7 +95,6 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
     vtr = sf_floatalloc(nt);
-    
 
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
@@ -105,7 +102,7 @@ int main (int argc, char* argv[])
     nmo = stretch4_init (nt, t0, dt, nt, eps);
 
     eps = 100.*FLT_EPSILON;
-    
+
     /* BUG: figure out dh for irregular off[ih] */
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
@@ -128,7 +125,7 @@ int main (int argc, char* argv[])
 	  for (it=0; it < nt; it++) { /* time */
 	    t = t0 + it*dt;
 	    f = t - px[it]*hx*dt/dhx - py[it]*hy*dt/dhy; 
-	    
+
 	    if (f < 0. || f > t) {
 	      str[it] = t0-10.*dt;
 	      vtr[it] = 0.;
@@ -140,17 +137,15 @@ int main (int argc, char* argv[])
 	
 	
 	  stretch4_define (nmo,str);
-	  
-	  stretch4_apply (nmo,trace,out);	    
+
+	  stretch4_apply (nmo,trace,out);
 	  sf_floatwrite (out,nt,nmod);
-	  
-	  stretch4_apply (nmo,vtr,vtr);	    
+
+	  stretch4_apply (nmo,vtr,vtr);
 	  sf_floatwrite (vtr,nt,vel);
 	}
       }
     }
-    
-    exit (0);
+    sf_close();
+    exit(0);
 }
-
-/* 	$Id: Minmo.c 729 2004-07-29 18:22:16Z fomels $	 */

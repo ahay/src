@@ -1,23 +1,23 @@
 /* Time-space-domain Radon transform (slant stack) */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
+#include <rsf.h>
 #include "slant.h"
 
 int main(int argc, char* argv[])
@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
     int nt, n3, nx, np, i3, ntx, ntp;
     bool adj,verb,rho;
     float o1,d1, x0,dx, anti, p0,dp,p1;
-    float *cmp, *vscan;
-    sf_file in, out;
+    float *cmp=NULL, *vscan=NULL;
+    sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
 
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool ( "rho",&rho )) rho=true;   /* rho filtering */
     if (!sf_getfloat("anti",&anti)) anti=1.;    /* antialiasing */
 
-    if (adj) { 
+    if (adj) {
 	if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
 	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
 	if (!sf_histint  (in,"n2",&nx)) sf_error("No n2= in input");
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 	    sf_floatread(  cmp,ntx,in);
 	} else {
 	    sf_floatread(vscan,ntp,in);
-	} 
+	}
 
 	slant_lop(adj,false,ntp,ntx,vscan,cmp);
 
@@ -104,6 +104,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(  cmp,ntx,out);
 	} 
     }
-
+    sf_close();
     exit(0);
 }

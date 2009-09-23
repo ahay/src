@@ -4,26 +4,24 @@ Requires the input to be in (time,offset,shot)
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "aastretch.h"
 
 int main(int argc, char* argv[])
@@ -31,8 +29,8 @@ int main(int argc, char* argv[])
     bool aal, off;
     int nt,nx, nh, ix,it,ih, ns, is;
     float dt,dx, t0,x, v, dh, h0, h, t, sq, ds, s0, s, x0;
-    float *time, *str, *tx, *amp, **cinp, *cout;
-    sf_file inp, out;
+    float *time=NULL, *str=NULL, *tx=NULL, *amp=NULL, **cinp=NULL, *cout=NULL;
+    sf_file inp=NULL, out=NULL;
 
     sf_init (argc,argv);
     inp = sf_input("in");
@@ -40,7 +38,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("aal",&aal)) aal=true;
     /* if y, apply antialiasing */
-    
+
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&nh)) sf_error("No n2= in input");
     if (!sf_histint(inp,"n3",&ns)) ns=1;
@@ -50,7 +48,7 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(inp,"d2",&dh)) sf_error("No d2= in input");
     if (!sf_histfloat(inp,"o2",&h0)) sf_error("No o2= in input");
-    
+
     if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3= in input");
     if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3= in input");
 
@@ -110,7 +108,7 @@ int main(int argc, char* argv[])
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;
 		    sq = hypotf(t,h);
-		    
+
 		    str[it] = 0.5*(time[it]+sq);
 		    tx[it] = fabsf(0.5*h*dh/sq);
 		    amp[it]=1.;
@@ -125,8 +123,6 @@ int main(int argc, char* argv[])
 	    if (!off) sf_floatwrite (cout,nt,out);
 	} /* x */
     } /* s */
-    
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */
