@@ -1,10 +1,11 @@
 from rsfproj import *
 
-Flow(['7ab','7c','7d'],None,
-     '''7ab top=3.2 c1=.9 c2=6.8
-     c=${TARGETS[1]} d=${TARGETS[2]}
-     ''',prefix=plprefix)
-Plot('7ab','%s xscale=.57 yscale=1.2' % WhereIs('vppen'))
+Flow('7ab.vpl 7c 7d',None,
+     '''
+     7ab top=3.2 c1=.9 c2=6.8
+     c=${TARGETS[1]} d=${TARGETS[2]} |
+     %s xscale=.57 yscale=1.2
+     ''' % WhereIs('vppen'),prefix=plprefix)
 Plot('7c','grey wanttitle=n')
 Plot('7d','grey wanttitle=n')
 Plot('7cd','7c 7d','SideBySideAniso')

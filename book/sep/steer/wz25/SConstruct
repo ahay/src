@@ -1,0 +1,16 @@
+from rsfproj import *
+
+Fetch('wz.25.H','wz')
+
+def grey(title):
+    return '''
+    window max1=3 |
+    grey label1=Time label2= unit1=s crowd=0.8 labelsz=12
+    title="%s"
+    ''' % title
+
+Flow('input','wz.25.H',
+     'dd form=native | tpow tpow=2.7 | scale dscale=0.00000001')
+Plot('input',grey('Shot Gather'))
+
+End()
