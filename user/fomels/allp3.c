@@ -32,7 +32,7 @@ typedef struct Allpass *allpass;
 
 struct Allpass {
     int nx, ny, nz, nw, nj;
-    float* pp;
+    float *flt, *pp;
 };
 
 static allpass ap1, ap2;
@@ -54,7 +54,16 @@ allpass allpass_init(int nw                 /* filter size (1,2,3) */,
     ap->nz = nz;
     ap->pp = pp;
 
+    ap->flt = sf_floatalloc(2*nw+1);
+
     return ap;
+}
+
+void allpass_close(allpass ap)
+/*< free allocated storage >*/
+{
+    free(ap->flt);
+    free(ap);
 }
 
 void allpass1 (bool der         /* derivative flag */, 
@@ -64,7 +73,6 @@ void allpass1 (bool der         /* derivative flag */,
 /*< in-line plane-wave destruction >*/
 {
     int ix, iy, iz, iw, is, i, nx, ny, nz;
-    float a[7];
 
     nx = ap->nx;
     ny = ap->ny;
@@ -86,15 +94,15 @@ void allpass1 (bool der         /* derivative flag */,
 		i = ix + nx * (iy + ny * iz);
 
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[i], a);
+		    aderfilter(ap->nw, ap->pp[i], ap->flt);
 		} else {
-		    passfilter(ap->nw, ap->pp[i], a);
+		    passfilter(ap->nw, ap->pp[i], ap->flt);
 		}
 	      
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		  
-		    yy[i] += (xx[i+is+nx] - xx[i-is]) * a[iw];
+		    yy[i] += (xx[i+is+nx] - xx[i-is]) * ap->flt[iw];
 		}
 	    }
 	}
@@ -108,7 +116,6 @@ void allpass2 (bool der         /* derivative flag */,
 /*< cross-line plane-wave destruction >*/
 {
     int ix, iy, iz, iw, is, i, nx, ny, nz;
-    float a[7];
 
     nx = ap->nx;
     ny = ap->ny;
@@ -129,15 +136,15 @@ void allpass2 (bool der         /* derivative flag */,
 		i = ix + nx * (iy + ny * iz);
 		
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[i], a);
+		    aderfilter(ap->nw, ap->pp[i], ap->flt);
 		} else {
-		    passfilter(ap->nw, ap->pp[i], a);
+		    passfilter(ap->nw, ap->pp[i], ap->flt);
 		}
 		
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		    
-		    yy[i] += (xx[i+is+nx*ny] - xx[i-is]) * a[iw];
+		    yy[i] += (xx[i+is+nx*ny] - xx[i-is]) * ap->flt[iw];
 		}
 	    }
 	}
@@ -155,7 +162,6 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 /*< PWD as linear operator >*/
 {
     int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;
-    float a[7];
 
     if (n2 != 2*n1) sf_error("%s: size mismatch: %d != 2*%d",__FILE__,n2,n1);
 
@@ -174,16 +180,16 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap1->pp[i], a);
+		passfilter(nw, ap1->pp[i], ap1->flt);
 	      
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;
 	
 		    if (adj) {
-			xx[i+nx+is] += yy[i] * a[iw];
-			xx[i-is]    -= yy[i] * a[iw];
+			xx[i+nx+is] += yy[i] * ap1->flt[iw];
+			xx[i-is]    -= yy[i] * ap1->flt[iw];
 		    } else {
-			yy[i] += (xx[i+nx+is] - xx[i-is]) * a[iw];
+			yy[i] += (xx[i+nx+is] - xx[i-is]) * ap1->flt[iw];
 		    }
 		}
 	    }
@@ -203,16 +209,16 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap2->pp[i], a);
+		passfilter(nw, ap2->pp[i], ap2->flt);
 		
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;
 		    
 		    if (adj) {
-			xx[i+nx*ny+is] += yy[i+n1] * a[iw];
-			xx[i-is]       -= yy[i+n1] * a[iw];
+			xx[i+nx*ny+is] += yy[i+n1] * ap2->flt[iw];
+			xx[i-is]       -= yy[i+n1] * ap2->flt[iw];
 		    } else {
-			yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is]) * a[iw];
+			yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is]) * ap2->flt[iw];
 		    }
 		}
 	    }

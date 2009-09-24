@@ -44,9 +44,7 @@ int main(int argc, char* argv[])
     /* number of iterations */
 
     if (!sf_getint("order",&nw)) nw=1;
-    /* [1,2,3] accuracy order */
-    if (nw < 1 || nw > 3) 
-	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+    /* accuracy order */
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* antialiasing for first dip */
     if (!sf_getint("nj2",&nj2)) nj2=1;

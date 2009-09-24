@@ -26,23 +26,18 @@ void passfilter (int nw   /* size */,
 		 float* a /* output filter [2*nw+1] */)
 /*< find filter coefficients >*/
 {
-    int j, k, w, n;
-    float ak;
+    int j, k, n;
+    double ak;
     
     n = nw*2;
    
-    w = 1;
-    for (j=0; j < n; j++) {
-	w *= 2*(2*j+1);
-    }
-
     for (k=0; k <= n; k++) {
-	ak = 1.0/w;
+	ak = 1.0;
 	for (j=0; j < n-k; j++) {
-	    ak *= (k+j+1)*(n-j-p)/(j+1);
+	    ak *= (k+j+1)*(n-j-p)/(2*(2*j+1)*(j+1));
 	}
 	for (; j < n; j++) {
-	    ak *= (p+j+1.0);
+	    ak *= (p+j+1.0)/(2*(2*j+1));
 	}
 	a[k] = ak;
     }
@@ -53,39 +48,34 @@ void aderfilter (int nw   /* size */,
 		 float* a /* output filter [2*nw+1] */)
 /*< find coefficients for filter derivative >*/
 {
-    switch (nw) {
-	case 1: 
-	    a[0] = (3.-2.*p)/12.;
-	    a[1] = p/3.;
-	    a[2] = (-3.-2.*p)/12.;
-	    break;
-	case 2:
-	    a[0] = (5.-2.*p)*(5.+p*(p-5.))/840.;	
-	    a[1] = (80.+p*(p*(4.*p-15.)-20.))/420.;
-	    a[2] = p*(25.-2.*p*p)/140.;
-	    a[3] = (p*(p*(4.*p+15.)-20.)-80.)/420.;
-	    a[4] = (-5.-2.*p)*(5.+p*(p+5.))/840.;
-	    break;
-	case 3:
-	    a[0] = (1764. + 
-		    p*(-3248. + p*(2205. + p*(-700. + 
-					      (105. - 6.*p)*p))))/665280.;
-	    a[1] = (2772. + p*(-2436. + p*(525. + 
-					   p*(70. + p*(-35. + 3.*p)))))/55440.;
-	    a[2] = (6300. + p*(-336. + p*(-1281. + 
-					  p*(196. + (35. - 6.*p)*p))))/44352.;
-	    a[3] = (p*(1876. + p*p*(-154. + 3.*p*p)))/16632.;
-	    a[4] = (-6300. + p*(-336. + p*(1281. + 
-					   p*(196. + (-35. - 6.*p)*p))))/44352.;
-	    a[5] = (-2772. + p*(-2436. + p*(-525. + 
-					    p*(70. + p*(35. + 3.*p)))))/55440.;
-	    a[6] = (-1764. + p*(-3248. + p*(-2205. + 
-					    p*(-700. + 
-					       (-105. - 6.*p)*p))))/665280.;
-	    break;
-	default:
-	    sf_error("%s: filter size %d not implemented",__FILE__,nw);
-	    break;
+
+    int i, j, k, n;
+    double ak, aj;
+    
+    n = nw*2;
+   
+    for (k=0; k <= n; k++) {
+	a[k] = 0.;
+	for (i=0; i < n; i++) {
+	    ak = -1.0;
+	    for (j=0; j < n-k; j++) {
+		aj = (k+j+1.0)/(2*(2*j+1)*(j+1));
+		if (j != i) {
+		    ak *= aj*(n-j-p);
+		} else {
+		    ak *= -aj;
+		}
+	    }
+	    for (; j < n; j++) {
+		aj = 1.0/(2*(2*j+1));
+		if (j != i) {
+		    ak *= aj*(p+j+1.0);
+		} else {
+		    ak *= aj;
+		}
+	    }
+	    a[k] += ak;
+	}
     }
 }
 
