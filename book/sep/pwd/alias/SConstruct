@@ -23,4 +23,20 @@ for prec in [0,1]:
 
     Result('aliasp%d' % prec,['aliasp',dealias],'SideBySideAniso')
 
+Flow('dip3','aliasp',
+     'twodip2 order=12 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip4','dip3',
+     '''
+     window n3=1 |
+     transp | spline n1=96 o1=0 d1=0.25 | transp |
+     scale dscale=0.25
+     ''')
+
+Flow('dealias','aliasp4 dip4 ones4',
+     '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=12 verb=y prec=0
+     ''')
+Plot('dealias','window n1=575 | grey title=Output crowd=0.85')
+Result('aliasp','aliasp dealias','SideBySideAniso')
+
 End()
