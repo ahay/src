@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 '''
 Finds C source code files that call sf_input for a given file, but forget to
-call sf_fileclose. Call this program from the upper directory (RSFSRC) with no arguments, i.e.:
+call sf_close. Call this program from the upper directory (RSFSRC) with no
+arguments, i.e.:
     ./admin/find_file_leaks.py > results.asc
 It will print a list of affected files, sorted in a few categories.
 
 To eliminate the file leak, make sure all file pointers are initialized with
 NULL, i.e.:
     sf_file in=NULL;
-Then close the file only if the pointer has been allocated:
-    if (in != NULL) sf_fileclose(in);
-Keep in mind that this script checks for occurences of sf_input and
-sf_fileclose in a file, not in a procedure. Multi-procedure files, or
-procedures created especially to handle input, can easily "fool" this filter.
 
-Make your life easier by placing already-checked files in the similarly-named
-variable in main().
+Then call just before exit():
+    sf_close();
+
+This script checks that each file that has at least one sf_input also has a
+sf_close call. It can be fooled by multi-procedure files, or by procedures
+specially created to handle input. Flag such files by including them in the
+'exceptions' variable in main().
 
 Make sure that the list of directories to check for *.c files (variable
 dirs_to_check at the beginning of this script) is not out of date.
