@@ -21,21 +21,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 static float h;
 
 static float hyperb(float t, int it) 
-{ 
+{
     if (t > h) {
 	return sqrtf(t*t-h*h);
     } else {
 	return 0.;
     }
-} 
+}
 
 int main(int argc, char* argv[])
 {
@@ -43,8 +41,8 @@ int main(int argc, char* argv[])
     bool half, slow;
     int it,ih,ix,iv, nt,nh,nx,nv, nw, CDPtype;
     float dt, dh, t0, h0, v0, dv, v, dy;
-    float *trace, **stack;
-    sf_file cmp, scan;
+    float *trace=NULL, **stack=NULL;
+    sf_file cmp=NULL, scan=NULL;
 
     sf_init (argc,argv);
     scan = sf_input("in");
@@ -88,7 +86,7 @@ int main(int argc, char* argv[])
     if (sf_histfloat(scan,"d3",&dy)) {
 	CDPtype=0.5+0.5*dh/dy;
 	if (1 != CDPtype) sf_histint(scan,"CDPtype",&CDPtype);
-    } 	    
+    }
     sf_warning("CDPtype=%d",CDPtype);
 
     trace = sf_floatalloc(nt);
@@ -133,8 +131,6 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite (stack[0],nt*nh,cmp);
     } /* x */
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */

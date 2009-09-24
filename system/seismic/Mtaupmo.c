@@ -1,37 +1,35 @@
 /* Normal moveout in tau-p domain. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 static float p, f, dt, *vel;
 
 static float nmo_map(float t, int it) {
     float ft;
-    
+
     ft = vel[it];
     ft = 1.-p*ft*ft;
-    if (ft > 0.) 
-	f += sqrtf(ft); 
+    if (ft > 0.)
+	f += sqrtf(ft);
     return f*dt;
 }
 
@@ -40,8 +38,8 @@ int main (int argc, char* argv[])
     fint1 nmo;
     int ip, ix, nt, np, nx, nw, mute;
     float t0, dp, p0, str;
-    float *trace;
-    sf_file taup, nmod, velocity;
+    float *trace=NULL;
+    sf_file taup=NULL, nmod=NULL, velocity=NULL;
 
     sf_init (argc,argv);
     taup = sf_input("in");
@@ -65,11 +63,6 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("str",&str)) str=0.5;
     /* maximum stretch */
 
-    /*
-      p0 *= 0.5;
-      dp *= 0.5;
-    */
-
     if (!sf_getint("extend",&nw)) nw=4;
     /* interpolation accuracy */
 
@@ -79,7 +72,7 @@ int main (int argc, char* argv[])
     nmo = fint1_init (nw, nt, mute);
 
     for (ix=0; ix < nx; ix++) {
-	sf_floatread (vel,nt,velocity);	
+	sf_floatread (vel,nt,velocity);
 
 	for (ip=0; ip < np; ip++) {
 	    p = p0 + ip*dp;
@@ -93,8 +86,6 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
-    
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

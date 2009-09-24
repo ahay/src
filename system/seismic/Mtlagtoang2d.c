@@ -2,17 +2,17 @@
 
 /*
   Copyright (C) 2007 Colorado School of Mines
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,15 +25,15 @@
 int main (int argc, char* argv[])
 {
     bool inv, verb;
-    
+
     sf_file Fstk=NULL; /*    SS(t,z) file */
     sf_file Fang=NULL; /*     AD CIG file */
     sf_file Fgam=NULL; /* vpvs ratio file */
     sf_file Fdip=NULL; /*  dip field file */
     sf_file Fvel=NULL; /*   velocity file */
 
-    float **stk, *gam, *dip, *vel, **ang; /* I/O arrays */
-    float *tmp;                           /* mapping arrays */
+    float **stk=NULL, *gam=NULL, *dip=NULL, *vel=NULL, **ang=NULL; /* I/O arrays */
+    float *tmp=NULL;                           /* mapping arrays */
 
     sf_axis az; /* depth axis */
     sf_axis as; /*    SS axis */
@@ -49,7 +49,7 @@ int main (int argc, char* argv[])
 
     fint1 sft;
     float a,c,g,d,n,f,v,e;
-    
+
     /*------------------------------------------------------------*/
     sf_init (argc,argv);
 
@@ -70,9 +70,9 @@ int main (int argc, char* argv[])
     ncig = sf_leftsize(Fstk,2); /* number of CIGS to process */
 
     /* angle axis */
-    if (!sf_getint  ("na",&na)) na=sf_n(as);       
+    if (!sf_getint  ("na",&na)) na=sf_n(as);
     if (!sf_getfloat("da",&da)) da=1./(sf_n(as)-1);
-    if (!sf_getfloat("oa",&oa)) oa=0.;         
+    if (!sf_getfloat("oa",&oa)) oa=0.;
     aa = sf_maxa(na,oa,da);
     sf_oaxa(Fang,aa,2);
 
@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     sft = fint1_init(ext,sf_n(as),0);
-    
+
     /*------------------------------------------------------------*/
     for (icig = 0; icig < ncig; icig++) { /* loop over CIG */
 	if(verb) sf_warning("%d of %d",icig+1,ncig);
@@ -135,12 +135,13 @@ int main (int argc, char* argv[])
 		} else {
 		    ang[ia][iz] = 0.;
 		}
-	    } /* a */	
+	    } /* a */
 
 	} /* z */
 	/*------------------------------------------------------------*/
-	    
+
 	sf_floatwrite(ang[0],sf_n(az)*sf_n(aa),Fang);
     }
+    sf_close();
     exit (0);
 }

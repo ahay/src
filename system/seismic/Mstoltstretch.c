@@ -1,23 +1,23 @@
 /* Stolt stretch. */
 /*
   Copyright (C) 2007 University of Texas at Austin
-   
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-   
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-   
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
+#include <rsf.h>
 #include "stretch4.h"
 #include "fint1.h"
 #include "vt2w.h"
@@ -29,12 +29,12 @@ static float map(float t, int it) { return str[ix][it]; }
 int main(int argc, char* argv[])
 {
     int nt, ns, nx, it, nstr, ifix;
-    float dt, t0, eps, v0, *v, *trace, *out, *ww, wsum;
+    float dt, t0, eps, v0, *v=NULL, *trace=NULL, *out=NULL, *ww=NULL, wsum;
     char buffer[20];
     map4 stolt;
     fint1 istolt;
     bool inv;
-    sf_file in, st, vel;
+    sf_file in=NULL, st=NULL, vel=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 	    sf_putint (st,buffer,ifix);
 	}
     }
-    
+
     for (ix=0; ix < nx; ix++) {
 	for (it=0; it < nt; it++) {
 	    str[ix][it] *= dt/v0;
@@ -119,6 +119,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (out,ns,st);
 	}
     }
- 
+    sf_close();
     exit(0);
 }

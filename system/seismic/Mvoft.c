@@ -19,15 +19,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
 
 int main(int argc, char** argv)
 {
     int n1, n2, i1, i2;
-    float* vint;
+    float* vint=NULL;
     float o1, d1, v0, alpha, t;
-    sf_file in, out;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc, argv);
     in = sf_input("in");
@@ -56,8 +55,6 @@ int main(int argc, char** argv)
     for (i2=0; i2 < n2; i2++) {
 	sf_floatwrite(vint,n1,out);
     }
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id$	 */

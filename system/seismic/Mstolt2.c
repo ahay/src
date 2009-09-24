@@ -4,31 +4,30 @@ Requires the input to be cosine-transformed over the lateral axes.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     int nt,nx,ny, iw,ix,iy, nf, nw;
-    float dw, dt, dx,dy, t0, y, w,st,sq, *str, *trace2, *trace, vel, a, b, x;
-    sf_file in, out;
+    float dw, dt, dx,dy, t0, y, w,st,sq, *str=NULL, *trace2=NULL, *trace=NULL, vel, a, b, x;
+    sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -95,7 +94,7 @@ int main(int argc, char* argv[])
 		    trace[iw] = 0.;
 		}
 	    }
-       
+
 	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
 	    sf_prefilter_apply (nw, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
@@ -103,8 +102,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace2,nt,out);
 	}
     }
-
+    sf_close();
     exit (0);
 }
-
-/* 	$Id: Mstolt.c 2497 2007-01-23 00:24:42Z sfomel $	 */

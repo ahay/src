@@ -2,17 +2,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -80,12 +80,12 @@ int main (int argc, char *argv[])
     Bslow = fslice_init(n, nz, sizeof(float));
     fslice_load(Bs,Bslow,SF_FLOAT);
 
-    /*------------------------------------------------------------*/    
+    /*------------------------------------------------------------*/
     /* WAVEFIELD */
 
     Bw_s = sf_input("swf");
     Bw_r = sf_input("rwf");
-    
+
     if (SF_COMPLEX != sf_gettype(Bw_s)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Bw_r)) sf_error("Need complex receiver data");
 
@@ -154,15 +154,15 @@ int main (int argc, char *argv[])
     srmva_close();
 
     /*------------------------------------------------------------*/
-      
+
     if(adj) fslice_dump(Ps,Pslow,SF_COMPLEX);
     else    fslice_dump(Pi,Pimag,SF_COMPLEX);
     fslice_close(Pimag);
     fslice_close(Pslow);
-    
+
     fslice_close(Bwfls);
     fslice_close(Bwflr);
     fslice_close(Bslow);
-
+    sf_close();
     exit (0);
 }

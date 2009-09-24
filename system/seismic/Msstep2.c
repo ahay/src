@@ -1,24 +1,23 @@
 /* 3-D post-stack modeling/migration with extended split step. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
-
 #include "split2.h"
 #include "slice.h"
 
@@ -39,8 +38,8 @@ int main (int argc, char *argv[])
 
     bool inv;             /* modeling or migration        */
     bool verb;            /* verbosity */
-    float eps;            /* dip filter constant          */  
-    sf_file in, out, vel;
+    float eps;            /* dip filter constant          */
+    sf_file in=NULL, out=NULL, vel=NULL;
     slice imag, slow;
 
     sf_init(argc,argv);
@@ -115,10 +114,10 @@ int main (int argc, char *argv[])
     /* allocate space for slowness and image */
     slow = slice_init(vel,ny,nx,nz);
     imag = slice_init(inv? in:out,ny,nx,nz);
-    
+
     /* initialize split-step */
     split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,padx,pady,nr,dt);
     split2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow);
-
+    sf_close();
     exit (0);
 }

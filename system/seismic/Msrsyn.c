@@ -2,17 +2,17 @@
 /*
   Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,15 +27,15 @@ int main (int argc, char *argv[])
     sf_axis ary,asy,ay;
     sf_axis ae;
 
-    sf_file Fs;  /* source   file sou[nw]         */
-    sf_file Fr;  /* receiver file rec[nw][nrx][nry][nsx][nsy] */
-    sf_file Fsw; /* source wavefield [nw][ nx][ ny][ne] */
-    sf_file Frw; /* source wavefield [nw][ nx][ ny][ne] */
+    sf_file Fs=NULL;  /* source   file sou[nw]         */
+    sf_file Fr=NULL;  /* receiver file rec[nw][nrx][nry][nsx][nsy] */
+    sf_file Fsw=NULL; /* source wavefield [nw][ nx][ ny][ne] */
+    sf_file Frw=NULL; /* source wavefield [nw][ nx][ ny][ne] */
 
-    sf_complex   *rr;
-    sf_complex   *ss;
-    sf_complex ***rw;
-    sf_complex ***sw;
+    sf_complex   *rr=NULL;
+    sf_complex   *ss=NULL;
+    sf_complex ***rw=NULL;
+    sf_complex ***sw=NULL;
     int   isx,isy,irx,iry,ix,iy,iw;
     int   nsx,nsy,nrx,nry,nx,ny,nw;
     float ox,dx,oy,dy;
@@ -48,7 +48,7 @@ int main (int argc, char *argv[])
     Fs = sf_input ("wav");
     Fsw= sf_output("swf"); sf_settype(Fsw,SF_COMPLEX);
     Frw= sf_output("out"); sf_settype(Frw,SF_COMPLEX);
-    
+
     if (!sf_getint  ("nx",&nx)) sf_error ("Need nx="); /* x samples */
     if (!sf_getfloat("dx",&dx)) sf_error ("Need dx="); /* x sampling */
     if (!sf_getfloat("ox",&ox)) sf_error ("Need ox="); /* x origin */
@@ -84,7 +84,7 @@ int main (int argc, char *argv[])
 
     for(    isy=0;isy<nsy;isy++) { sy = sf_o(asy) + isy * sf_d(asy);
 	for(isx=0;isx<nsx;isx++) { sx = sf_o(asx) + isx * sf_d(asx);
-	    
+
 	    for        (iy=0;iy<ny;iy++) {
 		for    (ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
 		    }
 		}
 	    }
-	    
+
 	    yy = sy; iy = 0.5+(yy-oy)/dy;
 	    xx = sx; ix = 0.5+(xx-ox)/dx;
 	    if(iy>=0 && iy<ny && ix>=0 && ix<nx) {
@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
 		    sw[iy][ix][iw] = ss[iw];
 		}
 	    }
-	    
+
 	    sf_complexwrite(sw[0][0],nx*ny*nw,Fsw);
 	}
     }
@@ -109,7 +109,7 @@ int main (int argc, char *argv[])
     /* RECEIVER wavefield */
     for(    isy=0;isy<nsy;isy++) { sy = sf_o(asy) + isy * sf_d(asy);
 	for(isx=0;isx<nsx;isx++) { sx = sf_o(asx) + isx * sf_d(asx);
-	    
+
 	    for        (iy=0;iy<ny;iy++) {
 		for    (ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
@@ -117,15 +117,15 @@ int main (int argc, char *argv[])
 		    }
 		}
 	    }
-	    
+
 	    for(    iry=0;iry<nry;iry++) { ry = sf_o(ary) + iry * sf_d(ary);
 		for(irx=0;irx<nrx;irx++) { rx = sf_o(arx) + irx * sf_d(arx);
 
 		    sf_complexread(rr,nw,Fr);
-		    
+
 		    yy = sy + ry; iy = 0.5+(yy-oy)/dy;
 		    xx = sx + rx; ix = 0.5+(xx-ox)/dx;
-		    
+
 		    if(iy>=0 && iy<ny && ix>=0 && ix<nx) {
 			for( iw=0;iw<nw;iw++) {
 			    rw[iy][ix][iw] = rr[iw];
@@ -137,11 +137,11 @@ int main (int argc, char *argv[])
 	}
     }
     /*------------------------------------------------------------*/
-    
+
     ;         ;            free(ss);
     ;         ;            free(rr);
     free(**sw); free(*sw); free(sw);
     free(**rw); free(*rw); free(rw);
-    
+    sf_close();
     exit (0);
 }

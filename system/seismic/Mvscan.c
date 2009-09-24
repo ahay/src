@@ -4,50 +4,48 @@ Inverse of sfvelmod
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
-
 #include <rsf.h>
-
 #include "fint1.h"
 
 static float v, h, v1, s;
 
 static float hyperb(float t, int it) 
-{ 
+{
     return hypotf(t,v);
-} 
+}
 
 static float nonhyperb(float t, int it) 
-{ 
+{
     /* shifted hyperbola */
     return t*(1.0-1.0/s) + sqrtf(t*t+s*v*v)/s;
-} 
+}
 
 static float hyperb1(float t, int it) 
-{ 
+{
     return sqrtf(t*t+v*v-v1*v1*h*h);
-} 
+}
 
 static float nonhyperb1(float t, int it) 
-{ 
+{
     return t*(1.0-1.0/s) + sqrtf(t*t+s*(v*v-v1*v1*h*h))/s;
-} 
+}
 
 static float curved(float t, int it) 
 {
@@ -73,12 +71,12 @@ int main(int argc, char* argv[])
 {
     fint1 nmo;
     bool sembl, half, slow, dsembl, asembl, weight, squared;
-    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
+    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask=NULL;
     float amp, amp2, dt, dh, t0, h0, v0, dv, ds, smax, num, den, dy, str, sh=0., sh2=0.;
-    float *trace, ***stack, ***stack2, ***stackh, *hh;
-    char *time, *space, *unit;
+    float *trace=NULL, ***stack=NULL, ***stack2=NULL, ***stackh=NULL, *hh=NULL;
+    char *time=NULL, *space=NULL, *unit=NULL;
     size_t len;
-    sf_file cmp, scan, offset, msk;
+    sf_file cmp=NULL, scan=NULL, offset=NULL, msk=NULL;
     mapfunc nmofunc;
 
     sf_init (argc,argv);
@@ -251,13 +249,13 @@ int main(int argc, char* argv[])
 
 	    for (is=0; is < ns; is++) {
 		s = 1.0 + is*ds;
-	    
+
 		for (iv=0; iv < nv; iv++) {
 		    v = v0 + iv * dv;
 		    v = slow? h*v: h/v;
-		    
+
 		    stretch(nmo,nmofunc,nt,dt,t0,nt,dt,t0,trace,str);
-		    
+
 		    for (it=0; it < nt; it++) {
 			amp = weight? fabsf(v)*trace[it]: trace[it];
 			if (dsembl) {
@@ -269,7 +267,7 @@ int main(int argc, char* argv[])
 			} else {
 			    if (sembl || asembl) stack2[is][iv][it] += amp*amp;
 			    if (asembl) stackh[is][iv][it] += amp*h;
-			    
+
 			    stack[is][iv][it] += amp;
 			}
 		    }
@@ -290,7 +288,7 @@ int main(int argc, char* argv[])
 			for (i=ib; i < ie; i++) {
 			    num += stack[is][iv][i]*stack[is][iv][i];
 			    den += stack2[is][iv][i];
-			    
+
 			    /* (h2 s^2 - 2 h s sh + N sh^2)/((-h^2 + h2 N) s2) */
 			    if (asembl) 
 				num += (nh*stackh[is][iv][i]*stackh[is][iv][i] - 
@@ -310,8 +308,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (stack[0][0],nt*nv*ns,scan);
 	}
     } /* x */
-
+    sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */
