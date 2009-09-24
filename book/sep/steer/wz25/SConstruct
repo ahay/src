@@ -31,10 +31,12 @@ Flow('mask',mask,'add mode=p ${SOURCES[1:4]} | dd type=float | cut min2=2.1')
 Flow('hole','input mask','add mode=p ${SOURCES[1]}')
 Plot('hole',grey('Shot Gather with Holes'))
 
-Flow('dip','hole mask','dip mask=${SOURCES[1]} rect1=100 rect2=20 order=3')
+Flow('dip0','hole','math output="4*x2/(x1+0.001)" ')
+Flow('dip','hole mask dip0',
+     'dip mask=${SOURCES[1]} rect1=100 rect2=20 order=3 idip=${SOURCES[2]}')
 
-Flow('fill','hole mask dip',
-     'planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} verb=y order=3 niter=1000')
+Flow('fill','hole mask dip0',
+     'planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} verb=y order=3')
 Plot('fill',grey('Filled'))
 
 Result('wz-combo','input hole fill','SideBySideAniso')
