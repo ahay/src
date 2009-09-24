@@ -13,4 +13,30 @@ Flow('input','wz.25.H',
      'dd form=native | tpow tpow=2.7 | scale dscale=0.00000001')
 Plot('input',grey('Shot Gather'))
 
+c1=(.6,2.,1.4,2.5)
+c2=(.4,1.5,-1.7,0.)
+r1=(.3,.4,.6,.2)
+r2=(.4,.6,.3,.7)
+
+mask = []
+for i in range(4):
+    mask.append('mask%d' % i)
+    Flow(mask[i],'input',
+         '''
+         math output="((x1-%g)/%g)^2+((x2-%g)/%g)^2" |
+         mask min=1
+         ''' % (c1[i],r1[i],c2[i],r2[i]))
+Flow('mask',mask,'add mode=p ${SOURCES[1:4]} | dd type=float | cut min2=2.1')
+
+Flow('hole','input mask','add mode=p ${SOURCES[1]}')
+Plot('hole',grey('Shot Gather with Holes'))
+
+Flow('dip','hole mask','dip mask=${SOURCES[1]} rect1=100 rect2=20 order=3')
+
+Flow('fill','hole mask dip',
+     'planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} verb=y order=3 niter=1000')
+Plot('fill',grey('Filled'))
+
+Result('wz-combo','input hole fill','SideBySideAniso')
+
 End()

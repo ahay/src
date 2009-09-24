@@ -7,8 +7,10 @@ Plot[z[x, 0.8, 1.2], {x, -1.2, 1.2}, PlotRange -> All,
 Plot[-Sqrt[1.2^2 - 0.8^2]*Sqrt[(0.8 - x)*(0.8 + x)]/0.8,{x, -0.8, 0.8}, 
   PlotRange -> All, PlotStyle -> {Thickness[0.01]}, AspectRatio -> Automatic];
 Show[{%%%, %%, %, 
-    Graphics[{Text["-h", {-0.8, 0.1}], Text["h", {0.8, 0.1}]}]}, 
+    Graphics[{Text["-h", {-0.8, 0.1}], Text["h", {0.8, 0.1}],
+    Line[{{-1.5,0},{-1.5,-2.1}}],Line[{{0,0},{0,-2.1}}]}]}, 
     AspectRatio -> Automatic, AxesLabel -> {"y", None}, 
-    AxesOrigin -> {-1.5, 0}, Ticks -> None];
+    Axes->{Automatic,None},
+    Ticks -> None];
 Export["junk_ma.eps",%, "EPS"];
 
