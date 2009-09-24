@@ -33,7 +33,7 @@ if not hasattr(os, 'walk'):
 def main():
 
     dirs_to_check = 'api book framework pens plot su system user .'
-    nonexec_ext = 'c cc f f90 i m tex txt'
+    nonexec_ext = 'c cc f f90 h i m tex txt'
     nonexec_files = 'SConstruct Makefile'
 
     nonexec_ext_list   = nonexec_ext.split()
