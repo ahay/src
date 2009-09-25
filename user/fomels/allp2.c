@@ -32,7 +32,7 @@ typedef struct Allpass2 *allpass2;
 
 struct Allpass2 {
     int nx, ny, nw, nj;
-    float** pp;
+    float *flt, **pp;
 };
 
 static allpass2 ap2;
@@ -52,8 +52,17 @@ allpass2 allpass2_init(int nw         /* filter size (1,2,3) */,
     ap->nx = nx;
     ap->ny = ny;
     ap->pp = pp;
+
+    ap->flt = sf_floatalloc(2*nw+1);
     
     return ap;
+}
+
+void allpass2_close(allpass2 ap)
+/*< free allocated storage >*/
+{
+    free(ap->flt);
+    free(ap);
 }
 
 void allpass22_init (allpass2 ap1)
@@ -66,7 +75,6 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 /*< PWD as linear operator >*/
 {
     int i, ix, iy, iw, is, nx, ny;
-    float a[7];
 
     sf_adjnull(adj,add,n1,n2,xx,yy);
   
@@ -75,17 +83,17 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 
     for (iy=0; iy < ny-1; iy++) {
 	for (ix = ap2->nw*ap2->nj; ix < nx-ap2->nw*ap2->nj; ix++) {
-	    passfilter(ap2->nw, ap2->pp[iy][ix], a);
+	    passfilter(ap2->nw, ap2->pp[iy][ix], ap2->flt);
 	    i = ix + iy*nx;
 	      
 	    for (iw = 0; iw <= 2*ap2->nw; iw++) {
 		is = (iw-ap2->nw)*ap2->nj;
 		  
 		if (adj) {
-		    xx[i+is+nx] += yy[i]*a[iw];
-		    xx[i-is]    -= yy[i]*a[iw];
+		    xx[i+is+nx] += yy[i]*ap2->flt[iw];
+		    xx[i-is]    -= yy[i]*ap2->flt[iw];
 		} else {
-		    yy[i] += (xx[i+is+nx] - xx[i-is]) * a[iw];
+		    yy[i] += (xx[i+is+nx] - xx[i-is]) * ap2->flt[iw];
 		}
 	    }
 	}
@@ -99,7 +107,6 @@ void allpass21 (bool der          /* derivative flag */,
 /*< plane-wave destruction >*/
 {
     int ix, iy, iw, is;
-    float a[7];
 
     for (iy=0; iy < ap->ny; iy++) {
 	for (ix=0; ix < ap->nx; ix++) {
@@ -110,16 +117,16 @@ void allpass21 (bool der          /* derivative flag */,
     for (iy=0; iy < ap->ny-1; iy++) {
 	for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
 	    if (der) {
-		aderfilter(ap->nw, ap->pp[iy][ix], a);
+		aderfilter(ap->nw, ap->pp[iy][ix], ap->flt);
 	    } else {
-		passfilter(ap->nw, ap->pp[iy][ix], a);
+		passfilter(ap->nw, ap->pp[iy][ix], ap->flt);
 	    }
 	      
 	    for (iw = 0; iw <= 2*ap->nw; iw++) {
 		is = (iw-ap->nw)*ap->nj;
 		  
 		yy[iy][ix] += (xx[iy+1][ix+is] - 
-			       xx[iy  ][ix-is]) * a[iw];
+			       xx[iy  ][ix-is]) * ap->flt[iw];
 	    }
 	}
     }
