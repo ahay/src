@@ -21,61 +21,83 @@
 
 #include "apfilt.h"
 
-void passfilter (int nw   /* size */, 
-		 float p  /* slope */, 
-		 float* a /* output filter [2*nw+1] */)
+static int n;
+static float *b;
+
+void apfilt_init(int nw /* filter order */)
+/*< initialize >*/
+{
+    int j, k;
+    double bk;
+
+    n = nw*2;
+    b = sf_floatalloc(n+1);
+
+    for (k=0; k <= n; k++) {
+	bk = 1.0;
+	for (j=0; j < n; j++) {
+	    if (j < n-k) {
+		bk *= (k+j+1.0)/(2*(2*j+1)*(j+1));
+	    } else {
+		bk *= 1.0/(2*(2*j+1));
+	    }
+	}
+	b[k] = bk;
+    }
+}
+
+void apfilt_close(void)
+/*< free allocated storage >*/
+{
+    free(b);
+}
+
+void passfilter (float p  /* slope */, 
+		 float* a /* output filter [n+1] */)
 /*< find filter coefficients >*/
 {
-    int j, k, n;
-    double ak;
+    int j, k;
+    float ak;
     
-    n = nw*2;
-   
     for (k=0; k <= n; k++) {
-	ak = 1.0;
-	for (j=0; j < n-k; j++) {
-	    ak *= (k+j+1)*(n-j-p)/(2*(2*j+1)*(j+1));
-	}
-	for (; j < n; j++) {
-	    ak *= (p+j+1.0)/(2*(2*j+1));
+	ak = b[k];
+	for (j=0; j < n; j++) {
+	    if (j < n-k) {
+		ak *= (n-j-p);
+	    } else {
+		ak *= (p+j+1);
+	    }
 	}
 	a[k] = ak;
     }
 }
 
-void aderfilter (int nw   /* size */, 
-		 float p  /* slope */, 
-		 float* a /* output filter [2*nw+1] */)
+void aderfilter (float p  /* slope */, 
+		 float* a /* output filter [n+1] */)
 /*< find coefficients for filter derivative >*/
 {
 
-    int i, j, k, n;
-    double ak, aj;
+    int i, j, k;
+    float ak, ai;
     
-    n = nw*2;
-   
     for (k=0; k <= n; k++) {
-	a[k] = 0.;
+	ak = 0.;
 	for (i=0; i < n; i++) {
-	    ak = -1.0;
-	    for (j=0; j < n-k; j++) {
-		aj = (k+j+1.0)/(2*(2*j+1)*(j+1));
-		if (j != i) {
-		    ak *= aj*(n-j-p);
-		} else {
-		    ak *= -aj;
+	    ai = -1.0;
+	    for (j=0; j < n; j++) {
+		if (j != i) {			
+		    if (j < n-k) {
+			ai *= (n-j-p);
+		    } else {
+			ai *= (p+j+1);
+		    }
+		} else if (j < n-k) {
+		    ai *= (-1);
 		}
 	    }
-	    for (; j < n; j++) {
-		aj = 1.0/(2*(2*j+1));
-		if (j != i) {
-		    ak *= aj*(p+j+1.0);
-		} else {
-		    ak *= aj;
-		}
-	    }
-	    a[k] += ak;
+	    ak += ai;
 	}
+	a[k] = ak*b[k];
     }
 }
 

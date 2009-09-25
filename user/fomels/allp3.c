@@ -55,6 +55,7 @@ allpass allpass_init(int nw                 /* filter size (1,2,3) */,
     ap->pp = pp;
 
     ap->flt = sf_floatalloc(2*nw+1);
+    apfilt_init(nw);
 
     return ap;
 }
@@ -62,6 +63,7 @@ allpass allpass_init(int nw                 /* filter size (1,2,3) */,
 void allpass_close(allpass ap)
 /*< free allocated storage >*/
 {
+    apfilt_close();
     free(ap->flt);
     free(ap);
 }
@@ -94,9 +96,9 @@ void allpass1 (bool der         /* derivative flag */,
 		i = ix + nx * (iy + ny * iz);
 
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[i], ap->flt);
+		    aderfilter(ap->pp[i], ap->flt);
 		} else {
-		    passfilter(ap->nw, ap->pp[i], ap->flt);
+		    passfilter(ap->pp[i], ap->flt);
 		}
 	      
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
@@ -136,9 +138,9 @@ void allpass2 (bool der         /* derivative flag */,
 		i = ix + nx * (iy + ny * iz);
 		
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[i], ap->flt);
+		    aderfilter(ap->pp[i], ap->flt);
 		} else {
-		    passfilter(ap->nw, ap->pp[i], ap->flt);
+		    passfilter(ap->pp[i], ap->flt);
 		}
 		
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
@@ -180,7 +182,7 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap1->pp[i], ap1->flt);
+		passfilter(ap1->pp[i], ap1->flt);
 	      
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;
@@ -209,7 +211,7 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap2->pp[i], ap2->flt);
+		passfilter(ap2->pp[i], ap2->flt);
 		
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;

@@ -47,12 +47,15 @@ cpwd cpwd_init(int n1 /* trace length */,
  
     w->a = sf_floatalloc (w->na);
     
+    apfilt_init(1);
+
     return w;
 }
 
 void cpwd_close (cpwd w)
 /*< free allocated storage >*/
 {
+    apfilt_close();
     free (w->a);
     free (w);
 }
@@ -65,7 +68,7 @@ float cpwd_define (bool adj    /* adjoint flag */,
 {
     float b[3], diag;
     
-    passfilter (1, pp, b);
+    passfilter (pp, b);
     
     if (adj) {
 	w->a[0] = b[2];

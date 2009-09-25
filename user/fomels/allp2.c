@@ -37,7 +37,7 @@ struct Allpass2 {
 
 static allpass2 ap2;
 
-allpass2 allpass2_init(int nw         /* filter size (1,2,3) */, 
+allpass2 allpass2_init(int nw         /* filter order */, 
 		       int nj         /* filter step */, 
 		       int nx, int ny /* data size */, 
 		       float **pp     /* dip [ny][nx] */) 
@@ -55,12 +55,14 @@ allpass2 allpass2_init(int nw         /* filter size (1,2,3) */,
 
     ap->flt = sf_floatalloc(2*nw+1);
     
+    apfilt_init(nw);
     return ap;
 }
 
 void allpass2_close(allpass2 ap)
 /*< free allocated storage >*/
 {
+    apfilt_close();
     free(ap->flt);
     free(ap);
 }
@@ -83,7 +85,7 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 
     for (iy=0; iy < ny-1; iy++) {
 	for (ix = ap2->nw*ap2->nj; ix < nx-ap2->nw*ap2->nj; ix++) {
-	    passfilter(ap2->nw, ap2->pp[iy][ix], ap2->flt);
+	    passfilter(ap2->pp[iy][ix], ap2->flt);
 	    i = ix + iy*nx;
 	      
 	    for (iw = 0; iw <= 2*ap2->nw; iw++) {
@@ -117,9 +119,9 @@ void allpass21 (bool der          /* derivative flag */,
     for (iy=0; iy < ap->ny-1; iy++) {
 	for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
 	    if (der) {
-		aderfilter(ap->nw, ap->pp[iy][ix], ap->flt);
+		aderfilter(ap->pp[iy][ix], ap->flt);
 	    } else {
-		passfilter(ap->nw, ap->pp[iy][ix], ap->flt);
+		passfilter(ap->pp[iy][ix], ap->flt);
 	    }
 	      
 	    for (iw = 0; iw <= 2*ap->nw; iw++) {

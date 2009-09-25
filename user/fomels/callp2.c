@@ -33,7 +33,7 @@ typedef struct Callpass2 *callpass2;
 
 struct Callpass2 {
     int nx, ny, nw, nj;
-    float a[7], d[7];
+    float *a, *d;
 };
 
 callpass2 callpass2_init(int nw          /* filter size (1,2,3) */, 
@@ -50,14 +50,27 @@ callpass2 callpass2_init(int nw          /* filter size (1,2,3) */,
     ap->nx = nx;
     ap->ny = ny;
    
+    ap->a = sf_floatalloc(2*nw+1);
+    ap->d = sf_floatalloc(2*nw+1);
+    apfilt_init(nw);
+
     return ap;
+}
+
+void callpass2_close(callpass2 ap)
+/*< Free allocated storage >*/
+{
+    apfilt_close();
+    free(ap->a);
+    free(ap->d);
+    free(ap);
 }
 
 void callpass21_set (callpass2 ap, float p /* constant dip */)
 /*< set dip >*/
 {
-    aderfilter(ap->nw, p, ap->d);
-    passfilter(ap->nw, p, ap->a);
+    aderfilter(p, ap->d);
+    passfilter(p, ap->a);
 }
 
 void callpass21 (bool der           /* derivative flag */, 

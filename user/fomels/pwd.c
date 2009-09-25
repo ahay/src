@@ -47,6 +47,8 @@ pwd pwd_init(int n1 /* trace length */,
  
     w->a = sf_floatalloc2 (n1,w->na);
 
+    apfilt_init(1);
+
     return w;
 }
 
@@ -56,6 +58,7 @@ void pwd_close (pwd w)
     free (w->a[0]);
     free (w->a);
     free (w);
+    apfilt_close();
 }
 
 void pwd_define (bool adj        /* adjoint flag */, 
@@ -69,7 +72,7 @@ void pwd_define (bool adj        /* adjoint flag */,
     float b[3];
     
     for (i=0; i < w->n; i++) {
-      passfilter (1, pp[i], b);
+	passfilter (pp[i], b);
 	
       if (adj) {
 	  w->a[0][i] = b[2];
