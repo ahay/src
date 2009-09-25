@@ -32,7 +32,7 @@ typedef struct Pwd *pwd; /* abstract data type */
 
 struct Pwd {
     int n, na;
-    float **a;
+    float **a, *b;
 };
 
 pwd pwd_init(int n1 /* trace length */, 
@@ -46,8 +46,9 @@ pwd pwd_init(int n1 /* trace length */,
     w->na = 2*nw+1;
  
     w->a = sf_floatalloc2 (n1,w->na);
+    w->b = sf_floatalloc (w->na);
 
-    apfilt_init(1);
+    apfilt_init(nw);
 
     return w;
 }
@@ -57,6 +58,7 @@ void pwd_close (pwd w)
 {
     free (w->a[0]);
     free (w->a);
+    free (w->b);
     free (w);
     apfilt_close();
 }
@@ -68,33 +70,38 @@ void pwd_define (bool adj        /* adjoint flag */,
 		 float** offd    /* defined off-diagonal */)
 /*< fill the matrix >*/
 {
-    int i;
-    float b[3];
+    int i, j, k, nw;
     
+    nw = (w->na-1)/2;
+
     for (i=0; i < w->n; i++) {
-	passfilter (pp[i], b);
+	passfilter (pp[i], w->b);
 	
-      if (adj) {
-	  w->a[0][i] = b[2];
-	  w->a[1][i] = b[1];	
-	  w->a[2][i] = b[0];
-      } else {
-	  w->a[0][i] = b[0];
-	  w->a[1][i] = b[1];	
-	  w->a[2][i] = b[2];
-      }
+	for (j=0; j < w->na; j++) {
+	    if (adj) {
+		w->a[j][i] = w->b[w->na-1-j];
+	    } else {
+		w->a[j][i] = w->b[j];
+	    }
+	}
     }
     
-    for (i=1; i < w->n-1; i++) {
-	diag[i] += 
-	    w->a[0][i-1]*w->a[0][i-1] + 
-	    w->a[1][i  ]*w->a[1][i  ] + 
-	    w->a[2][i+1]*w->a[2][i+1];
+    for (i=nw; i < w->n-nw; i++) {
+	for (j=0; j < w->na; j++) {
+	    diag[i] += w->a[j][i-nw+j]*w->a[j][i-nw+j]; 
+	}
+	for (k=0; k < 2*nw; k++) {
+	    for (j=0; j < 2*nw-k; j++) {
+		offd[k][i-k] += w->a[j][i+j]*w->a[j+k+1][i+j];
+	    }
+	}
+/*
 	offd[0][i] += 
 	    w->a[0][i  ]*w->a[1][i  ] + 
 	    w->a[1][i+1]*w->a[2][i+1];
 	offd[1][i-1] +=
 	    w->a[0][i]*w->a[2][i];
+*/
     }
     /* zero-slope */
     offd[0][0] += w->a[0][0]*(w->a[1][0]+w->a[2][0]) + w->a[1][1]*w->a[2][1];
@@ -125,94 +132,63 @@ void pwd_set (bool adj   /* adjoint flag */,
 	      float* tmp /* temporary storage */)
 /*< matrix multiplication >*/
 {
-    int i;
+    int i, j, k, nw;
+
+    nw = (w->na-1)/2;
 
     if (adj) {
 	for (i=0; i < w->n; i++) {
 	    tmp[i]=0.;
 	}
-	/* zero slope */
-	tmp[0] += 
-	    w->a[2][0]*out[0] +
-	    w->a[1][0]*out[0];
-	tmp[1] +=
-	    w->a[2][1]*out[0];
-	tmp[w->n-2] +=
-	    w->a[0][w->n-2]*out[w->n-1];
-	tmp[w->n-1] +=
-	    w->a[1][w->n-1]*out[w->n-1] +
-	    w->a[0][w->n-1]*out[w->n-1];
-	for (i=1; i < w->n-1; i++) {
-	    tmp[i-1] += w->a[0][i-1]*out[i];
-	    tmp[i  ] += w->a[1][i  ]*out[i];
-	    tmp[i+1] += w->a[2][i+1]*out[i];
+	for (i=0; i < w->n; i++) {
+	    for (j=0; j < w->na; j++) {
+		k = i+j-nw;
+		if (k < 0) {
+		    k = -k-1;
+		} else if (k >= w->n) {
+		    k = 2*w->n-k-1;
+		}
+		tmp[k] += w->a[j][k]*out[i];
+	    }
 	}
 	for (i=0; i < w->n; i++) {
 	    inp[i]=0.;
 	}
-	/* zero-slope */
-	inp[0] += 
-	    w->a[0][0]*tmp[0] +
-	    w->a[1][0]*tmp[0];
-	inp[1] +=
-	    w->a[2][0]*tmp[0];
-	inp[w->n-2] +=
-	    w->a[0][w->n-1]*tmp[w->n-1];
-	inp[w->n-1] +=
-	    w->a[1][w->n-1]*tmp[w->n-1] +
-	    w->a[2][w->n-1]*tmp[w->n-1];
-	for (i=1; i < w->n-1; i++) {
-	    inp[i-1] += w->a[0][i]*tmp[i];
-	    inp[i  ] += w->a[1][i]*tmp[i];
-	    inp[i+1] += w->a[2][i]*tmp[i];
+	for (i=0; i < w->n; i++) {
+	    for (j=0; j < w->na; j++) {
+		k = i+j-nw;
+		if (k < 0) {
+		    k = -k-1;
+		} else if (k >= w->n) {
+		    k = 2*w->n-k-1;
+		}
+		inp[k] += w->a[j][i]*tmp[i];
+	    }
 	}
     } else {
-	for (i=1; i < w->n-1; i++) {
-	    tmp[i] = 
-		w->a[0][i]*inp[i-1] +
-		w->a[1][i]*inp[i  ] +
-		w->a[2][i]*inp[i+1];
+	for (i=0; i < w->n; i++) {
+	    tmp[i] = 0.;
+	    for (j=0; j < w->na; j++) {
+		k = i+j-nw;
+		if (k < 0) {
+		    k = -k-1;
+		} else if (k >= w->n) {
+		    k = 2*w->n-k-1;
+		}
+		tmp[i] += w->a[j][i]*inp[k];
+	    }
 	}
-	/* zero-slope */
-	tmp[0] =
-	    w->a[0][0]*inp[0] +
-	    w->a[1][0]*inp[0] + 
-	    w->a[2][0]*inp[1];
-	tmp[w->n-1] = 
-	    w->a[0][w->n-1]*inp[w->n-2] + 
-	    w->a[1][w->n-1]*inp[w->n-1] +
-	    w->a[2][w->n-1]*inp[w->n-1];
-	/* zero value 
-	   tmp[0] = 
-	   w->a[1][0]*inp[0] +
-	   w->a[2][0]*inp[1];
-	   tmp[w->n-1] = 
-	   w->a[0][w->n-1]*inp[w->n-2] +
-	   w->a[1][w->n-1]*inp[w->n-1];
-	*/
-	for (i=1; i < w->n-1; i++) {
-	    out[i] = 
-		w->a[0][i-1]*tmp[i-1] +
-		w->a[1][i  ]*tmp[i  ] +
-		w->a[2][i+1]*tmp[i+1];
+	for (i=0; i < w->n; i++) {
+	    out[i] = 0.;
+	    for (j=0; j < w->na; j++) {
+		k = i+j-nw;
+		if (k < 0) {
+		    k = -k-1;
+		} else if (k >= w->n) {
+		    k = 2*w->n-k-1;
+		}
+		out[i] += w->a[j][k]*tmp[k];
+	    }
 	}
-	/* zero slope */
-	out[0] = 
-	    w->a[2][0]*tmp[0] +
-	    w->a[1][0]*tmp[0] +
-	    w->a[2][1]*tmp[1];
-	out[w->n-1] =
-	    w->a[0][w->n-2]*tmp[w->n-2] +
-	    w->a[1][w->n-1]*tmp[w->n-1] +
-	    w->a[0][w->n-1]*tmp[w->n-1];
-	
-	/* zero value 
-	   out[0] = 
-	   w->a[1][0]*tmp[0] +
-	   w->a[2][1]*tmp[1];
-	   out[w->n-1] = 
-	   w->a[0][w->n-2]*tmp[w->n-2] +
-	   w->a[1][w->n-1]*tmp[w->n-1];
-	*/
     }
 }
