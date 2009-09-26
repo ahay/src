@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     float den, inten, max, *dat;
     int n1, n2, point, i, j;
-    bool rep, noise;
+    bool rep, noise, allpos;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -44,9 +44,9 @@ int main (int argc, char* argv[])
     if ( den < 0. ){
        den =0.;
     } else {
-           if ( den > 100.) {
-              den = 100.;
-           }
+	if ( den > 100.) {
+	    den = 100.;
+	}
     }
     den *= 0.01;
 
@@ -55,6 +55,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("rep",&rep)) rep=false;
     /* if y, replace data with noise */
+
+    if (!sf_getbool("allpos",&allpos)) allpos=false;
+    /* if y, assume positive noise */
 
     if (!sf_getbool("noise",&noise)) noise=false;
     /* if y, output noise only */
@@ -77,7 +80,11 @@ int main (int argc, char* argv[])
         for (i=0; i< n2; i++) {
             for (j=0; j<(int)(den*n1); j++) {
                 point = rand()%n1;
-                dat[i*n1+point] = inten*max*(0.01*(rand()%100)*2.-1.);
+		if (!allpos) {
+		    dat[i*n1+point] = inten*max*(0.01*(rand()%100)*2.-1.);
+		} else {
+		    dat[i*n1+point] = inten*max*(0.01*(rand()%100));
+		}
             }
         }
     } else {
@@ -93,14 +100,22 @@ int main (int argc, char* argv[])
             for (i=0; i< n2; i++) {
                 for (j=0; j<(int)(den*n1); j++) {
                     point = rand()%n1;
-                    dat[i*n1+point] = inten*max*(0.01*(rand()%100)*2.-1.);
+		    if (!allpos) {
+			dat[i*n1+point] = inten*max*(0.01*(rand()%100)*2.-1.);
+		    } else {
+			dat[i*n1+point] = inten*max*(0.01*(rand()%100));
+		    }
                 }
             }
         } else {
             for (i=0; i< n2; i++) {
                 for (j=0; j<(int)(den*n1); j++) {
                     point = rand()%n1;
-                    dat[i*n1+point] += inten*max*(0.01*(rand()%100)*2.-1.);
+		    if (!allpos) {
+			dat[i*n1+point] += inten*max*(0.01*(rand()%100)*2.-1.);
+		    } else {
+			dat[i*n1+point] += inten*max*(0.01*(rand()%100));
+		    }
                 }
             }
         }            
