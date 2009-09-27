@@ -119,7 +119,7 @@ int main (int argc, char* argv[])
 	} /* nx */
 	sf_floatwrite (trace2,nx,out);
     } /* nz */
-    
+    sf_close();
     exit (0);
 }
 

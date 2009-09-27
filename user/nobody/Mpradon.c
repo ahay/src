@@ -131,6 +131,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(dtp,ntp,out);
 	sf_int2_close();
     }
-    
+    sf_close();
     exit(0);
 }

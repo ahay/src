@@ -130,6 +130,6 @@ int main (int argc, char *argv[])
     ;      fslice_close(wfl_s);
     ;      fslice_close(wfl_r);
     ;      fslice_close(refl);
-    
+    sf_close();
     exit (0);
 }

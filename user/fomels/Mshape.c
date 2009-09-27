@@ -77,8 +77,6 @@ int main(int argc, char* argv[])
     divn(rough,limit,smooth);
 
     sf_floatwrite(smooth,nm,out);
-
+    sf_close();
     exit(0);
 }
-
-

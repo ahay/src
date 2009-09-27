@@ -162,6 +162,7 @@ int main (int argc, char* argv[])
 
     free(bufi);
     free(bufo);
+    sf_close();
     exit (0);
 }
 

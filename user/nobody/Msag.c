@@ -1,4 +1,12 @@
 /* Simple v(z) synthetic.
+
+Notes about theory:
+
+v = v0 + alpha * z
+t = 2 * \int_0^z dz/(v0+alpha*z)
+t = 2 * log( 1 + alpha*z/v0 ) / alpha
+exp(alpha*tmax/2.) = 1 + alpha * zmax/ v0
+v0 * (exp( alpha * tmax/2.) - 1) /alpha =  zmax = dz * (nz+1)
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -86,16 +94,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite (datr[0],nt*nx,sag);
-
+    sf_close();
     exit (0);
 }
-
-/*	Notes about theory
- *	v = v0 + alpha * z
- *	t = 2 * \int_0^z dz/(v0+alpha*z)
- *	t = 2 * log( 1 + alpha*z/v0 ) / alpha
- *	exp(alpha*tmax/2.) = 1 + alpha * zmax/ v0
- *	v0 * (exp( alpha * tmax/2.) - 1) /alpha =  zmax = dz * (nz+1)
- */
-
-/* 	$Id$	 */

@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite (trace,nz,mod);
     }
-
+    sf_close();
     exit (0);
 }
 

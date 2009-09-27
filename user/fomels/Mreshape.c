@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	    if (NULL != in2) sf_floatwrite(data2,n1,out2);
 	}
     }
-	
+    sf_close();
     exit(0);
 }
 

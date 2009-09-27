@@ -673,7 +673,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (err,niter,res);
 	}
     }
-    
+    sf_close();
     exit(0);
 }
 

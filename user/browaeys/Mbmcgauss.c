@@ -116,6 +116,6 @@ int main(int argc, char* argv[])
 
     /* output */
     sf_floatwrite(hist[0],nbin*nbin,out);
-
+    sf_close();
     exit(0);
 }

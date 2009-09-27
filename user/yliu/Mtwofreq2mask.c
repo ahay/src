@@ -89,7 +89,7 @@ int main (int argc, char *argv[])
 
     /* write components */
     sf_floatwrite(p[0],n12*4,out);
-     
+    sf_close();
     exit (0);
 }
 

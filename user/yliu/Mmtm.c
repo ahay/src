@@ -150,7 +150,8 @@ int main (int argc, char* argv[])
 	default:
 	    sf_error("Unknown method type=%c",type[0]);
 	    break;
-    }	    
+    }
+    sf_close();
     exit (0);
 }
 

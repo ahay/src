@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
 	    sf_floatwrite(b,n1,b2);
 	}
     }
-    
+    sf_close();
     exit (0);
 }
 

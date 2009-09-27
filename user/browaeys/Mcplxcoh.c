@@ -112,9 +112,7 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(cc[0][0],ntt*(nx-1)*2,out);
-
+    sf_close();
     exit (0);
 
 }
-
-

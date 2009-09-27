@@ -236,6 +236,6 @@ int main(int argc, char* argv[])
 
 	}                     /* z loop (in block) */
     }                         /* z loop (blocks) */
-	
+    sf_close();
     exit (0);
 }

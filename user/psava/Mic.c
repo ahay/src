@@ -224,7 +224,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(ii[0],nz*nx,Fi);	    
 	    break;
     } /* switch */
-    
+    sf_close();
     exit (0);
 }
-    

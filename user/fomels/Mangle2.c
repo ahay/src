@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(trace,2*nx-1,angle);
     }
-
+    sf_close();
     exit(0);
 }
 

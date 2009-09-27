@@ -83,6 +83,6 @@ int main(int argc,char* argv[])
     } else {
 	sf_floatwrite(d,nd,dat);
     }
-
+    sf_close();
     exit(0);
 }

@@ -181,6 +181,6 @@ int main(int argc, char* argv[])
     free(**vv); free(*vv); free(vv);
     free(**tt); free(*tt); free(tt);
     free(**ll); free(*ll); free(ll);
-
+    sf_close();
     exit (0);
 }

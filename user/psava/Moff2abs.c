@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
     free(dat);
     free(mwt);
     free(dwt);
-
+    sf_close();
     exit(0);
 }
 

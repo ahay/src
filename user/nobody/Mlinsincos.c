@@ -152,6 +152,6 @@ int main(int argc, char* argv[])
 	
     /* output on angle grid */
     sf_floatwrite(a[0],na*npos,out);
-
+    sf_close();
     exit(0);
 }

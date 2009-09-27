@@ -103,6 +103,7 @@ int main (int argc, char *argv[])
     sf_floatwrite(g22[0],nq1*nq2,Fg);
 
     /*------------------------------------------------------------*/
+    sf_close();
     exit (0); 
 
 }

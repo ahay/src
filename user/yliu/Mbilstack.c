@@ -146,7 +146,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite(w,n12,weight);	
 	sf_floatwrite(result,n1,out);
     }	    
-
+    sf_close();
     exit (0);
 }
 

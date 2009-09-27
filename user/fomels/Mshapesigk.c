@@ -77,6 +77,6 @@ int main(int argc, char* argv[])
     sf_conjgrad(NULL,copyk_lop,trislk_lop,p,s,d,niter);
 
     sf_floatwrite(s,n123,out);
-
+    sf_close();
     exit(0);
 }

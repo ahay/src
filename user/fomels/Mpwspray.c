@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
 	}
 	sf_floatwrite(u[0][0],n1*ns2*n2,out);
     }	    
-
+    sf_close();
     exit (0);
 }
 

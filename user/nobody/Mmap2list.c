@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     free(*map); free(map);
-
+    sf_close();
     exit(0);
 }
 

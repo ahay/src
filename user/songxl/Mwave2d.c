@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
          sf_floatwrite(new[iz]+nb1,nx,out);
          }
        }
-        
+    sf_close();
     exit(0); 
 }           
            

@@ -99,6 +99,6 @@ int main (int argc, char* argv[])
     }
                                 /* ... or simple byte count     */
     else printf ("size= %10lld\n",(long long) total);
-
+    sf_close();
     exit (0);
 }

@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
     } /* h */
 
     sf_floatwrite (semb[0][0],n1*nx*nv,out);
-
+    sf_close();
     exit(0);
 }
 

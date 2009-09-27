@@ -139,7 +139,7 @@ int main (int argc, char **argv)
 	    sf_complexwrite(ck,nk,out);
 	}
     }
-    
+    sf_close();
     exit (0);
 }
 

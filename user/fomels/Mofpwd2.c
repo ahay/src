@@ -99,8 +99,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(obj[0],np*nq,of);
-
+    sf_close();
     exit(0);
 }
-
-  

@@ -114,7 +114,7 @@ int main (int argc, char* argv[])
     divn (num, den, phase);
 
     sf_floatwrite(phase,n12,out);
-
+    sf_close();
     exit(0);
 }
 

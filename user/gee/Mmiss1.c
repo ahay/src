@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         mis1 (niter, xx, known, step);
 	sf_floatwrite (xx,n1,out);
     }
-    
+    sf_close();
     exit(0);
 }
 

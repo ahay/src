@@ -481,6 +481,7 @@ int main(int argc, char* argv[])
 	  sf_floatwrite(trace,nt,modl);
 	} /* ih */
       } /* im */
-    }  
+    }
+    sf_close();
     exit(0);
 }

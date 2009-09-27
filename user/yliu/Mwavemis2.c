@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
 	} 
 	sf_floatwrite (dd,n12,out);
     }
-    
+    sf_close();
     exit(0);
 }
 

@@ -154,6 +154,6 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatwrite(r[i2],n1,refl);
     }
-
+    sf_close();
     exit(0);
 }

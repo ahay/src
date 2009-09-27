@@ -77,7 +77,7 @@ int main (int argc,char* argv[])
 	     order);
 	
     sf_floatwrite (t,n123,time);
-    
+    sf_close();
     exit (0);
 }
 

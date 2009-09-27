@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
          }/*it*/
          sf_floatwrite(outdata,nt,out);
     } /* n2*/
-
+    sf_close();
     exit(0);
 }
 

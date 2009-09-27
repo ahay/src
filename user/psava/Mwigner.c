@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
     
     /* write output */
     sf_floatwrite(ww[0][0],n1*n2*n3,Fw);  
-
+    sf_close();
     exit (0);
 }

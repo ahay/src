@@ -228,6 +228,6 @@ int main (int argc, char *argv[])
 	    break;
     }
     fslice_close(slow);
-    
+    sf_close();
     exit (0);
 }

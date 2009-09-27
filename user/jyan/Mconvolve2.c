@@ -150,6 +150,6 @@ int main(int argc, char* argv[])
     /* write data */
     sf_floatwrite(y[0],sf_n(a1)*sf_n(a2),Fy);
     /*------------------------------------------------------------*/
-
+    sf_close();
     exit (0);
 }

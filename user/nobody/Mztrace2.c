@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     }
 
     ztrace2_close();
-
+    sf_close();
     exit (0);
 }
 

@@ -427,6 +427,6 @@ int main(int argc, char* argv[])
 
     }
     if(verb) fprintf(stderr,"\n");    
-
+    sf_close();
     exit (0);
 }

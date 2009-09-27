@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(aa->flt,aa->nh,pef);
 
     print (dim, n, center, a, aa);
-
+    sf_close();
     exit(0);
 }
 

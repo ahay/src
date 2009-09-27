@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (slice[is],nax,out[is]);
 	}
     }
-
+    sf_close();
     exit (0);
 }
 

@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	     o1, d1, m[0], o2, d2, m[1], aa, rr, eps);
     
     sf_floatwrite (rr,nm,out);
-
+    sf_close();
     exit(0);
 }
 

@@ -112,7 +112,7 @@ int main (int argc, char* argv[])
     sf_eno_close (pfnt);
   
     sf_warning("number of branches = %d", ng);
-
+    sf_close();
     exit (0);
 }
 

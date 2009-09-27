@@ -113,32 +113,11 @@ int main(int argc, char* argv[])
                       }
                       hilb[it] = hilb[it]*trace[i1]/(max+ee);
                       outtrace[it] += hilb[it];
-                      
                   }
-                  
-                  
               }
               sf_floatwrite(outtrace,n1,out);
-
-
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
      }
+     sf_close();
      exit(0);
 }
-

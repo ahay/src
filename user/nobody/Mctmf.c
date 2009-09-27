@@ -50,6 +50,6 @@ int main (int argc, char* argv[])
 
         sf_ucharwrite(output, n12, out);
     }
-
+    sf_close();
     exit (0);
 }
