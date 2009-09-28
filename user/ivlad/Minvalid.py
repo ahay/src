@@ -95,7 +95,7 @@ def main(argv=sys.argv):
             # Check for incomplete binaries
             com_out = commands.getoutput(sfin+'y '+f)
             line_list = com_out.split('\n')
-            if line_list[-1][:6] == 'sfin: ':
+            if line_list[-1][:6] == 'sfin: ' and line_list[-1][6:16] != 'The first ':
                 msg = f
                 if(verb):
                     msg += '\tBinary '
