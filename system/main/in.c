@@ -43,7 +43,7 @@ int main (int argc, char* argv[])
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex","short"};
     const char *form[] = {"ascii","xdr","native"};
-    char pad[] = "              ", out[15];
+    char pad[] = "              ", out[25];
 
     sf_init (argc,argv);
     if (!sf_getbool ("info",&info)) info = true;

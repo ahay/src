@@ -20,7 +20,7 @@ mandir = os.path.join(root,'man')
 opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
-
+#env["ENV"]["DYLD_LIBRARY_PATH"]="/opt/intel/Compiler/11.1/058/lib"
 if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
     conf.CheckAll()
@@ -28,7 +28,6 @@ if not os.path.isfile('config.py'):
 
 Help(opts.GenerateHelpText(env,cmp))
 opts.Save('config.py',env)
-
 config = env.Command('config.py','configure.py','')
 env.Precious(config)
 
