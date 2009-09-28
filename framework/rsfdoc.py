@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc
-import re, sys, os, string, glob, string, signal
+import re, sys, os, glob, signal
 import rsfpath
 
 try:
@@ -28,12 +28,12 @@ progs = {}
 data = {}
 
 # documented programs
-docprogs = string.split('''
+docprogs = '''
 add attr cat cmplx conjgrad cp cut dd disfil dottest get headerattr
 headercut headermath headersort headerwindow in interleave mask math
 pad prep4plot put real remap1 reverse rm rotate rtoc scale segyread
 segywrite spike spray stack stretch transp window sizes figlist booklist
-''')
+'''.split()
 
 def handler(signum, frame):
     'signal handler for abortion [Ctrl-C]'
@@ -128,23 +128,23 @@ def selfdoc(target=None,source=None,env=None):
 
 def bold(text):
     """Format a string in bold by overstriking."""
-    return string.join(map(lambda ch: ch + "\b" + ch, text),'')
+    return ''.join(map(lambda ch: ch + "\b" + ch, text))
 
 def underline(text):
     """Format a string in underline by overstriking."""
-    return string.join(map(lambda ch: ch + "\b_", text),'')
+    return ''.join(map(lambda ch: ch + "\b_", text))
 
 def replace(text, *pairs):
     """Do a series of global replacements on a string."""
     while pairs:
-        text = string.join(string.split(text, pairs[0]), pairs[1])
+        text = pairs[1].join(text.split(pairs[0]))
         pairs = pairs[2:]
     return text
 
 def section(head,body):
-    text = string.join(map(lambda line: "\t" + line,
-                           string.split(body,"\n")),"\n")
-    return bold(string.upper(head)) + "\n" + text + "\n"
+    text = "\n".join(map(lambda line: "\t" + line,
+                         body.split("\n")))
+    return bold(head.upper()) + "\n" + text + "\n"
 
 def page(title, contents):
     """Format an HTML page."""
@@ -237,8 +237,7 @@ class rsfpar(object):
                "<strong>" + name + self.default + \
                "</strong>" + self.range
     def text(self,name):
-        return string.join([self.type,name,self.default,self.range,self.desc],
-                           ' | ')
+        return ' | '.join([self.type,name,self.default,self.range,self.desc])
     def spec(self,name):
         type = self.type.rstrip()
         range = self.range
@@ -265,7 +264,7 @@ class rsfpar(object):
         """TO DO: float range detection"""
 
         """Parse invalid defaults to long description"""
-        LHS, default = string.split(default,'=',1)
+        LHS, default = default.split('=',1)
         try:
             try:
                 if type=='enum-bool':
@@ -307,7 +306,7 @@ class rsfpar(object):
             line = 'Param:  %s %s %s %s \t%s\n' % (name,type,range,default,desc)
         return line
     def mwiki(self,name):
-        desc = string.replace(self.desc,'\n','<br>')
+        desc = self.desc.replace('\n','<br>')
         desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
         desc = re.sub(r'(?:\s*<br>)+$','',desc)
         return "|-\n| ''%s'' || '''%s%s''' || %s || %s\n" % \
@@ -345,7 +344,7 @@ class rsfprog(object):
         self.pars = {}
     def check(self,par):
         '''par is name=value pair, check if it makes sense, return 1 if not'''
-        pair = string.split(par,'=')
+        pair = par.split('=')
         if len(pair) != 2:
             return 0
         key = pair[0]
@@ -388,7 +387,7 @@ class rsfprog(object):
             pardoc = ''
             for par in pars:
                 pardoc = pardoc + self.pars[par].show(par)
-            doc = doc + section('parameters',string.rstrip(pardoc))
+            doc = doc + section('parameters',pardoc.rstrip())
         if self.also:
             doc = doc + section('see also',self.also)
         books = self.uses.keys()
@@ -401,7 +400,7 @@ class rsfprog(object):
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
                         usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
-            doc = doc + section('used in',string.rstrip(usedoc))
+            doc = doc + section('used in',usedoc.rstrip())
         doc = doc + section('source',self.file)
         if self.wiki:
             doc = doc + section('documentation',underline(self.wiki))
@@ -422,7 +421,7 @@ class rsfprog(object):
         if self.snps:
             contents = contents + '|-\n! colspan="4" | %s\n' % self.snps
         if self.cmts:
-            cmts = string.replace(self.cmts,'\n','<br>')
+            cmts =self.cmts.replace('\n','<br>')
             cmts = re.sub(r'(?:\s*<br>)+$','',cmts)
             contents = contents + '|-\n|  colspan="4" | %s\n' % cmts
         pars =  self.pars.keys()
@@ -580,7 +579,7 @@ DocCmd: %s
             contents = contents + \
                        bigsection('Synopsis','#fffff', '#aa55cc',self.snps)
         if self.cmts:
-            contents = contents + string.replace(self.cmts,'\n','<br>\n')
+            contents = contents + self.cmts.replace('\n','<br>\n')
         pars =  self.pars.keys()
         if pars:
             pars.sort()
@@ -588,10 +587,9 @@ DocCmd: %s
             bgcol = '#ffc8d8'
             for par in pars:
                 pardoc = pardoc + \
-                         heading(self.pars[par].html(par),
-                                 '#000000', bgcol,
-                                 string.replace(self.pars[par].desc,
-                                                '\n','<br>\n'),add='') + '\n'
+                         heading(self.pars[par].html(par),'#000000', bgcol,
+                                 self.pars[par].desc.replace('\n','<br>\n'),
+                                 add='') + '\n'
                 if bgcol=='#ffc8d8':
                     bgcol ='#f0f0f8'
                 else:
@@ -613,8 +611,7 @@ DocCmd: %s
                         <a href="book/%s/%s.html">%s</a><br>
                         ''' % (book,proj,proj)
                 usedoc = usedoc + \
-                         bigsection(string.upper(book),
-                                    '#000000','#ffd8c8',bookdoc)
+                         bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
             contents = contents + \
                        bigsection('Used In','#ffffff', '#eeaa77',usedoc)
         file.write(page(self.name,contents))
@@ -693,7 +690,7 @@ def text(dir,name):
     for dir in keys:
         names = dirs[dir]
         names.sort()
-        file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
+        file.write('\n[%s]\n\n%s\n' % (dir,'\n'.join(names)))
     file.close()
 
 def spec(dir,name='extend.spec'):
@@ -811,13 +808,13 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     else:
         name = re.sub('\.cc?$','',name)
     src = open(file,"r")   # open source
-    text = string.join(src.readlines(),'')
+    text = ''.join(src.readlines())
     src.close()
     first = comment[lang].match(text)
     if first:
-        tops = string.split(first.group(1),"\n")
-        desc = string.lstrip(tops.pop(0))
-        first = string.join(tops,"\n")
+        tops = first.group(1).split("\n")
+        desc = tops.pop(0).lstrip()
+        first = '\n'.join(tops)
     else:
         desc = None
     prog = rsfprog(name,file,desc)
@@ -926,7 +923,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             parname = par[0]
             desc = par[1]
             if parname in prog.pars: # defined previously as file
-                filedesc = string.strip(prog.pars[parname].desc)
+                filedesc = prog.pars[parname].desc.strip()
                 if desc:
                     desc = desc + '(%s)' % filedesc
                 else:
@@ -951,8 +948,8 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     else:
         info = synopsis[lang].match(first)
         if info:
-            snps = snps + ' ' + string.lstrip(info.group(1))
-            first = string.lstrip(info.group(2))
+            snps = snps + ' ' + info.group(1).lstrip()
+            first = info.group(2).lstrip()
     prog.synopsis(snps,first)
     out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,first))
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))

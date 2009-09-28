@@ -70,11 +70,13 @@ void pwd_define (bool adj        /* adjoint flag */,
 		 float** offd    /* defined off-diagonal */)
 /*< fill the matrix >*/
 {
-    int i, j, k, nw;
+    int i, j, k, j2, m, n, nw;
+    float am, aj;
     
     nw = (w->na-1)/2;
+    n = w->n;
 
-    for (i=0; i < w->n; i++) {
+    for (i=0; i < n; i++) {
 	passfilter (pp[i], w->b);
 	
 	for (j=0; j < w->na; j++) {
@@ -86,43 +88,37 @@ void pwd_define (bool adj        /* adjoint flag */,
 	}
     }
     
-    for (i=nw; i < w->n-nw; i++) {
+    for (i=0; i < n; i++) {
 	for (j=0; j < w->na; j++) {
-	    diag[i] += w->a[j][i-nw+j]*w->a[j][i-nw+j]; 
-	}
-	for (k=0; k < 2*nw; k++) {
-	    for (j=0; j < 2*nw-k; j++) {
-		offd[k][i-k] += w->a[j][i+j]*w->a[j+k+1][i+j];
+	    k = i+j-nw;
+	    if (k >=0 && k < n) {
+		aj = w->a[j][k];
+		j2 = nw-i-k-1;
+		if (j2 >=0)     aj += w->a[j2][k];
+		j2 += 2*n;
+		if (j2 < w->na) aj += w->a[j2][k];
+		diag[i] += aj*aj;
+	    }
+	} 
+	for (m=0; m < 2*nw; m++) {
+	    for (j=m+1; j < w->na; j++) {
+		k = i+j-nw;
+		if (k < m+1) continue;
+		if (k >= n) break;
+		aj = w->a[j][k];
+		j2 = nw-i-k-1;
+		if (j2 >=0)     aj += w->a[j2][k];
+		j2 += 2*n;
+		if (j2 < w->na) aj += w->a[j2][k];
+		am = w->a[j-m-1][k];
+		j2 = nw-i-k+m;
+		if (j2 >=0)     am += w->a[j2][k];
+		j2 += 2*n;
+		if (j2 < w->na) am += w->a[j2][k];
+		offd[m][i] += am*aj;
 	    }
 	}
-/*
-	offd[0][i] += 
-	    w->a[0][i  ]*w->a[1][i  ] + 
-	    w->a[1][i+1]*w->a[2][i+1];
-	offd[1][i-1] +=
-	    w->a[0][i]*w->a[2][i];
-*/
     }
-    /* zero-slope */
-    offd[0][0] += w->a[0][0]*(w->a[1][0]+w->a[2][0]) + w->a[1][1]*w->a[2][1];
-    offd[0][w->n-1] += w->a[0][w->n-1]*w->a[2][w->n-1];
-    diag[0] += 
-	(w->a[1][0]+w->a[2][0])*(w->a[1][0]+w->a[2][0]) + 
-	w->a[2][1]*w->a[2][1];
-    diag[w->n-1] += 
-	w->a[0][w->n-2]*w->a[0][w->n-2] + 
-	(w->a[0][w->n-1] + w->a[1][w->n-1])*(w->a[0][w->n-1] + w->a[1][w->n-1]);
-    /* zero value 
-    offd[0][0] += 
-	w->a[0][0]*w->a[1][0] + 
-	w->a[1][1]*w->a[2][1];
-    diag[0] += 
-	w->a[1][0]*w->a[1][0] + 
-	w->a[2][1]*w->a[2][1];
-    diag[w->n-1] += 
-	w->a[0][w->n-2]*w->a[0][w->n-2] + 
-	w->a[1][w->n-1]*w->a[1][w->n-1];
-    */
 }
 
 void pwd_set (bool adj   /* adjoint flag */,
@@ -132,60 +128,61 @@ void pwd_set (bool adj   /* adjoint flag */,
 	      float* tmp /* temporary storage */)
 /*< matrix multiplication >*/
 {
-    int i, j, k, nw;
+    int i, j, k, n, nw;
 
     nw = (w->na-1)/2;
+    n = w->n;
 
     if (adj) {
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    tmp[i]=0.;
 	}
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		if (k < 0) {
 		    k = -k-1;
-		} else if (k >= w->n) {
-		    k = 2*w->n-k-1;
+		} else if (k >= n) {
+		    k = 2*n-k-1;
 		}
 		tmp[k] += w->a[j][k]*out[i];
 	    }
 	}
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    inp[i]=0.;
 	}
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		if (k < 0) {
 		    k = -k-1;
-		} else if (k >= w->n) {
-		    k = 2*w->n-k-1;
+		} else if (k >= n) {
+		    k = 2*n-k-1;
 		}
 		inp[k] += w->a[j][i]*tmp[i];
 	    }
 	}
     } else {
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    tmp[i] = 0.;
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		if (k < 0) {
 		    k = -k-1;
-		} else if (k >= w->n) {
-		    k = 2*w->n-k-1;
+		} else if (k >= n) {
+		    k = 2*n-k-1;
 		}
 		tmp[i] += w->a[j][i]*inp[k];
 	    }
 	}
-	for (i=0; i < w->n; i++) {
+	for (i=0; i < n; i++) {
 	    out[i] = 0.;
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		if (k < 0) {
 		    k = -k-1;
-		} else if (k >= w->n) {
-		    k = 2*w->n-k-1;
+		} else if (k >= n) {
+		    k = 2*n-k-1;
 		}
 		out[i] += w->a[j][k]*tmp[k];
 	    }

@@ -37,8 +37,9 @@ int main (int argc, char* argv[])
     int i, j, ncheck, esize, dim=SF_MAX_DIM;
     off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
-    char *label=NULL, *filename=NULL, *dataname=NULL, key[8], *val=NULL, buf[BUFSIZ], zero[BUFSIZ];
-    sf_file file=NULL;
+    char *label, *filename, *dataname, key[8], *val;
+    char buf[BUFSIZ], zero[BUFSIZ];
+    sf_file file;
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex","short"};
     const char *form[] = {"ascii","xdr","native"};
