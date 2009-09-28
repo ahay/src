@@ -23,7 +23,7 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys
+import os, sys, commands, math
 
 # Operating system return codes
 unix_success = 0
@@ -136,3 +136,47 @@ def readaxis( inp, axisnr, verb=False ):
                    want = 'stdout',
                    verb = verb)
     return( int(n), float(o), float(d))
+
+###############################################################################
+
+def ndims(filename):
+    'Returns nr of dims in a file, ignoring trailing length 1 dimensions'
+
+    max_dims = 9
+    nlist = [1] * max_dims
+
+    for dim in range(1,max_dims+1):
+        command = '<'+filename+' sfget parform=n n' + str(dim)
+        sfget_out = commands.getoutput(command)
+        if sfget_out[:15] != 'sfget: No key n':
+            curr_n = int(sfget_out)
+            if curr_n > 1:
+                nlist[dim-1] = curr_n
+
+    for dim in range(max_dims,0,-1):
+        if nlist[dim-1] > 1:
+            break
+
+    return dim
+
+####################################################################
+
+def add_zeros(i, n):
+    '''Generates string of zeros + str(i)'''
+
+    ndigits_n = int(math.floor(math.log10(n-1)))
+    if i == 0:
+        nzeros = ndigits_n
+    else:
+        nzeros = ndigits_n - int(math.floor(math.log10(i)))
+
+    return nzeros*'0'+str(i)
+
+####################################################################
+
+def execute(command, verb=False):
+    '''Echoes a command to screen, then executes it'''
+
+    if verb:
+        print command
+    os.system(command)
