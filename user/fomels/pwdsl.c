@@ -29,12 +29,13 @@
 static int n2, n1, n, k2;
 static float *tmp1, *tmp2, amp;
 
-void pwdsl_init(int m1, int m2       /* data dimensions */, 
+void pwdsl_init(int m1, int m2       /* data dimensions */,
+		int order            /* accuracy order */,
 		int rect1, int rect2 /* triangle radius */,
 		float eps            /* regularization parameter */)
 /*< initialize >*/
 {
-    predict_init (m1,m2,eps,rect2);
+    predict_init (m1,m2,eps,order,rect2);
     sf_triangle1_init(rect1,m1);
 
     n2 = m2+2*rect2;

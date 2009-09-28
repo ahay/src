@@ -27,7 +27,7 @@ The program works with 2-D data. The second dimension should be a power of 2.
 
 int main(int argc, char* argv[])
 {
-    int i, n1, n2, n12, n3, ik, nk, n12k, niter, nliter, iter, i1, i2, i3;
+    int i, n1, n2, n12, n3, ik, nk, n12k, niter, nliter, iter, i1, i2, i3, order;
     float eps, eps0, wi, *d, *s, ***pp, ***ww, *w, *p=NULL;
     char *type;
     bool verb;
@@ -80,10 +80,13 @@ int main(int argc, char* argv[])
 	sf_putint(weight,"n4",n3);
     }
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type (haar,linear) */
 
-    seisletk_init(nk,n1,n2,true,eps0,type[0],pp);
+    seisletk_init(nk,n1,n2,true,eps0,order,type[0],pp);
     copyk_init(nk,n12);
 
     for (i3=0; i3 < n3; i3++) {

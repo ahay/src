@@ -607,6 +607,7 @@ void seislet_init(int n1      /* trace length */,
 		  bool inv1   /* inversion flag */, 
 		  bool unit1  /* weighting flag */,
 		  float eps   /* regularization parameter */,
+		  int order   /* accuracy order */,
 		  char type   /* transform type */) 
 /*< allocate space >*/
 {
@@ -619,7 +620,7 @@ void seislet_init(int n1      /* trace length */,
     n = n1;
     for (nt=1; nt < n2; nt *= 2) ;
     t = sf_floatalloc2(n,nt);
-    predict_init (n, nt, eps*eps, 1);
+    predict_init (n, nt, eps*eps, order, 1);
 
     t1 = sf_floatalloc(n);
     t2 = sf_floatalloc(n);

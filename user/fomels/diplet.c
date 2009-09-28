@@ -27,13 +27,14 @@ static float ***p;
 void diplet_init(int n1      /* trace length */, 
 		 int n2      /* number of traces */,
 		 int np1     /* number of slopes */,
-		 float ***p1  /* slopes */,
+		 float ***p1 /* slopes */,
 		 bool inv    /* inversion flag */, 
 		 float eps   /* regularization parameter */,
+		 int order   /* accuracy order */,
 		 char type   /* transform type */) 
 /*< allocate space >*/
 {
-    seislet_init(n1, n2, inv, true, eps, type);
+    seislet_init(n1, n2, inv, true, eps, order, type);
     np = np1;
     p = p1;
 }

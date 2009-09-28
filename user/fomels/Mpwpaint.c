@@ -23,7 +23,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, i0;
+    int n1,n2,n3, i1,i2,i3, i0, order;
     float eps, **u, **p, *trace;
     sf_file out, dip, seed;
 
@@ -42,8 +42,11 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("i0",&i0)) i0=0;
     /* reference trace */
+    
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
 
-    predict_init (n1, n2, eps*eps, 1);
+    predict_init (n1, n2, eps*eps, order, 1);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);

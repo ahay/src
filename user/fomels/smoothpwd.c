@@ -32,6 +32,7 @@ static void predict_smooth_lop(bool adj, bool add,
 
 void smoothpwd_init(int n1, int n2 /* data size */,
 		    float eps      /* PWD regularization */,
+		    int order      /* accuracy order */,
 		    int rect1      /* vertical smoothing radius */, 
 		    float **dip    /* dip field [n2][n1] */)
 /*< initialize >*/
@@ -39,7 +40,7 @@ void smoothpwd_init(int n1, int n2 /* data size */,
     n = n1*n2;
 
     repeat_init(n1,n2,sf_causint_lop);
-    predict_init (n1,n2,eps,1);
+    predict_init (n1,n2,eps,order,1);
     predict_set(dip);
     sf_triangle2_init (rect1,1,n1,n2,1);
 

@@ -24,15 +24,16 @@ static int n12;
 static float **p, **q, *tmp;
 
 void predict2_init(int m1, int m2           /* data dimensions */, 
-		 float eps               /* regularization parameter */,
-		 float** pp, float **qq  /* slopes [m1][m2] */)
+		   float eps                /* regularization parameter */,
+		   int order                /* accuracy order */,
+		   float** pp, float **qq   /* slopes [m1][m2] */)
 /*< initialize >*/
 {
     p=pp;
     q=qq;
     n12=m1*m2;
 
-    predict_init(m1,m2,eps,1);
+    predict_init(m1,m2,eps,order,1);
     tmp = sf_floatalloc(n12);
 }
 

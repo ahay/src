@@ -26,7 +26,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, n12, n23, ref2, ref3, i2,i3,i1, ud, lr;
+    int n1,n2,n3, n12, n23, ref2, ref3, i2,i3,i1, ud, lr, order;
     float eps, ***dat, ***p, ***q, **p2, **q2, *trace;
     sf_file dip, out, seed, cost;
 
@@ -70,7 +70,10 @@ int main (int argc, char *argv[])
     sf_floatread(dat[ref3][ref2],n1,seed);
     if (verb) sf_warning("%d %d",ref2,ref3);
 
-    predict_init(n1,n2, eps*eps, 1);
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
+    predict_init(n1,n2, eps*eps, order, 1);
     
     while (dijskstra_step(&i2,&i3,&ud,&lr)) {
 	if (verb) sf_warning("%d %d",i2,i3);

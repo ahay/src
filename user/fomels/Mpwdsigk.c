@@ -27,7 +27,7 @@ The program works with 2-D data.
 
 int main(int argc, char* argv[])
 {
-    int i, n1, n2, n12, n3, nk, n12k, niter, nliter, iter, i3;
+    int i, n1, n2, n12, n3, nk, n12k, niter, nliter, iter, i3, order;
     float eps, *d, *s, ***pp, *w=NULL, *p=NULL;
     bool verb;
     sf_file in, out, dips, weight=NULL;
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     s = sf_floatalloc(n12k);
     d = sf_floatalloc(n12);
     pp = sf_floatalloc3(n1,n2,nk);
@@ -79,7 +82,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    predk_init(nk,n1,n2,0.0001,pp);
+    predk_init(nk,n1,n2,0.0001,order,pp);
     copyk_init(nk,n12);
 
     for (i3=0; i3 < n3; i3++) {

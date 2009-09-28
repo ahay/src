@@ -23,7 +23,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order;
     float eps, ***u, **p, *trace;
     sf_file inp, out, dip;
 
@@ -45,12 +45,15 @@ int main (int argc, char *argv[])
     /* spray radius */
     ns2 = 2*ns+1;
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     sf_putint(out,"n2",ns2);
     sf_putfloat(out,"o2",-ns);
     sf_putfloat(out,"d2",1.0);
     sf_shiftdim(inp, out, 2);
 
-    predict_init (n1, n2, eps*eps, 1);
+    predict_init (n1, n2, eps*eps, order, 1);
 
     u = sf_floatalloc3(n1,ns2,n2);
     for (i2=0; i2 < n2; i2++) {

@@ -33,11 +33,10 @@ static void stepper(bool adj /* adjoint flag */,
 
 void predict_init (int nx, int ny /* data size */, 
 		   float e        /* regularization parameter */,
+		   int nw         /* accuracy order */,
 		   int k          /* radius */)
 /*< initialize >*/
 {
-    const int nw=1;
-
     n1 = nx;
     n2 = ny;
     nb = 2*nw;

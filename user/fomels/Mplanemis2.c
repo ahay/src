@@ -78,14 +78,14 @@ int main(int argc, char* argv[])
 
     if (NULL != qq) {
 	if (prec) {
-	    predict2_init(n1,n2,0.0001,pp,qq);
+	    predict2_init(n1,n2,0.0001,nw,pp,qq);
 	    sf_mask_init(known);
 	} else {
 	    twoplane2_init(nw, nj1,nj2, n1,n2, pp, qq);
 	}
     } else {
 	if (prec) {
-	    predict_init(n1,n2,0.0001,1);
+	    predict_init(n1,n2,0.0001,nw,1);
 	    predict_set(pp);
 	    sf_mask_init(known);
 	} else {

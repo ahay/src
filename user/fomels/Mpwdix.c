@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-    int ncycle, niter, n1, n2, n12, i1, i2, rect;
+    int ncycle, niter, n1, n2, n12, i1, i2, rect, order;
     float **vr, **vi, **wt, **v0, **p=NULL, wti, eps;
     bool verb;
     sf_file vrms, vint, weight, vout, slope;
@@ -68,7 +68,10 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
 
-    smoothpwd_init(n1,n2,0.0001,rect,p);
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
+    smoothpwd_init(n1,n2,0.0001,order,rect,p);
     
     wti = 0.;
     for (i2=0; i2 < n2; i2++) {

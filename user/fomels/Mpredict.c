@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n1, n2, n12, n3, i3;
+    int n1, n2, n12, n3, i3, order;
     float *input, *smooth, **slope;
     sf_file in, out, dip;
 
@@ -39,8 +39,11 @@ int main(int argc, char* argv[])
     n12 = n1*n2;
 
     if (!sf_getbool("adj",&adj)) adj=false;
+    
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
 
-    predict_init(n1, n2, 0.01, 1);
+    predict_init(n1, n2, 0.01, order, 1);
 
     input = sf_floatalloc(n12);
     smooth = sf_floatalloc(n12);

@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, n1, n2, n12, i3, n3, rect1, rect2;
+    int i, niter, n1, n2, n12, i3, n3, rect1, rect2, order;
     float *mm, *dd, **pp, lam;
     bool *known;
     sf_file in, out, dip, mask;
@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
@@ -56,7 +59,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("rect2",&rect2)) rect2=3;
     /* smoothing radius */
     
-    pwdsl_init(n1,n2,rect1,rect2,0.01);
+    pwdsl_init(n1,n2,order,rect1,rect2,0.01);
     pwdsl_set(pp);
     sf_mask_init(known);
     

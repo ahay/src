@@ -24,7 +24,8 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, np, i4, n4, k2, k3, j2, j3, ud, lr;
+    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3;
+    int order, np, i4, n4, k2, k3, j2, j3, ud, lr;
     float eps, ****u, ***p1, ***p2, **cost, *trace;
     sf_file inp, out, dip;
 
@@ -43,6 +44,9 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
     
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     if (!sf_getint("ns2",&ns2)) sf_error("Need ns1=");
     if (!sf_getint("ns3",&ns3)) sf_error("Need ns2=");
     /* spray radius */
@@ -61,7 +65,7 @@ int main (int argc, char *argv[])
     }
 
     dijkstra_init(np2,np3,cost,cost);
-    predict_init (n1, n2, eps*eps, 1);
+    predict_init (n1, n2, eps*eps, order, 1);
 
     u = sf_floatalloc4(n1,np,n2,n3);
     for (i3=0; i3 < n3; i3++) {

@@ -26,13 +26,12 @@
 #include <pwd.h>
 #include <limits.h>
 
-#include "getpar.h"
-#include "error.h"
-#include "alloc.h"
-#include "file.h"
 #include "_bool.h"
 #include "simtab.h"
 /*^*/
+
+#include "error.h"
+#include "alloc.h"
 
 static sf_simtab pars;
 static char *prog = NULL;
@@ -63,6 +62,7 @@ void sf_init(int argc,char *argv[])
     FILE *fp;
     size_t len;
     char *rsf, sfdoc[PATH_MAX], cwd[PATH_MAX], *pwd;
+    extern void sf_close(void);
 
     pars = sf_simtab_init (argc);
 
@@ -128,6 +128,7 @@ void sf_init(int argc,char *argv[])
 	    sf_simtab_put(pars,argv[ic]);
 	}
     }
+
     atexit(sf_close);
 }
 

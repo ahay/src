@@ -26,7 +26,7 @@ static void datawrite(int n1, float scale, float *pp, sf_file out);
 
 int main(int argc, char *argv[])
 {
-    int n1, n2, i3, n3, n12, ip, np, n12p, ncycle, niter;
+    int n1, n2, i3, n3, n12, ip, np, n12p, ncycle, niter, order;
     bool inv, verb, decomp;
     char *type;
     float *pp, *qq, ***dd, eps, perc, scale;
@@ -80,10 +80,13 @@ int main(int argc, char *argv[])
 	(void) sf_shiftdim(in, out, 3);
     } 
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type (haar,linear,biorthogonal), default is linear */
     
-    diplet_init(n1,n2,decomp? 1: np, dd,true,eps,type[0]);
+    diplet_init(n1,n2,decomp? 1: np, dd,true,eps,order,type[0]);
  
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dd[0][0],n12p,dip);	

@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n1, n2, n12, n3, i3, rect1, rect2;
+    int n1, n2, n12, n3, i3, order, rect1, rect2;
     float *input, *smooth, **slope, eps;
     sf_file in, out, dip;
 
@@ -48,7 +48,10 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
-    pwdsl_init(n1, n2, rect1, rect2, eps);
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */	
+
+    pwdsl_init(n1, n2, order, rect1, rect2, eps);
 
     input = sf_floatalloc(n12);
     smooth = sf_floatalloc(n12);

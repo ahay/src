@@ -24,16 +24,17 @@ static int n, n12;
 static float ***p;
 
 void predk_init(int nk          /* number of components */,
-		 int m1, int m2  /* data dimensions */, 
-		 float eps       /* regularization parameter */,
-		 float*** pk     /* slopes [nk][m1][m2] */)
+		int m1, int m2  /* data dimensions */, 
+		float eps       /* regularization parameter */,
+		int order       /* accuracy order */,
+		float*** pk     /* slopes [nk][m1][m2] */)
 /*< initialize >*/
 {
     n=nk;
     p=pk;
     n12=m1*m2;
 
-    predict_init(m1,m2,eps,1);
+    predict_init(m1,m2,eps,order,1);
 }
 
 void predk_close(void)

@@ -25,7 +25,8 @@
 
 static float *tmp;
 
-void smoothshape_init(int n1, int n2        /* data size */, 
+void smoothshape_init(int n1, int n2        /* data size */,
+		      int order             /* accuracy order */,
 		      int rect1, int rect2  /* smoothing radius */,
 		      float lam             /* operator scaling */,
 		      float **dip           /* dip field */) 
@@ -36,7 +37,7 @@ void smoothshape_init(int n1, int n2        /* data size */,
     n = n1*n2;
 
     repeat_init(n1,n2,sf_causint_lop);
-    pwdsl_init(n1,n2,rect1,rect2, 0.01);
+    pwdsl_init(n1,n2,order,rect1,rect2, 0.01);
     pwdsl_set(dip);
 
     tmp = sf_floatalloc(n);

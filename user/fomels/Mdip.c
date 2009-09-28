@@ -78,9 +78,7 @@ int main (int argc, char *argv[])
     /* initial cross-line dip */
 
     if (!sf_getint("order",&order)) order=1;
-    /* [1,2,3] accuracy order */
-    if (order < 1 || order > 3) 
-	sf_error ("Unsupported order=%d, choose between 1 and 3",order);
+    /* accuracy order */
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* in-line antialiasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;

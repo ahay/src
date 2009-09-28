@@ -24,7 +24,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i1, n1, i2, n2, i3, n3, n12, niter;
+    int i1, n1, i2, n2, i3, n3, n12, niter, order;
     bool inv, adj, unit;
     char *type;
     float *pp, *qq, **ww, *hilb, **dd, eps;
@@ -70,10 +70,13 @@ int main(int argc, char *argv[])
     if (!sf_getbool("unit",&unit)) unit=false;
     /* if y, use unitary scaling */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    seislet_init(n1,n2,inv,unit,eps,type[0]);
+    seislet_init(n1,n2,inv,unit,eps,order,type[0]);
     seislet_set(dd);
 
     for (i3=0; i3 < n3; i3++) {

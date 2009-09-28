@@ -28,6 +28,7 @@ void seisletk_init(int nk      /* number of components */,
 		   int n2      /* number of traces */, 
 		   bool inv    /* inversion flag */, 
 		   float eps   /* regularization parameter */,
+		   int order   /* accuracy order */,
 		   char type   /* transform type */,
 		   float*** pk /* slopes [nk][m1][m2] */)
 /*< initialize >*/
@@ -36,7 +37,7 @@ void seisletk_init(int nk      /* number of components */,
     p=pk;
     n12=n1*n2;
 
-    seislet_init(n1,n2,inv,false,eps,type);
+    seislet_init(n1,n2,inv,false,eps,order,type);
 }
 
 void seisletk_close(void)

@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2;
+    int n1, n2, i2, order;
     float *trace, *shift, eps;
     sf_file inp, out, dip;
 
@@ -38,9 +38,12 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     trace = sf_floatalloc(n1);
     shift = sf_floatalloc(n1);
-    predict_init (n1,n2,eps*eps,1);
+    predict_init (n1,n2,eps*eps,order,1);
     
 
     for (i2=0; i2 < n2; i2++) {

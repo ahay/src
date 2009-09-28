@@ -6,7 +6,7 @@
 
 int main(void) {
     float dot1[2], dot2[2];
-    static int n1=100, n2=100; 
+    static int n1=100, n2=100, nw=3; 
     int i1, i2;
     float **p, **q;
 
@@ -20,7 +20,7 @@ int main(void) {
 	}
     }
 
-    predict2_init(n1, n2, 0.01, p, q);
+    predict2_init(n1, n2, 0.01, nw, p, q);
     sf_dot_test(predict2_lop, n1*n2, n1*n2, dot1, dot2);
     predict2_close();
 

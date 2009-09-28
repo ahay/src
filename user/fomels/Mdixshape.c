@@ -31,7 +31,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main(int argc, char* argv[])
 {
-    int niter, nd, n1, n2, i1, i2, rect1, rect2;
+    int niter, nd, n1, n2, i1, i2, rect1, rect2, order;
     float **vr, **vi, **wt, **v0, **dp, wti, lam;
     sf_file vrms, vint, weight, vout, dip;
 
@@ -52,6 +52,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("lam",&lam)) lam=1.;
     /* operator scaling for inversion */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     vr = sf_floatalloc2(n1,n2);
     vi = sf_floatalloc2(n1,n2);
     wt = sf_floatalloc2(n1,n2);
@@ -62,7 +65,7 @@ int main(int argc, char* argv[])
     sf_floatread(wt[0],nd,weight);
     sf_floatread(dp[0],nd,dip);
 
-    smoothshape_init(n1, n2, rect1, rect2, lam, dp);
+    smoothshape_init(n1, n2, order, rect1, rect2, lam, dp);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
