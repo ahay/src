@@ -29,7 +29,7 @@
 #include "getpar.h"
 #include "error.h"
 #include "alloc.h"
-
+#include "file.h"
 #include "_bool.h"
 #include "simtab.h"
 /*^*/
@@ -128,6 +128,7 @@ void sf_init(int argc,char *argv[])
 	    sf_simtab_put(pars,argv[ic]);
 	}
     }
+    atexit(sf_close);
 }
 
 void sf_parclose (void)
