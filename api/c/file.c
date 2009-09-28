@@ -1455,6 +1455,8 @@ void sf_close(void)
 {
     int i;
     sf_file file;
+
+    if (NULL == infiles) return;
     
     for (i=0; i <= ifile; i++) {
 	file = infiles[i];
