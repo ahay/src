@@ -80,8 +80,9 @@ def syswait(comm):
         child = 0
         return exit
     else:
-        os.system(comm)
-        os._exit(0)
+        status = os.system(comm)
+        if (status==0): os._exit(0)
+        else:           os._exit(1)
 
 def size_string(size):
 
@@ -196,7 +197,12 @@ def main(argv=sys.argv):
                 g = {}
                 l = {}
                 execfile(os.path.join(root,'.rsfproj'),g,l)
-                data_size = l['size']
+                if 'size' in l:
+                    data_size = l['size']
+                else:
+                    data_size = 0
+                    string = "   *********  .rsfproj error   *********  %s\n"
+                    sys.stderr.write(string % root)
                 
                 data_type = 'unknown'
                 if len(l['data']) == 0:     data_type = 'none   '
@@ -239,20 +245,28 @@ def main(argv=sys.argv):
                 if data_type == 'public ' : data_public  = data_public+1
                 if data_type == 'private' : data_private = data_private+1
                 
-                sys.stdout.write('%s       %s      %9s  %s     %s\n' % (filter_command,rsfproj_exist,size_string(data_size),data_type,root))
+                tuple = (filter_command,rsfproj_exist,
+                         size_string(data_size),data_type,root)
+                sys.stdout.write('%s       %s      %9s  %s     %s\n' % tuple)
                 sys.stdout.flush()
             
                                         # execute command in directory
-            if (filter is True) and (command is not None): 
-                sys.stderr.write("   +++++++++  running command  +++++++++  %s\n" % root)
-                t0 = os.times()
-                syswait(' '.join(['cd',root,';',command]))
-                t1 = os.times()
+            if (filter is True) and (command is not None):
+                string = "   +++++++++  running command  +++++++++  %s\n"
+                sys.stderr.write(string % root)
+                t0   = os.times()
+                exit = syswait(' '.join(['cd',root,';',command]))
+                t1   = os.times()
                 t_user = t1[2]-t0[2]
                 t_sys  = t1[3]-t0[3]
                 t_real = t1[4]-t0[4]
-                sys.stderr.write("   user %6.2f   sys %6.2f  real %6.2f  %s\n" % (t_user,t_sys,t_real,root))
-                sys.stderr.write("   ---------   command  done   ---------  %s\n" % root)
+                string = "   user %6.2f   sys %6.2f  real %6.2f  %s\n"
+                sys.stderr.write(string % (t_user,t_sys,t_real,root))
+                if (exit==0):
+                    string = "   ---------  command success  ---------  %s\n"
+                else:
+                    string = "   *********   command error   *********  %s\n"
+                sys.stderr.write(string % root)
 
     sys.stderr.write("\n")
     sys.stderr.write("Directories listed : %3d\n" % total_list)
