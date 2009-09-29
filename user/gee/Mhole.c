@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (maskout,n1,mask);
 	}
     }
-    sf_close();
+
     exit (0);
 }
 

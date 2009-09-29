@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   sf_conjgrad_init(n2,n2,n2,n2,eps,FLT_EPSILON,true,false);
   sf_conjgrad(NULL,kron_lop,sf_copy_lop,p,y,x,niter);
 */
-    sf_close();
+
     exit(0);
 }
 

@@ -145,6 +145,6 @@ int main (int argc, char *argv[])
 	       slow, 
 	       dt);
     dsr2_close();
-    sf_close();
+
     exit (0);
 }

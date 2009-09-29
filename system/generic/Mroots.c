@@ -106,6 +106,6 @@ int main(int argc, char* argv[])
 	qsort(e,n-1,sizeof(sf_complex),compare);
 	sf_complexwrite(e,n-1, root);
     }
-    sf_close();
+
     exit(0);
 }

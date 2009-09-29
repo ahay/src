@@ -142,6 +142,6 @@ int main (int argc, char *argv[])
 
     fslice_close(Bwfld);
     fslice_close(Bslow);
-    sf_close();
+
     exit(0);
 }

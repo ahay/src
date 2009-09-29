@@ -106,6 +106,6 @@ int main (int argc, char *argv[])
 
     free( *qq); free( qq);
     free( *wx); free( wx);
-    sf_close();
+
     exit (0);
 }

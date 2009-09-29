@@ -32,6 +32,6 @@ int main (int argc, char*argv[]) {
 
     sf_fileflush(out,in);
 
-    sf_close();
+
     exit(0);
 }

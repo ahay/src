@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
     }
 
     /* clean up */
-    sf_close();
+
     exit (0);
 }
 

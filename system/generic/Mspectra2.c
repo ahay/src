@@ -143,6 +143,6 @@ int main (int argc, char* argv[])
 	}
 	sf_floatwrite(spec[0],nw*nk,out);
     }
-    sf_close();
+
     exit (0);
 }

@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 		sf_int2_lop, sf_triangle2_lop, grad[0], img[0], y, niter);
 
     sf_floatwrite(img[0],n12,out);
-    sf_close();
+
     exit(0);
 }
 

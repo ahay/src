@@ -203,7 +203,7 @@ int main (int argc, char *argv[])
 	}
 	unlink(tmpname);
     }
-    sf_close();
+
     exit (0);
 }
 

@@ -171,7 +171,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite (q[0],nz*nx,out);
     }
 
-    sf_close();
+
     exit (0);
 }
 

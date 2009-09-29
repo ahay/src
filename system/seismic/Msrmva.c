@@ -163,6 +163,6 @@ int main (int argc, char *argv[])
     fslice_close(Bwfls);
     fslice_close(Bwflr);
     fslice_close(Bslow);
-    sf_close();
+
     exit (0);
 }

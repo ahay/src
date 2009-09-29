@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
     fft3a1_close(ft1);
     fft3a2_close(ft2);
     fft3a3_close(ft3);
-    sf_close();
+
     exit (0);
 }

@@ -213,6 +213,6 @@ int main(int argc, char* argv[])
 
     if (!inv && zero)
 	sf_floatwrite (stack[0][0],n123,out);
-    sf_close();
+
     exit(0);
 }

@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(z,n1,sphere);
     }
-    sf_close();
+
     exit(0);
 }
 

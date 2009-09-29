@@ -209,6 +209,6 @@ int main(int argc, char* argv[])
 	    } /* v 2 */
 	} /* x */
     } /* y */
-    sf_close();
+
     exit (0);
 }

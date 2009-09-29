@@ -196,10 +196,10 @@ int main(int argc, char* argv[])
 
 	if (NULL != mapfile) unlink(mapf);
 	
-	sf_close();
+	
     }
 
-    sf_close();
+
     exit (0);
 }
 

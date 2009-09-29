@@ -89,6 +89,6 @@ int main(int argc, char* argv[])
 	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
 
-    sf_close();
+
     exit (0);
 }

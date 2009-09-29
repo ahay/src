@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
         sf_floatwrite(list,n1,out);     /* Write the output         */
     }
 
-    sf_close();
+
 
     exit (0);
 }

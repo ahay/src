@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(xr,ntx,fx);
     sf_floatwrite(yr,ntx,fy);
 
-    sf_close();
+
     exit(0);
 }
 

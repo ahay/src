@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     divn(pick0,ampl,pick);
 
     sf_floatwrite (pick,nm,out);	
-    sf_close();
+
     exit (0);
 }
 

@@ -62,6 +62,6 @@ int main(int argc, char* argv[]) {
 	sf_freqfilt(n1,trace);
 	sf_floatwrite(trace,n1,out);
     }
-    sf_close();
+
     exit(0);
 }

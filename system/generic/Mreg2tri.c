@@ -136,6 +136,6 @@ int main(int argc, char* argv[])
 	sf_settype(edge,SF_FLOAT);
 	sf_floatwrite(e,4*ne,edge);
     }
-    sf_close();
+
     exit (0);
 }

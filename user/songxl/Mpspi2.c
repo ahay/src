@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
    free(sig);
    free(weight);
 
-   sf_close();
+ 
    exit(0); 
 }           
            

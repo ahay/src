@@ -62,7 +62,7 @@ int main (int argc, char *argv[])
 
 	sf_floatwrite(v[0],n1*n2,out);
     }
-    sf_close();
+
     exit (0);
 }
 

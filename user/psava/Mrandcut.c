@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     free(**uo); free(*uo); free(uo);
     /*------------------------------------------------------------*/
 
-    sf_close();
+
     exit (0);
 }
 

@@ -30,6 +30,6 @@ int main(int argc, char* argv[])
     vp_barframe_init (in,0.,1.);
     vp_barframe ();
 
-    sf_close();
+
     exit(0);
 }

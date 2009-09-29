@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
     free(uk);     
     free(sig);
 
-    sf_close();
+
     exit(0); 
 }           
            

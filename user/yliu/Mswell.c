@@ -170,7 +170,7 @@ int main (int argc, char* argv[])
 
     sf_floatwrite(dat,n1*n2,out);  
     }
-    sf_close();
+
     exit (0);
 }
 

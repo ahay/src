@@ -87,6 +87,6 @@ int main(int argc, char* argv[])
     } else {
       sf_error("Need float or complex type");
     }
-    sf_close();
+
     exit(0);
 }

@@ -80,6 +80,6 @@ int main(int argc, char* argv[])
 	sf_charwrite(rbuf,nbuf,real);
     }
     
-    sf_close();
+
     exit (0);
 }

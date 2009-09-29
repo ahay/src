@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 	sf_intwrite(ibuf,nbuf,out);
     }
 
-    sf_close();
+
     exit(0);
 }
 	    

@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(mm+p1,p2,out);
 
-    sf_close();
+
     exit (0);
 }
 

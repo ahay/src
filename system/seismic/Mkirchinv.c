@@ -92,6 +92,6 @@ int main(int argc, char* argv[])
 	if (NULL != err) sf_floatwrite(error,niter,err);
     }
 
-    sf_close();
+
     exit(0);
 }

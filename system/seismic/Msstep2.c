@@ -118,6 +118,6 @@ int main (int argc, char *argv[])
     /* initialize split-step */
     split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,padx,pady,nr,dt);
     split2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow);
-    sf_close();
+
     exit (0);
 }

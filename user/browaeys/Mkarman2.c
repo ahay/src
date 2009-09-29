@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
     sf_warning ("axx=%g axy=%g ayy=%g nu=%g",a[0],a[1],a[2],-2*aa-1.);
     
     sf_floatwrite (data[0],nx*ny,out);
-    sf_close();
+
     exit (0);
 }
 

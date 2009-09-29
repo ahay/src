@@ -510,6 +510,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(dd,nr,Fd);
     }
     if(verb) fprintf(stderr,"\n");
-    sf_close();
+
     exit (0);
 }

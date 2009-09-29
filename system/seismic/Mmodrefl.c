@@ -98,6 +98,6 @@ int main(int argc, char* argv[])
     sf_int1_lop (true,false,nt,n1,spline,aps);
     sf_spline_post(nw, 0, 1, nt, spline, trace);
     sf_floatwrite(trace,nt,dat);
-    sf_close();
+
     exit(0);
 }

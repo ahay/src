@@ -123,6 +123,6 @@ int main(int argc, char* argv[])
 	    if (!off) sf_floatwrite (cout,nt,out);
 	} /* x */
     } /* s */
-    sf_close();
+
     exit(0);
 }

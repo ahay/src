@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 	thrsample(in,out,complex_data,mode,thrvalue);
     }
     
-    sf_close(); 
+ 
     exit(0);
 }
 

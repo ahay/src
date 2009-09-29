@@ -98,6 +98,6 @@ If n3=1 in the output, outputs both signal and noise. Otherwise, only signal.
 	    sf_floatwrite(d,n12,out);
 	}
     }
-    sf_close();
+
     exit(0);
 }

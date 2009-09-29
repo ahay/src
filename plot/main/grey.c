@@ -397,6 +397,6 @@ int main(int argc, char* argv[])
 	} 
     } /* i3 loop */
 
-    sf_close();
+
     exit (0);
 }

@@ -326,6 +326,6 @@ int main(int argc, char* argv[])
 	if(         it   %jdata==0) sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
-    sf_close();
+
     exit (0);
 }

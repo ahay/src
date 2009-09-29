@@ -425,7 +425,7 @@ int main(int argc, char* argv[])
     free(ss);
     free(rr);
     free(dd);
-    sf_close();
+
     exit (0);
 }
 

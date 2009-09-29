@@ -294,6 +294,6 @@ int main(int argc, char* argv[])
 	vp_purge(); 
     } /* frame loop */
 
-    sf_close();
+
     exit(0);
 }

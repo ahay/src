@@ -1162,7 +1162,7 @@ main (int argc,char **argv)
 
     /* close connection to X server */
     XCloseDisplay(dpy);
-    sf_close();
+
     exit(0);
 }
 

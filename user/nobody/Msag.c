@@ -94,6 +94,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite (datr[0],nt*nx,sag);
-    sf_close();
+
     exit (0);
 }

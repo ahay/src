@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
 	/* write t-y dip */
 	sf_floatwrite(p,n123,out);
     }
-    sf_close();
+
     exit (0);
 }
 

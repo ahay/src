@@ -103,6 +103,6 @@ int main(int argc, char* argv[])
     }
 
     sf_complexwrite(plot,na,out);
-    sf_close();
+
     exit(0);
 }

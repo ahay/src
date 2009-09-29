@@ -446,7 +446,7 @@ int main(int argc, char* argv[])
 	    free(b04);
     }
 
-    sf_close();
+
     exit(0); 
 }           
            

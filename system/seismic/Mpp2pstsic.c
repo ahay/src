@@ -110,6 +110,6 @@ int main (int argc, char* argv[])
 
 	sf_floatwrite(ang[0],nz*na,Fang);
     }
-    sf_close();
+
     exit (0);
 }

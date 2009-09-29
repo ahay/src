@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
     maski (niter, n12, dd, hh, known, aa, bb);
     sf_floatwrite(hh,n12,out);
-    sf_close();
+
     exit(0);
 }
 

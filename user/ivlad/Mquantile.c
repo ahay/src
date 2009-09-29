@@ -69,6 +69,6 @@ main (int argc, char *argv[])
 
     printf( "%f\n", q );
 
-    sf_close();
+
     exit(0);
 }

@@ -97,6 +97,6 @@ int main(int argc, char* argv[])
     /*Output velocity at each time value.*/
     sf_floatwrite(w,nw,out);
   }
-  sf_close();
+
   exit(0);
 }

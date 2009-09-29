@@ -142,6 +142,6 @@ int main (int argc, char* argv[])
 
 	sf_floatwrite(ang[0],sf_n(az)*sf_n(aa),Fang);
     }
-    sf_close();
+
     exit (0);
 }

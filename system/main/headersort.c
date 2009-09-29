@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 	sf_charwrite(trace,n1,out);
     }
 
-    sf_close();
+
     exit(0);
 }
     

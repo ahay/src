@@ -158,6 +158,6 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     wfsep_close(wfs);
-    sf_close();
+
     exit (0);
 }

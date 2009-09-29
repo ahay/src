@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
     } /* itr */
 
     sf_floatwrite(out[0][0],n1*nx*ny,mig);
-    sf_close();
+
     exit(0);
 }
 

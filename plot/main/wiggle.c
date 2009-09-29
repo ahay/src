@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
 	vp_simpleframe();
 
     } /* i3 */
-    sf_close();
+
     exit(0);
 }
 

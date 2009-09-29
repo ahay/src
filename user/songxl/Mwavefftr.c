@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
     free(sig);
     free(wav);
 
-    sf_close();
+
     exit(0); 
 }           
            

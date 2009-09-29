@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	svddenoise_lop(n2,n1,pclip,pp,qq);
 	sf_floatwrite(qq,n1*n2,out);
     }
-    sf_close();
+
     exit(0);
 }
 

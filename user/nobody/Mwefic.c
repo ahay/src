@@ -82,6 +82,6 @@ int main (int argc, char *argv[])
     fslice_close(sdat);
     fslice_close(rdat);
     fslice_close(imag);
-    sf_close();
+
     exit (0);
 }

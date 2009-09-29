@@ -212,6 +212,6 @@ int main(int argc, char* argv[])
 
     /* output beam stack */
     sf_floatwrite(semb[0][0],npx*npy*1,out);
-    sf_close();
+
     exit(0);
 }

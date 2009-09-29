@@ -45,6 +45,6 @@ main (int argc, char *argv[])
 
     printf( "%d\n", n );
 
-    sf_close();
+
     exit(0);
 }

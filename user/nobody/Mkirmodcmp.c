@@ -482,6 +482,6 @@ int main(int argc, char* argv[])
 	} /* ih */
       } /* im */
     }
-    sf_close();
+
     exit(0);
 }

@@ -122,7 +122,7 @@ int main (int argc, char *argv[])
 	/* write dip */
 	sf_floatwrite(p[0],n12,out);
     }    
-    sf_close();
+
     exit (0);
 }
 

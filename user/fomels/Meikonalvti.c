@@ -186,7 +186,7 @@ int main (int argc,char* argv[])
     }
     
     /* close input */
-    sf_close();
+
     exit (0);
 }
 

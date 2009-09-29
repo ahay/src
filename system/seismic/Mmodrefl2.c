@@ -112,6 +112,6 @@ int main(int argc, char* argv[])
 	sf_spline_post(nw, 0, 1, nt, spline, trace);
 	sf_floatwrite(trace,nt,out);
     }
-    sf_close();
+
     exit(0);
 }

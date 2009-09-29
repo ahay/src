@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
     warpscan(inp,oth,rat1);
 
     sf_floatwrite(rat1,n2g,warped);
-    sf_close();
+
     exit (0);
 }
 

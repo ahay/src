@@ -169,6 +169,6 @@ int main(int argc, char* argv[])
     ompsft3_close  (ompsft);    
     /*------------------------------------------------------------*/
 
-    sf_close();
+
     exit(0);
 }		

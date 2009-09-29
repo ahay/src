@@ -265,6 +265,6 @@ int main (int argc, char* argv[]) {
         sf_floatwrite (grid, nm, out);
     }
 
-    sf_close();
+
     exit(0);
 }

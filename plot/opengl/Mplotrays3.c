@@ -605,6 +605,6 @@ int main (int argc, char **argv) {
 
     glutMainLoop ();
 
-    sf_close();
+
     return 0;
 }

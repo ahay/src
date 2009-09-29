@@ -351,6 +351,6 @@ int main(int argc, char* argv[])
 	} /* ih */
     } /* is */
 
-    sf_close();
+
     exit(0);
 }

@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,nh,angle);
 	}
     }
-    sf_close();
+
     exit(0);
 }
 

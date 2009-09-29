@@ -122,6 +122,6 @@ int main(int argc, char* argv[])
          sf_floatwrite(outdata,nt,out);
          sf_warning("running cmp is = %d of %d",icmp, ncmp); 
      }
-    sf_close();
+
     exit(0);
 }

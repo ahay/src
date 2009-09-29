@@ -66,6 +66,6 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(filt,n1,out);
 	}
     }
-    sf_close();
+
     exit(0);
 }

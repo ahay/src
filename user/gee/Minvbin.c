@@ -269,7 +269,7 @@ int main (int argc, char* argv[])
 	sf_floatwrite (mm,nm,out);
     }
 
-    sf_close();
+
     exit(0);
 }
 

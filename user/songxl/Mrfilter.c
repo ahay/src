@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
           fsig[ix] = -fsig[ix]*v[ix]*v[ix];
          } 
     sf_floatwrite(fsig,nx,out);
-    sf_close();
+
     exit(0); 
 }           
            

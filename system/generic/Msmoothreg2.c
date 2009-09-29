@@ -63,6 +63,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(trace,n12,smooth);
-    sf_close();
+
     exit (0);
 }

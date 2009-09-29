@@ -749,7 +749,7 @@ int main (int argc, char *argv[])
 	XCloseDisplay(dpy);
 
 	free(z);
-        sf_close();
+    
 	exit(0);
 }
 			

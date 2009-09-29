@@ -56,6 +56,6 @@ int main(int argc, char* argv[])
     if (NULL != strstr (sf_getprog(),"mv"))
 	sf_rm(infile,false,false,false);
 
-    sf_close();
+
     exit (0);
 }

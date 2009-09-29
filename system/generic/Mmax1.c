@@ -98,6 +98,6 @@ int main(int argc, char* argv[])
 
 	sf_complexwrite(pick,np,out);
     }
-    sf_close();
+
     exit(0);
 }

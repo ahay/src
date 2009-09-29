@@ -215,6 +215,6 @@ int main(int argc, char* argv[])
 
     if(!adj) sf_floatwrite  (img[0],ng*nt,Fi);
 /*------------------------------------------------------------*/
-    sf_close();
+
     exit(0);
 }

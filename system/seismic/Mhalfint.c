@@ -60,6 +60,6 @@ int main(int argc, char* argv[])
 	halfint (adj, pp);
 	sf_floatwrite (pp,n1,out);
     }
-    sf_close();
+
     exit(0);
 }

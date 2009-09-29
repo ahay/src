@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite (model,n1,out);
     }
-    sf_close();
+
     exit(0);
 }
 

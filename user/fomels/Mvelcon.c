@@ -65,6 +65,6 @@ int main(int argc, char* argv[])
     velcon_lop (adj, add, n12, n12, modl, data);
 
     sf_floatwrite (adj? modl: data,n12,out);
-    sf_close();
+
     exit(0);
 }

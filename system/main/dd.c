@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 	size -= nin;
     }
     
-    sf_close();
+
     exit(0);
 }
 

@@ -182,6 +182,6 @@ int main(int argc, char *argv[])
 	if (nsegy != fwrite(trace, 1, nsegy, file))
 	    sf_error ("Error writing trace %d",itr+1);
     }
-    sf_close();
+
     exit (0);
 }

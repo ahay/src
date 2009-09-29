@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
     }
 
     elpf_close();
-    sf_close();
+
     exit (0);
 }
 

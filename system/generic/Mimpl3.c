@@ -78,6 +78,6 @@ int main(int argc, char* argv[])
     sf_floatread (dat[0][0],n123,in);
     impl3_apply (dat,true,false);
     sf_floatwrite (dat[0][0],n123,out);
-    sf_close();
+
     exit(0);
 }

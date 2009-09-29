@@ -283,7 +283,7 @@ int main (int argc, char **argv)
 	}
     } /* loop over CMPs */
 
-    sf_close();
+
     exit (0);
 }
 

@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     for (i=0; i < nd; i++) {
 	sf_floatwrite(xyz1[i],3,out);
     }
-    sf_close();
+
     exit(0);
 }
 

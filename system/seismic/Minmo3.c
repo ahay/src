@@ -117,6 +117,6 @@ int main (int argc, char* argv[])
 	} /* ix */
       } /* iy */
     } /* i4 */
-    sf_close();
+
     exit (0);
 }

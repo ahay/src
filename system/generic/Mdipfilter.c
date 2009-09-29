@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 	} /* iy */
     } /* i3 */
 
-    sf_close();
+
     exit(0);
 }
 

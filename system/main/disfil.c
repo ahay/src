@@ -161,7 +161,7 @@ int main (int argc, char* argv[])
 
     if (trailer != NULL) printf ("%s\n",trailer);   /* print trailer string */
 
-    sf_close();
+
     exit (0);
 }
 

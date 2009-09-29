@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     free(dip);
     free(*ddd); free(ddd);
     free(*mmm); free(mmm);
-    sf_close();
+
     exit(0);
 }
 

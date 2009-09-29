@@ -146,6 +146,6 @@ int main (int argc, char *argv[])
 	       dt);
     dsr2_close();
 
-    sf_close();
+
     exit (0);
 }

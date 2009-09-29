@@ -64,6 +64,6 @@ int main(int argc, char* argv[])
 	
 	sf_complexwrite(e,n, val);
     }
-    sf_close();
+
     exit(0);
 }

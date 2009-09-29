@@ -79,6 +79,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(obj,np,of);
-    sf_close();
+
     exit(0);
 }

@@ -83,6 +83,6 @@ int main(int argc, char* argv[])
     }
 
     printf("******************************************* \n");
-    sf_close();
+
     exit(0);
 }

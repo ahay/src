@@ -118,7 +118,7 @@ int main (int argc, char* argv[])
 	    sf_floatwrite(ph, nt, hdip);
 	}
     }
-    sf_close();
+
     exit (0);
 }
 

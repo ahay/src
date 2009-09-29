@@ -54,6 +54,6 @@ int main(int argc, char* argv[])
 	impl1_apply (dat);
 	sf_floatwrite (dat,n1,out);
     }
-    sf_close();
+
     exit(0);
 }

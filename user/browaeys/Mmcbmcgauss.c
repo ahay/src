@@ -91,6 +91,6 @@ int main(int argc, char* argv[])
 
     /* output */
     sf_floatwrite(mc,nr,out);
-    sf_close();
+
     exit(0);
 }

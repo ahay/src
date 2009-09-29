@@ -108,6 +108,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(a,nt,avo);
 	sf_floatwrite(b,nt,avo);
     } /* x */
-    sf_close();
+
     exit(0);
 }

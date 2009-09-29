@@ -175,6 +175,6 @@ int main(int argc, char* argv[])
 	sf_warning("i = %d", i);
 
     }
-    sf_close();
+
     exit(0);
 }

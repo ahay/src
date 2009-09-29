@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     nhelicon_lop (false,false,ntxy,ntxy,pp,qq);
     sf_floatwrite(qq,ntxy,out);
 
-    sf_close();
+
     exit(0);
 }
 

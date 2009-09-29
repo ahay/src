@@ -225,6 +225,6 @@ int main(int argc, char* argv[])
     free(b20);
     free(b01);
     free(b02);
-    sf_close();
+
     exit(0);
 }

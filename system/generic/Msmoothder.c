@@ -73,6 +73,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(dtrace,n1,der);
     }
-    sf_close();
+
     exit (0);
 }

@@ -386,6 +386,6 @@ int main(int argc, char* argv[])
     sf_floatwrite(x0,nxz,fx);
     sf_floatwrite(t0,nxz,ft);
 
-    sf_close();
+
     exit(0);
 }

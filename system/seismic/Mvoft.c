@@ -55,6 +55,6 @@ int main(int argc, char** argv)
     for (i2=0; i2 < n2; i2++) {
 	sf_floatwrite(vint,n1,out);
     }
-    sf_close();
+
     exit (0);
 }

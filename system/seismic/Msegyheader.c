@@ -96,6 +96,6 @@ int main(int argc, char* argv[])
 	    sf_intwrite(buf2,SF_NKEYS,out);
 	}
     }
-    sf_close();
+
     exit(0);
 }

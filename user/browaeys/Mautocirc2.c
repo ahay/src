@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     binning(data,nbin,nx,ny,dx,dy,xi,yi,strength,verb);
 
     sf_floatwrite (circ,nbin,out);
-    sf_close();
+
     exit (0);
 }
 

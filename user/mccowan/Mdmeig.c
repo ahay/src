@@ -53,6 +53,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(evec,n2,evecs);
     }
 
-    sf_close();
+
     exit(0);
 }

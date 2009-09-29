@@ -122,6 +122,6 @@ int main(int argc, char* argv[])
 	if (NULL != msk) sf_intwrite(mask,nh2,msk);
     }
 
-    sf_close();
+
     exit(0);
 }

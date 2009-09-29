@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     free(*map); free(map);
     free(mod);
     free(dat);
-    sf_close();
+
     exit(0);
 }
 

@@ -102,6 +102,6 @@ int main(int argc, char* argv[])
     sf_floatwrite(hh[0][0],az.n*ax.n*ay.n,Ff);
 
     free(**hh); free(*hh); free(hh);
-    sf_close();
+
     exit (0);
 }

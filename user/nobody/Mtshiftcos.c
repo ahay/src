@@ -98,6 +98,6 @@ int main (int argc, char* argv[])
 	    
 	sf_floatwrite(ang[0],az.n*aa.n,Fang);
     }
-    sf_close();
+
     exit (0);
 }

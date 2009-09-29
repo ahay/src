@@ -347,6 +347,6 @@ int main (int argc, char* argv[]) {
     }
 
     sf_floatwrite (v, n1 * n2, vel);
-    sf_close();
+
     exit (0);
 }

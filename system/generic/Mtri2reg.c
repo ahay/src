@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(e,4*ne,edge2);
     }
 
-    sf_close();
+
     exit(0);
 }
 

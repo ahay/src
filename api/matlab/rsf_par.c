@@ -135,5 +135,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	    mexErrMsgTxt("Unknown type.");
 	    break;
     }
-    sf_close();
+
 }

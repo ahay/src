@@ -142,6 +142,6 @@ int main (int argc, char *argv[])
     ;         ;            free(rr);
     free(**sw); free(*sw); free(sw);
     free(**rw); free(*rw); free(rw);
-    sf_close();
+
     exit (0);
 }

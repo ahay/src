@@ -178,6 +178,6 @@ int main(int argc, char* argv[])
     sf_deallocatehelix(ff);
     sf_deallocatehelix(aa);
 
-    sf_close();
+
     exit (0);
 }

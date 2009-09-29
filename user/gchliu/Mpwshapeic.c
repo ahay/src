@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 	
     smoothshape(niter, wt[0], uw[0], rf[0]);
     sf_floatwrite(rf[0],nd,refl);
-    sf_close();
+
     exit(0);
 }
 

@@ -104,6 +104,6 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(s,nh,out);
 	} /* s */
     } /* w */
-    sf_close();
+
     exit(0);
 }

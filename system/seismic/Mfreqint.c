@@ -128,6 +128,6 @@ int main(int argc, char *argv[])
 	freqlets_lop(false,false,n1w,n1,qq,mm);
 	sf_complexwrite(mm,n1,out);
     }
-    sf_close();
+
     exit(0);
 }

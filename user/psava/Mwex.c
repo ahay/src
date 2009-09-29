@@ -166,6 +166,6 @@ int main (int argc, char *argv[])
     wextap_close(tap);
     /*------------------------------------------------------------*/
 
-    sf_close();
+
     exit (0);
 }

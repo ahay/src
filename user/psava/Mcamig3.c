@@ -302,6 +302,6 @@ int main (int argc, char *argv[])
     fslice_close(slow);
     /*------------------------------------------------------------*/
 
-    sf_close();
+
     exit (0);
 }

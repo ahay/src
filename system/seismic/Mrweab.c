@@ -223,6 +223,6 @@ int main(int argc, char* argv[])
 
     sf_complexwrite(ab[0],naref*nbref*nt,Fr);
 
-    sf_close();
+
     exit(0);
 }

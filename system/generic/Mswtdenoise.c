@@ -79,6 +79,6 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite(ainverse,n_number,out);
     }
-    sf_close();
+
     exit(0);
 }

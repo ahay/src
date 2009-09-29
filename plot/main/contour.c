@@ -174,6 +174,6 @@ int main (int argc, char* argv[])
 
     } /* i3 */
 
-    sf_close();
+
     exit(0);
 }

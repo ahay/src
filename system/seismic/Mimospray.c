@@ -75,6 +75,6 @@ int main(int argc, char* argv[])
 	imospray_lop (false,false,n1,n12,model,dat);
 	sf_floatwrite(dat,n12,out);
     }
-    sf_close();
+
     exit(0);
 }

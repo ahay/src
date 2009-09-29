@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     in = sf_input ("in");
     out = sf_output ("out");
 
-    sf_close ();
+
     sf_fileclose (out);
 
     exit (0);

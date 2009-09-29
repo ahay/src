@@ -320,7 +320,7 @@ int main (int argc, char* argv[]) {
     unlink (tga_filename);
     unlink (scm_filename);
 
-    sf_close ();
+
 
     exit (0);
 }

@@ -175,7 +175,7 @@ int main (int argc, char* argv[])
 	sf_intwrite(map[0],nx*ny,mask);
     }
 
-    sf_close();
+
     exit(0);
 }
 

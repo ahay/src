@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     contran_lop (false,false,nx,nx,pp,qq);
     sf_floatwrite(qq,nx,out);
 
-    sf_close();
+
     exit(0);
 }
 

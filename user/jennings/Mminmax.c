@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         sf_floatwrite(v3,nbuf,out);     /* Write the output         */
     }
     
-    sf_close();
+
     exit(0);
 }
 

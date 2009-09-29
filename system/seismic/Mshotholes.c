@@ -53,6 +53,6 @@ int main(int argc, char* argv[])
 	}
     }
     sf_intwrite (known[0],n2*n3,mask);
-    sf_close();
+
     exit(0);
 }

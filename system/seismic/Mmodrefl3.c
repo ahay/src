@@ -141,6 +141,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(pp[0],nt*np,out);
 	sf_floatwrite(ps[0],nt*np,out);
     }
-    sf_close();
+
     exit(0);
 }

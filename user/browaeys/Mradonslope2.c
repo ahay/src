@@ -115,6 +115,6 @@ int main (int argc, char *argv[])
     }
 
     sf_floatwrite(imgd[0][0],nx*nz*nd,Fimgd);
-    sf_close();
+
     exit (0);
 }

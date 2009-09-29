@@ -92,6 +92,6 @@ int main(int argc, char* argv[])
     if (adj) sf_floatwrite(m,nm,out);
     if (!adj) sf_floatwrite(dT,nx,out);
   }
-  sf_close();
+
   exit(0);
 }

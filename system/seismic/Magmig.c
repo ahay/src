@@ -142,6 +142,6 @@ int main(int argc, char *argv[])
 
 	sf_floatwrite(img[0],nt*nx,out);
     } /* ig */
-    sf_close();
+
     exit(0);
 }

@@ -392,7 +392,7 @@ int main(int argc, char* argv[])
 
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 
-    sf_close();
+
     exit(0);
 }
     

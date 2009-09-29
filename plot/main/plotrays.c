@@ -85,6 +85,6 @@ int main(int argc, char* argv[])
 
     vp_frame();
 
-    sf_close();
+
     exit(0);
 }

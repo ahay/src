@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     envcorr(inp,rat);
 
     sf_floatwrite(rat,nd,out);
-    sf_close();
+
     exit (0);
 }
 

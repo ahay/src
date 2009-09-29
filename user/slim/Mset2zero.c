@@ -90,6 +90,6 @@ int main (int argc, char *argv[])
         }
         assert(eleft==0);
     }
-    sf_close();
+
     exit (0);
 }

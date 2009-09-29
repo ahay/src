@@ -82,6 +82,6 @@ int main(int argc, char* argv[])
 
     fclose(tiffin);
     unlink(tiffname);
-    sf_close();
+
     exit(0);
 }

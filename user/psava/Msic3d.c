@@ -314,6 +314,6 @@ int main(int argc, char* argv[])
     }                     /* b loop */
     
     if(verb) fprintf(stderr,"\n");
-    sf_close();
+
     exit (0);
 }

@@ -190,6 +190,6 @@ int main(int argc, char* argv[])
 
 /*	fprintf(stderr,"\n-----------------------------\n");*/
     }
-    sf_close();
+
     exit (0);
 }

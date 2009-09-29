@@ -75,6 +75,6 @@ int main(int argc, char* argv[])
     sf_complexread(dat[0],nx*nw,data);
     fdmig (dat, img, movie);
     sf_floatwrite(img[0],nx*nz,imag);
-    sf_close();
+
     exit(0);
 }

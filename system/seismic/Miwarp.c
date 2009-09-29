@@ -69,6 +69,6 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite (trace2,n1,out);
     }
-    sf_close();
+
     exit(0);
 }

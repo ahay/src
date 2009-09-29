@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(resi,n123,out);
     }
-    sf_close();
+
     exit(0);
 }
 

@@ -177,6 +177,6 @@ int main(int argc, char* argv[])
 	}
 	if (stack) sf_complexwrite (out,nx,stk);
     }
-    sf_close();
+
     exit(0);
 }

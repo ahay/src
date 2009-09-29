@@ -124,7 +124,7 @@ int main (int argc, char* argv[])
 	sf_floatwrite (img,ntx,mig);
     }
 
-    sf_close();
+
     exit (0);
 }
 

@@ -93,6 +93,6 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (cos,nt,cos2);
 	}
     }
-    sf_close();
+
     exit (0);
 }

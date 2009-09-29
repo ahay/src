@@ -126,7 +126,7 @@ int main (int argc, char* argv[])
 	}
 	sf_floatwrite(pikt[0][0],na*nh*nt,pik);
     }
-    sf_close();
+
     exit (0);
 }
 

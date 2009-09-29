@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     sf_intwrite(aa->lag,aa->nh,lag);
     sf_floatwrite(aa->flt,aa->nh,filt);
 
-    sf_close();
+
     exit (0);
 }
 

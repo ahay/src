@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(out,nd,warped);
     sf_floatwrite(warp,nd,warpout);
 
-    sf_close();
+
     exit (0);
 }
 

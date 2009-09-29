@@ -304,6 +304,6 @@ int main(int argc, char* argv[])
     } /* iw frequency loop */
 
     if (!inv) sf_floatwrite (depth[0],nz*nx,out);
-    sf_close();
+
     exit (0);
 }

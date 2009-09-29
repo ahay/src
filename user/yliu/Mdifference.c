@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     difference[n1*n2-1]=maxdata1;
     sf_floatwrite(difference,n1*n2,out);
 
-    sf_close();
+
     exit(0);
 }
 /* 	$Id$	 */

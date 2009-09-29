@@ -172,6 +172,6 @@ int main(int argc, char* argv[])
 	sf_intwrite(edge[0],n12,out);
     }
 
-    sf_close();
+
     exit(0);
 }

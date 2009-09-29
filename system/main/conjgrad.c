@@ -383,6 +383,6 @@ int main(int argc, char* argv[])
     unlink(s);
     unlink(S);
 
-    sf_close();
+
     exit(0);
 }

@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(dense,n1d,out);
 	}
     }
-    sf_close();
+
     exit(0);
 }
 

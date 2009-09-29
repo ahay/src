@@ -71,6 +71,6 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(fbuf,nbuf,out);
     }
-    sf_close();
+
     exit(0);
 }

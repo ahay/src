@@ -70,5 +70,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
     for (i=0; i < dim; i++) {
 	p[i] = n[i];
     }
-    sf_close();
+
 }

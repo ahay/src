@@ -147,6 +147,6 @@ int main(int argc, char* argv[])
     /*Write 3 W values to output at every time coordinate*/
     sf_floatwrite(w,nw,out);
   }
-  sf_close();
+
   exit(0);
 }

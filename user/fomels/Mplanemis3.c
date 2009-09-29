@@ -106,6 +106,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite (mm,n123,out);
     }
-    sf_close();
+
     exit(0);
 }

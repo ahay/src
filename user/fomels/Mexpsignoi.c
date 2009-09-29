@@ -73,6 +73,6 @@ int main(int argc, char* argv[])
 	d[i] -= s[i];
     }
     sf_floatwrite(d,n12,out);
-    sf_close();
+
     exit(0);
 }
