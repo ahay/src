@@ -41,10 +41,8 @@ int main (int argc, char *argv[])
     sf_init (argc,argv);
     in = sf_input ("in");
     out = sf_output ("out");
-
-    if (!sf_histint (in,"esize",&esize) || esize <= 0)
-	sf_error("Need esize > 0 in in");
-
+    
+    esize = sf_esize(in);
     dim = sf_largefiledims(in,n);
 
     for (i=0; i < dim; i++) {
@@ -83,7 +81,8 @@ int main (int argc, char *argv[])
 	}
 	if (f[i] < 0) {
 	    f[i] = n[i]+f[i];
-	    if (f[i] < 0) sf_error("Negative f%d=%lld",i+1,(long long int) f[i]);
+	    if (f[i] < 0) sf_error("Negative f%d=%lld",
+				   i+1,(long long int) f[i]);
 	}
 
 	/* new values for o and d */
@@ -96,7 +95,8 @@ int main (int argc, char *argv[])
 	    /*( n#=(0,...) window size in #-th dimension )*/
 	    snprintf(key,5,"max%d",i+1);
 	    if (sf_getfloat(key,&a)) {
-		/*( max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...) maximum in #-th dimension )*/
+		/*( max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...) 
+		  maximum in #-th dimension )*/
 		m[i] = 1.5 + (a - o[i]) / d[i];
 	    } else {
 		m[i] = 1.5 + (n[i] - 1 - f[i]) / j[i];
