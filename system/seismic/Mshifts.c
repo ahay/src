@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 		t = i1+p;
 		it = floorf(t);
 
-		if (it < 0 || it >= n1) {
+		if (it < -1 || it > n1) {
 		    for (i2=0; i2 < n2-1; i2++) {
 			trace[i2]=0.;
 		    }

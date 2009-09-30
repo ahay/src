@@ -21,13 +21,14 @@ except ImportError:
     sys.stderr.write('Could not import distutils.\n\n')
     sys.exit(1)
 
-setup(name='rsfproj',
+setup(name='murr',
       version='0.9.9-1',
       maintainer='Sergey Fomel',
       maintainer_email='sergey.fomel@gmail.com',
       url='http://www.ahay.org/',
-      description='Python utilities for Madagascar',
+      description='Madagascar Utilities for Reproducible Research',
       py_modules=['rsfpath','rsfflow','rsfproj','rsftex','rsfbook'],
+      scripts=['pscons','sfdoc','sfkill','sftop'],
       )
 
-#      scripts=['latex2wiki','sftour','vpconvert']
+# Convert *.py scripts 
