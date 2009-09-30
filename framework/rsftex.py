@@ -392,17 +392,15 @@ def use(target=None,source=None,env=None):
     out = open(trg,'w')
     what = os.path.basename(trg)[-4:] # uses or data
 
-    usesfile = open(info,'r')
-    contents = usesfile.read()
-    usesfile.close()
-
-    exec contents in locals() 
+    glo = {}
+    loc = {}
+    execfile(info,glo,loc)
 
     project = os.path.dirname(info)
     tree = env.get('tree')
     doc = map(lambda prog:
               'rsfdoc.progs["%s"].use("%s","%s","%s")' %
-              (prog,tree[1],tree[2],project),eval(what))
+              (prog,tree[1],tree[2],project),loc[what])
     out.write(string.join(doc,'\n') + '\n')
     out.close()
     
