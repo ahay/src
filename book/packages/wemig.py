@@ -105,7 +105,7 @@ def bWRrtm(data,wfld,velo,dens,coor,custom,par):
 # IC
 # ------------------------------------------------------------
 
-# CIC
+# CIC: cross-correlation
 def cic(imag,swfl,rwfl,custom,par):
     par['ciccustom'] = custom
 
@@ -128,6 +128,17 @@ def eic(cip,swfl,rwfl,cc,custom,par):
          cc=${SOURCES[2]}
          %(eiccustom)s
          ''' %par)
+
+# CIC: deconvolution
+def dic(imag,swfl,rwfl,eps,custom,par):
+    par['diccustom'] = custom
+    
+    Flow(imag,[swfl,rwfl],
+         '''
+         math s=${SOURCES[0]} r=${SOURCES[1]} 
+         output="-(conj(s)*r)/(conj(s)*s+%g)" |
+         transp plane=23 | stack | real
+         ''' %eps)
 
 # ------------------------------------------------------------
 def wem(imag,sdat,rdat,slow,custom,par):

@@ -33,11 +33,11 @@
 #define rCOR(a,b) (a*b)
 
 #ifdef SF_HAS_COMPLEX_H
-#define cWGH(a,b,c) (-1.*(conjf(a)*b)*c)
+#define cWGH(a,b,c) (+1.*(conjf(a)*b)*c)
 #define cCOR(a,b) (conjf(a)*b) 
 #define cMUL(a,b) (a*b) 
 #else
-#define cWGH(a,b,c) (-1.*sf_cmul((sf_cmul(conjf(a),b)),c))
+#define cWGH(a,b,c) (+1.*sf_cmul((sf_cmul(conjf(a),b)),c))
 #define cCOR(a,b) (sf_cmul(conjf(a),b))
 #define cMUL(a,b) (sf_cmul(a,b))
 #endif
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
 	/* precompute phase for time delay */
 	tt  =sf_complexalloc2(nht2,nw);
 	for(iw=0;iw<nw;iw++) {
-	    w = 2*SF_PI*( sf_o(aw)+iw*sf_d(aw) );
+	    w = -2*SF_PI*( sf_o(aw)+iw*sf_d(aw) );
 	    
 	    for(iht=0;iht<nht2;iht++) {
 		ht = oht+iht*dht;

@@ -925,3 +925,19 @@ def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          wfl=${TARGETS[1]}
          %(fdcustom)s
          ''' % par)
+
+# ------------------------------------------------------------
+def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
+
+    par['xcen']=xcen
+    par['zcen']=zcen
+    par['xsig']=xsig*xsig
+    par['zsig']=zsig*xsig
+
+    Flow(gaus,None,
+         '''
+         math output="exp( -((x1-%(zcen)g)*(x1-%(zcen)g))/(2*%(zsig)g) - ((x2-%(xcen)g)*(x2-%(xcen)g))/(2*%(xsig)g) )"
+         n1=%(nz)d d1=%(dz)g o1=%(oz)g
+         n2=%(nx)d d2=%(dx)g o2=%(ox)g |
+         scale axis=123 
+         ''' % par)
