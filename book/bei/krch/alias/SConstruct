@@ -3,8 +3,7 @@ from rsfproj import *
 Result('alias',None,
        '''
        aliasp cycles=35 ix0=2 |
-       grey pclip=100 wanttitle=n xll=1 yll=1 xur=10 yur=10
+       grey pclip=100 wanttitle=n screenratio=1
        ''')
-    
-###########################################################################
+
 End()
