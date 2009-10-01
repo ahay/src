@@ -12,7 +12,7 @@ par = {
     'kt':50,
     'nb':100, 
     'jsnap':50,
-    'jdata':4
+    'jdata':1
     }
 fdm.param(par)
 

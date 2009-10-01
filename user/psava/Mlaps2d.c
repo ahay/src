@@ -218,13 +218,13 @@ int main(int argc, char* argv[])
 
 	if(ccin[ic]) {
 
-	    icx = (cc[ic].x-sf_o(ax))/sf_d(ax);
+	    icx = 1+(cc[ic].x-sf_o(ax))/sf_d(ax);
 	    for(ihx=-nhx; ihx<nhx+1; ihx++) {
 		mcxall[ic][nhx+ihx] = icx-ihx;
 		pcxall[ic][nhx+ihx] = icx+ihx;
 	    }
 
-	    icz = (cc[ic].z-sf_o(az))/sf_d(az);
+	    icz = 1+(cc[ic].z-sf_o(az))/sf_d(az);
 	    for(ihz=-nhz; ihz<nhz+1; ihz++) {
 		mczall[ic][nhz+ihz] = icz-ihz;
 		pczall[ic][nhz+ihz] = icz+ihz;
