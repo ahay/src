@@ -25,8 +25,8 @@ int main(int argc, char *argv[])
     float d1, d2;
     bool verb, stack, both;
 
-    sf_complex *dd, *mm=NULL, *mu=NULL;
-    sf_file in, out;
+    sf_complex *dd, *ref=NULL, *mm=NULL, *mu=NULL;
+    sf_file in, out, dif=NULL;
 
     sf_init(argc,argv);
 
@@ -70,9 +70,17 @@ int main(int argc, char *argv[])
 	}
     } else {
 	mu = sf_complexalloc(n1*n2);
+    }
+
+    if (NULL != sf_getstring ("dif")) {
+	dif = sf_input("dif");
+	ref = sf_complexalloc(n1*n2);
+    } else {
+	dif = NULL;
     }	
     
     dd = sf_complexalloc(n1*n2);
+
     if (!both) {
 	mm = sf_complexalloc((2*n1-1)*n1*n2);
     } else {
@@ -84,6 +92,9 @@ int main(int argc, char *argv[])
 	for (iw=0; iw < nw; iw++) { /* loop over frequency */
 	    if (verb) sf_warning("frequency %d of %d",iw+1,nw);
 	    sf_complexread(dd,n1*n2,in);
+	    if (NULL != dif) {
+		sf_complexread(ref,n1*n2,dif);
+	    }
 	    if (!both) {
 		for (i2=0; i2 < n2; i2++) {
 		    for (i1=0; i1 < n1; i1++) {
@@ -107,9 +118,17 @@ int main(int argc, char *argv[])
 			    if (s1 >= 0 && s1 < n2 && x1 >= 0 && x1 < n1 && 
 				s2 >= 0 && s2 < n2 && x2 >= 0 && x2 < n1 ) {
 #ifdef SF_HAS_COMPLEX_H
-				mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = dd[s1*n1+x1]*dd[s2*n1+x2];
+				if(NULL != dif) {
+				    mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = dd[s1*n1+x1]*ref[s2*n1+x2];
+				} else {
+				    mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = dd[s1*n1+x1]*dd[s2*n1+x2];
+				}
 #else
-				mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+				if(NULL != dif) {
+				    mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]);
+				} else {
+				    mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+				}
 #endif
 			    } else {
 				mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = 0.;
@@ -145,9 +164,17 @@ int main(int argc, char *argv[])
 			    if (s1 >= 0 && s1 < n2 && x1 >= 0 && x1 < n1 && 
 				s2 >= 0 && s2 < n2 && x2 >= 0 && x2 < n1 ) {
 #ifdef SF_HAS_COMPLEX_H
-				mm[i2*n1*n1+i1*n1+m] = dd[s1*n1+x1]*dd[s2*n1+x2];
+				if(NULL != dif) {			
+				    mm[i2*n1*n1+i1*n1+m] = dd[s1*n1+x1]*ref[s2*n1+x2];
+				} else {
+				    mm[i2*n1*n1+i1*n1+m] = dd[s1*n1+x1]*dd[s2*n1+x2];
+				}
 #else
-				mm[i2*n1*n1+i1*n1+m] = sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+				if(NULL != dif) {	
+				    mm[i2*n1*n1+i1*n1+m] = sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]);
+				} else {
+				    mm[i2*n1*n1+i1*n1+m] = sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+				}
 #endif
 			    } else {
 				mm[i2*n1*n1+i1*n1+m] = 0.;
