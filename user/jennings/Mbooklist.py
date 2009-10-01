@@ -203,6 +203,7 @@ def main(argv=sys.argv):
                     data_size = 0
                     string = "   *********  .rsfproj error   *********  %s\n"
                     sys.stderr.write(string % root)
+                    sys.stderr.flush()
                 
                 data_type = 'unknown'
                 if len(l['data']) == 0:     data_type = 'none   '
@@ -254,6 +255,7 @@ def main(argv=sys.argv):
             if (filter is True) and (command is not None):
                 string = "   +++++++++  running command  +++++++++  %s\n"
                 sys.stderr.write(string % root)
+                sys.stderr.flush()
                 t0   = os.times()
                 exit = syswait(' '.join(['cd',root,';',command]))
                 t1   = os.times()
@@ -267,6 +269,7 @@ def main(argv=sys.argv):
                 else:
                     string = "   *********   command error   *********  %s\n"
                 sys.stderr.write(string % root)
+                sys.stderr.flush()
 
     sys.stderr.write("\n")
     sys.stderr.write("Directories listed : %3d\n" % total_list)
