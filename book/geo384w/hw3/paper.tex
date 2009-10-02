@@ -1,0 +1,255 @@
+\author{Charles Hewitt Dix} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 3}
+
+\begin{abstract}
+  This homework has three parts. In the theoretical part, you will
+  find the geometrical amplitude of the acoustic displacement, derive
+  dynamic ray tracing equations, and extend the hyperbolic
+  approximation of reflection moveouts. In the computational part, you
+  will experiment with a field dataset from the Gulf of Mexico. In the
+  programming part, you will implement exact and approximate
+  traveltime computations in a $V(z)$ medium.
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+\end{verbatim}
+
+\section{Theoretical part}
+
+\begin{enumerate}
+\item In class, we derived the following acoustic wave equation for
+  pressure $P(\mathbf{x},t)$:
+\begin{equation}
+{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 P}{\partial t^2}} =\nabla^2 P + 
+\rho(\mathbf{x})\,
+\nabla\left(\frac{1}{\rho(\mathbf{x})}\right) \cdot \nabla P\;.
+\label{eq:pwave}
+\end{equation}
+\begin{enumerate}
+\item Using the connection between the pressure and displacement, derive the
+acoustic wave equation for the displacement vector
+$\mathbf{u}(\mathbf{x},t)$:
+\begin{equation}
+  \label{eq:uwave}
+  \rho(\mathbf{x})\,\frac{\partial^2 \mathbf{u}}{\partial t^2} =
+\end{equation}
+\item Consider a geometrical wave representation in the vicinity of a wavefront
+\begin{equation}
+  {\mathbf{u}(\mathbf{x},t)} = \mathbf{a}(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
+  \label{eq:gwave}
+\end{equation}
+and derive partial differential equations for the traveltime function
+$T(\mathbf{x})$ and the vector amplitude $\mathbf{a}(\mathbf{x})$.
+\item Assuming that the geometrical wave propagates in the direction
+  of the traveltime gradient
+\begin{equation}
+  {\mathbf{a}(\mathbf{x})} = A(\mathbf{x})\,V(\mathbf{x})\,\nabla T
+  \label{eq:vamp}
+\end{equation}
+show that the amplitude continuation along a ray is given by equation 
+\begin{equation}
+  \label{eq:avj}
+  \left|\mathbf{a}_1\right| = \left|\mathbf{a}_0\right|\,
+  \left(\frac{\rho_0\,V_0\,J_0}{\rho_1\,V_1\,J_1}\right)^{1/2}\;, 
+\end{equation}
+where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
+\end{enumerate}
+\item Consider a medium with a constant gradient of slowness squared
+  \begin{equation}
+    S^2(\mathbf{x}) = S_0^2 + 2\,\mathbf{g} \cdot (\mathbf{x}-\mathbf{x}_0)\;.
+  \end{equation}
+\begin{enumerate}
+\item In the 2-D case, the ray-family coordinate system can be
+  specified by $\mathbf{r}=\{\sigma,\theta\}$, where $\sigma$ goes
+  along the ray, and $\theta$ is the initial ray angle. A family of
+  rays starts from the source point $\mathbf{x}_0$ which each ray
+  traveling in the direction $\mathbf{p_0} =
+  \{S_0\,\cos{\theta},S_0\,\sin{\theta}\}$. Show that the coordinate
+  transformation matrix $\mathbf{P}=\partial \mathbf{p}/\partial
+  \mathbf{r}$ changes along the ray as
+  \begin{equation}
+    \label{eq:p}
+    \mathbf{P}(\sigma) = \left[\begin{array}{cc} 
+        g_1 & -S_0\,\sin{\theta} \\
+        g_2 & S_0\,\cos{\theta} \end{array}\right]\;,
+  \end{equation}
+  where $g_1$ and $g_2$ are the components of $\mathbf{g}$ and find
+  the corresponding transformation of the matrices
+  $\mathbf{X}=\partial \mathbf{x}/\partial \mathbf{r}$ and
+  $\mathbf{K}=\mathbf{P}\,\mathbf{X}^{-1}$.
+  \begin{eqnarray}
+    \label{eq:x}
+    \mathbf{X}(\sigma)  & = & \\ 
+    \mathbf{K}(\sigma)  & = & 
+    \label{eq:k}
+    \end{eqnarray}
+  \item Find the one-point geometrical spreading $J$ from a point
+    source in the 2-D case as a function of $S_0$, $\mathbf{g}$, the
+    source location $\mathbf{x}_0$, the initial ray
+    direction~$\theta$, and the ray coordinate $\sigma$.
+  \item Using analytical ray tracing solutions, find the two-point
+    geometrical spreading $J$ from a point source in the 2-D case as a
+    function of $S_0$, $\mathbf{g}$, the source location
+    $\mathbf{x}_0$ and the receiver location $\mathbf{x}_1$.
+  \end{enumerate}
+\item In class, we discussed the hyperbolic traveltime approximation for normal moveout
+  \begin{equation}
+  \label{eq:hyper2}
+  T(h) \approx \sqrt{T_0^2 + \frac{h^2}{V_0^2}}\;.
+\end{equation}
+More accurate approximations, involving additional parameters, are possible.
+\begin{enumerate}
+\item Consider the following three-parameter approximation
+  \begin{equation}
+    \label{eq:taner}
+    T(h) \approx \sqrt{T_0^2 + \frac{h^2}{V_0^2+a\,h^2}}\;,
+  \end{equation}
+  where $a$ is the velocity ``acceleration'' parameter
+  \cite[]{taner1,taner2,blias2}. 
+
+Evaluate parameter $a$ in terms of the velocity $V(z)$ and the reflector depth $z_0$.
+\begin{equation}
+  \label{eq:a}
+  a =
+\end{equation}
+by expanding
+  equation~(\ref{eq:taner}) in a Taylor series around the zero offset
+  $h=0$ and comparing it with the corresponding Taylor series of the exact
+  traveltime. The exact traveltime is given by the parametric equations
+  \begin{eqnarray}
+\label{eq:xofp}
+h(p) & = & \int\limits_0^{z_0} \frac{p\,V(z)\,dz}{\sqrt{1-p^2 V^2(z)}}\;, \\
+\label{eq:tofp}
+T(p) & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
+\end{eqnarray}
+
+\end{enumerate}
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\section{Computational part}
+\inputdir{cmp}
+
+In the computational part, we begin working with field data. The left
+panel in Figure~\ref{fig:cmp} shows a CMP (common midpoint) gather
+from the Gulf of Mexico \cite[]{bei}.
+
+\plot{cmp}{width=\textwidth}{From left to right: (a) CMP (common midpoint) gather 
+with overlaid traveltime curves. (b) Interval velocity. (c) RMS
+(root-mean-square) velocity overlaid on the semblance scan. (d) CMP
+gather after normal moveout.}
+ 
+We will assume a $V(z)$ medium and will use a very simple model of the
+interval velocity to explain the geometry of the observed data. The
+model involves two parameters: the initial gradient of velocity and
+the maximum velocity. The velocity function starts at the water
+velocity of~1.5 km/s and grows linearly with vertical time until it
+reaches the maximum velocity, after which point it remains flat. The
+panels in Figure~\ref{fig:cmp} show the interval velocity, the
+corresponding RMS velocity (overlaid on the semblance scan), and the
+CMP gather after NMO (normal moveout). 
+
+Your task is to find the best values of the two model parameters for
+optimal prediction of the traveltime geometry and for flattening the
+CMP gather after NMO.
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd ~/geo384w/hw3/cmp
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons cmps.vpl
+\end{verbatim}
+to generate and display a movie looping through different values of
+the maximum velocity. If you are on a computer with multiple CPUs, you
+can also try
+\begin{verbatim}
+pscons cmps.vpl
+\end{verbatim}
+to generate different movie frames faster by running computations in
+parallel.
+\item Edit the \texttt{SConstruct} file to modify the velocity gradient. Check your result by running
+\begin{verbatim}
+pscons cmps.vpl
+\end{verbatim}
+again. 
+\item Edit the \texttt{SConstruct} file to select the 
+best frame of the movie (corresponding to the best maximum velocity). Display it by running
+\begin{verbatim}
+scons view
+\end{verbatim}
+\end{enumerate}
+
+{\small \lstinputlisting[frame=single]{cmp/SConstruct}}
+
+\section{Programming part}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{cmp/traveltime.c}
+
+\newpage
+
+\sideplot{time}{width=\textwidth}{Traveltime in a $V(z)$ medium.}
+
+The program \texttt{cmp/traveltime.c} computes reflection traveltimes
+in a $V(z)$ medium by using different methods. 
+
+\begin{enumerate}
+\item Modify the program to implement approximation~(\ref{eq:taner}) using your equation~(\ref{eq:a}).
+\item Modify the program to implement exact traveltime computation by doing shooting iterations with equations~(\ref{eq:xofp}-\ref{eq:tofp}). 
+Using Newton's method, you can find the value of $p$ for a given $h$ by solving the non-linear equation $h(p)=h$ with iterations
+\begin{equation}
+\label{eq:newton}
+p_{n+1} = p_n - \frac{h(p_n)-h}{h'(p_n)}\;.
+\end{equation}
+\item For the traveltime in Figure~\ref{fig:time}, find the offset, where the absolute error of the hyperbolic approximation~(\ref{eq:hyper2}) exceeds~0.1 s. 
+\item For the traveltime in Figure~\ref{fig:time}, find the offset, where the absolute error of the nonhyperbolic approximation~(\ref{eq:taner}) exceeds~0.1 s. 
+\end{enumerate}
+
+\newpage
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo384w/hw3#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Dix's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+ \begin{verbatim} 
+  scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. 
+\end{enumerate}
+
+\bibliographystyle{seg} 
+\bibliography{SEG,hw3}
