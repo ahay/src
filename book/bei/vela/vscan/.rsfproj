@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfvelmod', 'sfvscan', 'sfdots', 'sfwindow', 'sfdd', 'sfmutter', 'sfgrey', 'sfpick', 'sfgraph', 'sfnmo', 'sfstack', 'sfshearer', 'sfagc', 'sfslice', 'sfmath', 'sfdix']
+data=['data/midpts/midpts.hh']
+size=  113307000
