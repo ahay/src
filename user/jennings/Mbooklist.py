@@ -70,26 +70,84 @@ def handler(signum, frame):
 signal.signal(signal.SIGINT,handler) # handle interrupt
 
 child = None
-def syswait(comm):
+def command_wait(comm):
     'Interruptable system command'
 
     global child
     child = os.fork()
     if child:
+        t0 = os.times()
         (pid,exit) = os.waitpid(child,0)
+        t1 = os.times()
         child = 0
-        return exit
+        dt_user = t1[2]-t0[2]
+        dt_sys  = t1[3]-t0[3]
+        dt_real = t1[4]-t0[4]
+        return (exit,dt_user,dt_sys,dt_real)
     else:
         status = os.system(comm)
         if (status==0): os._exit(0)
         else:           os._exit(1)
 
 def size_string(size):
+    'Make a human-readable size string'
 
     units = [' B','KB','MB','GB','TB']
     p = 1
     while 1024**p <= size : p = p+1
     return "%3.2f %s" % (float(size)/1024**(p-1),units[p-1])
+    
+def read_rsfproj(root,files):
+    'Read contents of an .rsfproj file'
+    
+    error           = 0             # defaults
+    rsfproj_exist   = 'no '         
+    data_size       = 0
+    data_type       = 'unknown'
+
+    if '.rsfproj' in files:         # get info from .rsfproj
+        rsfproj_exist = 'yes'
+        
+        g = {}                      # read file
+        l = {}
+        execfile(os.path.join(root,'.rsfproj'),g,l)
+        
+                                    # get data size
+        if 'size' in l: data_size = l['size']
+        else:           error = 1
+        
+                                    # get data type
+        if 'data' in l:
+            if len(l['data']) == 0:     data_type = 'none   '
+            if len(l['data']) >  0:     data_type = 'public '
+            if 'PRIVATE' in l['data']:  data_type = 'private'
+        else:
+            error = 1
+        
+    return (error,rsfproj_exist,data_size,data_type)
+    
+def calc_filter(options,props):
+    'Calculate command filter'
+    
+    filter = True
+    (rsfproj,      size,     data)      = options
+    (rsfproj_exist,data_size,data_type) = props
+    
+    # rsfproj existence filter
+    if (rsfproj == 'yes') and (rsfproj_exist == 'no '): filter = False
+    if (rsfproj == 'no' ) and (rsfproj_exist == 'yes'): filter = False
+    
+    # total rsf data file size filter
+    if (data_size > size): filter = False
+    
+    # external data type filter
+    if (data == 'none'   ) and ((data_type == 'public ') or (data_type == 'private')):
+        filter = False
+    if (data == 'public'      ) and  (data_type != 'public '): filter = False
+    if (data == 'none+public' ) and  (data_type == 'private'): filter = False
+    if (data == 'private'     ) and  (data_type != 'private'): filter = False
+    
+    return filter
 
 ###############################################################################
 
@@ -167,16 +225,18 @@ def main(argv=sys.argv):
         sys.stdout.write('command   rsfproj     size    data        directory\n')
         sys.stdout.flush()
 
-    total_list   = 0
-    total_size   = 0
-    pass_list    = 0
-    pass_size    = 0
-    rsfproj_yes  = 0
-    rsfproj_no   = 0
-    data_unknown = 0
-    data_none    = 0
-    data_public  = 0
-    data_private = 0
+    total_list      = 0
+    total_size      = 0
+    pass_list       = 0
+    pass_size       = 0
+    rsfproj_yes     = 0
+    rsfproj_no      = 0
+    rsfproj_error   = 0
+    command_error   = 0
+    data_unknown    = 0
+    data_none       = 0
+    data_public     = 0
+    data_private    = 0
     
     for bookdir in books:
         for root,dirs,files in os.walk(bookdir):
@@ -191,40 +251,19 @@ def main(argv=sys.argv):
                             
                                                 # skip dirs without SConstruct
             if 'SConstruct' not in files: continue
-                
-            if '.rsfproj' in files:         # get info from .rsfproj
-                rsfproj_exist = 'yes'
-                g = {}
-                l = {}
-                execfile(os.path.join(root,'.rsfproj'),g,l)
-                if 'size' in l:
-                    data_size = l['size']
-                else:
-                    data_size = 0
-                    string = "   *********  .rsfproj error   *********  %s\n"
-                    sys.stderr.write(string % root)
-                    sys.stderr.flush()
-                
-                data_type = 'unknown'
-                if len(l['data']) == 0:     data_type = 'none   '
-                if len(l['data']) >  0:     data_type = 'public '
-                if 'PRIVATE' in l['data']:  data_type = 'private'
-                
-            else:                           # defaults when no .rsfproj
-                rsfproj_exist = 'no '
-                data_size = 0
-                data_type = 'unknown'
-            
-                                            # calculate directory filter
-            filter = True
-            if (rsfproj == 'yes') and (rsfproj_exist == 'no '): filter = False
-            if (rsfproj == 'no' ) and (rsfproj_exist == 'yes'): filter = False
-            if (data_size > size): filter = False
-            if (data == 'none'   ) and ((data_type == 'public ') or (data_type == 'private')):
-                filter = False
-            if (data == 'public'      ) and  (data_type != 'public '): filter = False
-            if (data == 'none+public' ) and  (data_type == 'private'): filter = False
-            if (data == 'private'     ) and  (data_type != 'private'): filter = False
+                            
+                                                # read rsfproj file
+            tuple = read_rsfproj(root,files)
+            (error,rsfproj_exist,data_size,data_type) = tuple
+            if error==1:
+                rsfproj_error = rsfproj_error+1
+                string = "   *********  .rsfproj error   *********  %s\n"
+                sys.stderr.write(string % root)
+                sys.stderr.flush()
+
+                                                # calculate directory filter
+            filter = calc_filter((rsfproj,      size,     data),
+                                 (rsfproj_exist,data_size,data_type))
             if filter==True:
                 pass_list = pass_list+1
                 pass_size = pass_size+data_size
@@ -256,30 +295,32 @@ def main(argv=sys.argv):
                 string = "   +++++++++  running command  +++++++++  %s\n"
                 sys.stderr.write(string % root)
                 sys.stderr.flush()
-                t0   = os.times()
-                exit = syswait(' '.join(['cd',root,';',command]))
-                t1   = os.times()
-                t_user = t1[2]-t0[2]
-                t_sys  = t1[3]-t0[3]
-                t_real = t1[4]-t0[4]
+
+                tuple = command_wait(' '.join(['cd',root,';',command]))
+                (exit,dt_user,dt_sys,dt_real) = tuple
+
                 string = "   user %6.2f   sys %6.2f  real %6.2f  %s\n"
-                sys.stderr.write(string % (t_user,t_sys,t_real,root))
+                sys.stderr.write(string % (dt_user,dt_sys,dt_real,root))
                 if (exit==0):
                     string = "   ---------  command success  ---------  %s\n"
                 else:
                     string = "   *********   command error   *********  %s\n"
+                    command_error = command_error+1
                 sys.stderr.write(string % root)
                 sys.stderr.flush()
 
+    sys.stdout.flush()
     sys.stderr.write("\n")
     sys.stderr.write("Directories listed : %3d\n" % total_list)
     sys.stderr.write("Total data size    : %s\n" % size_string(total_size))
     sys.stderr.write("\n")
-    sys.stderr.write("Directories for command     : %3d\n" % pass_list)
-    sys.stderr.write("Total data size for command : %s\n" % size_string(pass_size))
-    sys.stderr.write("\n")
     sys.stderr.write("Directories with .rsfproj    : %3d\n" % rsfproj_yes)
     sys.stderr.write("Directories without .rsfproj : %3d\n" % rsfproj_no)
+    sys.stderr.write(".rsfproj errors              : %3d\n" % rsfproj_error)
+    sys.stderr.write("\n")
+    sys.stderr.write("Directories for command     : %3d\n" % pass_list)
+    sys.stderr.write("Total data size for command : %s\n"  % size_string(pass_size))
+    sys.stderr.write("Command errors              : %3d\n" % command_error)
     sys.stderr.write("\n")
     sys.stderr.write("Directories using unknown external data : %3d\n" % data_unknown)
     sys.stderr.write("Directories using no external data      : %3d\n" % data_none)
