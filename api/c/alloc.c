@@ -134,7 +134,7 @@ void *sf_realloc (void* ptr   /* previous data */,
 /*------------------------------------------------------------*/
 /*@out@*/ sf_complex **sf_complexalloc2 (size_t n1 /* fast dimension */, 
 					 size_t n2 /* slow dimension */)
-	  /*< complex 2-D allocation, out[0] points to a contiguous array >*/ 
+	  /*< complex 2-D allocation >*/ 
 {
     size_t i2;
     sf_complex **ptr;
@@ -151,7 +151,7 @@ void *sf_realloc (void* ptr   /* previous data */,
 /*@out@*/ sf_complex ***sf_complexalloc3 (size_t n1 /* fast dimension */, 
 					  size_t n2 /* slower dimension */, 
 					  size_t n3 /* slowest dimension */)
-	  /*< complex 3-D allocation, out[0][0] points to a contiguous array >*/ 
+	  /*< complex 3-D allocation >*/ 
 {
     size_t i3;
     sf_complex ***ptr;
@@ -169,7 +169,7 @@ void *sf_realloc (void* ptr   /* previous data */,
 					   size_t n2 /* slower dimension */, 
 					   size_t n3 /* slower dimension */, 
 					   size_t n4 /* slowest dimension */)
-	  /*< complex 4-D allocation, out[0][0][0] points to a contiguous array >*/ 
+	  /*< complex 4-D allocation >*/ 
 {
     size_t i4;
     sf_complex ****ptr;
@@ -178,6 +178,25 @@ void *sf_realloc (void* ptr   /* previous data */,
     ptr[0] = sf_complexalloc3 (n1,n2,n3*n4);
     for (i4=1; i4 < n4; i4++) {
 	ptr[i4] = ptr[0]+i4*n3;
+    }
+    return ptr;
+}
+
+/*------------------------------------------------------------*/
+/*@out@*/ sf_complex *****sf_complexalloc5 (size_t n1 /* fast dimension */, 
+					    size_t n2 /* slower dimension */, 
+					    size_t n3 /* slower dimension */, 
+					    size_t n4 /* slower dimension */,
+					    size_t n5 /* slowest dimension */)
+	  /*< complex 5-D allocation >*/ 
+{
+    size_t i5;
+    sf_complex *****ptr;
+    
+    ptr = (sf_complex*****) sf_alloc (n5,sizeof(sf_complex****));
+    ptr[0] = sf_complexalloc4 (n1,n2,n3,n4*n5);
+    for (i5=1; i5 < n5; i5++) {
+	ptr[i5] = ptr[0]+i5*n4;
     }
     return ptr;
 }
