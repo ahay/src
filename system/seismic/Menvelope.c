@@ -37,7 +37,7 @@ int main (int argc, char* argv[])
     data = sf_floatalloc(n1);
     hilb = sf_floatalloc(n1);
 
-    if (!sf_getint("order",&n)) n=6;
+    if (!sf_getint("order",&n)) n=100;
     /* Hilbert transformer order */
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */
