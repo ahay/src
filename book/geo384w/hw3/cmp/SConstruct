@@ -71,13 +71,13 @@ for iv in range(21):
     Plot(vrms+'w',vrms,
          '''
          graph yreverse=y transp=y pad=n 
-         wanttitle=n wantaxis=n min2=1.4 max2=2.8 
+         wanttitle=n wantaxis=n min2=1.4 max2=2.5 
          plotcol=7 plotfat=15
          ''')
     Plot(vrms+'b',vrms,
          '''
          graph yreverse=y transp=y pad=n 
-         wanttitle=n wantaxis=n min2=1.4 max2=2.8 
+         wanttitle=n wantaxis=n min2=1.4 max2=2.5 
          plotcol=0 plotfat=3
          ''')
     Plot(vrms,['vscan',vrms+'w',vrms+'b'],'Overlay')
