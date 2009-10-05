@@ -26,7 +26,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 #include <rsf.h>
 
 #include "divn.h"
-#include "hilbert.h"
 
 int main (int argc, char* argv[])
 {

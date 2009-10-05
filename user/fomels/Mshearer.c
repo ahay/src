@@ -26,7 +26,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 #include <rsf.h>
 
 #include "divn.h"
-#include "hilbert.h"
 
 int main (int argc, char* argv[])
 {
@@ -65,7 +64,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */
 
-    hilbert_init(n1, nh, c);
+    sf_hilbert_init(n1, nh, c);
 
     if (!sf_getint("short",&shrt)) shrt=1;
     /* short smoothing radius */
@@ -81,7 +80,7 @@ int main (int argc, char* argv[])
 	hilb = den+n1*i2;
 
 	sf_floatread(trace,n1,in);
-	hilbert(trace,hilb);
+	sf_hilbert(trace,hilb);
 
 	for (i1=0; i1 < n1; i1++) {
 	    trace[i1] = hypotf(trace[i1],hilb[i1]);

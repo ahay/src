@@ -1,7 +1,7 @@
 /* Nonstationary convolution with a Ricker wavelet. Phase and Frequency can be time-varying. */
 /*
   Copyright (C) 2009 China University of Petroleum-Beijing 
-	         and University of Texas at Austin
+  and University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
 #include <rsf.h>
 
 #include "ricker.h"
-
-#include "hilbert.h"
 
 int main(int argc, char* argv[])
 {
@@ -44,12 +42,12 @@ int main(int argc, char* argv[])
     /* Frequency and phase*/
     if (NULL == sf_getstring("tphase") || NULL == sf_getstring("tfreq")) {
         if (!sf_getfloat("frequency",&freq)) {
-           /* peak frequency for Ricker wavelet (in Hz) */
-           if (!sf_getfloat("freq",&freq)) freq=0.2;
-           /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+	    /* peak frequency for Ricker wavelet (in Hz) */
+	    if (!sf_getfloat("freq",&freq)) freq=0.2;
+	    /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
         } else {
-          if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-          freq *= 2.*d1;
+	    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	    freq *= 2.*d1;
         }
 
         trace = sf_floatalloc(n1);
@@ -61,7 +59,7 @@ int main(int argc, char* argv[])
 	    sf_freqfilt(n1,trace);
 	    sf_floatwrite(trace,n1,out);
         }
-     } else { /*frequency and phase are time-varying*/
+    } else { /*frequency and phase are time-varying*/
         
         sf_file tpha, tfre;
         if (!sf_histfloat(in,"o1",&o1)) o1=0;
@@ -74,7 +72,7 @@ int main(int argc, char* argv[])
         if (!sf_histint(tpha,"n1",&i) || i != n1) sf_error("the phase file has not same length");
         if (!sf_histint(tfre,"n1",&i) || i != n1) sf_error("the frequency file has not same length");
         if (!sf_getint("hiborder",&hilbn)) hilbn=6;
-          /* Hilbert transformer order */
+	/* Hilbert transformer order */
         if (!sf_getfloat("hibref",&hilbc)) hilbc=1.;
         trace = sf_floatalloc(n1);
         freqc = sf_floatalloc(n1);
@@ -85,39 +83,39 @@ int main(int argc, char* argv[])
         sf_floatread(phase,n1,tpha);
 
          
-        hilbert_init(n1, hilbn, hilbc);
+        sf_hilbert_init(n1, hilbn, hilbc);
         hilb = sf_floatalloc(n1);
         for (i2=0;i2 < n2; i2++) {
-             sf_floatread(trace,n1,in);
-             for (it=0; it < n1; it++) {
-                  outtrace[it] = 0.;
-             }
-             for (i1=0; i1 < n1; i1++) {
+	    sf_floatread(trace,n1,in);
+	    for (it=0; it < n1; it++) {
+		outtrace[it] = 0.;
+	    }
+	    for (i1=0; i1 < n1; i1++) {
                   
-                  max = 0.; 
-                  for (it=0;it < n1; it++) {
+		max = 0.; 
+		for (it=0;it < n1; it++) {
                        
-                       mt=d1*(i1-it);
-                       ric[it] = (1-2*(SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt))*exp(-SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt);
+		    mt=d1*(i1-it);
+		    ric[it] = (1-2*(SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt))*exp(-SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt);
                        
-                  }
-                  hilbert(ric,hilb);
-                  for (it=0; it < n1; it++) {
-		       hilb[it] = ric[it]*cosf(phase[i1]*SF_PI/180.) + hilb[it]*sinf(phase[i1]*SF_PI/180.);
-                       if (hilb[it] > max) max=hilb[it];
-	          }
-                  for (it=0;it < n1; it++) {
-                      if (!norm) {
-                         max = 1;
-                         ee  = 0.;
-                      }
-                      hilb[it] = hilb[it]*trace[i1]/(max+ee);
-                      outtrace[it] += hilb[it];
-                  }
-              }
-              sf_floatwrite(outtrace,n1,out);
+		}
+		sf_hilbert(ric,hilb);
+		for (it=0; it < n1; it++) {
+		    hilb[it] = ric[it]*cosf(phase[i1]*SF_PI/180.) + hilb[it]*sinf(phase[i1]*SF_PI/180.);
+		    if (hilb[it] > max) max=hilb[it];
+		}
+		for (it=0;it < n1; it++) {
+		    if (!norm) {
+			max = 1;
+			ee  = 0.;
+		    }
+		    hilb[it] = hilb[it]*trace[i1]/(max+ee);
+		    outtrace[it] += hilb[it];
+		}
+	    }
+	    sf_floatwrite(outtrace,n1,out);
         }
-     }
+    }
  
-     exit(0);
+    exit(0);
 }

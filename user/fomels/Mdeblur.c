@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "ntriangle1.h"
-#include "hilbert.h"
 
 int main(int argc, char* argv[])
 {
@@ -76,7 +75,7 @@ int main(int argc, char* argv[])
 
     ntriangle1_init(nbox,n1,n2,nr,ns);
     sf_weight_init(wght);
-    hilbert_init(n1, 10, 1.);
+    sf_hilbert_init(n1, 10, 1.);
 
     for (iter=0; iter < nliter; iter++) {
 	sf_solver_prec(ntriangle1_lop,sf_cgstep,sf_weight_lop,
@@ -85,7 +84,7 @@ int main(int argc, char* argv[])
 	sf_cgstep_close();
 
 	for (i2=0; i2 < n2; i2++) {
-	    hilbert(modl+i2*n1,wght+i2*n1);
+	    sf_hilbert(modl+i2*n1,wght+i2*n1);
 	    for (i1=0; i1 < n1; i1++) {
 		wght[i1+i2*n1] = hypotf(modl[i1+i2*n1],wght[i1+i2*n1]);
 	    }

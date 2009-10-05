@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "hilbert.h"
-
 int main (int argc, char* argv[])
 {
     bool hlb;
@@ -52,11 +50,11 @@ int main (int argc, char* argv[])
     a *= SF_PI/180.;
     /* convert to radian */
 
-    hilbert_init(n1, n, c);
+    sf_hilbert_init(n1, n, c);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
-	hilbert(data,hilb);
+	sf_hilbert(data,hilb);
 
 	if (!hlb) {
 	    for (i1=0; i1 < n1; i1++) {

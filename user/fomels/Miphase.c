@@ -21,7 +21,6 @@
 #include <rsf.h>
 
 #include "divn.h"
-#include "hilbert.h"
 
 int main (int argc, char* argv[])
 {
@@ -73,13 +72,13 @@ int main (int argc, char* argv[])
     if (!sf_getbool("band",&band)) band=false;
     /* if y, compute instantaneous bandwidth */
 
-    hilbert_init(n1, nh, c);
+    sf_hilbert_init(n1, nh, c);
     sf_deriv_init(n1, nh, c);
 
     mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
-	hilbert(trace,hilb);
+	sf_hilbert(trace,hilb);
 
 	if (band) {
 	    for (i1=0; i1 < n1; i1++) {

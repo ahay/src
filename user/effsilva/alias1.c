@@ -1,7 +1,6 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "hilbert.h"
 #include "hwt2d.h"
 
 #include "alias1.h"
@@ -45,7 +44,7 @@ int indexMap(
     dxdg = (float *) malloc(b.ng*sizeof(float));
     dzdg = (float *) malloc(b.ng*sizeof(float));
     
-    hilbert_init(b.ng, norder, 0.);
+    sf_deriv_init(b.ng, norder, 0.);
     hwt2d_init(vel,az,ax,az,ax);
     
     for(it=0;it<b.nt;it++){
@@ -53,8 +52,8 @@ int indexMap(
 	    x[ig]=crealf(rays[it][ig]);
 	    z[ig]=cimagf(rays[it][ig]);
 	}
-	deriv(x,dxdg);
-	deriv(z,dzdg);
+	sf_deriv(x,dxdg);
+	sf_deriv(z,dzdg);
 	for(ig=0;ig<b.ng;ig++){
 	    if(dxdg[ig]>zero) {tg=fabs(dzdg[ig]/dxdg[ig]);
 	    }else{tg=tg90;}
@@ -80,7 +79,7 @@ int indexMap(
 	}
     }
     
-    hilbert_free();
+    sf_deriv_free();
     free(x); free(z); free(dxdg); free(dzdg);
     flag = 1;
     
@@ -102,7 +101,7 @@ int angleMap(
     dxdg = (float *) malloc(b.ng*sizeof(float));
     dzdg = (float *) malloc(b.ng*sizeof(float));
     
-    hilbert_init(b.ng, norder, 0.);
+    sf_deriv_init(b.ng, norder, 0.);
     
     halfpi = 2*atan(1);
     for(it=0;it<b.nt;it++){
@@ -110,8 +109,8 @@ int angleMap(
 	    x[ig]=crealf(rays[it][ig]);
 	    z[ig]=cimagf(rays[it][ig]);
 	}
-	deriv(x,dxdg);
-	deriv(z,dzdg);    
+	sf_deriv(x,dxdg);
+	sf_deriv(z,dzdg);    
 	for(ig=0;ig<b.ng;ig++){
 	    if(dxdg[ig]>zero) {ang=atan(dzdg[ig]/dxdg[ig]);
 	    }else{ang=halfpi;}
@@ -119,7 +118,7 @@ int angleMap(
 	}
     }
     
-    hilbert_free();
+    sf_deriv_free();
     free(x); free(z); free(dxdg); free(dzdg);
     flag = 1;
     
@@ -203,7 +202,7 @@ int indexMap2(
     dxdt = (float *) malloc(b.nt*sizeof(float));
     dzdt = (float *) malloc(b.nt*sizeof(float));
     
-    hilbert_init(b.nt, norder, 0.);
+    sf_deriv_init(b.nt, norder, 0.);
     hwt2d_init(vel,az,ax,az,ax);
     
     for(ig=0;ig<b.ng;ig++){
@@ -211,8 +210,8 @@ int indexMap2(
 	    x[it]=crealf(rays[it][ig]);
 	    z[it]=cimagf(rays[it][ig]);
 	}
-	deriv(x,dxdt);
-	deriv(z,dzdt);
+	sf_deriv(x,dxdt);
+	sf_deriv(z,dzdt);
 	for(it=0;it<b.nt;it++){
 	    if(dxdt[it]>zero) {tg=fabs(dzdt[it]/dxdt[it]);
 	    }else{tg=tg90;}
@@ -234,7 +233,7 @@ int indexMap2(
 	}
     }
     
-    hilbert_free();
+    sf_deriv_free();
     free(x); free(z); free(dxdt); free(dzdt);
     flag = 1;
     

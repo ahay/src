@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "seislet.h"
-#include "hilbert.h"
 
 int main(int argc, char *argv[])
 {
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
 	ww = sf_floatalloc2(n1,n2);
 	hilb = sf_floatalloc(n1);
 	sf_weight_init(ww[0]);
-	hilbert_init(n1, 6, 1.);
+	sf_hilbert_init(n1, 6, 1.);
     } else {
 	ww = NULL;
 	hilb = NULL;
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
 
 		/* find envelope */
 		for (i2=0; i2 < n2; i2++) {
-		    hilbert(qq+i2*n1,hilb);
+		    sf_hilbert(qq+i2*n1,hilb);
 		    for (i1=0; i1 < n1; i1++) {
 			ww[i2][i1] = hypotf(qq[i1+i2*n1],hilb[i1]);
 		    }

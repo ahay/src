@@ -1,4 +1,4 @@
-/* Hilbert transform and first derivative FIR. */
+/* Hilbert transform FIR filter. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,16 +24,16 @@
 
 #include <math.h>
 
-#include <rsf.h>
-
 #include "hilbert.h"
+
+#include "alloc.h"
 
 static float c, c2, *h;
 static int n, nt;
 
-void hilbert_init(int nt1  /* transform length */, 
-		  int n1   /* trace length */, 
-		  float c1 /* filter parameter */)
+void sf_hilbert_init(int nt1  /* transform length */, 
+		     int n1   /* trace length */, 
+		     float c1 /* filter parameter */)
 /*< initialize >*/
 {
     n = n1;
@@ -43,13 +43,13 @@ void hilbert_init(int nt1  /* transform length */,
     h = sf_floatalloc(nt);
 }
 
-void hilbert_free(void)
+void sf_hilbert_free(void)
 /*< free allocated storage >*/
 {
     free(h);
 }
 
-void hilbert (const float* trace, float* trace2)
+void sf_hilbert (const float* trace, float* trace2)
 /*< transform >*/
 {
     int i, it;
@@ -79,7 +79,7 @@ void hilbert (const float* trace, float* trace2)
     trace2[nt-1] = 2.*(h[nt-2]-h[nt-1])*c;
 }
 
-void hilbert4 (const float* trace, float* trace2)
+void sf_hilbert4 (const float* trace, float* trace2)
 /*< transform - kind 4 filter >*/
 {
     int i, it;
@@ -106,30 +106,3 @@ void hilbert4 (const float* trace, float* trace2)
     trace2[nt-1] = trace2[nt-2];
 }
 
-void deriv (const float* trace, float* trace2)
-/*< derivative operator >*/
-{
-    int i, it;
-    
-    for (it=0; it < nt; it++) {
-	h[it] = trace[it];
-    }
-
-    for (i=n; i >= 1; i--) {
-	for (it=1; it < nt-1; it++) {
-	    trace2[it] = h[it]-0.5*(h[it+1]+h[it-1]);
-	}
-	trace2[0] = trace2[1];
-	trace2[nt-1] = trace2[nt-2];
-
-	for (it=0; it < nt; it++) {
-	    h[it] = trace[it] + trace2[it]*i/(2*i+1);
-	}
-    }
-
-    trace2[0] = h[1]-h[0];
-    for (it=1; it < nt-1; it++) {
-	trace2[it] = 0.5*(h[it+1]-h[it-1]);
-    }
-    trace2[nt-1] = h[nt-1]-h[nt-2];
-}

@@ -13,7 +13,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys
+import sys, string
 
 try:
     from distutils.core import setup
@@ -27,8 +27,13 @@ setup(name='murr',
       maintainer_email='sergey.fomel@gmail.com',
       url='http://www.ahay.org/',
       description='Madagascar Utilities for Reproducible Research',
-      py_modules=['rsfpath','rsfflow','rsfproj','rsftex','rsfbook'],
-      scripts=['pscons','sfdoc','sfkill','sftop'],
+      py_modules=string.split('''
+      rsfpath rsfflow rsfproj rsftex rsfbook sftour
+      '''),
+      scripts=string.split('''
+      pscons sfdoc sfkill sftop vplot2eps vplot2png vplot2gif vplot2avi 
+      latex2wiki sftour vpconvert
+      '''),
       )
 
-# Convert *.py scripts 
+# Check imports

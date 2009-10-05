@@ -7,10 +7,6 @@
 #include "aarots.h"
 #endif
 
-#ifndef  _hilbert_h
-#include "hilbert.h"
-#endif
-
 #include "migzrots.h"
 
 /*--------------------------------------------------------------------------*/
@@ -78,14 +74,14 @@ void derive_1( int n1, int n2, float d1,
 {
     int n=6,i1,i2;
     
-    hilbert_init(n1, n, 0.);
+    sf_deriv_init(n1, n, 0.);
     
     for (i2=0;i2<n2;i2++) {
-	deriv(y[i2],dyd1[i2]);
+	sf_deriv(y[i2],dyd1[i2]);
 	for(i1=0;i1<n1;i1++) dyd1[i2][i1] /= d1;
     }
     
-    hilbert_free();
+    sf_deriv_free();
     
 }
 
@@ -107,18 +103,18 @@ void derive_2( int n1, int n2, float d2,
   }
 */
     
-    hilbert_init(n2, n, 0.);
+    sf_deriv_init(n2, n, 0.);
     yy   = sf_floatalloc(n2);
     der2 = sf_floatalloc(n2);
     
     for (i1=0;i1<n1;i1++) {
 	for(i2=0;i2<n2;i2++) yy[i2] = y[i2][i1];
-	deriv(yy,der2);
+	sf_deriv(yy,der2);
 	for(i2=0;i2<n2;i2++) dyd2[i2][i1] = der2[i2]/d2;
     }
     
     free(yy); free(der2);
-    hilbert_free();
+    sf_deriv_free();
     
 }
 

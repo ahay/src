@@ -4,10 +4,10 @@ import configure
 
 progs = '''
 agmig ai2refl avo bin cascade c2r cell2 cell3 cgscan cmp2shot
-constfdmig2 cos2ang depth2time dimag dmo dsr dsr2 extract fincon
-finstack fkamo fkdmo fourvc fourvc0 fourvc2 freqint freqlet gazdag
-halfint headerattr headermath hwt2d hwtex imospray infill inmo inmo3
-intbin isin2ang itaupmo itaupmo2 iwarp kirchinv kirchnew kirmod
+constfdmig2 cos2ang depth2time dimag dmo dsr dsr2 envelope extract
+fincon finstack fkamo fkdmo fourvc fourvc0 fourvc2 freqint freqlet
+gazdag halfint headerattr headermath hwt2d hwtex imospray infill inmo
+inmo3 intbin isin2ang itaupmo itaupmo2 iwarp kirchinv kirchnew kirmod
 kirmod3 layer linsincos mig45 migsteep3 modrefl modrefl2 modrefl3
 mutter nmo nmov nmow pnmo pnmo3d pp2psang pp2psang2 pp2pstsic
 preconstkirch prestolt ptaupmo pveltran radial radon randrefl rays2

@@ -21,7 +21,6 @@
 #include <rsf.h>
 
 #include "divn.h"
-#include "hilbert.h"
 
 int main (int argc, char* argv[])
 {
@@ -65,15 +64,15 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */
 
-    hilbert_init(n1, nh, c);
+    sf_hilbert_init(n1, nh, c);
 
     mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
-	hilbert(trace,hilb);
+	sf_hilbert(trace,hilb);
 
 	sf_floatread(trace2,n1,ref);
-	hilbert(trace2,hilb2);
+	sf_hilbert(trace2,hilb2);
 
 	for (i1=0; i1 < nh; i1++, i++) {
 	    num[i] = 0.;

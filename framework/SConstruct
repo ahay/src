@@ -27,7 +27,8 @@ for src in Split('vplot2eps vplot2png vplot2gif vplot2avi '
                  'latex2wiki sftour vpconvert'):
     if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
         py_install(src)
-        env.InstallAs(os.path.join(bindir,src),src+'.py')
+        env.Command(src,src+'.py','cp $SOURCE $TARGET')
+        env.Install(bindir,src)
 
 for src in Split('doc top kill'):
     env.Install(bindir,'sf'+src)
@@ -43,7 +44,7 @@ py_install('rsfuse')
 
 htm = os.path.join(docdir,'index.html')
 txt = os.path.join(txtdir,'INDEX.txt')
-spc = os.path.join(spcdir,'global.spec')
+spc = os.path.join(spcdir,'extend.spec')
 man = os.path.join(mandir,'index.man')
 
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
