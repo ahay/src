@@ -1,7 +1,7 @@
-/* 3-D SSR migration/modeling using extended split-step */
+/* 3-D SSR extrapolation using extended split-step */
 
 /*
-  Copyright (C) 2007 Colorado School of Mines
+  Copyright (C) 2009 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

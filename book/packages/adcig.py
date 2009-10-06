@@ -110,7 +110,7 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
     if(par['eratio']>=1):
         par['eheight']=10
     else:
-        par['eheight']=13*par['eratio']
+        par['eheight']=12*par['eratio']
 
 #    byte gainpanel=a pclip=100 %s |
 

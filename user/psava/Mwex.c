@@ -1,4 +1,4 @@
-/* 3-D zero-offset modeling/migration with extended SSF */
+/* 3-D modeling/migration with extended SSF */
 
 /*
   Copyright (C) 2007 Colorado School of Mines

@@ -353,6 +353,8 @@ int main (int argc, char *argv[])
 	default:
 	    if(verb) sf_warning("C.I.C.");
 	    cigs = fslice_init(n,1,sizeof(float));
+	    ahx = sf_maxa(1,0.,0); sf_setlabel(ahx,"");
+	    sf_oaxa(Fc,ahx,4);
 
 	    img=img3o_init(cub,imag,cigs,jcx,jcy,jcz);
 	    imop       = img3o;
