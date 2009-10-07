@@ -46,7 +46,7 @@ def modpar(par):
     par['dt']=0.001
     par['nb']=150
     par['jsnap']=1000
-    par['jdata']=4
+    par['jdata']=1
     par['wweight']=50
     par['wclip']=0.5
  
