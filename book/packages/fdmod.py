@@ -270,12 +270,22 @@ def horizontal(cc,coord,par):
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
+
 def horizontal3d(cc,coord,par):
     Flow(cc+'_',None,
          'math n1=%(nx)d d1=%(dx)g o1=%(ox)g n2=%(ny)d d2=%(dy)g o2=%(oy)g output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g" | put n1=%d n2=1' % (coord,par['nx']*par['ny']) )
-    Flow(cc+'_x',cc+'_','math output="x1" | put n1=%d n2=1' % (      par['nx']*par['ny']) )
-    Flow(cc+'_y',cc+'_','math output="x2" | put n1=%d n2=1' % (      par['nx']*par['ny']) )
+
+    if(par['nx']==1):
+        Flow(cc+'_x',cc+'_','math output="%g" | put n1=%d n2=1' % (par['ox'],par['nx']*par['ny']) )
+    else:
+        Flow(cc+'_x',cc+'_','math output="x1" | put n1=%d n2=1' % (      par['nx']*par['ny']) )
+
+    if(par['ny']==1):
+        Flow(cc+'_y',cc+'_','math output="%g" | put n1=%d n2=1' % (par['oy'],par['nx']*par['ny']) )
+    else:
+        Flow(cc+'_y',cc+'_','math output="x2" | put n1=%d n2=1' % (          par['nx']*par['ny']) )
+
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=2 space=n
