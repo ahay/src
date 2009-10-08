@@ -25,7 +25,7 @@
 
 static int n1, n2, nb, k2;
 static sf_bands slv;
-static float *diag, **offd, eps, **dip, *tt;
+static float *diag, **offd, eps, eps2, **dip, *tt;
 static pwd w;
 
 static void stepper(bool adj /* adjoint flag */,
@@ -42,6 +42,7 @@ void predict_init (int nx, int ny /* data size */,
     nb = 2*nw;
 
     eps = e;
+    eps2 = e;
 
     slv = sf_banded_init (n1, nb);
     diag = sf_floatalloc (n1);
@@ -71,25 +72,32 @@ void predict_step(bool adj     /* adjoint flag */,
 		  float* pp    /* slope */)
 /*< prediction step >*/
 {
-    int i1;
+    int i1, ib;
 
     for (i1=0; i1 < n1; i1++) {
-	diag[i1] = 6.*eps;
-	offd[0][i1] = -4.*eps;
-	offd[1][i1] = eps;
+	diag[i1] = 2.*eps+eps2;
+	offd[0][i1] = -eps;
+	for (ib=1; ib < nb; ib++) {
+	    offd[ib][i1] = 0.0;
+	}
     }
-    diag[0] = diag[n1-1] = 1.+eps;
-    diag[1] = diag[n1-2] = 1.+5.*eps;
-    offd[0][0] = offd[0][n1-2] = -2.*eps;
+    diag[0] -= eps;
+    diag[n1-1] -= eps;
 
     pwd_define (forw, w, pp, diag, offd);
     sf_banded_define (slv, diag, offd);
 
     if (adj) {
-	sf_banded_solve (slv, trace);
-	pwd_set (true, w, trace, trace, diag);
+	sf_banded_solve (slv, trace);	
+	pwd_set (true, w, diag, trace, offd[0]);
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = diag[i1] + eps2*trace[i1];
+	}
     } else {
-	pwd_set (false, w, trace, trace, diag);
+	pwd_set (false, w, trace, diag, offd[0]);
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = diag[i1] + eps2*trace[i1];
+	}
 	sf_banded_solve (slv, trace);
     }
 }
@@ -287,66 +295,4 @@ void subtract_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
     }
 }
 
-void predict_flat(int i0     /* reference trace number */, 
-		  float** d  /* input */, 
-		  float** mm /* output */, 
-		  float** pp /* slope */)
-/*< predictive flattening >*/
-{
-    int i1, i2, m2;
-    float *trace;
 
-    /* prediction from the left */
-    for (i2=0; i2 <= i0; i2++) {
-        for (i1=0; i1 < n1; i1++) {
-            mm[i2][i1] = d[i2][i1];
-        }
-
-        if (i2 == i0) break;
-
-	for (i1=0; i1 < n1; i1++) {
-	    diag[i1] = 6.*eps;
-	    offd[0][i1] = -4.*eps;
-	    offd[1][i1] = eps;
-	}
-	diag[0] = diag[n1-1] = 1.+eps;
-	diag[1] = diag[n1-2] = 1.+5.*eps;
-	offd[0][0] = offd[0][n1-2] = -2.*eps;
-
-        pwd_define (true, w, pp[i2], diag, offd);
-        sf_banded_define (slv, diag, offd);
-
-        for (m2=0; m2 <= i2; m2++) {
-            trace = mm[m2];
-
-            pwd_set (false, w, trace, trace, diag);
-            sf_banded_solve (slv, trace);
-        }
-    }
-    
-    /* prediction from the right */
-    for (i2=n2-1; i2 > i0; i2--) {
-        for (i1=0; i1 < n1; i1++) {
-            mm[i2][i1] = d[i2][i1];
-        }
-
-	for (i1=0; i1 < n1; i1++) {
-	    diag[i1] = 6.*eps;
-	    offd[0][i1] = -4.*eps;
-	    offd[1][i1] = eps;
-	}
-	diag[0] = diag[n1-1] = 1.+eps;
-	diag[1] = diag[n1-2] = 1.+5.*eps;
-	offd[0][0] = offd[0][n1-2] = -2.*eps;
-
-        pwd_define (false, w, pp[i2-1], diag, offd);
-        sf_banded_define (slv, diag, offd);
-
-        for (m2=n2-1; m2 >= i2; m2--) {
-            trace = mm[m2];
-
-            pwd_set (false, w, trace, trace, diag);
-            sf_banded_solve (slv, trace);
-        }
-    }
-}

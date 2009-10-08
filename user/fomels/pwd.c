@@ -70,7 +70,7 @@ void pwd_define (bool adj        /* adjoint flag */,
 		 float** offd    /* defined off-diagonal */)
 /*< fill the matrix >*/
 {
-    int i, j, k, j2, m, n, nw;
+    int i, j, k, m, n, nw;
     float am, aj;
     
     nw = (w->na-1)/2;
@@ -93,29 +93,17 @@ void pwd_define (bool adj        /* adjoint flag */,
 	    k = i+j-nw;
 	    if (k >=0 && k < n) {
 		aj = w->a[j][k];
-		j2 = nw-i-k-1;
-		if (j2 >=0)     aj += w->a[j2][k];
-		j2 += 2*n;
-		if (j2 < w->na) aj += w->a[j2][k];
 		diag[i] += aj*aj;
 	    }
 	} 
 	for (m=0; m < 2*nw; m++) {
 	    for (j=m+1; j < w->na; j++) {
 		k = i+j-nw;
-		if (k < m+1) continue;
-		if (k >= n) break;
-		aj = w->a[j][k];
-		j2 = nw-i-k-1;
-		if (j2 >=0)     aj += w->a[j2][k];
-		j2 += 2*n;
-		if (j2 < w->na) aj += w->a[j2][k];
-		am = w->a[j-m-1][k];
-		j2 = nw-i-k+m;
-		if (j2 >=0)     am += w->a[j2][k];
-		j2 += 2*n;
-		if (j2 < w->na) am += w->a[j2][k];
-		offd[m][i] += am*aj;
+		if (k >= m+1 && k < n) {
+		    aj = w->a[j][k];
+		    am = w->a[j-m-1][k];
+		    offd[m][i] += am*aj;
+		}
 	    }
 	}
     }
@@ -137,53 +125,37 @@ void pwd_set (bool adj   /* adjoint flag */,
 	for (i=0; i < n; i++) {
 	    tmp[i]=0.;
 	}
-	for (i=0; i < n; i++) {
+	for (i=nw; i < n-nw-1; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		if (k < 0) {
-		    k = -k-1;
-		} else if (k >= n) {
-		    k = 2*n-k-1;
-		}
 		tmp[k] += w->a[j][k]*out[i];
 	    }
 	}
 	for (i=0; i < n; i++) {
 	    inp[i]=0.;
 	}
-	for (i=0; i < n; i++) {
+	for (i=nw; i < n-nw-1; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		if (k < 0) {
-		    k = -k-1;
-		} else if (k >= n) {
-		    k = 2*n-k-1;
-		}
 		inp[k] += w->a[j][i]*tmp[i];
 	    }
 	}
     } else {
 	for (i=0; i < n; i++) {
 	    tmp[i] = 0.;
+	}
+	for (i=nw; i < n-nw-1; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		if (k < 0) {
-		    k = -k-1;
-		} else if (k >= n) {
-		    k = 2*n-k-1;
-		}
 		tmp[i] += w->a[j][i]*inp[k];
 	    }
 	}
 	for (i=0; i < n; i++) {
 	    out[i] = 0.;
+	}
+	for (i=nw; i < n-nw-1; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		if (k < 0) {
-		    k = -k-1;
-		} else if (k >= n) {
-		    k = 2*n-k-1;
-		}
 		out[i] += w->a[j][k]*tmp[k];
 	    }
 	}

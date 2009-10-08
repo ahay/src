@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 				}
 #endif
 			    } else {
-				mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = 0.;
+				mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1] = sf_cmplx(0.,0.);
 			    }
 			}
 		    }
@@ -141,15 +141,23 @@ int main(int argc, char *argv[])
 		    sf_complexwrite(mm,(2*n1-1)*n1*n2,out);
 		} else {
 		    for (i2=0; i2 < n2*n1; i2++) {
-			mu[i2] = 0.;
+			mu[i2] = sf_cmplx(0.,0.);
 		    }
 		    for (i2=0; i2 < n2*n1; i2++) {
 			fold = 0;
 			for (i1=0; i1 < (2*n1-1); i1++) {
+#ifdef SF_HAS_COMPLEX_H
 			    mu[i2] += mm[i2*(2*n1-1)+i1];
-			    if (0!=mm[i2*(2*n1-1)+i1]) fold++;
+#else
+			    mu[i2] = sf_cadd(mu[i2],mm[i2*(2*n1-1)+i1]);
+#endif
+			    if (0. != cabsf(mm[i2*(2*n1-1)+i1])) fold++;
 			}
-			mu[i2] /= fold+FLT_EPSILON;
+#ifdef SF_HAS_COMPLEX_H
+			mu[i2] /= fold+SF_EPS;
+#else
+			mu[i2] = sf_crmul(mu[i2],1.0/(fold+SF_EPS));
+#endif
 		    }
 		    sf_complexwrite(mu,n1*n2,out);
 		}
@@ -177,7 +185,7 @@ int main(int argc, char *argv[])
 				}
 #endif
 			    } else {
-				mm[i2*n1*n1+i1*n1+m] = 0.;
+				mm[i2*n1*n1+i1*n1+m] = sf_cmplx(0.,0.);
 			    }
 			}
 		    }
@@ -186,15 +194,23 @@ int main(int argc, char *argv[])
 		    sf_complexwrite(mm,n1*n1*n2,out);
 		} else {
 		    for (i2=0; i2 < n2*n1; i2++) {
-			mu[i2] = 0.;
+			mu[i2] = sf_cmplx(0.,0.);
 		    }
 		    for (i2=0; i2 < n2*n1; i2++) {
 			fold = 0;
 			for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 			    mu[i2] += mm[i2*n1+i1];
-			    if (0!=mm[i2*n1+i1]) fold++;
+#else
+			    mu[i2] = sf_cadd(mu[i2],mm[i2*n1+i1]);
+#endif
+			    if (0.0 != cabsf(mm[i2*n1+i1])) fold++;
 			}
-			mu[i2] /= fold+FLT_EPSILON;
+#ifdef SF_HAS_COMPLEX_H
+			mu[i2] /= fold+SF_EPS;
+#else
+			mu[i2] = sf_crmul(mu[i2],1.0/(fold+SF_EPS));
+#endif
 		    }
 		    sf_complexwrite(mu,n1*n2,out);
 		}
