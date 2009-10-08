@@ -44,13 +44,14 @@ Result('mona','mona1 mona2','SideBySideAniso',vppen='txscale=1.5')
 
 for col in ('h','H'):
     mona = 'mona+%s' % col
+    if col=='H': mona = 'mona+caph'
     Plot(mona,'mona',
          '''
          grey allpos=y pclip=100 
          color=%s title="%s (color=%s)"
          transp=n wantaxis=n
          ''' % (col,colors[col],col))
-Result('monacap','mona+h mona+H','SideBySideIso',vppen='ysize=10 xsize=10')
+Result('monacap','mona+h mona+caph','SideBySideIso',vppen='ysize=10 xsize=10')
 
 for col in ('i','iC'):
     mona = 'mona+%s' % col
