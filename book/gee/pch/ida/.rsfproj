@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgrey', 'sflopef', 'sflosignoi']
+data=['data/ida/ida.H']
+size=     895768

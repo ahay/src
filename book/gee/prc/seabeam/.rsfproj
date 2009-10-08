@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpad', 'sfwilson', 'sfmiss', 'sfgrey']
+data=['data/seab/seabin.hh']
+size=     641234

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfreverse', 'sfcostaper', 'sfgrey', 'sfigrad']
+data=['data/bay/bay.h']
+size=    6720000

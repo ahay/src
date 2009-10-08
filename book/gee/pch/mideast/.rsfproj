@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sftpow', 'sfgrey', 'sfbyte']
+data=['data/mideast/gravel2D.H', 'data/mideast/dune3D.H']
+size=    1704960
