@@ -16,7 +16,7 @@
 
 import os, re, glob, string, types, pwd, shutil
 import cStringIO, token, tokenize, cgi, sys, keyword
-import rsfconf, rsfdoc, rsfprog, rsfpath, latex2wiki, vplot2eps
+import rsfconf, rsfdoc, rsfprog, rsfpath, latex2wiki
 
 import SCons
 
@@ -373,13 +373,14 @@ def pstexpen(target=None,source=None,env=None):
             return 1
     else:
         try:
+            import vpconvert
             options = 'color=n fat=1 fatmult=1.5 invras=y'
             name = os.path.splitext(os.path.basename(eps))[0]
             if colorfigs == ['ALL'] or name in colorfigs:
                 options += ' color=y'
             if geomanuscript:
                 options += ' serifs=n'
-            vplot2eps.convert(vpl,eps,options)
+            vpconvert.convert(vpl,eps,args=options)
         except:
             return 1
     return 0

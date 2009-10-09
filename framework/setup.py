@@ -31,9 +31,7 @@ setup(name='murr',
       rsfpath rsfflow rsfproj rsftex rsfbook sftour
       '''),
       scripts=string.split('''
-      pscons sfdoc sfkill sftop vplot2eps vplot2png vplot2gif vplot2avi 
-      latex2wiki sftour vpconvert
+      pscons sfdoc sfkill sftop latex2wiki sftour
       '''),
       )
 
-# Check imports

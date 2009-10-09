@@ -23,12 +23,10 @@ for src in Split('path doc flow proj prog tex book'):
     py_install('rsf' + src)
 py_install('suproj')
 
-for src in Split('vplot2eps vplot2png vplot2gif vplot2avi '
-                 'latex2wiki sftour vpconvert'):
-    if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
-        py_install(src)
-        env.Command(src,src+'.py','cp $SOURCE $TARGET')
-        env.Install(bindir,src)
+for src in Split('latex2wiki sftour'):
+    py_install(src)
+    env.Command(src,src+'.py','cp $SOURCE $TARGET')
+    env.Install(bindir,src)
 
 for src in Split('doc top kill'):
     env.Install(bindir,'sf'+src)
@@ -38,7 +36,7 @@ use = env.Command('rsfuse.py',None,
                   action=Action(rsfdoc.use,varlist=['book','scons']),
                   book='book',scons=sys.argv[0])
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
-for case in Split('vpplot suproj vplot2eps rsftex rsfproj'):
+for case in Split('vpplot suproj rsftex rsfproj'):
     Depends(use,os.path.join(libdir,case+'.py'))
 py_install('rsfuse')
 

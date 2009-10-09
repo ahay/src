@@ -109,7 +109,7 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 ##########################################################################
 # PENS BUILD
 ##########################################################################
-pdirs = ('fonts','include','utilities','genlib','main','docs')
+pdirs = ('fonts','include','utilities','genlib','main','docs','scripts')
 
 for dir in map(lambda x: os.path.join('pens',x), pdirs):
     build = os.path.join('build',dir)

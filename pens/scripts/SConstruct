@@ -1,0 +1,19 @@
+Import('env bindir libdir')
+
+scripts = '''
+vplot2eps vplot2png vplot2gif vplot2avi vpconvert
+'''
+
+def py_install(source):
+    global env,libdir
+    py = source+'.py'
+    pyc = py+'c'
+    env.Pycompile(pyc,py)
+    env.Install(libdir,[py,pyc])
+
+for src in Split(scripts):
+    if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
+        py_install(src)
+        env.Command(src,src+'.py','cp $SOURCE $TARGET')
+        env.Install(bindir,src)
+
