@@ -73,34 +73,39 @@ void predict_step(bool adj     /* adjoint flag */,
 /*< prediction step >*/
 {
     int i1, ib;
-    float t0, tn;
+    float t0, t1, t2, t3;
 
     for (i1=0; i1 < n1; i1++) {
-	diag[i1] = 2.*eps;
-	offd[0][i1] = -eps;
-	for (ib=1; ib < nb; ib++) {
+	diag[i1] = 6.*eps;
+    	offd[0][i1] = -4.*eps;
+    	offd[1][i1] = eps;
+	for (ib=2; ib < nb; ib++) {
 	    offd[ib][i1] = 0.0;
 	}
     }
 
+    diag[0] = diag[n1-1] = eps2+eps;
+    diag[1] = diag[n1-2] = eps2+5.*eps;
+    offd[0][0] = offd[0][n1-2] = -2.*eps;
+    
     pwd_define (forw, w, pp, diag, offd);
     sf_banded_define (slv, diag, offd);
 
-    if (adj) {
-	sf_banded_solve (slv, trace);	
-	t0 = trace[0];
-	tn = trace[n1-1];
-	pwd_set (true, w, trace, trace, diag);
-	trace[0] += eps*t0;
-	trace[n1-1] += eps*tn;
-    } else {
-	t0 = trace[0];
-	tn = trace[n1-1];
-	pwd_set (false, w, trace, trace, diag);
-	trace[0] += eps*t0;
-	trace[n1-1] += eps*tn;
-	sf_banded_solve (slv, trace);
-    }
+    if (adj) sf_banded_solve (slv, trace);
+
+    t0 = trace[0];
+    t1 = trace[1];
+    t2 = trace[n1-2];
+    t3 = trace[n1-1];
+
+    pwd_set (adj, w, trace, trace, diag);
+
+    trace[0] += eps2*t0;
+    trace[1] += eps2*t1;
+    trace[n1-2] += eps2*t2;
+    trace[n1-1] += eps2*t3;
+
+    if (!adj) sf_banded_solve (slv, trace);
 }
 
 void predict_set(float **dip1 /* dip field [n2][n1] */)

@@ -6,18 +6,20 @@ http://www.ahay.org
 
 What is Madagascar?
 ===================
-Madagascar is an open-source software package for geophysical data
-processing and reproducible numerical experiments. Its mission is to
+Madagascar is an open-source software package for multidimensional data
+analysis and reproducible computational experiments. Its mission is to
 provide
 
     * a convenient and powerful environment
     * a convenient technology transfer tool 
 
-for researchers working with digital image and data processing. The
-technology developed using the Madagascar project management system is
-transferred in the form of recorded processing histories, which become
-"computational recipes" to be verified, exchanged, and modified by
-users of the system.
+
+for researchers working with digital image and data processing in
+geophysics and related fields. Technology developed using the
+Madagascar project management system is transferred in the form of
+recorded processing histories, which become "computational recipes" to
+be verified, exchanged, and modified by users of the system.
+
 
 Design Principles
 =================
