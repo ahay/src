@@ -47,7 +47,7 @@ v0 = 2.5
 t0 = 2*D/v0
 it0=int(t0/dt)
 it1=it0
-print it1
+#print it1
 Flow('spike1',None,
      '''
      spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
@@ -86,7 +86,7 @@ v0 = 1.7
 t0 = 2*D/v0
 it0=int(t0/dt)
 it2=it0
-print it2
+#print it2
 Flow('spike2',None,
      '''
      spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
@@ -126,7 +126,7 @@ v0 = 1.75
 t0 = 2*D/v0
 it0=int(t0/dt)
 it3=it0
-print it3
+#print it3
 Flow('spike3',None,
      '''
      spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
@@ -164,7 +164,7 @@ v0 = 2.0
 t0 = 2*D/v0
 it0=int(t0/dt)
 it4=it0
-print it4
+#print it4
 Flow('spike4',None,
      '''
      spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
