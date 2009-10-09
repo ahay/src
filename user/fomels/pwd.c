@@ -91,7 +91,7 @@ void pwd_define (bool adj        /* adjoint flag */,
     for (i=0; i < n; i++) {
 	for (j=0; j < w->na; j++) {
 	    k = i+j-nw;
-	    if (k >=0 && k < n) {
+	    if (k >= nw && k < n-nw) {
 		aj = w->a[j][k];
 		diag[i] += aj*aj;
 	    }
@@ -99,7 +99,7 @@ void pwd_define (bool adj        /* adjoint flag */,
 	for (m=0; m < 2*nw; m++) {
 	    for (j=m+1; j < w->na; j++) {
 		k = i+j-nw;
-		if (k >= m+1 && k < n) {
+		if (k >= nw && k < n-nw) {
 		    aj = w->a[j][k];
 		    am = w->a[j-m-1][k];
 		    offd[m][i] += am*aj;
@@ -125,16 +125,17 @@ void pwd_set (bool adj   /* adjoint flag */,
 	for (i=0; i < n; i++) {
 	    tmp[i]=0.;
 	}
-	for (i=nw; i < n-nw-1; i++) {
+	for (i=0; i < n; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		tmp[k] += w->a[j][k]*out[i];
+		if (k >= nw && k < n-nw) 
+		    tmp[k] += w->a[j][k]*out[i];
 	    }
 	}
 	for (i=0; i < n; i++) {
 	    inp[i]=0.;
 	}
-	for (i=nw; i < n-nw-1; i++) {
+	for (i=nw; i < n-nw; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		inp[k] += w->a[j][i]*tmp[i];
@@ -144,7 +145,7 @@ void pwd_set (bool adj   /* adjoint flag */,
 	for (i=0; i < n; i++) {
 	    tmp[i] = 0.;
 	}
-	for (i=nw; i < n-nw-1; i++) {
+	for (i=nw; i < n-nw; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
 		tmp[i] += w->a[j][i]*inp[k];
@@ -152,11 +153,10 @@ void pwd_set (bool adj   /* adjoint flag */,
 	}
 	for (i=0; i < n; i++) {
 	    out[i] = 0.;
-	}
-	for (i=nw; i < n-nw-1; i++) {
 	    for (j=0; j < w->na; j++) {
 		k = i+j-nw;
-		out[i] += w->a[j][k]*tmp[k];
+		if (k >= nw && k < n-nw) 
+		    out[i] += w->a[j][k]*tmp[k];
 	    }
 	}
     }

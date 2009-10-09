@@ -73,31 +73,32 @@ void predict_step(bool adj     /* adjoint flag */,
 /*< prediction step >*/
 {
     int i1, ib;
+    float t0, tn;
 
     for (i1=0; i1 < n1; i1++) {
-	diag[i1] = 2.*eps+eps2;
+	diag[i1] = 2.*eps;
 	offd[0][i1] = -eps;
 	for (ib=1; ib < nb; ib++) {
 	    offd[ib][i1] = 0.0;
 	}
     }
-    diag[0] -= eps;
-    diag[n1-1] -= eps;
 
     pwd_define (forw, w, pp, diag, offd);
     sf_banded_define (slv, diag, offd);
 
     if (adj) {
 	sf_banded_solve (slv, trace);	
-	pwd_set (true, w, diag, trace, offd[0]);
-	for (i1=0; i1 < n1; i1++) {
-	    trace[i1] = diag[i1] + eps2*trace[i1];
-	}
+	t0 = trace[0];
+	tn = trace[n1-1];
+	pwd_set (true, w, trace, trace, diag);
+	trace[0] += eps*t0;
+	trace[n1-1] += eps*tn;
     } else {
-	pwd_set (false, w, trace, diag, offd[0]);
-	for (i1=0; i1 < n1; i1++) {
-	    trace[i1] = diag[i1] + eps2*trace[i1];
-	}
+	t0 = trace[0];
+	tn = trace[n1-1];
+	pwd_set (false, w, trace, trace, diag);
+	trace[0] += eps*t0;
+	trace[n1-1] += eps*tn;
 	sf_banded_solve (slv, trace);
     }
 }
@@ -294,5 +295,6 @@ void subtract_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 	}
     }
 }
+
 
 
