@@ -95,7 +95,7 @@ def size_string(size):
     units = [' B','KB','MB','GB','TB']
     p = 1
     while 1024**p <= size : p = p+1
-    return "%3.2f %s" % (float(size)/1024**(p-1),units[p-1])
+    return "%4.2f %s" % (float(size)/1024**(p-1),units[p-1])
     
 def read_rsfproj(root,files):
     'Read contents of an .rsfproj file'
@@ -287,7 +287,7 @@ def main(argv=sys.argv):
                 
                 tuple = (filter_command,rsfproj_exist,
                          size_string(data_size),data_type,root)
-                sys.stdout.write('%s       %s      %9s  %s     %s\n' % tuple)
+                sys.stdout.write('%s       %s     %10s  %s     %s\n' % tuple)
                 sys.stdout.flush()
             
                                         # execute command in directory
