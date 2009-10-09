@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfwindow', 'sfnoise', 'sftransp', 'sfheadersort', 'sfmath', 'sfinmo', 'sfwiggle']
+data=[]
+size=     202400
