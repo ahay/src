@@ -138,12 +138,18 @@ def retrieve(target=None,source=None,env=None):
         session.quit()
     else:
         server = env.get('server')
-        remote = os.path.basename(file)  
         if server == 'local':
-            remote = os.path.join(folder,remote)
             for file in map(str,target):
-                return os.command('cp %s %s' % (remote,file))
+                remote = os.path.basename(file)  
+                remote = os.path.join(folder,remote)
+                try:
+                    os.link(remote,file)
+                except:
+                    print 'Could not link file "%s" ' % remote
+                    os.unlink(file)
+                    return 6
         for file in map(str,target):
+            remote = os.path.basename(file)  
             rdir =  string.join([server,folder,remote],'/')
             try:
                 urllib.urlretrieve(rdir,file)
