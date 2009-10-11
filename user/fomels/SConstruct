@@ -10,8 +10,8 @@ fpow freqest gaussmooth interpt iphase kron l1 locov lpf lsfit mffit
 mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
 ofsemb patch pick pick3 plane planemis2 planemis3 planereg2 planereg3
 planesignoi pmig pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3
-pwdsigk pwdsmooth2 pwspray pwspray3 reshape rsin seislet seisigk shape
-shapesigk shearer similarity smoothreg thin timecont timefreq
+pwdsigk pwdsmooth2 pwspray pwspray3 rdiv reshape rsin seislet seisigk
+shape shapesigk shearer similarity smoothreg thin timecont timefreq
 timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon warp1
 warpadd warpscan
 '''

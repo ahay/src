@@ -46,8 +46,7 @@ def exists(pen):
     '''check if a given pen exists'''
     bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
     exe = os.path.join(bindir,pen+'pen')
-    binary = os.popen('file -bi ' + exe, 'r')
-    if binary.read().startswith('application'):
+    if os.path.isfile(exe):
         return exe
     else:
         return None

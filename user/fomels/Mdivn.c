@@ -1,9 +1,4 @@
-/* Smooth division. 
-
-Takes: rect1=1 rect2=1 ... 
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Smooth division. */
 /*
   Copyright (C) 2006 University of Texas at Austin
    
@@ -46,6 +41,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	nd *= n[i];
     }
 
