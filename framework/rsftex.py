@@ -380,7 +380,7 @@ def pstexpen(target=None,source=None,env=None):
                 options += ' color=y'
             if geomanuscript:
                 options += ' serifs=n'
-            vpconvert.convert(vpl,eps,args=options)
+            vpconvert.convert(vpl,eps,'eps',None,options)
         except:
             return 1
     return 0
