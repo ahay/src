@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		    fp0 = c[0] + c[1]*xp;
 		    fp = fp0*fp0 + c[2]*xp*xp;
 
-		    q = sqrtf(fp*fm);
+		    q = sqrtf(fabsf(fp*fm))+SF_EPS;
 
 		    t[im][ih] = 0.5*(f + (2*c[3]+c[1]*c[1]-c[2])*h*h + q);
 		    dt[0][im][ih] = f0+0.5*(fp0*fm+fm0*fp)/q;

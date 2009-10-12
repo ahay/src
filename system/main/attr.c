@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 		    break;
 	    }
 	    fsum += f;
-	    fsqr += f*f;
+	    fsqr += (double) f*f;
 	    if (lval != 2 || lval != 0) flval += pow(fabs(f),lval);
 	    if (0. == f) nzero++;
 	    if (SF_COMPLEX==type) {
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
     else if (lval==0) fnorm = nsiz-nzero;
     else              fnorm = pow(flval,1./lval);
     frms = sqrt(fsqr/nsiz);
-    if (nsiz > 1) fvar = (fsqr-nsiz*fmean*fmean)/(nsiz-1);
+    if (nsiz > 1) fvar = fabs(fsqr-nsiz*fmean*fmean)/(nsiz-1);
     else          fvar = 0.0;
     fstd = sqrt(fvar);
 
