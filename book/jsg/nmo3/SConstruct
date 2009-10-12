@@ -1,3 +1,7 @@
 from rsftex import *
 
-End()
+End(color='''
+pxsmooth3d pysmooth3d pmag3_anisow 
+deltaTslice1 deltaTslice2 deltaTslice3 deltaTslice4
+slowsqrdslice1 slowsqrdslice2 slowsqrdslice3 slowsqrdslice4
+''')
