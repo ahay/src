@@ -12,8 +12,7 @@ def py_install(source):
     env.Install(libdir,[py,pyc])
 
 for src in Split(scripts):
-    if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
-        py_install(src)
-        env.Command(src,src+'.py','cp $SOURCE $TARGET')
-        env.Install(bindir,src)
+    py_install(src)
+    env.Command(src,src+'.py','cp $SOURCE $TARGET')
+    env.Install(bindir,src)
 
