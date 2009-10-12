@@ -76,7 +76,7 @@ t_0=\sqrt{t^2-\left(W_xx^2+W_yy^2+2W_{xy}xy\right)},
 
 \begin{equation}
 \label{eq:Wmat}
-\tensor{W}=\pmatrix{W_x & W_{xy} \cr W_{xy} & W_y},
+\tensor{W}=\begin{pmatrix} W_x & W_{xy} \cr W_{xy} & W_y \end{pmatrix},
 \end{equation}
 
 
@@ -185,14 +185,14 @@ t_{\Delta k}=t_\Delta (t_0,x_i,y_j),
 
 \begin{equation}
 \label{eq:x}
-\mathbf{x}_{k}=\pmatrix{x^2_i & y^2_j & 2x_iy_j},
+\mathbf{x}_{k}=\begin{pmatrix} x^2_i & y^2_j & 2x_iy_j \end{pmatrix},
 \end{equation}
 
 \noindent and
 
 \begin{equation}
 \label{eq:w}
-\mathbf{w}=\pmatrix{W_x \cr W_y \cr W_{xy}}.
+\mathbf{w}=\begin{pmatrix} W_x \cr W_y \cr W_{xy} \end{pmatrix}.
 \end{equation}
 
 \noindent Linear system \ref{eq:dtXw} has ($n_x\times n_y$) equations with only three unknowns. By solving \ref{eq:dtXw} for each time-slice in the output CMP, we construct the slowness matrix $\tensor{W}(t_0)$, and use it with equations \ref{eq:alpha}, \ref{eq:lambda}, and \ref{eq:S} to extract the coordinate rotation angle $\alpha (t_0)$ and the NMO slowness as a function of azimuth, $S(t_0,\theta )$.
