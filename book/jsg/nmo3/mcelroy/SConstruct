@@ -7,13 +7,13 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 segy = 'mcelroy.sgy'
 
-Fetch(segy,'chevron',private)
+#Fetch(segy,'chevron',private)
 
-Flow('mac tmac mac.asc mac.bin',segy,
+Flow('mac tmac mac.asc mac.bin', None, # segy,
      '''
-     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
-     ep=228
-     ''')
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+     ep=228 tape=%s
+     ''' % segy)
 
 # From mac.asc:
 

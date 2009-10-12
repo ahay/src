@@ -500,6 +500,7 @@ class Project(Environment):
 
 # Default project
 project = Project()
+
 def Flow(target,source,flow,**kw):
     return apply(project.Flow,(target,source,flow),kw)
 def Plot (target,source,flow=None,**kw):
