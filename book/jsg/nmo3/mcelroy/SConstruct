@@ -9,11 +9,11 @@ segy = 'mcelroy.sgy'
 
 Fetch(segy,'chevron',private)
 
-Flow('mac tmac mac.asc mac.bin', segy,
-     '''
-     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
-     ep=228 tape=%s
-     ''' % segy)
+#Flow('mac tmac mac.asc mac.bin', segy,
+#     '''
+#     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+#     ep=228 tape=%s
+#     ''' % segy)
 
 # From mac.asc:
 
@@ -162,7 +162,7 @@ Result('superdip','super2 dipx dipy','SideBySideAniso',local=1)
 # Apply PNMO as residual NMO
 Flow('pnmod vpnmo','super2 dipy dipx','pnmo3d dipx=${SOURCES[1]} dipy=${SOURCES[2]} vel=${TARGETS[1]} | bandpass fhi=45 flo=8 ')
 Plot('pnmod','byte gainpanel=all | grey3 title="PNMOd" frame1=80 frame2=10 frame3=10')
-Result('super2_pnmo','super2 pnmod','SideBySideAniso',local=1)
+Result('super2-pnmo','super2 pnmod','SideBySideAniso',local=1)
 
 # Supergather in off and az 
 Flow('super21','super2','put n2=5625 n3=1 | window squeeze=y | transp')
@@ -188,7 +188,7 @@ for cased in ('super21','pnmod1','dipy1','dipx1','pmag1'):
            'byte gainpanel=20 | grey3 frame1=200 frame2=24 frame3=22 wanttitle=n parallel2=n titlesz=15 labelsz=12',local=1)
 
     for casep in ('wiggle','grey'):
-        Result(cased+'_aniso'+casep[0],cased+'_oa',
+        Result(cased+'-aniso'+casep[0],cased+'_oa',
              '''
              window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
              %s transp=y yreverse=y poly=y pclip=97 color=j parallel2=n
@@ -326,7 +326,7 @@ Plot('dipa2','byte gainpanel=all | grey3 title="Azimuth Slope" frame1=200 frame2
 Result('dipoa2','pnmo_oa_anisow dipo2 dipa2','SideBySideAniso',local=1)
 
 Flow('pnmo_oa2','pnmo_oa dipo2','pnmo half=y dip=${SOURCES[1]} | bandpass fhi=45 flo=8')
-Result('pnmo_oa2_anisow','pnmo_oa2',
+Result('pnmo-oa2-anisow','pnmo_oa2',
      '''
      window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
      %s transp=y yreverse=y poly=y pclip=97
@@ -397,7 +397,7 @@ Plot('pnmo_oa3_anisow','pnmo_oa3',
      %s transp=y yreverse=y poly=y pclip=97
      title="After PNMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"  titlesz=15 labelsz=12
      ''' % 'wiggle',local=1)
-Result('pmag3_anisow','pmag3',
+Result('pmag3-anisow','pmag3',
      '''
      window min1=0.9 max1=1.6 min2=3.6 max2=4.0 |
      stack |
