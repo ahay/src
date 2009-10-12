@@ -18,7 +18,27 @@ Austin, TX 78713-8924}
 
 \begin{abstract}
 
-Azimuthal anisotropy or lateral velocity variations cause azimuthal variations in moveout velocity which can lead to seismic image degradation if not properly handled.  In cases where apparent azimuthally anisotropic moveout is present, a single picked velocity is inadequate to flatten an event on a 3D CMP gather.  Conventional velocity analysis techniques require a significant amount of time and effort, especially in areas where apparent anisotropy is observed.  We propose a velocity-independent imaging approach to perform an elliptically anisotropic moveout correction in 3D.  The velocity-independent approach relies on volumetric local traveltime slopes rather than aggregate velocities, and therefore provides an azimuthally flexible description of traveltime geometries throughout the gather.  We derive theoretical expressions for extracting the moveout slowness matrix and the angle between the symmetry and acquisition axes as volumetric local attributes.  A practical inversion scheme to extract the same parameters is also developed.  These parameters are used to solve for moveout slowness as a function of azimuth.  Tests on a synthetic CMP gather show accurate results for the automatic moveout correction and the inversion scheme.  A field data example from West Texas illustrates the application of the automatic moveout correction as a residual moveout.
+Azimuthal anisotropy or lateral velocity variations cause azimuthal
+variations in moveout velocity which can lead to seismic image
+degradation if not properly handled.  In cases where apparent
+azimuthally anisotropic moveout is present, a single picked velocity
+is inadequate to flatten an event on a 3D CMP gather.  Conventional
+velocity analysis techniques require a significant amount of time and
+effort, especially in areas where apparent anisotropy is observed.  We
+propose a velocity-independent imaging approach to perform an
+elliptically anisotropic moveout correction in 3D.  The
+velocity-independent approach relies on volumetric local traveltime
+slopes rather than aggregate velocities, and therefore provides an
+azimuthally flexible description of traveltime geometries throughout
+the gather.  We derive theoretical expressions for extracting the
+moveout slowness matrix and the angle between the symmetry and
+acquisition axes as volumetric local attributes.  A practical
+inversion scheme to extract the same parameters is also developed.
+These parameters are used to solve for moveout slowness as a function
+of azimuth.  Tests on a synthetic CMP gather show accurate results for
+the automatic moveout correction and the inversion scheme.  A field
+data example from West Texas illustrates the application of the
+automatic moveout correction as a residual moveout.
 
 \end{abstract}
 
@@ -180,10 +200,10 @@ t_{\Delta k}=t_\Delta (t_0,x_i,y_j),
 \section{Examples}
 
 \inputdir{azimuthtest}
-\multiplot*{2}{cmp3d,nmo063d}{width=0.3\textwidth}
+\multiplot{2}{cmp3d,nmo063d}{width=0.3\textwidth}
  {(a.) A synthetic 3D CMP gather with four events of varying apparent elliptical anisotropy. The three panels in the display show a time-slice view (upper square panel), a crossline view (central panel), and an inline view (right panel) of the same volume.  (b.) An isotropic NMO correction using a picked velocity function appropriate for flattening certain events.  At best, isotropic NMO can flatten either the inline or crossline directions well, but there is no single velocity function that will flatten both. }
 
-\multiplot*{3}{pxsmooth3d,pysmooth3d,PNMO3d}{width=0.3\textwidth}
+\multiplot{3}{pxsmooth3d,pysmooth3d,PNMO3d}{width=0.3\textwidth}
  {The (a.) inline and (b.) crossline slopes of the CMP gather from Figure \ref{fig:cmp3d}.  (c.) These slopes are used with equation \ref{eq:PNMO} to automatically perform the proposed elliptically anisotropic moveout correction. All four events are flattened perfectly where the slopes are not aliased.}
 
 We provide two examples to illustrate the performance of our approach.  In the first example, we consider a simple 3D synthetic CMP gather (Figure~\ref{fig:cmp3d}) with four events, each with a different degree of apparent azimuthal anisotropy. The synthetic CMP in Figure~\ref{fig:cmp3d} was created by first specifying the moveout slowness matrix, $\tensor{W}$ for each event.  Each of the four events was modeled individually by applying inverse 3D NMO to a flat reflection based on equation \ref{eq:NMO}.  The exact parameters used to model the four events are specified in Table 1.  The four events were then added together into a single CMP gather with a small amount of random noise (10\% of the signal amplitude).  The result of this approach differs from real cases in that the traveltime surface for each of the events is completely independent from overlying events.  However, this approach allows us to specify the exact moveout slownesses of each the events without additional work.  
@@ -209,25 +229,25 @@ By measuring the local slopes of an input CMP gather as a volumetric attribute, 
 
 Another perspective of the same test is shown in Figures~\ref{fig:oacmp} and \ref{fig:oaPNMO}.  The traces from the synthetic CMP gather have been binned into offset and azimuth coordinates to display the familiar sinusoidal signature of azimuthal traveltime variations.  The various squared traveltime shifts ($t_\Delta $ values) applied by the automatic NMO correction were computed during implementation using equation \ref{eq:PNMO}, and then stored as a volumetric attribute.  For each of the events, time-slices of this volume are shown in Figures~\ref{fig:deltaTslice1}-\ref{fig:deltaTslice4}.  The elliptical variation is clearly displayed for events A, B, and C, but the subtle variation for event D makes it difficult to detect the apparent anisotropy. Each time-slice from the same volume was re-indexed into a vector following the scheme described in the previous section, and then fed into a least-squares solver for equation \ref{eq:dtXw} to yield $\tensor{W}(t_0)$.  The results of this inversion are displayed in Figures~\ref{fig:Wxinv}-\ref{fig:Wyinv}. At the times of the events, all three parameters have been extracted accurately.  The shaping regularization used to create smooth slope fields also leads to similar smoothness in the $\tensor{W}$ estimates.  Because of the random noise in the synthetic data, slope measurements away from events are also random.  The best-fit surface through these random slopes tends to be a flat plane, which is characterized on a CMP gather by zero slowness, causing the $W_x$ and $W_y$ estimates to tend toward zero between events.  It is important to note that the values shown in Figures~\ref{fig:Wxinv}-\ref{fig:InvAlpha} each rely on the accuracy of the NMO shifts computed at the corresponding value of $t_0$.  Only the sparse times of this synthetic CMP gather with data have meaningful slope estimates and therefore meaningful $\tensor{W}$ and $\alpha $ estimates.  
 
-\multiplot*{2}{oacmp,oaPNMO}{width=0.3\textwidth}
+\multiplot{2}{oacmp,oaPNMO}{width=0.3\textwidth}
  {(a.) A common offset (0.75 km) display of CMP from Figure~\ref{fig:cmp3d} with azimuth on the horizontal axis.  (b.) The same traces after the automatic moveout correction.  All events are shifted up to their appropriate $t_0$ and flattened.}
 
-\multiplot*{2}{deltaTslice1,deltaTslice2,deltaTslice3,deltaTslice4}{width=0.3\textwidth}
+\multiplot{2}{deltaTslice1,deltaTslice2,deltaTslice3,deltaTslice4}{width=0.3\textwidth}
 {Traveltime squared shifts ($t_{\Delta }(t_0,x,y)$) for each event. (a.) Event A. (b.) Event B. (c.) Event C. (d.) Event D.}
 
 The extracted moveout slowness matrices $\tensor{W}(t_0)$ are used with equation \ref{eq:alphatx} to estimate $\alpha (t_0)$.  The results of estimating $\alpha (t_0)$ are displayed in Figure~\ref{fig:InvAlpha}, and the values at the times of each event are accurate.  We conclude this example by solving for NMO slowness-squared as using $\alpha (t_0)$ and the corresponding eigenvalues at each $t_0$ with equation \ref{eq:S}. These results, shown in Figures~\ref{fig:slowsqrdslice1}-\ref{fig:slowsqrdslice4} show that for all four events, the angle of anisotropy is detected.  From this volume, the principal moveout directions are readily determined, the fast and slow axes are resolved, and the apparent anisotropy (the ratio or difference of $V_{fast}$ and $V_{slow}$ ) is measurable.
 
-\multiplot*{2}{Wxinv,Wyinv,Wxyinv,InvAlpha}{width=0.3\textwidth}
+\multiplot{2}{Wxinv,Wyinv,Wxyinv,InvAlpha}{width=0.3\textwidth}
 {Elements of $\tensor{W}(t_0)$ inverted from $t_{\Delta }(t_0,x,y)$ surfaces: (a.) $W_x$. (b.) $W_y$. (c.) $W_{xy}$.  (d.) Azimuth angle $\alpha (t_0)$ computed from $\tensor{W}(t_0)$.}
 
-\multiplot*{2}{slowsqrdslice1,slowsqrdslice2,slowsqrdslice3,slowsqrdslice4}{width=0.3\textwidth}
+\multiplot{2}{slowsqrdslice1,slowsqrdslice2,slowsqrdslice3,slowsqrdslice4}{width=0.3\textwidth}
 {Time-slice views of NMO slowness-squared values computed for each event.(a.) Event A. (b.) Event B. (c.) Event C. (d.) Event D.}
 
 \inputdir{mcelroy}
-\plot*{supercube}{width=0.7\textwidth}
+\plot{supercube}{width=0.7\textwidth}
 {3D view of a supergather from the McElroy data set, West Texas, US. Although the data has been isotropically NMO corrected, the time-slice view shows a subtle directional trend to the flatness of an event at 0.978 s.}
 
-\multiplot*{3}{super21_anisow,pmag3_anisow,pnmo_oa2_anisow}{width=0.3\textwidth}
+\multiplot{3}{super21_anisow,pmag3_anisow,pnmo_oa2_anisow}{width=0.3\textwidth}
 {A time-versus-azimuth panel of traces for a range of offsets from 3.6-4.0 km from the McElroy data set. The central panel shows local slope magnitudes corresponding to the left input panel. The slope magnitude was computed as $\sqrt{p_x^2+p_y^2}$.   The same data after an automatic moveout correction has been applied as a residual moveout correction is shown on the right.}
 
 We next demonstrate a potential application of the automatic moveout correction on a real data example.  In this case, we apply the automatic elliptically anisotropic moveout correction as a residual moveout correction.  A subset of the McElroy data set from West Texas was formed into a supergather seen in Figure~\ref{fig:supercube}.  Figure~\ref{fig:super21_anisow} shows a common offset (3.6-4.0 km) time-versus-azimuth display of the same data, where azimuthal anisotropy is evident for several events. In Figure~\ref{fig:pmag3_anisow}, the magnitude of the local slope is shown for the initial data.  The areas with higher slope values highlight areas that were not ideally flattened by the prior isotropic NMO correction. The region of the highest slopes along the top of the figure is due to the proximity of the prior NMO mute at about 0.8 $s$. Figure~\ref{fig:pnmo_oa2_anisow} shows the results of applying two iterations of the proposed moveout correction.  Further iterations will continue to flatten later events as distortions from overlying layers are removed.  The events in the results are already noticeably flatter, and will therefore produce a cleaner stack.    
