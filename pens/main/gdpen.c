@@ -48,7 +48,7 @@ char            name[] = "gdpen";
 #define NCOLOR 256 /* number of colors */
 #define MAXVERT 1000
 
-static gdImagePtr image, oldimage;
+static gdImagePtr image;
 static bool light = false;
 static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
 static char *image_type;
@@ -208,6 +208,10 @@ void gdreset (void)
 static void gd_write (void)
 {
     static bool called=false;
+
+#ifdef GIFANIM
+    static gdImagePtr oldimage;
+#endif
 
     /* Reset clipping, otherwise GD will write a partial frame */
     gdImageSetClip(image, dev.xmin, dev.ymin, dev.xmax - 1, dev.ymax - 1);

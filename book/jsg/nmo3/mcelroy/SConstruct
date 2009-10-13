@@ -9,11 +9,11 @@ segy = 'mcelroy.sgy'
 
 Fetch(segy,'chevron',private)
 
-#Flow('mac tmac mac.asc mac.bin', segy,
-#     '''
-#     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
-#     ep=228 tape=%s
-#     ''' % segy)
+Flow('mac tmac mac.asc mac.bin', segy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+     ep=228 tape=%s
+     ''' % segy)
 
 # From mac.asc:
 
