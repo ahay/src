@@ -61,7 +61,7 @@ for (n1,nd) in ((500,50),(50,500)):
            '''
            cat axis=2 ${SOURCES[1]} |
            graph dash=1,0 title="Model convergence %d" 
-	   label1=Iterations label2="Model misfit" 
+           label1=Iterations label2="Model misfit" 
            ''' % n1)
 
 End()
