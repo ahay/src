@@ -51,8 +51,8 @@ def data():
          segyread
          tape=$SOURCE
          tfile=${TARGETS[1]}
-         hfile=${TARGETS[2]}
-         bfile=${TARGETS[3]}
+         hfile=/dev/null
+         bfile=/dev/null
          ''',stdin=0)
 
 # ------------------------------------------------------------
