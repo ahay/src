@@ -35,7 +35,7 @@ struct sf_Bands {
 };
 
 sf_bands sf_banded_init (int n    /* matrix size */, 
-		   int band /* band size */)
+			 int band /* band size */)
 /*< initialize >*/
 {
     sf_bands slv;
