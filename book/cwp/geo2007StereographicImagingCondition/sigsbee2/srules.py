@@ -162,8 +162,8 @@ def run(par):
              window max1=%(tcut)g
              ''' % par)
         
-        Result('q'+k,'window j3=10 |' +
-               fdmod.dgrey('gainpanel=a pclip=99',par))
+        Plot('q'+k,'window j3=10 |' +
+             fdmod.dgrey('gainpanel=a pclip=99',par),view=1)
 
     Flow(  'qi','qs qr','add mode=p ${SOURCES[1]}')
     Result('qi','window j3=10 |'
