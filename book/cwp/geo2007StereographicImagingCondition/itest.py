@@ -208,7 +208,7 @@ def run(par):
          scale rscale=%(vprt)g
          ''' % par)
     Flow(  'velo','vbck vprt','add ${SOURCES[1]}')
-    Plot(  'velo',fdmod.cgrey('allpos=y bias=1200 pclip=100 color=f',par))
+    Plot(  'velo',fdmod.cgrey('allpos=y bias=1200 pclip=100 color=g',par))
     Result('velo',['velo','ss','sx'],'Overlay')
     
     # density
