@@ -304,8 +304,8 @@ def run(par):
     Flow(  'oi','os or','add mode=p ${SOURCES[1]}')
     
     for i in ('s','r','i'):
-        Result('q'+i,'window j3=10 |'
-               + fdmod.dgrey('gainpanel=a pclip=100',par))    
+        Plot('q'+i,'window j3=10 |'
+             + fdmod.dgrey('gainpanel=a pclip=100',par),view=1)    
         Result('o'+i,'window j3=10 | transp |'
                + fdmod.egrey('gainpanel=a pclip=100',par))
         
