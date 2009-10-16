@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfbandpass', 'sfpad', 'sfcosft', 'sfspray', 'sffourvc', 'sfwindow', 'sfgrey', 'sfvelcon', 'sft2chebstretch', 'sfchebvc']
+data=[]
+size=    3670016
