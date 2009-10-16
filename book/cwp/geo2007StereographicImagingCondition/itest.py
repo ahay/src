@@ -306,8 +306,8 @@ def run(par):
     for i in ('s','r','i'):
         Plot('q'+i,'window j3=10 |'
              + fdmod.dgrey('gainpanel=a pclip=100',par),view=1)    
-        Result('o'+i,'window j3=10 | transp |'
-               + fdmod.egrey('gainpanel=a pclip=100',par))
+        Plot('o'+i,'window j3=10 | transp |'
+             + fdmod.egrey('gainpanel=a pclip=100',par),view=1)
         
         Flow(['q'+i+'plt','q'+i+'bar'],'q'+i,
              'byte bar=${TARGETS[1]} gainpanel=a pclip=100')
