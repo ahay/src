@@ -208,7 +208,7 @@ def run(par):
          scale rscale=%(vprt)g
          ''' % par)
     Flow(  'velo','vbck vprt','add ${SOURCES[1]}')
-    Plot(  'velo',fdmod.cgrey('allpos=y bias=1200 pclip=100 color=F',par))
+    Plot(  'velo',fdmod.cgrey('allpos=y bias=1200 pclip=100 color=f',par))
     Result('velo',['velo','ss','sx'],'Overlay')
     
     # density
@@ -285,7 +285,7 @@ def run(par):
              window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g |
              scale axis=123
              ''' % par)
-        Result('u'+i,'window j3=10 |' + fdmod.wgrey('pclip=99',par))
+        Plot('u'+i,'window j3=10 |' + fdmod.wgrey('pclip=99',par),view=1)
 
         for k in range(0,par['nt']/par['jsnap'],25):
             fdmod.wframe('u'+i+'-'+str(k/25),'u'+i,k,'pclip=99',par)
