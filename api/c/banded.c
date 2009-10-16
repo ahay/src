@@ -20,6 +20,7 @@
 #include "banded.h"
 
 #include "alloc.h"
+#include "_defs.h"
 
 #ifndef _sf_banded_h
 
@@ -58,68 +59,51 @@ void sf_banded_define (sf_bands slv,
 		       float** offd /* off-diagonal [band][n] */)
 /*< define the matrix >*/
 {
-    int k, m, n;
+    int k, m, m1, n, n1;
     float t;
     
-    slv->d[0] = diag[0];
-    for (k = 0; k < slv->band-1; k++) {
-	for (m = k; m >= 0; m--) {
-	    t = offd[m][k-m];
-	    for (n = m+1; n < k-1; n++) 
-		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
-	    slv->o[m][k-m] = t/slv->d[k-m];
+    for (k = 0; k < slv->n; k++) {
+	t = diag[k];
+	m1 = SF_MIN(k,slv->band);
+	for (m = 0; m < m1; m++)
+	    t -= (slv->o[m][k-m-1])*(slv->o[m][k-m-1])*(slv->d[k-m-1]);
+	slv->d[k] = t;
+	n1 = SF_MIN(slv->n-k-1,slv->band);
+	for (n = 0; n < n1; n++) {
+	    t = offd[n][k];
+	    m1 = SF_MIN(k,slv->band-n-1);
+	    for (m = 0; m < m1; m++) {
+		t -= (slv->o[m][k-m-1])*(slv->o[n+m+1][k-m-1])*(slv->d[k-m-1]);
+	    }
+	    slv->o[n][k] = t/slv->d[k];
 	}
-	t = diag[k+1];
-	for (m = 0; m <= k; m++)
-	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*(slv->d[k-m]);
-	slv->d[k+1] = t;
-    }
-    for (k = slv->band-1; k < slv->n-1; k++) {
-	for (m = slv->band-1; m >= 0; m--) {
-	    t = offd[m][k-m];
-	    for (n = m+1; n < slv->band; n++) 
-		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
-	    slv->o[m][k-m] = t/(slv->d[k-m]);
-	}
-	t = diag[k+1];
-	for (m = 0; m < slv->band; m++) 
-	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*slv->d[k-m];
-	slv->d[k+1] = t;
     }
 }
+
 
 void sf_banded_const_define (sf_bands slv, 
 			     float diag        /* diagonal */, 
 			     const float* offd /* off-diagonal [band] */)
 /*< define matrix with constant diagonal coefficients >*/
 {
-    int k, m, n;
+    int k, m, m1, n, n1;
     float t;
     
-    slv->d[0] = diag;
-    for (k = 0; k < slv->band-1; k++) {
-	for (m = k; m >= 0; m--) {
-	    t = offd[m];
-	    for (n = m+1; n < k-1; n++) 
-		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
-	    slv->o[m][k-m] = t/slv->d[k-m];
-	}
+    for (k = 0; k < slv->n; k++) {   
 	t = diag;
-	for (m = 0; m <= k; m++)
-	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*(slv->d[k-m]);
-	slv->d[k+1] = t;
-    }
-    for (k = slv->band-1; k < slv->n-1; k++) {
-	for (m = slv->band-1; m >= 0; m--) {
-	    t = offd[m];
-	    for (n = m+1; n < slv->band; n++) 
-		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
-	    slv->o[m][k-m] = t/(slv->d[k-m]);
+	m1 = SF_MIN(k,slv->band);
+	for (m = 0; m < m1; m++)
+	    t -= (slv->o[m][k-m-1])*(slv->o[m][k-m-1])*(slv->d[k-m-1]);
+	slv->d[k] = t;
+	n1 = SF_MIN(slv->n-k-1,slv->band);
+	for (n = 0; n < n1; n++) {
+	    t = offd[n];
+	    m1 = SF_MIN(k,slv->band-n-1);
+	    for (m = 0; m < m1; m++) {
+		t -= (slv->o[m][k-m-1])*(slv->o[n+m+1][k-m-1])*(slv->d[k-m-1]);
+	    }
+	    slv->o[n][k] = t/slv->d[k];
 	}
-	t = diag;
-	for (m = 0; m < slv->band; m++) 
-	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*slv->d[k-m];
-	slv->d[k+1] = t;
     }
 }
 
@@ -168,31 +152,21 @@ void sf_banded_const_define_reflect (sf_bands slv,
 void sf_banded_solve (const sf_bands slv, float* b)
 /*< invert (in place) >*/
 {
-    int k, m;
+    int k, m, m1;
     float t;
-    
-    for (k = 1; k < slv->band; k++) {
+
+    for (k = 1; k < slv->n; k++) {
 	t = b[k];
-	for (m = 1; m <= k; m++)
-	    t -= (slv->o[m-1][k-m]) * b[k-m];
+	m1 = SF_MIN(k,slv->band);
+	for (m = 0; m < m1; m++)
+	    t -= (slv->o[m][k-m-1]) * b[k-m-1];
 	b[k] = t;
     }
-    for (k = slv->band; k < slv->n; k++) { 
-	t = b[k];
-	for (m = 1; m <= slv->band; m++) 
-	    t -= (slv->o[m-1][k-m]) * b[k-m];
-	b[k] = t;
-    }
-    for (k = slv->n-1; k >= slv->n - slv->band; k--) {
+    for (k = slv->n-1; k >= 0; k--) {
 	t = b[k]/slv->d[k];
-	for (m = 0; m < slv->n - k - 1; m++)
+	m1 = SF_MIN(slv->n -k-1,slv->band);
+	for (m = 0; m < m1; m++)
 	    t -= slv->o[m][k] * b[k+m+1];
-	b[k] = t;
-    }
-    for (k = slv->n - slv->band -1; k >= 0; k--) {
-	t = b[k]/slv->d[k];
-	for (m = 0; m < slv->band; m++) 
-	    t -= (slv->o[m][k]) * b[k+m+1];
 	b[k] = t;
     }
 }
