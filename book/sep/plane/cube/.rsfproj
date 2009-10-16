@@ -1,0 +1,3 @@
+uses=['sfcube', 'sfbyte', 'sfgrey3', 'sfdip', 'sfwindow', 'sffactorm', 'sfmath']
+data=[]
+size=    3183624

@@ -1,0 +1,3 @@
+uses=['sfqdome', 'sfsmooth', 'sfbyte', 'sfgrey3', 'sfdip', 'sfwindow', 'sfnoise', 'sfmask', 'sfheadercut', 'sfspray', 'sfdd', 'sffactorn', 'sfplanemis3']
+data=[]
+size=   52020000

@@ -1,0 +1,3 @@
+uses=['sfheat', 'sfwiggle', 'sfheat3', 'sfwindow', 'sfgrey', 'sfstack', 'sfscale', 'sfput', 'sfcat', 'sfgraph']
+data=[]
+size=    1732320
