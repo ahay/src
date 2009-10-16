@@ -166,8 +166,8 @@ def run(par):
              fdmod.dgrey('gainpanel=a pclip=99',par),view=1)
 
     Flow(  'qi','qs qr','add mode=p ${SOURCES[1]}')
-    Result('qi','window j3=10 |'
-           + fdmod.dgrey('gainpanel=a pclip=100',par))
+    Plot('qi','window j3=10 |'
+           + fdmod.dgrey('gainpanel=a pclip=100',par),view=1)
         
     # SIC
     Flow('kk',['qs','qr'],
