@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfcat', 'sftransp', 'sfmodrefl2', 'sfricker1', 'sfnoise', 'sfadd', 'sfdots', 'sfwarpscan', 'sfpick', 'sfgraph', 'sfsmoothder', 'sfwarp1', 'sfbyte', 'sfgrey3']
+data=['data/long/vel_time1.rsf', 'data/long/vel_time2.rsf', 'data/long/vel_time2_over.rsf', 'data/long/vel_time2_over_compaction.rsf']
+size=   79215200
