@@ -28,9 +28,9 @@ if 'c++' in env.get('API',[]):
         env.Install(libdir,lib)
         env.Install(incdir,hhfiles)
 
-    for ccfile in ['getpar','file']:
-        test = 'Test' + ccfile + '.cc'
-        env.Program([test,lib])
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.cc'
+        env.Program(file,[test,lib],PROGSUFFIX='.x',PROGPREFIX='Test')
 
 
         

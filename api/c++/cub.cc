@@ -6,7 +6,7 @@ using namespace std;
 CUB::CUB( const char* tag, const char* typ)
 {
     if(tag) {
-	if(typ == "i") {
+	if(typ[0] == 'i') {
 	    file_ = sf_input (tag);
 	} else {
 	    file_ = sf_output(tag);

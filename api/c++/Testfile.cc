@@ -12,8 +12,10 @@ int main(int argc, char* argv[])
     int n1;
     
     in.get("n1",n1);
+    if (in.type() != SF_INT)
+	sf_error("Need int type.");
 
-    std::valarray<float> trace(n1);
+    std::valarray<int> trace(n1);
 
     in >> trace;
 

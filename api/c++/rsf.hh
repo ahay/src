@@ -20,8 +20,11 @@ public:
     ~iRSF();
     // file size
     int size (int dim=0);
+    // file data type
+    int type (void);
     // reading data
     const iRSF& operator>> (std::valarray <float> &vect) const;
+    const iRSF& operator>> (std::valarray <int> &vect) const;
     // reading parameters
     void get (const char* name,   int& value,   int defolt) const;
     void get (const char* name,   int& value) const;
@@ -59,6 +62,7 @@ public:
     ~oRSF();
     // writing data
     const oRSF& operator<< (std::valarray <float> &vect) const;
+    const oRSF& operator<< (std::valarray <int> &vect) const;
     // writing parameters
     void put (const char* name, int value) const;
     void put (const char* name, float value) const;

@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     float **sia=NULL;
     float **coa=NULL;
 
-    float **rm,**ro,**rp,**ra,**rt; /*      main wavefield */
+    float **rm,**ro,**rp,**ra=NULL,**rt; /*      main wavefield */
     float **qm,**qo,**qp,**qa,**qt; /* auxiliary wavefield */
 
     /* linear interpolation weights/indices */

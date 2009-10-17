@@ -54,6 +54,13 @@ iRSF::size (int dim /* =0 */)
     return sf_leftsize(file_,dim);
 }
 
+// file data type
+int 
+iRSF::type (void)
+{
+    return (int) sf_gettype(file_);
+}
+
 // Reading data
 // ------------
 const iRSF&
@@ -61,6 +68,14 @@ iRSF::operator>> (std::valarray<float> &array) const
 {
     if (NULL == file_) sf_error("Cannot write data to parameter file");
     sf_floatread(&(array[0]),array.size(),file_);
+    return *this;
+}
+
+const iRSF&
+iRSF::operator>> (std::valarray<int> &array) const
+{
+    if (NULL == file_) sf_error("Cannot write data to parameter file");
+    sf_intread(&(array[0]),array.size(),file_);
     return *this;
 }
 
@@ -72,6 +87,14 @@ oRSF::operator<< (std::valarray<float> &array) const
     sf_floatwrite(&(array[0]),array.size(),file_);
     return *this;
 }
+
+const oRSF&
+oRSF::operator<< (std::valarray<int> &array) const
+{
+    sf_intwrite(&(array[0]),array.size(),file_);
+    return *this;
+}
+
 
 // Reading parameters
 /////////////////////
