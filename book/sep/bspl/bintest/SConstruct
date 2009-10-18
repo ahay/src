@@ -5,6 +5,7 @@ tmax=80.0
 t=0.01 
 spline = ((3*(12-7*t),16*(2*t-3),12-11*t),
           (40*(4-3*t),15*(11*t-12),-24*t,20-21*t))
+eps=0.00001
 
 for f in (2,4): 
     flt = 'flt%d' % f
@@ -14,7 +15,7 @@ for f in (2,4):
     Flow(flt+'.asc',None,
          '''
          echo %s a0=%g n1=%d data_format=ascii_float in=$TARGET 
-         ''' % (string.join(map(str,spl[1:]),' '),spl[0],ns))
+         ''' % (string.join(map(str,spl[1:]),' '),spl[0]+eps,ns))
     Flow([flt,'lag-'+flt],flt+'.asc',
          '''
          dd form=native | 
