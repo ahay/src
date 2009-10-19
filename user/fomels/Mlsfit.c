@@ -61,23 +61,27 @@ int main(int argc, char* argv[])
     sf_floatread(func[0],n1*nc,fit);
     sf_fileclose(fit);
 
+    mat = sf_floatalloc2(nc,nc);
+    
     if (NULL != sf_getstring("weight")) {
-	wht = sf_input("weight");
-	weight = sf_floatalloc(n1);
-	wfunc = sf_floatalloc2(n1,nc);
-
-	sf_floatread(weight,n1,wht);
-	sf_fileclose(wht);
-
-	for (ic=0; ic < nc; ic++) {
-	    for (i1=0; i1 < n1; i1++) {
-		wfunc[ic][i1] = func[ic][i1]*weight[i1];
-	    }
-	}
-
+      wht = sf_input("weight");
+      weight = sf_floatalloc(n1);
+      wfunc = sf_floatalloc2(n1,nc);
     } else {
-	weight = NULL;
-	wfunc = func;
+      wht = NULL;
+      weight = NULL;
+      wfunc = func;
+
+	/* compute A'A matrix */
+	for (ic=0; ic < nc; ic++) {
+	  for (id=0; id <= ic; id++) {
+	    mat[ic][id] = 0.;
+	    for (i1=0; i1 < n1; i1++) {
+	      mat[ic][id] += func[ic][i1]*func[id][i1];
+	    }
+	    mat[id][ic] = mat[ic][id];
+	  }
+	}
     }
 
     gaussel_init(nc);
@@ -85,24 +89,32 @@ int main(int argc, char* argv[])
     rhs = sf_floatalloc(nc);
     mat = sf_floatalloc2(nc,nc);
 
-    /* compute A'A matrix */
-    for (ic=0; ic < nc; ic++) {
-	for (id=0; id <= ic; id++) {
-	    mat[ic][id] = 0.;
-	    for (i1=0; i1 < n1; i1++) {
-		mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
-	    }
-	    mat[id][ic] = mat[ic][id];
-	}
-    }
-
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,inp);
 	
 	if (NULL != weight) {
+	  sf_floatread(weight,n1,wht);
+
+	  for (ic=0; ic < nc; ic++) {
 	    for (i1=0; i1 < n1; i1++) {
-		dat[i1] *= weight[i1];
+	      wfunc[ic][i1] = func[ic][i1]*weight[i1];
 	    }
+	  }
+
+	  /* compute A'A matrix */
+	  for (ic=0; ic < nc; ic++) {
+	    for (id=0; id <= ic; id++) {
+	      mat[ic][id] = 0.;
+	      for (i1=0; i1 < n1; i1++) {
+		mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
+	      }
+	      mat[id][ic] = mat[ic][id];
+	    }
+	  }
+	  
+	  for (i1=0; i1 < n1; i1++) {
+	    dat[i1] *= weight[i1];
+	  }
 	}	
 
 	/* compute A'd */
@@ -122,13 +134,12 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    dat[i1] = 0.;
 	    for (ic=0; ic < nc; ic++) {
-		dat[i1] += func[ic][i1]*sol[ic];
+	      dat[i1] += func[ic][i1]*sol[ic];
 	    }
 	}
 
 	sf_floatwrite(dat,n1,out);
     }
-
 
     exit(0);
 }
