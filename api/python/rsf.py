@@ -331,7 +331,7 @@ class Output(_File):
             self.temp = False
         self.file = c_rsf.sf_output(self.tag)
         if src: # clone source file
-            c_rsf.sf_settype(self.file,File.type.index(src.type))
+            c_rsf.sf_settype(self.file,_File.type.index(src.type))
             c_rsf.sf_fileflush(self.file,src.file)
         _File.__init__(self,self.tag)
     def write(self,data):
