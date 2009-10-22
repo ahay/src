@@ -39,9 +39,10 @@ try:
 except:
     import sys
     sys.stderr.write('''
-    sffdct needs PyCurvelab and did not find it on your system. Check
-    your PYTHONPATH or go to
+    sffdct needs PyCurvelab and did not find it on your system.
+    Check your PYTHONPATH or go to
     https://wave.eos.ubc.ca/Software/Licenced/ to download it.\n\n''')
+    sys.exit(1)
  
 par = sf.Par()
 input  = sf.Input()
