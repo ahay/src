@@ -10,7 +10,7 @@ for nw in (2,4):
         splan = 'splan%d-%d' % (nw,p)
         Flow([splan,'lag'+splan],None,
              '''
-             splineplane p=%g eps0=0.001 eps=0.0001 nw=%d lag=${TARGETS[1]}
+             splineplane p=%g eps0=0.1 eps=0.0001 nw=%d lag=${TARGETS[1]}
              ''' % (planes[p],nw))
         plane = 'plane%d-%d' % (nw,p)
         Flow(plane,splan,
