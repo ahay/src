@@ -6,7 +6,7 @@ n1 = 10000
 Flow('data',None,
      '''
      math n1=%f n2=1 output="1" |
-     noise rep=y |
+     noise seed=1 rep=y |
      math output="abs(input)"
      ''' % n1 )
 Flow('incore','data','sort')
