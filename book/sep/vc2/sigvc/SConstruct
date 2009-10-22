@@ -20,7 +20,7 @@ velcon.velcon('sig',
               padx=521,   # lateral padding
               v1=1.5,     # other velocity
               rect1=100,  # vertical smoothing
-              rect2=10)  # lateral  smoothing
+              rect2=10)   # lateral  smoothing
 
 Plot('vel','sig-vlf2',
      '''
