@@ -42,7 +42,7 @@ Result('nng',mygraph("NNG thresholded data") )
 Flow('data',None,
      '''
      math n1=%f n2=1 output="1" |
-     noise rep=y
+     noise seed=1 rep=y
      ''' % n1 )
 
 # Thresholding

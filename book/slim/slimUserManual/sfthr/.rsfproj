@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfthr', 'sfgraph', 'sfnoise']
+data=[]
+size=       4000
