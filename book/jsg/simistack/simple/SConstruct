@@ -15,7 +15,7 @@ Flow('spike5',None,'spike n1=100 nsp=1 mag=1 d1=0.004 o1=0 k1=50 | ricker1 freq=
 Flow('syn','spike1 spike2 spike3 spike4 spike5',
      '''
      cat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} | 
-     put o2=1 | noise type=y mean=0 var=0.00011
+     put o2=1 | noise seed=1 type=y mean=0 var=0.00011
      ''')
 Plot('syn','syn','wiggle  transp=y yreverse=y poly=y label2=Trace labelsz=12 title="a)" screenratio=0.8')
 
