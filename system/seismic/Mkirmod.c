@@ -206,11 +206,16 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
     /* velocity gradient */
 
+    if (!sf_getfloat("velz",&(vel->vz))) (vel->vz)=vel->v0;
+    /* vertical velocity (for anisotropy) */
+    if (!sf_getfloat("eta",&(vel->n))) (vel->n)=0.;
+    /* eta (for anisotropy) */
+
     type = sf_getstring("type");
-    /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity) */
+    /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy) */
     if (NULL==type) {
 	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
-    } else if ((vel->gx)==0. && (vel->gz)==0.) {
+    } else if ((vel->gx)==0. && (vel->gz)==0. && (vel->n)==0.) {
 	free(type);
 	type = "const"; 
     } else if ('s'==type[0]) {
@@ -221,7 +226,7 @@ int main(int argc, char* argv[])
 	(vel->gx) *= -2.*slow/(vel->v0);
 	(vel->gz) *= -2.*slow/(vel->v0);
 	(vel->v0) = slow;     
-    } else if ('v' != type[0]) {
+    } else if ('v' != type[0] && 'a' != type[0]) {
 	sf_error("Unknown type=%s",type);
     }
 
@@ -243,7 +248,7 @@ int main(int argc, char* argv[])
     /* type of the receiver side branch */
     if (NULL==type2) {	
 	type2=type;
-    } else if ((vel2->gx)==0. && (vel2->gz)==0.) {
+    } else if ((vel2->gx)==0. && (vel2->gz)==0. && (vel2->n)==0.) {
 	free(type2);
 	type2 = "const"; 
     } else if ('s'==type2[0]) {
@@ -254,7 +259,7 @@ int main(int argc, char* argv[])
 	(vel2->gx) *= -slow/(vel2->v0);
 	(vel2->gz) *= -slow/(vel2->v0);
 	(vel2->v0) = slow;     
-    } else if ('v' != type2[0]) {
+    } else if ('v' != type2[0] && 'a' != type2[0]) {
 	sf_error("Unknown type=%s",type2);
     }
 

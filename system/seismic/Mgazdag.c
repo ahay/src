@@ -34,6 +34,9 @@ int main (int argc, char *argv[])
     float x,y;          /* wave number */
     float x0,y0;        /* wave number origin */
     float *vt, v0;	/* velocity v(t)		*/
+    float *vz, vz0;	/* vertical velocity v(t)		*/
+    float *n, n0;	/* eta		*/
+
     float *p,*q;	/* input, output data		*/
 
     bool inv;           /* modeling or migration        */
@@ -42,7 +45,7 @@ int main (int argc, char *argv[])
 
     char *rule;         /* phase-shuft interpolation rule */
 
-    sf_file in, out, vel;
+    sf_file in, out, vel, velz, eta;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -99,6 +102,9 @@ int main (int argc, char *argv[])
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
 	if (NULL == sf_getstring("velocity")) {
+	    vel = NULL;
+	    velz = NULL;
+	    eta = NULL;
 	    if (!sf_getint("nz",&nz)) nz = nt;
 	    /* Length of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("dz",&dz)) dz = dt;
@@ -109,6 +115,16 @@ int main (int argc, char *argv[])
 		sf_error ("No n1= in velocity");
 	    if (!sf_histfloat(vel,"d1",&dz)) 
 		sf_error ("No d1= in velocity");
+
+	    if (NULL == sf_getstring("velz")) {
+		velz = NULL;
+		eta = NULL;
+	    } else {
+		velz = sf_input("velz");
+		if (NULL == sf_getstring("eta")) sf_error("Need eta=");
+		eta = sf_input("eta");
+	    }
+
 	}
 	sf_putint(out,"n1",nz);
 	sf_putfloat(out,"d1",dz);
@@ -116,23 +132,56 @@ int main (int argc, char *argv[])
     }
     
     vt = sf_floatalloc(nz);
-    if (NULL == sf_getstring("velocity")) {
+    vz = sf_floatalloc(nz);
+    n = sf_floatalloc(nz);
+
+    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
+    /* phase-shift interpolation rule (simple, midpoint, linear) */
+
+    if (NULL == vel) {
 	/* file with velocity */
 	if (!sf_getfloat("vel",&v0)) sf_error ("vel= must be supplied");
 	/* Constant velocity (if no velocity file) */
+
+	if (!sf_getfloat("vz",&vz0)) vz0=v0;
+	/* Constant vertical velocity (if no velocity file) */
+
+	if (!sf_getfloat("n",&n0)) n0=0.0;
+	/* Constant eta (if no velocity file) */	
+
 	for (iz=0; iz < nz; iz++) {
 	    vt[iz] = v0;
+	    vz[iz] = vz0;
+	    n[iz] = n0;
 	}
     } else {
-	vel = sf_input("velocity");
 	sf_floatread(vt,nz,vel);
 	sf_fileclose(vel);
+
+	if ('a' == rule[0]) {
+	    if (NULL == velz || NULL == eta) sf_error("Need velz= and eta=");
+	    sf_floatread(vz,nz,velz);
+	    sf_floatread(n,nz,eta);
+
+	    sf_fileclose(velz);
+	    sf_fileclose(eta);
+	}  else {
+	    for (iz=0; iz < nz; iz++) {
+		vz[iz] = vt[iz];
+		n[iz] = 0.0;
+	    }
+	}	
     }
 
     /* vt -> 1/4 vt^2 */ 
     for (iz=0; iz < nz; iz++) {
 	vt[iz] *= 0.25*vt[iz];
-	if (depth) vt[iz] = 1./vt[iz];
+	vz[iz] *= 0.25*vz[iz];
+
+	if (depth) {
+	    vt[iz] = 1./vt[iz];
+	    vz[iz] = 1./vz[iz];
+	}
     }
 
     /* determine frequency sampling */    
@@ -141,10 +190,7 @@ int main (int argc, char *argv[])
     p = sf_floatalloc(nt2);
     q = sf_floatalloc(nz);
 
-    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
-    /* phase-shift interpolation rule (simple, midpoint, linear) */
-
-    gazdag_init (eps, nt2, dt, nz, dz, vt, depth, rule[0]);
+    gazdag_init (eps, nt2, dt, nz, dz, vt, vz, n, depth, rule[0]);
 
     for (iy=0; iy < ny; iy++) {
 	y = y0+iy*dy;

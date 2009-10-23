@@ -29,7 +29,7 @@
 #ifndef _kirmod3_h
 
 typedef struct Velocity3 {
-    float v0, gx, gy, gz, x0, y0, z0;
+    float v0, gx, gy, gz, x0, y0, z0, vz, n;
 } *velocity3;
 /*^*/
 
@@ -66,7 +66,7 @@ void kirmod3_map(ktable ta          /* ray attribute object */,
 /*< Compute traveltimes and amplitudes >*/
 {
     float x, y, z, x2, y2, zx, zy, x1, y1;
-    float px, py, pz, r, v1, g, gy, gx, gz, dz;
+    float px, py, pz, v1, g, gy, gx, gz, dz;
     
     x1 = xy[0];
     y1 = xy[1];
@@ -87,7 +87,6 @@ void kirmod3_map(ktable ta          /* ray attribute object */,
     zy = dipy[ic][iy][ix];
     dz = sqrtf(1.0+zx*zx+zy*zy);
 		    
-    r = sqrtf(x*x+y*y+z*z)+FLT_EPSILON*hypotf(dx,dy); /* distance */
     g = sqrtf((v->gz)*(v->gz)+
 	      (v->gx)*(v->gx)+
 	      (v->gy)*(v->gy));
@@ -97,5 +96,6 @@ void kirmod3_map(ktable ta          /* ray attribute object */,
     px = x+z*zx;                    /* r*dr/dx */
     py = y+z*zy;
     pz = z-x*zx-y*zy;
-    kirmod_table(type,false,r,g,gx,gy,gz,v1,v1,px,py,pz,dz,ta);
+    kirmod_table(type,false,z,x,y,g,gx,gy,gz,v1,v1,v->vz,v->n,px,py,pz,dz,ta);
 }
+

@@ -25,7 +25,7 @@
 #include "gazdag.h"
 #include "pshift.h"
 
-static float eps, *vt, dw, dz;
+static float eps, *vt, *vz, *eta, dw, dz;
 static int nz, nw;
 static sf_complex *pp;
 static kiss_fftr_cfg forw, invs;
@@ -36,6 +36,8 @@ void gazdag_init (float eps1  /* regularization */,
                   int nz1     /* depth samples */, 
 		  float dz1   /* depth sampling */, 
 		  float *vt1  /* velocity (time) or slowness (depth) */, 
+		  float *vz1,
+		  float *eta1,
 		  bool depth  /* depth (or time) */,
 		  char rule   /* interpolation rule */)
 /*< Initialize >*/
@@ -44,6 +46,8 @@ void gazdag_init (float eps1  /* regularization */,
     nz = nz1; 
     dz = dz1;
     vt = vt1;
+    vz = vz1;
+    eta = eta1;
 
     /* determine frequency sampling */
     nw = nt/2+1;
@@ -84,7 +88,7 @@ void gazdag (bool inv  /* modeling (or migration) */,
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
                 w2 = sf_cmplx(eps*dw,iw*dw);
-		kz = pshift(w2,k2,vt[iz],vt[iz+1]);
+		kz = pshift(w2,k2,vt[iz],vt[iz+1],vz[iz],eta[iz]);
 #ifdef SF_HAS_COMPLEX_H
                 pp[iw] = pp[iw]*cexpf(-kz*dz) + q[iz];
 #else
@@ -109,7 +113,7 @@ void gazdag (bool inv  /* modeling (or migration) */,
 
                 /* accumulate image (summed over frequency) */
                 q[iz] += crealf(pp[iw]);
-		kz = pshift(w2,k2,vt[iz],vt[iz+1]);
+		kz = pshift(w2,k2,vt[iz],vt[iz+1],vz[iz],eta[iz]);
 #ifdef SF_HAS_COMPLEX_H
                 pp[iw] *= conjf(cexpf(-kz*dz));
 #else

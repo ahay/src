@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     map4 nmo;
     int it,ix,ip, nt,nx, np;
-    float dt, t0, p, p0, t, f, dp, eps;
+    float dt, t0, p, p0, t, f, dp, eps, v0, c0;
     float *trace=NULL, *slope=NULL, *dsldt=NULL, *str=NULL, *cos=NULL;
     sf_file inp=NULL, nmod=NULL, cos2=NULL, dip=NULL, dipt=NULL;
 
@@ -52,6 +52,10 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
+    if (!sf_getfloat("v0",&v0)) v0=0.;
+    /* initial velocity */
+    v0 *= dp;
+
     trace = sf_floatalloc(nt);
     slope = sf_floatalloc(nt);
     dsldt = sf_floatalloc(nt);
@@ -65,6 +69,8 @@ int main (int argc, char* argv[])
     for (ix = 0; ix < nx; ix++) { /* midpoints */
 	for (ip = 0; ip < np; ip++) { /* offset */
 	    p = p0+ip;
+	    c0 = p*v0;
+	    c0 = 1.-c0*c0;
 
 	    sf_floatread (trace,nt,inp);
 	    sf_floatread (slope,nt,dip);
@@ -73,7 +79,7 @@ int main (int argc, char* argv[])
 	    for (it=0; it < nt; it++) { /* time */
 		t = t0 + it*dt;
 
-		f = t - p*slope[it]*dt;
+		f = t - p*slope[it]*dt*c0;
 
 		if (f < 0. || f < t) {
 		    str[it] = t0-10.*dt;

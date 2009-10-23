@@ -27,6 +27,7 @@ int main (int argc, char **argv)
 {
     int nt, nt2;               /* number of time samples */
     int nz;		/* number of migrated time samples */
+    int nw;               /* number of frequencies */
     int nh;               /* number of offsets */
     int ik,im,iz,ia;      /* loop counters 	*/
     int nk,nm;		/* number of wave numbers */	
@@ -40,6 +41,8 @@ int main (int argc, char **argv)
     float k,m;            /* wave number                  */
     float k0=0.;       /* first offset wavenumber */
     float *vt, v0;	/* velocity v(t)		*/
+    float *vz, vz0;	/* vertical velocity v(t)		*/
+    float *n, n0;	/* eta		*/
 
     float *p, **q;	/* data, image */
 
@@ -48,8 +51,9 @@ int main (int argc, char **argv)
     float eps;            /* dip filter constant          */   
     
     char *rule;         /* phase-shuft interpolation rule */
+    char *arule;        /* angle gather rule */
             
-    sf_file vel, in, out;
+    sf_file vel, velz=NULL, eta=NULL, in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -70,7 +74,6 @@ int main (int argc, char **argv)
 
     if (!sf_getfloat("da",&da)) da=90.;
     /* angle sampling (in degrees) */
-    da *= SF_PI/180.;
 
     if (inv) { /* modeling */
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
@@ -156,6 +159,8 @@ int main (int argc, char **argv)
 	if (NULL == sf_getstring("velocity")) {
 	    /* file with velocity */
 	    vel = NULL;
+	    velz = NULL;
+	    eta = NULL;
 	    if (!sf_getint("nz",&nz)) nz=nt;
 	    /* Length of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("dz",&dz)) dz=dt;
@@ -164,6 +169,17 @@ int main (int argc, char **argv)
 	    vel = sf_input ("velocity");
 	    if (!sf_histint(vel,"n1",&nz)) sf_error ("No n1= in velocity");
 	    if (!sf_histfloat(vel,"d1",&dz)) sf_error ("No d1= in velocity");
+
+	    if (NULL == sf_getstring("velz")) {
+		velz = NULL;
+		eta = NULL;
+	    } else {
+		velz = sf_input("velz");
+		if (NULL == sf_getstring("eta")) sf_error("Need eta=");
+		eta = sf_input("eta");
+	    }
+
+	    
 	}
 
 	sf_putint(out,"n1",na);
@@ -175,42 +191,78 @@ int main (int argc, char **argv)
 	sf_putfloat(out,"o2",0.);
     }
 
+    da *= SF_PI/180.; /* convert to radians */
+
     dm *= 2.0*SF_PI;
     dk *= 2.0*SF_PI;
     k0 *= 2.0*SF_PI;
 
     vt = sf_floatalloc(nz);
+    vz = sf_floatalloc(nz);
+    n = sf_floatalloc(nz);
+
+    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
+    /* phase-shift interpolation rule (simple, midpoint, linear, anisotropic) */
+
+    if (NULL == (arule = sf_getstring("arule"))) arule="isotropic";
+    /* angle gather rule */
 
     if (NULL == vel) {
 	if (!sf_getfloat("vel",&v0)) sf_error ("Need vel=");
 	/* Constant velocity (if no velocity file) */
+
+	if (!sf_getfloat("vz",&vz0)) vz0=v0;
+	/* Constant vertical velocity (if no velocity file) */
+
+	if (!sf_getfloat("n",&n0)) n0=0.0;
+	/* Constant eta (if no velocity file) */
+
 	for (iz=0; iz < nz; iz++) {
 	    vt[iz] = v0;
+	    vz[iz] = vz0;
+	    n[iz] = n0;
 	}
     } else {
 	sf_floatread(vt,nz,vel);
 	sf_fileclose(vel);
+
+	if ('a' == rule[0]) {
+	    if (NULL == velz || NULL == eta) sf_error("Need velz= and eta=");
+	    sf_floatread(vz,nz,velz);
+	    sf_floatread(n,nz,eta);
+
+	    sf_fileclose(velz);
+	    sf_fileclose(eta);
+	}  else {
+	    for (iz=0; iz < nz; iz++) {
+		vz[iz] = vt[iz];
+		n[iz] = 0.0;
+	    }
+	}
     }
 
     /* vt -> vt^2 */ 
     for (iz=0; iz < nz; iz++) {
 	vt[iz] *= vt[iz];
-	if (depth) vt[iz] = 1./vt[iz];
+	vz[iz] *= vz[iz];
+	if (depth) { /* convert to slowness */
+	    vt[iz] = 1./vt[iz];
+	    vz[iz] = 1./vz[iz];
+	}
     }
 
     /* determine frequency sampling */    
     nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
 
-    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
-    /* phase-shift interpolation rule (simple, midpoint, linear) */
+    if (!sf_getint("nw",&nw)) nw = nt2/2+1;
+    /* Maximum number of frequencies */
 
     /* allocate space */
     p = sf_floatalloc(nt2);
     q = sf_floatalloc2(na,nz);
-
     
-    dsr_init(eps, nt2, dt, nz, dz, vt, depth, rule[0], na, da);
-
+    dsr_init(eps, nw, nt2, dt, nz, dz, vt, vz, n, depth, rule[0], na, da);
+    
     /* migrate each wavenumber */
     for (ik=0; ik<nk; ik++) { /* midpoint wavenumber */
 	sf_warning("wavenumber %d of %d",ik+1,nk);
@@ -236,7 +288,7 @@ int main (int argc, char **argv)
 		if (nt != nt2) p[nt] = 0.;
 	    }
 
-	    dsr(inv,k,m,p,q);
+	    dsr(arule[0],inv,k,m,p,q);
 
 	    if (inv) sf_floatwrite(p,nt,out);
 	}

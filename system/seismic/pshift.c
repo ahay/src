@@ -33,7 +33,7 @@ void pshift_init(bool depth1 /* depth (or time) */,
     rule = rule1;
 }
 
-sf_complex pshift(sf_complex w2, float k2, float v1, float v2)
+sf_complex pshift(sf_complex w2, float k2, float v1, float v2, float vz, float n)
 /*< phase shift for different rules >*/
 {
     sf_complex cshift, cshift1, cshift2, y;
@@ -46,6 +46,12 @@ sf_complex pshift(sf_complex w2, float k2, float v1, float v2)
 #endif
 
     switch (rule) {
+	case 'a': /* VTI anisotropy */
+	    if (depth) {
+		w2 = w2 * vz * (1. + k2 / (w2 * v1 + 2.*n*k2));
+	    } else {
+		w2 = w2 * (1. + v1 * k2 / (w2  + 2.*n*k2 * v1));
+	    }
 	case 's': /* simple */			
 #ifdef SF_HAS_COMPLEX_H
 	    if (depth) {

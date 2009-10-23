@@ -25,17 +25,20 @@
 #include "dsr.h"
 #include "pshift.h"
 
-static float eps, *vt, dw, dz, da;
+static float eps, *vt, *vz, *eta, dw, dz, da;
 static int nz, nw, na;
 static sf_complex *pp;
 static kiss_fftr_cfg forw, invs;
 
 void dsr_init (float eps1 /* regularization */, 
+	       int nw1    /* number of frequencies */,
 	       int nt     /* time samples */, 
 	       float dt   /* time sampling */, 
 	       int nz1    /* depth samples */, 
 	       float dz1  /* depth sampling */, 
 	       float *vt1 /* velocity/slowness */, 
+	       float *vz1 /* vertical velocity/slowness */,
+	       float *eta1 /* eta */,
 	       bool depth /* depth or time migration */,
 	       char rule   /* interpolation rule */,
 	       int na1     /* angle samples */,
@@ -46,18 +49,20 @@ void dsr_init (float eps1 /* regularization */,
     nz = nz1; 
     dz = dz1;
     vt = vt1;
+    vz = vz1;
+    eta = eta1;
     na = na1;
     da = da1;
+    nw = nw1;
 
     /* determine frequency sampling */
-    nw = nt/2+1;
     dw = 2.0*SF_PI/(nt*dt);
     
     forw = kiss_fftr_alloc(nt,0,NULL,NULL);
     invs = kiss_fftr_alloc(nt,1,NULL,NULL);
     
     /* allocate workspace */
-    pp = sf_complexalloc (nw);
+    pp = sf_complexalloc (nt/2+1);
     pshift_init(depth,rule);
 } 
 
@@ -69,7 +74,8 @@ void dsr_close ()
     free (invs);
 }
 
-void dsr (bool inv /* modeling or migration */, 
+void dsr (char rule /* rule for angle gathers */,
+	  bool inv /* modeling or migration */, 
 	  float kx /* midpoint wavenumber */, 
 	  float kh /* half-offset wavenumber */, 
 	  float *p /* time trace */, 
@@ -99,12 +105,12 @@ void dsr (bool inv /* modeling or migration */,
 		w = sf_cmplx(eps*dw,iw*dw);
 
 #ifdef SF_HAS_COMPLEX_H
-		k = pshift(w,r,vt[iz],vt[iz+1])+
-		    pshift(w,s,vt[iz],vt[iz+1]);
+		k = pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz])+
+		    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]);
 		pp[iw] = q[iz][0] + pp[iw]*cexpf(-k*dz);
 #else
-		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1]),
-			    pshift(w,s,vt[iz],vt[iz+1]));
+		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz]),
+			    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]));
 		pp[iw] = sf_cadd(sf_cmplx(q[iz][0],0.),
 				 sf_cmul(pp[iw],cexpf(sf_crmul(k,-dz))));
 #endif
@@ -120,39 +126,38 @@ void dsr (bool inv /* modeling or migration */,
 	/* loop over migrated times z */
 	for (iz=0; iz<nz-1; iz++) {
 	    /* loop over frequencies w */
-	    for (iw=0; iw<nw; iw++) {
+	    for (iw=1; iw<nw; iw++) {
 		w = sf_cmplx(eps*dw,iw*dw);
 
 		/* find angle */
 
 #ifdef SF_HAS_COMPLEX_H
-		k = pshift(w,r,vt[iz],vt[iz+1])+
-		    pshift(w,s,vt[iz],vt[iz+1]);
-		a = crealf(0.5*vt[iz]/w*csqrtf(k*k-kx*kx));
+		k = pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz])+
+		    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]);
 #else
 		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1]),
 			    pshift(w,s,vt[iz],vt[iz+1]));
-		a = crealf(sf_cmul(sf_cdiv(sf_cmplx(0.5*vt[iz],0.),w),
-				   csqrtf(sf_csub(sf_cmul(k,k),
-						  sf_cmplx(kx*kx,0.)))));
 #endif
+		
+		if (rule=='a') {
+		    q[iz][0] += crealf(pp[iw]);
+/*		    a = costheta(vt[iz],cimagf(w),kx,kh); */
+		} else {
+		    a = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(k),kx);		
 
-#ifdef DEBUG_LATER
-
-		if (a >= 0. && a <= 1.) {
-		    a = acosf(a)/da;
-		    ia = a;
-		    a -= ia;
-		    if (ia >=0 && ia < na-1) {
-			/* accumulate image (summed over frequency) */
-			q[iz][ia] += (1.-a)*crealf(pp[iw]);
-			q[iz][ia+1] += a*crealf(pp[iw]);
-		    }
+		    if (a <= 1.) {
+			a = acosf(a)/da;
+			ia = floorf(a);
+			a -= ia;
+			if (ia >=0 && ia < na-1) {
+			    /* accumulate image (summed over frequency) */
+			    q[iz][ia] += (1.-a)*crealf(pp[iw]);
+			    q[iz][ia+1] += a*crealf(pp[iw]);
+			} else if (ia==na-1) {
+			    q[iz][ia] += crealf(pp[iw]);
+			}
+		    } 
 		}
-#endif
-
-		q[iz][0] += crealf(pp[iw]);
-
 
 #ifdef SF_HAS_COMPLEX_H
 		pp[iw] *= conjf(cexpf(-k*dz));

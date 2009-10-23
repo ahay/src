@@ -376,7 +376,7 @@ def pstexpen(target=None,source=None,env=None):
             import vpconvert
             options = 'color=n fat=1 fatmult=1.5 invras=y'
             name = os.path.splitext(os.path.basename(eps))[0]
-            if colorfigs == ['ALL'] or name in colorfigs:
+            if 'ALL' in colorfigs or name in colorfigs:
                 options += ' color=y'
             if geomanuscript:
                 options += ' serifs=n'

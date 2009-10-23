@@ -111,11 +111,12 @@ float layer_time(float* start /* [2] start ray point */,
     v2 = v0[0]+g[0][0]*(x       -x0[0][0])+g[1][0]*(z       -x0[1][0]);
 
     /* first layer */
-    kirmod_table(type[0], true, 
-		 hypotf(x-start[0],z-start[1]),
+    kirmod_table(type[0], true,
+		 z-start[1], 
+		 x-start[0],0.,
 		 hypotf(g[0][0],g[1][0]),
 		 g[0][0],0.,g[1][0], /* gradient */
-		 v,v2,
+		 v,v2,v,0.,
 		 0., 0., 0., 1.,
 		 table);
     t = table->t;
@@ -130,10 +131,10 @@ float layer_time(float* start /* [2] start ray point */,
 	
 	/* current layer */
 	kirmod_table(type[i], true, 
-		     hypotf(x2-x,z2-z),
+		     z2-z,x2-x,0.,
 		     hypotf(g[0][i],g[1][i]),
 		     g[0][i],0.,g[1][i], /* gradient */
-		     v,v2,
+		     v,v2,v,0.,
 		     0., 0., 0., 1.,
 		     table);
 	t += table->t;
@@ -148,10 +149,10 @@ float layer_time(float* start /* [2] start ray point */,
     
     /* last layer */
     kirmod_table(type[n-1], true, 
-		 hypotf(end[0]-x,end[1]-z),
+		 end[1]-z,end[0]-x,0.,
 		 hypotf(g[0][n-1],g[1][n-1]),
 		 g[0][n-1],0.,g[1][n-1], /* gradient */
-		 v,v2,
+		 v,v2,v,0.,
 		 0., 0., 0., 1.,
 		 table);
     t += table->t;

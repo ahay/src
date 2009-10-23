@@ -33,7 +33,7 @@ typedef struct Surface *surface;
 /*^*/
 
 typedef struct Velocity {
-    float v0, gx, gz, x0, z0;
+    float v0, gx, gz, x0, z0, vz, n;
 } *velocity;
 /*^*/
 
@@ -172,7 +172,7 @@ void kirmod2_table (surface y                  /* surface structure */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy, ic;
-    float x, z, x2, zx, x1, xp=0., px, pz, r, v1, v2, g, gx, gz, dz;
+    float x, z, x2, zx, x1, xp=0., px, pz, v1, v2, g, gx, gz, dz;
     ktable **ta=NULL;
 
     for (iy=0; iy < ny; iy++) {	
@@ -195,14 +195,13 @@ void kirmod2_table (surface y                  /* surface structure */,
 		    dz = hypotf(1.0,zx);
 		    v2 = (v->v0)+(v->gx)*(x2-(v->x0))+(v->gz)*(z-(v->z0));
 		    
-		    r = hypotf(x,z)+FLT_EPSILON*dx; /* distance */
 		    g = hypotf(v->gx,v->gz);        /* gradient */
 		    gx = (v->gx)+(v->gz)*zx;        /* dw/dx */
 		    gz = (v->gz)-(v->gx)*zx;
 		    px = x+z*zx;                    /* r*dr/dx */
 		    pz = z-x*zx;
 		    kirmod_table(type,twod,
-				 r,g,gx,0.,gz,v1,v2,px,0.,pz,dz,ta[ix][ic]);
+				 z,x,0.,g,gx,0.,gz,v1,v2,v->vz,v->n,px,0.,pz,dz,ta[ix][ic]);
 		} 
 	    } 
 	} 

@@ -37,13 +37,17 @@ typedef struct KTable {
 
 void kirmod_table(char type    /* type of velocity distribution */,
 		  bool twod    /* 2-D or 2.5-D/3-D */,
-		  float r      /* distance between source and receiver */, 
+		  float z,
+		  float x,
+		  float y      /* distance between source and receiver */, 
 		  float g      /* absolute gradient */,
 		  float gx     /* gx+gz*zx */,
 		  float gy     /* gy+gz*zy */,
 		  float gz     /* gz-gx*zx */,
 		  float v1     /* source velocity function */, 
 		  float v2     /* receiver velocity function */,
+		  float vn     /* "NMO" velocity */,
+		  float n      /* "eta" parameter */,
 		  float px     /* x+z*zx */,
 		  float py     /* y+z*zy */,
 		  float pz     /* z-x*zx */,
@@ -51,9 +55,25 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		  ktable table /* [5] output table */)
 /*< Compute traveltime attributes >*/
 {
-    float sigma, rad, v0, a;
+    float sigma, rad, v0, a, r, h;
+
+    r = sqrtf(x*x+y*y+z*z)+FLT_EPSILON; /* distance */
 
     switch (type) {
+	case 'a': /* VTI anisotropy */
+	    h = z*z/(v1*v1) + x*x/((1.+2*n)*vn*vn); /* hyperbolic part */
+	    table->t = sqrtf(((3.+4.*n)*h + sqrtf(h*h + 16.*n*(1.+n)*z*z*x*x/((1.+2*n)*vn*vn*v1*v1)))/(4.*(1.+n))); 
+	    if (twod) {
+		table->a = sqrtf(r/v1);
+	    } else {
+		table->a = r;
+		table->ar = 1./(r*v1);
+	    }
+	    px /= (r*v1);
+	    py /= (r*v1);
+	    pz = fabsf(pz)/(r*dz);
+	    table->tn = sqrtf(fabsf(1./(v1*v1)-px*px-py*py));
+	    break;		     
 	case 'c': /* constant velocity */
 	    table->t = r/v1;
 	    if (twod) {
