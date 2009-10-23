@@ -30,7 +30,7 @@ Flow('clean','modl refl',
 
 Flow('data','clean',
      '''
-     noise type=y mean=0 var=0.00000004
+     noise seed=1 type=y mean=0 var=0.00000004
      ''')
  
 shots = []
