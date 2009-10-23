@@ -28,7 +28,7 @@ int omp_init()
     ompath=omp_get_num_threads();
     if(ompnth<1) ompnth=ompath;
     omp_set_num_threads(ompnth);
-    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+    sf_warning("using %d of %d threads",ompnth,ompath);
 #else
     ompnth=0;
 #endif
