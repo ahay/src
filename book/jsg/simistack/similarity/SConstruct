@@ -1,7 +1,7 @@
 from rsfproj import *
 #
 
-Flow('ricker',None,'spike n1=170 nsp=3 mag=1 d1=0.004 o1=-0.3 k1=80  | ricker1 frequency=10.5 | scale axis=1 | noise var=0 ')
+Flow('ricker',None,'spike n1=170 nsp=3 mag=1 d1=0.004 o1=-0.3 k1=80  | ricker1 frequency=10.5 | scale axis=1 | noise seed=1 var=0 ')
 Result('ricker',
        '''
        graph screenratio=0.8 pad=n
@@ -13,13 +13,13 @@ Result('ref',
        graph screenratio=0.8 pad=n
        barwidth=0.2 crowd1=0.75  crowd2=0.3 pad=n min2=-1.5 max2=1.5 max1=2.0 title="b)"
        ''')
-Flow('signal1',None,'spike n1=500 nsp=3 mag=1,1,1 d1=0.004 o1=0 k1=90,100,300  | ricker1 frequency=10.5 | scale axis=1 | noise var=1e-6 ')
+Flow('signal1',None,'spike n1=500 nsp=3 mag=1,1,1 d1=0.004 o1=0 k1=90,100,300  | ricker1 frequency=10.5 | scale axis=1 | noise seed=2 var=1e-6 ')
 Result('signal1',
        '''
        graph screenratio=0.8 pad=n
        barwidth=0.2 crowd1=0.75  crowd2=0.3 pad=n min2=-1.5 max2=1.5 max1=2.0 title="c)"
        ''')
-Flow('signal2',None,'spike n1=500 nsp=3 mag=1,1,1 d1=0.004 o1=0 k1=90,100,300  | ricker1 frequency=10.5 | scale axis=1 | noise var=0.07')
+Flow('signal2',None,'spike n1=500 nsp=3 mag=1,1,1 d1=0.004 o1=0 k1=90,100,300  | ricker1 frequency=10.5 | scale axis=1 | noise seed=3 var=0.07')
 Result('signal2',
        '''
        graph screenratio=0.8 pad=n
