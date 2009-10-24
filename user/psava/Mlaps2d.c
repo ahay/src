@@ -218,13 +218,13 @@ int main(int argc, char* argv[])
 
 	if(ccin[ic]) {
 
-	    icx = 1+(cc[ic].x-sf_o(ax))/sf_d(ax);
+	    icx = 0.5+(cc[ic].x-sf_o(ax))/sf_d(ax);
 	    for(ihx=-nhx; ihx<nhx+1; ihx++) {
 		mcxall[ic][nhx+ihx] = icx-ihx;
 		pcxall[ic][nhx+ihx] = icx+ihx;
 	    }
 
-	    icz = 1+(cc[ic].z-sf_o(az))/sf_d(az);
+	    icz = 0.5+(cc[ic].z-sf_o(az))/sf_d(az);
 	    for(ihz=-nhz; ihz<nhz+1; ihz++) {
 		mczall[ic][nhz+ihz] = icz-ihz;
 		pczall[ic][nhz+ihz] = icz+ihz;
@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 		for(ic=0; ic<nc; ic++) { /* loop over CIPs */
 		    if(ccin[ic]) {
 			
-			for        (iht=0; iht<nht2; iht++) { mct=mctall[iht];     pct=pctall[iht];
+			for        (iht=0; iht<nht2; iht++) { mct=mctall    [iht]; pct=pctall    [iht];
 			    for    (ihx=0; ihx<nhx2; ihx++) { mcx=mcxall[ic][ihx]; pcx=pcxall[ic][ihx];
 				for(ihz=0; ihz<nhz2; ihz++) { mcz=mczall[ic][ihz]; pcz=pczall[ic][ihz];
 				    
