@@ -36,8 +36,7 @@ class Par:
         args = {}
         for a in argv:
             key = a.split('=')[0]
-            val = a.lstrip(key+'=')
-            args[key] = val
+            args[key] = a.replace(key+'=','')
         return args
 
     def __filter_equal_sign(self,argv):
@@ -96,6 +95,7 @@ class Par:
         elif val =='n' or val == 'false':
             return False
         else:
-            sys.stderr.write( '\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
-                              (key, self.prog))
+            msg = '\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
+                  (key, self.prog)
+            sys.stderr.write(msg)
             sys.exit(1)
