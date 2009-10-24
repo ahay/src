@@ -302,6 +302,18 @@ def vertical(cc,coord,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
+def vertical3d(cc,coordx,coordy,par):
+    Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
+    Flow(cc+'_x',cc+'_','math output="%g" '% coordx)
+    Flow(cc+'_y',cc+'_','math output="%g" '% coordy)
+    Flow(cc+'_z',cc+'_','math output="x1" ')
+    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
+
 def point(cc,xcoord,zcoord,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
