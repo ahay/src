@@ -81,7 +81,7 @@ Flow('pptrace1','pptrace.rsf','dd form=native | window max1=5')
 Plot('seis','pptrace1',
      '''
      graph title="(c) Seismic Trace" label1="Time (s)" label2=Amplitude
-     labelsz=10 titlesz=12
+     labelsz=10 titlesz=12 
      ''')
 
 for case in (1,2):

@@ -47,11 +47,27 @@ sf_complex pshift(sf_complex w2, float k2, float v1, float v2, float vz, float n
 
     switch (rule) {
 	case 'a': /* VTI anisotropy */
+#ifdef SF_HAS_COMPLEX_H		       
 	    if (depth) {
 		w2 = w2 * vz * (1. + k2 / (w2 * v1 + 2.*n*k2));
 	    } else {
 		w2 = w2 * (1. + v1 * k2 / (w2  + 2.*n*k2 * v1));
 	    }
+#else
+	    if (depth) {
+		w2 = sf_cmul(sf_crmul(w2,vz),
+			     sf_cadd(sf_cmplx(1.,0.),
+				     sf_cdiv(sf_cmplx(k2,0.),
+					     sf_cadd(sf_crmul(w2,v1),
+						     sf_cmplx(2.*n*k2,0.)))));
+	    } else {
+		w2 = sf_cmul(w2,
+			     sf_cadd(sf_cmplx(1.,0.),
+				     sf_cdiv(sf_cmplx(v1*k2,0.),
+					     sf_cadd(w2,
+						     sf_cmplx(2.*n*k2 * v1,0.)))));
+	    }
+#endif
 	case 's': /* simple */			
 #ifdef SF_HAS_COMPLEX_H
 	    if (depth) {

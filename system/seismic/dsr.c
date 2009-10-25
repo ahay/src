@@ -159,8 +159,8 @@ void dsr (char rule /* rule for angle gathers */,
 		k = pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz])+
 		    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]);
 #else
-		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1]),
-			    pshift(w,s,vt[iz],vt[iz+1]));
+		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz]),
+			    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]));
 #endif
 		
 		if (rule=='a') {
