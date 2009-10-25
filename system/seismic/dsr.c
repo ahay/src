@@ -18,6 +18,30 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/* b/2a, c/a c2^4 + 2*(b/2a) c2^2 + (c/a) = 0 
+List((-4*Power(n,2)*Power(r,4)*Power(s,4) + 
+      2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*v*
+       Power(w,2) - Power(r,2)*Power(s,2)*
+       (Power(v,2) + Power(vz + 4*n*vz,2))*Power(w,4) + 
+      (1 + 4*n)*(Power(r,2) + Power(s,2))*v*Power(vz,2)*
+       Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8))/
+    ((2*n*Power(r,4) + Power(r,2)*(-v + vz + 4*n*vz)*
+         Power(w,2) - v*vz*Power(w,4))*
+      (2*n*Power(s,4) + Power(s,2)*(-v + vz + 4*n*vz)*
+         Power(w,2) - v*vz*Power(w,4))),
+   Power(4*Power(n,2)*Power(r,4)*Power(s,4) - 
+      2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*v*
+       Power(w,2) + Power(r,2)*Power(s,2)*
+       (Power(v,2) - Power(vz + 4*n*vz,2))*Power(w,4) + 
+      (1 + 4*n)*(Power(r,2) + Power(s,2))*v*Power(vz,2)*
+       Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8),2)/
+    (Power(-2*n*Power(r,4) + 
+        Power(r,2)*(v - (1 + 4*n)*vz)*Power(w,2) + 
+        v*vz*Power(w,4),2)*
+      Power(-2*n*Power(s,4) + 
+        Power(s,2)*(v - (1 + 4*n)*vz)*Power(w,2) + 
+        v*vz*Power(w,4),2))) */
+
 #include <math.h>
 
 #include <rsf.h>
