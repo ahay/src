@@ -95,7 +95,7 @@ class Par:
         elif val =='n' or val == 'false':
             return False
         else:
-            msg = '\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
-                  (key, self.prog)
+            msg = ('\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
+                   (key, self.prog))
             sys.stderr.write(msg)
             sys.exit(1)
