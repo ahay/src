@@ -67,8 +67,7 @@ def time2freq(dtime,dfreq,par):
          fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          put label1=w |
-         transp |
-         spray axis=2 n=1 o=0 d=1 |
+         transp transp plane=12 | transp plane=23 |
          put label1=t label2=rx label3=ry label4=sx label5=sy
          ''' % par)
 

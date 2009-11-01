@@ -42,11 +42,9 @@ def wempar(par):
 def slowness(slow,velo,par):
     Flow(slow,velo,
          '''
-         window |
          math "output=1/input" |
-         transp |
-         spray axis=2 n=1 o=0 d=1 |
-         put label2=y unit2=""
+         transp plane=12 | 	
+	 transp plane=23
          ''')
 
 # ------------------------------------------------------------
@@ -70,6 +68,10 @@ def bWRwem(data,wfld,slow,par):
          window |
          transp
          ''' % param(par))
+
+def wemWR(data,wfld,slow,causal,par):
+    Flow(wfld,[data,slow],
+         'wex %s slo=${SOURCES[1]}' % param(par) + ' causal=%s '%causal) 
 
 # ------------------------------------------------------------
 # RTM
@@ -116,6 +118,12 @@ def cic(imag,swfl,rwfl,custom,par):
          %(ciccustom)s
          ''' % par)
 
+def cic3d(imag,swfl,rwfl,par):
+    Flow(imag,[swfl,rwfl],
+         '''
+         cic uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d
+         ''' % par)
+
 # EIC
 def eic(cip,swfl,rwfl,cc,custom,par):
     par['eiccustom'] = custom
@@ -128,6 +136,19 @@ def eic(cip,swfl,rwfl,cc,custom,par):
          cc=${SOURCES[2]}
          %(eiccustom)s
          ''' %par)
+
+def eic3d(cip,swfl,rwfl,cc,custom,par):
+    par['eiccustom'] = custom
+   
+    Flow(cip,[swfl,rwfl,cc],
+         '''
+         eic verb=y
+         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
+         ur=${SOURCES[1]}
+         cc=${SOURCES[2]}
+         %(eiccustom)s
+         ''' %par)
+
 
 # CIC: deconvolution
 def dic(imag,swfl,rwfl,eps,custom,par):
