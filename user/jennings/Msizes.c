@@ -63,15 +63,15 @@ int main (int argc, char* argv[])
 
                                 /* Get file properties          */
         file = sf_input(filename);
-	if (NULL == file) continue;
+        if (NULL == file) continue;
 
-	bytes = sf_bytes(file);
-	if (bytes < 0) { /* reading from "stdin" */
-	    bytes = sf_filesize (file);
-	    if (!sf_histint(file,"esize",&esize) || esize <= 0)
-		sf_error("%s: need esize > 0 in input",__FILE__);
-	    bytes *= esize;
-	}
+        bytes = sf_bytes(file);
+        if (bytes < 0) { /* reading from "stdin" */
+            bytes = sf_filesize (file);
+            if (!sf_histint(file,"esize",&esize) || esize <= 0)
+            sf_error("%s: need esize > 0 in input",__FILE__);
+            bytes *= esize;
+        }
         sf_fileclose(file);
 
         total += bytes;
