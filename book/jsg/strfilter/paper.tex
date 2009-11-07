@@ -565,8 +565,8 @@ $\{x_1,x_2,\cdots,x_N\}$. The rank-ordered set can be written as
 
 The estimate of the center sample will be denoted $y^{\star}$.
 
-      \subsubsection{Lower-upper-middle smoother}
-
+\begin{description} 
+      \item[Lower-upper-middle smoother] \ \\
 Lower-upper-middle (LUM) smoother is equivalent to 
 center-weighted medians \cite[]{Justusson81}. The output of the LUM
 smoother with parameter $k$ is given by
@@ -581,8 +581,7 @@ smoother is $x_{(k)}$ if $x^{\star} < x_{(k)}$. If $x^{\star} > x_{(N-k+1)}$, th
 the output of the LUM smoother is $x_{(N-k+1)}$. Otherwise the output
 of the LUM smoother is simply $x^{\star}$.
 
-     \subsubsection{Lower-upper-middle sharpener}
-
+     \item[Lower-upper-middle sharpener] \ \\
 We can define a value centered between the lower- and upper-order
 statistics, $x_{(l)}$ and $x_{(N-l+1)}$. This midpoint or average,
 denoted $t_l$, is given by
@@ -612,8 +611,7 @@ identity filter. In the case where $l=1$, a maximum amount of
 sharpening is achieved since $x^{\star}$ is being shifted to one of the
 extreme-order statistics $x_{(1)}$ or $x_{(N)}$.
 
-     \subsubsection{Lower-upper-middle filter}
-
+     \item[Lower-upper-middle filter] \ \\
 To obtain an enhancing filter that is robust and can reject outliers,
 the philosophies of the lower-upper-middle (LUM)
 smoother and lower-upper-middle (LUM) sharpener must be
@@ -632,6 +630,7 @@ x^{\star}$}\\ x^{\star}, & \textrm{otherwise}
 where $t_l$ is the midpoint between $x_{(l)}$ and $x_{(N-l+1)}$
 defined in equation
 \ref{eq:lumsh1}, and  $1 \le k \le l \le (N+1)/2$.
+\end{description}
 
 \bibliographystyle{seg}
 \bibliography{SEG,paper}
