@@ -8,7 +8,7 @@ Papers(copyr='The University of Texas at Austin',
                 'time2depth':'Maria Cameron, Sergey Fomel, and James Sethian',
                 'medianfilter': 'Yang Liu, Cai Liu, and Dian Wang',
                 'simistack': 'Guochang Liu, Sergey Fomel, Long Jin, and Xiaohong Chen',
-                'strfilter'" 'Yang Liu, Sergey Fomel, Guochang Liu'},
+                'strfilter': 'Yang Liu, Sergey Fomel, and Guochang Liu'},
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
 End(use='amsmath,newalg')

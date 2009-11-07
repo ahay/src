@@ -364,7 +364,7 @@ further reduce the fault damage of the standard median filter
                  (d).}
 
 The key steps of our method are illustrated schematically in Figure~\ref{fig:strat}.
-\inputdir{figures}
+\inputdir{XFig}
    \plot{strat}{width=0.9\textwidth}{Schematic illustration of the
          proposed workflow.}
 
@@ -555,7 +555,7 @@ similarity to the reference one is comparatively large \cite[]{Liu09b}.
 
 In this appendix, we review lower-upper-middle (LUM)
 filters introduced by \cite{Hardie93}. Consider a window function
-containing a set of $N$ samples centered about the sample $x^*$. We
+containing a set of $N$ samples centered about the sample $x^{\star}$. We
 assume $N$ to be odd. This set of observations will be denoted by
 $\{x_1,x_2,\cdots,x_N\}$. The rank-ordered set can be written as
 \begin{equation}
@@ -563,7 +563,7 @@ $\{x_1,x_2,\cdots,x_N\}$. The rank-ordered set can be written as
   \label{eq:lum1}
 \end{equation}
 
-The estimate of the center sample will be denoted $y^*$.
+The estimate of the center sample will be denoted $y^{\star}$.
 
       \subsubsection{Lower-upper-middle smoother}
 
@@ -571,15 +571,15 @@ Lower-upper-middle (LUM) smoother is equivalent to
 center-weighted medians \cite[]{Justusson81}. The output of the LUM
 smoother with parameter $k$ is given by
 \begin{equation}
-    y^* = med \{x_{(k)},x^*,x_{(N-k+1)}\}\,,
+    y^{\star} = med \{x_{(k)},x^{\star},x_{(N-k+1)}\}\,,
   \label{eq:lumsm} 
 \end{equation}
 where $1 \le k \le (N+1)/2$.
 
 Thus, the output of the lower-upper-middle (LUM)
-smoother is $x_{(k)}$ if $x^* < x_{(k)}$. If $x^* > x_{(N-k+1)}$, then
+smoother is $x_{(k)}$ if $x^{\star} < x_{(k)}$. If $x^{\star} > x_{(N-k+1)}$, then
 the output of the LUM smoother is $x_{(N-k+1)}$. Otherwise the output
-of the LUM smoother is simply $x^*$.
+of the LUM smoother is simply $x^{\star}$.
 
      \subsubsection{Lower-upper-middle sharpener}
 
@@ -595,21 +595,21 @@ Then, the output of the lower-upper-middle (LUM)
 sharpener with parameter $l$ is given by 
 
 \begin{equation}
-   y^* = \left\{ \begin{array}{ll} x_{(l)}, &
- \textrm{if $x_{(l)}< x^* \le t_l$}\\ x_{(N-l+1)}, & \textrm{if
- $t_{l}< x^* < x_{(N-l+1)}$}\\ x^* & \textrm{otherwise}
+   y^{\star} = \left\{ \begin{array}{ll} x_{(l)}, &
+ \textrm{if $x_{(l)}< x^{\star} \le t_l$}\\ x_{(N-l+1)}, & \textrm{if
+ $t_{l}< x^{\star} < x_{(N-l+1)}$}\\ x^{\star} & \textrm{otherwise}
 \end{array} \right..
  \label{eq:lumsh2} 
 \end{equation}
 
-Thus, if $x_{(l)}<x^*<x_{(N-l+1)}$, then $x^*$ is shifted outward to
+Thus, if $x_{(l)}<x^{\star}<x_{(N-l+1)}$, then $x^{\star}$ is shifted outward to
 $x_{(l)}$ or $x_{(N-l+1)}$ according to which is closest to
-$x^*$. Otherwise the sample $x^*$ is unmodified. By changing the
+$x^{\star}$. Otherwise the sample $x^{\star}$ is unmodified. By changing the
 parameter $l$, various levels of sharpening can be achieved.  In the
 case where $l=(N+1)/2$, no sharpening occurs and the
 lower-upper-middle (LUM) sharpener is simply an
 identity filter. In the case where $l=1$, a maximum amount of
-sharpening is achieved since $x^*$ is being shifted to one of the
+sharpening is achieved since $x^{\star}$ is being shifted to one of the
 extreme-order statistics $x_{(1)}$ or $x_{(N)}$.
 
      \subsubsection{Lower-upper-middle filter}
@@ -621,11 +621,11 @@ combined. This leads us to the general
 lower-upper-middle (LUM) filter. A direct definition is
 as follows: 
 \begin{equation} 
-  y^* = \left\{
-\begin{array}{ll} x_{(k)}, & \textrm{if $ x^* < x_{(k)}$}\\ x_{(l)}, &
-\textrm{if $ x_{(l)} < x^* < t_l$}\\ x_{(N-l+1)}, & \textrm{if $ t_l <
-x^* < x_{(N-l+1)}$}\\ x_{(N-k+1)}, & \textrm{if $ x_{(N-l+1)} <
-x^*$}\\ x^*, & \textrm{otherwise}
+  y^{\star} = \left\{
+\begin{array}{ll} x_{(k)}, & \textrm{if $ x^{\star} < x_{(k)}$}\\ x_{(l)}, &
+\textrm{if $ x_{(l)} < x^{\star} < t_l$}\\ x_{(N-l+1)}, & \textrm{if $ t_l <
+x^{\star} < x_{(N-l+1)}$}\\ x_{(N-k+1)}, & \textrm{if $ x_{(N-l+1)} <
+x^{\star}$}\\ x^{\star}, & \textrm{otherwise}
 \end{array} \right..
   \label{eq:lum5} 
 \end{equation}
