@@ -1,4 +1,7 @@
-/* 2-D shot gather multiple prediction */
+/* 2-D shot gather multiple prediction 
+The axes in the input are {offset,shot,frequency}
+The axes in the output are {prediction(if stack=n),offset,shot,frequency}
+*/
 /*
   Copyright (C) 2009 University of Texas at Austin
    
@@ -22,10 +25,11 @@
 int main(int argc, char *argv[])
 {
     int nw, n1, n2, n4, iw, i1, i2, i4, s1, x1, s2, x2, m, fold;
-    float d1, d2;
+    int jumpo, jumps, newn1, newn2, tn;
+    float d1, d2, newd1, newd2;
     bool verb, stack, both;
 
-    sf_complex *dd, *ref=NULL, *mm=NULL, *mu=NULL;
+    sf_complex *dd, *ref=NULL, *mm=NULL, *mu=NULL, *mtemp=NULL;
     sf_file in, out, dif=NULL;
 
     sf_init(argc,argv);
@@ -57,17 +61,41 @@ int main(int argc, char *argv[])
     /* receiver flag, if y, receiver with both sides */
 
     if (!stack) {
+	if (!sf_getint("jumpo",&jumpo)) jumpo=1;
+	/* jump in offset dimension, only for stack=n */
+	
+	if (!sf_getint("jumps",&jumps)) jumps=1;
+	/* jump in shot dimension, only for stack=n  */
+    }
+    newn1 = n1;
+    newn2 = n2;
+    if (!stack) {
 	if (!both) {
 	    sf_putint(out,"n1",(2*n1-1));
 	    sf_putfloat(out,"d1",d1);
 	    sf_putfloat(out,"o1",(1-n1)*d1);
-	    (void) sf_shiftdim(in, out, 1);
 	} else {
 	    sf_putint(out,"n1",n1);
 	    sf_putfloat(out,"d1",d1);
 	    sf_putfloat(out,"o1",(-1*n1/2)*d1);
-	    (void) sf_shiftdim(in, out, 1);
 	}
+	(void) sf_shiftdim(in, out, 1);
+	if (n1%jumpo == 0) {
+	    newn1 = n1 / jumpo;
+	} else {
+	    newn1 = n1 / jumpo +1;
+	}
+	if (n2%jumps == 0) {
+	    newn2 = n2 / jumps;
+	} else {
+	    newn2 = n2 / jumps +1;
+	}
+	newd1 = (float) (d1 * jumpo);
+	newd2 = (float) (d2 * jumps);
+	sf_putint(out,"n2",newn1);
+	sf_putfloat(out,"d2",newd1);
+	sf_putint(out,"n3",newn2);
+	sf_putfloat(out,"d3",newd2);
     } else {
 	mu = sf_complexalloc(n1*n2);
     }
@@ -83,8 +111,10 @@ int main(int argc, char *argv[])
 
     if (!both) {
 	mm = sf_complexalloc((2*n1-1)*n1*n2);
+	mtemp = sf_complexalloc((2*n1-1)*newn1*newn2);
     } else {
 	mm = sf_complexalloc(n1*n1*n2);
+	mtemp = sf_complexalloc(n1*newn1*newn2);
     }
 
     /* loop over n4 */
@@ -138,7 +168,19 @@ int main(int argc, char *argv[])
 		}
 		
 		if (!stack) {
-		    sf_complexwrite(mm,(2*n1-1)*n1*n2,out);
+		    tn = 0;
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    if ((i2 % jumps == 0) && (i1 % jumpo == 0)) {
+				for (m=(-1*n1+1); m < n1; m++) {
+				    mtemp[tn] = mm[i2*(2*n1-1)*n1+i1*(2*n1-1)+m+n1-1];
+				    tn ++;
+				}
+			    }
+			}
+		    }
+		    if (tn!=(2*n1-1)*newn1*newn2) sf_error("jump error!");		    
+		    sf_complexwrite(mtemp,tn,out);
 		} else {
 		    for (i2=0; i2 < n2*n1; i2++) {
 			mu[i2] = sf_cmplx(0.,0.);
@@ -191,7 +233,19 @@ int main(int argc, char *argv[])
 		    }
 		}
 		if (!stack) {
-		    sf_complexwrite(mm,n1*n1*n2,out);
+		    tn = 0;
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    if (i2 % jumps == 0 && i1 % jumpo == 0) {
+				for (m=0; m < n1; m++) {
+				    mtemp[tn] = mm[i2*n1*n1+i1*n1+m];
+				    tn ++;
+				}
+			    }
+			}
+		    }	
+		    if (tn!=n1*newn1*newn2) sf_error("jump error!");
+		    sf_complexwrite(mtemp,tn,out);
 		} else {
 		    for (i2=0; i2 < n2*n1; i2++) {
 			mu[i2] = sf_cmplx(0.,0.);
