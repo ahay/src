@@ -858,6 +858,23 @@ class TeXPaper(Environment):
             self.Color(html,[scons,info])
             self.scons.append(html)
 
+        self.Command('dummy.tex',self.figs,Action(dummy))
+
+        uses = os.path.join(self.path,'.sf_uses')
+        if self.uses:
+            self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
+        else:
+            self.Command(uses,None,'touch $TARGET')
+        self.Alias('uses',uses)
+
+        data = os.path.join(self.path,'.sf_data')
+        if self.data:
+            self.Command(data,self.data,'cat $SOURCES > $TARGET')
+        else:
+            self.Command(data,None,'touch $TARGET')
+        self.Alias('data',data)
+
+
         if self.scons:
             self.Install(self.doc,self.scons)
         self.Alias('figinstall',self.doc)        
@@ -1007,6 +1024,7 @@ class TeXPaper(Environment):
                          'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
             self.Alias(paper+'.install',dochtml)
             self.Depends(paper+'.install','figinstall')
+        return pdf
     def End(self,paper='paper',**kw):
         if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)
@@ -1018,21 +1036,6 @@ class TeXPaper(Environment):
             self.Alias('install',paper+'.install')
             self.Alias('figs',paper+'.figs')
             self.Default('pdf')
-        self.Command('dummy.tex',self.figs,Action(dummy))
-
-        uses = os.path.join(self.path,'.sf_uses')
-        if self.uses:
-            self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
-        else:
-            self.Command(uses,None,'touch $TARGET')
-        self.Alias('uses',uses)
-
-        data = os.path.join(self.path,'.sf_data')
-        if self.data:
-            self.Command(data,self.data,'cat $SOURCES > $TARGET')
-        else:
-            self.Command(data,None,'touch $TARGET')
-        self.Alias('data',data)
 
 default = TeXPaper()
 def Dir(**kw):
