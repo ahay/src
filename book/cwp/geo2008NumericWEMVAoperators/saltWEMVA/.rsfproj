@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfwindow', 'sfspray', 'sfput', 'sfcat', 'sfscale', 'sfgrey', 'sfspike', 'sfsmooth', 'sftransp', 'sfmath', 'sfdepth2time', 'sfricker1', 'sftime2depth', 'sfclip', 'sfcmplx', 'sfreal', 'sfdd', 'sfgraph', 'sffft1', 'sfpad', 'sfrtoc', 'sfzomig3', 'sfzomva', 'sfsrmod3', 'sfsrsyn', 'sfsrmig3', 'sfsrmva']
+data=['data/sigsbee/sigsbee2a_stratigraphy.sgy']
+size= 1010408428
