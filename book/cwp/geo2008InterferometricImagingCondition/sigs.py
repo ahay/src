@@ -198,7 +198,7 @@ def randomedge(noise,vel,par):
     Flow(noise,[vel,vel+'-saltbd',vel+'-saltin',vel+'-taper'],
          '''
          math output=1 |
-         noise |
+         noise seed=2009 |
          smooth rect1=5 rect2=5 repeat=3 |
          mask min=1.00 |
          dd type=float |
