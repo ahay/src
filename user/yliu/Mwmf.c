@@ -123,4 +123,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwmf.c 4796 2009-09-29 19:39:07Z yang_liu $	 */
+/* 	$Id$	 */
