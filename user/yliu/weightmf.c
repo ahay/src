@@ -26,44 +26,72 @@
 float wmedianfilter(float *odata, float *oweights, int nfw)
 /*< get a weighted median value >*/
 {   
-  int i,j,k;
-  float *data, *weights;
-  float temp,average,wm,sum;
-
-  data = sf_floatalloc(nfw);
-  weights = sf_floatalloc(nfw);
-
-  for(i=0;i<nfw;i++){
-    data[i]=odata[i];
-    weights[i]=oweights[i];
-  }
-
-  for(i=1;i<nfw;i++){
-    for(j=0;j<nfw-i;j++){
-      if(data[j]>data[j+1]){
-	temp=data[j];
-	data[j]=data[j+1];
-	data[j+1]=temp;
-	temp=weights[j];
-	weights[j]=weights[j+1];
-	weights[j+1]=temp;
-      }
+    int i,j,k;
+    float *data, *weights;
+    float temp,average,wm,sum;
+    
+    data = sf_floatalloc(nfw);
+    weights = sf_floatalloc(nfw);
+    
+    for(i=0;i<nfw;i++){
+	data[i]=odata[i];
+	weights[i]=oweights[i];
     }
-  }
-  sum=0.;
-  for(i=0;i<nfw;i++){
-    sum+=weights[i];
-  }
-  average=sum/2.;
-  k=0;
-  sum=weights[0];
-  while (sum<average){
-    k++;
-    sum+=weights[k];
-  }
-  wm=data[k];
-  return wm;
+    
+    for(i=1;i<nfw;i++){
+	for(j=0;j<nfw-i;j++){
+	    if(data[j]>data[j+1]){
+		temp=data[j];
+		data[j]=data[j+1];
+		data[j+1]=temp;
+		temp=weights[j];
+		weights[j]=weights[j+1];
+		weights[j+1]=temp;
+	    }
+	}
+    }
+    sum=0.;
+    for(i=0;i<nfw;i++){
+	sum+=weights[i];
+    }
+    average=sum/2.;
+    k=0;
+    sum=weights[0];
+    while (sum<average){
+	k++;
+	sum+=weights[k];
+    }
+    wm=data[k];
+    return wm;
+    
+}
 
+float wmedian(float *temp,float *weight,int nfw)
+/*< get a weighted median value >*/
+{   
+    int i, j, pass, *index, b;
+    float wm, a, *data;
+    
+    data = sf_floatalloc(nfw);
+    index = sf_intalloc(nfw);
+    for (j=0; j < nfw; j++) {
+	data[j] = temp[j]*weight[j];
+	index[j] = j;
+    }
+    for(pass=1; pass < nfw; pass++) {
+	for(i=0; i < nfw-pass; i++) {
+	    if(data[i] > data[i+1]) {
+		a = data[i];
+		b = index[i];
+		data[i] = data[i+1];
+		index[i] = index[i+1];
+		data[i+1] = a;
+		index[i+1] = b;
+	    }
+	}
+    }
+    wm = temp[index[nfw/2]];
+    return wm;
 }
 
 /* 	$Id$	 */
