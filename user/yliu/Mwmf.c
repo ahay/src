@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
 {
     int n1, n2, wn1, wn2;
     int nfw, m, i, j, k;
-    bool boundary, data;
+    bool boundary;
     
     float *trace, *tempt, *temp1, *wei, *tempw1;
     sf_file in, out, weights=NULL;
@@ -59,9 +59,6 @@ int main (int argc, char* argv[])
     if (!sf_getbool("boundary",&boundary)) boundary=false;
     /* if y, boundary is data, whereas zero*/
 
-    if (!sf_getbool("data",&data)) data=true;
-    /* if y, output data, whereas weighted data */
-    
     if (nfw < 1)  sf_error("Need positive integer input"); 
     if (nfw%2 == 0)  nfw = (nfw+1);
     m=(nfw-1)/2;
@@ -108,13 +105,8 @@ int main (int argc, char* argv[])
 			tempw1[k] = 0.;
 		    }
 		}
-		if (!data) temp1[k] *= tempw1[k];
 	    }
-	    if (data) {
-		trace[i] = wmedian(temp1,tempw1,nfw);
-	    } else {
-		trace[i] = medianfilter(temp1,nfw);
-	    }
+	    trace[i] = wmedianfilter(temp1,tempw1,nfw);
 	}
 	
 	sf_floatwrite(trace,n1,out);
