@@ -131,6 +131,19 @@ def wexXIMG(cig,data,slow,wfls,gg,par):
          ''' % par)
     par.pop('temp')
 
+def wexTIMG(cig,data,slow,wfls,gg,par):
+    par['temp'] = param(par)
+    Flow(cig,[data,slow,wfls,gg],
+         '''
+         weximg %(temp)s
+         nhx=0 nhz=0 nhy=0 nht=%(nht)d dht=%(dht)g
+         adj=1 save=0 feic=1 verb=y
+         slo=${SOURCES[1]}
+         swfl=${SOURCES[2]}
+         cc=${SOURCES[3]}
+         ''' % par)
+    par.pop('temp')
+
 # ------------------------------------------------------------
 # WEXMVA
 # ------------------------------------------------------------
