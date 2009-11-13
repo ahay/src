@@ -4,7 +4,7 @@ Flow('plane',None,
      '''
      spike n1=64 n2=32 d2=1 o2=1 label2=Trace
      nsp=3 k1=8,20,32 k2=4 l2=28 p2=2,1,0 |
-     noise var=0.03
+     noise seed=1 var=0.03
      ''')
 
 for plot in ('wiggle','grey'):
