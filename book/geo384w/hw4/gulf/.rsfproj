@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfbyte', 'sftransp', 'sfgrey3']
+data=['data/midpts/beinew.HH']
+size=   48000000
