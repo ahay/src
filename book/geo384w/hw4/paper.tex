@@ -1,196 +1,183 @@
-\author{Jules Browaeys}
+\author{Gustav Kirchhoff} 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Homework 4}
 
 \begin{abstract}
   This homework has two parts. In the theoretical part, you will
-  derive analytically the reflection traveltime from a hyperbolic
-  reflector and the geometrical spreading for the case of a constant
-  gradient of slowness squared.  In the computational part, you will
-  experiment with imaging synthetic data using traveltimes and waves.
+  perform several analytical derivations: amplitudes of elastic waves,
+  geometrical slant stacks, elliptical reflections. In the
+  computational part, you will experiment with imaging a synthetic
+  dataset and a field dataset from the Gulf of Mexico.
 \end{abstract}
 
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+\end{verbatim}
 
 \section{Theoretical part}
 
 \begin{enumerate}
-\item Consider the source point $s$ and the receiver point $r$ at the
-  surface $z=0$ above a 2-D constant-velocity medium and a hyperbolic
-  reflector defined by the equation 
-  \begin{equation}
-    \label{eq:hyper}
-    z(x) = \sqrt{h^2 +
-      x^2\,\tan^2{\alpha}}\;.
-  \end{equation}
-  \begin{enumerate}
-  \item Apply Fermat's principle to derive the horizontal coordinate of
-    the reflection point $y$ and the reflection traveltime $T$ as 
-    functions of $s$, $r$, $h$, and $\alpha$.
- \begin{eqnarray}
-L(y) & = & \sqrt{z^2(y)+(y-s)^2} + \sqrt{z^2(y)+(y-r)^2}\; \\
-0 & = & \frac{y/\cos^2\alpha-s}{\sqrt{z^2(y)+(y-s)^2}}
-+ \frac{y/\cos^2\alpha-r}{\sqrt{z^2(y)+(y-r)^2}}\;
- \end{eqnarray}
- \begin{eqnarray}
- (y/\cos^2\alpha-s)^2\;(z^2(y)+(y-r)^2) & = & (y/\cos^2\alpha-r)^2\;(z^2(y)+(y-s)^2)\;. \nonumber
- \end{eqnarray}
-  \item Test your equations by considering the limiting cases
-    \begin{itemize}
-    \item $h=0$, 
-      when the hyperbolic reflector turns into a dipping 
-      plane $z(x)= x\,\tan{\alpha}$ for positive $x$ (recall Homework 2).
-    \item $\alpha=0$,
-      when the
-      hyperbolic reflector turns into a flat plane $z(x)=h$.
-    \end{itemize}
-  \end{enumerate}
-\item Consider a medium with a constant gradient of slowness squared
-  \begin{equation}
-    S^2(\mathbf{x}) = S_0^2 + 2\,\mathbf{g} \cdot (\mathbf{x}-\mathbf{x}_0)\;.
-  \end{equation}
-  \begin{enumerate}
-  \item Show that, in this kind of medium, the dynamic ray tracing system
-    takes the form
-  \begin{eqnarray}
-    \label{eq:dxds}
-    {\frac{d \mathbf{X}}{d \sigma}} & = & \mathbf{P}\;, \\
-    {\frac{d \mathbf{P}}{d \sigma}} & = & \mathbf{0}\;.
-    \label{eq:dpds}
-  \end{eqnarray}
-\item Consider a point source in the 2-D case. Show that matrices
-  $\mathbf{X}$ and $\mathbf{P}$ can be initialized as
-  \begin{eqnarray}
-    \label{eq:x0}
-    \mathbf{X}(0) & = & \left[\begin{array}{cc} 
-        S_0\,\cos{\theta} & 0 \\
-        S_0\,\sin{\theta} & 0 \end{array}\right]\;, \\
-    \label{eq:p0}
-    \mathbf{P}(0) & = & \left[\begin{array}{cc} 
-        g_1 & -S_0\,\sin{\theta} \\
-        g_2 & S_0\,\cos{\theta} \end{array}\right]\;, 
-  \end{eqnarray}
-  where $\theta$ is the initial ray angle, , and $g_1$ and $g_2$ are
-  components of $\mathbf{g}$.
-\item Solve system~(\ref{eq:dxds}-\ref{eq:dpds}) with initial
-  conditions~(\ref{eq:x0}-\ref{eq:p0}) to find $\mathbf{X}(\sigma)$
-  and $\mathbf{P}(\sigma)$.
-\item Using your derivations, find the two-point geometrical spreading
-  $J$ from a point source in the 2-D case as a function of $S_0$,
-  $\mathbf{g}$, the source location $\mathbf{x}_0$ and the receiver
-  location $\mathbf{x}_1$.
-\end{enumerate}
+\item Consider the elastic wave equation
+\begin{equation}
+  \label{eq:ewave}
+  \rho\,\ddot{u}_i = C_{ijkl,j}\,u_{k,l} + C_{ijkl}\,u_{k,lj}\;
+\end{equation}
+in the case of an isotropic elasticity
+\begin{equation}
+  \label{eq:lame}
+  C_{ijkl} = \lambda\,\delta_{ij}\,\delta_{kl} + 
+  \mu\,(\delta_{ik}\,\delta_{jl} + \delta_{il}\,\delta_{jk})\;.
+\end{equation}
+Using the geometrical representation
+\begin{equation}
+  u_i(\mathbf{x},t) = a_i(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
+  \label{eq:gwave}
+\end{equation}
+and assuming the P-wave polarization in the direction of the gradient
+of $T$, derive the elastic P-wave amplitude transport equation and
+show its similarity to the corresponding equation for the case of
+acoustic variable-density wave propagation.
+\item Consider a 2-D common-midpoint gather $G(t,x)$, which
+  contains a geometrical event $A_0\,f\left(t-T(x)\right)$ with a
+  constant amplitude $A_0$ along a hyperbolic shape
+\begin{equation}
+\label{eq:hyper}
+T(x) = \sqrt{t0^2+\frac{x^2}{v^2}}\;.
+\end{equation}
+The gather gets transformed by the slant-stack (Radon transform) operator
+\begin{equation}
+\label{eq:radon}
+R(\tau,p) = \mathbf{D}_t^{1/2} \int G(\tau + p x, x) d x\;.
+\end{equation}
+where $ \mathbf{D}_t^{1/2}$ is a waveform-correcting half-order
+derivative operator.
 
+Using the theory of geometrical integration, show that $R(\tau,p)$
+will contain a geometrical event $A_1(p)\,f\left(\tau-T_1(p)\right)$.
+Determine $T_1(p)$ and $A_1(p)$.
+\item Consider source and receiver coordinates $s$ and $r$ on the
+  surface of a 2-D constant-velocity medium with velocity
+  $V$. 
+
+  \begin{enumerate}
+  \item Assuming that the reflection traveltime is $T$, show that the
+    reflection point $\{x,z\}$ must belong to an ellipse (\emph{migration
+      impulse response})
+    \begin{equation}
+      \label{eq:ellipse}
+      z(x) = \sqrt{R^2 - \alpha\,(x-m)^2}\;,
+    \end{equation}
+    where $R=V\,T_n/2$, $T_n=\sqrt{T^2-\frac{4\,h^2}{V^2}}$, $h=(r-s)/2$, and $m=(r+s)/2$.
+  \item Find $\alpha$.
+  \item Consider that the ellipse in equation~\ref{eq:ellipse} as a
+    reflection surface and apply Fermat's principle to find the reflection
+    traveltime $T_0(x_0)$ for observations with sources and receivers coincident at $x_0$.
+  \end{enumerate}
+  
 \end{enumerate}
 
 \section{Computational part}
 
-In this part of the homework, we will use a simple synthetic model to
-explore common-shot imaging with traveltimes and waves. You will study
-the effect of velocities on imaging.
-
 \begin{enumerate}
-\item We will start by exploring traveltime imaging using the
-  hyperbolic reflector model from equation~(\ref{eq:hyper}). The model
-  is shown in Figure~\ref{fig:model}.
+\item In the first part, you will experiment with creating and 
+  imaging a synthetic seismic reflection dataset.
 
-  \inputdir{times}
-  %\plot{model}{width=\textwidth}{Synthetic velocity model with one reflector.}
+  \inputdir{dome}
 
-{\small
-  \lstinputlisting[frame=single]{times/SConstruct}}
+  \multiplot{2}{ref,data}{width=0.45\textwidth}{(a) Reflector model. (b) 2-D synthetic data.}
+  \plot{vscan}{width=0.9\textwidth}{Velocity semblance scan.}
+  \plot{vnmo}{width=0.9\textwidth}{RMS velocity (a) and picked NMO velocity (b).}
+  \multiplot{2}{dstack,zoff}{width=0.45\textwidth}{(a) DMO stack. (b) Zero-offset section.}
+  \multiplot{2}{tmig,dmig2}{width=0.45\textwidth}{(a) Kirchhoff poststack time migration. 
+  (b) Time migration converted to depth, with reflectors overlaid.}
 
-  Figure~\ref{fig:dtime0-0,dtime1-0,dtime2-0} demonstrates the
-  traveltime imaging procedure for three different source locations:
-  forward continuation from the source, backward continuation from the
-  recorded reflection traveltime, and taking the zero level set of
-  their difference as a map of the reflector location.
+Figure~\ref{fig:data} shows a synthetic reflection dataset computed
+from a reflector model shown in Figure~\ref{fig:ref} and assuming a
+velocity model with a constant vertical gradient $V(z) = 1.5 +
+0.25\,z$. A small amount of random noise is added to the synthetic data.
 
-  %\multiplot{3}{dtime0-0,dtime1-0,dtime2-0}{width=\textwidth}{Forward
-  %  traveltime continuation from the source (left), backward
-  %  traveltime continuation from the recorded reflection traveltime
-  %  (center), and their difference (right) for three different source
-  %  locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, 
-  %  (c) $s=3\,\mbox{km}$.}
-
-  Combining images from different sources, we obtain the result shown
-  in Figure~\ref{fig:time0}.
-
-  %\plot{time0}{width=\textwidth}{Reflector images from traveltime
-  %  continuation overlayed on top of the velocity model.}
-
-  What happens when the velocity used for traveltime continuation is
-  incorrect? The results are shown in
-  Figures~\ref{fig:dtime0-1,dtime1-1,dtime2-1} and~\ref{fig:time1}.
-
-  %\multiplot{3}{dtime0-1,dtime1-1,dtime2-1}{width=\textwidth}{ Imaging
-  %  in velocity that is 10\% lower than the correct one. Forward
-  %  traveltime continuation from the source (left), backward
-  %  traveltime continuation from the recorded reflection traveltime
-  %  (center), and their difference (right) for three different source
-  %  locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, (c)
-  %  $s=3\,\mbox{km}$.}
-
-  %\plot{time1}{width=\textwidth}{Imaging in velocity that is 10\%
-  %  lower than the correct one. Reflector images from traveltime
-  %  continuation overlaid on top of the velocity model.}
+Figure~\ref{fig:vscan} shows a conventional velocity semblance
+scan. Figure~\ref{fig:vnmo} compares the RMS velocity with the NMO
+velocity picked from the scan. Figure~\ref{fig:dstack,zoff} compares a
+DMO stack and the zero-offset section from the data. Finally,
+Figure~\ref{fig:tmig,dmig2} shows the result of Kirchhoff time
+migration before and after conversion from time to depth.
 
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-> cd ~/geo384w/hw4/times
+cd ~/geo384w/hw4/dome
 \end{verbatim}
 \item Run
 \begin{verbatim}
-> scons view
+scons view
 \end{verbatim}
-  to generate figures and display them on your screen.  
-\item Explain the artifacts. Why, even with the correct velocity, images are not perfectly aligned with the reflector?
-\item Edit the \texttt{SConstruct} file to change the reflector shape
-  from plane to hyperbolic. Run 
+to generate the figures and display them on your screen.
+If you are on a computer with multiple CPUs, you
+can also try
 \begin{verbatim}
-> scons view
+pscons view
 \end{verbatim}
-  again to observe the differences.
-\item Instead of using the velocity that is 10\% lower, try a velocity that is 10\% higher. 
-Make appropriate changes in the \texttt{SConstruct} file and update the figures.
-\item Explain how traveltime imaging with multiple sources can be used to estimate the correct velocity. 
+to run certain computations in parallel.
+\item Explain the cause of the difference between the RMS velocity and the NMO velocity in Figure~\ref{fig:vnmo}.
+\item Edit the \texttt{SConstruct} file to switch on the antialiasing parameter in Kirchhoff migration 
+(by changing it from 0 to 1). Generate the migration figures again. What differences do you observe?
+\item Edit the \texttt{kirchhoff.c} file to improve the result of migration. This task is open-ended. 
+The change is up to you, as long as you can achieve an improvement. Possible options:
+\begin{itemize}
+\item Use a more accurate traveltime computation.
+\item Introduce an amplitude weight.
+\item Change from time to depth migration (you can assume a locally $V(z)$ medium and use results from previous homeworks.)
+\item Change from poststack to prestack migration.
+\end{itemize}
+\item The processing flow in the \texttt{SConstruct} file involves some cheating: the exact 
+depth velocity and the exact RMS velocity are used without being
+estimated from the data. Modify the processing flow so that only
+properties estimated from the data get used. This task is open-ended
+as well, different data processing strategies are possible.
 \end{enumerate}
 
-\item Now we will turn to imaging with waves. Figure~\ref{fig:shots} shows three synthetic shot gathers generated for the same reflector model.
-Figures~\ref{fig:image} shows an image generated by Kirchhoff
-migration with the correct velocity.
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small	\lstinputlisting[frame=single]{dome/SConstruct}}
 
-{\small \lstinputlisting[frame=single]{waves/SConstruct}}
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{dome/kirchhoff.c}
 
-\inputdir{waves}
-%\plot{shots}{width=\textwidth}{Shot gathers for the hyperbolic reflector model.}
-%\plot{image}{width=\textwidth}{Kirchhoff image for the hyperbolic reflector model.}
+\newpage
 
-% ADD ANOTHER FIGURE HERE
+\inputdir{gulf}
+\plot{gulf}{width=0.8\textwidth}{2-D field dataset from the Gulf of Mexico.}
+
+\item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data, 
+to process a 2-D field dataset from the Gulf of Mexico, shown in Figure~\ref{fig:gulf}.
 
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-> cd ~/geo384w/hw4/waves
+cd ~/geo384w/hw4/gulf
 \end{verbatim}
 \item Run
 \begin{verbatim}
-> scons view
+scons view
 \end{verbatim}
-  to generate figures and display them on your screen.
-\item Edit the \texttt{SConstruct} file to change the reflector shape
-  from plane to hyperbolic. Run 
-\begin{verbatim}
-> scons view
-\end{verbatim}
-  again to observe the differences.
-\item Create a loop of different images for velocities that are 10\% lower, correct, 
-and 10\% higher. Make appropriate changes in the \texttt{SConstruct} file.
-\item Include your new figures in the \texttt{geo384w/hw4/paper.tex} file following the analogy with 
-Figure~\ref{fig:image}.
-\item Explain how wave imaging with multiple sources can be used to estimate the correct velocity. 
+to generate the figures and display them on your screen.
+\item Edit the \texttt{SConstruct} file to implement your processing strategy. 
+Make sure to select appropriate processing parameters.
 \end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small	\lstinputlisting[frame=single]{gulf/SConstruct}}
 
 \end{enumerate}
 
@@ -202,21 +189,20 @@ Figure~\ref{fig:image}.
   first line to have your name instead of Kirchhoff's.
 \item Run
 \begin{verbatim}
-  > sftour scons lock
+sftour scons lock
 \end{verbatim}
 to update all figures.
 \item Run
 \begin{verbatim}
-  > sftour scons -c
+sftour scons -c
 \end{verbatim}
-  to remove intermediate files.
+to remove intermediate files.
 \item Run
  \begin{verbatim} 
-  > scons pdf
+ scons pdf
 \end{verbatim}
   to create the final document.
 \item Submit your result (file \texttt{paper.pdf}) on paper or by
-  e-mail. If you do your assignment on one of the computers in the
-  Unix lab, you can simply leave the file in your directory.
+  e-mail. 
 \end{enumerate}
 

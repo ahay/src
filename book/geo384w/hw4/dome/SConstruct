@@ -1,0 +1,159 @@
+from rsfproj import *
+
+# Generate a reflector model
+
+Flow('dome',None,
+     '''
+     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Distance
+     output="5-3*exp(-(x1-5)^2/9)"
+     ''')
+Flow('ref','dome',
+     '''
+     spray axis=2 n=5 o=0 d=0.25 |
+     math output="(input-1)*x2*x2+1"
+     ''')
+Flow('dip','ref',
+     'math output="2*(x1-5)/3*exp(-(x1-5)^2/9)*x2*x2" ')
+
+Plot('ref',
+     '''
+     graph min1=0 max1=10 min2=0 max2=5.5 
+     yreverse=y wanttitle=n label2=Depth unit2=km
+     wheretitle=b wherexlabel=t
+     ''')
+Result('ref','Overlay')
+
+# Model data
+
+Flow('modl','ref dip',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=51  dh=0.1  h0=0
+     ns=201 ds=0.05 s0=0
+     freq=10 dt=0.004 nt=1501
+     vel=1.5 gradz=0.25 verb=y |
+     tpow tpow=1 |
+     put d2=0.05 label3=Midpoint unit3=km 
+     ''',split=[1,2001],reduce='add')
+
+# Add random noise
+Flow('data','modl','noise var=1e-6 seed=112009')
+
+Result('data',
+       '''
+       byte |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame2=160 frame3=10 
+       label1=Time unit1=s 
+       label3=Half-Offset unit3=km 
+       title=Data point1=0.8 point2=0.8
+       ''')
+
+# Velocity estimation
+#####################
+
+# Ideal velocity
+Flow('vofz',None,
+     '''
+     math d1=0.01 n1=801 n2=201 d2=0.05 output="1.5+0.25*x1"
+     ''')
+Flow('voft','vofz',
+     'depth2time velocity=$SOURCE dt=0.004 nt=1501')
+Flow('vrms','voft',
+     '''
+     add mode=p $SOURCE | causint | 
+     math output="sqrt(input*0.004/(x1+0.004))" 
+     ''')
+
+# Velocity scan
+Flow('vscan','data',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',split=[3,201])
+
+Result('vscan',
+       '''
+       byte allpos=y gainpanel=all |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame2=160 frame3=10 
+       label1=Time unit1=s color=j
+       label3=Velocity unit3=km/s 
+       label2=Midpoint unit2=km
+       title="Velocity Scan" point1=0.8 point2=0.8
+       ''')
+
+# Velocity picking
+Flow('vnmo','vscan','pick rect1=100 rect2=10 | window')
+
+for vel in ('vrms','vnmo'):
+    Plot(vel,
+     '''
+     window max1=4 |
+     grey color=j allpos=y bias=1.5 clip=0.8 
+     scalebar=y barreverse=y barlabel=Velocity barunit=km/s
+     label2=Midpoint unit2=km label1=Time unit1=s
+     title="%s Velocity"
+     ''' % vel[1:].upper())
+Result('vnmo','vrms vnmo','SideBySideAniso')
+
+# Stacking
+##########
+
+Flow('nmo','data vnmo','nmo velocity=${SOURCES[1]}')
+Flow('stack','nmo','stack')
+
+# Using vrms is CHEATING
+########################
+Flow('nmo0','data vrms','nmo velocity=${SOURCES[1]}')
+Flow('dstack','nmo0',
+     '''
+     window f1=250 | 
+     logstretch | fft1 | 
+     transp plane=13 memsize=1000 |
+     finstack | 
+     transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | 
+     pad beg1=250 | put unit1=s
+     ''')
+
+Flow('zoff','data','window n2=1')
+
+stacks = {
+    'stack': 'Stack with NMO Velocity',
+    'dstack': 'DMO Stack',
+    'zoff': 'Zero Offset'
+    }
+
+for stack in stacks.keys():
+    Result(stack,
+           '''
+           window min1=1 max1=5 | 
+           grey title="%s" 
+           ''' % stacks[stack])
+
+# Kirchhoff Migration
+#####################
+
+prog = Program('kirchhoff.c')
+exe = str(prog[0])
+
+# Using vrms is CHEATING
+########################
+Flow('tmig','dstack %s vrms' % prog[0],
+     './${SOURCES[1]} vel=${SOURCES[2]} antialias=0')
+
+Result('tmig','grey title="Time Migration" ')
+
+# Using vofz is CHEATING
+########################
+Flow('dmig','tmig vofz','time2depth velocity=${SOURCES[1]}')
+
+Plot('dmig',
+     '''
+     window max1=5.5 | 
+     grey title="Time -> Depth" 
+     label2=Distance label1=Depth unit1=km
+     ''')
+
+Result('dmig','Overlay')
+Result('dmig2','dmig ref','Overlay')
+
+End()
