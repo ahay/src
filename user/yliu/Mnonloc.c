@@ -25,10 +25,12 @@ IEEE, 836-846*/
 #include <stdio.h>
 #include <math.h>
 
+#include "bilateral.h"
+
 int main (int argc, char *argv[])
 {
-    int n1,n2, i1,i2, is, ns, irep, nrep;
-    float *trace, *output, ax, bx, t, norm;
+    int n1, n2, i2, ns, nrep;
+    float *trace, output, ax, bx;
     sf_file inp, out;
     bool gauss;
 
@@ -63,44 +65,16 @@ int main (int argc, char *argv[])
     }
 
     trace = sf_floatalloc(n1);
-    output = sf_floatalloc(n1);
 
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 	/* read input */
 	sf_floatread(trace,n1,inp);
-	for (i1=0; i1 < n1; i1++) {
-	    output[i1] = trace[i1];
-	}
 
-	for (irep=0; irep < nrep; irep++) {
-	    /* loop over samples */
-	    for (i1=0; i1 < n1; i1++) {	    
-		t = 0.;
-		norm = 0.;
-		
-		/* accumulate shifts */
-		for (is=-ns; is <= ns; is++) {
-		    if (i1+is >= 0 && i1+is < n1) {
-			if (gauss) {
-			    t += output[i1+is]*expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(output[i1+is]-output[i1])*(output[i1+is]-output[i1])/(bx*bx+FLT_EPSILON));
-			    norm += expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(output[i1+is]-output[i1])*(output[i1+is]-output[i1])/(bx*bx+FLT_EPSILON));
-			} else {
-			    t += output[i1+is]*(1.-fabsf(1.*is)/(ns+FLT_EPSILON))*expf(-bx*(output[i1+is]-output[i1])*(output[i1+is]-output[i1]));
-			    norm += (1.-fabsf(1.*is)/(ns+FLT_EPSILON))*expf(-bx*(output[i1+is]-output[i1])*(output[i1+is]-output[i1]));
-			}
-		    } 
-		}
-		/* Nomalize */
-		output[i1] = t / (norm+FLT_EPSILON);
-	    }
-	}
-
+	output = bilateral(trace,ns,ax,bx,n1,nrep,gauss);
 	/* write output */
-	sf_floatwrite(output,n1,out);
+	sf_floatwrite(trace,n1,out);
     }
-
-    /* clean up */
 
     exit (0);
 }
