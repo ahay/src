@@ -41,7 +41,7 @@ typedef complex double sf_double_complex;
 #endif /* SF_HAS_COMPLEX_H */
 #endif /* NO_COMPLEX */
 
-typedef enum { PERIODIC, DERIV1, DERIV2, FLAT, NATURAL } bc_code;
+typedef enum { PERIODIC, DERIV1, DERIV2, FLAT, NATURAL, ANTIPERIODIC } bc_code;
 typedef enum { U1D, U2D, U3D } spline_code;
 typedef enum { SINGLE_REAL, DOUBLE_REAL, SINGLE_COMPLEX, DOUBLE_COMPLEX } type_code;
 
