@@ -106,14 +106,14 @@ int main(int argc, char* argv[])
 	/* combination */
 
         for (i1=0; i1 < n1; i1++) {
-           done = sqrtf(fabsf(rat1[i1]*rat2[i1]));
-  	   if ((rat1[i1] > 0. && rat2[i1] < 0. && -rat2[i1] >= rat1[i1]) ||
-               (rat1[i1] < 0. && rat2[i1] > 0. && rat2[i1] >= -rat1[i1])) 
-		  done = -done;
-           done += 1.;
-           done *= done;
-           done *= done/16.;
-           rat1[i1] = done;	
+	    done = sqrtf(fabsf(rat1[i1]*rat2[i1]));
+	    if ((rat1[i1] > 0. && rat2[i1] < 0. && -rat2[i1] >= rat1[i1]) ||
+		(rat1[i1] < 0. && rat2[i1] > 0. && rat2[i1] >= -rat1[i1])) 
+		done = -done;
+	    done += 1.;
+	    done *= done;
+	    done *= done/16.;
+	    rat1[i1] = done;	
         }
 
         sf_floatwrite(rat1,n1,out);
