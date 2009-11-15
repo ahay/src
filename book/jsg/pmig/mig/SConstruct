@@ -96,8 +96,7 @@ Plot('vtr',
      ''')
 Plot('vtr2','vtr vpk','Overlay')
 
-Flow('vsc','cdp',
-     'vscan v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}')
+Flow('vsc','cdp','vscan v0=1.5 dv=0.01 nv=151')
 Plot('vsc',
      '''
      envelope | 

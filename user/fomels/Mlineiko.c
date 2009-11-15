@@ -1,0 +1,112 @@
+/* Iterative solution of the linearized eikonal equation. */
+/*
+  Copyright (C) 2009 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+
+#include "upgrad.h"
+
+int main(int argc, char* argv[])
+{
+    bool inv;
+    int dim, i, n[SF_MAX_DIM], it, nt, niter, iter, *m;
+    float d[SF_MAX_DIM], *t, *dt, *s, *ds, tol;
+    double err;
+    char key[4];
+    sf_file dtime, time, slow, mask;
+    
+    sf_init(argc,argv);
+    time = sf_input("in");
+    dtime = sf_output("out");
+    
+    dim = sf_filedims(time,n);
+
+    nt = 1;
+    for (i=0; i < dim; i++) {
+	sprintf(key,"d%d",i+1);
+	if (!sf_histfloat(time,key,d+i)) sf_error("No %s= in input",key);
+	nt *= n[i];
+    }
+
+    if (!sf_getbool("inv",&inv)) inv=true;
+    /* if y, traveltime; if n, slowness squared */
+
+    upgrad_init(dim,n,d);
+
+    t = sf_floatalloc(nt);
+    s = sf_floatalloc(nt);
+
+    sf_floatread(t,nt,time);
+
+    if (!inv) {
+	upgrad_set(t);
+	upgrad_forw(t,s);
+
+	sf_floatwrite(s,nt,dtime);
+    } else {
+	slow = sf_input("slow"); /* slowness */
+
+	if (!sf_getint("niter",&niter)) niter=1;
+	/* maximum number of iterations */
+
+	if (!sf_getfloat("tol",&tol)) tol=0.001;
+	/* tolerance for convergence */
+
+	ds = sf_floatalloc(nt);
+	dt = sf_floatalloc(nt);
+	m = sf_intalloc(nt);
+
+	if (NULL != sf_getstring("mask")) {
+	    mask = sf_input("mask");
+	    if (SF_INT != sf_gettype(mask)) sf_error("Need int mask");
+	    sf_intread(m,nt,mask);
+	    sf_fileclose(mask);
+	} else {
+	    for (it=0; it < nt; it++) {
+		m[it]=1;
+	    }
+	}
+	
+	sf_floatread(s,nt,slow);
+	sf_fileclose(slow);
+
+	for (iter=0; iter < niter; iter++) {
+	    upgrad_set(t);
+	    upgrad_forw(t,ds);
+	    
+	    for (it=0; it < nt; it++) {
+		ds[it] = m[it]? sqrtf(ds[it])*s[it]-ds[it]:0.0;
+	    }
+	    
+	    upgrad_solve(ds,dt);
+	    
+	    for (it=0; it < nt; it++) {
+		t[it] += dt[it];
+	    }
+	    
+	    err = sqrt(cblas_dsdot(nt,dt,1,dt,1)/nt);
+	    if (err < tol) break;
+
+	    sf_warning("cycle=%d dt=%g",iter+1,err);
+	}
+	
+	sf_floatwrite(t,nt,dtime);
+    }
+
+    exit(0);
+}
