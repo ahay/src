@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <math.h>
+#include <assert.h>
 
 #include "einspline.h"
 
@@ -1771,15 +1772,6 @@ void recompute_UBspline_3d_z (UBspline_3d_z* spline, sf_double_complex *data) {
 static void destroy_UBspline (Bspline *spline) {
   free (spline->coefs);
   free (spline);
-}
-
-void destroy_Bspline (void *spline) {
-  Bspline *sp = (Bspline *)spline;
-  if (sp->sp_code <= U3D)
-    destroy_UBspline (sp);
-  else
-    fprintf (stderr, "Error in destroy_Bspline:  invalide spline code %d.\n",
-             sp->sp_code);
 }
 
 /*
@@ -5403,3 +5395,3553 @@ void eval_UBspline_3d_z_vgh (UBspline_3d_z * spline,
 
 }
 #endif /* NO_COMPLEX */
+
+/***********************************************************
+ ***********************************************************
+ ***********************************************************
+ *                                                         *
+ *                   Non-Uniform splines                   *
+ *                                                         *
+ ***********************************************************
+ ***********************************************************
+ ***********************************************************/
+
+static NUBasis *create_NUBasis (NUgrid *grid, bool periodic)
+{
+  int i, j;
+  NUBasis *basis = malloc (sizeof(NUBasis));
+  basis->grid = grid;
+  basis->periodic = periodic;
+  int N = grid->num_points;
+  basis->xVals = malloc ((N+5)*sizeof(double));
+  basis->dxInv = malloc (3*(N+2)*sizeof(double));
+  for (i=0; i<N; i++)
+    basis->xVals[i+2] = grid->points[i];
+  double *g = grid->points;
+  /* Extend grid points on either end to provide enough points to
+     construct a full basis set */
+  if (!periodic) {
+    basis->xVals[0]   = g[ 0 ] - 2.0*(g[1]-g[0]);
+    basis->xVals[1]   = g[ 0 ] - 1.0*(g[1]-g[0]);
+    basis->xVals[N+2] = g[N-1] + 1.0*(g[N-1]-g[N-2]);
+    basis->xVals[N+3] = g[N-1] + 2.0*(g[N-1]-g[N-2]);
+    basis->xVals[N+4] = g[N-1] + 3.0*(g[N-1]-g[N-2]);
+  }
+  else {
+    basis->xVals[1]   = g[ 0 ] - (g[N-1] - g[N-2]);
+    basis->xVals[0]   = g[ 0 ] - (g[N-1] - g[N-3]);
+    basis->xVals[N+2] = g[N-1] + (g[ 1 ] - g[ 0 ]);
+    basis->xVals[N+3] = g[N-1] + (g[ 2 ] - g[ 0 ]);
+    basis->xVals[N+4] = g[N-1] + (g[ 3 ] - g[ 0 ]);
+  }
+  for (i=0; i<N+2; i++) 
+    for (j=0; j<3; j++) 
+      basis->dxInv[3*i+j] = 
+        1.0/(basis->xVals[i+j+1]-basis->xVals[i]);
+  return basis;
+}
+
+static void destroy_NUBasis (NUBasis *basis)
+{
+  free (basis->xVals);
+  free (basis->dxInv);
+  free (basis);
+}
+
+
+static int get_NUBasis_funcs_s (NUBasis *basis, double x,
+                                float bfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2];
+  return i;
+}
+
+static void get_NUBasis_funcs_si (NUBasis *basis, int i,
+                                  float bfuncs[4])
+{
+  int i2 = i+2;
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals; 
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2];
+}
+
+static int get_NUBasis_dfuncs_s (NUBasis *basis, double x,
+                                 float bfuncs[4], float dbfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  return i;
+}
+
+static void get_NUBasis_dfuncs_si (NUBasis *basis, int i,
+                                   float bfuncs[4], float dbfuncs[4])
+{
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+}
+
+static int get_NUBasis_d2funcs_s (NUBasis *basis, double x,
+                                  float bfuncs[4], float dbfuncs[4], float d2bfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  d2bfuncs[0] = 6.0 * (+dxInv[3*(i+0)+2]* dxInv[3*(i+1)+1]*b1[0]);
+  d2bfuncs[1] = 6.0 * (-dxInv[3*(i+1)+1]*(dxInv[3*(i+0)+2]+dxInv[3*(i+1)+2])*b1[0] +
+                        dxInv[3*(i+1)+2]* dxInv[3*(i+2)+1]*b1[1]);
+  d2bfuncs[2] = 6.0 * (+dxInv[3*(i+1)+2]* dxInv[3*(i+1)+1]*b1[0] -
+                        dxInv[3*(i+2)+1]*(dxInv[3*(i+1)+2] + dxInv[3*(i+2)+2])*b1[1]);
+  d2bfuncs[3] = 6.0 * (+dxInv[3*(i+2)+2]* dxInv[3*(i+2)+1]*b1[1]);
+
+  return i;
+}
+
+static void get_NUBasis_d2funcs_si (NUBasis *basis, int i,
+                                    float bfuncs[4], float dbfuncs[4], float d2bfuncs[4])
+{
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  d2bfuncs[0] = 6.0 * (+dxInv[3*(i+0)+2]* dxInv[3*(i+1)+1]*b1[0]);
+  d2bfuncs[1] = 6.0 * (-dxInv[3*(i+1)+1]*(dxInv[3*(i+0)+2]+dxInv[3*(i+1)+2])*b1[0] +
+                        dxInv[3*(i+1)+2]* dxInv[3*(i+2)+1]*b1[1]);
+  d2bfuncs[2] = 6.0 * (+dxInv[3*(i+1)+2]* dxInv[3*(i+1)+1]*b1[0] -
+                        dxInv[3*(i+2)+1]*(dxInv[3*(i+1)+2] + dxInv[3*(i+2)+2])*b1[1]);
+  d2bfuncs[3] = 6.0 * (+dxInv[3*(i+2)+2]* dxInv[3*(i+2)+1]*b1[1]);
+}
+
+
+/*
+   Double-precision version
+                            */
+static int get_NUBasis_funcs_d (NUBasis *basis, double x,
+                                double bfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2];
+  return i;
+}
+
+static void get_NUBasis_funcs_di (NUBasis *basis, int i,
+                                  double bfuncs[4])
+{
+  int i2 = i+2;
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals; 
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2];
+}
+
+static int get_NUBasis_dfuncs_d (NUBasis *basis, double x,
+                                 double bfuncs[4], double dbfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  return i;
+}
+
+static void get_NUBasis_dfuncs_di (NUBasis *basis, int i,
+                                   double bfuncs[4], double dbfuncs[4])
+{
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+}
+
+
+static int get_NUBasis_d2funcs_d (NUBasis *basis, double x,
+                                  double bfuncs[4], double dbfuncs[4], double d2bfuncs[4])
+{
+  double b1[2], b2[3];
+  int i = (*basis->grid->reverse_map)(basis->grid, x);
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  d2bfuncs[0] = 6.0 * (+dxInv[3*(i+0)+2]* dxInv[3*(i+1)+1]*b1[0]);
+  d2bfuncs[1] = 6.0 * (-dxInv[3*(i+1)+1]*(dxInv[3*(i+0)+2]+dxInv[3*(i+1)+2])*b1[0] +
+                        dxInv[3*(i+1)+2]* dxInv[3*(i+2)+1]*b1[1]);
+  d2bfuncs[2] = 6.0 * (+dxInv[3*(i+1)+2]* dxInv[3*(i+1)+1]*b1[0] -
+                        dxInv[3*(i+2)+1]*(dxInv[3*(i+1)+2] + dxInv[3*(i+2)+2])*b1[1]);
+  d2bfuncs[3] = 6.0 * (+dxInv[3*(i+2)+2]* dxInv[3*(i+2)+1]*b1[1]);
+
+  return i;
+}
+
+static void get_NUBasis_d2funcs_di (NUBasis *basis, int i,
+                                    double bfuncs[4], double dbfuncs[4], 
+                                    double d2bfuncs[4])
+{
+  double b1[2], b2[3];
+  double x = basis->grid->points[i];
+  int i2 = i+2;
+  double *dxInv = basis->dxInv;
+  double *xVals = basis->xVals;
+
+  b1[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+2)+0];
+  b1[1]     = (x-xVals[i2])    * dxInv[3*(i+2)+0];
+  b2[0]     = (xVals[i2+1]-x)  * dxInv[3*(i+1)+1] * b1[0];
+  b2[1]     = ((x-xVals[i2-1]) * dxInv[3*(i+1)+1] * b1[0]+
+               (xVals[i2+2]-x) * dxInv[3*(i+2)+1] * b1[1]);
+  b2[2]     = (x-xVals[i2])    * dxInv[3*(i+2)+1] * b1[1];
+  bfuncs[0] = (xVals[i2+1]-x)  * dxInv[3*(i  )+2] * b2[0];
+  bfuncs[1] = ((x-xVals[i2-2]) * dxInv[3*(i  )+2] * b2[0] +
+               (xVals[i2+2]-x) * dxInv[3*(i+1)+2] * b2[1]);
+  bfuncs[2] = ((x-xVals[i2-1]) * dxInv[3*(i+1)+2] * b2[1] +
+               (xVals[i2+3]-x) * dxInv[3*(i+2)+2] * b2[2]);
+  bfuncs[3] = (x-xVals[i2])    * dxInv[3*(i+2)+2] * b2[2]; 
+
+  dbfuncs[0] = -3.0 * (dxInv[3*(i  )+2] * b2[0]);
+  dbfuncs[1] =  3.0 * (dxInv[3*(i  )+2] * b2[0] - dxInv[3*(i+1)+2] * b2[1]);
+  dbfuncs[2] =  3.0 * (dxInv[3*(i+1)+2] * b2[1] - dxInv[3*(i+2)+2] * b2[2]);
+  dbfuncs[3] =  3.0 * (dxInv[3*(i+2)+2] * b2[2]);
+
+  d2bfuncs[0] = 6.0 * (+dxInv[3*(i+0)+2]* dxInv[3*(i+1)+1]*b1[0]);
+  d2bfuncs[1] = 6.0 * (-dxInv[3*(i+1)+1]*(dxInv[3*(i+0)+2]+dxInv[3*(i+1)+2])*b1[0] +
+                        dxInv[3*(i+1)+2]* dxInv[3*(i+2)+1]*b1[1]);
+  d2bfuncs[2] = 6.0 * (+dxInv[3*(i+1)+2]* dxInv[3*(i+1)+1]*b1[0] -
+                        dxInv[3*(i+2)+1]*(dxInv[3*(i+1)+2] + dxInv[3*(i+2)+2])*b1[1]);
+  d2bfuncs[3] = 6.0 * (+dxInv[3*(i+2)+2]* dxInv[3*(i+2)+1]*b1[1]);
+}
+
+/***********************************************************
+
+     Single-precision, real creation routines
+
+ ***********************************************************
+
+   Notes on conventions:
+   Below, M (and Mx, My, Mz) represent the number of
+   data points to be interpolated.  With derivative
+   boundary conditions, it is equal to the number of
+   grid points.  With periodic boundary conditions,
+   it is one less than the number of grid points.
+   N (and Nx, Ny, Nz) is the number of B-spline
+   coefficients, which is #(grid points)+2 for all
+   boundary conditions. */
+
+static void solve_NUB_deriv_interp_1d_s (NUBasis *basis, 
+                                         float *data, int datastride,
+                                         float *p, int pstride,
+                                         float abcdInitial[4], float abcdFinal[4])
+{
+  int M = basis->grid->num_points;
+  int N = M+2;
+  int i, row;
+  /* Banded matrix storage.  The first three elements in the
+     tinyvector store the tridiagonal coefficients.  The last element
+     stores the RHS data. */
+  float *bands = malloc (4*N*sizeof(float));
+
+  /* Fill up bands */
+  for (i=0; i<4; i++) {
+    bands[i]         = abcdInitial[i];
+    bands[4*(N-1)+i] = abcdFinal[i];
+  }
+  for (i=0; i<M; i++) {
+    get_NUBasis_funcs_si (basis, i, &(bands[4*(i+1)]));
+    bands[4*(i+1)+3] = data[datastride*i];
+  }
+
+  /* Now solve:
+     First and last rows are different */
+  bands[4*0+1] /= bands[4*0+0];
+  bands[4*0+2] /= bands[4*0+0];
+  bands[4*0+3] /= bands[4*0+0];
+  bands[4*0+0] = 1.0;
+  bands[4*1+1] -= bands[4*1+0]*bands[4*0+1];
+  bands[4*1+2] -= bands[4*1+0]*bands[4*0+2];
+  bands[4*1+3] -= bands[4*1+0]*bands[4*0+3];
+  bands[4*0+0] = 0.0;
+  bands[4*1+2] /= bands[4*1+1];
+  bands[4*1+3] /= bands[4*1+1];
+  bands[4*1+1] = 1.0;
+
+  /* Now do rows 2 through M+1 */
+  for (row=2; row < N-1; row++) {
+    bands[4*(row)+1] -= bands[4*(row)+0]*bands[4*(row-1)+2];
+    bands[4*(row)+3] -= bands[4*(row)+0]*bands[4*(row-1)+3];
+    bands[4*(row)+2] /= bands[4*(row)+1];
+    bands[4*(row)+3] /= bands[4*(row)+1];
+    bands[4*(row)+0] = 0.0;
+    bands[4*(row)+1] = 1.0;
+  }
+
+  /* Do last row */
+  bands[4*(M+1)+1] -= bands[4*(M+1)+0]*bands[4*(M-1)+2];
+  bands[4*(M+1)+3] -= bands[4*(M+1)+0]*bands[4*(M-1)+3];
+  bands[4*(M+1)+2] -= bands[4*(M+1)+1]*bands[4*(M)+2];
+  bands[4*(M+1)+3] -= bands[4*(M+1)+1]*bands[4*(M)+3];
+  bands[4*(M+1)+3] /= bands[4*(M+1)+2];
+  bands[4*(M+1)+2] = 1.0;
+
+  p[pstride*(M+1)] = bands[4*(M+1)+3];
+  /* Now back substitute up */
+  for (row=M; row>0; row--)
+    p[pstride*(row)] = bands[4*(row)+3] - bands[4*(row)+2]*p[pstride*(row+1)];
+
+  /* Finish with first row */
+  p[0] = bands[4*(0)+3] - bands[4*(0)+1]*p[pstride*1] - bands[4*(0)+2]*p[pstride*2];
+
+  free (bands);
+}
+
+/* The number of elements in data should be one less than the number
+   of grid points */
+static void solve_NUB_periodic_interp_1d_s (NUBasis *basis,
+                                            float *data, int datastride,
+                                            float *p, int pstride)
+{
+  int M = basis->grid->num_points-1;
+  int i, row;
+
+  /* Banded matrix storage.  The first three elements in each row
+     store the tridiagonal coefficients.  The last element
+     stores the RHS data. */
+  float *bands   = malloc (4*M*sizeof(float));
+  float *lastCol = malloc (  M*sizeof(float));
+
+  /* Fill up bands */
+  for (i=0; i<M; i++) {
+    get_NUBasis_funcs_si (basis, i, &(bands[4*i])); 
+    bands[4*(i)+3] = data[i*datastride];
+  }
+
+  /* Now solve:
+     First and last rows are different */
+  bands[4*(0)+2] /= bands[4*(0)+1];
+  bands[4*(0)+0] /= bands[4*(0)+1];
+  bands[4*(0)+3] /= bands[4*(0)+1];
+  bands[4*(0)+1]  = 1.0;
+  bands[4*(M-1)+1] -= bands[4*(M-1)+2]*bands[4*(0)+0];
+  bands[4*(M-1)+3] -= bands[4*(M-1)+2]*bands[4*(0)+3];
+  bands[4*(M-1)+2]  = -bands[4*(M-1)+2]*bands[4*(0)+2];
+  lastCol[0] = bands[4*(0)+0];
+
+  for (row=1; row < (M-1); row++) {
+    bands[4*(row)+1] -= bands[4*(row)+0] * bands[4*(row-1)+2];
+    bands[4*(row)+3] -= bands[4*(row)+0] * bands[4*(row-1)+3];
+    lastCol[row]   = -bands[4*(row)+0] * lastCol[row-1];
+    bands[4*(row)+0] = 0.0;
+    bands[4*(row)+2] /= bands[4*(row)+1];
+    bands[4*(row)+3] /= bands[4*(row)+1];
+    lastCol[row]  /= bands[4*(row)+1];
+    bands[4*(row)+1]  = 1.0;
+    if (row < (M-2)) {
+      bands[4*(M-1)+3] -= bands[4*(M-1)+2]*bands[4*(row)+3];
+      bands[4*(M-1)+1] -= bands[4*(M-1)+2]*lastCol[row];
+      bands[4*(M-1)+2] = -bands[4*(M-1)+2]*bands[4*(row)+2];
+    }
+  }
+
+  /* Now do last row
+     The [2] element and [0] element are now on top of each other */
+  bands[4*(M-1)+0] += bands[4*(M-1)+2];
+  bands[4*(M-1)+1] -= bands[4*(M-1)+0] * (bands[4*(M-2)+2]+lastCol[M-2]);
+  bands[4*(M-1)+3] -= bands[4*(M-1)+0] *  bands[4*(M-2)+3];
+  bands[4*(M-1)+3] /= bands[4*(M-1)+1];
+  p[pstride*M] = bands[4*(M-1)+3];
+  for (row=M-2; row>=0; row--) 
+    p[pstride*(row+1)] = bands[4*(row)+3] - 
+      bands[4*(row)+2]*p[pstride*(row+2)] - lastCol[row]*p[pstride*M];
+
+  p[pstride*  0  ] = p[pstride*M];
+  p[pstride*(M+1)] = p[pstride*1];
+  p[pstride*(M+2)] = p[pstride*2];
+
+  free (bands);
+  free (lastCol);
+}
+
+static void find_NUBcoefs_1d_s (NUBasis *basis, BCtype_s bc,
+                                float *data,  int dstride,
+                                float *coefs, int cstride)
+{
+  if (bc.lCode == PERIODIC) 
+    solve_NUB_periodic_interp_1d_s (basis, data, dstride, coefs, cstride);
+  else {
+    int M = basis->grid->num_points;
+    /* Setup boundary conditions */
+    float bfuncs[4], dbfuncs[4], abcd_left[4], abcd_right[4];
+    /* Left boundary */
+    if (bc.lCode == FLAT || bc.lCode == NATURAL)
+      bc.lVal = 0.0;
+    if (bc.lCode == FLAT || bc.lCode == DERIV1) {
+      get_NUBasis_dfuncs_si (basis, 0, bfuncs, abcd_left);
+      abcd_left[3] = bc.lVal;
+    }
+    if (bc.lCode == NATURAL || bc.lCode == DERIV2) {
+      get_NUBasis_d2funcs_si (basis, 0, bfuncs, dbfuncs, abcd_left);
+      abcd_left[3] = bc.lVal;
+    }
+
+    /* Right boundary */
+    if (bc.rCode == FLAT || bc.rCode == NATURAL)
+      bc.rVal = 0.0;
+    if (bc.rCode == FLAT || bc.rCode == DERIV1) {
+      get_NUBasis_dfuncs_si (basis, M-1, bfuncs, abcd_right);
+      abcd_right[3] = bc.rVal;
+    }
+    if (bc.rCode == NATURAL || bc.rCode == DERIV2) {
+      get_NUBasis_d2funcs_si (basis, M-1, bfuncs, dbfuncs, abcd_right);
+      abcd_right[3] = bc.rVal;
+    }
+    /* Now, solve for coefficients */
+    solve_NUB_deriv_interp_1d_s (basis, data, dstride, coefs, cstride,
+                                 abcd_left, abcd_right);
+  }
+}
+
+NUBspline_1d_s* create_NUBspline_1d_s (NUgrid* x_grid, BCtype_s xBC, float *data)
+{
+  /* First, create the spline structure */
+  NUBspline_1d_s* spline = malloc (sizeof(NUBspline_1d_s));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU1D;
+  spline->t_code  = SINGLE_REAL;
+
+  /* Next, create the basis */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  /* M is the number of data points */
+  int M; 
+  if (xBC.lCode == PERIODIC) M = x_grid->num_points - 1;
+  else                       M = x_grid->num_points;
+  int N = x_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->coefs = malloc(N*sizeof(float));
+  find_NUBcoefs_1d_s (spline->x_basis, xBC, data, 1, spline->coefs, 1);
+
+  return spline;
+}
+
+NUBspline_2d_s* create_NUBspline_2d_s (NUgrid* x_grid, NUgrid* y_grid,
+                                       BCtype_s xBC, BCtype_s yBC, float *data)
+{
+  int ix, iy;
+  /* First, create the spline structure */
+  NUBspline_2d_s* spline = malloc (sizeof(NUBspline_2d_s));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU2D;
+  spline->t_code  = SINGLE_REAL;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  int Mx, My, Nx, Ny;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+
+  spline->x_stride = Ny;
+  spline->coefs = malloc (sizeof(float)*Nx*Ny);
+
+  // First, solve in the X-direction 
+  for (iy=0; iy<My; iy++) {
+    int doffset = iy;
+    int coffset = iy;
+    find_NUBcoefs_1d_s (spline->x_basis, xBC, data+doffset, My,
+                        spline->coefs+coffset, Ny);
+  }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) {
+    int doffset = ix*Ny;
+    int coffset = ix*Ny;
+    find_NUBcoefs_1d_s (spline->y_basis, yBC, spline->coefs+doffset, 1, 
+                        spline->coefs+coffset, 1);
+  }
+
+  return spline;
+}
+
+
+NUBspline_3d_s *create_NUBspline_3d_s (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid,
+                                       BCtype_s xBC, BCtype_s yBC, BCtype_s zBC, float *data)
+{
+  int ix, iy, iz;
+  /* First, create the spline structure */
+  NUBspline_3d_s* spline = malloc (sizeof(NUBspline_3d_s));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU3D;
+  spline->t_code  = SINGLE_REAL;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  spline->z_basis = create_NUBasis (z_grid, zBC.lCode==PERIODIC);
+  int Mx, My, Mz, Nx, Ny, Nz;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+  if (zBC.lCode == PERIODIC) Mz = z_grid->num_points - 1;
+  else                       Mz = z_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+  Nz = z_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->x_stride = Ny*Nz;
+  spline->y_stride = Nz;
+  spline->coefs = malloc (sizeof(float)*Nx*Ny*Nz);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) 
+    for (iz=0; iz<Mz; iz++) {
+      int doffset = iy*Mz+iz;
+      int coffset = iy*Nz+iz;
+      find_NUBcoefs_1d_s (spline->x_basis, xBC, data+doffset, My*Mz,
+                          spline->coefs+coffset, Ny*Nz);
+    }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iz=0; iz<Nz; iz++) {
+      int doffset = ix*Ny*Nz + iz;
+      int coffset = ix*Ny*Nz + iz;
+      find_NUBcoefs_1d_s (spline->y_basis, yBC, spline->coefs+doffset, Nz, 
+                          spline->coefs+coffset, Nz);
+    }
+
+  /* Now, solve in the Z-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iy=0; iy<Ny; iy++) {
+      int doffset = (ix*Ny+iy)*Nz;
+      int coffset = (ix*Ny+iy)*Nz;
+      find_NUBcoefs_1d_s (spline->z_basis, zBC, spline->coefs+doffset, 1, 
+                          spline->coefs+coffset, 1);
+    }
+  return spline;
+}
+
+/***********************************************************
+
+     Double-precision, real creation routines
+
+ ***********************************************************/
+
+static void solve_NUB_deriv_interp_1d_d (NUBasis *basis, 
+                                         double *data, int datastride,
+                                         double *   p, int pstride,
+                                         double abcdInitial[4], double abcdFinal[4])
+{
+  int M = basis->grid->num_points;
+  int N = M+2;
+  int i, row;
+  /* Banded matrix storage.  The first three elements in the
+     tinyvector store the tridiagonal coefficients.  The last element
+     stores the RHS data. */
+
+  double *bands = malloc (4*N*sizeof(double));
+
+  /* Fill up bands */
+  for (i=0; i<4; i++) {
+    bands[i]         = abcdInitial[i];
+    bands[4*(N-1)+i] = abcdFinal[i];
+  }
+  for (i=0; i<M; i++) {
+    get_NUBasis_funcs_di (basis, i, &(bands[4*(i+1)]));
+    bands[4*(i+1)+3] = data[datastride*i];
+  }
+
+  /* Now solve:
+     First and last rows are different */
+  bands[4*0+1] /= bands[4*0+0];
+  bands[4*0+2] /= bands[4*0+0];
+  bands[4*0+3] /= bands[4*0+0];
+  bands[4*0+0] = 1.0;
+  bands[4*1+1] -= bands[4*1+0]*bands[4*0+1];
+  bands[4*1+2] -= bands[4*1+0]*bands[4*0+2];
+  bands[4*1+3] -= bands[4*1+0]*bands[4*0+3];
+  bands[4*0+0] = 0.0;
+  bands[4*1+2] /= bands[4*1+1];
+  bands[4*1+3] /= bands[4*1+1];
+  bands[4*1+1] = 1.0;
+
+  /* Now do rows 2 through M+1 */
+  for (row=2; row < N-1; row++) {
+    bands[4*(row)+1] -= bands[4*(row)+0]*bands[4*(row-1)+2];
+    bands[4*(row)+3] -= bands[4*(row)+0]*bands[4*(row-1)+3];
+    bands[4*(row)+2] /= bands[4*(row)+1];
+    bands[4*(row)+3] /= bands[4*(row)+1];
+    bands[4*(row)+0] = 0.0;
+    bands[4*(row)+1] = 1.0;
+  }
+
+  /* Do last row */
+  bands[4*(M+1)+1] -= bands[4*(M+1)+0]*bands[4*(M-1)+2];
+  bands[4*(M+1)+3] -= bands[4*(M+1)+0]*bands[4*(M-1)+3];
+  bands[4*(M+1)+2] -= bands[4*(M+1)+1]*bands[4*(M)+2];
+  bands[4*(M+1)+3] -= bands[4*(M+1)+1]*bands[4*(M)+3];
+  bands[4*(M+1)+3] /= bands[4*(M+1)+2];
+  bands[4*(M+1)+2] = 1.0;
+
+  p[pstride*(M+1)] = bands[4*(M+1)+3];
+  /* Now back substitute up */
+  for (row=M; row>0; row--)
+    p[pstride*(row)] = bands[4*(row)+3] - bands[4*(row)+2]*p[pstride*(row+1)];
+
+  /* Finish with first row */
+  p[0] = bands[4*(0)+3] - bands[4*(0)+1]*p[pstride*1] - bands[4*(0)+2]*p[pstride*2];
+
+  free (bands);
+}
+
+static void solve_NUB_periodic_interp_1d_d (NUBasis *basis,
+                                            double *data, int datastride,
+                                            double *p, int pstride)
+{
+  int M = basis->grid->num_points-1;
+  int i, row;
+
+  /* Banded matrix storage.  The first three elements in the
+     tinyvector store the tridiagonal coefficients.  The last element
+     stores the RHS data. */
+
+  double *bands   = malloc (4*M*sizeof(double));
+  double *lastCol = malloc (  M*sizeof(double));
+
+  /* Fill up bands */
+  for (i=0; i<M; i++) {
+    get_NUBasis_funcs_di (basis, i, &(bands[4*i])); 
+    bands[4*(i)+3] = data[i*datastride];
+  }
+
+  /* Now solve:
+     First and last rows are different */
+  bands[4*(0)+2] /= bands[4*(0)+1];
+  bands[4*(0)+0] /= bands[4*(0)+1];
+  bands[4*(0)+3] /= bands[4*(0)+1];
+  bands[4*(0)+1]  = 1.0;
+  bands[4*(M-1)+1] -= bands[4*(M-1)+2]*bands[4*(0)+0];
+  bands[4*(M-1)+3] -= bands[4*(M-1)+2]*bands[4*(0)+3];
+  bands[4*(M-1)+2]  = -bands[4*(M-1)+2]*bands[4*(0)+2];
+  lastCol[0] = bands[4*(0)+0];
+
+  for (row=1; row < (M-1); row++) {
+    bands[4*(row)+1] -= bands[4*(row)+0] * bands[4*(row-1)+2];
+    bands[4*(row)+3] -= bands[4*(row)+0] * bands[4*(row-1)+3];
+    lastCol[row]   = -bands[4*(row)+0] * lastCol[row-1];
+    bands[4*(row)+0] = 0.0;
+    bands[4*(row)+2] /= bands[4*(row)+1];
+    bands[4*(row)+3] /= bands[4*(row)+1];
+    lastCol[row]  /= bands[4*(row)+1];
+    bands[4*(row)+1]  = 1.0;
+    if (row < (M-2)) {
+      bands[4*(M-1)+3] -= bands[4*(M-1)+2]*bands[4*(row)+3];
+      bands[4*(M-1)+1] -= bands[4*(M-1)+2]*lastCol[row];
+      bands[4*(M-1)+2] = -bands[4*(M-1)+2]*bands[4*(row)+2];
+    }
+  }
+
+  /* Now do last row
+     The [2] element and [0] element are now on top of each other */
+  bands[4*(M-1)+0] += bands[4*(M-1)+2];
+  bands[4*(M-1)+1] -= bands[4*(M-1)+0] * (bands[4*(M-2)+2]+lastCol[M-2]);
+  bands[4*(M-1)+3] -= bands[4*(M-1)+0] *  bands[4*(M-2)+3];
+  bands[4*(M-1)+3] /= bands[4*(M-1)+1];
+  p[pstride*M] = bands[4*(M-1)+3];
+  for (row=M-2; row>=0; row--) 
+    p[pstride*(row+1)] = bands[4*(row)+3] - 
+      bands[4*(row)+2]*p[pstride*(row+2)] - lastCol[row]*p[pstride*M];
+
+  p[pstride*  0  ] = p[pstride*M];
+  p[pstride*(M+1)] = p[pstride*1];
+  p[pstride*(M+2)] = p[pstride*2];
+
+  free (bands);
+  free (lastCol);
+}
+
+static void find_NUBcoefs_1d_d (NUBasis *basis, BCtype_d bc,
+                                double *data,  int dstride,
+                                double *coefs, int cstride)
+{
+  if (bc.lCode == PERIODIC) 
+    solve_NUB_periodic_interp_1d_d (basis, data, dstride, coefs, cstride);
+  else {
+    int M = basis->grid->num_points;
+    /* Setup boundary conditions */
+    double bfuncs[4], dbfuncs[4], abcd_left[4], abcd_right[4];
+    /* Left boundary */
+    if (bc.lCode == FLAT || bc.lCode == NATURAL)
+      bc.lVal = 0.0;
+    if (bc.lCode == FLAT || bc.lCode == DERIV1) {
+      get_NUBasis_dfuncs_di (basis, 0, bfuncs, abcd_left);
+      abcd_left[3] = bc.lVal;
+    }
+    if (bc.lCode == NATURAL || bc.lCode == DERIV2) {
+      get_NUBasis_d2funcs_di (basis, 0, bfuncs, dbfuncs, abcd_left);
+      abcd_left[3] = bc.lVal;
+    }
+
+    /* Right boundary */
+    if (bc.rCode == FLAT || bc.rCode == NATURAL)
+      bc.rVal = 0.0;
+    if (bc.rCode == FLAT || bc.rCode == DERIV1) {
+      get_NUBasis_dfuncs_di (basis, M-1, bfuncs, abcd_right);
+      abcd_right[3] = bc.rVal;
+    }
+    if (bc.rCode == NATURAL || bc.rCode == DERIV2) {
+      get_NUBasis_d2funcs_di (basis, M-1, bfuncs, dbfuncs, abcd_right);
+      abcd_right[3] = bc.rVal;
+    }
+
+    /* Now, solve for coefficients */
+    solve_NUB_deriv_interp_1d_d (basis, data, dstride, coefs, cstride,
+                                 abcd_left, abcd_right);
+  }
+}
+
+NUBspline_1d_d *create_NUBspline_1d_d (NUgrid* x_grid, BCtype_d xBC, double *data)
+{
+  /* First, create the spline structure */
+  NUBspline_1d_d* spline = malloc (sizeof(NUBspline_1d_d));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU1D;
+  spline->t_code  = DOUBLE_REAL;
+
+  /* Next, create the basis */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  /* M is the number of data points */
+  int M; 
+  if (xBC.lCode == PERIODIC) M = x_grid->num_points - 1;
+  else                       M = x_grid->num_points;
+  int N = x_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->coefs = malloc(N*sizeof(double));
+  find_NUBcoefs_1d_d (spline->x_basis, xBC, data, 1, spline->coefs, 1);
+
+  return spline;
+}
+
+NUBspline_2d_d *create_NUBspline_2d_d (NUgrid* x_grid, NUgrid* y_grid,
+                                       BCtype_d xBC, BCtype_d yBC, double *data)
+{
+  int ix, iy;
+  /* First, create the spline structure */
+  NUBspline_2d_d* spline = malloc (sizeof(NUBspline_2d_d));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU2D;
+  spline->t_code  = DOUBLE_REAL;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+
+  int Mx, My, Nx, Ny;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+
+  spline->x_stride = Ny;
+  spline->coefs = malloc (sizeof(double)*Nx*Ny);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) {
+    int doffset = iy;
+    int coffset = iy;
+    find_NUBcoefs_1d_d (spline->x_basis, xBC, data+doffset, My,
+                        spline->coefs+coffset, Ny);
+  }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) {
+    int doffset = ix*Ny;
+    int coffset = ix*Ny;
+    find_NUBcoefs_1d_d (spline->y_basis, yBC, spline->coefs+doffset, 1, 
+                        spline->coefs+coffset, 1);
+  }
+
+  return spline;
+}
+
+NUBspline_3d_d *create_NUBspline_3d_d (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid,
+                                       BCtype_d xBC, BCtype_d yBC, BCtype_d zBC, double *data)
+{
+  int ix, iy, iz;
+  /* First, create the spline structure */
+  NUBspline_3d_d* spline = malloc (sizeof(NUBspline_3d_d));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU3D;
+  spline->t_code  = DOUBLE_REAL;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  spline->z_basis = create_NUBasis (z_grid, zBC.lCode==PERIODIC);
+
+  int Mx, My, Mz, Nx, Ny, Nz;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+  if (zBC.lCode == PERIODIC) Mz = z_grid->num_points - 1;
+  else                       Mz = z_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+  Nz = z_grid->num_points + 2;
+
+  spline->x_stride = Ny*Nz;
+  spline->y_stride = Nz;
+  spline->coefs = malloc (sizeof(double)*Nx*Ny*Nz);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) 
+    for (iz=0; iz<Mz; iz++) {
+      int doffset = iy*Mz+iz;
+      int coffset = iy*Nz+iz;
+      find_NUBcoefs_1d_d (spline->x_basis, xBC, data+doffset, My*Mz,
+                          spline->coefs+coffset, Ny*Nz);
+    }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iz=0; iz<Nz; iz++) {
+      int doffset = ix*Ny*Nz + iz;
+      int coffset = ix*Ny*Nz + iz;
+      find_NUBcoefs_1d_d (spline->y_basis, yBC, spline->coefs+doffset, Nz, 
+                          spline->coefs+coffset, Nz);
+    }
+
+  /* Now, solve in the Z-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iy=0; iy<Ny; iy++) {
+      int doffset = (ix*Ny+iy)*Nz;
+      int coffset = (ix*Ny+iy)*Nz;
+      find_NUBcoefs_1d_d (spline->z_basis, zBC, spline->coefs+doffset, 1, 
+                          spline->coefs+coffset, 1);
+    }
+  return spline;
+}
+
+#ifndef NO_COMPLEX
+
+/***********************************************************
+
+     Single-precision, complex creation routines
+
+ ***********************************************************/
+
+static void find_NUBcoefs_1d_c (NUBasis *basis, BCtype_c bc,
+                                sf_complex *data,  int dstride,
+                                sf_complex *coefs, int cstride)
+{
+  BCtype_s bc_r, bc_i;
+  bc_r.lCode = bc.lCode;   bc_i.lCode = bc.lCode;
+  bc_r.rCode = bc.rCode;   bc_i.rCode = bc.rCode;
+  bc_r.lVal  = bc.lVal_r;  bc_r.rVal  = bc.rVal_r;
+  bc_i.lVal  = bc.lVal_i;  bc_i.rVal  = bc.rVal_i;
+
+  float *data_r  = ((float*)data );
+  float *data_i  = ((float*)data )+1;
+  float *coefs_r = ((float*)coefs);
+  float *coefs_i = ((float*)coefs)+1;
+
+  find_NUBcoefs_1d_s (basis, bc_r, data_r, 2*dstride, coefs_r, 2*cstride);
+  find_NUBcoefs_1d_s (basis, bc_i, data_i, 2*dstride, coefs_i, 2*cstride);
+}
+
+
+NUBspline_1d_c *create_NUBspline_1d_c (NUgrid* x_grid, BCtype_c xBC, sf_complex *data)
+{
+  /* First, create the spline structure */
+  NUBspline_1d_c* spline = malloc (sizeof(NUBspline_1d_c));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU1D;
+  spline->t_code  = SINGLE_COMPLEX;
+
+  /* Next, create the basis */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  /* M is the number of data points */
+  int M; 
+  if (xBC.lCode == PERIODIC) M = x_grid->num_points - 1;
+  else                       M = x_grid->num_points;
+  int N = x_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->coefs = malloc(N*sizeof(sf_complex));
+  find_NUBcoefs_1d_c (spline->x_basis, xBC, data, 1, spline->coefs, 1);
+
+  return spline;
+}
+
+NUBspline_2d_c *create_NUBspline_2d_c (NUgrid* x_grid, NUgrid* y_grid,
+                                       BCtype_c xBC, BCtype_c yBC, sf_complex *data)
+{
+  int ix, iy;
+  /* First, create the spline structure */
+  NUBspline_2d_c* spline = malloc (sizeof(NUBspline_2d_c));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU2D;
+  spline->t_code  = SINGLE_COMPLEX;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  int Mx, My, Nx, Ny;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+
+  spline->x_stride = Ny;
+  spline->coefs = malloc (sizeof(sf_complex)*Nx*Ny);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) {
+    int doffset = iy;
+    int coffset = iy;
+    find_NUBcoefs_1d_c (spline->x_basis, xBC, data+doffset, My,
+                        spline->coefs+coffset, Ny);
+  }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) {
+    int doffset = ix*Ny;
+    int coffset = ix*Ny;
+    find_NUBcoefs_1d_c (spline->y_basis, yBC, spline->coefs+doffset, 1, 
+                        spline->coefs+coffset, 1);
+  }
+
+  return spline;
+}
+
+NUBspline_3d_c *create_NUBspline_3d_c (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid,
+                                       BCtype_c xBC, BCtype_c yBC, BCtype_c zBC, sf_complex *data)
+{
+  int ix, iy, iz;
+  /* First, create the spline structure */
+  NUBspline_3d_c* spline = malloc (sizeof(NUBspline_3d_c));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU3D;
+  spline->t_code  = SINGLE_COMPLEX;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  spline->z_basis = create_NUBasis (z_grid, zBC.lCode==PERIODIC);
+  int Mx, My, Mz, Nx, Ny, Nz;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+  if (zBC.lCode == PERIODIC) Mz = z_grid->num_points - 1;
+  else                       Mz = z_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+  Nz = z_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->x_stride = Ny*Nz;
+  spline->y_stride = Nz;
+  spline->coefs = malloc (sizeof(sf_complex)*Nx*Ny*Nz);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) 
+    for (iz=0; iz<Mz; iz++) {
+      int doffset = iy*Mz+iz;
+      int coffset = iy*Nz+iz;
+      find_NUBcoefs_1d_c (spline->x_basis, xBC, data+doffset, My*Mz,
+                          spline->coefs+coffset, Ny*Nz);
+    }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iz=0; iz<Nz; iz++) {
+      int doffset = ix*Ny*Nz + iz;
+      int coffset = ix*Ny*Nz + iz;
+      find_NUBcoefs_1d_c (spline->y_basis, yBC, spline->coefs+doffset, Nz, 
+                          spline->coefs+coffset, Nz);
+    }
+
+  /* Now, solve in the Z-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iy=0; iy<Ny; iy++) {
+      int doffset = (ix*Ny+iy)*Nz;
+      int coffset = (ix*Ny+iy)*Nz;
+      find_NUBcoefs_1d_c (spline->z_basis, zBC, spline->coefs+doffset, 1, 
+                          spline->coefs+coffset, 1);
+    }
+  return spline;
+}
+
+/***********************************************************
+
+     Double-precision complex creation routines
+
+ ***********************************************************/
+
+static void find_NUBcoefs_1d_z (NUBasis *basis, BCtype_z bc,
+                                sf_double_complex *data,  int dstride,
+                                sf_double_complex *coefs, int cstride)
+{
+  BCtype_d bc_r, bc_i;
+  bc_r.lCode = bc.lCode;   bc_i.lCode = bc.lCode;
+  bc_r.rCode = bc.rCode;   bc_i.rCode = bc.rCode;
+  bc_r.lVal  = bc.lVal_r;  bc_r.rVal  = bc.rVal_r;
+  bc_i.lVal  = bc.lVal_i;  bc_i.rVal  = bc.rVal_i;
+
+  double *data_r  = ((double*)data );
+  double *data_i  = ((double*)data )+1;
+  double *coefs_r = ((double*)coefs);
+  double *coefs_i = ((double*)coefs)+1;
+
+  find_NUBcoefs_1d_d (basis, bc_r, data_r, 2*dstride, coefs_r, 2*cstride);
+  find_NUBcoefs_1d_d (basis, bc_i, data_i, 2*dstride, coefs_i, 2*cstride);
+}
+
+NUBspline_1d_z *create_NUBspline_1d_z (NUgrid* x_grid, BCtype_z xBC, sf_double_complex *data)
+{
+  /* First, create the spline structure */
+  NUBspline_1d_z* spline = malloc (sizeof(NUBspline_1d_z));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU1D;
+  spline->t_code  = DOUBLE_COMPLEX;
+
+  /* Next, create the basis */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  /* M is the number of data points */
+  int M; 
+  if (xBC.lCode == PERIODIC) M = x_grid->num_points - 1;
+  else                       M = x_grid->num_points;
+  int N = x_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->coefs = malloc(N*sizeof(sf_double_complex));
+  find_NUBcoefs_1d_z (spline->x_basis, xBC, data, 1, spline->coefs, 1);
+
+  return spline;
+}
+
+NUBspline_2d_z *create_NUBspline_2d_z (NUgrid* x_grid, NUgrid* y_grid,
+                                       BCtype_z xBC, BCtype_z yBC, sf_double_complex *data)
+{
+  int ix, iy;
+  /* First, create the spline structure */
+  NUBspline_2d_z* spline = malloc (sizeof(NUBspline_2d_z));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU2D;
+  spline->t_code  = DOUBLE_COMPLEX;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  int Mx, My, Nx, Ny;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+
+  spline->x_stride = Ny;
+  spline->coefs = malloc (sizeof(sf_double_complex)*Nx*Ny);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) {
+    int doffset = iy;
+    int coffset = iy;
+    find_NUBcoefs_1d_z (spline->x_basis, xBC, data+doffset, My,
+                        spline->coefs+coffset, Ny);
+  }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) {
+    int doffset = ix*Ny;
+    int coffset = ix*Ny;
+    find_NUBcoefs_1d_z (spline->y_basis, yBC, spline->coefs+doffset, 1, 
+                        spline->coefs+coffset, 1);
+  }
+
+  return spline;
+}
+
+NUBspline_3d_z *create_NUBspline_3d_z (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid,
+                                       BCtype_z xBC, BCtype_z yBC, BCtype_z zBC, sf_double_complex *data)
+{
+  int ix, iy, iz;
+  /* First, create the spline structure */
+  NUBspline_3d_z* spline = malloc (sizeof(NUBspline_3d_z));
+  if (spline == NULL)
+    return spline;
+  spline->sp_code = NU3D;
+  spline->t_code  = DOUBLE_COMPLEX;
+  spline->x_grid = x_grid;
+  spline->y_grid = y_grid;
+  spline->z_grid = z_grid;
+
+  /* Next, create the bases */
+  spline->x_basis = create_NUBasis (x_grid, xBC.lCode==PERIODIC);
+  spline->y_basis = create_NUBasis (y_grid, yBC.lCode==PERIODIC);
+  spline->z_basis = create_NUBasis (z_grid, zBC.lCode==PERIODIC);
+  int Mx, My, Mz, Nx, Ny, Nz;
+  if (xBC.lCode == PERIODIC) Mx = x_grid->num_points - 1;
+  else                       Mx = x_grid->num_points;
+  if (yBC.lCode == PERIODIC) My = y_grid->num_points - 1;
+  else                       My = y_grid->num_points;
+  if (zBC.lCode == PERIODIC) Mz = z_grid->num_points - 1;
+  else                       Mz = z_grid->num_points;
+
+  Nx = x_grid->num_points + 2;
+  Ny = y_grid->num_points + 2;
+  Nz = z_grid->num_points + 2;
+
+  /* Allocate coefficients and solve */
+  spline->x_stride = Ny*Nz;
+  spline->y_stride = Nz;
+  spline->coefs = malloc (sizeof(sf_double_complex)*Nx*Ny*Nz);
+
+  /* First, solve in the X-direction */
+  for (iy=0; iy<My; iy++) 
+    for (iz=0; iz<Mz; iz++) {
+      int doffset = iy*Mz+iz;
+      int coffset = iy*Nz+iz;
+      find_NUBcoefs_1d_z (spline->x_basis, xBC, data+doffset, My*Mz,
+                          spline->coefs+coffset, Ny*Nz);
+    }
+
+  /* Now, solve in the Y-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iz=0; iz<Nz; iz++) {
+      int doffset = ix*Ny*Nz + iz;
+      int coffset = ix*Ny*Nz + iz;
+      find_NUBcoefs_1d_z (spline->y_basis, yBC, spline->coefs+doffset, Nz, 
+                          spline->coefs+coffset, Nz);
+    }
+
+  /* Now, solve in the Z-direction */
+  for (ix=0; ix<Nx; ix++) 
+    for (iy=0; iy<Ny; iy++) {
+      int doffset = (ix*Ny+iy)*Nz;
+      int coffset = (ix*Ny+iy)*Nz;
+      find_NUBcoefs_1d_z (spline->z_basis, zBC, spline->coefs+doffset, 1, 
+                          spline->coefs+coffset, 1);
+    }
+  return spline;
+}
+#endif /* NO_COMPLEX */
+
+static void destroy_NUBspline (Bspline *spline)
+{
+  free (spline->coefs);
+  switch (spline->sp_code) {
+  case NU1D:
+    destroy_NUBasis (((NUBspline_1d*)spline)->x_basis);
+    break;
+  case NU2D:
+    destroy_NUBasis (((NUBspline_2d*)spline)->x_basis);
+    destroy_NUBasis (((NUBspline_2d*)spline)->y_basis);
+    break;
+
+  case NU3D:
+    destroy_NUBasis (((NUBspline_3d*)spline)->x_basis);
+    destroy_NUBasis (((NUBspline_3d*)spline)->y_basis);
+    destroy_NUBasis (((NUBspline_3d*)spline)->z_basis);
+    break;
+  default:
+    break;
+  }
+}
+
+
+/************************************************************/
+/* 1D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_s (NUBspline_1d_s *spline, 
+                          double x, float *val)
+{
+  float bfuncs[4];
+  int i = get_NUBasis_funcs_s (spline->x_basis, x, bfuncs);
+  float *coefs = spline->coefs;
+  *val = (coefs[i+0]*bfuncs[0] +coefs[i+1]*bfuncs[1] +
+          coefs[i+2]*bfuncs[2] +coefs[i+3]*bfuncs[3]);
+}
+
+/* Value and first derivative */
+void eval_NUBspline_1d_s_vg (NUBspline_1d_s *spline, double x, 
+                             float *val, float *grad)
+{
+  float bfuncs[4], dbfuncs[4];
+  int i = get_NUBasis_dfuncs_s (spline->x_basis, x, bfuncs, dbfuncs);
+  float *coefs = spline->coefs;
+  *val =  (coefs[i+0]* bfuncs[0] + coefs[i+1]* bfuncs[1] +
+           coefs[i+2]* bfuncs[2] + coefs[i+3]* bfuncs[3]);
+  *grad = (coefs[i+0]*dbfuncs[0] + coefs[i+1]*dbfuncs[1] +
+           coefs[i+2]*dbfuncs[2] + coefs[i+3]*dbfuncs[3]);
+}
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_s_vgl (NUBspline_1d_s *spline, double x, 
+                              float *val, float *grad,
+                              float *lapl)
+{
+  float bfuncs[4], dbfuncs[4], d2bfuncs[4];
+  int i = get_NUBasis_d2funcs_s (spline->x_basis, x, bfuncs, dbfuncs, d2bfuncs);
+  float *coefs = spline->coefs;
+  *val =  (coefs[i+0]*  bfuncs[0] + coefs[i+1]*  bfuncs[1] +
+           coefs[i+2]*  bfuncs[2] + coefs[i+3]*  bfuncs[3]);
+  *grad = (coefs[i+0]* dbfuncs[0] + coefs[i+1]* dbfuncs[1] +
+           coefs[i+2]* dbfuncs[2] + coefs[i+3]* dbfuncs[3]);
+  *lapl = (coefs[i+0]*d2bfuncs[0] + coefs[i+1]*d2bfuncs[1] +
+           coefs[i+2]*d2bfuncs[2] + coefs[i+3]*d2bfuncs[3]);
+
+}
+
+void eval_NUBspline_1d_s_vgh (NUBspline_1d_s *spline, double x, 
+                              float *val, float *grad,
+                              float *hess)
+{
+  eval_NUBspline_1d_s_vgl (spline, x, val, grad, hess);
+}
+
+/************************************************************/
+/* 2D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_s (NUBspline_2d_s *spline, 
+                          double x, double y, float *val)
+{
+  float a[4], b[4];
+  int ix = get_NUBasis_funcs_s (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_s (spline->y_basis, y, b);
+
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+#undef C
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_2d_s_vg (NUBspline_2d_s *spline, 
+                             double x, double y, 
+                             float *val, float *grad)
+{
+  float a[4], b[4], da[4], db[4];
+  int ix = get_NUBasis_dfuncs_s (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_s (spline->y_basis, y, b, db);
+
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[0] = (da[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+             da[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+             da[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+             da[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+#undef C
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_s_vgl (NUBspline_2d_s *spline, 
+                              double x, double y, float *val, 
+                              float *grad, float *lapl)
+{
+  float a[4], b[4], da[4], db[4], d2a[4], d2b[4], bc[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  *lapl   = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]+
+             a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+
+#undef C
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_s_vgh (NUBspline_2d_s *spline, 
+                              double x, double y, float *val, 
+                              float *grad, float *hess)
+{
+  float a[4], b[4], da[4], db[4], d2a[4], d2b[4], bc[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[0] = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]);
+  hess[1] = (da[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             da[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             da[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             da[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[3] = (a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+  hess[2] = hess[1];
+
+#undef C
+}
+
+
+/************************************************************/
+/* 3D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_s (NUBspline_3d_s *spline, 
+                          double x, double y, double z,
+                          float *val)
+{
+
+  float a[4], b[4], c[4];
+  int ix = get_NUBasis_funcs_s (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_s (spline->y_basis, y, b);
+  int iz = get_NUBasis_funcs_s (spline->z_basis, z, c);
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  *val = (a[0]*(b[0]*(P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3])+
+                b[1]*(P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3])+
+                b[2]*(P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3])+
+                b[3]*(P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]))+
+          a[1]*(b[0]*(P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3])+
+                b[1]*(P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3])+
+                b[2]*(P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3])+
+                b[3]*(P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]))+
+          a[2]*(b[0]*(P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3])+
+                b[1]*(P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3])+
+                b[2]*(P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3])+
+                b[3]*(P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]))+
+          a[3]*(b[0]*(P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3])+
+                b[1]*(P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3])+
+                b[2]*(P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3])+
+                b[3]*(P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3])));
+#undef P
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_3d_s_vg (NUBspline_3d_s *spline, 
+                             double x, double y, double z,
+                             float *val, float *grad)
+{
+  float a[4], b[4], c[4], da[4], db[4], dc[4], 
+        cP[16], bcP[4], dbcP[4];
+  int ix = get_NUBasis_dfuncs_s (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_s (spline->y_basis, y, b, db);
+  int iz = get_NUBasis_dfuncs_s (spline->z_basis, z, c, dc);
+  float *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  *val    = ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+  grad[0] = (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*(b[0]*(P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3])+
+           b[1]*(P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3])+
+           b[2]*(P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3])+
+           b[3]*(P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]))+
+     a[1]*(b[0]*(P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3])+
+           b[1]*(P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3])+
+           b[2]*(P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3])+
+           b[3]*(P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]))+
+     a[2]*(b[0]*(P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3])+
+           b[1]*(P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3])+
+           b[2]*(P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3])+
+           b[3]*(P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]))+
+     a[3]*(b[0]*(P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3])+
+           b[1]*(P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3])+
+           b[2]*(P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3])+
+           b[3]*(P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3])));
+#undef P
+
+}
+
+
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_s_vgl (NUBspline_3d_s *spline, 
+                              double x, double y, double z,
+                              float *val, float *grad, float *lapl) {
+  float a[4], b[4], c[4], da[4], db[4], dc[4], 
+        d2a[4], d2b[4], d2c[4], cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_s (spline->z_basis, z, c, dc, d2c);
+
+  float *coefs = spline->coefs;
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+
+  *val    = 
+    ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+
+  grad[0] = 
+    (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = 
+    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+
+  *lapl = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3])
+    +     (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]) +
+    (a[0]*(b[0]*(P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3])+    
+           b[1]*(P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3])+
+           b[2]*(P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3])+
+           b[3]*(P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]))+
+     a[1]*(b[0]*(P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3])+
+           b[1]*(P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3])+
+           b[2]*(P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3])+
+           b[3]*(P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]))+
+     a[2]*(b[0]*(P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3])+
+           b[1]*(P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3])+
+           b[2]*(P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3])+
+           b[3]*(P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]))+
+     a[3]*(b[0]*(P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3])+
+           b[1]*(P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3])+
+           b[2]*(P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3])+
+           b[3]*(P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3])));
+#undef P
+
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_s_vgh (NUBspline_3d_s *spline, 
+                              double x, double y, double z,
+                              float *val, float *grad, float *hess)
+{
+  float a[4], b[4], c[4], da[4], db[4], dc[4], 
+        d2a[4], d2b[4], d2c[4], cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
+        d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_s (spline->z_basis, z, c, dc, d2c);
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+  float *coefs = spline->coefs;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  d2cP[ 0] = (P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3]);
+  d2cP[ 1] = (P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3]);
+  d2cP[ 2] = (P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3]);
+  d2cP[ 3] = (P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]);
+  d2cP[ 4] = (P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3]);
+  d2cP[ 5] = (P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3]);
+  d2cP[ 6] = (P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3]);
+  d2cP[ 7] = (P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]);
+  d2cP[ 8] = (P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3]);
+  d2cP[ 9] = (P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3]);
+  d2cP[10] = (P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3]);
+  d2cP[11] = (P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]);
+  d2cP[12] = (P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3]);
+  d2cP[13] = (P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3]);
+  d2cP[14] = (P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3]);
+  d2cP[15] = (P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  bd2cP[0] = ( b[0]*d2cP[ 0] + b[1]*d2cP[ 1] + b[2]*d2cP[ 2] + b[3]*d2cP[ 3]);
+  bd2cP[1] = ( b[0]*d2cP[ 4] + b[1]*d2cP[ 5] + b[2]*d2cP[ 6] + b[3]*d2cP[ 7]);
+  bd2cP[2] = ( b[0]*d2cP[ 8] + b[1]*d2cP[ 9] + b[2]*d2cP[10] + b[3]*d2cP[11]);
+  bd2cP[3] = ( b[0]*d2cP[12] + b[1]*d2cP[13] + b[2]*d2cP[14] + b[3]*d2cP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+  dbdcP[0] = ( db[0]*dcP[ 0] + db[1]*dcP[ 1] + db[2]*dcP[ 2] + db[3]*dcP[ 3]);
+  dbdcP[1] = ( db[0]*dcP[ 4] + db[1]*dcP[ 5] + db[2]*dcP[ 6] + db[3]*dcP[ 7]);
+  dbdcP[2] = ( db[0]*dcP[ 8] + db[1]*dcP[ 9] + db[2]*dcP[10] + db[3]*dcP[11]);
+  dbdcP[3] = ( db[0]*dcP[12] + db[1]*dcP[13] + db[2]*dcP[14] + db[3]*dcP[15]);
+
+  *val = a[0]*bcP[0] + a[1]*bcP[1] + a[2]*bcP[2] + a[3]*bcP[3];
+  grad[0] = (da[0] *bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+  /* d2x */
+  hess[0] = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3]);
+  /* dx dy */
+  hess[1] = (da[0]*dbcP[0] + da[1]*dbcP[1] + da[1]*dbcP[1] + da[1]*dbcP[1]);
+  hess[3] = hess[1];
+  /* dx dz */
+  hess[2] = (da[0]*bdcP[0] + da[1]*bdcP[1] + da[1]*bdcP[1] + da[1]*bdcP[1]);
+  hess[6] = hess[2];
+  /* d2y */
+  hess[4] = (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]);
+  /* dy dz */
+  hess[5] = (a[0]*dbdcP[0] + a[1]*dbdcP[1] + a[2]*dbdcP[2] + a[3]*dbdcP[3]);
+  hess[7] = hess[5];
+  /* d2z */
+  hess[8] = (a[0]*bd2cP[0] + a[1]*bd2cP[1] + a[2]*bd2cP[2] + a[3]*bd2cP[3]);
+#undef P
+
+}
+
+/************************************************************/
+/* 1D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_d (NUBspline_1d_d *spline, 
+                          double x, double *val)
+{
+  double bfuncs[4];
+  int i = get_NUBasis_funcs_d (spline->x_basis, x, bfuncs);
+  double *coefs = spline->coefs;
+  *val = (coefs[i+0]*bfuncs[0] +coefs[i+1]*bfuncs[1] +
+          coefs[i+2]*bfuncs[2] +coefs[i+3]*bfuncs[3]);
+}
+
+/* Value and first derivative */
+void eval_NUBspline_1d_d_vg (NUBspline_1d_d *spline, double x, 
+                             double *val, double *grad)
+{
+  double bfuncs[4], dbfuncs[4];
+  int i = get_NUBasis_dfuncs_d (spline->x_basis, x, bfuncs, dbfuncs);
+  double *coefs = spline->coefs;
+  *val =  (coefs[i+0]* bfuncs[0] + coefs[i+1]* bfuncs[1] +
+           coefs[i+2]* bfuncs[2] + coefs[i+3]* bfuncs[3]);
+  *grad = (coefs[i+0]*dbfuncs[0] + coefs[i+1]*dbfuncs[1] +
+           coefs[i+2]*dbfuncs[2] + coefs[i+3]*dbfuncs[3]);
+}
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_d_vgl (NUBspline_1d_d *spline, double x, 
+                              double *val, double *grad,
+                              double *lapl)
+{
+  double bfuncs[4], dbfuncs[4], d2bfuncs[4];
+  int i = get_NUBasis_d2funcs_d (spline->x_basis, x, bfuncs, dbfuncs, d2bfuncs);
+  double *coefs = spline->coefs;
+  *val =  (coefs[i+0]*  bfuncs[0] + coefs[i+1]*  bfuncs[1] +
+           coefs[i+2]*  bfuncs[2] + coefs[i+3]*  bfuncs[3]);
+  *grad = (coefs[i+0]* dbfuncs[0] + coefs[i+1]* dbfuncs[1] +
+           coefs[i+2]* dbfuncs[2] + coefs[i+3]* dbfuncs[3]);
+  *lapl = (coefs[i+0]*d2bfuncs[0] + coefs[i+1]*d2bfuncs[1] +
+           coefs[i+2]*d2bfuncs[2] + coefs[i+3]*d2bfuncs[3]);
+
+}
+
+void eval_NUBspline_1d_d_vgh (NUBspline_1d_d *spline, double x, 
+                              double *val, double *grad,
+                              double *hess)
+{
+  eval_NUBspline_1d_d_vgl (spline, x, val, grad, hess);
+}
+
+/************************************************************/
+/* 2D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_d (NUBspline_2d_d *spline, 
+                          double x, double y, double *val)
+{
+  double a[4], b[4];
+  int ix = get_NUBasis_funcs_d (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_d (spline->y_basis, y, b);
+
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+#undef C
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_2d_d_vg (NUBspline_2d_d *spline, 
+                             double x, double y, 
+                             double *val, double *grad)
+{
+  double a[4], b[4], da[4], db[4];
+  int ix = get_NUBasis_dfuncs_d (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_d (spline->y_basis, y, b, db);
+
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[0] = (da[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+             da[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+             da[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+             da[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+#undef C
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_d_vgl (NUBspline_2d_d *spline, 
+                              double x, double y, double *val, 
+                              double *grad, double *lapl)
+{
+  double a[4], b[4], da[4], db[4], d2a[4], d2b[4], bc[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  *lapl   = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]+
+             a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+
+#undef C
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_d_vgh (NUBspline_2d_d *spline, 
+                              double x, double y, double *val, 
+                              double *grad, double *hess)
+{
+  double a[4], b[4], da[4], db[4], d2a[4], d2b[4], bc[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[0] = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]);
+  hess[1] = (da[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             da[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             da[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             da[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[3] = (a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+  hess[2] = hess[1];
+
+#undef C
+}
+
+/************************************************************/
+/* 3D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_d (NUBspline_3d_d *spline, 
+                          double x, double y, double z,
+                          double *val)
+{
+
+  double a[4], b[4], c[4];
+  int ix = get_NUBasis_funcs_d (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_d (spline->y_basis, y, b);
+  int iz = get_NUBasis_funcs_d (spline->z_basis, z, c);
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  *val = (a[0]*(b[0]*(P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3])+
+                b[1]*(P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3])+
+                b[2]*(P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3])+
+                b[3]*(P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]))+
+          a[1]*(b[0]*(P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3])+
+                b[1]*(P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3])+
+                b[2]*(P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3])+
+                b[3]*(P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]))+
+          a[2]*(b[0]*(P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3])+
+                b[1]*(P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3])+
+                b[2]*(P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3])+
+                b[3]*(P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]))+
+          a[3]*(b[0]*(P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3])+
+                b[1]*(P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3])+
+                b[2]*(P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3])+
+                b[3]*(P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3])));
+#undef P
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_3d_d_vg (NUBspline_3d_d *spline, 
+                             double x, double y, double z,
+                             double *val, double *grad)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4], 
+         cP[16], bcP[4], dbcP[4];
+  int ix = get_NUBasis_dfuncs_d (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_d (spline->y_basis, y, b, db);
+  int iz = get_NUBasis_dfuncs_d (spline->z_basis, z, c, dc);
+  double *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  *val    = ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+  grad[0] = (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*(b[0]*(P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3])+
+           b[1]*(P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3])+
+           b[2]*(P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3])+
+           b[3]*(P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]))+
+     a[1]*(b[0]*(P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3])+
+           b[1]*(P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3])+
+           b[2]*(P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3])+
+           b[3]*(P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]))+
+     a[2]*(b[0]*(P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3])+
+           b[1]*(P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3])+
+           b[2]*(P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3])+
+           b[3]*(P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]))+
+     a[3]*(b[0]*(P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3])+
+           b[1]*(P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3])+
+           b[2]*(P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3])+
+           b[3]*(P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3])));
+#undef P
+
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_d_vgl (NUBspline_3d_d *spline, 
+                              double x, double y, double z,
+                              double *val, double *grad, double *lapl)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4], 
+         d2a[4], d2b[4], d2c[4], cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_d (spline->z_basis, z, c, dc, d2c);
+
+  double *coefs = spline->coefs;
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+
+  *val    = 
+    ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+
+  grad[0] = 
+    (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = 
+    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+
+  *lapl = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3])
+    +     (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]) +
+    (a[0]*(b[0]*(P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3])+    
+           b[1]*(P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3])+
+           b[2]*(P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3])+
+           b[3]*(P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]))+
+     a[1]*(b[0]*(P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3])+
+           b[1]*(P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3])+
+           b[2]*(P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3])+
+           b[3]*(P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]))+
+     a[2]*(b[0]*(P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3])+
+           b[1]*(P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3])+
+           b[2]*(P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3])+
+           b[3]*(P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]))+
+     a[3]*(b[0]*(P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3])+
+           b[1]*(P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3])+
+           b[2]*(P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3])+
+           b[3]*(P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3])));
+#undef P
+
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_d_vgh (NUBspline_3d_d *spline, 
+                              double x, double y, double z,
+                              double *val, double *grad, double *hess)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4], 
+         d2a[4], d2b[4], d2c[4], cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
+         d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_d (spline->z_basis, z, c, dc, d2c);
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+  double *coefs = spline->coefs;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  d2cP[ 0] = (P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3]);
+  d2cP[ 1] = (P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3]);
+  d2cP[ 2] = (P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3]);
+  d2cP[ 3] = (P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]);
+  d2cP[ 4] = (P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3]);
+  d2cP[ 5] = (P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3]);
+  d2cP[ 6] = (P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3]);
+  d2cP[ 7] = (P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]);
+  d2cP[ 8] = (P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3]);
+  d2cP[ 9] = (P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3]);
+  d2cP[10] = (P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3]);
+  d2cP[11] = (P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]);
+  d2cP[12] = (P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3]);
+  d2cP[13] = (P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3]);
+  d2cP[14] = (P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3]);
+  d2cP[15] = (P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  bd2cP[0] = ( b[0]*d2cP[ 0] + b[1]*d2cP[ 1] + b[2]*d2cP[ 2] + b[3]*d2cP[ 3]);
+  bd2cP[1] = ( b[0]*d2cP[ 4] + b[1]*d2cP[ 5] + b[2]*d2cP[ 6] + b[3]*d2cP[ 7]);
+  bd2cP[2] = ( b[0]*d2cP[ 8] + b[1]*d2cP[ 9] + b[2]*d2cP[10] + b[3]*d2cP[11]);
+  bd2cP[3] = ( b[0]*d2cP[12] + b[1]*d2cP[13] + b[2]*d2cP[14] + b[3]*d2cP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+  dbdcP[0] = ( db[0]*dcP[ 0] + db[1]*dcP[ 1] + db[2]*dcP[ 2] + db[3]*dcP[ 3]);
+  dbdcP[1] = ( db[0]*dcP[ 4] + db[1]*dcP[ 5] + db[2]*dcP[ 6] + db[3]*dcP[ 7]);
+  dbdcP[2] = ( db[0]*dcP[ 8] + db[1]*dcP[ 9] + db[2]*dcP[10] + db[3]*dcP[11]);
+  dbdcP[3] = ( db[0]*dcP[12] + db[1]*dcP[13] + db[2]*dcP[14] + db[3]*dcP[15]);
+
+  *val = a[0]*bcP[0] + a[1]*bcP[1] + a[2]*bcP[2] + a[3]*bcP[3];
+  grad[0] = (da[0] *bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+  /* d2x */
+  hess[0] = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3]);
+  /* dx dy */
+  hess[1] = (da[0]*dbcP[0] + da[1]*dbcP[1] + da[1]*dbcP[1] + da[1]*dbcP[1]);
+  hess[3] = hess[1];
+  /* dx dz */
+  hess[2] = (da[0]*bdcP[0] + da[1]*bdcP[1] + da[1]*bdcP[1] + da[1]*bdcP[1]);
+  hess[6] = hess[2];
+  /* d2y */
+  hess[4] = (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]);
+  /* dy dz */
+  hess[5] = (a[0]*dbdcP[0] + a[1]*dbdcP[1] + a[2]*dbdcP[2] + a[3]*dbdcP[3]);
+  hess[7] = hess[5];
+  /* d2z */
+  hess[8] = (a[0]*bd2cP[0] + a[1]*bd2cP[1] + a[2]*bd2cP[2] + a[3]*bd2cP[3]);
+#undef P
+
+}
+
+#ifndef NO_COMPLEX
+/************************************************************/
+/* 1D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_c (NUBspline_1d_c *spline, 
+                          double x, sf_complex *val)
+{
+  float bfuncs[4];
+  int i = get_NUBasis_funcs_s (spline->x_basis, x, bfuncs);
+  sf_complex *coefs = spline->coefs;
+  *val = (coefs[i+0]*bfuncs[0] +coefs[i+1]*bfuncs[1] +
+          coefs[i+2]*bfuncs[2] +coefs[i+3]*bfuncs[3]);
+}
+
+/* Value and first derivative */
+void eval_NUBspline_1d_c_vg (NUBspline_1d_c *spline, double x, 
+                             sf_complex *val, sf_complex *grad)
+{
+  float bfuncs[4], dbfuncs[4];
+  int i = get_NUBasis_dfuncs_s (spline->x_basis, x, bfuncs, dbfuncs);
+  sf_complex *coefs = spline->coefs;
+  *val =  (coefs[i+0]* bfuncs[0] + coefs[i+1]* bfuncs[1] +
+           coefs[i+2]* bfuncs[2] + coefs[i+3]* bfuncs[3]);
+  *grad = (coefs[i+0]*dbfuncs[0] + coefs[i+1]*dbfuncs[1] +
+           coefs[i+2]*dbfuncs[2] + coefs[i+3]*dbfuncs[3]);
+}
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_c_vgl (NUBspline_1d_c *spline, double x, 
+                              sf_complex *val, sf_complex *grad,
+                              sf_complex *lapl)
+{
+  float bfuncs[4], dbfuncs[4], d2bfuncs[4];
+  int i = get_NUBasis_d2funcs_s (spline->x_basis, x, bfuncs, dbfuncs, d2bfuncs);
+  sf_complex *coefs = spline->coefs;
+  *val =  (coefs[i+0]*  bfuncs[0] + coefs[i+1]*  bfuncs[1] +
+           coefs[i+2]*  bfuncs[2] + coefs[i+3]*  bfuncs[3]);
+  *grad = (coefs[i+0]* dbfuncs[0] + coefs[i+1]* dbfuncs[1] +
+           coefs[i+2]* dbfuncs[2] + coefs[i+3]* dbfuncs[3]);
+  *lapl = (coefs[i+0]*d2bfuncs[0] + coefs[i+1]*d2bfuncs[1] +
+           coefs[i+2]*d2bfuncs[2] + coefs[i+3]*d2bfuncs[3]);
+
+}
+
+void eval_NUBspline_1d_c_vgh (NUBspline_1d_c *spline, double x, 
+                              sf_complex *val, sf_complex *grad,
+                              sf_complex *hess)
+{
+  eval_NUBspline_1d_c_vgl (spline, x, val, grad, hess);
+}
+
+/************************************************************/
+/* 2D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_c (NUBspline_2d_c *spline, 
+                          double x, double y, sf_complex *val)
+{
+  float a[4], b[4];
+  int ix = get_NUBasis_funcs_s (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_s (spline->y_basis, y, b);
+
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+#undef C
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_2d_c_vg (NUBspline_2d_c *spline, 
+                             double x, double y, 
+                             sf_complex *val, sf_complex *grad)
+{
+  float a[4], b[4], da[4], db[4];
+  int ix = get_NUBasis_dfuncs_s (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_s (spline->y_basis, y, b, db);
+
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[0] = (da[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+             da[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+             da[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+             da[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+#undef C
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_c_vgl (NUBspline_2d_c *spline, 
+                              double x, double y, sf_complex *val, 
+                              sf_complex *grad, sf_complex *lapl)
+{
+  float a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_complex bc[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  *lapl   = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]+
+             a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+
+#undef C
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_c_vgh (NUBspline_2d_c *spline, 
+                              double x, double y, sf_complex *val, 
+                              sf_complex *grad, sf_complex *hess)
+{
+  float a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_complex bc[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[0] = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]);
+  hess[1] = (da[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             da[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             da[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             da[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[3] = (a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+  hess[2] = hess[1];
+
+#undef C
+}
+
+/************************************************************/
+/* 3D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_c (NUBspline_3d_c *spline, 
+                          double x, double y, double z,
+                          sf_complex *val)
+{
+
+  float a[4], b[4], c[4];
+  int ix = get_NUBasis_funcs_s (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_s (spline->y_basis, y, b);
+  int iz = get_NUBasis_funcs_s (spline->z_basis, z, c);
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  *val = (a[0]*(b[0]*(P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3])+
+                b[1]*(P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3])+
+                b[2]*(P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3])+
+                b[3]*(P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]))+
+          a[1]*(b[0]*(P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3])+
+                b[1]*(P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3])+
+                b[2]*(P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3])+
+                b[3]*(P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]))+
+          a[2]*(b[0]*(P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3])+
+                b[1]*(P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3])+
+                b[2]*(P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3])+
+                b[3]*(P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]))+
+          a[3]*(b[0]*(P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3])+
+                b[1]*(P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3])+
+                b[2]*(P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3])+
+                b[3]*(P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3])));
+#undef P
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_3d_c_vg (NUBspline_3d_c *spline, 
+                             double x, double y, double z,
+                             sf_complex *val, sf_complex *grad)
+{
+  float a[4], b[4], c[4], da[4], db[4], dc[4];
+  sf_complex cP[16], bcP[4], dbcP[4];
+  int ix = get_NUBasis_dfuncs_s (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_s (spline->y_basis, y, b, db);
+  int iz = get_NUBasis_dfuncs_s (spline->z_basis, z, c, dc);
+  sf_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  *val    = ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+  grad[0] = (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*(b[0]*(P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3])+
+           b[1]*(P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3])+
+           b[2]*(P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3])+
+           b[3]*(P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]))+
+     a[1]*(b[0]*(P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3])+
+           b[1]*(P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3])+
+           b[2]*(P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3])+
+           b[3]*(P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]))+
+     a[2]*(b[0]*(P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3])+
+           b[1]*(P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3])+
+           b[2]*(P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3])+
+           b[3]*(P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]))+
+     a[3]*(b[0]*(P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3])+
+           b[1]*(P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3])+
+           b[2]*(P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3])+
+           b[3]*(P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3])));
+#undef P
+
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_c_vgl (NUBspline_3d_c *spline, 
+                              double x, double y, double z,
+                              sf_complex *val, sf_complex *grad, 
+                              sf_complex *lapl)
+{
+  float a[4], b[4], c[4], da[4], db[4], dc[4], 
+        d2a[4], d2b[4], d2c[4];
+  sf_complex cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_s (spline->z_basis, z, c, dc, d2c);
+
+  sf_complex *coefs = spline->coefs;
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+
+  *val    = 
+    ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+
+  grad[0] = 
+    (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = 
+    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+
+  *lapl = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3])
+    +     (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]) +
+    (a[0]*(b[0]*(P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3])+    
+           b[1]*(P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3])+
+           b[2]*(P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3])+
+           b[3]*(P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]))+
+     a[1]*(b[0]*(P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3])+
+           b[1]*(P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3])+
+           b[2]*(P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3])+
+           b[3]*(P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]))+
+     a[2]*(b[0]*(P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3])+
+           b[1]*(P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3])+
+           b[2]*(P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3])+
+           b[3]*(P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]))+
+     a[3]*(b[0]*(P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3])+
+           b[1]*(P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3])+
+           b[2]*(P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3])+
+           b[3]*(P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3])));
+#undef P
+
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_c_vgh (NUBspline_3d_c *spline, 
+                              double x, double y, double z,
+                              sf_complex *val, sf_complex *grad, sf_complex *hess)
+{
+  float a[4], b[4], c[4], da[4], db[4], dc[4], 
+        d2a[4], d2b[4], d2c[4];
+  sf_complex cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
+                d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  int ix = get_NUBasis_d2funcs_s (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_s (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_s (spline->z_basis, z, c, dc, d2c);
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+  sf_complex *coefs = spline->coefs;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  d2cP[ 0] = (P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3]);
+  d2cP[ 1] = (P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3]);
+  d2cP[ 2] = (P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3]);
+  d2cP[ 3] = (P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]);
+  d2cP[ 4] = (P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3]);
+  d2cP[ 5] = (P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3]);
+  d2cP[ 6] = (P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3]);
+  d2cP[ 7] = (P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]);
+  d2cP[ 8] = (P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3]);
+  d2cP[ 9] = (P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3]);
+  d2cP[10] = (P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3]);
+  d2cP[11] = (P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]);
+  d2cP[12] = (P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3]);
+  d2cP[13] = (P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3]);
+  d2cP[14] = (P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3]);
+  d2cP[15] = (P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  bd2cP[0] = ( b[0]*d2cP[ 0] + b[1]*d2cP[ 1] + b[2]*d2cP[ 2] + b[3]*d2cP[ 3]);
+  bd2cP[1] = ( b[0]*d2cP[ 4] + b[1]*d2cP[ 5] + b[2]*d2cP[ 6] + b[3]*d2cP[ 7]);
+  bd2cP[2] = ( b[0]*d2cP[ 8] + b[1]*d2cP[ 9] + b[2]*d2cP[10] + b[3]*d2cP[11]);
+  bd2cP[3] = ( b[0]*d2cP[12] + b[1]*d2cP[13] + b[2]*d2cP[14] + b[3]*d2cP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+  dbdcP[0] = ( db[0]*dcP[ 0] + db[1]*dcP[ 1] + db[2]*dcP[ 2] + db[3]*dcP[ 3]);
+  dbdcP[1] = ( db[0]*dcP[ 4] + db[1]*dcP[ 5] + db[2]*dcP[ 6] + db[3]*dcP[ 7]);
+  dbdcP[2] = ( db[0]*dcP[ 8] + db[1]*dcP[ 9] + db[2]*dcP[10] + db[3]*dcP[11]);
+  dbdcP[3] = ( db[0]*dcP[12] + db[1]*dcP[13] + db[2]*dcP[14] + db[3]*dcP[15]);
+
+  *val = a[0]*bcP[0] + a[1]*bcP[1] + a[2]*bcP[2] + a[3]*bcP[3];
+  grad[0] = (da[0] *bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+  /* d2x */
+  hess[0] = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3]);
+  /* dx dy */
+  hess[1] = (da[0]*dbcP[0] + da[1]*dbcP[1] + da[1]*dbcP[1] + da[1]*dbcP[1]);
+  hess[3] = hess[1];
+  /* dx dz */
+  hess[2] = (da[0]*bdcP[0] + da[1]*bdcP[1] + da[1]*bdcP[1] + da[1]*bdcP[1]);
+  hess[6] = hess[2];
+  /* d2y */
+  hess[4] = (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]);
+  /* dy dz */
+  hess[5] = (a[0]*dbdcP[0] + a[1]*dbdcP[1] + a[2]*dbdcP[2] + a[3]*dbdcP[3]);
+  hess[7] = hess[5];
+  /* d2z */
+  hess[8] = (a[0]*bd2cP[0] + a[1]*bd2cP[1] + a[2]*bd2cP[2] + a[3]*bd2cP[3]);
+#undef P
+
+}
+
+/************************************************************/
+/* 1D double-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_z (NUBspline_1d_z *spline, 
+                          double x, sf_double_complex *val)
+{
+  double bfuncs[4];
+  int i = get_NUBasis_funcs_d (spline->x_basis, x, bfuncs);
+  sf_double_complex *coefs = spline->coefs;
+  *val = (coefs[i+0]*bfuncs[0] +coefs[i+1]*bfuncs[1] +
+          coefs[i+2]*bfuncs[2] +coefs[i+3]*bfuncs[3]);
+}
+
+/* Value and first derivative */
+void eval_NUBspline_1d_z_vg (NUBspline_1d_z *spline, double x, 
+                             sf_double_complex *val, sf_double_complex *grad)
+{
+  double bfuncs[4], dbfuncs[4];
+  int i = get_NUBasis_dfuncs_d (spline->x_basis, x, bfuncs, dbfuncs);
+  sf_double_complex *coefs = spline->coefs;
+  *val =  (coefs[i+0]* bfuncs[0] + coefs[i+1]* bfuncs[1] +
+           coefs[i+2]* bfuncs[2] + coefs[i+3]* bfuncs[3]);
+  *grad = (coefs[i+0]*dbfuncs[0] + coefs[i+1]*dbfuncs[1] +
+           coefs[i+2]*dbfuncs[2] + coefs[i+3]*dbfuncs[3]);
+}
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_z_vgl (NUBspline_1d_z *spline, double x, 
+                              sf_double_complex *val, sf_double_complex *grad,
+                              sf_double_complex *lapl)
+{
+  double bfuncs[4], dbfuncs[4], d2bfuncs[4];
+  int i = get_NUBasis_d2funcs_d (spline->x_basis, x, bfuncs, dbfuncs, d2bfuncs);
+  sf_double_complex *coefs = spline->coefs;
+  *val =  (coefs[i+0]*  bfuncs[0] + coefs[i+1]*  bfuncs[1] +
+           coefs[i+2]*  bfuncs[2] + coefs[i+3]*  bfuncs[3]);
+  *grad = (coefs[i+0]* dbfuncs[0] + coefs[i+1]* dbfuncs[1] +
+           coefs[i+2]* dbfuncs[2] + coefs[i+3]* dbfuncs[3]);
+  *lapl = (coefs[i+0]*d2bfuncs[0] + coefs[i+1]*d2bfuncs[1] +
+           coefs[i+2]*d2bfuncs[2] + coefs[i+3]*d2bfuncs[3]);
+
+}
+
+void eval_NUBspline_1d_z_vgh (NUBspline_1d_z *spline, double x, 
+                              sf_double_complex *val, sf_double_complex *grad,
+                              sf_double_complex *hess)
+{
+  eval_NUBspline_1d_z_vgl (spline, x, val, grad, hess);
+}
+
+/************************************************************/
+/* 2D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_z (NUBspline_2d_z *spline, 
+                          double x, double y, sf_double_complex *val)
+{
+  double a[4], b[4];
+  int ix = get_NUBasis_funcs_d (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_d (spline->y_basis, y, b);
+
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+#undef C
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_2d_z_vg (NUBspline_2d_z *spline, 
+                             double x, double y, 
+                             sf_double_complex *val, sf_double_complex *grad)
+{
+  double a[4], b[4], da[4], db[4];
+  int ix = get_NUBasis_dfuncs_d (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_d (spline->y_basis, y, b, db);
+
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  *val = (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+          a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+          a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+          a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[0] = (da[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
+             da[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
+             da[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
+             da[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+#undef C
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_z_vgl (NUBspline_2d_z *spline, 
+                              double x, double y, sf_double_complex *val, 
+                              sf_double_complex *grad, sf_double_complex *lapl)
+{
+  double a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_double_complex bc[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  *lapl   = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]+
+             a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+
+#undef C
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_z_vgh (NUBspline_2d_z *spline, 
+                              double x, double y, sf_double_complex *val, 
+                              sf_double_complex *grad, sf_double_complex *hess)
+{
+  double a[4], b[4], da[4], db[4], d2a[4], d2b[4];
+  sf_double_complex bc[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
+  bc[0] = (C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3]);
+  bc[1] = (C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3]);
+  bc[2] = (C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3]);
+  bc[3] = (C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]);
+  *val = (a[0]*bc[0] + a[1]*bc[1] + a[2]*bc[2] + a[3]*bc[3]);
+  grad[0] = (da[0]*bc[0] + da[1]*bc[1] + da[2]*bc[2] + da[3]*bc[3]);
+  grad[1] = (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[0] = (d2a[0]*bc[0] + d2a[1]*bc[1] + d2a[2]*bc[2] + d2a[3]*bc[3]);
+  hess[1] = (da[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
+             da[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
+             da[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
+             da[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
+  hess[3] = (a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
+             a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
+             a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
+             a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
+  hess[2] = hess[1];
+
+#undef C
+}
+
+/************************************************************/
+/* 3D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_z (NUBspline_3d_z *spline, 
+                          double x, double y, double z,
+                          sf_double_complex *val)
+{
+
+  double a[4], b[4], c[4];
+  int ix = get_NUBasis_funcs_d (spline->x_basis, x, a);
+  int iy = get_NUBasis_funcs_d (spline->y_basis, y, b);
+  int iz = get_NUBasis_funcs_d (spline->z_basis, z, c);
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  *val = (a[0]*(b[0]*(P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3])+
+                b[1]*(P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3])+
+                b[2]*(P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3])+
+                b[3]*(P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]))+
+          a[1]*(b[0]*(P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3])+
+                b[1]*(P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3])+
+                b[2]*(P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3])+
+                b[3]*(P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]))+
+          a[2]*(b[0]*(P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3])+
+                b[1]*(P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3])+
+                b[2]*(P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3])+
+                b[3]*(P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]))+
+          a[3]*(b[0]*(P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3])+
+                b[1]*(P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3])+
+                b[2]*(P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3])+
+                b[3]*(P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3])));
+#undef P
+
+}
+
+/* Value and gradient */
+void eval_NUBspline_3d_z_vg (NUBspline_3d_z *spline, 
+                             double x, double y, double z,
+                             sf_double_complex *val, sf_double_complex *grad)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4];
+  sf_double_complex cP[16], bcP[4], dbcP[4];
+  int ix = get_NUBasis_dfuncs_d (spline->x_basis, x, a, da);
+  int iy = get_NUBasis_dfuncs_d (spline->y_basis, y, b, db);
+  int iz = get_NUBasis_dfuncs_d (spline->z_basis, z, c, dc);
+  sf_double_complex *coefs = spline->coefs;
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  *val    = ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+  grad[0] = (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*(b[0]*(P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3])+
+           b[1]*(P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3])+
+           b[2]*(P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3])+
+           b[3]*(P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]))+
+     a[1]*(b[0]*(P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3])+
+           b[1]*(P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3])+
+           b[2]*(P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3])+
+           b[3]*(P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]))+
+     a[2]*(b[0]*(P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3])+
+           b[1]*(P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3])+
+           b[2]*(P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3])+
+           b[3]*(P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]))+
+     a[3]*(b[0]*(P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3])+
+           b[1]*(P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3])+
+           b[2]*(P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3])+
+           b[3]*(P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3])));
+#undef P
+
+}
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_z_vgl (NUBspline_3d_z *spline, 
+                              double x, double y, double z,
+                              sf_double_complex *val, sf_double_complex *grad, 
+                              sf_double_complex *lapl)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4], 
+         d2a[4], d2b[4], d2c[4];
+  sf_double_complex cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
+
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_d (spline->z_basis, z, c, dc, d2c);
+
+  sf_double_complex *coefs = spline->coefs;
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+
+  *val    = 
+    ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
+
+  grad[0] = 
+    (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = 
+    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = 
+    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+
+  *lapl = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3])
+    +     (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]) +
+    (a[0]*(b[0]*(P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3])+    
+           b[1]*(P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3])+
+           b[2]*(P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3])+
+           b[3]*(P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]))+
+     a[1]*(b[0]*(P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3])+
+           b[1]*(P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3])+
+           b[2]*(P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3])+
+           b[3]*(P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]))+
+     a[2]*(b[0]*(P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3])+
+           b[1]*(P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3])+
+           b[2]*(P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3])+
+           b[3]*(P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]))+
+     a[3]*(b[0]*(P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3])+
+           b[1]*(P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3])+
+           b[2]*(P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3])+
+           b[3]*(P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3])));
+#undef P
+
+}
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_z_vgh (NUBspline_3d_z *spline, 
+                              double x, double y, double z,
+                              sf_double_complex *val, sf_double_complex *grad, sf_double_complex *hess)
+{
+  double a[4], b[4], c[4], da[4], db[4], dc[4], 
+         d2a[4], d2b[4], d2c[4];
+  sf_double_complex cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
+                 d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
+  int ix = get_NUBasis_d2funcs_d (spline->x_basis, x, a, da, d2a);
+  int iy = get_NUBasis_d2funcs_d (spline->y_basis, y, b, db, d2b);
+  int iz = get_NUBasis_d2funcs_d (spline->z_basis, z, c, dc, d2c);
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+  sf_double_complex *coefs = spline->coefs;
+#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
+  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
+  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
+  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
+  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
+  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
+  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
+  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
+  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
+  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
+  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
+  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
+  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
+  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
+  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
+  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
+  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+
+  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
+  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
+  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
+  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
+  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
+  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
+  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
+  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
+  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
+  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
+  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
+  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
+  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
+  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
+  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
+  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
+
+  d2cP[ 0] = (P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3]);
+  d2cP[ 1] = (P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3]);
+  d2cP[ 2] = (P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3]);
+  d2cP[ 3] = (P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]);
+  d2cP[ 4] = (P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3]);
+  d2cP[ 5] = (P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3]);
+  d2cP[ 6] = (P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3]);
+  d2cP[ 7] = (P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]);
+  d2cP[ 8] = (P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3]);
+  d2cP[ 9] = (P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3]);
+  d2cP[10] = (P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3]);
+  d2cP[11] = (P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]);
+  d2cP[12] = (P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3]);
+  d2cP[13] = (P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3]);
+  d2cP[14] = (P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3]);
+  d2cP[15] = (P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3]);
+
+  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
+  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
+  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
+  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
+
+  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
+  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
+  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
+  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
+
+  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
+  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
+  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
+  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
+
+  bd2cP[0] = ( b[0]*d2cP[ 0] + b[1]*d2cP[ 1] + b[2]*d2cP[ 2] + b[3]*d2cP[ 3]);
+  bd2cP[1] = ( b[0]*d2cP[ 4] + b[1]*d2cP[ 5] + b[2]*d2cP[ 6] + b[3]*d2cP[ 7]);
+  bd2cP[2] = ( b[0]*d2cP[ 8] + b[1]*d2cP[ 9] + b[2]*d2cP[10] + b[3]*d2cP[11]);
+  bd2cP[3] = ( b[0]*d2cP[12] + b[1]*d2cP[13] + b[2]*d2cP[14] + b[3]*d2cP[15]);
+
+  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
+  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
+  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
+  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
+
+  dbdcP[0] = ( db[0]*dcP[ 0] + db[1]*dcP[ 1] + db[2]*dcP[ 2] + db[3]*dcP[ 3]);
+  dbdcP[1] = ( db[0]*dcP[ 4] + db[1]*dcP[ 5] + db[2]*dcP[ 6] + db[3]*dcP[ 7]);
+  dbdcP[2] = ( db[0]*dcP[ 8] + db[1]*dcP[ 9] + db[2]*dcP[10] + db[3]*dcP[11]);
+  dbdcP[3] = ( db[0]*dcP[12] + db[1]*dcP[13] + db[2]*dcP[14] + db[3]*dcP[15]);
+
+  *val = a[0]*bcP[0] + a[1]*bcP[1] + a[2]*bcP[2] + a[3]*bcP[3];
+  grad[0] = (da[0] *bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
+  grad[1] = (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
+  grad[2] = (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
+  /* d2x */
+  hess[0] = (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3]);
+  /* dx dy */
+  hess[1] = (da[0]*dbcP[0] + da[1]*dbcP[1] + da[1]*dbcP[1] + da[1]*dbcP[1]);
+  hess[3] = hess[1];
+  /* dx dz */
+  hess[2] = (da[0]*bdcP[0] + da[1]*bdcP[1] + da[1]*bdcP[1] + da[1]*bdcP[1]);
+  hess[6] = hess[2];
+  /* d2y */
+  hess[4] = (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]);
+  /* dy dz */
+  hess[5] = (a[0]*dbdcP[0] + a[1]*dbdcP[1] + a[2]*dbdcP[2] + a[3]*dbdcP[3]);
+  hess[7] = hess[5];
+  /* d2z */
+  hess[8] = (a[0]*bd2cP[0] + a[1]*bd2cP[1] + a[2]*bd2cP[2] + a[3]*bd2cP[3]);
+#undef P
+
+}
+#endif /* NO_COMPLEX */
+
+static int center_grid_reverse_map (void* gridptr, double x)
+{
+  center_grid *grid = (center_grid *)gridptr;
+
+  x -= grid->center;
+  double index = 
+    copysign (log1p(fabs(x)*grid->aInv)*grid->bInv, x);
+  return (int)floor(grid->half_points + index - grid->even_half);
+}
+
+static int log_grid_reverse_map (void *gridptr, double x)
+{
+  log_grid *grid = (log_grid *)gridptr;
+
+  int index = (int) floor(grid->ainv*log(x*grid->startinv));
+
+  if (index < 0)
+    return 0;
+  else
+    return index;
+}
+
+static int general_grid_reverse_map (void* gridptr, double x)
+{
+  NUgrid* grid = (NUgrid*) gridptr;
+  int N = grid->num_points;
+  double *points = grid->points;
+  if (x <= points[0])
+    return (0);
+  else if (x >= points[N-1])
+    return (N-1);
+  else {
+    int hi = N-1;
+    int lo = 0;
+    bool done = false;
+    while (!done) {
+      int i = (hi+lo)>>1;
+      if (points[i] > x)
+	hi = i;
+      else
+	lo = i;
+      done = (hi-lo)<2;
+    }
+    return (lo);
+  }
+}
+
+NUgrid* create_center_grid (double start, double end, double ratio, 
+		                    int num_points)
+{
+  int i;
+  center_grid *grid = malloc (sizeof (center_grid));
+  if (grid != NULL) {
+    assert (ratio > 1.0);
+    grid->start       = start;
+    grid->end         = end;
+    grid->center      = 0.5*(start + end);
+    grid->num_points  = num_points;
+    grid->half_points = num_points/2;
+    grid->odd = ((num_points % 2) == 1);
+    grid->b = log(ratio) / (double)(grid->half_points-1);
+    grid->bInv = 1.0/grid->b;
+    grid->points = malloc (num_points * sizeof(double));
+    if (grid->odd) {
+      grid->even_half = 0.0;  
+      grid->odd_one   = 1;
+      grid->a = 0.5*(end-start)/expm1(grid->b*grid->half_points);
+      grid->aInv = 1.0/grid->a;
+      for (i=-grid->half_points; i<=grid->half_points; i++) {
+	double sign;
+	if (i<0) 
+	  sign = -1.0;
+	else
+	  sign =  1.0;
+	grid->points[i+grid->half_points] = 
+	  sign * grid->a*expm1(grid->b*abs(i))+grid->center;
+      }
+    }
+    else {
+      grid->even_half = 0.5;  
+      grid->odd_one   = 0;
+      grid->a = 
+	0.5*(end-start)/expm1(grid->b*(-0.5+grid->half_points));
+      grid->aInv = 1.0/grid->a;
+      for (i=-grid->half_points; i<grid->half_points; i++) {
+	double sign;
+	if (i<0) sign = -1.0; 
+	else     sign =  1.0;
+	grid->points[i+grid->half_points] = 
+	  sign * grid->a*expm1(grid->b*fabs(0.5+i)) + grid->center;
+      }
+    }
+    grid->reverse_map = center_grid_reverse_map;
+    grid->code = CENTER;
+  }
+  return (NUgrid*) grid;
+}
+
+
+NUgrid* create_log_grid (double start, double end,
+		                 int num_points)
+{
+  int i;
+  log_grid *grid = malloc (sizeof (log_grid));
+  grid->code = LOG;
+  grid->start = start;
+  grid->end = end;
+  grid->num_points = num_points;
+  grid->points = malloc(num_points*sizeof(double));
+  grid->a = 1.0/(double)(num_points-1)*log(end/start);
+  grid->ainv = 1.0/grid->a;
+  grid->startinv = 1.0/start;
+  for (i=0; i<num_points; i++)
+    grid->points[i] = start*exp(grid->a*(double)i);
+  grid->reverse_map = log_grid_reverse_map;
+  return (NUgrid*) grid;
+}
+
+NUgrid* create_general_grid (double *points, int num_points)
+{
+  int i;
+  NUgrid* grid = malloc (sizeof(NUgrid));
+  if (grid != NULL) {
+    grid->reverse_map = general_grid_reverse_map;
+    grid->code = GENERAL;
+    grid->points = malloc (num_points*sizeof(double));
+    grid->start = points[0];
+    grid->end   = points[num_points-1];
+    grid->num_points = num_points;
+    for (i=0; i<num_points; i++) 
+      grid->points[i] = points[i];
+    grid->code = GENERAL;
+  }
+  return grid;
+}
+
+void destroy_grid (NUgrid *grid)
+{
+  free (grid->points);
+  free (grid);
+}
+
+void destroy_Bspline (void *spline) {
+  Bspline *sp = (Bspline *)spline;
+  if (sp->sp_code <= U3D)
+    destroy_UBspline (sp);
+  else
+    destroy_NUBspline (sp);
+}

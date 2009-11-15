@@ -21,10 +21,6 @@
 #ifndef EINSPLINE_H
 #define EINSPLINE_H
 
-/*
- * bspline_base.h
- */
-
 #ifndef NO_COMPLEX
 #ifndef SF_HAS_COMPLEX_H
 #ifndef KISS_FFT_H
@@ -41,8 +37,16 @@ typedef complex double sf_double_complex;
 #endif /* SF_HAS_COMPLEX_H */
 #endif /* NO_COMPLEX */
 
+#ifndef _sf_bool_h
+#include "_bool.h"
+#endif
+
+/*
+ * bspline_base.h
+ */
+
 typedef enum { PERIODIC, DERIV1, DERIV2, FLAT, NATURAL, ANTIPERIODIC } bc_code;
-typedef enum { U1D, U2D, U3D } spline_code;
+typedef enum { U1D, U2D, U3D, NU1D, NU2D, NU3D } spline_code;
 typedef enum { SINGLE_REAL, DOUBLE_REAL, SINGLE_COMPLEX, DOUBLE_COMPLEX } type_code;
 
 typedef struct 
@@ -559,15 +563,15 @@ void recompute_UBspline_3d_s (UBspline_3d_s* spline, float *data);
  *************************************
  *************************************/
 
-/* Create 1D uniform single-precision, real Bspline */
+/* Create 1D uniform double-precision, real Bspline */
 UBspline_1d_d* create_UBspline_1d_d (Ugrid x_grid, BCtype_d xBC, double *data);
 
-/* Create 2D uniform single-precision, real Bspline */
+/* Create 2D uniform double-precision, real Bspline */
 UBspline_2d_d* create_UBspline_2d_d (Ugrid x_grid,   Ugrid y_grid,
                                      BCtype_d   xBC, BCtype_d   yBC,
                                      double *data);
 
-/* Create 3D uniform single-precision, real Bspline */
+/* Create 3D uniform double-precision, real Bspline */
 UBspline_3d_d* create_UBspline_3d_d (Ugrid x_grid,   Ugrid   y_grid,   Ugrid z_grid,
                                      BCtype_d  xBC,  BCtype_d   yBC, BCtype_d   zBC,
                                      double *data);
@@ -585,15 +589,15 @@ void recompute_UBspline_3d_d (UBspline_3d_d* spline, double *data);
  ****************************************
  ****************************************/
 
-/* Create 1D uniform single-precision, real Bspline */
+/* Create 1D uniform single-precision, complex Bspline */
 UBspline_1d_c* create_UBspline_1d_c (Ugrid x_grid, BCtype_c xBC, sf_complex *data);
 
-/* Create 2D uniform single-precision, real Bspline */
+/* Create 2D uniform single-precision, complex Bspline */
 UBspline_2d_c* create_UBspline_2d_c (Ugrid   x_grid, Ugrid   y_grid,
                                      BCtype_c   xBC, BCtype_c   yBC,
                                      sf_complex *data);
 
-/* Create 3D uniform single-precision, real Bspline */
+/* Create 3D uniform single-precision, complex Bspline */
 UBspline_3d_c* create_UBspline_3d_c (Ugrid  x_grid, Ugrid y_grid, Ugrid z_grid,
                                      BCtype_c  xBC, BCtype_c yBC, BCtype_c zBC,
                                      sf_complex *data);
@@ -628,6 +632,608 @@ void recompute_UBspline_1d_z (UBspline_1d_z* spline, sf_double_complex *data);
 void recompute_UBspline_2d_z (UBspline_2d_z* spline, sf_double_complex *data);
 
 void recompute_UBspline_3d_z (UBspline_3d_z* spline, sf_double_complex *data);
+#endif /* NO_COMPLEX */
+
+/****************************************
+ ****************************************
+ ********* Non-uniform splines **********
+ ****************************************
+ ****************************************/
+
+/*
+ * nugrid.h
+ */
+
+typedef enum { LINEAR, GENERAL, CENTER, LOG } grid_type;
+
+typedef struct
+{
+  grid_type code;
+  double start, end;
+  double *points;
+  int num_points;
+  int (*reverse_map)(void *grid, double x);
+} NUgrid;
+
+typedef struct
+{
+  grid_type code;
+  double start, end;
+  double *points;
+  int num_points;
+  int (*reverse_map)(void *grid, double x);
+  double a, aInv, b, bInv, center, even_half;
+  int half_points, odd_one;
+  bool odd;
+} center_grid;
+
+typedef struct
+{
+  grid_type code;
+  double start, end;
+  double *points;
+  int num_points;
+  int (*reverse_map)(void *grid, double x);
+  double a, ainv, startinv;
+} log_grid;
+
+NUgrid* create_center_grid (double start, double end, double ratio, 
+                                    int num_points);
+NUgrid* create_log_grid (double start, double end, int num_points);
+NUgrid* create_general_grid (double *points, int num_points);
+
+/*
+ * nubasis.h
+ */
+
+typedef struct
+{
+  NUgrid *grid;
+  double *xVals;
+  double *dxInv;
+  bool periodic;
+} NUBasis;
+
+/*
+ * nubspline_structs.h
+ */
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  void *coefs;
+  NUgrid *x_grid;
+  NUBasis *x_basis;
+} NUBspline_1d;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  void *coefs;
+  int x_stride;
+  NUgrid *x_grid, *y_grid;
+  NUBasis *x_basis, *y_basis;
+} NUBspline_2d;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  void *coefs;
+  int x_stride, y_stride;
+  NUgrid *x_grid, *y_grid, *z_grid;
+  NUBasis *x_basis, *y_basis, *z_basis;
+} NUBspline_3d;
+
+/*************************
+ * Single precision real *
+ *************************/
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  float *coefs;
+  NUgrid *x_grid;
+  NUBasis *x_basis;
+  BCtype_s xBC;
+} NUBspline_1d_s;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  float *coefs;
+  int x_stride;
+  NUgrid  *x_grid,  *y_grid;
+  NUBasis *x_basis, *y_basis;
+  BCtype_s xBC, yBC;
+} NUBspline_2d_s;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  float *coefs;
+  int x_stride, y_stride;
+  NUgrid  *x_grid,  *y_grid,  *z_grid;
+  NUBasis *x_basis, *y_basis, *z_basis;
+  BCtype_s xBC, yBC, zBC;
+} NUBspline_3d_s;
+
+/*************************
+ * Double precision real *
+ *************************/
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  double *coefs;
+  NUgrid *x_grid;
+  NUBasis *x_basis;
+  BCtype_d xBC;
+} NUBspline_1d_d;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  double *coefs;
+  int x_stride;
+  NUgrid *x_grid, *y_grid;
+  NUBasis *x_basis, *y_basis;
+  BCtype_d xBC, yBC;
+} NUBspline_2d_d;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  double *coefs;
+  int x_stride, y_stride;
+  NUgrid  *x_grid,  *y_grid,  *z_grid;
+  NUBasis *x_basis, *y_basis, *z_basis;
+  BCtype_d xBC, yBC, zBC;
+} NUBspline_3d_d;
+
+#ifndef NO_COMPLEX
+/****************************
+ * Single precision complex *
+ ****************************/
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_complex *coefs;
+  NUgrid *x_grid;
+  NUBasis *x_basis;
+  BCtype_c xBC;
+} NUBspline_1d_c;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_complex *coefs;
+  int x_stride;
+  NUgrid *x_grid, *y_grid;
+  NUBasis *x_basis, *y_basis;
+  BCtype_c xBC, yBC;
+} NUBspline_2d_c;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_complex *coefs;
+  int x_stride, y_stride;
+  NUgrid  *x_grid,  *y_grid,  *z_grid;
+  NUBasis *x_basis, *y_basis, *z_basis;
+  BCtype_c xBC, yBC, zBC;
+} NUBspline_3d_c;
+
+/****************************
+ * Double precision complex *
+ ****************************/
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_double_complex *coefs;
+  NUgrid  *x_grid;
+  NUBasis *x_basis;
+  BCtype_z xBC;
+} NUBspline_1d_z;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_double_complex *coefs;
+  int x_stride;
+  NUgrid  *x_grid,  *y_grid;
+  NUBasis *x_basis, *y_basis;
+  BCtype_z xBC, yBC;
+} NUBspline_2d_z;
+
+typedef struct
+{
+  spline_code sp_code;
+  type_code    t_code;
+  sf_double_complex *coefs;
+  int x_stride, y_stride;
+  NUgrid  *x_grid,  *y_grid,  *z_grid;
+  NUBasis *x_basis, *y_basis, *z_basis;
+  BCtype_z xBC, yBC, zBC;
+} NUBspline_3d_z;
+#endif /* NO_COMPLEX */
+
+/*
+ * bspline_eval_std_s|d|c|z.h
+ */
+
+/************************************************************/
+/* 1D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_s (NUBspline_1d_s *spline,
+                          double x, float *val);
+
+/* Value and first derivative */
+void eval_NUBspline_1d_s_vg (NUBspline_1d_s *spline, double x, 
+                             float *val, float *grad);
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_s_vgl (NUBspline_1d_s *spline, double x, 
+                              float *val, float *grad,
+                              float *lapl);
+
+void eval_NUBspline_1d_s_vgh (NUBspline_1d_s *spline, double x, 
+                              float *val, float *grad,
+                              float *hess);
+
+/************************************************************/
+/* 2D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_s (NUBspline_2d_s *spline, 
+                          double x, double y, float *val);
+
+/* Value and gradient */
+void eval_NUBspline_2d_s_vg (NUBspline_2d_s *spline, 
+                             double x, double y, 
+                             float *val, float *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_s_vgl (NUBspline_2d_s *spline, 
+                              double x, double y, float *val, 
+                              float *grad, float *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_s_vgh (NUBspline_2d_s *spline, 
+                              double x, double y, float *val, 
+                              float *grad, float *hess);
+
+/************************************************************/
+/* 3D single-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_s (NUBspline_3d_s *spline, 
+                          double x, double y, double z,
+                          float *val);
+
+/* Value and gradient */
+void eval_NUBspline_3d_s_vg (NUBspline_3d_s *spline, 
+                             double x, double y, double z,
+                             float *val, float *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_s_vgl (NUBspline_3d_s *spline, 
+                              double x, double y, double z,
+                              float *val, float *grad, float *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_s_vgh (NUBspline_3d_s *spline, 
+                              double x, double y, double z,
+                              float *val, float *grad, float *hess);
+
+/************************************************************/
+/* 1D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_d (NUBspline_1d_d *spline, 
+                          double x, double *val);
+
+/* Value and first derivative */
+void eval_NUBspline_1d_d_vg (NUBspline_1d_d *spline, double x, 
+                             double *val, double *grad);
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_d_vgl (NUBspline_1d_d *spline, double x, 
+                              double *val, double *grad,
+                              double *lapl);
+
+void eval_NUBspline_1d_d_vgh (NUBspline_1d_d *spline, double x, 
+                              double *val, double *grad,
+                              double *hess);
+
+/************************************************************/
+/* 2D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_d (NUBspline_2d_d *spline, 
+                          double x, double y, double *val);
+
+/* Value and gradient */
+void eval_NUBspline_2d_d_vg (NUBspline_2d_d *spline, 
+                             double x, double y, 
+                             double *val, double *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_d_vgl (NUBspline_2d_d *spline, 
+                              double x, double y, double *val, 
+                              double *grad, double *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_d_vgh (NUBspline_2d_d *spline, 
+                              double x, double y, double *val, 
+                              double *grad, double *hess);
+
+/************************************************************/
+/* 3D double-precision, real evaulation functions           */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_d (NUBspline_3d_d *spline, 
+                          double x, double y, double z,
+                          double *val);
+
+/* Value and gradient */
+void eval_NUBspline_3d_d_vg (NUBspline_3d_d *spline, 
+                             double x, double y, double z,
+                             double *val, double *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_d_vgl (NUBspline_3d_d *spline, 
+                              double x, double y, double z,
+                              double *val, double *grad, double *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_d_vgh (NUBspline_3d_d *spline, 
+                              double x, double y, double z,
+                              double *val, double *grad, double *hess);
+
+#ifndef NO_COMPLEX
+/************************************************************/
+/* 1D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_c (NUBspline_1d_c *spline, 
+                          double x, sf_complex *val);
+
+/* Value and first derivative */
+void eval_NUBspline_1d_c_vg (NUBspline_1d_c *spline, double x, 
+                             sf_complex *val, sf_complex *grad);
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_c_vgl (NUBspline_1d_c *spline, double x, 
+                              sf_complex *val, sf_complex *grad,
+                              sf_complex *lapl);
+
+void eval_NUBspline_1d_c_vgh (NUBspline_1d_c *spline, double x, 
+                              sf_complex *val, sf_complex *grad,
+                              sf_complex *hess);
+
+/************************************************************/
+/* 2D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_c (NUBspline_2d_c *spline, 
+                          double x, double y, sf_complex *val);
+
+/* Value and gradient */
+void eval_NUBspline_2d_c_vg (NUBspline_2d_c *spline, 
+                             double x, double y, 
+                             sf_complex *val, sf_complex *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_c_vgl (NUBspline_2d_c *spline, 
+                              double x, double y, sf_complex *val, 
+                              sf_complex *grad, sf_complex *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_c_vgh (NUBspline_2d_c *spline, 
+                              double x, double y, sf_complex *val, 
+                              sf_complex *grad, sf_complex *hess);
+
+/************************************************************/
+/* 3D single-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_c (NUBspline_3d_c *spline, 
+                          double x, double y, double z,
+                          sf_complex *val);
+
+/* Value and gradient */
+void eval_NUBspline_3d_c_vg (NUBspline_3d_c *spline, 
+                             double x, double y, double z,
+                             sf_complex *val, sf_complex *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_c_vgl (NUBspline_3d_c *spline, 
+                              double x, double y, double z,
+                              sf_complex *val, sf_complex *grad, 
+                              sf_complex *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_c_vgh (NUBspline_3d_c *spline, 
+                              double x, double y, double z,
+                              sf_complex *val, sf_complex *grad, sf_complex *hess);
+
+
+/************************************************************/
+/* 1D double-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_1d_z (NUBspline_1d_z *spline, 
+                          double x, sf_double_complex *val);
+
+/* Value and first derivative */
+void eval_NUBspline_1d_z_vg (NUBspline_1d_z *spline, double x, 
+                             sf_double_complex *val, sf_double_complex *grad);
+
+/* Value, first derivative, and second derivative */
+void eval_NUBspline_1d_z_vgl (NUBspline_1d_z *spline, double x, 
+                              sf_double_complex *val, sf_double_complex *grad,
+                              sf_double_complex *lapl);
+
+void eval_NUBspline_1d_z_vgh (NUBspline_1d_z *spline, double x, 
+                              sf_double_complex *val, sf_double_complex *grad,
+                              sf_double_complex *hess);
+
+/************************************************************/
+/* 2D double-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_2d_z (NUBspline_2d_z *spline, 
+                          double x, double y, sf_double_complex *val);
+
+/* Value and gradient */
+void eval_NUBspline_2d_z_vg (NUBspline_2d_z *spline, 
+                             double x, double y, 
+                             sf_double_complex *val, sf_double_complex *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_2d_z_vgl (NUBspline_2d_z *spline, 
+                              double x, double y, sf_double_complex *val, 
+                              sf_double_complex *grad, sf_double_complex *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_2d_z_vgh (NUBspline_2d_z *spline, 
+                              double x, double y, sf_double_complex *val, 
+                              sf_double_complex *grad, sf_double_complex *hess);
+
+
+/************************************************************/
+/* 3D double-precision, complex evaulation functions        */
+/************************************************************/
+
+/* Value only */
+void eval_NUBspline_3d_z (NUBspline_3d_z *spline, 
+                          double x, double y, double z,
+                          sf_double_complex *val);
+
+/* Value and gradient */
+void eval_NUBspline_3d_z_vg (NUBspline_3d_z *spline, 
+                             double x, double y, double z,
+                             sf_double_complex *val, sf_double_complex *grad);
+
+/* Value, gradient, and laplacian */
+void eval_NUBspline_3d_z_vgl (NUBspline_3d_z *spline, 
+                              double x, double y, double z,
+                              sf_double_complex *val, sf_double_complex *grad, 
+                              sf_double_complex *lapl);
+
+/* Value, gradient, and Hessian */
+void eval_NUBspline_3d_z_vgh (NUBspline_3d_z *spline, 
+                              double x, double y, double z,
+                              sf_double_complex *val, sf_double_complex *grad, sf_double_complex *hess);
+
+#endif /* NO_COMPLEX */
+
+/*
+ * nubspline_create.h
+ */
+
+/***********************************************************
+ ***********************************************************
+ ****       Non-uniform Spline creation functions       ****
+ ***********************************************************
+ ***********************************************************/
+
+/*****************************************
+ *****************************************
+ ** Non-Uniform, single precision, real **
+ *****************************************
+ *****************************************/
+
+/* Create 1D uniform single-precision, real NUBspline */
+NUBspline_1d_s* create_NUBspline_1d_s (NUgrid* x_grid, BCtype_s xBC, float *data);
+
+/* Create 2D uniform single-precision, real NUBspline */
+NUBspline_2d_s* create_NUBspline_2d_s (NUgrid* x_grid, NUgrid* y_grid,
+                                       BCtype_s xBC, BCtype_s yBC, float *data);
+
+/* Create 3D uniform single-precision, real NUBspline */
+NUBspline_3d_s* create_NUBspline_3d_s (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid,
+                                       BCtype_s xBC, BCtype_s yBC, BCtype_s zBC, float *data);
+
+/*****************************************
+ *****************************************
+ ** Non-Uniform, double precision, real **
+ *****************************************
+ *****************************************/
+
+/* Create 1D uniform double-precision, real NUBspline */
+NUBspline_1d_d* create_NUBspline_1d_d (NUgrid* x_grid, BCtype_d xBC, double *data);
+
+/* Create 2D uniform double-precision, real NUBspline */
+NUBspline_2d_d* create_NUBspline_2d_d (NUgrid* x_grid, NUgrid* y_grid, 
+                                       BCtype_d xBC, BCtype_d yBC, double *data);
+
+/* Create 3D uniform double-precision, real NUBspline */
+NUBspline_3d_d* create_NUBspline_3d_d (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid, 
+                                       BCtype_d xBC, BCtype_d yBC, BCtype_d zBC, double *data);
+
+#ifndef NO_COMPLEX
+/********************************************
+ ********************************************
+ ** Non-Uniform, single precision, complex **
+ ********************************************
+ ********************************************/
+
+/* Create 1D uniform single-precision, complex NUBspline */
+NUBspline_1d_c* create_NUBspline_1d_c (NUgrid* x_grid, BCtype_c xBC, 
+                                       sf_complex *data);
+
+/* Create 2D uniform single-precision, complex NUBspline */
+NUBspline_2d_c* create_NUBspline_2d_c (NUgrid* x_grid, NUgrid* y_grid, 
+                                       BCtype_c xBC, BCtype_c yBC, sf_complex *data);
+
+/* Create 3D uniform single-precision, complex NUBspline */
+NUBspline_3d_c* create_NUBspline_3d_c (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid, 
+                                       BCtype_c xBC, BCtype_c yBC, BCtype_c zBC, 
+                                       sf_complex *data);
+
+/********************************************
+ ********************************************
+ ** Non-Uniform, double precision, complex **
+ ********************************************
+ ********************************************/
+
+/* Create 1D uniform double-precision, complex NUBspline */
+NUBspline_1d_z* create_NUBspline_1d_z (NUgrid* x_grid, BCtype_z xBC, 
+                                       sf_double_complex *data);
+
+/* Create 2D uniform double-precision, complex NUBspline */
+NUBspline_2d_z* create_NUBspline_2d_z (NUgrid* x_grid, NUgrid *y_grid, 
+                                       BCtype_z xBC, BCtype_z yBC, sf_double_complex *data);
+
+/* Create 3D uniform double-precision, complex NUBspline */
+NUBspline_3d_z* create_NUBspline_3d_z (NUgrid* x_grid, NUgrid* y_grid, NUgrid* z_grid, 
+		                               BCtype_z xBC, BCtype_z yBC, BCtype_z zBC, sf_double_complex *data);
+
 #endif /* NO_COMPLEX */
 
 #endif /* EINSPLINE_H */
