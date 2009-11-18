@@ -10,7 +10,7 @@ minmax listminmax clip2 sizes
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-figlist booklist
+figlist booklist testlist
 '''
 
 # Python modules that do not need SWIG+numpy

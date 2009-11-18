@@ -99,21 +99,21 @@ def vpl_list(list):
 
     return newlist
 
-def rsftest_write(  exist_fig,exist_lock,
-                    n_fig_missing,n_fig_extra,
-                    n_different,n_same,
-                    files):
+def rsftest_write(exist_fig,exist_lock,miss,extra,diff,same,files):
     'write an .rsftest file'
     
     rsftest_file = open('.rsftest','w')
 
-    rsftest_file.write("exist_fig = %s\n" %     exist_fig)
-    rsftest_file.write("exist_lock = %s\n" %    exist_lock)
-    rsftest_file.write("n_fig_missing = %d\n" % n_fig_missing)
-    rsftest_file.write("n_fig_extra = %d\n" %   n_fig_extra)
-    rsftest_file.write("n_different = %d\n" %   n_different)
-    rsftest_file.write("n_same = %d\n" %        n_same)
-    rsftest_file.write("files = %s\n" %         files)
+    import time
+
+    rsftest_file.write("time = '%s'\n"      % time.asctime())
+    rsftest_file.write("exist_fig = %s\n"   % exist_fig)
+    rsftest_file.write("exist_lock = %s\n"  % exist_lock)
+    rsftest_file.write("miss = %s\n"        % miss)
+    rsftest_file.write("extra = %s\n"       % extra)
+    rsftest_file.write("diff = %s\n"        % diff)
+    rsftest_file.write("same = %s\n"        % same)
+    rsftest_file.write("files = %s\n"       % files)
     rsftest_file.close()
 
     return
@@ -136,7 +136,7 @@ def main(argv=sys.argv):
     lockdir = par.string('lockdir') # lock directory, default = lock counterpart of figdir
     list    = par.string('list')    # how much to list [none,diff,miss,all], default = all
     show    = par.string('show')    # how much to show [none,diff,miss,all], default = none
-    rsftest = par.string('rsftest') # write .rsftest file? [yes,no,auto], default = auto
+    rsftest = par.bool('rsftest',False) # write .rsftest file?
 
                                     # check list and show parameters
     options = ['none','diff','miss','all']
@@ -149,18 +149,6 @@ def main(argv=sys.argv):
     if options.count(show) == 0:
         print "Unknown show option: %s" % show
         return unix_error
-
-    options = ['yes','no','auto']
-    if rsftest is None: rsftest='auto'
-    if options.count(rsftest) == 0:
-        print "Unknown rsftest option: %s" % rsftest
-        return unix_error
-        
-    if rsftest == 'yes':    write_rsftest = True
-    if rsftest == 'no':     write_rsftest = False
-    if rsftest == 'auto':
-        if (figdir == None) and (lockdir == None):  write_rsftest = True
-        else:                                       write_rsftest = False
         
 ################    get environment variables
 
@@ -207,6 +195,9 @@ def main(argv=sys.argv):
                                     # check if fig & lock directories exist
     exist_fig   = os.path.exists(figpath)
     exist_lock  = os.path.exists(lockpath)
+    if (not exist_fig) or (not exist_lock):
+        if rsftest: rsftest_write(exist_fig,exist_lock,None,None,None,None,None)
+        return unix_error
 
                                     # print fig directory path
     print ""
@@ -228,19 +219,11 @@ def main(argv=sys.argv):
 
 ################    initialize variables
 
-    n_fig_missing = 0
-    n_fig_extra   = 0
-    n_different   = 0
-    n_same        = 0
-    files         = {}
-
-    if (not exist_fig) or (not exist_lock):
-        if write_rsftest:
-            rsftest_write(  exist_fig,exist_lock,
-                            n_fig_missing,n_fig_extra,
-                            n_different,n_same,
-                            files)
-        return unix_error
+    miss  = 0
+    extra = 0
+    diff  = 0
+    same  = 0
+    files = {}
 
 ################    get file lists
 
@@ -262,12 +245,12 @@ def main(argv=sys.argv):
                                     # find missing files
     for item in filelist:
         if figlist.count(item)  == 0:
-            files[item]   = ' -'
-            n_fig_missing = n_fig_missing+1
+            files[item] = ' -'
+            miss = miss+1
     for item in filelist:
         if locklist.count(item) == 0:
-            files[item]   = ' +'
-            n_fig_extra   = n_fig_extra+1
+            files[item] = ' +'
+            extra = extra+1
 
                                     # find different files
     binpath = os.path.expandvars(os.path.join('$RSFROOT','bin'))
@@ -276,17 +259,17 @@ def main(argv=sys.argv):
         if files[item] == '  ':
             figfile  = os.path.join(figpath,item)
             lockfile = os.path.join(lockpath,item)
-            diff     = os.system(' '.join([command,figfile,lockfile,'&> /dev/null']))
-            if diff != 0:
+            check    = os.system(' '.join([command,figfile,lockfile,'&> /dev/null']))
+            if check != 0:
                 files[item] = '%2d' % (diff/256)
-                n_different = n_different+1
+                diff = diff+1
 
 ################    print file list and show selected figs
 
     print ""
     command = os.path.join(binpath,'sfpen')
     for item in filelist:
-        miss_check =     (files[item] != '  ')
+        miss_check =      (files[item] != '  ')
 
         diff_check = (    (files[item] != '  ')
                       and (files[item] != ' -')
@@ -308,22 +291,18 @@ def main(argv=sys.argv):
 
         if list_check: print " %s %s" % (files[item],item)
         if show_check: syswait(' '.join([command,figfile,lockfile]))
-        if files[item] == '  ': n_same = n_same+1
+        if files[item] == '  ': same = same+1
 
     print ""
-    print "Identical files:         %3d" % n_same
-    print "Different files:         %3d" % n_different
-    print "Files missing from Fig:  %3d" % n_fig_missing
-    print "Extra files in Fig:      %3d" % n_fig_extra
+    print "Identical files:         %3d" % same
+    print "Different files:         %3d" % diff
+    print "Files missing from Fig:  %3d" % miss
+    print "Extra files in Fig:      %3d" % extra
     print "Total vplot files:       %3d" % len(filelist)
     print ""
 
                                         # write .rsftest file
-    if write_rsftest:
-        rsftest_write(  exist_fig,exist_lock,
-                        n_fig_missing,n_fig_extra,
-                        n_different,n_same,
-                        files)
+    if rsftest: rsftest_write(exist_fig,exist_lock,miss,extra,diff,same,files)
 
     return unix_success
 
