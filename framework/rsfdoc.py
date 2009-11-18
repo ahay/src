@@ -759,7 +759,7 @@ version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
 
 comment['c'] = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
-                        '(?P<type>bool|int|float)'
+                        '(?P<type>bool|largeint|int|float)'
                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                         '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'
                         '(?:[\{]|' # either \{ or
@@ -775,7 +775,7 @@ params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                          '[^\;\{]*[\;\{]\s*' # ending with ; or {
                          '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                          '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
-param2['c'] = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*'
+param2['c'] = re.compile(r'sf_get(?P<type>bool|largeint|int|float|string)\s*'
                     '\([^/]+\/\*\(\s*(?P<name>[\w\#]+)'
                     '(?:=(?P<default>\S+))?'
                     '\s*(?P<desc>[^\)]+)\)\*\/')
@@ -784,7 +784,7 @@ params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                      '\s*(?P<size>[\w\_]+)\s*\)[^/]+'
                      '\/\*\(\s*(?P<name>[\w\#]+)'
                      '(?:=(?P<default>\S+))?'
-                     '\s*(?P<desc>[^\)]+)\)\*\/')
+                     '\s*(?P<desc>(?:[^\)]|\)[^\*])+)\)\*\/')
 stringpar['c'] = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
                        '[^\;\{]*[\;\{]\s*(?:\/\*'
                        '\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
