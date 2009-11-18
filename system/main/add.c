@@ -90,7 +90,7 @@ int main (int argc, char* argv[])
     sf_file *in, out;
     float *scale, *add;
     bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
-    char cmode, *mode, *buf, *bufi;
+    char cmode, *mode, *buf, *bufi, *prog;
     sf_datatype type;
 
     /* init RSF */
@@ -152,11 +152,19 @@ int main (int argc, char* argv[])
     (void) sf_getbools("exp",exp_flag,nin);
     /* If true compute exponential */
 
-    mode = sf_getstring("mode");
-    /* 'a' means add (default), 
-       'p' or 'm' means multiply, 
-       'd' means divide 
-    */
+    prog = sf_getprog();
+    if (NULL != strstr(prog,"mul")) {
+	mode = "mul";
+    } else if (NULL != strstr(prog,"div")) {
+	mode = "div";
+    } else {
+	mode = sf_getstring("mode");
+       /* 'a' means add (default), 
+	  'p' or 'm' means multiply, 
+	  'd' means divide 
+       */
+    }
+
     cmode = (NULL==mode)? 'a':mode[0];
 
     /* verify file compatibility */

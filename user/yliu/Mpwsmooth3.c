@@ -57,7 +57,7 @@ int main (int argc, char *argv[])
     /* if y, bilateral smoothing */
 
     if (!sf_getbool("gauss",&gauss)) gauss=false;
-    /* if y, gaussian weight; otherwish, triangle weight */
+    /* if y, gaussian weight; otherwise, triangle weight */
 
     if (gauss) {
 	if (!sf_getfloat("ax",&ax)) sf_error("Need ax=");

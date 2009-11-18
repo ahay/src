@@ -14,6 +14,7 @@ try: # distributed version
     env = env.Clone()
     alias = {'cat':'merge',
              'real':'imag',
+             'add':'mul div',
              'cp':'mv'}
 except: # local version
     env = configure.Debug()
@@ -34,12 +35,13 @@ for prog in mains:
         env.Install(bindir,main[0])
 
         if prog in alias.keys():
-	       other = string.replace(str(main[0]),prog,alias[prog])
-               env.InstallAs(os.path.join(bindir,other),main[0])
+            for prog2 in Split(alias[prog]):
+                other = string.replace(str(main[0]),prog,prog2)
+                env.InstallAs(os.path.join(bindir,other),main[0])
 
-               if env['PLATFORM'] == 'cygwin':
-                   other = string.replace(other,'.exe','')
-               docalias[other] = 'sf'+prog
+                if env['PLATFORM'] == 'cygwin':
+                    other = string.replace(other,'.exe','')
+                docalias[other] = 'sf'+prog
 
 mpicc = env.get('MPICC')
 if mpicc:
