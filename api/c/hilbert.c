@@ -31,8 +31,8 @@
 static float c, c2, *h;
 static int n, nt;
 
-void sf_hilbert_init(int nt1  /* transform length */, 
-		     int n1   /* trace length */, 
+void sf_hilbert_init(int nt1  /* trace length */, 
+		     int n1   /* transform length */, 
 		     float c1 /* filter parameter */)
 /*< initialize >*/
 {
@@ -43,7 +43,7 @@ void sf_hilbert_init(int nt1  /* transform length */,
     h = sf_floatalloc(nt);
 }
 
-void sf_hilbert_free(void)
+void sf_hilbert_close(void)
 /*< free allocated storage >*/
 {
     free(h);

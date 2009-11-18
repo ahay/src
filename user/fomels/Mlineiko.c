@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
     float d[SF_MAX_DIM], *t, *dt, *s, *ds, tol;
     double err;
     char key[4];
+    upgrad upg;
     sf_file dtime, time, slow, mask;
     
     sf_init(argc,argv);
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inv",&inv)) inv=true;
     /* if y, traveltime; if n, slowness squared */
 
-    upgrad_init(dim,n,d);
+    upg = upgrad_init(dim,n,d);
 
     t = sf_floatalloc(nt);
     s = sf_floatalloc(nt);
@@ -54,8 +55,8 @@ int main(int argc, char* argv[])
     sf_floatread(t,nt,time);
 
     if (!inv) {
-	upgrad_set(t);
-	upgrad_forw(t,s);
+	upgrad_set(upg,t);
+	upgrad_forw(upg,t,s);
 
 	sf_floatwrite(s,nt,dtime);
     } else {
@@ -86,14 +87,14 @@ int main(int argc, char* argv[])
 	sf_fileclose(slow);
 
 	for (iter=0; iter < niter; iter++) {
-	    upgrad_set(t);
-	    upgrad_forw(t,ds);
+	    upgrad_set(upg,t);
+	    upgrad_forw(upg,t,ds);
 	    
 	    for (it=0; it < nt; it++) {
 		ds[it] = m[it]? sqrtf(ds[it])*s[it]-ds[it]:0.0;
 	    }
 	    
-	    upgrad_solve(ds,dt);
+	    upgrad_solve(upg,ds,dt);
 	    
 	    for (it=0; it < nt; it++) {
 		t[it] += dt[it];

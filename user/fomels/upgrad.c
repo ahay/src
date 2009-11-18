@@ -19,10 +19,24 @@
 
 #include <rsf.h>
 
-static int ndim, nt, ss[3], *order;
-static unsigned char **update;
+#ifndef _upgrad_h
+
+typedef struct Upgrad *upgrad;
+/* abstract data type */
+/*^*/
+
+#endif
+
+struct Upgrad {
+    int *order;
+    unsigned char **update;
+    float **ww;
+    const float *t0;
+};
+
+static int ndim, nt, ss[3];
 static const int *nn;
-static float dd[3], **ww;
+static float dd[3];
 static const float *t0;
 
 static int fermat(const void *a, const void *b)
@@ -37,11 +51,12 @@ static int fermat(const void *a, const void *b)
     return -1;
 }
 
-void upgrad_init(int mdim        /* number of dimensions */,
-		 const int *mm   /* [dim] data size */,
-		 const float *d  /* [dim] data sampling */)
+upgrad upgrad_init(int mdim        /* number of dimensions */,
+		   const int *mm   /* [dim] data size */,
+		   const float *d  /* [dim] data sampling */)
 /*< initialize >*/
 {
+    upgrad upg;
     int i;
 
     if (mdim > 3) sf_error("%s: dim=%d > 3",__FILE__,mdim);
@@ -56,34 +71,38 @@ void upgrad_init(int mdim        /* number of dimensions */,
 	dd[i] = 1.0/(d[i]*d[i]);
     }
 
-    update = sf_ucharalloc2(2,nt);
-    ww = sf_floatalloc2(ndim+1,nt);
-    order = sf_intalloc(nt);
+    upg = (upgrad) sf_alloc(1,sizeof(*upg));
+
+    upg->update = sf_ucharalloc2(2,nt);
+    upg->ww = sf_floatalloc2(ndim+1,nt);
+    upg->order = sf_intalloc(nt);
+
+    return upg;
 }
 
-void upgrad_set(const float *r0 /* reference */)
+void upgrad_set(upgrad upg, const float *r0 /* reference */)
 /*< supply reference >*/
 {
     int i, m, it, jt, ii[3];
     unsigned char *up;
     float t, t2;
 
-    t0 = r0;
+    t0 = upg->t0;
 
     /* sort from small to large traveltime */
     for (it = 0; it < nt; it++) {
-	order[it] = it;
+	upg->order[it] = it;
     }
-    qsort(order, nt, sizeof(int), fermat);
+    qsort(upg->order, nt, sizeof(int), fermat);
      
     for (it = 0; it < nt; it++) {
-	jt = order[it];
+	jt = upg->order[it];
 
 	sf_line2cart(ndim,nn,jt,ii);
-	up = update[it];
+	up = upg->update[it];
 	up[0] = up[1] = 0;
 	t = t0[jt];
-	ww[it][ndim] = 0.;
+	upg->ww[it][ndim] = 0.;
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if ((ii[i] == 0) || 
 		(ii[i] != nn[i]-1 && t0[jt+ss[i]] < t0[jt-ss[i]])) {
@@ -95,23 +114,24 @@ void upgrad_set(const float *r0 /* reference */)
 
 	    if (t2 < t) {
 		up[0] |= m;
-		ww[it][i] = (t-t2)*dd[i];
-		ww[it][ndim] += ww[it][i];
+		upg->ww[it][i] = (t-t2)*dd[i];
+		upg->ww[it][ndim] += upg->ww[it][i];
 	    }	    
 	}
     }
 }
 
-void upgrad_close(void)
+void upgrad_close(upgrad upg)
 /*< free allocated storage >*/
 {
-    free(*ww);
-    free(ww);
-    free(update);
-    free(order);
+    free(*(upg->ww));
+    free(upg->ww);
+    free(upg->update);
+    free(upg->order);
 }
 
-void upgrad_solve(const float *rhs /* right-hand side */, 
+void upgrad_solve(upgrad upg,
+		  const float *rhs /* right-hand side */, 
 		  float *x         /* solution */)
 /*< linear operator >*/
 {
@@ -120,11 +140,11 @@ void upgrad_solve(const float *rhs /* right-hand side */,
     float num, den;
    
     for (it = 0; it < nt; it++) {
-	jt = order[it];
+	jt = upg->order[it];
 
 	num = rhs[jt];
-	up = update[it];
-	den = ww[it][ndim];
+	up = upg->update[it];
+	den = upg->ww[it][ndim];
 
 	if (den == 0.) {
 	    x[jt] = 0.;
@@ -134,7 +154,7 @@ void upgrad_solve(const float *rhs /* right-hand side */,
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {
 		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
-		num += ww[it][i]*x[j];		
+		num += upg->ww[it][i]*x[j];		
 	    }
 	}
 	
@@ -142,7 +162,8 @@ void upgrad_solve(const float *rhs /* right-hand side */,
     }
 }
 
-void upgrad_forw(const float *x /* solution */,
+void upgrad_forw(upgrad upg,
+		 const float *x /* solution */,
 		 float *rhs     /* right-hand side */)
 /*< forward operator >*/
 {
@@ -151,16 +172,16 @@ void upgrad_forw(const float *x /* solution */,
     float num, x2;
    
     for (it = 0; it < nt; it++) {
-	jt = order[it];
+	jt = upg->order[it];
 
 	x2 = x[jt];
-	up = update[it];
+	up = upg->update[it];
 	num = 0.;
 
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {
 		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
-		num += ww[it][i]*(x2-x[j]);		
+		num += upg->ww[it][i]*(x2-x[j]);		
 	    }
 	}
 	
