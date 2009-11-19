@@ -104,6 +104,9 @@ int main(int argc, char* argv[])
 	    case SF_INT:
 		sf_intread((int*) buf,nbuf,in);
 		break;
+            case SF_SHORT:
+                sf_shortread((short*) buf,nbuf,in);
+		break;
 	    case SF_COMPLEX:
 		sf_complexread((sf_complex*) buf,nbuf,in);
 		break;
@@ -121,18 +124,21 @@ int main(int argc, char* argv[])
 		    f=((float*)buf)[i]; 
 		    break;
 		case SF_INT: 
-		    f=(float) ((int*)buf)[i]; 
+		    f=(float) ((int*)buf)[i];
 		    break;
-		case SF_COMPLEX: 
-		    c=((sf_complex*)buf)[i];  
-		    f=cabsf(c); 
+                case SF_SHORT:
+                    f=(float) ((short*)buf)[i];
+                    break;
+		case SF_COMPLEX:
+		    c=((sf_complex*)buf)[i];
+		    f=cabsf(c);
 		    break;
 		case SF_UCHAR:
-		    f=(float) ((unsigned char*) buf)[i]; 
+		    f=(float) ((unsigned char*) buf)[i];
 		    break;
 		case SF_CHAR:
 		default: 
-		    f=(float) buf[i]; 
+		    f=(float) buf[i];
 		    break;
 	    }
 	    fsum += f;
