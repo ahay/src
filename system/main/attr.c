@@ -168,7 +168,6 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    sf_fileclose(in);
 
     fmean = fsum/nsiz;
     if (lval==2)      fnorm = sqrt(fsqr);
