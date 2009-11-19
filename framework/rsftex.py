@@ -332,7 +332,7 @@ def copyfigs(target=None,source=None,env=None):
           try:
                shutil.copy(src,dst)
           except:
-               sys.stderr.write('Cannot copy %s' % src)
+               sys.stderr.write('Cannot copy %s\n' % src)
      return 0
 
 def latex2mediawiki(target=None,source=None,env=None):
