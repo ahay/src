@@ -531,9 +531,9 @@ def aimage(cic,iic,
     # ------------------------------------------------------------
     # imaging condition
     Flow(cic,[dat+'-'+vel+'-sou',dat+'-'+vel+'-rec'],
-         'xcor uu=${SOURCES[1]} verb=y nbuf=100 axis=3')
+         'xcor2d uu=${SOURCES[1]} verb=y nbuf=100 axis=3')
     Flow(iic,[dat+'-'+vel+'-sou',dat+'-'+vel+'-wig'],
-         'xcor uu=${SOURCES[1]} verb=y nbuf=100 axis=3')
+         'xcor2d uu=${SOURCES[1]} verb=y nbuf=100 axis=3')
 
     # ------------------------------------------------------------
     # WDF on image
