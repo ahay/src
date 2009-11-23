@@ -84,7 +84,7 @@
 typedef struct sf_File *sf_file;
 /*^*/
 
-typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT} sf_datatype;
+typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT, SF_DOUBLE} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 /*^*/
 
@@ -359,6 +359,9 @@ size_t sf_esize(sf_file file)
         case SF_SHORT:
             return sizeof(short);
             break;
+        case SF_DOUBLE:
+            return sizeof(double);
+            break;
 	default:
 	    return sizeof(char);
 	    break;
@@ -454,10 +457,12 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
 	sf_settype(file,SF_UCHAR);
     } else if (NULL != strstr(format,"short")) {
 	sf_settype(file,SF_SHORT);
+    } else if (NULL != strstr(format,"double")) {
+	sf_settype(file,SF_DOUBLE);
     } else {
 	sf_settype(file,SF_CHAR);
     }
-    
+
     if (0 == strncmp(format,"ascii_",6)) {
 	sf_setform(file,SF_ASCII);
     } else if (0 == strncmp(format,"xdr_",4)) {
@@ -756,7 +761,7 @@ Prepares file for writing binary data >*/
 	    break;
         case SF_SHORT:
 	    switch (file->form) {
-		case SF_ASCII:		    
+		case SF_ASCII:
 		    sf_putstring(file,"data_format","ascii_short");
 		    break;
 		case SF_XDR:
@@ -767,9 +772,22 @@ Prepares file for writing binary data >*/
 		    break;
 	    }
 	    break;
+        case SF_DOUBLE:
+	    switch (file->form) {
+		case SF_ASCII:
+		    sf_putstring(file,"data_format","ascii_double");
+		    break;
+		case SF_XDR:
+		    sf_putstring(file,"data_format","xdr_double");
+		    break;
+		default:
+		    sf_putstring(file,"data_format","native_double");
+		    break;
+	    }
+	    break;
 	case SF_UCHAR:
 	    switch (file->form) {
-		case SF_ASCII:		    
+		case SF_ASCII:
 		    sf_putstring(file,"data_format","ascii_uchar");
 		    break;
 		case SF_XDR:
