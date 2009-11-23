@@ -68,6 +68,8 @@ sf_complex pshift(sf_complex w2, float k2, float v1, float v2, float vz, float n
 						     sf_cmplx(2.*n*k2 * v1,0.)))));
 	    }
 #endif
+	    cshift = csqrtf(w2);
+	    break;
 	case 's': /* simple */			
 #ifdef SF_HAS_COMPLEX_H
 	    if (depth) {

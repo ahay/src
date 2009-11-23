@@ -71,4 +71,4 @@ void ricker_close(void)
     sf_freqfilt_close();
 }
 
-/* 	$Id: ricker.c 694 2004-07-06 21:04:46Z fomels $	 */
+/* 	$Id$	 */

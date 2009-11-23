@@ -170,4 +170,4 @@ void grid3a_close(grid3a grd)
     free (grd);
 }
 
-/* 	$Id: grid3a.c 787 2004-09-09 11:11:48Z fomels $	 */
+/* 	$Id$	 */

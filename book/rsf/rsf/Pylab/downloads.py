@@ -39,6 +39,10 @@ down = '''
 5258
 5452
 5765
+6021
+6303
+6665
+7038
 '''
 down = map(int,down.split())
 ind = arange(len(down))
@@ -46,9 +50,10 @@ width=0.75
 
 p1 = bar(ind,down,width)
 ylabel('Downloads')
-xticks(ind[::6]+width/2, ('Jun-2006', 'Dec-2006',
-                          'Jun-2007', 'Dec-2007', 
-                          'Jun-2008', 'Dec-2008'))
+xticks(ind[::6]+width/2, ('06/2006', '12/2006',
+                          '06/2007', '12/2007', 
+                          '06/2008', '12/2008',
+                          '06/2009'))
 title('Cumulative Downloads')
 #grid(True)
 

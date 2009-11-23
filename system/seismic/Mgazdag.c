@@ -72,6 +72,10 @@ int main (int argc, char *argv[])
     dy *= 2.*SF_PI; y0 *= 2.*SF_PI;
 
     if (inv) { /* modeling */
+	vel = NULL;
+	velz = NULL;
+	eta = NULL;
+
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
 

@@ -48,6 +48,7 @@ child = None
 def syswait(comm):
     'Interruptable system command'
     global child
+    print comm
     child = os.fork()
     if child:
         (pid,exit) = os.waitpid(child,0)
@@ -55,6 +56,7 @@ def syswait(comm):
         return exit
     else:
         os.system(comm)
+        print "Done"
         os._exit(0)
 
 def subdirs():

@@ -76,4 +76,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Ms2ofz.c 1477 2005-09-29 01:05:56Z fomels $	 */
+/* 	$Id$	 */

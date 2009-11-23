@@ -228,4 +228,4 @@ int trace_ray (raytrace rt  /* ray tracing object */,
     }
 }
 
-/* 	$Id: raytracing.c 775 2004-09-03 19:44:45Z fomels $	 */
+/* 	$Id$	 */
