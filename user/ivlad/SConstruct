@@ -5,12 +5,12 @@ import configure
 
 # C mains
 progs = '''
-quantile leftsize filedims fileflush create
+quantile leftsize filedims fileflush create gettype
 '''
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-pclip prep4plot wiki2static invalid split
+pclip prep4plot wiki2static invalid split zcp
 '''
 
 # Python modules that do not need SWIG+numpy

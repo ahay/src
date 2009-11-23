@@ -39,16 +39,16 @@ def main(argv=sys.argv):
     par = rsf.Par(argv)
     verb = par.bool('verb', False) # verbosity flag
     mydir = par.string('dir') # directory with files
+
     if mydir == None:
         rsfprog.selfdoc()
         return ivlad.unix_error
-    else:
-        if not os.path.isdir(mydir):
-            print mydir + ' is not a valid directory'
-            return ivlad.unix_error
-        if not os.access(mydir,os.X_OK):
-            print mydir + ' lacks +x permissions for ' + os.getlogin()
-            return ivlad.unix_error
+    if not os.path.isdir(mydir):
+        print mydir + ' is not a valid directory'
+        return ivlad.unix_error
+    if not os.access(mydir,os.X_OK):
+        print mydir + ' lacks +x permissions for ' + os.getlogin()
+        return ivlad.unix_error
     if not os.access(mydir,os.R_OK):
         print mydir + ' lacks read permissions for ' + os.getlogin()
         return ivlad.unix_error
