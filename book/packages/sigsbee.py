@@ -29,7 +29,7 @@ def param():
     par['dr']=0.075*par['ft2km']
 
     par['nzdtm']=244 # number of redatuming steps through water
-    par['nzpad']=142
+    par['nzpad']=143
 
     # all shots parameters
     par['nsall']=500
@@ -135,10 +135,12 @@ def getstrvel(velo,par):
          scale rscale=%g |
          put 
          o1=%g d1=%g label1=%s unit1=%s
-         o2=%g d2=%g label2=%s unit2=%s
+         o2=%g d2=%g label2=%s unit2=%s |
+	 window n1=%d n2=%d
          ''' % (par['ft2km'],
                 0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
-                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
+                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux'],
+		par['nz'],par['nx']
                 ))
 
 # ------------------------------------------------------------

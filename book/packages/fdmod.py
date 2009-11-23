@@ -359,6 +359,16 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
+def dipping(cc,intercept,slope,par):
+    Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+    Flow(cc+'_z',cc+'_','math output="%g+x1*%g" '%(intercept,slope))
+    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     Flow(cc+'_',None,
          '''
@@ -831,7 +841,7 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     
     # conventional (cross-correlation zero-lag) imaging condition
     Flow(imag,[swfl,rwfl],
-         'xcor uu=${SOURCES[1]} axis=3 verb=y nbuf=%(nbuf)d ompnth=%(ompnth)d' % par)
+         'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=%(nbuf)d ompnth=%(ompnth)d' % par)
 
 #    Flow(imag,[swfl,rwfl],
 #         'add ${SOURCES[1]} mode=p| transp plane=23 | stack')

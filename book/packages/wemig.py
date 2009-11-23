@@ -170,10 +170,10 @@ def wem(imag,sdat,rdat,slow,custom,par):
     cic(imag,swfl,rwfl,custom,par)
 
 # ------------------------------------------------------------
-def rtm(imag,sdat,rdat,slow,custom,par):
+def rtm(imag,sdat,rdat,velo,dens,custom,par):
     
-    fWRrtm(sdat,swfl,slow,par)
-    bWRrtm(rdat,rwfl,slow,par)
+    fWRrtm(sdat,swfl,velo,dens,par)
+    bWRrtm(rdat,rwfl,velo,dens,par)
 
     cic(imag,swfl,rwfl,custom,par)
 
