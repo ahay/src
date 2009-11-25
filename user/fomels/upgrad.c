@@ -31,7 +31,6 @@ struct Upgrad {
     int *order;
     unsigned char **update;
     float **ww;
-    const float *t0;
 };
 
 static int ndim, nt, ss[3];
@@ -87,7 +86,7 @@ void upgrad_set(upgrad upg, const float *r0 /* reference */)
     unsigned char *up;
     float t, t2;
 
-    t0 = upg->t0;
+    t0 = r0;
 
     /* sort from small to large traveltime */
     for (it = 0; it < nt; it++) {

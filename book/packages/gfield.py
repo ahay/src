@@ -29,7 +29,7 @@ def execute(rr,par):
          math output="0"
          n1=%(nz)d d1=%(dz)g o1=%(oz)g label1="z" 
          n2=%(nx)d d2=%(dx)g o2=%(ox)g label2="x" |
-         noise type=y |
+         noise seed=112009 type=y |
          scale axis=123
          ''' % lpar)
     
