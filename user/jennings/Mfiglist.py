@@ -261,7 +261,7 @@ def main(argv=sys.argv):
             lockfile = os.path.join(lockpath,item)
             check    = os.system(' '.join([command,figfile,lockfile,'&> /dev/null']))
             if check != 0:
-                files[item] = '%2d' % (diff/256)
+                files[item] = '%2d' % (check/256)
                 diff = diff+1
 
 ################    print file list and show selected figs

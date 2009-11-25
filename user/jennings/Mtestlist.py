@@ -217,11 +217,11 @@ def main(argv=sys.argv):
                 rsftest_no  = rsftest_no+1
                 rsftest_no_list.append(root)
 
-            if not rsftest_vals['exist_fig']:
+            if rsftest_vals['exist_fig'] == False:
                 figdir_no  = figdir_no+1
                 figdir_no_list.append(root)
 
-            if not rsftest_vals['exist_lock']:
+            if rsftest_vals['exist_lock'] == False:
                 lockdir_no  = lockdir_no+1
                 lockdir_no_list.append(root)
 
@@ -239,20 +239,20 @@ def main(argv=sys.argv):
 
                                                 # write summary table
             if outfile != None:
-                outfile.write('%s  '   % sbool[rsfproj_vals['exist']])
-                outfile.write('%s  '   % serror[rsfproj_vals['error']])
-                outfile.write('%s  '   % sbool[rsftest_vals['exist']])
-                outfile.write('%s  '   % serror[rsftest_vals['error']])
-                outfile.write('"%s"  ' % rsftest_vals['time'])
-                outfile.write('%12s  ' % int_string(rsfproj_vals['size']))
-                outfile.write('%s  '   % rsfproj_vals['data'])
-                outfile.write('%s  '   % sbool[rsftest_vals['exist_fig']])
-                outfile.write('%s  '   % sbool[rsftest_vals['exist_lock']])
-                outfile.write('%3s  '  % int_string(rsftest_vals['miss']))
-                outfile.write('%3s  '  % int_string(rsftest_vals['extra']))
-                outfile.write('%3s  '  % int_string(rsftest_vals['diff']))
-                outfile.write('%3s  '  % int_string(rsftest_vals['same']))
-                outfile.write('%s\n'   % root)
+                outfile.write('%s  '      % sbool[rsfproj_vals['exist']])
+                outfile.write('%s  '      % serror[rsfproj_vals['error']])
+                outfile.write('%s  '      % sbool[rsftest_vals['exist']])
+                outfile.write('%s  '      % serror[rsftest_vals['error']])
+                outfile.write('"%-24s"  ' % rsftest_vals['time'])
+                outfile.write('%12s  '    % int_string(rsfproj_vals['size']))
+                outfile.write('%s  '      % rsfproj_vals['data'])
+                outfile.write('%s  '      % sbool[rsftest_vals['exist_fig']])
+                outfile.write('%s  '      % sbool[rsftest_vals['exist_lock']])
+                outfile.write('%3s  '     % int_string(rsftest_vals['miss']))
+                outfile.write('%3s  '     % int_string(rsftest_vals['extra']))
+                outfile.write('%3s  '     % int_string(rsftest_vals['diff']))
+                outfile.write('%3s  '     % int_string(rsftest_vals['same']))
+                outfile.write('%s\n'      % root)
             
 ################    write summary
 
@@ -266,27 +266,27 @@ def main(argv=sys.argv):
     for item in rsftest_error_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
-    sys.stdout.write("Examples without a fig directory (%d):\n" % figdir_no)
+    sys.stdout.write("Tested examples without a fig directory (%d):\n" % figdir_no)
     figdir_no_list.sort()
     for item in figdir_no_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
-    sys.stdout.write("Examples without a lock directory (%d):\n" % lockdir_no)
+    sys.stdout.write("Tested examples without a lock directory (%d):\n" % lockdir_no)
     lockdir_no_list.sort()
     for item in lockdir_no_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
-    sys.stdout.write("Examples with missing figs (%d):\n" % figs_missing)
+    sys.stdout.write("Tested examples with missing figs (%d):\n" % figs_missing)
     figs_missing_list.sort()
     for item in figs_missing_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
-    sys.stdout.write("Examples with extra figs (%d):\n" % figs_extra)
+    sys.stdout.write("Tested examples with extra figs (%d):\n" % figs_extra)
     figs_extra_list.sort()
     for item in figs_extra_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
-    sys.stdout.write("Examples with non-matching figs (%d):\n" % figs_diff)
+    sys.stdout.write("Tested examples with non-matching figs (%d):\n" % figs_diff)
     figs_diff_list.sort()
     for item in figs_diff_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
