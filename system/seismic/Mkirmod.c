@@ -272,6 +272,8 @@ int main(int argc, char* argv[])
     if (!sf_getbool("cmp",&cmp)) cmp=false;
     /* compute CMP instead of shot gathers */
     
+    if (cmp && !adj) sf_putint(modl,"CDPtype",1);
+
     inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp);
     if (strcmp(type,type2) ||
 	(vel2->v0) != (vel->v0) || 
