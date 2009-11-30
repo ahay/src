@@ -86,7 +86,7 @@ int main (int argc, char* argv[])
 		    cos[it] = 0.;
 		} else {
 		    str[it] = sqrtf(t*f); /* t -> tau */
-		    cos[it] = 4*t/(t+f-p*t*dsldt[it]+eps)-t/(f+eps);
+		    cos[it] = t*c0*(4.0/(t+f-c0*p*t*dsldt[it]+eps)-1.0/(f+eps));
 		}
 	    }
 
