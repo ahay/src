@@ -1,4 +1,4 @@
-/* Seislet transform using offset continuation */
+/* Seislet transform using shot continuation */
 /*
   Copyright (C) 2009 University of Texas at Austin
    
@@ -18,53 +18,47 @@
 */
 #include <rsf.h>
 
-#include "oclet.h"
-#include "ocpredict.h"
+#include "sclet.h"
+#include "scpredict.h"
 
-static int h, nx, nh;
-static float dh, h0, w, dw;
+static int s, nh, ns;
+static float ds, s0, dh, h0, w, dw, eps;
 static bool inv, unit;
 static sf_complex **t, *t1, *t2, *wei;
 static void (*transform)(bool);
 
-static void ocpredict_forw(bool adj, sf_complex *tt, int i, int j)
+static void scpredict_forw(bool adj, sf_complex *tt, int i, int j)
 /* Predict forward */
 {
     int i2;
-    float h1, h2;
     for (i2=i; i2 < i+j; i2++) {
-	h1 = h0 + i2*dh;
-	h2 = h1+dh;
-	ocpredict_step(adj,true,dw,nx,w,h1,h2,tt);
+	scpredict_step(adj,dw,w,nh,dh,h0,ds,eps,tt);
     }
 }
 
-static void ocpredict_back(bool adj, sf_complex *tt, int i, int j)    
+static void scpredict_back(bool adj, sf_complex *tt, int i, int j)    
 /* Predict backward */
 {
     int i2;
-    float h1, h2;
     for (i2=i+j; i2 > i; i2--) {
-	h2 = h0 + i2*dh;
-	h1 = h2-dh;
-	ocpredict_step(adj,false,dw,nx,w,h1,h2,tt);
+	scpredict_step(adj,dw,w,nh,h0,dh,-ds,eps,tt);
     }
 }
 
-static void ochaar(bool adj) 
+static void schaar(bool adj) 
 /* Lifting Haar transform in place */
 {
     int i, j, i1;
 
     if (adj) {
-	for (j=1; j <= h/2; j *= 2) {
-	    for (i=0; i < h-j; i += 2*j) {
+	for (j=1; j <= s/2; j *= 2) {
+	    for (i=0; i < s-j; i += 2*j) {
 		if (inv) {
-		    for (i1=0; i1 < nx; i1++) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(false,t1,i,j); /* *z0 */
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j); /* *z0 */
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i+j][i1] -= t1[i1]; 
 #else
@@ -72,11 +66,11 @@ static void ochaar(bool adj)
 #endif    
 			/* d = o - P[e] */
 		    }
-		    for (i1=0; i1 < nx; i1++) {
+		    for (i1=0; i1 < nh; i1++) {
 			t2[i1] = t[i+j][i1];
 		    }
-		    ocpredict_back(false,t2,i,j); /* 1/z0 */
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(false,t2,i,j); /* 1/z0 */
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i][i1] += t2[i1]/2; 
 #else
@@ -85,11 +79,11 @@ static void ochaar(bool adj)
                         /* s = e + U[d] */
 		    }
 		} else {
-		    for (i1=0; i1 < nx; i1++) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];  
 		    }
-		    ocpredict_back(true,t1,i,j); 
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j); 
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i][i1] += t1[i1];
 #else
@@ -97,11 +91,11 @@ static void ochaar(bool adj)
 #endif 
 			/* s = e + P'[d] */
 		    }
-		    for (i1=0; i1 < nx; i1++) {
+		    for (i1=0; i1 < nh; i1++) {
 			t2[i1] = t[i][i1]; 
 		    }
-		    ocpredict_forw(true,t2,i,j); 
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(true,t2,i,j); 
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i+j][i1] -= t2[i1]/2;
 #else
@@ -113,13 +107,13 @@ static void ochaar(bool adj)
 	    }
 	}
     } else {
-	for (j=h/2; j >= 1; j /= 2) {
-	    for (i=0; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	for (j=s/2; j >= 1; j /= 2) {
+	    for (i=0; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 		    t2[i1] = t[i+j][i1];
 		}
-		ocpredict_back(false,t2,i,j); 
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t2,i,j); 
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[i][i1] -= t2[i1]/2; 
 #else
@@ -127,11 +121,11 @@ static void ochaar(bool adj)
 #endif 
 		    /* e = s - U[d] */
 		}
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i][i1];
 		}
-		ocpredict_forw(false,t1,i,j); 
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j); 
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[i+j][i1] += t1[i1];
 #else
@@ -144,22 +138,22 @@ static void ochaar(bool adj)
     } 
 }
 
-static void oclinear(bool adj)
+static void sclinear(bool adj)
 /* Lifting Linear transform in place */
 {
     int i, j, i1;
     
     if (adj) {
-	for (j=1; j <= h/2; j *= 2) {
+	for (j=1; j <= s/2; j *= 2) {
 	    if (inv) {
-		for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+		for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 			t2[i1] = t[i+2*j][i1];
 		    }
-		    ocpredict_forw(false,t1,i,j);
-		    ocpredict_back(false,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    scpredict_back(false,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i+j][i1] -= (t1[i1]+t2[i1])/2; 
 #else
@@ -169,12 +163,12 @@ static void oclinear(bool adj)
                         /* d = o - P[e] */
 		    }
 		}		
-		if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+		if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(false,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i+j][i1] -= t1[i1];
 #else
@@ -183,11 +177,11 @@ static void oclinear(bool adj)
 			/* d = o - P[e] */
 		    }		    
 		}
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[j][i1];
 		}
-		ocpredict_back(false,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[0][i1] += t1[i1]/2;
 #else
@@ -195,14 +189,14 @@ static void oclinear(bool adj)
 					 sf_crmul(t1[i1],0.5)); 
 #endif
 		}
-		for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+		for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 			t2[i1] = t[i-j][i1];
 		    }
-		    ocpredict_back(false,t1,i,j);
-		    ocpredict_forw(false,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(false,t1,i,j);
+		    scpredict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i][i1] += (t1[i1]+t2[i1])/4;
 #else
@@ -213,14 +207,14 @@ static void oclinear(bool adj)
 		    }
 		}
 	    } else {
-		for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+		for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 			t2[i1] = t[i+j][i1];
 		    }
-		    ocpredict_back(true,t1,i,j);
-		    ocpredict_forw(true,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    scpredict_forw(true,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i][i1] += t1[i1]/2; 
 			t[i+2*j][i1] += t2[i1]/2;
@@ -232,12 +226,12 @@ static void oclinear(bool adj)
 #endif
 		    }
 		}
-		if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+		if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 		    }
-		    ocpredict_back(true,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i][i1] -= t1[i1];
 #else
@@ -245,11 +239,11 @@ static void oclinear(bool adj)
 #endif
 		    }		    
 		}
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[0][i1];
 		}
-		ocpredict_forw(true,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(true,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[j][i1] -= t1[i1]/2;
 #else
@@ -257,14 +251,14 @@ static void oclinear(bool adj)
 					 sf_crmul(t1[i1],-0.5)); 
 #endif
 		}
-		for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+		for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 			t2[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(true,t1,i,j);
-		    ocpredict_back(true,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(true,t1,i,j);
+		    scpredict_back(true,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 			t[i+j][i1] -= t1[i1]/4;
 			t[i-j][i1] -= t2[i1]/4;
@@ -279,15 +273,15 @@ static void oclinear(bool adj)
 	    }
 	}
     } else {
-	for (j=h/2; j >= 1; j /= 2) {
-	    for (i=2*j; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	for (j=s/2; j >= 1; j /= 2) {
+	    for (i=2*j; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i+j][i1];
 		    t2[i1] = t[i-j][i1];
 		}
-		ocpredict_back(false,t1,i,j);
-		ocpredict_forw(false,t2,i-j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,i,j);
+		scpredict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[i][i1] -= (t1[i1]+t2[i1])/4;
 #else
@@ -297,11 +291,11 @@ static void oclinear(bool adj)
 		    /* e = s - U d */
 		}
 	    }
-	    for (i1=0; i1 < nx; i1++) {
+	    for (i1=0; i1 < nh; i1++) {
 		t1[i1] = t[j][i1];
 	    }
-	    ocpredict_back(false,t1,0,j);
-	    for (i1=0; i1 < nx; i1++) {
+	    scpredict_back(false,t1,0,j);
+	    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		t[0][i1] -= t1[i1]/2;
 #else
@@ -309,14 +303,14 @@ static void oclinear(bool adj)
 				   sf_crmul(t1[i1],-0.5)); 
 #endif
 	    }
-	    for (i=0; i < h-2*j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=0; i < s-2*j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i][i1];
 		    t2[i1] = t[i+2*j][i1];
 		}
-		ocpredict_forw(false,t1,i,j);
-		ocpredict_back(false,t2,i+j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		scpredict_back(false,t2,i+j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[i+j][i1] += (t1[i1]+t2[i1])/2; 
 #else
@@ -326,12 +320,12 @@ static void oclinear(bool adj)
 		    /* o = d + P[e] */
 		}
 	    }	 
-	    if (i+j < h) {
-		for (i1=0; i1 < nx; i1++) {
+	    if (i+j < s) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i][i1];
 		}
-		ocpredict_forw(false,t1,i,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		    t[i+j][i1] += t1[i1];
 #else
@@ -344,23 +338,23 @@ static void oclinear(bool adj)
     }
 }
 
-static void ocbiorthogonal(bool adj)
+static void scbiorthogonal(bool adj)
 /* Lifting Biorthogonal transform in place */
 {
     int i, j, i1;
     float a;    
     if (adj) {
-	for (j=1; j <= h/2; j *= 2) {
+	for (j=1; j <= s/2; j *= 2) {
 	    if (inv) {
 		a = -1.586134342f;
-	    	for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	    	for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
                         t1[i1] = t[i][i1];
                         t2[i1] = t[i+2*j][i1];
                     }
-		    ocpredict_forw(false,t1,i,j);
-		    ocpredict_back(false,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    scpredict_back(false,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -370,12 +364,12 @@ static void ocbiorthogonal(bool adj)
 		         /* Predict 1 */
                     }
 	        }	 
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(false,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
                         t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/ 
 #else
@@ -384,11 +378,11 @@ static void ocbiorthogonal(bool adj)
 		    }		    
 		}
                 a= -0.05298011854f;
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[j][i1];
 		}
-		ocpredict_back(false,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -396,14 +390,14 @@ static void ocbiorthogonal(bool adj)
 #endif 
                 }
 
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 			t2[i1] = t[i-j][i1];
 		    }
-		    ocpredict_back(false,t1,i,j);
-		    ocpredict_forw(false,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(false,t1,i,j);
+		    scpredict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -415,14 +409,14 @@ static void ocbiorthogonal(bool adj)
 	        }
                 /* Step 1 */
 		a = 0.8829110762f;
-	    	for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	    	for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
                         t1[i1] = t[i][i1];
                         t2[i1] = t[i+2*j][i1];
                     }
-		    ocpredict_forw(false,t1,i,j);
-		    ocpredict_back(false,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    scpredict_back(false,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i+j][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -432,12 +426,12 @@ static void ocbiorthogonal(bool adj)
 		         /* Predict 2 */
                     }
 	        }	 
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(false,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(false,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
                         t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
 #else
@@ -446,11 +440,11 @@ static void ocbiorthogonal(bool adj)
 		    }		    
 		}
                 a= 0.4435068522f;
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[j][i1];
 		}
-		ocpredict_back(false,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 	            t[0][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -458,14 +452,14 @@ static void ocbiorthogonal(bool adj)
 #endif 
                 }
 
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 			t2[i1] = t[i-j][i1];
 		    }
-		    ocpredict_back(false,t1,i,j);
-		    ocpredict_forw(false,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(false,t1,i,j);
+		    scpredict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -477,8 +471,8 @@ static void ocbiorthogonal(bool adj)
 	        }
                 /* Step 2 */
                 a= 1/(1.230174105f);
-	        for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i+j][i1] *= a;
 #else
@@ -486,8 +480,8 @@ static void ocbiorthogonal(bool adj)
 #endif
                     }
 	        }
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
                         t[i+j][i1] *= a;  /*right boundary*/ 
 #else
@@ -495,15 +489,15 @@ static void ocbiorthogonal(bool adj)
 #endif 
 		    }		    
 		}
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 	            t[0][i1] /= a;        /*left boundary*/
 #else
 		    t[0][i1] = sf_crmul(t[0][i1],1./a); 
 #endif 
                 }
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i][i1] /= a;
 #else
@@ -515,14 +509,14 @@ static void ocbiorthogonal(bool adj)
 	    } else {
 
 		a = 1.586134342f;
-	    	for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	    	for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
                         t1[i1] = t[i+j][i1];
                         t2[i1] = t[i+j][i1];
                     }
-		    ocpredict_back(true,t1,i,j);
-		    ocpredict_forw(true,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    scpredict_forw(true,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H	
 		        t[i][i1] += t1[i1]*a;
 		        t[i+2*j][i1] += t2[i1]*a;
@@ -533,12 +527,12 @@ static void ocbiorthogonal(bool adj)
 		         /* adjoint Predict 1 */
                     }
 	        }
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 		    }
-		    ocpredict_back(true,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                         t[i][i1] += 2*a*t1[i1];  /*right boundary*/  
 #else
@@ -548,11 +542,11 @@ static void ocbiorthogonal(bool adj)
 		}
 		
 		a= 0.05298011854f;
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[0][i1];
 		}
-		ocpredict_forw(true,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(true,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	            t[j][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -560,14 +554,14 @@ static void ocbiorthogonal(bool adj)
 #endif
                 }
 
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 			t2[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(true,t1,i,j);
-		    ocpredict_back(true,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(true,t1,i,j);
+		    scpredict_back(true,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		        t[i+j][i1] += t1[i1]*a;
 		        t[i-j][i1] += t2[i1]*a;
@@ -580,14 +574,14 @@ static void ocbiorthogonal(bool adj)
 	        }
                 /* Step 1 */
 		a = -0.8829110762f;
-	    	for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	    	for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
                         t1[i1] = t[i+j][i1];
                         t2[i1] = t[i+j][i1];
                     }
-		    ocpredict_back(true,t1,i,j);
-		    ocpredict_forw(true,t2,i+j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    scpredict_forw(true,t2,i+j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		        t[i][i1] += t1[i1]*a;
 		        t[i+2*j][i1] += t2[i1]*a;
@@ -598,12 +592,12 @@ static void ocbiorthogonal(bool adj)
 		         /* adjoint Predict 2 */
                     }
 	        }	 
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i+j][i1];
 		    }
-		    ocpredict_back(true,t1,i,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_back(true,t1,i,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                         t[i][i1] += 2*a*t1[i1];  /*right boundary*/  
 #else
@@ -612,11 +606,11 @@ static void ocbiorthogonal(bool adj)
 		    }		    
 		}
                 a= -0.4435068522f;
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[0][i1];
 		}
-		ocpredict_forw(true,t1,0,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(true,t1,0,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	            t[j][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -624,14 +618,14 @@ static void ocbiorthogonal(bool adj)
 #endif
                 }
 
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 			t1[i1] = t[i][i1];
 			t2[i1] = t[i][i1];
 		    }
-		    ocpredict_forw(true,t1,i,j);
-		    ocpredict_back(true,t2,i-j,j);
-		    for (i1=0; i1 < nx; i1++) {
+		    scpredict_forw(true,t1,i,j);
+		    scpredict_back(true,t2,i-j,j);
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		        t[i+j][i1] += t1[i1]*a;
 		        t[i-j][i1] += t2[i1]*a;
@@ -644,8 +638,8 @@ static void ocbiorthogonal(bool adj)
 	        }
                      /* Step 2 */
                 a= 1.230174105f;
-	        if (i+j < h) {
-		    for (i1=0; i1 < nx; i1++) {
+	        if (i+j < s) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                         t[i+j][i1] *= a;  /*right boundary*/ 
 #else
@@ -654,8 +648,8 @@ static void ocbiorthogonal(bool adj)
 		    }		    
 		}
 
-	        for (i=0; i < h-2*j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=0; i < s-2*j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		        t[i+j][i1] *= a;
 #else
@@ -664,15 +658,15 @@ static void ocbiorthogonal(bool adj)
                     }
 	        }
 
-		for (i1=0; i1 < nx; i1++) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	            t[0][i1] /= a;        /*left boundary*/
 #else
 		    t[0][i1] = sf_crmul(t[0][i1],1./a); 
 #endif 
                 }
-	        for (i=2*j; i < h-j; i += 2*j) {
-		    for (i1=0; i1 < nx; i1++) {
+	        for (i=2*j; i < s-j; i += 2*j) {
+		    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		        t[i][i1] /= a;
 #else
@@ -685,11 +679,11 @@ static void ocbiorthogonal(bool adj)
 
 	}
     } else {
-	for (j=h/2; j >= 1; j /= 2) {
+	for (j=s/2; j >= 1; j /= 2) {
 
             a= 1.230174105f;
-	    for (i=2*j; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=2*j; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i][i1] /= a;
 #else
@@ -697,15 +691,15 @@ static void ocbiorthogonal(bool adj)
 #endif 
                 }
 	    }
-            for (i1=0; i1 < nx; i1++) {
+            for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	        t[0][i1] /= a;        /*left boundary*/
 #else
 		t[0][i1] = sf_crmul(t[0][i1],1./a); 
 #endif 
             }
-	    for (i=0; i < h-2*j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=0; i < s-2*j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i+j][i1] *= a;
 #else
@@ -713,8 +707,8 @@ static void ocbiorthogonal(bool adj)
 #endif 
                 }
 	    }
-	    if (i+j < h) {
-		for (i1=0; i1 < nx; i1++) {
+	    if (i+j < s) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                     t[i+j][i1] *= a;  /*right boundary*/ 
 #else
@@ -725,14 +719,14 @@ static void ocbiorthogonal(bool adj)
 		    /* Undo Scale */
 
             a= -0.4435068522f;
-	    for (i=2*j; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=2*j; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 	            t1[i1] = t[i+j][i1];
 		    t2[i1] = t[i-j][i1];
 		}
-		ocpredict_back(false,t1,i,j);
-		ocpredict_forw(false,t2,i-j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,i,j);
+		scpredict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -742,11 +736,11 @@ static void ocbiorthogonal(bool adj)
 		        /* Undo Update 2 */
                 }
 	    }
-            for (i1=0; i1 < nx; i1++) {
+            for (i1=0; i1 < nh; i1++) {
 		t1[i1] = t[j][i1];
 	    }
-	    ocpredict_back(false,t1,0,j);
-	    for (i1=0; i1 < nx; i1++) {
+	    scpredict_back(false,t1,0,j);
+	    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	        t[0][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -755,14 +749,14 @@ static void ocbiorthogonal(bool adj)
             }
 
 	    a = -0.8829110762f;
-	    for (i=0; i < h-2*j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=0; i < s-2*j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
                     t1[i1] = t[i][i1];
                     t2[i1] = t[i+2*j][i1];
                 }
-		ocpredict_forw(false,t1,i,j);
-		ocpredict_back(false,t2,i+j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		scpredict_back(false,t2,i+j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i+j][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -772,12 +766,12 @@ static void ocbiorthogonal(bool adj)
 		         /* Undo Predict 2 */
                 }
 	    }	 
-	    if (i+j < h) {
-		for (i1=0; i1 < nx; i1++) {
+	    if (i+j < s) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i][i1];
 		}
-		ocpredict_forw(false,t1,i,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                     t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
 #else
@@ -788,14 +782,14 @@ static void ocbiorthogonal(bool adj)
                    /* Undo Step 2 */
 
             a= 0.05298011854f;
-	    for (i=2*j; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=2*j; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 	            t1[i1] = t[i+j][i1];
 		    t2[i1] = t[i-j][i1];
 		}
-		ocpredict_back(false,t1,i,j);
-		ocpredict_forw(false,t2,i-j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_back(false,t1,i,j);
+		scpredict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -805,11 +799,11 @@ static void ocbiorthogonal(bool adj)
 		        /* Undo Update 1 */
                 }
 	    }
-            for (i1=0; i1 < nx; i1++) {
+            for (i1=0; i1 < nh; i1++) {
 		t1[i1] = t[j][i1];
 	    }
-	    ocpredict_back(false,t1,0,j);
-	    for (i1=0; i1 < nx; i1++) {
+	    scpredict_back(false,t1,0,j);
+	    for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	        t[0][i1] += 2*a*t1[i1];      /*left boundary*/
 #else
@@ -817,14 +811,14 @@ static void ocbiorthogonal(bool adj)
 #endif
             }
 	    a = 1.586134342f;
-	    for (i=0; i < h-2*j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (i=0; i < s-2*j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
                     t1[i1] = t[i][i1];
                     t2[i1] = t[i+2*j][i1];
                 }
-		ocpredict_forw(false,t1,i,j);
-		ocpredict_back(false,t2,i+j,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		scpredict_back(false,t2,i+j,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[i+j][i1] += (t1[i1]+t2[i1])*a;
 #else
@@ -834,12 +828,12 @@ static void ocbiorthogonal(bool adj)
 		         /* Undo Predict 1 */
                 }
 	    }	 
-	    if (i+j < h) {
-		for (i1=0; i1 < nx; i1++) {
+	    if (i+j < s) {
+		for (i1=0; i1 < nh; i1++) {
 		    t1[i1] = t[i][i1];
 		}
-		ocpredict_forw(false,t1,i,j);
-		for (i1=0; i1 < nx; i1++) {
+		scpredict_forw(false,t1,i,j);
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
                     t[i+j][i1] += 2*a*t1[i1];  /*right boundary*/  
 #else
@@ -853,14 +847,17 @@ static void ocbiorthogonal(bool adj)
 }
 
 
-void oclet_init(int nx_in      /* midpoint number   */, 
-		int nh_in      /* offset number     */, 
-		float dh_in    /* offset interval   */,
-		float dw_in    /* freqency interval */,
-		float h0_in    /* minumum offset    */,
-		bool inv1      /* inversion flag    */, 
-		bool unit1     /* weighting flag    */,
-		char type      /* transform type    */) 
+void sclet_init(int nh_in      /* offset number       */, 
+		float dh_in    /* offset interval     */,
+		float h0_in    /* initial offset      */,
+		int ns_in      /* shot number         */, 
+		float ds_in    /* shot interval       */,
+		float dw_in    /* freqency interval   */,
+		float s0_in    /* minumum shot number */,
+		bool inv1      /* inversion flag      */, 
+		bool unit1     /* weighting flag      */,
+		float eps_in   /* regularization      */,
+		char type      /* transform type      */) 
 /*< allocate space >*/
 {
     int i,j;
@@ -868,27 +865,30 @@ void oclet_init(int nx_in      /* midpoint number   */,
 
     inv = inv1;
     unit = unit1;
-    nx = nx_in;
     nh = nh_in;
     dh = dh_in;
     h0 = h0_in;
+    ns = ns_in;
+    ds = ds_in;
+    s0 = s0_in;
     dw = dw_in;
+    eps = eps_in;
 
-    for (h=1; h < nh; h *= 2) ;
-    t = sf_complexalloc2(nx,h);
+    for (s=1; s < ns; s *= 2) ;
+    t = sf_complexalloc2(nh,s);
 
-    t1 = sf_complexalloc(nx);
-    t2 = sf_complexalloc(nx);
+    t1 = sf_complexalloc(nh);
+    t2 = sf_complexalloc(nh);
 
     switch(type) {
 	case 'h': 
-	    transform = ochaar;
+	    transform = schaar;
 	    break;
 	case 'l':
-	    transform = oclinear;
+	    transform = sclinear;
 	    break;
 	case 'b':
-	    transform = ocbiorthogonal;
+	    transform = scbiorthogonal;
 	    break;
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
@@ -896,19 +896,19 @@ void oclet_init(int nx_in      /* midpoint number   */,
     }
 
     if (unit) {
-	wei = sf_complexalloc(h);
+	wei = sf_complexalloc(s);
 
-	wei[0] = sf_cmplx(sqrtf((float) h),0.);
+	wei[0] = sf_cmplx(sqrtf((float) s),0.);
 	wi = 0.5;	
-	for (j=1; j <= h/2; j *= 2, wi *= 2) {
-	    for (i=0; i < h-j; i += 2*j) {
+	for (j=1; j <= s/2; j *= 2, wi *= 2) {
+	    for (i=0; i < s-j; i += 2*j) {
 		wei[i+j] = sf_cmplx(sqrtf(wi),0.);
 	    }
 	}
     }
 }
 
-void oclet_close(void) 
+void sclet_close(void) 
 /*< deallocate space >*/
 {
     free (*t);
@@ -916,9 +916,10 @@ void oclet_close(void)
     free (t1);
     free (t2);
     if (unit) free(wei);
+    scpredict_close();
 }
 
-void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *y, float w_in)
+void sclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *y, float w_in)
 /*< linear operator >*/
 {
     int it, i, j, i1;
@@ -930,17 +931,17 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	for (it=0; it < nx1; it++) {
 	    t[0][it] = y[it];
 	}
-	for (it=nx1; it < nx*h; it++) {
+	for (it=nx1; it < nh*s; it++) {
 	    t[0][it] = sf_cmplx(0.,0.);
 	}
     } else {
-	for (i1=0; i1 < nx; i1++) {
+	for (i1=0; i1 < nh; i1++) {
 	    t[0][i1] = x[i1];
 	}
-	it = nx;
-	for (j=h/2; j >= 1; j /= 2) {
-	    for (i=0; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	it = nh;
+	for (j=s/2; j >= 1; j /= 2) {
+	    for (i=0; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 		    if (it < ny1) {
 			t[i+j][i1]=x[it];
 			it++;
@@ -952,8 +953,8 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	}
 
 	if (unit) {
-	    for (it=0; it < h; it++) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (it=0; it < s; it++) {
+		for (i1=0; i1 < nh; i1++) {
 		    if (inv) {
 #ifdef SF_HAS_COMPLEX_H
 			t[it][i1] /= wei[it];
@@ -976,8 +977,8 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 
     if (adj) {
 	if (unit) {
-	    for (it=0; it < h; it++) {
-		for (i1=0; i1 < nx; i1++) {
+	    for (it=0; it < s; it++) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    t[it][i1] *= wei[it];
 #else
@@ -987,17 +988,17 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 	    }
 	}
 
-	for (i1=0; i1 < nx; i1++) {
+	for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 	    x[i1] += t[0][i1];
 #else
 	    x[i1] = sf_cadd(x[i1],t[0][i1]);
 #endif
 	}
-	it = nx;
-	for (j=h/2; j >= 1; j /= 2) {
-	    for (i=0; i < h-j; i += 2*j) {
-		for (i1=0; i1 < nx; i1++) {
+	it = nh;
+	for (j=s/2; j >= 1; j /= 2) {
+	    for (i=0; i < s-j; i += 2*j) {
+		for (i1=0; i1 < nh; i1++) {
 #ifdef SF_HAS_COMPLEX_H
 		    x[it] += t[i+j][i1];
 #else
@@ -1017,5 +1018,6 @@ void oclet_lop(bool adj, bool add, int nx1, int ny1, sf_complex *x, sf_complex *
 #endif
 	}
     }
+
 }
 /* 	$Id$	 */
