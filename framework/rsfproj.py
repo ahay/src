@@ -328,7 +328,7 @@ class Project(Environment):
 
             if self.jobs < split[1]:
                 jobs = self.jobs            
-                w = int(0.5+float(split[1])/jobs) # length of one chunk
+                w = int(1+float(split[1])/jobs) # length of one chunk
             else:
                 jobs = split[1]
                 w = 1
