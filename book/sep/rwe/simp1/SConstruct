@@ -26,13 +26,18 @@ Flow('anomX',None,
      n1=%(nz)d d1=%(dz)g o1=%(oz)g
      n2=%(nX)d d2=%(dX)g o2=%(oX)g
     ''' % par)
+
 Plot('anomX','grey color=j scalebar=y allpos=n pclip=100 wanttitle=n')
+
+Result('anomX','grey color=j scalebar=y allpos=n pclip=100 wanttitle=n')
 
 Flow('vel_ss','anomX',
      'math output="250+.20*(x2-%(oX)g)+.15*(x1-%(oz)g)" ' % par)
 Flow('vel_cc','anomX vel_ss','add ${SOURCES[1]}')
 
 Plot('vel_cc','grey color=j scalebar=y allpos=y pclip=100')
+
+Result('vel_cc','grey color=j scalebar=y allpos=y pclip=100 wanttitle=n')
 
 ############################################
 
