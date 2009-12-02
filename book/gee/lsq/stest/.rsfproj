@@ -1,3 +1,3 @@
-uses=['sfdd', 'sfspike', 'sfconjgrad', 'sfmatmult', 'sfcconjgrad', 'sfcmatmult']
+uses=['sfdd', 'sfspike', 'sfconjgrad', 'sfmatmult', 'sfgraph', 'sfcconjgrad', 'sfcmatmult']
 data=[]
-size=          0
+size=        665
