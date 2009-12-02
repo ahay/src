@@ -195,9 +195,6 @@ def main(argv=sys.argv):
                                     # check if fig & lock directories exist
     exist_fig   = os.path.exists(figpath)
     exist_lock  = os.path.exists(lockpath)
-    if (not exist_fig) or (not exist_lock):
-        if rsftest: rsftest_write(exist_fig,exist_lock,None,None,None,None,None)
-        return unix_error
 
                                     # print fig directory path
     print ""
@@ -216,6 +213,10 @@ def main(argv=sys.argv):
     else:
         print "Lock directory does not exist:"
         print lockpath
+
+    if (not exist_fig) or (not exist_lock):
+        if rsftest: rsftest_write(exist_fig,exist_lock,None,None,None,None,None)
+        return unix_error
 
 ################    initialize variables
 
