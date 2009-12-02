@@ -32,7 +32,7 @@ Flow('x0',None,'spike n1=4')
 Flow('x','y mat x0',
      'conjgrad matmult mat=${SOURCES[1]} mod=${SOURCES[2]} niter=6')
      
-Result('x','graph wanttitle=n')
+Result('x','graph symbol=* wanttitle=n wantaxis1=n symbolsz=10')
 
 ### Complex Test #####
 
@@ -66,6 +66,6 @@ Flow('cy','cy0','dd form=native')
 Flow('cx','cy cmat',
      'cconjgrad cmatmult mat=${SOURCES[1]} mod=${SOURCES[0]} niter=6')
 
-Result('cx','graph wanttitle=n')
+Result('cx','graph symbol=* wanttitle=n symbolsz=10')
 
 End()
