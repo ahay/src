@@ -128,7 +128,7 @@ void grid2a_rhs(void* par /* grid */,
     
     /* group angle */
     if (ax > az) {
-	az = (d+r)*(d+r)*ax/(d*d+2*(ax-az)*d*r+r2); 
+	az = (d+r)*(d+r)*ax/(d*d+2*(ax-az)*d*r+r2+SF_EPS); 
     } else {
 	az = (d+r)*(d+r)*den/(16.*az*num);
     }    
