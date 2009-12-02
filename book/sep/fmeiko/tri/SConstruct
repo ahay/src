@@ -208,8 +208,7 @@ Plot('hole3','e3',
      'window f2=96 | graph plotcol=6 title="Third Refinement" ')
 Plot('out3','hole3 hole','Overlay')
 
-
-Result('hole','out0 out1 out2 out3','SideBySideIso')
+Result('hole','out0 out1 out2','SideBySideIso')
 
 ############################# SPHERE ####################################
 
