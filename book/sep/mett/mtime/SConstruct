@@ -31,4 +31,6 @@ Plot('ett',
 
 Plot('marm-ett','marm ett','Overlay')
 
+Result('marm-ett','marm ett','Overlay')
+
 End()
