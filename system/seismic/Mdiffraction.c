@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     int nx, ny, nt, four, nsp, nd, ix, iy, isp, kz, kx, ky, k;
     float dx, dy, dt, t0, z, x, y, x1, y1, x0, y0, tx, ty;
     float freq, s1, s2, s12, t;
-    float *v1, *v2, *v12, *sp, *trace, *time, *delt, *ampl;
+    float *v1, *v2, *v12, **sp, *trace, *time, *delt, *ampl;
     sf_file w1, w2, w12, spikes, data;
 
     sf_init(argc,argv);
@@ -64,8 +64,11 @@ int main(int argc, char *argv[])
     sf_fileclose(w2);
     sf_fileclose(w12);
 
-    sp = sf_floatalloc(4);
+    sp = sf_floatalloc2(4,nsp);
     trace = sf_floatalloc(nt);
+
+    sf_floatread(sp[0],4*nsp,spikes);
+    sf_fileclose(spikes);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
@@ -82,10 +85,9 @@ int main(int argc, char *argv[])
 	for (ix=0; ix < nx; ix++) {
 	    x1 = x0 + ix*dx;
 	    for (isp=0; isp < nsp; isp++) {
-		sf_floatread(sp,4,spikes);
-		z = sp[0];
-		x = sp[1]-x1;
-		y = sp[2]-y1;
+		z = sp[isp][0];
+		x = sp[isp][1]-x1;
+		y = sp[isp][2]-y1;
 
 		kz = 0.5+(z-t0)/dt;
 		kx = 0.5+(x-x0)/dx;
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
 
 		    time[isp] = t;
 		    delt[isp] = SF_MAX(tx*dx,ty*dy);
-		    ampl[isp] = sp[3];
+		    ampl[isp] = sp[isp][3];
 		}
 	    }
 

@@ -7,7 +7,7 @@ par = {
     'nt':801, 'ot':0,'dt':0.001, 'lt':'t','ut':'s', 'kt':75,
     'nx':401, 'ox':0,'dx':0.0075,'lx':'x','ux':'km',
     'nz':401, 'oz':0,'dz':0.0075,'lz':'z','uz':'km',
-    'xcenter':1.5,'zcenter':1.5,
+    'xcenter':1.5,'zcenter':1.5, 'height': 10,
     'vbias':1.75
     }
 fdmod.param(par)
@@ -70,7 +70,7 @@ Flow('wdf','wfl','wdf verb=y nh1=%d nh2=%d' % (nwig,nwig) )
 # ------------------------------------------------------------
 for k in ('wfl','wdf'):
     fdmod.wom(k+'m',k,'vel',par['vbias'],par)
-    Result(   k+'m',fdmod.wgrey('pclip=99',par))
+    Plot(   k+'m',fdmod.wgrey('pclip=99',par),view=1)
 
     for i in range(0,par['nt']/par['jsnap'],1):
         fdmod.wframe(k+'-'+str(i),k,i,'pclip=99',par)
