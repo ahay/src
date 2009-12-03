@@ -71,11 +71,32 @@ int main (int argc, char *argv[])
     dx *= 2.*SF_PI; x0 *= 2.*SF_PI;
     dy *= 2.*SF_PI; y0 *= 2.*SF_PI;
 
-    if (inv) { /* modeling */
+    if (NULL == sf_getstring("velocity")) {
 	vel = NULL;
 	velz = NULL;
 	eta = NULL;
+	if (!sf_getint("nz",&nz)) nz = nt;
+	/* Length of depth axis (for migration, if no velocity file) */
+	if (!sf_getfloat("dz",&dz)) dz = dt;
+	/* Sampling of depth axis (for migration, if no velocity file) */
+    } else {
+	vel = sf_input("velocity");
+	if (!sf_histint(vel,"n1",&nz)) 
+	    sf_error ("No n1= in velocity");
+	if (!sf_histfloat(vel,"d1",&dz)) 
+	    sf_error ("No d1= in velocity");
+	
+	if (NULL == sf_getstring("velz")) {
+	    velz = NULL;
+	    eta = NULL;
+	} else {
+	    velz = sf_input("velz");
+	    if (NULL == sf_getstring("eta")) sf_error("Need eta=");
+	    eta = sf_input("eta");
+	}
+    }
 
+    if (inv) { /* modeling */
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
 
@@ -105,31 +126,7 @@ int main (int argc, char *argv[])
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
-	if (NULL == sf_getstring("velocity")) {
-	    vel = NULL;
-	    velz = NULL;
-	    eta = NULL;
-	    if (!sf_getint("nz",&nz)) nz = nt;
-	    /* Length of depth axis (for migration, if no velocity file) */
-	    if (!sf_getfloat("dz",&dz)) dz = dt;
-	    /* Sampling of depth axis (for migration, if no velocity file) */
-	} else {
-	    vel = sf_input("velocity");
-	    if (!sf_histint(vel,"n1",&nz)) 
-		sf_error ("No n1= in velocity");
-	    if (!sf_histfloat(vel,"d1",&dz)) 
-		sf_error ("No d1= in velocity");
 
-	    if (NULL == sf_getstring("velz")) {
-		velz = NULL;
-		eta = NULL;
-	    } else {
-		velz = sf_input("velz");
-		if (NULL == sf_getstring("eta")) sf_error("Need eta=");
-		eta = sf_input("eta");
-	    }
-
-	}
 	sf_putint(out,"n1",nz);
 	sf_putfloat(out,"d1",dz);
 	sf_putfloat(out,"o1",0.);

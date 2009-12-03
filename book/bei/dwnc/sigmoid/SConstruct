@@ -21,7 +21,7 @@ def phaseshift(adj,case):
     pad n2=%d | cosft sign2=1 |
     gazdag inv=%d velocity=${SOURCES[1]} nt=400 |
     cosft sign2=-1 | window n2=%d
-    ''' % (2*200/(4-case),1-adj,200/(4-case))
+    ''' % (2*200/(4-case)+1,1-adj,200/(4-case))
 
 for case in range(1,4):
     mod = 'mod%d' % case        
