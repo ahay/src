@@ -74,6 +74,18 @@ static sf_complex myarg(sf_complex c)
     return c;
 }
 
+static sf_complex myreal(sf_complex c)
+{
+    c = sf_cmplx(creal(c),0.);
+    return c;
+}
+
+static sf_complex myimag(sf_complex c)
+{
+    c = sf_cmplx(0.,cimag(c));
+    return c;
+}
+
 typedef sf_complex (*cfunc)(sf_complex);
 static cfunc cfunctable[] = {
     ccosf,
@@ -93,7 +105,9 @@ static cfunc cfunctable[] = {
     csqrtf,
     myabs,
     myarg,
-    myconj
+    myconj,
+    myreal,
+    myimag
 };
 
 enum {GRP, NUM, INDX, FUN, POW, MULDIV, UNARY, PLUSMIN};
@@ -409,6 +423,8 @@ size_t sf_math_parse (char*       output /* expression */,
 		} else if (0==strcmp(key,"erfc") && SF_FLOAT==datatype)   { *indx = 17;
 		} else if (0==strcmp(key,"arg") && SF_COMPLEX==datatype) { *indx = 16;
 		} else if (0==strcmp(key,"conj") && SF_COMPLEX==datatype) { *indx = 17;
+		} else if (0==strcmp(key,"real") && SF_COMPLEX==datatype) { *indx = 18;
+		} else if (0==strcmp(key,"imag") && SF_COMPLEX==datatype) { *indx = 19;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",
