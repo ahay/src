@@ -40,9 +40,11 @@ int main(int argc, char *argv[])
     if (!sf_histint(w1,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(w1,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(w1,"o1",&t0)) t0=0.0;
+
     if (!sf_histint(w1,"n2",&nx)) sf_error("No n2= in input");
     if (!sf_histfloat(w1,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(w1,"o2",&x0)) x0=0.0;
+
     if (!sf_histint(w1,"n3",&ny)) sf_error("No n3= in input");
     if (!sf_histfloat(w1,"d3",&dy)) sf_error("No d3= in input");
     if (!sf_histfloat(w1,"o3",&y0)) y0=0.0;
@@ -60,15 +62,10 @@ int main(int argc, char *argv[])
     sf_floatread(v2,nd,w2);
     sf_floatread(v12,nd,w12);
 
-    sf_fileclose(w1);
-    sf_fileclose(w2);
-    sf_fileclose(w12);
-
     sp = sf_floatalloc2(4,nsp);
     trace = sf_floatalloc(nt);
 
     sf_floatread(sp[0],4*nsp,spikes);
-    sf_fileclose(spikes);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
@@ -86,12 +83,15 @@ int main(int argc, char *argv[])
 	    x1 = x0 + ix*dx;
 	    for (isp=0; isp < nsp; isp++) {
 		z = sp[isp][0];
-		x = sp[isp][1]-x1;
-		y = sp[isp][2]-y1;
+		x = sp[isp][1];
+		y = sp[isp][2];
 
 		kz = 0.5+(z-t0)/dt;
 		kx = 0.5+(x-x0)/dx;
-		ky = 0.5+(y=y0)/dy;
+		ky = 0.5+(y-y0)/dy;
+
+		x -= x1;
+		y -= y1;
 
 		if (kz < 0 || kz >= nt ||
 		    kx < 0 || kx >= nx ||
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		    ty = 4.*(s2*y+s12*x)/(t+dt);
 
 		    time[isp] = t;
-		    delt[isp] = SF_MAX(tx*dx,ty*dy);
+		    delt[isp] = SF_MAX(fabsf(tx*dx),fabsf(ty*dy));
 		    ampl[isp] = sp[isp][3];
 		}
 	    }
