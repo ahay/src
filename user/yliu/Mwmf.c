@@ -22,8 +22,6 @@
 #include <math.h>
 
 #include "weightmf.h"
-#include "median.h"
-#include "boundary.h"
 
 int main (int argc, char* argv[]) 
 {

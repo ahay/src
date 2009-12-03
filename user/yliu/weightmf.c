@@ -94,6 +94,96 @@ float wmedian(float *temp,float *weight,int nfw)
     return wm;
 }
 
+void cweight(float *data,float *weight,float nw,float rect)
+/*< get weights from data using local correlation >*/
+{   
+    int i, j, m1, m2;
+    float *one, *two, done, dtwo;
+
+    m1 = (nw-1)/2;
+    m2 = (rect-1)/2;
+
+    one = sf_floatalloc(rect);
+    two = sf_floatalloc(rect);
+
+    done = 0.;
+    for (i=0; i < rect; i++) {
+	one[i] = data[m1-m2+i];
+	done += one[i]*one[i];
+    }
+
+    for (i=0; i < nw; i++) {
+	for (j=0; j < rect; j++) {
+	    if ((i-m2+j) >=0 && (i-m2+j) < nw) {
+		two[j] = data[i-m2+j];
+	    } else {
+		two[j] = 0.;
+	    }
+	}
+	dtwo = 0.;
+	weight[i] = 0.;
+	for (j=0; j < rect; j++) {
+	    dtwo += two[j]*two[j];
+	    weight[i] += one[j]*two[j];
+	}
+	weight[i] = fabsf(weight[i])/(sqrtf(done*dtwo)+FLT_EPSILON);
+    }
+}
+
+void vweight(float *data,float *weight,float nw)
+/*< get weights from data using variance >*/
+{   
+    int i;
+    float mean, norm;
+
+    mean = 0.;
+    for (i=0; i < nw; i++) {
+	mean += data[i];
+    }
+    mean = mean/nw;
+    norm = 0.;
+    for (i=0; i < nw; i++) {
+	weight[i] = 1./((data[i]-mean)*(data[i]-mean)+FLT_EPSILON);
+	norm +=weight[i];
+    }
+    for (i=0; i < nw; i++) {
+	weight[i] = nw*weight[i]/(norm+FLT_EPSILON);
+    }  
+}
+
+void lvweight(float *data,float *weight,float nw,float rect)
+/*< get weights from data using local variance >*/
+{   
+    int i, j, m1, m2;
+    float *one, *two, mean;
+
+    m1 = (nw-1)/2;
+    m2 = (rect-1)/2;
+    one = sf_floatalloc(rect);   
+    two = sf_floatalloc(rect);
+
+    mean = 0.;
+    for (i=0; i < rect; i++) {
+	one[i] = data[m1-m2+i];
+	mean += one[i];
+    }
+    mean = mean/rect;
+    for (i=0; i < nw; i++) {
+	for (j=0; j < rect; j++) {
+	    if ((i-m2+j) >=0 && (i-m2+j) < nw) {
+		two[j] = data[i-m2+j];
+	    } else {
+		two[j] = 0.;
+	    }
+	}
+	weight[i] = 0.;
+	for (j=0; j < rect; j++) {
+	    weight[i] += (two[j]-mean)*(two[j]-mean);
+	}
+	weight[i] = rect*1./(weight[i]+FLT_EPSILON);
+    }
+}
+
 /* 	$Id$	 */
 
 
