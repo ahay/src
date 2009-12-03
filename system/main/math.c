@@ -5,8 +5,7 @@ cos,  sin,  tan,  acos,  asin,  atan,
 cosh, sinh, tanh, acosh, asinh, atanh,
 exp,  log,  sqrt, abs,
 erf,  erfc (for float data),
-arg,  conj (for complex data).
-real, imag (complex data only)
+arg,  conj, real, imag (for complex data).
 
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
