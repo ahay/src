@@ -91,8 +91,8 @@ float jacobi(float** a     /* matrix to rotate */,
 
     if (NULL != v) {
 	for (i=0; i < n; i++) {
-	    aj[i] = v[j][i]*c-v[k][i]*s;
-	    ak[i] = v[j][i]*s+v[k][i]*c;
+	    aj[i] = v[j][i]*c+v[k][i]*s;
+	    ak[i] = v[k][i]*c-v[j][i]*s;
 	}
 	for (i=0; i < n; i++) {
 	    v[j][i] = aj[i];
