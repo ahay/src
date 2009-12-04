@@ -115,10 +115,10 @@ bool hwt3d_cusp(pt3d Tm, /* it-1,ig   ,ih   */
     sHpGm = SF_SIG( jac3d(&To,&Tm,&Hp,&Gm) );
     sHpGp = SF_SIG( jac3d(&To,&Tm,&Hp,&Gp) );
 
-    c = sGmHm*sGmHp==1 ||
-	sGpHm*sGpHp==1 ||
-	sHmGm*sHmGp==1 ||
-	sHpGm*sHpGp==1;
+    c = (bool) (sGmHm*sGmHp==1 ||
+		sGpHm*sGpHp==1 ||
+		sHmGm*sHmGp==1 ||
+		sHpGm*sHpGp==1);
 
     if(c)
 	return true;

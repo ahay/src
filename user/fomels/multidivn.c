@@ -47,7 +47,7 @@ void multidivn_init(int nw       /* number of components */,
     p = sf_floatalloc (n2);
     weight2_init(nw,n,den);
 
-    prec = (NULL != aa);
+    prec = (bool) (NULL != aa);
     if (prec) sf_helicon_init(aa);
 }
 

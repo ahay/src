@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     if (SF_UCHAR != sf_gettype(in)) sf_error("Need unsigned char in input");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_getbool("color",&color)) color=(3==n1);
+    if (!sf_getbool("color",&color)) color=(bool)(3==n1);
 
     if (color) {
 	nc = n1;

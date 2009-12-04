@@ -103,8 +103,10 @@ bool sf_getbools_f (const char* key,/*@out@*/ int* ipar, size_t n)
 }
 
 #ifdef f2cFortran /* f2c adds an extra underscore */
+#ifndef INTEL_COMPILER
 #undef fcallsc
 #define fcallsc(UN,LN) append_fcallsc(_,_,UN,LN)
+#endif
 #endif 
 
 FCALLSCSUB0(sf_init_f,SF_INIT,sf_init)

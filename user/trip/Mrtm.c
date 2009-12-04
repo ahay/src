@@ -51,11 +51,11 @@ int main(int argc, char ** argv) {
     
     /* workspace */
     
-    float * restrict v;    /* velocity field */
-    float * restrict p1;   /* pressure field, current time step */
-    float * restrict p0;   /* pressure field, last time step */
-    float * restrict rp1;  /* receiver pressure field, current time step */
-    float * restrict rp0;  /* receiver pressure field, last time step */
+    float * v;    /* velocity field */
+    float * p1;   /* pressure field, current time step */
+    float * p0;   /* pressure field, last time step */
+    float * rp1;  /* receiver pressure field, current time step */
+    float * rp0;  /* receiver pressure field, last time step */
     float * tr;            /* traces */
     float * tmp;           /* swap */
     float * imag;          /* image */ 

@@ -329,7 +329,7 @@ void xclose (int status)
 	    
 	    if ((option = XGetDefault (pen_display, name, "Stay")) != NULL)
 		if ((option[0] == 'y') || (option[0] == 'Y') || (option[0] == '1'))
-		    persist = 1;
+		    persist = true;
 	    if (!sf_getbool("stay",&persist)) persist=false;
 	    /* open terminal to count keys */
 
@@ -512,7 +512,7 @@ void opendev (int argc, char* argv[])
     
     /* color support */
     dev.num_col = DisplayCells(pen_display, pen_screen);
-    if( dev.num_col <= 2 ) mono=1;
+    if( dev.num_col <= 2 ) mono=true;
 
     if ( pen_visual->class == PseudoColor ){
 	pen_colormap = XCreateColormap(pen_display,

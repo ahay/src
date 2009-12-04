@@ -118,8 +118,8 @@ void opendev (int argc, char* argv[])
     /* background color (black,white,light,dark) 
        'light' and 'dark' cause the background to be transparent (in PNG and GIF) */
 
-    fill = ('l' != color[0] && 'd' != color[0]);
-    light = ('b' != color[0] && 'd' != color[0]);
+    fill = (bool)  ('l' != color[0] && 'd' != color[0]);
+    light = (bool) ('b' != color[0] && 'd' != color[0]);
  
 #ifdef _PDF
     surface = cairo_pdf_surface_create_for_stream(cr_fwrite, NULL, nx, ny);

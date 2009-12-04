@@ -46,7 +46,7 @@ void mask4freq (int nw         /* filter size */,
 	    i=ix + nx*iy;
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj;
-		mm[i] = mm[i] || xx[i-is];
+		mm[i] = (bool) (mm[i] || xx[i-is]);
 	    }
 	}
     }

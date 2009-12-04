@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 	}
 	
 	pclip=99.;
-	eclip = !sf_getfloat("clip",&clip);
+	eclip = (bool) (!sf_getfloat("clip",&clip));
 	/* data clip */
 	if (eclip) {	    
 	    clip = 0.;
@@ -176,9 +176,9 @@ int main(int argc, char* argv[])
 	/* if y, draw scalebar */	
     }
     if (scalebar) {
-	nomin = !sf_getfloat("minval",&barmin);
+	nomin = (bool) (!sf_getfloat("minval",&barmin));
 	/* minimum value for scalebar (default is the data minimum) */
-	nomax = !sf_getfloat("maxval",&barmax);
+	nomax = (bool) (!sf_getfloat("maxval",&barmax));
 	/* maximum value for scalebar (default is the data maximum) */
 	
 	barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
@@ -204,8 +204,8 @@ int main(int argc, char* argv[])
 	    bar = sf_input(barfile);
 	    if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
 
-	    if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);
-	    if (nomax) nomax = !sf_histfloat(bar,"maxval",&barmax);
+	    if (nomin) nomin = (bool) (!sf_histfloat(bar,"minval",&barmin));
+	    if (nomax) nomax = (bool) (!sf_histfloat(bar,"maxval",&barmax));
 	}
     }
 

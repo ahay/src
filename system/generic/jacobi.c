@@ -39,7 +39,8 @@ void jacobi_close(void)
 }
 
 float jacobi(float** a     /* matrix to rotate */, 
-	     int j , int k /* indeces (k > j) */) 
+	     int j , int k /* indeces (k > j) */,
+             float ** v    /* eigenvalues */) 
 /*< Jacobi rotation >*/
 {
     int i;
@@ -85,6 +86,17 @@ float jacobi(float** a     /* matrix to rotate */,
 	    a[i][k] = ak[i];
 	} else {
 	    a[k][i] = ak[i];
+	}
+    }
+
+    if (NULL != v) {
+	for (i=0; i < n; i++) {
+	    aj[i] = v[j][i]*c-v[k][i]*s;
+	    ak[i] = v[j][i]*s+v[k][i]*c;
+	}
+	for (i=0; i < n; i++) {
+	    v[j][i] = aj[i];
+	    v[k][i] = ak[i];
 	}
     }
 

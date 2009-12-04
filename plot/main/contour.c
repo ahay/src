@@ -55,7 +55,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("max1",&max1)) max1=o1+(n1-1)*d1; /* maximum on 1st axis */
     if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2; /* maximum on 2nd axis */
 
-    hasc = (NULL != (cfilename = sf_getstring("cfile")));
+    hasc = (bool) (NULL != (cfilename = sf_getstring("cfile")));
     /* contours in a file */
 
     if (hasc) {
@@ -96,9 +96,9 @@ int main (int argc, char* argv[])
 	NULL == sf_getstring("barlabel")) scalebar = false;
     /* scale bar label */
     if (scalebar) {
-	nomin = !sf_getfloat("minval",&bmin);
+	nomin = (bool) (!sf_getfloat("minval",&bmin));
 	/* minimum value for scalebar (default is the data minimum) */
-	nomax = !sf_getfloat("maxval",&bmax);
+	nomax = (bool) (!sf_getfloat("maxval",&bmax));
 	/* maximum value for scalebar (default is the data maximum) */
     }
 

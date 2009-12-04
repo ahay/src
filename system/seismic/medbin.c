@@ -46,9 +46,9 @@ void medbin_init (float **coord       /* coordinates [nd][2] */,
     for (id = 0; id < nd; id++) {
 	i1 = 0.5 + (coord[id][0] - o1)/d1;
 	i2 = 0.5 + (coord[id][1] - o2)/d2;
-	m[id] = 
-	    (i1 >= 0) && (i1 < n1) &&    
-	    (i2 >= 0) && (i2 < n2);
+	m[id] = (bool)
+	    ((i1 >= 0) && (i1 < n1) &&    
+	     (i2 >= 0) && (i2 < n2));
 	if (m[id]) {
 	    im = i2*n1+i1;
 	    ct[im]++;

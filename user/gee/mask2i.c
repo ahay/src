@@ -34,7 +34,7 @@ void maski (int niter       /* number of iterations */,
 
     mask = sf_boolalloc(nx);
     for (ix=0; ix < nx; ix++) {
-	mask[ix] = known[ix];
+	mask[ix] = (bool) known[ix];
     }
 
     sf_mask_init(mask);

@@ -619,8 +619,8 @@ static void make_baraxis (float min, float max)
 	    baraxis->format="%1.5g";
     }
 
-    modify = (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
-	      !sf_getfloat ("obarnum", &(baraxis->num0)));
+    modify = (bool) (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
+		     !sf_getfloat ("obarnum", &(baraxis->num0)));
 
     baraxis->ntic = vp_optimal_scale(baraxis->ntic, 
 				     modify,
@@ -672,8 +672,8 @@ static void make_axes (void)
 		inch1/(aspect*labelsz);
 	/* first axis ticmarks */
 
-	modify = (!sf_getfloat ("d1num", &(axis1->dnum)) ||
-		  !sf_getfloat ("o1num", &(axis1->num0)));
+	modify = (bool) (!sf_getfloat ("d1num", &(axis1->dnum)) ||
+			 !sf_getfloat ("o1num", &(axis1->num0)));
  
 	axis1->ntic = vp_optimal_scale(axis1->ntic,
 				       modify,
@@ -706,8 +706,8 @@ static void make_axes (void)
 		inch2/(aspect*labelsz);
 	/* number of tickmarks on the second axis */
 
-	modify = (!sf_getfloat ("d2num", &(axis2->dnum)) ||
-		  !sf_getfloat ("o2num", &(axis2->num0)));
+	modify = (bool) (!sf_getfloat ("d2num", &(axis2->dnum)) ||
+			 !sf_getfloat ("o2num", &(axis2->num0)));
 
 	axis2->ntic = vp_optimal_scale(axis2->ntic,
 				       modify,
@@ -738,8 +738,8 @@ static void make_axes (void)
 	    axis3->ntic = inch3/(aspect*labelsz);
 	/* third axis tickmarks */
 
-	modify = (!sf_getfloat ("d3num", &(axis3->dnum)) ||
-		  !sf_getfloat ("o3num", &(axis3->num0)));
+	modify = (bool) (!sf_getfloat ("d3num", &(axis3->dnum)) ||
+			 !sf_getfloat ("o3num", &(axis3->num0)));
  
 	axis3->ntic = vp_optimal_scale(axis3->ntic,
 				       modify,
@@ -1491,7 +1491,7 @@ void vp_frame(void)
 	}
 
 	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel1",&need))
-	    need = (NULL != label1);
+	    need = (bool) (NULL != label1);
 	/* to put numbers at frame ends */
 
 	if (need) {
@@ -1533,7 +1533,7 @@ void vp_frame(void)
 	}
 
 	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel2",&need))
-	    need = (NULL != label2);
+	    need = (bool) (NULL != label2);
 	/* to put numbers at frame ends */
 	 
 	if (need) {
@@ -1571,7 +1571,7 @@ void vp_frame(void)
 	}
 	
 	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel3",&need))
-	    need = (NULL != label3);
+	    need = (bool) (NULL != label3);
 	/* to put numbers at frame ends */
 
 	if (need) {

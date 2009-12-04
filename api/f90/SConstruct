@@ -22,7 +22,7 @@ if 'f90' in env.get('API',[]) and env.has_key('F90'):
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(CPPDEFINES=['GFORTRAN'],F90FLAGS=' -J${SOURCE.dir}')
     elif F90base == 'ifort':
-        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
+        env.Append(CPPDEFINES=['INTEL_COMPILER'],F90FLAGS=' -module ${SOURCE.dir}')
 
     env.Object('fortran.o','fortran.c')
     obj = env.Object('rsf.f90')

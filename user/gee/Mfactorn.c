@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     sf_floatread(x,ntxy,mask);
 
     for (i=0; i < ntxy; i++) {
-	mm[i] = (x[i] != 0.);
+	mm[i] = (bool) (x[i] != 0.);
     }
 
     sf_floatread(x,ntxy,in);

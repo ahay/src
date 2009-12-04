@@ -38,9 +38,9 @@ copyright holder.
 #define VERB 
 */
 
-void step24_forward(float * restrict tgt_p, 
-		    float * restrict src_p, 
-		    float * restrict v,
+void step24_forward(float * tgt_p, 
+		    float * src_p, 
+		    float * v,
 		    int nz, int nx,
 		    float rz, float rx, float s) 
 /*< step forward using 2,4 scheme >*/

@@ -220,7 +220,7 @@ void sf_smooth (sf_triangle tr  /* smoothing object */,
 /*< apply triangle smoothing >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
-    doubint (tr->np,tr->tmp,box || der);
+    doubint (tr->np,tr->tmp,(bool) (box || der));
     triple (o,d,tr->nx,tr->nb,x,tr->tmp,box);
 }
 
@@ -232,7 +232,7 @@ void sf_smooth2 (sf_triangle tr  /* smoothing object */,
 /*< apply adjoint triangle smoothing >*/
 {
     triple2 (o,d,tr->nx,tr->nb,x,tr->tmp,box);
-    doubint2 (tr->np,tr->tmp,box || der);
+    doubint2 (tr->np,tr->tmp,(bool) (box || der));
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 

@@ -147,7 +147,7 @@ int
 main (int argc,char **argv)
 {
     int n1,n2,n1tic,n2tic,
-	i1,i2,grid1,grid2,style,
+	i1,i2,style,
 	n1c,n2c,i1beg,i1end,i2beg,i2end,i1c,i2c,
 	nz,iz,i1step,i2step,
 	xbox,ybox,wbox,hbox,
@@ -157,6 +157,7 @@ main (int argc,char **argv)
 	imageOutOfDate,winwidth=-1,winheight=-1,
 	showloc=0,
 	lwidth,lheight,lx,ly; /* BEREND */
+    gridcode grid1, grid2;
     bool balance, verbose, blockinterp, legend;
 
     int base;

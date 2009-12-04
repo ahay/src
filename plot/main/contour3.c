@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 	max1 = zi;
     }
 
-    hasc = (NULL != (cfilename = sf_getstring("cfile")));
+    hasc = (bool) (NULL != (cfilename = sf_getstring("cfile")));
     /* contours in a file */
 
     if (hasc) {
@@ -181,9 +181,9 @@ int main(int argc, char* argv[])
 	!sf_getbool ("scalebar",&scalebar)) scalebar = false;
     /* if y, draw scalebar */
     if (scalebar) {
-	nomin = !sf_getfloat("minval",&barmin);
+	nomin = (bool) (!sf_getfloat("minval",&barmin));
 	/* minimum value for scalebar (default is the data minimum) */
-	nomax = !sf_getfloat("maxval",&barmax);
+	nomax = (bool) (!sf_getfloat("maxval",&barmax));
 	/* maximum value for scalebar (default is the data maximum) */
 
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;

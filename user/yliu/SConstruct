@@ -3,8 +3,8 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-atm1 atm2 bilstack difference dip2 doeps domf dominantf donf dowmf
-duwt dwt97 epsf fkoclet fkoclet3 fourmis2 initial kuwahara locorr
+atm1 atm2 bilstack difference doeps domf dominantf donf dowmf duwt
+dwt97 epsf fkoclet fkoclet3 fourmis2 initial kuwahara locorr
 lpfdenoise1 lpfdenoise2 lrmf lum lum2 lumsmoother lumsharpener mean mf
 mlm mtm mlwm multiple nonloc oclet pwcsemb pwd2 pwsfault pwsfault3
 pwsmooth pwsmooth3 saltpepper sclet seisavf seislet97 seismis2

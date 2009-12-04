@@ -91,7 +91,7 @@ if dnum=0., an optimal linear scale is estimated
 	if (onum+(nopt-1)*dnum > num2) nopt--;
     }
 
-    nopt = vp_optimal_scale(nopt,dnum==0.,true, "%1.5g",
+    nopt = vp_optimal_scale(nopt,(bool) (dnum==0.),true, "%1.5g",
 			    num1, num2, &onum, &dnum, &maxstrlen);
 
     /* figure out the tic mark spacing */

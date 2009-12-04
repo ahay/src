@@ -163,8 +163,8 @@ def check_all(context):
     jpeg(context) # FDNSI
     blas(context) # FDNSI
     mpi (context) # FDNSI
-    omp (context) # FDNSI
     pthreads (context) # FDNSI
+    omp (context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -238,6 +238,9 @@ def cc(context):
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
+
+    if string.rfind(CC,'icc') >= 0:
+        intel(context)
 
     context.Message("checking if %s works ... " % CC)
     res = context.TryLink(text,'.c')
@@ -1011,17 +1014,19 @@ def omp(context):
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
     flags = context.env.get('CCFLAGS','')
+    lflags = context.env.get('LINKFLAGS','')
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
         LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
+        LINKGLAGS = lflags
     elif icc:
-        LIBS.append('guide')
-        LIBS.append('pthread')
         CCFLAGS = flags + ' -openmp -D_OPENMP'
+        LINKFLAGS = lflags + ' -openmp' 
     else:
         CCFLAGS = flags
+        LINKFLAGS = lflags
 
     text = '''
     #include <omp.h>
@@ -1034,8 +1039,10 @@ def omp(context):
     return 0;
     }
     '''
+
     context.env['LIBS'] = LIBS
     context.env['CCFLAGS'] = CCFLAGS
+    context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
@@ -1045,11 +1052,9 @@ def omp(context):
         need_pkg('omp', fatal=False)
         if gcc:
             LIBS.pop()
-        if icc:
-            LIBS.pop()
-            LIBS.pop()
         context.env['LIBS'] = LIBS
         context.env['CCFLAGS'] = flags
+        context.env['LINKFLAGS'] = lflags
         context.env['OMP'] = False
 
 def pthreads(context):
@@ -1165,6 +1170,7 @@ def cxx(context):
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
            'f77':'f2cFortran',
+           'ifort':'f2cFortran',
            'gfortran':'NAGf90Fortran',
            'gfc':'NAGf90Fortran',
            'f2c':'f2cFortran'}
@@ -1187,12 +1193,15 @@ def f77(context):
         context.env['F77'] = F77
     if F77:
         context.Result(F77)
+        context.env['F77'] = F77
     else:
         context.Result(context_failure)
         need_pkg('f77')
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
+        context.env['FORTRAN'] = F77
+    
     text = '''      program Test
       stop
       end
@@ -1474,6 +1483,7 @@ def options(file):
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')
     opts.Add('F77','The Fortran-77 compiler')
+    opts.Add('FORTRAN','The generic Fortran compiler')
     opts.Add('F77FLAGS','General options that are passed to the F77 compiler',
              '-O2')
     opts.Add('CFORTRAN','Type of the Fortran-77 compiler (for cfortran.h)')

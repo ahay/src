@@ -132,7 +132,7 @@ double sf_vfsr_tomo_cost_func (double *cost_parameters,
     diff = sqrt (diff);
 
     if (diff < data->cost_eps)
-        data->done = TRUE;
+        data->done = true;
 
     *cost_flag = TRUE;
     return diff;
@@ -320,7 +320,7 @@ int main (int argc, char* argv[]) {
     vfsr_user_data.np1 = np1;
     vfsr_user_data.np2 = np2;
     vfsr_user_data.niter = niter;
-    vfsr_user_data.done = FALSE;
+    vfsr_user_data.done = false;
     vfsr_user_data.cost_eps = eps;
 
     vfsr_user_options = vfsr_get_new_defines ();

@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     int j, k, n, n2, i3, n3, iter, niter;
-    float **a=NULL, *e=NULL, s2;
-    sf_file mat=NULL, val=NULL;
+    float **a, *e, **v, s2;
+    sf_file mat, val, eig;
 
     sf_init(argc,argv);
     mat = sf_input("in");
@@ -41,6 +41,20 @@ int main(int argc, char* argv[])
 
     a = sf_floatalloc2(n,n);
     e = sf_floatalloc(n);
+
+    if (NULL != sf_getstring("eig")) {
+	eig = sf_output("eig"); /* eigenvectors */
+	v = sf_floatalloc2(n,n);
+	for (j=0; j < n; j++) {
+	    for (k=0; k < n; k++) {
+		v[j][k] = (j==k)? 1.0:0.0;
+	    }
+	}
+    } else {
+	eig = NULL;
+	v = NULL;
+    }
+
     jacobi_init(n);
 
     for (i3=0; i3 < n3; i3++) {
@@ -50,7 +64,7 @@ int main(int argc, char* argv[])
 	    s2 = 0.;
 	    for (j=0; j < n-1; j++) {
 		for (k=j+1; k < n; k++) {
-		    s2 += jacobi(a,j,k);
+		    s2 += jacobi(a,j,k,v);
 		}
 	    }
 	    sf_warning("iter=%d s2=%g",iter+1,s2);
@@ -61,6 +75,7 @@ int main(int argc, char* argv[])
 	}
 
 	sf_floatwrite(e,n, val);
+	if (NULL != v) 	sf_floatwrite(v[0],n*n, eig);
     }
 
     exit(0);

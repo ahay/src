@@ -75,8 +75,8 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
     /* maximum dip */
 
-  /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter);
+    /* initialize dip estimation */
+    dip3_init(n[0], n[1], n[2], rect, liter, false);
 
     u = sf_floatalloc(n123);
     p = sf_floatalloc(n123);

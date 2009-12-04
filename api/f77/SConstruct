@@ -22,6 +22,8 @@ if 'f77' in env.get('API',[]):
 
     if F77base[:8] == 'gfortran' or F77base[:3] == 'gfc':
         env.Append(CPPDEFINES=['GFORTRAN'])
+    elif F77base == 'ifort':
+        env.Append(CPPDEFINES=['INTEL_COMPILER'])
         
     env.Object('fortran.o','fortran.c')
 

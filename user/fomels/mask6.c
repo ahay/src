@@ -50,7 +50,7 @@ void mask32 (int nw                 /* filter size */,
 
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj1;		  
-		    m1[i] = m1[i] || xx[i-is] || xx[i+nx+is];
+		    m1[i] = (bool) (m1[i] || xx[i-is] || xx[i+nx+is]);
 		}
 	    }
 	}
@@ -63,7 +63,7 @@ void mask32 (int nw                 /* filter size */,
 
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj2;		  
-		    m2[i] = m2[i] || xx[i-is] || xx[i+ny*nx+is];
+		    m2[i] = (bool) (m2[i] || xx[i-is] || xx[i+ny*nx+is]);
 		}
 	    }
 	}
@@ -95,7 +95,7 @@ void mask3 (int nw         /* filter size */,
 	for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj;
-		mm[iy][ix] = mm[iy][ix] || xx[iy+1][ix+is] || xx[iy][ix-is];
+		mm[iy][ix] = (bool) (mm[iy][ix] || xx[iy+1][ix+is] || xx[iy][ix-is]);
 	    }
 	}
     }
@@ -129,7 +129,7 @@ void mask6 (int nw           /* filter size */,
 
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj1;
-		xx[i] = xx[i] || mm[i+nx+is] || mm[i-is];
+		xx[i] = (bool) (xx[i] || mm[i+nx+is] || mm[i-is]);
 	    }
 	}
     }
@@ -144,7 +144,7 @@ void mask6 (int nw           /* filter size */,
 	    
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj2;
-		mm[i] = mm[i] || xx[i+nx+is] || xx[i-is];
+		mm[i] = (bool) (mm[i] || xx[i+nx+is] || xx[i-is]);
 	    }
 	}
     }

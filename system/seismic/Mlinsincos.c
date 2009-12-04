@@ -81,6 +81,10 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("ot",&ot)) ot=0.;
     /* polar angle origin */
 
+    if (!sf_histint(in,"nvx",&nvx)) sf_error("No nvx= in input");
+    if (!sf_histfloat(in,"dvx",&dvx)) sf_error("No dvx= in input");
+    if (!sf_histfloat(in,"ovx",&ovx)) sf_error("No ovx= in input");
+
     if (!sf_getint("nr",&nr)) nr=nvx/2;
     /* number of radius on radial lines */
     if (!sf_getfloat("dr",&dr)) dr=dvx;
@@ -94,10 +98,6 @@ int main(int argc, char* argv[])
 
     /* read input file parameters */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-
-    if (!sf_histint(in,"nvx",&nvx)) sf_error("No nvx= in input");
-    if (!sf_histfloat(in,"dvx",&dvx)) sf_error("No dvx= in input");
-    if (!sf_histfloat(in,"ovx",&ovx)) sf_error("No ovx= in input");
 
     if (!sf_histint(in,"nvy",&nvy)) sf_error("No nvy= in input");
     if (!sf_histfloat(in,"dvy",&dvy)) sf_error("No dvy= in input");

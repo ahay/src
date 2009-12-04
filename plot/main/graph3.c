@@ -76,9 +76,9 @@ int main(int argc, char* argv[])
 	    break;
     }
 
-    nomin = !sf_getfloat("min",&min);
+    nomin = (bool) !sf_getfloat("min",&min);
     /* minimum function value */
-    nomax = !sf_getfloat("max",&max);
+    nomax = (bool) !sf_getfloat("max",&max);
     /* maximum function value */
 
     if (nomin) min = +FLT_MAX;

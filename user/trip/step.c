@@ -38,9 +38,9 @@ copyright holder.
 #include <mpi.h>
 #endif
 
-void step_forward(float * restrict tgt_p, 
-		  float * restrict src_p, 
-		  float * restrict v,
+void step_forward(float * tgt_p, 
+		  float * src_p, 
+		  float * v,
 		  int nz, int nx,
 		  float rz, float rx, float s) 
 /*< step forward >*/
@@ -63,9 +63,9 @@ void step_forward(float * restrict tgt_p,
 }
 
 #ifdef IWAVE_USE_MPI
-void mpi_step_forward(float * restrict p0,
-		      float * restrict p1,
-		      float * restrict v,
+void mpi_step_forward(float * p0,
+		      float * p1,
+		      float * v,
 		      int nz,
 		      int nx,
 		      float rz,

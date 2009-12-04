@@ -161,7 +161,7 @@ bool dijskstra_step(int *i1, int *i2, int *ud, int *lr)
     
     bool success;
 
-    success = (np > 0);
+    success = (bool)(np > 0);
 
     p = sf_pqueue_extract(); 
     np--;

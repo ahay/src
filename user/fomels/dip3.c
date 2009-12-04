@@ -32,7 +32,8 @@ static int n, n1, n2, n3, nn[3];
 
 void dip3_init(int m1, int m2, int m3       /* dimensions */, 
 	       int* rect                    /* smoothing radius [3] */, 
-	       int niter                    /* number of iterations */)
+	       int niter                    /* number of iterations */,
+	       bool verb                    /* verbosity flag */)
 /*< initialize >*/
 {
     n1=m1;
@@ -49,7 +50,7 @@ void dip3_init(int m1, int m2, int m3       /* dimensions */,
     nn[1]=n2;
     nn[2]=n3;
 
-    divn_init (3, n, nn, rect, niter, true);
+    divn_init (3, n, nn, rect, niter, verb);
 }
 
 void dip3_close(void)

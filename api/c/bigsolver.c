@@ -1214,7 +1214,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	}
  
 	if (forget && nfreq != 0) { /* periodic restart */
-	    forget = (0 == (iter+1)%nfreq); 
+	    forget = (bool) (0 == (iter+1)%nfreq); 
 	}
 
 
@@ -1485,7 +1485,7 @@ void sf_left_solver (sf_operator oper   /* linear operator */,
 	}
  
 	if (forget && nfreq != 0) { /* periodic restart */
-	    forget = (0 == (iter+1)%nfreq); 
+	    forget = (bool) (0 == (iter+1)%nfreq); 
 	}
 
 

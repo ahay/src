@@ -34,7 +34,7 @@ float **lowrank(int m, int n,    /* matrix size */
 /*< find low-rank matrix approximation >*/
 {
     int ir, nr, *rs;
-    float **mid;
+    float **mid=NULL;
     
     nr = npk;
 

@@ -240,8 +240,8 @@ static bool cconnect (vp_contour cnt,
     jy = (*iy);
 
     /**** mask ****/
-    mask = !pos || (z[jy][jx] >= 0.   && z[jy][jx+1] >= 0. && 
-		    z[jy+1][jx] >= 0. && z[jy+1][jx+1] >= 0.);
+    mask = (bool) (!pos || (z[jy][jx] >= 0.   && z[jy][jx+1] >= 0. && 
+			    z[jy+1][jx] >= 0. && z[jy+1][jx+1] >= 0.));
 
     if (cnt->south[jy + 1][jx]) {  /* if exiting north */
 	jy++;

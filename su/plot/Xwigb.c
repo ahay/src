@@ -153,13 +153,14 @@ int main (int argc, char *argv[])
 {
     bool verbose, interp;
     int n1,n2,n1tic,n2tic,wt,va,
-	i2,grid1,grid2,style=0,
+	i2,style=0,
 	nz,iz,endian,
 	xbox,ybox,wbox,hbox,
 	xb,yb,wb,hb,
 	x,y,width,height,
 	imageOutOfDate,winwidth=-1,winheight=-1,
 	showloc=0,wigclip;
+    gridcode grid1,grid2;
     float labelsize,titlesize,perc,clip,xcur,bias,
 	d1,f1,d2,f2,*z,*temp,*x2,
 	x1beg,x1end,x2beg,x2end,
@@ -468,9 +469,9 @@ int main (int argc, char *argv[])
 			xDrawAxesBox(dpy,win,
 				x,y,width,height,
 				x1begb,x1endb,0.0,0.0,
-				d1num,f1num,n1tic,grid1,label1,
+				     d1num,f1num,n1tic,grid1,label1,
 				x2begb,x2endb,p2beg,p2end,
-				d2num,f2num,n2tic,grid2,label2,
+				     d2num,f2num,n2tic,grid2,label2,
 				labelfont,title,titlefont,
 				labelcolor,titlecolor,gridcolor,
 				style);

@@ -4,8 +4,8 @@ import configure
 
 progs = '''
 abalance analytical angle angle2 approx bdix beamform blur cflow
-chebvc cpef dealias deblur dijkstra dip diplet dips distance divn dix
-dixshape eikonal eikonalvti erf exgr explanesignoi expsignoi focus
+chebvc cpef dealias deblur dijkstra dip dip2 diplet dips distance divn
+dix dixshape eikonal eikonalvti erf exgr explanesignoi expsignoi focus
 fpow freqest gaussmooth gbeamform interpt iphase kron l1 lineiko locov
 lpf lsfit mffit mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt
 ofilp ofpwd ofpwd2 ofsemb patch pick pick3 plane planemis2 planemis3

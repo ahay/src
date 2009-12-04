@@ -40,7 +40,7 @@ void fixbad (int niter    /* number of iterations */,
 	rabs[iy] = fabsf (rr[iy]);
     rbar = sf_quantile(ny/2,ny,rabs);
     for (iy=0; iy < ny; iy++) 
-	known[iy] = (yy[iy] > 0.) && (fabsf(rr[iy]) < 4. * rbar);
+	known[iy] = (bool) ((yy[iy] > 0.) && (fabsf(rr[iy]) < 4. * rbar));
     mis2 (niter, ny, yy, aa, known, 0., true);
 
     free(rr);

@@ -364,7 +364,7 @@ void opendev (int argc, char* argv[])
 
     if (NULL == (color = sf_getstring("bgcolor"))) color="black";
     /* background color */
-    light = (color[0] == 'w' || color[0] == 'l');
+    light = (bool) (color[0] == 'w' || color[0] == 'l');
 
     /*
      * Allocate space for image 
