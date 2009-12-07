@@ -1020,7 +1020,7 @@ def omp(context):
     if gcc:
         LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
-        LINKGLAGS = lflags
+        LINKFLAGS = lflags
     elif icc:
         CCFLAGS = flags + ' -openmp -D_OPENMP'
         LINKFLAGS = lflags + ' -openmp' 

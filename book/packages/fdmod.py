@@ -79,22 +79,23 @@ def param(par):
     if(not par.has_key('oqx')): par['oqx']=par['ox']
     if(not par.has_key('dqx')): par['dqx']=par['dx']
     
-    par['labelattr']=' '+par['labelattr']+' '
+    par['labelattr']=' '+par['labelattr']+' parallel2=n format2=%3.1f format1=%3.1f '
     
+
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1=%s unit1=%s
-    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           par['labelattr']+' '+custom)
+           par['labelattr']+custom)
 def cgrey3d(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |
@@ -122,8 +123,8 @@ def wgrey(custom,par):
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
-    label1=%s unit1=%s
-    label2=%s unit2=%s
+    label1="\F2 %s\F3" unit1=%s
+    label2="\F2 %s\F3" unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],
@@ -136,8 +137,8 @@ def wgrey(custom,par):
 def cgraph(custom,par):
     return '''
     graph labelrot=n wantaxis=n title="" yreverse=y wherexlabel=t
-    min2=%g max2=%g label2=%s unit2=%s
-    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -148,8 +149,8 @@ def cgraph(custom,par):
 def ccont(custom,par):
     return '''
     contour labelrot=n wantaxis=n title=""
-    min1=%g max1=%g label1=%s unit1=%s
-    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1="\F2 %s\F3"
+    min2=%g max2=%g label2=%s unit2="\F2 %s\F3"
     screenratio=%g screenht=%g wantscalebar=%s
     plotcol=2 plotfat=3
     %s
@@ -162,8 +163,8 @@ def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1=%s unit1=%s
-    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -194,8 +195,8 @@ def egrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
     pclip=100
-    min2=%g max2=%g label2=%s unit2=%s
-    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -207,7 +208,7 @@ def fgrey(custom,par):
     grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min2=%g max2=%g label2=%s unit2=%s
-    label1="f" unit1="Hz"
+    label1="\F2 f\F3" unit1="\F2 Hz\F3"
     screenratio=%g screenht=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['lx'],par['ux'],
