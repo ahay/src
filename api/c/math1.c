@@ -76,13 +76,13 @@ static sf_complex myarg(sf_complex c)
 
 static sf_complex myreal(sf_complex c)
 {
-    c = sf_cmplx(creal(c),0.);
+    c = sf_cmplx(crealf(c),0.);
     return c;
 }
 
 static sf_complex myimag(sf_complex c)
 {
-    c = sf_cmplx(0.,cimag(c));
+    c = sf_cmplx(0.,cimagf(c));
     return c;
 }
 
