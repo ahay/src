@@ -5,10 +5,7 @@
 from rsfproj import *
 import fdmod
 
-ccf='-DNO_BLAS -fopenmp -O2 -g -std=gnu99 -Wall -pedantic'
-lib=['rsf','m','gomp']
-
-Program('AFDM.x',['AFDM.c','fdutil.c','omputil.c'],CCFLAGS=ccf,LIBS=lib)
+Program('AFDM.x',['AFDM.c','fdutil.c','omputil.c'])
 
 # ------------------------------------------------------------
 par = {
