@@ -104,10 +104,10 @@ struct vplot_current_state
 struct color_table_current_state
 {
     int largest;
-    int count[MAX_COL + 1];
-    int red[MAX_COL + 1];
-    int green[MAX_COL + 1];
-    int blue[MAX_COL + 1];
+    int count[NPAT];
+    int red[NPAT];
+    int green[NPAT];
+    int blue[NPAT];
 };
 struct dash_state
 {
@@ -229,12 +229,13 @@ main (int argc, char *argv[])
     char command1[40], command2[40];
     int error_count1 = 0;
     int group1 = 0, group2 = 0;
+
     struct pattern_state pstate1;
     struct pattern_state pstate2;
     struct dash_state dstate1;
     struct dash_state dstate2;
-    struct color_table_current_state cstate1;
-    struct color_table_current_state cstate2;
+    struct color_table_current_state *cstate1;
+    struct color_table_current_state *cstate2;
     struct vplot_current_state state1;
     struct vplot_current_state state2;
     const struct vplot_current_state reset_state = {
@@ -291,56 +292,59 @@ main (int argc, char *argv[])
     state1 = reset_state;
     state2 = reset_state;
 
-    cstate1.largest = -1;
+    cstate1 = sf_alloc(1,sizeof(*cstate1));
+    cstate2 = sf_alloc(1,sizeof(*cstate2));
+
+    cstate1->largest = -1;
     for (ii = 0; ii <= MAX_COL; ii++)
     {
-	cstate1.count[ii] = 0;
+	cstate1->count[ii] = 0;
 
-	cstate1.red[ii] = VPLOTDIFF_NOT_INITIALIZED;
-	cstate1.green[ii] = VPLOTDIFF_NOT_INITIALIZED;
-	cstate1.blue[ii] = VPLOTDIFF_NOT_INITIALIZED;
+	cstate1->red[ii] = VPLOTDIFF_NOT_INITIALIZED;
+	cstate1->green[ii] = VPLOTDIFF_NOT_INITIALIZED;
+	cstate1->blue[ii] = VPLOTDIFF_NOT_INITIALIZED;
     }
 
-    cstate1.red[0] = 0;
-    cstate1.green[0] = 0;
-    cstate1.blue[0] = 0;
+    cstate1->red[0] = 0;
+    cstate1->green[0] = 0;
+    cstate1->blue[0] = 0;
 
-    cstate1.red[1] = 0;
-    cstate1.green[1] = 0;
-    cstate1.blue[1] = MAX_GUN;
+    cstate1->red[1] = 0;
+    cstate1->green[1] = 0;
+    cstate1->blue[1] = MAX_GUN;
 
-    cstate1.red[2] = MAX_GUN;
-    cstate1.green[2] = 0;
-    cstate1.blue[2] = 0;
+    cstate1->red[2] = MAX_GUN;
+    cstate1->green[2] = 0;
+    cstate1->blue[2] = 0;
 
-    cstate1.red[3] = MAX_GUN;
-    cstate1.green[3] = 0;
-    cstate1.blue[3] = MAX_GUN;
+    cstate1->red[3] = MAX_GUN;
+    cstate1->green[3] = 0;
+    cstate1->blue[3] = MAX_GUN;
 
-    cstate1.red[4] = 0;
-    cstate1.green[4] = MAX_GUN;
-    cstate1.blue[4] = 0;
+    cstate1->red[4] = 0;
+    cstate1->green[4] = MAX_GUN;
+    cstate1->blue[4] = 0;
 
-    cstate1.red[5] = 0;
-    cstate1.green[5] = MAX_GUN;
-    cstate1.blue[5] = MAX_GUN;
+    cstate1->red[5] = 0;
+    cstate1->green[5] = MAX_GUN;
+    cstate1->blue[5] = MAX_GUN;
 
-    cstate1.red[6] = MAX_GUN;
-    cstate1.green[6] = MAX_GUN;
-    cstate1.blue[6] = 0;
+    cstate1->red[6] = MAX_GUN;
+    cstate1->green[6] = MAX_GUN;
+    cstate1->blue[6] = 0;
 
-    cstate1.red[7] = MAX_GUN;
-    cstate1.green[7] = MAX_GUN;
-    cstate1.blue[7] = MAX_GUN;
+    cstate1->red[7] = MAX_GUN;
+    cstate1->green[7] = MAX_GUN;
+    cstate1->blue[7] = MAX_GUN;
 
-    cstate2.largest = -1;
+    cstate2->largest = -1;
     for (ii = 0; ii <= MAX_COL; ii++)
     {
-	cstate2.count[ii] = 0;
+	cstate2->count[ii] = 0;
 
-	cstate2.red[ii] = cstate1.red[ii];
-	cstate2.green[ii] = cstate1.green[ii];
-	cstate2.blue[ii] = cstate1.blue[ii];
+	cstate2->red[ii] = cstate1->red[ii];
+	cstate2->green[ii] = cstate1->green[ii];
+	cstate2->blue[ii] = cstate1->blue[ii];
     }
 
     dstate1.dashon = 0;
@@ -421,7 +425,7 @@ main (int argc, char *argv[])
 	    c1 = getc (stream1);
 	    if (0 != check_vplot1 (debug1, argv[1],
 				   c1, stream1, &count1, &group1, &state1,
-				   reset_state, &cstate1, &dstate1,
+				   reset_state, cstate1, &dstate1,
 				   &pstate1, &warn, &needtocheck1, command1))
 		break;
 	}
@@ -430,7 +434,7 @@ main (int argc, char *argv[])
 	    c2 = getc (stream2);
 	    if (0 != check_vplot1 (debug2, argv[2],
 				   c2, stream2, &count2, &group2, &state2,
-				   reset_state, &cstate2, &dstate2,
+				   reset_state, cstate2, &dstate2,
 				   &pstate2, &warn, &needtocheck2, command2))
 		break;
 	}
@@ -451,8 +455,8 @@ main (int argc, char *argv[])
 	 */
 	if (0 !=
 	    check_state (command1, command2, argv[1], argv[2],
-			 count_string1, &state1, &cstate1, &dstate1,
-			 &pstate1, count_string2, &state2, &cstate2,
+			 count_string1, &state1, cstate1, &dstate1,
+			 &pstate1, count_string2, &state2, cstate2,
 			 &dstate2, &pstate2, &warn, &needtocheck1, &needtocheck2))
 	    error_count1++;
 
@@ -542,8 +546,9 @@ main (int argc, char *argv[])
 		}
 		error_count1 +=
 		    check_vplot2ras (debug1, argv[1], c1, stream1, &count1,
-				     &cstate1,
-				     debug2, argv[2], c2, stream2, &count2, &cstate2);
+				     cstate1,
+				     debug2, argv[2], c2, stream2, &count2, 
+				     cstate2);
 
 		state1.move1 = VPLOTDIFF_NOT_INITIALIZED;
 		state1.move2 = VPLOTDIFF_NOT_INITIALIZED;
@@ -2927,3 +2932,4 @@ check_vplot2simple (int c,
 
     return errorcount;
 }
+
