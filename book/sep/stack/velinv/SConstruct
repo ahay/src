@@ -86,14 +86,12 @@ Flow('flt pre','shifts2 scan',
 Flow('inv','shifts flt','add mode=p ${SOURCES[1]} | stack axis=3 norm=n')
 Flow('cmp2','scan1',iscan(0,1,1,0) + ' adj=1')
 
-scale = 6.382e-09 # 1/(cmp*cmp)
-
 Result('cgiter','err0 err1',
        '''
-       cat axis=2 ${SOURCES[1]} | scale dscale=%g |
-       graph min2=0 max2=0.4 labelsz=10 titlesz=12 dash=1,0
+       cat axis=2 ${SOURCES[1]} | scale axis=2 |
+       graph min2=0 max2=1.1 labelsz=10 titlesz=12 dash=1,0
        title="Iterative Convergence" unit1= unit2=
-       ''' % scale)
+       ''')
 
 Result('dircvv','cmp vscan','SideBySideAniso')
 
