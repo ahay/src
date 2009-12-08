@@ -23,7 +23,7 @@ Result('wiggle0','Txx.HH','wiggle')
 Flow('windowed','Txx.HH','window n2=10 min1=0.4 max1=0.8')
 
 plotpar = '''
-transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n
+transp=y poly=y yreverse=y pclip=100 nc=20 allpos=n
 '''
 
 for plot in ('wiggle','contour','grey'):
