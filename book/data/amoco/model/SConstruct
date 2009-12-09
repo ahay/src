@@ -12,8 +12,15 @@ Flow('velmodel','velmodel.hh', '''dd form=native | scale rscale=.001 | put
     unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model  
     ''')
 
-Result('velmodel','''window $SOURCE  max1=4 | grey  scalebar=y
-                     color=I gainpanel=a allpos=y screenratio=.18 screenht=2
-                     scalebar=y barlabel=\(km/s\) title=Amoco\ Velocity\ Model 
-                     labelsz=4 titlesz=6 wheretitle=t''')
+Result('velmodel',
+       '''
+       grey  scalebar=y barreverse=y
+       color=j allpos=y bias=1.9
+       screenwd=8.8 screenht=1.6
+       barlabel=" " barunit=km/s
+       title="Amoco Velocity Model" 
+       labelsz=4 titlesz=6
+       wheretitle=t 
+       ''')
+
 End()
