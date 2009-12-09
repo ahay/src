@@ -115,6 +115,6 @@ Plot('normtim',
      label2="1000000 CPU time/N" unit2=s label1="N/1000000" unit1=
      min2=0 max2=2
      ''')
-Result('times','tim normtim','SideBySideIso')
+Plot('times','tim normtim','SideBySideIso')
 
 End()
