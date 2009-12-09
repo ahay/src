@@ -25,7 +25,7 @@
 int main (int argc, char* argv[])
 {
     float den, inten, max, *dat;
-    int n1, n2, point, i, j;
+    int n1, n2, point, i, j, seed;
     bool rep, noise, allpos;
     sf_file in, out;
 
@@ -64,7 +64,10 @@ int main (int argc, char* argv[])
 
     dat = sf_floatalloc (n1*n2);
 
-    srand((unsigned)time(NULL));
+    if (!sf_getint("seed",&seed)) seed = time(NULL);
+    /* random seed */
+
+    srand((unsigned long) seed);
 
     if (noise) {
         max=0.;

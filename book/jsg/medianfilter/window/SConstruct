@@ -14,7 +14,8 @@ Flow('model','model0.dat',
      ''',stdin=0)
 
 # Add saltpepper white noise
-Flow('noise0','model','transp | saltpepper den=5 inten=2 |  transp')
+Flow('noise0','model',
+     'transp | saltpepper seed=122009 den=5 inten=2 |  transp')
 
 for yy in range(9):
     title = 'mf%d' % (3+yy*2)

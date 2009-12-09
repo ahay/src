@@ -18,7 +18,7 @@ Result('sigmoid1','sigmoid',
 Flow('noise','sigmoid',
      '''
      noise seed=2008 var=3.e-7 |
-     saltpepper den=50 inten=0.
+     saltpepper den=50 inten=0. seed=122009
      ''')
 Result('gnoise1','noise',
        '''

@@ -28,7 +28,7 @@ Result('smodel',
        ''')
 
 # Add saltpepper white noise
-Flow('noise0','model','transp | saltpepper den=5 inten=2 | transp')
+Flow('noise0','model','transp | saltpepper seed=122009 den=5 inten=2 | transp')
 Result('noise0',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n 
@@ -46,7 +46,7 @@ Result('snoise0',
 
 # Add saltpepper color noise ()
 Flow('noise1','model',
-     'transp | saltpepper den=5 inten=2 | transp | bandpass fhi=100')
+     'transp | saltpepper den=5 inten=2 seed=2009 | transp | bandpass fhi=100')
 Result('noise1',
        '''
        wiggle transp=y yreverse=y color=n wanttitle=n
