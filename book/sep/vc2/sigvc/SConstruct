@@ -24,7 +24,7 @@ velcon.velcon('sig',
 
 Plot('vel','sig-vlf2',
      '''
-     window min3=1 n3=1 | contour nc=50 title="Velocity Continuation"
+     window min3=1 n3=1 | contour nc=25 title="Velocity Continuation"
      ''')
 
 Flow('mva','sig-cip',
@@ -33,7 +33,7 @@ Flow('mva','sig-cip',
 Plot('mva',
      '''
      window min3=1 n3=1 |
-     contour nc=50 title="Conventional Velocity Analysis"
+     contour nc=25 title="Conventional Velocity Analysis"
      ''')
 
 Result('sig-mva1','vel mva','SideBySideAniso')

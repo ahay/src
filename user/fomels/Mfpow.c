@@ -22,6 +22,7 @@ static float newton(float bi, int imin, int imax, const float* spec, const float
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int n1, n2, i1, i2, imin, imax, iter, niter, ib, nb, i;
     float fmin, fmax, d1, *spec, bi, *b, *w, semb, db, deltab, b0, bmin, bmax, oldsemb;
     float omega, rho, eps, tol, smax;
@@ -58,6 +59,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("tol",&tol)) tol=SF_EPS;
     /* accuracy tolerance for beta */
+
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
 
     imin = SF_MAX(floorf(0.5+fmin/d1),0);
     imax = SF_MIN(floorf(1.5+fmax/d1),n1);
@@ -115,7 +119,7 @@ int main(int argc, char* argv[])
 	    bi += deltab;
 	    oldsemb = semb;
 
-	    sf_warning("beta=%g semb=%g",bi,semb);
+	    if (verb) sf_warning("beta=%g semb=%g",bi,semb);
 	    if (fabsf(deltab) < tol) break;
 	}
 

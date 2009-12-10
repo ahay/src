@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool phase;
     int i1, n1, iw, nt, nw, i2, n2, rect, niter;
     float t, d1, w, w0, dw, *trace, *bs, *bc, *ss, *cc;
     sf_file time, timefreq;
@@ -69,6 +70,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of inversion iterations */
 
+    if (!sf_getbool("phase",&phase)) phase=false;
+    /* output phase instead of amplitude */
+
     divn_init(1,n1,&n1,&rect,niter,false);
 
     for (i2=0; i2 < n2; i2++) {
@@ -94,7 +98,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    for (i1=0; i1 < n1; i1++) {
-		ss[i1] = hypotf(ss[i1],cc[i1]);
+		ss[i1] = phase? atan2f(ss[i1],cc[i1]): hypotf(ss[i1],cc[i1]);
 	    }
 
 	    sf_floatwrite(ss,n1,timefreq);

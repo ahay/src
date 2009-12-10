@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int dim, dim1, i, n1, i1, i2, n2, niter, n[SF_MAX_DIM]; 
     int rect[SF_MAX_DIM];
     char key[6];	
@@ -56,10 +57,13 @@ int main(int argc, char* argv[])
         }
     }
 
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity */
+
     if (!sf_getint("niter",&niter)) niter=20;
     /* maximum number of iterations */
 
-    divn_init(dim1, n1, n, rect, niter, true);
+    divn_init(dim1, n1, n, rect, niter, verb);
 	
     one = sf_floatalloc(n1);
     two = sf_floatalloc(n1);
@@ -67,6 +71,8 @@ int main(int argc, char* argv[])
     rat2 = sf_floatalloc(n1);
 
     for (i2=0; i2 < n2; i2++) {
+	sf_warning("record %d of %d",i2+1,n2);
+
 	sf_floatread(one,n1,in);
         sf_floatread(two,n1,other);
 
