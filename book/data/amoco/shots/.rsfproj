@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfscale', 'sfwindow', 'sfgrey']
+data=['data/Amoco/shots.hh']
+size=  151388160
