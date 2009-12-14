@@ -3,7 +3,11 @@
 Takes: rect1=1 rect2=1 ...
 
 rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+
+Theory in Appendix B of:
+S. Fomel, 2009, 
+Velocity analysis using AB semblance: Geophysical Prospecting, v. 57, 311-321.
+Reproducible version in RSFSRC/book/jsg/avo */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
