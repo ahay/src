@@ -318,7 +318,7 @@ def random(gg,mask,ff,aa,ru,rv,par):
     part['rv']=rv # characteristic length
     gfield.execute(gg+'_',part)
     Flow(gg,[gg+'_',mask],'add mode=p ${SOURCES[1]}')
-    Result(gg,fdmod.cgrey('color=f',par))    
+    Result(gg,fdmod.cgrey('color=F',par))    
     
 # ------------------------------------------------------------
 def model(vo,vv,rm,gg,gm,par):
