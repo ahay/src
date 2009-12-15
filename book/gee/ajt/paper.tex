@@ -1928,12 +1928,12 @@ An example is shown in Figure \ref{fig:cunha}.
 A module that does reverse moveout is \texttt{hypotenusei}.
 Given a zero-offset trace, it makes another at non-zero offset.
 The adjoint does the usual normal moveout correction.
-\opdex{hypotenusei}{inverse moveout}{42}{73}{filt/proc}
+\opdex{hypotenusei}{inverse moveout}{42}{73}{system/seismic}
 (My 1992 textbook (PVI) illustrates many additional features of normal moveout.)
 A companion routine \texttt{imospray}
 loops over offsets and makes a trace for each.
 The adjoint of {\tt imospray} is the industrial process of moveout and stack.
-\opdex{imospray}{inverse NMO spray}{47}{62}{filt/proc}
+\opdex{imospray}{inverse NMO spray}{47}{62}{system/seismic}
 
 \par
 This is the first time we have built an operator (moveout and stack)
