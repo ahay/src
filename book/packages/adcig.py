@@ -163,7 +163,7 @@ def egrey(custom,par):
             par['ut'],
             par['eratio'],par['eheight'],
             par['epoint1'],par['epoint2'],
-            custom )
+            par['labelattr']+' '+custom )
 
 # ------------------------------------------------------------
 # z-lx-tau
@@ -183,6 +183,6 @@ def sgrey(custom,par):
             par['ut'],
             par['sratio'],par['sheight'],
             par['spoint1'],par['spoint2'],
-            custom )
+            par['labelattr']+' '+custom )
 
 
