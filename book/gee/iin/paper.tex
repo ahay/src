@@ -803,7 +803,7 @@ that the operator does the same calculation that its adjoint does.
 Any operator of the form $\bold A'\bold A$ is self-adjoint because
 $(\bold A'\bold A)'=\bold A'\bold A''=\bold A'\bold A$. )
 \par
-\opdex{laplac2}{Laplacian in 2-D}{34}{78}{user/fomels} 
+\opdex{laplac2}{Laplacian in 2-D}{34}{78}{system/generic} 
 Subroutine \texttt{lapfill()}
 \vpageref{lst:lapfill} is the same idea as \texttt{mis1()}
 \vpageref{lst:mis1} except that 
@@ -812,7 +812,7 @@ laplacian
 implemented by module \texttt{laplac2} \vpageref{lst:laplac2}. 
 
 
-\moddex{lapfill}{Find 2-D missing data}{63}{76}{user/fomels}
+\moddex{lapfill}{Find 2-D missing data}{63}{76}{system/generic}
 
 \par
 Subroutine \texttt{lapfill()}
@@ -950,8 +950,8 @@ I used the gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
 % I used the \bx{roughening operator} \texttt{rufftri2()} \vpageref{lst:rufftri2},
 % which is an impulse minus a broad smoothing operator.
 The solver is \texttt{grad2fill()}.
-\moddex{igrad2}{finite-difference gradient}{45}{57}{user/fomels}
-\moddex{grad2fill}{low cut missing data}{52}{60}{user/fomels}
+\moddex{igrad2}{finite-difference gradient}{45}{57}{system/generic}
+\moddex{grad2fill}{low cut missing data}{52}{60}{system/generic}
 
 %\par
 %Having a roughener with an adjustable width in the smoothing operator
