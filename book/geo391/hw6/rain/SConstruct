@@ -166,7 +166,7 @@ for case in ('trian','laplace'+str(nmax),'shape'+str(nmax)):
          math a1=${SOURCES[1]} a2=${SOURCES[2]}
          output="input/sqrt(a1*a2)" |
          dd form=ascii --out=$TARGET
-         format="label=correlation=%g"
+         format="label=correlation=%7.5g"
          ''',stdout=0)
     Plot(cor,cor+'.asc',
          'box x0=5.5 y0=9 xt=0 par=$SOURCE',stdin=0)
