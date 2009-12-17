@@ -1,0 +1,67 @@
+import os, sys, re, string, glob
+rsfsrc = os.environ.get('RSFSRC','../..')
+sys.path.append(rsfsrc)
+import configure
+
+
+progs = '''
+heatgmres1
+'''
+
+try:  # distributed version
+    Import('env root libdir bindir')
+    env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+except: # local version
+    env = configure.Debug()
+    root = None
+    SConscript(os.path.join(rsfsrc,'api/c/SConstruct'))
+    src = glob.glob('[a-z]*.c')
+
+# Temporary solution - use MPI compiler for all sources
+petscdir = env.get('PETSCDIR')
+
+if petscdir:
+    mpicc = env.get('MPICC')
+    petscpath = env.get('PETSCPATH',[])
+    petsclibpath = env.get('PETSCLIBPATH',[])
+    petsclibs = env.get('PETSCLIBS',[])
+    if mpicc:
+        env.Replace(CC=mpicc)
+
+    env.Replace(LIBS=petsclibs)
+    env.Prepend(CPPPATH=petscpath,
+                LIBPATH=petsclibpath)
+
+    env.Prepend(CPPPATH=[os.path.join(rsfsrc,'include')],
+                LIBPATH=[os.path.join(rsfsrc,'lib')],
+                LIBS=['rsf'])
+
+    for source in src:
+        inc = env.Include(source,prefix='')
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+    
+    mains = []
+    mains = Split(progs)
+    for prog in mains:
+        sources = ['M' + prog]
+        configure.depends(env,sources,'M'+prog)
+        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        if root:
+            env.Install(bindir,prog)
+
+    ######################################################################
+    # SELF-DOCUMENTATION
+    ######################################################################
+    if root:
+        user = os.path.basename(os.getcwd())
+        main = 'sf%s.py' % user
+
+        docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+        env.Depends(docs,'#/framework/rsfdoc.py')	
+
+        doc = env.Docmerge(main,docs)
+        env.Install(libdir,doc)
+

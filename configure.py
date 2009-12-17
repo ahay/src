@@ -999,60 +999,60 @@ def petsc(context):
 
     petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
     petscarch = os.environ.get('PETSC_ARCH')
-    if petscdir:
-        petscpath = [os.path.join(petscdir,'include')]
-        if petscarch:
-            petsclibpath = [os.path.join(os.path.join(petscdir,petscarch),'lib')]
-            petscpath.append(os.path.join(os.path.join(petscdir,petscarch),'include'))
-        else:
-            petsclibpath = [os.path.join(petscdir,'lib')]
-        petsclibs =  ['petscksp','petscmat','petscdm','petscvec','petsc']
-        for lib in ['mpiuni','scalapack','flapack','blacs','fblas']:
-            if glob.glob(os.path.join(petsclibpath[0],"lib%s.*" % lib)):
-                petsclibs.append(lib)
-        if WhereIs('gfortran'):
-            petsclibs.append('gfortran')
-        elif WhereIs('g77'):
-            petsclibs.append('g2c')
+    if not petscdir:
+	return
 
-        oldcc = context.env.get('CC')
-        mpicc = context.env.get('MPICC')
-        if mpicc:
-            context.env['CC'] = mpicc
+    petscpath = [os.path.join(petscdir,'include')]
+    if petscarch:
+        petsclibpath = [os.path.join(os.path.join(petscdir,petscarch),'lib')]
+        petscpath.append(os.path.join(os.path.join(petscdir,petscarch),'include'))
+    else:
+        petsclibpath = [os.path.join(petscdir,'lib')]
+    petsclibs =  ['petscksp','petscmat','petscdm','petscvec','petsc']
+    for lib in ['mpiuni','scalapack','flapack','blacs','fblas']:
+        if glob.glob(os.path.join(petsclibpath[0],"lib%s.*" % lib)):
+            petsclibs.append(lib)
+    if WhereIs('gfortran'):
+        petsclibs.append('gfortran')
+    elif WhereIs('g77'):
+        petsclibs.append('g2c')
 
-        xlibpath = context.env.get('XLIBPATH')
-        if xlibpath:
-            for path in xlibpath:
-                petsclibpath.append(path)
-        xlibs = context.env.get('XLIBS')
-        if xlibs:
-            for lib in xlibs:
-                petsclibs.append(lib)
+    oldcc = context.env.get('CC')
+    mpicc = context.env.get('MPICC')
+    if mpicc:
+        context.env['CC'] = mpicc
 
-        context.env['CPPPATH'] = oldpath + [petscpath,] 
-        context.env['LIBPATH'] = oldlibpath + [petsclibpath,]
-        context.env['LIBS'] = petsclibs
+    xlibpath = context.env.get('XLIBPATH')
+    if xlibpath:
+        for path in xlibpath:
+            petsclibpath.append(path)
+    xlibs = context.env.get('XLIBS')
+    if xlibs:
+        for lib in xlibs:
+            petsclibs.append(lib)
 
-        text = '''
-        #include <petscksp.h>
-        int main(int argc,char* argv[]) {
-        KSP Solver; Mat A;
-        MPI_Comm comm = MPI_COMM_WORLD;
-        PetscInitialize (&argc, &argv, 0, 0);
-        MatCreate (comm, &A);
-        KSPCreate (comm, &Solver);
-        KSPSetType (Solver, KSPGMRES);
-        PetscFinalize ();
-        }\n'''
-        res = context.TryLink(text,'.c')
+    context.env['CPPPATH'] = oldpath + [petscpath,] 
+    context.env['LIBPATH'] = oldlibpath + [petsclibpath,]
+    context.env['LIBS'] = petsclibs
 
-        context.env['CPPPATH'] = oldpath
-        context.env['LIBPATH'] = oldlibpath
-        context.env['LIBS'] = oldlibs
-        context.env['CC'] = oldcc
-    else: # PETSc not found
-        res = None
+    text = '''
+    #include <petscksp.h>
+    int main(int argc,char* argv[]) {
+    KSP Solver; Mat A;
+    MPI_Comm comm = MPI_COMM_WORLD;
+    PetscInitialize (&argc, &argv, 0, 0);
+    MatCreate (comm, &A);
+    KSPCreate (comm, &Solver);
+    KSPSetType (Solver, KSPGMRES);
+    PetscFinalize ();
+    }\n'''
+    res = context.TryLink(text,'.c')
 
+    context.env['CPPPATH'] = oldpath
+    context.env['LIBPATH'] = oldlibpath
+    context.env['LIBS'] = oldlibs
+    context.env['CC'] = oldcc
+ 
     if res:
         context.Result(res)
         context.env['PETSCDIR'] = petscdir
