@@ -70,8 +70,8 @@ Flow('ro',None,
      add add=1800000
      ''' % par)
 
-Plot('vp',fdmod.cgrey('bias=3       pclip=100',par))
-Plot('ro',fdmod.cgrey('bias=2800000 pclip=100',par))
+Plot('vp',fdmod.cgrey('bias=3       pclip=100 max1=2.0001',par))
+Plot('ro',fdmod.cgrey('bias=2800000 pclip=100 max1=2.0001',par))
 
 Result('vp','vp rr ss','Overlay')
 Result('ro','ro rr ss','Overlay')
@@ -91,7 +91,7 @@ Flow(['da','wa'],['wava','vp','ro','ss','rr','AFDM.x'],
          wfl=${TARGETS[1]}
          ''' % par)
 
-Result('da','transp |'           + fdmod.dgrey('',par))
+Result('da','transp |'           + fdmod.dgrey('format2=%3.2f',par))
 Result('wa','window n3=1 f3=9 |' + fdmod.wgrey('',par))
 
 Result('wamovie','wa',fdmod.wgrey('pclip=99',par))
