@@ -14,13 +14,14 @@ Flow('fft','data',
 # CORRELATION 
 Flow('fft2','fft','math output="input*conj(input)" ')
 # SMOOTHING THE DENOMINATOR
+eps = 0.000003
 Flow('smoo','fft2',
      '''
-     real | smooth rect1=100 rect2=50 repeat=5 | rtoc |
+     real | clip2 lower=%g |
+     smooth rect1=100 rect2=50 repeat=5 | rtoc |
      math num=$SOURCE output=num/input 
-     ''')
+     ''' % eps)
 # INVERSION WITH EPSILON
-eps = 0.000003
 Flow('divn','fft2','math output="input/(input+%g)" ' % eps)
      
 for case in ('fft2','smoo','divn'):
