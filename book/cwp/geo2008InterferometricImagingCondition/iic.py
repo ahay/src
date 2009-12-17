@@ -307,7 +307,7 @@ def wavelet(wav,par):
 
 # ------------------------------------------------------------
 # generate random field
-def random(gg,mask,ff,aa,ru,rv,par):
+def random(seed,gg,mask,ff,aa,ru,rv,par):
 
     part=par.copy()
 
@@ -316,7 +316,7 @@ def random(gg,mask,ff,aa,ru,rv,par):
     part['aa']=aa # angle    
     part['ru']=ru # characteristic length
     part['rv']=rv # characteristic length
-    gfield.execute(gg+'_',part)
+    gfield.execute(gg+'_',seed,part)
     Flow(gg,[gg+'_',mask],'add mode=p ${SOURCES[1]}')
     Result(gg,fdmod.cgrey('color=F',par))    
     
@@ -563,7 +563,7 @@ def realization(gg,mask,ff,aa,ru,rv,
         ktag = "-r%01d" % k
 
         # generate random velocity model
-        random(gg+ktag,mask,ff,aa,ru,rv,par)
+        random(112009+k,gg+ktag,mask,ff,aa,ru,rv,par)
         model(vo,vv+ktag,rm+ktag,gg+ktag,gm,par)
 
         # passive-array modeling and migration

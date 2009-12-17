@@ -23,7 +23,7 @@ aa=2
 ru=0.25*par['ft2km']
 rv=0.25*par['ft2km']
 gm=0.3
-iic.random('gg','mask',ff,aa,ru,rv,par)
+iic.random(112009,'gg','mask',ff,aa,ru,rv,par)
 iic.model('vo','vv','rm','gg',gm,par)
 # ------------------------------------------------------------
 iic.receivers('rr',par)

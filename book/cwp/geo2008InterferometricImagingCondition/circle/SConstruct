@@ -50,7 +50,7 @@ aa=2
 ru=0.02
 rv=0.02
 gm=0.25
-iic.random('gg','mask',ff,aa,ru,rv,par)
+iic.random(112009,'gg','mask',ff,aa,ru,rv,par)
 iic.model('vbk','vel','den','gg',gm,par)
 # ------------------------------------------------------------
 # sources

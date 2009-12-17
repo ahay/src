@@ -1,7 +1,7 @@
 from rsfproj import *
 import math
 
-def execute(rr,par):
+def execute(rr,seed,par):
     lpar = par.copy()
 
     if(not lpar.has_key('ff')): lpar['ff']=0
@@ -22,6 +22,8 @@ def execute(rr,par):
     lpar['nz']=2*(par['nz'] + abs(par['oz'])/par['dz'])
     lpar['ox']=-lpar['nx']*par['dx']/2
     lpar['oz']=-lpar['nz']*par['dz']/2
+
+    lpar['seed']=seed
     
     # IID noise
     Flow(rr+'-n',None,
@@ -29,7 +31,7 @@ def execute(rr,par):
          math output="0"
          n1=%(nz)d d1=%(dz)g o1=%(oz)g label1="z" 
          n2=%(nx)d d2=%(dx)g o2=%(ox)g label2="x" |
-         noise seed=112009 type=y |
+         noise seed=%(seed)d type=y |
          scale axis=123
          ''' % lpar)
     
