@@ -1007,10 +1007,13 @@ def petsc(context):
         else:
             petsclibpath = [os.path.join(petscdir,'lib')]
         petsclibs =  ['petscksp','petscmat','petscdm','petscvec','petsc']
-        for lib in ['scalapack','flapack','blacs','fblas']:
+        for lib in ['mpiuni','scalapack','flapack','blacs','fblas']:
             if glob.glob(os.path.join(petsclibpath[0],"lib%s.*" % lib)):
                 petsclibs.append(lib)
-        petsclibs.append('g2c')
+        if WhereIs('gfortran'):
+            petsclibs.append('gfortran')
+        elif WhereIs('g77'):
+            petsclibs.append('g2c')
 
         oldcc = context.env.get('CC')
         mpicc = context.env.get('MPICC')
@@ -1027,8 +1030,8 @@ def petsc(context):
                 petsclibs.append(lib)
 
         context.env['CPPPATH'] = oldpath + [petscpath,] 
-        context.env['LIBPATH'] = oldlibpath + [petsclibpath,] 
-        context.env['LIBS'] = oldlibs + [petsclibs,] 
+        context.env['LIBPATH'] = oldlibpath + [petsclibpath,]
+        context.env['LIBS'] = petsclibs
 
         text = '''
         #include <petscksp.h>
