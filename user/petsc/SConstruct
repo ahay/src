@@ -3,7 +3,6 @@ rsfsrc = os.environ.get('RSFSRC','../..')
 sys.path.append(rsfsrc)
 import configure
 
-
 progs = '''
 heatgmres1
 '''
@@ -43,25 +42,27 @@ if petscdir:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
     
-    mains = []
-    mains = Split(progs)
-    for prog in mains:
+mains = Split(progs)
+for prog in mains:
+    if petscdir:
         sources = ['M' + prog]
         configure.depends(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
-        if root:
-            env.Install(bindir,prog)
-
-    ######################################################################
-    # SELF-DOCUMENTATION
-    ######################################################################
+    else:
+        prog = env.Place('sf'+prog,None,var='PETSCDIR',package='petsc')
     if root:
-        user = os.path.basename(os.getcwd())
-        main = 'sf%s.py' % user
+        env.Install(bindir,prog)
 
-        docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-        env.Depends(docs,'#/framework/rsfdoc.py')	
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
 
-        doc = env.Docmerge(main,docs)
-        env.Install(libdir,doc)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    env.Depends(docs,'#/framework/rsfdoc.py')	
+    
+    doc = env.Docmerge(main,docs)
+    env.Install(libdir,doc)
 
