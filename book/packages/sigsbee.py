@@ -135,12 +135,10 @@ def getstrvel(velo,par):
          scale rscale=%g |
          put 
          o1=%g d1=%g label1=%s unit1=%s
-         o2=%g d2=%g label2=%s unit2=%s |
-	 window n1=%d n2=%d
+         o2=%g d2=%g label2=%s unit2=%s
          ''' % (par['ft2km'],
                 0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
-                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux'],
-		par['nz'],par['nx']
+                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
                 ))
 
 # ------------------------------------------------------------
