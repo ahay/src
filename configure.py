@@ -991,16 +991,16 @@ pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
 
 def petsc(context):
+    petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
+    petscarch = os.environ.get('PETSC_ARCH')
+    if not petscdir:
+	return
+
     context.Message("checking for PETSc ... ")
 
     oldpath = context.env.get('CPPPATH',[])
     oldlibpath = context.env.get('LIBPATH',[])
     oldlibs = context.env.get('LIBS',[])
-
-    petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
-    petscarch = os.environ.get('PETSC_ARCH')
-    if not petscdir:
-	return
 
     petscpath = [os.path.join(petscdir,'include')]
     if petscarch:
