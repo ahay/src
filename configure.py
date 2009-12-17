@@ -1,4 +1,4 @@
-import sys, os, string, re, commands, types, py_compile
+import sys, os, glob, string, re, commands, types, py_compile
 
 try: # The subprocess module was introduced in Python 2.4
     import subprocess
@@ -165,6 +165,7 @@ def check_all(context):
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
+    petsc(context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -986,6 +987,83 @@ def mpi(context):
         need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
 
+pkg['petsc'] = {'ubuntu':'petsc-dev',
+                'fedora':'petsc-devel'}
+
+def petsc(context):
+    context.Message("checking for PETSc ... ")
+
+    oldpath = context.env.get('CPPPATH',[])
+    oldlibpath = context.env.get('LIBPATH',[])
+    oldlibs = context.env.get('LIBS',[])
+
+    petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
+    petscarch = os.environ.get('PETSC_ARCH')
+    if petscdir:
+        petscpath = [os.path.join(petscdir,'include')]
+        if petscarch:
+            petsclibpath = [os.path.join(os.path.join(petscdir,petscarch),'lib')]
+            petscpath.append(os.path.join(os.path.join(petscdir,petscarch),'include'))
+        else:
+            petsclibpath = [os.path.join(petscdir,'lib')]
+        petsclibs =  ['petscksp','petscmat','petscdm','petscvec','petsc']
+        for lib in ['scalapack','flapack','blacs','fblas']:
+            if glob.glob(os.path.join(petsclibpath[0],"lib%s.*" % lib)):
+                petsclibs.append(lib)
+        petsclibs.append('g2c')
+
+        oldcc = context.env.get('CC')
+        mpicc = context.env.get('MPICC')
+        if mpicc:
+            context.env['CC'] = mpicc
+
+        xlibpath = context.env.get('XLIBPATH')
+        if xlibpath:
+            for path in xlibpath:
+                petsclibpath.append(path)
+        xlibs = context.env.get('XLIBS')
+        if xlibs:
+            for lib in xlibs:
+                petsclibs.append(lib)
+
+        context.env['CPPPATH'] = oldpath + [petscpath,] 
+        context.env['LIBPATH'] = oldlibpath + [petsclibpath,] 
+        context.env['LIBS'] = oldlibs + [petsclibs,] 
+
+        text = '''
+        #include <petscksp.h>
+        int main(int argc,char* argv[]) {
+        KSP Solver; Mat A;
+        MPI_Comm comm = MPI_COMM_WORLD;
+        PetscInitialize (&argc, &argv, 0, 0);
+        MatCreate (comm, &A);
+        KSPCreate (comm, &Solver);
+        KSPSetType (Solver, KSPGMRES);
+        PetscFinalize ();
+        }\n'''
+        res = context.TryLink(text,'.c')
+
+        context.env['CPPPATH'] = oldpath
+        context.env['LIBPATH'] = oldlibpath
+        context.env['LIBS'] = oldlibs
+        context.env['CC'] = oldcc
+    else: # PETSc not found
+        res = None
+
+    if res:
+        context.Result(res)
+        context.env['PETSCDIR'] = petscdir
+        context.env['PETSCPATH'] = petscpath
+        context.env['PETSCLIBPATH'] = petsclibpath
+        context.env['PETSCLIBS'] = petsclibs
+    else:
+        context.Result(context_failure)
+        need_pkg('petsc', fatal=False)
+        context.env['PETSCDIR'] = None
+        context.env['PETSCPATH'] = None
+        context.env['PETSCLIBPATH'] = None
+        context.env['PETSCLIBS'] = None
+
 def ncpus():
     'Detects number of CPUs'
     if plat['OS'] in ('linux','posix'):
@@ -1446,6 +1524,10 @@ def options(file):
     opts.Add('OPENGLPATH','Path to OpenGL headers')
     opts.Add('GLEW','GLEW library','GLEW')
     opts.Add('MPICC','MPI C compiler')
+    opts.Add('PETSCDIR','Portable, Extensible Toolkit for Scientific computation - installation directory')
+    opts.Add('PETSCPATH','PETSc - path to headers')
+    opts.Add('PETSCLIBPATH','PETSc - path to libraries')
+    opts.Add('PETSCLIBS','PETSc - libraries')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
