@@ -793,8 +793,8 @@ def wdfic(cii,
     Result(cii,[cii,'rr'],'Overlay')        
     Result('win'+cii,
            cii,
-           fdmod.cgrey('min1=%g max1=%g min2=%g max2=%g screenratio=%g wantaxis=y',par) %
-           (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio']) )
+           fdmod.cgrey('min1=%g max1=%g min2=%g max2=%g screenratio=%g wantaxis=y' %
+                       (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio']),par))
     
     
 # ------------------------------------------------------------
