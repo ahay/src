@@ -44,12 +44,12 @@
     
     size *= n;
     
-    if (0>=size) sf_error("%s: illegal allocation",__FILE__);
+    if (0>=size) sf_error("%s: illegal allocation (%d bytes)",__FILE__,size);
     
     ptr = malloc (size);
 
     if (NULL == ptr)
-	sf_error ("%s: cannot allocate %d bytes:", __FILE__, n*size);
+	sf_error ("%s: cannot allocate %d bytes:", __FILE__,size);
 
     return ptr;
 }
