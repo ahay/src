@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfcostaper', 'sfgrey', 'sfadd', 'sfspike', 'sfstack', 'sfcat', 'sftransp', 'sfgraph']
+data=['data/bay/bay.h']
+size=   20160056

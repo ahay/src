@@ -1,7 +1,5 @@
 from rsfproj import *
 
-from rsfproj import *
-
 # Download data
 Fetch('bay.h','bay')
 
@@ -81,7 +79,7 @@ for case in range(2):
          ''')
 
 # Display CPU time
-Result('time','ctime0 ctime1',
+Plot  ('time','ctime0 ctime1',
        '''
        cat axis=1 ${SOURCES[1]} | transp |
        graph dash=0,1 wanttitle=n
