@@ -1,6 +1,6 @@
-/* 3-D curvature estimation by plane wave destruction. */
+/* 2-D curvature estimation by plane wave destruction. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2009 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
