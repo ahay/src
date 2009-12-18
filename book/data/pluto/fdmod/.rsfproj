@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfspike', 'sfricker1', 'sfscale', 'sfwindow', 'sfgraph', 'sfmath', 'sfcat', 'sftransp', 'sfdd', 'sfgrey', 'sfawefd2d']
+data=['data/pluto/P15VPint_25f_padded.SEGY']
+size=  156356268
