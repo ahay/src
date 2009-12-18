@@ -667,13 +667,15 @@ static void make_axes (void)
 	    axis1->format = "%1.5g"; /* tick mark format */
 
 	if (!sf_getint ("n1tic",&(axis1->ntic))) 
+	    /*( n1tic axis1 number of ticmarks )*/
 	    axis1->ntic = cube? 
 		inch1*(mid1-min1)/((max1-min1)*aspect*labelsz):
 		inch1/(aspect*labelsz);
-	/* first axis ticmarks */
 
 	modify = (bool) (!sf_getfloat ("d1num", &(axis1->dnum)) ||
+			 /*( d1num axis1 tic increment )*/
 			 !sf_getfloat ("o1num", &(axis1->num0)));
+	/*( o1num axis1 tic origin )*/
  
 	axis1->ntic = vp_optimal_scale(axis1->ntic,
 				       modify,
@@ -700,14 +702,16 @@ static void make_axes (void)
 	if (NULL == (axis2->format = sf_getstring("format2")))
 	    axis2->format = "%1.5g"; /* tickmark format */
 
-	if (!sf_getint ("n2tic",&(axis2->ntic))) 
+	if (!sf_getint ("n2tic",&(axis2->ntic)))
+	    /*( n2tic axis2 number of ticmarks )*/
 	    axis2->ntic = cube?
 		inch2*(mid2-min2)/((max2-min2)*aspect*labelsz):
 		inch2/(aspect*labelsz);
-	/* number of tickmarks on the second axis */
 
 	modify = (bool) (!sf_getfloat ("d2num", &(axis2->dnum)) ||
+			 /*( d2num axis2 tic increment )*/
 			 !sf_getfloat ("o2num", &(axis2->num0)));
+	/*( o2num axis2 tic origin )*/
 
 	axis2->ntic = vp_optimal_scale(axis2->ntic,
 				       modify,
@@ -734,12 +738,14 @@ static void make_axes (void)
 	if (NULL == (axis3->format = sf_getstring("format3")))
 	    axis3->format = "%1.5g"; /* tickmark format */
 	
-	if (!sf_getint ("n3tic",&(axis3->ntic))) 
+	if (!sf_getint ("n3tic",&(axis3->ntic)))
+	    /*( n3tic axis3 number of ticmarks )*/
 	    axis3->ntic = inch3/(aspect*labelsz);
-	/* third axis tickmarks */
 
 	modify = (bool) (!sf_getfloat ("d3num", &(axis3->dnum)) ||
+			 /*( d3num axis3 tic increment )*/
 			 !sf_getfloat ("o3num", &(axis3->num0)));
+	/*( o3num axis3 tic origin )*/
  
 	axis3->ntic = vp_optimal_scale(axis3->ntic,
 				       modify,
