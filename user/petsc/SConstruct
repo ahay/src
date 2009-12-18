@@ -27,7 +27,6 @@ if petscdir:
     petsclibs = env.get('PETSCLIBS',[])
         
     env.Replace(CC=petsccc)
-    #env.Replace(LIBS=petsclibs)
     env.Prepend(CPPPATH=petscpath,
                 LIBPATH=petsclibpath,
                 LIBS=petsclibs)

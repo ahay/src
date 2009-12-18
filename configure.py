@@ -994,7 +994,7 @@ def petsc(context):
     petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
 
     if not petscdir:
-	return
+        return
 
     # Compile test program and catch output
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
