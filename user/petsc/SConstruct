@@ -18,20 +18,19 @@ except: # local version
     SConscript(os.path.join(rsfsrc,'api/c/SConstruct'))
     src = glob.glob('[a-z]*.c')
 
-# Temporary solution - use MPI compiler for all sources
 petscdir = env.get('PETSCDIR')
 
 if petscdir:
-    mpicc = env.get('MPICC')
+    petsccc = env.get('PETSCCC')
     petscpath = env.get('PETSCPATH',[])
     petsclibpath = env.get('PETSCLIBPATH',[])
     petsclibs = env.get('PETSCLIBS',[])
-    if mpicc:
-        env.Replace(CC=mpicc)
-
-    env.Replace(LIBS=petsclibs)
+        
+    env.Replace(CC=petsccc)
+    #env.Replace(LIBS=petsclibs)
     env.Prepend(CPPPATH=petscpath,
-                LIBPATH=petsclibpath)
+                LIBPATH=petsclibpath,
+                LIBS=petsclibs)
 
     env.Prepend(CPPPATH=[os.path.join(rsfsrc,'include')],
                 LIBPATH=[os.path.join(rsfsrc,'lib')],

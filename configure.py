@@ -992,48 +992,46 @@ pkg['petsc'] = {'ubuntu':'petsc-dev',
 
 def petsc(context):
     petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
-    petscarch = os.environ.get('PETSC_ARCH')
+
     if not petscdir:
 	return
 
+    # Compile test program and catch output
+    if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
+        popen = subprocess.Popen('make -k all clean', shell=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 cwd='%s/petsc' % os.getcwd())
+        if popen.wait() != 0:
+            return
+        makeout = popen.stdout.read()
+    else: # otherwise use os.popen2(), deprecated in Py 2.6
+        makeout = os.popen2('make -k -C %s/petsc all clean' % os.getcwd())[1].read()
+
     context.Message("checking for PETSc ... ")
 
+    # Compiler name
+    compiler = re.compile(r'^\S*')
+    petsccc = compiler.findall(makeout)
+    petsccc = WhereIs(petsccc[0])
+    # All include paths (-I/...)
+    includes = re.compile(r'\s\-I(\S*)')
+    petscpath = includes.findall(makeout)
+    # All lib paths (-L/...)
+    libpaths = re.compile(r'\s\-L(\S*)')
+    petsclibpath = libpaths.findall(makeout)
+    # All libs (-l...)
+    libs = re.compile(r'\s\-l(\S*)')
+    petsclibs = libs.findall(makeout)
+
+    oldcc = context.env.get('CC')
     oldpath = context.env.get('CPPPATH',[])
     oldlibpath = context.env.get('LIBPATH',[])
     oldlibs = context.env.get('LIBS',[])
 
-    petscpath = [os.path.join(petscdir,'include')]
-    if petscarch:
-        petsclibpath = [os.path.join(os.path.join(petscdir,petscarch),'lib')]
-        petscpath.append(os.path.join(os.path.join(petscdir,petscarch),'include'))
-    else:
-        petsclibpath = [os.path.join(petscdir,'lib')]
-    petsclibs =  ['petscksp','petscmat','petscdm','petscvec','petsc']
-    for lib in ['mpiuni','scalapack','flapack','blacs','fblas']:
-        if glob.glob(os.path.join(petsclibpath[0],"lib%s.*" % lib)):
-            petsclibs.append(lib)
-    if WhereIs('gfortran'):
-        petsclibs.append('gfortran')
-    elif WhereIs('g77'):
-        petsclibs.append('g2c')
-
-    oldcc = context.env.get('CC')
-    mpicc = context.env.get('MPICC')
-    if mpicc:
-        context.env['CC'] = mpicc
-
-    xlibpath = context.env.get('XLIBPATH')
-    if xlibpath:
-        for path in xlibpath:
-            petsclibpath.append(path)
-    xlibs = context.env.get('XLIBS')
-    if xlibs:
-        for lib in xlibs:
-            petsclibs.append(lib)
-
+    context.env['CC'] = petsccc
     context.env['CPPPATH'] = oldpath + [petscpath,] 
     context.env['LIBPATH'] = oldlibpath + [petsclibpath,]
-    context.env['LIBS'] = petsclibs
+    context.env['LIBS'] = oldlibs + [petsclibs,]
 
     text = '''
     #include <petscksp.h>
@@ -1052,13 +1050,14 @@ def petsc(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
     context.env['CC'] = oldcc
- 
+
     if res:
         context.Result(res)
         context.env['PETSCDIR'] = petscdir
         context.env['PETSCPATH'] = petscpath
         context.env['PETSCLIBPATH'] = petsclibpath
         context.env['PETSCLIBS'] = petsclibs
+        context.env['PETSCCC'] = petsccc
     else:
         context.Result(context_failure)
         need_pkg('petsc', fatal=False)
@@ -1066,6 +1065,7 @@ def petsc(context):
         context.env['PETSCPATH'] = None
         context.env['PETSCLIBPATH'] = None
         context.env['PETSCLIBS'] = None
+        context.env['PETSCCC'] = None
 
 def ncpus():
     'Detects number of CPUs'
@@ -1531,6 +1531,7 @@ def options(file):
     opts.Add('PETSCPATH','PETSc - path to headers')
     opts.Add('PETSCLIBPATH','PETSc - path to libraries')
     opts.Add('PETSCLIBS','PETSc - libraries')
+    opts.Add('PETSCCC','PETSc - compiler')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
