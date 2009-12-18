@@ -176,8 +176,8 @@ int main(int argc, char* argv[])
     if (error && (NULL != sf_getstring ("res")) && (NULL != sf_getstring ("ref"))) {
 	err = sf_floatalloc(niter);
 	sf_putint(res,"n1",niter);
-	sf_putint(res,"d1",1);
-	sf_putint(res,"o1",1);	
+	sf_putfloat(res,"d1",1);
+	sf_putfloat(res,"o1",1);	
 	sf_putint(res,"n2",1);
     }
 

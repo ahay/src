@@ -103,12 +103,12 @@ int main(int argc, char* argv[])
     dd2 = sf_floatalloc(n12);
 
     seislet_set(pp);
-    sf_floatread(pp[0],n12,dip);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
 
 	sf_floatread(dd,n12,in);
+	sf_floatread(pp[0],n12,dip);
 	for (i1=0; i1 < n12; i1++) {
 	    dd2[i1] = dd[i1];
 	}
