@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfscale', 'sfwindow', 'sfgrey']
+data=['data/pluto/int_depth_vp.sgy', 'data/pluto/P15VPint_25f_padded.SEGY']
+size=  105875520
