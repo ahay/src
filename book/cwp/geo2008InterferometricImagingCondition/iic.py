@@ -486,8 +486,8 @@ def pimage(cic,iic,
         Plot(img,fdmod.cgrey('pclip=100',par))
         Result( img,[img,rec],'Overlay')
         Result('win'+img,img,
-               fdmod.cgrey('min1=%g max1=%g min2=%g max2=%g screenratio=%g wantaxis=y',par) %
-               (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio']) )
+               fdmod.cgrey('min1=%g max1=%g min2=%g max2=%g screenratio=%g wantaxis=y' %
+                           (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio']),par) )
 
 # ------------------------------------------------------------
 # active array imaging
