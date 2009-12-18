@@ -1000,12 +1000,12 @@ def petsc(context):
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
         popen = subprocess.Popen('make -k all clean', shell=True,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 cwd='%s/petsc' % os.getcwd())
+                                 cwd=os.path.join(os.getcwd(),'petsc'))
         if popen.wait() != 0:
             return
         makeout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeout = os.popen2('make -k -C %s/petsc all clean' % os.getcwd())[1].read()
+        makeout = os.popen2('make -k -C %s all clean' % os.path.join(os.getcwd(),'petsc'))[1].read()
 
     context.Message("checking for PETSc ... ")
 
