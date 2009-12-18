@@ -1061,11 +1061,6 @@ def petsc(context):
     else:
         context.Result(context_failure)
         need_pkg('petsc', fatal=False)
-        context.env['PETSCDIR'] = None
-        context.env['PETSCPATH'] = None
-        context.env['PETSCLIBPATH'] = None
-        context.env['PETSCLIBS'] = None
-        context.env['PETSCCC'] = None
 
 def ncpus():
     'Detects number of CPUs'
