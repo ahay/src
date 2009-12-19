@@ -26,9 +26,10 @@ int main(int argc, char* argv[])
     int nw, n1, n2, n12, i1, i2, i3, n3, j, iter, nperc, interp, order;
     float *mm, *dd, *dd2=NULL, **pp, *d1, *m1, eps, perc, *hcurv;
     float *data, *model, *ldata=NULL, *sddata, min, max, dm, dperc;
+    sf_complex *norm12;
     char *type;
     bool verb, dwt;
-    sf_file in, out, dip, lcurve=NULL, hcurve=NULL;
+    sf_file in, out, dip, lcurve=NULL, hcurve=NULL, norm=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -70,6 +71,9 @@ int main(int argc, char* argv[])
     if (NULL != sf_getstring ("hcurve")) {
 	hcurve = sf_output("hcurve");
     }
+    if (NULL != sf_getstring ("norm")) {
+	norm = sf_output("norm");
+    }
 
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
@@ -79,6 +83,7 @@ int main(int argc, char* argv[])
     m1 = sf_floatalloc(n1);
     data = sf_floatalloc(nperc);
     model = sf_floatalloc(nperc);
+    norm12 = sf_complexalloc(nperc);
     min = 0.;
     max = 0.;
     order = 1;
@@ -179,7 +184,23 @@ int main(int argc, char* argv[])
 			dm = fabsf(model[iter]-model[iter-1]);
 		    }
 		}
+		norm12[iter]=sf_cmplx(model[iter],data[iter]);
 	    }
+
+	    if (NULL != sf_getstring ("norm")) {
+		sf_settype(norm,SF_COMPLEX);
+		sf_putint(norm,"n1",nperc);
+		sf_putfloat(norm,"d1",dperc);
+		sf_putfloat(norm,"o1",0.);
+		sf_putstring(norm,"label1","Percentage");
+		sf_putstring(norm,"unit1","");
+		sf_putint(norm,"n2",1);
+		sf_putstring(norm,"label2","Norm1&2");
+		sf_putstring(norm,"unit2","");
+		sf_putint(norm,"n3",1);
+		sf_complexwrite(norm12,nperc,norm);
+	    }
+
 	    max = model[0];
 	    min = model[nperc-2];
 	    /* interpolate model */
@@ -204,13 +225,13 @@ int main(int argc, char* argv[])
 		sf_putint(lcurve,"n1",interp);
 		sf_putfloat(lcurve,"d1",-dm);
 		sf_putfloat(lcurve,"o1",max);
-		sf_putstring(lcurve,"label1","|m|_1");
+		sf_putstring(lcurve,"label1","||m||\\_\\s75 1\\^\\s100 ");
 		sf_putstring(lcurve,"unit1","");
 		sf_putint(lcurve,"n2",1);
-		sf_putstring(lcurve,"label2","|d-d*|^2_2");
+		sf_putstring(lcurve,"label2","||d-d*||\\_\\s75 2\\s300 \\^\\s75 2 \\s100 ");
 		sf_putstring(lcurve,"unit2","");
 		sf_putint(lcurve,"n3",1);
-		sf_floatwrite (ldata,interp,lcurve);
+		sf_floatwrite(ldata,interp,lcurve);
 	    }
 
 	    hcurv = sf_floatalloc(nperc);
@@ -238,7 +259,7 @@ int main(int argc, char* argv[])
 		sf_putstring(hcurve,"label2","Curvature");
 		sf_putstring(hcurve,"unit2","");
 		sf_putint(hcurve,"n3",1);
-		sf_floatwrite (hcurv,nperc,hcurve);
+		sf_floatwrite(hcurv,nperc,hcurve);
 	    }
 	    min = hcurv[nperc/2];
 	    perc = 0.;
