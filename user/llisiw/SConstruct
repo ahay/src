@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-kirmig
+kirmig kirmig0
 '''
 
 try:  # distributed version

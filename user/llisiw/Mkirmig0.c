@@ -1,4 +1,4 @@
-/* 2-D Prestack Kirchhoff depth migration. */
+/* 2-D Post-stack Kirchhoff depth migration. */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -22,9 +22,9 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, ny, ns, nh, nz, nzx, ix, ih, i, is, ist, iht;
-    float *trace, *out, **table, *stable, *rtable;
-    float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal;
+    int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
+    float *trace, *out, **table, *stable;
+    float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal;
     sf_file inp, mig, tbl;
 
     sf_init (argc,argv);
@@ -33,17 +33,13 @@ int main(int argc, char* argv[])
     mig = sf_output("out");
 
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
-    if (!sf_histint(inp,"n2",&nh)) sf_error("No n2=");
-    if (!sf_histint(inp,"n3",&ns)) sf_error("No n3=");
+    if (!sf_histint(inp,"n2",&ns)) sf_error("No n2=");
 
     if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1=");
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1=");
 
-    if (!sf_histfloat(inp,"o2",&h0)) sf_error("No o2=");
-    if (!sf_histfloat(inp,"d2",&dh)) sf_error("No d2=");
-
-    if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3=");
-    if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3=");
+    if (!sf_histfloat(inp,"o2",&s0)) sf_error("No o2=");
+    if (!sf_histfloat(inp,"d2",&ds)) sf_error("No d2=");
 
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
     if (!sf_histint(tbl,"n2",&nx)) sf_error("No n2= in table");
@@ -75,7 +71,11 @@ int main(int argc, char* argv[])
     out = sf_floatalloc(nzx);
     trace = sf_floatalloc(nt);
 
-    for (is=0; is < ns; is++) { /* shot */
+    for (i=0; i < nzx; i++) {
+	out[i] = 0.;
+    }
+
+    for (is=0; is < ns; is++) { /* surface location */
 	s = s0 + is*ds;
 
 	/* Add accurate interpolation later */
@@ -89,39 +89,20 @@ int main(int argc, char* argv[])
 
 	stable = table[ist];
 
-	for (i=0; i < nzx; i++) {
-	    out[i] = 0.;
-	}
-	
-	for (ih=0; ih < nh; ih++) { /* offset */
-	    h = h0+ih*dh;
+	sf_floatread (trace,nt,inp);
+	doubint(nt,trace);
 
-	    /* place in the table */
-	    /* nearest neighbor interpolation */
+	/* Add aperture limitation later */
 
-	    iht = 0.5 + (s+h-y0)/dy;
-	    if (iht < 0) iht=0;
-	    if (iht >= ny) iht=ny-1;
+	for (ix=0; ix < nzx; ix++) { /* image */
+	    ti = 2*stable[ix];
 
-	    rtable = table[iht];
-
-	    sf_floatread (trace,nt,inp);
-	    doubint(nt,trace);
-
-	    /* Add aperture limitation later */
-
-	    for (ix=0; ix < nzx; ix++) { /* image */
-		t1 = stable[ix];
-		t2 = rtable[ix];
-		ti = t1+t2;
-
-		/* Add antialiasing later */
-		out[ix] += pick(ti,0.,trace,nt,dt,t0);
-	    } 
-	} 
-	
-	sf_floatwrite(out,nzx,mig);        
+	    /* Add antialiasing later */
+	    out[ix] += pick(ti,0.,trace,nt,dt,t0);
+	} 	
     }
+
+    sf_floatwrite(out,nzx,mig);        
 
     exit(0);
 }
