@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     bool phase;
     int i1, n1, iw, nt, nw, i2, n2, rect, niter;
-    float t, d1, w, w0, dw, *trace, *bs, *bc, *ss, *cc;
-    sf_file time, timefreq;
+    float t, d1, w, w0, dw, *trace, *bs, *bc, *ss, *cc, *mm;
+    sf_file time, timefreq, mask;
     
     sf_init(argc,argv);
     time = sf_input("in");
@@ -75,16 +75,31 @@ int main(int argc, char* argv[])
 
     divn_init(1,n1,&n1,&rect,niter,false);
 
+    if (NULL != sf_getstring("mask")) {
+	mask = sf_input("mask");
+	mm = sf_floatalloc(n1);
+    } else {
+	mask = NULL;
+	mm = NULL;
+    }
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,time);
+	if (NULL != mm) {
+	    sf_floatread(mm,n1,mask);
+	    for (i1=0; i1 < n1; i1++) {
+		trace[i1] *= mm[i1];
+	    }
+	}
 
 	for (iw=0; iw < nw; iw++) {
 	    w = w0 + iw*dw;
 
-	    if (0.==w) {
+	    if (0.==w) { /* zero frequency */
 		for (i1=0; i1 < n1; i1++) {
 		    ss[i1] = 0.;
 		    bc[i1] = 0.5;
+		    if (NULL != mm) bc[i1] *= mm[i1];
 		}
 		divn(trace,bc,cc);
 	    } else {
@@ -92,6 +107,10 @@ int main(int argc, char* argv[])
 		    t = i1*d1;
 		    bs[i1] = sinf(w*t);
 		    bc[i1] = cosf(w*t);
+		    if (NULL != mm) {
+			bs[i1] *= mm[i1];
+			bc[i1] *= mm[i1];
+		    }
 		}
 		divn(trace,bs,ss);
 		divn(trace,bc,cc);
