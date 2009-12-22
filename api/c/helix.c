@@ -46,8 +46,13 @@ sf_filter sf_allocatehelix( int nh)
 
     aa = (sf_filter) sf_alloc(1,sizeof(*aa));
     aa->nh = nh;
-    aa->flt = sf_floatalloc(nh);
-    aa->lag = sf_intalloc  (nh);
+    if (nh > 0) {
+	aa->flt = sf_floatalloc(nh);
+	aa->lag = sf_intalloc  (nh);
+    } else {
+	aa->flt = NULL;
+	aa->lag = NULL;
+    }
     aa->mis = NULL;
     
     return aa;

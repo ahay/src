@@ -18,24 +18,24 @@
 */
 
 #include <math.h>
-#include <float.h>
 #include <rsf.h>
 #include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
     map4 nmo;
+    char *type;
     int it,ix,ip, nt,nx, np;
-    float dt, t0, p, p0, t, f, dp, eps, v0, c0;
-    float *trace=NULL, *slope=NULL, *dsldt=NULL, *str=NULL, *cos=NULL;
-    sf_file inp=NULL, nmod=NULL, cos2=NULL, dip=NULL, dipt=NULL;
+    float dt, t0, p, p0, t, f, dp, eps, v0, c0, cos2, dp1;
+    float *trace=NULL, *slope=NULL, *dsldt=NULL, *str=NULL, *vel=NULL;
+    sf_file inp=NULL, nmod=NULL, vel2=NULL, dip=NULL, dipt=NULL;
 
     sf_init (argc,argv);
     inp = sf_input("in");
     dip = sf_input("dip");
     dipt = sf_input("dipt");
     nmod = sf_output("out");
-    cos2 = sf_output("cos2");
+    vel2 = sf_output("vel2");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in input");
@@ -46,6 +46,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(inp,"d2",&dp)) sf_error("No d2= in input");
     if (!sf_histfloat(inp,"o2",&p0)) sf_error("No o2= in input");
     p0 /= dp;
+    dp1 = 1./(dp*dp);
 
     nx = sf_leftsize(inp,2);
 
@@ -56,15 +57,18 @@ int main (int argc, char* argv[])
     /* initial velocity */
     v0 *= dp;
 
+    if (NULL == (type = sf_getstring("type"))) type="dix";
+    /* transform type */
+
     trace = sf_floatalloc(nt);
     slope = sf_floatalloc(nt);
     dsldt = sf_floatalloc(nt);
     str = sf_floatalloc(nt);
-    cos = sf_floatalloc(nt);
+    vel = sf_floatalloc(nt);
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
 
-    eps = 100.*FLT_EPSILON;
+    eps = 100.*SF_EPS;
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
 	for (ip = 0; ip < np; ip++) { /* offset */
@@ -83,10 +87,23 @@ int main (int argc, char* argv[])
 
 		if (f < 0. || f < t) {
 		    str[it] = t0-10.*dt;
-		    cos[it] = 0.;
+		    vel[it] = 0.;
 		} else {
 		    str[it] = sqrtf(t*f); /* t -> tau */
-		    cos[it] = t*c0*(4.0/(t+f-c0*p*t*dsldt[it]+eps)-1.0/(f+eps));
+		    switch (type[0]) {
+			case 'd':
+			    cos2 = t*c0*(4.0/(t+f-c0*p*t*dsldt[it]+eps)-1.0/
+					 (f+eps));
+			    vel[it] = (1-cos2)/(p*p+eps);
+			    break;
+			case 'l':
+			    vel[it] = dsldt[it]/(p*(p*dsldt[it]-1.0)+eps);
+			    break;
+			default:
+			    sf_error("Unknown type \"%s\"",type);
+			    break;
+		    }
+		    vel[it] *= dp1;
 		}
 	    }
 
@@ -95,8 +112,8 @@ int main (int argc, char* argv[])
 	    stretch4_apply (nmo,trace,trace);
 	    sf_floatwrite (trace,nt,nmod);
 
-	    stretch4_apply (nmo,cos,cos);
-	    sf_floatwrite (cos,nt,cos2);
+	    stretch4_apply (nmo,vel,vel);
+	    sf_floatwrite (vel,nt,vel2);
 	}
     }
 

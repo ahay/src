@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int n[SF_MAX_DIM], n0[SF_MAX_DIM];
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
     int dim, n123, i, niter, na, *kk;
-    float *dd;
+    float *dd, tol;
     sf_filter aa;   
     char varname[6], *lagfile;
     sf_file in, filt, lag, mask;
@@ -61,6 +61,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("na",&na)) na=0;
     /* filter size */
+
+    if (!sf_getfloat("tol",&tol)) tol=1.e-6;
+    /* tolerance for filter compression */
 
     if (0 == na) {
 	if (!sf_getints("gap",gap,dim)) {
@@ -139,7 +142,7 @@ int main(int argc, char* argv[])
     /* number of iterations */
 
     find_pef (n123, dd, aa, niter);         /* estimate aa */
-    aa = compress( aa, 1.e-6);              /* eliminate zeroes */
+    aa = compress( aa, tol);              /* eliminate zeroes */
     print(dim, n, center, a, aa);           /* print filter */
 
     sf_putint(filt,"n1",aa->nh);
