@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     float ***ppp;
     sf_complex *pp, *qq;
     cfilter aa, fac1, fac2;
-    sf_file out, imp;
+    sf_file out, imp=NULL;
 
     sf_init(argc,argv);
     out = sf_output("out");
