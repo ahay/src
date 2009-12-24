@@ -255,7 +255,7 @@ par['aa']=1.0   #6.3 # distribution shape parameter 'alpha'
 par['ru']=0.036 
 par['rv']=0.009
 
-gfield.execute('hh',par)
+gfield.execute('hh',112009,par)
 Result('hh',fdmod.cgrey('wantscalebar=y color=j',par))
 Flow('gg','hh mask','add mode=p ${SOURCES[1]}')
 Result('gg',fdmod.cgrey('wantscalebar=y color=j',par))
