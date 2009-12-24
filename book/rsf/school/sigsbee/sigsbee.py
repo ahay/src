@@ -25,8 +25,8 @@ def paramwin():
 def getstrvelwin(velo,par):
 
     strvelfile = 'data/sigsbee/sigsbee2a_stratigraphy.sgy'
-    #strvelfile = 'sigsbee2a_stratigraphy.sgy'
-    #Fetch(strvelfile,'sigsbee')
+    strvelfile = 'sigsbee2a_stratigraphy.sgy'
+    Fetch(strvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
          strvelfile,

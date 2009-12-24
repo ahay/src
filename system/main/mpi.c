@@ -28,7 +28,7 @@
 
 int main(int argc, char* argv[])
 {
-    int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc,sys;
+    int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
     off_t size, left,nbuf, n[SF_MAX_DIM];
     char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5];
     char **inames=NULL, **onames=NULL, buffer[BUFSIZ];
