@@ -79,7 +79,7 @@ void enogrid_apply (enogrid pnt,
 /*< Apply interpolation. >*/
 {
     int k, b2, i;
-    float f1;
+    float *f1;
     
     if (j-pnt->order+2 < 0) {
 	b2 = 0;
@@ -101,7 +101,7 @@ void enogrid_apply (enogrid pnt,
 	}
 
 	sf_eno_set (pnt->jnt,pnt->f0);
-	sf_eno_apply (pnt->jnt,j,y,f+i,&f1,FUNC);
+	sf_eno_apply (pnt->jnt,j,y,f+i,f1,FUNC);
     }
 }
 
