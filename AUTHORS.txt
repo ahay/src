@@ -1,5 +1,5 @@
 Vladimir Bashkardin <bash@mail.utexas.edu>
-Jules Browaeys <jules.browaeys@beg.utexas.edu>
+Jules Browaeys <jules.browaeys@total.com>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
 Joseph Dellinger <geojoe@freeusp.org>
@@ -8,6 +8,8 @@ Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>
 Jim Jennings <jenningsjwj@mac.com>
 Long Jin <long.jin@shell.com>
+Roman Kazinnik <roman.only@gmail.com>
+Siwei Li <llisiw@hotmail.com>
 Guochang Liu <guochang.liu@yahoo.com>
 Yang Liu <yangliu1979@gmail.com> 
 Doug McCowan <dwmccowan@windstream.net>
