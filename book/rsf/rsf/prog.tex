@@ -1227,6 +1227,111 @@ is equivalent to \texttt{sfscale dscale=1}.
     \input{sfspike}
   }}
 
+\input{sfspike} takes no input and generates an output with
+``spikes''. It is an easy way to create data. Here is an example:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 k1=4 k2=1 | sfdisfil
+   0:             0            0            0            1            0
+   5:             0            0            0            0            0
+  10:             0            0            0            0            0
+\end{verbatim}
+The spike location is specified by parameters \texttt{k1=4} and
+\texttt{k2=1}. Note that the locations are numbered starting from 1. 
+If one of the parameters is omitted or given the value of zero, the 
+spike in the corresponding direction becomes a plane:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 k1=4 | sfdisfil   
+   0:             0            0            0            1            0
+   5:             0            0            0            1            0
+  10:             0            0            0            1            0
+
+\end{verbatim}
+If no spike parameters are given, the whole dataset is filled with ones:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 | sfdisfil
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            1            1            1            1
+\end{verbatim}
+
+To create several spikes, use the \texttt{nsp=} parameter and give a comma-separated list of values to \texttt{k\#=} arguments:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 nsp=3 k1=1,3,4 k2=1,2,3 | sfdisfil
+   0:             1            0            0            0            0
+   5:             0            0            1            0            0
+  10:             0            0            0            1            0
+\end{verbatim}
+If the number of values in the list is smaller than \texttt{nsp}, the
+last value gets repeated, and the spikes add on top of each other,
+creating larger amplitudes:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 nsp=3 k1=1,3 k2=1,2 | sfdisfil
+   0:             1            0            0            0            0
+   5:             0            0            2            0            0
+  10:             0            0            0            0            0
+\end{verbatim}
+The magnitude of the spikes can be controlled explicitly with the
+\texttt{mag=} parameter:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 nsp=3 k1=1,3,4 k2=1,2,3 mag=1,4,2 | sfdisfil
+   0:             1            0            0            0            0
+   5:             0            0            4            0            0
+  10:             0            0            0            2            0
+\end{verbatim}
+
+You can create boxes instead of spikes by using \texttt{l\#=}
+parameters:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 k1=2 l1=4 k2=2 mag=8 | sfdisfil
+   0:             0            0            0            0            0
+   5:             0            8            8            8            0
+  10:             0            0            0            0            0
+\end{verbatim}
+In this case, \texttt{k1=2} specifies the box start, and \texttt{l1=4}
+specifies the box end.
+
+Finally, multi-dimensional planes can be given an inclination by using \texttt{p\#=} parameters:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 k1=2 p2=1 | sfdisfil
+   0:             0            0            1            0            0
+   5:             0            0            0            1            0
+  10:             0            0            0            0            1
+\end{verbatim}
+When the inclination value is not integer, simple linear interpolation is used:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 k1=2 p2=0.7 | sfdisfil
+   0:             0          0.3          0.7            0            0
+   5:             0            0          0.6          0.4            0
+  10:             0            0            0          0.9          0.1
+\end{verbatim}
+
+\texttt{sfspike} supplies default dimensions and labels to all axis:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 n3=4 > spike.rsf
+bash$ sfin spike.rsf
+spike.rsf:
+    in="/home/sergey/RSFROOT/scratch/spike.rsf@"
+    esize=4 type=float form=native 
+    n1=5           d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=4           d3=0.1         o3=0          label3="Distance" unit3="km" 
+	60 elements 240 bytes
+\end{verbatim}
+As you can see, the first axis is assumed to be time, with sampling of
+$0.004$ seconds. All other axes are assumed to be distance, with
+sampling of $0.1$ kilometers. All these parameters can be changed on
+the command line.
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 n3=4 label3=Offset unit3=ft d3=20 > spike.rsf
+bash$ sfin spike.rsf
+spike.rsf:
+    in="/home/sergey/RSFROOT/scratch/spike.rsf@"
+    esize=4 type=float form=native 
+    n1=5           d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=4           d3=20          o3=0          label3="Offset" unit3="ft" 
+	60 elements 240 bytes
+\end{verbatim}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfspray}
