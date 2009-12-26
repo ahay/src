@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfspike', 'sfricker1', 'sfscale', 'sftransp', 'sfwindow', 'sfgraph', 'sfmath', 'sfcat', 'sfdd', 'sfgrey', 'sfawefd2d']
+data=['data/sigsbee/sigsbee2a_stratigraphy.sgy']
+size= 1218128944

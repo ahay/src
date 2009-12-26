@@ -31,7 +31,8 @@ Flow('wav',None,
          put label1=t label2=x label3=y |
          transp
          ''' % par)    
-Result('wav','transp | window n1=200 | graph title="" label1="t" label2=')
+Result('wav',
+       'transp | window n1=200 | graph title="" label1="t" label2= unit2=')
 # ------------------------------------------------------------
 # experiment setup
 Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
@@ -66,7 +67,7 @@ Flow('vel','vstr2A',
      ''' % par)
 
 Plot('vel',fdmod.cgrey('''
-allpos=y bias=1.5 pclip=100 color=F title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t
+allpos=y bias=1.5 pclip=100 color=j title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t
 ''',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 
@@ -84,9 +85,13 @@ Plot('wfl',fdmod.wgrey('pclip=99 title=Wavefield\ Movie labelsz=4 titlesz=6 wher
 times=['1','2','3','4']
 cntr=0
 for item in ['9','19','29','39']:
-    Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a
-              pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(s\) labelsz=4
-              titlesz=6 screenratio=.375 screenht=2 wheretitle=t''' % (item,times[cntr]))
+    Result('time'+item,'wfl',
+           '''
+           window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a
+           pclip=99 wantframenum=y title=Wavefield\ at\ %s\ s labelsz=4
+           titlesz=6 screenratio=.375 screenht=2 wheretitle=t
+           label1=z label2=x unit1=kft unit2=kft
+           ''' % (item,times[cntr]))
     cntr = cntr + 1
 Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
 End()
