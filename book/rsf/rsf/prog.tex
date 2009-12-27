@@ -1293,16 +1293,16 @@ specifies the box end.
 Finally, multi-dimensional planes can be given an inclination by using \texttt{p\#=} parameters:
 \begin{verbatim}
 bash$ sfspike n1=5 n2=3 k1=2 p2=1 | sfdisfil
-   0:             0            0            1            0            0
-   5:             0            0            0            1            0
-  10:             0            0            0            0            1
+   0:             0            1            0            0            0
+   5:             0            0            1            0            0
+  10:             0            0            0            1            0
 \end{verbatim}
 When the inclination value is not integer, simple linear interpolation is used:
 \begin{verbatim}
 bash$ sfspike n1=5 n2=3 k1=2 p2=0.7 | sfdisfil
-   0:             0          0.3          0.7            0            0
-   5:             0            0          0.6          0.4            0
-  10:             0            0            0          0.9          0.1
+   0:             0            1            0            0            0
+   5:             0          0.3          0.7            0            0
+  10:             0            0          0.6          0.4            0
 \end{verbatim}
 
 \texttt{sfspike} supplies default dimensions and labels to all axis:

@@ -1,4 +1,7 @@
-/* Generate simple data: spikes, boxes, planes, constants. */
+/* Generate simple data: spikes, boxes, planes, constants. 
+
+Spike positioning is given in samples and starts with 1.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -146,7 +149,7 @@ int main(int argc, char* argv[])
 		if ((kk < -1 && ll < -1) || 
 		    (kk >= 0 && ll >= 0 && 
 		     (kk > ii[i] || ll < ii[i]))) break;
-		pp += p[i][is]*(ii[i]-k[i][is]);
+		pp += p[i][is]*(ii[i]-k[i][is]-1);
 	    }
 	    if (i < dim) continue; /* skip this spike */
 
