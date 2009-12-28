@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfscale', 'sfput', 'sfgrey', 'sfdd', 'sfheadermath', 'sfwindow', 'sfmath', 'sfcat', 'sftransp', 'sfintbin', 'sfmutter', 'sffft1', 'sfspray', 'sfspike', 'sfsrsyn', 'sfreal', 'sfsrmig3', 'sfagc']
+data=['data/sigsbee/sigsbee2a_migvel.sgy', 'data/sigsbee/sigsbee2a_nfs.sgy']
+size= 3266842580

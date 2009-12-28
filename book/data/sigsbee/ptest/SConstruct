@@ -52,7 +52,7 @@ Result('mvel',
      grey color=j allpos=y title= scalebar=y
      barlabel=Velocity barunit=km/s
      label1=Depth unit1=km label2=Lateral unit2=km
-     barreverse=y pclip=100 screenratio=0.375 screenht=6.5
+     barreverse=y pclip=100 screenratio=0.375 screenht=5
      ''',local=1)
 
 
@@ -163,12 +163,12 @@ par.update({'jsx':2, 'jsz':4})
 
 srpmig.fwaveslow('shot','mvel',par)
 
-Result('rwav',
-       '''
-       window | math output="abs(input)" | real |
-       grey title=Wavefield
-       label1=Frequency unit1=Hz label2=Distance unit2=km
-       ''',local=1)
+Plot('rwav',
+     '''
+     window | math output="abs(input)" | real |
+     grey title=Wavefield
+     label1=Frequency unit1=Hz label2=Distance unit2=km
+     ''',local=1,view=1)
 
 # PARALLEL
 # --------
