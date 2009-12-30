@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     float t0, t02;
     float * m_mids, *h_halfoffset;
   
-    sf_file in,out,out_tcrs;
+    sf_file in,out,out_tcrs = NULL;
     char * out_tcrs_file = 0;
     float crs_a0[3], crs_a[3];
  
