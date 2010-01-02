@@ -264,7 +264,7 @@ par['ru']=0.036
 par['rv']=0.009
 
 # Use package gfield.py to generate perturbations
-gfield.execute('hh',par)
+gfield.execute('hh',122009,par)
 Result('hh',fdmod.cgrey('wantscalebar=y color=j',par))
 Flow('gg','hh mask','add mode=p ${SOURCES[1]}')
 Result('gg',fdmod.cgrey('wantscalebar=y color=j',par))
