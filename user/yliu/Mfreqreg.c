@@ -1,6 +1,6 @@
 /* Local frequency interpolation. */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2010 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,17 +27,18 @@ int main(int argc, char* argv[])
     int i1, n1, iw, nt, nw, i2, n2, n12;
     int rect, niter, m[SF_MAX_DIM], rec[SF_MAX_DIM];
     float t, d1, w, w0, dw, *trace, *bsc, *kbsc, *sscc, *mm, *reg, mean;
+    bool verb;
     sf_filter aa=NULL;
     sf_file in, out, mask;
     
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-
+    
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     n2 = sf_leftsize(in,1);
-
+    
     if (!sf_getint("nw",&nw)) { /* number of frequencies */
 	nt = 2*kiss_fft_next_fast_size((n1+1)/2);
 	nw = nt/2+1;
@@ -52,11 +53,11 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("w0",&w0)) w0=0.;
 	/* first frequency */
     }
-
+    
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
     n12 = 2*n1*nw;
-
+    
     trace = sf_floatalloc(n1);
     reg = sf_floatalloc(n1);
     bsc    = sf_floatalloc(n12);
@@ -68,15 +69,18 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of inversion iterations */
 
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
+    
     for(i2=0; i2 < SF_MAX_DIM; i2 ++) {
 	m[i2] = 1;
 	rec[i2] = 1;
     }
     m[0] = n1;
     rec[0] = rect;
-
+    
     multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, false); 
-
+    
     if (NULL != sf_getstring("mask")) {
 	mask = sf_input("mask");
 	mm = sf_floatalloc(n1);
@@ -84,7 +88,7 @@ int main(int argc, char* argv[])
 	mask = NULL;
 	mm = NULL;
     }
-
+    
     if (NULL != mm) {
         sf_floatread(mm,n1,mask);
 	for (i1=0; i1 < n1; i1++) {
@@ -134,18 +138,19 @@ int main(int argc, char* argv[])
     for (i1=0; i1 < n12; i1++) {
         kbsc[i1] /= mean;
     }
-
+    
     for (i2=0; i2 < n2; i2++) {
+	if (verb) sf_warning("slice %d of %d",i2+1,n2);
 	sf_floatread(trace,n1,in);
 	for (i1=0; i1 < n1; i1++) {
 	    reg[i1] = 0.;
 	}
-
+	
 	for(i1=0; i1 < n1; i1++) {
-	  trace[i1] /= mean;
+	    trace[i1] /= mean;
 	}
 	multidivn (trace,sscc,niter);
-
+	
 	for (iw=0; iw < nw; iw++) {
 	    for (i1=0; i1 < n1; i1++) {
 	        reg[i1] +=sscc[iw*n1+i1]*bsc[iw*n1+i1];
