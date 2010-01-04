@@ -114,6 +114,9 @@ def retrieve(target=None,source=None,env=None):
         login = private['login']
         password = private['password']
         server = private['server']
+        if not server:
+            print 'Cannot access proprietary data server' 
+            return 7
         try:
             session = ftplib.FTP(server,login,password)
             session.cwd(folder)
