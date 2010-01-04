@@ -228,7 +228,8 @@ int main(int argc, char* argv[])
 		sf_putstring(lcurve,"label1","||m||\\_\\s75 1\\^\\s100 ");
 		sf_putstring(lcurve,"unit1","");
 		sf_putint(lcurve,"n2",1);
-		sf_putstring(lcurve,"label2","||d-d*||\\_\\s75 2\\s300 \\^\\s75 2 \\s100 ");
+		sf_putstring(lcurve,"label2",
+			     "||d-d*||\\_\\s75 2\\s300 \\^\\s75 2 \\s100 ");
 		sf_putstring(lcurve,"unit2","");
 		sf_putint(lcurve,"n3",1);
 		sf_floatwrite(ldata,interp,lcurve);
@@ -237,18 +238,18 @@ int main(int argc, char* argv[])
 	    hcurv = sf_floatalloc(nperc);
 	    /* H-curve */
 	    for (j=1; j < nperc-1; j++) {
-		hcurv[j] = (data[j+1]-2*data[j]+data[j-1])*4./
-		    ((model[j+1]-model[j-1])*(model[j+1]-model[j-1]))-
-		    (data[j+1]-data[j-1])*4./((model[j+1]-model[j-1])*
-		    (model[j+1]-model[j-1])*(model[j+1]-model[j-1]))*
-		    (model[j+1]-2*model[j]+model[j-1]);	
+	        hcurv[j] = ((model[j+1]-model[j-1])*
+			    (data[j+1]-2*data[j]+data[j-1])-
+			    (data[j+1]-data[j-1])*
+			    (model[j+1]-2*model[j]+model[j-1]))/
+		            powf(((model[j+1]-model[j-1])*
+				  (model[j+1]-model[j-1])+
+				  (data[j+1]-data[j-1])*
+				  (data[j+1]-data[j-1])),1.5);
 	    }
-	    hcurv[0] = (data[2]-2*data[1]+data[0])/
-		    ((model[1]-model[0])*(model[1]-model[0]))-
-		    (data[1]-data[0])/((model[1]-model[0])*
-		    (model[1]-model[0])*(model[1]-model[0]))*
-		    (model[2]-2*model[1]+model[0]);	
-	    hcurv[nperc-1] = hcurv[nperc-2];
+	    hcurv[0] = 0.;
+	    hcurv[nperc-1] = 0.;
+
 	    if (NULL != sf_getstring ("hcurve")) {
 		sf_putint(hcurve,"n1",nperc);
 		sf_putfloat(hcurve,"d1",dperc);
@@ -261,11 +262,11 @@ int main(int argc, char* argv[])
 		sf_putint(hcurve,"n3",1);
 		sf_floatwrite(hcurv,nperc,hcurve);
 	    }
-	    min = hcurv[nperc/2];
+	    max = hcurv[nperc/2];
 	    perc = 0.;
-	    for (j=0; j < nperc; j++) {
-		if (min > hcurv[j] && 0.!=hcurv[j]) {
-		    min = hcurv[j];
+	    for (j=(int)(0.1*nperc); j < nperc; j++) {
+		if (max < hcurv[j]) {
+		    max = hcurv[j];
 		    perc = j*dperc;
 		}
 	    }
