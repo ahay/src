@@ -78,6 +78,8 @@ figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 # REGULAR EXPRESSIONS
 #############################################################################
 
+begcom = re.compile(r'^[^%]*\\begin\{comment\}')
+endcom = re.compile(r'^[^%]*\\end\{comment\}')
 isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?' \
                     '\{([^\}]+)')
 ismplot = re.compile(r'^[^%]*\\multiplot\*?\s*(?:\[[htbp]+\])?' \
@@ -125,7 +127,16 @@ def latexscan(node,env,path):
     plots = []
     for file in inputs:
         inp = open(file,'r')
-        for line in inp.readlines():            
+        comment = 0
+        for line in inp.readlines():
+            if comment:
+                if endcom.search(line):
+                    comment = 0
+                continue
+            if begcom.search(line):
+                comment = 1
+                continue
+            
             dir  = chdir.search(line)
             if dir:
                 inputdir = dir.group(1)
