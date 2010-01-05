@@ -13,7 +13,7 @@ for file in modelFiles:
         d1=.001249  d2=.001249 o1=0 o2=0 label1=Depth label2=Distance
         unit1=km unit2=km
                                     ''')
-    Result(outputFiles[counter],'grey scalebar=y')
+    Result(outputFiles[counter],'grey scalebar=y allpos=y barreverse=y wanttitle=n')
     counter = counter+1
   
 # ------------------------------------------------------------
