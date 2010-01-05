@@ -1,7 +1,7 @@
 from rsfbook import *
 
 report = (('Optimization','cdstep stack forwd spitz oc2 pwd bspl'),
-          ('Helix Transform','precon findif burg specfac plane'),
+          ('Helix Transform','precon findif burg specfac plane steer'),
           ('Imaging','stoltst antial angle'),
           ('Traveltimes','lineiko huygens fmeiko fmsec'),
           ('Azimuth Moveout','oc1 norm fkamo'),

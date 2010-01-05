@@ -30,20 +30,18 @@ regularization in tomography problems are encouraging.
 \section{INTRODUCTION}
 %background
 When attempting to do inversion we are constantly confronted with the
-problem of slow convergence.  Claerbout and 
-Nichols\shortcite{Claerbout.sep.82.183}
+problem of slow convergence. \cite{Claerbout.sep.82.183}
 suggested using a preconditioner
 to speed up convergence.  Unfortunately it is often difficult to find an
 appropriate preconditioner and/or the preconditioner is so 
 computationally expensive that
 it negates the savings gained by reducing
-the  number of iterations \cite{Claerbout.tdf.82}.
-Claerbout \shortcite{Claerbout.sep.95.jon1}
-proposed
+the  number of iterations \cite[]{Claerbout.tdf.82}.
+\cite{Claerbout.sep.95.jon1} proposed
 designing helicon-style operators
 to  provide  a method to find stable inverses, 
 and potentially, appropriate preconditioners
-\cite{Fomel.sep.95.sergey1,Fomel.sep.94.sergey1}.
+\cite[]{Fomel.sep.95.sergey1,Fomel.sep.94.sergey1}.
 \par
 In addition, geophysical problems are often under-determined,
 requiring some type of regularization.  Unfortunately the simplest,
@@ -52,7 +50,7 @@ features when we would often prefer solutions that follow trends.
 This problem is especially prevalent in velocity estimation.  The
 result obtained through many inversion schemes produce a velocity
 structure that geologists (whose insights are hard to encode into the
-regression equations) find unreasonable \cite{Etgen}.  Fortunately,
+regression equations) find unreasonable \cite[]{Etgen}.  Fortunately,
 there are often other sources of information that can be encoded into
 the regularization operator that allow the inversion to be guided
 towards a more appealing result.  For example, in the case of velocity
@@ -85,8 +83,8 @@ In general, geophysical problems are ill-posed.
 To obtain  pleasing results we impose some type of regularization
 criteria such as
 diagonal scaling, limiting solutions to large 
-singular values \cite{Clapp.sep.84.75},  or
-minimizing different solution norms \cite{Nichols.sep.82.1}.
+singular values \cite[]{Clapp.sep.84.75},  or
+minimizing different solution norms \cite[]{Nichols.sep.82.1}.
 The 
 typical  SEP approach is to minimize the power out of a regularization
 operator ($\mathbf A$) applied to the model ($\mathbf m$),
@@ -97,7 +95,7 @@ described by the fitting goal
 \end{equation}
 Where $\mathbf A$'s spectrum will be the inverse of $\mathbf m$,
 so to produce a smooth $\mathbf m$, we need a rough 
-$\mathbf A$\cite{Claerbout.tdf.82}).
+$\mathbf A$\cite[]{Claerbout.tdf.82}).
 The regularization operator can take many forms, in order of increasing
 complexity:
 \begin{description}
@@ -115,7 +113,7 @@ this case  preference is given to slopes at 45 degrees.}
         \item  [Prediction Error Filters (PEF)] Like steering filters apply a 
    preferential smoothing direction, but are not limited to a single dip
     and determine their smoothing directions
-         from the known data \cite{Schwab.sep.94.matt2}.
+         from the known data \cite[]{Schwab.sep.94.matt2}.
 \end{description}
 
 
@@ -156,7 +154,7 @@ We have three general requirements:
 \item and it is computationally inexpensive.
 \end{itemize}
 By defining our operators via the helix method 
-\cite{Claerbout.sep.95.jon1} we can meet all of these
+\cite[]{Claerbout.sep.95.jon1} we can meet all of these
 requirements.
 The helix concept is to transform {\it N}-Dimensional
 operators into  1-D operators  to take
@@ -187,7 +185,7 @@ model
 there are two general
 courses of action:
 \begin{description}
-\item [Patching] \cite{Claerbout.sep.73.391,Schwab.sep.84.271}
+\item [Patching] \cite[]{Claerbout.sep.73.391,Schwab.sep.84.271}
 Redefine our problem into a series of problems,
 each on a small subset of the data where the stationarity assumption is
 valid, then recombine the data.  This approach leads to problems in determining
@@ -216,7 +214,7 @@ information over large, overlapping regions at each iteration.
 
 To illustrate the effectiveness of this method
 imagine a simple interpolation problem.
-Following the methodology of \cite{Fomel.sep.95.sergey1} we first bin the 
+Following the methodology of \cite[]{Fomel.sep.95.sergey1} we first bin the 
 data, producing
 a model $\mathbf m$, composed of known data $\mathbf m_k$ and unknown data 
 $\mathbf m_u$.  We 
@@ -297,7 +295,7 @@ we created a synthetic shot gather using a $v(z)=a+bz$ model as input
 to a finite difference code.  We then cut
 a hole in this shot gather  and attempted
 to recover the removed values.
-As Figure \ref{fig:shot-s-combo} shows we did a good job 
+As Figure \ref{fig:combo} shows we did a good job 
 recovering the amplitude within a few iterations.
 
 \plot{combo}{width=6in,height=3.8in}{}{Left, synthetic shot gather; center,
@@ -306,10 +304,10 @@ holes cut out of shot gather; right, inversion result after 15 iterations.}
 To see how the method reacted when it was given data that did not
 fit its model (in this case hyperbolic moveout) we used a dataset with
 significant noise problems (ground roll, bad traces, etc.).  Using
-the same technique as in Figure \ref{fig:shot-s-combo} 
+the same technique as in Figure \ref{fig:combo} 
 we ended up with a result which did a fairly
 decent job fitting portions of the data where noise content was low,
-but a poor job elsewhere (Figure \ref{fig:wz-25-combo}).  Even  where
+but a poor job elsewhere (Figure \ref{fig:wz-combo}).  Even  where
 the method did the best job of reconstructing the data, it still left
 a visible footprint. A more esthetically pleasing result can be achieved
 by using the above method followed a more traditional interpolation problem
@@ -320,18 +318,21 @@ using  the operator $\mathbf A$ and the fitting goal
 \end{equation}
 where  $\mathbf m$ is initialized with the result of our previous 
 inversion problem and not allowed to change at locations where we have data.
-The bottom right panel in Figure \ref{fig:wz-25-combo}  shows
+The bottom right panel in Figure \ref{fig:wz-combo}  shows
 the result of applying a few iterations of fitting goal (\ref{eq:old}) 
-to the bottom left result in Figure \ref{fig:wz-25-combo}.
+to the bottom left result in Figure \ref{fig:wz-combo}.
 By using  both methodologies the interpolated data does a much better job 
 blending into its
 surroundings but still is a poor interpolation result.
 
+\inputdir{wz25}
 
-\activeplot{wz-25-combo}{width=6in,height=7in}{}{Top left, original shot
+\plot{wz-combo}{width=6in,height=7in}{Top left, original shot
 gather; top right, gather with holes (input); bottom left,
 result applying equation \ref{eq:easy}, bottom right, result after
 applying equation (\ref{eq:easy}) followed by (\ref{eq:old}).}
+
+\begin{comment}
 
 \section{REGULARIZATION}
 The steering filter methodology has the most potential as a regularization 
@@ -340,18 +341,18 @@ we use inverse steering-filters in conjunction with another
 operator, in this case a tomography operator, to improve the 
 inversion result.
 For our tomography operator we chose Toldi's 
-interval to stacking velocity operator\cite{Toldi.sep.43}. 
-Generally, Toldi\shortcite{Toldi.sep.43} related perturbations in 
+interval to stacking velocity operator\cite[]{Toldi.sep.43}. 
+Generally, \cite{Toldi.sep.43} related perturbations in 
 interval slowness
 to perturbations in stacking slowness 
 in  simple  slowness models.  
 \par
 We constructed a synthetic interval slowness perturbation model (Figure 
-\FIG{toldi-steer},  left panel) where the perturbations from zero follow a 
+\ref{fig:toldi-steer},  left panel) where the perturbations from zero follow a 
 sinusoidal path, and the anomalies go from positive to negative as you go
 from left to right.  
 We  used Toldi's forward operator to compute
-stacking velocities at various depth levels (Figure \FIG{toldi-stack}, 
+stacking velocities at various depth levels (Figure \ref{fig:toldi-stack}, 
 left panel), in this case we simulating collecting stacking velocity at 10
 evenly spaced depths (compared to 160 depth locations in our interval
 slowness model), assuming a cable length of $2~km$.
@@ -374,7 +375,7 @@ Where ${\mathbf T}$, is the Toldi operator; ${\mathbf A}$, is a Laplacian smooth
 ${\mathbf m}$, is our interval slowness perturbation model; and ${\mathbf d}$, is
 our data, stacking slowness perturbations.
 \par
-The center panel of Figure \FIG{toldi-steer} shows the inversion result.  
+The center panel of Figure \ref{fig:toldi-steer} shows the inversion result.  
 We tried a variety of ${\mathbf \epsilon}$ values, selecting one that 
 created a rough
 model, but did a fairly good job recovering the correct interval velocity
@@ -390,10 +391,11 @@ model and changed our fitting goal to:
 {\mathbf T} {\mathbf A}^{-1} {\mathbf x} &\approx& {\mathbf d} 
 \end{eqnarray}
 where ${\mathbf A}$ is our steering filter matrix.  As the right panel of 
-Figure \FIG{toldi-steer} shows we did a substantially better job 
+Figure \ref{fig:toldi-steer} shows we did a substantially better job 
 following ``geology'', with the added benefit of better vertically
 constraining  the interval slowness perturbations. 
 
+\end{comment} 
 
 
 \section{FUTURE WORK AND CONCLUSIONS}
@@ -425,17 +427,16 @@ where the derivative $\mathbf{S}'(\sigma)$ can be computed analytically.
 It is interesting to note that if we start with $\sigma =0$ and apply
 the first-order filter (\ref{eqn:p1}), then the first iteration of
 scheme (\ref{eqn:newton}) will be exactly equivalent to the
-slope-estimation method of \longcite{Claerbout.blackwell.92}, used by
-\longcite{Bednar.sep.95.bednarb} for calculating coherency attributes.
+slope-estimation method of \cite{Claerbout.blackwell.92}, used by
+\cite{Bednar.sep.95.bednarb} for calculating coherency attributes.
 Finally, the steering filter
 regularization methodology needs to be tried in
 conjunction with a variety of operators and 
 applied to  real data problems.
 
 
-\bibliographystyle{sep}
-\bibliography{MISC,SEP,bob}
-
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,bob}
 
 %\newpage
 %\FloatListing
@@ -443,7 +444,7 @@ applied to  real data problems.
 
 
 
-%We used a Fortran90 inversion toolkit \cite{Fomel.sep.93.317} to estimate
+%We used a Fortran90 inversion toolkit \cite[]{Fomel.sep.93.317} to estimate
 %the model.  We first read in and binned the data:
 %\begin{verbatim}
 %call sreed( 'in', raw_data, 4*3*nd)
