@@ -376,7 +376,6 @@ class RSFReport(Environment):
         # get list of papers
         if type(papers[0]) is types.TupleType:
             sections = Sections(papers)
-            print sections
             kw.update({'sections':sections})
             papers = Split(string.join(map(lambda x: x[1],papers)))
         for i in range(len(papers)):

@@ -974,6 +974,7 @@ def mpi(context):
         }\n'''
         cc = context.env.get('CC')
         context.env['CC'] = mpicc
+        context.env['MPICH_CC'] = cc 
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
     else: # mpicc not found
