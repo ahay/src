@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
 	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
 	if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
 	if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
-	flo = o2;
-	fhi = o2+(nw-1)*d2;
+	flo = o2*d1;
+	fhi = (o2+(nw-1)*d2)*d1;
 	n2 = sf_leftsize(in,2);
 	nflo = (int) (flo*n1+0.5);
 	nfhi = (int) (fhi*n1+0.5);
