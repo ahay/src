@@ -15,6 +15,7 @@ try: # distributed version
     alias = {'cat':'merge',
              'real':'imag',
              'add':'mul div',
+             'stack': 'prod min max',
              'cp':'mv'}
 except: # local version
     env = configure.Debug()

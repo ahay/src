@@ -99,4 +99,4 @@ Depends2('install',map(lambda x: x+'.install',
 #               \end{textblock}}
 #               ''')
 
-End(color='const rand')
+End(options='manuscript',use='hyperref',color='const rand')

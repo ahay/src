@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     int j, n2, i2, ni, *fold = NULL, axis;
     off_t i, n, i3, n3;
     sf_file in, out;
-    char key1[7];
-    bool norm, rms, min, max, prod;
+    char key1[7], *prog;
+    bool norm, rms, min=false, max=false, prod=false;
     float *trace, *stack;
     double *dstack;
     sf_datatype type;
@@ -67,21 +67,32 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
     n3 = sf_unshiftdim(in,out,axis);
  
-    if (!sf_getbool("rms",&rms)) rms = false;
-    /* If y, compute the root-mean-square instead of stack. */
-    if (rms || !sf_getbool("norm",&norm)) norm = true;
-    /* If y, normalize by fold. */
-    if (!sf_getbool("min",&min)) min = false;
-    /* If y, find minimum instead of stack.  Ignores rms and norm. */
-    if (!sf_getbool("max",&max)) max = false;
-    /* If y, find maximum instead of stack.  Ignores rms and norm. */
-    if (!sf_getbool("prod",&prod)) prod = false;
-    /* If y, find product instead of stack.  Ignores rms and norm. */
-    
-    if (min || max || prod) { rms = false; norm = false; }
-    if ((min && max) || (min && prod) || (max && prod)) 
-	sf_error("Cannot have min=y max=y prod=y");
+    prog = sf_getprog();
+    if (NULL != strstr(prog,"max")) {
+	max = true;
+    } else if (NULL != strstr(prog,"min")) {
+	min = true;
+    } else if (NULL != strstr(prog,"prod")) {
+	prod = true;
+    } else {
+	if (!sf_getbool("rms",&rms)) rms = false;
+	/* If y, compute the root-mean-square instead of stack. */
+	if (rms || !sf_getbool("norm",&norm)) norm = true;
+	/* If y, normalize by fold. */
+	
+	if (!sf_getbool("min",&min)) min = false;
+	/* If y, find minimum instead of stack.  Ignores rms and norm. */
+	if (!sf_getbool("max",&max)) max = false;
+	/* If y, find maximum instead of stack.  Ignores rms and norm. */
+	if (!sf_getbool("prod",&prod)) prod = false;
+	/* If y, find product instead of stack.  Ignores rms and norm. */
 
+	if ((min && max) || (min && prod) || (max && prod)) 
+	    sf_error("Cannot have min=y max=y prod=y");
+    }	
+
+    if (min || max || prod) { rms = false; norm = false; }
+ 
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
     stack = sf_floatalloc (n);
