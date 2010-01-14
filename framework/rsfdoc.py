@@ -272,6 +272,8 @@ class rsfpar(object):
                 if type=='enum-bool':
                     if default not in ['y','n']:
                         raise TypeError
+                elif '(' in default:
+                    raise NameError
                 else:
                     DefaultIsValid = isinstance(eval(default),eval(type))
             except (SyntaxError,NameError,TypeError): # exception when default contains expressions

@@ -39,9 +39,9 @@ int main(int argc, char* argv[])
     float **stk=NULL, *gam=NULL, *dip=NULL, **ang=NULL; /* I/O arrays */
     float *tmp=NULL;                     /* mapping arrays */
 
-    sf_axis az; /* depth axis */
-    sf_axis as; /*    SS axis */
-    sf_axis aa; /* angle axis */
+    sf_axis axz; /* depth axis */
+    sf_axis axs; /*    SS axis */
+    sf_axis axa; /* angle axis */
 
     int ext;
     int ncig, icig; /* CIG index */
@@ -67,43 +67,43 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
-    az = sf_iaxa(Fstk,1); /* depth axis */
-    as = sf_iaxa(Fstk,2); /*    SS axis */
+    axz = sf_iaxa(Fstk,1); /* depth axis */
+    axs = sf_iaxa(Fstk,2); /*    SS axis */
 
     ncig = sf_leftsize(Fstk,2); /* number of CIGS to process */
 
     /* angle axis */
-    if (!sf_getint  ("na",&na)) na=sf_n(as);       
-    if (!sf_getfloat("da",&da)) da=1./(sf_n(as)-1);
+    if (!sf_getint  ("na",&na)) na=sf_n(axs);       
+    if (!sf_getfloat("da",&da)) da=1./(sf_n(axs)-1);
     if (!sf_getfloat("oa",&oa)) oa=0.;         
-    aa = sf_maxa(na,oa,da);
-    sf_oaxa(Fang,aa,2);
+    axa = sf_maxa(na,oa,da);
+    sf_oaxa(Fang,axa,2);
 
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
     /* I/O arrays */
-    stk = sf_floatalloc2(sf_n(az),sf_n(as)); /* SS(h,z) CIG */
-    gam = sf_floatalloc (sf_n(az)         ); /*  vpvs ratio */
-    dip = sf_floatalloc (sf_n(az)         ); /*  dip  field */
-    ang = sf_floatalloc2(sf_n(az),sf_n(aa)); /*      AD CIG */
+    stk = sf_floatalloc2(sf_n(axz),sf_n(axs)); /* SS(h,z) CIG */
+    gam = sf_floatalloc (sf_n(axz)         ); /*  vpvs ratio */
+    dip = sf_floatalloc (sf_n(axz)         ); /*  dip  field */
+    ang = sf_floatalloc2(sf_n(axz),sf_n(axa)); /*      AD CIG */
 
     /* temp array */
-    tmp = sf_floatalloc(sf_n(as));
+    tmp = sf_floatalloc(sf_n(axs));
 
     /*------------------------------------------------------------*/
-    sft = fint1_init(ext,sf_n(as),0);
+    sft = fint1_init(ext,sf_n(axs),0);
 
     /*------------------------------------------------------------*/
     for (icig=0; icig < ncig; icig++) { /* loop over CIG */
 	if(verb) sf_warning("%d of %d",icig+1,ncig);
 
-	sf_floatread(stk[0],sf_n(az)*sf_n(as),Fstk);	
-	sf_floatread(gam   ,sf_n(az)         ,Fgam);
-	sf_floatread(dip   ,sf_n(az)         ,Fdip);
+	sf_floatread(stk[0],sf_n(axz)*sf_n(axs),Fstk);	
+	sf_floatread(gam   ,sf_n(axz)         ,Fgam);
+	sf_floatread(dip   ,sf_n(axz)         ,Fdip);
 
 	/*------------------------------------------------------------*/
-	for (iz=0; iz < sf_n(az); iz++) {
+	for (iz=0; iz < sf_n(axz); iz++) {
 	    /* loop over depth */
 
 	    g = gam[iz];
@@ -111,14 +111,14 @@ int main(int argc, char* argv[])
 
 	    d*=(g*g-1.);
 
-	    for (is = 0; is < sf_n(as); is++) { 
+	    for (is = 0; is < sf_n(axs); is++) { 
 		/* loop over slant-stack index */
 		tmp[is] = stk[is][iz];
 	    }
 	    fint1_set(sft,tmp);
 
-	    for (ia=0; ia < sf_n(aa); ia++) {
-		a = sf_o(aa)+ia*sf_d(aa);          /* ang */
+	    for (ia=0; ia < sf_n(axa); ia++) {
+		a = sf_o(axa)+ia*sf_d(axa);          /* ang */
 		t = tanf(a/180*SF_PI);             /* tan */
 		
 		/*
@@ -126,10 +126,10 @@ int main(int argc, char* argv[])
 		 */
 		n = (4*g*t+d*(t*t+1.)) / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
 
-		f = (n - sf_o(as)) / sf_d(as);
+		f = (n - sf_o(axs)) / sf_d(axs);
 		fint = f;
 
-		if (fint >= 0 && fint < sf_n(as)) {
+		if (fint >= 0 && fint < sf_n(axs)) {
 		    ang[ia][iz] = fint1_apply(sft,fint,f-fint,false);
 		} else {
 		    ang[ia][iz] = 0.;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	} /* z */
 	/*------------------------------------------------------------*/
 
-	sf_floatwrite(ang[0],sf_n(az)*sf_n(aa),Fang);
+	sf_floatwrite(ang[0],sf_n(axz)*sf_n(axa),Fang);
     }
 
     exit(0);
