@@ -12,7 +12,7 @@ Flow('model',None,
      'sfsigmoid n1=300 n2=400')
 Result('model','sfgrey title="Model" ')
 
-Flow('data','model','sfnoise var=1e-4 ')
+Flow('data','model','sfnoise var=1e-4 seed=12010')
 Result('data','sfgrey title="Data" ')
 
 Flow('res','data',
