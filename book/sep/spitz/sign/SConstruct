@@ -6,7 +6,7 @@ def plot(title):
 Flow('make',None,'make  n1=75 n2=25 t1=2')
 Plot('make',plot('GEE'))
 Plot('make2','make',plot('Spitz'))
-Plot('plane','make',plot('signal+noise'))
+#Plot('plane','make',plot('signal+noise'))
 
 Flow('noiz','make',
      'noise rep=y type=n seed=1993 range=0.145 | smooth rect1=3')
