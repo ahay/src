@@ -6,7 +6,7 @@ Maria Cameron <kourkina@earthlink.net>
 Joseph Dellinger <geojoe@freeusp.org>
 Sergey Fomel <sergey.fomel@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
-Trevor Irons <tirons@users.sourceforge.net>
+Trevor Irons <tirons@mines.edu>
 Jim Jennings <jenningsjwj@mac.com>
 Long Jin <long.jin@shell.com>
 Roman Kazinnik <roman.only@gmail.com>
