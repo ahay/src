@@ -1,0 +1,31 @@
+# This SConstruct builds and places the JAVA API Jar in the LIB FOLDER
+# that is then installed to RSFROOT
+
+import os,sys,string,re,shutil
+sys.path.append('../..')
+import configure
+try:
+    Import('env root libdir')
+    env = env.Clone()
+except:
+    env = configure.Debug()
+    root = None
+    SConscript('../../plot/lib/SConstruct')
+
+cp = None
+try:
+    cp = os.environ['CLASSPATH']
+    env['JAVACLASSPATH'] = cp
+except:
+    print 'Could not find Mines JTK in classpath.'
+    print 'Will not build Java API'
+
+files = ['RSFHeader.java','RSFReader.java','RSFWriter.java']
+
+if 'java' in env.get('API',[]) and cp:
+        env.Jar('rsf.jar',files)
+
+        env.Install('../../lib','rsf.jar')
+
+        if root:
+                env.Install(libdir,'rsf.jar')
