@@ -1,0 +1,102 @@
+from rsfproj import *
+
+# Get data
+##########
+
+tgz = '2D_Land_data_2ms.tgz'
+
+Fetch(tgz,
+      server='http://www.freeusp.org',
+      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+      dir='Data')
+
+files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
+
+Flow(files,tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+Flow('line tline line.asc line.bin','Line_001.sgy',
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
+Result('first','line',
+       'window n2=1000 | agc rect1=250 rect2=100 | grey title="First 1000 traces" ')
+
+Flow('lines','line',
+     '''
+     intbin yk=cdpt | window f3=2 |
+     put
+     label2=Source   d2=0.05  o2=688 unit2=km
+     label3=Receiver d3=0.025 o3=685 unit3=km
+     label1=Time unit1=s
+     ''')
+
+Result('lines',
+       '''
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=100 frame3=120 flat=n
+       title="Raw Data"
+       ''')
+
+
+# Get true geometry
+###################
+
+lines = {'S':251,'R':782}
+color = {'S':4, 'R':2}
+
+for case in 'SR':
+    Flow(case+'.asc','Line_001.%cPS' % case,
+         '''
+         awk 'NR > 20 {print $8, " ", $9}'
+         '''
+         )
+    Flow(case,case+'.asc',
+         '''
+         echo in=$SOURCE data_format=ascii_float n1=2 n2=%d |
+         dd form=native 
+         ''' % lines[case],stdin=0)
+    Plot(case,
+         '''
+         scale dscale=0.001 | dd type=complex |
+         graph symbol=* title=%c plotcol=%d
+         min1=684 max1=705 min2=3837 max2=3842
+         ''' % (case,color[case]))
+
+Result('SR','S R','OverUnderAniso')
+Result('SRO','R S','Overlay')
+
+# Arrange receiver coordinates 
+shots = []
+for shot in range(lines['S']):
+    line = 'line%d' % shot
+    Flow(line,'R','window n1=1 f2=%d n2=282' % (2*shot))
+    shots.append(line)
+Flow('rec',shots,'cat axis=2 ${SOURCES[1:%d]}' % len(shots))
+
+Plot('rec',
+     '''
+     window j1=5 j2=2 |
+     scale dscale=0.001 | 
+     rtoc | math output="input+I*x2" |
+     graph symbol=* plotcol=%d title="Stacking Diagram"
+     label1=Distance unit1=km label2="Shot Number"
+     min1=684 max1=705
+     ''' % color['R'])
+
+Plot('sou','S',
+     '''
+     window n1=1 j2=2 |
+     scale dscale=0.001 | 
+     rtoc | math output="input+I*x1" |
+     graph symbol=* plotcol=%d
+     wanttitle=n wantaxis=n
+     min1=684 max1=705
+     ''' % color['S'])
+
+Result('diagram','rec sou','Overlay')
+
+# Simple stack
+##############
+
+
+
+End()
