@@ -179,6 +179,8 @@ def check_all(context):
         octave(context)
     if 'python' in api:
         python(context)
+    if 'java' in api:
+        java(context)
 
 def identify_platform(context):
     global plat
@@ -1179,7 +1181,7 @@ def api_options(context):
         api = []
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
-                         'f90', 'python', 'matlab', 'octave']
+                         'f90', 'python', 'matlab', 'octave', 'java']
 
     for option in api:
         if not option in valid_api_options:
@@ -1496,6 +1498,19 @@ def python(context):
     except:
         context.Result(context_failure)
 
+def java(context):
+    context.Message("Checking for Mines JTK in Classpath ...")
+    try:
+            if 'edu_mines_jtk.jar' in os.environ['CLASSPATH']:
+                context.Result(context_success)
+            else:
+                context.Result(context_failure)
+                context.Message("Please add path to Mines JTK to the CLASSPATH environmental variable to proceed with the Java API")
+    except:
+            context.Result(context_failure)
+            context.Message("Please add path to Mines JTK to the CLASSPATH environmental variable to proceed with the Java API")
+
+
 def intel(context):
     '''Trying to fix weird intel setup.'''
     libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
@@ -1560,7 +1575,7 @@ def options(file):
     opts.Add('XLIBS','X11 libraries')
     opts.Add('XINC','Location of X11 headers')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
-    opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, octave, python')
+    opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, octave, python, java')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')
