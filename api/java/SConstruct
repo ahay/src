@@ -20,7 +20,7 @@ except:
     print 'Will not build Java API'
 
 
-files = ['RSFHeader','RSFWriter','RSFReader','RSFPar']
+files = ['Header','Writer','Reader','Par']
 
 targets = map(lambda x: 'rsf/'+x+'.class',files)
 sources = map(lambda x: x+'.java',files)

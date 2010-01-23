@@ -4,9 +4,9 @@ import java.io.*;
 import java.nio.ByteOrder;
 import edu.mines.jtk.io.ArrayOutputStream;
 
-public class RSFWriter{
+public class Writer{
 
-    public static PrintStream writeHeader(RSFHeader header,String fullPath){
+    public static PrintStream writeHeader(Header header,String fullPath){
             PrintStream ps = null;
             try{
                     PrintWriter pw = null;
@@ -40,7 +40,7 @@ public class RSFWriter{
                  
     }
 
-    public static void writeRSF(RSFHeader header, float[] data, String filename){
+    public static void writeRSF(Header header, float[] data, String filename){
             header.name = filename;
             String fullPath = "";
             if (filename.equals("out")){
@@ -66,7 +66,7 @@ public class RSFWriter{
             ps.close();
     }
 
-    public static void writeRSF(RSFHeader header, float[][] data, String filename){
+    public static void writeRSF(Header header, float[][] data, String filename){
             header.name = filename;
             String fullPath = "";
             if (filename.equals("out")){
@@ -91,7 +91,7 @@ public class RSFWriter{
                     }
             ps.close();
     }
-    public static void writeRSF(RSFHeader header, float[][][] data, String filename){
+    public static void writeRSF(Header header, float[][][] data, String filename){
             header.name = filename;
             String fullPath = "";
             if (filename.equals("out")){

@@ -1,10 +1,10 @@
 package rsf;
 
-public class RSFHeader{
+public class Header{
 
     public static final int MAX_DIMS = 3;
     
-    public RSFHeader(){
+    public Header(){
         ndims = 0;
         esize = 4;
         path = "";

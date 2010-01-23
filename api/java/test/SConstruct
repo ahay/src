@@ -1,0 +1,19 @@
+from rsfproj import *
+
+import os, string
+
+top = os.environ.get('RSFROOT')
+libdir = os.path.join(top,'lib')
+
+
+cp = os.environ['MINESJTK']
+
+env = Environment()
+
+env.Command('Clip.class','Clip.java', 'javac -cp %s:%s/rsf.jar:. $SOURCE' % (cp,libdir))
+
+Flow('test.attr','Clip.class',
+    '''
+    spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | 
+    java -cp %s:%s/rsf.jar:. Clip | attr
+    ''')

@@ -8,7 +8,7 @@ import java.util.regex.*;
 import java.nio.ByteOrder;
 import edu.mines.jtk.io.ArrayInputStream;
 
-public class RSFReader{
+public class Reader{
 
         /* This is a demo of how to use the interface 
     public static void main(String[] args){
@@ -37,7 +37,7 @@ public class RSFReader{
         System.out.print("\n");
     }
 
-    public static float[] readBinary(RSFHeader header){
+    public static float[] readBinary(Header header){
             try{
                     int n = 1;
                     /* Get total number of elements */
@@ -54,7 +54,7 @@ public class RSFReader{
                     return null;
             }
     }
-    public static float[][] readBinary2D(RSFHeader header){
+    public static float[][] readBinary2D(Header header){
             try{
                     if (header.ndims != 2){
                         throw new Exception("Bad number of dimensions");
@@ -71,7 +71,7 @@ public class RSFReader{
                     return null;
             }
     }
-    public static float[][][] readBinary3D(RSFHeader header){
+    public static float[][][] readBinary3D(Header header){
             try{
                     if (header.ndims != 3){
                         throw new Exception("Bad number of dimensions");
@@ -90,8 +90,8 @@ public class RSFReader{
             }
     }
  
-    public static RSFHeader readHeader(String filename){
-            RSFHeader header = new RSFHeader();
+    public static Header readHeader(String filename){
+            Header header = new Header();
             header.setName(filename);
             try{
                     Scanner s = null;

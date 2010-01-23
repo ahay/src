@@ -2,9 +2,9 @@ package rsf;
 
 import java.util.Hashtable;
 
-public class RSFPar{
+public class Par{
 
-    public RSFPar(String[] args){
+    public Par(String[] args){
         dictionary = new Hashtable<String,String>();
         for (String arg: args){
             try{
