@@ -6,10 +6,17 @@ import edu.mines.jtk.io.ArrayOutputStream;
 
 public class RSFWriter{
 
-    public static void writeHeader(RSFHeader header,String fullPath){
-
+    public static PrintStream writeHeader(RSFHeader header,String fullPath){
+            PrintStream ps = null;
             try{
-                    PrintWriter pw = new PrintWriter(new FileOutputStream(header.name));
+                    PrintWriter pw = null;
+                    
+                    if (header.name.equals("out")){
+                        ps = new PrintStream(System.out);
+                        pw = new PrintWriter(ps);
+                    } else {
+                        pw = new PrintWriter(new FileOutputStream(header.name));
+                    }
                     String path = System.getenv("DATAPATH");
                     pw.println("java programs warning, this file may not be reproducibile");
                     pw.println();
@@ -23,54 +30,93 @@ public class RSFWriter{
                         pw.println("label"+j+"=\""+header.labels[i]+"\"");
                         pw.println("unit"+j+"=\""+header.units[i]+"\"");
                     }
-                    pw.close();
+                    pw.flush();
+                    //pw.close();
             } catch (Exception e){
 
                     System.out.println(e);
             }
+            return ps;
                  
     }
 
-    public static void writeRSF(RSFHeader header, float[] data){
-            String fullPath = System.getenv("DATAPATH")+ header.name+"@";
-            writeHeader(header,fullPath);
+    public static void writeRSF(RSFHeader header, float[] data, String filename){
+            header.name = filename;
+            String fullPath = "";
+            if (filename.equals("out")){
+                fullPath = "stdin";
+            } else {
+                fullPath = System.getenv("DATAPATH")+ header.name+"@";
+            }
+            PrintStream ps = writeHeader(header,fullPath);
+            System.out.printf("\n\n%c%c%c",'\014','\014','\004');
             try{
-                    ArrayOutputStream aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
-
+                    ArrayOutputStream aos = null;
+                    if (fullPath.equals("stdin")){
+                        aos = new ArrayOutputStream(ps,ByteOrder.nativeOrder());
+                    } else {
+                        aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
+                    }
                     aos.writeFloats(data);
 
                     aos.close();
             } catch (Exception e){
                     System.out.println(e);
                     }
-
+            ps.close();
     }
 
-    public static void writeRSF(RSFHeader header, float[][] data){
-            String fullPath = System.getenv("DATAPATH")+ header.name+"@";
-            writeHeader(header,fullPath);
+    public static void writeRSF(RSFHeader header, float[][] data, String filename){
+            header.name = filename;
+            String fullPath = "";
+            if (filename.equals("out")){
+                fullPath = "stdin";
+            } else {
+                fullPath = System.getenv("DATAPATH")+ header.name+"@";
+            }
+            PrintStream ps = writeHeader(header,fullPath);
+            System.out.printf("\n\n%c%c%c",'\014','\014','\004');
             try{
-                   ArrayOutputStream aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
-
+                    ArrayOutputStream aos = null;
+                    if (fullPath.equals("stdin")){
+                        aos = new ArrayOutputStream(ps,ByteOrder.nativeOrder());
+                    } else {
+                        aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
+                    }
                     aos.writeFloats(data);
 
                     aos.close();
             } catch (Exception e){
                     System.out.println(e);
-            }
+                    }
+            ps.close();
     }
-    public static void writeRSF(RSFHeader header, float[][][] data){
-            String fullPath = System.getenv("DATAPATH")+ header.name+"@";
-            writeHeader(header,fullPath);
+    public static void writeRSF(RSFHeader header, float[][][] data, String filename){
+            header.name = filename;
+            String fullPath = "";
+            if (filename.equals("out")){
+                fullPath = "stdin";
+            } else {
+                fullPath = System.getenv("DATAPATH")+ header.name+"@";
+            }
+            PrintStream ps = writeHeader(header,fullPath);
+            System.out.printf("\n\n%c%c%c",'\014','\014','\004');
             try{
-                   ArrayOutputStream aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
-
+                    ArrayOutputStream aos = null;
+                    if (fullPath.equals("stdin")){
+                        aos = new ArrayOutputStream(ps,ByteOrder.nativeOrder());
+                    } else {
+                        aos = new ArrayOutputStream(fullPath,ByteOrder.nativeOrder());
+                    }
                     aos.writeFloats(data);
 
                     aos.close();
             } catch (Exception e){
                     System.out.println(e);
-            }
+                    }
+            ps.close();
+
+
     }
 
 

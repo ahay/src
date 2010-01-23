@@ -10,9 +10,9 @@ import edu.mines.jtk.io.ArrayInputStream;
 
 public class RSFReader{
 
+        /* This is a demo of how to use the interface 
     public static void main(String[] args){
 
-        /* This is a demo of how to use the interface */
             RSFHeader header = readHeader(args[0]);
 
             System.out.printf("Header for %s is: \n", args[0]);
@@ -26,7 +26,9 @@ public class RSFReader{
             header.setName("javatest.rsf");
 
             RSFWriter.writeRSF(header,data);
+
     }
+    */
 
     public static void printFloats(float[] f){
         for(int i = 0; i < f.length; ++i){
@@ -92,7 +94,12 @@ public class RSFReader{
             RSFHeader header = new RSFHeader();
             header.setName(filename);
             try{
-                    Scanner s = new Scanner(new FileInputStream(filename));
+                    Scanner s = null;
+                    if (filename.equals("in")){
+                        s = new Scanner(new InputStreamReader(System.in));
+                    } else {
+                        s = new Scanner(new FileInputStream(filename));
+                    }
                     while(s.hasNextLine()){
                         String line = s.nextLine();
                         if( line.contains("=")){
