@@ -14,17 +14,24 @@ except:
 
 cp = None
 try:
-    cp = os.environ['CLASSPATH']
-    env['JAVACLASSPATH'] = cp
+    cp = os.environ['MINESJTK']
 except:
     print 'Could not find Mines JTK in classpath.'
     print 'Will not build Java API'
 
-files = ['RSFHeader.java','RSFReader.java','RSFWriter.java']
 
+files = ['RSFHeader','RSFWriter','RSFReader']
+
+targets = map(lambda x: x+'.class',files)
+sources = map(lambda x: x+'.java',files)
+
+pwd = os.getcwd()
 if 'java' in env.get('API',[]) and cp:
-        env.Jar('rsf.jar',files)
 
+        for i in range(len(files)):
+            env.Command(targets[i],sources[i],['javac -cp %s:%s -d %s $SOURCE' % (cp,pwd,pwd)])
+
+        env.Command('rsf.jar',targets,'jar cf $TARGET -C %s rsf/' %(pwd))
         env.Install('../../lib','rsf.jar')
 
         if root:
