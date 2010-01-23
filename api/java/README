@@ -4,7 +4,7 @@ You can get the Mines JTK at:
 
 http://inside.mines.edu/~dhale/jtk/
 
-To link to it, add the CLASSPATH environmental variable to your profile.
+To link to it, add the MINESJTK environmental variable to your profile.
 
-e.g. export CLASSPATH=$CLASSPATH:PATH_TO_JTK
+e.g. export MINESJTK=PATH_TO_JTK
 

@@ -24,7 +24,7 @@ public class RSFHeader{
 
     public void setDelta(int index, float delta){
             try{
-                    deltas[index] = delta;
+                    deltas[index-1] = delta;
             } catch (Exception e){
                     System.out.printf("Failed putting %f at index %d into deltas\n",delta,index);
                     System.exit(1);
@@ -33,7 +33,7 @@ public class RSFHeader{
 
     public void setOrigin(int index, float origin){
             try{
-                    origins[index] = origin;
+                    origins[index-1] = origin;
             } catch (Exception e){
                     System.out.printf("Failed putting %f at index %d into origins\n",origin,index);
             }
@@ -41,7 +41,7 @@ public class RSFHeader{
 
     public void setN(int index, int n){
             try{
-                    this.n[index] = n;
+                    this.n[index-1] = n;
                     ndims += 1;
             } catch (Exception e){
                     System.out.printf("Failed putting %d at index %d into n\n",n,index);
@@ -50,7 +50,7 @@ public class RSFHeader{
 
     public void setLabel(int index, String label){
             try{
-                    labels[index] = label;
+                    labels[index-1] = label;
             } catch (Exception e){
                     System.out.printf("Failed to put %s at index %d in labels\n",label,index);
             }
@@ -58,7 +58,7 @@ public class RSFHeader{
 
     public void setUnit(int index, String unit){
             try{
-                    units[index] = unit;
+                    units[index-1] = unit;
             } catch (Exception e){
                     System.out.printf("Failed to put %s at index %d in unit\n",unit,index);
             }

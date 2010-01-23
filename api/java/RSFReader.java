@@ -11,6 +11,8 @@ import edu.mines.jtk.io.ArrayInputStream;
 public class RSFReader{
 
     public static void main(String[] args){
+
+        /* This is a demo of how to use the interface */
             RSFHeader header = readHeader(args[0]);
 
             System.out.printf("Header for %s is: \n", args[0]);
@@ -104,7 +106,7 @@ public class RSFReader{
                                             String temp = key.substring(1);
                                             Integer dim = Integer.valueOf(temp);
                                             Integer elements = Integer.valueOf(val);
-                                            header.setN(dim-1,elements);
+                                            header.setN(dim,elements);
                                         } else if (key.startsWith("data_format")){
                                             header.setFormat(val.replace("\"",""));
                                         } else if (key.startsWith("in")){
@@ -113,20 +115,20 @@ public class RSFReader{
                                             String temp = key.substring(1);
                                             Integer dim = Integer.valueOf(temp);
                                             Float delta = Float.valueOf(val);
-                                            header.setDelta(dim-1,delta);
+                                            header.setDelta(dim,delta);
                                         } else if (key.startsWith("o")){
                                             String temp = key.substring(1);
                                             Integer dim = Integer.valueOf(temp);
                                             Float origin = Float.valueOf(val);
-                                            header.setOrigin(dim-1,origin);
+                                            header.setOrigin(dim,origin);
                                         } else if (key.startsWith("label")){
                                             String temp = key.substring(5);
                                             Integer dim = Integer.valueOf(temp);
-                                            header.setLabel(dim-1,val.replace("\"",""));
+                                            header.setLabel(dim,val.replace("\"",""));
                                         } else if (key.startsWith("unit")){
                                             String temp = key.substring(4);
                                             Integer dim = Integer.valueOf(temp);
-                                            header.setUnit(dim-1,val.replace("\"",""));
+                                            header.setUnit(dim,val.replace("\"",""));
                                         }
                                 } catch (ArrayIndexOutOfBoundsException e){
                                         System.out.printf("WARNING: CAUGHT ARRAYOUTOFBOUNDS! TRYING TO ADD %S WITH %S VALUE\n",key,val);                                
