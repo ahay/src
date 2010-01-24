@@ -2,7 +2,7 @@
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}} 
 
-\author{Sergey Fomel\footnotemark[1], Paul Sava\footnotemark[2], Jim Jennings, Jules Browaeys, Yang Liu\footnotemark[1], Ioan Vlad, Vladimir Bashkardin\footnotemark[1],  Gilles Hennenfent, Trevor Irons, and William Burnett\footnotemark[1]}
+\author{Sergey Fomel\footnotemark[1], Paul Sava\footnotemark[2], Jim Jennings, Jules Browaeys, Yang Liu\footnotemark[1], Ioan Vlad, Vladimir Bashkardin\footnotemark[1],  Gilles Hennenfent, Trevor Irons\footnotemark[2], and William Burnett\footnotemark[1]}
 
 \ms{GEO-2010}
 
@@ -12,8 +12,7 @@ John A. and Katherine G. Jackson School of Geosciences \\
 The University of Texas at Austin \\
 University Station, Box X \\
 Austin, TX 78713-8972 \\
-\footnotemark[2] Center for Wave Phenomena \\
-Department of Geophysics \\
+\footnotemark[2] Department of Geophysics \\
 Colorado School of Mines \\
 Golden, CO 80401}
 
@@ -28,13 +27,32 @@ Golden, CO 80401}
 
 \section{Introduction}
 
+The goal of this paper is to introduce the \textsc{Madagascar}
+software package. \textsc{Madagascar} provides a collection of
+programs for multidimensional data analysis, including seismic imaging
+and seismic data processing, and an integrated environment for
+conducting data processing workflows and computational experiments.
+
+It is the need for an integrated and open environment for geophysical
+research that motivated the development of
+\textsc{Madagascar}... reproducible research... ..similarities and
+differences with MATLAB... with SU...
+
+The paper is organized as follows. We start with basic facts about the
+\textsc{Madagascar} development status and organizational
+structure. Next, we describe the core principles that went into
+software design. Finally, we provide guidelines for new users for
+exploring the package and for contributing new software to it. The
+appendix contains a complete example of a small research project
+implemented in \textsc{Madagascar}
+
 \section{Facts}
 
 The work on the \textsc{Madagascar} package (previously named RSF for \emph{Regularly
 Sampled Format}) was started in 2003.  The package got
 publicly released during an EAGE Workshop on open-source E\&P Software
 in Vienna in June 2006. Since then, more than 20 people have
-contributed to its developement, writing more than 250,000 lines of code.
+contributed to its development, writing more than 250,000 lines of code.
 
 \href{http://www.ohloh.net/}{Ohloh}, a website that maps the landscape
 of open-source software development, evaluates \textsc{Madagascar} as
@@ -55,7 +73,20 @@ The design of \textsc{Madagascar} is based on several fundamental principles.
 
 An easy way to start exploring \textsc{Madagascar} is checking the list of reproducible papers. 
 
-\section{Example}
+\subsection{Installation}
+
+\section{How to contribute your own programs to \textsc{Madagascar}}
+
+The \textsc{Madagascar} community is open. Developers take a joint
+responsibility of maintaining and extending the package. It is easy to
+become a developer....
 
 \bibliographystyle{seg}
 \bibliography{SEG}
+
+\append{Example}
+
+In this appendix, we provide a simple example of using
+\textsc{Madagascar} for a research project.
+
+
