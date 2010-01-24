@@ -4,7 +4,8 @@ William Burnett <will.burnett@gmail.com>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
 Joseph Dellinger <geojoe@freeusp.org>
-Sergey Fomel <sergey.fomel@gmail.com> 
+Sergey Fomel <sergey.fomel@gmail.com>
+Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@mines.edu>
 Jim Jennings <jenningsjwj@mac.com>

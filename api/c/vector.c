@@ -89,7 +89,7 @@ vc3d axa3d( int n)
 double scp3d(vc3d* U, vc3d* V)
 /*< scalar product of 3D vectors >*/
 {
-    return V->dx*V->dx + V->dy*V->dy + V->dz*V->dz;
+    return U->dx*V->dx + U->dy*V->dy + U->dz*V->dz;
 }
 
 vc3d vcp3d(vc3d* U, vc3d* V)
