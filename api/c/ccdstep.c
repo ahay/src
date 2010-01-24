@@ -130,7 +130,7 @@ static sf_double_complex dsdot(int n,
     int i;
     
     prod = sf_dcmplx(0.,0.);
-#ifdef _OPENMP
+#if defined(_OPENMP) && defined(SF_HAS_COMPLEX_H)
 #pragma omp parallel for private(i,xi,yi,pi) reduction(+:prod)
 #endif
     for (i=0; i < n; i++) {
