@@ -313,7 +313,7 @@ def report_all(target=None,source=None,env=None):
          '\\cleardoublepage\n',
          '\\pagenumbering{arabic}\n',
          '\\setcounter{page}{1}\n',
-         '\\GEOheader{\\GROUP, Report \\REPORT, \\today}\n'
+         '\\GEOheader{\\GROUP, \\REPORT, \\today}\n'
          ])
     all.write('%% start of paper list\n')
     resdirs = env.get('resdirs',{})
