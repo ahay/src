@@ -116,7 +116,7 @@
 
 /* Too big a number to be a possible width or height, which is bounded by 64 */
 #define MAGIC		5555
-#define MAX_LENGTH	10000	/* Max number of lines in input Vplot file */
+#define MAX_LENGTH	100000	/* Max number of lines in input Vplot file */
 #define MAX_FONT	32768	/* Max number of symbols in a font */
 #define MAX_STRING	10	/* Max length of char number */
 
