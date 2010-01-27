@@ -21,7 +21,8 @@ import rsfprog
 top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
 
-def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',remote='',stdout=1,stdin=1,timer=''):
+def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',remote='',
+         stdout=1,stdin=1,timer='',mpirun=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')
     steps = []
@@ -55,6 +56,9 @@ def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',rem
                 if re.match(r'[^/]+\.exe$',command): # local program
                     command = os.path.join('.',command)
             pars.insert(0,command)
+            # special rule for MPI programs
+            if rsfprog.startswith(prefix+'mpi') and mpirun:                
+                pars.instert(0,mpirun)
             # special rule for solvers
             if rsfprog == prefix+'conjgrad' or \
                    rsfprog == prefix+'cconjgrad':

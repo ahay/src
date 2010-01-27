@@ -216,6 +216,7 @@ class Project(Environment):
         opts.Add('CHECKPAR','Whether to check parameters')
         opts.Add('ENVIRON','Additional environment settings')
         opts.Add('CLUSTER','Nodes available on a cluster')
+        opts.Add('MPIRUN','mpirun command')
         opts.Update(self)
         cwd = os.getcwd()
         self.cwd = cwd
@@ -272,6 +273,8 @@ class Project(Environment):
             self.timer = WhereIs('time') + ' '
         else:
             self.timer = ''
+
+        self.mpirun = self.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
 
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
@@ -403,7 +406,7 @@ class Project(Environment):
             
         command = rsfflow.Flow(sources,flow,rsf,
                                self.checkpar,self.coms,prefix,self.progsuffix,
-                               remote,stdout,stdin,self.timer)
+                               remote,stdout,stdin,self.timer,self.mpirun)
 
         # May need to do it remotely
         if remote:
