@@ -131,7 +131,8 @@ void upgrad_close(upgrad upg)
 
 void upgrad_solve(upgrad upg,
 		  const float *rhs /* right-hand side */, 
-		  float *x         /* solution */)
+		  float *x         /* solution */,
+		  const float *x0  /* initial solution */)
 /*< linear operator >*/
 {
     int it, jt, i, m, j;
@@ -146,7 +147,7 @@ void upgrad_solve(upgrad upg,
 	den = upg->ww[it][ndim];
 
 	if (den == 0.) {
-	    x[jt] = 0.;
+	    x[jt] = (NULL != x0)? x0[jt]: 0.;
 	    continue;
 	}
 

@@ -23,13 +23,12 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv;
     int dim, i, n[SF_MAX_DIM], it, nt, niter, iter, *m;
-    float d[SF_MAX_DIM], *t, *dt, *s, *ds, tol;
+    float d[SF_MAX_DIM], *t, *dt, *s, *ds, *t0, tol;
     double err;
     char key[4], *what;
     upgrad upg;
-    sf_file dtime, time, slow, mask;
+    sf_file dtime, time, slow, mask, time0;
     
     sf_init(argc,argv);
     time = sf_input("in");
@@ -47,9 +46,6 @@ int main(int argc, char* argv[])
     if (NULL == (what = sf_getstring("what"))) what="time";
     /* what to compute */
 
-    if (!sf_getbool("inv",&inv)) inv=true;
-    /* if y, traveltime; if n, slowness squared */
-
     upg = upgrad_init(dim,n,d);
 
     t = sf_floatalloc(nt);
@@ -65,12 +61,21 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(s,nt,dtime);
 	    break;
 	case 'i': /* integration */
+	    if (NULL != sf_getstring("time")) {
+		time0 = sf_input("time");
+		t0 = sf_floatalloc(nt);
+		sf_floatread(t0,nt,time0);
+		sf_fileclose(time0);
+	    } else {
+		t0 = NULL;
+	    }
+
 	    slow = sf_input("slow");  /* slowness */
 	    sf_floatread(s,nt,slow);
 	    sf_fileclose(slow);
 
 	    upgrad_set(upg,t);
-	    upgrad_solve(upg,s,t);
+	    upgrad_solve(upg,s,t,t0);
 	    
 	    sf_floatwrite(t,nt,dtime);
 	    break;
@@ -109,7 +114,7 @@ int main(int argc, char* argv[])
 		    ds[it] = m[it]? sqrtf(ds[it])*s[it]-ds[it]:0.0;
 		}
 		
-		upgrad_solve(upg,ds,dt);
+		upgrad_solve(upg,ds,dt,NULL);
 		
 		for (it=0; it < nt; it++) {
 		    t[it] += dt[it];

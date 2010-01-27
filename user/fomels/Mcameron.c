@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
 	    x[i1] = x[i];
 	    z[i1] = z[i1-1]+dt*v[i1-1];
-	    k[i1] = false;
+	    k[i1] = (ix==0) || (ix==nx-1);
 	}
     }
 
