@@ -1,5 +1,6 @@
 #include <rsf.h>
 #include "fdutil.h"
+#include <stdio.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -579,7 +580,10 @@ void lint2d_inject(float**uu,
     float wa;
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia,wa) shared(ca,ww,uu)
+#pragma omp parallel for \
+    schedule(dynamic,1) \
+    private(ia,wa) \
+    shared(ca,ww,uu)
 #endif
     for (ia=0;ia<ca->n;ia++) {
 	wa = ww[ia];
@@ -808,6 +812,14 @@ abcone2d abcone2d_make(int     nop,
 		       bool   free, 
 		       fdm2d   fdm)
 /*< init 2D ABC >*/
+
+/*This absorbing boundary condition follows the work done in
+Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
+
+Which can be found at:
+
+http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
+*/
 {
     abcone2d abc;
     int iz,ix;
@@ -841,6 +853,15 @@ abcone3d abcone3d_make(int     nop,
 		       bool   free, 
 		       fdm3d   fdm)
 /*< init 3D ABC >*/
+
+/*This absorbing boundary condition follows the work done in
+Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
+
+Which can be found at:
+
+http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
+*/
+
 {
     abcone3d abc;
     int iz,ix,iy;
@@ -1052,6 +1073,13 @@ void abcone3d_apply(float  ***uo,
 /*------------------------------------------------------------*/
 sponge sponge_make(int nb)
 /*< init boundary sponge >*/
+
+/* Sponge boundary conditions multiply incoming wavefields
+by smaller coefficients to attenuate the wavefield over time and space.
+
+The sponge coefficients need to deviate from 1 very gradually to ensure
+that there are no induced reflections caused by large impedance 
+contrasts */
 {
     sponge spo;
     int   ib;
@@ -1059,7 +1087,6 @@ sponge sponge_make(int nb)
     
     spo = (sponge) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(nb);
-
     sb = 4.0*nb;               
     for(ib=0; ib<nb; ib++) {
 	fb = ib/(sqrt(2.0)*sb);
@@ -1085,6 +1112,38 @@ void sponge2d_apply(float**   uu,
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
 	w = spo->w[fdm->nb-ib-1];
+
+	ibz = fdm->nzpad-ib-1;
+	for(ix=0; ix<fdm->nxpad; ix++) {
+	    uu[ix][ib ] *= w; /*    top sponge */
+	    uu[ix][ibz] *= w; /* bottom sponge */
+	}
+
+	ibx = fdm->nxpad-ib-1;
+	for(iz=0; iz<fdm->nzpad; iz++) {
+	    uu[ib ][iz] *= w; /*   left sponge */
+	    uu[ibx][iz] *= w; /*  right sponge */
+	}
+
+    }
+}
+
+void sponge2d_apply_test(float**   uu,
+		    sponge   spo,
+		    fdm2d    fdm)
+/*< apply boundary sponge >*/
+{
+    int iz,ix,ib,ibz,ibx;
+    float w;
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ib,iz,ix,ibz,ibx,w)			\
+    shared(fdm,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[ib];
 
 	ibz = fdm->nzpad-ib-1;
 	for(ix=0; ix<fdm->nxpad; ix++) {
