@@ -17,7 +17,7 @@
  *
  * - Joe Dellinger
  */
-#define NUM_FONTS	17
+#define NUM_FONTS	18
 
 /*
  * Modifications:
@@ -48,6 +48,7 @@
 #include <italict.include>
 #include <scripts.include>
 #include <math.include>
+#include <hiragana.include>
 
 
 
@@ -126,5 +127,7 @@ GLYPH font[NUMGENFONT] = {
 {0, "math", NOT_LOADED},
 
 {0, "misc", NOT_LOADED},
+
+{0, "hiragana", NOT_LOADED},
 
 };
