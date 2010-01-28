@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj;
+    bool adj, verb;
     int n1, n2, n12, n3, i3, order, rect1, rect2;
     float *input, *smooth, **slope, eps;
     sf_file in, out, dip;
@@ -45,6 +45,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
 
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
@@ -58,6 +61,8 @@ int main(int argc, char* argv[])
     slope = sf_floatalloc2(n1,n2);
  
     for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+
 	sf_floatread(input,n12,in);
 	sf_floatread(slope[0],n12,dip);
 
