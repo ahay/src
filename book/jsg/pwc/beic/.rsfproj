@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfcontour', 'sfdip', 'sfpwdsigk', 'sfadd', 'sfcat', 'sfbyte', 'sfwindow', 'sfdix', 'sfpwdix', 'sfspray', 'sfdixshape', 'sfwiggle']
+data=['data/midpts/bei-agc.rsf', 'data/midpts/bei-npk.rsf', 'data/midpts/bei-agc2.rsf']
+size=   15452640
