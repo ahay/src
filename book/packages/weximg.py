@@ -46,14 +46,14 @@ def wempar(par):
 def fWRwex(data,wfld,slow,par):
     Flow(wfld,[data,slow],
          '''
-         wexwfl causal=y %s slo=${SOURCES[1]} 
+         wexwfl verb=y causal=y %s slo=${SOURCES[1]} 
          ''' % param(par))
 
 # Wavefield Reconstruction: backward in time
 def bWRwex(data,wfld,slow,par):
     Flow(wfld,[data,slow],
          '''
-         wexwfl causal=n %s slo=${SOURCES[1]} 
+         wexwfl verb=y causal=n %s slo=${SOURCES[1]} 
          ''' % param(par))
 
 # Causal datuming (forward in time, causal=y)
@@ -62,7 +62,7 @@ def bWRwex(data,wfld,slow,par):
 def Cdtwex(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         wexwfl inv=0 datum=1 causal=y %s
+         wexwfl verb=y inv=0 datum=1 causal=y %s
          slo=${SOURCES[1]}
          ''' % param(par))
 
@@ -78,7 +78,6 @@ def Adtwex(wfld,data,slow,par):
 
 
 def datum(swf1,rwf1,slow,swf0,rwf0,par):
-    
     Cdtwex(swf1,swf0,slow,par) #      causal
     Adtwex(rwf1,rwf0,slow,par) # anti-causal
 

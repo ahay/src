@@ -6,6 +6,7 @@ import fdmod
 def param():
     par = {
         'nx':3201,  'ox':10.000,'dx':0.025,  'lx':'x', 'ux':'km',
+        'ny':1,     'oy':0.000, 'dy':0.025,  'ly':'y', 'uy':'km',
         'nz':1201,  'oz':0,     'dz':0.025,  'lz':'z', 'uz':'km',
         'nt':1500,  'ot':0,     'dt':0.008,  'lt':'t', 'ut':'s'
         }
@@ -14,6 +15,8 @@ def param():
     
     par['ox']=par['ox']*par['ft2km']
     par['dx']=par['dx']*par['ft2km']
+    par['oy']=par['oy']*par['ft2km']
+    par['dy']=par['dy']*par['ft2km']
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
 
