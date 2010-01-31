@@ -122,22 +122,8 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 	}
     }
     divn(num,den,rat2);
-	
-    for (i=0; i < n2g; i++) {
-	if (rat1[i] > 0.) {
-	    if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
-		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-	    } else {
-		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-	    }
-	} else {
-	    if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
-		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-	    } else {
-		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-	    }
-	}
-    }
+    
+    divn_combine(rat1,rat2,rat1);
 }
 
 /* 	$Id: Mwarpscan.c 744 2004-08-17 18:46:07Z fomels $	 */

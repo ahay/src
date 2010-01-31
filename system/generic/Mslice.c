@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
 	for (it=0; it < nt; it++) {
 	    s = (picks[it] - s0)/ds;
-	    is = s; s -= is;
+	    is = floorf(s); s -= is;
 	    if (is >= 0 && is < ns-1) {
 		trace[it] = s * semb[is+1][it] + (1.-s) * semb[is][it];
 	    } else {

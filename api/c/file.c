@@ -156,6 +156,8 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	    return NULL;
 	}
     }
+
+    file->buf = NULL;
 /*    setbuf(file->stream,file->buf); */
 
     /* create a parameter table */
@@ -208,7 +210,6 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	sf_error ("%s: pipe problem:",__FILE__);
 
     file->op = XDR_DECODE;
-    file->buf = NULL;
 
     format = sf_histstring(file,"data_format");
     if (NULL == format) {
@@ -253,6 +254,8 @@ Should do output after sf_input. >*/
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to header file %s:",__FILE__,headname);
     }
+
+    file->buf = NULL;
 /*    setbuf(file->stream,file->buf); */
 
     file->pars = sf_simtab_init (tabsize);
@@ -304,7 +307,6 @@ Should do output after sf_input. >*/
     sf_putstring(file,"in",file->dataname);    
 
     file->op = XDR_ENCODE;
-    file->buf = NULL;
 
     if (NULL == infiles) {
 	infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));

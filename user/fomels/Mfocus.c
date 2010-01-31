@@ -1,9 +1,4 @@
-/* Focusing indicator. 
-
-Takes: rect1=1 rect2=1 ... 
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Focusing indicator. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -53,6 +48,7 @@ int main (int argc, char* argv[])
     for (i=0; i < dim1; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	n12 *= n[i];
     }
     
@@ -91,29 +87,7 @@ int main (int argc, char* argv[])
 	
 	divn (num, den, rat2);
 	
-	for (i=0; i < n12; i++) {
-	    rat1[i] *= rat2[i];
-	}
-	
-	/*
-	  
-	for (i=0; i < n12; i++) {
-	if (rat1[i] > 0.) {
-	if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
-	rat1[i] = fabsf(rat1[i]*rat2[i]);
-	} else {
-	rat1[i] = -fabsf(rat1[i]*rat2[i]);
-	}
-	} else {
-	if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
-	rat1[i] = -fabsf(rat1[i]*rat2[i]);
-	} else {
-	rat1[i] = fabsf(rat1[i]*rat2[i]);
-	}
-	}
-	}
-	
-	*/
+	divn_combine (rat1, rat2, rat1);
 	
 	sf_floatwrite(rat1,n12,out);
     }

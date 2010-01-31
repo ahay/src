@@ -8,12 +8,13 @@ cflow chebvc cpef curv dealias deblur dijkstra dip dip2 diplet dips
 distance divn dix dixshape eikonal eikonalvti erf exgr explanesignoi
 expsignoi focus fpow freqest gaussmooth gbeamform interpt iphase kron
 l1 lineiko locov lpf lsfit mffit mig3 miss3 nconv nsmooth nsmooth1
-ocparcel octentwt ofilp ofpwd ofpwd2 ofsemb patch pick pick3 plane
-planemis2 planemis3 planereg2 planereg3 planesignoi pmig pmshape2
-predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk pwdsmooth2 pwspray
-pwspray3 rdiv reshape riesz rsin seislet seisigk shape shapesigk
-shearer similarity smoothreg thin timecont timefreq timeshift tomo
-trismooth2 tristack twodip2 twofreq2 velcon warp1 warpadd warpscan
+ocparcel octentwt ofilp ofpwd ofpwd2 ofsemb patch phaserot pick pick3
+plane planemis2 planemis3 planereg2 planereg3 planesignoi pmig
+pmshape2 predict pwd pwcoh pwdix pwpaint pwpaint3 pwdsigk pwdsmooth2
+pwspray pwspray3 rdiv reshape riesz rsin seislet seisigk shape
+shapesigk shearer similarity simenv smoothreg thin timecont timefreq
+timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon warp1
+warpadd warpscan
 '''
 
 pyprogs = 'rcat'

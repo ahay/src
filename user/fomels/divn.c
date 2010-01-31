@@ -22,7 +22,7 @@
 #include "divn.h"
 #include "trianglen.h"
 
-static int niter;
+static int niter, n;
 static float *p;
 
 void divn_init(int ndim   /* number of dimensions */, 
@@ -34,6 +34,7 @@ void divn_init(int ndim   /* number of dimensions */,
 /*< initialize >*/
 {
     niter = niter1;
+    n = nd;
 
     trianglen_init(ndim, nbox, ndat);
     sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
@@ -54,5 +55,24 @@ void divn (float* num, float* den,  float* rat)
     sf_weight_init(den);
     sf_conjgrad(NULL, sf_weight_lop,trianglen_lop,p,rat,num,niter); 
 }
+
+void divn_combine (const float* one, const float* two, float *prod)
+/*< compute product of two divisions >*/
+{
+    int i;
+    float p;
+
+    for (i=0; i < n; i++) {
+	p = sqrtf(fabsf(one[i]*two[i]));
+	if ((one[i] > 0. && two[i] < 0. && -two[i] >= one[i]) ||
+	    (one[i] < 0. && two[i] > 0. && two[i] >= -one[i])) 
+	    p = -p;
+	p += 1.;
+	p *= p;
+	p *= p/16.;
+	prod[i] = p;	
+    }
+}
+    
 
 /* 	$Id$	 */
