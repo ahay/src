@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 '''Finds RSF files with missing or incomplete binaries or headers.
-Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
+Delete them all with shell constructs like: rm -f `sfinvalid dir=.`
+Works only in a given directory, not recursively in subdirectories'''
 
 # Copyright (C) 2009 Ioan Vlad
 #
