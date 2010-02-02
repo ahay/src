@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 '''Finds RSF files with missing or incomplete binaries or headers.
-Delete them all with shell constructs like:
-    rm -f `sfinvalid dir=.`'''
+Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
 
 # Copyright (C) 2009 Ioan Vlad
 #
@@ -18,6 +17,8 @@ Delete them all with shell constructs like:
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# This program is dependent on the output of sfin
 
 import sys, os, glob, commands
 import rsfprog
@@ -95,11 +96,27 @@ def main(argv=sys.argv):
             # Check for incomplete binaries
             com_out = commands.getoutput(sfin+'y '+f)
             line_list = com_out.split('\n')
-            if line_list[-1][:6] == 'sfin: ' and line_list[-1][6:16] != 'The first ':
+
+            # Using a grep equivalent below because the "Actually..." error
+            # message in sfin is not always on last line.
+
+            # Clumsy interpretation of grep below, with a touch of awk
+            # Using Unix grep in original command will not work
+            # because errors come via stderr and grep works on stdout
+
+            err_list = []
+            for line in line_list:
+                if line[:6] == 'sfin: ':
+                    err_msg = line[6:]
+                    if err_msg != 'This data file is entirely zeros.':
+                        if err_msg[:10] != 'The first ':
+                            err_list.append(err_msg.strip())
+            if err_list != []:
                 msg = f
-                if(verb):
-                    msg += '\tBinary '
-                    msg += line_list[-1][6:].strip().split(',')[1].rstrip('.').lstrip()
+                if verb:
+                    # Showing only the first error. Probably the only one.
+                    msg += '\t' + err_list[0]
+
         if msg != None:
             print msg
 
