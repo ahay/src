@@ -21,6 +21,7 @@
 #include <rsf.h>
 
 static void ddbreak (sf_datatype itype, sf_datatype otype);
+static float ibm2float (const char* num);
 
 int main(int argc, char *argv[])
 {
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
     short *sbuf;
     sf_complex *cbuf;
     unsigned char *ubuf;
+    bool ibm = false;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -154,9 +156,23 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
-			for (i=j=0; i < nin && j < nout; i++, j++) {
-			    fbuf[j] = ibuf[i]; 
-			}
+                        if (!sf_getbool("ibm",&ibm)) ibm=false;
+                        /* Special case - assume integers actually represent IBM floats */
+                        if (ibm) {
+                            /* This is a very special case - the input values
+                               are not integers but IBM floats actually. Since
+                               there is no format for storing float headers in Madagascar,
+                               they come in as integers. We catch them here and
+                               do a proper conversion from IBM floats to IEEE floats */
+			    for (i=j=0; i < nin && j < nout; i++, j++) {
+			        fbuf[j] = ibm2float ((const char*)&ibuf[i]);
+			    }
+                        } else {
+                            /* Regular conversion from integer to float */
+			    for (i=j=0; i < nin && j < nout; i++, j++) {
+			        fbuf[j] = ibuf[i]; 
+			    }
+                        }
 			sf_floatwrite(fbuf,nout,out);
 			break;
 		    case SF_COMPLEX:
@@ -277,6 +293,56 @@ static void ddbreak (sf_datatype itype, sf_datatype otype)
 
     sf_error("Conversion from %s to %s"
 	     " is unsupported",types[itype],types[otype]);
+}
+
+static float ibm2float (const char* num)
+/* floating point conversion from IBM format */
+{
+    unsigned int x, s, f;
+    const unsigned int fMAXIEEE = 0x7F7FFFFF;
+    int e;         
+    float y;
+                                                                     
+    x = *((unsigned int*)num);
+    
+    /* check for special case of zero */
+    if ((x & 0x7fffffff) == 0) return 0.0; 
+
+    /* fetch the sign, exponent (removing excess 64), and fraction */   
+    s =   x & 0x80000000;                                               
+    e = ((x & 0x7f000000) >> 24) - 64;                                   
+    f =   x & 0x00ffffff;                                                
+                                                                    
+    /* convert scale factor from base-16 to base-2 */        
+    if (e >= 0) {
+	e <<= 2;  
+    } else { 
+	e = -((-e) << 2); 
+    }
+                                                                        
+    /* convert exponent for 24 bit fraction to 23 bit fraction */           
+    e -= 1;                                                               
+                                                                            
+    /* normalize the fraction */                                            
+    if (0 != f) {
+	while ((f & 0x00800000) == 0) {         
+	    f <<= 1;
+	    e -= 1;
+	}       
+    }                                                               
+	
+    /* drop the '1' preceeding the binary point */                       
+    f &= 0x007fffff;                                                         
+    
+    /* convert exponent to excess 127 and store the number */
+    if ((e += 127) >= 255) {
+	s |= fMAXIEEE;
+    } else if (e > 0) {
+	s |= (e << 23) | f; 	    
+    }    
+
+    memcpy (&y,&s,4);
+    return y;
 }
 
 /* 	$Id$	 */
