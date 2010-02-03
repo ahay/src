@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 '''Finds RSF files with missing or incomplete binaries or headers.
-Delete them all with shell constructs like: rm -f `sfinvalid dir=.`
-Works only in a given directory, not recursively in subdirectories'''
+Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
 
 # Copyright (C) 2009 Ioan Vlad
 #
@@ -36,37 +35,15 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
-    verb = par.bool('verb', False) # verbosity flag
-    mydir = par.string('dir') # directory with files
-
-    if mydir == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
-    if not os.path.isdir(mydir):
-        print mydir + ' is not a valid directory'
-        return ivlad.unix_error
-    if not os.access(mydir,os.X_OK):
-        print mydir + ' lacks +x permissions for ' + os.getlogin()
-        return ivlad.unix_error
-    if not os.access(mydir,os.R_OK):
-        print mydir + ' lacks read permissions for ' + os.getlogin()
-        return ivlad.unix_error
-
-    if os.path.abspath(mydir) == os.getcwd():
-        mydir = '' # for a more readable display
-
-    rsf_list = glob.glob(os.path.join(mydir,'*.rsf'))
-
-    # Filter out metafile directories (yes, some people use them)
-    rsf_files = filter(lambda x:os.path.isfile(x),rsf_list)
-    rsf_files.sort()
+def visit(verb, dirname, names):
+    'Function to execute once in each dir'
 
     sfin = 'sfin info='
+    rsf_files = filter(lambda x:os.path.splitext(x)[1]==ivlad.ext, names)
+    rsf_files.sort()
 
     for f in rsf_files:
+        f = os.path.abspath(os.path.join(dirname,f))
         com_out = commands.getoutput(sfin+'n '+f)
         msg = None
         if com_out[:6] == 'sfin: ':
@@ -121,9 +98,29 @@ def main(argv=sys.argv):
         if msg != None:
             print msg
 
+###############################################################################
+
+def main(argv=sys.argv):
+
+    par = rsf.Par(argv)
+    verb = par.bool('verb', False)     # Display what is wrong with the dataset
+    mydir = par.string('dir')          # directory with files
+    recursive = par.bool('rec', False) # Whether to go down recursively
+
+    # I should really use exceptions here. No time now.
+    if ivlad.chk_dir(mydir) == ivlad.unix_error:
+        return ivlad.unix_error
+
+    if recursive:
+        os.path.walk(mydir, visit, verb)
+    else:
+        files = filter(lambda x:os.path.isfile(x),os.listdir(mydir))
+        visit(verb, mydir, files)
+
     return ivlad.unix_success
 
 ###############################################################################
 
 if __name__ == '__main__':
     sys.exit(main()) # Exit with the success or error code returned by main
+

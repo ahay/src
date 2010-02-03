@@ -24,7 +24,6 @@ find $DATAPATH -type f -mmin -15 -exec rm -f {} \;'''
 # This program is dependent on the output of sfin info=n
 
 import sys, os, glob, commands
-import rsfprog
 
 try:
     import rsf
@@ -36,8 +35,13 @@ try: # Give precedence to local version
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
 
+################################################################################
+
 def visit(verb, dirname, names):
     'Function to execute once in each dir'
+
+    names.sort()
+
     for f in names:
         if os.path.splitext(f)[1] == ivlad.ext: # File has rsf extension 
             fname = os.path.abspath(os.path.join(dirname,f))
@@ -48,7 +52,7 @@ def visit(verb, dirname, names):
             cmd = 'touch -c ' + bfile # Do not create if it does not exist
             os.system(cmd)
 
-###############################################################################
+################################################################################
 
 def main(argv=sys.argv):
 
@@ -56,24 +60,15 @@ def main(argv=sys.argv):
     verb = par.bool('verb', False) # display header and corresponding binary
     mydir = par.string('dir') # directory with files
 
-    if mydir == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
-    if not os.path.isdir(mydir):
-        print mydir + ' is not a valid directory'
-        return ivlad.unix_error
-    if not os.access(mydir,os.X_OK):
-        print mydir + ' lacks +x permissions for ' + os.getlogin()
-        return ivlad.unix_error
-    if not os.access(mydir,os.R_OK):
-        print mydir + ' lacks read permissions for ' + os.getlogin()
+    # I should really use exceptions here. No time now.
+    if ivlad.chk_dir(mydir) == ivlad.unix_error:
         return ivlad.unix_error
 
     os.path.walk(mydir, visit, verb)
 
     return ivlad.unix_success
 
-###############################################################################
+################################################################################
 
 if __name__ == '__main__':
     sys.exit(main()) # Exit with the success or error code returned by main

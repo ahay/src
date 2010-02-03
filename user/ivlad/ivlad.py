@@ -23,7 +23,7 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, commands, math
+import os, sys, commands, math, rsfprog
 
 # Operating system return codes
 unix_success = 0
@@ -180,3 +180,27 @@ def execute(command, verb=False):
     if verb:
         print command
     os.system(command)
+
+################################################################################
+
+def chk_dir(mydir):
+    'Checks a directory exists and has +rx permissions'
+
+    if mydir == None:
+        rsfprog.selfdoc()
+        return unix_error
+
+    if not os.path.isdir(mydir):
+        print mydir + ' is not a valid directory'
+        return unix_error
+
+    if not os.access(mydir,os.X_OK):
+        print mydir + ' lacks +x permissions for ' + os.getlogin()
+        return unix_error
+
+    if not os.access(mydir,os.R_OK):
+        print mydir + ' lacks read permissions for ' + os.getlogin()
+        return unix_error
+
+    return unix_success
+
