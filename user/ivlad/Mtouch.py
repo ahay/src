@@ -3,7 +3,7 @@
 Will go down recursively in subdirectories. Current date and time is used.
 Useful for determining disk leaks: Orphan binaries (those without headers) will
 not be touched. You can remove them with commands such as:
-find $DATAPATH -type f -mmin -15 -exec rm -f {} \;'''
+find $DATAPATH -type f -mmin +15 -exec rm -f {} \;'''
 
 # Copyright (C) 2010 Ioan Vlad
 #
