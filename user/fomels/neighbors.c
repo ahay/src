@@ -420,7 +420,7 @@ int neighbors_distance(int np         /* number of points */,
 	n123 -= dist(k,x[0],x[1],x[2]);
 	if (ix[0] != n[0]-1) {
 	    n123 -= dist(k+s[0],d[0]-x[0],x[1],x[2]);
-	    if (x[1] != n[1]-1) {
+	    if (ix[1] != n[1]-1) {
 		n123 -= dist(k+s[0]+s[1],d[0]-x[0],d[1]-x[1],x[2]);
 		if (ix[2] != n[2]-1) 
 		    n123 -= 

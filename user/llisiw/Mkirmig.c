@@ -32,18 +32,16 @@ int main(int argc, char* argv[])
     tbl = sf_input("table"); /* traveltime table */
     mig = sf_output("out");
 
-    if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
-    if (!sf_histint(inp,"n2",&nh)) sf_error("No n2=");
-    if (!sf_histint(inp,"n3",&ns)) sf_error("No n3=");
+    if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(inp,"n2",&nh)) sf_error("No n2= in input");
+    if (!sf_histint(inp,"n3",&ns)) sf_error("No n3= in input");
 
-    if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1=");
-    if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1=");
-
-    if (!sf_histfloat(inp,"o2",&h0)) sf_error("No o2=");
-    if (!sf_histfloat(inp,"d2",&dh)) sf_error("No d2=");
-
-    if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3=");
-    if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3=");
+    if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1= in input");
+    if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(inp,"o2",&h0)) sf_error("No o2= in input");
+    if (!sf_histfloat(inp,"d2",&dh)) sf_error("No d2= in input");
+    if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3= in input");
+    if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3= in input");
 
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
     if (!sf_histint(tbl,"n2",&nx)) sf_error("No n2= in table");
