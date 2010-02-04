@@ -20,8 +20,7 @@ if they exist'''
 
 # This program is dependent on the output of sfin and sfattr
 
-import sys, os, glob, commands
-import rsfprog
+import sys, os, glob, commands, rsfprog
 
 try:
     import rsf
@@ -41,6 +40,10 @@ def main(argv=sys.argv):
     verb = par.bool('verb', False) # Display headers and binaries being deleted
     mydir = par.string('dir')           # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
+
+    if mydir == None:
+        rsfprog.selfdoc()
+        return ivlad.unix_error
 
     # Clean up headers with existing binaries
 

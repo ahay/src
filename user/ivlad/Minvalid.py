@@ -43,6 +43,10 @@ def main(argv=sys.argv):
     recursive = par.bool('rec', False)  # Whether to go down recursively
     chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
 
+    if mydir == None:
+        rsfprog.selfdoc()
+        return ivlad.unix_error
+
     invalid_files_list = [] # will contain tuples: (file, msg)
 
     if recursive:
