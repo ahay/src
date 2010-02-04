@@ -78,7 +78,7 @@ gx:       X group coordinate 80
 gy:       Y group coordinate 84 
 
 counit:   coordinate units code:
-for previoius four entries
+for previous four entries
 1 = length (meters or feet)
 2 = seconds of arc (in this case, the
 X values are unsigned longitude and the Y values
