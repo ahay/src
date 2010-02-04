@@ -10,7 +10,7 @@ quantile leftsize filedims fileflush create gettype
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-pclip prep4plot wiki2static invalid split zcp touch
+pclip prep4plot wiki2static invalid split zcp touch rmrf
 '''
 
 # Python modules that do not need SWIG+numpy

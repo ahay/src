@@ -204,3 +204,124 @@ def chk_dir(mydir):
 
     return unix_success
 
+################################################################################
+
+def isvalid(f,chk4nan=False):
+    'Determines whether f is a valid RSF file'
+    # Also returns msg with invalidity reason, or says if first x bytes are zero
+    # Depends on sfin and sfattr output and formatting. To enhance robustness,
+    # most parsing of sfin output messages is wrapped in try... except clauses
+
+    msg = None
+    is_rsf_ok = True
+
+    sfin = 'sfin info='
+    com_out = commands.getoutput(sfin+'n '+f)
+    
+    if com_out[:6] == 'sfin: ':
+        is_rsf_ok = False
+
+        try:
+            err_msg = com_out.split(':')[2].strip()
+        except:
+            err_msg = ''
+
+        if err_msg[:15] == 'No in= in file ':
+            # Check if header is zero
+            if os.path.getsize(f) == 0:
+                msg = 'Empty header'
+            else:
+                msg = 'Missing in='
+
+        elif err_msg[:22] == 'Cannot read data file ':
+            # Check the binary
+            bnr = err_msg[22:]
+            (bnr_path, bnr_file) = os.path.split(bnr)
+            if not os.access(bnr_path,os.X_OK):
+                msg = 'Missing +x permissions to dir: ' + bnr_path
+            elif not os.path.isfile(bnr):
+                msg = 'Missing binary: ' + bnr
+            elif not os.access(bnr,os.R_OK):
+                msg = 'Missing read permissions to file: ' + bnr
+        else: # Error not classified in this script
+            msg = err_msg
+
+    else: # No error message from sfin
+        # Check for incomplete binaries
+        com_out = commands.getoutput(sfin+'y '+f)
+        line_list = com_out.split('\n')
+
+        # Using a grep equivalent below because the "Actually..." error
+        # message in sfin is not always on last line.
+
+        # Clumsy implementation of grep below, with a touch of awk
+        # Using Unix grep in original command will not work
+        # because errors come via stderr and grep works on stdout
+
+        err_list = []
+        for line in line_list:
+            if line[:6] == 'sfin: ':
+                err_msg = line[6:]
+                if err_msg != 'This data file is entirely zeros.':
+                    if err_msg[:10] != 'The first ':
+                        err_list.append(err_msg.strip())
+        if err_list != []:
+            is_rsf_ok = False
+            # Showing only the first error. Probably the only one.
+            msg = err_list[0]
+
+    if is_rsf_ok: # no errors found by sfin
+        if chk4nan:
+            cmd_out = commands.getoutput('sfattr <'+f)
+            line_list = cmd_out.split('\n')
+            for l in line_list:
+                if '=' in l:
+                    val = l.split('=')[1].strip().split('at')[0].strip()
+                    if val in ('inf', '-inf', 'nan'):
+                        is_rsf_ok = False
+                        msg = 'Data contains ' + val
+
+    return (is_rsf_ok, msg)
+
+################################################################################
+
+def list_invalid_rsf_files(dirname, flist, chk4nan=False):
+    'Not recursive. Returns list of (file,msg) tuples.'
+    
+    if chk_dir(dirname) == unix_error:
+        return None # I should really use exceptions here. No time now.
+
+    invalid_files = []
+
+    rsf_files = filter(lambda x:os.path.splitext(x)[1]==ext, flist)
+    rsf_files.sort()
+
+    for f in rsf_files:
+        f = os.path.abspath(os.path.join(dirname,f))
+        (is_rsf_ok, msg) = isvalid(f, chk4nan)
+        if not is_rsf_ok:
+            invalid_files.append((f, msg))
+
+    return invalid_files
+
+################################################################################
+
+def list_valid_rsf_files(dirname, flist, chk4nan=False):
+    'Not recursive'
+    
+    if chk_dir(dirname) == unix_error:
+        return None # I should really use exceptions here. No time now.
+
+    valid_files = []
+
+    rsf_files = filter(lambda x:os.path.splitext(x)[1]==ext, flist)
+    rsf_files.sort()
+
+    for f in rsf_files:
+        f = os.path.abspath(os.path.join(dirname,f))
+        (is_rsf_ok, msg) = isvalid(f, chk4nan)
+        if is_rsf_ok:
+            valid_files.append(f)
+
+    return valid_files
+

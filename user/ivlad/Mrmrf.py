@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-'''Finds RSF files with missing or incomplete binaries or headers.
-Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
+'''Recursively removes all RSF headers in a directory, and associated binaries,
+if they exist'''
 
 # Copyright (C) 2010 Ioan Vlad
 #
@@ -38,29 +38,41 @@ except: # Use distributed version
 def main(argv=sys.argv):
 
     par = rsf.Par(argv)
-    verb = par.bool('verb', False)      # Display what is wrong with the dataset
+    verb = par.bool('verb', False) # Display headers and binaries being deleted
     mydir = par.string('dir')           # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
-    chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
 
-    invalid_files_list = [] # will contain tuples: (file, msg)
+    # Clean up headers with existing binaries
+
+    valid_files_list = []
 
     if recursive:
         for root, dirs, files in mydir:
-            invalid_files_list += \
-            ivlad.list_invalid_rsf_files(root, files, chk4nan)
+            valid_files_list += \
+            ivlad.list_valid_rsf_files(root, files, chk4nan)
     else:
         files = filter(lambda x:os.path.isfile(x),os.listdir(mydir))
-        invalid_files_list += \
-        ivlad.list_invalid_rsf_files(mydir, files, chk4nan)
+        valid_files_list += \
+        ivlad.list_valid_rsf_files(mydir, files, chk4nan=False)
 
-    myline = ''
+    for f in valid_files_list:
+        if(verb):
+            print f + ': ' + commands.getoutput('sfin info=n ' + f)
+        os.system('sfrm ' + f)
 
-    for entry in invalid_files_list:
-        myline = entry[0]
+    # Clean up headers with no binaries
+
+    if recursive:
+        hdr_str = commands.getoutput('find %s -type f -name "*.rsf"' % mydir)
+        hdr_list = hdr_str.split('\n')
+    else:
+        hdr_list = filter(lambda x:os.path.isfile(x),
+                          glob.glob(os.path.join(mydir,'*.rsf')))
+
+    for f in hdr_list:
         if verb:
-            myline += ': ' + entry[1]
-        print myline
+            print f
+        os.remove(f)
 
     return ivlad.unix_success
 

@@ -21,9 +21,10 @@ find $DATAPATH -type f -mmin +15 -exec rm -f {} \;'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# This program is dependent on the output of sfin info=n
+# This program is dependent on the output of sfin and sfattr
 
 import sys, os, glob, commands
+import rsfprog
 
 try:
     import rsf
@@ -35,40 +36,36 @@ try: # Give precedence to local version
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
 
-################################################################################
-
-def visit(verb, dirname, names):
-    'Function to execute once in each dir'
-
-    names.sort()
-
-    for f in names:
-        if os.path.splitext(f)[1] == ivlad.ext: # File has rsf extension 
-            fname = os.path.abspath(os.path.join(dirname,f))
-            cmd = 'sfin info=n ' + fname
-            bfile = commands.getoutput(cmd)
-            if(verb):
-                print fname + ': \t' + bfile
-            cmd = 'touch -c ' + bfile # Do not create if it does not exist
-            os.system(cmd)
-
-################################################################################
+###############################################################################
 
 def main(argv=sys.argv):
 
     par = rsf.Par(argv)
-    verb = par.bool('verb', False) # display header and corresponding binary
-    mydir = par.string('dir') # directory with files
+    verb = par.bool('verb', False)      # Display what is wrong with the dataset
+    mydir = par.string('dir')           # Directory with files
+    recursive = par.bool('rec', False)  # Whether to go down recursively
+    chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
 
-    # I should really use exceptions here. No time now.
-    if ivlad.chk_dir(mydir) == ivlad.unix_error:
-        return ivlad.unix_error
+    valid_files_list = []
 
-    os.path.walk(mydir, visit, verb)
+    if recursive:
+        for root, dirs, files in mydir:
+            valid_files_list += \
+            ivlad.list_valid_rsf_files(root, files, chk4nan)
+    else:
+        files = filter(lambda x:os.path.isfile(x),os.listdir(mydir))
+        valid_files_list += \
+        ivlad.list_valid_rsf_files(mydir, files, chk4nan)
+
+    for f in valid_files_list:
+        bfile = commands.getoutput('sfin info=n ' + f)
+        if(verb):
+            print f + ': ' + bfile
+        os.system('touch -c ' + bfile)
 
     return ivlad.unix_success
 
-################################################################################
+###############################################################################
 
 if __name__ == '__main__':
     sys.exit(main()) # Exit with the success or error code returned by main
