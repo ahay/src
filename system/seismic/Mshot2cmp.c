@@ -84,7 +84,15 @@ int main(int argc, char* argv[])
 	sf_settype(msk,SF_INT);
 
 	sf_putint(msk,"n1",nh2);
+	sf_putfloat(msk,"d1",type*dh);
+	sf_putfloat(msk,"o1",oh);
+	sf_putstring(msk,"label1","Offset");
+
 	sf_putint(msk,"n2",ny);
+	sf_putfloat(msk,"d2",dy);
+	sf_putfloat(msk,"o2",oy);
+	sf_putstring(msk,"label2","Midpoint");
+
 	sf_putint(msk,"n3",1);
 
 	mask = sf_intalloc(nh2);

@@ -24,8 +24,8 @@ Flow('lines','line',
      '''
      intbin yk=cdpt | window f3=2 |
      put
-     label2=Source   d2=0.05  o2=688 unit2=km
-     label3=Receiver d3=0.025 o3=685 unit3=km
+     label2=Source d2=0.05  o2=688 unit2=km
+     label3=Offset d3=0.025 o3=-3.5 unit3=km
      label1=Time unit1=s
      ''')
 
@@ -94,9 +94,15 @@ Plot('sou','S',
 
 Result('diagram','rec sou','Overlay')
 
-# Simple stack
-##############
+# Brute stack
+#############
 
+Flow('cmps mask','lines','transp plane=23 memsize=1000 | shot2cmp mask=${TARGETS[1]} half=n')
 
+Result('fold','mask','dd type=float | stack axis=1 norm=n | graph title=Fold unit1=km label2= unit2=')
+
+Flow('brute','cmps','stack')
+
+Result('brute','grey title="Brute Stack" ')
 
 End()

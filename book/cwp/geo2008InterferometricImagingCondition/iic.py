@@ -544,8 +544,8 @@ def aimage(cic,iic,
         Plot(img,fdmod.cgrey('pclip=100',par))
         Result( img,[img,rec,sou],'Overlay')
         Result('win'+img,img,
-               fdmod.cgrey('pclip=100 min1=%g max1=%g min2=%g max2=%g screenratio=%g screenht=%g wantaxis=y',par) %
-               (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio'],par['wheight']) )
+               fdmod.cgrey('pclip=100 min1=%g max1=%g min2=%g max2=%g screenratio=%g screenht=%g wantaxis=y' %
+               (par['wzmin'],par['wzmax'],par['wxmin'],par['wxmax'],par['wratio'],par['wheight']),par))
 
 # ------------------------------------------------------------
 # ------------------------------------------------------------

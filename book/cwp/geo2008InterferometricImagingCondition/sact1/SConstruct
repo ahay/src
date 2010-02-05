@@ -27,7 +27,7 @@ sigs.sedimentmask('mask','vwin',par)
 Result('mask',fdmod.cgrey('',par))
 
 Flow('vo','vwin','smooth rect1=25 rect2=25')
-Plot('vo',fdmod.cgrey('allpos=y bias=%g',par) % par['vbias'])
+Plot('vo',fdmod.cgrey('allpos=y bias=%g' % par['vbias'],par))
 Result('vo','vo','Overlay')
 # ------------------------------------------------------------
 ff=0
