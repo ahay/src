@@ -1501,14 +1501,14 @@ def python(context):
 def java(context):
     context.Message("Checking for Mines JTK in Classpath ...")
     try:
-            if 'edu_mines_jtk.jar' in os.environ['CLASSPATH']:
+            if 'edu_mines_jtk.jar' in os.environ['MINESJTK']:
                 context.Result(context_success)
             else:
                 context.Result(context_failure)
-                context.Message("Please add path to Mines JTK to the CLASSPATH environmental variable to proceed with the Java API")
+                context.Message("Please add path to Mines JTK to the MINESJTK environmental variable to proceed with the Java API")
     except:
             context.Result(context_failure)
-            context.Message("Please add path to Mines JTK to the CLASSPATH environmental variable to proceed with the Java API")
+            context.Message("Please add path to Mines JTK to the MINESJTK environmental variable to proceed with the Java API")
 
 
 def intel(context):
