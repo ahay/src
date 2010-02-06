@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 {
     int n1, n2, wn1, wn2;
     int nfw, m, i, j, k;
-    bool boundary;
+    bool boundary, verb;
     
     float *trace, *tempt, *temp1, *wei, *tempw1;
     sf_file in, out, weights=NULL;
@@ -44,6 +44,8 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
     
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
 
     if (NULL != weights) {
 	if (!sf_histint(weights,"n1",&wn1)) sf_error("No n1= in weights");
@@ -68,6 +70,7 @@ int main (int argc, char* argv[])
     tempw1 = sf_floatalloc(nfw);
     
     for(j=0; j < n2; j++) {
+	if (verb) sf_warning("slice %d of %d",j+1,n2);
 	sf_floatread(trace,n1,in);
 	if (NULL != weights) {
 	    sf_floatread(wei,n1,weights);

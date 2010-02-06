@@ -62,8 +62,10 @@ float wmedianfilter(float *odata, float *oweights, int nfw)
 	sum+=weights[k];
     }
     wm=data[k];
+    free(weights);
+    free(data);
     return wm;
-    
+   
 }
 
 float wmedian(float *temp,float *weight,int nfw)
@@ -91,6 +93,8 @@ float wmedian(float *temp,float *weight,int nfw)
 	}
     }
     wm = temp[index[nfw/2]];
+    free(index);
+    free(data);
     return wm;
 }
 
@@ -128,6 +132,8 @@ void cweight(float *data,float *weight,float nw,float rect)
 	}
 	weight[i] = fabsf(weight[i])/(sqrtf(done*dtwo)+FLT_EPSILON);
     }
+    free(one);
+    free(two);
 }
 
 void vweight(float *data,float *weight,float nw)
@@ -182,6 +188,8 @@ void lvweight(float *data,float *weight,float nw,float rect)
 	}
 	weight[i] = rect*1./(weight[i]+FLT_EPSILON);
     }
+    free(one);
+    free(two);
 }
 
 /* 	$Id$	 */
