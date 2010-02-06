@@ -70,7 +70,8 @@ int main (int argc, char* argv[])
     tempw1 = sf_floatalloc(nfw);
     
     for(j=0; j < n2; j++) {
-	if (verb) sf_warning("slice %d of %d",j+1,n2);
+	if ((verb && 0==j%100) || (n2-1)==j) 
+	    sf_warning("slice %d of %d",j+1,n2);
 	sf_floatread(trace,n1,in);
 	if (NULL != weights) {
 	    sf_floatread(wei,n1,weights);
