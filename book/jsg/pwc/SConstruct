@@ -1,9 +1,0 @@
-from rsftex import *
-
-#Paper('seg2005',lclass='segabs')
-
-#Paper('summary',include=r'\thispagestyle{empty}',options='manuscript')
-
-End(color='bei-slp bei-pdxw bei-pdx cmp super') # options='twocolumn,twoside')
-
-
