@@ -442,7 +442,6 @@ size_t sf_math_parse (char*       output /* expression */,
 	switch (c) {
 	    case '+': 
 	    case '-':
-		top = sf_top (st1);
 		type = hasleft? PLUSMIN: UNARY;
 		break;
 	    case '*':
