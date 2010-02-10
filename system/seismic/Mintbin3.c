@@ -1,6 +1,6 @@
-/* Data binning. */
+/* 4-D data binning. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2010 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,10 +26,10 @@
 
 int main (int argc, char* argv[])
 {
-    int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
-    int xmin, xmax, ymin, ymax, i, ix, iy, **map;
+    int id, nk, nd, nt, nx, ny, nz, n2, xkey, ykey, zkey, *hdr, *x, *y, *z;
+    int xmin, xmax, ymin, ymax, zmin, zmax, i, ix, iy, iz, ***map;
     off_t pos;
-    char *buf, *zero, *xk, *yk, *header;
+    char *buf, *zero, *xk, *yk, *zk, *header;
     sf_file in, out, head, mask;
 
     sf_init (argc,argv);
@@ -67,18 +67,28 @@ int main (int argc, char* argv[])
 	/* y key number (if no yk), default is tracf */
 	ykey = segykey("tracf");
     }
+    if (NULL != (zk = sf_getstring("zk"))) {
+	/* z key name */
+	zkey = segykey(zk);
+    }  else if (!sf_getint("zkey",&zkey)) {
+	/* z key number (if no zk), default is tracf */
+	zkey = segykey("tracf");
+    }
     
     if (xkey < 0 || xkey >= nk) 
 	sf_error("xkey=%d is out of the range [0,%d]",xkey,nk-1);
     if (ykey < 0 || ykey >= nk) 
 	sf_error("ykey=%d is out of the range [0,%d]",ykey,nk-1);
+    if (zkey < 0 || zkey >= nk) 
+	sf_error("zkey=%d is out of the range [0,%d]",zkey,nk-1);
 
     hdr = sf_intalloc(nk);
     x = sf_intalloc(nd);
     y = sf_intalloc(nd);
+    z = sf_intalloc(nd);
 
-    ymin = xmin = +INT_MAX;
-    ymax = xmax = -INT_MAX;
+    zmin = ymin = xmin = +INT_MAX;
+    zmax = ymax = xmax = -INT_MAX;
     for (id=0; id<nd; id++) {	
 	sf_intread (hdr,nk,head);
 	i = hdr[xkey]; 
@@ -89,6 +99,10 @@ int main (int argc, char* argv[])
 	if (i < ymin) ymin=i;
 	if (i > ymax) ymax=i;
 	y[id] = i;
+	i = hdr[zkey]; 
+	if (i < zmin) zmin=i;
+	if (i > zmax) zmax=i;
+	z[id] = i;
     }
 
     sf_fileclose (head);
@@ -98,34 +112,45 @@ int main (int argc, char* argv[])
     sf_getint ("xmax",&xmax); /* x maximum */
     sf_getint ("ymin",&ymin); /* y minimum */
     sf_getint ("ymax",&ymax); /* y maximum */
+    sf_getint ("zmin",&zmin); /* z minimum */
+    sf_getint ("zmax",&zmax); /* z maximum */
 
     if (xmax < xmin) sf_error ("xmax=%d < xmin=%d",xmax,xmin);
     if (ymax < ymin) sf_error ("ymax=%d < ymin=%d",ymax,ymin);
+    if (zmax < zmin) sf_error ("zmax=%d < zmin=%d",zmax,zmin);
 
     nx = xmax-xmin+1;
     ny = ymax-ymin+1;
+    nz = zmax-zmin+1;
 
     sf_putint (out,"n2",nx);
     sf_putint (out,"n3",ny);
+    sf_putint (out,"n4",nz);
     sf_putint (out,"o2",xmin);
     sf_putint (out,"o3",ymin);
+    sf_putint (out,"o4",zmin);
     sf_putint (out,"d2",1);
     sf_putint (out,"d3",1);
+    sf_putint (out,"d4",1);
 
-    map = sf_intalloc2(nx,ny);
+    map = sf_intalloc3(nx,ny,nz);
 
-    for (iy=0; iy < ny; iy++) {
-	for (ix=0; ix < nx; ix++) {
-	    map[iy][ix] = -1;
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		map[iz][iy][ix] = -1;
+	    }
 	}
     }
 
     for (id = 0; id < nd; id++) {
 	ix = x[id];
 	iy = y[id];
+	iz = z[id];
 	if (ix >= xmin && ix <= xmax && 
-	    iy >= ymin && iy <= ymax) {
-	    map[iy-ymin][ix-xmin] = id;
+	    iy >= ymin && iy <= ymax &&
+	    iz >= zmin && iz <= zmax) {
+	    map[iz-zmin][iy-ymin][ix-xmin] = id;
 	}
     }
    
@@ -144,16 +169,18 @@ int main (int argc, char* argv[])
     pos = sf_tell(in);
 
     /* loop over output */
-    for (iy=0; iy < ny; iy++) {
-	sf_warning("%d of %d",iy+1,ny);
-	for (ix=0; ix < nx; ix++) {
-	    id = map[iy][ix];
-	    if (id < 0) {
-		sf_charwrite (zero,nt,out);
-	    } else {
-		sf_seek(in,pos + (off_t) id*nt,SEEK_SET);		
-		sf_charread (buf,nt,in);
-		sf_charwrite (buf,nt,out);
+    for (iz=0; iz < nz; iz++) {
+	sf_warning("%d of %d",iz+1,nz);
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		id = map[iz][iy][ix];
+		if (id < 0) {
+		    sf_charwrite (zero,nt,out);
+		} else {
+		    sf_seek(in,pos + (off_t) id*nt,SEEK_SET);		
+		    sf_charread (buf,nt,in);
+		    sf_charwrite (buf,nt,out);
+		}
 	    }
 	}
     }
@@ -164,19 +191,21 @@ int main (int argc, char* argv[])
 	mask = sf_output(header);
 	sf_putint(mask,"n1",nx);
 	sf_putint(mask,"n2",ny);
+	sf_putint(mask,"n3",nz);
 	sf_settype(mask,SF_INT);
 
-	for (iy=0; iy < ny; iy++) {
-	    for (ix=0; ix < nx; ix++) {
-		map[iy][ix] = (map[iy][ix] >= 0);
+	for (iz=0; iz < nz; iz++) {
+	    for (iy=0; iy < ny; iy++) {
+		for (ix=0; ix < nx; ix++) {
+		    map[iz][iy][ix] = (map[iz][iy][ix] >= 0);
+		}
 	    }
 	}
 
-	sf_intwrite(map[0],nx*ny,mask);
+	sf_intwrite(map[0][0],nx*ny*nz,mask);
     }
-
 
     exit(0);
 }
 
-/* 	$Id$	 */
+
