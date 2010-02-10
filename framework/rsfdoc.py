@@ -83,13 +83,14 @@ def selfdoc():
     if prognm[0] == 'M' and prognm[-3:] == '.py':
         # User testing code in his local directory
         prognm = 'sf' + prognm[1:-3]
-        print 'Self-doc may be out of synch, do "scons install" in RSFSRC'
+        msg = 'Self-doc may be out of synch, do "scons install" in RSFSRC'
+        sys.stderr.write(msg)
 
     prog = rsfdoc.progs.get(prognm)
     if prog != None:
         prog.document()
     else:
-        print 'No installed man page for ' + prognm
+        sys.stderr.write('No installed man page for ' + prognm)
 ''')
     out.close()
 
