@@ -8,8 +8,8 @@ dwt97 epsf fkoclet fkoclet3 fourmis2 freqreg initial kuwahara locorr
 lpfdenoise1 lpfdenoise2 lrmf lum lum2 lumsmoother lumsharpener mean mf
 mlm mtm mlwm multiple nonloc oclet pwcsemb pwd2 pwsfault pwsfault3
 pwsmooth pwsmooth3 saltpepper sclet seisavf seishrink seislet97
-seismis2 seispocs seisreg2 sharpsimi snr st svddenoise swell ltft tvmf
-twofreq2mask wavemis2 wmf zcwt
+seismis2 seispocs seisreg2 sharpsimi snr st svddenoise swell ltft
+threshold2 tvmf twofreq2mask wavemis2 wmf zcwt
 '''
 
 try:  # distributed version
