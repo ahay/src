@@ -73,12 +73,24 @@ def getprogs(target=None,source=None,env=None):
     out.write('\nimport vpplot\n\n')
     out.write('''
 try:
-   import rsfuse
+    import rsfuse
 except:
-   pass\n''')
-    out.write('\ndef selfdoc():\n')
-    out.write('   prog = rsfdoc.progs.get(os.path.basename(sys.argv[0]))\n')
-    out.write('   prog.document()\n')
+    pass
+
+def selfdoc():
+    'Display man page'
+    prognm = os.path.basename(sys.argv[0])
+    if prognm[0] == 'M' and prognm[-3:] == '.py':
+        # User testing code in his local directory
+        prognm = 'sf' + prognm[1:-3]
+        print 'Self-doc may be out of synch, do "scons install" in RSFSRC'
+
+    prog = rsfdoc.progs.get(prognm)
+    if prog != None:
+        prog.document()
+    else:
+        print 'No installed man page for ' + prognm
+''')
     out.close()
 
 def use(target=None,source=None,env=None):
