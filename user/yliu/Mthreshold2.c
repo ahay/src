@@ -51,6 +51,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("pclip",&pclip)) pclip=99.;
 
+    if (SF_FLOAT == sf_gettype(in)) {
+	dat = sf_floatalloc(n);
+    } else if (SF_COMPLEX == sf_gettype(in)) {
+	cdat = sf_complexalloc(n);
+    } else {
+	sf_error("Need float or complex input");
+    }
+
     for (ir=0; ir < nr; ir++) {    
 	if (verb) sf_warning("slice %d of %d", ir+1, nr);
 
@@ -65,13 +73,11 @@ int main(int argc, char* argv[])
 	if (nc >= n) nc=n-1;
 	
 	if (SF_FLOAT == sf_gettype(in)) {
-	    dat = sf_floatalloc(n);
 	    sf_floatread(dat,n,in);
 	    for (i=0; i < n; i++) {
 		adat[i] = fabsf(dat[i]);
 	    }
 	} else if (SF_COMPLEX == sf_gettype(in)) {
-	    cdat = sf_complexalloc(n);
 	    sf_complexread(cdat,n,in);
 	    for (i=0; i < n; i++) {
 		adat[i] = cabsf(cdat[i]);
