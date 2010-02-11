@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
-    float *trace, *out, **table, *stable;
-    float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal;
+    float *trace, *out, **table, **tablex, *stable, *stablex;
+    float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal, tx;
     sf_file inp, mig, tbl;
 
     sf_init (argc,argv);
@@ -67,6 +67,17 @@ int main(int argc, char* argv[])
 
     table = sf_floatalloc2(nzx,ny);
     sf_floatread(table[0],nzx*ny,tbl);
+    sf_fileclose(tbl);
+
+    if (NULL != sf_getstring("tablex")) {
+	tbl = sf_input("tablex");
+
+	tablex = sf_floatalloc2(nzx,ny);
+	sf_floatread(tablex[0],nzx*ny,tbl);
+	sf_fileclose(tbl);
+    } else {
+	tablex = NULL;
+    }
 
     out = sf_floatalloc(nzx);
     trace = sf_floatalloc(nt);
@@ -88,6 +99,7 @@ int main(int argc, char* argv[])
 	if (ist >= ny) ist=ny-1;
 
 	stable = table[ist];
+	stablex = (NULL==tablex)? NULL:tablex[ist];
 
 	sf_floatread (trace,nt,inp);
 	doubint(nt,trace);
@@ -96,10 +108,11 @@ int main(int argc, char* argv[])
 
 	for (ix=0; ix < nzx; ix++) { /* image */
 	    ti = 2*stable[ix];
-
+	    tx = (NULL==stablex)?0.:2*stablex[ix];
+	    
 	    /* Add antialiasing later */
-	    out[ix] += pick(ti,0.,trace,nt,dt,t0);
-	} 	
+	    out[ix] += pick(ti,tx*ds*aal,trace,nt,dt,t0);
+	}
     }
 
     sf_floatwrite(out,nzx,mig);        
