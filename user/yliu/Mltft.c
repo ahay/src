@@ -98,7 +98,11 @@ int main(int argc, char* argv[])
     outp = sf_complexalloc(n1*nw);
     if (!inv) {
 	sscc = sf_floatalloc(n12);
-	multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, verb); 
+	if (n2 < 500) {
+	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, verb); 
+	} else {
+	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, false);
+	} 
     }
     
     if (NULL != sf_getstring("mask")) {
