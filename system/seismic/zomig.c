@@ -28,9 +28,6 @@
 #include "slowref.h"
 #include "ssr.h"
 
-#include "slice.h"
-/*^*/
-
 #define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
@@ -45,7 +42,7 @@ static float         **sm; /* reference slowness squared */
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
 static int            *nr; /* number of references */
-static fslice        slow; /* slowness slice */
+static sf_fslice        slow; /* slowness slice */
 
 static float       ***rrr;
 static float       ***sss;
@@ -67,7 +64,7 @@ void zomig_init(bool verb_,
 		int tmx, int tmy /* taper size */,
 		int pmx, int pmy /* padding in the k domain */,
 		int nrmax        /* maximum number of references */,
-		fslice slow_)
+		sf_fslice slow_)
 /*< initialize >*/
 {
     int   ilx, ily, iz, jj;
@@ -118,7 +115,7 @@ void zomig_init(bool verb_,
     nr = sf_intalloc          (az.n); /* nr of ref slownesses */
     slow = slow_;
     for (iz=0; iz<az.n; iz++) {
-	fslice_get(slow,iz,ss[0]);
+	sf_fslice_get(slow,iz,ss[0]);
 	SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 
 	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
@@ -180,8 +177,8 @@ void zomig_free()
 /*------------------------------------------------------------*/
 
 void zomig(bool inv    /* forward/adjoint flag */, 
-	   fslice data /* data  [nw][nmy][nmx] */,
-	   fslice imag /* image [nz][nmy][nmx] */)
+	   sf_fslice data /* data  [nw][nmy][nmx] */,
+	   sf_fslice imag /* image [nz][nmy][nmx] */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,imy,imx,ilx,ily;
@@ -190,7 +187,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
     if(!inv) { /* prepare image for migration */
 	LOOP( qq[imy][imx] = 0.0; );
 	for (iz=0; iz<az.n; iz++) {
-	    fslice_put(imag,iz,qq[0]);
+	    sf_fslice_put(imag,iz,qq[0]);
 	}
     }
 
@@ -198,14 +195,14 @@ void zomig(bool inv    /* forward/adjoint flag */,
 	for( iz=0; iz<az.n; iz++) {
 	    LOOP( rrr[iz][imy][imx] = 0;);
 
-	    fslice_get(slow,iz,so[0]);
+	    sf_fslice_get(slow,iz,so[0]);
 	    SOOP( sss[iz][ily][ilx] = so[ily][ilx]*twoway;);
 	}
 
 	if(inv) { /* MODELING */
 	    
 	    for (iz=0; iz<az.n; iz++) {
-		fslice_get(imag,iz,qq[0]);
+		sf_fslice_get(imag,iz,qq[0]);
 		LOOP( rrr[iz][imy][imx] = qq[imy][imx]; );
 	    }
 	    for (iw=0; iw<aw.n; iw++) { /* frequency loop */
@@ -230,7 +227,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
 		LOOP( wx[imy][imx].r += rrr[0][imy][imx]; );
 #endif
 		taper2(wx);
-		fslice_put(data,iw,wx[0]);
+		sf_fslice_put(data,iw,wx[0]);
 	    }
 	} else { /* MIGRATION */
 
@@ -238,7 +235,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
 		if(verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
 		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 		
-		fslice_get(data,iw,wx[0]); 
+		sf_fslice_get(data,iw,wx[0]); 
 		taper2(wx);
 		LOOP( rrr[0][imy][imx] += crealf(wx[imy][imx]); );
 		
@@ -251,7 +248,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
 	    }
 	    for (iz=0; iz<az.n; iz++) {
 		LOOP(qq[imy][imx] = rrr[iz][imy][imx]; );
-		fslice_put(imag,iz,qq[0]);
+		sf_fslice_put(imag,iz,qq[0]);
 	    }
 	} /* else inv */
 
@@ -264,10 +261,10 @@ void zomig(bool inv    /* forward/adjoint flag */,
 		w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d); /* causal */
 		LOOP( wx[imy][imx] = sf_cmplx(0.,0.); );  
 		
-		fslice_get(slow,az.n-1,so[0]);
+		sf_fslice_get(slow,az.n-1,so[0]);
 		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 		for (iz=az.n-1; iz>0; iz--) {
-		    fslice_get(imag,iz,qq[0]);
+		    sf_fslice_get(imag,iz,qq[0]);
 #ifdef SF_HAS_COMPLEX_H
 		    LOOP( wx[imy][imx] +=
 			  qq[imy][imx]; );
@@ -277,13 +274,13 @@ void zomig(bool inv    /* forward/adjoint flag */,
 #endif
 		    
 		    /* upward continuation */
-		    fslice_get(slow,iz-1,ss[0]);
+		    sf_fslice_get(slow,iz-1,ss[0]);
 		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		    ssr_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 		
-		fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
+		sf_fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( wx[imy][imx]  += 
 		      qq[imy][imx]; );	
@@ -293,33 +290,33 @@ void zomig(bool inv    /* forward/adjoint flag */,
 #endif
 		
 		taper2(wx);
-		fslice_put(data,iw,wx[0]);    /* output data @ iz=0 */
+		sf_fslice_put(data,iw,wx[0]);    /* output data @ iz=0 */
 		
 	    } else { /* MIGRATION */
 		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 
-		fslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
+		sf_fslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
 		taper2(wx);
 		
-		fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
+		sf_fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 		LOOP(;      qq[imy][imx] += 
 		     crealf(wx[imy][imx] ); );
-		fslice_put(imag,0,qq[0]);
+		sf_fslice_put(imag,0,qq[0]);
 		
-		fslice_get(slow,0,so[0]);	    
+		sf_fslice_get(slow,0,so[0]);	    
 		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 		for (iz=0; iz<az.n-1; iz++) {
 		    
 		    /* downward continuation */
-		    fslice_get(slow,iz+1,ss[0]);
+		    sf_fslice_get(slow,iz+1,ss[0]);
 		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		    
-		    fslice_get(imag,iz+1,qq[0]); /* imaging */
+		    sf_fslice_get(imag,iz+1,qq[0]); /* imaging */
 		    LOOP(;      qq[imy][imx] += 
 			 crealf(wx[imy][imx] ); );
-		    fslice_put(imag,iz+1,qq[0]);
+		    sf_fslice_put(imag,iz+1,qq[0]);
 		} /* iz */
 	    } /* else */
 	} /* iw */
@@ -330,8 +327,8 @@ void zomig(bool inv    /* forward/adjoint flag */,
 
 void zodtm(bool inv    /* forward/adjoint flag */, 
 	   bool causal,
-	   fslice data /* data [nw][nmy][nmx] */,
-	   fslice wfld /* wfld [nw][nmy][nmx] */)
+	   sf_fslice data /* data [nw][nmy][nmx] */,
+	   sf_fslice wfld /* wfld [nw][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
     int iz,iw,ie, ilx,ily;
@@ -351,20 +348,20 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 		    w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 		}
 
-		fslice_get(wfld,iw+ie*aw.n,wx[0]);
+		sf_fslice_get(wfld,iw+ie*aw.n,wx[0]);
 		taper2(wx);
 		
-		fslice_get(slow,az.n-1,so[0]);
+		sf_fslice_get(slow,az.n-1,so[0]);
 		SOOP( so[ily][ilx] *= twoway; );     /* 2-way time */
 		for (iz=az.n-1; iz>0; iz--) {
-		    fslice_get(slow,iz-1,ss[0]);
+		    sf_fslice_get(slow,iz-1,ss[0]);
 		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		    ssr_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 		
 		taper2(wx);
-		fslice_put(data,iw+ie*aw.n,wx[0]);
+		sf_fslice_put(data,iw+ie*aw.n,wx[0]);
 	    } else { /* DOWNWARD DATUMING */
 		if(causal) {
 		    w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
@@ -372,20 +369,20 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 		    w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 		}
 
-		fslice_get(data,iw+ie*aw.n,wx[0]);
+		sf_fslice_get(data,iw+ie*aw.n,wx[0]);
 		taper2(wx);
 		
-		fslice_get(slow,0,so[0]);
+		sf_fslice_get(slow,0,so[0]);
 		SOOP( so[ily][ilx] *= twoway; );     /* 2-way time */
 		for (iz=0; iz<az.n-1; iz++) {
-		    fslice_get(slow,iz+1,ss[0]);
+		    sf_fslice_get(slow,iz+1,ss[0]);
 		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 		
 		taper2(wx);
-		fslice_put(wfld,iw+ie*aw.n,wx[0]);
+		sf_fslice_put(wfld,iw+ie*aw.n,wx[0]);
 	    } /* else */
 	} /* iw */
     } /* ie */
@@ -395,8 +392,8 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 
 void zowfl(bool inv    /* forward/adjoint flag */, 
 	   bool causal,
-	   fslice data /*      data [nw][nmy][nmx] */,
-	   fslice wfld /* wavefield [nw][nmy][nmx] */)
+	   sf_fslice data /*      data [nw][nmy][nmx] */,
+	   sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
     int iz,iw, ilx,ily;
@@ -413,22 +410,22 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 		w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 	    }
 	    
-	    fslice_get(data,iw,wx[0]);
+	    sf_fslice_get(data,iw,wx[0]);
 	    taper2(wx);
 
 	    taper2(wx);
-	    fslice_put(wfld,iw*az.n+az.n-1,wx[0]);
+	    sf_fslice_put(wfld,iw*az.n+az.n-1,wx[0]);
 
-	    fslice_get(slow,az.n-1,so[0]);
+	    sf_fslice_get(slow,az.n-1,so[0]);
 	    SOOP( so[ily][ilx] *= twoway; );     /* 2-way time */
 	    for (iz=az.n-1; iz>0; iz--) {
-		fslice_get(slow,iz-1,ss[0]);
+		sf_fslice_get(slow,iz-1,ss[0]);
 		SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		ssr_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 		taper2(wx);
-		fslice_put(wfld,iw*az.n+iz-1,wx[0]);
+		sf_fslice_put(wfld,iw*az.n+iz-1,wx[0]);
 	    }
 
 	} else {  /* DOWNWARD EXTRAPOLATION */
@@ -438,20 +435,20 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 	    }
 
-	    fslice_get(data,iw,wx[0]);
+	    sf_fslice_get(data,iw,wx[0]);
 	    taper2(wx);
 
-	    fslice_put(wfld,iw*az.n,wx[0]);
+	    sf_fslice_put(wfld,iw*az.n,wx[0]);
 
-	    fslice_get(slow,0,so[0]);
+	    sf_fslice_get(slow,0,so[0]);
 	    SOOP( so[ily][ilx] *= twoway; );     /* 2-way time */
 	    for (iz=0; iz<az.n-1; iz++) {	    
-		fslice_get(slow,iz+1,ss[0]);
+		sf_fslice_get(slow,iz+1,ss[0]);
 		SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-		fslice_put(wfld,iw*az.n+iz+1,wx[0]);
+		sf_fslice_put(wfld,iw*az.n+iz+1,wx[0]);
 	    } /* iz */
 	} /* else */
     } /* iw */

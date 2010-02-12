@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
     float vpvs;
 
     void (*imop)      (cub3d,img3d,int,int);        /* imaging operator apply */
-    void (*imop_close)(cub3d,img3d,fslice,fslice);  /* imaging operator close */
+    void (*imop_close)(cub3d,img3d,sf_fslice,sf_fslice);  /* imaging operator close */
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -76,10 +76,10 @@ int main (int argc, char *argv[])
     sf_file Fc=NULL;             /*      cigs file C */
 
     /* I/O slices */
-    fslice wfl_s=NULL,wfl_r=NULL;
-    fslice slo_s=NULL,slo_r=NULL;
-    fslice imag=NULL;
-    fslice cigs=NULL;
+    sf_fslice wfl_s=NULL,wfl_r=NULL;
+    sf_fslice slo_s=NULL,slo_r=NULL;
+    sf_fslice imag=NULL;
+    sf_fslice cigs=NULL;
 
     int ompchunk=1;
     int ompnth=1;
@@ -159,10 +159,10 @@ int main (int argc, char *argv[])
     nz = sf_n(amz);
     dz = sf_d(amz);
 
-    slo_s = fslice_init(n, nz, sizeof(float));
-    slo_r = fslice_init(n, nz, sizeof(float));
-    fslice_load(Fs_s,slo_s,SF_FLOAT);
-    fslice_load(Fs_r,slo_r,SF_FLOAT);
+    slo_s = sf_fslice_init(n, nz, sizeof(float));
+    slo_r = sf_fslice_init(n, nz, sizeof(float));
+    sf_fslice_load(Fs_s,slo_s,SF_FLOAT);
+    sf_fslice_load(Fs_r,slo_r,SF_FLOAT);
 
     /*------------------------------------------------------------*/    
     /* WAVEFIELD/IMAGE */
@@ -187,7 +187,7 @@ int main (int argc, char *argv[])
     sf_putint(Fi,"n4",1);
     sf_putint(Fi,"n5",1);
 
-    imag = fslice_init( nx*ny*nz,1,sizeof(float));
+    imag = sf_fslice_init( nx*ny*nz,1,sizeof(float));
 
     /*------------------------------------------------------------*/
     /* CIGS */
@@ -262,7 +262,7 @@ int main (int argc, char *argv[])
 	    sf_raxa(acy);
 	    sf_raxa(acz);
 
-	    cigs = fslice_init(n,
+	    cigs = sf_fslice_init(n,
 			       sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),
 			       sizeof(float));
 
@@ -278,7 +278,7 @@ int main (int argc, char *argv[])
 	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
 	    sf_oaxa(Fc,aht,4);
 
-	    cigs = fslice_init(n,
+	    cigs = sf_fslice_init(n,
 			       sf_n(aht),
 			       sizeof(float));
 
@@ -305,7 +305,7 @@ int main (int argc, char *argv[])
 	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 
-	    cigs = fslice_init(n,
+	    cigs = sf_fslice_init(n,
 			       sf_n(ahx)*sf_n(ahy)*sf_n(ahz),
 			       sizeof(float));
 
@@ -341,7 +341,7 @@ int main (int argc, char *argv[])
 	    sf_raxa(ahb);
 
 	    sf_oaxa(Fc,ahh,4);
-	    cigs = fslice_init(n,
+	    cigs = sf_fslice_init(n,
 			       nh,
 			       sizeof(float));
 
@@ -352,7 +352,7 @@ int main (int argc, char *argv[])
 	case 'o':
 	default:
 	    if(verb) sf_warning("C.I.C.");
-	    cigs = fslice_init(n,1,sizeof(float));
+	    cigs = sf_fslice_init(n,1,sizeof(float));
 	    ahx = sf_maxa(1,0.,0); sf_setlabel(ahx,"");
 	    sf_oaxa(Fc,ahx,4);
 
@@ -366,11 +366,11 @@ int main (int argc, char *argv[])
     /* slice management (temp files) */
     nw = sf_n(aw)*sf_n(ae);
 
-    wfl_s = fslice_init( nx*ny, nw,sizeof(sf_complex));
-    wfl_r = fslice_init( nx*ny, nw,sizeof(sf_complex));
+    wfl_s = sf_fslice_init( nx*ny, nw,sizeof(sf_complex));
+    wfl_r = sf_fslice_init( nx*ny, nw,sizeof(sf_complex));
 
-    fslice_load(Fw_s,wfl_s,SF_COMPLEX);
-    fslice_load(Fw_r,wfl_r,SF_COMPLEX);
+    sf_fslice_load(Fw_s,wfl_s,SF_COMPLEX);
+    sf_fslice_load(Fw_r,wfl_r,SF_COMPLEX);
 
     /*------------------------------------------------------------*/
     /* init structures */
@@ -420,18 +420,18 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
     if(verb) sf_warning("dump imag");
-    fslice_dump(Fi,imag,SF_FLOAT);
+    sf_fslice_dump(Fi,imag,SF_FLOAT);
 
     if(verb) sf_warning("dump cigs");
-    fslice_dump(Fc,cigs,SF_FLOAT);
+    sf_fslice_dump(Fc,cigs,SF_FLOAT);
 
     /*------------------------------------------------------------*/
-    fslice_close(slo_s);
-    fslice_close(slo_r);
-    fslice_close(wfl_s);
-    fslice_close(wfl_r);
-    fslice_close(imag);
-    fslice_close(cigs);
+    sf_fslice_close(slo_s);
+    sf_fslice_close(slo_r);
+    sf_fslice_close(wfl_s);
+    sf_fslice_close(wfl_r);
+    sf_fslice_close(imag);
+    sf_fslice_close(cigs);
 
     /*------------------------------------------------------------*/
 

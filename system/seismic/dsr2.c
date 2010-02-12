@@ -32,9 +32,6 @@
 #define LOOPxh2(a) for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh2;ih++){ {a} }}
 #define LOOPuh(a)  for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh; ih++){ {a} }}
 
-#include "slice.h"
-/*^*/
-
 static int nx,nh,nh2,nz,nu,nrmax;
 static float dz;
 
@@ -53,7 +50,7 @@ static sf_complex **wx;   /* wavefield x */
 static int           **ms, **mr; /* multi-reference slowness map  */
 static bool          ***skip;
 static float         **ma; /* multi-reference slowness mask */
-static fslice mms, mmr;
+static sf_fslice mms, mmr;
 
 void dsr2_init(int nz1, float dz1             /* depth */,
 	       int nh1, float dh1, float h01  /* half-offset */,
@@ -153,8 +150,8 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     /* precompute taper array */
     taper2_init(nx,nh,ntx,nth,true,false);
 
-    mms = fslice_init(nh*nx,nz,sizeof(int));
-    mmr = fslice_init(nh*nx,nz,sizeof(int));
+    mms = sf_fslice_init(nh*nx,nz,sizeof(int));
+    mmr = sf_fslice_init(nh*nx,nz,sizeof(int));
 }
 
 void dsr2_close(void)
@@ -181,8 +178,8 @@ void dsr2_close(void)
     
     free(**skip); 
     free( *skip); free(skip);
-    fslice_close(mms);
-    fslice_close(mmr);
+    sf_fslice_close(mms);
+    sf_fslice_close(mmr);
     taper2_close();
     fft2_close();
 }
@@ -192,7 +189,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 	  float eps                   /* stability factor */,  
 	  int nw, float dw, float w0  /* frequency (radian) */,
 	  sf_file data                /* data       [nw][nx][nh] */,
-	  slice imag                  /* image file [nz][nu][nh] */,
+	  sf_slice imag                  /* image file [nz][nu][nh] */,
 	  float **slow                /* slowness   [nz][nx]     */,
 	  float dt                    /* time error */)
 /*< Apply migration/modeling >*/
@@ -204,7 +201,7 @@ void dsr2(bool verb                   /* verbosity flag */,
     if (!inv) { /* prepare image for migration */
 	LOOPuh( qq[iu][ih] = 0.0; );
 	for (iz=0; iz<nz; iz++) {
-	    slice_put(imag,iz,qq[0]);
+	    sf_slice_put(imag,iz,qq[0]);
 	}
     }
 
@@ -223,8 +220,8 @@ void dsr2(bool verb                   /* verbosity flag */,
 	    LOOPxh( if(si[ is[ix][ih] ] > sy) ms[ix][ih]++;
 		    if(si[ ir[ix][ih] ] > sy) mr[ix][ih]++; );
 	}
-	fslice_put(mms,iz,ms[0]);
-	fslice_put(mmr,iz,mr[0]);
+	sf_fslice_put(mms,iz,ms[0]);
+	sf_fslice_put(mmr,iz,mr[0]);
 	for (j=0; j<nr[iz]; j++) {
 	    for (k=0; k<nr[iz]; k++) {
 		skip[iz][j][k] = true;
@@ -254,7 +251,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 	    si = slow[nz-1];
 
 	    /* imaging condition */
-	    slice_get(imag,nz-1,qq[0]);	    
+	    sf_slice_get(imag,nz-1,qq[0]);	    
 	    LOOPxh( wx[ix][ih] = sf_cmplx(qq[ ii[ix] ][ih],0.);  );
 
 	    /* loop over migrated depths z */
@@ -279,8 +276,8 @@ void dsr2(bool verb                   /* verbosity flag */,
 		fft2(false,(kiss_fft_cpx**) pk);		
 		
 		si = slow[iz];
-		fslice_get(mms,iz,ms[0]);
-		fslice_get(mmr,iz,mr[0]);
+		sf_fslice_get(mms,iz,ms[0]);
+		sf_fslice_get(mmr,iz,mr[0]);
 
 		LOOPxh( wx[ix][ih] = sf_cmplx(0,0); );
 		for (j=0; j<nr[iz]; j++) {
@@ -328,7 +325,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 		    }
 		}
 		
-		slice_get(imag,iz,qq[0]);
+		sf_slice_get(imag,iz,qq[0]);
 
 		/* w-x at top */
 #ifdef SF_HAS_COMPLEX_H
@@ -361,10 +358,10 @@ void dsr2(bool verb                   /* verbosity flag */,
 	    for (iz=0; iz< nz-1; iz++) {
 
 		/* imaging condition */
-		slice_get(imag,iz,qq[0]);
+		sf_slice_get(imag,iz,qq[0]);
 		LOOPxh(        qq[ii[ix]][ih] += 
 			crealf(wx   [ix] [ih] ); );
-		slice_put(imag,iz,qq[0]);
+		sf_slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
 		LOOPxh2( pk[ix][ih] = sf_cmplx(0.,0.););
@@ -385,8 +382,8 @@ void dsr2(bool verb                   /* verbosity flag */,
 		fft2(false,(kiss_fft_cpx**) pk);
 
 		si = slow[iz+1];
-		fslice_get(mms,iz,ms[0]);
-		fslice_get(mmr,iz,mr[0]);
+		sf_fslice_get(mms,iz,ms[0]);
+		sf_fslice_get(mmr,iz,mr[0]);
 		
 		LOOPxh( wx[ix][ih] = sf_cmplx(0,0); );
 		for (j=0; j<nr[iz]; j++) {
@@ -454,10 +451,10 @@ void dsr2(bool verb                   /* verbosity flag */,
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */
-	    slice_get(imag,nz-1,qq[0]);
+	    sf_slice_get(imag,nz-1,qq[0]);
 	    LOOPxh(        qq[ii[ix]][ih] += 
 		    crealf(wx   [ix] [ih]); );
-	    slice_put(imag,nz-1,qq[0]);
+	    sf_slice_put(imag,nz-1,qq[0]);
 	} /* else */
     } /* iw */
 }

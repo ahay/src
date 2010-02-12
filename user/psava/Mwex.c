@@ -53,9 +53,9 @@ int main (int argc, char *argv[])
     sf_file Fw=NULL; 
 
     /* I/O slices */
-    fslice slow=NULL;
-    fslice data=NULL;
-    fslice wfld=NULL;
+    sf_fslice slow=NULL;
+    sf_fslice data=NULL;
+    sf_fslice wfld=NULL;
 
     int ompnth=1;
 
@@ -108,14 +108,14 @@ int main (int argc, char *argv[])
    
     /*------------------------------------------------------------*/
     /* init temp files */
-    slow = fslice_init(sf_n(alx)*sf_n(aly)*sf_n(az),1       ,sizeof(float));
-    data = fslice_init(sf_n(amx)*sf_n(amy),          sf_n(aw),sizeof(sf_complex));
-    wfld = fslice_init(sf_n(amx)*sf_n(amy)*sf_n(az),sf_n(aw),sizeof(sf_complex));
+    slow = sf_fslice_init(sf_n(alx)*sf_n(aly)*sf_n(az),1       ,sizeof(float));
+    data = sf_fslice_init(sf_n(amx)*sf_n(amy),          sf_n(aw),sizeof(sf_complex));
+    wfld = sf_fslice_init(sf_n(amx)*sf_n(amy)*sf_n(az),sf_n(aw),sizeof(sf_complex));
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
-    fslice_load(Fs,slow,SF_FLOAT);
-    fslice_load(Fd,data,SF_COMPLEX);
+    sf_fslice_load(Fs,slow,SF_FLOAT);
+    sf_fslice_load(Fd,data,SF_COMPLEX);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -149,14 +149,14 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
-    fslice_dump(Fw,wfld,SF_COMPLEX);
+    sf_fslice_dump(Fw,wfld,SF_COMPLEX);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
     /* close temp files */
-    fslice_close(data);
-    fslice_close(wfld);
-    fslice_close(slow);    
+    sf_fslice_close(data);
+    sf_fslice_close(wfld);
+    sf_fslice_close(slow);    
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/

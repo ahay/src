@@ -59,10 +59,10 @@ int main (int argc, char *argv[])
     sf_file Fw=NULL; 
 
     /* I/O slices */
-    fslice slow=NULL;
-    fslice imag=NULL;
-    fslice data=NULL;
-    fslice wfld=NULL;
+    sf_fslice slow=NULL;
+    sf_fslice imag=NULL;
+    sf_fslice data=NULL;
+    sf_fslice wfld=NULL;
 
     int ompchunk=1;
     int ompnth=1;
@@ -121,8 +121,8 @@ int main (int argc, char *argv[])
     n = sf_n(alx)*sf_n(aly);
     nz = sf_n(amz);
 
-    slow = fslice_init(n,nz,sizeof(float));
-    fslice_load(Fs,slow,SF_FLOAT);
+    slow = sf_fslice_init(n,nz,sizeof(float));
+    sf_fslice_load(Fs,slow,SF_FLOAT);
     
     switch(mode[0]) {
 	case 'w': /* save wavefield */
@@ -139,10 +139,10 @@ int main (int argc, char *argv[])
 	    n  = sf_n(amx)*sf_n(amy);
 	    nw = sf_n(aw);
 
-	    data = fslice_init(n,   nw,sizeof(sf_complex));
-	    wfld = fslice_init(n,nz*nw,sizeof(sf_complex));
+	    data = sf_fslice_init(n,   nw,sizeof(sf_complex));
+	    wfld = sf_fslice_init(n,nz*nw,sizeof(sf_complex));
 
-	    fslice_load(Fd,data,SF_COMPLEX);
+	    sf_fslice_load(Fd,data,SF_COMPLEX);
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
@@ -158,10 +158,10 @@ int main (int argc, char *argv[])
 		n  = sf_n(amx)*sf_n(amy);
 		nw = sf_n(aw)*sf_n(ae);
 
-		data = fslice_init(n,nw,sizeof(sf_complex));
-		wfld = fslice_init(n,nw,sizeof(sf_complex));
+		data = sf_fslice_init(n,nw,sizeof(sf_complex));
+		wfld = sf_fslice_init(n,nw,sizeof(sf_complex));
 
-		fslice_load(Fw,wfld,SF_COMPLEX);
+		sf_fslice_load(Fw,wfld,SF_COMPLEX);
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
 		Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
@@ -175,10 +175,10 @@ int main (int argc, char *argv[])
 		n  = sf_n(amx)*sf_n(amy);
 		nw = sf_n(aw)*sf_n(ae);
 
-		data = fslice_init(n,nw,sizeof(sf_complex));
-		wfld = fslice_init(n,nw,sizeof(sf_complex));
+		data = sf_fslice_init(n,nw,sizeof(sf_complex));
+		wfld = sf_fslice_init(n,nw,sizeof(sf_complex));
 
-		fslice_load(Fd,data,SF_COMPLEX);
+		sf_fslice_load(Fd,data,SF_COMPLEX);
 	    }
 	    break;
 	case 'm':
@@ -202,10 +202,10 @@ int main (int argc, char *argv[])
 
 		n = sf_n(amx)*sf_n(amy);
 
-		data = fslice_init(n,nw,sizeof(sf_complex));
-		imag = fslice_init(n,nz,sizeof(float));
+		data = sf_fslice_init(n,nw,sizeof(sf_complex));
+		imag = sf_fslice_init(n,nz,sizeof(float));
 
-		fslice_load(Fi,imag,SF_FLOAT);			
+		sf_fslice_load(Fi,imag,SF_FLOAT);			
 	    } else { /* migration */
 		Fd = sf_input ( "in");
 		Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
@@ -219,10 +219,10 @@ int main (int argc, char *argv[])
 		n  = sf_n(amx)*sf_n(amy);
 		nw = sf_n(aw);
 
-		data = fslice_init(n,nw,sizeof(sf_complex));
-		imag = fslice_init(n,nz,sizeof(float));
+		data = sf_fslice_init(n,nw,sizeof(sf_complex));
+		imag = sf_fslice_init(n,nz,sizeof(float));
 	    
-		fslice_load(Fd,data,SF_COMPLEX);
+		sf_fslice_load(Fd,data,SF_COMPLEX);
 	    }
 	    break;
     }
@@ -279,25 +279,25 @@ int main (int argc, char *argv[])
     /* slice management (temp files) */
     switch(mode[0]) {
 	case 'w':
-	    fslice_dump(Fw,wfld,SF_COMPLEX);
-	    fslice_close(data);
-	    fslice_close(wfld);
+	    sf_fslice_dump(Fw,wfld,SF_COMPLEX);
+	    sf_fslice_close(data);
+	    sf_fslice_close(wfld);
 	    break;
 	case 'd':
-	    if(inv) fslice_dump(Fd,data,SF_COMPLEX);
-	    else    fslice_dump(Fw,wfld,SF_COMPLEX);    
-	    fslice_close(data);
-	    fslice_close(wfld);
+	    if(inv) sf_fslice_dump(Fd,data,SF_COMPLEX);
+	    else    sf_fslice_dump(Fw,wfld,SF_COMPLEX);    
+	    sf_fslice_close(data);
+	    sf_fslice_close(wfld);
 	    break;
 	case 'm':
-	    if(inv) fslice_dump(Fd,data,SF_COMPLEX);
-	    else    fslice_dump(Fi,imag,SF_FLOAT);
-	    fslice_close(data);
-	    fslice_close(imag);
+	    if(inv) sf_fslice_dump(Fd,data,SF_COMPLEX);
+	    else    sf_fslice_dump(Fi,imag,SF_FLOAT);
+	    sf_fslice_close(data);
+	    sf_fslice_close(imag);
 	default:
 	    break;
     }
-    fslice_close(slow);
+    sf_fslice_close(slow);
     
     /*------------------------------------------------------------*/
 

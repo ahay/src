@@ -27,9 +27,6 @@
 #include "taper.h"
 #include "slowref.h"
 
-#include "slice.h"
-/*^*/
-
 #define LOOPxy(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ {a} }}
 #define LOOPxy2(a) for(ix=0;ix<nx2;ix++){ for(iy=0;iy<ny2;iy++){ {a} }}
 
@@ -141,8 +138,8 @@ void split2(bool verb                   /* verbosity flag */,
 	    float eps                   /* stability factor */,  
 	    int nw, float dw, float w0  /* frequency (radian) */,
 	    sf_file data                /* data  [nw][nx][ny] */,
-	    slice imag                  /* image  [nz][nx][ny] */,
-	    slice slow                  /* slowness  [nz][nx][ny] */)
+	    sf_slice imag                  /* image  [nz][nx][ny] */,
+	    sf_slice slow                  /* slowness  [nz][nx][ny] */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,iy,ir,nxy;
@@ -152,14 +149,14 @@ void split2(bool verb                   /* verbosity flag */,
     if (!inv) { /* prepare image for migration */
 	LOOPxy( qq[ix][iy] = 0.0; );
 	for (iz=0; iz<nz; iz++) {
-	    slice_put(imag,iz,qq[0]);
+	    sf_slice_put(imag,iz,qq[0]);
 	}
     }
 
     /* compute reference slowness */
     nxy = nx*ny;
     for (iz=0; iz<nz; iz++) {
-	slice_get(slow,iz,  ss[0]);
+	sf_slice_get(slow,iz,  ss[0]);
 	nr[iz] = slowref(nrmax,ds,nxy,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
@@ -182,10 +179,10 @@ void split2(bool verb                   /* verbosity flag */,
 
 	if (inv) { /* MODELING */
 	    /* start from bottom */
-	    slice_get(slow,nz-1,ss[0]);
+	    sf_slice_get(slow,nz-1,ss[0]);
 	    
 	    /* imaging condition */
-	    slice_get(imag,nz-1,qq[0]);
+	    sf_slice_get(imag,nz-1,qq[0]);
 	    LOOPxy( wx[ix][iy] = sf_cmplx(qq[ix][iy],0.); );
 
 	    /* loop over migrated depths z */
@@ -209,7 +206,7 @@ void split2(bool verb                   /* verbosity flag */,
 #endif
 		
 		fft2(false,(kiss_fft_cpx**) pp);
-		slice_get(slow,iz,ss[0]);
+		sf_slice_get(slow,iz,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
@@ -251,7 +248,7 @@ void split2(bool verb                   /* verbosity flag */,
 #endif
 		} /* ir loop */
 
-		slice_get(imag,iz,qq[0]);
+		sf_slice_get(imag,iz,qq[0]);
 		
 		/* w-x @ top */
 #ifdef SF_HAS_COMPLEX_H
@@ -273,15 +270,15 @@ void split2(bool verb                   /* verbosity flag */,
 	    sf_complexread(wx[0],nxy,data);
 	    taper2(wx);
 
-	    slice_get(slow,0,ss[0]);
+	    sf_slice_get(slow,0,ss[0]);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
 
 		/* imaging condition */
-		slice_get(imag,iz,qq[0]);
+		sf_slice_get(imag,iz,qq[0]);
 		LOOPxy( qq[ix][iy] += crealf(wx[ix][iy]); );
-		slice_put(imag,iz,qq[0]);
+		sf_slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
 		LOOPxy2( pp[ix][iy]=sf_cmplx(0.,0.););
@@ -298,7 +295,7 @@ void split2(bool verb                   /* verbosity flag */,
 #endif
 		
 		fft2(false,(kiss_fft_cpx**) pp);
-		slice_get(slow,iz+1,ss[0]);
+		sf_slice_get(slow,iz+1,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
@@ -355,9 +352,9 @@ void split2(bool verb                   /* verbosity flag */,
 	    } /* iz */
 
 	    /* imaging condition @ bottom */ 
-	    slice_get(imag,nz-1,qq[0]);
+	    sf_slice_get(imag,nz-1,qq[0]);
 	    LOOPxy( qq[ix][iy] += crealf(wx[ix][iy]); );
-	    slice_put(imag,nz-1,qq[0]);
+	    sf_slice_put(imag,nz-1,qq[0]);
 	    
 	} /* else */
     } /* iw */

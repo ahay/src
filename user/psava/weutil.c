@@ -1,8 +1,5 @@
 #include <rsf.h>
 
-#include "slice.h"
-/*^*/
-
 #include "weutil.h"
 /*^*/
 
@@ -130,7 +127,7 @@ typedef struct slo *slo3d;
 /*^*/
 
 struct slo{
-    fslice    slice; /* slowness slice */
+    sf_fslice    slice; /* slowness slice */
     int         *nr; /* number of references */
     float      **sm; /* ref slo squared */
     float     ***ss; /* slowness */
@@ -146,8 +143,8 @@ typedef struct img *img3d;
 /*^*/
 
 struct img{
-    fslice imag;
-    fslice cigs;
+    sf_fslice imag;
+    sf_fslice cigs;
     sf_complex ****qs;      /* source wavefield */
     sf_complex ****qr;      /* receiver wavefield */
     float      ****qi;      /* image */
@@ -176,7 +173,7 @@ struct ssroperator{
     sf_complex ***ww_s; /*   source wavefield */
     sf_complex ***ww_r; /* receiver wavefield */
     sf_complex ***ww  ; /*          wavefield */   
-    fslice        wtmp; /* tmp wavefield (for SR modeling) */
+    sf_fslice     wtmp; /* tmp wavefield (for SR modeling) */
     float      ***rr;   /*  reflectivity (for SR modeling)  */
     float       **qq;   /* image (for ZO modeling/migration) */
 };

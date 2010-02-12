@@ -46,10 +46,10 @@ int main (int argc, char *argv[])
     sf_file Pi=NULL;             /*     image file R ( nx, ny,nz) */
 
     /* I/O slices */
-    fslice Bwfls=NULL,Bwflr=NULL;
-    fslice Bslow=NULL;
-    fslice Pslow=NULL;
-    fslice Pimag=NULL;
+    sf_fslice Bwfls=NULL,Bwflr=NULL;
+    sf_fslice Bslow=NULL;
+    sf_fslice Pslow=NULL;
+    sf_fslice Pimag=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -77,8 +77,8 @@ int main (int argc, char *argv[])
     n = sf_n(alx)*sf_n(aly);
     nz = sf_n(amz);
 
-    Bslow = fslice_init(n, nz, sizeof(float));
-    fslice_load(Bs,Bslow,SF_FLOAT);
+    Bslow = sf_fslice_init(n, nz, sizeof(float));
+    sf_fslice_load(Bs,Bslow,SF_FLOAT);
 
     /*------------------------------------------------------------*/
     /* WAVEFIELD */
@@ -98,11 +98,11 @@ int main (int argc, char *argv[])
     n = sf_n(amx)*sf_n(amy);
     nw = sf_n(aw);
 
-    Bwfls = fslice_init( n,nz*nw,sizeof(sf_complex));
-    Bwflr = fslice_init( n,nz*nw,sizeof(sf_complex));
+    Bwfls = sf_fslice_init( n,nz*nw,sizeof(sf_complex));
+    Bwflr = sf_fslice_init( n,nz*nw,sizeof(sf_complex));
 
-    fslice_load(Bw_s,Bwfls,SF_COMPLEX);
-    fslice_load(Bw_r,Bwflr,SF_COMPLEX);
+    sf_fslice_load(Bw_s,Bwfls,SF_COMPLEX);
+    sf_fslice_load(Bw_r,Bwflr,SF_COMPLEX);
 
     /*------------------------------------------------------------*/
 
@@ -116,10 +116,10 @@ int main (int argc, char *argv[])
 	sf_oaxa(Ps,amy,2);
 	sf_oaxa(Ps,amz,3);
 
-	Pslow = fslice_init(n,nz, sizeof(sf_complex));
+	Pslow = sf_fslice_init(n,nz, sizeof(sf_complex));
 
-	Pimag = fslice_init(n,nz, sizeof(sf_complex));
-	fslice_load(Pi,Pimag,SF_COMPLEX);
+	Pimag = sf_fslice_init(n,nz, sizeof(sf_complex));
+	sf_fslice_load(Pi,Pimag,SF_COMPLEX);
     } else {
 	
 	Ps = sf_input("in");
@@ -131,10 +131,10 @@ int main (int argc, char *argv[])
 	sf_oaxa(Pi,amy,2);
 	sf_oaxa(Pi,amz,3);
 	
-	Pslow = fslice_init(n,nz, sizeof(sf_complex));
-	fslice_load(Ps,Pslow,SF_COMPLEX);
+	Pslow = sf_fslice_init(n,nz, sizeof(sf_complex));
+	sf_fslice_load(Ps,Pslow,SF_COMPLEX);
 	
-	Pimag = fslice_init(n,nz, sizeof(sf_complex));
+	Pimag = sf_fslice_init(n,nz, sizeof(sf_complex));
     }
 
     /*------------------------------------------------------------*/
@@ -155,14 +155,14 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
 
-    if(adj) fslice_dump(Ps,Pslow,SF_COMPLEX);
-    else    fslice_dump(Pi,Pimag,SF_COMPLEX);
-    fslice_close(Pimag);
-    fslice_close(Pslow);
+    if(adj) sf_fslice_dump(Ps,Pslow,SF_COMPLEX);
+    else    sf_fslice_dump(Pi,Pimag,SF_COMPLEX);
+    sf_fslice_close(Pimag);
+    sf_fslice_close(Pslow);
 
-    fslice_close(Bwfls);
-    fslice_close(Bwflr);
-    fslice_close(Bslow);
+    sf_fslice_close(Bwfls);
+    sf_fslice_close(Bwflr);
+    sf_fslice_close(Bslow);
 
     exit (0);
 }

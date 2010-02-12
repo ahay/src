@@ -32,9 +32,6 @@
 #include "slow3.h"
 #include "cam3.h"
 
-#include "slice.h"
-/*^*/
-
 #include "weutil.h"
 /*^*/
 
@@ -111,8 +108,8 @@ void camig3(camoperator3d weop,
 	    tap3d tap,
 	    slo3d slo,
 	    bool  inv   /*      forward/adjoint flag */, 
-	    fslice data /* data  [nw][nhx][nmy][nmx] */,
-	    fslice imag /* image [nz][nhx][nmy][nmx] */)
+	    sf_fslice data /* data  [nw][nhx][nmy][nmx] */,
+	    sf_fslice imag /* image [nz][nhx][nmy][nmx] */)
 /*< Apply migration/modeling >*/
 {
     int imz,iw,imy,imx,ihx;
@@ -122,7 +119,7 @@ void camig3(camoperator3d weop,
     if (!inv) { /* prepare image for migration */
 	LOOP( weop->qq[ihx][imy][imx] = 0.0; );
 	for (imz=0; imz<cub->amz.n; imz++) {
-	    fslice_put(imag,imz,weop->qq[0][0]);
+	    sf_fslice_put(imag,imz,weop->qq[0][0]);
 	}
     }
     
@@ -145,7 +142,7 @@ void camig3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
 #ifdef _OPENMP
 #pragma omp critical
@@ -157,7 +154,7 @@ void camig3(camoperator3d weop,
 #pragma omp critical
 #endif 
 		{
-		fslice_get(imag,imz,weop->qq[0][0]); /* I.C. */
+		sf_fslice_get(imag,imz,weop->qq[0][0]); /* I.C. */
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( weop->ww[ompith][ihx][imy][imx] +=
 		      weop->qq        [ihx][imy][imx]; );
@@ -169,7 +166,7 @@ void camig3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);	
 		slow3_advance(cub,slo,ompith);
 	    }
@@ -179,7 +176,7 @@ void camig3(camoperator3d weop,
 #pragma omp critical
 #endif
 	    {
-		fslice_get(imag,0,weop->qq[0][0]);
+		sf_fslice_get(imag,0,weop->qq[0][0]);
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( weop->ww[ompith][ihx][imy][imx]  += 
 		      weop->qq        [ihx][imy][imx]; );	
@@ -188,7 +185,7 @@ void camig3(camoperator3d weop,
 		      weop->qq        [ihx][imy][imx]; );
 #endif	  
 		taper3d(weop->ww[ompith],tap);
-		fslice_put(data,iw,weop->ww[ompith][0][0]);    /* output data @ iz=0 */
+		sf_fslice_put(data,iw,weop->ww[ompith][0][0]);    /* output data @ iz=0 */
 	    }
 	    
 	} else { /* MIGRATION */
@@ -198,24 +195,24 @@ void camig3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0][0]);
 	    taper3d(weop->ww[ompith],tap);
 	    
 #ifdef _OPENMP	 
 #pragma omp critical
 #endif
 	    {
-		fslice_get(imag,0,weop->qq[0][0]);
+		sf_fslice_get(imag,0,weop->qq[0][0]);
 		LOOP(;      weop->qq        [ihx][imy][imx] += 
 		     crealf(weop->ww[ompith][ihx][imy][imx] ); );
-		fslice_put(imag,0,weop->qq[0][0]);
+		sf_fslice_put(imag,0,weop->qq[0][0]);
 	    }
 	    
 	    /* downward continuation */
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,0,slo->so[ompith][0]);	
+	    sf_fslice_get(slo->slice,0,slo->so[ompith][0]);	
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
 #ifdef _OPENMP
 #pragma omp critical
@@ -225,7 +222,7 @@ void camig3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 
@@ -233,10 +230,10 @@ void camig3(camoperator3d weop,
 #pragma omp critical
 #endif
 		{
-		    fslice_get(imag,imz+1,weop->qq[0][0]); /* I.C. */
+		    sf_fslice_get(imag,imz+1,weop->qq[0][0]); /* I.C. */
 		    LOOP(;      weop->qq        [ihx][imy][imx] += 
 			 crealf(weop->ww[ompith][ihx][imy][imx] ); );
-		    fslice_put(imag,imz+1,weop->qq[0][0]);
+		    sf_fslice_put(imag,imz+1,weop->qq[0][0]);
 		}
 
 	    } /* z */
@@ -252,8 +249,8 @@ void cadtm3(camoperator3d weop,
 	    tap3d tap,
 	    slo3d slo,
 	    bool  inv   /* forward/adjoint flag */, 
-	    fslice data /* data [nw][nmy][nmx] */,
-	    fslice wfld /* wfld [nw][nmy][nmx] */)
+	    sf_fslice data /* data [nw][nmy][nmx] */,
+	    sf_fslice wfld /* wfld [nw][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
     int imz,iw;
@@ -276,13 +273,13 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(wfld,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_get(wfld,iw,weop->ww[ompith][0][0]);
 	    taper3d(weop->ww[ompith],tap);
 	
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
 #ifdef _OPENMP
 #pragma omp critical
@@ -293,7 +290,7 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);		
+		sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);		
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 	    }
@@ -301,7 +298,7 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_put(data,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_put(data,iw,weop->ww[ompith][0][0]);
 
 	} else { /* DOWNWARD DATUMING */
 	    w = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
@@ -309,13 +306,13 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0][0]);
 	    taper3d(weop->ww[ompith],tap);
 	    
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,0,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,0,slo->so[ompith][0]);
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
 #ifdef _OPENMP
 #pragma omp critical
@@ -326,7 +323,7 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 	    }
@@ -334,7 +331,7 @@ void cadtm3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_put(wfld,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_put(wfld,iw,weop->ww[ompith][0][0]);
 	} /* else */
     } /* w */
     
@@ -347,8 +344,8 @@ void cawfl3(camoperator3d weop,
 	    tap3d tap,
 	    slo3d slo,
 	    bool  inv   /* forward/adjoint flag */, 
-	    fslice data /*      data [nw][nmy][nmx] */,
-	    fslice wfld /* wavefield [nw][nmy][nmx] */)
+	    sf_fslice data /*      data [nw][nmy][nmx] */,
+	    sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
     int imz,iw;
@@ -371,14 +368,14 @@ void cawfl3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0][0]);
 	    taper3d(weop->ww[ompith],tap);
-	    fslice_put(wfld,iw*cub->amz.n+cub->amz.n-1,weop->ww[ompith][0][0]);
+	    sf_fslice_put(wfld,iw*cub->amz.n+cub->amz.n-1,weop->ww[ompith][0][0]);
 
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
 #ifdef _OPENMP
 #pragma omp critical
@@ -389,14 +386,14 @@ void cawfl3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(wfld,iw*cub->amz.n+imz-1,weop->ww[ompith][0][0]);
+		sf_fslice_put(wfld,iw*cub->amz.n+imz-1,weop->ww[ompith][0][0]);
 	    }
 
 	} else {  /* DOWNWARD EXTRAPOLATION */
@@ -405,14 +402,14 @@ void cawfl3(camoperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0][0]);
 	    taper3d(weop->ww[ompith],tap);
-	    fslice_put(wfld,iw*cub->amz.n,weop->ww[ompith][0][0]);
+	    sf_fslice_put(wfld,iw*cub->amz.n,weop->ww[ompith][0][0]);
 
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,0,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,0,slo->so[ompith][0]);
 	    for (imz=0; imz<cub->amz.n-1; imz++) {	
 #ifdef _OPENMP
 #pragma omp critical
@@ -423,14 +420,14 @@ void cawfl3(camoperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(wfld,iw*cub->amz.n+imz+1,weop->ww[ompith][0][0]);
+		sf_fslice_put(wfld,iw*cub->amz.n+imz+1,weop->ww[ompith][0][0]);
 	    } /* z */
 	} /* else */
     } /* w */

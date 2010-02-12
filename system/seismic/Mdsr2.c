@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant          */  
     sf_file in, out, vel;
-    slice imag;
+    sf_slice imag;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -129,7 +129,7 @@ int main (int argc, char *argv[])
     sf_floatread(slow[0],ny*nz,vel);
     sf_fileclose(vel);
 
-    imag = slice_init( inv ? in:out,nh,ny,nz);
+    imag = sf_slice_init( inv ? in:out,nh,ny,nz);
 
     dsr2_init (nz,dz, 
 	       nh,dh,h0, 

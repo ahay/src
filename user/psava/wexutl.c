@@ -1,8 +1,5 @@
 #include <rsf.h>
 
-#include "slice.h"
-/*^*/
-
 #include "wexutl.h"
 /*^*/
 
@@ -72,7 +69,7 @@ typedef struct wexslo *wexslo3d;
 /*^*/
 
 struct wexslo{
-    fslice    slice; /* slowness slice */
+    sf_fslice slice; /* slowness slice */
     int         *nr; /* number of references */
     float      **sm; /* ref slo squared */
     int       nrmax;

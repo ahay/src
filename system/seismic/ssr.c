@@ -27,9 +27,6 @@
 #include "fft2.h"
 #include "taper.h"
 
-/*#include "slice.h"*/
-/*^*/
-
 #define LOOP(a) for(iy=0;iy<ayy.n;iy++){ for(ix=0;ix<axx.n;ix++){ {a} }}
 #define KOOP(a) for(iy=0;iy<byy.n;iy++){ for(ix=0;ix<bxx.n;ix++){ {a} }}
 #define SOOP(a) for(iy=0;iy<aly.n;iy++){ for(ix=0;ix<alx.n;ix++){ {a} }}

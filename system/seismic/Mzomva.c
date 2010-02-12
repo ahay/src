@@ -43,8 +43,8 @@ int main (int argc, char *argv[])
     sf_file Ps=NULL;  /* slowness perturbation dS (nmx,nmy,nz) complex */
     sf_file Pi=NULL;  /*    image perturbation dI (nmx,nmy,nz) complex */
 
-    fslice Bslow=NULL,Bwfld=NULL;
-    fslice Pslow=NULL,Pimag=NULL;
+    sf_fslice Bslow=NULL,Bwfld=NULL;
+    sf_fslice Pslow=NULL,Pimag=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -69,8 +69,8 @@ int main (int argc, char *argv[])
     n = sf_n(alx)*sf_n(aly);
     nz = sf_n(amz);
 
-    Bslow = fslice_init(n,nz,sizeof(float));
-    fslice_load(Bs,Bslow,SF_FLOAT);
+    Bslow = sf_fslice_init(n,nz,sizeof(float));
+    sf_fslice_load(Bs,Bslow,SF_FLOAT);
 
     /* wavefield parameters */
     Bw = sf_input("wfl");
@@ -84,8 +84,8 @@ int main (int argc, char *argv[])
     n = sf_n(amx)*sf_n(amy);
     nw = sf_n(aw);
 
-    Bwfld = fslice_init(n,nz*nw,sizeof(sf_complex));
-    fslice_load(Bw,Bwfld,SF_COMPLEX);
+    Bwfld = sf_fslice_init(n,nz*nw,sizeof(sf_complex));
+    sf_fslice_load(Bw,Bwfld,SF_COMPLEX);
 
     if (inv) { /* adjoint: image -> slowness */
 	
@@ -98,10 +98,10 @@ int main (int argc, char *argv[])
 	sf_oaxa(Ps,amy,2);
 	sf_oaxa(Ps,amz,3);
 
-	Pslow = fslice_init(n,nz, sizeof(sf_complex));
+	Pslow = sf_fslice_init(n,nz, sizeof(sf_complex));
 
-	Pimag = fslice_init(n,nz, sizeof(sf_complex));
-	fslice_load(Pi,Pimag,SF_COMPLEX);
+	Pimag = sf_fslice_init(n,nz, sizeof(sf_complex));
+	sf_fslice_load(Pi,Pimag,SF_COMPLEX);
 
     } else {   /* forward: slowness -> image */
 
@@ -114,10 +114,10 @@ int main (int argc, char *argv[])
 	sf_oaxa(Pi,amy,2);
 	sf_oaxa(Pi,amz,3);
 	
-	Pslow = fslice_init(n,nz, sizeof(sf_complex));
-	fslice_load(Ps,Pslow,SF_COMPLEX);
+	Pslow = sf_fslice_init(n,nz, sizeof(sf_complex));
+	sf_fslice_load(Ps,Pslow,SF_COMPLEX);
 
-	Pimag = fslice_init(n,nz, sizeof(sf_complex));
+	Pimag = sf_fslice_init(n,nz, sizeof(sf_complex));
 
     }
     /*------------------------------------------------------------*/
@@ -135,13 +135,13 @@ int main (int argc, char *argv[])
     zomva_close();
 
     /*------------------------------------------------------------*/
-    if(inv) fslice_dump(Ps,Pslow,SF_COMPLEX);
-    else    fslice_dump(Pi,Pimag,SF_COMPLEX);
-    fslice_close(Pimag);
-    fslice_close(Pslow);
+    if(inv) sf_fslice_dump(Ps,Pslow,SF_COMPLEX);
+    else    sf_fslice_dump(Pi,Pimag,SF_COMPLEX);
+    sf_fslice_close(Pimag);
+    sf_fslice_close(Pslow);
 
-    fslice_close(Bwfld);
-    fslice_close(Bslow);
+    sf_fslice_close(Bwfld);
+    sf_fslice_close(Bslow);
 
     exit(0);
 }

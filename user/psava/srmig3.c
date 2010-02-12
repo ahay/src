@@ -33,9 +33,6 @@
 #include "ssr3.h"
 #include "img3.h"
 
-#include "slice.h"
-/*^*/
-
 #include "weutil.h"
 /*^*/
 
@@ -107,10 +104,10 @@ void srmig3(ssroperator3d weop,
 	    slo3d s_s,
 	    slo3d s_r,
 	    img3d img,
-	    fslice swfl /* source   data [nw][ny][nx] */,
-	    fslice rwfl /* receiver data [nw][ny][nx] */,
-	    fslice imag /*         image [nz][ny][nx] */,
-	    fslice cigs,
+	    sf_fslice swfl /* source   data [nw][ny][nx] */,
+	    sf_fslice rwfl /* receiver data [nw][ny][nx] */,
+	    sf_fslice imag /*         image [nz][ny][nx] */,
+	    sf_fslice cigs,
 	    void (*imop)(cub3d,img3d,int,int)
     )
 /*< apply SR migration >*/
@@ -141,8 +138,8 @@ void srmig3(ssroperator3d weop,
 #pragma omp critical
 #endif	    
 	    {
-		fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]);
-		fslice_get(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
+		sf_fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]);
+		sf_fslice_get(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
 	    }
 
 	    taper2d(weop->ww_s[ompith],tap);
@@ -152,8 +149,8 @@ void srmig3(ssroperator3d weop,
 #pragma omp critical
 #endif	    
 	    {
-		fslice_get(s_s->slice, 0, s_s->so[ompith][0]);
-		fslice_get(s_r->slice, 0, s_r->so[ompith][0]);
+		sf_fslice_get(s_s->slice, 0, s_s->so[ompith][0]);
+		sf_fslice_get(s_r->slice, 0, s_r->so[ompith][0]);
 	    }
 	    
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
@@ -162,8 +159,8 @@ void srmig3(ssroperator3d weop,
 #pragma omp critical
 #endif	    
 		{
-		    fslice_get(s_s->slice, imz+1, s_s->ss[ompith][0]);
-		    fslice_get(s_r->slice, imz+1, s_r->ss[ompith][0]);
+		    sf_fslice_get(s_s->slice, imz+1, s_s->ss[ompith][0]);
+		    sf_fslice_get(s_r->slice, imz+1, s_r->ss[ompith][0]);
 		}
 		
 		ssr3_ssf(ws,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);

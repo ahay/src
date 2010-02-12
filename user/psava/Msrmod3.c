@@ -54,9 +54,9 @@ int main (int argc, char *argv[])
     sf_file Fr=NULL;              /* reflectivity */
 
     /* I/O slices */
-    fslice wfl_s=NULL,wfl_r=NULL;
-    fslice slo_s=NULL,slo_r=NULL;
-    fslice refl=NULL;
+    sf_fslice wfl_s=NULL,wfl_r=NULL;
+    sf_fslice slo_s=NULL,slo_r=NULL;
+    sf_fslice refl=NULL;
 
     int ompchunk=1;
     int ompnth=1;
@@ -121,10 +121,10 @@ int main (int argc, char *argv[])
     n  = sf_n(alx)*sf_n(aly);
     nz = sf_n(amz);
 
-    slo_s = fslice_init(n, nz, sizeof(float));
-    slo_r = fslice_init(n, nz, sizeof(float));
-    fslice_load(Fs_s,slo_s,SF_FLOAT);
-    fslice_load(Fs_r,slo_r,SF_FLOAT);
+    slo_s = sf_fslice_init(n, nz, sizeof(float));
+    slo_r = sf_fslice_init(n, nz, sizeof(float));
+    sf_fslice_load(Fs_s,slo_s,SF_FLOAT);
+    sf_fslice_load(Fs_r,slo_r,SF_FLOAT);
 
     /*------------------------------------------------------------*/
     /* WAVEFIELD/IMAGE */
@@ -145,12 +145,12 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
-    wfl_s = fslice_init(n,nw,sizeof(sf_complex));
-    wfl_r = fslice_init(n,nw,sizeof(sf_complex));
-    refl  = fslice_init(n,nz,sizeof(float));
+    wfl_s = sf_fslice_init(n,nw,sizeof(sf_complex));
+    wfl_r = sf_fslice_init(n,nw,sizeof(sf_complex));
+    refl  = sf_fslice_init(n,nz,sizeof(float));
 
-    fslice_load(Fw_s,wfl_s,SF_COMPLEX);
-    fslice_load(Fr,  refl, SF_FLOAT);
+    sf_fslice_load(Fw_s,wfl_s,SF_COMPLEX);
+    sf_fslice_load(Fr,  refl, SF_FLOAT);
 
     /*------------------------------------------------------------*/
     /* wavefield hypercube */
@@ -207,14 +207,14 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
     if(verb) sf_warning("dump data");
-    fslice_dump(Fw_r,wfl_r,SF_COMPLEX);
+    sf_fslice_dump(Fw_r,wfl_r,SF_COMPLEX);
 
     /*------------------------------------------------------------*/
-    fslice_close(slo_s);
-    fslice_close(slo_r);
-    fslice_close(wfl_s);
-    fslice_close(wfl_r);
-    fslice_close(refl);
+    sf_fslice_close(slo_s);
+    sf_fslice_close(slo_r);
+    sf_fslice_close(wfl_s);
+    sf_fslice_close(wfl_r);
+    sf_fslice_close(refl);
     
     /*------------------------------------------------------------*/
 

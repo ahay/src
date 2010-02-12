@@ -32,9 +32,6 @@
 #include "slow3.h"
 #include "ssr3.h"
 
-#include "slice.h"
-/*^*/
-
 #include "weutil.h"
 /*^*/
 
@@ -110,8 +107,8 @@ void zomig3(ssroperator3d weop,
 	    tap3d tap,
 	    slo3d slo,
 	    bool  inv   /* forward/adjoint flag */, 
-	    fslice data /* data  [nw][nmy][nmx] */,
-	    fslice imag /* image [nz][nmy][nmx] */)
+	    sf_fslice data /* data  [nw][nmy][nmx] */,
+	    sf_fslice imag /* image [nz][nmy][nmx] */)
 /*< Apply migration/modeling >*/
 {
     int imz,iw,imy,imx;
@@ -121,7 +118,7 @@ void zomig3(ssroperator3d weop,
     if(!inv) { /* prepare image for migration */
 	LOOP( weop->qq[imy][imx] = 0.0; );
 	for (imz=0; imz<cub->amz.n; imz++) {
-	    fslice_put(imag,imz,weop->qq[0]);
+	    sf_fslice_put(imag,imz,weop->qq[0]);
 	}
     }
     
@@ -148,7 +145,7 @@ void zomig3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
 
@@ -156,7 +153,7 @@ void zomig3(ssroperator3d weop,
 #pragma omp critical
 #endif 
 		{
-		    fslice_get(imag,imz,weop->qq[0]); /* I.C. */
+		    sf_fslice_get(imag,imz,weop->qq[0]); /* I.C. */
 #ifdef SF_HAS_COMPLEX_H
 		    LOOP( weop->ww[ompith][imy][imx] +=
 			  weop->qq        [imy][imx]; );
@@ -168,7 +165,7 @@ void zomig3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
 		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 		
 		ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);		
@@ -180,7 +177,7 @@ void zomig3(ssroperator3d weop,
 #pragma omp critical
 #endif
 	    {
-		fslice_get(imag,0,weop->qq[0]);
+		sf_fslice_get(imag,0,weop->qq[0]);
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( weop->ww[ompith][imy][imx]  += 
 		      weop->qq[imy][imx]; );	
@@ -194,7 +191,7 @@ void zomig3(ssroperator3d weop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif
-		fslice_put(data,iw,weop->ww[ompith][0]);    /* output data @ iz=0 */
+		sf_fslice_put(data,iw,weop->ww[ompith][0]);    /* output data @ iz=0 */
 
 	} else { /* MIGRATION */
 	    w = sf_cmplx(cub->eps*cub->aw.d,
@@ -204,31 +201,31 @@ void zomig3(ssroperator3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0]);
 	    taper2d(weop->ww[ompith],tap);
 
 #ifdef _OPENMP	 
 #pragma omp critical
 #endif
 	    {
-		fslice_get(imag,0,weop->qq[0]);
+		sf_fslice_get(imag,0,weop->qq[0]);
 		LOOP(;      weop->qq[imy][imx] += 
 		     crealf(weop->ww[ompith][imy][imx] ); );
-		fslice_put(imag,0,weop->qq[0]);
+		sf_fslice_put(imag,0,weop->qq[0]);
 	    }
 	    
 	    /* downward continuation */
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,0,slo->so[ompith][0]);	
+	    sf_fslice_get(slo->slice,0,slo->so[ompith][0]);	
 	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
 
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 		
 		ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);
@@ -238,10 +235,10 @@ void zomig3(ssroperator3d weop,
 #pragma omp critical
 #endif
 		{
-		    fslice_get(imag,imz+1,weop->qq[0]); /* I.C. */
+		    sf_fslice_get(imag,imz+1,weop->qq[0]); /* I.C. */
 		    LOOP(;      weop->qq[imy][imx] += 
 			 crealf(weop->ww[ompith][imy][imx] ); );
-		    fslice_put(imag,imz+1,weop->qq[0]);
+		    sf_fslice_put(imag,imz+1,weop->qq[0]);
 		}
 	    } /* z */
 	} /* else */
@@ -256,8 +253,8 @@ void zodtm3(ssroperator3d weop,
 	    slo3d slo,
 	    bool inv    /* forward/adjoint flag */, 
 	    bool causal,
-	    fslice data /* data [nw][nmy][nmx] */,
-	    fslice wfld /* wfld [nw][nmy][nmx] */)
+	    sf_fslice data /* data [nw][nmy][nmx] */,
+	    sf_fslice wfld /* wfld [nw][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
     int imz,iw,ie;
@@ -288,13 +285,13 @@ void zodtm3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(wfld,iw+ie*cub->aw.n,weop->ww[ompith][0]);
+		sf_fslice_get(wfld,iw+ie*cub->aw.n,weop->ww[ompith][0]);
 		taper2d(weop->ww[ompith],tap);
 		
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+		sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 		slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 
 		for (imz=cub->amz.n-1; imz>0; imz--) {
@@ -302,7 +299,7 @@ void zodtm3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		    fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		    sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
 		    slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 
 		    ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);
@@ -313,7 +310,7 @@ void zodtm3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(data,iw+ie*cub->aw.n,weop->ww[ompith][0]);
+		sf_fslice_put(data,iw+ie*cub->aw.n,weop->ww[ompith][0]);
 	    } else { /* DOWNWARD DATUMING */
 		if(causal) {
 		    w = sf_cmplx(cub->eps*cub->aw.d,  cub->aw.o+iw*cub->aw.d );
@@ -324,20 +321,20 @@ void zodtm3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(data,iw+ie*cub->aw.n,weop->ww[ompith][0]);
+		sf_fslice_get(data,iw+ie*cub->aw.n,weop->ww[ompith][0]);
 		taper2d(weop->ww[ompith],tap);
 		
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,0,slo->so[ompith][0]);
+		sf_fslice_get(slo->slice,0,slo->so[ompith][0]);
 		slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 
 		for (imz=0; imz<cub->amz.n-1; imz++) {
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		    fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		    sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		    slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 
 		    ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);
@@ -348,7 +345,7 @@ void zodtm3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(wfld,iw+ie*cub->aw.n,weop->ww[ompith][0]);
+		sf_fslice_put(wfld,iw+ie*cub->aw.n,weop->ww[ompith][0]);
 	    } /* else */
 	} /* w */
     } /* e */
@@ -362,8 +359,8 @@ void zowfl3(ssroperator3d weop,
 	    slo3d slo,
 	    bool inv    /* forward/adjoint flag */, 
 	    bool causal,
-	    fslice data /*      data [nw][nmy][nmx] */,
-	    fslice wfld /* wavefield [nw][nmy][nmx] */)
+	    sf_fslice data /*      data [nw][nmy][nmx] */,
+	    sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
     int imz,iw;
@@ -393,17 +390,17 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0]);
 	    taper2d(weop->ww[ompith],tap);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_put(wfld,iw*cub->amz.n+cub->amz.n-1,weop->ww[ompith][0]);
+	    sf_fslice_put(wfld,iw*cub->amz.n+cub->amz.n-1,weop->ww[ompith][0]);
 
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
 	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
@@ -411,7 +408,7 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
 		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 
 		ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);
@@ -420,7 +417,7 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(wfld,iw*cub->amz.n+imz-1,weop->ww[ompith][0]);
+		sf_fslice_put(wfld,iw*cub->amz.n+imz-1,weop->ww[ompith][0]);
 	    }
 
 	} else {  /* DOWNWARD EXTRAPOLATION */
@@ -433,17 +430,17 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(data,iw,weop->ww[ompith][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0]);
 	    taper2d(weop->ww[ompith],tap);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_put(wfld,iw*cub->amz.n,weop->ww[ompith][0]);
+	    sf_fslice_put(wfld,iw*cub->amz.n,weop->ww[ompith][0]);
 
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-	    fslice_get(slo->slice,0,slo->so[ompith][0]);
+	    sf_fslice_get(slo->slice,0,slo->so[ompith][0]);
 	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 
 	    for (imz=0; imz<cub->amz.n-1; imz++) {	    
@@ -451,7 +448,7 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		sf_fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
 		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
 
 		ssr3_ssf(w,weop->ww[ompith],cub,ssr,tap,slo,imz,ompith);
@@ -460,7 +457,7 @@ void zowfl3(ssroperator3d weop,
 #ifdef _OPENMP	
 #pragma omp critical
 #endif
-		fslice_put(wfld,iw*cub->amz.n+imz+1,weop->ww[ompith][0]);
+		sf_fslice_put(wfld,iw*cub->amz.n+imz+1,weop->ww[ompith][0]);
 	    } /* z */
 	} /* else */
     } /* w */

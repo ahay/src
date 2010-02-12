@@ -31,7 +31,7 @@
 
 /*------------------------------------------------------------*/
 slo3d slow3_init(cub3d   cub,
-		 fslice  slice_,   /* slowness slice */
+		 sf_fslice  slice_,   /* slowness slice */
 		 int     nrmax,   /* maximum number of references */
 		 float   dsmax,
 		 float  twoway
@@ -59,7 +59,7 @@ slo3d slow3_init(cub3d   cub,
     slo->nr = sf_intalloc              (cub->amz.n);  /* nr of ref slownesses */
     
     for (imz=0; imz<cub->amz.n; imz++) {
-	fslice_get(slo->slice,imz,slo->ss[0][0]);
+	sf_fslice_get(slo->slice,imz,slo->ss[0][0]);
 	slow3_twoway(cub,slo,slo->ss,ompith);
 
 	slo->nr[imz] = slow3(slo->nrmax,

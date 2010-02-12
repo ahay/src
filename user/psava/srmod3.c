@@ -32,9 +32,6 @@
 #include "slow3.h"
 #include "ssr3.h"
 
-#include "slice.h"
-/*^*/
-
 #include "weutil.h"
 /*^*/
 
@@ -92,7 +89,7 @@ ssroperator3d srmod3_init(cub3d cub)
     weop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
 
     weop->rr   = sf_floatalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
-    weop->wtmp = fslice_init   (cub->amx.n*cub->amy.n,cub->amz.n*cub->ompnth,sizeof(sf_complex));
+    weop->wtmp = sf_fslice_init   (cub->amx.n*cub->amy.n,cub->amz.n*cub->ompnth,sizeof(sf_complex));
 
     return weop;
 }
@@ -105,7 +102,7 @@ void srmod3_close(ssroperator3d weop)
     free(**weop->ww_r); free( *weop->ww_r); free( weop->ww_r);
     
     free( **weop->rr); free( *weop->rr); free( weop->rr);
-    fslice_close(weop->wtmp);
+    sf_fslice_close(weop->wtmp);
 }
 
 /*------------------------------------------------------------*/
@@ -115,9 +112,9 @@ void srmod3(ssroperator3d weop,
 	    tap3d tap,
 	    slo3d s_s,
 	    slo3d s_r,
-	    fslice swfl /* source   data [nw][ny][nx] */,
-	    fslice rwfl /* receiver data [nw][ny][nx] */,
-	    fslice refl
+	    sf_fslice swfl /* source   data [nw][ny][nx] */,
+	    sf_fslice rwfl /* receiver data [nw][ny][nx] */,
+	    sf_fslice refl
     )
 /*< apply SR modeling >*/
 {
@@ -149,22 +146,22 @@ void srmod3(ssroperator3d weop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	    fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]); 
+	    sf_fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]); 
 	    taper2d(weop->ww_s[ompith],tap);
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	    fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
+	    sf_fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
 	    
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif	    
-	    fslice_get(s_s->slice,0,s_s->so[ompith][0]);
+	    sf_fslice_get(s_s->slice,0,s_s->so[ompith][0]);
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif	    
-		fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
+		sf_fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
 		
 		ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
 		
@@ -173,7 +170,7 @@ void srmod3(ssroperator3d weop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-		fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
+		sf_fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
 	    } /* z (down-going) */
 	    
 	    /*------------------------------------------------------------*/
@@ -183,19 +180,19 @@ void srmod3(ssroperator3d weop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif	    
-	    fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
+	    sf_fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif	    
-		fslice_get(s_r->slice,imz-1,s_r->ss[ompith][0]);
+		sf_fslice_get(s_r->slice,imz-1,s_r->ss[ompith][0]);
 		
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif   
-		fslice_get(weop->wtmp,kth+imz,weop->ww_s[ompith][0]); 
+		sf_fslice_get(weop->wtmp,kth+imz,weop->ww_s[ompith][0]); 
 		
-		fslice_get(refl,imz,weop->rr[ompith][0]);
+		sf_fslice_get(refl,imz,weop->rr[ompith][0]);
 		
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
@@ -219,7 +216,7 @@ void srmod3(ssroperator3d weop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif  
-	    fslice_put(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
+	    sf_fslice_put(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
 	} /* w */
 	
     } /* e */

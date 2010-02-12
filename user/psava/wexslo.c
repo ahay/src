@@ -31,7 +31,7 @@
 
 /*------------------------------------------------------------*/
 wexslo3d wexslo_init(wexcub3d   cub,
-		     fslice  slice_,   /* slowness slice */
+		     sf_fslice  slice_,   /* slowness slice */
 		     int     nrmax,   /* maximum number of references */
 		     float   dsmax
     )
@@ -51,7 +51,7 @@ wexslo3d wexslo_init(wexcub3d   cub,
     slo->sm = sf_floatalloc2(slo->nrmax,cub->az.n);  /* ref slowness squared */
     slo->nr = sf_intalloc              (cub->az.n);  /* nr of ref slownesses */
     
-    fslice_get(slo->slice,0,slo->s[0][0]);
+    sf_fslice_get(slo->slice,0,slo->s[0][0]);
 
     for (iz=0; iz<cub->az.n; iz++) {
 	slo->nr[iz] = wexslo(slo->nrmax,

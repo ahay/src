@@ -27,9 +27,6 @@
 #include <omp.h>
 #endif
 
-#include "slice.h"
-/*^*/
-
 #include "wex.h"
 #include "wextap.h"
 #include "wexslo.h"
@@ -122,8 +119,8 @@ void wex(wexop3d weop,
 	 wextap3d tap,
 	 wexslo3d slo,
 	 int  wexsign,
-	 fslice data /*      data [nw][nmy][nmx] */,
-	 fslice wfld /* wavefield [nw][nmy][nmx] */)
+	 sf_fslice data /*      data [nw][nmy][nmx] */,
+	 sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
     int iz,iw;
@@ -146,7 +143,7 @@ void wex(wexop3d weop,
 				      ompith,iw+1,cub->aw.n);
 	    
 	    /* read wavefield */
-	    fslice_get(data,iw,weop->ww[ompith][0]);
+	    sf_fslice_get(data,iw,weop->ww[ompith][0]);
 	}
 	    w = sf_cmplx( cub->eps*cub->aw.d, wexsign * (cub->aw.o+iw*cub->aw.d) );
 
@@ -171,7 +168,7 @@ void wex(wexop3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-	    fslice_put(wfld,iw,weop->w[ompith][0][0]);
+	    sf_fslice_put(wfld,iw,weop->w[ompith][0][0]);
 
     } /* w */
     /*------------------------------------------------------------*/

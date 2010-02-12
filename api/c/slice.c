@@ -24,32 +24,35 @@
 #include <unistd.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
-#include <rsf.h>
+#include "file.h"
 /*^*/
 
 #include "slice.h"
+#include "alloc.h"
+#include "error.h"
 
-#ifndef _slice_h
+#ifndef _sf_slice_h
 
-typedef struct Slice *slice;
+typedef struct sf_Slice *sf_slice;
 /* abstract data type */
 /*^*/
 
-typedef struct FSlice *fslice;
+typedef struct sf_FSlice *sf_fslice;
 /* abstract data type */
 /*^*/
 
 #endif
 
 /*------------------------------------------------------------*/
-struct Slice {
+struct sf_Slice {
     off_t start;
     sf_file file;
     int n12, n3;
 };
 
-struct FSlice {
+struct sf_FSlice {
     FILE* file;
     char* name;
     off_t n1;
@@ -57,13 +60,12 @@ struct FSlice {
 };
 /*------------------------------------------------------------*/
 
-/*------------------------------------------------------------*/
-slice slice_init(sf_file file, int n1, int n2, int n3)
+sf_slice sf_slice_init(sf_file file, int n1, int n2, int n3)
 /*< initialize a sliceable file object >*/
 {
-    slice sl;
+    sf_slice sl;
 
-    sl = (slice) sf_alloc(1,sizeof(*sl));
+    sl = (sf_slice) sf_alloc(1,sizeof(*sl));
     sl->file = file;
     sl->n12 = n1*n2;
     sl->n3 = n3;
@@ -75,7 +77,7 @@ slice slice_init(sf_file file, int n1, int n2, int n3)
 }
 
 /*------------------------------------------------------------*/
-void slice_get(slice sl, int i3, float* data)
+void sf_slice_get(sf_slice sl, int i3, float* data)
 /*< get a slice at level i3 >*/
 {
     sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(float),SEEK_SET);
@@ -83,7 +85,7 @@ void slice_get(slice sl, int i3, float* data)
 }
 
 /*------------------------------------------------------------*/
-void slice_put(slice sl, int i3, float* data)
+void sf_slice_put(sf_slice sl, int i3, float* data)
 /*< put a slice at level i3 >*/
 {
     sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(float),SEEK_SET);
@@ -91,7 +93,7 @@ void slice_put(slice sl, int i3, float* data)
 }
 
 /*------------------------------------------------------------*/
-void cslice_get(slice sl, int i3, sf_complex* data)
+void sf_cslice_get(sf_slice sl, int i3, sf_complex* data)
 /*< get a slice at level i3 >*/
 {
     sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(sf_complex),SEEK_SET);
@@ -99,7 +101,7 @@ void cslice_get(slice sl, int i3, sf_complex* data)
 }
 
 /*------------------------------------------------------------*/
-void cslice_put(slice sl, int i3, sf_complex* data)
+void sf_cslice_put(sf_slice sl, int i3, sf_complex* data)
 /*< put a slice at level i3 >*/
 {
     sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(sf_complex),SEEK_SET);
@@ -107,12 +109,12 @@ void cslice_put(slice sl, int i3, sf_complex* data)
 }
 
 /*------------------------------------------------------------*/
-fslice fslice_init(int n1, int n2, size_t size)
+sf_fslice sf_fslice_init(int n1, int n2, size_t size)
 /*< initialize a sliceable file object >*/
 {
-    fslice sl;
+    sf_fslice sl;
 
-    sl = (fslice) sf_alloc(1,sizeof(*sl));
+    sl = (sf_fslice) sf_alloc(1,sizeof(*sl));
     sl->file = sf_tempfile(&(sl->name), "w+b");
     sl->n1 = n1*size;
     sl->n2 = n2;
@@ -121,7 +123,7 @@ fslice fslice_init(int n1, int n2, size_t size)
 }
 
 /*------------------------------------------------------------*/
-void fslice_get(fslice sl, int i2, void* data)
+void sf_fslice_get(sf_fslice sl, int i2, void* data)
 /*< get a slice at level i2 >*/
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
@@ -133,7 +135,7 @@ void fslice_get(fslice sl, int i2, void* data)
 }
 
 /*------------------------------------------------------------*/
-void fslice_put(fslice sl, int i2, void* data)
+void sf_fslice_put(sf_fslice sl, int i2, void* data)
 /*< put a slice at level i2 >*/
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
@@ -145,7 +147,7 @@ void fslice_put(fslice sl, int i2, void* data)
 }
 
 /*------------------------------------------------------------*/
-void fslice_close(fslice sl)
+void sf_fslice_close(sf_fslice sl)
 /*< remove the file and free allocated storage >*/
 {
     unlink(sl->name);
@@ -153,7 +155,7 @@ void fslice_close(fslice sl)
 }
 
 /*------------------------------------------------------------*/
-void fslice_load(sf_file in, fslice sl, sf_datatype type)
+void sf_fslice_load(sf_file in, sf_fslice sl, sf_datatype type)
 /*< load the contents of in into a slice file >*/
 {
     off_t nleft, n;
@@ -188,7 +190,7 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
 }
 
 /*------------------------------------------------------------*/
-void fslice_dump(sf_file out, fslice sl, sf_datatype type)
+void sf_fslice_dump(sf_file out, sf_fslice sl, sf_datatype type)
 /*< dump the contents of a slice file to out >*/
 {
     off_t nleft, n;

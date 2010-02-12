@@ -25,9 +25,6 @@
 
 #include "img2.h"
 
-#include "slice.h"
-/*^*/
-
 #define  LOOP(a) for( imy=0; imy< amy.n; imy++){ \
                  for( imx=0; imx< amx.n; imx++){ {a} }}
 
@@ -139,7 +136,7 @@ void img2o_init(sf_axis amx_,
 		int jcx_,
 		int jcy_,
 		int jcz_,
-		fslice imag
+		sf_fslice imag
     )
 /*< initialize zero-lag I.C. >*/
 {
@@ -186,7 +183,7 @@ void img2x_init(sf_axis amx_,
 		sf_axis ahx_,
 		sf_axis ahy_,
 		sf_axis ahz_,
-		fslice imag
+		sf_fslice imag
     )
 /*< initialize x-lag I.C. >*/
 {
@@ -237,7 +234,7 @@ void img2t_init(sf_axis amx_,
 		int jcz_,
 		sf_axis aht_,
 		sf_axis aw_,
-		fslice imag
+		sf_fslice imag
     )
 /*< initialize t-lag I.C. >*/
 {
@@ -299,7 +296,7 @@ void img2h_init(sf_axis amx_,
 		sf_axis aha_,
 		sf_axis ahb_,
 		sf_axis aw_,
-		fslice imag,
+		sf_fslice imag,
 		float vpvs_
     )
 /*< initialize abs x-lag I.C. >*/
@@ -614,8 +611,8 @@ void img2g(int iw)
 }
 
 /*------------------------------------------------------------*/
-void img2o_close(fslice imag,
-		 fslice cigs)
+void img2o_close(sf_fslice imag,
+		 sf_fslice cigs)
 /*< deallocate zero-lag I.C. >*/
 {
     int imz, imy, imx, id;
@@ -630,8 +627,8 @@ void img2o_close(fslice imag,
 	MLOOP(qi[imz][imy][imx] = wt[imz][imy][imx];);
     }
 
-    fslice_put(imag,0,qi[0][0]);
-    fslice_put(cigs,0,qo[0][0]);
+    sf_fslice_put(imag,0,qi[0][0]);
+    sf_fslice_put(cigs,0,qo[0][0]);
 
     img2_close();
 
@@ -641,12 +638,12 @@ void img2o_close(fslice imag,
 }
 
 /*------------------------------------------------------------*/
-void img2t_close(fslice imag,
-		 fslice cigs)
+void img2t_close(sf_fslice imag,
+		 sf_fslice cigs)
 /*< deallocate t-lag I.C. >*/
 {
-    fslice_put(imag,0,qi[0][0]);
-    fslice_put(cigs,0,qt[0][0][0]);
+    sf_fslice_put(imag,0,qi[0][0]);
+    sf_fslice_put(cigs,0,qt[0][0][0]);
 
     img2_close();
 
@@ -660,12 +657,12 @@ void img2t_close(fslice imag,
 }
 
 /*------------------------------------------------------------*/
-void img2h_close(fslice imag,
-		 fslice cigs)
+void img2h_close(sf_fslice imag,
+		 sf_fslice cigs)
 /*< deallocate abs x-lag I.C. >*/
 {
-    fslice_put(imag,0,qi[0][0]);
-    fslice_put(cigs,0,qh[0][0][0]);
+    sf_fslice_put(imag,0,qi[0][0]);
+    sf_fslice_put(cigs,0,qh[0][0][0]);
 
     img2_close();
 
@@ -676,12 +673,12 @@ void img2h_close(fslice imag,
 }
 
 /*------------------------------------------------------------*/
-void img2x_close(fslice imag,
-		 fslice cigs)
+void img2x_close(sf_fslice imag,
+		 sf_fslice cigs)
 /*< deallocate x-lag I.C. >*/
 {
-    fslice_put(imag,0,qi[0][0]);
-    fslice_put(cigs,0,qx[0][0][0][0][0]);
+    sf_fslice_put(imag,0,qi[0][0]);
+    sf_fslice_put(cigs,0,qx[0][0][0][0][0]);
 
     img2_close();
 

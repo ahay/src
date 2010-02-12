@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 #include "split2.h"
-#include "slice.h"
 
 int main (int argc, char *argv[])
 {
@@ -40,7 +39,7 @@ int main (int argc, char *argv[])
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant          */
     sf_file in=NULL, out=NULL, vel=NULL;
-    slice imag, slow;
+    sf_slice imag, slow;
 
     sf_init(argc,argv);
     in  = sf_input ("in");
@@ -112,8 +111,8 @@ int main (int argc, char *argv[])
     w0 *= 2.*SF_PI;
 
     /* allocate space for slowness and image */
-    slow = slice_init(vel,ny,nx,nz);
-    imag = slice_init(inv? in:out,ny,nx,nz);
+    slow = sf_slice_init(vel,ny,nx,nz);
+    imag = sf_slice_init(inv? in:out,ny,nx,nz);
 
     /* initialize split-step */
     split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,padx,pady,nr,dt);
