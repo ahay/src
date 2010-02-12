@@ -1,0 +1,14 @@
+from rsfproj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+
+for part in range(1,5):
+    sgy = 'Anisotropic_FD_Model_Shots_part%d.sgy.gz' % part
+    rsf = 'part%d' % part
+    Flow([rsf,'t'+rsf,rsf+'.asc',rsf+'.bin'],sgy,
+         '''
+         zcat $SOURCE | 
+         segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+         ''')
+
+End()

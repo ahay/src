@@ -14,7 +14,7 @@ Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 for par in pars:
     Flow([par,par+'.asc',par+'.bin'],sgy[par],
          '''
-         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
          put
          o2=0 d2=0.00625 label2=Distance unit2=km
          o1=0 d1=0.00625 label1=Depth unit1=km %s
