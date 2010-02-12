@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	    tx = (NULL==stablex)?0.:2*stablex[ix];
 	    
 	    /* Add antialiasing later */
-	    out[ix] += pick(ti,tx*ds*aal,trace,nt,dt,t0);
+	    out[ix] += pick(ti,fabsf(tx*ds*aal),trace,nt,dt,t0);
 	}
     }
 
