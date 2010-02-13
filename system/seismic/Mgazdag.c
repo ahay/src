@@ -75,9 +75,9 @@ int main (int argc, char *argv[])
 	vel = NULL;
 	velz = NULL;
 	eta = NULL;
-	if (!sf_getint("nz",&nz)) nz = nt;
+	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* Length of depth axis (for migration, if no velocity file) */
-	if (!sf_getfloat("dz",&dz)) dz = dt;
+	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
 	/* Sampling of depth axis (for migration, if no velocity file) */
     } else {
 	vel = sf_input("velocity");
