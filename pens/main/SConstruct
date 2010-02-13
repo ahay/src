@@ -219,7 +219,7 @@ if ogl or oglflags:
     env.Depends(obj,'oglpen.h')
     main = env.Program('oglpen',[obj,]+objects,
                        LIBS=[ogl]+env.get('LIBS',[]),
-                       LINKFLAGS=[oglflags]+env.get('LINK_FLAGS',[]))
+                       LINKFLAGS=[oglflags]+env.get('LINKFLAGS',[]))
     pens.append('oglpen')
 else:
     main = env.Place('oglpen',None,var='OPENGL',package='freeglut-devel')
