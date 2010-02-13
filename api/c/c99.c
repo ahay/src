@@ -22,6 +22,7 @@
 
 #include "c99.h"
 #include "error.h"
+#include "_defs.h"
 
 #ifndef _sf_c99_h
 
