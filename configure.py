@@ -999,16 +999,19 @@ def petsc(context):
     if not petscdir:
         return
 
+    testdir = os.path.join(os.getcwd(),'user/petsc')
+
     # Compile test program and catch output
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
         popen = subprocess.Popen('make -k all clean', shell=True,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 cwd=os.path.join(os.getcwd(),'petsc'))
+                                 stdout=subprocess.PIPE, 
+                                 stderr=subprocess.PIPE,
+                                 cwd=testdir)
         if popen.wait() != 0:
             return
         makeout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeout = os.popen2('make -k -C %s all clean' % os.path.join(os.getcwd(),'petsc'))[1].read()
+        makeout = os.popen2('make -k -C %s all clean' % testdir)[1].read()
 
     context.Message("checking for PETSc ... ")
 
