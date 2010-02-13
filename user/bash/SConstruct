@@ -17,6 +17,8 @@ except: # local version
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')
 
+src.remove('einspline.c')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=['rsf'])

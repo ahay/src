@@ -152,6 +152,14 @@ float fabsf(float x)
 #endif
 /*^*/
 
+float fmaxf(float x)
+/*< float floor >*/
+{ return (float) fmax(x);}
+
+float fminf(float x)
+/*< float floor >*/
+{ return (float) fmin(x);}
+
 float floorf(float x)
 /*< float floor >*/
 { return (float) floor(x);}

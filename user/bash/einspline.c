@@ -24,6 +24,8 @@
 #include <math.h>
 #include <assert.h>
 
+#include <rsf.h>
+
 #include "einspline.h"
 
 #ifndef __USE_ISOC99

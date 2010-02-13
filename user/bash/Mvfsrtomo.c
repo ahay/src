@@ -21,6 +21,7 @@
 #include <rsf.h>
 
 #include "eikfswp.h"
+#include "einspline.h"
 
 /* Interpolates 2D velocity to a bigger grid */
 static void sf_vel_spline_interp_2d (double *v0, float *v,

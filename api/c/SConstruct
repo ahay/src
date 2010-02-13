@@ -6,7 +6,7 @@ import SCons
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'einspline kiss_fft kiss_fftr mt19937ar vfsr'
+src = 'kiss_fft kiss_fftr mt19937ar vfsr'
 hdrs = 'vfsr_defs'
 
 src2 = '''

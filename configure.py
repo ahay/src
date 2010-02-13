@@ -266,7 +266,7 @@ def cc(context):
             context.env['CCFLAGS'] = oldflag
         # large file support
         (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
-        if not status:
+        if not status and lfs:
             oldflag = context.env.get('CCFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
             context.env['CCFLAGS'] = oldflag + ' ' + lfs

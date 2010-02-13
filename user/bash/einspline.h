@@ -21,26 +21,6 @@
 #ifndef EINSPLINE_H
 #define EINSPLINE_H
 
-#ifndef NO_COMPLEX
-#ifndef SF_HAS_COMPLEX_H
-#ifndef KISS_FFT_H
-#ifdef __cplusplus
-#include <complex>
-typedef std::complex<float>  sf_complex;
-typedef std::complex<double> sf_double_complex;
-#else
-#include <complex.h>
-typedef complex float  sf_complex;
-typedef complex double sf_double_complex;
-#endif /* __cplusplus */
-#endif /* KISS_FFT_H */
-#endif /* SF_HAS_COMPLEX_H */
-#endif /* NO_COMPLEX */
-
-#ifndef _sf_bool_h
-#include "_bool.h"
-#endif
-
 /*
  * bspline_base.h
  */
