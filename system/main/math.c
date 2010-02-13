@@ -97,11 +97,11 @@ int main (int argc, char* argv[])
 	     (arg[0] == 'n' || 
 	      arg[0] == 'd' || 
 	      arg[0] == 'o') &&
-	     isdigit(arg[1])) ||
+	     isdigit((int) arg[1])) ||
 	    (0 == strncmp(arg,"label",5) &&
-	     ((eq-arg == 5) || (eq-arg == 6 && isdigit(arg[5])))) ||
+	     ((eq-arg == 5) || (eq-arg == 6 && isdigit((int) arg[5])))) ||
 	    (0 == strncmp(arg,"unit",4) && 
-	     ((eq-arg == 4) || (eq-arg == 5 && isdigit(arg[4]))))
+	     ((eq-arg == 4) || (eq-arg == 5 && isdigit((int) arg[4]))))
 	    ) continue; /* not a file */
 	
 	len = (size_t) (eq-arg);
