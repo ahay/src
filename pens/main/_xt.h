@@ -155,7 +155,7 @@ typedef struct xtf_ {
     int   frame_num;            /* number of this frame */
     int has_image;              /* A stored image of this frame exists */
     int break_end;              /* This frame ended with a break (not erase)*/
-		char filename[256];         /* File name */
+    char filename[256];         /* File name */
     XImage* image;		/* An XIMage of this frame */
     Pixmap  pixmap;		/* A pixmap of this frame */
     struct cmap_ cmap;		/* the colormap for this frame */

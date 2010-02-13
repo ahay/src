@@ -2707,12 +2707,17 @@ int xt_endframe = NO;
  * a USER_INT command at the end of the frame.
  * this will cause dovplot to exit at the end of the frame.
  */
-void xt_draw_file( start_file, start_pos, end_file, end_pos , total_len )
-int start_file;   /* index of start file in the array of input files */
-int start_pos;    /* offset in the file to start reading the plot commands */
-int *end_file;    /* index of the file we finished reading this frame */
-int *end_pos;     /* position at which we eneded reading this frame */
-long *total_len;  /* the total length of vplot data for this frame */
+void xt_draw_file(int start_file, 
+                  /* index of start file in the array of input files */
+		  long start_pos, 
+                  /* offset in the file to start reading the plot commands */
+		  int *end_file,
+                  /* index of the file we finished reading this frame */
+		  int *end_pos , 
+                  /* position at which we eneded reading this frame */  
+		  long *total_len 
+		  /* the total length of vplot data for this frame */
+    )
 {
 
     int save_pause;
