@@ -881,6 +881,8 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             type = par[0]
             parname = par[1]
             default = par[2]
+            if type == 'string':
+                default = default.strip('"').strip("'")
             range = par[3]
             desc = par[4]
         elif lang == 'f90':
