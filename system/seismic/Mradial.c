@@ -67,10 +67,9 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"o1",x0);
 	sf_putstring(out,"label1","Offset");
 
-	if (NULL != (unit=sf_histstring(in,"unit1")) &&
-	    NULL != (space=strchr(unit,'/'))) {
-	    *space='\0';
-	    sf_putstring(out,"unit1",unit);
+	if (NULL != (unit=sf_histstring(in,"unit1"))) {
+	    space=strchr(unit,'/');
+	    if (*space == '\0') sf_putstring(out,"unit1",unit);
 	}
 
 	sf_prefilter_init (nw, nv, 2*nv);

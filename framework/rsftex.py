@@ -36,6 +36,7 @@ SCons.Defaults.DefaultEnvironment(tools = [])
 #############################################################################
 
 bibtex      = WhereIs('bibtex')
+makeindex   = WhereIs('makeindex')
 acroread    = WhereIs('acroread')
 pdfread     = acroread or WhereIs('kpdf') or WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 pdftops     = WhereIs('pdftops')
@@ -96,6 +97,7 @@ subfigure = re.compile(r'\\contentsline \{subfigure\}\{\\numberline \{\(([\w])')
 logfigure = re.compile(r'\s*\<use ([^\>]+)')
 suffix = re.compile('\.[^\.]+$')
 cwpslides = re.compile(r'\\documentclass[^\{]*\{cwpslides\}')
+makeind = re.compile(r'\\index')
                   
 #############################################################################
 # CUSTOM SCANNERS
@@ -204,7 +206,7 @@ def latify(target=None,source=None,env=None):
     include = env.get('include')
     if use:
          if type(use) is not types.ListType:
-              use = [use]
+              use = use.split(',')
          for package in use:
               options = re.match(r'(\[[^\]]*\])\s*(\S+)',package)
               if options:
@@ -243,6 +245,8 @@ def latex_emit(target=None, source=None, env=None):
         target.append(stem+'.out')
         target.append(stem+'.snm')
         target.append(stem+'.toc')
+    if makeind.search(contents):
+        target.append(stem+'.idx')
     return target, source
 
 def latex2dvi(target=None,source=None,env=None):
@@ -263,9 +267,9 @@ def latex2dvi(target=None,source=None,env=None):
     for line in aux.readlines():
         if re.search("bibdata",line):
             if not bibtex:
-                print '\n\tBibTeX is missing. ' 
+                print '\n\tBibTeX is missing.' 
                 return 1
-            os.system(string.join([bibtex,stem],' '))
+            os.system(' '.join([bibtex,stem]))
             os.system(run)
             os.system(run)
             break
@@ -274,7 +278,14 @@ def latex2dvi(target=None,source=None,env=None):
             os.system(run)
             break
     aux.close()
-    # (Add makeindex later)
+    # Check if makeindex is needed
+    idx = stem + '.idx'
+    if os.path.isfile(idx):
+        if not makeindex:
+            print '\n\tMakeIndex is missing.' 
+            return 1
+        os.system(' '.join([makeindex,idx]))
+        os.system(run)
     # Check if rerun is needed
     for i in range(3): # repeat 3 times at most
         done = 1
