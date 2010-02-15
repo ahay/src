@@ -114,14 +114,6 @@ def main(argv=sys.argv):
     out = ooio.RSFfile(ooio.stdout, par, ndim=2, intent='out', dtype=numtype) 
     out.set_hdr_info([n2, n1], o, d, unit, lbl)
     
-    ivlad.msg(ivlad.hr)
-    out.print_self('out')
-    ivlad.msg(ivlad.hr)
-    out.hdr.print_self('out.hdr')
-    if out.dat != None:
-        ivlad.msg(ivlad.hr)
-        out.dat.print_self('out.dat')
-    
     for line in lines:
         for val in line:
             out.write(val)
