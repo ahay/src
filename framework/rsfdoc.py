@@ -823,7 +823,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     elif lang[0] =='f':
         name = re.sub('\.f\d*$','',name)
     else:
-        name = re.sub('\.cc?$','',name)
+        name = re.sub('\.c(c|u)?$','',name)
     src = open(file,"r")   # open source
     text = ''.join(src.readlines())
     src.close()
