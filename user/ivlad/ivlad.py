@@ -7,7 +7,7 @@ DESCRIPTION
 SOURCE
 	user/ivlad/ivlad.py
 """
-# Copyright (C) 2007, 2009 Ioan Vlad
+# Copyright (C) 2007-2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,12 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, commands, math, rsfprog
+import os, sys, commands, math, rsfprog, string, random
+
+try: # Give precedence to local version
+    import m8rex
+except: # Use distributed version
+    import rsfuser.m8rex as m8rex
 
 # Operating system return codes
 unix_success = 0
@@ -32,6 +37,10 @@ unix_error   = 1
 # Other constants
 pipe = ' | '
 ext  = '.rsf'
+fmt = {'int':'i', 'float':'f'} # For usage with struct.pack
+
+# Horizontal ruler (for logs, screen messages):
+hr = 80 * '-'
 
 # Try to avoid old platform-dependent modules that will be deprecated.
 # See http://docs.python.org/dev/lib/module-subprocess.html
@@ -206,6 +215,34 @@ def chk_dir(mydir):
 
 ################################################################################
 
+def chk_dir_rx(dir_nm):
+    'Checks a directory exists and has +rx permissions'
+
+    if not os.path.isdir(dir_nm):
+        raise m8rex.NotAValidDir(dir_nm)
+
+    if not os.access(dir_nm,os.X_OK):
+        raise m8rex.NoXPermissions(dir_nm)
+
+    if not os.access(dir_nm,os.R_OK):
+        raise NoReadPermissions(dir_nm)
+
+################################################################################
+
+def chk_dir_wx(dir_nm):
+    'Checks a directory exists and has +rx permissions'
+
+    if not os.path.isdir(dir_nm):
+        raise m8rex.NotAValidDir(dir_nm)
+
+    if not os.access(dir_nm,os.X_OK):
+        raise m8rex.NoXPermissions(dir_nm)
+
+    if not os.access(dir_nm,os.W_OK):
+        raise NoWritePermissions(dir_nm)
+
+################################################################################
+
 def isvalid(f,chk4nan=False):
     'Determines whether f is a valid RSF file'
     # Also returns msg with invalidity reason, or says if first x bytes are zero
@@ -324,4 +361,47 @@ def list_valid_rsf_files(dirname, flist, chk4nan=False):
             valid_files.append(f)
 
     return valid_files
+
+################################################################################
+
+def msg(message, verb=True):
+    'Print message using stderr stream'
+
+    if verb:
+        sys.stderr.write(str(message)+'\n')
+
+################################################################################
+
+def stdout_is_pipe():
+    'True if writing to a pipe, false if writing to file (prog>file.rsf)'
+
+    try:
+        pos = sys.stdout.tell() # pos is offset in file
+        return False # I am writing to a file
+    except: 
+        return True
+
+################################################################################
+
+def trunc_or_append(n, ilist, append_val=None, verb=False):
+    'Make a list be n elements regardless if it is longer or shorter'
+    
+    assert type(ilist) == list 
+
+    ndiff = n - len(ilist)
+    
+    if ndiff < 0:
+        msg('Truncated %d elements' % ndiff, verb)
+        return ilist[:n]
+    elif ndiff > 0:
+        msg('Appended %d elements' % ndiff, verb)
+        return ilist + ndiff * [append_val]
+    else: # n = len(ilist)
+        return ilist
+
+################################################################################
+
+def gen_random_str(strlen):
+    chars = string.letters + string.digits
+    return ''.join(random.choice(chars) for i in xrange(strlen))
 
