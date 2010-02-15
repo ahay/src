@@ -22,6 +22,7 @@ Attribute noArrays allows distinguishing between the two modules.
 
 import sys
 from string import lower
+from rsfuser.ivlad import unix_error
 
 class Par:
 
@@ -62,11 +63,11 @@ class Par:
         else:
             sys.stderr.write( '\n  Argument %s= not given to %s \n' %
                               (key, self.prog))
-            sys.exit(1)
+            sys.exit(unix_error)
 
-    def string(self, key):
+    def string(self, key, default=None):
         """Returns string argument given to program"""
-        return self.__get(key, default=None)
+        return self.__get(key, default)
 
     def int(self,key,default=None):
         """Returns integer argument given to program"""
@@ -75,7 +76,7 @@ class Par:
         except:
             sys.stderr.write( '\n  Argument %s= to %s must be integer\n' %
                               (key, self.prog))
-            sys.exit(1)
+            sys.exit(unix_error)
 
     def float(self,key,default=None):
         """Returns float argument given to program"""
@@ -84,7 +85,7 @@ class Par:
         except:
             sys.stderr.write( '\n  Argument %s= to %s must be float\n' %
                               (key, self.prog))
-            sys.exit(1)
+            sys.exit(unix_error)
 
     def bool(self,key,default=None):
         """Returns bool argument given to program"""
@@ -98,4 +99,4 @@ class Par:
             msg = ('\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
                    (key, self.prog))
             sys.stderr.write(msg)
-            sys.exit(1)
+            sys.exit(unix_error)
