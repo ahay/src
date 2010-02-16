@@ -403,5 +403,8 @@ def trunc_or_append(n, ilist, append_val=None, verb=False):
 
 def gen_random_str(strlen):
     chars = string.letters + string.digits
-    return ''.join(random.choice(chars) for i in xrange(strlen))
+    char_list = []
+    for i in range(strlen):
+        char_list += random.choice(chars)
+    return ''.join(char_list)
 
