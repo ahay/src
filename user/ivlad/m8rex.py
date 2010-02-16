@@ -36,6 +36,11 @@ class Error(Exception):
 
 # Exceptions ordered alphabetically
 
+class ConflictingArgs(Error):
+    def __init__(self, arg1, val1, arg2, val2):
+        self.msg = '%s cannot be %s when %s=%s' % \
+        (arg1, str(val1), arg2, str(val2))
+
 class MissingArgument(Error):
     'For checking command-line arguments to Python main programs'
     def __init__(self, arg):
@@ -60,5 +65,4 @@ class NoWritePermissions(Error):
 class StringParamNotInAcceptableValueList(Error):
     def __init__(self, param, avl):
         self.msg = 'Parameter ' + param + ' not in: ' + ', '.join(avl)
-
 

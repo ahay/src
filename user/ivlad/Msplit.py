@@ -26,12 +26,17 @@ be thinner."""
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys, rsfprog, commands, math
-from rsfuser.ivlad import unix_error, unix_success, ext, ndims, add_zeros, execute
 
 try:
     import rsf
 except:
     import rsfbak as rsf
+
+try: # Give precedence to local version
+    import ivlad, m8rex
+except: # Use distributed version
+    import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 ################################################################################
 
@@ -44,24 +49,24 @@ def main(argv=sys.argv):
     inp = par.string('inp')
     if inp == None:
         rsfprog.selfdoc()
-        return unix_error
+        return ivlad.unix_error
 
     outdir = par.string('outdir')
     if outdir == None:
-        out_basenm = os.path.basename(inp).rstrip(ext) + '_split'
-        outdir = out_basenm + ext
+        out_basenm = os.path.basename(inp).rstrip(ivlad.ext) + '_split'
+        outdir = out_basenm + ivlad.ext
 
     nthick = par.int('nthick', 1)
     if nthick < 1:
         print 'Slice thickness must be 1 or higher'
-        return unix_error
+        return ivlad.unix_error
 
-    lastdim = str(ndims(inp))
+    lastdim = str(ivlad.ndims(inp))
 
     n = int(commands.getoutput('sfget <' + inp + ' parform=n n' + lastdim))
     if nthick >= n:
         print 'Slice thickness (%d) should be < axis length (%d)' % (nthick, n)
-        return unix_error
+        return ivlad.unix_error
 
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
@@ -75,26 +80,26 @@ def main(argv=sys.argv):
 
     for i in range(nslices_whole):
 
-        i_str = add_zeros(i,nslices_whole)
-        i_slc = os.path.join(outdir, i_str + '_stdout' + ext)
+        i_str = ivlad.add_zeros(i,nslices_whole)
+        i_slc = os.path.join(outdir, i_str + '_stdout' + ivlad.ext)
 
         command = '<%s sfwindow f%s=%d ' % (inp, lastdim,f)
         command += 'n%s=%d %s > %s' % (lastdim, nthick, dpath, i_slc)
-        execute(command, verb)
+        ivlad.exe(command, verb)
 
         f += nthick
 
     ist = n - nslices_whole * nthick # Incomplete Slice Thickness
 
     if ist > 0:
-        i_str = qsub.add_zeros(i+1,nslices_whole)
-        i_slc = os.path.join(outdir, i_str + '_stdout' + ext)
+        i_str = ivlad.add_zeros(i+1,nslices_whole)
+        i_slc = os.path.join(outdir, i_str + '_stdout' + ivlad.ext)
 
         command = '<%s sfwindow f%s=%d ' % (inp, lastdim, f)
         command += 'n%s=%d > %s' % (lastdim, ist, i_slc)
-        execute(command, verb)
+        ivlad.exe(command, verb)
 
-    return unix_success
+    return ivlad.unix_success
 
 ##############################################
 
@@ -103,6 +108,6 @@ if __name__ == '__main__':
     try:
         status = main()
     except:
-        status = unix_error
+        status = ivlad.unix_error
 
     sys.exit(status)

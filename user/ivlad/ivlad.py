@@ -49,33 +49,29 @@ try:
     have_subprocess=True
 except: # Python < 2.4
     have_subprocess=False
-    from os import system
-    from commands import getoutput
+    import commands, os
 
 ###############################################################################
 
 def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
     '''Sends command to the operating system. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
-    - arg. List of strings with program arguments. LIST (can be STRING for only 1 arg)
+    - arg. List of strings with program arguments. LIST (or str for only 1 arg)
     - stdin. Filename STRING.
     - stdout. Filename STRING. Must not be specified if want=stdout
-    - want: What to return. STRING: 'stdout' or 'stderr'. [Stderr not implemented yet]
+    - want: what to return STRING: 'stdout' or 'stderr'. [Stderr not implemented yet]
     - verb: whether to print command before executing it. BOOL
     If stdout= is given, then the function writes to that file and returns None
     If want=stdout, then a STRING with stripped newlines is returned.'''
 
-    if want:
-        if want not in ('stdout','stderr'):
-            sys.stderr.write('The "want" argument to send_to_os must be "stdout" or "stderr"')
-            sys.exit(error)
-        if stdout and want == 'stdout':
-            sys.stderr.write('No stdout= should be given to send_to_os when want="stdout"')
-            sys.exit(error)
+    if want != None:
+        assert want in ('stdout','stderr')
+        if stdout != None and want == 'stdout':
+            raise m8rex.ConflictingArgs('stdout',None,'want','stdout')
 
     # Build the [prog, args] list
-    if arg:
-        if str(arg) == arg: # it's a string
+    if arg != None:
+        if type(arg) == str:
             arg = [arg]     # make it a list
         arg.insert(0,prog)
         cmdlist = arg
@@ -113,11 +109,51 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
             return None
     else: # no subprocess module present
         if want == 'stdout':
-            s = getoutput( command )
+            s = commands.getoutput( command )
             return s
         elif stdout:
-            system(command)
+            os.system(command)
             return None
+
+###############################################################################
+
+def getout(prog, arg=None, stdin=None, verb=False):
+    '''Replacement for commands.getoutput. Arguments:
+    - prog. Executable to be run. STRING. The only non-optional argument.
+    - arg. List of strings with program arguments, or just a string
+    - stdin. Filename STRING.
+    - verb: whether to print command before executing it. BOOL
+    Returned value: stdout of command, with stripped newlines'''
+
+    assert type(prog) == str
+    assert type(stdin) == str
+    assert type(verb) == bool
+
+    # Build the [prog, args] list
+    cmdlist = [prog]
+    if arg != None:
+        if type(arg) == str:
+            arg = arg.split()
+        cmdlist += arg 
+      
+    # Build command string for printing or Python < 2.4
+    if verb or not have_subprocess:
+        cmd = ' '.join(cmdlist)
+        if stdin:
+            cmd4print += ' <' + stdin
+        if verb:
+            msg(cmd)
+
+    if have_subprocess:
+        if stdin:
+            finp = open(stdin,'r')
+        else:
+            finp = None
+        s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
+        output = s.communicate()[0]
+        return output.rstrip('\n')
+    else: # no subprocess module present
+        return commands.getoutput(cmd)
 
 ###############################################################################
 
@@ -189,6 +225,17 @@ def execute(command, verb=False):
     if verb:
         print command
     os.system(command)
+
+####################################################################
+
+def exe(cmd, verb=False):
+    '''Echoes a command to screen via stderr, then executes it'''
+
+    msg(cmd, verb)
+    if have_subprocess:
+        subprocess.call(cmd, shell=True)
+    else:
+        os.system(command)
 
 ################################################################################
 
