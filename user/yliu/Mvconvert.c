@@ -145,4 +145,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mvconvert.c 4796 2009-09-29 19:39:07Z yang_liu $	 */
+/* 	$Id$	 */
