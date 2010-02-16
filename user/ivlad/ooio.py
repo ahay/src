@@ -57,6 +57,7 @@ class BaseFile:
         akeys = attribs.keys()
         akeys.sort()
         max_nm_len = max(map(len,akeys))
+        ivlad.msg(ivlad.hr)
         ivlad.msg(varname + ': instance of ' + self.__class__.__name__)
         indent = '  '
         spc = ' '
@@ -79,7 +80,6 @@ class File(BaseFile):
     'Single file, header, binary or together, i.e. segy, .rsf, .rsf@, etc'
 
     def path_analysis(self,path):
-        assert path != None
         self.full_nm = os.path.abspath(path) # /abs/path/file.rsf
         self.parent_dir = os.path.abspath(os.path.dirname(path)) # /abs/path
         self.nm = os.path.basename(path) # file.rsf
@@ -102,8 +102,9 @@ class File(BaseFile):
 
     def __init__(self, path, intent, expected_sz=None):
         BaseFile.__init__(self, intent)
-        self.path_analysis(path)
-        self.chk_ok(expected_sz)
+        if path != None:
+            self.path_analysis(path)
+            self.chk_ok(expected_sz)
         if intent == 'in':
             self.sz = os.path.getsize(self.full_nm)
         elif intent == 'out':
@@ -249,15 +250,12 @@ class RSFfile(MetaFile):
         assert self.intent == 'out'
         if self.writing_to_stdout_pipe:
             self.hdr.dat = 'stdin'
-            self.dat = None
+            self.dat = File(None, intent='out')
+            self.dat.writing_to_stdout = True
         else:
-            # We will write a data file to disk.
-            # Get or create name of data file
+            # We will write a data file to disk. Get or create its name:
             if self.writing_to_stdout_file:
-                # Should get the name of the file by emulating function
-                # getfilename in RSFSRC/api/c/file.c, or in some other way.
-                # Until I know how to do that in Python:
-                dat_nm = ivlad.gen_random_str(20) + self.valid_ext[0]
+                dat_nm = ivlad.data_file_nm()
             elif not self.writing_to_stdout:
                 dat_nm = self.hdr.nm
             dat_nm = dpath_suffix + dat_nm + '@'

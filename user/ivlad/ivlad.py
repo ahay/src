@@ -408,3 +408,36 @@ def gen_random_str(strlen):
         char_list += random.choice(chars)
     return ''.join(char_list)
 
+################################################################################
+
+def get_stdout_nm():
+    'Find the name of the file that the stdout stream is writing to'    
+    # The kernel of this function initially provided by Jeff Godwin
+
+    found_stdout = False
+
+    for f in os.listdir('.'):
+        # Comparing the unique file ID stored by the OS for the file stream 
+        # stdout with the known entries in the file table:
+        if os.fstat(1)[1] == os.stat(f)[1]:
+            found_stdout = True
+            break
+
+    if found_stdout:
+        return f
+    else:
+        return None
+
+################################################################################
+
+def data_file_nm():
+    'Get stdout file name, or if not possible, generate a random name'
+
+    stdout = get_stdout_nm()
+
+    if stdout == None:
+        nm_len = 16 # Arbitrary random file name length
+        return gen_random_str(nm_len)+'.rsf'
+    else:
+        return stdout
+

@@ -57,6 +57,7 @@ def main(argv=sys.argv):
     # Process parameters
 
     verb = par.bool('verb', False) # Whether to echo n1, n2, infill/truncation
+    debug = par.bool('debug', False) # Extra verbosity for debugging
     truncate = par.bool('trunc', False) 
     # Truncate or add zeros if nr elems in rows differs
 
@@ -114,6 +115,12 @@ def main(argv=sys.argv):
     out = ooio.RSFfile(ooio.stdout, par, ndim=2, intent='out', dtype=numtype) 
     out.set_hdr_info([n2, n1], o, d, unit, lbl)
     
+    if debug:
+        out.print_self('out')
+        out.hdr.print_self('out.hdr')
+        out.dat.print_self('out.dat')
+        ivlad.msg(ivlad.hr)
+
     for line in lines:
         for val in line:
             out.write(val)
