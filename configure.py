@@ -1686,8 +1686,12 @@ def placeholder(target=None,source=None,env=None):
     out.write('#!/usr/bin/env python\n')
     out.write('import sys\n\n')
     out.write('sys.stderr.write(\'\'\'\n%s is not installed.\n')
-    out.write('Check $RSFROOT/lib/rsfconfig.py for ' + var)
-    out.write('\nand reinstall if necessary.')
+    if var:
+        out.write('Check $RSFROOT/lib/rsfconfig.py for ' + var)
+        out.write('\nand reinstall if necessary.')
+    message = env.get('message')
+    if message:
+        out.write(message)
     package = env.get('package')
     if package:
         out.write('\nPossible missing packages: ' + package)
