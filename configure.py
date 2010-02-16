@@ -90,7 +90,11 @@ include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
 
 # find dependencies for C 
 def depends(env,list,file):
-    filename = string.replace(env.File(file+'.c').abspath,'build/','',1)
+    filename = env.File(file+'.c').abspath
+    # replace last occurence of build/
+    last = filename.rfind('build/')
+    if last >= 0:
+        filename = filename[:last] + filename[last+6:]
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include.findall(line):
@@ -104,7 +108,11 @@ include90 = re.compile(r'^[^!]*use\s+(\S+)')
 
 # find dependencies for Fortran-90
 def depends90(env,list,file):
-    filename = string.replace(env.File(file+'.f90').abspath,'build/','',1)
+    filename = env.File(file+'.f90').abspath
+    # replace last occurence of build/
+    last = filename.rfind('build/')
+    if last >= 0:
+        filename = filename[:last] + filename[last+6:]
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include90.findall(line):
