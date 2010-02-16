@@ -12,9 +12,9 @@ ocparcel octentwt ofilp ofpwd ofpwd2 ofsemb patch phaserot pick pick3
 plane planemis2 planemis3 planereg2 planereg3 planesignoi pmig
 pmshape2 predict pwd pwcoh pwdix pwdsigk pwdsmooth2 pwpaint pwpaint3
 pwspray pwspray3 rdiv reshape riesz rsin seislet seisigk shape
-shapesigk shearer similarity simenv smoothreg thin timecont timefreq
-timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon warp1
-warpadd warpscan
+shapesigk shearer similarity simenv smoothreg taupfit thin timecont
+timefreq timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon
+warp1 warpadd warpscan
 '''
 
 pyprogs = 'rcat'

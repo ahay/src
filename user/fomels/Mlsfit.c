@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool linear;
     int n[SF_MAX_DIM], dim, dim1, n1, n2, i, i2, i1, ic, id, nc;
     float *dat, **func, **wfunc, **mat, *rhs, *sol, *weight;
     sf_file inp, fit, coef, out, wht;
@@ -30,6 +31,9 @@ int main(int argc, char* argv[])
     inp = sf_input("in");
     fit = sf_input("fit");
     out = sf_output("out");
+
+    if (!sf_getbool("linear",&linear)) linear=true;
+    /* if linear LS */
 
     dim = sf_filedims(inp,n);
     if (!sf_getint("dim",&dim1)) dim1=dim;
@@ -58,30 +62,19 @@ int main(int argc, char* argv[])
     dat = sf_floatalloc(n1);
     func = sf_floatalloc2(n1,nc);
 
-    sf_floatread(func[0],n1*nc,fit);
-    sf_fileclose(fit);
+    if (linear) {
+	sf_floatread(func[0],n1*nc,fit);
+	sf_fileclose(fit);
+    }
 
-    mat = sf_floatalloc2(nc,nc);
-    
     if (NULL != sf_getstring("weight")) {
-      wht = sf_input("weight");
-      weight = sf_floatalloc(n1);
-      wfunc = sf_floatalloc2(n1,nc);
+	wht = sf_input("weight");
+	weight = sf_floatalloc(n1);
+	wfunc = sf_floatalloc2(n1,nc);
     } else {
-      wht = NULL;
-      weight = NULL;
-      wfunc = func;
-
-	/* compute A'A matrix */
-	for (ic=0; ic < nc; ic++) {
-	  for (id=0; id <= ic; id++) {
-	    mat[ic][id] = 0.;
-	    for (i1=0; i1 < n1; i1++) {
-	      mat[ic][id] += func[ic][i1]*func[id][i1];
-	    }
-	    mat[id][ic] = mat[ic][id];
-	  }
-	}
+	wht = NULL;
+	weight = NULL;
+	wfunc = func;
     }
 
     gaussel_init(nc);
@@ -91,31 +84,32 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,inp);
+	if (!linear) sf_floatread(func[0],n1*nc,fit);
 	
 	if (NULL != weight) {
-	  sf_floatread(weight,n1,wht);
+	    sf_floatread(weight,n1,wht);
 
-	  for (ic=0; ic < nc; ic++) {
+	    for (ic=0; ic < nc; ic++) {
+		for (i1=0; i1 < n1; i1++) {
+		    wfunc[ic][i1] = func[ic][i1]*weight[i1];
+		}
+	    }
+	    
 	    for (i1=0; i1 < n1; i1++) {
-	      wfunc[ic][i1] = func[ic][i1]*weight[i1];
+		dat[i1] *= weight[i1];
 	    }
-	  }
+	}
 
-	  /* compute A'A matrix */
-	  for (ic=0; ic < nc; ic++) {
+	/* compute A'A matrix */
+	for (ic=0; ic < nc; ic++) {
 	    for (id=0; id <= ic; id++) {
-	      mat[ic][id] = 0.;
-	      for (i1=0; i1 < n1; i1++) {
-		mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
-	      }
-	      mat[id][ic] = mat[ic][id];
+		mat[ic][id] = 0.;
+		for (i1=0; i1 < n1; i1++) {
+		    mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
+		}
+		mat[id][ic] = mat[ic][id];
 	    }
-	  }
-	  
-	  for (i1=0; i1 < n1; i1++) {
-	    dat[i1] *= weight[i1];
-	  }
-	}	
+	}
 
 	/* compute A'd */
 	for (ic=0; ic < nc; ic++) {
@@ -134,7 +128,7 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    dat[i1] = 0.;
 	    for (ic=0; ic < nc; ic++) {
-	      dat[i1] += func[ic][i1]*sol[ic];
+		dat[i1] += func[ic][i1]*sol[ic];
 	    }
 	}
 

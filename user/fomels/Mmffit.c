@@ -43,7 +43,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dm)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&m0)) m0=0.;
 
-    if (!sf_histint(coef,"n1",&nc) || nc != NC) sf_error("Need n1=3 in coef");
+    if (!sf_histint(coef,"n1",&nc) || nc != NC) 
+	sf_error("Need n1=%d in coef",NC);
     sf_putint(fit,"n3",NC);
     
     sf_floatread(c,NC,coef);

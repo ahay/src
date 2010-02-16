@@ -407,6 +407,8 @@ int main(int argc, char *argv[])
 	sf_putint(out,"n2",n2);
 	sf_putfloat(out,"d1",dt);
 	sf_putfloat(out,"o1",0.);
+	sf_putstring(out,"label1","Time");
+	sf_putstring(out,"unit1","s");
 	sf_setformat(out, "native_float");    
 	ftrace = suxdr? sf_floatalloc (ns): NULL;
     } else {
