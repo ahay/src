@@ -21,10 +21,11 @@ import os,sys,string,tempfile
 
 sfcat = os.path.join(os.environ.get('RSFROOT'),'bin/sfcat')
 sfrm  = os.path.join(os.environ.get('RSFROOT'),'bin/sfrm')
+datapath = os.environ.get('DATAPATH','/tmp').rstrip('/')
 
 def rcat(files,options,out):
     'Call sfcat recursively on a list of files'
-    global sfcat
+    global sfcat, sfrm, datapath
     if len(files) <= 3:
         stdout = os.dup(1)
         os.dup2(out,1)
@@ -35,13 +36,17 @@ def rcat(files,options,out):
         middle = len(files)/2
         first = files[:middle]
         secon = files[middle:]
-        fd,ffile = tempfile.mkstemp()
-        sd,sfile = tempfile.mkstemp()
+        fd,ffile = tempfile.mkstemp(dir=datapath)
+        sd,sfile = tempfile.mkstemp(dir=datapath)
         rcat(first,options,fd)
         rcat(secon,options,sd)
         rcat([ffile,sfile],options,out)
-        os.system(sfrm + ' ' + ffile)
-        os.system(sfrm + ' ' + sfile)
+        for tmp in ((fd,ffile),(sd,sfile)):
+            try:
+                os.system(sfrm + ' ' + tmp[1])
+                os.close(tmp[0])
+            except:
+                pass
 
 if __name__ == "__main__":
     options = []

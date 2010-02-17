@@ -36,31 +36,40 @@ static void check_compat (int esize, int nin, sf_file *in, int axis,
 
 int main (int argc, char* argv[])
 {
-    int i, j, axis, *naxis, nin;
+    int i, j, axis, *naxis, nin, open_max;
     int dim, dim1, esize, nspace;
     off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
     sf_file *in, out;
-    char* prog, key[3], buf[BUFSIZ];
+    char *prog, key[3], buf[BUFSIZ], **filename;
     bool space;
     
     sf_init(argc,argv);
     
-    in = (sf_file*) sf_alloc ((size_t) argc,sizeof(sf_file));
+    filename = (char**) sf_alloc ((size_t) argc,sizeof(char*));
 
     if (!sf_stdin()) { /* no input file in stdin */
 	nin=0;
     } else {
-	in[0] = sf_input("in");
+	filename[0] = "in";
 	nin=1;
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
 	if (NULL != strchr(argv[i],'=')) 
 	    continue; /* not a file */
-	in[nin] = sf_input(argv[i]);
+	filename[nin] = argv[i];
 	nin++;
     }
     if (0==nin) sf_error ("no input");
+
+    open_max = sysconf(_SC_OPEN_MAX);
+    if (open_max > 0 && nin+1 > open_max)
+	sf_error("Too many files for sfcat, try sfrcat instead.");
+
+    in = (sf_file*) sf_alloc ((size_t) nin,sizeof(sf_file));
+    for (i=0; i< nin; i++) {
+	in[i] = sf_input(filename[i]);
+    }
 
     out = sf_output ("out");
 
