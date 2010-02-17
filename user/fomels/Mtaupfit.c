@@ -45,6 +45,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(coef,"n1",&nc) || nc != nc2) 
 	sf_error("Need n1=%d in coef",nc2);
 
+    c = sf_floatalloc(nc);
+
     sf_putint(fit,"n2",nc);
     sf_shiftdim(in, fit, 2);
 
