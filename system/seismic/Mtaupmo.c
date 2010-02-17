@@ -21,7 +21,7 @@
 #include <rsf.h>
 #include "fint1.h"
 
-static float p, f, dt, *vel;
+static float p, f, dt, *vel, *velx;
 
 static float nmo_map(float t, int it) {
     float ft;
@@ -33,13 +33,26 @@ static float nmo_map(float t, int it) {
     return f*dt;
 }
 
+static float anmo_map(float t, int it) {
+    float ft,gt;
+
+    ft = vel[it];
+    gt = velx[it];
+    gt = 1.-p*gt*gt;
+    gt = gt/(gt+p*ft*ft);
+    if (gt > 0.)
+	f += sqrtf(gt);
+    return f*dt;
+}
+
 int main (int argc, char* argv[])
 {
     fint1 nmo;
     int ip, ix, nt, np, nx, nw, mute;
     float t0, dp, p0, str;
-    float *trace=NULL;
-    sf_file taup=NULL, nmod=NULL, velocity=NULL;
+    float *trace;
+    mapfunc map;
+    sf_file taup, nmod, velocity, velocityx;
 
     sf_init (argc,argv);
     taup = sf_input("in");
@@ -69,10 +82,21 @@ int main (int argc, char* argv[])
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
 
+    if (NULL != sf_getstring("velx")) {
+	velocityx = sf_input("velx");
+	velx = sf_floatalloc(nt);
+	map = anmo_map;
+    } else {
+	velocityx = NULL;
+	velx = NULL;
+	map = nmo_map;
+    }
+
     nmo = fint1_init (nw, nt, mute);
 
     for (ix=0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);
+	if (NULL != velx) sf_floatread (velx,nt,velocityx);
 
 	for (ip=0; ip < np; ip++) {
 	    p = p0 + ip*dp;
@@ -82,7 +106,7 @@ int main (int argc, char* argv[])
 	    fint1_set(nmo,trace);
 
 	    f = 0.;
-	    stretch(nmo,nmo_map,nt,dt,t0,nt,dt,t0,trace,str);
+	    stretch(nmo,map,nt,dt,t0,nt,dt,t0,trace,str);
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
