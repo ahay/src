@@ -289,7 +289,8 @@ int main(int argc, char *argv[])
 
 static void ddbreak (sf_datatype itype, sf_datatype otype)
 {
-    const char* types[]={"uchar","char","int","float","complex"};
+    const char* types[]={"uchar","char","int","float",
+			 "complex","short","double"};
 
     sf_error("Conversion from %s to %s"
 	     " is unsupported",types[itype],types[otype]);
