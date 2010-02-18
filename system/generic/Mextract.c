@@ -22,13 +22,10 @@
 
 #include <rsf.h>
 
-#include "segy.h"
-
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nm, nt, it, nx, ny, xkey, ykey, interp;
     float *mm, *dd, **xy, *hdr, x0, y0, dx, dy;
-    char *xk, *yk;
     sf_file in, out, head;
 
     sf_init (argc,argv);
@@ -40,20 +37,10 @@ int main (int argc, char* argv[])
     nt = sf_leftsize(in,2);
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (NULL != (xk = sf_getstring("xk"))) {
-	/* x key name */
-	xkey = segykey(xk);
-    }  else if (!sf_getint("xkey",&xkey)) {
-	/* x key number (if no xk), default is sx */
-	xkey = segykey("sx");
-    }
-    if (NULL != (yk = sf_getstring("yk"))) {
-	/* y key name */
-	ykey = segykey(yk);
-    }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is sy */
-	ykey = segykey("sy");
-    }
+    if (!sf_getint("xkey",&xkey)) xkey=0;
+    /* x key number */
+    if (!sf_getint("ykey",&ykey)) ykey=1;
+    /* y key number */
 
     /* create coordinates */
     head = sf_input("head");
