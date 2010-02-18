@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-aastack agmig ai2refl avo bin cascade c2r cell2 cell3 cgscan cmp2shot
+aastack agmig ai2refl avo cascade c2r cell2 cell3 cgscan cmp2shot
 constfdmig2 cos2ang depth2time diffraction dimag dmo dsr dsr2 envelope
 extract fincon finstack fkamo fkdmo fourvc fourvc0 fourvc2 freqint
 freqlet gazdag halfint headerattr headermath hwt2d hwtex imospray

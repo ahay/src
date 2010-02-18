@@ -3,9 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-agc aliasp bandpass bin1 boxsmooth canny causint clip cmatmult cosft
-costaper deriv dipfilter dwt enoint2 equal fern fft1 fft3 grad2 grad3
-heat histogram igrad intshow inttest1 inttest2 impl1 impl2 impl3
+agc aliasp bandpass bin bin1 boxsmooth canny causint clip cmatmult
+cosft costaper deriv dipfilter dwt enoint2 equal fern fft1 fft3 grad2
+grad3 heat histogram igrad intshow inttest1 inttest2 impl1 impl2 impl3
 jacobi jacobi2 lapfill linefit lpad mandelbrot matmult max1 miss2
 monof monof2 noise postfilter2 pow reg2tri remap1 roots shapebin
 shapebin1 sharpen slice smooth smoothder smoothreg2 spectra spectra2
