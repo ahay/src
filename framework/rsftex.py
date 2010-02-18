@@ -38,7 +38,7 @@ SCons.Defaults.DefaultEnvironment(tools = [])
 bibtex      = WhereIs('bibtex')
 makeindex   = WhereIs('makeindex')
 acroread    = WhereIs('acroread')
-pdfread     = acroread or WhereIs('kpdf') or WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+pdfread     = acroread or WhereIs('kpdf') or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 pdftops     = WhereIs('pdftops')
 epstopdf    = WhereIs('epstopdf') or WhereIs('a2ping') 
 if epstopdf:
