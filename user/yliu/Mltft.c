@@ -27,7 +27,6 @@ int main(int argc, char* argv[])
     int i1, n1, iw, nt, nw, i2, n2, rect, niter, n12;
     int m[SF_MAX_DIM], rec[SF_MAX_DIM];
     float t, d1, w, w0, dw, *trace, *kbsc, *sscc=NULL, *mm, mean;
-    sf_filter aa=NULL;
     sf_complex *outp;
     sf_file in, out, mask;
    
@@ -99,9 +98,9 @@ int main(int argc, char* argv[])
     if (!inv) {
 	sscc = sf_floatalloc(n12);
 	if (n2 < 500) {
-	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, verb); 
+	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, NULL, verb); 
 	} else {
-	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, false);
+	    multidivn_init(2*nw, 1, n1, m, rec, kbsc, NULL, false);
 	} 
     }
     
