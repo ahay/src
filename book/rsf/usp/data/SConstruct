@@ -98,11 +98,19 @@ Result('diagram','rec sou','Overlay')
 #############
 
 Flow('cmps mask','lines','transp plane=23 memsize=1000 | shot2cmp mask=${TARGETS[1]} half=n')
+Flow('fold','mask','dd type=float | stack axis=1 norm=n')
 
-Result('fold','mask','dd type=float | stack axis=1 norm=n | graph title=Fold unit1=km label2= unit2=')
+Result('fold','graph title=Fold unit1=km label2= unit2=')
 
 Flow('brute','cmps','stack')
 
 Result('brute','grey title="Brute Stack" ')
+
+Result('overlay','fold brute',
+       '''
+       spray axis=1 n=1501 d=0.002 o=0 label=Time unit=s |
+       add scale=1,1000 ${SOURCES[1]} |
+       grey color=j title="Brute Stack (with Fold)"
+       ''')
 
 End()
