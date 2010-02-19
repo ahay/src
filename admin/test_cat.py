@@ -30,7 +30,7 @@ for i in range(nfiles):
     cmd = cmd_root + fname
     print cmd
     subprocess.call(cmd, shell=True)
-    all_files += ' ' + fnam
+    all_files += ' ' + fname
 
 print '\n# Created all files\n'
 
