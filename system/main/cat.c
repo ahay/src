@@ -63,14 +63,13 @@ int main (int argc, char* argv[])
     if (0==nin) sf_error ("no input");
 
     open_max = sysconf(_SC_OPEN_MAX);
-    if (open_max > 0 && nin+1 > open_max)
+    if (open_max > 0 && 2*nin+5 > open_max)
 	sf_error("Too many files for sfcat, try sfrcat instead.");
 
     in = (sf_file*) sf_alloc ((size_t) nin,sizeof(sf_file));
     for (i=0; i< nin; i++) {
 	in[i] = sf_input(filename[i]);
     }
-
     out = sf_output ("out");
 
     if (!sf_getbool("space",&space)) {

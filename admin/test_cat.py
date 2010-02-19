@@ -34,12 +34,17 @@ for i in range(nfiles):
 
 print '\n# Created all files\n'
 
-cmd = 'sfcat axis=2' + all_files + ' > ' + fname_root + 'out.rsf'
-print cmd
+for cat in ('sfcat','sfrcat'):
+    cmd = cat + ' axis=2' + all_files + ' > ' + fname_root + 'out.rsf'
+    print cmd
 
-try:
+    try:
+        subprocess.call(cmd, shell=True)
+    except:
+        print 'sfcat failed'
+
+for i in range(nfiles):
+    fname = fname_root + str(i) + '.rsf'
+    cmd = 'sfrm ' + fname
     subprocess.call(cmd, shell=True)
-except:
-    print 'sfcat failed'
-    subprocess.call('sfrm'+ all_files)
 
