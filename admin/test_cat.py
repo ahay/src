@@ -2,7 +2,7 @@
 '''
 Tests how many files can sfcat concatenate
 '''
-# Copyright (C) 2009 Ioan Vlad
+# Copyright (C) 2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ Tests how many files can sfcat concatenate
 
 import subprocess
 
-nfiles = 511
+nfiles = 511 # May fail for n > 510 on some systems
 cmd_root = 'sfspike n1=10 > '
 fname_root = 'test_junk_'
 all_files = ''
