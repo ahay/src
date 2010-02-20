@@ -20,42 +20,68 @@
 /*^*/
 #include "mmmult.h"
 
-static float**** filt;
+static float* filter;
 static int nf1, nf2, n1, n2;
 
-void mmmult_init (float**** bb, int nff1, int nff2, int nff3, int nff4) 
+void mmmult_init (float* bb, int nff1, int nff2, int nff3, int nff4) 
 /*< initialize with a pointer to a matrix >*/
 {
-    filt = bb;
-    nf1  = nff1;
-    nf2  = nff2;
-    n1   = nff3;
-    n2   = nff4;
+    filter = bb;
+    nf1    = nff1;
+    nf2    = nff2;
+    n1     = nff3;
+    n2     = nff4;
 }
 
 void mmmult_lop (bool adj, bool add, 
-		  int nx, int ny, float** model, float** data) 
+		  int nx, int ny, float* mm, float* dd) 
 /*< linear operator >*/
 {
     int i, j, k, l;
-    
-    sf_adjnull (adj,add,nx,ny,model[0],data[0]);
-    
+    float**** filt, **model, **data;
+
+    filt = sf_floatalloc4(nf1,nf2,n1,n2);
+    data = sf_floatalloc2(n1,n2);
+    model = sf_floatalloc2(n1,n2);
+
+    sf_adjnull (adj,add,nx,ny,mm,dd);
+
     for (l=0; l < n2; l++) {
 	for (k=0; k < n1; k++) {
 	    for (j=0; j < nf2; j++) {
-		for (i=-nf1/2; i < (nf1-nf1/2-1); i++) {
+		for (i=0; i < nf1; i++) {
+		    filt[l][k][j][i] = 
+			filter[l*n1*nf2*nf1+
+			       k*nf2*nf1+
+			       j*nf1+
+			       i];
+		}
+	    }
+	    model[l][k] = mm[l*n1+k];
+	    data[l][k] = dd[l*n1+k];
+	}
+    }
+    for (l=0; l < n2; l++) {
+	for (k=0; k < n1; k++) {
+	    for (j=0; j < nf2; j++) {
+		for (i=-nf1/2; i < (nf1+1)/2; i++) {
 		    /* zero value boundary conditions */
 		    if (l+j < 0 || l+j >= n2 || k+i < 0 || k+i >= n1) {
 			continue; 
 		    }
 		    if (adj) {
-			model[l+j][k+i] += filt[l][k][j][i]*data[l][k];
+			model[l+j][k+i] += filt[l][k][j][i+nf1/2]*data[l][k];
 		    } else {
-			data[l][k] += filt[l][k][j][i]*model[l+j][k+i];
+			data[l][k] += filt[l][k][j][i+nf1/2]*model[l+j][k+i];
 		    }
 		}
 	    }
+	}
+    }
+    for (l=0; l < n2; l++) {
+	for (k=0; k < n1; k++) {
+	    mm[l*n1+k] = model[l][k];
+	    dd[l*n1+k] = data[l][k];
 	}
     }
 }
