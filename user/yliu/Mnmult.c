@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     data = sf_floatalloc2(n1,n2);
     model = sf_floatalloc2(n1,n2);
 
-    matmult_init (filt, nf1, nf2, nf3, nf4);	
+    mmmult_init (filt, nf1, nf2, nf3, nf4);	
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(filt[0][0][0],nf1234,fil);
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	    sf_floatread(model[0],n1*n2,inp);
 	}
 
-	matmult_lop (adj, false, n1*n2, n1*n2, model, data);
+	mmmult_lop (adj, false, n1*n2, n1*n2, model, data);
 	if (adj) {
 	    sf_floatwrite(model[0],n1*n2,out);
 	} else {

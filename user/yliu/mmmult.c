@@ -23,7 +23,7 @@
 static float**** filt;
 static int nf1, nf2, n1, n2;
 
-void matmult_init (float**** bb, int nff1, int nff2, int nff3, int nff4) 
+void mmmult_init (float**** bb, int nff1, int nff2, int nff3, int nff4) 
 /*< initialize with a pointer to a matrix >*/
 {
     filt = bb;
@@ -33,7 +33,7 @@ void matmult_init (float**** bb, int nff1, int nff2, int nff3, int nff4)
     n2   = nff4;
 }
 
-void matmult_lop (bool adj, bool add, 
+void mmmult_lop (bool adj, bool add, 
 		  int nx, int ny, float** model, float** data) 
 /*< linear operator >*/
 {
