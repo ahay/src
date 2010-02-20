@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     bool adj;
     int n1, n2, n3, nf1, nf2, nf3, nf4, nf1234, i3;
-    float **data, **model, ****filt;
+    float *data, *model, *filt;
     sf_file inp, out, fil;
 
     sf_init(argc,argv);
@@ -50,25 +50,25 @@ int main(int argc, char* argv[])
     if (nf3!=n1 || nf4!=n2) sf_error("need n1==nf3 && n2==nf4");
     nf1234 = nf1*nf2*nf3*nf4;
     
-    filt = sf_floatalloc4(nf1,nf2,nf3,nf4);
-    data = sf_floatalloc2(n1,n2);
-    model = sf_floatalloc2(n1,n2);
+    filt = sf_floatalloc(nf1234);
+    data = sf_floatalloc(n1*n2);
+    model = sf_floatalloc(n1*n2);
 
     mmmult_init (filt, nf1, nf2, nf3, nf4);	
 
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread(filt[0][0][0],nf1234,fil);
+	sf_floatread(filt,nf1234,fil);
 	if (adj) {
-	    sf_floatread(data[0],n1*n2,inp);
+	    sf_floatread(data,n1*n2,inp);
 	} else {
-	    sf_floatread(model[0],n1*n2,inp);
+	    sf_floatread(model,n1*n2,inp);
 	}
 
 	mmmult_lop (adj, false, n1*n2, n1*n2, model, data);
 	if (adj) {
-	    sf_floatwrite(model[0],n1*n2,out);
+	    sf_floatwrite(model,n1*n2,out);
 	} else {
-	    sf_floatwrite(data[0],n1*n2,out);
+	    sf_floatwrite(data,n1*n2,out);
 	}
     }
     exit(0);
