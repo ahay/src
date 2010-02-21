@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3;
     float *mm, *kk, *filt, eps;
-    bool *known;
+    bool *known, exact;
     sf_file in, out, fil, mask;
 
     sf_init (argc,argv);
@@ -35,6 +35,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* Number of iterations */
+
+    if (!sf_getbool("exact",&exact)) exact=true;
+    /* If y, preserve the known data values */
 
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
@@ -83,7 +86,19 @@ int main(int argc, char* argv[])
 	}
     }
 
+    if (exact) {
+	for (i=0; i < n1*n2; i++) {
+	    if (known[i]) kk[i] = mm[i];
+	}
+    }
+
     nmis (niter, nf1, nf2, nf3, nf4, filt, mm, known, eps);
+
+    if (exact) {
+	for (i=0; i < n1*n2; i++) {
+	    if (known[i]) mm[i] = kk[i];
+	}
+    }
 
     sf_floatwrite(mm,n1*n2,out);
 
