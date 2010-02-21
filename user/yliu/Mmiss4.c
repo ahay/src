@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3;
     float *mm, *kk, *filt, eps;
-    bool *known, exact;
+    bool *known, exact, verb;
     sf_file in, out, fil, mask;
 
     sf_init (argc,argv);
@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
+
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
 
     /* input data, output model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    nmis (niter, nf1, nf2, nf3, nf4, filt, mm, known, eps);
+    nmis (niter, nf1, nf2, nf3, nf4, filt, mm, known, eps, verb);
 
     if (exact) {
 	for (i=0; i < n1*n2; i++) {

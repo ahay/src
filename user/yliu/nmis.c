@@ -28,7 +28,8 @@ void nmis(int niter         /* number of iterations */,
 	  float *filt,
 	  float *xx         /* model */, 
 	  const bool *known /* mask for known data */,
-	  float eps         /* regularization parameter */) 
+	  float eps         /* regularization parameter */,
+	  bool verb         /* verbosity flag */) 
 /*< interpolate >*/
 {
     int ix;
@@ -42,7 +43,7 @@ void nmis(int niter         /* number of iterations */,
     
     mmmult_init(filt, nf1, nf2, nf3, nf4);
     sf_solver (mmmult_lop, sf_cgstep, nf3*nf4, nf3*nf4, xx, dd, niter, 
-	       "known", known, "x0", xx, "end");
+	       "known", known, "x0", xx, "verb", verb, "end");
     free(dd);
     sf_cgstep_close();
 }
