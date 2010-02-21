@@ -89,7 +89,9 @@ def determine_paths(env):
     if not cudaSDKPath:
         paths = [
             '/'.join([home, 'NVIDIA_GPU_Computing_SDK', 'C']),
+            '/'.join([home, 'NVIDIA_GPU_Computing_SDK']),
             '/'.join([home, 'NVIDIA_CUDA_SDK', 'C']),
+            '/'.join([home, 'NVIDIA_CUDA_SDK']),
             '/'.join([home, 'opt', 'cudasdk', 'C']),
             '/'.join([home, 'opt', 'NVIDIA_GPU_Computing_SDK', 'C']),
             '/'.join([home, 'opt', 'NVIDIA_CUDA_SDK', 'C']),
