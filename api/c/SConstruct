@@ -17,7 +17,7 @@ files freqfilt freqfilt2 fzero getpar helicon helix hilbert igrad1
 impl2 int1 int2 int3 interp interp_spline irls komplex llist mask
 math1 point pqueue prefilter pweno randn recfilt runge quantile
 quadratic sharpen sharpinv simtab slice spline stack stretch system
-tent2 tinysolver triangle triangle1 triangle2 tridiagonal vector
+tent2 timer tinysolver triangle triangle1 triangle2 tridiagonal vector
 weight
 '''
 
