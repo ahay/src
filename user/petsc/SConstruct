@@ -4,6 +4,7 @@ sys.path.append(rsfsrc)
 import configure
 
 progs = '''
+aimplfd1
 heatgmres1
 '''
 
