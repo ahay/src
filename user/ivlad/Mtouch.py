@@ -42,13 +42,14 @@ def main(argv=sys.argv):
 
     par = rsf.Par(argv)
     verb = par.bool('verb', False)      # Display what is wrong with the dataset
-    mydir = par.string('dir')           # Directory with files
+    mydir = par.string('dir','.')       # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
     chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
 
-    if mydir == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
+    help = par.bool('help', False)
+    if help:
+        rsfprog.selfdoc() # Show the man page
+        return ivlad.unix_success # Consulting the documentation is not an error
 
     valid_files_list = []
 
@@ -63,14 +64,20 @@ def main(argv=sys.argv):
 
     for f in valid_files_list:
         bfile = commands.getoutput('sfin info=n ' + f)
-        if(verb):
-            print f + ': ' + bfile
-        os.system('touch -c ' + bfile)
+        ivlad.msg(f + ': ' + bfile, verb)
+        ivlad.exe('touch -c ' + bfile)
 
     return ivlad.unix_success
 
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
+
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)
 

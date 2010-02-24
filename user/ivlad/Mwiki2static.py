@@ -66,7 +66,7 @@ def generate_hard_coded_paths(outdir):
     h['imgdir_url']    = h['wiki_url'] + h['imgdir_basenm']
     h['imgdir_local']  = os.path.join(h['wiki_local'], h['imgdir_basenm'])
 
-    # Documents should be at docdir_url (and subdirs), downloaded to docdir_local
+    # Docs should be at docdir_url (and subdirs), downloaded to docdir_local
     h['docdir_basenm'] = 'docs'
     h['nonwiki_root']  = h['hosting_domain'] + '/wikilocal'
     h['docdir_url']    = h['nonwiki_root'] + '/' + h['docdir_basenm']
@@ -101,19 +101,26 @@ def read_page_section(hcp, pagenm, just_before_section, just_after_section):
 
 def get_page_list(hcp, verb):
     'Returns a list with pages to download from the wiki'
-    if verb:
-        print 'Downloading and parsing page list...'
-    just_before_pagelist = \
-    '<hr /><table style="background: inherit;" border="0" width="100%"><tr><td width="33%">'
+
+    ivlad.msg('Downloading and parsing page list...', verb)
+
+    just_before_pagelist = '<hr />'
+    just_before_pagelist += \
+    '<table style="background: inherit;" border="0" width="100%">'
+    just_before_pagelist += '<tr><td width="33%">'
+
     just_after_pagelist='</table><div class="printfooter">'
-    s = read_page_section(hcp, 'Special:AllPages', just_before_pagelist, just_after_pagelist)
+
+    s = read_page_section(hcp, 
+                          'Special:AllPages', 
+                          just_before_pagelist, 
+                          just_after_pagelist)
     list1 = s.split('<td width="33%">')
     p0 = '<a href="'
     p1 = '" title="'
     p2 = '/%s/' % hcp['wiki_basenm']
     list2 = map(lambda x: after(before(x.lstrip(p0),p1),p2), list1)
-    if verb:
-        print '...done'
+    ivlad.msg('...done', verb)
     return sorted(list2)
 
 ###############################################################################
@@ -140,25 +147,34 @@ def clean_and_mkdir_local(hcp, pagelist):
 
 def get_wiki_image_dict(hcp, verb):
     'Returns a dictionary with image_name:path/inside/img/url/dir'
-    if verb:
-        print 'Downloading and parsing image list...'
+
+    ivlad.msg('Downloading and parsing image list...', verb)
+
     pg = 'Special:ImageList?limit=500&ilsearch=&title=Special%3AImageList'
     just_before_imglist = '<th>Description</th>\n</tr></thead><tbody>'
-    just_after_imglist = \
-    '</tr>\n</tbody></table>\n<br />\n<table class="imagelist_nav TablePager_nav" align="center" cellpadding="3"><tr>'
-    img_table = read_page_section(hcp, pg, just_before_imglist, just_after_imglist)
+    just_after_imglist = '''</tr>
+</tbody></table>
+<br />
+<table class="imagelist_nav TablePager_nav" align="center" cellpadding="3">'''
+    just_after_imglist += '<tr>'
+    img_table = read_page_section(hcp, 
+                                  pg, 
+                                  just_before_imglist, 
+                                  just_after_imglist)
     list1 = img_table.split('<tr>\n<td class="TablePager_col_img_timestamp">')
     imgdict = {}
-    p1 = '<td class="TablePager_col_img_name"><a href="/%s/Image:' % hcp['wiki_basenm']
+    p1 = '<td class="TablePager_col_img_name"><a href="/%s/Image:' % \
+        hcp['wiki_basenm']
     p2 = '">file</a>)</td>'
-    p3 = '(<a href="/%s/%s/'%(hcp['wiki_basenm'],hcp['imgdir_basenm'])
+    p3 = '(<a href="/%s/%s/' % (hcp['wiki_basenm'],hcp['imgdir_basenm'])
+
     for item in list1:
-	s = after(before(after(item,p1),p2),p3)
-	if s != '':
-	    (filepath, filename) = os.path.split(s)
-	    imgdict[filename] = filepath
-    if verb:
-        print '...done'
+	    s = after(before(after(item,p1),p2),p3)
+	    if s != '':
+	        (filepath, filename) = os.path.split(s)
+	        imgdict[filename] = filepath
+
+    ivlad.msg('...done', verb)
     return imgdict
 
 ###############################################################################
@@ -203,8 +219,7 @@ def download_file(url, filename, verb, whatisfile, textmode=False):
     format = 'w'
     if not textmode:
         format += 'b'
-    if verb:
-        print 'Downloading %s: %s' % (whatisfile, url)
+    ivlad.msg('Downloading %s: %s' % (whatisfile, url), verb)
     urlhandle = urlopen(url)
     contents  = urlhandle.read()
     outhandle = open(filename, format)
@@ -244,7 +259,7 @@ def filter_page(s, hcp, pagelist, wiki_img_repl_dict):
 
 def download_pages(hcp, pagelist, wiki_img_repl_dict):
     for page in pagelist:
-        print 'Downloading and parsing: ' + page
+        ivlad.msg('Downloading and parsing: ' + page)
         page_url    = hcp['wiki_url'] + page + hcp['printable']
         if page == 'Main_Page':
             local_basename = 'index'
@@ -263,10 +278,11 @@ def download_pages(hcp, pagelist, wiki_img_repl_dict):
 
 def download_imgs(imgs_to_download, wikiroot, imgdir):
     for imgfile in sorted(imgs_to_download.keys()):
-        print 'Downloading: ' + imgfile
-        img_url = wikiroot + img_dir_basename + '/' + imgs_to_download[imgfile] + '/' + imgfile
+        ivlad.msg('Downloading: ' + imgfile)
+        img_url = wikiroot + img_dir_basename + '/' + \
+                  imgs_to_download[imgfile] + '/' + imgfile
         img_file = os.path.join(imgdir,imgfile)
-        os.system('curl ' + img_url + '>' + img_file)
+        ivlad.exe('curl ' + img_url + '>' + img_file)
 
 ###############################################################################
 
@@ -298,12 +314,10 @@ def inspect_doc_dir(docdir_url, docdir_local, docs_to_download):
 
 def inspect_docs(hcp, verb):
     'generates with docs to download (url:target)'
-    if verb:
-        print 'Downloading and parsing document list...'
+    ivlad.msg('Downloading and parsing document list...', verb)
     docs_to_download = {}
     inspect_doc_dir(hcp['docdir_url'], hcp['docdir_local'], docs_to_download)
-    if verb:
-        print '...done'
+    ivlad.msg('...done', verb)
     return docs_to_download
 
 ###############################################################################
@@ -312,12 +326,13 @@ def main(argv=sys.argv):
 
     par = rsf.Par(argv)
 
-    verb = par.bool('verb', False) # verbosity flag
+    help = par.bool('help', False)
+    if help:
+        rsfprog.selfdoc() # Show the man page
+        return ivlad.unix_success # Consulting the documentation is not an error
 
-    outdir = par.string('outdir')
-    if outdir is None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
+    verb = par.bool('verb', False) # verbosity flag
+    outdir = par.string('outdir','.')
 
     hcp = generate_hard_coded_paths(outdir)
 
@@ -339,11 +354,23 @@ def main(argv=sys.argv):
         download_file(d, docs_to_download[d], verb, 'document')
 
     if not os.path.isfile(hcp['css_local']):
-        download_file(hcp['css_url'], hcp['css_local'], verb, 'stylesheet', textmode=True)
+        download_file(hcp['css_url'], 
+                      hcp['css_local'], 
+                      verb, 
+                      'stylesheet', 
+                      textmode=True)
 
     return ivlad.unix_success
 
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main())
+
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)
+

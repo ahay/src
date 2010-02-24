@@ -2,7 +2,7 @@
 ''''Copies header of float file, fills output binary with zeros
 Usage: sfzcp file1.rsf file2.rsf'''
 
-# Copyright (C) 2009 Ioan Vlad
+# Copyright (C) 2009-2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,16 +21,17 @@ Usage: sfzcp file1.rsf file2.rsf'''
 import commands, os, sys
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 ###############################################################################
 
 def main(argv=sys.argv):
 
     if len(sys.argv) != 3:
-        sys.stderr.write('Usage: sfzcp file1.rsf file2.rsf\n')
+        ivlad.msg('Usage: sfzcp file1.rsf file2.rsf')
         return ivlad.unix_error
 
     f1 = sys.argv[1] + ' '
@@ -38,27 +39,33 @@ def main(argv=sys.argv):
 
     f1_type = commands.getoutput('<' + f1 + 'sfgettype')
     if f1_type != 'SF_FLOAT':
-        sys.stderr.write('Other types not yet implemented\n')
-        return ivlad.unix_error
+        raise m8rex.TypeHandlingNotImplemented(f1_type)
 
-    dims_str = commands.getoutput('<' + f1 + 'sffiledims parform=n')
+    dims_str = ivlad.getout('sffiledims','parform=n',f1)
     ndims = int(dims_str.split(':')[0])
 
     cmd = 'sfspike mag=0 '
     fields = 'n o d unit label'.split()
 
     for i in range(ndims):
-        for z in fields:
-            cmd_local = '<' + f1 + 'sfget parform=y ' + z+str(i+1)
-            cmd += commands.getoutput(cmd_local) + ' '
+        for z in fields:            
+            cmd += ivlad.getout('sfget',['parform=y',z+str(i+1)],f1) + ' '
 
     cmd += ' >' + f2
 
-    os.system(cmd)
+    ivlad.exe(cmd)
 
     return ivlad.unix_success
 
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
+
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)
+

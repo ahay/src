@@ -23,7 +23,7 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, commands, math, rsfprog, string, random
+import os, sys, math, rsfprog, string, random
 
 try: # Give precedence to local version
     import m8rex
@@ -49,25 +49,19 @@ try:
     have_subprocess=True
 except: # Python < 2.4
     have_subprocess=False
-    import commands, os
+    import commands
 
 ###############################################################################
 
-def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
+def send2os(prog, arg=None, stdin=None, stdout=None, verb=False):
     '''Sends command to the operating system. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
     - arg. List of strings with program arguments. LIST (or str for only 1 arg)
     - stdin. Filename STRING.
-    - stdout. Filename STRING. Must not be specified if want=stdout
-    - want: what to return STRING: 'stdout' or 'stderr'. [Stderr not implemented yet]
-    - verb: whether to print command before executing it. BOOL
-    If stdout= is given, then the function writes to that file and returns None
-    If want=stdout, then a STRING with stripped newlines is returned.'''
+    - stdout. Filename STRING.
+    - verb: whether to print command before executing it. BOOL'''
 
-    if want != None:
-        assert want in ('stdout','stderr')
-        if stdout != None and want == 'stdout':
-            raise m8rex.ConflictingArgs('stdout',None,'want','stdout')
+    # Like ivlad.exe, but with another user interface
 
     # Build the [prog, args] list
     if arg != None:
@@ -88,8 +82,7 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
             cmd4print.append('>')
             cmd4print.append(stdout)
         command = ' '.join(cmd4print)
-        if verb:
-            print command
+        msg(command, verb)
 
     if have_subprocess:
         if stdin:
@@ -100,24 +93,14 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
             fout = open(stdout,'w')
         else:
             fout = None
-        if want == 'stdout':
-            s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
-            output = s.communicate()[0]
-            return output.rstrip('\n') # Remove the newline character
-        else:
-            subprocess.Popen(cmdlist,stdin=finp,stdout=fout).wait()
-            return None
+        subprocess.Popen(cmdlist,stdin=finp,stdout=fout).wait()
+
     else: # no subprocess module present
-        if want == 'stdout':
-            s = commands.getoutput( command )
-            return s
-        elif stdout:
-            os.system(command)
-            return None
+        os.system(command)
 
 ###############################################################################
 
-def getout(prog, arg=None, stdin=None, verb=False):
+def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     '''Replacement for commands.getoutput. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
     - arg. List of strings with program arguments, or just a string
@@ -134,15 +117,15 @@ def getout(prog, arg=None, stdin=None, verb=False):
     if arg != None:
         if type(arg) == str:
             arg = arg.split()
+        assert type(arg) == list
         cmdlist += arg 
       
     # Build command string for printing or Python < 2.4
     if verb or not have_subprocess:
         cmd = ' '.join(cmdlist)
-        if stdin:
+        if stdin != None:
             cmd4print += ' <' + stdin
-        if verb:
-            msg(cmd)
+        msg(cmd, verb)
 
     if have_subprocess:
         if stdin:
@@ -151,9 +134,16 @@ def getout(prog, arg=None, stdin=None, verb=False):
             finp = None
         s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
         output = s.communicate()[0]
-        return output.rstrip('\n')
     else: # no subprocess module present
-        return commands.getoutput(cmd)
+        output = commands.getoutput(cmd)
+
+    if output == None:
+        if raiseIfNoneOut:
+            raise m8rex.NoReturnFromExtProgram(prog)
+    else:
+        output = output.rstrip('\n')
+
+    return output
 
 ###############################################################################
 
@@ -165,21 +155,10 @@ def readaxis( inp, axisnr, verb=False ):
 
     ax = str(axisnr)
 
-    n = send_to_os('sfget',
-                   arg = ['parform=n','n'+ax],
-                   stdin = inp,
-                   want = 'stdout',
-                   verb = verb)
-    o = send_to_os('sfget',
-                   arg = ['parform=n','o'+ax],
-                   stdin = inp,
-                   want = 'stdout',
-                   verb = verb)
-    d = send_to_os('sfget',
-                   arg = ['parform=n','d'+ax],
-                   stdin = inp,
-                   want = 'stdout',
-                   verb = verb)
+    n = getout('sfget',['parform=n','n'+ax], inp, verb)
+    o = getout('sfget',['parform=n','o'+ax], inp, verb)
+    d = getout('sfget',['parform=n','d'+ax], inp, verb)
+
     return( int(n), float(o), float(d))
 
 ###############################################################################
@@ -191,8 +170,7 @@ def ndims(filename):
     nlist = [1] * max_dims
 
     for dim in range(1,max_dims+1):
-        command = '<'+filename+' sfget parform=n n' + str(dim)
-        sfget_out = commands.getoutput(command)
+        sfget_out = getout('sfget',['parform=n','n'+str(dim)],filename)
         if sfget_out[:15] != 'sfget: No key n':
             curr_n = int(sfget_out)
             if curr_n > 1:
@@ -219,23 +197,17 @@ def add_zeros(i, n):
 
 ####################################################################
 
-def execute(command, verb=False):
-    '''Echoes a command to screen, then executes it'''
-
-    if verb:
-        print command
-    os.system(command)
-
-####################################################################
-
 def exe(cmd, verb=False):
-    '''Echoes a command to screen via stderr, then executes it'''
+    'Echoes a string command to screen via stderr, then executes it'
+
+    assert type(cmd) == str
 
     msg(cmd, verb)
+
     if have_subprocess:
         subprocess.call(cmd, shell=True)
     else:
-        os.system(command)
+        os.system(cmd)
 
 ################################################################################
 
@@ -247,15 +219,15 @@ def chk_dir(mydir):
         return unix_error
 
     if not os.path.isdir(mydir):
-        print mydir + ' is not a valid directory'
+        msg(mydir + ' is not a valid directory')
         return unix_error
 
     if not os.access(mydir,os.X_OK):
-        print mydir + ' lacks +x permissions for ' + os.getlogin()
+        msg(mydir + ' lacks +x permissions for ' + os.getlogin())
         return unix_error
 
     if not os.access(mydir,os.R_OK):
-        print mydir + ' lacks read permissions for ' + os.getlogin()
+        msg(mydir + ' lacks read permissions for ' + os.getlogin())
         return unix_error
 
     return unix_success
@@ -300,7 +272,7 @@ def isvalid(f,chk4nan=False):
     is_rsf_ok = True
 
     sfin = 'sfin info='
-    com_out = commands.getoutput(sfin+'n '+f)
+    com_out = getout('sfin',['info=n', f])
     
     if com_out[:6] == 'sfin: ':
         is_rsf_ok = False
@@ -332,7 +304,7 @@ def isvalid(f,chk4nan=False):
 
     else: # No error message from sfin
         # Check for incomplete binaries
-        com_out = commands.getoutput(sfin+'y '+f)
+        com_out = getout('sfin',['info=y',f])
         line_list = com_out.split('\n')
 
         # Using a grep equivalent below because the "Actually..." error
@@ -356,7 +328,7 @@ def isvalid(f,chk4nan=False):
 
     if is_rsf_ok: # no errors found by sfin
         if chk4nan:
-            cmd_out = commands.getoutput('sfattr <'+f)
+            cmd_out = getout('sfattr', None, f)
             line_list = cmd_out.split('\n')
             for l in line_list:
                 if '=' in l:
@@ -492,10 +464,7 @@ def data_file_nm():
 
 def chk_file_dims(filenm, ndims):
 
-    leftsize = int(send_to_os('sfleftsize', arg='i='+str(ndims), stdin=filenm,
-                              want='stdout', verb=verb))
-
-    if leftsize > 1:
+    if int(getout('sfleftsize', 'i='+str(ndims), filenm, verb)) > 1:
         raise m8rex.NdimsMismatch(filenm, ndims)
 
 ################################################################################
@@ -510,11 +479,13 @@ def chk_par_in_list(par,avl):
 
 ################################################################################
 
-def chk_param_limit(parval, parnm, limval=0, comp='>')
-
-    if comp == '>':
-        if parval <= limval:
-            raise m8rex.ParBeyondLimit(parnm,limval,comp)
+def chk_param_limit(parval, parnm, limval=0, comp='>'):
+    '"Assert" uility for the CLI'
+    if (comp == '>'  and parval <= limval) or \
+       (comp == '>=' and parval <  limval) or \
+       (comp == '<=' and parval >  limval) or \
+       (comp == '<'  and parval >= limval):
+        raise m8rex.ParBeyondLimit(parnm,limval,comp)
         
 ################################################################################
 

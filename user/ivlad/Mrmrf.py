@@ -60,9 +60,8 @@ def main(argv=sys.argv):
         ivlad.list_valid_rsf_files(mydir, files, chk4nan=False)
 
     for f in valid_files_list:
-        if(verb):
-            print f + ': ' + commands.getoutput('sfin info=n ' + f)
-        os.system('sfrm ' + f)
+        ivlad.msg(f + ': ' + commands.getoutput('sfin info=n ' + f), verb)
+        ivlad.exe('sfrm ' + f)
 
     # Clean up headers with no binaries
 

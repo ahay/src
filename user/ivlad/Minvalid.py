@@ -38,10 +38,12 @@ except: # Use distributed version
 def main(argv=sys.argv):
 
     par = rsf.Par(argv)
+
     help = par.bool('help', False)
     if help:
         rsfprog.selfdoc() # Show the man page
         return ivlad.unix_success # Consulting the documentation is not an error
+
     verb = par.bool('verb', False)      # Display what is wrong with the dataset
     mydir = par.string('dir', '.')      # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
@@ -64,7 +66,7 @@ def main(argv=sys.argv):
         myline = entry[0]
         if verb:
             myline += ': ' + entry[1]
-        print myline
+        print myline # This program's stdout is a list of files. Do not use msg
 
     return ivlad.unix_success
 

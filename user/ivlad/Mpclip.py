@@ -53,12 +53,8 @@ def main(argv=sys.argv):
     sfquantile = prog_nm_root + 'quantile'
     sfclip     = prog_nm_root + 'clip'
 
-    clip = ivlad.send_to_os(sfquantile, arg='pclip='+str(pclip),
-                      stdin=inp, want='stdout', verb=verb)
-    if clip == None:
-        raise m8rex.NoReturnFromExtProgram(sfquantile)
-
-    ivlad.send_to_os(sfclip, arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
+    clip = ivlad.getout('sfquantile', 'pclip='+str(pclip), inp, verb, True)
+    ivlad.exe('sfclip <%s clip=%s >%s' % (inp, clip, out), verb)
 
     return ivlad.unix_success
 

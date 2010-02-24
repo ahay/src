@@ -5,7 +5,7 @@ If prar=n, no action will be taken on axis for which h/w was not specified
 If prar=y and only one par (h or w) is specified, the picture will scale
 along both axes until it is of the specified dimension.'''
 
-# Copyright (C) 2007, 2009 Ioan Vlad
+# Copyright (C) 2007-2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,16 +50,8 @@ def main(argv=sys.argv):
 
     ivlad.chk_file_dims(inp, 2)
 
-    n1 = ivlad.send_to_os('sfget',
-                    arg = ['parform=n','n1'],
-                    stdin = inp,
-                    want = 'stdout',
-                    verb = verb)
-    n2 = ivlad.send_to_os('sfget',
-                    arg = ['parform=n','n2'],
-                    stdin = inp,
-                    want = 'stdout',
-                    verb = verb)
+    n1 = ivlad.getout('sfget',['parform=n','n1'], inp, verb)
+    n2 = ivlad.getout('sfget',['parform=n','n2'], inp, verb)
     n1 = int(n1)
     n2 = int(n2)
 
@@ -82,7 +74,7 @@ def main(argv=sys.argv):
         ivlad.chk_param_limit(h, 'h')
         if (h,w) == (n1,n2):
             ivlad.msg('Change h or w if you want out!=inp')
-            ivlad.send_to_os('sfcp', arg=[inp, out], verb=verb)
+            ivlad.exe('sfcp %s %s' % (inp, out), verb)
             return ivlad.unix_success
         h = ivlad.valswitch(h, n1, None)
         w = ivlad.valswitch(w, n2, None)
@@ -96,9 +88,7 @@ def main(argv=sys.argv):
 
     if unit != 'px':
         ppi = par.int('ppi') # outp. resolution (px/in). Necessary when unit!=px
-        if ppi <= 0:
-            sys.stderr.write('ppi must be > 0\n')
-            return ivlad.unix_error
+        ivlad.chk_param_limit(ppi, 'ppi')
         # Transform w and h to px
         if unit == 'in':
             scale = 1
@@ -133,10 +123,12 @@ def main(argv=sys.argv):
 
     h = int(h)
     w = int(w)
-    h = ivlad.valswitch(h, n1, None)
-    w = ivlad.valswitch(w, n2, None)
+
     assert h > 1
     assert w > 1
+
+    h = ivlad.valswitch(h, n1, None)
+    w = ivlad.valswitch(w, n2, None)
 
     # Put tmp files together with the binaries,
     # so that if prep4plot crashes, user is not
@@ -146,20 +138,13 @@ def main(argv=sys.argv):
                        '.prep4plot_junk_')
 
     # Interpolation and, if needed, bandpass 
-    if h:
-        d1 = ivlad.send_to_os('sfget',
-                   arg = ['parform=n','d1'],
-                   stdin = inp,
-                   want = 'stdout',
-                   verb = verb)
+    if h != None:
+        d1 = ivlad.getout('sfget', ['parform=n','d1'], inp, verb)
         d1 = float(d1) * (n1-1)/float(h-1)
         if h < n1:
             ready_for_remap_1 = tmp + '1'
-            ivlad.send_to_os('sfbandpass',
-                       arg='fhi='+str(0.5/d1),
-                       stdin=inp,
-                       stdout=ready_for_remap_1,
-                       verb=verb)
+            ivlad.exe('sfbandpass <%s fhi=%f >%s' % \
+                     (inp, 0.5/d1, ready_for_remap_1), verb)
             rem2del_junk1 = True
         else:
             ready_for_remap_1 = inp
@@ -170,66 +155,38 @@ def main(argv=sys.argv):
         else:
             out_remap1 = out
             rem2del_junk2 = False
-        ivlad.send_to_os('sfremap1',
-                   arg=['n1='+str(h), 'd1='+str(d1)],
-                   stdin=ready_for_remap_1,
-                   stdout=out_remap1,
-                   verb=verb)
+        ivlad.exe('sfremap1 <%s n1=%d d1=%f >%s' % \
+                 (ready_for_remap_1, h, d1, out_remap1), verb)
         if rem2del_junk1:
-            ivlad.send_to_os('sfrm',
-                       arg=ready_for_remap_1,
-                       verb=verb)
+            ivlad.exe('sfrm ' + ready_for_remap_1, verb)
     else: # no action on axis 1
         out_remap1 = inp
         rem2del_junk2 = False
 
-    if w:
-        d2 = ivlad.send_to_os('sfget',
-                   arg = ['parform=n','d2'],
-                   stdin = inp,
-                   want = 'stdout',
-                   verb = verb)
+    if w != None:
+        d2 = ivlad.getout('sfget', ['parform=n','d2'], inp, verb)
         d2 = float(d2) * (n2-1)/float(w-1)
         out_transp1 = tmp + '3'
-        ivlad.send_to_os('sftransp',
-                   stdin=out_remap1,
-                   stdout=out_transp1,
-                   verb=verb)
+        ivlad.exe('sftransp <%s >%s' % (out_remap1, out_transp1), verb)
         if rem2del_junk2:
-            ivlad.send_to_os('sfrm',
-                       arg=out_remap1,
-                       verb=verb)
+            ivlad.exe('sfrm ' + out_remap1, verb)
         if w < n2:
             ready_for_remap_2 = tmp + '4'
-            ivlad.send_to_os('sfbandpass',
-                       arg='fhi='+str(0.5/d2),
-                       stdin=out_transp1,
-                       stdout=ready_for_remap_2,
-                       verb=verb)
+            ivlad.exe('sfbandpass <%s fhi=%f >%s' % \
+                     (out_transp1, 0.5/d2, ready_for_remap_2), verb)
             rem2del_junk4 = True
         else:
             ready_for_remap_2 = out_transp1
             rem2del_junk4 = False
         ready_for_transp2 = tmp + '5'
-        ivlad.send_to_os('sfremap1',
-                   arg=['n1='+str(w), 'd1='+str(d2)],
-                   stdin=ready_for_remap_2,
-                   stdout=ready_for_transp2,
-                   verb=verb)
-        ivlad.send_to_os('sfrm',
-                   arg=out_transp1,
-                   verb=verb)
+        ivlad.exe('sfremap1 <%s n1=%d d1=%f >%s' % \
+                 (ready_for_remap_2,w,d2,ready_for_transp2), verb)
+        ivlad.exe('sfrm ' + out_transp1, verb)
         if rem2del_junk4:
-            ivlad.send_to_os('sfrm',
-                       arg=ready_for_remap_2,
-                       verb=verb)
-        ivlad.send_to_os('sftransp',
-                   stdin=ready_for_transp2,
-                   stdout=out,
-                   verb=verb)
-        ivlad.send_to_os('sfrm',
-                   arg=ready_for_transp2,
-                   verb=verb)
+            ivlad.exe('sfrm ' + ready_for_remap_2, verb)
+        ivlad.exe('sftransp <%s >%s' % (ready_for_transp2, out), verb)
+        ivlad.exe('sfrm ' + ready_for_transp2, verb)
+
     return ivlad.unix_success
 
 ###############################################################################

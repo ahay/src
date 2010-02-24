@@ -51,22 +51,17 @@ def main(argv=sys.argv):
         rsfprog.selfdoc()
         return ivlad.unix_error
 
-    outdir = par.string('outdir')
-    if outdir == None:
-        out_basenm = os.path.basename(inp).rstrip(ivlad.ext) + '_split'
-        outdir = out_basenm + ivlad.ext
+    out_basenm = os.path.basename(inp).rstrip(ivlad.ext) + '_split'
+
+    outdir = par.string('outdir',out_basenm + ivlad.ext)
 
     nthick = par.int('nthick', 1)
-    if nthick < 1:
-        print 'Slice thickness must be 1 or higher'
-        return ivlad.unix_error
+    ivlad.chk_param_limit(nthick, 'nthick', 1, '>')
 
     lastdim = str(ivlad.ndims(inp))
 
     n = int(commands.getoutput('sfget <' + inp + ' parform=n n' + lastdim))
-    if nthick >= n:
-        print 'Slice thickness (%d) should be < axis length (%d)' % (nthick, n)
-        return ivlad.unix_error
+    ivlad.chk_param_limit(nthick, 'nthick', n, '<')
 
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
@@ -107,7 +102,9 @@ if __name__ == '__main__':
 
     try:
         status = main()
-    except:
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
         status = ivlad.unix_error
 
     sys.exit(status)
+
