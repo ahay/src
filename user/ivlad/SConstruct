@@ -78,6 +78,9 @@ if 'f90' in api and F90:
                            LINK=F90)
         if root:
             env.Install(bindir,prog)
+else:
+    for prog in mains_f90:
+        prog = env.Place('sf'+prog,None,package='Fortran90+API=F90')
 
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
@@ -102,6 +105,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains_f90) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
                py_mains_meta)
     env.Depends(docs,'#/framework/rsfdoc.py')	
