@@ -53,6 +53,20 @@ except: # Python < 2.4
 
 ###############################################################################
 
+def exe(cmd, verb=False):
+    'Echoes a string command to screen via stderr, then executes it'
+
+    assert type(cmd) == str
+
+    msg(cmd, verb)
+
+    if have_subprocess:
+        subprocess.call(cmd, shell=True)
+    else:
+        os.system(cmd)
+
+###############################################################################
+
 def send2os(prog, arg=None, stdin=None, stdout=None, verb=False):
     '''Sends command to the operating system. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
@@ -195,43 +209,6 @@ def add_zeros(i, n):
 
     return nzeros*'0'+str(i)
 
-####################################################################
-
-def exe(cmd, verb=False):
-    'Echoes a string command to screen via stderr, then executes it'
-
-    assert type(cmd) == str
-
-    msg(cmd, verb)
-
-    if have_subprocess:
-        subprocess.call(cmd, shell=True)
-    else:
-        os.system(cmd)
-
-################################################################################
-
-def chk_dir(mydir):
-    'Checks a directory exists and has +rx permissions'
-
-    if mydir == None:
-        rsfprog.selfdoc()
-        return unix_error
-
-    if not os.path.isdir(mydir):
-        msg(mydir + ' is not a valid directory')
-        return unix_error
-
-    if not os.access(mydir,os.X_OK):
-        msg(mydir + ' lacks +x permissions for ' + os.getlogin())
-        return unix_error
-
-    if not os.access(mydir,os.R_OK):
-        msg(mydir + ' lacks read permissions for ' + os.getlogin())
-        return unix_error
-
-    return unix_success
-
 ################################################################################
 
 def chk_dir_rx(dir_nm):
@@ -344,8 +321,7 @@ def isvalid(f,chk4nan=False):
 def list_invalid_rsf_files(dirname, flist, chk4nan=False):
     'Not recursive. Returns list of (file,msg) tuples.'
     
-    if chk_dir(dirname) == unix_error:
-        return None # I should really use exceptions here. No time now.
+    chk_dir_rx(dirname)
 
     invalid_files = []
 
@@ -365,8 +341,7 @@ def list_invalid_rsf_files(dirname, flist, chk4nan=False):
 def list_valid_rsf_files(dirname, flist, chk4nan=False):
     'Not recursive'
     
-    if chk_dir(dirname) == unix_error:
-        return None # I should really use exceptions here. No time now.
+    chk_dir_rx(dirname)
 
     valid_files = []
 
