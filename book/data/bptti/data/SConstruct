@@ -4,6 +4,8 @@ from rsfproj import *
 
 for part in range(1,5):
     sgy = 'Anisotropic_FD_Model_Shots_part%d.sgy.gz' % part
+    Fetch(sgy,'BP',top=os.environ.get('DATAPATH'),server='local')
+    
     rsf = 'part%d' % part
     Flow([rsf,'t'+rsf,rsf+'.asc',rsf+'.bin'],sgy,
          '''
