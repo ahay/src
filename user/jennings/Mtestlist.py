@@ -87,6 +87,7 @@ def read_rsfproj(root,files):
             if len(l['data']) == 0:     values['data'] = 'none   '
             if len(l['data']) >  0:     values['data'] = 'public '
             if 'PRIVATE' in l['data']:  values['data'] = 'private'
+            if 'LOCAL'   in l['data']:  values['data'] = 'local'
         else:
             values['error'] = 1
 

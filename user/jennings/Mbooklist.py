@@ -120,6 +120,7 @@ def read_rsfproj(root,files):
             if len(l['data']) == 0:     data_type = 'none'
             if len(l['data']) >  0:     data_type = 'public'
             if 'PRIVATE' in l['data']:  data_type = 'private'
+            if 'LOCAL'   in l['data']:  data_type = 'local'
         else:
             error = 1
 
@@ -149,6 +150,7 @@ def calc_filter(options,props):
     if (fetch_none    == False) and (data_type == 'none'):    filter = False
     if (fetch_public  == False) and (data_type == 'public'):  filter = False
     if (fetch_private == False) and (data_type == 'private'): filter = False
+    if (fetch_local   == False) and (data_type == 'local'):   filter = False
 
     return filter
 
@@ -192,6 +194,9 @@ def main(argv=sys.argv):
     fetch_private = par.bool('private',False)
     # fetch-private-data filter
 
+    fetch_local = par.bool('local',False)
+    # fetch-local-data filter
+
     command = par.string('command')
     # command to execute in each directory, default = none
 
@@ -210,6 +215,7 @@ def main(argv=sys.argv):
     if fetch_none is None:      fetch_none    = True
     if fetch_public is None:    fetch_public  = False
     if fetch_private is None:   fetch_private = False
+    if fetch_local is None:     fetch_local   = False
 
 ################    build list of search directories
 
@@ -249,6 +255,7 @@ def main(argv=sys.argv):
     data_none       = 0
     data_public     = 0
     data_private    = 0
+    data_local      = 0
 
     for bookdir in books:
         for root,dirs,files in os.walk(bookdir):
@@ -274,7 +281,7 @@ def main(argv=sys.argv):
                 sys.stdout.flush()
 
                                                 # calculate directory filter
-            options = (rsfproj,uses,size,fetch_none,fetch_public,fetch_private)
+            options = (rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local)
             props   = (rsfproj_exist,uses_list,data_size,data_type)
             filter  = calc_filter(options,props)
             if filter==True:
@@ -297,6 +304,7 @@ def main(argv=sys.argv):
                 if data_type == 'none'    : data_none    = data_none+1
                 if data_type == 'public'  : data_public  = data_public+1
                 if data_type == 'private' : data_private = data_private+1
+                if data_type == 'local'   : data_local   = data_local+1
 
                 tuple = (filter_command,rsfproj_exist,
                          size_string(data_size),data_type,root)
@@ -339,6 +347,7 @@ def main(argv=sys.argv):
     sys.stdout.write("Directories using no external data      : %3d\n" % data_none)
     sys.stdout.write("Directories using public external data  : %3d\n" % data_public)
     sys.stdout.write("Directories using private external data : %3d\n" % data_private)
+    sys.stdout.write("Directories using private internal data : %3d\n" % data_local)
     sys.stdout.write("\n")
 
     return unix_success
