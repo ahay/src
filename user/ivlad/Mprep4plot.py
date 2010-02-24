@@ -29,9 +29,10 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 ###############################################################################
 
@@ -47,13 +48,7 @@ def main(argv=sys.argv):
 
     verb = par.bool('verb', False) # if y, print system commands, outputs
 
-    leftsize = int(ivlad.send_to_os('sfleftsize', arg='i=2', stdin=inp,
-                              want='stdout', verb=verb))
-
-    if leftsize > 1:
-        sys.stderr.write('Input must be 2-D file\n')
-        return ivlad.unix_error
-    del leftsize
+    ivlad.chk_file_dims(inp, 2)
 
     n1 = ivlad.send_to_os('sfget',
                     arg = ['parform=n','n1'],
@@ -76,61 +71,48 @@ def main(argv=sys.argv):
     none=impossible #even uglier hack, for self-doc to show user-friendly message
     h = par.int('h', none) # output height
     w = par.int('w', none) # output width
+    w = ivlad.valswitch(w, none, None)
+    h = ivlad.valswitch(h, none, None)
 
-    if w==impossible:
-        if h==impossible:
-            sys.stderr.write('Either w or h must be specified!!\n')
-            return ivlad.unix_error
-        else: # h was read from the command line
-            w = None
-    else: # w was read from the command line
-        if h==impossible:
-            h = None
-        else: # both w and h were read. Check for sanity:
-            if w <= 0:
-                sys.stderr.write('w is a width, must be >0\n')
-                return ivlad.unix_error
-            if h <= 0:
-                sys.stderr.write('h is a height, must be >0\n')
-                return ivlad.unix_error
-            if (h,w)==(n1,n2):
-                sys.stderr.write('Change h or w if you want out!=inp\n')
-                ivlad.send_to_os('sfcp', arg=[inp, out], verb=verb)
-                return ivlad.unix_success
-            if h==n1:
-                h = None # No interp needed on axis 1
-            if w==n2:
-                w = None # Same for axis 2
-    del impossible
+    if (h, w) == (None, None):
+        raise m8rex.MissingArgument('h or w')
+
+    if h != None and w != None: # both w and h were read. Check for sanity:
+        ivlad.chk_param_limit(w, 'w')
+        ivlad.chk_param_limit(h, 'h')
+        if (h,w) == (n1,n2):
+            ivlad.msg('Change h or w if you want out!=inp')
+            ivlad.send_to_os('sfcp', arg=[inp, out], verb=verb)
+            return ivlad.unix_success
+        h = ivlad.valswitch(h, n1, None)
+        w = ivlad.valswitch(w, n2, None)
+
     # Now h and w are either None, or have a value worth doing interpolation on.
 
     # Transform h and w to pixels, if they are not
     # No default value for par.string -- Quirk of rsf, replicated in rsfbak
-    unit = par.string('unit') # unit of h and w. Can be: px(default), mm, cm, in
-    if unit: # something was read from command line
-        if unit not in ('mm','cm','in','px'):
-            sys.stderr.write('unit must be: mm/cm/in/px\n')
+    unit = par.string('unit', 'px') # unit of h and w. Can be: px, mm, cm, in
+    ivlad.chk_par_in_list(unit,['mm','cm','in','px'])
+
+    if unit != 'px':
+        ppi = par.int('ppi') # outp. resolution (px/in). Necessary when unit!=px
+        if ppi <= 0:
+            sys.stderr.write('ppi must be > 0\n')
             return ivlad.unix_error
-        if unit != 'px':
-            ppi = par.int('ppi') # output resolution (px/in). Necessary when unit!=px
-            if ppi <= 0:
-                sys.stderr.write('ppi must be > 0\n')
-                return ivlad.unix_error
-            # Transform w and h to px
-            if unit == 'in':
-                scale = 1
-            elif unit == 'mm':
-                scale = 254
-            elif unit == 'cm':
-                scale = 25.4
-            if w:
-                w *= ppi / float(scale)
-            if h:
-                h *= ppi / float(scale)
-            # Don't worry, we'll convert to int after prar block
-            del scale
-    else: # unit not in prog arguments 
-        unit = 'px'
+        # Transform w and h to px
+        if unit == 'in':
+            scale = 1
+        elif unit == 'mm':
+            scale = 254
+        elif unit == 'cm':
+            scale = 25.4
+        if w:
+            w *= ppi / float(scale)
+        if h:
+            h *= ppi / float(scale)
+        # Don't worry, we'll convert to int after prar block
+        del scale
+
     # Now h and w are either None, or in pixels
 
     # If prar=y, then h and/or w define a bounding box.
@@ -151,13 +133,10 @@ def main(argv=sys.argv):
 
     h = int(h)
     w = int(w)
-    if h == n1:
-        h = None # No interp needed on axis 1
-    if w == n2:
-        w = None # Same for axis 2
-    if h < 2 or w < 2:
-        sys.stderr.write('sanity check failed\n')
-        return ivlad.unix_error
+    h = ivlad.valswitch(h, n1, None)
+    w = ivlad.valswitch(w, n2, None)
+    assert h > 1
+    assert w > 1
 
     # Put tmp files together with the binaries,
     # so that if prep4plot crashes, user is not
@@ -256,4 +235,11 @@ def main(argv=sys.argv):
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
+
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)

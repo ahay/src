@@ -20,8 +20,7 @@ Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
 
 # This program is dependent on the output of sfin and sfattr
 
-import sys, os, glob, commands
-import rsfprog
+import os, rsfprog, sys
 
 try:
     import rsf
@@ -29,23 +28,24 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 ###############################################################################
 
 def main(argv=sys.argv):
 
     par = rsf.Par(argv)
+    help = par.bool('help', False)
+    if help:
+        rsfprog.selfdoc() # Show the man page
+        return ivlad.unix_success # Consulting the documentation is not an error
     verb = par.bool('verb', False)      # Display what is wrong with the dataset
-    mydir = par.string('dir')           # Directory with files
+    mydir = par.string('dir', '.')      # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
     chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
-
-    if mydir == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
 
     invalid_files_list = [] # will contain tuples: (file, msg)
 
@@ -71,5 +71,11 @@ def main(argv=sys.argv):
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
 
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)

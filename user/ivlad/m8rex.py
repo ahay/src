@@ -35,6 +35,7 @@ class Error(Exception):
 ########################################
 
 # Exceptions ordered alphabetically
+# Message should specify what the problem is
 
 class ConflictingArgs(Error):
     def __init__(self, arg1, val1, arg2, val2):
@@ -42,9 +43,12 @@ class ConflictingArgs(Error):
         (arg1, str(val1), arg2, str(val2))
 
 class MissingArgument(Error):
-    'For checking command-line arguments to Python main programs'
     def __init__(self, arg):
         self.msg = 'Missing argument: ' + arg
+
+class NdimsMismatch(Error):
+    def __init__(self, filenm, ndims):
+        self.msg = 'File ' + filenm + ' must be %d-D' % ndims
 
 class NotAValidDir(Error):
     def __init__(self, dirnm):
@@ -58,11 +62,25 @@ class NoReadPermissions(Error):
     def __init__(self, name):
         self.msg = name + ' lacks +r permissions for ' + os.getlogin()
 
+class NoReturnFromExtProgram(Error):
+    def __init__(self, prognm):
+        self.msg = 'No return from program ' + prognm
+
 class NoWritePermissions(Error):
     def __init__(self, name):
         self.msg = name + ' lacks +w permissions for ' + os.getlogin()
 
+class ParBeyondLimit(Error):
+    def __init__(self, parnm, limval, comp):
+        self.msg = parnm + ' must be ' + comp + str(limval)
+
+class ParamOutOfRange(Error):
+    def __init__(self, param, minval, maxval):
+        self.msg = 'Parameter %s not between %s and %s' % \
+                (param, str(minval), str(maxval))
+
 class StringParamNotInAcceptableValueList(Error):
     def __init__(self, param, avl):
         self.msg = 'Parameter ' + param + ' not in: ' + ', '.join(avl)
+
 

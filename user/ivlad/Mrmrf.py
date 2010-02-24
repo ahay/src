@@ -28,9 +28,10 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 ###############################################################################
 
@@ -73,8 +74,7 @@ def main(argv=sys.argv):
                           glob.glob(os.path.join(mydir,'*.rsf')))
 
     for f in hdr_list:
-        if verb:
-            print f
+        ivlad.msg(f)
         os.remove(f)
 
     return ivlad.unix_success
@@ -82,5 +82,11 @@ def main(argv=sys.argv):
 ###############################################################################
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
 
+    try:
+        status = main()
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
+        status = ivlad.unix_error
+
+    sys.exit(status)

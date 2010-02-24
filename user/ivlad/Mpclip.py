@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 'Percentile clip. Shell for sfclip(sfquantile(input)).'
 
-# Copyright (C) 2007, 2009 Ioan Vlad
+# Copyright (C) 2007-2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys, rsfprog, os
+import os, rsfprog, sys
 
 try:
     import rsf
@@ -25,34 +25,10 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
-
-###############################################################################
-
-# Use exceptions for elegant unit testing
-
-class Error(Exception):
-    '''Base class for exceptions in this module.'''
-    def __str__(self):
-        return 'Pclip exception: ' + self.message
-
-class PclipWrongVal(Error):
-    '''exception: pclip out of range'''
-    def __init__(self):
-        self.message = 'pclip must be between 0 and 100'
-
-class NoReturnFromQuantile(Error):
-    '''exception: sfquantile failed'''
-    def __init__(self):
-        self.message = 'sfquantile did not return anything'
-
-# Find programs in RSF
-RSFROOT = os.environ.get('RSFROOT')
-bindir = os.path.join(RSFROOT,'bin')
-sfquantile = os.path.join(bindir,'sfquantile')
-sfclip = os.path.join(bindir,'sfclip')
+    import rsfuser.m8rex as m8rex
 
 ###############################################################################
 
@@ -70,16 +46,19 @@ def main(argv=sys.argv):
     verb = par.bool('verb', False) # if y, print system commands, outputs
     pclip = par.float('pclip',99)  # percentile clip
 
-    if pclip <0 or pclip>100:
-        raise PclipWrongVal
+    if pclip < 0 or pclip > 100:
+        raise m8rex.ParamOutOfRange('pclip',0,100)
 
-    clip = send_to_os(sfquantile, arg='pclip='+str(pclip),
+    prog_nm_root = os.path.join(os.environ.get('RSFROOT'),'bin','sf')
+    sfquantile = prog_nm_root + 'quantile'
+    sfclip     = prog_nm_root + 'clip'
+
+    clip = ivlad.send_to_os(sfquantile, arg='pclip='+str(pclip),
                       stdin=inp, want='stdout', verb=verb)
+    if clip == None:
+        raise m8rex.NoReturnFromExtProgram(sfquantile)
 
-    if not clip:
-        raise NoReturnFromQuantile
-
-    send_to_os(sfclip, arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
+    ivlad.send_to_os(sfclip, arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
 
     return ivlad.unix_success
 
@@ -89,8 +68,8 @@ if __name__ == '__main__':
 
     try:
         status = main()
-    except Error, e:
-        print e.message
+    except m8rex.Error, e:
+        ivlad.msg(True, e.msg)
         status = ivlad.unix_error
 
     sys.exit(status)

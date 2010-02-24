@@ -488,3 +488,39 @@ def data_file_nm():
     else:
         return stdout
 
+################################################################################
+
+def chk_file_dims(filenm, ndims):
+
+    leftsize = int(send_to_os('sfleftsize', arg='i='+str(ndims), stdin=filenm,
+                              want='stdout', verb=verb))
+
+    if leftsize > 1:
+        raise m8rex.NdimsMismatch(filenm, ndims)
+
+################################################################################
+
+def chk_par_in_list(par,avl):
+    'Checks whether parameter is in acceptable values list'
+
+    if par not in avl:
+        if type(par) == str:
+            raise m8rex.StringParamNotInAcceptableValueList(par, avl)
+        # Fill in other types here
+
+################################################################################
+
+def chk_param_limit(parval, parnm, limval=0, comp='>')
+
+    if comp == '>':
+        if parval <= limval:
+            raise m8rex.ParBeyondLimit(parnm,limval,comp)
+        
+################################################################################
+
+def valswitch(var,val1,val2):
+    if var == val1:
+        return val2
+    else:
+        return var
+

@@ -51,8 +51,7 @@ def main(argv=sys.argv):
     delim = par.string('delimiter',',') # Separator between values in input file
     numtype = par.string('dtype', 'float') # Input type    
 
-    if numtype not in ooio.dtype_avl:
-        raise m8rex.StringParamNotInAcceptableValueList(numtype, ooio.dtype_avl)
+    ivlad.chk_par_in_list(numtype, ooio.dtype_avl)
 
     # Process parameters
 
