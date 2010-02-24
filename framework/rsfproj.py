@@ -495,6 +495,8 @@ class Project(Environment):
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:
             self.data.append('PRIVATE')
+        elif server=='local':
+            self.data.append('LOCAL')
         else:
             if not type(files) is types.ListType:
                 files = string.split(files)
