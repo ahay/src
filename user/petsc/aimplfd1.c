@@ -52,7 +52,7 @@ sf_petsc_aimplfd1 sf_petsc_aimplfd1_init (int nx, float dx, float dt,
     int i;
     float ro, rtx2;
     PetscErrorCode ierr;
-    PetscScalar Ro12, Rom;
+    PetscScalar Ro12, Rom, Val;
 
     sf_petsc_aimplfd1 aimplfd;
 
@@ -77,6 +77,8 @@ sf_petsc_aimplfd1 sf_petsc_aimplfd1_init (int nx, float dx, float dt,
                              PETSC_DEFAULT, niter); CHKERR;
     /* Solution and r.h.s. vectors */
     ierr = VecCreateMPI (aimplfd->comm, PETSC_DECIDE, aimplfd->N, &aimplfd->Rhs); CHKERR;
+    Val = 0.0;
+    ierr = VecSet (aimplfd->Rhs, Val); CHKERR;
     ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut); CHKERR;
     ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut1); CHKERR;
     ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut2); CHKERR;
@@ -129,12 +131,10 @@ void sf_petsc_aimplfd1_next_step (sf_petsc_aimplfd1 aimplfd)
     PetscScalar Val;
 
     /* R.H.S. */
-    ierr = VecAssemblyBegin (aimplfd->Rhs); CHKERR;
     Val = -1.0;
     VecScale (aimplfd->Ut2, Val);
     Val = 2.0;
     VecWAXPY (aimplfd->Rhs, Val, aimplfd->Ut1, aimplfd->Ut2);
-    ierr = VecAssemblyEnd (aimplfd->Rhs); CHKERR;
 
     /* Solve the system */
     ierr = KSPSolve (aimplfd->Solver, aimplfd->Rhs, aimplfd->Ut); CHKERR;
