@@ -32,19 +32,16 @@ int main (int argc, char* argv[]) {
 
     /* PETSc Initialization */
     ierr = PetscInitialize (&argc, &argv, 0, 0); CHKERRQ(ierr);
+    MPI_Comm_rank (MPI_COMM_WORLD, &cpuid);
+    sf_warning ("CPU id %d", cpuid);
 
     sf_init (argc, argv);
 
-    vel = sf_input ("input");
+    vel = sf_input ("in");
     /* Velocity */
     if (0 == cpuid)
         usol = sf_output ("out");
     /* Solution - wavefield */
-
-    /* PETSc initialization */
-    ierr = PetscInitialize (&argc, &argv, 0, 0); CHKERRQ(ierr);
-    MPI_Comm_rank (MPI_COMM_WORLD, &cpuid);
-    sf_warning ("CPU id %d", cpuid);
 
     if (SF_FLOAT != sf_gettype (vel))
         sf_error ("Need float input");
