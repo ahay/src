@@ -35,7 +35,7 @@ int main (int argc, char* argv[]) {
 
     sf_init (argc, argv);
 
-    vel = sf_input ("in");
+    vel = sf_input ("input");
     /* Velocity */
     if (0 == cpuid)
         usol = sf_output ("out");
