@@ -20,6 +20,7 @@
 #include "aimplfd1.h"
 
 int main (int argc, char* argv[]) {
+    int cpuid;
     int nx, nt, it, is, niter;
     float ox, ot, dx, dt, sx;
     float *u, *v, *f;
@@ -29,15 +30,21 @@ int main (int argc, char* argv[]) {
     /* PETSc */
     PetscErrorCode ierr;
 
+    /* PETSc Initialization */
+    ierr = PetscInitialize (&argc, &argv, 0, 0); CHKERRQ(ierr);
+
     sf_init (argc, argv);
 
     vel = sf_input ("in");
     /* Velocity */
-    usol = sf_output ("out");
+    if (0 == cpuid)
+        usol = sf_output ("out");
     /* Solution - wavefield */
 
     /* PETSc initialization */
     ierr = PetscInitialize (&argc, &argv, 0, 0); CHKERRQ(ierr);
+    MPI_Comm_rank (MPI_COMM_WORLD, &cpuid);
+    sf_warning ("CPU id %d", cpuid);
 
     if (SF_FLOAT != sf_gettype (vel))
         sf_error ("Need float input");
@@ -70,12 +77,11 @@ int main (int argc, char* argv[]) {
     sf_floatread (f, nt, src);
 
     /* Create time axis in output */
-    sf_putint (usol, "n2", nt);
-    sf_putfloat (usol, "d2", dt);
-    sf_putfloat (usol, "o2", ot);
-
-    /* Initialization */
-    ierr = PetscInitialize (&argc, &argv, 0, 0); CHKERRQ(ierr);
+    if (0 == cpuid) {
+        sf_putint (usol, "n2", nt);
+        sf_putfloat (usol, "d2", dt);
+        sf_putfloat (usol, "o2", ot);
+    }
 
     PetscFPrintf (MPI_COMM_WORLD, stderr, "Initializing GMRES solver\n");
     
@@ -84,7 +90,7 @@ int main (int argc, char* argv[]) {
     free (v);
     /* Wavefield */
     u = sf_floatalloc (nx);
-    
+
     PetscFPrintf (MPI_COMM_WORLD, stderr, "Running GMRES solver\n");
 
     /* Loop in time */
@@ -96,7 +102,8 @@ int main (int argc, char* argv[]) {
         sf_petsc_aimplfd1_get_wavefield (aimplfd, u);
 
         /* Write the solution */
-        sf_floatwrite (u, nx, usol);
+        if (0 == cpuid)
+            sf_floatwrite (u, nx, usol);
     }
 
     /* Clean up */
