@@ -13,7 +13,7 @@ public class Par{
                     String key = split[0];
                     String val = split[1];
                     dictionary.put(key,val);
-                    System.out.printf("Added key: %s, value: %s\n",key,val);
+                    //System.out.printf("Added key: %s, value: %s\n",key,val);
                 }
             } catch (Exception e){
                 //do nothing

@@ -1,22 +1,26 @@
 from rsfproj import *
+# The classpath is now automatically set. 
 
-import os, string
+# Compile the Java program, this will also remove the class file when cleaning.
+project.Command('Clip.class','Clip.java', 'javac $SOURCE')
 
-top = os.environ.get('RSFROOT')
-libdir = os.path.join(top,'lib')
-
-
-cp = os.environ['MINESJTK']
-
-env = Environment()
-
-env.Command('Clip.class','Clip.java', 'javac -cp %s:%s/rsf.jar:. $SOURCE' % (cp,libdir))
-
+# Use Flows as usual.
 Flow('dat',[],
     '''
     spike n1=1000 n2=100 n3=10 nsp=1 k1=500
     ''')
-Flow('test.attr',['dat','Clip.class'],
+# To create the dependency tree, we include the .class file that we created above
+# as a source needed for this target.
+# You should NEVER refer to this .class file when executing your Java program.
+# You don't need to specify the classpath, because we have set the environmental variable!
+Flow('clipd',['dat','Clip.class'],
     '''
-    java -cp %s:%s/rsf.jar:. Clip clip=0.5 | attr
-    ''' % (cp,libdir))
+    java Clip clip=0.5 in=${SOURCES[0]} out=$TARGET 
+    ''')
+Flow('test.attr','clipd','sfattr')
+
+
+##########################################################################
+# Should you need to manually tweak the classpath, you can do so by:
+# temp = project['ENV']['CLASSPATH']
+# project['ENV']['CLASSPATH'] = temp + ':test.jar:/user/home/test2.jar'

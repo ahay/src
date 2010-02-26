@@ -4,6 +4,7 @@
 import os,sys,string,re,shutil
 sys.path.append('../..')
 import configure
+
 try:
     Import('env root libdir')
     env = env.Clone()
@@ -19,7 +20,7 @@ except:
     print 'Could not find Mines JTK in classpath.'
     print 'Will not build Java API'
 
-
+bindir = os.path.join(root,'bin','sfjava')
 files = ['Header','Writer','Reader','Par']
 
 targets = map(lambda x: 'rsf/'+x+'.class',files)
@@ -27,12 +28,10 @@ sources = map(lambda x: x+'.java',files)
 
 pwd = os.getcwd()
 if 'java' in env.get('API',[]) and cp:
-
         for i in range(len(files)):
             env.Command(targets[i],sources[i],['javac -cp %s:%s -d %s $SOURCE' % (cp,pwd,pwd)])
 
         env.Command('rsf.jar',targets,'jar cf $TARGET -C %s rsf/' %(pwd))
         env.Install('../../lib','rsf.jar')
-
         if root:
                 env.Install(libdir,'rsf.jar')

@@ -2,7 +2,7 @@ package rsf;
 
 public class Header{
 
-    public static final int MAX_DIMS = 3;
+    public static final int MAX_DIMS = 9;
     
     public Header(){
         ndims = 0;
@@ -12,6 +12,9 @@ public class Header{
         deltas = new float[MAX_DIMS];
         origins = new float[MAX_DIMS];
         n = new int[MAX_DIMS];
+//	for(int i = 0; i < MAX_DIMS; ++i){
+//		n[i] = 1;		
+//	}
         labels = new String[MAX_DIMS];
         units = new String[MAX_DIMS];
         name = "";
@@ -42,7 +45,7 @@ public class Header{
     public void setN(int index, int n){
             try{
                     this.n[index-1] = n;
-                    ndims += 1;
+                    //ndims += 1;
             } catch (Exception e){
                     System.err.printf("Failed putting %d at index %d into n\n",n,index);
             }
