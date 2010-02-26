@@ -1,0 +1,371 @@
+\section{Cell ray tracing (cell.c)}
+
+
+
+
+\subsection{{sf\_cell1\_intersect}}
+Intersects a straight ray with the cell boundary.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cell1_intersect (a, x, dy, p, sx, jx);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cell1_intersect (float a, float x, float dy, float p, 
+                         float *sx, int *jx)
+/*< intersecting a straight ray with cell boundaries >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dy]
+   \setlength\itemsep{0pt}
+   \item[a]  gradient of slowness (\texttt{float}).  
+   \item[x]  non-integer part of the position in the grid relative to grid origin. It is of type \texttt{float}.
+   \item[dy] depth or lateral sampling divided by slowness. It is of type \texttt{float}.
+   \item[p]  the ray parameter. It is of type \texttt{float}.
+   \item[sx] distance traveled in the medium (cell) times the velocity of the medium (equivalent to the optical path length in optics). It is of type \texttt{float*}.
+   \item[jx] the direction of the ray. It is of type \texttt{int*}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell1\_update1}}
+Performs the first step of the first order symplectic method for ray tracing.
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell1_update1 (dim, s, v, p, g);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell1_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic first-order: step 1 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{}{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. + s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell1\_update2}}
+Performs the second step of the first order symplectic method for ray tracing.
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell1_update2 (dim, s, v, p, g);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell1_update2 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic first-order: step 2 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{ }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. - s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell11\_intersect2}}
+Intersects a straight ray with the cell boundary.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cell11_intersect2 (a, da, p, g, sp, jp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cell11_intersect2 (float a, float da, 
+                           const float* p, const float* g, 
+                           float *sp, int *jp)
+/*< intersecting a straight ray with cell boundaries >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a]  position in the grid (\texttt{float}).  
+   \item[da] grid spacing. It is of type \texttt{float}.
+   \item[p]  the ray parameter. It is of type \texttt{const float*}.
+   \item[g]  gradient of slowness (\texttt{const float*}).  
+   \item[sp] distance traveled in the medium (cell) times the velocity of the medium (equivalent to the optical path length in optics). It is of type \texttt{float*}.
+   \item[jp] the direction of the ray. It is of type \texttt{int*}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell11\_update1}}
+Performs the first step of the first order non-symplectic method for ray tracing.
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell11_update1 (dim, s, v, p, g);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell11_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< nonsymplectic first-order: step 1 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. + s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell11\_update2}}
+Performs the second step of the first order non-symplectic method for ray tracing.
+
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell11_update2 (dim, s, v, p, g);\end{verbatim}
+
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell11_update2 (int dim, float s, float v, float *p, const float *g) 
+/*< nonsymplectic first-order: step 2 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. - s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell\_intersect}}
+Intersects a parabolic ray with the cell boundary.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cell_intersect (a, x, dy, p, sx, jx);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cell_intersect (float a, float x, float dy, float p, 
+                        float *sx, int *jx)
+/*< intersecting a parabolic ray with cell boundaries >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a]  gradient of slowness (\texttt{float}).  
+   \item[x]  non-integer part of the position in the grid relative to grid origin. It is of type \texttt{float}.
+   \item[dy] depth or lateral sampling divided by slowness. It is of type \texttt{float}.
+   \item[p]  the ray parameter. It is of type \texttt{float}.
+   \item[sx] distance traveled in the medium (cell) times the velocity of the medium (equivalent to the optical path length in optics). It is of type \texttt{float*}.
+   \item[jx]  the direction of the ray. It is of type \texttt{int*}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell\_snap}}
+Terminates the ray at the nearest boundary.
+
+\subsubsection*{Definition}
+\begin{verbatim} b = sf_cell_snap (z, iz, eps);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool sf_cell_snap (float *z, int *iz, float eps)
+/*< round to the nearest boundary >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt eps]
+   \setlength\itemsep{0pt}
+   \item[z]   position (\texttt{float*}).  
+   \item[iz]  sampling (\texttt{int*}).
+   \item[eps] tolerance. It is of type \texttt{float}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[true/false] whether the ray is terminated or not. It is of type \texttt{bool}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell\_update1}}
+Performs the first step of the second order symplectic method for ray tracing.
+
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell_update1 (dim, s, v, p, g);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic second-order: step 1 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[ ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. + s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cell\_update2}}
+Performs the second step of the second order symplectic method for ray tracing.
+
+\subsubsection*{Call}
+\begin{verbatim}tt = sf_cell_update2 (dim, s, v, p, g);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell_update2 (int dim        /* number of dimensions */, 
+                       float s        /* sigma */, 
+                       float v        /* slowness */, 
+                       float *p       /* in - ?, out - direction */, 
+                       const float *g /* slowness gradient */) 
+/*< symplectic second-order: step 2 >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dim]
+   \setlength\itemsep{0pt}
+   \item[dim] dimension (\texttt{int}).  
+   \item[s]   $\sigma$ (\texttt{float}).
+   \item[v]   slowness. It is of type \texttt{float}.
+   \item[p]   direction. It is of type \texttt{float*}.
+   \item[g]   slowness gradient. It is of type \texttt{const float*}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{ }{\quad}[ ]
+   \setlength\itemsep{0pt}  
+   \item[0.5*v*v*s*(1. - s*pg)] travel time. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_cell\_p2a}}
+Converts the ray parameter to an angle.
+
+
+\subsubsection*{Call}
+\begin{verbatim}a = sf_cell_p2a (p);\end{verbatim}
+
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cell_p2a (float* p)
+/*< convert ray parameter to angle >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[p] the ray parameter (\texttt{float*}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[a] angle of the ray. It is of type \texttt{float*}.
+\end{desclist}
+
+

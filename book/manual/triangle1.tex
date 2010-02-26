@@ -1,0 +1,86 @@
+\section{1-D triangle smoothing as a linear operator (triangle1.c)}
+
+
+
+
+\subsection{{sf\_triangle1\_init}}
+Initializes the triangle filter.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_triangle1_init (nbox, ndat);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_triangle1_init (int nbox /* triangle size */, 
+                        int ndat /* data size */)
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt inbox]
+   \setlength\itemsep{0pt}
+   \item[inbox] size of the triangle filter (\texttt{int}). 
+   \item[ndat]  size of the data (\texttt{int}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_triangle1\_lop}}\label{sec:sf_triangle1_lop}
+Applies the triangle smoothing to one of the input data and applies the smoothed data to the unsmoothed one as a linear operator.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_triangle1_lop (adj, add, nx, ny, x, y);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+/*< linear operator >*/
+{
+   ...  
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] a parameter to determine whether weights are applied to \texttt{yy} or \texttt{xx} (\texttt{bool}). 
+   \item[add] a parameter to determine whether the input needs to be zeroed (\texttt{bool}).
+   \item[nx]  size of \texttt{x} (\texttt{int}). 
+   \item[ny]  size of \texttt{y} (\texttt{int}).
+   \item[x]   data or operator, depending on whether \texttt{adj} is true or false (\texttt{float}). 
+   \item[y]   data or operator, depending on whether \texttt{adj} is true or false.  Must be of type \texttt{float}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[\texttt{x} or \texttt{y}] the output depending on whether \texttt{adj} is true or false (\texttt{float}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_triangle1\_close}}
+Frees the space allocated for the triangle smoothing filter.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_triangle1_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_triangle1_close(void)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+

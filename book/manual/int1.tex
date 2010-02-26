@@ -1,0 +1,115 @@
+\section{1-D interpolation (int1.c)}
+\index{interpolation!1D}
+
+
+
+
+\subsection{{sf\_int1\_init}}\label{sec:sf_int1_init}
+Initializes the required variables and allocates the required space for 1D interpolation.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_int1_init (coord, o1, d1, n1, interp, nf_in, nd_in);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void  sf_int1_init (float* coord               /* cooordinates [nd] */, 
+                 float o1, float d1, int n1 /* axis */, 
+                 sf_interpolator interp     /* interpolation function */, 
+                 int nf_in                  /* interpolator length */, 
+                 int nd_in                  /* number of data points */)
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt coord]
+   \setlength\itemsep{0pt}
+   \item[coord]  coordinates (\texttt{float*}).  
+   \item[o1]     origin of the axis (\texttt{float}).  
+   \item[d1]     sampling of the axis (\texttt{float}).  
+   \item[n1]     length of the axis (\texttt{float}).  
+   \item[interp] interpolation function (\texttt{sf\_interpolator}).  
+   \item[nf\_in] interpolator length (\texttt{int}).  
+   \item[nd\_in] number of data points (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_int1\_lop}}
+Applies the linear operator for interpolation.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_int1_lop (adj, add, nm, ny, x, ord);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void  sf_int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
+/*< linear operator >*/
+{ 
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ord]
+   \setlength\itemsep{0pt}
+   \item[adj] a parameter to determine whether the output is \texttt{x} or \texttt{ord} (\texttt{bool}).
+   \item[add] a parameter to determine whether the input needs to be zeroed (\texttt{bool}).
+   \item[nm]  size of \texttt{x} (\texttt{int}).
+   \item[ny]  size of \texttt{ord} (\texttt{int}).
+   \item[x]   output or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+   \item[ord] output or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cint1\_lop}}
+Applies the complex \index{interpolation!complex data}linear operator for interpolation of complex data.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cint1_lop (adj, add, nm, ny, x, ord);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void  sf_cint1_lop (bool adj, bool add, int nm, int ny, sf_complex* x, sf_comple
+x* ord)
+/*< linear operator for complex numbers >*/
+{ 
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ord]
+   \setlength\itemsep{0pt}
+   \item[adj] a parameter to determine whether the output is \texttt{x} or \texttt{ord} (\texttt{bool}).
+   \item[add] a parameter to determine whether the input needs to be zeroed (\texttt{bool}).
+   \item[nm]  size of \texttt{x} (\texttt{int}).
+   \item[ny]  size of \texttt{ord} (\texttt{int}).
+   \item[x]   output or operator, depending on whether \texttt{adj} is true or false (\texttt{sf\_complex*}).
+   \item[ord] output or operator, depending on whether \texttt{adj} is true or false (\texttt{sf\_complex*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_int1\_close}}
+Frees the space allocated for 1D interpolation by \hyperref[sec:sf_int1_init]{\texttt{sf\_int1\_init}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_int1_close ();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_int1_close (void)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+

@@ -1,0 +1,307 @@
+\section{Supplying compatibility with the C99 standard (c99.c)}
+
+
+
+
+\subsection{{sf\_cmplx}}
+Creates a complex number. The real and imaginary parts are of type \texttt{float}.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt re]
+   \setlength\itemsep{0pt}
+   \item[re] real part of the complex number (\texttt{float}).
+   \item[im] imaginary part of the complex number (\texttt{float}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt c]
+   \setlength\itemsep{0pt}
+   \item[c] the complex number.
+\end{desclist}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float complex sf_cmplx(float re, float im)
+/*< complex number >*/
+{
+    float complex c;
+    __real__ c = re;
+    __imag__ c = im;
+    return c;
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_dcmplx}}
+Creates a complex number. The real and imaginary parts are of type \texttt{double}.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt re]
+   \setlength\itemsep{0pt}
+   \item[re] real part of the complex number (\texttt{double}).
+   \item[im] imaginary part of the complex number (\texttt{double}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the complex number.
+\end{desclist}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double complex sf_dcmplx(double re, double im)
+/*< complex number >*/
+{
+    double complex c;
+    __real__ c = re;
+    __imag__ c = im;
+    return c;
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_cmplx}}
+Creates a complex number. The real and imaginary parts are of type \texttt{float}. Definition would return a complex number but of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt re]
+   \setlength\itemsep{0pt}
+   \item[re] real part of the complex number (\texttt{float}).
+   \item[im] imaginary part of the complex number (\texttt{float}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt c]
+   \setlength\itemsep{0pt}
+   \item[c] the complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cmplx(float re, float im)
+/*< complex number >*/
+{
+    kiss_fft_cpx c;
+    c.r = re;
+    c.i = im;
+    return c;
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_dcmplx}}
+Creates a complex number. The real and imaginary parts are of type \texttt{float}. Definition would return a complex number but of type \texttt{sf\_double\_complex}.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[re] real part of the complex number (\texttt{double}).
+   \item[im] imaginary part of the complex number (\texttt{double}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the complex number. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcmplx(double re, double im)
+/*< complex number >*/
+{
+    sf_double_complex c;
+    c.r = re;
+    c.i = im;
+    return c;
+}
+
+#endif
+/*^*/
+
+#if !defined(__cplusplus) && !defined(SF_HAS_COMPLEX_H)
+/*^*/
+
+#if !defined(hpux) && !defined(__hpux)
+/*^*/
+
+float copysignf(float x, float y)
+/*< float copysign >*/
+{ return (float) copysign(x,y);}
+
+#endif
+/*^*/
+
+float sqrtf(float x) 
+/*< float sqrt >*/
+{ return (float) sqrt(x);}
+
+float logf(float x)  
+/*< float log >*/
+{ return (float) log(x);}
+
+float log10f(float x) 
+/*< float log10 >*/
+{ return (float) log10(x);}
+
+float expf(float x) 
+/*< float exp >*/
+{ return (float) exp(x);}
+
+float erff(float x) 
+/*< float erf >*/
+{ return (float) erf(x);}
+
+float erfcf(float x) 
+/*< float erfc >*/
+{ return (float) erfc(x);}
+
+#if !defined(hpux) && !defined(__hpux)
+/*^*/
+
+float fabsf(float x) 
+/*< float fabs >*/
+{ return (float) fabs(x);}
+
+#endif
+/*^*/
+
+float floorf(float x)
+/*< float floor >*/
+{ return (float) floor(x);}
+
+float ceilf(float x) 
+/*< float ceil >*/
+{ return (float) ceil(x);}
+
+float fmodf(float x, float y) 
+/*< float fmod >*/
+{ return (float) fmod(x,y);}
+
+float cosf(float x) 
+/*< float cos >*/
+{ return (float) cos(x);}
+
+float sinf(float x) 
+/*< float sin >*/
+{ return (float) sin(x);}
+
+float tanf(float x) 
+/*< float tan >*/
+{ return (float) tan(x);}
+
+float acosf(float x) 
+/*< float acos >*/
+{ return (float) acos(x);}
+
+float asinf(float x) 
+/*< float asin >*/
+{ return (float) asin(x);}
+
+float atanf(float x) 
+/*< float atan >*/
+{ return (float) atan(x);}
+
+float atan2f(float x, float y) 
+/*< float atan2 >*/
+{ return (float) atan2(x,y);}
+
+float coshf(float x) 
+/*< float cosh >*/
+{ return (float) cosh(x);}
+
+float sinhf(float x) 
+/*< float sinh >*/
+{ return (float) sinh(x);}
+
+float tanhf(float x) 
+/*< float tanh >*/
+{ return (float) tanh(x);}
+
+float acoshf(float x) 
+/*< float acosh >*/
+{ extern double acosh(double x);
+return (float) acosh(x);}
+
+float asinhf(float x) 
+/*< float asinh >*/
+{ extern double asinh(double x);
+return (float) asinh(x);}
+
+float atanhf(float x) 
+/*< float atanh >*/
+{ extern double atanh(double x);
+ return (float) atanh(x);}
+
+float powf(float x, float y) 
+/*< float pow >*/
+{ return (float) pow(x,y);}
+
+float hypotf(float x, float y) 
+/*< float hypot >*/
+{ extern double hypot(double x, double y);
+ return (float) hypot(x,y);}
+
+#if defined(hpux) || defined(__hpux)
+/*^*/
+
+static char     *digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+long long
+strtoll(const char *ptr, const char **endptr, int base)
+/*< strtoll replacement >*/
+{
+        const char      *cp;
+        long long        ret;
+        char            *dig;
+        int              d;
+
+        for (ret = 0, cp = ptr ; *cp && (dig = strchr(digits, *cp)) != NULL  && 
+(d = (int)(dig - digits)) < base ; cp++) {
+                ret = (ret * base) + d;
+        }
+        if (endptr != NULL) {
+                *endptr = cp;
+        }
+        return ret;
+}
+
+unsigned long long
+strtoull(const char *ptr, const char **endptr, int base)
+/*< strtoull replacement >*/
+{
+        const char      *cp;
+        unsigned long long       ret;
+        char            *dig;
+        int              d;
+
+        for (ret = 0, cp = ptr ; *cp && (dig = strchr(digits, *cp)) != NULL  && 
+(d = (unsigned int)(dig - digits)) < base ; cp++) {
+                ret = (ret * base) + d;
+        }
+        if (endptr != NULL) {
+                *endptr = cp;
+        }
+        return ret;
+}
+
+#define finite(x) isfinite(x)
+#endif
+/*^*/
+
+#endif
+/*^*/
+
+/*      $Id: c99.c 3594 2008-05-14 03:09:16Z sfomel $    */
+\end{verbatim}
+
+
+
+

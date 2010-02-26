@@ -1,0 +1,48 @@
+\section{Zero finder (fzero.c)}
+
+
+
+
+\subsection{{sf\_zero}}
+Returns the zero (root) of the input function, $f(x)$ in a specified interval $[a,b]$.
+
+\subsubsection*{Call}
+\begin{verbatim}b = sf_zero ((*func)(float), a, b, fa, fb, toler, verb);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_zero (float (*func)(float) /* function f(x) */, 
+               float a, float b     /* interval */, 
+               float fa, float fb   /* f(a) and f(b) */,
+               float toler          /* tolerance */, 
+               bool verb            /* verbosity flag */)
+/*< Return c such that f(c)=0 (within tolerance). 
+  fa and fb should have different signs. >*/
+{
+    float c, fc, m, s, p, q, r, e, d;
+    char method[256];
+
+   ...
+    return b;
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt (*func)(float)]
+   \setlength\itemsep{0pt}
+   \item[(*func)(float)] function, the root of which is required. Must be of type \texttt{sf\_double\_complex}.  
+   \item[a]     lower limit of the interval (\texttt{float}).
+   \item[b]     upper limit of the interval (\texttt{float}).
+   \item[fa]    function value at the lower limit (\texttt{float}).
+   \item[fb]    function value at the upper limit (\texttt{float}).
+   \item[toler] error tolerance (\texttt{float}).
+   \item[verb]  verbosity flag (\texttt{bool}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[b] root of the input function. It is of type \texttt{float}.
+\end{desclist}
+
+

@@ -1,0 +1,365 @@
+\section{Construction of vectors (vector.c)}\label{sec:vector.c}
+
+
+
+
+\subsection{{det3}}
+The determinant of a $3\times 3$ matrix.
+
+\subsubsection*{Call}
+\begin{verbatim}d = det3(m);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double det3(double *m)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[m] a $3\times3$ matrix (\texttt{double}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[d] the determinant (\texttt{double}).
+\end{desclist}
+
+
+
+\subsection{{det2}}
+The determinant of a $2\times2$ matrix.
+
+\subsubsection*{Call}
+\begin{verbatim}d = det2(m);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double det2(double *m)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[m] a $2\times2$ matrix (\texttt{double}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[d] the determinant (\texttt{double}).
+\end{desclist}
+
+
+
+\subsection{{jac3d}}
+Returns a 3D jacobian.
+
+\subsubsection*{Call}
+\begin{verbatim}r = jac3d(C, T, P, Q);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double jac3d(pt3d *C, pt3d *T, pt3d *P, pt3d *Q)
+/*< 3D jacobian >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c.r] real part of the complex number. It is of type \texttt{double}.
+\end{desclist}
+
+
+
+\subsection{{vec3d}}
+Builds a 3D vector. The components of the vector returned are the difference of the respective components of the two input points (position vectors). The first input vector is the origin.
+
+\subsubsection*{Call}
+\begin{verbatim}V = vec3d(O, A);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+vc3d vec3d(pt3d* O, pt3d* A)
+/*< build 3D vector >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[O] a 3D point, this serves as the origin (\texttt{pt3d}). 
+   \item[A] a 3D point (\texttt{pt3d}).     
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] the 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+
+\subsection{{axa3d}}
+Builds a 3D unit vector. The components of the vector returned are zero except for the one indicated in the input argument \texttt{n}, which is equal to one. If \texttt{n}=1 the z axis is 1, if \texttt{n}=2 the x axis is 1 and if \texttt{n}=3 the y axis is 1.
+
+\subsubsection*{Call}
+\begin{verbatim}V = axa3d (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+vc3d axa3d( int n)
+/*< build 3D unit vector >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] a number which indicates which axis is to be set equal to 1 (\texttt{int}).     
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] the 3D unit vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+
+
+\subsection{{scp3d}}
+Returns the scalar product of the two 3D vectors.
+
+\subsubsection*{Call}
+\begin{verbatim}p = scp3d(U, V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double scp3d(vc3d* U, vc3d* V)
+/*< scalar product of 3D vectors >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[U] a 3D vector (\texttt{vc3d}). 
+   \item[V] a 3D vector (\texttt{vc3d}).     
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V->dx*V->dx + V->dy*V->dy + V->dz*V->dz] the 3D unit vector.
+\end{desclist}
+
+
+
+
+\subsection{{vcp3d}}
+Returns the vector product of the two input vectors.
+
+\subsubsection*{Call}
+\begin{verbatim}W = vcp3d(U, V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+vc3d vcp3d(vc3d* U, vc3d* V)
+/*< vector product of 3D vectors >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[U] a 3D vector (\texttt{vc3d}). 
+   \item[V] a 3D vector (\texttt{vc3d}). 
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[W] the 3D unit vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+
+
+\subsection{{len3d}}
+Returns the length of a 3D vector.
+
+\subsubsection*{Call}
+\begin{verbatim}l = len3d(V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double len3d(vc3d* V)
+/*< 3D vector length >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] a 3D vector (\texttt{vc3d}).     
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[l] the length of the 3D vector. It is of type \texttt{double}.
+\end{desclist}
+
+
+
+
+\subsection{{nor3d}}
+Normalizes a 3D vector. The components of the 3D input vector are divided by its length. 
+
+\subsubsection*{Call}
+\begin{verbatim}W = nor3d(V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+vc3d nor3d(vc3d* V)
+/*< normalize 3D vector >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] the input 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[W] the normalized 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+
+
+\subsection{{ang3d}}
+Returns the angle between the input 3D vectors. 
+
+\subsubsection*{Call}
+\begin{verbatim}a = ang3d(U, V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double ang3d(vc3d* U, vc3d* V)
+/*< angle between 3D vectors >*/
+{
+   ...   
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[U] the input 3D vector. It is of type \texttt{vc3d}. 
+   \item[V] the input 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] the angle between the two input 3D vectors. It is of type \texttt{double}.
+\end{desclist}
+
+
+
+
+
+\subsection{{tip3d}}
+Returns the tip of a 3D vector. The components of the vector returned are the sum of the respective components of the two input points (position vectors). Unlike the \texttt{sf\_vc3d} where the first input vector was the origin, in \texttt{sf\_tip3d} the origin is zero. This means that the vector returned is a position vector or simply a point, which is of type \texttt{pt3d}.
+
+\subsubsection*{Call}
+\begin{verbatim}A = tip3d(O, V);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+pt3d tip3d(pt3d* O, vc3d* V)
+/*< tip of a 3D vector >*/
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[O] a 3D point (\texttt{pt3d}). 
+   \item[V] a 3D point (\texttt{pt3d}).     
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] the 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+
+
+\subsection{{scl3d}}
+Scales a 3D vector, that is, it multiplies it by a scalar. The components of the vector returned are the product of the components of the input vector and the input scalar.
+
+\subsubsection*{Call}
+\begin{verbatim}W = scl3d(V, s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+vc3d scl3d(vc3d* V, float s)
+/*< scale a 3D vector >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[V] a 3D point (\texttt{pt3d}). 
+   \item[s] a scalar which is to be multiplied by every component of the input vector (\texttt{float}).   
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[W] the scaled 3D vector. It is of type \texttt{vc3d}.
+\end{desclist}
+
+
+

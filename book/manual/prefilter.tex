@@ -1,0 +1,106 @@
+\section{Convert data to B-spline coefficients by fast B-spline transform (prefilter.c)}
+
+
+
+
+\subsection{{sf\_prefilter\_init}}\label{sec:sf_prefilter_init}
+Initializes the pre-filter for spline interpolation by initializing the required variables and allocating the required space.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_prefilter_init (nw, nt_in, pad_in);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_prefilter_init (int nw     /* spline order */, 
+                        int nt_in  /* temporary storage length */, 
+                        int pad_in /* padding */)
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt pad\_in]
+   \setlength\itemsep{0pt}
+   \item[nw]      order of the spline (\texttt{int}). 
+   \item[nt\_in]  length of the temporary storage (\texttt{int}). 
+   \item[pad\_in] length of the padding required (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_prefilter\_apply}}
+Applies the pre-filter to the input 1D data to convert it to the spline coefficients.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_prefilter_apply (nd, dat);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_prefilter_apply (int nd     /* data length */, 
+                         float* dat /* in - data, out - coefficients */)
+/*< Convert 1-D data to spline coefficients >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ndat]
+   \setlength\itemsep{0pt}
+   \item[nd] length of the input data (\texttt{int}). 
+   \item[dat] the input data, which is converted to spline coefficients as output (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_prefilter}}
+Applies the pre-filter to the input N dimensional data to convert it to the spline coefficients.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_prefilter (dim, n, dat);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_prefilter (int dim    /* number of dimensions */, 
+                   int* n     /* data size [dim] */, 
+                   float* dat /* in - data, out - coefficients */)
+/*< Convert N-D data to spline coefficients >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt dat]
+   \setlength\itemsep{0pt}
+   \item[dim] number of dimensions in the input data (\texttt{int}). 
+   \item[n] size of the input data (\texttt{int*}).  
+   \item[dat] the input data, which is converted to spline coefficients as output (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_prefilter\_close}}
+Frees the space allocated for the pre-filer by \hyperref[sec:sf_prefilter_init]{\texttt{sf\_prefilter\_init}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_prefilter_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_prefilter_close( void)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+      
+
+
+
+

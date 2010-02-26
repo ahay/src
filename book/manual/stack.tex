@@ -1,0 +1,263 @@
+\section{Generic stack (FILO) structure operations (stack.c)}
+
+
+
+
+\subsection{{sf\_stack\_init}}
+Initializes the object of type \texttt{sf\_stack}, that is, it allocates the required memory for the data and also sets the size of the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}s = sf_stack_init (size_t size);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_stack sf_stack_init (size_t size)
+/*< create a stack >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[size] size of the stack (\texttt{size\_t}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stack\_print}}
+Prints the information about the stack on the screen. This may be used for debugging.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stack_print(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stack_print (sf_stack s)
+/*< print out a stack (for debugging) >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stack\_get}}
+Extracts the length of the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}l = sf_stack_get(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int sf_stack_get (sf_stack s) 
+/*< extract stack length >*/
+{
+   ... 
+}
+\end{verbatim}
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stack_set(s, pos);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stack_set (sf_stack s, int pos) 
+/*< set stack position >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s->top - s->entry] length of the stack. It is of type \texttt{int}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stack\_set}}
+Sets the position of the pointer in the stack to the specified in the input \texttt{pos}.
+
+\begin{verbatim}sf_stack_set (s, pos);\end{verbatim}
+
+\begin{verbatim}
+void sf_stack_set (sf_stack s, int pos) 
+/*< set stack position >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt pos]
+   \setlength\itemsep{0pt}
+   \item[s]   a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}. 
+   \item[pos] desired position of the pointer in the stack. It is of type \texttt{int}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_push}}
+Inserts the data into the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_push(s, data, type);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_push(sf_stack s, void *data, int type)
+/*< push data into stack (requires unique data for each push) >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt type]
+   \setlength\itemsep{0pt}
+   \item[s ]   a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}. 
+   \item[data] data which is to be written into the stack. It is of type \texttt{void*}.
+   \item[type] type of the data. It is of type \texttt{int}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pop}}
+Extracts the data from the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}dat = sf_pop(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void* sf_pop(sf_stack s)
+/*< pop data from stack >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[old->data] extracted data from the stack. It is of type \texttt{void*}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_full}}
+Tests whether the stack is full or not.
+
+\subsubsection*{Call}
+\begin{verbatim} isfull = sf_full(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool sf_full (sf_stack s)
+/*< test if the stack is full >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s->top >= s->entry] true, if the stack is full, false otherwise. It is of type \texttt{bool}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_top}}
+Returns the data type of the top entry of the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}typ = sf_top(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int sf_top(sf_stack s)
+/*< return the top type >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s->top->type] type of the top entry. It is of type \texttt{int}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stack\_close}}
+Frees the space allocated for the stack.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stack_close(s);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stack_close(sf_stack s)
+/*< free allocated memory >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[s] a stack (an object of type \texttt{sf\_stack}). It is of type \texttt{sf\_stack}.
+\end{desclist}
+
+
+

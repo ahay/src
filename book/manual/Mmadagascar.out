@@ -1,0 +1,96 @@
+\BOOKMARK [0][-]{chapter*.1}{Contents}{}
+\BOOKMARK [0][-]{chapter*.2}{Preface}{}
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [0][-]{chapter.2}{An example: Finite-Difference modeling}{}
+\BOOKMARK [1][-]{section.2.1}{Introduction}{chapter.2}
+\BOOKMARK [1][-]{section.2.2}{C program}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Explanation of the code}{chapter.2}
+\BOOKMARK [0][-]{chapter.3}{Data types}{}
+\BOOKMARK [1][-]{section.3.1}{Data types}{chapter.3}
+\BOOKMARK [0][-]{chapter.4}{Preparing for input}{}
+\BOOKMARK [1][-]{section.4.1}{Convenience allocation programs \(alloc.c\)}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{Simbol Table for parameters \(simtab.c\)}{chapter.4}
+\BOOKMARK [1][-]{section.4.3}{Parameter handling \(getpar.c\)}{chapter.4}
+\BOOKMARK [0][-]{chapter.5}{Operations with RSF files}{}
+\BOOKMARK [1][-]{section.5.1}{Main operations with RSF files \(file.c\)}{chapter.5}
+\BOOKMARK [1][-]{section.5.2}{Additional operations with RSF files \(files.c\)}{chapter.5}
+\BOOKMARK [1][-]{section.5.3}{Complex number operations \(komplex.c\)}{chapter.5}
+\BOOKMARK [0][-]{chapter.6}{Error handling}{}
+\BOOKMARK [1][-]{section.6.1}{Handling warning and error messages \(error.c\)}{chapter.6}
+\BOOKMARK [0][-]{chapter.7}{Linear operators}{}
+\BOOKMARK [1][-]{section.7.1}{Introduction}{chapter.7}
+\BOOKMARK [1][-]{section.7.2}{Adjoint zeroing \(adjnull.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.3}{Identity operator \(copy.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.4}{Identity operator \(complex data\) \(ccopy.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.5}{Simple mask operator \(mask.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.6}{Simple weight operator \(weight.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.7}{1-D finite difference \(igrad1.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.8}{Causal integration \(causint.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.9}{Chaining linear operators \(chain.c\)}{chapter.7}
+\BOOKMARK [1][-]{section.7.10}{Dot product test for linear operators \(dottest.c\)}{chapter.7}
+\BOOKMARK [0][-]{chapter.8}{Data analysis}{}
+\BOOKMARK [1][-]{section.8.1}{FFT \(kiss\137fftr.c\)}{chapter.8}
+\BOOKMARK [1][-]{section.8.2}{Cosine window weighting function \(tent2.c\)}{chapter.8}
+\BOOKMARK [1][-]{section.8.3}{Anisotropic diffusion, 2-D \(impl2.c\)}{chapter.8}
+\BOOKMARK [0][-]{chapter.9}{Filtering}{}
+\BOOKMARK [1][-]{section.9.1}{Frequency-domain filtering \(freqfilt.c\)}{chapter.9}
+\BOOKMARK [1][-]{section.9.2}{Frequency-domain filtering in 2-D \(freqfilt.c\)}{chapter.9}
+\BOOKMARK [1][-]{section.9.3}{Helical convolution \(helicon.c\)}{chapter.9}
+\BOOKMARK [1][-]{section.9.4}{Helical filter definition and allocation \(helix.c\)}{chapter.9}
+\BOOKMARK [1][-]{section.9.5}{Recursive convolution \(polynomial division\) \(recfilt.c\)}{chapter.9}
+\BOOKMARK [1][-]{section.9.6}{Cosine Fourier transform \(cosft.c\)}{chapter.9}
+\BOOKMARK [0][-]{chapter.10}{Solvers}{}
+\BOOKMARK [1][-]{section.10.1}{Banded matrix solver \(banded.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.2}{Claerbout's conjugate-gradient iteration \(cgstep.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.3}{Conjugate-gradient with shaping regularization \(conjgrad.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.4}{CG with preconditioning \(conjprec.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.5}{CG iteration \(complex data\) \(cgstep.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.6}{Conjugate-gradient with shaping regularization for complex numbers \(cconjgrad.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.7}{Conjugate-direction iteration \(cdstep.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.8}{Linked list for use in conjugate-direction-type methods \(llist.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.9}{Conjugate-direction iteration for complex numbers \(ccdstep.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.10}{Linked list for CD-type methods \(complex data\) \(clist.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.11}{Solving quadratic equations \(quadratic.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.12}{Zero finder \(fzero.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.13}{Runge-Kutta ODE solvers \(runge.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.14}{Solver function for iterative least-squares optimization \(tinysolver.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.15}{Solver functions for iterative least-squares optimization \(bigsolver.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.16}{Weighting for iteratively-reweighted least squares \(irls.c\)}{chapter.10}
+\BOOKMARK [1][-]{section.10.17}{Tridiagonal matrix solver \(tridiagonal.c\)}{chapter.10}
+\BOOKMARK [0][-]{chapter.11}{Interpolation}{}
+\BOOKMARK [1][-]{section.11.1}{1-D interpolation \(int1.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.2}{2-D interpolation \(int2.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.3}{3-D interpolation \(int3.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.4}{Basic interpolation functions \(interp.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.5}{Convert data to B-spline coefficients by fast B-spline transform \(prefilter.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.6}{B-spline interpolation \(spline.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.7}{Inverse linear interpolation \(stretch.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.8}{1-D ENO interpolation \(eno.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.9}{ENO interpolation in 2-D \(eno2.c\)}{chapter.11}
+\BOOKMARK [1][-]{section.11.10}{1-D ENO power-p interpolation \(pweno.c\)}{chapter.11}
+\BOOKMARK [0][-]{chapter.12}{Smoothing}{}
+\BOOKMARK [1][-]{section.12.1}{1-D triangle smoothing as a linear operator \(triangle1.c\)}{chapter.12}
+\BOOKMARK [1][-]{section.12.2}{2-D triangle smoothing as a linear operator \(triangle2.c\)}{chapter.12}
+\BOOKMARK [1][-]{section.12.3}{Triangle smoothing \(triangle.c\)}{chapter.12}
+\BOOKMARK [1][-]{section.12.4}{Smooth gradient operations \(edge.c\)}{chapter.12}
+\BOOKMARK [0][-]{chapter.13}{Ray tracing}{}
+\BOOKMARK [1][-]{section.13.1}{Cell ray tracing \(celltrace.c\)}{chapter.13}
+\BOOKMARK [1][-]{section.13.2}{Cell ray tracing \(cell.c\)}{chapter.13}
+\BOOKMARK [0][-]{chapter.14}{General tools}{}
+\BOOKMARK [1][-]{section.14.1}{First derivative FIR filter \(deriv.c\)}{chapter.14}
+\BOOKMARK [1][-]{section.14.2}{Computing quantiles by Hoare's algorithm \(quantile.c\)}{chapter.14}
+\BOOKMARK [1][-]{section.14.3}{Pseudo-random numbers: uniform and normally distributed \(randn.c\)}{chapter.14}
+\BOOKMARK [1][-]{section.14.4}{Evaluating mathematical expressions \(math1.c\)}{chapter.14}
+\BOOKMARK [0][-]{chapter.15}{Geometry}{}
+\BOOKMARK [1][-]{section.15.1}{Construction of points \(point.c\)}{chapter.15}
+\BOOKMARK [1][-]{section.15.2}{Construction of vectors \(vector.c\)}{chapter.15}
+\BOOKMARK [1][-]{section.15.3}{Conversion between line and Cartesian coordinates of a vector \(decart.c\)}{chapter.15}
+\BOOKMARK [1][-]{section.15.4}{Axes \(axa.c\)}{chapter.15}
+\BOOKMARK [0][-]{chapter.16}{Miscellaneous}{}
+\BOOKMARK [1][-]{section.16.1}{sharpening \(sharpen.c\)}{chapter.16}
+\BOOKMARK [1][-]{section.16.2}{Sharpening inversion added Bregman iteration \(sharpinv.c\)}{chapter.16}
+\BOOKMARK [0][-]{chapter.17}{System}{}
+\BOOKMARK [1][-]{section.17.1}{Priority queue \(heap sorting\) \(pqueue.c\)}{chapter.17}
+\BOOKMARK [1][-]{section.17.2}{Simplified system command \(system.c\)}{chapter.17}
+\BOOKMARK [1][-]{section.17.3}{Generic stack \(FILO\) structure operations \(stack.c\)}{chapter.17}
+\BOOKMARK [0][-]{section*.1522}{Index}{}

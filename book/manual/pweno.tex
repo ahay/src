@@ -1,0 +1,154 @@
+\section{1-D ENO power-p interpolation (pweno.c)}
+
+
+
+
+\subsection{{sf\_pweno\_init}}
+Initializes an object of type \texttt{sf\_pweno}.
+
+\subsubsection*{Call}
+\begin{verbatim}ent = sf_pweno sf_pweno_init (int order, n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_pweno sf_pweno_init (int order /* interpolation order */,
+                        int n     /* data size */)
+/*< Initialize interpolation object >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt order]
+   \setlength\itemsep{0pt}
+   \item[order] order of interpolation (\texttt{int}). 
+   \item[n] size of the data (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ent] object of type \texttt{sf\_pweno}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pweno\_close}}
+Frees the space allocated for the \texttt{sf\_pweno} object by \texttt{sf\_pweno\_init}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pweno_close (ent);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pweno_close (sf_pweno ent)
+/*< Free internal storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ent] object of type \texttt{sf\_pweno}.
+\end{desclist}
+
+
+
+
+\subsection{{powerpeno}}
+Calculates the Power-p limiter for eno method using the input numbers \texttt{x} and \texttt{y}.
+
+\subsubsection*{Call}
+\begin{verbatim}power = powerpeno (x, y, p);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float powerpeno (float x, float y, int p /* power order */)
+/*< Limiter power-p eno >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[x] an input number (\texttt{float}). 
+   \item[y] an input number (\texttt{float}). 
+   \item[p] power order (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[mins * power] limiter power-p. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pweno\_set}}
+Sets the interpolation undivided difference table.
+
+\subsubsection*{Call}
+\begin{verbatim}void sf_pweno_set (sf_pweno ent, float* c /* data [n] */, int p);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pweno_set (sf_pweno ent, float* c /* data [n] */, int p /* power order */)
+/*< Set the interpolation undivided difference table. c can be changed or freed 
+afterwards >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ent]
+   \setlength\itemsep{0pt}
+   \item[ent] the interpolation object. Must be of type \texttt{sf\_pweno}. 
+   \item[c] input data (\texttt{float*}).  
+   \item[p] power order (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pweno\_apply}}
+Applies the interpolation.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pweno_apply (ent, i, x, f, f1, what);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pweno_apply (sf_pweno ent, 
+                int i     /* grid location */, 
+                float x   /* offset from grid */, 
+                float *f  /* output data value */, 
+                float *f1 /* output derivative */, 
+                derr what /* flag of what to compute */) 
+/*< Apply interpolation >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt what]
+   \setlength\itemsep{0pt}
+   \item[i]    location of the grid (\texttt{int}).  
+   \item[x]    offset from the grid (\texttt{float}). 
+   \item[f]    output data value (\texttt{float*}).  
+   \item[f1]   output derivative (\texttt{float*}).  
+   \item[what] flag of what to compute. Must be of type \texttt{derr}.  
+\end{desclist}
+
+
+
+
+

@@ -1,0 +1,38 @@
+\section{Causal integration (causint.c)}
+This causal integration operator is defined by
+\begin{gather*}
+	y = Lx,  \qquad\textrm{with}\quad y_t \leftarrow \sum_{\tau=0}^tx_\tau.
+\intertext{Its adjoint is}
+	x = L^*y,\qquad\textrm{with}\quad x_t \leftarrow \sum_{\tau=t}^{T-1}y_\tau,
+\end{gather*}
+where $T$ is the total number of samples of $x$.
+
+
+
+
+\subsection{{sf\_causint\_lop}}
+
+\subsubsection*{Call}
+\begin{verbatim}sf_causint_lop (adj, add, nx, ny, x, y);\end{verbatim}
+
+\subsubsection*{Defintion}
+\begin{verbatim}
+sf_causint_lop (adj, add, nx, ny, x, y)
+/*< linear operator >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] adjoint flag (\texttt{bool}). If \texttt{true}, then the adjoint is computed, i.e.~$x\leftarrow L^*y$ or $x\leftarrow x+L^*y$. 
+   \item[add] addition flag (\texttt{bool}). If \texttt{true}, then $y\leftarrow y+Lx$ or $x\leftarrow x+L^*y$.  
+   \item[nx]  size of \texttt{x} (\texttt{int}). 
+   \item[ny]  size of \texttt{y} (\texttt{int}). 
+   \item[x]   input data or output (\texttt{float*}).
+   \item[y]   output or input data (\texttt{float*}).
+\end{desclist}
+
+

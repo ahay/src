@@ -1,0 +1,300 @@
+\section{Additional operations with RSF files (files.c)}
+
+
+
+
+\subsection{{sf\_filedims}}\label{sec:sf_filedims}
+Returns the dimensions of the file.
+
+\subsubsection*{Call}
+\begin{verbatim}dim = sf_filedims (file, n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int sf_filedims (sf_file file, /*@out@*/ int *n) 
+/*< Find file dimensions.
+--- 
+Outputs the number of dimensions dim and a dimension array n[dim] >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt}{\quad}[file]
+   \setlength\itemsep{0pt}
+   \item[file] a pointer to the file structure whose dimensions are required (\texttt{sf\_file}). 
+   \item[n]    an array where the dimensions will be stored (\texttt{int}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{}{\quad}[nddimm]
+   \setlength\itemsep{0pt}
+   \item[\texttt{dim}] number of dimensions in the file (\texttt{int}). 
+   \item[\texttt{n[dim]}] the array of dimensions (\texttt{int}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_largefiledims}}
+Returns the dimensions of the file. It is exactly like \hyperref[sec:sf_filedims]{\texttt{sf\_filedims}} but \texttt{n} in the input is the offset in bytes in the input file (type \texttt{off\_t}) rather than just an integer.
+
+\subsubsection*{Call}
+\begin{verbatim}dim = sf_largefiledims (file, n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int sf_largefiledims (sf_file file, /*@out@*/ off_t *n) 
+/*< Find file dimensions.
+--- 
+Outputs the number of dimensions dim and a dimension array n[dim] >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt file]
+   \setlength\itemsep{0pt}
+   \item[file] a pointer to the file structure whose dimensions are required (\texttt{sf\_file}). 
+   \item[n] an array where the dimensions will be stored (\texttt{off\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{}{\quad}[\tt nddimm]
+   \setlength\itemsep{0pt}
+   \item[\texttt{dim}]    number of dimensions in the file (\texttt{off\_t}). 
+   \item[\texttt{n[dim]}] the array of dimensions (\texttt{off\_t}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_memsize}}
+Returns the memory size defined in the environment variable \texttt{RSFMEMSIZE}. If there is an invalid value the function will print an error message an assign a default value of 100 Mbytes.
+
+\subsubsection*{Call}
+\begin{verbatim}memsize = sf_memsize();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int sf_memsize()
+/*< Returns memory size by:
+  1. checking RSFMEMSIZE environmental variable
+  2. using hard-coded "def" constant
+  >*/
+{
+
+   ...
+    return memsize;
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_filesize}}
+Returns the size of the file, that is, the product of the dimensions. It uses the function \hyperref[sec:sf_leftsize]{\texttt{sf\_leftsize}}.
+
+\subsubsection*{Call}
+\begin{verbatim}size = sf_filesize (file);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+off_t sf_filesize (sf_file file) 
+/*< Find file size (product of all dimensions) >*/
+{    
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[file] a pointer to the file structure whose size is required (\texttt{sf\_file}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[size] product of dimensions in the file (\texttt{off\_t}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_leftsize}}\label{sec:sf_leftsize}
+Returns the size of the file, that is, the product of the dimensions but only for the dimensions greater than the input integer dim. It uses the function \hyperref[sec:sf_leftsize]{\texttt{sf\_leftsize}}.
+
+\subsubsection*{Call}
+\begin{verbatim}size = sf_leftsize (file, dim);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+off_t sf_leftsize (sf_file file, int dim) 
+/*< Find file size for dimensions greater than dim >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt file]
+   \setlength\itemsep{0pt}
+   \item[file] the file whose size is required (\texttt{sf\_file}). 
+   \item[dim] a pointer to the file structure whose size is required (\texttt{sf\_file}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[size] product of dimensions greater than dim in the file (\texttt{off\_t}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cp}}
+Copies the input file \texttt{in} to the output file \texttt{out}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cp (in, out);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cp(sf_file in, sf_file out)
+/*< Copy file in to file out >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[in] the file which is to be copied (\texttt{sf\_file}). 
+   \item[out] the file to which \texttt{in} file is to be copied (\texttt{sf\_file}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_rm}}
+Removes the RSF file. There are options to force removal (files are deleted even if protected), to inquire before removing a file and whether or to require verbose output.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_rm (filename, force, verb, inquire);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_rm(const char* filename, bool force, bool verb, bool inquire)
+/*< Remove an RSF file.
+---
+force, verb, and inquire flags should behave similar to the corresponding flags 
+in the Unix "rm" command. >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\texttt }{\quad}[filename]
+   \setlength\itemsep{0pt}
+   \item[filename] name of the file which is to be removed (\texttt{sf\_file}). 
+   \item[force]    remove forcefully or not (\texttt{sf\_file}). 
+   \item[inquire]  ask before removing or not (\texttt{sf\_file}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_shiftdim}}
+Shifts the grid by one dimension after the axis defined in the input parameters (axis). 
+
+\subsubsection*{Call}
+\begin{verbatim}n3 = sf_shiftdim(in, out, axis);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+off_t sf_shiftdim(sf_file in, sf_file out, int axis) 
+/*< shift grid after axis by one dimension forward >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt axis]
+   \setlength\itemsep{0pt}
+   \item[in]   a pointer to the input file structure (\texttt{sf\_file}). 
+   \item[out]  a pointer to the output file structure (\texttt{sf\_file}). 
+   \item[axis] the axis after which the grid is to be shifted (\texttt{sf\_file}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n3] the file size (product of dimensions) after the shift (\texttt{off\_t}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_unshiftdim}}
+Shifts the grid backward by one dimension after the axis defined in the input parameters (axis). 
+
+\subsubsection*{Call}
+\begin{verbatim}n3 = sf_unshiftdim (in, out, axis);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+off_t sf_unshiftdim(sf_file in, sf_file out, int axis) 
+/*< shift grid after axis by one dimension backward >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt axis]
+   \setlength\itemsep{0pt}
+   \item[in]   a pointer to the input file structure (\texttt{sf\_file}). 
+   \item[out]  a pointer to the output file structure (\texttt{sf\_file}). 
+   \item[axis] the axis after which the grid is to be shifted (\texttt{sf\_file}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt n3]
+   \setlength\itemsep{0pt}
+   \item[n3] the file size (product of dimensions) after the backward shift (\texttt{off\_t}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_endian}}
+Returns true if the machine is little endian. 
+
+\subsubsection*{Definition}
+\begin{verbatim}little_endian = sf_endian (); \end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool sf_endian (void)
+/*< Endianness test, returns true for little-endian machines >*/
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[little\_endian] a boolean parameter which is true if the machine is little endian.
+\end{desclist}
+
+
+
+
+

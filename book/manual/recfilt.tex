@@ -1,0 +1,82 @@
+\section{Recursive convolution (polynomial division) (recfilt.c)}
+
+
+
+
+\subsection{{sf\_recfilt\_init}}
+Initializes the linear filter by allocating the required space and initializing the required variables.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_recfilt_init(nd, nb, bb);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_recfilt_init( int nd    /* data size */, 
+                   int nb    /* filter size */, 
+                   float* bb /* filter [nb] */) 
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt bb]
+   \setlength\itemsep{0pt}
+   \item[nd] size of the data which is to be filtered (\texttt{int}).  
+   \item[nb] size of the filter (\texttt{int}). 
+   \item[bb] filter which is to be applied (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_recfilt\_lop}}
+Applies the linear operator to \texttt{xx} (or \texttt{yy}) and the result is applied to \texttt{yy} (or \texttt{xx}), depending on whether \texttt{adj} is false or true, with the operator initialized by \texttt{sf\_recfilt\_init}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_recfilt_lop (adj, add, nx, ny, xx, yy);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
+/*< linear operator >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] a parameter to determine whether filter is applied to \texttt{yy} or \texttt{xx} (\texttt{bool}).
+   \item[add] a parameter to determine whether the input needs to be zeroed (\texttt{bool}).
+   \item[nx]  size of \texttt{x}x (\texttt{int}).
+   \item[ny]  size of \texttt{y}y (\texttt{int}).
+   \item[xx]  data or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+   \item[yy]  data or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_recfilt\_close}}
+Frees the space allocated by \texttt{sf\_recfilt\_init}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_recfilt_close ();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_recfilt_close (void) 
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+

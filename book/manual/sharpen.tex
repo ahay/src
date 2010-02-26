@@ -1,0 +1,105 @@
+\section{sharpening (sharpen.c)}
+
+
+
+
+\subsection{{sf\_sharpen\_init}}
+Initializes the sharpening operator by allocating the required and initializing the required operators.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_sharpen_init(n1, perc);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_sharpen_init(int n1     /* data size */,
+                     float perc /* quantile percentage */) 
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt perc]
+   \setlength\itemsep{0pt}
+   \item[n1]	   size  of the data (\texttt{int}).  
+   \item[perc] the quantile percentage (\texttt{float}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_sharpen\_close}}
+Frees the allocated memory for the sharpening calculation.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_sharpen_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_sharpen_close(void)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_sharpen}}
+Computes the weights for the sharpening regularization.
+
+
+\subsubsection*{Call}
+\begin{verbatim}wp = sf_sharpen(pp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_sharpen(const float *pp) 
+/*< compute weight for sharpening regularization >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[pp] an array for which the weights are to be calculated (\texttt{const float*}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[wp] weights for sharpening regularization. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_csharpen}}
+Computes the weights for the sharpening regularization for complex numbers.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_csharpen(pp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_csharpen(const sf_complex *pp) 
+/*< compute weight for sharpening regularization >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[pp] an array for which the weights are to be calculated (\texttt{sf\_complex}).  
+\end{desclist}
+
+
+
+
+

@@ -1,0 +1,1210 @@
+\section{Complex number operations (komplex.c)}
+
+
+
+
+\subsection{{creal}}
+Returns the real part of the complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}r = sf_creal(c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double sf_creal(sf_double_complex c)
+/*< real part >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[r] real part of the complex number. It is of type \texttt{double}.
+\end{desclist}
+
+
+
+
+\subsection{{cimag}}
+Returns the imaginary part of the complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}im = sf_cimag(c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double sf_cimag(sf_double_complex c)
+/*< imaginary part >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[im] imaginary part of the complex number (\texttt{double}).
+\end{desclist}
+
+
+
+
+\subsection{{dcneg}}
+Returns the negative complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}n = sf_dcneg(a);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcneg(sf_double_complex a)
+/*< unary minus >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] negative of the complex number. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dcadd}}
+Adds two complex numbers.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcadd(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcadd(sf_double_complex a, sf_double_complex b)
+/*< complex addition >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}. 
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] $a+b$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dcsub}}
+Subtracts two complex numbers.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcsub(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcsub(sf_double_complex a, sf_double_complex b)
+/*< complex subtraction >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}. 
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] $a-b$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dcmul}}
+Multiplies two complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcmul(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcmul(sf_double_complex a, sf_double_complex b)
+/*< complex multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the product $ab$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dccmul}}
+Multiplies two complex number. Its output type and one of the input parameters is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dccmul(a, b);
+\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_dccmul(sf_double_complex a, kiss_fft_cpx b)
+/*< complex multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the product $ab$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dcdmul}}
+Multiplies two complex number. One of the input parameters is \texttt{kiss\_fft\_cpx}. This means that it should only be used if \texttt{complex.h} header is not used.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcdmul(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcdmul(sf_double_complex a, kiss_fft_cpx b)
+/*< complex multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] product $ab$ of the two complex numbers $a$ and $b$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+\subsection{{dcrmul}}
+Multiplies a complex number with a real number of type \texttt{double}. 
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcrmul(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcrmul(sf_double_complex a, double b)
+/*< complex by real multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a real number (\texttt{double}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] product of the complex number $a$ and the real number $b$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{dcdiv}}
+Divides two complex numbers.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_dcdiv(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_double_complex sf_dcdiv(sf_double_complex a, sf_double_complex b)
+/*< complex division >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] $\frac{a}{b}$. It is of type \texttt{sf\_double\_complex}.
+\end{desclist}
+
+
+
+
+\subsection{{cabs}}
+Returns the absolute value (magnitude) of a complex number. It uses the \texttt{hypot} function from the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}a = sf_cabs(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double sf_cabs(sf_double_complex z)
+/*< replacement for cabsf >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[hypot(z.r,z.i)] absolute value of the complex number. 
+\end{desclist}
+
+
+
+
+\subsection{{cabs}}
+Returns the argument of a complex number. It uses the \texttt{atan2} function from the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}u = sf_carg(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+double sf_carg(sf_double_complex z)
+/*< replacement for cargf >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[atan2(z.r,z.i)] argument of the complex number. 
+\end{desclist}
+
+
+
+
+\subsection{{crealf}}
+Returns the real part of the complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}r = sf_crealf(c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_crealf(kiss_fft_cpx c)
+/*< real part >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[r] real part of the complex number. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{cimagf}}
+Returns the imaginary part of the complex number.
+
+\subsubsection*{Call}
+\begin{verbatim}im = sf_cimagf(c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cimagf(kiss_fft_cpx c)
+/*< imaginary part >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c]      a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[im] imaginary part of the complex number. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{cprint}}
+Prints the complex number on the screen. This is done using the \hyperref[sec:sf_warning]{\texttt{sf\_warning}}.
+
+\subsubsection*{Call}
+\begin{verbatim}cprint(c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void cprint (sf_complex c)
+/*< print a complex number (for debugging purposes) >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] a complex number (\texttt{sf\_complex}).  
+\end{desclist}
+
+
+
+
+\subsection{{cadd}}
+Adds two complex numbers. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_cadd(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cadd(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex addition >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the sum $a+b$ of the two complex numbers $a$, $b$. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{csub}}
+Subtracts two complex numbers. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_csub(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_csub(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex subtraction >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] difference of the two complex numbers $a$, $b$. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{csqrtf}}
+Returns the square root of a complex number. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_csqrtf (c);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_csqrtf (kiss_fft_cpx c)
+/*< complex square root >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] square root of the complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cdiv}}
+Divides two complex numbers. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_cdiv(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cdiv(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex division >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] $\frac{a}{b}$. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cmul}}
+Multiplies two complex numbers. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_cmul(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cmul(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] product of the two complex numbers a and b. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{crmul}}
+Multiplies a complex number with a real number. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_crmul(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_crmul(kiss_fft_cpx a, float b)
+/*< complex by real multiplication >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+   \item[b] a real number (\texttt{float}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] the product $ab$ of a complex number $a$ and real number $b$. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cneg}}
+Returns negative of a complex number. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}b = sf_cneg(a);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cneg(kiss_fft_cpx a)
+/*< unary minus >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] negative of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{conjf}}
+Returns complex conjugate of a complex number. The output is of type \texttt{kiss\_fft\_cpx}.
+
+\subsubsection*{Call}
+\begin{verbatim}z1 = sf_conjf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_conjf(kiss_fft_cpx z)
+/*< complex conjugate >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{sf\_double\_complex}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z1] complex conjugate of the complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cabsf}}
+Returns the magnitude of a complex number. It uses a function \texttt{hypotf} from \texttt{c99.h}, which calls the \texttt{hypot} function from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_cabsf(kiss_fft_cpx z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cabsf(kiss_fft_cpx z)
+/*< replacement for cabsf >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] magnitude of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cargf}}
+Returns the argument of a complex number. It uses a function \texttt{atan2f} from \texttt{c99.h}, which calls the \texttt{atan2} function from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}u = sf_cargf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float sf_cargf(kiss_fft_cpx z)
+/*< replacement for cargf >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[u] argument of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{ctanhf}}
+Returns hyperbolic tangent of a complex number. It uses a function
+like \texttt{coshf} and \texttt{sinhf} from \texttt{c99.h}, which call \texttt{cosh} and \texttt{sinh} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}th = sf_ctanhf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_ctanhf(kiss_fft_cpx z)
+/*< complex hyperbolic tangent >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[th] hyperbolic tangent of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{ccosf}}
+Returns cosine of a complex number. It uses the functions like \texttt{coshf} and \texttt{sinhf} from \texttt{c99.h}, which call \texttt{cosh} and \texttt{sinh} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w =  sf_ccosf (z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_ccosf(kiss_fft_cpx z)
+/*< complex cosine >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] cosine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{ccoshf}}
+Returns hyperbolic cosine of a complex number. It uses the functions like \texttt{coshf} and \texttt{sinhf} from \texttt{c99.h}, which call \texttt{cosh} and \texttt{sinh} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_ccoshf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_ccoshf(kiss_fft_cpx z)
+/*< complex hyperbolic cosine >*/
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] huperbolic cosine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{ccosf}}
+Returns sine of a complex number. It uses the functions like \texttt{coshf} and \texttt{sinhf} from \texttt{c99.h}, which call \texttt{cosh} and \texttt{sinh} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_csinf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_csinf(kiss_fft_cpx z)
+/*< complex sine >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] sine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{csinhf}}
+Returns hyperbolic cosine of a complex number. It uses the functions like \texttt{coshf} and \texttt{sinhf} from \texttt{c99.h}, which call \texttt{cosh} and \texttt{sinh} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_csinhf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_csinhf(kiss_fft_cpx z)
+/*< complex hyperbolic sine >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] huperbolic cosine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{clogf}}
+Returns natural logarithm of a complex number. It uses the functions like \texttt{logf} and \texttt{hypotf} from \texttt{c99.h}, which call \texttt{log} and \texttt{hypot} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_clogf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_clogf(kiss_fft_cpx z)
+/*< complex natural logarithm >*/
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] natural logarithm of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cexpf}}
+Returns exponential of a complex number. It uses the functions like \texttt{expf} and \texttt{cosf} from \texttt{c99.h}, which call \texttt{exp} and \texttt{cos} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_cexpf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cexpf(kiss_fft_cpx z)
+/*< complex exponential >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] exponential of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{ctanf}}
+Returns tangent of a complex number. It uses the functions like \texttt{sinf} and \texttt{cosf} from \texttt{c99.h}, which call \texttt{sin} and \texttt{cos} functions from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_ctanf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_ctanf(kiss_fft_cpx z)
+/*< complex tangent >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] tangent of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{casinf}}
+Returns hyperbolic arcsine of a complex number. It uses the function \texttt{asinf} from \texttt{c99.h}, which calls the \texttt{asin} function from \texttt{math.h} in the C library.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_casinf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_casinf(kiss_fft_cpx z)
+/*< complex hyperbolic arcsine >*/
+{
+   ...  
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] arcsine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cacosf}}
+Returns hyperbolic arccosine of a complex number. It uses \texttt{sf\_cacosf}.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_cacosf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cacosf(kiss_fft_cpx z)
+/*< complex hyperbolic arccosine >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] hyperbolic arccosine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{catanf}}
+Returns arctangent of a complex number. It uses \texttt{sf\_clogf} and \texttt{sf\_cdiv}.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_catanf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_catanf(kiss_fft_cpx z)
+/*< complex arctangent >*/
+{
+   ...   
+}     
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] arctangent of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+\subsection{{catanhf}}
+Returns hyperbolic arctangent of a complex number. It uses \texttt{sf\_catanf}.
+
+\subsubsection*{Call}
+\begin{verbatim}w =_cpx sf_catanhf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_catanhf(kiss_fft_cpx z)
+/*< complex hyperbolic arctangent >*/
+{
+   ...
+}     
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] hyperbolic arctangent of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+\subsection{{casinhf}}
+Returns hyperbolic arcsine of a complex number. It uses \texttt{sf\_casinf}.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_casinhf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_casinhf(kiss_fft_cpx z)
+/*< complex hyperbolic sine >*/
+{
+   ...
+}     
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] hyperbolic arcsine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+\subsection{{cacoshf}}
+Returns hyperbolic arccosine of a complex number. It uses \texttt{sf\_casinf}.
+
+\subsubsection*{Call}
+\begin{verbatim}w = sf_cacoshf(z);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cacoshf(kiss_fft_cpx z)
+/*< complex hyperbolic cosine >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[z] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] hyperbolic arccosine of a complex number. It is of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+
+
+\subsection{{cpowf}}
+Returns the complex base $a$ raised to complex power $b$.
+
+\subsubsection*{Call}
+\begin{verbatim}c = sf_cpowf(a, b);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+kiss_fft_cpx sf_cpowf(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex power >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[a] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+   \item[b] a complex number. Must be of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[c] $a^b$. It is a complex number of type \texttt{kiss\_fft\_cpx}.
+\end{desclist}
+
+
+

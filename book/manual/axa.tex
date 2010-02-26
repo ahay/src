@@ -1,0 +1,360 @@
+\section{Axes (axa.c)}\label{sec:axa.c}
+
+
+
+
+\subsection{{sf\_maxa}}
+Creates a simple axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA = sf_maxa(n, o, d);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_axis sf_maxa(int n   /* length */, 
+                float o /* origin */, 
+                float d /* sampling */)
+/*< make a simple axis >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] length of the axis (\texttt{int}).  
+   \item[o] origin of the axis (\texttt{float}).  
+   \item[d] sampling of the axis (\texttt{float}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[AA] the axis. It is of type \texttt{sf\_axis}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_iaxa}}\label{sec:sf_iaxa}
+Reads an axis from the file which is given in the input.
+
+\subsubsection*{Call}
+\begin{verbatim}AA = sf_iaxa(FF, i);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_axis sf_iaxa(sf_file FF, int i) 
+/*< read axis i >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt FF]
+   \setlength\itemsep{0pt}
+   \item[FF] the file from which the axis is to be read (\texttt{sf\_file}).  
+   \item[i]  a number which specified which axis is to be read, for example \texttt{n1}, \texttt{n2}, \texttt{n3} etc (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[AA] location where the axis is stored. It is of type \texttt{sf\_axis}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_oaxa}}\label{sec:sf_oaxa}
+Writes an axis, from the input location, to the file, which is also given in the input.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_oaxa(FF, AA, i);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_oaxa(sf_file FF, const sf_axis AA, int i) 
+/*< write axis i >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt AA]
+   \setlength\itemsep{0pt}
+   \item[FF] the file in which the axis is to be written (\texttt{sf\_file}).  
+   \item[AA] the location from where the axis is to be read. Must be of type \texttt{const sf\_axis}.  
+   \item[i]  a number which specified which axis is to be read, for example \texttt{n1}, \texttt{n2}, \texttt{n3} etc (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_raxa}}
+Prints the information about the axis on the screen.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_raxa(AA);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_raxa(const sf_axis AA) 
+/*< report information on axis AA >*/
+{    
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis about which the information is required. Must be of type \texttt{const sf\_axis}.  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_n}}\label{sec:sf_n}
+Provides access to the length of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->n = sf_n(AA);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+int sf_n(const sf_axis AA) 
+/*< access axis length >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose length is to be accessed. Must be of type \texttt{const sf\_axis}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[AA->n] length of the axis. It is of type \texttt{int}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_o}}
+Provides access to the origin of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->o = sf_o(AA);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+float sf_o(const sf_axis AA) 
+/*< access axis origin >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose length is to be accessed. Must be of type \texttt{const sf\_axis}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[AA->o] length of the axis. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_d}}\label{sec:sf_d}
+Provides access to the sampling of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->d = sf_d(AA);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+float sf_d(const sf_axis AA) 
+/*< access axis sampling >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose length is to be accessed. Must be of type \texttt{const sf\_axis}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[AA->d] length of the axis. It is of type \texttt{float}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_nod}}
+Copies the length, origin and sampling of the input axis to another place which is also an object of type \texttt{sf\_axis}.
+
+\subsubsection*{Call}
+\begin{verbatim}BB = sf_nod(AA);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+sf_axa sf_nod(const sf_axis AA) 
+/*< access length, origin, and sampling >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose length, origin and sampling is to be accessed. Must be of type \texttt{const sf\_axis}.  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}  
+   \item[BB] the location where the length, origin and sampling are copied. It is of type \texttt{sf\_axis}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_setn}}
+Changes the length of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->n = sf_setn(AA, n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_setn(sf_axis AA, int n)
+/*< change axis length >*/
+{ AA->n=n; }
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt AA]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose length is to be changed (\texttt{sf\_axis}).  
+   \item[n]  the new length which is to be set (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_seto}}
+Changes the origin of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->o = sf_seto(AA, o);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_seto(sf_axis AA, float o)
+/*< change axis origin >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt AA]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose origin is to be changed (\texttt{sf\_axis}).  
+   \item[o]  the new origin which is to be set (\texttt{float}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_setd}}
+Changes the sampling of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}AA->d = sf_setd(AA, d);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_setd(sf_axis AA, float d)
+/*< change axis sampling >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[AA] the axis whose sampling is to be changed (\texttt{sf\_axis}).  
+   \item[o]  the new sampling which is to be set (\texttt{float}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_setlabel}}
+Changes the label of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_setlabel(AA, label);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_setlabel(sf_axis AA, const char* label)
+/*< change axis label >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt label]
+   \setlength\itemsep{0pt}
+   \item[AA]    the axis whose label is to be changed (\texttt{sf\_axis}).  
+   \item[label] the new label which is to be set (\texttt{const char*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_setunit}}
+Changes the unit of the axis.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_setunit(AA, unit);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}  
+void sf_setunit(sf_axis AA, const char* unit)
+/*< change axis unit >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt unit]
+   \setlength\itemsep{0pt}
+   \item[AA]   the axis whose unit is to be changed (\texttt{sf\_axis}).  
+   \item[unit] the new unit which is to be set (\texttt{const char*}).  
+\end{desclist}
+

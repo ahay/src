@@ -1,0 +1,102 @@
+\section{Cosine Fourier transform (cosft.c)}
+
+
+
+
+\subsection{{sf\_cosft}}
+Makes preparations for the cosine Fourier transform, by allocating the required spaces.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cosft_init(n1);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cosft_init(int n1)
+/*< initialize >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1\_in] length of the input (\texttt{int}).  
+\end{desclist}
+
+
+
+\subsection{{sf\_cosft\_close}}
+Frees the allocated space.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cosft_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cosft_close(void) 
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_cosft\_frw}}
+This function performs the forward cosine Fourier transform.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cosft_frw (q, o1, d1);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cosft_frw (float *q /* data */, 
+                   int o1   /* first sample */, 
+                   int d1   /* step */) 
+/*< forward transform >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt d2]
+   \setlength\itemsep{0pt}
+   \item[q]  input data (\texttt{float}). 
+   \item[o1] first sample of the input data (\texttt{int}). 
+   \item[d1] step size (\texttt{int}).  
+\end{desclist}
+
+
+
+\subsection{{sf\_cosft\_inv}}
+This function performs the forward cosine Fourier transform.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cosft_inv (q, o1, d1);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cosft_inv (float *q /* data */, 
+                   int o1   /* first sample */, 
+                   int d1   /* step */) 
+/*< inverse transform >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt d2]
+   \setlength\itemsep{0pt}
+   \item[q]  input data (\texttt{float}). 
+   \item[o1] first sample of the input data (\texttt{int}). 
+   \item[d1] step size (\texttt{int}).  
+\end{desclist}
+
+
+
+
+

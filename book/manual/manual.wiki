@@ -1,0 +1,130 @@
+
+
+
+
+
+
+
+
+
+
+
+
+\title{Madagascar Programming Reference Manual}
+\author{Seismic Wave Analysis Group
+
+<tt>http://swag.kaust.edu.sa</tt>
+
+
+KAUST
+
+
+
+Mohammad Akbar Zuberi
+
+Christos Saragiotis
+
+Tariq Alkhalifah}
+   
+\maketitle
+\cleardoublepage
+\tableofcontents\addcontentsline{toc}{chapter}{Contents}
+\cleardoublepage
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+\chapter{Introduction}
+\chapter{An example: Finite-Difference modeling}
+
+
+\chapter{Data types}
+\chapter{Preparing for input}
+
+
+
+\chapter{Operations with RSF files}
+
+
+
+\chapter{Error handling}
+
+\chapter{Linear operators}
+
+
+
+
+
+
+
+
+
+\chapter{Data analysis}
+
+
+
+\chapter{Filtering}
+
+
+
+
+
+
+\chapter{Solvers}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Interpolation}
+
+
+
+
+
+
+
+
+
+
+\chapter{Smoothing}
+
+
+
+
+\chapter{Ray tracing}
+
+
+\chapter{General tools}
+
+
+
+
+\chapter{Geometry }
+
+
+
+
+\chapter{Miscellaneous}
+
+
+\chapter{System}
+
+
+
+
+\cleardoublepage
+\printindex
+\addcontentsline{toc}{chapter}{Index}
+\cleardoublepage
+

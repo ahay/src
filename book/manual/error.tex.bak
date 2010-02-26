@@ -1,0 +1,86 @@
+\section{error.c}
+
+\subsection{\texttt{sf\_error}}\label{sec:sf_error}
+This function outputs an error message to \texttt{stderr}, which is usually the screen. It uses \texttt{sf\_getprog} to get the name of the program which is causing the error and print it on the screen.  This function uses \texttt{vfprintf}, which can take a variable number of arguments initialized by \texttt{va\_list}. This gives the user flexibility in choosing the number of arguments.
+
+If there is a '\texttt{:}' at the end of format, information about the system errors is printed, this is done by using \texttt{strerror} to interpret the last error number \texttt{errno} in the system. Also, if there is a '\texttt{;}' at the end of a format the command prompt will not go to the next line.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt format]
+   \setlength\itemsep{0pt}
+   \item[format] a string of \texttt{type \texttt{const char*}} containing the format specifiers for the arguments to be input from the next commands.
+   \item[...]    variable number of arguments, which are to replace the format specifiers in the format.    
+\end{desclist}
+
+\subsubsection*{Output}
+An error message output to \texttt{sterr} (usually printed on screen).
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_error( const char *format, ... )
+/*< Outputs an error message to stderr and terminates the program. 
+---
+Format and variable arguments follow printf convention. Additionally, a ':' at
+the end of format adds system information for system errors. >*/
+{
+    va_list args;
+    char *prog;
+
+    ...
+
+    exit(EXIT_FAILURE);
+}
+\end{verbatim}
+
+
+
+\subsection{\texttt{sf\_warning}}\label{sec:sf_warning}
+This function outputs a warning message to \texttt{stderr} which is usually the screen. It uses \texttt{sf\_getprog} to get the name of the program which is causing the error and print it on the screen.  This function uses \texttt{vfprintf}, which can take a variable number of arguments initialized by \texttt{va\_list}. This gives the user flexibility in choosing the number of arguments.
+If there is a '\texttt{:}' at the end of format, information about the system errors is printed, this is done by using \texttt{strerror} to interpret the last error number \texttt{errno} in the system. Also, if there is a '\texttt{;}' at the end of a format the command prompt will not go to the next line.
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt format]
+   \setlength\itemsep{0pt}
+   \item[format] a string of \texttt{type \texttt{const char*}} containing the format specifiers for the arguments to be input from the next commands. 
+   \item[...]    variable number of arguments, which are to replace the format specifiers in the format.     
+\end{desclist}
+
+\subsubsection*{Output}
+A warning message output to \texttt{sterr} ( usually printed on screen).
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_warning( const char *format, ... )
+/*< Outputs a warning message to stderr. 
+---
+Format and variable arguments follow printf convention. Additionally, a ':' at
+the end of format adds system information for system errors. >*/
+{
+    va_list args;
+    
+    (void) fflush(stdout);
+    va_start(args,format);
+
+    /* print out name of program causing error */
+    fprintf(stderr,"%s: ",sf_getprog()); 
+
+    /* print out remainder of message */
+    (void) vfprintf( stderr, format, args );
+    va_end(args);
+
+    /* if format ends with ':', print system information */
+    if (format[0] != '\0' && format[strlen(format)-1] == ':')
+        fprintf (stderr, " %s", strerror(errno));
+
+    /* if format ends with ';', do not end line */
+    if (format[0] == '\0' || format[strlen(format)-1] != ';')
+        fprintf (stderr, "\n");
+    (void) fflush(stderr);
+}
+
+/*      $Id: error.c 3738 2008-08-15 01:00:56Z henrykm $         */
+
+(END) 
+\end{verbatim}
+
+

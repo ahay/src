@@ -1,0 +1,379 @@
+\section{Solver functions for iterative least-squares optimization (bigsolver.c)}
+
+
+
+
+\subsection{{sf\_solver\_prec}}
+Applies solves generic linear equations after preconditioning the data.
+
+\subsubsection*{Call}
+\begin{verbatim}
+sf_solver_prec (oper, solv, prec, nprec, nx, ny, 
+                x, dat, niter, eps, "x0",x0, ..., "end");
+\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_solver_prec (sf_operator oper   /* linear operator */, 
+                     sf_solverstep solv /* stepping function */, 
+                     sf_operator prec   /* preconditioning operator */, 
+                     int nprec          /* size of p */, 
+                     int nx             /* size of x */, 
+                     int ny             /* size of dat */, 
+                     float* x           /* estimated model */, 
+                     const float* dat   /* data */, 
+                     int niter          /* number of iterations */, 
+                     float eps          /* regularization parameter */, 
+                    ...                /* variable number of arguments */) 
+/*< Generic preconditioned linear solver.
+ ---
+ Solves
+ oper{x} =~ dat
+ eps p   =~ 0
+ where x = prec{p}
+ ---
+ The last parameter in the call to this function should be "end".
+ Example: 
+ ---
+ sf_solver_prec (oper_lop,sf_cgstep,prec_lop,
+ np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+ ---
+ Parameters in ...:
+ ... 
+ "wt":     float*:         weight      
+ "wght":   sf_weight wght: weighting function
+ "x0":     float*:         initial model
+ "nloper": sf_operator:    nonlinear operator  
+ "mwt":    float*:         model weight
+ "verb":   bool:           verbosity flag
+ "known":  bool*:          known model mask
+ "nmem":   int:            iteration memory
+ "nfreq":  int:            periodic restart
+ "xmov":   float**:        model iteration
+ "rmov":   float**:        residual iteration
+ "err":    float*:         final error
+ "res":    float*:         final residual
+ "xp":     float*:         preconditioned model
+ >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nprec]
+   \setlength\itemsep{0pt}
+   \item[oper]  the operator. Must be of type \texttt{sf\_operator}
+   \item[solv]  the stepping function (\texttt{sf\_solverstep}).  
+   \item[prec]  preconditioning operator (\texttt{sf\_operator}).   
+   \item[nprec] size of the preconditioned data (\texttt{int}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[ny]    size of the data  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{float*}).  
+   \item[dat]   the data (\texttt{const float*}).  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[...]   variable number of arguments.
+\end{desclist}
+
+
+
+\subsection{{sf\_csolver\_prec}}
+Applies solves generic linear equations for complex data after preconditioning the data.
+
+\subsubsection*{Call}
+\begin{verbatim}
+sf_csolver_prec (oper, solv, prec, nprec, nx, ny,
+                 x, dat, niter, eps, "x0",x0, ..., "end");
+\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_csolver_prec (oper, solv, prec, nprec, nx, ny,
+                 x, dat, niter, eps, niter, eps, "x0",x0, ..., "end");
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nprec]
+   \setlength\itemsep{0pt}
+   \item[oper]  the operator (\texttt{sf\_coperator}).  
+   \item[solv]  the stepping function (\texttt{sf\_csolverstep}).  
+   \item[prec]  preconditioning operator (\texttt{sf\_coperator}).  
+   \item[nprec] size of the preconditioned data (\texttt{int}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[ny]    size of the data  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{sf\_complex*}).  
+   \item[dat]   the data. Must be of type \texttt{const sf\_complex*}.  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[...]   variable number of arguments.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_solver\_reg}}
+Applies solves generic linear equations after regularizing the data.
+
+\subsubsection*{Call}
+\begin{verbatim}
+sf_solver_reg (oper, solv, reg, nreg, nx, ny,
+               x, y, niter, eps, "x0",x0, ..., "end");
+\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_solver_reg (sf_operator oper   /* linear operator */, 
+                    sf_solverstep solv /* stepping function */,
+                    sf_operator reg    /* regularization operator */, 
+                    int nreg           /* size of reg{x} */, 
+                    int nx             /* size of x */, 
+                    int ny             /* size of dat */, 
+                    float* x           /* estimated model */, 
+                    const float* dat   /* data */, 
+                    int niter          /* number of iterations */, 
+                    float eps          /* regularization parameter */, 
+                   ...                /* variable number of arguments */) 
+/*< Generic regularized linear solver.
+  ---
+  Solves
+  oper{x}    =~ dat
+  eps reg{x} =~ 0
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_solver_reg (oper_lop,sf_cgstep,reg_lop,
+  np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator  
+  "nlreg":  sf_operator:    nonlinear regularization operator
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  "resm":   float*:         final model residual
+  >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt niter]
+   \setlength\itemsep{0pt}
+   \item[oper]  the linear operator (\texttt{sf\_operator}).
+   \item[solv]  the stepping function (\texttt{sf\_solverstep}).  
+   \item[prec]  regularization operator (\texttt{sf\_operator}).   
+   \item[nreg]  size of the regularized data (\texttt{int}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[ny]    size of the data  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{float*}).  
+   \item[dat]   the data (\texttt{const float*}).  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[...]   variable number of arguments.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_solver}}
+Solves generic linear equations.
+
+
+\subsubsection*{Call}
+\begin{verbatim}
+sf_solver (oper, solv, nx, ny, x, dat, niter, "x0",x0, ..., "end");
+\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_solver (sf_operator oper   /* linear operator */, 
+                sf_solverstep solv /* stepping function */, 
+                int nx             /* size of x */, 
+                int ny             /* size of dat */, 
+                float* x           /* estimated model */, 
+                const float* dat   /* data */, 
+                int niter          /* number of iterations */, 
+               ...                /* variable number of arguments */)
+/*< Generic linear solver.
+  ---
+  Solves
+  oper{x}    =~ dat
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_solver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  ---
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator
+  "mwt":    float*:         model weight
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt niter]
+   \setlength\itemsep{0pt}
+   \item[oper]  the operator (\texttt{sf\_operator}).
+   \item[solv]  the stepping function (\texttt{sf\_solverstep}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[ny]    size of the data  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{float*}).  
+   \item[dat]   the data (\texttt{const float*}).  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[...]   variable number of arguments.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_left\_solver}}
+Solves generic linear equations for non-symmetric operators.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_left_solver (oper, solv, nx, x, dat, niter, "x0",x0, ..., "end");\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_left_solver (sf_operator oper   /* linear operator */, 
+                     sf_solverstep solv /* stepping function */, 
+                     int nx             /* size of \texttt{x} and dat */, 
+                     float* x           /* estimated model */, 
+                     const float* dat   /* data */, 
+                     int niter          /* number of iterations */, 
+                    ...                /* variable number of arguments */)
+/*< Generic linear solver for non-symmetric operators.
+  ---
+  Solves
+  oper{x}    =~ dat
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_left_solver (oper_lop,sf_cdstep,nx,ny,x,y,100,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  ---
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator
+  "mwt":    float*:         model weight
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt niter]
+   \setlength\itemsep{0pt}
+   \item[oper]  the operator (\texttt{sf\_operator}).
+   \item[solv]  the stepping function (\texttt{sf\_solverstep}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{float*}).  
+   \item[dat]   the data (\texttt{const float*}).  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[...]   variable number of arguments.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_csolver}}
+Solves generic linear equations for complex data.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_csolver (oper, solv, nx, ny, x, dat, niter, "x0",x0, ..., "end");\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_csolver (sf_coperator oper        /* linear operator */, 
+                 sf_csolverstep solv      /* stepping function */, 
+                 int nx                   /* size of x */, 
+                 int ny                   /* size of dat */, 
+                 sf_complex* x            /* estimated model */, 
+                 const sf_complex* dat    /* data */, 
+                 int niter                /* number of iterations */, 
+                ...                      /* variable number of arguments */) 
+/*< Generic linear solver for complex data.
+  ---
+  Solves
+  oper{x}    =~ dat
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_csolver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  ---
+  "wt":     float*:          weight      
+  "wght":   sf_cweight wght: weighting function
+  "x0":     sf_complex*:  initial model
+  "nloper": sf_coperator:    nonlinear operator  
+  "verb":   bool:            verbosity flag
+  "known":  bool*:           known model mask
+  "nmem":   int:             iteration memory
+  "nfreq":  int:             periodic restart
+  "xmov":   sf_complex**: model iteration
+  "rmov":   sf_complex**: residual iteration
+  "err":    float*:  final error
+  "res":    sf_complex*:  final residual
+  >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt niter]
+   \setlength\itemsep{0pt}
+   \item[oper]  the operator (\texttt{sf\_coperator}).  
+   \item[solv]  the stepping function (\texttt{sf\_csolverstep}).  
+   \item[nx]    size of the estimated model  (\texttt{int}).  
+   \item[ny]    size of the data  (\texttt{int}).  
+   \item[x]     estimated model  (\texttt{sf\_complex*}).  
+   \item[dat]   the data. Must be of type \texttt{const sf\_complex*}.  
+   \item[niter] number of iterations (\texttt{int}).  
+   \item[eps]   regularization parameter (\texttt{float}).  
+   \item[... ]   variable number of arguments.
+\end{desclist}
+

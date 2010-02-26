@@ -1,0 +1,41 @@
+\section{Dot product test for linear operators (dottest.c)}
+Performs the dot product test (see p.~\pageref{sec:dot-product test}), to check whether the adjoint of the operator is coded incorrectly. Coding is incorrect if any of 
+\begin{gather*}
+   \langle Lm_1,d_2\rangle = \langle m_1, L^*d_2\rangle\quad\textrm{or}\quad
+   \langle d_1 + Lm_1,d_2\rangle = \langle m_1, m_2+L^*d_2\rangle
+\end{gather*} 
+does not hold (within machine precision). $m_1$ and $d_2$ are random vectors.
+
+
+
+
+\subsection{{sf\_dot\_test}}\label{sec:sf_dot_test}
+\texttt{dot1[0]} must equal \texttt{dot1[1]} and \texttt{dot2[0]} must equal \texttt{dot2[1]} for the test to pass.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_dot_test (oper, nm, nd, dot1, dot2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_dot_test(sf_operator oper /* linear operator */, 
+                 int nm           /* model size */, 
+                 int nd           /* data size */, 
+                 float* dot1      /* first output */, 
+                 float* dot2      /* second output */) 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt oper]
+   \setlength\itemsep{0pt}
+   \item[oper] the linear operator, whose adjoint is to be tested (\texttt{sf\_operator}). 
+   \item[nm]   size of the models (\texttt{int}). 
+   \item[nd]   size of the data (\texttt{int}). 
+   \item[dot1] first output dot product (\texttt{float*}).
+   \item[dot2] second output dot product (\texttt{float*}).
+\end{desclist}
+
+
+
