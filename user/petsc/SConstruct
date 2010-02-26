@@ -5,6 +5,7 @@ import configure
 
 progs = '''
 aimplfd1
+aimplfd2
 heatgmres1
 '''
 
