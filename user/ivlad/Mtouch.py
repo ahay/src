@@ -32,10 +32,10 @@ except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
-
+    import rsfuser.m8rex as m8rex
 ###############################################################################
 
 def main(argv=sys.argv):
