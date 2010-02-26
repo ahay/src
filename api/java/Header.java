@@ -24,6 +24,10 @@ public class Header{
             this.name = name;
     }
     
+    public String getName(){
+            return name;
+    }
+    
 
     public void setDelta(int index, float delta){
             try{
@@ -33,6 +37,10 @@ public class Header{
                //     System.exit(1);
             }
     }
+    
+    public float getDelta(int index){
+            return deltas[index-1];
+    }
 
     public void setOrigin(int index, float origin){
             try{
@@ -40,6 +48,10 @@ public class Header{
             } catch (Exception e){
                     System.err.printf("Failed putting %f at index %d into origins\n",origin,index);
             }
+    }
+    
+    public float getOrigin(int index){
+            return origins[index-1];
     }
 
     public void setN(int index, int n){
@@ -50,6 +62,10 @@ public class Header{
                     System.err.printf("Failed putting %d at index %d into n\n",n,index);
             }
     }
+    
+    public int getN(int index){
+            return n[index-1];
+    }
 
     public void setLabel(int index, String label){
             try{
@@ -57,6 +73,10 @@ public class Header{
             } catch (Exception e){
                     System.err.printf("Failed to put %s at index %d in labels\n",label,index);
             }
+    }
+    
+    public String getLabel(int index){
+            return labels[index-1];
     }
 
     public void setUnit(int index, String unit){
@@ -66,12 +86,23 @@ public class Header{
                     System.err.printf("Failed to put %s at index %d in unit\n",unit,index);
             }
     }
+    
+    public String getUnit(int index){
+            return units[index-1];
+    }
 
     public void setPath(String path){
             this.path = path;
     }
+    
+    public String getPath(){
+           return path;
+    }
     public void setFormat(String format){
             this.format = format;
+    }
+    public String getFormat(){
+            return format;
     }
 
     public String toString(){

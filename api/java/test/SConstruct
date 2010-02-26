@@ -19,7 +19,6 @@ Flow('clipd',['dat','Clip.class'],
     ''')
 Flow('test.attr','clipd','sfattr')
 
-
 ##########################################################################
 # Should you need to manually tweak the classpath, you can do so by:
 # temp = project['ENV']['CLASSPATH']

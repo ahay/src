@@ -35,9 +35,9 @@ public class Clip {
         // Read our binary data.
          float[][][] data = Reader.readBinary3D(header);
         //Initialize our array values.
-         int n3 = header.n[2];
-         int n2 = header.n[1];
-         int n1 = header.n[0];
+         int n3 = header.getN(3);
+         int n2 = header.getN(2);
+         int n1 = header.getN(1);
         //Perform clipping operation.
          for(int i = 0; i < n3; ++i){
             for(int j = 0; j < n2; ++j){
