@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009) (format=pdflatex 2009.11.29)  15 FEB 2010 14:21
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009) (format=pdflatex 2009.12.16)  26 FEB 2010 14:27
 entering extended mode
  %&-line parsing enabled.
 **manual.ltx
@@ -326,59 +326,60 @@ LaTeX Info: Redefining \pageref on input line 9.
 \openout4 = `manual.out'.
 
 \AtBeginShipoutBox=\box28
-LaTeX Font Info:    Try loading font information for U+msa on input line 39.
+LaTeX Font Info:    Try loading font information for U+msa on input line 40.
 
 (/usr/local/texlive/2009/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2009/06/22 v3.00 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 39.
+LaTeX Font Info:    Try loading font information for U+msb on input line 40.
 
 (/usr/local/texlive/2009/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 ) [1
 
 
-{/Users/user1085/Library/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2
+{/usr/local/texlive/2009/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2
 
 ] (./manual.toc
 [3
 
-] [4] [5] [6] [7] [8] [9]
+]
 Overfull \hbox (9.25322pt too wide) in paragraph at lines 294--294
  [][] []\OT1/cmr/m/n/10.95 Conjugate-gradient with shap-ing reg-u-lar-iza-tion 
 for com-plex num-bers (cconj- 
  []
 
-[10] [11] [12] [13] [14] [15])
+[4])
 \tf@toc=\write5
 \openout5 = `manual.toc'.
 
- [16] (./preface.tex) [17
+ [5] [6
 
+] (./preface.tex [7
 
-] [18
-
-]
+]) [8]
 Chapter 1.
-(./intro.tex) [19] [20
+(./intro.tex) [9
+
+] [10
 
 ]
 Chapter 2.
-(./example_fd.tex [21]
+(./example_fd.tex [11]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [22]
+ [12]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [23]
-[24] [25]
+ [13]
+[14] [15]
 Overfull \hbox (9.42853pt too wide) in paragraph at lines 230--231
 \OT1/cmr/m/n/10.95 loc-ity and re-flec-tiv-ity. This is done us-ing []\OT1/cmtt
-/m/n/10.95 sf[]floatalloc[] \OT1/cmr/m/n/10.95 (p. []41[]) and []\OT1/cmtt/m/n/
+/m/n/10.95 sf[]floatalloc[] \OT1/cmr/m/n/10.95 (p. []31[]) and []\OT1/cmtt/m/n/
 10.95 sf[]floatalloc2[]
  []
 
-[26] [27] [28] [29]) [30]
+[16] [17] [18] [19]) [20]
 Chapter 3.
 (./data_types.tex
 Missing character: There is no Ô in font cmr10!
@@ -389,70 +390,70 @@ Overfull \hbox (2.34227pt too wide) in paragraph at lines 25--26
  same pur-pose as \OT1/cmtt/m/n/10.95 kiss[]fft[]state
  []
 
-[31
+[21
 
-] [32]
+] [22]
 Overfull \hbox (0.25092pt too wide) in paragraph at lines 69--70
 \OT1/cmr/m/n/10.95 pa-ram-e-ters pre-cisely as \OT1/cmtt/m/n/10.95 (bool, bool,
  int, int, sf[]complex*, const sf[]complex*,
  []
 
-[33]
+[23]
 Missing character: There is no Ò in font cmr10!
 Missing character: There is no Ó in font cmr10!
- [34]) [35] [36
+ [24]) [25] [26
 
 ]
 Chapter 4.
-(./alloc.tex [37] [38] [39] [40] [41] [42] [43]
+(./alloc.tex [27] [28] [29] [30] [31] [32] [33]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 368--368
 []\OT1/cmtt/m/n/10.95 /*< complex 4-D allocation, out[0][0][0] points to a cont
 iguous array >*/[] 
  []
 
-[44] [45] [46] [47] [48]
+[34] [35] [36] [37] [38]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 606--606
 []\OT1/cmtt/m/n/10.95 /*< float 5-D allocation, out[0][0][0][0] points to a con
 tiguous array >*/[] 
  []
 
-[49]
+[39]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 645--645
 []\OT1/cmtt/m/n/10.95 /*< float 6-D allocation, out[0][0][0][0][0] points to a 
 contiguous array >*/[] 
  []
 
-[50] [51] [52]
+[40] [41] [42]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 818--818
 []\OT1/cmtt/m/n/10.95 /*< unsigned char 2-D allocation, out[0] points to a cont
 iguous array >*/[] 
  []
 
-[53]
+[43]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 852--852
 []\OT1/cmtt/m/n/10.95 /*< unsigned char 3-D allocation, out[0][0] points to a c
 ontiguous array >*/[] 
  []
 
-) (./simtab.tex [54]
+) (./simtab.tex [44]
 Overfull \hbox (3.16101pt too wide) in paragraph at lines 54--55
 []\OT1/cmr/m/n/10.95 the ta-ble whose al-lo-cated mem-ory has to be deleted. Mu
 st be of type \OT1/cmtt/m/n/10.95 sf[]simtab\OT1/cmr/m/n/10.95 . 
  []
 
-[55]
+[45]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 121--121
 []\OT1/cmtt/m/n/10.95 bool sf_simtab_getint (sf_simtab table, const char* key,/
 *@out@*/ int* par)[] 
  []
 
-[56]
+[46]
 Overfull \hbox (41.64134pt too wide) in paragraph at lines 154--154
 []\OT1/cmtt/m/n/10.95 bool sf_simtab_getlargeint (sf_simtab table, const char* 
 key,/*@out@*/ off_t* pa[] 
  []
 
-[57]
+[47]
 Overfull \hbox (35.89265pt too wide) in paragraph at lines 186--186
 []\OT1/cmtt/m/n/10.95 bool sf_simtab_getfloat (sf_simtab table, const char* key
 ,/*@out@*/ float* par)[] 
@@ -464,13 +465,13 @@ Overfull \hbox (41.64134pt too wide) in paragraph at lines 219--219
 y,/*@out@*/ double* par[] 
  []
 
-[58] [59]
+[48] [49]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 316--316
 []\OT1/cmtt/m/n/10.95 bool sf_simtab_getbool (sf_simtab table, const char* key,
 /*@out@*/ bool *par)[] 
  []
 
-[60]
+[50]
 Overfull \hbox (47.39003pt too wide) in paragraph at lines 348--348
 []\OT1/cmtt/m/n/10.95 sf_simtab_getbools (sf_simtab table, const char* key,/*@o
 ut@*/bool *par,size_t n)[] 
@@ -482,20 +483,20 @@ Overfull \hbox (21.47002pt too wide) in paragraph at lines 354--355
  Must be of XXXXXXXXX
  []
 
-[61] [62] [63]) (./getpar.tex [64] [65]
+[51] [52] [53]) (./getpar.tex [54] [55]
 Overfull \hbox (37.83846pt too wide) in paragraph at lines 69--70
 \OT1/cmr/m/n/10.95 Reads the pa-ram-e-ters from the in-ter-nal ta-ble and write
 s them to a file. It uses []\OT1/cmtt/m/n/10.95 sf[]simtab[]output[]\OT1/cmr/m/
 n/10.95 .
  []
 
-[66] [67] [68] [69]
+[56] [57] [58] [59]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 266--266
 []\OT1/cmtt/m/n/10.95 /*< get an int array parameter (comma-separated) from the
  command line >*/[] 
  []
 
-[70] [71] [72] [73] [74]) [75] [76
+[60] [61] [62] [63] [64]) [65] [66
 
 ]
 Chapter 5.
@@ -505,7 +506,7 @@ Overfull \hbox (35.89265pt too wide) in paragraph at lines 42--42
 age, const char* name)[] 
  []
 
-[77] [78] [79] [80] [81] [82] [83] [84] [85] [86]
+[67] [68] [69] [70] [71] [72] [73] [74] [75] [76]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 536--536
 []\OT1/cmtt/m/n/10.95 bool sf_histints (sf_file file, const char* key,/*@out@*/
  int* par,size_t n)[] 
@@ -517,13 +518,13 @@ Overfull \hbox (1.40053pt too wide) in paragraph at lines 570--570
 t@*/ off_t* par)[] 
  []
 
-[87] [88] [89] [90] [91] [92]
+[77] [78] [79] [80] [81] [82]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 844--844
 []\OT1/cmtt/m/n/10.95 void sf_putints (sf_file file, const char* key, const int
 * par, size_t n)[] 
  []
 
-[93] [94] [95] [96]
+[83] [84] [85] [86]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 1035--1035
 []\OT1/cmtt/m/n/10.95 void sf_complexread (/*@out@*/ sf_complex* arr, size_t si
 ze, sf_file file)[] 
@@ -535,13 +536,13 @@ Overfull \hbox (5.42197pt too wide) in paragraph at lines 1040--1041
 is to be copied (\OT1/cmtt/m/n/10.95 sf[]complex\OT1/cmr/m/n/10.95 ). 
  []
 
-[97]
+[87]
 Overfull \hbox (5.42197pt too wide) in paragraph at lines 1118--1119
 []\OT1/cmr/m/n/10.95 a pointer to the ar-ray to which the ar-ray from the file 
 is to be copied (\OT1/cmtt/m/n/10.95 sf[]complex\OT1/cmr/m/n/10.95 ). 
  []
 
-[98]
+[88]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 1139--1139
 []\OT1/cmtt/m/n/10.95 void sf_ucharread (/*@out@*/ unsigned char* arr, size_t s
 ize, sf_file file)[] 
@@ -553,7 +554,7 @@ Overfull \hbox (5.42197pt too wide) in paragraph at lines 1144--1145
 is to be copied (\OT1/cmtt/m/n/10.95 sf[]complex\OT1/cmr/m/n/10.95 ). 
  []
 
-[99]
+[89]
 Overfull \hbox (5.42197pt too wide) in paragraph at lines 1187--1188
 []\OT1/cmr/m/n/10.95 a pointer to the ar-ray to which the ar-ray from the file 
 is to be copied (\OT1/cmtt/m/n/10.95 sf[]complex\OT1/cmr/m/n/10.95 ). 
@@ -572,7 +573,7 @@ Overfull \hbox (4.08418pt too wide) in paragraph at lines 1222--1223
 ,
  []
 
-[100]
+[90]
 Overfull \hbox (0.95126pt too wide) in paragraph at lines 1248--1249
 \OT1/cmr/m/n/10.95 Writes an float ar-ray to the file, ac-cord-ing to the value
  of the form of the file, i.e. \OT1/cmtt/m/n/10.95 SF[]ASCII\OT1/cmr/m/n/10.95 
@@ -586,27 +587,27 @@ Overfull \hbox (5.05753pt too wide) in paragraph at lines 1274--1275
 ,
  []
 
-[101]
+[91]
 Overfull \hbox (5.42197pt too wide) in paragraph at lines 1291--1292
 []\OT1/cmr/m/n/10.95 a pointer to the ar-ray to which the ar-ray from the file 
 is to be copied (\OT1/cmtt/m/n/10.95 sf[]complex\OT1/cmr/m/n/10.95 ). 
  []
 
-[102] [103] [104]) (./files.tex [105] [106] [107]
+[92] [93] [94]) (./files.tex [95] [96] [97]
 Overfull \hbox (35.89265pt too wide) in paragraph at lines 199--199
 []\OT1/cmtt/m/n/10.95 force, verb, and inquire flags should behave similar to t
 he corresponding flags[] 
  []
 
-[108] [109]) (./komplex.tex [110] [111] [112] [113] [114]
+[98] [99]) (./komplex.tex [100] [101] [102] [103] [104]
 Overfull \hbox (23.14056pt too wide) in paragraph at lines 276--277
 []\OT1/cmr/m/n/10.95 product of the com-plex num-ber $\OML/cmm/m/it/10.95 a$ \O
 T1/cmr/m/n/10.95 and the real num-ber $\OML/cmm/m/it/10.95 b$\OT1/cmr/m/n/10.95
  . It is of type \OT1/cmtt/m/n/10.95 sf[]double[]complex\OT1/cmr/m/n/10.95 . 
  []
 
-[115] [116] [117] [118] [119] [120] [121] [122] [123] [124] [125] [126]
-[127] [128] [129] [130] [131]) [132]
+[105] [106] [107] [108] [109] [110] [111] [112] [113] [114] [115] [116]
+[117] [118] [119] [120] [121]) [122]
 Chapter 6.
 (./error.tex
 Overfull \hbox (53.13872pt too wide) in paragraph at lines 24--24
@@ -614,7 +615,7 @@ Overfull \hbox (53.13872pt too wide) in paragraph at lines 24--24
 n. Additionally, a ':' at[] 
  []
 
-[133
+[123
 
 ]
 Overfull \hbox (30.14397pt too wide) in paragraph at lines 56--56
@@ -622,20 +623,20 @@ Overfull \hbox (30.14397pt too wide) in paragraph at lines 56--56
 dditionally, a ':' at[] 
  []
 
-) [134]
+) [124]
 Chapter 7.
 (./lop_intro.tex
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [135
+ [125
 
 ]
 LaTeX Font Info:    Try loading font information for U+dsrom on input line 18.
 
 (/usr/local/texlive/2009/texmf-dist/tex/latex/doublestroke/Udsrom.fd
 File: Udsrom.fd 1995/08/01 v0.1 Double stroke roman font definitions
-) [136]
-[137] [138]) (./adjnull.tex [139]) (./copy.tex [140]
+) [126]
+[127] [128]) (./adjnull.tex [129]) (./copy.tex [130]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 24--24
 []\OT1/cmtt/m/n/10.95 void sf_copy_lop (bool adj, bool add, int nx, int ny, flo
 at* xx, float* yy)[] 
@@ -647,26 +648,26 @@ Overfull \hbox (23.33739pt too wide) in paragraph at lines 1--1
 py.c) 
  []
 
-[141]) (./mask.tex [142] [143]) (./weight.tex [144]
+[131]) (./mask.tex [132] [133]) (./weight.tex [134]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 56--56
 []\OT1/cmtt/m/n/10.95 void sf_weight_lop (bool adj, bool add, int nx, int ny, f
 loat* xx, float* yy)[] 
  []
 
-[145] [146]) (./igrad1.tex [147]) (./causint.tex [148]) (./chain.tex [149]
-[150] [151] [152]
+[135] [136]) (./igrad1.tex [137]) (./causint.tex [138]) (./chain.tex [139]
+[140] [141] [142]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 200--200
 []\OT1/cmtt/m/n/10.95 sf_chain3 (oper1,oper2,oper3, adj,add, nm,nt1,nt2,nd, mod
 ,dat,tmp1,tmp2);[] 
  []
 
-[153]
+[143]
 Overfull \hbox (35.89265pt too wide) in paragraph at lines 222--222
 []\OT1/cmtt/m/n/10.95 /*< Chains three operators, computing oper1{oper2{poer3{{
 mod}}} or its adjoint.[] 
  []
 
-) (./dottest.tex [154]) [155] [156
+) (./dottest.tex [144]) [145] [146
 
 ]
 Chapter 8.
@@ -676,7 +677,7 @@ Overfull \hbox (53.13872pt too wide) in paragraph at lines 15--15
 id * mem,size_t * lenmem)[] 
  []
 
-[157]
+[147]
 Overfull \hbox (41.64134pt too wide) in paragraph at lines 59--59
 []\OT1/cmtt/m/n/10.95 void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *ti
 medata,kiss_fft_cpx *fr[] 
@@ -706,7 +707,7 @@ Overfull \hbox (41.64134pt too wide) in paragraph at lines 85--85
 data,kiss_fft_scalar *t[] 
  []
 
-[158]
+[148]
 Overfull \hbox (17.95499pt too wide) in paragraph at lines 91--92
 []\OT1/cmr/m/n/10.95 location where the in-verse time data is to be stored (\OT
 1/cmtt/m/n/10.95 const kiss[]fft[]scalar*\OT1/cmr/m/n/10.95 ). 
@@ -718,43 +719,43 @@ Overfull \hbox (2.44308pt too wide) in paragraph at lines 92--93
 ed (\OT1/cmtt/m/n/10.95 kiss[]fft[]cpx*\OT1/cmr/m/n/10.95 ). 
  []
 
-) (./tent2.tex) (./impl2.tex [159] [160] [161]
+) (./tent2.tex) (./impl2.tex [149] [150] [151]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 133--133
 []\OT1/cmtt/m/n/10.95 void sf_impl2_lop (bool adj, bool add, int nx, int ny, fl
 oat* x, float* y)[] 
  []
 
-) [162]
+) [152]
 Chapter 9.
-(./freqfilt.tex [163
+(./freqfilt.tex [153
 
-] [164]
+] [154]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 137--137
 []\OT1/cmtt/m/n/10.95 void sf_freqfilt_lop (bool adj, bool add, int nx, int ny,
  float* x, float* y)[] 
  []
 
-[165]) (./freqfilt2.tex [166]
+[155]) (./freqfilt2.tex [156]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 91--91
 []\OT1/cmtt/m/n/10.95 void sf_freqfilt2_spec (const float* x /* input */, float
 ** y /* spectrum */)[] 
  []
 
-[167]
+[157]
 Overfull \hbox (30.14397pt too wide) in paragraph at lines 117--117
 []\OT1/cmtt/m/n/10.95 void sf_freqfilt2_lop (bool adj, bool add, int nx, int ny
 , float* x, float* y)[] 
  []
 
-) (./helicon.tex [168]) (./helix.tex [169] [170]) (./recfilt.tex [171]
+) (./helicon.tex [158]) (./helix.tex [159] [160]) (./recfilt.tex [161]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 48--48
 []\OT1/cmtt/m/n/10.95 void sf_recfilt_lop( bool adj, bool add, int nx, int ny, 
 float* xx, float*yy)[] 
  []
 
-) (./cosft.tex [172] [173]) [174]
+) (./cosft.tex [162] [163]) [164]
 Chapter 10.
-(./banded.tex [175
+(./banded.tex [165
 
 ]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 82--82
@@ -762,73 +763,73 @@ Overfull \hbox (1.40053pt too wide) in paragraph at lines 82--82
 gonal [band] */)[] 
  []
 
-[176]
+[166]
 Overfull \hbox (47.39003pt too wide) in paragraph at lines 111--111
 []                                     \OT1/cmtt/m/n/10.95 const float* offd /*
  off-diagonal [band] */)[] 
  []
 
-[177]) (./cgstep.tex [178]) (./conjgrad.tex
+[167]) (./cgstep.tex [168]) (./conjgrad.tex
 Overfull \hbox (38.42291pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.3.  CONJUGATE-GRADIENT WITH SHAPING REGULARIZATION (CONJ
-GRAD.C) \OT1/cmr/m/n/10.95 179
+GRAD.C) \OT1/cmr/m/n/10.95 169
  []
 
-[179] [180]) (./conjprec.tex [181] [182]) (./ccgstep.tex
+[169] [170]) (./conjprec.tex [171] [172]) (./ccgstep.tex
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 27--27
 []\OT1/cmtt/m/n/10.95 /*< Step of Claerbout's conjugate-gradient iteration for 
 complex operators.[] 
  []
 
-[183] [184]) (./cconjgrad.tex
+[173] [174]) (./cconjgrad.tex
 Overfull \hbox (189.28618pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.6.  CONJUGATE-GRADIENT WITH SHAPING REGULARIZATION FOR C
-OMPLEX NUMBERS (CCONJGRAD.C) \OT1/cmr/m/n/10.95 185
+OMPLEX NUMBERS (CCONJGRAD.C) \OT1/cmr/m/n/10.95 175
  []
 
-[185]
+[175]
 Overfull \hbox (6.12389pt too wide) in paragraph at lines 78--79
 \OT1/cmr/m/n/10.95 Frees the space al-lo-cated for the com-plex con-ju-gate gra
 -di-ent solver by []\OT1/cmtt/m/n/10.95 sf[]cconjgrad[]init[]\OT1/cmr/m/n/10.95
  . 
  []
 
-[186]) (./cdstep.tex
+[176]) (./cdstep.tex
 Overfull \hbox (189.28618pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.6.  CONJUGATE-GRADIENT WITH SHAPING REGULARIZATION FOR C
-OMPLEX NUMBERS (CCONJGRAD.C) \OT1/cmr/m/n/10.95 187
+OMPLEX NUMBERS (CCONJGRAD.C) \OT1/cmr/m/n/10.95 177
  []
 
-[187] [188] [189]) (./llist.tex [190]
+[177] [178] [179]) (./llist.tex [180]
 Overfull \hbox (50.12973pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.8.  LINKED LIST FOR USE IN CONJUGATE-DIRECTION-TYPE METH
-ODS (LLIST.C) \OT1/cmr/m/n/10.95 191
+ODS (LLIST.C) \OT1/cmr/m/n/10.95 181
  []
 
-[191] [192]) (./ccdstep.tex
+[181] [182]) (./ccdstep.tex
 Overfull \hbox (50.12973pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.8.  LINKED LIST FOR USE IN CONJUGATE-DIRECTION-TYPE METH
-ODS (LLIST.C) \OT1/cmr/m/n/10.95 193
+ODS (LLIST.C) \OT1/cmr/m/n/10.95 183
  []
 
-[193] [194]
+[183] [184]
 Overfull \hbox (48.00294pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.9.  CONJUGATE-DIRECTION ITERATION FOR COMPLEX NUMBERS (C
-CDSTEP.C) \OT1/cmr/m/n/10.95 195
+CDSTEP.C) \OT1/cmr/m/n/10.95 185
  []
 
-[195]) (./clist.tex
+[185]) (./clist.tex
 Overfull \hbox (15.12581pt too wide) in paragraph at lines 1--1
 []\OT1/cmr/bx/n/14.4 Linked list for conjugate-direction-type meth-ods (com-
  []
 
-[196] [197] [198] [199]) (./quadratic.tex) (./fzero.tex [200]
+[186] [187] [188] [189]) (./quadratic.tex) (./fzero.tex [190]
 Overfull \hbox (35.03896pt too wide) in paragraph at lines 33--34
 []\OT1/cmr/m/n/10.95 function, the root of which is re-quired. Must be of type 
 \OT1/cmtt/m/n/10.95 sf[]double[]complex\OT1/cmr/m/n/10.95 . 
  []
 
-) (./runge.tex [201]
+) (./runge.tex [191]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 36--36
 []   \OT1/cmtt/m/n/10.95 \item[n1]   number of steps for performing the raytrac
 ing (\texttt{int}).[] 
@@ -840,13 +841,13 @@ Overfull \hbox (47.39003pt too wide) in paragraph at lines 36--36
 ytracing (\texttt{int}).[] 
  []
 
-[202]
+[192]
 Overfull \hbox (76.13347pt too wide) in paragraph at lines 102--102
 []\OT1/cmtt/m/n/10.95 it = sf_ode23_step (y, par, (*rhs)(void*,float*,float*), 
 (*term)(void*,float*), traj);[] 
  []
 
-[203]
+[193]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 125--125
 []                   \OT1/cmtt/m/n/10.95 /* function returning 1 if the ray nee
 ds to terminate */,[] 
@@ -861,7 +862,7 @@ ectory (output) */)[]
 ) (./tinysolver.tex
 Underfull \vbox (badness 2443) has occurred while \output is active []
 
- [204]
+ [194]
 Overfull \hbox (1.52827pt too wide) in paragraph at lines 34--35
 []\OT1/cmr/m/n/10.95 a step-ping func-tion to per-form up-dates on the ini-tial
  model (\OT1/cmtt/m/n/10.95 sf[]solverstep\OT1/cmr/m/n/10.95 ). 
@@ -870,34 +871,34 @@ Overfull \hbox (1.52827pt too wide) in paragraph at lines 34--35
 ) (./bigsolver.tex
 Overfull \hbox (106.1737pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.14.  SOLVER FUNCTION FOR ITERATIVE LEAST-SQUARES OPTIMIZ
-ATION (TINYSOLVER.C) \OT1/cmr/m/n/10.95 205
+ATION (TINYSOLVER.C) \OT1/cmr/m/n/10.95 195
  []
 
-[205]
+[195]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 61--61
 []                    \OT1/cmtt/m/n/10.95 ...                /* variable number
  of arguments */)[] 
  []
 
-[206]
+[196]
 Overfull \hbox (104.27269pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.15.  SOLVER FUNCTIONS FOR ITERATIVE LEAST-SQUARES OPTIMI
-ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 207
+ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 197
  []
 
-[207]
+[197]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 170--170
 []                   \OT1/cmtt/m/n/10.95 ...                /* variable number 
 of arguments */)[] 
  []
 
-[208]
+[198]
 Overfull \hbox (104.27269pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.15.  SOLVER FUNCTIONS FOR ITERATIVE LEAST-SQUARES OPTIMI
-ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 209
+ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 199
  []
 
-[209] [210]
+[199] [200]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 302--302
 []                     \OT1/cmtt/m/n/10.95 int nx             /* size of \textt
 t{x} and dat */,[] 
@@ -912,10 +913,10 @@ Overfull \hbox (7.14922pt too wide) in paragraph at lines 302--302
 
 Overfull \hbox (104.27269pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.15.  SOLVER FUNCTIONS FOR ITERATIVE LEAST-SQUARES OPTIMI
-ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 211
+ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 201
  []
 
-[211] [212]
+[201] [202]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 364--364
 []                \OT1/cmtt/m/n/10.95 ...                      /* variable numb
 er of arguments */)[] 
@@ -924,16 +925,16 @@ er of arguments */)[]
 
 Overfull \hbox (104.27269pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.15.  SOLVER FUNCTIONS FOR ITERATIVE LEAST-SQUARES OPTIMI
-ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 213
+ZATION (BIGSOLVER.C) \OT1/cmr/m/n/10.95 203
  []
 
-[213]) (./irls.tex [214]) (./tridiagonal.tex
+[203]) (./irls.tex [204]) (./tridiagonal.tex
 Overfull \hbox (28.99248pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 10.16.  WEIGHTING FOR ITERATIVELY-REWEIGHTED LEAST SQUARES 
-(IRLS.C) \OT1/cmr/m/n/10.95 215
+(IRLS.C) \OT1/cmr/m/n/10.95 205
  []
 
-[215] [216] [217]
+[205] [206] [207]
 Overfull \hbox (35.89265pt too wide) in paragraph at lines 109--109
 []                           \OT1/cmtt/m/n/10.95 float* b /* in - right-hand si
 de, out - solution */)[] 
@@ -945,7 +946,7 @@ Overfull \hbox (35.89265pt too wide) in paragraph at lines 127--127
 de, out - solution */)[] 
  []
 
-) [218]
+) [208]
 Chapter 11.
 (./int1.tex
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 24--24
@@ -953,7 +954,7 @@ Overfull \hbox (1.40053pt too wide) in paragraph at lines 24--24
 ion function */,[] 
  []
 
-[219
+[209
 
 ]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 54--54
@@ -967,51 +968,51 @@ Overfull \hbox (41.64134pt too wide) in paragraph at lines 84--84
 f_complex* x, sf_comple[] 
  []
 
-[220]) (./int2.tex [221]
+[210]) (./int2.tex [211]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 59--59
 []\OT1/cmtt/m/n/10.95 void  sf_int2_lop (bool adj, bool add, int nm, int ny, fl
 oat* x, float* ord)[] 
  []
 
-[222]) (./int3.tex [223]
+[212]) (./int3.tex [213]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 65--65
 []\OT1/cmtt/m/n/10.95 void  sf_int3_lop (bool adj, bool add, int nm, int ny, fl
 oat* mm, float* dd)[] 
  []
 
-[224]) (./interp.tex [225] [226]) (./prefilter.tex
+[214]) (./interp.tex [215] [216]) (./prefilter.tex
 Overfull \hbox (137.19507pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 11.5.  CONVERT DATA TO B-SPLINE COEFFICIENTS BY FAST B-SPLI
-NE TRANSFORM (PREFILTER.C) \OT1/cmr/m/n/10.95 227
+NE TRANSFORM (PREFILTER.C) \OT1/cmr/m/n/10.95 217
  []
 
-[227] [228]) (./spline.tex [229] [230] [231]) (./stretch.tex
+[217] [218]) (./spline.tex [219] [220] [221]) (./stretch.tex
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 22--22
 []                        \OT1/cmtt/m/n/10.95 bool narrow                /* if 
 zero boundary */)[] 
  []
 
-[232]
+[222]
 Overfull \hbox (51.22115pt too wide) in paragraph at lines 70--71
 \OT1/cmr/m/n/10.95 Converts the or-di-nates (\OT1/cmtt/m/n/10.95 ord\OT1/cmr/m/
 n/10.95 ) de-fined in the in-put to model (\OT1/cmtt/m/n/10.95 mod\OT1/cmr/m/n/
 10.95 ). It uses the []\OT1/cmtt/m/n/10.95 sf[]tridiagonal[]solve[]
  []
 
-[233]
+[223]
 Overfull \hbox (36.71303pt too wide) in paragraph at lines 96--97
 \OT1/cmr/m/n/10.95 Converts model (mod) to or-di-nates by lin-ear in-ter-po-la-
 tion. It is the in-verse of []\OT1/cmtt/m/n/10.95 sf[]stretch[]apply[]\OT1/cmr/
 m/n/10.95 . 
  []
 
-[234]) (./eno.tex [235]
+[224]) (./eno.tex [225]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 69--69
 []\OT1/cmtt/m/n/10.95 /*< Set the interpolation table. c can be changed or free
 d afterwords >*/[] 
  []
 
-[236]) (./eno2.tex [237]
+[226]) (./eno2.tex [227]
 Overfull \hbox (7.14922pt too wide) in paragraph at lines 56--56
 []\OT1/cmtt/m/n/10.95 /*< Set the interpolation table. c can be changed or free
 d afterwords. >*/[] 
@@ -1023,13 +1024,13 @@ Overfull \hbox (7.14922pt too wide) in paragraph at lines 82--82
 d afterwords. >*/[] 
  []
 
-[238]
+[228]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 130--130
 []                    \OT1/cmtt/m/n/10.95 der what         /* what to compute [
 FUNC,DER,BOTH] */)[] 
  []
 
-[239]) (./pweno.tex [240] [241]
+[229]) (./pweno.tex [230] [231]
 Overfull \hbox (53.13872pt too wide) in paragraph at lines 108--108
 []\OT1/cmtt/m/n/10.95 void sf_pweno_set (sf_pweno ent, float* c /* data [n] */,
  int p /* power order */)[] 
@@ -1041,17 +1042,17 @@ Overfull \hbox (35.89265pt too wide) in paragraph at lines 108--108
 an be changed or freed[] 
  []
 
-[242]) [243] [244
+[232]) [233] [234
 
 ]
 Chapter 12.
-(./triangle1.tex [245]
+(./triangle1.tex [235]
 Overfull \hbox (30.14397pt too wide) in paragraph at lines 46--46
 []\OT1/cmtt/m/n/10.95 void sf_triangle1_lop (bool adj, bool add, int nx, int ny
 , float* x, float* y)[] 
  []
 
-) (./triangle2.tex [246]
+) (./triangle2.tex [236]
 Overfull \hbox (30.14397pt too wide) in paragraph at lines 49--49
 []\OT1/cmtt/m/n/10.95 void sf_triangle2_lop (bool adj, bool add, int nx, int ny
 , float* x, float* y)[] 
@@ -1060,22 +1061,22 @@ Overfull \hbox (30.14397pt too wide) in paragraph at lines 49--49
 
 Overfull \hbox (4.04846pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 12.2.  2-D TRIANGLE SMOOTHING AS A LINEAR OPERATOR (TRIANGL
-E2.C) \OT1/cmr/m/n/10.95 247
+E2.C) \OT1/cmr/m/n/10.95 237
  []
 
-[247]) (./triangle.tex [248] [249] [250] [251] [252]
+[237]) (./triangle.tex [238] [239] [240] [241] [242]
 Overfull \hbox (6.23311pt too wide) in paragraph at lines 232--233
 []\OT1/cmr/m/n/10.95 an ob-ject (fil-ter) used for smooth-ing, box or tri-an-gl
 e. Must be of type \OT1/cmtt/m/n/10.95 sf[]triangle\OT1/cmr/m/n/10.95 . 
  []
 
-[253]
+[243]
 Overfull \hbox (6.23311pt too wide) in paragraph at lines 265--266
 []\OT1/cmr/m/n/10.95 an ob-ject (fil-ter) used for smooth-ing, box or tri-an-gl
 e. Must be of type \OT1/cmtt/m/n/10.95 sf[]triangle\OT1/cmr/m/n/10.95 . 
  []
 
-) (./edge.tex [254] [255] [256]) [257] [258
+) (./edge.tex [244] [245] [246]) [247] [248
 
 ]
 Chapter 13.
@@ -1085,7 +1086,7 @@ Overfull \hbox (1.40053pt too wide) in paragraph at lines 27--27
 ion accuracy */,[] 
  []
 
-[259] [260]) (./cell.tex [261]
+[249] [250]) (./cell.tex [251]
 Overfull \hbox (18.64659pt too wide) in paragraph at lines 49--49
 []\OT1/cmtt/m/n/10.95 float sf_cell1_update1 (int dim, float s, float v, float 
 *p, const float *g)[] 
@@ -1097,7 +1098,7 @@ Overfull \hbox (18.64659pt too wide) in paragraph at lines 83--83
 *p, const float *g)[] 
  []
 
-[262] [263]
+[252] [253]
 Overfull \hbox (24.39528pt too wide) in paragraph at lines 148--148
 []\OT1/cmtt/m/n/10.95 float sf_cell11_update1 (int dim, float s, float v, float
  *p, const float *g)[] 
@@ -1109,15 +1110,15 @@ Overfull \hbox (24.39528pt too wide) in paragraph at lines 184--184
  *p, const float *g)[] 
  []
 
-[264] [265]
+[254] [255]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 282--282
 []\OT1/cmtt/m/n/10.95 float sf_cell_update1 (int dim, float s, float v, float *
 p, const float *g)[] 
  []
 
-[266] [267]) [268]
+[256] [257]) [258]
 Chapter 14.
-(./deriv.tex [269
+(./deriv.tex [259
 
 ]) (./quantile.tex
 Overfull \hbox (7.10074pt too wide) in paragraph at lines 1--1
@@ -1125,24 +1126,24 @@ Overfull \hbox (7.10074pt too wide) in paragraph at lines 1--1
 
  []
 
-[270]) (./randn.tex
+[260]) (./randn.tex
 Overfull \hbox (83.36246pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 14.3.  PSEUDO-RANDOM NUMBERS: UNIFORM AND NORMALLY DISTRIBU
-TED (RANDN.C) \OT1/cmr/m/n/10.95 271
+TED (RANDN.C) \OT1/cmr/m/n/10.95 261
  []
 
-[271]) (./math1.tex [272] [273] [274] [275] [276]) [277] [278
+[261]) (./math1.tex [262] [263] [264] [265] [266]) [267] [268
 
 ]
 Chapter 15.
-(./point.tex [279] [280] [281] [282] [283] [284] [285] [286] [287])
-(./vector.tex [288] [289] [290] [291] [292] [293] [294]) (./decart.tex
+(./point.tex [269] [270] [271] [272] [273] [274] [275] [276] [277])
+(./vector.tex [278] [279] [280] [281] [282] [283] [284]) (./decart.tex
 Overfull \hbox (119.09717pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 15.3.  CONVERSION BETWEEN LINE AND CARTESIAN COORDINATES OF
- A VECTOR (DECART.C) \OT1/cmr/m/n/10.95 295
+ A VECTOR (DECART.C) \OT1/cmr/m/n/10.95 285
  []
 
-[295] [296]
+[285] [286]
 Overfull \hbox (1.94458pt too wide) in paragraph at lines 117--118
 \OT1/cmr/m/n/10.95 Converts the line co-or-di-nate to Carte-sian co-or-di-nates
 . It works ex-actly like []\OT1/cmtt/m/n/10.95 sf[]line2cart[]
@@ -1163,20 +1164,20 @@ Overfull \hbox (1.94458pt too wide) in paragraph at lines 148--149
 
 Overfull \hbox (119.09717pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 15.3.  CONVERSION BETWEEN LINE AND CARTESIAN COORDINATES OF
- A VECTOR (DECART.C) \OT1/cmr/m/n/10.95 297
+ A VECTOR (DECART.C) \OT1/cmr/m/n/10.95 287
  []
 
-[297]
+[287]
 Overfull \hbox (12.8979pt too wide) in paragraph at lines 164--164
 []                         \OT1/cmtt/m/n/10.95 const off_t* ii /* cartesian coo
 rdinates [dim] */)[] 
  []
 
-[298]) (./axa.tex [299] [300] [301] [302] [303] [304]) [305] [306
+[288]) (./axa.tex [289] [290] [291] [292] [293] [294]) [295] [296
 
 ]
 Chapter 16.
-(./sharpen.tex [307] [308]) (./sharpinv.tex
+(./sharpen.tex [297] [298]) (./sharpinv.tex
 Overfull \hbox (39.45906pt too wide) in paragraph at lines 1--1
 []\OT1/cmr/bx/n/14.4 Sharpening in-ver-sion added Breg-man it-er-a-tion (sharpi
 nv.c) 
@@ -1185,54 +1186,57 @@ nv.c)
 
 Overfull \hbox (17.05396pt too wide) has occurred while \output is active
 \OT1/cmr/m/sl/10.95 16.2.  SHARPENING INVERSION ADDED BREGMAN ITERATION (SHARPI
-NV.C) \OT1/cmr/m/n/10.95 309
+NV.C) \OT1/cmr/m/n/10.95 299
  []
 
-[309]
+[299]
 Overfull \hbox (1.40053pt too wide) in paragraph at lines 55--55
 []\OT1/cmtt/m/n/10.95 void sf_sharpinv(oper, scale, niter, ncycle, perc, verb, 
 nq, np, qq, pp);[] 
  []
 
-) [310]
+) [300]
 Chapter 17.
-(./pqueue.tex [311
+(./pqueue.tex [301
 
-] [312] [313]) (./system.tex [314]) (./stack.tex [315]
-[316] [317] [318]) [319] [320
+] [302] [303]) (./system.tex [304]) (./stack.tex [305]
+[306] [307] [308]) [309] [310
 
-]
-No file manual.ind.
-(./manual.aux) ) 
+] (./manual.ind [311
+
+]) [312
+
+
+] (./manual.aux) ) 
 Here is how much of TeX's memory you used:
- 8074 strings out of 493848
- 112805 string characters out of 3149206
- 152380 words of memory out of 3000000
- 8648 multiletter control sequences out of 15000+200000
+ 7628 strings out of 493848
+ 104370 string characters out of 3149206
+ 151964 words of memory out of 3000000
+ 8208 multiletter control sequences out of 15000+200000
  17508 words of font info for 69 fonts, out of 3000000 for 9000
  714 hyphenation exceptions out of 8191
- 38i,16n,37p,1646b,591s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmbx10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmbx12.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmex10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmmi10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/
-cmmi8.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-r10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
-2.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.
-pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb
-></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></
-usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr
-/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsl10.pfb></usr/
-local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/l
-ocal/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/loc
-al/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/loca
-l/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local
-/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/local/
-texlive/2009/texmf-dist/fonts/type1/public/doublestroke/dsrom10.pfb>
-Output written on manual.pdf (320 pages, 1307300 bytes).
+ 38i,16n,36p,1646b,495s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmbx10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmbx12.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmex10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmmi10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmmi8.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r12.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
+7.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.p
+fb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb>
+</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></u
+sr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsl10.pfb></us
+r/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr
+/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/l
+ocal/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/lo
+cal/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/loc
+al/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/loca
+l/texlive/2009/texmf-dist/fonts/type1/public/doublestroke/dsrom10.pfb>
+Output written on manual.pdf (312 pages, 1092568 bytes).
 PDF statistics:
- 6328 PDF objects out of 7423 (max. 8388607)
- 2395 named destinations out of 2487 (max. 500000)
- 4409 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 4516 PDF objects out of 5155 (max. 8388607)
+ 2387 named destinations out of 2487 (max. 500000)
+ 769 words of extra memory for PDF output out of 10000 (max. 10000000)
 

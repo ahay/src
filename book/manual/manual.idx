@@ -1,29 +1,29 @@
-\indexentry{operator!linear|hyperpage}{135}
-\indexentry{zero-padding operator|hyperpage}{136}
-\indexentry{operator!zero padding|hyperpage}{136}
-\indexentry{convolution operator|hyperpage}{136}
-\indexentry{operator!convolution|hyperpage}{136}
-\indexentry{identity operator|hyperpage}{136}
-\indexentry{operator!identity|hyperpage}{136}
-\indexentry{null operator|hyperpage}{136}
-\indexentry{operator!null|hyperpage}{136}
-\indexentry{operator!product|hyperpage}{137}
-\indexentry{product!of operators|hyperpage}{137}
-\indexentry{operator!adjoint|hyperpage}{137}
-\indexentry{adjoint|hyperpage}{137}
-\indexentry{truncation operator|hyperpage}{137}
-\indexentry{operator!truncation|hyperpage}{137}
-\indexentry{operator!crosscorrelation|hyperpage}{137}
-\indexentry{crosscorrelation operation|hyperpage}{137}
-\indexentry{filtering!frequency domain|hyperpage}{163}
-\indexentry{filtering!frequency domain|hyperpage}{166}
-\indexentry{conjugate gradient!solver|hyperpage}{179}
-\indexentry{conjugate gradient!with preconditioning|hyperpage}{182}
-\indexentry{conjugate direction method!real data|hyperpage}{188}
-\indexentry{conjugate direction method!complex data|hyperpage}{194}
-\indexentry{dot product!Hermitian|hyperpage}{196}
-\indexentry{interpolation!1D|hyperpage}{219}
-\indexentry{interpolation!complex data|hyperpage}{220}
-\indexentry{interpolation!2D|hyperpage}{221}
-\indexentry{interpolation!3D|hyperpage}{223}
-\indexentry{interpolation!nearest neighbor|hyperpage}{225}
+\indexentry{operator!linear|hyperpage}{125}
+\indexentry{zero-padding operator|hyperpage}{126}
+\indexentry{operator!zero padding|hyperpage}{126}
+\indexentry{convolution operator|hyperpage}{126}
+\indexentry{operator!convolution|hyperpage}{126}
+\indexentry{identity operator|hyperpage}{126}
+\indexentry{operator!identity|hyperpage}{126}
+\indexentry{null operator|hyperpage}{126}
+\indexentry{operator!null|hyperpage}{126}
+\indexentry{operator!product|hyperpage}{127}
+\indexentry{product!of operators|hyperpage}{127}
+\indexentry{operator!adjoint|hyperpage}{127}
+\indexentry{adjoint|hyperpage}{127}
+\indexentry{truncation operator|hyperpage}{127}
+\indexentry{operator!truncation|hyperpage}{127}
+\indexentry{operator!crosscorrelation|hyperpage}{127}
+\indexentry{crosscorrelation operation|hyperpage}{127}
+\indexentry{filtering!frequency domain|hyperpage}{153}
+\indexentry{filtering!frequency domain|hyperpage}{156}
+\indexentry{conjugate gradient!solver|hyperpage}{169}
+\indexentry{conjugate gradient!with preconditioning|hyperpage}{172}
+\indexentry{conjugate direction method!real data|hyperpage}{178}
+\indexentry{conjugate direction method!complex data|hyperpage}{184}
+\indexentry{dot product!Hermitian|hyperpage}{186}
+\indexentry{interpolation!1D|hyperpage}{209}
+\indexentry{interpolation!complex data|hyperpage}{210}
+\indexentry{interpolation!2D|hyperpage}{211}
+\indexentry{interpolation!3D|hyperpage}{213}
+\indexentry{interpolation!nearest neighbor|hyperpage}{215}

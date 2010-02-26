@@ -7,545 +7,90 @@
 \BOOKMARK [1][-]{section.2.3}{Explanation of the code}{chapter.2}
 \BOOKMARK [0][-]{chapter.3}{Data types}{}
 \BOOKMARK [1][-]{section.3.1}{Data types}{chapter.3}
-\BOOKMARK [2][-]{subsection.3.1.1}{Complex numbers and FFT}{section.3.1}
-\BOOKMARK [2][-]{subsection.3.1.2}{Files}{section.3.1}
-\BOOKMARK [2][-]{subsection.3.1.3}{Operators}{section.3.1}
-\BOOKMARK [2][-]{subsection.3.1.4}{Geometry}{section.3.1}
-\BOOKMARK [2][-]{subsection.3.1.5}{Lists}{section.3.1}
-\BOOKMARK [2][-]{subsection.3.1.6}{sys/types.h}{section.3.1}
 \BOOKMARK [0][-]{chapter.4}{Preparing for input}{}
 \BOOKMARK [1][-]{section.4.1}{Convenience allocation programs \(alloc.c\)}{chapter.4}
-\BOOKMARK [2][-]{subsection.4.1.1}{sf\137alloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.2}{sf\137realloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.3}{sf\137charalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.4}{sf\137ucharalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.5}{sf\137shortalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.6}{sf\137intalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.7}{sf\137largeintalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.8}{sf\137floatalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.9}{sf\137complexalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.10}{sf\137complexalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.11}{sf\137complexalloc3}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.12}{sf\137complexalloc4}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.13}{sf\137boolalloc}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.14}{sf\137boolalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.15}{sf\137boolalloc3}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.16}{sf\137floatalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.17}{sf\137floatalloc3}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.18}{sf\137floatalloc4}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.19}{sf\137floatalloc5}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.20}{sf\137floatalloc6}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.21}{sf\137intalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.22}{sf\137intalloc3}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.23}{sf\137intalloc4}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.24}{sf\137charalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.25}{sf\137uncharalloc2}{section.4.1}
-\BOOKMARK [2][-]{subsection.4.1.26}{sf\137uncharalloc3}{section.4.1}
 \BOOKMARK [1][-]{section.4.2}{Simbol Table for parameters \(simtab.c\)}{chapter.4}
-\BOOKMARK [2][-]{subsection.4.2.1}{sf\137simtab\137init}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.2}{sf\137simtab\137close}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.3}{sf\137simtab\137enter}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.4}{sf\137simtab\137get}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.5}{sf\137simtab\137getint}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.6}{sf\137simtab\137getlargeint}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.7}{sf\137simtab\137getfloat}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.8}{sf\137simtab\137getdouble}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.9}{sf\137simtab\137getfloats}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.10}{sf\137simtab\137getstring}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.11}{sf\137simtab\137getbool}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.12}{sf\137simtab\137getbools}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.13}{sf\137simtab\137getints}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.14}{sf\137simtab\137getstrings}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.15}{sf\137simtab\137put}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.16}{sf\137simtab\137input}{section.4.2}
-\BOOKMARK [2][-]{subsection.4.2.17}{sf\137simtab\137output}{section.4.2}
 \BOOKMARK [1][-]{section.4.3}{Parameter handling \(getpar.c\)}{chapter.4}
-\BOOKMARK [2][-]{subsection.4.3.1}{sf\137stdin}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.2}{sf\137init}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.3}{sf\137par\137close}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.4}{sf\137parout}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.5}{sf\137getprog}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.6}{sf\137getuser}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.7}{sf\137gethost}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.8}{sf\137getcdir}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.9}{sf\137getint}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.10}{sf\137getlargeint}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.11}{sf\137getints}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.12}{sf\137getfloat}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.13}{sf\137getdouble}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.14}{sf\137getfloats}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.15}{sf\137getstring}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.16}{sf\137getstrings}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.17}{sf\137getbool}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.18}{sf\137getbools}{section.4.3}
-\BOOKMARK [2][-]{subsection.4.3.19}{sf\137getpars}{section.4.3}
 \BOOKMARK [0][-]{chapter.5}{Operations with RSF files}{}
 \BOOKMARK [1][-]{section.5.1}{Main operations with RSF files \(file.c\)}{chapter.5}
-\BOOKMARK [2][-]{subsection.5.1.1}{sf\137file\137error}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.2}{sf\137error}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.3}{sf\137input}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.4}{sf\137output}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.5}{sf\137gettype}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.6}{sf\137getform}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.7}{sf\137esize}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.8}{sf\137settype}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.9}{sf\137setpars}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.10}{sf\137bufsiz}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.11}{sf\137setform}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.12}{sf\137setformat}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.13}{sf\137getfilename}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.14}{sf\137gettmpdatapath}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.15}{sf\137getdatapath}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.16}{sf\137readpathfile}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.17}{sf\137fileclose}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.18}{sf\137histint}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.19}{sf\137histints}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.20}{sf\137histlargeint}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.21}{sf\137histfloat}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.22}{sf\137histdouble}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.23}{sf\137histfloats}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.24}{sf\137histbool}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.25}{sf\137histtbools}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.26}{sf\137histstring}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.27}{sf\137fileflush}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.28}{sf\137putint}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.29}{sf\137putints}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.30}{sf\137putlargeint}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.31}{sf\137putfloat}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.32}{sf\137putstring}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.33}{sf\137putline}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.34}{sf\137setaformat}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.35}{sf\137complexwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.36}{sf\137complexread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.37}{sf\137charwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.38}{sf\137uncharwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.39}{sf\137charread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.40}{sf\137uncharread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.41}{sf\137intwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.42}{sf\137intread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.43}{sf\137shortread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.44}{sf\137shortwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.45}{sf\137floatwrite}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.46}{sf\137floatread}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.47}{sf\137bytes}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.48}{sf\137tell}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.49}{sf\137tempfile}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.50}{sf\137seek}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.51}{sf\137unpipe}{section.5.1}
-\BOOKMARK [2][-]{subsection.5.1.52}{sf\137close}{section.5.1}
 \BOOKMARK [1][-]{section.5.2}{Additional operations with RSF files \(files.c\)}{chapter.5}
-\BOOKMARK [2][-]{subsection.5.2.1}{sf\137filedims}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.2}{sf\137largefiledims}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.3}{sf\137memsize}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.4}{sf\137filesize}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.5}{sf\137leftsize}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.6}{sf\137cp}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.7}{sf\137rm}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.8}{sf\137shiftdim}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.9}{sf\137unshiftdim}{section.5.2}
-\BOOKMARK [2][-]{subsection.5.2.10}{sf\137endian}{section.5.2}
 \BOOKMARK [1][-]{section.5.3}{Complex number operations \(komplex.c\)}{chapter.5}
-\BOOKMARK [2][-]{subsection.5.3.1}{creal}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.2}{cimag}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.3}{dcneg}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.4}{dcadd}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.5}{dcsub}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.6}{dcmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.7}{dccmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.8}{dcdmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.9}{dcrmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.10}{dcdiv}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.11}{cabs}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.12}{cabs}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.13}{crealf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.14}{cimagf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.15}{cprint}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.16}{cadd}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.17}{csub}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.18}{csqrtf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.19}{cdiv}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.20}{cmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.21}{crmul}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.22}{cneg}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.23}{conjf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.24}{cabsf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.25}{cargf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.26}{ctanhf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.27}{ccosf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.28}{ccoshf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.29}{ccosf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.30}{csinhf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.31}{clogf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.32}{cexpf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.33}{ctanf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.34}{casinf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.35}{cacosf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.36}{catanf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.37}{catanhf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.38}{casinhf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.39}{cacoshf}{section.5.3}
-\BOOKMARK [2][-]{subsection.5.3.40}{cpowf}{section.5.3}
 \BOOKMARK [0][-]{chapter.6}{Error handling}{}
 \BOOKMARK [1][-]{section.6.1}{Handling warning and error messages \(error.c\)}{chapter.6}
-\BOOKMARK [2][-]{subsection.6.1.1}{sf\137error}{section.6.1}
-\BOOKMARK [2][-]{subsection.6.1.2}{sf\137warning}{section.6.1}
 \BOOKMARK [0][-]{chapter.7}{Linear operators}{}
 \BOOKMARK [1][-]{section.7.1}{Introduction}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.1.1}{Definition of operators}{section.7.1}
-\BOOKMARK [2][-]{subsection.7.1.2}{Products of operators}{section.7.1}
-\BOOKMARK [2][-]{subsection.7.1.3}{Adjoint operators}{section.7.1}
-\BOOKMARK [2][-]{subsection.7.1.4}{The dot-product test}{section.7.1}
-\BOOKMARK [2][-]{subsection.7.1.5}{Implementation of operators}{section.7.1}
 \BOOKMARK [1][-]{section.7.2}{Adjoint zeroing \(adjnull.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.2.1}{sf\137adjnull}{section.7.2}
-\BOOKMARK [2][-]{subsection.7.2.2}{sf\137cadjnull}{section.7.2}
 \BOOKMARK [1][-]{section.7.3}{Identity operator \(copy.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.3.1}{sf\137copy\137lop}{section.7.3}
 \BOOKMARK [1][-]{section.7.4}{Identity operator \(complex data\) \(ccopy.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.4.1}{sf\137ccopy\137lop}{section.7.4}
 \BOOKMARK [1][-]{section.7.5}{Simple mask operator \(mask.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.5.1}{sf\137mask\137init}{section.7.5}
-\BOOKMARK [2][-]{subsection.7.5.2}{sf\137mask\137lop}{section.7.5}
-\BOOKMARK [2][-]{subsection.7.5.3}{sf\137cmask\137lop}{section.7.5}
 \BOOKMARK [1][-]{section.7.6}{Simple weight operator \(weight.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.6.1}{sf\137weight\137init}{section.7.6}
-\BOOKMARK [2][-]{subsection.7.6.2}{sf\137weight\137lop}{section.7.6}
-\BOOKMARK [2][-]{subsection.7.6.3}{sf\137cweight\137lop}{section.7.6}
-\BOOKMARK [2][-]{subsection.7.6.4}{sf\137weight\137apply}{section.7.6}
-\BOOKMARK [2][-]{subsection.7.6.5}{sf\137cweight\137apply}{section.7.6}
 \BOOKMARK [1][-]{section.7.7}{1-D finite difference \(igrad1.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.7.1}{sf\137igrad1\137lop}{section.7.7}
 \BOOKMARK [1][-]{section.7.8}{Causal integration \(causint.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.8.1}{sf\137causint\137lop}{section.7.8}
 \BOOKMARK [1][-]{section.7.9}{Chaining linear operators \(chain.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.9.1}{sf\137chain}{section.7.9}
-\BOOKMARK [2][-]{subsection.7.9.2}{sf\137cchain}{section.7.9}
-\BOOKMARK [2][-]{subsection.7.9.3}{sf\137array}{section.7.9}
-\BOOKMARK [2][-]{subsection.7.9.4}{sf\137normal}{section.7.9}
-\BOOKMARK [2][-]{subsection.7.9.5}{sf\137chain3}{section.7.9}
 \BOOKMARK [1][-]{section.7.10}{Dot product test for linear operators \(dottest.c\)}{chapter.7}
-\BOOKMARK [2][-]{subsection.7.10.1}{sf\137dot\137test}{section.7.10}
 \BOOKMARK [0][-]{chapter.8}{Data analysis}{}
 \BOOKMARK [1][-]{section.8.1}{FFT \(kiss\137fftr.c\)}{chapter.8}
-\BOOKMARK [2][-]{subsection.8.1.1}{sf\137kiss\137fftr\137alloc}{section.8.1}
-\BOOKMARK [2][-]{subsection.8.1.2}{kiss\137fftr}{section.8.1}
-\BOOKMARK [2][-]{subsection.8.1.3}{kiss\137fftri}{section.8.1}
 \BOOKMARK [1][-]{section.8.2}{Cosine window weighting function \(tent2.c\)}{chapter.8}
-\BOOKMARK [2][-]{subsection.8.2.1}{sf\137tent2}{section.8.2}
 \BOOKMARK [1][-]{section.8.3}{Anisotropic diffusion, 2-D \(impl2.c\)}{chapter.8}
-\BOOKMARK [2][-]{subsection.8.3.1}{sf\137impl2\137init}{section.8.3}
-\BOOKMARK [2][-]{subsection.8.3.2}{sf\137impl2\137close}{section.8.3}
-\BOOKMARK [2][-]{subsection.8.3.3}{sf\137impl2\137set}{section.8.3}
-\BOOKMARK [2][-]{subsection.8.3.4}{sf\137impl2\137set}{section.8.3}
-\BOOKMARK [2][-]{subsection.8.3.5}{sf\137impl2\137lop}{section.8.3}
 \BOOKMARK [0][-]{chapter.9}{Filtering}{}
 \BOOKMARK [1][-]{section.9.1}{Frequency-domain filtering \(freqfilt.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.1.1}{sf\137freqfilt\137init}{section.9.1}
-\BOOKMARK [2][-]{subsection.9.1.2}{sf\137freqfilt\137set}{section.9.1}
-\BOOKMARK [2][-]{subsection.9.1.3}{sf\137freqfilt\137cset}{section.9.1}
-\BOOKMARK [2][-]{subsection.9.1.4}{sf\137freqfilt\137close}{section.9.1}
-\BOOKMARK [2][-]{subsection.9.1.5}{sf\137freqfilt}{section.9.1}
-\BOOKMARK [2][-]{subsection.9.1.6}{sf\137freqfilt\137lop}{section.9.1}
 \BOOKMARK [1][-]{section.9.2}{Frequency-domain filtering in 2-D \(freqfilt.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.2.1}{sf\137freqfilt2\137init}{section.9.2}
-\BOOKMARK [2][-]{subsection.9.2.2}{sf\137freqfilt2\137set}{section.9.2}
-\BOOKMARK [2][-]{subsection.9.2.3}{sf\137freqfilt2\137close}{section.9.2}
-\BOOKMARK [2][-]{subsection.9.2.4}{sf\137freqfilt2\137spec}{section.9.2}
-\BOOKMARK [2][-]{subsection.9.2.5}{sf\137freqfilt2\137lop}{section.9.2}
 \BOOKMARK [1][-]{section.9.3}{Helical convolution \(helicon.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.3.1}{sf\137helicon\137init}{section.9.3}
-\BOOKMARK [2][-]{subsection.9.3.2}{sf\137helicon\137lop}{section.9.3}
 \BOOKMARK [1][-]{section.9.4}{Helical filter definition and allocation \(helix.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.4.1}{sf\137allocatehelix}{section.9.4}
-\BOOKMARK [2][-]{subsection.9.4.2}{sf\137deallocatehelix}{section.9.4}
-\BOOKMARK [2][-]{subsection.9.4.3}{sf\137displayhelix}{section.9.4}
 \BOOKMARK [1][-]{section.9.5}{Recursive convolution \(polynomial division\) \(recfilt.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.5.1}{sf\137recfilt\137init}{section.9.5}
-\BOOKMARK [2][-]{subsection.9.5.2}{sf\137recfilt\137lop}{section.9.5}
-\BOOKMARK [2][-]{subsection.9.5.3}{sf\137recfilt\137close}{section.9.5}
 \BOOKMARK [1][-]{section.9.6}{Cosine Fourier transform \(cosft.c\)}{chapter.9}
-\BOOKMARK [2][-]{subsection.9.6.1}{sf\137cosft}{section.9.6}
-\BOOKMARK [2][-]{subsection.9.6.2}{sf\137cosft\137close}{section.9.6}
-\BOOKMARK [2][-]{subsection.9.6.3}{sf\137cosft\137frw}{section.9.6}
-\BOOKMARK [2][-]{subsection.9.6.4}{sf\137cosft\137inv}{section.9.6}
 \BOOKMARK [0][-]{chapter.10}{Solvers}{}
 \BOOKMARK [1][-]{section.10.1}{Banded matrix solver \(banded.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.1.1}{sf\137banded\137init}{section.10.1}
-\BOOKMARK [2][-]{subsection.10.1.2}{sf\137banded\137define}{section.10.1}
-\BOOKMARK [2][-]{subsection.10.1.3}{sf\137banded\137const\137define}{section.10.1}
-\BOOKMARK [2][-]{subsection.10.1.4}{sf\137banded\137const\137define\137reflect}{section.10.1}
-\BOOKMARK [2][-]{subsection.10.1.5}{sf\137banded\137solve}{section.10.1}
-\BOOKMARK [2][-]{subsection.10.1.6}{sf\137banded\137close}{section.10.1}
 \BOOKMARK [1][-]{section.10.2}{Claerbout's conjugate-gradient iteration \(cgstep.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.2.1}{sf\137cgstep}{section.10.2}
-\BOOKMARK [2][-]{subsection.10.2.2}{sf\137cgstep\137close}{section.10.2}
 \BOOKMARK [1][-]{section.10.3}{Conjugate-gradient with shaping regularization \(conjgrad.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.3.1}{sf\137conjgrad\137init}{section.10.3}
-\BOOKMARK [2][-]{subsection.10.3.2}{sf\137conjgrad\137close}{section.10.3}
-\BOOKMARK [2][-]{subsection.10.3.3}{sf\137conjgrad}{section.10.3}
 \BOOKMARK [1][-]{section.10.4}{CG with preconditioning \(conjprec.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.4.1}{sf\137conjprec\137init}{section.10.4}
-\BOOKMARK [2][-]{subsection.10.4.2}{sf\137conjprec\137close}{section.10.4}
-\BOOKMARK [2][-]{subsection.10.4.3}{sf\137conjprec}{section.10.4}
 \BOOKMARK [1][-]{section.10.5}{CG iteration \(complex data\) \(cgstep.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.5.1}{sf\137ccgstep}{section.10.5}
-\BOOKMARK [2][-]{subsection.10.5.2}{sf\137ccgstep\137close}{section.10.5}
-\BOOKMARK [2][-]{subsection.10.5.3}{dotprod}{section.10.5}
 \BOOKMARK [1][-]{section.10.6}{Conjugate-gradient with shaping regularization for complex numbers \(cconjgrad.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.6.1}{norm}{section.10.6}
-\BOOKMARK [2][-]{subsection.10.6.2}{sf\137cconjgrad\137init}{section.10.6}
-\BOOKMARK [2][-]{subsection.10.6.3}{sf\137cconjgrad\137close}{section.10.6}
-\BOOKMARK [2][-]{subsection.10.6.4}{sf\137cconjgrad}{section.10.6}
 \BOOKMARK [1][-]{section.10.7}{Conjugate-direction iteration \(cdstep.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.7.1}{sf\137cdstep\137init}{section.10.7}
-\BOOKMARK [2][-]{subsection.10.7.2}{sf\137cdstep\137close}{section.10.7}
-\BOOKMARK [2][-]{subsection.10.7.3}{sf\137cdstep}{section.10.7}
-\BOOKMARK [2][-]{subsection.10.7.4}{sf\137cdstep\137diag}{section.10.7}
-\BOOKMARK [2][-]{subsection.10.7.5}{sf\137cdstep\137mat}{section.10.7}
 \BOOKMARK [1][-]{section.10.8}{Linked list for use in conjugate-direction-type methods \(llist.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.8.1}{sf\137list\137init}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.2}{sf\137llist\137rewind}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.3}{sf\137llist\137depth}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.4}{sf\137llist\137add}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.5}{sf\137llist\137down}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.6}{sf\137llist\137close}{section.10.8}
-\BOOKMARK [2][-]{subsection.10.8.7}{sf\137llist\137chop}{section.10.8}
 \BOOKMARK [1][-]{section.10.9}{Conjugate-direction iteration for complex numbers \(ccdstep.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.9.1}{sf\137ccdstep\137init}{section.10.9}
-\BOOKMARK [2][-]{subsection.10.9.2}{sf\137ccdstep\137close}{section.10.9}
-\BOOKMARK [2][-]{subsection.10.9.3}{sf\137ccdstep}{section.10.9}
-\BOOKMARK [2][-]{subsection.10.9.4}{saxpy}{section.10.9}
-\BOOKMARK [2][-]{subsection.10.9.5}{dsdot}{section.10.9}
 \BOOKMARK [1][-]{section.10.10}{Linked list for CD-type methods \(complex data\) \(clist.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.10.1}{sf\137clist\137init}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.2}{sf\137clist\137rewind}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.3}{sf\137clist\137depth}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.4}{sf\137clist\137add}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.5}{sf\137llist\137down}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.6}{sf\137clist\137close}{section.10.10}
-\BOOKMARK [2][-]{subsection.10.10.7}{sf\137clist\137chop}{section.10.10}
 \BOOKMARK [1][-]{section.10.11}{Solving quadratic equations \(quadratic.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.11.1}{sf\137quadratic\137solve}{section.10.11}
 \BOOKMARK [1][-]{section.10.12}{Zero finder \(fzero.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.12.1}{sf\137zero}{section.10.12}
 \BOOKMARK [1][-]{section.10.13}{Runge-Kutta ODE solvers \(runge.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.13.1}{sf\137runge\137init}{section.10.13}
-\BOOKMARK [2][-]{subsection.10.13.2}{sf\137ode23}{section.10.13}
-\BOOKMARK [2][-]{subsection.10.13.3}{sf\137ode23\137step}{section.10.13}
 \BOOKMARK [1][-]{section.10.14}{Solver function for iterative least-squares optimization \(tinysolver.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.14.1}{sf\137tinysolver}{section.10.14}
 \BOOKMARK [1][-]{section.10.15}{Solver functions for iterative least-squares optimization \(bigsolver.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.15.1}{sf\137solver\137prec}{section.10.15}
-\BOOKMARK [2][-]{subsection.10.15.2}{sf\137csolver\137prec}{section.10.15}
-\BOOKMARK [2][-]{subsection.10.15.3}{sf\137solver\137reg}{section.10.15}
-\BOOKMARK [2][-]{subsection.10.15.4}{sf\137solver}{section.10.15}
-\BOOKMARK [2][-]{subsection.10.15.5}{sf\137left\137solver}{section.10.15}
-\BOOKMARK [2][-]{subsection.10.15.6}{sf\137csolver}{section.10.15}
 \BOOKMARK [1][-]{section.10.16}{Weighting for iteratively-reweighted least squares \(irls.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.16.1}{sf\137irls\137init}{section.10.16}
-\BOOKMARK [2][-]{subsection.10.16.2}{sf\137irls\137close}{section.10.16}
-\BOOKMARK [2][-]{subsection.10.16.3}{sf\137l1}{section.10.16}
-\BOOKMARK [2][-]{subsection.10.16.4}{sf\137cauchy}{section.10.16}
 \BOOKMARK [1][-]{section.10.17}{Tridiagonal matrix solver \(tridiagonal.c\)}{chapter.10}
-\BOOKMARK [2][-]{subsection.10.17.1}{sf\137tridiagonal\137init}{section.10.17}
-\BOOKMARK [2][-]{subsection.10.17.2}{sf\137tridiagonal\137define}{section.10.17}
-\BOOKMARK [2][-]{subsection.10.17.3}{sf\137tridiagonal\137const\137define}{section.10.17}
-\BOOKMARK [2][-]{subsection.10.17.4}{sf\137tridiagonal\137solve}{section.10.17}
-\BOOKMARK [2][-]{subsection.10.17.5}{sf\137tridiagonal\137close}{section.10.17}
 \BOOKMARK [0][-]{chapter.11}{Interpolation}{}
 \BOOKMARK [1][-]{section.11.1}{1-D interpolation \(int1.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.1.1}{sf\137int1\137init}{section.11.1}
-\BOOKMARK [2][-]{subsection.11.1.2}{sf\137int1\137lop}{section.11.1}
-\BOOKMARK [2][-]{subsection.11.1.3}{sf\137cint1\137lop}{section.11.1}
-\BOOKMARK [2][-]{subsection.11.1.4}{sf\137int1\137close}{section.11.1}
 \BOOKMARK [1][-]{section.11.2}{2-D interpolation \(int2.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.2.1}{sf\137int2\137init}{section.11.2}
-\BOOKMARK [2][-]{subsection.11.2.2}{sf\137int2\137lop}{section.11.2}
-\BOOKMARK [2][-]{subsection.11.2.3}{sf\137int2\137close}{section.11.2}
 \BOOKMARK [1][-]{section.11.3}{3-D interpolation \(int3.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.3.1}{sf\137int3\137init}{section.11.3}
-\BOOKMARK [2][-]{subsection.11.3.2}{sf\137int3\137lop}{section.11.3}
-\BOOKMARK [2][-]{subsection.11.3.3}{sf\137int3\137close}{section.11.3}
 \BOOKMARK [1][-]{section.11.4}{Basic interpolation functions \(interp.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.4.1}{sf\137bin\137int}{section.11.4}
-\BOOKMARK [2][-]{subsection.11.4.2}{sf\137lin\137int}{section.11.4}
-\BOOKMARK [2][-]{subsection.11.4.3}{sf\137lg\137int}{section.11.4}
-\BOOKMARK [2][-]{subsection.11.4.4}{sf\137taylor\137int}{section.11.4}
 \BOOKMARK [1][-]{section.11.5}{Convert data to B-spline coefficients by fast B-spline transform \(prefilter.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.5.1}{sf\137prefilter\137init}{section.11.5}
-\BOOKMARK [2][-]{subsection.11.5.2}{sf\137prefilter\137apply}{section.11.5}
-\BOOKMARK [2][-]{subsection.11.5.3}{sf\137prefilter}{section.11.5}
-\BOOKMARK [2][-]{subsection.11.5.4}{sf\137prefilter\137close}{section.11.5}
 \BOOKMARK [1][-]{section.11.6}{B-spline interpolation \(spline.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.6.1}{sf\137spline\137init}{section.11.6}
-\BOOKMARK [2][-]{subsection.11.6.2}{sf\137spline4\137init}{section.11.6}
-\BOOKMARK [2][-]{subsection.11.6.3}{sf\137spline4\137post}{section.11.6}
-\BOOKMARK [2][-]{subsection.11.6.4}{sf\137spline\137post}{section.11.6}
-\BOOKMARK [2][-]{subsection.11.6.5}{sf\137spline2}{section.11.6}
 \BOOKMARK [1][-]{section.11.7}{Inverse linear interpolation \(stretch.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.7.1}{sf\137stretch\137init}{section.11.7}
-\BOOKMARK [2][-]{subsection.11.7.2}{sf\137stretch\137define}{section.11.7}
-\BOOKMARK [2][-]{subsection.11.7.3}{sf\137stretch\137apply}{section.11.7}
-\BOOKMARK [2][-]{subsection.11.7.4}{sf\137stretch\137invert}{section.11.7}
-\BOOKMARK [2][-]{subsection.11.7.5}{sf\137stretch\137close}{section.11.7}
 \BOOKMARK [1][-]{section.11.8}{1-D ENO interpolation \(eno.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.8.1}{sf\137eno\137init}{section.11.8}
-\BOOKMARK [2][-]{subsection.11.8.2}{sf\137eno\137close}{section.11.8}
-\BOOKMARK [2][-]{subsection.11.8.3}{sf\137eno\137set}{section.11.8}
-\BOOKMARK [2][-]{subsection.11.8.4}{sf\137eno\137apply}{section.11.8}
 \BOOKMARK [1][-]{section.11.9}{ENO interpolation in 2-D \(eno2.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.9.1}{sf\137eno2\137init}{section.11.9}
-\BOOKMARK [2][-]{subsection.11.9.2}{sf\137eno2\137set}{section.11.9}
-\BOOKMARK [2][-]{subsection.11.9.3}{sf\137eno2\137set1}{section.11.9}
-\BOOKMARK [2][-]{subsection.11.9.4}{sf\137eno2\137close}{section.11.9}
-\BOOKMARK [2][-]{subsection.11.9.5}{sf\137eno2\137apply}{section.11.9}
 \BOOKMARK [1][-]{section.11.10}{1-D ENO power-p interpolation \(pweno.c\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.10.1}{sf\137pweno\137init}{section.11.10}
-\BOOKMARK [2][-]{subsection.11.10.2}{sf\137pweno\137close}{section.11.10}
-\BOOKMARK [2][-]{subsection.11.10.3}{powerpeno}{section.11.10}
-\BOOKMARK [2][-]{subsection.11.10.4}{sf\137pweno\137set}{section.11.10}
-\BOOKMARK [2][-]{subsection.11.10.5}{sf\137pweno\137apply}{section.11.10}
 \BOOKMARK [0][-]{chapter.12}{Smoothing}{}
 \BOOKMARK [1][-]{section.12.1}{1-D triangle smoothing as a linear operator \(triangle1.c\)}{chapter.12}
-\BOOKMARK [2][-]{subsection.12.1.1}{sf\137triangle1\137init}{section.12.1}
-\BOOKMARK [2][-]{subsection.12.1.2}{sf\137triangle1\137lop}{section.12.1}
-\BOOKMARK [2][-]{subsection.12.1.3}{sf\137triangle1\137close}{section.12.1}
 \BOOKMARK [1][-]{section.12.2}{2-D triangle smoothing as a linear operator \(triangle2.c\)}{chapter.12}
-\BOOKMARK [2][-]{subsection.12.2.1}{sf\137triangle2\137init}{section.12.2}
-\BOOKMARK [2][-]{subsection.12.2.2}{sf\137triangle2\137lop}{section.12.2}
-\BOOKMARK [2][-]{subsection.12.2.3}{sf\137triangle2\137close}{section.12.2}
 \BOOKMARK [1][-]{section.12.3}{Triangle smoothing \(triangle.c\)}{chapter.12}
-\BOOKMARK [2][-]{subsection.12.3.1}{sf\137triangle\137init}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.2}{fold}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.3}{fold2}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.4}{doubint}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.5}{doubint2}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.6}{triple}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.7}{triple2}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.8}{sf\137smooth}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.9}{sf\137smooth2}{section.12.3}
-\BOOKMARK [2][-]{subsection.12.3.10}{sf\137triangle\137close}{section.12.3}
 \BOOKMARK [1][-]{section.12.4}{Smooth gradient operations \(edge.c\)}{chapter.12}
-\BOOKMARK [2][-]{subsection.12.4.1}{sf\137grad2}{section.12.4}
-\BOOKMARK [2][-]{subsection.12.4.2}{sf\137sobel}{section.12.4}
-\BOOKMARK [2][-]{subsection.12.4.3}{sf\137sobel2}{section.12.4}
-\BOOKMARK [2][-]{subsection.12.4.4}{sf\137sobel32}{section.12.4}
 \BOOKMARK [0][-]{chapter.13}{Ray tracing}{}
 \BOOKMARK [1][-]{section.13.1}{Cell ray tracing \(celltrace.c\)}{chapter.13}
-\BOOKMARK [2][-]{subsection.13.1.1}{sf\137celltrace\137init}{section.13.1}
-\BOOKMARK [2][-]{subsection.13.1.2}{sf\137celltrace\137close}{section.13.1}
-\BOOKMARK [2][-]{subsection.13.1.3}{sf\137cell\137trace}{section.13.1}
 \BOOKMARK [1][-]{section.13.2}{Cell ray tracing \(cell.c\)}{chapter.13}
-\BOOKMARK [2][-]{subsection.13.2.1}{sf\137cell1\137intersect}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.2}{sf\137cell1\137update1}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.3}{sf\137cell1\137update2}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.4}{sf\137cell11\137intersect2}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.5}{sf\137cell11\137update1}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.6}{sf\137cell11\137update2}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.7}{sf\137cell\137intersect}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.8}{sf\137cell\137snap}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.9}{sf\137cell\137update1}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.10}{sf\137cell\137update2}{section.13.2}
-\BOOKMARK [2][-]{subsection.13.2.11}{sf\137cell\137p2a}{section.13.2}
 \BOOKMARK [0][-]{chapter.14}{General tools}{}
 \BOOKMARK [1][-]{section.14.1}{First derivative FIR filter \(deriv.c\)}{chapter.14}
-\BOOKMARK [2][-]{subsection.14.1.1}{sf\137deriv\137init}{section.14.1}
-\BOOKMARK [2][-]{subsection.14.1.2}{sf\137deriv\137free}{section.14.1}
-\BOOKMARK [2][-]{subsection.14.1.3}{sf\137deriv}{section.14.1}
 \BOOKMARK [1][-]{section.14.2}{Computing quantiles by Hoare's algorithm \(quantile.c\)}{chapter.14}
-\BOOKMARK [2][-]{subsection.14.2.1}{sf\137quantile}{section.14.2}
 \BOOKMARK [1][-]{section.14.3}{Pseudo-random numbers: uniform and normally distributed \(randn.c\)}{chapter.14}
-\BOOKMARK [2][-]{subsection.14.3.1}{sf\137randn1}{section.14.3}
-\BOOKMARK [2][-]{subsection.14.3.2}{sf\137randn}{section.14.3}
-\BOOKMARK [2][-]{subsection.14.3.3}{sf\137random}{section.14.3}
 \BOOKMARK [1][-]{section.14.4}{Evaluating mathematical expressions \(math1.c\)}{chapter.14}
-\BOOKMARK [2][-]{subsection.14.4.1}{myabs}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.2}{myconj}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.3}{myarg}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.4}{sf\137math\137evaluate}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.5}{sf\137complex\137math\137evaluate}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.6}{sf\137math\137parse}{section.14.4}
-\BOOKMARK [2][-]{subsection.14.4.7}{sf\137math\137parse}{section.14.4}
-\BOOKMARK [0][-]{chapter.15}{Geometry }{}
+\BOOKMARK [0][-]{chapter.15}{Geometry}{}
 \BOOKMARK [1][-]{section.15.1}{Construction of points \(point.c\)}{chapter.15}
-\BOOKMARK [2][-]{subsection.15.1.1}{printpt2d}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.2}{printpt3d}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.3}{pt2dwrite1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.4}{pt2dwrite2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.5}{pt3dwrite1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.6}{pt3dwrite2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.7}{pt2dread1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.8}{pt2dread2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.9}{pt3dread1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.10}{pt3dread2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.11}{pt2dalloc1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.12}{pt2dalloc2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.13}{pt2dalloc3}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.14}{pt3dalloc1}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.15}{pt3dalloc2}{section.15.1}
-\BOOKMARK [2][-]{subsection.15.1.16}{pt3dalloc3}{section.15.1}
 \BOOKMARK [1][-]{section.15.2}{Construction of vectors \(vector.c\)}{chapter.15}
-\BOOKMARK [2][-]{subsection.15.2.1}{det3}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.2}{det2}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.3}{jac3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.4}{vec3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.5}{axa3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.6}{scp3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.7}{vcp3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.8}{len3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.9}{nor3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.10}{ang3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.11}{tip3d}{section.15.2}
-\BOOKMARK [2][-]{subsection.15.2.12}{scl3d}{section.15.2}
 \BOOKMARK [1][-]{section.15.3}{Conversion between line and Cartesian coordinates of a vector \(decart.c\)}{chapter.15}
-\BOOKMARK [2][-]{subsection.15.3.1}{sf\137line2cart}{section.15.3}
-\BOOKMARK [2][-]{subsection.15.3.2}{sf\137cart2line}{section.15.3}
-\BOOKMARK [2][-]{subsection.15.3.3}{sf\137first\137index}{section.15.3}
-\BOOKMARK [2][-]{subsection.15.3.4}{sf\137large\137line2cart}{section.15.3}
-\BOOKMARK [2][-]{subsection.15.3.5}{sf\137large\137cart2line}{section.15.3}
-\BOOKMARK [2][-]{subsection.15.3.6}{sf\137large\137first\137index}{section.15.3}
 \BOOKMARK [1][-]{section.15.4}{Axes \(axa.c\)}{chapter.15}
-\BOOKMARK [2][-]{subsection.15.4.1}{sf\137maxa}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.2}{sf\137iaxa}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.3}{sf\137oaxa}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.4}{sf\137raxa}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.5}{sf\137n}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.6}{sf\137o}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.7}{sf\137d}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.8}{sf\137nod}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.9}{sf\137setn}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.10}{sf\137seto}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.11}{sf\137setd}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.12}{sf\137setlabel}{section.15.4}
-\BOOKMARK [2][-]{subsection.15.4.13}{sf\137setunit}{section.15.4}
 \BOOKMARK [0][-]{chapter.16}{Miscellaneous}{}
 \BOOKMARK [1][-]{section.16.1}{sharpening \(sharpen.c\)}{chapter.16}
-\BOOKMARK [2][-]{subsection.16.1.1}{sf\137sharpen\137init}{section.16.1}
-\BOOKMARK [2][-]{subsection.16.1.2}{sf\137sharpen\137close}{section.16.1}
-\BOOKMARK [2][-]{subsection.16.1.3}{sf\137sharpen}{section.16.1}
-\BOOKMARK [2][-]{subsection.16.1.4}{sf\137csharpen}{section.16.1}
 \BOOKMARK [1][-]{section.16.2}{Sharpening inversion added Bregman iteration \(sharpinv.c\)}{chapter.16}
-\BOOKMARK [2][-]{subsection.16.2.1}{sf\137csharpinv}{section.16.2}
-\BOOKMARK [2][-]{subsection.16.2.2}{sf\137sharpinv}{section.16.2}
 \BOOKMARK [0][-]{chapter.17}{System}{}
 \BOOKMARK [1][-]{section.17.1}{Priority queue \(heap sorting\) \(pqueue.c\)}{chapter.17}
-\BOOKMARK [2][-]{subsection.17.1.1}{sf\137pqueue\137init}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.2}{sf\137pqueue\137start}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.3}{sf\137pqueue\137close}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.4}{sf\137pqueue\137insert}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.5}{sf\137pqueue\137insert2}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.6}{sf\137pqueue\137extract}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.7}{sf\137pqueue\137extract2}{section.17.1}
-\BOOKMARK [2][-]{subsection.17.1.8}{sf\137pqueue\137update}{section.17.1}
 \BOOKMARK [1][-]{section.17.2}{Simplified system command \(system.c\)}{chapter.17}
-\BOOKMARK [2][-]{subsection.17.2.1}{sf\137system}{section.17.2}
 \BOOKMARK [1][-]{section.17.3}{Generic stack \(FILO\) structure operations \(stack.c\)}{chapter.17}
-\BOOKMARK [2][-]{subsection.17.3.1}{sf\137stack\137init}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.2}{sf\137stack\137print}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.3}{sf\137stack\137get}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.4}{sf\137stack\137set}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.5}{sf\137push}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.6}{sf\137pop}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.7}{sf\137full}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.8}{sf\137top}{section.17.3}
-\BOOKMARK [2][-]{subsection.17.3.9}{sf\137stack\137close}{section.17.3}
+\BOOKMARK [0][-]{section*.1522}{Index}{}

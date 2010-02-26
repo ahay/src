@@ -1,564 +1,565 @@
-\contentsline {chapter}{Contents}{16}{chapter*.1}
-\contentsline {chapter}{Preface}{17}{chapter*.2}
-\contentsline {chapter}{\numberline {1}Introduction}{19}{chapter.1}
-\contentsline {chapter}{\numberline {2}An example: Finite-Difference modeling}{21}{chapter.2}
-\contentsline {section}{\numberline {2.1}Introduction}{21}{section.2.1}
-\contentsline {section}{\numberline {2.2}C program}{21}{section.2.2}
-\contentsline {section}{\numberline {2.3}Explanation of the code}{24}{section.2.3}
-\contentsline {chapter}{\numberline {3}Data types}{31}{chapter.3}
-\contentsline {section}{\numberline {3.1}Data types}{31}{section.3.1}
-\contentsline {subsection}{\numberline {3.1.1}Complex numbers and FFT}{31}{subsection.3.1.1}
-\contentsline {subsection}{\numberline {3.1.2}Files}{32}{subsection.3.1.2}
-\contentsline {subsection}{\numberline {3.1.3}Operators}{32}{subsection.3.1.3}
-\contentsline {subsection}{\numberline {3.1.4}Geometry}{34}{subsection.3.1.4}
-\contentsline {subsection}{\numberline {3.1.5}Lists}{34}{subsection.3.1.5}
-\contentsline {subsection}{\numberline {3.1.6}sys/types.h}{35}{subsection.3.1.6}
-\contentsline {chapter}{\numberline {4}Preparing for input}{37}{chapter.4}
-\contentsline {section}{\numberline {4.1}Convenience allocation programs (alloc.c)}{37}{section.4.1}
-\contentsline {subsection}{\numberline {4.1.1}{sf\_alloc}}{37}{subsection.4.1.1}
-\contentsline {subsection}{\numberline {4.1.2}{sf\_realloc}}{38}{subsection.4.1.2}
-\contentsline {subsection}{\numberline {4.1.3}{sf\_charalloc}}{38}{subsection.4.1.3}
-\contentsline {subsection}{\numberline {4.1.4}{sf\_ucharalloc}}{39}{subsection.4.1.4}
-\contentsline {subsection}{\numberline {4.1.5}{sf\_shortalloc}}{39}{subsection.4.1.5}
-\contentsline {subsection}{\numberline {4.1.6}{sf\_intalloc}}{40}{subsection.4.1.6}
-\contentsline {subsection}{\numberline {4.1.7}{sf\_largeintalloc}}{41}{subsection.4.1.7}
-\contentsline {subsection}{\numberline {4.1.8}{sf\_floatalloc}}{41}{subsection.4.1.8}
-\contentsline {subsection}{\numberline {4.1.9}{sf\_complexalloc}}{42}{subsection.4.1.9}
-\contentsline {subsection}{\numberline {4.1.10}{sf\_complexalloc2}}{42}{subsection.4.1.10}
-\contentsline {subsection}{\numberline {4.1.11}{sf\_complexalloc3}}{43}{subsection.4.1.11}
-\contentsline {subsection}{\numberline {4.1.12}{sf\_complexalloc4}}{44}{subsection.4.1.12}
-\contentsline {subsection}{\numberline {4.1.13}{sf\_boolalloc}}{44}{subsection.4.1.13}
-\contentsline {subsection}{\numberline {4.1.14}{sf\_boolalloc2}}{45}{subsection.4.1.14}
-\contentsline {subsection}{\numberline {4.1.15}{sf\_boolalloc3}}{46}{subsection.4.1.15}
-\contentsline {subsection}{\numberline {4.1.16}{sf\_floatalloc2}}{46}{subsection.4.1.16}
-\contentsline {subsection}{\numberline {4.1.17}{sf\_floatalloc3}}{47}{subsection.4.1.17}
-\contentsline {subsection}{\numberline {4.1.18}{sf\_floatalloc4}}{48}{subsection.4.1.18}
-\contentsline {subsection}{\numberline {4.1.19}{sf\_floatalloc5}}{48}{subsection.4.1.19}
-\contentsline {subsection}{\numberline {4.1.20}{sf\_floatalloc6}}{49}{subsection.4.1.20}
-\contentsline {subsection}{\numberline {4.1.21}{sf\_intalloc2}}{50}{subsection.4.1.21}
-\contentsline {subsection}{\numberline {4.1.22}{sf\_intalloc3}}{51}{subsection.4.1.22}
-\contentsline {subsection}{\numberline {4.1.23}{sf\_intalloc4}}{51}{subsection.4.1.23}
-\contentsline {subsection}{\numberline {4.1.24}{sf\_charalloc2}}{52}{subsection.4.1.24}
-\contentsline {subsection}{\numberline {4.1.25}{sf\_uncharalloc2}}{53}{subsection.4.1.25}
-\contentsline {subsection}{\numberline {4.1.26}{sf\_uncharalloc3}}{53}{subsection.4.1.26}
-\contentsline {section}{\numberline {4.2}Simbol Table for parameters (simtab.c)}{54}{section.4.2}
-\contentsline {subsection}{\numberline {4.2.1}{sf\_simtab\_init}}{54}{subsection.4.2.1}
-\contentsline {subsection}{\numberline {4.2.2}{sf\_simtab\_close}}{55}{subsection.4.2.2}
-\contentsline {subsection}{\numberline {4.2.3}{sf\_simtab\_enter}}{55}{subsection.4.2.3}
-\contentsline {subsection}{\numberline {4.2.4}{sf\_simtab\_get}}{56}{subsection.4.2.4}
-\contentsline {subsection}{\numberline {4.2.5}{sf\_simtab\_getint}}{56}{subsection.4.2.5}
-\contentsline {subsection}{\numberline {4.2.6}{sf\_simtab\_getlargeint}}{57}{subsection.4.2.6}
-\contentsline {subsection}{\numberline {4.2.7}{sf\_simtab\_getfloat}}{57}{subsection.4.2.7}
-\contentsline {subsection}{\numberline {4.2.8}{sf\_simtab\_getdouble}}{58}{subsection.4.2.8}
-\contentsline {subsection}{\numberline {4.2.9}{sf\_simtab\_getfloats}}{59}{subsection.4.2.9}
-\contentsline {subsection}{\numberline {4.2.10}{sf\_simtab\_getstring}}{60}{subsection.4.2.10}
-\contentsline {subsection}{\numberline {4.2.11}{sf\_simtab\_getbool}}{60}{subsection.4.2.11}
-\contentsline {subsection}{\numberline {4.2.12}{sf\_simtab\_getbools}}{61}{subsection.4.2.12}
-\contentsline {subsection}{\numberline {4.2.13}{sf\_simtab\_getints}}{61}{subsection.4.2.13}
-\contentsline {subsection}{\numberline {4.2.14}{sf\_simtab\_getstrings}}{62}{subsection.4.2.14}
-\contentsline {subsection}{\numberline {4.2.15}{sf\_simtab\_put}}{63}{subsection.4.2.15}
-\contentsline {subsection}{\numberline {4.2.16}{sf\_simtab\_input}}{63}{subsection.4.2.16}
-\contentsline {subsection}{\numberline {4.2.17}{sf\_simtab\_output}}{64}{subsection.4.2.17}
-\contentsline {section}{\numberline {4.3}Parameter handling (getpar.c)}{65}{section.4.3}
-\contentsline {subsection}{\numberline {4.3.1}{sf\_stdin}}{65}{subsection.4.3.1}
-\contentsline {subsection}{\numberline {4.3.2}{sf\_init}}{65}{subsection.4.3.2}
-\contentsline {subsection}{\numberline {4.3.3}{sf\_par\_close}}{66}{subsection.4.3.3}
-\contentsline {subsection}{\numberline {4.3.4}{sf\_parout}}{66}{subsection.4.3.4}
-\contentsline {subsection}{\numberline {4.3.5}{sf\_getprog}}{66}{subsection.4.3.5}
-\contentsline {subsection}{\numberline {4.3.6}{sf\_getuser}}{67}{subsection.4.3.6}
-\contentsline {subsection}{\numberline {4.3.7}{sf\_gethost}}{67}{subsection.4.3.7}
-\contentsline {subsection}{\numberline {4.3.8}{sf\_getcdir}}{68}{subsection.4.3.8}
-\contentsline {subsection}{\numberline {4.3.9}{sf\_getint}}{68}{subsection.4.3.9}
-\contentsline {subsection}{\numberline {4.3.10}{sf\_getlargeint}}{69}{subsection.4.3.10}
-\contentsline {subsection}{\numberline {4.3.11}{sf\_getints}}{70}{subsection.4.3.11}
-\contentsline {subsection}{\numberline {4.3.12}{sf\_getfloat}}{70}{subsection.4.3.12}
-\contentsline {subsection}{\numberline {4.3.13}{sf\_getdouble}}{71}{subsection.4.3.13}
-\contentsline {subsection}{\numberline {4.3.14}{sf\_getfloats}}{71}{subsection.4.3.14}
-\contentsline {subsection}{\numberline {4.3.15}{sf\_getstring}}{72}{subsection.4.3.15}
-\contentsline {subsection}{\numberline {4.3.16}{sf\_getstrings}}{73}{subsection.4.3.16}
-\contentsline {subsection}{\numberline {4.3.17}{sf\_getbool}}{73}{subsection.4.3.17}
-\contentsline {subsection}{\numberline {4.3.18}{sf\_getbools}}{74}{subsection.4.3.18}
-\contentsline {subsection}{\numberline {4.3.19}{sf\_getpars}}{75}{subsection.4.3.19}
-\contentsline {chapter}{\numberline {5}Operations with RSF files}{77}{chapter.5}
-\contentsline {section}{\numberline {5.1}Main operations with RSF files (file.c)}{77}{section.5.1}
-\contentsline {subsection}{\numberline {5.1.1}{sf\_file\_error}}{77}{subsection.5.1.1}
-\contentsline {subsection}{\numberline {5.1.2}{sf\_error}}{77}{subsection.5.1.2}
-\contentsline {subsection}{\numberline {5.1.3}{sf\_input}}{78}{subsection.5.1.3}
-\contentsline {subsection}{\numberline {5.1.4}{sf\_output}}{78}{subsection.5.1.4}
-\contentsline {subsection}{\numberline {5.1.5}{sf\_gettype}}{79}{subsection.5.1.5}
-\contentsline {subsection}{\numberline {5.1.6}{sf\_getform}}{80}{subsection.5.1.6}
-\contentsline {subsection}{\numberline {5.1.7}{sf\_esize}}{80}{subsection.5.1.7}
-\contentsline {subsection}{\numberline {5.1.8}{sf\_settype}}{81}{subsection.5.1.8}
-\contentsline {subsection}{\numberline {5.1.9}{sf\_setpars}}{81}{subsection.5.1.9}
-\contentsline {subsection}{\numberline {5.1.10}{sf\_bufsiz}}{81}{subsection.5.1.10}
-\contentsline {subsection}{\numberline {5.1.11}{sf\_setform}}{82}{subsection.5.1.11}
-\contentsline {subsection}{\numberline {5.1.12}{sf\_setformat}}{82}{subsection.5.1.12}
-\contentsline {subsection}{\numberline {5.1.13}{sf\_getfilename}}{83}{subsection.5.1.13}
-\contentsline {subsection}{\numberline {5.1.14}{sf\_gettmpdatapath}}{84}{subsection.5.1.14}
-\contentsline {subsection}{\numberline {5.1.15}{sf\_getdatapath}}{84}{subsection.5.1.15}
-\contentsline {subsection}{\numberline {5.1.16}{sf\_readpathfile}}{85}{subsection.5.1.16}
-\contentsline {subsection}{\numberline {5.1.17}{sf\_fileclose}}{86}{subsection.5.1.17}
-\contentsline {subsection}{\numberline {5.1.18}{sf\_histint}}{86}{subsection.5.1.18}
-\contentsline {subsection}{\numberline {5.1.19}{sf\_histints}}{87}{subsection.5.1.19}
-\contentsline {subsection}{\numberline {5.1.20}{sf\_histlargeint}}{87}{subsection.5.1.20}
-\contentsline {subsection}{\numberline {5.1.21}{sf\_histfloat}}{88}{subsection.5.1.21}
-\contentsline {subsection}{\numberline {5.1.22}{sf\_histdouble}}{89}{subsection.5.1.22}
-\contentsline {subsection}{\numberline {5.1.23}{sf\_histfloats}}{89}{subsection.5.1.23}
-\contentsline {subsection}{\numberline {5.1.24}{sf\_histbool}}{90}{subsection.5.1.24}
-\contentsline {subsection}{\numberline {5.1.25}{sf\_histtbools}}{91}{subsection.5.1.25}
-\contentsline {subsection}{\numberline {5.1.26}{sf\_histstring}}{91}{subsection.5.1.26}
-\contentsline {subsection}{\numberline {5.1.27}{sf\_fileflush}}{92}{subsection.5.1.27}
-\contentsline {subsection}{\numberline {5.1.28}{sf\_putint}}{92}{subsection.5.1.28}
-\contentsline {subsection}{\numberline {5.1.29}{sf\_putints}}{93}{subsection.5.1.29}
-\contentsline {subsection}{\numberline {5.1.30}{sf\_putlargeint}}{93}{subsection.5.1.30}
-\contentsline {subsection}{\numberline {5.1.31}{sf\_putfloat}}{94}{subsection.5.1.31}
-\contentsline {subsection}{\numberline {5.1.32}{sf\_putstring}}{95}{subsection.5.1.32}
-\contentsline {subsection}{\numberline {5.1.33}{sf\_putline}}{95}{subsection.5.1.33}
-\contentsline {subsection}{\numberline {5.1.34}{sf\_setaformat}}{96}{subsection.5.1.34}
-\contentsline {subsection}{\numberline {5.1.35}{sf\_complexwrite}}{96}{subsection.5.1.35}
-\contentsline {subsection}{\numberline {5.1.36}{sf\_complexread}}{97}{subsection.5.1.36}
-\contentsline {subsection}{\numberline {5.1.37}{sf\_charwrite}}{97}{subsection.5.1.37}
-\contentsline {subsection}{\numberline {5.1.38}{sf\_uncharwrite}}{98}{subsection.5.1.38}
-\contentsline {subsection}{\numberline {5.1.39}{sf\_charread}}{98}{subsection.5.1.39}
-\contentsline {subsection}{\numberline {5.1.40}{sf\_uncharread}}{99}{subsection.5.1.40}
-\contentsline {subsection}{\numberline {5.1.41}{sf\_intwrite}}{99}{subsection.5.1.41}
-\contentsline {subsection}{\numberline {5.1.42}{sf\_intread}}{100}{subsection.5.1.42}
-\contentsline {subsection}{\numberline {5.1.43}{sf\_shortread}}{100}{subsection.5.1.43}
-\contentsline {subsection}{\numberline {5.1.44}{sf\_shortwrite}}{101}{subsection.5.1.44}
-\contentsline {subsection}{\numberline {5.1.45}{sf\_floatwrite}}{101}{subsection.5.1.45}
-\contentsline {subsection}{\numberline {5.1.46}{sf\_floatread}}{102}{subsection.5.1.46}
-\contentsline {subsection}{\numberline {5.1.47}{sf\_bytes}}{102}{subsection.5.1.47}
-\contentsline {subsection}{\numberline {5.1.48}{sf\_tell}}{103}{subsection.5.1.48}
-\contentsline {subsection}{\numberline {5.1.49}{sf\_tempfile}}{103}{subsection.5.1.49}
-\contentsline {subsection}{\numberline {5.1.50}{sf\_seek}}{104}{subsection.5.1.50}
-\contentsline {subsection}{\numberline {5.1.51}{sf\_unpipe}}{104}{subsection.5.1.51}
-\contentsline {subsection}{\numberline {5.1.52}{sf\_close}}{104}{subsection.5.1.52}
-\contentsline {section}{\numberline {5.2}Additional operations with RSF files (files.c)}{105}{section.5.2}
-\contentsline {subsection}{\numberline {5.2.1}{sf\_filedims}}{105}{subsection.5.2.1}
-\contentsline {subsection}{\numberline {5.2.2}{sf\_largefiledims}}{105}{subsection.5.2.2}
-\contentsline {subsection}{\numberline {5.2.3}{sf\_memsize}}{106}{subsection.5.2.3}
-\contentsline {subsection}{\numberline {5.2.4}{sf\_filesize}}{107}{subsection.5.2.4}
-\contentsline {subsection}{\numberline {5.2.5}{sf\_leftsize}}{107}{subsection.5.2.5}
-\contentsline {subsection}{\numberline {5.2.6}{sf\_cp}}{108}{subsection.5.2.6}
-\contentsline {subsection}{\numberline {5.2.7}{sf\_rm}}{108}{subsection.5.2.7}
-\contentsline {subsection}{\numberline {5.2.8}{sf\_shiftdim}}{109}{subsection.5.2.8}
-\contentsline {subsection}{\numberline {5.2.9}{sf\_unshiftdim}}{109}{subsection.5.2.9}
-\contentsline {subsection}{\numberline {5.2.10}{sf\_endian}}{110}{subsection.5.2.10}
-\contentsline {section}{\numberline {5.3}Complex number operations (komplex.c)}{110}{section.5.3}
-\contentsline {subsection}{\numberline {5.3.1}{creal}}{110}{subsection.5.3.1}
-\contentsline {subsection}{\numberline {5.3.2}{cimag}}{111}{subsection.5.3.2}
-\contentsline {subsection}{\numberline {5.3.3}{dcneg}}{111}{subsection.5.3.3}
-\contentsline {subsection}{\numberline {5.3.4}{dcadd}}{112}{subsection.5.3.4}
-\contentsline {subsection}{\numberline {5.3.5}{dcsub}}{113}{subsection.5.3.5}
-\contentsline {subsection}{\numberline {5.3.6}{dcmul}}{113}{subsection.5.3.6}
-\contentsline {subsection}{\numberline {5.3.7}{dccmul}}{114}{subsection.5.3.7}
-\contentsline {subsection}{\numberline {5.3.8}{dcdmul}}{114}{subsection.5.3.8}
-\contentsline {subsection}{\numberline {5.3.9}{dcrmul}}{115}{subsection.5.3.9}
-\contentsline {subsection}{\numberline {5.3.10}{dcdiv}}{115}{subsection.5.3.10}
-\contentsline {subsection}{\numberline {5.3.11}{cabs}}{116}{subsection.5.3.11}
-\contentsline {subsection}{\numberline {5.3.12}{cabs}}{116}{subsection.5.3.12}
-\contentsline {subsection}{\numberline {5.3.13}{crealf}}{117}{subsection.5.3.13}
-\contentsline {subsection}{\numberline {5.3.14}{cimagf}}{117}{subsection.5.3.14}
-\contentsline {subsection}{\numberline {5.3.15}{cprint}}{118}{subsection.5.3.15}
-\contentsline {subsection}{\numberline {5.3.16}{cadd}}{118}{subsection.5.3.16}
-\contentsline {subsection}{\numberline {5.3.17}{csub}}{119}{subsection.5.3.17}
-\contentsline {subsection}{\numberline {5.3.18}{csqrtf}}{119}{subsection.5.3.18}
-\contentsline {subsection}{\numberline {5.3.19}{cdiv}}{120}{subsection.5.3.19}
-\contentsline {subsection}{\numberline {5.3.20}{cmul}}{121}{subsection.5.3.20}
-\contentsline {subsection}{\numberline {5.3.21}{crmul}}{121}{subsection.5.3.21}
-\contentsline {subsection}{\numberline {5.3.22}{cneg}}{122}{subsection.5.3.22}
-\contentsline {subsection}{\numberline {5.3.23}{conjf}}{122}{subsection.5.3.23}
-\contentsline {subsection}{\numberline {5.3.24}{cabsf}}{123}{subsection.5.3.24}
-\contentsline {subsection}{\numberline {5.3.25}{cargf}}{123}{subsection.5.3.25}
-\contentsline {subsection}{\numberline {5.3.26}{ctanhf}}{124}{subsection.5.3.26}
-\contentsline {subsection}{\numberline {5.3.27}{ccosf}}{124}{subsection.5.3.27}
-\contentsline {subsection}{\numberline {5.3.28}{ccoshf}}{125}{subsection.5.3.28}
-\contentsline {subsection}{\numberline {5.3.29}{ccosf}}{125}{subsection.5.3.29}
-\contentsline {subsection}{\numberline {5.3.30}{csinhf}}{126}{subsection.5.3.30}
-\contentsline {subsection}{\numberline {5.3.31}{clogf}}{127}{subsection.5.3.31}
-\contentsline {subsection}{\numberline {5.3.32}{cexpf}}{127}{subsection.5.3.32}
-\contentsline {subsection}{\numberline {5.3.33}{ctanf}}{128}{subsection.5.3.33}
-\contentsline {subsection}{\numberline {5.3.34}{casinf}}{128}{subsection.5.3.34}
-\contentsline {subsection}{\numberline {5.3.35}{cacosf}}{129}{subsection.5.3.35}
-\contentsline {subsection}{\numberline {5.3.36}{catanf}}{129}{subsection.5.3.36}
-\contentsline {subsection}{\numberline {5.3.37}{catanhf}}{130}{subsection.5.3.37}
-\contentsline {subsection}{\numberline {5.3.38}{casinhf}}{130}{subsection.5.3.38}
-\contentsline {subsection}{\numberline {5.3.39}{cacoshf}}{131}{subsection.5.3.39}
-\contentsline {subsection}{\numberline {5.3.40}{cpowf}}{131}{subsection.5.3.40}
-\contentsline {chapter}{\numberline {6}Error handling}{133}{chapter.6}
-\contentsline {section}{\numberline {6.1}Handling warning and error messages (error.c)}{133}{section.6.1}
-\contentsline {subsection}{\numberline {6.1.1}{sf\_error}}{133}{subsection.6.1.1}
-\contentsline {subsection}{\numberline {6.1.2}{sf\_warning}}{134}{subsection.6.1.2}
-\contentsline {chapter}{\numberline {7}Linear operators}{135}{chapter.7}
-\contentsline {section}{\numberline {7.1}Introduction}{135}{section.7.1}
-\contentsline {subsection}{\numberline {7.1.1}Definition of operators}{135}{subsection.7.1.1}
-\contentsline {subsection}{\numberline {7.1.2}Products of operators}{136}{subsection.7.1.2}
-\contentsline {subsection}{\numberline {7.1.3}Adjoint operators}{137}{subsection.7.1.3}
-\contentsline {subsection}{\numberline {7.1.4}The dot-product test}{138}{subsection.7.1.4}
-\contentsline {subsection}{\numberline {7.1.5}Implementation of operators}{138}{subsection.7.1.5}
-\contentsline {section}{\numberline {7.2}Adjoint zeroing (adjnull.c)}{139}{section.7.2}
-\contentsline {subsection}{\numberline {7.2.1}sf\_adjnull}{139}{subsection.7.2.1}
-\contentsline {subsection}{\numberline {7.2.2}sf\_cadjnull}{140}{subsection.7.2.2}
-\contentsline {section}{\numberline {7.3}Identity operator (copy.c)}{141}{section.7.3}
-\contentsline {subsection}{\numberline {7.3.1}{sf\_copy\_lop}}{141}{subsection.7.3.1}
-\contentsline {section}{\numberline {7.4}Identity operator (complex data) (ccopy.c)}{141}{section.7.4}
-\contentsline {subsection}{\numberline {7.4.1}{sf\_ccopy\_lop}}{142}{subsection.7.4.1}
-\contentsline {section}{\numberline {7.5}Simple mask operator (mask.c)}{142}{section.7.5}
-\contentsline {subsection}{\numberline {7.5.1}{sf\_mask\_init}}{142}{subsection.7.5.1}
-\contentsline {subsection}{\numberline {7.5.2}{sf\_mask\_lop}}{143}{subsection.7.5.2}
-\contentsline {subsection}{\numberline {7.5.3}{sf\_cmask\_lop}}{143}{subsection.7.5.3}
-\contentsline {section}{\numberline {7.6}Simple weight operator (weight.c)}{144}{section.7.6}
-\contentsline {subsection}{\numberline {7.6.1}{sf\_weight\_init}}{144}{subsection.7.6.1}
-\contentsline {subsection}{\numberline {7.6.2}{sf\_weight\_lop}}{145}{subsection.7.6.2}
-\contentsline {subsection}{\numberline {7.6.3}{sf\_cweight\_lop}}{145}{subsection.7.6.3}
-\contentsline {subsection}{\numberline {7.6.4}{sf\_weight\_apply}}{146}{subsection.7.6.4}
-\contentsline {subsection}{\numberline {7.6.5}{sf\_cweight\_apply}}{146}{subsection.7.6.5}
-\contentsline {section}{\numberline {7.7}1-D finite difference (igrad1.c)}{147}{section.7.7}
-\contentsline {subsection}{\numberline {7.7.1}{sf\_igrad1\_lop}}{147}{subsection.7.7.1}
-\contentsline {section}{\numberline {7.8}Causal integration (causint.c)}{148}{section.7.8}
-\contentsline {subsection}{\numberline {7.8.1}{sf\_causint\_lop}}{148}{subsection.7.8.1}
-\contentsline {section}{\numberline {7.9}Chaining linear operators (chain.c)}{149}{section.7.9}
-\contentsline {subsection}{\numberline {7.9.1}{sf\_chain}}{149}{subsection.7.9.1}
-\contentsline {subsection}{\numberline {7.9.2}{sf\_cchain}}{150}{subsection.7.9.2}
-\contentsline {subsection}{\numberline {7.9.3}{sf\_array}}{151}{subsection.7.9.3}
-\contentsline {subsection}{\numberline {7.9.4}{sf\_normal}}{152}{subsection.7.9.4}
-\contentsline {subsection}{\numberline {7.9.5}{sf\_chain3}}{153}{subsection.7.9.5}
-\contentsline {section}{\numberline {7.10}Dot product test for linear operators (dottest.c)}{154}{section.7.10}
-\contentsline {subsection}{\numberline {7.10.1}{sf\_dot\_test}}{154}{subsection.7.10.1}
-\contentsline {chapter}{\numberline {8}Data analysis}{157}{chapter.8}
-\contentsline {section}{\numberline {8.1}FFT (kiss\_fftr.c)}{157}{section.8.1}
-\contentsline {subsection}{\numberline {8.1.1}{sf\_kiss\_fftr\_alloc}}{157}{subsection.8.1.1}
-\contentsline {subsection}{\numberline {8.1.2}{kiss\_fftr}}{157}{subsection.8.1.2}
-\contentsline {subsection}{\numberline {8.1.3}{kiss\_fftri}}{158}{subsection.8.1.3}
-\contentsline {section}{\numberline {8.2}Cosine window weighting function (tent2.c)}{159}{section.8.2}
-\contentsline {subsection}{\numberline {8.2.1}{sf\_tent2}}{159}{subsection.8.2.1}
-\contentsline {section}{\numberline {8.3}Anisotropic diffusion, 2-D (impl2.c)}{159}{section.8.3}
-\contentsline {subsection}{\numberline {8.3.1}{sf\_impl2\_init}}{159}{subsection.8.3.1}
-\contentsline {subsection}{\numberline {8.3.2}{sf\_impl2\_close}}{160}{subsection.8.3.2}
-\contentsline {subsection}{\numberline {8.3.3}{sf\_impl2\_set}}{161}{subsection.8.3.3}
-\contentsline {subsection}{\numberline {8.3.4}{sf\_impl2\_set}}{161}{subsection.8.3.4}
-\contentsline {subsection}{\numberline {8.3.5}{sf\_impl2\_lop}}{162}{subsection.8.3.5}
-\contentsline {chapter}{\numberline {9}Filtering}{163}{chapter.9}
-\contentsline {section}{\numberline {9.1}Frequency-domain filtering (freqfilt.c)}{163}{section.9.1}
-\contentsline {subsection}{\numberline {9.1.1}{sf\_freqfilt\_init}}{163}{subsection.9.1.1}
-\contentsline {subsection}{\numberline {9.1.2}{sf\_freqfilt\_set}}{163}{subsection.9.1.2}
-\contentsline {subsection}{\numberline {9.1.3}{sf\_freqfilt\_cset}}{164}{subsection.9.1.3}
-\contentsline {subsection}{\numberline {9.1.4}{sf\_freqfilt\_close}}{164}{subsection.9.1.4}
-\contentsline {subsection}{\numberline {9.1.5}{sf\_freqfilt}}{165}{subsection.9.1.5}
-\contentsline {subsection}{\numberline {9.1.6}{sf\_freqfilt\_lop}}{165}{subsection.9.1.6}
-\contentsline {section}{\numberline {9.2}Frequency-domain filtering in 2-D (freqfilt.c)}{166}{section.9.2}
-\contentsline {subsection}{\numberline {9.2.1}{sf\_freqfilt2\_init}}{166}{subsection.9.2.1}
-\contentsline {subsection}{\numberline {9.2.2}{sf\_freqfilt2\_set}}{166}{subsection.9.2.2}
-\contentsline {subsection}{\numberline {9.2.3}{sf\_freqfilt2\_close}}{167}{subsection.9.2.3}
-\contentsline {subsection}{\numberline {9.2.4}{sf\_freqfilt2\_spec}}{167}{subsection.9.2.4}
-\contentsline {subsection}{\numberline {9.2.5}{sf\_freqfilt2\_lop}}{168}{subsection.9.2.5}
-\contentsline {section}{\numberline {9.3}Helical convolution (helicon.c)}{168}{section.9.3}
-\contentsline {subsection}{\numberline {9.3.1}{sf\_helicon\_init}}{168}{subsection.9.3.1}
-\contentsline {subsection}{\numberline {9.3.2}{sf\_helicon\_lop}}{169}{subsection.9.3.2}
-\contentsline {section}{\numberline {9.4}Helical filter definition and allocation (helix.c)}{169}{section.9.4}
-\contentsline {subsection}{\numberline {9.4.1}{sf\_allocatehelix}}{169}{subsection.9.4.1}
-\contentsline {subsection}{\numberline {9.4.2}{sf\_deallocatehelix}}{170}{subsection.9.4.2}
-\contentsline {subsection}{\numberline {9.4.3}{sf\_displayhelix}}{170}{subsection.9.4.3}
-\contentsline {section}{\numberline {9.5}Recursive convolution (polynomial division) (recfilt.c)}{171}{section.9.5}
-\contentsline {subsection}{\numberline {9.5.1}{sf\_recfilt\_init}}{171}{subsection.9.5.1}
-\contentsline {subsection}{\numberline {9.5.2}{sf\_recfilt\_lop}}{171}{subsection.9.5.2}
-\contentsline {subsection}{\numberline {9.5.3}{sf\_recfilt\_close}}{172}{subsection.9.5.3}
-\contentsline {section}{\numberline {9.6}Cosine Fourier transform (cosft.c)}{172}{section.9.6}
-\contentsline {subsection}{\numberline {9.6.1}{sf\_cosft}}{172}{subsection.9.6.1}
-\contentsline {subsection}{\numberline {9.6.2}{sf\_cosft\_close}}{173}{subsection.9.6.2}
-\contentsline {subsection}{\numberline {9.6.3}{sf\_cosft\_frw}}{173}{subsection.9.6.3}
-\contentsline {subsection}{\numberline {9.6.4}{sf\_cosft\_inv}}{174}{subsection.9.6.4}
-\contentsline {chapter}{\numberline {10}Solvers}{175}{chapter.10}
-\contentsline {section}{\numberline {10.1}Banded matrix solver (banded.c)}{175}{section.10.1}
-\contentsline {subsection}{\numberline {10.1.1}{sf\_banded\_init}}{175}{subsection.10.1.1}
-\contentsline {subsection}{\numberline {10.1.2}{sf\_banded\_define}}{175}{subsection.10.1.2}
-\contentsline {subsection}{\numberline {10.1.3}{sf\_banded\_const\_define}}{176}{subsection.10.1.3}
-\contentsline {subsection}{\numberline {10.1.4}{sf\_banded\_const\_define\_reflect}}{177}{subsection.10.1.4}
-\contentsline {subsection}{\numberline {10.1.5}{sf\_banded\_solve}}{177}{subsection.10.1.5}
-\contentsline {subsection}{\numberline {10.1.6}{sf\_banded\_close}}{178}{subsection.10.1.6}
-\contentsline {section}{\numberline {10.2}Claerbout's conjugate-gradient iteration (cgstep.c)}{178}{section.10.2}
-\contentsline {subsection}{\numberline {10.2.1}{sf\_cgstep}}{178}{subsection.10.2.1}
-\contentsline {subsection}{\numberline {10.2.2}{sf\_cgstep\_close}}{179}{subsection.10.2.2}
-\contentsline {section}{\numberline {10.3}Conjugate-gradient with shaping regularization (conjgrad.c)}{179}{section.10.3}
-\contentsline {subsection}{\numberline {10.3.1}{sf\_conjgrad\_init}}{179}{subsection.10.3.1}
-\contentsline {subsection}{\numberline {10.3.2}{sf\_conjgrad\_close}}{180}{subsection.10.3.2}
-\contentsline {subsection}{\numberline {10.3.3}{sf\_conjgrad}}{181}{subsection.10.3.3}
-\contentsline {section}{\numberline {10.4}CG with preconditioning (conjprec.c)}{181}{section.10.4}
-\contentsline {subsection}{\numberline {10.4.1}{sf\_conjprec\_init}}{181}{subsection.10.4.1}
-\contentsline {subsection}{\numberline {10.4.2}{sf\_conjprec\_close}}{182}{subsection.10.4.2}
-\contentsline {subsection}{\numberline {10.4.3}{sf\_conjprec}}{182}{subsection.10.4.3}
-\contentsline {section}{\numberline {10.5}CG iteration (complex data) (cgstep.c)}{183}{section.10.5}
-\contentsline {subsection}{\numberline {10.5.1}{sf\_ccgstep}}{183}{subsection.10.5.1}
-\contentsline {subsection}{\numberline {10.5.2}{sf\_ccgstep\_close}}{184}{subsection.10.5.2}
-\contentsline {subsection}{\numberline {10.5.3}{dotprod}}{184}{subsection.10.5.3}
-\contentsline {section}{\numberline {10.6}Conjugate-gradient with shaping regularization for complex numbers (cconjgrad.c)}{185}{section.10.6}
-\contentsline {subsection}{\numberline {10.6.1}{norm}}{185}{subsection.10.6.1}
-\contentsline {subsection}{\numberline {10.6.2}{sf\_cconjgrad\_init}}{186}{subsection.10.6.2}
-\contentsline {subsection}{\numberline {10.6.3}{sf\_cconjgrad\_close}}{186}{subsection.10.6.3}
-\contentsline {subsection}{\numberline {10.6.4}{sf\_cconjgrad}}{187}{subsection.10.6.4}
-\contentsline {section}{\numberline {10.7}Conjugate-direction iteration (cdstep.c)}{188}{section.10.7}
-\contentsline {subsection}{\numberline {10.7.1}{sf\_cdstep\_init}}{188}{subsection.10.7.1}
-\contentsline {subsection}{\numberline {10.7.2}{sf\_cdstep\_close}}{188}{subsection.10.7.2}
-\contentsline {subsection}{\numberline {10.7.3}{sf\_cdstep}}{188}{subsection.10.7.3}
-\contentsline {subsection}{\numberline {10.7.4}{sf\_cdstep\_diag}}{189}{subsection.10.7.4}
-\contentsline {subsection}{\numberline {10.7.5}{sf\_cdstep\_mat}}{190}{subsection.10.7.5}
-\contentsline {section}{\numberline {10.8}Linked list for use in conjugate-direction-type methods (llist.c)}{190}{section.10.8}
-\contentsline {subsection}{\numberline {10.8.1}{sf\_list\_init}}{190}{subsection.10.8.1}
-\contentsline {subsection}{\numberline {10.8.2}{sf\_llist\_rewind}}{191}{subsection.10.8.2}
-\contentsline {subsection}{\numberline {10.8.3}{sf\_llist\_depth}}{191}{subsection.10.8.3}
-\contentsline {subsection}{\numberline {10.8.4}{sf\_llist\_add}}{192}{subsection.10.8.4}
-\contentsline {subsection}{\numberline {10.8.5}{sf\_llist\_down}}{192}{subsection.10.8.5}
-\contentsline {subsection}{\numberline {10.8.6}{sf\_llist\_close}}{193}{subsection.10.8.6}
-\contentsline {subsection}{\numberline {10.8.7}{sf\_llist\_chop}}{193}{subsection.10.8.7}
-\contentsline {section}{\numberline {10.9}Conjugate-direction iteration for complex numbers (ccdstep.c)}{194}{section.10.9}
-\contentsline {subsection}{\numberline {10.9.1}{sf\_ccdstep\_init}}{194}{subsection.10.9.1}
-\contentsline {subsection}{\numberline {10.9.2}{sf\_ccdstep\_close}}{194}{subsection.10.9.2}
-\contentsline {subsection}{\numberline {10.9.3}{sf\_ccdstep}}{194}{subsection.10.9.3}
-\contentsline {subsection}{\numberline {10.9.4}{saxpy}}{195}{subsection.10.9.4}
-\contentsline {subsection}{\numberline {10.9.5}{dsdot}}{196}{subsection.10.9.5}
-\contentsline {section}{\numberline {10.10}Linked list for CD-type methods (complex data) (clist.c)}{196}{section.10.10}
-\contentsline {subsection}{\numberline {10.10.1}{sf\_clist\_init}}{196}{subsection.10.10.1}
-\contentsline {subsection}{\numberline {10.10.2}{sf\_clist\_rewind}}{197}{subsection.10.10.2}
-\contentsline {subsection}{\numberline {10.10.3}{sf\_clist\_depth}}{197}{subsection.10.10.3}
-\contentsline {subsection}{\numberline {10.10.4}{sf\_clist\_add}}{198}{subsection.10.10.4}
-\contentsline {subsection}{\numberline {10.10.5}{sf\_llist\_down}}{198}{subsection.10.10.5}
-\contentsline {subsection}{\numberline {10.10.6}{sf\_clist\_close}}{199}{subsection.10.10.6}
-\contentsline {subsection}{\numberline {10.10.7}{sf\_clist\_chop}}{199}{subsection.10.10.7}
-\contentsline {section}{\numberline {10.11}Solving quadratic equations (quadratic.c)}{200}{section.10.11}
-\contentsline {subsection}{\numberline {10.11.1}{sf\_quadratic\_solve}}{200}{subsection.10.11.1}
-\contentsline {section}{\numberline {10.12}Zero finder (fzero.c)}{200}{section.10.12}
-\contentsline {subsection}{\numberline {10.12.1}{sf\_zero}}{200}{subsection.10.12.1}
-\contentsline {section}{\numberline {10.13}Runge-Kutta ODE solvers (runge.c)}{201}{section.10.13}
-\contentsline {subsection}{\numberline {10.13.1}{sf\_runge\_init}}{201}{subsection.10.13.1}
-\contentsline {subsection}{\numberline {10.13.2}{sf\_ode23}}{202}{subsection.10.13.2}
-\contentsline {subsection}{\numberline {10.13.3}{sf\_ode23\_step}}{203}{subsection.10.13.3}
-\contentsline {section}{\numberline {10.14}Solver function for iterative least-squares optimization (tinysolver.c)}{205}{section.10.14}
-\contentsline {subsection}{\numberline {10.14.1}{sf\_tinysolver}}{205}{subsection.10.14.1}
-\contentsline {section}{\numberline {10.15}Solver functions for iterative least-squares optimization (bigsolver.c)}{205}{section.10.15}
-\contentsline {subsection}{\numberline {10.15.1}{sf\_solver\_prec}}{205}{subsection.10.15.1}
-\contentsline {subsection}{\numberline {10.15.2}{sf\_csolver\_prec}}{207}{subsection.10.15.2}
-\contentsline {subsection}{\numberline {10.15.3}{sf\_solver\_reg}}{208}{subsection.10.15.3}
-\contentsline {subsection}{\numberline {10.15.4}{sf\_solver}}{209}{subsection.10.15.4}
-\contentsline {subsection}{\numberline {10.15.5}{sf\_left\_solver}}{211}{subsection.10.15.5}
-\contentsline {subsection}{\numberline {10.15.6}{sf\_csolver}}{212}{subsection.10.15.6}
-\contentsline {section}{\numberline {10.16}Weighting for iteratively-reweighted least squares (irls.c)}{214}{section.10.16}
-\contentsline {subsection}{\numberline {10.16.1}{sf\_irls\_init}}{214}{subsection.10.16.1}
-\contentsline {subsection}{\numberline {10.16.2}{sf\_irls\_close}}{214}{subsection.10.16.2}
-\contentsline {subsection}{\numberline {10.16.3}{sf\_l1}}{214}{subsection.10.16.3}
-\contentsline {subsection}{\numberline {10.16.4}{sf\_cauchy}}{215}{subsection.10.16.4}
-\contentsline {section}{\numberline {10.17}Tridiagonal matrix solver (tridiagonal.c)}{216}{section.10.17}
-\contentsline {subsection}{\numberline {10.17.1}{sf\_tridiagonal\_init}}{216}{subsection.10.17.1}
-\contentsline {subsection}{\numberline {10.17.2}{sf\_tridiagonal\_define}}{216}{subsection.10.17.2}
-\contentsline {subsection}{\numberline {10.17.3}{sf\_tridiagonal\_const\_define}}{217}{subsection.10.17.3}
-\contentsline {subsection}{\numberline {10.17.4}{sf\_tridiagonal\_solve}}{217}{subsection.10.17.4}
-\contentsline {subsection}{\numberline {10.17.5}{sf\_tridiagonal\_close}}{218}{subsection.10.17.5}
-\contentsline {chapter}{\numberline {11}Interpolation}{219}{chapter.11}
-\contentsline {section}{\numberline {11.1}1-D interpolation (int1.c)}{219}{section.11.1}
-\contentsline {subsection}{\numberline {11.1.1}{sf\_int1\_init}}{219}{subsection.11.1.1}
-\contentsline {subsection}{\numberline {11.1.2}{sf\_int1\_lop}}{220}{subsection.11.1.2}
-\contentsline {subsection}{\numberline {11.1.3}{sf\_cint1\_lop}}{220}{subsection.11.1.3}
-\contentsline {subsection}{\numberline {11.1.4}{sf\_int1\_close}}{221}{subsection.11.1.4}
-\contentsline {section}{\numberline {11.2}2-D interpolation (int2.c)}{221}{section.11.2}
-\contentsline {subsection}{\numberline {11.2.1}{sf\_int2\_init}}{221}{subsection.11.2.1}
-\contentsline {subsection}{\numberline {11.2.2}{sf\_int2\_lop}}{222}{subsection.11.2.2}
-\contentsline {subsection}{\numberline {11.2.3}{sf\_int2\_close}}{223}{subsection.11.2.3}
-\contentsline {section}{\numberline {11.3}3-D interpolation (int3.c)}{223}{section.11.3}
-\contentsline {subsection}{\numberline {11.3.1}{sf\_int3\_init}}{223}{subsection.11.3.1}
-\contentsline {subsection}{\numberline {11.3.2}{sf\_int3\_lop}}{224}{subsection.11.3.2}
-\contentsline {subsection}{\numberline {11.3.3}{sf\_int3\_close}}{225}{subsection.11.3.3}
-\contentsline {section}{\numberline {11.4}Basic interpolation functions (interp.c)}{225}{section.11.4}
-\contentsline {subsection}{\numberline {11.4.1}{sf\_bin\_int}}{225}{subsection.11.4.1}
-\contentsline {subsection}{\numberline {11.4.2}{sf\_lin\_int}}{225}{subsection.11.4.2}
-\contentsline {subsection}{\numberline {11.4.3}{sf\_lg\_int}}{226}{subsection.11.4.3}
-\contentsline {subsection}{\numberline {11.4.4}{sf\_taylor\_int}}{226}{subsection.11.4.4}
-\contentsline {section}{\numberline {11.5}Convert data to B-spline coefficients by fast B-spline transform (prefilter.c)}{227}{section.11.5}
-\contentsline {subsection}{\numberline {11.5.1}{sf\_prefilter\_init}}{227}{subsection.11.5.1}
-\contentsline {subsection}{\numberline {11.5.2}{sf\_prefilter\_apply}}{228}{subsection.11.5.2}
-\contentsline {subsection}{\numberline {11.5.3}{sf\_prefilter}}{228}{subsection.11.5.3}
-\contentsline {subsection}{\numberline {11.5.4}{sf\_prefilter\_close}}{229}{subsection.11.5.4}
-\contentsline {section}{\numberline {11.6}B-spline interpolation (spline.c)}{229}{section.11.6}
-\contentsline {subsection}{\numberline {11.6.1}{sf\_spline\_init}}{229}{subsection.11.6.1}
-\contentsline {subsection}{\numberline {11.6.2}{sf\_spline4\_init}}{230}{subsection.11.6.2}
-\contentsline {subsection}{\numberline {11.6.3}{sf\_spline4\_post}}{230}{subsection.11.6.3}
-\contentsline {subsection}{\numberline {11.6.4}{sf\_spline\_post}}{231}{subsection.11.6.4}
-\contentsline {subsection}{\numberline {11.6.5}{sf\_spline2}}{231}{subsection.11.6.5}
-\contentsline {section}{\numberline {11.7}Inverse linear interpolation (stretch.c)}{232}{section.11.7}
-\contentsline {subsection}{\numberline {11.7.1}{sf\_stretch\_init}}{232}{subsection.11.7.1}
-\contentsline {subsection}{\numberline {11.7.2}{sf\_stretch\_define}}{233}{subsection.11.7.2}
-\contentsline {subsection}{\numberline {11.7.3}{sf\_stretch\_apply}}{233}{subsection.11.7.3}
-\contentsline {subsection}{\numberline {11.7.4}{sf\_stretch\_invert}}{234}{subsection.11.7.4}
-\contentsline {subsection}{\numberline {11.7.5}{sf\_stretch\_close}}{234}{subsection.11.7.5}
-\contentsline {section}{\numberline {11.8}1-D ENO interpolation (eno.c)}{235}{section.11.8}
-\contentsline {subsection}{\numberline {11.8.1}{sf\_eno\_init}}{235}{subsection.11.8.1}
-\contentsline {subsection}{\numberline {11.8.2}{sf\_eno\_close}}{235}{subsection.11.8.2}
-\contentsline {subsection}{\numberline {11.8.3}{sf\_eno\_set}}{236}{subsection.11.8.3}
-\contentsline {subsection}{\numberline {11.8.4}{sf\_eno\_apply}}{236}{subsection.11.8.4}
-\contentsline {section}{\numberline {11.9}ENO interpolation in 2-D (eno2.c)}{237}{section.11.9}
-\contentsline {subsection}{\numberline {11.9.1}{sf\_eno2\_init}}{237}{subsection.11.9.1}
-\contentsline {subsection}{\numberline {11.9.2}{sf\_eno2\_set}}{238}{subsection.11.9.2}
-\contentsline {subsection}{\numberline {11.9.3}{sf\_eno2\_set1}}{238}{subsection.11.9.3}
-\contentsline {subsection}{\numberline {11.9.4}{sf\_eno2\_close}}{239}{subsection.11.9.4}
-\contentsline {subsection}{\numberline {11.9.5}{sf\_eno2\_apply}}{239}{subsection.11.9.5}
-\contentsline {section}{\numberline {11.10}1-D ENO power-p interpolation (pweno.c)}{240}{section.11.10}
-\contentsline {subsection}{\numberline {11.10.1}{sf\_pweno\_init}}{240}{subsection.11.10.1}
-\contentsline {subsection}{\numberline {11.10.2}{sf\_pweno\_close}}{240}{subsection.11.10.2}
-\contentsline {subsection}{\numberline {11.10.3}{powerpeno}}{241}{subsection.11.10.3}
-\contentsline {subsection}{\numberline {11.10.4}{sf\_pweno\_set}}{241}{subsection.11.10.4}
-\contentsline {subsection}{\numberline {11.10.5}{sf\_pweno\_apply}}{242}{subsection.11.10.5}
-\contentsline {chapter}{\numberline {12}Smoothing}{245}{chapter.12}
-\contentsline {section}{\numberline {12.1}1-D triangle smoothing as a linear operator (triangle1.c)}{245}{section.12.1}
-\contentsline {subsection}{\numberline {12.1.1}{sf\_triangle1\_init}}{245}{subsection.12.1.1}
-\contentsline {subsection}{\numberline {12.1.2}{sf\_triangle1\_lop}}{245}{subsection.12.1.2}
-\contentsline {subsection}{\numberline {12.1.3}{sf\_triangle1\_close}}{246}{subsection.12.1.3}
-\contentsline {section}{\numberline {12.2}2-D triangle smoothing as a linear operator (triangle2.c)}{247}{section.12.2}
-\contentsline {subsection}{\numberline {12.2.1}{sf\_triangle2\_init}}{247}{subsection.12.2.1}
-\contentsline {subsection}{\numberline {12.2.2}{sf\_triangle2\_lop}}{247}{subsection.12.2.2}
-\contentsline {subsection}{\numberline {12.2.3}{sf\_triangle2\_close}}{248}{subsection.12.2.3}
-\contentsline {section}{\numberline {12.3}Triangle smoothing (triangle.c)}{248}{section.12.3}
-\contentsline {subsection}{\numberline {12.3.1}{sf\_triangle\_init}}{248}{subsection.12.3.1}
-\contentsline {subsection}{\numberline {12.3.2}{fold}}{249}{subsection.12.3.2}
-\contentsline {subsection}{\numberline {12.3.3}{fold2}}{250}{subsection.12.3.3}
-\contentsline {subsection}{\numberline {12.3.4}{doubint}}{250}{subsection.12.3.4}
-\contentsline {subsection}{\numberline {12.3.5}{doubint2}}{251}{subsection.12.3.5}
-\contentsline {subsection}{\numberline {12.3.6}{triple}}{251}{subsection.12.3.6}
-\contentsline {subsection}{\numberline {12.3.7}{triple2}}{252}{subsection.12.3.7}
-\contentsline {subsection}{\numberline {12.3.8}{sf\_smooth}}{253}{subsection.12.3.8}
-\contentsline {subsection}{\numberline {12.3.9}{sf\_smooth2}}{253}{subsection.12.3.9}
-\contentsline {subsection}{\numberline {12.3.10}{sf\_triangle\_close}}{254}{subsection.12.3.10}
-\contentsline {section}{\numberline {12.4}Smooth gradient operations (edge.c)}{255}{section.12.4}
-\contentsline {subsection}{\numberline {12.4.1}{sf\_grad2}}{255}{subsection.12.4.1}
-\contentsline {subsection}{\numberline {12.4.2}{sf\_sobel}}{255}{subsection.12.4.2}
-\contentsline {subsection}{\numberline {12.4.3}{sf\_sobel2}}{256}{subsection.12.4.3}
-\contentsline {subsection}{\numberline {12.4.4}{sf\_sobel32}}{256}{subsection.12.4.4}
-\contentsline {chapter}{\numberline {13}Ray tracing}{259}{chapter.13}
-\contentsline {section}{\numberline {13.1}Cell ray tracing (celltrace.c)}{259}{section.13.1}
-\contentsline {subsection}{\numberline {13.1.1}{sf\_celltrace\_init}}{259}{subsection.13.1.1}
-\contentsline {subsection}{\numberline {13.1.2}{sf\_celltrace\_close}}{260}{subsection.13.1.2}
-\contentsline {subsection}{\numberline {13.1.3}{sf\_cell\_trace}}{260}{subsection.13.1.3}
-\contentsline {section}{\numberline {13.2}Cell ray tracing (cell.c)}{261}{section.13.2}
-\contentsline {subsection}{\numberline {13.2.1}{sf\_cell1\_intersect}}{261}{subsection.13.2.1}
-\contentsline {subsection}{\numberline {13.2.2}{sf\_cell1\_update1}}{262}{subsection.13.2.2}
-\contentsline {subsection}{\numberline {13.2.3}{sf\_cell1\_update2}}{262}{subsection.13.2.3}
-\contentsline {subsection}{\numberline {13.2.4}{sf\_cell11\_intersect2}}{263}{subsection.13.2.4}
-\contentsline {subsection}{\numberline {13.2.5}{sf\_cell11\_update1}}{264}{subsection.13.2.5}
-\contentsline {subsection}{\numberline {13.2.6}{sf\_cell11\_update2}}{264}{subsection.13.2.6}
-\contentsline {subsection}{\numberline {13.2.7}{sf\_cell\_intersect}}{265}{subsection.13.2.7}
-\contentsline {subsection}{\numberline {13.2.8}{sf\_cell\_snap}}{266}{subsection.13.2.8}
-\contentsline {subsection}{\numberline {13.2.9}{sf\_cell\_update1}}{266}{subsection.13.2.9}
-\contentsline {subsection}{\numberline {13.2.10}{sf\_cell\_update2}}{267}{subsection.13.2.10}
-\contentsline {subsection}{\numberline {13.2.11}{sf\_cell\_p2a}}{268}{subsection.13.2.11}
-\contentsline {chapter}{\numberline {14}General tools}{269}{chapter.14}
-\contentsline {section}{\numberline {14.1}First derivative FIR filter (deriv.c)}{269}{section.14.1}
-\contentsline {subsection}{\numberline {14.1.1}{sf\_deriv\_init}}{269}{subsection.14.1.1}
-\contentsline {subsection}{\numberline {14.1.2}{sf\_deriv\_free}}{269}{subsection.14.1.2}
-\contentsline {subsection}{\numberline {14.1.3}{sf\_deriv}}{270}{subsection.14.1.3}
-\contentsline {section}{\numberline {14.2}Computing quantiles by Hoare's algorithm (quantile.c)}{270}{section.14.2}
-\contentsline {subsection}{\numberline {14.2.1}{sf\_quantile}}{270}{subsection.14.2.1}
-\contentsline {section}{\numberline {14.3}Pseudo-random numbers: uniform and normally distributed (randn.c)}{271}{section.14.3}
-\contentsline {subsection}{\numberline {14.3.1}{sf\_randn1}}{271}{subsection.14.3.1}
-\contentsline {subsection}{\numberline {14.3.2}{sf\_randn}}{272}{subsection.14.3.2}
-\contentsline {subsection}{\numberline {14.3.3}{sf\_random}}{272}{subsection.14.3.3}
-\contentsline {section}{\numberline {14.4}Evaluating mathematical expressions (math1.c)}{273}{section.14.4}
-\contentsline {subsection}{\numberline {14.4.1}{myabs}}{273}{subsection.14.4.1}
-\contentsline {subsection}{\numberline {14.4.2}{myconj}}{273}{subsection.14.4.2}
-\contentsline {subsection}{\numberline {14.4.3}{myarg}}{274}{subsection.14.4.3}
-\contentsline {subsection}{\numberline {14.4.4}{sf\_math\_evaluate}}{274}{subsection.14.4.4}
-\contentsline {subsection}{\numberline {14.4.5}{sf\_complex\_math\_evaluate}}{275}{subsection.14.4.5}
-\contentsline {subsection}{\numberline {14.4.6}{sf\_math\_parse}}{276}{subsection.14.4.6}
-\contentsline {subsection}{\numberline {14.4.7}{sf\_math\_parse}}{276}{subsection.14.4.7}
-\contentsline {chapter}{\numberline {15}Geometry }{279}{chapter.15}
-\contentsline {section}{\numberline {15.1}Construction of points (point.c)}{279}{section.15.1}
-\contentsline {subsection}{\numberline {15.1.1}{printpt2d}}{279}{subsection.15.1.1}
-\contentsline {subsection}{\numberline {15.1.2}{printpt3d}}{279}{subsection.15.1.2}
-\contentsline {subsection}{\numberline {15.1.3}{pt2dwrite1}}{280}{subsection.15.1.3}
-\contentsline {subsection}{\numberline {15.1.4}{pt2dwrite2}}{280}{subsection.15.1.4}
-\contentsline {subsection}{\numberline {15.1.5}{pt3dwrite1}}{281}{subsection.15.1.5}
-\contentsline {subsection}{\numberline {15.1.6}{pt3dwrite2}}{282}{subsection.15.1.6}
-\contentsline {subsection}{\numberline {15.1.7}{pt2dread1}}{282}{subsection.15.1.7}
-\contentsline {subsection}{\numberline {15.1.8}{pt2dread2}}{283}{subsection.15.1.8}
-\contentsline {subsection}{\numberline {15.1.9}{pt3dread1}}{283}{subsection.15.1.9}
-\contentsline {subsection}{\numberline {15.1.10}{pt3dread2}}{284}{subsection.15.1.10}
-\contentsline {subsection}{\numberline {15.1.11}{pt2dalloc1}}{285}{subsection.15.1.11}
-\contentsline {subsection}{\numberline {15.1.12}{pt2dalloc2}}{285}{subsection.15.1.12}
-\contentsline {subsection}{\numberline {15.1.13}{pt2dalloc3}}{286}{subsection.15.1.13}
-\contentsline {subsection}{\numberline {15.1.14}{pt3dalloc1}}{286}{subsection.15.1.14}
-\contentsline {subsection}{\numberline {15.1.15}{pt3dalloc2}}{287}{subsection.15.1.15}
-\contentsline {subsection}{\numberline {15.1.16}{pt3dalloc3}}{287}{subsection.15.1.16}
-\contentsline {section}{\numberline {15.2}Construction of vectors (vector.c)}{288}{section.15.2}
-\contentsline {subsection}{\numberline {15.2.1}{det3}}{288}{subsection.15.2.1}
-\contentsline {subsection}{\numberline {15.2.2}{det2}}{288}{subsection.15.2.2}
-\contentsline {subsection}{\numberline {15.2.3}{jac3d}}{289}{subsection.15.2.3}
-\contentsline {subsection}{\numberline {15.2.4}{vec3d}}{290}{subsection.15.2.4}
-\contentsline {subsection}{\numberline {15.2.5}{axa3d}}{290}{subsection.15.2.5}
-\contentsline {subsection}{\numberline {15.2.6}{scp3d}}{291}{subsection.15.2.6}
-\contentsline {subsection}{\numberline {15.2.7}{vcp3d}}{291}{subsection.15.2.7}
-\contentsline {subsection}{\numberline {15.2.8}{len3d}}{292}{subsection.15.2.8}
-\contentsline {subsection}{\numberline {15.2.9}{nor3d}}{292}{subsection.15.2.9}
-\contentsline {subsection}{\numberline {15.2.10}{ang3d}}{293}{subsection.15.2.10}
-\contentsline {subsection}{\numberline {15.2.11}{tip3d}}{294}{subsection.15.2.11}
-\contentsline {subsection}{\numberline {15.2.12}{scl3d}}{294}{subsection.15.2.12}
-\contentsline {section}{\numberline {15.3}Conversion between line and Cartesian coordinates of a vector (decart.c)}{295}{section.15.3}
-\contentsline {subsection}{\numberline {15.3.1}{sf\_line2cart}}{295}{subsection.15.3.1}
-\contentsline {subsection}{\numberline {15.3.2}{sf\_cart2line}}{295}{subsection.15.3.2}
-\contentsline {subsection}{\numberline {15.3.3}{sf\_first\_index}}{296}{subsection.15.3.3}
-\contentsline {subsection}{\numberline {15.3.4}{sf\_large\_line2cart}}{297}{subsection.15.3.4}
-\contentsline {subsection}{\numberline {15.3.5}{sf\_large\_cart2line}}{297}{subsection.15.3.5}
-\contentsline {subsection}{\numberline {15.3.6}{sf\_large\_first\_index}}{298}{subsection.15.3.6}
-\contentsline {section}{\numberline {15.4}Axes (axa.c)}{299}{section.15.4}
-\contentsline {subsection}{\numberline {15.4.1}{sf\_maxa}}{299}{subsection.15.4.1}
-\contentsline {subsubsection}{Input parameters}{299}{section*.1405}
-\contentsline {subsection}{\numberline {15.4.2}{sf\_iaxa}}{300}{subsection.15.4.2}
-\contentsline {subsubsection}{Input parameters}{300}{section*.1409}
-\contentsline {subsection}{\numberline {15.4.3}{sf\_oaxa}}{300}{subsection.15.4.3}
-\contentsline {subsubsection}{Input parameters}{300}{section*.1413}
-\contentsline {subsection}{\numberline {15.4.4}{sf\_raxa}}{301}{subsection.15.4.4}
-\contentsline {subsubsection}{Input parameters}{301}{section*.1416}
-\contentsline {subsection}{\numberline {15.4.5}{sf\_n}}{301}{subsection.15.4.5}
-\contentsline {subsubsection}{Input parameters}{301}{section*.1419}
-\contentsline {subsection}{\numberline {15.4.6}{sf\_o}}{301}{subsection.15.4.6}
-\contentsline {subsubsection}{Input parameters}{302}{section*.1423}
-\contentsline {subsection}{\numberline {15.4.7}{sf\_d}}{302}{subsection.15.4.7}
-\contentsline {subsubsection}{Input parameters}{302}{section*.1427}
-\contentsline {subsection}{\numberline {15.4.8}{sf\_nod}}{303}{subsection.15.4.8}
-\contentsline {subsubsection}{Input parameters}{303}{section*.1431}
-\contentsline {subsection}{\numberline {15.4.9}{sf\_setn}}{303}{subsection.15.4.9}
-\contentsline {subsubsection}{Input parameters}{303}{section*.1435}
-\contentsline {subsection}{\numberline {15.4.10}{sf\_seto}}{304}{subsection.15.4.10}
-\contentsline {subsubsection}{Input parameters}{304}{section*.1438}
-\contentsline {subsection}{\numberline {15.4.11}{sf\_setd}}{304}{subsection.15.4.11}
-\contentsline {subsubsection}{Input parameters}{304}{section*.1441}
-\contentsline {subsection}{\numberline {15.4.12}{sf\_setlabel}}{304}{subsection.15.4.12}
-\contentsline {subsubsection}{Input parameters}{305}{section*.1444}
-\contentsline {subsection}{\numberline {15.4.13}{sf\_setunit}}{305}{subsection.15.4.13}
-\contentsline {subsubsection}{Input parameters}{305}{section*.1447}
-\contentsline {chapter}{\numberline {16}Miscellaneous}{307}{chapter.16}
-\contentsline {section}{\numberline {16.1}sharpening (sharpen.c)}{307}{section.16.1}
-\contentsline {subsection}{\numberline {16.1.1}{sf\_sharpen\_init}}{307}{subsection.16.1.1}
-\contentsline {subsection}{\numberline {16.1.2}{sf\_sharpen\_close}}{307}{subsection.16.1.2}
-\contentsline {subsection}{\numberline {16.1.3}{sf\_sharpen}}{308}{subsection.16.1.3}
-\contentsline {subsection}{\numberline {16.1.4}{sf\_csharpen}}{308}{subsection.16.1.4}
-\contentsline {section}{\numberline {16.2}Sharpening inversion added Bregman iteration (sharpinv.c)}{309}{section.16.2}
-\contentsline {subsection}{\numberline {16.2.1}{sf\_csharpinv}}{309}{subsection.16.2.1}
-\contentsline {subsection}{\numberline {16.2.2}{sf\_sharpinv}}{310}{subsection.16.2.2}
-\contentsline {chapter}{\numberline {17}System}{311}{chapter.17}
-\contentsline {section}{\numberline {17.1}Priority queue (heap sorting) (pqueue.c)}{311}{section.17.1}
-\contentsline {subsection}{\numberline {17.1.1}{sf\_pqueue\_init}}{311}{subsection.17.1.1}
-\contentsline {subsection}{\numberline {17.1.2}{sf\_pqueue\_start}}{311}{subsection.17.1.2}
-\contentsline {subsection}{\numberline {17.1.3}{sf\_pqueue\_close}}{312}{subsection.17.1.3}
-\contentsline {subsection}{\numberline {17.1.4}{sf\_pqueue\_insert}}{312}{subsection.17.1.4}
-\contentsline {subsection}{\numberline {17.1.5}{sf\_pqueue\_insert2}}{312}{subsection.17.1.5}
-\contentsline {subsection}{\numberline {17.1.6}{sf\_pqueue\_extract}}{313}{subsection.17.1.6}
-\contentsline {subsection}{\numberline {17.1.7}{sf\_pqueue\_extract2}}{313}{subsection.17.1.7}
-\contentsline {subsection}{\numberline {17.1.8}{sf\_pqueue\_update}}{314}{subsection.17.1.8}
-\contentsline {section}{\numberline {17.2}Simplified system command (system.c)}{314}{section.17.2}
-\contentsline {subsection}{\numberline {17.2.1}{sf\_system}}{314}{subsection.17.2.1}
-\contentsline {section}{\numberline {17.3}Generic stack (FILO) structure operations (stack.c)}{315}{section.17.3}
-\contentsline {subsection}{\numberline {17.3.1}{sf\_stack\_init}}{315}{subsection.17.3.1}
-\contentsline {subsection}{\numberline {17.3.2}{sf\_stack\_print}}{315}{subsection.17.3.2}
-\contentsline {subsection}{\numberline {17.3.3}{sf\_stack\_get}}{316}{subsection.17.3.3}
-\contentsline {subsection}{\numberline {17.3.4}{sf\_stack\_set}}{317}{subsection.17.3.4}
-\contentsline {subsection}{\numberline {17.3.5}{sf\_push}}{317}{subsection.17.3.5}
-\contentsline {subsection}{\numberline {17.3.6}{sf\_pop}}{317}{subsection.17.3.6}
-\contentsline {subsection}{\numberline {17.3.7}{sf\_full}}{318}{subsection.17.3.7}
-\contentsline {subsection}{\numberline {17.3.8}{sf\_top}}{318}{subsection.17.3.8}
-\contentsline {subsection}{\numberline {17.3.9}{sf\_stack\_close}}{319}{subsection.17.3.9}
+\contentsline {chapter}{Contents}{5}{chapter*.1}
+\contentsline {chapter}{Preface}{7}{chapter*.2}
+\contentsline {chapter}{\numberline {1}Introduction}{9}{chapter.1}
+\contentsline {chapter}{\numberline {2}An example: Finite-Difference modeling}{11}{chapter.2}
+\contentsline {section}{\numberline {2.1}Introduction}{11}{section.2.1}
+\contentsline {section}{\numberline {2.2}C program}{11}{section.2.2}
+\contentsline {section}{\numberline {2.3}Explanation of the code}{14}{section.2.3}
+\contentsline {chapter}{\numberline {3}Data types}{21}{chapter.3}
+\contentsline {section}{\numberline {3.1}Data types}{21}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Complex numbers and FFT}{21}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}Files}{22}{subsection.3.1.2}
+\contentsline {subsection}{\numberline {3.1.3}Operators}{22}{subsection.3.1.3}
+\contentsline {subsection}{\numberline {3.1.4}Geometry}{24}{subsection.3.1.4}
+\contentsline {subsection}{\numberline {3.1.5}Lists}{24}{subsection.3.1.5}
+\contentsline {subsection}{\numberline {3.1.6}sys/types.h}{25}{subsection.3.1.6}
+\contentsline {chapter}{\numberline {4}Preparing for input}{27}{chapter.4}
+\contentsline {section}{\numberline {4.1}Convenience allocation programs (alloc.c)}{27}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}{sf\_alloc}}{27}{subsection.4.1.1}
+\contentsline {subsection}{\numberline {4.1.2}{sf\_realloc}}{28}{subsection.4.1.2}
+\contentsline {subsection}{\numberline {4.1.3}{sf\_charalloc}}{28}{subsection.4.1.3}
+\contentsline {subsection}{\numberline {4.1.4}{sf\_ucharalloc}}{29}{subsection.4.1.4}
+\contentsline {subsection}{\numberline {4.1.5}{sf\_shortalloc}}{29}{subsection.4.1.5}
+\contentsline {subsection}{\numberline {4.1.6}{sf\_intalloc}}{30}{subsection.4.1.6}
+\contentsline {subsection}{\numberline {4.1.7}{sf\_largeintalloc}}{31}{subsection.4.1.7}
+\contentsline {subsection}{\numberline {4.1.8}{sf\_floatalloc}}{31}{subsection.4.1.8}
+\contentsline {subsection}{\numberline {4.1.9}{sf\_complexalloc}}{32}{subsection.4.1.9}
+\contentsline {subsection}{\numberline {4.1.10}{sf\_complexalloc2}}{32}{subsection.4.1.10}
+\contentsline {subsection}{\numberline {4.1.11}{sf\_complexalloc3}}{33}{subsection.4.1.11}
+\contentsline {subsection}{\numberline {4.1.12}{sf\_complexalloc4}}{34}{subsection.4.1.12}
+\contentsline {subsection}{\numberline {4.1.13}{sf\_boolalloc}}{34}{subsection.4.1.13}
+\contentsline {subsection}{\numberline {4.1.14}{sf\_boolalloc2}}{35}{subsection.4.1.14}
+\contentsline {subsection}{\numberline {4.1.15}{sf\_boolalloc3}}{36}{subsection.4.1.15}
+\contentsline {subsection}{\numberline {4.1.16}{sf\_floatalloc2}}{36}{subsection.4.1.16}
+\contentsline {subsection}{\numberline {4.1.17}{sf\_floatalloc3}}{37}{subsection.4.1.17}
+\contentsline {subsection}{\numberline {4.1.18}{sf\_floatalloc4}}{38}{subsection.4.1.18}
+\contentsline {subsection}{\numberline {4.1.19}{sf\_floatalloc5}}{38}{subsection.4.1.19}
+\contentsline {subsection}{\numberline {4.1.20}{sf\_floatalloc6}}{39}{subsection.4.1.20}
+\contentsline {subsection}{\numberline {4.1.21}{sf\_intalloc2}}{40}{subsection.4.1.21}
+\contentsline {subsection}{\numberline {4.1.22}{sf\_intalloc3}}{41}{subsection.4.1.22}
+\contentsline {subsection}{\numberline {4.1.23}{sf\_intalloc4}}{41}{subsection.4.1.23}
+\contentsline {subsection}{\numberline {4.1.24}{sf\_charalloc2}}{42}{subsection.4.1.24}
+\contentsline {subsection}{\numberline {4.1.25}{sf\_uncharalloc2}}{43}{subsection.4.1.25}
+\contentsline {subsection}{\numberline {4.1.26}{sf\_uncharalloc3}}{43}{subsection.4.1.26}
+\contentsline {section}{\numberline {4.2}Simbol Table for parameters (simtab.c)}{44}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}{sf\_simtab\_init}}{44}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}{sf\_simtab\_close}}{45}{subsection.4.2.2}
+\contentsline {subsection}{\numberline {4.2.3}{sf\_simtab\_enter}}{45}{subsection.4.2.3}
+\contentsline {subsection}{\numberline {4.2.4}{sf\_simtab\_get}}{46}{subsection.4.2.4}
+\contentsline {subsection}{\numberline {4.2.5}{sf\_simtab\_getint}}{46}{subsection.4.2.5}
+\contentsline {subsection}{\numberline {4.2.6}{sf\_simtab\_getlargeint}}{47}{subsection.4.2.6}
+\contentsline {subsection}{\numberline {4.2.7}{sf\_simtab\_getfloat}}{47}{subsection.4.2.7}
+\contentsline {subsection}{\numberline {4.2.8}{sf\_simtab\_getdouble}}{48}{subsection.4.2.8}
+\contentsline {subsection}{\numberline {4.2.9}{sf\_simtab\_getfloats}}{49}{subsection.4.2.9}
+\contentsline {subsection}{\numberline {4.2.10}{sf\_simtab\_getstring}}{50}{subsection.4.2.10}
+\contentsline {subsection}{\numberline {4.2.11}{sf\_simtab\_getbool}}{50}{subsection.4.2.11}
+\contentsline {subsection}{\numberline {4.2.12}{sf\_simtab\_getbools}}{51}{subsection.4.2.12}
+\contentsline {subsection}{\numberline {4.2.13}{sf\_simtab\_getints}}{51}{subsection.4.2.13}
+\contentsline {subsection}{\numberline {4.2.14}{sf\_simtab\_getstrings}}{52}{subsection.4.2.14}
+\contentsline {subsection}{\numberline {4.2.15}{sf\_simtab\_put}}{53}{subsection.4.2.15}
+\contentsline {subsection}{\numberline {4.2.16}{sf\_simtab\_input}}{53}{subsection.4.2.16}
+\contentsline {subsection}{\numberline {4.2.17}{sf\_simtab\_output}}{54}{subsection.4.2.17}
+\contentsline {section}{\numberline {4.3}Parameter handling (getpar.c)}{55}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}{sf\_stdin}}{55}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}{sf\_init}}{55}{subsection.4.3.2}
+\contentsline {subsection}{\numberline {4.3.3}{sf\_par\_close}}{56}{subsection.4.3.3}
+\contentsline {subsection}{\numberline {4.3.4}{sf\_parout}}{56}{subsection.4.3.4}
+\contentsline {subsection}{\numberline {4.3.5}{sf\_getprog}}{56}{subsection.4.3.5}
+\contentsline {subsection}{\numberline {4.3.6}{sf\_getuser}}{57}{subsection.4.3.6}
+\contentsline {subsection}{\numberline {4.3.7}{sf\_gethost}}{57}{subsection.4.3.7}
+\contentsline {subsection}{\numberline {4.3.8}{sf\_getcdir}}{58}{subsection.4.3.8}
+\contentsline {subsection}{\numberline {4.3.9}{sf\_getint}}{58}{subsection.4.3.9}
+\contentsline {subsection}{\numberline {4.3.10}{sf\_getlargeint}}{59}{subsection.4.3.10}
+\contentsline {subsection}{\numberline {4.3.11}{sf\_getints}}{60}{subsection.4.3.11}
+\contentsline {subsection}{\numberline {4.3.12}{sf\_getfloat}}{60}{subsection.4.3.12}
+\contentsline {subsection}{\numberline {4.3.13}{sf\_getdouble}}{61}{subsection.4.3.13}
+\contentsline {subsection}{\numberline {4.3.14}{sf\_getfloats}}{61}{subsection.4.3.14}
+\contentsline {subsection}{\numberline {4.3.15}{sf\_getstring}}{62}{subsection.4.3.15}
+\contentsline {subsection}{\numberline {4.3.16}{sf\_getstrings}}{63}{subsection.4.3.16}
+\contentsline {subsection}{\numberline {4.3.17}{sf\_getbool}}{63}{subsection.4.3.17}
+\contentsline {subsection}{\numberline {4.3.18}{sf\_getbools}}{64}{subsection.4.3.18}
+\contentsline {subsection}{\numberline {4.3.19}{sf\_getpars}}{65}{subsection.4.3.19}
+\contentsline {chapter}{\numberline {5}Operations with RSF files}{67}{chapter.5}
+\contentsline {section}{\numberline {5.1}Main operations with RSF files (file.c)}{67}{section.5.1}
+\contentsline {subsection}{\numberline {5.1.1}{sf\_file\_error}}{67}{subsection.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}{sf\_error}}{67}{subsection.5.1.2}
+\contentsline {subsection}{\numberline {5.1.3}{sf\_input}}{68}{subsection.5.1.3}
+\contentsline {subsection}{\numberline {5.1.4}{sf\_output}}{68}{subsection.5.1.4}
+\contentsline {subsection}{\numberline {5.1.5}{sf\_gettype}}{69}{subsection.5.1.5}
+\contentsline {subsection}{\numberline {5.1.6}{sf\_getform}}{70}{subsection.5.1.6}
+\contentsline {subsection}{\numberline {5.1.7}{sf\_esize}}{70}{subsection.5.1.7}
+\contentsline {subsection}{\numberline {5.1.8}{sf\_settype}}{71}{subsection.5.1.8}
+\contentsline {subsection}{\numberline {5.1.9}{sf\_setpars}}{71}{subsection.5.1.9}
+\contentsline {subsection}{\numberline {5.1.10}{sf\_bufsiz}}{71}{subsection.5.1.10}
+\contentsline {subsection}{\numberline {5.1.11}{sf\_setform}}{72}{subsection.5.1.11}
+\contentsline {subsection}{\numberline {5.1.12}{sf\_setformat}}{72}{subsection.5.1.12}
+\contentsline {subsection}{\numberline {5.1.13}{sf\_getfilename}}{73}{subsection.5.1.13}
+\contentsline {subsection}{\numberline {5.1.14}{sf\_gettmpdatapath}}{74}{subsection.5.1.14}
+\contentsline {subsection}{\numberline {5.1.15}{sf\_getdatapath}}{74}{subsection.5.1.15}
+\contentsline {subsection}{\numberline {5.1.16}{sf\_readpathfile}}{75}{subsection.5.1.16}
+\contentsline {subsection}{\numberline {5.1.17}{sf\_fileclose}}{76}{subsection.5.1.17}
+\contentsline {subsection}{\numberline {5.1.18}{sf\_histint}}{76}{subsection.5.1.18}
+\contentsline {subsection}{\numberline {5.1.19}{sf\_histints}}{77}{subsection.5.1.19}
+\contentsline {subsection}{\numberline {5.1.20}{sf\_histlargeint}}{77}{subsection.5.1.20}
+\contentsline {subsection}{\numberline {5.1.21}{sf\_histfloat}}{78}{subsection.5.1.21}
+\contentsline {subsection}{\numberline {5.1.22}{sf\_histdouble}}{79}{subsection.5.1.22}
+\contentsline {subsection}{\numberline {5.1.23}{sf\_histfloats}}{79}{subsection.5.1.23}
+\contentsline {subsection}{\numberline {5.1.24}{sf\_histbool}}{80}{subsection.5.1.24}
+\contentsline {subsection}{\numberline {5.1.25}{sf\_histtbools}}{81}{subsection.5.1.25}
+\contentsline {subsection}{\numberline {5.1.26}{sf\_histstring}}{81}{subsection.5.1.26}
+\contentsline {subsection}{\numberline {5.1.27}{sf\_fileflush}}{82}{subsection.5.1.27}
+\contentsline {subsection}{\numberline {5.1.28}{sf\_putint}}{82}{subsection.5.1.28}
+\contentsline {subsection}{\numberline {5.1.29}{sf\_putints}}{83}{subsection.5.1.29}
+\contentsline {subsection}{\numberline {5.1.30}{sf\_putlargeint}}{83}{subsection.5.1.30}
+\contentsline {subsection}{\numberline {5.1.31}{sf\_putfloat}}{84}{subsection.5.1.31}
+\contentsline {subsection}{\numberline {5.1.32}{sf\_putstring}}{85}{subsection.5.1.32}
+\contentsline {subsection}{\numberline {5.1.33}{sf\_putline}}{85}{subsection.5.1.33}
+\contentsline {subsection}{\numberline {5.1.34}{sf\_setaformat}}{86}{subsection.5.1.34}
+\contentsline {subsection}{\numberline {5.1.35}{sf\_complexwrite}}{86}{subsection.5.1.35}
+\contentsline {subsection}{\numberline {5.1.36}{sf\_complexread}}{87}{subsection.5.1.36}
+\contentsline {subsection}{\numberline {5.1.37}{sf\_charwrite}}{87}{subsection.5.1.37}
+\contentsline {subsection}{\numberline {5.1.38}{sf\_uncharwrite}}{88}{subsection.5.1.38}
+\contentsline {subsection}{\numberline {5.1.39}{sf\_charread}}{88}{subsection.5.1.39}
+\contentsline {subsection}{\numberline {5.1.40}{sf\_uncharread}}{89}{subsection.5.1.40}
+\contentsline {subsection}{\numberline {5.1.41}{sf\_intwrite}}{89}{subsection.5.1.41}
+\contentsline {subsection}{\numberline {5.1.42}{sf\_intread}}{90}{subsection.5.1.42}
+\contentsline {subsection}{\numberline {5.1.43}{sf\_shortread}}{90}{subsection.5.1.43}
+\contentsline {subsection}{\numberline {5.1.44}{sf\_shortwrite}}{91}{subsection.5.1.44}
+\contentsline {subsection}{\numberline {5.1.45}{sf\_floatwrite}}{91}{subsection.5.1.45}
+\contentsline {subsection}{\numberline {5.1.46}{sf\_floatread}}{92}{subsection.5.1.46}
+\contentsline {subsection}{\numberline {5.1.47}{sf\_bytes}}{92}{subsection.5.1.47}
+\contentsline {subsection}{\numberline {5.1.48}{sf\_tell}}{93}{subsection.5.1.48}
+\contentsline {subsection}{\numberline {5.1.49}{sf\_tempfile}}{93}{subsection.5.1.49}
+\contentsline {subsection}{\numberline {5.1.50}{sf\_seek}}{94}{subsection.5.1.50}
+\contentsline {subsection}{\numberline {5.1.51}{sf\_unpipe}}{94}{subsection.5.1.51}
+\contentsline {subsection}{\numberline {5.1.52}{sf\_close}}{94}{subsection.5.1.52}
+\contentsline {section}{\numberline {5.2}Additional operations with RSF files (files.c)}{95}{section.5.2}
+\contentsline {subsection}{\numberline {5.2.1}{sf\_filedims}}{95}{subsection.5.2.1}
+\contentsline {subsection}{\numberline {5.2.2}{sf\_largefiledims}}{95}{subsection.5.2.2}
+\contentsline {subsection}{\numberline {5.2.3}{sf\_memsize}}{96}{subsection.5.2.3}
+\contentsline {subsection}{\numberline {5.2.4}{sf\_filesize}}{97}{subsection.5.2.4}
+\contentsline {subsection}{\numberline {5.2.5}{sf\_leftsize}}{97}{subsection.5.2.5}
+\contentsline {subsection}{\numberline {5.2.6}{sf\_cp}}{98}{subsection.5.2.6}
+\contentsline {subsection}{\numberline {5.2.7}{sf\_rm}}{98}{subsection.5.2.7}
+\contentsline {subsection}{\numberline {5.2.8}{sf\_shiftdim}}{99}{subsection.5.2.8}
+\contentsline {subsection}{\numberline {5.2.9}{sf\_unshiftdim}}{99}{subsection.5.2.9}
+\contentsline {subsection}{\numberline {5.2.10}{sf\_endian}}{100}{subsection.5.2.10}
+\contentsline {section}{\numberline {5.3}Complex number operations (komplex.c)}{100}{section.5.3}
+\contentsline {subsection}{\numberline {5.3.1}{creal}}{100}{subsection.5.3.1}
+\contentsline {subsection}{\numberline {5.3.2}{cimag}}{101}{subsection.5.3.2}
+\contentsline {subsection}{\numberline {5.3.3}{dcneg}}{101}{subsection.5.3.3}
+\contentsline {subsection}{\numberline {5.3.4}{dcadd}}{102}{subsection.5.3.4}
+\contentsline {subsection}{\numberline {5.3.5}{dcsub}}{103}{subsection.5.3.5}
+\contentsline {subsection}{\numberline {5.3.6}{dcmul}}{103}{subsection.5.3.6}
+\contentsline {subsection}{\numberline {5.3.7}{dccmul}}{104}{subsection.5.3.7}
+\contentsline {subsection}{\numberline {5.3.8}{dcdmul}}{104}{subsection.5.3.8}
+\contentsline {subsection}{\numberline {5.3.9}{dcrmul}}{105}{subsection.5.3.9}
+\contentsline {subsection}{\numberline {5.3.10}{dcdiv}}{105}{subsection.5.3.10}
+\contentsline {subsection}{\numberline {5.3.11}{cabs}}{106}{subsection.5.3.11}
+\contentsline {subsection}{\numberline {5.3.12}{cabs}}{106}{subsection.5.3.12}
+\contentsline {subsection}{\numberline {5.3.13}{crealf}}{107}{subsection.5.3.13}
+\contentsline {subsection}{\numberline {5.3.14}{cimagf}}{107}{subsection.5.3.14}
+\contentsline {subsection}{\numberline {5.3.15}{cprint}}{108}{subsection.5.3.15}
+\contentsline {subsection}{\numberline {5.3.16}{cadd}}{108}{subsection.5.3.16}
+\contentsline {subsection}{\numberline {5.3.17}{csub}}{109}{subsection.5.3.17}
+\contentsline {subsection}{\numberline {5.3.18}{csqrtf}}{109}{subsection.5.3.18}
+\contentsline {subsection}{\numberline {5.3.19}{cdiv}}{110}{subsection.5.3.19}
+\contentsline {subsection}{\numberline {5.3.20}{cmul}}{111}{subsection.5.3.20}
+\contentsline {subsection}{\numberline {5.3.21}{crmul}}{111}{subsection.5.3.21}
+\contentsline {subsection}{\numberline {5.3.22}{cneg}}{112}{subsection.5.3.22}
+\contentsline {subsection}{\numberline {5.3.23}{conjf}}{112}{subsection.5.3.23}
+\contentsline {subsection}{\numberline {5.3.24}{cabsf}}{113}{subsection.5.3.24}
+\contentsline {subsection}{\numberline {5.3.25}{cargf}}{113}{subsection.5.3.25}
+\contentsline {subsection}{\numberline {5.3.26}{ctanhf}}{114}{subsection.5.3.26}
+\contentsline {subsection}{\numberline {5.3.27}{ccosf}}{114}{subsection.5.3.27}
+\contentsline {subsection}{\numberline {5.3.28}{ccoshf}}{115}{subsection.5.3.28}
+\contentsline {subsection}{\numberline {5.3.29}{ccosf}}{115}{subsection.5.3.29}
+\contentsline {subsection}{\numberline {5.3.30}{csinhf}}{116}{subsection.5.3.30}
+\contentsline {subsection}{\numberline {5.3.31}{clogf}}{117}{subsection.5.3.31}
+\contentsline {subsection}{\numberline {5.3.32}{cexpf}}{117}{subsection.5.3.32}
+\contentsline {subsection}{\numberline {5.3.33}{ctanf}}{118}{subsection.5.3.33}
+\contentsline {subsection}{\numberline {5.3.34}{casinf}}{118}{subsection.5.3.34}
+\contentsline {subsection}{\numberline {5.3.35}{cacosf}}{119}{subsection.5.3.35}
+\contentsline {subsection}{\numberline {5.3.36}{catanf}}{119}{subsection.5.3.36}
+\contentsline {subsection}{\numberline {5.3.37}{catanhf}}{120}{subsection.5.3.37}
+\contentsline {subsection}{\numberline {5.3.38}{casinhf}}{120}{subsection.5.3.38}
+\contentsline {subsection}{\numberline {5.3.39}{cacoshf}}{121}{subsection.5.3.39}
+\contentsline {subsection}{\numberline {5.3.40}{cpowf}}{121}{subsection.5.3.40}
+\contentsline {chapter}{\numberline {6}Error handling}{123}{chapter.6}
+\contentsline {section}{\numberline {6.1}Handling warning and error messages (error.c)}{123}{section.6.1}
+\contentsline {subsection}{\numberline {6.1.1}{sf\_error}}{123}{subsection.6.1.1}
+\contentsline {subsection}{\numberline {6.1.2}{sf\_warning}}{124}{subsection.6.1.2}
+\contentsline {chapter}{\numberline {7}Linear operators}{125}{chapter.7}
+\contentsline {section}{\numberline {7.1}Introduction}{125}{section.7.1}
+\contentsline {subsection}{\numberline {7.1.1}Definition of operators}{125}{subsection.7.1.1}
+\contentsline {subsection}{\numberline {7.1.2}Products of operators}{126}{subsection.7.1.2}
+\contentsline {subsection}{\numberline {7.1.3}Adjoint operators}{127}{subsection.7.1.3}
+\contentsline {subsection}{\numberline {7.1.4}The dot-product test}{128}{subsection.7.1.4}
+\contentsline {subsection}{\numberline {7.1.5}Implementation of operators}{128}{subsection.7.1.5}
+\contentsline {section}{\numberline {7.2}Adjoint zeroing (adjnull.c)}{129}{section.7.2}
+\contentsline {subsection}{\numberline {7.2.1}sf\_adjnull}{129}{subsection.7.2.1}
+\contentsline {subsection}{\numberline {7.2.2}sf\_cadjnull}{130}{subsection.7.2.2}
+\contentsline {section}{\numberline {7.3}Identity operator (copy.c)}{131}{section.7.3}
+\contentsline {subsection}{\numberline {7.3.1}{sf\_copy\_lop}}{131}{subsection.7.3.1}
+\contentsline {section}{\numberline {7.4}Identity operator (complex data) (ccopy.c)}{131}{section.7.4}
+\contentsline {subsection}{\numberline {7.4.1}{sf\_ccopy\_lop}}{132}{subsection.7.4.1}
+\contentsline {section}{\numberline {7.5}Simple mask operator (mask.c)}{132}{section.7.5}
+\contentsline {subsection}{\numberline {7.5.1}{sf\_mask\_init}}{132}{subsection.7.5.1}
+\contentsline {subsection}{\numberline {7.5.2}{sf\_mask\_lop}}{133}{subsection.7.5.2}
+\contentsline {subsection}{\numberline {7.5.3}{sf\_cmask\_lop}}{133}{subsection.7.5.3}
+\contentsline {section}{\numberline {7.6}Simple weight operator (weight.c)}{134}{section.7.6}
+\contentsline {subsection}{\numberline {7.6.1}{sf\_weight\_init}}{134}{subsection.7.6.1}
+\contentsline {subsection}{\numberline {7.6.2}{sf\_weight\_lop}}{135}{subsection.7.6.2}
+\contentsline {subsection}{\numberline {7.6.3}{sf\_cweight\_lop}}{135}{subsection.7.6.3}
+\contentsline {subsection}{\numberline {7.6.4}{sf\_weight\_apply}}{136}{subsection.7.6.4}
+\contentsline {subsection}{\numberline {7.6.5}{sf\_cweight\_apply}}{136}{subsection.7.6.5}
+\contentsline {section}{\numberline {7.7}1-D finite difference (igrad1.c)}{137}{section.7.7}
+\contentsline {subsection}{\numberline {7.7.1}{sf\_igrad1\_lop}}{137}{subsection.7.7.1}
+\contentsline {section}{\numberline {7.8}Causal integration (causint.c)}{138}{section.7.8}
+\contentsline {subsection}{\numberline {7.8.1}{sf\_causint\_lop}}{138}{subsection.7.8.1}
+\contentsline {section}{\numberline {7.9}Chaining linear operators (chain.c)}{139}{section.7.9}
+\contentsline {subsection}{\numberline {7.9.1}{sf\_chain}}{139}{subsection.7.9.1}
+\contentsline {subsection}{\numberline {7.9.2}{sf\_cchain}}{140}{subsection.7.9.2}
+\contentsline {subsection}{\numberline {7.9.3}{sf\_array}}{141}{subsection.7.9.3}
+\contentsline {subsection}{\numberline {7.9.4}{sf\_normal}}{142}{subsection.7.9.4}
+\contentsline {subsection}{\numberline {7.9.5}{sf\_chain3}}{143}{subsection.7.9.5}
+\contentsline {section}{\numberline {7.10}Dot product test for linear operators (dottest.c)}{144}{section.7.10}
+\contentsline {subsection}{\numberline {7.10.1}{sf\_dot\_test}}{144}{subsection.7.10.1}
+\contentsline {chapter}{\numberline {8}Data analysis}{147}{chapter.8}
+\contentsline {section}{\numberline {8.1}FFT (kiss\_fftr.c)}{147}{section.8.1}
+\contentsline {subsection}{\numberline {8.1.1}{sf\_kiss\_fftr\_alloc}}{147}{subsection.8.1.1}
+\contentsline {subsection}{\numberline {8.1.2}{kiss\_fftr}}{147}{subsection.8.1.2}
+\contentsline {subsection}{\numberline {8.1.3}{kiss\_fftri}}{148}{subsection.8.1.3}
+\contentsline {section}{\numberline {8.2}Cosine window weighting function (tent2.c)}{149}{section.8.2}
+\contentsline {subsection}{\numberline {8.2.1}{sf\_tent2}}{149}{subsection.8.2.1}
+\contentsline {section}{\numberline {8.3}Anisotropic diffusion, 2-D (impl2.c)}{149}{section.8.3}
+\contentsline {subsection}{\numberline {8.3.1}{sf\_impl2\_init}}{149}{subsection.8.3.1}
+\contentsline {subsection}{\numberline {8.3.2}{sf\_impl2\_close}}{150}{subsection.8.3.2}
+\contentsline {subsection}{\numberline {8.3.3}{sf\_impl2\_set}}{151}{subsection.8.3.3}
+\contentsline {subsection}{\numberline {8.3.4}{sf\_impl2\_set}}{151}{subsection.8.3.4}
+\contentsline {subsection}{\numberline {8.3.5}{sf\_impl2\_lop}}{152}{subsection.8.3.5}
+\contentsline {chapter}{\numberline {9}Filtering}{153}{chapter.9}
+\contentsline {section}{\numberline {9.1}Frequency-domain filtering (freqfilt.c)}{153}{section.9.1}
+\contentsline {subsection}{\numberline {9.1.1}{sf\_freqfilt\_init}}{153}{subsection.9.1.1}
+\contentsline {subsection}{\numberline {9.1.2}{sf\_freqfilt\_set}}{153}{subsection.9.1.2}
+\contentsline {subsection}{\numberline {9.1.3}{sf\_freqfilt\_cset}}{154}{subsection.9.1.3}
+\contentsline {subsection}{\numberline {9.1.4}{sf\_freqfilt\_close}}{154}{subsection.9.1.4}
+\contentsline {subsection}{\numberline {9.1.5}{sf\_freqfilt}}{155}{subsection.9.1.5}
+\contentsline {subsection}{\numberline {9.1.6}{sf\_freqfilt\_lop}}{155}{subsection.9.1.6}
+\contentsline {section}{\numberline {9.2}Frequency-domain filtering in 2-D (freqfilt.c)}{156}{section.9.2}
+\contentsline {subsection}{\numberline {9.2.1}{sf\_freqfilt2\_init}}{156}{subsection.9.2.1}
+\contentsline {subsection}{\numberline {9.2.2}{sf\_freqfilt2\_set}}{156}{subsection.9.2.2}
+\contentsline {subsection}{\numberline {9.2.3}{sf\_freqfilt2\_close}}{157}{subsection.9.2.3}
+\contentsline {subsection}{\numberline {9.2.4}{sf\_freqfilt2\_spec}}{157}{subsection.9.2.4}
+\contentsline {subsection}{\numberline {9.2.5}{sf\_freqfilt2\_lop}}{158}{subsection.9.2.5}
+\contentsline {section}{\numberline {9.3}Helical convolution (helicon.c)}{158}{section.9.3}
+\contentsline {subsection}{\numberline {9.3.1}{sf\_helicon\_init}}{158}{subsection.9.3.1}
+\contentsline {subsection}{\numberline {9.3.2}{sf\_helicon\_lop}}{159}{subsection.9.3.2}
+\contentsline {section}{\numberline {9.4}Helical filter definition and allocation (helix.c)}{159}{section.9.4}
+\contentsline {subsection}{\numberline {9.4.1}{sf\_allocatehelix}}{159}{subsection.9.4.1}
+\contentsline {subsection}{\numberline {9.4.2}{sf\_deallocatehelix}}{160}{subsection.9.4.2}
+\contentsline {subsection}{\numberline {9.4.3}{sf\_displayhelix}}{160}{subsection.9.4.3}
+\contentsline {section}{\numberline {9.5}Recursive convolution (polynomial division) (recfilt.c)}{161}{section.9.5}
+\contentsline {subsection}{\numberline {9.5.1}{sf\_recfilt\_init}}{161}{subsection.9.5.1}
+\contentsline {subsection}{\numberline {9.5.2}{sf\_recfilt\_lop}}{161}{subsection.9.5.2}
+\contentsline {subsection}{\numberline {9.5.3}{sf\_recfilt\_close}}{162}{subsection.9.5.3}
+\contentsline {section}{\numberline {9.6}Cosine Fourier transform (cosft.c)}{162}{section.9.6}
+\contentsline {subsection}{\numberline {9.6.1}{sf\_cosft}}{162}{subsection.9.6.1}
+\contentsline {subsection}{\numberline {9.6.2}{sf\_cosft\_close}}{163}{subsection.9.6.2}
+\contentsline {subsection}{\numberline {9.6.3}{sf\_cosft\_frw}}{163}{subsection.9.6.3}
+\contentsline {subsection}{\numberline {9.6.4}{sf\_cosft\_inv}}{164}{subsection.9.6.4}
+\contentsline {chapter}{\numberline {10}Solvers}{165}{chapter.10}
+\contentsline {section}{\numberline {10.1}Banded matrix solver (banded.c)}{165}{section.10.1}
+\contentsline {subsection}{\numberline {10.1.1}{sf\_banded\_init}}{165}{subsection.10.1.1}
+\contentsline {subsection}{\numberline {10.1.2}{sf\_banded\_define}}{165}{subsection.10.1.2}
+\contentsline {subsection}{\numberline {10.1.3}{sf\_banded\_const\_define}}{166}{subsection.10.1.3}
+\contentsline {subsection}{\numberline {10.1.4}{sf\_banded\_const\_define\_reflect}}{167}{subsection.10.1.4}
+\contentsline {subsection}{\numberline {10.1.5}{sf\_banded\_solve}}{167}{subsection.10.1.5}
+\contentsline {subsection}{\numberline {10.1.6}{sf\_banded\_close}}{168}{subsection.10.1.6}
+\contentsline {section}{\numberline {10.2}Claerbout's conjugate-gradient iteration (cgstep.c)}{168}{section.10.2}
+\contentsline {subsection}{\numberline {10.2.1}{sf\_cgstep}}{168}{subsection.10.2.1}
+\contentsline {subsection}{\numberline {10.2.2}{sf\_cgstep\_close}}{169}{subsection.10.2.2}
+\contentsline {section}{\numberline {10.3}Conjugate-gradient with shaping regularization (conjgrad.c)}{169}{section.10.3}
+\contentsline {subsection}{\numberline {10.3.1}{sf\_conjgrad\_init}}{169}{subsection.10.3.1}
+\contentsline {subsection}{\numberline {10.3.2}{sf\_conjgrad\_close}}{170}{subsection.10.3.2}
+\contentsline {subsection}{\numberline {10.3.3}{sf\_conjgrad}}{171}{subsection.10.3.3}
+\contentsline {section}{\numberline {10.4}CG with preconditioning (conjprec.c)}{171}{section.10.4}
+\contentsline {subsection}{\numberline {10.4.1}{sf\_conjprec\_init}}{171}{subsection.10.4.1}
+\contentsline {subsection}{\numberline {10.4.2}{sf\_conjprec\_close}}{172}{subsection.10.4.2}
+\contentsline {subsection}{\numberline {10.4.3}{sf\_conjprec}}{172}{subsection.10.4.3}
+\contentsline {section}{\numberline {10.5}CG iteration (complex data) (cgstep.c)}{173}{section.10.5}
+\contentsline {subsection}{\numberline {10.5.1}{sf\_ccgstep}}{173}{subsection.10.5.1}
+\contentsline {subsection}{\numberline {10.5.2}{sf\_ccgstep\_close}}{174}{subsection.10.5.2}
+\contentsline {subsection}{\numberline {10.5.3}{dotprod}}{174}{subsection.10.5.3}
+\contentsline {section}{\numberline {10.6}Conjugate-gradient with shaping regularization for complex numbers (cconjgrad.c)}{175}{section.10.6}
+\contentsline {subsection}{\numberline {10.6.1}{norm}}{175}{subsection.10.6.1}
+\contentsline {subsection}{\numberline {10.6.2}{sf\_cconjgrad\_init}}{176}{subsection.10.6.2}
+\contentsline {subsection}{\numberline {10.6.3}{sf\_cconjgrad\_close}}{176}{subsection.10.6.3}
+\contentsline {subsection}{\numberline {10.6.4}{sf\_cconjgrad}}{177}{subsection.10.6.4}
+\contentsline {section}{\numberline {10.7}Conjugate-direction iteration (cdstep.c)}{178}{section.10.7}
+\contentsline {subsection}{\numberline {10.7.1}{sf\_cdstep\_init}}{178}{subsection.10.7.1}
+\contentsline {subsection}{\numberline {10.7.2}{sf\_cdstep\_close}}{178}{subsection.10.7.2}
+\contentsline {subsection}{\numberline {10.7.3}{sf\_cdstep}}{178}{subsection.10.7.3}
+\contentsline {subsection}{\numberline {10.7.4}{sf\_cdstep\_diag}}{179}{subsection.10.7.4}
+\contentsline {subsection}{\numberline {10.7.5}{sf\_cdstep\_mat}}{180}{subsection.10.7.5}
+\contentsline {section}{\numberline {10.8}Linked list for use in conjugate-direction-type methods (llist.c)}{180}{section.10.8}
+\contentsline {subsection}{\numberline {10.8.1}{sf\_list\_init}}{180}{subsection.10.8.1}
+\contentsline {subsection}{\numberline {10.8.2}{sf\_llist\_rewind}}{181}{subsection.10.8.2}
+\contentsline {subsection}{\numberline {10.8.3}{sf\_llist\_depth}}{181}{subsection.10.8.3}
+\contentsline {subsection}{\numberline {10.8.4}{sf\_llist\_add}}{182}{subsection.10.8.4}
+\contentsline {subsection}{\numberline {10.8.5}{sf\_llist\_down}}{182}{subsection.10.8.5}
+\contentsline {subsection}{\numberline {10.8.6}{sf\_llist\_close}}{183}{subsection.10.8.6}
+\contentsline {subsection}{\numberline {10.8.7}{sf\_llist\_chop}}{183}{subsection.10.8.7}
+\contentsline {section}{\numberline {10.9}Conjugate-direction iteration for complex numbers (ccdstep.c)}{184}{section.10.9}
+\contentsline {subsection}{\numberline {10.9.1}{sf\_ccdstep\_init}}{184}{subsection.10.9.1}
+\contentsline {subsection}{\numberline {10.9.2}{sf\_ccdstep\_close}}{184}{subsection.10.9.2}
+\contentsline {subsection}{\numberline {10.9.3}{sf\_ccdstep}}{184}{subsection.10.9.3}
+\contentsline {subsection}{\numberline {10.9.4}{saxpy}}{185}{subsection.10.9.4}
+\contentsline {subsection}{\numberline {10.9.5}{dsdot}}{186}{subsection.10.9.5}
+\contentsline {section}{\numberline {10.10}Linked list for CD-type methods (complex data) (clist.c)}{186}{section.10.10}
+\contentsline {subsection}{\numberline {10.10.1}{sf\_clist\_init}}{186}{subsection.10.10.1}
+\contentsline {subsection}{\numberline {10.10.2}{sf\_clist\_rewind}}{187}{subsection.10.10.2}
+\contentsline {subsection}{\numberline {10.10.3}{sf\_clist\_depth}}{187}{subsection.10.10.3}
+\contentsline {subsection}{\numberline {10.10.4}{sf\_clist\_add}}{188}{subsection.10.10.4}
+\contentsline {subsection}{\numberline {10.10.5}{sf\_llist\_down}}{188}{subsection.10.10.5}
+\contentsline {subsection}{\numberline {10.10.6}{sf\_clist\_close}}{189}{subsection.10.10.6}
+\contentsline {subsection}{\numberline {10.10.7}{sf\_clist\_chop}}{189}{subsection.10.10.7}
+\contentsline {section}{\numberline {10.11}Solving quadratic equations (quadratic.c)}{190}{section.10.11}
+\contentsline {subsection}{\numberline {10.11.1}{sf\_quadratic\_solve}}{190}{subsection.10.11.1}
+\contentsline {section}{\numberline {10.12}Zero finder (fzero.c)}{190}{section.10.12}
+\contentsline {subsection}{\numberline {10.12.1}{sf\_zero}}{190}{subsection.10.12.1}
+\contentsline {section}{\numberline {10.13}Runge-Kutta ODE solvers (runge.c)}{191}{section.10.13}
+\contentsline {subsection}{\numberline {10.13.1}{sf\_runge\_init}}{191}{subsection.10.13.1}
+\contentsline {subsection}{\numberline {10.13.2}{sf\_ode23}}{192}{subsection.10.13.2}
+\contentsline {subsection}{\numberline {10.13.3}{sf\_ode23\_step}}{193}{subsection.10.13.3}
+\contentsline {section}{\numberline {10.14}Solver function for iterative least-squares optimization (tinysolver.c)}{195}{section.10.14}
+\contentsline {subsection}{\numberline {10.14.1}{sf\_tinysolver}}{195}{subsection.10.14.1}
+\contentsline {section}{\numberline {10.15}Solver functions for iterative least-squares optimization (bigsolver.c)}{195}{section.10.15}
+\contentsline {subsection}{\numberline {10.15.1}{sf\_solver\_prec}}{195}{subsection.10.15.1}
+\contentsline {subsection}{\numberline {10.15.2}{sf\_csolver\_prec}}{197}{subsection.10.15.2}
+\contentsline {subsection}{\numberline {10.15.3}{sf\_solver\_reg}}{198}{subsection.10.15.3}
+\contentsline {subsection}{\numberline {10.15.4}{sf\_solver}}{199}{subsection.10.15.4}
+\contentsline {subsection}{\numberline {10.15.5}{sf\_left\_solver}}{201}{subsection.10.15.5}
+\contentsline {subsection}{\numberline {10.15.6}{sf\_csolver}}{202}{subsection.10.15.6}
+\contentsline {section}{\numberline {10.16}Weighting for iteratively-reweighted least squares (irls.c)}{204}{section.10.16}
+\contentsline {subsection}{\numberline {10.16.1}{sf\_irls\_init}}{204}{subsection.10.16.1}
+\contentsline {subsection}{\numberline {10.16.2}{sf\_irls\_close}}{204}{subsection.10.16.2}
+\contentsline {subsection}{\numberline {10.16.3}{sf\_l1}}{204}{subsection.10.16.3}
+\contentsline {subsection}{\numberline {10.16.4}{sf\_cauchy}}{205}{subsection.10.16.4}
+\contentsline {section}{\numberline {10.17}Tridiagonal matrix solver (tridiagonal.c)}{206}{section.10.17}
+\contentsline {subsection}{\numberline {10.17.1}{sf\_tridiagonal\_init}}{206}{subsection.10.17.1}
+\contentsline {subsection}{\numberline {10.17.2}{sf\_tridiagonal\_define}}{206}{subsection.10.17.2}
+\contentsline {subsection}{\numberline {10.17.3}{sf\_tridiagonal\_const\_define}}{207}{subsection.10.17.3}
+\contentsline {subsection}{\numberline {10.17.4}{sf\_tridiagonal\_solve}}{207}{subsection.10.17.4}
+\contentsline {subsection}{\numberline {10.17.5}{sf\_tridiagonal\_close}}{208}{subsection.10.17.5}
+\contentsline {chapter}{\numberline {11}Interpolation}{209}{chapter.11}
+\contentsline {section}{\numberline {11.1}1-D interpolation (int1.c)}{209}{section.11.1}
+\contentsline {subsection}{\numberline {11.1.1}{sf\_int1\_init}}{209}{subsection.11.1.1}
+\contentsline {subsection}{\numberline {11.1.2}{sf\_int1\_lop}}{210}{subsection.11.1.2}
+\contentsline {subsection}{\numberline {11.1.3}{sf\_cint1\_lop}}{210}{subsection.11.1.3}
+\contentsline {subsection}{\numberline {11.1.4}{sf\_int1\_close}}{211}{subsection.11.1.4}
+\contentsline {section}{\numberline {11.2}2-D interpolation (int2.c)}{211}{section.11.2}
+\contentsline {subsection}{\numberline {11.2.1}{sf\_int2\_init}}{211}{subsection.11.2.1}
+\contentsline {subsection}{\numberline {11.2.2}{sf\_int2\_lop}}{212}{subsection.11.2.2}
+\contentsline {subsection}{\numberline {11.2.3}{sf\_int2\_close}}{213}{subsection.11.2.3}
+\contentsline {section}{\numberline {11.3}3-D interpolation (int3.c)}{213}{section.11.3}
+\contentsline {subsection}{\numberline {11.3.1}{sf\_int3\_init}}{213}{subsection.11.3.1}
+\contentsline {subsection}{\numberline {11.3.2}{sf\_int3\_lop}}{214}{subsection.11.3.2}
+\contentsline {subsection}{\numberline {11.3.3}{sf\_int3\_close}}{215}{subsection.11.3.3}
+\contentsline {section}{\numberline {11.4}Basic interpolation functions (interp.c)}{215}{section.11.4}
+\contentsline {subsection}{\numberline {11.4.1}{sf\_bin\_int}}{215}{subsection.11.4.1}
+\contentsline {subsection}{\numberline {11.4.2}{sf\_lin\_int}}{215}{subsection.11.4.2}
+\contentsline {subsection}{\numberline {11.4.3}{sf\_lg\_int}}{216}{subsection.11.4.3}
+\contentsline {subsection}{\numberline {11.4.4}{sf\_taylor\_int}}{216}{subsection.11.4.4}
+\contentsline {section}{\numberline {11.5}Convert data to B-spline coefficients by fast B-spline transform (prefilter.c)}{217}{section.11.5}
+\contentsline {subsection}{\numberline {11.5.1}{sf\_prefilter\_init}}{217}{subsection.11.5.1}
+\contentsline {subsection}{\numberline {11.5.2}{sf\_prefilter\_apply}}{218}{subsection.11.5.2}
+\contentsline {subsection}{\numberline {11.5.3}{sf\_prefilter}}{218}{subsection.11.5.3}
+\contentsline {subsection}{\numberline {11.5.4}{sf\_prefilter\_close}}{219}{subsection.11.5.4}
+\contentsline {section}{\numberline {11.6}B-spline interpolation (spline.c)}{219}{section.11.6}
+\contentsline {subsection}{\numberline {11.6.1}{sf\_spline\_init}}{219}{subsection.11.6.1}
+\contentsline {subsection}{\numberline {11.6.2}{sf\_spline4\_init}}{220}{subsection.11.6.2}
+\contentsline {subsection}{\numberline {11.6.3}{sf\_spline4\_post}}{220}{subsection.11.6.3}
+\contentsline {subsection}{\numberline {11.6.4}{sf\_spline\_post}}{221}{subsection.11.6.4}
+\contentsline {subsection}{\numberline {11.6.5}{sf\_spline2}}{221}{subsection.11.6.5}
+\contentsline {section}{\numberline {11.7}Inverse linear interpolation (stretch.c)}{222}{section.11.7}
+\contentsline {subsection}{\numberline {11.7.1}{sf\_stretch\_init}}{222}{subsection.11.7.1}
+\contentsline {subsection}{\numberline {11.7.2}{sf\_stretch\_define}}{223}{subsection.11.7.2}
+\contentsline {subsection}{\numberline {11.7.3}{sf\_stretch\_apply}}{223}{subsection.11.7.3}
+\contentsline {subsection}{\numberline {11.7.4}{sf\_stretch\_invert}}{224}{subsection.11.7.4}
+\contentsline {subsection}{\numberline {11.7.5}{sf\_stretch\_close}}{224}{subsection.11.7.5}
+\contentsline {section}{\numberline {11.8}1-D ENO interpolation (eno.c)}{225}{section.11.8}
+\contentsline {subsection}{\numberline {11.8.1}{sf\_eno\_init}}{225}{subsection.11.8.1}
+\contentsline {subsection}{\numberline {11.8.2}{sf\_eno\_close}}{225}{subsection.11.8.2}
+\contentsline {subsection}{\numberline {11.8.3}{sf\_eno\_set}}{226}{subsection.11.8.3}
+\contentsline {subsection}{\numberline {11.8.4}{sf\_eno\_apply}}{226}{subsection.11.8.4}
+\contentsline {section}{\numberline {11.9}ENO interpolation in 2-D (eno2.c)}{227}{section.11.9}
+\contentsline {subsection}{\numberline {11.9.1}{sf\_eno2\_init}}{227}{subsection.11.9.1}
+\contentsline {subsection}{\numberline {11.9.2}{sf\_eno2\_set}}{228}{subsection.11.9.2}
+\contentsline {subsection}{\numberline {11.9.3}{sf\_eno2\_set1}}{228}{subsection.11.9.3}
+\contentsline {subsection}{\numberline {11.9.4}{sf\_eno2\_close}}{229}{subsection.11.9.4}
+\contentsline {subsection}{\numberline {11.9.5}{sf\_eno2\_apply}}{229}{subsection.11.9.5}
+\contentsline {section}{\numberline {11.10}1-D ENO power-p interpolation (pweno.c)}{230}{section.11.10}
+\contentsline {subsection}{\numberline {11.10.1}{sf\_pweno\_init}}{230}{subsection.11.10.1}
+\contentsline {subsection}{\numberline {11.10.2}{sf\_pweno\_close}}{230}{subsection.11.10.2}
+\contentsline {subsection}{\numberline {11.10.3}{powerpeno}}{231}{subsection.11.10.3}
+\contentsline {subsection}{\numberline {11.10.4}{sf\_pweno\_set}}{231}{subsection.11.10.4}
+\contentsline {subsection}{\numberline {11.10.5}{sf\_pweno\_apply}}{232}{subsection.11.10.5}
+\contentsline {chapter}{\numberline {12}Smoothing}{235}{chapter.12}
+\contentsline {section}{\numberline {12.1}1-D triangle smoothing as a linear operator (triangle1.c)}{235}{section.12.1}
+\contentsline {subsection}{\numberline {12.1.1}{sf\_triangle1\_init}}{235}{subsection.12.1.1}
+\contentsline {subsection}{\numberline {12.1.2}{sf\_triangle1\_lop}}{235}{subsection.12.1.2}
+\contentsline {subsection}{\numberline {12.1.3}{sf\_triangle1\_close}}{236}{subsection.12.1.3}
+\contentsline {section}{\numberline {12.2}2-D triangle smoothing as a linear operator (triangle2.c)}{237}{section.12.2}
+\contentsline {subsection}{\numberline {12.2.1}{sf\_triangle2\_init}}{237}{subsection.12.2.1}
+\contentsline {subsection}{\numberline {12.2.2}{sf\_triangle2\_lop}}{237}{subsection.12.2.2}
+\contentsline {subsection}{\numberline {12.2.3}{sf\_triangle2\_close}}{238}{subsection.12.2.3}
+\contentsline {section}{\numberline {12.3}Triangle smoothing (triangle.c)}{238}{section.12.3}
+\contentsline {subsection}{\numberline {12.3.1}{sf\_triangle\_init}}{238}{subsection.12.3.1}
+\contentsline {subsection}{\numberline {12.3.2}{fold}}{239}{subsection.12.3.2}
+\contentsline {subsection}{\numberline {12.3.3}{fold2}}{240}{subsection.12.3.3}
+\contentsline {subsection}{\numberline {12.3.4}{doubint}}{240}{subsection.12.3.4}
+\contentsline {subsection}{\numberline {12.3.5}{doubint2}}{241}{subsection.12.3.5}
+\contentsline {subsection}{\numberline {12.3.6}{triple}}{241}{subsection.12.3.6}
+\contentsline {subsection}{\numberline {12.3.7}{triple2}}{242}{subsection.12.3.7}
+\contentsline {subsection}{\numberline {12.3.8}{sf\_smooth}}{243}{subsection.12.3.8}
+\contentsline {subsection}{\numberline {12.3.9}{sf\_smooth2}}{243}{subsection.12.3.9}
+\contentsline {subsection}{\numberline {12.3.10}{sf\_triangle\_close}}{244}{subsection.12.3.10}
+\contentsline {section}{\numberline {12.4}Smooth gradient operations (edge.c)}{245}{section.12.4}
+\contentsline {subsection}{\numberline {12.4.1}{sf\_grad2}}{245}{subsection.12.4.1}
+\contentsline {subsection}{\numberline {12.4.2}{sf\_sobel}}{245}{subsection.12.4.2}
+\contentsline {subsection}{\numberline {12.4.3}{sf\_sobel2}}{246}{subsection.12.4.3}
+\contentsline {subsection}{\numberline {12.4.4}{sf\_sobel32}}{246}{subsection.12.4.4}
+\contentsline {chapter}{\numberline {13}Ray tracing}{249}{chapter.13}
+\contentsline {section}{\numberline {13.1}Cell ray tracing (celltrace.c)}{249}{section.13.1}
+\contentsline {subsection}{\numberline {13.1.1}{sf\_celltrace\_init}}{249}{subsection.13.1.1}
+\contentsline {subsection}{\numberline {13.1.2}{sf\_celltrace\_close}}{250}{subsection.13.1.2}
+\contentsline {subsection}{\numberline {13.1.3}{sf\_cell\_trace}}{250}{subsection.13.1.3}
+\contentsline {section}{\numberline {13.2}Cell ray tracing (cell.c)}{251}{section.13.2}
+\contentsline {subsection}{\numberline {13.2.1}{sf\_cell1\_intersect}}{251}{subsection.13.2.1}
+\contentsline {subsection}{\numberline {13.2.2}{sf\_cell1\_update1}}{252}{subsection.13.2.2}
+\contentsline {subsection}{\numberline {13.2.3}{sf\_cell1\_update2}}{252}{subsection.13.2.3}
+\contentsline {subsection}{\numberline {13.2.4}{sf\_cell11\_intersect2}}{253}{subsection.13.2.4}
+\contentsline {subsection}{\numberline {13.2.5}{sf\_cell11\_update1}}{254}{subsection.13.2.5}
+\contentsline {subsection}{\numberline {13.2.6}{sf\_cell11\_update2}}{254}{subsection.13.2.6}
+\contentsline {subsection}{\numberline {13.2.7}{sf\_cell\_intersect}}{255}{subsection.13.2.7}
+\contentsline {subsection}{\numberline {13.2.8}{sf\_cell\_snap}}{256}{subsection.13.2.8}
+\contentsline {subsection}{\numberline {13.2.9}{sf\_cell\_update1}}{256}{subsection.13.2.9}
+\contentsline {subsection}{\numberline {13.2.10}{sf\_cell\_update2}}{257}{subsection.13.2.10}
+\contentsline {subsection}{\numberline {13.2.11}{sf\_cell\_p2a}}{258}{subsection.13.2.11}
+\contentsline {chapter}{\numberline {14}General tools}{259}{chapter.14}
+\contentsline {section}{\numberline {14.1}First derivative FIR filter (deriv.c)}{259}{section.14.1}
+\contentsline {subsection}{\numberline {14.1.1}{sf\_deriv\_init}}{259}{subsection.14.1.1}
+\contentsline {subsection}{\numberline {14.1.2}{sf\_deriv\_free}}{259}{subsection.14.1.2}
+\contentsline {subsection}{\numberline {14.1.3}{sf\_deriv}}{260}{subsection.14.1.3}
+\contentsline {section}{\numberline {14.2}Computing quantiles by Hoare's algorithm (quantile.c)}{260}{section.14.2}
+\contentsline {subsection}{\numberline {14.2.1}{sf\_quantile}}{260}{subsection.14.2.1}
+\contentsline {section}{\numberline {14.3}Pseudo-random numbers: uniform and normally distributed (randn.c)}{261}{section.14.3}
+\contentsline {subsection}{\numberline {14.3.1}{sf\_randn1}}{261}{subsection.14.3.1}
+\contentsline {subsection}{\numberline {14.3.2}{sf\_randn}}{262}{subsection.14.3.2}
+\contentsline {subsection}{\numberline {14.3.3}{sf\_random}}{262}{subsection.14.3.3}
+\contentsline {section}{\numberline {14.4}Evaluating mathematical expressions (math1.c)}{263}{section.14.4}
+\contentsline {subsection}{\numberline {14.4.1}{myabs}}{263}{subsection.14.4.1}
+\contentsline {subsection}{\numberline {14.4.2}{myconj}}{263}{subsection.14.4.2}
+\contentsline {subsection}{\numberline {14.4.3}{myarg}}{264}{subsection.14.4.3}
+\contentsline {subsection}{\numberline {14.4.4}{sf\_math\_evaluate}}{264}{subsection.14.4.4}
+\contentsline {subsection}{\numberline {14.4.5}{sf\_complex\_math\_evaluate}}{265}{subsection.14.4.5}
+\contentsline {subsection}{\numberline {14.4.6}{sf\_math\_parse}}{266}{subsection.14.4.6}
+\contentsline {subsection}{\numberline {14.4.7}{sf\_math\_parse}}{266}{subsection.14.4.7}
+\contentsline {chapter}{\numberline {15}Geometry}{269}{chapter.15}
+\contentsline {section}{\numberline {15.1}Construction of points (point.c)}{269}{section.15.1}
+\contentsline {subsection}{\numberline {15.1.1}{printpt2d}}{269}{subsection.15.1.1}
+\contentsline {subsection}{\numberline {15.1.2}{printpt3d}}{269}{subsection.15.1.2}
+\contentsline {subsection}{\numberline {15.1.3}{pt2dwrite1}}{270}{subsection.15.1.3}
+\contentsline {subsection}{\numberline {15.1.4}{pt2dwrite2}}{270}{subsection.15.1.4}
+\contentsline {subsection}{\numberline {15.1.5}{pt3dwrite1}}{271}{subsection.15.1.5}
+\contentsline {subsection}{\numberline {15.1.6}{pt3dwrite2}}{272}{subsection.15.1.6}
+\contentsline {subsection}{\numberline {15.1.7}{pt2dread1}}{272}{subsection.15.1.7}
+\contentsline {subsection}{\numberline {15.1.8}{pt2dread2}}{273}{subsection.15.1.8}
+\contentsline {subsection}{\numberline {15.1.9}{pt3dread1}}{273}{subsection.15.1.9}
+\contentsline {subsection}{\numberline {15.1.10}{pt3dread2}}{274}{subsection.15.1.10}
+\contentsline {subsection}{\numberline {15.1.11}{pt2dalloc1}}{275}{subsection.15.1.11}
+\contentsline {subsection}{\numberline {15.1.12}{pt2dalloc2}}{275}{subsection.15.1.12}
+\contentsline {subsection}{\numberline {15.1.13}{pt2dalloc3}}{276}{subsection.15.1.13}
+\contentsline {subsection}{\numberline {15.1.14}{pt3dalloc1}}{276}{subsection.15.1.14}
+\contentsline {subsection}{\numberline {15.1.15}{pt3dalloc2}}{277}{subsection.15.1.15}
+\contentsline {subsection}{\numberline {15.1.16}{pt3dalloc3}}{277}{subsection.15.1.16}
+\contentsline {section}{\numberline {15.2}Construction of vectors (vector.c)}{278}{section.15.2}
+\contentsline {subsection}{\numberline {15.2.1}{det3}}{278}{subsection.15.2.1}
+\contentsline {subsection}{\numberline {15.2.2}{det2}}{278}{subsection.15.2.2}
+\contentsline {subsection}{\numberline {15.2.3}{jac3d}}{279}{subsection.15.2.3}
+\contentsline {subsection}{\numberline {15.2.4}{vec3d}}{280}{subsection.15.2.4}
+\contentsline {subsection}{\numberline {15.2.5}{axa3d}}{280}{subsection.15.2.5}
+\contentsline {subsection}{\numberline {15.2.6}{scp3d}}{281}{subsection.15.2.6}
+\contentsline {subsection}{\numberline {15.2.7}{vcp3d}}{281}{subsection.15.2.7}
+\contentsline {subsection}{\numberline {15.2.8}{len3d}}{282}{subsection.15.2.8}
+\contentsline {subsection}{\numberline {15.2.9}{nor3d}}{282}{subsection.15.2.9}
+\contentsline {subsection}{\numberline {15.2.10}{ang3d}}{283}{subsection.15.2.10}
+\contentsline {subsection}{\numberline {15.2.11}{tip3d}}{284}{subsection.15.2.11}
+\contentsline {subsection}{\numberline {15.2.12}{scl3d}}{284}{subsection.15.2.12}
+\contentsline {section}{\numberline {15.3}Conversion between line and Cartesian coordinates of a vector (decart.c)}{285}{section.15.3}
+\contentsline {subsection}{\numberline {15.3.1}{sf\_line2cart}}{285}{subsection.15.3.1}
+\contentsline {subsection}{\numberline {15.3.2}{sf\_cart2line}}{285}{subsection.15.3.2}
+\contentsline {subsection}{\numberline {15.3.3}{sf\_first\_index}}{286}{subsection.15.3.3}
+\contentsline {subsection}{\numberline {15.3.4}{sf\_large\_line2cart}}{287}{subsection.15.3.4}
+\contentsline {subsection}{\numberline {15.3.5}{sf\_large\_cart2line}}{287}{subsection.15.3.5}
+\contentsline {subsection}{\numberline {15.3.6}{sf\_large\_first\_index}}{288}{subsection.15.3.6}
+\contentsline {section}{\numberline {15.4}Axes (axa.c)}{289}{section.15.4}
+\contentsline {subsection}{\numberline {15.4.1}{sf\_maxa}}{289}{subsection.15.4.1}
+\contentsline {subsubsection}{Input parameters}{289}{section*.1405}
+\contentsline {subsection}{\numberline {15.4.2}{sf\_iaxa}}{290}{subsection.15.4.2}
+\contentsline {subsubsection}{Input parameters}{290}{section*.1409}
+\contentsline {subsection}{\numberline {15.4.3}{sf\_oaxa}}{290}{subsection.15.4.3}
+\contentsline {subsubsection}{Input parameters}{290}{section*.1413}
+\contentsline {subsection}{\numberline {15.4.4}{sf\_raxa}}{291}{subsection.15.4.4}
+\contentsline {subsubsection}{Input parameters}{291}{section*.1416}
+\contentsline {subsection}{\numberline {15.4.5}{sf\_n}}{291}{subsection.15.4.5}
+\contentsline {subsubsection}{Input parameters}{291}{section*.1419}
+\contentsline {subsection}{\numberline {15.4.6}{sf\_o}}{291}{subsection.15.4.6}
+\contentsline {subsubsection}{Input parameters}{292}{section*.1423}
+\contentsline {subsection}{\numberline {15.4.7}{sf\_d}}{292}{subsection.15.4.7}
+\contentsline {subsubsection}{Input parameters}{292}{section*.1427}
+\contentsline {subsection}{\numberline {15.4.8}{sf\_nod}}{293}{subsection.15.4.8}
+\contentsline {subsubsection}{Input parameters}{293}{section*.1431}
+\contentsline {subsection}{\numberline {15.4.9}{sf\_setn}}{293}{subsection.15.4.9}
+\contentsline {subsubsection}{Input parameters}{293}{section*.1435}
+\contentsline {subsection}{\numberline {15.4.10}{sf\_seto}}{294}{subsection.15.4.10}
+\contentsline {subsubsection}{Input parameters}{294}{section*.1438}
+\contentsline {subsection}{\numberline {15.4.11}{sf\_setd}}{294}{subsection.15.4.11}
+\contentsline {subsubsection}{Input parameters}{294}{section*.1441}
+\contentsline {subsection}{\numberline {15.4.12}{sf\_setlabel}}{294}{subsection.15.4.12}
+\contentsline {subsubsection}{Input parameters}{295}{section*.1444}
+\contentsline {subsection}{\numberline {15.4.13}{sf\_setunit}}{295}{subsection.15.4.13}
+\contentsline {subsubsection}{Input parameters}{295}{section*.1447}
+\contentsline {chapter}{\numberline {16}Miscellaneous}{297}{chapter.16}
+\contentsline {section}{\numberline {16.1}sharpening (sharpen.c)}{297}{section.16.1}
+\contentsline {subsection}{\numberline {16.1.1}{sf\_sharpen\_init}}{297}{subsection.16.1.1}
+\contentsline {subsection}{\numberline {16.1.2}{sf\_sharpen\_close}}{297}{subsection.16.1.2}
+\contentsline {subsection}{\numberline {16.1.3}{sf\_sharpen}}{298}{subsection.16.1.3}
+\contentsline {subsection}{\numberline {16.1.4}{sf\_csharpen}}{298}{subsection.16.1.4}
+\contentsline {section}{\numberline {16.2}Sharpening inversion added Bregman iteration (sharpinv.c)}{299}{section.16.2}
+\contentsline {subsection}{\numberline {16.2.1}{sf\_csharpinv}}{299}{subsection.16.2.1}
+\contentsline {subsection}{\numberline {16.2.2}{sf\_sharpinv}}{300}{subsection.16.2.2}
+\contentsline {chapter}{\numberline {17}System}{301}{chapter.17}
+\contentsline {section}{\numberline {17.1}Priority queue (heap sorting) (pqueue.c)}{301}{section.17.1}
+\contentsline {subsection}{\numberline {17.1.1}{sf\_pqueue\_init}}{301}{subsection.17.1.1}
+\contentsline {subsection}{\numberline {17.1.2}{sf\_pqueue\_start}}{301}{subsection.17.1.2}
+\contentsline {subsection}{\numberline {17.1.3}{sf\_pqueue\_close}}{302}{subsection.17.1.3}
+\contentsline {subsection}{\numberline {17.1.4}{sf\_pqueue\_insert}}{302}{subsection.17.1.4}
+\contentsline {subsection}{\numberline {17.1.5}{sf\_pqueue\_insert2}}{302}{subsection.17.1.5}
+\contentsline {subsection}{\numberline {17.1.6}{sf\_pqueue\_extract}}{303}{subsection.17.1.6}
+\contentsline {subsection}{\numberline {17.1.7}{sf\_pqueue\_extract2}}{303}{subsection.17.1.7}
+\contentsline {subsection}{\numberline {17.1.8}{sf\_pqueue\_update}}{304}{subsection.17.1.8}
+\contentsline {section}{\numberline {17.2}Simplified system command (system.c)}{304}{section.17.2}
+\contentsline {subsection}{\numberline {17.2.1}{sf\_system}}{304}{subsection.17.2.1}
+\contentsline {section}{\numberline {17.3}Generic stack (FILO) structure operations (stack.c)}{305}{section.17.3}
+\contentsline {subsection}{\numberline {17.3.1}{sf\_stack\_init}}{305}{subsection.17.3.1}
+\contentsline {subsection}{\numberline {17.3.2}{sf\_stack\_print}}{305}{subsection.17.3.2}
+\contentsline {subsection}{\numberline {17.3.3}{sf\_stack\_get}}{306}{subsection.17.3.3}
+\contentsline {subsection}{\numberline {17.3.4}{sf\_stack\_set}}{307}{subsection.17.3.4}
+\contentsline {subsection}{\numberline {17.3.5}{sf\_push}}{307}{subsection.17.3.5}
+\contentsline {subsection}{\numberline {17.3.6}{sf\_pop}}{307}{subsection.17.3.6}
+\contentsline {subsection}{\numberline {17.3.7}{sf\_full}}{308}{subsection.17.3.7}
+\contentsline {subsection}{\numberline {17.3.8}{sf\_top}}{308}{subsection.17.3.8}
+\contentsline {subsection}{\numberline {17.3.9}{sf\_stack\_close}}{309}{subsection.17.3.9}
+\contentsline {chapter}{Index}{312}{section*.1522}

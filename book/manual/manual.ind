@@ -1,66 +1,66 @@
 \begin{theindex}
 
-  \item adjoint, \hyperpage{127}
+  \item adjoint, \hyperpage{125}
 
   \indexspace
 
   \item conjugate direction method
-    \subitem complex data, \hyperpage{184}
-    \subitem real data, \hyperpage{178}
+    \subitem complex data, \hyperpage{182}
+    \subitem real data, \hyperpage{176}
   \item conjugate gradient
-    \subitem solver, \hyperpage{169}
-    \subitem with preconditioning, \hyperpage{172}
-  \item convolution operator, \hyperpage{126}
-  \item crosscorrelation operation, \hyperpage{127}
+    \subitem solver, \hyperpage{167}
+    \subitem with preconditioning, \hyperpage{170}
+  \item convolution operator, \hyperpage{124}
+  \item crosscorrelation operation, \hyperpage{125}
 
   \indexspace
 
   \item dot product
-    \subitem Hermitian, \hyperpage{186}
+    \subitem Hermitian, \hyperpage{184}
 
   \indexspace
 
   \item filtering
-    \subitem frequency domain, \hyperpage{153}, \hyperpage{156}
+    \subitem frequency domain, \hyperpage{151}, \hyperpage{154}
 
   \indexspace
 
-  \item identity operator, \hyperpage{126}
+  \item identity operator, \hyperpage{124}
   \item interpolation
-    \subitem 1D, \hyperpage{209}
-    \subitem 2D, \hyperpage{211}
-    \subitem 3D, \hyperpage{213}
-    \subitem complex data, \hyperpage{210}
-    \subitem nearest neighbor, \hyperpage{215}
+    \subitem 1D, \hyperpage{207}
+    \subitem 2D, \hyperpage{209}
+    \subitem 3D, \hyperpage{211}
+    \subitem complex data, \hyperpage{208}
+    \subitem nearest neighbor, \hyperpage{213}
 
   \indexspace
 
-  \item null operator, \hyperpage{126}
+  \item null operator, \hyperpage{124}
 
   \indexspace
 
   \item operator
-    \subitem adjoint, \hyperpage{127}
-    \subitem convolution, \hyperpage{126}
-    \subitem crosscorrelation, \hyperpage{127}
-    \subitem identity, \hyperpage{126}
-    \subitem linear, \hyperpage{125}
-    \subitem null, \hyperpage{126}
-    \subitem product, \hyperpage{127}
-    \subitem truncation, \hyperpage{127}
-    \subitem zero padding, \hyperpage{126}
+    \subitem adjoint, \hyperpage{125}
+    \subitem convolution, \hyperpage{124}
+    \subitem crosscorrelation, \hyperpage{125}
+    \subitem identity, \hyperpage{124}
+    \subitem linear, \hyperpage{123}
+    \subitem null, \hyperpage{124}
+    \subitem product, \hyperpage{125}
+    \subitem truncation, \hyperpage{125}
+    \subitem zero padding, \hyperpage{124}
 
   \indexspace
 
   \item product
-    \subitem of operators, \hyperpage{127}
+    \subitem of operators, \hyperpage{125}
 
   \indexspace
 
-  \item truncation operator, \hyperpage{127}
+  \item truncation operator, \hyperpage{125}
 
   \indexspace
 
-  \item zero-padding operator, \hyperpage{126}
+  \item zero-padding operator, \hyperpage{124}
 
 \end{theindex}
