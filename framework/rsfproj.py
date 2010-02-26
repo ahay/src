@@ -60,6 +60,13 @@ figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
 libs = os.environ.get('LIBS',"")
 
+# Java classpath environmental variable setup
+jclasspath = None
+try:
+    jclasspath = '%s:%s:.' % (os.environ['MINESJTK'],os.path.join(libdir,'rsf.jar')) 
+except Exception, e:
+    jclasspath = None
+
 resdir = None
 
 def set_dir(dir='Fig'):
@@ -256,6 +263,8 @@ class Project(Environment):
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=['rsf'])
+        if jclasspath: # If we have java variables set
+            self.Append(ENV={'CLASSPATH':jclasspath})
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
