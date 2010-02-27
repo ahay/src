@@ -56,7 +56,7 @@ for prog in mains:
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
-if root:
+if petscdir and root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
