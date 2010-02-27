@@ -32,8 +32,8 @@ if petscdir:
                 LIBPATH=petsclibpath,
                 LIBS=petsclibs)
 
-    env.Prepend(CPPPATH=[os.path.join(rsfsrc,'include')],
-                LIBPATH=[os.path.join(rsfsrc,'lib')],
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
                 LIBS=['rsf'])
 
     for source in src:
@@ -58,7 +58,7 @@ for prog in mains:
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
-if petscdir and root:
+if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
