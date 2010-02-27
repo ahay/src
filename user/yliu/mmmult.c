@@ -84,6 +84,15 @@ void mmmult_lop (bool adj, bool add,
 	    dd[l*n1+k] = data[l][k];
 	}
     }
+    free (***filt); free(**filt); free(*filt); free(filt);
+    free (*model); free (model);
+    free (*data); free (data);
+}
+
+void mmmult_close () 
+/*< free filter memory >*/
+{
+    free (filter);
 }
 
 /* 	$Id$	 */
