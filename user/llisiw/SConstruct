@@ -46,4 +46,3 @@ if root:
     doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
 
-

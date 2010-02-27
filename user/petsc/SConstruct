@@ -1,6 +1,5 @@
 import os, sys, re, string, glob
-rsfsrc = os.environ.get('RSFSRC','../..')
-sys.path.append(rsfsrc)
+sys.path.append('../..')
 import configure
 
 progs = '''
@@ -17,7 +16,7 @@ try:  # distributed version
 except: # local version
     env = configure.Debug()
     root = None
-    SConscript(os.path.join(rsfsrc,'api/c/SConstruct'))
+    SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')
 
 petscdir = env.get('PETSCDIR')
@@ -41,6 +40,9 @@ if petscdir:
         inc = env.Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
+else:
+    for source in src:
+        inc = env.Include(source,prefix='')
     
 mains = Split(progs)
 for prog in mains:
