@@ -15,7 +15,7 @@ In the discrete world, operators act on vectors and linear operators are in fact
     \mathbf{y} = \mathbf{L}\mathbf{x} = \begin{bmatrix}\mathbf{I}\\\mathbf{O}\end{bmatrix}\mathbf{x} 
                = \begin{bmatrix}\mathbf{x}\\\mathbf{0}\end{bmatrix}.
 \end{gather*}
-Note that as in the case of functions, the domains of $\mathbf{x}$ and $\mathbf{y}$ are different: $\mathbf{x}\in\mathds{R}^n$ (or more generally $\mathbf{x}\in\mathds{C}^n$), while $\mathbf{y}\in\mathds{R}^{n+m}$ (or $\mathds{C}^{n+m}$).
+Note that as in the case of functions, the domains of $\mathbf{x}$ and $\mathbf{y}$ are different: $\mathbf{x}\in\mathbb{R}^n$ (or more generally $\mathbf{x}\in\mathbb{C}^n$), while $\mathbf{y}\in\mathbb{R}^{n+m}$ (or $\mathbb{C}^{n+m}$).
 
 Similarly, one can define \index{convolution operator}\index{operator!convolution} convolution of $\mathbf{x}$ with $\mathbf{a}=[a_1\;a_2\;\dots\;a_m]^T$ as the multiplication of $\mathbf{x}$ with 
 \begin{gather*}
@@ -51,7 +51,7 @@ The dot-product test is a valuable checkpoint, which can tell us whether the imp
 \begin{gather}\label{eq:dotproducttest}
 	\langle a,Lb\rangle = \langle(L^*a)^*,b\rangle
 \end{gather} 
-where $\langle\,,\,{}\rangle$ denotes the dot product. Remember that the dot product of two functions $f,g\in \mathds L_2$ is $\int fg^*\;dt$ while the dot product of two vectors $\mathbf{x}$ and $\mathbf{y}$ is $\mathbf{x}^H\mathbf{y}$. Notice that for vectors eq.~\eqref{eq:dotproducttest} becomes $\mathbf{x}^H\mathbf{Ly} = (\mathbf{L}^H\mathbf{y})^H\mathbf{y}$ which is obviously true.
+where $\langle\,,\,{}\rangle$ denotes the dot product. Remember that the dot product of two functions $f,g\in \mathbb{L}_2$ is $\int fg^*\;dt$ while the dot product of two vectors $\mathbf{x}$ and $\mathbf{y}$ is $\mathbf{x}^H\mathbf{y}$. Notice that for vectors eq.~\eqref{eq:dotproducttest} becomes $\mathbf{x}^H\mathbf{Ly} = (\mathbf{L}^H\mathbf{y})^H\mathbf{y}$ which is obviously true.
 The lhs of eq.~\eqref{eq:dotproducttest} is computed using $L$, while the rhs is computed using the adjoint $L^*$. For the dot-product test, one just needs to load the vectors \texttt{x} and \texttt{y} with random numbers and perform the two computations. If the two results are not equal (within machine precision), then the computation of either $L$ or $L^*$ is erroneous. Note that truncation errors have identical effects on both operators, so the two results should be almost equal. The dot-product test (for real operators only) is implemented by \hyperref[sec:sf_dot_test]{\texttt{sf\_dot\_test}}.
 
 \subsection{Implementation of operators}
