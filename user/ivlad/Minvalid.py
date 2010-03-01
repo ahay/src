@@ -52,7 +52,7 @@ def main(argv=sys.argv):
     invalid_files_list = [] # will contain tuples: (file, msg)
 
     if recursive:
-        for root, dirs, files in mydir:
+        for root, dirs, files in os.walk(mydir):
             invalid_files_list += \
             ivlad.list_invalid_rsf_files(root, files, chk4nan)
     else:

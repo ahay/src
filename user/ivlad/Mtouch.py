@@ -54,7 +54,7 @@ def main(argv=sys.argv):
     valid_files_list = []
 
     if recursive:
-        for root, dirs, files in mydir:
+        for root, dirs, files in os.walk(mydir):
             valid_files_list += \
             ivlad.list_valid_rsf_files(root, files, chk4nan)
     else:

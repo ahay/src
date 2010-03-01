@@ -123,7 +123,6 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     Returned value: stdout of command, with stripped newlines'''
 
     assert type(prog) == str
-    assert type(stdin) == str
     assert type(verb) == bool
 
     # Build the [prog, args] list
