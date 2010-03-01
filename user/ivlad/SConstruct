@@ -1,47 +1,55 @@
 import os, sys, re, string, glob
-srcroot = os.environ.get('RSFSRC', '../..')
-sys.path.append(srcroot)
-import configure
 
+try:
+    import configure
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/ivlad
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(srcroot)
+    import configure
+    
 # C mains
-progs = '''
+progs_c = '''
 quantile leftsize filedims fileflush create gettype
 '''
 
-# Python mains that do not need SWIG+numpy
-py_meta = '''
-pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf
-'''
-
-# Python modules that do not need SWIG+numpy
-pylibs_meta = '''
-ivlad m8rex ooio
-'''
-
+# F90 mains
 progs_f90 = '''
 seekwin
 '''
 
-try:  # distributed version
+# Python mains that do not need SWIG+numpy
+progs_py = '''
+pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf
+'''
+
+# Python modules that do not need SWIG+numpy
+py_modules = '''
+ivlad m8rex ooio
+'''
+
+if glob_build:
     Import('env root libdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
+    dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/ivlad
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.{c,f90}')))
     bldroot = '../..' # aka RSFSRC/build
-except: # local version
-    env = configure.Debug()
-    root = None
+else:
+    env = configure.Debug() # Debugging flags for compilers
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     src = glob.glob('[a-z]*.{c,f90}')
     bldroot = os.environ.get('RSFROOT')
 
-F90 = env.get('F90')
+mylibs=['rsf']
 api = env.get('API',[])
-if 'f90' in api and F90:
-    mylibs=['rsff90','rsf']
+
+if 'f90' in api:
+    F90 = env.get('F90')
+    assert F90 != None # The configure step should have found the compiler           
+    mylibs.insert(0,'rsff90') # order matters when linking
     env.Prepend(F90PATH=[os.path.join(bldroot,'include')])
-else:
-    mylibs=['rsf']
 
 env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
             LIBPATH=[os.path.join(bldroot,'lib')],
@@ -52,12 +60,12 @@ for source in src:
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
-mains = Split(progs)
-for prog in mains:
+mains_c = Split(progs_c)
+for prog in mains_c:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
+    if glob_build:
         env.Install(bindir,prog)
 
 ###############
@@ -65,7 +73,7 @@ for prog in mains:
 ###############
 
 mains_f90 = Split(progs_f90)
-if 'f90' in api and F90:
+if 'f90' in api:
     F90base = os.path.basename(F90)
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(F90FLAGS=' -J${SOURCE.dir}')
@@ -76,40 +84,41 @@ if 'f90' in api and F90:
         configure.depends90(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.f90',sources),
                            LINK=F90)
-        if root:
+        if glob_build:
             env.Install(bindir,prog)
-else:
+else: # Put in a placeholder
     for prog in mains_f90:
         prog = env.Place('sf'+prog,None,package='Fortran90+API=F90')
-    if root:
+    if glob_build:
         env.Install(bindir,prog)
 
 ######################################################################
-# PYTHON METAPROGRAMS (python API not needed)
-######################################################################
 
-if root: # no compilation but rename
+if glob_build:
 
-    # Python main programs
-    py_mains_meta = Split(py_meta)
-    for prog in  Split(py_meta):
+    # Py main programs 
+    mains_py = Split(progs_py)
+    for prog in mains_py:
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
 
-    # User modules
-    rsfuser = os.path.join(libdir,'rsfuser')
-    for module in Split(pylibs_meta):
-        env.Install(rsfuser,module+'.py')
+    # The back-up Python API
+    rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
+    env.Pycompile(rsfbak+'c',rsfbak)
+    env.Install(libdir, rsfbak+'c')
 
-######################################################################
-# SELF-DOCUMENTATION
-######################################################################
-if root:
+    # Py modules 
+    rsfuser = os.path.join(libdir,'rsfuser')
+    for module in Split(py_modules):
+        env.Pycompile(module+'.pyc',module+'.py')
+        env.Install(rsfuser,module+'.pyc')
+
+    # Self-doc
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-    docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains_f90) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
-               py_mains_meta)
+    docs = \
+        map(lambda prog: env.Doc(prog,'M'+prog),mains_c) + \
+        map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains_f90) + \
+        map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'), mains_py)
     env.Depends(docs,'#/framework/rsfdoc.py')	
     doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)

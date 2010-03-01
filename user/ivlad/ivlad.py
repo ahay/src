@@ -160,6 +160,15 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
 
 ###############################################################################
 
+def getcataxis(filenm):
+    'Returns sffiledims(filenm)+1'
+
+    ndims_str = getout('sffiledims', 'parform=n', filenm)
+    nds = int(ndims_str.split(':')[0])
+    return str(nds+1)
+
+###############################################################################
+
 def readaxis( inp, axisnr, verb=False ):
     '''Reads n,o,d for one axis of a Madagascar hypercube
     - inp: filename. STRING.
