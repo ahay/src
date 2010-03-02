@@ -58,7 +58,7 @@ def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',rem
             pars.insert(0,command)
             # special rule for MPI programs
             if rsfprog.startswith(prefix+'mpi') and mpirun:                
-                pars.instert(0,mpirun)
+                pars.insert(0,mpirun)
             # special rule for solvers
             if rsfprog == prefix+'conjgrad' or \
                    rsfprog == prefix+'cconjgrad':
