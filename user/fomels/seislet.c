@@ -619,7 +619,10 @@ void seislet_init(int n1      /* trace length */,
 
     n = n1;
     for (nt=1; nt < n2; nt *= 2) ;
+    if (n2!= nt) sf_error("n2=%d need pow(2,n)",n2);
+
     t = sf_floatalloc2(n,nt);
+
     predict_init (n, nt, eps*eps, order, 1);
 
     t1 = sf_floatalloc(n);
