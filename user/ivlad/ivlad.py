@@ -137,7 +137,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     if verb or not have_subprocess:
         cmd = ' '.join(cmdlist)
         if stdin != None:
-            cmd4print += ' <' + stdin
+            cmd += ' <' + stdin
         msg(cmd, verb)
 
     if have_subprocess:
