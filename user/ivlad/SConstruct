@@ -30,96 +30,34 @@ py_modules = '''
 ivlad m8rex ooio
 '''
 
+# Needed for both C and F90 programs:
 if glob_build:
-    Import('env root libdir bindir')
+    Import('env libdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/ivlad
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.{c,f90}')))
     bldroot = '../..' # aka RSFSRC/build
 else:
     env = configure.Debug() # Debugging flags for compilers
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
-    src = glob.glob('[a-z]*.{c,f90}')
     bldroot = os.environ.get('RSFROOT')
 
-mylibs=['rsf']
+(env, docs_c) = \
+    configure.build_install_c(env, progs_c, bindir, glob_build, bldroot)
+
 api = env.get('API',[])
 
-if 'f90' in api:
-    F90 = env.get('F90')
-    assert F90 != None # The configure step should have found the compiler           
-    mylibs.insert(0,'rsff90') # order matters when linking
-    env.Prepend(F90PATH=[os.path.join(bldroot,'include')])
-
-env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
-            LIBPATH=[os.path.join(bldroot,'lib')],
-            LIBS=mylibs)
-
-for source in src:
-    inc = env.Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-
-mains_c = Split(progs_c)
-for prog in mains_c:
-    sources = ['M' + prog]
-    configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if glob_build:
-        env.Install(bindir,prog)
-
-###############
-# Fortran 90
-###############
-
-mains_f90 = Split(progs_f90)
-if 'f90' in api:
-    F90base = os.path.basename(F90)
-    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
-        env.Append(F90FLAGS=' -J${SOURCE.dir}')
-    elif F90base == 'ifort':
-        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
-    for prog in mains_f90:
-        sources = ['M' + prog]
-        configure.depends90(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.f90',sources),
-                           LINK=F90)
-        if glob_build:
-            env.Install(bindir,prog)
-else: # Put in a placeholder
-    for prog in mains_f90:
-        prog = env.Place('sf'+prog,None,package='Fortran90+API=F90')
-    if glob_build:
-        env.Install(bindir,prog)
+(env, docs_f90) = configure.build_install_f90(env, progs_f90, bindir, api, 
+    bldroot, glob_build)
 
 ######################################################################
 
 if glob_build:
 
-    # Py main programs 
-    mains_py = Split(progs_py)
-    for prog in mains_py:
-        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+    (env, docs_py) = configure.install_py_mains(env, progs_py, bindir)
+    env = configure.install_py_modules(env, py_modules, libdir)
+    env = configure.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
 
     # The back-up Python API
     rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
     env.Pycompile(rsfbak+'c',rsfbak)
     env.Install(libdir, rsfbak+'c')
-
-    # Py modules 
-    rsfuser = os.path.join(libdir,'rsfuser')
-    for module in Split(py_modules):
-        env.Pycompile(module+'.pyc',module+'.py')
-        env.Install(rsfuser,module+'.pyc')
-
-    # Self-doc
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    docs = \
-        map(lambda prog: env.Doc(prog,'M'+prog),mains_c) + \
-        map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains_f90) + \
-        map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'), mains_py)
-    env.Depends(docs,'#/framework/rsfdoc.py')	
-    doc = env.Docmerge(main,docs)
-    env.Install(libdir,doc)
 

@@ -1700,3 +1700,143 @@ def placeholder(target=None,source=None,env=None):
     return py_success
 
 Place = Builder (action = Action(placeholder,varlist=['var','package']))
+
+################################################################################
+
+# Below: boilerplate SCons code patterns placed in functions, to eliminate code
+# duplication between user directories. Using this module because it is imported
+# by user SConstructs. 
+
+def install_py_mains(env, progs_py, bindir):
+    'Copy Python programs to bindir, generate list of self-doc files'
+
+    mains_py = Split(progs_py)
+    for prog in mains_py:
+        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+
+    # Self-doc
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    docs_py = map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
+           mains_py)
+
+    return env, docs_py
+
+#####################
+
+def build_install_c(env, progs_c, bindir, glob_build, bldroot):
+    'Build and install C programs'
+
+    env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
+            LIBPATH=[os.path.join(bldroot,'lib')],
+            LIBS=['rsf'])
+
+    if glob_build:
+        dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/$USER
+        src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+    else:
+        src = glob.glob('[a-z]*.c')
+
+    for source in src:
+        inc = env.Include(source,prefix='')
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+
+    mains_c = Split(progs_c)
+    for prog in mains_c:
+        sources = ['M' + prog]
+        depends(env, sources, 'M'+prog)
+        prog = env.Program(prog, map(lambda x: x + '.c',sources))
+        if glob_build:
+            env.Install(bindir,prog)
+
+    if glob_build:
+        docs_c = map(lambda prog: env.Doc(prog,'M'+prog),mains_c)
+    else:
+        docs_c = None
+
+    return env, docs_c
+
+#####################
+
+def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
+    'Build and install Fortran90 programs'
+
+    mains_f90 = Split(progs_f90)
+
+    if 'f90' in api:
+        F90 = env.get('F90')
+        assert F90 != None # The configure step should have found the compiler
+
+        if glob_build:
+            dir = string.replace(os.getcwd(),'/build','') # RSFSRC/user/$USER
+            src = map(os.path.basename,
+                glob.glob(os.path.join(dir,'[a-z]*.f90')))
+        else:
+            src = glob.glob('[a-z]*.f90')
+
+        for source in src:
+            inc = env.Include(source,prefix='')
+            obj = env.StaticObject(source)
+            env.Depends(obj,inc)
+
+        env['LIBS'].insert(0,'rsff90') # order matters when linking
+        env.Prepend(F90PATH=[os.path.join(bldroot,'include')])
+    
+        F90base = os.path.basename(F90)
+        if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
+            env.Append(F90FLAGS=' -J${SOURCE.dir}')
+        elif F90base == 'ifort':
+            env.Append(F90FLAGS=' -module ${SOURCE.dir}')
+        for prog in mains_f90:
+            sources = ['M' + prog]
+            depends90(env,sources,'M'+prog)
+            prog = env.Program(prog,map(lambda x: x + '.f90',sources),
+                           LINK=F90)
+            if glob_build:
+                env.Install(bindir,prog)
+
+    else: # Put in a placeholder
+        for prog in mains_f90:
+            prog = env.Place('sf'+prog,None,package='Fortran90+API=F90')
+        if glob_build:
+            env.Install(bindir,prog)
+
+    docs_f90 = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),
+               mains_f90)
+
+    return env, docs_f90
+
+#####################
+
+def install_py_modules(env, py_modules, libdir):
+    'Compile Python modules and install to libdir/rsfuser'
+
+    rsfuser = os.path.join(libdir,'rsfuser')
+    for module in Split(py_modules):
+        env.Pycompile(module+'.pyc',module+'.py')
+        env.Install(rsfuser,module+'.pyc')
+
+    return env
+
+#####################
+
+def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
+
+    docs = []
+    if docs_c != None:
+        docs += docs_c
+    if docs_py != None:
+        docs += docs_py
+    if docs_f90 != None:
+        docs += docs_f90
+
+    env.Depends(docs,'#/framework/rsfdoc.py')	
+
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    doc = env.Docmerge(main,docs)
+    env.Install(libdir,doc)
+
+    return env
+
