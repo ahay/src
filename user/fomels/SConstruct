@@ -17,7 +17,7 @@ timefreq timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon
 warp1 warpadd warpscan
 '''
 
-pyprogs = 'rcat'
+pyprogs = 'rcat fft'
 pymods = 'dottest conjgrad'
 
 try:  # distributed version
