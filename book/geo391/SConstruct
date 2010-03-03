@@ -1,0 +1,9 @@
+from rsfbook import *
+
+papers = map(lambda x: 'hw%d' % x,range(1,7))
+
+Book(title='Multidimensional Data Analysis \\\\ (Homeworks)',
+     author='Sergey Fomel',
+     chapters=papers,use='hyperref')
+
+End()
