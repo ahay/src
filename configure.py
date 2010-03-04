@@ -1843,3 +1843,10 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
 
     return env
 
+#####################
+
+def add_ext_static_lib(env, libnm, root=os.environ.get('RSFROOT')):
+    
+    env['LIBS'].append(File(os.path.join(root,'lib','lib'+libnm+'.a')))
+    env['CPPPATH'].append(os.path.join(root,'include'))
+
