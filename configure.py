@@ -1802,8 +1802,11 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
         if glob_build:
             env.Install(bindir,prog)
 
-    docs_f90 = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),
+    if glob_build:
+        docs_f90 = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),
                mains_f90)
+    else:
+        docs_f90 = None
 
     return env, docs_f90
 

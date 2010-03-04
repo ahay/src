@@ -37,6 +37,7 @@ if glob_build:
     bldroot = '../..' # aka RSFSRC/build
 else:
     env = configure.Debug() # Debugging flags for compilers
+    bindir = None
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     bldroot = os.environ.get('RSFROOT')
 
