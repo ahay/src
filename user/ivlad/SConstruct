@@ -41,21 +41,21 @@ else:
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     bldroot = os.environ.get('RSFROOT')
 
-(env, docs_c) = \
+docs_c = \
     configure.build_install_c(env, progs_c, bindir, glob_build, bldroot)
 
 api = env.get('API',[])
 
-(env, docs_f90) = configure.build_install_f90(env, progs_f90, bindir, api, 
+docs_f90 = configure.build_install_f90(env, progs_f90, bindir, api, 
     bldroot, glob_build)
 
 ######################################################################
 
 if glob_build:
 
-    (env, docs_py) = configure.install_py_mains(env, progs_py, bindir)
-    env = configure.install_py_modules(env, py_modules, libdir)
-    env = configure.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
+    docs_py = configure.install_py_mains(env, progs_py, bindir)
+    configure.install_py_modules(env, py_modules, libdir)
+    configure.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
 
     # The back-up Python API
     rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')

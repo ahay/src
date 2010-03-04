@@ -1720,7 +1720,7 @@ def install_py_mains(env, progs_py, bindir):
     docs_py = map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
            mains_py)
 
-    return env, docs_py
+    return docs_py
 
 #####################
 
@@ -1755,7 +1755,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
     else:
         docs_c = None
 
-    return env, docs_c
+    return docs_c
 
 #####################
 
@@ -1808,7 +1808,7 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
     else:
         docs_f90 = None
 
-    return env, docs_f90
+    return docs_f90
 
 #####################
 
@@ -1819,8 +1819,6 @@ def install_py_modules(env, py_modules, libdir):
     for module in Split(py_modules):
         env.Pycompile(module+'.pyc',module+'.py')
         env.Install(rsfuser,module+'.pyc')
-
-    return env
 
 #####################
 
@@ -1840,8 +1838,6 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
     main = 'sf%s.py' % user
     doc = env.Docmerge(main,docs)
     env.Install(libdir,doc)
-
-    return env
 
 #####################
 
