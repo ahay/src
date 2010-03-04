@@ -41,13 +41,12 @@ else:
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     bldroot = os.environ.get('RSFROOT')
 
-docs_c = \
-    configure.build_install_c(env, progs_c, bindir, glob_build, bldroot)
+docs_c = configure.build_install_c(env, progs_c, bindir, glob_build, bldroot)
 
 api = env.get('API',[])
 
-docs_f90 = configure.build_install_f90(env, progs_f90, bindir, api, 
-    bldroot, glob_build)
+docs_f90 = configure.build_install_f90(env, progs_f90, bindir, api, bldroot, 
+    glob_build)
 
 ######################################################################
 
