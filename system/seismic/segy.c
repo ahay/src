@@ -37,7 +37,7 @@ enum {
     SF_EBCBYTES=3200,	/* Bytes in the card image EBCDIC block */
     SF_BNYBYTES=400,	/* Bytes in the binary coded block	*/
     SF_HDRBYTES=240,	/* Bytes in the tape trace header	*/
-    SF_NKEYS=71,	/* Number of mandated header fields	*/
+    SF_NKEYS=91,	/* Number of mandated header fields	*/
     SF_BHKEYS=27	/* Number of mandated binary fields	*/
 };
 /*^*/
@@ -420,8 +420,26 @@ static const segy segy_key[] = {
     {"otrav",  2},   /* overtravel taper code:
 		      1 = down (or behind)
 		      2 = up (or ahead) 71/178 */
-    /* 72/180 73/184 74/188 75/192 76/196 77/200 78/204 79/208 
-       80/212 81/216 82/220 83/224 84/228 85/232 86/236 */
+    {"cdpx",   4},   /* X coordinate of CDP 180 */
+    {"cdpy",   4},   /* Y coordinate of CDP 184 */
+    {"iline",  4},   /* in-line number 188 */
+    {"xline",  4},   /* cross-line number 192 */
+    {"shnum",  4},   /* shotpoint number 196 */
+    {"shsca",  2},   /* shotpoint scalar 200 */
+    {"tval",   2},   /* trace value meas. 202 */
+    {"tconst4",4},   /* transduction const 204 */
+    {"tconst2",2},   /* transduction const 208 */
+    {"tunits", 2},   /* transduction units 210 */
+    {"device", 2},   /* device identifier 212 */
+    {"tscalar",2},   /* time scalar 214 */
+    {"stype",  2},   /* source type 216 */
+    {"sendir", 4},   /* source energy dir. 218 */
+    {"unknown",2},   /* unknown 222 */
+    {"smeas4", 4},   /* source measurement 224 */
+    {"smeas2", 2},   /* source measurement 228 */
+    {"smeasu", 2},   /* source measurement unit 230 */
+    {"unass1", 4},   /* unassigned 232 */
+    {"unass2", 4}    /* unassigned 236 */
 };
 
 

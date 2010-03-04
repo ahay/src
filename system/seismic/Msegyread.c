@@ -202,10 +202,49 @@ original field record 174
 
 gaps:      gap size (total number of groups dropped) 176 
 
-otrav:     overtravel taper code:
+otrav:     overtravel taper code: 
 1 = down (or behind)
-2 = up (or ahead)
+2 = up (or ahead) 178
 
+cdpx:   X coordinate of CDP 180
+
+cdpy:   Y coordinate of CDP 184
+
+iline:  in-line number 188 
+
+xline:  cross-line number 192
+
+shnum:  shotpoint number 196
+
+shsca:  shotpoint scalar 200
+
+tval:   trace value meas. 202
+
+tconst4: transduction const 204
+
+tconst2: transduction const 208
+
+tunits:  transduction units 210
+
+device:  device identifier 212
+
+tscalar: time scalar 214
+
+stype:   source type 216
+
+sendir:  source energy dir. 218
+ 
+unknown: unknown 222
+
+smeas4:  source measurement 224
+
+smeas2:  source measurement 228
+
+smeasu:  source measurement unit 230 
+
+unass1:  unassigned 232
+
+unass2:  unassigned 236
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -317,34 +356,42 @@ int main(int argc, char *argv[])
 	
 	ebc2asc (SF_EBCBYTES, ahead);
 	
-	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
-	/* output text data header file */
-
-	if (NULL == (head = fopen(headname,"w")))
+	if (NULL == (headname = sf_getstring("hfile"))) {
+	    /* output text data header file */
+	    head = NULL;
+	} else {
+	    if (NULL == (head = fopen(headname,"w")))
 	    sf_error("Cannot open file \"%s\" for writing ascii header:",
 		     headname);
 
-	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, head)) 
+	    if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, head)) 
 	    sf_error("Error writing ascii header");
-	fclose (head);
 
-	if (verbose) sf_warning("ASCII header written to \"%s\"",headname);
+	    fclose (head);
+	    
+	    if (verbose) 
+	    sf_warning("ASCII header written to \"%s\"",headname);
+	}
 
 	if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, file))
 	    sf_error("Error reading binary header");
 
-	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
-	/* output binary data header file */
-
-	if (NULL == (head = fopen(headname,"wb")))
+	if (NULL == (headname = sf_getstring("bfile"))) {
+	    /* output binary data header file */
+	    head = NULL;
+	} else {
+	    if (NULL == (head = fopen(headname,"wb"))) 
 	    sf_error("Cannot open file \"%s\" for writing binary header:",
 		     headname);
 
-	if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, head)) 
+	    if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, head)) 
 	    sf_error("Error writing binary header");
-	fclose (head);
+	 
+	    fclose (head);
 
-	if (verbose) sf_warning("Binary header written to \"%s\"",headname);
+	    if (verbose) 
+	    sf_warning("Binary header written to \"%s\"",headname);
+	}
 
 	if (!sf_getint("format",&format)) format = segyformat (bhead);
 	/* [1,2,3,5] Data format. The default is taken from binary header.

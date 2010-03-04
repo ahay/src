@@ -14,8 +14,7 @@ files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
 
 Flow(files,tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
-Flow('line tline line.asc line.bin','Line_001.sgy',
-     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+Flow('line tline','Line_001.sgy','segyread tfile=${TARGETS[1]}')
 
 Result('first','line',
        'window n2=1000 | agc rect1=250 rect2=100 | grey title="First 1000 traces" ')
