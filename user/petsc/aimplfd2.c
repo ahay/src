@@ -37,7 +37,7 @@ struct PETScAimplFD2 {
     MPI_Comm comm;
     KSP Solver;
     Mat A;
-    Vec Rhs, Ut, Ut1, Ut2;
+    Vec Ut, Ut1, Ut2;
     float dz, dx, dt;
 };
 /* concrete data type */
@@ -90,12 +90,11 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     ierr = KSPSetTolerances (aimplfd->Solver, PETSC_DEFAULT, PETSC_DEFAULT,
                              PETSC_DEFAULT, niter); CHKERR;
     /* Solution and r.h.s. vectors */
-    ierr = VecCreateMPI (aimplfd->comm, PETSC_DECIDE, N, &aimplfd->Rhs); CHKERR;
+    ierr = VecCreateMPI (aimplfd->comm, PETSC_DECIDE, N, &aimplfd->Ut); CHKERR;
     Val = 0.0;
-    ierr = VecSet (aimplfd->Rhs, Val); CHKERR;
-    ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut); CHKERR;
-    ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut1); CHKERR;
-    ierr = VecDuplicate (aimplfd->Rhs, &aimplfd->Ut2); CHKERR;
+    ierr = VecSet (aimplfd->Ut, Val); CHKERR;
+    ierr = VecDuplicate (aimplfd->Ut, &aimplfd->Ut1); CHKERR;
+    ierr = VecDuplicate (aimplfd->Ut, &aimplfd->Ut2); CHKERR;
 
     /* Build matrix */
     ierr = MatAssemblyBegin (aimplfd->A, MAT_FINAL_ASSEMBLY); CHKERR;
@@ -132,16 +131,16 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 /*< Calculate next time step. >*/
 {
     PetscErrorCode ierr;
-    PetscScalar Val;
+    PetscScalar Val1, Val2;
 
     /* R.H.S. */
-    Val = -1.0;
-    VecScale (aimplfd->Ut2, Val);
-    Val = 2.0;
-    VecWAXPY (aimplfd->Rhs, Val, aimplfd->Ut1, aimplfd->Ut2);
+    Val1 = 2.0;
+    Val2 = -1.0;
+    /* Ut2 becomes right-hand side */
+    VecAXPBY (aimplfd->Ut2, Val1, Val2, aimplfd->Ut1);
 
     /* Solve the system */
-    ierr = KSPSolve (aimplfd->Solver, aimplfd->Rhs, aimplfd->Ut); CHKERR;
+    ierr = KSPSolve (aimplfd->Solver, aimplfd->Ut2, aimplfd->Ut); CHKERR;
 
     /* Move time steps */
     ierr = VecCopy (aimplfd->Ut1, aimplfd->Ut2); CHKERR;
@@ -195,7 +194,6 @@ void sf_petsc_aimplfd2_destroy (sf_petsc_aimplfd2 aimplfd)
     PetscErrorCode ierr;
 
     ierr = KSPDestroy (aimplfd->Solver); CHKERR;
-    ierr = VecDestroy (aimplfd->Rhs); CHKERR;
     ierr = VecDestroy (aimplfd->Ut); CHKERR;
     ierr = VecDestroy (aimplfd->Ut1); CHKERR;
     ierr = VecDestroy (aimplfd->Ut2); CHKERR;
