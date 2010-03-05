@@ -27,7 +27,7 @@ static void datawrite(int n1, float scale, float *pp, sf_file out);
 int main(int argc, char *argv[])
 {
     int n1, n2, i3, n3, n12, ip, np, n12p, ncycle, niter, order;
-    bool inv, verb, decomp;
+    bool inv, verb, decomp, twhole;
     char *type;
     float *pp, *qq, ***dd, eps, perc, scale;
     sf_file in, out, dip;
@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+
+    if (!sf_getbool("twhole",&twhole)) twhole=true;
+    /* threshold flag, if y, whole model, otherwise, each component */
 
     if (!sf_getbool("decomp",&decomp)) decomp=false;
     /* do decomposition */
@@ -107,7 +110,7 @@ int main(int argc, char *argv[])
 	} else {
     	    sf_floatread(pp,n12,in);
 	    sf_sharpinv(diplet_lop,
-			scale,niter,ncycle,perc,verb,n12p,n12,qq,pp); 
+			scale,niter,ncycle,perc,verb,n12p,n12,qq,pp,twhole); 
 	    sf_floatwrite(qq,n12p,out);
 	} 
     }
