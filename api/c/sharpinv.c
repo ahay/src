@@ -35,14 +35,19 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 		  bool verb         /* verbosity flag */,
 		  int nq, int np    /* model and data size */,
 		  sf_complex *qq    /* model */, 
-		  sf_complex *pp    /* data */)
+		  sf_complex *pp    /* data */,
+		  bool twhole       /* thresholding flag */)
 /*< sharp inversion for complex-valued operators >*/
 {
-    int iter, i, i1;
-    sf_complex *q0, *p0, *p1;
+    int iter, i, i1, ti;
+    sf_complex *q0, *p0, *p1, *tp=NULL;
     float qdif0=0., pdif0=0., qdif, pdif, pi;
 
-    sf_sharpen_init(nq,perc);
+    if (!twhole) {
+	sf_sharpen_init(np,perc);
+    } else {
+	sf_sharpen_init(nq,perc);
+    }
     q0 = sf_complexalloc(nq);
     p0 = sf_complexalloc(np);
     p1 = sf_complexalloc(np);
@@ -79,8 +84,23 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 		qq[i1] = sf_cadd(qq[i1],q0[i1]);
 #endif
 	    }
-	    sf_csharpen(qq);
-	    sf_cweight_apply(nq,qq);
+
+	    if (!twhole) {
+		tp = sf_complexalloc(np);
+		for (ti=0; ti < (nq/np); ti++) {
+		    for (i1=0; i1 < np; i1++) {
+			tp[i1] = qq[ti*np+i1];
+		    }
+		    sf_csharpen(tp);
+		    sf_cweight_apply(np,tp);
+		    for (i1=0; i1 < np; i1++) {
+			qq[ti*np+i1] = tp[i1];
+		    }
+		}
+	    } else {
+		sf_csharpen(qq);
+		sf_cweight_apply(nq,qq);
+	    }
 
 	    if (verb) {		  	    
 		qdif = 0.;
@@ -139,6 +159,7 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
     free(q0);
     free(p0);
     free(p1);
+    if (!twhole) free(tp);
     sf_sharpen_close();
 }
 
@@ -150,14 +171,19 @@ void sf_sharpinv(sf_operator oper  /* inverted operator */,
 		 bool verb         /* verbosity flag */,
 		 int nq, int np    /* model and data size */,
 		 float *qq         /* model */, 
-		 float *pp         /* data */)
+		 float *pp         /* data */,
+                 bool twhole       /* thresholding flag */)
 /*< sharp inversion for real-valued operators >*/
 {
-    int iter, i, i1;
-    float *q0, *p0, *p1;
+    int iter, i, i1, ti;
+    float *q0, *p0, *p1, *tp=NULL;
     float qdif0=0., pdif0=0., qdif, pdif, pi;
 
-    sf_sharpen_init(nq,perc);
+    if (!twhole) {
+	sf_sharpen_init(np,perc);
+    } else {
+	sf_sharpen_init(nq,perc);
+    }
     q0 = sf_floatalloc(nq);
     p0 = sf_floatalloc(np);
     p1 = sf_floatalloc(np);
@@ -186,8 +212,22 @@ void sf_sharpinv(sf_operator oper  /* inverted operator */,
 	    for (i1=0; i1 < nq; i1++) {
 		qq[i1] += q0[i1];
 	    }
-	    sf_sharpen(qq);
-	    sf_weight_apply(nq,qq);
+	    if (!twhole) {
+		tp = sf_floatalloc(np);
+		for (ti=0; ti < (nq/np); ti++) {
+		    for (i1=0; i1 < np; i1++) {
+			tp[i1] = qq[ti*np+i1];
+		    }
+		    sf_sharpen(tp);
+		    sf_weight_apply(np,tp);
+		    for (i1=0; i1 < np; i1++) {
+			qq[ti*np+i1] = tp[i1];
+		    }
+		}
+	    } else {
+		sf_sharpen(qq);
+		sf_weight_apply(nq,qq);
+	    }
 
 	    if (verb) {		  
 		qdif = 0.;
@@ -234,5 +274,6 @@ void sf_sharpinv(sf_operator oper  /* inverted operator */,
     free(q0);
     free(p0);
     free(p1);
+    if(!twhole) free(tp);
     sf_sharpen_close();
 }
