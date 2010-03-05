@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	} else {
 	    sf_complexread(pp,n1,in);
 	    sf_csharpinv(freqlets_lop,
-			 scale,niter,ncycle,perc,verb,n1w,n1,qq,pp);
+			 scale,niter,ncycle,perc,verb,n1w,n1,qq,pp,true);
 	    sf_complexwrite(qq,n1w,out);
 	}
     }
