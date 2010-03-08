@@ -1765,34 +1765,36 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
     mains_f90 = Split(progs_f90)
 
     if 'f90' in api:
+
         F90 = env.get('F90')
         assert F90 != None # The configure step should have found the compiler
-
-        if glob_build:
-            dir = string.replace(os.getcwd(),'/build','') # RSFSRC/user/$USER
-            src = map(os.path.basename,
-                glob.glob(os.path.join(dir,'[a-z]*.f90')))
-        else:
-            src = glob.glob('[a-z]*.f90')
-
-        for source in src:
-            inc = env.Include(source,prefix='')
-            obj = env.StaticObject(source)
-            env.Depends(obj,inc)
-
-        env['LIBS'].insert(0,'rsff90') # order matters when linking
-        env.Prepend(F90PATH=[os.path.join(bldroot,'include')])
-    
         F90base = os.path.basename(F90)
         if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
             env.Append(F90FLAGS=' -J${SOURCE.dir}')
         elif F90base == 'ifort':
             env.Append(F90FLAGS=' -module ${SOURCE.dir}')
+
+        env.Prepend(LIBS='rsff90', # order matters when linking
+                    F90PATH=os.path.join(bldroot,'include'))
+
+        all_f90_src = []
         for prog in mains_f90:
+            obj_dep = []
             sources = ['M' + prog]
             depends90(env,sources,'M'+prog)
-            prog = env.Program(prog,map(lambda x: x + '.f90',sources),
-                           LINK=F90)
+            for f90_src in sources:
+                if f90_src not in all_f90_src:
+                    all_f90_src.append(f90_src)
+                    inc = env.Include(f90_src+'.f90',prefix='')
+                    obj = env.StaticObject(f90_src+'.f90')
+                    # SCons mistakenly treats ".mod" files as ".o" files, and
+                    # tries to build them the same way (which fails). So we
+                    # explicitly keep just the ".o" files as dependencies:
+                    for fname in obj:
+                        if os.path.splitext(fname.__str__())[1] == '.o':
+                            obj_dep.append(fname)
+                            env.Depends(fname,inc)
+            prog = env.Program(prog,obj_dep, LINK=F90)
             if glob_build:
                 env.Install(bindir,prog)
 
