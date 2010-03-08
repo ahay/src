@@ -1777,23 +1777,18 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
         env.Prepend(LIBS='rsff90', # order matters when linking
                     F90PATH=os.path.join(bldroot,'include'))
 
-        all_f90_src = []
         for prog in mains_f90:
             obj_dep = []
             sources = ['M' + prog]
             depends90(env,sources,'M'+prog)
             for f90_src in sources:
-                if f90_src not in all_f90_src:
-                    all_f90_src.append(f90_src)
-                    inc = env.Include(f90_src+'.f90',prefix='')
-                    obj = env.StaticObject(f90_src+'.f90')
-                    # SCons mistakenly treats ".mod" files as ".o" files, and
-                    # tries to build them the same way (which fails). So we
-                    # explicitly keep just the ".o" files as dependencies:
-                    for fname in obj:
-                        if os.path.splitext(fname.__str__())[1] == '.o':
-                            obj_dep.append(fname)
-                            env.Depends(fname,inc)
+                obj = env.StaticObject(f90_src+'.f90')
+                # SCons mistakenly treats ".mod" files as ".o" files, and
+                # tries to build them the same way (which fails). So we
+                # explicitly keep just the ".o" files as dependencies:
+                for fname in obj:
+                    if os.path.splitext(fname.__str__())[1] == '.o':
+                        obj_dep.append(fname)
             # Using obj_dep instead of the list of sources because when two
             # mains used the same module, object files for the module were 
             # created in both places, hence endless "double-define" warnings
