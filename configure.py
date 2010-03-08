@@ -1794,7 +1794,10 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
                         if os.path.splitext(fname.__str__())[1] == '.o':
                             obj_dep.append(fname)
                             env.Depends(fname,inc)
-            prog = env.Program(prog,obj_dep, LINK=F90)
+            # Using obj_dep instead of the list of sources because when two
+            # mains used the same module, object files for the module were 
+            # created in both places, hence endless "double-define" warnings
+            prog = env.Program(prog, obj_dep, LINK=F90)
             if glob_build:
                 env.Install(bindir,prog)
 
