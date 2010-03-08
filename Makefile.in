@@ -7,6 +7,9 @@ install:
 
 clean:
 	$(SCONS) -c
+	rm .sconsign*
 
 distclean:
 	$(SCONS) -c install
+	rm .sconsign*
+
