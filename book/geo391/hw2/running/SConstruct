@@ -85,6 +85,6 @@ Plot  ('time','ctime0 ctime1',
        graph dash=0,1 wanttitle=n
        label2="CPU Time" unit2=s
        label1="Window Size" unit1=
-       ''')
+       ''',view=1)
 
 End()

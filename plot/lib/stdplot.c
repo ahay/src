@@ -769,7 +769,7 @@ static void make_grid (bool grid)
     if (axis1 != NULL) { 
 	if (!sf_getbool("grid",&need) && !sf_getbool("grid1",&need))
 	    need = transp? false: grid;
-	/* to draw grid */
+	/*( grid1 to draw grid on first axis )*/
 
 	if (need) {
 	    grid1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
@@ -778,7 +778,7 @@ static void make_grid (bool grid)
 	    grid1->or = axis1->or;
 
 	    if (!sf_getfloat ("g1num",&(grid1->dnum))) {
-		/* grid marks on first axis */
+		/*( g1num grid marks on first axis )*/
 		grid1->dnum = axis1->dnum;
 		grid1->ntic = axis1->ntic;
 	    } else {
@@ -800,7 +800,7 @@ static void make_grid (bool grid)
     if (axis2 != NULL) {
 	if (!sf_getbool("grid",&need) && !sf_getbool("grid2",&need))
 	    need = transp? grid: false;
-	/* to draw grid */
+	/*( grid2 to draw grid on second axis )*/
 
 	if (need) {
 	    grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
@@ -809,7 +809,7 @@ static void make_grid (bool grid)
 	    grid2->or = axis2->or;
 	    
 	    if (!sf_getfloat ("g2num",&(grid2->dnum))) {
-		/* grid marks on second axis */
+		/*( g2num grid marks on second axis )*/
 		grid2->dnum = axis2->dnum;
 		grid2->ntic = axis2->ntic;
 	    } else {

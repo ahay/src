@@ -12,12 +12,15 @@ Fetch(tgz,
 
 files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
 
-Flow(files,tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+Flow(files,tgz,'gzcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
 Flow('line tline','Line_001.sgy','segyread tfile=${TARGETS[1]}')
 
 Result('first','line',
-       'window n2=1000 | agc rect1=250 rect2=100 | grey title="First 1000 traces" ')
+       '''
+       window n2=1000 | agc rect1=250 rect2=100 | 
+       grey title="First 1000 traces" 
+       ''')
 
 Flow('lines','line',
      '''
@@ -69,7 +72,7 @@ for shot in range(lines['S']):
     line = 'line%d' % shot
     Flow(line,'R','window n1=1 f2=%d n2=282' % (2*shot))
     shots.append(line)
-Flow('rec',shots,'cat axis=2 ${SOURCES[1:%d]}' % len(shots))
+Flow('rec',shots,'rcat axis=2 ${SOURCES[1:%d]}' % len(shots))
 
 Plot('rec',
      '''
@@ -96,7 +99,8 @@ Result('diagram','rec sou','Overlay')
 # Brute stack
 #############
 
-Flow('cmps mask','lines','transp plane=23 memsize=1000 | shot2cmp mask=${TARGETS[1]} half=n')
+Flow('cmps mask','lines',
+     'transp plane=23 memsize=1000 | shot2cmp mask=${TARGETS[1]} half=n')
 Flow('fold','mask','dd type=float | stack axis=1 norm=n')
 
 Result('fold','graph title=Fold unit1=km label2= unit2=')
@@ -111,5 +115,15 @@ Result('overlay','fold brute',
        add scale=1,1000 ${SOURCES[1]} |
        grey color=j title="Brute Stack (with Fold)"
        ''')
+
+# Denoising
+###########
+
+Flow('shot','lines','window n2=1 f2=198 | tpow tpow=1')
+
+Plot('shot','grey title=Before')
+
+Result('spec','shot',
+       'spectra | window max1=100 | grey color=j allpos=y title=Spectra')
 
 End()

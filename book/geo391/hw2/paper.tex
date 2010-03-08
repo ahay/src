@@ -91,8 +91,8 @@ by removing local outliers.
 
 \multiplot{2}{med,res}{width=0.45\textwidth}{Data separated into signal (a) and noise (b) by applying a running median filter.}
 
-\plot{time}{width=\textwidth}{CPU time for computing the running median with different algorithms as a function of the window size. 
-The dashed line corresponds to slow sorting in program \texttt{running.c}, the solid line corresponds to the fast \emph{quantile} algorithm.}
+%\plot{time}{width=\textwidth}{CPU time for computing the running median with different algorithms as a function of the window size. 
+%The dashed line corresponds to slow sorting in program \texttt{running.c}, the solid line corresponds to the fast \emph{quantile} algorithm.}
 
 The algorithm is implemented in program \texttt{running.c}.
 
@@ -106,7 +106,11 @@ scons view
 \end{verbatim}
 to reproduce the figures on your screen.
 \item Modify the \texttt{running.c} program and the \texttt{SConstruct} file to compute running mean instead of running median. Compare the results.
-\item \textbf{EXTRA CREDIT} for improving the efficiency of the running median algorithm. Figure~\ref{fig:time} compares the efficiency of running median computations using the slow sorting from function \texttt{median} in program \texttt{running.c} and the fast quantile algorithm (library function \verb#sf_quantile# ). Your goal is to make the algorithm even faster. Consider parallelization, reusing previous window results, other fast sorting strategies, etc.
+\item \textbf{EXTRA CREDIT} for improving the efficiency of the running median algorithm. Run
+\begin{verbatim}
+scons time.vpl
+\end{verbatim}
+to display a figure that compares the efficiency of running median computations using the slow sorting from function \texttt{median} in program \texttt{running.c} and the fast quantile algorithm (library function \verb#sf_quantile# ). Your goal is to make the algorithm even faster. Consider parallelization, reusing previous window results, other fast sorting strategies, etc.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}

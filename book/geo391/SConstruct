@@ -2,8 +2,8 @@ from rsfbook import *
 
 papers = map(lambda x: 'hw%d' % x,range(1,7))
 
-Book(title='Multidimensional Data Analysis \\\\ (Homeworks)',
+Book(title='\\large{GEO391} \\ Multidimensional Data Analysis in Geosciences \\\\ (Homeworks)',
      author='Sergey Fomel',
-     chapters=papers,use='hyperref')
+     chapters=papers)
 
-End()
+End(options='book',use='hyperref,listings,newalg')
