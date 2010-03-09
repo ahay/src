@@ -126,4 +126,6 @@ Plot('shot','grey title=Before')
 Result('spec','shot',
        'spectra | window max1=100 | grey color=j allpos=y title=Spectra')
 
+Flow('timefreq','shot','timefreq nw=81 dw=1 rect=50 verb=y')
+
 End()
