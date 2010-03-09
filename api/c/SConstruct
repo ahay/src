@@ -36,7 +36,7 @@ includes = map(lambda x: x+'.h',Split(src2)+Split(hdrs)+Split(src))
 sobjs = []
 dobjs = []
 for source in Split(src2):
-    env.Include(source,prefix='sf_')
+    env.RSF_Include(source,prefix='sf_')
 
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')

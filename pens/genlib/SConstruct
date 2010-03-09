@@ -26,7 +26,7 @@ includes = map(lambda x: x+'.h',Split(src))
 
 objects = []
 for source in Split(src):
-    env.Include(source,prefix='pen_')
+    env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)

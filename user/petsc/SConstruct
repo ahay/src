@@ -37,12 +37,12 @@ if petscdir:
                 LIBS=['rsf'])
 
     for source in src:
-        inc = env.Include(source,prefix='')
+        inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
 else:
     for source in src:
-        inc = env.Include(source,prefix='')
+        inc = env.RSF_Include(source,prefix='')
     
 mains = Split(progs)
 for prog in mains:

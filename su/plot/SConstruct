@@ -27,7 +27,7 @@ if xinc and xlib:
                 LIBS=['X11','su','rsf'])
     
     for source in src:
-        inc = env.Include(source,prefix='')
+        inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
 

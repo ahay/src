@@ -41,7 +41,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=['rsf'])
 
 for source in src:
-    inc = env.Include(source,prefix='')
+    inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 

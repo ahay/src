@@ -1619,7 +1619,7 @@ def Debug():
         env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env.SConsignFile(None)
-    env.Append(BUILDERS={'Include':Header,
+    env.Append(BUILDERS={'RSF_Include':Header,
                          'Place':Place},
                SCANNERS=[Include])
     return env
@@ -1738,7 +1738,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
         src = glob.glob('[a-z]*.c')
 
     for source in src:
-        inc = env.Include(source,prefix='')
+        inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
 

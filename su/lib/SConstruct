@@ -29,7 +29,7 @@ env.Prepend(CPPPATH=['../../include'],
 objects = []
 includes = []
 for source in Split(src):
-    inc = env.Include(source,prefix='sf_')
+    inc = env.RSF_Include(source,prefix='sf_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,inc)
     objects.append(obj)

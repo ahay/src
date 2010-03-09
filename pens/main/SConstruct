@@ -22,7 +22,7 @@ sources = map(lambda x: x+'vplot',Split(src))
 
 objects = []
 for source in sources:
-    env.Include(source,prefix='pen_')
+    env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
@@ -33,7 +33,7 @@ sfpen = env.get('SFPEN')
 # vppen
 #######
 
-env.Include('vppen',prefix='pen_')
+env.RSF_Include('vppen',prefix='pen_')
 obj = env.StaticObject('vppen.c')
 env.Depends(obj,'vppen.h')
 main = env.Program('vppen',[obj,]+objects)
@@ -50,7 +50,7 @@ inc = env.get('XINC')
 lib = env.get('XLIBPATH')
 
 if inc and lib:
-    env.Include('xtpen',prefix='pen_')
+    env.RSF_Include('xtpen',prefix='pen_')
     obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
     env.Depends(obj,'xtpen.h')
     main = env.Program('xtpen',[obj,]+objects,
@@ -71,7 +71,7 @@ if root:
 #######
 
 if inc and lib:
-    env.Include('x11pen',prefix='pen_')
+    env.RSF_Include('x11pen',prefix='pen_')
     obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
     env.Depends(obj,'x11pen.h')
     main = env.Program('x11pen',[obj,]+objects,
@@ -87,7 +87,7 @@ if root:
 # pspen
 #######
 
-env.Include('pspen',prefix='pen_')
+env.RSF_Include('pspen',prefix='pen_')
 obj = env.StaticObject('pspen.c')
 env.Depends(obj,'pspen.h')
 main = env.Program('pspen',[obj,]+objects)
@@ -100,7 +100,7 @@ pens.append('pspen')
 # raspen
 #######
 
-env.Include('raspen',prefix='pen_')
+env.RSF_Include('raspen',prefix='pen_')
 pens.append('raspen')
 
 for pen in ('ppm','tiff','jpeg'):
@@ -141,7 +141,7 @@ gifanim = env.get('GIFANIM')
 ffmpeg = env.get('FFMPEG')
 
 if gd:
-    env.Include('gdpen',prefix='gd_')
+    env.RSF_Include('gdpen',prefix='gd_')
     path =  env.get('CPPPATH',[])
     defines = env.get('CPPDEFINES',[])
     libs = [gd]+env.get('LIBS',[])
@@ -172,7 +172,7 @@ if root:
 # crpen
 #######
 
-env.Include('crpen',prefix='pen_')
+env.RSF_Include('crpen',prefix='pen_')
 pens.append('crpen')
 path = env.get('CAIROPATH')
 
@@ -213,7 +213,7 @@ if ogl or oglflags:
     if oglflags:
         if type(oglflags) is not types.ListType:
             oglflags = Split(oglflags)
-    env.Include('oglpen',prefix='ogl_')
+    env.RSF_Include('oglpen',prefix='ogl_')
     obj = env.StaticObject('oglpen.c',
                            CPPPATH=[oglpath]+env.get('CPPPATH',[]))
     env.Depends(obj,'oglpen.h')

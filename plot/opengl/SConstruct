@@ -48,7 +48,7 @@ for source in Split(oglsrc):
     src.remove(source+'.c')
 
 for source in src:
-    inc = env.Include(source,prefix='')
+    inc = env.RSF_Include(source,prefix='')
     if ogl:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)

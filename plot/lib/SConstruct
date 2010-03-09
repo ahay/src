@@ -26,7 +26,7 @@ includes = map(lambda x: x+'.h',psrc)
 objects = []
 dobjects = []
 for source in psrc:
-    env.Include(source,prefix='vp_')
+    env.RSF_Include(source,prefix='vp_')
 
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
