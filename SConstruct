@@ -140,4 +140,3 @@ env.Install(rsfuser,'__init__.py')
 env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,spcdir,mandir])
 env.Clean('install', rsfuser)
 
-# 	$Id$

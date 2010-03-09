@@ -1,14 +1,14 @@
 import os, sys, re, string, glob
 
 try:
-    import configure
+    import bldutil, configure
     glob_build = True # scons command launched in RSFSRC
     srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/ivlad
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(srcroot)
-    import configure
+    import bldutil, configure
     
 # C mains
 progs_c = '''
@@ -41,20 +41,20 @@ else:
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     bldroot = os.environ.get('RSFROOT')
 
-docs_c = configure.build_install_c(env, progs_c, bindir, glob_build, bldroot)
+docs_c = bldutil.build_install_c(env, progs_c, bindir, glob_build, bldroot)
 
 api = env.get('API',[])
 
-docs_f90 = configure.build_install_f90(env, progs_f90, bindir, api, bldroot, 
+docs_f90 = bldutil.build_install_f90(env, progs_f90, bindir, api, bldroot, 
     glob_build)
 
 ######################################################################
 
 if glob_build:
 
-    docs_py = configure.install_py_mains(env, progs_py, bindir)
-    configure.install_py_modules(env, py_modules, libdir)
-    configure.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
+    docs_py = bldutil.install_py_mains(env, progs_py, bindir)
+    bldutil.install_py_modules(env, py_modules, libdir)
+    bldutil.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
 
     # The back-up Python API
     rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
