@@ -862,7 +862,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if re.match(rsfplotprefix,name):
         snps = snps + ' > plot.' + rsfplotsuffix
     parline = ''
-    pars = params.get(lang)d
+    pars = params.get(lang)
     if pars:
         for par in pars.findall(text):
             type = par[0]
