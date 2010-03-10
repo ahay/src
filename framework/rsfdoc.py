@@ -29,10 +29,10 @@ data = {}
 
 # Programs with wiki documentation
 docprogs = '''
-add attr cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get headerattr
-headercut headermath headersort headerwindow in interleave mask math
-pad prep4plot put real remap1 reverse rm rotate rtoc scale segyread
-segywrite spike spray stack stretch transp window sizes figlist booklist
+add attr awefd cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get 
+headerattr headercut headermath headersort headerwindow in interleave mask math
+pad pick prep4plot put real remap1 reverse rm rotate rtoc scale segyread
+segywrite spike spray srmig3 stack stretch transp window sizes figlist booklist
 '''.split()
 
 def handler(signum, frame):
@@ -862,7 +862,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if re.match(rsfplotprefix,name):
         snps = snps + ' > plot.' + rsfplotsuffix
     parline = ''
-    pars = params.get(lang)
+    pars = params.get(lang)d
     if pars:
         for par in pars.findall(text):
             type = par[0]
