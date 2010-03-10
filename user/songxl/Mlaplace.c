@@ -85,9 +85,8 @@ int main(int argc, char* argv[])
  
     for (iz=0; iz < nz; iz++){
          for (ix=0; ix < nx; ix++) {
-             new[iz][ix] = 20.0*old[iz][ix]
-             -4.0*(old[iz][ix-1]+old[iz][ix+1]+old[iz-1][ix]+old[iz+1][ix])
-             -(old[iz-1][ix-1]+old[iz-1][ix+1]+old[iz+1][ix-1]+old[iz+1][ix+1]);
+             new[iz][ix] = (2.0*old[iz+nbt][ix+nbl]-old[iz+nbt][ix+nbl-1]-old[iz+nbt][ix+nbl+1])/(dx*dx)
+                         + (2.0*old[iz+nbt][ix+nbl]-old[iz+nbt+1][ix+nbl]-old[iz+nbt-1][ix+nbl])/(dz*dz);
          }
     }
 
