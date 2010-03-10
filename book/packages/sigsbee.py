@@ -162,6 +162,20 @@ def replace(vpad,velo,par):
     Flow(vpad,[velo+'_sed',velo+'_pad'],'cat axis=1 ${SOURCES[1]}')
 
 # ------------------------------------------------------------
+# extend bottom salt 
+def extend(vpad,velo,par):
+
+    # padding in z
+    par['nreplace']=21
+    Flow(velo+'_cut',velo,
+         '''
+         window n1=1 f1=%d | 
+         spray axis=1 n=%d
+         ''' % (par['nz']-1,par['nzpad']) )
+    
+    Flow(vpad,[velo,velo+'_cut'],'cat axis=1 ${SOURCES[1]}')
+
+# ------------------------------------------------------------
 def getrefl(refl,par):
 
     reffile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'

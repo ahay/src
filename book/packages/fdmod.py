@@ -56,10 +56,13 @@ def param(par):
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
+    dt=par['tmax']-par['tmin'];
     yxratio=dx/(dx+dy);
     yzratio=dz/(dz+dy);
+    ytratio=10*dt/(10*dt+dy);
     
     par['ratio3d']=(dz+dy)/(dx+dy);
+    par['pointt']=ytratio;
     par['pointz']=yzratio;
     par['pointx']=yxratio;
     if(par['ratio3d']>1):
@@ -188,7 +191,7 @@ def dgrey3d(custom,par):
            par['lx'],par['ux'],
            par['ly'],par['uy'],
            par['nt']/2,par['nx']/2,par['ny']/2,
-           par['ratio3d'],par['height3d'],par['pointz'],par['pointx'],
+           par['ratio3d'],par['height3d'],par['pointt'],par['pointx'],
            par['labelattr']+' '+custom)
 
 def egrey(custom,par):
