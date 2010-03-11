@@ -1,4 +1,5 @@
-/* 3-D zero-offset modeling/migration with extended split-step */
+/* 3-D zero-offset modeling/migration with extended split-step
+To be deprecated in favor of zomig3 */
 
 /*
   Copyright (C) 2006 Colorado School of Mines
