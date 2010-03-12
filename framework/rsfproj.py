@@ -153,24 +153,25 @@ def retrieve(target=None,source=None,env=None):
                 remote = os.path.basename(file)  
                 remote = os.path.join(folder,remote)
                 try:
-                    os.link(remote,file)
+                    os.symlink(remote,file)
                 except:
                     print 'Could not link file "%s" ' % remote
                     os.unlink(file)
                     return 6
-        for file in map(str,target):
-            remote = os.path.basename(file)  
-            rdir =  string.join([server,folder,remote],'/')
-            try:
-                urllib.urlretrieve(rdir,file)
+        else:
+            for file in map(str,target):
+                remote = os.path.basename(file)  
+                rdir =  string.join([server,folder,remote],'/')
+                try:
+                    urllib.urlretrieve(rdir,file)
 
-                if not os.stat(file)[6]:
-                    print 'Could not download file "%s" ' % file
-                    os.unlink(file)
-                    return 2
-            except:
-                print 'Could not download "%s" from "%s" ' % (file,rdir)
-                return 5
+                    if not os.stat(file)[6]:
+                        print 'Could not download file "%s" ' % file
+                        os.unlink(file)
+                        return 2
+                except:
+                    print 'Could not download "%s" from "%s" ' % (file,rdir)
+                    return 5
     return 0
 
 vppen = os.path.join(bindir,'vppen')
