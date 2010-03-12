@@ -85,7 +85,7 @@ if root:
     docs = map(lambda prog: env.Doc(prog),('stdplot.c',))
     env.Depends(docs,'#/framework/rsfdoc.py')
 
-    doc = env.Docmerge(main,docs)
+    doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
     
 # 	$Id$	

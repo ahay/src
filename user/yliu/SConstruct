@@ -50,7 +50,7 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/framework/rsfdoc.py')	
-    doc = env.Docmerge(main,docs)
+    doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
 
 

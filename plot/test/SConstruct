@@ -51,7 +51,7 @@ if root:
 	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
 	docalias = {'vpreflexpt':'vpreflector',
 		    'vpreflkine':'vpreflector'}
-	doc = env.Docmerge(main,docs,alias=docalias)
+	doc = env.RSF_Docmerge(main,docs,alias=docalias)
 	env.Install(libdir,doc)
 
 #####################################################################

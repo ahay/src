@@ -142,7 +142,7 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
 
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-    doc = env.Docmerge(main,docs)
+    doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
 
 ################################################################################

@@ -58,6 +58,6 @@ if root:
     alias = {}
     for wave in Split(waves):
         alias['sf'+wave] = 'sfwavedoc'
-    doc = env.Docmerge(main,docs,alias=alias)
+    doc = env.RSF_Docmerge(main,docs,alias=alias)
     env.Install(libdir,doc)
 #####################################################################

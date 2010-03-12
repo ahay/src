@@ -55,7 +55,7 @@ if root:
     else:
         docs = []
 
-    doc = env.Docmerge(main,docs)
+    doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
 #####################################################################
 

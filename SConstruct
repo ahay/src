@@ -44,7 +44,7 @@ env.Alias('config',config)
 env.Append(BUILDERS={'RSF_Include':configure.Header,
                      'RSF_Place':configure.Place,
                      'RSF_Pycompile':configure.Pycompile,
-                     'Docmerge':configure.Docmerge},
+                     'RSF_Docmerge':configure.Docmerge},
            SCANNERS=[configure.Include])
 
 ##########################################################################
