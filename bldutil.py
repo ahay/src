@@ -123,7 +123,7 @@ def install_py_modules(env, py_modules, libdir):
 
     rsfuser = os.path.join(libdir,'rsfuser')
     for module in Split(py_modules):
-        env.Pycompile(module+'.pyc',module+'.py')
+        env.RSF_Pycompile(module+'.pyc',module+'.py')
         env.Install(rsfuser,module+'.pyc')
 
 ################################################################################

@@ -16,7 +16,7 @@ def py_install(source):
     global env,libdir
     py = source+'.py'
     pyc = py+'c'
-    env.Pycompile(pyc,py)
+    env.RSF_Pycompile(pyc,py)
     env.Install(libdir,[py,pyc])
 
 for src in Split('path doc flow proj prog tex book'):

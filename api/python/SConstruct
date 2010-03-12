@@ -16,7 +16,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
 if root:
-    env.Pycompile('rsfbak.pyc','rsfbak.py')
+    env.RSF_Pycompile('rsfbak.pyc','rsfbak.py')
     env.Install(libdir,['rsfbak.py','rsfbak.pyc'])
 
 if 'python' in env.get('API',[]):
