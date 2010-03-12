@@ -58,7 +58,7 @@ if inc and lib:
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
     pens.append('xtpen')
 else:
-    main = env.Place('xtpen',None,
+    main = env.RSF_Place('xtpen',None,
                      var='XINC and XLIBPATH',package='libXaw-devel')
 
 if root:
@@ -79,7 +79,7 @@ if inc and lib:
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
     pens.append('x11pen')
 else:
-    main = env.Place('x11pen',None,var='XINC and XLIBPATH')
+    main = env.RSF_Place('x11pen',None,var='XINC and XLIBPATH')
     
 if root:
     env.Install(bindir,main[0])
@@ -123,7 +123,7 @@ for pen in ('ppm','tiff','jpeg'):
                            LIBS=[lib]+env.get('LIBS',[]))
         docalias['sf'+name]='sfraspen'
     else:
-        main = env.Place(name,None,var=cap,
+        main = env.RSF_Place(name,None,var=cap,
                          package={'ppm':'libnetpbm-devel',
                                   'tiff':'libtiff-devel',
                                   'jpeg':'libjpeg-devel'}[pen])
@@ -164,7 +164,7 @@ if gd:
     main = env.Program('gdpen',[obj,]+objects,LIBS=libs)
     pens.append('gdpen')
 else:
-    main = env.Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
+    main = env.RSF_Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
     
 if root:
     env.Install(bindir,main[0])
@@ -195,7 +195,7 @@ for pen in ('png','pdf','svg'):
                            LIBS=[lib]+env.get('LIBS',[]))
         docalias['sf'+name]='sfcrpen'
     else:
-        main = env.Place(name,None,var='CAIRO-'+cap,pakage='cairo')
+        main = env.RSF_Place(name,None,var='CAIRO-'+cap,pakage='cairo')
     
     if root:
         env.Install(bindir,main[0])
@@ -222,7 +222,7 @@ if ogl or oglflags:
                        LINKFLAGS=[oglflags]+env.get('LINKFLAGS',[]))
     pens.append('oglpen')
 else:
-    main = env.Place('oglpen',None,var='OPENGL',package='freeglut-devel')
+    main = env.RSF_Place('oglpen',None,var='OPENGL',package='freeglut-devel')
 
 if root:
     env.Install(bindir,main[0])

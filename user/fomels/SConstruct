@@ -57,7 +57,7 @@ for conv in ('byte2jpg','jpg2byte'):
         libs=env.get('LIBS')+[jpeg]
         prog = env.Program('sf'+conv,['_%s.c' % conv,jpeg_o],LIBS=libs)
     else:
-        prog = env.Place('sf'+conv,None,var='JPEG',package='libjpeg-devel')
+        prog = env.RSF_Place('sf'+conv,None,var='JPEG',package='libjpeg-devel')
     if root:
         env.Install(bindir,prog)
 
@@ -68,7 +68,7 @@ for conv in ('byte2tif','tif2byte'):
         libs=env.get('LIBS')+[tiff]
         prog = env.Program('sf'+conv,'_%s.c' % conv,LIBS=libs)
     else:
-        prog = env.Place('sf'+conv,None,var='TIFF',package='libtiff-devel')
+        prog = env.RSF_Place('sf'+conv,None,var='TIFF',package='libtiff-devel')
     if root:
         env.Install(bindir,prog)
 

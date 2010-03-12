@@ -38,7 +38,7 @@ threads = env.get('PTHREADS')
 if threads:
     prog = env.Program('Mthreads.c')
 else:
-    prog = env.Place('sfthreads',None,var='PTHREADS')
+    prog = env.RSF_Place('sfthreads',None,var='PTHREADS')
 if root:
     env.Install(bindir,prog[0])
 

@@ -1620,7 +1620,7 @@ def Debug():
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env.SConsignFile(None)
     env.Append(BUILDERS={'RSF_Include':Header,
-                         'Place':Place},
+                         'RSF_Place':Place},
                SCANNERS=[Include])
     return env
 

@@ -51,7 +51,7 @@ for prog in mains:
         configure.depends(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
-        prog = env.Place('sf'+prog,None,var='PETSCDIR',package='petsc')
+        prog = env.RSF_Place('sf'+prog,None,var='PETSCDIR',package='petsc')
     if root:
         env.Install(bindir,prog)
 

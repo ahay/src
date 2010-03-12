@@ -23,7 +23,7 @@
 
 for y in `find $RSFSRC -name SConstruct`;
   do 
-    sed "s/\.Include/\.RSF_Include/g" $y > sed_tmp.asc;
+    sed "s/env\.Place/env\.RSF_Place/g" $y > sed_tmp.asc;
     mv -f sed_tmp.asc $y;
   done
 
