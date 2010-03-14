@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
 	}	
 	
 	/* estimate t-y dip */
-	dip3(2, niter, order, nj2, verb, u, p, m2, pmin, pmax);
+	dip3(2, niter, order, nj2, verb, u, p, m2, qmin, qmax);
 	
 	/* write t-y dip */
 	sf_floatwrite(p,n123,out);

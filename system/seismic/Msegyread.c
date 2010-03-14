@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *headname, *filename, *trace, *read, *prog;
     sf_file out, hdr, msk=NULL;
-    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask;
+    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask, nkeys;
     off_t pos, nsegy;
     FILE *head, *file;
     float *ftrace, dt;
@@ -465,7 +465,12 @@ int main(int argc, char *argv[])
 
     if (read[0] != 'd') { /* not only data */
 	hdr = sf_output("tfile");
-	sf_putint(hdr,"n1",SF_NKEYS);
+
+	nkeys = SF_NKEYS;
+
+	/* get extra keys */
+
+	sf_putint(hdr,"n1",nkeys);
 	sf_putint(hdr,"n2",n2);
 	sf_setformat(hdr,"native_int");
 
@@ -474,6 +479,7 @@ int main(int argc, char *argv[])
 	if (NULL != out) sf_putstring(out,"head",headname);
     } else {
 	hdr = NULL;
+	nkeys = 0;
     }
 
     if (NULL != out) sf_fileflush(out,NULL);
@@ -492,8 +498,8 @@ int main(int argc, char *argv[])
 		}
 		fseeko(file,nsegy,SEEK_CUR);
 
-		segy2head(trace, itrace, SF_NKEYS);
-		sf_intwrite(itrace,SF_NKEYS,hdr);
+		segy2head(trace, itrace, nkeys);
+		sf_intwrite(itrace, nkeys, hdr);
 	    }
 
 	    break;
@@ -502,7 +508,7 @@ int main(int argc, char *argv[])
 	    trace = sf_charalloc (nsegy);
 
 	    for (itr=0; itr < ntr; itr++) {
-		fseek(file,SF_HDRBYTES,SEEK_CUR);
+		fseeko(file,SF_HDRBYTES,SEEK_CUR);
 		if (NULL != mask && !mask[itr]) {
 		    fseeko(file,nsegy,SEEK_CUR);
 		    continue;
@@ -530,8 +536,8 @@ int main(int argc, char *argv[])
 		    sf_error ("Error reading trace header %d",itr+1);
 		}
 
-		segy2head(trace, itrace, SF_NKEYS);
-		sf_intwrite(itrace,SF_NKEYS,hdr);
+		segy2head(trace, itrace, nkeys);
+		sf_intwrite(itrace, nkeys, hdr);
 
 		if (suxdr) {
 		    segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
