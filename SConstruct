@@ -50,6 +50,10 @@ env.Append(BUILDERS={'RSF_Include':configure.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
+# rsfbld is a dependency of rsfproj
+env.RSF_Pycompile('bldutil.pyc','bldutil.py')
+env.InstallAs(os.path.join(libdir,'rsfbld.pyc'), 'bldutil.pyc')
+
 system = filter(lambda x: x[0] != '.', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 # Avoid crashing when user places some files in RSFSRC/user
