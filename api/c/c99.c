@@ -81,8 +81,12 @@ double complex sf_dcmplx(double re, double im)
 /*< complex number >*/
 {
     double complex c;
+#ifdef __GNUC__
     __real__ c = re;
     __imag__ c = im;
+#else
+    c = re+im*_Complex_I;
+#endif
     return c;
 }
 
