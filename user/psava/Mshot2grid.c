@@ -102,6 +102,10 @@ int main (int argc, char *argv[])
 	c_irec = sf_complexalloc3(sf_n(aw),sf_n(arx),sf_n(ary));
 	c_osou = sf_complexalloc3(sf_n(aw),sf_n(ax),sf_n(ay));
 	c_orec = sf_complexalloc3(sf_n(aw),sf_n(ax),sf_n(ay));
+	r_isou = NULL;
+	r_irec = NULL;
+	r_osou = NULL;
+	r_orec = NULL;
     } else {
 	r_isou = sf_floatalloc (sf_n(at));
 	r_irec = sf_floatalloc3(sf_n(at),sf_n(arx),sf_n(ary));

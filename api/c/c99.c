@@ -68,8 +68,12 @@ float complex sf_cmplx(float re, float im)
 /*< complex number >*/
 {
     float complex c;
+#ifdef __GNUC__
     __real__ c = re;
     __imag__ c = im;
+#else
+    c = re+im*_Complex_I;
+#endif
     return c;
 }
 
