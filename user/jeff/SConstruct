@@ -1,6 +1,6 @@
 import os, sys, re, string, glob
 sys.path.append('../..')
-import configure, bldutil
+import bldutil
 
 progs = '''
 rwe2d
@@ -11,7 +11,7 @@ try:  # distributed version
     env = env.Clone()
 except: # local version
     root = None
-    env = configure.Debug()
+    env = bldutil.Debug()
     SConscript('../../api/f90/SConstruct')
 
 F90 = env.get('F90')

@@ -1,4 +1,9 @@
-import configure, glob, os, re, string
+import glob, os, re, string
+
+try:
+    import configure
+except:
+    import rsfconf as configure
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons
@@ -10,6 +15,24 @@ if version[0] == 1  or \
 else:  # old style
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+
+################################################################################
+
+def Debug():
+    'Environment for debugging'
+    env = Environment()
+    srcroot = os.environ.get('RSFSRC', '../..')
+    opts = configure.options(os.path.join(srcroot,'config.py'))
+    opts.Update(env)
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    if  env['PLATFORM'] == 'sunos':
+        env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    env.SConsignFile(None)
+    env.Append(BUILDERS={'RSF_Include':Header,
+                         'RSF_Place':Place},
+               SCANNERS=[Include])
+    return env
 
 ################################################################################
 

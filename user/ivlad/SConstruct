@@ -1,14 +1,14 @@
 import os, sys, re, string, glob
 
 try:
-    import bldutil, configure
+    import bldutil
     glob_build = True # scons command launched in RSFSRC
     srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/ivlad
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(srcroot)
-    import bldutil, configure
+    import bldutil
     
 # C mains
 progs_c = '''
@@ -36,7 +36,7 @@ if glob_build:
     env = env.Clone()
     bldroot = '../..' # aka RSFSRC/build
 else:
-    env = configure.Debug() # Debugging flags for compilers
+    env = bldutil.Debug() # Debugging flags for compilers
     bindir = None
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
     bldroot = os.environ.get('RSFROOT')
