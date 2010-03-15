@@ -1,6 +1,6 @@
 import os, sys, re, string, glob
 sys.path.append('../..')
-import configure
+import configure, bldutil
 
 progs = '''
 rwe2d
@@ -34,7 +34,7 @@ if 'f90' in api and F90:
 
     for prog in mains:
         sources = ['M' + prog]
-        configure.depends90(env,sources,'M'+prog)
+        bldutil.depends90(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.f90',sources),
                            LINK=F90)
         if root:

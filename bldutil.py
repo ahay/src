@@ -1,4 +1,4 @@
-import configure, glob, os, string
+import configure, glob, os, re, string
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons
@@ -10,6 +10,25 @@ if version[0] == 1  or \
 else:  # old style
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+
+################################################################################
+
+include90 = re.compile(r'^[^!]*use\s+(\S+)')
+
+# find dependencies for Fortran-90
+def depends90(env,list,file):
+    filename = env.File(file+'.f90').abspath
+    # replace last occurence of build/
+    last = filename.rfind('build/')
+    if last >= 0:
+        filename = filename[:last] + filename[last+6:]
+    fd = open(filename,'r')
+    for line in fd.readlines():
+        for inc in include90.findall(line):
+            if inc not in list and inc != 'rsf':
+                list.append(inc)
+                depends90(env,list,inc)
+    fd.close()
 
 ################################################################################
 
@@ -69,7 +88,7 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
         for prog in mains_f90:
             obj_dep = []
             sources = ['M' + prog]
-            configure.depends90(env,sources,'M'+prog)
+            depends90(env,sources,'M'+prog)
             for f90_src in sources:
                 obj = env.StaticObject(f90_src+'.f90')
                 # SCons mistakenly treats ".mod" files as ".o" files, and

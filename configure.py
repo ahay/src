@@ -103,24 +103,6 @@ def depends(env,list,file):
                 depends(env,list,inc)
     fd.close()
 
-
-include90 = re.compile(r'^[^!]*use\s+(\S+)')
-
-# find dependencies for Fortran-90
-def depends90(env,list,file):
-    filename = env.File(file+'.f90').abspath
-    # replace last occurence of build/
-    last = filename.rfind('build/')
-    if last >= 0:
-        filename = filename[:last] + filename[last+6:]
-    fd = open(filename,'r')
-    for line in fd.readlines():
-        for inc in include90.findall(line):
-            if inc not in list and inc != 'rsf':
-                list.append(inc)
-                depends90(env,list,inc)
-    fd.close()
-
 def included(node,env,path):
     file = os.path.basename(str(node))
     file = re.sub('\.[^\.]+$','',file)

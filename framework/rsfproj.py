@@ -16,13 +16,7 @@
 
 import os, stat, sys, types, copy
 import re, string, urllib, ftplib
-
-import rsfdoc
-import rsfprog
-import rsfconf
-import rsfpath
-import rsfflow
-
+import rsfbld, rsfconf, rsfflow, rsfdoc, rsfpath, rsfprog
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -535,7 +529,7 @@ def Get(name):
     return project['ENV'].get(name)
 def Program90(prog):
     sources = [prog]
-    rsfconf.depends90(project,sources,prog)
+    rsfbld.depends90(project,sources,prog)
     return project.Program(prog,
                            map(lambda x: x + '.f90',sources),
                            F90PATH=[incdir],
