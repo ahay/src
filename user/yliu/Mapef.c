@@ -22,16 +22,17 @@
 #include <math.h>
 #include "multidivn1.h"
 #include "weight2.h"
+#include "mask4apef.h"
 
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], m[SF_MAX_DIM], rect[SF_MAX_DIM], a[SF_MAX_DIM];
     int ndim, mdim, nd, ns, n12, i, j, niter;
     int i1, i2, i3, j1, j2, j3, jump, i4, n4;
-    float *d, *f, *g, mean, *ff;
+    float *d, *f, *g, mean, *ff, *outm;
     char key[6];
-    sf_file flt, mat, pre;
-    bool verb;
+    sf_file flt, mat, pre, maskin, maskout;
+    bool verb, *mask;
 
     sf_init(argc,argv);
 
@@ -90,6 +91,23 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
+    if (NULL != sf_getstring("maskin")) {
+	/* optional input mask file */
+	mask = sf_boolalloc(nd);
+	maskin = sf_input("maskin");
+    } else {
+	mask = NULL;
+	maskin = NULL;
+    }
+    if (NULL != sf_getstring("maskout")) {
+	/* optional output mask file */
+	maskout = sf_output("maskout");
+	outm = sf_floatalloc(nd);
+    } else {
+	outm = NULL;
+	maskout = NULL;
+    }	
+
     d = sf_floatalloc(n12);
     f = sf_floatalloc(n12);
     ff = sf_floatalloc(n12);
@@ -116,6 +134,21 @@ int main(int argc, char* argv[])
     }
 
     for (i4=0; i4 < n4; i4++) {
+    	if (NULL != maskin) {
+	    sf_floatread(g,nd,maskin);
+	    mask4apef (a, jump, m, g, mask);
+	    if (NULL != maskout) {
+		for (i3=0; i3 < nd; i3++) {
+		    if (!mask[i3]) {
+			outm[i3] = 0.;
+		    } else {
+			outm[i3] = 1.;
+		    }
+		}
+		sf_floatwrite (outm,nd,maskout);
+	    }
+	}
+
 	sf_floatread(g,nd,mat);
 	for (i3=0; i3 < a[2]; i3++) {
 	    for (i2=0; i2 < a[1]; i2++) {
@@ -129,9 +162,9 @@ int main(int argc, char* argv[])
 				      (i1+a[0]/2)*m[2]*m[1]*m[0]+
 				      j3*m[1]*m[0]+j2*m[0]+j1] = 0.;
 				} else {
-				    if ((j1+i1*jump)<0 || (j1+i1*jump)>m[0] || 
-					(j2+i2*jump)<0 || (j2+i2*jump)>m[1] ||
-					(j3+i3*jump)<0 || (j3+i3*jump)>m[2]) {
+				    if ((j1+i1*jump)<0 || (j1+i1*jump)>=m[0] ||
+					(j2+i2*jump)<0 || (j2+i2*jump)>=m[1] ||
+					(j3+i3*jump)<0 || (j3+i3*jump)>=m[2]) {
 					d[i3*a[1]*a[0]*m[2]*m[1]*m[0]+
 					  i2*a[0]*m[2]*m[1]*m[0]+
 					  (i1+a[0]/2)*m[2]*m[1]*m[0]+
@@ -169,6 +202,28 @@ int main(int argc, char* argv[])
 	}
 	for(i=0; i < nd; i++) {
 	    g[i] /= mean;
+	}
+
+    	if (NULL != maskin) {
+	    for (j3=0; j3 < m[2]; j3++) {
+		for (j2=0; j2 < m[1]; j2++) {
+		    for (j1=0; j1 < m[0]; j1++) {
+			if (!mask[j3*m[1]*m[0]+j2*m[0]+j1]) {
+			    for (i3=0; i3 < a[2]; i3++) {
+				for (i2=0; i2 < a[1]; i2++) {
+				    for (i1=0; i1 < a[0]; i1++) {
+					d[i3*a[1]*a[0]*m[2]*m[1]*m[0]+
+					  i2*a[0]*m[2]*m[1]*m[0]+
+					  i1*m[2]*m[1]*m[0]+
+					  j3*m[1]*m[0]+j2*m[0]+j1] = 0.;
+				    }
+				}
+			    }
+			    g[j3*m[1]*m[0]+j2*m[0]+j1] = 0.;
+			}
+		    }
+		}
+	    } 
 	}
 	
 	multidivn (g,f,niter);
