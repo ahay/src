@@ -33,7 +33,7 @@ typedef struct PETScAimplFD2 *sf_petsc_aimplfd2;
 #endif
 
 struct PETScAimplFD2 {
-    PetscInt Nx, Nz;
+    PetscInt Nx, Nz, Npad, Nxpad, Nzpad;
     MPI_Comm comm;
     KSP Solver;
     Mat A;
@@ -42,16 +42,48 @@ struct PETScAimplFD2 {
 };
 /* concrete data type */
 
+#define SCHKERR CHKERRABORT(comm,ierr)
 #define CHKERR CHKERRABORT(aimplfd->comm,ierr)
 
-static void sf_petsc_aimplfd2_set_mat (sf_petsc_aimplfd2 aimplfd,
+/* Show contents of a matrix */
+static void sf_petsc_mat_view (MPI_Comm comm, Mat A) {
+    PetscViewer viewer;
+    PetscErrorCode ierr;
+
+/*
+    ierr = PetscViewerDrawOpen (comm, NULL, "Matrix", PETSC_DECIDE, PETSC_DECIDE,
+                                                      PETSC_DECIDE, PETSC_DECIDE, &viewer); SCHKERR;
+*/
+    ierr = PetscViewerASCIIOpen (comm, "mat.out", &viewer); SCHKERR;
+    ierr = MatView (A, viewer); SCHKERR;
+    ierr = PetscViewerDestroy (viewer); SCHKERR;
+}
+    
+/* Remove padding from indices and get velocity from the array */
+static float sf_petsc_aimplfd2_get_vel (sf_petsc_aimplfd2 aimplfd, float *v, int ix, int iz) {
+    int ixs, izs;
+    ixs = ix - aimplfd->Npad;
+    izs = iz - aimplfd->Npad;
+    if (ix < aimplfd->Npad)
+        ixs = 0;
+    else if (ix >= (aimplfd->Npad + aimplfd->Nx))
+        ixs = aimplfd->Nx - 1;
+    if (iz < aimplfd->Npad)
+        izs = 0;
+    else if (iz >= (aimplfd->Npad + aimplfd->Nz))
+        izs = aimplfd->Nz - 1;
+    return v[ixs*aimplfd->Nz + izs];
+}
+
+/* Check boundaries and insert a coefficient into the matrix */
+static void sf_petsc_aimplfd2_set_mat (sf_petsc_aimplfd2 aimplfd, Mat A,
                                        PetscInt J, PetscInt K, PetscInt N, PetscScalar C)
 {
     PetscErrorCode ierr;
 
     if (J >= 0 && J < N &&
         K >= 0 && K < N) {
-        ierr = MatSetValues (aimplfd->A, 1, &J, 1, &K, &C, INSERT_VALUES); CHKERR;
+        ierr = MatSetValues (A, 1, &J, 1, &K, &C, INSERT_VALUES); CHKERR;
     }
 }
 
@@ -60,7 +92,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 /*< Initialize implicit F-D object. >*/
 {
     PetscInt J, K, N;
-    int ix, iz, idx;
+    int ix, iz;
     float v2, rtx2, rtz2;
     PetscErrorCode ierr;
     PetscScalar Rox, Roz, Val;
@@ -74,12 +106,15 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     aimplfd->dz = dz;
     aimplfd->dx = dx;
     aimplfd->dt = dt;
+    aimplfd->Npad = 2; /* Pad area thickness */
+    aimplfd->Nxpad = aimplfd->Nx + aimplfd->Npad*2; /* Total thickness in x */
+    aimplfd->Nzpad = aimplfd->Nz + aimplfd->Npad*2; /* Total thickness in x */
     aimplfd->comm = MPI_COMM_WORLD;
 
     /* Matrix */
     ierr = MatCreate (aimplfd->comm, &aimplfd->A); CHKERR;
     /* Matrix width/heigh */
-    N = aimplfd->Nx*aimplfd->Nz;
+    N = aimplfd->Nxpad*aimplfd->Nzpad;
     ierr = MatSetSizes (aimplfd->A, PETSC_DECIDE, PETSC_DECIDE,
                         N, N); CHKERR;
     ierr = MatSetType (aimplfd->A, MATMPIAIJ); CHKERR;
@@ -91,33 +126,40 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
                              PETSC_DEFAULT, niter); CHKERR;
     /* Solution and r.h.s. vectors */
     ierr = VecCreateMPI (aimplfd->comm, PETSC_DECIDE, N, &aimplfd->Ut); CHKERR;
-    Val = 0.0;
-    ierr = VecSet (aimplfd->Ut, Val); CHKERR;
+    ierr = VecZeroEntries (aimplfd->Ut); CHKERR;
     ierr = VecDuplicate (aimplfd->Ut, &aimplfd->Ut1); CHKERR;
     ierr = VecDuplicate (aimplfd->Ut, &aimplfd->Ut2); CHKERR;
 
-    /* Build matrix */
+    /* Build propagation matrix */
     ierr = MatAssemblyBegin (aimplfd->A, MAT_FINAL_ASSEMBLY); CHKERR;
     rtx2 = (dt*dt)/(dx*dx);
     rtz2 = (dt*dt)/(dz*dz);
+    nx = aimplfd->Nxpad;
+    nz = aimplfd->Nzpad;
+    Val = 1.0;
     for (ix = 0; ix < nx; ix++) {
         for (iz = 0; iz < nz; iz++) {
-            idx = ix*nz + iz;
-            v2 = v[idx];
-            v2 *= v2;
-            Rox = v2*rtx2;
-            Roz = v2*rtz2;
-            J = idx;
-            K = J - nz;
-            sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
-            K = J - 1;
-            sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Roz);
-            K = J;
-            sf_petsc_aimplfd2_set_mat (aimplfd, J, J, N, 1 + 2*(Rox + Roz));
-            K = J + 1;
-            sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Roz);
-            K = J + nz;
-            sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
+            if (ix < (aimplfd->Npad - 1) || ix > (aimplfd->Nxpad + aimplfd->Npad) ||
+                iz < (aimplfd->Npad - 1) || iz > (aimplfd->Nzpad + aimplfd->Npad)) {
+                J = ix*nz + iz;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, J, N, Val);
+            } else {
+                v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, iz);
+                v2 *= v2;
+                Rox = v2*rtx2;
+                Roz = v2*rtz2;
+                J = ix*nz + iz;
+                K = J - nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Rox);
+                K = J - 1;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Roz);
+                K = J;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, J, N, 1 + 2*(Rox + Roz));
+                K = J + 1;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Roz);
+                K = J + nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Rox);
+            }
         }
     }
     /* Finish matrix assembly */
@@ -156,7 +198,7 @@ void sf_petsc_aimplfd2_add_source (sf_petsc_aimplfd2 aimplfd, float f, int iz, i
 
     ierr = VecAssemblyBegin (aimplfd->Ut1); CHKERR;
     Val = f*0.5*aimplfd->dt*aimplfd->dt;
-    J = aimplfd->Nz*ix + iz;
+    J = aimplfd->Nzpad*(ix + aimplfd->Npad) + iz + aimplfd->Npad;
     ierr = VecSetValue (aimplfd->Ut1, J, Val, ADD_VALUES); CHKERR;
     ierr = VecAssemblyEnd (aimplfd->Ut1); CHKERR;
 }
@@ -171,19 +213,20 @@ void sf_petsc_aimplfd2_get_wavefield (sf_petsc_aimplfd2 aimplfd, float *u)
     Vec Uout;
     VecScatter Uctx;
 
-    ierr = VecScatterCreateToZero (aimplfd->Ut, &Uctx, &Uout); CHKERR;
-    ierr = VecScatterBegin (Uctx, aimplfd->Ut, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
-    nx = aimplfd->Nx;
-    nz = aimplfd->Nz;
-    for (ix = 0; ix < nx; ix++) {
-        for (iz = 0; iz < nz; iz++) {
-            J = ix*nz + iz;
-            i = J;
+    ierr = VecScatterCreateToZero (aimplfd->Ut1, &Uctx, &Uout); CHKERR;
+    ierr = VecScatterBegin (Uctx, aimplfd->Ut1, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
+    nx = aimplfd->Nx + aimplfd->Npad;
+    nz = aimplfd->Nz + aimplfd->Npad;
+    i = 0;
+    for (ix = aimplfd->Npad; ix < nx; ix++) {
+        for (iz = aimplfd->Npad; iz < nz; iz++) {
+            J = ix*aimplfd->Nzpad + iz;
             ierr = VecGetValues (Uout, 1, &J, &Val); CHKERR;
             u[i] = Val;
+            i++;
         }
     }
-    ierr = VecScatterEnd (Uctx, aimplfd->Ut, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
+    ierr = VecScatterEnd (Uctx, aimplfd->Ut1, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
     ierr = VecScatterDestroy (Uctx); CHKERR;
     ierr = VecDestroy (Uout); CHKERR;
 }
@@ -194,9 +237,10 @@ void sf_petsc_aimplfd2_destroy (sf_petsc_aimplfd2 aimplfd)
     PetscErrorCode ierr;
 
     ierr = KSPDestroy (aimplfd->Solver); CHKERR;
+    ierr = MatDestroy (aimplfd->A); CHKERR;
     ierr = VecDestroy (aimplfd->Ut); CHKERR;
     ierr = VecDestroy (aimplfd->Ut1); CHKERR;
-    ierr = VecDestroy (aimplfd->Ut2); CHKERR;
+    ierr = VecDestroy (aimplfd->Ut2); CHKERR;   
 
     free (aimplfd);
 }
