@@ -405,19 +405,19 @@ int main(int argc, char* argv[])
              new[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
          }
  */         
-         new[isz+nbt][isx+nbl] += wav[it];
+      //   new[isz+nbt][isx+nbl] += wav[it];
 
 	 for (iz=0; iz < nzb; iz++) {  
              for (ix=0; ix < nxb; ix++) {
-            //     dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
-            //     new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-                 new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; 
+                 dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
+                 new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
+            //     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; 
              }
          }
  
-    //     new[isz+nb][isx+nb] += wav[it];
-    //     bd_decay(new); 
-    //     bd_decay(dercur); 
+           new[isz+nbt][isx+nbl] += wav[it];
+           bd_decay(new); 
+           bd_decay(dercur); 
                  
 	 for (iz=0; iz < nzb; iz++) {  
              for(ix=0; ix < nxb; ix++) {
