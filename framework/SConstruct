@@ -19,6 +19,8 @@ def py_install(source):
     env.RSF_Pycompile(pyc,py)
     env.Install(libdir,[py,pyc])
 
+Depends('rsfproj.pyc',os.path.join(libdir,'rsfbld.pyc'))
+
 for src in Split('path doc flow proj prog tex book'):
     py_install('rsf' + src)
 py_install('suproj')

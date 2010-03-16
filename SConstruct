@@ -50,7 +50,7 @@ env.Append(BUILDERS={'RSF_Include':configure.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
-# rsfbld is a dependency of rsfproj
+Depends('bldutil.pyc','configure.pyc')
 env.RSF_Pycompile('bldutil.pyc','bldutil.py')
 env.InstallAs(os.path.join(libdir,'rsfbld.pyc'), 'bldutil.pyc')
 
