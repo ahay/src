@@ -52,6 +52,7 @@ env.Append(BUILDERS={'RSF_Include':configure.Header,
 
 Depends('bldutil.pyc','configure.pyc')
 env.RSF_Pycompile('bldutil.pyc','bldutil.py')
+env.InstallAs(os.path.join(libdir,'rsfbld.py'),  'bldutil.py')
 env.InstallAs(os.path.join(libdir,'rsfbld.pyc'), 'bldutil.pyc')
 
 system = filter(lambda x: x[0] != '.', os.listdir('system'))
