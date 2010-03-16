@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil, configure
 import SCons
 
 #############################################################################
@@ -24,7 +24,7 @@ weight
 try: # distribution version
     Import('env root libdir incdir')
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
 
 ##############################################################################
@@ -67,5 +67,3 @@ if root:
 for file in Split('banded eno2 fft file getpar quantile simtab triangle2'):
     test = env.StaticObject('Test' + file + '.c')
     prog = env.Program(file,[test,slib],PROGSUFFIX='.x',PROGPREFIX='Test')
-
-

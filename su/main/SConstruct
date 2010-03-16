@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil
 
 progs = '''
 sinc
@@ -10,7 +10,7 @@ try: # distributed version
     Import('env root libdir bindir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../lib/SConstruct')
 

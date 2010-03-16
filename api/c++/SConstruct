@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append('../..')
-import configure
+import bldutil
 
 sources = Split('rsf cub vai')
 
@@ -8,7 +8,7 @@ try: # distribution version
     Import('env root libdir incdir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../c/SConstruct')
 
@@ -31,6 +31,3 @@ if 'c++' in env.get('API',[]):
     for file in ['getpar','file']:
         test = 'Test' + file + '.cc'
         env.Program(file,[test,lib],PROGSUFFIX='.x',PROGPREFIX='Test')
-
-
-        

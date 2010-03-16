@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil
 
 progs = '''
 add attr cat cconjgrad cdottest cmplx conjgrad cp cut dd disfil
@@ -18,7 +18,7 @@ try: # distributed version
              'stack': 'prod min max',
              'cp':'mv'}
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
 
@@ -73,5 +73,3 @@ if root:
     env.Depends(docs,'#/framework/rsfdoc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
     env.Install(libdir,doc)
-
-

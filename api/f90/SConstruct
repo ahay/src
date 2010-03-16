@@ -1,12 +1,12 @@
 import sys, os
 sys.path.append('../..')
-import configure
+import bldutil
 
 try: # distribution version
     Import('env root libdir incdir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../c/SConstruct')
 

@@ -1,6 +1,6 @@
 import os, sys, string, types
 sys.path.append('../..')
-import configure
+import bldutil
 
 src = 'do  init_  main_ proc_'
 
@@ -8,7 +8,7 @@ try: # distribution version
     Import('env root libdir bindir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../genlib/SConstruct')
     

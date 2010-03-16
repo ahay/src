@@ -1,6 +1,6 @@
 import sys, os, string, re
 sys.path.append('../..')
-import configure
+import bldutil
 
 modules = Split('rsf vplot vfsr')
 
@@ -8,7 +8,7 @@ try: # distribution version
     Import('env root libdir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../plot/lib/SConstruct')
 

@@ -1,6 +1,6 @@
 import os, sys, glob, string
 sys.path.append('../..')
-import configure
+import bldutil
 
 try: # distributed version
     Import('env root incdir')
@@ -8,7 +8,7 @@ try: # distributed version
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.vplot_font')))
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     src = glob.glob('[a-z]*.vplot_font')
 

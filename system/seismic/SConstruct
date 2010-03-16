@@ -1,6 +1,6 @@
 import os, sys, re, string, glob, types
 sys.path.append('../..')
-import configure
+import bldutil, configure
 
 progs = '''
 aastack agmig ai2refl avo cascade c2r cell2 cell3 cgscan cmp2shot
@@ -31,7 +31,7 @@ try:  # distributed version
              'stretch': map(lambda x: x+ 'stretch',
                             Split('log t2 t2cheb lmo nmo rad dat'))}
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')

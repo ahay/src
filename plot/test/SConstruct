@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil
 
 plots = '''
 7ab cmp croshyp csp dc dcretard ellipse francis headray hyplay nmotraj
@@ -11,7 +11,7 @@ try:
 	Import('env root libdir bindir')
 	env = env.Clone()
 except:
-	env = configure.Debug()
+	env = bldutil.Debug()
 	root = None
 	SConscript('../lib/SConstruct')
 

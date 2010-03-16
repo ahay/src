@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil, configure
 
 src = '''
 genarea genhatch geninteract genmarker genmessage genpatarea genpoint
@@ -11,7 +11,7 @@ try: # distribution version
     Import('env root libdir incdir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     incdir = os.path.join(os.environ.get('RSFROOT','/usr'),'include')        
     SConscript('../fonts/SConstruct')

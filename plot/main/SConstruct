@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil
 
 progs = '''
 box contour contour3 dots graph graph3 grey grey3 plas pldb plotrays
@@ -12,7 +12,7 @@ try:
     env = env.Clone()
     alias = {'grey':'byte','grey3':'cubeplot'}
 except:
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../lib/SConstruct')
 

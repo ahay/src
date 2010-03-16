@@ -1,6 +1,6 @@
 import os, sys, re, string, glob, types
 sys.path.append('../..')
-import configure
+import bldutil, configure
 
 progs = '''
 agc aliasp bandpass bin bin1 boxsmooth canny causint clip cmatmult
@@ -20,7 +20,7 @@ try:  # distributed version
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
     alias = {'pow':'tpow'}
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')

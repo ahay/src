@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import configure
+import bldutil, configure
 
 src = '''
 clip dashvec dither dupside error fatvec geth greycorr intersect solve
@@ -11,7 +11,7 @@ try: # distribution version
     Import('env root libdir')
     env = env.Clone()
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../plot/lib/SConstruct')
 
