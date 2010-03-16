@@ -1098,7 +1098,7 @@ void  dummy_proc () { return; }
 void actionDummy( w, ev, p, np)
 Widget w; XEvent *ev; String *p; Cardinal *np; { dummy_proc(); }
 
-void  next_proc(
+static void  next_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
@@ -1106,7 +1106,7 @@ void  next_proc(
 void actionNext(Widget w, XEvent *ev, String *p, Cardinal *np)
 { next_proc(w,NULL,NULL); }
 
-void  prev_proc(
+static void  prev_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
@@ -1114,7 +1114,7 @@ void  prev_proc(
 void actionPrev(Widget w, XEvent *ev, String *p, Cardinal *np)
 { prev_proc(w,NULL,NULL); }
 
-void quit_proc(
+static void quit_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
@@ -1136,7 +1136,7 @@ void actionQuit(Widget w, XEvent *ev, String *p, Cardinal *np)
     
 }
 
-void restart_proc(
+static void restart_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
@@ -1144,7 +1144,7 @@ void restart_proc(
 void actionRestart(Widget w, XEvent *ev, String *p, Cardinal *np)
 { restart_proc(w,NULL,NULL); }
 
-void run_proc(
+static void run_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2
@@ -1152,7 +1152,7 @@ void run_proc(
 void actionRun(Widget w, XEvent *ev, String *p, Cardinal *np)
 { run_proc(w,NULL,NULL); }
 
-void stop_proc(
+static void stop_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
@@ -1163,7 +1163,7 @@ void actionStop(Widget  w, XEvent *ev, String *p, Cardinal *np)
 static Arg rigidArgs[] = { { XtNlabel, (XtArgVal)"Rigid" } };
 static Arg stretchArgs[] = { { XtNlabel, (XtArgVal)"Stretchy" } };
 
-void stretch_proc(
+static void stretch_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2  
@@ -1187,7 +1187,7 @@ void actionStretch(Widget w, XEvent *ev, String *p, Cardinal *np)
 { stretch_proc(w,NULL,NULL); }
 
 /* the timeout proc called in run mode by an application timer */
-void timeout_proc(
+static void timeout_proc(
     XtPointer      x1     /* closure */,
     XtIntervalId*  id1     /* id */
 ){    didTIME = YES; return; }
@@ -1208,7 +1208,7 @@ float delay;
 /* procs to set pause between frames, these are not currently set as
  * button callbacks but they may be used in a translation table 
  */
-void slower_proc(){ 
+static void slower_proc(){ 
    if( fpause==0. ) fpause =.25; 
    else fpause = fpause*2.; 
    if( fpause >=10. ) fpause =9.99;
