@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 
     /* n3 is the number of windows, n2xn1 is the window size */
 
-    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
     
     if (!sf_histint(ma,"n1",&n) || n != 2)
@@ -88,36 +88,27 @@ int main(int argc, char* argv[])
 	sf_floatread(&m2,1,ma2);
 	sf_floatread(&a2,1,ma2);
 	
-	if (m1 < m2)
-	    sf_warning("PP bandwidth less than PS bandwidth at i=%d",i3);
-
 	for (i2=0; i2 < n2; i2++) { /* loop over traces in a window */
 	    sf_complexread(data,n1,in);
 	    if (NULL != in2) sf_complexread(data2,n1,in2);
 	
 	    /* Frequency-domain Gaussian scaling and smoothing */
-	    if (m1 > m2) {
-		for (iw=0; iw < n1; iw++) {
-		    f = iw*d1;
-		    f *= f;
+	    for (iw=0; iw < n1; iw++) {
+		f = iw*d1;
+		f *= f;
+		if (m1 > m2) {
 		    f = (a2*m1)/(a1*m2)*expf(f*(1./m1-1./m2));
 #ifdef SF_HAS_COMPLEX_H
 		    data[iw] *= f;
 #else
 		    data[iw] = sf_crmul(data[iw],f);
 #endif
-		}
-	    } else {
-		for (iw=0; iw < n1; iw++) {
-		    f = iw*d1;
-		    f *= f;
+		} else if (NULL != in2) {
 		    f = (a1*m2)/(a2*m1)*expf(f*(1./m2-1./m1));
 #ifdef SF_HAS_COMPLEX_H
-		    if (NULL != in2) data2[iw] *= f;
-		    data[iw] = 0.; /*/= f+FLT_EPSILON;*/
+		    data2[iw] *= f;
 #else
-		    if (NULL != in2) data2[iw] = sf_crmul(data2[iw],f);
-		    data[iw] = 0.; /*sf_cdiv(data[iw],(f+FLT_EPSILON));*/
+		    data2[iw] = sf_crmul(data2[iw],f);
 #endif
 		}
 	    }
@@ -126,7 +117,7 @@ int main(int argc, char* argv[])
 	    if (NULL != in2) sf_complexwrite(data2,n1,out2);
 	}
     }
-
+    
     exit(0);
 }
 
