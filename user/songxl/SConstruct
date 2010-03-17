@@ -1,6 +1,6 @@
 import os, sys, re, string, glob
 sys.path.append('../..')
-import configure
+import bldutil, configure
 
 progs = '''
 wave1 wave4 wave124 sbd waveab integral rfilter wave2dss wave2domp wavefft waveffte wavefftb
@@ -20,7 +20,7 @@ try:  # distributed version
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')

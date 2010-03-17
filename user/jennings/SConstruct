@@ -1,7 +1,7 @@
 import os, sys, re, string, glob
 srcroot = os.environ.get('RSFSRC', '../..')
 sys.path.append(srcroot)
-import configure
+import bldutil, configure
 
 # C mains
 progs = '''
@@ -23,7 +23,7 @@ try:  # distributed version
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
-    env = configure.Debug()
+    env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
     src = glob.glob('[a-z]*.c')

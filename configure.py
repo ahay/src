@@ -1590,22 +1590,6 @@ def options(file):
 
     return opts
 
-def Debug():
-    'Environment for debugging'
-    env = Environment()
-    srcroot = os.environ.get('RSFSRC', '../..')
-    opts = options(os.path.join(srcroot,'config.py'))
-    opts.Update(env)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
-    if  env['PLATFORM'] == 'sunos':
-        env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-    env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
-    env.SConsignFile(None)
-    env.Append(BUILDERS={'RSF_Include':Header,
-                         'RSF_Place':Place},
-               SCANNERS=[Include])
-    return env
-
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
 def includes(list,file):
