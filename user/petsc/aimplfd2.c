@@ -76,14 +76,13 @@ static float sf_petsc_aimplfd2_get_vel (sf_petsc_aimplfd2 aimplfd, float *v, int
 }
 
 /* Check boundaries and insert a coefficient into the matrix */
-static void sf_petsc_aimplfd2_set_mat (sf_petsc_aimplfd2 aimplfd, Mat A,
-                                       PetscInt J, PetscInt K, PetscInt N, PetscScalar C)
+static void sf_petsc_aimplfd2_set_mat (MPI_Comm comm, Mat A, PetscInt J, PetscInt K, PetscInt N, PetscScalar C)
 {
     PetscErrorCode ierr;
 
     if (J >= 0 && J < N &&
         K >= 0 && K < N) {
-        ierr = MatSetValues (A, 1, &J, 1, &K, &C, INSERT_VALUES); CHKERR;
+        ierr = MatSetValues (A, 1, &J, 1, &K, &C, INSERT_VALUES); SCHKERR;
     }
 }
 
@@ -118,10 +117,11 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     ierr = MatSetSizes (aimplfd->A, PETSC_DECIDE, PETSC_DECIDE,
                         N, N); CHKERR;
     ierr = MatSetType (aimplfd->A, MATMPIAIJ); CHKERR;
+    ierr = MatSetOption (aimplfd->A, MAT_SYMMETRIC, PETSC_TRUE); CHKERR;
     /* Solver type */
     ierr = KSPCreate (aimplfd->comm, &aimplfd->Solver); CHKERR;
     ierr = KSPSetOperators (aimplfd->Solver, aimplfd->A, aimplfd->A, SAME_NONZERO_PATTERN); CHKERR;
-    ierr = KSPSetType (aimplfd->Solver, KSPGMRES); CHKERR;
+    ierr = KSPSetType (aimplfd->Solver, KSPCGS); CHKERR;
     ierr = KSPSetTolerances (aimplfd->Solver, PETSC_DEFAULT, PETSC_DEFAULT,
                              PETSC_DEFAULT, niter); CHKERR;
     /* Solution and r.h.s. vectors */
@@ -139,10 +139,10 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     Val = 1.0;
     for (ix = 0; ix < nx; ix++) {
         for (iz = 0; iz < nz; iz++) {
-            if (ix < (aimplfd->Npad - 1) || ix > (aimplfd->Nxpad + aimplfd->Npad) ||
-                iz < (aimplfd->Npad - 1) || iz > (aimplfd->Nzpad + aimplfd->Npad)) {
+            if (ix < aimplfd->Npad || ix >= (aimplfd->Nx + aimplfd->Npad) ||
+                iz < aimplfd->Npad || iz >= (aimplfd->Nz + aimplfd->Npad)) {
                 J = ix*nz + iz;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, J, N, Val);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, J, N, Val);
             } else {
                 v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, iz);
                 v2 *= v2;
@@ -150,22 +150,24 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
                 Roz = v2*rtz2;
                 J = ix*nz + iz;
                 K = J - nz;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Rox);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
                 K = J - 1;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Roz);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Roz);
                 K = J;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, J, N, 1 + 2*(Rox + Roz));
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, J, N, 1 + 2*(Rox + Roz));
                 K = J + 1;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Roz);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Roz);
                 K = J + nz;
-                sf_petsc_aimplfd2_set_mat (aimplfd, aimplfd->A, J, K, N, -Rox);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
             }
         }
     }
     /* Finish matrix assembly */
     ierr = MatAssemblyEnd (aimplfd->A, MAT_FINAL_ASSEMBLY); CHKERR;
     ierr = MatSetOption (aimplfd->A, MAT_NEW_NONZERO_LOCATION_ERR, PETSC_TRUE); CHKERR;
-
+/*
+    sf_petsc_mat_view (aimplfd->comm, aimplfd->A);
+*/
     return aimplfd;
 }
 
@@ -174,6 +176,7 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 {
     PetscErrorCode ierr;
     PetscScalar Val1, Val2;
+    PetscInt N;
 
     /* R.H.S. */
     Val1 = 2.0;
@@ -183,10 +186,22 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 
     /* Solve the system */
     ierr = KSPSolve (aimplfd->Solver, aimplfd->Ut2, aimplfd->Ut); CHKERR;
-
+    ierr = KSPGetIterationNumber (aimplfd->Solver, &N); CHKERR;
+    PetscFPrintf (MPI_COMM_WORLD, stderr, "Iterations number - %d\n", N);
     /* Move time steps */
     ierr = VecCopy (aimplfd->Ut1, aimplfd->Ut2); CHKERR;
     ierr = VecCopy (aimplfd->Ut, aimplfd->Ut1); CHKERR;
+}
+
+int sf_petsc_aimplfd2_get_niter (sf_petsc_aimplfd2 aimplfd)
+/*< Get number of iterations from the previous solver run. >*/
+{
+    PetscErrorCode ierr;
+    PetscInt N;
+
+    ierr = KSPGetIterationNumber (aimplfd->Solver, &N); CHKERR;
+
+    return N;
 }
 
 void sf_petsc_aimplfd2_add_source_ut1 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
