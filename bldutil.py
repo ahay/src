@@ -29,9 +29,9 @@ def Debug():
         env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env.SConsignFile(None)
-    env.Append(BUILDERS={'RSF_Include':Header,
-                         'RSF_Place':Place},
-               SCANNERS=[Include])
+    env.Append(BUILDERS={'RSF_Include':configure.Header,
+                         'RSF_Place':configure.Place},
+               SCANNERS=[configure.Include])
     return env
 
 ################################################################################
