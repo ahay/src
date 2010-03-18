@@ -19,11 +19,6 @@
 
 import os, rsfprog, sys
 
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
-
 try: # Give precedence to local version
     import ivlad, m8rex
 except: # Use distributed version
@@ -32,16 +27,10 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
-
-    # Parse arguments into a parameter table
-    par = rsf.Par(argv)
+def main(par):
 
     inp = par.string('inp') # input file
     out = par.string('out') # output file
-    if None in (inp, out):
-        rsfprog.selfdoc()
-        return
 
     verb = par.bool('verb', False) # if y, print system commands, outputs
     pclip = par.float('pclip',99)  # percentile clip
@@ -60,12 +49,5 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
+ivlad.run(__name__, main, ['inp','out'])
 
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)

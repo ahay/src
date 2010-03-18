@@ -7,7 +7,7 @@ DESCRIPTION
 SOURCE
 	user/ivlad/ivlad.py
 """
-# Copyright (C) 2007-2010 Ioan Vlad
+# Copyright (C) 2007-2010 Ioan Vlade
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,6 +30,18 @@ try: # Give precedence to local version
 except: # Use distributed version
     import rsfuser.m8rex as m8rex
 
+try:
+    import rsf
+except: # Madagascar's Python API not installed
+    import rsfbak as rsf
+
+try:
+    import subprocess
+    have_subprocess=True
+except: # Python < 2.4
+    have_subprocess=False
+    import commands
+
 # Operating system return codes
 unix_success = 0
 unix_error   = 1
@@ -42,14 +54,34 @@ fmt = {'int':'i', 'float':'f'} # For usage with struct.pack
 # Horizontal ruler (for logs, screen messages):
 hr = 80 * '-'
 
-# Try to avoid old platform-dependent modules that will be deprecated.
-# See http://docs.python.org/dev/lib/module-subprocess.html
-try:
-    import subprocess
-    have_subprocess=True
-except: # Python < 2.4
-    have_subprocess=False
-    import commands
+###############################################################################
+
+def show_man_and_out(condition):
+    'Display self-doc (man page) and exit'
+
+    if condition:
+        rsfprog.selfdoc() # show the man page
+        sys.exit(unix_success)
+
+###############################################################################
+
+def run(nm, main_func, cpar=[]):
+    '''nm must be __name__ . main_func must take a single argument -- par
+       cpar is compulsory parameter list'''
+
+    if nm == '__main__':
+        par = rsf.Par(sys.argv) # Parse arguments into a parameter table
+        show_man_and_out(par.bool('help', False))
+        for p in cpar:
+            q = par.string(p)
+            show_man_and_out(q == None)
+        try:
+            status = main_func(par) # run the program
+        except m8rex.Error, e:
+            msg(True, e.msg)
+            status = unix_error
+
+        sys.exit(status)
 
 ###############################################################################
 
