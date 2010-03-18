@@ -29,7 +29,6 @@ Takes: > plot.vpl
 
 static float screenwide, screenhigh, screenratio;
 static bool transp;
-static const float eps=1.e-20;
 
 #define XOF(Y) (screenwide *       (Y) / screenhigh)
 #define YOF(X) (screenhigh * (1. - (X) / screenwide))
@@ -231,8 +230,15 @@ int main (int argc, char* argv[])
 		}
 	    }
 
+	    if (hi > 0.0 && lo > 0.0) {
+		lo=-hi;
+	    } else if (hi < 0.0 && lo < 0.0) {
+		hi=-lo;
+	    }
+
 	    av = (hi + lo) / 2.;
-	    range = (hi>lo)? 1./(hi-lo): 1./eps;
+	    range = 1./(hi-lo);
+
 	    zerosignal = axis +  tracehigh * (0.-av)*range;
 
 	    vp_bgroup("labels");
