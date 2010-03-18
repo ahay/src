@@ -41,6 +41,13 @@ def convert(infile,outfile):
     else:
         frames = 1
 
+    if frames > 1:
+        import commands
+        which_gifsicle = commands.getoutput('which gifsicle')
+        if which_gifsicle[:18] == 'which: no gifsicle':
+            sys.stderr.write('Missing program: gifsicle\n')
+            sys.exit(1)
+
     xmin = float(stat[7]) - spacing
     xmax = float(stat[9]) + spacing
     xcen = (xmin+xmax)/2.
