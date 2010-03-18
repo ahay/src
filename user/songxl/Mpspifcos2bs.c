@@ -21,8 +21,10 @@
 #include <limits.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include "abcpass.h" 
 #endif
+
+#include "abcpass.h" 
+
 int main(int argc, char* argv[]) 
 {
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, iv, nv, nz, iz, isx, isz, nb, nxb, nzb;

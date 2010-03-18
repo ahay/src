@@ -160,9 +160,9 @@ int main(int argc, char *argv[])
 				    }
 #else
 				    if(NULL != dif) {
-					mm[i2*n1+i1] += sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]);
+					mm[i2*n1+i1] = sf_cadd(mm[i2*n1+i1],sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]));
 				    } else {
-					mm[i2*n1+i1] += sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+					mm[i2*n1+i1] = sf_cadd(mm[i2*n1+i1],sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]));
 				    }
 #endif
 				} else {
@@ -240,9 +240,9 @@ int main(int argc, char *argv[])
 				    }
 #else
 				    if(NULL != dif) {	
-					mm[i2*n1+i1] += sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]);
+					mm[i2*n1+i1] = sf_cadd(mm[i2*n1+i1],sf_cmul(dd[s1*n1+x1],ref[s2*n1+x2]));
 				    } else {
-					mm[i2*n1+i1] += sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]);
+					mm[i2*n1+i1] = sf_cadd(mm[i2*n1+i1],sf_cmul(dd[s1*n1+x1],dd[s2*n1+x2]));
 				    }
 #endif
 				} else {

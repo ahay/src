@@ -28,7 +28,7 @@ void srcsm_init(float dz, float dx/*grid size*/)
 /*< initialization >*/
 {
 
-    float dx2, dz2, R0, rxxz, rxzz, tmp;
+    float dx2, dz2, R0, rxxz, rxzz;
     dx2 = dx*dx;
     dz2 = dz*dz;
     R0 = sqrtf(dx2+dz2);

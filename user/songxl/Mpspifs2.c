@@ -162,7 +162,11 @@ int main(int argc, char* argv[])
          for (iz=0; iz<nz; iz++) {
              for (ix=1; ix<nx; ix+=2) {
                     //curcmp[iz][ix] = (sf_complex) sf_cneg((kiss_fft_cpx)curcmp[iz][ix]);
+#ifdef SF_HAS_COMPLEX_H
                     curcmp[iz][ix] = -1.0*curcmp[iz][ix];
+#else
+		    curcmp[iz][ix] = sf_crmul(curcmp[iz][ix],-1.0);
+#endif
              }
          }
 
@@ -175,7 +179,11 @@ int main(int argc, char* argv[])
          for (iz=1; iz<nz; iz+=2) {
              for (ikx=0; ikx<nkx; ikx++) {
                     //curcmp[iz][ikx] = (sf_complex) sf_cneg((kiss_fft_cpx)curcmp[iz][ikx]);
+#ifdef SF_HAS_COMPLEX_H
                     curcmp[iz][ikx] = -1.0*curcmp[iz][ikx];
+#else
+		    curcmp[iz][ikx] = sf_crmul(curcmp[iz][ikx],-1.0);
+#endif
              }
          }
          for (ikx=0; ikx < nkx; ikx++){
@@ -212,17 +220,25 @@ int main(int argc, char* argv[])
               for (ikx=0; ikx < nkx; ikx++){
              /* Inverse Fourier transform kz to z */
                   kiss_fft_stride(cfgzi,(kiss_fft_cpx *)uktmp[0]+ikx,(kiss_fft_cpx *)ctracez,nkx); 
+#ifdef SF_HAS_COMPLEX_H
                   for (ikz=0; ikz < nkz; ikz++) uktmp[ikz][ikx] = ctracez[ikz]*(ikz%2? -1.0: 1.0); 
+#else
+		  for (ikz=0; ikz < nkz; ikz++) uktmp[ikz][ikx] = sf_crmul(ctracez[ikz],ikz%2? -1.0: 1.0); 
+#endif
 
               }
               for (ikz=0; ikz < nkz; ikz++){
              /* Inverse Fourier transform kx to x */
                   kiss_fft_stride(cfgxi,(kiss_fft_cpx *)uktmp[ikz],(kiss_fft_cpx *)ctracex,1); 
+#ifdef SF_HAS_COMPLEX_H
                   for (ikx=0; ikx < nkx; ikx++) uktmp[ikz][ikx] = ctracex[ikx]*(ikx%2?-1.0:1.0); 
+#else
+		  for (ikx=0; ikx < nkx; ikx++) uktmp[ikz][ikx] = sf_crmul(ctracex[ikx],ikx%2?-1.0:1.0); 
+#endif
               }
 	      for (iz=0; iz < nz; iz++) {  
 	          for (ix=0; ix < nx; ix++) {  
-                      newc[iz][ix]  = creal(uktmp[iz][ix]);
+                      newc[iz][ix]  = crealf(uktmp[iz][ix]);
                       newc[iz][ix] /= nkx * nkz; 
 		      newc[iz][ix] *= weight[iv][iz][ix];
                       new[iz][ix] += newc[iz][ix];
