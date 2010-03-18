@@ -23,12 +23,7 @@ local copy is not present.'''
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from urllib import urlopen
-import os, copy, sys, rsfprog
-
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+import os, copy, sys
 
 try: # Give precedence to local version
     import ivlad
@@ -322,14 +317,7 @@ def inspect_docs(hcp, verb):
 
 ###############################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
-
-    help = par.bool('help', False)
-    if help:
-        rsfprog.selfdoc() # Show the man page
-        return ivlad.unix_success # Consulting the documentation is not an error
+def main(par):
 
     verb = par.bool('verb', False) # verbosity flag
     outdir = par.string('outdir','.')
@@ -364,13 +352,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
-
+ivlad.run(__name__, main)

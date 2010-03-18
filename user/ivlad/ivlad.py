@@ -61,15 +61,19 @@ def show_man_and_out(condition):
 
     if condition:
         rsfprog.selfdoc() # show the man page
-        sys.exit(unix_success)
+        sys.exit(unix_error)
 
 ###############################################################################
 
-def run(nm, main_func, cpar=[]):
+def run(nm, main_func, cpar=[], nminarg=None, nmaxarg=None):
     '''nm must be __name__ . main_func must take a single argument -- par
        cpar is compulsory parameter list'''
 
     if nm == '__main__':
+        if nminarg != None:
+            show_man_and_out(len(sys.argv) < nminarg+1)
+        if nmaxarg != None:
+            show_man_and_out(len(sys.argv) > nmaxarg+1)
         par = rsf.Par(sys.argv) # Parse arguments into a parameter table
         show_man_and_out(par.bool('help', False))
         for p in cpar:

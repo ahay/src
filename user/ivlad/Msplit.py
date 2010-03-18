@@ -25,12 +25,7 @@ be thinner."""
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, rsfprog, commands, math
-
-try:
-    import rsf
-except:
-    import rsfbak as rsf
+import os, sys, math
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -40,16 +35,11 @@ except: # Use distributed version
 
 ################################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
+def main(par):
 
     verb = par.bool('verb', False)
 
     inp = par.string('inp')
-    if inp == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
 
     out_basenm = os.path.basename(inp).rstrip(ivlad.ext) + '_split'
 
@@ -60,7 +50,7 @@ def main(argv=sys.argv):
 
     lastdim = str(ivlad.ndims(inp))
 
-    n = int(commands.getoutput('sfget <' + inp + ' parform=n n' + lastdim))
+    n = int(ivlad.getout('sfget',['parform=n','n'+lastdim], inp))
     ivlad.chk_param_limit(nthick, 'nthick', n, '<')
 
     if not os.path.isdir(outdir):
@@ -78,9 +68,9 @@ def main(argv=sys.argv):
         i_str = ivlad.add_zeros(i,nslices_whole)
         i_slc = os.path.join(outdir, i_str + '_stdout' + ivlad.ext)
 
-        command = '<%s sfwindow f%s=%d ' % (inp, lastdim,f)
-        command += 'n%s=%d %s > %s' % (lastdim, nthick, dpath, i_slc)
-        ivlad.exe(command, verb)
+        cmd = '<%s sfwindow f%s=%d ' % (inp, lastdim,f)
+        cmd += 'n%s=%d %s > %s' % (lastdim, nthick, dpath, i_slc)
+        ivlad.exe(cmd, verb)
 
         f += nthick
 
@@ -90,21 +80,12 @@ def main(argv=sys.argv):
         i_str = ivlad.add_zeros(i+1,nslices_whole)
         i_slc = os.path.join(outdir, i_str + '_stdout' + ivlad.ext)
 
-        command = '<%s sfwindow f%s=%d ' % (inp, lastdim, f)
-        command += 'n%s=%d > %s' % (lastdim, ist, i_slc)
-        ivlad.exe(command, verb)
+        cmd = '<%s sfwindow f%s=%d ' % (inp, lastdim, f)
+        cmd += 'n%s=%d > %s' % (lastdim, ist, i_slc)
+        ivlad.exe(cmd, verb)
 
     return ivlad.unix_success
 
 ##############################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
-
+ivlad.run(__name__, main, ['inp'])

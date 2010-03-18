@@ -21,12 +21,7 @@ become dimension-1 columns in output. Output encoding is native.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import csv, struct, sys, rsfprog, os
-
-try:
-    import rsf
-except:
-    import rsfbak as rsf
+import csv, struct, sys, os
 
 try: # Give precedence to local version
     import ivlad, m8rex, ooio
@@ -37,14 +32,7 @@ except: # Use distributed version
 
 ################################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
-
-    help = par.bool('help', False)
-    if help:
-        rsfprog.selfdoc() # Show the man page
-        return ivlad.unix_success # Consulting the documentation is not an error
+def main(par):
 
     # Input parameters
 
@@ -128,13 +116,4 @@ def main(argv=sys.argv):
 
 ##############################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
-
+ivlad.run(__name__, main)

@@ -21,12 +21,7 @@ along both axes until it is of the specified dimension.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, rsfprog
-
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+import os, sys
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -36,15 +31,10 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
+def main(par):
 
     inp = par.string('inp') # input file
     out = par.string('out') # output file
-    if None in (inp, out):
-        rsfprog.selfdoc()
-        return ivlad.unix_error
 
     verb = par.bool('verb', False) # if y, print system commands, outputs
 
@@ -191,12 +181,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
+ivlad.run(__name__, main, ['inp','out'])

@@ -20,12 +20,7 @@ if they exist'''
 
 # This program is dependent on the output of sfin and sfattr
 
-import sys, os, glob, commands, rsfprog
-
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+import sys, os, glob
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -35,16 +30,11 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
+def main(par):
 
-    par = rsf.Par(argv)
     verb = par.bool('verb', False) # Display headers and binaries being deleted
     mydir = par.string('dir')           # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
-
-    if mydir == None:
-        rsfprog.selfdoc()
-        return ivlad.unix_error
 
     # Clean up headers with existing binaries
 
@@ -60,13 +50,13 @@ def main(argv=sys.argv):
         ivlad.list_valid_rsf_files(mydir, files, chk4nan=False)
 
     for f in valid_files_list:
-        ivlad.msg(f + ': ' + commands.getoutput('sfin info=n ' + f), verb)
+        ivlad.msg(f + ': ' + ivlad.getout('sfin',['info=n',f]), verb)
         ivlad.exe('sfrm ' + f)
 
     # Clean up headers with no binaries
 
     if recursive:
-        hdr_str = commands.getoutput('find %s -type f -name "*.rsf"' % mydir)
+        hdr_str = ivlad.getout('find',[mydir, '-type', 'f', '-name', '"*.rsf"'])
         hdr_list = hdr_str.split('\n')
     else:
         hdr_list = filter(lambda x:os.path.isfile(x),
@@ -80,12 +70,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
+ivlad.run(__name__, main, ['dir'])

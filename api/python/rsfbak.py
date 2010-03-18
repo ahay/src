@@ -22,7 +22,8 @@ Attribute noArrays allows distinguishing between the two modules.
 
 import sys
 from string import lower
-from rsfuser.ivlad import unix_error
+
+unix_error = 1
 
 class Par:
 

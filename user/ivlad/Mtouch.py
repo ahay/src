@@ -23,13 +23,7 @@ find $DATAPATH -type f -mmin +15 -exec rm -f {} \;'''
 
 # This program is dependent on the output of sfin and sfattr
 
-import sys, os, glob, commands
-import rsfprog
-
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+import sys, os, glob
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -38,18 +32,12 @@ except: # Use distributed version
     import rsfuser.m8rex as m8rex
 ###############################################################################
 
-def main(argv=sys.argv):
+def main(par):
 
-    par = rsf.Par(argv)
     verb = par.bool('verb', False)      # Display what is wrong with the dataset
     mydir = par.string('dir','.')       # Directory with files
     recursive = par.bool('rec', False)  # Whether to go down recursively
     chk4nan = par.bool('chk4nan',False) # Check for NaN values. Expensive!!
-
-    help = par.bool('help', False)
-    if help:
-        rsfprog.selfdoc() # Show the man page
-        return ivlad.unix_success # Consulting the documentation is not an error
 
     valid_files_list = []
 
@@ -63,7 +51,7 @@ def main(argv=sys.argv):
         ivlad.list_valid_rsf_files(mydir, files, chk4nan)
 
     for f in valid_files_list:
-        bfile = commands.getoutput('sfin info=n ' + f)
+        bfile = ivlad.getout('sfin',['info=n',f])
         ivlad.msg(f + ': ' + bfile, verb)
         ivlad.exe('touch -c ' + bfile)
 
@@ -71,13 +59,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
-
+ivlad.run(__name__, main)

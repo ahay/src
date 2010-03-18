@@ -20,12 +20,7 @@ Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
 
 # This program is dependent on the output of sfin and sfattr
 
-import os, rsfprog, sys
-
-try:
-    import rsf
-except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+import os, sys
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -35,14 +30,7 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
-
-    par = rsf.Par(argv)
-
-    help = par.bool('help', False)
-    if help:
-        rsfprog.selfdoc() # Show the man page
-        return ivlad.unix_success # Consulting the documentation is not an error
+def main(par):
 
     verb = par.bool('verb', False)      # Display what is wrong with the dataset
     mydir = par.string('dir', '.')      # Directory with files
@@ -72,12 +60,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
+ivlad.run(__name__, main)

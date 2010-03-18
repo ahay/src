@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, rsfprog, sys
+import os, sys
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -50,4 +50,3 @@ def main(par):
 ###############################################################################
 
 ivlad.run(__name__, main, ['inp','out'])
-

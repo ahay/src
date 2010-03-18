@@ -18,7 +18,7 @@ Usage: sfzcp file1.rsf file2.rsf'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import commands, os, sys
+import os, sys
 
 try: # Give precedence to local version
     import ivlad, m8rex
@@ -28,16 +28,12 @@ except: # Use distributed version
 
 ###############################################################################
 
-def main(argv=sys.argv):
+def main(par):
 
-    if len(sys.argv) != 3:
-        ivlad.msg('Usage: sfzcp file1.rsf file2.rsf')
-        return ivlad.unix_error
+    f1 = argv[1] + ' '
+    f2 = argv[2]
 
-    f1 = sys.argv[1] + ' '
-    f2 = sys.argv[2]
-
-    f1_type = commands.getoutput('<' + f1 + 'sfgettype')
+    f1_type = ivlad.getout('sfgettype', stdin=f1)
     if f1_type != 'SF_FLOAT':
         raise m8rex.TypeHandlingNotImplemented(f1_type)
 
@@ -59,13 +55,4 @@ def main(argv=sys.argv):
 
 ###############################################################################
 
-if __name__ == '__main__':
-
-    try:
-        status = main()
-    except m8rex.Error, e:
-        ivlad.msg(True, e.msg)
-        status = ivlad.unix_error
-
-    sys.exit(status)
-
+ivlad.run(__name__, main, nminarg=2, nmaxarg=2)
