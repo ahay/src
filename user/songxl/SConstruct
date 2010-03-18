@@ -1,6 +1,6 @@
 import os, sys, re, string, glob
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 
 progs = '''
 wave1 wave4 wave124 sbd waveab integral rfilter wave2dss wave2domp wavefft waveffte wavefftb
@@ -37,7 +37,7 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    configure.depends(env,sources,'M'+prog)
+    bldutil.depends(env,sources,'M'+prog)
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
@@ -53,5 +53,4 @@ if root:
     env.Depends(docs,'#/framework/rsfdoc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
-
 

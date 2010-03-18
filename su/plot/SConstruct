@@ -1,6 +1,6 @@
 import os, sys, glob, string
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 
 progs = '''
 image
@@ -35,7 +35,7 @@ mains = Split(progs)
 for prog in mains:
     if xinc and xlib:
         sources = ['X' + prog]
-        configure.depends(env,sources,'X'+prog)
+        bldutil.depends(env,sources,'X'+prog)
         main = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
         main = env.RSF_Place('sf'+prog,None,var='XINC and XLIBPATH')

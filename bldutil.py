@@ -18,6 +18,12 @@ else:  # old style
 
 ################################################################################
 
+# Constants
+
+py_success = 0 # user-defined
+
+################################################################################
+
 def Debug():
     'Environment for debugging'
     env = Environment()
@@ -33,6 +39,25 @@ def Debug():
                          'RSF_Place':configure.Place},
                SCANNERS=[configure.Include])
     return env
+
+################################################################################
+
+include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
+
+# find dependencies for C 
+def depends(env,list,file):
+    filename = env.File(file+'.c').abspath
+    # replace last occurence of build/
+    last = filename.rfind('build/')
+    if last >= 0:
+        filename = filename[:last] + filename[last+6:]
+    fd = open(filename,'r')
+    for line in fd.readlines():
+        for inc in include.findall(line):
+            if inc not in list and inc[0] != '_':
+                list.append(inc)
+                depends(env,list,inc)
+    fd.close()
 
 ################################################################################
 
@@ -76,7 +101,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
     mains_c = Split(progs_c)
     for prog in mains_c:
         sources = ['M' + prog]
-        configure.depends(env, sources, 'M'+prog)
+        depends(env, sources, 'M'+prog)
         prog = env.Program(prog, map(lambda x: x + '.c',sources))
         if glob_build:
             env.Install(bindir,prog)
