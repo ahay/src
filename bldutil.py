@@ -81,12 +81,12 @@ def depends90(env,list,file):
 ################################################################################
 
 def chk_exists(prog, ext='c', mainprog=True):
-    return
 
-    prognm = ''
+    ext = ext.lstrip('.') # In case the user put a dot
+
+    prognm = prog + '.' + ext
     if mainprog:
-        prognm += 'M'
-    prognm += prog + '.' + ext
+        prognm = 'M' + prognm
     
     try:
         assert os.path.isfile(prognm)
