@@ -149,9 +149,9 @@ void inverse_mat(double h[3][3], double i[3][3])
 		d += h[l][k]*i[k][j];
 	    }
 	    if (l == j) 
-		assert(fabs(d-1.f) < 1e-16);
+		assert(fabs(d-1.f) < 1e-6);
 	    else
-		assert(fabs(d) < 1e-16);
+		assert(fabs(d) < 1e-6);
 	}	
     }
 
@@ -229,14 +229,19 @@ int main(int argc, char* argv[])
     float t0, t02;
     float * m_mids, *h_halfoffset;
   
-    sf_file in,/*out,*/out_tcrs;
-    //char * out_tcrs_file = 0;
+    sf_file in,/*out,*/out_tcrs, out_tcrs_params;
+    char * out_tcrs_params_file = 0;
     double crs_a0[3], crs_a[3], sum;
+    float params[3];
  
     sf_init(argc,argv);
 
     in = sf_input("in");
     out_tcrs = sf_output("out");
+
+    out_tcrs_params_file = sf_getstring("crsparams");
+    assert(out_tcrs_params_file);
+    out_tcrs_params = sf_output(out_tcrs_params_file); /* "crsparams"); */
 
     /* read input file parameters */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float");
@@ -334,6 +339,9 @@ int main(int argc, char* argv[])
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a, crs_a0, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
+	sf_putint (out_tcrs_params, "n3", 1);
+	sf_putint (out_tcrs_params, "n2", 1);
+	sf_putint (out_tcrs_params, "n1", 3);
 
     /* output colorsc */
     //if (out_tcrs_file) {
@@ -344,6 +352,11 @@ int main(int argc, char* argv[])
 		tcrs[im][ih] = sqrt(dT2crs[im][ih] + t02);
 
        sf_floatwrite(tcrs[0],Nm*Nh,out_tcrs);
+
+       params[0] =  (float)crs_a0[0];
+       params[1] = (float)crs_a0[1];
+       params[2] = (float)crs_a0[2];
+       sf_floatwrite(params, 3, out_tcrs_params);
 
        //}
 
