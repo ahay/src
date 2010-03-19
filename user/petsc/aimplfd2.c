@@ -91,7 +91,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 /*< Initialize implicit F-D object. >*/
 {
     PetscInt J, K, N;
-    int ix, iz;
+    int ix, iz, idx;
     float v2, rtx2, rtz2;
     PetscErrorCode ierr;
     PetscScalar Rox, Roz, Val;
@@ -140,13 +140,13 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     for (ix = 0; ix < nx; ix++) {
         for (iz = 0; iz < nz; iz++) {
 
-
             idx = ix*nz + iz;
 
 	    if (ix == 0 || ix == nx-1 || iz==0 || iz==nz-1) {
 		J = idx;
 		Rox = 1.f;
-		sf_petsc_aimplfd2_set_mat (aimplfd, J, J, N, Rox);
+		//sf_petsc_aimplfd2_set_mat (aimplfd, J, J, N, Rox);
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, J, N, Val);
 	    }
 	    else {
 		v2 = v[idx];
@@ -155,6 +155,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 		Roz = v2*rtz2;
 		J = idx;
 		K = J - nz;
+		/*
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
 		K = J - 1;
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Roz);
@@ -164,19 +165,14 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Roz);
 		K = J + nz;
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
-	    }
-/*
-            if (ix < aimplfd->Npad || ix >= (aimplfd->Nx + aimplfd->Npad) ||
-                iz < aimplfd->Npad || iz >= (aimplfd->Nz + aimplfd->Npad)) {
-                J = ix*nz + iz;
-                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, J, N, Val);
-            } else {
+		
                 v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, iz);
                 v2 *= v2;
                 Rox = v2*rtx2;
                 Roz = v2*rtz2;
                 J = ix*nz + iz;
                 K = J - nz;
+		*/
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
                 K = J - 1;
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Roz);
@@ -187,7 +183,6 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
                 K = J + nz;
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
             }
-*/
         }
     }
     /* Finish matrix assembly */
@@ -204,14 +199,10 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 {
     PetscErrorCode ierr;
     PetscScalar Val1, Val2;
-<<<<<<< .mine
     PetscInt J;
-    int nx, nz, ix, iz;
+    int nx, nz, ix, iz, N;
     //Vec Uout;
     //VecScatter Uctx;
-=======
-    PetscInt N;
->>>>>>> .r5566
 
     /* R.H.S. */
     Val1 = 2.0;
@@ -244,13 +235,8 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
     ierr = VecCopy (aimplfd->Ut, aimplfd->Ut1); CHKERR;
 }
 
-<<<<<<< .mine
-void sf_petsc_aimplfd2_add_source_ut2 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
-/*< Inject source at a specific location. >*/
-=======
 int sf_petsc_aimplfd2_get_niter (sf_petsc_aimplfd2 aimplfd)
 /*< Get number of iterations from the previous solver run. >*/
->>>>>>> .r5566
 {
     PetscErrorCode ierr;
     PetscInt N;
@@ -260,8 +246,8 @@ int sf_petsc_aimplfd2_get_niter (sf_petsc_aimplfd2 aimplfd)
     return N;
 }
 
-void sf_petsc_aimplfd2_add_source_ut1 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
-/*< Inject source at a specific location into t-1 step. >*/
+void sf_petsc_aimplfd2_add_source_ut2 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
+/*< Inject source at a specific location. >*/
 {
     PetscInt J;
     PetscErrorCode ierr;
@@ -275,7 +261,7 @@ void sf_petsc_aimplfd2_add_source_ut1 (sf_petsc_aimplfd2 aimplfd, float f, int i
 }
 
 void sf_petsc_aimplfd2_add_source_ut1 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
-/*< Inject source at a specific location. >*/
+/*< Inject source at a specific location into t-1 step. >*/
 {
     PetscInt J;
     PetscErrorCode ierr;
@@ -288,26 +274,7 @@ void sf_petsc_aimplfd2_add_source_ut1 (sf_petsc_aimplfd2 aimplfd, float f, int i
     ierr = VecAssemblyEnd (aimplfd->Ut1); CHKERR;
 }
 
-<<<<<<< .mine
-
 void sf_petsc_aimplfd2_get_wavefield_ut1 (sf_petsc_aimplfd2 aimplfd, float *u)
-=======
-void sf_petsc_aimplfd2_add_source_ut2 (sf_petsc_aimplfd2 aimplfd, float f, int iz, int ix)
-/*< Inject source at a specific location into t-1 step. >*/
-{
-    PetscInt J;
-    PetscErrorCode ierr;
-    PetscScalar Val;
-
-    ierr = VecAssemblyBegin (aimplfd->Ut2); CHKERR;
-    Val = f*0.5*aimplfd->dt*aimplfd->dt;
-    J = aimplfd->Nzpad*(ix + aimplfd->Npad) + iz + aimplfd->Npad;
-    ierr = VecSetValue (aimplfd->Ut2, J, Val, ADD_VALUES); CHKERR;
-    ierr = VecAssemblyEnd (aimplfd->Ut2); CHKERR;
-}
-
-void sf_petsc_aimplfd2_get_wavefield_ut1 (sf_petsc_aimplfd2 aimplfd, float *u)
->>>>>>> .r5566
 /*< Get wavefield values at the current time step. >*/
 {
     int i, nx, nz, ix, iz;
@@ -317,29 +284,18 @@ void sf_petsc_aimplfd2_get_wavefield_ut1 (sf_petsc_aimplfd2 aimplfd, float *u)
     Vec Uout;
     VecScatter Uctx;
 
-<<<<<<< .mine
     ierr = VecScatterCreateToZero (aimplfd->Ut1, &Uctx, &Uout); CHKERR;
     ierr = VecScatterBegin (Uctx, aimplfd->Ut1, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
     nx = aimplfd->Nx;
     nz = aimplfd->Nz;
     memset(u, (int)0, nx*nz*sizeof(float));
+    
     for (ix = 1; ix < nx-1; ix++) {
         for (iz = 1; iz < nz-1; iz++) {
             J = ix*nz + iz;
             i = J;
-=======
-    ierr = VecScatterCreateToZero (aimplfd->Ut1, &Uctx, &Uout); CHKERR;
-    ierr = VecScatterBegin (Uctx, aimplfd->Ut1, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
-    nx = aimplfd->Nx + aimplfd->Npad;
-    nz = aimplfd->Nz + aimplfd->Npad;
-    i = 0;
-    for (ix = aimplfd->Npad; ix < nx; ix++) {
-        for (iz = aimplfd->Npad; iz < nz; iz++) {
-            J = ix*aimplfd->Nzpad + iz;
->>>>>>> .r5566
             ierr = VecGetValues (Uout, 1, &J, &Val); CHKERR;
             u[i] = Val;
-            i++;
         }
     }
     ierr = VecScatterEnd (Uctx, aimplfd->Ut1, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
@@ -347,36 +303,6 @@ void sf_petsc_aimplfd2_get_wavefield_ut1 (sf_petsc_aimplfd2 aimplfd, float *u)
     ierr = VecDestroy (Uout); CHKERR;
 }
 
-<<<<<<< .mine
-void sf_petsc_aimplfd2_get_wavefield_ut2 (sf_petsc_aimplfd2 aimplfd, float *u)
-/*< Get wavefield values at the current time step. >*/
-{
-    int i, nx, nz, ix, iz;
-    PetscInt J;
-    PetscErrorCode ierr;
-    PetscScalar Val;
-    Vec Uout;
-    VecScatter Uctx;
-
-    ierr = VecScatterCreateToZero (aimplfd->Ut2, &Uctx, &Uout); CHKERR;
-    ierr = VecScatterBegin (Uctx, aimplfd->Ut2, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
-    nx = aimplfd->Nx;
-    nz = aimplfd->Nz;
-    memset(u, (int)0, nx*nz*sizeof(float));
-    for (ix = 1; ix < nx-1; ix++) {
-        for (iz = 1; iz < nz-1; iz++) {
-            J = ix*nz + iz;
-            i = J;
-            ierr = VecGetValues (Uout, 1, &J, &Val); CHKERR;
-            u[i] = Val;
-        }
-    }
-    ierr = VecScatterEnd (Uctx, aimplfd->Ut2, Uout, INSERT_VALUES, SCATTER_FORWARD); CHKERR;
-    ierr = VecScatterDestroy (Uctx); CHKERR;
-    ierr = VecDestroy (Uout); CHKERR;
-}
-
-=======
 void sf_petsc_aimplfd2_get_wavefield_ut2 (sf_petsc_aimplfd2 aimplfd, float *u)
 /*< Get wavefield values at the current time step. >*/
 {
@@ -405,7 +331,7 @@ void sf_petsc_aimplfd2_get_wavefield_ut2 (sf_petsc_aimplfd2 aimplfd, float *u)
     ierr = VecDestroy (Uout); CHKERR;
 }
 
->>>>>>> .r5566
+
 void sf_petsc_aimplfd2_destroy (sf_petsc_aimplfd2 aimplfd)
 /*< Destroy the object. >*/
 {
