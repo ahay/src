@@ -104,8 +104,8 @@ int main(int argc, char* argv[])
 	    r2 = d2 - 2.*rd*a + r2*a*a;
 	    rp2 = dm*dm;
 
-	    if (verb) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
-				 iter,r2,rp2,m,a);
+	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
+					      iter,r2,rp2,m,a);
 
 	    m += dm;
 	    if (r2 < eps || rp2 < eps) break;
