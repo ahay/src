@@ -38,7 +38,7 @@ copyright holder.
 #include <assert.h>
 
 #include "wavefun.h"
-/* #include "stepgeom.h" */
+
 #include "aimplfd2.h"
 #define CFL 0.7
 

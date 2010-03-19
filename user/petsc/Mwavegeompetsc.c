@@ -37,7 +37,6 @@ copyright holder.
 
 #include <rsf.h>
 
-/* #include "stepgeom.h"*/
 #include "wavefun.h"
 #include "aimplfd2.h"
 

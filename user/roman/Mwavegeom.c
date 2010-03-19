@@ -73,7 +73,6 @@ int main(int argc, char ** argv) {
     float two;       /* two */
     int k_scale, num_cfl;
 
-    geomB * arrB = (geomB*)0;
     float *tgt = 0;
 
 

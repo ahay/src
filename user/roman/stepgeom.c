@@ -34,6 +34,7 @@ copyright holder.
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef IWAVE_USE_MPI
 #include <mpi.h>
@@ -203,7 +204,7 @@ void step_forward_g(geomB * arrB,
     int lenB;
     
     geomB *pB;
-    float e, sum, vel, r1, sum_r1, l2, l02, prod; 
+    float e, sum, vel, r1, sum_r1, prod; 
     int ix1, iz1, ix2, iz2, k, ioff1, ioff2;
     int nxnz = nx * nz;
     const float dx2 = dx*dx, dz2 = dz*dz;
@@ -297,8 +298,6 @@ int step_forward_k(float *tgt,
 
     const int 
 	k_nz = k * nz, 
-	k1_nz = (k-1) * nz,
-	k1 = k - 1,
 	kp1 = k + 1;
 
     float
