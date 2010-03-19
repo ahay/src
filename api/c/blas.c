@@ -33,7 +33,7 @@
 /*^*/
 
 double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
-/*< x'y float -> complex >*/
+/*< x'y float -> double >*/
 {
     int i, ix, iy;
     double dot;

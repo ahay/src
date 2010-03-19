@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool adj, inv;
     int dim, i, n[SF_MAX_DIM], it, nt, niter, iter, *m;
     float d[SF_MAX_DIM], *t, *dt, *s, *ds, *t0, tol;
     double err;
@@ -56,11 +57,47 @@ int main(int argc, char* argv[])
     switch (what[0]) {
 	case 's': /* slowness squared */
 	    upgrad_set(upg,t);
-	    upgrad_forw(upg,t,s);
+	    upgrad_forw(upg,t,s); /* s = grad(t)*grad(t) */
+
+	    sf_floatwrite(s,nt,dtime);
+	    break;
+	case 'l': /* linear operator */
+	    if (!sf_getbool("adj",&adj)) adj=false;
+	    /* adjoint flag (for what=linear) */
+	
+	    if (!sf_getbool("inv",&inv)) inv=false;
+	    /* inverse flag (for what=linear) */
+
+	    /* get t0 */
+	    if (NULL == sf_getstring("time"))
+		sf_error("Need time=");
+
+	    time0 = sf_input("time");
+	    t0 = sf_floatalloc(nt);
+	    sf_floatread(t0,nt,time0);
+	    sf_fileclose(time0);
+	    
+//	    if (inv) upgrad_sort(!adj);
+	    upgrad_set(upg,t0);
+	    
+	    if (inv) {
+		if (adj) {
+		    upgrad_inverse(upg,s,t,NULL);
+		} else {
+		    upgrad_solve(upg,t,s,NULL);
+		}
+	    } else {
+		if (adj) {
+		    upgrad_adj(upg,s,t);
+		} else {
+		    upgrad_forw(upg,t,s);
+		}
+	    }
 
 	    sf_floatwrite(s,nt,dtime);
 	    break;
 	case 'i': /* integration */
+	    /* boundary conditions */
 	    if (NULL != sf_getstring("time")) {
 		time0 = sf_input("time");
 		t0 = sf_floatalloc(nt);
@@ -70,12 +107,13 @@ int main(int argc, char* argv[])
 		t0 = NULL;
 	    }
 
+	    /* get s */
 	    slow = sf_input("slow");  /* slowness */
 	    sf_floatread(s,nt,slow);
 	    sf_fileclose(slow);
 
 	    upgrad_set(upg,t);
-	    upgrad_solve(upg,s,t,t0);
+	    upgrad_solve(upg,s,t,t0); /* solve for t */
 	    
 	    sf_floatwrite(t,nt,dtime);
 	    break;

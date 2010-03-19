@@ -86,9 +86,8 @@ int main(int argc, char* argv[])
 	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	    if (msiz < mbuf) mbuf=msiz;
 
-	    for (im=0; im < mbuf; im++) {
-		buf[im] = (float) genrand_real1 ();
-	    }
+	    sf_random(mbuf,buf);
+
 	    sf_floatwrite(buf,mbuf,pip);
 	}
     } 
@@ -148,9 +147,8 @@ int main(int argc, char* argv[])
 	for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 	    if (dsiz < dbuf) dbuf=dsiz;
 
-	    for (id=0; id < dbuf; id++) {
-		buf[id] = (float) genrand_real1 ();
-	    }
+	    sf_random(dbuf,buf);
+
 	    sf_floatwrite(buf,dbuf,pip);
 	}
     } 
@@ -187,6 +185,8 @@ int main(int argc, char* argv[])
 	    if (msiz < mbuf) mbuf=msiz;
 
 	    sf_floatread(buf,mbuf,pip);
+
+
 	    for (im=0; im < mbuf; im++) {
 		dp += buf[im]*genrand_real1 ();
 	    }	

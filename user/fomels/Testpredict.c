@@ -5,7 +5,7 @@
 #include "predict.h"
 
 int main(void) {
-    float dot1[2], dot2[2];
+    double dot1[2], dot2[2];
     static int n1=100, n2=100, rect=3, order=3; 
     int i1, i2;
     float **p;

@@ -5,7 +5,7 @@
 #include "ntriangle1.h"
 
 int main(void) {
-    float dot1[2], dot2[2];
+    double dot1[2], dot2[2];
     int nbox=5, ndat1=50, ndat2=10, ndat, **rect, **shift, i1, i2;
 
     rect = sf_intalloc2(ndat1,ndat2);

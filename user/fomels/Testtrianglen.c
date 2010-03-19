@@ -5,7 +5,7 @@
 #include "trianglen.h"
 
 int main(void) {
-    float dot1[2], dot2[2];
+    double dot1[2], dot2[2];
     int nbox[]={10,5}, ndat[]={50,100}, n12;
 
     trianglen_init(2, nbox, ndat);

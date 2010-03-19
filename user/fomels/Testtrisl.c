@@ -5,7 +5,7 @@
 #include "trisl.h"
 
 int main(void) {
-    float dot1[2], dot2[2];
+    double dot1[2], dot2[2];
     static int n1=100, n2=100, rect1=10, rect2=5; 
 /*    static int n1=7, n2=7, rect1=3, rect2=3; */
     int i1, i2;

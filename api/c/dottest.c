@@ -30,8 +30,8 @@
 void sf_dot_test(sf_operator oper /* linear operator */, 
 		 int nm           /* model size */, 
 		 int nd           /* data size */, 
-		 float* dot1      /* first output */, 
-		 float* dot2      /* second output */) 
+		 double* dot1      /* first output */, 
+		 double* dot2      /* second output */) 
 /*< The dot product test to see if the adjoint is coded correctly.
    In the output dot1[0] shpould be equal to dot1[1] 
    (within machine precision),
@@ -48,16 +48,16 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     sf_random( nd, dat2);
 
     oper(false, false, nm, nd, mod1, dat1);
-    dot1[0] = cblas_sdot( nd, dat1, 1, dat2, 1);
+    dot1[0] = cblas_dsdot( nd, dat1, 1, dat2, 1);
 
     oper(true, false, nm, nd, mod2, dat2);
-    dot1[1] = cblas_sdot( nm, mod1, 1, mod2, 1);
+    dot1[1] = cblas_dsdot( nm, mod1, 1, mod2, 1);
 
     oper(false, true, nm, nd, mod1, dat1);
-    dot2[0] = cblas_sdot( nd, dat1, 1, dat2, 1);
+    dot2[0] = cblas_dsdot( nd, dat1, 1, dat2, 1);
 
     oper(true, true, nm, nd, mod2, dat2);
-    dot2[1] = cblas_sdot( nm, mod1, 1, mod2, 1);
+    dot2[1] = cblas_dsdot( nm, mod1, 1, mod2, 1);
 
     free (mod1);
     free (mod2);

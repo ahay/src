@@ -3,7 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 progs = '''
-kirmig kirmig0
+kirmig kirmig0 drayinte lintest
 '''
 
 try:  # distributed version

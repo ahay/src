@@ -5,7 +5,7 @@
 #include "gauss2.h"
 
 int main(void) {
-    float dot1[2], dot2[2];
+    double dot1[2], dot2[2];
     static int n1=100, n2=100;
     static float f1=10., f2=5.;
 
