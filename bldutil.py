@@ -117,7 +117,8 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
 
     mains_c = Split(progs_c)
     for prog in mains_c:
-        chk_exists(prog)
+        if not glob_build:
+            chk_exists(prog)
         sources = ['M' + prog]
         depends(env, sources, 'M'+prog)
         prog = env.Program(prog, map(lambda x: x + '.c',sources))
@@ -152,7 +153,8 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
                     F90PATH=os.path.join(bldroot,'include'))
 
         for prog in mains_f90:
-            chk_exists(prog, 'f90')
+            if not glob_build:
+                chk_exists(prog, 'f90')
             obj_dep = []
             sources = ['M' + prog]
             depends90(env,sources,'M'+prog)
@@ -192,7 +194,6 @@ def install_py_mains(env, progs_py, bindir):
 
     mains_py = Split(progs_py)
     for prog in mains_py:
-        chk_exists(prog, 'py')
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
 
     # Self-doc
@@ -210,7 +211,6 @@ def install_py_modules(env, py_modules, libdir):
 
     rsfuser = os.path.join(libdir,'rsfuser')
     for module in Split(py_modules):
-        chk_exists(module, 'py', mainprog=False)
         env.RSF_Pycompile(module+'.pyc',module+'.py')
         env.Install(rsfuser,module+'.pyc')
 
