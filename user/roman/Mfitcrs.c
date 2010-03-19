@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     float t0, t02;
     float * m_mids, *h_halfoffset;
   
-    sf_file in,out,out_tcrs = NULL;
+    sf_file in,out,out_tcrs = NULL,out_tcrs_params = NULL;
     char * out_tcrs_file = 0;
     float crs_a0[3], crs_a[3];
  
@@ -241,9 +241,6 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
  
-    //if (!sf_getint("is_rays_only",&is_rays_only)) is_rays_only = 0;
-
-
     /* read input file parameters */
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float");
 
@@ -280,7 +277,7 @@ int main(int argc, char* argv[])
     // t - the times corresponding to 1st local maximum
     
     out_tcrs_file = sf_getstring ("tcrs");
-    
+    out_tcrs_params = sf_output ("out");
     if (out_tcrs_file) {
 	
         out_tcrs = sf_output (out_tcrs_file);
@@ -335,7 +332,12 @@ int main(int argc, char* argv[])
 
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, crs_a0[0], crs_a0[1], crs_a0[2]);
 
-    /* output colorsc */
+
+	sf_floatwrite(crs_a0, 3, out_tcrs_params);
+	sf_putint (out_tcrs_params, "n3", 1);
+	sf_putint (out_tcrs_params, "n2", 1);
+	sf_putint (out_tcrs_params, "n1", 3);
+
     if (out_tcrs_file) {
 	// BUGBUG
 	 //sf_intwrite(t_colors[0][0],nz*nx*na,out_colors);

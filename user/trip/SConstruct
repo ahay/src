@@ -4,6 +4,7 @@ import bldutil
 
 waves = '''
 rtm wave wave24 
+rtmgeom wavegeom
 '''
 other = '''
 vam

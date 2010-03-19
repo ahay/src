@@ -1,4 +1,4 @@
-/* 1-D ubic spline interpolation interface */
+/* 1-D cubic spline interpolation interface */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
