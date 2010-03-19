@@ -100,7 +100,9 @@ int main (int argc, char* argv[]) {
         PetscFPrintf (MPI_COMM_WORLD, stderr, "Timestep #%d, t=%f\n", it, it*dt);
 
         sf_petsc_aimplfd2_next_step (aimplfd);
-        sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix);
+
+        sf_petsc_aimplfd2_add_source_ut2 (aimplfd, f[it], iz, ix);
+        //sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix);
         sf_petsc_aimplfd2_get_wavefield_ut1 (aimplfd, u);
 
         /* Write the solution */
