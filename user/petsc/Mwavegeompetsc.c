@@ -150,7 +150,7 @@ int main(int argc, char ** argv) {
 	
 	/* initialize pressure fields, traces */
 	//fzeros(p0,nxz);
-	fzeros(p1,nxz);
+ 	fzeros(p1,nxz);
 	fzeros(tr,nsam);
 	
 	/* initialize movie frame counter */
@@ -168,7 +168,8 @@ int main(int argc, char ** argv) {
 	    num_cfl = step_forward_k(p0,p1,v,wi.nz,wi.nx,rz,rx,s, k_scale, wi.dt, CFL, wi.dx, wi.dz); 
 	    sf_warning(" %g time |p0|_L1 num_cfl (per) = %g", it*100.f/wi.nt, (float)num_cfl*100.f/(float)(nxz));*/
 	    /* norm1(p0, wi.nz, wi.nx)); */
-	    PetscFPrintf (MPI_COMM_WORLD, stderr, "Timestep #%f, t=%f\n", 100.f*it/wi.nt, it*wi.dt);
+	    if (it %10 == 0)
+		PetscFPrintf (MPI_COMM_WORLD, stderr, "Timestep #%f, t=%f\n", 100.f*it/wi.nt, it*wi.dt);
 
 	    sf_petsc_aimplfd2_next_step (aimplfd);
 	    
