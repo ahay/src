@@ -22,7 +22,6 @@
 void   read4file(char *fname, float **s0, float **sinit, float **s, int nx, int nz)
 {
     FILE *fp;
-    int i;
 
     if((fp=fopen(fname, "rb"))==NULL) {
 	printf("Cannot open file.\n");

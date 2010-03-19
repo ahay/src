@@ -81,6 +81,7 @@ def depends90(env,list,file):
 ################################################################################
 
 def chk_exists(prog, ext='c', mainprog=True):
+    return
 
     prognm = ''
     if mainprog:
