@@ -23,8 +23,6 @@ Attribute noArrays allows distinguishing between the two modules.
 import sys
 from string import lower
 
-unix_error = 1
-
 class Par:
 
     def __init__(self,argv=sys.argv):
@@ -64,7 +62,7 @@ class Par:
         else:
             sys.stderr.write( '\n  Argument %s= not given to %s \n' %
                               (key, self.prog))
-            sys.exit(unix_error)
+            sys.exit(1)
 
     def string(self, key, default=None):
         """Returns string argument given to program"""
@@ -77,7 +75,7 @@ class Par:
         except:
             sys.stderr.write( '\n  Argument %s= to %s must be integer\n' %
                               (key, self.prog))
-            sys.exit(unix_error)
+            sys.exit(1)
 
     def float(self,key,default=None):
         """Returns float argument given to program"""
@@ -86,7 +84,7 @@ class Par:
         except:
             sys.stderr.write( '\n  Argument %s= to %s must be float\n' %
                               (key, self.prog))
-            sys.exit(unix_error)
+            sys.exit(1)
 
     def bool(self,key,default=None):
         """Returns bool argument given to program"""
@@ -100,4 +98,4 @@ class Par:
             msg = ('\n  Argument %s= to %s must be bool (y/n, True/False) \n' %
                    (key, self.prog))
             sys.stderr.write(msg)
-            sys.exit(unix_error)
+            sys.exit(1)
