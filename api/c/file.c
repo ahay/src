@@ -1405,6 +1405,7 @@ FILE *sf_tempfile(char** dataname, const char* mode)
 {
     FILE *tmp;
     char *path;
+    int stemp;
     extern FILE * fdopen (int fd, const char *mode);
     extern int mkstemp (char *template);
     
@@ -1412,7 +1413,11 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     if (NULL == path) path = getdatapath();
     *dataname = sf_charalloc (NAME_MAX+1);
     snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
-    tmp = fdopen(mkstemp(*dataname),mode);
+    
+    stemp = mkstemp(*dataname);
+    if (stemp < 0) sf_error ("%s: cannot create %s:",__FILE__,*dataname);
+
+    tmp = fdopen(stemp,mode);
     if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,*dataname);
     
     return tmp;
