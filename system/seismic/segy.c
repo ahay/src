@@ -628,7 +628,7 @@ void set_segydt(char* bhead, float dt)
     float scale;
 
     /* input in seconds or miliseconds? */
-    scale = (dt > 1.0)? 1000:1000000.;
+    scale = (dt < 1.0)? 1000000.:1000.;
 
     insert2((int) (scale*dt),bhead+SF_SEGY_DT);
 }
