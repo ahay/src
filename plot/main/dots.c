@@ -234,6 +234,9 @@ int main (int argc, char* argv[])
 		lo=-lo;
 	    } else if (hi < 0.0 && lo < 0.0) {
 		hi=-hi;
+	    } else if (hi==0.0) {
+		hi=1.0;
+		lo=-1.0;
 	    }
 
 	    av = (hi + lo) / 2.;
