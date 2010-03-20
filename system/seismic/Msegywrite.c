@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     char *headname=NULL, *filename=NULL, *trace=NULL, count[4], *prog=NULL;
     const char *myheader[] = {"      This dataset was created",
 			      "     with the Madagascar package",
-			      "     http://rsf.sourceforge.net/"};
+			      "     http://www.ahay.org/"};
     sf_file in=NULL, hdr=NULL;
     int format=1, i, ns, nk, nsegy, itr, ntr, *itrace=NULL;
     FILE *head=NULL, *file=NULL;
@@ -70,10 +70,9 @@ int main(int argc, char *argv[])
     }
 
     if (!su) {
-	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
-	/* input text data header file */
-
-	if (NULL != (head = fopen(headname,"r"))) {
+	if (NULL != (headname = sf_getstring("hfile")) &&
+	    NULL != (head = fopen(headname,"r"))) {
+	    /* input text data header file */
 	    if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, head)) 
 		sf_error("Error reading ascii header");
 	    fclose (head);
@@ -93,20 +92,19 @@ int main(int argc, char *argv[])
 	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error writing ebcdic header");
 
-	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
-	/* input binary data header file */
-
-	if (NULL == (head = fopen(headname,"rb"))) {
-	    memset(bhead,0,SF_BNYBYTES);
-	    set_segyformat(bhead,1);
-
-	    if (verbose) sf_warning("Binary header created on the fly");
-	} else {
+	if (NULL != (headname = sf_getstring("bfile")) &&
+	    NULL != (head = fopen(headname,"rb"))) {
+	    /* input binary data header file */
 	    if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, head)) 
 		sf_error("Error reading binary header");
 	    fclose (head);
 
 	    if (verbose) sf_warning("Binary header read from \"%s\"",headname);
+	} else {
+	    memset(bhead,0,SF_BNYBYTES);
+	    set_segyformat(bhead,1);
+
+	    if (verbose) sf_warning("Binary header created on the fly");
 	}
 
 	if (sf_histint(in,"n1",&ns)) set_segyns(bhead,ns);

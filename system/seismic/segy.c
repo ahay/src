@@ -625,7 +625,12 @@ float segydt (const char* bhead)
 void set_segydt(char* bhead, float dt)
 /*< set dt (sampling) in binary header >*/    
 {
-    insert2((int) 1000000.*dt,bhead+SF_SEGY_DT);
+    float scale;
+
+    /* input in seconds or miliseconds? */
+    scale = (dt > 1.0)? 1000:1000000.;
+
+    insert2((int) (scale*dt),bhead+SF_SEGY_DT);
 }
 
 static void float2ibm (float y, char* num)
