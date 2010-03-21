@@ -1,81 +1,81 @@
 /*  Vplot filter for X windows using the X Toolkit (Xt). 
 
- This pen takes all the standard X-toolkit options
- E.g. -geometry 500x400 -font fixed
+    This pen takes all the standard X-toolkit options
+    E.g. -geometry 500x400 -font fixed
 
- The pen has two display modes
+    The pen has two display modes
 
- RUNNING MODE: Runs through all the frames in a loop
- Active buttons are:
-        QUIT : quits the program
-        STOP : enter frame mode
+    RUNNING MODE: Runs through all the frames in a loop
+    Active buttons are:
+    QUIT : quits the program
+    STOP : enter frame mode
 
- FRAME MODE (pause=-1): Pauses after each frame
- Active buttons are:
-        NEXT : next frame
-        PREV : previous frame
-        QUIT : quits the program
-        RESTART : go to the first frame
-        RUN  : enter running mode
-        STRETCHY/RIGID : make plot fill the frame or preserve aspect ratio
-        FORWARDS/BACKWARDS/BOTH-WAYS : change direction of frame flipping
-        Note that a backwards run will only show those frames already plotted
-        It is advisable to run once through all the frames forwards.
+    FRAME MODE (pause=-1): Pauses after each frame
+    Active buttons are:
+    NEXT : next frame
+    PREV : previous frame
+    QUIT : quits the program
+    RESTART : go to the first frame
+    RUN  : enter running mode
+    STRETCHY/RIGID : make plot fill the frame or preserve aspect ratio
+    FORWARDS/BACKWARDS/BOTH-WAYS : change direction of frame flipping
+    Note that a backwards run will only show those frames already plotted
+    It is advisable to run once through all the frames forwards.
 
- The following actions are available for binding to keystrokes;
- xt_quit(): quit program   xt_next(): next frame   xt_prev(): prev frame
- xt_run(): run mode        xt_stop(): frame mode   xt_restart(): first frame
- xt_faster(): reduce pause between frames in run mode
- xt_slower(): increase pause between frames in run mode
- xt_stretchy(): toggle between stretchy and rigid modes
- xt_number(digit): enter a digit in the current number
- xt_reset_number(): reset the current number
- xt_goto_frame(): goto the frame number given by the current number
- xt_print_coord(): Print mouse coords in the file given by interact=
+    The following actions are available for binding to keystrokes;
+    xt_quit(): quit program   xt_next(): next frame   xt_prev(): prev frame
+    xt_run(): run mode        xt_stop(): frame mode   xt_restart(): first frame
+    xt_faster(): reduce pause between frames in run mode
+    xt_slower(): increase pause between frames in run mode
+    xt_stretchy(): toggle between stretchy and rigid modes
+    xt_number(digit): enter a digit in the current number
+    xt_reset_number(): reset the current number
+    xt_goto_frame(): goto the frame number given by the current number
+    xt_print_coord(): Print mouse coords in the file given by interact=
 
- The default key bindings are:
-       <Btn1Down>:            xt_print_coord()  \n\
-       <KeyPress>n:           xt_stop() xt_reset_number() xt_next()  \n\
-       <KeyPress>m:           xt_stop() xt_reset_number() xt_prev()  \n\
-       <KeyPress>r:           xt_run()  \n\
-       <KeyPress>q:           xt_quit()  \n\
-       <KeyPress>.:           xt_stop()  \n\
-       <KeyPress>f:           xt_faster()  \n\
-       <KeyPress>s:           xt_slower()  \n\
-       <KeyPress>t:           xt_stretchy()  \n\
-       <KeyPress>0:           xt_number(0)  \n\
-        ......                  .......
-       <KeyPress>9:           xt_number(9)  \n\
-       <KeyPress>Return:      xt_goto_frame() xt_reset_number()  \n\
-       <KeyPress>Escape:      xt_reset_number()
+    The default key bindings are:
+    <Btn1Down>:            xt_print_coord()  \n\
+    <KeyPress>n:           xt_stop() xt_reset_number() xt_next()  \n\
+    <KeyPress>m:           xt_stop() xt_reset_number() xt_prev()  \n\
+    <KeyPress>r:           xt_run()  \n\
+    <KeyPress>q:           xt_quit()  \n\
+    <KeyPress>.:           xt_stop()  \n\
+    <KeyPress>f:           xt_faster()  \n\
+    <KeyPress>s:           xt_slower()  \n\
+    <KeyPress>t:           xt_stretchy()  \n\
+    <KeyPress>0:           xt_number(0)  \n\
+    ......                  .......
+    <KeyPress>9:           xt_number(9)  \n\
+    <KeyPress>Return:      xt_goto_frame() xt_reset_number()  \n\
+    <KeyPress>Escape:      xt_reset_number()
 
-Here is an example of overriding these in your ~/.Xdefaults file
- this binds the keypad number 1 to skip to the first frame
- xtpen*translations: #override\n\
- <KeyPress>Q:       xt_quit() \n\
- <KeyPress>KP_1:       xt_number(1) xt_goto_frame() xt_reset_number()
+    Here is an example of overriding these in your ~/.Xdefaults file
+    this binds the keypad number 1 to skip to the first frame
+    xtpen*translations: #override\n\
+    <KeyPress>Q:       xt_quit() \n\
+    <KeyPress>KP_1:       xt_number(1) xt_goto_frame() xt_reset_number()
 
- N.B using prev when you are at the first frame takes you to the last
- frame plotted so far; this is not necessarily the last frame!
- You can only jump to a frame if it has already been plotted once.
- If you give an invalid frame number it will jump to the next frame.
+    N.B using prev when you are at the first frame takes you to the last
+    frame plotted so far; this is not necessarily the last frame!
+    You can only jump to a frame if it has already been plotted once.
+    If you give an invalid frame number it will jump to the next frame.
 
-Many parameters may have their defaults set in the Xresource database
-Here are the equivalent names:
-  option name          X-Resource name         Type
-  ===========          ===============         ====
-  stretchy              XTpen.stretchy         Boolean
-  images                XTpen.useImages        Boolean
-  pixmaps               XTpen.usePixmaps       Boolean
-  buttons               XTpen.showButtons      Boolean
-  labels                XTpen.showLabels       Boolean
-  want_text             XTpen.showText         Boolean
-  numcol                XTpen.numCol           int
-  pause                 XTpen.pause            int
+    Many parameters may have their defaults set in the Xresource database
+    Here are the equivalent names:
+    option name          X-Resource name         Type
+    ===========          ===============         ====
+    stretchy              XTpen.stretchy         Boolean
+    images                XTpen.useImages        Boolean
+    pixmaps               XTpen.usePixmaps       Boolean
+    buttons               XTpen.showButtons      Boolean
+    labels                XTpen.showLabels       Boolean
+    want_text             XTpen.showText         Boolean
+    numcol                XTpen.numCol           int
+    pause                 XTpen.pause            int
  
-E.g. If you want xtpen to come up in stretchy mode as a default
-     put this line in your Xdefaults file:
-XTpen.stretchy: True
+    E.g. If you want xtpen to come up in stretchy mode as a default
+    put this line in your Xdefaults file:
+    XTpen.stretchy: True
 */
 
 /*
@@ -286,87 +286,87 @@ AppData app_data;
 #define XtCVisDepth "VisDepth"
 
 static XtResource resources[] = {
-{
-    XtNstretchy,
-    XtCStretchy,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, stretchy ),
-    XtRString,
-    "False",
-},
-{
-    XtNusePixmaps,
-    XtCUsePixmaps,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, pixmaps ),
-    XtRString,
-    "False",
-},
-{
-    XtNuseImages,
-    XtCUseImages,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, images ),
-    XtRString,
-    "True",
-},
-{
-    XtNshowButtons,
-    XtCShowButtons,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, buttons ),
-    XtRString,
-    "True",
-},
-{
-    XtNshowLabels,
-    XtCShowLabels,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, labels ),
-    XtRString,
-    "True",
-},
-{
-    XtNshowText,
-    XtCShowText,
-    XtRBoolean,
-    sizeof(Boolean),
-    XtOffset( AppDataPtr, textpane ),
-    XtRString,
-    "True",
-},
-{
-    XtNnumCol,
-    XtCNumCol,
-    XtRInt,
-    sizeof(int),
-    XtOffset( AppDataPtr, num_col ),
-    XtRString,
-    "0",
-},
-{ 
-    XtNvisDepth,
-    XtCVisDepth,
-    XtRInt,
-    sizeof(int),
-    XtOffset( AppDataPtr, vis_depth ),
-    XtRString,
-    "32",
-},
-{
-    XtNpause,
-    XtCPause,
-    XtRFloat,
-    sizeof(float),
-    XtOffset( AppDataPtr, pause ),
-    XtRString,
-    "0.",
-}
+    {
+	XtNstretchy,
+	XtCStretchy,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, stretchy ),
+	XtRString,
+	"False",
+    },
+    {
+	XtNusePixmaps,
+	XtCUsePixmaps,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, pixmaps ),
+	XtRString,
+	"False",
+    },
+    {
+	XtNuseImages,
+	XtCUseImages,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, images ),
+	XtRString,
+	"True",
+    },
+    {
+	XtNshowButtons,
+	XtCShowButtons,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, buttons ),
+	XtRString,
+	"True",
+    },
+    {
+	XtNshowLabels,
+	XtCShowLabels,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, labels ),
+	XtRString,
+	"True",
+    },
+    {
+	XtNshowText,
+	XtCShowText,
+	XtRBoolean,
+	sizeof(Boolean),
+	XtOffset( AppDataPtr, textpane ),
+	XtRString,
+	"True",
+    },
+    {
+	XtNnumCol,
+	XtCNumCol,
+	XtRInt,
+	sizeof(int),
+	XtOffset( AppDataPtr, num_col ),
+	XtRString,
+	"0",
+    },
+    { 
+	XtNvisDepth,
+	XtCVisDepth,
+	XtRInt,
+	sizeof(int),
+	XtOffset( AppDataPtr, vis_depth ),
+	XtRString,
+	"32",
+    },
+    {
+	XtNpause,
+	XtCPause,
+	XtRFloat,
+	sizeof(float),
+	XtOffset( AppDataPtr, pause ),
+	XtRString,
+	"0.",
+    }
 };
 
 int xt_after_break = 0;
@@ -382,47 +382,32 @@ unsigned long	*pen_colors;
 Colormap	pen_colormap;
 Widget		xtpen, vpane, control_panel, pen_picture; 
 Widget		text_region=(Widget)0;
-XtAppContext	pen_context;
-int		own_colormap;
-int		x_num_col;
-int		num_col_req = 0;
-int		num_col_max = 128;
-int		num_col_min = 16;
-int             xmono = NO;
-int             xtruecol = NO;
-int		screen_depth;
-int		visual_depth;
-long		screen_black, screen_white;
-bool             xt_stretchy;
-bool 		boxy,want_images,greedy_pixmaps,see_progress;
-char 	*message_text;
-int		plotting_started = 0;
+				    XtAppContext	pen_context;
+				    int		own_colormap;
+				    int		x_num_col;
+				    int		num_col_req = 0;
+				    int		num_col_max = 128;
+				    int		num_col_min = 16;
+				    int             xmono = NO;
+				    int             xtruecol = NO;
+				    int		screen_depth;
+				    int		visual_depth;
+				    long		screen_black, screen_white;
+				    bool             xt_stretchy;
+				    bool 		boxy,want_images,greedy_pixmaps,see_progress;
+				    char 	*message_text;
+				    int		plotting_started = 0;
 
-String fallback_resources[] = {
-	"*text.scrollVertical:            whenNeeded",
-	"*text.autoFill:                  True",
-	"*text.Wrap:                      word",
-	"*text.height:                    50",
-	"*Font:                           fixed",
-	"*Foreground:                     black",
-	"*Background:                     white",
-	NULL,
-};
-
-extern void actionNext();
-extern void actionPrev();
-extern void actionQuit();
-extern void actionRun();
-extern void actionStop();
-extern void actionRestart();
-extern void actionStretch();
-extern void actionSlower();
-extern void actionFaster();
-extern void actionNumber();
-extern void actionNumReset();
-extern void actionGoto();
-extern void actionCoord();
-extern void actionRunMode();
+				    String fallback_resources[] = {
+					"*text.scrollVertical:            whenNeeded",
+					"*text.autoFill:                  True",
+					"*text.Wrap:                      word",
+					"*text.height:                    50",
+					"*Font:                           fixed",
+					"*Foreground:                     black",
+					"*Background:                     white",
+					NULL,
+				    };
 
 extern void PenRepaint();
 
@@ -431,7 +416,7 @@ extern void PenRepaint();
 
 /* default translation table for pen_picture widget */
 static char trans[] =
-	"<Expose>:		PenRepaint() \n\
+    "<Expose>:		PenRepaint() \n\
          <ConfigureNotify>:	PenRepaint() \n\
          <Btn1Down>:            xt_print_coord() \n\
          None<KeyPress>n:       xt_stop() xt_reset_number() xt_next() \n\
@@ -456,21 +441,21 @@ static char trans[] =
 	 None<KeyPress>Return:	xt_goto_frame() xt_reset_number()";
 
 static XtActionsRec window_actions[] = {
-	{"PenRepaint",	      PenRepaint},
-	{"xt_quit",           actionQuit},	
-	{"xt_next",           actionNext},	
-	{"xt_stretchy",       actionStretch},	
-	{"xt_prev",           actionPrev},
-        {"xt_run",            actionRun},
-        {"xt_stop",           actionStop},
-        {"xt_restart",        actionRestart},
-	{"xt_faster",         actionFaster},
-	{"xt_slower",         actionSlower},
-	{"xt_number",         actionNumber},
-	{"xt_reset_number",   actionNumReset},
-	{"xt_goto_frame",     actionGoto},
-	{"xt_print_coord",    actionCoord},
-	{"xt_run_mode",       actionRunMode},
+    {"PenRepaint",	      PenRepaint},
+    {"xt_quit",           actionQuit},	
+    {"xt_next",           actionNext},	
+    {"xt_stretchy",       actionStretch},	
+    {"xt_prev",           actionPrev},
+    {"xt_run",            actionRun},
+    {"xt_stop",           actionStop},
+    {"xt_restart",        actionRestart},
+    {"xt_faster",         actionFaster},
+    {"xt_slower",         actionSlower},
+    {"xt_number",         actionNumber},
+    {"xt_reset_number",   actionNumReset},
+    {"xt_goto_frame",     actionGoto},
+    {"xt_print_coord",    actionCoord},
+    {"xt_run_mode",       actionRunMode},
 };
 
 extern int xt_next_num;
@@ -482,9 +467,9 @@ Widget  app;
 {
 
     XtVaGetApplicationResources( app,
-			&app_data,
-			resources, XtNumber( resources ),
-			NULL );
+				 &app_data,
+				 resources, XtNumber( resources ),
+				 NULL );
     return 0;
 
 }
@@ -492,8 +477,8 @@ Widget  app;
 
 typedef union
 {
-  int i;
-  float f;
+    int i;
+    float f;
 } IntFloatUnion;
 
 
@@ -512,31 +497,31 @@ void PopupConfirm(
     XtPointer  x2        /* call_data */ /* callback specific data */
     )
 {
-  float xoff,yoff;
-	int   col,fat,box,point;
-	float size;
-  float x_oval,y_oval;
-	char boxit[128],arrow[129];
+    float xoff,yoff;
+    int   col,fat,box,point;
+    float size;
+    float x_oval,y_oval;
+    char boxit[128],arrow[129];
 	
 
-  sscanf(XawDialogGetValueString(xOffset),"%f",&xoff );
-  sscanf(XawDialogGetValueString(yOffset),"%f",&yoff );
-  sscanf(XawDialogGetValueString(Color),"%d",&col );
-  sscanf(XawDialogGetValueString(Fat),"%d",&fat );
-  sscanf(XawDialogGetValueString(Size),"%f",&size );
-  sscanf(XawDialogGetValueString(Boxit),"%s",boxit );
-  sscanf(XawDialogGetValueString(YOVAL),"%f",&y_oval );
-  sscanf(XawDialogGetValueString(XOVAL),"%f",&x_oval );
-  sscanf(XawDialogGetValueString(POINTER),"%s",arrow );
-	if(boxit[0]=='n') box=0;
-	else box=1;
-	if(arrow[0]=='n') point=0;
-	else point=1;
+    sscanf(XawDialogGetValueString(xOffset),"%f",&xoff );
+    sscanf(XawDialogGetValueString(yOffset),"%f",&yoff );
+    sscanf(XawDialogGetValueString(Color),"%d",&col );
+    sscanf(XawDialogGetValueString(Fat),"%d",&fat );
+    sscanf(XawDialogGetValueString(Size),"%f",&size );
+    sscanf(XawDialogGetValueString(Boxit),"%s",boxit );
+    sscanf(XawDialogGetValueString(YOVAL),"%f",&y_oval );
+    sscanf(XawDialogGetValueString(XOVAL),"%f",&x_oval );
+    sscanf(XawDialogGetValueString(POINTER),"%s",arrow );
+    if(boxit[0]=='n') box=0;
+    else box=1;
+    if(arrow[0]=='n') point=0;
+    else point=1;
 
-  fprintf( outfp,"x0=%f y0=%f label=\"%s\" xt=%f yt=%f lab_fat=%d lab_color=%d boxit=%d size=%f pointer=%d x_oval=%f y_oval=%f \n",vpx,vpy,
-   	   XawDialogGetValueString(PointLabelWidget), xoff, yoff,fat,col,box,size,point,x_oval,y_oval);
-  fflush( outfp );
-  XtPopdown( PopUpWidget );
+    fprintf( outfp,"x0=%f y0=%f label=\"%s\" xt=%f yt=%f lab_fat=%d lab_color=%d boxit=%d size=%f pointer=%d x_oval=%f y_oval=%f \n",vpx,vpy,
+	     XawDialogGetValueString(PointLabelWidget), xoff, yoff,fat,col,box,size,point,x_oval,y_oval);
+    fflush( outfp );
+    XtPopdown( PopUpWidget );
 }
 
 void actionPointPopupConfirm(Widget w, XEvent *event, 
@@ -550,7 +535,7 @@ void PopupCancel(
     XtPointer  x2        /* call_data */ /* callback specific data */
     )
 {
-  XtPopdown( PopUpWidget );
+    XtPopdown( PopUpWidget );
 }
 
 void actionPointPopupCancel(Widget w, XEvent *event, 
@@ -560,16 +545,16 @@ void actionPointPopupCancel(Widget w, XEvent *event,
 static void set_labels(x,y)
 float x,y;
 {
-   Arg arg[1];
-   char text[32];
+    Arg arg[1];
+    char text[32];
 
-   sprintf( text, "%6.2f ", x );
-   XtSetArg( arg[0], XtNlabel, text );
-   XtSetValues( xLabel , arg, ONE );
+    sprintf( text, "%6.2f ", x );
+    XtSetArg( arg[0], XtNlabel, text );
+    XtSetValues( xLabel , arg, ONE );
 
-   sprintf( text, "%6.2f ", y );
-   XtSetArg( arg[0], XtNlabel, text );
-   XtSetValues( yLabel , arg, ONE );
+    sprintf( text, "%6.2f ", y );
+    XtSetArg( arg[0], XtNlabel, text );
+    XtSetValues( yLabel , arg, ONE );
 }
 
 
@@ -577,222 +562,222 @@ void doPointPopup( fp, x, y )
 FILE* fp;
 float x,y;
 {
-  Arg argList[20];
-  int args;
+    Arg argList[20];
+    int args;
   
-  Window root, child;
-  static Widget cancelWidget, confirmWidget;
-  static Widget vpaneWidget, labelBox, offsetBox,otherBox,otherBox2;
+    Window root, child;
+    static Widget cancelWidget, confirmWidget;
+    static Widget vpaneWidget, labelBox, offsetBox,otherBox,otherBox2;
 
-  char xoff_string[32];
-  char yoff_string[32];
-  char text_string[32];
-	char box_string[32];
-	char size_string[32];
-	char color_string[32];
-	char fat_string[32];
-	char pointer_string[32];
-	char xov_string[32];
-	char yov_string[32];
+    char xoff_string[32];
+    char yoff_string[32];
+    char text_string[32];
+    char box_string[32];
+    char size_string[32];
+    char color_string[32];
+    char fat_string[32];
+    char pointer_string[32];
+    char xov_string[32];
+    char yov_string[32];
   
-  static Boolean inited = False;
-  int root_x, root_y, child_x, child_y;
-  unsigned int buttons;
+    static Boolean inited = False;
+    int root_x, root_y, child_x, child_y;
+    unsigned int buttons;
   
-  Dimension width;
-  Dimension height;
-  Dimension px,py,pw,ph;
+    Dimension width;
+    Dimension height;
+    Dimension px,py,pw,ph;
 
-  vpx=x; vpy=y; outfp= fp;
-
-  /*
-   * Find out where the mouse is, so we can put the confirmation
-   * box right there.
-   */
-  XQueryPointer( pen_display,pen_window,
-		&root, &child,
-		&root_x, &root_y, &child_x, &child_y, &buttons);
-  /*
-   * If we need to construct the label box do that,
-   * otherwise just reset the position and callbacks and
-   * put it up again.
-   */
-  if (!inited) {
-    /*
-     * The confirmation box will be a pop-up widget.
-     */
-    args = 0;
-    XtSetArg(argList[args],XtNinput, True); args++;
-    PopUpWidget =
-      XtCreatePopupShell("Point", transientShellWidgetClass,
-			 xtpen, argList, args);
-    
-      args = 0;
-      vpaneWidget = XtCreateWidget("vpane",panedWidgetClass,
-                PopUpWidget,
-                NULL, 0);
+    vpx=x; vpy=y; outfp= fp;
 
     /*
-     * Make a box to put the labels in.
+     * Find out where the mouse is, so we can put the confirmation
+     * box right there.
      */
-
-    labelBox = XtCreateManagedWidget("labelBox", boxWidgetClass,
-				vpaneWidget, NULL, 0);
-
-    xLabel = XtCreateManagedWidget("000.00",labelWidgetClass,labelBox,NULL,0);
-    yLabel = XtCreateManagedWidget("000.00",labelWidgetClass,labelBox,NULL,0);
-
-    offsetBox = XtCreateManagedWidget("offsetBox", boxWidgetClass,
-				vpaneWidget, NULL, 0);
-    
-    /* dialogs for the offsets */
-    args = 0;
-    strcpy(pointer_string, "yes" );
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)pointer_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Do arrow" ); args++;
-    XtSetArg( argList[2], XtNleft, XtChainLeft ); args++;
-    POINTER = XtCreateManagedWidget("dialog1", dialogWidgetClass,
-					       offsetBox, argList, args);
-    args = 0;
-    sprintf( xoff_string, "%4.2f", 1.0 );
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)xoff_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"x-off" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, POINTER); args++;
-    xOffset = XtCreateManagedWidget("dialog1", dialogWidgetClass,
-					       offsetBox, argList, args);
-
-    args = 0;
-    sprintf( yoff_string, "%4.2f", 1.0 );
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)yoff_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"y-off" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, xOffset); args++;
-    yOffset = XtCreateManagedWidget("dialog2", dialogWidgetClass,
-					      offsetBox, argList, args);
-    args = 0;
-    sprintf( xov_string, "%4.2f", 0.0 );
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)xov_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-x" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, yOffset); args++;
-    XOVAL = XtCreateManagedWidget("dialog2", dialogWidgetClass,
-					      offsetBox, argList, args);
-    args = 0;
-    sprintf( yov_string, "%4.2f", 0.0 );
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)yov_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-y" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, XOVAL); args++;
-    YOVAL = XtCreateManagedWidget("dialog2", dialogWidgetClass,
-					      offsetBox, argList, args);
-
-		/*addition features to set */
-    otherBox = XtCreateManagedWidget("otherBox", boxWidgetClass,
-				vpaneWidget, NULL, 0);
-
-    args = 0;
-    sprintf( fat_string, "%3d", 0);
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)fat_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"fat" ); args++;
-    XtSetArg( argList[2], XtNleft, XtChainLeft ); args++;
-    Fat = XtCreateManagedWidget("dialog3", dialogWidgetClass,
-					      otherBox, argList, args);
-
-    args = 0;
-    sprintf( color_string, "%2d", 7);
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)color_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"color" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, Fat); args++;
-    Color = XtCreateManagedWidget("dialog4", dialogWidgetClass,
-					      otherBox, argList, args);
-
-    otherBox2 = XtCreateManagedWidget("otherBox", boxWidgetClass,
-				vpaneWidget, NULL, 0);
-
-    args = 0;
-    sprintf( size_string, "%6.3f", .25);
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)size_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Size" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, Color); args++;
-    Size = XtCreateManagedWidget("dialog5", dialogWidgetClass,
-					      otherBox2, argList, args);
-
-    args = 0;
-    sprintf( box_string, "%s","yes");
-    XtSetArg( argList[0], XtNvalue, (XtArgVal)box_string ); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Box" ); args++;
-    XtSetArg( argList[2], XtNfromHoriz, Size); args++;
-    Boxit = XtCreateManagedWidget("dialog6", dialogWidgetClass,
-					      otherBox2, argList, args);
-
-
-    
+    XQueryPointer( pen_display,pen_window,
+		   &root, &child,
+		   &root_x, &root_y, &child_x, &child_y, &buttons);
     /*
-     * Dialog for the label.
+     * If we need to construct the label box do that,
+     * otherwise just reset the position and callbacks and
+     * put it up again.
      */
+    if (!inited) {
+	/*
+	 * The confirmation box will be a pop-up widget.
+	 */
+	args = 0;
+	XtSetArg(argList[args],XtNinput, True); args++;
+	PopUpWidget =
+	    XtCreatePopupShell("Point", transientShellWidgetClass,
+			       xtpen, argList, args);
+    
+	args = 0;
+	vpaneWidget = XtCreateWidget("vpane",panedWidgetClass,
+				     PopUpWidget,
+				     NULL, 0);
+
+	/*
+	 * Make a box to put the labels in.
+	 */
+
+	labelBox = XtCreateManagedWidget("labelBox", boxWidgetClass,
+					 vpaneWidget, NULL, 0);
+
+	xLabel = XtCreateManagedWidget("000.00",labelWidgetClass,labelBox,NULL,0);
+	yLabel = XtCreateManagedWidget("000.00",labelWidgetClass,labelBox,NULL,0);
+
+	offsetBox = XtCreateManagedWidget("offsetBox", boxWidgetClass,
+					  vpaneWidget, NULL, 0);
+    
+	/* dialogs for the offsets */
+	args = 0;
+	strcpy(pointer_string, "yes" );
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)pointer_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Do arrow" ); args++;
+	XtSetArg( argList[2], XtNleft, XtChainLeft ); args++;
+	POINTER = XtCreateManagedWidget("dialog1", dialogWidgetClass,
+					offsetBox, argList, args);
+	args = 0;
+	sprintf( xoff_string, "%4.2f", 1.0 );
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)xoff_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"x-off" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, POINTER); args++;
+	xOffset = XtCreateManagedWidget("dialog1", dialogWidgetClass,
+					offsetBox, argList, args);
+
+	args = 0;
+	sprintf( yoff_string, "%4.2f", 1.0 );
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)yoff_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"y-off" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, xOffset); args++;
+	yOffset = XtCreateManagedWidget("dialog2", dialogWidgetClass,
+					offsetBox, argList, args);
+	args = 0;
+	sprintf( xov_string, "%4.2f", 0.0 );
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)xov_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-x" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, yOffset); args++;
+	XOVAL = XtCreateManagedWidget("dialog2", dialogWidgetClass,
+				      offsetBox, argList, args);
+	args = 0;
+	sprintf( yov_string, "%4.2f", 0.0 );
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)yov_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-y" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, XOVAL); args++;
+	YOVAL = XtCreateManagedWidget("dialog2", dialogWidgetClass,
+				      offsetBox, argList, args);
+
+	/*addition features to set */
+	otherBox = XtCreateManagedWidget("otherBox", boxWidgetClass,
+					 vpaneWidget, NULL, 0);
+
+	args = 0;
+	sprintf( fat_string, "%3d", 0);
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)fat_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"fat" ); args++;
+	XtSetArg( argList[2], XtNleft, XtChainLeft ); args++;
+	Fat = XtCreateManagedWidget("dialog3", dialogWidgetClass,
+				    otherBox, argList, args);
+
+	args = 0;
+	sprintf( color_string, "%2d", 7);
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)color_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"color" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, Fat); args++;
+	Color = XtCreateManagedWidget("dialog4", dialogWidgetClass,
+				      otherBox, argList, args);
+
+	otherBox2 = XtCreateManagedWidget("otherBox", boxWidgetClass,
+					  vpaneWidget, NULL, 0);
+
+	args = 0;
+	sprintf( size_string, "%6.3f", .25);
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)size_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Size" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, Color); args++;
+	Size = XtCreateManagedWidget("dialog5", dialogWidgetClass,
+				     otherBox2, argList, args);
+
+	args = 0;
+	sprintf( box_string, "%s","yes");
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)box_string ); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Box" ); args++;
+	XtSetArg( argList[2], XtNfromHoriz, Size); args++;
+	Boxit = XtCreateManagedWidget("dialog6", dialogWidgetClass,
+				      otherBox2, argList, args);
+
+
+    
+	/*
+	 * Dialog for the label.
+	 */
+	args = 0;
+	strcpy(text_string,"");
+	XtSetArg( argList[0], XtNvalue, (XtArgVal)text_string); args++;
+	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Label for this point" ); args++;
+	PointLabelWidget = XtCreateManagedWidget("dialog", dialogWidgetClass,
+						 vpaneWidget, argList, args);
+    
+	/*
+	 * Confirmation button.
+	 */
+	confirmWidget = XtCreateManagedWidget("confirm", commandWidgetClass,
+					      PointLabelWidget , NULL, 0);
+	XtAddCallback( confirmWidget ,  XtNcallback, PopupConfirm, NULL );
+    
+	/*
+	 * Cancellation button.
+	 */
+	cancelWidget = XtCreateManagedWidget("cancel", commandWidgetClass,
+					     PointLabelWidget , NULL, 0);
+	XtAddCallback( cancelWidget ,  XtNcallback, PopupCancel, NULL );
+
+	/*
+	 * Let the shell widget know we're here.
+	 */
+	XtManageChild(vpaneWidget);
+	XtRealizeWidget(PopUpWidget);
+	inited = True;
+    }
+
+    set_labels( vpx,vpy);
+  
+    /*
+     * Take some pains to center the popup on the pointer, but be certain
+     * the thing is visible, else they can never exit
+     */
+    args = 0;
+    XtSetArg(argList[args], XtNx, &px); args++;
+    XtSetArg(argList[args], XtNy, &py); args++;
+    XtSetArg(argList[args], XtNwidth, &pw); args++;
+    XtSetArg(argList[args], XtNheight, &ph); args++;
+    XtGetValues(xtpen, argList,args);
+  
+    args = 0;
+    XtSetArg(argList[args], XtNwidth, &width); args++;
+    XtSetArg(argList[args], XtNheight, &height); args++;
+    XtGetValues(PopUpWidget,argList,args);
+  
+    root_x -= (width/2);
+    root_y -= (3*height/4);
+  
+    if ( root_x < 0 ) root_x = 0;
+    if ( root_y < 0 ) root_y = 0;
+  
+    args = 0;
+    XtSetArg(argList[args], XtNx, root_x); args++;
+    XtSetArg(argList[args], XtNy, root_y); args++;
+    XtSetValues(PopUpWidget,argList,args);
+  
+    /* reset the string */
     args = 0;
     strcpy(text_string,"");
     XtSetArg( argList[0], XtNvalue, (XtArgVal)text_string); args++;
-    XtSetArg( argList[1], XtNlabel, (XtArgVal)"Label for this point" ); args++;
-    PointLabelWidget = XtCreateManagedWidget("dialog", dialogWidgetClass,
-					       vpaneWidget, argList, args);
-    
-    /*
-     * Confirmation button.
-     */
-    confirmWidget = XtCreateManagedWidget("confirm", commandWidgetClass,
-					  PointLabelWidget , NULL, 0);
-    XtAddCallback( confirmWidget ,  XtNcallback, PopupConfirm, NULL );
-    
-    /*
-     * Cancellation button.
-     */
-    cancelWidget = XtCreateManagedWidget("cancel", commandWidgetClass,
-					 PointLabelWidget , NULL, 0);
-    XtAddCallback( cancelWidget ,  XtNcallback, PopupCancel, NULL );
-
-    /*
-     * Let the shell widget know we're here.
-     */
-    XtManageChild(vpaneWidget);
-    XtRealizeWidget(PopUpWidget);
-    inited = True;
-  }
-
-  set_labels( vpx,vpy);
+    XtSetValues(PointLabelWidget, argList, args);
   
-  /*
-   * Take some pains to center the popup on the pointer, but be certain
-   * the thing is visible, else they can never exit
-   */
-  args = 0;
-  XtSetArg(argList[args], XtNx, &px); args++;
-  XtSetArg(argList[args], XtNy, &py); args++;
-  XtSetArg(argList[args], XtNwidth, &pw); args++;
-  XtSetArg(argList[args], XtNheight, &ph); args++;
-  XtGetValues(xtpen, argList,args);
-  
-  args = 0;
-  XtSetArg(argList[args], XtNwidth, &width); args++;
-  XtSetArg(argList[args], XtNheight, &height); args++;
-  XtGetValues(PopUpWidget,argList,args);
-  
-  root_x -= (width/2);
-  root_y -= (3*height/4);
-  
-  if ( root_x < 0 ) root_x = 0;
-  if ( root_y < 0 ) root_y = 0;
-  
-  args = 0;
-  XtSetArg(argList[args], XtNx, root_x); args++;
-  XtSetArg(argList[args], XtNy, root_y); args++;
-  XtSetValues(PopUpWidget,argList,args);
-  
-  /* reset the string */
-  args = 0;
-  strcpy(text_string,"");
-  XtSetArg( argList[0], XtNvalue, (XtArgVal)text_string); args++;
-  XtSetValues(PointLabelWidget, argList, args);
-  
-  /* pop it up */
-  XtPopup(PopUpWidget, XtGrabExclusive);
+    /* pop it up */
+    XtPopup(PopUpWidget, XtGrabExclusive);
 }
 
 #define MAXVERT 1000
@@ -822,51 +807,51 @@ void xtattributes (int command, int v, int v1, int v2, int v3)
 
     switch (command)
     {
-    case SET_COLOR:
-	xt_set_color( v );
-	break;
+	case SET_COLOR:
+	    xt_set_color( v );
+	    break;
 
-    case SET_COLOR_TABLE:
-        xt_set_color_table( v, v1, v2, v3 );
-	break;
+	case SET_COLOR_TABLE:
+	    xt_set_color_table( v, v1, v2, v3 );
+	    break;
 
-    case SET_WINDOW:
+	case SET_WINDOW:
 
-	clip_rect.x = XCORD( v  );
-	clip_rect.y = YCORD( v3 );
-	clip_rect.width = XCORD( v2 ) - XCORD( v ) + 1;
-	clip_rect.height = YCORD( v1 ) - YCORD( v3 ) + 1;
-	clip_xorigin = XCORD(dev.xmin); clip_yorigin =  YCORD(dev.ymax);
-	XSetClipRectangles( pen_display, pen_gc, clip_xorigin, clip_yorigin,
-			 &clip_rect, 1, Unsorted );
-	break;
+	    clip_rect.x = XCORD( v  );
+	    clip_rect.y = YCORD( v3 );
+	    clip_rect.width = XCORD( v2 ) - XCORD( v ) + 1;
+	    clip_rect.height = YCORD( v1 ) - YCORD( v3 ) + 1;
+	    clip_xorigin = XCORD(dev.xmin); clip_yorigin =  YCORD(dev.ymax);
+	    XSetClipRectangles( pen_display, pen_gc, clip_xorigin, clip_yorigin,
+				&clip_rect, 1, Unsorted );
+	    break;
 	
-    case BEGIN_GROUP:
-	break;
-    case END_GROUP:
-	if( v == 0 ) {
-	    /* add the group name to the message window (if it exists ) */
-            /*   addText( group_name );*/
-            /*   addText( "\n" );*/
-	    switch( v1 ) {
-		case UNSPECIFIED_EGROUP:
-		case USER_EGROUP:
-		case ERASE_EGROUP:
-		case EOF_ERASE_EGROUP:
-		    xt_endframe = YES;
-		    break;
-		case BREAK_EGROUP:
-		    xt_after_break = 1;
-		    xt_endframe = YES;
-		    break;
-		case IGNORE_EGROUP:
-		case EOF_IGNORE_EGROUP:
-		    xt_endframe = NO; /* eof but not the end of a frame */
-		    break;
+	case BEGIN_GROUP:
+	    break;
+	case END_GROUP:
+	    if( v == 0 ) {
+		/* add the group name to the message window (if it exists ) */
+		/*   addText( group_name );*/
+		/*   addText( "\n" );*/
+		switch( v1 ) {
+		    case UNSPECIFIED_EGROUP:
+		    case USER_EGROUP:
+		    case ERASE_EGROUP:
+		    case EOF_ERASE_EGROUP:
+			xt_endframe = YES;
+			break;
+		    case BREAK_EGROUP:
+			xt_after_break = 1;
+			xt_endframe = YES;
+			break;
+		    case IGNORE_EGROUP:
+		    case EOF_IGNORE_EGROUP:
+			xt_endframe = NO; /* eof but not the end of a frame */
+			break;
+		}
 	    }
-	}
 		
-	break;
+	    break;
     }
 }
 
@@ -875,24 +860,24 @@ void xtclose (int status)
 {
     switch (status)
     {
-    case CLOSE_PAUSE:
-	break;
+	case CLOSE_PAUSE:
+	    break;
 
-    case CLOSE_NORMAL:
-    case CLOSE_ERROR:
-    case CLOSE_INTERRUPT:
-	xt_clear_images(frame_list);
-	remove_pixmap();
-	break;
+	case CLOSE_NORMAL:
+	case CLOSE_ERROR:
+	case CLOSE_INTERRUPT:
+	    xt_clear_images(frame_list);
+	    remove_pixmap();
+	    break;
 
-    case CLOSE_FLUSH:
-	/*horrible hack to skip the first two flushes after erase */
-	if( xt_after_erase ){
-	    xt_after_erase--;
-	}else{
-            xt_flush_display(); 
-	}
-	break;
+	case CLOSE_FLUSH:
+	    /*horrible hack to skip the first two flushes after erase */
+	    if( xt_after_erase ){
+		xt_after_erase--;
+	    }else{
+		xt_flush_display(); 
+	    }
+	    break;
     }
 }
 
@@ -927,40 +912,40 @@ int mincol,maxcol;
     int i;
     unsigned long planeMask;
 
-   for(i=0; i < SEP_MAP_SIZE; i++) map[i]=U0_SEP;
+    for(i=0; i < SEP_MAP_SIZE; i++) map[i]=U0_SEP;
 
 
     /* try to allocate these cells in the current colormap */
     ncol = maxcol;
     colormap = pen_colormap;
     do {
-      sucess = XAllocColorCells(pen_display,colormap,
-			0,&planeMask, 0,map,ncol ) ;
-      if( !sucess ) ncol = ncol/2;
+	sucess = XAllocColorCells(pen_display,colormap,
+				  0,&planeMask, 0,map,ncol ) ;
+	if( !sucess ) ncol = ncol/2;
 
     } while( !sucess && ncol >=mincol );
 
 
     if( ! sucess ){
         /*-- It didn't work so ... construct our own XColormap 
-	     We copy the old one so that  we still get black and pwhite
-	     defined OK --*/
-          ERR( COMMENT,name,"allocated new colormap");
-	  colormap = XCopyColormapAndFree( pen_display,pen_colormap);
-         /* try to allocate these cells in the current colormap */
-         ncol = maxcol;
-         do{
-           sucess = XAllocColorCells(pen_display,colormap,
-			0,&planeMask, 0,map,ncol ) ;
-           if( !sucess ) ncol = ncol/2;
+	  We copy the old one so that  we still get black and pwhite
+	  defined OK --*/
+	ERR( COMMENT,name,"allocated new colormap");
+	colormap = XCopyColormapAndFree( pen_display,pen_colormap);
+	/* try to allocate these cells in the current colormap */
+	ncol = maxcol;
+	do{
+	    sucess = XAllocColorCells(pen_display,colormap,
+				      0,&planeMask, 0,map,ncol ) ;
+	    if( !sucess ) ncol = ncol/2;
 
-         } while( !sucess && ncol >=mincol );
+	} while( !sucess && ncol >=mincol );
     }
 
 
     if( !sucess ) 
-      ERR( FATAL,name,
-	  "unable to obtain minimum number of cells in any colormap");
+	ERR( FATAL,name,
+	     "unable to obtain minimum number of cells in any colormap");
   
     pen_colormap = colormap; 
     return ncol; 
@@ -970,16 +955,16 @@ int mincol,maxcol;
 void xt_set_color(int col )
 /*< set color >*/
 {
-   if (mono) {
-       if (col){
-   	color = map[1];
-       }else{
-	   color = map[0];
-       }
-   }else{
-	   color = map[col];
-   }
-   XSetForeground(pen_display, pen_gc, color);
+    if (mono) {
+	if (col){
+	    color = map[1];
+	}else{
+	    color = map[0];
+	}
+    }else{
+	color = map[col];
+    }
+    XSetForeground(pen_display, pen_gc, color);
 }
 
 void xt_set_color_table(int col, int ired, int igreen, int iblue )
@@ -995,7 +980,7 @@ void xt_set_color_table(int col, int ired, int igreen, int iblue )
 
     /* put the color in the colormap, we specify the pixel value from the
        values in the table "map".
-     */
+    */
     
     pen_color.red = red[col] << 8;
     pen_color.green = green[col] << 8;
@@ -1004,8 +989,8 @@ void xt_set_color_table(int col, int ired, int igreen, int iblue )
 
     if( xtruecol ) {
 	/* True-Color we get told the pixel */
-	 XAllocColor(pen_display,pen_colormap,&pen_color);
-	 map[col] = pen_color.pixel;
+	XAllocColor(pen_display,pen_colormap,&pen_color);
+	map[col] = pen_color.pixel;
 	
     }else{
 	/* Pesudo-Color we suppy the pixel */
@@ -1020,27 +1005,27 @@ void xt_set_color_table(int col, int ired, int igreen, int iblue )
 
 /* save the current colormap in the structure associated with this frame */
 void xt_save_colormap( frame )
- xtFrame *frame;
+xtFrame *frame;
 {
-int i;
+    int i;
 
     if( mono ) return;
 
     for( i=0; i < dev.num_col ; i++ ){
-     frame->cmap.map[i] = map[i];
-     frame->cmap.red[i] = red[i];
-     frame->cmap.green[i] = green[i];
-     frame->cmap.blue[i] = blue[i];
+	frame->cmap.map[i] = map[i];
+	frame->cmap.red[i] = red[i];
+	frame->cmap.green[i] = green[i];
+	frame->cmap.blue[i] = blue[i];
     }
 
 }
 
 /* restore the saved  current colormap from this frame */
 void xt_restore_colormap( frame )
- xtFrame *frame;
+xtFrame *frame;
 {
-XColor*           pen_color;
-int i;
+    XColor*           pen_color;
+    int i;
 
     if( mono ) return;
 
@@ -1052,16 +1037,16 @@ int i;
         green[i] = frame->cmap.green[i];
         blue[i] = frame->cmap.blue[i];
 	if( ! xtruecol ) {
-           pen_color[i].red = frame->cmap.red[i] << 8;
-           pen_color[i].green = frame->cmap.green[i] << 8;
-           pen_color[i].blue = frame->cmap.blue[i] << 8;
-           pen_color[i].pixel = frame->cmap.map[i];
-           pen_color[i].flags = DoRed | DoGreen | DoBlue;
+	    pen_color[i].red = frame->cmap.red[i] << 8;
+	    pen_color[i].green = frame->cmap.green[i] << 8;
+	    pen_color[i].blue = frame->cmap.blue[i] << 8;
+	    pen_color[i].pixel = frame->cmap.map[i];
+	    pen_color[i].flags = DoRed | DoGreen | DoBlue;
 	}
     }
 
     if( ! xtruecol ) {
-       XStoreColors(pen_display,pen_colormap,pen_color, dev.num_col);
+	XStoreColors(pen_display,pen_colormap,pen_color, dev.num_col);
     }
 	
     XSetWindowBackground( pen_display, pen_window, map[0]);
@@ -1093,17 +1078,20 @@ static int didFRAM1 = NO,  didRUN = NO, didSTOP=NO , didCHANGE = NO;
 static int next_on=NO ,prev_on=NO ,quit_on=NO ,restart_on=NO ;
 static int run_on=NO , stop_on=NO, size_on=NO;
 
+static void  dummy_proc () { return; }
 
-void  dummy_proc () { return; }
-void actionDummy( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { dummy_proc(); }
+void actionDummy(Widget w, XEvent ev, String *p, Cardinal *np)
+/*< dummy >*/
+{ dummy_proc(); }
 
 static void  next_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
     ){  if( next_on == YES ) didNEXT = YES;    return; }
+
 void actionNext(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< next >*/
 { next_proc(w,NULL,NULL); }
 
 static void  prev_proc(
@@ -1111,7 +1099,9 @@ static void  prev_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
     ){  if( prev_on==YES ) didPREV = YES;    return; }
+
 void actionPrev(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< prev >*/
 { prev_proc(w,NULL,NULL); }
 
 static void quit_proc(
@@ -1119,7 +1109,9 @@ static void quit_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
     ){  if( quit_on == YES ) didQUIT = YES;    return; }
+
 void actionQuit(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< quit >*/
 {
     if( interact[0] != '\0' ) {
 	if (first_time == YES){
@@ -1141,7 +1133,9 @@ static void restart_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
     ){  if( restart_on == YES) didFRAM1 = YES;    return; }
+
 void actionRestart(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< restart >*/
 { restart_proc(w,NULL,NULL); }
 
 static void run_proc(
@@ -1149,7 +1143,9 @@ static void run_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2
     ){  if( run_on == YES ) didRUN = YES;    return; }
+
 void actionRun(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< run >*/
 { run_proc(w,NULL,NULL); }
 
 static void stop_proc(
@@ -1157,7 +1153,9 @@ static void stop_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2        
     ){  if( stop_on == YES ) didSTOP = YES;    return; }
+
 void actionStop(Widget  w, XEvent *ev, String *p, Cardinal *np)
+/*< stop >*/
 { stop_proc(w,NULL,NULL); }
 
 static Arg rigidArgs[] = { { XtNlabel, (XtArgVal)"Rigid" } };
@@ -1167,7 +1165,7 @@ static void stretch_proc(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2  
-){ 
+    ){ 
     xt_stretchy = !xt_stretchy;  /* toggle the "stretchy" attribute */
 
     if( wantButtons ){
@@ -1183,58 +1181,60 @@ static void stretch_proc(
     }
     didCHANGE = YES; return; 
 }
+
 void actionStretch(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< stretch >*/
 { stretch_proc(w,NULL,NULL); }
 
 /* the timeout proc called in run mode by an application timer */
 static void timeout_proc(
     XtPointer      x1     /* closure */,
     XtIntervalId*  id1     /* id */
-){    didTIME = YES; return; }
+    ){    didTIME = YES; return; }
 
-void set_delay_label(delay)
-float delay;
+static void set_delay_label(float delay)
 { 
-   Arg arg[1];
-   char text[32];
+    Arg arg[1];
+    char text[32];
 
-   if( wantLabels ){
-      sprintf( text, "delay %4.2f ", delay );
-      XtSetArg( arg[0], XtNlabel, text );
-      XtSetValues( delay_label , arg, ONE );
-   }
+    if( wantLabels ){
+	sprintf( text, "delay %4.2f ", delay );
+	XtSetArg( arg[0], XtNlabel, text );
+	XtSetValues( delay_label , arg, ONE );
+    }
 }
 
 /* procs to set pause between frames, these are not currently set as
  * button callbacks but they may be used in a translation table 
  */
 static void slower_proc(){ 
-   if( fpause==0. ) fpause =.25; 
-   else fpause = fpause*2.; 
-   if( fpause >=10. ) fpause =9.99;
+    if( fpause==0. ) fpause =.25; 
+    else fpause = fpause*2.; 
+    if( fpause >=10. ) fpause =9.99;
 
-   set_delay_label(fpause);
+    set_delay_label(fpause);
 }
-void actionSlower( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { slower_proc(); }
 
-void faster_proc(){ 
-   fpause = fpause/2.; 
-   if( fpause < .05 ) fpause =0.05;
-   set_delay_label(fpause);
+void actionSlower(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< slower >*/
+{ slower_proc(); }
+
+void faster_proc(void)
+{ 
+    fpause = fpause/2.; 
+    if( fpause < .05 ) fpause =0.05;
+    set_delay_label(fpause);
 }
-void actionFaster( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { faster_proc(); }
 
+void actionFaster(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< faster >*/
+{ faster_proc(); }
 
 /* the number that is updated by user keystrokes */
 static int inputNumber=0;
 
-void actionNumber( w, event, params, num_params)
-Widget w;
-XEvent *event;
-String *params;
-Cardinal *num_params;
+void actionNumber(Widget w, XEvent *event, String *params, Cardinal *num_params)
+/*< number >*/
 {
 
     if( params && *params){
@@ -1252,20 +1252,25 @@ Cardinal *num_params;
 /* this is the global variable that is examained to see what the user typed */
 int xt_next_num = -1;
 
-void numberReset(){
+static void numberReset(void)
+{
     inputNumber = -1;
 }
-void actionNumReset( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { numberReset(); }
 
+void actionNumReset(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< numreset >*/
+{ numberReset(); }
 
 /* set next frame number to the users number and then do a next frame */
-void gotoFrame(){
+static void gotoFrame(void)
+{
     xt_next_num = inputNumber ;
     if( next_on == YES ) didNEXT = YES;    return;
 }
-void actionGoto( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { gotoFrame(); }
+
+void actionGoto(Widget w, XEvent *ev, String *p, Cardinal *np)
+/*< goto >*/
+{ gotoFrame(); }
 
 
 /* toggle run mode between Forward, Backward, Both-ways */
@@ -1274,14 +1279,14 @@ Widget w; XEvent *ev; String *p; Cardinal *np; { gotoFrame(); }
 void set_mode_label(newlab)
 char* newlab;
 { 
-   Arg arg[1];
-   char text[32];
+    Arg arg[1];
+    char text[32];
 
-   if( wantLabels ){
-      strncpy( text, newlab, 32 );
-      XtSetArg( arg[0], XtNlabel, text );
-      XtSetValues( mode_button , arg, ONE );
-   }
+    if( wantLabels ){
+	strncpy( text, newlab, 32 );
+	XtSetArg( arg[0], XtNlabel, text );
+	XtSetValues( mode_button , arg, ONE );
+    }
 }
 /* this is the global variable that controls run mode */
 /* the enumeration is defined in xtpen.h */
@@ -1291,71 +1296,67 @@ void toggle_run_mode(
     Widget     w         /* widget */,
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2  
-){
-  switch( xt_run_mode ) {
-    case XT_FORWARD:
-        xt_run_mode = XT_BACKWARD;
-	set_mode_label("Backwards");
-	break;
-    case XT_BACKWARD:
-        xt_run_mode = XT_BOTH_WAYS;
-	set_mode_label("Both Ways");
-	break;
-    case XT_BOTH_WAYS:
-        xt_run_mode = XT_FORWARD;
-	set_mode_label("Forwards ");
-	break;
-  }
+    ){
+    switch( xt_run_mode ) {
+	case XT_FORWARD:
+	    xt_run_mode = XT_BACKWARD;
+	    set_mode_label("Backwards");
+	    break;
+	case XT_BACKWARD:
+	    xt_run_mode = XT_BOTH_WAYS;
+	    set_mode_label("Both Ways");
+	    break;
+	case XT_BOTH_WAYS:
+	    xt_run_mode = XT_FORWARD;
+	    set_mode_label("Forwards ");
+	    break;
+    }
 	    
 }
+
 void actionRunMode(Widget  w, XEvent *ev, String *p, Cardinal *np)
+/*< runmode >*/
 { toggle_run_mode(w,NULL,NULL); }
 
-
-void set_frame_label(frame_num)
-int frame_num;
+static void set_frame_label(int frame_num)
 { 
-   Arg arg[1];
-   char text[10];
+    Arg arg[1];
+    char text[10];
 
-   if( wantLabels ){
-       sprintf( text, " %3d ", frame_num );
-       XtSetArg( arg[0], XtNlabel, text );
-       XtSetValues( frame_label , arg, ONE );
-   }
+    if( wantLabels ){
+	sprintf( text, " %3d ", frame_num );
+	XtSetArg( arg[0], XtNlabel, text );
+	XtSetValues( frame_label , arg, ONE );
+    }
 }
 
-/* this action procedure prints the event location to the file "interact" */
-void actionCoord(w,event,params,numparams)
-Widget w;
-XEvent *event;
-String *params;
-Cardinal *numparams;
+void actionCoord(Widget w,XEvent *event,String *params,Cardinal *numparams)
+/*< this action procedure prints the event location to the file "interact" >*/
 {
-int x,y;
+    int x,y;
 
-   if( interact[0] == '\0' ) return;
+    if( interact[0] == '\0' ) return;
 
-   if (first_time == YES){
+    if (first_time == YES){
         outfp = fopen (interact, "w");
         if (outfp == NULL) {
             ERR (FATAL, name, "Can't open interact output file %s!", interact);
         }
         first_time = NO;
-   }
+    }
 
-   if( event->type == ButtonPress ){
-       x = XCORD (event->xbutton.x);
-       y = YCORD (event->xbutton.y);
-       devtovpxy ( x, y, &x, &y );
-       if( boxy ){
-           doPointPopup( outfp, (float) x/RPERIN, (float) y/RPERIN );
-       }else{
-           fprintf( outfp,"%f\t%f\n",(float) x/RPERIN,(float) y/RPERIN );
-           fflush( outfp );
-       }
+    if( event->type == ButtonPress ){
+	x = XCORD (event->xbutton.x);
+	y = YCORD (event->xbutton.y);
+	devtovpxy ( x, y, &x, &y );
+	if( boxy ){
+	    doPointPopup( outfp, (float) x/RPERIN, (float) y/RPERIN );
+	}else{
+	    fprintf( outfp,"%f\t%f\n",(float) x/RPERIN,(float) y/RPERIN );
+	    fflush( outfp );
+	}
 
-   }
+    }
 }
 
 void create_panel(Widget parent,bool want_buttons,bool want_labels)
@@ -1366,47 +1367,47 @@ void create_panel(Widget parent,bool want_buttons,bool want_labels)
     if( wantButtons ){
   
         next_button = XtVaCreateManagedWidget("Next",commandWidgetClass,
-		parent, NULL);
+					      parent, NULL);
         XtAddCallback(next_button, XtNcallback, next_proc, NULL);
 
         prev_button = XtVaCreateManagedWidget("Prev",commandWidgetClass,
-		parent,NULL);
+					      parent,NULL);
         XtAddCallback(prev_button, XtNcallback, prev_proc, NULL);
 
         quit_button = XtVaCreateManagedWidget("Quit",commandWidgetClass,
-		parent,NULL);
+					      parent,NULL);
         XtAddCallback(quit_button, XtNcallback, quit_proc, NULL);
 
         restart_button = XtVaCreateManagedWidget("Restart",commandWidgetClass,
-		parent,NULL);
+						 parent,NULL);
         XtAddCallback(restart_button, XtNcallback, restart_proc, NULL);
 
         run_button = XtVaCreateManagedWidget("Run",commandWidgetClass,
-		parent,NULL);
+					     parent,NULL);
         XtAddCallback(run_button, XtNcallback, run_proc, NULL);
  
         stop_button = XtVaCreateManagedWidget("Stop",commandWidgetClass,
-		parent,NULL);
+					      parent,NULL);
         XtAddCallback(stop_button, XtNcallback, stop_proc, NULL);   
 
         stretch_button = XtVaCreateManagedWidget("Stretchy",commandWidgetClass,
-		parent,NULL);
+						 parent,NULL);
         XtAddCallback(stretch_button, XtNcallback, stretch_proc, NULL);   
  	if( xt_stretchy )
 	    XtSetValues( stretch_button, rigidArgs, XtNumber(rigidArgs) );
 
         mode_button = XtVaCreateManagedWidget("Forwards ",commandWidgetClass,
-		parent,NULL);
+					      parent,NULL);
         XtAddCallback(mode_button, XtNcallback, toggle_run_mode, NULL);   
 
     }
 
     if( wantLabels ){
         frame_label = XtCreateManagedWidget("  0 ",labelWidgetClass,parent,
-			NULL,ZERO);
+					    NULL,ZERO);
 
         delay_label = XtCreateManagedWidget("delay      ",
-		labelWidgetClass,parent, NULL,ZERO);
+					    labelWidgetClass,parent, NULL,ZERO);
 
     }
 
@@ -1416,17 +1417,17 @@ void create_panel(Widget parent,bool want_buttons,bool want_labels)
 void activate_buttons()
 {
     if( wantButtons ){
-    /* turn on the buttons, if required */
-    XtSetSensitive( next_button, ( next_on == YES ) );
-    XtSetSensitive( prev_button, ( prev_on == YES ) );
-    XtSetSensitive( quit_button, ( quit_on == YES ) );
-    XtSetSensitive( restart_button, ( restart_on == YES ) );
-    XtSetSensitive( run_button,  ( run_on == YES ) );
-    XtSetSensitive( stop_button, ( stop_on == YES ) );
-    XtSetSensitive( stretch_button, ( size_on == YES ) );
+	/* turn on the buttons, if required */
+	XtSetSensitive( next_button, ( next_on == YES ) );
+	XtSetSensitive( prev_button, ( prev_on == YES ) );
+	XtSetSensitive( quit_button, ( quit_on == YES ) );
+	XtSetSensitive( restart_button, ( restart_on == YES ) );
+	XtSetSensitive( run_button,  ( run_on == YES ) );
+	XtSetSensitive( stop_button, ( stop_on == YES ) );
+	XtSetSensitive( stretch_button, ( size_on == YES ) );
     }
  
-return;
+    return;
 }
 
 void inactivate_buttons()
@@ -1434,13 +1435,13 @@ void inactivate_buttons()
     /* turn all the buttons off */
 
     if( wantButtons ){
-    XtSetSensitive( next_button, False );
-    XtSetSensitive( prev_button, False );
-    XtSetSensitive( quit_button, False );
-    XtSetSensitive( restart_button, False );
-    XtSetSensitive( run_button,  False );
-    XtSetSensitive( stop_button, False );
-    XtSetSensitive( stretch_button, False );
+	XtSetSensitive( next_button, False );
+	XtSetSensitive( prev_button, False );
+	XtSetSensitive( quit_button, False );
+	XtSetSensitive( restart_button, False );
+	XtSetSensitive( run_button,  False );
+	XtSetSensitive( stop_button, False );
+	XtSetSensitive( stretch_button, False );
     }
    
     return;
@@ -1480,7 +1481,7 @@ int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doST
 	if( didSTOP ){
 	    didSTOP=NO;	    return STOP;
         } else if (didQUIT) {
-	       return  QUIT; 
+	    return  QUIT; 
 	}else{
 	    return TIME;
 	}
@@ -1493,22 +1494,22 @@ int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doST
 	}
   
 	if (didNEXT) {
-	        didNEXT = NO;	retval = NEXT;
+	    didNEXT = NO;	retval = NEXT;
         } else if (didPREV) {
-		didPREV = NO;    retval = PREV; 
+	    didPREV = NO;    retval = PREV; 
         } else if (didRUN) {
-		didRUN = NO;     retval= RUN; 
+	    didRUN = NO;     retval= RUN; 
         } else if (didSTOP) {
-		didSTOP = NO;    retval = STOP; 
+	    didSTOP = NO;    retval = STOP; 
         } else if (didQUIT) {
-	       retval = QUIT; 
+	    retval = QUIT; 
         } else if (didFRAM1) {
-		didFRAM1 = NO;	 retval = RESTART;  
+	    didFRAM1 = NO;	 retval = RESTART;  
         } else if (didCHANGE) {
-		didCHANGE = NO;	 retval = CHANGED;  
+	    didCHANGE = NO;	 retval = CHANGED;  
         }
 	if( wantButtons ){
-	   inactivate_buttons();
+	    inactivate_buttons();
         }
 	return retval;
     }
@@ -1619,10 +1620,10 @@ void xt_dovplot (int nn, FILE **inpltin, char **innames)
 	    next_file = draw_frame->end_file + 1;
 	    next_pos = 0;
 	    if( next_file == nn ) {
-		 next_file = -1; /* at the end */
+		next_file = -1; /* at the end */
 
-	         /* check for case where we only have one frame */
-	         if( frame_list->num_frame == 1 ) running=NO;
+		/* check for case where we only have one frame */
+		if( frame_list->num_frame == 1 ) running=NO;
 	    }
 
 	}else{ /* still in the same file */
@@ -1641,25 +1642,25 @@ void xt_dovplot (int nn, FILE **inpltin, char **innames)
 	    doQUIT = doSTOP = YES; 
 
 	    what_next = xt_pause(doNEXT,doPREV,doRESTART,
-					doQUIT,doRUN,doSTOP,doSIZE);
+				 doQUIT,doRUN,doSTOP,doSIZE);
 	     
             /* what to do if the timeout occurs */
 	    if( what_next == TIME ){
 	        switch( xt_run_mode ){
 		    case XT_FORWARD:
-		         what_next = NEXT;
-			 break;
+			what_next = NEXT;
+			break;
 		    case XT_BACKWARD:
-			 what_next = PREV;
-			 break;
+			what_next = PREV;
+			break;
 		    case XT_BOTH_WAYS:
 
 	                if( draw_frame == xt_last_frame(frame_list) ){
-			     going_forwards = NO;
+			    going_forwards = NO;
 			}
 
 	                if( draw_frame == xt_first_frame(frame_list) ){
-			     going_forwards = YES;
+			    going_forwards = YES;
 			}
  		
 		        if( going_forwards ){
@@ -1678,76 +1679,76 @@ void xt_dovplot (int nn, FILE **inpltin, char **innames)
 	    doNEXT = !(frame_list->num_frame == 1 && next_file == -1 );
 	    doSTOP = NO;
 	    what_next =  xt_pause(doNEXT,doPREV,doRESTART,
-	     				doQUIT,doRUN,doSTOP,doSIZE);
+				  doQUIT,doRUN,doSTOP,doSIZE);
 	 
 	}
 
 
 	/* act on the result of the pause */
 	switch(what_next){
-	  case QUIT:
-	    draw_file = -1;
-	    break;
+	    case QUIT:
+		draw_file = -1;
+		break;
 
-	  case STOP:
-	    running = NO;
-	    break;
+	    case STOP:
+		running = NO;
+		break;
 
-	  case RUN:
-	    running = YES;
-	    break;
+	    case RUN:
+		running = YES;
+		break;
 	    
-	  case NEXT:
+	    case NEXT:
 
-	    /* see if the user typed a frame number */
-	    if( xt_next_num != -1  && 
-		(next_frame=xt_frame_num(frame_list,xt_next_num)) != 0  ){
-		draw_frame = next_frame;
-		draw_file = draw_frame->file_num;
-		draw_pos = draw_frame->file_position;
-		xt_next_num = -1;
-
-	    }else{
-
-		/* they didn't type anything or it was an invalid number */
-	        if( (draw_frame == xt_last_frame(frame_list)) 
-			&& next_file != -1 ){ 
-		    /* this is currently our last frame,,
-	             * but we are not at the end of the input.
-		     * So get next frame to plot */
-		    draw_file = next_file; draw_pos = next_pos;
-		    draw_frame = xt_frame( frame_list, draw_file, draw_pos ); 
-
-	        }else{
-		    /* we already know what the next frame is */
-		    draw_frame = draw_frame->next;
+		/* see if the user typed a frame number */
+		if( xt_next_num != -1  && 
+		    (next_frame=xt_frame_num(frame_list,xt_next_num)) != 0  ){
+		    draw_frame = next_frame;
 		    draw_file = draw_frame->file_num;
 		    draw_pos = draw_frame->file_position;
-	        }
-	    }
+		    xt_next_num = -1;
 
-	    break;
+		}else{
+
+		    /* they didn't type anything or it was an invalid number */
+		    if( (draw_frame == xt_last_frame(frame_list)) 
+			&& next_file != -1 ){ 
+			/* this is currently our last frame,,
+			 * but we are not at the end of the input.
+			 * So get next frame to plot */
+			draw_file = next_file; draw_pos = next_pos;
+			draw_frame = xt_frame( frame_list, draw_file, draw_pos ); 
+
+		    }else{
+			/* we already know what the next frame is */
+			draw_frame = draw_frame->next;
+			draw_file = draw_frame->file_num;
+			draw_pos = draw_frame->file_position;
+		    }
+		}
+
+		break;
 				
-	  case PREV:
-	    /* get previous frame to plot */
-	    draw_frame = draw_frame->prev;
-	    draw_file = draw_frame->file_num;
-	    draw_pos = draw_frame->file_position;
-	    break;
+	    case PREV:
+		/* get previous frame to plot */
+		draw_frame = draw_frame->prev;
+		draw_file = draw_frame->file_num;
+		draw_pos = draw_frame->file_position;
+		break;
 
-	  case CHANGED:
-	    /* something changed in the plotting parameters
-   	     * flush all cached images and replot the current frame */
-	    xt_clear_images(frame_list);
-	    xtredraw();
-	    break;
+	    case CHANGED:
+		/* something changed in the plotting parameters
+		 * flush all cached images and replot the current frame */
+		xt_clear_images(frame_list);
+		xtredraw();
+		break;
 
-	  case RESTART:
-	    /* go back to the first frame */
-	    draw_frame = xt_first_frame(frame_list); 
-	    draw_file = draw_frame->file_num;
-	    draw_pos = draw_frame->file_position;
-	    break;
+	    case RESTART:
+		/* go back to the first frame */
+		draw_frame = xt_first_frame(frame_list); 
+		draw_file = draw_frame->file_num;
+		draw_pos = draw_frame->file_position;
+		break;
 	}
 
 
@@ -1772,24 +1773,24 @@ void xterase (int command)
 
     switch (command)
     {
-    case ERASE_START:
-    case ERASE_MIDDLE:
-	if( have_pixmap ){
-	    clear_pixmap();
-	}else{
-	    /* clear window */
-	      Dimension width, height;
-	      Position left, top;
+	case ERASE_START:
+	case ERASE_MIDDLE:
+	    if( have_pixmap ){
+		clear_pixmap();
+	    }else{
+		/* clear window */
+		Dimension width, height;
+		Position left, top;
 
-	      XtVaGetValues(pen_picture,XtNwidth,&width,XtNheight,&height,
-                XtNx,&left,XtNy,&top,NULL);
+		XtVaGetValues(pen_picture,XtNwidth,&width,XtNheight,&height,
+			      XtNx,&left,XtNy,&top,NULL);
 
-	      XSetForeground(pen_display, pen_gc, map[0] );
-    	      XFillRectangle(pen_display, pen_drawable, pen_gc,
-             			   0,0,width,height);
-              XSetForeground(pen_display, pen_gc, color );
-	}
-	break;
+		XSetForeground(pen_display, pen_gc, map[0] );
+		XFillRectangle(pen_display, pen_drawable, pen_gc,
+			       0,0,width,height);
+		XSetForeground(pen_display, pen_gc, color );
+	    }
+	    break;
     }
 }
 
@@ -1802,25 +1803,25 @@ xtFrameList* xt_new_list(xtFrameList*  old_list, int *frames, int num_frame)
  * Given a redraw_file,redraw_position pair we can then return a valid image.
  >*/
 {
-   xtFrameList* new_list;
+    xtFrameList* new_list;
 
-   new_list = (xtFrameList*) sf_alloc(1,sizeof(xtFrameList));
+    new_list = (xtFrameList*) sf_alloc(1,sizeof(xtFrameList));
    
-   if( old_list == 0 ){
-       new_list->start=0;
-       new_list->end =0;
-       new_list->parent=0;
-       new_list->num_frame=0;
+    if( old_list == 0 ){
+	new_list->start=0;
+	new_list->end =0;
+	new_list->parent=0;
+	new_list->num_frame=0;
        
-   }else{
-       int i;
-       for( i=0; i<num_frame; i++ ){
-	   xt_add_frame( new_list, xt_frame_num( old_list, frames[i] ) );
-       }
-       new_list->parent = old_list;
-   }
+    }else{
+	int i;
+	for( i=0; i<num_frame; i++ ){
+	    xt_add_frame( new_list, xt_frame_num( old_list, frames[i] ) );
+	}
+	new_list->parent = old_list;
+    }
 	
-   return new_list;
+    return new_list;
 }   
        
 
@@ -1829,22 +1830,22 @@ xtFrame* xt_new_frame( filenum, filepos )
 int filenum;
 int filepos;
 {
-   xtFrame *newfr;
+    xtFrame *newfr;
 
-   newfr = (xtFrame*) sf_alloc(1,sizeof(xtFrame));
-   newfr->file_num = filenum;
-   newfr->file_position = filepos;
-   newfr->end_pos = 0;
-   newfr->total_len = 0;
-   newfr->frame_num = 0;
-   newfr->break_end = 0;
-   newfr->has_image = 0; 
-   newfr->image = 0;
-   newfr->pixmap = 0;
-   newfr->next =  0;
-   newfr->prev =  0;
+    newfr = (xtFrame*) sf_alloc(1,sizeof(xtFrame));
+    newfr->file_num = filenum;
+    newfr->file_position = filepos;
+    newfr->end_pos = 0;
+    newfr->total_len = 0;
+    newfr->frame_num = 0;
+    newfr->break_end = 0;
+    newfr->has_image = 0; 
+    newfr->image = 0;
+    newfr->pixmap = 0;
+    newfr->next =  0;
+    newfr->prev =  0;
 
-   return newfr;
+    return newfr;
 }
 
 void xt_add_frame(xtFrameList*  list, xtFrame* frame)
@@ -1894,20 +1895,20 @@ xtFrameList* list;
 int filenum;
 int filepos;
 {
-xtFrame *curr, *start;
-xtFrame *found;
+    xtFrame *curr, *start;
+    xtFrame *found;
 
-if( list==0 || list->start == 0 ) return (xtFrame*) 0;
+    if( list==0 || list->start == 0 ) return (xtFrame*) 0;
 
-found = (xtFrame*)0;
-start = curr = list->start;
+    found = (xtFrame*)0;
+    start = curr = list->start;
 
-do{
-  if( filenum == curr->file_num && filepos == curr->file_position) found=curr;
-  curr = curr->next;
-}while( (found==(xtFrame*)0 ) && curr != start );
+    do{
+	if( filenum == curr->file_num && filepos == curr->file_position) found=curr;
+	curr = curr->next;
+    }while( (found==(xtFrame*)0 ) && curr != start );
 
-return found;
+    return found;
 
 }
 
@@ -1937,23 +1938,23 @@ void xt_store_image(xtFrame* fram )
     if( greedy_pixmaps ){
 
         if( fram->pixmap != (Pixmap)0 ) {
-	   XFreePixmap(pen_display,fram->pixmap );
+	    XFreePixmap(pen_display,fram->pixmap );
         }
         fram->pixmap = (Pixmap)0;
 
         fram->pixmap = MyCreatePixmap(pen_display,pen_drawable,
-                        pen_width,pen_height,
-                        visual_depth );
+				      pen_width,pen_height,
+				      visual_depth );
 
 	if( fram->pixmap == (Pixmap)0 ){
-	   /* allocation failed, give up on this method */
-	   greedy_pixmaps = false;
+	    /* allocation failed, give up on this method */
+	    greedy_pixmaps = false;
 	}else{
-           XSync( pen_display,0 );
-	   XSetClipMask( pen_display, pen_gc, None );
-           XCopyArea(pen_display,pen_drawable,fram->pixmap,pen_gc,
-                        0,0,pen_width,pen_height,0 ,0);
-           fram->has_image = 1;
+	    XSync( pen_display,0 );
+	    XSetClipMask( pen_display, pen_gc, None );
+	    XCopyArea(pen_display,pen_drawable,fram->pixmap,pen_gc,
+		      0,0,pen_width,pen_height,0 ,0);
+	    fram->has_image = 1;
 	}
 
     }
@@ -1966,22 +1967,22 @@ void xt_store_image(xtFrame* fram )
 	   in data transmission so we try to make sure that the
            effort is worthwhile.
 
-          The image size = pen_width * pen_height * visual_depth
-	  The size of the plot data is frame->total_len.
-	  If the plot is a lot smaller than the image size we will
-          just replot it from scratch next time
+	   The image size = pen_width * pen_height * visual_depth
+	   The size of the plot data is frame->total_len.
+	   If the plot is a lot smaller than the image size we will
+	   just replot it from scratch next time
 
-	  This should probaly be related to an estimated connection speed
-	  and the time taken to render the frame.
+	   This should probaly be related to an estimated connection speed
+	   and the time taken to render the frame.
         */
 	if( pen_width * pen_height * visual_depth < 50*fram->total_len ){
             XSync( pen_display,0 );
 	    if( fram->image != 0 ){
-		 XDestroyImage( fram->image );
+		XDestroyImage( fram->image );
 	    }
 	    fram->image=0;
             fram->image = XGetImage( pen_display, pen_drawable, 0,0,
-			  pen_width, pen_height, AllPlanes, ZPixmap );
+				     pen_width, pen_height, AllPlanes, ZPixmap );
             fram->has_image = 1;
 	}
     }
@@ -1992,21 +1993,21 @@ void xt_store_image(xtFrame* fram )
 /* put the image back into the drawable */
 void xt_put_image(xtFrame*  fram)
 {
-  XImage* old_image;
+    XImage* old_image;
 
-  if( fram->pixmap != (Pixmap)0 ){
+    if( fram->pixmap != (Pixmap)0 ){
 	XSetClipMask( pen_display, pen_gc, None );
         XCopyArea(pen_display,fram->pixmap,pen_drawable,pen_gc,
-                        0,0,pen_width,pen_height,0 ,0);
-  }else{
-      old_image = fram->image;
-      if( old_image != 0 ){
-          /* put the old image onto the drawable */
-          XPutImage( pen_display, pen_drawable, pen_gc, old_image, 0, 0, 0, 0,
-                   old_image->width, old_image->height );
-      }
-  }
-  xt_restore_colormap( fram );
+		  0,0,pen_width,pen_height,0 ,0);
+    }else{
+	old_image = fram->image;
+	if( old_image != 0 ){
+	    /* put the old image onto the drawable */
+	    XPutImage( pen_display, pen_drawable, pen_gc, old_image, 0, 0, 0, 0,
+		       old_image->width, old_image->height );
+	}
+    }
+    xt_restore_colormap( fram );
 }
 
 void xt_clear_images(xtFrameList* list)
@@ -2025,12 +2026,12 @@ void xt_clear_images(xtFrameList* list)
 	    do{
 		/* free the image associated with this frame */
 		if( curr->image != 0 )
-		  XDestroyImage( curr->image ); curr->image=0;
+		    XDestroyImage( curr->image ); curr->image=0;
 		curr->image= 0;
 
 		/* free the pixmap associated with this frame */
 		if( curr->pixmap != (Pixmap)0 )
-        	  XFreePixmap(pen_display,curr->pixmap);
+		    XFreePixmap(pen_display,curr->pixmap);
 		curr->pixmap = 0;
 
 		/* we don't have a stored image for this frame */
@@ -2109,29 +2110,29 @@ int xtinteract (int what, FILE *controltty, char *string)
  
     switch (what)
     {
-    case INT_PAUSE:
-	if (skipit){
+	case INT_PAUSE:
+	    if (skipit){
+		skipit = NO;
+		break;   /* skip the pause that occurs after a restart */
+	    }
+	case INT_USER_PAUSE:
 	    skipit = NO;
-	    break;   /* skip the pause that occurs after a restart */
-	}
-    case INT_USER_PAUSE:
-	skipit = NO;
 
-	/*
- 	 * Pauses caused by the "break" command too hard to handle!
- 	 */
-        if (group_number != 0){
-            return DOVPLOT_CONT;
-	}
+	    /*
+	     * Pauses caused by the "break" command too hard to handle!
+	     */
+	    if (group_number != 0){
+		return DOVPLOT_CONT;
+	    }
 
-	return DOVPLOT_EXIT; /* exit dovplot routine at end of frame */
+	    return DOVPLOT_EXIT; /* exit dovplot routine at end of frame */
 
 
-    case INT_GET_STRING:
-	/* Not supported */
-	break;
-    default:
-	break;
+	case INT_GET_STRING:
+	    /* Not supported */
+	    break;
+	default:
+	    break;
     }
 
     return DOVPLOT_CONT;
@@ -2142,73 +2143,73 @@ void xtaddText( str )
 char *str;
 {
   
-  if ( text_region ) {
-    int len ;
-    int rc;
-    char *p;
-    char *currentString;
+    if ( text_region ) {
+	int len ;
+	int rc;
+	char *p;
+	char *currentString;
     
-    Arg argList[20];
-    Cardinal args;
+	Arg argList[20];
+	Cardinal args;
     
-    XawTextPosition start;
-    XawTextBlock tblk, empty_tblk;
+	XawTextPosition start;
+	XawTextBlock tblk, empty_tblk;
     
-    len = strlen(str);
+	len = strlen(str);
 
-    if ( len <= 0 )
-      return;
+	if ( len <= 0 )
+	    return;
 
-    p = (char*)malloc( len+1 );
-    strcpy( p, str );
-    p[len] = '\0';
+	p = (char*)malloc( len+1 );
+	strcpy( p, str );
+	p[len] = '\0';
     
-    tblk.firstPos = 0;
-    tblk.length = len;
-    tblk.ptr = p;
-    tblk.format = FMT8BIT;
+	tblk.firstPos = 0;
+	tblk.length = len;
+	tblk.ptr = p;
+	tblk.format = FMT8BIT;
     
-    /* empty text block for deletion */
-    empty_tblk.firstPos = 0;
-    empty_tblk.length = 0;
-    empty_tblk.ptr = "";
-    empty_tblk.format = FMT8BIT;
+	/* empty text block for deletion */
+	empty_tblk.firstPos = 0;
+	empty_tblk.length = 0;
+	empty_tblk.ptr = "";
+	empty_tblk.format = FMT8BIT;
 
-    args = 0;
-    XtSetArg(argList[args], XtNstring, &currentString); args++;
-    XtGetValues(text_region, argList, args);
+	args = 0;
+	XtSetArg(argList[args], XtNstring, &currentString); args++;
+	XtGetValues(text_region, argList, args);
     
-    start = strlen( currentString );
+	start = strlen( currentString );
     
-    XawTextDisableRedisplay(text_region); 
+	XawTextDisableRedisplay(text_region); 
 
-    while ( start + len > TEXT_BUFFER_SIZE ) {
+	while ( start + len > TEXT_BUFFER_SIZE ) {
       
-      /* find first line and delete it */
+	    /* find first line and delete it */
       
-      char *eol = strchr( currentString, '\n');
+	    char *eol = strchr( currentString, '\n');
       
-      if ( eol != 0 && eol < &currentString[TEXT_BUFFER_SIZE] ) {
-	XawTextReplace( text_region, 0, eol-currentString+1, &empty_tblk );
-        start -= eol - currentString + 1;
-      }
-      else {
-	XawTextReplace( text_region, 0, start, &empty_tblk );
-	start = 0;
-	break;
-      }
+	    if ( eol != 0 && eol < &currentString[TEXT_BUFFER_SIZE] ) {
+		XawTextReplace( text_region, 0, eol-currentString+1, &empty_tblk );
+		start -= eol - currentString + 1;
+	    }
+	    else {
+		XawTextReplace( text_region, 0, start, &empty_tblk );
+		start = 0;
+		break;
+	    }
+	}
+
+	rc= XawTextReplace( text_region, start, start, &tblk );
+	if (rc != XawEditDone) {
+	    fprintf(stderr, "XawTextReplace(text, %d, %d, &textblock): %d\n",
+		    (int) start, (int) start, rc);
+	}
+	XawTextSetInsertionPoint(text_region, start + len);
+	XawTextEnableRedisplay(text_region);
+	XawTextDisplay(text_region);
+
     }
-
-    rc= XawTextReplace( text_region, start, start, &tblk );
-    if (rc != XawEditDone) {
-        fprintf(stderr, "XawTextReplace(text, %d, %d, &textblock): %d\n",
-		(int) start, (int) start, rc);
-    }
-    XawTextSetInsertionPoint(text_region, start + len);
-    XawTextEnableRedisplay(text_region);
-    XawTextDisplay(text_region);
-
-  }
 }
 
 
@@ -2219,24 +2220,24 @@ void xtmessage (int command, char *text)
 
     switch (command)
     {
-    case MESG_TEXT:
-	if (!eatit){
-	    if( text_region && plotting_started ){
-		xtaddText( text );
-	    }else{
-	        printf ("%s", text);
+	case MESG_TEXT:
+	    if (!eatit){
+		if( text_region && plotting_started ){
+		    xtaddText( text );
+		}else{
+		    printf ("%s", text);
+		}
 	    }
-	}
-	break;
-    case MESG_HIGHLIGHT_ON:
-	eatit = YES;
-	break;
-    case MESG_DONE:
-	eatit = NO;
-	if( !text_region && plotting_started ){
-	    fflush (stdout);
-        }
-	break;
+	    break;
+	case MESG_HIGHLIGHT_ON:
+	    eatit = YES;
+	    break;
+	case MESG_DONE:
+	    eatit = NO;
+	    if( !text_region && plotting_started ){
+		fflush (stdout);
+	    }
+	    break;
     }
 }
 
@@ -2299,12 +2300,12 @@ void opendev (int argc, char* argv[])
     /* initialize the first app (we will delete this one later ) */
     xtargc = argc;
     xtpen = XtVaAppInitialize(
-		&pen_context,
-		"XTpen",
-		NULL, ZERO,
-		&xtargc, argv,
-		fallback_resources,
-		NULL);
+	&pen_context,
+	"XTpen",
+	NULL, ZERO,
+	&xtargc, argv,
+	fallback_resources,
+	NULL);
     
     /* get app data from the resource database */
     xt_app_data( xtpen );
@@ -2374,17 +2375,17 @@ void opendev (int argc, char* argv[])
     /* initialze argument list counter to zero */
     cnt=0;
 
-   /* For the default visual set the initial colormap to be 
-      the default colormap, otherwise aloocate your own */
-   default_visual = DefaultVisual( pen_display, pen_screen);
-   if( pen_visual->visualid  == default_visual->visualid ){
-     pen_colormap = DefaultColormap(pen_display, pen_screen);
-   }else{
-     pen_colormap = XCreateColormap( pen_display, 
-		DefaultRootWindow(pen_display) , pen_visual, AllocNone );
-     XtSetArg (args[cnt], XtNvisual, pen_visual); ++cnt;
-     XtSetArg (args[cnt], XtNdepth, visual_depth ); ++cnt;
-   }
+    /* For the default visual set the initial colormap to be 
+       the default colormap, otherwise aloocate your own */
+    default_visual = DefaultVisual( pen_display, pen_screen);
+    if( pen_visual->visualid  == default_visual->visualid ){
+	pen_colormap = DefaultColormap(pen_display, pen_screen);
+    }else{
+	pen_colormap = XCreateColormap( pen_display, 
+					DefaultRootWindow(pen_display) , pen_visual, AllocNone );
+	XtSetArg (args[cnt], XtNvisual, pen_visual); ++cnt;
+	XtSetArg (args[cnt], XtNdepth, visual_depth ); ++cnt;
+    }
 
     if(  mono  ){
 	dev.num_col = x_num_col;
@@ -2413,19 +2414,19 @@ void opendev (int argc, char* argv[])
 /*    XtSetArg (args[cnt], XtNargc, myxargc); ++cnt;*/
     iarg=0;
     while(iarg < myxargc){
-      if(myxargv[iarg][0]=='-' && iarg < myxargc-1){
-        XtSetArg(args[cnt],&(myxargv[iarg][1]),myxargv[iarg+1]);++cnt;
-        iarg++;
-      }
-      iarg++;
+	if(myxargv[iarg][0]=='-' && iarg < myxargc-1){
+	    XtSetArg(args[cnt],&(myxargv[iarg][1]),myxargv[iarg+1]);++cnt;
+	    iarg++;
+	}
+	iarg++;
     }
     
 
 
 
     xtpen = XtAppCreateShell ( "xtpen", "XTpen",
-                                applicationShellWidgetClass,
-                                pen_display, args, cnt);
+			       applicationShellWidgetClass,
+			       pen_display, args, cnt);
 
 
     /* default size for the picture is 1/2 of screen height and width
@@ -2435,9 +2436,9 @@ void opendev (int argc, char* argv[])
     default_height = dheight*.5;
   
     vpane = XtVaCreateManagedWidget("vpane",panedWidgetClass,
-		xtpen, 
-		XtNwidth, default_width,
-        	NULL);
+				    xtpen, 
+				    XtNwidth, default_width,
+				    NULL);
 
     if( !sf_getbool("buttons",&want_buttons) ) 
 	want_buttons = (bool) app_data.buttons;
@@ -2461,26 +2462,26 @@ void opendev (int argc, char* argv[])
     if( !sf_getbool("images",&want_images) ) 
 	want_images = (bool) app_data.images;
     /* copy the image created by plotting each frame and save it in
-     the client program (xtpen). This will increase memory usage in
-     the machine that runs the pen command. If you have a fast
-     connection to your X-server it will make redisplay of frames
-     faster. If you have a slow connection, it may make replotting
-     slower. */
+       the client program (xtpen). This will increase memory usage in
+       the machine that runs the pen command. If you have a fast
+       connection to your X-server it will make redisplay of frames
+       faster. If you have a slow connection, it may make replotting
+       slower. */
 
     if( !sf_getbool("pixmaps",&greedy_pixmaps)) 
 	greedy_pixmaps = (bool) app_data.pixmaps;
     /* Copy the image created by plotting each frame and save it in
-     the X-server. This will increase memory usage of the machine that
-     displays the window! Redisplay of frames will be very fast and
-     the network traffic is very low so this is a suitable option for
-     slow connections.  If your X-server is a workstation with plenty
-     of memory and swap space then this option should be very useful.
-     If your X-server has limited memory, this option may have
-     undesirable effects on the response of your terminal. */
+       the X-server. This will increase memory usage of the machine that
+       displays the window! Redisplay of frames will be very fast and
+       the network traffic is very low so this is a suitable option for
+       slow connections.  If your X-server is a workstation with plenty
+       of memory and swap space then this option should be very useful.
+       If your X-server has limited memory, this option may have
+       undesirable effects on the response of your terminal. */
 
     if( want_buttons || want_labels ){
         control_panel = XtCreateManagedWidget("control_panel",boxWidgetClass,
-		vpane, NULL, ZERO);
+					      vpane, NULL, ZERO);
 
         create_panel(control_panel,want_buttons,want_labels);
     }
@@ -2492,19 +2493,19 @@ void opendev (int argc, char* argv[])
         if(NULL == (message_text = sf_getstring("message"))) message_text="";
 
         text_region = XtVaCreateManagedWidget("text",
-		asciiTextWidgetClass,vpane,
-		XtNstring, (XtArgVal)message_text,
-		XtNlength, (XtArgVal)TEXT_BUFFER_SIZE, 
-		XtNeditType, XawtextEdit,
-		NULL );
+					      asciiTextWidgetClass,vpane,
+					      XtNstring, (XtArgVal)message_text,
+					      XtNlength, (XtArgVal)TEXT_BUFFER_SIZE, 
+					      XtNeditType, XawtextEdit,
+					      NULL );
     }
 
     pen_picture = XtVaCreateManagedWidget("pen_picture",
-		widgetClass, vpane,
-                XtNwidth, default_width,
-	        XtNheight, default_height,
-		XtNcolormap, pen_colormap,
-		NULL);
+					  widgetClass, vpane,
+					  XtNwidth, default_width,
+					  XtNheight, default_height,
+					  XtNcolormap, pen_colormap,
+					  NULL);
 
 
 
@@ -2596,7 +2597,7 @@ Dimension *width,*height;
     /* now get the size of the actual picture and set dev.xmax etc. */
 
     XtVaGetValues(pen_picture,XtNwidth,width,XtNheight,height,
-		XtNx,&left,XtNy,&top,NULL);
+		  XtNx,&left,XtNy,&top,NULL);
   
     /* set VPLOT plotting window */
     dev.xmin = left;
@@ -2642,58 +2643,58 @@ int max_depth;
 XVisualInfo* vinfo;
 {
 
-  /* try and figure out a good visual */
+    /* try and figure out a good visual */
   
-  /* try for 24bit true color */
-   if(  max_depth >=24 &&
-	XMatchVisualInfo(display,screen,24,TrueColor,vinfo) ){
-     xmono=NO;
-     xtruecol=YES;
-     visual_depth = 24;
+    /* try for 24bit true color */
+    if(  max_depth >=24 &&
+	 XMatchVisualInfo(display,screen,24,TrueColor,vinfo) ){
+	xmono=NO;
+	xtruecol=YES;
+	visual_depth = 24;
      
-     /* try for 8 bit pseudo color */
-   }else if( max_depth >=8 &&
-	XMatchVisualInfo(display,screen,8,PseudoColor,vinfo) ){
-     xmono=NO;
-     xtruecol=NO;
-     visual_depth = 8;
-     x_num_col = 256;
+	/* try for 8 bit pseudo color */
+    }else if( max_depth >=8 &&
+	      XMatchVisualInfo(display,screen,8,PseudoColor,vinfo) ){
+	xmono=NO;
+	xtruecol=NO;
+	visual_depth = 8;
+	x_num_col = 256;
      
-     /* try for 16bit true color */
-   }else if( max_depth >=16 &&
-	XMatchVisualInfo(display,screen,16,TrueColor,vinfo) ){
-     xmono=NO;
-     xtruecol=YES;
-     visual_depth = 16;
+	/* try for 16bit true color */
+    }else if( max_depth >=16 &&
+	      XMatchVisualInfo(display,screen,16,TrueColor,vinfo) ){
+	xmono=NO;
+	xtruecol=YES;
+	visual_depth = 16;
      
-     /* try for 8 true color */
-   }else if( max_depth >=8 &&
-	XMatchVisualInfo(display,screen,8,TrueColor,vinfo) ){
-     xmono=NO;
-     xtruecol=YES;
-     visual_depth = 8;
+	/* try for 8 true color */
+    }else if( max_depth >=8 &&
+	      XMatchVisualInfo(display,screen,8,TrueColor,vinfo) ){
+	xmono=NO;
+	xtruecol=YES;
+	visual_depth = 8;
      
-     /* try for 4 bit pseudo color */
-   }else if( max_depth >=4 &&
-	XMatchVisualInfo(display,screen,4,PseudoColor,vinfo) ){
-     xmono=NO;
-     num_col_min = 8;
-     x_num_col = 8;
-     visual_depth = 4;
-     xtruecol=NO;
+	/* try for 4 bit pseudo color */
+    }else if( max_depth >=4 &&
+	      XMatchVisualInfo(display,screen,4,PseudoColor,vinfo) ){
+	xmono=NO;
+	num_col_min = 8;
+	x_num_col = 8;
+	visual_depth = 4;
+	xtruecol=NO;
      
-     /* if we can't get any of those try for a monochrome visual */
-     /* try for 1 bit static grey */
-   }else if( max_depth >=1 &&
-	XMatchVisualInfo(display,screen,1,StaticGray,vinfo) ){
-     xmono = YES;
-     visual_depth = 1;
-     xtruecol=NO;
-     mono = true;
-     x_num_col = 2;
-   }else{
-     ERR(FATAL,name,"Could not obtain a suitable visual");
-   }
+	/* if we can't get any of those try for a monochrome visual */
+	/* try for 1 bit static grey */
+    }else if( max_depth >=1 &&
+	      XMatchVisualInfo(display,screen,1,StaticGray,vinfo) ){
+	xmono = YES;
+	visual_depth = 1;
+	xtruecol=NO;
+	mono = true;
+	x_num_col = 2;
+    }else{
+	ERR(FATAL,name,"Could not obtain a suitable visual");
+    }
 
 
    
@@ -2747,14 +2748,14 @@ void xt_draw_file(int start_file,
             inFiles[file_num].new = NO;
 
 	    if( start_pos < -1 ){
-	         /* start_pos will be < -1 for a pipe input */
+		/* start_pos will be < -1 for a pipe input */
 		if( *end_pos < -1 ){
-		  /* this is a replot request */
-                  ERR (WARN, name, "sorry, unable to draw frame.");
-	          xt_endframe = YES ;
+		    /* this is a replot request */
+		    ERR (WARN, name, "sorry, unable to draw frame.");
+		    xt_endframe = YES ;
 		}else{
-		  /* just do it! */
-    	          dovplot ();
+		    /* just do it! */
+		    dovplot ();
 		}
 	    }else{
 	        /* this is for a file input */
@@ -2771,12 +2772,12 @@ void xt_draw_file(int start_file,
         *end_pos = ftell( inFiles[file_num].stream );
 
 	if( *end_pos == -1 ){ 
-	  /* when reading from a pipe */
-	  *end_pos = start_pos - 2;
-	  *total_len += 99999; /* fake it to make it save images */
+	    /* when reading from a pipe */
+	    *end_pos = start_pos - 2;
+	    *total_len += 99999; /* fake it to make it save images */
         }else{
-	  /* accumalate a length measure */
-	  *total_len += *end_pos - file_pos;
+	    /* accumalate a length measure */
+	    *total_len += *end_pos - file_pos;
 	}
 	
 
@@ -2820,26 +2821,26 @@ void xt_draw_frame(xtFrame* frame )
     int end_pos;
     long total_len;
 
-   if( frame->has_image ){
-       xt_put_image( frame );
-       end_pos = frame->end_pos;
+    if( frame->has_image ){
+	xt_put_image( frame );
+	end_pos = frame->end_pos;
 
-   }else{
-       if( frame->prev != 0 ){
-	if( frame->prev->break_end ) xt_after_break = 1;
-       }
-       end_pos = frame->end_pos;
-       xt_draw_file(frame->file_num, frame->file_position, &end_file, 
-			&end_pos, &total_len);
-       frame->total_len = total_len;
-       frame->end_file = end_file;
-       frame->end_pos = end_pos;
-       if( xt_after_break ) frame->break_end = 1;
-       if( want_images || greedy_pixmaps ) xt_store_image( frame );
+    }else{
+	if( frame->prev != 0 ){
+	    if( frame->prev->break_end ) xt_after_break = 1;
+	}
+	end_pos = frame->end_pos;
+	xt_draw_file(frame->file_num, frame->file_position, &end_file, 
+		     &end_pos, &total_len);
+	frame->total_len = total_len;
+	frame->end_file = end_file;
+	frame->end_pos = end_pos;
+	if( xt_after_break ) frame->break_end = 1;
+	if( want_images || greedy_pixmaps ) xt_store_image( frame );
 
-   }
+    }
 
-   xt_flush_display();
+    xt_flush_display();
 
 }
 
@@ -2898,12 +2899,12 @@ XExposeEvent *event;
 String *params;
 Cardinal *num_params;
 {
-Dimension width, height;
-Position left, top;
+    Dimension width, height;
+    Position left, top;
 
 
     XtVaGetValues(pen_picture,XtNwidth,&width,XtNheight,&height,
-		XtNx,&left,XtNy,&top,NULL);
+		  XtNx,&left,XtNy,&top,NULL);
 
 
     if( have_pixmap && (width == pen_width )&& (height == pen_height)){
@@ -2928,8 +2929,8 @@ void xt_flush_display(void)
         /* copy the pixmap to the screen */
         XSetClipMask( pen_display, pen_gc, None );
         if( pen_pixmap != (Pixmap)0) XCopyArea(pen_display,pen_pixmap,
-		        pen_window,pen_gc,
-                        0,0,pen_width,pen_height,0 ,0);
+					       pen_window,pen_gc,
+					       0,0,pen_width,pen_height,0 ,0);
     }
     XFlush(pen_display);
 }
@@ -2942,7 +2943,7 @@ int have_pixmap;
 void clear_pixmap(){
     XSetForeground(pen_display, pen_gc, map[0] );
     XFillRectangle(pen_display, pen_pixmap, pen_gc,
-		0,0,pen_width,pen_height);
+		   0,0,pen_width,pen_height);
     XSetForeground(pen_display, pen_gc, color );
 }
 
@@ -2977,8 +2978,8 @@ int height;
     }
 
     pen_pixmap = MyCreatePixmap(pen_display,pen_window,
-                      width,height,
-		      visual_depth );
+				width,height,
+				visual_depth );
 
     /* check if pixmap creation succeeded */
     if( pen_pixmap != (Pixmap)0 ) {
@@ -3002,8 +3003,8 @@ static int MyHandler(dpy,errorevent)
 Display *dpy;
 XErrorEvent * errorevent;
 {
-  attachfailed = 1;
-  return(0);
+    attachfailed = 1;
+    return(0);
 }
 
 Pixmap MyCreatePixmap( display,drawable,width,height,depth )
@@ -3012,19 +3013,19 @@ Drawable drawable;
 unsigned int width,height;
 unsigned int depth;
 {
-Pixmap pix;
+    Pixmap pix;
 
-XErrorHandler handler;
-XSync(display,0);
-attachfailed  = 0;
+    XErrorHandler handler;
+    XSync(display,0);
+    attachfailed  = 0;
 
-handler = XSetErrorHandler(MyHandler);      /* Start critical time */
-pix = XCreatePixmap(display,drawable, width,height, depth );
-XSync(display,0);
-(void) XSetErrorHandler(handler);           /* Critical time over */
+    handler = XSetErrorHandler(MyHandler);      /* Start critical time */
+    pix = XCreatePixmap(display,drawable, width,height, depth );
+    XSync(display,0);
+    (void) XSetErrorHandler(handler);           /* Critical time over */
 
-if( attachfailed ) return (Pixmap)0; 
-else return pix;
+    if( attachfailed ) return (Pixmap)0; 
+    else return pix;
 
 }
 
@@ -3118,52 +3119,52 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
 	    incr2 = widthpad;
 	}
 	else
-	if (orient == 1)
-	{
-	    xloc = XCORD (xpos) - out_of + 1;
-	    yloc = YCORD (ypos);
-	    width = out_of;
-	    height = length;
-	    if (xmono)
-		widthpad = ((width + 15) / 16) * 16;
+	    if (orient == 1)
+	    {
+		xloc = XCORD (xpos) - out_of + 1;
+		yloc = YCORD (ypos);
+		width = out_of;
+		height = length;
+		if (xmono)
+		    widthpad = ((width + 15) / 16) * 16;
+		else
+		    widthpad = ((width + 1) / 2) * 2;
+		offset = width - 1;
+		incr1 = widthpad;
+		incr2 = -1;
+	    }
 	    else
-		widthpad = ((width + 1) / 2) * 2;
-	    offset = width - 1;
-	    incr1 = widthpad;
-	    incr2 = -1;
-	}
-	else
-	if (orient == 2)
-	{
-	    xloc = XCORD (xpos) - length + 1;
-	    yloc = YCORD (ypos) - out_of + 1;
-	    width = length;
-	    height = out_of;
-	    if (xmono)
-		widthpad = ((width + 15) / 16) * 16;
-	    else
-		widthpad = ((width + 1) / 2) * 2;
-	    offset = widthpad * height - 1 - widthpad + width;
-	    incr1 = -1;
-	    incr2 = -widthpad;
-	}
-	else
-	if (orient == 3)
-	{
-	    xloc = XCORD (xpos);
-	    yloc = YCORD (ypos) - length + 1;
-	    width = out_of;
-	    height = length;
-	    if (xmono)
-		widthpad = ((width + 15) / 16) * 16;
-	    else
-		widthpad = ((width + 1) / 2) * 2;
-	    offset = widthpad * (height - 1);
-	    incr1 = -widthpad;
-	    incr2 = 1;
-	}
+		if (orient == 2)
+		{
+		    xloc = XCORD (xpos) - length + 1;
+		    yloc = YCORD (ypos) - out_of + 1;
+		    width = length;
+		    height = out_of;
+		    if (xmono)
+			widthpad = ((width + 15) / 16) * 16;
+		    else
+			widthpad = ((width + 1) / 2) * 2;
+		    offset = widthpad * height - 1 - widthpad + width;
+		    incr1 = -1;
+		    incr2 = -widthpad;
+		}
+		else
+		    if (orient == 3)
+		    {
+			xloc = XCORD (xpos);
+			yloc = YCORD (ypos) - length + 1;
+			width = out_of;
+			height = length;
+			if (xmono)
+			    widthpad = ((width + 15) / 16) * 16;
+			else
+			    widthpad = ((width + 1) / 2) * 2;
+			offset = widthpad * (height - 1);
+			incr1 = -widthpad;
+			incr2 = 1;
+		    }
 	/* raster2 = (unsigned char *) calloc ((widthpad / 2) * 	
-					     visual_depth * height / 8, 2); */
+	   visual_depth * height / 8, 2); */
 	raster3 = (unsigned char *) calloc ((widthpad / 2) * height, 2);
 
     }
@@ -3175,9 +3176,9 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
 	for (rp = raster[0]; rp < re; rp++, rp3 += incr1)
 	{
 	    /* if( *rp )
-		*rp3 = screen_black;
-	    else
-		*rp3 = screen_white; */
+	     *rp3 = screen_black;
+	     else
+	     *rp3 = screen_white; */
 	    *rp3 = !!(*rp); 
 	}
     }
@@ -3188,7 +3189,7 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
 	re = raster[0] + length;
 	for (rp = raster[0]; rp < re; rp++, rp3 += incr1)
 	{
-	   *rp3 = map[*rp];
+	    *rp3 = map[*rp];
         }
 
     } 
@@ -3228,7 +3229,7 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
     	bitmap_pad = 1;
     	bytes_per_line = widthpad/8;
     	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
-		(char *) raster2,width,height,bitmap_pad,bytes_per_line);
+				 (char *) raster2,width,height,bitmap_pad,bytes_per_line);
 
     } else if( visual_depth == 8 ){
 	/* its easy to make 8 bit images, fast */
@@ -3240,63 +3241,63 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
     	bitmap_pad = 8;
     	bytes_per_line = widthpad;
     	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
-		(char *) raster3,xwidth,xheight,bitmap_pad,bytes_per_line);
+				 (char *) raster3,xwidth,xheight,bitmap_pad,bytes_per_line);
 	if (!pen_image) ERR(FATAL, name, "couldn't create XImage!");
 
 
-      }else if( visual_depth == 16 ||
-	       visual_depth==12 ||
-	       visual_depth == 15 ){
+    }else if( visual_depth == 16 ||
+	      visual_depth==12 ||
+	      visual_depth == 15 ){
 	/* convert raster3 to a 12/15/16 bit image in raster2 */
-         raster2 = (unsigned char *) calloc((size_t) (2*width*height),1);
-	 depth = visual_depth;
-	 format = ZPixmap;
-	 xoffset = 0;
-	 xwidth = width;
-	 xheight = height;
-	 bitmap_pad = 16;
-	 bytes_per_line = 0;
-	 pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
-				  (char *)raster2,xwidth,xheight,bitmap_pad,
-				  bytes_per_line);
-	 if (!pen_image) ERR(FATAL, name, "couldn't create XImage!");
+	raster2 = (unsigned char *) calloc((size_t) (2*width*height),1);
+	depth = visual_depth;
+	format = ZPixmap;
+	xoffset = 0;
+	xwidth = width;
+	xheight = height;
+	bitmap_pad = 16;
+	bytes_per_line = 0;
+	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
+				 (char *)raster2,xwidth,xheight,bitmap_pad,
+				 bytes_per_line);
+	if (!pen_image) ERR(FATAL, name, "couldn't create XImage!");
 	 
-	 if (visual_depth == 12 && pen_image->bits_per_pixel != 16) {
-	   ERR(FATAL, name,
+	if (visual_depth == 12 && pen_image->bits_per_pixel != 16) {
+	    ERR(FATAL, name,
 		"Can't handle visual_depth==12 && bits_per_pixel != 16 ");
-	 }
+	}
 
-	 rp3 = raster3;
+	rp3 = raster3;
 	
-	 if (pen_image->byte_order == MSBFirst) {
+	if (pen_image->byte_order == MSBFirst) {
 	   
-           for (i=0, rp2=raster2; i<height; i++) {
-	     rp3 = raster3 + i*widthpad;
-	     for (j=0, tip=rp2; j<width; j++, rp3++) {
-	       xcol = map[*rp3];
-	       *tip++ = xcol >>8 & 0xff;
-	       *tip++ = xcol & 0xff;
-	     }
-	     rp2 += pen_image->bytes_per_line;
-	   }
+	    for (i=0, rp2=raster2; i<height; i++) {
+		rp3 = raster3 + i*widthpad;
+		for (j=0, tip=rp2; j<width; j++, rp3++) {
+		    xcol = map[*rp3];
+		    *tip++ = xcol >>8 & 0xff;
+		    *tip++ = xcol & 0xff;
+		}
+		rp2 += pen_image->bytes_per_line;
+	    }
 	   
-	 } else {  /* LSBFirst */
+	} else {  /* LSBFirst */
 	   
-	   for (i=0, rp2=raster2; i<height; i++) {
-	     rp3 = raster3 + i*widthpad;
-	     for (j=0, tip=rp2; j<width; j++, rp3++) {
-	       xcol = map[*rp3];
-	       *tip++ = xcol & 0xff;
-	       *tip++ = xcol >>8 & 0xff;
-	     }
-	     rp2 += pen_image->bytes_per_line;
-	   }
-	 }
+	    for (i=0, rp2=raster2; i<height; i++) {
+		rp3 = raster3 + i*widthpad;
+		for (j=0, tip=rp2; j<width; j++, rp3++) {
+		    xcol = map[*rp3];
+		    *tip++ = xcol & 0xff;
+		    *tip++ = xcol >>8 & 0xff;
+		}
+		rp2 += pen_image->bytes_per_line;
+	    }
+	}
        
 
     } else if( visual_depth == 24 || visual_depth == 32 ) {
         /* convert raster3 to a 24/32 bit image in raster2 */
-         raster2 = (unsigned char *) calloc((size_t) (4*width*height),1);
+	raster2 = (unsigned char *) calloc((size_t) (4*width*height),1);
     	depth = visual_depth;
    	format = ZPixmap;
    	xoffset = 0;
@@ -3305,7 +3306,7 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
     	bitmap_pad = 32;
     	bytes_per_line = 0;
     	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
-		(char *)raster2,xwidth,xheight,bitmap_pad,bytes_per_line);
+				 (char *)raster2,xwidth,xheight,bitmap_pad,bytes_per_line);
         if (!pen_image) ERR(FATAL, name, "couldn't create XImage!");
  
         do32 = (pen_image->bits_per_pixel == 32);
@@ -3313,30 +3314,30 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
  
         if (pen_image->byte_order == MSBFirst) {
 	  
-           for (i=0, rp2=raster2; i<height; i++) {
-	      rp3 = raster3 + i*widthpad;
-              for (j=0, tip=rp2; j<width; j++, rp3++) {
-                 xcol = map[*rp3];
-                 if (do32) *tip++ = 0;
-                 *tip++ = (xcol>>16) & 0xff;
-                 *tip++ = (xcol>>8) & 0xff;
-                 *tip++ =  xcol & 0xff;
-               }
-               rp2 += pen_image->bytes_per_line;
+	    for (i=0, rp2=raster2; i<height; i++) {
+		rp3 = raster3 + i*widthpad;
+		for (j=0, tip=rp2; j<width; j++, rp3++) {
+		    xcol = map[*rp3];
+		    if (do32) *tip++ = 0;
+		    *tip++ = (xcol>>16) & 0xff;
+		    *tip++ = (xcol>>8) & 0xff;
+		    *tip++ =  xcol & 0xff;
+		}
+		rp2 += pen_image->bytes_per_line;
             }
 
         } else {  /* LSBFirst */
 
             for (i=0, rp2=raster2; i<height; i++) {
-	      rp3 = raster3 + i*widthpad;
-              for (j=0, tip=rp2; j<width; j++, rp3++) {
-                xcol = map[*rp3];
-                *tip++ =  xcol & 0xff;
-                *tip++ = (xcol>>8) & 0xff;
-                *tip++ = (xcol>>16) & 0xff;
-                if (do32) *tip++ = 0;
-              }
-              rp2 += pen_image->bytes_per_line;
+		rp3 = raster3 + i*widthpad;
+		for (j=0, tip=rp2; j<width; j++, rp3++) {
+		    xcol = map[*rp3];
+		    *tip++ =  xcol & 0xff;
+		    *tip++ = (xcol>>8) & 0xff;
+		    *tip++ = (xcol>>16) & 0xff;
+		    if (do32) *tip++ = 0;
+		}
+		rp2 += pen_image->bytes_per_line;
             }
         }
 
@@ -3352,19 +3353,19 @@ void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient
     	bitmap_pad = 32;
     	bytes_per_line = 0;
 	raster2 = (unsigned char *) calloc ((widthpad / 2) * 	
-					     visual_depth * height / 8, 2); 
+					    visual_depth * height / 8, 2); 
     	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
-		(char *)raster2,xwidth,xheight,bitmap_pad,bytes_per_line);
+				 (char *)raster2,xwidth,xheight,bitmap_pad,bytes_per_line);
 	for (i = 0; i < height; i++) {
-	  rp = raster3 + widthpad*i;
-	  for (j = 0; j < width; j++) {
-	    XPutPixel( pen_image , j, i, map[*rp++] );
-	  }}
+	    rp = raster3 + widthpad*i;
+	    for (j = 0; j < width; j++) {
+		XPutPixel( pen_image , j, i, map[*rp++] );
+	    }}
 	
-     }
+    }
 
     XPutImage(pen_display,pen_drawable,pen_gc,pen_image,
-		0,0,xloc,yloc,xwidth,xheight);
+	      0,0,xloc,yloc,xwidth,xheight);
     XDestroyImage(pen_image);
 
     /* free up remaining work space */
