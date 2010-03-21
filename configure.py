@@ -859,47 +859,9 @@ def opengl(context):
         context.Result(context_failure)
         need_pkg('opengl', fatal=False)
 
-    if res:
-        glew(context,LIBS,ogl)
-
     context.env['LIBS'] = LIBS
     context.env['LINKFLAGS'] = LINKFLAGS
     context.env['CPPPATH'] = CPPPATH
-
-pkg['glew'] = {'ubuntu':'libglew1.5-dev',
-               'suse'  :'glew-devel',
-               'fedora':'glew + glew-devel'}
-
-# If this test is failed, no GLEW programs
-def glew(context,LIBS,ogl):
-    context.Message("checking for GLEW ... ")
-
-    text = '''
-    #include <GL/glew.h>
-    #ifdef __APPLE__
-    #include <GLUT/glut.h>
-    #else
-    #include <GL/glut.h>
-    #endif
-    int main(int argc,char* argv[]) {
-    GLenum err;
-    glutInit(&argc, argv);
-    err = glewInit();
-    return 0;
-    }\n'''
-
-    GLEW = context.env.get('GLEW','GLEW')
-    context.env['LIBS'] =  LIBS + [GLEW] + ogl 
-
-    res = context.TryLink(text,'.c')
-
-    if res:
-        context.Result(res)
-        context.env['GLEW'] = GLEW
-    else:
-
-        context.Result(context_failure)
-        need_pkg('glew', fatal=False)
 
 pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel'}
 
@@ -1528,7 +1490,6 @@ def options(file):
     opts.Add('OPENGL','OpenGL libraries')
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
     opts.Add('OPENGLPATH','Path to OpenGL headers')
-    opts.Add('GLEW','GLEW library','GLEW')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('PETSCDIR','Portable, Extensible Toolkit for Scientific computation - installation directory')
     opts.Add('PETSCPATH','PETSc - path to headers')
