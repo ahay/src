@@ -6,8 +6,7 @@ import SCons
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr mt19937ar vfsr'
-hdrs = 'vfsr_defs'
+src = 'kiss_fft kiss_fftr mt19937ar'
 
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
@@ -31,7 +30,7 @@ except: # local version
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src2)+Split(hdrs)+Split(src))
+includes = map(lambda x: x+'.h',Split(src2)+Split(src))
 
 sobjs = []
 dobjs = []

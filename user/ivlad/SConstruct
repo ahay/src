@@ -57,7 +57,7 @@ if glob_build:
     bldutil.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
 
     # The back-up Python API
-    rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
-    env.RSF_Pycompile(rsfbak+'c',rsfbak)
-    env.Install(libdir, rsfbak+'c')
+    #rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
+    #env.RSF_Pycompile(rsfbak+'c',rsfbak)
+    #env.Install(libdir, rsfbak+'c')
 

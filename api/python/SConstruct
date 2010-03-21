@@ -2,7 +2,7 @@ import sys, os, string, re
 sys.path.append('../..')
 import bldutil
 
-modules = Split('rsf vplot vfsr')
+modules = Split('rsf vplot')
 
 try: # distribution version
     Import('env root libdir')

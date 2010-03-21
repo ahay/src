@@ -1,4 +1,4 @@
-/* Process data with GIMP.
+/* Process data with GIMP 2.0.
    
 Input samples must be in byte (unsigned char) format. Preprocess data
 with sfbyte first, if they have float or other samples. Only first 2D
@@ -47,9 +47,9 @@ http://registry.gimp.org/
 
 /*
 
-   This utility merely creates a temporary graphics file in TGA format,
+   This utility simple creates a temporary graphics file in TGA format,
    dumps input RSF data into it, creates a Script-Fu script (Scheme
-   language), installs it with gimptool, invokes GIMP with the user
+   language), installs it with gimptool-2.0, invokes GIMP with the user
    specified command, uninstalls the script, outputs contents of the
    processed tmp TGA file as RSF data in the end.
 
@@ -122,8 +122,8 @@ int main (int argc, char* argv[]) {
 
     sf_init (argc, argv);
 
-    if (0 != system ("gimptool --quiet"))
-        sf_error ("Can not execute gimptool: make sure it is installed and reachable through $PATH");
+    if (0 != system ("gimptool-2.0 --quiet"))
+        sf_error ("Can not execute gimptool-2.0: make sure it is installed and reachable through $PATH");
 
     if (NULL == sf_getstring ("command")) sf_error ("Need command=");
     /* Command to be executed by GIMP */
@@ -230,9 +230,9 @@ int main (int argc, char* argv[]) {
     fclose (scm_file);
 
     /* Install the script */
-    snprintf (buffer, BUFFER_SIZE, "gimptool --quiet --install-script %s", scm_filename);
+    snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --install-script %s", scm_filename);
     if (0 != system (buffer))
-        sf_error ("Can not install a Script-Fu script with gimptool: check if GIMP installed correctly");
+        sf_error ("Can not install a Script-Fu script with gimptool-2.0: check if GIMP installed correctly");
 
     /* Read 2D section */
     buf = sf_ucharalloc2 (n1, n2);
@@ -273,7 +273,7 @@ int main (int argc, char* argv[]) {
               cmd, tga_filename, &cmd_start[cmd_len]);
 
     if (0 != system (buffer)) {
-        snprintf (buffer, BUFFER_SIZE, "gimptool --quiet --uninstall-script %s", scm_filename);
+        snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
         system (buffer);
         unlink (tga_filename);
         unlink (scm_filename);
@@ -283,7 +283,7 @@ int main (int argc, char* argv[]) {
     /* Read the resulted image */
     gimp_file = fopen (tga_filename, "r+");
     if (NULL == gimp_file) {
-        snprintf (buffer, BUFFER_SIZE, "gimptool --quiet --uninstall-script %s", scm_filename);
+        snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
         system (buffer);
         unlink (tga_filename);
         unlink (scm_filename);
@@ -315,7 +315,7 @@ int main (int argc, char* argv[]) {
     sf_ucharwrite (buf[0], n1 * n2, out);
 
     /* Uninstall the script */
-    snprintf (buffer, BUFFER_SIZE, "gimptool --quiet --uninstall-script %s", scm_filename);
+    snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
     system (buffer);
     unlink (tga_filename);
     unlink (scm_filename);
