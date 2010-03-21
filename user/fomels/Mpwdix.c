@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "smoothpwd.h"
-#include "repeat.h"
 
 int main(int argc, char* argv[])
 {
@@ -89,7 +88,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    repeat_lop(false,true,n12,n12,v0[0],vr[0]);
+    sf_repeat_lop(false,true,n12,n12,v0[0],vr[0]);
 
     smoothpwd(niter, ncycle, wt[0], vr[0], vi[0], verb, eps);
 
@@ -99,7 +98,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    repeat_lop(false,false,n12,n12,vi[0],vr[0]);
+    sf_repeat_lop(false,false,n12,n12,vi[0],vr[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {

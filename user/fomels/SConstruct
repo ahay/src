@@ -75,7 +75,7 @@ for conv in ('byte2tif','tif2byte'):
 for prog in Split(
     '''
     burg cburg gauss2 gaussel grid1 matmult matmult2 ntriangle1
-    predict predict2 pwdsl trianglen trisl
+    predict predict2 pwdsl trisl
     '''):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)

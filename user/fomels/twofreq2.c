@@ -24,8 +24,6 @@
 #include <rsf.h>
 /*^*/
 
-#include "twofreq2.h"
-#include "twodiv2.h"
 #include "expont2.h"
 #include "expder2.h"
 
@@ -34,16 +32,22 @@ static int n1, n2, n;
 static const int niter=100;
 
 void twofreq2_init(int nx, int ny     /* data size */, 
-		   float fx, float fy /* smoothing radius */, 
-		   bool gauss         /* Gaussian or triangle smoothing */)
+		   int fx, int fy /* smoothing radius */)
 /*< initialize >*/
 {
+    int nd[2], rect[2];
+
     n1=nx; n2=ny; n=n1*n2;
     u1 = sf_floatalloc(n*4);
     u2 = sf_floatalloc(n);
     dp = sf_floatalloc(n*4);
 
-    twodiv2_init(4,n1,n2,fx,fy,niter,gauss,true,u1);
+    nd[0] = nx;
+    nd[1] = ny;
+    rect[0] = fx;
+    rect[1] = fy;
+
+    sf_multidivn_init(4,2,n,nd,rect,u1,NULL,true);
 }
 
 void twofreq2_close(void)
@@ -52,13 +56,14 @@ void twofreq2_close(void)
     free (u1);
     free (u2);
     free (dp);
-    twodiv2_close();
+    sf_multidivn_close();
 }
 
 void twofreq2(int niter  /* number of iterations */, 
 	      bool verb  /* verbosity flag */, 
 	      float *u   /* input data */, 
-	      float** pq /* estimated frequencies */)
+	      float** pq /* estimated frequencies */,
+	      bool *mask /* mask for missing data */)
 /*< estimate >*/
 {
     int i, iter;
@@ -102,7 +107,17 @@ void twofreq2(int niter  /* number of iterations */,
 
 	if (verb) sf_warning("%d %g %g %g %g %g", iter+1, 
 			     sqrt(usum/n), psum1/n, psum2/n, psum3/n, psum4/n);
-	twodiv2(u2,dp);
+
+	if (NULL != mask) {
+	    for(i=0; i < n; i++) {
+		if (mask[i]) {
+		    u1[i] = 0.;
+		    u2[i] = 0.;
+		}
+	    }
+	}
+
+	sf_multidivn(u2,dp,niter);
 
 	for(i=0; i < 4*n; i++) {
 	    pq[0][i] += dp[i];

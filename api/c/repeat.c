@@ -17,15 +17,17 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "_solver.h"
 /*^*/
 
 #include "repeat.h"
+#include "error.h"
+#include "adjnull.h"
 
 static int n1, n2;
 static sf_operator oper;
 
-void repeat_init(int m1            /* trace length */, 
+void sf_repeat_init(int m1            /* trace length */, 
 		 int m2            /* number of traces */, 
 		 sf_operator oper1 /* operator */)
 /*< initialize >*/
@@ -35,7 +37,7 @@ void repeat_init(int m1            /* trace length */,
     oper = oper1;
 }
 
-void repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+void sf_repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
 /*< combined linear operator >*/
 {
     int i2;       

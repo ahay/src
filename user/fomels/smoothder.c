@@ -21,9 +21,6 @@
 
 #include "smoothder.h"
 
-#include "repeat.h"
-#include "trianglen.h"
-
 static float *tmp;
 
 void smoothder_init(int n     /* data size */, 
@@ -37,9 +34,8 @@ void smoothder_init(int n     /* data size */,
     n1 = ndat[0];
     n2 = n/n1;
     
-    repeat_init(n1,n2,sf_causint_lop);
-
-    trianglen_init(ndim,rect,ndat);
+    sf_repeat_init(n1,n2,sf_causint_lop);
+    sf_trianglen_init(ndim,rect,ndat);
 
     tmp = sf_floatalloc(n);
     sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, false);    
@@ -50,7 +46,7 @@ void smoothder_close(void)
 {
     free(tmp);
     sf_conjgrad_close();
-    trianglen_close();
+    sf_trianglen_close();
 }
 
 void smoothder(int niter     /* number of iterations */, 
@@ -61,8 +57,10 @@ void smoothder(int niter     /* number of iterations */,
 { 
     if (NULL != weight) {
 	sf_weight_init(weight);
-	sf_conjgrad(sf_weight_lop,repeat_lop,trianglen_lop,tmp,der,data,niter);
+	sf_conjgrad(sf_weight_lop,sf_repeat_lop,sf_trianglen_lop,
+		    tmp,der,data,niter);
     } else {
-	sf_conjgrad(NULL,repeat_lop,trianglen_lop,tmp,der,data,niter);
+	sf_conjgrad(NULL,sf_repeat_lop,sf_trianglen_lop,
+		    tmp,der,data,niter);
     }
 }

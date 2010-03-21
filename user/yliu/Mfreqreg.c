@@ -19,8 +19,6 @@
 #include <rsf.h>
 
 #include <math.h>
-#include "multidivn1.h"
-#include "weight2.h"
 
 int main(int argc, char* argv[])
 {
@@ -79,7 +77,7 @@ int main(int argc, char* argv[])
     m[0] = n1;
     rec[0] = rect;
     
-    multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, false); 
+    sf_multidivn_init(2*nw, 1, n1, m, rec, kbsc, aa, false); 
     
     if (NULL != sf_getstring("mask")) {
 	mask = sf_input("mask");
@@ -149,7 +147,7 @@ int main(int argc, char* argv[])
 	for(i1=0; i1 < n1; i1++) {
 	    trace[i1] /= mean;
 	}
-	multidivn (trace,sscc,niter);
+	sf_multidivn (trace,sscc,niter);
 	
 	for (iw=0; iw < nw; iw++) {
 	    for (i1=0; i1 < n1; i1++) {

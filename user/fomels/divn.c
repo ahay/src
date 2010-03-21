@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "divn.h"
-#include "trianglen.h"
 
 static int niter, n;
 static float *p;
@@ -36,7 +35,7 @@ void divn_init(int ndim   /* number of dimensions */,
     niter = niter1;
     n = nd;
 
-    trianglen_init(ndim, nbox, ndat);
+    sf_trianglen_init(ndim, nbox, ndat);
     sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
     p = sf_floatalloc (nd);
 }
@@ -44,7 +43,7 @@ void divn_init(int ndim   /* number of dimensions */,
 void divn_close (void)
 /*< free allocated storage >*/
 {
-    trianglen_close();
+    sf_trianglen_close();
     sf_conjgrad_close();
     free (p);
 }
@@ -53,7 +52,7 @@ void divn (float* num, float* den,  float* rat)
 /*< smoothly divide rat=num/den >*/
 {
     sf_weight_init(den);
-    sf_conjgrad(NULL, sf_weight_lop,trianglen_lop,p,rat,num,niter); 
+    sf_conjgrad(NULL, sf_weight_lop,sf_trianglen_lop,p,rat,num,niter); 
 }
 
 void divn_combine (const float* one, const float* two, float *prod)

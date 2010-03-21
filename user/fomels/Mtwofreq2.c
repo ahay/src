@@ -8,13 +8,14 @@ Takes: < data.rsf > dip.rsf
 #include <rsf.h>
 
 #include "twofreq2.h"
+#include "mask4freq.h"
 
 int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, i;
     float eps, lam, p0, q0, p1, q1, *u, **p;
-    bool verb, gauss;
-    sf_file in, out;
+    bool verb, *m;
+    sf_file in, out, mask;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -49,14 +50,27 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
-    if (!sf_getbool("gauss",&gauss)) gauss = false;
-    /* if y, use exact Gaussian for smoothing */
 
     /* initialize spectral estimation */
-    twofreq2_init(n1, n2, eps, lam, gauss);
+    twofreq2_init(n1, n2, (int) eps, (int) lam);
 
     u = sf_floatalloc(n12);
     p = sf_floatalloc2(n12,4);
+
+    /* allocate mask */
+    if (NULL != sf_getstring("mask")) {
+	m = sf_boolalloc(n12);
+	mask = sf_input("mask");
+    } else {
+	mask = NULL;
+	m = NULL;
+    }
+
+    /* initialize mask */
+    if (NULL != mask) {
+	sf_floatread(u,n12,mask);
+	mask4freq (2, 1, n1, n2, u, m);
+    }
 
     /* read data */
     sf_floatread(u,n12,in);
@@ -70,7 +84,7 @@ int main (int argc, char *argv[])
     }
   
     /* estimate components */
-    twofreq2(niter, verb, u, p);
+    twofreq2(niter, verb, u, p, m);
 
     /* write components */
     sf_floatwrite(p[0],n12*4,out);
@@ -78,4 +92,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mtwodip2.c 704 2004-07-13 18:22:06Z fomels $	 */
+/* 	$Id: Mtwofreq2.c 704 2004-07-13 18:22:06Z fomels $	 */

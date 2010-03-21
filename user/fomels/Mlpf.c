@@ -18,11 +18,9 @@
 */
 #include <rsf.h>
 
-#include "multidivn.h"
-#include "weight2.h"
-
 int main(int argc, char* argv[])
 {
+    bool verb;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], rect[SF_MAX_DIM];
     int ndim, mdim, nd, ns, n12, i, j, niter, na, ia;
     float *d, *f, *g, mean, a0;
@@ -69,6 +67,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
+
     if (NULL == (peffile = sf_getstring("pef"))) { 
         /* signal PEF file (optional) */
 	aa = NULL;
@@ -101,7 +102,7 @@ int main(int argc, char* argv[])
     f = sf_floatalloc(n12);
     g = sf_floatalloc(nd);
 
-    multidivn_init(ns, mdim, nd, m, rect, d, aa); 
+    sf_multidivn_init(ns, mdim, nd, m, rect, d, aa, verb); 
     
     sf_floatread(d,n12,dat);
     sf_floatread(g,nd,mat);
@@ -124,7 +125,7 @@ int main(int argc, char* argv[])
 	g[i] /= mean;
     }
     
-    multidivn (g,f,niter);
+    sf_multidivn (g,f,niter);
     sf_floatwrite(f,n12,flt);
 
     if (pre) {
@@ -132,7 +133,7 @@ int main(int argc, char* argv[])
 	    d[i] *= mean;
 	}
 	
-	weight2_lop(false,false,n12,nd,f,g);
+	sf_weight2_lop(false,false,n12,nd,f,g);
 	sf_floatwrite(g,nd,pre);
     }
 

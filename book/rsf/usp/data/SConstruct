@@ -126,6 +126,16 @@ Plot('shot','grey title=Before')
 Result('spec','shot',
        'spectra | window max1=100 | grey color=j allpos=y title=Spectra')
 
-Flow('timefreq','shot','timefreq nw=81 dw=1 rect=50 verb=y')
+Flow('ltft','shot',
+     'ltft rect=20 verb=y nw=100 dw=1 niter=50')
+Plot('ltft',
+       '''
+       math output="abs(input)" | real |
+       byte allpos=y gainpanel=100 pclip=99 |
+       grey3 color=j  frame1=120 frame2=0 frame3=71 label1=Time flat=y 
+       unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
+       screenht=10 screenratio=0.7 movie=2
+       point1=0.8 point2=0.3 wanttitle=n
+       ''',view=1)
 
 End()

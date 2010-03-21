@@ -20,9 +20,7 @@
 #include <rsf.h>
 
 #include "blockder.h"
-#include "repeat.h"
 #include "doubint.h"
-#include "weight2.h"
 
 static float *tmp;
 
@@ -36,13 +34,13 @@ void blockder_init(int n1, int n2       /* data size */,
 
     n = n1*n2;
     
-    repeat_init(n1,n2,doubint_lop);
+    sf_repeat_init(n1,n2,doubint_lop);
 
     doubint_init(n1);
     tmp = sf_floatalloc(n);
     sf_sharpen_init(n,perc);
     sf_sharpen(block);
-    weight2_init(1,n,weight);
+    sf_weight2_init(1,n,weight);
 
     sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, false);    
 }
@@ -54,7 +52,7 @@ void blockder_close(void)
 
     doubint_close();
     sf_sharpen_close();
-    weight2_close();
+    sf_weight2_close();
     sf_conjgrad_close();
 }
 
@@ -63,5 +61,5 @@ void blockder(int niter   /* number of iterations */,
 	      float* der  /* output derivative */) 
 /*< find the derivative >*/
 { 
-    sf_conjgrad(weight2_lop,repeat_lop,sf_weight_lop,tmp,der,data,niter);
+    sf_conjgrad(sf_weight2_lop,sf_repeat_lop,sf_weight_lop,tmp,der,data,niter);
 }

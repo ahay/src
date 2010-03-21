@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "smoothpwd.h"
-#include "repeat.h"
 #include "predict.h"
 
 
@@ -39,7 +38,7 @@ void smoothpwd_init(int n1, int n2 /* data size */,
 {
     n = n1*n2;
 
-    repeat_init(n1,n2,sf_causint_lop);
+    sf_repeat_init(n1,n2,sf_causint_lop);
     predict_init (n1,n2,eps,order,1);
     predict_set(dip);
     sf_triangle2_init (rect1,1,n1,n2,1);
@@ -75,11 +74,11 @@ void smoothpwd(int niter     /* number of iterations */,
     
     for (iter=0; iter < ncycle; iter++) {
 	if (NULL != weight) {
-	    sf_solver_prec (repeat_lop,sf_cgstep,predict_smooth_lop,
+	    sf_solver_prec (sf_repeat_lop,sf_cgstep,predict_smooth_lop,
 			    n,n,n,der,data,niter,eps,
 			    "wt",weight,"verb",verb,"mwt",w,"xp",p,"end");
 	} else {
-	    sf_solver_prec (repeat_lop,sf_cgstep,predict_smooth_lop,
+	    sf_solver_prec (sf_repeat_lop,sf_cgstep,predict_smooth_lop,
 			    n,n,n,der,data,niter,eps,
 			    "verb",verb,"mwt",w,"xp",p,"end");
 	}

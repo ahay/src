@@ -17,18 +17,24 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "trianglen.h"
-
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
+
+#include "trianglen.h"
+#include "file.h"
+#include "triangle.h"
+#include "alloc.h"
+#include "error.h"
+#include "adjnull.h"
+#include "decart.h"
 
 static int *n, s[SF_MAX_DIM], nd, dim;
 static sf_triangle *tr;
 static float *tmp;
 
-void trianglen_init (int ndim  /* number of dimensions */, 
-		     int *nbox /* triangle radius [ndim] */, 
-		     int *ndat /* data dimensions [ndim] */)
+void sf_trianglen_init (int ndim  /* number of dimensions */, 
+			int *nbox /* triangle radius [ndim] */, 
+			int *ndat /* data dimensions [ndim] */)
 /*< initialize >*/
 {
     int i;
@@ -47,7 +53,7 @@ void trianglen_init (int ndim  /* number of dimensions */,
     tmp = sf_floatalloc (nd);
 }
 
-void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+void sf_trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
     int i, j, i0;
@@ -89,7 +95,7 @@ void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }    
 }
 
-void trianglen_close(void)
+void sf_trianglen_close(void)
 /*< free allocated storage >*/
 {
     int i;
@@ -103,4 +109,4 @@ void trianglen_close(void)
     free(tr);
 }
 
-/* 	$Id: trianglen.c 4092 2009-01-29 21:16:20Z sfomel $	 */
+/* 	$Id$	 */

@@ -17,17 +17,20 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "weight2.h"
+#include "alloc.h"
+#include "error.h"
+#include "adjnull.h"
 
 static int nw;
 static float **w;
 
-void weight2_init(int nw1   /* number of components */, 
-		  int n     /* model size */, 
-		  float *ww /* weight [nw*n] */)
+void sf_weight2_init(int nw1   /* number of components */, 
+		     int n     /* model size */, 
+		     float *ww /* weight [nw*n] */)
 /*< initialize >*/
 {
     int iw;
@@ -40,13 +43,13 @@ void weight2_init(int nw1   /* number of components */,
     }
 }
 
-void weight2_close(void)
+void sf_weight2_close(void)
 /*< free allocated storage >*/
 {
     free(w);
 }
 
-void weight2_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
+void sf_weight2_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 /*< linear operator >*/
 {
     int i, iw;

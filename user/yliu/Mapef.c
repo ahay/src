@@ -20,8 +20,6 @@
 #include <rsf.h>
 
 #include <math.h>
-#include "multidivn1.h"
-#include "weight2.h"
 #include "mask4apef.h"
 
 int main(int argc, char* argv[])
@@ -113,7 +111,7 @@ int main(int argc, char* argv[])
     ff = sf_floatalloc(n12);
     g = sf_floatalloc(nd);
 
-    multidivn_init(ns, mdim, nd, m, rect, d, NULL, verb); 
+    sf_multidivn_init(ns, mdim, nd, m, rect, d, NULL, verb); 
 
     if (1==m[2] && 1==m[1]) {
 	sf_shiftdim(mat,flt,1);
@@ -226,7 +224,7 @@ int main(int argc, char* argv[])
 	    } 
 	}
 	
-	multidivn (g,f,niter);
+	sf_multidivn (g,f,niter);
 	
 	for (i3=0; i3 < a[2]; i3++) {
 	    for (i2=0; i2 < a[1]; i2++) {
@@ -275,7 +273,7 @@ int main(int argc, char* argv[])
 	    for(i=0; i < n12; i++) {
 		d[i] *= mean;
 	    }
-	    weight2_lop(false,false,n12,nd,f,g);
+	    sf_weight2_lop(false,false,n12,nd,f,g);
 	    sf_floatwrite(g,nd,pre);
 	}
     }

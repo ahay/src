@@ -21,8 +21,6 @@
 
 #include "elpf.h"
 #include <math.h>
-#include "multidivn1.h"
-#include "weight2.h"
 
 static float *fixd, *d, mean;
 static int m[SF_MAX_DIM], rec[SF_MAX_DIM];
@@ -55,7 +53,7 @@ void elpf_init (int n          /* data size */,
     m[0] = nfw;
     rec[0] = rect;
 
-    multidivn_init(2, 1, nfw, m, rec, d, aa, verb);
+    sf_multidivn_init(2, 1, nfw, m, rec, d, aa, verb);
 
     mean = 0.;
     for (i=0; i < n2; i++) {
@@ -73,7 +71,7 @@ void elpf_close (void)
 {
     free (fixd);
     free (d);
-    multidivn_close();   
+    sf_multidivn_close();   
 }
 
 float elpf (float *inp     /* input data */,
@@ -129,12 +127,12 @@ float elpf (float *inp     /* input data */,
 		g[k] /= mean;
 	    }
 
-	    multidivn (g,f,niter);
+	    sf_multidivn (g,f,niter);
 
 	    for (k=0; k < nfw*2; k++) {
 		d[k] *= mean;
 	    }
-	    weight2_lop(false,false,nfw*2,nfw,f,g);
+	    sf_weight2_lop(false,false,nfw*2,nfw,f,g);
 	    pre[1*nfw+p] = g[nfw-1-p];
 	    err = 0.;
 	    for (k=0; k < nfw; k++) {

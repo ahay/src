@@ -16,10 +16,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
-
-#include "trianglen.h"
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +61,7 @@ int main(int argc, char* argv[])
     /* if y, keep known values */
 
     sf_mask_init(known);
-    trianglen_init(dim, rect, n);
+    sf_trianglen_init(dim, rect, n);
 
     sf_floatread(mm,n12,in);
 
@@ -94,7 +91,7 @@ int main(int argc, char* argv[])
     sf_conjgrad_init(n12, n12, n12, n12, eps, FLT_EPSILON, true, false);
 
  
-    sf_conjgrad(NULL, sf_mask_lop, trianglen_lop, pp, mm, mm, niter);
+    sf_conjgrad(NULL, sf_mask_lop, sf_trianglen_lop, pp, mm, mm, niter);
 
     if (force) {
 	for (i=0; i < n12; i++) {

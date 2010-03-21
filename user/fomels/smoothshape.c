@@ -21,7 +21,6 @@
 
 #include "smoothshape.h"
 #include "pwdsl.h"
-#include "repeat.h"
 
 static float *tmp;
 
@@ -36,7 +35,7 @@ void smoothshape_init(int n1, int n2        /* data size */,
 
     n = n1*n2;
 
-    repeat_init(n1,n2,sf_causint_lop);
+    sf_repeat_init(n1,n2,sf_causint_lop);
     pwdsl_init(n1,n2,order,rect1,rect2, 0.01);
     pwdsl_set(dip);
 
@@ -60,8 +59,8 @@ void smoothshape(int niter     /* number of iterations */,
 { 
     if (NULL != weight) {
 	sf_weight_init(weight);
-	sf_conjgrad(sf_weight_lop,repeat_lop,pwdsl_lop,tmp,der,data,niter);
+	sf_conjgrad(sf_weight_lop,sf_repeat_lop,pwdsl_lop,tmp,der,data,niter);
     } else {
-	sf_conjgrad(NULL,repeat_lop,pwdsl_lop,tmp,der,data,niter);
+	sf_conjgrad(NULL,sf_repeat_lop,pwdsl_lop,tmp,der,data,niter);
     }
 }

@@ -27,7 +27,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 #include <rsf.h>
 
 #include "smoothder.h"
-#include "repeat.h"
 
 int main(int argc, char* argv[])
 {
@@ -86,7 +85,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    repeat_lop(false,true,nd,nd,v0[0],vr[0]);
+    sf_repeat_lop(false,true,nd,nd,v0[0],vr[0]);
     smoothder(niter, wt[0], vr[0], vi[0]);
  
     for (i2=0; i2 < n2; i2++) {
@@ -95,7 +94,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    repeat_lop(false,false,nd,nd,vi[0],vr[0]);
+    sf_repeat_lop(false,false,nd,nd,vi[0],vr[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {

@@ -25,7 +25,6 @@
 /*^*/
 
 #include "twodip2.h"
-#include "twodiv2.h"
 #include "div2.h"
 #include "allp3.h"
 
@@ -38,12 +37,14 @@ static void border(float* u);
 
 void twodip2_init(int nx, int ny     /* data size */, 
 		  float fx, float fy /* smoothing radius */, 
-		  bool sign1         /* if keep slope signs */, 
+		  bool sign1         /* if keep slope signs */,
 		  bool gauss         /* Gaussian versus triangle smoothing */,
 		  bool verb          /* verbosity flag */,
 		  bool both          /* both slopes or one */)
 /*< initialize >*/
 {
+    int nd[2], rect[2];
+
     n1=nx; n2=ny; n=n1*n2;
     u2 = sf_floatalloc(n);
     u3 = sf_floatalloc(n);
@@ -52,7 +53,11 @@ void twodip2_init(int nx, int ny     /* data size */,
 	u1 = sf_floatalloc2(n,2);
 	dp = sf_floatalloc(n*2);
 	p0 = sf_floatalloc(n*2);
-	twodiv2_init(2,n1,n2,fx,fy,niter,gauss,verb,u1[0]);
+	nd[0] = nx;
+	nd[1] = ny;
+	rect[0] = fx;
+	rect[1] = fy;
+	sf_multidivn_init(2,2,n,nd,rect,u1[0],NULL,true);
     } else {
 	u1 = sf_floatalloc2(n,1);
 	dp = sf_floatalloc(n);
@@ -71,7 +76,7 @@ void twodip2_close(void)
     free (u3);
     free (dp);
     free (p0);
-    twodiv2_close();
+    sf_multidivn_close();
 }
 
 void twodip2(int niter        /* number of iterations */, 
@@ -142,7 +147,7 @@ void twodip2(int niter        /* number of iterations */,
 	    }
 	}
 
-	twodiv2(u2,dp);
+	sf_multidivn(u2,dp,niter);
 	
 	lam = 1.;
 	for (k=0; k < 8; k++) {
