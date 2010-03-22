@@ -3,8 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 waves = '''
-rtm wave wave24 
-rtmgeom wavegeom
+rtm wave wave24
 '''
 other = '''
 vam
