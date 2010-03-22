@@ -44,7 +44,7 @@ env.Append(BUILDERS={'RSF_Include':configure.Header,
                      'RSF_Place':configure.Place,
                      'RSF_Pycompile':configure.Pycompile,
                      'RSF_Docmerge':bldutil.Docmerge},
-           SCANNERS=[configure.Include])
+           SCANNERS=[bldutil.Include])
 
 ##########################################################################
 # FRAMEWORK BUILD

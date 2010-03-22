@@ -86,19 +86,6 @@ def header(target=None,source=None,env=None):
 Header = Builder (action = Action(header,varlist=['prefix']),
                   src_suffix='.c',suffix='.h')
 
-include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
-
-def included(node,env,path):
-    file = os.path.basename(str(node))
-    file = re.sub('\.[^\.]+$','',file)
-    contents = node.get_contents()
-    includes = include.findall(contents)
-    if file in includes:
-        includes.remove(file)
-    return map(lambda x: x + '.h',includes)
-
-Include = Scanner(name='Include',function=included,skeys=['.c'])
-
 plat = {'OS': 'unknown',
         'distro': 'unknown',
         'arch': 'unknown',

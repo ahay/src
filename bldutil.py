@@ -57,6 +57,19 @@ def merge(target=None,source=None,env=None):
 
 ################################################################################
 
+def __included(node,env,path):
+    file = os.path.basename(str(node))
+    file = re.sub('\.[^\.]+$','',file)
+    contents = node.get_contents()
+    includes = __include.findall(contents)
+    if file in includes:
+        includes.remove(file)
+    return map(lambda x: x + '.h',includes)
+
+Include = Scanner(name='Include', function=__included, skeys=['.c'])
+
+################################################################################
+
 def __docmerge(target=None,source=None,env=None):
     outfile = target[0].abspath
     out = open(outfile,'w')
@@ -95,7 +108,7 @@ def Debug():
     env.SConsignFile(None)
     env.Append(BUILDERS={'RSF_Include':configure.Header,
                          'RSF_Place':configure.Place},
-               SCANNERS=[configure.Include])
+               SCANNERS=[Include])
     return env
 
 ################################################################################
