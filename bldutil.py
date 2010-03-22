@@ -127,6 +127,31 @@ Docmerge = Builder(action=Action(__docmerge,varlist=['alias']),
 
 ################################################################################
 
+def __placeholder(target=None,source=None,env=None):
+    filename = str(target[0])
+    out = open(filename,'w')
+    var = env.get('var')
+    out.write('#!/usr/bin/env python\n')
+    out.write('import sys\n\n')
+    out.write('sys.stderr.write(\'\'\'\n%s is not installed.\n')
+    if var:
+        out.write('Check $RSFROOT/lib/rsfconfig.py for ' + var)
+        out.write('\nand reinstall if necessary.')
+    message = env.get('message')
+    if message:
+        out.write(message)
+    package = env.get('package')
+    if package:
+        out.write('\nPossible missing packages: ' + package)
+    out.write('\n\'\'\' % sys.argv[0])\nsys.exit(1)\n')
+    out.close()
+    os.chmod(filename,0775)
+    return __py_success
+
+Place = Builder (action = Action(__placeholder,varlist=['var','package']))
+
+################################################################################
+
 def Debug():
     'Environment for debugging'
     env = Environment()
@@ -139,7 +164,7 @@ def Debug():
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env.SConsignFile(None)
     env.Append(BUILDERS={'RSF_Include':Header,
-                         'RSF_Place':configure.Place},
+                         'RSF_Place':Place},
                SCANNERS=[Include])
     return env
 
