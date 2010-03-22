@@ -1,6 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import configure, os
+import bldutil, configure, os
 
 env = Environment()
 
@@ -43,7 +43,7 @@ env.Alias('config',config)
 env.Append(BUILDERS={'RSF_Include':configure.Header,
                      'RSF_Place':configure.Place,
                      'RSF_Pycompile':configure.Pycompile,
-                     'RSF_Docmerge':configure.Docmerge},
+                     'RSF_Docmerge':bldutil.Docmerge},
            SCANNERS=[configure.Include])
 
 ##########################################################################

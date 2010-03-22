@@ -1,4 +1,4 @@
-import glob, os, re, string
+import glob, os, re, string, py_compile
 
 try:
     import configure
@@ -18,9 +18,35 @@ else:  # old style
 
 ################################################################################
 
-# Constants
+# Constants used in multiple functions
 
-py_success = 0 # user-defined
+__py_success = 0 # user-defined
+__include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
+
+################################################################################
+
+def __docmerge(target=None,source=None,env=None):
+    outfile = target[0].abspath
+    out = open(outfile,'w')
+    out.write('import rsfdoc\n\n')
+    for src in map(str,source):
+        inp = open(src,'r')
+        for line in inp.readlines():
+                out.write(line)
+        inp.close()
+    alias = env.get('alias',{})
+    for prog in alias.keys():
+        out.write("rsfdoc.progs['%s']=%s\n" % (prog,alias[prog]))
+    out.close()
+    py_compile.compile(outfile,outfile+'c')
+    return __py_success
+
+def __pycompile_emit(target, source, env):
+    target.append(str(target[0])+'c')
+    return target,source 
+
+Docmerge = Builder(action=Action(__docmerge,varlist=['alias']),
+                   emitter=__pycompile_emit)
 
 ################################################################################
 
@@ -42,10 +68,8 @@ def Debug():
 
 ################################################################################
 
-include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
-
-# find dependencies for C 
 def depends(env,list,file):
+    'Find dependencies for C'
     filename = env.File(file+'.c').abspath
     # replace last occurence of build/
     last = filename.rfind('build/')
@@ -53,7 +77,7 @@ def depends(env,list,file):
         filename = filename[:last] + filename[last+6:]
     fd = open(filename,'r')
     for line in fd.readlines():
-        for inc in include.findall(line):
+        for inc in __include.findall(line):
             if inc not in list and inc[0] != '_':
                 list.append(inc)
                 depends(env,list,inc)
@@ -61,10 +85,10 @@ def depends(env,list,file):
 
 ################################################################################
 
-include90 = re.compile(r'^[^!]*use\s+(\S+)')
-
-# find dependencies for Fortran-90
 def depends90(env,list,file):
+    'Find dependencies for Fortran-90'
+
+    include90 = re.compile(r'^[^!]*use\s+(\S+)')
     filename = env.File(file+'.f90').abspath
     # replace last occurence of build/
     last = filename.rfind('build/')
@@ -81,13 +105,12 @@ def depends90(env,list,file):
 ################################################################################
 
 def chk_exists(prog, ext='c', mainprog=True):
+    'Check if file corresponding to program name exists'
 
     ext = ext.lstrip('.') # In case the user put a dot
-
     prognm = prog + '.' + ext
     if mainprog:
         prognm = 'M' + prognm
-    
     try:
         assert os.path.isfile(prognm)
     except:

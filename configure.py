@@ -88,21 +88,6 @@ Header = Builder (action = Action(header,varlist=['prefix']),
 
 include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
 
-# find dependencies for C 
-def depends(env,list,file):
-    filename = env.File(file+'.c').abspath
-    # replace last occurence of build/
-    last = filename.rfind('build/')
-    if last >= 0:
-        filename = filename[:last] + filename[last+6:]
-    fd = open(filename,'r')
-    for line in fd.readlines():
-        for inc in include.findall(line):
-            if inc not in list and inc[0] != '_':
-                list.append(inc)
-                depends(env,list,inc)
-    fd.close()
-
 def included(node,env,path):
     file = os.path.basename(str(node))
     file = re.sub('\.[^\.]+$','',file)
@@ -1581,29 +1566,6 @@ def merge(target=None,source=None,env=None):
         inp.close()
     out.close()
     return py_success
-
-def docmerge(target=None,source=None,env=None):
-    outfile = target[0].abspath
-    out = open(outfile,'w')
-    out.write('import rsfdoc\n\n')
-    for src in map(str,source):
-        inp = open(src,'r')
-        for line in inp.readlines():
-                out.write(line)
-        inp.close()
-    alias = env.get('alias',{})
-    for prog in alias.keys():
-        out.write("rsfdoc.progs['%s']=%s\n" % (prog,alias[prog]))
-    out.close()
-    py_compile.compile(outfile,outfile+'c')
-    return py_success
-
-def pycompile_emit(target, source, env):
-    target.append(str(target[0])+'c')
-    return target,source 
-
-Docmerge = Builder(action=Action(docmerge,varlist=['alias']),
-                   emitter=pycompile_emit)
 
 def placeholder(target=None,source=None,env=None):
     filename = str(target[0])
