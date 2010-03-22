@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 
 #############################################################################
 # MAIN LIBRARY
@@ -44,7 +44,7 @@ dlib = env.SharedLibrary('rsfplot',dobjects,
                          SHLIBPREFIX='libd',
                          LIBS=['drsf']+env.get('LIBS',[]))
 
-inc = env.Command('rsfplot.h',includes,Action(configure.merge))
+inc = env.Command('rsfplot.h',includes,Action(bldutil.merge))
 env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)
 
@@ -87,6 +87,3 @@ if root:
 
     doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
-    
-# 	$Id$	
-

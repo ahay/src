@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 import SCons
 
 #############################################################################
@@ -51,7 +51,7 @@ for source in Split(src2):
 slib = env.StaticLibrary('rsf',sobjs+sources)
 dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
 
-inc = env.Command('rsf.h',includes,Action(configure.merge))
+inc = env.Command('rsf.h',includes,Action(bldutil.merge))
 
 env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)

@@ -1,6 +1,6 @@
 import os, sys, string, re
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 
 #############################################################################
 # SU LIBRARY
@@ -39,11 +39,10 @@ for source in Split(src):
 # MAIN LIBRARY
 ##############################################################################
 lib = env.StaticLibrary('su',objects)
-inc = env.Command('su.h',includes,Action(configure.merge))
+inc = env.Command('su.h',includes,Action(bldutil.merge))
 env.Install('../../lib',lib)
 env.Install('../../include',inc)
 
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
-

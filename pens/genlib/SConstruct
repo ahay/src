@@ -1,6 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
-import bldutil, configure
+import bldutil
 
 src = '''
 genarea genhatch geninteract genmarker genmessage genpatarea genpoint
@@ -31,6 +31,5 @@ for source in Split(src):
     env.Depends(obj,source+'.h')
     objects.append(obj)
 
-inc = env.Command('genpen.h',includes,Action(configure.merge))
+inc = env.Command('genpen.h',includes,Action(bldutil.merge))
 lib = env.StaticLibrary('genpen',objects)
-

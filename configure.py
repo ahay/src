@@ -1536,37 +1536,6 @@ def options(file):
 
     return opts
 
-local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
-
-def includes(list,file):
-    global local_include
-    fd = open(file,'r')
-    for line in fd.readlines():
-         match = local_include.match(line)
-         if match:
-             other = os.path.join(os.path.dirname(file),match.group(1))
-             if not other in list:
-                 includes(list,other)
-    list.append(file)
-    fd.close()
-
-def merge(target=None,source=None,env=None):
-    global local_include
-    sources = map(str,source)
-    incs = []
-    for src in sources:
-        if not src in incs:
-            includes(incs,src)
-    out = open(str(target[0]),'w')
-    for src in incs:
-        inp = open(src,'r')
-        for line in inp.readlines():
-            if not local_include.match(line):
-                out.write(line)
-        inp.close()
-    out.close()
-    return py_success
-
 def placeholder(target=None,source=None,env=None):
     filename = str(target[0])
     out = open(filename,'w')
