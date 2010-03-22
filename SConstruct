@@ -40,7 +40,7 @@ env.Alias('config',config)
 # CUSTOM BUILDERS
 ##########################################################################
 
-env.Append(BUILDERS={'RSF_Include':configure.Header,
+env.Append(BUILDERS={'RSF_Include':bldutil.Header,
                      'RSF_Place':configure.Place,
                      'RSF_Pycompile':configure.Pycompile,
                      'RSF_Docmerge':bldutil.Docmerge},
