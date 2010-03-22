@@ -66,8 +66,13 @@ def show_man_and_out(condition):
 ###############################################################################
 
 def run(nm, main_func, cpar=[], nminarg=None, nmaxarg=None):
-    '''nm must be __name__ . main_func must take a single argument -- par
-       cpar is compulsory parameter list'''
+    'For eliminating boilerplate code in main programs'
+
+    # nm must be __name__
+    # main_func must take a single argument -- par
+    # cpar is compulsory parameter list
+    # nminarg: minimum number of command-line arguments to the program
+    # nmaxarg: max nr of CLI args to prog
 
     if nm == '__main__':
         if nminarg != None:
@@ -103,6 +108,24 @@ def exe(cmd, verb=False):
 
 ###############################################################################
 
+def __is_x(fname):
+    return os.path.exists(fname) and os.access(fname, os.X_OK)
+
+def which(prog):
+    'Same functionality as Unix which'
+
+    fpath, fname = os.path.split(prog)
+
+    if fpath == None or fpath.strip()=='':
+        for path in os.environ["PATH"].split(os.pathsep):
+            x_file = os.path.join(path, prog)
+            if __is_x(x_file):
+                return x_file
+    else:
+        if __is_x(prog):
+            return prog
+ 
+###############################################################################
 def send2os(prog, arg=None, stdin=None, stdout=None, verb=False):
     '''Sends command to the operating system. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
@@ -158,8 +181,17 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     - verb: whether to print command before executing it. BOOL
     Returned value: stdout of command, with stripped newlines'''
 
+    def cat_cmd(cmdlist, stdin):
+        cmd = ' '.join(cmdlist)
+        if stdin != None:
+            cmd += ' <' + stdin
+        return cmd
+
     assert type(prog) == str
     assert type(verb) == bool
+
+    if which(prog) == None:
+        raise m8rex.MissingProgram(prog)
 
     # Build the [prog, args] list
     cmdlist = [prog]
@@ -171,20 +203,27 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
       
     # Build command string for printing or Python < 2.4
     if verb or not have_subprocess:
-        cmd = ' '.join(cmdlist)
-        if stdin != None:
-            cmd += ' <' + stdin
+        cmd = cat_cmd(cmdlist, stdin)
         msg(cmd, verb)
 
     if have_subprocess:
-        if stdin:
-            finp = open(stdin,'r')
-        else:
+        if stdin == None:
             finp = None
-        s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
-        output = s.communicate()[0]
+        else:
+            if os.path.isfile(stdin):
+                finp = open(stdin,'r')
+            else:
+                raise m8rex.NotAValidFile(stdin)
+        try:
+            s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
+            output = s.communicate()[0]
+        except:
+            raise m8rex.FailedExtCall(cat_cmd(cmdlist, stdin))
     else: # no subprocess module present
-        output = commands.getoutput(cmd)
+        try:
+            output = commands.getoutput(cmd)
+        except:
+            raise m8rex.FailedExtCall(cmd)
 
     if output == None:
         if raiseIfNoneOut:

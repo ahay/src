@@ -42,9 +42,17 @@ class ConflictingArgs(Error):
         self.msg = '%s cannot be %s when %s=%s' % \
         (arg1, str(val1), arg2, str(val2))
 
+class FailedExtCall(Error):
+    def __init__(self, call):
+        self.msg = 'Failed external call:\n' + call
+
 class MissingArgument(Error):
     def __init__(self, arg):
         self.msg = 'Missing argument: ' + arg
+
+class MissingProgram(Error):
+    def __init__(self, prog):
+        self.msg = 'Missing executable: ' + prog
 
 class NdimsMismatch(Error):
     def __init__(self, filenm, ndims):
@@ -53,6 +61,10 @@ class NdimsMismatch(Error):
 class NotAValidDir(Error):
     def __init__(self, dirnm):
         self.msg = 'Not a valid directory: ' + dirnm
+
+class NotAValidFile(Error):
+    def __init__(self, filenm):
+        self.msg = 'Not a valid file: ' + filenm
 
 class NoXPermissions(Error):
     def __init__(self, name):
