@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     /* cube axes */
     sf_axis at,ax,as,ae,aa;
-    int     it,ix,is,ie;
+    int     it,ix,is,ie,ne;
 
     int ompchunk, ompith=0, ompnth=1;
 #ifdef _OPENMP
@@ -109,8 +109,10 @@ int main(int argc, char* argv[])
     tmp = sf_complexalloc4(sf_n(at),sf_n(ax),1,ompnth);
     bak = sf_complexalloc3(sf_n(at),sf_n(ax),1);
 
+    ne = sf_n(ae);
+
     /* zero output */
-    for         (ie=0;ie<sf_n(ae);ie++){
+    for         (ie=0;ie<ne;ie++){
 	for     (ix=0;ix<sf_n(ax);ix++){
 	    for (it=0;it<sf_n(at);it++){
 		odat[ie][ix][it] = 0.0;
@@ -133,9 +135,9 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for \
     private(ie,ix,it,ompith) \
-    shared (is,ae,ax,at,tmp,bak,dels,ompsft,ompfft,odat)
+    shared (is,ne,ax,at,tmp,bak,dels,ompsft,ompfft,odat)
 #endif
-	for         (ie=0;ie<sf_n(ae);ie++){
+	for         (ie=0;ie<ne;ie++){
 #ifdef _OPENMP
             ompith=omp_get_thread_num();
 #pragma omp critical
@@ -163,7 +165,7 @@ int main(int argc, char* argv[])
 
     } /* s loop */
 
-    sf_floatwrite(odat[0][0],sf_n(at)*sf_n(ax)*sf_n(ae),Fo); 
+    sf_floatwrite(odat[0][0],sf_n(at)*sf_n(ax)*ne,Fo); 
  
     ompfft3a1_close(ompfft);
     ompsft3_close  (ompsft);    
