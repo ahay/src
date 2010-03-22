@@ -1,4 +1,4 @@
-import sys, os, glob, string, re, commands, types, py_compile
+import sys, os, glob, string, re, commands, types
 
 try: # The subprocess module was introduced in Python 2.4
     import subprocess
@@ -19,7 +19,6 @@ else:  # old style
 # CONSTANTS -- DO NOT CHANGE
 context_success = 1
 context_failure = 0
-py_success = 0 # user-defined
 unix_failure = 1
 
 def escape_seq(keyword):
@@ -46,14 +45,6 @@ def stderr_write(message, highlight_mode=None):
         message =  prependix + message + escape_seq('end')
 
     sys.stderr.write('\n  %s\n' % message)
-
-def pycompile(target, source, env):
-    "convert py to pyc "
-    for i in range(0,len(source)):
-        py_compile.compile(source[i].abspath,target[i].abspath)
-    return py_success
-
-Pycompile = Builder(action=pycompile)
 
 plat = {'OS': 'unknown',
         'distro': 'unknown',

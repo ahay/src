@@ -152,6 +152,16 @@ Place = Builder (action = Action(__placeholder,varlist=['var','package']))
 
 ################################################################################
 
+def __pycompile(target, source, env):
+    "convert py to pyc "
+    for i in range(0,len(source)):
+        py_compile.compile(source[i].abspath,target[i].abspath)
+    return __py_success
+
+Pycompile = Builder(action=__pycompile)
+
+################################################################################
+
 def Debug():
     'Environment for debugging'
     env = Environment()
