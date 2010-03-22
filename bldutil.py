@@ -18,10 +18,42 @@ else:  # old style
 
 ################################################################################
 
-# Constants used in multiple functions
+# Constants used in multiple functions. Internal to module.
 
 __py_success = 0 # user-defined
 __include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
+__local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
+
+################################################################################
+
+def __includes(list,file):
+    global __local_include
+    fd = open(file,'r')
+    for line in fd.readlines():
+         match = __local_include.match(line)
+         if match:
+             other = os.path.join(os.path.dirname(file),match.group(1))
+             if not other in list:
+                 __includes(list,other)
+    list.append(file)
+    fd.close()
+
+def merge(target=None,source=None,env=None):
+    global __local_include
+    sources = map(str,source)
+    incs = []
+    for src in sources:
+        if not src in incs:
+            __includes(incs,src)
+    out = open(str(target[0]),'w')
+    for src in incs:
+        inp = open(src,'r')
+        for line in inp.readlines():
+            if not __local_include.match(line):
+                out.write(line)
+        inp.close()
+    out.close()
+    return __py_success
 
 ################################################################################
 
