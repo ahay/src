@@ -81,7 +81,7 @@ double crs_dt(double a[3], float m, float h)
 }
 // input: T2[h][m] = T^2 - t_0^2
 // output: Tcrs[h][m] and err=Sum Sum (T-Tcrs)^2 dm dh
-double f_crs(float **dT2, double a[3], float **dT2crs, int Nm, int Nh, float * m, float * h)
+double f_crs(float **dT2, double a[3], float **dT2crs, int Nm, int Nh, float * m, float * h, int **mask)
 {
     double d, sum = 0.f;
 
@@ -93,13 +93,16 @@ double f_crs(float **dT2, double a[3], float **dT2crs, int Nm, int Nh, float * m
 
 	    d = dT2[im][ih] - dT2crs[im][ih];
 
+	    if (mask) 
+		d *= (float)mask[im][ih];
+	    
 	    sum += d * d;
 	}
     }
     return sum;
 }
 // grad[3]
-void f_grad_crs(double grad[3], float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs)
+void f_grad_crs(double grad[3], float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs, int **mask)
 {
     double delta_dT;
 
@@ -111,6 +114,9 @@ void f_grad_crs(double grad[3], float * m, int Nm, float * h, int Nh, float **dT
 
 	    delta_dT = dT2[im][ih] - dT2crs[im][ih];
 
+	    if (mask) 
+		delta_dT *= (float)mask[im][ih];
+	    
 	    grad[0] += delta_dT * m[im];
 
 	    grad[1] += delta_dT * m[im] * m[im];
@@ -156,17 +162,17 @@ void inverse_mat(double h[3][3], double i[3][3])
     }
 
 }
-double fit_crs_params(float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs, double a0[3], double a[3], double * sum_old)
+double fit_crs_params(float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs, int **mask, double a0[3], double a[3], double * sum_old)
 {
 
-    *sum_old = f_crs(dT2, a0, dT2crs, Nm, Nh, m, h);
+    *sum_old = f_crs(dT2, a0, dT2crs, Nm, Nh, m, h, mask);
 
     double 
 	Hess[3][3], invH[3][3],
 	grad[3],
 	da[3];
      
-    f_grad_crs(grad, m, Nm, h, Nh, dT2, dT2crs);
+    f_grad_crs(grad, m, Nm, h, Nh, dT2, dT2crs, mask);
 
     hessian(Hess, m, Nm, h, Nh);
     //Hinv = H^-1
@@ -186,7 +192,7 @@ double fit_crs_params(float * m, int Nm, float * h, int Nh, float **dT2, float *
 
     //f_grad_crs(grad, m, Nm, h, Nh, dT2, dT2crs);
     //*sum_new = 
-    f_crs(dT2, a, dT2crs, Nm, Nh, m, h);
+    f_crs(dT2, a, dT2crs, Nm, Nh, m, h, mask);
 
     return sqrt(grad[0]*grad[0] + grad[1]*grad[1] + grad[2]*grad[2]);
 }
@@ -221,16 +227,17 @@ void pick_first_picks(float *** Ttraces,
 int main(int argc, char* argv[])
 {
     
-    int  Nm, Nh, im0;
+    int  itmp, Nm, Nh, im0;
     float dm, om, dh, oh, x0, grad_norm;
     
     float **t;                    /* surface to fit */
     float **dT2, **dT2crs, **tcrs;
+    int   **mask = NULL;
     float t0, t02;
     float * m_mids, *h_halfoffset;
   
-    sf_file in,/*out,*/out_tcrs, out_tcrs_params;
-    char * out_tcrs_params_file = 0;
+    sf_file in,/*out,*/out_tcrs, out_tcrs_params, imask;
+    char * out_tcrs_params_file = 0, *mask_fname = 0;
     double crs_a0[3], crs_a[3], sum;
     float params[3];
  
@@ -259,6 +266,20 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&dh)) sf_error("No d1=");
     if (!sf_histfloat(in,"o1",&oh)) sf_error("No o1=");
     
+    /* MASK */
+    mask_fname = sf_getstring("mask");
+    if (mask_fname) 
+    {
+	imask = sf_input (mask_fname);
+	if (!sf_histint(imask,"n1",&itmp)) sf_error("No n1= in input");
+	assert(itmp == Nh);
+	if (!sf_histint(imask,"n2",&itmp)) sf_error("No n2= in input");
+	assert(itmp == Nm);
+
+	mask = sf_intalloc2(Nh,Nm);
+
+	sf_intread(mask[0], Nh*Nm, mask);
+    }
 
     /* memory allocations */
 
@@ -323,20 +344,20 @@ int main(int argc, char* argv[])
     crs_a0[0] = crs_a0[1] = crs_a0[2] = 0.f;
 
 
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a0, crs_a, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
     sf_warning("fitcrs: INITIAL               norm grad = %g , err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a, crs_a0, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a0, crs_a, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a[0], crs_a[1], crs_a[2]);
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a, crs_a0, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
 
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a0, crs_a, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
-    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, crs_a, crs_a0, &sum);
+    grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
 	sf_putint (out_tcrs_params, "n3", 1);
@@ -360,16 +381,8 @@ int main(int argc, char* argv[])
 
        //}
 
-    /* TBD delete !!!
-       for (int ia = 0; ia < na; ia++) {
-	for (int ix = 0; ix < nx; ix ++) {
-	    free(&(t[ia][ix][0]));
-	    free(&(t_colors[ia][ix][0]));
-	}
-	free(t[ia]);
-	free(t_colors[ia]);
-    }
-    */
+       if (mask)
+	   free(mask[0]);
 /*    free(t[0][0]);
     free(t_colors[0][0]);
 	
