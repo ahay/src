@@ -553,3 +553,10 @@ def valswitch(var,val1,val2):
     else:
         return var
 
+################################################################################
+
+def switch(condition, val1, val2):
+    if condition:
+        return val1
+    else:
+        return val2

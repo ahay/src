@@ -22,7 +22,7 @@ seekwin
 
 # Python mains that do not need SWIG+numpy
 progs_py = '''
-pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf
+pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf wuab ximage
 '''
 
 # Python modules that do not need SWIG+numpy
