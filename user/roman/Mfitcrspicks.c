@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
 
 	mask = sf_intalloc2(Nh,Nm);
 
-	sf_intread(mask[0], Nh*Nm, mask);
+	sf_intread(mask[0], Nh*Nm, imask);
     }
 
     /* memory allocations */
