@@ -817,7 +817,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl'):
     global comment, param, params, param2, params2, \
            synopsis, stringpar, inpout, version
-    name = rsfprefix + re.sub('^[MX]','',os.path.basename(file))
+    name = rsfprefix + re.sub('^[MX_]','',os.path.basename(file))
     if lang[:2] == 'py':
         name = re.sub('\.py$','',name)
     elif lang[0] =='f':

@@ -103,6 +103,7 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
+        map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
         map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsfdoc.py')	
 
