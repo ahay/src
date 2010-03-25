@@ -125,9 +125,8 @@ def main():
     if env_var_list != []:
         env_var_list.sort()
         for v in env_var_list:
-            print v
-            #if v not in known_vars:
-            #    print v
+            if v not in known_vars:
+                print v
 
     return ivlad.unix_success
 
