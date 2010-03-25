@@ -26,9 +26,3 @@ for y in `find $RSFSRC -name SConstruct`;
     sed "s/env\.Docmerge/env\.RSF_Docmerge/g" $y > sed_tmp.asc;
     mv -f sed_tmp.asc $y;
   done
-
-# Matching ".Include" instead of simply "Include" was intended to find 
-# occurences of env.Include as well as clones of the environment named 
-# differently, i.e. env_f90.Include. A couple of occurences were also found in
-# $RSFSRC/configure.py
-
