@@ -137,7 +137,8 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
 
     assert type(prog) == str
     assert type(verb) == bool
-    stdin = stdin.strip()
+    if stdin != None:
+        stdin = stdin.strip()
 
     def cat_cmd(cmdlist, stdin):
         cmd = ' '.join(cmdlist)
