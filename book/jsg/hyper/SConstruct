@@ -1,0 +1,11 @@
+from rsftex import *
+
+Paper('approx',use='amsmath')
+
+Paper('wg',lclass='article')
+
+Command2('revised.tex','paper.tex','cp $SOURCE $TARGET')
+
+Paper('revised',options='manuscript,revised')
+
+End(options='manuscript',color='vz v eta vz1')

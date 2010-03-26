@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfwindow', 'sfscale', 'sfgrey', 'sfspray', 'sfmath', 'sfstack', 'sfreverse', 'sfcausint', 'sfgraph', 'sfcmplx']
+data=['data/marm/marmvx.HH', 'data/marm/marmvz.HH', 'data/marm/marmeta.HH']
+size=    4787860
