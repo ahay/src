@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-'''
-Wrapper for Utilities Acting on Binaries
+'''Wrapper for Utilities Acting on Binaries
 '''
 # Copyright (C) 2010 Ioan Vlad
 #

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-'''
-Displays a 2-D RSF file with Seismic Unix's ximage
+'''Displays a 2-D RSF file with Seismic Unix's ximage
 Test with:
 sfspike n1=5 n2=3 nsp=3 k1=1,3,4 k2=1,2,3 > junk.rsf
 sfximage inp=junk.rsf par="perc=100 cmap=rgb1 legend=1"

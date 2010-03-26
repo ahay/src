@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-'''Recursively removes all RSF headers in a directory, and associated binaries,
-if they exist'''
+'''Recursively removes all RSF headers in a directory (associated binaries too)
+Missing binaries do not cause failure.'''
 
 # Copyright (C) 2010 Ioan Vlad
 #

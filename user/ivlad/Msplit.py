@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-"""
-Splits file into slices along the last dimension
-
+'''Splits file into slices along the last dimension
 Usage:
 
 sfsplit inp=file.rsf outdir=[file_split.rsf] nthick=[1]
 
 Parameter nthick gives the maximum thickness of a slice. The last slice may
-be thinner."""
+be thinner.'''
 
 # Copyright (C) 2009 Ioan Vlad
 #
@@ -39,13 +37,14 @@ def main(par):
 
     verb = par.bool('verb', False)
 
-    inp = par.string('inp')
+    inp = par.string('inp') # ifile.rsf
 
     out_basenm = os.path.basename(inp).rstrip(ivlad.ext) + '_split'
 
-    outdir = par.string('outdir',out_basenm + ivlad.ext)
+    outdir = par.string('outdir',(out_basenm+ivlad.ext)) # Default is ifile_split.rsf
 
-    nthick = par.int('nthick', 1)
+    nthick = par.int('nthick', 1) # slice thickness
+
     ivlad.chk_param_limit(nthick, 'nthick', 1, '>')
 
     lastdim = str(ivlad.ndims(inp))
