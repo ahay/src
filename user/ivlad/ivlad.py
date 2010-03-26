@@ -132,17 +132,18 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     - prog. Executable to be run. STRING. The only non-optional argument.
     - arg. List of strings with program arguments, or just a string
     - stdin. Filename STRING.
-    - verb: whether to print command before executing it. BOOL
+    - verb: whether to display command before executing it. BOOL
     Returned value: stdout of command, with stripped newlines'''
+
+    assert type(prog) == str
+    assert type(verb) == bool
+    stdin = stdin.strip()
 
     def cat_cmd(cmdlist, stdin):
         cmd = ' '.join(cmdlist)
         if stdin != None:
             cmd += ' <' + stdin
         return cmd
-
-    assert type(prog) == str
-    assert type(verb) == bool
 
     if which(prog) == None:
         raise m8rex.MissingProgram(prog)
