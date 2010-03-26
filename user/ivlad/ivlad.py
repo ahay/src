@@ -7,7 +7,7 @@ DESCRIPTION
 SOURCE
 	user/ivlad/ivlad.py
 """
-# Copyright (C) 2007-2010 Ioan Vlade
+# Copyright (C) 2007-2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ def run(nm, main_func, cpar=[], nminarg=None, nmaxarg=None):
         try:
             status = main_func(par) # run the program
         except m8rex.Error, e:
-            msg(True, e.msg)
+            msg(e.msg, True)
             status = unix_error
 
         sys.exit(status)
@@ -124,52 +124,6 @@ def which(prog):
     else:
         if __is_x(prog):
             return prog
- 
-###############################################################################
-def send2os(prog, arg=None, stdin=None, stdout=None, verb=False):
-    '''Sends command to the operating system. Arguments:
-    - prog. Executable to be run. STRING. The only non-optional argument.
-    - arg. List of strings with program arguments. LIST (or str for only 1 arg)
-    - stdin. Filename STRING.
-    - stdout. Filename STRING.
-    - verb: whether to print command before executing it. BOOL'''
-
-    # Like ivlad.exe, but with another user interface
-
-    # Build the [prog, args] list
-    if arg != None:
-        if type(arg) == str:
-            arg = [arg]     # make it a list
-        arg.insert(0,prog)
-        cmdlist = arg
-    else:
-        cmdlist = [prog]
-
-    # Build command string for printing or Python < 2.4
-    if verb or not have_subprocess:
-        cmd4print = cmdlist[:]
-        if stdin:
-            cmd4print.append('<')
-            cmd4print.append(stdin)
-        if stdout:
-            cmd4print.append('>')
-            cmd4print.append(stdout)
-        command = ' '.join(cmd4print)
-        msg(command, verb)
-
-    if have_subprocess:
-        if stdin:
-            finp = open(stdin,'r')
-        else:
-            finp = None
-        if stdout:
-            fout = open(stdout,'w')
-        else:
-            fout = None
-        subprocess.Popen(cmdlist,stdin=finp,stdout=fout).wait()
-
-    else: # no subprocess module present
-        os.system(command)
 
 ###############################################################################
 
