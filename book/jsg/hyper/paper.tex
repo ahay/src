@@ -556,9 +556,9 @@ where $g$ is the velocity gradient and $V_0$ is velocity at zero depth.
 The reflection traveltime can be expressed in an analytical form as a
 function of offset \cite[]{LSC00-00-02680268}
 \begin{equation}
+  t(x) = {\frac{2\,H}{V_0\,(r-1)}}\,
+  {\arccosh{\left[1 + \frac{(r-1)^2}{2\,r}\,\left(1+\frac{x^2}{4\,H^2}\right)\right]}}\;,
   \label{eq:tlinear}
-  t(x) = \frac{2\,H}{V_0\,(r-1)}\,
-  \arccosh{\left[1 + \frac{(r-1)^2}{2\,r}\,\left(1+\frac{x^2}{4\,H^2}\right)\right]}\;,
 \end{equation}
 where \new{$H$ is the depth of the reflector, and} $r=V(H)/V_0$ \old{being} \new{is}
 the ratio of velocity at the bottom and the top of the model. The
@@ -589,8 +589,8 @@ additional parameters $B$ and $C$.
 
 The linear sloth model is defined by 
 \begin{equation}
+  {\frac{1}{V^2(z)}} = {\frac{1}{V_0^2}}\,(1+G\,z)\;.
   \label{eq:sloth}
-  \frac{1}{V^2(z)} = \frac{1}{V_0^2}\,(1+G\,z)\;.
 \end{equation}
 where $G$ is the sloth gradient and $V_0$ is velocity at zero depth.
 
