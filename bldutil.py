@@ -115,6 +115,7 @@ def __docmerge(target=None,source=None,env=None):
     for prog in alias.keys():
         out.write("rsfdoc.progs['%s']=%s\n" % (prog,alias[prog]))
     out.close()
+    print outfile
     py_compile.compile(outfile,outfile+'c')
     return __py_success
 
@@ -347,7 +348,7 @@ def install_py_modules(env, py_modules, libdir):
     rsfuser = os.path.join(libdir,'rsfuser')
     for module in Split(py_modules):
         env.RSF_Pycompile(module+'.pyc',module+'.py')
-        env.Install(rsfuser,module+'.pyc')
+        env.Install(rsfuser,[module+'.py',module+'.pyc'])
 
 ################################################################################
 

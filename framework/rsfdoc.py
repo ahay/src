@@ -748,7 +748,8 @@ synopsis = {}
 inpout = {}
 version = {}
 
-comment['python'] = re.compile(r'[^\'\"]*[\'\"]+([^\'\"]+)')
+comment['python'] = re.compile(r'[^\'\"]*([\'\"]+)(?P<comment>[^\'\"].+?)\1',
+                               re.DOTALL)
 param['python'] = re.compile(r'par\.(?P<type>bool|int|float|string)'
                              '\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
                              '(?:\,\s*(?P<default>[^\)]+))?\)'
@@ -761,7 +762,7 @@ inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                                 '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
 version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 
-comment['f90'] = re.compile(r'(?:\!([^!\n]+)\n)+')
+comment['f90'] = re.compile(r'(?:\!(?P<comment>[^!\n]+)\n)+')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                           '\s*(?P<var>[\w\_]+)\s*'
                           '(?:\,\s*(?P<default>[^\)]+))?\)'
@@ -774,7 +775,7 @@ inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
 version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
 
-comment['c'] = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')
+comment['c'] = re.compile(r'\/\*(?P<comment>(?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
                         '(?P<type>bool|largeint|int|float|double)'
                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
@@ -829,7 +830,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     src.close()
     first = comment[lang].match(text)
     if first:
-        tops = first.group(1).split("\n")
+        tops = first.group('comment').split("\n")
         desc = tops.pop(0).lstrip()
         first = '\n'.join(tops)
     else:

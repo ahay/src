@@ -109,5 +109,3 @@ if root:
 
     doc = env.RSF_Docmerge(main,docs)
     env.Install(libdir,doc)
-
-
