@@ -219,15 +219,12 @@ int main (int argc, char* argv[])
                 sf_petsc_aimplfd2_add_source_ut2 (aimplfd, ww[0], cs->jz[ia], cs->jx[ia]);
             }
         } else {
-        /*
             sf_floatread (ww, ns, Fwav);
-            */
-            sf_floatread (ww, 1, Fwav);
             for (ia = 0; ia < cs->n; ia++) {
             /*
                 PetscFPrintf (MPI_COMM_WORLD, stderr, "Source #%d [%d, %d], f=%f\n", ia, cs->jz[ia], cs->jx[ia], ww[0]);
                 */
-                sf_petsc_aimplfd2_add_source_ut2 (aimplfd, ww[0], cs->jz[ia], cs->jx[ia]);
+                sf_petsc_aimplfd2_add_source_ut2 (aimplfd, ww[ia], cs->jz[ia], cs->jx[ia]);
             }
         }
         /* sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix); */
