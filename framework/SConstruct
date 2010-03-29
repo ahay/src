@@ -4,6 +4,7 @@ import rsfdoc
 Import('env root bindir libdir docdir spcdir mandir system user')
 
 txtdir = os.path.join(docdir,'txt')
+mn1dir = os.path.join(mandir,'man1')
 python = WhereIs('python')
 
 dirs = Split('plot libplot pens sumain suplot')
@@ -45,7 +46,7 @@ py_install('rsfuse')
 htm = os.path.join(docdir,'index.html')
 txt = os.path.join(txtdir,'INDEX.txt')
 spc = os.path.join(spcdir,'extend.spec')
-man = os.path.join(mandir,'index.man')
+man = os.path.join(mn1dir,'index.man')
 
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
@@ -54,7 +55,7 @@ env.Command(htm,None,
             '%s framework/sfdoc -w %s -r %s' % (python,docdir,repos))
 env.Command(txt,None,'%s framework/sfdoc -t %s' % (python,txtdir))
 env.Command(spc,None,'%s framework/sfdoc -s %s' % (python,spcdir))
-env.Command(man,None,'%s framework/sfdoc -g %s' % (python,mandir))
+env.Command(man,None,'%s framework/sfdoc -g %s' % (python,mn1dir))
 
 Depends(htm,use)
 Depends(txt,use)

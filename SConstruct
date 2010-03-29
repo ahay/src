@@ -11,7 +11,7 @@ libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
 spcdir = os.path.join(root,'spec')
-mandir = os.path.join(root,'man')
+mandir = os.path.join(root,'share','man')
 
 ##########################################################################
 # CONFIGURATION
