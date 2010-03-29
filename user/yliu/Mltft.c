@@ -20,12 +20,14 @@
 
 #include <math.h>
 
+#include "nmultidivn.h"
+
 int main(int argc, char* argv[])
 {
     bool inv, verb;
-    int i1, n1, iw, nt, nw, i2, n2, rect, niter, n12;
-    int m[SF_MAX_DIM], rec[SF_MAX_DIM];
-    float t, d1, w, w0, dw, *trace, *kbsc, *sscc=NULL, *mm, mean;
+    int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12;
+    int m[SF_MAX_DIM], *rect;
+    float t, d1, w, w0, dw, *trace, *kbsc, *sscc=NULL, *mm, mean, alpha;
     sf_complex *outp;
     sf_file in, out, mask;
    
@@ -66,18 +68,17 @@ int main(int argc, char* argv[])
 	sf_putstring(out,"unit2","Hz");
 	sf_settype(out,SF_COMPLEX);
 
-	if (!sf_getint("rect",&rect)) rect=10;
+	if (!sf_getint("rect",&rect0)) rect0=10;
 	/* smoothing radius */
 	if (!sf_getint("niter",&niter)) niter=100;
 	/* number of inversion iterations */
-	
+	if (!sf_getfloat("alpha",&alpha)) alpha=0.;
+	/* frequency adaptivity */
+
 	for(i2=0; i2 < SF_MAX_DIM; i2 ++) {
 	    m[i2] = 1;
-	    rec[i2] = 1;
 	}
 	m[0] = n1;
-	rec[0] = rect;
-	
     } else {
 	n2 = sf_leftsize(in,2);
 	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
@@ -94,13 +95,15 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(n1);
     kbsc    = sf_floatalloc(n12);
     outp = sf_complexalloc(n1*nw);
+
+    rect = sf_intalloc(2*nw);
+    for (iw=0; iw < nw; iw++) {
+	rect[iw+nw] = rect[iw] = SF_MAX(1, (int) rect0/(1.0+alpha*iw/nw));
+    }
+
     if (!inv) {
 	sscc = sf_floatalloc(n12);
-	if (n2 < 500) {
-	    sf_multidivn_init(2*nw, 1, n1, m, rec, kbsc, NULL, verb); 
-	} else {
-	    sf_multidivn_init(2*nw, 1, n1, m, rec, kbsc, NULL, false);
-	} 
+	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, verb && (n2 < 500)); 
     }
     
     if (NULL != sf_getstring("mask")) {
@@ -165,7 +168,7 @@ int main(int argc, char* argv[])
 	    for(i1=0; i1 < n1; i1++) {
 		trace[i1] /= mean;
 	    }
-	    sf_multidivn (trace,sscc,niter);
+	    nmultidivn (trace,sscc,niter);
 	    for (iw=0; iw < nw; iw++) {
 		for (i1=0; i1 < n1; i1++) {
 		    outp[iw*n1+i1] = sf_cmplx(sscc[(iw+nw)*n1+i1],
