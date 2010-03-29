@@ -6,8 +6,9 @@ progs = '''
 aimplfd1
 aimplfd2
 heatgmres1
-wavegeompetsc
+petscawefd2d
 rtmgeompetsc
+wavegeompetsc
 '''
 
 try:  # distributed version
