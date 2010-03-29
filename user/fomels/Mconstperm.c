@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
-	if (!sf_getint("dz",&dz)) sf_error("Need dz=");
+	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
 	/* time sampling (if migration) */
 
 	sf_putint(data,"n1",nz);
@@ -68,12 +68,12 @@ int main(int argc, char* argv[])
 
 	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
 	/* time samples (if modeling) */
-	if (!sf_getint("dt",&dt)) sf_error("Need dt=");
+	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
 	/* time sampling (if modeling) */
 
 	if (!sf_getint("nh",&nh)) sf_error("Need nh=");
         /* offset samples (if modeling) */
-	if (!sf_getint("dh",&dh)) sf_error("Need dh=");
+	if (!sf_getfloat("dh",&dh)) sf_error("Need dh=");
 	/* offset sampling (if modeling) */
 
 	sf_putint(data,"n1",nh);
