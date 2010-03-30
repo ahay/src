@@ -21,8 +21,9 @@
 int main(int argc, char* argv[])
 {
     bool inv;
-    int nt, nx, nz, nh;
+    int it, nt, ix, nx, iz, nz, ih, nh;
     float dt, dx, dz, dh, v;
+    float ***prev, ***curr, **imag;
     sf_file data, image;
 
     sf_init(argc,argv);
@@ -33,7 +34,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("v",&v)) sf_error("Need v=");
     /* velocity */
 
-    if (inv) {
+    if (inv) { /* migration */
 	data = sf_input("in");
 	image = sf_output("out");
 
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"label1","Depth");
 
 	sf_putint(data,"n3",1); /* stack for now */
-    } else {
+    } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
 
@@ -84,6 +85,29 @@ int main(int argc, char* argv[])
 	sf_putint(data,"d3",dt);
 	sf_putstring(data,"label3","Time");
     }
+
+    imag = sf_floatalloc2(nz,nx);
+    prev = sf_floatalloc3(nh,nx,nz);
+    curr = sf_floatalloc3(nh,nx,nz);
+
+    if (!inv) {
+	sf_floatread(imag[0],nz*nx,image);
+
+	for (iz=0; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
+		prev[iz][ix][0] = 0.;
+		curr[iz][ix][0] = imag[ix][iz];
+		for (ih=1; ih < nh; ih++) {
+		    prev[iz][ix][ih] = 0.;
+		    curr[iz][ix][ih] = 0.;
+		}
+	    }
+	}
+
+	/* cosft of curr */
+    }
+
+    /* time stepping */
 
     exit(0);
 }
