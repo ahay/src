@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int m[SF_MAX_DIM], *rect;
     float t, d1, w, w0, dw, *trace, *kbsc, *sscc=NULL, *mm, mean, alpha;
     sf_complex *outp;
-    sf_file in, out, mask;
+    sf_file in, out, mask, basis;
    
     sf_init(argc,argv);
     in = sf_input("in");
@@ -43,6 +43,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
+
+    if (NULL != sf_getstring("basis")) {
+	basis = sf_output("basis");
+    } else {
+	basis = NULL;
+    }
 
     if (!inv) {
 	if (!sf_getint("nw",&nw)) { /* number of frequencies */
@@ -86,8 +92,17 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,"o2",&w0)) sf_error("No o2= in input");
 	sf_unshiftdim(in, out, 2);
 	sf_settype(out,SF_FLOAT);
-    }	
+    }
 
+    if (NULL != basis) {
+	sf_shiftdim(in, basis, 2);
+	sf_putint(basis,"n2",nw*2);
+	sf_putfloat(basis,"d2",dw);
+	sf_putfloat(basis,"o2",w0);
+	sf_putstring(basis,"label2","Frequency");
+	sf_putstring(basis,"unit2","Hz");
+    }
+	
     n12 = 2*n1*nw;
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
@@ -144,6 +159,10 @@ int main(int argc, char* argv[])
 		if (NULL != mm) kbsc[(iw+nw)*n1+i1] *= mm[i1];
 	    }
 	}
+    }
+
+    if (NULL != basis) {
+	sf_floatwrite(kbsc,n12,basis);
     }
 
     mean = 0.;
