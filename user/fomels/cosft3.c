@@ -1,0 +1,77 @@
+/* 3-D cosine Fourier transform */
+/*
+  Copyright (C) 2010 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
+
+void cosft3(bool inv,               /* forward or inverse */ 
+	    int n1, int n2, int n3, /* dimensions */
+	    float ***data           /* data [n3][n2][n1] */)
+/*< transform (in place) >*/
+{
+    int i1, i2, i3;
+
+    if (inv) {
+	sf_cosft_init(n3);
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_inv(data[0][0],i1+i2*n1,n1*n2);
+	    }
+	}
+	sf_cosft_close();
+	
+	sf_cosft_init(n2);
+    	for (i3=0; i3 < n3; i3++) {
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_inv(data[i3][0],i1,n1);
+	    }
+	}
+	sf_cosft_close();
+	
+	sf_cosft_init(n1);	
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		sf_cosft_inv(data[i3][i2],0,1);
+	    }
+	}	
+	sf_cosft_close();
+    } else {
+	sf_cosft_init(n1);	
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		sf_cosft_frw(data[i3][i2],0,1);
+	    }
+	}	
+	sf_cosft_close();
+	
+	sf_cosft_init(n2);
+    	for (i3=0; i3 < n3; i3++) {
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_frw(data[i3][0],i1,n1);
+	    }
+	}
+	sf_cosft_close();
+	
+	sf_cosft_init(n3);
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_frw(data[0][0],i1+i2*n1,n1*n2);
+	    }
+	}
+	sf_cosft_close();
+    }
+}

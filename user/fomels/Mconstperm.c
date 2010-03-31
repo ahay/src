@@ -18,6 +18,8 @@
 */
 #include <rsf.h>
 
+#include "cosft3.h"
+
 int main(int argc, char* argv[])
 {
     bool inv;
@@ -93,9 +95,7 @@ int main(int argc, char* argv[])
     if (!inv) {
 	sf_floatread(imag[0],nz*nx,image);
 
-	/* Initialize model + 3-D CosFT */
-
-	sf_cosft_init(nh);
+	/* Initialize model */
 
 	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
@@ -105,31 +105,10 @@ int main(int argc, char* argv[])
 		    prev[iz][ix][ih] = 0.;
 		    curr[iz][ix][ih] = 0.;
 		}
-		sf_cosft_frw(curr[iz][ix],0,1);
 	    }
 	}
 
-	sf_cosft_close();
-	
-	sf_cosft_init(nx);
-
-	for (iz=0; iz < nz; iz++) {
-	    for (ih=0; ih < nh; ih++) {
-		sf_cosft_frw(curr[iz][0],ih,nh);
-	    }
-	}
-
-	sf_cosft_close();
-
-	sf_cosft_init(nz);
-
-	 for (ix=0; ix < nx; ix++) {
-	     for (ih=0; ih < nh; ih++) {
-		 sf_cosft_frw(curr[0][0],ih+ix*nh,nh*nx);
-	     }
-	 }
-
-	 sf_cosft_close();
+	cosft3(false,nh,nx,nz,curr);
     }
 
     /* time stepping */
