@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
  
     for (iz=0; iz < nzb; iz++){
          for (ix=0; ix < nxb; ix++) {
-         w = dt*dt*v[iz][ix]*v[iz][ix];
+         w = v[iz][ix]*v[iz][ix];
          g1 = dt*dt*(v[iz][ix]*v[iz][ix]-v0*v0)/(12.0*dx*dx);
          g2 = dt*dt*(v[iz][ix]*v[iz][ix]-v0*v0)/(12.0*dz*dz);
          aa[iz][ix][1] = w*g1;
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
 
              for (ikx=0; ikx < nkx; ikx++) {
                  kx = ikx * dkx*2.0*pi;
-                 tmpdt = 2.0*(cosf(v0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(v0*v0*dt*dt);
+                 tmpdt = 2.0*(cosf(v0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(v0*v0);
                  uk[ikz][ikx] = uk[ikz][ikx]*tmpdt;
              }
 
