@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     bool inv;
     int it, nt, ix, nx, iz, nz, ih, nh;
-    float dt, dx, dz, dh, v;
+    float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
     float ***prev, ***curr, **imag;
     sf_file data, image;
 
@@ -32,9 +32,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if n, modeling; if y, migration */
-
-    if (!sf_getfloat("v",&v)) sf_error("Need v=");
-    /* velocity */
 
     if (inv) { /* migration */
 	data = sf_input("in");
@@ -92,6 +89,15 @@ int main(int argc, char* argv[])
     prev = sf_floatalloc3(nh,nx,nz);
     curr = sf_floatalloc3(nh,nx,nz);
 
+    if (!sf_getfloat("v",&v)) sf_error("Need v=");
+    /* velocity */
+
+    v *= SF_PI*dt;
+
+    dx = 1./(2*kiss_fft_next_fast_size(nx-1)*dx);
+    dz = 1./(2*kiss_fft_next_fast_size(nz-1)*dz);
+    dh = 1./(2*kiss_fft_next_fast_size(nh-1)*dh);
+
     if (!inv) {
 	sf_floatread(imag[0],nz*nx,image);
 
@@ -109,11 +115,35 @@ int main(int argc, char* argv[])
 	}
 
 	cosft3(false,nh,nx,nz,curr);
+
+	for (ix=0; ix < nx; ix++) {
+	    for (ih=0; ih < nh; ih++) {
+		curr[0][ix][ih] = 0.;
+	    }
+	}
     }
 
     /* time stepping */
     for (it=0; it < nt; it++) {
-	;
+
+	for (iz=1; iz < nz; iz++) {
+	    kz = iz*dz;
+	    for (ix=0; ix < nx; ix++) {
+		kx = ix*dx;
+		x = (kz*kz+kx*kx)/kz;
+		for (ih=0; ih < nh; ih++) {
+		    kh = ih*dh;
+		    h = (kz*kz+kh*kh)/kz;
+		    
+		    c = curr[iz][ix][ih];
+		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
+		    prev[iz][ix][ih] = c;					      
+		}
+	    }
+	}
+
+	/* extract zero depth */
+
     }
 
     exit(0);
