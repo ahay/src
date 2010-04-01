@@ -20,9 +20,9 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, nz, it, ix, iz, order;
-    float dt, dx, dz;
-    float **vv, *xx, *xp, *zz, *zp, *vd;
+    int nt, nx, nz, it, ix, iy, iz, order;
+    float dt, dx, dz, y, z, v, q, x1,x2, z1,z2, r1,r2, xd,zd,rd, d2, a,b;
+    float **vv, *xx, *xp, *zz, *zp, *vd, *rr;
     sf_eno2 vmap;
     sf_file vel, dix;
 
@@ -64,6 +64,93 @@ int main(int argc, char* argv[])
     zp = sf_floatalloc(nx);
   
     vd = sf_floatalloc(nx);
+    rr = sf_floatalloc(nx);
 
+    /* on the surface */
+    for (ix=0; ix < nx; ix++) {
+	zp[ix] = 0.;
+	xp[ix] = ix*dx;
+	vd[ix] = vv[0][ix];
+	rr[ix] = vv[0][ix]*dt;
+    }
+
+    sf_floatwrite(zp,nx,dix);
+    sf_floatwrite(xp,nx,dix);
+    sf_floatwrite(vd,nx,dix);
+
+    for (it=1; it < nt; it++) {
+	/* HWT update */
+	for (ix=0; ix < nx; ix++) {
+	    if (ix==0) {
+		z1 = zp[ix];
+		x1 = xp[ix];
+		r1 = rr[ix];
+	    } else {
+		z1 = zp[ix-1];
+		x1 = xp[ix-1];
+		r1 = rr[ix-1];
+	    }
+	    if (ix==nx-1) {
+		z2 = zp[ix];
+		x2 = xp[ix];
+		r2 = rr[ix];
+	    } else {
+		z2 = zp[ix+1];
+		x2 = xp[ix+1];
+		r2 = rr[ix+1];
+	    }
+	    
+	    zd = z2-z1;
+	    xd = x2-x1;
+	    rd = r2-r1;
+	    d2 = xd*xd+zd*zd;
+
+	    a = rd/d2;
+	    b = SF_SIG(xd)*sqrtf(d2-rd*rd)/d2;
+
+	    z1 = a*zd-b*xd;
+	    z2 = a*zd+b*xd;
+
+	    x1 = a*xd+b*zd;
+	    x2 = a*xd-b*zd;
+
+	    if (x1*x1+z1*z1 > x2*x2+z2*z2) {
+		zz[ix] = zp[ix]-rr[ix]*z2;
+		xx[ix] = xp[ix]-rr[ix]*x2;
+	    } else {
+		zz[ix] = zp[ix]-rr[ix]*z1;
+		xx[ix] = xp[ix]-rr[ix]*x1;
+	    }
+	}
+	
+	for (ix=0; ix < nx; ix++) {
+	    zp[ix] = zz[ix];
+	    xp[ix] = xx[ix];
+
+	    /* get velocity */
+	    y = xx[ix]/dx; iy = floorf(y); y -= iy;
+	    z = zz[ix]/dz; iz = floorf(z); z -= iz;
+	    sf_eno2_apply (vmap,iy,iz,y,z,&v,NULL,FUNC);
+
+	    rr[ix] = v*dt;
+
+	    /* get geometrical spreading */
+	    if (ix==0) {
+		q = hypotf(xx[ix+1]-xx[ix],zz[ix+1]-zz[ix]);
+	    } else if (ix==nx-1) {
+		q = hypotf(xx[ix]-xx[ix-1],zz[ix]-zz[ix-1]);
+	    } else {
+		q = 0.5*hypotf(xx[ix+1]-xx[ix-1],zz[ix+1]-zz[ix-1]);
+	    }
+
+	    /* dix velocity */
+	    vd[ix] = v*dx/q;
+	}
+
+	sf_floatwrite(zp,nx,dix);
+	sf_floatwrite(xp,nx,dix);
+	sf_floatwrite(vd,nx,dix);
+    }
+    
     exit(0);
 }
