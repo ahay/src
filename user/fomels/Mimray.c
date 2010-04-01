@@ -130,6 +130,23 @@ int main(int argc, char* argv[])
 	    /* get velocity */
 	    y = xx[ix]/dx; iy = floorf(y); y -= iy;
 	    z = zz[ix]/dz; iz = floorf(z); z -= iz;
+
+	    if (iy <= 0) {
+		iy=0; y=0.0;
+	    } else if (iy >= nx) {
+		iy=nx-1; y=0.0;
+	    } else if (iy == nx-1) {
+		y=0.0;
+	    }
+
+	    if (iz <= 0) {
+		iz=0; z=0.0;
+	    } else if (iz >= nz) {
+		iz=nz-1; z=0.0;
+	    } else if (iz == nz-1) {
+		z=0.0;
+	    }
+
 	    sf_eno2_apply (vmap,iy,iz,y,z,&v,NULL,FUNC);
 
 	    rr[ix] = v*dt;

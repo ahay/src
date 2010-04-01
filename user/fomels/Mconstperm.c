@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     bool inv;
     int it, nt, ix, nx, iz, nz, ih, nh;
     float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
-    float ***prev, ***curr, **imag;
+    float ***prev, ***curr, **img, **dat;
     sf_file data, image;
 
     sf_init(argc,argv);
@@ -85,7 +85,9 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"label3","Time");
     }
 
-    imag = sf_floatalloc2(nz,nx);
+    img = sf_floatalloc2(nz,nx);
+    dat = sf_floatalloc2(nh,nx);
+
     prev = sf_floatalloc3(nh,nx,nz);
     curr = sf_floatalloc3(nh,nx,nz);
 
@@ -99,14 +101,14 @@ int main(int argc, char* argv[])
     dh = 1./(2*kiss_fft_next_fast_size(nh-1)*dh);
 
     if (!inv) {
-	sf_floatread(imag[0],nz*nx,image);
+	sf_floatread(img[0],nz*nx,image);
 
 	/* Initialize model */
 
 	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
 		prev[iz][ix][0] = 0.;
-		curr[iz][ix][0] = imag[ix][iz];
+		curr[iz][ix][0] = img[ix][iz];
 		for (ih=1; ih < nh; ih++) {
 		    prev[iz][ix][ih] = 0.;
 		    curr[iz][ix][ih] = 0.;
@@ -126,6 +128,12 @@ int main(int argc, char* argv[])
     /* time stepping */
     for (it=0; it < nt; it++) {
 
+	for (ix=0; ix < nx; ix++) {
+	    for (ih=0; ih < nh; ih++) {
+		dat[ix][ih] = 0.;
+	    }
+	}
+
 	for (iz=1; iz < nz; iz++) {
 	    kz = iz*dz;
 	    for (ix=0; ix < nx; ix++) {
@@ -137,13 +145,16 @@ int main(int argc, char* argv[])
 		    
 		    c = curr[iz][ix][ih];
 		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
-		    prev[iz][ix][ih] = c;					      
+		    prev[iz][ix][ih] = c;
+
+		    if (iz==nz-1) c *= 0.5; /* Nyquist frequency */
+		    dat[ix][ih] += c;
 		}
 	    }
 	}
 
-	/* extract zero depth */
-
+	cosft2(true,nh,nx,dat);
+	sf_floatwrite(dat[0],nh*nx,data);
     }
 
     exit(0);
