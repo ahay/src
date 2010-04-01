@@ -142,8 +142,8 @@ int main(int argc, char* argv[])
 
         ffdstep(old, cur, aa, nxb, nzb, v0, dt); 
 
+        sf_floatread(wav,nx,wave);
         for (ix=0; ix < nx; ix++) {
-            sf_floatread(wav,nx,wave);
             old[isz+nbt][nbl+ix] += wav[ix];
         }
 
