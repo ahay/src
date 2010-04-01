@@ -1,4 +1,4 @@
-/* 2-D Fourier finite-difference wave extrapolation */
+/* 2-D Fourier finite-difference wave extrapolation, point source */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -20,43 +20,40 @@
 #include <math.h>
 #include <limits.h>
 #include "abcpass.h"
+#include "ffdstep.h"
+#include "srcsm.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, nbt, nbb, nbl, nbr, nxb, nzb;
-    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2;
-    float **new,  **old,  **cur,  **uk, **dercur, **derold, *wav;
+    int nx, nz, nt, ix, iz, it, nbt, nbb, nbl, nbr, nxb, nzb, isz;
+    float dt, dx, dz, o1, o2;
+    float **old,  **cur,  **tmp, *wav;
     float  **v, v0, ***aa, w, g1, g2, ct, cb, cl, cr; //top, bottom, left, right 
-    sf_file out, vel, source;
+    sf_file out, vel, wave;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
      
 
     sf_init(argc,argv);
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
-    source = sf_input("in");   /* source wavlet*/
+    wave = sf_input("in");   /* source wavlet*/
 
 //    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
-    if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(wave)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
     if (!sf_histfloat(vel,"o1",&o1)) o1=0.0;
     if (!sf_histfloat(vel,"o2",&o2)) o1=0.0;
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
     if (!sf_getint("nt",&nt)) sf_error("Need nt input");
-
+    if (!sf_getint("isz",&isz)) sf_error("Need isz input");
 
     if (!sf_getint("nbt",&nbt)) nbt=44;
     if (!sf_getint("nbb",&nbb)) nbb=44;
@@ -81,21 +78,11 @@ int main(int argc, char* argv[])
 
     nxb = nx + nbl + nbr;
     nzb = nz + nbt + nbb;
-    nkx = nxb;
-    nkz = nzb;
-    dkx = 1./(2.0*kiss_fft_next_fast_size(nxb-1)*dx);
-    dkz = 1./(2.0*kiss_fft_next_fast_size(nzb-1)*dz);
-
-
-
 
     wav    =  sf_floatalloc(nx);
+
     old    =  sf_floatalloc2(nxb,nzb);
     cur    =  sf_floatalloc2(nxb,nzb);
-    new    =  sf_floatalloc2(nxb,nzb);
-    uk     =  sf_floatalloc2(nxb,nzb);
-    derold    =  sf_floatalloc2(nxb,nzb);
-    dercur    =  sf_floatalloc2(nxb,nzb);
     aa     =  sf_floatalloc3(3,nxb,nzb);
     
     bd_init(nx,nz,nbt,nbb,nbl,nbr,ct,cb,cl,cr);
@@ -132,7 +119,7 @@ int main(int argc, char* argv[])
  
     for (iz=0; iz < nzb; iz++){
          for (ix=0; ix < nxb; ix++) {
-         w = dt*dt*v[iz][ix]*v[iz][ix];
+         w = v[iz][ix]*v[iz][ix];
          g1 = dt*dt*(v[iz][ix]*v[iz][ix]-v0*v0)/(12.0*dx*dx);
          g2 = dt*dt*(v[iz][ix]*v[iz][ix]-v0*v0)/(12.0*dz*dz);
          aa[iz][ix][1] = w*g1;
@@ -144,161 +131,44 @@ int main(int argc, char* argv[])
     for (iz=0; iz < nzb; iz++) {
         for (ix=0; ix < nxb; ix++) {
             cur[iz][ix] = 0.0;
-        }
-    }
-    sf_floatread(wav,nx,source);
-    for (ix=0; ix < nx; ix++) {
-        cur[nbt][ix+nbl] = wav[ix];
-        }
-    for (iz=0; iz < nzb; iz++) {
-        for (ix=0; ix < nxb; ix++) {
             old[iz][ix] =  0.0; 
-            derold[iz][ix] =cur[iz][ix]/dt;
-           }
-         }
-    for (iz=nbt; iz<nz+nbt; iz++){
-        sf_floatwrite(cur[iz]+nbl,nx,out);
+        }
     }
-/*
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();}
-    sf_warning("using %d threads",nth);
-    #endif
-*/
+
     /* propagation in time */
-    for (it=1; it < nt; it++) {
+    ffdstep_init(nxb,nzb,dx,dz);
 
-         for (iz=0; iz < nzb; iz++){
-             for (ix=0; ix < nxb; ix++){ 
-                  new[iz][ix] = 0.0; 
-                  uk[iz][ix] = cur[iz][ix]; 
-                }
+    for (it=0; it < nt; it++) {
+
+        ffdstep(old, cur, aa, nxb, nzb, v0, dt); 
+
+        for (ix=0; ix < nx; ix++) {
+            sf_floatread(wav,nx,wave);
+            old[isz+nbt][nbl+ix] += wav[ix];
+        }
+
+        bd_decay(old); 
+        bd_decay(cur); 
+        tmp = old;
+        old = cur;
+        cur = tmp;
+        
+        for (iz=nbt; iz<nz+nbt; iz++){
+             sf_floatwrite(cur[iz]+nbl,nx,out);
          }  
-
-
- if (it==1)   sf_warning("before First FFT!");
-/* compute u(kx,kz) */
-         sf_cosft_init(nxb);
-         for (iz=0; iz < nzb; iz++){
-             /* Fourier transform x to kx */
-             sf_cosft_frw(uk[iz],0,1);
-         }
-         sf_cosft_close();
-
-         sf_cosft_init(nzb);
-         for (ikx=0; ikx < nkx; ikx++){
-             /* Fourier transform z to kz */
-             sf_cosft_frw(uk[0],ikx,nxb);
-         }
-         sf_cosft_close();
-
-         if (it==1) sf_warning("First FFT over!");
-/*    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
-    #endif
-*/
-
-         for (ikz=0; ikz < nkz; ikz++) {
-             kz = ikz* dkz*2.0*pi;
-
-             for (ikx=0; ikx < nkx; ikx++) {
-                 kx = ikx * dkx*2.0*pi;
-                 tmpdt = 2.0*(cosf(v0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(v0*v0*dt*dt);
-                 uk[ikz][ikx] = uk[ikz][ikx]*tmpdt;
-             }
-
-         }   
-/* Inverse FFT*/
-         sf_cosft_init(nzb);
-         for (ikx=0; ikx < nkx; ikx++){
-             /* Inverse Fourier transform kz to z */
-             sf_cosft_inv(uk[0],ikx,nxb);
-         }
-         sf_cosft_close();
-         sf_cosft_init(nxb);
-         for (iz=0; iz < nzb; iz++){
-             /* Inverse Fourier transform kx to x */
-              sf_cosft_inv(uk[iz],0,1);
-         }
-         sf_cosft_close();
-
-         if (it==1) sf_warning("First IFFT over!");
-
-	 for (iz=1; iz < nzb-1; iz++) {  
-	     for (ix=1; ix < nxb-1; ix++) {  
-                 new[iz][ix]  = uk[iz][ix]*aa[iz][ix][0]
-                              + (uk[iz][ix-1]+uk[iz][ix+1])*aa[iz][ix][1]
-                              + (uk[iz-1][ix]+uk[iz+1][ix])*aa[iz][ix][2];
-             }
-         }  
-    
-         new[0][0] = uk[0][0]*aa[0][0][0] + uk[0][1]*aa[0][0][1] + uk[1][0]*aa[0][0][2];
-         new[0][nxb-1] = uk[0][nxb-1]*aa[0][nxb-1][0] + uk[0][nxb-2]*aa[0][nxb-1][1] + uk[1][nxb-1]*aa[0][nxb-1][2];
-         new[nzb-1][0] = uk[nzb-1][0]*aa[nzb-1][0][0] + uk[nzb-1][1]*aa[nzb-1][0][1] + uk[nzb-2][0]*aa[nzb-1][0][2];
-         new[nzb-1][nxb-1] = uk[nzb-1][nxb-1]*aa[nzb-1][nxb-1][0] + uk[nzb-1][nxb-2]*aa[nzb-1][nxb-1][1] + uk[nzb-2][nxb-1]*aa[nzb-1][nxb-1][2];
-          
-	 for (ix=1; ix < nxb-1; ix++) {  
-             new[0][ix] = uk[0][ix]*aa[0][ix][0] + (uk[0][ix-1]+uk[0][ix+1])*aa[0][ix][1] + uk[1][ix]*aa[0][ix][2];
-             new[nz-1][ix] = uk[nz-1][ix]*aa[nz-1][ix][0] + (uk[nz-1][ix-1]+uk[nz-1][ix+1])*aa[nz-1][ix][1] + uk[nz-2][ix]*aa[nz-1][ix][2];
-         }
-	 for (iz=1; iz < nzb-1; iz++) {  
-             new[iz][0] = uk[iz][0]*aa[iz][0][0] + uk[iz][1]*aa[iz][0][1] + (uk[iz-1][0]+uk[iz+1][0])*aa[iz][0][2]; 
-             new[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
-         }
-          
-         if (it==1) sf_warning("Before second read!");
-         sf_floatread(wav,nx,source);
-         if (it==1) sf_warning("second read over!");
-         for (ix=0; ix < nx; ix++) {
-             new[nbt][ix+nbl] += wav[ix];
-         }
-
-	 for (iz=0; iz < nzb; iz++) {  
-             for (ix=0; ix < nxb; ix++) {
-                 dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
-                 new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-             }
-         }
- 
-    //     new[isz+nb][isx+nb] += wav[it];
-         bd_decay(new); 
-         bd_decay(dercur); 
-                 
-	 for (iz=0; iz < nzb; iz++) {  
-             for(ix=0; ix < nxb; ix++) {
-	        old[iz][ix] = cur[iz][ix]; 
-	        cur[iz][ix] = new[iz][ix]; 
-	        derold[iz][ix] = dercur[iz][ix]; 
-             }
-         }
-         for (iz=nbt; iz<nz+nbt; iz++){
-             sf_floatwrite(new[iz]+nbl,nx,out);
-         }  
-         sf_warning("it = %d",it);
     }
+
+    ffdstep_close();
     bd_close();
     free(**aa);
     free(*aa);
     free(aa);
     free(*v);     
-    free(*new);     
     free(*cur);     
     free(*old);     
-    free(*dercur);     
-    free(*derold);     
-    free(*uk);     
     free(v);     
-    free(new);     
     free(cur);     
     free(old);     
-    free(dercur);     
-    free(derold);     
-    free(uk);     
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
- 
     exit(0); 
 }           
            
