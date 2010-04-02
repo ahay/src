@@ -1,0 +1,9 @@
+import os, sys
+py_vers = sys.version_info[:2]
+
+if py_vers < (2, 7):
+    import distutils.sysconfig as sysconfig
+else:
+    import sysconfig
+
+# print 'Standard Python package location is ' + sysconfig.get_python_lib()
