@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, glob
 py_vers = sys.version_info[:2]
 
 if py_vers < (2, 7):
@@ -6,6 +6,22 @@ if py_vers < (2, 7):
 else:
     import sysconfig
 
-# print 'Standard Python package location is ' + sysconfig.get_python_lib()
+# Find out if this is a global build, and get env (libdir too if we'll install)
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    #srcroot = os.path.abspath('../..') # cwd is RSFSRC/build/user/ivlad
+except:
+    glob_build = False # scons command launched in the local directory
+    sys.stderr.write('Run scons in RSFSRC, not in this directory\n')
 
-Import('env libdir')
+if glob_build:
+    Import('env libdir')
+    std_py_pkg_loc = sysconfig.get_python_lib()
+    subdir = std_py_pkg_loc.split('python')[1]
+    pkgdir = os.path.join(libdir, 'python'+subdir,'rsf')
+    for pyfile in glob.glob('*.py'):
+        if os.path.isfile(pyfile):
+            env.Install(pkgdir, pyfile)
+            env.RSF_Pycompile(pyfile+'c', pyfile)
+            env.Install(pkgdir, pyfile+'c')
