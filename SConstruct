@@ -139,8 +139,7 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 ##########################################################################
 
 rsfuser = os.path.join(libdir,'rsfuser')
-env.Install(rsfuser,'__init__.py')
+env.Install(rsfuser,os.path.join('framework', 'py_pkg', '__init__.py'))
 
 env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,spcdir,mandir])
 env.Clean('install', rsfuser)
-
