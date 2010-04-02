@@ -134,7 +134,7 @@ def calc_filter(options,props):
     'Calculate command filter'
 
     filter = True
-    (rsfproj,uses,size,fetch_none,fetch_public,fetch_private) = options
+    (rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local) = options
     (rsfproj_exist,uses_list,data_size,data_type) = props
 
     # rsfproj existence filter
@@ -285,6 +285,7 @@ def main(argv=sys.argv):
             props   = (rsfproj_exist,uses_list,data_size,data_type)
             filter  = calc_filter(options,props)
             if filter==True:
+            
                 pass_list = pass_list+1
                 pass_size = pass_size+data_size
 
