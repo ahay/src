@@ -7,3 +7,5 @@ else:
     import sysconfig
 
 # print 'Standard Python package location is ' + sysconfig.get_python_lib()
+
+Import('env libdir')
