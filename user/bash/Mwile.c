@@ -137,15 +137,15 @@ int main (int argc, char* argv[]) {
             cmd = eq;
             cmd++;
             j = 0;
-            while (*cmd && isspace (*cmd)) /* Skip leading spaces if any */
+            while ('\0' != *cmd && isspace ((int) *cmd)) /* Skip leading spaces if any */
                 cmd++;
             if (*cmd) /* Command name begins here */
                 cmd_start = cmd;
-            while (*cmd) { /* Start scanning command and its arguments */
-                if (isspace (*cmd)) { 
+            while ('\0' != *cmd) { /* Start scanning command and its arguments */
+                if (isspace ((int) *cmd)) { 
                     if (0 == cmd_len) /* First space - end of the name of the command */
                         cmd_len = j;
-                    while (*cmd && isspace (*cmd)) /* Skip spaces till the next argument */
+                    while ('\0' != *cmd && isspace ((int) *cmd)) /* Skip spaces till the next argument */
                         cmd++;
                     if (*cmd) /* Found another argument after spaces */
                         arg_num++;

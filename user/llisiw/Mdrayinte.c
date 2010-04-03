@@ -59,16 +59,38 @@ int main(int argc, char* argv[])
 
     /* Dynamic ray tracing along vertical ray */
     for (i=1; i<nz; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	Q[i] = (P[i-1]-vel[(nx-1)/2][i-1]*Q[i-1]*dz/(v0*v0*4))*v0*dz+Q[i-1];
 	P[i] = -((1.5*vel[(nx-1)/2][i-1]+0.5*vel[(nx-1)/2][i])*Q[i-1]+(vel[(nx-1)/2][i-1]+vel[(nx-1)/2][i])/2*v0*dz/2*P[i-1])*dz/(v0*v0*2)+P[i-1];
+#else
+	Q[i] = sf_cadd(
+	    sf_crmul(
+		sf_cadd(P[i-1],
+			sf_crmul(Q[i-1],
+				 -vel[(nx-1)/2][i-1]*dz/(v0*v0*4))),v0*dz),
+	    Q[i-1]);
+	P[i] = sf_cadd(
+	    sf_crmul(
+		sf_cadd(
+		    sf_crmul(Q[i-1],
+			     (1.5*vel[(nx-1)/2][i-1]+0.5*vel[(nx-1)/2][i])),
+		    sf_crmul(P[i-1],
+			     (vel[(nx-1)/2][i-1]+vel[(nx-1)/2][i])/2*v0*dz/2)),
+		-dz/(v0*v0*2)),P[i-1]);
+#endif
     }
 
     /* Gaussian beam complex travel time */
     for (j=0; j<nx; j++) {
 	for (i=0; i<nz; i++) {
-
+#ifdef SF_HAS_COMPLEX_H
 	    cpxtbl[i+j*nz] = t0+(i*dz)/v0+0.5*((j-(nx-1)/2)*dx)*((j-(nx-1)/2)*dx)*P[i]/Q[i];
-
+#else
+	    cpxtbl[i+j*nz] = sf_cadd(sf_cmplx(t0+(i*dz)/v0,0.0),
+				     sf_crmul(sf_cdiv(P[i],Q[i]),
+					      0.5*((j-(nx-1)/2)*dx)
+					      *((j-(nx-1)/2)*dx)));
+#endif
 	}
     }
 

@@ -113,7 +113,11 @@ int main(int argc, char* argv[])
 	if (NULL == mat) {
 	    for (im = 0; im < nm; im++) {
 		for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
 		    cwavem[ik] = cwave[ik]*lft[im][ik]/nx2;
+#else
+		    cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
+#endif
 		}
 		kiss_fftri(icfg,(kiss_fft_cpx *) cwavem,wave[im]);
 	    }
