@@ -1,27 +1,67 @@
 import os, sys, glob
-py_vers = sys.version_info[:2]
 
-if py_vers < (2, 7):
+# Madagascar modules:
+import doc
+
+if sys.version_info[:2] < (2, 7):
     import distutils.sysconfig as sysconfig
 else:
     import sysconfig
 
-# Find out if this is a global build, and get env (libdir too if we'll install)
 try:
     import bldutil
-    glob_build = True # scons command launched in RSFSRC
-    #srcroot = os.path.abspath('../..') # cwd is RSFSRC/build/user/ivlad
 except:
-    glob_build = False # scons command launched in the local directory
-    sys.stderr.write('Run scons in RSFSRC, not in this directory\n')
+    sys.stderr.write('Run scons in RSFSRC=../.., not in this directory\n')
+    Exit(1)
 
-if glob_build:
-    Import('env libdir')
-    std_py_pkg_loc = sysconfig.get_python_lib()
-    subdir = std_py_pkg_loc.split('python')[1]
-    pkgdir = os.path.join(libdir, 'python'+subdir,'rsf')
-    for pyfile in glob.glob('*.py'):
-        if os.path.isfile(pyfile):
-            env.Install(pkgdir, pyfile)
-            env.RSF_Pycompile(pyfile+'c', pyfile)
-            env.Install(pkgdir, pyfile+'c')
+################################################################################
+
+Import('env libdir system user')
+assert os.path.isdir(libdir)
+
+# Deduce installation directory name
+std_py_pkg_loc = sysconfig.get_python_lib()
+subdir = std_py_pkg_loc.split('python')[1]
+pkgdir = os.path.join(libdir, 'python'+subdir,'rsf')
+
+dirs = Split('plot libplot pens sumain suplot') + system + user
+env.Command('prog.py',os.path.join(pkgdir,'path.py'),
+            action=Action(doc.getprogs,varlist=['dirs']),dirs=dirs)
+
+for src in Split('path doc flow proj prog tex book'):
+    bldutil.py_install(src, env, pkgdir)
+
+############################### Dependencies and installs from RSFSRC
+Depends('proj.pyc',os.path.join(pkgdir,'bld.pyc'))
+
+# Remember the Depends and Pycompile in RSFSRC/SConstruct
+env.InstallAs(os.path.join(pkgdir,'bld.py'), 
+    os.path.join('..','..','bldutil.py'))
+env.InstallAs(os.path.join(pkgdir,'bld.pyc'),
+    os.path.join('..','..','bldutil.pyc'))
+env.Install(pkgdir,os.path.join('..','..','config.py'))
+env.InstallAs(os.path.join(pkgdir,'conf.py'),
+    os.path.join('..','..','configure.py'))
+env.InstallAs(os.path.join(pkgdir,'conf.pyc'),
+    os.path.join('..','..','configure.pyc'))
+
+######## Building rsf.use
+use = env.Command('use.py',None,
+                  action=Action(doc.use,varlist=['book','scons']),
+                  book='book',scons=sys.argv[0])
+#----------------------------------------
+# Fix the libdirs below in the future:
+Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
+for case in Split('vpplot suproj'):
+    Depends(use,os.path.join(libdir,case+'.py'))
+#-----------------------------------------
+for case in Split('tex proj doc'):
+    Depends(use,os.path.join(pkgdir,case+'.py'))
+bldutil.py_install('use', env, pkgdir)
+
+##########################################################################
+# Self-documentation
+
+Doc = Builder (action = Action(doc.selfdoc,varlist=['rsfprefix','lang']),
+               src_suffix='.c',suffix='.py')
+env.Append(BUILDERS = {'RSF_Doc' : Doc})
