@@ -121,7 +121,7 @@ def use(target=None,source=None,env=None):
                 if os.path.isfile(uses):
                     sout = open(uses,'r')
                     local_doc = sout.read()
-                    print local_doc
+#                    print local_doc
                     doc = doc + local_doc
                     sout.close()
 

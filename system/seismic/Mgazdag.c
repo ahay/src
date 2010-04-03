@@ -75,10 +75,6 @@ int main (int argc, char *argv[])
 	vel = NULL;
 	velz = NULL;
 	eta = NULL;
-	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
-	/* Length of depth axis (for migration, if no velocity file) */
-	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
-	/* Sampling of depth axis (for migration, if no velocity file) */
     } else {
 	vel = sf_input("velocity");
 	if (!sf_histint(vel,"n1",&nz)) 
@@ -126,6 +122,25 @@ int main (int argc, char *argv[])
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
+
+	if (NULL == vel) {
+	    if (!sf_getint("nz",&nz)) {
+		/* Length of depth axis (for migration, if no velocity file) */
+		if (depth) {
+		    sf_error("Need nz=");
+		} else {
+		    nz = nt;
+		}
+	    }
+	    if (!sf_getfloat("dz",&dz)) {
+		/* Sampling of depth axis (for migration, if no velocity file) */
+		if (depth) {
+		    sf_error("Need dz=");
+		} else {
+		    dz = dt;
+		}
+	    }
+	}
 
 	sf_putint(out,"n1",nz);
 	sf_putfloat(out,"d1",dz);
