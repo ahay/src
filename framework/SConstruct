@@ -69,4 +69,5 @@ Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix','lang']),
 env.Append(BUILDERS = {'Doc' : Doc})
 
 # RSF Python package
-SConscript(os.path.join('py_pkg','SConstruct'), exports='env libdir')
+SConscript(os.path.join('py_pkg','SConstruct'), 
+           exports='env libdir system user')
