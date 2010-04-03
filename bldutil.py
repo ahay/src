@@ -352,6 +352,23 @@ def install_py_modules(env, py_modules, libdir):
 
 ################################################################################
 
+def py_install(src, env, targetdir):
+    'Compile and install py module'
+
+    [filenm, ext] = os.path.splitext(src)
+
+    if ext == '.py':
+        source = filenm
+    elif ext == '':
+        source = src
+
+    py = source+'.py'
+    pyc = py+'c'
+    env.RSF_Pycompile(pyc,py)
+    env.Install(targetdir,[py,pyc])
+
+################################################################################
+
 def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
 
     docs = []
