@@ -87,7 +87,7 @@ static void sf_petsc_aimplfd2_set_mat (MPI_Comm comm, Mat A, PetscInt J, PetscIn
 }
 
 sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, float dt,
-                                          float *v, int niter)
+                                          float *v, int niter, bool fourth)
 /*< Initialize implicit F-D object. >*/
 {
     PetscInt J, K, N;
@@ -146,7 +146,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 
             idx = ix*nz + iz;
 
-	    if (ix == 0 || ix == nx-1 || iz==0 || iz==nz-1) {
+	    if (ix <= 1 || ix >= nx-2 || iz<=1 || iz>=nz-2) {
 		J = idx;
 		Rox = 1.f;
 		//sf_petsc_aimplfd2_set_mat (aimplfd, J, J, N, Rox);
@@ -157,8 +157,6 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 		v2 *= v2;
 		Rox = v2*rtx2;
 		Roz = v2*rtz2;
-		J = idx;
-		K = J - nz;
 		/*
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
 		K = J - 1;
@@ -169,7 +167,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Roz);
 		K = J + nz;
 		sf_petsc_aimplfd2_set_mat (aimplfd, J, K, N, -Rox);
-		
+
                 v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, iz);
                 v2 *= v2;
                 Rox = v2*rtx2;
@@ -177,6 +175,29 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
                 J = ix*nz + iz;
                 K = J - nz;
 		*/
+		if (fourth) {
+		J = idx;
+		K = J - 2*nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, 1.0/12.0*Rox);
+                K = J - 2;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, 1.0/12.0*Roz);
+		K = J - nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -16.0/12.0*Rox);
+                K = J - 1;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -16.0/12.0*Roz);
+                K = J;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, J, N, 1 + 30.0/12.0*(Rox + Roz));
+		K = J + 2*nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, 1.0/12.0*Rox);
+                K = J + 2;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, 1.0/12.0*Roz);
+		K = J + nz;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -16.0/12.0*Rox);
+                K = J + 1;
+                sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -16.0/12.0*Roz);
+		} else {
+		J = idx;
+		K = J - nz;
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
                 K = J - 1;
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Roz);
@@ -186,6 +207,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Roz);
                 K = J + nz;
                 sf_petsc_aimplfd2_set_mat (aimplfd->comm, aimplfd->A, J, K, N, -Rox);
+                }
             }
         }
     }

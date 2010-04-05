@@ -200,7 +200,7 @@ int main (int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     PetscFPrintf (MPI_COMM_WORLD, stderr, "Initializing GMRES solver\n");   
-    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, &v[0][0], 10);
+    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, &v[0][0], 10, true);
 
     /*------------------------------------------------------------*/
     /* 

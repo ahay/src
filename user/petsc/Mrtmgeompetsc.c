@@ -127,8 +127,8 @@ int main(int argc, char ** argv) {
     if (vmin<=0.0) sf_error("min velocity nonpositive");
 
 
-    aimplfd     = sf_petsc_aimplfd2_init (ri.nz, ri.nx, ri.dz, ri.dx, ri.dt, v, ri.nt);
-    aimplfd_rev = sf_petsc_aimplfd2_init (ri.nz, ri.nx, ri.dz, ri.dx, ri.dt, v, ri.nt);
+    aimplfd     = sf_petsc_aimplfd2_init (ri.nz, ri.nx, ri.dz, ri.dx, ri.dt, v, ri.nt, true);
+    aimplfd_rev = sf_petsc_aimplfd2_init (ri.nz, ri.nx, ri.dz, ri.dx, ri.dt, v, ri.nt, true);
 
     /* only square of velocity array needed from here on 
     fsquare(v,nxz); */

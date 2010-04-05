@@ -123,7 +123,7 @@ int main(int argc, char ** argv) {
     if (vmin<=0.0) 
 	sf_error("min velocity nonpositive");
     
-    aimplfd = sf_petsc_aimplfd2_init (wi.nz, wi.nx, wi.dz, wi.dx, wi.dt, v, wi.nt);
+    aimplfd = sf_petsc_aimplfd2_init (wi.nz, wi.nx, wi.dz, wi.dx, wi.dt, v, wi.nt, true);
 
     /* only square of velocity array needed from here on 
     fsquare(v,nxz); */ 

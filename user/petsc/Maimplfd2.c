@@ -24,6 +24,7 @@ int main (int argc, char* argv[]) {
     int nz, nx, nt, it, ix, iz, niter;
     float oz, ox, ot, dz, dx, dt, sx, sz;
     float *u, *v, *f;
+    bool fourth;
     sf_petsc_aimplfd2 aimplfd;
     /* I/O */
     sf_file usol, vel, src;
@@ -68,6 +69,9 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("niter", &niter)) niter = 10;
     /* Number of solver iterations */
 
+    if (!sf_getbool ("fourth", &fourth)) fourth = true;
+    /* Higher order flag */
+
     /* Velocity array */
     v = sf_floatalloc (nx*nz);
     /* Source array */
@@ -87,7 +91,7 @@ int main (int argc, char* argv[]) {
 
     PetscFPrintf (MPI_COMM_WORLD, stderr, "Initializing GMRES solver\n");
     
-    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, v, niter);
+    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, v, niter, fourth);
 
     free (v);
     /* Wavefield */
