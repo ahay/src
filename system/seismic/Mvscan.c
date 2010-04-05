@@ -79,10 +79,6 @@ int main(int argc, char* argv[])
     sf_file cmp=NULL, scan=NULL, offset=NULL, msk=NULL;
     mapfunc nmofunc;
 
-    int ind;
-    float rk_num, rk_delta, rk_eps = 1e-2;;
-    float *** rk_exp, *** rk_m2, rk_ratio, rk_ratio_L1;
-
     sf_init (argc,argv);
     cmp = sf_input("in");
     scan = sf_output("out");
@@ -219,11 +215,6 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(nt);
     nmo = fint1_init(nw,nt,mute);
 
-
-    rk_exp =  sf_floatalloc3(nt,nv,ns);
-    rk_m2  =  sf_floatalloc3(nt,nv,ns);
-
-
     for (ix=0; ix < nx; ix++) {
 	sf_warning("cmp %d of %d",ix+1,nx);
 
@@ -256,7 +247,6 @@ int main(int argc, char* argv[])
 	    }
 	    fint1_set(nmo,trace);
 
-	    rk_num = 0.f;
 	    for (is=0; is < ns; is++) {
 		s = 1.0 + is*ds;
 
@@ -278,37 +268,11 @@ int main(int argc, char* argv[])
 			    if (sembl || asembl) stack2[is][iv][it] += amp*amp;
 			    if (asembl) stackh[is][iv][it] += amp*h;
 
-			    stack[is][iv][it] += amp; 
-
-			    rk_num ++;
-			    rk_delta = amp - rk_exp[is][iv][it];
-                            rk_exp[is][iv][it] += rk_delta / (float)(ih+1);//rk_num;
-			    rk_m2[is][iv][it] += rk_delta * (amp - rk_exp[is][iv][it]);
+			    stack[is][iv][it] += amp;
 			}
 		    }
 		} /* v */
 	    } /* s */
-
-	    ind = 0;
-	    rk_ratio_L1 = 0.f;
-
-	    for (is=0; is < ns; is++) {
-		for (iv=0; iv < nv; iv++) {
-		    for (it=0; it < nt; it++) {
-			if (fabs(rk_exp[0][0][ind]) > 1e-2f) {
-			    rk_ratio = (sqrt(rk_m2[0][0][ind] / (float)(ih+1))) /
-				fabs(rk_exp[0][0][ind]);
-			}
-			//rk_ratio = (sqrt(rk_m2[0][0][ind] / (float)ih));
-				
-			rk_ratio_L1 += fabs(rk_ratio);
-			ind++;
-		    }
-		}
-	    }
-
-	    if (rk_ratio_L1 > rk_eps) 
-		break;
 	} /* h */
 	
 	if (sembl || asembl) {
