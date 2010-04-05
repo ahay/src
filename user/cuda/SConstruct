@@ -18,7 +18,7 @@ gpuktmig
 
 if env['CUDA_SDK_PATH']:
 
-    env.Append(LIBS=['cuda','cutil','cudart'])
+    env.Append(LIBS=['cuda','cudart'])
     env.Append(CPPPATH=['../../include'],
                NVCCINC=['-I'+os.getcwd(),'-I'+os.getcwd()+'/../../include'],
                NVCCFLAGS=[map(lambda x: '-D'+x,env.get('CPPDEFINES',''))],
