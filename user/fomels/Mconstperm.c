@@ -96,11 +96,18 @@ int main(int argc, char* argv[])
 
     v *= SF_PI*dt;
 
-    dx = 1./(2*kiss_fft_next_fast_size(nx-1)*dx);
-    dz = 1./(2*kiss_fft_next_fast_size(nz-1)*dz);
-    dh = 1./(2*kiss_fft_next_fast_size(nh-1)*dh);
+    dx = cosft_dk(nx,dx);
+    dz = cosft_dk(nz,dz);
+    dh = cosft_dk(nh,dh);
 
-    if (!inv) {
+    if (inv) {
+	/* initialize image */
+	for (iz=0; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
+		img[ix][iz] = 0.;
+	    }
+	}
+    } else {
 	sf_floatread(img[0],nz*nx,image);
 
 	/* Initialize model */
@@ -128,9 +135,13 @@ int main(int argc, char* argv[])
     /* time stepping */
     for (it=0; it < nt; it++) {
 
-	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {
-		dat[ix][ih] = 0.;
+	if (inv) {
+	    sf_floatread(dat[0],nh*nx,data);
+	} else {
+	    for (ix=0; ix < nx; ix++) {
+		for (ih=0; ih < nh; ih++) {
+		    dat[ix][ih] = 0.;
+		}
 	    }
 	}
 
@@ -147,14 +158,24 @@ int main(int argc, char* argv[])
 		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
 		    prev[iz][ix][ih] = c;
 
-		    if (iz==nz-1) c *= 0.5; /* Nyquist frequency */
-		    dat[ix][ih] += c;
+		    if (!inv) {
+			if (iz==nz-1) c *= 0.5; /* Nyquist frequency */
+			dat[ix][ih] += c;
+		    }
 		}
+		
 	    }
 	}
 
-	cosft2(true,nh,nx,dat);
-	sf_floatwrite(dat[0],nh*nx,data);
+	if (!inv) {
+	    cosft2(true,nh,nx,dat);
+	    sf_floatwrite(dat[0],nh*nx,data);
+	}
+    }
+
+    if (inv) {
+	cosft2(true,nz,nx,img);
+	sf_floatwrite(img[0],nz*nx,image);
     }
 
     exit(0);

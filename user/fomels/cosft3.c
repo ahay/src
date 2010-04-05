@@ -18,6 +18,12 @@
 */
 #include <rsf.h>
 
+int cosft_dk(int n, float d)
+/*< wavenumber sampling for cosine FT >*/
+{
+    return 1./(2*kiss_fft_next_fast_size(n-1)*d);
+}
+
 void cosft3(bool inv,               /* forward or inverse */ 
 	    int n1, int n2, int n3, /* dimensions */
 	    float ***data           /* data [n3][n2][n1] */)
