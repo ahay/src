@@ -200,7 +200,7 @@ int main (int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     PetscFPrintf (MPI_COMM_WORLD, stderr, "Initializing GMRES solver\n");   
-    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, &v[0][0], 10, true);
+    aimplfd = sf_petsc_aimplfd2_init (nz, nx, dz, dx, dt, &v[0][0], 100, true);
 
     /*------------------------------------------------------------*/
     /* 
@@ -216,7 +216,7 @@ int main (int argc, char* argv[])
         if (expl) {
             sf_floatread (ww, 1, Fwav);
             for (ia = 0; ia < cs->n; ia++) {
-                sf_petsc_aimplfd2_add_source_ut2 (aimplfd, ww[0], cs->jz[ia], cs->jx[ia]);
+                sf_petsc_aimplfd2_add_source_ut1 (aimplfd, ww[0], cs->jz[ia], cs->jx[ia]);
             }
         } else {
             sf_floatread (ww, ns, Fwav);
@@ -224,11 +224,10 @@ int main (int argc, char* argv[])
             /*
                 PetscFPrintf (MPI_COMM_WORLD, stderr, "Source #%d [%d, %d], f=%f\n", ia, cs->jz[ia], cs->jx[ia], ww[0]);
                 */
-                sf_petsc_aimplfd2_add_source_ut2 (aimplfd, ww[ia], cs->jz[ia], cs->jx[ia]);
+                sf_petsc_aimplfd2_add_source_ut1 (aimplfd, ww[ia], cs->jz[ia], cs->jx[ia]);
             }
         }
-        /* sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix); */
-        sf_petsc_aimplfd2_get_wavefield_ut1 (aimplfd, &u[0][0]);
+        sf_petsc_aimplfd2_get_wavefield_ut2 (aimplfd, &u[0][0]);
 
         /* extract data */
         /*

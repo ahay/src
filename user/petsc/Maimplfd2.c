@@ -105,9 +105,9 @@ int main (int argc, char* argv[]) {
 
         sf_petsc_aimplfd2_next_step (aimplfd);
 
-        sf_petsc_aimplfd2_add_source_ut2 (aimplfd, f[it], iz, ix);
+        sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix);
         /* sf_petsc_aimplfd2_add_source_ut1 (aimplfd, f[it], iz, ix); */
-        sf_petsc_aimplfd2_get_wavefield_ut1 (aimplfd, u);
+        sf_petsc_aimplfd2_get_wavefield_ut2 (aimplfd, u);
 
         /* Write the solution */
         if (0 == cpuid)

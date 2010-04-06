@@ -38,6 +38,7 @@ struct PETScAimplFD2 {
     MPI_Comm comm;
     KSP Solver;
     Mat A;
+    MatNullSpace Nullsp;
     Vec Ut, Ut1, Ut2;
     float dz, dx, dt;
     float *bzl, *bzh, *bxl, *bxh; /* B.C. */
@@ -77,8 +78,33 @@ static float sf_petsc_aimplfd2_get_vel (sf_petsc_aimplfd2 aimplfd, float *v, int
     return v[ixs*aimplfd->Nz + izs];
 }
 
-
 #define MAX_RC 9
+
+/* Null space remover */
+static PetscErrorCode sf_petsc_aimplfd2_null_space (Vec x, void *ctx) {
+    sf_petsc_aimplfd2 aimplfd = (sf_petsc_aimplfd2)ctx;
+    PetscErrorCode ierr;
+    PetscInt idx;
+    PetscScalar Val = 0.0;
+    int nx, nz, ix, iz;
+
+    nx = aimplfd->Nxpad;
+    nz = aimplfd->Nzpad;
+    /* Cleanup the padded area */
+    ierr = VecAssemblyBegin (x); CHKERR;
+    for (ix = 0; ix < nx; ix++) {
+        for (iz = 0; iz < nz; iz++) {
+            idx = ix*nz + iz;
+            if (ix < aimplfd->Npad || ix >= (aimplfd->Npad + aimplfd->Nx) ||
+                iz < aimplfd->Npad || iz >= (aimplfd->Npad + aimplfd->Nz)) {
+                ierr = VecSetValue (x, idx, Val, INSERT_VALUES); CHKERR;
+            }
+        }
+    }
+    ierr = VecAssemblyEnd (x); CHKERR;
+
+    PetscFunctionReturn (0);
+}
 
 sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, float dt,
                                           float *v, int niter, bool fourth)
@@ -116,16 +142,11 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     ierr = MatSetType (aimplfd->A, MATMPIBAIJ); CHKERR;
     */
     ierr = MatCreateSeqAIJ (aimplfd->comm, N, N, fourth ? 9 : 5, PETSC_NULL, &aimplfd->A); CHKERR;
+    ierr = MatZeroEntries (aimplfd->A); CHKERR;
     ierr = MatSetOption (aimplfd->A, MAT_SYMMETRIC, PETSC_TRUE); CHKERR;
     /*
     ierr = MatSetOption (aimplfd->A, MAT_USE_HASH_TABLE, PETSC_TRUE); CHKERR;
     */
-    /* Solver type */
-    ierr = KSPCreate (aimplfd->comm, &aimplfd->Solver); CHKERR;
-    ierr = KSPSetOperators (aimplfd->Solver, aimplfd->A, aimplfd->A, SAME_NONZERO_PATTERN); CHKERR;
-    ierr = KSPSetType (aimplfd->Solver, KSPCGS); CHKERR;
-    ierr = KSPSetTolerances (aimplfd->Solver, PETSC_DEFAULT, PETSC_DEFAULT,
-                             PETSC_DEFAULT, niter); CHKERR;
     /* Solution and r.h.s. vectors */
     ierr = VecCreateMPI (aimplfd->comm, PETSC_DECIDE, N, &aimplfd->Ut); CHKERR;
     ierr = VecZeroEntries (aimplfd->Ut); CHKERR;
@@ -141,8 +162,8 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     for (ix = 0; ix < nx; ix++) {
         for (iz = 0; iz < nz; iz++) {
             idx = ix*nz + iz;
-            if (ix < aimplfd->Npad || ix > (aimplfd->Npad + aimplfd->Nx) ||
-                iz < aimplfd->Npad || iz > (aimplfd->Npad + aimplfd->Nz)) {
+            if (ix < aimplfd->Npad || ix >= (aimplfd->Npad + aimplfd->Nx) ||
+                iz < aimplfd->Npad || iz >= (aimplfd->Npad + aimplfd->Nz)) {
                 J = idx;
                 ierr = MatSetValue (aimplfd->A, J, J, Val, INSERT_VALUES); CHKERR;
             } else {
@@ -222,6 +243,18 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
         aimplfd->bxh[iz] = (1-d)/(1+d);
     }
 
+    ierr = MatNullSpaceCreate (aimplfd->comm, PETSC_FALSE, 0, PETSC_NULL, &aimplfd->Nullsp); CHKERR;
+    ierr = MatNullSpaceSetFunction (aimplfd->Nullsp, sf_petsc_aimplfd2_null_space, aimplfd); CHKERR;
+
+    /* Solver type */
+    ierr = KSPCreate (aimplfd->comm, &aimplfd->Solver); CHKERR;
+    ierr = KSPSetOperators (aimplfd->Solver, aimplfd->A, aimplfd->A, DIFFERENT_NONZERO_PATTERN); CHKERR;
+    ierr = KSPSetType (aimplfd->Solver, KSPGMRES); CHKERR;
+    ierr = KSPSetTolerances (aimplfd->Solver, PETSC_DEFAULT, PETSC_DEFAULT,
+                             PETSC_DEFAULT, niter); CHKERR;
+    ierr = KSPSetNullSpace (aimplfd->Solver, aimplfd->Nullsp); CHKERR;
+    ierr = KSPSetUp (aimplfd->Solver); CHKERR;
+
     return aimplfd;
 }
 
@@ -279,6 +312,11 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 
     /* Solve the system */
     ierr = KSPSolve (aimplfd->Solver, aimplfd->Ut2, aimplfd->Ut); CHKERR;
+    /*
+    KSPConvergedReason reason;
+    ierr = KSPGetConvergedReason (aimplfd->Solver, &reason); CHKERR;
+    PetscFPrintf (MPI_COMM_WORLD, stderr, "Convergence reason: %d\n", reason);
+    */
 
     /* Move time steps */
     ierr = VecCopy (aimplfd->Ut1, aimplfd->Ut2); CHKERR;
@@ -394,7 +432,8 @@ void sf_petsc_aimplfd2_destroy (sf_petsc_aimplfd2 aimplfd)
     ierr = MatDestroy (aimplfd->A); CHKERR;
     ierr = VecDestroy (aimplfd->Ut); CHKERR;
     ierr = VecDestroy (aimplfd->Ut1); CHKERR;
-    ierr = VecDestroy (aimplfd->Ut2); CHKERR;   
+    ierr = VecDestroy (aimplfd->Ut2); CHKERR;
+    ierr = MatNullSpaceDestroy (aimplfd->Nullsp); CHKERR;
 
     free (aimplfd->bzl);
     free (aimplfd->bzh);
