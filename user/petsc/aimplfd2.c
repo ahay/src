@@ -100,7 +100,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
     aimplfd->dz = dz;
     aimplfd->dx = dx;
     aimplfd->dt = dt;
-    aimplfd->Npad = 2; /* Pad area thickness */
+    aimplfd->Npad = 5; /* Pad area thickness */
     aimplfd->Nxpad = aimplfd->Nx + aimplfd->Npad*2; 
     aimplfd->Nzpad = aimplfd->Nz + aimplfd->Npad*2; 
     aimplfd->comm = MPI_COMM_WORLD;
@@ -232,8 +232,8 @@ static void sf_petsc_aimplfd2_bc_apply (sf_petsc_aimplfd2 aimplfd) {
     PetscErrorCode ierr;
     PetscScalar **uo, **um;
 
-    ierr = VecGetArray2d (aimplfd->Ut1, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &um); CHKERR;
-    ierr = VecGetArray2d (aimplfd->Ut2, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &uo); CHKERR;
+    ierr = VecGetArray2d (aimplfd->Ut1, aimplfd->Nxpad, aimplfd->Nzpad, 0, 0, &um); CHKERR;
+    ierr = VecGetArray2d (aimplfd->Ut2, aimplfd->Nxpad, aimplfd->Nzpad, 0, 0, &uo); CHKERR;
 
     for (ix = 0; ix < aimplfd->Nxpad; ix++) {
         for (iop = 0; iop < nop; iop++) {
