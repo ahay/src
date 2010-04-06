@@ -40,6 +40,7 @@ struct PETScAimplFD2 {
     Mat A;
     Vec Ut, Ut1, Ut2;
     float dz, dx, dt;
+    float *bzl, *bzh, *bxl, *bxh; /* B.C. */
 };
 /* concrete data type */
 
@@ -85,7 +86,7 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 {
     PetscInt J, N;
     int ix, iz, idx;
-    float v2, rtx2, rtz2;
+    float v2, rtx2, rtz2, d;
     PetscErrorCode ierr;
     PetscScalar Rox, Roz, Val, Vals[MAX_RC];
     PetscInt Cols[MAX_RC];
@@ -194,7 +195,71 @@ sf_petsc_aimplfd2 sf_petsc_aimplfd2_init (int nz, int nx, float dz, float dx, fl
 /*
     sf_petsc_mat_view (aimplfd->comm, aimplfd->A);
 */
+
+    aimplfd->bzl = sf_floatalloc (aimplfd->Nxpad);
+    aimplfd->bzh = sf_floatalloc (aimplfd->Nxpad);
+    aimplfd->bxl = sf_floatalloc (aimplfd->Nzpad);
+    aimplfd->bxh = sf_floatalloc (aimplfd->Nzpad);
+
+    rtx2 = dt/dx;
+    rtz2 = dt/dz;
+    /* Top/Bottom coefficients for B.C. */
+    for (ix = 0; ix < aimplfd->Nxpad; ix++) {
+        v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, 0);
+        d = v2*rtz2;
+        aimplfd->bzl[ix] = (1-d)/(1+d);
+        v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, ix, aimplfd->Nzpad);
+        d = v2*rtz2;
+        aimplfd->bzh[ix] = (1-d)/(1+d);
+    }
+    /* Left/right coefficients for B.C. */
+    for (iz = 0; iz < aimplfd->Nzpad; iz++) {
+        v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, 0, iz);
+        d = v2*rtx2;
+        aimplfd->bxl[iz] = (1-d)/(1+d);
+        v2 = sf_petsc_aimplfd2_get_vel (aimplfd, v, aimplfd->Nxpad, iz);
+        d = v2*rtx2;
+        aimplfd->bxh[iz] = (1-d)/(1+d);
+    }
+
     return aimplfd;
+}
+
+/* Apply B.C. */
+static void sf_petsc_aimplfd2_bc_apply (sf_petsc_aimplfd2 aimplfd) {
+    int iz, ix, iop;
+    int nop = aimplfd->Npad;
+    PetscErrorCode ierr;
+    PetscScalar **uo, **um;
+
+    ierr = VecGetArray2d (aimplfd->Ut1, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &um); CHKERR;
+    ierr = VecGetArray2d (aimplfd->Ut2, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &uo); CHKERR;
+
+    for (ix = 0; ix < aimplfd->Nxpad; ix++) {
+        for (iop = 0; iop < nop; iop++) {
+            /* top BC */
+            iz = nop - iop;
+            uo[ix][iz] = um[ix][iz + 1] +(um[ix][iz] - uo[ix][iz + 1])*aimplfd->bzl[ix];
+            /* bottom BC */
+            iz = aimplfd->Nzpad - nop + iop - 1;
+            uo[ix][iz] = um[ix][iz - 1] +(um[ix][iz] - uo[ix][iz - 1])*aimplfd->bzh[ix];
+        }
+    }
+
+    for (iz = 0; iz < aimplfd->Nzpad; iz++) {
+        for (iop = 0; iop < nop; iop++) {
+            /* left BC */
+            ix = nop - iop;
+            uo[ix][iz] = um[ix + 1][iz] + (um[ix][iz] - uo[ix + 1][iz])*aimplfd->bxl[iz];
+            /* right BC */
+            ix = aimplfd->Nxpad - nop + iop - 1;
+            uo[ix  ][iz] = um[ix - 1][iz] + (um[ix][iz] - uo[ix - 1][iz])*aimplfd->bxh[iz];
+        }
+    }
+
+    ierr = VecRestoreArray2d (aimplfd->Ut2, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &uo); CHKERR;
+    ierr = VecRestoreArray2d (aimplfd->Ut1, aimplfd->Nzpad, aimplfd->Nxpad, 0, 0, &um); CHKERR;
+    return;
 }
 
 void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
@@ -202,7 +267,6 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
 {
     PetscErrorCode ierr;
     PetscScalar Val1, Val2;
-    int N;
 
     /* R.H.S. */
     Val1 = 2.0;
@@ -210,10 +274,11 @@ void sf_petsc_aimplfd2_next_step (sf_petsc_aimplfd2 aimplfd)
     /* Ut2 becomes right-hand side */
     VecAXPBY (aimplfd->Ut2, Val1, Val2, aimplfd->Ut1);
 
+    /* Apply B.C. */
+    sf_petsc_aimplfd2_bc_apply (aimplfd);
+
     /* Solve the system */
     ierr = KSPSolve (aimplfd->Solver, aimplfd->Ut2, aimplfd->Ut); CHKERR;
-    ierr = KSPGetIterationNumber (aimplfd->Solver, &N); CHKERR;
-    PetscFPrintf (MPI_COMM_WORLD, stderr, "Iterations number - %d\n", N);
 
     /* Move time steps */
     ierr = VecCopy (aimplfd->Ut1, aimplfd->Ut2); CHKERR;
@@ -330,6 +395,11 @@ void sf_petsc_aimplfd2_destroy (sf_petsc_aimplfd2 aimplfd)
     ierr = VecDestroy (aimplfd->Ut); CHKERR;
     ierr = VecDestroy (aimplfd->Ut1); CHKERR;
     ierr = VecDestroy (aimplfd->Ut2); CHKERR;   
+
+    free (aimplfd->bzl);
+    free (aimplfd->bzh);
+    free (aimplfd->bxl);
+    free (aimplfd->bxh);
 
     free (aimplfd);
 }
