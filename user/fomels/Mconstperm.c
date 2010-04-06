@@ -22,18 +22,18 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv;
-    int it, nt, ix, nx, iz, nz, ih, nh;
+    bool mig;
+    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its;
     float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
     float ***prev, ***curr, **img, **dat;
     sf_file data, image;
 
     sf_init(argc,argv);
 
-    if (!sf_getbool("inv",&inv)) inv=false;
+    if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
 
-    if (inv) { /* migration */
+    if (mig) { /* migration */
 	data = sf_input("in");
 	image = sf_output("out");
 
@@ -100,43 +100,51 @@ int main(int argc, char* argv[])
     dz = cosft_dk(nz,dz);
     dh = cosft_dk(nh,dh);
 
-    if (inv) {
+    for (iz=0; iz < nz; iz++) {
+	for (ix=0; ix < nx; ix++) {
+	    for (ih=0; ih < nh; ih++) {
+		prev[iz][ix][ih] = 0.;
+		curr[iz][ix][ih] = 0.;
+	    }
+	}
+    }
+
+    if (mig) {
 	/* initialize image */
 	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
 		img[ix][iz] = 0.;
 	    }
 	}
+
+	it1 = nt-1;
+	it2 = 0;
+	its = -1;
+
     } else {
 	sf_floatread(img[0],nz*nx,image);
 
 	/* Initialize model */
 
-	for (iz=0; iz < nz; iz++) {
+	for (iz=1; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
-		prev[iz][ix][0] = 0.;
 		curr[iz][ix][0] = img[ix][iz];
-		for (ih=1; ih < nh; ih++) {
-		    prev[iz][ix][ih] = 0.;
-		    curr[iz][ix][ih] = 0.;
-		}
 	    }
 	}
-
 	cosft3(false,nh,nx,nz,curr);
-
-	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {
-		curr[0][ix][ih] = 0.;
-	    }
-	}
+	
+	it1 = 0;
+	it2 = nt-1;
+	its = +1;
     }
 
-    /* time stepping */
-    for (it=0; it < nt; it++) {
 
-	if (inv) {
+    /* time stepping */
+    for (it=it1; it != it2; it += its) {
+
+	if (mig) {
 	    sf_floatread(dat[0],nh*nx,data);
+	    cosft2(false,nh,nx,dat);	    
 	} else {
 	    for (ix=0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {
@@ -155,25 +163,35 @@ int main(int argc, char* argv[])
 		    h = (kz*kz+kh*kh)/kz;
 		    
 		    c = curr[iz][ix][ih];
+
+		    if (mig) {
+			c += (iz==nz-1)? dat[ix][ih]*0.5: dat[ix][ih];
+		    } else {
+			dat[ix][ih] += (iz==nz-1)? c*0.5: c;
+		    }
+
 		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
 		    prev[iz][ix][ih] = c;
-
-		    if (!inv) {
-			if (iz==nz-1) c *= 0.5; /* Nyquist frequency */
-			dat[ix][ih] += c;
-		    }
 		}
-		
 	    }
 	}
 
-	if (!inv) {
+	if (!mig) {
 	    cosft2(true,nh,nx,dat);
 	    sf_floatwrite(dat[0],nh*nx,data);
 	}
     }
 
-    if (inv) {
+    if (mig) {
+	for (iz=1; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
+		for (ih=0; ih < nh; ih++) {
+		    c = curr[iz][ix][ih];
+		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
+		}
+	    }
+	}
+
 	cosft2(true,nz,nx,img);
 	sf_floatwrite(img[0],nz*nx,image);
     }

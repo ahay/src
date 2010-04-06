@@ -28,10 +28,10 @@ int main(int argc, char* argv[])
     int type;
     int it,iz,ix;        /* index variables */
     int nt,nz,nx;
-    float dt,dz,dx,dt2;
+    float dt,dz,dx,dt2,old;
 
-    float  *ww,**vv,**rr;     /* I/O arrays*/
-    float **um,**uo,**up,**ud;/* tmp arrays */
+    float  *ww,**vv,**rr; /* I/O arrays*/
+    float **um,**uo,**ud; /* tmp arrays */
 
     sf_file Fw,Fv,Fr,Fo; /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -63,7 +63,6 @@ int main(int argc, char* argv[])
     /* allocate temporary arrays */
     um=sf_floatalloc2(nz,nx);
     uo=sf_floatalloc2(nz,nx);
-    up=sf_floatalloc2(nz,nx);
     ud=sf_floatalloc2(nz,nx);
  
     dt2 = dt*dt;   
@@ -71,7 +70,6 @@ int main(int argc, char* argv[])
 	for (iz=0; iz<nz; iz++) {
 	    um[ix][iz]=0;
 	    uo[ix][iz]=0;
-	    up[ix][iz]=0;
 	    ud[ix][iz]=0;
 	    vv[ix][iz] *= vv[ix][iz]*dt2;
 	}
@@ -85,30 +83,18 @@ int main(int argc, char* argv[])
 
 	laplacian(uo,ud);
 
-	/* inject wavelet */
 	for (ix=0; ix<nx; ix++) {
 	    for (iz=0; iz<nz; iz++) {
-		ud[ix][iz] += ww[it] * rr[ix][iz];
-	    }
-	}
-
-	/* scale by velocity */
-	for (ix=0; ix<nx; ix++) {
-	    for (iz=0; iz<nz; iz++) {
+		/* scale by velocity */
 		ud[ix][iz] *= vv[ix][iz];
-	    }
-	}
+
+		/* inject wavelet */
+		ud[ix][iz] += ww[it] * rr[ix][iz];
 	
-	/* time step */
-	for (ix=0; ix<nx; ix++) {	    
-	    for (iz=0; iz<nz; iz++) {
-		up[ix][iz] = 
-		    2*uo[ix][iz] 
-		    - um[ix][iz] 
-		    + ud[ix][iz]; 
-		
-		um[ix][iz] = uo[ix][iz];
-		uo[ix][iz] = up[ix][iz];
+		/* time step */
+		old = uo[ix][iz];
+		uo[ix][iz] += uo[ix][iz] - um[ix][iz] + ud[ix][iz]; 		
+		um[ix][iz] = old;
 	    }
 	}
 	
