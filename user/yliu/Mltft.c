@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
     bool inv, verb;
     int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12;
     int m[SF_MAX_DIM], *rect;
-    float t, d1, w, w0, dw, *trace, *kbsc, *sscc=NULL, *mm, mean, alpha;
+    float t, d1, w, w0, dw, mean, alpha;
+    float *trace, *kbsc, *mkbsc=NULL,*sscc=NULL, *mm=NULL;
     sf_complex *outp;
     sf_file in, out, mask, basis;
    
@@ -124,9 +125,11 @@ int main(int argc, char* argv[])
     if (NULL != sf_getstring("mask")) {
 	mask = sf_input("mask");
 	mm = sf_floatalloc(n1);
+	mkbsc = sf_floatalloc(n12);
     } else {
 	mask = NULL;
 	mm = NULL;
+	mkbsc = NULL;
     }
 
     /* sin and cos basis */
@@ -135,13 +138,11 @@ int main(int argc, char* argv[])
 	if (0.==w) { /* zero frequency */
 	    for (i1=0; i1 < n1; i1++) {
 		kbsc[iw*n1+i1] = 0.;
-		if (NULL != mm) kbsc[iw*n1+i1] *= mm[i1];
 	    }
 	} else {
 	    for (i1=0; i1 < n1; i1++) {
 		t = i1*d1;
 		kbsc[iw*n1+i1] = sinf(w*t);
-		if (NULL != mm) kbsc[iw*n1+i1] *= mm[i1];
 	    }
 	}
     }
@@ -150,14 +151,18 @@ int main(int argc, char* argv[])
 	if (0.==w) { /* zero frequency */
 	    for (i1=0; i1 < n1; i1++) {
 		kbsc[(iw+nw)*n1+i1] = 0.5;
-		if (NULL != mm) kbsc[(iw+nw)*n1+i1] *= mm[i1];
 	    }
 	} else {
 	    for (i1=0; i1 < n1; i1++) {
 		t = i1*d1;
 		kbsc[(iw+nw)*n1+i1] = cosf(w*t);
-		if (NULL != mm) kbsc[(iw+nw)*n1+i1] *= mm[i1];
 	    }
+	}
+    }
+    
+    if (NULL != mm) {
+	for (iw=0; iw < n12; iw++) {
+	    mkbsc[iw] = kbsc[iw];
 	}
     }
 
@@ -166,24 +171,41 @@ int main(int argc, char* argv[])
     }
 
     mean = 0.;
-    for (i2=0; i2 < n12; i2++) {
-        mean += kbsc[i2]*kbsc[i2];
+    for (i1=0; i1 < n12; i1++) {
+	mean += kbsc[i1]*kbsc[i1];
     }
     mean = sqrtf (mean/(n12));
     for (i1=0; i1 < n12; i1++) {
-        kbsc[i1] /= mean;
+	kbsc[i1] /= mean;
     }
-
+    
     for (i2=0; i2 < n2; i2++) {
 	if (verb) sf_warning("slice %d of %d",i2+1,n2);
+	if (NULL != mm) {
+	    sf_floatread(mm,n1,mask);
+	    for (iw=0; iw < 2*nw; iw++) {
+		for (i1=0; i1 < n1; i1++) {
+		    kbsc[iw*n1+i1] *= mm[i1];
+		}
+	    }
+	    mean = 0.;
+	    for (i1=0; i1 < n12; i1++) {
+		mean += kbsc[i1]*kbsc[i1];
+	    }
+	    mean = sqrtf (mean/(n12));
+	    for (i1=0; i1 < n12; i1++) {
+		kbsc[i1] /= mean;
+	    }
+	}
+
 	if (!inv) {
 	    sf_floatread(trace,n1,in);
 	    if (NULL != mm) {
-		sf_floatread(mm,n1,mask);
 		for (i1=0; i1 < n1; i1++) {
 		    trace[i1] *= mm[i1];
 		}
 	    }
+	    
 	    for(i1=0; i1 < n1; i1++) {
 		trace[i1] /= mean;
 	    }
@@ -208,6 +230,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    sf_floatwrite(trace,n1,out);
+	}
+	if (NULL != mm) {
+	    for (iw=0; iw < n12; iw++) {
+		kbsc[iw] = mkbsc[iw];
+	    }
 	}
     }
     exit(0);
