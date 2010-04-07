@@ -23,7 +23,8 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nx2, nk, nt, m1, m2, ix, ik, it, im, n2;
-    float dt, f, *curr, *prev, **lft, **rht, **mid, **wave;
+    float dt, f, old;
+    float *curr, *prev, **lft, **rht, **mid, **wave;
     sf_complex **mat, *cwave, *cwavem;
     sf_file inp, out, prop, left, right;
 
@@ -124,25 +125,27 @@ int main(int argc, char* argv[])
 	}
 
 	for (ix = 0; ix < nx; ix++) {
-	    f = curr[ix];
-	    curr[ix] = -prev[ix];
-	    prev[ix] = f;
+	    old = f = curr[ix];
+	    f += f-prev[ix];
+	    prev[ix] = old;
 
 	    if (NULL == mat) {
 		for (im = 0; im < m1; im++) {
 		    for (ik = 0; ik < m2; ik++) {
-			curr[ix] += rht[ix][ik]*mid[ik][im]*wave[im][ix];
+			f += rht[ix][ik]*mid[ik][im]*wave[im][ix];
 		    }
 		}
 	    } else {
 		for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		    curr[ix] += crealf(mat[ix][ik] * cwave[ik]);
+		    f += crealf(mat[ix][ik] * cwave[ik]);
 #else
-		    curr[ix] += crealf(sf_cmul(mat[ix][ik],cwave[ik]));
+		    f += crealf(sf_cmul(mat[ix][ik],cwave[ik]));
 #endif
 		}
 	    }
+
+	    curr[ix] = f;
 	} 
 
 	sf_floatwrite(curr,nx,out);

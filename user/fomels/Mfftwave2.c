@@ -125,8 +125,7 @@ int main(int argc, char* argv[])
 		i = iz+ix*nz;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */
 		
-		c = curr[j];
-		old = c;
+		old = c = curr[j];
 		c += c + ww[it] * rr[i] - prev[i];
 		prev[i] = old;
 
