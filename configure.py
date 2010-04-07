@@ -48,6 +48,7 @@ def stderr_write(message, highlight_mode=None):
 
 plat = {'OS': 'unknown',
         'distro': 'unknown',
+        'version': 'unknown',
         'arch': 'unknown',
         'cpu': 'unknown'}
 pkg = {}
@@ -108,20 +109,31 @@ def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
     plat['OS'] = context.env.get('PLATFORM',sys.platform)
-
-    # Check for distributions / OS versions
     try:
-        from platform import architecture, uname, dist
+        from platform import architecture, uname
+        if sys.version_info[:2] < (2, 6): # Python < 2.6
+            from platform import dist
+        else:
+            from platform import linux_distribution as dist
+
         plat['arch'] = architecture()[0]
-        name = uname()[2].split('.')[-1]
+        del architecture
+
+        name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix'):
-            if name[:2] == 'fc':
+            if dist()[0].lower() == 'fedora':
+                plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
-            elif name[:2] == 'EL' or name[:2] == 'el':
+                plat['version'] = dist()[1]
+            elif dist()[0].lower() == 'redhat':
+                plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
+                plat['version'] = dist()[1]
             elif name[-7:] == 'generic':
+                plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
             elif dist()[0] == 'SuSE':
+                plat['OS'] = 'linux'
                 plat['distro'] = 'suse'
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
@@ -132,8 +144,9 @@ def identify_platform(context):
         elif plat['OS'] == 'irix':
              plat['distro'] = uname()[2]
         elif plat['OS'] in ('hp-ux', 'hpux'):
+             plat['OS'] = 'hpux'
              plat['distro'] = uname()[2].split('.')[-2]
-        del architecture, uname, dist
+        del uname, dist
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
         # commands through os.system to find distro/version
@@ -238,7 +251,7 @@ def libs(context):
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    if plat['OS'] == 'sunos' or plat['OS'] == 'hp-ux' or plat['OS'] == 'hpux':
+    if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
     elif plat['OS'] == 'cygwin':
         LIBS.append('rpc')
