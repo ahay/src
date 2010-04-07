@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 		         fabsf(x+h)/(vi*vi*(t2+dt));
 
 		    out[ix][it] += 
-		         pick(ti,tx*dx*aal,trace,nt,dt,t0);
+			pick(ti,fabsf(tx*dx*aal),trace,nt,dt,t0);
 		} 
 	    } 
 	} 
