@@ -18,12 +18,13 @@
 */
 #include <rsf.h>
 
+#include "fft1.h"
+
 int main(int argc, char* argv[]) 
 {
-    int nx, nx2, nk, nt, nm, ix, ik, it, im;
+    int nx, nx2, nk, nt, m1, m2, ix, ik, it, im, n2;
     float dt, f, *curr, *prev, **lft, **rht, **mid, **wave;
     sf_complex **mat, *cwave, *cwavem;
-    kiss_fftr_cfg cfg, icfg;
     sf_file inp, out, prop, left, right;
 
     sf_init(argc,argv);
@@ -43,16 +44,12 @@ int main(int argc, char* argv[])
     sf_putstring(out,"label2","Time");
     sf_putstring(out,"unit2","s");
 
-    nk = kiss_fft_next_fast_size((nx+1)/2)+1;
-    nx2 = 2*(nk-1);
+    nk = fft1_init(nx,&nx2);
 
     curr = sf_floatalloc(nx2);
     prev = sf_floatalloc(nx);
 
     cwave = sf_complexalloc(nk);
-
-    cfg = kiss_fftr_alloc(nx2,0,NULL,NULL);
-
     prop = sf_input("prop");
 
     if (NULL != sf_getstring("left")) {
@@ -61,15 +58,22 @@ int main(int argc, char* argv[])
 	left = sf_input("left");
 	right = sf_input("right");
 
-	if (!sf_histint(prop,"n1",&nm)) sf_error("No n1= in prop");
+	if (!sf_histint(prop,"n1",&m1)) sf_error("No n1= in prop");
+	if (!sf_histint(prop,"n2",&m2)) sf_error("No n2= in prop");
 
-	lft = sf_floatalloc2(nk,nm);
-	mid = sf_floatalloc2(nm,nm);
-	rht = sf_floatalloc2(nm,nx);
+	if (!sf_histint(left,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
+	if (!sf_histint(left,"n2",&n2) || n2 != m1) sf_error("Need n2=%d in left",m1);
+	
+	if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
+	if (!sf_histint(right,"n2",&n2) || n2 != nx) sf_error("Need n2=%d in right",nx);
 
-	sf_floatread(lft[0],nk*nm,left);
-	sf_floatread(rht[0],nx*nm,right);
-	sf_floatread(mid[0],nm*nm,prop);
+	lft = sf_floatalloc2(nk,m1);
+	mid = sf_floatalloc2(m1,m2);
+	rht = sf_floatalloc2(m2,nx);
+
+	sf_floatread(lft[0],nk*m1,left);
+	sf_floatread(rht[0],nx*m2,right);
+	sf_floatread(mid[0],m1*m2,prop);
 
 	sf_fileclose(left);
 	sf_fileclose(right);
@@ -78,9 +82,7 @@ int main(int argc, char* argv[])
 	mat = NULL;
 
 	cwavem = sf_complexalloc(nk);
-	wave = sf_floatalloc2(nx,nm);
-
-	icfg = kiss_fftr_alloc(nx2,1,NULL,NULL);
+	wave = sf_floatalloc2(nx,m1);
     } else {
 	if (SF_COMPLEX != sf_gettype(prop)) sf_error("Need complex prop");
 
@@ -94,8 +96,6 @@ int main(int argc, char* argv[])
 
 	cwavem = NULL;
 	wave = NULL;
-	
-	icfg = NULL;
     }
     
     sf_floatread (curr,nx,inp);
@@ -108,10 +108,10 @@ int main(int argc, char* argv[])
 
     /* propagation in time */
     for (it=0; it < nt; it++) {
-	kiss_fftr (cfg,curr,(kiss_fft_cpx *) cwave);
+	fft1(curr,cwave);
 
 	if (NULL == mat) {
-	    for (im = 0; im < nm; im++) {
+	    for (im = 0; im < m1; im++) {
 		for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
 		    cwavem[ik] = cwave[ik]*lft[im][ik]/nx2;
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 		    cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
 #endif
 		}
-		kiss_fftri(icfg,(kiss_fft_cpx *) cwavem,wave[im]);
+		ifft1(wave[im],cwavem);
 	    }
 	}
 
@@ -129,8 +129,8 @@ int main(int argc, char* argv[])
 	    prev[ix] = f;
 
 	    if (NULL == mat) {
-		for (im = 0; im < nm; im++) {
-		    for (ik = 0; ik < nm; ik++) {
+		for (im = 0; im < m1; im++) {
+		    for (ik = 0; ik < m2; ik++) {
 			curr[ix] += rht[ix][ik]*mid[ik][im]*wave[im][ix];
 		    }
 		}
