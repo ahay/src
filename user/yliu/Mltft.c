@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
 	    sf_floatread(mm,n1,mask);
 	    for (iw=0; iw < 2*nw; iw++) {
 		for (i1=0; i1 < n1; i1++) {
-		    kbsc[iw*n1+i1] *= mm[i1];
+		    kbsc[iw*n1+i1] = mkbsc[iw*n1+i1]*mm[i1];
 		}
 	    }
 	    mean = 0.;
@@ -230,11 +230,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    sf_floatwrite(trace,n1,out);
-	}
-	if (NULL != mm) {
-	    for (iw=0; iw < n12; iw++) {
-		kbsc[iw] = mkbsc[iw];
-	    }
 	}
     }
     exit(0);
