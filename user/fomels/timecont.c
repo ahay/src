@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "timecont.h"
-#include "neighbors.h"
 
 void timecont (float* time                /* time */, 
 	       float* t0                  /* time at the surface */,
@@ -46,11 +45,11 @@ void timecont (float* time                /* time */,
     n[2] = n3; d[2] = d3;
 
     sf_pqueue_start();
-    neighbors_init (in, d, n, order, time);
+    sf_neighbors_init (in, d, n, order, time);
 
-    for (npoints =  surface (v, t0);
+    for (npoints =  sf_neighbors_surface (v, t0, false);
 	 npoints > 0;
-	 npoints -= neighbours2(i)) {
+	 npoints -= sf_neighbours2(i)) {
 	/* Pick largest value in the NarrowBand
 	   mark as good, decrease points_left */
 	

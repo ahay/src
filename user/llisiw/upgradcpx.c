@@ -256,14 +256,3 @@ void upgrad_adj(upgrad upg,
 	}
     }
 }
-
-void upgrad_source(upgrad upgreal  /* real stencil */,
-		   upgrad upgimag  /* imag stencil */,
-		   int *s        /* output source */)
-/*< check stencil consistency and return source location >*/
-{
-    if (upgreal->order[0] != upgimag->order[0])
-	sf_warning("inconsistency: minimum real and imag time are at different grid point (source)");
-    else
-	sf_line2cart(ndim,nn,upgreal->order[0],s);
-}

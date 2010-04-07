@@ -1,4 +1,4 @@
-/* Distance computation by fast marching. */
+/* fast marching interface for marching from the surface. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,67 +19,66 @@
 
 #include <rsf.h>
 
-#include "distance.h"
+#include "fastmarchcpx.h"
 
-void distance_init (int n3,int n2,int n1) 
-/*< Initialize data dimensions >*/
+static float *d;
+static int *n, *in;
+
+void fastmarchcpx_init(int *n_in, float *d_in) 
+/*< initailize >*/
 {
     int maxband;
-    
+
+    n = n_in;
+    d = d_in;
+
     maxband = 0;
-    if (n1 > 1) maxband += 2*n2*n3;
-    if (n2 > 1) maxband += 2*n1*n3;
-    if (n3 > 1) maxband += 2*n1*n2;
+    if (n[0] > 1) maxband += 2*n[1]*n[2];
+    if (n[1] > 1) maxband += 2*n[0]*n[2];
+    if (n[2] > 1) maxband += 2*n[0]*n[1];
 
     sf_pqueue_init (10*maxband);
+
+    in = sf_intalloc(n[0]*n[1]*n[2]);
 }
 
-void distance (int np         /* number of points */, 
-	       float **points /* point coordinates [np][3] */,
-	       float* dist    /* distance */, 
-	       float* v       /* slowness squared */,
-	       int* in                    /* in/front/out flag */, 
-	       int n3,int n2,int n1       /* dimensions */,
-	       float o3,float o2,float o1 /* origin */,
-	       float d3,float d2,float d1 /* sampling */,
-	       int order                  /* accuracy order (1,2,3) */)
+void fastmarchcpx (float* time                /* time */,
+		   float* t0                  /* fixed traveltime */,
+		   float* v                   /* slowness squared */)
 /*< Run fast marching eikonal solver >*/
 {
-    float d[3], o[3], *p;
-    int n[3], npoints, i;
-    
-    n[0] = n1; o[0] = o1; d[0] = d1;
-    n[1] = n2; o[1] = o2; d[1] = d2;
-    n[2] = n3; o[2] = o3; d[2] = d3;
+    float *p;
+    int npoints, i;
 
     sf_pqueue_start();
-    sf_neighbors_init (in, d, n, order, dist);
+    sf_neighbors_init (in, d, n, 1, time);
 
-    for (npoints =  sf_neighbors_distance (np, v, points, d, o);
+    for (npoints =  sf_neighbors_surface (v, t0, true);
+/*    for (npoints =  sf_neighbors_mask (v, t0, m ,true); */
 	 npoints > 0;
 	 npoints -= sf_neighbours(i)) {
 	/* Pick smallest value in the NarrowBand
 	   mark as good, decrease points_left */
-
-	/* sf_warning("npoints=%d",npoints); */
-
+	
 	p = sf_pqueue_extract();
 
 	if (p == NULL) {
 	    sf_warning("%s: heap exausted!",__FILE__);
 	    break;
 	}
-
-	i = p - dist;
+	
+	i = p - time;
 
 	in[i] = SF_IN;
     }
-}
+}    
 
-void distance_close (void)
-/*< Free allocated storage >*/
+void fastmarchcpx_close(void)
+/*< free allocated storage >*/
 {
     sf_pqueue_close();
+    free(in);
 }
 
-/* 	$Id: distance.c 754 2004-08-24 07:59:16Z fomels $	 */
+
+

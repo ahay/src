@@ -26,9 +26,7 @@ static float *temp1, *temp2, *temp;
 void cpxeiko_init(int dim,
 		  int *n,
 		  int nm, /* model size */
-		  float *d,
-		  float *tr  /* realtime */,
-		  float *ti  /* imagtime */)
+		  float *d)
 /*< initialize operator >*/
 {
     temp1 = sf_floatalloc(nm);
@@ -37,7 +35,12 @@ void cpxeiko_init(int dim,
 
     upgreal = upgrad_init(dim,n,d);
     upgimag = upgrad_init(dim,n,d);
+}
 
+void cpxeiko_set(float *tr  /* realtime */,
+		 float *ti  /* imagtime */)
+/*< set references >*/
+{
     upgrad_set(upgreal,tr);
     upgrad_set(upgimag,ti);
 }
@@ -88,6 +91,21 @@ void cpxeiko_forw(bool flag   /* real=true / imag=false */,
     } else {
 	upgrad_forw(upgimag,in,rhs);
     }
+}
+
+void cpxeiko_ref(int dim,
+		 int *n,
+		 float *d,
+		 const float *r0,  /* reference */
+		 float *rhs)
+/*< calculate reference >*/
+{
+    upgrad ref;
+
+    ref = upgrad_init(dim,n,d);
+    upgrad_set(ref,r0);
+
+    upgrad_forw(ref,r0,rhs);
 }
 
 void cpxeiko_close()

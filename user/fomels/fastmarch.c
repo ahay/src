@@ -21,7 +21,6 @@
 /*^*/
 
 #include "fastmarch.h"
-#include "neighbors.h"
 
 void fastmarch_init (int n3,int n2,int n1) 
 /*< Initialize data dimensions >*/
@@ -56,11 +55,11 @@ void fastmarch (float* time                /* time */,
     n[2] = n3; xs[2] = s3-o3; b[2] = b3; d[2] = d3;
 
     sf_pqueue_start();
-    neighbors_init (in, d, n, order, time);
+    sf_neighbors_init (in, d, n, order, time);
 
-    for (npoints =  nearsource (xs, b, d, v, plane);
+    for (npoints =  sf_neighbors_nearsource (xs, b, d, v, plane);
 	 npoints > 0;
-	 npoints -= neighbours(i)) {
+	 npoints -= sf_neighbours(i)) {
 	/* Pick smallest value in the NarrowBand
 	   mark as good, decrease points_left */
 

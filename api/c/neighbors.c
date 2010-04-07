@@ -20,10 +20,11 @@
 #include <float.h>
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
 
 #include "neighbors.h"
+#include "pqueue.h"
+#include "_defs.h"
 
 struct Upd {
     double stencil, value;
@@ -42,9 +43,8 @@ static void grid (int *i, const int *n);
 static int *in, *n, s[3], order;
 static float *ttime, *vv, rdx[3];
 static double v1;
-static const float big_value = FLT_MAX;
 
-void neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */, 
+void sf_neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */, 
 		     float *rdx1  /* grid sampling [3] */, 
 		     int *n1      /* grid samples [3] */, 
 		     int order1   /* accuracy order */, 
@@ -59,7 +59,7 @@ void neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */,
     rdx[2] = 1./(rdx1[2]*rdx1[2]);
 }
 
-int  neighbours(int i) 
+int  sf_neighbours(int i) 
 /*< Update neighbors of gridpoint i, return number of updated points >*/
 {
     int j, k, ix, npoints;
@@ -79,7 +79,7 @@ int  neighbours(int i)
     return npoints;
 }
 
-int  neighbours2(int i) 
+int  sf_neighbours2(int i) 
 /*< Update neighbors of gridpoint i, return number of updated points >*/
 {
     int j, k, ix, npoints;
@@ -145,14 +145,14 @@ static float qsolve(int i)
 	    k = i-s[j];
 	    a = ttime[k];
 	} else {
-	    a = big_value;
+	    a = SF_HUGE;
 	}
 
 	if (ix < n[j]-1) {
 	    k = i+s[j];
 	    b = ttime[k];
 	} else {
-	    b = big_value;
+	    b = SF_HUGE;
 	}
 
 	xj = x+j;
@@ -198,18 +198,18 @@ static float qsolve(int i)
     
     v1=vv[i];
 
-    if(v[2]->value < big_value) {   /* ALL THREE DIRECTIONS CONTRIBUTE */
+    if(v[2]->value < SF_HUGE) {   /* ALL THREE DIRECTIONS CONTRIBUTE */
 	if (updaten(3, &res, v) || 
 	    updaten(2, &res, v) || 
 	    updaten(1, &res, v)) return res;
-    } else if(v[1]->value < big_value) { /* TWO DIRECTIONS CONTRIBUTE */
+    } else if(v[1]->value < SF_HUGE) { /* TWO DIRECTIONS CONTRIBUTE */
 	if (updaten(2, &res, v) || 
 	    updaten(1, &res, v)) return res;
-    } else if(v[0]->value < big_value) { /* ONE DIRECTION CONTRIBUTES */
+    } else if(v[0]->value < SF_HUGE) { /* ONE DIRECTION CONTRIBUTES */
 	if (updaten(1, &res, v)) return res;
     }
 	
-    return big_value;
+    return SF_HUGE;
 }
 
 static float qsolve2(int i)
@@ -384,7 +384,7 @@ static int dist(int k, float x1, float x2, float x3)
     return 0;
 }
 
-int neighbors_distance(int np         /* number of points */,
+int sf_neighbors_distance(int np         /* number of points */,
 		       float *vv1     /* slowness squared */,
 		       float **points /* point coordinates[np][3] */,
 		       float *d       /* grid sampling [3] */,
@@ -401,7 +401,7 @@ int neighbors_distance(int np         /* number of points */,
     /* initialize everywhere */
     for (i=0; i < n123; i++) {
 	in[i] = SF_OUT;
-	ttime[i] = big_value;
+	ttime[i] = SF_HUGE;
     }
 
     for (ip=0; ip < np; ip++) {
@@ -440,11 +440,11 @@ int neighbors_distance(int np         /* number of points */,
     return n123;
 }
 
-int nearsource(float* xs   /* source location [3] */, 
-	       int* b      /* constant-velocity box around it [3] */, 
-	       float* d    /* grid sampling [3] */, 
-	       float* vv1  /* slowness [n[0]*n[1]*n[2]] */, 
-	       bool *plane /* if plane-wave source */)
+int sf_neighbors_nearsource(float* xs   /* source location [3] */, 
+			    int* b      /* constant-velocity box around it [3] */, 
+			    float* d    /* grid sampling [3] */, 
+			    float* vv1  /* slowness [n[0]*n[1]*n[2]] */, 
+			    bool *plane /* if plane-wave source */)
 /*< initialize the source >*/
 {
     int npoints, ic, i, j, is, start[3], endx[3], ix, iy, iz;
@@ -454,7 +454,7 @@ int nearsource(float* xs   /* source location [3] */,
     /* initialize everywhere */
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
 	in[i] = SF_OUT;
-	ttime[i] = big_value;
+	ttime[i] = SF_HUGE;
     }
 
     vv = vv1;
@@ -508,16 +508,21 @@ int nearsource(float* xs   /* source location [3] */,
     return npoints;
 }
 
-int surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
-	    float* tt0  /* surface traveltime [n[1]*n[2]] */)
-/*< initialize the source >*/
+int sf_neighbors_surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
+			 float* tt0  /* surface traveltime [n[1]*n[2]] */,
+			 bool forw /* forward or backward continuation */)
+/*< initialize the source at the surface >*/
 {
     int npoints, i, j, ix, iy;
     
     /* initialize everywhere */
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
 	in[i] = SF_OUT;
-	ttime[i] = 0.;
+	if (forw) {
+	    ttime[i] = SF_HUGE;
+	} else {
+	    ttime[i] = 0.;
+	}
     }
 
     vv = vv1;
@@ -532,14 +537,57 @@ int surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
 	    ttime[i] = tt0[j];
 	    in[i] = SF_IN;
 
-	    sf_pqueue_insert2 (ttime+i);
+	    if (forw) {
+		sf_pqueue_insert (ttime+i);
+	    } else {
+		sf_pqueue_insert2 (ttime+i);
+	    }
 	}
     }
     
     return npoints;
 }
 
+int sf_neighbors_mask(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
+		      float* tref /* reference traveltime [n[0]*n[1]*n[2]] */,
+		      bool* known /* where known [n[0]*n[1]*n[2]] */,
+		      bool forw   /* forward or backward continuation */)
+/*< initialize the source using a mask >*/
+{
+    int npoints, i, nxy;
+
+    /* save velocity */
+    vv = vv1;
+    
+    /* total number of points */
+    nxy = n[0]*n[1]*n[2];
+    npoints = nxy;
+
+    for (i=0; i < nxy; i++) {
+	if (known[i]) {
+	    in[i] = SF_IN;
+	    ttime[i] = tref[i];
+
+	    if (forw) {
+		sf_pqueue_insert (ttime+i);
+	    } else {
+		sf_pqueue_insert2 (ttime+i);
+	    }
+
+	    npoints--;
+	} else {
+	    in[i] = SF_OUT;
+	    if (forw) {
+		ttime[i] = SF_HUGE;
+	    } else {
+		ttime[i] = 0.;
+	    }
+	}
+    }
+
+    return npoints;
+}
 
 
-/* 	$Id$	 */
+/* 	$Id: neighbors.c 5281 2010-02-04 00:51:06Z llisiw $	 */
 
