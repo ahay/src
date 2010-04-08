@@ -57,9 +57,12 @@ def param(par):
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
-    yxratio=dx/(dx+dy);
-    yzratio=dz/(dz+dy);
-    ytratio=10*dt/(10*dt+dy);
+    if ((dx+dy)    == 0.0)  : yxratio=1.0
+    else                    : yxratio=dx/(dx+dy)
+    if ((dz+dy)    == 0.0)  : yzratio=1.0
+    else                    : yzratio=dz/(dz+dy)
+    if ((10*dt+dy) == 0.0)  : ytratio=1.0
+    else                    : ytratio=10*dt/(10*dt+dy);
     
     par['ratio3d']=(dz+dy)/(dx+dy);
     par['pointt']=ytratio;
