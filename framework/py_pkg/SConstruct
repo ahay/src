@@ -17,7 +17,7 @@ except:
 ################################################################################
 
 Import('env libdir system user')
-assert os.path.isdir(libdir)
+#assert os.path.isdir(libdir)
 
 # Deduce installation directory name
 std_py_pkg_loc = sysconfig.get_python_lib()
