@@ -43,6 +43,199 @@ static float hyperb(float t, int it)
     return hypotf(t,v);
 }
 */
+ /******* MF
+%
+% Knip = a(1); Kn = a(2); B = a(3);
+% m [Nm x 1]
+% x [Nx x 1]
+function [dT, t0, num_invalid] = f_T_mf(a,m,x)
+
+global dT_exact V_0 V_0_grad is_V_0_grad 
+
+Nm = size (m,1);
+Nx = size (x,1);
+dT = zeros (Nm,Nx);
+
+num_invalid = 0;
+invalid_value = 10;
+
+if is_V_0_grad    V_midpoint_array = V_0_grad;else    V_midpoint_array = V_0 * ones (Nm,1); end
+% V slope  s.t. m
+if (size(a,1) > 3) 
+    V_midpoint_array = V_0 + a(4) * m; 
+end;
+% V0
+if (size(a,1) > 4) 
+    V_midpoint_array = a(5) + a(4) * m; 
+end
+
+for im=1:Nm
+
+    Vm = V_midpoint_array(im);
+    
+    for ix=1:Nx
+         
+         [dT(im,ix), invalid] = f_dT_mf_R(a, m(im), x(ix), Vm);
+         
+         num_invalid = num_invalid + invalid;
+         if (invalid)
+             dT(im,ix) = 15*dT_exact(im,ix); %invalid_value; BUGBUG: temporary solution assume no-error at invalid place
+         end
+        %dT(im,ix)=f_dT_mf(a, m(im), x(ix));
+    end
+end
+t0 = 2 / V_midpoint_array(floor(Nm/2+0.5)) * (1/a(1)) / cos (a(3));%
+num_invalid
+return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% MF validity: noV_0_grad = 3500 + m;t evry S-R pair is valid
+%
+function [is_valid] = f_mf_is_valid (a,m,h)
+Rnip = a(1); Rn = a(2); B = a(3);
+sb = sin(B);
+is_valid = 1;
+xg = m + h;
+xs = m - h;
+% the validity condition:
+if (abs (B) > 1e-6)
+    if (B < -1e-6)
+        x_left = Rnip / sb;
+        if (xs < x_left || xg < x_left)
+            is_valid = 0;
+        end
+    else
+        x_right = Rnip / (sb);
+        if (xs > x_right || xg > x_right)
+            is_valid = 0;
+        end
+    end
+end
+return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% T _mfV_0_grad = 3500 + m;
+% a [3 x 1] = { Knip, Kn, betha }
+% 
+function [dT] = f_dT_mf(a,m,h)% without V0 and t0
+global V0
+if (~f_mf_is_valid (a,m,h))
+    dT = 0;
+    return
+end
+%Knip = a(1); Kn = a(2); B = a(3);
+Knip = 1/a(1); Kn = 1/a(2); B = a(3);
+sb = sin(B);
+
+xg = m + h;
+xs = m - h;
+
+mone = xg - xs;
+mahane = (xg+xs-Knip * sb * xg * xs);
+
+if (abs (mahane) > 1e-4)
+    g = mone / mahane; %% (xg-xs) / (xg+xs-Knip * sb * xg * xs);
+else
+    if (abs (mone - mahane) < 1e-6)
+        g = 1;
+    else
+        g = 1e10;
+    end;
+end;
+
+% g = 0
+Ks = -Kn;    
+Kg = Kn;
+
+% otherwise
+if (abs (g) > 1e-6)
+    G = 1 / g;
+    % Source
+    if (abs (G-1) < 1e-6)
+        Ks = 0; % TODO: Rs = infty
+    else
+        Ks = (Knip - G*Kn) / (1 - G);
+    end
+    % Geophone
+    if (abs (G+1) < 1e-6)
+        Kg = 0; % TODO: Rg = infty
+    else
+        Kg = (Knip + G*Kn) / (1 + G);
+    end
+end
+
+Ts = (sqrt (1 + 2*Ks * sb * xs + (Ks*xs)*(Ks*xs)) - 1) / Ks;
+
+Tg = (sqrt (1 + 2*Kg * sb * xg + (Kg*xg)*(Kg*xg)) - 1) / Ks;
+
+dT = (Ts + Tg)/V0;
+
+return
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% d t2 \ da1 [da2,da3] = m [mm, hh]
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% MF in Rnre Rcee
+function [dT, invalid] = f_dT_mf_R(a,m,h, V_midpoint)% without V0 and t0
+
+if (~f_mf_is_valid (a,m,h))
+    invalid = 1;
+    dT = 0;
+    return
+end
+invalid = 0;
+
+Rnip = a(1); 
+Rn = a(2); 
+betha = a(3);
+%%%%%%%%%%%%%%%%%%%%
+xg = m + h;
+xs = m - h;
+
+radCre = Rnip; 
+radCee = Rn; 
+%%%%%%%%%
+delx = xs; 
+dely = xg;
+%%%%%%%%%
+s_angle = 2 * sin (betha) * delx * dely;
+per_trace_idlet_y = 2 * dely * sin (betha);
+per_trace_idlet_x = 2 * delx * sin (betha);
+%%%%%%%%%
+s = delx + dely - s_angle/radCre;
+if (abs (s) > 1e-10)
+    sigma = (delx - dely) / s;
+else
+    sigma = 1e10;
+end
+%%%%%%%%%
+if ( abs (sigma*radCee + radCre) > 1e-10)
+    rplus = radCee / (sigma*radCee+radCre)*(1+sigma)*radCre;
+else
+    rplus = 1e10;    
+end
+if ( abs (-sigma*radCee + radCre) > 1e-10)
+    rminus = -radCee / (-sigma*radCee+radCre)*(1-sigma)*radCre;
+else
+    rminus = 1e10;
+end
+%%%%%%%%%
+delty = sqrt (rminus*rminus + rminus*per_trace_idlet_y + dely*dely) - abs (rminus);
+if (rminus < 0)
+    delty = -delty;
+end
+
+deltx = sqrt (rplus*rplus - rplus*per_trace_idlet_x + delx*delx) - abs (rplus);
+if (rplus < 0)
+    deltx = -deltx;
+end
+
+dT = (deltx - delty) / V_midpoint;
+
+return
+
+***********/
 int main(int argc, char* argv[])
 {
     fint1 crs/*nmo*/;

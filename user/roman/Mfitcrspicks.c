@@ -325,8 +325,8 @@ int main(int argc, char* argv[])
       t0 = Tmx_all (m_all_ind, 1);*/
     //x0 = m_mids[(int)(Nm/2 + 0.5)];
 
-    im0 = (int)(Nm/2.f + 0.5f) - 1;
-    x0 = om + dm * im0;
+    im0 = (int)((Nm - 1.f)/2.f);
+    x0 = om + dm * (Nm - 1.f)/2.f; /* im0; */
     t0 = t[im0][0];
     t02 = t0 * t0;
     for (int im = 0; im < Nm; im ++) {
@@ -345,18 +345,18 @@ int main(int argc, char* argv[])
 
 
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
-    sf_warning("fitcrs: INITIAL               norm grad = %g , err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
+    sf_warning("fitcrs x0=%g:\n INITIAL  norm grad = %g , err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", x0, grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
-    sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
+    //sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
-    sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a[0], crs_a[1], crs_a[2]);
+    //sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a[0], crs_a[1], crs_a[2]);
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
-    sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
+    //sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
 
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a0, crs_a, &sum);
-    sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
+    //sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
     grad_norm = fit_crs_params(m_mids, Nm, h_halfoffset, Nh, dT2, dT2crs, mask, crs_a, crs_a0, &sum);
     sf_warning("fitcrs : HESSIAN MINIMIZATION norm grad = %g, err2 = %g, crs params for {m, m m, h h} are: [%g %g %g]", grad_norm, sum, crs_a0[0], crs_a0[1], crs_a0[2]);
 
