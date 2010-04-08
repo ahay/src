@@ -3,10 +3,10 @@ sys.path.append('../..')
 import bldutil
 
 progs = '''
-kirmig kirmig0 drayinte lintest 
+kirmig kirmig0 drayinte lintest
+testanal gradient cconst cgconst
 '''
 
-# testanal gradient cconst cgconst
 
 try:  # distributed version
     Import('env root libdir bindir')
