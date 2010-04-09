@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+	if(verb) fprintf(stderr,"\r%d",it);
 
 	/* matrix multiplication */
 	fft2(curr,cwave);

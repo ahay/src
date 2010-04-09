@@ -20,7 +20,7 @@ Import('env root libdir system user')
 #assert os.path.isdir(libdir)
 
 # Deduce installation directory name
-std_py_pkg_loc = sysconfig.get_python_lib()
+std_py_pkg_loc = os.path.join(sysconfig.get_python_lib(),'rsf')
 pkgdir = std_py_pkg_loc.replace(sysconfig.PREFIX,root)
 
 dirs = Split('plot libplot pens sumain suplot') + system + user
