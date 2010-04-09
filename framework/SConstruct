@@ -70,4 +70,4 @@ env.Append(BUILDERS = {'Doc' : Doc})
 
 # RSF Python package
 SConscript(os.path.join('py_pkg','SConstruct'), 
-           exports='env libdir system user')
+           exports='env root libdir system user')

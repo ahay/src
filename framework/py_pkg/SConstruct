@@ -16,19 +16,12 @@ except:
 
 ################################################################################
 
-Import('env libdir system user')
+Import('env root libdir system user')
 #assert os.path.isdir(libdir)
 
 # Deduce installation directory name
 std_py_pkg_loc = sysconfig.get_python_lib()
-# Info about OS type (found at configure time) should be read from config.py
-# Until then:
-if '/python' in std_py_pkg_loc: # Linux
-    subdir = std_py_pkg_loc.split('python')[1]
-    pkgdir = os.path.join(libdir, 'python'+subdir,'rsf')
-elif '/Python/' in std_py_pkg_loc: # Probably Mac OS
-    subdir = std_py_pkg_loc.split('/Python/')[1]
-    pkgdir = os.path.join(libdir, 'Python', subdir, 'rsf')
+pkgdir = std_py_pkg_loc.replace(sysconfig.PREFIX,root)
 
 dirs = Split('plot libplot pens sumain suplot') + system + user
 env.Command('prog.py',os.path.join(pkgdir,'path.py'),
