@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
-	sf_warning("it=%d",it);
+	sf_warning("it=%d;",it);
 
 	if (mig) {
 	    sf_floatread(dat[0],nh*nx,data);
@@ -183,6 +183,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(dat[0],nh*nx,data);
 	}
     }
+    sf_warning(".");
 
     if (mig) {
 	for (iz=1; iz < nz; iz++) {

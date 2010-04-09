@@ -102,9 +102,8 @@ int main(int argc, char* argv[])
 
 
     /* MAIN LOOP */
-    if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
-	if(verb) fprintf(stderr,"\r%d",it);
+	if(verb) sf_warning("it=%d;",it);
 
 	/* matrix multiplication */
 	fft2(curr,cwave);
@@ -142,7 +141,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(curr+ix*nz2,nz,Fo);
 	}
     }
-    if(verb) fprintf(stderr,"\n");    
+    if(verb) sf_warning(".");    
     
     exit (0);
 }

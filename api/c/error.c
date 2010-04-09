@@ -38,9 +38,12 @@ the end of format adds system information for system errors. >*/
 {
     va_list args;
     char *prog;
+    int last;
 
     (void) fflush(stdout);
     va_start(args,format);
+
+    last = strlen(format)-1;
 
     /* print out name of program causing error */
     prog = sf_getprog();
@@ -51,14 +54,11 @@ the end of format adds system information for system errors. >*/
     va_end(args);
 
     /* if format ends with ':', print system information */
-    if (format[0] != '\0' && format[strlen(format)-1] == ':')
+    if (format[0] != '\0' && format[last] == ':')
 	fprintf (stderr, " %s", strerror(errno));
 
-    /* if format ends with ';', do not end line */
-    if (format[0] == '\0' || format[strlen(format)-1] != ';')
-	fprintf (stderr, "\n");
-   
     if (0==strcmp("python",prog)) longjmp(*python_except,1);
+ 
     (void) fflush(stderr);
     exit(EXIT_FAILURE);
 }
@@ -70,24 +70,43 @@ Format and variable arguments follow printf convention. Additionally, a ':' at
 the end of format adds system information for system errors. >*/
 {
     va_list args;
+    char *prog;
+    int last;
     
     (void) fflush(stdout);
     va_start(args,format);
 
+    last = strlen(format)-1;
+
+    /* if format ends with ';', carriage return */
+    if (format[0] != '\0' && format[last] == ';')
+	fprintf (stderr, "\r");
+
+    /* if format starts with '.', new line */
+    if (format[0] == '.') {
+	fprintf (stderr, "\n");
+	if (0 == last) {
+	    (void) fflush(stderr);
+	    return;
+	}
+    }
+
     /* print out name of program causing error */
-    fprintf(stderr,"%s: ",sf_getprog()); 
+    prog = sf_getprog();
+    fprintf(stderr,"%s: ",prog); 
 
     /* print out remainder of message */
     (void) vfprintf( stderr, format, args );
     va_end(args);
 
     /* if format ends with ':', print system information */
-    if (format[0] != '\0' && format[strlen(format)-1] == ':')
+    if (format[0] != '\0' && format[last] == ':')
 	fprintf (stderr, " %s", strerror(errno));
 
     /* if format ends with ';', do not end line */
-    if (format[0] == '\0' || format[strlen(format)-1] != ';')
+    if (format[0] == '\0' || format[last] != ';')
 	fprintf (stderr, "\n");
+
     (void) fflush(stderr);
 }
 
