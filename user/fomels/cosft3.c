@@ -18,9 +18,11 @@
 */
 #include <rsf.h>
 
-int cosft_dk(int n, float d)
+float cosft_dk(int n, float d)
 /*< wavenumber sampling for cosine FT >*/
 {
+    if (1==n) return d;
+
     return 1./(2*kiss_fft_next_fast_size(n-1)*d);
 }
 
@@ -32,53 +34,65 @@ void cosft3(bool inv,               /* forward or inverse */
     int i1, i2, i3;
 
     if (inv) {
-	sf_cosft_init(n3);
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		sf_cosft_inv(data[0][0],i1+i2*n1,n1*n2);
-	    }
-	}
-	sf_cosft_close();
-	
-	sf_cosft_init(n2);
-    	for (i3=0; i3 < n3; i3++) {
-	    for (i1=0; i1 < n1; i1++) {
-		sf_cosft_inv(data[i3][0],i1,n1);
-	    }
-	}
-	sf_cosft_close();
-	
-	sf_cosft_init(n1);	
-	for (i3=0; i3 < n3; i3++) {
+	if (n3 > 1) {
+	    sf_cosft_init(n3);
 	    for (i2=0; i2 < n2; i2++) {
-		sf_cosft_inv(data[i3][i2],0,1);
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_inv(data[0][0],i1+i2*n1,n1*n2);
+		}
 	    }
-	}	
-	sf_cosft_close();
+	    sf_cosft_close();
+	}
+	
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i3=0; i3 < n3; i3++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_inv(data[i3][0],i1,n1);
+		}
+	    }
+	    sf_cosft_close();
+	}
+	
+	if (n1 > 1) {
+	    sf_cosft_init(n1);	
+	    for (i3=0; i3 < n3; i3++) {
+		for (i2=0; i2 < n2; i2++) {
+		    sf_cosft_inv(data[i3][i2],0,1);
+		}
+	    }	
+	    sf_cosft_close();
+	}
     } else {
-	sf_cosft_init(n1);	
-	for (i3=0; i3 < n3; i3++) {
+	if (n1 > 1) {
+	    sf_cosft_init(n1);	
+	    for (i3=0; i3 < n3; i3++) {
+		for (i2=0; i2 < n2; i2++) {
+		    sf_cosft_frw(data[i3][i2],0,1);
+		}
+	    }	
+	    sf_cosft_close();
+	}
+	
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i3=0; i3 < n3; i3++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_frw(data[i3][0],i1,n1);
+		}
+	    }
+	    sf_cosft_close();
+	}
+	
+	if (n3 > 1) {
+	    sf_cosft_init(n3);
 	    for (i2=0; i2 < n2; i2++) {
-		sf_cosft_frw(data[i3][i2],0,1);
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_frw(data[0][0],i1+i2*n1,n1*n2);
+		}
 	    }
-	}	
-	sf_cosft_close();
-	
-	sf_cosft_init(n2);
-    	for (i3=0; i3 < n3; i3++) {
-	    for (i1=0; i1 < n1; i1++) {
-		sf_cosft_frw(data[i3][0],i1,n1);
-	    }
+	    sf_cosft_close();
 	}
-	sf_cosft_close();
-	
-	sf_cosft_init(n3);
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		sf_cosft_frw(data[0][0],i1+i2*n1,n1*n2);
-	    }
-	}
-	sf_cosft_close();
     }
 }
 
@@ -90,27 +104,51 @@ void cosft2(bool inv,       /* forward or inverse */
     int i1, i2;
 
     if (inv) {
-	sf_cosft_init(n2);
-	for (i1=0; i1 < n1; i1++) {
-	    sf_cosft_inv(data[0],i1,n1);
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_inv(data[0],i1,n1);
+	    }
+	    sf_cosft_close();
+	}	    
+
+	if (n1 > 1) {
+	    sf_cosft_init(n1);	
+	    for (i2=0; i2 < n2; i2++) {
+		sf_cosft_inv(data[i2],0,1);
+	    }
+	    sf_cosft_close();
 	}
-	sf_cosft_close();
-	
-	sf_cosft_init(n1);	
-	for (i2=0; i2 < n2; i2++) {
-	    sf_cosft_inv(data[i2],0,1);
-	}
-	sf_cosft_close();
     } else {
-	sf_cosft_init(n1);	
-	for (i2=0; i2 < n2; i2++) {
-	    sf_cosft_frw(data[i2],0,1);
+	if (n1 > 1) {
+	    sf_cosft_init(n1);	
+	    for (i2=0; i2 < n2; i2++) {
+		sf_cosft_frw(data[i2],0,1);
+	    }
+	    sf_cosft_close();
+	}	
+
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i1=0; i1 < n1; i1++) {
+		sf_cosft_frw(data[0],i1,n1);
+	    }
+	    sf_cosft_close();
 	}
-	sf_cosft_close();
-	
-	sf_cosft_init(n2);
-	for (i1=0; i1 < n1; i1++) {
-	    sf_cosft_frw(data[0],i1,n1);
+    }
+}
+
+void cosft1(bool inv,    /* forward or inverse */ 
+	    int n1,      /* dimensions */
+	    float *data  /* data [n3][n2][n1] */)
+/*< 1-D transform (in place) >*/
+{
+    if (n1 > 1) {
+	sf_cosft_init(n1);	
+	if (inv) {
+	    sf_cosft_inv(data,0,1);
+	} else {
+	    sf_cosft_frw(data,0,1);
 	}
 	sf_cosft_close();
     }

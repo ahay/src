@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 	/* time sampling (if migration) */
 
 	sf_putint(data,"n1",nz);
-	sf_putint(data,"d1",dz);
+	sf_putfloat(data,"d1",dz);
 	sf_putstring(data,"label1","Depth");
 
 	sf_putint(data,"n3",1); /* stack for now */
@@ -77,12 +77,13 @@ int main(int argc, char* argv[])
 	/* offset sampling (if modeling) */
 
 	sf_putint(data,"n1",nh);
-	sf_putint(data,"d1",dh);
+	sf_putfloat(data,"d1",dh);
 	sf_putstring(data,"label1","Half-Offset");
 
 	sf_putint(data,"n3",nt);
-	sf_putint(data,"d3",dt);
+	sf_putfloat(data,"d3",dt);
 	sf_putstring(data,"label3","Time");
+	sf_putstring(data,"unit3","s");
     }
 
     img = sf_floatalloc2(nz,nx);
@@ -118,7 +119,7 @@ int main(int argc, char* argv[])
 	}
 
 	it1 = nt-1;
-	it2 = 0;
+	it2 = -1;
 	its = -1;
 
     } else {
@@ -134,13 +135,14 @@ int main(int argc, char* argv[])
 	cosft3(false,nh,nx,nz,curr);
 	
 	it1 = 0;
-	it2 = nt-1;
+	it2 = nt;
 	its = +1;
     }
 
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
+	sf_warning("it=%d",it);
 
 	if (mig) {
 	    sf_floatread(dat[0],nh*nx,data);
