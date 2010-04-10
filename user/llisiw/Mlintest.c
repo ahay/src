@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float dwnorm=0.0, wnorm0=0.0, rhsnorm=0.0, rhsnorm0=1.0, rhsnorm2=2.0, step;
 /*    double dot1[2], dot2[2]; */
     char key[4];
-    sf_file realtime, imagtime, realout, imagout, slow, ref, monitor, slowout, mask;
+    sf_file realtime, imagtime, realout, imagout, slow, ref, monitor, slowout;
     
     sf_init(argc,argv);
     realtime = sf_input("in");

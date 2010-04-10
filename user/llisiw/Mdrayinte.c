@@ -69,8 +69,10 @@ int main(int argc, char* argv[])
 	Q[i] = (P[i-1]-dir[0][i-1]*Q[i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))*vel[0][i-1]*dz+Q[i-1];
 	P[i] = -((1.5*dir[0][i-1]+0.5*dir[0][i])*Q[i-1]+(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2*P[i-1])*dz/(vel[0][i-1]*vel[0][i-1]*2)+P[i-1];
 #else
-	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],crmul(Q[i-1],-dir[0][i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))),vel[0][i-1]*dz),Q[i-1]);
-	P[i] = sf_cadd(sf_crmul(sf_cadd(crmul(Q[i-1],-((1.5*dir[0][i-1]+0.5*dir[0][i]))),sf_crmul(P[i-1],(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2*)),dz/(vel[0][i-1]*vel[0][i-1]*2)),P[i-1]);
+	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],sf_crmul(Q[i-1],-dir[0][i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))),vel[0][i-1]*dz),Q[i-1]);
+	P[i] = sf_cadd(
+	    sf_crmul(
+		sf_cadd(sf_crmul(Q[i-1],-((1.5*dir[0][i-1]+0.5*dir[0][i]))),sf_crmul(P[i-1],(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2)),dz/(vel[0][i-1]*vel[0][i-1]*2)),P[i-1]);
 #endif
     }
 

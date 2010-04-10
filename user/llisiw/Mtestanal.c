@@ -72,11 +72,14 @@ int main(int argc, char* argv[])
 		imag = -2*(s2*(o1+ix*d1-source1)+s3*(o2+iy*d2-source2));
 		if (imag != 0. || (imag == 0. && real >= 0.))
 		{
-		    output[ix+iy*n1] = sf_cmplx(sqrtf((hypotf(real,imag)+real)/2),imag/sqrtf(2*(hypotf(real,imag)+real))+sqrtf(s1*s1+s2*s2+s3*s3));
-		    output[ix+iy*n1] /= v0;
+		    output[ix+iy*n1] = 
+			sf_cmplx(sqrtf((hypotf(real,imag)+real)/2)/v0,
+				 (imag/sqrtf(2*(hypotf(real,imag)+real))+
+				  sqrtf(s1*s1+s2*s2+s3*s3))/v0);
 		} else {
-		    output[ix+iy*n1] = sf_cmplx(0.,-sqrtf(-real)+sqrtf(s1*s1+s2*s2+s3*s3));
-		    output[ix+iy*n1] /= v0;
+		    output[ix+iy*n1] = sf_cmplx(0.,
+						(-sqrtf(-real)+
+						 sqrtf(s1*s1+s2*s2+s3*s3))/v0);
 		}
 	    }
 	}
