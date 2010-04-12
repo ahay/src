@@ -16,7 +16,7 @@ progs = '''
 gpuktmig
 '''
 
-if env['CUDA_SDK_PATH']:
+if env['CUDA_TOOLKIT_PATH']:
 
     env.Append(LIBS=['cuda','cudart'])
     env.Append(CPPPATH=['../../include'],
@@ -29,7 +29,7 @@ if env['CUDA_SDK_PATH']:
 
 mains = Split(progs)
 for prog in mains:
-    if env['CUDA_SDK_PATH']:
+    if env['CUDA_TOOLKIT_PATH']:
         sources = ['M' + prog]
         prog = env.Program(prog,map(lambda x: x + '.cu',sources))
     else:
