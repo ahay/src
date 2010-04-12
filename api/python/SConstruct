@@ -1,6 +1,6 @@
 import sys, os, string, re
 sys.path.append('../..')
-import bldutil
+import bldutilrsf
 
 modules = Split('rsf vplot')
 
@@ -14,10 +14,6 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
-
-if root:
-    env.RSF_Pycompile('rsfbak.pyc','rsfbak.py')
-    env.Install(libdir,['rsfbak.py','rsfbak.pyc'])
 
 if 'python' in env.get('API',[]):
     try:

@@ -57,7 +57,7 @@ class Par:
         """Obtains value of argument from dictionary"""
         if self.__args.has_key(key):
             return self.__args[key]
-        elif str(default):
+        elif default != None:
             return default
         else:
             sys.stderr.write( '\n  Argument %s= not given to %s \n' %
