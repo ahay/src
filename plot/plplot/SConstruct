@@ -58,15 +58,16 @@ if plplot:
         main = env.Program(prog + '.c')
         if root:
              env.Install(bindir,main[0])
-    if root:
-        main = 'sfplplot.py'
-
-        docs = map(lambda prog: env.Doc(prog),mains)
-        env.Depends(docs,'#/framework/rsfdoc.py')
-        doc = env.RSF_Docmerge(main,docs)
-        env.Install(libdir,doc)
 elif root:
     for prog in mains:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
         env.Install(bindir,main[0])
+
+if root:
+    main = 'sfplplot.py'
+
+    docs = map(lambda prog: env.Doc(prog),mains)
+    env.Depends(docs,'#/framework/rsfdoc.py')
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(libdir,doc)
 
