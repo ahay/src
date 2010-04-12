@@ -123,7 +123,7 @@ void wex(wexop3d weop,
 	 sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
-    int iz,iw;
+    int iz,iw,imx,imy;
     sf_complex w;
     int ompith=0;
 
@@ -171,8 +171,22 @@ void wex(wexop3d weop,
 	    sf_fslice_put(wfld,iw,weop->w[ompith][0][0]);
 
     } /* w */
-    /*------------------------------------------------------------*/
-
 }
 
+/*
+ 
+            for(imy=0; imy<cub->amy.n; imy++){
+                for(imx=(cub->amx.n/2-1); imx<(cub->amx.n/2+2); imx++){
+                  sf_warning("wwr=%f+%f",crealf(weop->ww[ompith][imy][imx]),cimagf(weop->ww[ompith][imy][imx])); 
+                }
+            }
+                    
+                if(iz<2){
+                    for(imy=0; imy<cub->amy.n; imy++){
+                        for(imx=(cub->amx.n/2-1); imx<(cub->amx.n/2+2); imx++){
+                          sf_warning("iz=%d,wwr=%f+%f",iz,crealf(weop->ww[ompith][imy][imx]),cimagf(weop->ww[ompith][imy][imx])); 
+                        } 
+                    } 
+                }  
+*/
 

@@ -192,6 +192,13 @@ void wexssr(
 	wexfft(true,
 	       (kiss_fft_cpx**) ssr->wk[ompith],
 	       ssr->f2d[ompith]);
+/*
+        for(iy=0; iy<cub->amy.n; iy++){
+            for(ix=(cub->amx.n/2-1); ix<(cub->amx.n/2+2); ix++){
+              if(iz<2)
+              sf_warning("after IFT wk=%f+%f",crealf(ssr->wk[ompith][iy][ix]),cimagf(ssr->wk[ompith][iy][ix]));
+            }
+        }*/
 
 	/* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H

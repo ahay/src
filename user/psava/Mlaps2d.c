@@ -212,6 +212,8 @@ int main(int argc, char* argv[])
     czmin = sf_o(az) +             nhz *sf_d(az);
     czmax = sf_o(az) + (sf_n(az)-1-nhz)*sf_d(az);
 
+    sf_warning("cxmin=%f,cxmax=%f,czmin=%f,czmax=%f",cxmin,cxmax,czmin,czmax);
+
     for(ic=0; ic<nc; ic++) {
 	ccin[ic]=(cc[ic].x>=cxmin && cc[ic].x<=cxmax &&
 		  cc[ic].z>=czmin && cc[ic].z<=czmax)?true:false;

@@ -137,6 +137,7 @@ int main (int argc, char *argv[])
 		      SF_MIN(tmy,cub->amy.n-1), /* tmy */
 		      true,true);
     ssr = wexssr_init(cub,pmx,pmy,tmx,tmy,dsmax);
+    sf_warning("nrmax=%d",nrmax);
     slo = wexslo_init(cub,slow,nrmax,dsmax);
     /*------------------------------------------------------------*/
 
