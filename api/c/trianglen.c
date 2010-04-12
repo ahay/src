@@ -39,8 +39,8 @@ void sf_trianglen_init (int ndim  /* number of dimensions */,
 {
     int i;
 
-    n = ndat;
     dim = ndim;
+    n = sf_intalloc(dim);
 
     tr = (sf_triangle*) sf_alloc(dim,sizeof(sf_triangle));
 
@@ -48,6 +48,7 @@ void sf_trianglen_init (int ndim  /* number of dimensions */,
     for (i=0; i < dim; i++) {
 	tr[i] = (nbox[i] > 1)? sf_triangle_init (nbox[i],ndat[i]): NULL;
 	s[i] = nd;
+	n[i] = ndat[i];
 	nd *= ndat[i];
     }
     tmp = sf_floatalloc (nd);
@@ -107,6 +108,7 @@ void sf_trianglen_close(void)
     }
 
     free(tr);
+    free(n);
 }
 
 /* 	$Id$	 */
