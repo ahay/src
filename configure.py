@@ -81,6 +81,7 @@ def check_all(context):
     ppm (context) # FDNSI
     tiff (context) # FDNSI
     gd  (context) # FDNSI
+    plplot  (context) # FDNSI
     ffmpeg  (context) # FDNSI
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
@@ -593,6 +594,52 @@ def gd(context):
         need_pkg('libgd', fatal=False)
         context.env['GD'] = None
     LIBS.pop()
+
+pkg['plplot'] = {'fedora':'plplot-devel',
+                 'suse':'libplplot-devel',
+                 'ubuntu':'libplplot-dev'}
+
+def plplot(context):
+    context.Message("checking for plplot ... ")
+
+    oldpath = context.env.get('CPPPATH',[])
+    plplotpath = context.env.get('PLPLOTPATH')
+    if plplotpath and os.path.isfile(os.path.join(plplotpath,'plplot.h')):
+        context.env['CPPPATH'] = oldpath + [plplotpath]
+    else:
+        for top in ('/usr/include','/usr/local/include','/sw/include','/opt/local/include'):
+            plplotpath = os.path.join(top,'plplot')
+            if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
+                context.env['CPPPATH'] = oldpath + [plplotpath]
+                break
+
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    text = '''
+    #include <plplot.h>
+    #include <plplotP.h>
+    #include <plstrm.h>
+    int main (int argc, char *argv[]) {
+    plinit ();
+    pladv (0);
+    return 0;
+    }\n'''
+    plplot = context.env.get('PLPLOT','plplotd')
+    LIBS.append(plplot)
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.Result(res)
+        context.env['PLPLOT'] = plplot
+        context.env['PLPLOTPATH'] = plplotpath
+    else:
+        context.Result(context_failure)
+        need_pkg('plplot', fatal=False)
+        context.env['PLPLOT'] = None
+    context.env['CPPPATH'] = oldpath    
+    LIBS.pop()
+
 
 pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
                  'suse':'ffmpeg-devel',
@@ -1448,6 +1495,8 @@ def options(file):
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')
     opts.Add('GIFANIM','Support for GIF animation in the GD library')
+    opts.Add('PLPLOT','PLPLOT library')
+    opts.Add('PLPLOTPATH','Path to PLPLOT headers')
     opts.Add('FFMPEG','The ffmpeg library')
     opts.Add('FFMPEGPATH','Path to ffmpeg codec headers')
     opts.Add('CAIRO','The cairo library')

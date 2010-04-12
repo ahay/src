@@ -7,7 +7,7 @@ txtdir = os.path.join(docdir,'txt')
 mn1dir = os.path.join(mandir,'man1')
 python = WhereIs('python')
 
-dirs = Split('plot libplot pens sumain suplot')
+dirs = Split('plot plplot libplot pens sumain suplot')
 dirs = dirs + system + user
 
 env.Command('rsfprog.py',None,
