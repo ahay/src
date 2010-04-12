@@ -137,10 +137,6 @@ int main (int argc, char *argv[]) {
         clevel = (PLFLT*)calloc (nc, sizeof(PLFLT));
     }
 
-    /* Set font */
-    plfontld (PL_FCI_SERIF);
-    plfont (PL_FCI_SERIF);
-
     /* Set up x & y dimensions */
     x = (PLFLT*)calloc (n2, sizeof(PLFLT));
     y = (PLFLT*)calloc (n1, sizeof(PLFLT));
@@ -151,6 +147,10 @@ int main (int argc, char *argv[]) {
         x[i] = o2 + i*d2;
 
     buffer = sf_plvpl_get_data_buffer (n1, n2, type);
+
+    /* Set font */
+    plfontld (1);
+    plfont (2);
 
     i = 0;
     while (i < n3) {
@@ -166,7 +166,7 @@ int main (int argc, char *argv[]) {
         pladv (0);
         plcol0 (VP_WHITE);
         plvpor (0.0, 1.0, 0.0, 0.9);
-        plwind (-1.0, 1.0, -1.0, 1.5);
+        plwind (-0.85, 0.85, -0.6, 1.4);
         plw3d (1.0, 1.0, 1.2,
                o2, o2 + (n2 - 1)*d2,
                o1, o1 + (n1 - 1)*d1,
