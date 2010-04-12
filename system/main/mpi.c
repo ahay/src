@@ -28,8 +28,8 @@
 
 int main(int argc, char* argv[])
 {
-    int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
-    off_t size, left,nbuf, n[SF_MAX_DIM];
+    int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis;
+    off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM];
     char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5];
     char **inames=NULL, **onames=NULL, buffer[BUFSIZ];
     FILE *ifile=NULL, *ofile=NULL;
@@ -52,20 +52,37 @@ int main(int argc, char* argv[])
 	out = sf_output("output");
 
 	ndim = sf_largefiledims (inp,n);
-	size = sf_esize(inp);
-	for (i=0; i < ndim-1; i++) {
-	    size *= n[i];
+
+	if (!sf_getint("split",&axis)) axis=ndim;
+	/* axis to split */
+	if (axis > ndim) axis=ndim;
+	snprintf(key,5,"n%d",axis);
+
+	axis--;
+
+	size1 = sf_esize(inp);
+	size2 = 1;
+	for (i=0; i < ndim; i++) {
+	    if      (i < axis) size1 *= n[i];
+	    else if (i > axis) size2 *= n[i];
 	}
 
-	last = n[ndim-1];
-	chunk = last/(nodes-1);
-	extra = last-chunk*(nodes-1);
-	snprintf(key,5,"n%d",ndim);
+	split = n[axis];
+
+	jobs = nodes-1;
+	if (nodes < split) {
+	    w = 1+(float) split/jobs;
+	} else {
+	    w = 1;
+	    jobs = split;
+	}
+	bigjobs = split - jobs*(chunk-1);
 
 	j=0;
 	for (i=1; i < argc; i++) {
 	    if (strncmp(argv[i],"input=",6) &&
-		strncmp(argv[i],"output=",7)) {
+		strncmp(argv[i],"output=",7) &&
+		strncmp(argv[i],"split=",6)) {
 		len = strlen(argv[i]);
 		if (j+len > CMDLEN-2) {
 		    sf_warning("command line is too long");
@@ -78,29 +95,38 @@ int main(int argc, char* argv[])
 	}
 	command[j]='\0';
 
-	inames = (char**) sf_alloc(nodes-1,sizeof(char*));
-	onames = (char**) sf_alloc(nodes-1,sizeof(char*));
+	inames = (char**) sf_alloc(jobs,sizeof(char*));
+	onames = (char**) sf_alloc(jobs,sizeof(char*));
 
-	for (node=1; node < nodes; node++) {
+	for (job=0; job < jobs; job++) {
+	    if (job < bigjobs) {
+		chunk = w;
+		skip = job*w;
+	    } else {
+		chunk = w-1;
+		skip = bigjobs*w+(job-bigjobs)*chunk;
+	    }
+
 	    ifile = sf_tempfile(&iname,"w+b");
 	    ofile = sf_tempfile(&oname,"w+b");
 
-	    inames[node-1]=iname;
-	    onames[node-1]=oname;
+	    inames[job]=iname;
+	    onames[job]=oname;
 
 	    in = sf_output(iname);
 	    fclose(ifile);
 
-	    nc = (node==nodes-1)? chunk+extra:chunk;
-
-	    sf_putint(in,key,nc);
+	    sf_putint(in,key,chunk);
 	    sf_fileflush(in,inp);
 	    sf_setform(in,SF_NATIVE);
 
-	    for (i=0; i < nc; i++) {
-		for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
-		    if (nbuf > left) nbuf=left;
+	    for (i2=0; i2 < size2; i2++) {
+		sf_seek(inp,size1*(i2*split+skip),SEEK_SET);
 
+		nbuf=BUFSIZ;
+		for (left=chunk*size1; left > 0; left -= nbuf) {
+		    if (nbuf > left) nbuf=left;
+		    
 		    sf_charread(buffer,nbuf,inp);
 		    sf_charwrite(buffer,nbuf,in);
 		}
@@ -109,11 +135,9 @@ int main(int argc, char* argv[])
 	    sf_fileclose(in);
 
 	    snprintf(cmdline,CMDLEN,"%s < %s > %s",command,iname,oname);
-	    MPI_Send(cmdline,strlen(cmdline)+1,MPI_CHAR,node,0,MPI_COMM_WORLD);
+	    MPI_Send(cmdline,strlen(cmdline)+1,MPI_CHAR,job+1,0,MPI_COMM_WORLD);
 	    fclose(ofile);
 	}
-
-	sf_fileclose(inp);
 
 	iname = sf_getstring("input");
 	ofile = sf_tempfile(&oname,"w+b");
@@ -123,36 +147,49 @@ int main(int argc, char* argv[])
 
 	inp = sf_input(oname);
 	ndim = sf_largefiledims (inp,n);
-	if (last != n[ndim-1]) {
-	    sf_warning("Wrong dimensionality %d != %d",last,n[ndim-1]);
+	if (split != n[axis]) {
+	    sf_warning("Wrong dimensionality %d != n%d (%d)",
+		       split,axis+1,n[axis]);
 	    MPI_Finalize();
 	}
 
- 	size = sf_esize(inp);
-	for (i=0; i < ndim-1; i++) {
-	    size *= n[i];
+	size1 = sf_esize(inp);
+	size2 = 1;
+	for (i=0; i < ndim; i++) {
+	    if      (i < axis) size1 *= n[i];
+	    else if (i > axis) size2 *= n[i];
 	}
 
 	sf_setformat(out,sf_histstring(inp,"data_format"));
 	sf_fileflush(out,inp);
+
 	sf_setform(out,SF_NATIVE);
-	sf_fileclose(inp);
 	sf_rm(oname,true,false,false);
 
-	for (node=1; node < nodes; node++) {
-	    MPI_Recv(&rank,1, MPI_INT, node, 1, MPI_COMM_WORLD,&stat);
+	for (job=0; job < jobs; job++) {
+	    if (job < bigjobs) {
+		chunk = w;
+		skip = job*w;
+	    } else {
+		chunk = w-1;
+		skip = bigjobs*w+(job-bigjobs)*chunk;
+	    }
 
-	    iname = inames[node-1];
-	    oname = onames[node-1];
+	    MPI_Recv(&rank,1, MPI_INT, job+1, 1, MPI_COMM_WORLD,&stat);
+
+	    iname = inames[job];
+	    oname = onames[job];
 
 	    in = sf_input(oname);
 	    sf_setform(in,SF_NATIVE);
 
-	    nc = (node==nodes-1)? chunk+extra:chunk;
-	    for (i=0; i < nc; i++) {
-		for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
-		    if (nbuf > left) nbuf=left;
+	    for (i2=0; i2 < size2; i2++) {
+		sf_seek(in,size1*(i2*split+skip),SEEK_SET);
 
+		nbuf=BUFSIZ;
+		for (left=chunk*size1; left > 0; left -= nbuf) {
+		    if (nbuf > left) nbuf=left;
+		    
 		    sf_charread(buffer,nbuf,in);
 		    sf_charwrite(buffer,nbuf,out);
 		}
@@ -161,11 +198,13 @@ int main(int argc, char* argv[])
 	    sf_rm(iname,true,false,false);
 	    sf_rm(oname,true,false,false);
 	}
+
+	sf_fileclose(inp);
     } else { /* slave nodes */
 	MPI_Recv(cmdline, CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
         sf_system(cmdline);
 	MPI_Send(&rank,1,MPI_INT,0,1,MPI_COMM_WORLD);
     }
-
+    
     MPI_Finalize();
 }

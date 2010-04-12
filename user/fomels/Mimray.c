@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	    x1 = a*xd+b*zd;
 	    x2 = a*xd-b*zd;
 
-	    if (x1*x1+z1*z1 > x2*x2+z2*z2) {
+	    if (z2 < z1) {
 		zz[ix] = zp[ix]-rr[ix]*z2;
 		xx[ix] = xp[ix]-rr[ix]*x2;
 	    } else {
@@ -153,11 +153,14 @@ int main(int argc, char* argv[])
 
 	    /* get geometrical spreading */
 	    if (ix==0) {
-		q = hypotf(xx[ix+1]-xx[ix],zz[ix+1]-zz[ix]);
+		q = hypotf(xx[ix+1]-xx[ix],
+			   zz[ix+1]-zz[ix]);
 	    } else if (ix==nx-1) {
-		q = hypotf(xx[ix]-xx[ix-1],zz[ix]-zz[ix-1]);
+		q = hypotf(xx[ix]-xx[ix-1],
+			   zz[ix]-zz[ix-1]);
 	    } else {
-		q = 0.5*hypotf(xx[ix+1]-xx[ix-1],zz[ix+1]-zz[ix-1]);
+		q = 0.5*hypotf(xx[ix+1]-xx[ix-1],
+			       zz[ix+1]-zz[ix-1]);
 	    }
 
 	    /* dix velocity */

@@ -21,7 +21,8 @@ import rsfprog
 top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
 
-def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',remote='',
+def Flow(sources,flow,rsf=1,checkpar=False,coms=[],
+         prefix='sf',progsuffix='',remote='',
          stdout=1,stdin=1,timer='',mpirun=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')
