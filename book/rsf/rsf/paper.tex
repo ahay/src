@@ -48,11 +48,12 @@ implemented in \textsc{Madagascar}
 
 \section{Facts}
 
-The work on the \textsc{Madagascar} package (previously named RSF for \emph{Regularly
-Sampled Format}) was started in 2003.  The package got
+The work on the \textsc{Madagascar} package (previously named RSF for
+\emph{Regularly Sampled Format}) started in 2003.  The package got
 publicly released during an EAGE Workshop on open-source E\&P Software
 in Vienna in June 2006. Since then, more than 25 people have
-contributed to its development, writing more than 250,000 lines of code.
+contributed to its development, writing more than 250,000 lines of
+code.
 
 \href{http://www.ohloh.net/}{Ohloh}, a website that maps the landscape
 of open-source software development, evaluates \textsc{Madagascar} as
@@ -79,11 +80,30 @@ and signal processing communities:
 
 \section{Design principles}
 
-The design of \textsc{Madagascar} is based on several fundamental principles.
+The design of \textsc{Madagascar} is based on several fundamental
+principles. 
+
+One of the principles is \emph{modularity} and
+\emph{encapsulation}. Similarly to Seismic Unix \cite[]{TLE16-07-10451049},
+the core of \textsc{Madagascar} consists of a collection of separate
+modules, connected in data analysis workflows...
+
+\emph{reproducible research} and \emph{test-driven development}.
+
+\emph{file format} 
 
 \section{How to find your way around \textsc{Madagascar}}
 
-An easy way to start exploring \textsc{Madagascar} is checking the list of reproducible papers. 
+An easy way to start exploring \textsc{Madagascar} is checking the
+list of reproducible papers at
+\url{http://www.ahay.org/wiki/Reproducible_Documents}.  If any of
+these papers looks close to your interests, follow the links until you
+find a figure with a "wrench" button under it. Click on the wrench,
+and it will open a computational recipe used for generating the figure
+(the \texttt{SConstruct} file). Here is an simple
+example\footnote{\url{http://www.reproducibility.org/RSF/book/rsf/rsf/sfmath.html}}:
+
+\subsection{Madagascar components}
 
 \subsection{Installation}
 
@@ -91,10 +111,22 @@ An easy way to start exploring \textsc{Madagascar} is checking the list of repro
 
 The \textsc{Madagascar} community is open. Developers take a joint
 responsibility of maintaining and extending the package. It is easy to
-become a developer....
+become a developer:
+\begin{enumerate}
+\item  Follow the Guide on Adding new programs to Madagascar.
+\item  If your employer holds the copyright for your software, obtain a permission to distribute under a GPL license and place a copyright and GPL license notice in each file with code.
+\item Register at SourceForge.
+\item Find out who the current project administrators are and pass your SourceForge user name to one of them.
+\item Upload your directory to the Subversion repository at SourceForge.
+\item Make sure to add reproducible examples of using your program. As a rule, programs without examples are not included in the release version. 
+\end{enumerate}	
+
+\section{Conclusions}
+
+We have introduced \textsc{Madagascar}, a software package for multidimensional data analysis...
 
 \bibliographystyle{seg}
-\bibliography{SEG}
+\bibliography{SEG,intro}
 
 \append{Example}
 

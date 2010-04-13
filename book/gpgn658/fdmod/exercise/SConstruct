@@ -94,7 +94,7 @@ Flow(['da','wa'],['wava','vp','ro','ss','rr','AFDM.x'],
 Result('da','transp |'           + fdmod.dgrey('o2num=0 d2num=0.1 n2tic=9',par))
 Result('wa','window n3=1 f3=9 |' + fdmod.wgrey('',par))
 
-Result('wamovie','wa',fdmod.wgrey('pclip=99',par))
+Plot('wamovie','wa',fdmod.wgrey('pclip=99',par),view=1)
 
     
 End()

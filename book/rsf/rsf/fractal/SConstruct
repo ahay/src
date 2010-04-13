@@ -46,6 +46,6 @@ for k in range(0,61,2):
     Plot('man'+str(k/2),'dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=%d' %k)
 
 allman = map(lambda x: 'man%d.vpl' % x,range(31))
-Result('manit',allman,'Movie')
+Plot('manit',allman,'Movie',view=1)
 
 End()
