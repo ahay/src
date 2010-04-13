@@ -25,9 +25,10 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx,  nz, ix, iz, nbt, nbb, nbl, nbr, nxb, nzb;
-    float dx, dz;
-    float **new,  **old;
+    int nx,  nz,  iz;
+    int nkx, nkz, ikx, ikz;
+    float dx, dkx, kx, dz, dkz, kz, pi=SF_PI, o1, o2;
+    float **old;
     sf_file out, img;
      
 
@@ -41,60 +42,75 @@ int main(int argc, char* argv[])
     if (!sf_histint(img,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(img,"d2",&dz)) sf_error("No d2= in input");
 
+    if (!sf_histfloat(img,"o1",&o1)) o1=0.0;
+    if (!sf_histfloat(img,"o2",&o2)) o2=0.0;
+
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
+    sf_putfloat(out,"o1",o1);
+
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
+    sf_putfloat(out,"o2",o2);
 
-    nbl =1;
-    nbr =1;
-    nbt =1;
-    nbb =1; 
-    nxb = nx + nbl + nbr;
-    nzb = nz + nbt + nbb;
-
+    nkx = nx;
+    nkz = nz;
+    dkx = 1./(2.0*kiss_fft_next_fast_size(nx-1)*dx);
+    dkz = 1./(2.0*kiss_fft_next_fast_size(nz-1)*dz);
 
 
 
-    old    =  sf_floatalloc2(nxb,nzb);
-    new    =  sf_floatalloc2(nx,nz);
+
+
+    old    =  sf_floatalloc2(nx,nz);
+
     
-    bd_init(nx,nz,nbt,nbb,nbl,nbr,0,0,0,0);
-
-    /*input & extend image*/
-    for (iz=nbt; iz<nz+nbt; iz++){
-        sf_floatread(old[iz]+nbl,nx,img);
-         for (ix=0; ix<nbl; ix++){
-             old[iz][ix] = old[iz][nbl];
+    sf_floatread(old[0],nx*nz,img);
+/* compute u(kx,kz) */
+         sf_cosft_init(nx);
+         for (iz=0; iz < nz; iz++){
+             /* Fourier transform x to kx */
+             sf_cosft_frw(old[iz],0,1);
          }
-         for (ix=0; ix<nbr; ix++){
-             old[iz][nx+nbl+ix] = old[iz][nx+nbl-1];
-         }     
-    }
-    for (iz=0; iz<nbt; iz++){
-        for (ix=0; ix<nxb; ix++){
-            old[iz][ix] = old[nbt][ix];
-        }
-    }
-    for (iz=0; iz<nbb; iz++){
-        for (ix=0; ix<nxb; ix++){
-            old[nz+nbt+iz][ix] = old[nz+nbt-1][ix];
-        }
-    }
+         sf_cosft_close();
 
- 
-    for (iz=0; iz < nz; iz++){
-         for (ix=0; ix < nx; ix++) {
-             new[iz][ix] = (2.0*old[iz+nbt][ix+nbl]-old[iz+nbt][ix+nbl-1]-old[iz+nbt][ix+nbl+1])/(dx*dx)
-                         + (2.0*old[iz+nbt][ix+nbl]-old[iz+nbt+1][ix+nbl]-old[iz+nbt-1][ix+nbl])/(dz*dz);
+         sf_cosft_init(nz);
+         for (ikx=0; ikx < nkx; ikx++){
+             /* Fourier transform z to kz */
+             sf_cosft_frw(old[0],ikx,nx);
          }
-    }
+         sf_cosft_close();
 
-    sf_floatwrite(new[0],nx*nz,out);
-    bd_close();
-    free(*new);     
+/*    #ifdef _OPENMP
+    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
+    #endif
+*/
+
+         for (ikz=0; ikz < nkz; ikz++) {
+             kz = ikz* dkz*2.0*pi;
+
+             for (ikx=0; ikx < nkx; ikx++) {
+                 kx = ikx * dkx*2.0*pi;
+                 old[ikz][ikx] = old[ikz][ikx]*(kx*kx+kz*kz);
+             }
+
+         }   
+/* Inverse FFT*/
+         sf_cosft_init(nz);
+         for (ikx=0; ikx < nkx; ikx++){
+             /* Inverse Fourier transform kz to z */
+             sf_cosft_inv(old[0],ikx,nx);
+         }
+         sf_cosft_close();
+         sf_cosft_init(nx);
+         for (iz=0; iz < nz; iz++){
+             /* Inverse Fourier transform kx to x */
+              sf_cosft_inv(old[iz],0,1);
+         }
+         sf_cosft_close();
+
+    sf_floatwrite(old[0],nx*nz,out);
     free(*old);     
-    free(new);     
     free(old);     
     exit(0); 
 }           
