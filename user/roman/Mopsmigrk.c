@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 
 		s = (xi-s0)/ds;
 		is = floorf(s);
-		if (is < 0 || is >= ns-1) {
+		if (is < 0 || is > ns-1) {
 		    for (ja=ia; ja < na; ja++) {
 			img[ia][ja] = 0.0;
 		    }
@@ -126,9 +126,8 @@ int main(int argc, char* argv[])
 		    /* h = (dis[ja]-xi-h0)/dh; */
 		    h = (dis[ja] - h0)/dh;
 
-
 		    ih = floorf(h);
-		    if (ih < 0 || ih >= nh-1) {
+		    if (ih < 0 || ih > nh-1) {
 			img[ia][ja] = 0.0;
 			continue;
 		    }
@@ -146,9 +145,16 @@ int main(int argc, char* argv[])
 		    }
 		    t -= it;
 
-		    /* trilinear interpolation from the data */
+		    if ((is == 0 || is == ns-1) || (ih == 0 || ih == nh-1)) {
+			img[ia][ja] = 
+			    dat[is][ih][it  ] * (1.-t) +
+			    dat[is][ih][it+1] *     t;
+		    }
+		    else {
+			/* trilinear interpolation from the data */
 		    
-		    img[ia][ja] = 
+			img[ia][ja] = 
+
 			dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
 			dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
 			dat[is][ih+1][it]*(1.-s)*h*(1.-t) +
@@ -157,6 +163,7 @@ int main(int argc, char* argv[])
 			dat[is][ih+1][it+1]*(1.-s)*h*t +
 			dat[is+1][ih+1][it]*s*h*(1.-t) +
 			dat[is+1][ih+1][it+1]*s*h*t;
+		    }
 		}
 	    }
 
