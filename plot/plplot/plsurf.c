@@ -50,8 +50,8 @@ int main (int argc, char *argv[]) {
     float minval, maxval;
     float alt, az;
     int meshc;
-    int opt = DRAW_LINEXY;
-    bool sides, contour;
+    int opt = 0;
+    bool mesh, sides, bcontour, scontour, faceted;
 
     void *buffer;
     sf_file in;
@@ -92,14 +92,6 @@ int main (int argc, char *argv[]) {
     axis2 = sf_plvpl_make_axis_title (label2, unit2);
     axis3 = sf_plvpl_make_axis_title (label3, unit3);
 
-    /* initialize color table */
-    if (NULL == (color = sf_getstring ("color"))) color=NULL;
-    /* color scheme (default is i) */
-    if (color) {
-        vp_rascoltab (VP_WHITE + 1, color);
-        opt |= MAG_COLOR;
-    }
-
     if (!sf_getbool ("wanttitle", &wanttitle)) wanttitle = true;
     /* if include title */
     if (wanttitle) {
@@ -120,21 +112,50 @@ int main (int argc, char *argv[]) {
     if (alt > 90.0) alt = 0.0;
     if (alt < 0.0) alt = 0.0;
 
+    if (!sf_getbool ("mesh", &mesh)) mesh = true;
+    /* what to draw: true - mesh, false - shaded surface */
+    if (mesh) {
+        opt |= DRAW_LINEXY;
+        opt |= MESH;
+    }
     if (!sf_getint ("meshc", &meshc)) meshc = VP_YELLOW;
-    /* mesh color */
+    /* mesh color or surface contour color */
     if (meshc < VP_BLUE) meshc = VP_BLUE;
     if (meshc > VP_WHITE) meshc = VP_WHITE;
 
     if (!sf_getbool ("sides", &sides)) sides = false;
     /* draw sides */
-    if (!sf_getbool ("contour", &contour)) contour = false;
+    if (sides)
+        opt |= DRAW_SIDES;
+    if (!sf_getbool ("bcontour", &bcontour)) bcontour = false;
     /* draw contour lines at the bottom */
+    if (bcontour)
+        opt |= BASE_CONT;
+    if (!sf_getbool ("scontour", &scontour)) scontour = false;
+    /* draw contour lines on the surface (surface mode only) */
+    if (scontour)
+        opt |= SURF_CONT;
     if (!sf_getint ("nc", &nc)) nc = 10;
     /* number of contour lines */
     if (nc < 1) nc = 1;
-    if (contour) {
-        opt |= BASE_CONT;
+    if (bcontour || scontour)
         clevel = (PLFLT*)calloc (nc, sizeof(PLFLT));
+    else 
+        nc = 0;
+    if (!sf_getbool ("faceted", &faceted)) faceted = false;
+    /* each cell is faceted on the surface (surface mode only) */
+    if (faceted)
+        opt |= FACETED;
+
+    /* initialize color table */
+    if (NULL == (color = sf_getstring ("color"))) color=NULL;
+    /* color scheme (default is i) */
+    if (color) {
+        vp_rascoltab (VP_WHITE + 1, color);
+        opt |= MAG_COLOR;
+    } else if (false == mesh) { /* Set default b/w color palette for surface rendering */
+        vp_rascoltab (VP_WHITE + 1, "b");
+        opt |= MAG_COLOR;
     }
 
     /* Set up x & y dimensions */
@@ -160,9 +181,14 @@ int main (int argc, char *argv[]) {
         if (minval < zmin) zmin = minval;
         if (maxval > zmax) zmax = maxval;
 
+        if (scontour || bcontour) {
+            step = (zmax - zmin)/(nc + 1);
+            for (j = 0; j < nc; j++)
+                clevel[j] = zmin + step + step*j;
+        }
+
         if (i > 0)
             vp_erase ();
-
         pladv (0);
         plcol0 (VP_WHITE);
         plvpor (0.0, 1.0, 0.0, 0.9);
@@ -176,14 +202,10 @@ int main (int argc, char *argv[]) {
 	        "bcdmnstuv", axis3, 0.0, 0);
 
         plcol0 (meshc);
-        if (contour) {
-            step = (zmax - zmin)/(nc + 1);
-            for (j = 0; j < nc; j++)
-                clevel[j] = zmin + step + step*j;
-            plmeshc(x, y, z, n1, n1, opt, clevel, nc);
-        } else {
-            plot3d (x, y, z, n2, n1, opt, sides);
-        }
+        if (opt & MESH)
+	    plot3dc (x, y, z, n2, n1, opt, clevel, nc);
+	else
+            plsurf3d (x, y, z, n2, n1, opt, clevel, nc);
 
         if (wanttitle) {
             plcol0 (VP_WHITE);
@@ -196,7 +218,7 @@ int main (int argc, char *argv[]) {
     /* Clean up */
     plend ();
 
-    if (contour) free (clevel);
+    if (clevel) free (clevel);
     free (x);
     free (y);
     plFree2dGrid (z, n2, n1);
