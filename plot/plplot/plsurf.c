@@ -44,8 +44,12 @@ int main (int argc, char *argv[]) {
     char *color, *title = NULL;
     char *label1, *label2, *label3;
     char *unit1, *unit2, *unit3;
-    char *axis1, *axis2, *axis3;
-    bool wanttitle;
+    char *axis1 = "", *axis2 = "", *axis3 = "";
+    char *where;
+    bool wanttitle, wantaxis;
+    bool wantaxis1 = false, wantaxis2 = false, wantaxis3 = false;
+    float labelsz, titlesz;
+    int labelfat, titlefat;
 
     float minval, maxval;
     float alt, az;
@@ -79,26 +83,55 @@ int main (int argc, char *argv[]) {
     /* Initialize plplot */
     plinit ();
 
-    /* Axes */
-    if (NULL == (label1 = sf_histstring (in, "label1"))) label1 = "";
-    if (NULL == (label2 = sf_histstring (in, "label2"))) label2 = "";
-    if (NULL == (label3 = sf_histstring (in, "label3"))) label3 = "";
-
-    if (NULL == (unit1 = sf_histstring (in, "unit1"))) unit1 = "";
-    if (NULL == (unit2 = sf_histstring (in, "unit2"))) unit2 = "";
-    if (NULL == (unit3 = sf_histstring (in, "unit3"))) unit3 = "";
-
-    axis1 = sf_plvpl_make_axis_title (label1, unit1);
-    axis2 = sf_plvpl_make_axis_title (label2, unit2);
-    axis3 = sf_plvpl_make_axis_title (label3, unit3);
+    /* Axes; allow user redefine label and units over values from the history */
+    if (!sf_getbool ("wantaxis", &wantaxis)) wantaxis = true;
+    /* if generate axes with ticks and labels */
+    if (wantaxis) {
+        if (!sf_getbool ("wantaxis1", &wantaxis1)) wantaxis1 = true;
+        if (false == wantaxis1 ||
+            (NULL == (label1 = sf_getstring ("label1")) &&
+             NULL == (label1 = sf_histstring (in, "label1")))) label1 = "";
+        if (!sf_getbool ("wantaxis2", &wantaxis2)) wantaxis2 = true;
+        if (false == wantaxis2 ||
+            (NULL == (label2 = sf_getstring ("label2")) &&
+             NULL == (label2 = sf_histstring (in, "label2")))) label2 = "";
+        if (!sf_getbool ("wantaxis3", &wantaxis3)) wantaxis3 = true;
+        if (false == wantaxis3 ||
+            (NULL == (label3 = sf_getstring ("label3")) &&
+             NULL == (label3 = sf_histstring (in, "label3")))) label3 = "";
+        if (false == wantaxis1 ||
+            (NULL == (unit1 = sf_getstring ("unit1")) &&
+             NULL == (unit1 = sf_histstring (in, "unit1")))) unit1 = "";
+        if (false == wantaxis2 ||
+            (NULL == (unit2 = sf_getstring ("unit2")) &&
+             NULL == (unit2 = sf_histstring (in, "unit2")))) unit2 = "";
+        if (false == wantaxis3 ||
+            (NULL == (unit3 = sf_getstring ("unit3")) &&
+             NULL == (unit3 = sf_histstring (in, "unit3")))) unit3 = "";
+        axis1 = sf_plvpl_make_axis_title (label1, unit1);
+        axis2 = sf_plvpl_make_axis_title (label2, unit2);
+        axis3 = sf_plvpl_make_axis_title (label3, unit3);
+    }
 
     if (!sf_getbool ("wanttitle", &wanttitle)) wanttitle = true;
     /* if include title */
     if (wanttitle) {
-        if (NULL == (title = sf_getstring ("title"))) title = NULL;
-        /* title */
+        if (NULL == (title = sf_getstring ("title")) &&
+            NULL == (title = sf_histstring (in, "title"))) title = NULL;
         if (NULL == title) wanttitle = false;
     }
+
+    if (NULL == (where = sf_getstring ("wheretitle")) || 0 == strlen (where)) where = "top";
+    /* where to put title (top,bottom) */
+
+    if (!sf_getfloat ("labelsz", &labelsz)) labelsz = 8.0;
+    /* label font size */
+    if (!sf_getfloat ("titlesz", &titlesz)) titlesz = 10.0;
+    /* title font size */
+    if (!sf_getint ("labelfat", &labelfat)) labelfat = 1;
+    /* label fatness */
+    if (!sf_getint ("titlefat", &titlefat)) titlefat = 1;
+    /* title fatness */
 
     if (!sf_getfloat ("minval", &minval)) minval = SF_HUGE;
     /* minimum value for the vertical axis (default is data minimum) */
@@ -191,25 +224,36 @@ int main (int argc, char *argv[]) {
             vp_erase ();
         pladv (0);
         plcol0 (VP_WHITE);
-        plvpor (0.0, 1.0, 0.0, 0.9);
-        plwind (-0.85, 0.85, -0.6, 1.4);
+        plvpor (0.0, 1.0,
+                where[0] != 't' && wanttitle ? 0.1 : 0.0,
+                where[0] != 't' || !wanttitle ? 1.0 : 0.9);
+        plwind (-0.9 - fdimf (labelsz, 8.0)*0.025, 0.9 + fdimf (labelsz, 8.0)*0.025,
+                -0.6 - fdimf (labelsz, 8.0)*0.02, 1.45);
         plw3d (1.0, 1.0, 1.2,
                o2, o2 + (n2 - 1)*d2,
                o1, o1 + (n1 - 1)*d1,
                zmin, zmax, alt, az);
-        plbox3 ("bnstu", axis1, 0.0, 0,
-	        "bnstu", axis2, 0.0, 0,
-	        "bcdmnstuv", axis3, 0.0, 0);
+        plschr (0, labelsz/10.0);
+        vp_fat (labelfat);
+        plbox3 (wantaxis && wantaxis2 ? "bnstu" : "b", axis2, 0.0, 0,
+                wantaxis && wantaxis1 ? "bnstu" : "b", axis1, 0.0, 0,
+                wantaxis && wantaxis3 ? "bcdmnstuv" : "bcduv", axis3, 0.0, 0);
+        vp_fat (1);
+        plschr (0, 1.0);
 
         plcol0 (meshc);
         if (opt & MESH)
-	    plot3dc (x, y, z, n2, n1, opt, clevel, nc);
-	else
+            plot3dc (x, y, z, n2, n1, opt, clevel, nc);
+        else
             plsurf3d (x, y, z, n2, n1, opt, clevel, nc);
 
         if (wanttitle) {
             plcol0 (VP_WHITE);
-            plmtex ("t", 1.0, 0.5, 0.5, title);
+            plschr (0, titlesz/10.0);
+            vp_fat (titlefat);
+            plmtex (where[0] != 'b' ? "t" : "b", 1.0, 0.5, 0.5, title);
+            vp_fat (1);
+            plschr (0, 1.0);
         }
 
         i++;
@@ -223,9 +267,11 @@ int main (int argc, char *argv[]) {
     free (y);
     plFree2dGrid (z, n2, n1);
     free (buffer);
-    free (axis3);
-    free (axis2);
-    free (axis1);
+    if (wantaxis) {
+        free (axis3);
+        free (axis2);
+        free (axis1);
+    }
 
     exit (0);
 }
