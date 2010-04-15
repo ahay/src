@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	    w = 1;
 	    jobs = split;
 	}
-	bigjobs = split - jobs*(chunk-1);
+	bigjobs = split - jobs*(w-1);
 
 	j=0;
 	for (i=1; i < argc; i++) {
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 	inp = sf_input(oname);
 	ndim = sf_largefiledims (inp,n);
 
-	if (!sf_getint("join",&axis2)) axis2=axis;
+	if (!sf_getint("join",&axis2)) axis2=axis+1;
 	if (axis2 > ndim) axis2=ndim;
 	snprintf(key,5,"n%d",axis2);
 
