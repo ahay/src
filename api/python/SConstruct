@@ -1,6 +1,6 @@
 import sys, os, string, re
 sys.path.append('../..')
-import bldutilrsf
+import bldutil
 
 modules = Split('rsf vplot')
 
