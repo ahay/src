@@ -3,7 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 progs = '''
-fitcrs fitcrspicks fitnonhcrspicks readsample vscancrs rkawefd2d wavegeom rtmgeom opsmigrk 
+fitcrs fitcrspicks fitnonhcrspicks readsample vscancrs rkawefd2d wavegeom rtmgeom cigangle
 '''
 
 try:  # distributed version

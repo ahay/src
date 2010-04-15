@@ -1,4 +1,4 @@
-/* Shot-recorder Oriented prestack migration data is (shots x recs x time). */
+/* src-receiver to angle gathers */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -21,11 +21,14 @@
 int main(int argc, char* argv[])
 {
     int iz, nz, ix, nx, ia, ja, na, it, nt, ih, nh, is, ns;
-    float t, h, s, dt, dh, ds, t0, s0, h0, dz, z0, z1, tolz;
+    float t, h, s, dt, dh, ds, t0, s0, h0, dz, z0;
     float zi, zj, xi, ti, tj;
-    float *tim, *dis, *dep, ***dat, **img;
+    float *tim, *dis, *dep, ***dat, ***img;
     sf_file time, dist, dept, data, imag;
-    
+
+    int nalpha, ngamma, ialpha, igamma;
+    float tolz, da, a0, alpha, gamma, alpha0, gamma0, dalpha, dgamma;
+
     sf_init(argc,argv);
 
     dist = sf_input("in");
@@ -38,15 +41,16 @@ int main(int argc, char* argv[])
     if (!sf_histint(time,"n2",&nx)) sf_error("No n2= in input");
     if (!sf_histint(time,"n3",&nz)) sf_error("No n3= in input");
 
-    if (!sf_histfloat(time,"d3",&dz)) sf_error("No d1= in input");
+    if (!sf_histfloat(time,"d3",&dz)) sf_error("No d3= in time");
+    if (!sf_histfloat(time,"d1",&da)) sf_error("No d1= in time");
+
     if (!sf_histfloat(time,"o3",&z0)) sf_error("No d1= in input");
+    if (!sf_histfloat(time,"o1",&a0)) sf_error("No o1= in time");
 
-    if (!sf_getfloat("z0",&z1)) z1=z0;
+    if (!sf_getint("nalpha",&nalpha)) nalpha=90;
+
+    if (!sf_getfloat("tolz",&tolz)) tolz=1.f;
     /* surface depth */
-    //assert(fabs(z1) < 1e-6f);
-
-    /* tolerance depth */
-    if (!sf_getfloat("tolz",&tolz)) tolz=2.0;
     tolz *= dz;
 
     tim = sf_floatalloc(na);
@@ -73,17 +77,37 @@ int main(int argc, char* argv[])
     sf_floatread(dat[0][0],nt*nh*ns,data);
     sf_fileclose(data);
 
-    /* The output is (a, a, x, z) */
-    sf_shiftdim(dist, imag, 1);
-    sf_putint(imag,"n1",na);
+    /* The output is (alpha, gamma, t) */
+    //nalpha = 360;
+    ngamma = nalpha;
+    alpha0 = 0.;
+    gamma0 = 0.;
+    dalpha = 360/nalpha;
+    dgamma = 360/ngamma;
 
-    img = sf_floatalloc2(na,na);
+    //sf_shiftdim(dist, imag, 1);
+    sf_putint(imag,"n3",nalpha);
+    sf_putint(imag,"n2",ngamma);
+    sf_putint(imag,"n1",nt);
+
+    sf_putfloat(imag,"o3",alpha0);
+    sf_putfloat(imag,"o2",gamma0);
+    sf_putfloat(imag,"o1",t0);
+    //sf_putint(imag,"n1",nt);
+
+    sf_putfloat(imag,"d3",dalpha);
+    sf_putfloat(imag,"d2",dgamma);
+    sf_putfloat(imag,"d1",dt);
+
+    img = sf_floatalloc3(nt, ngamma, nalpha);
+
+    for (iz=0; iz < nalpha*ngamma*nt; iz++) 
+	img[0][0][iz] = 0.f;
 
     for (iz=0; iz < nz; iz++) {
-	sf_warning("depth %d of %d",iz+1,nz);
-
+	
 	for (ix=0; ix < nx; ix++) {
-
+	    
 	    sf_floatread(tim,na,time);
 	    sf_floatread(dis,na,dist);
 	    sf_floatread(dep,na,dept);
@@ -95,9 +119,6 @@ int main(int argc, char* argv[])
 		zi = dep[ia];
 		
 		if (zi > z0 + tolz) {
-		    for (ja=ia; ja < na; ja++) {
-			img[ia][ja] = 0.0;
-		    }
 		    continue;
 		}
 
@@ -107,10 +128,8 @@ int main(int argc, char* argv[])
 
 		s = (xi-s0)/ds;
 		is = floorf(s);
-		if (is < 0 || is > ns-1) {
-		    for (ja=ia; ja < na; ja++) {
-			img[ia][ja] = 0.0;
-		    }
+
+		if (is < 0 || is >= ns-1) {
 		    continue;
 		}
 		s -= is;
@@ -120,44 +139,45 @@ int main(int argc, char* argv[])
 		for (ja=0; ja < na; ja++) {
 		    zj = dep[ja];
 		    
-		    if (zj > z0 + tolz) {
-			img[ia][ja] = 0.0;
+		    if (zj > z0 + dz) {
 			continue;
 		    }
 		    
 		    /* get receiver location, interpolate */
 
-		    /* h = (dis[ja]-xi-h0)/dh; */
-		    h = (dis[ja] - h0)/dh;
-
+		    h = (dis[ja]-xi-h0)/dh;
 		    ih = floorf(h);
-		    if (ih < 0 || ih > nh-1) {
-			img[ia][ja] = 0.0;
+		    if (ih < 0 || ih >= nh-1) {
 			continue;
 		    }
 		    h -= ih;
 
 		    /* get time, interpolate */
-
 		    tj = tim[ja];
 
 		    t = (ti+tj-t0)/dt; 
 		    it = floorf(t);
 		    if (it < 0 || it >= nt-1) {
-			img[ia][ja] = 0.0;
 			continue;
 		    }
 		    t -= it;
 
-		    if ((is == 0 || is == ns-1) || (ih == 0 || ih == nh-1)) {
-			img[ia][ja] = 
-			    dat[is][ih][it  ] * (1.-t) +
-			    dat[is][ih][it+1] *     t;
-		    }
-		    else {
-			/* trilinear interpolation from the data */
+		    /* trilinear interpolation from the data */
+		    alpha = a0 + 0.5f*da*(ia + ja);
+		    gamma = 0.5f * da * (ia - ja);
+
+		    ialpha = floor( (alpha - alpha0)/dalpha);
+		    igamma = floor( (gamma - gamma0)/dgamma);
+
+		    if (ialpha < 0) ialpha += nalpha;
+		    if (igamma < 0) igamma += ngamma;
+
+		    if (ialpha >= nalpha) ialpha += nalpha;
+		    if (igamma >= ngamma) igamma += ngamma;
 		    
-			img[ia][ja] = 
+		    if (ialpha >= 0 && ialpha < nalpha && igamma >=0 && igamma < ngamma)
+
+			img[ialpha][igamma][it] = 
 
 			dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
 			dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
@@ -167,13 +187,13 @@ int main(int argc, char* argv[])
 			dat[is][ih+1][it+1]*(1.-s)*h*t +
 			dat[is+1][ih+1][it]*s*h*(1.-t) +
 			dat[is+1][ih+1][it+1]*s*h*t;
-		    }
 		}
-	    }
+	    } // ia
+	} // ix
+    } // iz
 
-	    sf_floatwrite(img[0],na*na,imag);
-	}
-    }
+    sf_floatwrite(img[0][0],nalpha*ngamma*nt,imag);
+
 
     exit(0);
 }
