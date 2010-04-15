@@ -209,7 +209,7 @@ $v=1.5\,\mbox{km/s}$.}
 \sideplot{mod}{height=2.5in}{Synthetic model for testing
 finite-difference migration by velocity continuation.}
 
-\new{Figures~\ref{fig:vlckaa}--\ref{fig:vlcspv}} compare invertability of different
+\new{Figures~\ref{fig:vlckaa}--\ref{fig:vlcstv}} compare invertability of different
 migration methods. In all cases, constant-velocity modeling (demigration) 
 %by the adjoint operator \cite[]{Claerbout.blackwell.92}
 was followed by migration with the correct velocity.  Figures
@@ -224,7 +224,7 @@ model. Since the forward operators were different for different
 migrations, this comparison did not test the migration properties
 themselves. For such a test, I compare the results of the Kirchhoff
 and velocity-continuation migrations after Stolt modeling.  The result
-of velocity continuation, shown in Figure \ref{fig:vlcspv}, is
+of velocity continuation, shown in Figure \ref{fig:vlcstk,vlcstv}, is
 noticeably more accurate than that of the Kirchhoff method.
 
 %\activeplot{vlckir}{width=6in,height=2.5in}{ER}{Result of modeling and
@@ -258,9 +258,8 @@ spectrum.}
   is the reconstruction error. Bottom right is the absolute error in the
   spectrum.  }
 
-\plot{vlcspv}{width=6in,height=5in}{Top:
-modeling with Stolt method, migration with the Kirchhoff
-method. Bottom: modeling with Stolt method, migration with the
+\multiplot{2}{vlcstk,vlcstv}{width=4in}{(a) Modeling with Stolt method, migration with the Kirchhoff
+  method. (b) Modeling with Stolt method, migration with the
 finite-difference velocity continuation. Left plots show the
 reconstructed models. Right plots show the reconstruction errors.}
 
@@ -278,9 +277,10 @@ velocity models. In these cases, the cost of Stolt migration increases in
 direct proportion to the number of velocity models, while the cost of velocity
 continuation stays the same.
 
-\par
 \subsection{Fourier approach}
-\par
+
+\inputdir{spec}
+
 The change of variable $\sigma = t^2$ transforms
 equation~(\ref{PDE}) to the form
 \begin{equation}

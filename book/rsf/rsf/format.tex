@@ -342,7 +342,7 @@ minimum value = 1 at 1
 However, piping the output of SEPlib programs to RSF (or, for that matter, any
 other non-SEPlib programs) will result in an unterminated process. Do not try
 \begin{verbatim}
-bash$ Spike n1=1 | sfattr want=min
+bash$ Spike n1=1 | sfattr want=ming
 \end{verbatim}
 That happens because SEPlib uses sockets for piping and expects a socket
 connection from the receiving program. RSF passes data through regular Unix
