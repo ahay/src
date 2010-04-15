@@ -1,4 +1,4 @@
-/* Velocity continuation. */
+/* Prestack velocity continuation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 

@@ -28,7 +28,7 @@
 
 int main(int argc, char* argv[])
 {
-    int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis;
+    int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis, axis2;
     off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM];
     char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5];
     char **inames=NULL, **onames=NULL, buffer[BUFSIZ];
@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 	for (i=1; i < argc; i++) {
 	    if (strncmp(argv[i],"input=",6) &&
 		strncmp(argv[i],"output=",7) &&
-		strncmp(argv[i],"split=",6)) {
+		strncmp(argv[i],"split=",6) &&
+		strncmp(argv[i],"join=",5)) {
 		len = strlen(argv[i]);
 		if (j+len > CMDLEN-2) {
 		    sf_warning("command line is too long");
@@ -147,17 +148,18 @@ int main(int argc, char* argv[])
 
 	inp = sf_input(oname);
 	ndim = sf_largefiledims (inp,n);
-	if (split != n[axis]) {
-	    sf_warning("Wrong dimensionality %d != n%d (%d)",
-		       split,axis+1,n[axis]);
-	    MPI_Finalize();
-	}
+
+	if (!sf_getint("join",&axis2)) axis2=axis;
+	if (axis2 > ndim) axis2=ndim;
+	snprintf(key,5,"n%d",axis2);
+
+	axis2--;
 
 	size1 = sf_esize(inp);
 	size2 = 1;
 	for (i=0; i < ndim; i++) {
-	    if      (i < axis) size1 *= n[i];
-	    else if (i > axis) size2 *= n[i];
+	    if      (i < axis2) size1 *= n[i];
+	    else if (i > axis2) size2 *= n[i];
 	}
 
 	sf_setformat(out,sf_histstring(inp,"data_format"));
@@ -167,14 +169,6 @@ int main(int argc, char* argv[])
 	sf_rm(oname,true,false,false);
 
 	for (job=0; job < jobs; job++) {
-	    if (job < bigjobs) {
-		chunk = w;
-		skip = job*w;
-	    } else {
-		chunk = w-1;
-		skip = bigjobs*w+(job-bigjobs)*chunk;
-	    }
-
 	    MPI_Recv(&rank,1, MPI_INT, job+1, 1, MPI_COMM_WORLD,&stat);
 
 	    iname = inames[job];
@@ -183,9 +177,12 @@ int main(int argc, char* argv[])
 	    in = sf_input(oname);
 	    sf_setform(in,SF_NATIVE);
 
+	    if (!sf_histint(in,key,&chunk)) {
+		sf_warning("Problem on node %d with file %s",job+1,oname);
+		MPI_Finalize();
+	    }
+	    
 	    for (i2=0; i2 < size2; i2++) {
-		sf_seek(in,size1*(i2*split+skip),SEEK_SET);
-
 		nbuf=BUFSIZ;
 		for (left=chunk*size1; left > 0; left -= nbuf) {
 		    if (nbuf > left) nbuf=left;
@@ -194,6 +191,8 @@ int main(int argc, char* argv[])
 		    sf_charwrite(buffer,nbuf,out);
 		}
 	    }
+
+	    sf_fileclose(in);
 
 	    sf_rm(iname,true,false,false);
 	    sf_rm(oname,true,false,false);
