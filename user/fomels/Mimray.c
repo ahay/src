@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nt, nx, nz, it, ix, iy, iz, order;
     float dt, dx, dz, y, z, v, q, x1,x2, z1,z2, r1,r2, xd,zd,rd, d2, a,b;
-    float **vv, *xx, *xp, *zz, *zp, *vd, *rr;
+    float **vv, *xx, *xp, *zz, *zp, *vd, *qq, *rr;
     sf_eno2 vmap;
     sf_file vel, dix;
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nt",&nt)) sf_error("Need nt=");
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
     
-    sf_putint(dix,"n2",3);
+    sf_putint(dix,"n2",4);
 
     sf_putint(dix,"n3",nt);
     sf_putfloat(dix,"d3",dt);
@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
     zp = sf_floatalloc(nx);
   
     vd = sf_floatalloc(nx);
+    qq = sf_floatalloc(nx);
     rr = sf_floatalloc(nx);
 
     /* on the surface */
@@ -164,12 +165,14 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* dix velocity */
-	    vd[ix] = v*dx/q;
+	    vd[ix] = v;
+	    qq[ix] = q/dx;
 	}
 
 	sf_floatwrite(zp,nx,dix);
 	sf_floatwrite(xp,nx,dix);
 	sf_floatwrite(vd,nx,dix);
+	sf_floatwrite(qq,nx,dix);
     }
     
     exit(0);

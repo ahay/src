@@ -1,15 +1,5 @@
 from rsfproj import *
 
-# Need to reproduce:
-###################
-# mod.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# t2-fft.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# t2.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# vlcspv.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# vlcstp.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# vlcstv.vpl 	 2962 	 2 years 	 sfomel 	 figs
-# vlcvel.vpl
-
 Flow('mod',None,
      '''
      sigmoid n1=200 d2=.008 n2=200 | smooth rect1=3 diff1=1 | smooth rect1=3
