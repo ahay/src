@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
     int nt, nx, nz, it, ix, iy, iz, order;
-    float dt, dx, dz, y, z, v, q, x1,x2, z1,z2, r1,r2, xd,zd,rd, d2, a,b;
+    float dt, dx, dz, y, z, v, q, x1,x2, z1,z2, r1,r2, xd,zd,rd, d2, a,b, x0;
     float **vv, *xx, *xp, *zz, *zp, *vd, *qq, *rr;
     sf_eno2 vmap;
     sf_file vel, dix;
@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
+    if (!sf_histfloat(vel,"o1",&x0)) sf_error("No d1= in input");
 
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
@@ -70,14 +71,16 @@ int main(int argc, char* argv[])
     /* on the surface */
     for (ix=0; ix < nx; ix++) {
 	zp[ix] = 0.;
-	xp[ix] = ix*dx;
+	xp[ix] = x0+ix*dx;
 	vd[ix] = vv[0][ix];
+	qq[ix] = 1.0;
 	rr[ix] = vv[0][ix]*dt;
     }
 
     sf_floatwrite(zp,nx,dix);
     sf_floatwrite(xp,nx,dix);
     sf_floatwrite(vd,nx,dix);
+    sf_floatwrite(qq,nx,dix);
 
     for (it=1; it < nt; it++) {
 	/* HWT update */
@@ -129,8 +132,8 @@ int main(int argc, char* argv[])
 	    xp[ix] = xx[ix];
 
 	    /* get velocity */
-	    y = xx[ix]/dx; iy = floorf(y); y -= iy;
-	    z = zz[ix]/dz; iz = floorf(z); z -= iz;
+	    y = (xx[ix]-x0)/dx; iy = floorf(y); y -= iy;
+	    z = zz[ix]/dz;      iz = floorf(z); z -= iz;
 
 	    if (iy <= 0) {
 		iy=0; y=0.0;
