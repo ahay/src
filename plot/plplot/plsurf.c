@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
     bool wanttitle, wantaxis;
     bool wantaxis1 = false, wantaxis2 = false, wantaxis3 = false;
     float labelsz, titlesz;
-    int labelfat, titlefat;
+    int labelfat, titlefat, font;
 
     float minval, maxval;
     float alt, az;
@@ -133,6 +133,11 @@ int main (int argc, char *argv[]) {
     if (!sf_getint ("titlefat", &titlefat)) titlefat = 1;
     /* title fatness */
 
+    if (!sf_getint ("font", &font)) font = 2;
+    /* font */
+    if (font < 1) font = 1;
+    if (font > 4) font = 4;
+
     if (!sf_getfloat ("minval", &minval)) minval = SF_HUGE;
     /* minimum value for the vertical axis (default is data minimum) */
     if (!sf_getfloat ("maxval", &maxval)) maxval = -SF_HUGE;
@@ -203,8 +208,8 @@ int main (int argc, char *argv[]) {
     buffer = sf_plvpl_get_data_buffer (n1, n2, type);
 
     /* Set font */
-    plfontld (1);
-    plfont (2);
+    plfontld (1); /* Extended set */
+    plfont (font);
 
     i = 0;
     while (i < n3) {
