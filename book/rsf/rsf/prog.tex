@@ -516,6 +516,18 @@ bash$ ( sfspike n1=100 | sfget n1 d1 o1; echo "o1+(n1-1)*d1" ) | bc
 \end{verbatim}
 See also \texttt{sfput}.
 
+
+\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/get.c?view=markup}{system/main/get.c}}
+
+The implementation is trivial. Loop through all command-line parameters that contain 
+the ``='' character.
+\moddex{get}{get}{41}{43}{system/main}
+
+Get the parameter value (as string) and output it as either
+\texttt{key=value} or \texttt{value}, depending on the
+\texttt{parform} parameter.  
+\moddex{get}{get}{44}{50}{system/main}
+
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfheaderattr}
 }}
