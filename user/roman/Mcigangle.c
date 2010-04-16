@@ -139,13 +139,15 @@ int main(int argc, char* argv[])
 		for (ja=0; ja < na; ja++) {
 		    zj = dep[ja];
 		    
-		    if (zj > z0 + dz) {
+		    if (zj > z0 + tolz) {
 			continue;
 		    }
 		    
 		    /* get receiver location, interpolate */
 
-		    h = (dis[ja]-xi-h0)/dh;
+		    //h = (dis[ja]-xi-h0)/dh;
+		    h = ( dis[ja] - h0 )/dh;
+
 		    ih = floorf(h);
 		    if (ih < 0 || ih >= nh-1) {
 			continue;
@@ -172,8 +174,8 @@ int main(int argc, char* argv[])
 		    if (ialpha < 0) ialpha += nalpha;
 		    if (igamma < 0) igamma += ngamma;
 
-		    if (ialpha >= nalpha) ialpha += nalpha;
-		    if (igamma >= ngamma) igamma += ngamma;
+		    if (ialpha >= nalpha) ialpha -= nalpha;
+		    if (igamma >= ngamma) igamma -= ngamma;
 		    
 		    if (ialpha >= 0 && ialpha < nalpha && igamma >=0 && igamma < ngamma)
 
