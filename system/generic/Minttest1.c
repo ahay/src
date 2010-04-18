@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     float *mm=NULL, *coord=NULL, *z=NULL, o, oo, d, dd, kai;
     char *intp=NULL;
     sf_interpolator interp=NULL;
+    sf_bands spl=NULL;
     sf_file in=NULL, out=NULL, crd=NULL;
 
     sf_init (argc,argv);
@@ -92,7 +93,7 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-	    sf_prefilter_init (nw, n, 3*n);
+	    spl = sf_spline_init(nw,n);
 	    interp = sf_spline_int;
 	    break;
 	case 'm':
@@ -112,9 +113,11 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
         sf_floatread (mm,n,in);
 
-        if ('s' == intp[0] || 'm' == intp[0]) 
+        if ('s' == intp[0]) {
+	    sf_banded_solve(spl,mm);
+	} else if ('m' == intp[0]) { 
 	    sf_prefilter_apply (n,mm);
-	
+	}
 	sf_int1_lop (false,false,n,nd,mm,z);
 
 	sf_floatwrite (z,nd,out);

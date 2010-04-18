@@ -25,9 +25,11 @@
 int main(int argc, char* argv[])
 {
     int m[2], n, n3, nd1, nd2, nd, nw, i3, two;
-    float *mm=NULL, **coord=NULL, *z=NULL, o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
+    float **mm=NULL, **coord=NULL, *z=NULL, *tmp=NULL;
+    float o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
     char *intp=NULL;
     sf_interpolator interp=NULL;
+    sf_bands spl1=NULL, spl2=NULL;
     sf_file in=NULL, out=NULL, crd=NULL;
 
     sf_init (argc,argv);
@@ -106,8 +108,10 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-	    sf_prefilter_init (nw, n, 3*n);
 	    interp = sf_spline_int;
+	    spl1 = sf_spline_init(nw,m[0]);
+	    spl2 = sf_spline_init(nw,m[1]);
+	    tmp = sf_floatalloc(m[1]);
 	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
@@ -117,13 +121,13 @@ int main(int argc, char* argv[])
     sf_int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
 
     z = sf_floatalloc(nd);
-    mm = sf_floatalloc(n);
+    mm = sf_floatalloc2(m[0],m[1]);
 
     for (i3=0; i3 < n3; i3++) {
-        sf_floatread (mm,n,in);
-        if ('s' == intp[0]) sf_prefilter(2,m,mm);
+        sf_floatread (mm[0],n,in);
+        if ('s' == intp[0]) sf_spline2(spl1,spl2,m[0],m[1],mm,tmp);
 
-	sf_int2_lop (false,false,n,nd,mm,z);
+	sf_int2_lop (false,false,n,nd,mm[0],z);
 
 	sf_floatwrite (z,nd,out);
     }
