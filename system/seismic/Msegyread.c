@@ -328,9 +328,16 @@ int main(int argc, char *argv[])
 
     if (-1 == ftello(file)) sf_error("Cannot read from a pipe");
 
-    fseeko(file,0,SEEK_END);
-    pos = ftello(file); /* pos is the filesize in bytes */
-    fseeko(file,0,SEEK_SET);
+    if (!sf_getint("n2",&ntr)) ntr=0;
+    /* number of traces to read (if 0, read all traces) */
+
+    if (0==ntr) {
+	fseeko(file,0,SEEK_END);
+	pos = ftello(file); /* pos is the filesize in bytes */
+	fseeko(file,0,SEEK_SET);
+    } else {
+	pos = 0;
+    }
 
     if (NULL == (read = sf_getstring("read"))) read = "b";
     /* what to read: h - header, d - data, b - both (default) */
@@ -347,7 +354,7 @@ int main(int argc, char *argv[])
 	free (trace);
 
 	nsegy = SF_HDRBYTES + ns*4;
-	ntr = pos/nsegy;	
+	if (0==ntr) ntr = pos/nsegy;	
 
 	if (suxdr) format=5;
     } else { /* get data headers */
@@ -427,7 +434,7 @@ int main(int argc, char *argv[])
 
 	dt = segydt (bhead);
 	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
-	ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
+	if (0==ntr) ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
     } 
     if (verbose) sf_warning("Expect %d traces",ntr);
     

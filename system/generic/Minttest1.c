@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	    break;
 	case 'c':
 	    if (!strncmp("cub",intp,3)) { /* Cubic convolution */
-		interp = sf_lg_int;
+		interp = cube_int;
 	    } else if (!strncmp("cos",intp,3)) { /* Cosine */
 		sinc_init('c', 0.);
 		interp = sinc_int;
