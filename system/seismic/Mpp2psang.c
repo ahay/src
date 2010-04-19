@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     int nz, na, iz, ia, nw, n3, i3;
     float **gather=NULL, *trace=NULL, *modl=NULL, *coord=NULL, *gamma=NULL;
     float da, a0, r, t;
+    sf_bands spl;
     sf_file in=NULL, out=NULL, vpvs=NULL;
 
     sf_init (argc,argv);
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nw",&nw)) nw=4; /* accuracy level */
 
-    sf_prefilter_init (nw,na,2*na);
+    spl = sf_spline_init (nw,na);
 
     n3 = sf_leftsize(in,2);
 
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 		trace[ia] = gather[ia][iz];
 	    }
 
-	    sf_prefilter_apply (na,trace);
+	    sf_banded_solve (spl,trace);
 	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
 	    sf_int1_lop (false,false,na,na,trace,modl);
 

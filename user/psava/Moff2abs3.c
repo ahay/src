@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 {
     bool  verb;
     sf_axis  az,ah,aa,ab,ahx,ahy,ahz;
+    sf_bands spl;
     float    h, a, b, hx, hy, hz;
     int  iz,ih,ia,ib;
     int  nz,nh,na,nb,nhx,nhy,nhz;
@@ -122,9 +123,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    sf_prefilter_init(nw,    /* spline order */
-		      nd,    /* temporary storage */
-		      2*nd); /* padding */
+    spl = sf_spline_init(nw,nd);
 
     sf_int3_init( map, 
 		  ohx, ohy, ohz,
@@ -138,7 +137,7 @@ int main(int argc, char* argv[])
 
 	sf_floatread (mod,nm,Fm);
 
-	sf_prefilter_apply(nd,dat);
+	sf_banded_solve(spl,dat);
 	sf_int3_lop(false,false,nm,nd,mod,dat);
 
 	sf_floatwrite(dat,nd,Fd);

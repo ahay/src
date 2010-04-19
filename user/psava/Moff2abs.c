@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     int  nz,   nhx,nhy,nhz;
     float       hx, hy, hz;
     float oh,dh,ohx,dhx,ohy,dhy,ohz,dhz;
+    sf_bands spl;
 
     sf_file Fd; /*  data =   vector offset (hx,hy,hz)-z */
     sf_file Fm; /* model = absolute offset     h     -z */
@@ -88,10 +89,7 @@ int main(int argc, char* argv[])
     mwt = sf_floatalloc(nh); /* model weight */
     dwt = sf_floatalloc(nd); /*  data weight */
 
-
-    sf_prefilter_init(nw,    /* spline order */
-		      nd,    /* temporary storage */
-		      2*nd); /* padding */
+    spl = sf_spline_init(nw,nd);
 
     for(ihz=0;ihz<nhz;ihz++) {
 	hz = ohz + ihz * dhz;         hz*=hz;
@@ -118,14 +116,14 @@ int main(int argc, char* argv[])
     for(id=0;id<nd;id++) {
 	dwt[id]=1;
     }
-    sf_prefilter_apply(nd,dwt);  
+    sf_banded_solve(spl,dwt);  
 
     for(iz=0;iz<nz;iz++) {
 	sf_warning("iz=%d of %d",iz+1,nz);
 
 	sf_floatread(dat,nd,Fd);
 
-	sf_prefilter_apply(nd,dat);  
+	sf_banded_solve(spl,dat);  
 	sf_int1_lop( true,   /* adj */
 		     false,  /* add */
 		     nh,     /* n model */

@@ -16,13 +16,9 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <rsf.h>
 
 #include "prefilter.h"
-#include "recfilt.h"
-#include "alloc.h"
-#include "error.h"
-#include "decart.h"
-#include "file.h"
 
 static float flt2[1] = {0.0};
 static float flt3[1] = {0.1715729};
@@ -48,7 +44,7 @@ static float *tmp1, *tmp2 /* temporary storage */;
 static float a0 /* normalization */;
 static int nt, pad;
 
-void sf_prefilter_init (int nw     /* spline order */, 
+void prefilter_init (int nw     /* spline order */, 
 			int nt_in  /* temporary storage length */, 
 			int pad_in /* padding */)
 /*< initialize >*/
@@ -98,7 +94,7 @@ void sf_prefilter_init (int nw     /* spline order */,
     }
 }
 
-void sf_prefilter_apply (int nd     /* data length */, 
+void prefilter_apply (int nd     /* data length */, 
 			 float* dat /* in - data, out - coefficients */)
 /*< Convert 1-D data to spline coefficients >*/
 {
@@ -122,7 +118,7 @@ void sf_prefilter_apply (int nd     /* data length */,
     }
 }
 
-void sf_prefilter (int dim    /* number of dimensions */, 
+void prefilter (int dim    /* number of dimensions */, 
 		   int* n     /* data size [dim] */, 
 		   float* dat /* in - data, out - coefficients */)
 /*< Convert N-D data to spline coefficients >*/
@@ -131,7 +127,7 @@ void sf_prefilter (int dim    /* number of dimensions */,
     int m[SF_MAX_DIM], m1[SF_MAX_DIM], n1[SF_MAX_DIM];
 
     if (dim == 1) {
-	sf_prefilter_apply (n[0], dat);
+	prefilter_apply (n[0], dat);
 	return;
     }
   
@@ -174,7 +170,7 @@ void sf_prefilter (int dim    /* number of dimensions */,
     }
 }
 
-void sf_prefilter_close( void)
+void prefilter_close( void)
 /*< free allocated storage >*/
 {
     free (tmp1);

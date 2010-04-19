@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 {
     int nt,nx,ny, iw,ix,iy, nf, nw;
     float dw, dt, dx,dy, t0, y, w,st,sq, *str=NULL, *trace2=NULL, *trace=NULL, vel, a, b, x;
+    sf_bands spl;
     sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
     trace2 = sf_floatalloc(nw);
     str = sf_floatalloc(nw);
 
-    sf_prefilter_init (nf, nw, 3*nw);
+    spl = (nf > 2)? sf_spline_init (nf, nw): NULL;
     for (iy = 0; iy < ny; iy++) {
 	sf_warning("%d of %d",iy+1,ny);
 	y = iy*dy;
@@ -96,7 +97,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
-	    sf_prefilter_apply (nw, trace);
+	    if (nf > 2) sf_banded_solve (spl, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
 	    sf_cosft_inv (trace2,0,1);
 	    sf_floatwrite(trace2,nt,out);

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     float vmin, vmax, dv, dx, x0, t0, t, dt, tp;
     char *unit=NULL, *space=NULL, *time=NULL;
     size_t len;
-    sf_bands spl;
+    sf_bands spl=NULL;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	    if (*space == '\0') sf_putstring(out,"unit1",unit);
 	}
 
-	spl = sf_spline_init (nw, nv);
+	if (nw > 2) spl = sf_spline_init (nw, nv);
 
 	ntr = nv;
 	ntm = nx;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"x0",x0);
 	sf_putfloat(out,"dx",dx);
 
-	spl = sf_spline_init (nw, nx);
+	if (nw > 2) spl = sf_spline_init (nw, nx);
 
 	ntr = nx;
 	ntm = nv;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 	    t = t0 + it*dt;
 
 	    sf_floatread (trace,ntr,in);
-	    sf_banded_solve (spl,trace);
+	    if (nw > 2) sf_banded_solve (spl,trace);
 
 	    if (t > tp) {
 		if (inv) {

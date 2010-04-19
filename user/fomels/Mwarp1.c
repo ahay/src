@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     float *ampl=NULL, *damp=NULL, o1, d1, o2, d2, error, mean, *num, *den;
     bool verb, noamp;
     char key[6];
+    sf_bands spl;
     sf_file in, warped, other, warpin, warpout, amplout=NULL;
 
     sf_init (argc, argv);
@@ -114,12 +115,13 @@ int main(int argc, char* argv[])
     num =   sf_floatalloc (nd);
     den =   sf_floatalloc (nd);
 
-    sf_prefilter_init (order, n1, order*10);     
+    /* convert to spline coefficients */
+    spl = sf_spline_init (order, n1);     
     for (i2=0; i2 < m2; i2++) {
 	sf_floatread(inp+i2*n1,n1,in);
-	sf_prefilter_apply (n1, inp+i2*n1);
+	sf_banded_solve(spl,inp+i2*n1);
     }
-    sf_prefilter_close();
+    sf_banded_close(spl);
 
     sf_floatread(oth,nd,other);
     sf_fileclose(other);

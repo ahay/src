@@ -57,9 +57,11 @@ the end of format adds system information for system errors. >*/
     if (format[0] != '\0' && format[last] == ':')
 	fprintf (stderr, " %s", strerror(errno));
 
+    fprintf (stderr, "\n");
+    (void) fflush(stderr);
+
     if (0==strcmp("python",prog)) longjmp(*python_except,1);
  
-    (void) fflush(stderr);
     exit(EXIT_FAILURE);
 }
 

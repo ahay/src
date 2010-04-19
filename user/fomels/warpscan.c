@@ -22,6 +22,7 @@
 
 static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
 static int n2g, ntr, n1, n2, ng, order;
+static sf_bands spl;
 
 void warpscan_init(int m1     /* input trace length */, 
 		   float o11  /* input origin */,
@@ -60,7 +61,7 @@ void warpscan_init(int m1     /* input trace length */,
     num = sf_floatalloc (n2g);
     den = sf_floatalloc (n2g);
 
-    sf_prefilter_init (order, n1, order*10);     
+    spl = sf_spline_init (order, n1);     
     divn_init(dim, n2g, m, rect, niter, true);
 }
 
@@ -75,7 +76,7 @@ void warpscan(float** inp /* input data [ntr][n1] */,
     doth = 0.;
     dout = 0.;
     for (i2=0; i2 < ntr; i2++) {
-	sf_prefilter_apply (n1, inp[i2]);
+	sf_banded_solve (spl, inp[i2]);
 
 	for (i1=0; i1 < n2; i1++) {
 	    doth += oth[i2][i1]*oth[i2][i1];

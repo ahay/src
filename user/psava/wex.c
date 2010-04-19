@@ -123,7 +123,7 @@ void wex(wexop3d weop,
 	 sf_fslice wfld /* wavefield [nw][nmy][nmx] */)
 /*< Save wavefield from downward continuation >*/
 {
-    int iz,iw,imx,imy;
+    int iz,iw; /* imx,imy; */
     sf_complex w;
     int ompith=0;
 

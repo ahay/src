@@ -19,6 +19,8 @@
 
 #include <string.h>
 #include <rsf.h>
+
+#include "prefilter.h"
 #include "interp_cube.h"
 #include "interp_sinc.h"
 #include "interp_mom.h"
@@ -97,7 +99,7 @@ int main(int argc, char* argv[])
 	    interp = sf_spline_int;
 	    break;
 	case 'm':
-	    sf_prefilter_init (-nw, n, 3*n);
+	    prefilter_init (-nw, n, 3*n);
 	    interp = mom_int;
 	    break;
 	default:
@@ -116,7 +118,7 @@ int main(int argc, char* argv[])
         if ('s' == intp[0]) {
 	    sf_banded_solve(spl,mm);
 	} else if ('m' == intp[0]) { 
-	    sf_prefilter_apply (n,mm);
+	    prefilter_apply (n,mm);
 	}
 	sf_int1_lop (false,false,n,nd,mm,z);
 
