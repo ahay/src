@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis, axis2, splitargc;
     off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM], *splitsize1=NULL, *splitsize2=NULL;
-    char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5], *splitname;
+    char cmdline[CMDLEN], command[CMDLEN], splitcommand[CMDLEN], *iname=NULL, *oname=NULL, key[5], *splitname;
     char **inames=NULL, **onames=NULL, buffer[BUFSIZ], **splitargv, *eq, *arg, *filekey;
     FILE *ifile=NULL, *ofile=NULL;
     sf_file inp=NULL, out=NULL, in=NULL, *splitfile=NULL;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 		strncmp(argv[i],"split=",6) &&
 		strncmp(argv[i],"join=",5)) {
 		if ('_'==argv[i][0]) {
-		    splitargv[splitargc] = argv[i]+1;
+		    splitargv[splitargc] = argv[i];
 		    splitargc++;
 		} else {
 		    len = strlen(argv[i]);
@@ -172,6 +172,7 @@ int main(int argc, char* argv[])
 
 	    sf_fileclose(in);
 
+	    splitcommand[0]='\0';
 	    for (i=0; i < splitargc; i++) {
 		arg = splitargv[i];
 		eq  = strchr(arg,'=');
@@ -202,11 +203,11 @@ int main(int argc, char* argv[])
 
 		sf_fileclose(in);
 
-		snprintf(cmdline,CMDLEN,"%s %s=%s",command,filekey,splitname);
-		strncpy(command,cmdline,CMDLEN);
+		snprintf(cmdline,CMDLEN,"%s %s=%s",splitcommand,filekey+1,splitname);
+		strncpy(splitcommand,cmdline,CMDLEN);
 	    }	
 
-	    snprintf(cmdline,CMDLEN,"%s < %s > %s",command,iname,oname);
+	    snprintf(cmdline,CMDLEN,"%s %s < %s > %s",command,splitcommand,iname,oname);
 	    MPI_Send(cmdline,strlen(cmdline)+1,MPI_CHAR,job+1,0,MPI_COMM_WORLD);
 	    fclose(ofile);
 	}
