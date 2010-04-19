@@ -26,7 +26,7 @@
 
 #define CMDLEN 4096
 
-static void sizes(sf_file file, int axis, int ndim, const int *n, int *size1, int *size2)
+static void sizes(sf_file file, int axis, int ndim, const off_t *n, off_t *size1, off_t *size2)
 {
     int i;
 
@@ -41,9 +41,7 @@ static void sizes(sf_file file, int axis, int ndim, const int *n, int *size1, in
 int main(int argc, char* argv[])
 {
     int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis, axis2, splitargc;
-    int *splitsize1=NULL, *splitsize2=NULL;
-    off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM];
-    size_t len;
+    off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM], *splitsize1=NULL, *splitsize2=NULL;
     char cmdline[CMDLEN], command[CMDLEN], *iname=NULL, *oname=NULL, key[5], *splitname;
     char **inames=NULL, **onames=NULL, buffer[BUFSIZ], **splitargv, *eq, *arg, *filekey;
     FILE *ifile=NULL, *ofile=NULL;
@@ -112,8 +110,8 @@ int main(int argc, char* argv[])
 	command[j]='\0';
 
 	if (0 < splitargc) { /* files to split other than input */
-	    splitsize1 = sf_intalloc(splitargc);
-	    splitsize2 = sf_intalloc(splitargc);
+	    splitsize1 = sf_largeintalloc(splitargc);
+	    splitsize2 = sf_largeintalloc(splitargc);
 	    splitfile = (sf_file*) sf_alloc(splitargc,sizeof(sf_file));
 
 	    for (i=0; i < splitargc; i++) {
@@ -123,7 +121,7 @@ int main(int argc, char* argv[])
 		    sf_warning("Wrong parameter \"_%s\"",arg);
 		    MPI_Finalize();
 		}
-		len = (size_t) (eq-arg);
+		len = eq-arg;
 		filekey = sf_charalloc(len+1);
 		strncpy(filekey,arg,len);
 		filekey[len]='\0';
@@ -177,7 +175,7 @@ int main(int argc, char* argv[])
 	    for (i=0; i < splitargc; i++) {
 		arg = splitargv[i];
 		eq  = strchr(arg,'=');
-		len = (size_t) (eq-arg);
+		len = eq-arg;
 		filekey = sf_charalloc(len+1);
 		strncpy(filekey,arg,len);
 		filekey[len]='\0';
