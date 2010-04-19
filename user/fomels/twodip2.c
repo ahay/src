@@ -96,16 +96,16 @@ void twodip2(int niter        /* number of iterations */,
     aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
-    allpass1 (false, ap, u, u3);
-    allpass1 (false, aq, u3,u2);
+    allpass1 (false, false, ap, u, u3);
+    allpass1 (false, false, aq, u3,u2);
     border(u2);
     
     for (iter =0; iter < niter; iter++) {
-	allpass1 (true,  aq, u3,u1[1]);
+	allpass1 (false, true,  aq, u3,u1[1]);
 	border(u1[1]);
 	
-	allpass1 (true,  ap, u, u3);
-	allpass1 (false, aq, u3,u1[0]);
+	allpass1 (false, true,  ap, u, u3);
+	allpass1 (false, false, aq, u3,u1[0]);
 	border(u1[0]);
 
 	mean = 0.;
@@ -164,8 +164,8 @@ void twodip2(int niter        /* number of iterations */,
 		}
 	    }
 	    
-	    allpass1 (false, ap, u, u3);
-	    allpass1 (false, aq, u3,u2);
+	    allpass1 (false, false, ap, u, u3);
+	    allpass1 (false, false, aq, u3,u2);
 	    border(u2);
 
 	    usum2 = 0.;
@@ -196,13 +196,13 @@ void otherdip2(int niter        /* number of iterations */,
     aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
-    allpass1 (false, ap, u, u3);
-    allpass1 (false, aq, u3,u2);
+    allpass1 (false, false, ap, u, u3);
+    allpass1 (false, false, aq, u3,u2);
     border(u2);
 
     for (iter =0; iter < niter; iter++) {
-	allpass1 (true,  ap, u, u3);
-	allpass1 (false, aq, u3,u1[0]);
+	allpass1 (false, true,  ap, u, u3);
+	allpass1 (false, false, aq, u3,u1[0]);
 	border(u1[0]);
 
 	mean = 0.;
@@ -254,8 +254,8 @@ void otherdip2(int niter        /* number of iterations */,
 		}
 	    }
 	    
-	    allpass1 (false, ap, u, u3);
-	    allpass1 (false, aq, u3,u2);
+	    allpass1 (false, false, ap, u, u3);
+	    allpass1 (false, false, aq, u3,u2);
 	    border(u2);
 	    
 	    usum2 = 0.;

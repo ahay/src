@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
     char key1[7], *prog;
     bool norm, rms, min=false, max=false, prod=false;
-    float *trace, *stack;
+    float t, *trace, *stack, *scale=NULL;
     double *dstack;
     sf_datatype type;
 
@@ -67,6 +67,15 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
     n3 = sf_unshiftdim(in,out,axis);
  
+    if (n2 < 100) {
+	scale = sf_floatalloc(n2);
+	if (!sf_getfloats("scale",scale,n2)) {
+	    /* optionally scale before stacking */
+	    free(scale);
+	    scale = NULL;
+	}
+    }
+
     prog = sf_getprog();
     if (NULL != strstr(prog,"max")) {
 	max = true;
@@ -112,15 +121,17 @@ int main(int argc, char* argv[])
         for (i2=0; i2 < n2; i2++) {
             sf_floatread (trace, n, in);
             for (i=0; i < n; i++) {
+		t = trace[i];
+		if (NULL != scale) t *= scale[i2];
                 if (min || max) {
-                    if (min) stack[i] = SF_MIN(stack[i],trace[i]);
-                    if (max) stack[i] = SF_MAX(stack[i],trace[i]);
+                    if (min) stack[i] = SF_MIN(stack[i],t);
+                    if (max) stack[i] = SF_MAX(stack[i],t);
                 } else if (prod) {
-		    dstack[i] *= trace[i];
+		    dstack[i] *= t;
 		} else {
-		    dstack[i] += rms? (double) trace[i]*trace[i]: trace[i];
+		    dstack[i] += rms? (double) t*t: t;
 		}
-                if (norm && (0.0 != trace[i])) fold[i]++; 
+                if (norm && (0.0 != t)) fold[i]++; 
             }
         }
 	if (!min && !max) {

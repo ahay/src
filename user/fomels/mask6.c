@@ -22,12 +22,12 @@
 
 #include "mask6.h"
 
-void mask32 (int nw                 /* filter size */, 
+void mask32 (bool both              /* left and right predictions */,
+	     int nw                 /* filter size */, 
 	     int nj1, int nj2       /* dealiasing stretch */, 
 	     int nx, int ny, int nz /* data size */, 
-	     float *yy              /* data [nz][ny][nx] */, 
-	     bool *m1               /* first dip mask [nz][ny][nx] */, 
-	     bool *m2               /* second dip mask [nz][ny][nx] */)
+	     float *yy              /* data [nz*ny*nx] */, 
+	     bool **m               /* dip mask [both? 4:2][nz*ny*nx] */) 
 /*< two-dip masks in 3-D >*/
 {
     int ix, iy, iz, iw, is, i, n;
@@ -39,8 +39,12 @@ void mask32 (int nw                 /* filter size */,
 
     for (i=0; i < n; i++) {
 	xx[i] = (bool) (yy[i] == 0.);
-	m1[i] = false;
-	m2[i] = false;
+	m[0][i] = false;
+	m[1][i] = false;
+	if (both) {
+	    m[2][i] = false;
+	    m[3][i] = false;
+	}
     }
 
     for (iz=0; iz < nz; iz++) {
@@ -50,7 +54,7 @@ void mask32 (int nw                 /* filter size */,
 
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj1;		  
-		    m1[i] = (bool) (m1[i] || xx[i-is] || xx[i+nx+is]);
+		    m[0][i] = (bool) (m[0][i] || xx[i-is] || xx[i+nx+is]);
 		}
 	    }
 	}
@@ -63,7 +67,38 @@ void mask32 (int nw                 /* filter size */,
 
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj2;		  
-		    m2[i] = (bool) (m2[i] || xx[i-is] || xx[i+ny*nx+is]);
+		    m[1][i] = (bool) (m[1][i] || xx[i-is] || xx[i+ny*nx+is]);
+		}
+	    }
+	}
+    }
+
+    if (!both) {
+	free(xx);
+	return;
+    }
+
+    for (iz=0; iz < nz; iz++) {
+	for (iy=1; iy < ny; iy++) {
+	    for (ix = nw*nj1; ix < nx-nw*nj1; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj1;		  
+		    m[2][i] = (bool) (m[2][i] || xx[i-is] || xx[i-nx+is]);
+		}
+	    }
+	}
+    }
+
+    for (iz=1; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix = nw*nj2; ix < nx-nw*nj2; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj2;		  
+		    m[3][i] = (bool) (m[3][i] || xx[i-is] || xx[i-ny*nx+is]);
 		}
 	    }
 	}

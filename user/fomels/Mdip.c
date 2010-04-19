@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     int n[SF_MAX_DIM], rect[3], n4, nr, ir; 
     float p0, q0, *u, *p, pmin, pmax, qmin, qmax;
     char key[4];
-    bool verb, *m1, *m2;
+    bool verb, both, **mm;
     sf_file in, out, mask, idip0, xdip0;
 
     sf_init(argc,argv);
@@ -45,16 +45,20 @@ int main (int argc, char *argv[])
 	nr *= n[j];
     }
 
+    if (!sf_getbool("both",&both)) both=false;
+    /* if y, compute both left and right predictions */
+
     if (1 == n[2]) {
-	n4=0; 
+	n4=0;
+	if (both) sf_putint(out,"n3",2);
     } else {
 	if (!sf_getint("n4",&n4)) n4=2;
 	/* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */ 
 	if (n4 > 2) n4=2;
 	if (2==n4) {
-	    sf_putint(out,"n4",n4);
+	    sf_putint(out,"n4",both? 4:2);
 	    for (j=3; j < dim; j++) {
-		snprintf(key,4,"n%d",j+2);
+		snprintf(key,4,"n%d",both? j+4:j+2);
 		sf_putint(out,key,n[j]);
 	    }
 	}
@@ -102,12 +106,11 @@ int main (int argc, char *argv[])
     p = sf_floatalloc(n123);
 
     if (NULL != sf_getstring("mask")) {
-	m1 = sf_boolalloc(n123);
-	m2 = sf_boolalloc(n123);
+	mm = sf_boolalloc2(n123,both? 4:2);
 	mask = sf_input("mask");
     } else {
-	m1 = NULL;
-	m2 = NULL;
+	mm = (bool**) sf_alloc(4,sizeof(bool*));
+	mm[0] = mm[1] = mm[2] = mm[3] = NULL;
 	mask = NULL;
     }
 
@@ -128,7 +131,7 @@ int main (int argc, char *argv[])
     for (ir=0; ir < nr; ir++) {
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (order, nj1, nj2, n[0], n[1], n[2], u, m1, m2);
+	    mask32 (both, order, nj1, nj2, n[0], n[1], n[2], u, mm);
 	}
 
 	/* read data */
@@ -145,28 +148,64 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(1, niter, order, nj1, verb, u, p, m1, pmin, pmax);
+	    dip3(false, 1, niter, order, nj1, verb, u, p, mm[0], pmin, pmax);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
 	}
 
-	if (0 == n4) continue; /* done if only t-x dip */
+	if (0 != n4) {
+	    /* initialize t-y dip */
+	    if (NULL != xdip0) {
+		sf_floatread(p,n123,xdip0);
+	    } else {
+		for(i=0; i < n123; i++) {
+		    p[i] = q0;
+		}
+	    }	
+	    
+	    /* estimate t-y dip */
+	    dip3(false, 2, niter, order, nj2, verb, u, p, mm[1], qmin, qmax);
+	    
+	    /* write t-y dip */
+	    sf_floatwrite(p,n123,out);
+	}
 
-	/* initialize t-y dip */
-	if (NULL != xdip0) {
-	    sf_floatread(p,n123,xdip0);
-	} else {
-	    for(i=0; i < n123; i++) {
-		p[i] = q0;
+	if (!both) continue;
+
+	if (1 != n4) {
+	    /* initialize t-x dip */
+	    if (NULL != idip0) {
+		sf_floatread(p,n123,idip0);
+	    } else {
+		for(i=0; i < n123; i++) {
+		    p[i] = p0;
+		}
 	    }
+	    
+	    /* estimate t-x dip */
+	    dip3(true, 1, niter, order, nj1, verb, u, p, mm[2], pmin, pmax);
+	    
+	    /* write t-x dip */
+	    sf_floatwrite(p,n123,out);
+	}
+
+	if (0 != n4) {
+	    /* initialize t-y dip */
+	    if (NULL != xdip0) {
+		sf_floatread(p,n123,xdip0);
+	    } else {
+		for(i=0; i < n123; i++) {
+		    p[i] = q0;
+		}
+	    }	
+	    
+	    /* estimate t-y dip */
+	    dip3(true, 2, niter, order, nj2, verb, u, p, mm[3], qmin, qmax);
+	    
+	    /* write t-y dip */
+	    sf_floatwrite(p,n123,out);
 	}	
-	
-	/* estimate t-y dip */
-	dip3(2, niter, order, nj2, verb, u, p, m2, qmin, qmax);
-	
-	/* write t-y dip */
-	sf_floatwrite(p,n123,out);
     }
 
     exit (0);

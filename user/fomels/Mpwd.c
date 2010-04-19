@@ -23,6 +23,7 @@
 
 int main (int argc, char *argv[])
 {
+    bool both;
     int ir, nr, n1,n2,n3,n4, m1, m2, m3, n12, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
@@ -51,14 +52,20 @@ int main (int argc, char *argv[])
     if (1 != n3 && (!sf_histint(dip,"n3",&m3) || m3 != n3)) 
 	sf_error("Need n3=%d in dip",n3);
 
+    if (!sf_getbool("both",&both)) both=false;
+    /* if y, compute both left and right predictions */
+
     if (1 == n3) {
 	n4=0;
+	if (both) sf_putint(out,"n3",2);
     } else {
 	if (!sf_getint("n4",&n4)) n4=2;
-	/* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */ 
+	/* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */
+ 
 	if (n4 > 2) n4=2;
-	if (2==n4) sf_putint(out,"n4",n4);
-	if (0 != n4) {
+	if (2==n4) sf_putint(out,"n4",both? 4:2);
+
+	if (0 != n4 || both) {
 	    sf_unpipe(in,(off_t) n123*sizeof(float));
 	    pos = sf_tell(in);
 	}
@@ -72,6 +79,7 @@ int main (int argc, char *argv[])
     /* cross-line aliasing */
 
     for (ir=0; ir < nr; ir++) {
+
 	if (1 != n4) { /* in-line */
 	    u1 = sf_floatalloc(n12);
 	    u2 = sf_floatalloc(n12);
@@ -87,7 +95,7 @@ int main (int argc, char *argv[])
 		ap = allpass_init (nw,nj1,n1,n2,1,p);
 		
 		/* apply */
-		allpass1(false, ap, u1, u2);
+		allpass1(false, false, ap, u1, u2);
 		
 		/* write t-x destruction */
 		sf_floatwrite(u2,n12,out);
@@ -114,14 +122,64 @@ int main (int argc, char *argv[])
 	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
 	    
 	    /* apply */
-	    allpass2(false, ap, u1, u2);
+	    allpass2(false, false, ap, u1, u2);
+	    
+	    /* write t-y destruction */
+	    sf_floatwrite(u2,n123,out);
+	}
+
+	if (!both) continue;
+
+	if (1 != n4) { /* in-line */
+	    u1 = sf_floatalloc(n12);
+	    u2 = sf_floatalloc(n12);
+	    p  = sf_floatalloc(n12);
+
+	    sf_seek(in,pos,SEEK_SET);
+	    
+	    for (i3=0; i3 < n3; i3++) {
+		/* read data */
+		sf_floatread(u1,n12,in);
+		
+		/* read t-x dip */
+		sf_floatread(p,n12,dip);
+		
+		ap = allpass_init (nw,nj1,n1,n2,1,p);
+		
+		/* apply */
+		allpass1(true, false, ap, u1, u2);
+		
+		/* write t-x destruction */
+		sf_floatwrite(u2,n12,out);
+	    }
+	    
+	    free(u1);
+	    free(u2);
+	    free(p);	    
+	}
+
+	if (0 != n4) { /* cross-line */
+	    u1 = sf_floatalloc(n123);
+	    u2 = sf_floatalloc(n123);
+	    p  = sf_floatalloc(n123);
+	    
+	    /* read data */
+	    sf_seek(in,pos,SEEK_SET);
+	    sf_floatread(u1,n123,in);
+	    
+	    /* read t-y dip */
+	    sf_floatread(p,n123,dip);
+	    
+	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
+	    
+	    /* apply */
+	    allpass2(true, false, ap, u1, u2);
 	    
 	    /* write t-y destruction */
 	    sf_floatwrite(u2,n123,out);
 	}
     }
     
-
     exit (0);
 }
 

@@ -68,18 +68,24 @@ void allpass_close(allpass ap)
     free(ap);
 }
 
-void allpass1 (bool der         /* derivative flag */, 
+void allpass1 (bool left        /* left or right prediction */,
+	       bool der         /* derivative flag */, 
 	       const allpass ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
 
     nx = ap->nx;
     ny = ap->ny;
     nz = ap->nz;
 
+    if (left) {
+	i1=1; i2=ny;   ip=-nx;
+    } else {
+	i1=0; i2=ny-1; ip=nx;
+    }
 
     for (iz=0; iz < nz; iz++) {
 	for (iy=0; iy < ny; iy++) {
@@ -91,7 +97,7 @@ void allpass1 (bool der         /* derivative flag */,
     }
   
     for (iz=0; iz < nz; iz++) {
-	for (iy=0; iy < ny-1; iy++) {
+	for (iy=i1; iy < i2; iy++) {
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
 
@@ -104,24 +110,31 @@ void allpass1 (bool der         /* derivative flag */,
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		  
-		    yy[i] += (xx[i+is+nx] - xx[i-is]) * ap->flt[iw];
+		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
 		}
 	    }
 	}
     }
 }
 
-void allpass2 (bool der         /* derivative flag */, 
+void allpass2 (bool left        /* left or right prediction */,
+	       bool der         /* derivative flag */, 
 	       const allpass ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< cross-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
 
     nx = ap->nx;
     ny = ap->ny;
     nz = ap->nz;
+
+    if (left) {
+	i1=1; i2=nz;   ip=-nx*ny;
+    } else {
+	i1=0; i2=nz-1; ip=nx*ny;
+    }
     
     for (iz=0; iz < nz; iz++) {
 	for (iy=0; iy < ny; iy++) {
@@ -132,7 +145,7 @@ void allpass2 (bool der         /* derivative flag */,
 	}
     }
     
-    for (iz=0; iz < nz-1; iz++) {
+    for (iz=i1; iz < i2; iz++) {
 	for (iy=0; iy < ny; iy++) {
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
@@ -146,7 +159,7 @@ void allpass2 (bool der         /* derivative flag */,
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		    
-		    yy[i] += (xx[i+is+nx*ny] - xx[i-is]) * ap->flt[iw];
+		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
 		}
 	    }
 	}

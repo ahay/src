@@ -62,7 +62,8 @@ void dip3_close(void)
     divn_close();
 }
 
-void dip3(int dip                 /* 1 - inline, 2 - crossline */, 
+void dip3(bool left               /* left or right prediction */,
+	  int dip                 /* 1 - inline, 2 - crossline */, 
 	  int niter               /* number of nonlinear iterations */, 
 	  int nw                  /* filter size */, 
 	  int nj                  /* filter stretch for aliasing */, 
@@ -80,16 +81,16 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
     ap = allpass_init (nw,nj,n1,n2,n3,p);
 
     if (dip == 1) {
-	allpass1 (false, ap, u,u2);
+	allpass1 (left, false, ap, u,u2);
     } else {
-	allpass2 (false, ap, u,u2);
+	allpass2 (left, false, ap, u,u2);
     }
 
     for (iter =0; iter < niter; iter++) {
 	if (dip == 1) {
-	    allpass1 (true,  ap, u,u1);
+	    allpass1 (left, true,  ap, u,u1);
 	} else {
-	    allpass2 (true,  ap, u,u1);
+	    allpass2 (left, true,  ap, u,u1);
 	}
 	
 	mean = 0.;
@@ -134,9 +135,9 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
 		p[i] = pi;
 	    }
 	    if (dip == 1) {
-		allpass1 (false, ap, u,u2);
+		allpass1 (left, false, ap, u,u2);
 	    } else {
-		allpass2 (false, ap, u,u2);
+		allpass2 (left, false, ap, u,u2);
 	    }
 
 	    usum2 = 0.;

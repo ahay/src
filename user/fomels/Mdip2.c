@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], nr, ir; 
     float p0, q0, *u, *p, pmin, pmax, qmin, qmax;
-    bool verb, *m1, *m2;
+    bool verb, **mm;
     sf_file in, out, mask, idip0, xdip0;
 
     sf_init(argc,argv);
@@ -82,12 +82,11 @@ int main (int argc, char *argv[])
     p = sf_floatalloc(n123);
 
     if (NULL != sf_getstring("mask")) {
-	m1 = sf_boolalloc(n123);
-	m2 = sf_boolalloc(n123);
+	mm = sf_boolalloc2(n123,2);
 	mask = sf_input("mask");
     } else {
-	m1 = NULL;
-	m2 = NULL;
+	mm = (bool**) sf_alloc(2,sizeof(bool*));
+	mm[0] = mm[1] = NULL;
 	mask = NULL;
     }
 
@@ -104,7 +103,7 @@ int main (int argc, char *argv[])
 	if (verb) sf_warning("slice %d of %d", ir+1, nr);
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (order, nj1, nj2, n[0], n[1], n[2], u, m1, m2);
+	    mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
 	}
 
 	/* read data */
@@ -121,7 +120,7 @@ int main (int argc, char *argv[])
 	}
 	
 	/* estimate t-x dip */
-	dip3(1, niter, order, nj1, verb, u, p, m1, pmin, pmax);
+	dip3(false, 1, niter, order, nj1, verb, u, p, mm[0], pmin, pmax);
 	
 	/* write t-x dip */
 	sf_floatwrite(p,n123,out);
