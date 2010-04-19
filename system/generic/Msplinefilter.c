@@ -20,8 +20,9 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2, pad, nw;
+    int n1, n2, i2, nw;
     float *trace=NULL;
+    sf_bands spl;
     sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
@@ -31,21 +32,15 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_getint ("pad",&pad)) pad=n1;
-    /* padding */
-
     if (!sf_getint("nw",&nw)) sf_error("Need nw=");
     /* filter size */
 
     trace = sf_floatalloc(n1);
-
-    sf_prefilter_init (nw,n1,pad);
+    spl = sf_spline_init(nw,n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
-
-	sf_prefilter_apply (n1,trace);
-
+	sf_banded_solve(spl,trace);
 	sf_floatwrite(trace,n1,out);
     }
 
