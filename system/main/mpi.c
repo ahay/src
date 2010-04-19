@@ -42,8 +42,10 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len, axis, axis2, splitargc;
     off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM], *splitsize1=NULL, *splitsize2=NULL;
-    char cmdline[CMDLEN], command[CMDLEN], splitcommand[CMDLEN], *iname=NULL, *oname=NULL, key[5], *splitname;
-    char **inames=NULL, **onames=NULL, buffer[BUFSIZ], **splitargv, *eq, *arg, *filekey;
+    float d, o, di, oi;
+    char cmdline[CMDLEN], command[CMDLEN], splitcommand[CMDLEN], *iname=NULL, *oname=NULL;
+    char nkey[5], okey[5], dkey[5], *splitname;
+    char **inames=NULL, **onames=NULL, ***spnames=NULL, buffer[BUFSIZ], **splitkey, *eq, *arg;
     FILE *ifile=NULL, *ofile=NULL;
     sf_file inp=NULL, out=NULL, in=NULL, *splitfile=NULL;
     MPI_Status stat;
@@ -68,7 +70,12 @@ int main(int argc, char* argv[])
 	if (!sf_getint("split",&axis)) axis=ndim;
 	/* axis to split */
 	if (axis > ndim) axis=ndim;
-	snprintf(key,5,"n%d",axis);
+
+	snprintf(nkey,5,"n%d",axis);
+	snprintf(okey,5,"o%d",axis);
+	snprintf(dkey,5,"d%d",axis);
+	if (!sf_histfloat(inp,okey,&o)) o=0.;
+	if (!sf_histfloat(inp,dkey,&d)) d=1.;
 
 	axis--;
 	sizes(inp,axis,ndim,n,&size1,&size2);
@@ -82,26 +89,36 @@ int main(int argc, char* argv[])
 	    jobs = split;
 	}
 	bigjobs = split - jobs*(w-1);
-	
-	splitargv = (char**) sf_alloc(argc,sizeof(char*));
+
+	splitkey = (char**) sf_alloc(argc,sizeof(char*));
 	splitargc = 0;
 
 	j=0;
 	for (i=1; i < argc; i++) {
-	    if (strncmp(argv[i],"input=",6) &&
-		strncmp(argv[i],"output=",7) &&
-		strncmp(argv[i],"split=",6) &&
-		strncmp(argv[i],"join=",5)) {
-		if ('_'==argv[i][0]) {
-		    splitargv[splitargc] = argv[i];
+	    arg = argv[i];
+	    if (strncmp(arg,"input=",6) &&
+		strncmp(arg,"output=",7) &&
+		strncmp(arg,"split=",6) &&
+		strncmp(arg,"join=",5)) {
+		if ('_'==arg[0]) {
+		    eq  = strchr(arg,'=');
+		    if (NULL == eq) {
+			sf_warning("Wrong parameter \"%s\"",arg);
+			MPI_Finalize();
+		    }
+		    len = eq-arg;
+		    splitkey[splitargc] = sf_charalloc(len+1);
+		    strncpy(splitkey[splitargc],arg,len);
+		    splitkey[splitargc][len]='\0';
+
 		    splitargc++;
 		} else {
-		    len = strlen(argv[i]);
+		    len = strlen(arg);
 		    if (j+len > CMDLEN-2) {
 			sf_warning("command line is too long");
 			MPI_Finalize();
 		    }
-		    strncpy(command+j,argv[i],len);
+		    strncpy(command+j,arg,len);
 		    command[j+len]=' ';
 		    j += len+1;
 		}
@@ -115,21 +132,18 @@ int main(int argc, char* argv[])
 	    splitfile = (sf_file*) sf_alloc(splitargc,sizeof(sf_file));
 
 	    for (i=0; i < splitargc; i++) {
-		arg = splitargv[i];
-		eq  = strchr(arg,'=');
-		if (NULL == eq) {
-		    sf_warning("Wrong parameter \"_%s\"",arg);
-		    MPI_Finalize();
-		}
-		len = eq-arg;
-		filekey = sf_charalloc(len+1);
-		strncpy(filekey,arg,len);
-		filekey[len]='\0';
-	 
-		splitfile[i] = sf_input(filekey);
-
+		splitfile[i] = sf_input(splitkey[i]);
 		ndim = sf_largefiledims (splitfile[i],n);
 		sizes(splitfile[i],axis,ndim,n,splitsize1+i,splitsize2+i);
+		if (n[axis] != split) {
+		    sf_warning("Wrong dimensions in file %s",splitkey[i]);
+		    MPI_Finalize();
+		}
+	    }
+	    
+	    spnames = (char***) sf_alloc(jobs,sizeof(char**));
+	    for (job=0; job < jobs; job++) {
+		spnames[job] = (char**) sf_alloc(splitargc,sizeof(char*));
 	    }
 	}
 
@@ -154,7 +168,8 @@ int main(int argc, char* argv[])
 	    in = sf_output(iname);
 	    fclose(ifile);
 
-	    sf_putint(in,key,chunk);
+	    sf_putint(in,nkey,chunk);
+	    sf_putfloat(in,okey,o+skip*d);
 	    sf_fileflush(in,inp);
 	    sf_setform(in,SF_NATIVE);
 
@@ -174,26 +189,26 @@ int main(int argc, char* argv[])
 
 	    splitcommand[0]='\0';
 	    for (i=0; i < splitargc; i++) {
-		arg = splitargv[i];
-		eq  = strchr(arg,'=');
-		len = eq-arg;
-		filekey = sf_charalloc(len+1);
-		strncpy(filekey,arg,len);
-		filekey[len]='\0';
-		
 		ifile = sf_tempfile(&splitname,"w+b");
+
+		spnames[job][i] = splitname;
+
 		in = sf_output(splitname);
 		fclose(ifile);
 
-		sf_putint(in,key,chunk);
+		if (!sf_histfloat(splitfile[i],okey,&oi)) oi=0.;
+		if (!sf_histfloat(splitfile[i],dkey,&di)) di=1.;
+
+		sf_putint(in,nkey,chunk);
+		sf_putfloat(in,okey,oi+skip*di);
 		sf_fileflush(in,splitfile[i]);
 		sf_setform(in,SF_NATIVE);
 
-		for (i2=0; i2 < size2; i2++) {
-		    sf_seek(splitfile[i],size1*(i2*split+skip),SEEK_SET);
+		for (i2=0; i2 < splitsize2[i]; i2++) {
+		    sf_seek(splitfile[i],splitsize1[i]*(i2*split+skip),SEEK_SET);
 
 		    nbuf=BUFSIZ;
-		    for (left=chunk*size1; left > 0; left -= nbuf) {
+		    for (left=chunk*splitsize1[i]; left > 0; left -= nbuf) {
 			if (nbuf > left) nbuf=left;
 			
 			sf_charread(buffer,nbuf,splitfile[i]);
@@ -203,7 +218,7 @@ int main(int argc, char* argv[])
 
 		sf_fileclose(in);
 
-		snprintf(cmdline,CMDLEN,"%s %s=%s",splitcommand,filekey+1,splitname);
+		snprintf(cmdline,CMDLEN,"%s %s=%s",splitcommand,splitkey[i]+1,splitname);
 		strncpy(splitcommand,cmdline,CMDLEN);
 	    }	
 
@@ -223,10 +238,10 @@ int main(int argc, char* argv[])
 
 	if (!sf_getint("join",&axis2)) axis2=axis+1;
 	if (axis2 > ndim) axis2=ndim;
-	snprintf(key,5,"n%d",axis2);
+	snprintf(nkey,5,"n%d",axis2);
 
 	axis2--;
-	sizes(inp,axis,ndim,n,&size1,&size2);
+	sizes(inp,axis2,ndim,n,&size1,&size2);
 
 	sf_setformat(out,sf_histstring(inp,"data_format"));
 	sf_fileflush(out,inp);
@@ -243,7 +258,7 @@ int main(int argc, char* argv[])
 	    in = sf_input(oname);
 	    sf_setform(in,SF_NATIVE);
 
-	    if (!sf_histint(in,key,&chunk)) {
+	    if (!sf_histint(in,nkey,&chunk)) {
 		sf_warning("Problem on node %d with file %s",job+1,oname);
 		MPI_Finalize();
 	    }
@@ -262,12 +277,17 @@ int main(int argc, char* argv[])
 
 	    sf_rm(iname,true,false,false);
 	    sf_rm(oname,true,false,false);
+
+	    for (i=0; i < splitargc; i++) {
+		iname = spnames[job][i];
+		sf_rm(iname,true,false,false);
+	    }
 	}
 
 	sf_fileclose(inp);
     } else { /* slave nodes */
 	MPI_Recv(cmdline, CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
-	sf_warning(cmdline);
+	fprintf(stderr,"CPU %d: %s\n",rank,cmdline); 
         sf_system(cmdline);
 	MPI_Send(&rank,1,MPI_INT,0,1,MPI_COMM_WORLD);
     }
