@@ -24,10 +24,11 @@ along both axes until it is of the specified dimension.'''
 import os, sys
 
 try: # Give precedence to local version
-    import ivlad, m8rex
+    import ivlad, m8rex, sf
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
     import rsfuser.m8rex as m8rex
+    import rsfuser.sf as sf
 
 ###############################################################################
 
@@ -64,7 +65,7 @@ def main(par):
         ivlad.chk_param_limit(h, 'h')
         if (h,w) == (n1,n2):
             ivlad.msg('Change h or w if you want out!=inp')
-            ivlad.exe('sfcp %s %s' % (inp, out), verb)
+            sf.cp(inp, out, verb)
             return ivlad.unix_success
         h = ivlad.valswitch(h, n1, None)
         w = ivlad.valswitch(w, n2, None)
@@ -133,8 +134,7 @@ def main(par):
         d1 = float(d1) * (n1-1)/float(h-1)
         if h < n1:
             ready_for_remap_1 = tmp + '1'
-            ivlad.exe('sfbandpass <%s fhi=%f >%s' % \
-                     (inp, 0.5/d1, ready_for_remap_1), verb)
+            sf.bandpass(inp, ready_for_remap_1, fhi=0.5/d1, verb=verb)
             rem2del_junk1 = True
         else:
             ready_for_remap_1 = inp
@@ -145,10 +145,9 @@ def main(par):
         else:
             out_remap1 = out
             rem2del_junk2 = False
-        ivlad.exe('sfremap1 <%s n1=%d d1=%f >%s' % \
-                 (ready_for_remap_1, h, d1, out_remap1), verb)
+        sf.remap1(ready_for_remap_1, out_remap1, n1=h, d1=d1, verb=verb)
         if rem2del_junk1:
-            ivlad.exe('sfrm ' + ready_for_remap_1, verb)
+            sf.rm(ready_for_remap_1, verb)
     else: # no action on axis 1
         out_remap1 = inp
         rem2del_junk2 = False
@@ -157,25 +156,23 @@ def main(par):
         d2 = ivlad.getout('sfget', ['parform=n','d2'], inp, verb)
         d2 = float(d2) * (n2-1)/float(w-1)
         out_transp1 = tmp + '3'
-        ivlad.exe('sftransp <%s >%s' % (out_remap1, out_transp1), verb)
+        sf.transp(out_remap1, out_transp1, verb=verb)
         if rem2del_junk2:
-            ivlad.exe('sfrm ' + out_remap1, verb)
+            sf.rm(out_remap1, verb)
         if w < n2:
             ready_for_remap_2 = tmp + '4'
-            ivlad.exe('sfbandpass <%s fhi=%f >%s' % \
-                     (out_transp1, 0.5/d2, ready_for_remap_2), verb)
+            sf.bandpass(out_transp1, ready_for_remap_2, fhi=0.5/d2, verb=verb)
             rem2del_junk4 = True
         else:
             ready_for_remap_2 = out_transp1
             rem2del_junk4 = False
         ready_for_transp2 = tmp + '5'
-        ivlad.exe('sfremap1 <%s n1=%d d1=%f >%s' % \
-                 (ready_for_remap_2,w,d2,ready_for_transp2), verb)
-        ivlad.exe('sfrm ' + out_transp1, verb)
+        sf.remap1(ready_for_remap_2,ready_for_transp2,n1=w,d1=d2,verb=verb)
+        sf.rm(out_transp1, verb)
         if rem2del_junk4:
-            ivlad.exe('sfrm ' + ready_for_remap_2, verb)
-        ivlad.exe('sftransp <%s >%s' % (ready_for_transp2, out), verb)
-        ivlad.exe('sfrm ' + ready_for_transp2, verb)
+            sf.rm(ready_for_remap_2, verb)
+        sf.transp(ready_for_transp2, out, verb)
+        sf.rm(ready_for_transp2, verb)
 
     return ivlad.unix_success
 

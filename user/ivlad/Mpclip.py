@@ -20,10 +20,11 @@
 import os, sys
 
 try: # Give precedence to local version
-    import ivlad, m8rex
+    import ivlad, m8rex, sf
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
     import rsfuser.m8rex as m8rex
+    import rsfuser.sf as sf
 
 ###############################################################################
 
@@ -43,7 +44,7 @@ def main(par):
     sfclip     = prog_nm_root + 'clip'
 
     clip = ivlad.getout('sfquantile', 'pclip='+str(pclip), inp, verb, True)
-    ivlad.exe('sfclip <%s clip=%s >%s' % (inp, clip, out), verb)
+    sf.clip(inp, out, clip, verb)
 
     return ivlad.unix_success
 

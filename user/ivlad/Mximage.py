@@ -24,9 +24,10 @@ See also sfimage.
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, sf
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.sf as sf
 
 ###############################################################################
 
@@ -38,12 +39,10 @@ def main(par):
 
     prog = 'ximage' 
     tpar = 'n1=n1 n2=n2 f1=o1 f2=o2 d1=d1 d2=d2 label1=label1 label2=label2'
-    vflag = ivlad.switch(par.bool('verb',False), 'y', 'n')
+    verb = par.bool('verb',False)
+    vflag = ivlad.switch(, 'y', 'n')
 
-    cmd = 'sfwuab inp=%s prog=%s tpar="%s" ipar="%s" verb=%s' %\
-        (inp, prog, tpar, ipar, vflag)
-
-    ivlad.exe(cmd, verb)
+    sf.wuab(inp, prog, tpar, ipar, verb)
     
     return ivlad.unix_success
 

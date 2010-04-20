@@ -23,10 +23,11 @@ Missing binaries do not cause failure.'''
 import sys, os, glob
 
 try: # Give precedence to local version
-    import ivlad, m8rex
+    import ivlad, m8rex, sf
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
     import rsfuser.m8rex as m8rex
+    import rsfuser.sf as sf
 
 ###############################################################################
 
@@ -51,7 +52,7 @@ def main(par):
 
     for f in valid_files_list:
         ivlad.msg(f + ': ' + ivlad.getout('sfin',['info=n',f]), verb)
-        ivlad.exe('sfrm ' + f)
+        sf.rm(f, verb)
 
     # Clean up headers with no binaries
 
