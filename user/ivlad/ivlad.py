@@ -61,7 +61,7 @@ def append(string, logfile):
     newline = '\n'
     if string[-1] != newline:
         string += newline
-    handle = open(logfile, 'a')
+    handle = open(logfile.strip(), 'a')
     handle.write(string)
     handle.close()
 
