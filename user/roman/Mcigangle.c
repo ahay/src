@@ -112,6 +112,10 @@ int main(int argc, char* argv[])
 	    sf_floatread(dis,na,dist);
 	    sf_floatread(dep,na,dept);
 
+	    //for (ia=0; ia < na*na*nt; ia++)
+	    //img[0][0][ia] = 0;
+	    memset(img[0][0],(int)0, na*na*nt*sizeof(float));
+
 	    for (ia=0; ia < na; ia++) {
 
 		/* check that depth is on the surface */

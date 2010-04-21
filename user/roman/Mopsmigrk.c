@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#include <assert.h>
 
 int main(int argc, char* argv[])
 {
@@ -80,7 +81,11 @@ int main(int argc, char* argv[])
     img = sf_floatalloc2(na,na);
 
     for (iz=0; iz < nz; iz++) {
+
 	sf_warning("depth %d of %d",iz+1,nz);
+
+	for (ja=0; ja < na*na; ja++) 
+	    img[0][ja] = 0.0;    
 
 	for (ix=0; ix < nx; ix++) {
 
@@ -95,7 +100,7 @@ int main(int argc, char* argv[])
 		zi = dep[ia];
 		
 		if (zi > z0 + tolz) {
-		    for (ja=ia; ja < na; ja++) {
+		    for (ja=0/*ia*/; ja < na; ja++) {
 			img[ia][ja] = 0.0;
 		    }
 		    continue;
@@ -108,7 +113,7 @@ int main(int argc, char* argv[])
 		s = (xi-s0)/ds;
 		is = floorf(s);
 		if (is < 0 || is > ns-1) {
-		    for (ja=ia; ja < na; ja++) {
+		    for (ja=0/*ia*/; ja < na; ja++) {
 			img[ia][ja] = 0.0;
 		    }
 		    continue;
@@ -149,24 +154,37 @@ int main(int argc, char* argv[])
 		    }
 		    t -= it;
 
-		    if ((is == 0 || is == ns-1) || (ih == 0 || ih == nh-1)) {
+		    if (is+1 > ns-1 && ih+1 > nh-1) {
+
 			img[ia][ja] = 
 			    dat[is][ih][it  ] * (1.-t) +
 			    dat[is][ih][it+1] *     t;
 		    }
 		    else {
-			/* trilinear interpolation from the data */
-		    
-			img[ia][ja] = 
+			if (is+1 > ns-1 && ih+1 <= nh-1) {
 
-			dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
-			dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
-			dat[is][ih+1][it]*(1.-s)*h*(1.-t) +
-			dat[is+1][ih][it]*s*(1.-h)*(1.-t) +
-			dat[is+1][ih][it+1]*s*(1.-h)*t +
-			dat[is][ih+1][it+1]*(1.-s)*h*t +
-			dat[is+1][ih+1][it]*s*h*(1.-t) +
-			dat[is+1][ih+1][it+1]*s*h*t;
+			    img[ia][ja] = 
+				
+				dat[is][ih][it]*(1.-h)*(1.-t) +
+				dat[is][ih][it+1]*(1.-h)*t +
+				dat[is][ih+1][it]*h*(1.-t) +
+				dat[is][ih+1][it+1]*h*t;
+			}
+			else {
+			    assert(is + 1 <= ns -1);
+			    /* trilinear interpolation from the data */
+		    
+			    img[ia][ja] = 
+				
+				dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
+				dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
+				dat[is][ih+1][it]*(1.-s)*h*(1.-t) +
+				dat[is+1][ih][it]*s*(1.-h)*(1.-t) +
+				dat[is+1][ih][it+1]*s*(1.-h)*t +
+				dat[is][ih+1][it+1]*(1.-s)*h*t +
+				dat[is+1][ih+1][it]*s*h*(1.-t) +
+				dat[is+1][ih+1][it+1]*s*h*t;
+			}
 		    }
 		}
 	    }
