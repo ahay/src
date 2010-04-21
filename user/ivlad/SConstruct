@@ -27,7 +27,7 @@ pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf wuab ximage
 
 # Python modules that do not need SWIG+numpy
 py_modules = '''
-ivlad m8rex ooio
+ivlad m8rex ooio sf
 '''
 
 # Needed for both C and F90 programs:
