@@ -56,6 +56,13 @@ hr = '#' + 79 * '-'
 
 ###############################################################################
 
+def append(string, logfile):
+    handle = open(logfile, 'a')
+    handle.write(string)
+    handle.close()
+
+###############################################################################
+
 def show_man_and_out(condition):
     'Display self-doc (man page) and exit'
 

@@ -50,6 +50,9 @@ def clip(inp, out, clip, verb=False):
 def cp(inp, out, verb=False):
     ivlad.exe('sfcp %s %s' % (inp, out), verb)
 
+def real(inp, out, verb=False):
+    ivlad.exe('sfreal <%s >%s' % (inp, out), verb)
+
 def remap1(inp, out, d1=None, n1=None, o1=None, order=None, pattern=None, 
     verb=False):
     d1_str = ivlad.switch(d1==None, '', ' d1='+str(d1))
@@ -66,6 +69,9 @@ def rm(files, verb=False):
     else:
         f_str = ' '.join(file_list)
     ivlad.exe('sfrm ' + f_str, verb)
+
+def rtoc(inp, out, verb=False):
+    ivlad.exe('sfrtoc <%s >%s' % (inp, out), verb)
 
 def transp(inp, out, plane=12, memsize=None, verb=False):
     memsz_str = ivlad.switch(memsize==None, '', 'memsize=' + str(memsize))
