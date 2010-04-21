@@ -3,7 +3,8 @@
 Zeros will be added if number of elements is not the same in each row.
 n1 and n2 are computed automatically. For consistency with sfdisfil and 
 sfmatmult, output is C-style order (row-first), i.e. rows in input file 
-become dimension-1 columns in output. Output encoding is native.'''
+become dimension-1 columns in output. Output encoding is native. If n2=1 in
+output, the second dimension will not be written to the header.'''
 
 # Copyright (C) 2010 Ioan Vlad
 #
@@ -24,10 +25,9 @@ become dimension-1 columns in output. Output encoding is native.'''
 import csv, struct, sys, os
 
 try: # Give precedence to local version
-    import ivlad, m8rex, ooio
+    import ivlad, ooio
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
-    import rsfuser.m8rex as m8rex
     import rsfuser.ooio  as ooio
 
 ################################################################################
@@ -99,8 +99,20 @@ def main(par):
             line = lines[i]
             lines[i] = ivlad.trunc_or_append(n2, line, 0, verb)
 
-    out = ooio.RSFfile(ooio.stdout, par, ndim=2, intent='out', dtype=numtype) 
-    out.set_hdr_info([n2, n1], o, d, unit, lbl)
+    # Avoiding to add a second dimension of length 1
+    if n1 == 1:
+        ndim_out = 1
+        n = [n2]
+        o = [o[0]]
+        d = [d[0]]
+        unit = [unit[0]]
+        lbl = [lbl[0]]
+    else:
+        ndim_out = 2
+        n = [n2, n1]
+
+    out = ooio.RSFfile(ooio.stdout,par,ndim=ndim_out,intent='out',dtype=numtype) 
+    out.set_hdr_info(n, o, d, unit, lbl)
     
     if debug:
         out.print_self('out')
