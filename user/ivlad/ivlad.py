@@ -57,6 +57,10 @@ hr = '#' + 79 * '-'
 ###############################################################################
 
 def append(string, logfile):
+    'Equivalent of echo string >>logfile'
+    newline = '\n'
+    if string[-1] != newline:
+        string += newline
     handle = open(logfile, 'a')
     handle.write(string)
     handle.close()
