@@ -55,7 +55,7 @@ def remap1(inp, out, d1=None, n1=None, o1=None, order=None, pattern=None,
     d1_str = ivlad.switch(d1==None, '', ' d1='+str(d1))
     n1_str = ivlad.switch(n1==None, '', ' n1='+str(n1))
     o1_str = ivlad.switch(o1==None, '', ' o1='+str(o1))
-    pattern_str = ivlad.switch(pattern=None, '', ' pattern='+pattern)
+    pattern_str = ivlad.switch(pattern==None, '', ' pattern='+pattern)
     cmd = 'sfremap1 <%s >%s' % (inp, out) 
     cmd += d1_str + n1_str + o1_str + pattern_str
     ivlad.exe(cmd, verb)
