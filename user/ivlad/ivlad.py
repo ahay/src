@@ -52,7 +52,7 @@ ext  = '.rsf'
 fmt = {'int':'i', 'float':'f'} # For usage with struct.pack
 
 # Horizontal ruler (for logs, screen messages):
-hr = 80 * '-'
+hr = '#' + 79 * '-'
 
 ###############################################################################
 
