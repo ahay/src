@@ -16,7 +16,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
 
 #ifndef _upgrad_h
@@ -166,6 +165,7 @@ void upgrad_solve(upgrad upg,
 }
 
 void upgrad_inverse(upgrad upg,
+		    bool add         /* addition flag */,
 		    float *rhs       /* right-hand side */,
 		    const float *x   /* solution */,
 		    const float *x0  /* initial solution */)
@@ -175,8 +175,10 @@ void upgrad_inverse(upgrad upg,
     unsigned char *up;
     float den, w;
 
-    for (it = 0; it < nt; it++) {
-	rhs[it] = 0.;
+    if (!add) {
+	for (it = 0; it < nt; it++) {
+	    rhs[it] = 0.;
+	}
     }
    
     for (it = nt-1; it >= 0; it--) {

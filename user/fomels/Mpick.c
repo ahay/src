@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
-	sf_warning("cmp %d of %d",i3+1,n3);
+	sf_warning("cmp %d of %d;",i3+1,n3);
 	sf_floatread(scan[0],n1*n2,scn);
 
 	/* transpose and reverse */
@@ -149,6 +149,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(pick2,n1,pik);
 	}
     }
+    sf_warning(".");
     
     if (smooth) {
 	/* normalize amplitudes */

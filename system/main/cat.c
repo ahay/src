@@ -38,6 +38,7 @@ int main (int argc, char* argv[])
 {
     int i, j, axis, *naxis, nin, open_max;
     int dim, dim1, esize, nspace;
+    float f;
     off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
     sf_file *in, out;
     char *prog, key[3], buf[BUFSIZ], **filename;
@@ -132,6 +133,18 @@ int main (int argc, char* argv[])
     (void) snprintf(key,3,"n%d",axis);
     sf_putint(out,key,(int) ni);
     
+    if (sf_getfloat("o",&f)) {
+	/* axis origin */
+	(void) snprintf(key,3,"o%d",axis);
+	sf_putfloat(out,key,f);
+    }
+
+    if (sf_getfloat("d",&f)) {
+	/* axis sampling */
+	(void) snprintf(key,3,"d%d",axis);	
+	sf_putfloat(out,key,f);
+    }
+
     sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
     sf_setform(out,SF_NATIVE);

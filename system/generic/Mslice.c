@@ -34,13 +34,12 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&ns)) sf_error("No n2= in input");
-    nx = sf_leftsize(in,2);
 
+    if (!sf_histint(in,"n2",&ns)) sf_error("No n2= in input");
     if (!sf_histfloat(in,"o2",&s0)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"d2",&ds)) sf_error("No d2= in input");
 
-    sf_putint(out,"n2",1);
+    nx = sf_unshiftdim(in,out,2);
 
     semb = sf_floatalloc2(nt,ns);
     picks = sf_floatalloc (nt);

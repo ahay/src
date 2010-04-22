@@ -71,7 +71,9 @@ int main(int argc, char* argv[])
     rat2 = sf_floatalloc(n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_warning("record %d of %d",i2+1,n2);
+	sf_warning(verb? 
+		   "record %d of %d":
+		   "record %d of %d;",i2+1,n2);
 
 	sf_floatread(one,n1,in);
         sf_floatread(two,n1,other);
@@ -109,6 +111,7 @@ int main(int argc, char* argv[])
 	divn_combine (rat1,rat2,rat1);
         sf_floatwrite(rat1,n1,out);
     }
+    if (!verb) sf_warning(".");
 
     exit(0);
 }

@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	    
 	    if (inv) {
 		if (adj) {
-		    upgrad_inverse(upg,s,t,NULL);
+		    upgrad_inverse(upg,false,s,t,NULL);
 		} else {
 		    upgrad_solve(upg,t,s,NULL);
 		}
