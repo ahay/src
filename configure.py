@@ -604,6 +604,8 @@ def plplot(context):
 
     oldpath = context.env.get('CPPPATH',[])
     plplotpath = context.env.get('PLPLOTPATH')
+    oldlibpath = context.env.get('LIBPATH',[])
+    plplotlibpath = context.env.get('PLPLOTLIBPATH')
     if plplotpath and os.path.isfile(os.path.join(plplotpath,'plplot.h')):
         context.env['CPPPATH'] = oldpath + [plplotpath]
     else:
@@ -612,6 +614,8 @@ def plplot(context):
             if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
                 context.env['CPPPATH'] = oldpath + [plplotpath]
                 break
+    if plplotlibpath:
+        context.env['LIBPATH'] = oldlibpath + [plplotlibpath]
 
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
@@ -633,11 +637,13 @@ def plplot(context):
         context.Result(res)
         context.env['PLPLOT'] = plplot
         context.env['PLPLOTPATH'] = plplotpath
+        context.env['PLPLOTLIBPATH'] = plplotlibpath
     else:
         context.Result(context_failure)
         need_pkg('plplot', fatal=False)
         context.env['PLPLOT'] = None
-    context.env['CPPPATH'] = oldpath    
+    context.env['CPPPATH'] = oldpath
+    context.env['LIBPATH'] = oldlibpath    
     LIBS.pop()
 
 
@@ -1497,6 +1503,7 @@ def options(file):
     opts.Add('GIFANIM','Support for GIF animation in the GD library')
     opts.Add('PLPLOT','PLPLOT library')
     opts.Add('PLPLOTPATH','Path to PLPLOT headers')
+    opts.Add('PLPLOTLIBPATH','Path to PLPLOT library')
     opts.Add('FFMPEG','The ffmpeg library')
     opts.Add('FFMPEGPATH','Path to ffmpeg codec headers')
     opts.Add('CAIRO','The cairo library')
