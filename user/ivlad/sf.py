@@ -50,6 +50,14 @@ def clip(inp, out, clip, verb=False):
 def cp(inp, out, verb=False):
     ivlad.exe('sfcp %s %s' % (inp, out), verb)
 
+def get(inp, par, parform=False, verb=False):
+    args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
+    out = ivlad.getout('sfget', args, inp, verb).split()
+    if len(out) == 1:
+        return out[0]
+    else:
+        return out
+
 def real(inp, out, verb=False):
     ivlad.exe('sfreal <%s >%s' % (inp, out), verb)
 

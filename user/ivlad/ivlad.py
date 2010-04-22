@@ -56,6 +56,14 @@ hr = '#' + 79 * '-'
 
 ###############################################################################
 
+def mklist(x):
+    if type(x) == str:
+        return x.split()
+    elif type(x) == list:
+        return x
+
+###############################################################################
+
 def append(string, logfile):
     'Equivalent of echo string >>logfile'
     newline = '\n'
@@ -138,16 +146,6 @@ def which(prog):
 
 ###############################################################################
 
-def getint(filenm, param):
-    return int(getout('sfget',['parform=n',param],filenm))
-
-###############################################################################
-
-def getfloat(filenm, param):
-    return float(getout('sfget',['parform=n',param],filenm))
-
-###############################################################################
-
 def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     '''Replacement for commands.getoutput. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
@@ -173,10 +171,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     # Build the [prog, args] list
     cmdlist = [prog]
     if arg != None:
-        if type(arg) == str:
-            arg = arg.split()
-        assert type(arg) == list
-        cmdlist += arg 
+        cmdlist += mklist(arg)
       
     # Build command string for printing or Python < 2.4
     if verb or not have_subprocess:
