@@ -210,9 +210,10 @@ for h in ('o','x','t','m'):           # Imaging: o,x,t
             slo = 's'     + k + n
             dds = 'd'     + k + 's'
             ddr = 'd'     + k + 'r'
+            cig = 'h' + h + k + n
 
             # images
-            spmig.image(img,slo,dds,ddr,locpar)
+            spmig.imagePW3(img,cig,slo,dds,ddr,locpar)
 
 # ------------------------------------------------------------
 # angle-gather overlays
@@ -254,9 +255,11 @@ for h in ('x','t'):
             if(n=='+'): tit='title="s>s\s60 \_0\^\s100 "'
 
             img = 'i' + h + k + n
-            off = 'h' + h + k + n
+            cig = 'h' + h + k + n
             ssk = 's' + h + k + n
             ssko= 'c' + h + k + n
+
+            off = 'o' + h + k + n
 
             ang = 'a' + h + k + n
 
@@ -265,9 +268,10 @@ for h in ('x','t'):
             dip = 'd' + k + n
             
             # offset gather
-            Flow(off,img,'window | transp')
+            Flow(off,cig,'window | transp plane=12 | stack')
+
             if(h=='x'):
-                Plot(off,off,
+                Plot(off,
                      igrey('pclip=100 label1=z unit1=m label2=h unit2=m %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=-4 np=200 dp=0.04')
                 Plot(ssk,
@@ -279,11 +283,11 @@ for h in ('x','t'):
                      igrey('pclip=100 label1=z unit1=m label2="\F10 q\F3 (\^o\_)"  %s') % tit)
             
             if(h=='t'):
-                Plot(off,off,
+                Plot(off,
                      igrey('pclip=100 label1=z unit1=m label2="\F10 t\F3" unit2=s %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=0  np=200 dp=50')
                 Plot(ssk,
-                     igrey('pclip=99.5 min2=0 max2=4000 label1=z unit1=m label2="\F10 n\F3 " unit2="m/s" %s') % tit)
+                     igrey('pclip=99.9 min2=0 max2=4000 label1=z unit1=m label2="\F10 n\F3 " unit2="m/s" %s') % tit)
                 ovl = 'tov' + n
 
                 Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
@@ -291,7 +295,7 @@ for h in ('x','t'):
                 Flow(ang,[ssk,vel,dip],
                      'tshift cos=y a0=0 na=150 da=0.45 velocity=${SOURCES[1]} dip=${SOURCES[2]}')
                 Plot(ang,
-                     igrey('pclip=99.5 label1=z unit1=m label2="\F10 q\F3 " unit2="\^o\_"  %s') % tit)
+                     igrey('pclip=99.9 label1=z unit1=m label2="\F10 q\F3 " unit2="\^o\_"  %s') % tit)
                 
             Plot(ssko,[ssk,ovl],'Overlay')
 
@@ -305,14 +309,14 @@ for h in ('x','t'):
 #Result('xang',['cxp-','cxp0','cxp+'],'SideBySideIso')
 #Result('tang',['ctp-','ctp0','ctp+'],'SideBySideIso')
 
-Result('xoff',['hxp-','hxp0','hxp+'],'OverUnderIso')
-Result('toff',['htp-','htp0','htp+'],'OverUnderIso')
+Result('xoff',['oxp-','oxp0','oxp+'],'OverUnderIso')
+Result('toff',['otp-','otp0','otp+'],'OverUnderIso')
 Result('xssk',['cxp-','cxp0','cxp+'],'OverUnderIso')
 Result('tssk',['ctp-','ctp0','ctp+'],'OverUnderIso')
 Result('xang',['axp-','axp0','axp+'],'OverUnderIso')
 Result('tang',['atp-','atp0','atp+'],'OverUnderIso')
 
-pplot.p3x2('off','hxp-','hxp0','hxp+','htp-','htp0','htp+',0.30,0.30,-11,-13)
+pplot.p3x2('off','oxp-','oxp0','oxp+','otp-','otp0','otp+',0.30,0.30,-11,-13)
 pplot.p3x2('ssk','cxp-','cxp0','cxp+','ctp-','ctp0','ctp+',0.30,0.30,-11,-13)
 pplot.p3x2('ang','axp-','axp0','axp+','atp-','atp0','atp+',0.30,0.30,-11,-13)
 
