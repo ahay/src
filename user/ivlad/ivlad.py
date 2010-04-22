@@ -138,6 +138,16 @@ def which(prog):
 
 ###############################################################################
 
+def getint(filenm, param):
+    return int(getout('sfget',['parform=n',param],filenm))
+
+###############################################################################
+
+def getfloat(filenm, param):
+    return float(getout('sfget',['parform=n',param],filenm))
+
+###############################################################################
+
 def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     '''Replacement for commands.getoutput. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
