@@ -72,24 +72,32 @@ def __run(prog, args, inp, out, verb, exe, postproc=None):
             return cmd
         else: # exe=='x', execute
             ivlad.exe(cmd, verb)
+
+################################################################################
     
+def __parse(arg_dict):
+    'Turn the list of args into a string (default vals must be None!)'  
+    
+    args = ''
+    for arg_nm in arg_dict.keys():
+	if arg_nm not in ('inp', 'out', 'verb', 'exe'):
+	    arg_v = arg_dict[arg_nm]
+	    args += ivlad.switch(arg_v==None, '', ' %s=%s' % (arg_nm,arg_v))
+
+    return args
+
 ################################################################################
 
 def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
     phase=None, verb=False, exe='x'):
-    fhi_str  = ivlad.switch( fhi==None,   '', ' fhi='  +str(fhi ))
-    flo_str  = ivlad.switch( flo==None,   '', ' flo='  +str(flo ))
-    nphi_str = ivlad.switch( nphi==None,  '', ' nphi=' +str(nphi))
-    nplo_str = ivlad.switch( nplo==None,  '', ' nplo=' +str(nplo))
-    phase_str = ivlad.switch(phase==None, '', ' phase='+str(phase))
-    verb_str = ivlad.switch(verb, ' verb=y', '')
-    args = fhi_str + flo_str + nphi_str + nplo_str + phase_str + verb_str
-    return __run('sfbandpass', args, inp, out, verb, exe)
+    
+    return __run('sfbandpass', __parse(locals()), inp, out, verb, exe)
 
 ################################################################################
 
-def clip(inp=None, out=None, clip=99, verb=False, exe='x'):
-    return __run('sfclip', 'clip=' + str(clip), inp, out, verb, exe)
+def clip(inp=None, out=None, clip=None, verb=False, exe='x'):
+
+    return __run('sfclip', __parse(locals()), inp, out, verb, exe)
 
 ################################################################################
 
@@ -99,6 +107,7 @@ def cp(inp, out, verb=False, exe='x'):
 ################################################################################
 
 def create(out=None, n=None, verb=False, exe='x'):
+
     args = ''
     nlist = ivlad.mklist(n)
     for i in range(len(nlist)):
@@ -107,7 +116,16 @@ def create(out=None, n=None, verb=False, exe='x'):
 
 ################################################################################
 
+def csv2rsf(inp=None, out=None, delimiter=None, dtype=None, debug=None,
+    trunc=None, o1=None, o2=None, d1=None, d2=None, unit1=None, unit2=None,
+    label1=None, label2=None, verb=False, exe='x'):
+
+    return __run('sfcsv2rsf', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
 def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
+
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
     if exe == 'x' and out==None: # invalid combination, fix the call
         exe = 'g'
@@ -122,22 +140,20 @@ def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
 ################################################################################
 
 def real(inp=None, out=None, verb=False, exe='x'):
+
     return __run('sfreal', None, inp, out, verb, exe)
 
 ################################################################################
 
 def remap1(inp=None, out=None, d1=None, n1=None, o1=None, order=None, 
     pattern=None, verb=False, exe='x'):
-    d1_str = ivlad.switch(d1==None, '', ' d1='+str(d1))
-    n1_str = ivlad.switch(n1==None, '', ' n1='+str(n1))
-    o1_str = ivlad.switch(o1==None, '', ' o1='+str(o1))
-    pattern_str = ivlad.switch(pattern==None, '', ' pattern='+pattern)
-    args = d1_str + n1_str + o1_str + pattern_str
-    return __run('sfremap1', args, inp, out, verb, exe)
+
+    return __run('sfremap1', __parse(locals()), inp, out, verb, exe)
 
 ################################################################################
 
 def rm(files, verb=False, exe='x'):
+
     if type(files) == str:
         args = files
     else:
@@ -147,20 +163,17 @@ def rm(files, verb=False, exe='x'):
 ################################################################################
 
 def rtoc(inp=None, out=None, verb=False, exe='x'):
+
     return __run('sfrtoc', None, inp, out, verb, exe)
 
 ################################################################################
 
-def transp(inp=None, out=None, plane=12, memsize=None, verb=False, exe='x'):
-    memsz_str = ivlad.switch(memsize==None, '', 'memsize=' + str(memsize))
-    plane_str = ' plane=' + str(plane)
-    args = memsz_str + plane_str
-    return __run('sftransp', args, inp, out, verb, exe)
+def transp(inp=None, out=None, plane=None, memsize=None, verb=False, exe='x'):
+
+    return __run('sftransp', __parse(locals()), inp, out, verb, exe)
 
 ################################################################################
 
 def wuab(inp=None, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
-    vflag = ivlad.switch(verb, 'y', 'n')
-    args = 'inp=%s prog=%s tpar="%s" ipar="%s" verb=%s' %\
-        (inp, prog, tpar, ipar, vflag)
-    return __run('sfwuab', args, None, None, verb, exe)
+
+    return __run('sfwuab', __parse(locals()), None, None, verb, exe)
