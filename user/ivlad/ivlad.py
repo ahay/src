@@ -61,6 +61,8 @@ def mklist(x):
         return x.split()
     elif type(x) == list:
         return x
+    elif type(x) == int:
+        return [x]
 
 ###############################################################################
 
