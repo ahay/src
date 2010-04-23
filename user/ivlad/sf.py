@@ -30,73 +30,131 @@ try: # Give precedence to local version
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
 
+# The arguments pipe and printonly in the functions below allow them to perform
+# in three ways:
+# 1. called as sf.prog(arglist[,exe='x']) to execute directly a RSF program
+# 2. called as sf.prog(arglist, exe='g') to return stdout of program
+# 2. called as sf.prog(arglist, exe='p') to return a 'prog args' string
+#    ready to be chained into a pipe and executed by ivlad.pp (no output 
+#    captured)
+# 3. called as sf.prog(arglist, exe='l') to return a 
+#    'prog <inp >out args' string that can be written to a script, log, etc
+
 ################################################################################
 
-def bandpass(inp, out, fhi=None, flo=None, nphi=None, nplo=None, phase=None, 
-    verb=False):
-    fhi_str  = ivlad.switch(fhi==None,  '', ' fhi=' +str(fhi ))
-    flo_str  = ivlad.switch(flo==None,  '', ' flo=' +str(flo ))
-    nphi_str = ivlad.switch(nphi==None, '', ' nphi='+str(nphi))
-    nplo_str = ivlad.switch(nplo==None, '', ' nplo='+str(nplo))
-    phase_str = ivlad.switch(phase==None, '', ' phase='+phase)
+def __run(prog, args, inp, out, verb, exe, postproc=None):
+    
+    prog = prog.strip()
+    if args == None:
+        args = ''
+    else:
+        args = args.strip()
+    cmd  = prog
+
+    if exe == 'g': # get output
+        assert out == None
+        out_str = ivlad.getout(prog, args, inp, verb)
+        if postproc == None:
+            return out_str
+        else:
+            return postproc(out_str)
+    elif exe == 'p': # call part of a pipe
+        if args != '':
+            cmd += ' ' + args
+        return cmd
+    else:
+        if inp != None:
+            cmd += ' <' + inp.strip()
+        if out != None:
+            cmd += ' >' + out.strip()
+        if args != '':
+            cmd +=  ' ' + args
+        if exe == 'l': # log
+            return cmd
+        else: # exe=='x', execute
+            ivlad.exe(cmd, verb)
+    
+################################################################################
+
+def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
+    phase=None, verb=False, exe='x'):
+    ##########
+    fhi_str  = ivlad.switch( fhi==None,   '', ' fhi='  +str(fhi ))
+    flo_str  = ivlad.switch( flo==None,   '', ' flo='  +str(flo ))
+    nphi_str = ivlad.switch( nphi==None,  '', ' nphi=' +str(nphi))
+    nplo_str = ivlad.switch( nplo==None,  '', ' nplo=' +str(nplo))
+    phase_str = ivlad.switch(phase==None, '', ' phase='+str(phase))
     verb_str = ivlad.switch(verb, ' verb=y', '')
-    cmd = 'sfbandpass <%s >%s' % (inp,out)
-    cmd += fhi_str + flo_str + nphi_str + nplo_str + phase_str + verb_str
-    ivlad.exe(cmd, verb)
+    args = fhi_str + flo_str + nphi_str + nplo_str + phase_str + verb_str
+    ##########
+    return __run('sfbandpass', args, inp, out, verb, exe)
 
-def clip(inp, out, clip, verb=False):
-    ivlad.exe('sfclip <%s clip=%s >%s' % (inp, clip, out), verb)
+def clip(inp=None, out=None, clip=99, verb=False, exe='x'):
+    return __run('sfclip', 'clip=' + str(clip), inp, out, verb, exe)
 	
-def cp(inp, out, verb=False):
-    ivlad.exe('sfcp %s %s' % (inp, out), verb)
+def cp(inp, out, verb=False, exe='x'):
+    return __run('sfcp', inp + ' ' + out, None, None, verb, exe)
 
-def create(out, n, verb=False):
-    cmd = 'sfcreate >' + out
+def create(out=None, n=None, verb=False, exe='x'):
+    ##########
+    args = ''
     nlist = ivlad.mklist(n)
     for i in range(len(nlist)):
-        cmd += ' n%d=%d' % (i+1,nlist[i])
-    ivlad.exe(cmd, verb)
+        args += ' n%d=%d' % (i+1,nlist[i])
+    ##########
+    return __run('sfcreate', args, None, out, verb, exe)
 
-def get(inp, par, parform=False, verb=False):
+def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
-    out = ivlad.getout('sfget', args, inp, verb).split()
-    if len(out) == 1:
-        return out[0]
-    else:
-        return out
+    if exe == 'x' and out==None: # invalid combination, fix the call
+        exe = 'g'
+    def postproc(out_str):
+        out = out_str.split()
+        if len(out) == 1:
+            return out[0]
+        else:
+            return out
+    return __run('sfget', ' '.join(args), inp, out, verb, exe, postproc)
 
-def real(inp, out, verb=False):
-    ivlad.exe('sfreal <%s >%s' % (inp, out), verb)
+def real(inp=None, out=None, verb=False, exe='x'):
+    return __run('sfreal', None, inp, out, verb, exe)
 
-def remap1(inp, out, d1=None, n1=None, o1=None, order=None, pattern=None, 
-    verb=False):
+def remap1(inp=None, out=None, d1=None, n1=None, o1=None, order=None, 
+    pattern=None, verb=False, exe='x'):
+    ##########
     d1_str = ivlad.switch(d1==None, '', ' d1='+str(d1))
     n1_str = ivlad.switch(n1==None, '', ' n1='+str(n1))
     o1_str = ivlad.switch(o1==None, '', ' o1='+str(o1))
     pattern_str = ivlad.switch(pattern==None, '', ' pattern='+pattern)
-    cmd = 'sfremap1 <%s >%s' % (inp, out) 
-    cmd += d1_str + n1_str + o1_str + pattern_str
-    ivlad.exe(cmd, verb)
+    args = d1_str + n1_str + o1_str + pattern_str
+    ##########
+    return __run('sfremap1', args, inp, out, verb, exe)
 
-def rm(files, verb=False):
+def rm(files, verb=False, exe='x'):
+    ##########
     if type(files) == str:
-        f_str = files
+        args = files
     else:
-        f_str = ' '.join(file_list)
-    ivlad.exe('sfrm ' + f_str, verb)
+        args = ' '.join(file_list)
+    ##########
+    return __run('sfrm', args, None, None, verb, exe)
 
-def rtoc(inp, out, verb=False):
-    ivlad.exe('sfrtoc <%s >%s' % (inp, out), verb)
+def rtoc(inp=None, out=None, verb=False, exe='x'):
+    return __run('sfrtoc', None, inp, out, verb, exe)
 
-def transp(inp, out, plane=12, memsize=None, verb=False):
+def transp(inp=None, out=None, plane=12, memsize=None, verb=False, exe='x'):
+    ##########
     memsz_str = ivlad.switch(memsize==None, '', 'memsize=' + str(memsize))
     plane_str = ' plane=' + str(plane)
-    cmd = 'sftransp <%s >%s' % (inp, out)
-    ivlad.exe(cmd + memsz_str + plane_str, verb)
+    args = memsz_str + plane_str
+    ##########
+    return __run('sftransp', args, inp, out, verb, exe)
 
-def wuab(inp, prog, tpar, ipar, verb=False):
+def wuab(inp=None, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
+    ##########
     vflag = ivlad.switch(verb, 'y', 'n')
-    cmd = 'sfwuab inp=%s prog=%s tpar="%s" ipar="%s" verb=%s' %\
+    args = 'inp=%s prog=%s tpar="%s" ipar="%s" verb=%s' %\
         (inp, prog, tpar, ipar, vflag)
-    ivlad.exe(cmd, verb)
+    ##########
+    return __run('sfwuab', args, None, None, verb, exe)
 

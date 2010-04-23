@@ -54,6 +54,26 @@ fmt = {'int':'i', 'float':'f'} # For usage with struct.pack
 # Horizontal ruler (for logs, screen messages):
 hr = '#' + 79 * '-'
 
+################################################################################
+
+def pp(call_list, inp=None, out=None):
+    'Print a pipe command. Output can be fed to ivlad.exe'
+    # Example: 
+    # ivlad.pp([sf.rtoc(exe='p'),
+    #           sf.real(exe='p'),
+    #           sf.get(par='n1',exe='p')],
+    #          'junk.rsf','file.asc') 
+    # Outputs:
+    # '<junk.rsf sfrtoc | sfreal | sfget parform=n n1'
+
+    cmd = ''
+    if inp != None:
+        cmd += '<' + inp + ' '
+    cmd += pipe.join(call_list)
+    if out != None:
+        cmd += ' >' + out
+    return cmd
+
 ###############################################################################
 
 def mklist(x):
