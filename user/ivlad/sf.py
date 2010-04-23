@@ -50,6 +50,13 @@ def clip(inp, out, clip, verb=False):
 def cp(inp, out, verb=False):
     ivlad.exe('sfcp %s %s' % (inp, out), verb)
 
+def create(out, n, verb=False):
+    cmd = 'sfcreate >' + out
+    nlist = ivlad.mklist(n)
+    for i in range(len(nlist)):
+        cmd += ' n%d=%d' % (i+1,nlist[i])
+    ivlad.exe(cmd, verb)
+
 def get(inp, par, parform=False, verb=False):
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
     out = ivlad.getout('sfget', args, inp, verb).split()
