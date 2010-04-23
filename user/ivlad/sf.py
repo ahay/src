@@ -124,6 +124,20 @@ def csv2rsf(inp=None, out=None, delimiter=None, dtype=None, debug=None,
 
 ################################################################################
 
+def filedims(inp=None, out=None, large=None, parform=None, verb=False, exe='x'):
+
+    if exe == 'x' and out==None: # invalid combination, fix the call
+        exe = 'g'
+    return __run('sffiledims', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
+def fileflush(inp=None, out=None, verb=False, exe='x'):
+
+    return __run('sffileflush', None, inp, out, verb, exe)
+
+################################################################################
+
 def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
 
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
@@ -136,6 +150,30 @@ def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
         else:
             return out
     return __run('sfget', ' '.join(args), inp, out, verb, exe, postproc)
+
+################################################################################
+
+def gettype(inp=None, out=None, verb=False, exe='x'):
+
+    if exe == 'x' and out==None: # invalid combination, fix the call
+        exe = 'g'
+    return __run('sfgettype', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
+def invalid(out=None, chk4nan=None, dir=None, rec=None, verb=False, exe='x'):
+
+    if exe == 'x' and out==None: # invalid combination, fix the call
+        exe = 'g'
+    return __run('sfinvalid', __parse(locals()), out, verb, exe)
+
+################################################################################
+
+def leftsize(inp=None, out=None, i=None, verb=False, exe='x'):
+
+    if exe == 'x' and out==None: # invalid combination, fix the call
+        exe = 'g'
+    return __run('sfleftsize', __parse(locals()), inp, out, verb, exe)
 
 ################################################################################
 
