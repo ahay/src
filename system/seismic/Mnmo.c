@@ -174,7 +174,7 @@ int main (int argc, char* argv[])
     nmo = fint1_init (nw, nt, mute);
     
     for (ix = 0; ix < nx; ix++) {
-	sf_warning("CMP %d of %d",ix+1,nx);
+	sf_warning("CMP %d of %d;",ix+1,nx);
 
 	sf_floatread (vel,nt,velocity);	
 	if (NULL != het) sf_floatread(par,nt,het);
@@ -200,7 +200,7 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
-
+    sf_warning(".");
 
     exit (0);
 }
