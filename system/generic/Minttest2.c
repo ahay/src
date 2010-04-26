@@ -1,4 +1,4 @@
-/* Forward interpolation from a regular grid in 2-D. */
+/* Interpolation from a regular grid in 2-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
