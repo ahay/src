@@ -28,7 +28,8 @@ static bool *m;
 
 static void doubint(int n, float *tmp);
 
-void aastretch_init (int n1   /* trace length */, 
+void aastretch_init (bool box /* if box instead of triangle */,
+		     int n1   /* trace length */, 
 		     float o1 /* trace origin */, 
 		     float d1 /* trace sampling */, 
 		     int n2   /* number of data samples */)

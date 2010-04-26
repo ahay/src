@@ -47,7 +47,7 @@ void slant_init (bool pull1                     /* pull or push mode */,
     t0 = t01; dt = dt1; nt = nt1; 
     s1 = s11; 
 
-    aastretch_init (nt, t0, dt, nt);
+    aastretch_init (false, nt, t0, dt, nt);
     if (rho) {
 	halfint_init (true,2*nt,1.-1./nt);
 	tmp  = sf_floatalloc(nt);

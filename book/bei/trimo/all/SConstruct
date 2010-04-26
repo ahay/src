@@ -23,8 +23,8 @@ Result('nmotraj', None,'nmotraj',prefix=plprefix)
 #overlap=1.6
 
 Flow('model',None,'spike nsp=4 n2=1 d1=0.012 n1=140 k1=10,40,46,132')
-Flow('gather','model','aastack adj=0 n2=10 o2=0 d2=0.1 antialias=1 boxmo1=1 | scale axis=12')
-Flow('stack','gather','aastack adj=1                   antialias=1 boxmo1=1 | scale axis=1')
+Flow('gather','model','aastack adj=0 n2=10 o2=0 d2=0.1 antialias=1 box=1 | scale axis=12')
+Flow('stack','gather','aastack adj=1                   antialias=1 box=1 | scale axis=1')
 Flow('zero','model','math output=0')
 
 Result('boxmo1','model gather stack zero',

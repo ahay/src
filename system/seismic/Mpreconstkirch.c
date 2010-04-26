@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	tx[it] = 0.;
     }
 
-    aastretch_init (nt, t0, dt, nt);
+    aastretch_init (false, nt, t0, dt, nt);
 
     if (inv && zero) sf_floatread (cinp[0][0],n123,in);
 

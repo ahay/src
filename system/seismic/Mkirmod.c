@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
     }
     
     /*** Initialize stretch ***/
-    aastretch_init (nt, t0, dt, nxc);
+    aastretch_init (false, nt, t0, dt, nxc);
 
     time = sf_floatalloc2(nx,nc);
     ampl = sf_floatalloc2(nx,nc);

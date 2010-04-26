@@ -23,10 +23,10 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, nv, ix;
+    int nt, nx, nv, ix, it;
     bool adj, inv, box;
-    float vel, antialias, o1, o2, d1, d2, slow;
-    float **gather, *stack;
+    float vel, antialias, o1, o2, d1, d2, slow, t;
+    float **gather, *stack, *coord, *delt, *amp;
     sf_file inp, out;
 
     sf_init (argc,argv);
@@ -67,6 +67,8 @@ int main(int argc, char* argv[])
 
     gather = sf_floatalloc2(nt,nx);
     stack = sf_floatalloc(nt);
+    coord = sf_floatalloc(nt);
+    delt = sf_floatalloc(nt);
 
     if (adj) {
 	sf_floatread(gather[0],nt*nx,inp); 
@@ -74,18 +76,26 @@ int main(int argc, char* argv[])
 	sf_floatread (stack,nt,inp); 
     }
 
-    sf_adjnull(false,false,nt,nt*nx,stack,gather[0]);
+    sf_adjnull(adj,false,nt,nt*nx,stack,gather[0]);
 
-    if (box) {
-	aastretch_init (nt, o1, d1, nt);
-    } else {
-	aastretch_init (nt, o1, d1, nt);
-    }
+    aastretch_init (box, nt, o1, d1, nt);
 
     for (ix=0; ix < nx; ix++) {
 	slow = (o2 + d2*ix)/vel;
 
-/*	aanmo_step (pul, hyper_time, cos2D_ampl, slow, hyper_slope, antialias, d2); */
+	for (it=0; it < nt; it++) {
+	    t = o1 + it*d1;
+	    coord[it] = hypotf(t,slow);
+	    if (coord[it] > 0.) {
+		delt[it] = fabsf(antialias*slow*d2/(vel*coord[it]));
+		amp[it] = (t / coord[it]) / sqrtf (coord[it]);
+	    } else {
+		delt[it] = 0.;
+		amp[it] = 0.;
+	    }
+	}
+
+	aastretch_define (coord, delt, amp);
 	aastretch_lop (adj,true,nt,nt,stack,gather[ix]);
     }
 

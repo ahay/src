@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     cinp = sf_floatalloc2(nt,nh);
     cout = sf_floatalloc(nt);
 
-    aastretch_init (nt, t0, dt, nt);
+    aastretch_init (false, nt, t0, dt, nt);
 
     for (is=0; is < ns; is++) {
 	sf_warning("shot %d of %d",is+1, ns);

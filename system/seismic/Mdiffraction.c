@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     delt = sf_floatalloc(nsp);
     ampl = sf_floatalloc(nsp);
 
-    aastretch_init (nt, t0, dt, nsp);
+    aastretch_init (false, nt, t0, dt, nsp);
 
     for (iy=0; iy < ny; iy++) {
 	y1 = y0 + iy*dy;
