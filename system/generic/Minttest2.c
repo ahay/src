@@ -1,4 +1,4 @@
-/* Testing forward interpolation in 2-D. */
+/* Forward interpolation from a regular grid in 2-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
