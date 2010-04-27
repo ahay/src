@@ -212,6 +212,19 @@ def transp(inp=None, out=None, plane=None, memsize=None, verb=False, exe='x'):
 
 ################################################################################
 
+def window(inp=None, out=None, squeeze=None, j1=None, j2=None, j3=None, j4=None,
+j5=None, j6=None, j7=None, j8=None, j9=None, d1=None, d2=None, d3=None, d4=None,
+d5=None, d6=None, d7=None, d8=None, d9=None, f1=None, f2=None, f3=None, f4=None,
+f5=None, f6=None, f7=None, f8=None, f9=None, min1=None, min2=None, min3=None,
+min4=None, min5=None, min6=None, min7=None, min8=None, min9=None, n1=None, 
+n2=None, n3=None, n4=None, n5=None, n6=None, n7=None, n8=None, n9=None, 
+max1=None, max2=None, max3=None, max4=None, max5=None, max6=None, max7=None, 
+max8=None, max9=None, verb=False, exe='x'):
+
+    return __run('sfwindow', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
 def wuab(inp=None, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
 
     return __run('sfwuab', __parse(locals()), None, None, verb, exe)
