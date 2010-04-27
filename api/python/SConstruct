@@ -15,9 +15,6 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
-if 'gomp' in env['LIBS']:
-    env['LIBS'].remove('gomp')
-
 if 'python' in env.get('API',[]):
     try:
         EnsureSConsVersion(1,0)
@@ -46,7 +43,7 @@ if 'python' in env.get('API',[]):
         env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
                     LIBS = ['librsfplot','librsf',python])
     else:
-        env.Append(LIBS=['drsfplot','drsf'])
+        env.Replace(LIBS=['drsfplot','drsf'])
 
     for module in modules:
         ifile = module+'.i'
