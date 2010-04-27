@@ -225,6 +225,12 @@ max8=None, max9=None, verb=False, exe='x'):
 
 ################################################################################
 
+def squeeze(inp=None, out=None, verb=False, exe='x'):
+
+    return __run('sfwindow', 'squeeze=y', inp, out, verb, exe)
+
+################################################################################
+
 def wuab(inp=None, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
 
     return __run('sfwuab', __parse(locals()), None, None, verb, exe)
