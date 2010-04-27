@@ -202,7 +202,7 @@ int main (int argc, char **argv)
     n = sf_floatalloc(nz);
 
     if (NULL == (rule = sf_getstring("rule"))) rule="simple";
-    /* phase-shift interpolation rule (simple, midpoint, linear, anisotropic) */
+    /* phase-shift interpolation rule (simple, midpoint, linear, anisotropic, dti) */
 
     if (NULL == (arule = sf_getstring("arule"))) arule="isotropic";
     /* angle gather rule */
@@ -226,7 +226,7 @@ int main (int argc, char **argv)
 	sf_floatread(vt,nz,vel);
 	sf_fileclose(vel);
 
-	if ('a' == rule[0]) {
+	if ('a' == rule[0] || 'a' == arule[0] || 'd' == rule[0] || 'd' == arule[0] ) {
 	    if (NULL == velz || NULL == eta) sf_error("Need velz= and eta=");
 	    sf_floatread(vz,nz,velz);
 	    sf_floatread(n,nz,eta);

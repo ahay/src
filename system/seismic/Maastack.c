@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     stack = sf_floatalloc(nt);
     coord = sf_floatalloc(nt);
     delt = sf_floatalloc(nt);
+    amp = sf_floatalloc(nt);
 
     if (adj) {
 	sf_floatread(gather[0],nt*nx,inp); 

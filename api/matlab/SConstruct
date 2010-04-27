@@ -19,7 +19,7 @@ if 'matlab' in env.get('API',[]):
     suffix = env.get('MEXSUFFIX')
 
     if mex:
-        mexcom = mex + " CFLAGS='$CCFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
+        mexcom = mex + " CC=$CC CFLAGS='$CCFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
 
     for inp in Split('par dim read write create'):
         cfile = 'rsf_' + inp

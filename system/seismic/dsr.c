@@ -17,31 +17,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-/* b/2a, c/a c2^4 + 2*(b/2a) c2^2 + (c/a) = 0 
-List((-4*Power(n,2)*Power(r,4)*Power(s,4) + 
-      2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*v*
-       Power(w,2) - Power(r,2)*Power(s,2)*
-       (Power(v,2) + Power(vz + 4*n*vz,2))*Power(w,4) + 
-      (1 + 4*n)*(Power(r,2) + Power(s,2))*v*Power(vz,2)*
-       Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8))/
-    ((2*n*Power(r,4) + Power(r,2)*(-v + vz + 4*n*vz)*
-         Power(w,2) - v*vz*Power(w,4))*
-      (2*n*Power(s,4) + Power(s,2)*(-v + vz + 4*n*vz)*
-         Power(w,2) - v*vz*Power(w,4))),
-   Power(4*Power(n,2)*Power(r,4)*Power(s,4) - 
-      2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*v*
-       Power(w,2) + Power(r,2)*Power(s,2)*
-       (Power(v,2) - Power(vz + 4*n*vz,2))*Power(w,4) + 
-      (1 + 4*n)*(Power(r,2) + Power(s,2))*v*Power(vz,2)*
-       Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8),2)/
-    (Power(-2*n*Power(r,4) + 
-        Power(r,2)*(v - (1 + 4*n)*vz)*Power(w,2) + 
-        v*vz*Power(w,4),2)*
-      Power(-2*n*Power(s,4) + 
-        Power(s,2)*(v - (1 + 4*n)*vz)*Power(w,2) + 
-        v*vz*Power(w,4),2))) */
-
 #include <math.h>
 
 #include <rsf.h>
@@ -98,6 +73,82 @@ void dsr_close ()
     free (invs);
 }
 
+static double Power(float a, int p)
+{
+    int i;
+    double b=a;
+    for(i=0; i<p-1; ++i)
+	b *=a;
+    return(b);
+}
+
+
+static float costheta(float v, float vz, float n, float w, float s, float r)
+{
+    float a;
+    double bo2a,coa,a2;
+
+    a2=s;
+    s *=s;
+    r *=r;
+
+    bo2a=(-4*Power(n,2)*Power(r,2)*Power(s,2) +   
+	  2*n*r*s*(r + s)*v*
+	  Power(w,2) - r*s*                  
+	  (Power(v,2) + Power(vz + 4*n*vz,2))*Power(w,4) +     
+	  (1 + 4*n)*(r + s)*v*Power(vz,2)*    
+	  Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8))/     
+	((2*n*Power(r,2) + r*(-v + vz + 4*n*vz)*       
+	  Power(w,2) - v*vz*Power(w,4))*                     
+	 (2*n*Power(s,2) + s*(-v + vz + 4*n*vz)*      
+	  Power(w,2) - v*vz*Power(w,4)));
+                    
+    coa=Power(4*Power(n,2)*Power(r,2)*Power(s,2) -               
+	      2*n*r*s*(r + s)*v*
+	      Power(w,2) + r*s*                  
+	      (Power(v,2) - Power(vz + 4*n*vz,2))*Power(w,4) +     
+	      (1 + 4*n)*(r + s)*v*Power(vz,2)*    
+	      Power(w,6) - Power(v,2)*Power(vz,2)*Power(w,8),2)/   
+	(Power(-2*n*Power(r,2) +                                
+	       r*(v - (1 + 4*n)*vz)*Power(w,2) +          
+	       v*vz*Power(w,4),2)*                                 
+	 Power(-2*n*Power(s,2) +
+	       s*(v - (1 + 4*n)*vz)*Power(w,2) +
+	       v*vz*Power(w,4),2));
+    /*  bo2a=(-1 + (1 + 4*n)*(Power(r,2) + Power(s,2))*Power(vz,2) - 
+	2*(1 + 4*n + 8*Power(n,2))*Power(r,2)*Power(s,2)*Power(vz,4) + 
+	2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*Power(vz,6) - 
+	4*Power(n,2)*Power(r,4)*Power(s,4)*Power(vz,8))/
+	((-1 + 2*n*Power(r,2)*Power(vz,2)*(2 + Power(r,2)*Power(vz,2)))*
+	(-1 + 2*n*Power(s,2)*Power(vz,2)*(2 + Power(s,2)*Power(vz,2))));
+	coa=Power(1 - (1 + 4*n)*(Power(r,2) + Power(s,2))*Power(vz,2) + 
+	8*n*(1 + 2*n)*Power(r,2)*Power(s,2)*Power(vz,4) + 
+	2*n*Power(r,2)*Power(s,2)*(Power(r,2) + Power(s,2))*Power(vz,6) - 
+	4*Power(n,2)*Power(r,4)*Power(s,4)*Power(vz,8),2)/
+	(Power(1 - 2*n*Power(r,2)*Power(vz,2)*(2 + Power(r,2)*Power(vz,2)),2)*
+	Power(1 - 2*n*Power(s,2)*Power(vz,2)*(2 + Power(s,2)*Power(vz,2)),2));*/
+
+
+    if(a2<0)
+	a2 = -bo2a -sqrt(SF_ABS(Power(bo2a,2) - coa));
+    else
+	a2 = -bo2a +sqrt(SF_ABS(Power(bo2a,2) - coa));
+    /*warn("bo2a=%f coa=%f a2=%f",bo2a,coa,a2);*/
+
+    if(a2>=0) a=sqrt(a2);
+    else a=sqrt(-a2);
+  
+    a = SF_MIN(1,sqrt(0.5+0.5*a));
+    /*kk = sqrt(Power(w,2)*vz-Power(dw*eps,2)*vz-s)+sqrt(Power(w,2)*vz-Power(dw*eps,2)-r);
+      w2 = sf_cmplx(dw*eps,w);
+      w2 = w2*w2;
+      w2 = csqrtf(w2*vz+s)+csqrtf(w2*vz+r);
+      a = 0.5/(sqrt(vz)*w)*hypotf(cimagf(w2),kx);*/
+    /*warn("a=%f kk=%f w=%f v=%f s2=%f r2=%f",a,kk,w,vz,s,r);*/
+
+    return(a);
+}
+
 void dsr (char rule /* rule for angle gathers */,
 	  bool inv /* modeling or migration */, 
 	  float kx /* midpoint wavenumber */, 
@@ -107,8 +158,8 @@ void dsr (char rule /* rule for angle gathers */,
 /*< apply >*/
 {
     int iz,iw, ia;
-    float s, r, a;
-    sf_complex w, k;
+    float s, r, a, ss;
+    sf_complex w, k, kk;
 
     /* convert from midpoint/offset wavenumbers to
        source/receiver wavenumbers */
@@ -151,6 +202,8 @@ void dsr (char rule /* rule for angle gathers */,
 	for (iz=0; iz<nz-1; iz++) {
 	    /* loop over frequencies w */
 	    for (iw=1; iw<nw; iw++) {
+		if(iw*dw*iw*dw*vt[iz]/(1+2*eta[iz])<s) continue;
+		if(iw*dw*iw*dw*vt[iz]/(1+2*eta[iz])<r) continue;
 		w = sf_cmplx(eps*dw,iw*dw);
 
 		/* find angle */
@@ -158,16 +211,35 @@ void dsr (char rule /* rule for angle gathers */,
 #ifdef SF_HAS_COMPLEX_H
 		k = pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz])+
 		    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]);
+		kk = pshift(w,r,vt[iz],vt[iz+1],vt[iz],0.0)+
+		    pshift(w,s,vt[iz],vt[iz+1],vt[iz],0.0);
 #else
 		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1],vz[iz],eta[iz]),
 			    pshift(w,s,vt[iz],vt[iz+1],vz[iz],eta[iz]));
+		kk = sf_cadd(pshift(w,r,vt[iz],vt[iz+1],vt[iz],0.0),
+			     pshift(w,s,vt[iz],vt[iz+1],vt[iz],0.0));
 #endif
 		
 		if (rule=='a') {
-		    q[iz][0] += crealf(pp[iw]);
-/*		    a = costheta(vt[iz],cimagf(w),kx,kh); */
-		} else {
-		    a = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(k),kx);		
+		    a = costheta(vt[iz],vt[iz],eta[iz],cimagf(w),0.5*(kx-kh),0.5*(kx+kh));
+		    ss = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(kk),kx);
+		    /*warn("a=%f ss=%f eps=%f w=%f kx=%f s=%f r=%f eta=%f",a,ss,eps,cimagf(w),kx,sqrt(s),sqrt(r),eta[iz]);*/
+
+		    if (a <= 1.) {
+			a = acosf(a)/da;
+			ia = floorf(a);
+			a -= ia;
+			if (ia >=0 && ia < na-1) {
+			    /* accumulate image (summed over frequency) */
+			    q[iz][ia] += (1.-a)*crealf(pp[iw]);
+			    q[iz][ia+1] += a*crealf(pp[iw]);
+			} else if (ia==na-1) {
+			    q[iz][ia] += crealf(pp[iw]);
+			}
+		    }
+		
+		} else{
+		    a = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(kk),kx);
 
 		    if (a <= 1.) {
 			a = acosf(a)/da;
