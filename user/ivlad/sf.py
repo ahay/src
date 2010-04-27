@@ -210,7 +210,7 @@ def rm(files, verb=False, exe='x'):
     if type(files) == str:
         args = files
     else:
-        args = ' '.join(file_list)
+        args = ' '.join(files)
     return __run('sfrm', args, None, None, verb, exe)
 
 ################################################################################
