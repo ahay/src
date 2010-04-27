@@ -177,6 +177,11 @@ def leftsize(inp=None, out=None, i=None, verb=False, exe='x'):
 
 ################################################################################
 
+def mv(inp, out, verb=False, exe='x'):
+    return __run('sfmv', inp + ' ' + out, None, None, verb, exe)
+
+################################################################################
+
 def real(inp=None, out=None, verb=False, exe='x'):
 
     return __run('sfreal', None, inp, out, verb, exe)
