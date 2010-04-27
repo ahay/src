@@ -18,85 +18,108 @@
 */
 #include <rsf.h>
 
-#include "cameron.h"
+#include "divn.h"
 
 int main(int argc, char *argv[])
 {
-    int ix, it, i, i1, nx, nt, nxt, niter;
-    bool *k;
-    float x0, dx, dt, *v, *x, *z, *r;
-    sf_file vdix, vint, xz;
+    bool verb;
+    int ix, it, nx, nt, niter, rect;
+    float ox, dx, dt, norm;
+    float **v, **vi, *x0, *z0, *x1, *z1, *num, *den;
+    sf_file vdix, zx;
 
     sf_init(argc,argv);
     vdix = sf_input("in");
-    vint = sf_output("out");
+    zx = sf_output("out");
 
-    xz = sf_output("xz");
-    sf_putint(xz,"n3",2);
+    if (!sf_histint(vdix,"n1",&nx)) sf_error("No n1= in input");
+    if (!sf_histint(vdix,"n2",&nt)) sf_error("No n2= in input");
 
-    if (!sf_histint(vdix,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(vdix,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histfloat(vdix,"o1",&ox)) sf_error("No o2= in input");
+    if (!sf_histfloat(vdix,"d1",&dx)) sf_error("No d1= in input");
+    if (!sf_histfloat(vdix,"d2",&dt)) sf_error("No d2= in input");
 
-    if (!sf_histfloat(vdix,"d1",&dt)) sf_error("No d1= in input");
-    if (!sf_histfloat(vdix,"d2",&dx)) sf_error("No d2= in input");
-    if (!sf_histfloat(vdix,"o2",&x0)) sf_error("No o2= in input");
+    sf_shiftdim(vdix,zx,2);
+    sf_putint(zx,"n2",2);
 
-    if (!sf_getint("niter",&niter)) niter=nt*3;
+    if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    nxt = nx*nt;
+    if (!sf_getint("rect",&rect)) rect=3;
+    /* lateral smoothing */
 
-    v = sf_floatalloc(nxt);
-    x = sf_floatalloc(nxt);
-    z = sf_floatalloc(nxt);
-    r = sf_floatalloc(2*nxt);
-    k = sf_boolalloc(nxt);
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
-    sf_floatread(v,nxt,vdix);
+    v  = sf_floatalloc2(nx,nt);
+    vi = sf_floatalloc2(nx,nt);
 
-    cameron_init(nt,nx,dt,dx,v);
+    x0 = sf_floatalloc(nx);
+    z0 = sf_floatalloc(nx);
+    x1 = sf_floatalloc(nx);
+    z1 = sf_floatalloc(nx);
 
+    sf_floatread(v[0],nx*nt,vdix);
+    
     for (ix=0; ix < nx; ix++) {
-	i = ix*nt;
+	x0[ix] = ox+ix*dx;
+	z0[ix] = 0.;
+	
+	x1[ix] = x0[ix];
+	z1[ix] = dt*v[0][ix];
+    }
 
-	x[i]   = x0+ix*dx;
-	x[i+1] = x0+ix*dx;
-	z[i]   = 0.;
-	z[i+1] = dt*v[i];
-	k[i]   = true;
-	k[i+1] = true;
+    sf_floatwrite(z0,nx,zx);
+    sf_floatwrite(x0,nx,zx);
 
-	for (it=2; it < nt; it++) {
-	    i1 = i+it;
+    sf_floatwrite(z1,nx,zx);
+    sf_floatwrite(x1,nx,zx);
 
-	    x[i1] = x[i];
-	    z[i1] = z[i1-1]+dt*v[i1-1];
-	    k[i1] = (ix==0) || (ix==nx-1);
+    /* dimensionless velocity */
+    for (it=0; it < nt; it++) {
+	for (ix=0; ix < nx; ix++) {
+	    v[it][ix] *= dt/dx;
+	    vi[it][ix] = 1.0/v[it][ix];
 	}
     }
 
-    for (i=0; i < 2*nxt; i++) {			
-	r[i] = 0.;
-    }
+    divn_init(1,nx,&nx,&rect,niter,verb);
 
-    sf_solver (cameron_lop,sf_cgstep,nxt,2*nxt,x,r,niter,"x0",x,"known",k,"verb",true,"end");
-    sf_cgstep_close();
-    sf_solver (cameron_lop,sf_cgstep,nxt,2*nxt,z,r,niter,"x0",z,"known",k,"verb",true,"end");
-    sf_cgstep_close();
+    den = sf_floatalloc(nx);
+    num = sf_floatalloc(nx);
 
-    sf_floatwrite(x,nxt,xz);
-    sf_floatwrite(z,nxt,xz);
+    den[0] = den[nx-1] = 0.;
+    num[0] = num[nx-1] = 0.;
 
-    for (ix=0; ix < nx; ix++) {
-	i = ix*nt;
-	for (it=1; it < nt; it++) {
-	    i1=i+it;
-
-	    v[i1] = hypotf(x[i1]-x[i1-1],
-			   z[i1]-z[i1-1])/dt;
+    for (it=2; it < nt; it++) {
+	norm = 0.;
+	for (ix=1; ix < nx-1; ix++) {
+	    den[ix] = vi[it-1][ix]+0.25*(vi[it][ix]-vi[it-2][ix]);
+	    norm += den[ix]*den[ix];
 	}
-    }
+	norm = 1.0/sqrtf(norm);
 
-    sf_floatwrite(v,nxt,vint);
+	for (ix=1; ix < nx-1; ix++) {
+	    den[ix] *= norm;
+	    num[ix] = -norm*(v[it-1][ix]*(z1[ix-1]-2*z1[ix]+z1[ix+1])+
+			     vi[it-1][ix]*(z0[ix]-2*z1[ix])+
+			     0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(z1[ix+1]-z1[ix-1])-
+			     0.25*(vi[it][ix]-vi[it-2][ix])*z0[ix]);
+	    z0[ix] = z1[ix];
+	}
+	divn(num,den,z1);
+	sf_floatwrite(z1,nx,zx);  
+
+	for (ix=1; ix < nx-1; ix++) {
+	    num[ix] = -norm*(v[it-1][ix]*(x1[ix-1]-2*x1[ix]+x1[ix+1])+
+			     vi[it-1][ix]*(x0[ix]-2*x1[ix])+
+			     0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(x1[ix+1]-x1[ix-1])-
+			     0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]);
+	    x0[ix] = x1[ix];
+	}
+	divn(num,den,x1);
+	sf_floatwrite(x1,nx,zx);
+    }
+    
     exit(0);
 }

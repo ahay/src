@@ -1360,6 +1360,9 @@ def matlab(context):
     if mex:
         context.Result(mex)
         context.env['MEX'] = mex
+        if plat['OS'] == 'darwin':
+            maci64 = os.environ.get('MACI64',0)                    
+            context.env.Append(ENV={'MACI64':maci64})
     else:
         context.Result(context_failure)
         stderr_write('Please install mex.','yellow_on_red')
