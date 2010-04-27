@@ -101,6 +101,16 @@ def clip(inp=None, out=None, clip=None, verb=False, exe='x'):
 
 ################################################################################
 
+def cat(out, files=None, axis=None, o=None, d=None, verb=False, exe='x'):
+
+    aod = __parse({'axis':axis,'o':o,'d':d})
+    # file names are not in key=val format, so __parse will not work
+    filestr = ' '.join(files[1:])
+
+    return __run('sfcat', aod+' '+filestr, files[0], out, verb, exe)    
+
+################################################################################
+
 def cp(inp, out, verb=False, exe='x'):
     return __run('sfcp', inp + ' ' + out, None, None, verb, exe)
 
