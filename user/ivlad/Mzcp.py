@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-''''Copies header of float file, fills output binary with zeros
+'''Copies header of float file, fills output binary with zeros
 Usage: sfzcp file1.rsf file2.rsf'''
 
 # Copyright (C) 2009-2010 Ioan Vlad

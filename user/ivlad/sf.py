@@ -77,7 +77,7 @@ def __run(prog, args, inp, out, verb, exe, postproc=None):
     
 def __parse(arg_dict):
     'Turn the list of args into a string (default vals must be None!)'  
-    
+
     args = ''
     for arg_nm in arg_dict.keys():
 	if arg_nm not in ('inp', 'out', 'verb', 'exe'):
@@ -192,6 +192,14 @@ def mv(inp, out, verb=False, exe='x'):
 
 ################################################################################
 
+def pclip(inp, out, pclip=None, verb=False, exe='x'):
+
+    arg_dict = locals()
+    args = __parse(arg_dict) + ' inp='+inp + ' out=' + out
+    return __run('sfpclip', args, None, None, verb, exe)
+
+################################################################################
+
 def real(inp=None, out=None, verb=False, exe='x'):
 
     return __run('sfreal', None, inp, out, verb, exe)
@@ -215,15 +223,58 @@ def rm(files, verb=False, exe='x'):
 
 ################################################################################
 
+def rmrf(mydir, rec=False, verb=False, exe='x'):
+
+    arg = 'dir=' + mydir + ' rec=' + ivlad.switch(rec, 'y', 'n')
+
+    return __run('sfrmrf', args, None, None, verb, exe)
+
+################################################################################
+
 def rtoc(inp=None, out=None, verb=False, exe='x'):
 
     return __run('sfrtoc', None, inp, out, verb, exe)
 
 ################################################################################
 
+def seekwin(inp, out=None, nread=None, nseek=None, whence=None, verb=False,
+exe='x'):
+    # Takes stdin, but input cannot be from pipe
+
+    return __run('sfseekwin', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
+def split(inp, outdir=None, nthick=None, verb=False, exe='x'):
+
+    arg_dict = locals()
+    args = __parse(arg_dict) + ' inp='+inp
+
+    return __run('sfsplit', args, None, None, verb, exe)
+
+################################################################################
+
+def squeeze(inp=None, out=None, verb=False, exe='x'):
+
+    return __run('sfwindow', 'squeeze=y', inp, out, verb, exe)
+
+################################################################################
+
+def touch(mydir=None, rec=None, chk4nan=None, verb=False, exe='x'):
+
+    return __run('sftouch', __parse(locals()), None, None, verb, exe)
+
+################################################################################
+
 def transp(inp=None, out=None, plane=None, memsize=None, verb=False, exe='x'):
 
     return __run('sftransp', __parse(locals()), inp, out, verb, exe)
+
+################################################################################
+
+def wiki2static(outdir=None, verb=False, exe='x'):
+
+    return __run('sfwiki2static', __parse(locals()), None, None, verb, exe)
 
 ################################################################################
 
@@ -240,12 +291,23 @@ max8=None, max9=None, verb=False, exe='x'):
 
 ################################################################################
 
-def squeeze(inp=None, out=None, verb=False, exe='x'):
+def wuab(inp, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
 
-    return __run('sfwindow', 'squeeze=y', inp, out, verb, exe)
+    arg_dict = locals()
+    args = __parse(arg_dict) + ' inp='+inp
+
+    return __run('sfwuab', args, None, None, verb, exe)
 
 ################################################################################
 
-def wuab(inp=None, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
+def ximage(inp, par=None, verb=False, exe='x'):
 
-    return __run('sfwuab', __parse(locals()), None, None, verb, exe)
+    arg_dict = locals()
+    args = 'inp='+inp + ivlad.switch(par==None, '', ' par="' + par + '"')
+
+    return __run('sfximage', args, None, None, verb, exe)
+
+################################################################################
+
+def zcp(inp, out, verb=False, exe='x'):
+    return __run('sfzcp', inp + ' ' + out, None, None, verb, exe)
