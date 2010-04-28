@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
 
     if (!sf_getfloat("theta",&theta)) theta=0.2;
     /* direction of central ground roll */
-    if (!sf_getfloat("alpha",&alpha)) alpha=0.01;
+    if (!sf_getfloat("alpha",&alpha)) alpha=0.1;
     /* width parameter of ground roll */
 
-    if (alpha <= 0) alpha=0.01;
+    if (alpha <= 0) alpha=0.1;
     if (d2 > 0.1) {
 	d2 /= 1000.;
 	o2 /= 1000.;
@@ -79,9 +79,9 @@ int main(int argc, char *argv[])
 
 	max = 0.;
 	for (i=0; i < n1*n2; i++) {
-	    if (max <= data[i]) max = data[i];
+	    if (max <= fabsf(data[i])) max = fabsf(data[i]);
 	}
-	if (max <= 0.) max = 1.;
+	if (0. == max) max = 1.;
 	
 	/* loop over traces */
 	for (i=0; i < n2; i++) {
@@ -99,7 +99,8 @@ int main(int argc, char *argv[])
 				       (o2+d2*(i-beg2))*(o2+d2*(i-beg2))))*
 			expf(-powf(atanf((o2+d2*(i-beg2))
 					/((o1+d1*(j-beg1))+
-					  FLT_EPSILON)-theta),2.)/alpha);
+					  FLT_EPSILON)-theta),2.)/
+			     (alpha*alpha));
 		} else {
 		    data[n1*i+j] += 
 			max*sinf(2*SF_PI*
@@ -113,7 +114,8 @@ int main(int argc, char *argv[])
 				       (o2+d2*(i-beg2))*(o2+d2*(i-beg2))))*
 			expf(-powf(atanf((o2+d2*(i-beg2))
 					/((o1+d1*(j-beg1))+
-					  FLT_EPSILON)-theta),2.)/alpha);
+					  FLT_EPSILON)-theta),2.)/
+			     (alpha*alpha));
 		}
 	    }
 	}
