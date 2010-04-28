@@ -25,10 +25,13 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx,  nz,  iz;
+    int nx,  nz,  ix, iz;
     int nkx, nkz, ikx, ikz;
-    float dx, dkx, kx, dz, dkz, kz, pi=SF_PI, o1, o2;
+    float dx, dkx, kx, dz, dkz, kz, kx0, kz0, pi=SF_PI, o1, o2;
     float **old;
+    kiss_fft_cpx **uk, *ctracex, *ctracez;
+    kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
+
     sf_file out, img;
      
 
@@ -53,65 +56,100 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d2",dz);
     sf_putfloat(out,"o2",o2);
 
-    nkx = nx;
-    nkz = nz;
-    dkx = 1./(2.0*kiss_fft_next_fast_size(nx-1)*dx);
-    dkz = 1./(2.0*kiss_fft_next_fast_size(nz-1)*dz);
+    nkx = kiss_fft_next_fast_size(nx);
+    nkz = kiss_fft_next_fast_size(nz);
+    if (nkx != nx) sf_warning("nkx padded to %d",nkx);
+    if (nkz != nz) sf_warning("nkz padded to %d",nkz);
+//    dkx =  1./(2.0*kiss_fft_next_fast_size(nx-1)*dx);
+//    dkz =  1./(2.0*kiss_fft_next_fast_size(nz-1)*dz);
+    dkx = 1./(nkx*dx);
+    kx0 = -0.5/dx;
+    dkz = 1./(nkz*dz);
+    kz0 = -0.5/dz;
+
+    cfgx = kiss_fft_alloc(nkx,0,NULL,NULL);
+    cfgxi = kiss_fft_alloc(nkx,1,NULL,NULL);
+    cfgz = kiss_fft_alloc(nkz,0,NULL,NULL);
+    cfgzi = kiss_fft_alloc(nkz,1,NULL,NULL);
 
 
+    uk = (kiss_fft_cpx **) sf_complexalloc2(nkx,nkz);
+    ctracex = (kiss_fft_cpx *) sf_complexalloc(nkx);
+    ctracez = (kiss_fft_cpx *) sf_complexalloc(nkz);
 
-
-
-    old    =  sf_floatalloc2(nx,nz);
-
-    
+           
+           
+           
+    old     =  sf_floatalloc2(nx,nz);
     sf_floatread(old[0],nx*nz,img);
-/* compute u(kx,kz) */
-         sf_cosft_init(nx);
-         for (iz=0; iz < nz; iz++){
-             /* Fourier transform x to kx */
-             sf_cosft_frw(old[iz],0,1);
-         }
-         sf_cosft_close();
 
-         sf_cosft_init(nz);
-         for (ikx=0; ikx < nkx; ikx++){
-             /* Fourier transform z to kz */
-             sf_cosft_frw(old[0],ikx,nx);
+    for (iz=0; iz < nz; iz++){
+        for (ix=0; ix < nx; ix++){
+             uk[iz][ix].r = old[iz][ix];
+             uk[iz][ix].i = 0.0;
+           }
+    }
+
+/* compute  u(kx,kz) */
+    for (iz=0; iz < nz; iz++){
+         /* Fourier transform x to kx */
+            for (ix=1; ix < nx; ix+=2){
+                uk[iz][ix] = sf_cneg(uk[iz][ix]);
+                }
+            kiss_fft_stride(cfgx,uk[iz],ctracex,1);
+            for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ikx];
          }
-         sf_cosft_close();
+     for (ikx=0; ikx < nkx; ikx++){
+         /* Fourier transform z to kz */
+            for (ikz=1; ikz<nkz; ikz+=2){
+                uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
+                }
+            kiss_fft_stride(cfgz,uk[0]+ikx,ctracez,nkx);
+            for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ikz];
+           }
 
 /*    #ifdef _OPENMP
     #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
     #endif
-*/
-
+*/        
+          
          for (ikz=0; ikz < nkz; ikz++) {
-             kz = ikz* dkz*2.0*pi;
-
-             for (ikx=0; ikx < nkx; ikx++) {
-                 kx = ikx * dkx*2.0*pi;
-                 old[ikz][ikx] = old[ikz][ikx]*(kx*kx+kz*kz);
-             }
-
+              kz = ikz* dkz*2.0*pi;
+           
+              for (ikx=0; ikx < nkx; ikx++) {
+                  kx = ikx * dkx*2.0*pi;
+                  uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],(kx*kx+kz*kz));
+              }
+           
          }   
 /* Inverse FFT*/
-         sf_cosft_init(nz);
          for (ikx=0; ikx < nkx; ikx++){
-             /* Inverse Fourier transform kz to z */
-             sf_cosft_inv(old[0],ikx,nx);
-         }
-         sf_cosft_close();
-         sf_cosft_init(nx);
-         for (iz=0; iz < nz; iz++){
+         /* Inverse Fourier transform kz to z */
+             kiss_fft_stride(cfgzi,(kiss_fft_cpx *)uk[0]+ikx,(kiss_fft_cpx *)ctracez,nkx);
+             for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ikz],ikz%2?-1.0:1.0);
+              }
+             for (ikz=0; ikz < nkz; ikz++){
              /* Inverse Fourier transform kx to x */
-              sf_cosft_inv(old[iz],0,1);
+                 kiss_fft_stride(cfgxi,(kiss_fft_cpx *)uk[ikz],(kiss_fft_cpx *)ctracex,1);
+                 for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ikx],ikx%2?-1.0:1.0);
+             }
+
+         for (iz=0; iz < nz; iz++){
+             for (ix=0; ix < nx; ix++){
+                  old[iz][ix] = sf_crealf(uk[iz][ix]);
+                  old[iz][ix] /= (nkx*nkz);
+                }
          }
-         sf_cosft_close();
+
 
     sf_floatwrite(old[0],nx*nz,out);
     free(*old);     
     free(old);     
+    free(*uk);
+    free(uk);
+    free(ctracex);
+    free(ctracez);
+    
     exit(0); 
 }           
            
