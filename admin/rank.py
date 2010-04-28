@@ -27,19 +27,18 @@ programs = progs.keys()
 proj = {}
 for p in programs:
     uses = progs[p].uses
-    list = []
     for book in uses.keys():
         for chapter in uses[book].keys():
-            for project in uses[book][chapter]:
+            ps = uses[book][chapter]
+            for project in ps:
                 dir = '/'.join([book,chapter,project])
-                list.append(dir)
 
                 if proj.get(dir):
                     proj[dir].append(p)
                 else:
                     proj[dir] = [p]
 
-                for project2 in uses[book][chapter]:
+                for project2 in ps:
                     if project2 != project:
                         dir2 = '/'.join([book,chapter,project2])
                         Gproj.add_edge(dir,dir2)
