@@ -1,7 +1,7 @@
 /* 2-D Prestack Kirchhoff time migration with antialiasing. 
 The axes in the input are {time,midpoint,offset}
 The axes in the output are {time,midpoint}
-The axes in the ODCIG are {time,midpoint,offset}
+The axes in the "image gather" are {time,midpoint,offset}
 */
 /*
   Copyright (C) 2010 University of Texas at Austin
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     int nt, nx, nh, ix, ih, iy, i, nn, it, **fold, apt;
     float *trace, **out, **v, rho, **outd, *pp;
     float h, x, t, h0, dh, dx, ti, tx, t0, t1, t2, dt, vi, aal;
-    sf_file inp, mig, vel, odcig;
+    sf_file inp, mig, vel, gather;
     bool half, verb;
 
     sf_init (argc,argv);
@@ -96,10 +96,10 @@ int main(int argc, char* argv[])
     sf_putfloat(mig,"d3",1.);
     sf_putfloat(mig,"o3",0.);
     
-    if (NULL != sf_getstring("odcig")) {
-	odcig = sf_output("odcig");
+    if (NULL != sf_getstring("gather")) {
+	gather = sf_output("gather");
     } else {
-	odcig = NULL;
+	gather = NULL;
     }
 
     if (!sf_getfloat("antialias",&aal)) aal = 1.0;
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (NULL != odcig) sf_floatwrite(out[0],nt*nx,odcig);
+	if (NULL != gather) sf_floatwrite(out[0],nt*nx,gather);
 
 	for (iy=0; iy < nx; iy++) {
 	    for (it=0; it < nt; it++) {
