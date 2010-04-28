@@ -26,19 +26,21 @@ SOURCE
 import os, sys, math, rsfprog, string, random
 
 try: # Give precedence to local version
-    import ivlad
+    import ivlad, m8rex
 except: # Use distributed version
     import rsfuser.ivlad as ivlad
+    import rsfuser.m8rex as m8rex
 
 # The exe argument allows the public functions below to perform in three ways:
-# 1. called as sf.prog(arglist[,exe='x']) to execute directly a RSF program
+# 1. called as sf.prog(arglist[,exe=None]) to execute directly a RSF program
 # 2. called as sf.prog(arglist, exe='g') to return stdout of program
 # 2. called as sf.prog(arglist, exe='p') to return a 'prog args' string
 #    ready to be chained into a pipe and executed by ivlad.pp (no output 
 #    captured)
 # 3. called as sf.prog(arglist, exe='l') to return a 
 #    'prog <inp >out args' string that can be written to a script, log, etc
-
+# Use sf._set_xmode to set exe to a certain value, to avoid having to specify it
+# in every call
 ################################################################################
 
 def __run(prog, args, inp, out, verb, exe, postproc=None):
@@ -88,67 +90,106 @@ def __parse(arg_dict):
 
 ################################################################################
 
-def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
-    phase=None, verb=False, exe='x'):
+glob_exe = 'x'
+
+def _set_xmode(exec_mode=None):
+    'Save programmer for typing exe= in every call'
+    global glob_exe
     
-    return __run('sfbandpass', __parse(locals()), inp, out, verb, exe)
+    if exec_mode != None:
+        ivlad.chk_par_in_list(exec_mode,['x','g','p','l'])
+        glob_exe = exec_mode
+
+def __x(exe, g_exe):
+    if exe == None:
+        return g_exe
+    else:
+        ivlad.chk_par_in_list(exe, ['x','g','p','l'])
+        return exe
+
+################################################################################
+# Wrappers for sf programs
+################################################################################
+
+def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
+    phase=None, verb=False, exe=None):
+    
+    return __run('sfbandpass', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def clip(inp=None, out=None, clip=None, verb=False, exe='x'):
+def clip(inp=None, out=None, clip=None, verb=False, exe=None):
 
-    return __run('sfclip', __parse(locals()), inp, out, verb, exe)
+    return __run('sfclip', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def cat(out, files=None, axis=None, o=None, d=None, verb=False, exe='x'):
+def cat(out, files=None, axis=None, o=None, d=None, verb=False, exe=None):
 
     aod = __parse({'axis':axis,'o':o,'d':d})
     # file names are not in key=val format, so __parse will not work
     filestr = ' '.join(files[1:])
 
-    return __run('sfcat', aod+' '+filestr, files[0], out, verb, exe)    
+    return __run('sfcat', aod+' '+filestr, 
+        files[0], out,
+        verb, __x(exe,glob_exe))    
 
 ################################################################################
 
-def cp(inp, out, verb=False, exe='x'):
-    return __run('sfcp', inp + ' ' + out, None, None, verb, exe)
+def cp(inp, out, verb=False, exe=None):
+    #if exe == None:
+        #exe = glob_exe
+    return __run('sfcp', inp + ' ' + out, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def create(out=None, n=None, verb=False, exe='x'):
+def create(out=None, n=None, verb=False, exe=None):
 
     args = ''
     nlist = ivlad.mklist(n)
     for i in range(len(nlist)):
         args += ' n%d=%d' % (i+1,nlist[i])
-    return __run('sfcreate', args, None, out, verb, exe)
+    return __run('sfcreate', args, 
+        None, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
 def csv2rsf(inp=None, out=None, delimiter=None, dtype=None, debug=None,
     trunc=None, o1=None, o2=None, d1=None, d2=None, unit1=None, unit2=None,
-    label1=None, label2=None, verb=False, exe='x'):
+    label1=None, label2=None, verb=False, exe=None):
 
-    return __run('sfcsv2rsf', __parse(locals()), inp, out, verb, exe)
+    return __run('sfcsv2rsf', __parse(locals()), 
+        inp,out,
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def filedims(inp=None, out=None, large=None, parform=None, verb=False, exe='x'):
+def filedims(inp=None, out=None, large=None, parform=None, verb=False, exe=None):
 
     if exe == 'x' and out==None: # invalid combination, fix the call
         exe = 'g'
-    return __run('sffiledims', __parse(locals()), inp, out, verb, exe)
+    return __run('sffiledims', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def fileflush(inp=None, out=None, verb=False, exe='x'):
+def fileflush(inp=None, out=None, verb=False, exe=None):
 
-    return __run('sffileflush', None, inp, out, verb, exe)
+    return __run('sffileflush', None, 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
+def get(inp=None, par=None, parform=False, out=None, verb=False, exe=None):
 
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
     if exe == 'x' and out==None: # invalid combination, fix the call
@@ -159,122 +200,155 @@ def get(inp=None, par=None, parform=False, out=None, verb=False, exe='x'):
             return out[0]
         else:
             return out
-    return __run('sfget', ' '.join(args), inp, out, verb, exe, postproc)
+    return __run('sfget', ' '.join(args), 
+        inp, out, 
+        verb, __x(exe,glob_exe), postproc)
 
 ################################################################################
 
-def gettype(inp=None, out=None, verb=False, exe='x'):
+def gettype(inp=None, out=None, verb=False, exe=None):
 
     if exe == 'x' and out==None: # invalid combination, fix the call
         exe = 'g'
-    return __run('sfgettype', __parse(locals()), inp, out, verb, exe)
+    return __run('sfgettype', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def invalid(out=None, chk4nan=None, dir=None, rec=None, verb=False, exe='x'):
+def invalid(out=None, chk4nan=None, dir=None, rec=None, verb=False, exe=None):
 
     if exe == 'x' and out==None: # invalid combination, fix the call
         exe = 'g'
-    return __run('sfinvalid', __parse(locals()), out, verb, exe)
+    return __run('sfinvalid', __parse(locals()), 
+        None, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def leftsize(inp=None, out=None, i=None, verb=False, exe='x'):
+def leftsize(inp=None, out=None, i=None, verb=False, exe=None):
 
     if exe == 'x' and out==None: # invalid combination, fix the call
         exe = 'g'
-    return __run('sfleftsize', __parse(locals()), inp, out, verb, exe)
+    return __run('sfleftsize', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def mv(inp, out, verb=False, exe='x'):
-    return __run('sfmv', inp + ' ' + out, None, None, verb, exe)
+def mv(inp, out, verb=False, exe=None):
+    return __run('sfmv', inp + ' ' + out, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def pclip(inp, out, pclip=None, verb=False, exe='x'):
+def pclip(inp, out, pclip=None, verb=False, exe=None):
 
     arg_dict = locals()
     args = __parse(arg_dict) + ' inp='+inp + ' out=' + out
-    return __run('sfpclip', args, None, None, verb, exe)
+    return __run('sfpclip', args, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def real(inp=None, out=None, verb=False, exe='x'):
+def real(inp=None, out=None, verb=False, exe=None):
 
-    return __run('sfreal', None, inp, out, verb, exe)
+    return __run('sfreal', None, 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
 def remap1(inp=None, out=None, d1=None, n1=None, o1=None, order=None, 
-    pattern=None, verb=False, exe='x'):
+    pattern=None, verb=False, exe=None):
 
-    return __run('sfremap1', __parse(locals()), inp, out, verb, exe)
+    return __run('sfremap1', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def rm(files, verb=False, exe='x'):
+def rm(files, verb=False, exe=None):
 
     if type(files) == str:
         args = files
     else:
         args = ' '.join(files)
-    return __run('sfrm', args, None, None, verb, exe)
+    return __run('sfrm', args, None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def rmrf(mydir, rec=False, verb=False, exe='x'):
+def rmrf(mydir, rec=False, verb=False, exe=None):
 
     arg = 'dir=' + mydir + ' rec=' + ivlad.switch(rec, 'y', 'n')
 
-    return __run('sfrmrf', args, None, None, verb, exe)
+    return __run('sfrmrf', args, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def rtoc(inp=None, out=None, verb=False, exe='x'):
+def rtoc(inp=None, out=None, verb=False, exe=None):
 
-    return __run('sfrtoc', None, inp, out, verb, exe)
+    return __run('sfrtoc', None, 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
 def seekwin(inp, out=None, nread=None, nseek=None, whence=None, verb=False,
-exe='x'):
+exe=None):
     # Takes stdin, but input cannot be from pipe
 
-    return __run('sfseekwin', __parse(locals()), inp, out, verb, exe)
+    return __run('sfseekwin', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def split(inp, outdir=None, nthick=None, verb=False, exe='x'):
+def split(inp, outdir=None, nthick=None, verb=False, exe=None):
 
     arg_dict = locals()
     args = __parse(arg_dict) + ' inp='+inp
 
-    return __run('sfsplit', args, None, None, verb, exe)
+    return __run('sfsplit', args, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def squeeze(inp=None, out=None, verb=False, exe='x'):
+def squeeze(inp=None, out=None, verb=False, exe=None):
 
-    return __run('sfwindow', 'squeeze=y', inp, out, verb, exe)
-
-################################################################################
-
-def touch(mydir=None, rec=None, chk4nan=None, verb=False, exe='x'):
-
-    return __run('sftouch', __parse(locals()), None, None, verb, exe)
+    return __run('sfwindow', 'squeeze=y', 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def transp(inp=None, out=None, plane=None, memsize=None, verb=False, exe='x'):
+def touch(mydir=None, rec=None, chk4nan=None, verb=False, exe=None):
 
-    return __run('sftransp', __parse(locals()), inp, out, verb, exe)
+    return __run('sftouch', __parse(locals()), 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def wiki2static(outdir=None, verb=False, exe='x'):
+def transp(inp=None, out=None, plane=None, memsize=None, verb=False, exe=None):
 
-    return __run('sfwiki2static', __parse(locals()), None, None, verb, exe)
+    return __run('sftransp', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
+
+################################################################################
+
+def wiki2static(outdir=None, verb=False, exe=None):
+
+    return __run('sfwiki2static', __parse(locals()), 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
@@ -285,29 +359,37 @@ f5=None, f6=None, f7=None, f8=None, f9=None, min1=None, min2=None, min3=None,
 min4=None, min5=None, min6=None, min7=None, min8=None, min9=None, n1=None, 
 n2=None, n3=None, n4=None, n5=None, n6=None, n7=None, n8=None, n9=None, 
 max1=None, max2=None, max3=None, max4=None, max5=None, max6=None, max7=None, 
-max8=None, max9=None, verb=False, exe='x'):
+max8=None, max9=None, verb=False, exe=None):
 
-    return __run('sfwindow', __parse(locals()), inp, out, verb, exe)
+    return __run('sfwindow', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def wuab(inp, prog=None, tpar=None, ipar=None, verb=False, exe='x'):
+def wuab(inp, prog=None, tpar=None, ipar=None, verb=False, exe=None):
 
     arg_dict = locals()
     args = __parse(arg_dict) + ' inp='+inp
 
-    return __run('sfwuab', args, None, None, verb, exe)
+    return __run('sfwuab', args, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def ximage(inp, par=None, verb=False, exe='x'):
+def ximage(inp, par=None, verb=False, exe=None):
 
     arg_dict = locals()
     args = 'inp='+inp + ivlad.switch(par==None, '', ' par="' + par + '"')
 
-    return __run('sfximage', args, None, None, verb, exe)
+    return __run('sfximage', args, 
+        None, None, 
+        verb, __x(exe,glob_exe))
 
 ################################################################################
 
-def zcp(inp, out, verb=False, exe='x'):
-    return __run('sfzcp', inp + ' ' + out, None, None, verb, exe)
+def zcp(inp, out, verb=False, exe=None):
+    return __run('sfzcp', inp + ' ' + out, 
+        None, None, 
+        verb, __x(exe,glob_exe))
