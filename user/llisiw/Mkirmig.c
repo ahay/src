@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[])
 {
+    char *unit;
     int nt, nx, ny, ns, nh, nz, nzx, ix, ih, i, is, ist, iht;
     float *trace, *out, **table, *stable, *rtable;
     float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal;
@@ -59,6 +60,10 @@ int main(int argc, char* argv[])
 
     sf_putfloat(mig,"o1",z0);
     sf_putfloat(mig,"d1",dz);
+    sf_putstring(mig,"label1","Depth");
+    unit = sf_histstring(inp,"unit2");
+    if (NULL != unit) sf_putstring(mig,"unit1",unit);
+
     sf_putfloat(mig,"o2",x0);
     sf_putfloat(mig,"d2",dx);
 

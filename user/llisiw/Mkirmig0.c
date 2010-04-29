@@ -25,6 +25,7 @@ int main(int argc, char* argv[])
     int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
     float *trace, *out, **table, **tablex, *stable, *stablex;
     float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal, tx;
+    char *unit;
     sf_file inp, mig, tbl;
 
     sf_init (argc,argv);
@@ -57,8 +58,13 @@ int main(int argc, char* argv[])
 
     sf_putfloat(mig,"o1",z0);
     sf_putfloat(mig,"d1",dz);
+    sf_putstring(mig,"label1","Depth");
+    unit = sf_histstring(inp,"unit2");
+    if (NULL != unit) sf_putstring(mig,"unit1",unit);
+
     sf_putfloat(mig,"o2",x0);
     sf_putfloat(mig,"d2",dx);
+    sf_putstring(mig,"label2","Distance");
 
     if (!sf_getfloat("antialias",&aal)) aal=1.0;
     /* antialiasing */
@@ -110,7 +116,6 @@ int main(int argc, char* argv[])
 	    ti = 2*stable[ix];
 	    tx = (NULL==stablex)?0.:2*stablex[ix];
 	    
-	    /* Add antialiasing later */
 	    out[ix] += pick(ti,fabsf(tx*ds*aal),trace,nt,dt,t0);
 	}
     }
