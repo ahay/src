@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     bool verb;
     int ix, it, nx, nt, niter, rect;
     float ox, dx, dt, norm;
-    float **v, **vi, *x0, *z0, *x1, *z1, *num, *den;
+    float **v, **vi, *x0, *z0, *x1, *z1, *x2, *num, *den;
     sf_file vdix, zx;
 
     sf_init(argc,argv);
@@ -58,22 +58,25 @@ int main(int argc, char *argv[])
     z0 = sf_floatalloc(nx);
     x1 = sf_floatalloc(nx);
     z1 = sf_floatalloc(nx);
+    x2 = sf_floatalloc(nx);
 
     sf_floatread(v[0],nx*nt,vdix);
     
     for (ix=0; ix < nx; ix++) {
-	x0[ix] = ox+ix*dx;
+	x0[ix] = 0.;
 	z0[ix] = 0.;
 	
-	x1[ix] = x0[ix];
+	x1[ix] = 0.;
 	z1[ix] = dt*v[0][ix];
+
+	x2[ix] = ox+ix*dx;
     }
 
     sf_floatwrite(z0,nx,zx);
-    sf_floatwrite(x0,nx,zx);
+    sf_floatwrite(x2,nx,zx);
 
     sf_floatwrite(z1,nx,zx);
-    sf_floatwrite(x1,nx,zx);
+    sf_floatwrite(x2,nx,zx);
 
     /* dimensionless velocity */
     for (it=0; it < nt; it++) {
@@ -97,7 +100,7 @@ int main(int argc, char *argv[])
 	    den[ix] = vi[it-1][ix]+0.25*(vi[it][ix]-vi[it-2][ix]);
 	    norm += den[ix]*den[ix];
 	}
-	norm = 1.0/sqrtf(norm);
+	norm = sqrtf(nx/norm);
 
 	for (ix=1; ix < nx-1; ix++) {
 	    den[ix] *= norm;
@@ -114,11 +117,16 @@ int main(int argc, char *argv[])
 	    num[ix] = -norm*(v[it-1][ix]*(x1[ix-1]-2*x1[ix]+x1[ix+1])+
 			     vi[it-1][ix]*(x0[ix]-2*x1[ix])+
 			     0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(x1[ix+1]-x1[ix-1])-
-			     0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]);
+			     0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]+
+			     0.5*(v[it-1][ix+1]-v[it-1][ix-1])*dx);
 	    x0[ix] = x1[ix];
 	}
 	divn(num,den,x1);
-	sf_floatwrite(x1,nx,zx);
+
+	for (ix=0; ix < nx; ix++) {
+	    x2[ix] = x1[ix] + ox+ix*dx;
+	}
+	sf_floatwrite(x2,nx,zx);
     }
     
     exit(0);

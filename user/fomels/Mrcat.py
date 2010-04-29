@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'Recursive sfcat (usefule for a large list of files)'
+'Recursive sfcat (useful for a long list of files)'
 
 ##   Copyright (C) 2007 University of Texas at Austin
 ##  

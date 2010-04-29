@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
-	if (verb) sf_warning("%s %d of %d",cmp?"cmp":"shot",is+1,ns);
+	if (verb) sf_warning("%s %d of %d;",cmp?"cmp":"shot",is+1,ns);
 
 	for (ih=0; ih < nh; ih++) {
 
@@ -396,6 +396,7 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
+    sf_warning(".");
 
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 

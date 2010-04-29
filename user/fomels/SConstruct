@@ -17,7 +17,7 @@ simenv smoothreg taupfit thin timecont timefreq timeshift tomo
 trismooth2 tristack twodip2 twofreq2 velcon warp1 warpadd warpscan
 '''
 
-pyprogs = 'rcat fft'
+pyprogs = 'fft las2rsf rcat'
 pymods = 'dottest conjgrad'
 
 try:  # distributed version
