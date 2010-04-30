@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	aastretch_define (coord, delt, amp);
+	aastretch_define (coord, delt, NULL);
 	aastretch_lop (adj,true,nt,nt,stack,gather[ix]);
     }
 

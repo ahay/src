@@ -284,6 +284,8 @@ so if enough trace interpolation is done, the operator is no longer subsampled.
 A disadvantage of data interpolation is that the data becomes more bulky.
 Here we attack the operator aliasing problem directly.
 
+\inputdir{all}
+
 \par
 A simple program designed for antialiasing
 gave the result in Figure~\ref{fig:boxmo1}.
@@ -291,7 +293,7 @@ A zero-offset signal is input to adjoint NMO to make
 synthetic data which is then NMO'ed and stacked.
 Notice that the end of each rectangle
 is the beginning of the rectangle at the next offset. %
-\activesideplot{boxmo1}{width=3.00in,height=4in}{ER}{
+\sideplot{boxmo1}{width=3.00in,height=4in}{
 	Rectangle smoothing during NMO and stacking.
 	Notice that the end of one rectangle exactly coincides
 	with the beginning of the rectangle at next larger offset.
@@ -349,6 +351,8 @@ anticausal summation.
 Thus each impulse in the data becomes a rectangle from the impulse to $t=0$.
 Then subtracting values at rectangle ends gives the desired integral of data
 in the rectangle.
+
+\begin{comment}
 The code is in subroutines {\tt boxmo()}
 and {\tt boxstack()}.
 The traveltime depth $\tau$ is denoted by {\tt z} in the code.
@@ -378,6 +382,7 @@ inversely proportional to the pulse width {\tt (itp - it)}.
 Wavelet area is conserved to assure that after low-pass filtering,
 the strength of a wave is independent of whether it straddled
 two mesh points as $(.5,.5)$ or lay wholly on one of them as $(1,0)$.
+\end{comment}
 
 \par
 To test a limiting case,
@@ -394,7 +399,7 @@ the full amplitude is not recovered on the latest event.
 The explanation is that a significant fraction of the angular
 aperture has been truncated at the widest offset.
 
-\activesideplot{boxmo0}{width=3.00in}{ER}{
+\sideplot{boxmo0}{width=3.00in}{
 	Rectangles shortened to one point duration.
 	({\tt antialias=0.})
 	}
@@ -423,13 +428,15 @@ of the triangle center with
 the triplet center is to integrate
 once causally and once anticausally
 as done in subroutine \texttt{doubint()} \vpageref{lst:doubint}.
-\progdex{doubint}{double integration} %
+\moddex{doubint}{double integration}{30}{42}{system/seismic} %
 
 \par
 You can imagine placing the ends and apex of each triangle
 at a nearest neighbor mesh point as we did with the rectangles.
 Instead I place these ends more precisely on the mesh with
 linear interpolation.
+
+\begin{comment}
 Subroutine \texttt{lint1()} \vpageref{lst:lint1} does linear interpolation,
 but here we need weighted results
 as provided by \texttt{spotw()} \vpageref{lst:spotw}.
@@ -439,6 +446,8 @@ as provided by \texttt{spotw()} \vpageref{lst:spotw}.
 Using these subroutines,
 I assembled the stacking subroutine {\tt tristack()}
 and the NMO routine {\tt trimo()} with triangle wavelets.
+\end{comment}
+
 The triangle routines are like those for rectangles
 except for some minor changes.
 Instead of computing the theoretical locations
@@ -455,22 +464,24 @@ Thus to preserve areas, each wavelet is scaled by the inverse {\em  squared}
 of the triangle's base length.
 Results are shown in
 Figures~\ref{fig:trimo0} and~\ref{fig:trimo1}.
-\activesideplot{trimo0}{width=3.00in}{ER}{
+\sideplot{trimo0}{width=3.00in}{
 	Triangle wavelets,
 	accurately positioned,
 	but aliased
 	({\tt antialias=0.})
 	}
-\activesideplot{trimo1}{width=3.00in}{ER}{
+\sideplot{trimo1}{width=3.00in}{
 	Antialiased triangle wavelets.
 	({\tt antialias=1.})
 	Where ever triangle duration is more than about three points,
 	the end of one triangle marks the apex of the next.
 	}
 
+\begin{comment}
 \progdex{tristack}{stack with triangle footprint} 
 
 \progdex{trimo}{triangle footprint}
+\end{comment}
 
 From the stack reconstruction of the model in Figure~\ref{fig:trimo1}
 we see the reconstruction is more blured with antialiasing

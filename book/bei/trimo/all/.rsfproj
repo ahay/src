@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfnmostretch', 'sfgrey', 'sfput', 'sfstack', 'sfdots', 'vpnmotraj']
+uses=['sfspike', 'sfnmostretch', 'sfgrey', 'sfput', 'sfstack', 'sfdots', 'vpnmotraj', 'sfmath', 'sfaastack', 'sfscale', 'sfmerge']
 data=[]
-size=     285600
+size=     329840

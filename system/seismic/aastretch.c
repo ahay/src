@@ -17,16 +17,14 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "aastretch.h"
-
 #include <rsf.h>
-/*^*/
 
-static int nt, nd, **x;
+#include "aastretch.h"
+#include "doubint.h"
+
+static int nt, nd, nk, **x;
 static float t0,dt, **w, *a, *tmp, *tmp2;
 static bool *m;
-
-static void doubint(int n, float *tmp);
 
 void aastretch_init (bool box /* if box instead of triangle */,
 		     int n1   /* trace length */, 
@@ -39,13 +37,15 @@ void aastretch_init (bool box /* if box instead of triangle */,
     t0 = o1; 
     dt = d1; 
     nd = n2;
-
-    x = sf_intalloc2(3,nd);
+    
+    nk = box? 2:3;
+    
+    x = sf_intalloc2(nk,nd);
     m = sf_boolalloc(nd);
-    w = sf_floatalloc2(3,nd);
+    w = sf_floatalloc2(nk,nd);
     a = sf_floatalloc(nd);
 
-    tmp = sf_floatalloc(n1*3);
+    tmp = sf_floatalloc(n1*nk);
     tmp2 = sf_floatalloc(n1);
 }
 
@@ -60,10 +60,10 @@ void aastretch_define (const float *coord /* data coordinates [nd] */,
     for (id = 0; id < nd; id++) {
 	m[id] = false;
 
-	rx[0] = coord[id] - delt[id] - dt;
+	rx[0] = coord[id] + delt[id] + dt;
 	rx[1] = coord[id];          
-	rx[2] = coord[id] + delt[id] + dt;
-	for (j=0; j < 3; j++) {
+	if (nk > 2) rx[2] = coord[id] - delt[id] - dt;
+	for (j=0; j < nk; j++) {
 	    rx[j] = (rx[j] - t0)/dt; 
 	    ix[j] = rx[j]; 
 	    if ((ix[j] < 0) || (ix[j] > nt - 2)) {
@@ -76,9 +76,13 @@ void aastretch_define (const float *coord /* data coordinates [nd] */,
 
 	x[id][0] = ix[0];
 	x[id][1] = ix[1] + nt;
-	x[id][2] = ix[2] + 2*nt;
+	if (nk > 2) {
+	    x[id][2] = ix[2] + 2*nt;
+	    a[id] = dt*dt/(delt[id]*delt[id] + dt*dt);
+	} else {
+	    a[id] = dt/(fabsf(delt[id]) + dt);
+	}
 
-	a[id] = dt*dt/(delt[id]*delt[id] + dt*dt);
 	if (NULL != amp) a[id] *= amp[id];
     }
 }
@@ -102,15 +106,15 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	    tmp2[it] = modl[it];
 	}
 	
-	doubint (nt, tmp2);
+	doubint (nk > 2, nt, tmp2);
 	
 	for (it=0; it < nt; it++) {
-	    tmp[it+nt]   = 2.*tmp2[it];
+	    tmp[it+nt]   = (nk-1)*tmp2[it];
 	    tmp[it]      =   -tmp2[it];
-	    tmp[it+2*nt] =   -tmp2[it];
+	    if (nk > 2) tmp[it+2*nt] =   -tmp2[it];
 	}
     } else {
-	for (it=0; it < 3*nt; it++) {
+	for (it=0; it < nk*nt; it++) {
 	    tmp[it]=0.;
 	}
     }
@@ -119,7 +123,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	if (m[id]) continue;
 	
 	aa = a[id];
-	for (j=0; j < 3; j++) {
+	for (j=0; j < nk; j++) {
 	    i1 = x[id][j]; 
 	    i2 = i1 + 1;
 	    
@@ -140,34 +144,19 @@ void aastretch_lop (bool adj    /* adjoint flag */,
   
     if (!adj) {
 	for (it=0; it < nt; it++) {
-	    tmp2[it] = 2.* tmp[it+nt] - tmp[it] - tmp[it+2*nt];
+	    if (nk > 2) {
+		tmp2[it] = 2*tmp[it+nt] - tmp[it] - tmp[it+2*nt];
+	    } else {
+		tmp2[it] = tmp[it+nt] - tmp[it];
+	    }
 	}
 	
-	doubint (nt, tmp2);
+	doubint (nk > 2, nt, tmp2);
 
 	for (it=0; it < nt; it++) {
 	    modl[it] += tmp2[it];
 	}
     } 
-}
-
-static void doubint(int n, float *tmp)
-/* double integration */
-{
-    float t;
-    int it;
-
-    
-    t = 0.;
-    for (it = 0; it < n; it++) {
-	t += tmp[it];
-	tmp[it] = t;
-    }
-    t = 0.;
-    for (it = n-1; it >=0; it--) {
-	t += tmp[it];
-	tmp[it] = t;
-    }
 }
 
 void aastretch_close (void)
