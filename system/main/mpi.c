@@ -20,34 +20,12 @@
 
 #include <rsf.h>
 
-#define CMDLEN 4096
-
-static void sizes(sf_file file, int axis, int ndim, 
-		  const off_t *n, off_t *size1, off_t *size2)
-{
-    int i;
-
-    *size1 = sf_esize(file);
-    *size2 = 1;
-    for (i=0; i < ndim; i++) {
-	if      (i < axis) *size1 *= n[i];
-	else if (i > axis) *size2 *= n[i];
-    }
-}
-
 int main(int argc, char* argv[])
 {
-    int rank, nodes, skip, ndim,split,job,jobs,bigjobs,chunk,w,i,j,len;
-    int axis, axis2, splitargc;
-    off_t size1, i2, size2, left,nbuf, n[SF_MAX_DIM];
-    off_t *splitsize1=NULL, *splitsize2=NULL;
-    float d, o, di, oi;
-    char **commands, cmdline[CMDLEN], command[CMDLEN], splitcommand[CMDLEN];
-    char *iname=NULL, *oname=NULL, nkey[5], okey[5], dkey[5], *splitname;
-    char **inames=NULL, **onames=NULL, ***spnames=NULL;
-    char buffer[BUFSIZ], **splitkey, *eq, *arg;
-    FILE *ifile=NULL, *ofile=NULL;
-    sf_file inp=NULL, out=NULL, in=NULL, *splitfile=NULL;
+    int rank, nodes, ndim, job, axis, axis2;
+    off_t n[SF_MAX_DIM];
+    char **commands, *cmdline, *iname;
+    sf_file inp=NULL, out=NULL;
     MPI_Status stat;
 
     MPI_Init(&argc,&argv);
@@ -89,7 +67,7 @@ int main(int argc, char* argv[])
 
 	sf_fileclose(inp);
     } else { /* slave nodes */
-	MPI_Recv(cmdline, CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
+	MPI_Recv(cmdline, SF_CMDLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD,&stat);
 	fprintf(stderr,"CPU %d: %s\n",rank,cmdline); 
         sf_system(cmdline);
 	MPI_Send(&rank,1,MPI_INT,0,1,MPI_COMM_WORLD);

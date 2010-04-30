@@ -30,9 +30,10 @@
 #include "files.h"
 #include "system.h"
 
-#define CMDLEN 4096
+#define SF_CMDLEN 4096
+/*^*/
 
-static char command[CMDLEN], splitcommand[CMDLEN], **inames=NULL, **onames=NULL;
+static char command[SF_CMDLEN], splitcommand[SF_CMDLEN], **inames=NULL, **onames=NULL;
 static char ***spnames=NULL, buffer[BUFSIZ], nkey[5];
 static off_t size1, size2;
 static int splitargc;
@@ -109,7 +110,7 @@ char** parallel_split(sf_file inp          /* input file */,
 		splitargc++;
 	    } else {
 		len = strlen(arg);
-		if (j+len > CMDLEN-2) sf_error("command line is too long");
+		if (j+len > SF_CMDLEN-2) sf_error("command line is too long");
 
 		strncpy(command+j,arg,len);
 		command[j+len]=' ';
@@ -145,7 +146,7 @@ char** parallel_split(sf_file inp          /* input file */,
 
     for (job=0; job < jobs; job++) {
 	cmdline = commands[job];
-	cmdline = sf_charalloc(CMDLEN);
+	cmdline = sf_charalloc(SF_CMDLEN);
 
 	if (job < bigjobs) {
 	    chunk = w;
@@ -215,12 +216,12 @@ char** parallel_split(sf_file inp          /* input file */,
 
 	    sf_fileclose(in);
 
-	    snprintf(cmdline,CMDLEN,"%s %s=%s",
+	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",
 		     splitcommand,splitkey[i]+1,splitname);
-	    strncpy(splitcommand,cmdline,CMDLEN);
+	    strncpy(splitcommand,cmdline,SF_CMDLEN);
 	}	
 
-	snprintf(cmdline,CMDLEN,"%s %s < %s > %s",
+	snprintf(cmdline,SF_CMDLEN,"%s %s < %s > %s",
 		 command,splitcommand,iname,oname);
     }
 
@@ -232,7 +233,7 @@ void parallel_out(sf_file out          /* output file */,
 		  const char *iname    /* name of the input file */)
 /*< prepare output >*/
 {
-    char *oname, cmdline[CMDLEN];
+    char *oname, cmdline[SF_CMDLEN];
     int ndim;
     off_t n[SF_MAX_DIM];
     sf_file inp;
@@ -240,7 +241,7 @@ void parallel_out(sf_file out          /* output file */,
 
     ofile = sf_tempfile(&oname,"w+b");
     
-    snprintf(cmdline,CMDLEN,"%s %s --dryrun=y < %s > %s",
+    snprintf(cmdline,SF_CMDLEN,"%s %s --dryrun=y < %s > %s",
 	     command,splitcommand,iname,oname);
     sf_system(cmdline);
     
