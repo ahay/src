@@ -33,6 +33,7 @@
 #include "simtab.h"
 #include "error.h"
 #include "alloc.h"
+#include "_defs.h"
 
 #include "_bool.h"
 #include "file.h"
@@ -124,13 +125,12 @@ void sf_cp(sf_file in, sf_file out)
 {
     int esize;
     off_t nsiz, nbuf;
-    char buf[BUFSIZ];
+    char *buf;
     
     nsiz = sf_bytes (in);
     if (nsiz < 0) { /* reading from "stdin" */
-	nsiz = sf_filesize (in);
-	if (!sf_histint(in,"esize",&esize) || esize <= 0)
-	    sf_error("%s: need esize > 0 in input",__FILE__);
+	nsiz = sf_filesize(in);
+	esize = sf_esize(in);
 	nsiz *= esize;
     }
 
@@ -138,11 +138,17 @@ void sf_cp(sf_file in, sf_file out)
     sf_setformat(in,"raw");
     sf_setformat(out,"raw");
 
-    for (nbuf = (off_t) BUFSIZ; nsiz > 0; nsiz -= nbuf) {
+    nbuf = sf_bufsiz(in);
+    buf = sf_charalloc(SF_MIN(nbuf,nsiz));
+
+    while (nsiz > 0) {
 	if (nbuf > nsiz) nbuf=nsiz;
 	sf_charread (buf,nbuf,in);
 	sf_charwrite (buf,nbuf,out);
+	nsiz -= nbuf;
     }
+
+    free(buf);
 }
 
 void sf_rm(const char* filename, bool force, bool verb, bool inquire)
@@ -176,11 +182,17 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
     sf_simtab_input (tab,file,NULL);
     (void) fclose (file);
     in = sf_simtab_getstring (tab,"in");
-    if (NULL == in) sf_error ("%s:  File %s has no in=",__FILE__,filename);
+    if (NULL == in) {
+	if (force) {
+	    sf_warning ("%s:  File %s has no in=",__FILE__,filename);
+	} else {
+	    sf_error ("%s:  File %s has no in=",__FILE__,filename);
+	}
+    }
     if (0 != remove(filename)) 
 	sf_error ("%s: Trouble removing header file %s:",__FILE__,filename);
 
-    if (0 != strcmp(in,"stdin")) {
+    if (NULL != in && 0 != strcmp(in,"stdin")) {
 	if (verb) sf_warning("sf_rm: Removing data %s",in);
 	if (!force) {
 	    if (0 != stat(in,&buf)) 
@@ -196,8 +208,13 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
 		if ('y' != cc && 'Y' != cc) return;
 	    }
 	}
-	if (0 != remove(in)) 
-	    sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
+	if (0 != remove(in)) {
+	    if (force) {
+		sf_warning ("%s: Trouble removing data file %s:",__FILE__,in);
+	    } else {
+		sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
+	    }
+	}
     }
     if (NULL != query)
         (void) fclose (query);

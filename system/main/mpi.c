@@ -56,7 +56,9 @@ int main(int argc, char* argv[])
 	}
 
 	iname = sf_getstring("input");
+
 	if (!sf_getint("join",&axis2)) axis2=axis;
+	/* axis to join */
 
 	parallel_out(out,axis2,iname);
 	

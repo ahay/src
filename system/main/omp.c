@@ -24,22 +24,21 @@
 
 #include <rsf.h>
 
-#define CMDLEN 4096
-
 int main(int argc, char* argv[])
 {
-    int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
-    off_t n[SF_MAX_DIM], size, left,nbuf;
-    char command[CMDLEN], command2[CMDLEN];
-    char *iname=NULL, *oname=NULL, *iname2=NULL, key[5];
-    char **inames=NULL, **onames=NULL, **cmdline=NULL, buffer[BUFSIZ];
-    FILE *ifile=NULL, *ofile=NULL;
-    sf_file inp=NULL, out=NULL, in=NULL, inp2=NULL;
+    int axis, axis2, rank, nodes, node, ndim;
+    off_t n[SF_MAX_DIM];
+    char *iname=NULL, **cmdline;
+    FILE *tmp;
+    sf_file inp, out, inp2;
 
 #pragma omp parallel
     {
 	nodes = omp_get_num_threads();
-	if (1 >= nodes) nodes = omp_get_num_procs(); 
+	if (1 >= nodes) {
+	    nodes = omp_get_num_procs(); 
+	    omp_set_num_threads(nodes);
+	}
     }
 
     /* master node */
@@ -50,128 +49,35 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     ndim = sf_largefiledims (inp,n);
-    size = sf_esize(inp);
-    for (i=0; i < ndim-1; i++) {
-	size *= n[i];
-    }
+    if (!sf_getint("split",&axis)) axis=ndim;
+    /* axis to split */
 
-    last = n[ndim-1];
-    chunk = last/nodes;
-    extra = last-chunk*nodes;
-    snprintf(key,5,"n%d",ndim);
+    tmp = sf_tempfile(&iname,"w+b");
+    fclose(tmp);
 
-    j=0;
-    for (i=1; i < argc; i++) {
-	len = strlen(argv[i]);
-	if (j+len > CMDLEN-2) sf_error("command line is too long");
-	strncpy(command+j,argv[i],len);
-	command[j+len]=' ';
-	j += len+1;
-    }
-    command[j]='\0';
-
-    inames = (char**) sf_alloc(nodes,sizeof(char*));
-    onames = (char**) sf_alloc(nodes,sizeof(char*));
-    cmdline = (char**) sf_alloc(nodes,sizeof(char*));
-
-    ifile = sf_tempfile(&iname2,"w+b");
-    inp2 = sf_output(iname2);
-    fclose(ifile);
-
-    sf_fileflush(inp2,inp);
-    sf_setform(inp2,SF_NATIVE);
-
-    sf_fileflush(out,inp);
-    sf_setform(out,SF_NATIVE);
-
-    sf_setform(inp,SF_NATIVE);
-
-    for (node=0; node < nodes; node++) {
-	if (node > 0) {
-	    fclose(ifile);
-	    fclose(ofile);
-	}
-
-	ifile = sf_tempfile(&iname,"w+b");
-	ofile = sf_tempfile(&oname,"w+b");
-
-	inames[node]=iname;
-	onames[node]=oname;
-
-	in = sf_output(iname);
-	nc = (node==nodes-1)? chunk+extra:chunk;
-	sf_putint(in,key,nc);
-	sf_fileflush(in,inp);
-	sf_setform(in,SF_NATIVE);
-
-	for (i=0; i < nc; i++) {
-	    for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
-		if (nbuf > left) nbuf=left;
-		
-		sf_charread(buffer,nbuf,inp);
-		sf_charwrite(buffer,nbuf,in);
-		sf_charwrite(buffer,nbuf,inp2);
-	    }
-	}
-
-	sf_fileclose(in);
-
-	cmdline[node] = sf_charalloc(CMDLEN);
-	snprintf(cmdline[node],CMDLEN,"%s < %s > %s",command,iname,oname);
-    }
+    inp2 = sf_output(iname);
+    sf_cp(inp,inp2);
     sf_fileclose(inp2);
 
-    /* sf_warning("start parallel job"); */
+    inp2 = sf_input(iname);
 
-#pragma omp parallel private(rank)
+    cmdline = parallel_split(inp2,axis,nodes+1,ndim,n,argc,argv);  
+
+#pragma omp parallel private(rank) shared(cmdline)
     {
-	omp_set_num_threads(nodes);
 	rank = omp_get_thread_num();
+	fprintf(stderr,"CPU %d: %s\n",rank,cmdline[rank]); 
 	sf_system(cmdline[rank]);
     }
-
-    /* sf_warning("end parallel job"); */
-
-    ofile = sf_tempfile(&oname,"w+b");
-    snprintf(command2,CMDLEN,"%s --dryrun=y < %s > %s",command,iname2,oname);
-    sf_system(command2);
-    sf_rm(iname2,true,false,false);
-
-    inp = sf_input(oname);
-    ndim = sf_largefiledims (inp,n);
-    if (last != n[ndim-1]) 
-	sf_error("Wrong dimensionality %d != %d",last,n[ndim-1]);
-
-    size = sf_esize(inp);
-    for (i=0; i < ndim-1; i++) {
-	size *= n[i];
-    }
-
-    sf_setformat(out,sf_histstring(inp,"data_format"));
-    sf_fileflush(out,inp);
-    sf_setform(out,SF_NATIVE);
-    sf_fileclose(inp);
-    sf_rm(oname,true,false,false);
+    
+    if (!sf_getint("join",&axis2)) axis2=axis;
+    /* axis to join */
+    
+    parallel_out(out,axis2,iname);
+    sf_rm(iname,true,false,false);
 
     for (node=0; node < nodes; node++) {
-	iname = inames[node];
-	oname = onames[node];
-
-	in = sf_input(oname);
-	sf_setform(in,SF_NATIVE);
-
-	nc = (node==nodes-1)? chunk+extra:chunk;
-	for (i=0; i < nc; i++) {
-	    for (nbuf=BUFSIZ,left=size; left > 0; left -= nbuf) {
-		if (nbuf > left) nbuf=left;
-		
-		sf_charread(buffer,nbuf,in);
-		sf_charwrite(buffer,nbuf,out);
-	    }
-	}
-
-	sf_rm(iname,true,false,false);
-	sf_rm(oname,true,false,false);
+	parallel_join(out,node);
     }
 
     exit(0);

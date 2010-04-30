@@ -145,8 +145,8 @@ char** parallel_split(sf_file inp          /* input file */,
     commands =  (char**) sf_alloc(jobs,sizeof(char*));
 
     for (job=0; job < jobs; job++) {
+	commands[job] = sf_charalloc(SF_CMDLEN);
 	cmdline = commands[job];
-	cmdline = sf_charalloc(SF_CMDLEN);
 
 	if (job < bigjobs) {
 	    chunk = w;
