@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, node,ndim,last,extra,chunk,i,j,len,nc;
     off_t n[SF_MAX_DIM], size, left,nbuf;
-    char command[CMDLEN], command2[CMDLEN], *iname=NULL, *oname=NULL, *iname2=NULL, key[5];
+    char command[CMDLEN], command2[CMDLEN];
+    char *iname=NULL, *oname=NULL, *iname2=NULL, key[5];
     char **inames=NULL, **onames=NULL, **cmdline=NULL, buffer[BUFSIZ];
     FILE *ifile=NULL, *ofile=NULL;
     sf_file inp=NULL, out=NULL, in=NULL, inp2=NULL;
