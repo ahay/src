@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint("split",&axis)) axis=ndim;
 	/* axis to split */
 	
-	commands = parallel_split(inp,axis,nodes,ndim,n,argc,argv);  
+	commands = sf_split(inp,axis,nodes,ndim,n,argc,argv);  
 
 	for (job=1; job < nodes; job++) {
 	    cmdline = commands[job-1];
@@ -60,11 +60,11 @@ int main(int argc, char* argv[])
 	if (!sf_getint("join",&axis2)) axis2=axis;
 	/* axis to join */
 
-	parallel_out(out,axis2,iname);
+	sf_out(out,axis2,iname);
 	
 	for (job=1; job < nodes; job++) {
 	    MPI_Recv(&rank,1, MPI_INT, job, 1, MPI_COMM_WORLD,&stat);
-	    parallel_join(out,job-1);
+	    sf_join(out,job-1);
 	}
 
 	sf_fileclose(inp);

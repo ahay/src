@@ -51,7 +51,7 @@ static void sizes(sf_file file, int axis, int ndim,
     }
 }
 
-char** parallel_split(sf_file inp          /* input file */, 
+char** sf_split(sf_file inp          /* input file */, 
 		      int axis             /* split axis */,
 		      int nodes            /* number of CPUs */,
 		      int ndim, off_t *n   /* [ndim] file dimensions */, 
@@ -228,7 +228,7 @@ char** parallel_split(sf_file inp          /* input file */,
     return commands;
 }
 
-void parallel_out(sf_file out          /* output file */, 
+void sf_out(sf_file out          /* output file */, 
 		  int axis             /* join axis */,
 		  const char *iname    /* name of the input file */)
 /*< prepare output >*/
@@ -261,7 +261,7 @@ void parallel_out(sf_file out          /* output file */,
     sf_rm(oname,true,false,false);
 }
 
-void parallel_join(sf_file out, int job)
+void sf_join(sf_file out, int job)
 /*< join outputs >*/
 {
     int i, chunk;

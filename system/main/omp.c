@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
     inp2 = sf_input(iname);
 
-    cmdline = parallel_split(inp2,axis,nodes+1,ndim,n,argc,argv);  
+    cmdline = sf_split(inp2,axis,nodes+1,ndim,n,argc,argv);  
 
 #pragma omp parallel private(rank) shared(cmdline)
     {
@@ -73,11 +73,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("join",&axis2)) axis2=axis;
     /* axis to join */
     
-    parallel_out(out,axis2,iname);
+    sf_out(out,axis2,iname);
     sf_rm(iname,true,false,false);
 
     for (node=0; node < nodes; node++) {
-	parallel_join(out,node);
+	sf_join(out,node);
     }
 
     exit(0);
