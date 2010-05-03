@@ -23,10 +23,10 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3, i3;
+    int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3, i3, nf;
     float *mm, *kk, *filt, eps;
     bool *known, exact, verb;
-    sf_file in, out, fil, mask;
+    sf_file in, out, fil, mask=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
     
     if (nf3!=n1 || nf4!=n2) sf_error("need n1==nf3 && n2==nf4");
     
-    filt = sf_floatalloc(nf1*nf2*nf3*nf4);
+    nf = nf1*nf2*nf3*nf4;
+    filt = sf_floatalloc(nf);
     mm = sf_floatalloc(n1*n2);
     kk = sf_floatalloc(n1*n2);
     known = sf_boolalloc(n1*n2);
@@ -71,16 +72,19 @@ int main(int argc, char* argv[])
 	known[i]=false;
     }
 
+    if (NULL != sf_getstring("mask")) {
+	/* optional input mask file for known data */
+	mask = sf_input("mask");
+    }
+
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
 	sf_floatread(mm,n1*n2,in);
-	sf_floatread(filt,nf1*nf2*nf3*nf4,fil);
+	sf_floatread(filt,nf,fil);
 	
 	if (NULL != sf_getstring("mask")) {
 	    /* optional input mask file for known data */
-	    mask = sf_input("mask");
 	    sf_floatread(kk,n1*n2,mask);
-	    sf_fileclose(mask);
 	    
 	    for (i=0; i < n1*n2; i++) {
 		known[i] = (bool) (kk[i] != 0.);

@@ -44,7 +44,6 @@ void nmis(int niter         /* number of iterations */,
     mmmult_init(filt, nf1, nf2, nf3, nf4);
     sf_solver (mmmult_lop, sf_cgstep, nf3*nf4, nf3*nf4, xx, dd, niter, 
 	       "known", known, "x0", xx, "verb", verb, "end");
-    mmmult_close();
     free(dd);
     sf_cgstep_close();
 
