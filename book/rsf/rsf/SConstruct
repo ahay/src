@@ -1,8 +1,8 @@
-from rsftex import *
+from rsf.tex import *
 
 import os
-import rsfdoc
-import rsfprog
+import rsf.doc
+import rsf.prog
 
 root = os.environ.get('RSFROOT')
 libdir = os.path.join(root,'lib')
@@ -14,13 +14,12 @@ run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
 output = {'.tex':'l',
           '.wiki':'m'}
 
-for prog in rsfdoc.progs.keys():
+for prog in rsf.doc.progs.keys():
     for out in output.keys():
         Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
     Depends('prog.ltx',prog+'.tex')
     Depends('prog.wiki',prog+'.wiki')
 
-#Paper('install',use=['[bookmarks=true]hyperref','color','listings'])
 Paper('tour',use='listings,color,hyperref',color='mona monacap monaclip')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')

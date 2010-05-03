@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('qdome',None,'qdome n1=200 d1=.008')
 

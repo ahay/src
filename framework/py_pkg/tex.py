@@ -16,9 +16,21 @@
 
 import os, re, glob, string, types, pwd, shutil
 import cStringIO, token, tokenize, cgi, sys, keyword
-import rsf, latex2wiki
-
 import SCons
+
+# Someone should eventually figure out the dependencies and specify Depends()
+# in SConstruct, so that rsf.tex functions are only called after rsf has been
+# installed
+try:
+    import rsf.conf as rsfconf
+    import rsf.doc as rsfdoc
+    import rsf.path as rsfpath
+    import rsf.latex2wiki as latex2wiki
+except: # First installation
+    import conf as rsfconf
+    import doc as rsfdoc
+    import path as rsfpath
+    import latex2wiki
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = map(int,string.split(SCons.__version__,'.')[:3])
@@ -35,10 +47,13 @@ SCons.Defaults.DefaultEnvironment(tools = [])
 # CONFIGURATION VARIABLES
 #############################################################################
 
+# To do: the configuration process should know about these dependencies!
+
 bibtex      = WhereIs('bibtex')
 makeindex   = WhereIs('makeindex')
 acroread    = WhereIs('acroread')
-pdfread     = acroread or WhereIs('kpdf') or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+pdfread     = acroread or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 pdftops     = WhereIs('pdftops')
 epstopdf    = WhereIs('epstopdf') or WhereIs('a2ping') 
 if epstopdf:
@@ -68,12 +83,23 @@ itype = os.environ.get('IMAGE_TYPE','png')
 
 rerun = re.compile(r'\bRerun')
 
-# directory tree for executable files
-top = os.environ.get('RSFROOT')
-bindir = os.path.join(top,'bin')
-libdir = os.path.join(top,'lib')
-incdir = os.path.join(top,'include')
-figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
+# RSFROOT should be actually read from somewhere, so as to allow installation 
+# when RSFROOT is not specified, and is actually something like /usr/
+root = os.environ.get('RSFROOT')# not needed in module except for default of figdir, is it imported elsewhere?
+bindir = os.path.join(root,'bin') # not needed in module, is it imported elsewhere?
+libdir = os.path.join(root,'lib') # not needed in module, is it imported elsewhere?
+incdir = os.path.join(root,'include') # not needed in module, is it imported elsewhere?
+figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
+# The lines below are copied from py_pkg/SConstruct, both should be
+# executed from a common module, or pkgdir imported:
+if sys.version_info[:2] < (2, 7):
+    import distutils.sysconfig as sysconfig
+else:
+    import sysconfig
+# Deduce installation directory name
+std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
+pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
+# End stuff copied from SConstruct
 
 #############################################################################
 # REGULAR EXPRESSIONS
@@ -422,7 +448,7 @@ def use(target=None,source=None,env=None):
     project = os.path.dirname(info)
     tree = env.get('tree')
     doc = map(lambda prog:
-              'rsf.doc.progs["%s"].use("%s","%s","%s")' %
+              'rsfdoc.progs["%s"].use("%s","%s","%s")' %
               (prog,tree[1],tree[2],project),loc[what])
     out.write(string.join(doc,'\n') + '\n')
     out.close()
@@ -466,7 +492,7 @@ _pos = 0
 
 
 def _proglink(name):
-    link = '<a href="/RSF/%s.html">%s</a>' % (rsf.doc.progs[name].name, name)
+    link = '<a href="/RSF/%s.html">%s</a>' % (rsfdoc.progs[name].name, name)
     return link
 
 dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
@@ -598,7 +624,7 @@ def colorize(target=None,source=None,env=None):
 
          if uses:
              out.write('</div><p><div class="progs">')
-             out.write(rsf.doc.multicolumn(uses,_proglink))
+             out.write(rsfdoc.multicolumn(uses,_proglink))
 
          if data:
              while 'PRIVATE' in data:
@@ -606,7 +632,7 @@ def colorize(target=None,source=None,env=None):
              while 'LOCAL' in data:
                  data.remove('LOCAL')
              out.write('</div><p><div class="dsets">')
-             out.write(rsf.doc.multicolumn(data,_datalink))
+             out.write(rsfdoc.multicolumn(data,_datalink))
  
      out.write('''
      </div>
@@ -793,10 +819,10 @@ class TeXPaper(Environment):
         kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
         if version[0] < 1 or version[1] < 2:
-            opts = Options(os.path.join(libdir,'rsfconfig.py'))
+            opts = Options(os.path.join(pkgdir,'config.py'))
         else:
-            opts = Variables(os.path.join(libdir,'rsfconfig.py'))
-        rsf.conf.options(opts)
+            opts = Variables(os.path.join(pkgdir,'config.py'))
+        rsfconf.options(opts)
         opts.Update(self)
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
@@ -818,7 +844,7 @@ class TeXPaper(Environment):
             if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
                 self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
 
-        self.tree = rsf.path.dirtree()
+        self.tree = rsfpath.dirtree()
 
 	self.doc = os.environ.get(
             'RSFDOC',
@@ -826,16 +852,16 @@ class TeXPaper(Environment):
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
-        rsf.path.mkdir(self.doc)
+        rsfpath.mkdir(self.doc)
 
-        datapath = rsf.path.datapath()
+        datapath = rsfpath.datapath()
         self.path = os.path.dirname(datapath)
         if datapath[:2] != './':
             for level in self.tree[1:]:
                 self.path = os.path.join(self.path,level)
-        rsf.path.mkdir(self.path)
+        rsfpath.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
-        rsf.path.sconsign(self)
+        rsfpath.sconsign(self)
 
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
@@ -862,7 +888,7 @@ class TeXPaper(Environment):
         self.data = []
         self.Dir()
     def Install2(self,dir,fil):
-        dir2 = rsf.path.mkdir(dir)
+        dir2 = rsfpath.mkdir(dir)
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories

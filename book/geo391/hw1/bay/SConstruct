@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # Download data
 Fetch('bay.h','bay')

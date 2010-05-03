@@ -27,8 +27,8 @@ import csv, struct, sys, os
 try: # Give precedence to local version
     import ivlad, ooio
 except: # Use distributed version
-    import rsfuser.ivlad as ivlad
-    import rsfuser.ooio  as ooio
+    import rsf.user.ivlad as ivlad
+    import rsf.user.ooio  as ooio
 
 ################################################################################
 

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # default parameters
 def param(par):

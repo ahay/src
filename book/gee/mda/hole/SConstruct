@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('make',None,'make n1=100 n2=20')
 Flow('hole','make','hole')

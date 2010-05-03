@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 # Fetch Files from repository
 modelFiles=['vp_marmousi-ii.segy','vs_marmousi-ii.segy','density_marmousi-ii.segy']
 outputFiles=['vp','vs','density']

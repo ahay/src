@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 nr = 10000 # number of realizations
 ns = 100   # number of samples

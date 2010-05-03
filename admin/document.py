@@ -12,8 +12,8 @@ etc..."
 Note: private projects are also included
 '''
 
-from rsfdoc import progs
-import rsfprog
+from rsf.doc import progs
+import rsf.prog as rsfprog
 
 def nuses(p):
     'how many times a program is used'

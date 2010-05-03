@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('mod3',None,
      '''sigmoid n1=200 d2=.008 n2=200 |

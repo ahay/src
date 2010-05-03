@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 FTPserver = {
     'server': 'slim.eos.ubc.ca',

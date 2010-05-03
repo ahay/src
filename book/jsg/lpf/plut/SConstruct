@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for case in ('ref','mod'):
     sgy = 'pluto1.5_%s.sgy' % case

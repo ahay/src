@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 lag = (1,2,3,97,98,99,100)
 flt = (-.36,-.024,-.013,-.024,-.05,-.11,-.31)

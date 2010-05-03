@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('cmp807_raw.HH','rad')
 Flow('cmp','cmp807_raw.HH',

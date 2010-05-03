@@ -2,7 +2,7 @@
 # Setting up
 #########################################################
 
-from rsfproj import *
+from rsf.proj import *
 
 #########################################################
 # Obtaining the test data

@@ -32,7 +32,7 @@ ivlad m8rex ooio sf
 
 # Needed for both C and F90 programs:
 if glob_build:
-    Import('env libdir bindir')
+    Import('env bindir pkgdir')
     env = env.Clone()
     bldroot = '../..' # aka RSFSRC/build
 else:
@@ -53,11 +53,11 @@ docs_f90 = bldutil.build_install_f90(env, progs_f90, bindir, api, bldroot,
 if glob_build:
 
     docs_py = bldutil.install_py_mains(env, progs_py, bindir)
-    bldutil.install_py_modules(env, py_modules, libdir)
-    bldutil.install_self_doc(env, libdir, docs_c, docs_py, docs_f90)
+    bldutil.install_py_modules(env, py_modules, pkgdir)
+    bldutil.install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90)
 
     # The back-up Python API
     if 'python' not in api:
-        rsfbak = os.path.join(srcroot, 'api', 'python', 'rsfbak.py')
-        env.RSF_Pycompile(rsfbak+'c',rsfbak)
-        env.Install(libdir, rsfbak+'c')
+        apibak = os.path.join(srcroot, 'api', 'python', 'apibak.py')
+        env.RSF_Pycompile(apibak+'c',apibak)
+        env.Install(pkgdir, apibak+'c')

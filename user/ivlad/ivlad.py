@@ -23,17 +23,17 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, math, rsfprog, string, random
+import os, sys, math, rsf.prog, string, random
 
 try: # Give precedence to local version
     import m8rex
 except: # Use distributed version
-    import rsfuser.m8rex as m8rex
+    import rsf.user.m8rex as m8rex
 
 try:
-    import rsf
+    import rsf.api as rsf
 except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+    import rsf.apibak as rsf
 
 try:
     import subprocess
@@ -101,7 +101,7 @@ def show_man_and_out(condition):
     'Display self-doc (man page) and exit'
 
     if condition:
-        rsfprog.selfdoc() # show the man page
+        rsf.prog.selfdoc() # show the man page
         sys.exit(unix_error)
 
 ###############################################################################

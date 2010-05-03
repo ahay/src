@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # get data
 Fetch('cmps-tp.HH','blake')

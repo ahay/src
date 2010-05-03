@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # ------------------------------------------------------------
 # lags to slant-stacks

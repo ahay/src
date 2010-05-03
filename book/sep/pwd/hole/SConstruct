@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def plot(title):
     return 'grey wantaxis1=n label1=Sample label2=Trace title="%s" ' % title

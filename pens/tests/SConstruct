@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 tests = '''
 align alignh aspect_ratio clipping colors coltab Cyrillic erase greycol hatch 

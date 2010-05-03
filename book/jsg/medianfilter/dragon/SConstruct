@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 box = '''
       box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=3

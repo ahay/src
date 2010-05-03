@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def wflds(wfld,cmps,par):
     Flow(wfld,cmps,

@@ -36,9 +36,9 @@ if not hasattr(os,'walk'):
     sys.exit(unix_error)
 
 try:
-    import rsf
+    import rsf.api as rsf
 except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+    import rsf.apibak as rsf
 
 sfprefix = 'sf'                 # prefix for rsf commands
 plprefix = 'vp'                 # prefix for vpl commands

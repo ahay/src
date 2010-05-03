@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def grey(title):
     return 'grey crowd=.88 wantaxis=n title="%s"' % title

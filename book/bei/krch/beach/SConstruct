@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('7ab.vpl 7c 7d',None,
      '''

@@ -1,4 +1,4 @@
-from rsftex import *
+from rsf.tex import *
 
 End(color='''
     scan100 time2-over mdif-time2-over

@@ -6,7 +6,7 @@
 # Date  : December, 07
 import sys
 
-from   rsfproj import *
+from rsf.proj import *
 try:
     import numpy   as     np
 except:

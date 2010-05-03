@@ -2,7 +2,7 @@
  # acoustic modeling (simple half-space model)
  ##
 
-from rsfproj import *
+from rsf.proj import *
 import fdmod
 
 Program('AFDM.x',['AFDM.c','fdutil.c','omputil.c'])

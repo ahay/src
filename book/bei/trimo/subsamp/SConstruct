@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('dense',None,'aliasp cycles=30 n2=500 slow=0.0045')
 Flow('subsa','dense','window j2=25')

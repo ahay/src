@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''
 Return mask to remove random traces in 2D and 3D using a maximum gap
 size constraint
@@ -28,13 +27,13 @@ size constraint
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsf as sf
+import rsf.api as sf
 import numpy as np
 
 try: # Give precedence to local version
     from hegilles import killtraces
 except: # Use distributed version
-    from rsfuser.hegilles import killtraces
+    from rsf.user.hegilles import killtraces
 
 par = sf.Par()
 

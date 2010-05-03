@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for dat in Split('a d gma gmd'):
     sep = dat + '.int.HH'

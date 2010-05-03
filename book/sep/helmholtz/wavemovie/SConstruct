@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('imp',None,'wavemovie nx=128 impresp=y imp=$TARGET',stdout=0)
 

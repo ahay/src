@@ -1,4 +1,4 @@
-from rsfbook import *
+from rsf.book import *
 
 #chapters = Split('ajt lsq iin hlx prc mda noiz lal pch lmn rez')
 chapters = Split('ajt lsq iin hlx prc mda lal pch lmn rez')

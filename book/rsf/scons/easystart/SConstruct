@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # Download the input data file
 Fetch('lena.img','imgs')

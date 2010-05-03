@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def read_chevron(target=None,source=None,env=None):
     inp = open(str(source[0]),'r')

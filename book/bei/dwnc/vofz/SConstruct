@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math, string
 
 def sag(nt,nx,alpha):

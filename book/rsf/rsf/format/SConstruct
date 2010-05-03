@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('sin',None,'math n1=1000 output="sin(0.5*x1)" ')
 

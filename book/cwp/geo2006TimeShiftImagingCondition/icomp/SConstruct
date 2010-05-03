@@ -2,7 +2,7 @@
  # Imaging condition components
  ##
 
-from rsfproj import *
+from rsf.proj import *
 import math
 
 # ------------------------------------------------------------

@@ -202,7 +202,7 @@ Here is a simple SConstruct file to make filter.rsf and filter.vpl :
 #
 # Setting up
 #
-from rsfproj import *
+from rsf.proj import *
 
 #
 # Make filter.rsf

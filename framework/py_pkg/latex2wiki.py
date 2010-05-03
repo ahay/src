@@ -1,19 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: ISO-8859-1 -*-
 #
-# Modified by Sergey Fomel <sergey.fomel@beg.utexas.edu>
-#
-# Mike Meylan is hacking this to include more latex commands
-# and Malte has added a few things that get rid of his personal latex commands.
-#
-#This code has been modified by Anthony Miller for handling of inline mathematics and
-#	more sophisticated documents. 
-#
-#Original idea from : 
-#       Maxime Biais <maxime@biais.org>
-#     but has been nearly all rewritten since...
-# A good fraction of this code was written by
-#Marc Poulhiès <marc.poulhies@epfl.ch>
+# Original idea and some code from Maxime Biais. Significant contributions by
+# Marc Poulhiès. Additions and changes by Mike Meylan, Malte, Anthony Miller and
+# Sergey Fomel.
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -28,8 +18,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-# $Id: latex2twiki.py,v 1.2 2005/07/27 12:40:53 poulhies Exp $
 
 import re, string, os
 
@@ -48,7 +36,7 @@ insert = ""
 lang = "text"
 code = ""
 coderef = ""
-repos = "http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk"
+repos = "http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/"
 
 def dummy(s):
     pass

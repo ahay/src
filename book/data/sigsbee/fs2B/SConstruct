@@ -2,7 +2,7 @@
  # Sigsbee 2B Free Surface Shot Data   #
  #######################################
 
-from rsfproj import *
+from rsf.proj import *
 
 #------- Define Variables and Filenames ------#
 data = 'sigsbee2b_fs.segy'

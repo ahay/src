@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('spike',None,
      'spike n1=29 nsp=5 k1=5,10,15,20,25 mag=1,-4,6,-4,1')

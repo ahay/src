@@ -5,7 +5,7 @@
 #         
 # Date  : January, 07
 
-from rsfproj import *
+from rsf.proj import *
 import os
 
 Flow('model',None,

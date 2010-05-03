@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 nt=401
 ns=25

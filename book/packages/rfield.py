@@ -27,7 +27,7 @@
 # Import RSF and math libraries.
 #
 
-from rsfproj import *
+from rsf.proj import *
 from math    import sqrt,pi
 
 def rfield (real_par,grid_par,covar_par):

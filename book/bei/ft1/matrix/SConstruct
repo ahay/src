@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math, string
 
 Flow('real',None,'math n1=32 n2=32 output="cos(%g*x1*x2)" ' % (2*math.pi/32))

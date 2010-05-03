@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math
 
 def execute(rr,seed,par):

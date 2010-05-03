@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('elf-stk2.rsf','masha')
 Flow('data','elf-stk2.rsf','dd form=native | put o1=0')

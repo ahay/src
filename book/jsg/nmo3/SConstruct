@@ -1,4 +1,4 @@
-from rsftex import *
+from rsf.tex import *
 
 End(use='amsmath',color='''
 pxsmooth3d pysmooth3d pmag3-anisow 

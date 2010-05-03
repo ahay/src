@@ -3,11 +3,6 @@ import os, sys, glob
 # Madagascar modules:
 import doc
 
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
-
 try:
     import bldutil
 except:
@@ -16,24 +11,23 @@ except:
 
 ################################################################################
 
-Import('env root libdir system user')
-#assert os.path.isdir(libdir)
+Import('env root bindir pkgdir system user')
 
-# Deduce installation directory name
-std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
+env.Install(pkgdir,'__init__.py')
 
 dirs = Split('plot libplot pens sumain suplot') + system + user
 env.Command('prog.py',os.path.join(pkgdir,'path.py'),
             action=Action(doc.getprogs,varlist=['dirs']),dirs=dirs)
 
-for src in Split('path doc flow proj prog tex book'):
+for src in Split('path doc flow proj prog tex book latex2wiki suproj use sftour'):
     bldutil.py_install(src, env, pkgdir)
 
-############################### Dependencies and installs from RSFSRC
+env.InstallAs(bindir,'latex2wiki.pyc')
+env.InstallAs(bindir,'sftour.pyc')
+
+# Dependencies and installs from RSFSRC
 Depends('proj.pyc',os.path.join(pkgdir,'bld.pyc'))
 
-# Remember the Depends and Pycompile in RSFSRC/SConstruct
 env.InstallAs(os.path.join(pkgdir,'bld.py'), 
     os.path.join('..','..','bldutil.py'))
 env.InstallAs(os.path.join(pkgdir,'bld.pyc'),
@@ -44,23 +38,23 @@ env.InstallAs(os.path.join(pkgdir,'conf.py'),
 env.InstallAs(os.path.join(pkgdir,'conf.pyc'),
     os.path.join('..','..','configure.pyc'))
 
-######## Building rsf.use
+# Building rsf.use
 use = env.Command('use.py',None,
                   action=Action(doc.use,varlist=['book','scons']),
                   book='book',scons=sys.argv[0])
-#----------------------------------------
-# Fix the libdirs below in the future:
-Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
+
+Depends(use,map(lambda x: os.path.join(pkgdir,'sf'+x+'.py'),dirs))
+
 for case in Split('vpplot suproj'):
-    Depends(use,os.path.join(libdir,case+'.py'))
-#-----------------------------------------
+    Depends(use,os.path.join(pkgdir,case+'.py'))
+
 for case in Split('tex proj doc'):
     Depends(use,os.path.join(pkgdir,case+'.py'))
-bldutil.py_install('use', env, pkgdir)
 
+Depends(os.path.join(pkgdir,'tex.py'), os.path.join(pkgdir,'vpconvert.py'))
 ##########################################################################
 # Self-documentation
 
 Doc = Builder (action = Action(doc.selfdoc,varlist=['rsfprefix','lang']),
                src_suffix='.c',suffix='.py')
-env.Append(BUILDERS = {'RSF_Doc' : Doc})
+env.Append(BUILDERS = {'Doc' : Doc})

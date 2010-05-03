@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def dix(data,        # data name
         agc,         # migrated image

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('t0',None,'spike n1=1001 d1=0.001 unit1="s" label1="Time" ')
 Flow('t1','t0','math output=x1')

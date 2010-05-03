@@ -21,7 +21,7 @@ pyprogs = 'fft las2rsf rcat'
 pymods = 'dottest conjgrad'
 
 try:  # distributed version
-    Import('env root libdir bindir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
@@ -87,13 +87,13 @@ for prog in Split(
 # PYTHON METAPROGRAMS (python API not needed)
 ######################################################################
 
-if root: # no compilation but rename
+if root: # no compilation, just rename
     pymains = Split(pyprogs)
     exe = env.get('PROGSUFFIX','')
     for prog in pymains:
         env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
     for mod in Split(pymods):
-        env.Install(libdir,mod+'.py')
+        env.Install(pkgdir,mod+'.py')
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -105,7 +105,7 @@ if root:
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
         map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
         map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
-    env.Depends(docs,'#/framework/rsfdoc.py')	
+    env.Depends(docs,'#/framework/py_pkg/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
+    env.Install(pkgdir,doc)

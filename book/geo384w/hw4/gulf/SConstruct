@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('beinew.HH','midpts')
 Flow('gulf','beinew.HH',

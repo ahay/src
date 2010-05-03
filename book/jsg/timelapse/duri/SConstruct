@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for i in range(6):
     m = 'm%d' % i

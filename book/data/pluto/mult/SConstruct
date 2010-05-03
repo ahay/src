@@ -10,7 +10,7 @@
  # format files,converts them to RSF   #
  # format and produces plots or movies #   
 #---------------------------------------
-from rsfproj import *
+from rsf.proj import *
 
  #######################################
  #        Define Variables             #

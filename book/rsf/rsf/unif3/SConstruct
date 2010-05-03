@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def layer(output):
     return 'math n1=200 n2=100 d1=0.05 d2=0.05 output="%s" ' % output 

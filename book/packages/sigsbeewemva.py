@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import sigsbee,fdmod,spmig,encode,adcig,zomig
 
 # ------------------------------------------------------------

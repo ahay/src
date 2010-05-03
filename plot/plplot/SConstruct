@@ -3,7 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 try: # distribution version
-    Import('env root libdir bindir')
+    Import('env root libdir bindir pkgdir')
     env = env.Clone()
     # Different environment for the plugin
     lenv = env.Clone()
@@ -74,7 +74,6 @@ if root:
     main = 'sfplplot.py'
 
     docs = map(lambda prog: env.Doc(prog),mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')
+    env.Depends(docs,'#/framework/py_pkg/doc.py')
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
-
+    env.Install(pkgdir,doc)

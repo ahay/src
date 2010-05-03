@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def plot(title):
     return 'grey crowd=.85  wantaxis=0 title="%s" ' % title

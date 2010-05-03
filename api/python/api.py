@@ -2,7 +2,7 @@ import os, sys, tempfile, re
 import c_rsf
 import numpy
 
-import rsfdoc
+import rsf.doc
 import rsfprog
 
 ###
@@ -356,7 +356,7 @@ class Filter(object):
             lp = len(prefix)
             if name[:lp] != prefix:
                 name = prefix+name
-            self.prog = rsfdoc.progs.get(name)   
+            self.prog = rsf.doc.progs.get(name)   
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
                 self.plot   = name[lp:] in Filter.plots
@@ -516,7 +516,7 @@ class _Wrap(object):
          try:
              return getattr(self.wrapped, name)
          except AttributeError:
-             if name in rsfdoc.progs.keys() or 'sf'+name in rsfdoc.progs.keys():
+             if name in rsf.doc.progs.keys() or 'sf'+name in rsf.doc.progs.keys():
                  return Filter(name)
              else:
                  raise
@@ -563,8 +563,6 @@ if __name__ == "__main__":
     assert 100 == n1
     assert 0.25 == input.float("d1")
     assert 'Time' == input.string("label1")
-#    output.settype('int')
-#    assert 'int' == output.type
     n2 = 10
     output.put('n2',n2)
     assert 10 == output.int('n2')
@@ -576,5 +574,3 @@ if __name__ == "__main__":
     for i in xrange(n2):
         output.write(trace)
     os.system("sfrm junk.rsf")
-    
-# 	$Id: rsf.py 3148 2007-11-13 00:13:20Z sfomel $	

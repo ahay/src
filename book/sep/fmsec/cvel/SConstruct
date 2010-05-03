@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 yshot=0.2
 zshot=0.2

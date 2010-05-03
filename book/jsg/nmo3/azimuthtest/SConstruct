@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math
 
 ## Plot font and screen ratio, width, height for uniform ppt figs.

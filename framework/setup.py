@@ -28,10 +28,9 @@ setup(name='murr',
       url='http://www.ahay.org/',
       description='Madagascar Utilities for Reproducible Research',
       py_modules=string.split('''
-      rsfpath rsfflow rsfproj rsftex rsfbook sftour
+      rsfpath rsfflow rsfproj rsftex book sftour
       '''),
       scripts=string.split('''
       pscons sfdoc sfkill sftop latex2wiki sftour
       '''),
       )
-

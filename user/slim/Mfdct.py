@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''
 Madagascar wrapper to the Fast Discrete Curvelet Transform (FDCT)
 
@@ -33,7 +32,7 @@ Requirements:
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import numpy as np
-import rsf as sf
+import rsf.api as sf
 try:
     import pyct as ct
 except:

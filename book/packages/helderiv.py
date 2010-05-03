@@ -1,6 +1,6 @@
 import string
 
-from rsfproj import *
+from rsf.proj import *
 
 def Helderiv(name,eps=0.001,na=16):
     '''Creates helix derivative filter'''

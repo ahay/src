@@ -8,7 +8,7 @@
 # mailto:jules.browaeys@beg.utexas.edu
 
 
-from rsfproj import *
+from rsf.proj import *
 from math import pi
 
 private = {'login':os.environ.get('BEG_LOGIN'),

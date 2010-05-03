@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('aliasp',None,'aliasp cycles=25')
 Plot('aliasp','window n1=575 | grey title=Input crowd=0.85')

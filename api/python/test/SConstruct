@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import os, string
 
 top = os.environ.get('RSFROOT')

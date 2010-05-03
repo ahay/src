@@ -1,4 +1,4 @@
-from rsfbook import *
+from rsf.book import *
 
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',

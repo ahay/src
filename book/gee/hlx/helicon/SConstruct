@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 t = "titles=\"in:in/A:A*in/A:(in/A)/A':AA'(in/A)/A'\""
 g = 'grey gainpanel=every pclip=100 wantaxis=n crowd=.88 gpow=.7 title="%s" '

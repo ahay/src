@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math
 
 for case in (0,1):

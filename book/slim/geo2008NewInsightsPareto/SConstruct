@@ -5,7 +5,7 @@
 #         
 # Date  : November, 07
 
-from rsftex import *
+from rsf.tex import *
 import os
 
 SConscript('Fig/SConstruct')

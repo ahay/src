@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('inp',None,'spike n1=15 label1=" " ')
 Flow('filt',None,'spike n1=2 nsp=2 k1=1,2 mag=1,-0.5')

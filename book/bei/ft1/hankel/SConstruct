@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Result('hankel',None,
        'spike k1=8 n1=32| halfint inv=y | dots title=" " label1=" " ')

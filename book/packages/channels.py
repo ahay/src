@@ -24,7 +24,7 @@
 # Import RSF and math libraries.
 #
 
-from rsfproj import *
+from rsf.proj import *
 from math    import pi
 import rfield
 import os

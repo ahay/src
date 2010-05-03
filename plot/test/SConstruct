@@ -8,7 +8,7 @@ reflector reflexpt reflkine sg vrms whitepruf
 '''
 
 try:
-	Import('env root libdir bindir')
+	Import('env root pkgdir bindir')
 	env = env.Clone()
 except:
 	env = bldutil.Debug()
@@ -52,7 +52,7 @@ if root:
 	docalias = {'vpreflexpt':'vpreflector',
 		    'vpreflkine':'vpreflector'}
 	doc = env.RSF_Docmerge(main,docs,alias=docalias)
-	env.Install(libdir,doc)
+	env.Install(pkgdir,doc)
 
 #####################################################################
 

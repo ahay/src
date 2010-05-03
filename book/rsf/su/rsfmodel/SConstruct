@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 xmax = 6.0
 zmax = 2.0

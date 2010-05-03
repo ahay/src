@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # Make a velocity model with a hyperbolic reflector
 Flow('model',None,

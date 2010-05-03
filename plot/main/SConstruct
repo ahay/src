@@ -8,7 +8,7 @@ thplot vplotdiff wiggle
 '''
 
 try:
-    Import('env root libdir bindir')
+    Import('env root bindir pkgdir')
     env = env.Clone()
     alias = {'grey':'byte','grey3':'cubeplot'}
 except:
@@ -40,8 +40,6 @@ if root:
     main = 'sfplot.py'
     
     docs = map(lambda prog: env.Doc(prog),mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')
+    env.Depends(docs,'#/framework/py_pkg/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
-    env.Install(libdir,doc)
-
-
+    env.Install(pkgdir,doc)

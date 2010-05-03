@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('gravel2D.H','mideast')
 Flow('gravel2D','gravel2D.H','dd form=native')

@@ -7,7 +7,7 @@ sinc
 '''
 
 try: # distributed version
-    Import('env root libdir bindir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -33,10 +33,6 @@ if root:
     main = 'sfsumain.py'
     
     docs = map(lambda prog: env.Doc(prog),mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')
+    env.Depends(docs,'#/framework/py_pkg/doc.py')
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
-#####################################################################
-
-# 	$Id$
-
+    env.Install(pkgdir,doc)

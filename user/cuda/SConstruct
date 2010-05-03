@@ -3,7 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 try:  # distributed version
-    Import('env root libdir bindir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -49,8 +49,8 @@ if root:
     main = 'sf%s.py' % user
 
     docs = map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')	
+    env.Depends(docs,'#/framework/py_pkg/doc.py')	
     
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
+    env.Install(pkgdir,doc)
 

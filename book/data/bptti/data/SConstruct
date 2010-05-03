@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
 

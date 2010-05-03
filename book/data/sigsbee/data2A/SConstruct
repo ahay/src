@@ -1,7 +1,7 @@
     ############################
     #   Sigsbee 2A Shot Data   #
     ############################
-from rsfproj import *
+from rsf.proj import *
 #------- Define Variables and Filenames ------#
 data = 'sigsbee2a_nfs.sgy'
 

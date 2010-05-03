@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('time',None,
      'math n1=200 d1=1 o1=1 output="(x1-1)*0.4" ')

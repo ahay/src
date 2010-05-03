@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 rwemig = Program90('RWEmig')
 rweab  = Program90('RWEab')

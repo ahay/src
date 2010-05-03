@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # Fetch Files from repository
 Fetch("P15shots150f_endon_0ph-1stHlf.SEGY","pluto")

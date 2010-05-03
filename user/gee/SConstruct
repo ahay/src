@@ -13,7 +13,7 @@ wavemovie wilson
 '''
 
 try:  # distributed version
-    Import('env root libdir bindir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
@@ -48,8 +48,8 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')	
+    env.Depends(docs,'#/framework/py_pkg/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
+    env.Install(pkgdir,doc)
 
 

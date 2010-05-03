@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('wz.10.H','wz')
 Flow('wz','wz.10.H','dd form=n | tpow tpow=2 | agc rect1=200 rect2=4 | transp')

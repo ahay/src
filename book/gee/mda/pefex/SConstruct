@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 dat = {'dat':'gomshot.h',
        'zof':'gomnearoffset.H'}

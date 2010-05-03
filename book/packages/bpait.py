@@ -2,7 +2,7 @@
  # BPAIT parameters
  ##
 
-from rsfproj import *
+from rsf.proj import *
 import fdmod
 
 # ------------------------------------------------------------

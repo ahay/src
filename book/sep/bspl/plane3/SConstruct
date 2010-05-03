@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 planes = [0.7,-1,0.1]
 spikes = [20,80,30]

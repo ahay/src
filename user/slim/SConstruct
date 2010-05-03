@@ -8,7 +8,7 @@ py_progs = 'fdct killtraces jitter'
 py_mods = 'hegilles'
 
 try:  # distributed version
-    Import('env root libdir bindir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
     src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
@@ -69,7 +69,7 @@ if root:
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
 
     # Python modules    
-    rsfuser = os.path.join(libdir,'rsfuser')
+    rsfuser = os.path.join(pkgdir,'user')
     for module in Split(py_mods):
         env.Install(rsfuser,module+'.py')
 
@@ -84,6 +84,6 @@ if root:
            map(lambda prog: env.Doc(prog+'.cc'),cpp_mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
                py_mains)
-    env.Depends(docs,'#/framework/rsfdoc.py')
+    env.Depends(docs,'#/framework/py_pkg/doc.py')
     doc = env.RSF_Docmerge(main,docs)
-    env.Install(libdir,doc)
+    env.Install(pkgdir,doc)

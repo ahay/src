@@ -25,9 +25,9 @@ import sys, os, glob
 try: # Give precedence to local version
     import ivlad, m8rex, sf
 except: # Use distributed version
-    import rsfuser.ivlad as ivlad
-    import rsfuser.m8rex as m8rex
-    import rsfuser.sf as sf
+    import rsf.user.ivlad as ivlad
+    import rsf.user.m8rex as m8rex
+    import rsf.user.sf as sf
 
 ###############################################################################
 

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('wood.h','textures')
 Flow('wood','wood.h','dd form=native')

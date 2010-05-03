@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 # Fetch Files from repository
 Fetch("obc_div_v_1.segy","marm2")
 Fetch("obc_div_v_2.segy","marm2")

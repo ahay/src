@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def plot(plot,data,n1,n2,f1,f2,j1,j2,w1,w2,custom,par):
 

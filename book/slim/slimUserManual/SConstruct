@@ -1,5 +1,5 @@
 import os
-from rsftex import *
+from rsf.tex import *
 
 root = os.environ.get('RSFROOT')
 bindir = os.path.join(root,'bin')

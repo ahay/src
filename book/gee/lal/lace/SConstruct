@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def synth(n1=75,n2=5,static=2,jump=4,step=[-4,2,1],amp=[1.,-1.,0.7]):
     i0 = [n1/3,n1/3+static,n1/2]

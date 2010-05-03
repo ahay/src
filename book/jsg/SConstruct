@@ -1,4 +1,4 @@
-from rsfbook import *
+from rsf.book import *
 
 Papers(copyr='The University of Texas at Austin',
        group='Jackson School of Geosciences',

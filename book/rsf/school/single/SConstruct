@@ -6,7 +6,7 @@
 ##############################################################
 
 
-from rsfproj import *
+from rsf.proj import *
 import fdmod,gfield,rules
 
 par = {

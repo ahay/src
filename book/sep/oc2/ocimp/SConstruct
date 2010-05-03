@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 grey = 'grey label1=Time label2=Midpoint pclip=99.5'
 

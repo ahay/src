@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # clip percentiles
 perc = {'03': 95,

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 n1 = {
     '34': 400,

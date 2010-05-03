@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 data = 'wz.24.H'
 Fetch(data,'wz')

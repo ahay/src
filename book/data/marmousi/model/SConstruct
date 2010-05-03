@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 # Fetch Files from repository
 raw=['marmvel.hh','marmsmooth.HH']
 for file in raw:

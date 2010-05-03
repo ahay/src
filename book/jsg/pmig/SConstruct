@@ -1,4 +1,4 @@
-from rsftex import *
+from rsf.tex import *
 
 #Paper('seg2005',lclass='segabs')
 

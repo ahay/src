@@ -24,7 +24,7 @@
 # Setting up
 #
 
-from rsfproj import *
+from rsf.proj import *
 import rfield
 
 #

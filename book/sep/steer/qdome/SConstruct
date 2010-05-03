@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('qdome',None,'qdome n1=200 d1=0.008 | window n3=1 f3=45')
 Flow('slope','qdome','dip rect1=5 rect2=5')

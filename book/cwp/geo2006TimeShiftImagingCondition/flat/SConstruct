@@ -2,7 +2,7 @@
  # Simple example of time-shift imaging condition (flat reflector)
  ##
 
-from rsfproj import *
+from rsf.proj import *
 import math
 import zomig,spmig,pplot
 

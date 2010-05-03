@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('lag.asc',None,
      'echo 99 102 201 n1=3 n=100,100 data_format=ascii_int in=$TARGET')

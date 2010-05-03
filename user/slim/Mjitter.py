@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''
 Return mask to remove random traces in 2D using jittered sampling
 '''
@@ -27,13 +26,13 @@ Return mask to remove random traces in 2D using jittered sampling
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsf as sf
+import rsf.api as sf
 import numpy as np
 
 try: # Give precedence to local version
     from hegilles import jitter
 except: # Use distributed version
-    from rsfuser.hegilles import jitter
+    from rsf.user.hegilles import jitter
 
 par = sf.Par()
 

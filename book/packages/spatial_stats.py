@@ -24,7 +24,7 @@
 # Import RSF library.
 #
 
-from rsfproj import *
+from rsf.proj import *
 
 #
 # Fast spatial statistics computation with FFTs:

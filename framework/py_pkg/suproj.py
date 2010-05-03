@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsfproj, os, re, string, sys, array, types
+import rsf.proj, os, re, string, sys, array, types
 
 susuffix = '.su'
 pssuffix = '.eps'
@@ -35,16 +35,16 @@ for prog in suprogs:
         suplots.append(prog[1:])
 re_plots = re.compile(r'\b(su|s|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
 
-class SUProject(rsfproj.Project):
+class SUProject(rsf.proj.Project):
     def __init__(self,**kw):
-        apply(rsfproj.Project.__init__,(self,),kw)
+        apply(rsf.proj.Project.__init__,(self,),kw)
         self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
         self['ENV']['CWPROOT'] = topdir
         self.plots = []
         self.views = []
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsf':0,'suffix': suffix,'src_suffix':src_suffix})
-        return apply(rsfproj.Project.Flow,(self,target,source,flow),kw)
+        return apply(rsf.proj.Project.Flow,(self,target,source,flow),kw)
     def Plot(self,target,source,flow=None,**kw):
         if not flow: # two arguments
             flow = source

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def slow(name,par):
     Flow('slow_'+name,'vel_'+name,

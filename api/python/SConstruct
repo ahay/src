@@ -2,10 +2,15 @@ import sys, os, string, re
 sys.path.append('../..')
 import bldutil
 
-modules = Split('rsf vplot')
+# Since now rsf is the main module, the API is now rsf.api and 
+# installed in py_pkg location
+# Backwards compatibility can be maintained with: import rsf.api as rsf
+# Shared object files still go into RSFROOT/lib.
+
+modules = Split('api vplot')
 
 try: # distribution version
-    Import('env root libdir')
+    Import('env root libdir pkgdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -20,7 +25,7 @@ if 'python' in env.get('API',[]):
         EnsureSConsVersion(1,0)
     except:
         print "\n\n\tPlease upgrade SCons to version >= 1.0\n\n"
-        sys.exit(1)
+        Exit(1)
 
     # Python includes for SWIG
     pythinc = []
@@ -31,7 +36,7 @@ if 'python' in env.get('API',[]):
         pythinc.append(os.path.join(numpy_loc,'core','include'))
     except:
         print "\n\n\tPlease install numpy\n\n"
-        sys.exit(1)
+        Exit(1)
 
     import distutils.sysconfig
     pythinc.append(distutils.sysconfig.get_python_inc())
@@ -45,8 +50,10 @@ if 'python' in env.get('API',[]):
     else:
         env.Replace(LIBS=['drsfplot','drsf'])
 
+    ifiles = {'api':'rsf', 'vplot':'vplot'}
+
     for module in modules:
-        ifile = module+'.i'
+        ifile = ifiles[module]+'.i'
         wrap = env.CFile(module,ifile,SWIGFLAGS='-python')
         python = env.LoadableModule(module,wrap[0],
                                     LDMODULEPREFIX='_c_',

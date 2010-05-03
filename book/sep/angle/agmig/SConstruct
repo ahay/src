@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 nz = 257
 dz = 0.004

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 fft3 = 'fft1 | fft3 axis=2 | fft3 axis=3'
 ifft3 = 'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y'

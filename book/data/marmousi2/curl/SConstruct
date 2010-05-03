@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import fdmod 
 # Fetch Files from repository
 Fetch("obc_curl_v_1.segy","marm2")

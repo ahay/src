@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 from bay import Bay
 from helderiv import Helderiv
 

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def alias(n,tmax=80.0):
     d = tmax/(n-1)

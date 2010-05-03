@@ -25,8 +25,8 @@ See also sfimage.
 try: # Give precedence to local version
     import ivlad, sf
 except: # Use distributed version
-    import rsfuser.ivlad as ivlad
-    import rsfuser.sf as sf
+    import rsf.user.ivlad as ivlad
+    import rsf.user.sf as sf
 
 ###############################################################################
 

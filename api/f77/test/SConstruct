@@ -1,6 +1,6 @@
-import rsfproj
+import rsf.proj
 
-proj = rsfproj.Project()
+proj = rsf.proj.Project()
 proj.Prepend(LIBS=['rsff'])
 
 proj.Program('clip.f',

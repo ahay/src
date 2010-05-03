@@ -272,7 +272,7 @@ languages (C++, Fortran-77, Fortran-90, Python) are also provided.
 The main \texttt{SConstruct} commands defined in our reproducible
 research environment are collected in Table~\ref{tbl:commands}.
 
-\tabl{commands}{Basic methods of an \texttt{rsfproj} object.}{
+\tabl{commands}{Basic methods of an \texttt{rsf.proj} object.}{
 \begin{center}
 \begin{tabular}{|p{0.9\textwidth}|} \hline
 \noindent\texttt{Fetch(data\_file,dir[,ftp\_server\_info])}\\ \ \\
@@ -326,7 +326,7 @@ figure for publication. But let us have a closer look at the
 \lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
 %
 is a standard Python command that loads the Madagascar project
-management module \texttt{rsfproj.py} which provides our extension to
+management module \texttt{rsf.proj.py} which provides our extension to
 SCons.\\
 
 \lstinputlisting[firstline=4,lastline=4,frame=single]{easystart/SConstruct}
@@ -477,10 +477,10 @@ bias=128 clip=50 screenratio=1 > Fig/lena.vpl
   scripts.  For computationally demanding data processing, this
   feature can save you a lot of time and can make your experiments
   more interactive and enjoyable.
-\item A special parameter to SCons (defined in \texttt{rsfproj.py})
+\item A special parameter to SCons (defined in \texttt{rsf.proj.py})
   can time the execution of each step in the processing flow. Try
   running \texttt{scons TIMER=y}.
-\item The \texttt{rsfproj} module has direct access to the database
+\item The \texttt{rsf.proj} module has direct access to the database
   that stores parameters of all Madagascar modules. Try running
   \texttt{scons CHECKPAR=y} to see parameter checking enforced before
   computations\footnote{This feature is new and experimental and may
@@ -489,7 +489,7 @@ bias=128 clip=50 screenratio=1 > Fig/lena.vpl
 
 The summary of our SCons commands is given in Table~\ref{tbl:proj}.
 
-\tabl{proj}{SCons commands and options defined in \texttt{rsfproj}.}{
+\tabl{proj}{SCons commands and options defined in \texttt{rsf.proj}.}{
 \begin{center}
 \begin{tabular}{|p{0.9\textwidth}|}
   \hline 
@@ -634,7 +634,7 @@ installation directory. The source of this file is in
 \href{http://svn.sourceforge.net/viewvc/rsf/trunk/python/rsftex.py?view=markup}{python/rsftex.py}.
 We summarize the basic methods and commands in Tables~\ref{tbl:texcom} and~\ref{tbl:tex}.
 
-\tabl{texcom}{Basic methods of an \texttt{rsftex} object.}{
+\tabl{texcom}{Basic methods of an \texttt{rsf.tex} object.}{
 \begin{center}
 \begin{tabular}{|p{0.9\textwidth}|} \hline
   \noindent\texttt{Paper($<$paper\_name$>$,[,lclass][,use][,include][,options])}\\ \ \\
@@ -652,7 +652,7 @@ We summarize the basic methods and commands in Tables~\ref{tbl:texcom} and~\ref{
 \end{tabular}
 \end{center}}
 
-\tabl{tex}{SCons commands defined in \texttt{rsftex}.}{
+\tabl{tex}{SCons commands defined in \texttt{rsf.tex}.}{
 \begin{center}
 \begin{tabular}{|p{0.9\textwidth}|}
   \hline 

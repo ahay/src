@@ -1,4 +1,4 @@
-from rsfbook import *
+from rsf.book import *
 
 report = (('2006',
            '''

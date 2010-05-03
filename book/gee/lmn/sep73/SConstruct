@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Fetch('WGstack.H','book/iee')
 Flow('dgulf','WGstack.H','dd form=native | window n1=1000 f2=1020 n2=200')

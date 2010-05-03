@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for comp in ('vx','vz','eta'):
     src = 'marm%s.HH' % comp

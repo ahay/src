@@ -5,7 +5,7 @@
 #         
 # Date  : August, 07
 
-from rsfproj import *
+from rsf.proj import *
 import string as s
 
 # define SLIM FTP server information

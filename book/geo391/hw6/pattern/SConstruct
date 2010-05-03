@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 g = 'grey crowd1=0.96 crowd2=0.85 wantaxis=n title="%s" '
 

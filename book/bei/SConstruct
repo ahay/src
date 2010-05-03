@@ -1,4 +1,4 @@
-from rsfbook import *
+from rsf.book import *
 
 #chapters = Split('fld conj wvs vela krch ft1 dwnc dpmv fdm trimo sg')
 chapters = Split('fld conj wvs vela krch ft1 dwnc dpmv sg')

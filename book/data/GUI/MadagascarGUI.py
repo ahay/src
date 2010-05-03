@@ -454,7 +454,7 @@ class Madagascar:
         os.system(command)
         command2=LOCATION + '/SConstruct' 
         SConstruct=open(command2,'w')
-        SConstruct.write("from rsfproj import *")
+        SConstruct.write("from rsf.proj import *")
         SConstruct.write("\n")
         sectionHeader = '# Fetch Files from repository \n'
         SConstruct.write(sectionHeader)

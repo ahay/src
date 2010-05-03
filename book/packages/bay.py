@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def Bay(name,f2=500,n2=1600,f1=400,n1=700):
     '''Extracts the Bay Area dataset (digital topography) and windows it'''

@@ -25,7 +25,7 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-import rsf, sftour
+import rsf
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -345,7 +345,7 @@ def report_all(target=None,source=None,env=None):
 def tour(target=None,source=None,env=None):
     dirs = map(os.path.dirname,map(str,source))
     command = env.get('command')
-    sftour.tour(dirs,command,0)
+    rsf.sftour.tour(dirs,command,0)
     return 0
 
 Tour = Builder(action = Action(tour),varlist=['command'])

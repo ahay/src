@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
  #######################################  
  # Sigsbee 2B velocity model construct #

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 from galilee import Galilee
 
 Galilee('sea',150,150)

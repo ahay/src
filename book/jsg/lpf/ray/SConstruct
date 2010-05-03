@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for case in Split('data mult ddata dmult'):
     segy = case + '.segy'

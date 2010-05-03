@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import spmig, sgmig, zomig,fdmod
 
 def param(par):

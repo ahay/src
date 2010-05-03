@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 # Fetch Files from repository
 Fetch("int_depth_vp.sgy","pluto")
 Fetch("P15VPint_25f_padded.SEGY","pluto")

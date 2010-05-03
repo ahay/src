@@ -17,7 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsf
+import rsf.api as rsf
 
 def conjgrad(oper,dat,x0,niter):
     'Conjugate-gradient algorithm for minimizing |L x - d|^2'

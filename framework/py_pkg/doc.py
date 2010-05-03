@@ -979,7 +979,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     # Implements own UI instead of Madagascar's standard Python API
     # for UI compatibility with pydoc
     import getopt
-    import rsfprog
+    import rsf.prog
 
     this = sys.argv.pop(0)
     class BadUsage: pass

@@ -21,8 +21,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-for y in `find $RSFSRC -name SConstruct`;
+for y in `find $RSFROOT/src/ -name SConstruct`;
   do 
-    sed "s/env\.Docmerge/env\.RSF_Docmerge/g" $y > sed_tmp.asc;
+    sed "s/import rsfproj/import rsf\.proj/g" $y > sed_tmp.asc;
     mv -f sed_tmp.asc $y;
   done

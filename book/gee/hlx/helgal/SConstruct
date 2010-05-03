@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 from galilee import Galilee
 from helderiv import Helderiv
 

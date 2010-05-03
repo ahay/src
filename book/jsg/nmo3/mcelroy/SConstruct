@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 import math
 
 private = {'login':os.environ.get('BEG_LOGIN'),

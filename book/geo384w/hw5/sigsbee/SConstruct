@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 from math import pi
 
 # Download velocity model from the data server

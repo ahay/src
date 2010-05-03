@@ -2,7 +2,7 @@
  # Angle-gathers after wave-equation migration (ziggy model)
  ##
  
-from rsfproj import *
+from rsf.proj import *
 import pplot
 
 # ------------------------------------------------------------

@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('data1',None,'spike n1=30 k1=15 label1=" " ')
 Flow('data2','data1','causint')

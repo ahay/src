@@ -3,7 +3,7 @@ import glob, os, re, string, py_compile
 try:
     import configure
 except:
-    import rsfconf as configure
+    import rsf.conf as configure
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons
@@ -105,7 +105,7 @@ Header = Builder (action = Action(__header,varlist=['prefix']),
 def __docmerge(target=None,source=None,env=None):
     outfile = target[0].abspath
     out = open(outfile,'w')
-    out.write('import rsfdoc\n\n')
+    out.write('import rsf.doc\n\n')
     for src in map(str,source):
         inp = open(src,'r')
         for line in inp.readlines():
@@ -113,7 +113,7 @@ def __docmerge(target=None,source=None,env=None):
         inp.close()
     alias = env.get('alias',{})
     for prog in alias.keys():
-        out.write("rsfdoc.progs['%s']=%s\n" % (prog,alias[prog]))
+        out.write("rsf.doc.progs['%s']=%s\n" % (prog,alias[prog]))
     out.close()
     print outfile
     py_compile.compile(outfile,outfile+'c')
@@ -342,10 +342,10 @@ def install_py_mains(env, progs_py, bindir):
 
 ################################################################################
 
-def install_py_modules(env, py_modules, libdir):
-    'Compile Python modules and install to libdir/rsfuser'
+def install_py_modules(env, py_modules, pkgdir):
+    'Compile Python modules and install to pkgdir/user'
 
-    rsfuser = os.path.join(libdir,'rsfuser')
+    rsfuser = os.path.join(pkgdir,'user')
     for module in Split(py_modules):
         env.RSF_Pycompile(module+'.pyc',module+'.py')
         env.Install(rsfuser,[module+'.py',module+'.pyc'])
@@ -379,7 +379,7 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
     if docs_f90 != None:
         docs += docs_f90
 
-    env.Depends(docs,'#/framework/rsfdoc.py')	
+    env.Depends(docs,'#/framework/py_pkg/doc.py')	
 
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user

@@ -1,7 +1,7 @@
 ## 
  # GPGN 658 - Homework 3
  ##
-from rsfproj import *
+from rsf.proj import *
 import fdm
 
 # ------------------------------------------------------------

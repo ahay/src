@@ -20,7 +20,7 @@
 try: # Give precedence to local version
     import ivlad
 except: # Use distributed version
-    import rsfuser.ivlad as ivlad
+    import rsf.user.ivlad as ivlad
 
 ###############################################################################
 

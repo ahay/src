@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 for file in ('beistack','beivrms'):
     Fetch(file+'.HH','midpts')

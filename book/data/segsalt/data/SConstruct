@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 from beg import server
 # replace with your own data server

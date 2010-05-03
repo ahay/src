@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 def plot(title):
     return 'grey titlesz=15 title="%s" wantaxis=n' % title

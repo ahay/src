@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 from galilee import *
 
 lag = [1,2] + range(98,103) + range(198,203)

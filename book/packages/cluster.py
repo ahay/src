@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 # generate launch file
 def launch(edir,job,nodes,time,queue,project):
