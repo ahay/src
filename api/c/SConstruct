@@ -1,7 +1,6 @@
 import os, sys, string
 sys.path.append('../..')
 import bldutil
-import SCons
 
 #############################################################################
 # MAIN LIBRARY
@@ -22,6 +21,7 @@ triangle2 trianglen tridiagonal vector weight weight2
 
 try: # distribution version
     Import('env root libdir incdir')
+    env = env.Clone()
 except: # local version
     env = bldutil.Debug()
     root = None

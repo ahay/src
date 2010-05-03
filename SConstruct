@@ -69,7 +69,7 @@ user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 
 SConscript(dirs='framework',name='SConstruct',
-       exports='env root bindir libdir pkgdir docdir spcdir mandir system user')
+           exports='env root bindir libdir pkgdir docdir spcdir mandir system user')
 
 ##########################################################################
 # API BUILD
@@ -89,6 +89,7 @@ for dir in map(lambda x: os.path.join('api',x), api):
         api_exports += 'pkgdir'
     else:
         api_exports += 'incdir'
+        
     SConscript(dirs=build,name='SConstruct',exports=api_exports)
     Default(build)
 
@@ -126,6 +127,7 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
         plot_exports = 'env root libdir incdir pkgdir'
     elif dir == 'plot/plplot':
         plot_exports = 'env root libdir bindir pkgdir'
+
     SConscript(dirs=build,name='SConstruct', exports=plot_exports)
     Default(build)
 

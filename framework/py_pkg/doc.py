@@ -76,6 +76,11 @@ def getprogs(target=None,source=None,env=None):
         out.write('import sf%s\n' % mod)
     out.write('\nimport vpplot\n\n')
     out.write('''
+try:
+    import rsf.use
+except:
+    pass
+    
 def selfdoc():
     'Display man page'
     prognm = os.path.basename(sys.argv[0])

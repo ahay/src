@@ -448,7 +448,7 @@ def use(target=None,source=None,env=None):
     project = os.path.dirname(info)
     tree = env.get('tree')
     doc = map(lambda prog:
-              'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+              'rsf.doc.progs["%s"].use("%s","%s","%s")' %
               (prog,tree[1],tree[2],project),loc[what])
     out.write(string.join(doc,'\n') + '\n')
     out.close()
