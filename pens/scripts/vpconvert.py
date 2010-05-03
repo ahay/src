@@ -16,10 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, tempfile
-import vplot2eps
-import vplot2png
-import vplot2gif
-import vplot2avi
+import rsf.vplot2eps
+import rsf.vplot2png
+import rsf.vplot2gif
+import rsf.vplot2avi
 
 pens = {
     'vpl': 'vp',
@@ -121,22 +121,22 @@ def convert(vpl,out,format,pen,args):
         args += ' type=%s' % format
 
     if format == 'eps':
-        vplot2eps.convert(vpl,out,
-                          options='color=n fat=1 fatmult=1.5 ' + args)
+        rsf.vplot2eps.convert(vpl,out,
+                              options='color=n fat=1 fatmult=1.5 ' + args)
     elif format == 'png' and pen == 'ps':
-        vplot2png.convert(vpl,out,
-                          options='color=y fat=1 fatmult=1.5 ' + args)
+        rsf.vplot2png.convert(vpl,out,
+                              options='color=y fat=1 fatmult=1.5 ' + args)
     elif format == 'gif' and pen == 'ppm':
-        vplot2gif.convert(vpl,out)
+        rsf.vplot2gif.convert(vpl,out)
     elif format == 'avi':
         if not which('ffmpeg'):
             print "Conversion failed. Please install ffmpeg."
             sys.exit(5)
-        vplot2avi.convert(vpl,out)
+        rsf.vplot2avi.convert(vpl,out)
     elif format == 'pdf' and pen == 'ps':
         eps = tempfile.mktemp(suffix='.eps')
-        vplot2eps.convert(vpl,eps,
-                          options='color=y fat=1 fatmult=1.5 ' + args)
+        rsf.vplot2eps.convert(vpl,eps,
+                              options='color=y fat=1 fatmult=1.5 ' + args)
         epstopdf = which('epstopdf') or which('a2ping')
         if epstopdf:
             command = 'LD_LIBRARY_PATH=%s %s %s %s --outfile=%s' % \

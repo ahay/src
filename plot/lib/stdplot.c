@@ -774,11 +774,13 @@ static void make_grid (bool grid)
 	if (need) {
 	    grid1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-	    grid1->num0 = axis1->num0;
+	    if (!sf_getfloat ("g1num0",&(grid1->num0))) 
+		grid1->num0 = axis1->num0;
+	    /*( g1num0 grid mark origin on first axis )*/
 	    grid1->or = axis1->or;
 
 	    if (!sf_getfloat ("g1num",&(grid1->dnum))) {
-		/*( g1num grid marks on first axis )*/
+		/*( g1num grid mark sampling on first axis )*/
 		grid1->dnum = axis1->dnum;
 		grid1->ntic = axis1->ntic;
 	    } else {
@@ -805,11 +807,13 @@ static void make_grid (bool grid)
 	if (need) {
 	    grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 	    
-	    grid2->num0 = axis2->num0;
+	    if (!sf_getfloat ("g2num0",&(grid2->num0))) 
+		grid2->num0 = axis2->num0;
+	    /*( g2num0 grid mark origin on second axis )*/
 	    grid2->or = axis2->or;
 	    
 	    if (!sf_getfloat ("g2num",&(grid2->dnum))) {
-		/*( g2num grid marks on second axis )*/
+		/*( g2num grid mark sampling on second axis )*/
 		grid2->dnum = axis2->dnum;
 		grid2->ntic = axis2->ntic;
 	    } else {

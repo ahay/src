@@ -17,11 +17,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys, time
-import vplot2gif
+import rsf.vplot2gif
 
 def convert(infile,outfile):
     gif = 'tmp%s.gif' %  time.time()    
-    vplot2gif.convert(infile,gif)
+    rsf.vplot2gif.convert(infile,gif)
     run = 'ffmpeg -f gif -i %s %s' % (gif,outfile)
     os.system(run)
     os.unlink(gif)

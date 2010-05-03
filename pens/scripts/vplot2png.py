@@ -14,13 +14,14 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import vplot2eps, tempfile, os, sys, re
+import tempfile, os, sys, re
+import rsf.vplot2eps
 
 def convert(vpl,png,**kw):
     'Vplot to PNG'
     eps = tempfile.mktemp()
-    vplot2eps.convert(vpl,eps,
-                      options=kw.get('options','color=y fat=1 fatmult=1.5'))
+    rsf.vplot2eps.convert(vpl,eps,
+                          options=kw.get('options','color=y fat=1 fatmult=1.5'))
 
     option = kw.get('plotoption','')
     pstoimg = kw.get('pstoimg','pstoimg')
