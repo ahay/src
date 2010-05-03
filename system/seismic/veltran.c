@@ -80,8 +80,8 @@ void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
 	s = s0 + is*ds;
 	for (ix=0; ix < nx; ix++) { 
 	    x = x0 + ix*dx;
-	    sx = s*x;
-	    sxx = sx*x;
+	    sx = (s-s1)*x*dx;
+	    sxx = s*x*x;
 
 	    for (it=0; it < nt; it++) {		
 		z = t0 + it*dt;
@@ -90,7 +90,7 @@ void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
 		if (t > 0. && z > 0.) {
 		    t = sqrtf(t);
 		    str[it] = t;
-		    tx[it] = anti*(sx/t-s1);
+		    tx[it] = anti*sx/t;
 		    switch (adj? psun1: psun2) {
 			case 2:
 			    w = x*x;

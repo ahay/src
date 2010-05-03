@@ -84,11 +84,11 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"dv",dv);
     }
 
-    if (!sf_getfloat("s0",&s1) && !sf_histfloat(in,"s0",&s1))
-	sf_error("need s0=");
+    if (!sf_getfloat("s02",&s1)) s1=0.;
+    /* reference slowness squared (for antialiasing) */
 
     s0 = 1./(v0 +(nv-1)*dv); s0 *= s0; ds = (1./(v0*v0) - s0)/(nv-1);
-    s0 = ds;		               ds = (1./(v0*v0) - s0)/(nv-1);
+/*    s0 = ds;		               ds = (1./(v0*v0) - s0)/(nv-1); */
 
     if (adj) {
 	sf_putstring(out,"label2","Offset");

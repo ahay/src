@@ -16,7 +16,7 @@ Flow('cmp','cmp807_raw.HH',
 Plot('cmp','grey title="Input CMP Gather" clip=%g' % clip)
 
 # Velocity Transform
-Flow('veltran','cmp','veltran s02=0.25 v0=1.250 dv=0.025 nv=60 adj=y')
+Flow('veltran','cmp','veltran anti=0.1 v0=1.250 dv=0.125 nv=60 adj=y')
 Plot('veltran','grey title="Velocity Scan" ')
 
 # Display Side by Side
@@ -25,7 +25,7 @@ Result('veltran','cmp veltran','SideBySideAniso')
 # Least-Squares Optimization
 Flow('velinv','cmp veltran',
      '''
-     conjgrad veltran s02=0.25 v0=1.250 dv=0.025 nv=60 niter=20
+     conjgrad veltran anti=0.1 v0=1.250 dv=0.125 nv=60 niter=20
      mod=${SOURCES[1]}
      ''')
 Plot('velinv','grey title="Least-Squares Velocity Scan" ')
@@ -34,14 +34,14 @@ Plot('velinv','grey title="Least-Squares Velocity Scan" ')
 
 for case in ('tran','inv'):
     err = 'err'+case
-    Flow(err,['vel'+case,'cmp'],'veltran adj=n | add scale=1,-1 ${SOURCES[1]}')
+    Flow(err,['vel'+case,'cmp'],'veltran anti=0.1 adj=n | add scale=1,-1 ${SOURCES[1]}')
     Plot(err,'grey title="Data Residual" clip=%g' % clip)
     Result(err,[err,'vel'+case],'SideBySideAniso')
 
 def iscan(miter,psun1,psun2,niter=10):
     return '''
     cgscan miter=%d psun1=%d psun2=%d error=${TARGETS[1]}
-    niter=%d s02=0.25 v0=1.250 dv=0.025 nv=60 anti=1
+    niter=%d v0=1.250 dv=0.125 nv=60 anti=0.1
     ''' % (miter,psun1,psun2,niter)
 
 for psun in (0,1):

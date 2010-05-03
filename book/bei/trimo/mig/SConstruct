@@ -1,4 +1,4 @@
-from rsfproj import *
+from rsf.proj import *
 
 Flow('aamod',None,
      '''
@@ -23,6 +23,7 @@ for aal in range(2):
 v0 = 0.25
 v1 = 100
 dv = (v1-v0)/34
+s02 = 1/(v0+dv)**2
 
 Flow('mod',None,
      '''
@@ -30,9 +31,9 @@ Flow('mod',None,
      n1=75 o1=0    d1=0.05333333 label1=
      n2=35 o2=0.01 d2=0.11735294 label2=Slowness unit2=km/s
      nsp=3 k1=19,35,49 k2=25,2,1 mag=3,1,2 |
-     put v0=%g dv=%g s0=%g
-     ''' % (v0,dv,1/(v0+dv)))
-Flow('aacdp','mod','veltran adj=n anti=0.05 nx=30 x0=0.2 dx=0.148275862')
+     put v0=%g dv=%g
+     ''' % (v0,dv))
+Flow('aacdp','mod','veltran adj=n anti=0.25 s02=%g nx=30 x0=0.2 dx=0.148275862' % s02)
 
 for dat in Split('aamod aad0 aad1 aad1h aamig0 aamig1 aacdp'):
     Result(dat,
