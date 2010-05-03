@@ -60,9 +60,6 @@ env.Append(BUILDERS={'RSF_Include':bldutil.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
-Depends('bldutil.pyc','configure.pyc')
-env.RSF_Pycompile('bldutil.pyc','bldutil.py')
-
 system = filter(lambda x: x[0] != '.', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 # Avoid crashing when user places some files in RSFSRC/user
@@ -172,5 +169,13 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 rsfuser = os.path.join(pkgdir,'user')
 env.Install(rsfuser,os.path.join('framework', 'py_pkg', '__init__.py'))
 
-env.Alias('install',[incdir,bindir,libdir,rsfuser,docdir,spcdir,mandir])
+env.Install(pkgdir,'config.py') 	 
+
+env.InstallAs(os.path.join(pkgdir,'conf.py'),'configure.py') 	 
+env.InstallAs(os.path.join(pkgdir,'conf.pyc'),'configure.pyc')
+
+env.InstallAs(os.path.join(pkgdir,'bld.py'),  'bldutil.py') 	 
+env.InstallAs(os.path.join(pkgdir,'bld.pyc'), 'bldutil.pyc')
+
+env.Alias('install',[incdir,bindir,pkgdir,libdir,rsfuser,docdir,spcdir,mandir])
 env.Clean('install', rsfuser)

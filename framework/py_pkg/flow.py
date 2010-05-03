@@ -14,12 +14,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import string, sys, os, re, rsf
+import string, sys, os, re
+import rsf.doc
+import rsf.prog
 
 top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
 
-def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
+def Flow(sources,flow,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
          remote='', stdout=1,stdin=1,timer='',mpirun=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')
@@ -32,7 +34,7 @@ def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
             # command is assumed to be always first in line
             command = pars.pop(0)
             # check if this command is in our list
-            if rsf:
+            if rsfflow:
                 if command[:2]==prefix:
                     # assuming prefix is two chars (sf)
                     rsfprog = command
@@ -62,7 +64,7 @@ def Flow(sources,flow,rsf=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
                    rsfprog == prefix+'cconjgrad':
                 command = pars.pop(1)
                 # check if this command is in our list
-                if rsf:
+                if rsfflow:
                     if command[:2]==prefix:
                         # assuming prefix is two chars
                         rsfprog = command

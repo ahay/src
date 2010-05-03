@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types, copy, re, string, urllib, ftplib
-import rsf
+import rsf.conf, rsf.path, rsf.bld, rsf.flow
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -315,7 +315,7 @@ class Project(Environment):
         for key in self['ENV'].keys():
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
 
-    def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
+    def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
              split=[],reduce='cat',local=0):
 
@@ -346,7 +346,7 @@ class Project(Environment):
             else:
                 reduction = reduce
 
-        if split and self.jobs > 1 and rsf and sfiles:
+        if split and self.jobs > 1 and rsfflow and sfiles:
             # Split the flow into parallel flows
 
             if self.jobs < split[1]:
@@ -421,7 +421,7 @@ class Project(Environment):
         else:
             remote = ''
             
-        command = rsfflow.Flow(sources,flow,rsf,
+        command = rsf.flow.Flow(sources,flow,rsfflow,
                                self.checkpar,self.coms,prefix,self.progsuffix,
                                remote,stdout,stdin,self.timer,self.mpirun)
 

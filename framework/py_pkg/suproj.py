@@ -43,7 +43,7 @@ class SUProject(rsf.proj.Project):
         self.plots = []
         self.views = []
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
-        kw.update({'rsf':0,'suffix': suffix,'src_suffix':src_suffix})
+        kw.update({'rsfflow':0,'suffix': suffix,'src_suffix':src_suffix})
         return apply(rsf.proj.Project.Flow,(self,target,source,flow),kw)
     def Plot(self,target,source,flow=None,**kw):
         if not flow: # two arguments
