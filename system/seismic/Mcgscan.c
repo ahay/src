@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int nt, n3, nx, nv, i3, ntx, ntv, ic, nc;
     int niter, miter, psun1, psun2;
     bool adj;
-    float o1,d1, x0,dx, v0,dv, anti, s02,s0,ds, perc;
+    float o1,d1, x0,dx, v0,dv, anti, s1,s0,ds, perc;
     float *cmp=NULL, *vscan=NULL, *error=NULL, *mask=NULL;
     sf_file in=NULL, out=NULL, err=NULL, msk=NULL;
 
@@ -75,8 +75,6 @@ int main(int argc, char* argv[])
 	    sf_error("need v0=");
 	if (!sf_getfloat("dv",&dv) && !sf_histfloat(in,"dv",&dv))
 	    sf_error("need dv=");
-	if (!sf_getfloat("s02",&s02) && !sf_histfloat(in,"s02",&s02))
-	    sf_error("need s02=");
 
 	sf_putfloat(out,"x0",x0);
 	sf_putfloat(out,"dx",dx);
@@ -85,6 +83,9 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"v0",v0);
 	sf_putfloat(out,"dv",dv);
     }
+
+    if (!sf_getfloat("s0",&s1) && !sf_histfloat(in,"s0",&s1))
+	sf_error("need s0=");
 
     s0 = 1./(v0 +(nv-1)*dv); s0 *= s0; ds = (1./(v0*v0) - s0)/(nv-1);
     s0 = ds;		               ds = (1./(v0*v0) - s0)/(nv-1);
@@ -146,7 +147,7 @@ int main(int argc, char* argv[])
     vscan = sf_floatalloc(ntv);
 
     veltran_init (true, x0, dx, nx, s0, ds, nv, o1, d1, nt, 
-		  s02, anti, psun1, psun2);
+		  s1, anti, psun1, psun2);
 
     for (i3=0; i3 < n3; i3++) {
 	if( adj) {
@@ -160,15 +161,18 @@ int main(int argc, char* argv[])
 	} else { 
 	    if (nc > 0) {
 		for (ic=0; ic < nc; ic++) {
-		    sf_conjgrad(NULL,veltran_lop,sf_weight_lop,mask,vscan,cmp,niter);
+		    sf_conjgrad(NULL,veltran_lop,sf_weight_lop,
+				mask,vscan,cmp,niter);
 		    sf_sharpen(vscan);
 		}
 	    } else {
 		if (NULL != msk) sf_floatread(mask,ntv,msk);
 		
 		sf_cdstep_init();
-		sf_solver (veltran_lop, sf_cdstep, ntv, ntx, vscan, cmp, niter, 
-			   "err", error, "nmem", 0, "nfreq", miter, "mwt", mask, "end");
+		sf_solver (veltran_lop, sf_cdstep, 
+			   ntv, ntx, vscan, cmp, niter, 
+			   "err", error, "nmem", 0, "nfreq", miter, 
+			   "mwt", mask, "end");
 		sf_cdstep_close();
 		
 		if(NULL != err) sf_floatwrite(error,niter,err);

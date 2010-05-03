@@ -491,15 +491,20 @@ in more complicated examples where events cross.
 
 \section{MIGRATION WITH ANTIALIASING}
 \sx{antialias!migration}
+
+\inputdir{mig}
+
+\begin{comment}
 Subroutine {\tt aamig()} below does migration and diffraction modeling
 using subroutine {\tt trimo()} as the workhorse. %
 \progdex{aamig}{antialias migration} % 
+\end{comment}
 Figure~\ref{fig:aamod} shows the synthetic image
 that is used for testing.
 There is a horizontal layer, a dipping layer, and a few impulses.
 The impulses are chosen stronger than the layers because
 they will spread out in the synthetic data.
-\activesideplot{aamod}{width=3.00in}{ER}{
+\sideplot{aamod}{width=3.00in}{
 	Model image for migration study.
 	}
 
@@ -509,10 +514,10 @@ The hyperbolas look fine---the way we expect.
 The horizontal layer, however, is followed by many pseudo layers.
 These pseudo layers are the result of modeling with an operator
 that is spatially aliased.
-\activesideplot{aad0}{width=3.00in}{ER}{
+\sideplot{aad0}{width=3.00in}{
 	Synthetic data without regard for aliasing.
-	Made from model image with {\tt aamig()}
-	taking {\tt antialias=0.}
+%	Made from model image with {\tt aamig()}
+%	taking {\tt antialias=0.}
 	}
 
 Figure~\ref{fig:aad1} shows how the synthetic data improves dramatically
@@ -528,10 +533,10 @@ because the temporal bandwidth is widest at the apex
 there is no filtering away of high spatial frequencies).
 Simple low-pass temporal filtering (not shown)
 will cause the wavelet to be largely independent of offset.
-\activesideplot{aad1}{width=3.00in}{ER}{
+\sideplot{aad1}{width=3.00in}{
 	Synthetic data accounting for aliasing.
-	Made from model image with {\tt aamig()}
-	taking {\tt antialias=1.}
+%	Made from model image with {\tt aamig()}
+%	taking {\tt antialias=1.}
 	}
 
 \par
@@ -552,27 +557,27 @@ the waveform on the  horizontal layer in Figure~\ref{fig:aad1} back to an impuls
 This was done in Figure~\ref{fig:aad1h}.
 You can see the final flat-layer waveform
 is roughly the zero-phase shape we started with.
-\activesideplot{aad1h}{width=3.00in}{ER}{
+\sideplot{aad1h}{width=3.00in}{
 	Best synthetic data.
-	Made from model image using {\tt aamig()}
-	with {\tt antialias=1} followed by
-	a causal half-order time derivative.
+%	Made from model image using {\tt aamig()}
+%	with {\tt antialias=1} followed by
+%	a causal half-order time derivative.
 	Lowpass temporal filtering would make wavelets
 	more independent of location on a hyperbola.
 	}
 
-Figure~\ref{fig:aamig2} shows my best migration of my best synthetic data.
+Figure~\ref{fig:aamig1} shows my best migration of my best synthetic data.
 All the features of the original model are apparent.
 Naturally, high frequencies are lost,
 more on the dipping bed than the level one.  
 Likewise the broadening of the deeper point scatterer compared
 to the shallow one is a well known aperture effect.
 
-\activesideplot{aamig2}{width=3.00in}{ER}{
+\sideplot{aamig1}{width=3.00in}{
 	Best migration of best synthetic data.
-	Uses {\tt aamig()}
-	with {\tt antialias=2} followed by
-	an anticausal half-order time derivative.
+%	Uses {\tt aamig()}
+%	with {\tt antialias=2} followed by
+%	an anticausal half-order time derivative.
 	}
 
 Figure~\ref{fig:aamig0} shows what happens when antialiasing
@@ -581,13 +586,13 @@ Notice many false layers above the given horizontal layer.
 Notice semicircles above the impulses.
 Notice apparent noise everywhere.
 But notice also that the dipping bed is sharper
-than the antialiased result in Figure \ref{fig:aamig2}.
-\activesideplot{aamig0}{width=3.00in}{ER}{
+than the antialiased result in Figure \ref{fig:aamig1}.
+\sideplot{aamig0}{width=3.00in}{
 	Migration of best synthetic data
 	without regard for aliasing.
-	Uses {\tt aamig()}
-	with {\tt antialias=0.}
-	(and an anticausal half-order time derivative)
+%	Uses {\tt aamig()}
+%	with {\tt antialias=0.}
+%	(and an anticausal half-order time derivative)
 	}
 
 \subsection{Use of the antialiasing parameter}
@@ -605,7 +610,7 @@ they will cut steeply across our migration hyperbola.
 Figure~\ref{fig:croshyp} suggests
 that such hyperbolas require
 an antialias parameter greater than unity, say {\tt antialias=2.}
-\activesideplot{croshyp}{width=2.5in}{ER}{
+\sideplot{croshyp}{width=2.5in}{
 	Crossing hyperbolas that do not touch.
 	Thus the points shown are not enough
 	to prevent spatial aliasing a line integral
@@ -665,7 +670,7 @@ I chose $s_0$ to match the water wave.
 In practice $s_0$ might be the earth's slowness
 as a function of traveltime depth.
 
-\activesideplot{aacdp}{width=3.00in}{ER}{
+\sideplot{aacdp}{width=3.00in}{
 	The air wave and fast wave are broadened increasingly with offset,
 	but the water wave does not.
 	This broadening enables crossing events
