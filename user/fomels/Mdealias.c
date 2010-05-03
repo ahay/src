@@ -29,8 +29,9 @@ max(jx,jy)=N, the temporal bandwidth should be 1/N of Nyquist.
 
 int main (int argc, char *argv[])
 {
+    bool both;
     int n1, n2, n3, n12, m2, m3, m12, i1, i2, i3;
-    float d2, d3, ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***q2, ***uu;
+    float d2, d3, ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***q2, ***uu, ***p2;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -64,9 +65,19 @@ int main (int argc, char *argv[])
     u1 = sf_floatalloc3(n1,n2,n3);
     uu = sf_floatalloc3(n1,m2,m3);
 
-    p = sf_floatalloc3(n1,n2,n3);
+    if (!sf_getbool("both",&both)) both=false;
+    /* if use left and right slopes */
+    
+    if (both) {
+	p  = sf_floatalloc3(n1,m2,m3);
+	p2 = sf_floatalloc3(n1,m2,m3);
+	q = sf_floatalloc3(n1,n2,n3);
+    } else {
+	p = sf_floatalloc3(n1,n2,n3);
+	q = sf_floatalloc3(n1,n2,n3);
+	p2 = NULL;
+    }
 
-    q = sf_floatalloc3(n1,n2,n3);
     q2 = sf_floatalloc3(n1,n3,m2);
     
     uu1 = sf_floatalloc3(n1,m2,n3);
@@ -91,13 +102,25 @@ int main (int argc, char *argv[])
     sf_floatread(u1[0][0],n12,in);
 
     /* get slopes */
-    sf_floatread(p[0][0],n12,dip);
-    if (n3 > 1) sf_floatread(q[0][0],n12,dip);
+    if (both) {
+	sf_floatread(p[0][0],m12,dip);
+	sf_floatread(p2[0][0],m12,dip);
+    } else {
+	sf_floatread(p[0][0],n12,dip);
+    }
 
     /* interpolate inline */
-    for (i3=0; i3 < n3; i3++) {
-	interp2(n2,u1[i3],uu1[i3],p[i3]);
+    if (both) {
+	for (i3=0; i3 < n3; i3++) {
+	    interp2lr(n2,u1[i3],uu1[i3],p[2*i3],p2[2*i3]);
+	}
+    } else {
+	for (i3=0; i3 < n3; i3++) {
+	    interp2(n2,u1[i3],uu1[i3],p[i3]);
+	}
     }
+    
+    if (n3 > 1) sf_floatread(q[0][0],n12,dip);
     
     /* extend crossline slope */    
     for (i3=0; i3 < n3; i3++) {

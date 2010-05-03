@@ -313,7 +313,59 @@ class Project(Environment):
         # self.ip is the current CPU
 
         for key in self['ENV'].keys():
-            self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key]) 
+            self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key])
+
+    def __Split(self,split,reduction,
+                sfiles,tfiles,flow,stdout,stdin,suffix,prefix,src_suffix):
+        '''Split jobs for pscons'''
+        
+        if self.jobs < split[1]:
+            jobs = self.jobs            
+            w = int(1+float(split[1])/jobs) # length of one chunk
+        else:
+            jobs = split[1]
+            w = 1
+                
+        par_sfiles = copy.copy(sfiles)
+        par_targets = {}
+        for tfile in tfiles:
+            par_targets[tfile] = []
+
+        bigjobs = split[1] - jobs*(w-1)
+        for i in range(jobs):
+            if i < bigjobs:
+                chunk=w
+                skip=i*w
+            else:
+                chunk=w-1
+                skip=bigjobs*w+(i-bigjobs)*chunk
+                
+            for j in split[2]:
+                source = sfiles[j] + '_' + str(i)
+                par_sfiles[j] = source
+
+                self.Flow(source,sfiles[j],
+                          'window n%d=%d f%d=%d squeeze=n' % 
+                          (split[0],chunk,split[0],skip))
+
+            par_tfiles = []
+            for j in range(len(tfiles)):
+                tfile = tfiles[j]
+                par_tfile = tfile + '__' + str(i)
+                    
+                par_tfiles.append(par_tfile)
+                par_targets[tfile].append(par_tfile)
+ 
+            # operation on one chunk    
+            self.Flow(par_tfiles,par_sfiles,flow,
+                      stdout,stdin,1,
+                      suffix,prefix,src_suffix)
+
+        # Reduce parallel TARGETS down to original TARGETS:
+        for tfile in tfiles:
+            self.Flow(tfile,par_targets[tfile],
+                      '%s ${SOURCES[1:%d]}' % (reduction,jobs),
+                      local=1)
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
@@ -346,57 +398,14 @@ class Project(Environment):
             else:
                 reduction = reduce
 
-        if split and self.jobs > 1 and rsfflow and sfiles:
-            # Split the flow into parallel flows
+            if self.jobs > 1 and rsfflow and sfiles:
+                # Split the flow into parallel flows
 
-            if self.jobs < split[1]:
-                jobs = self.jobs            
-                w = int(1+float(split[1])/jobs) # length of one chunk
-            else:
-                jobs = split[1]
-                w = 1
-                
-            par_sfiles = copy.copy(sfiles)
-            par_targets = {}
-            for tfile in tfiles:
-                par_targets[tfile] = []
-
-            bigjobs = split[1] - jobs*(w-1)
-            for i in range(jobs):
-                if i < bigjobs:
-                    chunk=w
-                    skip=i*w
-                else:
-                    chunk=w-1
-                    skip=bigjobs*w+(i-bigjobs)*chunk
-                
-                for j in split[2]:
-                    source = sfiles[j] + '_' + str(i)
-                    par_sfiles[j] = source
-
-                    self.Flow(source,sfiles[j],
-                              'window n%d=%d f%d=%d squeeze=n' % 
-                              (split[0],chunk,split[0],skip))
-
-                par_tfiles = []
-                for j in range(len(tfiles)):
-                    tfile = tfiles[j]
-                    par_tfile = tfile + '__' + str(i)
-                    
-                    par_tfiles.append(par_tfile)
-                    par_targets[tfile].append(par_tfile)
- 
-                # operation on one chunk    
-                self.Flow(par_tfiles,par_sfiles,flow,
-                          stdout,stdin,1,
-                          suffix,prefix,src_suffix)
-
-            # Reduce parallel TARGETS down to original TARGETS:
-            for tfile in tfiles:
-                self.Flow(tfile,par_targets[tfile],
-                          '%s ${SOURCES[1:%d]}' % (reduction,jobs),
-                          local=1)
-            return
+                if split[1] != 'omp':
+                    self.__Split(split,reduction,
+                                 sfiles,tfiles,flow,stdout,stdin,
+                                 suffix,prefix,src_suffix)               
+                    return
 
         sources = []
         if sfiles:
