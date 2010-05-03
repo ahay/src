@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3;
+    int niter, n1, n2, i, nf1, nf2, nf3, nf4, n3, i3;
     float *mm, *kk, *filt, eps;
     bool *known, exact, verb;
     sf_file in, out, fil, mask;
@@ -71,40 +71,42 @@ int main(int argc, char* argv[])
 	known[i]=false;
     }
 
-    sf_floatread(mm,n1*n2,in);
-    sf_floatread(filt,nf1*nf2*nf3*nf4,fil);
-
-    if (NULL != sf_getstring("mask")) {
-	/* optional input mask file for known data */
-	mask = sf_input("mask");
-	sf_floatread(kk,n1*n2,mask);
-	sf_fileclose(mask);
+    for (i3=0; i3 < n3; i3++) {
+	sf_warning("slice %d of %d",i3+1,n3);
+	sf_floatread(mm,n1*n2,in);
+	sf_floatread(filt,nf1*nf2*nf3*nf4,fil);
 	
-	for (i=0; i < n1*n2; i++) {
-	    known[i] = (bool) (kk[i] != 0.);
+	if (NULL != sf_getstring("mask")) {
+	    /* optional input mask file for known data */
+	    mask = sf_input("mask");
+	    sf_floatread(kk,n1*n2,mask);
+	    sf_fileclose(mask);
+	    
+	    for (i=0; i < n1*n2; i++) {
+		known[i] = (bool) (kk[i] != 0.);
+	    }
+	} else {
+	    for (i=0; i < n1*n2; i++) {
+		known[i] = (bool) (mm[i] != 0.);
+	    }
 	}
-    } else {
-	for (i=0; i < n1*n2; i++) {
-	    known[i] = (bool) (mm[i] != 0.);
+	
+	if (exact) {
+	    for (i=0; i < n1*n2; i++) {
+		if (known[i]) kk[i] = mm[i];
+	    }
 	}
+	
+	nmis (niter, nf1, nf2, nf3, nf4, filt, mm, known, eps, verb);
+	
+	if (exact) {
+	    for (i=0; i < n1*n2; i++) {
+		if (known[i]) mm[i] = kk[i];
+	    }
+	}
+	
+	sf_floatwrite(mm,n1*n2,out);
     }
-
-    if (exact) {
-	for (i=0; i < n1*n2; i++) {
-	    if (known[i]) kk[i] = mm[i];
-	}
-    }
-
-    nmis (niter, nf1, nf2, nf3, nf4, filt, mm, known, eps, verb);
-
-    if (exact) {
-	for (i=0; i < n1*n2; i++) {
-	    if (known[i]) mm[i] = kk[i];
-	}
-    }
-
-    sf_floatwrite(mm,n1*n2,out);
-
 
     exit (0);
 }
