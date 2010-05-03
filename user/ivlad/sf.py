@@ -173,7 +173,7 @@ def csv2rsf(inp=None, out=None, delimiter=None, dtype=None, debug=None,
 
 def filedims(inp=None, out=None, large=None, parform=None, verb=False, exe=None):
 
-    if exe == 'x' and out==None: # invalid combination, fix the call
+    if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
     return __run('sffiledims', __parse(locals()), 
         inp, out, 
@@ -192,7 +192,7 @@ def fileflush(inp=None, out=None, verb=False, exe=None):
 def get(inp=None, par=None, parform=False, out=None, verb=False, exe=None):
 
     args = ['parform=' + ivlad.switch(parform, 'y', 'n')] + ivlad.mklist(par)
-    if exe == 'x' and out==None: # invalid combination, fix the call
+    if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
     def postproc(out_str):
         out = out_str.split()
@@ -208,7 +208,7 @@ def get(inp=None, par=None, parform=False, out=None, verb=False, exe=None):
 
 def gettype(inp=None, out=None, verb=False, exe=None):
 
-    if exe == 'x' and out==None: # invalid combination, fix the call
+    if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
     return __run('sfgettype', __parse(locals()), 
         inp, out, 
@@ -218,7 +218,7 @@ def gettype(inp=None, out=None, verb=False, exe=None):
 
 def invalid(out=None, chk4nan=None, dir=None, rec=None, verb=False, exe=None):
 
-    if exe == 'x' and out==None: # invalid combination, fix the call
+    if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
     return __run('sfinvalid', __parse(locals()), 
         None, out, 
@@ -228,7 +228,7 @@ def invalid(out=None, chk4nan=None, dir=None, rec=None, verb=False, exe=None):
 
 def leftsize(inp=None, out=None, i=None, verb=False, exe=None):
 
-    if exe == 'x' and out==None: # invalid combination, fix the call
+    if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
     return __run('sfleftsize', __parse(locals()), 
         inp, out, 
