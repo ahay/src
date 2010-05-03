@@ -1,0 +1,24 @@
+import os
+
+Import('env bindir libdir pkgdir docdir spcdir mandir system user')
+
+env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
+                'PYTHONPATH':os.environ.get('PYTHONPATH')})
+
+txtdir = os.path.join(docdir,'txt')
+mn1dir = os.path.join(mandir,'man1')
+
+htm = os.path.join(docdir,'index.html')
+txt = os.path.join(txtdir,'INDEX.txt')
+spc = os.path.join(spcdir,'extend.spec')
+man = os.path.join(mn1dir,'index.man')
+
+repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
+
+sfdoc = '../py_pkg/sfdoc'
+python = WhereIs('python')
+env.Command(htm,sfdoc,'%s $SOURCE -w %s -r %s' % (python,docdir,repos))
+env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))
+env.Command(spc,sfdoc,'%s $SOURCE -s %s' % (python,spcdir))
+env.Command(man,sfdoc,'%s $SOURCE -g %s' % (python,mn1dir))
+

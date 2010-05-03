@@ -11,7 +11,7 @@ except:
 
 ################################################################################
 
-Import('env root bindir pkgdir system user')
+Import('env bindir pkgdir system user')
 
 env.Install(pkgdir,'__init__.py')
 
@@ -19,24 +19,18 @@ dirs = Split('plot libplot pens sumain suplot') + system + user
 env.Command('prog.py',os.path.join(pkgdir,'path.py'),
             action=Action(doc.getprogs,varlist=['dirs']),dirs=dirs)
 
-for src in Split('path doc flow proj prog tex book latex2wiki suproj use sftour'):
+for src in Split('path doc flow proj prog tex book suproj use'):
     bldutil.py_install(src, env, pkgdir)
 
-env.InstallAs(bindir,'latex2wiki.pyc')
-env.InstallAs(bindir,'sftour.pyc')
+for src in Split('latex2wiki sftour'):
+    bldutil.py_install(src, env, pkgdir)
+    env.Command(src,src+'.py','cp $SOURCE $TARGET')
+    env.Install(bindir,src)
+
+env.Install(bindir,'sfdoc')
 
 # Dependencies and installs from RSFSRC
-Depends('proj.pyc',os.path.join(pkgdir,'bld.pyc'))
-
-env.InstallAs(os.path.join(pkgdir,'bld.py'), 
-    os.path.join('..','..','bldutil.py'))
-env.InstallAs(os.path.join(pkgdir,'bld.pyc'),
-    os.path.join('..','..','bldutil.pyc'))
-env.Install(pkgdir,os.path.join('..','..','config.py'))
-env.InstallAs(os.path.join(pkgdir,'conf.py'),
-    os.path.join('..','..','configure.py'))
-env.InstallAs(os.path.join(pkgdir,'conf.pyc'),
-    os.path.join('..','..','configure.pyc'))
+Depends('proj.py',os.path.join(pkgdir,'bld.py'))
 
 # Building rsf.use
 use = env.Command('use.py',None,

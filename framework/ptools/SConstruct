@@ -1,0 +1,3 @@
+Import('env bindir')
+
+env.Install(bindir,Split('pscons sfkill sftop'))

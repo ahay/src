@@ -27,10 +27,6 @@ setup(name='murr',
       maintainer_email='sergey.fomel@gmail.com',
       url='http://www.ahay.org/',
       description='Madagascar Utilities for Reproducible Research',
-      py_modules=string.split('''
-      rsfpath rsfflow rsfproj rsftex book sftour
-      '''),
-      scripts=string.split('''
-      pscons sfdoc sfkill sftop latex2wiki sftour
-      '''),
+      py_modules=string.split('book doc flow latex2wiki path proj'),
+      scripts=string.split('latex2wiki sfdoc sftour'),
       )
