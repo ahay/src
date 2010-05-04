@@ -1,6 +1,9 @@
-import os, sys, glob
+import os, sys, glob, string
 
-# Madagascar modules:
+# Madagascar modules
+dir = string.replace(os.getcwd(),'/build','')
+sys.path.append(dir)
+
 import doc
 
 try:

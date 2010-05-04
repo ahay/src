@@ -65,15 +65,15 @@ user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 # Avoid crashing when user places some files in RSFSRC/user
 user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 
-for dir in map(lambda x: os.path.join('framework',x),Split('py_pkg doc ptools')):
+frame_exports = 'env bindir libdir pkgdir docdir spcdir mandir system user'
+
+for dir in map(lambda x: os.path.join('framework',x),
+               Split('py_pkg doc ptools')):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-    
-    SConscript(dirs=build,name='SConstruct',
-               exports='env bindir libdir pkgdir docdir spcdir mandir system user')
-    Default(build)
 
-    env.Depends(build,'#/framework/py_pkg/doc.py')
+    SConscript(dirs=build,name='SConstruct',exports=frame_exports)
+    Default(build)
     
 ##########################################################################
 # API BUILD
