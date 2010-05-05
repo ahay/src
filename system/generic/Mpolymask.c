@@ -39,7 +39,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(inp,"o1",&o1)) o1=0.;
     if (!sf_histfloat(inp,"o2",&o2)) o2=0.;
 
-    poly = sf_input("poly");
+    poly = sf_input("poly"); 
+    /* list of polygon vertices */
+
     if (SF_FLOAT != sf_gettype(poly)) sf_error("Need float type in poly");
     if (!sf_histint(poly,"n1",&two) || 2 != two)
 	sf_error("Need n1=2 in poly");
