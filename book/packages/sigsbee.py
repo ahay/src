@@ -145,6 +145,35 @@ def getstrvel(velo,par):
                 ))
 
 # ------------------------------------------------------------
+def getreflect(ref,par):
+
+    reflectfile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'
+    #Fetch(velo,'sigsbee')
+
+    Flow([ref+'-raw',ref+'-t','./'+ref+'-h','./'+ref+'-b'],
+         reflectfile,
+         '''
+         segyread
+         tape=$SOURCE
+         tfile=${TARGETS[1]}
+         hfile=${TARGETS[2]}
+         bfile=${TARGETS[3]}
+         ''',stdin=0)
+
+    Flow(ref,
+         ref+'-raw',
+         '''
+         scale rscale=0.001 |
+         scale rscale=%g |
+         put 
+         o1=%g d1=%g label1=%s unit1=%s
+         o2=%g d2=%g label2=%s unit2=%s
+         ''' % (par['ft2km'],
+                0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
+                10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
+                ))
+
+# ------------------------------------------------------------
 # replace bottom salt and pad with sediment velocity
 def replace(vpad,velo,par):
 
@@ -337,6 +366,6 @@ def makedensity(velo,dens,smask,wmask,lmask,par):
          s=${SOURCES[1]}
          w=${SOURCES[2]}
          l=${SOURCES[3]}
-         output="0.23*((v*l)*3280.0)^0.25+1.0*w+1.23*s"
+         output="0.03*((10*v*l)*3280.0)^0.25+1.0*w+1.23*s"
          ''')
     

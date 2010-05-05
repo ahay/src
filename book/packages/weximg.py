@@ -72,7 +72,7 @@ def Cdtwex(wfld,data,slow,par):
 def Adtwex(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         wexwfl inv=0 datum=1 causal=n %s
+         wexwfl verb=y inv=0 datum=1 causal=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
 
@@ -88,7 +88,7 @@ def wexMOD(ref,data,slow,wfls,par):
          '''
          rtoc |
          weximg %s
-         adj=0 save=0 feic=0 verb=y
+         adj=0 save=0 feic=0 verb=y nrmax=5
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          ''' %param(par))
@@ -98,7 +98,7 @@ def wexCIMG(img,data,slow,wfls,par):
     Flow(img,[data,slow,wfls],
          '''
          weximg %s
-         adj=1 save=0 feic=0 verb=y
+         adj=1 save=0 feic=0 verb=y nrmax=5
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]} | 
          real
@@ -110,7 +110,7 @@ def wexEIMG(cip,data,slow,wfls,cc,par):
          '''
          weximg %(temp)s
          nhx=%(nhx)d nhz=%(nhz)d nhy=%(nhy)d nht=%(nht)d dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y
+         adj=1 save=0 feic=1 verb=y nrmax=5
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}
@@ -123,7 +123,7 @@ def wexXIMG(cig,data,slow,wfls,gg,par):
          '''
          weximg %(temp)s
          nhx=%(nhx)d nhz=0 nhy=%(nhy)d nht=0 dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y
+         adj=1 save=0 feic=1 verb=y nrmax=5
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}
@@ -136,7 +136,7 @@ def wexTIMG(cig,data,slow,wfls,gg,par):
          '''
          weximg %(temp)s
          nhx=0 nhz=0 nhy=0 nht=%(nht)d dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y
+         adj=1 save=0 feic=1 verb=y nrmax=5 
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}

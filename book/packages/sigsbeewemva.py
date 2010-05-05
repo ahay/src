@@ -177,6 +177,32 @@ def importvels(par):
     sigsbee.makemask('velC','smask','wmask','lmask',par)
 
 # ------------------------------------------------------------
+def importref(par):
+    # prepare reflectivity
+    sigsbee.getreflect('ref_',par)
+    Result('ref',fdmod.cgrey('pclip=99',par))
+
+    # padding in z
+    Flow('rpad','ref_',
+         '''
+         window n1=1 f1=1200 | 
+         spray axis=1 n=143 |
+         smooth rect2=250 repeat=5
+         ''' )
+
+    Flow('sub',None,
+         '''
+         spike nsp=1 mag=1
+         n1=3201 d1=0.00762 o1=3.048 k1=0 l1=%(nx)d
+         n2=1180 d2=0.00762 o2=0     k2=1179 l2=1179 |
+         put label1=x label2=z unit1=km unit2=km | transp 
+         ''' % par)
+
+    Flow('rsed','ref_','window n1=1180' )
+    Flow('rsed_','sub rsed','add ${SOURCES[1]}')
+    Flow('ref','rsed_ rpad','cat axis=1 ${SOURCES[1]}')
+
+# ------------------------------------------------------------
 def globalmask(amask,par):
     Flow(amask,None,
          '''
