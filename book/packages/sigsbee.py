@@ -366,6 +366,6 @@ def makedensity(velo,dens,smask,wmask,lmask,par):
          s=${SOURCES[1]}
          w=${SOURCES[2]}
          l=${SOURCES[3]}
-         output="0.03*((10*v*l)*3280.0)^0.25+1.0*w+1.23*s"
+         output="0.23*((v*l)*3280.0)^0.25+1.0*w+1.23*s"
          ''')
     
