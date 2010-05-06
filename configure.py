@@ -215,16 +215,17 @@ def cc(context):
         if plat['OS'] == 'darwin':
             context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
                                        ' -framework Accelerate'
-            if os.path.isdir('/sw'):    # paths for Fink
-                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                                         ['/sw/include',]
-                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                                         ['/sw/lib',]
             if os.path.isdir('/opt'):   # paths for MacPorts
                 context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
                                          ['/opt/local/include',]
                 context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
                                          ['/opt/local/lib',]
+            if os.path.isdir('/sw'):    # paths for Fink
+                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                                         ['/sw/include',]
+                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                                         ['/sw/lib',]
+  
 
     elif plat['OS'] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
@@ -452,7 +453,7 @@ def sfpen(context):
     sfpen = context.env.get('SFPEN')
     
     if not sfpen:
-        if plat['OS'] == 'cygwin':
+        if plat['OS'] == 'cygwin' or plat['OS'] == 'darwin':
             pens = ('oglpen','xtpen')
         else:
             pens = ('xtpen','oglpen')
@@ -466,7 +467,8 @@ def sfpen(context):
 
     if not sfpen:
         context.Result(context_failure)
-        stderr_write('sfpen (for displaying .vpl images) will not be built.','bold')
+        stderr_write('sfpen (for displaying .vpl images) will not be built.',
+                     'bold')
     else:
         context.Result(sfpen)
         context.env['SFPEN'] = sfpen
@@ -1049,7 +1051,8 @@ def omp(context):
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
-        LIBS.append('gomp')
+        if plat['OS'] != 'darwin':
+            LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
         LINKFLAGS = lflags
     elif icc:
