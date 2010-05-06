@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2008 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -14,7 +16,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, re
+import os, re, sys
+
+if sys.version_info[:2] < (2, 7):
+    import distutils.sysconfig as sysconfig
+else:
+    import sysconfig
+
+################################################################################
 
 def datapath():
     'Path for binary and temporary files'
@@ -39,6 +48,8 @@ def datapath():
         path = './' # the ultimate fallback
     return path
 
+################################################################################
+
 def dirtree(cwd=None):
     'hierarcical directory structure'
     if not cwd:
@@ -48,6 +59,8 @@ def dirtree(cwd=None):
             os.path.basename(cwd))
     return tree
 
+################################################################################
+
 def mkdir(dir):
     'Recursive directory making'
     while os.path.basename(dir) == '.':
@@ -56,6 +69,8 @@ def mkdir(dir):
         mkdir(os.path.dirname(dir))
         os.mkdir(dir)
     return dir
+
+################################################################################
 
 def sconsign(env):
     'SConsign database file'
@@ -70,6 +85,8 @@ def sconsign(env):
         except:
             env.SConsignFile(env.path+ '.sconsign')
 
+################################################################################
+
 def getpath(cwd):
     top = datapath()
     path = os.path.dirname(top)
@@ -82,3 +99,35 @@ def getpath(cwd):
         mkdir(path)
     path = os.path.join(path,os.path.basename(top))
     return path
+
+################################################################################
+
+def __get_central_site_pkgs(platform, version):
+    'Return central python package install location on the system'
+    # Some platform-dependent conditionals will come here
+    # For now: 
+    return sysconfig.get_python_lib()
+
+################################################################################
+
+def get_local_site_pkgs(platform=None, version=None):
+    'Get the directory that should be added to PYTHONPATH'
+
+    central_site_pkgs = __get_central_site_pkgs(platform, version)
+    prefix = sysconfig.PREFIX
+    
+    print 'central = ' + central_site_pkgs
+    print 'prefix = ' + prefix
+
+################################################################################
+
+def get_pkgdir(platform=None, version=None):
+    pass
+################################################################################
+
+def main():
+    get_local_site_pkgs()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
