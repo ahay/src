@@ -102,32 +102,37 @@ def getpath(cwd):
 
 ################################################################################
 
-def __get_central_site_pkgs(platform, version):
-    'Return central python package install location on the system'
-    # Some platform-dependent conditionals will come here
-    # For now: 
-    return sysconfig.get_python_lib()
-
-################################################################################
-
-def get_local_site_pkgs(platform=None, version=None):
+def get_local_site_pkgs(root=None, verb=False):
     'Get the directory that should be added to PYTHONPATH'
 
-    central_site_pkgs = __get_central_site_pkgs(platform, version)
+    central_site_pkgs = sysconfig.get_python_lib()
+
+    # This is actually platform dependent (Mac vs. Linux), because Python is not
+    # as cross-platform as it should be. When we will need to install in a 
+    # canonical location on Mac, platform detection will be included
     prefix = sysconfig.PREFIX
     
-    print 'central = ' + central_site_pkgs
-    print 'prefix = ' + prefix
+    if root == None:
+        root = os.environ.get('RSFROOT',os.environ['HOME'])
+
+    if central_site_pkgs[:len(prefix)] == prefix:
+        local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
+    else:
+        local_site_pkgs = os.path.join(root,'site-packages')
+
+    if verb:
+        print local_site_pkgs
+        return 0
+    else:
+        return local_site_pkgs
 
 ################################################################################
 
-def get_pkgdir(platform=None, version=None):
-    pass
-################################################################################
+def get_pkgdir(root=None):
+    'Return directory of the RSF Python package'
+    return os.path.join(get_local_site_pkgs(root),'rsf')
 
-def main():
-    get_local_site_pkgs()
-    return 0
+################################################################################
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(get_local_site_pkgs(verb=True))
