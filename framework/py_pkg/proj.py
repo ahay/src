@@ -223,7 +223,7 @@ class Project(Environment):
             import sysconfig
         # Deduce installation directory name
         std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-	pkgdir = os.path.join(root, std_pkgdir.lstrip('/'))
+        pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
         # End stuff copied from SConstruct
 
         opts = rsf.conf.options(os.path.join(pkgdir,'config.py'))

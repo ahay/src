@@ -44,7 +44,7 @@ env.Alias('config',config)
 
 # Deduce installation directory name. Should this happen in configure.py?
 std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-pkgdir = os.path.join(root, std_pkgdir.lstrip('/'))
+pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
 
 ##########################################################################
 # CUSTOM BUILDERS
