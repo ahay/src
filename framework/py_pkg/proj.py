@@ -212,19 +212,8 @@ class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
-        # RSFROOT should be actually read from somewhere, so as to allow installation 
-        # when RSFROOT is not specified, and is actually something like /usr/
-        root = os.environ.get('RSFROOT')
-        # The lines below are copied from py_pkg/SConstruct, both should be
-        # executed from a common module, or pkgdir imported:
-        if sys.version_info[:2] < (2, 7):
-            import distutils.sysconfig as sysconfig
-        else:
-            import sysconfig
-        # Deduce installation directory name
-        std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-        pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
-        # End stuff copied from SConstruct
+        root = os.environ.get('RSFROOT',os.environ['HOME'])
+        rsf.path.get_pkgdir(root)
 
         opts = rsf.conf.options(os.path.join(pkgdir,'config.py'))
         opts.Add('TIMER','Whether to time execution')

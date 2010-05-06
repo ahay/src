@@ -85,20 +85,12 @@ rerun = re.compile(r'\bRerun')
 
 # RSFROOT should be actually read from somewhere, so as to allow installation 
 # when RSFROOT is not specified, and is actually something like /usr/
-root = os.environ.get('RSFROOT')# not needed in module except for default of figdir, is it imported elsewhere?
+root = os.environ.get('RSFROOT',os.environ['HOME'])
 bindir = os.path.join(root,'bin') # not needed in module, is it imported elsewhere?
 libdir = os.path.join(root,'lib') # not needed in module, is it imported elsewhere?
 incdir = os.path.join(root,'include') # not needed in module, is it imported elsewhere?
 figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
-# The lines below are copied from py_pkg/SConstruct, both should be
-# executed from a common module, or pkgdir imported:
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
-# Deduce installation directory name
-std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
+pkgdir = rsfpath.get_pkgdir(root)
 
 # End stuff copied from SConstruct
 

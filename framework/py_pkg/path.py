@@ -100,39 +100,16 @@ def getpath(cwd):
 
 ################################################################################
 
-def get_local_site_pkgs(root=None, verb=False):
-    'Get the directory that should be added to PYTHONPATH'
-
-    central_site_pkgs = sysconfig.get_python_lib()
-
-    # This is actually platform dependent (Mac vs. Linux), because Python is not
-    # as cross-platform as it should be. When we will need to install in a 
-    # canonical location on Mac, platform detection will be included
-    prefix = sysconfig.PREFIX
-    
-    if root == None:
-        root = os.environ.get('RSFROOT',os.environ['HOME'])
-
-    if central_site_pkgs[:len(prefix)] == prefix:
-        local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
-    else:
-        local_site_pkgs = os.path.join(root,'site-packages')
-
-    if verb:
-        print local_site_pkgs
-        return 0
-    else:
-        return local_site_pkgs
-
-################################################################################
-
 def get_pkgdir(root=None):
     'Return directory of the RSF Python package'
     
     central_site_pkgs = sysconfig.get_python_lib()
 
+    if root == None:
+        root = os.environ.get('RSFROOT',os.environ['HOME'])
+
     if os.access(central_site_pkgs, os.W_OK):
         # I am root or have some sudo permission
         return os.path.join(central_site_pkgs,'rsf')
     else:
-        return os.path.join(os.environ['RSFROOT'],'lib','rsf')
+        return os.path.join(root,'lib','rsf')

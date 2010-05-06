@@ -1,11 +1,7 @@
 EnsureSConsVersion(0, 96)
 
-import bldutil, configure, os, sys
-
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
+import bldutil, configure, imp, os
+rsfpath = imp.load_source('path','framework/py_pkg/path.py')
 
 env = Environment()
 
@@ -17,10 +13,12 @@ incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
 spcdir = os.path.join(root,'spec')
 mandir = os.path.join(root,'share','man')
+pkgdir = rsfpath.get_pkgdir(root)
 
 ##########################################################################
 # CONFIGURATION
 ##########################################################################
+
 opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
@@ -37,14 +35,6 @@ env.Precious(config)
 
 Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 env.Alias('config',config)
-
-# Figuring out Python package installation directory
-# This needs to be done because files all over the source dir need to be
-# installed there (sfplot, the Python API, etc)
-
-# Deduce installation directory name. Should this happen in configure.py?
-std_pkgdir = os.path.join(sysconfig.get_python_lib(),'rsf')
-pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
 
 ##########################################################################
 # CUSTOM BUILDERS
