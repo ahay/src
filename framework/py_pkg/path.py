@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2008 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -130,9 +128,11 @@ def get_local_site_pkgs(root=None, verb=False):
 
 def get_pkgdir(root=None):
     'Return directory of the RSF Python package'
-    return os.path.join(get_local_site_pkgs(root),'rsf')
+    
+    central_site_pkgs = sysconfig.get_python_lib()
 
-################################################################################
-
-if __name__ == '__main__':
-    sys.exit(get_local_site_pkgs(verb=True))
+    if os.access(central_site_pkgs, os.W_OK):
+        # I am root or have some sudo permission
+        return os.path.join(central_site_pkgs,'rsf')
+    else:
+        return os.path.join(os.environ['RSFROOT'],'lib','rsf')
