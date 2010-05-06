@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2008 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -89,7 +91,7 @@ def getpath(cwd):
     top = datapath()
     path = os.path.dirname(top)
     if top[:2] != './':
-        # create a hierarcical structure
+        # create a hierarchical structure
         tree = dirtree(cwd)
         for level in tree:
             if level:
@@ -100,16 +102,38 @@ def getpath(cwd):
 
 ################################################################################
 
-def get_pkgdir(root=None):
-    'Return directory of the RSF Python package'
-    
+def get_local_site_pkgs(root=None, verb=False):
+    'Get the directory that should be added to PYTHONPATH'
+
     central_site_pkgs = sysconfig.get_python_lib()
 
+    # This is actually platform dependent (Mac vs. Linux), because Python is not
+    # as cross-platform as it should be. When we need to install in a 
+    # canonical location on Mac, platform detection will be included
+    prefix = sysconfig.PREFIX
+    
     if root == None:
         root = os.environ.get('RSFROOT',os.environ['HOME'])
 
-    if os.access(central_site_pkgs, os.W_OK):
-        # I am root or have some sudo permission
-        return os.path.join(central_site_pkgs,'rsf')
+    if central_site_pkgs[:len(prefix)] == prefix:
+        local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
     else:
-        return os.path.join(root,'lib','rsf')
+        local_site_pkgs = os.path.join(root,'lib')
+
+    if verb:
+        print local_site_pkgs
+        return 0
+    else:
+        return local_site_pkgs
+
+################################################################################
+
+def get_pkgdir(root=None):
+    'Return directory of the RSF Python package'
+    
+    return os.path.join(get_local_site_pkgs(root),'rsf')
+
+################################################################################
+
+if __name__ == '__main__':
+    sys.exit(get_local_site_pkgs(verb=True))
