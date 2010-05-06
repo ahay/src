@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj, inv;
+    bool adj, inv, squared;
     int dim, i, n[SF_MAX_DIM], it, nt, niter, iter, *m;
     float d[SF_MAX_DIM], *t, *dt, *s, *ds, *t0, tol;
     double err;
@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (what = sf_getstring("what"))) what="time";
     /* what to compute */
+
+    if (!sf_getbool("squared",&squared)) squared=true;
+    /* if slowness is squared */
 
     upg = upgrad_init(dim,n,d);
 
@@ -96,6 +99,26 @@ int main(int argc, char* argv[])
 
 	    sf_floatwrite(s,nt,dtime);
 	    break;
+	case 'd': /* differentiation */
+	    time0 = sf_input("time");
+	    t0 = sf_floatalloc(nt);
+	    sf_floatread(t0,nt,time0);
+	    sf_fileclose(time0);
+
+	    upgrad_set(upg,t);
+	    upgrad_forw(upg,t0,s); /* s = grad(t0)*grad(t) */
+
+	    if (!squared) {
+		ds = sf_floatalloc(nt);
+		upgrad_forw(upg,t,ds);
+		for (it=0; it < nt; it++) {
+		    s[it] /= sqrtf(ds[it]);
+		}
+		free(ds);
+	    }
+	    
+	    sf_floatwrite(s,nt,dtime);
+	    break;
 	case 'i': /* integration */
 	    /* boundary conditions */
 	    if (NULL != sf_getstring("time")) {
@@ -108,11 +131,21 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* get s */
-	    slow = sf_input("slow");  /* slowness */
+	    slow = sf_input("slow");  /* slowness squared */
 	    sf_floatread(s,nt,slow);
 	    sf_fileclose(slow);
 
 	    upgrad_set(upg,t);
+
+	    if (!squared) {
+		ds = sf_floatalloc(nt);
+		upgrad_forw(upg,t,ds);
+		for (it=0; it < nt; it++) {
+		    s[it] *= sqrtf(ds[it]);
+		}
+		free(ds);
+	    }
+
 	    upgrad_solve(upg,s,t,t0); /* solve for t */
 	    
 	    sf_floatwrite(t,nt,dtime);
