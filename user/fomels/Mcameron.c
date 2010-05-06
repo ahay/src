@@ -91,34 +91,57 @@ int main(int argc, char *argv[])
     den = sf_floatalloc(nx);
     num = sf_floatalloc(nx);
 
-    den[0] = den[nx-1] = 0.;
-    num[0] = num[nx-1] = 0.;
-
     for (it=2; it < nt; it++) {
 	norm = 0.;
-	for (ix=1; ix < nx-1; ix++) {
+	for (ix=0; ix < nx; ix++) {
 	    den[ix] = vi[it-1][ix]+0.25*(vi[it][ix]-vi[it-2][ix]);
 	    norm += den[ix]*den[ix];
 	}
 	norm = sqrtf(nx/norm);
 
-	for (ix=1; ix < nx-1; ix++) {
+	for (ix=0; ix < nx; ix++) {
 	    den[ix] *= norm;
-	    num[ix] = -norm*(v[it-1][ix]*(z1[ix-1]-2*z1[ix]+z1[ix+1])+
-			     vi[it-1][ix]*(z0[ix]-2*z1[ix])+
-			     0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(z1[ix+1]-z1[ix-1])-
-			     0.25*(vi[it][ix]-vi[it-2][ix])*z0[ix]);
+	    if (0==ix) {
+		num[ix] = -norm*(v[it-1][ix]*(z1[ix]-2*z1[ix+1]+z1[ix+2])+
+				 vi[it-1][ix]*(z0[ix]-2*z1[ix])+
+				 (v[it-1][ix+1]-v[it-1][ix])*(z1[ix+1]-z1[ix])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*z0[ix]);
+	    } else if (nx-1==ix) {
+		num[ix] = -norm*(v[it-1][ix]*(z1[ix-2]-2*z1[ix-1]+z1[ix])+
+				 vi[it-1][ix]*(z0[ix]-2*z1[ix])+
+				 (v[it-1][ix]-v[it-1][ix-1])*(z1[ix]-z1[ix-1])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*z0[ix]);
+	    } else {
+		num[ix] = -norm*(v[it-1][ix]*(z1[ix-1]-2*z1[ix]+z1[ix+1])+
+				 vi[it-1][ix]*(z0[ix]-2*z1[ix])+
+				 0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(z1[ix+1]-z1[ix-1])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*z0[ix]);
+	    }
 	    z0[ix] = z1[ix];
 	}
 	divn(num,den,z1);
 	sf_floatwrite(z1,nx,zx);  
 
-	for (ix=1; ix < nx-1; ix++) {
-	    num[ix] = -norm*(v[it-1][ix]*(x1[ix-1]-2*x1[ix]+x1[ix+1])+
-			     vi[it-1][ix]*(x0[ix]-2*x1[ix])+
-			     0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(x1[ix+1]-x1[ix-1])-
-			     0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]+
-			     0.5*(v[it-1][ix+1]-v[it-1][ix-1])*dx);
+	for (ix=0; ix < nx; ix++) {
+	    if (0==ix) {
+		num[ix] = -norm*(v[it-1][ix]*(x1[ix]-2*x1[ix+1]+x1[ix+2])+
+				 vi[it-1][ix]*(x0[ix]-2*x1[ix])+
+				 (v[it-1][ix+1]-v[it-1][ix])*(x1[ix+1]-x1[ix])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]+
+				 (v[it-1][ix+1]-v[it-1][ix])*dx);
+	    } else if (nx-1==ix) {
+		num[ix] = -norm*(v[it-1][ix]*(x1[ix-2]-2*x1[ix-1]+x1[ix])+
+				 vi[it-1][ix]*(x0[ix]-2*x1[ix])+
+				 (v[it-1][ix]-v[it-1][ix-1])*(x1[ix]-x1[ix-1])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]+
+				 (v[it-1][ix]-v[it-1][ix-1])*dx);
+	    } else {
+		num[ix] = -norm*(v[it-1][ix]*(x1[ix-1]-2*x1[ix]+x1[ix+1])+
+				 vi[it-1][ix]*(x0[ix]-2*x1[ix])+
+				 0.25*(v[it-1][ix+1]-v[it-1][ix-1])*(x1[ix+1]-x1[ix-1])-
+				 0.25*(vi[it][ix]-vi[it-2][ix])*x0[ix]+
+				 0.5*(v[it-1][ix+1]-v[it-1][ix-1])*dx);
+	    }
 	    x0[ix] = x1[ix];
 	}
 	divn(num,den,x1);

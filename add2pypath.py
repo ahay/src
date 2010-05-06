@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 
-import os, sys
+import os, imp
 
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
-
+rsfpath = imp.load_source('path','framework/py_pkg/path.py')
 root = os.environ.get('RSFROOT',os.getcwd())
-std_pkgdir = sysconfig.get_python_lib()
-pkgdir = std_pkgdir.replace(sysconfig.PREFIX,root,1)
+pkgdir = rsfpath.get_pkgdir(root)
 
 print pkgdir
