@@ -213,7 +213,7 @@ class Project(Environment):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
         root = os.environ.get('RSFROOT',os.environ['HOME'])
-        rsf.path.get_pkgdir(root)
+        pkgdir = rsf.path.get_pkgdir(root)
 
         opts = rsf.conf.options(os.path.join(pkgdir,'config.py'))
         opts.Add('TIMER','Whether to time execution')
