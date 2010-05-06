@@ -84,6 +84,9 @@ def param(par):
     if(not par.has_key('nqx')): par['nqx']=par['nx']
     if(not par.has_key('oqx')): par['oqx']=par['ox']
     if(not par.has_key('dqx')): par['dqx']=par['dx']
+
+    par['xratio']=2
+    par['tratio']=2
     
     par['labelattr']=' '+par['labelattr']+' parallel2=n format2=%3.1f format1=%3.1f '
     

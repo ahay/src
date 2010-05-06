@@ -60,7 +60,7 @@ def ciggrey(custom,par):
     grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
-    screenratio=2
+    screenratio=1.5
     labelsz=6 labelfat=3 titlesz=12 titlefat=3
     %s
     ''' % (
@@ -68,13 +68,13 @@ def ciggrey(custom,par):
         par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s '%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g crowd=0.6'%par+custom,par)
 
 def zgrey(custom,par):
     return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s '%par+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s '%par+custom,par)
+    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s screenratio=%(tratio)g crowd=0.6'%par+custom,par)
 
 def agrey(custom,par):
     return ciggrey(' label2="\F10 q\F3      " unit2="\^o\_" '%par+custom,par)
@@ -114,6 +114,20 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
 
 #    byte gainpanel=a pclip=100 %s |
 
+
+# ------------------------------------------------------------
+def xparam(nhx,ohx,dhx,nz,oz,dz,par):
+    dz = (nz-1)*dz
+    dx = (nhx-1)*dhx
+    par['xratio']=(dz)/(dx);
+
+def tparam(v,nht,oht,dht,nz,oz,dz,par):
+    dz = (nz-1)*dz
+    dt =((nht-1)*dht)*v
+
+    print dz,dt
+    par['tratio']=(dz)/(dt);
+    
 # ------------------------------------------------------------
 def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
 
