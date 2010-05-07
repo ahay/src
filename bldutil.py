@@ -398,7 +398,7 @@ def add_ext_static_lib(env, libnm, root=os.environ.get('RSFROOT')):
 def mk_env_setup_scripts(root, local_site_pkgs, dpath):
     'Write the environments setup scripts'
 
-    etcdir = os.path.join(root,'etc')
+    etcdir = os.path.join(root,'etc','madagascar')
     script_nm_root = os.path.join(etcdir,'env.')
 
     # bash and (t)csh for now. Contributions for other shells welcome
