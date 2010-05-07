@@ -23,7 +23,8 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, math, rsf.prog, string, random
+import os, sys, math, string, random
+import rsf.prog as rsfprog
 
 try: # Give precedence to local version
     import m8rex
@@ -101,7 +102,7 @@ def show_man_and_out(condition):
     'Display self-doc (man page) and exit'
 
     if condition:
-        rsf.prog.selfdoc() # show the man page
+        rsfprog.selfdoc() # show the man page
         sys.exit(unix_error)
 
 ###############################################################################
