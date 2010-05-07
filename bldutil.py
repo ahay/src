@@ -402,9 +402,8 @@ def mk_env_setup_scripts(root, local_site_pkgs, dpath):
     script_nm_root = os.path.join(etcdir,'env.')
 
     # bash and (t)csh for now. Contributions for other shells welcome
-    bsh = open(script_nm_root+'sh' , 'w')
-    csh = open(script_nm_root+'csh', 'w')
 
+    bsh = open(script_nm_root+'sh' , 'w')
     bsh.write('''#!/bin/sh
 
 export RSFROOT=%s
@@ -418,7 +417,9 @@ export DATAPATH=%s
 export MANPATH=$RSFROOT/share/man:$(manpath)
 export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
 ''' % (root, local_site_pkgs, dpath))
+    bsh.close()
 
+    csh = open(script_nm_root+'csh', 'w')
     csh.write('''#!/bin/csh
 
 setenv RSFROOT %s
@@ -432,3 +433,4 @@ setenv DATAPATH %s
 setenv MANPATH $RSFROOT/share/man:`manpath`
 setenv LD_LIBRARY_PATH $RSFROOT/lib:$LD_LIBRARY_PATH
 ''' % (root, local_site_pkgs, dpath))
+    csh.close()
