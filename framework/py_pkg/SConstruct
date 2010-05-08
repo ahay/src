@@ -18,7 +18,7 @@ Import('env bindir pkgdir system user')
 
 env.Install(pkgdir,'__init__.py')
 
-dirs = Split('plot libplot pens sumain suplot') + system + user
+dirs = Split('plot libplot plplot pens sumain suplot') + system + user
 env.Command('prog.py',os.path.join(pkgdir,'path.py'),
             action=Action(doc.getprogs,varlist=['dirs']),dirs=dirs)
 

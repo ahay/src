@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int nt, n3, nx, nv, i3, ntx, ntv;
-    bool adj;
+    bool adj, pull;
     float o1,d1, x0,dx, v0,dv, anti, s1,s0,ds;
     float *cmp=NULL, *vscan=NULL;
     sf_file in=NULL, out=NULL;
@@ -98,7 +98,10 @@ int main(int argc, char* argv[])
     cmp = sf_floatalloc(ntx);
     vscan = sf_floatalloc(ntv);
 
-    veltran_init (true, x0, dx, nx, s0, ds, nv, o1, d1, nt, 
+    if (!sf_getbool("pull",&pull)) pull=true;
+    /* pull or push operator */
+
+    veltran_init (pull, x0, dx, nx, s0, ds, nv, o1, d1, nt, 
 		  s1, anti, 0, 0);
 
     for (i3=0; i3 < n3; i3++) { 
