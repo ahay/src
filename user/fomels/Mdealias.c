@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 {
     bool both;
     int n1, n2, n3, n12, m2, m3, m12, i1, i2, i3;
-    float d2, d3, ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***q2, ***uu, ***p2;
+    float d2, d3, ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***qt, ***uu, ***p2, ***q2;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -67,18 +67,18 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("both",&both)) both=false;
     /* if use left and right slopes */
+
+    p = sf_floatalloc3(n1,n2,n3);
+    q = sf_floatalloc3(n1,n2,n3);
+    qt = sf_floatalloc3(n1,n3,m2);
     
     if (both) {
-	p  = sf_floatalloc3(n1,m2,m3);
-	p2 = sf_floatalloc3(n1,m2,m3);
-	q = sf_floatalloc3(n1,n2,n3);
+	p2 = sf_floatalloc3(n1,n2,n3);
+	q2 = sf_floatalloc3(n1,n2,n3);
     } else {
-	p = sf_floatalloc3(n1,n2,n3);
-	q = sf_floatalloc3(n1,n2,n3);
 	p2 = NULL;
+	q2 = NULL;
     }
-
-    q2 = sf_floatalloc3(n1,n3,m2);
     
     uu1 = sf_floatalloc3(n1,m2,n3);
 
@@ -102,22 +102,12 @@ int main (int argc, char *argv[])
     sf_floatread(u1[0][0],n12,in);
 
     /* get slopes */
-    if (both) {
-	sf_floatread(p[0][0],m12,dip);
-	sf_floatread(p2[0][0],m12,dip);
-    } else {
-	sf_floatread(p[0][0],n12,dip);
-    }
+    sf_floatread(p[0][0],n12,dip);
+    if (both) sf_floatread(p2[0][0],n12,dip);
 
     /* interpolate inline */
-    if (both) {
-	for (i3=0; i3 < n3; i3++) {
-	    interp2lr(n2,u1[i3],uu1[i3],p[2*i3],p2[2*i3]);
-	}
-    } else {
-	for (i3=0; i3 < n3; i3++) {
-	    interp2(n2,u1[i3],uu1[i3],p[i3]);
-	}
+    for (i3=0; i3 < n3; i3++) {
+	interp2(n2,u1[i3],uu1[i3],p[i3],both? p2[i3]:NULL);
     }
     
     if (n3 > 1) sf_floatread(q[0][0],n12,dip);
@@ -125,16 +115,16 @@ int main (int argc, char *argv[])
     /* extend crossline slope */    
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2-1; i2++) {
-	    q2[2*i2][i3] = q[i3][i2];
+	    qt[2*i2][i3] = q[i3][i2];
 	    for (i1=0; i1 < n1; i1++) {
-		q2[2*i2+1][i3][i1] = 0.5*(q[i3][i2][i1]+q[i3][i2+1][i1]);
+		qt[2*i2+1][i3][i1] = 0.5*(q[i3][i2][i1]+q[i3][i2+1][i1]);
 	    }
 	}
     }
 
     /* interpolate crossline */
     for (i2=0; i2 < m2; i2++) {
-	interp2(n3,uu2[i2],u2[i2],q2[i2]);
+	interp2(n3,uu2[i2],u2[i2],qt[i2],NULL);
     }
     
     sf_floatwrite(uu[0][0],m12,out);

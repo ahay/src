@@ -19,9 +19,14 @@
 #include <math.h>
 #include <rsf.h>
 
-int main(int argc, char* argv[]) {
+#include "berf.h"
+
+int main(int argc, char* argv[]) 
+{
+    bool spline;
     int n1, nt, iw, nw, i2, n2;
     float fhi, flo, a, fi, d1, dw, f, *trace, *filt;
+    float (*myerf)(float);
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -47,11 +52,16 @@ int main(int argc, char* argv[]) {
     if (!sf_getfloat("a",&a)) a=0.25;
     /* filter sharpness */
 
+    if (!sf_getbool("spline",&spline)) spline=false;
+    /* if use B-spline erf */
+
+    myerf = spline? berf: erff;
+
     for (iw=0; iw < nw; iw++) {
 	f = iw*dw;
 	fi = 1.;
-	if (flo > 0.) fi *= (1.-0.5*(erf(a*(f+flo))-erf(a*(f-flo))));
-	if (fhi > 0.) fi *= 0.5*(erf(a*(f+fhi))-erf(a*(f-fhi)));
+	if (flo > 0.) fi *= (1.-0.5*(myerf(a*(f+flo))-myerf(a*(f-flo))));
+	if (fhi > 0.) fi *= 0.5*(myerf(a*(f+fhi))-myerf(a*(f-fhi)));
 	filt[iw]=fi/nt;
     }
 

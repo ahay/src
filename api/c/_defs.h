@@ -14,7 +14,7 @@
 #define SF_ODD(n)  ((n) & 1)
 #define SF_EVEN(n) (!(SF_ODD(n)))
 
-#define SF_PI (3.141592653589793)
+#define SF_PI (3.14159265358979323846264338328)
 
 #define SF_EPS FLT_EPSILON
 #define SF_HUGE FLT_MAX

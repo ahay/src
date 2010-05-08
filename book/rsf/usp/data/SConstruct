@@ -12,7 +12,7 @@ Fetch(tgz,
 
 files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
 
-Flow(files,tgz,'gzcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+Flow(files,tgz,'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
 Flow('line tline','Line_001.sgy','segyread tfile=${TARGETS[1]}')
 

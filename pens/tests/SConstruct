@@ -46,7 +46,7 @@ for vfile in Split(vfiles):
     demo = 'demo_'+vfile
     Result(demo,demo+'.v','Movie')
 
-for f in range(17):
+for f in range(19):
      font = 'font%d' % f
      Result(font,program('Font'),'./$SOURCE %d | plas' % f,stdin=0)
 
