@@ -50,18 +50,15 @@ static double cheb_eval(const cheb_series * cs, double x)
     double y  = (2.0*x - cs->a - cs->b) / (cs->b - cs->a);
     double y2 = 2.0 * y;
 
-    double e = 0.0;
     double temp;
 
     for(j = cs->order; j>=1; j--) {
+	temp = d;
 	d = y2*d - dd + cs->c[j];
-	e += fabs(y2*temp) + fabs(dd) + fabs(cs->c[j]);
 	dd = temp;
     }
 
     d = y*d - dd + 0.5 * cs->c[0];
-    e += fabs(y*temp) + fabs(dd) + 0.5 * fabs(cs->c[0]);
-
     return d;
 }
 
