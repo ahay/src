@@ -1,4 +1,4 @@
-from suproj import *
+from rsf.suproj import *
 
 # clip percentiles
 perc = {'3':  95,

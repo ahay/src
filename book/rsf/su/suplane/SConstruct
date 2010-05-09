@@ -1,4 +1,4 @@
-from suproj import *
+from rsf.suproj import *
 
 Flow('plane',None,'suplane | suaddnoise sn=10')
 

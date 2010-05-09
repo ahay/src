@@ -1,4 +1,4 @@
-from suproj import *
+from rsf.suproj import *
 
 # byte swap for little endian
 if little_endian():

@@ -20,25 +20,22 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <rsfplot.h>
+
 #include <plplot.h>
 #include <plplotP.h>
 #include <plstrm.h>
+/*^*/
+
+#include "plvpl.h"
 
 /* Device info */
 
 PLDLLIMPEXP_DRIVER const char* plD_DEVICE_INFO_plvpl = 
   "plvpl:VPLOT:0:plvpl:0:plvpl\n";
 
-void plD_init_plvpl (PLStream *pls);
-void plD_line_plvpl (PLStream *pls, short x1a, short y1a, short x2a, short y2a);
-void plD_polyline_plvpl (PLStream *pls, short *xa, short *ya, PLINT npts);
-void plD_eop_plvpl (PLStream *pls);
-void plD_bop_plvpl (PLStream *pls);
-void plD_tidy_plvpl (PLStream *pls);
-void plD_state_plvpl (PLStream *pls, PLINT op);
-void plD_esc_plvpl (PLStream *pls, PLINT op, void *ptr);
-
-void plD_dispatch_init_plvpl (PLDispatchTable *pdt) {
+void plD_dispatch_init_plvpl (PLDispatchTable *pdt) 
+/*< initialize >*/
+{
     pdt->pl_MenuStr = strdup ("VPLOT");
     pdt->pl_DevName = strdup ("plvpl");
     pdt->pl_type = plDevType_FileOriented;
@@ -53,12 +50,9 @@ void plD_dispatch_init_plvpl (PLDispatchTable *pdt) {
     pdt->pl_esc      = (plD_esc_fp)      plD_esc_plvpl;
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_line_ps()
- *
- * Initialize the device.
-\*--------------------------------------------------------------------------*/
-void plD_init_plvpl (PLStream *pls) {
+void plD_init_plvpl (PLStream *pls) 
+/*< Initialize the device. >*/
+{
     pls->color = 1;
     pls->colorset = 0;
     pls->termin = 0;
@@ -97,12 +91,9 @@ void plD_init_plvpl (PLStream *pls) {
                 0, (PLINT)(pls->ylength*pls->ydpi));
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_line_plvpl()
- *
- * Draw a line in the current color from (x1,y1) to (x2,y2).
-\*--------------------------------------------------------------------------*/
-void plD_line_plvpl (PLStream *pls, short x1a, short y1a, short x2a, short y2a) {
+void plD_line_plvpl (PLStream *pls, short x1a, short y1a, short x2a, short y2a)
+/*< Draw a line in the current color from (x1,y1) to (x2,y2). >*/
+{
     float xp[2], yp[2];
 
     xp[0] = x1a/(PLFLT)RPERIN; xp[1] = x2a/(PLFLT)RPERIN;
@@ -110,57 +101,42 @@ void plD_line_plvpl (PLStream *pls, short x1a, short y1a, short x2a, short y2a) 
     vp_pline (xp, yp, 2);
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_polyline_plvpl()
- *
- * Draw a polyline in the current color.
-\*--------------------------------------------------------------------------*/
-void plD_polyline_plvpl (PLStream *pls, short *xa, short *ya, PLINT npts) {
+void plD_polyline_plvpl (PLStream *pls, short *xa, short *ya, PLINT npts) 
+/*< Draw a polyline in the current color. >*/
+{
     PLINT i;
 
     for (i = 0; i < npts - 1; i++)
         plD_line_plvpl (pls, xa[i], ya[i], xa[i + 1], ya[i + 1]);
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_eop_plvpl()
- *
- * End of page.
-\*--------------------------------------------------------------------------*/
-void plD_eop_plvpl (PLStream *pls) {
+void plD_eop_plvpl (PLStream *pls) 
+/*< End of page. >*/
+{
 /*
     vp_purge ();
 */
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_bop_plvpl ()
- *
- * Set up for the next page.
-\*--------------------------------------------------------------------------*/
-void plD_bop_plvpl (PLStream *pls) {
+void plD_bop_plvpl (PLStream *pls) 
+/*< Set up for the next page. >*/
+{
 /*
     vp_erase ();
 */
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_tidy_plvpl ()
- *
- * Close output or otherwise clean up.
-\*--------------------------------------------------------------------------*/
-void plD_tidy_plvpl (PLStream *pls) {
+void plD_tidy_plvpl (PLStream *pls) 
+/*< Close output or otherwise clean up. >*/
+{
 /*
     vp_purge ();
 */
 }
 
-/*--------------------------------------------------------------------------*\
- * plD_state_plvpl ()
- *
- * Handle change in PLStream state (color, pen width, fill attribute, etc).
-\*--------------------------------------------------------------------------*/
-void plD_state_plvpl (PLStream *pls, PLINT op) {
+void plD_state_plvpl (PLStream *pls, PLINT op) 
+/*< Handle change in PLStream state (color, pen width, fill attribute, etc). >*/
+{
     int i;
 
     switch (op) {
@@ -190,12 +166,10 @@ void plD_state_plvpl (PLStream *pls, PLINT op) {
 }
 
 static void fill_polygon (PLStream *pls);
-/*--------------------------------------------------------------------------*\
- * plD_esc_plvpl ()
- *
- * Escape function.
-\*--------------------------------------------------------------------------*/
-void plD_esc_plvpl (PLStream *pls, PLINT op, void *ptr) {
+
+void plD_esc_plvpl (PLStream *pls, PLINT op, void *ptr) 
+/*< Escape function. >*/
+{
     switch (op) {
         case PLESC_FILL:
             fill_polygon (pls);
@@ -210,8 +184,10 @@ void plD_esc_plvpl (PLStream *pls, PLINT op, void *ptr) {
 
 static void fill_polygon (PLStream *pls) {
     int i;
-    float *xp = (float*)malloc (pls->dev_npts);
-    float *yp = (float*)malloc (pls->dev_npts);
+    float *xp, *yp; 
+
+    xp = sf_floatalloc (pls->dev_npts);
+    yp = sf_floatalloc (pls->dev_npts);
 
     for (i = 0; i < pls->dev_npts; i++) {
         xp[i] = pls->dev_x[i]/(PLFLT)RPERIN;

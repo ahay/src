@@ -1,4 +1,4 @@
-from suproj import *
+from rsf.suproj import *
 import string
 
 xmax = 6

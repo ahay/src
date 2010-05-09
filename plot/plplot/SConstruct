@@ -5,43 +5,42 @@ import bldutil
 try: # distribution version
     Import('env root libdir bindir pkgdir')
     env = env.Clone()
-    # Different environment for the plugin
-    lenv = env.Clone()
 except: # local version
     env = bldutil.Debug()
-    lenv = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../lib/SConstruct')
 
 plplot = env.get('PLPLOT')
-plplotlibpath = lenv.get('PLPLOTLIBPATH','')
+plplotlibpath = env.get('PLPLOTLIBPATH','')
 
 ##############################################################################
 # Loadable PLPLOT driver
 ##############################################################################
 
 if plplot:
-    lenv.Prepend(CPPPATH=['../../include',lenv.get('PLPLOTPATH')],
-                 LIBPATH=['../../lib'],
-                 LIBS=['drsf','drsfplot',plplot])
-    if plplotlibpath and plplotlibpath != '':
-        lenv.Prepend(LIBPATH=[plplotlibpath])
+    env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
+                LIBPATH=['../../lib'],
+                LIBS=['drsf','drsfplot',plplot])
+    if plplotlibpath:
+        env.Prepend(LIBPATH=[plplotlibpath])
 
-    obj = lenv.SharedObject('plvpl.c')
-    dlib = lenv.SharedLibrary('plvpl',[obj],
+    env.RSF_Include('plvpl')
+    obj = env.SharedObject('plvpl.c')
+    dlib = env.SharedLibrary('plvpl',[obj],
                               SHLIBPREFIX='')
+    ilib = env.Install('../../lib',dlib)
 
     if root:
-        install = lenv.Install(libdir,[dlib])
-        lenv.Install(libdir,'plvpl.rc')
+        install = env.Install(libdir,dlib)
+        env.Install(libdir,'plvpl.rc')
 
-        if lenv['PLATFORM'] == 'darwin':
-            lenv.AddPostAction(install,
+        if env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
                                'install_name_tool -change '
                                'build/api/c/libdrsf.dylib '
                                '%s/libdrsf.dylib %s/%s' % \
                                    (libdir,libdir,dlib[0]))
-            lenv.AddPostAction(install,
+            env.AddPostAction(install,
                                'install_name_tool -change '
                                'build/api/c/libdrsfplot.dylib '
                                '%s/libdrsfplot.dylib %s/%s' % \
@@ -54,20 +53,15 @@ if plplot:
 progs = 'plsurf'
 mains = Split(progs)
 
-if plplot:
-    env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
-                LIBPATH=['../../lib'],
-                LIBS=['drsf','drsfplot',plplot])
-    if plplotlibpath and plplotlibpath != '':
-        env.Prepend(LIBPATH=[plplotlibpath])
-
-    for prog in mains:
-        main = env.Program(prog + '.c')
+for prog in mains:
+    if plplot:
         if root:
-             env.Install(bindir,main[0])
-elif root:
-    for prog in mains:
+            main = env.Program(prog,[prog + '.c',install])
+        else:
+            main = env.Program(prog,[prog + '.c',ilib])
+    else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
+    if root:
         env.Install(bindir,main[0])
 
 if root:

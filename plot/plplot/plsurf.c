@@ -19,11 +19,12 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <rsf.h>
 #include <rsfplot.h>
 
-#include <plplot.h>
+#include "plvpl.h"
 
 static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
@@ -394,7 +395,7 @@ static void sf_plvpl_set_driver_dir (void) {
     if (NULL == rsfroot)
         sf_error ("Need RSFROOT environment variable to run");
 
-    snprintf (buf, BUF_SIZ, "%s/lib", rsfroot);
+    sprintf (buf, "%s/lib", rsfroot);
     setenv ("PLPLOT_DRV_DIR", buf, 1);
 }
 
