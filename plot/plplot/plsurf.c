@@ -67,6 +67,8 @@ int main (int argc, char *argv[]) {
     in = sf_input ("in");
     type = sf_gettype (in);
 
+    vp_init();
+
     /* Dimensions */
     if (!sf_histint (in, "n1", &n1)) sf_error ("No n1= in input");
     if (!sf_histint (in, "n2", &n2)) sf_error ("No n2= in input");
@@ -122,7 +124,8 @@ int main (int argc, char *argv[]) {
         if (NULL == title) wanttitle = false;
     }
 
-    if (NULL == (where = sf_getstring ("wheretitle")) || 0 == strlen (where)) where = "top";
+    if (NULL == (where = sf_getstring ("wheretitle")) || 
+	0 == strlen (where)) where = "top";
     /* where to put title (top,bottom) */
 
     if (!sf_getfloat ("labelsz", &labelsz)) labelsz = 8.0;

@@ -19,18 +19,22 @@ plplotlibpath = env.get('PLPLOTLIBPATH','')
 
 if plplot:
     env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
-                LIBPATH=['../../lib'],
-                LIBS=['drsf','drsfplot',plplot])
+                LIBPATH=['../../lib'])
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 
     inc = env.RSF_Include('plvpl')
+
     dobj = env.SharedObject('plvpl.c')
-    dlib = env.SharedLibrary('plvpl',dobj)
+    dlib = env.SharedLibrary('plvpl',dobj,
+                             LIBS=['drsf','drsfplot',plplot]+env.get('LIBS',[]))
+
+    sobj = env.StaticObject('plvpl.c')
+    slib = env.StaticLibrary('plvpls',sobj)
 
     if root:
         env.Install(incdir,inc)
-        install = env.Install(libdir,dlib)
+        install = env.Install(libdir,[dlib,slib])
         env.Install(libdir,'plvpl.rc')
 
         if env['PLATFORM'] == 'darwin':
@@ -52,7 +56,8 @@ mains = Split(progs)
 
 for prog in mains:
     if plplot:
-        main = env.Program(prog,[prog + '.c',dlib])
+        main = env.Program(prog,[prog + '.c',slib],
+                           LIBS=['rsf','rsfplot',plplot]+env.get('LIBS',[]))
     else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
     if root:
