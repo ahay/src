@@ -1051,8 +1051,7 @@ def omp(context):
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if gcc:
-        if plat['OS'] != 'darwin':
-            LIBS.append('gomp')
+        LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
         LINKFLAGS = lflags
     elif icc:

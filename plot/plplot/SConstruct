@@ -3,7 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 try: # distribution version
-    Import('env root libdir bindir pkgdir')
+    Import('env root libdir incdir bindir pkgdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -24,27 +24,24 @@ if plplot:
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 
-    env.RSF_Include('plvpl')
-    obj = env.SharedObject('plvpl.c')
-    dlib = env.SharedLibrary('plvpl',[obj],
-                              SHLIBPREFIX='')
-    ilib = env.Install('../../lib',dlib)
+    inc = env.RSF_Include('plvpl')
+    dobj = env.SharedObject('plvpl.c')
+    dlib = env.SharedLibrary('plvpl',dobj)
 
     if root:
+        env.Install(incdir,inc)
         install = env.Install(libdir,dlib)
         env.Install(libdir,'plvpl.rc')
 
         if env['PLATFORM'] == 'darwin':
             env.AddPostAction(install,
-                               'install_name_tool -change '
-                               'build/api/c/libdrsf.dylib '
-                               '%s/libdrsf.dylib %s/%s' % \
-                                   (libdir,libdir,dlib[0]))
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
             env.AddPostAction(install,
-                               'install_name_tool -change '
-                               'build/api/c/libdrsfplot.dylib '
-                               '%s/libdrsfplot.dylib %s/%s' % \
-                                   (libdir,libdir,dlib[0]))
+                              'install_name_tool -change '
+                              'build/plot/lib/libdrsfplot.dylib '
+                              '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
 
 ##############################################################################
 # Plot tools
@@ -55,14 +52,25 @@ mains = Split(progs)
 
 for prog in mains:
     if plplot:
-        if root:
-            main = env.Program(prog,[prog + '.c',install])
-        else:
-            main = env.Program(prog,[prog + '.c',ilib])
+        main = env.Program(prog,[prog + '.c',dlib])
     else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
     if root:
-        env.Install(bindir,main[0])
+        install = env.Install(bindir,main[0])
+
+        if plplot and env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/plot/lib/libdrsfplot.dylib '
+                              '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/plot/plplot/libplvpl.dylib '
+                              '%s/libplvpl.dylib %s' % (libdir,install[0]))
 
 if root:
     main = 'sfplplot.py'

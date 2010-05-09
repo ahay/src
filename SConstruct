@@ -120,7 +120,7 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
     elif dir == 'plot/lib':
         plot_exports = 'env root libdir incdir pkgdir'
     elif dir == 'plot/plplot':
-        plot_exports = 'env root libdir bindir pkgdir'
+        plot_exports = 'env root libdir incdir bindir pkgdir'
 
     SConscript(dirs=build,name='SConstruct', exports=plot_exports)
     Default(build)
