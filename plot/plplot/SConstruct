@@ -25,24 +25,25 @@ if plplot:
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 
-    dlib = env.SharedLibrary('plvpl','plvpl.c',
-                             LIBS=['drsf','drsfplot',plplot]+env.get('LIBS',[]))
-
+    dlib = env.LoadableModule('plvpl','plvpl.c',
+                              LIBS=['drsf','drsfplot',plplot],
+                              LDMODULESUFFIX='.so',
+                              FRAMEWORKSFLAGS='-flat_namespace '
+                              '-undefined suppress')
     sobj = env.StaticObject('plvpl.c')
 
     if root:
-        env.Install(libdir,[dlib,'plvpl.rc'])
+        install = env.Install(libdir,[dlib,'plvpl.rc'])
 
         if env['PLATFORM'] == 'darwin':
-            install = env.InstallAs(os.path.join(libdir,'plvpl.so'),dlib)
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/plot/lib/libdrsfplot.dylib '
-                              '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
+            for lib in ('rsf','rsfplot'):
+                env.AddPostAction(install,
+                                  'install_name_tool -change '
+                                  'build/%s/libd%s.dylib '
+                                  '%s/libd%s.dylib %s' % \
+                                      ({'rsf':'api/c',
+                                        'rsfplot':'plot/lib'}[lib],
+                                       lib,libdir,lib,install[0]))
 
 ##############################################################################
 # Plot tools
