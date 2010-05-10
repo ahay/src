@@ -30,10 +30,10 @@ if plplot:
     sobj = env.StaticObject('plvpl.c')
 
     if root:
-        install = env.InstallAs(os.path.join(libdir,'plvpl.so'),dlib)
-        env.Install(libdir,'plvpl.rc')
+        env.Install(libdir,[dlib,'plvpl.rc'])
 
         if env['PLATFORM'] == 'darwin':
+            install = env.InstallAs(os.path.join(libdir,'plvpl.so'),dlib)
             env.AddPostAction(install,
                               'install_name_tool -change '
                               'build/api/c/libdrsf.dylib '
