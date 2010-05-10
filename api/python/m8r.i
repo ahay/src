@@ -1,6 +1,6 @@
 /* -*- C -*-  (not really, but good for syntax highlighting) */
 
-%module c_rsf
+%module c_m8r
 
 %{
 #include <stdio.h>

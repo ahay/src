@@ -1,25 +1,36 @@
 from rsf.proj import *
+import rsf.path
+
 import os, string
 
 top = os.environ.get('RSFROOT')
 libdir = os.path.join(top,'lib')
+pkgdir = rsf.path.get_local_site_pkgs()
+
+dirs = {
+    'PYTHON':pkgdir,
+    'LD_LIBRARY_':libdir
+    }
 
 path = {}
-for key in ('PYTHON','LD_LIBRARY_'):
+for key in dirs.keys():
     oldpath = os.environ.get(key+'PATH')
+    newpath = dirs[key]
     if oldpath:
         paths = string.split(oldpath,':')
-        if libdir not in paths:
-            paths.append(libpath)
+        if newpath not in paths:
+            paths.append(newpath)
         path[key] = string.join(paths,':')
     else:
-        path[key] = libdir
+        path[key] = newpath
+
+path['python'] = WhereIs('python')
 
 Flow('test.attr','clip.py',
      '''
-     spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | 
+     spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |  
      PYTHONPATH=%(PYTHON)s LD_LIBRARY_PATH=%(LD_LIBRARY_)s
-     ./$SOURCE clip=0.5 | attr
+     %(python)s ./$SOURCE clip=0.5 | attr
      ''' % path,stdin=0)
 
 

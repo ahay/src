@@ -1,9 +1,9 @@
 import os, sys, tempfile, re
-import c_rsf
+import c_m8r as c_rsf
 import numpy
 
 import rsf.doc
-import rsfprog
+import rsf.prog
 
 ###
 

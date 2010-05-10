@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy
-import rsf
+import m8r as rsf
 
 par = rsf.Par()
 input  = rsf.Input()

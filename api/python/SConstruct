@@ -7,7 +7,7 @@ import bldutil
 # Backwards compatibility can be maintained with: import rsf.api as rsf
 # Shared object files still go into RSFROOT/lib.
 
-modules = Split('api vplot')
+modules = Split('m8r vplot')
 
 try: # distribution version
     Import('env root libdir pkgdir')
@@ -50,21 +50,24 @@ if 'python' in env.get('API',[]):
     else:
         env.Replace(LIBS=['drsfplot','drsf'])
 
-    ifiles = {'api':'rsf', 'vplot':'vplot'}
-
     for module in modules:
-        ifile = ifiles[module]+'.i'
-        wrap = env.CFile(module,ifile,SWIGFLAGS='-python')
+        wrap = env.CFile(module,module+'.i',SWIGFLAGS='-python')
         python = env.LoadableModule(module,wrap[0],
                                     LDMODULEPREFIX='_c_',
                                     LDMODULESUFFIX='.so',
-                                    FRAMEWORKSFLAGS='-flat_namespace -undefined suppress')
+                                    FRAMEWORKSFLAGS='-flat_namespace '
+                                    '-undefined suppress')
 
         pfiles = [python,wrap[1],module+'.py']
         env.Install('../../lib',pfiles)
 
         if root:
-            install = env.Install(libdir,pfiles)
+            pydir = os.path.dirname(pkgdir)
+
+            install = env.Install(pydir,pfiles)
+            if module == 'rsf':
+                env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
+
             if env['PLATFORM'] == 'darwin':
                 for lib in ('rsf','rsfplot'):
                     env.AddPostAction(install,
@@ -73,4 +76,4 @@ if 'python' in env.get('API',[]):
                                       '%s/libd%s.dylib %s/%s' % \
                                           ({'rsf':'api/c',
                                             'rsfplot':'plot/lib'}[lib],
-                                           lib,libdir,lib,libdir,python[0]))
+                                           lib,libdir,lib,pydir,python[0]))
