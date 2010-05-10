@@ -24,17 +24,13 @@ if plplot:
         env.Prepend(LIBPATH=[plplotlibpath])
 
     inc = env.RSF_Include('plvpl')
-
-    dobj = env.SharedObject('plvpl.c')
-    dlib = env.SharedLibrary('plvpl',dobj,
+    dlib = env.SharedLibrary('plvpl','plvpl.c',
                              LIBS=['drsf','drsfplot',plplot]+env.get('LIBS',[]))
 
     sobj = env.StaticObject('plvpl.c')
-    slib = env.StaticLibrary('plvpls',sobj)
 
     if root:
-        env.Install(incdir,inc)
-        install = env.Install(libdir,[dlib,slib])
+        install = env.InstallAs(os.path.join(libdir,'plvpl.so'),dlib)
         env.Install(libdir,'plvpl.rc')
 
         if env['PLATFORM'] == 'darwin':
@@ -56,26 +52,12 @@ mains = Split(progs)
 
 for prog in mains:
     if plplot:
-        main = env.Program(prog,[prog + '.c',slib],
+        main = env.Program(prog,[prog + '.c',sobj],
                            LIBS=['rsf','rsfplot',plplot]+env.get('LIBS',[]))
     else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
     if root:
         install = env.Install(bindir,main[0])
-
-        if plplot and env['PLATFORM'] == 'darwin':
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/plot/lib/libdrsfplot.dylib '
-                              '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/plot/plplot/libplvpl.dylib '
-                              '%s/libplvpl.dylib %s' % (libdir,install[0]))
 
 if root:
     main = 'sfplplot.py'

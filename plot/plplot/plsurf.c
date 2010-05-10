@@ -20,11 +20,14 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <rsf.h>
 #include <rsfplot.h>
 
 #include "plvpl.h"
+
+#include <ltdl.h>
 
 static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
