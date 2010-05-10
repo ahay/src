@@ -17,13 +17,14 @@ plplotlibpath = env.get('PLPLOTLIBPATH','')
 # Loadable PLPLOT driver
 ##############################################################################
 
+inc = env.RSF_Include('plvpl')
+
 if plplot:
     env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
                 LIBPATH=['../../lib'])
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 
-    inc = env.RSF_Include('plvpl')
     dlib = env.SharedLibrary('plvpl','plvpl.c',
                              LIBS=['drsf','drsfplot',plplot]+env.get('LIBS',[]))
 

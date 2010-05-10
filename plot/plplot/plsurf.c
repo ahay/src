@@ -363,7 +363,8 @@ static void sf_plvpl_read_data (int n1, int n2, void *buffer, sf_datatype type,
             sf_complexread (buf, n1*n2, file);
             for (i = 0; i < n2; i++) {
                 for (j = 0; j < n1; j++) {
-                    data[i][j] = hypot (creal (buf[i*n1 + j]), cimag (buf[i*n1 + j]));
+                    data[i][j] = hypot (creal (buf[i*n1 + j]), 
+					cimag (buf[i*n1 + j]));
                 }
             }
             break;
