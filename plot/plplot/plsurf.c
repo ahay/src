@@ -27,8 +27,6 @@
 
 #include "plvpl.h"
 
-#include <ltdl.h>
-
 static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
 static void* sf_plvpl_get_data_buffer (int n1, int n2, sf_datatype type);

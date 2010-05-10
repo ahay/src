@@ -611,7 +611,8 @@ def plplot(context):
     if plplotpath and os.path.isfile(os.path.join(plplotpath,'plplot.h')):
         context.env['CPPPATH'] = oldpath + [plplotpath]
     else:
-        for top in ('/usr/include','/usr/local/include','/sw/include','/opt/local/include'):
+        for top in ('/usr/include','/usr/local/include',
+                    '/sw/include','/opt/local/include'):
             plplotpath = os.path.join(top,'plplot')
             if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
                 context.env['CPPPATH'] = oldpath + [plplotpath]
