@@ -1,11 +1,14 @@
 from rsf.proj import *
-import rsf.path
 
-import os, string
+import os, string, sys
+
+sys.path.append('../../..')
+
+import setenv
 
 top = os.environ.get('RSFROOT')
 libdir = os.path.join(top,'lib')
-pkgdir = rsf.path.get_local_site_pkgs()
+pkgdir = setenv.get_local_site_pkgs()
 
 dirs = {
     'PYTHON':pkgdir,
