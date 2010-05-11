@@ -3,6 +3,7 @@ Jules Browaeys <jules.browaeys@total.com>
 William Burnett <will.burnett@gmail.com>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
+Lorenzo Casasanta <casasanta@elet.polimi.it>
 Joseph Dellinger <geojoe@freeusp.org>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
