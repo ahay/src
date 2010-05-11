@@ -23,8 +23,6 @@ if sys.version_info[:2] < (2, 7):
 else:
     import sysconfig
 
-dpath = '/var/tmp'
-root = os.environ.get('RSFROOT','.')
 unix_success = 0
 
 ################################################################################
@@ -55,22 +53,10 @@ def get_local_site_pkgs(root=None, verb=False):
 
 ################################################################################
 
-def init_globs(rsfroot=None, user_dpath=None):
-    'Initialize datapath to make for an easy CLI interface'
-    global dpath, root
-
-    if user_dpath != None:
-        dpath = user_dpath
-
-    if rsfroot != None:
-        root=rsfroot
-
-################################################################################
-
 def mk_sh_script(script_nm, rsfroot):
     'Write the (ba)sh environment setup script'
 
-    global dpath, root
+    dpath = '/var/tmp'
 
     bsh = open(script_nm, 'w')
     bsh.write('''#!/bin/sh
@@ -94,7 +80,8 @@ export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
 
 def mk_csh_script(script_nm, rsfroot):
     'Write the (t)csh environments setup script'
-    global dpath, root
+    
+    dpath = '/var/tmp'
 
     csh = open(script_nm, 'w')
     csh.write('''#!/bin/csh
