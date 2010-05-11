@@ -23,6 +23,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool interval;
     map4 nmo; /* using cubic spline interpolation */
     int it,ix,ip, nt,nx, np;
     float dt, t0, p, p0, f, ft, dp, eps, at;
@@ -33,6 +34,9 @@ int main (int argc, char* argv[])
     cmp = sf_input("in");
     velocity = sf_input("velocity");
     nmod = sf_output("out");
+
+    if (!sf_getbool("interval",&interval)) interval=true;
+    /* use interval velocity */
 
     if (NULL == sf_getstring("eta")) {
 	eta = NULL;
@@ -72,11 +76,9 @@ int main (int argc, char* argv[])
 	    p *= p;
 
 	    sf_floatread (trace,nt,cmp);
-
+	    
 	    f = 0.;
 	    for (it=0; it < nt; it++) {
-		str[it] = t0+f*dt;
-
 		ft = vel[it];
 		ft *= ft;
 		
@@ -94,7 +96,14 @@ int main (int argc, char* argv[])
 		    break;
 		}
 
-		f += sqrtf(ft);
+		if (interval) {
+		    if (it==0) f = sqrtf(ft)*t0/dt;
+		    str[it] = f*dt;
+		    f += sqrtf(ft);
+		} else {		    
+		    f = sqrtf(ft);
+		    str[it] = f*(t0+it*dt);
+		}
 	    }
 
 	    stretch4_define (nmo,str);

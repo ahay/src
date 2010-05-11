@@ -1,6 +1,6 @@
 /* Slope-based tau-p velocity transform for VTI media by Fowler-Claerbout equations. */
 /*
- Copyright (C) 2010 Politecnico di Milano/*
+ Copyright (C) 2010 Politecnico di Milano
  
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

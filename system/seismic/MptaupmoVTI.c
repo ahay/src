@@ -18,7 +18,6 @@
 */
 
 #include <math.h>
-#include <float.h>
 #include <rsf.h>
 #include "stretch4.h"
 
@@ -69,7 +68,7 @@ int main (int argc, char* argv[])
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
 
-    eps = 100.*FLT_EPSILON;
+    eps = 100.*SF_EPS;
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
 	for (ip = 0; ip < np; ip++) { /* offset */
@@ -107,6 +106,6 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (cos,nt,cos2);*/
 	}
     }
-    sf_close();
+
     exit (0);
 }

@@ -29,14 +29,11 @@
 
 static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
-static void* sf_plvpl_get_data_buffer (int n1, int n2, sf_datatype type);
-static void sf_plvpl_read_data (int n1, int n2, void *buffer, sf_datatype type,
-                                PLFLT **data, sf_file file);
 
 int main (int argc, char *argv[]) {
     int n1, n2, n3;
     float o1, o2, o3, d1, d2, d3;
-    int i, j;
+    int i, j, i1, i2;
 
     PLFLT *x, *y, **z;
     int nc;
@@ -59,16 +56,16 @@ int main (int argc, char *argv[]) {
     int opt = 0;
     bool mesh, sides, bcontour, scontour, faceted;
 
-    void *buffer;
+    float **buffer;
     sf_file in;
-    sf_datatype type;
 
     /* Input data */    
     sf_init (argc, argv);
     in = sf_input ("in");
-    type = sf_gettype (in);
 
     vp_init();
+
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type in input");
 
     /* Dimensions */
     if (!sf_histint (in, "n1", &n1)) sf_error ("No n1= in input");
@@ -202,23 +199,28 @@ int main (int argc, char *argv[]) {
     }
 
     /* Set up x & y dimensions */
-    x = (PLFLT*)calloc (n2, sizeof(PLFLT));
-    y = (PLFLT*)calloc (n1, sizeof(PLFLT));
+    x = (PLFLT*) sf_alloc (n2, sizeof(PLFLT));
+    y = (PLFLT*) sf_alloc (n1, sizeof(PLFLT));
     plAlloc2dGrid (&z, n2, n1);
-    for (i = 0; i < n1; i++)
-        y[i] = o1 + i*d1;
-    for (i = 0; i < n2; i++)
-        x[i] = o2 + i*d2;
+    for (i1 = 0; i1 < n1; i1++)
+        y[i1] = o1 + i1*d1;
+    for (i2 = 0; i2 < n2; i2++)
+        x[i2] = o2 + i2*d2;
 
-    buffer = sf_plvpl_get_data_buffer (n1, n2, type);
+    buffer = sf_floatalloc2(n1,n2);
 
     /* Set font */
     plfontld (1); /* Extended set */
     plfont (font);
 
-    i = 0;
-    while (i < n3) {
-        sf_plvpl_read_data (n1, n2, buffer, type, z, in);
+    for (i=0; i < n3; i++) {
+	sf_floatread (buffer[0], n1*n2, in);
+
+	for (i2 = 0; i2 < n2; i2++) {
+	    for (i1 = 0; i1 < n1; i1++) {
+		z[i2][i1] = buffer[i2][i1];
+	    }
+	}
 
         plMinMax2dGrid (z, n2, n1, &zmax, &zmin);
         if (minval < zmin) zmin = minval;
@@ -265,8 +267,6 @@ int main (int argc, char *argv[]) {
             vp_fat (1);
             plschr (0, 1.0);
         }
-
-        i++;
     }
 
     /* Clean up */
@@ -276,6 +276,7 @@ int main (int argc, char *argv[]) {
     free (x);
     free (y);
     plFree2dGrid (z, n2, n1);
+    free (*buffer);
     free (buffer);
     if (wantaxis) {
         free (axis3);
@@ -286,121 +287,14 @@ int main (int argc, char *argv[]) {
     exit (0);
 }
 
-static void* sf_plvpl_get_data_buffer (int n1, int n2, sf_datatype type) {
-    void *buffer;
-    switch (type) {
-        case SF_UCHAR:
-            buffer = (void*)sf_ucharalloc (n1*n2);
-            break;
-        case SF_CHAR:
-            buffer = (void*)sf_charalloc (n1*n2);
-            break;
-        case SF_INT:
-            buffer = (void*)sf_intalloc (n1*n2);
-            break;
-        case SF_FLOAT:
-            buffer = (void*)sf_floatalloc (n1*n2);
-            break;
-        case SF_COMPLEX:
-            buffer = (void*)sf_complexalloc (n1*n2);
-            break;
-        case SF_SHORT:
-            buffer = (void*)sf_shortalloc (n1*n2);
-            break;
-        case SF_DOUBLE:
-            buffer = (void*)sf_alloc (n1*n2, sizeof (double));
-            break;
-    }
-    return buffer;
-}
-
-static void sf_plvpl_read_data (int n1, int n2, void *buffer, sf_datatype type,
-                                PLFLT **data, sf_file file) {
-    int i, j;
-    switch (type) {
-        case SF_UCHAR: {
-            unsigned char *buf = (unsigned char*)buffer;
-            sf_ucharread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-        case SF_CHAR: {
-            char *buf = (char*)buffer;
-            sf_charread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-        case SF_INT: {
-            int *buf = (int*)buffer;
-            sf_intread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-        case SF_FLOAT: {
-            float *buf = (float*)buffer;
-            sf_floatread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-        case SF_COMPLEX: {
-            sf_complex *buf = (sf_complex*)buffer;
-            sf_complexread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = hypot (creal (buf[i*n1 + j]), 
-					cimag (buf[i*n1 + j]));
-                }
-            }
-            break;
-        }
-        case SF_SHORT: {
-            short *buf = (short*)buffer;
-            sf_shortread (buf, n1*n2, file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-        case SF_DOUBLE: {
-            double *buf = (double*)buffer;
-            sf_ucharread ((unsigned char*)buf, n1*n2*sizeof(double), file);
-            for (i = 0; i < n2; i++) {
-                for (j = 0; j < n1; j++) {
-                    data[i][j] = buf[i*n1 + j];
-                }
-            }
-            break;
-        }
-    }
-}
-
-#define BUF_SIZ 2048
 static void sf_plvpl_set_driver_dir (void) {
-    char buf[BUF_SIZ];
+    char buf[PATH_MAX];
     char *rsfroot = getenv ("RSFROOT");
 
     if (NULL == rsfroot)
         sf_error ("Need RSFROOT environment variable to run");
 
-    sprintf (buf, "%s/lib", rsfroot);
+    snprintf (buf, PATH_MAX, "%s/lib", rsfroot);
     setenv ("PLPLOT_DRV_DIR", buf, 1);
 }
 
