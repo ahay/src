@@ -39,14 +39,16 @@ Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 
 # Second argument of call below should be the datapath value (if any) read from
 # the command line of "./configure" 
-setenv.init_globs(root, 'value_read_from_the_command_line_of_configure_if_any')
+#setenv.init_globs(root, 'value_read_from_the_command_line_of_configure_if_any')
 
 escript = os.path.join(os.getcwd(),'env.')
 sh_script  = escript + 'sh'
 csh_script = escript + 'csh'
 
-sh_script_cmd  = env.Command(sh_script, '', './setenv.py sh '+ sh_script)
-csh_script_cmd = env.Command(csh_script, '', './setenv.py csh '+ escript+'csh')
+sh_script_cmd  = env.Command(sh_script, '', 
+    './setenv.py sh ' + sh_script + ' ' + root)
+csh_script_cmd = env.Command(csh_script, '',
+    './setenv.py csh ' + csh_script + ' ' + root)
 
 env.Alias('config',[config, sh_script_cmd, csh_script_cmd])
 

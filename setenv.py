@@ -67,17 +67,17 @@ def init_globs(rsfroot=None, user_dpath=None):
 
 ################################################################################
 
-def mk_sh_script(script_nm):
+def mk_sh_script(script_nm, rsfroot):
     'Write the (ba)sh environment setup script'
 
-    global dpath
+    global dpath, root
 
     bsh = open(script_nm, 'w')
     bsh.write('''#!/bin/sh
 
 export RSFROOT=%s
 if [ -n "$PYTHONPATH" ]; then
-export PYTHONPATH=${PYTHONPATH}:$RSFROOT/%s
+export PYTHONPATH=${PYTHONPATH}:$RSFROOT%s
 else
 export PYTHONPATH=$RSFROOT/lib
 fi
@@ -85,23 +85,23 @@ export PATH=$RSFROOT/bin:$PATH
 export DATAPATH=%s
 export MANPATH=$RSFROOT/share/man:$(manpath)
 export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
-''' % (root, get_local_site_pkgs(root=''), dpath))
+''' % (rsfroot, get_local_site_pkgs(root=''), dpath))
     bsh.close()
 
     return unix_success
 
 ###############################################################################
 
-def mk_csh_script(script_nm):
+def mk_csh_script(script_nm, rsfroot):
     'Write the (t)csh environments setup script'
-    global dpath
+    global dpath, root
 
     csh = open(script_nm, 'w')
     csh.write('''#!/bin/csh
 
 setenv RSFROOT %s
 if ($?PYTHONPATH) then
-setenv PYTHONPATH ${PYTHONPATH}:$RSFROOT/%s
+setenv PYTHONPATH ${PYTHONPATH}:$RSFROOT%s
 else
 setenv PYTHONPATH $RSFROOT/lib
 endif
@@ -109,7 +109,7 @@ set path = ($RSFROOT/bin $path)
 setenv DATAPATH %s
 setenv MANPATH $RSFROOT/share/man:`manpath`
 setenv LD_LIBRARY_PATH $RSFROOT/lib:$LD_LIBRARY_PATH
-''' % (root, get_local_site_pkgs(root=''), dpath))
+''' % (rsfroot, get_local_site_pkgs(root=''), dpath))
     csh.close()
 
     return unix_success
@@ -127,14 +127,14 @@ if __name__ == '__main__':
     nargs = len(sys.argv)
     if nargs == 1:
         sys.exit(get_local_site_pkgs(verb=True))
-    elif nargs == 3:
+    elif nargs == 4:
         if sys.argv[1] == 'sh':
-            sys.exit(mk_sh_script(sys.argv[2]))
+            sys.exit(mk_sh_script(sys.argv[2],sys.argv[3]))
         elif sys.argv[1] == 'csh':
-            sys.exit(mk_csh_script(sys.argv[2]))
+            sys.exit(mk_csh_script(sys.argv[2],sys.argv[3]))
         else:
             sys.stderr.write('Second argument to setenv should be sh or csh\n')
             sys.exit(1)
     else:
-        sys.stderr.write('Usage: setenv.py (c)sh script_name\n')
+        sys.stderr.write('Usage: setenv.py (c)sh script_name <RSFROOT>\n')
         sys.exit(1)
