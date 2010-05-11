@@ -3,6 +3,7 @@ sys.path.append('../..')
 import bldutil
 
 progs = '''
+intervalVTI
 pveltranVTI
 pveltranVTI_DIX
 pveltranVTI_FOWLER

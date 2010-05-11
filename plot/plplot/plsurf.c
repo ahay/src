@@ -21,11 +21,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include <rsf.h>
 #include <rsfplot.h>
 
-#include "plvpl.h"
+#include <plplot.h>
 
 static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
@@ -56,7 +57,7 @@ int main (int argc, char *argv[]) {
     int opt = 0;
     bool mesh, sides, bcontour, scontour, faceted;
 
-    float **buffer;
+    float **data;
     sf_file in;
 
     /* Input data */    
@@ -70,7 +71,8 @@ int main (int argc, char *argv[]) {
     /* Dimensions */
     if (!sf_histint (in, "n1", &n1)) sf_error ("No n1= in input");
     if (!sf_histint (in, "n2", &n2)) sf_error ("No n2= in input");
-    if (!sf_histint (in, "n3", &n3)) n3 = 1;
+    n3 = sf_leftsize(in,2);
+
     if (!sf_histfloat (in, "o1", &o1)) o1 = 0.;
     if (!sf_histfloat (in, "o2", &o2)) o2 = 0.;
     if (!sf_histfloat (in, "o3", &o3)) o3 = 0.;
@@ -82,7 +84,7 @@ int main (int argc, char *argv[]) {
     sf_plvpl_set_driver_dir ();
 
     /* Initialize plplot */
-    plinit ();
+    plinit (); 
 
     /* Axes; allow user redefine label and units over values from the history */
     if (!sf_getbool ("wantaxis", &wantaxis)) wantaxis = true;
@@ -179,7 +181,7 @@ int main (int argc, char *argv[]) {
     /* number of contour lines */
     if (nc < 1) nc = 1;
     if (bcontour || scontour)
-        clevel = (PLFLT*)calloc (nc, sizeof(PLFLT));
+        clevel = (PLFLT*) sf_alloc (nc, sizeof(PLFLT));
     else 
         nc = 0;
     if (!sf_getbool ("faceted", &faceted)) faceted = false;
@@ -201,24 +203,25 @@ int main (int argc, char *argv[]) {
     /* Set up x & y dimensions */
     x = (PLFLT*) sf_alloc (n2, sizeof(PLFLT));
     y = (PLFLT*) sf_alloc (n1, sizeof(PLFLT));
-    plAlloc2dGrid (&z, n2, n1);
+
+    plAlloc2dGrid (&z, n2, n1); 
+
     for (i1 = 0; i1 < n1; i1++)
         y[i1] = o1 + i1*d1;
     for (i2 = 0; i2 < n2; i2++)
         x[i2] = o2 + i2*d2;
 
-    buffer = sf_floatalloc2(n1,n2);
+    data = sf_floatalloc2(n1,n2);
 
-    /* Set font */
-    plfontld (1); /* Extended set */
-    plfont (font);
+    plfontld (1); 
+    plfont (font); 
 
     for (i=0; i < n3; i++) {
-	sf_floatread (buffer[0], n1*n2, in);
+	sf_floatread (data[0], n1*n2, in);
 
 	for (i2 = 0; i2 < n2; i2++) {
 	    for (i1 = 0; i1 < n1; i1++) {
-		z[i2][i1] = buffer[i2][i1];
+		z[i2][i1] = data[i2][i1];
 	    }
 	}
 
@@ -276,8 +279,8 @@ int main (int argc, char *argv[]) {
     free (x);
     free (y);
     plFree2dGrid (z, n2, n1);
-    free (*buffer);
-    free (buffer);
+    free (*data);
+    free (data);
     if (wantaxis) {
         free (axis3);
         free (axis2);
@@ -289,7 +292,9 @@ int main (int argc, char *argv[]) {
 
 static void sf_plvpl_set_driver_dir (void) {
     char buf[PATH_MAX];
-    char *rsfroot = getenv ("RSFROOT");
+    char *rsfroot;
+
+    rsfroot = getenv ("RSFROOT");
 
     if (NULL == rsfroot)
         sf_error ("Need RSFROOT environment variable to run");

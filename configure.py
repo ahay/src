@@ -640,6 +640,7 @@ def plplot(context):
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     text = '''
+    #include <ltdl.h>
     #include <plplot.h>
     #include <plplotP.h>
     #include <plstrm.h>

@@ -28,9 +28,9 @@ if plplot:
     dlib = env.LoadableModule('plvpl','plvpl.c',
                               LIBS=['drsf','drsfplot',plplot],
                               LDMODULESUFFIX='.so',
+                              LDMODULEPREFIX='',
                               FRAMEWORKSFLAGS='-flat_namespace '
                               '-undefined suppress')
-    sobj = env.StaticObject('plvpl.c')
 
     if root:
         install = env.Install(libdir,[dlib,'plvpl.rc'])
@@ -54,7 +54,7 @@ mains = Split(progs)
 
 for prog in mains:
     if plplot:
-        main = env.Program(prog,[prog + '.c',sobj],
+        main = env.Program(prog + '.c',
                            LIBS=['rsf','rsfplot',plplot]+env.get('LIBS',[]))
     else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')

@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], n4, nr, ir; 
-    float p0, q0, *u, *p, pmin, pmax, qmin, qmax;
+    float p0, q0, *u, *p, *pi=NULL, *qi=NULL, pmin, pmax, qmin, qmax;
     char key[4];
     bool verb, both, **mm;
     sf_file in, out, mask, idip0, xdip0;
@@ -117,6 +117,7 @@ int main (int argc, char *argv[])
     if (NULL != sf_getstring("idip")) {
 	/* initial in-line dip */
 	idip0 = sf_input("idip");
+	if (both) pi = sf_floatalloc(n123);
     } else {
 	idip0 = NULL;
     }
@@ -124,6 +125,7 @@ int main (int argc, char *argv[])
     if (NULL != sf_getstring("xdip")) {
 	/* initial cross-line dip */
 	xdip0 = sf_input("xdip");
+	if (both) qi = sf_floatalloc(n123);
     } else {
 	xdip0 = NULL;
     }
@@ -140,7 +142,14 @@ int main (int argc, char *argv[])
 	if (1 != n4) {
 	    /* initialize t-x dip */
 	    if (NULL != idip0) {
-		sf_floatread(p,n123,idip0);
+		if (both) {
+		    sf_floatread(pi,n123,idip0);
+		    for(i=0; i < n123; i++) {
+			p[i] = pi[i];
+		    }
+		} else {
+		    sf_floatread(p,n123,idip0);
+		}
 	    } else {
 		for(i=0; i < n123; i++) {
 		    p[i] = p0;
@@ -157,7 +166,14 @@ int main (int argc, char *argv[])
 	if (0 != n4) {
 	    /* initialize t-y dip */
 	    if (NULL != xdip0) {
-		sf_floatread(p,n123,xdip0);
+		if (both) {
+		    sf_floatread(qi,n123,xdip0);
+		    for(i=0; i < n123; i++) {
+			p[i] = qi[i];
+		    }
+		} else {
+		    sf_floatread(p,n123,xdip0);
+		}
 	    } else {
 		for(i=0; i < n123; i++) {
 		    p[i] = q0;
@@ -176,10 +192,12 @@ int main (int argc, char *argv[])
 	if (1 != n4) {
 	    /* initialize t-x dip */
 	    if (NULL != idip0) {
-		sf_floatread(p,n123,idip0);
+		for(i=0; i < n123; i++) {
+		    p[i] = -pi[i];
+		}
 	    } else {
 		for(i=0; i < n123; i++) {
-		    p[i] = p0;
+		    p[i] = -p0;
 		}
 	    }
 	    
@@ -193,10 +211,12 @@ int main (int argc, char *argv[])
 	if (0 != n4) {
 	    /* initialize t-y dip */
 	    if (NULL != xdip0) {
-		sf_floatread(p,n123,xdip0);
+		for(i=0; i < n123; i++) {
+		    p[i] = -qi[i];
+		}
 	    } else {
 		for(i=0; i < n123; i++) {
-		    p[i] = q0;
+		    p[i] = -q0;
 		}
 	    }	
 	    
