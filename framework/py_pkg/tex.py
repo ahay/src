@@ -26,11 +26,14 @@ try:
     import rsf.doc as rsfdoc
     import rsf.path as rsfpath
     import rsf.latex2wiki as latex2wiki
+    import rsf.setenv as rsfenv
 except: # First installation
     import conf as rsfconf
     import doc as rsfdoc
     import path as rsfpath
     import latex2wiki
+    import imp
+    rsfenv = imp.load_source('setenv','../../setenv.py')
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = map(int,string.split(SCons.__version__,'.')[:3])
@@ -90,9 +93,7 @@ bindir = os.path.join(root,'bin') # not needed in module, is it imported elsewhe
 libdir = os.path.join(root,'lib') # not needed in module, is it imported elsewhere?
 incdir = os.path.join(root,'include') # not needed in module, is it imported elsewhere?
 figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
-pkgdir = rsfpath.get_pkgdir(root)
-
-# End stuff copied from SConstruct
+pkgdir = rsfenv.get_pkgdir(root)
 
 #############################################################################
 # REGULAR EXPRESSIONS

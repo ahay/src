@@ -16,12 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, re, sys
-
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
+import os, re
 
 ################################################################################
 
@@ -99,41 +94,3 @@ def getpath(cwd):
         mkdir(path)
     path = os.path.join(path,os.path.basename(top))
     return path
-
-################################################################################
-
-def get_local_site_pkgs(root=None, verb=False):
-    'Get the directory that should be added to PYTHONPATH'
-
-    central_site_pkgs = sysconfig.get_python_lib()
-
-    # This is actually platform dependent (Mac vs. Linux), because Python is not
-    # as cross-platform as it should be. When we need to install in a 
-    # canonical location on Mac, platform detection will be included
-    prefix = sysconfig.PREFIX
-    
-    if root == None:
-        root = os.environ.get('RSFROOT',os.environ['HOME'])
-
-    if central_site_pkgs[:len(prefix)] == prefix:
-        local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
-    else:
-        local_site_pkgs = os.path.join(root,'lib')
-
-    if verb:
-        print local_site_pkgs
-        return 0
-    else:
-        return local_site_pkgs
-
-################################################################################
-
-def get_pkgdir(root=None):
-    'Return directory of the RSF Python package'
-    
-    return os.path.join(get_local_site_pkgs(root),'rsf')
-
-################################################################################
-
-if __name__ == '__main__':
-    sys.exit(get_local_site_pkgs(verb=True))

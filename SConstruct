@@ -1,7 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import bldutil, configure, imp, os
-rsfpath = imp.load_source('path','framework/py_pkg/path.py')
+import bldutil, configure, imp, os, setenv
 
 env = Environment()
 
@@ -13,7 +12,8 @@ incdir = os.path.join(root,'include')
 docdir = os.path.join(root,'doc')
 spcdir = os.path.join(root,'spec')
 mandir = os.path.join(root,'share','man')
-pkgdir = rsfpath.get_pkgdir(root)
+pkgdir = setenv.get_pkgdir(root)
+etcdir = os.path.join(root, 'etc', 'madagascar')
 
 ##########################################################################
 # CONFIGURATION
@@ -34,7 +34,21 @@ config = env.Command('config.py','configure.py','')
 env.Precious(config)
 
 Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
-env.Alias('config',config)
+
+# ----------- Environment variable setup scripts -----------
+
+# Second argument of call below should be the datapath value (if any) read from
+# the command line of "./configure" 
+setenv.init_globs(root, 'value_read_from_the_command_line_of_configure_if_any')
+
+escript = os.path.join(os.getcwd(),'env.')
+sh_script  = escript + 'sh'
+csh_script = escript + 'csh'
+
+sh_script_cmd  = env.Command(sh_script, '', './setenv.py sh '+ sh_script)
+csh_script_cmd = env.Command(csh_script, '', './setenv.py csh '+ escript+'csh')
+
+env.Alias('config',[config, sh_script_cmd, csh_script_cmd])
 
 ##########################################################################
 # CUSTOM BUILDERS
@@ -166,7 +180,8 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 rsfuser = os.path.join(pkgdir,'user')
 env.Install(rsfuser,os.path.join('framework', 'py_pkg', '__init__.py'))
 
-env.Install(pkgdir,'config.py') 	 
+env.Install(pkgdir,['config.py', 'setenv.py', 'setenv.pyc']) 
+env.Install(etcdir, [sh_script, csh_script])
 
 env.InstallAs(os.path.join(pkgdir,'conf.py'),'configure.py') 	 
 env.InstallAs(os.path.join(pkgdir,'conf.pyc'),'configure.pyc')
@@ -174,5 +189,6 @@ env.InstallAs(os.path.join(pkgdir,'conf.pyc'),'configure.pyc')
 env.InstallAs(os.path.join(pkgdir,'bld.py'),  'bldutil.py') 	 
 env.InstallAs(os.path.join(pkgdir,'bld.pyc'), 'bldutil.pyc')
 
-env.Alias('install',[incdir,bindir,pkgdir,libdir,rsfuser,docdir,spcdir,mandir])
+env.Alias('install',
+    [incdir, bindir, pkgdir, libdir, rsfuser, docdir, spcdir, mandir, etcdir])
 env.Clean('install', rsfuser)

@@ -34,6 +34,7 @@ env.Install(bindir,'sfdoc')
 
 # Dependencies and installs from RSFSRC
 Depends('proj.py',os.path.join(pkgdir,'bld.py'))
+Depends('proj.py',os.path.join(pkgdir,'setenv.py'))
 
 # Building rsf.use
 use = env.Command('use.py',None,
@@ -49,6 +50,8 @@ for case in Split('tex proj doc'):
     Depends(use,os.path.join(pkgdir,case+'.py'))
 
 Depends(os.path.join(pkgdir,'tex.py'), os.path.join(pkgdir,'vpconvert.py'))
+Depends(os.path.join(pkgdir,'tex.py'), os.path.join(pkgdir,'setenv.py'))
+
 ##########################################################################
 # Self-documentation
 

@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types, copy, re, string, urllib, ftplib
-import rsf.conf, rsf.path, rsf.bld, rsf.flow
+import rsf.conf, rsf.path, rsf.bld, rsf.flow, rsf.setenv
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -213,7 +213,7 @@ class Project(Environment):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
         root = os.environ.get('RSFROOT',os.environ['HOME'])
-        pkgdir = rsf.path.get_pkgdir(root)
+        pkgdir = rsf.setenv.get_pkgdir(root)
 
         opts = rsf.conf.options(os.path.join(pkgdir,'config.py'))
         opts.Add('TIMER','Whether to time execution')
