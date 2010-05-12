@@ -23,39 +23,62 @@
 #define BAND 4
 
 static sf_bands band;
+static int nb, nx;
+static float eps;
 
-void recgauss_init(int nx     /* trace length */, 
-		   float rect /* smoothing length */)
+void recgauss_init(int nx1    /* trace length */, 
+		   bool der   /* if derivative */,
+		   float rect /* smoothing length */,
+		   int nb1    /* size of the boundary */,
+		   float eps1 /* regularization parameter */)
 /*< initialize >*/
 {
     float diag, offd[BAND];
 
     /* convert length into Gaussian factor */
     rect = (rect*rect-1.)/12.;
+
+    nx = nx1;
+    nb = nb1;
+    eps = eps1;
     
-    diag = 1. + rect*(205./72. + 
-		      rect*(5.6875 + 
-			    rect*(6.25 + 35.*rect/12.)));
-    offd[0] = -rect*(1.6 + 
-		     rect*(61./15. + 
-			   rect*(29./6. + 7.*rect/3.)));
-    offd[1] = rect*(0.2 + 
-		    rect*(169./120. + 
-			  rect*(13./6. + 7*rect/6.)));
-    offd[2] = -rect*(8./315. + 
-		     rect*(0.2 + 
-			   rect*(0.5 + rect/3.)));
-    offd[3] = rect*(1./560. + 
-		    rect*(7./480. + 
-			  rect*(1. + rect)/24.));
+    if (der) {
+	diag = 13903./22680. + rect*(5./4. + rect*(137./48. + rect*(155./36. + (35.*rect)/12.)));
+	offd[0] = 23189./113400. + rect*(-19./40. + rect*(-113./60. + rect*(-59./18. - (7.*rect)/3.)));
+	offd[1] = -701./56700. + rect*(-1./6. + rect*(53./120. + rect*(25./18. + (7.*rect)/6.)));
+	offd[2] = 167./113400. + rect*(1./56. + rect*(1./60. + rect*(-5./18. - rect/3.)));
+	offd[3] = -23./226800. + rect*(-1./840. + rect*(-1./480. + rect*(1./72. + rect/24.)));
+    } else {
+	diag = 1. + rect*(205./72. + 
+			  rect*(5.6875 + 
+				rect*(6.25 + 35.*rect/12.)));
+	offd[0] = -rect*(1.6 + 
+			 rect*(61./15. + 
+			       rect*(29./6. + 7.*rect/3.)));
+	offd[1] = rect*(0.2 + 
+			rect*(169./120. + 
+			      rect*(13./6. + 7*rect/6.)));
+	offd[2] = -rect*(8./315. + 
+			 rect*(0.2 + 
+			       rect*(0.5 + rect/3.)));
+	offd[3] = rect*(1./560. + 
+			rect*(7./480. + 
+			      rect*(1. + rect)/24.));
+    }
     
     band = sf_banded_init (nx,BAND);
-    sf_banded_const_define (band,diag,offd);
+    sf_banded_const_define_eps (band,diag,offd,nb,eps);
 }
 
 void recgauss(float *data)
 /*< smooth (in place) >*/
 {
+    int ib;
+
+    for (ib=0; ib < nb; ib++) {
+	data[ib] *= (1.+eps);
+	data[nx-ib-1] *= (1.+eps);
+    }
     sf_banded_solve (band,data);
 }
 

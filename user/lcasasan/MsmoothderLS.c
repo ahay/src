@@ -34,7 +34,6 @@ int main(int argc, char* argv[])
     int i, niter, nd, dim, n1, n2, i1, i2;
     int n[SF_MAX_DIM], box[SF_MAX_DIM];
     float **data, **model, *model0; // **wt;
-    float eps;
     char key[6];
     sf_file DATA, MODEL, DATA_OUT;
 
@@ -43,9 +42,6 @@ int main(int argc, char* argv[])
     MODEL = sf_output("out");
 
     dim = sf_filedims (DATA,n);
-
-    //if (!sf_getfloat("eps",&eps)) eps = 1.0; /*dumping factor*/
-
 
     nd = 1;
     for (i=0; i < dim; i++) {

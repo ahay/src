@@ -107,6 +107,37 @@ void sf_banded_const_define (sf_bands slv,
     }
 }
 
+void sf_banded_const_define_eps (sf_bands slv, 
+				 float diag        /* diagonal */, 
+				 const float* offd /* off-diagonal [band] */, 
+				 int nb            /* size of the boundary */,
+				 float eps         /* regularization parameter */)
+/*< define matrix with constant diagonal coefficients 
+  and regularized b.c. >*/
+{
+    int k, m, m1, n, n1;
+    float t;
+    
+    for (k = 0; k < slv->n; k++) {   
+	t = diag;
+	if (k < nb || slv->n-k-1 < nb) t += eps;
+	m1 = SF_MIN(k,slv->band);
+	for (m = 0; m < m1; m++)
+	    t -= (slv->o[m][k-m-1])*(slv->o[m][k-m-1])*(slv->d[k-m-1]);
+	slv->d[k] = t;
+	n1 = SF_MIN(slv->n-k-1,slv->band);
+	for (n = 0; n < n1; n++) {
+	    t = offd[n];
+	    m1 = SF_MIN(k,slv->band-n-1);
+	    for (m = 0; m < m1; m++) {
+		t -= (slv->o[m][k-m-1])*(slv->o[n+m+1][k-m-1])*(slv->d[k-m-1]);
+	    }
+	    slv->o[n][k] = t/slv->d[k];
+	}
+    }
+}
+
+
 void sf_banded_const_define_reflect (sf_bands slv, 
 				     float diag        /* diagonal */, 
 				     const float* offd /* off-diagonal [band] */)
