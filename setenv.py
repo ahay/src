@@ -23,8 +23,6 @@ if sys.version_info[:2] < (2, 7):
 else:
     import sysconfig
 
-unix_success = 0
-
 ################################################################################
 
 def get_local_site_pkgs(root=None, verb=False):
@@ -47,18 +45,18 @@ def get_local_site_pkgs(root=None, verb=False):
 
     if verb:
         print local_site_pkgs
-        return unix_success
+        return 0 # UNIX success
     else:
         return local_site_pkgs
 
 ################################################################################
 
-def mk_sh_script(script_nm, rsfroot):
+def mk_sh_script(target, source=None, env=None): 
     'Write the (ba)sh environment setup script'
+    # Needs this specific interface because it will be called by a SCons Command
+    # in RSFSRC/SConstruct
 
-    dpath = '/var/tmp'
-
-    bsh = open(script_nm, 'w')
+    bsh = open(str(target[0]), 'w')
     bsh.write('''#!/bin/sh
 
 export RSFROOT=%s
@@ -71,19 +69,20 @@ export PATH=$RSFROOT/bin:$PATH
 export DATAPATH=%s
 export MANPATH=$RSFROOT/share/man:$(manpath)
 export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
-''' % (rsfroot, get_local_site_pkgs(root=''), dpath))
+export RSFSRC=%s
+''' % (env['RSFROOT'], get_local_site_pkgs(root=''), env['DATAPATH'], 
+    env['RSFSRC']))
+
     bsh.close()
 
-    return unix_success
+    return None
 
 ###############################################################################
 
-def mk_csh_script(script_nm, rsfroot):
+def mk_csh_script(target, source=None, env=None):
     'Write the (t)csh environments setup script'
     
-    dpath = '/var/tmp'
-
-    csh = open(script_nm, 'w')
+    csh = open(str(target[0]), 'w')
     csh.write('''#!/bin/csh
 
 setenv RSFROOT %s
@@ -96,10 +95,13 @@ set path = ($RSFROOT/bin $path)
 setenv DATAPATH %s
 setenv MANPATH $RSFROOT/share/man:`manpath`
 setenv LD_LIBRARY_PATH $RSFROOT/lib:$LD_LIBRARY_PATH
-''' % (rsfroot, get_local_site_pkgs(root=''), dpath))
+setenv RSFSRC %s
+''' % (env['RSFROOT'], get_local_site_pkgs(root=''), env['DATAPATH'], 
+    env['RSFSRC']))
+
     csh.close()
 
-    return unix_success
+    return None
 
 ################################################################################
 
@@ -111,17 +113,4 @@ def get_pkgdir(root=None):
 ################################################################################
 
 if __name__ == '__main__':
-    nargs = len(sys.argv)
-    if nargs == 1:
-        sys.exit(get_local_site_pkgs(verb=True))
-    elif nargs == 4:
-        if sys.argv[1] == 'sh':
-            sys.exit(mk_sh_script(sys.argv[2],sys.argv[3]))
-        elif sys.argv[1] == 'csh':
-            sys.exit(mk_csh_script(sys.argv[2],sys.argv[3]))
-        else:
-            sys.stderr.write('Second argument to setenv should be sh or csh\n')
-            sys.exit(1)
-    else:
-        sys.stderr.write('Usage: setenv.py (c)sh script_name <RSFROOT>\n')
-        sys.exit(1)
+    sys.exit(get_local_site_pkgs(verb=True))

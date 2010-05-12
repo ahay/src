@@ -37,14 +37,19 @@ Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 
 # ----------- Environment variable setup scripts -----------
 
-escript = os.path.join(os.getcwd(),'env.')
-sh_script  = escript + 'sh'
-csh_script = escript + 'csh'
+# Variables below needed by setenv.mk(c)sh_script functions
+# Could not be passed as arguments because functions called in a SCons Command 
+# have to have a specific interface
+env['RSFSRC'] = os.getcwd()
+env['ENV_SCRIPT_BASENM'] = 'env'
+env['DATAPATH'] = '/var/tmp' # default. Should be provided as arg to ./configure
 
-sh_script_cmd  = env.Command(sh_script, '', 
-    './setenv.py sh ' + sh_script + ' ' + root)
-csh_script_cmd = env.Command(csh_script, '',
-    './setenv.py csh ' + csh_script + ' ' + root)
+escript = os.path.join(env['RSFSRC'],env['ENV_SCRIPT_BASENM'])
+sh_script  = escript + '.sh'  # Also needed further below by Install
+csh_script = escript + '.csh' # same as above
+
+sh_script_cmd  = env.Command(sh_script , '', setenv.mk_sh_script )
+csh_script_cmd = env.Command(csh_script, '', setenv.mk_csh_script)
 
 env.Alias('config',[config, sh_script_cmd, csh_script_cmd])
 
