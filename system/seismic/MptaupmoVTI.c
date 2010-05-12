@@ -25,11 +25,8 @@ int main (int argc, char* argv[])
 {
     map4 nmo;
     int it,ix,ip, nt,nx, np;
-    float dt, t0, p, p0, t, dp, eps; 
+    float dt, t0, p, p0, t, dp, eps, f; 
     float N,D;
-    //float *trace=NULL, *slope=NULL, *dsldt=NULL, *str=NULL, *cos=NULL;
-    //sf_file inp=NULL, nmod=NULL, cos2=NULL, dip=NULL, dipt=NULL;
-
     float *trace=NULL, *slope=NULL, *curv=NULL, *str=NULL;
     sf_file inp=NULL, nmod=NULL, dip=NULL, ddip=NULL ,tau0=NULL;
 
@@ -68,7 +65,7 @@ int main (int argc, char* argv[])
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
 
-    eps = 100.*SF_EPS;
+    eps = SF_EPS;
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
 	for (ip = 0; ip < np; ip++) { /* offset */
@@ -86,15 +83,13 @@ int main (int argc, char* argv[])
 		N=3*t*slope[it]*(dt)+t*p*curv[it]*(dt)-3*slope[it]*slope[it]*(dt*dt)*p;
 		D=3*t*slope[it]*(dt)+t*p*curv[it]*(dt)+slope[it]*slope[it]*(dt*dt)*p;
 		/*f = t - p*slope[it]*dt;*/
-
-		if (N*D < 0.) {
+		f = N/D; 
+		
+		if (f < 0.) {
 		    str[it] = t0-10.*dt;
-		    /*cos[it] = 0.;*/
-		} else {
-		    str[it] = t*sqrtf( (N*D)/(D*(D+FLT_EPSILON) ) ); /* t -> tau */
-		    
-		    /*cos[it] = 4*t/(t+f-p*t*dsldt[it]+eps)-t/(f+eps);*/
-		}
+		} else { 
+		    str[it] = t*sqrtf(f); /* t -> tau */
+		} 
 	    }
 
 	    stretch4_define (nmo,str);
