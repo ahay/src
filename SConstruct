@@ -42,7 +42,7 @@ Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 # have to have a specific interface
 env['RSFSRC'] = os.getcwd()
 env['ENV_SCRIPT_BASENM'] = 'env'
-env['DATAPATH'] = '/var/tmp' # default. Should be provided as arg to ./configure
+env['DATAPATH'] = '/var/tmp/' # default. Should be given as arg to ./configure
 
 escript = os.path.join(env['RSFSRC'],env['ENV_SCRIPT_BASENM'])
 sh_script  = escript + '.sh'  # Also needed further below by Install

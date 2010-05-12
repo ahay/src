@@ -56,19 +56,37 @@ def mk_sh_script(target, source=None, env=None):
     # Needs this specific interface because it will be called by a SCons Command
     # in RSFSRC/SConstruct
 
+    dpath = env['DATAPATH']
+    if dpath[-1] != '/':
+        dpath += '/'
+
     bsh = open(str(target[0]), 'w')
     bsh.write('''#!/bin/sh
 
+# Madagascar installation directory:
 export RSFROOT=%s
+
+# Making sure Python finds the rsf package:
 if [ -n "$PYTHONPATH" ]; then
 export PYTHONPATH=${PYTHONPATH}:$RSFROOT%s
 else
 export PYTHONPATH=$RSFROOT/lib
 fi
 export PATH=$RSFROOT/bin:$PATH
+
+# Default location for binary data files part of RSF datasets. 
+# You may want to overwrite this variable later in your resource file
 export DATAPATH=%s
+
+# Making sure the "man" program finds the Madagascar manual pages:
 export MANPATH=$RSFROOT/share/man:$(manpath)
+
+# Making sure Madagascar shared object filed (aka DLLs) are found at runtime:
 export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
+
+# Madagascar source location. Needed when user directories are not in 
+# RSFSRC/user, as is the case in a central install with users working from their
+# home directories:
 export RSFSRC=%s
 ''' % (env['RSFROOT'], get_local_site_pkgs(root=''), env['DATAPATH'], 
     env['RSFSRC']))
@@ -81,23 +99,44 @@ export RSFSRC=%s
 
 def mk_csh_script(target, source=None, env=None):
     'Write the (t)csh environments setup script'
-    
+    # Needs this specific interface because it will be called by a SCons Command
+    # in RSFSRC/SConstruct
+
+    dpath = env['DATAPATH']
+    if dpath[-1] != '/':
+        dpath += '/'
+
     csh = open(str(target[0]), 'w')
     csh.write('''#!/bin/csh
 
+# Madagascar installation directory:
 setenv RSFROOT %s
+
+# Making sure Python finds the rsf package:
 if ($?PYTHONPATH) then
 setenv PYTHONPATH ${PYTHONPATH}:$RSFROOT%s
 else
 setenv PYTHONPATH $RSFROOT/lib
 endif
+
+# Making sure the shell finds the Madagascar executables:
 set path = ($RSFROOT/bin $path)
+
+# Default location for binary data files part of RSF datasets. 
+# You may want to overwrite this variable later in your resource file
 setenv DATAPATH %s
+
+# Making sure the "man" program finds the Madagascar manual pages:
 setenv MANPATH $RSFROOT/share/man:`manpath`
+
+# Making sure Madagascar shared object filed (aka DLLs) are found at runtime:
 setenv LD_LIBRARY_PATH $RSFROOT/lib:$LD_LIBRARY_PATH
+
+# Madagascar source location. Needed when user directories are not in 
+# RSFSRC/user, as is the case in a central install with users working from their
+# home directories:
 setenv RSFSRC %s
-''' % (env['RSFROOT'], get_local_site_pkgs(root=''), env['DATAPATH'], 
-    env['RSFSRC']))
+''' % (env['RSFROOT'], get_local_site_pkgs(root=''), dpath, env['RSFSRC']))
 
     csh.close()
 
