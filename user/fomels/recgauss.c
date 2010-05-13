@@ -23,24 +23,16 @@
 #define BAND 4
 
 static sf_bands band;
-static int nb, nx;
-static float eps;
 
-void recgauss_init(int nx1    /* trace length */, 
+void recgauss_init(int nx    /* trace length */, 
 		   bool der   /* if derivative */,
-		   float rect /* smoothing length */,
-		   int nb1    /* size of the boundary */,
-		   float eps1 /* regularization parameter */)
+		   float rect /* smoothing length */)
 /*< initialize >*/
 {
     float diag, offd[BAND];
 
     /* convert length into Gaussian factor */
     rect = (rect*rect-1.)/12.;
-
-    nx = nx1;
-    nb = nb1;
-    eps = eps1;
     
     if (der) {
 	diag = 13903./22680. + rect*(5./4. + rect*(137./48. + rect*(155./36. + (35.*rect)/12.)));
@@ -67,18 +59,12 @@ void recgauss_init(int nx1    /* trace length */,
     }
     
     band = sf_banded_init (nx,BAND);
-    sf_banded_const_define_eps (band,diag,offd,nb,eps);
+    sf_banded_const_define_reflect (band,diag,offd);
 }
 
 void recgauss(float *data)
 /*< smooth (in place) >*/
 {
-    int ib;
-
-    for (ib=0; ib < nb; ib++) {
-	data[ib] *= (1.+eps);
-	data[nx-ib-1] *= (1.+eps);
-    }
     sf_banded_solve (band,data);
 }
 

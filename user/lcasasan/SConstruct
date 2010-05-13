@@ -4,8 +4,6 @@ import bldutil
 
 progs = '''
 intervalVTI
-pveltranVTI
-pveltranVTI_FOWLER
 smoothderLS
 '''
 

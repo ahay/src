@@ -75,11 +75,11 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    //model0[i2][i1] = -data[i2][0];
 		data[i2][i1] = data[i2][i1]-model0[i2];
-	   fprintf(stderr,"data = %f\n n1=%d",data[i2][i1],n1);
+/*	   fprintf(stderr,"data = %f\n n1=%d",data[i2][i1],n1); */
 
 	}
     }
-    fprintf(stderr,"data = %f",data[0][0]);
+/*    fprintf(stderr,"data = %f",data[0][0]); */
     //sf_repeat_lop(false,true,nd,nd,model0[0],data[0]);
     smoothder(niter, NULL, data[0], model[0]);
  

@@ -24,8 +24,8 @@
 int main (int argc, char* argv[]) 
 {
     bool der;
-    int i1, n1, i2, n2, irep, nrep, nb;
-    float *data, *data2, rect, eps;
+    int i1, n1, i2, n2, irep, nrep;
+    float *data, *data2, rect;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -39,15 +39,9 @@ int main (int argc, char* argv[])
     if (!sf_getbool("der",&der)) der=false;
     /* compute derivative */
 
-    if (!sf_getint("nb",&nb)) nb=1;
-    /* boundary */ 
-
-    if (!sf_getfloat("eps",&eps)) eps=1.;
-    /* regularization for boundary conditions */ 
-
     if (!sf_getfloat("rect",&rect)) rect=1;
     /* smoothing radius */ 
-    recgauss_init (n1,der,rect,nb,eps);
+    recgauss_init (n1,der,rect);
 
     data = sf_floatalloc (n1);
     data2 = der? sf_floatalloc (n1): NULL;
@@ -56,26 +50,24 @@ int main (int argc, char* argv[])
     /* repeat filtering several times */
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(data,n1,in);
+	if (der) {
+	    sf_floatread(data2,n1,in);
+	    data[0] = data2[1]-data2[0];
+	    for (i1=1; i1 < n1-1; i1++) {
+		data[i1] = 0.5*(data2[i1+1]-data2[i1-1]);
+	    }
+	    data[n1-1] = data2[n1-1]-data2[n1-2];
+	} else {
+	    sf_floatread(data,n1,in);
+	}
 
 	for (irep=0; irep < nrep; irep++) {
 	    recgauss (data);
 	}
-
-	if (der) {
-	    data2[0] = data[1]-data[0];
-	    for (i1=1; i1 < n1-1; i1++) {
-		data2[i1] = 0.5*(data[i1+1]-data[i1-1]);
-	    }
-	    data2[n1-1] = data[n1-1]-data[n1-2];
-
-	    sf_floatwrite(data2,n1,out);
-	} else {	
-	    sf_floatwrite(data,n1,out);
-	}
+	sf_floatwrite(data,n1,out);
     }    
 
     exit (0);
 }
 
-/* 	$Id$	 */
+
