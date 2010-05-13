@@ -50,6 +50,12 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
 
+    if (1==n1 && 1==n2) {
+	if (!sf_histint(in,"n3",&n1)) sf_error("No n3= in input");
+	if (!sf_histint(in,"n4",&n2)) sf_error("No n4= in input");
+	n3 = sf_leftsize(in,4);
+    }
+
     sf_fileflush(out,in);  /* copy data dimensions */
 
     /* input filter */
