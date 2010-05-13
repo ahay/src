@@ -29,7 +29,8 @@ sftestlist levels=2 book/geostats       # inventory of book/geostats
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, rsfprog
+import os, sys
+import rsf.prog as rsfprog
 
 if not hasattr(os,'walk'):
     sys.stderr.write('testlist needs Python 2.3 or greater\n')

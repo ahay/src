@@ -23,13 +23,13 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys, math, rsfprog, string, random
+import os, sys, math, rsf.prog, string, random
 
 try: # Give precedence to local version
     import ivlad, m8rex
 except: # Use distributed version
-    import rsfuser.ivlad as ivlad
-    import rsfuser.m8rex as m8rex
+    import rsf.user.ivlad as ivlad
+    import rsf.user.m8rex as m8rex
 
 # The exe argument allows the public functions below to perform in three ways:
 # 1. called as sf.prog(arglist[,exe=None]) to execute directly a RSF program

@@ -71,7 +71,7 @@ def getprogs(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     dirs = env.get('dirs')
     out.write('import sys, os\n\n')
-    out.write('import rsf\n\n')
+    out.write('import rsf.doc\n\n')
     for mod in dirs:
         out.write('import sf%s\n' % mod)
     out.write('\nimport vpplot\n\n')

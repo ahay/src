@@ -1,0 +1,23 @@
+from rsf.tex import *
+
+Paper('seg2006',lclass='segabs')
+
+Paper('xom',lclass='article')
+
+Paper('bgp',lclass='article',use='natbib,graphicx,amsmath')
+
+Command2('revised.tex','paper.tex','cp $SOURCE $TARGET')
+
+Paper('revised',options='manuscript,revised')
+
+End(options='manuscript',
+    color='''
+          sigmoiddip gathdip boon boon3 boon2
+          cdips rrdips
+          ''',
+    hires='''
+          sigmoidwvlt sigmoidseis 
+          sigmoidimpw sigmoidimps 
+          sigmoidwrec1 gathseis sign seis4
+          cdiplet rrdiplet
+          ''')

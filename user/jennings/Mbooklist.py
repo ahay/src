@@ -39,7 +39,8 @@ sfbooklist size=5 command=scons book    # build examples smaller than 5MB
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, copy, sys, signal, rsfprog
+import os, copy, sys, signal
+import rsf.prog as rsfprog
 
 if not hasattr(os,'walk'):
     sys.stderr.write('booklist needs Python 2.3 or greater\n')

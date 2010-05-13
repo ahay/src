@@ -38,7 +38,8 @@ number  is return code from sfvplotdiff indicating different files.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, copy, sys, signal, rsfprog
+import os, copy, sys, signal
+import rsf.prog as rsfprog
 
 try:
     import rsf.api as rsf
