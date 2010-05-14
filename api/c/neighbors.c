@@ -45,10 +45,10 @@ static float *ttime, *vv, rdx[3];
 static double v1;
 
 void sf_neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */, 
-		     float *rdx1  /* grid sampling [3] */, 
-		     int *n1      /* grid samples [3] */, 
-		     int order1   /* accuracy order */, 
-		     float *time1 /* traveltime [n[0]*n[1]*n[2]] */)
+			float *rdx1  /* grid sampling [3] */, 
+			int *n1      /* grid samples [3] */, 
+			int order1   /* accuracy order */, 
+			float *time1 /* traveltime [n[0]*n[1]*n[2]] */)
 /*< Initialize >*/
 {
     in = in1; ttime = time1; 

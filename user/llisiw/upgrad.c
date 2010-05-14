@@ -16,7 +16,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
 
 #ifndef _upgrad_h
@@ -183,8 +182,10 @@ void upgrad_inverse(upgrad upg,
 	jt = upg->order[it];
 
 	rhs[jt] += x[jt];
+
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
+
 	if (den == 0.) { /* at the source, use boundary conditions */
 	    rhs[jt] = (NULL != x0)? x0[jt]: 0.;
 	} else {

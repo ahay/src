@@ -3,8 +3,8 @@ sys.path.append('../..')
 import bldutil
 
 progs = '''
-kirmig kirmig0 drayinte lintest
-testanal gradient cconst cgconst
+kirmig kirmig0 drayinte lineiko lintest
+testanal gradient cconst cgconst fatomo opertest
 '''
 
 
