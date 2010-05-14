@@ -27,6 +27,7 @@ int main (int argc, char **argv)
     int nt;                   /* number of time samples */
     int nx;                   /* number of offsets */ 
     int nf1, nf2, nf;         /* number of filter size */
+    int n3, i3;
     float *x, *y, *filt;      /* input and output */
     sf_file in, out, fil;
 
@@ -43,6 +44,7 @@ int main (int argc, char **argv)
     /* read input file parameters */
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+    n3 = sf_leftsize(in,2);
 
     if (!sf_histint(fil,"n1",&nf1)) sf_error("No nf1= in filt");
     if (!sf_histint(fil,"n2",&nf2)) sf_error("No nf2= in filt");
@@ -54,22 +56,26 @@ int main (int argc, char **argv)
     y = sf_floatalloc (nt*nx);
     filt = sf_floatalloc (nt*nx*nf);
 
-    sf_floatread(filt,nt*nx*nf,fil);
+    for (i3=0; i3 < n3; i3++) {
+	if(verb) sf_warning("i=%d of %d",i3+1,n3);
 
-    matching_init(filt,nt,nx,nf);
+	sf_floatread(filt,nt*nx*nf,fil);
 
-    if (adj) {
-	sf_floatread(y,nt*nx,in);
-    } else { /* modeling */
-	sf_floatread(x,nt*nx,in);
-    }
+	matching_init(filt,nt,nx,nf);
+
+	if (adj) {
+	    sf_floatread(y,nt*nx,in);
+	} else { /* modeling */
+	    sf_floatread(x,nt*nx,in);
+	}
     
-    pmatching_lop (adj, false, nt*nx, nt*nx, x, y);
-    
-    if (adj) {
-	sf_floatwrite(x,nt*nx,out);
-    } else { /* modeling */
-	sf_floatwrite(y,nt*nx,out);
+	pmatching_lop (adj, false, nt*nx, nt*nx, x, y);
+	
+	if (adj) {
+	    sf_floatwrite(x,nt*nx,out);
+	} else { /* modeling */
+	    sf_floatwrite(y,nt*nx,out);
+	}
     }
     
     exit (0);
