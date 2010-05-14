@@ -82,6 +82,9 @@ void radonoper_lop (bool adj, bool add, int nxx, int nyy, float *x, float *y)
 {
     int ix, it, ip, iw;
     float w;
+
+    sf_adjnull (adj,add,nxx,nyy,x,y);
+
     if (adj) {
 	for (ix=0; ix < nx; ix++) { /* loop over offsets */
 	    for (it=0; it < nt; it++) {
