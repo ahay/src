@@ -640,7 +640,6 @@ def plplot(context):
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     text = '''
-    #include <ltdl.h>
     #include <plplot.h>
     #include <plplotP.h>
     #include <plstrm.h>
@@ -651,6 +650,7 @@ def plplot(context):
     }\n'''
     plplot = context.env.get('PLPLOT','plplotd')
     LIBS.append(plplot)
+    LIBS.append('ltdl')
     res = context.TryLink(text,'.c')
 
     if res:
@@ -665,7 +665,7 @@ def plplot(context):
     context.env['CPPPATH'] = oldpath
     context.env['LIBPATH'] = oldlibpath    
     LIBS.pop()
-
+    LIBS.pop()
 
 pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
                  'suse':'ffmpeg-devel',
