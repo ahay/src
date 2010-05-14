@@ -80,7 +80,6 @@ int main(int argc, char* argv[])
 	    sf_floatread(t0,nt,time0);
 	    sf_fileclose(time0);
 	    
-//	    if (inv) upgrad_sort(!adj);
 	    upgrad_set(upg,t0);
 	    
 	    if (inv) {
