@@ -28,11 +28,11 @@ def seislet(data,              # data name
     dip = data+'dip'
     Flow(dip,data,
          'dip rect1=%d rect2=%d p0=%g pmin=%g' % (rect1,rect2,p0,pmin))
-    Result(dip,'grey color=j title=Slope scalebar=y')
+    Result(dip,'grey  color=j title=Slope scalebar=y')
 
     seis = data+'seis'
     Flow(seis,[data,dip],
-         'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y unit=y' % eps)
+         'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y unit=y type=b' % eps)
     Result(seis,
            '''
            put o2=0 d2=1 | 
@@ -50,7 +50,8 @@ def seislet(data,              # data name
     sinv = data+'sinv'
 #    ssinv = data+'ssinv'
 
-    Flow(sinv,[seis,dip],'seislet dip=${SOURCES[1]} eps=%g inv=y unit=y' % eps)
+    Flow(sinv,[seis,dip],
+         'seislet dip=${SOURCES[1]} eps=%g inv=y unit=y type=b' % eps)
     Result(sinv,'grey  title="Inverse Seislet Transform" ')
 
 #    Flow(ssinv,[sseis,dip],'seislet dip=${SOURCES[1]} eps=%g' % eps)
@@ -58,7 +59,7 @@ def seislet(data,              # data name
 
     wvlt = data+'wvlt'
 
-    Flow(wvlt,data,'transp | dwt unit=y | transp')
+    Flow(wvlt,data,'transp | dwt unit=y type=l | transp')
 
     coef = data+'coef'
     Flow(coef,wvlt,'put n1=%d o1=1 d1=1 n2=1 unit1= unit2= | sort' % (n1*n2))
@@ -68,17 +69,14 @@ def seislet(data,              # data name
            put o2=0 d2=1 | grey  title="Wavelet Transform" label2=Scale unit2=
            ''')
 
-    Flow(coef+'temp',[coef,scoef],
-         '''
-         cat axis=2 ${SOURCES[1]} | window n1=%d | scale axis=1 |
-         math output="%g*log(input)" | put o1=0 d1=%g
-         ''' % ((n1*n2/2),10/math.log(10),(100./(n1*n2-1))))
-    Result(coef,coef+'temp',
+    Result(coef,[coef,scoef],
            '''
-           graph dash=1,0 label1="Percentage"
-           label2="a\_\s75 n \s100 (dB)" plotcol=7,7
-           unit1="%" unit2= title="Compression Ratio"
-           ''')
+           cat axis=2 ${SOURCES[1]} |
+           window n1=%d |
+           scale axis=1 |
+           math output="10*log(input)/log(10)" |
+           graph dash=1,0 label1=n label2="a\_n\^" unit2="DB" wanttitle=n 
+           ''' % (n1*n2/2))
 
     four = data+'four'
     Flow(four,data,'cosft sign2=1')
@@ -102,7 +100,7 @@ def seislet(data,              # data name
         Flow(rec,[seis,dip],
              '''
              threshold pclip=%d |
-             seislet dip=${SOURCES[1]} eps=%g inv=y unit=y
+             seislet dip=${SOURCES[1]} eps=%g inv=y unit=y type=b
              ''' % (c,eps))
         Result(rec,'grey  title="Inverse Seislet Transform (%d%%)" ' % c)
         wrec = '%swrec%d' % (data,c)
@@ -110,7 +108,7 @@ def seislet(data,              # data name
              '''
              threshold pclip=%d | 
              transp | 
-             dwt adj=y inv=y unit=y | transp
+             dwt adj=y inv=y unit=y type=l | transp
              ''' % c)
         Result(wrec,'grey  title="Inverse Wavelet Transform (%d%%)" ' % c)
 
@@ -148,7 +146,7 @@ def seislet(data,              # data name
     Flow(impw,dip,
      '''
      spike nsp=%d k1=%s k2=%s n1=%d n2=%d o2=%g d2=%g |
-     transp | dwt eps=%g adj=y inv=y unit=y | transp
+     transp | dwt eps=%g adj=y inv=y unit=y type=b | transp
      ''' % (nsp,k1,k2,n1,n2,o2,d2,eps),stdin=0)
     Result(impw,'grey  title=Wavelets')
 
