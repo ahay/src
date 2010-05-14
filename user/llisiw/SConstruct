@@ -4,7 +4,7 @@ import bldutil
 
 progs = '''
 kirmig kirmig0 drayinte lineiko lintest
-testanal gradient cconst cgconst fatomo opertest
+testanal gradient cconst cgconst fatomo
 '''
 
 
