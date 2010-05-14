@@ -24,12 +24,14 @@ import SCons
 try:
     import rsf.conf as rsfconf
     import rsf.doc as rsfdoc
+    import rsf.prog
     import rsf.path as rsfpath
     import rsf.latex2wiki as latex2wiki
     import rsf.setenv as rsfenv
 except: # First installation
     import conf as rsfconf
     import doc as rsfdoc
+    import prog
     import path as rsfpath
     import latex2wiki
     import imp
