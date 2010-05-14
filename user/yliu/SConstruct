@@ -10,7 +10,7 @@ lrmf ltft lum lum2 lumsmoother lumsharpener mean mf mig2 miss4 mlm mtm
 mlwm multiple nmult nonloc oclet pwcsemb pwd2 pwsfault pwsfault3
 pwsmooth pwsmooth3 radonoper saltpepper sclet seisavf seishrink
 seislet97 seismis2 seispocs seisreg2 sharpsimi snr st svddenoise swell
-threshold2 tvmf vconvert wavemis2 wmf zcwt
+testmatch threshold2 tvmf vconvert wavemis2 wmf zcwt
 '''
 
 try:  # distributed version
