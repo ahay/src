@@ -28,15 +28,15 @@ int main (int argc, char* argv[])
     bool map;
     map4 nmo;
     char *method;
-    int it,ix,ip,iv, nt,nx, np, nv, ntv, nw, nvh,ntvh, ne , ie ,nte;
+    int it,ix,ip,iv, nt,nx, np, nv, ntv, nw, nvh, ntvh, ne, ie, nte;
     float dt, t0, p, p0, t, dp, v0, dv, vh0, dvh , e0 , de;
-    float Vn2_eff, eta_eff,S_eff,dtau0_dtau,dVn2_dtau,deta_dtau, A, B, C; /* required for DIX oriented inversion*/
+    float Vn2_eff, eta_eff,S_eff,dtau0_dtau,dVn2_dtau,deta_dtau, A, B, C; 
     float N, D, Nt, Dt;
     float *v1, *v2, *v3; /* to compute velocity attribute panels */
-    float *R=NULL, *Rt=NULL, *Q=NULL, *Qt=NULL, **coord1=NULL, **coord2=NULL, **coord3=NULL ,*ord=NULL;
-    float *vN=NULL, *vN2=NULL,*vH=NULL, *vH2=NULL, *e=NULL, *e2=NULL, *TAU0=NULL, *TAU0t=NULL;
-    sf_file cmp=NULL, velN=NULL, velH=NULL, dip=NULL, dipt=NULL, curv=NULL, curvt=NULL, eta=NULL;
-    sf_file tau0=NULL, tau0t=NULL;
+    float *R, *Rt, *Q, *Qt, **coord1, **coord2, **coord3, *ord;
+    float *vN, *vN2, *vH, *vH2, *e, *e2, *TAU0, *TAU0t;
+    sf_file cmp=NULL, velN=NULL, velH=NULL, dip=NULL, dipt=NULL, curv=NULL;
+    sf_file tau0=NULL, tau0t=NULL, curvt=NULL, eta=NULL;
     	
     sf_init (argc,argv);
     tau0 = sf_input("in");
@@ -75,6 +75,17 @@ int main (int argc, char* argv[])
 	coord1 = NULL;
 	coord2 = NULL;
 	coord3 = NULL;
+
+	ntv = 0;
+	ntvh= 0;
+	nte = 0;	
+
+	vN  = NULL;
+	vN2 = NULL;
+	vH  = NULL;
+	vH2 = NULL;
+	e   = NULL;
+	e2  = NULL;
     } else {
 	nmo = NULL;
 
@@ -235,8 +246,9 @@ int main (int argc, char* argv[])
 			    v3[it] = .5* ( (v2[it]*v2[it] / v1[it]/v1[it]) -1 );
 			    break;
 			case 'd': case 'D': /* DIX EQUATIONS*/
-			    /*Ntn = (3*TAU-6*P/dp*Rn)*Rtn+P/dp*TAU*Qtn+(3*Rn+P/dp*Qn)*ts;
-			      Dtn = (3*TAU+2*P/dp*Rn)*Rtn+P/dp*TAU*Qtn+(3*Rn+P/dp*Qn)*ts;    */                    
+
+			    N=(3*t*R[it]*(dt)+t*p*Q[it]*(dt)-3*R[it]*R[it]*(dt*dt)*p);
+			    D=(3*t*R[it]*(dt)+t*p*Q[it]*(dt)+1*R[it]*R[it]*(dt*dt)*p);
 			    
 			    Nt = (3*t-6*p*R[it]*dt)*Rt[it]+p*t*Qt[it]+(3*R[it]+p*Q[it])*dt;
 			    Dt = (3*t+2*p*R[it]*dt)*Rt[it]+p*t*Qt[it]+(3*R[it]+p*Q[it])*dt;
