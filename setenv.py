@@ -61,7 +61,7 @@ def mk_sh_script(target, source=None, env=None):
         dpath += '/'
 
     bsh = open(str(target[0]), 'w')
-    bsh.write('''#!/bin/sh
+    myrc = '''#!/bin/sh
 
 # Madagascar installation directory:
 export RSFROOT=%s
@@ -89,9 +89,15 @@ export LD_LIBRARY_PATH=$RSFROOT/lib:$LD_LIBRARY_PATH
 # home directories:
 export RSFSRC=%s
 ''' % (env['RSFROOT'], get_local_site_pkgs(root=''), env['DATAPATH'], 
-    env['RSFSRC']))
+    env['RSFSRC'])
 
+    bsh.write(myrc)
     bsh.close()
+
+    shell = os.path.basename(os.environ.get('SHELL'))
+    if 'bash' == shell or 'sh' == shell:
+        sys.stderr.write('Please add the following to .bashrc or .bash_profile:\n\n')
+        sys.stderr.write(myrc)
 
     return None
 
@@ -107,7 +113,7 @@ def mk_csh_script(target, source=None, env=None):
         dpath += '/'
 
     csh = open(str(target[0]), 'w')
-    csh.write('''#!/bin/csh
+    myrc = '''#!/bin/csh
 
 # Madagascar installation directory:
 setenv RSFROOT %s
@@ -136,9 +142,14 @@ setenv LD_LIBRARY_PATH $RSFROOT/lib:$LD_LIBRARY_PATH
 # RSFSRC/user, as is the case in a central install with users working from their
 # home directories:
 setenv RSFSRC %s
-''' % (env['RSFROOT'], get_local_site_pkgs(root=''), dpath, env['RSFSRC']))
-
+''' % (env['RSFROOT'], get_local_site_pkgs(root=''), dpath, env['RSFSRC'])
+    csh.write(myrc)
     csh.close()
+
+    shell = os.path.basename(os.environ.get('SHELL'))
+    if 'tcsh' == shell or 'csh' == shell:
+        sys.stderr.write('Please add the following to .cshrc:\n\n')
+        sys.stderr.write(myrc)
 
     return None
 
