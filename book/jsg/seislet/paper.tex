@@ -830,9 +830,9 @@ of Economic Geology, The University of Texas at Austin.
 define the mathematical basis of plane-wave destruction filters via
 the local plane differential equation \cite[]{pvi}
 \begin{equation}
+  {\frac{\partial P}{\partial x}} +
+  {\sigma\,\frac{\partial P}{\partial t}} = 0\;,
   \label{eqn:pde}
-  \frac{\partial P}{\partial x} +
-  \sigma\,\frac{\partial P}{\partial t} = 0\;,
 \end{equation}
 where $P(t,x)$ is the wave field, and $\sigma$ is the local slope, which may
 also depend on $t$ and $x$. In the case of a constant slope,
@@ -848,9 +848,9 @@ nothing more than a mathematical description of a plane wave.}
 transform equation~\ref{eqn:pde} to the frequency domain, where it
 takes the form of the ordinary differential equation
 \begin{equation}
-  \label{eqn:ode}
-  \frac{d \hat{P}}{d x} +
+  {\frac{d \hat{P}}{d x}} +
   i \omega\,\sigma\, \hat{P} = 0
+  \label{eqn:ode}
 \end{equation}
 and has the general solution
 \begin{equation}
