@@ -56,9 +56,9 @@ fi
 # if numpy is installed in userspace, then its site-packages subdirectory
 # has to be in PYTHONPATH in order for "import numpy" to work
 if test -n "${PYTHONPATH}"; then
-    PYTHONPATH=`python setenv.py`:${PYTHONPATH}
+    PYTHONPATH=`python framework/setenv.py`:${PYTHONPATH}
 else
-    PYTHONPATH=`python setenv.py`
+    PYTHONPATH=`python framework/setenv.py`
 fi
 export PYTHONPATH
 
