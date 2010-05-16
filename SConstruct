@@ -13,7 +13,7 @@ if pythonpath:
     os.environ['PYTHONPATH'] = ':'.join([pythonpath,framework])
 else:
     os.environ['PYTHONPATH'] = framework
-sys.path.append(framework)
+sys.path.append([framework,os.path.join(os.getcwd(),'framework')])
 
 import bldutil, configure, setenv
 
