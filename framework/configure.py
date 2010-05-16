@@ -1511,7 +1511,7 @@ def configure(env,my_opts=None):
                 opts = Options(config)
             else:
                 opts = Variables(config)
-                break
+            break
     if opts:
         options(opts)
         if my_opts:

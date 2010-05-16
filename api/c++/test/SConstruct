@@ -6,9 +6,9 @@ proj.Prepend(LIBS=['rsf++'])
 proj.Program('clip.cc')
 proj.Flow('test.attr','clip.exe',
           '''
-                  spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | 
-                  ./$SOURCE clip=0.5 | attr
-                  ''',stdin=0)
+          spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | 
+          ./$SOURCE clip=0.5 | attr
+          ''',stdin=0)
 
 proj.Program(['matmult_test.cc',
               'matmult.cc',
