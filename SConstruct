@@ -126,7 +126,7 @@ for dir in map(lambda x: os.path.join('user',x), user):
 ##########################################################################
 # PLOT BUILD
 ##########################################################################
-pdirs = ('lib','main','plplot','test')
+pdirs = ('lib','main','test')
 
 for dir in map(lambda x: os.path.join('plot',x), pdirs):
     build = os.path.join('build',dir)
