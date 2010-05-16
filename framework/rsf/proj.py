@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types, copy, re, string, urllib, ftplib
-import rsf.conf, rsf.path, rsf.bld, rsf.flow, rsf.setenv
+import rsf.conf, rsf.path, rsf.flow
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -213,15 +213,15 @@ class Project(Environment):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
         root = os.environ.get('RSFROOT',os.environ['HOME'])
-        pkgdir = rsf.setenv.get_pkgdir(root)
-
-        opts = rsf.conf.options(os.path.join(pkgdir,'config.py'))
-        opts.Add('TIMER','Whether to time execution')
-        opts.Add('CHECKPAR','Whether to check parameters')
-        opts.Add('ENVIRON','Additional environment settings')
-        opts.Add('CLUSTER','Nodes available on a cluster')
-        opts.Add('MPIRUN','mpirun command')
-        opts.Update(self)
+        opts = {
+            'TIMER':'Whether to time execution',
+            'CHECKPAR':'Whether to check parameters',
+            'ENVIRON':'Additional environment settings',
+            'CLUSTER':'Nodes available on a cluster',
+            'MPIRUN':'mpirun command'
+            }
+        rsf.conf.configure(self,opts)
+        
         cwd = os.getcwd()
         self.cwd = cwd
 
@@ -538,15 +538,6 @@ def Program(*arg,**kw):
     return apply(project.Program,arg,kw)
 def Get(name):
     return project['ENV'].get(name)
-def Program90(prog):
-    sources = [prog]
-    rsf.bld.depends90(project,sources,prog)
-    return project.Program(prog,
-                           map(lambda x: x + '.f90',sources),
-                           F90PATH=[incdir],
-                           LIBS=['rsff90','rsf','m'],
-                           LINK=project.get('F90'),
-                           LINKFLAGS=project.get('F90FLAGS'))
 
 if __name__ == "__main__":
      import pydoc

@@ -51,9 +51,11 @@ if root:
 
     if xinc and xlib:
         docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
-        env.Depends(docs,'#/framework/py_pkg/doc.py')
+        env.Depends(docs,'#/framework/rsf/doc.py')
     else:
         docs = []
 
     doc = env.RSF_Docmerge(main,docs)
+
+    env.Install('../../framework/rsf',doc)
     env.Install(pkgdir,doc)

@@ -69,12 +69,12 @@ def subdirs():
 
 def getprogs(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
-    dirs = env.get('dirs')
     out.write('import sys, os\n\n')
     out.write('import rsf.doc\n\n')
-    for mod in dirs:
-        out.write('import sf%s\n' % mod)
-    out.write('\nimport vpplot\n\n')
+    for mod in map(str,source):
+        py = os.path.splitext(os.path.basename(mod))[0]
+        out.write('import rsf.%s\n' % py)
+    out.write('\nimport rsf.vpplot\n\n')
     out.write('''
 try:
     import rsf.use

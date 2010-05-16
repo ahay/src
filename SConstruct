@@ -1,10 +1,21 @@
 EnsureSConsVersion(0, 96)
 
-import bldutil, configure, imp, os, setenv
+import os, sys
 
 env = Environment()
 
 root = os.environ.get('RSFROOT',os.getcwd())
+
+pythonpath = os.environ.get('PYTHONPATH')
+framework = os.path.join(os.getcwd(),'build/framework')
+
+if pythonpath:
+    os.environ['PYTHONPATH'] = ':'.join([pythonpath,framework])
+else:
+    os.environ['PYTHONPATH'] = framework
+sys.path.append(framework)
+
+import bldutil, configure, setenv
 
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
@@ -30,28 +41,20 @@ if not os.path.isfile('config.py'):
 
 Help(opts.GenerateHelpText(env,cmp))
 opts.Save('config.py',env)
-config = env.Command('config.py','configure.py','')
+config = env.Command('config.py','framework/configure.py','')
 env.Precious(config)
 
-Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
+Clean(config,['#/config.log','#/.sconf_temp','#/framework/configure.pyc'])
+env.Alias('config',config)
 
 # ----------- Environment variable setup scripts -----------
 
-# Variables below needed by setenv.mk(c)sh_script functions
-# Could not be passed as arguments because functions called in a SCons Command 
-# have to have a specific interface
-env['RSFSRC'] = os.getcwd()
-env['ENV_SCRIPT_BASENM'] = 'env'
-env['DATAPATH'] = '/var/tmp/' # default. Should be given as arg to ./configure
-
-escript = os.path.join(env['RSFSRC'],env['ENV_SCRIPT_BASENM'])
-sh_script  = escript + '.sh'  # Also needed further below by Install
-csh_script = escript + '.csh' # same as above
-
-sh_script_cmd  = env.Command(sh_script , '', setenv.mk_sh_script )
-csh_script_cmd = env.Command(csh_script, '', setenv.mk_csh_script)
-
-env.Alias('config',[config, sh_script_cmd, csh_script_cmd])
+for sh in ('sh','csh'):
+    shrc  = env.Command('env.'+sh,  '', setenv.shell_script,
+                        varlist=('shell','DATAPATH'),
+                        shell=sh)
+    env.Alias('config',shrc)
+    env.Install(etcdir,shrc)
 
 ##########################################################################
 # CUSTOM BUILDERS
@@ -74,12 +77,11 @@ user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 
 frame_exports = 'env bindir libdir pkgdir docdir spcdir mandir system user'
 
-for dir in map(lambda x: os.path.join('framework',x),
-               Split('py_pkg doc ptools')):
+for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
 
-    SConscript(dirs=build,name='SConstruct',exports=frame_exports)
+    SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
     
 ##########################################################################
@@ -126,7 +128,7 @@ for dir in map(lambda x: os.path.join('user',x), user):
 ##########################################################################
 # PLOT BUILD
 ##########################################################################
-pdirs = ('lib','main','test')
+pdirs = ('lib','main','test','plplot')
 
 for dir in map(lambda x: os.path.join('plot',x), pdirs):
     build = os.path.join('build',dir)
@@ -181,16 +183,12 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 ##########################################################################
 
 rsfuser = os.path.join(pkgdir,'user')
-env.Install(rsfuser,os.path.join('framework', 'py_pkg', '__init__.py'))
+env.Install(rsfuser,os.path.join('framework','rsf','__init__.py'))
 
-env.Install(pkgdir,['config.py', 'setenv.py', 'setenv.pyc']) 
-env.Install(etcdir, [sh_script, csh_script])
+env.Install(pkgdir,'config.py') 
 
-env.InstallAs(os.path.join(pkgdir,'conf.py'),'configure.py') 	 
-env.InstallAs(os.path.join(pkgdir,'conf.pyc'),'configure.pyc')
-
-env.InstallAs(os.path.join(pkgdir,'bld.py'),  'bldutil.py') 	 
-env.InstallAs(os.path.join(pkgdir,'bld.pyc'), 'bldutil.pyc')
+env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
+env.InstallAs('#/build/framework/rsf/bld.py','framework/bldutil.py') 
 
 env.Alias('install',
     [incdir, bindir, pkgdir, libdir, rsfuser, docdir, spcdir, mandir, etcdir])

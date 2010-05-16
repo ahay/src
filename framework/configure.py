@@ -26,7 +26,8 @@ import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = map(int,string.split(SCons.__version__,'.')[:3])
-if version[0] == 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
+if version[0] == 1 or version[1] >= 97 or \
+        (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:  # old style
     import SCons.Script.SConscript
@@ -137,7 +138,7 @@ def identify_platform(context):
         del architecture
 
         name = uname()[2].split('.')[-2]
-        if plat['OS'] in ('linux', 'posix'):
+        if plat['OS'] in ('linux', 'posix', 'linux2'):            
             if dist()[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
@@ -146,7 +147,7 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
                 plat['version'] = dist()[1]
-            elif name[-7:] == 'generic':
+            elif dist()[0].lower() == 'ubuntu' or name[-7:] == 'generic':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
             elif dist()[0] == 'SuSE':
@@ -565,7 +566,7 @@ def tiff(context):
     LIBS.pop()
 
 pkg['libgd'] = {'suse':'gd-devel',
-                'ubuntu':'libgd2-noxpm-dev'}
+                'ubuntu':'libgd2-xpm-dev'}
 
 def gd(context):
     context.Message("checking for GD (PNG) ... ")
@@ -722,7 +723,8 @@ def ffmpeg(context):
     LIBS.pop()
 
 
-pkg['cairo'] = {'suse':'cairo-devel'}
+pkg['cairo'] = {'suse':'cairo-devel',
+                'ubuntu':'libcairo2-dev'}
 
 def cairo(context):
     context.Message("checking for cairo (PNG) ... ")
@@ -882,7 +884,8 @@ def opengl(context):
     context.env['LINKFLAGS'] = LINKFLAGS
     context.env['CPPPATH'] = CPPPATH
 
-pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel'}
+pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
+               'ubuntu':'libblas-dev'}
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -1497,6 +1500,24 @@ def intel(context):
         license = os.environ.get(key)
         if license:
             context.env.Append(ENV={key:license})
+
+def configure(env,my_opts=None):
+    'get options from config file'
+    opts = None
+    for path in sys.path:
+        config = os.path.join(path,'rsf','config.py')
+        if os.path.isfile(config):
+            if version[0] < 1 or version[1] < 2:
+                opts = Options(config)
+            else:
+                opts = Variables(config)
+                break
+    if opts:
+        options(opts)
+        if my_opts:
+            for opt in my_opts.keys():
+                opts.Add(opt,my_opts[opt])
+        opts.Update(env)
 
 def options(file):
     global version

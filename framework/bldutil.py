@@ -379,7 +379,7 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
     if docs_f90 != None:
         docs += docs_f90
 
-    env.Depends(docs,'#/framework/py_pkg/doc.py')	
+    env.Depends(docs,'#/framework/rsf/doc.py')	
 
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user

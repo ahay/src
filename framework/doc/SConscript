@@ -15,7 +15,7 @@ man = os.path.join(mn1dir,'index.man')
 
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 
-sfdoc = '../py_pkg/sfdoc'
+sfdoc = '../rsf/sfdoc'
 python = WhereIs('python')
 env.Command(htm,sfdoc,'%s $SOURCE -w %s -r %s' % (python,docdir,repos))
 env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))

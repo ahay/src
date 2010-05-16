@@ -82,8 +82,8 @@ for file in ('axis','stdplot'):
 if root:
     main = 'sflibplot.py'
 
-    docs = map(lambda prog: env.Doc(prog),('stdplot.c',))
-    env.Depends(docs,'#/framework/py_pkg/doc.py')
-
+    docs = map(env.Doc,['stdplot.c'])
     doc = env.RSF_Docmerge(main,docs)
+
+    env.Install('../../framework/rsf',doc)
     env.Install(pkgdir,doc)

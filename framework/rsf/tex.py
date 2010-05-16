@@ -16,26 +16,12 @@
 
 import os, re, glob, string, types, pwd, shutil
 import cStringIO, token, tokenize, cgi, sys, keyword
-import SCons
 
-# Someone should eventually figure out the dependencies and specify Depends()
-# in SConstruct, so that rsf.tex functions are only called after rsf has been
-# installed
-try:
-    import rsf.conf as rsfconf
-    import rsf.doc as rsfdoc
-    import rsf.prog
-    import rsf.path as rsfpath
-    import rsf.latex2wiki as latex2wiki
-    import rsf.setenv as rsfenv
-except: # First installation
-    import conf as rsfconf
-    import doc as rsfdoc
-    import prog
-    import path as rsfpath
-    import latex2wiki
-    import imp
-    rsfenv = imp.load_source('setenv','../../setenv.py')
+import rsf.conf, rsf.path, rsf.latex2wiki
+import rsf.doc
+import rsf.prog
+
+import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = map(int,string.split(SCons.__version__,'.')[:3])
@@ -95,7 +81,6 @@ bindir = os.path.join(root,'bin') # not needed in module, is it imported elsewhe
 libdir = os.path.join(root,'lib') # not needed in module, is it imported elsewhere?
 incdir = os.path.join(root,'include') # not needed in module, is it imported elsewhere?
 figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
-pkgdir = rsfenv.get_pkgdir(root)
 
 #############################################################################
 # REGULAR EXPRESSIONS
@@ -386,12 +371,12 @@ def latex2mediawiki(target=None,source=None,env=None):
     bblfile = re.sub('\.[^\.]+$','.bbl',texfile)
     try:
         bbl = open(bblfile,"r")
-        latex2wiki.parse_bbl(bbl)
+        rsf.latex2wiki.parse_bbl(bbl)
         bbl.close()
     except:
         pass
     wiki = open(str(target[0]),"w")
-    latex2wiki.convert(tex,wiki)
+    rsf.latex2wiki.convert(tex,wiki)
     wiki.close()
     tex.close()
     return 0
@@ -488,7 +473,7 @@ _pos = 0
 
 
 def _proglink(name):
-    link = '<a href="/RSF/%s.html">%s</a>' % (rsfdoc.progs[name].name, name)
+    link = '<a href="/RSF/%s.html">%s</a>' % (rsf.doc.progs[name].name, name)
     return link
 
 dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
@@ -620,7 +605,7 @@ def colorize(target=None,source=None,env=None):
 
          if uses:
              out.write('</div><p><div class="progs">')
-             out.write(rsfdoc.multicolumn(uses,_proglink))
+             out.write(rsf.doc.multicolumn(uses,_proglink))
 
          if data:
              while 'PRIVATE' in data:
@@ -628,7 +613,7 @@ def colorize(target=None,source=None,env=None):
              while 'LOCAL' in data:
                  data.remove('LOCAL')
              out.write('</div><p><div class="dsets">')
-             out.write(rsfdoc.multicolumn(data,_datalink))
+             out.write(rsf.doc.multicolumn(data,_datalink))
  
      out.write('''
      </div>
@@ -814,12 +799,7 @@ class TeXPaper(Environment):
     def __init__(self,**kw):
         kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
-        if version[0] < 1 or version[1] < 2:
-            opts = Options(os.path.join(pkgdir,'config.py'))
-        else:
-            opts = Variables(os.path.join(pkgdir,'config.py'))
-        rsfconf.options(opts)
-        opts.Update(self)
+        rsf.conf.configure(self)
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),
@@ -840,24 +820,22 @@ class TeXPaper(Environment):
             if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
                 self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
 
-        self.tree = rsfpath.dirtree()
+        self.tree = rsf.path.dirtree()
 
-	self.doc = os.environ.get(
-            'RSFDOC',
-            os.path.join(os.environ.get('RSFROOT'),'doc'))
+	self.doc = os.environ.get('RSFDOC',os.path.join(root,'doc'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
-        rsfpath.mkdir(self.doc)
+        rsf.path.mkdir(self.doc)
 
-        datapath = rsfpath.datapath()
+        datapath = rsf.path.datapath()
         self.path = os.path.dirname(datapath)
         if datapath[:2] != './':
             for level in self.tree[1:]:
                 self.path = os.path.join(self.path,level)
-        rsfpath.mkdir(self.path)
+        rsf.path.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
-        rsfpath.sconsign(self)
+        rsf.path.sconsign(self)
 
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
@@ -884,7 +862,7 @@ class TeXPaper(Environment):
         self.data = []
         self.Dir()
     def Install2(self,dir,fil):
-        dir2 = rsfpath.mkdir(dir)
+        dir2 = rsf.path.mkdir(dir)
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories

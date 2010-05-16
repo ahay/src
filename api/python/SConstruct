@@ -2,11 +2,6 @@ import sys, os, string, re
 sys.path.append('../..')
 import bldutil
 
-# Since now rsf is the main module, the API is now rsf.api and 
-# installed in py_pkg location
-# Backwards compatibility can be maintained with: import rsf.api as rsf
-# Shared object files still go into RSFROOT/lib.
-
 modules = Split('m8r vplot')
 
 try: # distribution version

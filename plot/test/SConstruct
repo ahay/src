@@ -52,6 +52,8 @@ if root:
 	docalias = {'vpreflexpt':'vpreflector',
 		    'vpreflkine':'vpreflector'}
 	doc = env.RSF_Docmerge(main,docs,alias=docalias)
+
+	env.Install('../../framework/rsf',doc)
 	env.Install(pkgdir,doc)
 
 #####################################################################

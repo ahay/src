@@ -53,7 +53,7 @@ if root:
 
     docs = map(lambda prog: env.Doc(prog,'M' + prog),
                Split(other)+['wavedoc'])    
-    env.Depends(docs,'#/framework/py_pkg/doc.py')
+    env.Depends(docs,'#/framework/rsf/doc.py')
 
     alias = {}
     for wave in Split(waves):

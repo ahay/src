@@ -1,0 +1,40 @@
+import os, sys
+import rsf.doc, bldutil
+
+################################################################################
+
+Import('env bindir pkgdir system user')
+
+env.Install(pkgdir,'__init__.py')
+
+dirs = Split('plot libplot plplot pens sumain suplot') + system + user
+
+for usr in user:
+    py = 'sf'+usr+'.py'
+    env.Install(os.path.join('.',py),
+                os.path.join('../../user',usr,py))
+#    bldutil.py_install(py, env, pkgdir)
+
+env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
+            action=Action(rsf.doc.getprogs))
+env.Depends('prog.py','vpplot.py')
+env.Command('use.py',['prog.py','conf.py'],
+            action=Action(rsf.doc.use,varlist=['book','scons']),
+            book='book',scons=sys.argv[0])
+
+for src in Split('path doc flow proj prog tex book suproj conf bld use'):
+    bldutil.py_install(src, env, pkgdir)
+
+for src in Split('latex2wiki sftour'):
+    bldutil.py_install(src, env, pkgdir)
+    env.Command(src,src+'.py','cp $SOURCE $TARGET')
+    env.Install(bindir,src)
+
+env.Install(bindir,'sfdoc')
+
+##########################################################################
+# Self-documentation
+
+Doc = Builder (action = Action(rsf.doc.selfdoc,varlist=['rsfprefix','lang']),
+               src_suffix='.c',suffix='.py')
+env.Append(BUILDERS = {'Doc' : Doc})
