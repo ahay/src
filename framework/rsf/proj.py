@@ -42,7 +42,6 @@ sfsuffix = '.rsf'
 vpsuffix = '.vpl'
 
 dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
-# ftp://egl.beg.utexas.edu
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')

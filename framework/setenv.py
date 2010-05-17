@@ -104,7 +104,7 @@ def shell_script(target, source=None, env=None):
     if shell == 'csh':
         for par in keys:
             if par == 'PATH':
-                myrc += '\n# %s\nset path = ($RSFROOT/bin $path)' % \
+                myrc += '\n# %s\nset path = ($RSFROOT/bin $path)\n' % \
                     shenv[par][1]
             else:
                 myrc += '\n# %s\nsetenv %s %s\n' % \
