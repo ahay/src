@@ -799,7 +799,7 @@ class TeXPaper(Environment):
     def __init__(self,**kw):
         kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
-        rsf.conf.configure(self)
+        rsf.conf.set_options(self)
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),

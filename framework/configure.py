@@ -1501,12 +1501,12 @@ def intel(context):
         if license:
             context.env.Append(ENV={key:license})
 
-def configure(env,my_opts=None):
+def set_options(env,my_opts=None):
     'get options from config file'
-    for path in sys.path:
-        config = os.path.join(path,'rsf','config.py')
-        if os.path.isfile(config):
-            break
+    etcdir = os.path.join(os.environ.get('RSFROOT'), 'etc', 'madagascar')
+    config = os.path.join(etcdir,'config.py')
+    if not os.path.isfile(config):
+        return
     opts = options(config)
     if my_opts:
         for opt in my_opts.keys():

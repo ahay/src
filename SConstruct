@@ -17,6 +17,8 @@ sys.path = [framework,'framework'] + sys.path
 
 import bldutil, configure, setenv
 
+env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
+
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
@@ -51,6 +53,7 @@ Clean(config,['#/config.log','#/.sconf_temp',
               '#/framework/rsf/doc.pyc',
               '#/framework/rsf/path.pyc'])
 env.Alias('config',config)
+env.Install(etcdir,'config.py') 
 
 # ----------- Environment variable setup scripts -----------
 
@@ -189,14 +192,6 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 # INSTALLATION
 ##########################################################################
 
-rsfuser = os.path.join(pkgdir,'user')
-env.Install(rsfuser,os.path.join('framework','rsf','__init__.py'))
+env.Alias('install',[incdir, bindir, pkgdir, 
+                     libdir, docdir, spcdir, mandir, etcdir])
 
-env.Install(pkgdir,'config.py') 
-
-env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
-env.InstallAs('#/build/framework/rsf/bld.py','framework/bldutil.py') 
-
-env.Alias('install',
-    [incdir, bindir, pkgdir, libdir, rsfuser, docdir, spcdir, mandir, etcdir])
-env.Clean('install', rsfuser)

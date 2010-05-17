@@ -220,7 +220,7 @@ class Project(Environment):
             'CLUSTER':'Nodes available on a cluster',
             'MPIRUN':'mpirun command'
             }
-        rsf.conf.configure(self,opts)
+        rsf.conf.set_options(self,opts)
         
         cwd = os.getcwd()
         self.cwd = cwd

@@ -2,6 +2,7 @@ import rsf.proj
 
 proj = rsf.proj.Project()
 proj.Prepend(LIBS=['rsf++'])
+proj.Replace(CCFLAGS='')
 
 proj.Program('clip.cc')
 proj.Flow('test.attr','clip.exe',
