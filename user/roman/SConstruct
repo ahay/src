@@ -1,9 +1,10 @@
 import os, sys, re, string, glob
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fitcrs fitcrspicks fitnonhcrspicks readsample vscancrs rkawefd2d wavegeom rtmgeom cigangle opsmigrk
+fitcrs fitcrspicks fitnonhcrspicks readsample vscancrs rkawefd2d
+wavegeom rtmgeom cigangle opsmigrk
 '''
 
 try:  # distributed version

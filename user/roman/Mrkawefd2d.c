@@ -42,7 +42,7 @@
 #define DZ(a,ix,iz,s) (C2*(a[ix  ][iz+2] - a[ix  ][iz-2]) +  \
                        C1*(a[ix  ][iz+1] - a[ix  ][iz-1])  )*s
 
-inline float f_ix_iz(float ** uo, const int ixkx, const int izkz)
+static float f_ix_iz(float ** uo, const int ixkx, const int izkz)
 {
     return
 	0.125f *(4.f*uo[ixkx][izkz]+uo[ixkx+1][izkz]+uo[ixkx][izkz+1]+uo[ixkx-1][izkz]+uo[ixkx][izkz-1]);

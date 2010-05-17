@@ -1,5 +1,5 @@
 import os, sys, string, re
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 #############################################################################

@@ -179,7 +179,7 @@ Author:		Berend Scheffers , TNO Delft, 06/11/92
 
 	xa = x+width/8;
 	ya = y+height+labelch;
-	sprintf(str,units);
+	sprintf(str,"%s",units);
 	lstr = (int) strlen(str);
 	XDrawString(dpy,win,gca,xa,ya,str,lstr);
 

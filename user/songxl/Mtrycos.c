@@ -24,8 +24,8 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx, nkx, nkz,  ix, ikx, ikz, nz, iz;
-    float dx, dkx, kx, dz, dkz, kz;
+    int nx, nkx, nkz,  ikx, nz, iz;
+    float dx, dkx, dz, dkz;
     float **data;
     sf_file out, in;
      

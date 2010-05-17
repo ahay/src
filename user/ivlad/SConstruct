@@ -7,7 +7,7 @@ try:
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
-    sys.path.append(srcroot)
+    sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
     
 # C mains

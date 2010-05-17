@@ -1,5 +1,5 @@
 import os, sys, re, string, glob, types
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 progs = '''

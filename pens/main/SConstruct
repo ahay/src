@@ -1,5 +1,5 @@
 import os, sys, string, types
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 src = 'do  init_  main_ proc_'

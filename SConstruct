@@ -44,7 +44,7 @@ opts.Save('config.py',env)
 config = env.Command('config.py','framework/configure.py','')
 env.Precious(config)
 
-Clean(config,['#/config.log','#/.sconf_temp','#/framework/configure.pyc'])
+Clean(config,['#/config.log','#/.sconf_temp','#/framework/bldutil.pyc'])
 env.Alias('config',config)
 
 # ----------- Environment variable setup scripts -----------
@@ -154,12 +154,14 @@ for dir in map(lambda x: os.path.join('pens',x), pdirs):
     BuildDir(build,dir)
     if dir == 'pens/main':
         pens_exports = 'env root pkgdir bindir'
+        sconscript = 'SConstruct'
     elif dir == 'pens/scripts':
         pens_exports = 'env bindir pkgdir'
+        sconscript = 'SConscript'
     else:
         pens_exports = 'env root incdir libdir bindir'
-    SConscript(dirs=build,name='SConstruct',
-               exports=pens_exports)
+        sconscript = 'SConstruct'
+    SConscript(dirs=build,name=sconscript,exports=pens_exports)
     Default(build)
 
 ##########################################################################

@@ -1,6 +1,6 @@
 import os, sys, re, string, glob
 srcroot = os.environ.get('RSFSRC', '../..')
-sys.path.append(srcroot)
+sys.path.append(os.path.join(srcroot,'framework'))
 import bldutil
 
 # C mains

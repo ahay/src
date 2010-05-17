@@ -1,12 +1,14 @@
 import os, sys, re, string, glob
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-wave1 wave4 wave124 sbd waveab integral rfilter wave2dss wave2domp wavefft waveffte wavefftb
+wave1 wave4 wave124 sbd waveab integral rfilter wave2dss 
+wave2domp wavefft waveffte wavefftb
 wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1  ffdv0b1
                                  fdb1 fd2bs 
-                                 pspif2 pspifs2 pspifcos2 pspifscos2 pspifcos2b pspifcos2bs 
+                                 pspif2 pspifs2 
+                                 pspifcos2 pspifscos2 pspifcos2b pspifcos2bs 
                                  ffdcos2 ffdcos2b ffdcos2bc ffdcos2bs ffd2b
                                  ffdan2b ffdan4b ffdantti4b ffdanttic
                                  ffdantti4b_smsr ffd2b_smsr

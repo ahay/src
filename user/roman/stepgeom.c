@@ -34,6 +34,7 @@ copyright holder.
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef IWAVE_USE_MPI
 #include <mpi.h>

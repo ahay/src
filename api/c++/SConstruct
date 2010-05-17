@@ -1,5 +1,5 @@
 import sys, os
-sys.path.append('../..')
+sys.path.append('../../framework')
 import bldutil
 
 sources = Split('rsf cub vai')
@@ -20,7 +20,7 @@ if 'c++' in env.get('API',[]):
     ccfiles = map(lambda x: x+'.cc',sources)
     hhfiles = map(lambda x: x+'.hh',sources)
 
-    lib = env.StaticLibrary('rsf++',ccfiles)
+    lib = env.StaticLibrary('rsf++',ccfiles,CCFLAGS='')
     env.Install('../../lib',lib)
     env.Install('../../include',hhfiles)
 

@@ -1,8 +1,8 @@
 # This SConstruct builds and places the JAVA API Jar in the LIB FOLDER
 # that is then installed to RSFROOT
 
-import os,sys,string,re,shutil
-sys.path.append('../..')
+import os,sys
+sys.path.append('../../framework')
 import bldutil
 
 try:
@@ -11,7 +11,6 @@ try:
 except:
     env = bldutil.Debug()
     root = None
-    SConscript('../../plot/lib/SConstruct')
 
 cp = None
 try:
