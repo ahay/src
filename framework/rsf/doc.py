@@ -98,9 +98,14 @@ def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     out.write('import rsf.doc\n\n')
     for dotproj in map(str,source):
-        glo = {}
-        loc = {}
-        execfile(dotproj,glo,loc)
+
+        try:
+            glo = {}
+            loc = {}
+            execfile(dotproj,glo,loc)
+        except:
+            sys.stderr.write('problem with %s',dotproj)
+            continue
         
         dirname = os.path.dirname(dotproj)
         dirname,project = os.path.split(dirname)
