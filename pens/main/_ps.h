@@ -11,17 +11,4 @@
  * is reached, the current path is ended and a new one is begun.
  */
 #define PATHLENGTH		1400  
-extern int tex;
-extern int file_created;
-extern int ncopies_document;
-extern char scratch_file[];
-extern int hold;
-extern int ps_dash_pattern_set;
-extern int ps_dash_pattern_exists;
-extern int ps_last_fat;
-extern float psscale;
-extern int ps_color;
-extern float ps_xlength, ps_ylength;
-extern int ps_set_papersize;
-extern float ps_ypapersize;
-extern char psprintertype[];
+

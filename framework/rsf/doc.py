@@ -15,12 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc, re, sys, os, glob, signal
-
-# Madagascar modules:
-try:
-    import rsf.path as rsfpath
-except: # path module was not installed yet
-    import path as rsfpath
+import rsf.path as rsfpath
 
 try:
     import datetime

@@ -1,9 +1,6 @@
 /*
  * All machine dependencies should go in here!
  */
-#ifndef PEN_SPOOL
-#define PEN_SPOOL  "/tmp"
-#endif
 
 /*
  * The path in the next line usually will end with a slash ('/')!

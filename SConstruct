@@ -13,7 +13,7 @@ if pythonpath:
     os.environ['PYTHONPATH'] = ':'.join([pythonpath,framework])
 else:
     os.environ['PYTHONPATH'] = framework
-sys.path.extend([framework,os.path.join(os.getcwd(),'framework')])
+sys.path = [framework,'framework'] + sys.path
 
 import bldutil, configure, setenv
 
@@ -44,7 +44,12 @@ opts.Save('config.py',env)
 config = env.Command('config.py','framework/configure.py','')
 env.Precious(config)
 
-Clean(config,['#/config.log','#/.sconf_temp','#/framework/bldutil.pyc'])
+Clean(config,['#/config.log','#/.sconf_temp',
+              '#/framework/bldutil.pyc',
+              '#/framework/configure.pyc',
+              '#/framework/setenv.pyc',
+              '#/framework/rsf/doc.pyc',
+              '#/framework/rsf/path.pyc'])
 env.Alias('config',config)
 
 # ----------- Environment variable setup scripts -----------

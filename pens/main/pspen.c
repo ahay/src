@@ -746,7 +746,7 @@ static int      ps_curcolor_no = 7;
 static int      new_ps_curcolor_no;
 static int      ps_curcolor_set = NO;
 
-int             ps_done_clipping_gsave = NO;
+static int      ps_done_clipping_gsave = NO;
 
 void psattributes (int command, int value, int v1, int v2, int v3)
 /*< attributes >*/
@@ -869,6 +869,7 @@ int             xmin, ymin, xmax, ymax;
     }
 }
 
+int             ps_last_fat = -1;
 
 void ps_fixup_after_grestore (void)
 /*< ? >*/
@@ -1016,6 +1017,13 @@ int             ii;
     ps_dash_pattern_set = YES;
 }
 
+static float           ps_xlength, ps_ylength;
+static int             ps_set_papersize = NO;
+static char            psprintertype[80] = "default";
+static int             file_created = NO;
+static char            *scratch_file;
+static int             tex = NO;
+
 void psclose (int status)
 /*< Routine to finish up >*/
 {
@@ -1024,7 +1032,7 @@ void psclose (int status)
     char            *printer0;
     char           *stringptr;
     int             ecode;
-    
+
     endpath ();
 
     switch (status)
@@ -1157,9 +1165,9 @@ void psclose (int status)
 #define TEXT_PAD	18
 
 float           psscale;
-
-extern int      ps_done_clipping_gsave;
-
+static float    ps_ypapersize;
+static int      ncopies_document = 1;
+static int      hold;
 
 void pserase (int command)
 /*< erase >*/
@@ -1275,27 +1283,16 @@ static int      page_count = 1;
 #endif
 
 
-int             file_created = NO;
-int             tex = NO;
-int             ncopies_document = 1;
-
 char            ps_paper[80];
 
 char            mapfile[100] = "default";
-char            scratch_file[100];
-int             hold;
-
 int             default_ps_font = DEFAULT_HARDCOPY_FONT;
 float           psscale;
 
 extern int      red[], green[], blue[];
 
-float           ps_xlength, ps_ylength;
 float           ps_xmin, ps_xmax, ps_ymin, ps_ymax;
 float           ps_xborder, ps_yborder;
-int             ps_set_papersize = NO;
-float           ps_ypapersize;
-char            psprintertype[80] = "default";
 
 void opendev (int argc, char* argv[])
 /*< open >*/
@@ -1683,37 +1680,8 @@ void opendev (int argc, char* argv[])
 
     if (creatafile)
     {
-char           *spooldirnm;
-
 	file_created = YES;
-
-	if ((spooldirnm = getenv ("VPLOTSPOOLDIR")) != NULL)
-	{
-	    sprintf (scratch_file, "%s%s", spooldirnm, "/PSPEN_XXXXXX");
-	}
-	else
-	{
-	    sprintf (scratch_file, "%s%s", PEN_SPOOL, "/PSPEN_XXXXXX");
-	}
-
-	mkstemp (scratch_file);
-	if ((pltout = fopen (scratch_file, "w")) == NULL)
-	{
-	    if (spooldirnm != NULL)
-	    {
-		ERR (COMMENT, name,
-		     "Check permissions on directory \"$VPLOTSPOOLDIR\" = \"%s\".",
-		     spooldirnm);
-	    }
-	    else
-	    {
-		ERR (COMMENT, name,
-		   "Perhaps you need to do \"setenv VPLOTSPOOLDIR /tmp\"?");
-	    }
-
-	    ERR (FATAL, name, "Could not open scratch file \"%s\"!",
-		 scratch_file);
-	}
+	pltout = sf_tempfile(&scratch_file,"w");
     }
 
     if (!sf_getbool("tex",&yesget)) yesget=false;
@@ -2263,8 +2231,6 @@ static char     last_size = 0, last_font;
 
     fprintf (pltout, "grestore\n");
 }
-
-int             ps_last_fat = -1;
 
 void psvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 /*< vector >*/

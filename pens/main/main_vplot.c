@@ -120,6 +120,7 @@
 
 #include <stdlib.h>
 
+/* should be defined in stdlib */
 extern int mkstemp (char *template);
 
 #include	<stdio.h>
@@ -154,6 +155,8 @@ extern int mkstemp (char *template);
 #include "init_vplot.h"
 #include "proc_vplot.h"
 #include "main_vplot.h"
+
+static FILE* tempcopy(FILE* infile,char* filename );
 
 extern struct termio tty_clean_state;
 
@@ -330,37 +333,15 @@ void removtemp(void)
     tspoolnm = (char*)NULL;
 }
 
-FILE* tempcopy(FILE* infile,char* filename )
-/*< temp copy >*/
+static FILE* tempcopy(FILE* infile,char* filename )
+/* temp copy */
 {
     FILE *temp;
     int len,total;
     char xfer_buf[ XFER_SIZE];
-    char* spooldirnm;
 
-
-    /* make up a temporary file name 
-     * I know there are beter routines to make up the name 
-     * but this one is more portable.
-     * PEN_SPOOL is a directory we can put temporary files in
-     * it is defined in params.h. It can be overridden by the
-     * environment variable VPLOTSPOOLDIR.
-     */
-    if( (spooldirnm = getenv("VPLOTSPOOLDIR")) != NULL ){
-	tspoolnm = (char *) malloc( strlen( spooldirnm ) +13 );
-        strcpy( tspoolnm, spooldirnm );
-    }else{
-        tspoolnm = (char *) malloc( strlen( PEN_SPOOL ) + 13 );
-        strcpy( tspoolnm, PEN_SPOOL );
-    }
-    tspoolnm = strcat( tspoolnm, "/vplotXXXXXX" );
-    mkstemp( tspoolnm );
-
-    if ( (temp = fopen(tspoolnm, "w")) == NULL) {
-	ERR (WARN, name, "unable to create temporary file");
-	return NULL;
-    }
-
+    temp = sf_tempfile(&tspoolnm,"w+");
+ 
     /* now copy everything from the input stream to our temporary file */
     total=0;
     while( (len=fread( xfer_buf, sizeof(char), XFER_SIZE, infile ) ) != 0 ){
