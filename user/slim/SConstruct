@@ -18,6 +18,8 @@ except: # local version
     src = glob.glob('[a-z]*.c')
     SConscript('../../api/c/SConstruct')
 
+
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=['rsf'])

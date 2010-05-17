@@ -1463,27 +1463,9 @@ def python(context):
     try:
         import numpy
         context.Result(context_success)
-        context.env['PYMODULES'] = ['numpy']
     except:
         context.Result(context_failure)
         need_pkg('numpy')
-
-    context.Message("checking for scipy ... ")
-    try:
-        import scipy
-        context.Result(context_success)
-        context.env.Append(PYMODULES='scipy')
-    except:
-        context.Result(context_failure)
-        need_pkg('scipy', fatal=False)
-
-    context.Message("checking for pyct ... ")
-    try:
-        import pyct
-        context.Result(context_success)
-        context.env.Append(PYMODULES='pyct')
-    except:
-        context.Result(context_failure)
 
 def java(context):
     context.Message("Checking for Mines JTK in Classpath ...")
@@ -1596,6 +1578,5 @@ def options(file):
     opts.Add('MATLAB','Matlab interpreter')
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
-    opts.Add('PYMODULES','List of Python modules available')
 
     return opts
