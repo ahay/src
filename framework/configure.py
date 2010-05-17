@@ -1503,17 +1503,12 @@ def intel(context):
 
 def configure(env,my_opts=None):
     'get options from config file'
-    opts = None
     for path in sys.path:
         config = os.path.join(path,'rsf','config.py')
         if os.path.isfile(config):
-            if version[0] < 1 or version[1] < 2:
-                opts = Options(config)
-            else:
-                opts = Variables(config)
             break
-    if opts:
-        options(opts)
+    if config:
+        opts = options(config)
         if my_opts:
             for opt in my_opts.keys():
                 opts.Add(opt,my_opts[opt])

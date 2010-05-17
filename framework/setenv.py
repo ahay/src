@@ -67,11 +67,12 @@ def shell_script(target, source=None, env=None):
 
     pythonpath = os.environ.get('PYTHONPATH')
     mypath = get_local_site_pkgs(env['RSFROOT'])
+    envpath = mypath.replace(rsfroot,'$RSFROOT',1)
 
     if pythonpath and not mypath in pythonpath.split(':'):
-        pythonpath = ':'.join([mypath,pythonpath])
+        pythonpath = ':'.join([envpath,pythonpath])
     else:
-        pythonpath = mypath
+        pythonpath = envpath
 
     shrc = open(str(target[0]), 'w')
     shrc.write('#!/bin/%s\n' % shell)
