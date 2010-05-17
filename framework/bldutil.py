@@ -1,9 +1,5 @@
 import glob, os, re, string, py_compile
-
-try:
-    import configure
-except:
-    import rsf.conf as configure
+import configure
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons
