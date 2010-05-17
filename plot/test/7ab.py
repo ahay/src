@@ -16,7 +16,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import math, sys
 import numpy
-import rsf, vplot
+import m8r, vplot
 
 def main(argv=sys.argv):
 
@@ -31,7 +31,7 @@ def main(argv=sys.argv):
     d1=0.02
     d2=0.12
     
-    par = rsf.Par(argv)    
+    par = m8r.Par(argv)    
 
     top = par.float('top',5.0)
     c1 = par.float('c1',0.5)
@@ -63,7 +63,7 @@ def main(argv=sys.argv):
 
     cs = par.string('c')
     if cs:
-	c = rsf.Output('c')
+	c = m8r.Output('c')
 	c.setformat('native_float')
 	c.put('n1',nt)
 	c.put('n2',nx)
@@ -105,7 +105,7 @@ def main(argv=sys.argv):
 
     ds = par.string('d')
     if ds:
-	d = rsf.Output('d')
+	d = m8r.Output('d')
 	d.setformat('native_float')
 	d.put('n1',nz)
 	d.put('n2',nx)

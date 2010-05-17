@@ -1530,6 +1530,7 @@ def options(file):
         opts=Variables(file)
 
     opts.Add('ENV','SCons environment')
+    opts.Add('RSFROOT','Top Madagascar installation directory')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries')

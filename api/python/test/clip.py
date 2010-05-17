@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import numpy
-import m8r as rsf
+import m8r
 
-par = rsf.Par()
-input  = rsf.Input()
-output = rsf.Output()
+par = m8r.Par()
+input  = m8r.Input()
+output = m8r.Output()
 assert 'float' == input.type
 
 n1 = input.int("n1")

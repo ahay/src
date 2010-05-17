@@ -32,12 +32,12 @@ If no pflt is specified, output will have two columns: line length, nr of occure
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from rsfuser.ivlad import unix_error, unix_success
+from rsf.user.ivlad import unix_error, unix_success
 
 try:
-    import rsf
+    import rsf.api as rsf
 except: # Madagascar's Python API not installed
-    import rsfbak as rsf
+    import rsf.apibak as rsf
 
 import os, sys, glob
 

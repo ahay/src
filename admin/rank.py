@@ -3,8 +3,8 @@
 Establish comparative ranking of different programs and projects
 '''
 
-from rsfdoc import progs
-import rsfprog
+from rsf.doc import progs
+import rsf.prog
 
 import networkx as nx
 

@@ -74,14 +74,6 @@ itype = os.environ.get('IMAGE_TYPE','png')
 
 rerun = re.compile(r'\bRerun')
 
-# RSFROOT should be actually read from somewhere, so as to allow installation 
-# when RSFROOT is not specified, and is actually something like /usr/
-root = os.environ.get('RSFROOT',os.environ['HOME'])
-bindir = os.path.join(root,'bin') # not needed in module, is it imported elsewhere?
-libdir = os.path.join(root,'lib') # not needed in module, is it imported elsewhere?
-incdir = os.path.join(root,'include') # not needed in module, is it imported elsewhere?
-figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
-
 #############################################################################
 # REGULAR EXPRESSIONS
 #############################################################################
@@ -796,18 +788,21 @@ class TeXPaper(Environment):
             if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
                 self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
 
-        self.tree = rsf.path.dirtree()
+        tree = rsf.path.dirtree()
 
-	self.doc = os.environ.get('RSFDOC',os.path.join(root,'doc'))
-        for level in self.tree:
+        root = self.get('RSFROOT')
+	self.docdir = os.environ.get('RSFDOC',os.path.join(root,'doc'))
+        self.figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
+        
+        for level in tree:
             if level:
-                self.doc = os.path.join(self.doc,level)
-        rsf.path.mkdir(self.doc)
+                self.docdir = os.path.join(self.docdir,level)
+        rsf.path.mkdir(self.docdir)
 
         datapath = rsf.path.datapath()
         self.path = os.path.dirname(datapath)
         if datapath[:2] != './':
-            for level in self.tree[1:]:
+            for level in tree[1:]:
                 self.path = os.path.join(self.path,level)
         rsf.path.mkdir(self.path)
         self.path = os.path.join(self.path,os.path.basename(datapath))
@@ -851,8 +846,8 @@ class TeXPaper(Environment):
         self.Command('dummy.tex',self.figs,Action(dummy))
 
         if self.scons:
-            self.Install(self.doc,self.scons)
-        self.Alias('figinstall',self.doc)        
+            self.Install(self.docdir,self.scons)
+        self.Alias('figinstall',self.docdir)        
         # reproducible figures
         erfigs = []
         eps = {}
@@ -860,7 +855,7 @@ class TeXPaper(Environment):
 
         # check figure repository
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
-                        figdir+'/\\1',os.path.abspath(topdir))
+                        self.figdir+'/\\1',os.path.abspath(topdir))
         for suffix in (vpsuffix,pssuffix):
             for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,suffix)):
                 eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
@@ -870,7 +865,7 @@ class TeXPaper(Environment):
         # follow symbolic links
         for pdir in filter(os.path.islink,glob.glob(topdir+'/[a-z]*')):
             vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
-                            figdir+'/\\1',
+                            self.figdir+'/\\1',
                             os.path.abspath(os.path.realpath(pdir)))
             for suffix in (vpsuffix,pssuffix):
                 for fig in glob.glob('%s/*%s' % (vpldir,suffix)):
@@ -880,7 +875,7 @@ class TeXPaper(Environment):
 
         for fig in eps.keys():
             ps = eps[fig]
-            resdir2 = os.path.join(self.doc,os.path.dirname(ps))
+            resdir2 = os.path.join(self.docdir,os.path.dirname(ps))
             self.Build(ps,fig)
             if epstopdf:
                 pdf = re.sub(pssuffix+'$','.pdf',ps)
@@ -906,7 +901,7 @@ class TeXPaper(Environment):
                 if mathematica and epstopdf:
                     self.Math(pdf,mth)
                 crfigs.append(pdf)
-            mathdir = os.path.join(self.doc,'Math')
+            mathdir = os.path.join(self.docdir,'Math')
             self.Install2(mathdir,mths)
             self.Alias('figinstall',mathdir)
         # matlab figures
@@ -918,7 +913,7 @@ class TeXPaper(Environment):
                 if matlab and epstopdf:
                     self.Matlab(pdf,mtl)
                 crfigs.append(pdf)
-            matlabdir = os.path.join(self.doc,'Matlab')
+            matlabdir = os.path.join(self.docdir,'Matlab')
             self.Install2(matlabdir,mtls)
             self.Alias('figinstall',matlabdir)
         # pylab figures
@@ -930,7 +925,7 @@ class TeXPaper(Environment):
                 if haspylab and epstopdf:
                     self.Pylab(pdf,pyl)
                 crfigs.append(pdf)
-            pylabdir = os.path.join(self.doc,'Pylab')
+            pylabdir = os.path.join(self.docdir,'Pylab')
             self.Install2(pylabdir,pyls)
             self.Alias('figinstall',pylabdir)
         # xfig figures:
@@ -942,7 +937,7 @@ class TeXPaper(Environment):
                 if fig2dev:
                     self.XFig(pdf,fig)
                 crfigs.append(pdf)
-            resdir2 = os.path.join(self.doc,'XFig')
+            resdir2 = os.path.join(self.docdir,'XFig')
             self.Install2(resdir2,figs)
             self.Alias('figinstall',resdir2)
         # non-reproducible figures
@@ -956,7 +951,7 @@ class TeXPaper(Environment):
                     png = re.sub(pssuffix+'$','.'+itype,eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
-                    resdir2 = os.path.join(self.doc,os.path.dirname(png))
+                    resdir2 = os.path.join(self.docdir,os.path.dirname(png))
                     self.Install2(resdir2,[png,pdf])
                     self.Alias('figinstall',resdir2)
         self.figs.extend(nrfigs)
@@ -972,7 +967,7 @@ class TeXPaper(Environment):
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
-        pdfinstall = self.Install(self.doc,paper+'.pdf')
+        pdfinstall = self.Install(self.docdir,paper+'.pdf')
         self.Alias(paper+'.install',pdfinstall)
         if pdfread:
             self.Alias(paper+'.read',self.Read(paper))
@@ -993,7 +988,7 @@ class TeXPaper(Environment):
             self.Depends(html,css)
             self.Depends(html,icons)
             self.Alias(paper+'.html',html)
-            docdir = os.path.join(self.doc,hdir)
+            docdir = os.path.join(self.docdir,hdir)
             dochtml = os.path.join(docdir,'index.html')
             self.Command(dochtml,html,
                          'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
