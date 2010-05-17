@@ -118,10 +118,23 @@ static void predefine (float w /* log-stretch frequency */)
 	
 	b = a[ih];
 
-	b[0] = b0[0] - 0.5*h*(I*(s-2.)/w+(2.*h+I*(s-1.)*w)/den); 
-	b[1] = b0[1] + h*(I*s/w+(2.*h+I*s*w)/den); 
-	b[2] = b0[2] - 0.5*h*(I*(s+2.)/w+(2.*h+I*(s+1.)*w)/den); 
-
+#ifdef SF_HAS_COMPLEX_H
+	b[0] -= 0.5*h*(sf_cmplx(0,(s-2.)/w)+sf_cmplx(2.*h,(s-1.)*w)/den); 
+	b[1] += h*(sf_cmplx(0.,s/w)+sf_cmplx(2.*h,s*w)/den); 
+	b[2] -= 0.5*h*(sf_cmplx(0.,(s+2.)/w)+sf_cmplx(2.*h,(s+1.)*w)/den); 
+#else
+	b[0] = sf_cadd(b[0],sf_crmul(sf_cadd(sf_cmplx(0,(s-2.)/w),
+					     sf_crmul(sf_cmplx(2.*h,(s-1.)*w),
+						      1.0/den)),
+				     -0.5*h)); 
+	b[1] = sf_cadd(b[1],sf_crmul(sf_cadd(sf_cmplx(0.,s/w),
+					     sf_crmul(sf_cmplx(2.*h,s*w),
+						      1.0/den)),h)); 
+	b[2] = sf_cadd(b[2],sf_crmul(sf_cadd(sf_cmplx(0.,(s+2.)/w),
+					     sf_crmul(sf_cmplx(2.*h,(s+1.)*w),
+						      1.0/den)),
+				     -0.5*h)); 
+#endif
 	filt2matrix(b,c[ih],cc[ih]);
     }
 }

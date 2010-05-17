@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
     nmo = fint1_init(nw,nt,mute);
 
     for (ix=0; ix < nx; ix++) {
-	sf_warning("cmp %d of %d",ix+1,nx);
+	sf_warning("cmp %d of %d;",ix+1,nx);
 
 	for (it=0; it < nt*nv*ns; it++) {
 	    stack[0][0][it] = 0.;
@@ -308,6 +308,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (stack[0][0],nt*nv*ns,scan);
 	}
     } /* x */
+    sf_warning(".");
 
     exit(0);
 }

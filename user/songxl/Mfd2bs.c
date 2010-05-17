@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     aa[1][1] =  16.0/(12.0*dz*dz); 
     aa[1][2] = - 1.0/(12.0*dz*dz); 
 
-    if(nb) wb =  sf_floatalloc(nb);
+    wb =  nb? sf_floatalloc(nb): NULL;
     abc_cal(0,nb,c,wb);
 
 

@@ -1,5 +1,5 @@
 import os, sys
-import rsf.doc, bldutil
+import doc, bldutil
 
 ################################################################################
 
@@ -17,10 +17,10 @@ for usr in user:
 #    bldutil.py_install(py, env, pkgdir)
 
 env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
-            action=Action(rsf.doc.getprogs))
+            action=Action(doc.getprogs))
 env.Depends('prog.py',['vpplot.py','doc.py'])
 env.Command('use.py',['prog.py','conf.py'],
-            action=Action(rsf.doc.use,varlist=['book','scons']),
+            action=Action(doc.use,varlist=['book','scons']),
             book='book',scons=sys.argv[0])
 
 for src in Split('path doc flow proj prog tex book suproj conf use'):
@@ -36,6 +36,6 @@ env.Install(bindir,'sfdoc')
 ##########################################################################
 # Self-documentation
 
-Doc = Builder (action = Action(rsf.doc.selfdoc,varlist=['rsfprefix','lang']),
+Doc = Builder (action = Action(doc.selfdoc,varlist=['rsfprefix','lang']),
                src_suffix='.c',suffix='.py')
 env.Append(BUILDERS = {'Doc' : Doc})

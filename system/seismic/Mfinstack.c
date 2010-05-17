@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     }
 
     for (iw=0; iw < nw; iw++) {
-	sf_warning("frequency %d of %d",iw+1,nw);
+	sf_warning("frequency %d of %d;",iw+1,nw);
 
 	w = 2.*SF_PI*(w0 + iw*dw); 
 	w2 = w*w;
@@ -177,6 +177,7 @@ int main(int argc, char* argv[])
 	}
 	if (stack) sf_complexwrite (out,nx,stk);
     }
+    sf_warning(".");
 
     exit(0);
 }

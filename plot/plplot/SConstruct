@@ -25,12 +25,17 @@ if plplot:
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 
-    dlib = env.LoadableModule('plvpl','plvpl.c',
-                              LIBS=['drsf','drsfplot',plplot],
-                              LDMODULESUFFIX='.so',
-                              LDMODULEPREFIX='',
-                              FRAMEWORKSFLAGS='-flat_namespace '
-                              '-undefined suppress')
+    if env['PLATFORM'] == 'cygwin':
+        dlib = env.LoadableModule('plvpl','plvpl.c',
+                              LIBS=['libdrsf','libdrsfplot',plplot],
+                              LDMODULEPREFIX='')
+    else:
+        dlib = env.LoadableModule('plvpl','plvpl.c',
+                                  LIBS=['drsf','drsfplot',plplot],
+                                  LDMODULESUFFIX='.so',
+                                  LDMODULEPREFIX='',
+                                  FRAMEWORKSFLAGS='-flat_namespace '
+                                  '-undefined suppress')
 
     if root:
         install = env.Install(libdir,[dlib,'plvpl.rc'])
