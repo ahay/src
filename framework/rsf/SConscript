@@ -18,7 +18,7 @@ for usr in user:
 
 env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
             action=Action(rsf.doc.getprogs))
-env.Depends('prog.py','vpplot.py')
+env.Depends('prog.py',['vpplot.py','doc.py'])
 env.Command('use.py',['prog.py','conf.py'],
             action=Action(rsf.doc.use,varlist=['book','scons']),
             book='book',scons=sys.argv[0])
