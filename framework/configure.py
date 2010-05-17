@@ -147,11 +147,11 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
                 plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'ubuntu' 
+            elif dist()[0].lower() == 'ubuntu':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
                 plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'debian' 
+            elif dist()[0].lower() == 'debian':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'debian'
                 plat['version'] = dist()[1]   
