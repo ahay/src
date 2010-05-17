@@ -74,6 +74,13 @@ def shell_script(target, source=None, env=None):
     else:
         pythonpath = envpath
 
+    ldlibpath = os.environ.get('LD_LIBRARY_PATH')
+    mypath = os.path.join(rsfroot,'lib')
+    if ldlibpath and not mypath in ldlibpath.split(':'):
+        ldlibpath = ':'.join(['$RSFROOT/lib',ldlibpath])
+    else:
+        ldlibpath = '$RSFROOT/lib'
+
     shrc = open(str(target[0]), 'w')
     shrc.write('#!/bin/%s\n' % shell)
 
@@ -82,7 +89,7 @@ def shell_script(target, source=None, env=None):
         'PYTHONPATH':[pythonpath,'Making sure Python finds the rsf package'],
         'DATAPATH':[datapath,
                     'Default location for binary data files part of RSF datasets'],
-        'LD_LIBRARY_PATH':['$RSFROOT/lib:$LD_LIBRARY_PATH',
+        'LD_LIBRARY_PATH':[ldlibpath,
                            'Making sure Madagascar shared object files are found at runtime'],
         'MANPATH':['`manpath`:$RSFROOT/share/man',
                    'Making sure the "man" program finds Madagascar manual pages'],

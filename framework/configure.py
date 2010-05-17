@@ -1507,12 +1507,11 @@ def configure(env,my_opts=None):
         config = os.path.join(path,'rsf','config.py')
         if os.path.isfile(config):
             break
-    if config:
-        opts = options(config)
-        if my_opts:
-            for opt in my_opts.keys():
-                opts.Add(opt,my_opts[opt])
-        opts.Update(env)
+    opts = options(config)
+    if my_opts:
+        for opt in my_opts.keys():
+            opts.Add(opt,my_opts[opt])
+    opts.Update(env)
 
 def options(file):
     global version
