@@ -147,12 +147,20 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
                 plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'ubuntu' or name[-7:] == 'generic':
+            elif dist()[0].lower() == 'ubuntu' 
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
+                plat['version'] = dist()[1]
+            elif dist()[0].lower() == 'debian' 
+                plat['OS'] = 'linux'
+                plat['distro'] = 'debian'
+                plat['version'] = dist()[1]   
             elif dist()[0] == 'SuSE':
                 plat['OS'] = 'linux'
-                plat['distro'] = 'suse'
+                plat['distro'] = 'suse'        
+            elif name[-7:] == 'generic':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'ubuntu'
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
