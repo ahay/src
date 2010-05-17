@@ -44,7 +44,7 @@ formats.sort()
 
 def exists(pen):
     '''check if a given pen exists'''
-    bindir = os.path.join(os.environ.get('RSFROOT'),'bin')
+    bindir = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin')
     exe = os.path.join(bindir,pen+'pen')
     if os.path.isfile(exe):
         return exe

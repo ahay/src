@@ -28,7 +28,6 @@
 
 #include <plplot.h>
 
-static void sf_plvpl_set_driver_dir (void);
 static char* sf_plvpl_make_axis_title (char *label, char *unit);
 
 int main (int argc, char *argv[]) {
@@ -81,7 +80,7 @@ int main (int argc, char *argv[]) {
     if (!sf_histfloat (in, "d3", &d3)) d3 = 1.;
 
     /* Set up loadable driver directory */
-    sf_plvpl_set_driver_dir ();
+    setenv ("PLPLOT_DRV_DIR", RSF_LIB, 1);
 
     /* Initialize plplot */
     plinit (); 
@@ -288,19 +287,6 @@ int main (int argc, char *argv[]) {
     }
 
     exit (0);
-}
-
-static void sf_plvpl_set_driver_dir (void) {
-    char buf[PATH_MAX];
-    char *rsfroot;
-
-    rsfroot = getenv ("RSFROOT");
-
-    if (NULL == rsfroot)
-        sf_error ("Need RSFROOT environment variable to run");
-
-    snprintf (buf, PATH_MAX, "%s/lib", rsfroot);
-    setenv ("PLPLOT_DRV_DIR", buf, 1);
 }
 
 static char* sf_plvpl_make_axis_title (char *label, char *unit) {

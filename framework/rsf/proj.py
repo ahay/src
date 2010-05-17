@@ -42,14 +42,6 @@ sfsuffix = '.rsf'
 vpsuffix = '.vpl'
 
 dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
-
-# directory tree for executable files
-top = os.environ.get('RSFROOT')
-bindir = os.path.join(top,'bin')
-libdir = os.path.join(top,'lib')
-incdir = os.path.join(top,'include')
-figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
-
 libs = os.environ.get('LIBS',"")
 
 # Java classpath environmental variable setup
@@ -73,6 +65,9 @@ set_dir()
 
 def test(target=None,source=None,env=None):
     src = str(source[0])
+    figdir = env('figdir')
+    bindir = env('bindir')
+    
     locked = re.sub('.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
     print "Comparing %s and %s" % (locked,src)
@@ -166,18 +161,11 @@ def retrieve(target=None,source=None,env=None):
                     return 5
     return 0
 
-vppen = os.path.join(bindir,'vppen')
-sfpen = os.path.join(bindir,'sfpen')
-pspen = os.path.join(bindir,'pspen')
-
-View  = Builder(action = sfpen + " $SOURCES",src_suffix=vpsuffix)
-
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
-Print = Builder(action = pspen + " printer=%s $SOURCES" % printer,src_suffix=vpsuffix)
 Retrieve = Builder(action = Action(retrieve,
                                    varlist=['dir','private','top','server']))
-Test = Builder(action=Action(test))
+Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 
 #############################################################################
@@ -185,22 +173,14 @@ Echo = Builder(action=Action(echo),varlist=['out','err'])
 #############################################################################
 
 combine ={
-    'SideBySideAniso': lambda n:
-        vppen + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
-    'OverUnderAniso': lambda n:
-        vppen + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
-    'SideBySideIso': lambda n:
-        vppen + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
-    'OverUnderIso': lambda n:
-        vppen + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
-    'TwoRows': lambda n:
-        vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % ((n+1)/2),
-    'TwoColumns': lambda n:
-        vppen + " size=r vpstyle=n gridnum=2,%d $SOURCES" % ((n+1)/2),
-    'Overlay': lambda n:
-        vppen + " erase=o vpstyle=n $SOURCES",
-    'Movie': lambda n:
-        vppen + " vpstyle=n $SOURCES"
+    'SideBySideAniso': lambda v, n: v + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
+    'OverUnderAniso':  lambda v, n: v + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
+    'SideBySideIso':   lambda v, n: v + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
+    'OverUnderIso':    lambda v, n: v + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
+    'TwoRows':         lambda v, n: v + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % ((n+1)/2),
+    'TwoColumns':      lambda v, n: v + " size=r vpstyle=n gridnum=2,%d $SOURCES" % ((n+1)/2),
+    'Overlay':         lambda v, n: v + " erase=o vpstyle=n $SOURCES",
+    'Movie':           lambda v, n: v + " vpstyle=n $SOURCES"
     }
 
 # Environmental variables to pass to SCons
@@ -211,7 +191,6 @@ class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         self.EnsureSConsVersion(0,96)
-        root = os.environ.get('RSFROOT',os.environ['HOME'])
         opts = {
             'TIMER':'Whether to time execution',
             'CHECKPAR':'Whether to check parameters',
@@ -220,6 +199,15 @@ class Project(Environment):
             'MPIRUN':'mpirun command'
             }
         rsf.conf.set_options(self,opts)
+
+        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        self.bindir = os.path.join(root,'bin')
+
+        self.sfpen = os.path.join(self.bindir,'sfpen')
+        self.pspen = os.path.join(self.bindir,'pspen')
+        self.vppen = os.path.join(self.bindir,'vppen')
+        
+        self.figs = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
         
         cwd = os.getcwd()
         self.cwd = cwd
@@ -231,7 +219,7 @@ class Project(Environment):
 
         self.resdir = resdir
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
-                             figdir+'/\\1',cwd)
+                             self.figs+'/\\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
         for env in keepenv:
             getenv = os.environ.get(env)
@@ -241,17 +229,18 @@ class Project(Environment):
             exe = ''
         else:
             exe = '.exe'
+
+        libdir = os.path.join(root,'lib')
+        incdir = os.path.join(root,'include')
+            
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
-                         'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
+                         'PYTHONPATH': os.environ.get('PYTHONPATH',''), 
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),
-                                                     '.Xauthority')),
-                         'RSFROOT':top},
-                    BUILDERS={'View':View,
-                              'Print':Print,
-                              'Retrieve':Retrieve,
+                                                     '.Xauthority'))},
+                    BUILDERS={'Retrieve':Retrieve,
                               'Test':Test,
                               'Echo':Echo},
                     LIBPATH=[libdir],
@@ -418,9 +407,9 @@ class Project(Environment):
         else:
             remote = ''
             
-        command = rsf.flow.Flow(sources,flow,rsfflow,
-                               self.checkpar,self.coms,prefix,self.progsuffix,
-                               remote,stdout,stdin,self.timer,self.mpirun)
+        command = rsf.flow.Flow(sources,flow,self.bindir,rsfflow,
+                                self.checkpar,self.coms,prefix,self.progsuffix,
+                                remote,stdout,stdin,self.timer,self.mpirun)
 
         # May need to do it remotely
         if remote:
@@ -455,12 +444,12 @@ class Project(Environment):
         if combine.has_key(flow):
             if not type(source) is types.ListType:
                 source = string.split(source)
-            flow = apply(combine[flow],[len(source)])
+            flow = apply(combine[flow],[self.vppen,len(source)])
             if vppen:
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % sfpen
+            flow = flow + ' | %s pixmaps=y' % self.sfpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})        
         return apply(self.Flow,(target,source,flow),kw)
@@ -473,16 +462,22 @@ class Project(Environment):
         plot = apply(self.Plot,(target2,source,flow),kw)
         target2 = target2 + suffix
         self.Default (plot),
-        self.view.append(self.View(target + '.view',plot))
-        self.prnt.append(self.Print(target + '.print',plot))
+        view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
+                            src_suffix=vpsuffix)
+        self.view.append(view)
+        prnt = self.Command(target + '.print',plot,
+                            self.pspen + " printer=%s $SOURCES" % printer,
+                            src_suffix=vpsuffix)
+        self.prnt.append(prnt)
         locked = os.path.join(self.figdir,target+suffix)
         self.InstallAs(locked,target2)
         lock2 = self.Command(target2+'@',locked,symlink)
         self.Alias(target + '.lock',lock2)
         self.lock.append(lock2)
         self.Command(target + '.flip',target2,
-                     '%s $SOURCE %s' % (sfpen,locked))
-        test = self.Test('.test_'+target,target2)
+                     '%s $SOURCE %s' % (self.sfpen,locked))
+        test = self.Test('.test_'+target,target2,
+                         figdir=self.figs,bindir=self.bindir)
         self.test.append(test)
         self.Alias(target + '.test',test)
         return plot
@@ -497,13 +492,12 @@ class Project(Environment):
             self.Echo('test',None,err='Nothing to test')
     def Info(self,target=None,source=None,env=None):
         'Store project information in a file'
-        global bindir
         infofile = str(target[0])
         info = open(infofile,'w')
         info.write('uses=' + str(self.coms) + '\n')
         info.write('data=' + str(self.data) + '\n')        
         info.close()
-        sizes = os.path.join(bindir,'sfsizes')
+        sizes = os.path.join(self.bindir,'sfsizes')
         os.system('%s files=n *%s >> %s' % (sizes,sfsuffix,infofile))
         return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):

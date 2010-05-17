@@ -18,10 +18,7 @@ import string, sys, os, re
 import rsf.doc
 import rsf.prog
 
-top = os.environ.get('RSFROOT')
-bindir = os.path.join(top,'bin')
-
-def Flow(sources,flow,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
+def Flow(sources,flow,bindir,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
          remote='', stdout=1,stdin=1,timer='',mpirun=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')

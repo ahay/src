@@ -18,7 +18,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
 
-fft = os.path.join(os.environ.get('RSFROOT'),'bin/sffft3')
+fft = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin/sffft3')
 
 def run(args):
     adj = 'n'

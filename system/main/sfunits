@@ -31,7 +31,7 @@ def usage():
 if argc < 3:
     usage()
 
-rsfroot = os.environ.get('RSFROOT')
+rsfroot = os.environ.get('RSFROOT',sys.prefix)
 if rsfroot:
     sfget = os.path.join(rsfroot,os.path.join('bin','sfget'))
 else:

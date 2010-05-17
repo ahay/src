@@ -391,6 +391,7 @@ def pstexpen(target=None,source=None,env=None):
             vplfile.close()
             epsfile.close()
         except:
+            sys.stderr.write('EPS write failed\n')
             return 1
     else:
         try:
@@ -403,6 +404,7 @@ def pstexpen(target=None,source=None,env=None):
                 options += ' serifs=n'
             vpconvert.convert(vpl,eps,'eps',None,options)
         except:
+            sys.stderr.write('vpconvert failed\n')
             return 1
     return 0
 
@@ -790,7 +792,7 @@ class TeXPaper(Environment):
 
         tree = rsf.path.dirtree()
 
-        root = self.get('RSFROOT')
+        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
 	self.docdir = os.environ.get('RSFDOC',os.path.join(root,'doc'))
         self.figdir = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
         

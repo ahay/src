@@ -19,9 +19,10 @@
 
 import os,sys,string,tempfile
 
-sfcat = os.path.join(os.environ.get('RSFROOT'),'bin/sfcat')
-sfrm  = os.path.join(os.environ.get('RSFROOT'),'bin/sfrm')
-datapath = os.environ.get('DATAPATH','/tmp').rstrip('/')
+bindir = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin')
+sfcat = os.path.join(bindir,'sfcat')
+sfrm  = os.path.join(bindir,'sfrm')
+datapath = os.environ.get('DATAPATH','/var/tmp').rstrip('/')
 
 def rcat(files,options,out):
     'Call sfcat recursively on a list of files'

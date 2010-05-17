@@ -132,7 +132,7 @@ def __placeholder(target=None,source=None,env=None):
     out.write('import sys\n\n')
     out.write('sys.stderr.write(\'\'\'\n%s is not installed.\n')
     if var:
-        out.write('Check $RSFROOT/lib/rsfconfig.py for ' + var)
+        out.write('Check $RSFROOT/etc/madagascar/config.py for ' + var)
         out.write('\nand reinstall if necessary.')
     message = env.get('message')
     if message:
@@ -384,7 +384,9 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
 
 ################################################################################
 
-def add_ext_static_lib(env, libnm, root=os.environ.get('RSFROOT')):
-    
+def add_ext_static_lib(env, libnm, root=None):
+
+    if not root:
+        root = env.get('RSFROOT',os.environ.get('RSFROOT'))
     env['LIBS'].append(File(os.path.join(root,'lib','lib'+libnm+'.a')))
     env['CPPPATH'].append(os.path.join(root,'include'))

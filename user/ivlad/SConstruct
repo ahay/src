@@ -39,7 +39,7 @@ else:
     env = bldutil.Debug() # Debugging flags for compilers
     bindir = None
     SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
-    bldroot = os.environ.get('RSFROOT')
+    bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
 
 docs_c = bldutil.build_install_c(env, progs_c, bindir, glob_build, bldroot)
 

@@ -44,12 +44,9 @@ if test ! -n "$root"; then
 fi
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
-    root=$HOME/RSF
-    if test ! -d $root; then
-	mkdir $root
-    fi
+    root=`python -c "import sys; print sys.prefix"`
     warning "I am temporarily setting RSFROOT to \"$root\"."
-    warning "Please adjust your shell settings to set it permanently!"
+    warning "You can adjust your shell settings to set it permanently."
     export RSFROOT=$root
 fi
 

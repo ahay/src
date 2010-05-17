@@ -16,7 +16,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, string, re, tempfile
 
-top = os.environ.get('RSFROOT')
+top = os.environ.get('RSFROOT',sys.prefix)
 bindir = os.path.join(top,'bin')
 vppen = os.path.join(bindir,'vppen')    
 pspen = os.path.join(bindir,'pspen')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Utilities for Python-based Madagascar programs in $RSFROOT/user/slim
+Utilities for Python-based Madagascar programs in RSFSRC/user/slim
 '''
 
 # Author: G. Hennenfent

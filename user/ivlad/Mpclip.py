@@ -39,7 +39,7 @@ def main(par):
     if pclip < 0 or pclip > 100:
         raise m8rex.ParamOutOfRange('pclip',0,100)
 
-    prog_nm_root = os.path.join(os.environ.get('RSFROOT'),'bin','sf')
+    prog_nm_root = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin','sf')
     sfquantile = prog_nm_root + 'quantile'
     sfclip     = prog_nm_root + 'clip'
 

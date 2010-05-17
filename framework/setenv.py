@@ -61,7 +61,7 @@ def shell_script(target, source=None, env=None):
 
     rsfroot = env['RSFROOT']
 
-    datapath = os.environ.get('DATAPATH','$RSFROOT/data')
+    datapath = os.environ.get('DATAPATH','/var/tmp')
     if datapath[-1] != '/':
         datapath += '/'
 

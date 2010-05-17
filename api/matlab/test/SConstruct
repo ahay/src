@@ -1,17 +1,17 @@
 from rsf.proj import *
-import os, string
+import os
 
-top = os.environ.get('RSFROOT')
+top = project.get('RSFROOT')
 libdir = os.path.join(top,'lib')
 
 path = {'exe':WhereIs('matlab')}
 for key in ('MATLAB','LD_LIBRARY_'):
     oldpath = os.environ.get(key+'PATH')
     if oldpath:
-        paths = string.split(oldpath,':')
+        paths = oldpath.split(':')
         if libdir not in paths:
-            paths.append(libpath)
-        path[key] = string.join(paths,':')
+            paths.append(libdir)
+        path[key] = ':'.join(paths)
     else:
         path[key] = libdir
 

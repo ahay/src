@@ -4,7 +4,11 @@ import os, sys, glob
 
 env = Environment()
 
-root = os.environ.get('RSFROOT',os.getcwd())
+root = os.environ.get('RSFROOT')
+
+if not root:
+    root = sys.prefix
+    print 'Setting RSFROOT to "%s" ' % root
 
 pythonpath = os.environ.get('PYTHONPATH')
 framework = os.path.join(os.getcwd(),'build/framework')

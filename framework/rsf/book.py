@@ -13,7 +13,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, string, re, glob, time, types
+import os, string, re, glob, time, types, sys
 
 import SCons
 
@@ -25,7 +25,7 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-import rsf.path, rsf.sftour, rsf.tex
+import rsf.path, rsf.sftour, rsf.tex, rsf.conf
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -379,13 +379,17 @@ def Sections(report):
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
+        rsf.conf.get_options(self)
+        
         self.Append(BUILDERS={'Tour':Tour})
+        
         cwd = os.getcwd()
         # create a hierarcical structure
         self.tree = (os.path.basename(os.path.dirname(cwd)),
                      os.path.basename(cwd))
-        self.doc = os.environ.get(
-            'RSFDOC',os.path.join(os.environ.get('RSFROOT'),'doc'))
+
+        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        self.doc = os.environ.get('RSFDOC',os.path.join(root,'doc'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)

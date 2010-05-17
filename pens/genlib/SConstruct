@@ -13,7 +13,8 @@ try: # distribution version
 except: # local version
     env = bldutil.Debug()
     root = None
-    incdir = os.path.join(os.environ.get('RSFROOT','/usr'),'include')        
+    rsfroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+    incdir = os.path.join(rsfroot,'include')        
     SConscript('../fonts/SConstruct')
     SConscript('../utilities/SConstruct')
 

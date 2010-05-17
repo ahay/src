@@ -1,7 +1,7 @@
 import os
 from rsf.tex import *
 
-root = os.environ.get('RSFROOT')
+root = default.get('RSFROOT')
 bindir = os.path.join(root,'bin')
 sfdoc  = os.path.join(bindir,'sfdoc')
 run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \

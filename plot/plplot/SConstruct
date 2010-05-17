@@ -8,6 +8,8 @@ try: # distribution version
 except: # local version
     env = bldutil.Debug()
     root = None
+    rsfroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+    libdir = os.path.join(rsfroot,'lib')  
     SConscript('../lib/SConstruct')
 
 plplot = env.get('PLPLOT')
@@ -21,7 +23,8 @@ inc = env.RSF_Include('plvpl')
 
 if plplot:
     env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
-                LIBPATH=['../../lib'])
+                LIBPATH=['../../lib'],
+                CPPDEFINES=['RSF_LIB=\'\"%s\"\'' % libdir])
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 

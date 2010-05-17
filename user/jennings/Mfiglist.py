@@ -158,11 +158,8 @@ def main(argv=sys.argv):
 
                                     # use $RSFROOT/figs if $RSFFIGS not defined
     if rsffigs == None:
-        if os.environ.get('RSFROOT') == None:
-            print "Environment variable $RSFROOT not defined."
-            return unix_error
-        else:
-            rsffigs = os.path.expandvars(os.path.join('$RSFROOT','figs'))
+        rsfroot = os.environ.get('RSFROOT',sys.prefix)
+        rsffigs = os.path.join(rsfroot,'figs')
 
                                     # get $RSFALTFIGS variable
     rsfaltfigs = os.environ.get('RSFALTFIGS')
