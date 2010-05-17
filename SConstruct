@@ -17,9 +17,9 @@ if pythonpath:
     os.environ['PYTHONPATH'] = ':'.join([pythonpath,framework])
 else:
     os.environ['PYTHONPATH'] = framework
-sys.path = [framework,'framework'] + sys.path
+sys.path = [framework,'./framework'] + sys.path
 
-import bldutil, configure, setenv
+import bldutil, configure, setenv, rsf.doc
 
 env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
 

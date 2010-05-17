@@ -1,5 +1,5 @@
 import os, sys
-import rsf.doc, bldutil
+import bldutil, rsf.doc
 
 ################################################################################
 
