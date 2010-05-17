@@ -3,7 +3,7 @@ import doc, bldutil
 
 ################################################################################
 
-Import('env bindir pkgdir system user')
+Import('env bindir pkgdir system user dotproj')
 
 env.Install(pkgdir,'__init__.py')
 env.Install(os.path.join(pkgdir,'user'),'__init__.py')
@@ -19,9 +19,10 @@ for usr in user:
 env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
             action=Action(doc.getprogs))
 env.Depends('prog.py',['vpplot.py','doc.py'])
-env.Command('use.py',['prog.py','conf.py'],
-            action=Action(doc.use,varlist=['book','scons']),
-            book='book',scons=sys.argv[0])
+
+env.Command('use.py',map(lambda x: '#/'+x,dotproj),
+            action=Action(doc.use))
+env.Depends('use.py',['prog.py','conf.py','doc.py'])
 
 for src in Split('path doc flow proj prog tex book suproj conf use'):
     bldutil.py_install(src, env, pkgdir)

@@ -1,6 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import os, sys
+import os, sys, glob
 
 env = Environment()
 
@@ -82,8 +82,9 @@ system = filter(lambda x: x[0] != '.', os.listdir('system'))
 user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 # Avoid crashing when user places some files in RSFSRC/user
 user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
+dotproj = glob.glob('book/*/*/*/.rsfproj')
 
-frame_exports = 'env bindir libdir pkgdir docdir spcdir mandir system user'
+frame_exports = 'env bindir libdir pkgdir docdir spcdir mandir system user dotproj'
 
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)

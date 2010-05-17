@@ -414,28 +414,6 @@ def pstexpen(target=None,source=None,env=None):
             return 1
     return 0
 
-def use(target=None,source=None,env=None):
-    "Collect RSF program uses"
-    info = str(source[0])
-
-    trg = str(target[0])
-    out = open(trg,'w')
-    what = os.path.basename(trg)[-4:] # uses or data
-
-    glo = {}
-    loc = {}
-    execfile(info,glo,loc)
-
-    project = os.path.dirname(info)
-    tree = env.get('tree')
-    doc = map(lambda prog:
-              'rsf.doc.progs["%s"].use("%s","%s","%s")' %
-              (prog,tree[1],tree[2],project),loc[what])
-    out.write(string.join(doc,'\n') + '\n')
-    out.close()
-    
-    return 0
-
 _KEYWORD = token.NT_OFFSET + 1
 _TEXT    = token.NT_OFFSET + 2
 
@@ -716,7 +694,6 @@ if pdfread:
 
 Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
-Uses = Builder(action = Action(use),varlist=['tree'])
 
 if epstopdf:
     PDFBuild = Builder(action = Action(eps2pdf),
@@ -812,8 +789,7 @@ class TeXPaper(Environment):
                               'Wiki':Wiki,
                               'Build':Build,
                               'Color':Color,
-                              'Figs':Figs,
-                              'Uses':Uses})
+                              'Figs':Figs})
         path = {'darwin': '/sw/bin',
                 'irix': '/usr/freeware/bin'}
         for plat in path.keys():
@@ -858,8 +834,6 @@ class TeXPaper(Environment):
             
         self.scons = []
         self.figs = []
-        self.uses = []
-        self.data = []
         self.Dir()
     def Install2(self,dir,fil):
         dir2 = rsf.path.mkdir(dir)
@@ -870,34 +844,11 @@ class TeXPaper(Environment):
             dir = os.path.dirname(info)
             scons = os.path.join(dir,'SConstruct')
 
-            uses = os.path.join(self.path,dir+'.uses')
-            self.Uses(uses,info,tree=self.tree)
-            self.uses.append(uses)
-
-            data = os.path.join(self.path,dir+'.data')
-            self.Uses(data,info,tree=self.tree)
-            self.data.append(data)
-
             html = dir+'.html'
             self.Color(html,[scons,info])
             self.scons.append(html)
 
         self.Command('dummy.tex',self.figs,Action(dummy))
-
-        uses = os.path.join(self.path,'.sf_uses')
-        if self.uses:
-            self.Command(uses,self.uses,'cat $SOURCES > $TARGET')
-        else:
-            self.Command(uses,None,'touch $TARGET')
-        self.Alias('uses',uses)
-
-        data = os.path.join(self.path,'.sf_data')
-        if self.data:
-            self.Command(data,self.data,'cat $SOURCES > $TARGET')
-        else:
-            self.Command(data,None,'touch $TARGET')
-        self.Alias('data',data)
-
 
         if self.scons:
             self.Install(self.doc,self.scons)

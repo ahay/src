@@ -94,41 +94,23 @@ def selfdoc():
     out.close()
 
 def use(target=None,source=None,env=None):
+    'Collect program uses information'
     out = open(str(target[0]),'w')
-    doc = 'import rsf.doc\n'
-    cwd = os.getcwd()
-    bookdir = env.get('book')
-    scons = env.get('scons')
-    if os.path.isdir(bookdir):
-        os.chdir(bookdir)
-        cwtop = os.getcwd()
-        for book in subdirs():
-            os.chdir(book)
-            cwbook = os.getcwd()
-            print "%s..." % book
-            for chapter in subdirs():
-                os.chdir(chapter)
-                print "...%s" % chapter
+    out.write('import rsf.doc\n\n')
+    for dotproj in map(str,source):
+        glo = {}
+        loc = {}
+        execfile(dotproj,glo,loc)
+        
+        dirname = os.path.dirname(dotproj)
+        dirname,project = os.path.split(dirname)
+        dirname,chapter = os.path.split(dirname)
+        dirname,book    = os.path.split(dirname)
 
-                syswait(scons + ' -s uses data')
-
-                datapath = rsfpath.datapath()
-                path = os.path.dirname(datapath)
-                if datapath[:2] != './':
-                    path = os.path.join(path,book,chapter)
-                uses = os.path.join(path,'.sf_uses')
-
-                if os.path.isfile(uses):
-                    sout = open(uses,'r')
-                    local_doc = sout.read()
-#                    print local_doc
-                    doc = doc + local_doc
-                    sout.close()
-
-                os.chdir(cwbook)
-            os.chdir(cwtop)
-        os.chdir(cwd)
-    out.write(doc)
+        for prog in loc['uses']:
+            out.write('rsf.doc.progs["%s"].use("%s","%s","%s")\n' % 
+                      (prog,book,chapter,project))
+        out.write('\n')
     out.close()
     return 0
 

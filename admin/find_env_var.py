@@ -21,7 +21,7 @@ Run it from RSFSRC, i.e. admin/find_env_var.py
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsfuser.ivlad as ivlad
+import rsf.user.ivlad as ivlad
 import os, sys, string
 
 if not hasattr(' ', 'partition'):

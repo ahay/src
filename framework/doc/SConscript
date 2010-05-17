@@ -1,6 +1,6 @@
 import os
 
-Import('env bindir libdir pkgdir docdir spcdir mandir system user')
+Import('env bindir libdir pkgdir docdir spcdir mandir')
 
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
