@@ -65,8 +65,8 @@ set_dir()
 
 def test(target=None,source=None,env=None):
     src = str(source[0])
-    figdir = env('figdir')
-    bindir = env('bindir')
+    figdir = env.get('figdir')
+    bindir = env.get('bindir')
     
     locked = re.sub('.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
