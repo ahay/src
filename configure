@@ -77,8 +77,8 @@ if test "$scons" = "no"; then
     fi
     echo "Installing SCons ... $scons"
     if test "$scons" = "failed"; then
-	fatal_error "SCons installation failed."
-	fatal_error "Please check your Python installation!"
+	fatal_error "Automatic SCons installation failed."
+	fatal_error "Please install SCons manually!"
 	exit 2
     fi
 fi
