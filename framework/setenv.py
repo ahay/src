@@ -69,19 +69,17 @@ def shell_script(target, source=None, env=None):
     mypath = get_local_site_pkgs(env['RSFROOT'])
 
     if pythonpath:
-        if not mypath in pythonpath.split(':'):
-            pythonpath = ':'.join([envpath,pythonpath])
+        pythonpath = ':'.join([mypath,'$PYTHONPATH'])
     else:
-        pythonpath = envpath
+        pythonpath = mypath
     pythonpath = pythonpath.replace(rsfroot,'$RSFROOT')
 
     ldlibpath = os.environ.get('LD_LIBRARY_PATH')
     mypath = os.path.join(rsfroot,'lib')
     if ldlibpath:
-        if not mypath in ldlibpath.split(':'):
-            ldlibpath = ':'.join(['$RSFROOT/lib',ldlibpath])
+        ldlibpath = ':'.join([mypath,'$LD_LIBRARY_PATH'])
     else:
-        ldlibpath = '$RSFROOT/lib'
+        ldlibpath = mypath
     ldlibpath = ldlibpath.replace(rsfroot,'$RSFROOT')
 
     shrc = open(str(target[0]), 'w')
