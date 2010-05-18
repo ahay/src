@@ -45,6 +45,7 @@ Clean(config,['#/config.log','#/.sconf_temp',
               '#/framework/bldutil.pyc',
               '#/framework/configure.pyc',
               '#/framework/setenv.pyc',
+              '#/framework/rsf/__init__.pyc',
               '#/framework/rsf/doc.pyc',
               '#/framework/rsf/path.pyc'])
 env.Alias('config',config)
@@ -56,8 +57,7 @@ env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py')
 
 for sh in ('sh','csh'):
     shrc  = env.Command('env.'+sh,  '', setenv.shell_script,
-                        varlist=('shell','DATAPATH'),
-                        shell=sh)
+                        varlist=('shell'),shell=sh)
     env.Alias('config',shrc)
     env.Install(etcdir,shrc)
 

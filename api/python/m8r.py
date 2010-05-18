@@ -4,6 +4,7 @@ import numpy
 
 import rsf.doc
 import rsf.prog
+import rsf.path
 
 ###
 
@@ -52,25 +53,7 @@ par = Par(['python','-'])
 
 class Temp(str):
     'Temporaty file name'
-    datapath = os.environ.get('DATAPATH')
-    if not datapath:
-        try:
-            pathfile = open('.datapath','r')
-        except:
-            try:
-                pathfile = open(os.path.join(os.environ.get('HOME'),
-                                             '.datapath'),'r')
-            except:
-                pathfile = None
-        if pathfile:
-            for line in pathfile.readlines():
-                check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],
-                                 line)
-                if check:
-                    datapath = check.group(1)
-            pathfile.close()
-        if not datapath:
-            datapath = './' # the ultimate fallback
+    datapath = rsf.path.datapath()
     tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
     def __new__(cls):
         return str.__new__(cls,tempfile.mktemp(dir=Temp.tmpdatapath))

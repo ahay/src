@@ -18,11 +18,12 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os,sys,string,tempfile
+import rsf.path
 
 bindir = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin')
 sfcat = os.path.join(bindir,'sfcat')
 sfrm  = os.path.join(bindir,'sfrm')
-datapath = os.environ.get('DATAPATH','/var/tmp').rstrip('/')
+datapath = rsf.path.datapath().rstrip('/')
 
 def rcat(files,options,out):
     'Call sfcat recursively on a list of files'

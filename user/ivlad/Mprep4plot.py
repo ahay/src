@@ -22,6 +22,7 @@ along both axes until it is of the specified dimension.'''
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys
+import rsf.path
 
 try: # Give precedence to local version
     import ivlad, m8rex, sf
@@ -124,7 +125,7 @@ def main(par):
     # Put tmp files together with the binaries,
     # so that if prep4plot crashes, user is not
     # left with junk files all over his dir
-    tmp = os.path.join(os.environ['DATAPATH'],
+    tmp = os.path.join(rsf.path.datapath(),
                        os.path.split(inp)[1],
                        '.prep4plot_junk_')
 

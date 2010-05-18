@@ -24,6 +24,7 @@ SOURCE
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys, socket, datetime, time, getpass, struct
+import rsf.path
 
 try: # Give precedence to local version
     import ivlad
@@ -259,7 +260,7 @@ class RSFfile(MetaFile):
             elif not self.writing_to_stdout:
                 dat_nm = self.hdr.nm
             dat_nm = dpath_suffix + dat_nm + '@'
-            self.dpath = os.path.abspath(os.environ.get('DATAPATH'))
+            self.dpath = os.path.abspath(rsf.path.datapath())
             ivlad.chk_dir_wx(self.dpath)
             self.hdr.dat = os.path.join(self.dpath, dat_nm)
             self.dat = File(self.hdr.dat, intent='out')
