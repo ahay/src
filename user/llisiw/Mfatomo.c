@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool plane[3], **m;
+    bool plane[3], verb, **m;
     int dim, n[3], i, nm, is, ns, nrhs, iter, niter, cgiter, order, *flag, **mtemp;
     float d[3], o[3], **t, **s, *slow, *stemp, *rhs, **record;
     char key[4];
@@ -50,6 +50,9 @@ int main(int argc, char* argv[])
     /* number of conjugate gradient iterations */
     
     if (!sf_getint("order",&order)) order=2;
+    /* fast marching accuracy order */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
     /* fast marching accuracy order */
 
     /* scan for model dimensions */
@@ -92,6 +95,11 @@ int main(int argc, char* argv[])
     sf_floatread(s[0],3*ns,shot);
     sf_intread(mtemp[0],nm*ns,mask);
     sf_floatread(slow,nm,sinp);
+    /* first input is velocity */
+
+    for (i=0; i < nm; i++) {
+	slow[i] = 1/(slow[i]*slow[i]);
+    }
 
     nrhs = 0;
     for (is=0; is < ns; is++) {
@@ -124,7 +132,7 @@ int main(int argc, char* argv[])
 	/* set stencil and right-hand side */
 	fatomo_set(t,record,rhs);
 
-	sf_solver(fatomo_lop,sf_cgstep,nm,nrhs,stemp,rhs,cgiter,"verb",false,"end");
+	sf_solver(fatomo_lop,sf_cgstep,nm,nrhs,stemp,rhs,cgiter,"verb",verb,"end");
 	
 	/* update slowness */
 	for (i=0; i < nm; i++) {
