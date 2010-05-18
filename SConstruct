@@ -10,18 +10,9 @@ if not root:
     root = sys.prefix
     print 'Setting RSFROOT to "%s" ' % root
 
-pythonpath = os.environ.get('PYTHONPATH')
-framework = os.path.join(os.getcwd(),'build/framework')
-
-if pythonpath:
-    os.environ['PYTHONPATH'] = ':'.join([pythonpath,framework])
-else:
-    os.environ['PYTHONPATH'] = framework
-sys.path = [framework,'./framework'] + sys.path
+sys.path.insert(0,'./framework')
 
 import bldutil, configure, setenv, rsf.doc
-
-env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
 
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
@@ -58,6 +49,8 @@ Clean(config,['#/config.log','#/.sconf_temp',
               '#/framework/rsf/path.pyc'])
 env.Alias('config',config)
 env.Install(etcdir,'config.py') 
+
+env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py') 
 
 # ----------- Environment variable setup scripts -----------
 
