@@ -18,7 +18,8 @@ import string, sys, os, re
 import rsf.doc
 import rsf.prog
 
-def Flow(sources,flow,bindir,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsuffix='',
+def Flow(sources,flow,bindir,rsfflow=1,
+         checkpar=False,coms=[],prefix='sf',progsuffix='',
          remote='', stdout=1,stdin=1,timer='',mpirun=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')
@@ -32,8 +33,7 @@ def Flow(sources,flow,bindir,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsu
             command = pars.pop(0)
             # check if this command is in our list
             if rsfflow:
-                if command[:2]==prefix:
-                    # assuming prefix is two chars (sf)
+                if command[:len(prefix)]==prefix:
                     rsfprog = command
                 else:
                     rsfprog = prefix + command            
@@ -48,35 +48,35 @@ def Flow(sources,flow,bindir,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsu
                     sources.append(command)
                     if rsfprog not in coms:
                         coms.append(rsfprog)
+                elif rsfprog == prefix + 'mpi':
+                    command = os.path.join(bindir,rsfprog+progsuffix) 
+                    sources.append(command)
             else:
                 rsfprog = None
-                if re.match(r'[^/]+\.exe$',command): # local program
-                    command = os.path.join('.',command)
+            if re.match(r'[^/]+\.exe$',command): # local program
+                command = os.path.join('.',command)
             pars.insert(0,command)
+            # special rule for metaprograms
+            if rsfprog and rsfprog[len(prefix):] in \
+                    ('conjgrad','cconjgrad','mpi','omp'):
+                command2 = pars.pop(1)
+                # check if this command is in our list
+                if rsfflow:
+                    if command2[:len(prefix)]==prefix:
+                        rsfprog2 = command2
+                    else:
+                        rsfprog2 = prefix + command2            
+                    if rsf.doc.progs.has_key(rsfprog2):
+                        command2 = os.path.join(bindir,rsfprog2+progsuffix) 
+                        sources.append(command2)
+                        if rsfprog2 not in coms:
+                            coms.append(rsfprog2)
+                if re.match(r'[^/]+\.exe$',command): # local program
+                    command = os.path.join('.',command)                 
+                pars.insert(1,command)
             # special rule for MPI programs
             if rsfprog.startswith(prefix+'mpi') and mpirun:                
                 pars.insert(0,mpirun)
-            # special rule for solvers
-            if rsfprog == prefix+'conjgrad' or \
-                   rsfprog == prefix+'cconjgrad':
-                command = pars.pop(1)
-                # check if this command is in our list
-                if rsfflow:
-                    if command[:2]==prefix:
-                        # assuming prefix is two chars
-                        rsfprog = command
-                    else:
-                        rsfprog = prefix + command            
-                    if rsf.doc.progs.has_key(rsfprog):
-                        command = os.path.join(bindir,rsfprog+progsuffix) 
-                        sources.append(command)
-                        if rsfprog not in coms:
-                            coms.append(rsfprog)
-                else:
-                    rsfprog = None
-                    if re.match(r'[^/]+\.exe$',command): # local program
-                        command = os.path.join('.',command)                 
-                pars.insert(1,command)
             #<- assemble the command line
             substep = remote + string.join(pars,' ')
             substeps.append(substep)
@@ -85,11 +85,17 @@ def Flow(sources,flow,bindir,rsfflow=1,checkpar=False,coms=[],prefix='sf',progsu
     #<- assemble the pipeline
     command = string.join(steps," && ")
     if stdout==1:
-        command = command + " > $TARGET"
+        if rsfprog == prefix+'mpi':
+            command = command + " output=$TARGET"
+        else:
+            command = command + " > $TARGET"
     elif stdout==0:
         command = command + " >/dev/null"
     if stdin:
-        command = "< $SOURCE " + command
+        if rsfprog == prefix+'mpi':
+            command = command + " input=$SOURCE"
+        else:
+            command = "< $SOURCE " + command
     command = timer + command
         
     return command
