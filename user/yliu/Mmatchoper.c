@@ -1,4 +1,4 @@
-/* Local time-frequency transform. */
+/* Local matching-radon operator. */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
