@@ -87,7 +87,8 @@ def param(par):
 
     par['xratio']=2
     par['tratio']=2
-    
+    par['aratio']=2
+
     par['labelattr']=' '+par['labelattr']+' parallel2=n format2=%3.1f format1=%3.1f '
     
 

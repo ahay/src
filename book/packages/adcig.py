@@ -68,16 +68,16 @@ def ciggrey(custom,par):
         par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g crowd=0.6'%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+custom,par)
 
 def zgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s '%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s screenratio=%(tratio)g crowd=0.6'%par+custom,par)
+    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3      " unit2="\^o\_" '%par+custom,par)
+    return ciggrey(' label2="\F10 q\F3      " unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+custom,par)
 # ------------------------------------------------------------
 
 
@@ -170,6 +170,7 @@ def egrey(custom,par):
     label3="\F10 t\F3      " unit3=%s
     screenratio=%g screenht=%g
     point1=%g point2=%g
+    xll=2 yll=1 
     %s
     ''' % ( par['nhz'], par['nhx'], par['nht'],
             par['uz'],
@@ -190,6 +191,7 @@ def sgrey(custom,par):
     label3="\F10 t\F3      " unit3=%s
     screenratio=%g screenht=%g
     point1=%g point2=%g
+    xll=2 yll=1 
     %s
     ''' % ( par['nz']/2, par['nhx'], par['nht'],
             par['uz'],
