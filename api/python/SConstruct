@@ -60,7 +60,7 @@ if 'python' in env.get('API',[]):
             pydir = os.path.dirname(pkgdir)
 
             install = env.Install(pydir,pfiles)
-            if module == 'rsf':
+            if module == 'm8r':
                 env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
 
             if env['PLATFORM'] == 'darwin':
