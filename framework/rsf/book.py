@@ -379,7 +379,7 @@ def Sections(report):
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
-        rsf.conf.get_options(self)
+        rsf.conf.set_options(self)
         
         self.Append(BUILDERS={'Tour':Tour})
         

@@ -109,10 +109,10 @@ implementation, we reconstruct two wavefields, one forward-propagated
 from the source and one backward-propagated from the receiver
 locations. Those wavefields can be represented as four-dimensional
 objects function of position in space $\mm=\lp x,y,z\rp$ and time $t$
-\beqa 
+\bea 
 \label{eqn:US} \US &=& \US \lp \mm,t \rp \\
 \label{eqn:UR} \UR &=& \UR \lp \mm,t \rp \;,
-\eeqa
+\eea
 where $\US$ and $\UR$ denote source and receiver wavefields. For the
 remainder of this paper, we can assume that the two wavefields have
 been reconstructed with one of the numerical methods mentioned
@@ -259,10 +259,10 @@ slant-stacks at coordinates $\mm$ and $t$ in the four-dimensional
 source and receiver wavefields. Thus, we can write the total source
 and receiver wavefields ($\US$ and $\UR$) as a sum of decomposed
 wavefields ($\WS$ and $\WR$):
-\beqa
+\bea
 \label{eqn:WS} \US \lp \mm,t \rp &=& \pint{\WS \lp \mm,\pp,t \rp} \\
 \label{eqn:WR} \UR \lp \mm,t \rp &=& \pint{\WR \lp \mm,\pp,t \rp} \;.
-\eeqa 
+\eea 
 Here, the three-dimensional vector $\pp$ represents the local
 slope function of position and time. Using the wavefields decomposed
 function of local slope, $\WS$ and $\WR$, we can design a
