@@ -71,9 +71,9 @@ def Flow(sources,flow,bindir,rsfflow=1,
                         sources.append(command2)
                         if rsfprog2 not in coms:
                             coms.append(rsfprog2)
-                if re.match(r'[^/]+\.exe$',command): # local program
-                    command = os.path.join('.',command)                 
-                pars.insert(1,command)
+                if re.match(r'[^/]+\.exe$',command2): # local program
+                    command2 = os.path.join('.',command2)                 
+                pars.insert(1,command2)
             # special rule for MPI programs
             if rsfprog.startswith(prefix+'mpi') and mpirun:                
                 pars.insert(0,mpirun)
