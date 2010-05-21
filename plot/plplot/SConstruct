@@ -45,7 +45,7 @@ if plplot:
 
         if env['PLATFORM'] == 'darwin':
             for lib in ('rsf','rsfplot'):
-                env.AddPostAction(install,
+                env.AddPostAction(install[0],
                                   'install_name_tool -change '
                                   'build/%s/libd%s.dylib '
                                   '%s/libd%s.dylib %s' % \
