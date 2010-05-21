@@ -185,7 +185,7 @@ Flow('cmp4','spike4 vel4','inmo3 velocity=${SOURCES[1]}',local=1)
 Flow('cmp','cmp1 cmp2 cmp3 cmp4',
      '''
      math cmp2=${SOURCES[1]} cmp3=${SOURCES[2]} cmp4=${SOURCES[3]} output="input+cmp2+cmp3+cmp4" |
-     noise range=0.011
+     noise seed=1 range=0.011
      ''',local=1)
 
 ################################################################################################################
