@@ -233,7 +233,8 @@ class Project(Environment):
         libdir = os.path.join(root,'lib')
         incdir = os.path.join(root,'include')
             
-        self.Append(ENV={'DATAPATH':self.path,
+        self.Append(ENV={'RSFROOT':root,
+                         'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',''), 
                          'XAUTHORITY':
