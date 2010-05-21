@@ -1182,7 +1182,7 @@ void vp_frame(void)
 {
     int i;
     bool need;
-    float num, xc, yc, vs, xp[4], yp[4];
+    float num, xc, yc, vs, xp[4], yp[4], shift;
     char string[32];
 
     vp_bgroup("plot frame");
@@ -1227,10 +1227,11 @@ void vp_frame(void)
 	    vs = -0.5*labelsz;
 	}
 
+	shift = label1->y;
 	if (! axis1->parallel) 
-	    label1->y += 2*(axis1->maxstrlen-1)*vs;
+	    shift += 2*(axis1->maxstrlen-1)*vs;
 
-	vp_gtext(label1->x, label1->y, 
+	vp_gtext(label1->x, shift, 
 		 label1->xpath, label1->ypath, 
 		 label1->xup, label1->yup, label1->text);
 
@@ -1302,10 +1303,12 @@ void vp_frame(void)
 	}
 
 	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
-	if (! axis2->parallel) 
-	    label2->x += 2*(axis2->maxstrlen-1)*vs;
 
-	vp_gtext(label2->x, label2->y, 
+	shift = label2->x;
+	if (! axis2->parallel) 
+	    shift += 2*(axis2->maxstrlen-1)*vs;
+
+	vp_gtext(shift, label2->y, 
 		 label2->xpath, label2->ypath, 
 		 label2->xup, label2->yup, label2->text);
 	
