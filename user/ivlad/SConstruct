@@ -55,9 +55,3 @@ if glob_build:
     docs_py = bldutil.install_py_mains(env, progs_py, bindir)
     bldutil.install_py_modules(env, py_modules, pkgdir)
     bldutil.install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90)
-
-    # The back-up Python API
-    if 'python' not in api:
-        apibak = os.path.join(srcroot, 'api', 'python', 'apibak.py')
-        env.RSF_Pycompile(apibak+'c',apibak)
-        env.Install(pkgdir, apibak+'c')
