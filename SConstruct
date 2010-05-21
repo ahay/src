@@ -97,6 +97,8 @@ api = env.get('API',[])
 if type(api) is str:
     api = [api]
 api.insert(0,'c')
+if not 'python' in api:
+    api.append('python')
 
 Default('build/include')
 Default('build/lib')
