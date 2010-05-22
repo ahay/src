@@ -49,7 +49,8 @@ int main(int argc, char* argv[])
 	sf_floatread(trace,nbuf,in);
 
 	for (i=0; i < nbuf; i++) {
-	    if      (trace[i] >  clip) trace[i]= clip;
+	    if (!isnormal(trace[i]))   trace[i]= SF_SIG(trace[i])*clip; 
+	    else if (trace[i] >  clip) trace[i]= clip;
 	    else if (trace[i] < -clip) trace[i]=-clip;
 	}
 

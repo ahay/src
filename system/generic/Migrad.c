@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
