@@ -207,7 +207,7 @@ class Project(Environment):
         self.pspen = os.path.join(self.bindir,'pspen')
         self.vppen = os.path.join(self.bindir,'vppen')
         
-        self.figs = os.environ.get('RSFFIGS',os.path.join(root,'figs'))
+        self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','figs'))
         
         cwd = os.getcwd()
         self.cwd = cwd

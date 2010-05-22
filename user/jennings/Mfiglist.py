@@ -159,7 +159,7 @@ def main(argv=sys.argv):
                                     # use $RSFROOT/figs if $RSFFIGS not defined
     if rsffigs == None:
         rsfroot = os.environ.get('RSFROOT',sys.prefix)
-        rsffigs = os.path.join(rsfroot,'figs')
+        rsffigs = os.path.join(rsfroot,'share','figs')
 
                                     # get $RSFALTFIGS variable
     rsfaltfigs = os.environ.get('RSFALTFIGS')

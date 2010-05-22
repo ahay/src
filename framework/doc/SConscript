@@ -1,11 +1,15 @@
 import os
 
-Import('env bindir libdir pkgdir docdir spcdir mandir')
+Import('env bindir libdir pkgdir shrdir srcdir')
 
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
 
-txtdir = os.path.join(docdir,'txt')
+txtdir = os.path.join(shrdir,'txt')
+mandir = os.path.join(shrdir,'man')
+docdir = os.path.join(shrdir,'doc')
+spcdir = os.path.join(shrdir,'spec')
+
 mn1dir = os.path.join(mandir,'man1')
 
 htm = os.path.join(docdir,'index.html')
@@ -13,7 +17,7 @@ txt = os.path.join(txtdir,'INDEX.txt')
 spc = os.path.join(spcdir,'extend.spec')
 man = os.path.join(mn1dir,'index.man')
 
-repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
+repos = os.environ.get('RSF_REPOSITORY',srcdir)
 
 sfdoc = '../rsf/sfdoc'
 python = WhereIs('python')
