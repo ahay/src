@@ -327,6 +327,7 @@ def install_py_mains(env, progs_py, bindir):
     mains_py = Split(progs_py)
     for prog in mains_py:
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+	env.RSF_Pycompile('M'+prog+'.py')
 
     # Self-doc
     user = os.path.basename(os.getcwd())
