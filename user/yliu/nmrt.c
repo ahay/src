@@ -55,7 +55,7 @@ void nmrt_init (int nt1, int nx1,
     if (freq) {
 	radonoper_init (nt1,dt1,t01,nx1,dx1,ox1,x01,np1,dp1,p01,par1);
     } else {
-	slant_init (true,rho1,x01,dx1,nx1,p01,dp1,np1,t01, dt1,nt1,p11,anti1);
+	slant_init (true,rho1,x01,dx1,nx1,p01,dp1,np1,t01,dt1,nt1,p11,anti1);
     }
 }
 
@@ -65,12 +65,12 @@ void nmrt_lop (int niter         /* number of iterations */,
 	       bool verb         /* verbosity flag */) 
 /*< least squares solver >*/
 {
-    sf_solver (nmrt_oper, sf_cgstep, nt*nx, nt*nx, xx, yy, niter, 
+    sf_solver (drecov_oper, sf_cgstep, nt*nx, nt*nx, xx, yy, niter, 
 	       "x0", yy, "verb", verb, "end");
     sf_cgstep_close();
 }
 
-void nmrt_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
+void drecov_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< linear operator >*/
 {
     sf_adjnull (adj, add, nm, nd, mod, dat);
@@ -96,7 +96,31 @@ void nmrt_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
     }
 }
 
-void nmrt_close(void)
+void nmrt_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
+/*< linear operator >*/
+{
+    sf_adjnull (!adj, add, nm, nd, mod, dat);
+
+    if (adj) {
+	if (freq) {
+	    radonoper_lop (false, add, nt*np, nt*nx, mod, tmp1);
+	} else {
+	    slant_lop(false,add,nt*np,nt*nx,mod,tmp1);
+	}
+	pmatching_lop(true,false,nt*nx,nt*nx,dat,tmp1);
+    } else {
+	pmatching_lop(false,false,nt*nx,nt*nx,dat,tmp1);
+
+	if (freq) {
+	    radonoper_lop (true, add, nt*np, nt*nx, mod, tmp1);
+	} else {
+	    slant_lop(true, add, nt*np, nt*nx, mod, tmp1);
+	}
+    }
+
+}
+
+void nmrt_close (void)
 /*< free allocated storage >*/
 {
     free (tmp1);

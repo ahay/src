@@ -27,9 +27,8 @@ int main(int argc, char* argv[])
     int m[SF_MAX_DIM], rect[SF_MAX_DIM];
     int mdim, nd, shift, niter;
     int i, i4, n4;
-    float *data, *filt, anti, p1;
+    float *data, *filt, anti, p1, pclip, *w=NULL;
     char key[6];
-    sf_file in, out;
     bool verb;            
     bool par, freq, rho;  
     int nt;                   /* number of time samples */
@@ -38,6 +37,7 @@ int main(int argc, char* argv[])
     float dt,t0;              /* time increment, starting time */
     float dp,p0;              /* slope increment, starting slope */
     float x0, dx, ox;         /* reference offset, increment, origin */
+    sf_file in, out, weight=NULL;
 
     sf_init(argc,argv);
 
@@ -82,10 +82,25 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
+    if (!sf_getfloat("pclip",&pclip)) pclip=100.;
+
     mdim = sf_filedims(in,m);
     mdim = SF_MIN(mdim,2);
     data = sf_floatalloc(nt*nx);
     filt = sf_floatalloc(nt*nx*shift);
+
+    if (NULL != sf_getstring ("weight")) {
+	weight = sf_output("weight");
+	w = sf_floatalloc(nt*np);
+	sf_putint(weight,"n2",np);
+	sf_putfloat(weight,"d2",dp);
+	sf_putfloat(weight,"o2",p0);
+	sf_putstring(weight,"label2","Weight");
+	sf_putstring(weight,"unit2","");
+    } else {
+	weight = NULL;
+	w = NULL;
+    }
 
     sf_shiftdim(in, out, 2);
     sf_putint(out,"n3",shift);
@@ -110,16 +125,20 @@ int main(int argc, char* argv[])
     }
     
     matchoper_init (shift,mdim,niter,m,rect,verb,nt,nx,np,dt,
-		    t0,dx,ox,x0,dp,p0,par,freq,rho,anti,p1);
+		    t0,dx,ox,x0,dp,p0,par,freq,rho,anti,p1,pclip);
 
     for (i4 = 0; i4 < n4; i4++) { /* loop over CMPs */
 	if(verb) sf_warning("i=%d of %d",i4+1,n4);
 
 	sf_floatread(data,nt*nx,in);
 
-	matchoper_lop(filt,data);
+	matchoper_lop(filt,data,w);
 
 	sf_floatwrite(filt,nt*nx*shift,out);
+
+	if (NULL!=weight) {
+	    sf_floatwrite(w,nt*np,weight);
+	}
     }
 
     exit(0);
