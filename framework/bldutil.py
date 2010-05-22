@@ -308,8 +308,8 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
     else: # Put in a placeholder
         for prog in mains_f90:
             prog = env.RSF_Place('sf'+prog,None,package='Fortran90+API=F90')
-        if glob_build:
-            env.Install(bindir,prog)
+            if glob_build:
+                env.Install(bindir,prog)
 
     if glob_build:
         docs_f90 = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),
