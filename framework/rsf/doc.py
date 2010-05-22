@@ -298,6 +298,12 @@ class rsfpar(object):
                 rw = 'r'
             elif (desc.find('output')>=0):
                 rw = 'w'
+            elif (desc.find('Output')>=0):
+                rw = 'w'
+                if not name:
+                    name = 'out'
+            elif (desc.find('Input')>=0):
+                rw = 'r'
             unspec = {'r':'in', 'w':'out'}
             if (data == unspec[rw]):
                 data = '(no hint on content)'
