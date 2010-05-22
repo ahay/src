@@ -89,6 +89,13 @@ for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
 
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
+
+dir = os.path.join('book','Recipes')
+build = os.path.join('build',dir)
+BuildDir(build,dir)
+
+SConscript(dirs=build,name='SConscript',exports='env pkgdir')
+Default(build)
     
 ##########################################################################
 # API BUILD

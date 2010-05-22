@@ -1,18 +1,12 @@
+import bldutil
+
 Import('env bindir pkgdir')
 
 scripts = '''
 vplot2eps vplot2png vplot2gif vplot2avi vpconvert
 '''
 
-# similar function exists in bldutil, aka rsf.bld
-def py_install(source):
-    global env,pkgdir
-    py = source+'.py'
-    pyc = py+'c'
-    env.RSF_Pycompile(pyc,py)
-    env.Install(pkgdir,[py,pyc])
-
 for src in Split(scripts):
-    py_install(src)
+    bldutil.py_install(src, env, pkgdir)
     env.Command(src,src+'.py','cp $SOURCE $TARGET')
     env.Install(bindir,src)

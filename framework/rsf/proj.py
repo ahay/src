@@ -261,7 +261,7 @@ class Project(Environment):
         self.test = []
         self.coms = []
         self.data = []
-        sys.path.append('../../../packages')
+        sys.path.append('../../../Recipes')
 
         timer = self.get('TIMER')
         if timer and timer[0] != 'n' and timer[0] != '0':

@@ -1,5 +1,6 @@
 from rsf.proj import *
-import sigsbee,fdmod
+import sigsbee
+import fdmod
 
 # ------------------------------------------------------------
 par=sigsbee.paramwin() # Sigsbee2A parameters
