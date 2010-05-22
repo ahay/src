@@ -784,11 +784,13 @@ class TeXPaper(Environment):
                               'Build':Build,
                               'Color':Color,
                               'Figs':Figs})
-        path = {'darwin': '/sw/bin',
-                'irix': '/usr/freeware/bin'}
+        path = {'darwin': ['/sw/bin','/opt/local/bin'],
+                'irix': ['/usr/freeware/bin']}
         for plat in path.keys():
-            if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
-                self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
+            if sys.platform[:len(plat)] == plat:
+                for pathdir in filter(os.path.isdir,path[plat]):                
+                    self['ENV']['PATH'] = ':'.join([pathdir,
+                                                    self['ENV']['PATH']])
 
         tree = rsf.path.dirtree()
 
