@@ -17,7 +17,9 @@ import bldutil, configure, setenv, rsf.doc
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
-shrdir = os.path.join(root,'share')
+docdir = os.path.join(root,'doc')
+spcdir = os.path.join(root,'spec')
+mandir = os.path.join(root,'share','man')
 pkgdir = setenv.get_pkgdir(root)
 etcdir = os.path.join(root, 'etc', 'madagascar')
 
@@ -79,7 +81,7 @@ user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
 user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
 dotproj = glob.glob('book/*/*/*/.rsfproj')
 
-frame_exports = 'env bindir libdir pkgdir shrdir system user dotproj'
+frame_exports = 'env bindir libdir pkgdir docdir spcdir mandir system user dotproj'
 
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
@@ -197,5 +199,6 @@ for dir in map(lambda x: os.path.join('su',x), sudirs):
 # INSTALLATION
 ##########################################################################
 
-env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
+env.Alias('install',[incdir, bindir, pkgdir, 
+                     libdir, docdir, spcdir, mandir, etcdir])
 
