@@ -15,9 +15,6 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
-if root:
-    bldutil.py_install('apibak.py', env, pkgdir)
-
 if 'python' in env.get('API',[]):
     try:
         EnsureSConsVersion(1,0)
