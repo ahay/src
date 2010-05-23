@@ -18,9 +18,9 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os,sys,string,tempfile
-import rsf.path
+import rsf.path, rsf.prog
 
-bindir = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin')
+bindir = os.path.join(rsf.prog.RSFROOT,'bin')
 sfcat = os.path.join(bindir,'sfcat')
 sfrm  = os.path.join(bindir,'sfrm')
 datapath = rsf.path.datapath().rstrip('/')

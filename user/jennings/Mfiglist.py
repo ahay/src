@@ -41,6 +41,8 @@ number  is return code from sfvplotdiff indicating different files.'''
 import os, copy, sys, signal
 import rsf.prog as rsfprog
 
+RSFROOT = rsfprog.RSFROOT
+
 try:
     import rsf.api as rsf
 except: # Madagascar's Python API not installed
@@ -158,8 +160,7 @@ def main(argv=sys.argv):
 
                                     # use $RSFROOT/figs if $RSFFIGS not defined
     if rsffigs == None:
-        rsfroot = os.environ.get('RSFROOT',sys.prefix)
-        rsffigs = os.path.join(rsfroot,'share','figs')
+        rsffigs = os.path.join(RSFROOT,'share','figs')
 
                                     # get $RSFALTFIGS variable
     rsfaltfigs = os.environ.get('RSFALTFIGS')
@@ -252,7 +253,7 @@ def main(argv=sys.argv):
             extra = extra+1
 
                                     # find different files
-    binpath = os.path.expandvars(os.path.join('$RSFROOT','bin'))
+    binpath = os.path.join(RSFROOT,'bin')
     command = os.path.join(binpath,sfprefix+'vplotdiff')
     for item in filelist:
         if files[item] == '  ':

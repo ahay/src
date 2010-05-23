@@ -331,7 +331,7 @@ class Filter(object):
              'dots','graph3','thplot','wiggle')
     diagnostic = ('attr','disfil')
     def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False):
-        rsfroot = os.environ.get('RSFROOT',sys.prefix)
+        rsfroot = rsf.prog.RSFROOT
         self.plot = False
         self.stdout = True
         self.prog = None

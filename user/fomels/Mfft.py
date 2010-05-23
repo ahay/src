@@ -17,8 +17,9 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
+import rsf.prog
 
-fft = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin/sffft3')
+fft = os.path.join(rsf.prog.RSFROOT,'bin','sffft3')
 
 def run(args):
     adj = 'n'

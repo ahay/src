@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types, copy, re, string, urllib, ftplib
-import rsf.conf, rsf.path, rsf.flow
+import rsf.conf, rsf.path, rsf.flow, rsf.prog
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -200,7 +200,7 @@ class Project(Environment):
             }
         rsf.conf.set_options(self,opts)
 
-        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        root = self.get('RSFROOT',rsf.prog.RSFROOT)
         self.bindir = os.path.join(root,'bin')
 
         self.sfpen = os.path.join(self.bindir,'sfpen')

@@ -794,7 +794,7 @@ class TeXPaper(Environment):
 
         tree = rsf.path.dirtree()
 
-        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        root = self.get('RSFROOT',rsf.prog.RSFROOT)
         self.docdir = os.environ.get('RSFDOC',os.path.join(root,'share','doc'))
         self.figdir = os.environ.get('RSFFIGS',os.path.join(root,'share','figs'))
         

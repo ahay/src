@@ -25,7 +25,7 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-import rsf.path, rsf.sftour, rsf.tex, rsf.conf
+import rsf.path, rsf.sftour, rsf.tex, rsf.conf, rsf.prog
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -388,7 +388,7 @@ class RSFReport(Environment):
         self.tree = (os.path.basename(os.path.dirname(cwd)),
                      os.path.basename(cwd))
 
-        root = self.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        root = rsf.prog.RSFROOT
         self.doc = os.environ.get('RSFDOC',os.path.join(root,'share','doc'))
         for level in self.tree:
             if level:

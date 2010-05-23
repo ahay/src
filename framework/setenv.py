@@ -36,7 +36,7 @@ def get_local_site_pkgs(root=None, verb=False):
     prefix = sysconfig.PREFIX
     
     if root == None:
-        root = os.environ.get('RSFROOT',os.environ['HOME'])
+        root = os.environ.get('RSFROOT',prefix)
 
     if central_site_pkgs[:len(prefix)] == prefix:
         local_site_pkgs = central_site_pkgs.replace(prefix,root,1)

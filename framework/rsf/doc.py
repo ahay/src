@@ -75,6 +75,8 @@ try:
     import rsf.use
 except:
     pass
+
+RSFROOT="%s"
     
 def selfdoc():
     'Display man page'
@@ -90,7 +92,7 @@ def selfdoc():
         prog.document()
     else:
         sys.stderr.write('No installed man page for ' + prognm+'\\n')
-''')
+''' % env.get('RSFROOT'))
     out.close()
 
 def use(target=None,source=None,env=None):

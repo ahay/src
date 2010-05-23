@@ -20,6 +20,7 @@ import rsf.vplot2eps
 import rsf.vplot2png
 import rsf.vplot2gif
 import rsf.vplot2avi
+import rsf.prog
 
 pens = {
     'vpl': 'vp',
@@ -44,7 +45,7 @@ formats.sort()
 
 def exists(pen):
     '''check if a given pen exists'''
-    bindir = os.path.join(os.environ.get('RSFROOT',sys.prefix),'bin')
+    bindir = os.path.join(rsf.prog.RSFROOT,'bin')
     exe = os.path.join(bindir,pen+'pen')
     if os.path.isfile(exe):
         return exe

@@ -15,8 +15,9 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, string, re, tempfile
+import rsf.prog
 
-top = os.environ.get('RSFROOT',sys.prefix)
+top = rsf.prog.RSFROOT
 bindir = os.path.join(top,'bin')
 vppen = os.path.join(bindir,'vppen')    
 pspen = os.path.join(bindir,'pspen')
