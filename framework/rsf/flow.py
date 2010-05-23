@@ -75,7 +75,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
                     command2 = os.path.join('.',command2)                 
                 pars.insert(1,command2)
             # special rule for MPI programs
-            if rsfprog.startswith(prefix+'mpi') and mpirun:                
+            if rsfprog and rsfprog.startswith(prefix+'mpi') and mpirun:
                 pars.insert(0,mpirun)
             #<- assemble the command line
             substep = remote + string.join(pars,' ')

@@ -1,0 +1,9 @@
+from rsf.suproj import *
+
+Flow('plane',None,'suplane')
+Flow('specfx','plane','suspecfx')
+
+for plot in ('plane','specfx'):
+    Result(plot,'suxwigb')
+
+End()
