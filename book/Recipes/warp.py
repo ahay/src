@@ -1,6 +1,6 @@
 from rsf.proj import *
 import math, string, sys
-import version
+import rsf.recipes.version as version
 
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -43,7 +43,7 @@ def warping(niter,rect1=1,rect2=1,rect3=1):
 def pick(min2,max2,rect1=1,rect2=1,rect3=1,an=0.5):
     return '''
     window min2=%g max2=%g | 
-    pick rect1=%d rect2=%d rect3=%d an=%g |
+    pick rect1=%d rect2=%d rect3=%d an=%g vel0=1 |
     window''' % (min2,max2,rect1,rect2,rect3,an)
 
 def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
