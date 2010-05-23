@@ -276,6 +276,11 @@ pkg['libs'] = {'fedora':'glibc-headers',
 def libs(context):
     context.Message("checking for libraries ... ")
     LIBS = context.env.get('LIBS','m')
+    DYNLIB = context.env.get('DYNLIB')
+    if not DYNLIB or DYNLIB[0].lower() == 'n':
+        context.env['DYNLIB'] = ''
+    else:
+        context.env['DYNLIB'] = 'd'
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
     if plat['OS'] in ('sunos', 'hpux'):
@@ -1543,6 +1548,7 @@ def options(file):
     opts.Add('CAIROPATH','Path to cairo header files')
     opts.Add('PPMPATH','Path to netpbm header files')
     opts.Add('SFPEN','Preference for sfpen')
+    opts.Add('DYNLIB','Compiling with dynamic libraries')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')
