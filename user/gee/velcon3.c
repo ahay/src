@@ -135,7 +135,7 @@ void velcon3_apply (bool adj, float **p1, float **p2)
     }
 
     for (iv=iv1; iv != iv2; iv += ivs) { 
-	sf_warning("%d %d",iv,iv2);
+	sf_warning("%d %d;",iv,iv2);
 
 	for (i=0; i < n; i++) {
 	    rhs[i] = 0.;
@@ -163,6 +163,7 @@ void velcon3_apply (bool adj, float **p1, float **p2)
 	    }
 	}
     }
+     sf_warning(".");
 
     for (i=0; i < n; i++) {
 	for (it=0; it < nt; it++) {

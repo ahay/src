@@ -699,9 +699,9 @@ static void make_axes (void)
 
 	if (!sf_getint ("n1tic",&(axis1->ntic))) 
 	    /*( n1tic axis1 number of ticmarks )*/
-	    axis1->ntic = 0.5 + cube? 
-		inch1*(mid1-min1)/((max1-min1)*aspect*labelsz):
-		inch1/(aspect*labelsz);
+	    axis1->ntic = cube? 
+		0.5 + inch1*(mid1-min1)/((max1-min1)*aspect*labelsz):
+		0.5 + inch1/(aspect*labelsz);
 
 	modify = (bool) (!sf_getfloat ("d1num", &(axis1->dnum)) ||
 			 /*( d1num axis1 tic increment )*/
@@ -735,9 +735,9 @@ static void make_axes (void)
 
 	if (!sf_getint ("n2tic",&(axis2->ntic)))
 	    /*( n2tic axis2 number of ticmarks )*/
-	    axis2->ntic = 0.5 + cube?
-		inch2*(mid2-min2)/((max2-min2)*aspect*labelsz):
-		inch2/(aspect*labelsz);
+	    axis2->ntic = cube?
+		0.5 + inch2*(mid2-min2)/((max2-min2)*aspect*labelsz):
+		0.5 + inch2/(aspect*labelsz);
 
 	modify = (bool) (!sf_getfloat ("d2num", &(axis2->dnum)) ||
 			 /*( d2num axis2 tic increment )*/

@@ -61,7 +61,7 @@ class SUProject(rsf.proj.Project):
         else:
             # X output
             xflow  = re_plots.sub('\\1x\\2',flow)
-            kw.update({'suffix':'.x','stdout':-1})
+            kw.update({'suffix':'.x11','stdout':-1})
             apply(self.Flow,(target,source,xflow),kw)
             # Postscript output
             psflow = re_plots.sub('\\1ps\\2',flow)
@@ -75,7 +75,7 @@ class SUProject(rsf.proj.Project):
         apply(self.Plot,(target2,source,flow),kw)
         self.Default (target2+pssuffix)
         if flow != 'Merge':
-            self.Alias(target+'.view',target2+'.x')
+            self.Alias(target+'.view',target2+'.x11')
             self.views.append(target)
         self.plots.append(target)
         lock = self.InstallAs(os.path.join(self.resdir,'.'+target+pssuffix),

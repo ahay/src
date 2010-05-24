@@ -1,6 +1,6 @@
 import os, string
-import rsf
 import rsf.sftour
+import rsf.doc
 
 books = '''
 bei
