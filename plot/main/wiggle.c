@@ -31,11 +31,11 @@ static bool transp;
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i3, i2, i1, i, fatp, xmask, ymask;
-    float o1, o2, o3, d1, d2, d3, **xp=NULL, pclip, zplot, zdata, x1, x2, y1, y2;
-    float gpow, scale, x0, y0, zero, xmax, xmin;
-    float **pdata=NULL, *q=NULL, *x=NULL, *y=NULL, *px=NULL, *py=NULL, *tmp=NULL;
+    float o1, o2, o3, d1, d2, d3, **xp, pclip, zplot, zdata, x1, x2, y1, y2;
+    float gpow, scale, x0, y0, zero, xmax, xmin, bias=0.0;
+    float **pdata=NULL, *q=NULL, *x=NULL, *y=NULL, *px=NULL, *py=NULL, *tmp;
     bool poly, seemean, verb, xreverse, yreverse;
-    sf_file in=NULL, xpos=NULL;
+    sf_file in, xpos;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	if (zdata <= 0.) {
 	    vp_gainpar (in,pdata,n1,n2,1,
-			pclip,pclip,&zdata,&gpow,0.,n3,0);
+			pclip,pclip,&zdata,&gpow,false,&bias,n3,0);
 	    if (verb) sf_warning("clip=%g",zdata);
 	} else {	    
 	  sf_floatread(pdata[0],n1*n2,in);

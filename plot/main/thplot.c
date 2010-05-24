@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 	/* subtract bias from data */
 
 	vp_gainpar (NULL,fff[0],nx,ny,gainstep,
-		    pclip,100.,&clip,&gg,pbias,n3,-2);
+		    pclip,100.,&clip,&gg,false,&pbias,n3,-2);
     }
 
     if (!sf_getfloat ("dclip",&dclip)) dclip=1.;

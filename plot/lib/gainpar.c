@@ -24,6 +24,9 @@
 
 #include "gainpar.h"
 
+static float get_bias (sf_file in, float **data, int n1, int n2, int step, 
+		       int nt);
+
 static void gain (sf_file in, float **data, int n1, int n2,int step,
 		  float pclip,float phalf,
 		  float *clip, float *gpow, float bias, int nt, float* buf);
@@ -35,21 +38,41 @@ void vp_gainpar (sf_file in, float **data,
 		 float phalf    /* percentage for gpow */,
 		 float *clip    /* output clip */, 
 		 float *gpow    /* output gpow */, 
-		 float bias, 
+		 bool mean      /* set bias to mean */,
+		 float *bias, 
 		 int n3         /* number of panels */ ,
 		 int panel      /* gain type */)
 /*< Find clip and gpow parameters >*/
 {
     int nt, i3, nclip, nhalf;
-    float *buf, *clipnp, *gpownp;
+    float *buf, *clipnp, *gpownp, **data2;
+    double sum;
+    off_t pos;
 
     nt = n1 / step;
     buf = sf_floatalloc(nt*n2);
   
     if(panel >= 0) { /* gain from a particular panel */
+	if (mean) {
+	    if (NULL != in) pos = sf_tell(in);
+	    *bias = get_bias(in, data, n1, n2, step, nt);
+	    if (NULL != in) sf_seek(in, pos, SEEK_SET);
+	}
 	gain (in, data, n1, n2, step, pclip, phalf,
-	      clip, gpow, bias, nt, buf);
+	      clip, gpow, *bias, nt, buf);
     } else { /* gainpanel=each */
+	if (mean) {
+	    if (NULL != in) pos = sf_tell(in);
+	    data2 = data;
+	    sum = 0.0;
+	    for (i3=0; i3<n3; i3++) {
+		sum += get_bias(in, data2, n1, n2, step, nt);		
+		if (NULL == in) data2 += n1*n2; /* next panel */
+	    }
+	    *bias = sum/n3;
+	    if (NULL != in) sf_seek(in, pos, SEEK_SET);
+	}
+	    
 	clipnp = sf_floatalloc(n3);
 	gpownp = sf_floatalloc(n3);
 
@@ -57,7 +80,7 @@ void vp_gainpar (sf_file in, float **data,
 	    clipnp[i3] = 0.;
 	    gpownp[i3] = 0.;	    
 	    gain (in, data, n1, n2, step, pclip, phalf,
-		  clipnp+i3, gpownp+i3, bias, nt, buf);
+		  clipnp+i3, gpownp+i3, *bias, nt, buf);
 	    if (NULL == in) data += n1*n2; /* next panel */
 	}
 
@@ -71,6 +94,26 @@ void vp_gainpar (sf_file in, float **data,
     }	
 
     free (buf);
+}
+
+static float get_bias (sf_file in, float **data, int n1, int n2, int step, 
+		       int nt)
+{
+    int i2, it;
+    float bias;
+    double sum;
+
+    if (NULL != in) sf_floatread (data[0],n1*n2,in);
+
+    sum = 0.0;
+    for (i2=0; i2<n2; i2++) {
+	for (it=0; it<nt; it++) {
+	    sum += data[i2][it*step];
+	}
+    }
+    bias = sum/(n2*nt);
+
+    return bias;
 }
  
 static void gain (sf_file in, float **data, int n1, int n2, int step,

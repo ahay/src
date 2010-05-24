@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0., minmax[2];
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
-    bool eclip=false, egpow=false, barreverse;
+    bool eclip=false, egpow=false, barreverse, mean=false;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
     char *gainpanel, *color, *barfile;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
@@ -156,6 +156,8 @@ int main(int argc, char* argv[])
 
 	if (!sf_getbool("allpos",&allpos)) allpos=false;
 	/* if y, assume positive data */
+	if (!sf_getbool("mean",&mean)) mean=false;
+	/* if y, bias on the mean value */
 	if (!sf_getfloat("bias",&pbias)) pbias=0.;
 	/* value mapped to the center of the color table */
 	if (!sf_getbool("polarity",&polarity)) polarity=false;
@@ -245,8 +247,9 @@ int main(int argc, char* argv[])
 	    pos = sf_tell(in);
 	    if (panel > 0) sf_seek(in,pos+panel*n1*n2*sizeof(float),SEEK_SET);
 	    vp_gainpar (in,data,n1,n2,gainstep,
-			pclip,phalf,&clip,&gpow,pbias,n3,panel);
-	    if (verb) sf_warning("panel=%d clip=%g gpow=%g",panel,clip,gpow);
+			pclip,phalf,&clip,&gpow,mean,&pbias,n3,panel);
+	    if (verb) sf_warning("panel=%d bias=%g clip=%g gpow=%g",
+				 panel,pbias,clip,gpow);
 	    if (byte) sf_putfloat(out,"clip",clip);
 	    sf_seek(in,pos,SEEK_SET); /* rewind */
 	}
@@ -267,8 +270,8 @@ int main(int argc, char* argv[])
 		if (eclip) clip=0.;
 		if (egpow) gpow=0.;
 		vp_gainpar (in,data,n1,n2,gainstep,
-			    pclip,phalf,&clip,&gpow,pbias,n3,0);
-		if (verb) sf_warning("clip=%g gpow=%g",clip,gpow);
+			    pclip,phalf,&clip,&gpow,mean,&pbias,n3,0);
+		if (verb) sf_warning("bias=%g clip=%g gpow=%g",pbias,clip,gpow);
 	    } else {
 		sf_floatread(data[0],n1*n2,in);
 	    }
