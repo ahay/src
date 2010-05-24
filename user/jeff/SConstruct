@@ -19,7 +19,7 @@ api = env.get('API',[])
  
 env.Prepend(F90PATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsff90','rsf'])
+            LIBS=['rsff90',env.get('DYNLIB','')+'rsf'])
 
 mains = Split(progs)
 

@@ -234,7 +234,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
 
     env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
             LIBPATH=[os.path.join(bldroot,'lib')],
-            LIBS=['rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
     if glob_build:
         dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/$USER

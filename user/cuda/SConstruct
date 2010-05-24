@@ -23,7 +23,7 @@ if env['CUDA_TOOLKIT_PATH']:
                NVCCINC=['-I'+os.getcwd(),'-I'+os.getcwd()+'/../../include'],
                NVCCFLAGS=[map(lambda x: '-D'+x,env.get('CPPDEFINES',''))],
                LIBPATH=['../../lib'],
-               LIBS=['rsf'])
+               LIBS=[env.get('DYNLIB','')+'rsf'])
     if not root:
         env.Append(NVCCFLAGS=['-g'])
 

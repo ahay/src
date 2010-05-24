@@ -22,11 +22,9 @@ except: # local version
     root = None
     SConscript('../../api/c/SConstruct')
 
-lib = env.get('DYNLIB','')+'rsf'
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[lib])
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 mains = Split(progs)
 

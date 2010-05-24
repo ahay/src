@@ -12,7 +12,7 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 if 'f77' in env.get('API',[]):
     F77 = env.get('F77')

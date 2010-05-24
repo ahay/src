@@ -16,9 +16,11 @@ except:
     root = None
     SConscript('../lib/SConstruct')
 
+libprefix = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsfplot','rsf'])
+            LIBS=[libprefix+'rsfplot', libprefix+'rsf'])
 
 mains = Split(progs)
 

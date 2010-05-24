@@ -24,7 +24,7 @@ xlib = env.get('XLIBPATH')
 if xinc and xlib:  
     env.Prepend(CPPPATH=['../../include',xinc],
                 LIBPATH=['../../lib',xlib],
-                LIBS=['X11','su','rsf'])
+                LIBS=['X11','su',env.get('DYNLIB','')+'rsf'])
     
     for source in src:
         inc = env.RSF_Include(source,prefix='')

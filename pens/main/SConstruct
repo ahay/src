@@ -11,10 +11,12 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../genlib/SConstruct')
-    
+
+libprefix = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../utilities','../genlib','../../lib'],
-            LIBS=['genpen','penutil','rsfplot','rsf'])
+            LIBS=['genpen', 'penutil', libprefix+'rsfplot', libprefix+'rsf'])
 
 env['PROGPREFIX'] = ''
 

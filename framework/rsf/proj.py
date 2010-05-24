@@ -248,7 +248,7 @@ class Project(Environment):
                     CPPPATH=[incdir],
                     LIBS=[libs],
                     PROGSUFFIX=exe)
-        self.Prepend(LIBS=['rsf'])
+        self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
         if jclasspath: # If we have java variables set
             self.Append(ENV={'CLASSPATH':jclasspath})
         if sys.platform[:6] == 'cygwin':

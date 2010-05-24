@@ -16,7 +16,7 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['su','rsf'])
+            LIBS=['su',env.get('DYNLIB','')+'rsf'])
 
 mains = Split(progs)
 

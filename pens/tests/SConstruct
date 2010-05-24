@@ -17,8 +17,10 @@ world zplot
 
 #removed mahjongg sun moffett vgr2 to save space
 
+libprefix = env.get('DYNLIB','')
+
 proj = Project()
-proj.Prepend(LIBS=['rsfplot'])
+proj.Prepend(LIBS=[libprefix+'rsfplot'])
 
 def program(prog):
     exe = proj.Program(prog+'.c')
@@ -28,7 +30,7 @@ api = proj.get('API',[])
 
 if 'f77' in api:
     fproj = Project()
-    fproj.Prepend(LIBS=['rsfplotf','rsfplot'])
+    fproj.Prepend(LIBS=['rsfplotf',libprefix+'rsfplot'])
 
     def fprogram(prog):
         exe = fproj.Program(prog+'.f',

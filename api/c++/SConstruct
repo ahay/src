@@ -14,7 +14,7 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsf'])
+            LIBS=[env.get('DYNLIB','') + 'rsf'])
 
 if 'c++' in env.get('API',[]):
     ccfiles = map(lambda x: x+'.cc',sources)

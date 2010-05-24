@@ -77,7 +77,7 @@ if 'f77' in api:
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
     env.Program([test,slib],PROGSUFFIX='.x',PROGPREFIX='',
-                LIBS=['rsf']+env.get('LIBS',[]))
+                LIBS=[env.get('DYNLIB','')+'rsf']+env.get('LIBS',[]))
         
 if root:
     main = 'sflibplot.py'

@@ -15,9 +15,11 @@ except:
 	root = None
 	SConscript('../lib/SConstruct')
 
+libprefix = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
 	    LIBPATH=['../../lib'],
-	    LIBS=['rsfplot','rsf'])
+	    LIBS=[libprefix+'rsfplot', libprefix+'rsf'])
 
 vplot = Builder(action = './$SOURCE - > $TARGET',suffix='.vpl')
 env.Append(BUILDERS = {'Vplot' : vplot})

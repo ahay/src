@@ -19,8 +19,7 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=['rsf'])
-
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 ##############################################################################
 # INCLUDES

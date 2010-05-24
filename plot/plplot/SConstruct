@@ -59,11 +59,13 @@ if plplot:
 
 progs = 'plsurf'
 mains = Split(progs)
+libprefix = env.get('DYNLIB','')
 
 for prog in mains:
     if plplot:
         main = env.Program(prog + '.c',
-                           LIBS=['rsf','rsfplot',plplot]+env.get('LIBS',[]))
+                           LIBS=[libprefix+'rsf', libprefix+'rsfplot', plplot]+\
+                                env.get('LIBS',[]))
     else:
         main = env.RSF_Place('sf'+prog,None,package='libplplot-dev')
     if root:
