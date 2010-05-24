@@ -48,6 +48,7 @@ static struct Label {
 }   /*@null@*/ *label1=NULL, 
     /*@null@*/ *label2=NULL, 
     /*@null@*/ *label3=NULL, 
+    /*@null@*/ *label4=NULL,
     /*@null@*/ *title=NULL, 
     /*@null@*/ *barlabel=NULL;
 
@@ -59,6 +60,7 @@ static struct Axis {
 }   /*@null@*/ *axis1=NULL, 
     /*@null@*/ *axis2=NULL, 
     /*@null@*/ *axis3=NULL, 
+    /*@null@*/ *axis4=NULL, 
     /*@null@*/ *baraxis=NULL, 
     /*@null@*/ *grid1=NULL, 
     /*@null@*/ *grid2=NULL, 
@@ -412,6 +414,12 @@ static void make_labels (sf_file in, char where1, char where2)
 	label2 = label;
     }
 
+    if (cube && flat && NULL != label3 && NULL != label2) {
+	label4 = (struct Label*) sf_alloc(1,sizeof(struct Label));
+    } else {
+	label4 = NULL;
+    }
+
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
     /* label size */
     if (cube) {
@@ -581,6 +589,29 @@ static void make_labels (sf_file in, char where1, char where2)
 	    label2->max = max2;
 	}
     } 
+
+    if (NULL != label4) { /* vertical axis for the out of plane axis */
+	label4->where = label2->where;
+	label4->fat   = label2->fat;
+	label4->text  = label3->text;
+
+	label4->ypath = label2->ypath;
+	label4->yup   = label2->yup;
+	label4->xpath = label2->xpath;
+	label4->xup   = label2->xup;
+
+	xc  = min1;
+	yc  = 0.5*(max2 + mid2);
+
+	vp_umove (xc, yc);
+	vp_where (&xc, &yc);
+
+	label4->y = yc;	
+	label4->x = label2->x;
+      
+	label4->max = l3max;
+	label4->min = l3min;
+    } 
 }
 
 static void make_baraxis (float min, float max)
@@ -609,7 +640,7 @@ static void make_baraxis (float min, float max)
 	/* tickmark labels parallel to the axis */
 
     if (!sf_getint ("nbartic",&(baraxis->ntic))) 
-	baraxis->ntic = (vertbar? inch2: inch1)/(aspect*labelsz);
+	baraxis->ntic = 0.5 + (vertbar? inch2: inch1)/(aspect*labelsz);
     /* nbartic number of scalebar ticmarks */
 
     if (NULL == (baraxis->format = sf_getstring("formatbar"))) {
@@ -668,7 +699,7 @@ static void make_axes (void)
 
 	if (!sf_getint ("n1tic",&(axis1->ntic))) 
 	    /*( n1tic axis1 number of ticmarks )*/
-	    axis1->ntic = cube? 
+	    axis1->ntic = 0.5 + cube? 
 		inch1*(mid1-min1)/((max1-min1)*aspect*labelsz):
 		inch1/(aspect*labelsz);
 
@@ -704,7 +735,7 @@ static void make_axes (void)
 
 	if (!sf_getint ("n2tic",&(axis2->ntic)))
 	    /*( n2tic axis2 number of ticmarks )*/
-	    axis2->ntic = cube?
+	    axis2->ntic = 0.5 + cube?
 		inch2*(mid2-min2)/((max2-min2)*aspect*labelsz):
 		inch2/(aspect*labelsz);
 
@@ -740,7 +771,7 @@ static void make_axes (void)
 	
 	if (!sf_getint ("n3tic",&(axis3->ntic)))
 	    /*( n3tic axis3 number of ticmarks )*/
-	    axis3->ntic = inch3/(aspect*labelsz);
+	    axis3->ntic = 0.5 + inch3/(aspect*labelsz);
 
 	modify = (bool) (!sf_getfloat ("d3num", &(axis3->dnum)) ||
 			 /*( d3num axis3 tic increment )*/
@@ -755,6 +786,33 @@ static void make_axes (void)
 				       &(axis3->num0), 
 				       &(axis3->dnum),
 				       &(axis3->maxstrlen));
+    }
+
+    if (label4 != NULL) { /* vertical axis for out of plane */
+	if (NULL == axis4)
+	    axis4 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+	axis4->or       = axis2->or;
+	axis4->parallel = axis2->parallel;
+	axis4->format   = axis2->format;
+	
+	if (!sf_getint ("n4tic",&(axis4->ntic)))
+	    /*( n4tic axis4 number of ticmarks )*/
+	    axis4->ntic = 0.5+inch2*(max2-mid2)/((max2-min2)*aspect*labelsz);
+
+	modify = (bool) (!sf_getfloat ("d4num", &(axis4->dnum)) ||
+			 /*( d4num axis4 tic increment )*/
+			 !sf_getfloat ("o4num", &(axis4->num0)));
+	/*( o4num axis4 tic origin )*/
+
+	axis4->ntic = vp_optimal_scale(axis4->ntic,
+				       modify,
+				       axis4->parallel,
+				       axis4->format,
+				       label4->min, label4->max, 
+				       &(axis4->num0), 
+				       &(axis4->dnum),
+				       &(axis4->maxstrlen));
     }
 
     wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
@@ -1182,7 +1240,7 @@ void vp_frame(void)
 {
     int i;
     bool need;
-    float num, xc, yc, vs, xp[4], yp[4], shift;
+    float num, xc, yc, vs, xp[4], yp[4], sx, sy;
     char string[32];
 
     vp_bgroup("plot frame");
@@ -1227,11 +1285,11 @@ void vp_frame(void)
 	    vs = -0.5*labelsz;
 	}
 
-	shift = label1->y;
+	sy = label1->y;
 	if (! axis1->parallel) 
-	    shift += 2*(axis1->maxstrlen-1)*vs;
+	    sy += 2*(axis1->maxstrlen-1)*vs;
 
-	vp_gtext(label1->x, shift, 
+	vp_gtext(label1->x, sy, 
 		 label1->xpath, label1->ypath, 
 		 label1->xup, label1->yup, label1->text);
 
@@ -1304,11 +1362,11 @@ void vp_frame(void)
 
 	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
 
-	shift = label2->x;
+	sx = label2->x;
 	if (! axis2->parallel) 
-	    shift += 2*(axis2->maxstrlen-1)*vs;
+	    sx += 2*(axis2->maxstrlen-1)*vs;
 
-	vp_gtext(shift, label2->y, 
+	vp_gtext(sx, label2->y, 
 		 label2->xpath, label2->ypath, 
 		 label2->xup, label2->yup, label2->text);
 	
@@ -1376,17 +1434,19 @@ void vp_frame(void)
 
 	vp_tjust (TH_CENTER, TV_TOP);
 	vs = -0.5*labelsz;
-	
+
+	sx = label3->x;
+	sy = label3->y;
 	if (! axis3->parallel) {
 	    if (flat) {
-		label3->y += 2*(axis3->maxstrlen-1)*vs;
+		sy += 2*(axis3->maxstrlen-1)*vs;
 	    } else {
-		label3->y += 2*(axis3->maxstrlen-1)*vs*costh;	
-		label3->x -= 2*(axis3->maxstrlen-1)*vs*sinth;
+		sy += 2*(axis3->maxstrlen-1)*vs*costh;	
+		sx -= 2*(axis3->maxstrlen-1)*vs*sinth;
 	    }
 	}
 	
-	vp_gtext(label3->x, label3->y, 
+	vp_gtext(sx, sy, 
 		 label3->xpath, label3->ypath, 
 		 label3->xup, label3->yup, label3->text);
 	
@@ -1467,7 +1527,80 @@ void vp_frame(void)
 	}
 	vp_egroup();
     }
-    
+
+    if (NULL != label4) {
+	vp_bgroup("axis 4");
+	vp_fat (label4->fat);
+
+	/* plot label */
+	if (((label4->where != 'l') && labelrot) ||
+	    ((label4->where == 'l') && !labelrot)) {
+	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	} else {
+	    vp_tjust (TH_CENTER, TV_TOP);
+	}
+
+	vs = label4->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+
+	sx = label4->x;
+	if (! axis4->parallel) 
+	    sx += 2*(axis4->maxstrlen-1)*vs;
+
+	vp_gtext(sx, label4->y, 
+		 label4->xpath, label4->ypath, 
+		 label4->xup, label4->yup, label4->text);
+	
+        /* plot tics */
+
+	if (axis4->parallel) {
+	    if (((label4->where != 'l') && labelrot) ||
+		((label4->where == 'l') && !labelrot)) {
+		vp_tjust (TH_CENTER, TV_BASE);
+	    } else {
+		vp_tjust (TH_CENTER, TV_CAP);
+	    }
+	} else {
+	    if (label4->where == 'l') {
+		vp_tjust (TH_RIGHT, TV_HALF);
+	    } else {
+		vp_tjust (TH_LEFT, TV_HALF);
+	    }
+	}
+
+	for (i=0; i < axis4->ntic; i++) {
+	    num = axis4->num0 + i*(axis4->dnum);
+	    if (fabsf(axis4->dnum) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
+
+	    yc = mid2+(num-label4->min)*(max2-mid2)/
+		(label4->max-label4->min);
+	    xc = min1;	    
+
+	    /* draw the tick */
+	    vp_umove (xc, yc);
+	    vp_where (&xc, &yc);
+	    vp_draw (xc+vs, yc);
+
+	    /* tick label */
+	    snprintf (string,32,axis2->format, num);
+
+	    if (axis4->parallel) {
+		if (labelrot) {
+		    vp_gtext(xc+ticksep*vs, yc, 
+			     0., -labelsz, 
+			     labelsz, 0., string);
+		} else {
+		    vp_gtext(xc+ticksep*vs, yc, 
+			     0., labelsz, 
+			     -labelsz, 0., string);
+		}
+	    } else {
+		vp_gtext(xc+ticksep*vs, yc, labelsz, 0., 0., labelsz, string);
+	    }
+	}
+	vp_egroup();
+    }
+
     if (NULL != title) {
 	vp_bgroup("title");
 	vp_fat (title->fat);
@@ -1503,7 +1636,8 @@ void vp_frame(void)
 	    vp_udraw(max1,yc+max2-mid2);
 	}
 
-	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel1",&need))
+	if (!sf_getbool("framelabel",&need) && 
+	    !sf_getbool("framelabel1",&need))
 	    need = (bool) (NULL != label1);
 	/* to put numbers at frame ends */
 
@@ -1523,7 +1657,7 @@ void vp_frame(void)
 			vp_gtext(xc+0.5*vs,yc,0.,-labelsz,labelsz,0.,string);
 		    } else {
 			vp_tjust (TH_CENTER, TV_CAP);
-			vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+			vp_gtext(xc+0.5*vs,yc,0.,labelsz,-labelsz,0.,string);
 		    }
 		} else {
 		    vp_tjust (TH_LEFT, TV_HALF);
@@ -1531,7 +1665,6 @@ void vp_frame(void)
 		}
 	    }
 	}
-	vp_egroup();
 
 	xc = min1+(mid1-min1)*(frame2+0.5)*d2/(l1max-l1min);
 
@@ -1545,7 +1678,8 @@ void vp_frame(void)
 	    vp_udraw(xc+max1-mid1,max2);
 	}
 
-	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel2",&need))
+	if (!sf_getbool("framelabel",&need) && 
+	    !sf_getbool("framelabel2",&need))
 	    need = (bool) (NULL != label2);
 	/* to put numbers at frame ends */
 	 
@@ -1562,11 +1696,22 @@ void vp_frame(void)
 	    vp_gtext(xc,yc+0.5*vs, labelsz, 0., 0., labelsz, string);
 	}	    
 
+	if (!sf_getbool("framelabel",&need) && 
+	    !sf_getbool("framelabel3",&need))
+	    need = (bool) (NULL != label3);
+	/* to put numbers at frame ends */
+
+	if (need) {
+	    num = label3->min+(frame3+0.5)*d3;
+	    if (fabsf(d3) > SF_EPS && 
+		fabsf(num) < SF_EPS) num=0.;
+	    snprintf (string,32,"%1.5g",num);
+	}
+
 	yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(l3max-l3min);
 	xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(l3max-l3min);
 
-	vp_color(cubelinecol);
-	
+	vp_color(cubelinecol);	
 	if (flat) {
 	    vp_umove(xc,min2);
 	    vp_udraw(xc,mid2);
@@ -1575,34 +1720,42 @@ void vp_frame(void)
 	    vp_udraw(xc,yc); 
 	}
 
+	if (need && flat) {
+	    vp_color(framelabelcol);
+	    vp_where(&xc,&yc);
+
+	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	    vp_gtext(xc,yc+0.5*vs, labelsz, 0., 0., labelsz, string);
+	}
+
+	yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(l3max-l3min);
+	xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(l3max-l3min);
+
+	vp_color(cubelinecol);
 	if (flat) {
-	    vp_umove(mid1,yc);
-	    vp_udraw(min1,yc);
+	    vp_umove(min1,yc);
+	    vp_udraw(mid1,yc);
 	} else {
 	    vp_umove(xc,yc);
 	    vp_udraw(xc+min1-mid1,yc);
 	}
-	
-	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel3",&need))
-	    need = (bool) (NULL != label3);
-	/* to put numbers at frame ends */
 
 	if (need) {
 	    vp_color(framelabelcol);
 	    vp_where(&xc,&yc);
-	    
-	    num = label3->min+(frame3+0.5)*d3;
-	    if (fabsf(d3) > SF_EPS && 
-		fabsf(num) < SF_EPS) num=0.;
-	    snprintf (string,32,"%1.5g",num);
-	    
-	    vp_tjust (TH_CENTER, TV_BOTTOM);
 
 	    if (flat) {
-		if (labelrot) {
-		    vp_gtext(xc-4.0*vs, yc, 0.,-labelsz, labelsz,0.,string);
+		if (axis2->parallel) {
+		    if (labelrot) {
+			vp_tjust (TH_CENTER, TV_BASE);
+			vp_gtext(xc+0.5*vs,yc,0.,-labelsz,labelsz,0.,string);
+		    } else {
+			vp_tjust (TH_CENTER, TV_CAP);
+			vp_gtext(xc+0.5*vs,yc,0.,labelsz,-labelsz,0.,string);
+		    }
 		} else {
-		    vp_gtext(xc-0.5*vs, yc, 0., labelsz,-labelsz,0.,string);
+		    vp_tjust (TH_LEFT, TV_HALF);
+		    vp_gtext(xc+0.5*vs, yc, labelsz, 0., 0., labelsz, string);
 		}
 	    } else {
 		vp_gtext(xc-0.5*vs*sinth, yc+0.5*vs*costh, 
@@ -1610,6 +1763,8 @@ void vp_frame(void)
 			 -labelsz*sinth,labelsz*costh,string);
 	    }
 	} /* label3 */
+
+	vp_egroup();
     } /* if cube */
     
     vp_uclip (min1, min2, max1, max2);
