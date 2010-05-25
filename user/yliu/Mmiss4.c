@@ -89,7 +89,6 @@ int main(int argc, char* argv[])
 	sf_floatread(filt,nf,fil);
 	
 	if (NULL != sf_getstring("mask")) {
-	    /* optional input mask file for known data */
 	    sf_floatread(kk,n1*n2,mask);
 	    
 	    for (i=0; i < n1*n2; i++) {
