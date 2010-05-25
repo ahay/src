@@ -1,4 +1,7 @@
 from rsf.proj import *
+
+print project['ENV']['PATH']
+
 import math
 
 # Velocity model

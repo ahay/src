@@ -251,9 +251,17 @@ class Project(Environment):
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
         if jclasspath: # If we have java variables set
             self.Append(ENV={'CLASSPATH':jclasspath})
+
+        path = {'darwin': '/opt/local/bin',
+                'irix': '/usr/freeware/bin',
+                'cygwin': '/usr/X11R6/bin'}
+        for plat in path.keys():
+            if sys.platform[:len(plat)] == plat:           
+                self['ENV']['PATH'] = ':'.join([path[plat],
+                                                self['ENV']['PATH']])
         if sys.platform[:6] == 'cygwin':
-            self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
+
         self['PROGPREFIX']=''
         self.view = []
         self.prnt = []
