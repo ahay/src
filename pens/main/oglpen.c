@@ -88,7 +88,7 @@ enum {
     MENU_STRETCHY,
     MENU_FULLSCREEN,
     MENU_QUIT
-    };
+};
 
 
 static void oglquit (int status) {
@@ -280,6 +280,10 @@ void oglreset (void)
         glLineWidth (aawidth);
         glPointSize (aawidth);
     }
+    glDisable (GL_CLIP_PLANE0);
+    glDisable (GL_CLIP_PLANE1);
+    glDisable (GL_CLIP_PLANE2);
+    glDisable (GL_CLIP_PLANE3);
 }
 
 /* Process queued events from the event loop */
@@ -351,6 +355,11 @@ void oglerase (int command)
         default:
             break;
     }
+    /* Reset clipping */
+    glDisable (GL_CLIP_PLANE0);
+    glDisable (GL_CLIP_PLANE1);
+    glDisable (GL_CLIP_PLANE2);
+    glDisable (GL_CLIP_PLANE3);
 }
 
 void oglstartanimation ()
@@ -425,6 +434,8 @@ void oglclose (int status)
 void oglattr (int command, int value, int v1, int v2, int v3)
 /*< attr >*/
 {
+    GLdouble eq[4];
+
     switch (command) {
         case SET_COLOR:
             oglcolor = value;
@@ -440,6 +451,24 @@ void oglattr (int command, int value, int v1, int v2, int v3)
                 glColor3f (color_table[oglcolor],
                            color_table[NCOLOR + oglcolor],
                            color_table[NCOLOR * 2 + oglcolor]);
+            break;
+        case SET_WINDOW:
+            /* Right */
+            glEnable (GL_CLIP_PLANE0);
+            eq[0] = -1; eq[1] = 0; eq[2] = 0; eq[3] = v2;
+            glClipPlane (GL_CLIP_PLANE0, eq);
+            /* Left */
+            glEnable (GL_CLIP_PLANE1);
+            eq[0] = 1; eq[1] = 0; eq[2] = 0; eq[3] = -value;
+            glClipPlane (GL_CLIP_PLANE1, eq);
+            /* Up */
+            glEnable (GL_CLIP_PLANE2);
+            eq[0] = 0; eq[1] = -1; eq[2] = 0; eq[3] = v3;
+            glClipPlane (GL_CLIP_PLANE2, eq);
+            /* Down */
+            glEnable (GL_CLIP_PLANE3);
+            eq[0] = 0; eq[1] = 1; eq[2] = 0; eq[3] = -v1;
+            glClipPlane (GL_CLIP_PLANE3, eq);
             break;
         default:
             break;
