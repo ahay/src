@@ -176,6 +176,9 @@ def main(argv=sys.argv):
     list = par.string('list')
     # how much to list [all,filter,none], default = all
 
+    timer = par.bool('timer',False)
+    # output execution time
+
     rsfproj = par.string('rsfproj')
     # rsfproj filter [yes,no,both], default = yes
 
@@ -322,8 +325,10 @@ def main(argv=sys.argv):
                 tuple = command_wait(' '.join(['cd',root,';',command]))
                 (exit,dt_user,dt_sys,dt_real) = tuple
 
-                string = "   user %6.2f   sys %6.2f  real %6.2f  %s\n"
-                sys.stdout.write(string % (dt_user,dt_sys,dt_real,root))
+                if (timer is True):
+                    string = "   user %6.2f   sys %6.2f  real %6.2f  %s\n"
+                    sys.stdout.write(string % (dt_user,dt_sys,dt_real,root))
+                    
                 if (exit==0):
                     string = "   ---------  command success  ---------  %s\n"
                 else:
