@@ -730,16 +730,16 @@ void oglreshape (int width, int height)
     if (!stretchy) {
         if (width * VP_SCREEN_RATIO <= height) {
             wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
-            glOrtho (0, nx,
-                     0, ny * wh, -1, 1);
+            glOrtho (-1, nx,
+                     -1, ny * wh, -1, 1);
         } else {
             wh = (GLfloat)width / (GLfloat)height * VP_SCREEN_RATIO;
-            glOrtho (0, nx * wh,
-                     0, ny, -1, 1);
+            glOrtho (-1, nx * wh,
+                     -1, ny, -1, 1);
         }
     } else
-        glOrtho (0, nx,
-                 0, ny, -1, 1);
+        glOrtho (-1, nx,
+                 -1, ny, -1, 1);
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
