@@ -391,3 +391,40 @@ def add_ext_static_lib(env, libnm, root=None):
         root = env.get('RSFROOT',os.environ.get('RSFROOT'))
     env['LIBS'].append(File(os.path.join(root,'lib','lib'+libnm+'.a')))
     env['CPPPATH'].append(os.path.join(root,'include'))
+
+################################################################################
+
+class UserSconsTargets:
+    'Describes and builds targets that can be found in user SConstructs'
+    def __init__(self):
+        self.c = None # C mains
+        self.c_libs = None
+        self.f90 = None # F90 mains
+        self.py = None # Python mains
+        self.py_modules = None # Python modules that do not need SWIG and numpy
+    def build_all(self, env, glob_build, srcroot, bindir, pkgdir):
+        # Needed for both C and F90 programs:
+        if glob_build:
+            env = env.Clone()
+            bldroot = '../..' # aka RSFSRC/build
+        else:
+            SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
+            bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+        if self.c == None:
+            docs_c = None
+        else:
+            docs_c = build_install_c(env, self.c, bindir, glob_build, bldroot)
+        api = env.get('API',[])
+        if self.f90 == None:
+            docs_f90 = None
+        else:
+            docs_f90 = build_install_f90(env, self.f90, bindir, api, bldroot,
+                                         glob_build)
+        if glob_build:
+            if self.py == None:
+                docs_py = None
+            else:
+                docs_py = install_py_mains(env, self.py, bindir)
+            if self.py_modules != None:
+                install_py_modules(env, self.py_modules, pkgdir)
+            install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90)

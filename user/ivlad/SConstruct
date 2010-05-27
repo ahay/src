@@ -1,57 +1,38 @@
-import os, sys, re, string, glob
+import os, sys
 
 try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
     srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/ivlad
+    Import('env bindir pkgdir')
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = pkgdir = None
     
+targets = bldutil.UserSconsTargets()
+
 # C mains
-progs_c = '''
+targets.c = '''
 quantile leftsize filedims fileflush create gettype
 '''
 
 # F90 mains
-progs_f90 = '''
+targets.f90 = '''
 seekwin
 '''
 
 # Python mains that do not need SWIG+numpy
-progs_py = '''
+targets.py = '''
 pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf wuab ximage
 '''
 
 # Python modules that do not need SWIG+numpy
-py_modules = '''
+targets.py_modules = '''
 ivlad m8rex ooio sf
 '''
 
-# Needed for both C and F90 programs:
-if glob_build:
-    Import('env bindir pkgdir')
-    env = env.Clone()
-    bldroot = '../..' # aka RSFSRC/build
-else:
-    env = bldutil.Debug() # Debugging flags for compilers
-    bindir = None
-    SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
-    bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
-
-docs_c = bldutil.build_install_c(env, progs_c, bindir, glob_build, bldroot)
-
-api = env.get('API',[])
-
-docs_f90 = bldutil.build_install_f90(env, progs_f90, bindir, api, bldroot, 
-    glob_build)
-
-######################################################################
-
-if glob_build:
-
-    docs_py = bldutil.install_py_mains(env, progs_py, bindir)
-    bldutil.install_py_modules(env, py_modules, pkgdir)
-    bldutil.install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90)
+targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
