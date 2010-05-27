@@ -1,5 +1,5 @@
 from rsf.proj import *
-import rsf.recipes.fdmod as fdmod 
+import fdmod 
 
 # ------------------------------------------------------------
 def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
