@@ -85,7 +85,6 @@ frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user dotproj'
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
-
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
 
@@ -123,6 +122,7 @@ for dir in map(lambda x: os.path.join('api',x), api):
 ##########################################################################
 # SYSTEM BUILD
 ##########################################################################
+
 for dir in map(lambda x: os.path.join('system',x), system):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
@@ -132,67 +132,70 @@ for dir in map(lambda x: os.path.join('system',x), system):
 ##########################################################################
 # USER BUILD
 ##########################################################################
-for dir in map(lambda x: os.path.join('user',x), user):
-    build = os.path.join('build',dir)
-    BuildDir(build,dir)
-    SConscript(dirs=build,name='SConstruct',
-        exports='env root bindir pkgdir')
-    Default(build)
+
+if os.path.isdir('user'):
+    for dir in map(lambda x: os.path.join('user',x), user):
+        build = os.path.join('build',dir)
+        BuildDir(build,dir)
+        SConscript(dirs=build,name='SConstruct', 
+            exports='env root bindir pkgdir')
+        Default(build)
 
 ##########################################################################
 # PLOT BUILD
 ##########################################################################
-pdirs = ('lib','main','test','plplot')
 
-for dir in map(lambda x: os.path.join('plot',x), pdirs):
-    build = os.path.join('build',dir)
-    BuildDir(build,dir)
-
-    if dir in ('plot/main','plot/test'):
-        plot_exports = 'env root bindir pkgdir'
-    elif dir == 'plot/lib':
-        plot_exports = 'env root libdir incdir pkgdir'
-    elif dir == 'plot/plplot':
-        plot_exports = 'env root libdir incdir bindir pkgdir'
-
-    SConscript(dirs=build,name='SConstruct', exports=plot_exports)
-    Default(build)
+if os.path.isdir('plot'):
+    pdirs = ('lib','main','test','plplot')
+    for dir in map(lambda x: os.path.join('plot',x), pdirs):
+        build = os.path.join('build',dir)
+        BuildDir(build,dir)
+        if dir in ('plot/main','plot/test'):
+            plot_exports = 'env root bindir pkgdir'
+        elif dir == 'plot/lib':
+            plot_exports = 'env root libdir incdir pkgdir'
+        elif dir == 'plot/plplot':
+            plot_exports = 'env root libdir incdir bindir pkgdir'
+        SConscript(dirs=build,name='SConstruct', exports=plot_exports)
+        Default(build)
 
 ##########################################################################
 # PENS BUILD
 ##########################################################################
-pdirs = ('fonts','include','utilities','genlib','main','docs','scripts')
 
-for dir in map(lambda x: os.path.join('pens',x), pdirs):
-    build = os.path.join('build',dir)
-    BuildDir(build,dir)
-    if dir == 'pens/main':
-        pens_exports = 'env root pkgdir bindir'
-        sconscript = 'SConstruct'
-    elif dir == 'pens/scripts':
-        pens_exports = 'env bindir pkgdir'
-        sconscript = 'SConscript'
-    else:
-        pens_exports = 'env root incdir libdir bindir'
-        sconscript = 'SConstruct'
-    SConscript(dirs=build,name=sconscript,exports=pens_exports)
-    Default(build)
+if os.path.isdir('pens'):
+    pdirs = ('fonts','include','utilities','genlib','main','docs','scripts')
+    for dir in map(lambda x: os.path.join('pens',x), pdirs):
+        build = os.path.join('build',dir)
+        BuildDir(build,dir)
+        if dir == 'pens/main':
+            pens_exports = 'env root pkgdir bindir'
+            sconscript = 'SConstruct'
+        elif dir == 'pens/scripts':
+            pens_exports = 'env bindir pkgdir'
+            sconscript = 'SConscript'
+        else:
+            pens_exports = 'env root incdir libdir bindir'
+            sconscript = 'SConstruct'
+        SConscript(dirs=build,name=sconscript,exports=pens_exports)
+        Default(build)
 
 ##########################################################################
 # SU BUILD
 ##########################################################################
-sudirs = ('lib','main','plot')
 
-for dir in map(lambda x: os.path.join('su',x), sudirs):
-    build = os.path.join('build',dir)
-    BuildDir(build,dir)
-    if dir in ('su/main','su/plot'):
-        su_exports = 'env root pkgdir bindir'
-    else:
-        su_exports = 'env root libdir bindir incdir'
-    SConscript(dirs=build,name='SConstruct',
-               exports=su_exports)
-    Default(build)
+if os.path.isdir('su'):
+    sudirs = ('lib','main','plot')
+    for dir in map(lambda x: os.path.join('su',x), sudirs):
+        build = os.path.join('build',dir)
+        BuildDir(build,dir)
+        if dir in ('su/main','su/plot'):
+            su_exports = 'env root pkgdir bindir'
+        else:
+            su_exports = 'env root libdir bindir incdir'
+        SConscript(dirs=build,name='SConstruct',
+                   exports=su_exports)
+        Default(build)
 
 ##########################################################################
 # INSTALLATION
