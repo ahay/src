@@ -47,7 +47,7 @@ void vp_gainpar (sf_file in, float **data,
     int nt, i3, nclip, nhalf;
     float *buf, *clipnp, *gpownp, **data2;
     double sum;
-    off_t pos;
+    off_t pos=0;
 
     nt = n1 / step;
     buf = sf_floatalloc(nt*n2);

@@ -1,0 +1,14 @@
+from rsf.suproj import *
+
+# Download data
+
+server=os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
+Fetch('sonar.su','cwp',server=server)
+
+# Make sure to compile SU with XDR support!
+
+Result('sonar',         'sonar','suximage')
+Result('sonar99',       'sonar','suximage perc=99')
+Result('sonar99leg',    'sonar','suximage perc=99 legend=1')
+
+End()

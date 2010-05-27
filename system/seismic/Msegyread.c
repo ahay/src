@@ -463,6 +463,9 @@ int main(int argc, char *argv[])
 	sf_putfloat(out,"o1",0.);
 	sf_putstring(out,"label1","Time");
 	sf_putstring(out,"unit1","s");
+	sf_putfloat(out,"d2",1.);
+	sf_putfloat(out,"o2",0.);
+	sf_putstring(out,"label2","Trace");
 	sf_setformat(out, "native_float");    
 	ftrace = suxdr? sf_floatalloc (ns): NULL;
     } else {
