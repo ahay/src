@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fitcrs fitcrspicks fitnonhcrspicks readsample vscancrs rkawefd2d
-wavegeom rtmgeom cigangle opsmigrk
+fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref vscancrs rkawefd2d
+wavegeom rtmgeom cigangle opsmigrk gsray2rays2d 
 '''
 
 try:  # distributed version

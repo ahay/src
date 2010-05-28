@@ -105,16 +105,15 @@ int main(int argc, char* argv[])
 	img[0][0][iz] = 0.f;
 
     for (iz=0; iz < nz; iz++) {
-	
+
+	sf_warning("depth %d of %d",iz+1,nz);
+
 	for (ix=0; ix < nx; ix++) {
 	    
 	    sf_floatread(tim,na,time);
 	    sf_floatread(dis,na,dist);
 	    sf_floatread(dep,na,dept);
 
-	    //for (ia=0; ia < na*na*nt; ia++)
-	    //img[0][0][ia] = 0;
-	    memset(img[0][0],(int)0, na*na*nt*sizeof(float));
 
 	    for (ia=0; ia < na; ia++) {
 

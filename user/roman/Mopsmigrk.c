@@ -22,11 +22,12 @@
 int main(int argc, char* argv[])
 {
     int iz, nz, ix, nx, ia, ja, na, it, nt, ih, nh, is, ns;
-    float t, h, s, dt, dh, ds, t0, s0, h0, dz, z0, z1, tolz;
+    float t, h, s, dt, dh, ds, t0, s0, h0, dz, z0, tolz;
     float zi, zj, xi, ti, tj;
     float *tim, *dis, *dep, ***dat, **img;
     sf_file time, dist, dept, data, imag;
-    
+    bool is_offset;
+
     sf_init(argc,argv);
 
     dist = sf_input("in");
@@ -42,13 +43,12 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(time,"d3",&dz)) sf_error("No d1= in input");
     if (!sf_histfloat(time,"o3",&z0)) sf_error("No d1= in input");
 
-    if (!sf_getfloat("z0",&z1)) z1=z0;
-    /* surface depth */
-    //assert(fabs(z1) < 1e-6f);
-
     /* tolerance depth */
     if (!sf_getfloat("tolz",&tolz)) tolz=2.0;
     tolz *= dz;
+
+    /* tolerance depth */
+    if (!sf_getbool("is_offset",&is_offset)) is_offset=false;
 
     tim = sf_floatalloc(na);
     dis = sf_floatalloc(na);
@@ -132,8 +132,10 @@ int main(int argc, char* argv[])
 		    
 		    /* get receiver location, interpolate */
 
-		    /* h = (dis[ja]-xi-h0)/dh; */
-		    h = (dis[ja] - h0)/dh;
+		    if (is_offset)
+			h = (dis[ja]-xi-h0)/dh; 
+		    else
+			h = (dis[ja] - h0)/dh;
 
 		    ih = floorf(h);
 		    if (ih < 0 || ih > nh-1) {
@@ -171,19 +173,20 @@ int main(int argc, char* argv[])
 				dat[is][ih+1][it+1]*h*t;
 			}
 			else {
-			    assert(is + 1 <= ns -1);
-			    /* trilinear interpolation from the data */
-		    
-			    img[ia][ja] = 
+			    if (is + 1 <= ns -1) {
+				/* trilinear interpolation from the data */
 				
-				dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
-				dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
-				dat[is][ih+1][it]*(1.-s)*h*(1.-t) +
-				dat[is+1][ih][it]*s*(1.-h)*(1.-t) +
-				dat[is+1][ih][it+1]*s*(1.-h)*t +
-				dat[is][ih+1][it+1]*(1.-s)*h*t +
-				dat[is+1][ih+1][it]*s*h*(1.-t) +
-				dat[is+1][ih+1][it+1]*s*h*t;
+				img[ia][ja] = 
+				
+				    dat[is][ih][it]*(1.-s)*(1.-h)*(1.-t) +
+				    dat[is][ih][it+1]*(1.-s)*(1.-h)*t +
+				    dat[is][ih+1][it]*(1.-s)*h*(1.-t) +
+				    dat[is+1][ih][it]*s*(1.-h)*(1.-t) +
+				    dat[is+1][ih][it+1]*s*(1.-h)*t +
+				    dat[is][ih+1][it+1]*(1.-s)*h*t +
+				    dat[is+1][ih+1][it]*s*h*(1.-t) +
+				    dat[is+1][ih+1][it+1]*s*h*t;
+			    }
 			}
 		    }
 		}
