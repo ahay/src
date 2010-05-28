@@ -234,7 +234,6 @@ class Project(Environment):
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),
                                                      '.Xauthority'))},
-                    JAVACLASSPATH=os.path.join(libdir,'rsf.jar'),
                     BUILDERS={'Retrieve':Retrieve,
                               'Test':Test,
                               'Echo':Echo},
@@ -243,6 +242,11 @@ class Project(Environment):
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
+
+        minesjtk = self.get('MINESJTK')
+        if minesjtk:
+            self.Append(JAVACLASSPATH=':'.join([os.path.join(libdir,'rsf.jar'),
+                                                minesjtk]))
 
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',

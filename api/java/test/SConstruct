@@ -1,15 +1,9 @@
 from rsf.proj import *
-# The classpath is now automatically set. 
 
-# Compile the Java program, this will also remove the class file when cleaning.
+# Compiles Clip.class
 project.Java('.','Clip.java')
 
-# Use Flows as usual.
-Flow('dat',None,
-    '''
-    spike n1=1000 n2=100 n3=10 nsp=1 k1=500
-    ''')
-
+Flow('dat',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clipd','Clip.class dat',
     '''
     java -cp ${JAVACLASSPATH}:. ${SOURCES[0].filebase} clip=0.5 
