@@ -11,7 +11,8 @@ executed.
 Optional directory filters controlling inventory or command execution
 may be specified based on existence of .rsfproj file, sf programs used,
 type of external data required, and total rsf data-file size of the
-completed example.
+completed example.  A an optional input text file may also be specified
+containing a list of examples to skip.
 
 The optional command is executed in the users default shell.
 
@@ -135,8 +136,11 @@ def calc_filter(options,props):
     'Calculate command filter'
 
     filter = True
-    (rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local) = options
-    (rsfproj_exist,uses_list,data_size,data_type) = props
+    (skiplist,rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local) = options
+    (root,rsfproj_exist,uses_list,data_size,data_type) = props
+
+    # skiplist filter
+    if root in skiplist: filter = False
 
     # rsfproj existence filter
     if (rsfproj != 'both') and (rsfproj != rsfproj_exist): filter = False
@@ -204,6 +208,9 @@ def main(argv=sys.argv):
     command = par.string('command')
     # command to execute in each directory, default = none
 
+    skipfile = par.string('skipfile')
+    # file with list of directories to skip
+
     if list is None:    list='all'
     if list not in ['all','filter','none']:
         sys.stderr.write('Unknown list option: %s\n' % list)
@@ -241,6 +248,15 @@ def main(argv=sys.argv):
     sys.stdout.write("Searching in: %s\n\n" % books)
     sys.stdout.flush()
 
+################    read skipfile
+
+    g = {}
+    l = {}
+    if skipfile is not None: execfile(skipfile,g,l)
+    
+    if 'skiplist' in l: skiplist = l['skiplist']
+    else:               skiplist = []
+        
 ################    search directory tree
 
     if (list == 'all') or (list == 'filter'):
@@ -274,7 +290,7 @@ def main(argv=sys.argv):
 
                                                 # skip dirs without SConstruct
             if 'SConstruct' not in files: continue
-
+            
                                                 # read rsfproj file
             tuple = read_rsfproj(root,files)
             (error,rsfproj_exist,uses_list,data_type,data_size) = tuple
@@ -285,8 +301,8 @@ def main(argv=sys.argv):
                 sys.stdout.flush()
 
                                                 # calculate directory filter
-            options = (rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local)
-            props   = (rsfproj_exist,uses_list,data_size,data_type)
+            options = (skiplist,rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local)
+            props   = (root,rsfproj_exist,uses_list,data_size,data_type)
             filter  = calc_filter(options,props)
             if filter==True:
             
