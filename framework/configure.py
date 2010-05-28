@@ -1472,18 +1472,24 @@ def python(context):
         context.Result(context_failure)
         need_pkg('numpy')
 
-def java(context):
-    context.Message("Checking for Mines JTK in Classpath ...")
-    try:
-            if 'edu_mines_jtk.jar' in os.environ['MINESJTK']:
-                context.Result(context_success)
-            else:
-                context.Result(context_failure)
-                context.Message("Please add path to Mines JTK to the MINESJTK environmental variable to proceed with the Java API")
-    except:
-            context.Result(context_failure)
-            context.Message("Please add path to Mines JTK to the MINESJTK environmental variable to proceed with the Java API")
+pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
+                 'darwin':'netpbm (fink)',
+                 'fedora':'netpbm-devel',
+                 'suse'  :'libnetpbm-devel',
+                 'ubuntu':'libnetpbm10-dev'}
 
+pkg['minesjtk'] = {}
+
+def java(context):
+    context.Message("Checking for Mines JTK ...")
+    MINESJTK = context.env.get('MINESJTK',os.environ.get('MINESJTK'))
+    if MINESJTK:
+        context.Result(MINESJTK)
+        context.env['MINESJTK'] = MINESJTK
+    else:
+        context.Result(context_failure)
+        pkg['minesjtk'][plat['distro']] = 'Mines JTK http://inside.mines.edu/~dhale/jtk/\n\tSet MINESJTK to the location of edu_mines_jtk.jar'
+        need_pkg('minesjtk')
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
@@ -1584,5 +1590,6 @@ def options(file):
     opts.Add('MATLAB','Matlab interpreter')
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
+    opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
 
     return opts

@@ -35,7 +35,7 @@ if test "$python" = "no"; then
     fatal_error "Please install Python before proceeding: http://www.python.org"
     exit 1
 fi
-python_v=`python -V 2>&1 | awk '{print $2}'`
+python_v=`$python -V 2>&1 | awk '{print $2}'`
 echo "checking Python version ... $python_v"
 
 root=${RSFROOT}
@@ -44,7 +44,7 @@ if test ! -n "$root"; then
 fi
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
-    root=`python -c "import sys; print sys.prefix"`
+    root=`$python -c "import sys; print sys.prefix"`
     warning "I am temporarily setting RSFROOT to \"$root\"."
     warning "You can adjust your shell settings to set it permanently."
     export RSFROOT=$root
@@ -53,9 +53,9 @@ fi
 # if numpy is installed in userspace, then its site-packages subdirectory
 # has to be in PYTHONPATH in order for "import numpy" to work
 if test -n "${PYTHONPATH}"; then
-    PYTHONPATH=`python framework/setenv.py`:${PYTHONPATH}
+    PYTHONPATH=`$python framework/setenv.py`:${PYTHONPATH}
 else
-    PYTHONPATH=`python framework/setenv.py`
+    PYTHONPATH=`$python framework/setenv.py`
 fi
 export PYTHONPATH
 
@@ -69,7 +69,7 @@ if test "$scons" = "no"; then
     gunzip < $archive | tar xf - > /dev/null
     dir=`ls -d scons-* | grep '[^mz]$'`
     cd $dir
-    python setup.py install --prefix=${RSFROOT} > /dev/null
+    $python setup.py install --prefix=${RSFROOT} > /dev/null
     cd $here
     scons="${RSFROOT}/bin/scons"
     if test ! -x "$scons"; then

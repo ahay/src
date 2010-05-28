@@ -44,13 +44,6 @@ vpsuffix = '.vpl'
 dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
 libs = os.environ.get('LIBS',"")
 
-# Java classpath environmental variable setup
-jclasspath = None
-try:
-    jclasspath = '%s:%s:.' % (os.environ['MINESJTK'],os.path.join(libdir,'rsf.jar')) 
-except Exception, e:
-    jclasspath = None
-
 resdir = None
 
 def set_dir(dir='Fig'):
@@ -232,7 +225,7 @@ class Project(Environment):
 
         libdir = os.path.join(root,'lib')
         incdir = os.path.join(root,'include')
-            
+
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
@@ -241,6 +234,7 @@ class Project(Environment):
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),
                                                      '.Xauthority'))},
+                    JAVACLASSPATH=os.path.join(libdir,'rsf.jar'),
                     BUILDERS={'Retrieve':Retrieve,
                               'Test':Test,
                               'Echo':Echo},
@@ -249,8 +243,6 @@ class Project(Environment):
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
-        if jclasspath: # If we have java variables set
-            self.Append(ENV={'CLASSPATH':jclasspath})
 
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',

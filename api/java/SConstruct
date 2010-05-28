@@ -12,25 +12,20 @@ except:
     env = bldutil.Debug()
     root = None
 
-cp = None
-try:
-    cp = os.environ['MINESJTK']
-except:
-    print 'Could not find Mines JTK in classpath.'
-    print 'Will not build Java API'
+cp = env.get('MINESJTK')
+if not cp:
+    print 'Please install Mines JTK and set MINESJTK during configuration.'
+    Exit(1)
 
-bindir = os.path.join(root,'bin','sfjava')
-files = ['Header','Writer','Reader','Par']
-
-targets = map(lambda x: 'rsf/'+x+'.class',files)
-sources = map(lambda x: x+'.java',files)
+files = Split('Header Writer Reader Par')
 
 pwd = os.getcwd()
 if 'java' in env.get('API',[]) and cp:
-        for i in range(len(files)):
-            env.Command(targets[i],sources[i],['javac -cp %s:%s -d %s $SOURCE' % (cp,pwd,pwd)])
+    env.Java('rsf',map(lambda x: x+'.java',files),JAVACLASSPATH=[cp,pwd])
+    env.Jar('rsf.jar','rsf',JARCHDIR=pwd)
 
-        env.Command('rsf.jar',targets,'jar cf $TARGET -C %s rsf/' %(pwd))
-        env.Install('../../lib','rsf.jar')
-        if root:
-                env.Install(libdir,'rsf.jar')
+    env.Install('../../lib','rsf.jar')
+    if root:
+        env.Install(libdir,'rsf.jar')
+
+        
