@@ -211,7 +211,8 @@ def cc(context):
     context.Result(res)
     if not res:
         need_pkg('libc')
-    if string.rfind(CC,'gcc') >= 0:
+    if string.rfind(CC,'gcc') >= 0 and \
+           string.rfind(CC,'pgcc') < 0:
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
@@ -1083,9 +1084,12 @@ def omp(context):
     CC    = context.env.get('CC','gcc')
     flags = context.env.get('CCFLAGS','')
     lflags = context.env.get('LINKFLAGS','')
+    pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
-    if gcc:
+    if pgcc:
+        CCFLAGS = flags + ' -mp'
+    elif gcc:
         LIBS.append('gomp')
         CCFLAGS = flags + ' -fopenmp'
         LINKFLAGS = lflags
@@ -1131,12 +1135,13 @@ def pthreads(context):
     flags = context.env.get('LINKFLAGS','')
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
+    pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
-    if gcc and plat['OS'] != 'darwin' and plat['OS'] != 'cygwin':
-        context.env.Append(LINKFLAGS='-pthread')
-    elif icc:
+    if icc or pgcc:
         LIBS.append('pthread')
+    elif gcc and plat['OS'] != 'darwin' and plat['OS'] != 'cygwin':
+        context.env.Append(LINKFLAGS='-pthread')
 
     text = '''
     #include <pthread.h>
@@ -1155,7 +1160,7 @@ def pthreads(context):
     else:
         context.Result(context_failure)
         need_pkg('pthreads', fatal=False)
-        if icc:
+        if icc or pgcc:
             LIBS.pop()
         context.env['LIBS'] = LIBS
         context.env.Replace(LINKFLAGS=flags)
