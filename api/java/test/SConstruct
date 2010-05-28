@@ -12,7 +12,8 @@ Flow('dat',None,
 
 Flow('clipd','Clip.class dat',
     '''
-    java ${SOURCES[0].filebase} clip=0.5 in=${SOURCES[1]} out=$TARGET 
+    java -cp ${JAVACLASSPATH}:. ${SOURCES[0].filebase} clip=0.5 
+    in=${SOURCES[1]} out=$TARGET 
     ''',stdin=0,stdout=-1)
 Flow('test.attr','clipd','sfattr')
 
