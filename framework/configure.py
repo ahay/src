@@ -1481,6 +1481,15 @@ pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
 pkg['minesjtk'] = {}
 
 def java(context):
+    context.Message("checking for javac ... ")
+    JAVAC = context.env.get('JAVAC',WhereIs('javac'))
+    if JAVAC:
+        context.Result(JAVAC)
+        context.env['JAVAC'] = JAVAC
+    else:
+        context.Result(context_failure)
+        need_pkg('java-devel')
+    
     context.Message("Checking for Mines JTK ...")
     MINESJTK = context.env.get('MINESJTK',os.environ.get('MINESJTK'))
     if MINESJTK:
@@ -1590,6 +1599,7 @@ def options(file):
     opts.Add('MATLAB','Matlab interpreter')
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
+    opts.Add('JAVAC','The Java compiler')
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
 
     return opts

@@ -21,7 +21,7 @@ files = Split('Header Writer Reader Par')
 
 pwd = os.getcwd()
 if 'java' in env.get('API',[]) and cp:
-    env.Java('rsf',map(lambda x: x+'.java',files),JAVACLASSPATH=[cp,pwd])
+    env.Java('.',map(lambda x: x+'.java',files),JAVACLASSPATH=[cp,pwd])
     env.Jar('rsf.jar','rsf',JARCHDIR=pwd)
 
     env.Install('../../lib','rsf.jar')

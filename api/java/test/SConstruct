@@ -6,8 +6,8 @@ project.Java('.','Clip.java')
 Flow('dat',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clipd','Clip.class dat',
     '''
-    java -cp ${JAVACLASSPATH}:. ${SOURCES[0].filebase} clip=0.5 
+    %s -cp ${JAVACLASSPATH}:. ${SOURCES[0].filebase} clip=0.5 
     in=${SOURCES[1]} out=$TARGET 
-    ''',stdin=0,stdout=-1)
+    ''' % WhereIs('java'),stdin=0,stdout=-1)
 Flow('test.attr','clipd','sfattr')
 
