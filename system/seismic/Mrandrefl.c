@@ -90,6 +90,8 @@ int main (int argc, char* argv[])
     /* time origin */
     sf_putfloat(mod,"o1",t0);
     sf_putint(mod,"n2",3);
+    sf_putstring(mod,"label1","Time");
+    sf_putstring(mod,"unit1","s");
     sf_setformat(mod,"native_float");
 
     if (!sf_getfloat("tscale",&tscale)) tscale=1.;
