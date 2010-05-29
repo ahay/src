@@ -1,3 +1,3 @@
 uses=['sfsigmoid', 'sfsmooth', 'sfput', 'sfgrey', 'sfdip', 'sfseislet', 'sfsort', 'sftransp', 'sfdwt', 'sfcat', 'sfwindow', 'sfscale', 'sfmath', 'sfgraph', 'sfcosft', 'sfstack', 'sfthreshold', 'sfspike', 'sfspray', 'sfdiplet', 'sfbandpass', 'sfinmo']
 data=[]
-size=  176759204
+size=  176554404
