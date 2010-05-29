@@ -159,6 +159,19 @@ def calc_filter(options,props):
 
     return filter
 
+def rsftimer_write(root,dt_user,dt_sys,dt_real):
+    'write an .rsftimer file'
+    
+    import time
+
+    rsftimer_file = open(os.path.join(root,'.rsftimer'),'a')
+
+    string = "%s  %6.2f  %6.2f  %6.2f\n"
+    rsftimer_file.write(string % (time.asctime(),dt_user,dt_sys,dt_real))
+    rsftimer_file.close()
+
+    return
+
 ###############################################################################
 
 def main(argv=sys.argv):
@@ -180,8 +193,8 @@ def main(argv=sys.argv):
     list = par.string('list')
     # how much to list [all,filter,none], default = all
 
-    timer = par.bool('timer',False)
-    # output execution time
+    timer = par.string('timer')
+    # output execution time [log,file,none], default = none
 
     rsfproj = par.string('rsfproj')
     # rsfproj filter [yes,no,both], default = yes
@@ -214,6 +227,11 @@ def main(argv=sys.argv):
     if list is None:    list='all'
     if list not in ['all','filter','none']:
         sys.stderr.write('Unknown list option: %s\n' % list)
+        return unix_error
+
+    if timer is None:   timer='none'
+    if timer not in ['log','file','none']:
+        sys.stderr.write('Unknown timer option: %s\n' % timer)
         return unix_error
 
     if rsfproj is None: rsfproj='yes'
@@ -341,9 +359,12 @@ def main(argv=sys.argv):
                 tuple = command_wait(' '.join(['cd',root,';',command]))
                 (exit,dt_user,dt_sys,dt_real) = tuple
 
-                if (timer is True):
+                if (timer == 'log'):
                     string = "   user %6.2f   sys %6.2f  real %6.2f  %s\n"
                     sys.stdout.write(string % (dt_user,dt_sys,dt_real,root))
+                    
+                if (timer == 'file'):
+                    rsftimer_write(root,dt_user,dt_sys,dt_real)
                     
                 if (exit==0):
                     string = "   ---------  command success  ---------  %s\n"
