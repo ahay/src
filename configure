@@ -2,16 +2,16 @@
 
 warning()
 {
-    echo -en "\E[1m" # bold
+    echo "\033[1m" # bold
     echo -n $1
-    echo -e "\E[0m" # end highlighting
+    echo "\033[0m" # end highlighting
 }
 
 fatal_error()
 {
-    echo -en "\E[41m\E[93m " # yellow on red background
+    echo "\033[41m\033[93m " # yellow on red background
     echo -n $1
-    echo -e " \E[0m" # end highlighting
+    echo "\033[0m" # end highlighting
 }
 
 findprog ()
@@ -45,19 +45,18 @@ fi
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
     root=`$python -c "import sys; print sys.prefix"`
-    warning "I am temporarily setting RSFROOT to \"$root\"."
-    warning "You can adjust your shell settings to set it permanently."
-    export RSFROOT=$root
+    warning "I am setting RSFROOT to $root\n"
+#    export RSFROOT=$root
 fi
 
 # if numpy is installed in userspace, then its site-packages subdirectory
 # has to be in PYTHONPATH in order for "import numpy" to work
-if test -n "${PYTHONPATH}"; then
-    PYTHONPATH=`$python framework/setenv.py`:${PYTHONPATH}
-else
-    PYTHONPATH=`$python framework/setenv.py`
-fi
-export PYTHONPATH
+#if test -n "${PYTHONPATH}"; then
+#    PYTHONPATH=`$python framework/setenv.py`:${PYTHONPATH}
+#else
+#    PYTHONPATH=`$python framework/setenv.py`
+#fi
+#export PYTHONPATH
 
 findprog scons
 scons=$prog
@@ -86,7 +85,7 @@ scons_v=`scons -v 2>&1 | awk 'NR==2 {print $2}' | sed s/,//`
 echo "checking SCons version ... $scons_v"
 
 echo "Running $scons $* config ..."
-rm -rf .scon* config.py
+rm -rf env.*sh .scon* config.py
 echo "------------------------"
 $scons $* config
 echo "------------------------"

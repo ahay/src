@@ -56,78 +56,72 @@ def shell_script(target, source=None, env=None):
     # Needs this specific interface because it will be called by a SCons Command
     # in RSFSRC/SConstruct
 
-    shell = env['shell']
-    user_shell = os.path.basename(os.environ.get('SHELL','/bin/sh'))
+    import configure
 
+    shell = env['shell']
     rsfroot = env['RSFROOT']
 
+    pypath = get_local_site_pkgs(rsfroot)
+    if shell == 'sh' and rsfroot != sysconfig.PREFIX:
+        # not default installation, requires proper PYTHONPATH
+        if pypath != os.environ.get('PYTHONPATH').split(':')[0]:
+            configure.stderr_write('Please set PYTHONPATH to %s' % pypath,
+                                   'yellow_on_red')
+        
     datapath = os.environ.get('DATAPATH','/var/tmp')
     if datapath[-1] != '/':
         datapath += '/'
 
-    pythonpath = os.environ.get('PYTHONPATH')
-    mypath = get_local_site_pkgs(env['RSFROOT'])
-
-    if pythonpath:
-        if os.path.expandvars(pythonpath) != mypath:
-            pythonpath = ':'.join([mypath,'$PYTHONPATH'])
-    else:
-        pythonpath = mypath
-    pythonpath = pythonpath.replace(rsfroot,'$RSFROOT')
-
-    ldlibpath = os.environ.get('LD_LIBRARY_PATH')
-    mypath = os.path.join(rsfroot,'lib')
-    if ldlibpath:
-        if os.path.expandvars(ldlibpath) != mypath:
-            ldlibpath = ':'.join([mypath,'$LD_LIBRARY_PATH'])
-    else:
-        ldlibpath = mypath
-    ldlibpath = ldlibpath.replace(rsfroot,'$RSFROOT')
+    ldlibpath = os.path.join(rsfroot,'lib')
+    
+    manpath = '`manpath`:$RSFROOT/share/man'
 
     shrc = open(str(target[0]), 'w')
     shrc.write('#!/bin/%s\n' % shell)
 
     shenv = {
-        'RSFROOT':[rsfroot,'Madagascar installation directory'],
-        'PYTHONPATH':[pythonpath,'Making sure Python finds the rsf package'],
-        'DATAPATH':[datapath,
-                    'Default location for binary data files part of RSF datasets'],
-        'LD_LIBRARY_PATH':[ldlibpath,
-                           'Making sure Madagascar shared object files are found at runtime'],
-        'MANPATH':['`manpath`:$RSFROOT/share/man',
-                   'Making sure the "man" program finds Madagascar manual pages'],
-        'PATH':['$RSFROOT/bin:$PATH',
-                  'Making sure shell finds Madagascar executables']
+        'RSFROOT':(rsfroot,'Madagascar installation directory'),
+        'PYTHONPATH':(pypath,'Python packages'),
+        'DATAPATH':(datapath,'binary data files part of RSF datasets'),
+        'LD_LIBRARY_PATH':(ldlibpath,'shared object files'),
+        'MANPATH':(manpath,'manual pages'),
+        'PATH':('$RSFROOT/bin:$PATH','executables')
         }
 
     keys = ('RSFROOT','PYTHONPATH','DATAPATH',
             'MANPATH','LD_LIBRARY_PATH','PATH')
 
     myrc = ''
-    if shell == 'csh':
-        for par in keys:
-            if par == 'PATH':
-                myrc += '\n# %s\nset path = ($RSFROOT/bin $path)\n' % \
-                    shenv[par][1]
-            else:
-                myrc += '\n# %s\nsetenv %s %s\n' % \
-                    (shenv[par][1],par,shenv[par][0])
-    else:
-        for par in keys:
-            myrc += '\n# %s\nexport %s=%s\n' % \
-                (shenv[par][1],par,shenv[par][0])
+    for par in keys:
+        comment = shenv[par][1]
+        value = shenv[par][0]
+        if par != 'RSFROOT':
+            value = value.replace(rsfroot,'$RSFROOT')
+        redefine =  (par == 'PYTHONPATH' or par == 'LD_LIBRARY_PATH')
 
-    if rsfroot != sysconfig.PREFIX and \
-            user_shell in ({'sh':('bash','sh'),'csh':('tcsh','csh')}[shell]):
-        sys.stderr.write('------------------------\n')
-        sys.stderr.write('You may want to add the following to %s:\n' %
-        {'sh':'.bashrc or .bash_profile','csh':'.cshrc'}[shell])
-        sys.stderr.write(myrc)
-        sys.stderr.write('------------------------\n')
+        myrc += '\n# Path for %s\n' % comment
+        if shell == 'csh':
+            if par == 'PATH':
+                myrc += 'set path = ($RSFROOT/bin $path)\n'
+            else:
+                if redefine:
+                    myrc += 'if ($?%s) then\n' % par
+                    myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
+                    myrc += 'else\n'
+                myrc += 'setenv %s %s\n' % (par,value)
+                if redefine:
+                    myrc += 'endif\n'              
+        else:
+            if redefine:
+                myrc += 'if [ -n "$%s" ]; then\n' % par
+                myrc += 'export %s=%s:${%s}\n' % (par,value,par)
+                myrc += 'else\n'
+            myrc += 'export %s=%s\n' % (par,value)
+            if redefine:
+                myrc += 'fi\n' 
     
     shrc.write(myrc)
     shrc.close()
-
     return 0
 
 ################################################################################
