@@ -12,7 +12,7 @@ wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1  ffdv0b1
                                  ffdcos2 ffdcos2b ffdcos2bc ffdcos2bs ffd2b
                                  ffdan2b ffdan4b ffdantti4b ffdanttic
                                  ffdantti4b_smsr ffd2b_smsr
-                                 ffdantti4b_rvr  ffd2b_rvr
+                                 ffdantti4b_rvr  ffd2b_rvr ffd2_ps
 trycos lmm laplace
 '''
 

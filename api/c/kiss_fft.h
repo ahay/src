@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <memory.h>
-/* #include <malloc.h> */
+#include <string.h>
+#include <malloc.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,9 +27,11 @@ extern "C" {
 #ifdef USE_SIMD
 # include <xmmintrin.h>
 # define kiss_fft_scalar __m128
-#define KISS_FFT_MALLOC(nbytes) memalign(16,nbytes)
+#define KISS_FFT_MALLOC(nbytes) _mm_malloc(nbytes,16)
+#define KISS_FFT_FREE _mm_free
 #else	
 #define KISS_FFT_MALLOC malloc
+#define KISS_FFT_FREE free
 #endif	
 
 
@@ -111,6 +113,10 @@ void kiss_fft_cleanup(void);
  * Returns the smallest integer k, such that k>=n and k has only "fast" factors (2,3,5)
  */
 int kiss_fft_next_fast_size(int n);
+
+/* for real ffts, we need an even size */
+#define kiss_fftr_next_fast_size_real(n) \
+        (kiss_fft_next_fast_size( ((n)+1)>>1)<<1)
 
 #ifdef __cplusplus
 } 
