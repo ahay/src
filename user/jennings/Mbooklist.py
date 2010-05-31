@@ -166,8 +166,8 @@ def rsftimer_write(root,dt_user,dt_sys,dt_real):
 
     rsftimer_file = open(os.path.join(root,'.rsftimer'),'a')
 
-    string = "%s  %6.2f  %6.2f  %6.2f\n"
-    rsftimer_file.write(string % (time.asctime(),dt_user,dt_sys,dt_real))
+    string = "%s  %7.2f  %7.2f  %7.2f  %s\n"
+    rsftimer_file.write(string % (time.asctime(),dt_user,dt_sys,dt_real,root))
     rsftimer_file.close()
 
     return
