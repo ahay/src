@@ -1,0 +1,25 @@
+skiplist =  [
+                'book/slim/geo2008NewInsightsPareto/pareto',    # Matlab not installed
+                'book/slim/slimUserManual/sffdct',              # PyCurvelab not installed
+                
+                                                                # Examples that run more than 2 minutes
+                'book/cwp/geo2006TimeShiftImagingCondition/zicig',
+                'book/cwp/geo2008NumericWEMVAoperators/saltWEMVA',
+                'book/data/amoco/fdmod',
+                'book/data/marmousi/fdmod',
+                'book/geo384w/hw4/dome',
+                'book/gpgn658/fdmod/exercise',
+                'book/jsg/diffr/gom',
+                'book/jsg/pmig/mig',
+                'book/jsg/shape/beivc',
+                'book/jsg/time2depth/masha2',
+                'book/jsg/timelapse/long1',
+                'book/rsf/school/sigsbee',
+                'book/sep/angle/agmig',
+                'book/sep/findif/vc3',
+                'book/sep/oc2/cup',
+                'book/sep/stoltst/elfst',
+                'book/sep/vc2/beivc',
+                'book/sep/vc2/sigvc'    
+            ]
+            
