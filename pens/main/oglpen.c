@@ -122,7 +122,7 @@ void opendev (int argc, char* argv[])
     dev.point = oglpoint;
 
     dev.need_end_erase = true;
-    dev.smart_clip = false;
+    dev.smart_clip = true;
     dev.smart_raster = true;
     dev.num_col = NCOLOR;
 
@@ -153,8 +153,10 @@ void opendev (int argc, char* argv[])
     sf_getfloat ("ppi", &dev.pixels_per_inch);
     /* pixels per inch */
 
-    dev.xmax = nx - 1;
-    dev.ymax = ny - 1;
+    dev.xmin = 0;
+    dev.ymin = 0;
+    dev.xmax = nx;
+    dev.ymax = ny;
 
     invras = false;
 
@@ -724,24 +726,32 @@ void oglreshape (int width, int height)
 {
     GLdouble wh = 1.0;
 
-    glViewport (0, 0, width, height);
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
     if (!stretchy) {
-        if (width*VP_SCREEN_RATIO <= height) {
-            wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
+        if (VP_ABSOLUTE == size) {
+            ny = height*DEV_SCALE;
+            nx = ny*width/height;
             glOrtho (-1, nx,
-                     -1, ny*wh, -1, 1);
-        } else {
-            wh = ((GLfloat)width / (GLfloat)height)*VP_SCREEN_RATIO;
-            glOrtho (-1, nx*wh,
                      -1, ny, -1, 1);
+        } else {
+            if (width*VP_SCREEN_RATIO <= height) {
+                wh = (GLfloat)height / (GLfloat)width / VP_SCREEN_RATIO;
+                glOrtho (-1, nx,
+                         -1, ny*wh, -1, 1);
+            } else {
+                wh = ((GLfloat)width / (GLfloat)height)*VP_SCREEN_RATIO;
+                glOrtho (-1, nx*wh,
+                         -1, ny, -1, 1);
+            }
         }
     } else
         glOrtho (-1, nx,
                  -1, ny, -1, 1);
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
+
+    glViewport (0, 0, width, height);
 
     glutPostRedisplay ();
 }
