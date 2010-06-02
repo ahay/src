@@ -169,6 +169,12 @@ def which(prog):
 
 ###############################################################################
 
+def chk_prog(prog):
+    if which(prog) == None:
+        raise m8rex.MissingProgram(prog)
+
+###############################################################################
+
 def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     '''Replacement for commands.getoutput. Arguments:
     - prog. Executable to be run. STRING. The only non-optional argument.
