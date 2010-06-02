@@ -1,3 +1,33 @@
+##   Copyright (C) 2010 University of Texas at Austin
+##  
+##   This program is free software; you can redistribute it and/or modify
+##   it under the terms of the GNU General Public License as published by
+##   the Free Software Foundation; either version 2 of the License, or
+##   (at your option) any later version.
+##  
+##   This program is distributed in the hope that it will be useful,
+##   but WITHOUT ANY WARRANTY; without even the implied warranty of
+##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##   GNU General Public License for more details.
+##  
+##   You should have received a copy of the GNU General Public License
+##   along with this program; if not, write to the Free Software
+##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+'''
+This module provides interface to RSF files and Madagascar programs.
+
+>>> import m8r
+>>> par = m8r.Par(["prog","a=5","b=as","a=100"])
+>>> par.int("a")
+100
+>>> par.int("c")
+>>> par.int("c",10)
+10
+'''
+
+#'
+
 import os, sys, tempfile, re
 import c_m8r as c_rsf
 import numpy
@@ -9,6 +39,19 @@ import rsf.path
 ###
 
 class Par(object):
+    '''
+    Parameter manipulation class.
+
+    Parameters are given with "=" sign, with the last definition winning.
+
+>>> import m8r
+>>> par = m8r.Par(["prog","a=5","b=as","a=100"])
+>>> par.int("a")
+100
+>>> par.int("c")
+>>> par.int("c",10)
+10
+    '''  
     def __init__(self,argv=sys.argv):
         c_rsf.sf_init(len(argv),argv)
         self.prog = c_rsf.sf_getprog()

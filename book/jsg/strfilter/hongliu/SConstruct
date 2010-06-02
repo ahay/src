@@ -83,7 +83,7 @@ Flow('sgr-stacks','3dsgr','spray axis=2 n=%d ' % ((2*ns2+1)*(2*ns3+1)))
 
 Flow('sgr-weight','sgr-stacks sgr-spray', 
      '''
-     similarity other=${SOURCES[1]} rect1=10 rect4=1 
+     similarity other=${SOURCES[1]} rect1=10 rect4=1 verb=n
      ''')
 
 Flow('sgr-weight0','sgr-weight','threshold pclip=99')
