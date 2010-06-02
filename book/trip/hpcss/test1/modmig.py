@@ -1,4 +1,4 @@
-from rsf.proj import *
+from rsfproj import *
 
 def Movie(title):
     Plot(title,'grey gainpanel=all wanttitle=n',view=1)
