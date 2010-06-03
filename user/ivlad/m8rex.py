@@ -95,6 +95,10 @@ class StringParamNotInAcceptableValueList(Error):
     def __init__(self, param, avl):
         self.msg = 'Parameter ' + param + ' not in: ' + ', '.join(avl)
 
+class StringParamInvalidFormat(Error):
+    def __init__(self, param, msg):
+        self.msg = 'Parameter ' + param + ' ' + msg
+
 class TypeHandlingNotImplemented(Error):
     def __init__(self, typenm):
         self.msg = 'Handling for type %s not implemented yet' % typenm
