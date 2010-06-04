@@ -53,8 +53,10 @@ def Flow(sources,flow,bindir,rsfflow=1,
                     sources.append(command)
             else:
                 rsfprog = None
-            if re.match(r'[^/]+\.exe$',command): # local program
-                command = os.path.join('.',command)
+                if re.match(r'[^/]+\.exe$',command): # local program
+                    command = os.path.join('.',command)
+                elif command in os.listdir(bindir):
+                    command = os.path.join(bindir,command) 
             pars.insert(0,command)
             # special rule for metaprograms
             if rsfprog and rsfprog[len(prefix):] in \

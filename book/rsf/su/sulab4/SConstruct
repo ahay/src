@@ -1,0 +1,13 @@
+from rsf.suproj import *
+
+Flow('plane',None,'suplane')
+Flow('depth','plane','suttoz t=0.0,0.15,0.2 v=1500,2000,3000')
+
+Result('plane','suxwigb title="test pattern" ')
+Result('depth','suwind itmax=64 | suxwigb title="depth section" ')
+
+Flow('plane2','depth','suztot z=0,131.25,193.75 v=1500,2000,3000')
+
+Result('plane2','suxwigb title="time section reconstructed" ')
+
+End()

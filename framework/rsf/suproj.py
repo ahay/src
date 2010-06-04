@@ -42,6 +42,7 @@ class SUProject(rsf.proj.Project):
         self['ENV']['CWPROOT'] = topdir
         self.plots = []
         self.views = []
+        self.bindir = bindir
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsfflow':0,'suffix': suffix,'src_suffix':src_suffix})
         return apply(rsf.proj.Project.Flow,(self,target,source,flow),kw)
