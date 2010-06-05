@@ -159,15 +159,15 @@ def calc_filter(options,props):
 
     return filter
 
-def rsftimer_write(root,dt_user,dt_sys,dt_real):
+def rsftimer_write(root,exit,dt_user,dt_sys,dt_real):
     'write an .rsftimer file'
     
     import time
 
     rsftimer_file = open(os.path.join(root,'.rsftimer'),'a')
 
-    string = "%s  %7.2f  %7.2f  %7.2f  %s\n"
-    rsftimer_file.write(string % (time.asctime(),dt_user,dt_sys,dt_real,root))
+    string = "%s  %3d  %8.2f  %8.2f  %8.2f  %s\n"
+    rsftimer_file.write(string % (time.asctime(),exit,dt_user,dt_sys,dt_real,root))
     rsftimer_file.close()
 
     return
@@ -364,7 +364,7 @@ def main(argv=sys.argv):
                     sys.stdout.write(string % (dt_user,dt_sys,dt_real,root))
                     
                 if (timer == 'file'):
-                    rsftimer_write(root,dt_user,dt_sys,dt_real)
+                    rsftimer_write(root,exit,dt_user,dt_sys,dt_real)
                     
                 if (exit==0):
                     string = "   ---------  command success  ---------  %s\n"
