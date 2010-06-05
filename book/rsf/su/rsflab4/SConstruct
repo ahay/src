@@ -27,7 +27,7 @@ Plot('velz',
 Result('vel','velt velz','SideBySideAniso')
 
 Flow('velt2','velt','spray axis=2 n=32')
-Flow('depth','plane vels',
+Flow('depth','plane velt2',
      '''
      time2depth velocity=${SOURCES[1]} intime=y nz=128 dz=2 |
      put label1=Depth unit1=m
