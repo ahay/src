@@ -21,11 +21,19 @@
 
 void   read4file(char *fname, float **s0, float **sinit, float **s, int nx, int nz)
 {
+    int i;
     FILE *fp;
 
     if((fp=fopen(fname, "rb"))==NULL) {
 	printf("Cannot open file.\n");
     }
+
+    /* nm */
+    if(fread(&i, sizeof(int), 1, fp) != 1) {
+	if (feof(fp))
+	    printf("File read error - nm.");
+    }
+    assert(i == nx*nz);
 
     /* m0 */
     if(fread(s0[0], sizeof(float), nx*nz, fp) != nx*nz) {

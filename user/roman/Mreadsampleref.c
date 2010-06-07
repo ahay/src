@@ -19,10 +19,9 @@
 #include <rsf.h>
 #include <assert.h>
 
-const int NM=4;
-
-void   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int nz, float **s)
+int   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int nz, float **s, int len)
 {
+    int i, NM;
     FILE *fp;
 
     if((fp=fopen(fname, "rb"))==NULL) {
@@ -35,6 +34,14 @@ void   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int
 	    printf("File read error - too small.");
     }
 
+    /* nm */
+    if(fread(&i, sizeof(int), 1, fp) != 1) {
+	if (feof(fp))
+	    printf("File read error - nm.");
+    }
+
+    NM = 4*i;
+    assert(NM<len);
     /* m0 */
     if(fread(m0, sizeof(float), NM, fp) != NM) {
 	if (feof(fp))
@@ -50,6 +57,8 @@ void   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int
     }
 
     fclose(fp);
+
+    return NM;
 }
 /*************************************************/
 
@@ -67,7 +76,7 @@ void putf(sf_file so1, int nx, int nz, float dx, float dz)
 }
 int main(int argc, char* argv[])
 {
-    const int nm = 4;
+    int nm = 1234567890;//1e10
     int n, nx, nz;
     float dx, dz;
     float ** t0, *m0, *minit, *m;
@@ -102,7 +111,7 @@ int main(int argc, char* argv[])
     m     = sf_floatalloc(nm);
 
     // sprintf(fname,"sample%-3d",S.nx);
-    read4file_ref(fname, m0, minit, m, nx, nz, t0);
+    nm = read4file_ref(fname, m0, minit, m, nx, nz, t0, nm);
 
     sf_floatwrite(t0[0],    nx*nz, so);
 
