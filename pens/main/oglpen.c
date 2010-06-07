@@ -28,6 +28,8 @@
 #endif
 #endif
 
+#include <limits.h>
+
 #include "../include/attrcom.h"
 #include "../include/extern.h"
 #include "../include/params.h"
@@ -525,9 +527,8 @@ void oglarea (int npts, struct vertex *head)
 /*< area >*/
 {
     int i, x, y;
-    int xvmin = dev.xmax, xvmax = dev.xmin,
-        yvmin = dev.ymax, yvmax = dev.ymin;
-    bool clipping = false;
+    int xvmin = INT_MAX, xvmax = INT_MIN,
+        yvmin = INT_MAX, yvmax = INT_MIN;
 
     /* Use stencil buffer to implement the even-odd rule */
     glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -554,42 +555,16 @@ void oglarea (int npts, struct vertex *head)
     }
     glEnd ();
     glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
-    /* Determine optimal window */
-    if (xwmin > xvmin) {
-        xvmin = xwmin;
-        clipping = true;
-    }
-    if (xwmax < xvmax) {
-        xvmax = xwmax;
-        clipping = true;
-    }
-    if (ywmin > yvmin) {
-        yvmin = ywmin;
-        clipping = true;
-    }
-    if (ywmax < yvmax) {
-        yvmax = ywmax;
-        clipping = true;
-    }
     /* Second - draw polygons only where stencil is 1 - odd number of intersection */
     glStencilFunc(GL_EQUAL, 1, 1);
     glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    /* First - fill inside */
     glBegin (GL_QUADS);
     glVertex2i (xvmin, yvmin);
     glVertex2i (xvmax, yvmin);
     glVertex2i (xvmax, yvmax);
     glVertex2i (xvmin, yvmax);
     glEnd ();
-    /* Second - outline border */
-    if (clipping) {
-        glBegin (GL_LINE_LOOP);
-        glVertex2i (xvmin, yvmin);
-        glVertex2i (xvmax, yvmin);
-        glVertex2i (xvmax, yvmax);
-        glVertex2i (xvmin, yvmax);
-        glEnd ();
-    }
+    glClear (GL_STENCIL_BUFFER_BIT);
     glDisable (GL_STENCIL_TEST);
 }
 
