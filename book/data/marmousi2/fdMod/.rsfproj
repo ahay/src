@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfgrey', 'sfspike', 'sfricker1', 'sfscale', 'sfwindow', 'sfgraph', 'sfmath', 'sfcat', 'sftransp', 'sfdd', 'sfawefd2d']
+data=['data/marm2/vp_marmousi-ii.segy']
+size=  610171364
