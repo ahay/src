@@ -188,7 +188,7 @@ int dgmres(int (*A)(const DblNumVec&, DblNumVec&), const DblNumVec& b, const Dbl
       res = sqrt(res);      if(print==1) cerr<<"Iter "<<resvec.size()<<": "<<res<<endl;
       resvec.push_back(res);
       err = res/bnrm2;
-      if(err<tol | j==m-1)
+      if(err<tol || j==m-1)
 	break;
       j=j+1;
     }
@@ -200,7 +200,7 @@ int dgmres(int (*A)(const DblNumVec&, DblNumVec&), const DblNumVec& b, const Dbl
     iC( dgemv(-1.0, Vj1, tmp, 1.0, r) );
     beta = 0;    for(int a=0; a<n; a++)      beta = beta + r(a)*r(a);
     beta = sqrt(beta);
-    if(err<tol | iter==maxit-1)
+    if(err<tol || iter==maxit-1)
       break;
     iter++;
   }
@@ -289,7 +289,7 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
       res = sqrt(res);      if(print==1) cerr<<"Iter "<<resvec.size()<<": "<<res<<endl;
       resvec.push_back(res);
       err = res/bnrm2;
-      if(err<tol | j==m-1)
+      if(err<tol || j==m-1)
 	break;
       j=j+1;
     }
@@ -301,7 +301,7 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
     iC( zgemv(-1.0, Vj1, tmp, 1.0, r) );
     beta = 0;    for(int a=0; a<n; a++)      beta = beta + abs(r(a)*r(a));
     beta = sqrt(beta);
-    if(err<tol | iter==maxit-1)
+    if(err<tol || iter==maxit-1)
       break;
     iter++;
   }

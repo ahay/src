@@ -21,7 +21,7 @@
 #include <algorithm>
 
 //external libraries
-#include "fftw3.h"
+//#include "fftw3.h"
 
 #include "blas.h"
 #include "lapack.h"

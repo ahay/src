@@ -14,13 +14,12 @@ try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.cc')))
+    inc = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.h*')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c++/SConstruct')
-    src = glob.glob('[a-z]*.cc')
-
+    inc = glob.glob('[a-z]*.h*')
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
@@ -32,12 +31,14 @@ if lapack:
                 LIBPATH=['../../lib'],
                 LIBS=[env.get('DYNLIB','')+'rsf++',
                       env.get('DYNLIB','')+'rsf']+lapack)
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-std=gnu99','')
 
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]+Split(subs)
     if lapack:
         prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+        env.Depends(prog,inc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
