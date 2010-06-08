@@ -31,7 +31,7 @@ The signs are reversed for inner=y.
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype, nh2;
-    bool abs, half, inner, hyper;
+    bool abs, half, inner, hyper, nan;
     float t0, tp, slope0, slopep, o1,d1,o2,d2,d3, x,x1, v0, *data, *off;
     sf_file in, out, offset;
 
@@ -48,6 +48,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
+    
+     if (!sf_getbool("nan",&nan)) nan=false;
+    /* if y, put  nans instead of zeros */
     
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
@@ -115,7 +118,7 @@ int main(int argc, char* argv[])
 	    if (hyper) x *= x;
 	    
 	    sf_floatread (data,n1,in);
-	    mutter (tp,slope0,slopep, x, data);
+	    mutter (tp,slope0,slopep, x, data, nan);
 	    sf_floatwrite (data,n1,out);
 	}
     }

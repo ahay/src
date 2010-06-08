@@ -45,7 +45,8 @@ void mutter (float tp     /* time step */,
 	     float slope0 /* first slope */, 
 	     float slopep /* second slope */, 
 	     float x      /* offset */, 
-	     float *data  /* trace */)
+	     float *data  /* trace */,
+	     bool  nan   /* nan instaed of zeros*/)
 /*< Mute >*/
 {
     int it;
@@ -58,7 +59,11 @@ void mutter (float tp     /* time step */,
 	if (hyper) t *= t;
 	wt = t - x * slope0;
 	if ((inner && wt > 0.) || (!inner && wt < 0.)) {
-	    data[it] = 0.;
+	    if (nan)
+	    	data[it]= 0.0 /0.0;
+	    else
+	    	data[it] = 0.;
+	    	
 	} else {
 	    wt = t - tp - x * slopep;
 	    if ((inner && wt >=0.) || (!inner && wt <= 0.)) {
