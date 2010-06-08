@@ -80,6 +80,11 @@ static int menu_tag = 0; /* GLUT menu tag */
 static bool has_menu = false;
 static int window_id; /* GLUT window identificator */
 
+#define MAX_TITLE_STR 64
+static const char *pen_title = "OpenGL pen";
+static char title_strbuf[MAX_TITLE_STR];
+static int curr_title_frame = -1;
+
 enum {
     MENU_NEXT,
     MENU_PREV,
@@ -179,13 +184,13 @@ void opendev (int argc, char* argv[])
         }
     }
 
-    window_id = glutCreateWindow ("OpenGL pen");
+    window_id = glutCreateWindow (pen_title);
     glutDisplayFunc (oglredraw);
     glutKeyboardFunc (oglkeyboard);
     glutIdleFunc (NULL);
     glutReshapeFunc (oglreshape);
 
-    if (NULL == (color = sf_getstring ("bgcolor"))) color= "black";
+    if (NULL == (color = sf_getstring ("bgcolor"))) color = "black";
     /* background color (black,white,light,dark) */
 
     switch (color[0]) {
@@ -268,6 +273,7 @@ void oglreset (void)
     }
 
     glDisable (GL_DEPTH_TEST);
+    glDepthFunc (GL_ALWAYS);
     glShadeModel (GL_FLAT);
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
     glDisable (GL_CULL_FACE);
@@ -535,7 +541,7 @@ void oglarea (int npts, struct vertex *head)
     glEnable (GL_STENCIL_TEST);
     glClear (GL_STENCIL_BUFFER_BIT);
     glStencilMask (0x01);
-    glStencilFunc(GL_ALWAYS, 0, 0);
+    glStencilFunc (GL_ALWAYS, 0, 0);
     /* First - calculate self-intersections in the stencil buffer */
     glStencilOp (GL_KEEP, GL_KEEP, GL_INVERT);
     glBegin (GL_TRIANGLE_FAN);
@@ -556,7 +562,7 @@ void oglarea (int npts, struct vertex *head)
     glEnd ();
     glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
     /* Second - draw polygons only where stencil is 1 - odd number of intersection */
-    glStencilFunc(GL_EQUAL, 1, 1);
+    glStencilFunc (GL_EQUAL, 1, 1);
     glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glBegin (GL_QUADS);
     glVertex2i (xvmin, yvmin);
@@ -564,7 +570,6 @@ void oglarea (int npts, struct vertex *head)
     glVertex2i (xvmax, yvmax);
     glVertex2i (xvmin, yvmax);
     glEnd ();
-    glClear (GL_STENCIL_BUFFER_BIT);
     glDisable (GL_STENCIL_TEST);
 }
 
@@ -694,6 +699,13 @@ void oglredraw (void)
     glCallList (ogllists[curr_frame / LIST_CHUNK] +
                 (curr_frame % LIST_CHUNK)*2);
     glutSwapBuffers ();
+
+    if (frames_num > 1 && curr_title_frame != curr_frame) {
+        curr_title_frame = curr_frame;
+        snprintf (title_strbuf, MAX_TITLE_STR - 1, "%s: frame %d of %d",
+                  pen_title, curr_title_frame + 1, frames_num);
+        glutSetWindowTitle (title_strbuf);
+    }
 }
 
 void oglreshape (int width, int height)
