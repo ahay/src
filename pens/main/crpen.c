@@ -265,9 +265,6 @@ void crattr (int command, int value, int v1, int v2, int v3)
 	    color_table[value][2] = v3;
 	    break;
 	case SET_WINDOW:
-	    cairo_reset_clip(cr);
-	    cairo_new_path(cr);
-
 	    x0 = value;
 	    width = SF_MAX(v2-value+1,0);
 	    y0 = dev.ymax-v3;

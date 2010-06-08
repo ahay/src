@@ -45,6 +45,11 @@ down = '''
 7038
 7392
 7824
+8175
+8566
+9114
+9456
+9759
 '''
 down = map(int,down.split())
 ind = arange(len(down))
@@ -55,12 +60,10 @@ ylabel('Downloads')
 xticks(ind[::6]+width/2, ('06/06', '12/06',
                           '06/07', '12/07', 
                           '06/08', '12/08',
-                          '06/09', '12/09'))
+                          '06/09', '12/09',
+                          '06/10'))
 title('Cumulative Downloads')
 #grid(True)
 
 #show()
 savefig('junk_py.eps')
-
-
-

@@ -17,9 +17,8 @@ world zplot
 
 #removed mahjongg sun moffett vgr2 to save space
 
-libprefix = env.get('DYNLIB','')
-
 proj = Project()
+libprefix = project.get('DYNLIB','')
 proj.Prepend(LIBS=[libprefix+'rsfplot'])
 
 def program(prog):
