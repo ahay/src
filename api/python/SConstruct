@@ -5,7 +5,7 @@ import bldutil
 modules = Split('m8r vplot')
 
 try: # distribution version
-    Import('env root libdir pkgdir')
+    Import('env root libdir pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -62,6 +62,7 @@ if 'python' in env.get('API',[]):
             install = env.Install(pydir,pfiles)
             if module == 'm8r':
                 env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
+                env.Install(bindir,module+'test')
 
             if env['PLATFORM'] == 'darwin':
                 for lib in ('rsf','rsfplot'):

@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+'''
+>>> import m8r
+>>> par = m8r.Par(["prog","a=5","b=as","a=100"])
+>>> par.int("a")
+100
+>>> par.int("c")
+>>> par.int("c",10)
+10
+>>> spike = m8r.spike(n1=10)[0]
+>>> spike.mean()
+1.0
+>>> spike2 = spike+spike
+>>> spike2.rms()
+2.0
+'''
+
+import doctest
+doctest.testmod()

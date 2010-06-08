@@ -249,7 +249,7 @@ def thesis_intro(target=None,source=None,env=None):
     univ = env.get('univ')
     committee = env.get('committee')
     if committee:
-        if univ=='UT':
+        if univ == 'UT':
             super = env.get('supervisor')
             if super:
                 if type(super) is types.ListType:
@@ -260,20 +260,28 @@ def thesis_intro(target=None,source=None,env=None):
             intro.write('\\committeemembers')
         for i in range(4):
             if len(committee) > i:
-                if univ and univ=='UT':
+                if univ == 'UT':
                     intro.write(('{%s}\n','[%s]\n')[i+1< len(committee)] % committee[i])
                 else:
                     intro.write('\\%s{%s}\n' %
                                 (('principaladviser','firstreader','secondreader','thirdreader')[i],
                                  committee[i]))
-    intro.write('\\beforepreface\n')
-    intro.write('\\newpage \\ \n')
+    if univ == 'UT':
+        degrees = env.get('degrees')
+        if degrees:
+            intro.write('\\previousdegrees{%s}\n' % degrees)
+    else:
+        intro.write('\\beforepreface\n')
+        intro.write('\\newpage \\ \n')
     for pref in prefs:
         tex = pref+'.tex'
         if os.path.isfile(tex): # input if file exists
             print "Found %s" % tex
             intro.write('\\input{%s}\n' % pref)
-    intro.write('\\afterpreface\n')
+    if univ == 'UT':
+        pass
+    else:
+        intro.write('\\afterpreface\n')
     intro.close()
     return 0
 
@@ -470,7 +478,7 @@ class RSFReport(Environment):
         rsf.tex.Paper('tpg',lclass='stanford-thesis',scons=0)
         # make introductory materials
         kw.update({'action':Action(thesis_intro),
-                   'varlist':['supervisor','committee','univ']})
+                   'varlist':['supervisor','committee','univ','degrees']})
         apply(self.Command,('intro.tex',None),kw)
         rsf.tex.Paper('intro',lclass='stanford-thesis',scons=0)
         for pref in prefs:

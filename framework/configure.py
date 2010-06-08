@@ -103,6 +103,7 @@ def check_all(context):
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
     blas(context) # FDNSI
+    lapack(context) # FDNSI
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
@@ -947,6 +948,45 @@ def blas(context):
             context.env['BLAS'] = None
             need_pkg('blas', fatal=False)
 
+def lapack(context):
+    context.Message("checking for LAPACK ... ")
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    blas = context.env.get('BLAS')
+    if not blas:
+        blas = 'blas'
+    lapack = context.env.get('LAPACK','lapack')
+    mylibs = [lapack,blas]
+    LIBS.extend(mylibs)
+    text = '''
+    int main(int argc,char* argv[]) {
+    int i=1;
+    return 0;
+    }\n'''
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+        context.env['LAPACK'] = mylibs
+        if plat['OS'] == 'cygwin':
+            context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
+                                         ':/lib/lapack'
+    else:
+        # some systems require cblas and atlas
+        mylibs.extend(['cblas','atlas'])
+        res = context.TryLink(text,'.c')
+        if res:
+            context.Result(res)
+            context.env['LAPACK'] = mylibs
+        else:
+            context.Result(context_failure)
+            context.env['LAPACK'] = None
+            need_pkg('lapack', fatal=False)
+        LIBS.pop()
+        LIBS.pop()
+    LIBS.pop()
+    LIBS.pop()
+
 pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
 def mpi(context):
@@ -1553,6 +1593,7 @@ def options(file):
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
+    opts.Add('LAPACK','The LAPACK library')
     opts.Add('PPM','The netpbm library')
     opts.Add('TIFF','The libtiff library')
     opts.Add('GD','The GD library')

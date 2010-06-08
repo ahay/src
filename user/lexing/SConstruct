@@ -1,0 +1,52 @@
+import os, sys, string, glob
+sys.path.append('../../framework')
+import bldutil
+
+progs = '''
+lrmatrix
+'''
+
+subs = '''
+vecmatop
+'''
+
+try:  # distributed version
+    Import('env root pkgdir bindir')
+    env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.cc')))
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../../api/c++/SConstruct')
+    src = glob.glob('[a-z]*.cc')
+
+
+lapack = env.get('LAPACK')
+
+if lapack:
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=[env.get('DYNLIB','')+'rsf++',
+                      env.get('DYNLIB','')+'rsf']+lapack)
+
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]+Split(subs)
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+
+    doc = env.RSF_Docmerge(main,[])
+    env.Install(pkgdir,doc)
+#####################################################################

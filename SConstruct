@@ -112,7 +112,7 @@ for dir in map(lambda x: os.path.join('api',x), api):
     BuildDir(build,dir)
     api_exports = 'env root libdir '
     if dir == 'api/python':
-        api_exports += 'pkgdir'
+        api_exports += 'pkgdir bindir'
     else:
         api_exports += 'incdir'
         
