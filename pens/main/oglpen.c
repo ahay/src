@@ -465,19 +465,19 @@ void oglattr (int command, int value, int v1, int v2, int v3)
         case SET_WINDOW:
             /* Right */
             glEnable (GL_CLIP_PLANE0);
-            eq[0] = -1; eq[1] = 0; eq[2] = 0; eq[3] = v2;
+            eq[0] = -1; eq[1] = 0; eq[2] = 0; eq[3] = v2 + 0.5;
             glClipPlane (GL_CLIP_PLANE0, eq);
             /* Left */
             glEnable (GL_CLIP_PLANE1);
-            eq[0] = 1; eq[1] = 0; eq[2] = 0; eq[3] = -value;
+            eq[0] = 1; eq[1] = 0; eq[2] = 0; eq[3] = -value + 0.5;
             glClipPlane (GL_CLIP_PLANE1, eq);
             /* Up */
             glEnable (GL_CLIP_PLANE2);
-            eq[0] = 0; eq[1] = -1; eq[2] = 0; eq[3] = v3;
+            eq[0] = 0; eq[1] = -1; eq[2] = 0; eq[3] = v3 + 0.5;
             glClipPlane (GL_CLIP_PLANE2, eq);
             /* Down */
             glEnable (GL_CLIP_PLANE3);
-            eq[0] = 0; eq[1] = 1; eq[2] = 0; eq[3] = -v1;
+            eq[0] = 0; eq[1] = 1; eq[2] = 0; eq[3] = -v1 + 0.5;
             glClipPlane (GL_CLIP_PLANE3, eq);
             break;
         default:
@@ -570,6 +570,7 @@ void oglarea (int npts, struct vertex *head)
     glVertex2i (xvmax, yvmax);
     glVertex2i (xvmin, yvmax);
     glEnd ();
+    glClear (GL_STENCIL_BUFFER_BIT);
     glDisable (GL_STENCIL_TEST);
 }
 
