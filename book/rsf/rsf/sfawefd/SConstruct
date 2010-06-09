@@ -48,7 +48,7 @@ Flow('dat wvl','wav vel den sou rec',
      transp | 
      awefd2d vel=${SOURCES[1]} den=${SOURCES[2]} 
      sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} 
-     verb=y free=n expl=y snap=y dabc=y jdata=1 jsnap=10 
+     verb=y free=n snap=y dabc=y jdata=1 jsnap=10 
      ''')
 
 # Run 'scons wvl.vpl' to watch a movie

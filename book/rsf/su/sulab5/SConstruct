@@ -1,0 +1,65 @@
+from rsf.suproj import *
+
+# input parameters
+n1=200
+n2=400
+d1=10
+d2=10
+
+# use unif2 to build the velocity profile
+Flow('syncline',None,
+     '''
+     echo
+     0         0
+     4000         0
+     1    -99999
+     0       1000.
+     500.      1100.
+     1000.     1300.
+     2000.     1000.
+     2700.     1100.
+     3200.     1000.
+     4000.     1050.
+     1.   -99999 |
+     unif2 ninf=2 nx=%d nz=%d v00=2000,3000
+     ninf=1 method=spline
+     ''' % (n2,n1))
+
+# view the velocity profile on the screen
+Result('syncline',
+       '''
+       ximage wbox=400 hbox=200 n1=%d n2=%d d1=%g d2=%g 
+       wbox=800 hbox=400  legend=1 title="Syncline model" label1="depth m" 
+       label2="distance m " units="m/s"
+       ''' % (n1,n2,d1,d2))
+
+# provide input for sufdmod2
+xs=1000
+zs=20
+hsz=20
+vsx=1000
+verbose=2
+tmax=2.0
+mt=10 
+label1="Depth m"
+label2="Distance m"
+
+# perform finite difference acoustic modeling to generate data
+# for a single shot in the
+Flow('seis hseis vseis sseis','syncline',
+     '''
+     sufdmod2 nz=%(n1)d dz=%(d1)g nx=%(n2)d dx=%(d2)g verbose=1 
+     xs=%(xs)g zs=%(zs)g hsz=%(hsz)g vsx=%(vsx)g
+     hsfile=${TARGETS[1]} vsfile=${TARGETS[2]} ssfile=${TARGETS[3]}
+     verbose=%(verbose)d tmax=%(tmax)g abs=1,1,1,1 mt=%(mt)d
+     ''' % globals())
+Result('seis',
+       '''
+       suxmovie  clip=1  title="Acoustic Finite-Differencing" 
+       windowtitle="Movie" label1=%(label1)s label2=%(label2)s
+       n1=%(n1)d d1=%(d1)g n2=%(n2)d d2=%(d2)g 
+       loop=1 sleep=20000  -geometry 800x400
+       ''' % globals())
+Result('hseis','suximage perc=99')
+
+End()

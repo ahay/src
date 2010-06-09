@@ -127,7 +127,12 @@ int main(int argc, char* argv[])
     Frec = sf_input ("rec"); /* receivers */
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
-    Fden = sf_input ("den"); /* density   */
+
+    if (NULL != sf_getstring("den")) {
+	Fden = sf_input ("den"); /* density   */
+    } else {
+	Fden = NULL;
+    }
 
     /*------------------------------------------------------------*/
     /* axes */
@@ -241,7 +246,13 @@ int main(int argc, char* argv[])
     vt  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 
     /* input density */
-    sf_floatread(tt[0],nz*nx,Fden);     expand(tt,ro ,fdm);
+    if (NULL != Fden) {
+	sf_floatread(tt[0],nz*nx,Fden);     
+    } else {
+	for (ix=0; ix< nz*nx; ix++) tt[0][ix] = 1.0f;
+    }
+    expand(tt,ro ,fdm);
+
     /* normalized density derivatives */
     for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 	for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
