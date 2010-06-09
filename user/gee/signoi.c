@@ -22,6 +22,7 @@
 
 #include "signoi.h"
 #include "polydiv.h"
+#include "helicon2.h"
 
 static int niter, nd;
 static float eps, *dd;
@@ -60,6 +61,25 @@ void signoi_lop (bool adj, bool add, int n1, int n2,
     nn++;
     ss++;
 }
+
+void signoi2_lop (bool adj, bool add, int n1, int n2, 
+		 float *data, float *sign)
+/*< alternative linear operator >*/
+{
+    helicon2_init (nd, nn);
+    sf_helicon_init (ss); 
+
+    sf_adjnull(adj,add,n1,n2,data,sign);
+
+    helicon2_lop (false, false, n1, n1, data, dd);
+    sf_solver_reg(helicon2_lop, sf_cgstep, sf_helicon_lop, 
+		  nd, nd, nd, sign, dd, niter, eps, "end");
+    sf_cgstep_close();
+
+    nn++;
+    ss++;
+}
+
 
 void signoi_close(void)
 /*< free allocated storage >*/

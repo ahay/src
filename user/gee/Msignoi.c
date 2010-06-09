@@ -24,6 +24,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool spitz;
     int niter, sa, na, j, dim, nx, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float *dd, *ss, eps, na0, sa0;
     char varname[6], *lagfile;
@@ -94,8 +95,16 @@ int main(int argc, char* argv[])
 	naa->flt[j] /= na0;
     }
 
+    if (!sf_getbool("spitz",&spitz)) spitz=false;
+    /* if use Spitz method */
+
     signoi_init (naa, saa, niter, nx, eps);
-    signoi_lop  (false,false,nx,nx,dd,ss);
+
+    if (spitz) {
+	signoi2_lop  (false,false,nx,nx,dd,ss);
+    } else {
+	signoi_lop  (false,false,nx,nx,dd,ss);
+    }
 
     sf_floatwrite(ss,nx,signoi);
 
