@@ -28,7 +28,7 @@ http://reproducibility.org/wiki/Advanced_Installation
 Environmental variables
 =======================
 
-To set environmental variables, append the contest of env.sh or
+To set environmental variables, append the content of env.sh or
 env.csh (depending on which shell you are using) to ~/.bash_profile or
 ~/.chsrc, respectively.
 
