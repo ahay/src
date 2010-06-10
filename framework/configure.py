@@ -974,6 +974,7 @@ def lapack(context):
     else:
         # some systems require cblas and atlas
         mylibs.extend(['cblas','atlas'])
+        LIBS.extend(['cblas','atlas'])
         res = context.TryLink(text,'.c')
         if res:
             context.Result(res)
