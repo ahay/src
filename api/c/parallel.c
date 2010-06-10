@@ -52,10 +52,10 @@ static void sizes(sf_file file, int axis, int ndim,
 }
 
 char** sf_split(sf_file inp          /* input file */, 
-		      int axis             /* split axis */,
-		      int nodes            /* number of CPUs */,
-		      int ndim, off_t *n   /* [ndim] file dimensions */, 
-		      int argc, char**argv /* command-line arguments */)
+		int axis             /* split axis */,
+		int nodes            /* number of CPUs */,
+		int ndim, off_t *n   /* [ndim] file dimensions */, 
+		int argc, char**argv /* command-line arguments */)
 /*< split the input file along the specified axis
   and generate parallel system commands >*/
 {

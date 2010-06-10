@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     int rank, nodes, ndim, job, axis, axis2;
     off_t n[SF_MAX_DIM];
-    char **commands, *cmdline, *iname;
+    char **commands, cmdline[SF_CMDLEN], *iname;
     sf_file inp=NULL, out=NULL;
     MPI_Status stat;
 
@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
 	commands = sf_split(inp,axis,nodes,ndim,n,argc,argv);  
 
 	for (job=1; job < nodes; job++) {
-	    cmdline = commands[job-1];
-	    MPI_Send(cmdline,strlen(cmdline)+1,MPI_CHAR,job,0,MPI_COMM_WORLD);
+	    strncpy(cmdline,commands[job-1],SF_CMDLEN);
+	    MPI_Send(cmdline, SF_CMDLEN, MPI_CHAR, job, 0, MPI_COMM_WORLD);
 	}
 
 	iname = sf_getstring("input");
