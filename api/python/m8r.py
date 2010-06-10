@@ -38,7 +38,7 @@ class Par(object):
             get,par = func(key)
             if get:
                 return par
-            elif default:
+            elif default != None:
                 return default
             else:
                 return None

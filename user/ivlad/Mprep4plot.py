@@ -21,7 +21,7 @@ along both axes until it is of the specified dimension.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys
+import os, sys, tempfile
 import rsf.path
 
 try: # Give precedence to local version
@@ -47,31 +47,20 @@ def main(par):
     n1 = int(n1)
     n2 = int(n2)
 
-    # Read and check the h and w parameters
-    # The debacle below could be avoided if rsf module had a function specifying
-    # whether a parameter for whom a default value is required was given at the
-    # command line or not.
-    impossible=-100000
-    none=impossible #even uglier hack, for self-doc to show user-friendly message
-    h = par.int('h', none) # output height
-    w = par.int('w', none) # output width
-    w = ivlad.valswitch(w, none, None)
-    h = ivlad.valswitch(h, none, None)
+    h = par.int('h', 768)  # output height
+    w = par.int('w', 1024) # output width
+    hash = par.string('h')
+    hasw = par.string('w')
 
-    if (h, w) == (None, None):
-        raise m8rex.MissingArgument('h or w')
-
-    if h != None and w != None: # both w and h were read. Check for sanity:
+    if hash and hasw: # both w and h were read. Check for sanity:
         ivlad.chk_param_limit(w, 'w')
         ivlad.chk_param_limit(h, 'h')
         if (h,w) == (n1,n2):
-            ivlad.msg('Change h or w if you want out!=inp')
+            ivlad.msg('Change h or w if you want out != inp')
             sf.cp(inp, out, verb)
             return ivlad.unix_success
         h = ivlad.valswitch(h, n1, None)
         w = ivlad.valswitch(w, n2, None)
-
-    # Now h and w are either None, or have a value worth doing interpolation on.
 
     # Transform h and w to pixels, if they are not
     # No default value for par.string -- Quirk of rsf, replicated in rsfbak
@@ -88,22 +77,20 @@ def main(par):
             scale = 254
         elif unit == 'cm':
             scale = 25.4
-        if w:
-            w *= ppi / float(scale)
-        if h:
-            h *= ppi / float(scale)
+        w *= ppi / float(scale)
+        h *= ppi / float(scale)
         # Don't worry, we'll convert to int after prar block
         del scale
 
-    # Now h and w are either None, or in pixels
+    # Now h and w are in pixels
 
     # If prar=y, then h and/or w define a bounding box.
     # Find the dimensions of the image inside this box
     prar = par.bool('prar', True) # if y, PReserve Aspect Ratio of input
     if prar: # preserve aspect ratio
-        if h and not w:
+        if hash and not hasw:
             w = n2 * float(h) / n1
-        elif w and not h:
+        elif hasw and not hash:
             h = n1 * float(w) / n2
         else: # Full bounding box specified
             hscale = float(h) / n1
@@ -121,13 +108,7 @@ def main(par):
 
     h = ivlad.valswitch(h, n1, None)
     w = ivlad.valswitch(w, n2, None)
-
-    # Put tmp files together with the binaries,
-    # so that if prep4plot crashes, user is not
-    # left with junk files all over his dir
-    tmp = os.path.join(rsf.path.datapath(),
-                       os.path.split(inp)[1],
-                       '.prep4plot_junk_')
+    tmp = tempfile.mktemp(dir=rsf.path.datapath())
 
     # Interpolation and, if needed, bandpass 
     if h != None:
@@ -172,7 +153,7 @@ def main(par):
         sf.rm(out_transp1, verb)
         if rem2del_junk4:
             sf.rm(ready_for_remap_2, verb)
-        sf.transp(ready_for_transp2, out, verb)
+        sf.transp(ready_for_transp2, out, verb=verb)
         sf.rm(ready_for_transp2, verb)
 
     return ivlad.unix_success

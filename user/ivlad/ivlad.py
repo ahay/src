@@ -521,7 +521,7 @@ def data_file_nm():
 
 ################################################################################
 
-def chk_file_dims(filenm, ndims):
+def chk_file_dims(filenm, ndims, verb=False):
 
     if int(getout('sfleftsize', 'i='+str(ndims), filenm, verb)) > 1:
         raise m8rex.NdimsMismatch(filenm, ndims)
