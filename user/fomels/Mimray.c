@@ -49,6 +49,8 @@ int main(int argc, char* argv[])
     sf_putstring(dix,"label3","Time");
     sf_putstring(dix,"unit3","s");
 
+    dt *= 0.5; /* one-way time */
+
     vv = sf_floatalloc2(nx,nz);
     sf_floatread(vv[0],nz*nx,vel);
 
