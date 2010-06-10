@@ -194,8 +194,10 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
             cmd += ' <' + stdin
         return cmd
 
-    if which(prog) == None:
-        raise m8rex.MissingProgram(prog)
+    prog = os.path.join(rsfprog.RSFROOT,'bin',prog)
+
+    #if which(prog) == None:
+    #   raise m8rex.MissingProgram(prog)
 
     # Build the [prog, args] list
     cmdlist = [prog]

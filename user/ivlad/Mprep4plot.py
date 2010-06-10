@@ -49,10 +49,10 @@ def main(par):
 
     h = par.int('h', 768)  # output height
     w = par.int('w', 1024) # output width
-    hash = par.string('h')
-    hasw = par.string('w')
+    has_h = par.string('h')
+    has_w = par.string('w')
 
-    if hash and hasw: # both w and h were read. Check for sanity:
+    if has_h and has_w: # both w and h were read. Check for sanity:
         ivlad.chk_param_limit(w, 'w')
         ivlad.chk_param_limit(h, 'h')
         if (h,w) == (n1,n2):
@@ -88,9 +88,9 @@ def main(par):
     # Find the dimensions of the image inside this box
     prar = par.bool('prar', True) # if y, PReserve Aspect Ratio of input
     if prar: # preserve aspect ratio
-        if hash and not hasw:
+        if has_h and not has_w:
             w = n2 * float(h) / n1
-        elif hasw and not hash:
+        elif has_w and not has_h:
             h = n1 * float(w) / n2
         else: # Full bounding box specified
             hscale = float(h) / n1

@@ -20,8 +20,9 @@ for file in modelFiles:
 title=['Compressional\ Velocity\ Model','Shear\ Velocity\ Model','Density\ Model']
 counter=0
 for file in outputFiles:
+    Flow(file+'small',file,'prep4plot inp=$SOURCE out=$TARGET',stdin=0,stdout=-1)
     if file is 'vp' or file is 'vs':
-        Result(file,
+        Result(file,file+'small',
                '''
                grey  color=I gainpanel=a allpos=y title=%s
                scalebar=y screenratio=.205 screenht=2
@@ -29,7 +30,7 @@ for file in outputFiles:
                labelsz=4 wheretitle=t titlesz=6 barreverse=y 
                ''' % title[counter])
     if file is 'density':
-        Result(file,
+        Result(file,file+'small',
                '''
                grey  color=I gainpanel=a allpos=y title=%s
                scalebar=y screenratio=.205 screenht=2

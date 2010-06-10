@@ -50,7 +50,7 @@ def __run(prog, args, inp, out, verb, exe, postproc=None):
         args = ''
     else:
         args = args.strip()
-    cmd  = prog
+    cmd  = os.path.join(rsf.prog.RSFROOT,'bin',prog)
 
     if exe == 'g': # get output
         assert out == None

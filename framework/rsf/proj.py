@@ -476,9 +476,8 @@ class Project(Environment):
         self.prnt.append(prnt)
         locked = os.path.join(self.figdir,target+suffix)
         self.InstallAs(locked,target2)
-        lock2 = self.Command(target2+'@',locked,symlink)
-        self.Alias(target + '.lock',lock2)
-        self.lock.append(lock2)
+        self.Alias(target + '.lock',locked)
+        self.lock.append(locked)
         self.Command(target + '.flip',target2,
                      '%s $SOURCE %s' % (self.sfpen,locked))
         test = self.Test('.test_'+target,target2,
