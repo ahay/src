@@ -59,8 +59,6 @@ def main(par):
             ivlad.msg('Change h or w if you want out != inp')
             sf.cp(inp, out, verb)
             return ivlad.unix_success
-        h = ivlad.valswitch(h, n1, None)
-        w = ivlad.valswitch(w, n2, None)
 
     # Transform h and w to pixels, if they are not
     # No default value for par.string -- Quirk of rsf, replicated in rsfbak
