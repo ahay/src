@@ -67,7 +67,7 @@ void twofreq2(int niter  /* number of iterations */,
 /*< estimate >*/
 {
     int i, iter;
-    float mean, usum=0., psum1=0., psum2=0., psum3=0., psum4=0., ui;
+    double mean, usum=0., psum1=0., psum2=0., psum3=0., psum4=0., ui;
  
     expont2_init(n1,n2,pq);
     expder2_init(n1,n2,pq);

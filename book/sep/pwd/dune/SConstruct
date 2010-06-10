@@ -27,12 +27,12 @@ for case in range(3):
     Flow('exp%d' % case,'dat2 freq',
          'expsignoi eps=%g freq=${SOURCES[1]} niter=100 verb=y' % eps)
     
-Flow('ex','exp0 mask2 dat dat2',
+Flow('ex','exp2 mask2 dat dat2',
      '''
      window n3=1 | add mode=p ${SOURCES[1]} |
      add scale=1,1,-1 ${SOURCES[2:4]}
      ''')
-Flow('expsn','exp0 ex',
+Flow('expsn','exp2 ex',
      'window f3=1 | cat ${SOURCES[1]} | byte pclip=95 gainpanel=all')
 
 Plot('exps','expsn',
@@ -55,7 +55,7 @@ Flow('ndip','exp2 mask',
 Flow('sn','dat2 ndip sdip freq',
      '''
      explanesignoi niter=2000 verb=y ndip=${SOURCES[1]} sdip=${SOURCES[2]}
-     freq=${SOURCES[3]} eps=0.1
+     freq=${SOURCES[3]} eps=0.01
      ''')
 Flow('sig','sn mask2 dat dat2',
      '''

@@ -51,11 +51,11 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
 	/* time sampling (if migration) */
 
-	sf_putint(data,"n1",nz);
-	sf_putfloat(data,"d1",dz);
-	sf_putstring(data,"label1","Depth");
+	sf_putint(image,"n1",nz);
+	sf_putfloat(image,"d1",dz);
+	sf_putstring(image,"label1","Depth");
 
-	sf_putint(data,"n3",1); /* stack for now */
+	sf_putint(image,"n3",1); /* stack for now */
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
