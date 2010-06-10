@@ -1031,7 +1031,8 @@ def petsc(context):
     
     # Run make in order to catch PETSc compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
-        popen = subprocess.Popen('make options', shell=True,
+        popen = subprocess.Popen('make PETSC_DIR=%s options' % petscdir, 
+                                 shell=True,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  cwd=testdir)
@@ -1039,8 +1040,9 @@ def petsc(context):
             return
         makeout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeout = os.popen2('make -C %s options' % testdir)[1].read()
-
+        makeout = os.popen2('make PETSC_DIR=%s -C %s options' % 
+                            (petscdir,testdir))[1].read()
+        
     context.Message("checking for PETSc ... ")
 
     # Compiler name
