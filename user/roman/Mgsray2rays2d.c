@@ -369,7 +369,7 @@ image[ix x iz] == 1 at rays' points
 ****************************/
 int main(int argc, char* argv[])
 {
-    int i,ix;//, interpolate; iz, ia, 
+    int num_refs, i,ix, k;//, interpolate; iz, ia, 
     //float  tola_da, tola, tolz_dz,tolz, tolx, tolx_dx;
     //float xprev, lprev, tprev, eps;a, t, z, x,
     //float *tim, *dis, *dep, *ang;
@@ -382,7 +382,7 @@ int main(int argc, char* argv[])
     int ix0, iz0, ia0;
 
     float **s, **sx, **sz;
-    float m[3][4];
+    float m[3][400];
     sf_file time;
     /* sf_file angl, time, dist, dept, timez0, minpath,lent, */
     sf_file imagt, slow, slowz, slowx, fref1, fref2, fref3;
@@ -391,8 +391,8 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
 
-    time/*dist*/ = sf_input("in");
-    /*time = sf_input("time");
+    time = sf_input("in"); // just to no the sizes
+    /* time = sf_input("time");
     dept = sf_input("dept");
     angl = sf_input("ang");*/
 
@@ -416,6 +416,7 @@ int main(int argc, char* argv[])
 
     /* read auxiliary slowness file */
     slow = sf_input("slow");
+
     s = sf_floatalloc2(nz,nx);
     sf_floatread(s[0],nz*nx,slow);
 
@@ -431,11 +432,14 @@ int main(int argc, char* argv[])
 
     /* read ref1 = {x, z, a1, a2} */
     fref1 = sf_input("ref1");
-    sf_floatread(m[0],4,fref1);
+
+    if (!sf_histint(fref1,"n1",&num_refs)) sf_error("No num_refs= in ref1");
+
+    sf_floatread(m[0], num_refs,fref1);
     fref2 = sf_input("ref2");
-    sf_floatread(m[1],4,fref2);
+    sf_floatread(m[1], num_refs,fref2);
     fref3 = sf_input("ref3");
-    sf_floatread(m[2],4,fref3);
+    sf_floatread(m[2], num_refs,fref3);
 
     /* convert to radians */
     oa = oa*SF_PI/180.;
@@ -537,23 +541,36 @@ int main(int argc, char* argv[])
     int ts_color;
 
     for (i=0; i<3;i++) {
-	ix0 = floor(0.5+(m[i][0]-ox)/dx);
-	iz0 = floor(0.5+(m[i][1]-oz)/dz);
-	ia0 = floor(0.5+(m[i][2]-oa)/da);
 
-	imagt_rays[iz0][ix0]=i+3;
+	for (k=0; k<num_refs/4; k++) {
 
-	(void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
+	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
+	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
+	    ia0 = floor(0.5+(m[i][4*k+2]-oa)/da);
 
-	ix0 = floor(0.5+(m[i][0]-ox)/dx);
-	iz0 = floor(0.5+(m[i][1]-oz)/dz);
-	ia0 = floor(0.5+(m[i][3]-oa)/da);
-	if (ia0 < 0)
-	    ia0 += na;
-	if (ia0 > na-1)
-	    ia0 -= na;
 
-	(void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
+	    if (ia0 < 0)
+		ia0 += na;
+	    if (ia0 > na-1)
+		ia0 -= na;
+
+	    imagt_rays[iz0][ix0]=i+3;
+
+	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
+
+	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
+	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
+	    ia0 = floor(0.5+(m[i][4*k+3]-oa)/da);
+
+	    if (ia0 < 0)
+		ia0 += na;
+	    if (ia0 > na-1)
+		ia0 -= na;
+
+	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
+
+	    printf("x=%g z=%g as=%g ar=%g\n",m[i][0],m[i][1],m[i][2],m[i][3]);
+	}
     }
     sf_floatwrite(imagt_rays[0],nz*nx,imagt);
 

@@ -40,7 +40,7 @@ int   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int 
 	    printf("File read error - nm.");
     }
 
-    NM = 4*i;
+    NM = i;
     assert(NM<len);
     /* m0 */
     if(fread(m0, sizeof(float), NM, fp) != NM) {
@@ -76,7 +76,7 @@ void putf(sf_file so1, int nx, int nz, float dx, float dz)
 }
 int main(int argc, char* argv[])
 {
-    int nm = 1234567890;//1e10
+    int nm = 1e3;//1234567890;//1e10
     int n, nx, nz;
     float dx, dz;
     float ** t0, *m0, *minit, *m;
@@ -96,12 +96,6 @@ int main(int argc, char* argv[])
 
     dx = dz = 1.f / (n - 1);
 
-    putf(so, nx, nz, dx, dz);
-
-    putf(so1, 1, nm, dx, dz);
-    putf(so2, 1, nm, dx, dz);
-    putf(so3, 1, nm, dx, dz);
-
     fname = sf_getstring ("sample");
 
     t0    = sf_floatalloc2(nz,nx);
@@ -111,7 +105,13 @@ int main(int argc, char* argv[])
     m     = sf_floatalloc(nm);
 
     // sprintf(fname,"sample%-3d",S.nx);
-    nm = read4file_ref(fname, m0, minit, m, nx, nz, t0, nm);
+    nm=read4file_ref(fname, m0, minit, m, nx, nz, t0, nm);
+
+    putf(so, nx, nz, dx, dz);
+
+    putf(so1, 1, nm, dx, dz);
+    putf(so2, 1, nm, dx, dz);
+    putf(so3, 1, nm, dx, dz);
 
     sf_floatwrite(t0[0],    nx*nz, so);
 
