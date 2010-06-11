@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
-    predict_init(n1, n2, 0.01, order, 1);
+    predict_init(n1, n2, 0.01, order, 1, false);
 
     input = sf_floatalloc(n12);
     smooth = sf_floatalloc(n12);

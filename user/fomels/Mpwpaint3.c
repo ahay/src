@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
-    predict_init(n1,n2, eps*eps, order, 1);
+    predict_init(n1,n2, eps*eps, order, 1, false);
     
     while (dijskstra_step(&i2,&i3,&ud,&lr)) {
 	if (verb) sf_warning("%d %d",i2,i3);

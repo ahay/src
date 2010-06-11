@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
     sf_putfloat(out,"d2",1.0);
     sf_shiftdim(inp, out, 2);
 
-    predict_init (n1, n2, eps*eps, order, 1);
+    predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc3(n1,ns2,n2);
     for (i2=0; i2 < n2; i2++) {

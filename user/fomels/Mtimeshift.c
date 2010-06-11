@@ -43,8 +43,7 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
     shift = sf_floatalloc(n1);
-    predict_init (n1,n2,eps*eps,order,1);
-    
+    predict_init (n1,n2,eps*eps,order,1,false);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,inp);

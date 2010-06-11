@@ -26,7 +26,7 @@
 static int n1, n2, nb, k2;
 static sf_bands slv;
 static float *diag, **offd, eps, eps2, **dip, *tt;
-static pwd w;
+static pwd w1, w2;
 
 static void stepper(bool adj /* adjoint flag */,
 		    int i2   /* trace number */);
@@ -34,7 +34,8 @@ static void stepper(bool adj /* adjoint flag */,
 void predict_init (int nx, int ny /* data size */, 
 		   float e        /* regularization parameter */,
 		   int nw         /* accuracy order */,
-		   int k          /* radius */)
+		   int k          /* radius */,
+		   bool two       /* if two predictions */)
 /*< initialize >*/
 {
     n1 = nx;
@@ -48,7 +49,9 @@ void predict_init (int nx, int ny /* data size */,
     diag = sf_floatalloc (n1);
     offd = sf_floatalloc2 (n1,nb);
 
-    w = pwd_init (n1, nw);
+    w1 = pwd_init (n1, nw);
+    w2 = two? pwd_init(n1,nw): NULL;
+
     tt = NULL;
 
     k2 = k;
@@ -62,18 +65,15 @@ void predict_close (void)
     free (diag);
     free (*offd);
     free (offd);
-    pwd_close (w);
+    pwd_close (w1);
+    if (NULL != w2) pwd_close (w2);
     if (NULL != tt) free(tt);
 }
 
-void predict_step(bool adj     /* adjoint flag */,
-		  bool forw    /* forward or backward */, 
-		  float* trace /* trace */, 
-		  float* pp    /* slope */)
-/*< prediction step >*/
+static void regularization(void)
+/* fill diag and offd using regularization */ 
 {
     int i1, ib;
-    float t0, t1, t2, t3;
 
     for (i1=0; i1 < n1; i1++) {
 	diag[i1] = 6.*eps;
@@ -87,8 +87,18 @@ void predict_step(bool adj     /* adjoint flag */,
     diag[0] = diag[n1-1] = eps2+eps;
     diag[1] = diag[n1-2] = eps2+5.*eps;
     offd[0][0] = offd[0][n1-2] = -2.*eps;
+}
+
+void predict_step(bool adj            /* adjoint flag */,
+		  bool forw           /* forward or backward */, 
+		  float* trace        /* input/output trace */,
+		  const float* pp    /* slope */)
+/*< prediction step >*/
+{
+    float t0, t1, t2, t3;
     
-    pwd_define (forw, w, pp, diag, offd);
+    regularization();
+    pwd_define (forw, w1, pp, diag, offd);
     sf_banded_define (slv, diag, offd);
 
     if (adj) sf_banded_solve (slv, trace);
@@ -98,7 +108,7 @@ void predict_step(bool adj     /* adjoint flag */,
     t2 = trace[n1-2];
     t3 = trace[n1-1];
 
-    pwd_set (adj, w, trace, trace, diag);
+    pwd_set (adj, w1, trace, trace, diag);
 
     trace[0] += eps2*t0;
     trace[1] += eps2*t1;
@@ -106,6 +116,45 @@ void predict_step(bool adj     /* adjoint flag */,
     trace[n1-1] += eps2*t3;
 
     if (!adj) sf_banded_solve (slv, trace);
+}
+
+void predict2_step(bool forw1        /* forward or backward */, 
+		   bool forw2,
+		   float* trace1     /* input trace */,
+		   float* trace2,
+		   const float* pp1  /* slope */,
+		   const float* pp2,
+		   float *trace      /* output trace */)
+/*< prediction step from two traces>*/
+{
+    int i1;
+    float t0, t1, t2, t3;
+    
+    regularization();
+
+    pwd_define (forw1, w1, pp1, diag, offd);
+    pwd_define (forw2, w2, pp2, diag, offd);
+
+    sf_banded_define (slv, diag, offd);
+
+    t0 = 0.5*(trace1[0]+trace2[0]);
+    t1 = 0.5*(trace1[1]+trace2[1]);
+    t2 = 0.5*(trace1[n1-2]+trace2[n1-2]);
+    t3 = 0.5*(trace1[n1-1]+trace2[n1-1]);
+
+    pwd_set (false, w1, trace1, offd[0], trace);
+    pwd_set (false, w2, trace2, offd[1], trace);
+
+    for (i1=0; i1 < n1; i1++) {
+	trace[i1] = offd[0][i1]+offd[1][i1];
+    }
+
+    trace[0] += eps2*t0;
+    trace[1] += eps2*t1;
+    trace[n1-2] += eps2*t2;
+    trace[n1-1] += eps2*t3;
+
+    sf_banded_solve (slv, trace);
 }
 
 void predict_set(float **dip1 /* dip field [n2][n1] */)

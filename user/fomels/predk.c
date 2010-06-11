@@ -34,7 +34,7 @@ void predk_init(int nk          /* number of components */,
     p=pk;
     n12=m1*m2;
 
-    predict_init(m1,m2,eps,order,1);
+    predict_init(m1,m2,eps,order,1,false);
 }
 
 void predk_close(void)

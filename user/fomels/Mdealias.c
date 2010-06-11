@@ -25,13 +25,15 @@ max(jx,jy)=N, the temporal bandwidth should be 1/N of Nyquist.
 #include <math.h>
 
 #include <rsf.h>
-#include "interpd.h"
+
+#include "predict.h"
 
 int main (int argc, char *argv[])
 {
     bool both;
-    int n1, n2, n3, n12, m2, m3, m12, i1, i2, i3;
-    float d2, d3, ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***qt, ***uu, ***p2, ***q2;
+    int n1, n2, n3, n12, m2, m3, m12, i1, i2, i3, order;
+    float d2, d3, eps;
+    float ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***qt, ***uu, ***p2, ***q2;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -96,7 +98,13 @@ int main (int argc, char *argv[])
 	}
     }
 
-    interp_init (n1, 0.0001);
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* regularization */
+
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
+    predict_init (n1,1,eps*eps,order,0,true);
 
     /* get data */
     sf_floatread(u1[0][0],n12,in);
@@ -107,7 +115,17 @@ int main (int argc, char *argv[])
 
     /* interpolate inline */
     for (i3=0; i3 < n3; i3++) {
-	interp2(n2,u1[i3],uu1[i3],p[i3],both? p2[i3]:NULL);
+	for (i2=0; i2 < n2-1; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		uu1[i3][2*i2][i1] = u1[i3][i2][i1];
+	    }
+	    predict2_step(true,both,u1[i3][i2],u1[i3][i2+1],
+			  p[i3][i2],both? p2[i3][i2+1]:p[i3][i2+1],
+			  uu1[i3][2*i2+1]);
+	}
+	for (i1=0; i1 < n1; i1++) {
+	    uu1[i3][2*n2-2][i1] = u1[i3][n2-1][i1];
+	}
     }
     
     if (n3 > 1) sf_floatread(q[0][0],n12,dip);
@@ -124,7 +142,18 @@ int main (int argc, char *argv[])
 
     /* interpolate crossline */
     for (i2=0; i2 < m2; i2++) {
-	interp2(n3,uu2[i2],u2[i2],qt[i2],NULL);
+	for (i3=0; i3 < n3-1; i3++) {
+	    for (i1=0; i1 < n1; i1++) {
+		u2[i2][2*i3][i1] = uu2[i2][i3][i1];
+	    }
+	    predict2_step(true,false,
+			  uu2[i2][i3],uu2[i2][i3+1],
+			  qt[i2][i3],qt[i2][i3+1],
+			  u2[i2][2*i3+1]);
+	}
+	for (i1=0; i1 < n1; i1++) {
+	    u2[i2][2*n3-2][i1] = uu2[i2][n3-1][i1];
+	}
     }
     
     sf_floatwrite(uu[0][0],m12,out);

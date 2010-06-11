@@ -18,7 +18,7 @@ int main(void) {
 	}
     }
 
-    predict_init(n1, n2, 0.01, order, rect);
+    predict_init(n1, n2, 0.01, order, rect,false);
     predict_set(p);
     sf_dot_test(predict_lop, n1*n2, n1*n2, dot1, dot2);
 

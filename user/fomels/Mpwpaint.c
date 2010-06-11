@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
-    predict_init (n1, n2, eps*eps, order, 1);
+    predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);

@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 	}
     } else {
 	if (prec) {
-	    predict_init(n1,n2,0.0001,nw,1);
+	    predict_init(n1,n2,0.0001,nw,1,false);
 	    predict_set(pp);
 	    sf_mask_init(known);
 	} else {
