@@ -46,6 +46,10 @@ class FailedExtCall(Error):
     def __init__(self, call):
         self.msg = 'Failed external call:\n' + call
 
+class FailedWrite(Error):
+    def __init__(self, fname):
+        self.msg = 'Failed writing to file %s. Possibly disk full.' % fname
+
 class MissingArgument(Error):
     def __init__(self, arg):
         self.msg = 'Missing argument: ' + arg
