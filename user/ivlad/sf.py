@@ -111,6 +111,20 @@ def __x(exe, g_exe):
 # Wrappers for sf programs
 ################################################################################
 
+def add(out, files=None, scale=None, add=None, sqrt=None, abs=None, log=None,
+    exp=None, mode=None, verb=False, exe=None):
+
+    arg = __parse({'scale':scale, 'add':add, 'sqrt':sqrt, 'abs':abs, 'log':log,
+        'exp':exp, 'mode':mode})
+    # file names are not in key=val format, so __parse will not work
+    filestr = ' '.join(files[1:])
+
+    return __run('sfadd', arg+' '+filestr, 
+        files[0], out,
+        verb, __x(exe,glob_exe))    
+
+################################################################################
+
 def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
     phase=None, verb=False, exe=None):
     
