@@ -4,8 +4,8 @@ Test with:
 sfspike n1=5 n2=3 nsp=3 k1=1,3,4 k2=1,2,3 > junk.rsf;
 sfximage inp=junk.rsf par="perc=100 cmap=rgb1 legend=1";
 You should see a picture with blue background and red blobs.
-See also sfimage.
-'''
+See also sfimage.'''
+
 # Copyright (C) 2010 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
