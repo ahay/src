@@ -69,8 +69,7 @@ def shell_script(target, source=None, env=None):
                                    'yellow_on_red')
         
     datapath = os.environ.get('DATAPATH','/var/tmp')
-    if datapath[-1] != '/':
-        datapath += '/'
+    if datapath[-1] != os.sep:  datapath += os.sep
 
     ldlibpath = os.path.join(rsfroot,'lib')
     
@@ -97,7 +96,7 @@ def shell_script(target, source=None, env=None):
         comment = shenv[par][1]
         value = shenv[par][0]
         if par != 'RSFROOT':
-            value = value.replace(rsfroot,'$RSFROOT')
+            value = value.replace(rsfroot+os.sep,'$RSFROOT'+os.sep)
         redefine =  (par == 'PYTHONPATH' or par == 'LD_LIBRARY_PATH')
 
         myrc += '\n# Path for %s\n' % comment
