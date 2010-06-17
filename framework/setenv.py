@@ -17,6 +17,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys
+import imp
+try:
+    import config
+except:
+    config = imp.load_source('config', 'config.py')
+#except:
+#    print os.getcwd()
+#    config = imp.load_source('config', '../config.py')
 
 if sys.version_info[:2] < (2, 7):
     import distutils.sysconfig as sysconfig
@@ -36,7 +44,7 @@ def get_local_site_pkgs(root=None, verb=False):
     prefix = sysconfig.PREFIX
     
     if root == None:
-        root = os.environ.get('RSFROOT',prefix)
+        root = os.environ.get('RSFROOT', config.RSFROOT)
 
     if central_site_pkgs[:len(prefix)] == prefix:
         local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
@@ -57,17 +65,11 @@ def shell_script(target, source=None, env=None):
     # in RSFSRC/SConstruct
 
     import configure
-
+    
     shell = env['shell']
-    rsfroot = env['RSFROOT']
+    rsfroot = config.RSFROOT 
 
-    pypath = get_local_site_pkgs(rsfroot)
-    if shell == 'sh' and rsfroot != sysconfig.PREFIX:
-        # not default installation, requires proper PYTHONPATH
-        if pypath != os.environ.get('PYTHONPATH','').split(':')[0]:
-            configure.stderr_write('Please set PYTHONPATH to %s' % pypath,
-                                   'yellow_on_red')
-        
+    pypath = get_local_site_pkgs(rsfroot)     
     datapath = os.environ.get('DATAPATH','/var/tmp')
     if datapath[-1] != os.sep:  datapath += os.sep
 

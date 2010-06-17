@@ -103,6 +103,14 @@ echo "------------------------"
 RSFROOT=$root $scons $args config
 echo "------------------------"
 echo "Done with configuration."
+
+M8R_PY_PATH=`framework/setenv.py`
+if [ -n "$PYTHONPATH" ]; then
+PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
+else
+PYTHONPATH=$M8R_PY_PATH
+fi
+
 echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
 cat Makefile.in >> Makefile
 exit 0
