@@ -48,7 +48,8 @@ def Flow(sources,flow,bindir,rsfflow=1,
                     sources.append(command)
                     if rsfprog not in coms:
                         coms.append(rsfprog)
-                elif rsfprog == prefix + 'mpi':
+                elif     rsfprog == prefix + 'mpi' or \
+                         rsfprog == prefix + 'omp':
                     command = os.path.join(bindir,rsfprog+progsuffix) 
                     sources.append(command)
             else:

@@ -265,6 +265,7 @@ class Project(Environment):
         self.test = []
         self.coms = []
         self.data = []
+        self.rest = []
         sys.path.append('../../../Recipes')
 
         timer = self.get('TIMER')
@@ -369,6 +370,8 @@ class Project(Environment):
         else:
             sfiles = []
 
+        mpirun = self.mpirun
+
         if split:
             if len(split) < 2:
                 split.append(1)
@@ -380,14 +383,17 @@ class Project(Environment):
             else:
                 reduction = reduce
 
-            if self.jobs > 1 and rsfflow and sfiles:
+            if split[1] == 'omp': 
+                flow = 'omp ' + flow
+            elif split[1] == 'mpi':
+                flow = 'mpi ' + flow
+                mpirun += ' -np %d' % split[2]
+            elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
-
-                if split[1] != 'omp':
-                    self.__Split(split,reduction,
-                                 sfiles,tfiles,flow,stdout,stdin,
-                                 suffix,prefix,src_suffix)               
-                    return
+                self.__Split(split,reduction,
+                             sfiles,tfiles,flow,stdout,stdin,
+                             suffix,prefix,src_suffix)               
+                return
 
         sources = []
         if sfiles:
@@ -414,7 +420,7 @@ class Project(Environment):
             
         command = rsf.flow.Flow(sources,flow,self.bindir,rsfflow,
                                 self.checkpar,self.coms,prefix,self.progsuffix,
-                                remote,stdout,stdin,self.timer,self.mpirun)
+                                remote,stdout,stdin,self.timer,mpirun)
 
         # May need to do it remotely
         if remote:
@@ -484,9 +490,11 @@ class Project(Environment):
                          figdir=self.figs,bindir=self.bindir)
         self.test.append(test)
         self.Alias(target + '.test',test)
+        self.rest.append(target)
         return plot
     def End(self):
         self.Command('.rsfproj',self.lock,action=Action(self.Info))
+        self.Command('results',None,'echo %s' % ' '.join(self.rest))
         if self.view: # if any results
             self.Alias('view',self.view)
             self.Alias('print',self.prnt)
