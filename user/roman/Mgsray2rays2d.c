@@ -386,7 +386,7 @@ int main(int argc, char* argv[])
     sf_file time;
     /* sf_file angl, time, dist, dept, timez0, minpath,lent, */
     sf_file imagt, slow, slowz, slowx, fref1, fref2, fref3;
-    //char *timez0_name, *minpath_name;
+    char *ref1_name, *ref2_name, *ref3_name;
     
 
     sf_init(argc,argv);
@@ -431,15 +431,29 @@ int main(int argc, char* argv[])
     sf_floatread(sx[0],nz*nx,slowx);
 
     /* read ref1 = {x, z, a1, a2} */
-    fref1 = sf_input("ref1");
+    ref1_name = sf_getstring ("ref1");
+    if (ref1_name) {
+	fref1 = sf_input(ref1_name);
+	if (!sf_histint(fref1,"n1",&num_refs)) sf_error("No num_refs= in ref1");    
+	sf_floatread(m[0], num_refs,fref1);
+    }
 
-    if (!sf_histint(fref1,"n1",&num_refs)) sf_error("No num_refs= in ref1");
+    ref2_name = sf_getstring ("ref2");
+    if (ref2_name) {
+	fref2 = sf_input(ref2_name);
+	if (!sf_histint(fref2,"n1",&num_refs)) sf_error("No num_refs= in ref2");    
+	sf_floatread(m[1], num_refs,fref2);
+    }
 
-    sf_floatread(m[0], num_refs,fref1);
-    fref2 = sf_input("ref2");
-    sf_floatread(m[1], num_refs,fref2);
-    fref3 = sf_input("ref3");
-    sf_floatread(m[2], num_refs,fref3);
+    ref3_name = sf_getstring ("ref3");
+    if (ref3_name) {
+	fref3 = sf_input(ref3_name);
+	if (!sf_histint(fref3,"n1",&num_refs)) sf_error("No num_refs= in ref3");
+	sf_floatread(m[2], num_refs,fref3);    
+    }
+
+    //fref3 = sf_input("ref3");
+    //sf_floatread(m[2], num_refs,fref3);
 
     /* convert to radians */
     oa = oa*SF_PI/180.;
@@ -464,85 +478,21 @@ int main(int argc, char* argv[])
     sf_putstring(imagt,"unit2","km");	
     sf_putstring(imagt,"unit1","km");	
 
-    /* min-path arrivals 
-    tim = sf_floatalloc(na);
-    dis = sf_floatalloc(na);
-    dep = sf_floatalloc(na);
-    ang = sf_floatalloc(na);
-   
-    timez0_name = sf_getstring ("timez0");    
-    assert (timez0_name);
-    timez0 = sf_output(timez0_name);   
-
-    minpath_name = sf_getstring ("minpath");
-    assert (minpath_name);
-    minpath = sf_output(minpath_name);
-    
-    sf_putint(minpath,"n2",nz);
-    sf_putint(minpath,"n1",nx);
-    sf_putint(minpath,"n3",1);
-
-    sf_putfloat(minpath,"d2",dz);
-    sf_putfloat(minpath,"d1",dx);
-    sf_putfloat(minpath,"o2",z0);
-    sf_putfloat(minpath,"o1",x0);
-
-    sf_putstring(minpath,"label2","z depth");
-    sf_putstring(minpath,"label1","x dist");
-    sf_putstring(minpath,"unit2","km");	
-    sf_putstring(minpath,"unit1","km");	
-
-    tr_time_z0 = sf_floatalloc3(na, nx, nz); 
-    tr_time_pos = sf_floatalloc2(nx, nz); 
-    tr_time_minpath = sf_floatalloc2(nx, nz); 
-    len_minpath = sf_floatalloc2(nx, nz); 
-    */
-
 
     for (ix=0; ix < nx*nz; ix++) 
 	imagt_rays[0][ix] = 0.f;
     
-/*
-    for (iz=0; iz < nz; iz++) {
-	
-	for (ix=0; ix < nx; ix++) {					
-
-	    sf_floatread(tim,na,time);
-	    sf_floatread(dis,na,dist);
-	    sf_floatread(dep,na,dept);
-	    sf_floatread(ang,na,angl);
-
-	    for (ia=0; ia < na; ia++) {
-
-		z = dep[ia];
-
-		x = dis[ia];
-
-		a = ang[ia];
-
-		t = tim[ia];
-		if (fabs(z-escz1)<tolz_dz && 
-		    fabs(x-escx1)<tolx_dx &&
-		    fabs(a-esca1)<tola_da) 
-		{		    
-		    //imagt_rays[iz][ix]=1.;
-		}
-		if (fabs(z-escz2)<tolz_dz && 
-		    fabs(x-escx2)<tolx_dx &&
-		    fabs(a-esca2)<tola_da) 
-		{		    
-		    //imagt_rays[iz][ix]=2.;
-		}		    
-	    }  
-	} 
-    } 
-*/
 	
     int ts_color;
 
     for (i=0; i<3;i++) {
 
-	for (k=0; k<num_refs/4; k++) {
+	if ((i== 0 && ref1_name)||
+	    (i== 1 && ref2_name)||
+	    (i== 2 && ref3_name))
+	{
+
+	    for (k=0; k<num_refs/4; k++) {
 
 	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
 	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
@@ -570,6 +520,7 @@ int main(int argc, char* argv[])
 	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
 
 	    printf("x=%g z=%g as=%g ar=%g\n",m[i][0],m[i][1],m[i][2],m[i][3]);
+	    }
 	}
     }
     sf_floatwrite(imagt_rays[0],nz*nx,imagt);
