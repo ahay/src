@@ -6,7 +6,11 @@ import bldutil, configure, setenv, rsf.doc
 
 env = Environment()
 
-root = os.environ.get('RSFROOT')
+if os.path.isfile('config.py'):
+    import config
+    root = config.RSFROOT
+else:
+    root = os.environ.get('RSFROOT')
 
 if not root:
     root = sys.prefix
