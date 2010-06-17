@@ -17,14 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, sys
-import imp
-try:
-    import config
-except:
-    config = imp.load_source('config', 'config.py')
-#except:
-#    print os.getcwd()
-#    config = imp.load_source('config', '../config.py')
 
 if sys.version_info[:2] < (2, 7):
     import distutils.sysconfig as sysconfig
@@ -44,7 +36,7 @@ def get_local_site_pkgs(root=None, verb=False):
     prefix = sysconfig.PREFIX
     
     if root == None:
-        root = os.environ.get('RSFROOT', config.RSFROOT)
+        root = os.environ.get('RSFROOT', prefix) 
 
     if central_site_pkgs[:len(prefix)] == prefix:
         local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
@@ -65,6 +57,8 @@ def shell_script(target, source=None, env=None):
     # in RSFSRC/SConstruct
 
     import configure
+    import imp
+    config = imp.load_source('config', 'config.py')
     
     shell = env['shell']
     rsfroot = config.RSFROOT 
