@@ -2,16 +2,16 @@
 
 warning()
 {
-    echo "\033[1m" # bold
+    echo -e "\033[1m" # bold
     echo -n $1
-    echo "\033[0m" # end highlighting
+    echo -e "\033[0m\n" # end highlighting
 }
 
 fatal_error()
 {
-    echo "\033[41m\033[93m " # yellow on red background
+    echo -e "\033[41m\033[93m " # yellow on red background
     echo -n $1
-    echo "\033[0m" # end highlighting
+    echo -e "\033[0m" # end highlighting
 }
 
 findprog ()
@@ -42,17 +42,19 @@ echo "checking Python version ... $python_v"
 # Also collect the list of all arguments other than --prefix= because this one
 # generates an error when passed to "scons"
 args='' 
-for arg in $*;
-do
-    case $arg in
-    --prefix=*)
-	    root=`echo $arg | sed 's/[-a-zA-Z0-9]*=//'`
-		;;
-    *)
-        args=$args" "$arg
-        ;;
-    esac
-done
+if test -n "$*"; then
+    for arg in $*;
+    do
+        case $arg in
+        --prefix=*)
+	        root=`echo $arg | sed 's/[-a-zA-Z0-9]*=//'`
+		    ;;
+        *)
+            args=$args" "$arg
+            ;;
+        esac
+    done
+fi
 
 if test ! -n "$root"; then
     root=${RSFROOT}
@@ -65,8 +67,8 @@ fi
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
     root=`$python -c "import sys; print sys.prefix"`
-    warning "I am setting RSFROOT to $root\n"
-    export RSFROOT=$root # needed for the possible SCons installation below
+    warning "I am setting RSFROOT to $root"
+    RSFROOT=$root # needed for the possible SCons installation below
 fi
 
 findprog scons
@@ -95,10 +97,10 @@ fi
 scons_v=`scons -v 2>&1 | awk 'NR==2 {print $2}' | sed s/,//`
 echo "checking SCons version ... $scons_v"
 
-echo "Running $scons $args RSFROOT=$root config ..."
+echo "Running RSFROOT=$root $scons $args config ..."
 rm -rf env.*sh .scon* config.py
 echo "------------------------"
-$scons $args config
+RSFROOT=$root $scons $args config
 echo "------------------------"
 echo "Done with configuration."
 echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile

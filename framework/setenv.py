@@ -64,7 +64,7 @@ def shell_script(target, source=None, env=None):
     pypath = get_local_site_pkgs(rsfroot)
     if shell == 'sh' and rsfroot != sysconfig.PREFIX:
         # not default installation, requires proper PYTHONPATH
-        if pypath != os.environ.get('PYTHONPATH').split(':')[0]:
+        if pypath != os.environ.get('PYTHONPATH','').split(':')[0]:
             configure.stderr_write('Please set PYTHONPATH to %s' % pypath,
                                    'yellow_on_red')
         
