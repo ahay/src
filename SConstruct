@@ -1,6 +1,8 @@
 EnsureSConsVersion(0, 96)
 
 import os, sys, glob
+sys.path.insert(0,'./framework')
+import bldutil, configure, setenv, rsf.doc
 
 env = Environment()
 
@@ -9,10 +11,6 @@ root = os.environ.get('RSFROOT')
 if not root:
     root = sys.prefix
     print 'Setting RSFROOT to "%s" ' % root
-
-sys.path.insert(0,'./framework')
-
-import bldutil, configure, setenv, rsf.doc
 
 srcdir = os.getcwd()
 bindir = os.path.join(root,'bin')

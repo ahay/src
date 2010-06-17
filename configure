@@ -38,25 +38,36 @@ fi
 python_v=`$python -V 2>&1 | awk '{print $2}'`
 echo "checking Python version ... $python_v"
 
-root=${RSFROOT}
+# Detect RSFROOT. Priority: (1) --prefix= ; (2) env. variable; (3) sys.prefix
+# Also collect the list of all arguments other than --prefix= because this one
+# generates an error when passed to "scons"
+args='' 
+for arg in $*;
+do
+    case $arg in
+    --prefix=*)
+	    root=`echo $arg | sed 's/[-a-zA-Z0-9]*=//'`
+		;;
+    *)
+        args=$args" "$arg
+        ;;
+    esac
+done
+
+if test ! -n "$root"; then
+    root=${RSFROOT}
+fi
+
 if test ! -n "$root"; then
     root="no"
 fi
+
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
     root=`$python -c "import sys; print sys.prefix"`
     warning "I am setting RSFROOT to $root\n"
-#    export RSFROOT=$root
+    export RSFROOT=$root # needed for the possible SCons installation below
 fi
-
-# if numpy is installed in userspace, then its site-packages subdirectory
-# has to be in PYTHONPATH in order for "import numpy" to work
-#if test -n "${PYTHONPATH}"; then
-#    PYTHONPATH=`$python framework/setenv.py`:${PYTHONPATH}
-#else
-#    PYTHONPATH=`$python framework/setenv.py`
-#fi
-#export PYTHONPATH
 
 findprog scons
 scons=$prog
@@ -84,10 +95,10 @@ fi
 scons_v=`scons -v 2>&1 | awk 'NR==2 {print $2}' | sed s/,//`
 echo "checking SCons version ... $scons_v"
 
-echo "Running $scons $* config ..."
+echo "Running $scons $args RSFROOT=$root config ..."
 rm -rf env.*sh .scon* config.py
 echo "------------------------"
-$scons $* config
+$scons $args config
 echo "------------------------"
 echo "Done with configuration."
 echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
