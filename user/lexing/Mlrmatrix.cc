@@ -41,20 +41,20 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 int main(int argc, char** argv)
-{
-    time_t t0, t1;
-    
+{   
+    sf_init(argc,argv); // Initialize RSF
+
     iRSF par(0);
     int seed;
 
-    par.get("seed",seed,time(NULL));
+    par.get("seed",seed,time(NULL)); // seed for random number generator
     srand48(seed);
 
     float eps;
-    par.get("eps",eps,1.e-4);
+    par.get("eps",eps,1.e-4); // tolerance
 
     int npk;
-    par.get("npk",npk,20);
+    par.get("npk",npk,20); // maximum rank
 
     iRSF in;
     oRSF out;
@@ -76,6 +76,8 @@ int main(int argc, char** argv)
     vector<int> cidx;
     vector<int> ridx;
     DblNumMat mid;
+
+    time_t t0, t1;   
 
     t0 = time(0);
     iC( lowrank(m,n,sample,(double) eps,npk,cidx,ridx,mid) );

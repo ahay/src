@@ -65,6 +65,7 @@ def warp2egamma(ss):
     math output="(input+x1)/x1" %s 
     ''' % ('| math output="2*input-1" ','')[ss]
 
+
 def warp3(name,       # name prefix
           pp,ps,      # PP and PS images
           warp,       # initial warp
@@ -640,31 +641,57 @@ def warp1(name,      # name prefix
         # SPECTRAL BALANCING
         ####################
 
-        phase = 'iphase rect1=%d' % (2*rect1)
+        ppft = n('ppft')
+        psft = n('psft')
 
-        ifr = n('ifr')
-        ppi = n('ppi')
-        psi = n('psi')
-        Flow(ppi,pp, phase)
-        Flow(psi,psw,phase)
-        Plot(ifr,[ppi,psi],iphase('Before'))
+        ltft = 'ltft rect=%d | transp' % frect
 
-        msk = n('msk')
-        Flow(msk,[psi,ppi],getmask)
+        Flow(ppft,pp,ltft)
+        Flow(psft,psw,ltft)
+
+        Flow(ppft+'a',ppft,'math output="abs(input)" | real')
+        Flow(psft+'a',psft,'math output="abs(input)" | real')
+
+        ftplot = 'window min1=%g max1=%g | grey allpos=y color=j ' % (fmin,fmax)
+
+        Plot(ppft+'a',ftplot+'title=PP')
+        Plot(psft+'a',ftplot+'title=PS')
+        Result(n('ft0'),[ppft+'a',psft+'a'],'OverUnderAniso')
+
+        pprick = n('pprick')
+        psrick = n('psrick')
+
+        Flow(pprick,ppft+'a',
+             'ricker niter=1000 ma=$TARGET verb=n m=20',stdout=0)
+        Flow(psrick,psft+'a',
+             'ricker niter=1000 ma=$TARGET verb=n m=20',stdout=0)
+
+        rickplot = '''
+        cat axis=3 ${SOURCES[1]} | window n1=1 max2=1 | 
+        math output="sqrt(input)" |
+        graph title="Dominant Frequency" 
+        label2=Frequency unit2=Hz min2=%g max2=%g
+        ''' % (fmin,fmax)
+
+        Result(n('rick'),[pprick,psrick],rickplot)
+        
+        Flow([ppft+'b',psft+'b'],[ppft,psft,pprick,psrick],
+             '''
+             freshape in2=${SOURCES[1]} ma=${SOURCES[2]}
+             ma2=${SOURCES[3]} out2=${TARGETS[1]}
+             ''')
+        Flow(ppft+'c',ppft+'b','math output="abs(input)" | real')
+        Flow(psft+'c',psft+'b','math output="abs(input)" | real')
+
+        Plot(ppft+'c',ftplot+'title=PP')
+        Plot(psft+'c',ftplot+'title=PS')
+        Result(n('fta'),[ppft+'c',psft+'c'],'OverUnderAniso')
 
         sr = n('sr')
         pr = n('pr')
 
-        Flow(sr+'0',[msk,psi,ppi],psrect(frect))
-        Flow(sr,[psw,sr+'0',pp],balance)
-    
-        Flow(pr+'0',[msk,psi,ppi],pprect(frect))
-        Flow(pr,[pp,pr+'0',pp],balance)
-
-        for case in (sr,pr):
-            Flow(case+'i',case,phase)
-        Plot(ifr+'1',[pr+'i',sr+'i'],iphase('After'))
-        Result(ifr,[ifr,ifr+'1'],'SideBySideAniso')     
+        Flow(pr,ppft+'b','transp | ltft inv=y')
+        Flow(sr,psft+'b','transp | ltft inv=y')
 
         Plot(psw+'1',[sr,pr],dplot)
         Result(psw+'1',[gamma,psw+'1'],'OverUnderAniso')

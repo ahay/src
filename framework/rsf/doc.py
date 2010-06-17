@@ -758,6 +758,16 @@ inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                                 '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
 version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 
+comment['c++'] = re.compile(r'(?:\/\/(?P<comment>[^\n]+)\n)+')
+inpout['c++'] = re.compile(r'(?P<io>iRSF|oRSF)\s*(?P<name>\w+)'
+                           '\s*(?:\(\s*(?P<tag>\w+)\s*\))?')
+param['c++'] = re.compile(r'par.get\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
+                          '(?:\,\s*(?P<var>[^\)\,]+))'
+                          '(?:\,\s*(?P<default>[^\)]+))?\)'
+                          '(?:\s*\;\s*\/\/\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                          '(?P<desc>[^\n]+\S))?')
+version['c++'] = re.compile(r'\/\/\s*\$Id\:\s*(.+\S)\s*\$/')
+
 comment['f90'] = re.compile(r'(?:\!(?P<comment>[^!\n]+)\n)+')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                           '\s*(?P<var>[\w\_]+)\s*'
@@ -839,18 +849,26 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     snps = name
     valid = {}
     for par in files:
-        filename = par[0]
-        if valid.get(filename,1):
-            io = par[1]
+        if lang == 'c++':
+            io = par[0]
+            filename = par[1]
             tag = par[2]
-            if tag == 'in' or (not tag and io == 'input'):
+            if tag == '0':
+                valid[filename]=0
+        else:
+            filename = par[0]
+            io = par[1]
+            tag = par[2]            
+        if valid.get(filename,1):
+            iotype = {'i':'input','o':'output'}[io[0].lower()]
+            if tag == 'in' or (not tag and iotype == 'input'):
                 iostring = ' < %s.%s' % (filename,rsfsuffix)
-            elif tag == 'out' or (not tag and io == 'output'):
+            elif tag == 'out' or (not tag and iotype == 'output'):
                 iostring = ' > %s.%s' % (filename,rsfsuffix)
             else:
                 iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
                 type = 'file   '
-                desc = 'auxiliary %s file name' % io
+                desc = 'auxiliary %s file name' % iotype
                 prog.par(tag,rsfpar(type,desc=desc))
                 out.write("%s.par('%s',rsf.doc.rsfpar('%s',desc='''%s'''))\n" %
                           (name,tag,type,desc))
@@ -883,6 +901,12 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             range = par[3]
             desc = par[4]
         elif lang == 'f90':
+            type = ''
+            parname = par[0]
+            default = par[2]
+            range = par[3]
+            desc = par[4]
+        elif lang == 'c++':
             type = ''
             parname = par[0]
             default = par[2]
