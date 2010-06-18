@@ -4,7 +4,7 @@ import bldutil
 
 progs = '''
 fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref vscancrs rkawefd2d
-wavegeom rtmgeom cigangle opsmigrk gsray2rays2d 
+wavegeom rtmgeom cigangle opsmigrk gsray2rays2d gsrayvti
 '''
 
 try:  # distributed version
