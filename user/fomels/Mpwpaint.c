@@ -24,17 +24,29 @@ int main (int argc, char *argv[])
 {
     bool verb;
     int n1,n2,n3, i1,i2,i3, i0, order;
-    float eps, **u, **p, *trace;
+    float o1, d1, eps, **u, **p, *trace, *time;
     sf_file out, dip, seed;
 
     sf_init(argc,argv);
     dip = sf_input("in");
     out = sf_output("out");
-    seed = sf_input("seed");
 
     if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(dip,2);
+
+    if (NULL != sf_getstring("seed")) {
+	seed = sf_input("seed");
+	time = NULL;
+    } else {
+	seed = NULL;
+	time = sf_floatalloc(n1);
+	if (!sf_histfloat(dip,"o1",&o1)) o1=0.; 
+	if (!sf_histfloat(dip,"d1",&d1)) d1=1.; 
+	for (i1=0; i1 < n1; i1++) {
+	    time[i1] = o1+i1*d1;
+	}
+    }
 
     if (!sf_getbool("verb",&verb)) verb=false;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -53,9 +65,16 @@ int main (int argc, char *argv[])
     trace = sf_floatalloc(n1);
 
     for (i3=0; i3 < n3; i3++) {
-	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
+	if (verb) sf_warning("cmp %d of %d;",i3+1,n3);
 	sf_floatread(p[0],n1*n2,dip);
-	sf_floatread(trace,n1,seed);
+
+	if (NULL != seed) {
+	    sf_floatread(trace,n1,seed);
+	} else {
+	    for (i1=0; i1 < n1; i1++) {
+		trace[i1] = time[i1];
+	    }
+	}
 
 	for (i1=0; i1 < n1; i1++) {
 	    u[i0][i1] = trace[i1];
@@ -77,6 +96,7 @@ int main (int argc, char *argv[])
 	}
 	sf_floatwrite(u[0],n1*n2,out);
     }
+    if (verb) sf_warning(".");
 
     exit (0);
 }

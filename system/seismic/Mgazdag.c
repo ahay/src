@@ -23,6 +23,7 @@
 
 int main (int argc, char *argv[])
 {
+    bool verb;
     int nt, nt2;	/* number of time samples */
     int nz;		/* number of migrated time samples */
     int nx, ny;		/* number of wavenumbers */
@@ -52,9 +53,11 @@ int main (int argc, char *argv[])
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
-    /* If y, modeling; if n, migration */
+    /* if y, modeling; if n, migration */
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
-    /* Stabilization parameter */
+    /* stabilization parameter */
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
 
     if (!sf_getbool("depth",&depth)) depth = false;
     /* if true, depth migration */
@@ -216,6 +219,8 @@ int main (int argc, char *argv[])
 	    x = x0+ix*dx;
 	    x = x*x+y;
 	
+	    if (verb) sf_warning("wavenumber %d of %d;",iy*nx+ix+1,nx*ny);
+	
 	    if (inv) {
 		sf_floatread(q,nz,in);
 	    } else {
@@ -236,7 +241,7 @@ int main (int argc, char *argv[])
 	    }
 	}
     } 
-
+    if (verb) sf_warning(".");
 
     exit (0);
 }

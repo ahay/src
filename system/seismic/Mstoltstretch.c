@@ -28,7 +28,7 @@ static float map(float t, int it) { return str[ix][it]; }
 
 int main(int argc, char* argv[])
 {
-    int nt, ns, nx, it, nstr, ifix;
+    int nt, ns, nx, n2, it, nstr, ifix;
     float dt, t0, eps, v0, *v=NULL, *trace=NULL, *out=NULL, *ww=NULL, wsum;
     char buffer[20];
     map4 stolt;
@@ -58,6 +58,10 @@ int main(int argc, char* argv[])
 	sf_putint(st,"nstretch", nstr);
     }
     nx = sf_leftsize(in,1);
+    n2 = sf_leftsize(vel,1);
+
+    if (n2 != 1 && n2 != nx) sf_error("Wrong number of traces in velocity");
+
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&t0) || 0. != t0) sf_error("Need o1=0 in input");
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -81,8 +85,15 @@ int main(int argc, char* argv[])
 
     wsum = 0.;
     for (ix=0; ix < nx; ix++) {
-	sf_floatread(v,nt,vel);
-	ww[ix] = vt2w (nt,v,str[ix]);
+	if (0==ix || n2 > 1) {
+	    sf_floatread(v,nt,vel);
+	    ww[ix] = vt2w (nt,v,str[ix]);
+	} else if (1 == n2) {
+	    ww[ix] = ww[0];
+	    for (it=0; it < nt; it++) {
+		str[ix][it] = str[0][it];
+	    } 
+	}
 	wsum += ww[ix];
     }
 

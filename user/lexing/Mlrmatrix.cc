@@ -15,8 +15,6 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#include <time.h>
-
 #include <rsf.hh>
 
 #include "vecmatop.hh"
@@ -77,19 +75,30 @@ int main(int argc, char** argv)
     vector<int> ridx;
     DblNumMat mid;
 
-    time_t t0, t1;   
-
-    t0 = time(0);
     iC( lowrank(m,n,sample,(double) eps,npk,cidx,ridx,mid) );
-    t1 = time(0);  cerr<<"lowrank used "<<difftime(t1,t0)<<"secs "<<endl;
 
-    for(unsigned int k=0; k<cidx.size(); k++)
+    int m2=mid.m();
+    int n2=mid.n();
+    double *dmid = mid.data();
+
+    std::valarray<float> fmid(m2*n2);
+    for (int k=0; k < m2*n2; k++) {
+	fmid[k] = dmid[k];
+    }
+
+    out.put("n1",m2);
+    out.put("n2",n2);
+    out << fmid;
+
+    for(int k=0; k<m2; k++)
 	cerr<<cidx[k]<<" ";
     cerr<<endl;
 
-    for(unsigned int k=0; k<ridx.size(); k++)
+    for(int k=0; k<n2; k++)
 	cerr<<ridx[k]<<" ";
     cerr<<endl;
+
+    // output left, right, and approximation
   
     return 0;
 }

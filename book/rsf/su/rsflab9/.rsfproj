@@ -1,0 +1,3 @@
+uses=['sfsuread', 'sfcostaper', 'sfput', 'sfcosft', 'sfdd', 'sfspline', 'sfdix', 'sfcat', 'sfgraph', 'sfwindow', 'sfstoltstretch', 'sfstolt', 'sfgazdag', 'sftime2depth', 'sfgrey']
+data=['PRIVATE']
+size=  184272000

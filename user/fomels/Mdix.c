@@ -39,7 +39,12 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     vrms = sf_input("in");
     vint = sf_output("out");
-    weight = sf_input("weight");
+    
+    if (NULL != sf_getstring("weight")) {
+	weight = sf_input("weight");
+    } else {
+	weight = NULL;
+    }
 
     dim = sf_filedims (vrms,n);
 
@@ -64,7 +69,14 @@ int main(int argc, char* argv[])
     v0 = sf_floatalloc2(n1,n2);
 
     sf_floatread(vr[0],nd,vrms);
-    sf_floatread(wt[0],nd,weight);
+
+    if (NULL != weight) {
+	sf_floatread(wt[0],nd,weight);
+    } else {
+	for (i1=0; i1 < nd; i1++) {
+	    wt[0][i1] = 1.0;
+	}
+    }
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */

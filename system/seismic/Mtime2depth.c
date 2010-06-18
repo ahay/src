@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int nt, nz, nx, iz, it, ix, nw;
+    int nt, nz, nx, iz, it, ix, nw, n2;
     bool slow, twoway, intime;
     float t0, dt, z0, dz, t=0., z=0., eps;
     float *time, *depth, *vel, *str;
@@ -59,6 +59,7 @@ int main (int argc, char *argv[])
     }
     if ((intime || !sf_histfloat(velocity,"o1",&z0)) && !sf_getfloat ("z0",&z0)) z0 = 0.; 
     /* Depth origin */
+    if (!sf_histint(velocity,"n2",&n2)) n2=1;
 
     sf_putfloat(out,"o1",z0);
 
@@ -88,35 +89,43 @@ int main (int argc, char *argv[])
     } else {
 	fnt = fint1_init (nw, nt, 0);
 	mp = NULL;
-	str = NULL;
+	str = sf_floatalloc(nz);
     }
 
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (time,nt,in);
-	sf_floatread (vel,intime? nt: nz,velocity);
+	if (0 == ix || n2 > 1) {
+	    sf_floatread (vel,intime? nt: nz,velocity);
+	    if (intime) {
+		for (it=0; it < nt; it++) {
+		    if (it == 0) {
+			t =  slow? t0/(vel[0]*dt): t0*vel[0]/dt;
+		    } else {
+			t += slow? 1./vel[it-1]: vel[it-1];
+		    }		 
+		    str[it] = t*dt;		 
+		}
+		sf_stretch_define (mp,str);
+	    } else {
+		for (iz = 0; iz < nz; iz++) {
+		    if (iz == 0) {
+			z =  slow? z0*vel[0]/dz: z0/(dz*vel[0]);
+		    } else {
+			z += slow? vel[iz-1]: 1./vel[iz-1];
+		    }
+		
+		    str[iz] = (z*dz-t0)/dt;
+		}
+	    }
+	}
 
 	if (intime) {
-	     for (it=0; it < nt; it++) {
-		 if (it == 0) {
-		     t =  slow? t0/(vel[0]*dt): t0*vel[0]/dt;
-		 } else {
-		     t += slow? 1./vel[it-1]: vel[it-1];
-		 }		 
-		 str[it] = t*dt;		 
-	     }
-	    sf_stretch_define (mp,str);
 	    sf_stretch_apply (mp,time,depth);
 	} else {
 	    fint1_set (fnt, time);
-
+	    
 	    for (iz = 0; iz < nz; iz++) {
-		if (iz == 0) {
-		    z =  slow? z0*vel[0]/dz: z0/(dz*vel[0]);
-		} else {
-		    z += slow? vel[iz-1]: 1./vel[iz-1];
-		}
-		
-		t = (z*dz-t0)/dt;
+		t = str[iz];
 		it = t;
 		t = t - it;
 		
@@ -126,7 +135,7 @@ int main (int argc, char *argv[])
 		    depth[iz] = time[nt-1];
 		} else {
 		    depth[iz] = fint1_apply (fnt, it, t, false);
-		}
+		}		
 	    }
 	}
 
