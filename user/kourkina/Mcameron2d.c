@@ -232,7 +232,7 @@ static void qp_cheb(void)
     }
   }
   while(k<nt1  && ch=='y') {
-      sf_warning("%d of %d",k,nt1);
+      sf_warning("%d of %d;",k,nt1);
 
     /*---chebspectrum for y---*/
     for(i=0;i<nc;i++) b[i]=*(y+i+k*nc);
@@ -273,6 +273,7 @@ static void qp_cheb(void)
     }
     k++;
   }
+  sf_warning(".");
   /*---------- find the velocity on the regular mesh by cubicsplines --------*/
   for( k=1;k<nt;k++) {
       for(i=0;i<nc;i++) b[i]=*(y+i+nc*k);
