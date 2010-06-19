@@ -1,9 +1,4 @@
-/* Convert RMS to interval velocity using LS and shaping regularization.
-
-Takes: rect1= rect2= ...
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Convert RMS to interval velocity using LS and shaping regularization. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

@@ -26,7 +26,7 @@ import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = map(int,string.split(SCons.__version__,'.')[:3])
-if version[0] == 1 or version[1] >= 97 or \
+if version[0] >= 1 or version[1] >= 97 or \
         (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:  # old style
@@ -1575,7 +1575,7 @@ def set_options(env,my_opts=None):
 def options(file):
     global version
 
-    if version[0] < 1 or version[1] < 2:
+    if version[0] < 1 or (version[0] == 1 and version[1] < 2):
         opts=Options(file)
     else:
         opts=Variables(file)
