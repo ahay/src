@@ -143,6 +143,9 @@ def main(argv=sys.argv):
     outfile_name  = par.string('outfile')
     # file name for detailed inventory table, default none
 
+    untested      = par.bool('untested',False)
+    # list untested examples?
+
 ################    build list of search directories
 
     books = []
@@ -259,8 +262,9 @@ def main(argv=sys.argv):
 ################    write summary
 
     sys.stdout.write("Examples without an .rsftest file (%d):\n" % rsftest_no)
-    rsftest_no_list.sort()
-    for item in rsftest_no_list: sys.stdout.write("%s\n" % item)
+    if untested:
+        rsftest_no_list.sort()
+        for item in rsftest_no_list: sys.stdout.write("%s\n" % item)
     sys.stdout.write("\n")
 
     sys.stdout.write("Examples with .rsftest file errors (%d):\n" % rsftest_errors)
