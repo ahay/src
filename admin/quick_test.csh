@@ -27,7 +27,9 @@ sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt book
 echo "+++++++ Running examples +++++++"
 echo
 sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
-    command="/usr/bin/time -p scons >& scons.log" book
+    command="/usr/bin/time -p scons 2>&1 >scons.log" book
+
+# need to use "2>&1 >" instead of ">&" because /bin/sh on Ubuntu is /bin/dash
 
 # compare the figures
 echo "+++++++ Comparing figures +++++++"
