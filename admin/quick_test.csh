@@ -21,19 +21,19 @@
 # list the examples
 echo "+++++++ Listing selected examples +++++++"
 echo
-sfbooklist size=1024 list=filter skipfile=skiplist.txt book
+sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt book
 
 # run the examples
 echo "+++++++ Running examples +++++++"
 echo
-sfbooklist size=1024 list=filter skipfile=skiplist.txt timer=file \
+sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
     command="/usr/bin/time -p scons >& scons.log" book
 
 # compare the figures
 echo "+++++++ Comparing figures +++++++"
 echo
 rm book/*/*/*/.rsftest
-sfbooklist size=1024 list=filter skipfile=skiplist.txt \
+sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt \
     command="sffiglist rsftest=y list=none > list.log" book
 
 # summarize the tests

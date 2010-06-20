@@ -132,7 +132,7 @@ void zomig3(ssroperator3d weop,
 	ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>;",
 				  ompith,iw+1,cub->aw.n);
 	
 	if(inv) { /* MODELING */
@@ -243,6 +243,7 @@ void zomig3(ssroperator3d weop,
 	    } /* z */
 	} /* else */
     } /* w */
+    if(cub->verb) sf_warning(".");
 }
 
 /*------------------------------------------------------------*/
@@ -272,7 +273,9 @@ void zodtm3(ssroperator3d weop,
 	    ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
+	    if(cub->verb) sf_warning ("(ith=%d) "
+				      "... <iw=%3d of %3d> "
+				      "... <ie=%3d of %3d>;",
 				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
 	    
 	    if(inv) { /* UPWARD DATUMING */
@@ -348,6 +351,7 @@ void zodtm3(ssroperator3d weop,
 		sf_fslice_put(wfld,iw+ie*cub->aw.n,weop->ww[ompith][0]);
 	    } /* else */
 	} /* w */
+	if(cub->verb) sf_warning(".");
     } /* e */
 }
 
@@ -374,10 +378,10 @@ void zowfl3(ssroperator3d weop,
 #endif
     for (iw=0; iw<cub->aw.n; iw++) {
 #ifdef _OPENMP
-	    ompith=omp_get_thread_num();
+	ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>;",
 				  ompith,iw+1,cub->aw.n);
 	
 	if(inv) { /*   UPWARD EXTRAPOLATION */
@@ -461,6 +465,7 @@ void zowfl3(ssroperator3d weop,
 	    } /* z */
 	} /* else */
     } /* w */
+    if(cub->verb) sf_warning(".");
 }
 /*------------------------------------------------------------*/
 
