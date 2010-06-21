@@ -9,9 +9,9 @@ Papers(copyr='Madagascar Community',
        rsf/tour.tex
        rsf/api.tex
        rsf/demo.tex
-       manual/manual.tex
        scons/paper.tex
        '''),
+       #              manual/manual.tex
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis'},
        line='\\url{http://www.ahay.org/}',

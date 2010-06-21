@@ -68,7 +68,6 @@ echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
     root=`$python -c "import sys; print sys.prefix"`
     warning "I am setting RSFROOT to $root"
-    RSFROOT=$root # needed for the possible SCons installation below
 fi
 
 findprog scons
@@ -81,9 +80,9 @@ if test "$scons" = "no"; then
     gunzip < $archive | tar xf - > /dev/null
     dir=`ls -d scons-* | grep '[^mz]$'`
     cd $dir
-    $python setup.py install --prefix=${RSFROOT} > /dev/null
+    $python setup.py install --prefix=$root > /dev/null
     cd $here
-    scons="${RSFROOT}/bin/scons"
+    scons="$root/bin/scons"
     if test ! -x "$scons"; then
 	scons="failed"
     fi

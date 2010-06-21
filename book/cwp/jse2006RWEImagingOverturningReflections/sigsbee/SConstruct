@@ -218,7 +218,8 @@ Flow('cos2','hwt2','window j2=4')
 # ------------------------------------------------------------
 # time data CC: (t,x)
 Flow  ('datCC','dd','transp')
-Result('datCC','grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
+Flow('datCCdec','datCC','prep4plot inp=$SOURCE out=$TARGET',stdin=0,stdout=-1)
+Result('datCC','datCCdec','grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
