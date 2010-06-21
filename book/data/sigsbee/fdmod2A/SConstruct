@@ -93,5 +93,5 @@ for item in ['9','19','29','39']:
            label1=z label2=x unit1=kft unit2=kft
            ''' % (item,times[cntr]))
     cntr = cntr + 1
-Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
+Result('dat','window j2=4 | transp |' + fdmod.dgrey('pclip=99',par))
 End()
