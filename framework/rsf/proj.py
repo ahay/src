@@ -494,7 +494,7 @@ class Project(Environment):
         return plot
     def End(self):
         self.Command('.rsfproj',self.lock,action=Action(self.Info))
-        self.Command('results',None,'echo %s' % ' '.join(self.rest))
+        self.Echo('results',None,out=self.rest)
         if self.view: # if any results
             self.Alias('view',self.view)
             self.Alias('print',self.prnt)

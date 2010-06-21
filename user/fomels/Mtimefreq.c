@@ -23,6 +23,7 @@
 int main(int argc, char* argv[])
 {
     bool phase;
+    char *label;
     int i1, n1, iw, nt, nw, i2, n2, rect, niter;
     float t, d1, w, w0, dw, *trace, *bs, *bc, *ss, *cc, *mm;
     sf_file time, timefreq, mask;
@@ -55,6 +56,11 @@ int main(int argc, char* argv[])
     sf_putint(timefreq,"n2",nw);
     sf_putfloat(timefreq,"d2",dw);
     sf_putfloat(timefreq,"o2",w0);
+
+    if (NULL != (label = sf_histstring(time,"label1")) &&
+	!sf_fft_label(2,label,timefreq)) 
+	sf_putstring(timefreq,"label2","Wavenumber");
+    sf_fft_unit(2,sf_histstring(time,"unit1"),timefreq);
 
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;

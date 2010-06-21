@@ -161,13 +161,13 @@ Plot('do','window j2=4 | transp |' + rwezo.dgrey('',par),view=1)
 for j in range(20,300,20):
     par['j'] = j
     
-    Plot('wo'+str(j/20),'wo',
+    Plot('wo'+str(j//20),'wo',
          '''
          window n3=1 f3=%(j)d
          min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
          ''' % par
          + rwezo.cgrey('pclip=99',par))
-    Result('wo'+str(j/20),['wo'+str(j/20),'cos1','ss'],'Overlay')
+    Result('wo'+str(j//20),['wo'+str(j//20),'cos1','ss'],'Overlay')
 
 Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
 Plot('dd','transp |' + rwezo.dgrey('',par),view=1)
@@ -217,13 +217,12 @@ Flow('cos2','hwt2','window j2=4')
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
-Flow  ('datCC','dd','transp')
-Flow('datCCdec','datCC','prep4plot inp=$SOURCE out=$TARGET',stdin=0,stdout=-1)
-Result('datCC','datCCdec','grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
+Flow  ('datCC','dd','transp memsize=1000')
+Result('datCC','window j1=3 | grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
-zomig.image('imgCC','sloCC','frqCC',par)
+zomig.image3('imgCC','sloCC','frqCC',par)
 Plot  ('imgCC','window | transp |' + rwezo.cgrey('pclip=99',par))
 Result('imgCC',['imgCC','cos1'],'Overlay')
 

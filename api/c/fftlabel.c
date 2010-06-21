@@ -18,18 +18,23 @@
 */
 #include <string.h>
 
-#include <rsf.h>
+#include "fftlabel.h"
 
-void fix_unit(int axis,   /* axis number */
-	      sf_file in  /* input file */, 
-	      sf_file out /* output file */)
+#include "file.h"
+/*^*/
+
+#include "alloc.h"
+
+void sf_fft_unit(int axis         /* axis number */,
+		 const char* unit /* input unit */,
+		 sf_file out      /* output file */)
 /*< Change unit to 1/unit or vice versa >*/
 {
     size_t len;
-    char *unit, *unit2, varname[7];
+    char *unit2, varname[7];
 
     snprintf(varname,7,"unit%d",axis);
-    if (NULL != (unit = sf_histstring(in,varname))) {
+    if (NULL != unit) {
 	if (0==strcmp(unit,"s")) {
 	    sf_putstring(out,varname,"Hz");
 	} else if (0==strcmp(unit,"Hz")) {
@@ -45,9 +50,9 @@ void fix_unit(int axis,   /* axis number */
     }
 }
 
-bool fix_label(int axis,         /* axis number */
-	       const char* label /* input label */, 
-	       sf_file out       /* output file */) 
+bool sf_fft_label(int axis          /* axis number */,
+		  const char* label /* input label */, 
+		  sf_file out       /* output file */) 
 /*< Choose an output label appropriately. 
   Returns false if the label name is not recognized. >*/
 {

@@ -23,8 +23,6 @@ Pad the data if you need to suppress wrap-around effects.
 
 #include <rsf.h>
 
-#include "fftlabel.h"
-
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, sign[SF_MAX_DIM], s[SF_MAX_DIM], n[SF_MAX_DIM];
@@ -70,9 +68,10 @@ int main (int argc, char* argv[])
 		sf_putstring(out,key,label);
 	    } else if (NULL != (label = sf_histstring(in,key))) {
 		sf_putstring(out,key2,label);
-		(void) fix_label(i+1,label,out);
+		(void) sf_fft_label(i+1,label,out);
 	    }
-	    fix_unit(i+1,in,out);
+	    snprintf(key,15,"unit%d",i+1);
+	    sf_fft_unit(i+1,sf_histstring(in,key),out);
 	}
     }
 

@@ -22,8 +22,6 @@ Input and output are complex data. The input is padded by factor pad.
 
 #include <rsf.h>
 
-#include "fftlabel.h"
-
 int main (int argc, char **argv)
 {
     int n1, nx, n3, dim, n[SF_MAX_DIM];     /* dimensions */
@@ -105,7 +103,7 @@ int main (int argc, char **argv)
 	if (NULL != label) {
 	    sf_putstring(out,varname,label);
 	} else if (NULL != (label = sf_histstring(in,varname))) {
-	    (void) fix_label(axis,label,out);
+	    (void) sf_fft_label(axis,label,out);
 	}
     } else {
 	sprintf(varname,"n%d",axis);
@@ -142,12 +140,13 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dk);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,k0);
-	if (NULL != label && !fix_label(axis,label,out)) {
+	if (NULL != label && !sf_fft_label(axis,label,out)) {
 	    sprintf(varname,"label%d",axis);
 	    sf_putstring(out,varname,"Wavenumber");
 	}
     }
-    fix_unit(axis,in,out);
+    sprintf(varname,"unit%d",axis);
+    sf_fft_unit(axis,sf_histstring(in,varname),out);
 
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 

@@ -72,7 +72,7 @@ for k in ('wfl','wdf'):
     fdmod.wom(k+'m',k,'vel',par['vbias'],par)
     Plot(   k+'m',fdmod.wgrey('pclip=99',par),view=1)
 
-    for i in range(0,par['nt']/par['jsnap'],1):
+    for i in range(0,par['nt']//par['jsnap'],1):
         fdmod.wframe(k+'-'+str(i),k,i,'pclip=99',par)
 	Result(k+'-'+str(i),[k+'-'+str(i),'ss'],'Overlay')
 

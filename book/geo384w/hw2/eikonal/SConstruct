@@ -62,7 +62,7 @@ Result('exact','vel time','Overlay')
 errs = []
 spaces = []
 
-for sample in range(1,nz/30):
+for sample in range(1,nz//30):
 
     # Subsample velocity and analytical traveltime
     ##############################################

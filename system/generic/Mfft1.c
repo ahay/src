@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "fftlabel.h"
-
 int main (int argc, char *argv[])
 {
     bool inv, sym, opt;
@@ -73,7 +71,7 @@ int main (int argc, char *argv[])
 	/* fix label */
 	if (NULL != (label = sf_histstring(in,"label1"))) {
 	    sf_putstring(out,"fft_label1",label);
-	    if (!fix_label(1,label,out))
+	    if (!sf_fft_label(1,label,out))
 		sf_putstring(out,"label1","Wavenumber");
 	}
     } else {
@@ -94,10 +92,10 @@ int main (int argc, char *argv[])
 	if (NULL != (label = sf_histstring(in,"fft_label1"))) {
 	    sf_putstring(out,"label1",label);
 	} else if (NULL != (label = sf_histstring(in,"label1"))) {
-	    (void) fix_label(1,label,out);
+	    (void) sf_fft_label(1,label,out);
 	}
     }	
-    fix_unit(1,in,out);
+    sf_fft_unit(1,sf_histstring(in,"unit1"),out);
 
     p = sf_floatalloc(nt);
     pp = (kiss_fft_cpx*) sf_complexalloc(nw);

@@ -71,11 +71,10 @@ int main(int argc, char** argv)
     DblNumMat mat(m,n,false,&(data[0]));
     matrix = mat;
     
-    vector<int> cidx;
-    vector<int> ridx;
+    vector<int> midx(m), nidx(n), lidx, ridx;
     DblNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) eps,npk,cidx,ridx,mid) );
+    iC( lowrank(m,n,sample,(double) eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -86,20 +85,47 @@ int main(int argc, char** argv)
 	fmid[k] = dmid[k];
     }
 
-    out.put("n1",m2);
-    out.put("n2",n2);
-    out << fmid;
+    oRSF middle("mid");
+    middle.put("n1",m2);
+    middle.put("n2",n2);
+    middle << fmid;
 
-    for(int k=0; k<m2; k++)
-	cerr<<cidx[k]<<" ";
-    cerr<<endl;
+    for (int k=0; k < m; k++) 
+	midx[k] = k;
+    for (int k=0; k < n; k++) 
+	nidx[k] = k;    
 
-    for(int k=0; k<n2; k++)
-	cerr<<ridx[k]<<" ";
-    cerr<<endl;
+    DblNumMat lmat(m,m2);
+    iC ( sample(midx,lidx,lmat) );
+    double *ldat = lmat.data();
 
-    // output left, right, and approximation
-  
+    std::valarray<float> ldata(m*m2);
+    for (int k=0; k < m*m2; k++) 
+	ldata[k] = ldat[k];
+    oRSF left("left");
+    left.put("n1",m);
+    left.put("n2",m2);
+    left << ldata;
+
+    DblNumMat rmat(n2,n);
+    iC ( sample(ridx,nidx,rmat) );
+    double *rdat = rmat.data();
+
+    std::valarray<float> rdata(n2*n);    
+    for (int k=0; k < n2*n; k++) 
+	rdata[k] = rdat[k];
+    oRSF right("right");
+    right.put("n1",n2);
+    right.put("n2",n);
+    right << rdata;
+
+    DblNumMat tmp1(m,n2);
+    iC( dgemm(1.0, lmat, mid, 0.0, tmp1) );
+    iC( dgemm(1.0, tmp1, rmat, 0.0, mat) );
+    for (int k=0; k < m*n; k++) 
+	fdata[k] = data[k];
+    out << fdata;
+
     return 0;
 }
 

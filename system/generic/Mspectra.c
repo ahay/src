@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "fftlabel.h"
-
 int main (int argc, char* argv[]) 
 {
     int n1, n2, ni, nfft, nw, i, i1, i2;
@@ -51,9 +49,9 @@ int main (int argc, char* argv[])
 
     /* fix label */
     if (NULL != (label = sf_histstring(in,"label1")) &&
-	!fix_label(1,label,out)) 
+	!sf_fft_label(1,label,out)) 
 	sf_putstring(out,"label1","Wavenumber");
-    fix_unit(1,in,out);
+    sf_fft_unit(1,sf_histstring(in,"unit1"),out);
 
     /* determine frequency sampling (for real to complex FFT) */
     nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
