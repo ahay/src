@@ -367,7 +367,7 @@ def warp2(name,       # name prefix
 
     PS = ('PS','SS')[ss]
 
-    Plot(ps,'grey title=%s label1="Time (s)" ' % PS)
+    Plot(ps,'grey title=%s label1=Time unit1=s' % PS)
 
     Flow(pp+'s0',pp,'spectra all=y')
 
@@ -597,7 +597,7 @@ def warp1(name,      # name prefix
     cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
     window min1=%g max1=%g |
     dots gaineach=0
-    labels="Difference:PS warped:PP" label1="Time (s)"
+    labels="Difference:PS warped:PP" label1=Time unit1=s
     ''' % (tmin,tmax)
 
     def iphase(title):
@@ -652,7 +652,9 @@ def warp1(name,      # name prefix
         Flow(ppft+'a',ppft,'math output="abs(input)" | real')
         Flow(psft+'a',psft,'math output="abs(input)" | real')
 
-        ftplot = 'window min1=%g max1=%g | grey allpos=y color=j ' % (fmin,fmax)
+        ftplot = '''
+        window min1=%g max1=%g max2=%g | grey allpos=y color=j
+        ''' % (fmin,fmax,tmax)
 
         Plot(ppft+'a',ftplot+'title=PP')
         Plot(psft+'a',ftplot+'title=PS')
@@ -667,11 +669,11 @@ def warp1(name,      # name prefix
              'ricker niter=1000 ma=$TARGET verb=n m=20',stdout=0)
 
         rickplot = '''
-        cat axis=3 ${SOURCES[1]} | window n1=1 max2=1 | 
+        cat axis=3 ${SOURCES[1]} | window n1=1 max2=%g | 
         math output="sqrt(input)" |
         graph title="Dominant Frequency" 
         label2=Frequency unit2=Hz min2=%g max2=%g
-        ''' % (fmin,fmax)
+        ''' % (tmax,fmin,fmax)
 
         Result(n('rick'),[pprick,psrick],rickplot)
         

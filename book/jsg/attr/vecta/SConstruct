@@ -66,6 +66,7 @@ warp.warp2('vec','pp','ss','fit0',
            rect2=50,
            fmax=70,
            fmin=20,
+           frect=25,
            frame1=285,
            iter=2,
            clip=0.39)
