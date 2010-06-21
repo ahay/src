@@ -23,6 +23,7 @@ for par in pars:
          ''' % ('','| scale dscale=0.001')[par=='vp'])
     Result(par,
            '''
+           window j2=8 j1=2 |
            grey color=j barlabel=%s scalebar=y
            screenwd=12.595 screenht=1.8
            labelsz=4 titlesz=5 barreverse=y
