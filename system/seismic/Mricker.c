@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     eps *= eps;
 
     for (i2=0; i2 < n2; i2++) {
+	sf_warning("slice %d of %d;",i2+1,n2);
 	sf_floatread(data,na,in);
 
 	d2 = 0.;
@@ -128,7 +129,8 @@ int main(int argc, char* argv[])
         
 	sf_floatwrite (data,na,out);
     }
-    
+
+    sf_warning(".");
 
     exit (0);
 }
