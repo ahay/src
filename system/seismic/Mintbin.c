@@ -145,7 +145,7 @@ int main (int argc, char* argv[])
 
     /* loop over output */
     for (iy=0; iy < ny; iy++) {
-	sf_warning("%d of %d",iy+1,ny);
+	sf_warning("%d of %d;",iy+1,ny);
 	for (ix=0; ix < nx; ix++) {
 	    id = map[iy][ix];
 	    if (id < 0) {
@@ -157,6 +157,7 @@ int main (int argc, char* argv[])
 	    }
 	}
     }
+    sf_warning(".");
 
     header = sf_getstring("mask");
     /* output mask file */
