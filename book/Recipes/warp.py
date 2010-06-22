@@ -51,7 +51,6 @@ def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
     return '''
     warpscan other=${SOURCES[1]} niter=100
     ng=%d dg=%g g0=%g rect1=%d rect2=%d rect3=%d rect4=%d |
-    math output='(1+input)^4' |
     window''' % (ng,dg,g0,rect1,rect2,rect3,rect4)
 
 def warp2gamma(ss):
@@ -439,6 +438,20 @@ def warp2(name,       # name prefix
         Plot(si+'2',freqplot(PS + ' Local Frequency'))
         Plot(pi,freqplot('PP Local Frequency'))
         Result(si,[pp+'i',si,pi,si+'2'],'TwoRows')
+
+
+        ppft = n('ppft')
+        psft = n('psft')
+
+        ltft = 'ltft rect=%d | transp' % frect
+
+        Flow(ppft,pp,ltft)
+        Flow(psft,psw,ltft)
+
+        Flow(ppft+'a',ppft,'math output="abs(input)" | real')
+        Flow(psft+'a',psft,'math output="abs(input)" | real')
+
+        
 
         s0 = psw+'s0'
         Flow(s0,psw,'spectra all=y')

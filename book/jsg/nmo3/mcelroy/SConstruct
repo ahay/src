@@ -1,9 +1,6 @@
 from rsf.proj import *
 import math
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
+from rsf.recipes.beg import server as private
 
 segy = 'mcelroy.sgy'
 
@@ -12,8 +9,8 @@ Fetch(segy,'chevron',private)
 Flow('mac tmac mac.asc mac.bin', segy,
      '''
      segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
-     ep=228 tape=%s
-     ''' % segy)
+     ep=228 
+     ''')
 
 # From mac.asc:
 
@@ -27,9 +24,9 @@ Flow('mac tmac mac.asc mac.bin', segy,
 #3D AZIMUTH - BYTES 229-232
 
 Flow('fhead','tmac','dd type=float')
-Flow('fold','mac fhead','window n1=1 f1=1000 | bin head=${SOURCES[1]} xk=fldr yk=tracf fold=$TARGET',stdout=0)
+Flow('fold','mac fhead','window n1=1 f1=1000 | bin head=${SOURCES[1]} xkey=2 ykey=3 fold=$TARGET',stdout=0)
 
-Result('fold','grey allpos=y color=j title="Fold Map" label1=Inline label2=Crossline transp=n yreverse=n scalebar=y')
+Result('fold','grey allpos=y color=j title="Fold Map" label1=Inline unit1= label2=Crossline unit2= transp=n yreverse=n scalebar=y')
 
 # Window traces for inline and crossline 
 
@@ -81,7 +78,8 @@ Flow('super2','bin2',
      fft1 | fft3 axis=2 | fft3 axis=3 |
      dipfilter v1=-16.5 v2=-7.5 v3=7.5 v4=16.5 taper=2 pass=n dim=3 |
      fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y |
-     bandpass fhi=45 flo=8 | sfwindow min3=-3.7 max3=3.7 min2=-3.7 max2=3.7
+     bandpass fhi=45 flo=8 | sfwindow min3=-3.7 max3=3.7 min2=-3.7 max2=3.7 |
+     put label2=Inline unit2=km label3=Crossline unit3=km
      ''')
 
 #v1=-8.0 v2=-3.5 v3=3.5 v4=8.0

@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-lrmatrix
+lrmatrix isolr2
 '''
 
 subs = '''

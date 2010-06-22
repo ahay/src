@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	comRC=sf_floatalloc3(2,ng,nt);
 
 	for(ii=0;ii<nn;ii++) {
-	    sf_warning("%d of %d",ii,nn);
+	    sf_warning("%d of %d;",ii,nn);
 	    if(adj) {
 		sf_floatread (comRC[0][0],2*ng*nt,Fi);
 
@@ -130,11 +130,12 @@ int main(int argc, char* argv[])
 		sf_floatwrite(comRC[0][0],2*ng*nt,Fo);
 	    }
 	}
+	sf_warning(".");
 
     } else {
 
 	for(ii=0;ii<nn;ii++) {
-	    sf_warning("%d of %d",ii,nn);
+	    sf_warning("%d of %d;",ii,nn);
 	    if(adj) {
 		sf_floatread (mapRC[0],ng*nt,Fi);
 		c2r(linear,adj,mapCC,mapRC,rays);
@@ -145,6 +146,7 @@ int main(int argc, char* argv[])
 		sf_floatwrite(mapRC[0],ng*nt,Fo);
 	    }
 	}
+	sf_warning(".");
 
     }
 

@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) { /* loop over windows */
 	sf_floatread(&m1,1,ma);
 	sf_floatread(&a1,1,ma);
+
 	sf_floatread(&m2,1,ma2);
 	sf_floatread(&a2,1,ma2);
 	

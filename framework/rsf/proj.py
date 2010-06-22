@@ -386,8 +386,9 @@ class Project(Environment):
             if split[1] == 'omp': 
                 flow = 'omp ' + flow
             elif split[1] == 'mpi':
-                flow = 'mpi ' + flow
-                mpirun += ' -np %d' % split[2]
+                if mpirun:
+                    flow = 'mpi ' + flow
+                    mpirun += ' -np %d' % split[2]
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,

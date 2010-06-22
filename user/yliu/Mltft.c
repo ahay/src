@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     }
     
     for (i2=0; i2 < n2; i2++) {
-	sf_warning("slice %d of %d",i2+1,n2);
+	sf_warning("slice %d of %d;",i2+1,n2);
 	if (NULL != mm) {
 	    sf_floatread(mm,n1,mask);
 	    for (iw=0; iw < 2*nw; iw++) {
@@ -232,6 +232,8 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,n1,out);
 	}
     }
+    sf_warning(".");
+
     exit(0);
 }
 

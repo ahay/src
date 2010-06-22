@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 
     for(iw=0;iw<nw;iw++) {
 	w=ow+iw*dw;
-	sf_warning("%s %d %d",met,iw,nw);
+	sf_warning("%s %d %d;",met,iw,nw);
 	
 	if(adj) {  /* modeling */
 	    w*=-2; /*      causal, two-way time */
@@ -212,6 +212,7 @@ int main(int argc, char* argv[])
 	    it=nt-1; rweone_zoi(adj,wfl,img[it]);
 	}
     }
+    sf_warning(".");
 
     if(!adj) sf_floatwrite  (img[0],ng*nt,Fi);
 /*------------------------------------------------------------*/

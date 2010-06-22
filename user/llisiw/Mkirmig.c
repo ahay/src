@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     char *unit;
     int nt, nx, ny, ns, nh, nz, nzx, ix, ih, i, is, ist, iht;
-    float *trace, *out, **table, *stable, *rtable;
-    float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal;
+    float *trace, *out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
+    float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal, tx;
     sf_file inp, mig, tbl;
 
     sf_init (argc,argv);
@@ -50,8 +50,10 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(tbl,"o1",&z0)) sf_error("No o1= in table");
     if (!sf_histfloat(tbl,"d1",&dz)) sf_error("No d1= in table");
+
     if (!sf_histfloat(tbl,"o2",&x0)) sf_error("No o2= in table");
     if (!sf_histfloat(tbl,"d2",&dx)) sf_error("No d2= in table");
+
     if (!sf_histfloat(tbl,"o3",&y0)) sf_error("No o3= in table");
     if (!sf_histfloat(tbl,"d3",&dy)) sf_error("No d3= in table");
 
@@ -74,6 +76,17 @@ int main(int argc, char* argv[])
 
     table = sf_floatalloc2(nzx,ny);
     sf_floatread(table[0],nzx*ny,tbl);
+    sf_fileclose(tbl);
+
+    if (NULL != sf_getstring("tablex")) {
+	tbl = sf_input("tablex");
+
+	tablex = sf_floatalloc2(nzx,ny);
+	sf_floatread(tablex[0],nzx*ny,tbl);
+	sf_fileclose(tbl);
+    } else {
+	tablex = NULL;
+    }
 
     out = sf_floatalloc(nzx);
     trace = sf_floatalloc(nt);
@@ -91,6 +104,7 @@ int main(int argc, char* argv[])
 	if (ist >= ny) ist=ny-1;
 
 	stable = table[ist];
+	stablex = (NULL==tablex)? NULL:tablex[ist];
 
 	for (i=0; i < nzx; i++) {
 	    out[i] = 0.;
@@ -107,6 +121,7 @@ int main(int argc, char* argv[])
 	    if (iht >= ny) iht=ny-1;
 
 	    rtable = table[iht];
+	    rtablex = (NULL==tablex)? NULL:tablex[iht];
 
 	    sf_floatread (trace,nt,inp);
 	    doubint(nt,trace);
@@ -117,9 +132,9 @@ int main(int argc, char* argv[])
 		t1 = stable[ix];
 		t2 = rtable[ix];
 		ti = t1+t2;
-
-		/* Add antialiasing later */
-		out[ix] += pick(ti,0.,trace,nt,dt,t0);
+		
+		tx = (NULL==tablex)? 0.:fabsf(rtablex[ix]*dh);
+		out[ix] += pick(ti,tx*aal,trace,nt,dt,t0);
 	    } 
 	} 
 	
