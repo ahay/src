@@ -30,7 +30,7 @@
 
 static float **u1, *u2, *u3, *dp, *p0;
 static int n1, n2, n, skip;
-static const int niter=100;
+static const int liter=100;
 static bool sign;
 
 static void border(float* u);
@@ -62,7 +62,7 @@ void twodip2_init(int nx, int ny     /* data size */,
 	u1 = sf_floatalloc2(n,1);
 	dp = sf_floatalloc(n);
 	p0 = sf_floatalloc(n);
-	div2_init(n1,n2,fx,fy,niter,gauss,true);
+	div2_init(n1,n2,fx,fy,liter,gauss,true);
     }
     
     sign = sign1;
@@ -147,7 +147,7 @@ void twodip2(int niter        /* number of iterations */,
 	    }
 	}
 
-	sf_multidivn(u2,dp,niter);
+	sf_multidivn(u2,dp,liter);
 	
 	lam = 1.;
 	for (k=0; k < 8; k++) {

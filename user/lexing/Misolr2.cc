@@ -55,6 +55,8 @@ int main(int argc, char** argv)
     int npk;
     par.get("npk",npk,20); // maximum rank
 
+    par.get("dt",dt); // time step
+
     iRSF vel;
 
     int nz,nx;
@@ -63,6 +65,7 @@ int main(int argc, char** argv)
     int m = nx*nz;
     std::valarray<float> vels(m);
     vel >> vels;
+    vs.resize(m);
     vs = vels;
     
     iRSF fft("fft");
@@ -90,12 +93,13 @@ int main(int argc, char** argv)
 	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
 	}
     }
+    ks.resize(n);
     ks = k;
 
     vector<int> lidx, ridx;
     DblNumMat mid;
 
-    iC( lowrank(nx*nz,nkx*nkz,sample,(double) eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,(double) eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -143,8 +147,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-
-
-
-

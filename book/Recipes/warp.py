@@ -51,6 +51,7 @@ def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
     return '''
     warpscan other=${SOURCES[1]} niter=100
     ng=%d dg=%g g0=%g rect1=%d rect2=%d rect3=%d rect4=%d |
+    math output="(input+0.5)^4" |
     window''' % (ng,dg,g0,rect1,rect2,rect3,rect4)
 
 def warp2gamma(ss):
@@ -142,7 +143,7 @@ def warp3(name,       # name prefix
         grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
         point1=0.75 point2=0.75
         label1="Time (s)" label2="In-line" label3="Cross-line"
-        color=j scalebar=y barlabel="Frequency (Hz)"
+        color=j scalebar=y barlabel=Frequency barunit=Hz
         ''' % (tmin,tmax,0.5/(math.pi*dt),
                (fmax-fmin)*0.25,(fmax+fmin)*0.5,title,frame1,trace-o2,line-o3)
 
@@ -330,13 +331,13 @@ def warp2(name,       # name prefix
     def freqplot(title):
         return '''
         scale scale dscale=%g |
-        %s clip=%g bias=%g color=j scalebar=y barlabel="Frequency (Hz)"
+        %s clip=%g bias=%g color=j scalebar=y barlabel=Frequency barunit=Hz
         ''' % (0.5/(math.pi*dt),plot(title),(fmax-fmin)*0.25,(fmax+fmin)*0.5)
 
     def specplot(title):
         return '''
         cat axis=2 ${SOURCES[1]} |
-        graph title="%s" max1=%g label1="Frequency (Hz)"
+        graph title="%s" max1=%g label1=Frequency unit1=Hz
         dash=0,1 plotfat=7 label2= 
         ''' % (title,4*fmax)
 
@@ -617,9 +618,9 @@ def warp1(name,      # name prefix
         return '''
         cat axis=2 ${SOURCES[1]} |
         scale dscale=%g | 
-        graph title="Local Frequency (%s)" label1="Time (s)"
+        graph title="Local Frequency (%s)" label1=Time unit1=s
         min2=%g max2=%g min1=%g max1=%g
-        dash=0,1 label2="Frequency (Hz)"
+        dash=0,1 label2=Frequency unit2=Hz
         ''' % (0.5/(math.pi*dt),title,fmin,fmax,tmin,tmax)
 
     warpit = warping(niter,200)
@@ -724,7 +725,7 @@ def warp1(name,      # name prefix
         grey title="Gamma scan" allpos=y 
         min2=%g max2=%g
         color=j pclip=100
-        label1="Time (s)" label2="Gamma"
+        label1=Time unit1=s label2=Gamma
         ''' % (tmin,tmax,g0,g1)
 
         scn = n('scn')

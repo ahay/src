@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     const int n1=100, n2[2]={100,100};
     int i, niter, nw, na;
-    float s0, a0, p, p2, p21, eps, eps0;
+    float s0, a0, p, p2, p21, eps;
     char *lagfile;
     sf_filter ss, aa;
     sf_file out, lag;
@@ -44,9 +44,6 @@ int main(int argc, char* argv[])
 
     p2 = p*p; 
     p21 = p2 + 1.;
-
-    if (!sf_getfloat("eps0",&eps0)) eps0=0.0;
-    /* stabilization for Wilson's factorization */
 
     switch(nw) {
 	case 2:
@@ -161,6 +158,7 @@ int main(int argc, char* argv[])
     aa = sf_allocatehelix(na);
     for (i=0; i < na; i++) {
 	aa->lag[i] = i+1;
+	aa->flt[i] = 0.0;
     }
 
     if (!sf_getint("niter",&niter)) niter=20;
@@ -168,14 +166,14 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=SF_EPS;
 
     wilson_init(20*n1);
-    a0 = wilson_factor (niter, s0+eps0, ss, aa, true, 1.e-6);	
+    a0 = wilson_factor (niter, s0, ss, aa, true, 1.e-6);	
     aa = compress(aa, eps);
   
     for (i=0; i < aa->nh; i++) {
 	aa->flt[i] = 0.;
     }
 
-    a0 = wilson_factor (niter, s0+eps0, ss, aa, true, 1.e-6);	
+    a0 = wilson_factor (niter, s0, ss, aa, true, 1.e-6);	
     aa = compress(aa, eps);
     na = aa->nh;
 
