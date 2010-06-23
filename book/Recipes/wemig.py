@@ -71,7 +71,7 @@ def bWRwem(data,wfld,slow,par):
 
 def wemWR(data,wfld,slow,causal,par):
     Flow(wfld,[data,slow],
-         'wex %s slo=${SOURCES[1]}' % param(par) + ' causal=%s '%causal) 
+         'wexwfl %s slo=${SOURCES[1]}' % param(par) + ' causal=%s '%causal) 
 
 # ------------------------------------------------------------
 # RTM

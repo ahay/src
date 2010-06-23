@@ -61,14 +61,15 @@ def shot2grid(swfl,rwfl,wave,shot,par):
     
 # ------------------------------------------------------------
 def time2freq(dtime,dfreq,par):
+    # input  is t-x-y-e
+    # output is x-y-w-e
 
     Flow(dfreq,dtime,
          '''
          fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          put label1=w |
-         transp plane=12 | 
-         spray axis=2 n=1 o=0 d=1 |
+         transp plane=12 | transp plane=23 | 
          put label1=x label2=y label3=w label4=e
          ''' % par)
 
