@@ -31,7 +31,7 @@ echo "+++++++ Running examples +++++++"
 echo
 #   need to use "2>&1 >" instead of ">&" because /bin/sh on Ubuntu is /bin/dash
 sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
-    command="scons > scons.log 2>&1"
+    command="scons > scons.log 2>&1" book
 
 # compare the figures
 echo "+++++++ Comparing figures +++++++"

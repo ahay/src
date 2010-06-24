@@ -1083,7 +1083,7 @@ Result('full_Cont_top','vph_top full_Int_taper_top full_Contribution_top','SideB
 # Term: p_S(r_A) v_0^{*}(r_B)
 Flow('pAS_vB0_top',['depsrf_w_1','deof_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
 
-Flow('pAS_vB0_topt','pAS_vB0_top',''' fft1 inv=y opt=y sym=y | window j1=25''')
+Flow('pAS_vB0_topt','pAS_vB0_top',''' fft1 inv=y opt=y sym=y''')
 
 # Term: v_S(r_A) p_0^{*}(r_B)
 Flow('vAS_pB0_top',['desrf_w_1','depof_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
@@ -1094,20 +1094,20 @@ Result('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
 Plot('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
 
 Result('pAS_vB0_topt',
-       ''' grey title="top: p_S V_0*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: p_S V_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('pAS_vB0_topt',
-       ''' grey title="top: p_S V_0*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: p_S V_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
 Result('vAS_pB0_topt',
-       ''' grey title="top: v_S p_0*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: v_S p_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('vAS_pB0_topt',
-       ''' grey title="top: v_S p_0*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: v_S p_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
