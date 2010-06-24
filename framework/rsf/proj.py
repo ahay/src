@@ -198,6 +198,7 @@ class Project(Environment):
 
         self.sfpen = os.path.join(self.bindir,'sfpen')
         self.pspen = os.path.join(self.bindir,'pspen')
+        self.vppen = os.path.join(self.bindir,'vppen')
         
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','figs'))
         
@@ -455,7 +456,8 @@ class Project(Environment):
         if combine.has_key(flow):
             if not type(source) is types.ListType:
                 source = string.split(source)
-            flow = apply(combine[flow],['vppen',len(source)])
+            flow = apply(combine[flow],[self.vppen,len(source)])
+            source.append(self.vppen)
             if vppen:
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
