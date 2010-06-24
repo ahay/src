@@ -1053,11 +1053,11 @@ Result('taper',fdmod.cgrey('title="taper" wantscalebar=y',par))
 Flow('full_Int_taper_top','full_Integrand_top taper','add ${SOURCES[1]} mode=p scale=1,-1')
 
 Result('full_Int_taper_top',
-       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_Int_taper_top',
-       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 

@@ -29,14 +29,9 @@ sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt book
 # run the examples
 echo "+++++++ Running examples +++++++"
 echo
-if ($SHELL == "/bin/csh" || $SHELL == "/bin/tcsh") then
-    sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
-        command="scons >& scons.log" book
-else
 #   need to use "2>&1 >" instead of ">&" because /bin/sh on Ubuntu is /bin/dash
-    sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
-        command="scons 2>&1 >scons.log"
-endif
+sfbooklist size=1024 list=filter skipfile=admin/skiplist.txt timer=file \
+    command="scons > scons.log 2>&1"
 
 # compare the figures
 echo "+++++++ Comparing figures +++++++"
