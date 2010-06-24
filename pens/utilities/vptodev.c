@@ -40,8 +40,7 @@ extern int      no_stretch_text;
 void vptodevxy (int x, int y, int *outx, int *outy)
 /*< convert vplot coordinates to device coordinates >*/
 {
-float           tempx, tempy, temp;
-
+    float tempx, tempy, temp;
 
     tempx = (float) (x - dev.xorigin) * xscale;
     tempy = (float) (y - dev.yorigin) * yscale;

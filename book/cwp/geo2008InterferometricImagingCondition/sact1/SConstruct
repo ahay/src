@@ -28,7 +28,7 @@ Result('mask',fdmod.cgrey('',par))
 
 Flow('vo','vwin','smooth rect1=25 rect2=25')
 Plot('vo',fdmod.cgrey('allpos=y bias=%g' % par['vbias'],par))
-Result('vo','vo','Overlay')
+#Result('vo','vo','Overlay')
 # ------------------------------------------------------------
 ff=0
 aa=2
@@ -41,14 +41,16 @@ iic.model('vo','vv','rm','gg',gm,par)
 iic.receivers('rr',par)
 iic.target(100,25,'qq',par)
 iic.segments('pss','ass','wav','xm','qq',par)
+
+Flow('wav2','wav','cp $SOURCE $TARGET',stdin=0,stdout=-1)
 # ------------------------------------------------------------
 # traveltimes
 iic.ttimes('vo','ass',par)
 
 # ------------------------------------------------------------
 # active array modeling
-iic.amodel('ado','awo','wav','vo','rm','xm','ass','rr','qq',par)
-iic.amodel('adv','awv','wav','vv','rm','xm','ass','rr','qq',par)
+iic.amodel('ado','awo','wav', 'vo','rm','xm','ass','rr','qq',par)
+iic.amodel('adv','awv','wav2','vv','rm','xm','ass','rr','qq',par)
 
 iic.movie('awo','vo',par)
 iic.movie('awv','vv',par)
@@ -63,13 +65,13 @@ Flow('taper',None,
      n2=%(nt)d d2=%(dt)g o2=%(ot)g |
      smooth rect1=150
      ''' % par)
-Result('taper','transp |'+fdmod.dgrey('pclip=99',par))
+Result('taper','window j1=10 j2=10 | transp |'+fdmod.dgrey('pclip=99',par))
 
 Flow('adotaper','adox taper','add mode=p ${SOURCES[1]}')
 Flow('advtaper','advx taper','add mode=p ${SOURCES[1]}')
 
-Result('adotaper','transp |'+fdmod.dgrey('pclip=99',par))
-Result('advtaper','transp |'+fdmod.dgrey('pclip=99',par))
+Result('adotaper','window j2=5 | transp |'+fdmod.dgrey('pclip=99',par))
+Result('advtaper','window j2=5 | transp |'+fdmod.dgrey('pclip=99',par))
 
 # ------------------------------------------------------------
 # active array migration

@@ -418,7 +418,7 @@ def amodel(dat,wfl,wav,vel,den,ref,sou,rec,ico,par):
     if(not par.has_key('wscale')): par['wscale']=5
     if(not par.has_key('vbias')): par['vbias']=1500
 
-    Result(wav,'window n1=1 n2=400 |' + fdmod.waveplot('',par))
+    Result(wav,'window n1=1 n2=400 |' + fdmod.waveplot('format1=%3.2f',par))
     Result('a'+vel,[vel,ico,rec,sou],'Overlay')
 
     fdmod.lwefd1(dat+'o',wfl+'o',

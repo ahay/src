@@ -997,20 +997,20 @@ Flow('full_vAS_pB0_topt','full_vAS_pB0_top',''' fft1 inv=y opt=y sym=n ''')
 #Plot('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
 
 Result('full_pAS_vB0_topt',
-       ''' grey title="top: p V*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: p V*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_pAS_vB0_topt',
-       ''' grey title="top: p V*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: p V*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
 Result('full_vAS_pB0_topt',
-       ''' grey title="top: V p*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: V p*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_vAS_pB0_topt',
-       ''' grey title="top: V p*" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: V p*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1131,11 +1131,11 @@ Plot('Integrand_top',
 Flow('Int_taper_top','Integrand_top taper','add ${SOURCES[1]} mode=p scale=1,1')
 
 Result('Int_taper_top',
-       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('Int_taper_top',
-       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+       '''window j1=25 | grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1220,11 +1220,11 @@ for i in range(5):
 	Flow('Int_taper_bot_'+str(i+2),['Integrand_bot_'+str(i+2),'taper'],'add ${SOURCES[1]} mode=p scale=1,-1')
 
 	Result('Int_taper_bot_'+str(i+2),
-	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+	       '''window j1=25 | grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('Int_taper_bot_'+str(i+2),
-	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+	       '''window j1=25 | grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	
@@ -1308,11 +1308,11 @@ for i in range(5):
 	Flow('full_Int_taper_bot_'+str(i+2),['full_Integrand_bot_'+str(i+2),'taper'],'add ${SOURCES[1]} mode=p scale=1,1')
 
 	Result('full_Int_taper_bot_'+str(i+2),
-	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+	       '''window j1=25 | grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('full_Int_taper_bot_'+str(i+2),
-	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+	       '''window j1=25 | grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	

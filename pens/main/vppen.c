@@ -1054,8 +1054,8 @@ void opendev (int argc, char* argv[])
 	    atemp[1] = (float) (VP_STANDARD_HEIGHT) / vparray[1];	 
 	}   
 
-	vpasize[0] = atemp[0] * RPERIN;
-	vpasize[1] = atemp[1] * RPERIN;
+	vpasize[0] = floorf(0.5+atemp[0] * RPERIN);
+	vpasize[1] = floorf(0.5+atemp[1] * RPERIN);
     }
 
 

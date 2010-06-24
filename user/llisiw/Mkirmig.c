@@ -44,6 +44,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3= in input");
     if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3= in input");
 
+    if (1==nh) dh=0.0;
+    if (1==ns) ds=0.0;
+
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
     if (!sf_histint(tbl,"n2",&nx)) sf_error("No n2= in table");
     if (!sf_histint(tbl,"n3",&ny)) sf_error("No n3= in table");
@@ -133,7 +136,8 @@ int main(int argc, char* argv[])
 		t2 = rtable[ix];
 		ti = t1+t2;
 		
-		tx = (NULL==tablex)? 0.:fabsf(rtablex[ix]*dh);
+		tx = (NULL==tablex)? 0.: SF_MAX(fabsf(stablex[ix]*ds),
+						fabsf(rtablex[ix]*dh));
 		out[ix] += pick(ti,tx*aal,trace,nt,dt,t0);
 	    } 
 	} 
