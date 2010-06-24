@@ -52,6 +52,8 @@ def Flow(sources,flow,bindir,rsfflow=1,
                          rsfprog == prefix + 'omp':
                     command = os.path.join(bindir,rsfprog+progsuffix) 
                     sources.append(command)
+                elif command[:len(bindir)]==bindir:
+                    sources.append(command)
             else:
                 rsfprog = None
                 if re.match(r'[^/]+\.exe$',command): # local program

@@ -457,7 +457,6 @@ class Project(Environment):
             if not type(source) is types.ListType:
                 source = string.split(source)
             flow = apply(combine[flow],[self.vppen,len(source)])
-            source.append(self.vppen)
             if vppen:
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
