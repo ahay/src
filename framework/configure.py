@@ -1502,7 +1502,6 @@ pkg['swig'] = {'fedora':'swig',
                'ubuntu':'swig'}
 pkg['numpy'] = {'fedora':'numpy',
                 'ubuntu':'python-scipy, python-numpy-dev'}
-pkg['scipy'] = {'fedora':'scipy'}
 
 def python(context):
     context.Message("checking for SWIG ... ")
