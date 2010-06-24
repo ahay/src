@@ -166,14 +166,14 @@ Echo = Builder(action=Action(echo),varlist=['out','err'])
 #############################################################################
 
 combine ={
-    'SideBySideAniso': lambda v, n: v + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
-    'OverUnderAniso':  lambda v, n: v + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
-    'SideBySideIso':   lambda v, n: v + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
-    'OverUnderIso':    lambda v, n: v + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
-    'TwoRows':         lambda v, n: v + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % ((n+1)/2),
-    'TwoColumns':      lambda v, n: v + " size=r vpstyle=n gridnum=2,%d $SOURCES" % ((n+1)/2),
-    'Overlay':         lambda v, n: v + " erase=o vpstyle=n $SOURCES",
-    'Movie':           lambda v, n: v + " vpstyle=n $SOURCES"
+    'SideBySideAniso': lambda v, n: v + " yscale=%d vpstyle=n gridnum=%d,1 ${SOURCES[:%d]}" % (n,n,n),
+    'OverUnderAniso':  lambda v, n: v + " xscale=%d vpstyle=n gridnum=1,%d ${SOURCES[:%d]}" % (n,n,n),
+    'SideBySideIso':   lambda v, n: v + " size=r vpstyle=n gridnum=%d,1 ${SOURCES[:%d]}" % (n,n),
+    'OverUnderIso':    lambda v, n: v + " size=r vpstyle=n gridnum=1,%d ${SOURCES[:%d]}" % (n,n),
+    'TwoRows':         lambda v, n: v + " size=r vpstyle=n gridnum=%d,2 ${SOURCES[:%d]}" % ((n+1)/2,n),
+    'TwoColumns':      lambda v, n: v + " size=r vpstyle=n gridnum=2,%d ${SOURCES[:%d]}" % ((n+1)/2,n),
+    'Overlay':         lambda v, n: v + " erase=o vpstyle=n ${SOURCES[:%d]}" % n,
+    'Movie':           lambda v, n: v + " vpstyle=n ${SOURCES[:%d]}" % n
     }
 
 # Environmental variables to pass to SCons
