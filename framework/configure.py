@@ -449,7 +449,8 @@ def x11(context):
     else:
         if  plat['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
-        elif plat['OS'] == 'linux' or plat['OS'] == 'posix':
+        elif (plat['OS'] == 'linux' or plat['OS'] == 'posix') and \
+                plat['distro'] != 'fedora':
             XLIBS = ['Xaw','Xt']
         else:
             XLIBS = ['Xaw','Xt','X11']

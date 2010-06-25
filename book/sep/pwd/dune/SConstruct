@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-Fetch('dune3D.H','mideast')
+#Fetch('dune3D.H','mideast')
 
 Flow('dat','dune3D.H',
      'dd form=native | window n3=1 f3=2 n1=500 f1=100 | scale dscale=100.')

@@ -45,9 +45,7 @@ int main(int argc, char* argv[])
     int     it,ix,is,ie,ne;
 
     int ompchunk, ompith=0, ompnth=1;
-#ifdef _OPENMP
     int ompath;
-#endif
 
     ompfft3d ompfft=NULL; 	 /* FT structure*/
     ompsft3d ompsft=NULL;	 /* SF structure*/

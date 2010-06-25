@@ -16,7 +16,7 @@ libprefix = env.get('DYNLIB','')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../utilities','../genlib','../../lib'],
-            LIBS=['genpen', 'penutil', 'X11',
+            LIBS=['genpen', 'penutil',
 		  libprefix+'rsfplot', libprefix+'rsf'])
 
 env['PROGPREFIX'] = ''
@@ -58,7 +58,7 @@ if inc and lib:
     env.Depends(obj,'xtpen.h')
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
-                       LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
+                       env.get('XLIBS',[])+env.get('LIBS',[]))
     pens.append('xtpen')
 else:
     main = env.RSF_Place('xtpen',None,

@@ -126,6 +126,8 @@ static int GoodEdge (Edge ab)
 
     near[0] = Near (ab, ab->face[0]);
     near[1] = Near (ab, ab->face[1]);
+
+
 #ifdef FAST
     test = incirclefast (ab->ends[0]->x,near[0]->x,
 			 ab->ends[1]->x,near[1]->x);
@@ -133,6 +135,7 @@ static int GoodEdge (Edge ab)
     test = incircle     (ab->ends[0]->x,near[0]->x,
 			 ab->ends[1]->x,near[1]->x);
 #endif
+
     return (ab->type == BOUNDARY)? (test >= 0.) : (test > 0.);
 }
 
