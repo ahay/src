@@ -28,7 +28,8 @@ int main(int argc, char **argv)
 {
     int n1, n2, ninf, i1, i2, i;
     float o1, d1, o2, d2, x, z;
-    float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter, *inter2;
+    float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter;
+    double *inter2;
     sf_file model, surface;
 
     sf_init(argc, argv);
@@ -59,7 +60,7 @@ int main(int argc, char **argv)
     sf_putfloat(model,"o1",o1);
 
     inter = sf_floatalloc2(n2,ninf);
-    inter2 = sf_floatalloc(ninf);
+    inter2 = (double*) sf_alloc(ninf,sizeof(double));
     sf_floatread(inter[0],n2*ninf,surface);
 
     ninf++; /* more layers than interfaces */
