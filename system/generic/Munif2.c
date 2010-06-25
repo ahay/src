@@ -27,8 +27,9 @@ Inspired by SU's unif2.
 int main(int argc, char **argv)
 {
     int n1, n2, ninf, i1, i2, i;
-    float o1, d1, o2, d2, *v0=NULL, *dvdx=NULL, *dvdz=NULL, *x0=NULL, *z0=NULL, *trace=NULL, **inter=NULL, x, z;
-    sf_file model=NULL, surface=NULL;
+    float o1, d1, o2, d2, x, z;
+    float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter;
+    sf_file model, surface;
 
     sf_init(argc, argv);
     surface = sf_input("in");
@@ -87,13 +88,9 @@ int main(int argc, char **argv)
 	for(i1=0; i1 < n1; i1++) {
 	    z = o1 + i1*d1;
 	    for (i=0; i < ninf-1; i++) {
-		if (z < inter[i][i2]) {
-		    trace[i1] = v0[i] + (x-x0[i])*dvdx[i] + (z-z0[i])*dvdz[i];
-		    break;
-		}
+		if (z < inter[i][i2]) break;
 	    }
-	    if (i == ninf-1) /* bottom layer */
-		trace[i1] = v0[i] + (x-x0[i])*dvdx[i] + (z-z0[i])*dvdz[i];
+	    trace[i1] = v0[i] + (x-x0[i])*dvdx[i] + (z-z0[i])*dvdz[i];
 	}
 	sf_floatwrite(trace,n1,model);
     }

@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     for (ih=0; ih < nh; ih++) {
 	h = h0 + ih*dh;
 	h *= h;
-	sf_warning("offset %d of %d",ih+1, nh);
+	sf_warning("offset %d of %d;",ih+1, nh);
 
 	if (!inv || !zero) sf_floatread (cinp[0][0],n123,in);
 	
@@ -210,6 +210,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (cout[0][0],n123,out);
 	}
     } /* h */
+    sf_warning(".");
 
     if (!inv && zero)
 	sf_floatwrite (stack[0][0],n123,out);
