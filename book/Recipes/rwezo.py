@@ -85,9 +85,12 @@ def cos(cos,jray,jwft,custom,par):
     par['jray']=jray
     par['jwft']=jwft
 
-    Plot(ray,cos,'window j1=%(jray)d | transp |' % par
+    par['jray2']=jray//5
+    par['jwft2']=jwft//5
+
+    Plot(ray,cos,'window j1=%(jray)d j2=%(jwft2)d | transp |' % par
          + fdmod.cgraph('plotcol=1 '+custom,par))
-    Plot(wft,cos,'window j2=%(jwft)d |' % par
+    Plot(wft,cos,'window j2=%(jwft)d j1=%(jray2)d |' % par
          + fdmod.cgraph('plotcol=2 '+custom,par))
     
     Plot(cos,[ray,wft],'Overlay')

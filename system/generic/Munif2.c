@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 {
     int n1, n2, ninf, i1, i2, i;
     float o1, d1, o2, d2, x, z;
-    float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter;
+    float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter, *inter2;
     sf_file model, surface;
 
     sf_init(argc, argv);
@@ -59,6 +59,7 @@ int main(int argc, char **argv)
     sf_putfloat(model,"o1",o1);
 
     inter = sf_floatalloc2(n2,ninf);
+    inter2 = sf_floatalloc(ninf);
     sf_floatread(inter[0],n2*ninf,surface);
 
     ninf++; /* more layers than interfaces */
@@ -85,10 +86,13 @@ int main(int argc, char **argv)
     /* compute linear velocity */
     for(i2=0; i2 < n2; i2++) { 
 	x = o2+i2*d2;
+	for (i=0; i < ninf-1; i++) {
+	    inter2[i] = inter[i][i2];
+	}
 	for(i1=0; i1 < n1; i1++) {
 	    z = o1 + i1*d1;
 	    for (i=0; i < ninf-1; i++) {
-		if (z < inter[i][i2]) break;
+		if (z < inter2[i]) break;
 	    }
 	    trace[i1] = v0[i] + (x-x0[i])*dvdx[i] + (z-z0[i])*dvdz[i];
 	}
