@@ -991,7 +991,11 @@ pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
 
 def mpi(context):
     context.Message("checking for MPI ... ")
-    mpicc = context.env.get('MPICC',WhereIs('mpicc'))
+    path = os.environ['PATH']
+    if plat['OS'] == 'linux':
+        if plat['distro'] == 'fedora':
+            path += ':/usr/lib64/openmpi/bin/'
+    mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
     if mpicc:
         context.Result(mpicc)
         context.Message("checking if %s works ... " % mpicc)
