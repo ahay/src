@@ -58,7 +58,7 @@ if inc and lib:
     env.Depends(obj,'xtpen.h')
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
-                       env.get('XLIBS',[])+env.get('LIBS',[]))
+                       LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
     pens.append('xtpen')
 else:
     main = env.RSF_Place('xtpen',None,
