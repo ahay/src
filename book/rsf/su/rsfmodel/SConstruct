@@ -29,7 +29,7 @@ Flow('layers.asc',None,
             n1,n2,xmax/(n1-1)))
 Flow('layers','layers.asc','dd form=native')
 
-d = 0.01
+d = 0.011
 
 Flow('mod1','layers',
      '''
