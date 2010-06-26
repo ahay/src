@@ -14,7 +14,7 @@ type of external data required, and total rsf data-file size of the
 completed example.  A an optional input text file may also be specified
 containing a list of examples to skip.
 
-The optional command is executed in the users default shell.
+The optional command is executed in /bin/sh.
 
 Examples (from within $RSFSRC):
 
@@ -24,7 +24,7 @@ sfbooklist command=scons book           # build examples with default filters
 sfbooklist size=5 command=scons book    # build examples smaller than 5MB
 '''
 
-# Copyright (C) 2009 James W. Jennings Jr.
+# Copyright (C) 2010 James W. Jennings Jr.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
