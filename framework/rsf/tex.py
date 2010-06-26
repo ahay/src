@@ -846,8 +846,6 @@ class TeXPaper(Environment):
             self.Color(html,[scons,info])
             self.scons.append(html)
 
-        self.Command('dummy.tex',self.figs,Action(dummy))
-
         if self.scons:
             self.Install(self.docdir,self.scons)
         self.Alias('figinstall',self.docdir)        
@@ -958,6 +956,7 @@ class TeXPaper(Environment):
                     self.Install2(resdir2,[png,pdf])
                     self.Alias('figinstall',resdir2)
         self.figs.extend(nrfigs)
+        self.Command('dummy.tex',self.figs,Action(dummy))
     def Paper(self,paper,lclass='geophysics',scons=1,
               use=None,include=None,options=None,
               resdir='Fig',color='',hires=''):
