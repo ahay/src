@@ -38,7 +38,7 @@ number  is return code from sfvplotdiff indicating different files.'''
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, copy, sys, signal
+import os, shutil, sys, signal
 import rsf.prog as rsfprog
 
 RSFROOT = rsfprog.RSFROOT
@@ -134,12 +134,13 @@ def main(argv=sys.argv):
         rsfprog.selfdoc()
         return unix_error
 
-    par     = rsf.Par(argv)         # get parameters
-    figdir  = par.string('figdir')  # fig directory, default = ./Fig
-    lockdir = par.string('lockdir') # lock directory, default = lock counterpart of figdir
-    list    = par.string('list')    # how much to list [none,diff,miss,all], default = all
-    show    = par.string('show')    # how much to show [none,diff,miss,all], default = none
+    par     = rsf.Par(argv)             # get parameters
+    figdir  = par.string('figdir')      # fig directory, default = ./Fig
+    lockdir = par.string('lockdir')     # lock directory, default = lock counterpart of figdir
+    list    = par.string('list')        # how much to list [none,diff,miss,all], default = all
+    show    = par.string('show')        # how much to show [none,diff,miss,all], default = none
     rsftest = par.bool('rsftest',False) # write .rsftest file?
+    copy    = par.bool('copy',False)    # copy different figs from figdir to lockdir?
 
                                     # check list and show parameters
     options = ['none','diff','miss','all']
@@ -253,6 +254,7 @@ def main(argv=sys.argv):
             extra = extra+1
 
                                     # find different files
+    print ""
     binpath = os.path.join(RSFROOT,'bin')
     command = os.path.join(binpath,sfprefix+'vplotdiff')
     for item in filelist:
@@ -262,12 +264,15 @@ def main(argv=sys.argv):
             check    = os.system(' '.join([command,figfile,lockfile,
                                            '2>/dev/null']))
             if check != 0:
-                files[item] = '%2d' % (check//256)
-                diff = diff+1
+                if copy:
+                    print "Copying %s from fig directory to lock directory." % item
+                    shutil.copy(figfile,lockfile)
+                else:
+                    files[item] = '%2d' % (check//256)
+                    diff = diff+1
 
 ################    print file list and show selected figs
 
-    print ""
     command = os.path.join(binpath,'sfpen')
     for item in filelist:
         miss_check =      (files[item] != '  ')
