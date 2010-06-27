@@ -138,5 +138,7 @@ if catData == 'y':
     Result('RSFfile','window j3=20 | grey gainpanel=a title=Shots')
 if catData == 'n':
     for file in RSFfiles:
-        Result(file,'window j3=20 | grey gainpanel=a title=Shots')
+        Plot(file,'window j3=20 | grey gainpanel=a title=Shots',view=1)
+	Result(file,'window n3=1 f3=460 | grey title=Shot')
+
 End()
