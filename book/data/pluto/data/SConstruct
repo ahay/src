@@ -17,5 +17,7 @@ Flow('shot',data,
      ''')
 
 #---------------- Plot Data ---------------#
-Result('shot','window j3=20 | grey gainpanel=a')
+Plot('shot','window j3=20 | grey gainpanel=a',view=1)
+Result('shot','window n3=1 f3=470 | grey title=Shot')
+
 End()
