@@ -210,13 +210,16 @@ sed -i -e 's/NoDisplay=true/NoDisplay=false/' /usr/share/applications/liveinst.d
 mkdir /home/liveuser/Desktop
 cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 
-# Download m8r version guaranteed to work on Fedora 13:
+# Download m8r version guaranteed to work on Fedora 13
+# Note: this download fails. Also, 
+# attempts to use curl to download a tarball only create an empty file
 svn co -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk /usr/src/madagascar
 # Configuration, build and install:
 cd /usr/src/madagascar
 ./configure
 make
 make install
+# This command runs as expected
 echo 'source /usr/etc/madagascar/env.sh' >> /home/liveuser/.bashrc
 
 # this goes at the end after all other changes. 
