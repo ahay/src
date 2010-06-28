@@ -214,7 +214,8 @@ cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 # Note: this download fails. Also, 
 # attempts to use curl to download a tarball only create an empty file
 svn co -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk /usr/src/madagascar
-# Configuration, build and install:
+# Configuration, build and install. Because the fedora name has been replaced with 
+# something generic, distro detection fails and some distro-dependent things may not work
 cd /usr/src/madagascar
 ./configure
 make
