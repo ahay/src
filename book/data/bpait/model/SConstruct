@@ -16,8 +16,9 @@ Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
 #fdmod.param(par)
 
 # Plotting Section
-Result('bpaitvel','''window $SOURCE  | grey  
-    color=I gainpanel=a title=BPait\ Velocity\ Model
-    scalebar=y allpos=y''')
+Result('bpaitvel','''window j1=4 j2=10  | grey  
+    color=j allpos=y title=BPait\ Velocity\ Model
+    scalebar=y  barreverse=y barlabel=Velocity barunit=m/s''')
+
 End()
 
