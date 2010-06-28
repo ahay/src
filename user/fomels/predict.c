@@ -118,6 +118,34 @@ void predict_step(bool adj            /* adjoint flag */,
     if (!adj) sf_banded_solve (slv, trace);
 }
 
+void predict1_step(bool forw      /* forward or backward */, 
+		   float* trace1  /* input trace */,
+		   const float* pp /* slope */,
+		   float* trace /* output trace */)
+/*< prediction step from one trace >*/
+{
+    float t0, t1, t2, t3;
+    
+    regularization();
+
+    pwd_define (forw, w1, pp, diag, offd);
+    sf_banded_define (slv, diag, offd);
+
+    t0 = trace1[0];
+    t1 = trace1[1];
+    t2 = trace1[n1-2];
+    t3 = trace1[n1-1];
+
+    pwd_set (false, w1, trace1, trace, diag);
+
+    trace[0] += eps2*t0;
+    trace[1] += eps2*t1;
+    trace[n1-2] += eps2*t2;
+    trace[n1-1] += eps2*t3;
+
+    sf_banded_solve (slv, trace);
+}
+
 void predict2_step(bool forw1        /* forward or backward */, 
 		   bool forw2,
 		   float* trace1     /* input trace */,

@@ -108,9 +108,9 @@ void upgrad_set(upgrad upg, const float *r0 /* reference */)
 	    if ((ii[i] == 0) || 
 		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
 		up[1] |= m;
-		t2 = t0[jt+ss[i]];
+		t2 = t0[b];
 	    } else {
-		t2 = t0[jt-ss[i]];
+		t2 = t0[a];
 	    }
 
 	    if (t2 < t) {
