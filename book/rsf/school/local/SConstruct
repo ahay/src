@@ -25,7 +25,7 @@ Result('local','dots')
 
 # Triangle weight
 # --- CHANGE BELOW ---
-Flow('triangle','local','math output="1-abs(x2)/10" ')
+Flow('triangle','local','math output="exp(-10*abs(x2)^2/10^2)" ')
 Flow('tnorm','triangle','stack')
 Result('triangle','dots gaineach=n title="Triangle Weight" ')
 

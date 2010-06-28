@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 	    x = x0+ix*dx; 
 	    x *= x;
 
-	    if (verb) sf_warning("wavenumber %d of %d and %d of %d", 
+	    if (verb) sf_warning("wavenumber %d of %d and %d of %d;", 
 				 ix+1,nx, iy+1,ny);
 	    k = (x+y) * 0.25 * 0.25 * 0.5;
 
@@ -209,6 +209,7 @@ int main(int argc, char* argv[])
 	    } /* v 2 */
 	} /* x */
     } /* y */
+    sf_warning(".");
 
     exit (0);
 }

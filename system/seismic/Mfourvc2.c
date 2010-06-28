@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     sf_cosft_init(nx);
 
     for (ih=0; ih < nh; ih++) {
-	sf_warning("offset %d of %d",ih+1,nh);
+	sf_warning("offset %d of %d;",ih+1,nh);
 
 	h = h0 + ih*dh;
 	h *= h;
@@ -199,6 +199,7 @@ int main(int argc, char* argv[])
 	    } /* x */
         } /* v */
     } /* h */
+    sf_warning(".");
 
     for (iv=0; iv < nv; iv++) {
 	for (ix=0; ix < nx; ix++) {
