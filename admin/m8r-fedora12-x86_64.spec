@@ -1,28 +1,6 @@
-# Spec file for making madagascar RPMs for Fedora 12
-#
-# To make the RPMs, it is a good idea to first create a user just for this,
-# i.e. makerpm. Then, install dependencies and set up. As root:
-# yum -y groupinstall "Development Tools"
-# yum -y install rpmdevtools mock rpmlint 
-# useradd -G mock makerpm
-#
-# Log in as makerpm. Type: rpmdev-setuptree to create the ~/rpmbuild directory.
-# Place this file (m8r-fedora12-x86_64.spec) in ~/rpmbuild/SPECS , then cd to 
-# that directory and run:
-# rpmbuild -ba madagascar.spec
-#
-# If you want a log of the entire process, use something like
-# rpmbuild -ba madagascar.spec |& tee ~/log_rpm.asc
-#
-# You may be able to QC the build with
-# mock -r fedora-12-x86_64 rebuild path_to_source_RPM
-#
-# If you want to debug your experiments, you can comment the contents of the
-# prep, build or clean sections (for prep and build, you must have executed it
-# once uncommented)
-#
-# A very good reference is
-# https://fedoraproject.org/wiki/How_to_create_an_RPM_package
+# Spec file for making madagascar RPMs for Fedora 12, 64-bit
+
+# Usage details at http://reproducibility.org/wiki/Packaging_madagascar#RPM
 
 %define version 1.0.0alpha
 %define m8rv madagascar-%{version}
