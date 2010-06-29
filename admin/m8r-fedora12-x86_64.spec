@@ -47,7 +47,7 @@ svn export -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk src
 
 %build
 cd src
-./configure --prefix=%{buildroot}/usr API=f77,f90,c++,python
+./configure --prefix=%{buildroot}/usr DYNLIB=y API=f77,f90,c++,python
 make
 
 %install
