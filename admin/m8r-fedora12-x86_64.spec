@@ -14,9 +14,15 @@
 # If you want a log of the entire process, use something like
 # rpmbuild -ba madagascar.spec |& tee ~/log_rpm.asc
 #
+# You may be able to QC the build with
+# mock -r fedora-12-x86_64 rebuild path_to_source_RPM
+#
 # If you want to debug your experiments, you can comment the contents of the
 # prep, build or clean sections (for prep and build, you must have executed it
 # once uncommented)
+#
+# A very good reference is
+# https://fedoraproject.org/wiki/How_to_create_an_RPM_package
 
 %define version 1.0.0alpha
 %define m8rv madagascar-%{version}
