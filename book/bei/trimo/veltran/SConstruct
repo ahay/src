@@ -31,4 +31,9 @@ Flow('mod',None,
      ''' % (v0,dv))
 Plot('mod',dots)
 
+for anti in range(2):
+    dat = 'dat%d' % anti
+    Flow(dat,'mod','veltran adj=n anti=%d nx=40 x0=-1 dx=0.141025641 pull=y' % anti)
+    Plot(dat,dots)
+
 End()

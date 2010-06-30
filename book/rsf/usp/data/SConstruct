@@ -26,7 +26,7 @@ Flow('lines','line',
      '''
      intbin yk=cdpt | window f3=2 |
      put
-     label2=Source d2=0.05  o2=688 unit2=km
+     label2=Source d2=0.05  o2=688  unit2=km
      label3=Offset d3=0.025 o3=-3.5 unit3=km
      label1=Time unit1=s
      ''')

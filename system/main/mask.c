@@ -23,39 +23,71 @@ The output can be used with sfheaderwindow.
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <float.h>
+#include <limits.h>
 
 #include <rsf.h>
 
 int main(int argc, char* argv[]) {
-    int *ibuf;
+    int *ibuf, imin=-INT_MAX, imax=INT_MAX;
     size_t nbuf, j;
     off_t nsiz;
-    float *fbuf, min, max;
+    float *fbuf=NULL, fmin=-FLT_MAX, fmax=FLT_MAX;
+    sf_datatype type;
     sf_file in, out;
 
     sf_init (argc, argv);
     in = sf_input("in");
     out = sf_output("out");
 
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    type = sf_gettype(in);
     sf_settype(out,SF_INT);
 
-    nbuf = BUFSIZ/sizeof(float);
-    fbuf = sf_floatalloc (nbuf);
-    ibuf = sf_intalloc (nbuf);
+    switch(type) {
+	case SF_FLOAT:
+	    nbuf = BUFSIZ/sizeof(float);
+	    fbuf = sf_floatalloc (nbuf);
 
-    if (!sf_getfloat("min",&min)) min=-FLT_MAX;
-    /* minimum header value */
-    if (!sf_getfloat("max",&max)) max=+FLT_MAX;
-    /* maximum header value */
+	    sf_getfloat("min",&fmin);
+	    /* minimum header value */
+	    sf_getfloat("max",&fmax);
+	    /* maximum header value */
+	    break;
+	case SF_INT:
+	    nbuf = BUFSIZ/sizeof(int);
+
+	    sf_getint("min",&imin);
+	    /* minimum header value */
+	    sf_getint("max",&imax);
+	    /* maximum header value */
+	    break;
+	default:
+	    sf_error("Unsupported type %d",type);
+	    break;
+    }
+
+    ibuf = sf_intalloc (nbuf);
 
     for (nsiz = sf_filesize (in); nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
-	sf_floatread(fbuf,nbuf,in);
-	for (j=0; j < nbuf; j++) {
-	    ibuf[j] = (fbuf[j] <= max && fbuf[j] >= min);
+	switch(type) {
+	    case SF_FLOAT:
+		sf_floatread(fbuf,nbuf,in);
+		for (j=0; j < nbuf; j++) {
+		    ibuf[j] = (fbuf[j] <= fmax && fbuf[j] >= fmin);
+		}
+		break;
+	    case SF_INT:
+		sf_intread(ibuf,nbuf,in);
+		for (j=0; j < nbuf; j++) {
+		    ibuf[j] = (ibuf[j] <= imax && ibuf[j] >= imin);
+		}
+		break;
+	    default:
+		sf_error("Unsupported type %d",type);
+		break;
 	}
+
 	sf_intwrite(ibuf,nbuf,out);
     }
 
