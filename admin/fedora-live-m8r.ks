@@ -8,11 +8,13 @@
 #    yum -y install livecd-tools system-config-kickstart spin-kickstarts
 # 2. Set SELinux to permissive mode. As root:
 #    setenforce 0
-# 3. Make the LiveCD. As root:
+# 3. Make the LiveCD:
 #    livecd-creator -f m8rFedoraLive -c fedora-live-m8r.ks
 
 %include /usr/share/spin-kickstarts/fedora-live-base.ks
 %include /usr/share/spin-kickstarts/fedora-live-minimization.ks
+
+repo --name=Madagascar --includepkgs=madagascar --baseurl=http://reproducibility.org/yum/repo/fedora/12/x86_64
 
 %packages
 
@@ -168,6 +170,8 @@ freeglut-devel
 libXaw-devel
 netpbm-devel 
 
+madagascar
+
 %end
 
 %post
@@ -210,18 +214,19 @@ sed -i -e 's/NoDisplay=true/NoDisplay=false/' /usr/share/applications/liveinst.d
 mkdir /home/liveuser/Desktop
 cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 
-# Download m8r version guaranteed to work on Fedora 13
-# Note: this download fails. Also, 
-# attempts to use curl to download a tarball only create an empty file
+# Download m8r version guaranteed to work on Fedora 13 (does not work):
 svn co -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk /usr/src/madagascar
-# Configuration, build and install. Because the fedora name has been replaced with 
-# something generic, distro detection fails and some distro-dependent things may not work
+
+# Configuration, build and install:
 cd /usr/src/madagascar
 ./configure
 make
 make install
-# This command runs as expected
-echo 'source /usr/etc/madagascar/env.sh' >> /home/liveuser/.bashrc
+echo 'source /etc/madagascar/env.sh' >> /home/liveuser/.bashrc
+# Bad hack -- temporary fix
+sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0\.0alpha-1\.fc12\.x86_64//g" /etc/madagascar/env.sh
+sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0\.0alpha-1\.fc12\.x86_64//g" /etc/madagascar/env.csh
+
 
 # this goes at the end after all other changes. 
 chown -R liveuser:liveuser /home/liveuser
