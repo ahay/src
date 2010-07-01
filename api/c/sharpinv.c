@@ -105,7 +105,7 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 	    if (verb) {		  	    
 		qdif = 0.;
 		for (i1=0; i1 < nq; i1++) {
-		    qdif += cabsf(qq[i1]);
+		    qdif += cabs(qq[i1]);
 		}
 
 		if (0==i) {
@@ -140,9 +140,9 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 	    pdif = 0.;
 	    for (i1=0; i1 < np; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-		pi = cabsf(pp[i1]+p1[i1]);
+		pi = cabs(pp[i1]+p1[i1]);
 #else
-		pi = cabsf(sf_cadd(pp[i1],p1[i1]));
+		pi = cabs(sf_cadd(pp[i1],p1[i1]));
 #endif
 		pdif += pi*pi;
 	    }
