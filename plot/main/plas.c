@@ -104,6 +104,7 @@ int main (int argc, char* argv[])
 	    case VP_PURGE:
 	    case VP_BREAK:
 	    case VP_NOOP:
+	    case VP_BACKGROUND:
 		putchar (c);
 		break;
 	    case VP_TXALIGN:

@@ -1,4 +1,4 @@
-/* 2-D smoothing by triangle directional shaping. */
+/* 2-D beam forming. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -20,10 +20,11 @@
 #include <rsf.h>
 
 #include "beamform.h"
+#include "pbeamform.h"
 
 int main(int argc, char* argv[])
 {
-    bool adj, gauss;
+    bool adj, gauss, plane;
     int n1, nc, nd, n3, i3, nb, n1c, n1d;
     float *dense, *coarse, **slope, d2;
     sf_file in, out, dip;
@@ -45,6 +46,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("gauss",&gauss)) gauss=false;
     /* use pseudo-gaussian */
 
+    if (!sf_getbool("plane",&plane)) plane=false;
+    /* use plane-wave construction */
+
     if (adj) {
 	if (!sf_histint(in,"n2",&nd)) sf_error("No n2= in input");
 	nc = (nd-1)/nb+1;
@@ -61,7 +65,11 @@ int main(int argc, char* argv[])
     n1d = n1*nd;
     n1c = n1*nc;
 
-    beamform_init(gauss, n1, nd, nb);
+    if (plane) {
+	pbeamform_init(gauss, n1, nd, nb);
+    } else {
+	beamform_init(gauss, n1, nd, nb);
+    }
 
     dense = sf_floatalloc(n1d);
     coarse = sf_floatalloc(n1c);
@@ -69,7 +77,12 @@ int main(int argc, char* argv[])
  
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(slope[0],n1d,dip);
-	beamform_set(slope);
+
+	if (plane) {
+	    pbeamform_set(slope);
+	} else {
+	    beamform_set(slope);
+	}
 
 	if (adj) {
 	    sf_floatread(dense,n1d,in);
@@ -77,7 +90,11 @@ int main(int argc, char* argv[])
 	    sf_floatread(coarse,n1c,in);
 	}
 
-	beamform_lop(adj,false,n1c,n1d,coarse,dense);
+	if (plane) {
+	    pbeamform_lop(adj,false,n1c,n1d,coarse,dense);
+	} else {
+	    beamform_lop(adj,false,n1c,n1d,coarse,dense);
+	}
 
 	if (adj) {
 	    sf_floatwrite(coarse,n1c,out);

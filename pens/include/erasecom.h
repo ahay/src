@@ -5,7 +5,8 @@ enum {
     ERASE_START, 
     ERASE_MIDDLE, 
     ERASE_END,
-    ERASE_BREAK
+    ERASE_BREAK,
+    ERASE_BACKGROUND    
     };
 
 /*

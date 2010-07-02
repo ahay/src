@@ -129,6 +129,7 @@ int main (int argc, char* argv[])
 	    case VP_BREAK:
 	    case VP_PURGE:
 	    case VP_NOOP:
+	    case VP_BACKGROUND:
 		printf ("%c\n", c);
 		break;
 	    case VP_ORIGIN:

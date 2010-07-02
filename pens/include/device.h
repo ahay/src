@@ -14,6 +14,7 @@ struct device{
     bool need_end_erase; /* Does device need erase at end? */
     bool smart_clip;     /* Can the device do its own clipping? (of vectors and polygons.) */
     bool smart_raster;   /* Can the device stretch AND clip its own raster? */
+    bool smart_background; /* Can do smart background erase */
     bool cachepipe;
     /* Setting cachepipe = YES will copy any piped files to a temporary file,
      * this may get done in dev.open.

@@ -7,6 +7,7 @@ struct device dev = {
     false, /* need_end_erase */
     false, /* smart_clip */
     false, /* smart_raster */
+    false, /* smart_background */
     false, /* cachepipe */
 
     DEFAULT_FONT, /* txfont */

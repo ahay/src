@@ -114,7 +114,8 @@ enum {
     VP_MESSAGE		= 'z',
     VP_BEGIN_GROUP	= '[',
     VP_END_GROUP	= ']',    
-    VP_OLDTEXT		= 't'
+    VP_OLDTEXT		= 't',
+    VP_BACKGROUND       = 'E'
 };
 /*^*/
 
@@ -240,6 +241,12 @@ void vp_erase (void)
 /*< erase screen >*/
 {
     (void) putc (VP_ERASE, pltout);
+}
+
+void vp_background (void)
+/*< erase screen to the background color  >*/
+{
+    (void) putc (VP_BACKGROUND, pltout);
 }
 
 void vp_fat (int f)

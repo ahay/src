@@ -128,7 +128,7 @@ def convert(vpl,out,format,pen,args):
         rsf.vplot2png.convert(vpl,out,
                               options='color=y fat=1 fatmult=1.5 ' + args)
     elif format == 'gif' and pen == 'ppm':
-        rsf.vplot2gif.convert(vpl,out)
+        rsf.vplot2gif.convert(vpl,out,args)
     elif format == 'avi':
         if not which('ffmpeg'):
             print "Conversion failed. Please install ffmpeg."

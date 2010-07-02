@@ -20,14 +20,19 @@
 # Modified from the original C-shell version by Joe Dellinger
 
 import sys, os, time, string, re, shutil
+import rsf.prog
 
-def convert(infile,outfile):
+def convert(infile,outfile,args=''):
     spacing = float(os.environ.get('GIFBORDER',0.1))
     ppi = int(os.environ.get('PPI',75))
     delay = int(os.environ.get('GIFDELAY',100))
+
+    bindir = os.path.join(rsf.prog.RSFROOT,'bin')
+    vppen  = os.path.join(bindir,'vppen') + ' ' + args
+    ppmpen = os.path.join(bindir,'ppmpen')
     
     # Use vppen to find out how big and where on the page the plot is.
-    stats = os.popen('vppen size=a stat=l < %s' % infile)
+    stats = os.popen(vppen + ' size=a stat=l < %s' % infile)
     lines = stats.readlines()
     stats.close()
 
@@ -65,7 +70,7 @@ def convert(infile,outfile):
     ''' % (outfile,width,height,ppi,spacing))
 
     random = time.time()
-    run = 'vppen size=a outN=vppen.%%d.%s < %s >/dev/null' % (random,infile)
+    run = vppen + ' size=a outN=vppen.%%d.%s < %s >/dev/null' % (random,infile)
     os.system(run)
 
     gifs = []
@@ -74,7 +79,7 @@ def convert(infile,outfile):
         gif = '%s.%d' % (outfile,i)
         gifs.append(gif)
 
-        run = 'ppmpen break=i n1=%d n2=%d ppi=%d size=a ' \
+        run = ppmpen + ' break=i n1=%d n2=%d ppi=%d size=a ' \
               'xcenter=%g ycenter=%g %s | ' \
               'ppmquant 256 | ppmtogif > %s' % \
               (width,height,ppi,xcen,ycen,vppen,gif)
@@ -135,10 +140,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if argc < 3:
+        narg = 2
         outfile = os.path.splitext(infile)[0]+'.gif'
     else:
+        narg = 3
         outfile = sys.argv[2]
 
-    convert(infile,outfile);
+    convert(infile,outfile,' '.join(sys.argv[narg:]))
 
     sys.exit(0)

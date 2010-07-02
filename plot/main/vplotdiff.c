@@ -2842,7 +2842,7 @@ check_vplot2simple (int c,
 	    if (debug2)
 		printf ("%c %d\n", c, npts2);
 
-	    if (npts1 != npts2)
+	    if (abs (npts1 - npts2) > VECTOR_TOL)
 	    {
 		sf_warning ("Command mismatch: oldarea");
 		fprintf (stderr,
@@ -2918,6 +2918,16 @@ check_vplot2simple (int c,
 		printf ("%c\n", c);
 	    (*count1)++;
 
+	    if (debug2)
+		printf ("%c\n", c);
+	    (*count2)++;
+	    break;
+	case VP_BACKGROUND:
+	    /* Need to actually compare */
+	    if (debug1)
+		printf ("%c\n", c);
+	    (*count1)++;
+	    
 	    if (debug2)
 		printf ("%c\n", c);
 	    (*count2)++;
