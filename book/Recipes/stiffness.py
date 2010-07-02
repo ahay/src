@@ -208,54 +208,85 @@ def vti3d(cc,vp,vs,ro,epsilon,delta,gamma,par):
 # ------------------------------------------------------------
 # TTI stiffness tensor
 def tti2d(mm,vp,vs,ro,epsilon,delta,nu,par):
-
-    Flow(nu+'-rad',nu,'math output="3.1415*input/180."')
-    
-    vti2d(mm+'-cc',vp,vs,ro,epsilon,delta,par)
-    Flow(mm+'-cc11',mm+'-cc','window n3=1 f3=0')
-    Flow(mm+'-cc33',mm+'-cc','window n3=1 f3=1')
-    Flow(mm+'-cc55',mm+'-cc','window n3=1 f3=2')
-    Flow(mm+'-cc13',mm+'-cc','window n3=1 f3=3')
+   # Is this really 2D TTI?  Jia's code suggests that 6 stiffness coefs are 
+    # required here...  Hence, this will be re-routed to her code, which is
+    # compliant with the newer elastic wave equation requirements.
+    useOLD = False
+    if useOLD:
+        Flow(nu+'-rad',nu,'math output="3.1415*input/180."')
         
-    Flow(mm+'11',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
-         '''
-         math output="c11*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c33*sin(nu)^4"
-         c11=${SOURCES[0]}
-         c13=${SOURCES[1]}
-         c33=${SOURCES[2]}
-         c55=${SOURCES[3]}
-         nu=${SOURCES[4]}
-         ''')
-    Flow(mm+'33',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
-         '''
-         math output="c33*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c11*sin(nu)^4"
-         c11=${SOURCES[0]}
-         c13=${SOURCES[1]}
-         c33=${SOURCES[2]}
-         c55=${SOURCES[3]}
-         nu=${SOURCES[4]}
-         ''')
-    Flow(mm+'55',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
-         '''
-         math output="(c11-2*c13+c33+4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
-         c11=${SOURCES[0]}
-         c13=${SOURCES[1]}
-         c33=${SOURCES[2]}
-         c55=${SOURCES[3]}
-         nu=${SOURCES[4]}
-         ''')
-    Flow(mm+'13',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
-         '''
-         math output="(c11+6*c13+c33-4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
-         c11=${SOURCES[0]}
-         c13=${SOURCES[1]}
-         c33=${SOURCES[2]}
-         c55=${SOURCES[3]}
-         nu=${SOURCES[4]}
-         ''')
-    
-    Flow(mm,[mm+'11',mm+'33',mm+'55',mm+'13'],
-         'cat axis=3 space=n ${SOURCES[1:4]}')
+        vti2d(mm+'-cc',vp,vs,ro,epsilon,delta,par)
+        Flow(mm+'-cc11',mm+'-cc','window n3=1 f3=0')
+        Flow(mm+'-cc33',mm+'-cc','window n3=1 f3=1')
+        Flow(mm+'-cc55',mm+'-cc','window n3=1 f3=2')
+        Flow(mm+'-cc13',mm+'-cc','window n3=1 f3=3')
+            
+        Flow(mm+'11',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+             '''
+             math output="c11*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c33*sin(nu)^4"
+             c11=${SOURCES[0]}
+             c13=${SOURCES[1]}
+             c33=${SOURCES[2]}
+             c55=${SOURCES[3]}
+             nu=${SOURCES[4]}
+             ''')
+        Flow(mm+'33',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+             '''
+             math output="c33*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c11*sin(nu)^4"
+             c11=${SOURCES[0]}
+             c13=${SOURCES[1]}
+             c33=${SOURCES[2]}
+             c55=${SOURCES[3]}
+             nu=${SOURCES[4]}
+             ''')
+        Flow(mm+'55',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+             '''
+             math output="(c11-2*c13+c33+4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
+             c11=${SOURCES[0]}
+             c13=${SOURCES[1]}
+             c33=${SOURCES[2]}
+             c55=${SOURCES[3]}
+             nu=${SOURCES[4]}
+             ''')
+        Flow(mm+'13',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+             '''
+             math output="(c11+6*c13+c33-4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
+             c11=${SOURCES[0]}
+             c13=${SOURCES[1]}
+             c33=${SOURCES[2]}
+             c55=${SOURCES[3]}
+             nu=${SOURCES[4]}
+             ''')
+        
+        Flow(mm,[mm+'11',mm+'33',mm+'55',mm+'13'],
+             'cat axis=3 space=n ${SOURCES[1:4]}')
+    else:
+        Flow(mm,[vp,vs,ro,epsilon,delta,nu],
+            '''
+            stiffness dim=2
+            vp=${SOURCES[0]}
+            vs=${SOURCES[1]}
+            ro=${SOURCES[2]}
+            eps=${SOURCES[3]}
+            del=${SOURCES[4]}
+            nu=${SOURCES[5]}
+            ''')
+         
+def tti3d(mm,vp,vs,ro,epsilon,delta,gamma,nu,alpha,par):
+    # Updated per the new elastic wave equation specifications.
+    # Requires sfstiffness.
+    Flow(mm,[vp,vs,ro,epsilon,delta,gamma,nu,alpha],
+        '''
+        stiffness dim=3
+        vp=${SOURCES[0]}
+        vs=${SOURCES[1]}
+        ro=${SOURCES[2]}
+        eps=${SOURCES[3]}
+        del=${SOURCES[4]}
+        gam=${SOURCES[5]}
+        nu=${SOURCES[6]}
+        alp=${SOURCES[7]}
+        ''',stdin=0)
     
 # ------------------------------------------------------------
 def ort2d(cc,vp,vs,ro,eps2,del2,par):
@@ -410,3 +441,40 @@ def cplot3d(cc,i1,i2,i3,par):
     Flow(cc+'-all',[cc+'-row1',cc+'-row2',cc+'-row3',cc+'-row4',cc+'-row5',cc+'-row6'],'cat axis=1 space=n ${SOURCES[1:6]}')
 
     Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y color=j')
+    
+def fcplot3d(cc,i1,i2,i3,par):
+    ''' Full 21 coefficient plot for stiffness tensor '''
+
+    Flow(cc+'-nul',cc,'window n1=1 n2=1 n3=1 n4=1 | math output=0')
+
+    Flow(cc+'-c11',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=0' %(i1,i2,i3))
+    Flow(cc+'-c12',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=1' %(i1,i2,i3))
+    Flow(cc+'-c13',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=2' %(i1,i2,i3))
+    Flow(cc+'-c14',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=3' %(i1,i2,i3))
+    Flow(cc+'-c15',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=4' %(i1,i2,i3))
+    Flow(cc+'-c16',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=5' %(i1,i2,i3))
+    Flow(cc+'-c22',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=6' %(i1,i2,i3))
+    Flow(cc+'-c23',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=7' %(i1,i2,i3))
+    Flow(cc+'-c24',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=8' %(i1,i2,i3))
+    Flow(cc+'-c25',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=9' %(i1,i2,i3))
+    Flow(cc+'-c26',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=10' %(i1,i2,i3))
+    Flow(cc+'-c33',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=11' %(i1,i2,i3))
+    Flow(cc+'-c34',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=12' %(i1,i2,i3))
+    Flow(cc+'-c35',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=13' %(i1,i2,i3))
+    Flow(cc+'-c36',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=14' %(i1,i2,i3))
+    Flow(cc+'-c44',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=15' %(i1,i2,i3))
+    Flow(cc+'-c45',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=16' %(i1,i2,i3))
+    Flow(cc+'-c46',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=17' %(i1,i2,i3))
+    Flow(cc+'-c55',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=18' %(i1,i2,i3))
+    Flow(cc+'-c56',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=19' %(i1,i2,i3))
+    Flow(cc+'-c66',cc,'window n1=1 f1=%d n2=1 f2=%d n3=1 f3=%d n4=1 f4=20' %(i1,i2,i3))
+    Flow(cc+'-row1',[cc+'-c11',cc+'-c12',cc+'-c13',cc+'-c14',cc+'-c15',cc+'-c16'],'cat axis=2 space=n ${SOURCES[1:6]}')
+    Flow(cc+'-row2',[cc+'-c12',cc+'-c22',cc+'-c23',cc+'-c24',cc+'-c25',cc+'-c26'],'cat axis=2 space=n ${SOURCES[1:6]}')
+    Flow(cc+'-row3',[cc+'-c13',cc+'-c23',cc+'-c33',cc+'-c34',cc+'-c35',cc+'-c36'],'cat axis=2 space=n ${SOURCES[1:6]}')
+    Flow(cc+'-row4',[cc+'-c14',cc+'-c24',cc+'-c34',cc+'-c44',cc+'-c45',cc+'-c46'],'cat axis=2 space=n ${SOURCES[1:6]}')
+    Flow(cc+'-row5',[cc+'-c15',cc+'-c25',cc+'-c35',cc+'-c45',cc+'-c55',cc+'-c56'],'cat axis=2 space=n ${SOURCES[1:6]}')
+    Flow(cc+'-row6',[cc+'-c16',cc+'-c26',cc+'-c36',cc+'-c46',cc+'-c56',cc+'-c66'],'cat axis=2 space=n ${SOURCES[1:6]}')
+
+    Flow(cc+'-all',[cc+'-row1',cc+'-row2',cc+'-row3',cc+'-row4',cc+'-row5',cc+'-row6'],'cat axis=1 space=n ${SOURCES[1:6]}')
+
+    Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y color=j')    
