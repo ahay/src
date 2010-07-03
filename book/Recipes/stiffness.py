@@ -263,13 +263,15 @@ def tti2d(mm,vp,vs,ro,epsilon,delta,nu,par):
     else:
         Flow(mm,[vp,vs,ro,epsilon,delta,nu],
             '''
-            stiffness dim=2
+            stiff dim=2
             vp=${SOURCES[0]}
             vs=${SOURCES[1]}
             ro=${SOURCES[2]}
             eps=${SOURCES[3]}
             del=${SOURCES[4]}
             nu=${SOURCES[5]}
+            gam=${SOURCES[0]}
+            alp=${SOURCES[0]}
             ''')
          
 def tti3d(mm,vp,vs,ro,epsilon,delta,gamma,nu,alpha,par):
@@ -277,7 +279,7 @@ def tti3d(mm,vp,vs,ro,epsilon,delta,gamma,nu,alpha,par):
     # Requires sfstiffness.
     Flow(mm,[vp,vs,ro,epsilon,delta,gamma,nu,alpha],
         '''
-        stiffness dim=3
+        stiff dim=3
         vp=${SOURCES[0]}
         vs=${SOURCES[1]}
         ro=${SOURCES[2]}
