@@ -76,7 +76,7 @@ void putf(sf_file so1, int nx, int nz, float dx, float dz)
 }
 int main(int argc, char* argv[])
 {
-    int nm = 1e3;//1234567890;//1e10
+    int nm = 1e6;//1234567890;//1e10
     int n, nx, nz;
     float dx, dz;
     float ** t0, *m0, *minit, *m;
