@@ -369,11 +369,8 @@ image[ix x iz] == 1 at rays' points
 ****************************/
 int main(int argc, char* argv[])
 {
+    int stride=1;
     int num_refs, i,ix, k;//, interpolate; iz, ia, 
-    //float  tola_da, tola, tolz_dz,tolz, tolx, tolx_dx;
-    //float xprev, lprev, tprev, eps;a, t, z, x,
-    //float *tim, *dis, *dep, *ang;
-    //int is_prev_sign, is_sign;
     float **imagt_rays;//**len_minpath, **tr_time_minpath, **tr_time_pos, ***tr_time_z0;
 
     /*float escx1 = 0.25, escz1=0.0, esca1=0.5;
@@ -382,7 +379,7 @@ int main(int argc, char* argv[])
     int ix0, iz0, ia0;
 
     float **s, **sx, **sz;
-    float m[3][400];
+    float **m=NULL;//m[3][400];
     sf_file time;
     /* sf_file angl, time, dist, dept, timez0, minpath,lent, */
     sf_file imagt, slow, slowz, slowx, fref1, fref2, fref3;
@@ -395,16 +392,21 @@ int main(int argc, char* argv[])
     /* time = sf_input("time");
     dept = sf_input("dept");
     angl = sf_input("ang");*/
+    if (!sf_getint("stride",&stride)) stride=1;
+    assert(stride>=1 && stride<10000);
 
-    if (!sf_histint(time,"n3",&nz)) sf_error("No n1= in input");
+    if (!sf_histint(time,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histint(time,"n2",&nx)) sf_error("No n2= in input");
-    if (!sf_histint(time,"n1",&na)) sf_error("No n3= in input");
-    if (!sf_histfloat(time,"d3",&dz)) sf_error("No d1= in input");
-    if (!sf_histfloat(time,"o3",&oz)) sf_error("No d1= in input");
+    if (!sf_histint(time,"n3",&na)) sf_error("No n3= in input");
+
+    if (!sf_histfloat(time,"d1",&dz)) sf_error("No d1= in input");
+    if (!sf_histfloat(time,"o1",&oz)) sf_error("No d1= in input");
+
     if (!sf_histfloat(time,"d2",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(time,"o2",&ox)) sf_error("No d1= in input");
-    if (!sf_histfloat(time,"d1",&da)) sf_error("No d1= in input");
-    if (!sf_histfloat(time,"o1",&oa)) sf_error("No d1= in input");
+
+    if (!sf_histfloat(time,"d3",&da)) sf_error("No d1= in input");
+    if (!sf_histfloat(time,"o3",&oa)) sf_error("No d1= in input");
     /*
     if (!sf_getfloat("tolz",&tolz)) sf_error("No tolz= (float)");
     if (!sf_getfloat("tolx",&tolx)) sf_error("No tolx= (float)");
@@ -434,21 +436,33 @@ int main(int argc, char* argv[])
     ref1_name = sf_getstring ("ref1");
     if (ref1_name) {
 	fref1 = sf_input(ref1_name);
+
 	if (!sf_histint(fref1,"n1",&num_refs)) sf_error("No num_refs= in ref1");    
+	if (!m)
+	    m=sf_floatalloc2(num_refs,3);
+
 	sf_floatread(m[0], num_refs,fref1);
     }
 
     ref2_name = sf_getstring ("ref2");
     if (ref2_name) {
 	fref2 = sf_input(ref2_name);
+
 	if (!sf_histint(fref2,"n1",&num_refs)) sf_error("No num_refs= in ref2");    
+	if (!m)
+	    m=sf_floatalloc2(num_refs,3);
+
 	sf_floatread(m[1], num_refs,fref2);
     }
 
     ref3_name = sf_getstring ("ref3");
     if (ref3_name) {
 	fref3 = sf_input(ref3_name);
+
 	if (!sf_histint(fref3,"n1",&num_refs)) sf_error("No num_refs= in ref3");
+	if (!m)
+	    m=sf_floatalloc2(num_refs,3);
+
 	sf_floatread(m[2], num_refs,fref3);    
     }
 
@@ -493,6 +507,9 @@ int main(int argc, char* argv[])
 	{
 
 	    for (k=0; k<num_refs/4; k++) {
+
+		if (k%stride!=0)
+		    continue;
 
 	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
 	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
