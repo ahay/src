@@ -499,6 +499,8 @@ int main(int argc, char* argv[])
 	
     int ts_color;
 
+    sf_warning("\n------------\n num-refs=%d\n",num_refs/4);
+
     for (i=0; i<3;i++) {
 
 	if ((i== 0 && ref1_name)||
@@ -536,7 +538,7 @@ int main(int argc, char* argv[])
 
 	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
 
-	    printf("x=%g z=%g as=%g ar=%g\n",m[i][0],m[i][1],m[i][2],m[i][3]);
+	    sf_warning("ref=%d(%d): x=%g z=%g as=%g ar=%g\n",k,num_refs/4,m[i][4*k],m[i][4*k+1],m[i][4*k+2],m[i][4*k+3]);
 	    }
 	}
     }

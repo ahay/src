@@ -19,7 +19,9 @@
 #include <rsf.h>
 #include <assert.h>
 
-int   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int nz, float **s, int len)
+float ** t0, *m0, *minit, *m;
+
+int   read4file_ref(char *fname,  int nx, int nz, float **s)
 {
     int i, NM;
     FILE *fp;
@@ -41,7 +43,11 @@ int   read4file_ref(char *fname, float *m0, float *minit, float *m, int nx, int 
     }
 
     NM = i;
-    assert(NM<len);
+
+    m0    = sf_floatalloc(NM);
+    minit = sf_floatalloc(NM);
+    m     = sf_floatalloc(NM);
+
     /* m0 */
     if(fread(m0, sizeof(float), NM, fp) != NM) {
 	if (feof(fp))
@@ -79,7 +85,6 @@ int main(int argc, char* argv[])
     int nm = 1e6;//1234567890;//1e10
     int n, nx, nz;
     float dx, dz;
-    float ** t0, *m0, *minit, *m;
     sf_file so, so1, so2, so3;
     char * fname = 0;
 
@@ -100,12 +105,8 @@ int main(int argc, char* argv[])
 
     t0    = sf_floatalloc2(nz,nx);
 
-    m0    = sf_floatalloc(nm);
-    minit = sf_floatalloc(nm);
-    m     = sf_floatalloc(nm);
-
     // sprintf(fname,"sample%-3d",S.nx);
-    nm=read4file_ref(fname, m0, minit, m, nx, nz, t0, nm);
+    nm=read4file_ref(fname, nx, nz, t0);
 
     putf(so, nx, nz, dx, dz);
 
@@ -121,5 +122,8 @@ int main(int argc, char* argv[])
 
     sf_close();
 
+    free(m0);
+    free(m);
+    free(minit);
     exit(0);
 }
