@@ -21,11 +21,11 @@ Madagascar is an open-source software package for multidimensional data analysis
 
 %prep
 rm -rf src
-svn export -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk src
+svn export https://rsf.svn.sourceforge.net/svnroot/rsf/trunk src
 
 %build
 cd src
-./configure --prefix=%{buildroot}/usr DYNLIB=y API=f77,f90,c++,python
+./configure --prefix=%{buildroot}/usr DYNLIB=y XLIBS=Xaw,Xt,X11 API=f77,f90,c++,python
 make
 
 %install

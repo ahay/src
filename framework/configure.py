@@ -445,7 +445,7 @@ def x11(context):
     XLIBS = context.env.get('XLIBS')
     if XLIBS:
         if type(XLIBS) is not types.ListType:
-            XLIBS = string.split(XLIBS)
+            XLIBS = string.split(XLIBS,',')
     else:
         if  plat['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
