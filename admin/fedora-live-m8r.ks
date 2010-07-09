@@ -214,14 +214,7 @@ sed -i -e 's/NoDisplay=true/NoDisplay=false/' /usr/share/applications/liveinst.d
 mkdir /home/liveuser/Desktop
 cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 
-# Download m8r version guaranteed to work on Fedora 13 (does not work):
-svn co -r 6304 https://rsf.svn.sourceforge.net/svnroot/rsf/trunk /usr/src/madagascar
-
-# Configuration, build and install:
-cd /usr/src/madagascar
-./configure
-make
-make install
+# Madagascar configuration
 echo 'source /etc/madagascar/env.sh' >> /home/liveuser/.bashrc
 # Bad hack -- temporary fix
 sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0\.0alpha-1\.fc12\.x86_64//g" /etc/madagascar/env.sh
