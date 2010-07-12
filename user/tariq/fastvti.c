@@ -21,14 +21,12 @@
 /*^*/
 
 #include "fastvti.h"
-#include "pqueue.h"
 
 #define AT(x,y,z) ((z)+n3*(y)+n23*(x))
 /*#define AT(z,y,x) ((z)+n1*(y)+n12*(x))*/
 
-#define INSERT nm--; mask[j] = FMM_FRONT; pt=ttime+j; heap_insert (pt)
+#define INSERT nm--; mask[j] = FMM_FRONT; pt=ttime+j; sf_pqueue_insert (pt)
 
-#define ABS(x) ((x) < 0 ? -(x) : (x))
 #define SGN(x) ((x) < 0 ? -1.0 : 1.0)
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
@@ -41,14 +39,11 @@
 
 static double tp;
 static float a, dd[8], rd1,rd2,rd3,d1,d2,d3;
-static int nm, n23, show=0, n, n1, n2, n3, jj2, jj3;
+static int nm, n23, n, n1, n2, n3, jj2, jj3;
 
-void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz, 
-	       float s, float y);
-void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz,
-	       float s, float y);
-
-
+static void update (int p1, int p2, int p3, float* tk, float* tj, unsigned char* mj, float s, float rsv, float eta);
+static void update2 (int p1, int p2, int p3, float* tj, unsigned char* mj, float s, float rsv, float eta);
+static void update3 (int p1, int p2, int p3, float* tj, unsigned char* mj, float s, float rsv, float eta);
 
 /* Numerically solving the differential source linear equation */
 void fastvti (float* time                /* time */, 
@@ -104,7 +99,7 @@ void fastvti (float* time                /* time */,
 
   j = AT(j1,j2,j3);
   s2 = slow[j];
-  warn("j=%d slow=%f",j,slow[0]);
+  sf_warning("j=%d slow=%f",j,slow[0]);
   sl = sqrt(s2);
   sv2 = 1./slowv[j];
   svl = sqrt(sv2);
@@ -120,7 +115,8 @@ void fastvti (float* time                /* time */,
   if (n2 > 1) nh += 2*n1*n3;
   if (n3 > 1) nh += 2*n1*n2;
 
-  heap_init (nh);
+  sf_pqueue_init(nh);
+  sf_pqueue_start();
 
   /* initialize source */
   for (i1 = j1-1; i1 <= j1+1; i1+=2) {
@@ -210,7 +206,7 @@ void fastvti (float* time                /* time */,
     }
   }
   /* source initialized */
-   warn("v=%f ss=%f dist2=%f nm=%d",slow[1],ss,dist2,nm);
+   sf_warning("v=%f ss=%f dist2=%f nm=%d",slow[1],ss,dist2,nm);
 
   /* precompute some of the finite-difference coefficients */
   dd[0] = 0.;
@@ -226,12 +222,12 @@ void fastvti (float* time                /* time */,
   if(order==1){
     /* start marching */
     while (nm > 0) {  /* "far away" points */
-      pt = heap_extract ();
+      pt = sf_pqueue_extract ();
       i = pt-ttime;
       i3 = i%n3;
       i2 = (i/n3)%n2;
       i1 = i/n23;
-      warn("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
+      sf_warning("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
 
       *(pm = mask+i) = FMM_IN;
       if (i1 < n1-1 && *(pm+n23) != FMM_IN) update (i1+1,i2,i3, pt, pt+n23, pm+n23, slow[i+n23],slowv[i+n23],eta[i+n23]); 
@@ -244,12 +240,12 @@ void fastvti (float* time                /* time */,
   } else if (order==2) {
     /* start marching */
     while (nm > 0) {  /* "far away" points */
-      pt = heap_extract ();
+      pt = sf_pqueue_extract ();
       i = pt-ttime;
       i3 = i%n3;
       i2 = (i/n3)%n2;
       i1 = i/n23;
-      warn("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
+      sf_warning("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
       
       *(pm = mask+i) = FMM_IN;
       if (i1 < n1-1 && *(pm+n23) != FMM_IN) update2 (i1+1,i2,i3, pt+n23, pm+n23, slow[i+n23],slowv[i+n23],eta[i+n23]); 
@@ -262,12 +258,12 @@ void fastvti (float* time                /* time */,
   } else {
     /* start marching */
     while (nm > 0) {  /* "far away" points */
-      pt = heap_extract ();
+      pt = sf_pqueue_extract ();
       i = pt-ttime;
       i3 = i%n3;
       i2 = (i/n3)%n2;
       i1 = i/n23;
-      warn("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
+      sf_warning("i1=%d i2=%d i3=%d i=%d time=%f slow=%f slow=%f eta=%f nm=%d",i1,i2,i3,i,ttime[i],slow[i],slowv[i],eta[i],nm);
 
       *(pm = mask+i) = FMM_IN;
       if (i1 < n1-1 && *(pm+n23) != FMM_IN) update3 (i1+1,i2,i3, pt+n23, pm+n23, slow[i+n23],slowv[i+n23],eta[i+n23]);
@@ -281,20 +277,20 @@ void fastvti (float* time                /* time */,
 
   for (i=0; i<n; i++) {
 	time[i] = ttime[i];
-	warn("time=%f dtime=%f",time[i],ttime[i]);
+	sf_warning("time=%f dtime=%f",time[i],ttime[i]);
   }
     
   /* end marching */
-  heap_close ();
+  sf_pqueue_close ();
   free (mask);
 }
 
-void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, float rsv, float eta)
+static void update (int p1, int p2, int p3, float* tk, float* tj, unsigned char* mj, float s, float rsv, float eta)
 {
   float r, b, c, t1=0, t2=0, u, d3r= d3*s*rsv, b2;
   float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
-  float A0,A1,A2,A3,A4,m1,m2,m3,tp4,tpA,tpB,tp,S1,S2;
-  double tp1,tp2,tp3,den,den1;
+  float A0,A1,A2,A3,A4,m1,m2,m3,tp4,tpA,tp;
+  double tp1,tp2,tp3,den;
   unsigned int k, i;
   int getin=0;
 
@@ -323,21 +319,21 @@ void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, fl
     i ^= 0x01; k |= 0x02;
   }
   if(p3==jj3 || getin || p2==jj2)
-    warn("p1=%d p2=%d p3=%d n1=%d n2=%d n3=%d",p1,p2,p3,n1,n2,n3);
+    sf_warning("p1=%d p2=%d p3=%d n1=%d n2=%d n3=%d",p1,p2,p3,n1,n2,n3);
 
   if(k){
     a = dd[k];
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*f-b;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(c-tp*(2.*b-tp*f))*den;
     tp2 = (tp1*(2.*(b-tp*f)-0.5*tp1*f))*den;
     tp3 = -(tp1*tp1*f-tp2*(2.*(b-tp*f)-tp1*f))*den;
     tp4 = -(tp2*f*(2*tp1+0.5*tp2)-tp3*(2.*(b-tp*f)-tp1*f))*den;
   }
   if(p3==jj3 || getin || p2==jj2)
-    warn("tp=%f tp1=%f tp2=%f t1=%f t2=%f den=%f",tp,tp1,tp2,t1,t2,den);
+    sf_warning("tp=%f tp1=%f tp2=%f t1=%f t2=%f den=%f",tp,tp1,tp2,t1,t2,den);
 
   g = gg = ggg = gggg = ggggg = ff = b1 = c1 = 0.; b2 = 0.; f1 = 0.;
   d3rr = -d3*c*rsv;
@@ -345,7 +341,7 @@ void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, fl
   if ((p3 < n3-1) && *(mj+1) && ((t2 = *(tj+1)) < *tj) && 
       ((i ^ 0x01) || t2 > t1)) {i |= 0x01; t1 = t2;}
   if(p3==jj3 || getin || p2==jj2)
-    warn("t1=%f t2=%f",t1,t2);
+    sf_warning("t1=%f t2=%f",t1,t2);
   if (i & 0x01) {
     if ((i & 0x02) && (!(i & 0x01) || t2 > t1)) t1 = t2;
     u = d3rr*t1; b1 = b+u; c1= c+u*t1; g= b+t1*f; gg = f; ggg=t1*t1*b;
@@ -357,19 +353,19 @@ void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, fl
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*ff-b2;
-    /*warn("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    /*sf_warning("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*d3*(gggg+4.*ggggg);
     m2 = f1-m1+tp*d3*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*d3*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
-			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
-						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),ABS(tp2));
-    tp3 = SGN(tp3)*MIN(ABS(-(tp1*tp1*(f1-m1+6*rsv*d3*tp*
-				      (g-tp*gg))-2.*tp2*m3+tp1*tp2*ff)*den),ABS(tp3));
-    tp4 = SGN(tp4)*MIN(ABS(-(2.*tp1*(tp1*tp1*rsv*d3*(g-2.*tp*gg)+tp2*(f1-m1+6.*rsv*tp*d3*(g-tp*gg)))+
-			     tp2*tp2*0.5*ff-2.*tp3*m3+tp1*tp3*ff)*den),ABS(tp4));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
+			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
+						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),SF_ABS(tp2));
+    tp3 = SGN(tp3)*MIN(SF_ABS(-(tp1*tp1*(f1-m1+6*rsv*d3*tp*
+				      (g-tp*gg))-2.*tp2*m3+tp1*tp2*ff)*den),SF_ABS(tp3));
+    tp4 = SGN(tp4)*MIN(SF_ABS(-(2.*tp1*(tp1*tp1*rsv*d3*(g-2.*tp*gg)+tp2*(f1-m1+6.*rsv*tp*d3*(g-tp*gg)))+
+			     tp2*tp2*0.5*ff-2.*tp3*m3+tp1*tp3*ff)*den),SF_ABS(tp4));
     /*tp1 = -(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
 			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den;
     tp2 = (2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
@@ -377,46 +373,46 @@ void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, fl
   }
 
   if (!k) return;
-  /*tp1 = SGN(tp1)*MIN(ABS(tp1),.1);
-  tp2 = SGN(tp2)*MIN(ABS(tp2),1.);
-  tp3 = SGN(tp3)*MIN(ABS(tp3),1.);*/
+  /*tp1 = SGN(tp1)*MIN(SF_ABS(tp1),.1);
+  tp2 = SGN(tp2)*MIN(SF_ABS(tp2),1.);
+  tp3 = SGN(tp3)*MIN(SF_ABS(tp3),1.);*/
   A0=tp; A1=A0+tp1*eta; A2=A1+tp2*eta*eta; A3=A2+tp3*eta*eta*eta; A4=A3+tp4*eta*eta*eta*eta;
-  /*warn("tp=%f tp1=%f tp2=%f tp3=%f tp4=%f A1=%f A2=%f A3=%f A4=%f den=%f",tp,tp1,tp2,tp3,tp4,A1,A2,A3,A4,den);*/
+  /*sf_warning("tp=%f tp1=%f tp2=%f tp3=%f tp4=%f A1=%f A2=%f A3=%f A4=%f den=%f",tp,tp1,tp2,tp3,tp4,A1,A2,A3,A4,den);*/
   if(p3==jj3 || getin || p2==jj2)
-    warn("tp=%f tp1=%f tp2=%f A1=%f A2=%f t1=%f t2=%f den=%f",tp,tp1,tp2,A1,A2,t1,t2,den);
-  if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001){
+    sf_warning("tp=%f tp1=%f tp2=%f A1=%f A2=%f t1=%f t2=%f den=%f",tp,tp1,tp2,A1,A2,t1,t2,den);
+  if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpA = (tp*tp1-(tp*tp2-tp1*tp1)*eta)*den;
   } else
   tpA = tp;
 
-  /*if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001){
+  /*if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001){
     den = A0+A2-2*A1;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpA = (A2*A0-A1*A1)*den;
   } else
   tpA = tp;*/
 
-  /*if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001 || ABS(tp3)>0.00000001 || ABS(tp4)>0.00000001){
+  /*if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001 || SF_ABS(tp3)>0.00000001 || SF_ABS(tp4)>0.00000001){
     den1 = (tp2-eta*tp3)*(eta*tp1*tp3*tp3*tp3+eta*eta*tp2*tp2*tp3*tp4+ 
        tp2*tp2*tp2*(-tp3+eta*tp4)+tp2*tp3*(tp1*tp3-eta*eta*tp3*tp3-2*eta*tp1*tp4));
-    den = (ABS(den1)<0.00000001 ? SGN(den1)*100000000. : 1./den1);
+    den = (SF_ABS(den1)<0.00000001 ? SGN(den1)*100000000. : 1./den1);
     tpB = (tp*den1+eta*(eta*tp2*tp2*tp2*tp2*tp2*(-tp3 +eta*tp4)+ 
         tp1*tp2*tp2*tp2*(tp2-2*eta*tp3)*(-tp3+eta*tp4)+ 
         tp1*tp1*tp3*(tp2-eta*tp3)*(tp2*tp3+eta*tp3*tp3-2*eta*tp2*tp4)))*den;
   } else
   tpB=tp;*/
 
-  /*if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001 || ABS(tp3)>0.00000001 || ABS(tp4)>0.00000001){
+  /*if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001 || SF_ABS(tp3)>0.00000001 || SF_ABS(tp4)>0.00000001){
     den = A1+A3-2*A2;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     S1 = (A3*A1-A2*A2)*den;
     den = A2+A4-2*A3;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     S2 = (A4*A2-A3*A3)*den;
     den = tpA+S2-2*S1;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpB = (S2*tpA-S1*S1)*den;
   } else
   tpB=tp;*/
@@ -424,22 +420,22 @@ void update (int p1, int p2, int p3, float* tk, float* tj, char* mj, float s, fl
   tp = tpA;
   if(p3==jj3  || p3==jj3+1 || p3==jj3-1 || getin || p2==jj2 || p2==jj2+1  || p2==jj2-1 || p2==n2-1 
      || p3==n3-1){
-    warn("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);
+    sf_warning("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);
     return;
   }
 
   if(tp<0 || tp >10){
-    warn("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
+    sf_warning("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
     exit(0);
   }
-  /*warn("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
+  /*sf_warning("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
   /*  tp = r + sqrt (fabs(tp*tp + r*r - c*a)); */
   if (tp < *tj && tp> *tk) {
     *tj = tp;
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
@@ -449,7 +445,7 @@ void updatelll (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
   float r, b, c, t1, t2, u, d3r= d3*s*rsv, b2;
   float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
   float A0,A1,A2,m1,m2,m3;
-  double tp1,tp2,den,den1;
+  double tp1,tp2,den;
   unsigned int k, i;
 
   dd[4] = 1./d3r;
@@ -482,7 +478,7 @@ void updatelll (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*f-b;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(c-tp*(2.*b-tp*f))*den;
     tp2 = (tp1*(2.*(b-tp*f)-0.5*tp1*f))*den;
   }
@@ -503,36 +499,36 @@ void updatelll (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*ff-b2;
-    /*warn("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    /*sf_warning("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*d3*(gggg+4.*ggggg);
     m2 = f1-m1+tp*d3*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*d3*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
-			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
-						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),ABS(tp2));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
+			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
+						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),SF_ABS(tp2));
   }
   if (!k) return;
-  /*tp1 = SGN(tp1)*MIN(ABS(tp1),.1);
-  tp2 = SGN(tp2)*MIN(ABS(tp2),1.);
-  tp3 = SGN(tp3)*MIN(ABS(tp3),1.);*/
+  /*tp1 = SGN(tp1)*MIN(SF_ABS(tp1),.1);
+  tp2 = SGN(tp2)*MIN(SF_ABS(tp2),1.);
+  tp3 = SGN(tp3)*MIN(SF_ABS(tp3),1.);*/
   A0=tp; A1=A0+tp1*eta; A2=A1+tp2*eta*eta;
-  /*warn("tp=%f tp1=%f tp2=%f A1=%f A2=%f A3=%f den=%f",tp,tp1,tp2,A1,A2,A3,den);*/
-  if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001){
+  /*sf_warning("tp=%f tp1=%f tp2=%f A1=%f A2=%f A3=%f den=%f",tp,tp1,tp2,A1,A2,A3,den);*/
+  if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tp = (tp*tp1-(tp*tp2-tp1*tp1)*eta)*den;
   }
 
-  /*warn("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
+  /*sf_warning("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
   /*  tp = r + sqrt (fabs(tp*tp + r*r - c*a)); */
   if (tp < *tj) {
     *tj = tp;
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
@@ -541,8 +537,8 @@ void updateold (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
 {
   float r, b, c, t1, t2, u, d3r= d3*s*rsv, b2;
   float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
-  float A0,A1,A2,m1,m2,m3,tpA;
-  double tp1,tp2,den,den1;
+  float m1,m2,m3;
+  double tp1,tp2,den;
   unsigned int k, i;
 
   dd[4] = 1./d3r;
@@ -575,7 +571,7 @@ void updateold (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*f-b;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(c-tp*(2.*b-tp*f))*den;
     tp2 = (tp1*(2.*(b-tp*f)-0.5*tp1*f))*den;
   }
@@ -596,21 +592,21 @@ void updateold (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*ff-b2;
-    /*warn("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    /*sf_warning("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*d3*(gggg+4.*ggggg);
     m2 = f1-m1+tp*d3*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*d3*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
-			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
-						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),ABS(tp2));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
+			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
+						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),SF_ABS(tp2));
   }
   if (!k) return;
 
-  if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001){
+  if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tp += tp1*tp1*eta*den;
   }
 
@@ -619,7 +615,7 @@ void updateold (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
@@ -628,8 +624,8 @@ void updateh (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
 {
   float r, b, c, t1, t2, u, d3r= d3*s*rsv, b2;
   float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
-  float A0,A1,A2,m1,m2,m3,tpA;
-  double tp1,tp2,tp3,tp4,den,den1;
+  float m1,m2,m3,tpA;
+  double tp1,tp2,tp3,tp4,den;
   unsigned int k, i;
 
   dd[4] = 1./d3r;
@@ -662,7 +658,7 @@ void updateh (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*f-b;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(c-tp*(2.*b-tp*f))*den;
     tp2 = (tp1*(2.*(b-tp*f)-0.5*tp1*f))*den;
     tp3 = -(tp1*tp1*f-tp2*(2.*(b-tp*f)-tp1*f))*den;
@@ -685,33 +681,33 @@ void updateh (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     r = b*a;
     tp = r + sqrt(MAX(s*a + r*r - c*a,0));
     den = tp*ff-b2;
-    /*warn("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    /*sf_warning("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,ff,b,d3r,d1,d2,d3);*/
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*d3*(gggg+4.*ggggg);
     m2 = f1-m1+tp*d3*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*d3*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
-			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
-						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),ABS(tp2));
-    tp3 = SGN(tp3)*MIN(ABS(-(tp1*tp1*(f1-m1+6*rsv*d3*tp*
-				      (g-tp*gg))-2.*tp2*m3+tp1*tp2*ff)*den),ABS(tp3));
-    tp4 = SGN(tp4)*MIN(ABS(-(2.*tp1*(tp1*tp1*rsv*d3*(g-2.*tp*gg)+tp2*(f1-m1+6.*rsv*tp*d3*(g-tp*gg)))+
-			     tp2*tp2*0.5*ff-2.*tp3*m3+tp1*tp3*ff)*den),ABS(tp4));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*f1+tp*tp*tp*d3*rsv*
+			     (2*g-tp*gg)+rsv*d3*tp*(2*ggg-tp*gggg-4.*tp*ggggg))*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*(b1-tp*f1-rsv*d3*(ggg-tp*gggg-4.*tp*ggggg+
+						     tp*tp*(3.*g-2.*tp*gg)))-0.5*tp1*tp1*ff)*den),SF_ABS(tp2));
+    tp3 = SGN(tp3)*MIN(SF_ABS(-(tp1*tp1*(f1-m1+6*rsv*d3*tp*
+				      (g-tp*gg))-2.*tp2*m3+tp1*tp2*ff)*den),SF_ABS(tp3));
+    tp4 = SGN(tp4)*MIN(SF_ABS(-(2.*tp1*(tp1*tp1*rsv*d3*(g-2.*tp*gg)+tp2*(f1-m1+6.*rsv*tp*d3*(g-tp*gg)))+
+			     tp2*tp2*0.5*ff-2.*tp3*m3+tp1*tp3*ff)*den),SF_ABS(tp4));
   }
   if (!k) return;
 
-  if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001 && ABS(tp3)>0.0000001 && ABS(tp4)>0.0000001){
+  if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001 && SF_ABS(tp3)>0.0000001 && SF_ABS(tp4)>0.0000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpA = tp+tp1*tp1*eta*den;
     den = (tp2-eta*tp3)*(eta*tp1*tp3*tp3*tp3+eta*eta*tp2*tp2*tp3*tp4+ 
        tp2*tp2*tp2*(-tp3+eta*tp4)+tp2*tp3*(tp1*tp3-eta*eta*tp3*tp3-2*eta*tp1*tp4));
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tp += eta*(eta*tp2*tp2*tp2*tp2*tp2*(-tp3 +eta*tp4)+ 
         tp1*tp2*tp2*tp2*(tp2-2*eta*tp3)*(-tp3+eta*tp4)+ 
         tp1*tp1*tp3*(tp2-eta*tp3)*(tp2*tp3+eta*tp3*tp3-2*eta*tp2*tp4))*den;
-    warn("tp=%f tpA=%f",tp,tpA);
+    sf_warning("tp=%f tpA=%f",tp,tpA);
   }
 
   if (tp < *tj) {
@@ -719,19 +715,19 @@ void updateh (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
 
 
 
-void update2 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
+static void update2 (int p1, int p2, int p3, float* tj, unsigned char* mj, float s, float rsv, float eta)
 {
-  float r, b, c, t1, t2, u, d3r=d3*s*rsv;
+  float b, c, t1, t2, u, d3r=d3*s*rsv;
   float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
   float A0,A1,A2,A3,A4,aaa1,bbb1,m1,m2,m3,S1,S2;
-  double tp1,tp2,tp3,den,den1,tp4,tpA,tpB;
+  double tp1,tp2,tp3,den,tp4,tpA,tpB;
   unsigned int k, i;
   double aaa,bbb,ccc,ddd,ddd1;
   unsigned int jjj;
@@ -772,19 +768,19 @@ void update2 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
   }
   jjj =0;
   if(p2==jj2)
-    warn("p1=%d p2=%d p3=%d n1=%d n2=%d n3=%d",p1,p2,p3,n1,n2,n3);
+    sf_warning("p1=%d p2=%d p3=%d n1=%d n2=%d n3=%d",p1,p2,p3,n1,n2,n3);
 
   if(k){
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*(ccc-s),0.)))/aaa;
     den = tp*aaa-bbb;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(ccc-tp*(2.*bbb-tp*aaa))*den;
     tp2 = (tp1*(2.*(bbb-tp*aaa)-0.5*tp1*aaa))*den;
     tp3 = -(tp1*tp1*aaa-tp2*(2.*(bbb-tp*aaa)-tp1*aaa))*den;
     tp4 = -(tp2*aaa*(2*tp1+0.5*tp2)-tp3*(2.*(bbb-tp*aaa)-tp1*aaa))*den;
   }
   if(p2==jj2)
-    warn("tp=%f tp1=%f tp2=%f v=%f vv=%f eta=%f t1=%f den=%f",tp,tp1,tp2,1/sqrt(s),sqrt(rsv),eta,t1,den);
+    sf_warning("tp=%f tp1=%f tp2=%f v=%f vv=%f eta=%f t1=%f den=%f",tp,tp1,tp2,1/sqrt(s),sqrt(rsv),eta,t1,den);
 
   ddd1=d3;
   if ((p3 > 0   ) && *(mj-1) && ((t1 = *(tj-1)) < *tj)) i |= 0x01;
@@ -808,68 +804,68 @@ void update2 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     ccc += -s;
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*ccc,0.)))/aaa;
     den = tp*aaa1-bbb1;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*ddd1*(gggg+4.*ggggg);
     m2 = ff-m1+tp*ddd1*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*ddd1*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
-	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),ABS(tp2));
-    tp3 = SGN(tp3)*MIN(ABS(-(tp1*tp1*(ff-m1+6.*rsv*ddd1*tp*
-		   (g-tp*gg))-2.*tp2*m3+tp1*tp2*aaa1)*den),ABS(tp3));
-    tp4 = SGN(tp4)*MIN(ABS(-(2.*tp1*(tp1*tp1*rsv*ddd1*(g-2.*tp*gg)+tp2*(ff-m1+6.*rsv*tp*ddd1*(g-tp*gg)))+
-			     tp2*tp2*0.5*aaa1-2.*tp3*m3+tp1*tp3*aaa1)*den),ABS(tp4));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
+	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),SF_ABS(tp2));
+    tp3 = SGN(tp3)*MIN(SF_ABS(-(tp1*tp1*(ff-m1+6.*rsv*ddd1*tp*
+		   (g-tp*gg))-2.*tp2*m3+tp1*tp2*aaa1)*den),SF_ABS(tp3));
+    tp4 = SGN(tp4)*MIN(SF_ABS(-(2.*tp1*(tp1*tp1*rsv*ddd1*(g-2.*tp*gg)+tp2*(ff-m1+6.*rsv*tp*ddd1*(g-tp*gg)))+
+			     tp2*tp2*0.5*aaa1-2.*tp3*m3+tp1*tp3*aaa1)*den),SF_ABS(tp4));
   }
   jjj =0;
 
   if (!k) return;
   /*den = tp*aaa1-bbb1;*/
-  /*warn("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,aaa,bbb,d3r,d1,d2,d3);*/
-  /*tp1 = SGN(tp1)*MIN(ABS(tp1),.1);
-  tp2 = SGN(tp2)*MIN(ABS(tp2),1.);
-  tp3 = SGN(tp3)*MIN(ABS(tp3),1.);*/
+  /*sf_warning("tp=%f aaa=%f bbb=%f d3r=%f d1=%f d2=%f d3=%f",tp,aaa,bbb,d3r,d1,d2,d3);*/
+  /*tp1 = SGN(tp1)*MIN(SF_ABS(tp1),.1);
+  tp2 = SGN(tp2)*MIN(SF_ABS(tp2),1.);
+  tp3 = SGN(tp3)*MIN(SF_ABS(tp3),1.);*/
   A0=tp; A1=A0+tp1*eta; A2=A1+tp2*eta*eta; A3=A2+tp3*eta*eta*eta; A4=A3+tp4*eta*eta*eta*eta;
   if(p2==jj2)
-    warn("tp=%f tp1=%f tp2=%f A1=%f A2=%f t1=%f den=%f",tp,tp1,tp2,tp4,A1,A2,t1,den);
-  if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001){
+    sf_warning("tp=%f tp1=%f tp2=%f A1=%f A2=%f t1=%f den=%f",tp,tp1,tp2,tp4,A1,A2,t1,den);
+  if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
     tpA = (tp*tp1-(tp*tp2-tp1*tp1)*eta)*den;
   } else
     tpA = tp;
 
-  /*if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001){
+  /*if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001){
     den = A0+A2-2*A1;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpA = (A2*A0-A1*A1)*den;
   } else
   tpA = tp;*/
 
-  /*if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001 || ABS(tp3)>0.00000001 || ABS(tp4)>0.00000001){
+  /*if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001 || SF_ABS(tp3)>0.00000001 || SF_ABS(tp4)>0.00000001){
     den1 = (tp2-eta*tp3)*(eta*tp1*tp3*tp3*tp3+eta*eta*tp2*tp2*tp3*tp4+ 
        tp2*tp2*tp2*(-tp3+eta*tp4)+tp2*tp3*(tp1*tp3-eta*eta*tp3*tp3-2*eta*tp1*tp4));
-    den = (ABS(den1)<0.000000000001 ? SGN(den1)*1000000000000. : 1./den1);
+    den = (SF_ABS(den1)<0.000000000001 ? SGN(den1)*1000000000000. : 1./den1);
     tp = (tp*den1+eta*(eta*tp2*tp2*tp2*tp2*tp2*(-tp3 +eta*tp4)+ 
         tp1*tp2*tp2*tp2*(tp2-2*eta*tp3)*(-tp3+eta*tp4)+ 
         tp1*tp1*tp3*(tp2-eta*tp3)*(tp2*tp3+eta*tp3*tp3-2*eta*tp2*tp4)))*den;
 	}*/
-  if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001 || ABS(tp3)>0.00000001 || ABS(tp4)>0.00000001){
+  if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001 || SF_ABS(tp3)>0.00000001 || SF_ABS(tp4)>0.00000001){
     den = A1+A3-2*A2;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     S1 = (A3*A1-A2*A2)*den;
     den = A2+A4-2*A3;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     S2 = (A4*A2-A3*A3)*den;
     den = tpA+S2-2*S1;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpB = (S2*tpA-S1*S1)*den;
   } else
   tpB=tp;
   tp = tpA;
   if(p2==jj2)
-    warn("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);
+    sf_warning("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);
   if(tp<0 || tp >10){
-    warn("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
+    sf_warning("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
     exit(0);
   }
  
@@ -879,7 +875,7 @@ void update2 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
@@ -887,9 +883,9 @@ void update2 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
 
 void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
 {
-  float r, b, c, t1, t2, u, d3r=d3*s*rsv;
+  float b, c, t1, t2, u, d3r=d3*s*rsv;
   float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
-  float A0,A1,A2,aaa1,bbb1,m1,m2,m3;
+  float aaa1,bbb1,m1,m2,m3;
   double tp1,tp2,den,tpp1,tpp2,delta=0;
   unsigned int k, i;
   double aaa,bbb,ccc,ddd,ddd1;
@@ -934,15 +930,15 @@ void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
   if(k){
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*(ccc-s),0.)))/aaa;
     den = tp*aaa-bbb;
-    if(ABS(den)<0.00000001)
-      warn("p1=%d p2=%d p3=%d tp=%f den=%f",p1,p2,p3,tp,den);
-    den = (ABS(den)<0.00000001 ? SGN(den)*100000000. : 1./den);
+    if(SF_ABS(den)<0.00000001)
+      sf_warning("p1=%d p2=%d p3=%d tp=%f den=%f",p1,p2,p3,tp,den);
+    den = (SF_ABS(den)<0.00000001 ? SGN(den)*100000000. : 1./den);
     tp1 = -(ccc-tp*(2.*bbb-tp*aaa))*den;
     tp2 = (tp1*(2.*(bbb-tp*aaa)-0.5*tp1*aaa))*den;
 
-    if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001){
+    if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001){
       den = tp1-tp2*eta;
-      den = (ABS(den)<0.00000000000001 ? SGN(den)*1000000000000000. : 1./den);
+      den = (SF_ABS(den)<0.00000000000001 ? SGN(den)*1000000000000000. : 1./den);
       delta = tp1*tp1*eta*den;
     }
   }
@@ -969,20 +965,20 @@ void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
     ccc += -s;
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*ccc,0.)))/aaa;
     den = tp*aaa1-bbb1;
-    if(ABS(den)<0.00000001)
-      warn("p1=%d p2=%d p3=%d tp=%f den=%f",p1,p2,p3,tp,den);
-    den = (ABS(den)<0.00000001 ? SGN(den)*100000000. : 1./den);
+    if(SF_ABS(den)<0.00000001)
+      sf_warning("p1=%d p2=%d p3=%d tp=%f den=%f",p1,p2,p3,tp,den);
+    den = (SF_ABS(den)<0.00000001 ? SGN(den)*100000000. : 1./den);
     m1 = rsv*ddd1*(gggg+4.*ggggg);
     m2 = ff-m1+tp*ddd1*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*ddd1*ggg;
     tpp1 = -(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
 	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den;
     tpp2 = (2.*tp1*m3-0.5*tp1*tp1*aaa1)*den;
-    /*if(ABS(tpp1)>ABS(tp1) || ABS(tpp2)>ABS(tp2))
-      warn("tp1=%f tp1new=%f tp2=%f tp2new=%f p1=%d p2=%d p3=%d",tp1,tpp1,tp2,tpp2,p1,p2,p3);*/
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
-	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),ABS(tp2));
+    /*if(SF_ABS(tpp1)>SF_ABS(tp1) || SF_ABS(tpp2)>SF_ABS(tp2))
+      sf_warning("tp1=%f tp1new=%f tp2=%f tp2new=%f p1=%d p2=%d p3=%d",tp1,tpp1,tp2,tpp2,p1,p2,p3);*/
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
+	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),SF_ABS(tp2));
     tp1 = tpp1;
     tp2 = tpp2;
   }
@@ -990,12 +986,12 @@ void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
 
   if (!k) return;
   
-  if(ABS(tp1)>0.000000000001 || ABS(tp2)>0.000000000001){
+  if(SF_ABS(tp1)>0.000000000001 || SF_ABS(tp2)>0.000000000001){
     den = tp1-tp2*eta;
-    if(ABS(den)<0.000000000000001)
-      warn("p1=%d p2=%d p3=%d tp=%f tp1=%f tp2=%f den=%f",p1,p2,p3,tp,tp1,tp2,den);
-    den = (ABS(den)<0.000000000000001 ? SGN(den)*1000000000000000. : 1./den);
-    tp += SGN(delta)*MIN(ABS(tp1*tp1*eta*den),ABS(delta));
+    if(SF_ABS(den)<0.000000000000001)
+      sf_warning("p1=%d p2=%d p3=%d tp=%f tp1=%f tp2=%f den=%f",p1,p2,p3,tp,tp1,tp2,den);
+    den = (SF_ABS(den)<0.000000000000001 ? SGN(den)*1000000000000000. : 1./den);
+    tp += SGN(delta)*MIN(SF_ABS(tp1*tp1*eta*den),SF_ABS(delta));
   }
 
   if (tp < *tj) {
@@ -1003,16 +999,16 @@ void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
 
 void update2h (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
 {
-  float r, b, c, t1, t2, u, d3r=d3*s*rsv;
+  float b, c, t1, t2, u, d3r=d3*s*rsv;
   float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
-  float A0,A1,A2,aaa1,bbb1,m1,m2,m3,tpA;
+  float aaa1,bbb1,m1,m2,m3,tpA;
   double tp1,tp2,tp3,tp4,den;
   unsigned int k, i;
   double aaa,bbb,ccc,ddd,ddd1;
@@ -1057,7 +1053,7 @@ void update2h (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, 
   if(k){
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*(ccc-s),0.)))/aaa;
     den = tp*aaa-bbb;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(ccc-tp*(2.*bbb-tp*aaa))*den;
     tp2 = (tp1*(2.*(bbb-tp*aaa)-0.5*tp1*aaa))*den;
     tp3 = -(tp1*tp1*aaa-tp2*(2.*(bbb-tp*aaa)-tp1*aaa))*den;
@@ -1086,31 +1082,31 @@ void update2h (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, 
     ccc += -s;
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*ccc,0.)))/aaa;
     den = tp*aaa1-bbb1;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*ddd1*(gggg+4.*ggggg);
     m2 = ff-m1+tp*ddd1*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*ddd1*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
-	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),ABS(tp2));
-    tp3 = SGN(tp3)*MIN(ABS(-(tp1*tp1*(ff-m1+6.*rsv*ddd1*tp*
-		   (g-tp*gg))-2.*tp2*m3+tp1*tp2*aaa1)*den),ABS(tp3));
-    tp4 = SGN(tp4)*MIN(ABS(-(2.*tp1*(tp1*tp1*rsv*ddd1*(g-2.*tp*gg)+tp2*(ff-m1+6.*rsv*tp*ddd1*(g-tp*gg)))+
-			     tp2*tp2*0.5*aaa1-2.*tp3*m3+tp1*tp3*aaa1)*den),ABS(tp4));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
+	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),SF_ABS(tp2));
+    tp3 = SGN(tp3)*MIN(SF_ABS(-(tp1*tp1*(ff-m1+6.*rsv*ddd1*tp*
+		   (g-tp*gg))-2.*tp2*m3+tp1*tp2*aaa1)*den),SF_ABS(tp3));
+    tp4 = SGN(tp4)*MIN(SF_ABS(-(2.*tp1*(tp1*tp1*rsv*ddd1*(g-2.*tp*gg)+tp2*(ff-m1+6.*rsv*tp*ddd1*(g-tp*gg)))+
+			     tp2*tp2*0.5*aaa1-2.*tp3*m3+tp1*tp3*aaa1)*den),SF_ABS(tp4));
   }
   jjj =0;
 
   if (!k) return;
 
-  if(ABS(tp1)>0.0000001 && ABS(tp2)>0.0000001 && ABS(tp3)>0.0000001 && ABS(tp4)>0.0000001){
+  if(SF_ABS(tp1)>0.0000001 && SF_ABS(tp2)>0.0000001 && SF_ABS(tp3)>0.0000001 && SF_ABS(tp4)>0.0000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000001 ? SGN(den)*1000000000. : 1./den);
     tpA = tp+tp1*tp1*eta*den;
     den = (tp2-eta*tp3)*(eta*tp1*tp3*tp3*tp3+eta*eta*tp2*tp2*tp3*tp4+ 
        tp2*tp2*tp2*(-tp3+eta*tp4)+tp2*tp3*(tp1*tp3-eta*eta*tp3*tp3-2*eta*tp1*tp4));
-    if(ABS(den)<0.0000000000000001)
-      warn("p1=%d p2=%d p3=%d tp=%f tp1=%f tp2=%f tp3=%f tp4=%f den=%f",p1,p2,p3,tp,tp1,tp2,tp3,tp4,den);
-    den = (ABS(den)<0.0000000000000001 ? SGN(den)*10000000000000000. : 1./den);
+    if(SF_ABS(den)<0.0000000000000001)
+      sf_warning("p1=%d p2=%d p3=%d tp=%f tp1=%f tp2=%f tp3=%f tp4=%f den=%f",p1,p2,p3,tp,tp1,tp2,tp3,tp4,den);
+    den = (SF_ABS(den)<0.0000000000000001 ? SGN(den)*10000000000000000. : 1./den);
     tp += eta*(eta*tp2*tp2*tp2*tp2*tp2*(-tp3 +eta*tp4)+ 
         tp1*tp2*tp2*tp2*(tp2-2*eta*tp3)*(-tp3+eta*tp4)+ 
         tp1*tp1*tp3*(tp2-eta*tp3)*(tp2*tp3+eta*tp3*tp3-2*eta*tp2*tp4))*den;
@@ -1121,16 +1117,16 @@ void update2h (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, 
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
 
 void update3old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
 {
-  float r, b, c, t1, t2, u, d3r=d3*s*rsv;
+  float b, c, t1, t2, u, d3r=d3*s*rsv;
   float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
-  float A0,A1,A2,aaa1,bbb1,m1,m2,m3;
+  float aaa1,bbb1,m1,m2,m3;
   double tp1,tp2,den;
   unsigned int k, i;
   double aaa,bbb,ccc,ddd,ddd1;
@@ -1200,7 +1196,7 @@ void update3old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
   if(k){
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*(ccc-s),0.)))/aaa;
     den = tp*aaa-bbb;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(ccc-tp*(2.*bbb-tp*aaa))*den;
     tp2 = (tp1*(2.*(bbb-tp*aaa)-0.5*tp1*aaa))*den;
   }
@@ -1241,42 +1237,42 @@ void update3old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv
     ccc += -s;
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*ccc,0.)))/aaa;
     den = tp*aaa1-bbb1;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*ddd1*(gggg+4.*ggggg);
     m2 = ff-m1+tp*ddd1*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*ddd1*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
-	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),ABS(tp2));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
+	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),SF_ABS(tp2));
   }
   jjj =0;
 
   if (!k) return;
 
-  /*warn("tp=%f tp1=%f tp2=%f den=%f",tp,tp1,tp2,den);*/
+  /*sf_warning("tp=%f tp1=%f tp2=%f den=%f",tp,tp1,tp2,den);*/
   
-  if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001){
+  if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
     tp += tp1*tp1*eta*den;
   }
-  /*warn("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
+  /*sf_warning("tp=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,den,k,p1,p2,p3);*/
   if (tp < *tj) {
     *tj = tp;
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
 
 
-void update3 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
+static void update3 (int p1, int p2, int p3, float* tj, unsigned char* mj, float s, float rsv, float eta)
 {
-  float r, b, c, t1, t2, u, d3r=d3*s*rsv;
+  float b, c, t1, t2, u, d3r=d3*s*rsv;
   float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
-  float A0,A1,A2,aaa1,bbb1,m1,m2,m3;
+  float aaa1,bbb1,m1,m2,m3;
   double tp1,tp2,den;
   unsigned int k, i;
   double aaa,bbb,ccc,ddd,ddd1;
@@ -1354,7 +1350,7 @@ void update3 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
   if(k){
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*(ccc-s),0.)))/aaa;
     den = tp*aaa-bbb;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     tp1 = -(ccc-tp*(2.*bbb-tp*aaa))*den;
     tp2 = (tp1*(2.*(bbb-tp*aaa)-0.5*tp1*aaa))*den;
   }
@@ -1399,27 +1395,27 @@ void update3 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     ccc += -s;
     tp = (bbb +sqrt (MAX(bbb*bbb-aaa*ccc,0.)))/aaa;
     den = tp*aaa1-bbb1;
-    den = (ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
+    den = (SF_ABS(den)<0.0000001 ? SGN(den)*10000000. : 1./den);
     m1 = rsv*ddd1*(gggg+4.*ggggg);
     m2 = ff-m1+tp*ddd1*rsv*(3.*g-2.*tp*gg);
     m3 = b1-tp*m2-rsv*ddd1*ggg;
-    tp1 = SGN(tp1)*MIN(ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
-	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),ABS(tp1));
-    tp2 = SGN(tp2)*MIN(ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),ABS(tp2));
+    tp1 = SGN(tp1)*MIN(SF_ABS(-(c1-2.*tp*b1+tp*tp*ff+tp*tp*tp*ddd1*rsv*
+	  (2.*g-tp*gg)-tp*tp*m1+rsv*ddd1*tp*2.*ggg)*den),SF_ABS(tp1));
+    tp2 = SGN(tp2)*MIN(SF_ABS((2.*tp1*m3-0.5*tp1*tp1*aaa1)*den),SF_ABS(tp2));
   }
   jjj =0;
 
   if (!k) return;
 
-  /*warn("tp=%f tp1=%f tp2=%f den=%f",tp,tp1,tp2,den);*/
+  /*sf_warning("tp=%f tp1=%f tp2=%f den=%f",tp,tp1,tp2,den);*/
   
-  if(ABS(tp1)>0.00000001 || ABS(tp2)>0.00000001){
+  if(SF_ABS(tp1)>0.00000001 || SF_ABS(tp2)>0.00000001){
     den = tp1-tp2*eta;
-    den = (ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
+    den = (SF_ABS(den)<0.000000000001 ? SGN(den)*1000000000000. : 1./den);
     tp += tp1*tp1*eta*den;
   }
   if(tp<0 || tp >10){
-    warn("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
+    sf_warning("tp=%f tp1=%f den=%f k=%d j1=%d j2=%d j3=%d",tp,tp1,den,k,p1,p2,p3);
     exit(0);
   }
   if (tp < *tj) {
@@ -1427,7 +1423,7 @@ void update3 (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, f
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }

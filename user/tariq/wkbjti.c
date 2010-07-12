@@ -79,8 +79,8 @@ void wkbjti (float xs                /* x source location*/,
 	     float** bet            /* bet */)
 /*< Run VTI eikonal solver >*/
 {
-	int ix,iz,ia,ir,na,nr;
-	float ss,a,r,da,dr,fa,fr,ex,ez,ea,rmax,rmaxs,tt,uu,wor,t11,t12,angp,
+	int ia,ir,na,nr;
+	float a,r,da,dr,fa,fr,ex,ez,ea,rmax,rmaxs,uu,wor,angp,
 		**sp,**tp,**up,**wp,**ap;
 	float **a1111p,**a3333p,**a1313p,**a1133p;
 	
@@ -297,8 +297,8 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 {
 	int i,wrap;
 	float drleft,drorig,frac,cmax,umaxl,uminr,uminm,umaxm,oda=1/da,
-		uu,uumin,unew,uold,ueol,ueor,wor,or,*wtemp,*s;
-	float a,b,daa,c,x;
+		uu,unew,uold,ueol,ueor,wor,or,*wtemp,*s;
+	float a,b,c,x;
 	/*float xx[na],duda[na][4];
 	
 	for (i=0; i<na; ++i)
@@ -574,7 +574,7 @@ author:  Zhenyue Liu, Colorado School of Mines, 07/8/92
 ******************************************************************************/
 {
 	int i;
-	float r1,*d,*b,*c,*e,t;
+	float r1,*d,*b,*c,*e;
 	
 	/* allocate workspace */
 	d = sf_floatalloc(na-2);
@@ -781,7 +781,7 @@ float dsvg(float a, float a1111, float a3333,float a1133,float a1313, float *ang
 
   int itr=0,ntr=LHD;
   double sint,cost,a2,b2,sin2t,cos2t,psi,gamma,sqgamma,v,e,d;
-  double dv,dgamma,sina,f1,f2,sint1,sint2,vg,ddgamma,ddv,dvg;
+  double dv,dgamma,sina,f1,f2,sint1,sint2,vg,dvg;
   double tol=EPSS,dsin,err,bb,sinda,cosda;
 
   a = ABS(a); 

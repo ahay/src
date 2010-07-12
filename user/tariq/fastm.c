@@ -22,14 +22,12 @@
 
 #include "fastm.h"
 #include "neighbors.h"
-#include "pqueue.h"
 
 /*#define AT(x,y,z) ((z)+n3*(y)+n23*(x))*/
 #define AT(z,y,x) ((z)+n1*(y)+n12*(x))
 
-#define INSERT nm--; mask[i] = FMM_FRONT; pt=ttime+i; heap_insert (pt)
+#define INSERT nm--; mask[i] = FMM_FRONT; pt=ttime+i; sf_pqueue_insert (pt)
 
-#define ABS(x) ((x) < 0 ? -(x) : (x))
 #define SGN(x) ((x) < 0 ? -1.0 : 1.0)
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
@@ -41,7 +39,7 @@
 #define FMM_FRONT 'f'
 
 static double tp;
-static float a, dd[8], rd1,rd2,rd3,d1,d2,d3;
+static float rd1,rd2,rd3,d1,d2,d3;
 static int nm, n12, show=0, n, n1, n2, n3;
 
 void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz, 
@@ -127,8 +125,7 @@ void fastds (float* time                /* time */,
 	     float dy            /*Source shift*/)
 /*< Run fast marching eikonal solver >*/
 {
-    float xs[3], *p, ***dw, ***tx, ***ty, ***tz, ***dD, *pt, *ptt, *ttime, *dtime, *ddtime;
-    float tmp;
+    float xs[3], ***dw, ***tx, ***ty, ***tz, ***dD, *pt, *ptt, *ttime, *dtime, *ddtime;
     int i, i1, i2, i3, j1, j2, nh;
     unsigned char *mask, *pm;
 
@@ -236,54 +233,55 @@ void fastds (float* time                /* time */,
     if (n2 > 1) nh += 2*n1*n3;
     if (n3 > 1) nh += 2*n1*n2;
 
-    heap_init (nh);
+    sf_pqueue_init (nh);
+    sf_pqueue_start();
 
     i1 = MAX(MIN(xs[0],n1-2),0);
     i2 = MAX(MIN(xs[1],n2-2),0);
     i3 = MAX(MIN(xs[2],n3-2),0);
     i = AT(i1,i2,i3); INSERT; ptt=dtime+i;
-    dtime[i] = SGN(dw[i3][i2][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
+    dtime[i] = SGN(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
     ttime[i] = time[i];
 
     if(n1>1){
       i = AT(i1+1,i2,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
+      dtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n2>1){
       i = AT(i1,i2+1,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
+      dtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
       ttime[i]= time[i];
     }
 
     if(n3>1){
       i = AT(i1,i2,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
+      dtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n2>1){
       i = AT(i1+1,i2+1,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
+      dtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n3>1){
       i = AT(i1+1,i2,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
+      dtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n2>1 && n3>1){
       i = AT(i1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
+      dtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n2>1 && n3>1){
       i = AT(i1+1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
+      dtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
       ttime[i]= time[i];
     }
 
@@ -291,14 +289,14 @@ void fastds (float* time                /* time */,
     if(order==1){
       /* start marching */
       while (nm > 0) {  /* "far away" points */
-	pt = heap_extract ();
+	pt = sf_pqueue_extract ();
 	
 	i = pt-ttime;
 	/*warn("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);*/
 	i1 = i%n1;
 	i2 = (i/n1)%n2;
 	i3 = i/n12;
-	warn("i1=%d i2=%d i3=%d n1=%d n2=%d n3=%d i=%d time=%f,nm=%d",i1,i2,i3,n1,n2,n3,i,time[i],nm);
+	sf_warning("i1=%d i2=%d i3=%d n1=%d n2=%d n3=%d i=%d time=%f,nm=%d",i1,i2,i3,n1,n2,n3,i,time[i],nm);
 
 	*(pm = mask+i) = FMM_IN;
 	ptt = dtime+i;
@@ -324,11 +322,11 @@ void fastds (float* time                /* time */,
     } else {
 
       while (nm > 0) {
-	pt = heap_extract ();
+	pt = sf_pqueue_extract ();
 	i = pt-ttime;
 	if(nm<30){
 	  show=1;
-	  warn("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);
+	  sf_warning("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);
 	}
 	i1 = i%n1;
 	i2 = (i/n1)%n2;
@@ -361,13 +359,13 @@ void fastds (float* time                /* time */,
       for (i=0; i<n; i++) {
 	/*time[i] = ttime[i];*/
 	time[i] -= dtime[i]*dy;
-	warn("time=%f time2=%f dtime=%f dy=%f",time[i],time[i],dtime[i],dy);
+	sf_warning("time=%f time2=%f dtime=%f dy=%f",time[i],time[i],dtime[i],dy);
       }
       return;
     }
 
      /* end marching */
-  heap_close ();
+  sf_pqueue_close ();
 
 
   nm = n;
@@ -461,64 +459,65 @@ void fastds (float* time                /* time */,
 	mask[i] = FMM_OUT;
     }
     
-    heap_init (nh);
+    sf_pqueue_init (nh);
+    sf_pqueue_start();
 
     i1 = MAX(MIN(xs[0],n1-2),0);
     i2 = MAX(MIN(xs[1],n2-2),0);
     i3 = MAX(MIN(xs[2],n3-2),0);
     i = AT(i1,i2,i3); INSERT; ptt=dtime+i;
-    ddtime[i] = SGN(dw[i3][i2][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
+    ddtime[i] = SGN(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
     ttime[i] = time[i];
 
     if(n1>1){
       i = AT(i1+1,i2,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
+      ddtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n2>1){
       i = AT(i1,i2+1,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
+      ddtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
       ttime[i] = time[i];
     }
 
     if(n3>1){
       i = AT(i1,i2,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
+      ddtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
       ttime[i] = time[i]; 
     }
 
     if(n1>1 && n2>1){
       i = AT(i1+1,i2+1,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
+      ddtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n1>1 && n3>1){
       i = AT(i1+1,i2,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
+      ddtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n2>1 && n3>1){
       i = AT(i1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
+      ddtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
       ttime[i] = time[i];
     }
 
     if(n1>1 && n2>1 && n3>1){
       i = AT(i1+1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
+      ddtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
       ttime[i] = time[i];
     }
 
     if(order==1){
       /* start marching */
       while (nm > 0) {  /* "far away" points */
-	pt = heap_extract ();
+	pt = sf_pqueue_extract ();
 	
 	i = pt-ttime;
-	/*warn("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);*/
+	/*sf_warning("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);*/
 	i1 = i%n1;
 	i2 = (i/n1)%n2;
 	i3 = i/n12;
@@ -547,11 +546,11 @@ void fastds (float* time                /* time */,
     } else {
 
       while (nm > 0) {
-	pt = heap_extract ();
+	pt = sf_pqueue_extract ();
 	i = pt-ttime;
 	if(nm<30){
 	  show=1;
-	  warn("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);
+	  sf_warning("i=%d ttime=%f ttime2=%f rd1=%f rd2=%f rd3=%f nm=%d",i,*pt,*(pt-1),rd1,rd2,rd3,nm);
 	}
 	i1 = i%n1;
 	i2 = (i/n1)%n2;
@@ -584,13 +583,13 @@ void fastds (float* time                /* time */,
       for (i=0; i<n; i++) {
 	/*time[i] = ttime[i];*/
 	time[i] -= dtime[i]*dy+0.5*ddtime[i]*dy*dy;
-	warn("time2=%f ddtime=%f dy=%f",time[i],ddtime[i],dy*dy);
+	sf_warning("time2=%f ddtime=%f dy=%f",time[i],ddtime[i],dy*dy);
       }
     } else {
       for (i=0; i<n; i++) {
 	/*time[i] = ttime[i];*/
 	time[i] -= dtime[i]*dtime[i]*dy/(dtime[i]-0.5*ddtime[i]*dy);
-	warn("time2=%f dtime==%f ddtime==%f ddtimeS=%f dy=%f",time[i],dtime[i]*dy,dtime[i]*dy-0.5*ddtime[i]*dy*dy,dtime[i]*dtime[i]*dy/(0.5*ddtime[i]*dy+dtime[i]),dy*dy);
+	sf_warning("time2=%f dtime==%f ddtime==%f ddtimeS=%f dy=%f",time[i],dtime[i]*dy,dtime[i]*dy-0.5*ddtime[i]*dy*dy,dtime[i]*dtime[i]*dy/(0.5*ddtime[i]*dy+dtime[i]),dy*dy);
       }
     }
    
@@ -599,7 +598,7 @@ void fastds (float* time                /* time */,
 void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz, 
 	       float s, float dy)
 {
-  float r, b, c, t1, t2, u, tr2=tx*tx+ty*ty, den,tp1,dt1;
+  float b, c, t1, t2, u, den,tp1,dt1;
   unsigned int k, i;
 
   b = c = 0; i = k = 0;
@@ -607,14 +606,14 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
   if ((p3 < n3-1) && *(mj+n12) && ((t2 = *(tj+n12)) < *tj) && 
       ((i ^ 0x01) || t2 > t1)) {i |= 0x01; t1 = t2; dt1 = *(dtj+n12);} 
   if (i & 0x01) {
-    u = rd3*ABS(tx); b += u*dt1; c += u;
+    u = rd3*SF_ABS(tx); b += u*dt1; c += u;
     i ^= 0x01; k |= 0x01;
   }
   if ((p2 > 0   ) && *(mj-n1) && ((t1 = *(tj-n1)) < *tj)) {i |= 0x01; dt1 = *(dtj-n1);}
   if ((p2 < n2-1) && *(mj+n1) && ((t2 = *(tj+n1)) < *tj) && 
       ((i ^ 0x01) || t2 > t1)) {i |= 0x01; t1 = t2; dt1 = *(dtj+n1);} 
   if (i & 0x01) {
-    u = rd2*ABS(ty); b += u*dt1; c += u;
+    u = rd2*SF_ABS(ty); b += u*dt1; c += u;
     i ^= 0x01; k |= 0x02;
   }
 
@@ -622,17 +621,16 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
   if ((p1 < n1-1) && *(mj+1) && ((t2 = *(tj+1)) < *tj) && 
       ((i ^ 0x01) || t2 > t1)) {i |= 0x01; t1 = t2; dt1 = *(dtj+1);}  
   if (i & 0x01) {
-    u = rd1*ABS(tz); b += u*dt1; c += u;
+    u = rd1*SF_ABS(tz); b += u*dt1; c += u;
     i ^= 0x01; k |= 0x04;
   }
 
   if (!k) return;
 
-  if(ABS(c) < 0.00000001) {
-    warn("stop p1=%d p2=%d p3=%d t=%f k=%d tp1=%f b=%f c=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,b,c,tx,ty,tz);
-    exit;
-  }
-  den = (ABS(c) < 0.00000001 ? SGN(c)*100000000. : 1./c);
+  if(SF_ABS(c) < 0.00000001) 
+    sf_error("stop p1=%d p2=%d p3=%d t=%f k=%d tp1=%f b=%f c=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,b,c,tx,ty,tz);
+
+  den = (SF_ABS(c) < 0.00000001 ? SGN(c)*100000000. : 1./c);
   /*tp1 = (b-(sqrt(1+2.*eta)-1)*sqrt(1+2.*eta0)*tr2*(1-rsv*tz*tz))*den;*/
   tp1 = (b-s)*den;
   tp = t -tp1*dy;
@@ -642,7 +640,7 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
@@ -650,7 +648,7 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
 void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz,
 		float s, float dy)
 {
-  float r, b, c, t1, t2, u, tr2=tx*tx+ty*ty, dt1;
+  float t1, t2, u, dt1;
   double den;
   unsigned int k, i;
   double bbb,ccc,ddd,tp1;
@@ -670,7 +668,7 @@ void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj
     } else if ((p3 > 1) && *(mj-2*n12)) {   
       ddd *= 1.5; dt1 *= 4.; dt1 -= *(dtj-2*n12); dt1 /= 3.;
     }
-    u = ddd*ABS(tx); bbb += u*dt1; ccc += u;
+    u = ddd*SF_ABS(tx); bbb += u*dt1; ccc += u;
     i ^= 0x01; k |= 0x01;
   }
   jjj =0;
@@ -685,7 +683,7 @@ void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj
     } else if ((p2 > 1) && *(mj-2*n1)) {   
       ddd *= 1.5; dt1 *= 4.; dt1 -= *(dtj-2*n1); dt1 /= 3.;
     }
-    u = ddd*ABS(ty); bbb += u*dt1; ccc += u;
+    u = ddd*SF_ABS(ty); bbb += u*dt1; ccc += u;
     i ^= 0x01; k |= 0x02;
   }
   jjj =0;
@@ -700,27 +698,27 @@ void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj
     } else if ((p1 > 1) && *(mj-2)) {   
       ddd *= 1.5; dt1 *= 4.; dt1 -= *(dtj-2); dt1 /= 3.;
     }
-    u = ddd*ABS(tz); bbb += u*dt1; ccc += u;
+    u = ddd*SF_ABS(tz); bbb += u*dt1; ccc += u;
     i ^= 0x01; k |= 0x04;
   }
   jjj =0;
 
   if (!k) return;
 
-  den = (ABS(ccc) < 0.00000001 ? SGN(ccc)*100000000. : 1./ccc);
-  /*den = (ABS(ccc) < 0.00000001 ? 0.0 : 1./ccc);*/
+  den = (SF_ABS(ccc) < 0.00000001 ? SGN(ccc)*100000000. : 1./ccc);
+  /*den = (SF_ABS(ccc) < 0.00000001 ? 0.0 : 1./ccc);*/
   tp1 = (bbb-s)*den;
-  /*tp1 = SGN(tp1)*MIN(ABS(tp1),0.5);*/
+  /*tp1 = SGN(tp1)*MIN(SF_ABS(tp1),0.5);*/
   tp = t-tp1*dy;
   if(show)
-    warn("p1=%d p2=%d p3=%d t=%f k=%d tp1=%f bbb=%f ccc=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,bbb,ccc,tx,ty,tz);
+    sf_warning("p1=%d p2=%d p3=%d t=%f k=%d tp1=%f bbb=%f ccc=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,bbb,ccc,tx,ty,tz);
 
   if (t < *tj && t>0) {
     *tj = t; *dtj = tp1;
     if (*mj == FMM_OUT) {
       nm--; 
       *mj = FMM_FRONT; 
-      heap_insert (tj);
+      sf_pqueue_insert (tj);
     } 
   }
 }
