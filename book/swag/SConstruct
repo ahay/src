@@ -1,7 +1,7 @@
 from rsf.book import *
 
 Papers(copyr='KAUST',
-       group='SWAG',
+       group='Seismic Wave Analysis Group',
        papers=Split('''
        introDTI/article.tex
        '''),
