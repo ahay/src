@@ -1,0 +1,389 @@
+\def\pcscwp{
+{Center for Wave Phenomena \\ Colorado School of Mines} \\ 
+\texttt{psava@mines.edu}
+}
+
+\def\pcscover{
+\author[]{Paul Sava}
+\institute{\pcscwp}
+\date{}
+\logo{WSI}
+}
+
+% ------------------------------------------------------------
+% colors
+\definecolor{darkgreen}{rgb}{0,0.4,0}
+
+\def\red#1{  \textcolor{red}      {#1} }
+\def\blue#1{ \textcolor{blue}     {#1} }
+\def\green#1{\textcolor{darkgreen}{#1} }
+\def\black#1{\textcolor{black}    {#1} }
+\def\white#1{\textcolor{white}    {#1} }
+
+% ------------------------------------------------------------
+% madagascar
+\def\mg{\blue{\sc madagascar}}
+\def\mex#1{ \red{ #1 } }
+\def\mvbt#1{\small{\blue{\begin{semiverbatim}#1\end{semiverbatim}}}}
+
+% ------------------------------------------------------------
+% equations
+\def\beq {        \begin{equation}}
+\def\eeq {          \end{equation}}
+\def\bea{        \begin{eqnarray}}
+\def\eea{          \end{eqnarray}}
+
+\def\rEq#1{Equation~\ref{eqn:#1}}
+\def\req#1{equation~\ref{eqn:#1}}
+\def\rEqs#1{Equations~\ref{eqn:#1}}
+\def\reqs#1{equations~\ref{eqn:#1}}
+\def\ren#1{\ref{eqn:#1}}
+
+\def\rFg#1{Figure~\ref{fig:#1}}
+\def\rfg#1{Figure~\ref{fig:#1}}
+\def\rFgs#1{Figures~\ref{fig:#1}}
+\def\rfgs#1{Figures~\ref{fig:#1}}
+\def\rfn#1{\ref{fig:#1}}
+
+\def\lp{\left (}
+\def\rp{\right)}
+
+\def\lb{\left [}
+\def\rb{\right]}
+
+\def\pbox#1{ \fbox {$ \displaystyle #1 $}}
+
+% ------------------------------------------------------------
+% field operators
+
+% trace
+\def\tr{\texttt{tr}\;}
+
+% divergence
+\def\DIV#1{\nabla \cdot {#1}}
+
+% curl
+\def\CURL#1{\nabla \times {#1}}
+
+% gradient
+\def\GRAD#1{\nabla {#1}}
+
+% Laplacian
+\def\LAPL#1{\nabla^2 {#1}}
+
+
+% ------------------------------------------------------------
+
+% elastic tensor
+\def\CC{{\bf C}}
+
+% identity tensor
+\def\I{\;{\bf I}}
+
+% particle displacement vector
+\def\uu{{\bf u}}
+
+% particle velocity vector
+\def\vv{{\bf v}}
+
+% particle acceleration vector
+\def\aa{{\bf a}}
+
+% force vector
+\def\ff{{\bf f}}
+
+% distance vector
+\def\xx{{\bf x}}
+
+% wavenumber vector
+\def\kk{{\bf k}}
+
+% ray parameter vector
+\def\pp{{\bf p}}
+
+% normal vector
+\def\nn{{\bf n}}
+
+% source vector
+\def\ss{{\bf s}}
+
+% receiver vector
+\def\rr{{\bf r}}
+
+% midpoint vector
+\def\mm{{\bf m}}
+\def\km{{\kk_\mm}}
+
+% offset vector
+\def\ho{{\bf h}}
+\def\kh{{\kk_\ho}}
+
+% space-lag vector
+\def\hh{ {\boldsymbol{\lambda}} }
+
+% time-lag scalar
+\def\tt{\tau}
+\def\ww{\omega}
+
+%
+\def\dd{{\bf d}}
+
+\def\bb{{\bf b}}
+\def\qq{{\bf q}}
+
+\def\ii{{\bf i}} % unit vector
+\def\jj{{\bf j}} % unit vector
+
+% ------------------------------------------------------------
+
+\def\Fop#1{\mathcal{F}     \lb #1 \rb}
+\def\Fin#1{\mathcal{F}^{-1}\lb #1 \rb}
+
+% ------------------------------------------------------------
+% partial derivatives
+
+\def\dtwo#1#2{\frac{\partial^2 #1}{\partial #2^2}}
+\def\done#1#2{\frac{\partial   #1}{\partial #2  }}
+\def\dthr#1#2{\frac{\partial^3 #1}{\partial #2^3}}
+\def\mtwo#1#2#3{ \frac{\partial^2#1}{\partial #2 \partial#3} }
+
+\def\larrow#1{\stackrel{#1}{\longleftarrow}}
+\def\rarrow#1{\stackrel{#1}{\longrightarrow}}
+
+% ------------------------------------------------------------
+% elasticity 
+
+\def\stress{\underline{\textbf{t}}}
+\def\strain{\underline{\textbf{e}}}
+\def\stiffness{\underline{\underline{\textbf{c}}}}
+\def\compliance{\underline{\underline{\textbf{s}}}}
+
+\def\GEOMlaw{
+\strain = \frac{1}{2} 
+\lb \GRAD{\uu} + \lp \GRAD{\uu} \rp^T \rb
+}
+
+\def\HOOKElaw{
+\stress = \lambda \; tr \lp \strain \rp {\bf I} + 2 \mu \strain 
+}
+
+\def\NEWTONlaw{
+\rho \ddot{\uu} = \DIV{\stress}
+}
+
+% potentials
+\def\VP{\boldsymbol{\psi}}
+\def\SP{\theta}
+
+% stress tensor
+\def\ssten{{\bf \sigma}}
+
+\def\ssmat{
+\lp \matrix {
+ \sigma_{11} &  \sigma_{12}   &  \sigma_{13} \cr
+ \sigma_{12} &  \sigma_{22}   &  \sigma_{23} \cr
+ \sigma_{13} &  \sigma_{23}   &  \sigma_{33} \cr
+} \rp
+}
+
+% strain tensor
+\def\eeten{{\bf \epsilon}}
+
+\def\eemat{
+\lp \matrix {
+ \epsilon_{11} &  \epsilon_{12}   &  \epsilon_{13} \cr
+ \epsilon_{12} &  \epsilon_{22}   &  \epsilon_{23} \cr
+ \epsilon_{13} &  \epsilon_{23}   &  \epsilon_{33} \cr
+} \rp
+}
+
+
+% plane wave kernel
+\def\pwker{A e^{i\;k \lp \nn \cdot \xx - v t \rp}}
+
+% ------------------------------------------------------------
+\def\nbnote#1{ 
+\vfill 
+\hrule \vspace{0.10in}
+\colorbox{green}{\textbf{NB:}} 
+        \emph{#1}
+\vspace{0.10in} \hrule }
+
+% ------------------------------------------------------------
+% image, data, wavefields
+
+\def\RR{{r}}
+
+\def\UU{{u}}
+\def\US{{\UU_s}}
+\def\UR{{\UU_r}}
+\def\dUU{{\Delta \UU}}
+\def\dUS{{\Delta \US}}
+\def\dUR{{\Delta \UR}}
+
+\def\DD{{d}}
+\def\DS{{\DD_s}}
+\def\DR{{\DD_r}}
+
+\def\WW{w}
+\def\WS{{\WW_s}}
+\def\WR{{\WW_r}}
+\def\dWW{{\Delta \WW}}
+\def\dWS{{\Delta \WS}}
+\def\dWR{{\Delta \WR}}
+
+\def\dR{\Delta \RR}
+
+\def\dPP{\Delta p}
+\def\dQQ{\Delta q}
+
+% ------------------------------------------------------------
+% sliding bar
+
+\def\tline#1{
+\put(101,-5){\small \blue{time}}
+\put( -4,-5){\small \blue{0}}
+\thicklines
+\put( 0,-4){\color{blue} \vector(1,0){100}}
+\put(#1,-4){\color{red}  \circle*{2}}
+}
+
+% ------------------------------------------------------------
+\def\cen#1{ \begin{center} \textbf{#1} \end{center}}
+
+% ------------------------------------------------------------
+% integrals
+
+\def\tint#1{\!\!\!\int\!\! #1 dt}
+\def\xint#1{\!\!\!\int\!\! #1 d\xx}
+\def\wint#1{\!\!\!\int\!\! #1 d\ww}
+\def\aint#1{\!\!\!\alert{\int}\!\! #1 d\alert{\xx}}
+
+% ------------------------------------------------------------
+\def\CONJ#1{\overline{#1}}
+
+% ------------------------------------------------------------
+% imaging components
+%\def\IC{\colorbox{yellow}{\textbf{I.C.}}}
+%\def\WR{\colorbox{yellow}{\textbf{W.R.}}}
+
+% ------------------------------------------------------------
+\def\dz{\Delta z}
+\def\dt{\Delta t}
+\def\dx{\Delta x}
+
+\def\dhx{\Delta h_x}
+\def\dhy{\Delta h_y}
+
+\def\kz{{k_z}}
+\def\kx{{k_x}}
+\def\ky{{k_y}}
+
+\def\kmx{{k_{m_x}}}
+\def\kmy{{k_{m_y}}}
+\def\khx{{k_{h_x}}}
+\def\khy{{k_{h_y}}}
+
+\def\klx{{k_{\lambda_x}}}
+\def\kly{{k_{\lambda_y}}}
+\def\klz{{k_{\lambda_z}}}
+
+\def\mx{{m_x}}
+\def\my{{m_y}}
+\def\hx{{h_x}}
+\def\hy{{h_y}}
+
+\def\sx{{s_x}}
+\def\sy{{s_y}}
+\def\rx{{r_x}}
+\def\ry{{r_y}}
+
+% ray parameter (absolute value)
+\def\modp#1{\left| \pp_{#1} \right|}
+
+% wavenumber
+\def\modk#1{\left| \kk_{#1} \right|}
+
+\def\ws{ {\ww s} }
+
+% ------------------------------------------------------------
+\def\kzwk{{\kz^{\kk}}}
+\def\kzwx{{\kz^{\xx}}}
+ 
+\def\PSk#1{e^{#1 i \kzwk \dz}}
+\def\PSx#1{e^{#1 i \kzwx \dz}}
+\def\PS#1{ e^{#1 i \kz   \dz}}
+\def\PSo#1{e^{#1 i \kz_0 \dz}}
+
+\def\TT{t}
+\def\TS{t_s}
+\def\TR{t_r}
+
+\def\ofx{\lp \xx \rp}
+\def\ofs{\lp \ss \rp}
+\def\ofr{\lp \rr \rp}
+
+\def\ofxm{\lp \xx,\hh \rp}
+
+\def\ofxmp{\lp \xx+\hh \rp}
+\def\ofxmm{\lp \xx-\hh \rp}
+
+% ------------------------------------------------------------
+\def\Nx{N_x}
+\def\Ny{N_y}
+\def\Nz{N_z}
+\def\Nt{N_t}
+\def\Nw{N_{\ww}}
+
+\def\Nlx{N_{\lambda_x}}
+\def\Nly{N_{\lambda_y}}
+\def\Nlz{N_{\lambda_z}}
+\def\Nlt{N_{\tau}}
+
+% ------------------------------------------------------------
+\def\wmin{\ww_{min}}
+\def\wmax{\ww_{max}}
+\def\zmin{z_{min}}
+\def\zmax{z_{max}}
+
+
+\def\ds{\Delta s}
+
+\def\ofm{ \lp \mm    \rp}
+\def\ofk{ \lp \kk_\mm\rp}
+
+\def\ofmh{\lp \mm,\ho\rp}
+\def\ofmz{\lp \mm,z  \rp}
+
+\def\ofmm{\lp \mm-\ho\rp}
+\def\ofmp{\lp \mm+\ho\rp}
+
+\def\ofmw{ \lp \mm,    \ww \rp}
+\def\ofmhw{\lp \mm,\ho,\ww \rp}
+
+\def\dkzds { \left. \frac{d {\kz}}  {d s} \right|_{s_0} }
+\def\dkzdsm{ \left. \frac{d {\kz}_s}{d s} \right|_{s_0} }
+\def\dkzdsp{ \left. \frac{d {\kz}_r}{d s} \right|_{s_0} }
+
+%\def\PSop#1#2#3{ \red{\mathcal{E}^{#1}_{#2}\lb #3 \rb}}
+%\def\FSop#1#2#3{ \red{\mathcal{F}^{#1}_{#2}\lb #3 \rb}}
+%\def\ASop#1#2#3{ \red{\mathcal{A}^{#1}_{#2}\lb #3 \rb}}
+
+\def\PSop#1#2#3{ \mathcal{E}^{#1}_{#2}\lb #3 \rb}
+\def\FSop#1#2#3{ \mathcal{F}^{#1}_{#2}\lb #3 \rb}
+\def\ASop#1#2#3{ \mathcal{A}^{#1}_{#2}\lb #3 \rb}
+
+\def\MOD#1{\left| {#1} \right|}
+
+\def\SSR#1#2{\sqrt{ \lb {#1} \rb^2 - \MOD{#2}^2} }
+\def\SSX#1#2{\sqrt{ 1 - \lb \frac{\MOD{#2}}{#1} \rb^2} }
+\def\SST#1#2{1 + \sum_{j=1}^N c_j \lb \frac{\MOD{#2}}{#1} \rb^{2j} }
+
+\def\SQREXP#1#2#3{ \frac{#1}{ \SSX{#2}{#3}}}
+
+\def\IMCO{{\textbf{\sc i.c.}}}
+\def\EXTR{{\textbf{\sc w.r.}}}
+\def\SCAT{{\textbf{\sc w.s.}}}
+
+\def\fFT#1{ \texttt{fFT} \lb #1 \rb }
+\def\iFT#1{ \texttt{iFT} \lb #1 \rb }

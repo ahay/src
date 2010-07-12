@@ -1,0 +1,90 @@
+\section{Moveout analysis}
+
+If we restrict the observation to the immediate vicinity of the
+reflection point, which means that we consider the moveout surface in
+a small range of lags, we can approximate the typical irregular
+wavefront in complex media by a plane, although the shapes of
+wavefronts are arbitrary in heterogeneous media. Following the
+derivation of \cite{YangSava.geo.mixlag} and using the geometry shown
+in \rfg{Reflection}, the source and receiver plane waves are described
+by:
+%
+\bea
+\label{eqn:PWS} \ns \cdot \xx &=& v(\theta) t \;, \\
+\label{eqn:PWR} \nr \cdot \lp \xx - 2d\nn \rp &=& v(\theta) t \;, 
+\eea
+%
+where $\ns$ and $\nr$ are the unit direction vectors of the source and
+receiver plane waves, respectively, \geouline{$\nn$ is the unit vector
+  orthogonal to the reflector at the image point, and vector $\xx$
+  indicates the image point position}. $v$ is defined as the phase
+velocity in the locally homogeneous medium around the reflection
+point, and thus it is identical for both wavefields. $\theta$ is half
+the scattering angle (reflection angle).
+
+We can also obtain the shifted source and receiver plane waves by
+introducing the space- and time-lags
+%
+\bea
+\label{eqn:SPWS} \ns \cdot \lp \xx + \hh \rp &=& v(\theta)  \lp t + \tt \rp \;, \\
+\label{eqn:SPWR} \nr \cdot \lp \xx - 2d\nn - \hh \rp &=& v(\theta) \lp t - \tt \rp \;.
+\eea
+%
+Solving the system of equations \ren{SPWS}-\ren{SPWR} leads to the
+expression
+%
+\beq \label{eqn:pmov} 
+\lp \ns - \nr \rp \cdot \xx = 2v(\theta) \tt - \lp \ns + \nr \rp \cdot \hh - 2d \nr \cdot \nn \;,
+\eeq
+%
+which characterizes the moveout function \geouline{(surface)}
+of space- and time-lags at a
+common-image point.
+
+Furthermore, we have the following relations for the reflection
+geometry:
+%
+\bea
+\label{eqn:pdif}  \ns - \nr &=& 2 \nn \cosc \;, \\
+\label{eqn:psum}  \ns + \nr &=& 2 \vq \sinc \;,
+\eea
+%
+where $\nn$ and $\vq$ are unit vectors normal and parallel to the
+reflection plane, \geouline{respectively,} and $\theta$ is the reflection angle. \geouline{Vector
+  $\vq$ characterizes the line representing the intersection of the
+  reflection and the reflector planes.}  Combining
+\reqs{pmov}-\ren{psum}, we obtain the moveout function for
+plane waves:
+%
+\beq \label{eqn:Ztl_plane}
+z \lp \hh, \tt \rp = d_0 - \frac{\tanc \lp \vq \cdot \hh \rp}{\nz} + \frac{\vt}{\nz \cosc} \;.
+\eeq
+%
+The quantity $d_0$ is defined as
+%
+\beq
+d_0 = \frac{d - \cn }{\nz} \;,
+\eeq
+%
+and represents the depth of the reflection corresponding to the chosen
+\geoulin2{common-image gather} (CIG) location. This quantity is invariant for different plane waves,
+thus assumed constant here. \geouline{The vector ${\bf{c}}$ is along the 
+Earth's surface given by $(x,y,0)$.}
+
+When incorrect velocity is used for imaging, and thus, an inaccurate
+reflection angle is assumed, based on the analysis in the preceding
+section, we can obtain the moveout function
+%
+\beq \label{eqn:Ztl_plane_vm}
+z \lp \hh, \tt \rp = d_{0f}
+- \frac{\tanc_m \lp \vq_m \cdot \hh \rp}{\nmz} 
++ \frac{\vm(\theta_m) \lp \tt - \td \rp}{\nmz \cosc_m} \;,
+\eeq
+%
+where $d_{0f}$ is the focusing depth of the corresponding reflection
+point, $\vm$ is the migration velocity, $\td$ is the focusing error,
+$\nnm$ and $\vq_m$ are vectors normal and parallel to the migrated
+reflector, respectively. \rEq{Ztl_plane_vm} describes the extended
+images moveout for a single seismic experiment and it is essentially
+identical to the similar formula obtained by
+\cite{YangSava.geo.mixlag} for isotropic media, but for using the phase velocity instead of the isotropic velocity.

@@ -1,0 +1,27 @@
+% ------------------------------------------------------------
+\section{Extended imaging condition}
+
+Conventional seismic imaging methods share the assumption of single scattering at discontinuities in the subsurface.  Under this assumption, waves propagate from seismic sources, interact with discontinuities and return to the surface as reflected seismic waves. We commonly speak about a ``source'' wavefield, originating at the seismic source and propagating in the medium prior to any interaction with discontinuities, and a ``receiver'' wavefield, originating at discontinuities and propagating in the medium to the receivers \cite[]{Berkhout.1982,Claerbout.iei}. The two wavefields kinematically coincide at discontinuities. Any mismatch between the wavefields indicates inaccurate wavefield reconstruction typically assumed to be due to inaccurate velocity. In this context, we do not need to make geometrical assumptions about up- or down-going propagation, since waves can move in any direction as long as they scatter only once. We also do not need to make any assumption about how we reconstruct those two wavefields as long as the wave-equation used accurately describes wave propagation in the medium under consideration.
+
+We can formulate imaging as a process involving two steps: the wavefield reconstruction and the imaging condition. The key elements in this imaging procedure are the source and receiver wavefields, $\US$ and $\UR$, which depend on space $\xx$ and time $t$.  A conventional crosscorrelation imaging condition (cIC) based on the reconstructed wavefields can be formulated as the zero lag of the crosscorrelation between the source and receiver wavefields \cite[]{Claerbout.iei}:
+%
+\beq
+\label{eqn:CICw}
+\RR \ofx = \esum{shots} \esum{\ww}
+\CONJ{ \USw \ofxw }
+       \URw \ofxw ,
+\eeq
+%
+where $\RR$ represents the migrated image and the over-line represents complex conjugation. This operation exploits the fact that portions of the wavefields match kinematically at subsurface positions where discontinuities occur.
+
+An extended imaging condition preserves in the output image certain acquisition (e.g., source or receiver coordinates) or illumination (e.g., reflection angle) parameters \cite[]{GEO46-11-15591567,Claerbout.iei,GEO50-12-24582472,TLE18-08-09500952}. In shot-record migration, the source and receiver wavefields are reconstructed on the same computational grid at all locations in space and all times or frequencies, therefore there is no a-priori separation that can be transferred to the output image. In this situation, the separation can be constructed by local translations between the two wavefields, either in space \cite[]{RickettSava.geo.img,SavaFomel.segab2.2005}, or in time \cite[]{SavaFomel.geo.tsic} or in space and time. This separation essentially represents local crosscorrelation lags between the source and receiver wavefields. Thus, an extended crosscorrelation imaging condition (eIC) defines the image as a function of space and crosscorrelation lags in space \geouline{$\hh$} and time \geouline{$\tt$}:
+%
+\beq
+\label{eqn:EICw}
+\RR \lp \xx,\hh,   \tt \rp = \esum{shots} \esum{\ww} e^{2 i \ww \tt}
+\CONJ{ \USw \lp \xx-\hh, \ww \rp }
+       \URw \lp \xx+\hh, \ww \rp \;.
+\eeq
+%
+\rEq{CICw} represents a special case of \req{EICw} for $\hh=0$ and $\tt=0$.  The eIC defined by \req{EICw} can be used to analyze the accuracy of wavefield reconstruction.
+

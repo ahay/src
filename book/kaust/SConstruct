@@ -1,0 +1,13 @@
+from rsf.book import *
+
+Papers(copyr='KAUST',
+       group='SWAG',
+       papers=Split('''
+       introDTI/article.tex
+       '''),
+       authors = {'introDTI-article':'Tariq Alkhalifah and Paul Sava'},
+       line='Selected papers',
+       fig=('introDTI/Math','kz','width=\\textwidth'))
+       
+End(use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace')
+

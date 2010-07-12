@@ -1,3 +1,4 @@
+Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@total.com>
 William Burnett <will.burnett@gmail.com>
