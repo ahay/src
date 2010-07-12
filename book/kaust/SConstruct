@@ -9,5 +9,5 @@ Papers(copyr='KAUST',
        line='Selected papers',
        fig=('introDTI/Math','kz','width=\\textwidth'))
        
-End(use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace')
+End(use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,ulem,setspace')
 
