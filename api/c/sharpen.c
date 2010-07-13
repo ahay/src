@@ -92,7 +92,7 @@ void sf_csharpen(const sf_complex *pp)
 
     wmax = 0.;
     for (i=0; i < n; i++) {
-	ww[i] = cabs(pp[i]);
+	ww[i] = sf_cabsf(pp[i]);
 	if (ww[i] > wmax) wmax=ww[i];
     }
     wmin = FLT_EPSILON*wmax;
@@ -104,7 +104,7 @@ void sf_csharpen(const sf_complex *pp)
     }
   
     for (i=0; i < n; i++) {
-	wi = cabs(pp[i])+wmin;
+	wi = sf_cabsf(pp[i])+wmin;
 	ww[i] = expf(-0.5*wp*wp/(wi*wi));
     }
 }

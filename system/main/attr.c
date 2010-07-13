@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                     break;
 		case SF_COMPLEX:
 		    c=((sf_complex*)buf)[i];
-		    f=cabs(c);
+		    f=sf_cabsf(c);
 		    break;
 		case SF_UCHAR:
 		    f=(float) ((unsigned char*) buf)[i];

@@ -90,6 +90,18 @@ double complex sf_dcmplx(double re, double im)
     return c;
 }
 
+double sf_cabs(double complex c)
+/*< complex absolute value >*/
+{
+    return hypot(creal(c),cimag(c));
+}
+
+float sf_cabsf(float complex c)
+/*< complex absolute value >*/
+{
+    return hypotf(crealf(c),cimagf(c));
+}
+
 #else
 /*^*/
 
