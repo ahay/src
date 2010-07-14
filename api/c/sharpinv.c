@@ -105,7 +105,7 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
 	    if (verb) {		  	    
 		qdif = 0.;
 		for (i1=0; i1 < nq; i1++) {
-		    qdif += sf_cabsf(qq[i1]);
+		    qdif += sf_cabs(qq[i1]);
 		}
 
 		if (0==i) {

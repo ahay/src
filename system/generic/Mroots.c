@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	sf_complexread(e,n,poly);
 
 	for (m = n; m > 0; m--) {
-	    if (sf_cabsf(e[m-1]) > FLT_EPSILON) break;
+	    if (sf_cabs(e[m-1]) > FLT_EPSILON) break;
 	}
 	m--;
 

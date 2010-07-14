@@ -35,7 +35,6 @@
 #define cimag   sf_cimag
 #define conjf   sf_conjf
 #define cabsf   sf_cabsf
-#define cabs    sf_cabs
 #define cargf   sf_cargf
 #define carg    sf_carg
 #define ccosf   sf_ccosf
@@ -144,13 +143,6 @@ sf_double_complex sf_dcdiv(sf_double_complex a, sf_double_complex b)
 	c.i = (a.i*r-a.r)/den;
     }
     return c;
-}
-
-double sf_cabs(sf_double_complex z)
-/*< replacement for cabsf >*/
-{
-    extern double hypot(double,double);
-    return hypot(z.r,z.i);
 }
 
 double sf_carg(sf_double_complex z)
