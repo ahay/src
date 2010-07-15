@@ -114,18 +114,6 @@ sf_double_complex sf_dcmplx(double re, double im)
 #endif
 /*^*/
 
-#if !defined(__cplusplus)
-/*^*/
-
-float sf_cabs(float complex c)
-/*< complex absolute value >*/
-{
-    return hypotf(crealf(c),cimagf(c));
-}\
-
-#endif
-/*^*/
-
 #if !defined(__cplusplus) && !defined(SF_HAS_COMPLEX_H)
 /*^*/
 

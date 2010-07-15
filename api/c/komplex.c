@@ -35,6 +35,7 @@
 #define cimag   sf_cimag
 #define conjf   sf_conjf
 #define cabsf   sf_cabsf
+#define cabs    sf_cabsd
 #define cargf   sf_cargf
 #define carg    sf_carg
 #define ccosf   sf_ccosf
@@ -151,6 +152,25 @@ double sf_carg(sf_double_complex z)
     extern double atan2(double,double);
     return atan2(z.i,z.r);
 }
+
+double sf_cabsd(sf_double_complex z)
+/*< replacement for cabs >*/
+{
+    extern double hypot(double,double);
+    return hypot(z.r,z.i);
+}
+
+#endif
+/*^*/
+
+#if !defined(__cplusplus)
+/*^*/
+
+float sf_cabs(sf_complex c)
+/*< complex absolute value >*/
+{
+    return hypotf(crealf(c),cimagf(c));
+}\
 
 #endif
 /*^*/
@@ -286,6 +306,7 @@ float sf_cabsf(kiss_fft_cpx z)
 {
     return hypotf(z.r,z.i);
 }
+
 
 float sf_cargf(kiss_fft_cpx z)
 /*< replacement for cargf >*/
