@@ -242,12 +242,18 @@ class Project(Environment):
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
-
+        
         minesjtk = self.get('MINESJTK')
         if minesjtk:
+            usercpath = os.environ.get('CLASSPATH','')
+            rsfcpath = os.path.join(libdir,'rsf.jar')
+            if usercpath == '':
+                self.Append(ENV={'CLASSPATH':'%s:%s:.' % (minesjtk,rsfcpath)})
+            else:
+                self.Append(ENV={'CLASSPATH':'%s:%s:%s:.' % (minesjtk,rsfcpath,usercpath)})    
             self.Append(JAVACLASSPATH=':'.join([os.path.join(libdir,'rsf.jar'),
-                                                minesjtk]))
-
+                                                minesjtk,usercpath]))
+           
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',
                 'cygwin': '/usr/X11R6/bin'}
