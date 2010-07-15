@@ -384,11 +384,17 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
 
 ################################################################################
 
-def add_ext_static_lib(env, libnm, root=None):
+def add_ext_lib(env, libnm, root=None, libdir='lib', static=True):
 
     if not root:
         root = env.get('RSFROOT',os.environ.get('RSFROOT'))
-    env['LIBS'].append(File(os.path.join(root,'lib','lib'+libnm+'.a')))
+
+    if static:
+        ext = '.a'
+    else:
+        ext = '.so'
+
+    env['LIBS'].append(File(os.path.join(root, libdir, 'lib'+libnm+ext)))
     env['CPPPATH'].append(os.path.join(root,'include'))
 
 ################################################################################
