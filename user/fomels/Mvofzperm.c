@@ -1,4 +1,4 @@
-/* Constant-velocity prestack exploditing reflector. */
+/* V(z) prestack exploditing reflector. */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -89,23 +89,12 @@ int main(int argc, char* argv[])
     img = sf_floatalloc2(nz,nx);
     dat = sf_floatalloc2(nh,nx);
 
-    prev = sf_floatalloc3(nh,nx,nz);
-    curr = sf_floatalloc3(nh,nx,nz);
+    curr = sf_floatalloc3(nz,nh,nx);
 
-    if (!sf_getfloat("v",&v)) sf_error("Need v=");
-    /* velocity */
-
-    v *= SF_PI*dt;
-
-    dx = cosft_dk(nx,dx);
-    dz = cosft_dk(nz,dz);
-    dh = cosft_dk(nh,dh);
-
-    for (iz=0; iz < nz; iz++) {
-	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {
-		prev[iz][ix][ih] = 0.;
-		curr[iz][ix][ih] = 0.;
+    for (ix=0; ix < nx; ix++) {
+	for (ih=0; ih < nh; ih++) {
+	    for (iz=0; iz < nz; iz++) {
+		curr[ix][ih][iz] = 0.;
 	    }
 	}
     }
@@ -129,10 +118,10 @@ int main(int argc, char* argv[])
 	/* Initialize model */
 	for (iz=1; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
-		curr[iz][ix][0] = img[ix][iz];
+		curr[ix][0][iz] = img[ix][iz];
 	    }
 	}
-	cosft3(false,nh,nx,nz,curr);
+	cosft12(false,nz,nh,nx,curr);
 	
 	/* step forward in time */
 	it1 = 0;
@@ -156,26 +145,16 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	for (iz=1; iz < nz; iz++) {
-	    kz = iz*dz;
-	    for (ix=0; ix < nx; ix++) {
-		kx = ix*dx;
-		x = (kz*kz+kx*kx)/kz;
-		for (ih=0; ih < nh; ih++) {
-		    kh = ih*dh;
-		    h = (kz*kz+kh*kh)/kz;
-		    
-		    c = curr[iz][ix][ih];
-
-		    if (mig) {
-			c += (iz==nz-1)? dat[ix][ih]*0.5: dat[ix][ih];
-		    } else {
-			dat[ix][ih] += (iz==nz-1)? c*0.5: c;
-		    }
-
-		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
-		    prev[iz][ix][ih] = c;
+	for (ix=0; ix < nx; ix++) {
+	    for (ih=0; ih < nh; ih++) {		
+		if (mig) {
+		    curr[ix][ih][0] += dat[ix][ih];
+		} else {
+		    dat[ix][ih] += curr[ix][ih][0];
 		}
+		
+		ik = ih + ix*nh;
+		lowrank1_step(siz[ik][0],siz[ik][1],lft[ik],mid[ik],rht[ik],curr);
 	    }
 	}
 
@@ -187,10 +166,10 @@ int main(int argc, char* argv[])
     sf_warning(".");
 
     if (mig) {
-	for (iz=1; iz < nz; iz++) {
-	    for (ix=0; ix < nx; ix++) {
-		for (ih=0; ih < nh; ih++) {
-		    c = curr[iz][ix][ih];
+	for (ix=0; ix < nx; ix++) {
+	    for (ih=0; ih < nh; ih++) {
+		for (iz=1; iz < nz; iz++) {
+		    c = curr[ix][ih][iz];
 		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
 		}
 	    }

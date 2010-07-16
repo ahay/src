@@ -239,11 +239,12 @@ static void outline_window (void);
 static void update_color (void);
 static void getvpstring (void);
 static int getpolygon (int npts);
+static void fill_background (void);
 
 void gen_dovplot (int nn, FILE **inpltin, char** innames)
 /*< Call dovplot, cycling through the input plot files >*/
 {
-int             ii;
+    int             ii;
 
     for (ii = 0; ii < nn; ii++)
     {
@@ -262,37 +263,37 @@ int             ii;
 void dovplot (void)
 /*< do vplot >*/
 {
-int             i, j, k, c;
-int             key, size, npts;
-int             nmul;
-int             nx, ny, nx_orig, ny_orig;
-int             orient, ras_orient;
-register int   *ptr=NULL;
-int             nx_mult, ny_mult;
-int             nx_temp, ny_temp;
-int            *tempbuf, *ptemp;
-vp_plotstyle    new_style;
-int             starterase = 0;
-int             hacol[NHATCH * 2], hafat[NHATCH * 2], haoff[NHATCH * 2],
-                hasiz[NHATCH * 2], numhatch;
-float           angle, xrasmult, yrasmult;
-int             xpix, ypix, num_pat, num_byte;
-int             yrast, lastrast;
-int             xvr_min, xvr_max, yvr_min, yvr_max;
-int             xr_min, xr_max, yr_min, yr_max;
-int             xvru_min, xvru_max, yvru_min, yvru_max;
-int             xru_min, yru_max;
-int             xxx[4], yyy[4];
-int             pos, ii, jj, kk, num_rep, ras_offset, dither_it;
-unsigned char  *rasterline, *rasterline2, **outraster, **outraster2;
-unsigned char   ibyte;
-int             xnewer, ynewer;
-int             xtext0, xtext1, xtext2, ytext0, ytext1, ytext2;
-int             type;
-int            *marker_vec, *mvec;
-int             savefat;
-float           savefatmult;
-char            string[MAXFLEN + 1];
+    int             i, j, k, c;
+    int             key, size, npts;
+    int             nmul;
+    int             nx, ny, nx_orig, ny_orig;
+    int             orient, ras_orient;
+    register int   *ptr=NULL;
+    int             nx_mult, ny_mult;
+    int             nx_temp, ny_temp;
+    int            *tempbuf, *ptemp;
+    vp_plotstyle    new_style;
+    int             starterase = 0;
+    int             hacol[NHATCH * 2], hafat[NHATCH * 2], haoff[NHATCH * 2],
+	hasiz[NHATCH * 2], numhatch;
+    float           angle, xrasmult, yrasmult;
+    int             xpix, ypix, num_pat, num_byte;
+    int             yrast, lastrast;
+    int             xvr_min, xvr_max, yvr_min, yvr_max;
+    int             xr_min, xr_max, yr_min, yr_max;
+    int             xvru_min, xvru_max, yvru_min, yvru_max;
+    int             xru_min, yru_max;
+    int             xxx[4], yyy[4];
+    int             pos, ii, jj, kk, num_rep, ras_offset, dither_it;
+    unsigned char  *rasterline, *rasterline2, **outraster, **outraster2;
+    unsigned char   ibyte;
+    int             xnewer, ynewer;
+    int             xtext0, xtext1, xtext2, ytext0, ytext1, ytext2;
+    int             type;
+    int            *marker_vec, *mvec;
+    int             savefat;
+    float           savefatmult;
+    char            string[MAXFLEN + 1];
 
     /*
      * Check to make sure we really got anything before we claim we've made a
@@ -449,877 +450,886 @@ char            string[MAXFLEN + 1];
     {
 	switch (c)		/* command list */
 	{
-	case VP_SETSTYLE:	/* set the style */
-	    c = getc (pltin);
-	    if ((c == 'r') || (c == 'R') || (c == 'm') || (c == 'M'))
-		new_style = VP_ROTATED;
-	    else if ((c == 'o') || (c == 'O'))
-		new_style = VP_OLD;
-	    else if ((c == 'a') || (c == 'A'))
-		new_style = VP_ABSOLUTE;
-	    else
-		new_style = VP_STANDARD;
-	    setstyle (new_style);
+	    case VP_SETSTYLE:	/* set the style */
+		c = getc (pltin);
+		if ((c == 'r') || (c == 'R') || (c == 'm') || (c == 'M'))
+		    new_style = VP_ROTATED;
+		else if ((c == 'o') || (c == 'O'))
+		    new_style = VP_OLD;
+		else if ((c == 'a') || (c == 'A'))
+		    new_style = VP_ABSOLUTE;
+		else
+		    new_style = VP_STANDARD;
+		setstyle (new_style);
 
-	    if (framewindows)
-		outline_window ();
+		if (framewindows)
+		    outline_window ();
 
-	    break;
-	case VP_MOVE:		/* move */
-	    /*
-	     * Reset position in dash pattern.
-	     */
-	    dashpos = 0.;
-
-	    GETXY (xold, yold);
-	    break;
-	case VP_DRAW:		/* draw */
-	    GETXY (xnew, ynew);
-	    update_color ();
-	    while ((c = getc (pltin)) == VP_DRAW)
-	    {
-		GETXY (xnewer, ynewer);
+		break;
+	    case VP_MOVE:		/* move */
 		/*
-		 * Is it the same point?
+		 * Reset position in dash pattern.
 		 */
-		if (xnewer == xnew && ynewer == ynew)
-		    continue;
-		/*
-		 * Is it colinear and horizontal or vertical?
-		 */
-		if ((ynewer == ynew && ynew == yold &&
-		     ((xnewer > xnew) == (xnew > xold))) ||
-		    (xnewer == xnew && xnew == xold &&
-		     ((ynewer > ynew) == (ynew > yold))))
+		dashpos = 0.;
+
+		GETXY (xold, yold);
+		break;
+	    case VP_DRAW:		/* draw */
+		GETXY (xnew, ynew);
+		update_color ();
+		while ((c = getc (pltin)) == VP_DRAW)
 		{
-		    ynew = ynewer;
+		    GETXY (xnewer, ynewer);
+		    /*
+		     * Is it the same point?
+		     */
+		    if (xnewer == xnew && ynewer == ynew)
+			continue;
+		    /*
+		     * Is it colinear and horizontal or vertical?
+		     */
+		    if ((ynewer == ynew && ynew == yold &&
+			 ((xnewer > xnew) == (xnew > xold))) ||
+			(xnewer == xnew && xnew == xold &&
+			 ((ynewer > ynew) == (ynew > yold))))
+		    {
+			ynew = ynewer;
+			xnew = xnewer;
+			continue;
+		    }
+		    dev.vector (xold, yold, xnew, ynew, fat, dashon);
+		    xold = xnew;
+		    yold = ynew;
 		    xnew = xnewer;
-		    continue;
+		    ynew = ynewer;
 		}
 		dev.vector (xold, yold, xnew, ynew, fat, dashon);
 		xold = xnew;
 		yold = ynew;
-		xnew = xnewer;
-		ynew = ynewer;
-	    }
-	    dev.vector (xold, yold, xnew, ynew, fat, dashon);
-	    xold = xnew;
-	    yold = ynew;
-	    if (c == EOF)
-		goto End_of_file;
-	    ungetc ((char) c, pltin);
-	    break;
-	case VP_PLINE:		/* polyline */
-	    /*
-	     * Reset position in dash pattern.
-	     */
-	    dashpos = 0.;
+		if (c == EOF)
+		    goto End_of_file;
+		ungetc ((char) c, pltin);
+		break;
+	    case VP_PLINE:		/* polyline */
+		/*
+		 * Reset position in dash pattern.
+		 */
+		dashpos = 0.;
 
-	    npts = geth (pltin);
-	    if (npts == 0)
-		break;
-	    GETXY (xold, yold);
-	    npts--;
-	    if (npts == 0)
-		break;
-	    GETXY (xnew, ynew);
-	    npts--;
-	    update_color ();
-	    while (npts > 0)
-	    {
-		GETXY (xnewer, ynewer);
+		npts = geth (pltin);
+		if (npts == 0)
+		    break;
+		GETXY (xold, yold);
 		npts--;
-		/*
-		 * Is it the same point?
-		 */
-		if (xnewer == xnew && ynewer == ynew)
-		    continue;
-		/*
-		 * Is it colinear and horizontal or vertical?
-		 */
-		if ((ynewer == ynew && ynew == yold &&
-		     ((xnewer > xnew) == (xnew > xold))) ||
-		    (xnewer == xnew && xnew == xold &&
-		     ((ynewer > ynew) == (ynew > yold))))
+		if (npts == 0)
+		    break;
+		GETXY (xnew, ynew);
+		npts--;
+		update_color ();
+		while (npts > 0)
 		{
-		    ynew = ynewer;
+		    GETXY (xnewer, ynewer);
+		    npts--;
+		    /*
+		     * Is it the same point?
+		     */
+		    if (xnewer == xnew && ynewer == ynew)
+			continue;
+		    /*
+		     * Is it colinear and horizontal or vertical?
+		     */
+		    if ((ynewer == ynew && ynew == yold &&
+			 ((xnewer > xnew) == (xnew > xold))) ||
+			(xnewer == xnew && xnew == xold &&
+			 ((ynewer > ynew) == (ynew > yold))))
+		    {
+			ynew = ynewer;
+			xnew = xnewer;
+			continue;
+		    }
+		    dev.vector (xold, yold, xnew, ynew, fat, dashon);
+		    xold = xnew;
+		    yold = ynew;
 		    xnew = xnewer;
-		    continue;
+		    ynew = ynewer;
 		}
 		dev.vector (xold, yold, xnew, ynew, fat, dashon);
 		xold = xnew;
 		yold = ynew;
-		xnew = xnewer;
-		ynew = ynewer;
-	    }
-	    dev.vector (xold, yold, xnew, ynew, fat, dashon);
-	    xold = xnew;
-	    yold = ynew;
-	    break;
-	case VP_PMARK:		/* polymarker */
-	    npts = geth (pltin);/* how many markers ? */
-	    type = geth (pltin);/* what symbol? (any positive integer) */
-	    size = geth (pltin);/* How big? */
-	    size = size * mkscale * vdevscale * RPERIN / TXPERIN;
-
-	    if (npts == 0)
 		break;
-	    /* allocate space for the points */
-	    marker_vec = (int *) malloc ((unsigned) (npts * 2 * sizeof (int)));
-	    mvec = marker_vec;
-	    if (mvec == NULL)
-		ERR (FATAL, name, "Can't malloc memory for markers!");
+	    case VP_PMARK:		/* polymarker */
+		npts = geth (pltin);/* how many markers ? */
+		type = geth (pltin);/* what symbol? (any positive integer) */
+		size = geth (pltin);/* How big? */
+		size = size * mkscale * vdevscale * RPERIN / TXPERIN;
 
-	    /* read the locations, and transform them to device coordinates */
-	    for (ii = 0; ii < npts; ii++)
-	    {
-		GETXY (xnewer, ynewer);
-		*mvec = xnewer;
-		++mvec;
-		*mvec = ynewer;
-		++mvec;
-	    }
-	    update_color ();
-	    /* call the device routine to display the markers */
-	    dev.marker (npts, type, size, marker_vec);
-	    /* release the storage used for the points */
-	    free ((char *) marker_vec);
-	    break;
-	case VP_ORIGIN:	/* set origin */
-	    dev.xorigin = geth (pltin);
-	    dev.yorigin = geth (pltin);
-	    break;
-	case VP_BEGIN_GROUP:
-	    ii = ftell (pltin) - 1;
-	    getvpstring ();
-	    strncpy (group_name, txbuffer, MAXFLEN);
-	    dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
-	    group_number++;
-	    break;
-	case VP_END_GROUP:
-	    group_number--;
-	    if (group_number < 1)
-	    {
-		ERR (WARN, name,
-		     "group invalidly nested");
-		group_number = 1;
-	    }
-	    else
-	    {
-		dev.attributes (END_GROUP, group_number, USER_EGROUP, 0, 0);
-	    }
-	    break;
-	case VP_GTEXT:		/* GKS-like text */
-	    xtext0 = 0;
-	    ytext0 = 0;
-	    vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
-	    GETXY_TEXT (xtext1, ytext1);
-	    GETXY_TEXT (xtext2, ytext2);
-    g_text:
-	    xtext1 -= xtext0;
-	    xtext2 -= xtext0;
-	    ytext1 -= ytext0;
-	    ytext2 -= ytext0;
+		if (npts == 0)
+		    break;
+		/* allocate space for the points */
+		marker_vec = (int *) malloc ((unsigned) (npts * 2 * sizeof (int)));
+		mvec = marker_vec;
+		if (mvec == NULL)
+		    ERR (FATAL, name, "Can't malloc memory for markers!");
 
-	    savefat = fat;
-	    savefatmult = fatmult;
-	    fatmult *= txscale;
-	    if (ifat >= 0)
-	    {
-		fat = fatmult * (float) (ifat + fatbase);
-	    }
-	    else
-	    {
-		fat = -1;
-	    }
-	    update_color ();
-	    getvpstring ();
+		/* read the locations, and transform them to device coordinates */
+		for (ii = 0; ii < npts; ii++)
+		{
+		    GETXY (xnewer, ynewer);
+		    *mvec = xnewer;
+		    ++mvec;
+		    *mvec = ynewer;
+		    ++mvec;
+		}
+		update_color ();
+		/* call the device routine to display the markers */
+		dev.marker (npts, type, size, marker_vec);
+		/* release the storage used for the points */
+		free ((char *) marker_vec);
+		break;
+	    case VP_ORIGIN:	/* set origin */
+		dev.xorigin = geth (pltin);
+		dev.yorigin = geth (pltin);
+		break;
+	    case VP_BEGIN_GROUP:
+		ii = ftell (pltin) - 1;
+		getvpstring ();
+		strncpy (group_name, txbuffer, MAXFLEN);
+		dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
+		group_number++;
+		break;
+	    case VP_END_GROUP:
+		group_number--;
+		if (group_number < 1)
+		{
+		    ERR (WARN, name,
+			 "group invalidly nested");
+		    group_number = 1;
+		}
+		else
+		{
+		    dev.attributes (END_GROUP, group_number, USER_EGROUP, 0, 0);
+		}
+		break;
+	    case VP_GTEXT:		/* GKS-like text */
+		xtext0 = 0;
+		ytext0 = 0;
+		vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
+		GETXY_TEXT (xtext1, ytext1);
+		GETXY_TEXT (xtext2, ytext2);
+	    g_text:
+		xtext1 -= xtext0;
+		xtext2 -= xtext0;
+		ytext1 -= ytext0;
+		ytext2 -= ytext0;
+
+		savefat = fat;
+		savefatmult = fatmult;
+		fatmult *= txscale;
+		if (ifat >= 0)
+		{
+		    fat = fatmult * (float) (ifat + fatbase);
+		}
+		else
+		{
+		    fat = -1;
+		}
+		update_color ();
+		getvpstring ();
 /*
  * Fonts less than NUMGENFONT reserved for gentext fonts:
  * up to the device to enforce that rule, though.
  */
-	    dev.text (txbuffer,
-		      txscale * (float) xtext1 / TEXTVECSCALE,
-		      txscale * (float) ytext1 / TEXTVECSCALE,
-		      txscale * (float) xtext2 / TEXTVECSCALE,
-		      txscale * (float) ytext2 / TEXTVECSCALE);
-	    fat = savefat;
-	    fatmult = savefatmult;
-	    break;
-	case VP_TEXT:		/* text */
-	    size = geth (pltin);
-	    size = size * (float) RPERIN / (float) TXPERIN;
-	    orient = (int) geth (pltin);
-    new_text:
-	    xtext0 = 0;
-	    ytext0 = 0;
-	    /* Character path direction */
-	    xtext1 =
-	     ROUND (TEXTVECSCALE * size * cos (orient * 3.14159 / 180.));
-	    ytext1 =
-	     ROUND (TEXTVECSCALE * size * sin (orient * 3.14159 / 180.));
-	    /* Character up vector direction */
-	    orient += 90;
-	    xtext2 =
-	     ROUND (TEXTVECSCALE * size * cos (orient * 3.14159 / 180.));
-	    ytext2 =
-	     ROUND (TEXTVECSCALE * size * sin (orient * 3.14159 / 180.));
-	    vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
-	    vptodevxy_text (xtext1, ytext1, &xtext1, &ytext1);
-	    vptodevxy_text (xtext2, ytext2, &xtext2, &ytext2);
-	    goto g_text;
-	    break;
-	case VP_OLDTEXT:	/* archaic format text */
-	    if ((key = geth (pltin)) < 0)
-		ERR (FATAL, name, "invalid text key");
-	    size = (key & 037);
-	    size = size * (float) RPERIN / (float) TXPERIN;
-	    orient = (int) (((key & 0140) >> 5) * 90);
-	    goto new_text;
-	    break;
-	case VP_OLDAREA:	/* polygon */
-	    npts = geth (pltin);
-	    afat = geth (pltin);
-	    if (afat >= 0)
-	    {
-		afat = fatmult * (fatbase + afat);
-	    }
-	    nx_temp = geth (pltin);
-	    ny_temp = geth (pltin);
+		dev.text (txbuffer,
+			  txscale * (float) xtext1 / TEXTVECSCALE,
+			  txscale * (float) ytext1 / TEXTVECSCALE,
+			  txscale * (float) xtext2 / TEXTVECSCALE,
+			  txscale * (float) ytext2 / TEXTVECSCALE);
+		fat = savefat;
+		fatmult = savefatmult;
+		break;
+	    case VP_TEXT:		/* text */
+		size = geth (pltin);
+		size = size * (float) RPERIN / (float) TXPERIN;
+		orient = (int) geth (pltin);
+	    new_text:
+		xtext0 = 0;
+		ytext0 = 0;
+		/* Character path direction */
+		xtext1 =
+		    ROUND (TEXTVECSCALE * size * cos (orient * 3.14159 / 180.));
+		ytext1 =
+		    ROUND (TEXTVECSCALE * size * sin (orient * 3.14159 / 180.));
+		/* Character up vector direction */
+		orient += 90;
+		xtext2 =
+		    ROUND (TEXTVECSCALE * size * cos (orient * 3.14159 / 180.));
+		ytext2 =
+		    ROUND (TEXTVECSCALE * size * sin (orient * 3.14159 / 180.));
+		vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
+		vptodevxy_text (xtext1, ytext1, &xtext1, &ytext1);
+		vptodevxy_text (xtext2, ytext2, &xtext2, &ytext2);
+		goto g_text;
+		break;
+	    case VP_OLDTEXT:	/* archaic format text */
+		if ((key = geth (pltin)) < 0)
+		    ERR (FATAL, name, "invalid text key");
+		size = (key & 037);
+		size = size * (float) RPERIN / (float) TXPERIN;
+		orient = (int) (((key & 0140) >> 5) * 90);
+		goto new_text;
+		break;
+	    case VP_OLDAREA:	/* polygon */
+		npts = geth (pltin);
+		afat = geth (pltin);
+		if (afat >= 0)
+		{
+		    afat = fatmult * (fatbase + afat);
+		}
+		nx_temp = geth (pltin);
+		ny_temp = geth (pltin);
 
 /*
  * If a monochrome device, then fill with dot pattern.
  * If a color device, fill with solid color.
  */
-	    nx = nx_temp * patternmult;
-	    if (nx_temp == 1 || (nx_temp > 0 && nx == 0))
-		nx = 1;
-	    ny = ny_temp * patternmult;
-	    if (ny_temp == 1 || (ny_temp > 0 && ny == 0))
-		ny = 1;
+		nx = nx_temp * patternmult;
+		if (nx_temp == 1 || (nx_temp > 0 && nx == 0))
+		    nx = 1;
+		ny = ny_temp * patternmult;
+		if (ny_temp == 1 || (ny_temp > 0 && ny == 0))
+		    ny = 1;
 
-	    nx_orig = nx;
-	    ny_orig = ny;
+		nx_orig = nx;
+		ny_orig = ny;
 
-	    if (!mono)
-	    {
-		if (nx_temp == 0 || ny_temp == 0)
+		if (!mono)
 		{
-		    nx = 0;
-		    ny = 0;
+		    if (nx_temp == 0 || ny_temp == 0)
+		    {
+			nx = 0;
+			ny = 0;
+		    }
+		    else
+		    {
+			nx = 1;
+			ny = 1;
+		    }
+		}
+		/*
+		 * Create a temporary pattern
+		 */
+		ipat = 0;
+		if (nx * ny > 0)
+		{
+		    if ((ptr = (int *) calloc ((unsigned) nx * ny, sizeof (int))) == NULL)
+			ERR (FATAL, name, "cannot alloc memory to load pattern");
+		    pat[ipat].patbits = ptr;
+		    ptr[(nx * ny) - 1] = cur_color;
 		}
 		else
-		{
-		    nx = 1;
-		    ny = 1;
-		}
-	    }
-	    /*
-	     * Create a temporary pattern
-	     */
-	    ipat = 0;
-	    if (nx * ny > 0)
-	    {
-		if ((ptr = (int *) calloc ((unsigned) nx * ny, sizeof (int))) == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load pattern");
-		pat[ipat].patbits = ptr;
-		ptr[(nx * ny) - 1] = cur_color;
-	    }
-	    else
-		pat[ipat].patbits = NULL;
+		    pat[ipat].patbits = NULL;
 
-	    pat[ipat].xdim = nx;
-	    pat[ipat].ydim = ny;
-	    pat[ipat].xdim_orig = nx_orig;
-	    pat[ipat].ydim_orig = ny_orig;
-	    npts = getpolygon (npts);
-	    update_color ();
-
-/* Do the polygon */
-	    if (npts > 2 && shade && nx > 0 && ny > 0)
-		dev.area (npts, vxbuffer);
-
-/* And then its border */
-	    if (afat >= 0)
-		vecoutline (vxbuffer);
-
-	    if (nx * ny > 0)
-		free ((char *) ptr);
-	    break;
-	case VP_AREA:		/* polygon fill */
-	    npts = geth (pltin);
-	    ipat = pat_color;
-
-	    if (pat[ipat].patbits == NULL && shade)
-	    {
-		/*
-		 * Create a default pattern (solid fill with this color) If
-		 * you don't like this default for a particular device, ie, a
-		 * black and white one, then the device itself can set up
-		 * defaults for colors 0 through 7 in dev.open
-		 */
-		nx = 1;
-		ny = 1;
-
-		if ((ptr = (int *) calloc ((unsigned) nx * ny, sizeof (int))) == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load pattern");
-		pat[ipat].patbits = ptr;
-		ptr[(nx * ny) - 1] = cur_color;
 		pat[ipat].xdim = nx;
 		pat[ipat].ydim = ny;
-		pat[ipat].xdim_orig = nx;
-		pat[ipat].ydim_orig = ny;
-	    }
-
-	    npts = getpolygon (npts);
-
-	    if (!shade)
-	    {
-		/* At least draw the boundary to show where it is */
-		afat = 0;
+		pat[ipat].xdim_orig = nx_orig;
+		pat[ipat].ydim_orig = ny_orig;
+		npts = getpolygon (npts);
 		update_color ();
-		vecoutline (vxbuffer);
-	    }
-	    else
-	    {
-		/* See whether raster or hatch area */
-		if (pat[ipat].xdim >= 0)
-		{
-		    /* raster */
-		    if (npts > 2 && pat[ipat].ydim > 0 && pat[ipat].xdim > 0)
-		    {
-			update_color ();
-			dev.area (npts, vxbuffer);
-		    }
-		}
-		else
-		{
-		    /* hatch */
-		    numhatch = -pat[ipat].xdim;
-		    angle = 3.14159 * pat[ipat].ydim / 180.;
-		    ptr = pat[ipat].patbits;
-		    for (i = 0; i < numhatch * 2; i++)
-		    {
-			hafat[i] = (*ptr++);
-			hacol[i] = (*ptr++);
-			haoff[i] = (*ptr++);
-			hasiz[i] = (*ptr++);
-		    }
-		    if (npts > 2)
-		    {
-			/*
-			 * Hatch patterns don't rotate. The polygon does, the
-			 * fill pattern doesn't.
-			 */
-			genhatch (npts, numhatch, angle, hafat, hacol, haoff, hasiz, vxbuffer);
-		    }
-		}
-	    }
-	    break;
-	case VP_FAT:		/* fat */
-	    /*
-	     * negative fat always means to not draw the line at all.
-	     */
-	    ifat = geth (pltin);
-	    if (ifat >= 0)
-	    {
-		fat = fatmult * (float) (ifat + fatbase);
-	    }
-	    else
-	    {
-		fat = -1;
-	    }
-	    dev.attributes (NEW_FAT, fat, 0, 0, 0);
-	    break;
-	case VP_COLOR:		/* change color */
-	    pat_color = geth (pltin);
-	    if (pat_color > MAX_COL || pat_color < 0)
-	    {
-		ERR (WARN, name, "bad color number %d (max %d, min 0)",
-		     pat_color, MAX_COL);
-		pat_color = DEFAULT_COLOR;
-	    }
-	    next_color = COLOR_MAP (pat_color);
-	    if (next_color != cur_color)
-	    {
-		cur_color = next_color;
-		need_devcolor = YES;
-	    }
-	    /*
-	     * Pattern zero reserved for the OLD_AREA command, so increment
-	     * the rest by one to make room.
-	     */
-	    pat_color++;
-	    break;
-	case VP_SET_COLOR_TABLE:	/* set color table entry */
-	    set_table();
-	    break;
-	case VP_PURGE:		/* purge pltout buffers */
-	    dev.close (CLOSE_FLUSH);
-	    break;
-	case VP_BREAK:		/* break */
-	    if (dev.brake == BREAK_IGNORE)
+
+/* Do the polygon */
+		if (npts > 2 && shade && nx > 0 && ny > 0)
+		    dev.area (npts, vxbuffer);
+
+/* And then its border */
+		if (afat >= 0)
+		    vecoutline (vxbuffer);
+
+		if (nx * ny > 0)
+		    free ((char *) ptr);
 		break;
-	    /* NOTE break IS IN AN "if": WE USUALLY FALL THROUGH HERE! */
-	case VP_ERASE:		/* erase (and break falls through here too) */
-	    dev.close (CLOSE_FLUSH);
+	    case VP_AREA:		/* polygon fill */
+		npts = geth (pltin);
+		ipat = pat_color;
 
-	    /*
-	     * Erases and breaks can't occur inside groups.
-	     */
-	    group_number--;
-	    if (group_number != 0)
-	    {
-		ERR (WARN, name,
-		     "group contains erase or break");
-		group_number = 0;
-	    }
-	    else
-	    {
-		if (erase & DO_LITERALS)
+		if (pat[ipat].patbits == NULL && shade)
 		{
-		    if (c == VP_ERASE || dev.brake)
-			dev.attributes (END_GROUP, group_number, ERASE_EGROUP, 0, 0);
+		    /*
+		     * Create a default pattern (solid fill with this color) If
+		     * you don't like this default for a particular device, ie, a
+		     * black and white one, then the device itself can set up
+		     * defaults for colors 0 through 7 in dev.open
+		     */
+		    nx = 1;
+		    ny = 1;
+
+		    if ((ptr = (int *) calloc ((unsigned) nx * ny, sizeof (int))) == NULL)
+			ERR (FATAL, name, "cannot alloc memory to load pattern");
+		    pat[ipat].patbits = ptr;
+		    ptr[(nx * ny) - 1] = cur_color;
+		    pat[ipat].xdim = nx;
+		    pat[ipat].ydim = ny;
+		    pat[ipat].xdim_orig = nx;
+		    pat[ipat].ydim_orig = ny;
+		}
+
+		npts = getpolygon (npts);
+
+		if (!shade)
+		{
+		    /* At least draw the boundary to show where it is */
+		    afat = 0;
+		    update_color ();
+		    vecoutline (vxbuffer);
+		}
+		else
+		{
+		    /* See whether raster or hatch area */
+		    if (pat[ipat].xdim >= 0)
+		    {
+			/* raster */
+			if (npts > 2 && pat[ipat].ydim > 0 && pat[ipat].xdim > 0)
+			{
+			    update_color ();
+			    dev.area (npts, vxbuffer);
+			}
+		    }
 		    else
-			dev.attributes (END_GROUP, group_number, BREAK_EGROUP, 0, 0);
+		    {
+			/* hatch */
+			numhatch = -pat[ipat].xdim;
+			angle = 3.14159 * pat[ipat].ydim / 180.;
+			ptr = pat[ipat].patbits;
+			for (i = 0; i < numhatch * 2; i++)
+			{
+			    hafat[i] = (*ptr++);
+			    hacol[i] = (*ptr++);
+			    haoff[i] = (*ptr++);
+			    hasiz[i] = (*ptr++);
+			}
+			if (npts > 2)
+			{
+			    /*
+			     * Hatch patterns don't rotate. The polygon does, the
+			     * fill pattern doesn't.
+			     */
+			    genhatch (npts, numhatch, angle, hafat, hacol, haoff, hasiz, vxbuffer);
+			}
+		    }
 		}
-		else
-		    dev.attributes (END_GROUP, group_number, IGNORE_EGROUP, 0, 0);
-	    }
-
-	    if (epause < 0)
-	    {
-		message (MESG_ERASE,NULL);
-		message (MESG_ON,NULL);
-		message (MESG_HOME,NULL);
-		message (MESG_READY,NULL);
-		message (MESG_HIGHLIGHT_ON,NULL);
-		message (MESG_TEXT, "Type Return to Continue...  ");
-		message (MESG_DONE,NULL);
-		ii = dev.interact (INT_PAUSE, controltty, string);
-		if (ii == DOVPLOT_EXIT)
-		    return;
-		message (MESG_HIGHLIGHT_OFF,NULL);
-		message (MESG_DONE,NULL);
-		message (MESG_OFF,NULL);
-		message (MESG_ERASE,NULL);
-	    }
-	    else
-	    {
-		if (epause > 0)
-		    sleep ((unsigned) epause);
-	    }
-	    /*
-	     * Inquire point back from device
-	     */
-	    if (interact[0] != '\0')
-	    {
-		getapoint ();
-	    }
-
-	    if (erase & DO_LITERALS) {
-		if ((c == VP_ERASE) || dev.brake)
+		break;
+	    case VP_FAT:		/* fat */
+		/*
+		 * negative fat always means to not draw the line at all.
+		 */
+		ifat = geth (pltin);
+		if (ifat >= 0)
 		{
-		    dev.erase (ERASE_MIDDLE);
-		    nplots++;
+		    fat = fatmult * (float) (ifat + fatbase);
 		}
 		else
 		{
-		    dev.erase (ERASE_BREAK);
-		    nplots++;
+		    fat = -1;
 		}
-	    }
-
-	    new_style = default_style;
-	    setstyle (new_style);
-	    reset ();
-
-	    /*
-	     * Start a new group level 0 to contain the next frame (separated
-	     * from the previous one by either an erase or break)
-	     */
-	    ii = ftell (pltin);
-	    sprintf (group_name, "%s.%d", pltname, nplots);
-	    dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
-	    group_number++;
-
-	    if (framewindows)
-		outline_window ();
-
-	    break;
-	case VP_WINDOW:	/* window */
-	    if (window)
-	    {
-		xwmin = geth (pltin);
-		ywmin = geth (pltin);
-		xwmax = geth (pltin);
-		ywmax = geth (pltin);
-
-		if (xwmin > xwmax || ywmin > ywmax)
+		dev.attributes (NEW_FAT, fat, 0, 0, 0);
+		break;
+	    case VP_COLOR:		/* change color */
+		pat_color = geth (pltin);
+		if (pat_color > MAX_COL || pat_color < 0)
 		{
+		    ERR (WARN, name, "bad color number %d (max %d, min 0)",
+			 pat_color, MAX_COL);
+		    pat_color = DEFAULT_COLOR;
+		}
+		next_color = COLOR_MAP (pat_color);
+		if (next_color != cur_color)
+		{
+		    cur_color = next_color;
+		    need_devcolor = YES;
+		}
+		/*
+		 * Pattern zero reserved for the OLD_AREA command, so increment
+		 * the rest by one to make room.
+		 */
+		pat_color++;
+		break;
+	    case VP_SET_COLOR_TABLE:	/* set color table entry */
+		set_table();
+		break;
+	    case VP_PURGE:		/* purge pltout buffers */
+		dev.close (CLOSE_FLUSH);
+		break;
+	    case VP_BACKGROUND:
+		if (honor_background) {
+		    if (dev.smart_background) {
+			dev.erase (ERASE_BACKGROUND);
+		    } else {
+			fill_background();
+		    }
+		}
+		break;
+	    case VP_BREAK:		/* break */
+		if (dev.brake == BREAK_IGNORE)
+		    break;
+		/* NOTE break IS IN AN "if": WE USUALLY FALL THROUGH HERE! */
+	    case VP_ERASE:		/* erase (and break falls through here too) */
+		dev.close (CLOSE_FLUSH);
+
+		/*
+		 * Erases and breaks can't occur inside groups.
+		 */
+		group_number--;
+		if (group_number != 0)
+		{
+		    ERR (WARN, name,
+			 "group contains erase or break");
+		    group_number = 0;
+		}
+		else
+		{
+		    if (erase & DO_LITERALS)
+		    {
+			if (c == VP_ERASE || dev.brake)
+			    dev.attributes (END_GROUP, group_number, ERASE_EGROUP, 0, 0);
+			else
+			    dev.attributes (END_GROUP, group_number, BREAK_EGROUP, 0, 0);
+		    }
+		    else
+			dev.attributes (END_GROUP, group_number, IGNORE_EGROUP, 0, 0);
+		}
+
+		if (epause < 0)
+		{
+		    message (MESG_ERASE,NULL);
+		    message (MESG_ON,NULL);
+		    message (MESG_HOME,NULL);
+		    message (MESG_READY,NULL);
+		    message (MESG_HIGHLIGHT_ON,NULL);
+		    message (MESG_TEXT, "Type Return to Continue...  ");
+		    message (MESG_DONE,NULL);
+		    ii = dev.interact (INT_PAUSE, controltty, string);
+		    if (ii == DOVPLOT_EXIT)
+			return;
+		    message (MESG_HIGHLIGHT_OFF,NULL);
+		    message (MESG_DONE,NULL);
+		    message (MESG_OFF,NULL);
+		    message (MESG_ERASE,NULL);
+		}
+		else
+		{
+		    if (epause > 0)
+			sleep ((unsigned) epause);
+		}
+		/*
+		 * Inquire point back from device
+		 */
+		if (interact[0] != '\0')
+		{
+		    getapoint ();
+		}
+
+		if (erase & DO_LITERALS) {
+		    if ((c == VP_ERASE) || dev.brake)
+		    {
+			dev.erase (ERASE_MIDDLE);
+			nplots++;
+		    }
+		    else
+		    {
+			dev.erase (ERASE_BREAK);
+			nplots++;
+		    }
+		}
+
+		new_style = default_style;
+		setstyle (new_style);
+		reset ();
+
+		/*
+		 * Start a new group level 0 to contain the next frame (separated
+		 * from the previous one by either an erase or break)
+		 */
+		ii = ftell (pltin);
+		sprintf (group_name, "%s.%d", pltname, nplots);
+		dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
+		group_number++;
+
+		if (framewindows)
+		    outline_window ();
+
+		break;
+	    case VP_WINDOW:	/* window */
+		if (window)
+		{
+		    xwmin = geth (pltin);
+		    ywmin = geth (pltin);
+		    xwmax = geth (pltin);
+		    ywmax = geth (pltin);
+
+		    if (xwmin > xwmax || ywmin > ywmax)
+		    {
 /*
  * vptodevw will always return a window that is the "right way around",
  * even if the original window was inverted. So produce an inside-out
  * window which will clip everything away to nothing.
  */
 
-		    xwmin = xWmax + 1;
-		    xwmax = xWmin - 1;
-		    ywmin = yWmax + 1;
-		    ywmax = yWmin - 1;
+			xwmin = xWmax + 1;
+			xwmax = xWmin - 1;
+			ywmin = yWmax + 1;
+			ywmax = yWmin - 1;
+		    }
+		    else
+		    {
+
+			vptodevw (xwmin, ywmin, xwmax, ywmax, &xwmin, &ywmin, &xwmax, &ywmax);
+
+			wlimit (xWmin, xWmax, &xwmin, &xwmax);
+			wlimit (yWmin, yWmax, &ywmin, &ywmax);
+		    }
 		}
 		else
 		{
-
-		    vptodevw (xwmin, ywmin, xwmax, ywmax, &xwmin, &ywmin, &xwmax, &ywmax);
-
-		    wlimit (xWmin, xWmax, &xwmin, &xwmax);
-		    wlimit (yWmin, yWmax, &ywmin, &ywmax);
+		    geth (pltin);
+		    geth (pltin);
+		    geth (pltin);
+		    geth (pltin);
 		}
-	    }
-	    else
-	    {
-		geth (pltin);
-		geth (pltin);
-		geth (pltin);
-		geth (pltin);
-	    }
-	    reset_windows ();
-	    if (framewindows)
-		outline_window ();
-	    break;
-	case VP_NOOP:		/* no op */
-	    break;
-	case VP_TXALIGN:	/* set text alignment */
-	    /*
-	     * These are made available to the device text routine
-	     */
-	    txalign.hor = geth (pltin);
-	    txalign.ver = geth (pltin);
-	    dev.attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
-	    break;
-	case VP_TXFONTPREC:	/* set text font */
-	    /*
-	     * These are made available to the device text routine
-	     */
-	    ii = geth (pltin);
-
-	    /*
-             * Force font substitution if serif fonts aren't OK
-             */
-            if (! serifs_OK)
-            {
-                if (ii == DEFAULT_HARDCOPY_FONT)
-                {
-		    ii = DEFAULT_SANSSERIF_FONT;
-                }
-                else if (ii == GREEK_SERIF_FONT)
-                {
-		    ii = GREEK_SANSSERIF_FONT;
-                }
-            }
-
-	    if (ii >= 0)
-		dev.txfont = ii;
-	    else
-		ii = -1;
-
-	    jj = geth (pltin);
-	    if (jj >= 0)
-		dev.txprec = jj;
-	    else
-		jj = -1;
-
-	    kk = geth (pltin);
-	    if (kk >= 0)
-		dev.txovly = kk;
-	    else
-		kk = -1;
-
-	    /*
-	     * Another way for the device to keep track of changes.
-	     */
-	    dev.attributes (NEW_FONT, ii, jj, kk, 0);
-	    break;
-	case VP_OVERLAY:	/* change overlay mode */
-	    /*
-	     * This is made available to the device dependent subroutines
-	     */
-	    overlay = (bool) (1 == geth (pltin));
-	    dev.attributes (NEW_OVERLAY, overlay, 0, 0, 0);
-	    break;
-	case VP_PATLOAD:	/* load a pattern */
-	    nmul = geth (pltin);
-	    ny = geth (pltin);
-
-	    /* See whether Raster or Hatch */
-	    if (ny >= 0)
-	    {
-		/* Raster */
-		/* nmul gives pixels_per_inch pattern is designed for */
-		ny_mult = ny * (dev.pixels_per_inch / nmul) * patternmult / dev.aspect_ratio;
-		if (ny_mult == 0 && ny > 0)
-		    ny_mult = 1;
-		nx = geth (pltin);
-		nx_mult = nx * (dev.pixels_per_inch / nmul) * patternmult;
-		if (nx_mult == 0 && nx > 0)
-		    nx_mult = 1;
-
-		ipat = geth (pltin) + 1;
-		if (ipat > NPAT || ipat < 1)
-		    ERR (FATAL, name, "bad pattern number %d (max %d, min 1)", ipat, NPAT);
+		reset_windows ();
+		if (framewindows)
+		    outline_window ();
+		break;
+	    case VP_NOOP:		/* no op */
+		break;
+	    case VP_TXALIGN:	/* set text alignment */
 		/*
-		 * Free up pattern that may already be there
+		 * These are made available to the device text routine
 		 */
-		if (pat[ipat].patbits != NULL)
+		txalign.hor = geth (pltin);
+		txalign.ver = geth (pltin);
+		dev.attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
+		break;
+	    case VP_TXFONTPREC:	/* set text font */
+		/*
+		 * These are made available to the device text routine
+		 */
+		ii = geth (pltin);
+
+		/*
+		 * Force font substitution if serif fonts aren't OK
+		 */
+		if (! serifs_OK)
 		{
-		    free ((char *) pat[ipat].patbits);
+		    if (ii == DEFAULT_HARDCOPY_FONT)
+		    {
+			ii = DEFAULT_SANSSERIF_FONT;
+		    }
+		    else if (ii == GREEK_SERIF_FONT)
+		    {
+			ii = GREEK_SANSSERIF_FONT;
+		    }
 		}
 
-		if (nx_mult * ny_mult > 0)
+		if (ii >= 0)
+		    dev.txfont = ii;
+		else
+		    ii = -1;
+
+		jj = geth (pltin);
+		if (jj >= 0)
+		    dev.txprec = jj;
+		else
+		    jj = -1;
+
+		kk = geth (pltin);
+		if (kk >= 0)
+		    dev.txovly = kk;
+		else
+		    kk = -1;
+
+		/*
+		 * Another way for the device to keep track of changes.
+		 */
+		dev.attributes (NEW_FONT, ii, jj, kk, 0);
+		break;
+	    case VP_OVERLAY:	/* change overlay mode */
+		/*
+		 * This is made available to the device dependent subroutines
+		 */
+		overlay = (bool) (1 == geth (pltin));
+		dev.attributes (NEW_OVERLAY, overlay, 0, 0, 0);
+		break;
+	    case VP_PATLOAD:	/* load a pattern */
+		nmul = geth (pltin);
+		ny = geth (pltin);
+
+		/* See whether Raster or Hatch */
+		if (ny >= 0)
 		{
-		    if ((ptr = (int *) malloc ((unsigned) (nx_mult * ny_mult * sizeof (int)))) == NULL)
+		    /* Raster */
+		    /* nmul gives pixels_per_inch pattern is designed for */
+		    ny_mult = ny * (dev.pixels_per_inch / nmul) * patternmult / dev.aspect_ratio;
+		    if (ny_mult == 0 && ny > 0)
+			ny_mult = 1;
+		    nx = geth (pltin);
+		    nx_mult = nx * (dev.pixels_per_inch / nmul) * patternmult;
+		    if (nx_mult == 0 && nx > 0)
+			nx_mult = 1;
+
+		    ipat = geth (pltin) + 1;
+		    if (ipat > NPAT || ipat < 1)
+			ERR (FATAL, name, "bad pattern number %d (max %d, min 1)", ipat, NPAT);
+		    /*
+		     * Free up pattern that may already be there
+		     */
+		    if (pat[ipat].patbits != NULL)
+		    {
+			free ((char *) pat[ipat].patbits);
+		    }
+
+		    if (nx_mult * ny_mult > 0)
+		    {
+			if ((ptr = (int *) malloc ((unsigned) (nx_mult * ny_mult * sizeof (int)))) == NULL)
+			    ERR (FATAL, name, "cannot alloc memory to load pattern");
+			pat[ipat].patbits = ptr;
+		    }
+		    else
+		    {
+			if ((ptr = (int *) malloc ((unsigned) (1 * sizeof (int)))) == NULL)
+			    ERR (FATAL, name, "cannot alloc memory to load dummy pattern");
+			pat[ipat].patbits = ptr;
+			ptr[0] = 0;
+		    }
+
+		    if (nx * ny > 0)
+		    {
+			if ((tempbuf = (int *) malloc ((unsigned) (nx * ny * sizeof (int)))) == NULL)
+			    ERR (FATAL, name,
+				 "cannot alloc memory to load pattern's temporary buffer");
+		    }
+		    else
+			tempbuf = NULL;
+
+		    /*
+		     * read in pattern
+		     */
+		    ptemp = tempbuf;
+		    for (j = 0; j < nx * ny; j++)
+		    {
+			k = geth (pltin);
+			if (k > MAX_COL || k < 0)
+			{
+			    ERR (WARN, name, "bad color number in pattern %d (max %d, min 0)",
+				 k, MAX_COL);
+			    k = DEFAULT_COLOR;
+			}
+			*ptemp++ = COLOR_MAP (k);
+		    }
+
+		    /*
+		     * copy into patbits, with "stretching"
+		     */
+		    for (i = 0; i < ny_mult; i++)
+		    {
+			ny_temp = i * ny / ny_mult;
+			for (j = 0; j < nx_mult; j++)
+			{
+			    nx_temp = j * nx / nx_mult;
+			    ptr[j + nx_mult * i] = tempbuf[nx_temp + nx * ny_temp];
+			}
+		    }
+		    /*
+		     * set dimensions of pattern
+		     */
+		    pat[ipat].xdim = nx_mult;
+		    pat[ipat].ydim = ny_mult;
+		    pat[ipat].xdim_orig = nx_mult;
+		    pat[ipat].ydim_orig = ny_mult;
+
+		    if (tempbuf != NULL)
+			free ((char *) tempbuf);
+
+		    dev.attributes (NEW_PAT, ipat, 0, 0, 0);
+		}
+		else
+		{
+		    /* Hatch Pattern */
+		    /* nmul gives angle, ny is merely a flag */
+		    nx = geth (pltin);
+		    if (nx <= 0 || nx * 2 > NHATCH)
+			ERR (FATAL, name, "bad numhatch %d (max %d/2, min 1)", nx, NHATCH);
+		    ipat = geth (pltin) + 1;
+		    if (ipat > NPAT || ipat < 1)
+			ERR (FATAL, name, "bad pattern number %d (max %d, min 1)", ipat, NPAT);
+		    /*
+		     * Free up pattern that may already be there
+		     */
+		    if (pat[ipat].patbits != NULL)
+		    {
+			free ((char *) pat[ipat].patbits);
+		    }
+		    if ((ptr = (int *) malloc ((unsigned) (nx * 4 * 2 * sizeof (int)))) == NULL)
 			ERR (FATAL, name, "cannot alloc memory to load pattern");
 		    pat[ipat].patbits = ptr;
-		}
-		else
-		{
-		    if ((ptr = (int *) malloc ((unsigned) (1 * sizeof (int)))) == NULL)
-			ERR (FATAL, name, "cannot alloc memory to load dummy pattern");
-		    pat[ipat].patbits = ptr;
-		    ptr[0] = 0;
-		}
 
-		if (nx * ny > 0)
-		{
-		    if ((tempbuf = (int *) malloc ((unsigned) (nx * ny * sizeof (int)))) == NULL)
-			ERR (FATAL, name,
-			     "cannot alloc memory to load pattern's temporary buffer");
-		}
-		else
-		    tempbuf = NULL;
-
-		/*
-		 * read in pattern
-		 */
-		ptemp = tempbuf;
-		for (j = 0; j < nx * ny; j++)
-		{
-		    k = geth (pltin);
-		    if (k > MAX_COL || k < 0)
+		    for (i = 0; i < nx * 2; i++)
 		    {
-			ERR (WARN, name, "bad color number in pattern %d (max %d, min 0)",
-			     k, MAX_COL);
-			k = DEFAULT_COLOR;
+			hafat[i] = geth (pltin);
+			if (hafat[i] >= 0)
+			{
+			    hafat[i] = fatmult * (fatbase + hafat[i]);
+			}
+			k = geth (pltin);
+			if (k > MAX_COL || k < 0)
+			{
+			    ERR (WARN, name, "bad color number in hatch %d (max %d, min 0)",
+				 k, MAX_COL);
+			    k = DEFAULT_COLOR;
+			}
+			hacol[i] = COLOR_MAP (k);
+			haoff[i] = geth (pltin) * patternmult * dev.pixels_per_inch / RPERIN;
+			hasiz[i] = geth (pltin);
 		    }
-		    *ptemp++ = COLOR_MAP (k);
-		}
-
-		/*
-		 * copy into patbits, with "stretching"
-		 */
-		for (i = 0; i < ny_mult; i++)
-		{
-		    ny_temp = i * ny / ny_mult;
-		    for (j = 0; j < nx_mult; j++)
+		    /*
+		     * Find the smallest hatch interval. 1/2 that, and then force
+		     * everything to be a multiple of that. If this were not
+		     * done, then hatch intervals that originally differed by
+		     * some simple fraction might end up slightly off, causing
+		     * very unsightly beats.
+		     */
+		    /*
+		     * Upper quantization limit of 1/10 inch
+		     */
+		    k = (RPERIN / 10) * 2;
+		    for (i = 0; i < nx * 2; i++)
 		    {
-			nx_temp = j * nx / nx_mult;
-			ptr[j + nx_mult * i] = tempbuf[nx_temp + nx * ny_temp];
+			if (hasiz[i] > 0 && hasiz[i] < k)
+			    k = hasiz[i];
 		    }
-		}
-		/*
-		 * set dimensions of pattern
-		 */
-		pat[ipat].xdim = nx_mult;
-		pat[ipat].ydim = ny_mult;
-		pat[ipat].xdim_orig = nx_mult;
-		pat[ipat].ydim_orig = ny_mult;
-
-		if (tempbuf != NULL)
-		    free ((char *) tempbuf);
-
-		dev.attributes (NEW_PAT, ipat, 0, 0, 0);
-	    }
-	    else
-	    {
-		/* Hatch Pattern */
-		/* nmul gives angle, ny is merely a flag */
-		nx = geth (pltin);
-		if (nx <= 0 || nx * 2 > NHATCH)
-		    ERR (FATAL, name, "bad numhatch %d (max %d/2, min 1)", nx, NHATCH);
-		ipat = geth (pltin) + 1;
-		if (ipat > NPAT || ipat < 1)
-		    ERR (FATAL, name, "bad pattern number %d (max %d, min 1)", ipat, NPAT);
-		/*
-		 * Free up pattern that may already be there
-		 */
-		if (pat[ipat].patbits != NULL)
-		{
-		    free ((char *) pat[ipat].patbits);
-		}
-		if ((ptr = (int *) malloc ((unsigned) (nx * 4 * 2 * sizeof (int)))) == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load pattern");
-		pat[ipat].patbits = ptr;
-
-		for (i = 0; i < nx * 2; i++)
-		{
-		    hafat[i] = geth (pltin);
-		    if (hafat[i] >= 0)
+		    j = k * (patternmult * dev.pixels_per_inch / RPERIN) / 2.;
+		    if (j < 1)
+			j = 1;
+		    for (i = 0; i < nx * 2; i++)
 		    {
-			hafat[i] = fatmult * (fatbase + hafat[i]);
+			hasiz[i] = ((int) ((hasiz[i] * 2) / k)) * j;
 		    }
-		    k = geth (pltin);
-		    if (k > MAX_COL || k < 0)
-		    {
-			ERR (WARN, name, "bad color number in hatch %d (max %d, min 0)",
-			     k, MAX_COL);
-			k = DEFAULT_COLOR;
-		    }
-		    hacol[i] = COLOR_MAP (k);
-		    haoff[i] = geth (pltin) * patternmult * dev.pixels_per_inch / RPERIN;
-		    hasiz[i] = geth (pltin);
-		}
-		/*
-		 * Find the smallest hatch interval. 1/2 that, and then force
-		 * everything to be a multiple of that. If this were not
-		 * done, then hatch intervals that originally differed by
-		 * some simple fraction might end up slightly off, causing
-		 * very unsightly beats.
-		 */
-		/*
-		 * Upper quantization limit of 1/10 inch
-		 */
-		k = (RPERIN / 10) * 2;
-		for (i = 0; i < nx * 2; i++)
-		{
-		    if (hasiz[i] > 0 && hasiz[i] < k)
-			k = hasiz[i];
-		}
-		j = k * (patternmult * dev.pixels_per_inch / RPERIN) / 2.;
-		if (j < 1)
-		    j = 1;
-		for (i = 0; i < nx * 2; i++)
-		{
-		    hasiz[i] = ((int) ((hasiz[i] * 2) / k)) * j;
-		}
-		/*
-		 * The above algorithm also means that you can't have a hatch
-		 * pattern come out on any device with a repetition rate of
-		 * faster than once per two pixels.
-		 */
+		    /*
+		     * The above algorithm also means that you can't have a hatch
+		     * pattern come out on any device with a repetition rate of
+		     * faster than once per two pixels.
+		     */
 
-		for (i = 0; i < nx * 2; i++)
-		{
+		    for (i = 0; i < nx * 2; i++)
+		    {
 /*
  * Make sure haoff < hasiz
  */
-		    if (haoff[i] >= hasiz[i])
-			haoff[i] = 0;
-		    *ptr++ = hafat[i];
-		    *ptr++ = hacol[i];
-		    *ptr++ = haoff[i];
-		    *ptr++ = hasiz[i];
+			if (haoff[i] >= hasiz[i])
+			    haoff[i] = 0;
+			*ptr++ = hafat[i];
+			*ptr++ = hacol[i];
+			*ptr++ = haoff[i];
+			*ptr++ = hasiz[i];
+		    }
+		    /*
+		     * set numhatch and angle... dimensions are 2 * numhatch by 4
+		     * . pat[ipat].xdim negative is a flag that this is a hatch
+		     * pattern, not raster, and so must be treated differently.
+		     */
+		    /*
+		     * numhatch, with neg as flag for hatch numhatch = 0 is OK,
+		     * because that means don't fill, same as nx = 0.
+		     */
+		    pat[ipat].xdim = -nx;
+		    pat[ipat].ydim = nmul;	/* angle */
 		}
-		/*
-		 * set numhatch and angle... dimensions are 2 * numhatch by 4
-		 * . pat[ipat].xdim negative is a flag that this is a hatch
-		 * pattern, not raster, and so must be treated differently.
-		 */
-		/*
-		 * numhatch, with neg as flag for hatch numhatch = 0 is OK,
-		 * because that means don't fill, same as nx = 0.
-		 */
-		pat[ipat].xdim = -nx;
-		pat[ipat].ydim = nmul;	/* angle */
-	    }
-	    break;
-	case VP_BIT_RASTER:	/* bit raster data */
-	case VP_BYTE_RASTER:	/* byte raster data */
-	    ras_orient = geth (pltin);
-	    if (rotate % 90 != 0)
-	    {
-		if (wantras)
+		break;
+	    case VP_BIT_RASTER:	/* bit raster data */
+	    case VP_BYTE_RASTER:	/* byte raster data */
+		ras_orient = geth (pltin);
+		if (rotate % 90 != 0)
 		{
-		    ERR (WARN, name, 
-			 "Raster only possible in 4 principal orientations");
-		    wantras = false;
+		    if (wantras)
+		    {
+			ERR (WARN, name, 
+			     "Raster only possible in 4 principal orientations");
+			wantras = false;
+		    }
 		}
-	    }
-	    else
-	    {
-		ras_orient += rotate / 90;
-		if (ras_orient >= 0)
-		    ras_orient = ras_orient % 4;
 		else
-		    ras_orient = ((ras_orient % 4) + 4) % 4;
-	    }
+		{
+		    ras_orient += rotate / 90;
+		    if (ras_orient >= 0)
+			ras_orient = ras_orient % 4;
+		    else
+			ras_orient = ((ras_orient % 4) + 4) % 4;
+		}
 
-	    /*
-	     * They're on their honor to not go out of bounds. This check is
-	     * just for things that HAVE to go out of bounds.
-	     */
-	    ras_offset = geth (pltin);
+		/*
+		 * They're on their honor to not go out of bounds. This check is
+		 * just for things that HAVE to go out of bounds.
+		 */
+		ras_offset = geth (pltin);
 
-	    if (ras_offset + 0 > MAX_COL || ras_offset + 255 < 0)
-	    {
-		ERR (FATAL, name, "Absurd raster offset %d", ras_offset);
-	    }
+		if (ras_offset + 0 > MAX_COL || ras_offset + 255 < 0)
+		{
+		    ERR (FATAL, name, "Absurd raster offset %d", ras_offset);
+		}
 
-	    xvr_min = geth (pltin);
-	    yvr_min = geth (pltin);
-	    xvr_max = geth (pltin);
-	    yvr_max = geth (pltin);
-	    vptodevw (xvr_min, yvr_min, xvr_max, yvr_max,
-		      &xvr_min, &yvr_min, &xvr_max, &yvr_max);
-	    xvru_min = xvr_min;
-	    yvru_min = yvr_min;
-	    xvru_max = xvr_max;
-	    yvru_max = yvr_max;
+		xvr_min = geth (pltin);
+		yvr_min = geth (pltin);
+		xvr_max = geth (pltin);
+		yvr_max = geth (pltin);
+		vptodevw (xvr_min, yvr_min, xvr_max, yvr_max,
+			  &xvr_min, &yvr_min, &xvr_max, &yvr_max);
+		xvru_min = xvr_min;
+		yvru_min = yvr_min;
+		xvru_max = xvr_max;
+		yvru_max = yvr_max;
 
-	    xpix = geth (pltin);
-	    ypix = geth (pltin);
+		xpix = geth (pltin);
+		ypix = geth (pltin);
 
-	    switch (ras_orient)
-	    {
-		case 0:
-		    xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
-		    yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
-		    xvr_max--;
-		    yvr_max--;
-		    break;
-		case 1:
-		    yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
-		    xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
-		    xvr_max--;
-		    yvr_min++;
-		    break;
-		case 2:
-		    xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
-		    yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
-		    xvr_min++;
-		    yvr_min++;
-		    break;
-		case 3:
-		default:
-		    yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
-		    xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
-		    xvr_min++;
-		    yvr_max--;
-		    break;
-	    }
+		switch (ras_orient)
+		{
+		    case 0:
+			xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
+			yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
+			xvr_max--;
+			yvr_max--;
+			break;
+		    case 1:
+			yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
+			xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
+			xvr_max--;
+			yvr_min++;
+			break;
+		    case 2:
+			xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
+			yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
+			xvr_min++;
+			yvr_min++;
+			break;
+		    case 3:
+		    default:
+			yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
+			xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
+			xvr_min++;
+			yvr_max--;
+			break;
+		}
 
-	    if (wantras && dev.smart_raster)
-	    {
-		rasterline  = sf_ucharalloc(xpix + 7 + 2);
-		rasterline2 = sf_ucharalloc(xpix + 7 + 2);
-		outraster = sf_ucharalloc2(xpix,ypix);
+		if (wantras && dev.smart_raster)
+		{
+		    rasterline  = sf_ucharalloc(xpix + 7 + 2);
+		    rasterline2 = sf_ucharalloc(xpix + 7 + 2);
+		    outraster = sf_ucharalloc2(xpix,ypix);
 
 /*
  * See whether we want to dither or not.
  * Dither if monochrome device and dithering has been asked for.
  * It's up to the device to decide whether to actually do this.
  */
-		dither_it = dither && mono;
+		    dither_it = dither && mono;
 
 /*
  * If the device is color, but the raster happens to all be shades
@@ -1328,247 +1338,49 @@ char            string[MAXFLEN + 1];
  * "ras_allgrey".	joe & david 10/03/94
  */
 
-              ras_allgrey = YES;
-              if (!mono)
-              {
-                  if (c == VP_BIT_RASTER)
-                  {
-                      for (ii=0; ii<2; ii++)
-                      {
-                          if (
-                          (color_set [ras_offset * ii][_RED] !=
-                          color_set [ras_offset * ii][_GREEN]) ||
-                          (color_set [ras_offset * ii][_GREEN] !=
-                          color_set [ras_offset * ii][_BLUE])
-                          )
-                          {
-                              ras_allgrey = NO;
-                              break;
-                          }
-                      }
-                  }
-                  else
-                  {
-                      for (ii=0; ii<256; ii++)
-                      {
-                          if (
-                          (color_set [ras_offset + ii][_RED] !=
-                          color_set [ras_offset + ii][_GREEN]) ||
-                          (color_set [ras_offset + ii][_GREEN] !=
-                          color_set [ras_offset + ii][_BLUE])
-                          )
-                          {
-                              ras_allgrey = NO;
-                              break;
-                          }
-                      }
-                  }
-              }
-
-		/*
-		 * Read in the Raster data for "Smart" devices, ie, those
-		 * which can stretch (and dither) their own raster.
-		 */
-		num_rep = 0;
-		for (yrast = 0; yrast < ypix; yrast++)
-		{
-		    /*
-		     * Read in the next raster line, if we have a new one
-		     */
-		    if (num_rep <= 0)
+		    ras_allgrey = YES;
+		    if (!mono)
 		    {
-			num_rep = geth (pltin);
-			if (num_rep <= 0)
-			    ERR (FATAL, name, "Bad Raster line multiplier");
-
-			pos = 0;
-		new_pat:num_pat = geth (pltin);
-			num_byte = geth (pltin);
-			if (num_pat <= 0 || num_byte <= 0 ||
-			    pos + num_pat * num_byte > xpix)
-			    ERR (FATAL, name, "Raster line not length promised");
-
-			if (num_pat > 1)
+			if (c == VP_BIT_RASTER)
 			{
-			    if (dither_it)
+			    for (ii=0; ii<2; ii++)
 			    {
-				READ_RASTER (
-				    rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
-				    rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				    );
-			    }
-			    else
-			    {
-				READ_RASTER (
-				    rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
-				    rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				    );
-			    }
-			    for (j = 0; j < num_pat; j++)
-			    {
-				for (k = 0; k < num_byte; k++)
+				if (
+				    (color_set [ras_offset * ii][_RED] !=
+				     color_set [ras_offset * ii][_GREEN]) ||
+				    (color_set [ras_offset * ii][_GREEN] !=
+				     color_set [ras_offset * ii][_BLUE])
+				    )
 				{
-				    rasterline[pos] = rasterline2[k];
-				    pos++;
+				    ras_allgrey = NO;
+				    break;
 				}
 			    }
 			}
 			else
 			{
-			    if (dither_it)
+			    for (ii=0; ii<256; ii++)
 			    {
-				READ_RASTER (
-				    rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
-				    rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				    );
+				if (
+				    (color_set [ras_offset + ii][_RED] !=
+				     color_set [ras_offset + ii][_GREEN]) ||
+				    (color_set [ras_offset + ii][_GREEN] !=
+				     color_set [ras_offset + ii][_BLUE])
+				    )
+				{
+				    ras_allgrey = NO;
+				    break;
+				}
 			    }
-			    else
-			    {
-				READ_RASTER (
-				    rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
-				    rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				    );
-			    }
-			    pos += num_byte;
 			}
-
-			if (pos < xpix)
-			    goto new_pat;
-			if (pos != xpix)
-			    ERR (FATAL, name, "Raster line not length promised");
-      
 		    }
-		    num_rep--;
 
-		    for (ii = 0; ii < xpix; ii++)
-		    {
-			outraster[yrast][ii] = rasterline[ii];
-		    }
-		}
-
-		/* Smart form */
-		dev.raster (xpix, ypix, xvr_min, yvr_min, xvr_max, yvr_max,
-			    outraster, ras_orient, dither_it);
-
-		free (rasterline);
-		free (rasterline2);
-		free (*outraster);
-		free (outraster);
-	    }
-	    else
-	    {
-		wlimit (xwmin, xwmax, &xvr_min, &xvr_max);
-		wlimit (ywmin, ywmax, &yvr_min, &yvr_max);
-
-		switch (ras_orient)
-		{
-		    case 0:
-			xvr_max++;
-			yvr_max++;
-			xr_max = xvr_max - xvru_min;
-			xr_min = xvr_min - xvru_min;
-			yr_max = yvr_max - yvru_min;
-			yr_min = yvr_min - yvru_min;
-			yru_max = yvru_max - yvru_min;
-			break;
-		    case 1:
-			xvr_max++;
-			yvr_min--;
-			xr_max = yvru_max - yvr_min;
-			xr_min = yvru_max - yvr_max;
-			yr_max = xvr_max - xvru_min;
-			yr_min = xvr_min - xvru_min;
-			yru_max = xvru_max - xvru_min;
-			break;
-		    case 2:
-			xvr_min--;
-			yvr_min--;
-			xr_max = xvru_max - xvr_min;
-			xr_min = xvru_max - xvr_max;
-			yr_max = yvru_max - yvr_min;
-			yr_min = yvru_max - yvr_max;
-			yru_max = yvru_max - yvru_min;
-			break;
-		    case 3:
-		    default:
-			xvr_min--;
-			yvr_max++;
-			xr_max = yvr_max - yvru_min;
-			xr_min = yvr_min - yvru_min;
-			yr_max = xvru_max - xvr_min;
-			yr_min = xvru_max - xvr_max;
-			yru_max = xvru_max - xvru_min;
-			break;
-		}
-		xru_min = 0;
-
-		if (yr_max < yr_min || xr_max < xr_min || !wantras)
-		{
 		    /*
-		     * We need to read through all the raster stuff, even if
-		     * we never use it.
+		     * Read in the Raster data for "Smart" devices, ie, those
+		     * which can stretch (and dither) their own raster.
 		     */
-		    yr_max = yr_min;
-		    xr_max = xr_min;
-		}
-
-		rasterline  = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
-		rasterline2 = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
-		if (rasterline == NULL || rasterline2 == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load raster line");
-
-/*
- * See whether we need to dither or not.
- * Dither if monochrome device and dithering has been asked for.
- */
-		dither_it = dither && mono;
-
-		if (xr_max > xr_min)
-		{
-		    outraster2 = (unsigned char **) malloc (sizeof (unsigned char*));
-		    if (outraster2 == NULL)
-			ERR (FATAL, name, "cannot alloc memory to load raster image");
-		    outraster2[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
-
-		    if (dither_it)
-		    {
-			outraster = (unsigned char **) malloc (sizeof (unsigned char*));
-			if (outraster == NULL)
-			    ERR (FATAL, name, "cannot alloc memory to load raster image");
-			outraster[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
-		    }
-		    else
-		    {
-			outraster = outraster2;
-		    }
-		    if (outraster2 == NULL || outraster == NULL)
-			ERR (FATAL, name, "cannot alloc memory to load raster line");
-		}
-		else
-		{
-		    outraster2 = NULL;
-		    outraster = NULL;
-		}
-
-		/*
-		 * Read in the Raster data
-		 */
-		lastrast = -1;
-		num_rep = 0;
-		for (i = yr_max - 1; i >= yr_min - 1; i--)
-		{
-		    yrast = (yru_max - 1 - i) * yrasmult;
-		    if (i == yr_min - 1)
-		    {
-			/*
-			 * Assure that the last bit of unused raster, if any,
-			 * is read. This last time through the loop is a
-			 * "dummy".
-			 */
-			yrast = ypix - 1;
-		    }
-
-		    for (ii = 0; ii < (yrast - lastrast); ii++)
+		    num_rep = 0;
+		    for (yrast = 0; yrast < ypix; yrast++)
 		    {
 			/*
 			 * Read in the next raster line, if we have a new one
@@ -1576,209 +1388,407 @@ char            string[MAXFLEN + 1];
 			if (num_rep <= 0)
 			{
 			    num_rep = geth (pltin);
-			    if (num_rep <= 0){
-				ERR (FATAL, name, "Bad Raster line multiplier(2)");
-        }
+			    if (num_rep <= 0)
+				ERR (FATAL, name, "Bad Raster line multiplier");
+
 			    pos = 0;
-		    new_pat2:num_pat = geth (pltin);
+			new_pat:num_pat = geth (pltin);
 			    num_byte = geth (pltin);
 			    if (num_pat <= 0 || num_byte <= 0 ||
-				pos + num_pat * num_byte > xpix){
+				pos + num_pat * num_byte > xpix)
 				ERR (FATAL, name, "Raster line not length promised");
-       }
 
-			    if ((ii + num_rep >= yrast - lastrast
-				&& xr_max > xr_min && i >= yr_min) )
+			    if (num_pat > 1)
 			    {
-				if (num_pat > 1)
+				if (dither_it)
 				{
-				    if (dither_it)
-				    {
-					READ_RASTER (
-					    rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
-					    rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					    );
-				    }
-				    else
-				    {
-					READ_RASTER (
-					    rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
-					    rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					    );
-				    }
-				    for (j = 0; j < num_pat; j++)
-				    {
-					for (k = 0; k < num_byte; k++)
-					{
-					    rasterline[pos] = rasterline2[k];
-					    pos++;
-					}
-				    }
+				    READ_RASTER (
+					rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+					rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					);
 				}
 				else
 				{
-				    if (dither_it)
+				    READ_RASTER (
+					rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+					rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					);
+				}
+				for (j = 0; j < num_pat; j++)
+				{
+				    for (k = 0; k < num_byte; k++)
 				    {
-					READ_RASTER (
-					    rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
-					    rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					    );
+					rasterline[pos] = rasterline2[k];
+					pos++;
 				    }
-				    else
-				    {
-					READ_RASTER (
-					    rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
-					    rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					    );
-				    }
-				    pos += num_byte;
 				}
 			    }
 			    else
 			    {
-/*
- * We're just going to turn right around and read another one,
- * So throw this away!
- */
-				if (c == VP_BYTE_RASTER)
+				if (dither_it)
 				{
-				    for (j = 0; j < num_byte; j++)
+				    READ_RASTER (
+					rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+					rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					);
+				}
+				else
+				{
+				    READ_RASTER (
+					rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+					rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					);
+				}
+				pos += num_byte;
+			    }
+
+			    if (pos < xpix)
+				goto new_pat;
+			    if (pos != xpix)
+				ERR (FATAL, name, "Raster line not length promised");
+      
+			}
+			num_rep--;
+
+			for (ii = 0; ii < xpix; ii++)
+			{
+			    outraster[yrast][ii] = rasterline[ii];
+			}
+		    }
+
+		    /* Smart form */
+		    dev.raster (xpix, ypix, xvr_min, yvr_min, xvr_max, yvr_max,
+				outraster, ras_orient, dither_it);
+
+		    free (rasterline);
+		    free (rasterline2);
+		    free (*outraster);
+		    free (outraster);
+		}
+		else
+		{
+		    wlimit (xwmin, xwmax, &xvr_min, &xvr_max);
+		    wlimit (ywmin, ywmax, &yvr_min, &yvr_max);
+
+		    switch (ras_orient)
+		    {
+			case 0:
+			    xvr_max++;
+			    yvr_max++;
+			    xr_max = xvr_max - xvru_min;
+			    xr_min = xvr_min - xvru_min;
+			    yr_max = yvr_max - yvru_min;
+			    yr_min = yvr_min - yvru_min;
+			    yru_max = yvru_max - yvru_min;
+			    break;
+			case 1:
+			    xvr_max++;
+			    yvr_min--;
+			    xr_max = yvru_max - yvr_min;
+			    xr_min = yvru_max - yvr_max;
+			    yr_max = xvr_max - xvru_min;
+			    yr_min = xvr_min - xvru_min;
+			    yru_max = xvru_max - xvru_min;
+			    break;
+			case 2:
+			    xvr_min--;
+			    yvr_min--;
+			    xr_max = xvru_max - xvr_min;
+			    xr_min = xvru_max - xvr_max;
+			    yr_max = yvru_max - yvr_min;
+			    yr_min = yvru_max - yvr_max;
+			    yru_max = yvru_max - yvru_min;
+			    break;
+			case 3:
+			default:
+			    xvr_min--;
+			    yvr_max++;
+			    xr_max = yvr_max - yvru_min;
+			    xr_min = yvr_min - yvru_min;
+			    yr_max = xvru_max - xvr_min;
+			    yr_min = xvru_max - xvr_max;
+			    yru_max = xvru_max - xvru_min;
+			    break;
+		    }
+		    xru_min = 0;
+
+		    if (yr_max < yr_min || xr_max < xr_min || !wantras)
+		    {
+			/*
+			 * We need to read through all the raster stuff, even if
+			 * we never use it.
+			 */
+			yr_max = yr_min;
+			xr_max = xr_min;
+		    }
+
+		    rasterline  = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
+		    rasterline2 = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
+		    if (rasterline == NULL || rasterline2 == NULL)
+			ERR (FATAL, name, "cannot alloc memory to load raster line");
+
+/*
+ * See whether we need to dither or not.
+ * Dither if monochrome device and dithering has been asked for.
+ */
+		    dither_it = dither && mono;
+
+		    if (xr_max > xr_min)
+		    {
+			outraster2 = (unsigned char **) malloc (sizeof (unsigned char*));
+			if (outraster2 == NULL)
+			    ERR (FATAL, name, "cannot alloc memory to load raster image");
+			outraster2[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
+
+			if (dither_it)
+			{
+			    outraster = (unsigned char **) malloc (sizeof (unsigned char*));
+			    if (outraster == NULL)
+				ERR (FATAL, name, "cannot alloc memory to load raster image");
+			    outraster[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
+			}
+			else
+			{
+			    outraster = outraster2;
+			}
+			if (outraster2 == NULL || outraster == NULL)
+			    ERR (FATAL, name, "cannot alloc memory to load raster line");
+		    }
+		    else
+		    {
+			outraster2 = NULL;
+			outraster = NULL;
+		    }
+
+		    /*
+		     * Read in the Raster data
+		     */
+		    lastrast = -1;
+		    num_rep = 0;
+		    for (i = yr_max - 1; i >= yr_min - 1; i--)
+		    {
+			yrast = (yru_max - 1 - i) * yrasmult;
+			if (i == yr_min - 1)
+			{
+			    /*
+			     * Assure that the last bit of unused raster, if any,
+			     * is read. This last time through the loop is a
+			     * "dummy".
+			     */
+			    yrast = ypix - 1;
+			}
+
+			for (ii = 0; ii < (yrast - lastrast); ii++)
+			{
+			    /*
+			     * Read in the next raster line, if we have a new one
+			     */
+			    if (num_rep <= 0)
+			    {
+				num_rep = geth (pltin);
+				if (num_rep <= 0){
+				    ERR (FATAL, name, "Bad Raster line multiplier(2)");
+				}
+				pos = 0;
+			    new_pat2:num_pat = geth (pltin);
+				num_byte = geth (pltin);
+				if (num_pat <= 0 || num_byte <= 0 ||
+				    pos + num_pat * num_byte > xpix){
+				    ERR (FATAL, name, "Raster line not length promised");
+				}
+
+				if ((ii + num_rep >= yrast - lastrast
+				     && xr_max > xr_min && i >= yr_min) )
+				{
+				    if (num_pat > 1)
 				    {
-					fgetc (pltin);
+					if (dither_it)
+					{
+					    READ_RASTER (
+						rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+						rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+						);
+					}
+					else
+					{
+					    READ_RASTER (
+						rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+						rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+						);
+					}
+					for (j = 0; j < num_pat; j++)
+					{
+					    for (k = 0; k < num_byte; k++)
+					    {
+						rasterline[pos] = rasterline2[k];
+						pos++;
+					    }
+					}
+				    }
+				    else
+				    {
+					if (dither_it)
+					{
+					    READ_RASTER (
+						rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+						rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+						);
+					}
+					else
+					{
+					    READ_RASTER (
+						rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+						rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+						);
+					}
+					pos += num_byte;
 				    }
 				}
 				else
 				{
-				    for (j = 0; j < num_byte; j += 8)
+/*
+ * We're just going to turn right around and read another one,
+ * So throw this away!
+ */
+				    if (c == VP_BYTE_RASTER)
 				    {
-					fgetc (pltin);
+					for (j = 0; j < num_byte; j++)
+					{
+					    fgetc (pltin);
+					}
+				    }
+				    else
+				    {
+					for (j = 0; j < num_byte; j += 8)
+					{
+					    fgetc (pltin);
+					}
+				    }
+				    pos += num_pat * num_byte;
+				}
+				if (pos < xpix)
+				    goto new_pat2;
+				if (pos != xpix){
+				    ERR (FATAL, name, "Raster line not length promised");
+				}
+
+				if (wantras && xr_max > xr_min && i >= yr_min)
+				{
+				    for (j = xr_min; j < xr_max; j++)
+				    {
+					outraster2[0][j - xr_min] =
+					    rasterline[(int) ((j - xru_min) * xrasmult)];
 				    }
 				}
-				pos += num_pat * num_byte;
 			    }
-			    if (pos < xpix)
-				goto new_pat2;
-			    if (pos != xpix){
-				ERR (FATAL, name, "Raster line not length promised");
-         }
+			    num_rep--;
+			}
+			lastrast = yrast;
 
-			    if (wantras && xr_max > xr_min && i >= yr_min)
+			if (xr_max > xr_min && i >= yr_min)
+			{
+			    if (dither_it)
 			    {
-				for (j = xr_min; j < xr_max; j++)
-				{
-				    outraster2[0][j - xr_min] =
-				     rasterline[(int) ((j - xru_min) * xrasmult)];
-				}
+				dithline (outraster2, outraster, xr_max - xr_min, yr_max - 1 - i, dither);
+			    }
+			    /* Dumb forms */
+      
+			    switch (ras_orient)
+			    {
+				case 0:
+				    dev.raster (yr_max - 1 - i, yr_max - yr_min,
+						xvr_min, i + yvru_min,
+						xr_max - xr_min, ras_orient, outraster,
+						0, 0);
+				    break;
+				case 1:
+				    dev.raster (yr_max - 1 - i, yr_max - yr_min,
+						xvru_min + i, yvr_max,
+						xr_max - xr_min, ras_orient, outraster,
+						0, 0);
+				    break;
+				case 2:
+				    dev.raster (yr_max - 1 - i, yr_max - yr_min,
+						xvr_max, yvru_max - i,
+						xr_max - xr_min, ras_orient, outraster,
+						0, 0);
+				    break;
+				case 3:
+				    dev.raster (yr_max - 1 - i, yr_max - yr_min,
+						xvru_max - i, yvr_min,
+						xr_max - xr_min, ras_orient, outraster,
+						0, 0);
+				    break;
 			    }
 			}
-			num_rep--;
 		    }
-		    lastrast = yrast;
-
-		    if (xr_max > xr_min && i >= yr_min)
+		    free (rasterline);
+		    free (rasterline2);
+		    if (outraster2 != NULL)
 		    {
-			if (dither_it)
-			{
-			    dithline (outraster2, outraster, xr_max - xr_min, yr_max - 1 - i, dither);
-			}
-			/* Dumb forms */
-      
-			switch (ras_orient)
-			{
-			case 0:
-			    dev.raster (yr_max - 1 - i, yr_max - yr_min,
-					xvr_min, i + yvru_min,
-				     xr_max - xr_min, ras_orient, outraster,
-					0, 0);
-			    break;
-			case 1:
-			    dev.raster (yr_max - 1 - i, yr_max - yr_min,
-					xvru_min + i, yvr_max,
-				     xr_max - xr_min, ras_orient, outraster,
-					0, 0);
-			    break;
-			case 2:
-			    dev.raster (yr_max - 1 - i, yr_max - yr_min,
-					xvr_max, yvru_max - i,
-				     xr_max - xr_min, ras_orient, outraster,
-					0, 0);
-			    break;
-			case 3:
-			    dev.raster (yr_max - 1 - i, yr_max - yr_min,
-					xvru_max - i, yvr_min,
-				     xr_max - xr_min, ras_orient, outraster,
-					0, 0);
-			    break;
+			free (*outraster2);
+			free (outraster2);
+			if (dither_it) {
+			    free (*outraster);
+			    free (outraster);
 			}
 		    }
-		}
-		free (rasterline);
-		free (rasterline2);
-		if (outraster2 != NULL)
-		{
-		    free (*outraster2);
-		    free (outraster2);
-		    if (dither_it) {
-			free (*outraster);
-			free (outraster);
+		    if (!wantras)
+		    {
+			xxx[0] = xvru_min;
+			yyy[0] = yvru_min;
+			xxx[1] = xvru_min;
+			yyy[1] = yvru_max;
+			xxx[2] = xvru_max;
+			yyy[2] = yvru_max;
+			xxx[3] = xvru_max;
+			yyy[3] = yvru_min;
+			drawpolygon (4, xxx, yyy);
 		    }
 		}
-		if (!wantras)
+		break;
+	    case VP_MESSAGE:	/* Text message */
+		getvpstring ();
+		message (MESG_READY,NULL);
+		message (MESG_MESSAGE,NULL);
+		message (MESG_TEXT, txbuffer);
+		message (MESG_TEXT, CRLF);
+		message (MESG_DONE,NULL);
+		break;
+	    case VP_SETDASH:
+		npts = geth (pltin);
+		if (npts > MAXDASH)
 		{
-		    xxx[0] = xvru_min;
-		    yyy[0] = yvru_min;
-		    xxx[1] = xvru_min;
-		    yyy[1] = yvru_max;
-		    xxx[2] = xvru_max;
-		    yyy[2] = yvru_max;
-		    xxx[3] = xvru_max;
-		    yyy[3] = yvru_min;
-		    drawpolygon (4, xxx, yyy);
+		    ERR (FATAL, name, "Too complicated a dash line pattern.");
 		}
-	    }
-	    break;
-	case VP_MESSAGE:	/* Text message */
-	    getvpstring ();
-	    message (MESG_READY,NULL);
-	    message (MESG_MESSAGE,NULL);
-	    message (MESG_TEXT, txbuffer);
-	    message (MESG_TEXT, CRLF);
-	    message (MESG_DONE,NULL);
-	    break;
-	case VP_SETDASH:
-	    npts = geth (pltin);
-	    if (npts > MAXDASH)
-	    {
-		ERR (FATAL, name, "Too complicated a dash line pattern.");
-	    }
-	    dashon = npts;
-	    k = 0;
-	    dashsum = 0.;
-	    for (ii = 0; ii < npts * 2; ii++)
-	    {
-		dashes[ii] = dashscale * (float) geth (pltin) / RPERIN;
-		if (dashes[ii] < 0.)
-		    ERR (FATAL, name, "Negative dash distance.");
+		dashon = npts;
+		k = 0;
+		dashsum = 0.;
+		for (ii = 0; ii < npts * 2; ii++)
+		{
+		    dashes[ii] = dashscale * (float) geth (pltin) / RPERIN;
+		    if (dashes[ii] < 0.)
+			ERR (FATAL, name, "Negative dash distance.");
 
-		if (dashes[ii] != 0.)
-		    k = 1;
+		    if (dashes[ii] != 0.)
+			k = 1;
 
-		dashsum += dashes[ii];
-	    }
-	    if (!k)
-		dashon = NO;
-	    dev.attributes (NEW_DASH, dashon, 0, 0, 0);
-	    break;
-	default:		/* error */
-	    ERR (FATAL, name,
-		 "invalid VPLOT command decimal %d character %c",
-		 (int) c, (char) c);
-	    break;
+		    dashsum += dashes[ii];
+		}
+		if (!k)
+		    dashon = NO;
+		dev.attributes (NEW_DASH, dashon, 0, 0, 0);
+		break;
+	    default:		/* error */
+		ERR (FATAL, name,
+		     "invalid VPLOT command decimal %d character %c",
+		     (int) c, (char) c);
+		break;
 	}
     }
 End_of_file:
- end_of_file();
- return;
+    end_of_file();
+    return;
 }
 
 void end_of_file(void)
@@ -1823,7 +1833,7 @@ void end_of_file(void)
  */
 static void reset (void)
 {
-int             ii, jj, kk;
+    int             ii, jj, kk;
 
     xwmin = xWmin;		/* plot window parameters defaulted */
     xwmax = xWmax;		/* to maximum size	 */
@@ -1875,7 +1885,7 @@ int             ii, jj, kk;
 void reset_windows (void)
 /*< reset windows >*/
 {
-extern int      xwmax_last, ywmax_last, xwmin_last, ywmin_last;
+    extern int      xwmax_last, ywmax_last, xwmin_last, ywmin_last;
 
     if (xwmax != xwmax_last || ywmax != ywmax_last
 	|| xwmin != xwmin_last || ywmin != ywmin_last)
@@ -1906,10 +1916,33 @@ static void outline_window (void)
     }
 }
 
+static void fill_background (void)
+{
+    int x[4], y[4];
+
+    if (need_devcolor == YES || cur_color != COLOR_MAP (BACKGROUND_COLOR))
+    {
+	dev.attributes (SET_COLOR, COLOR_MAP (BACKGROUND_COLOR), 0, 0, 0);
+	need_devcolor = NO;
+    }
+    
+    x[0] = dev.xmin; y[0] = dev.ymin;
+    x[1] = dev.xmin; y[1] = dev.ymax; 
+    x[2] = dev.xmax; y[2] = dev.ymax;
+    x[3] = dev.xmax, y[3] = dev.ymin;
+    drawpolygon (4, x, y);
+    
+    if (cur_color != COLOR_MAP (BACKGROUND_COLOR))
+    {
+	dev.attributes (SET_COLOR, cur_color, 0, 0, 0);
+	need_devcolor = NO;
+    }
+}
+
 static void getvpstring (void)
 {
-char           *txptr;
-int             ii;
+    char           *txptr;
+    int             ii;
 
     txptr = txbuffer;
 
@@ -1944,16 +1977,16 @@ int             ii;
 void drawpolygon (int npts, int *x, int *y)
 /*< draw polygon >*/
 {
-int             i, j;
-struct vertex  *vertex;
-static int      point;
+    int             i, j;
+    struct vertex  *vertex;
+    static int      point;
 
     j = 0;
     if (npts > (vxbuflen - 1))
     {
 	free ((char *) vxbuffer);
 	vxbuffer =
-	 (struct vertex *) malloc ((unsigned) ((npts + 1) * sizeof (struct vertex)));
+	    (struct vertex *) sf_alloc (npts + 1,sizeof (struct vertex));
     }
     vertex = vxbuffer;
     xnew = x[j];
@@ -2003,14 +2036,14 @@ static int      point;
 
 static int getpolygon (int npts)
 {
-int             i;
-struct vertex  *vertex;
+    int             i;
+    struct vertex  *vertex;
 
     if (npts > (vxbuflen - 1))
     {
 	free ((char *) vxbuffer);
 	vxbuffer =
-	 (struct vertex *) malloc ((unsigned) ((npts + 1) * sizeof (struct vertex)));
+	    (struct vertex *) malloc ((unsigned) ((npts + 1) * sizeof (struct vertex)));
     }
     vertex = vxbuffer;
     GETXY (xnew, ynew);

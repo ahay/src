@@ -96,6 +96,56 @@ void cosft3(bool inv,               /* forward or inverse */
     }
 }
 
+void cosft12(bool inv,               /* forward or inverse */ 
+	     int n1, int n2, int n3, /* dimensions */
+	     float ***data           /* data [n3][n2][n1] */)
+/*< transform first two coordinates (in place) >*/
+{
+    int i1, i2, i3;
+
+    if (inv) {
+	if (n3 > 1) {
+	    sf_cosft_init(n3);
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_inv(data[0][0],i1+i2*n1,n1*n2);
+		}
+	    }
+	    sf_cosft_close();
+	}
+	
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i3=0; i3 < n3; i3++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_inv(data[i3][0],i1,n1);
+		}
+	    }
+	    sf_cosft_close();
+	}
+    } else {
+	if (n2 > 1) {
+	    sf_cosft_init(n2);
+	    for (i3=0; i3 < n3; i3++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_frw(data[i3][0],i1,n1);
+		}
+	    }
+	    sf_cosft_close();
+	}
+	
+	if (n3 > 1) {
+	    sf_cosft_init(n3);
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_cosft_frw(data[0][0],i1+i2*n1,n1*n2);
+		}
+	    }
+	    sf_cosft_close();
+	}
+    }
+}
+
 void cosft2(bool inv,       /* forward or inverse */ 
 	    int n1, int n2, /* dimensions */
 	    float **data    /* data [n3][n2][n1] */)

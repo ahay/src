@@ -420,6 +420,7 @@ main (int argc, char *argv[])
 
     while (1)
     {
+	/* Read file 1 until we get to a plotting command */
 	while (1)
 	{
 	    c1 = getc (stream1);
@@ -429,6 +430,7 @@ main (int argc, char *argv[])
 				   &pstate1, &warn, &needtocheck1, command1))
 		break;
 	}
+	/* Read file 2 until we get to a plotting command */
 	while (1)
 	{
 	    c2 = getc (stream2);
@@ -439,6 +441,7 @@ main (int argc, char *argv[])
 		break;
 	}
 
+	/* Get the line numbers of the plotting commands (may be "EOF") */
 	if (c1 == EOF)
 	    strcpy (count_string1, "EOF");
 	else
@@ -452,6 +455,7 @@ main (int argc, char *argv[])
 	/*
 	 * Both streams are now poised at plotting commands.
 	 * Do their vplot states match?
+	 * The needtocheck structures allow us to only check what's necessary.
 	 */
 	if (0 !=
 	    check_state (command1, command2, argv[1], argv[2],
@@ -482,6 +486,7 @@ main (int argc, char *argv[])
 	    case VP_PMARK:
 	    case VP_AREA:
 	    case VP_OLDAREA:
+	    case VP_BACKGROUND:
 	    case VP_ERASE:
 		if (c1 != c2)
 		{
@@ -783,6 +788,23 @@ check_vplot1 (const int debug,
 	    sprintf (command, " (%c)", c);
 	    return 1;
 	    break;
+	case VP_BACKGROUND:
+	    /*
+	     * This command depends on what color 0 is set to,
+	     * but as we always check the entire color table
+	     * whenever we plot anything anyway, no additional
+	     * checking is required. Just flag it as a plotting
+	     * command by returning 1.
+	     * 
+	     * Should we later decide not to always check coltab,
+	     * then we'll need here:
+	     * needtocheck->coltab = NTC_NEED;
+	     */
+	    return 1;
+	    break;
+/*
+ * An erase is a plotting command that also changes the plot state.
+ */
 	case VP_ERASE:
 	    (*count)++;
 	    /* Make sure no groups left open at an erase */
@@ -2502,6 +2524,7 @@ vplot_debug (int c, FILE * stream)
 	    npts = vp_getint3 (stream);
 	    fprintf (stderr, "%c %d\n", c, npts);
 	    break;
+	case VP_BACKGROUND:
 	case VP_ERASE:
 	    fprintf (stderr, "%c\n", c);
 	    break;
@@ -2913,21 +2936,12 @@ check_vplot2simple (int c,
 	    state2->move2 = VPLOTDIFF_NOT_INITIALIZED;
 	    state2->move_count = *count2;
 	    break;
+	case VP_BACKGROUND:
 	case VP_ERASE:
 	    if (debug1)
 		printf ("%c\n", c);
 	    (*count1)++;
 
-	    if (debug2)
-		printf ("%c\n", c);
-	    (*count2)++;
-	    break;
-	case VP_BACKGROUND:
-	    /* Need to actually compare */
-	    if (debug1)
-		printf ("%c\n", c);
-	    (*count1)++;
-	    
 	    if (debug2)
 		printf ("%c\n", c);
 	    (*count2)++;

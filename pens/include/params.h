@@ -12,6 +12,7 @@
 #define SYSTEM_FONT_DIRECTORY "/usr/local/lib/vplotfonts/"
 #endif
 
+#define BACKGROUND_COLOR 0
 #define DEFAULT_COLOR	 7
 #define DEFAULT_LINESTYLE 0
 #define DEFAULT_FONT	0

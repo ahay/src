@@ -338,6 +338,14 @@ iRSF::get (const char* name, int size, bool* value) const
 // Writing parameters
 /////////////////////
 
+// set file data type
+void
+oRSF::type (sf_datatype type)
+{
+    sf_settype(file_,type);
+}
+
+
 void 
 oRSF::put (const char* name, int value) const
 {

@@ -100,16 +100,16 @@ static void vp_check_filep (FILE *plot);
 void vpattributes (int command, int value, int v1, int v2, int v3)
 /*< attributes >*/
 {
-static float    vpdash[MAXDASH];
-static float    vpgap[MAXDASH];
-static int      vpndash;
-static int     *vpattrarray;
-static int      vpxwmin, vpywmin, vpxwmax, vpywmax;
-static int      vpfont1, vpfont2, vpfont3;
-static int      vpjust1, vpjust2;
-static int      vpcolt1, vpcolt2, vpcolt3, vpcolt4;
-static int      vpovly;
-int             ii, jj;
+    static float    vpdash[MAXDASH];
+    static float    vpgap[MAXDASH];
+    static int      vpndash;
+    static int     *vpattrarray;
+    static int      vpxwmin, vpywmin, vpxwmax, vpywmax;
+    static int      vpfont1, vpfont2, vpfont3;
+    static int      vpjust1, vpjust2;
+    static int      vpcolt1, vpcolt2, vpcolt3, vpcolt4;
+    static int      vpovly;
+    int             ii, jj;
 
     dev.lost = YES;
 
@@ -117,217 +117,217 @@ int             ii, jj;
     {
 	switch (command)
 	{
-	case SET_COLOR:
-	    if (vpsetflag & F_COL)
-	    {
-		if (vpcolor == value)
-		    break;
-	    }
-	    vp_color (value);
-	    vpcolor = value;
-	    vpsetflag |= F_COL;
-	    break;
+	    case SET_COLOR:
+		if (vpsetflag & F_COL)
+		{
+		    if (vpcolor == value)
+			break;
+		}
+		vp_color (value);
+		vpcolor = value;
+		vpsetflag |= F_COL;
+		break;
 
-	case SET_COLOR_TABLE:
-	    if (vpsetflag & F_COLT)
-	    {
-		if (vpcolt1 == value &&
-		    vpcolt2 == v1 &&
-		    vpcolt3 == v2 &&
-		    vpcolt4 == v3)
-		    break;
-	    }
+	    case SET_COLOR_TABLE:
+		if (vpsetflag & F_COLT)
+		{
+		    if (vpcolt1 == value &&
+			vpcolt2 == v1 &&
+			vpcolt3 == v2 &&
+			vpcolt4 == v3)
+			break;
+		}
 /*
  * The only global attribute in vplot that stays set across
  * erases is the color table. If we're about to re-set this
  * color to the same thing it's already set to, then don't
  * bother! (Unless we've been told to do it anyway.)
  */
-	    if (vpsetcoltabanyway ||
-		vpscoltabinfo[value][ISITSET] != YES ||
-	        vpscoltabinfo[value][1] != v1 ||
-	        vpscoltabinfo[value][2] != v2 ||
-	        vpscoltabinfo[value][3] != v3)
-	    {
-	        vp_coltab (value,
-		       (float) v1 / (float) MAX_GUN,
-		       (float) v2 / (float) MAX_GUN,
-		       (float) v3 / (float) MAX_GUN);
+		if (vpsetcoltabanyway ||
+		    vpscoltabinfo[value][ISITSET] != YES ||
+		    vpscoltabinfo[value][1] != v1 ||
+		    vpscoltabinfo[value][2] != v2 ||
+		    vpscoltabinfo[value][3] != v3)
+		{
+		    vp_coltab (value,
+			       (float) v1 / (float) MAX_GUN,
+			       (float) v2 / (float) MAX_GUN,
+			       (float) v3 / (float) MAX_GUN);
 /*
  * A new one! Save it.
  */
-		vpscoltabinfo[value][ISITSET] = YES;
-		vpscoltabinfo[value][1] = v1;
-		vpscoltabinfo[value][2] = v2;
-		vpscoltabinfo[value][3] = v3;
-	    }
+		    vpscoltabinfo[value][ISITSET] = YES;
+		    vpscoltabinfo[value][1] = v1;
+		    vpscoltabinfo[value][2] = v2;
+		    vpscoltabinfo[value][3] = v3;
+		}
 
-	    vpcolt1 = value;
-	    vpcolt2 = v1;
-	    vpcolt3 = v2;
-	    vpcolt4 = v3;
-	    vpsetflag |= F_COLT;
+		vpcolt1 = value;
+		vpcolt2 = v1;
+		vpcolt3 = v2;
+		vpcolt4 = v3;
+		vpsetflag |= F_COLT;
 
-	    break;
+		break;
 
-	case SET_WINDOW:
+	    case SET_WINDOW:
 
-	    if (vpsetflag & F_CLIP)
-	    {
-		if (value == vpxwmin &&
-		    v1 == vpywmin &&
-		    v2 == vpxwmax &&
-		    v3 == vpywmax)
-		    break;
-	    }
-
-	    vp_clip ((float) (value) / RPERIN, (float) (v1) / RPERIN,
-		     (float) (v2) / RPERIN, (float) (v3) / RPERIN);
-	    vpxwmin = value;
-	    vpywmin = v1;
-	    vpxwmax = v2;
-	    vpywmax = v3;
-	    vpsetflag |= F_CLIP;
-	    break;
-
-	case NEW_DASH:
-	    if (vpsetflag & F_DASH)
-	    {
-		if (value == vpndash)
+		if (vpsetflag & F_CLIP)
 		{
-		    jj = YES;
-		    for (ii = 0; ii < value; ii++)
-		    {
-			if (vpdash[ii] != dashes[2 * ii] ||
-			    vpgap[ii] != dashes[2 * ii + 1])
-			    jj = NO;
-		    }
-		    if (jj)
+		    if (value == vpxwmin &&
+			v1 == vpywmin &&
+			v2 == vpxwmax &&
+			v3 == vpywmax)
 			break;
 		}
-	    }
 
-	    for (ii = 0; ii < value; ii++)
-	    {
-		vpdash[ii] = dashes[2 * ii];
-		vpgap[ii] = dashes[2 * ii + 1];
-	    }
-	    vp_setdash (vpdash, vpgap, value);
-	    vpndash = value;
-	    vpsetflag |= F_DASH;
-	    break;
+		vp_clip ((float) (value) / RPERIN, (float) (v1) / RPERIN,
+			 (float) (v2) / RPERIN, (float) (v3) / RPERIN);
+		vpxwmin = value;
+		vpywmin = v1;
+		vpxwmax = v2;
+		vpywmax = v3;
+		vpsetflag |= F_CLIP;
+		break;
 
-	case NEW_PAT:
-	    vpattrarray = (int *) malloc ((unsigned)
-			(pat[value].xdim * pat[value].ydim * sizeof (int)));
+	    case NEW_DASH:
+		if (vpsetflag & F_DASH)
+		{
+		    if (value == vpndash)
+		    {
+			jj = YES;
+			for (ii = 0; ii < value; ii++)
+			{
+			    if (vpdash[ii] != dashes[2 * ii] ||
+				vpgap[ii] != dashes[2 * ii + 1])
+				jj = NO;
+			}
+			if (jj)
+			    break;
+		    }
+		}
 
-	    if (vpattrarray != NULL)
-	    {
-		for (ii = 0; ii < pat[value].xdim * pat[value].ydim; ii++)
-		    vpattrarray[ii] = pat[value].patbits[ii];
+		for (ii = 0; ii < value; ii++)
+		{
+		    vpdash[ii] = dashes[2 * ii];
+		    vpgap[ii] = dashes[2 * ii + 1];
+		}
+		vp_setdash (vpdash, vpgap, value);
+		vpndash = value;
+		vpsetflag |= F_DASH;
+		break;
 
-		vp_patload ((int) RPERIN,
-			    pat[value].xdim, pat[value].ydim,
-			    value - 1, vpattrarray);
+	    case NEW_PAT:
+		vpattrarray = (int *) malloc ((unsigned)
+					      (pat[value].xdim * pat[value].ydim * sizeof (int)));
 
-		free ((char *) vpattrarray);
-	    }
-	    break;
+		if (vpattrarray != NULL)
+		{
+		    for (ii = 0; ii < pat[value].xdim * pat[value].ydim; ii++)
+			vpattrarray[ii] = pat[value].patbits[ii];
 
-	case NEW_FONT:
-	    if (value == -1)
-		value = vpfont1;
-	    if (v1 == -1)
-		v1 = vpfont2;
-	    if (v2 == -1)
-		v2 = vpfont3;
+		    vp_patload ((int) RPERIN,
+				pat[value].xdim, pat[value].ydim,
+				value - 1, vpattrarray);
 
-	    if (vpsetflag & F_FONT)
-	    {
-		if (vpfont1 == value &&
-		    vpfont2 == v1 &&
-		    vpfont3 == v2)
-		    break;
-	    }
+		    free ((char *) vpattrarray);
+		}
+		break;
 
-	    vp_tfont (value, v1, v2);
-	    vpfont1 = value;
-	    vpfont2 = v1;
-	    vpfont3 = v2;
-	    vpsetflag |= F_FONT;
-	    break;
+	    case NEW_FONT:
+		if (value == -1)
+		    value = vpfont1;
+		if (v1 == -1)
+		    v1 = vpfont2;
+		if (v2 == -1)
+		    v2 = vpfont3;
 
-	case NEW_OVERLAY:
-	    if (vpsetflag & F_OVLY)
-	    {
-		if (vpovly == value)
-		    break;
-	    }
+		if (vpsetflag & F_FONT)
+		{
+		    if (vpfont1 == value &&
+			vpfont2 == v1 &&
+			vpfont3 == v2)
+			break;
+		}
+
+		vp_tfont (value, v1, v2);
+		vpfont1 = value;
+		vpfont2 = v1;
+		vpfont3 = v2;
+		vpsetflag |= F_FONT;
+		break;
+
+	    case NEW_OVERLAY:
+		if (vpsetflag & F_OVLY)
+		{
+		    if (vpovly == value)
+			break;
+		}
 /*
  * Another libvplot command that doesn't exist but should.
  * XXXXXX
  *		vp_overlay(value);
  */
-	    vpsetflag |= F_OVLY;
-	    vpovly = value;
-	    break;
+		vpsetflag |= F_OVLY;
+		vpovly = value;
+		break;
 
-	case NEW_ALIGN:
-	    if (vpsetflag & F_JUST)
-	    {
-		if (vpjust1 == value &&
-		    vpjust2 == v1)
-		    break;
-	    }
-	    vp_tjust (value, v1);
-	    vpjust1 = value;
-	    vpjust2 = v1;
-	    vpsetflag |= F_JUST;
-	    break;
+	    case NEW_ALIGN:
+		if (vpsetflag & F_JUST)
+		{
+		    if (vpjust1 == value &&
+			vpjust2 == v1)
+			break;
+		}
+		vp_tjust (value, v1);
+		vpjust1 = value;
+		vpjust2 = v1;
+		vpsetflag |= F_JUST;
+		break;
 
-	case NEW_FAT:
-	    if (vpsetflag & F_FAT)
-	    {
-		if (vpfat == value)
-		    break;
-	    }
+	    case NEW_FAT:
+		if (vpsetflag & F_FAT)
+		{
+		    if (vpfat == value)
+			break;
+		}
 
-	    vp_fat (ROUND (value * FATPERIN / RPERIN));
-	    vpfat = value;
-	    vpsetflag |= F_FAT;
-	    break;
+		vp_fat (ROUND (value * FATPERIN / RPERIN));
+		vpfat = value;
+		vpsetflag |= F_FAT;
+		break;
 
-	case BEGIN_GROUP:
-	    if (value > 0)
-		vp_bgroup (group_name);
-	    break;
+	    case BEGIN_GROUP:
+		if (value > 0)
+		    vp_bgroup (group_name);
+		break;
 
-	case END_GROUP:
-	    if (value > 0)
-		vp_egroup ();
-	    break;
+	    case END_GROUP:
+		if (value > 0)
+		    vp_egroup ();
+		break;
 
-	default:
-	    break;
+	    default:
+		break;
 	}
     }
     else
     {
 	switch (command)
 	{
-	case SET_COLOR:
-	    if (vpsetflag & F_COL)
-	    {
-		if (vpcolor == value)
-		    break;
-	    }
-	    vp_color (value);
-	    vpcolor = value;
-	    vpsetflag |= F_COL;
-	    break;
+	    case SET_COLOR:
+		if (vpsetflag & F_COL)
+		{
+		    if (vpcolor == value)
+			break;
+		}
+		vp_color (value);
+		vpcolor = value;
+		vpsetflag |= F_COL;
+		break;
 
-	default:
-	    break;
+	    default:
+		break;
 	}
     }
 }
@@ -342,14 +342,14 @@ static int      vpxmaxs, vpxmins, vpymaxs, vpymins;
 void vp_do_dovplot (int nn, FILE **inpltin, char *innames[])
 /*< do vplot >*/
 {
-int             ii;
-bool             save_wantras;
-bool             save_shade;
-char            string[80];
-static int      it_got_clipped;
-float           hh, ww;
-float           rescale_x, rescale_y;
-char            format_string[80];
+    int             ii;
+    bool             save_wantras;
+    bool             save_shade;
+    char            string[80];
+    static int      it_got_clipped;
+    float           hh, ww;
+    float           rescale_x, rescale_y;
+    char            format_string[80];
 
     if (nn == 0)
 	return;
@@ -409,7 +409,7 @@ char            format_string[80];
 	    if (vpstat == YES)
 	    {
 		strcpy (format_string,
-		"%17s: h=%6.2f w=%6.2f; x=(%6.2f,%6.2f) y=(%6.2f,%6.2f)\n");
+			"%17s: h=%6.2f w=%6.2f; x=(%6.2f,%6.2f) y=(%6.2f,%6.2f)\n");
 	    }
 	    else
 	    {
@@ -451,7 +451,7 @@ char            format_string[80];
 		if (hh < 0. || ww < 0.)
 		{
 		    printf ("%17s: clipped away. ",
-			     innames[ii]);
+			    innames[ii]);
 		}
 		else
 		{
@@ -499,7 +499,7 @@ char            format_string[80];
 		    "            Total %d plot frame.\n", vpframecount + 1);
 	    else
 	        printf(
-		       "            Total %d plot frames.\n", vpframecount + 1);
+		    "            Total %d plot frames.\n", vpframecount + 1);
 
 	    if (it_got_clipped)
 	    {
@@ -581,21 +581,21 @@ char            format_string[80];
 	     * horizontal 
 	     */
 	{
-	case 'l':
-	    default_hshift += (0 - vpxmins);
-	    break;
-	case 'r':
-	    default_hshift += (0 - vpxmaxs);
-	    break;
-	case 'c':
-	    default_hshift += (0 - ((vpxmaxs + vpxmins) / 2));
-	    break;
-	case 'u':
-	    break;
-	default:
-	    ERR (WARN, name, "Unknown left-right alignment type %c.",
-		 vpaligns[0]);
-	    break;
+	    case 'l':
+		default_hshift += (0 - vpxmins);
+		break;
+	    case 'r':
+		default_hshift += (0 - vpxmaxs);
+		break;
+	    case 'c':
+		default_hshift += (0 - ((vpxmaxs + vpxmins) / 2));
+		break;
+	    case 'u':
+		break;
+	    default:
+		ERR (WARN, name, "Unknown left-right alignment type %c.",
+		     vpaligns[0]);
+		break;
 	}
 
 
@@ -604,21 +604,21 @@ char            format_string[80];
 	     * vertical 
 	     */
 	{
-	case 'b':
-	    default_vshift += (0 - vpymins);
-	    break;
-	case 't':
-	    default_vshift += (0 - vpymaxs);
-	    break;
-	case 'c':
-	    default_vshift += (0 - ((vpymaxs + vpymins) / 2));
-	    break;
-	case 'u':
-	    break;
-	default:
-	    ERR (WARN, name, "Unknown top-bottom alignment type %c.",
-		 vpaligns[1]);
-	    break;
+	    case 'b':
+		default_vshift += (0 - vpymins);
+		break;
+	    case 't':
+		default_vshift += (0 - vpymaxs);
+		break;
+	    case 'c':
+		default_vshift += (0 - ((vpymaxs + vpymins) / 2));
+		break;
+	    case 'u':
+		break;
+	    default:
+		ERR (WARN, name, "Unknown top-bottom alignment type %c.",
+		     vpaligns[1]);
+		break;
 	}
 
 	style = default_style;
@@ -651,10 +651,10 @@ char            format_string[80];
     }
 
 /*
- *********************************************************************
- * "Real" pass
- *********************************************************************
- */
+*********************************************************************
+* "Real" pass
+*********************************************************************
+*/
 
     if (vpdumb)
     {
@@ -672,6 +672,7 @@ char            format_string[80];
 	dev.smart_clip = true;
 	dev.smart_raster = true;
     }
+    dev.smart_background = true;
 
 /* Second (or first) pass */
     for (ii = 0; ii < nn; ii++)
@@ -696,106 +697,114 @@ void vperase (int command)
     {
 	switch (command)
 	{
-	case ERASE_START:
-	    vpframecount = 0;
-	    break;
-	case ERASE_MIDDLE:
-	    vpframecount++;
-	    newout = vpopen_name (vpframecount);
-	    vp_erase ();
-	    if (!vpdumb && vpstyle)
-	    {
-		vp_style (VP_ABSOLUTE);
-	    }
-	    dev.lost = YES;
-	    vpsetflag = NO;
+	    case ERASE_START:
+		vpframecount = 0;
+		break;
+	    case ERASE_MIDDLE:
+		vpframecount++;
+		newout = vpopen_name (vpframecount);
+		vp_erase ();
+		if (!vpdumb && vpstyle)
+		{
+		    vp_style (VP_ABSOLUTE);
+		}
+		dev.lost = YES;
+		vpsetflag = NO;
 
-	    if (!vpdumb && newout)
-	    {
+		if (!vpdumb && newout)
+		{
 /*
  * If this is a new output file, then explicitly set the entire
  * color table to its current state.
  */
-		vpsetcoltabanyway = YES;
-		for (ii=0; ii < VPPEN_NUM_COL; ii++)
-		{
-		    if (vpscoltabinfo[ii][ISITSET])
+		    vpsetcoltabanyway = YES;
+		    for (ii=0; ii < VPPEN_NUM_COL; ii++)
 		    {
-			vpattributes (SET_COLOR_TABLE, ii,
-			    vpscoltabinfo[ii][1],
-			    vpscoltabinfo[ii][2],
-			    vpscoltabinfo[ii][3]);
+			if (vpscoltabinfo[ii][ISITSET])
+			{
+			    vpattributes (SET_COLOR_TABLE, ii,
+					  vpscoltabinfo[ii][1],
+					  vpscoltabinfo[ii][2],
+					  vpscoltabinfo[ii][3]);
+			}
 		    }
-		}
-		vpsetcoltabanyway = NO;
+		    vpsetcoltabanyway = NO;
 
+		    dev.lost = YES;
+		    vpsetflag = NO;
+		}
+
+		break;
+	    case ERASE_BREAK:
+		vp_break ();
+		if (!vpdumb && vpstyle)
+		{
+		    vp_style (VP_ABSOLUTE);
+		}
 		dev.lost = YES;
 		vpsetflag = NO;
-            }
-
-	    break;
-	case ERASE_BREAK:
-	    vp_break ();
-	    if (!vpdumb && vpstyle)
-	    {
-		vp_style (VP_ABSOLUTE);
-	    }
-	    dev.lost = YES;
-	    vpsetflag = NO;
-	    break;
-	default:
-	    break;
+		break;
+	    case ERASE_BACKGROUND:
+		if (!vpdumb)
+		    vp_background();
+		break;
+	    default:
+		break;
 	}
     }
     else
     {
 	switch (command)
 	{
-	case ERASE_START:
-	    vpframecount = 0;
-	    dev.ymin = VP_STANDARD_HEIGHT * RPERIN;
-	case ERASE_MIDDLE:
-	    if (vpframecount < 0)
-		ERR (FATAL, name, "Must have initial erase with gridnum");
-	    if ((vpframecount % vparray[0]) == 0)
-	    {
-		dev.xmin = 0;
-		dev.ymin -= vpasize[1];
-	    }
-	    else
-	    {
-		dev.xmin += vpasize[0];
-	    }
-	    dev.xmax = dev.xmin + vpasize[0];
-	    dev.ymax = dev.ymin + vpasize[1];
+	    case ERASE_START:
+		vpframecount = 0;
+		dev.ymin = VP_STANDARD_HEIGHT * RPERIN;
+	    case ERASE_MIDDLE:
+		if (vpframecount < 0)
+		    ERR (FATAL, name, "Must have initial erase with gridnum");
+		if ((vpframecount % vparray[0]) == 0)
+		{
+		    dev.xmin = 0;
+		    dev.ymin -= vpasize[1];
+		}
+		else
+		{
+		    dev.xmin += vpasize[0];
+		}
+		dev.xmax = dev.xmin + vpasize[0];
+		dev.ymax = dev.ymin + vpasize[1];
 
-	    if (command == ERASE_MIDDLE)
-		vp_break ();
+		if (command == ERASE_MIDDLE)
+		    vp_break ();
 
-	    dev.lost = YES;
-	    vpsetflag = NO;
-	    reset_parameters ();
-	    vpframecount++;
+		dev.lost = YES;
+		vpsetflag = NO;
+		reset_parameters ();
+		vpframecount++;
 
-	    if (vpframe >= 0)
-	    {
-		vp_color (VP_WHITE);
-		vp_fat (vpframe);
+		if (vpframe >= 0)
+		{
+		    vp_color (VP_WHITE);
+		    vp_fat (vpframe);
 
-		vp_move ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
-		vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymin / RPERIN);
-		vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymax / RPERIN);
-		vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymax / RPERIN);
-		vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
+		    vp_move ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
+		    vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymin / RPERIN);
+		    vp_draw ((float) dev.xmax / RPERIN, (float) dev.ymax / RPERIN);
+		    vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymax / RPERIN);
+		    vp_draw ((float) dev.xmin / RPERIN, (float) dev.ymin / RPERIN);
 
-		vp_color (vpcolor);
-		vp_fat (ROUND (vpfat * FATPERIN / RPERIN));
-	    }
-	    break;
-	case ERASE_BREAK:
-	    break;
-	default:
-	    break;
+		    vp_color (vpcolor);
+		    vp_fat (ROUND (vpfat * FATPERIN / RPERIN));
+		}
+		break;
+	    case ERASE_BREAK:
+		break;
+	    case ERASE_BACKGROUND:
+		if (!vpdumb)
+		    vp_background();
+		break;
+	    default:
+		break;
 	}
     }
 }
@@ -803,8 +812,8 @@ void vperase (int command)
 void vpderase (int command)
 /*< Dummy erase command; does nothing but count frames. >*/
 {
-	switch (command)
-	{
+    switch (command)
+    {
 	case ERASE_START:
 	    vpframecount = 0;
 	    break;
@@ -815,7 +824,7 @@ void vpderase (int command)
 	    break;
 	default:
 	    break;
-	}
+    }
 }
 
 static int      saveitlog;
@@ -825,18 +834,18 @@ void vplogmessage (int command, char *string)
 {
     switch (command)
     {
-    case MESG_READY:
-	saveitlog = YES;
-	break;
-    case MESG_MESSAGE:
-	saveitlog = NO;
-	break;
-    case MESG_TEXT:
-	if (saveitlog)
-	    fprintf (stderr, "%s", string);
-	break;
-    default:
-	break;
+	case MESG_READY:
+	    saveitlog = YES;
+	    break;
+	case MESG_MESSAGE:
+	    saveitlog = NO;
+	    break;
+	case MESG_TEXT:
+	    if (saveitlog)
+		fprintf (stderr, "%s", string);
+	    break;
+	default:
+	    break;
     }
 }
 
@@ -872,9 +881,9 @@ void vplogvector (int x1, int y1, int x2, int y2, int nfat, int vpdashon)
 void vpmarker (int npts, int type, int size, int *pvec)
 /*< marker >*/
 {
-float          *xp;
-float          *yp;
-int             ii;
+    float          *xp;
+    float          *yp;
+    int             ii;
 
     vpsetflag = NO;
     dev.lost = YES;
@@ -905,34 +914,34 @@ void vpmessage (int command, char *string)
 {
     switch (command)
     {
-    case MESG_READY:
-	saveit = NO;
-	break;
-    case MESG_MESSAGE:
-	saveit = YES;
-	strcpy (savestring, "");
-	break;
-    case MESG_DONE:
-	if (saveit && !vpdumb)
-	{
-	    vp_message (savestring);
-	}
-	break;
-    case MESG_TEXT:
+	case MESG_READY:
+	    saveit = NO;
+	    break;
+	case MESG_MESSAGE:
+	    saveit = YES;
+	    strcpy (savestring, "");
+	    break;
+	case MESG_DONE:
+	    if (saveit && !vpdumb)
+	    {
+		vp_message (savestring);
+	    }
+	    break;
+	case MESG_TEXT:
 
-	if (saveit)
-	{
-	    if (strcmp (string, CRLF) != 0)
-		(void) strcat (savestring, string);
-	}
-	else
-	{
-	    fprintf (stderr, "%s", string);
-	}
+	    if (saveit)
+	    {
+		if (strcmp (string, CRLF) != 0)
+		    (void) strcat (savestring, string);
+	    }
+	    else
+	    {
+		fprintf (stderr, "%s", string);
+	    }
 
-	break;
-    default:
-	break;
+	    break;
+	default:
+	    break;
     }
 }
 
@@ -1045,8 +1054,8 @@ void opendev (int argc, char* argv[])
 
 /* Let it override.
 
-  if (vpbig || vpalign)
-  ERR (FATAL, name, "Incompatible option with gridnum");
+if (vpbig || vpalign)
+ERR (FATAL, name, "Incompatible option with gridnum");
 */
 
 	if (!sf_getfloats ("gridsize", atemp, 2)) {
@@ -1212,7 +1221,7 @@ static int vpopen_name (int num)
 
 void vpplot (int x, int y, int draw)
 /*< plot >*/
-    {
+{
     vpsetflag = NO;
 
     if (draw)
@@ -1371,8 +1380,8 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
 void vpvector (int x1, int y1, int x2, int y2, int nfat, int vpdashon)
 /*< vector >*/
 {
-static int      xlst, ylst;
-int             d1, d2;
+    static int      xlst, ylst;
+    int             d1, d2;
 
     if (nfat < 0)
 	return;

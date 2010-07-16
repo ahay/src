@@ -42,6 +42,7 @@ extern int rotate;
 extern float  hshift, vshift;
 extern int dither;
 extern bool endpause;
+extern bool honor_background;
 /* extern int txfont,txprec,txovly; */
 extern float pixc, greyc;
 

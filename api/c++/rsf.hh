@@ -63,6 +63,8 @@ public:
     // writing data
     const oRSF& operator<< (std::valarray <float> &vect) const;
     const oRSF& operator<< (std::valarray <int> &vect) const;
+    // set file data type
+    void type (sf_datatype type);
     // writing parameters
     void put (const char* name, int value) const;
     void put (const char* name, float value) const;

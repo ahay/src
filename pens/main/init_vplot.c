@@ -187,6 +187,7 @@ bool             window = true;
 bool             shade = true;
 bool             framewindows = false;
 bool             endpause = false;
+bool             honor_background = true;
 
 bool             wantras = true;
 bool             colormask[5];
@@ -365,6 +366,7 @@ void init_vplot (int argc, char* argv[])
     sf_getbool ("invras", &invras);
     sf_getbool ("txsquare", &no_stretch_text);
     sf_getbool ("serifs", &serifs_OK);
+    sf_getbool ("background",&honor_background);
 
     if (!sf_getbools ("colormask",colormask,5)) 
 	colormask[0] = colormask[1] = colormask[2] = 
