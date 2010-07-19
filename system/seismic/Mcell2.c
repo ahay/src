@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 
     sf_floatread(slow,nm,vel);
 
-    if (vel) { /* convert to slowness */
+    if (velocity) { /* convert to slowness */
 	for(im = 0; im < nm; im++){
 	    slow[im] = 1./slow[im];
 	}
