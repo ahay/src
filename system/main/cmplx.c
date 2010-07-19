@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
 
-    /* the first two non-parameters are real and imaginary files */
+    /* the first two non-parameters are real and imag files */
     for (i=1; i< argc; i++) { 
 	if (NULL == strchr(argv[i],'=')) {
 	    if (NULL == real) {
@@ -78,7 +78,8 @@ int main(int argc, char* argv[])
 
     cbuf = sf_charalloc(2*BUFSIZ);
 
-    for (nleft= (size_t) (rsize*resize); nleft > 0; nleft -= nbuf) {
+    for (nleft= (size_t) (rsize*resize); 
+	 nleft > 0; nleft -= nbuf) {
 	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
 	sf_charread(rbuf,nbuf,real);
 	sf_charread(ibuf,nbuf,imag);

@@ -214,7 +214,7 @@ The program flow is simple. First, get the names of the input files.
 \moddex{cmplx}{cmplx}{41}{57}{system/main}
 
 The main part of the program reads the real and imaginary parts buffer by buffer and assembles and writes out the complex input. 
-\moddex{cmplx}{cmplx}{81}{90}{system/main}
+\moddex{cmplx}{cmplx}{81}{91}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfconjgrad}
@@ -1152,14 +1152,6 @@ multiplied by zero. If using \texttt{rscale=0}, the other parameters are
 used to define scaling.  Thus, \texttt{sfscale rscale=0 axis=1} is
 equivalent to \texttt{sfscale axis=1}, and \texttt{sfscale rscale=0}
 is equivalent to \texttt{sfscale dscale=1}.
-
-\noindent\doublebox{\parbox{\textwidth}{
-    \input{sfsegyread}
-  }}
-
-\noindent\doublebox{\parbox{\textwidth}{
-    \input{sfsegywrite}
-  }}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfspike}

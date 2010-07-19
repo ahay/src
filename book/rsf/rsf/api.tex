@@ -116,7 +116,7 @@ cc clip.c -I$RSFROOT/include -L$RSFROOT/lib -lrsf -lm
 \end{verbatim}
 Change \texttt{cc} to the C compiler appropriate for your system and include
 additional compiler flags if necessary. The flags that RSF typically uses are
-in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+in \\ \texttt{\$RSFROOT/etc/madagascar/config.py}.
 
 \section{C++ interface}
 
@@ -169,7 +169,7 @@ c++ clip.cc -I$RSFROOT/include -L$RSFROOT/lib -lrsf++ -lrsf -lm
 \end{verbatim}
 Change \texttt{c++} to the C++ compiler appropriate for your system and
 include additional compiler flags if necessary. The flags that RSF typically
-uses are in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+uses are in \\ \texttt{\$RSFROOT/etc/madagascar/config.py}.
 
 \section{Fortran-77 interface}
 
@@ -249,7 +249,7 @@ f77 clip.f -L$RSFROOT/lib -lrsff -lrsf -lm
 \end{verbatim}
 Change \texttt{f77} to the Fortran compiler appropriate for your system and
 include additional compiler flags if necessary. The flags that RSF typically
-uses are in \\ \texttt{\$RSFROOT/lib/rsfconfig.py}.
+uses are in \\ \texttt{\$RSFROOT/etc/madagascar/config.py}.
 
 \section{Fortran-90 interface}
 
@@ -311,7 +311,7 @@ f90 clip.f90 -I$RSFROOT/include -L$RSFROOT/lib -lrsff90 -lrsf -lm
 \end{verbatim}
 Change \texttt{f90} to the Fortran-90 compiler appropriate for your system and
 include additional compiler flags if necessary. The flags that RSF typically
-uses are in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+uses are in \\ \texttt{\$RSFROOT/etc/madagascar/config.py}.
 
 \section{Python interface}
 
@@ -356,9 +356,9 @@ clipping, and writing out each trace.
 
 \subsection{Compiling}
 
-The python script does not require compilation. Simply make sure that
-\texttt{\$RSFROOT/lib} is in \texttt{PYTHONPATH} and
-\texttt{LD\_LIBRARY\_PATH}.
+The python script does not require compilation. Simply make sure to set
+\texttt{PYTHONPATH} and \texttt{LD\_LIBRARY\_PATH} according to \\
+\texttt{\$RSFROOT/etc/madagascar/env.sh} or \texttt{\$RSFROOT/etc/madagascar/env.csh}.
 
 \section{MATLAB interface} % a meaningless comment
 
@@ -399,7 +399,7 @@ Fortran-90 API bindings in addition to the basic package, run
 scons API=c++,f90 config
 \end{verbatim}
 Only the C interface is configured by default. The configuration
-parameters are stored in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+parameters are stored in \\ \texttt{\$RSFROOT/etc/madagascar/config.py}.
 
 \bibliographystyle{seg} 
 \bibliography{api}
