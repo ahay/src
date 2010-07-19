@@ -35,7 +35,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    float kz = cs[b]*dkz;
+	    float kz = cs[b]? cs[b]*dkz: SF_EPS;
 	    float x = (kz*kz+kx*kx)/kz;
 	    float h = (kz*kz+kh*kh)/kz;
 

@@ -441,7 +441,8 @@ check_compat (sf_datatype type /* data type */,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
-		sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
+		sf_error("%s mismatch: need %lld",key,
+			 (long long int) n[id-1]);
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&d)) {
 		if (!sf_histfloat(in[i],key,&di) || 

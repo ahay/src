@@ -21,7 +21,7 @@
 #include "lowrank1.h"
 
 static int nx;
-static float *cwave, **wave, **lft, **mid, **rht, *prev;
+static float *cwave, **wave, *prev;
 
 void lowrank1_init(int n1 /* data size */, 
 		   int m1 /* maximum rank */)
@@ -30,10 +30,6 @@ void lowrank1_init(int n1 /* data size */,
     int ix;
 
     nx = n1;
-
-    lft = left;
-    mid = middle;
-    rht = right;
 
     cwave = sf_floatalloc(nx);
     prev = sf_floatalloc(nx);
@@ -56,9 +52,9 @@ void lowrank1_close(void)
 }
 
 void lowrank1_step(int m1, int m2, 
-		   const float** left, 
-		   const float **middle, 
-		   const float **right, 
+		   const float **lft, 
+		   const float **mid, 
+		   const float **rht, 
 		   float* curr)
 /*< time step >*/
 {

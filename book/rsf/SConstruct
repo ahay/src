@@ -10,13 +10,13 @@ Papers(copyr='Madagascar Community',
        rsf/api.tex
        rsf/demo.tex
        scons/paper.tex
+       manual/manual.tex
        '''),
-       #              manual/manual.tex
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis'},
        line='\\url{http://www.ahay.org/}',
        fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
-End(use='hyperref,color,amsmath,fancybox,jfc',
-    include='\\newcommand{\\RSF}{../../..}')
+End(use='hyperref,color,amsmath,amssymb,fancybox,jfc,desclist,makeidx',
+    include='\\newcommand{\\RSF}{../../..}\n\\makeindex\\setcounter{tocdepth}{1}')
 
