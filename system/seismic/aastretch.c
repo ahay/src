@@ -106,7 +106,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	    tmp2[it] = modl[it];
 	}
 	
-	doubint (nk > 2, nt, tmp2);
+	doubint ((bool) (nk > 2), nt, tmp2);
 	
 	for (it=0; it < nt; it++) {
 	    tmp[it+nt]   = (nk-1)*tmp2[it];
@@ -151,7 +151,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	    }
 	}
 	
-	doubint (nk > 2, nt, tmp2);
+	doubint ((bool) (nk > 2), nt, tmp2);
 
 	for (it=0; it < nt; it++) {
 	    modl[it] += tmp2[it];

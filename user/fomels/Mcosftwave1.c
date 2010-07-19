@@ -72,12 +72,12 @@ int main(int argc, char* argv[])
     sf_fileclose(right);
     sf_fileclose(prop);
 
-    lowrank1_init(nx,m1,m2,lft,mid,rht);
+    lowrank1_init(nx,m1);
     sf_floatread (curr,nx,inp);
 
     /* propagation in time */
     for (it=0; it < nt; it++) {
-	lowrank1_step(curr);
+	lowrank1_step(m1,m2,lft,mid,rht,curr);
 	sf_floatwrite(curr,nx,out);
     }
     

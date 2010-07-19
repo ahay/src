@@ -60,7 +60,11 @@ void mutter (float tp     /* time step */,
 	wt = t - x * slope0;
 	if ((inner && wt > 0.) || (!inner && wt < 0.)) {
 	    if (nan)
+#ifdef NAN
+	        data[it]= NAN;
+#else
 	    	data[it]= 0.0 /0.0;
+#endif
 	    else
 	    	data[it] = 0.;
 	    	

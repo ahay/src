@@ -35,7 +35,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    float kz = cs[b]? cs[b]*dkz: SF_EPS;
+	    float kz = cs[b]? cs[b]*dkz: dkz;
 	    float x = (kz*kz+kx*kx)/kz;
 	    float h = (kz*kz+kh*kh)/kz;
 
@@ -132,8 +132,10 @@ int main(int argc, char** argv)
 	    int n2=mid.n();
 	    double *dmid = mid.data();
 
-	    for (int k=0; k < m2*n2; k++) {
-		fmid[k] = dmid[k];
+	    for (int j=0; j < n2; j++) {
+		for (int i=0; i < m2; i++) {
+		    fmid[i+j*npk] = dmid[i+j*m2];
+		}
 	    }
 	    middle << fmid;
 
@@ -149,8 +151,11 @@ int main(int argc, char** argv)
 	    iC ( sample(ridx,nidx,rmat) );
 	    double *rdat = rmat.data();
 
-	    for (int k=0; k < n2*nkz; k++) 
-		rdata[k] = rdat[k];
+	    for (int iz=0; iz < nkz; iz++) {
+		for (int j=0; j < n2; j++) {
+		    rdata[j+iz*npk] = rdat[j+iz*n2];
+		}
+	    }
 	    right << rdata;
 
 	    nsize[0] = m2;

@@ -61,6 +61,7 @@ int main(int argc, char* argv[]) {
 	    /* maximum header value */
 	    break;
 	default:
+	    nbuf = 0;
 	    sf_error("Unsupported type %d",type);
 	    break;
     }

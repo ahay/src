@@ -19,14 +19,15 @@
 #include <rsf.h>
 
 #include "cosft3.h"
+#include "lowrank1.h"
 
 int main(int argc, char* argv[])
 {
     bool mig;
-    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its;
-    float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
-    float ***prev, ***curr, **img, **dat;
-    sf_file data, image;
+    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its, ik, n1, n2, nk, nr, **siz;
+    float dt, dx, dz, dh, c;
+    float ***curr, **img, **dat, ***lft, ***mid, ***rht;
+    sf_file data, image, size, left, middle, right;
 
     sf_init(argc,argv);
 
@@ -99,6 +100,41 @@ int main(int argc, char* argv[])
 	}
     }
 
+    nk = nx*nh;
+
+    size = sf_input("size");
+    if (SF_INT != sf_gettype(size) ||
+	!sf_histint(size,"n1",&n1) || 2  != n1 ||
+	!sf_histint(size,"n2",&n2) || nk != n2) sf_error("Wrong size in size=");
+    siz = sf_intalloc2(2,nk);
+    sf_intread(siz[0],2*nk,size);
+    sf_fileclose(size);
+
+    left =  sf_input("left");
+    if (SF_FLOAT != sf_gettype(left) ||
+	!sf_histint(left,"n1",&n1) || nz != n1 ||
+	!sf_histint(left,"n3",&n2) || nk != n2) sf_error("Wrong size in left=");
+    if (!sf_histint(left,"n2",&nr)) sf_error("No n2= in left");
+    lft = sf_floatalloc3(nz,nr,nk);
+    sf_floatread(lft[0][0],nz*nr*nk,left);
+    sf_fileclose(left);
+
+    middle =  sf_input("middle");
+    if (SF_FLOAT != sf_gettype(middle) ||
+	!sf_histint(middle,"n1",&n1) || nr != n1 ||
+	!sf_histint(middle,"n3",&n2) || nk != n2) sf_error("Wrong size in middle=");
+    mid = sf_floatalloc3(nr,nr,nk);
+    sf_floatread(mid[0][0],nr*nr*nk,middle);
+    sf_fileclose(middle);
+
+    right =  sf_input("right");
+    if (SF_FLOAT != sf_gettype(right) ||
+	!sf_histint(right,"n2",&n1) || nz != n1 ||
+	!sf_histint(right,"n3",&n2) || nk != n2) sf_error("Wrong size in right=");
+    rht = sf_floatalloc3(nr,nz,nk);
+    sf_floatread(rht[0][0],nr*nz*nk,right);
+    sf_fileclose(right);
+
     if (mig) { /* migration */
 	/* initialize image */
 	for (iz=0; iz < nz; iz++) {
@@ -129,6 +165,7 @@ int main(int argc, char* argv[])
 	its = +1;
     }
 
+    lowrank1_init(nz,nr);
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
@@ -145,6 +182,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	ik=0;
 	for (ix=0; ix < nx; ix++) {
 	    for (ih=0; ih < nh; ih++) {		
 		if (mig) {
@@ -153,8 +191,8 @@ int main(int argc, char* argv[])
 		    dat[ix][ih] += curr[ix][ih][0];
 		}
 		
-		ik = ih + ix*nh;
-		lowrank1_step(siz[ik][0],siz[ik][1],lft[ik],mid[ik],rht[ik],curr);
+		lowrank1_step(siz[ik][0],siz[ik][1],lft[ik],mid[ik],rht[ik],curr[ix][ih]);
+		ik++;
 	    }
 	}
 

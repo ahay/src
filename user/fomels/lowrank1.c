@@ -52,9 +52,9 @@ void lowrank1_close(void)
 }
 
 void lowrank1_step(int m1, int m2, 
-		   const float **lft, 
-		   const float **mid, 
-		   const float **rht, 
+		   float **lft, 
+		   float **mid, 
+		   float **rht, 
 		   float* curr)
 /*< time step >*/
 {

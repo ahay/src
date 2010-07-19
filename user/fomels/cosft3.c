@@ -148,7 +148,7 @@ void cosft12(bool inv,               /* forward or inverse */
 
 void cosft2(bool inv,       /* forward or inverse */ 
 	    int n1, int n2, /* dimensions */
-	    float **data    /* data [n3][n2][n1] */)
+	    float **data    /* data [n2][n1] */)
 /*< 2-D transform (in place) >*/
 {
     int i1, i2;

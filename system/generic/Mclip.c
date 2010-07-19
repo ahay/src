@@ -21,6 +21,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool nan;
     int i, n, nbuf;
     float clip, *trace;
     sf_file in=NULL, out=NULL; /* Input and output files */
@@ -49,7 +50,12 @@ int main(int argc, char* argv[])
 	sf_floatread(trace,nbuf,in);
 
 	for (i=0; i < nbuf; i++) {
-	    if (!isnormal(trace[i]))   trace[i]= SF_SIG(trace[i])*clip; 
+#ifdef sun
+	    nan = !finite(trace[i]);
+#else
+	    nan = !isnormal(trace[i]);
+#endif
+	    if (nan) trace[i] = SF_SIG(trace[i])*clip; 
 	    else if (trace[i] >  clip) trace[i]= clip;
 	    else if (trace[i] < -clip) trace[i]=-clip;
 	}
