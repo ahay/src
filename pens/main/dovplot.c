@@ -1919,23 +1919,28 @@ static void outline_window (void)
 static void fill_background (void)
 {
     int x[4], y[4];
+    int cur_color_save;
 
-    if (need_devcolor == YES || cur_color != COLOR_MAP (BACKGROUND_COLOR))
-    {
-	dev.attributes (SET_COLOR, COLOR_MAP (BACKGROUND_COLOR), 0, 0, 0);
-	need_devcolor = NO;
-    }
-    
-    x[0] = dev.xmin; y[0] = dev.ymin;
-    x[1] = dev.xmin; y[1] = dev.ymax; 
-    x[2] = dev.xmax; y[2] = dev.ymax;
-    x[3] = dev.xmax, y[3] = dev.ymin;
-    drawpolygon (4, x, y);
-    
+    cur_color_save = cur_color;
+
     if (cur_color != COLOR_MAP (BACKGROUND_COLOR))
     {
-	dev.attributes (SET_COLOR, cur_color, 0, 0, 0);
-	need_devcolor = NO;
+        cur_color = COLOR_MAP (BACKGROUND_COLOR);
+	need_devcolor = YES;
+        /* drawpolygon will call update_color(); */
+    }
+
+    /* If the user requests a limited device plotting area, honor it. */
+    x[0] = xWmin; y[0] = yWmin;
+    x[1] = xWmin; y[1] = yWmax; 
+    x[2] = xWmax; y[2] = yWmax;
+    x[3] = xWmax, y[3] = yWmin;
+    drawpolygon (4, x, y);
+    
+    if (cur_color != cur_color_save)
+    {
+        cur_color = cur_color_save;
+	need_devcolor = YES;
     }
 }
 

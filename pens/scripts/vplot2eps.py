@@ -54,8 +54,11 @@ def convert(vplot,eps,
     else:           ybbp = ybmax
 
     # Compute bounding box
-    bbm = map(lambda x: (float(x)-space)*ppi,[xbbm,ybbm])
-    bbp = map(lambda x: (float(x)+space)*ppi,[xbbp,ybbp])
+    bm = map(lambda x: float(x)-space,[xbbm,ybbm])
+    bp = map(lambda x: float(x)+space,[xbbp,ybbp])
+    
+    bbm = map(lambda x: x*ppi,bm)
+    bbp = map(lambda x: x*ppi,bp)
 
     # Round to integer
     ibbm = map(int,bbm)
@@ -65,6 +68,8 @@ def convert(vplot,eps,
     out.write("%!PS-Adobe-2.0 EPSF-2.0\n")
     out.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(ibbm+ibbp))
     out.write("%%%%HiResBoundingBox: %g %g %g %g\n" % tuple(bbm+bbp))
+
+    opts += ' xwmin=%g ywmin=%g xwmax=%g ywmax=%g' % tuple(bm+bp)
     
     name = tempfile.mktemp()
     command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)

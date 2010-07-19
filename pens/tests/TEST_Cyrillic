@@ -5,7 +5,9 @@ Test of alternate fonts and ligatures.
 z
 
 z
-You should get "Glory to Labor!" in white on a red background.
+On a color device,
+z
+you should get "Glory to Labor!" in white on a red background.
 z
 Underneath, in yellow, the Russian alphabet, in order, in both cases.
 z
@@ -18,6 +20,8 @@ z
 and then on the next:
 z
 "Khrushchev lives!"
+z
+On a B+W device, all the text should contrast against the background.
 o 0 -1500
 F 11 2 0
 C 0 255 0 0
