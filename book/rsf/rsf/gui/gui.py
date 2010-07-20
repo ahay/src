@@ -8,18 +8,44 @@ except:
     sys.exit(1)
 
 root = Tk()
+root.title('Wavelet Demo')
 
-frame = Frame(root,relief=GROOVE,borderwidth=2)
+typev = StringVar()
+typev.set('b')
+
+type_frame = Frame(root,relief=SUNKEN,borderwidth=2)
+type_frame.pack(side=TOP,fill=X)
+
+Label(type_frame,text='Wavelet Type').pack(side=TOP)
+types = {'h':'Haar',
+         'l':'Linear',
+         'b':'Bi-orthogonal'}
+for t in 'hlb':
+    rbut = Radiobutton(type_frame,text=types[t],value=t,variable=typev)
+    rbut.pack(side=LEFT)
+
+pclip_frame = Frame(root,relief=SUNKEN,borderwidth=2)
+pclip_frame.pack(side=TOP,fill=X)
+  
+pclip = IntVar()
+pclip.set(50)
+
+scale = Scale(pclip_frame,from_=1,to=99,resolution=1,orient=HORIZONTAL,
+              variable=pclip,length=200)
+scale.pack(side=RIGHT)
+Label(pclip_frame,text='Threshold\nPercentile').pack(side=RIGHT,anchor=SE)
+
+frame = Frame(root)
 frame.pack(side=TOP,fill=X)
 
-quit = Button(frame,text="Quit",background="red",command=sys.exit)
-quit.pack(side=LEFT)
+quit = Button(frame,text='Quit',background='red',command=sys.exit)
+quit.pack(side=RIGHT)
 
 def scons():
-    os.system ("scons -Q view")
-
-cycle = Button(frame,text="Run",background="yellow",command=scons)
-cycle.pack(side=RIGHT)
+    os.system ('scons -Q type=%s pclip=%d view' % (typev.get(),pclip.get()))
+    
+cycle = Button(frame,text='Run',background='yellow',command=scons)
+cycle.pack()
 
 root.mainloop()
 
