@@ -122,37 +122,42 @@
 
 int             length[7] =
 {
- 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0
 };
 int             length2[7] =
 {
- 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0
 };
+
+static void write_int(int fd, int* c)
+{
+    if (sizeof(int) != write (fd, (char *) c, sizeof (int))) exit(2);
+}
 
 int main (int argc, char *argv[])
 {
-char           *mde, *cp;
-int            *x, *y, *z, *xp, *yp, *zp;
-char           *ch, *chp;
-int            *addr;
-int             addr_index;
-int             xout=0, xmax=0, xmin=0, ymin=0, ymax=0, nc = 0;
-int            *lwidth, *rwidth;
-int            *symb;
-int             pad, leftright, symbol;
-char            string[133];
-int             start, end;
-int             first = 1;
-int             letter, line, space, top, cap, half, base, bottom;
-int             left=0, right=0, vsymb=0, count=0;
-char            name[100];
-int             i, j, iaddr;
-int             fd;
-unsigned int    uint;
-int             sint;
-int             integer;
-int             lengtht;
-int             lig[7];
+    char           *mde, *cp;
+    int            *x, *y, *z, *xp, *yp, *zp;
+    char           *ch, *chp;
+    int            *addr;
+    int             addr_index;
+    int             xout=0, xmax=0, xmin=0, ymin=0, ymax=0, nc = 0;
+    int            *lwidth, *rwidth;
+    int            *symb;
+    int             pad, leftright, symbol;
+    char            string[133];
+    int             start, end;
+    int             first = 1;
+    int             letter, line, space, top, cap, half, base, bottom;
+    int             left=0, right=0, vsymb=0, count=0;
+    char            name[100];
+    int             i, j, iaddr;
+    int             fd;
+    unsigned int    uint;
+    int             sint;
+    int             integer;
+    int             lengtht;
+    int             lig[7];
 
     mde = (char *) malloc (MAX_LENGTH * sizeof (char));
     x = (int *) malloc (MAX_LENGTH * sizeof (int));
@@ -217,16 +222,15 @@ int             lig[7];
     while (1)
     {
 	if (NULL == fgets (string,132,stdin)) exit(1);
-        /* At most 6 characters in a ligature! */
+	/* At most 6 characters in a ligature! */
 	lig[0] = 0;
 	i = sscanf (string, "%d %d %d %d %d %d %d",
-		 lig, lig + 1, lig + 2, lig + 3, lig + 4, lig + 5, lig + 6);
+		    lig, lig + 1, lig + 2, lig + 3, lig + 4, lig + 5, lig + 6);
 	if (i <= 1)
 	{
 	    printf ("%d,  ", 0);
 	    integer = 0;
-	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) 
-		exit(2);
+	    write_int (fd, &integer);
 	    length[6] += sizeof (int);
 
 	    printf ("\n};\n\n");
@@ -237,22 +241,19 @@ int             lig[7];
 	{
 	    printf ("%d,  ", i - 1);
 	    integer = i - 1;
-	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) 
-		exit(2);
+	    write_int (fd, &integer);
 	    length[6] += sizeof (int);
 
 	    printf ("%d, ", lig[0]);
 	    integer = lig[0];
-	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int)))
-		exit(2);
+	    write_int (fd, &integer);
 	    length[6] += sizeof (int);
 
 	    for (j = 1; j < i; j++)
 	    {
 		printf ("%d,", lig[j]);
 		integer = lig[j];
-		if (sizeof(int) != write (fd, (char *) &integer, sizeof (int)))
-		    exit(2);
+		write_int (fd, &integer);
 		length[6] += sizeof (int);
 	    }
 	    printf ("\n");
@@ -280,102 +281,102 @@ int             lig[7];
     {
 	switch (mde[i])
 	{
-	case ('e'):
-	    /* Things to do when ending a character */
-	    if (!first)
-	    {
-		xout = EOCBIT;
-		if (!leftright || left == MAGIC || right == MAGIC)
+	    case ('e'):
+		/* Things to do when ending a character */
+		if (!first)
 		{
-		    lwidth[addr_index] = -xmin + pad / 2.;
-		    rwidth[addr_index] = xmax + pad / 2.;
+		    xout = EOCBIT;
+		    if (!leftright || left == MAGIC || right == MAGIC)
+		    {
+			lwidth[addr_index] = -xmin + pad / 2.;
+			rwidth[addr_index] = xmax + pad / 2.;
+		    }
+		    else
+		    {
+			lwidth[addr_index] = left;
+			rwidth[addr_index] = right;
+		    }
+		    if (!symbol || vsymb == MAGIC)
+		    {
+			symb[addr_index] = (ymax + ymin) / 2;
+		    }
+		    else
+		    {
+			symb[addr_index] = vsymb;
+		    }
 		}
 		else
-		{
-		    lwidth[addr_index] = left;
-		    rwidth[addr_index] = right;
-		}
-		if (!symbol || vsymb == MAGIC)
-		{
-		    symb[addr_index] = (ymax + ymin) / 2;
-		}
-		else
-		{
-		    symb[addr_index] = vsymb;
-		}
-	    }
-	    else
-		first = 0;
+		    first = 0;
 
-	    /* Things to do when beginning a character */
-	    if (ch[i * MAX_STRING + 0] != '\0')
-	    {
-		count = 0;
-		ymax = -10000;
-		ymin = 10000;
-		xmax = -10000;
-		xmin = 10000;
-		if (ch[i * MAX_STRING + 0] != '\\' || ch[i * MAX_STRING + 1] == '\0')
+		/* Things to do when beginning a character */
+		if (ch[i * MAX_STRING + 0] != '\0')
 		{
-		    addr_index = ch[i * MAX_STRING + 0];
+		    count = 0;
+		    ymax = -10000;
+		    ymin = 10000;
+		    xmax = -10000;
+		    xmin = 10000;
+		    if (ch[i * MAX_STRING + 0] != '\\' || ch[i * MAX_STRING + 1] == '\0')
+		    {
+			addr_index = ch[i * MAX_STRING + 0];
+		    }
+		    else
+		    {
+			sscanf (&ch[i * MAX_STRING + 0], "\\%d ", &addr_index);
+		    }
+		    if (addr_index < start || addr_index > end)
+		    {
+			fprintf (stderr, "Character value %d out of promised range %d to %d!\n", addr_index, start, end);
+			exit (1);
+		    }
+		    addr_index -= start;
+		    addr[addr_index] = iaddr;
+		    left = x[i];
+		    right = y[i];
+		    vsymb = z[i];
 		}
+		break;
+	    case 'A':
+		count = x[i];
+		if (count < 3)
+		{
+		    fprintf (stderr, "Polygon must have more than 2 vertices!\n");
+		    exit (2);
+		}
+		/* Don't increment iaddr, no output */
+		continue;
+		break;
+	    case '\t':
+		mde[i] = ' ';
+	    case ' ':
+		count--;
+	    case ('d'):
+	    case ('m'):
+		xout = x[i] < 0 ? -(x[i]) : x[i];
+		if (x[i] < 0)
+		    xout |= XBIT;
+		xout |= ((y[i] < 0 ? -(y[i]) : y[i]) << 7);
+		if (y[i] < 0)
+		    xout |= YBIT;
+		if (mde[i] == 'd')
+		    xout |= DRAWBIT;
 		else
-		{
-		    sscanf (&ch[i * MAX_STRING + 0], "\\%d ", &addr_index);
-		}
-		if (addr_index < start || addr_index > end)
-		{
-		    fprintf (stderr, "Character value %d out of promised range %d to %d!\n", addr_index, start, end);
-		    exit (1);
-		}
-		addr_index -= start;
-		addr[addr_index] = iaddr;
-		left = x[i];
-		right = y[i];
-		vsymb = z[i];
-	    }
-	    break;
-	case 'A':
-	    count = x[i];
-	    if (count < 3)
-	    {
-		fprintf (stderr, "Polygon must have more than 2 vertices!\n");
-		exit (2);
-	    }
-	    /* Don't increment iaddr, no output */
-	    continue;
-	    break;
-	case '\t':
-	    mde[i] = ' ';
-	case ' ':
-	    count--;
-	case ('d'):
-	case ('m'):
-	    xout = x[i] < 0 ? -(x[i]) : x[i];
-	    if (x[i] < 0)
-		xout |= XBIT;
-	    xout |= ((y[i] < 0 ? -(y[i]) : y[i]) << 7);
-	    if (y[i] < 0)
-		xout |= YBIT;
-	    if (mde[i] == 'd')
-		xout |= DRAWBIT;
-	    else
-	    if (mde[i] == ' ')
-	    {
-		xout |= DRAWBIT;
-		if (count > 0)
-		    xout |= EOCBIT;
-	    }
+		    if (mde[i] == ' ')
+		    {
+			xout |= DRAWBIT;
+			if (count > 0)
+			    xout |= EOCBIT;
+		    }
 
-	    xmax = x[i] < xmax ? xmax : x[i];
-	    xmin = x[i] > xmin ? xmin : x[i];
-	    ymax = y[i] < ymax ? ymax : y[i];
-	    ymin = y[i] > ymin ? ymin : y[i];
-	    break;
-	default:
-	    /* ignore this line */
-	    continue;
-	    break;
+		xmax = x[i] < xmax ? xmax : x[i];
+		xmin = x[i] > xmin ? xmin : x[i];
+		ymax = y[i] < ymax ? ymax : y[i];
+		ymin = y[i] > ymin ? ymin : y[i];
+		break;
+	    default:
+		/* ignore this line */
+		continue;
+		break;
 	}
 
 	/*
@@ -403,7 +404,7 @@ int             lig[7];
     fd = creat (string, 0777);
     if (20 != write (fd, (char *) "Vplot Binary fonT  \n", 20)) exit(2);
     integer = FONTCHECK;
-    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) exit(2);
+    write_int (fd, &integer);
     close (fd);
 
 /*
@@ -422,7 +423,7 @@ int             lig[7];
     {
 	printf ("%d,", addr[i]);
 	integer = addr[i];
-	if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) exit(2);
+	write_int (fd, &integer);
 	length[1] += sizeof (int);
     }
     close (fd);
@@ -435,7 +436,7 @@ int             lig[7];
     {
 	printf ("%d,", lwidth[i]);
 	sint = lwidth[i];
-	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
+	write_int (fd, &sint);
 	length[2] += sizeof (int);
     }
     close (fd);
@@ -448,7 +449,7 @@ int             lig[7];
     {
 	printf ("%d,", rwidth[i]);
 	sint = rwidth[i];
-	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
+	write_int (fd, &sint);
 	length[3] += sizeof (int);
     }
     close (fd);
@@ -461,7 +462,7 @@ int             lig[7];
     {
 	printf ("%d,", symb[i]);
 	sint = symb[i];
-	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
+	write_int (fd, &sint);
 	length[4] += sizeof (int);
     }
     close (fd);
@@ -469,29 +470,29 @@ int             lig[7];
     printf ("\n};\n\n\n");
 
     printf ("int %sdim[] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d};\n",
-       name, bottom, base, half, cap, top, letter, line, space, start, end);
+	    name, bottom, base, half, cap, top, letter, line, space, start, end);
     sprintf (string, "%sdim", name);
     fd = creat (string, 0777);
     sint = bottom;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = base;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = half;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = cap;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = top;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = letter;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = line;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = space;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = start;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     sint = end;
-    (void) write (fd, (char *) &sint, sizeof (int));
+    write_int (fd, &sint);
     length[0] += 10 * sizeof (int);
     close (fd);
 
@@ -512,8 +513,9 @@ int             lig[7];
 
     sprintf (string, "%sheader", name);
     fd = creat (string, 0777);
-    (void) write (fd, (char *) &lengtht, sizeof (int));
-    (void) write (fd, (char *) length2, 7 * sizeof (int));
+    write_int (fd, &lengtht);
+    if (7 * sizeof(int) != write (fd, (char *) length2, 7 * sizeof (int)))
+	exit(3);
     close (fd);
-	exit(0);
+    exit(0);
 }
