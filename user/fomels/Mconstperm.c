@@ -23,15 +23,21 @@
 int main(int argc, char* argv[])
 {
     bool mig;
-    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its;
+    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its, snap;
     float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
     float ***prev, ***curr, **img, **dat;
-    sf_file data, image;
+    sf_file data, image, snaps;
 
     sf_init(argc,argv);
 
     if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
+
+    if (!sf_getint("snap",&snap)) snap=0;
+    /* interval for snapshots */
+    
+    snaps = (snap > 0)? sf_output("snaps"): NULL;
+    /* (optional) snapshot file */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -84,6 +90,21 @@ int main(int argc, char* argv[])
 	sf_putfloat(data,"d3",dt);
 	sf_putstring(data,"label3","Time");
 	sf_putstring(data,"unit3","s");
+    }
+
+    if (NULL != snaps) {
+	sf_putint(snaps,"n1",nh);
+	sf_putfloat(snaps,"d1",dh);
+	sf_putstring(snaps,"label1","Half-Offset");
+
+	sf_putint(snaps,"n3",nz);
+	sf_putfloat(snaps,"d3",dz);
+	sf_putstring(snaps,"label3","Depth");
+
+	sf_putint(snaps,"n4",nt/snap);
+	sf_putfloat(snaps,"d4",dt*snap);
+	sf_putfloat(snaps,"o4",0.);
+	sf_putstring(snaps,"label4","Time");
     }
 
     img = sf_floatalloc2(nz,nx);
@@ -155,6 +176,9 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
+
+	if (NULL != snaps && 0 == it%snap) 
+	    sf_floatwrite(curr[0][0],nh*nx*nz,snaps);
 
 	for (iz=1; iz < nz; iz++) {
 	    kz = iz*dz;
