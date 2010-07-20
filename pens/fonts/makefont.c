@@ -202,12 +202,12 @@ int             lig[7];
     }
     strcat (name, "_");
 
-    (void) fgets (string,132,stdin);
+    if (NULL == fgets (string,132,stdin)) exit(1);
     sscanf (string, "%d %d", &start, &end);
-    (void) fgets (string,132,stdin);
+    if (NULL == fgets (string,132,stdin)) exit(1);
     sscanf (string, "%d %d %d", &letter, &line, &space);
     space -= 2 * letter;
-    (void) fgets (string,132,stdin);
+    if (NULL == fgets (string,132,stdin)) exit(1);
     sscanf (string, "%d %d %d %d %d", &top, &cap, &half, &base, &bottom);
 
     sprintf (string, "%slig", name);
@@ -216,7 +216,7 @@ int             lig[7];
 
     while (1)
     {
-	(void) fgets (string,132,stdin);
+	if (NULL == fgets (string,132,stdin)) exit(1);
         /* At most 6 characters in a ligature! */
 	lig[0] = 0;
 	i = sscanf (string, "%d %d %d %d %d %d %d",
@@ -225,7 +225,8 @@ int             lig[7];
 	{
 	    printf ("%d,  ", 0);
 	    integer = 0;
-	    (void) write (fd, (char *) &integer, sizeof (int));
+	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) 
+		exit(2);
 	    length[6] += sizeof (int);
 
 	    printf ("\n};\n\n");
@@ -236,19 +237,22 @@ int             lig[7];
 	{
 	    printf ("%d,  ", i - 1);
 	    integer = i - 1;
-	    (void) write (fd, (char *) &integer, sizeof (int));
+	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) 
+		exit(2);
 	    length[6] += sizeof (int);
 
 	    printf ("%d, ", lig[0]);
 	    integer = lig[0];
-	    (void) write (fd, (char *) &integer, sizeof (int));
+	    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int)))
+		exit(2);
 	    length[6] += sizeof (int);
 
 	    for (j = 1; j < i; j++)
 	    {
 		printf ("%d,", lig[j]);
 		integer = lig[j];
-		(void) write (fd, (char *) &integer, sizeof (int));
+		if (sizeof(int) != write (fd, (char *) &integer, sizeof (int)))
+		    exit(2);
 		length[6] += sizeof (int);
 	    }
 	    printf ("\n");
@@ -383,7 +387,8 @@ int             lig[7];
 	{
 	    printf ("%d,", xout);
 	    uint = xout;
-	    (void) write (fd, (char *) &uint, sizeof (unsigned int));
+	    if (sizeof(unsigned int) != 
+		write (fd, (char *) &uint, sizeof (unsigned int))) exit(2);
 	    length[5] += sizeof (unsigned int);
 	    if (xout == EOCBIT)
 		printf ("\n");
@@ -396,9 +401,9 @@ int             lig[7];
  */
     sprintf (string, "%scheck", name);
     fd = creat (string, 0777);
-    (void) write (fd, (char *) "Vplot Binary fonT  \n", 20);
+    if (20 != write (fd, (char *) "Vplot Binary fonT  \n", 20)) exit(2);
     integer = FONTCHECK;
-    (void) write (fd, (char *) &integer, sizeof (int));
+    if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) exit(2);
     close (fd);
 
 /*
@@ -417,7 +422,7 @@ int             lig[7];
     {
 	printf ("%d,", addr[i]);
 	integer = addr[i];
-	(void) write (fd, (char *) &integer, sizeof (int));
+	if (sizeof(int) != write (fd, (char *) &integer, sizeof (int))) exit(2);
 	length[1] += sizeof (int);
     }
     close (fd);
@@ -430,7 +435,7 @@ int             lig[7];
     {
 	printf ("%d,", lwidth[i]);
 	sint = lwidth[i];
-	(void) write (fd, (char *) &sint, sizeof (int));
+	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
 	length[2] += sizeof (int);
     }
     close (fd);
@@ -443,7 +448,7 @@ int             lig[7];
     {
 	printf ("%d,", rwidth[i]);
 	sint = rwidth[i];
-	(void) write (fd, (char *) &sint, sizeof (int));
+	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
 	length[3] += sizeof (int);
     }
     close (fd);
@@ -456,7 +461,7 @@ int             lig[7];
     {
 	printf ("%d,", symb[i]);
 	sint = symb[i];
-	(void) write (fd, (char *) &sint, sizeof (int));
+	if (sizeof(int) != write (fd, (char *) &sint, sizeof (int))) exit(2);
 	length[4] += sizeof (int);
     }
     close (fd);

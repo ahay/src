@@ -63,7 +63,8 @@ void geninteract (int what, FILE *controltty, char *string)
 	}
 	else
 	{
-	    (void) fgets (string, 79, controltty);
+	    if (NULL == fgets (string, 79, controltty)) 
+		ERR (FATAL,name,"fgets error");
 	}
 	break;
     default:
