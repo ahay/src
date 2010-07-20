@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-eikds eikEta eikvti wkbjTI makevel
+eikds eikEta eikvti wkbjTI makevel ScanCoef
 '''
 
 pyprogs = 'rcat'
