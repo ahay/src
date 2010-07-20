@@ -38,9 +38,9 @@ def publicproj(project):
     execfile('.rsfproj',g,l)
     if 'PRIVATE' in l['data'] or 'LOCAL' in l['data']:
         return False
-    if not 'size' in l:
+    if not 'size' in l or l['size'] <= 0:
         return False
-    if size > 0 and l['size'] > 0 and l['size'] > size:
+    if size > 0 and l['size'] > size:
         return False
     return True
 
@@ -56,7 +56,7 @@ def progtest(target=None,source=None,env=None):
     return 0
 
 def www(target=None,source=None,env=None):
-    sftour.tour(map(str,source),'scons -Q book.tex www')
+    rsf.sftour.tour(map(str,source),'scons -Q book.tex www')
     return 0
 
 env = Environment()
