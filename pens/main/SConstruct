@@ -163,7 +163,7 @@ if gd:
     obj = env.StaticObject('gdpen.o','gdpen.c',
                            CPPPATH=path,
                            CPPDEFINES=defines)
-    env.Depends(obj,'gdpen.h')
+    env.Depends(obj,['gdpen.h','../include/gendoc.h'])
     main = env.Program('gdpen',[obj,]+objects,LIBS=libs)
     pens.append('gdpen')
 else:
