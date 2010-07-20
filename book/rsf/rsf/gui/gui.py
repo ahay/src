@@ -10,8 +10,8 @@ except:
 root = Tk()
 root.title('Wavelet Demo')
 
-typev = StringVar()
-typev.set('b')
+wtype = StringVar()
+wtype.set('b')
 
 type_frame = Frame(root,relief=SUNKEN,borderwidth=2)
 type_frame.pack(side=TOP,fill=X)
@@ -21,7 +21,7 @@ types = {'h':'Haar',
          'l':'Linear',
          'b':'Bi-orthogonal'}
 for t in 'hlb':
-    rbut = Radiobutton(type_frame,text=types[t],value=t,variable=typev)
+    rbut = Radiobutton(type_frame,text=types[t],value=t,variable=wtype)
     rbut.pack(side=LEFT)
 
 pclip_frame = Frame(root,relief=SUNKEN,borderwidth=2)
@@ -42,7 +42,8 @@ quit = Button(frame,text='Quit',background='red',command=sys.exit)
 quit.pack(side=RIGHT)
 
 def scons():
-    os.system ('scons -Q type=%s pclip=%d view' % (typev.get(),pclip.get()))
+    'Get parameters from GUI and pass them to SCons'
+    os.system ('scons -Q type=%s pclip=%d view' % (wtype.get(),pclip.get()))
     
 cycle = Button(frame,text='Run',background='yellow',command=scons)
 cycle.pack()
