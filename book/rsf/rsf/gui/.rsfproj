@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgraph', 'sfdwt', 'sfthreshold']
+data=['data/wavelet/piece-regular.HH']
+size=       3072
