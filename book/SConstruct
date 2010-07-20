@@ -19,21 +19,30 @@ sep
 slim
 '''
 
+all =  ARGUMENTS.get('all', 'n')
+size = int(ARGUMENTS.get('size', 1024**2))
+
 def publicproj(project):
     '''Check if the project is publicly accessible'''
+    global all, size
     os.chdir(project)
+    # Skip if no .rsfproj
+    if not os.path.isfile('.rsfproj'):
+        return False
     # OK if all=y on the command line
-    if ARGUMENTS.get('all', 'n') == 'y':
-        return 1
+    if all == 'y':
+        return True
     # OK if no PRIVATE data
-    path = rsf.path.getpath(os.getcwd())
-    data = os.path.join(path,'.sf_data')
-    if os.path.isfile(data):
-        os.system('scons -s %s' % data)
-        items = open(data).read().split()
-        if 'PRIVATE' in items:
-            return 0
-    return 1
+    g = {}
+    l = {}
+    execfile('.rsfproj',g,l)
+    if 'PRIVATE' in l['data'] or 'LOCAL' in l['data']:
+        return False
+    if not 'size' in l:
+        return False
+    if size > 0 and l['size'] > 0 and l['size'] > size:
+        return False
+    return True
 
 def progtest(target=None,source=None,env=None):
     cwd = os.getcwd()
