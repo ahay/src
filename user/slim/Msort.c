@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
 	tmp = sf_floatalloc(1);
 	data = sf_floatalloc(nbchunks);
 	for (i=0; i<nbchunks; i++){
-	    fread(tmp, sizeof(float), 1, fp[i]);
+	    if (1 != fread(tmp, sizeof(float), 1, fp[i])) 
+		sf_error("fread error");
 	    data[i] = *tmp;
 	}
     
@@ -166,7 +167,8 @@ int main(int argc, char* argv[])
 		}
 	    }
       
-	    fread(tmp, sizeof(float),1, fp[icurrentext]);
+	    if (1 != fread(tmp, sizeof(float),1, fp[icurrentext]))
+		sf_error("fread error");
 	    if (!(feof(fp[icurrentext]))){
 		data[icurrentext] = *tmp;
 	    }

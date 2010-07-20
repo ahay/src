@@ -202,12 +202,12 @@ int             lig[7];
     }
     strcat (name, "_");
 
-    fgets (string,132,stdin);
+    (void) fgets (string,132,stdin);
     sscanf (string, "%d %d", &start, &end);
-    fgets (string,132,stdin);
+    (void) fgets (string,132,stdin);
     sscanf (string, "%d %d %d", &letter, &line, &space);
     space -= 2 * letter;
-    fgets (string,132,stdin);
+    (void) fgets (string,132,stdin);
     sscanf (string, "%d %d %d %d %d", &top, &cap, &half, &base, &bottom);
 
     sprintf (string, "%slig", name);
@@ -216,8 +216,8 @@ int             lig[7];
 
     while (1)
     {
-	fgets (string,132,stdin);
-/* At most 6 characters in a ligature! */
+	(void) fgets (string,132,stdin);
+        /* At most 6 characters in a ligature! */
 	lig[0] = 0;
 	i = sscanf (string, "%d %d %d %d %d %d %d",
 		 lig, lig + 1, lig + 2, lig + 3, lig + 4, lig + 5, lig + 6);
@@ -225,7 +225,7 @@ int             lig[7];
 	{
 	    printf ("%d,  ", 0);
 	    integer = 0;
-	    write (fd, (char *) &integer, sizeof (int));
+	    (void) write (fd, (char *) &integer, sizeof (int));
 	    length[6] += sizeof (int);
 
 	    printf ("\n};\n\n");
@@ -236,19 +236,19 @@ int             lig[7];
 	{
 	    printf ("%d,  ", i - 1);
 	    integer = i - 1;
-	    write (fd, (char *) &integer, sizeof (int));
+	    (void) write (fd, (char *) &integer, sizeof (int));
 	    length[6] += sizeof (int);
 
 	    printf ("%d, ", lig[0]);
 	    integer = lig[0];
-	    write (fd, (char *) &integer, sizeof (int));
+	    (void) write (fd, (char *) &integer, sizeof (int));
 	    length[6] += sizeof (int);
 
 	    for (j = 1; j < i; j++)
 	    {
 		printf ("%d,", lig[j]);
 		integer = lig[j];
-		write (fd, (char *) &integer, sizeof (int));
+		(void) write (fd, (char *) &integer, sizeof (int));
 		length[6] += sizeof (int);
 	    }
 	    printf ("\n");
@@ -383,7 +383,7 @@ int             lig[7];
 	{
 	    printf ("%d,", xout);
 	    uint = xout;
-	    write (fd, (char *) &uint, sizeof (unsigned int));
+	    (void) write (fd, (char *) &uint, sizeof (unsigned int));
 	    length[5] += sizeof (unsigned int);
 	    if (xout == EOCBIT)
 		printf ("\n");
@@ -396,9 +396,9 @@ int             lig[7];
  */
     sprintf (string, "%scheck", name);
     fd = creat (string, 0777);
-    write (fd, (char *) "Vplot Binary fonT  \n", 20);
+    (void) write (fd, (char *) "Vplot Binary fonT  \n", 20);
     integer = FONTCHECK;
-    write (fd, (char *) &integer, sizeof (int));
+    (void) write (fd, (char *) &integer, sizeof (int));
     close (fd);
 
 /*
@@ -417,7 +417,7 @@ int             lig[7];
     {
 	printf ("%d,", addr[i]);
 	integer = addr[i];
-	write (fd, (char *) &integer, sizeof (int));
+	(void) write (fd, (char *) &integer, sizeof (int));
 	length[1] += sizeof (int);
     }
     close (fd);
@@ -430,7 +430,7 @@ int             lig[7];
     {
 	printf ("%d,", lwidth[i]);
 	sint = lwidth[i];
-	write (fd, (char *) &sint, sizeof (int));
+	(void) write (fd, (char *) &sint, sizeof (int));
 	length[2] += sizeof (int);
     }
     close (fd);
@@ -443,7 +443,7 @@ int             lig[7];
     {
 	printf ("%d,", rwidth[i]);
 	sint = rwidth[i];
-	write (fd, (char *) &sint, sizeof (int));
+	(void) write (fd, (char *) &sint, sizeof (int));
 	length[3] += sizeof (int);
     }
     close (fd);
@@ -456,7 +456,7 @@ int             lig[7];
     {
 	printf ("%d,", symb[i]);
 	sint = symb[i];
-	write (fd, (char *) &sint, sizeof (int));
+	(void) write (fd, (char *) &sint, sizeof (int));
 	length[4] += sizeof (int);
     }
     close (fd);
@@ -468,25 +468,25 @@ int             lig[7];
     sprintf (string, "%sdim", name);
     fd = creat (string, 0777);
     sint = bottom;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = base;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = half;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = cap;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = top;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = letter;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = line;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = space;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = start;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     sint = end;
-    write (fd, (char *) &sint, sizeof (int));
+    (void) write (fd, (char *) &sint, sizeof (int));
     length[0] += 10 * sizeof (int);
     close (fd);
 
@@ -507,8 +507,8 @@ int             lig[7];
 
     sprintf (string, "%sheader", name);
     fd = creat (string, 0777);
-    write (fd, (char *) &lengtht, sizeof (int));
-    write (fd, (char *) length2, 7 * sizeof (int));
+    (void) write (fd, (char *) &lengtht, sizeof (int));
+    (void) write (fd, (char *) length2, 7 * sizeof (int));
     close (fd);
 	exit(0);
 }
