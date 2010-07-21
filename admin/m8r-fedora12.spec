@@ -1,8 +1,7 @@
-# Spec file for making madagascar RPMs for Fedora 12, 64-bit
-
+# Spec file for making madagascar 1.0 RPMs for Fedora 12
 # Usage details at http://reproducibility.org/wiki/Packaging_madagascar#RPM
 
-%define version 1.0.0alpha
+%define version 1.0
 %define m8rv madagascar-%{version}
 
 Name:      madagascar
@@ -11,9 +10,9 @@ Release:   1%{?dist}
 License:   GPLv2+
 Summary:   Utilities for geophysical data processing and numerical experiments
 Group:     Applications/Engineering
-URL:       http://reproducibility.org
+URL:       http://m8r.info
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildArch: x86_64
+BuildArch: %{_arch}
 Requires:  binutils, gcc, glibc-headers, scons, texlive-latex, gcc-c++, gcc-gfortran, numpy, python, swig, libgomp, openmpi, openmpi-devel, blas, blas-devel, atlas, atlas-devel, units, gifsicle, libtiff-devel, libjpeg-devel, plplot-devel, mesa-libGL-devel, freeglut, freeglut-devel, libXaw-devel, netpbm-devel 
 
 %description
@@ -21,7 +20,7 @@ Madagascar is an open-source software package for multidimensional data analysis
 
 %prep
 rm -rf src
-svn export https://rsf.svn.sourceforge.net/svnroot/rsf/trunk src
+svn export https://rsf.svn.sourceforge.net/svnroot/rsf/branches/madagascar-1.0 src
 
 %build
 cd src
@@ -44,8 +43,9 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{_bindir}/*
-# Using this instead of _libdir because that defaults to lib64, and it would
-# be difficult to change hard-coded RSFROOT/lib references just for this: 
+# Using _exec_prefix/lib instead of _libdir because on x86_64 _libdir defaults 
+# to lib64, and it would be difficult to change hard-coded RSFROOT/lib 
+# references throughout the codebase right now
 %{_exec_prefix}/lib/*
 %{_includedir}/*
 %{_mandir}/man1/*
