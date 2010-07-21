@@ -2,6 +2,7 @@
 # Usage details at http://reproducibility.org/wiki/Packaging_madagascar#RPM
 
 %define version 1.0
+# If you change version number, remember to also change it in the sed hack in the install section
 %define m8rv madagascar-%{version}
 
 Name:      madagascar
@@ -13,7 +14,7 @@ Group:     Applications/Engineering
 URL:       http://m8r.info
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: %{_arch}
-Requires:  binutils, gcc, glibc-headers, scons, texlive-latex, gcc-c++, gcc-gfortran, numpy, python, swig, libgomp, openmpi, openmpi-devel, blas, blas-devel, atlas, atlas-devel, units, gifsicle, libtiff-devel, libjpeg-devel, plplot-devel, mesa-libGL-devel, freeglut, freeglut-devel, libXaw-devel, netpbm-devel 
+Requires:  binutils, gcc, glibc-headers, scons, gcc-c++, gcc-gfortran, numpy, python, swig, libgomp, blas, blas-devel, atlas, atlas-devel, libXaw-devel 
 
 %description
 Madagascar is an open-source software package for multidimensional data analysis and reproducible computational experiments. Its mission is to provide a convenient and powerful work environment and technology transfer tool for researchers working with digital image and data processing in geophysics and related fields.
@@ -36,6 +37,9 @@ mkdir -p %{buildroot}/usr/share/%{m8rv}/html
 mv %{buildroot}/usr/share/doc/*.html %{buildroot}/usr/share/%{m8rv}/html
 mv %{buildroot}/usr/share/{spec,txt} %{buildroot}/usr/share/%{m8rv}
 mv %{buildroot}/usr/etc %{buildroot}/etc
+# Bad hack -- temporary fix. Should parse buildroot to add backslashes instead, or add a "rpm" option to configure
+sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0-1\.fc12\.x86_64//g" %{buildroot}/etc/madagascar/env.sh
+sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0-1\.fc12\.x86_64//g" %{buildroot}/etc/madagascar/env.csh
 
 %clean
 rm -rf %{buildroot}

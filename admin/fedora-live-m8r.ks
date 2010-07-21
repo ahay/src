@@ -22,10 +22,10 @@ repo --name=Madagascar --includepkgs=madagascar --baseurl=http://reproducibility
 evince
 -evince-dvi
 -evince-djvu
-gimp
+-gimp
 
 # development
-geany
+-geany
 vim-enhanced
 
 # Internet
@@ -40,23 +40,23 @@ NetworkManager-openvpn
 NetworkManager-gnome
 NetworkManager-pptp
 desktop-backgrounds-compat
-gparted
+-gparted
 setroubleshoot
 xdg-user-dirs-gtk
 
 # Command line
 ntfs-3g
-powertop
+-powertop
 wget
 
 # xfce packages
 @xfce-desktop
 Terminal
 gtk-xfce-engine
-ristretto
+-ristretto
 hal-storage-addon
-thunar-volman
-thunar-media-tags-plugin
+-thunar-volman
+-thunar-media-tags-plugin
 gigolo
 xfce4-battery-plugin
 xfce4-cellmodem-plugin
@@ -84,18 +84,12 @@ xfce4-verve-plugin
 xfce4-volstatus-icon
 xfce4-xfswitch-plugin
 xfce4-xkb-plugin
-xfwm4-themes
+-xfwm4-themes
 
-# dictionaries are big
 -aspell-*
 -man-pages-*
-
-# more fun with space saving
 -gimp-help
-# not needed, but as long as there is space left, we leave this in
 -desktop-backgrounds-basic
-
-# save some space
 -autofs
 -nss_db
 -acpid
@@ -145,30 +139,18 @@ binutils
 gcc
 glibc-headers
 scons
-texlive-latex
-subversion
 gcc-c++
 gcc-gfortran
 numpy
 python
 swig
 libgomp
-openmpi
-openmpi-devel
 blas
 blas-devel
 atlas
 atlas-devel
 scipy
-units 
-libtiff-devel
-libjpeg-devel
-plplot-devel
-mesa-libGL-devel
-freeglut
-freeglut-devel
 libXaw-devel
-netpbm-devel 
 
 madagascar
 
@@ -216,10 +198,6 @@ cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 
 # Madagascar configuration
 echo 'source /etc/madagascar/env.sh' >> /home/liveuser/.bashrc
-# Bad hack -- temporary fix
-sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0\.0alpha-1\.fc12\.x86_64//g" /etc/madagascar/env.sh
-sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0\.0alpha-1\.fc12\.x86_64//g" /etc/madagascar/env.csh
-
 
 # this goes at the end after all other changes. 
 chown -R liveuser:liveuser /home/liveuser
