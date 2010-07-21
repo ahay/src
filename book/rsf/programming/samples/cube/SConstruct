@@ -1,0 +1,8 @@
+from rsf.proj import *
+
+Flow('blank',None,'spike n1=50 n2=50 n3=50')
+
+Flow('noise','blank','noise')
+
+Result('noise','threedcube')
+End()
