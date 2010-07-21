@@ -467,6 +467,7 @@ void fastCoef (float* time                /* time */,
     }
     
     sf_pqueue_init (nh);
+    sf_pqueue_start ();
 
     i1 = MAX(MIN(xs[0],n1-2),0);
     i2 = MAX(MIN(xs[1],n2-2),0);
