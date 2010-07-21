@@ -92,21 +92,6 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"unit3","s");
     }
 
-    if (NULL != snaps) {
-	sf_putint(snaps,"n1",nh);
-	sf_putfloat(snaps,"d1",dh);
-	sf_putstring(snaps,"label1","Half-Offset");
-
-	sf_putint(snaps,"n3",nz);
-	sf_putfloat(snaps,"d3",dz);
-	sf_putstring(snaps,"label3","Depth");
-
-	sf_putint(snaps,"n4",nt/snap);
-	sf_putfloat(snaps,"d4",dt*snap);
-	sf_putfloat(snaps,"o4",0.);
-	sf_putstring(snaps,"label4","Time");
-    }
-
     img = sf_floatalloc2(nz,nx);
     dat = sf_floatalloc2(nh,nx);
 
@@ -121,6 +106,25 @@ int main(int argc, char* argv[])
     dx = cosft_dk(nx,dx);
     dz = cosft_dk(nz,dz);
     dh = cosft_dk(nh,dh);
+
+   if (NULL != snaps) {
+	sf_putint(snaps,"n1",nh);
+	sf_putfloat(snaps,"d1",dh);
+	sf_putstring(snaps,"label1","Half-Offset");
+
+	sf_putint(snaps,"n2",nx);
+	sf_putfloat(snaps,"d2",dx);
+	sf_putstring(snaps,"label2","Modpoint");
+
+	sf_putint(snaps,"n3",nz);
+	sf_putfloat(snaps,"d3",dz);
+	sf_putstring(snaps,"label3","Depth");
+
+	sf_putint(snaps,"n4",nt/snap);
+	sf_putfloat(snaps,"d4",dt*snap);
+	sf_putfloat(snaps,"o4",0.);
+	sf_putstring(snaps,"label4","Time");
+    }
 
     for (iz=0; iz < nz; iz++) {
 	for (ix=0; ix < nx; ix++) {
