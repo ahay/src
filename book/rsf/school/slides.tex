@@ -13,6 +13,17 @@ psava@mines.edu
 \large
 
 \def\big#1{\begin{center} \LARGE \textbf{#1} \end{center}}
+\def\cen#1{\begin{center}        \textbf{#1} \end{center}}
+
+\definecolor{LightGray}{rgb}{0.90,0.90,0.90}
+\def\graybox#1{
+\vfill
+\begin{center}
+\colorbox{LightGray}
+{\begin{minipage}{\columnwidth} {#1} \end{minipage}}
+\end{center}
+\vfill
+}
 
 % ------------------------------------------------------------
 \mode<beamer> { \cwpcover }
@@ -24,7 +35,7 @@ psava@mines.edu
 % ------------------------------------------------------------
 \begin{frame} \frametitle{assignment}
 
-\big{modify the acquisition parameters to explore the illumination at
+\cen{modify the acquisition parameters to explore the illumination at
 different locations in the subsurface}
 
 \end{frame}
@@ -33,41 +44,75 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{import packages}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=1,lastline=2]
+\lstinputlisting[firstline=1,lastline=3]
 		{sigsbee/SConstruct}
+}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{import packages}
+  \begin{itemize}
+  \item \texttt{sigsbee}: model-specific python module
+  \item \texttt{fdmod}: generic modeling and plotting module
+  \end{itemize}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{setup main parameters}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=5,lastline=10]
+\lstinputlisting[firstline=6,lastline=11]
 		{sigsbee/SConstruct}
+}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{setup main parameters}
+  \begin{itemize}
+  \item \texttt{par}: dictionary containing all parameters
+  \item override parameters in the \texttt{SConstruct}
+  \end{itemize}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{source coordinates}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=13,lastline=17]
+\lstinputlisting[firstline=14,lastline=18]
 		{sigsbee/SConstruct}
+}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{source coordinates}
+ \begin{itemize}
+  \item \texttt{5,2,1}: $n$, $o$, $d$ in the z direction
+  \item \texttt{12,8,1}: $n$, $o$, $d$ in the x direction
+  \end{itemize}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{receiver coordinates}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=20,lastline=31]
+\lstinputlisting[firstline=21,lastline=32]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{velocity/density models}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=34,lastline=45]
+\lstinputlisting[firstline=35,lastline=46]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 % ------------------------------------------------------------
@@ -75,9 +120,11 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{source wavelet}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=48,lastline=56]
+\lstinputlisting[firstline=49,lastline=57]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 % ------------------------------------------------------------
@@ -85,17 +132,35 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{FD modeling}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=59,lastline=63]
+\lstinputlisting[firstline=60,lastline=64]
 		{sigsbee/SConstruct}
+}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{FD modeling parameters}
+\cen{
+  data, \\
+  wavefield, \\
+  wavelet, \\
+  velocity, \\
+  density, \\
+  source coordinates, \\
+  receiver coordinates, \\
+  optional parameters, \\
+  parameter dictionary}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot wavefield}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=65,lastline=74]
+\lstinputlisting[firstline=65,lastline=75]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 % ------------------------------------------------------------
@@ -109,9 +174,11 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot data}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=76,lastline=86]
+\lstinputlisting[firstline=76,lastline=87]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 % ------------------------------------------------------------
@@ -119,17 +186,21 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{FD migration}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=89,lastline=93]
+\lstinputlisting[firstline=90,lastline=94]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot image}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=95,lastline=98]
+\lstinputlisting[firstline=95,lastline=99]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 % ------------------------------------------------------------
@@ -137,9 +208,11 @@ different locations in the subsurface}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{closing rules}
+\graybox{
 \normalsize 
-\lstinputlisting[firstline=101,lastline=101]
+\lstinputlisting[firstline=102,lastline=102]
 		{sigsbee/SConstruct}
+}
 \end{frame}
 \cwpnote{}
 
@@ -147,9 +220,15 @@ different locations in the subsurface}
 % ------------------------------------------------------------
 \begin{frame} \frametitle{the contest}
 
+  \cen{ Assuming that each receiver costs a fixed amount of $\$$,
+    construct the receiver array that gives you the best image for the
+    lowest cost.}
+
+\vfill \hrule \vfill
+
 \begin{itemize}
-   \item random sources in the subsurface
-   \item random receivers on the surface
+   \item you can consider multiple arrays
+   \item you can place the receivers anywhere on the surface
 \end{itemize}
 
 \end{frame}

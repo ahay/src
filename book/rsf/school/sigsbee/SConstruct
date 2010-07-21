@@ -4,11 +4,11 @@ import rsf.recipes.fdmod as fdmod
 
 # ------------------------------------------------------------
 par=sigsbee.paramwin() # Sigsbee2A parameters
-par['nt']=2001      # time steps (samples)
-par['kt']=100       # wavelet delay (samples) 
-par['dt']=0.001     # time sampling (ms)
-par['nb']=100       # boundary size (grid points)
-fdmod.param(par)    # plotting parameters
+par['nt']=2001         # time steps (samples)
+par['kt']=100          # wavelet delay (samples) 
+par['dt']=0.001        # time sampling (ms)
+par['nb']=100          # boundary (grid points)
+fdmod.param(par)       # plotting parameters
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)

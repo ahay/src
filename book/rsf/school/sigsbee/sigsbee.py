@@ -16,7 +16,7 @@ def paramwin():
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
 
-    par['jsnap']=300
+    par['jsnap']=150
 
     return par
 
