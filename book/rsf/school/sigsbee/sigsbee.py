@@ -1,5 +1,4 @@
 from rsf.proj import *
-import fdmod
 
 # ------------------------------------------------------------
 # model parameters
@@ -23,21 +22,10 @@ def paramwin():
 
 # ------------------------------------------------------------
 def getstrvelwin(velo,par):
-
-    strvelfile = 'data/sigsbee/sigsbee2a_stratigraphy.sgy'
     strvelfile = 'sigsbee2a_stratigraphy.sgy'
     Fetch(strvelfile,'sigsbee')
 
-    Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
-         strvelfile,
-         '''
-         segyread
-         tape=$SOURCE
-         tfile=${TARGETS[1]}
-         hfile=${TARGETS[2]}
-         bfile=${TARGETS[3]}
-         ''',stdin=0)
-
+    Flow(velo+'-raw',strvelfile,'segyread read=data')
     Flow(velo,
          velo+'-raw',
          '''
