@@ -8,7 +8,7 @@ constfdmig2 cos2ang depth2time diffraction dimag dmo dsr dsr2 envelope
 fincon finstack fkamo fkdmo fourvc fourvc0 fourvc2 freqint freqlet
 gazdag halfint headerattr headermath hwt2d hwtex imospray infill inmo
 inmo3 intbin intbin3 isin2ang itaupmo itaupmo2 iwarp kirchinv kirchnew
-kirmod kirmod3 layer linsincos mig45 migsteep3 modrefl modrefl2
+kirmod kirmod3 layer linsincos mig2 mig45 migsteep3 modrefl modrefl2
 modrefl3 mutter nmo nmov nmow nmow_adj pnmo pnmo3d pp2psang pp2psang2
 pp2pstsic preconstkirch prestolt ptaupmo ptaupmoVTI pveltran map2coh
 pveltranVTI radial radon randrefl rays2 rays2a rays3 refer ricker

@@ -23,7 +23,6 @@
 /*^*/
 
 #include "kirchnew.h"
-#include "halfint.h"
 
 static int nt, nx, sw;
 static bool ps, hd;
@@ -50,7 +49,7 @@ void kirchnew_init (float *vrms_in /* RMS velocity */,
     ps = ps_in;
     hd = hd_in;
     if (hd) {
-	halfint_init(true,nt,1.-1./nt);
+	sf_halfint_init(true,nt,1.-1./nt);
 	tmp = sf_floatalloc2 (nt,nx);
     }
 }
@@ -79,7 +78,7 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
 		for (it=0; it < nt; it++) {
 		    tmp[ix][it] = data[it+ix*nt];
 		}
-		halfint (adj,tmp[ix]);
+		sf_halfint (adj,tmp[ix]);
 	    } else {
 		for (it=0; it < nt; it++) {
 		    tmp[ix][it] = 0.;
@@ -184,7 +183,7 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
     
     if (hd && !adj) {
 	for (ix=0; ix < nx; ix++) {
-	    halfint (adj,tmp[ix]);
+	    sf_halfint (adj,tmp[ix]);
 	    for (it=0; it < nt; it++) {
 		data[it+ix*nt] += tmp[ix][it];
 	    }

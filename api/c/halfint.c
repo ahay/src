@@ -16,12 +16,18 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include "halfint.h"
-
 #include <math.h>
 
-#include <rsf.h>
+#include "halfint.h"
+#include "kiss_fft.h"
+#include "kiss_fftr.h"
+#include "alloc.h"
+#include "error.h"
+#include "_defs.h"
+#include "komplex.h"
+#include "adjnull.h"
+
+#include "_bool.h"
 /*^*/
 
 static int nw, n;
@@ -29,9 +35,9 @@ static float *tmp;
 static kiss_fft_cpx *cx, *cf;
 static kiss_fftr_cfg forw, invs;
 
-void halfint_init (bool inv  /* differentiation or integration */, 
-		   int n1    /* trace length */, 
-		   float rho /* regularization */)
+void sf_halfint_init (bool inv  /* differentiation or integration */, 
+		      int n1    /* trace length */, 
+		      float rho /* regularization */)
 /*< Initialize >*/
 {
     int i;
@@ -70,7 +76,7 @@ void halfint_init (bool inv  /* differentiation or integration */,
     tmp = sf_floatalloc(n);
 }
 
-void halfint_lop(bool adj, bool add, int n1, int n2, float *xx, float *yy)
+void sf_halfint_lop(bool adj, bool add, int n1, int n2, float *xx, float *yy)
 /*< linear operator >*/
 {
     int i;
@@ -84,7 +90,7 @@ void halfint_lop(bool adj, bool add, int n1, int n2, float *xx, float *yy)
 	tmp[i] = 0.;
     }
 
-    halfint (adj,tmp);
+    sf_halfint (adj,tmp);
 
     for (i=0; i < n1; i++) {
 	if (adj) {
@@ -95,7 +101,7 @@ void halfint_lop(bool adj, bool add, int n1, int n2, float *xx, float *yy)
     }
 }
 
-void halfint (bool adj, float* x /* [n] */)
+void sf_halfint (bool adj, float* x /* [n] */)
 /*< Integrate in place >*/
 {
     int i;
@@ -111,7 +117,7 @@ void halfint (bool adj, float* x /* [n] */)
     kiss_fftri(invs, cx, x);
 }
 
-void halfint_close(void)
+void sf_halfint_close(void)
 /*< Free allocated storage >*/
 {
     free (cx);

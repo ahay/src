@@ -21,25 +21,8 @@ The axes in the "image gather" are {time,midpoint,offset}
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include "halfint.h"
 
-static void doubint(int nt, float *trace)
-/* causal and anticausal integral */
-{
-    int it;
-    float tt;
-
-    tt = trace[0];
-    for (it=1; it < nt; it++) {
-	tt += trace[it];
-	trace[it] = tt;
-    }
-    tt = trace[nt-1];
-    for (it=nt-2; it >=0; it--) {
-	tt += trace[it];
-	trace[it] = tt;
-    }
-}
+#include "doubint.h"
     
 static float pick(float ti, float deltat, 
 		  const float *trace,
@@ -130,7 +113,7 @@ int main(int argc, char* argv[])
     nn = 2*kiss_fft_next_fast_size((nt+1)/2);
     pp = sf_floatalloc(nn);
 
-    halfint_init (true, nn, rho);
+    sf_halfint_init (true, nn, rho);
 
     for (i=0; i < nt*nx; i++) {
 	outd[0][i] = 0.;  
@@ -146,7 +129,7 @@ int main(int argc, char* argv[])
 
 	for (iy=0; iy < nx; iy++) { 
 	    sf_floatread (trace,nt,inp);
-	    doubint(nt,trace);
+	    doubint(true, nt,trace);
         
 	    for (ix=0; ix < nx; ix++) { 
 	        x = (ix-iy)*dx;
@@ -178,7 +161,7 @@ int main(int argc, char* argv[])
 	    for (it=nt; it < nn; it++) {
 		pp[it] = 0.;
 	    }
-	    halfint (true, pp);
+	    sf_halfint (true, pp);
 	    for (it=0; it < nt; it++) {
 		out[iy][it] = pp[it];
 	    }

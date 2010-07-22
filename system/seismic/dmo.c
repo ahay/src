@@ -22,7 +22,6 @@
 /*^*/
 
 #include "dmo.h" 
-#include "halfint.h"
 
 static bool inv;
 static int nt2,nt,nx,mint,n,type;
@@ -81,7 +80,7 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 
     sf_adjnull(adj,add,n1,n2,dat1,dat2);
 
-    halfint_init(true,nt2,1.-1./nt2);
+    sf_halfint_init(true,nt2,1.-1./nt2);
     
     if (!adj) {
 	for (ix=0; ix < nx; ix++) {
@@ -91,7 +90,7 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 	    for (it=nt; it < nt2; it++) {
 		tmp[ix][it] = 0.;
 	    }
-	    halfint (true,tmp[ix]);
+	    sf_halfint (true,tmp[ix]);
 	}
     } else {
 	for (i=0; i < nt2*nx; i++) { 
@@ -271,7 +270,7 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 	    for (it=nt; it < nt2; it++) {
 		tmp[ix][it] = 0.;
 	    }
-	    halfint (false,tmp[ix]);
+	    sf_halfint (false,tmp[ix]);
 	    
 	    for (it=0; it < nt; it++) {
 		dat1[it+ix*nt] += tmp[ix][it];
@@ -279,5 +278,5 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 	}
     }
 
-    halfint_close();
+    sf_halfint_close();
 }

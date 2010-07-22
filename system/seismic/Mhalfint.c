@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include "halfint.h"
 
 int main(int argc, char* argv[])
 {
@@ -50,14 +49,14 @@ int main(int argc, char* argv[])
     nn = 2*kiss_fft_next_fast_size((n1+1)/2);
     pp = sf_floatalloc(nn);
 
-    halfint_init (inv, nn, rho);
+    sf_halfint_init (inv, nn, rho);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (pp,n1,in);
 	for (i1=n1; i1 < nn; i1++) {
 	    pp[i1]=0.;
 	}
-	halfint (adj, pp);
+	sf_halfint (adj, pp);
 	sf_floatwrite (pp,n1,out);
     }
 

@@ -19,7 +19,6 @@
 
 #include "veltran.h"
 #include "aastretch.h"
-#include "halfint.h"
 
 #include <rsf.h>
 /*^*/
@@ -46,7 +45,7 @@ void veltran_init (bool pull1                     /* pull or push mode */,
     anti = anti1;
 
     aastretch_init (false, nt, t0, dt, nt);
-    halfint_init (true,2*nt,1.-1./nt);
+    sf_halfint_init (true,2*nt,1.-1./nt);
 
     amp  = sf_floatalloc(nt);
     str  = sf_floatalloc(nt);
@@ -63,7 +62,7 @@ void veltran_close (void)
     free(tmp);
 
     aastretch_close();
-    halfint_close();
+    sf_halfint_close();
 }
 
 void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
@@ -116,10 +115,10 @@ void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
 	    aastretch_define (str, tx, amp);
 
 	    if (pull) {
-		sf_chain(halfint_lop,aastretch_lop,
+		sf_chain(sf_halfint_lop,aastretch_lop,
 			 adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
 	    } else {
-		sf_chain(aastretch_lop,halfint_lop,
+		sf_chain(aastretch_lop,sf_halfint_lop,
 			 !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
 	    }
 	} /* ix */

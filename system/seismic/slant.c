@@ -19,7 +19,6 @@
 
 #include "slant.h"
 #include "aastretch.h"
-#include "halfint.h"
 
 #include <rsf.h>
 /*^*/
@@ -49,7 +48,7 @@ void slant_init (bool pull1                     /* pull or push mode */,
 
     aastretch_init (false, nt, t0, dt, nt);
     if (rho) {
-	halfint_init (true,2*nt,1.-1./nt);
+	sf_halfint_init (true,2*nt,1.-1./nt);
 	tmp  = sf_floatalloc(nt);
     }
 
@@ -68,7 +67,7 @@ void slant_close (void)
 
     aastretch_close();
     if (rho) {
-	halfint_close();
+	sf_halfint_close();
 	free(tmp);
     }
 }
@@ -108,14 +107,14 @@ void slant_lop (bool adj,
 	    
 	    if (pull) {
 		if (rho) {
-		    sf_chain(halfint_lop,aastretch_lop,
+		    sf_chain(sf_halfint_lop,aastretch_lop,
 			     adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
 		} else {
 		    aastretch_lop(adj,true,nt,nt,modl+is*nt,data+ix*nt);
 		}
 	    } else {
 		if (rho) {
-		    sf_chain(aastretch_lop,halfint_lop,
+		    sf_chain(aastretch_lop,sf_halfint_lop,
 			     !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
 		} else {
 		    aastretch_lop(!adj,true,nt,nt,data+ix*nt,modl+is*nt);
