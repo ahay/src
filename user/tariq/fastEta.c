@@ -708,13 +708,13 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
 
   if (!k) return;
 
-  if(ABS(c) < 0.00000001) 
-      sf_error("stop p1=%d p2=%d p3=%d t=%f k=%d tp1=%f b=%f c=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,b,c,tx,ty,tz);
-
   den = (ABS(c) < 0.00000001 ? SGN(c)*100000000. : 1./c);
   /*tp1 = (b-(sqrt(1+2.*eta)-1)*sqrt(1+2.*eta0)*tr2*(1-rsv*tz*tz))*den;*/
   tp1 = (b+s)*den;
   tp = t +tp1*dy;
+
+  if(ABS(c) < 0.00000001) 
+      sf_error("stop p1=%d p2=%d p3=%d t=%f k=%d tp1=%f b=%f c=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,b,c,tx,ty,tz);
 
   if (t < *tj) {
     *tj = t; *dtj = tp1;
