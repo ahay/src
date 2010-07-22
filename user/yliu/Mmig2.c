@@ -22,8 +22,6 @@ The axes in the "image gather" are {time,midpoint,offset}
 */
 #include <rsf.h>
 
-#include "doubint.h"
-    
 static float pick(float ti, float deltat, 
 		  const float *trace,
 		  int nt, float dt, float t0)
@@ -129,7 +127,7 @@ int main(int argc, char* argv[])
 
 	for (iy=0; iy < nx; iy++) { 
 	    sf_floatread (trace,nt,inp);
-	    doubint(true, nt,trace);
+	    sf_doubint(true, nt,trace);
         
 	    for (ix=0; ix < nx; ix++) { 
 	        x = (ix-iy)*dx;

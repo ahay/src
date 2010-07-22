@@ -16,11 +16,12 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
-
 #include "doubint.h"
 
-void doubint(bool dble, int n, float *trace /* [n] */)
+#include "_bool.h"
+/*^*/
+
+void sf_doubint(bool dble, int n, float *trace /* [n] */)
 /*< double integration or causal integration (in place) >*/
 {
     float t;

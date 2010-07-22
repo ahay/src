@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "aastretch.h"
-#include "doubint.h"
 
 static int nt, nd, nk, **x;
 static float t0,dt, **w, *a, *tmp, *tmp2;
@@ -106,7 +105,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	    tmp2[it] = modl[it];
 	}
 	
-	doubint ((bool) (nk > 2), nt, tmp2);
+	sf_doubint ((bool) (nk > 2), nt, tmp2);
 	
 	for (it=0; it < nt; it++) {
 	    tmp[it+nt]   = (nk-1)*tmp2[it];
@@ -151,7 +150,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
 	    }
 	}
 	
-	doubint ((bool) (nk > 2), nt, tmp2);
+	sf_doubint ((bool) (nk > 2), nt, tmp2);
 
 	for (it=0; it < nt; it++) {
 	    modl[it] += tmp2[it];
