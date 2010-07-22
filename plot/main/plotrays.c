@@ -71,11 +71,12 @@ int main(int argc, char* argv[])
     vp_plot_init(1);
     vp_plot_set(0);
  
-    (void) fread(&nsr,sizeof(int),1,stdin);
+    if (1 != fread(&nsr,sizeof(int),1,stdin)) sf_error("read error");
 
     for (ir=0; ir < nsr; ir++) {
-	(void) fread(&it,sizeof(int),1,stdin);
-	(void) fread(traj[0],sizeof(float),(it+1)*2,stdin);
+	if (1 != fread(&it,sizeof(int),1,stdin) ||
+	    (it+1)*2 != fread(traj[0],sizeof(float),(it+1)*2,stdin))
+	    sf_error("read error");
 	if (ir>0 && ir%jr) continue;  
 	vp_umove(traj[it][1],traj[it][0]);
 	while (--it >= 0) {

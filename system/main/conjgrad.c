@@ -53,6 +53,8 @@
 #define MWRITE(a) if (mbuf != fwrite(buf,sizeof(float),mbuf,a)) \
                   sf_error("write error")
 
+#define DUP(a) if (dup(a) < 0) sf_error("dup error:")
+
 int main(int argc, char* argv[])
 {
     int i, iter, niter, p[6][2], status;
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
 
 	    close(p[0][0]);
 	    close(STDOUT_FILENO);
-	    (void) dup(p[0][1]);
+	    DUP(p[0][1]);
 
 	    to = sf_output("out");
 
@@ -166,11 +168,11 @@ int main(int argc, char* argv[])
 
 	    close(p[0][1]);
 	    close(STDIN_FILENO);
-	    (void) dup(p[0][0]);
+	    DUP(p[0][0]);
 	    
 	    close(p[1][0]);
 	    close(STDOUT_FILENO);
-	    (void) dup(p[1][1]);
+	    DUP(p[1][1]);
 
 	    argv[argc-1][4]='1';
 	    execvp(argv[0],argv);
@@ -184,12 +186,12 @@ int main(int argc, char* argv[])
 	
 	    close(p[1][1]);
 	    close(STDIN_FILENO);
-	    (void) dup(p[1][0]);
+	    DUP(p[1][0]);
 	    from = sf_input("in");
 	    
 	    close(p[2][0]);
 	    close(STDOUT_FILENO);
-	    (void) dup(p[2][1]);
+	    DUP(p[2][1]);
 	    to = sf_output("out");
 	    sf_fileflush(to,mod);
 
@@ -216,7 +218,8 @@ int main(int argc, char* argv[])
 		    sf_error ("seek problem");
 	    }
 
-	    (void) write(p[4][1],&alpha,sizeof(double));
+	    if (sizeof(double) != write(p[4][1],&alpha,sizeof(double)))
+		sf_error("write error");
 	    
 	    fwrite(&rn,sizeof(double),1,sfile);
 
@@ -253,11 +256,11 @@ int main(int argc, char* argv[])
 
 	    close(p[2][1]);
 	    close(STDIN_FILENO);
-	    (void) dup(p[2][0]);
+	    DUP(p[2][0]);
 	    
 	    close(p[3][0]);
 	    close(STDOUT_FILENO);
-	    (void) dup(p[3][1]);
+	    DUP(p[3][1]);
 
 	    argv[argc-1][4]='0';
 	    execvp(argv[0],argv);
@@ -270,10 +273,11 @@ int main(int argc, char* argv[])
 
 	    close(p[3][1]);
 	    close(STDIN_FILENO);
-	    (void) dup(p[3][0]);
+	    DUP(p[3][0]);
 	    from = sf_input("in");
 	
-	    (void) read(p[4][0],&alpha,sizeof(double));
+	    if (sizeof(double) != read(p[4][0],&alpha,sizeof(double))) 
+		sf_error("read error");
 
 	    Sfile = fopen(S,"r+b");
 
@@ -309,7 +313,8 @@ int main(int argc, char* argv[])
 
 	    alpha = - rn/beta;
 
-	    (void) write(p[5][1],&alpha,sizeof(double));
+	    if (sizeof(double) != write(p[5][1],&alpha,sizeof(double)))
+		sf_error("write error");
 	    
 	    _exit(4);
 	}
@@ -317,7 +322,8 @@ int main(int argc, char* argv[])
 	if (0==pid[5]) {
 	    /* updates x and r */
 
-	    (void) read(p[5][0],&alpha,sizeof(double));
+	    if (sizeof(double) != read(p[5][0],&alpha,sizeof(double)))
+		sf_error("read error");
 
 	    sfile = fopen(s,"rb"); if (NULL == sfile) sf_error("Cannot open %s:",s);
 

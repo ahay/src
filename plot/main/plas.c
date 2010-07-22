@@ -26,6 +26,9 @@
 
 #define MAXLINE 2016
 
+#define GETLINE(a) if (NULL== fgets (a, MAXLINE, stdin)) \
+	sf_error("fgets error")
+
 static void text (void);
 static void setunits(char c);
 
@@ -134,7 +137,7 @@ int main (int argc, char* argv[])
 		sscanf (line, "%*c %d", &npts);
 		vp_putint (npts);
 		while (npts--) {
-		    (void) fgets (line, MAXLINE, stdin);
+		    GETLINE(line);
 		    sscanf (line, "%f %f", &x, &y);
 		    vp_putfloat0 (x * scale);
 		    vp_putfloat0 (y * scale);
@@ -147,7 +150,7 @@ int main (int argc, char* argv[])
 		vp_putint (mtype);
 		vp_putfloat0 (msize * txscale);
 		while (npts--) {
-		    (void) fgets (line, MAXLINE, stdin);
+		    GETLINE(line);
 		    sscanf (line, "%f %f", &x, &y);
 		    vp_putfloat0 (x * scale);
 		    vp_putfloat0 (y * scale);
@@ -209,14 +212,14 @@ int main (int argc, char* argv[])
 	    case VP_OLDAREA:
 		putchar (c);
 		sscanf (line, "%*c %d", &npts);
-		(void) fgets (line, MAXLINE, stdin);
+		GETLINE(line);
 		sscanf (line, "%f %d %d", &fat, &maskx, &masky);
 		vp_putint (npts);
 		vp_putfloat0 (fat * fatscale);
 		vp_putint (maskx);
 		vp_putint (masky);
 		for (i = 0; i < npts; i++) {
-		    (void) fgets (line, MAXLINE, stdin);
+		    GETLINE(line);
 		    sscanf (line, "%f %f", &x, &y);
 		    vp_putfloat0 (x * scale);
 		    vp_putfloat0 (y * scale);
@@ -227,7 +230,7 @@ int main (int argc, char* argv[])
 		sscanf (line, "%*c %d", &npts);
 		vp_putint (npts);
 		for (i = 0; i < npts; i++) {
-		    (void) fgets (line, MAXLINE, stdin);
+		    GETLINE(line);
 		    sscanf (line, "%f %f", &x, &y);
 		    vp_putfloat0 (scale * x);
 		    vp_putfloat0 (scale * y);
@@ -245,7 +248,7 @@ int main (int argc, char* argv[])
 		vp_putint (ipat);
 		if (-1 != nx) {
 		    for (i = 0; i < nx; i++) {
-			(void) fgets (line, MAXLINE, stdin);
+			GETLINE(line);
 			for (j = 0, ptr = line; j < ny; j++, ptr++) {
 			    if ('\0' == *ptr || '\n' == *ptr)
 				fprintf (stderr, "null/nl");
@@ -259,7 +262,7 @@ int main (int argc, char* argv[])
 		    }
 		} else {
 		    for (i = 0; i < ny * 2; i++) {
-			(void) fgets (line, MAXLINE, stdin);
+			GETLINE(line);
 			sscanf (line, "%f %d %f %f", &fat, &col, &off, &rep);
 			vp_putfloat0 (fat * fatscale);
 			vp_putint (col);
@@ -273,32 +276,32 @@ int main (int argc, char* argv[])
 		putchar (c);
 		vp_putint (ras_orient);
 		vp_putint (ras_offset);
-		(void) fgets (line, MAXLINE, stdin);
+		GETLINE(line);
 		sscanf (line, "%f %f", &xcor, &ycor);
 		vp_putfloat0 (xcor * scale);
 		vp_putfloat0 (ycor * scale);
-		(void) fgets (line, MAXLINE, stdin);
+		GETLINE(line);
 		sscanf (line, "%f %f", &xvplot, &yvplot);
 		vp_putfloat0 (scale * xvplot);
 		vp_putfloat0 (scale * yvplot);
-		(void) fgets (line, MAXLINE, stdin);
+		GETLINE(line);
 		sscanf (line, "%d %d", &xpix, &ypix);
 		vp_putint (xpix);
 		vp_putint (ypix);
 
 		for (j = 0; j < ypix; j += num_rep) {
-		    (void) fgets (line, MAXLINE, stdin);
+		    GETLINE(line);
 		    sscanf (line, "%d", &num_rep);
 		    if (num_rep < 1)
 			fprintf (stderr, "Bad Raster repetition factor\n");
 		    vp_putint (num_rep);
 		    for (count=0; count < xpix; count += num_byte * num_pat) {
-			(void) fgets (line, MAXLINE, stdin);
+			GETLINE(line);
 			sscanf (line, "%d %d", &num_pat, &num_byte);
 			vp_putint (num_pat);
 			vp_putint (num_byte);
 			for (i = 0; i < num_byte; i++) {
-			    (void) fgets (line, MAXLINE, stdin);
+			    GETLINE(line);
 			    sscanf (line, "%d", &byte);
 			    if (VP_BYTE_RASTER == c) {
 				putchar ((char) byte);

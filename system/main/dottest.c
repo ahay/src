@@ -24,6 +24,8 @@
 
 #include <rsf.h>
 
+#define DUP(a) if (dup(a) < 0) sf_error("dup error:")
+
 int main(int argc, char* argv[])
 {
     int p[4][2], i, im, id, status;
@@ -77,7 +79,7 @@ int main(int argc, char* argv[])
 
 	close(p[0][0]);
 	close(STDOUT_FILENO);
-	(void) dup(p[0][1]);
+	DUP(p[0][1]);
 
 	pip = sf_output("out");
 	sf_fileflush(pip,mod);
@@ -97,11 +99,11 @@ int main(int argc, char* argv[])
 
 	close(p[0][1]);
 	close(STDIN_FILENO);
-	(void) dup(p[0][0]);
+	DUP(p[0][0]);
 
 	close(p[1][0]);
 	close(STDOUT_FILENO);
-	(void) dup(p[1][1]);
+	DUP(p[1][1]);
 
 	argv[argc-1][4]='0';
 	execvp(argv[0],argv);
@@ -114,7 +116,7 @@ int main(int argc, char* argv[])
 	
 	close(p[1][1]);
 	close(STDIN_FILENO);
-	(void) dup(p[1][0]);
+	DUP(p[1][0]);
 
 	pip = sf_input("in");
 
@@ -138,7 +140,7 @@ int main(int argc, char* argv[])
 
 	close(p[2][0]);
 	close(STDOUT_FILENO);
-	(void) dup(p[2][1]);
+	DUP(p[2][1]);
 
 	pip = sf_output("out");
 	sf_fileflush(pip,dat);
@@ -158,11 +160,11 @@ int main(int argc, char* argv[])
 
 	close(p[2][1]);
 	close(STDIN_FILENO);
-	(void) dup(p[2][0]);
+	DUP(p[2][0]);
 
 	close(p[3][0]);
 	close(STDOUT_FILENO);
-	(void) dup(p[3][1]);
+	DUP(p[3][1]);
 
 	argv[argc-1][4]='1';
 	execvp(argv[0],argv);
@@ -175,7 +177,7 @@ int main(int argc, char* argv[])
 	
 	close(p[3][1]);
 	close(STDIN_FILENO);
-	(void) dup(p[3][0]);
+	DUP(p[3][0]);
 
 	pip = sf_input("in");
 
