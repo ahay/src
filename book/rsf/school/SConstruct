@@ -6,7 +6,8 @@ Paper('slides',
 
 Paper('slidesMadFast',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
+      include='\\newcommand{\\RSFSRC}{../../..}')
 
 End(use='hyperref,listings',
     color='horizon smoothed mona smoothed2')
