@@ -1,5 +1,5 @@
 # Spec file for making madagascar 1.0 RPMs for Fedora 12
-# Usage details at http://reproducibility.org/wiki/Packaging_madagascar#RPM
+# Usage details at http://m8r.info/wiki/Packaging_madagascar#RPM
 
 %define version 1.0
 # If you change version number, remember to also change it in the sed hack in the install section
@@ -40,6 +40,7 @@ mv %{buildroot}/usr/etc %{buildroot}/etc
 # Bad hack -- temporary fix. Should parse buildroot to add backslashes instead, or add a "rpm" option to configure
 sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0-1\.fc12\.x86_64//g" %{buildroot}/etc/madagascar/env.sh
 sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0-1\.fc12\.x86_64//g" %{buildroot}/etc/madagascar/env.csh
+sed -i "s/\/home\/makerpm\/rpmbuild\/BUILDROOT\/madagascar-1\.0-1\.fc12\.x86_64//g" %{buildroot}/usr/lib/python2.6/site-packages/rsf/prog.py
 
 %clean
 rm -rf %{buildroot}

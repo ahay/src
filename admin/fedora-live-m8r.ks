@@ -14,7 +14,7 @@
 %include /usr/share/spin-kickstarts/fedora-live-base.ks
 %include /usr/share/spin-kickstarts/fedora-live-minimization.ks
 
-repo --name=Madagascar --includepkgs=madagascar --baseurl=http://reproducibility.org/yum/repo/fedora/12/x86_64
+repo --name=Madagascar --includepkgs=madagascar --baseurl=http://m8r.info/yum/repo/fedora/12/x86_64
 
 %packages
 
@@ -27,6 +27,7 @@ evince
 # development
 -geany
 vim-enhanced
+emacs
 
 # Internet
 firefox
@@ -41,7 +42,7 @@ NetworkManager-gnome
 NetworkManager-pptp
 desktop-backgrounds-compat
 -gparted
-setroubleshoot
+-setroubleshoot
 xdg-user-dirs-gtk
 
 # Command line
