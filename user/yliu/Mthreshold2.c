@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     }
 
     for (ir=0; ir < nr; ir++) {    
-	if (verb) sf_warning("slice %d of %d", ir+1, nr);
+	if (verb) sf_warning("slice %d of %d;", ir+1, nr);
 
 	if (NULL != thr) {
 	    sf_floatread(&thrd,1,thr);
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(cdat,n,out);
 	}
     }
-
+    sf_warning(".");
     exit(0);
 }
 
