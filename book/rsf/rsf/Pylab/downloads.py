@@ -50,6 +50,7 @@ down = '''
 9114
 9456
 9759
+10003
 '''
 down = map(int,down.split())
 ind = arange(len(down))
