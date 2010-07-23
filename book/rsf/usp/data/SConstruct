@@ -45,29 +45,29 @@ for case in 'SR':
          ''' % (case,color[case]))
 Result('SRO','R S','Overlay')
 
-## # Arrange receiver coordinates 
-## shots = []
-## for shot in range(lines['S']):
-##     line = 'line%d' % shot
-##     Flow(line,'R','window n1=1 f2=%d n2=282' % (2*shot))
-##     shots.append(line)
-## Flow('rec',shots,'rcat axis=2 ${SOURCES[1:%d]}' % len(shots))
+# Arrange receiver coordinates 
+shots = []
+for shot in range(lines['S']):
+    line = 'line%d' % shot
+    Flow(line,'R','window n1=1 f2=%d n2=282' % (2*shot))
+    shots.append(line)
+Flow('rec',shots,'rcat axis=2 ${SOURCES[1:%d]}' % len(shots))
 
-## Plot('rec',
-##      '''
-##      window j1=5 j2=2 | scale dscale=0.001 | 
-##      rtoc | math output="input+I*x2" |
-##      graph symbol=* plotcol=%d title="Stacking Diagram"
-##      label1=Distance unit1=km label2="Shot Number"
-##      min1=684 max1=705
-##      ''' % color['R'])
-## Plot('sou','S',
-##      '''
-##      window n1=1 j2=2 | scale dscale=0.001 | 
-##      rtoc | math output="input+I*x1" |
-##      graph symbol=* plotcol=%d wanttitle=n wantaxis=n min1=684 max1=705
-##      ''' % color['S'])
-## Result('diagram','rec sou','Overlay')
+Plot('rec',
+     '''
+     window j1=5 j2=2 | scale dscale=0.001 | 
+     rtoc | math output="input+I*x2" |
+     graph symbol=* plotcol=%d title="Stacking Diagram"
+     label1=Distance unit1=km label2="Shot Number"
+     min1=684 max1=705
+     ''' % color['R'])
+Plot('sou','S',
+     '''
+     window n1=1 j2=2 | scale dscale=0.001 | 
+     rtoc | math output="input+I*x1" |
+     graph symbol=* plotcol=%d wanttitle=n wantaxis=n min1=684 max1=705
+     ''' % color['S'])
+Result('diagram','rec sou','Overlay')
 
 ##############################
 # Convert to regular geometry
@@ -247,7 +247,8 @@ Flow('noises','thresholds',
       ltft inv=y | transp plane=23 memsize=1000 | 
       mutter t0=-0.5 v0=0.7 | transp plane=23 memsize=1000
       ''')
-Flow('signals','subsample noises','add scale=1,-1 ${SOURCES[1]}')
+#Flow('signals','subsample noises','add scale=1,-1 ${SOURCES[1]}')
+Flow('signals','signals.H','dd form=native')
 
 ############################
 # Initial velocity analysis
@@ -265,49 +266,10 @@ Result('cmps',
        title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
        ''')
 
-# Select one CMP gather
-Flow('cmp','cmps','window n3=1 f3=642')
-Result('cmp','grey title=CMP')
-
 # Set up velocity scan parameters
 v0 = 2.15
 dv = 0.025
 nv = 100
-
-# First velocity scan
-Flow('scn1','cmp',
-     'vscan semblance=y v0=%g nv=%d dv=%g half=y str=0' % (v0,nv,dv))
-Plot('scn1',
-     '''
-     grey title="NMO Velocity" label1="Time" label2="Velocity"
-     color=j scalebar=n allpos=y barlabel="Velocity (m/s)"
-     barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
-     ''')
-
-Flow('vel1','scn1','pick rect1=15 gate=100 an=10 | window')
-Plot('vel1',
-     '''
-     graph transp=y yreverse=y min2=2.15 max2=4.65 wanttitle=n plotfat=10 
-     label1= unit1= label2= unit2= wantaxis1=n wantaxis2=n pad=n
-     ''') 
-Result('pick1','scn1 vel1','Overlay')
-
-# Second velocity scan
-Flow('vmute','scn1','mutter v0=0.9 t0=-4.5 inner=y')
-Plot('vmute',
-     '''
-     grey title="NMO Velocity" 
-     label1="Time" label2="Velocity"
-     color=j scalebar=n allpos=y barlabel="Velocity (m/s)"
-     barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
-     ''')
-Flow('vel2','vmute','pick rect1=15 gate=100 an=10 | window')
-Plot('vel2',
-     '''
-     graph transp=y yreverse=y min2=2.15 max2=4.65 wanttitle=n plotfat=10 
-     label1= unit1= label2= unit2= wantaxis1=n wantaxis2=n pad=n
-     ''') 
-Result('pick2','vmute vel2','Overlay')
 
 # Velocity scanning for all CMP gathers
 Flow('scn','cmps',
@@ -315,10 +277,12 @@ Flow('scn','cmps',
      vscan semblance=y v0=%g nv=%d dv=%g half=y str=0 |
      mutter v0=0.9 t0=-4.5 inner=y
      ''' % (v0,nv,dv),split=[3,1285])
+
 Flow('vel','scn','pick rect1=15 rect2=25 gate=100 an=10 | window')
 Result('vel',
        '''
-       grey title="NMO Velocity" label1="Time" label2="Lateral"
+       grey title="NMO Velocity" 
+       label1="Time" label2="Lateral"
        color=j scalebar=y allpos=y bias=2.1 %g barlabel="Velocity"
        barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
        ''' % (v0+0.5*nv*dv))
@@ -331,6 +295,7 @@ Flow('nmo','cmps vel',
      '''
      nmo velocity=${SOURCES[1]} half=y
      ''')
+
 Result('nmo',
        '''
        byte gainpanel=each |
