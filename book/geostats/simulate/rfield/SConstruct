@@ -25,7 +25,7 @@
 #
 
 from rsf.proj import *
-import rfield
+import rsf.recipes.rfield as rfield
 
 #
 # Set up 1D, 2D, and 3D example random field parameter dictionaries
