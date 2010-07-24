@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#BSUB -J vecsum       # Job name
+#BSUB -o vecsum.out   # Name of the output file
+#BSUB -q normal       # Queue name
+#BSUB -P rsfdev       # Account
+#BSUB -W 0:05         # runtime
+#BSUB -n 16           # number of CPUs
+
+export RSF_THREADS=16
+export RSF_CLUSTER=$LSB_MCPU_HOSTS
+pscons
+

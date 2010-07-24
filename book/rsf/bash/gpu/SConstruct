@@ -1,0 +1,23 @@
+from rsf.proj import *
+import os
+
+rsfroot = os.environ.get("RSFROOT")
+env=Environment(tools=['default','cudatool'],toolpath=['./'])
+env.Replace(PROGSUFFIX='.exe')
+env.Prepend(NVCCINC=['-I'+rsfroot+'/include'],
+            CPPPATH=[rsfroot+'/include'],
+            LIBPATH=[rsfroot+'/lib'],
+            LIBS=['cuda','cudart','stdc++',
+                  env.get('DYNLIB','')+'rsf'])
+
+prog = env.Program('gpuhello',['gpuhello.cu'])
+#prog = env.Program('gpuhello',['gpuhello.cpp','kernel.cu'])
+exe = str(prog[0])
+
+Flow('a',None,'math n1=512 n2=256 output="x1+x2"')
+Flow('b',None,'math n1=512 n2=256 output="-x1-x2"')
+
+Flow('c','a %s b' % exe,'./${SOURCES[1]} b=${SOURCES[2]}')
+
+End()
+

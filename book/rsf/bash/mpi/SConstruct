@@ -1,0 +1,14 @@
+from rsf.proj import *
+
+prog = Program('mpihello.c',CC='mpicc')
+exe = str(prog[0])
+
+Flow('a',None,'math n1=512 n2=256 output="x1+x2"')
+Flow('b',None,'math n1=512 n2=256 output="-x1-x2"')
+
+Flow('c','a %s b' % exe,'''
+     %s -np %d ./${SOURCES[1]} input=${SOURCES[0]} b=${SOURCES[2]}'''
+     % (WhereIs('mpirun'),2),stdin=0)
+
+End()
+
