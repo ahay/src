@@ -721,7 +721,7 @@ Flow('signals','subsample noises','add scale=1,-1 ${SOURCES[1]}')
   \frametitle{\jiubang{Convert shots to CMPs}}
 \babang{
 \begin{verbatim}
-Flow('cmps','newdata',
+Flow('cmps','signals',
      '''
      transp memsize=1000 plane=23 |
      mutter v0=3. |
