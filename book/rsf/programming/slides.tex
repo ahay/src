@@ -12,6 +12,8 @@ godwin.jeffrey@gmail.com
 \mode<beamer> {\cwpcover}
 \cwpnote{}
 
+\lstset{language=Python,showstringspaces=false}
+
 \newcommand{\centered}[1]{\begin{center} #1 \end{center}}
 % ------------------------------------------------------------
 \begin{frame} \frametitle{Purpose}
@@ -64,7 +66,7 @@ Should you build programs for all of your needs?
 
 \begin{frame} \frametitle{Wheel problems}
 \begin{itemize}
-\item Multipy two datasets
+\item Multiply two datasets
 \pause
 \item Concatenate datasets
 \pause
@@ -72,12 +74,12 @@ Should you build programs for all of your needs?
 \pause
 \item Apply a bandpass filter
 \pause
-\item Stolt migration
+\item Stolt migrations
 \end{itemize}
 \end{frame}
 
 \begin{frame} \frametitle{Your friend...}
-\begin{center}\Huge\textbf{sfdoc -k . $|$ less}\end{center}
+\begin{center}\Huge\textbf{sfdoc -k .}\end{center}
 \end{frame}
 
 \begin{frame} \frametitle{Additional resources}
@@ -215,7 +217,7 @@ Should you build programs for all of your needs?
 
 \begin{frame} \frametitle{Comments rules}
 \begin{itemize}
-\item Shebang execution rule   : $\#$!/usr/env/bin python
+\item Shebang execution rule   : $\#$!/usr/bin/env python
 \item One line documentation        $'''$My program does SVD on a 2D matrix $'''$
 \item Block documentation (comments)
 ''' line 1
@@ -227,15 +229,15 @@ Should you build programs for all of your needs?
 \end{frame}
 
 \begin{frame} \frametitle{Comments}
-\lstinputlisting[language=Python,firstline=1,lastline=5,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=1,lastline=5,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{API import}
-\lstinputlisting[language=Python,firstline=6,lastline=14,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=6,lastline=14,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Initialize command line argument parser}
-\lstinputlisting[language=Python,firstline=17,lastline=18,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=17,lastline=18,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Par(ser) rules}
@@ -249,7 +251,7 @@ Should you build programs for all of your needs?
 \end{frame}
 
 \begin{frame} \frametitle{Read command line arguments}
-\lstinputlisting[language=Python,firstline=19,lastline=22,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=19,lastline=22,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{RSF input/output classes}
@@ -264,50 +266,50 @@ output = rsf.Output("out.rsf")
 \end{frame}
 
 \begin{frame} \frametitle{Declare inputs and outputs}
-\lstinputlisting[language=Python,firstline=23,lastline=25,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=23,lastline=25,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Read input headers}
-\lstinputlisting[language=Python,firstline=31,lastline=33,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[language=Python,firstline=31,lastline=33,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Read datasets}
-\lstinputlisting[language=Python,firstline=35,lastline=38,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[language=Python,firstline=35,lastline=38,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Perform SVD}
-\lstinputlisting[language=Python,firstline=40,lastline=41,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=40,lastline=41,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Setup output headers}
-\lstinputlisting[language=Python,firstline=40,lastline=41,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=40,lastline=41,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Write out data}
-\lstinputlisting[language=Python,firstline=47,lastline=48,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=47,lastline=48,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame} \frametitle{Close open files}
-\lstinputlisting[language=Python,firstline=60,lastline=62,frame=shadowbox]{samples/python/Msvd.py}
+\lstinputlisting[firstline=60,lastline=62,frame=shadowbox]{\RSFSRC/user/godwinj/Msvd.py}
 \end{frame}
 
 \begin{frame}
 \centered{\Huge Python demos}
 \end{frame}
 
-\begin{frame} \frametitle{Installation Instructions}
-Source code: samples/python/
-\hrule
-\begin{itemize}
-\item Need scipy, numpy, Python API
-\item Symbolic link from samples/python to RSFSRC/user/pyexample
-\item Rebuild, reinstall: \emph{scons; scons install}
-\end{itemize}
-\end{frame}
+%\begin{frame} \frametitle{Installation Instructions}
+%Source code: samples/python/
+%\hrule
+%\begin{itemize}
+%\item Need scipy, numpy, Python API
+%\item Symbolic link from samples/python to RSFSRC/user/pyexample
+%\item Rebuild, reinstall: \emph{scons; scons install}
+%\end{itemize}
+%\end{frame}
 
 \begin{frame} \frametitle{ SVD}
 \begin{itemize}
-\item Location: samples/svd
+\item Location: book/rsf/programming/samples/svd
 \item Program: sfsvd
 \item Execution: scons view
 \item Demonstrates:  the use of simple numpy program wrapped in the RSF API
@@ -316,7 +318,7 @@ Source code: samples/python/
 
 \begin{frame}\frametitle{RSF + Python + MayaVi = \emph{Interactive} visualization}
 \begin{itemize}
-\item Location: samples/cube
+\item Location: book/rsf/programming/samples/cube
 \item Program : sfthreedcube
 \item Execution: scons or scons view, user must close pop-up window
 \item Demonstrates:  How to use more advanced libraries within RSF python programs

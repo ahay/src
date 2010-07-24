@@ -2,6 +2,7 @@ from rsf.tex import *
 
 Paper('slides',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,verbatim')
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,verbatim',
+      include='\\newcommand{\\RSFSRC}{../../..}')
     
 End()
