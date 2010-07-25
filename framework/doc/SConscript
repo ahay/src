@@ -28,7 +28,7 @@ env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))
 env.Command(spc,sfdoc,'%s $SOURCE -s %s' % (python,spcdir))
 env.Command(man,sfdoc,'%s $SOURCE -g %s' % (python,mn1dir))
 
-use = '../rsf/use.py'
+use = os.path.join(pkgdir,'use.py')
 
 env.Depends(htm,use)
 env.Depends(txt,use)
