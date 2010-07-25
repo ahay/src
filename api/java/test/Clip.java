@@ -1,7 +1,6 @@
-import rsf.Par;
-import rsf.Reader;
-import rsf.Writer;
-import rsf.Header;
+import rsf.RSF;
+import rsf.Input;
+import rsf.Output;
 
 /* A simple Java program to clip a dataset.
 
@@ -12,44 +11,34 @@ programs.
 */
 
 public class Clip {
+    static {
+        System.loadLibrary("jrsf");
+    }
     public static void main(String[] args){
         // Initialize command line argument passing
-         Par par = new Par(args);
+         RSF par = new RSF(args);
          // Get the input file name.
-         String input = par.getString("in","");
-         // If the input file name is nothing, then quit!
-         if (input.equals("")){
-                System.out.println("Did not find input file!");
-                System.exit(1);
-         }
-         //If the output file name is nothing, then quit!
-         String output = par.getString("out","");
-         if (output.equals("")){
-                System.out.println("Did not find output file!");
-                System.exit(1);
-         }
+         Input input = new Input("in");
+         Output output = new Output("out");
         // Get the value to clip to.
          float clip = par.getFloat("clip",0.0f);
-        //Read our header file.
-         Header header = Reader.readHeader(input);
         // Read our binary data.
-         float[][][] data = Reader.readBinary3D(header);
-        //Initialize our array values.
-         int n3 = header.getN(3);
-         int n2 = header.getN(2);
-         int n1 = header.getN(1);
-        //Perform clipping operation.
+        int n3 = input.getN(3);
+        int n2 = input.getN(2);
+        int n1 = input.getN(1);
+        //Perform clipping operation on a single trace and write out.
+        float[] data = new float[n1];
          for(int i = 0; i < n3; ++i){
             for(int j = 0; j < n2; ++j){
+                input.read(data);
                 for(int k = 0; k < n1; ++k){
-                    float trace = data[i][j][k];
-                    if (trace > clip) data[i][j][k] = clip;
-                    else if (trace < -clip) data[i][j][k] = -clip;
+                    if (data[k] > clip) data[k] = clip;
+                    else if (data[k] < -clip) data[k] = -clip;
                 }
+                output.write(data);
             }
          }
-        //Write our data out, using the same header values to the file
-        //located at: output.
-         Writer.writeRSF(header,data,output);
+         input.close();
+         output.close();
     }
 }
