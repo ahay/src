@@ -271,7 +271,7 @@ they cannot rotate correctly except to multiples of 90 degrees.
 The smallest clipping window that is possible that contains the desired
 clipping window will be used in this case.
 .TP
-.B erase=y break=b
+.B erase=y break=b background=y
 .B Erase=y
 forces an erase at the start of each input file, and follows the vplot
 literally thereafter.
@@ -291,6 +291,8 @@ treats the Vplot `break' command as a chance to pause, but not to erase.
 makes `break' and `erase' synonymous.
 .B Break=i
 ignores break commands completely.
+.B Background=n
+ignores the background command completely.
 .TP
 .B size=X
 .B size=relative

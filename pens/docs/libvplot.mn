@@ -29,23 +29,6 @@ C function names have an embedded underbar (e.g., `vp_break()')
 while the corresponding FORTRAN name will not use the
 underbar (`CALL VPBREAK()').
 .PP
-Input to
-.B vplot
-plot files should be done ONLY through the
-.B libvplot
-calls.
-Programs which write
-.B vplot
-language directly are doomed to early
-obsolescence.
-Future versions of
-.B vplot
-will provide backwards compatibility at the
-.B libvplot
-subroutine call level, not necessarily at the
-.B vplot
-language level.
-.PP
 Separate functions are available to accept geometric arguments
 in inches and in arbitrary user units. 
 The routines which accept user units have `u' prepended to
@@ -234,6 +217,19 @@ Prompt the user (or pause, depending on the `pause' argument to
 .B pen(9)
 ) allow interaction, and reset global plotting parameters,
 but don't erase the previous output.
+.RE
+.PP
+.ft 3
+.ne 5
+vp_background()
+.ft 1
+.RS
+.PP
+Tell the device that this is a good point to make sure the background
+color is being honored. This should only be called when the page is
+blank and after the background color (color 0) has been set to the
+desired background color for this plot. If the page is not blank
+when this command is called, the result will vary depending on the device.
 .RE
 .PP
 .ft 3

@@ -183,6 +183,18 @@ fresh. The break command only carries the first meaning. The ``next frame''
 of the plot builds upon the previous ones. This is useful when you want to
 be able to stop at various times as an image is being built up.
 .TP
+.B E
+Color the
+.B background
+of the plot page to the background color (defined by color 0).
+On some devices the background color changes immediately when color 0 is reset.
+For those devices this command is not needed and may be ignored.
+On other devices simply resetting color 0 is not enough. In those cases,
+this command will erase the plottable area to the background color.
+To ensure a device-independent plot, this command should be
+called after setting color 0 but before anything has actually been
+plotted on the current page.
+.TP
 .B o x y
 redefine
 .B origin
