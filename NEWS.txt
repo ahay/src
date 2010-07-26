@@ -1,1 +1,3 @@
 Meaningful changes done since the 1.0 release (2010-07-23):
+
+New, improved Java API: Cleaner, independent from Mines JTK. Not compatible with the old API
