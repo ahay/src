@@ -1,5 +1,5 @@
 from rsf.proj import *
-import modmig
+from rsf.recipes.modmig import modmig
 
 par = {
     'nt': 601,
@@ -19,6 +19,6 @@ par = {
     'fpeak': 20
     }
 
-modmig.modmig(par)
+modmig(par)
 
 End()
