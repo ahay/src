@@ -75,14 +75,14 @@ void step_z(float ray_z0, float DDz, float oz, float dz,
         *p_ray_z1 = ray_z0 - DDz; // fz / fx * DDx;
 
 	
-	*p_iz1 = floor((*p_ray_z1 - oz)/dz);
-	assert(*p_ray_z1 +1e-6f > oz + (*p_iz1)*dz);
+	*p_iz1 = floorf((*p_ray_z1 - oz)/dz);
+	assert(*p_ray_z1 +1e-4f > oz + (*p_iz1)*dz);
 
 	*p_iz2 = *p_iz1 + 1;
-	assert(*p_ray_z1 < 1e-6f + oz + (*p_iz2)*dz);
+	assert(*p_ray_z1 < 1e-4f + oz + (*p_iz2)*dz);
 
 	*p_dist_z1 = (*p_ray_z1 - oz)/dz - *p_iz1;
-	assert(*p_dist_z1 + 1e-6f > 0.f && *p_dist_z1 <= 1.0f);
+	assert(*p_dist_z1 + 1e-4f > 0.f && *p_dist_z1 <= 1.0f);
 	
 	// merge two indices if dist==0 or ==1
 	if (*p_dist_z1 < 1e-4) {
@@ -126,13 +126,13 @@ float	propagate_x(int dir,
     //assert((ixs > 0 && ray_x0  > ox) || (ixs < 0 && ray_x0 < ox+(nx-1)*dx));
 
     if (ixs > 0) {						
-	*p_ix1 = floor ( (ray_x0-ox) / dx );
+	*p_ix1 = floorf ( (ray_x0-ox) / dx );
 	if ((ray_x0 - (ox + (*p_ix1*dx)) < 0.01*dx) && *p_ix1 > 0) {
 	    (*p_ix1) = (*p_ix1) - 1;
 	}
     }
     else {
-	*p_ix1 = 1 + floor ((ray_x0-ox) / dx);
+	*p_ix1 = 1 + floorf ((ray_x0-ox) / dx);
 	if (((ox + (*p_ix1*dx)) - ray_x0 < 0.01*dx) && *p_ix1 < nx - 1) {
 	    (*p_ix1) = (*p_ix1) + 1;
 	}
@@ -208,10 +208,10 @@ float propagate_x_z (int dir,
 			     &ray_x1, &ray_z1, &ray_a1);
 	    
 
-	    assert(dir < 0 || max_delta_x > 1e-6f);
+	    assert(dir < 0 || max_delta_x > 1e-4f);
 	    assert(dir < 0 || ISIGN(ray_x0 - ray_x1) == dir * ISIGN(fx));
-	    assert( 1e-6 > fabs(ox + ix1*dx - ray_x1) );
-	    assert(ray_z1 + 1e-6f > oz + iz1*dz && ray_z1 < 1e-6f + oz + iz2*dz);
+	    assert( 1e-4 > fabs(ox + ix1*dx - ray_x1) );
+	    assert(ray_z1 + 1e-4f > oz + iz1*dz && ray_z1 < 1e-4f + oz + iz2*dz);
 	    //assert(ix1 >= 0 && ix1 < nx && iz1 >= 0 && iz1 < nz && iz2 >= 0 && iz2 < nz);
  
 	     if (iq == 2) 
@@ -266,10 +266,10 @@ float propagate_x_z (int dir,
 			     &ray_z1, &ray_x1, &ray_a1);
 	    
 
-	    assert(dir < 0 || max_delta_z > 1e-6f);
+	    assert(dir < 0 || max_delta_z > 1e-4f);
 	    assert(dir < 0 || ISIGN(ray_z0 - ray_z1) == dir * ISIGN(fz));
-	    assert(1e-6 > fabs(oz + iz1*dz - ray_z1));
-	    assert(ray_x1  + 1e-6f > ox + ix1*dx && ray_x1 < 1e-6f +  ox + ix2*dx);
+	    assert(1e-4 > fabs(oz + iz1*dz - ray_z1));
+	    assert(ray_x1  + 1e-4f > ox + ix1*dx && ray_x1 < 1e-4f +  ox + ix2*dx);
  
 	     if (iq == 2) 
 		 accum_val += ff2 / fz * (ray_z0 - ray_z1);
@@ -393,7 +393,7 @@ int main(int argc, char* argv[])
     dept = sf_input("dept");
     angl = sf_input("ang");*/
     if (!sf_getint("stride",&stride)) stride=1;
-    assert(stride>=1 && stride<10000);
+    assert(stride>=1);
 
     if (!sf_histint(time,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histint(time,"n2",&nx)) sf_error("No n2= in input");
@@ -510,13 +510,23 @@ int main(int argc, char* argv[])
 
 	    for (k=0; k<num_refs/4; k++) {
 
-		if (k%stride!=0)
+		ix0 = floorf(0.5+(m[i][4*k  ]-ox)/dx);
+		iz0 = floorf(0.5+(m[i][4*k+1]-oz)/dz);
+
+		if (stride > num_refs/4) {
+		    imagt_rays[iz0][ix0]=i+3;
 		    continue;
+		}
 
-	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
-	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
-	    ia0 = floor(0.5+(m[i][4*k+2]-oa)/da);
+		if (k%stride!=0) {
+		    continue;
+		}
 
+	    ia0 = floorf(0.5+(m[i][4*k+2]-oa)/da);
+
+	    sf_warning("ref=%d(%d): x=%g z=%g as=%g ar=%g\n",k,num_refs/4,m[i][4*k],m[i][4*k+1],m[i][4*k+2],m[i][4*k+3]);
+	    if (ix0<=0 || iz0<=0 || ix0>=nx || iz0>= nz)
+		continue;
 
 	    if (ia0 < 0)
 		ia0 += na;
@@ -527,9 +537,9 @@ int main(int argc, char* argv[])
 
 	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
 
-	    ix0 = floor(0.5+(m[i][4*k  ]-ox)/dx);
-	    iz0 = floor(0.5+(m[i][4*k+1]-oz)/dz);
-	    ia0 = floor(0.5+(m[i][4*k+3]-oa)/da);
+	    ix0 = floorf(0.5+(m[i][4*k  ]-ox)/dx);
+	    iz0 = floorf(0.5+(m[i][4*k+1]-oz)/dz);
+	    ia0 = floorf(0.5+(m[i][4*k+3]-oa)/da);
 
 	    if (ia0 < 0)
 		ia0 += na;
@@ -537,8 +547,6 @@ int main(int argc, char* argv[])
 		ia0 -= na;
 
 	    (void) propagate_x_z (1, 2/*iq*/, (float***)0/*t*/, (int***)0/*t_colors*/, s, sx, sz,  dx, dz, da, iz0, ix0, ia0, &ts_color, imagt_rays, i+3);
-
-	    sf_warning("ref=%d(%d): x=%g z=%g as=%g ar=%g\n",k,num_refs/4,m[i][4*k],m[i][4*k+1],m[i][4*k+2],m[i][4*k+3]);
 	    }
 	}
     }
