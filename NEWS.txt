@@ -1,3 +1,22 @@
 Meaningful changes done since the 1.0 release (2010-07-23):
 
-New, improved Java API: Cleaner, independent from Mines JTK. Not compatible with the old API
+Bug fixes:
+
+* Update of html/txt/spec documentation and man pages triggered by
+  changes in programs or examples through dependence on use.py
+
+Documentation:
+
+* Update to vplot man pages
+* This file (NEWS.txt)
+
+API enhancements:
+
+* New, improved Java API: Cleaner, independent from Mines JTK. Not
+compatible with the old API
+
+New papers:
+
+* rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
+* rsf/programming: Jeff Godwin's presentation at Houston-2010 
+* rsf/usp: Yang Liu's presentation at Houston-2010

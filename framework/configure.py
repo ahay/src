@@ -1524,12 +1524,8 @@ def python(context):
         context.Result(context_failure)
         need_pkg('numpy')
 
-pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
-                 'darwin':'netpbm (fink)',
-                 'fedora':'netpbm-devel',
-                 'suse'  :'libnetpbm-devel',
-                 'ubuntu':'libnetpbm10-dev'}
 
+pkg['java-devel'] = {'ubuntu':'openjdk-6-jdk'}
 pkg['minesjtk'] = {}
 
 def java(context):
@@ -1542,15 +1538,33 @@ def java(context):
         context.Result(context_failure)
         need_pkg('java-devel')
     
+    context.Message("checking for JAVA_HOME ... ")
+    JAVA_HOME = context.env.get('JAVA_HOME')
+    if JAVA_HOME:
+        context.Result(JAVA_HOME)
+        context.env['JAVA_HOME'] = JAVA_HOME
+    else:
+        context.Result(context_failure)
+        need_pkg('java-devel')
+
     context.Message("Checking for Mines JTK ...")
+    pkg['minesjtk'][plat['distro']] = 'Mines JTK http://inside.mines.edu/~dhale/jtk/\n\tSet MINESJTK to the location of edu_mines_jtk.jar'
+
     MINESJTK = context.env.get('MINESJTK',os.environ.get('MINESJTK'))
     if MINESJTK:
         context.Result(MINESJTK)
-        context.env['MINESJTK'] = MINESJTK
+        if os.path.isdir(MINESJTK):
+            MINESJTK = os.path.join(MINESJTK, 'edu_mines_jtk.jar')
+        if os.path.isfile(MINESJTK) and \
+                os.path.basename(MINESJTK) == 'edu_mines_jtk.jar':            
+            context.env['MINESJTK'] = MINESJTK
+        else:
+            stderr_write('Set MINESJTK to the location of edu_mines_jtk.jar',
+                         'bold')
+            context.env['MINESJTK'] = None
     else:
         context.Result(context_failure)
-        pkg['minesjtk'][plat['distro']] = 'Mines JTK http://inside.mines.edu/~dhale/jtk/\n\tSet MINESJTK to the location of edu_mines_jtk.jar'
-        need_pkg('minesjtk')
+        need_pkg('minesjtk', fatal=False)
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
@@ -1653,6 +1667,7 @@ def options(file):
     opts.Add('OCTAVE','Octave interpreter')
     opts.Add('MKOCTFILE','Octave function compiler')
     opts.Add('JAVAC','The Java compiler')
+    opts.Add('JAVA_HOME','Location of jdk')
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
 
     return opts
