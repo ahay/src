@@ -85,28 +85,28 @@ def dix(data,        # data name
     Result(dix,[dix,dix+'0'],'SideBySideAniso')
     Result(dix+'0',[npk,dix+'0'],'SideBySideAniso')
 
-    pdx = data+'-pdx'
-    Flow([pdx,pdx+'0'],[npk,smb,slp],
-         '''
-         pwdix slope=${SOURCES[2]}
-         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
-         niter=50 verb=y ncycle=10 rect1=%d
-         ''' % (4*rect1))
-    Plot(pdx,
-         '''
-         grey pclip=100 color=j bias=%g allpos=y
-         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         wanttitle=n 
-         ''' % (v0,units,units))
-    Plot(pdx+'0',
-         '''
-         grey pclip=100 color=j bias=%g
-         scalebar=y title="Predicted Migration Velocity"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s 
-         barlabel=Velocity barunit="%s/s" barreverse=y
-         ''' % (vm,units,units))
-    Result(pdx,[npk,pdx+'0'],'SideBySideAniso')
+#    pdx = data+'-pdx'
+#    Flow([pdx,pdx+'0'],[npk,smb,slp],
+#         '''
+#         pwdix slope=${SOURCES[2]}
+#         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
+#         niter=50 verb=y ncycle=10 rect1=%d
+#         ''' % (4*rect1))
+#    Plot(pdx,
+#         '''
+#         grey pclip=100 color=j bias=%g allpos=y
+#         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
+#         label1=Time unit1=s label2="Lateral Position" unit2=%s
+#         wanttitle=n 
+#         ''' % (v0,units,units))
+#    Plot(pdx+'0',
+#         '''
+#         grey pclip=100 color=j bias=%g
+#         scalebar=y title="Predicted Migration Velocity"
+#         label1=Time unit1=s label2="Lateral Position" unit2=%s 
+#         barlabel=Velocity barunit="%s/s" barreverse=y
+#         ''' % (vm,units,units))
+#    Result(pdx,[npk,pdx+'0'],'SideBySideAniso')
 
     shp = data+'-shp'
     ext = data+'-ext'
@@ -163,5 +163,5 @@ def dix(data,        # data name
          ''')
     
     Result(dix+'w',[dix,agc+'w'],'Overlay')
-    Result(pdx+'w',[pdx,vg+'w'],'Overlay')
+#    Result(pdx+'w',[pdx,vg+'w'],'Overlay')
     Result(shp+'w',[shp,agc+'w'],'Overlay')
