@@ -32,11 +32,13 @@ def velcon(data,        # data name
 
     if n1:
         mig2cip = '''
-        transp plane=24 memsize=500 | halfint inv=1 adj=1 | window n1=%d
+        transp plane=34 memsize=500 |
+        transp plane=23 | halfint inv=1 adj=1 | window n1=%d
         ''' % n1
     else:
         mig2cip = '''
-        transp plane=24 memsize=500 | halfint inv=1 adj=1
+        transp plane=34 memsize=500 |
+        transp plane=23 | halfint inv=1 adj=1
         '''
         n1=100
 
@@ -55,7 +57,7 @@ def velcon(data,        # data name
     Flow(ckx,pad,'cosft sign3=1')
     Flow(vlf,ckx,
          '''
-         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d |
+         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y |
          cosft sign3=-1 | window n3=%d
          ''' % (nv,dv,v0,padt,padt2,nx))
 
