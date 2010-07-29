@@ -271,7 +271,7 @@ def ndims(filename):
 
     for dim in range(1,max_dims+1):
         sfget_out = getout('sfget',['parform=n','n'+str(dim)],filename)
-        if sfget_out[:15] != 'sfget: No key n':
+        if len(sfget_out) > 0:
             curr_n = int(sfget_out)
             if curr_n > 1:
                 nlist[dim-1] = curr_n
