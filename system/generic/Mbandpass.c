@@ -62,7 +62,7 @@ int main (int argc, char* argv[])
 		     "got flo=%g, fhi=%g",flo/d1,fhi/d1);
 	if (0.5 < fhi)
 	    sf_error("Need fhi < Nyquist, "
-		     "got fhi=%g, Niquist=%g",fhi/d1,0.5/d1);
+		     "got fhi=%g, Nyquist=%g",fhi/d1,0.5/d1);
     }
 
     if (!sf_getbool("phase",&phase)) phase=false;    
