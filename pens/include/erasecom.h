@@ -10,7 +10,7 @@ enum {
     };
 
 /*
- * Types of erases: (Who would believe that there are 4 kinds?)
+ * Types of erases: (Who would believe that there are 5 kinds?)
  *
  * An erase really has two parts; you END one frame of a plot and BEGIN
  * another. For some devices you have to be careful to separate these
@@ -29,8 +29,25 @@ enum {
  *	is to allow saving of snapshots of a plot in progress. (An example
  *	of the proper use of ERASE_BREAK is in the filter Raspen.)
  *
- * For most screen devices, ERASE_START and ERASE_MIDDLE will just be regular
- * erases, and ERASE_END and ERASE_BREAK will be ignored.
+ * ERASE_BACKGROUND is for devices that can't easily change the background
+ *	color, for example, a paper plotter. If the vplot file redefines
+ *	color 0 to be red, do you really want to color the entire sheet
+ *	red? If the user uses the "background" command, it means they do.
+ *      Most devices will leave the external variable smart_background
+ *      set to its default value of false, in which case dovplot will
+ *	honor the vplot background command by drawing a polygon of color 0
+ *	that fills the plottable area. There are two cases where you
+ *	would set smart_background to true. First, if your device
+ *	naturally handles changes to the background color (for example,
+ *	a graphics device with a 256-color color table, where changing
+ *	color 0 instantly changes what has already been plotted). In
+ *	that case the device may safely ignore this command.
+ *	Second, if you have a "smart" device that has a built-in
+ *	command you can use to change the background color.
  *
- * Hardcopy devices may use ERASE_MIDDLE and ERASE_END instead.
+ * For most screen devices, ERASE_START and ERASE_MIDDLE will just be regular
+ * erases, and ERASE_END and ERASE_BACKGROUND will be ignored.
+ *
+ * Hardcopy devices will generally use ERASE_MIDDLE and ERASE_END and ignore
+ * ERASE_START and ERASE_BREAK.
  */
