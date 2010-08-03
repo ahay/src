@@ -131,6 +131,7 @@ int main (int argc,char* argv[])
  
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
+	sf_warning("shot %d of %d;",is+1,nshot);
 	if (sweep) {
 	    continue;
 	} else {
@@ -145,6 +146,7 @@ int main (int argc,char* argv[])
 
 	sf_floatwrite (t,n123,time);
     }
+    sf_warning(".");
 
     exit (0);
 }
