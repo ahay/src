@@ -253,6 +253,9 @@ class Project(Environment):
                 self.Append(ENV={'CLASSPATH':'%s:%s:%s:.' % (minesjtk,rsfcpath,usercpath)})    
             self.Append(JAVACLASSPATH=':'.join([os.path.join(libdir,'rsf.jar'),
                                                 minesjtk,usercpath]))
+        self.override = os.environ.get('SCONS_OVERRIDE',None)
+        # short circuits the dependency tree, forces the build of targets without proper
+        # dependencies in SCons
            
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',
@@ -452,6 +455,9 @@ class Project(Environment):
             if binaries:
                 Clean(flow,binaries)
 
+        if self.override:
+            self.Default(flow)
+            
         return flow
         
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
