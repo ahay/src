@@ -1,6 +1,6 @@
 /* Plane-wave spray in 3-D. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2010 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 #include "predict.h"
-#include "dijkstra.h"
 
 int main (int argc, char *argv[])
 {
@@ -60,12 +59,11 @@ int main (int argc, char *argv[])
     cost = sf_floatalloc2(np2,np3);
     for (i3=0; i3 < np3; i3++) {
 	for (i2=0; i2 < np2; i2++) {
-	    cost[i3][i2] = 1.;
+	    cost[i3][i2] = hypotf(i2-ns2,i3-ns3);
 	}
     }
 
-    dijkstra_init(np2,np3,cost,cost);
-    predict_init (n1, n2, eps*eps, order, 1, false);
+    predict_init (n1, n2, eps*eps, order, 1, true);
 
     u = sf_floatalloc4(n1,np,n2,n3);
     for (i3=0; i3 < n3; i3++) {
@@ -88,7 +86,8 @@ int main (int argc, char *argv[])
 	for (i3=0; i3 < n3; i3++) { 
 	    for (i2=0; i2 < n2; i2++) { 
 		sf_floatread(u[i3][i2][ns3*np2+ns2],n1,inp);
-		dijkstra_source(ns2,ns3);
+
+		/* write an abstraction analogous to dijkstra_step! */
 		
 		while (dijskstra_step(&k2,&k3,&ud,&lr)) {
 		    
