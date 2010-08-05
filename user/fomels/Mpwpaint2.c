@@ -88,7 +88,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
-    predict_init(n1,n2, eps*eps, order, 1, false);
+    predict_init(n1,n2, eps*eps, order, 1, true);
 
     /* sort from small to large traveltime */
     for (i = 0; i < n23; i++) {
@@ -109,13 +109,13 @@ int main (int argc, char *argv[])
 	b2 = j+1;
 	up2 = i2 && (i2 == n2-1 || 1 != fermat(&a2,&b2));
 	c2 = up2? a2:b2;
-	if (t2 < t0[c2]) update |= 1;
+	if (t2 > t0[c2]) update |= 1;
 
 	a3 = j-n2;
 	b3 = j+n2;
 	up3 = i3 && (i3 == n3-1 || 1 != fermat(&a3,&b3));
 	c3 = up3? a3:b3;
-	if (t2 < t0[c3]) update |= 2;
+	if (t2 > t0[c3]) update |= 2;
 	
 	switch(update) {
 	    case 0:
