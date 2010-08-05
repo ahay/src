@@ -182,7 +182,11 @@ int main(int argc, char* argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
-	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+	if (verb) {
+	    sf_warning("slice %d of %d",i3+1,n3);
+	} else {
+	    sf_warning("slice %d of %d;",i3+1,n3);
+	}
 	sf_floatread(dd,n12,in);
 	if (error && (NULL != sf_getstring ("res")) && (NULL != sf_getstring ("ref"))) {
 	    sf_floatread(refd,n12,ref);
@@ -673,6 +677,8 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (err,niter,res);
 	}
     }
+
+    if (!verb) sf_warning(".");
 
     exit(0);
 }
