@@ -131,7 +131,7 @@ int main (int argc, char *argv[])
 		predict1_step(up2,dat[c2],up2? p[a2]:p[j],dat[j]);
 		break;
 	    case 2:
-		predict1_step(up3,dat[c3],up2? q[a3]:q[j],dat[j]);
+		predict1_step(up3,dat[c3],up3? q[a3]:q[j],dat[j]);
 		break;
 	    case 3:
 		predict2_step(up2,up3,dat[c2],dat[c3],
