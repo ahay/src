@@ -3,6 +3,7 @@
 
 REQUIRES the PYTHON API, NUMPY AND SCIPY
 '''
+
 # Import RSF API
 try:
     import rsf.api as rsf

@@ -177,7 +177,7 @@ combine ={
     }
 
 # Environmental variables to pass to SCons
-keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','RSFMEMSIZE')
+keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','RSFMEMSIZE','PYTHONPATH')
 
 #############################################################################
 class Project(Environment):
@@ -229,7 +229,6 @@ class Project(Environment):
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
-                         'PYTHONPATH': os.environ.get('PYTHONPATH',''), 
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),
@@ -264,6 +263,11 @@ class Project(Environment):
             if sys.platform[:len(plat)] == plat:           
                 self['ENV']['PATH'] = ':'.join([path[plat],
                                                 self['ENV']['PATH']])
+        pythonpath = os.path.join(sys.prefix,'bin')
+        if os.path.isdir(pythonpath):
+            self['ENV']['PATH'] = ':'.join([pythonpath,
+                                            self['ENV']['PATH']])
+        
         if sys.platform[:6] == 'cygwin':
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
 
