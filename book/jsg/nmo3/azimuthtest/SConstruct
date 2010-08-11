@@ -493,17 +493,33 @@ Flow('cos','cos1 cos2',
      smooth rect1=3 rect2=3 
      ''')
 
+Flow('time2','cos',
+     '''
+     mul $SOURCE | stack axis=3 norm=n |
+     put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+     eikonal vel=n zshot=50 yshot=50
+     ''')
+Result('time2',
+       '''
+       grey color=j scalebar=y allpos=y
+       title="Minimum Time" transp=n yreverse=n
+       ''')
+
 # Time shifts
 
 Flow('pxysmooth','pysmooth pxsmooth','cat axis=4 ${SOURCES[1]}')
 
 Flow('seed','pxysmooth','window n2=1 n3=1 n4=1 | math output=x1')
-Flow('pick3','pxysmooth seed cos',
+Flow('pick3-old','pxysmooth seed cos',
      '''
      pwpaint3 seed=${SOURCES[1]} cost=${SOURCES[2]} ref2=50 ref3=50 |
      clip2 lower=0 upper=4
      ''')
-
+Flow('pick3','pxysmooth seed time2',
+     '''
+     pwpaint2 seed=${SOURCES[1]} cost=${SOURCES[2]} |
+     clip2 lower=0 upper=4
+     ''')
 
 Flow('t0.asc',None,'echo %g %g %g %g n1=4 data_format=ascii_float in=$TARGET' % (it1,it2,it3,it4))
 Flow('t0','t0.asc','dd form=native | math output="(input-3)*0.004" ')

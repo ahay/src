@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     bool sign, half;
     int   ns,    ny,    nh, nh2, nt;
     int   is,    iy,    ih, ih2=0, *mask;
-    float os,ds, oy,dy, oh,dh;
+    float os,ds, oy,dy, oh,dh, dh2;
     char *trace, *zero;
     sf_file in, out, msk;
 
@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
     }
 
     type = 0.5 + ds/dh;
+    dh2 = half? type*dh: 2*type*dh;
     
     dy = dh;
     oy = sign ? os + oh: os - oh - type*((nh-1)/type)*dh;
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
 
     nh2 = (nh+type-1)/type;
     sf_putint  (out,"n2",nh2);
-    sf_putfloat(out,"d2",type*dh);
+    sf_putfloat(out,"d2",dh2);
 
     sf_putint  (out,"n3",ny);
     sf_putfloat(out,"d3",dy);
@@ -83,8 +84,8 @@ int main(int argc, char* argv[])
 	msk = sf_output("mask");
 	sf_settype(msk,SF_INT);
 
-	sf_putint(msk,"n1",nh2);
-	sf_putfloat(msk,"d1",type*dh);
+	sf_putint  (msk,"n1",nh2);
+	sf_putfloat(msk,"d1",dh2);
 	sf_putfloat(msk,"o1",oh);
 	sf_putstring(msk,"label1","Offset");
 
@@ -113,6 +114,8 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
 
     for (iy=0; iy < ny; iy++) {
+	sf_warning("CMP %d of %d;",iy+1,ny);
+
 	if (NULL != msk) ih2=0;
 	for (ih=iy%type; ih < nh+iy%type; ih += type) {
 	    is = sign? (iy - ih)/type : (iy + ih)/type - (nh - 1)/type;
@@ -129,6 +132,7 @@ int main(int argc, char* argv[])
 	}
 	if (NULL != msk) sf_intwrite(mask,nh2,msk);
     }
+    sf_warning(".");
 
 
     exit(0);

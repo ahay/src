@@ -124,7 +124,7 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
 
-	if (sf_histfloat(cmp,"d3",&dy)) {
+	if (sf_histfloat(cmp,"d3",&dy) && !sf_getint("CDPtype",&CDPtype)) {
 	    CDPtype=half? 0.5+dh/dy : 0.5+0.5*dh/dy;
 	    if (CDPtype < 1) {
 		CDPtype=1;

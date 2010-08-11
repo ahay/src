@@ -113,18 +113,17 @@ int main(int argc, char* argv[])
 	
 	if (!sf_getbool("half",&half)) half=true;
 	/* if y, the second axis is half-offset instead of full offset */
-	if (half) {
-	    dh *= 2.;
-	    h0 *= 2.;
-	}
 	
 	CDPtype=1;
-	if (sf_histfloat(in,"d3",&d3)) {
-	    CDPtype=0.5+0.5*dh/d3;
-	    if (1 != CDPtype) sf_histint(in,"CDPtype",&CDPtype);
-	    if (1 > CDPtype) CDPtype=1;
+	if (sf_histfloat(in,"d3",&d3) && !sf_getint("CDPtype",&CDPtype)) {
+	    CDPtype=half? 0.5+dh/d3 : 0.5+0.5*dh/d3;
+	    if (CDPtype < 1) {
+		CDPtype=1;
+	    } else if (1 != CDPtype) {
+		sf_histint(in,"CDPtype",&CDPtype);
+	    	sf_warning("CDPtype=%d",CDPtype);
+	    }
 	} 	    
-	sf_warning("CDPtype=%d",CDPtype);
 	
 	h0 /= v0; 
 	dh /= v0;
@@ -232,11 +231,13 @@ int main(int argc, char* argv[])
     str = fint1_init(nw,n1,mute);
 
     for (i3=0; i3 < n3; i3++) {
+	sf_warning("CMP %d of %d;",i3+1,n3);
 	for (i2=0; i2 < n2; i2++) {
 	    if ( 'l' == rule[0] || 
 		 'n' == rule[0] || 
 		 'r' == rule[0]) {
 		h = h0+i2*dh + (dh/CDPtype)*(i3%CDPtype);
+		if (half) h *= 2;
 
 		if ('n' == rule[0]) h *= h;
 /*		if ('l' == rule[0]) h = fabsf(h);*/
@@ -256,7 +257,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (stretched,n,out);
 	}
     }
-
+    sf_warning(".");
 
     exit (0);
 }

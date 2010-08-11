@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
     }
 
     for (ih=0; ih < nh; ih++) {
-        if (verb) sf_warning("offset %d of %d",ih+1,nh);
+        if (verb) sf_warning("offset %d of %d;",ih+1,nh);
 	h = h0+ih*dh;
 	for (i=0; i < nt*nx; i++) {
 	    out[0][i] = 0.;
@@ -174,6 +174,7 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
+    if (verb) sf_warning(".");
 
     for (i=0; i < nt*nx; i++) {
 	outd[0][i] = outd[0][i]/(fold[0][i]+FLT_EPSILON);  

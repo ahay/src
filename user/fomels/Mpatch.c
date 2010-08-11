@@ -155,7 +155,7 @@ int main (int argc, char *argv[])
     ocpatch_init(dim,w12,p12,p,n,w);
     
     for (ip=0; ip < p12; ip++) {	
-	if (verb) sf_warning("patch %d of %d",ip+1,p12);
+	if (verb) sf_warning("patch %d of %d;",ip+1,p12);
 
 	if (inv) {
 	    sf_floatread (u,w12,in);
@@ -192,7 +192,8 @@ int main (int argc, char *argv[])
 	    sf_floatwrite (u,w12,out);
 
 	}
-    }		
+    }	
+    if (verb) sf_warning(".");
     
     if (inv) {
 	if (weight) {
@@ -207,4 +208,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip.c 1071 2005-03-20 20:08:23Z fomels $	 */
+
