@@ -96,6 +96,7 @@ def param(par):
     par['tratio']=2
     par['aratio']=2
 
+    par['labelrot'] =' parallel2=n '
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
     par['labelrot2']=' parallel2=n format1=%3.2f format2=%3.2f format3=%3.2f '
