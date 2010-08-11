@@ -12,34 +12,36 @@ fdmod.param(par)       # plotting parameters
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
-fdmod.boxarray('ss',5,2,1,12,8,1,par)
+fdmod.boxarray('ss',10,2,0.5,24,8,0.5,par)
 
 # plot sources
-Plot('ss',fdmod.ssplot('plotfat=10 symbol=.',par))
+Plot('ss',fdmod.ssplot('plotfat=10 symbol=. wantscalebar=y',par))
 
 # ------------------------------------------------------------
-par['jr']=4   # receiver jump (grid points)
+par['jr']=10  # receiver jump (grid points)
 par['nr']=100 # number of receivers
-par['fr']=500 # receivers origin (grid points)
+par['fr']=100 # receivers origin (grid points)
 
 # receiver coordinates
 fdmod.horizontal('tt',par['oz']+par['dz'],par)
-Flow('rr',
-     'tt',
-     'window n2=%(nr)d j2=%(jr)d f2=%(fr)d'%par)
+#Flow('rr',
+#     'tt',
+#     'window n2=%(nr)d j2=%(jr)d f2=%(fr)d'%par)
+
+fdmod.vertical('rr',par['ox']+par['nx']/2*par['dx'],par)
 
 # plot receivers
-Plot('rr',fdmod.rrplot('plotfat=10',par)) 
+Plot('rr',fdmod.rrplot('plotfat=10 wantscalebar=y',par)) 
 
 # ------------------------------------------------------------
 # get velocity
 sigsbee.getstrvelwin('vstr',par)
 Flow(  'velo',
        'vstr',
-       'smooth rect1=100 rect2=100 repeat=1')
+       'smooth rect1=10 rect2=10 repeat=1')
 
 # plot velocity
-Plot(  'velo',fdmod.cgrey('allpos=y bias=1.43',par))
+Plot(  'velo',fdmod.cgrey('allpos=y bias=1.43 wantscalebar=y',par))
 Result('velo',['velo','ss','rr'],'Overlay')
 
 # density
@@ -47,7 +49,7 @@ Flow('dens','velo','math output=1')
 
 # ------------------------------------------------------------
 # construct wavelet
-fdmod.wavelet('wav_',15,par) 
+fdmod.wavelet('wav_',10,par) 
 
 # transpose wavelet
 Flow(  'wav','wav_','transp')      
@@ -70,7 +72,7 @@ Plot('wfld',fdmod.wgrey('pclip=99',par),view=1)
 for i in range(7):
     tag = '-%02d' %(i)
     fdmod.wframe('wfld'+tag,
-                 'wfld',i,'pclip=99',par)
+                 'wfld',i,'pclip=99 wantscalebar=y',par)
     Result( 'wfld'+tag,
            ['wfld'+tag,'ss','rr'],'Overlay')
 
@@ -83,8 +85,10 @@ Flow('data','temp',
      ''' %par)
 
 # plot data
-Result('data','window j2=4 | transp |'
-       + fdmod.dgrey('',par))
+#Result('data','window j2=4 | transp |'
+#       + fdmod.dgrey('',par))
+Result('data','window j2=4 |'
+       + fdmod.egrey('',par))
 
 # ------------------------------------------------------------
 # run FD migration
