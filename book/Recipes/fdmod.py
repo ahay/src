@@ -64,14 +64,21 @@ def param(par):
     if ((10*dt+dy) == 0.0)  : ytratio=1.0
     else                    : ytratio=10*dt/(10*dt+dy);
     
-    par['ratio3d']=(dz+dy)/(dx+dy);
     par['pointt']=ytratio;
     par['pointz']=yzratio;
     par['pointx']=yxratio;
+
+    par['ratio3d']=(dz+dy)/(dx+dy);
     if(par['ratio3d']>1):
         par['height3d']=10
     else:
         par['height3d']=11*par['ratio3d']
+
+    par['tratio3d']=(10*dt+dy)/(dx+dy);
+    if(par['tratio3d']>1):
+        par['theight3d']=10
+    else:
+        par['theight3d']=11*par['tratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
@@ -89,9 +96,10 @@ def param(par):
     par['tratio']=2
     par['aratio']=2
 
-    par['labelattr']=' '+par['labelattr']+' parallel2=n format2=%3.1f format1=%3.1f '
+    par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
+    par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
+    par['labelrot2']=' parallel2=n format1=%3.2f format2=%3.2f format3=%3.2f '
     
-
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):
@@ -199,7 +207,7 @@ def dgrey3d(custom,par):
            par['lx'],par['ux'],
            par['ly'],par['uy'],
            par['nt']/2,par['nx']/2,par['ny']/2,
-           par['ratio3d'],par['height3d'],par['pointt'],par['pointx'],
+           par['tratio3d'],par['theight3d'],par['pointt'],par['pointx'],
            par['labelattr']+' '+custom)
 
 def egrey(custom,par):
