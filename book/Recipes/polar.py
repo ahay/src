@@ -60,7 +60,7 @@ def ovl(ovl,jc,jr,custom,cco):
              dd type=complex |
              window |
              graph title=""
-             wantaxis=n yreverse=y screenratio=1 plotcol=1
+             wantaxis=n yreverse=y screenratio=1 plotcol=3
              min1=%d max1=%d min2=%d max2=%d
              %s
              ''' %(min,max,min,max,
@@ -91,7 +91,7 @@ def ovl(ovl,jc,jr,custom,cco):
              dd type=complex |
              window |
              graph title=""
-             wantaxis=n yreverse=y screenratio=1 plotcol=1
+             wantaxis=n yreverse=y screenratio=1 plotcol=3
              min1=%d max1=%d min2=%d max2=%d
              %s
              ''' %(min,max,min,max,
