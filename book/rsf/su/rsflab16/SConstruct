@@ -1,0 +1,38 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('seismic.segy','cwp',server)
+
+# Convert to RSF
+Flow('seismic tseismic','seismic.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+for key in ('cdp','offset'):
+    Flow(key,'tseismic',
+         'dd type=float | headermath output=%s' % key)
+
+wiggle = '''
+wiggle transp=y yreverse=y pclip=99 wanttitle=n
+xpos=${SOURCES[1]} label2=Offset unit2=m poly=y
+'''
+
+# Capture a single CMP
+Flow('cdpmask','cdp','mask min=265 max=265')
+Flow('cdp265','seismic cdpmask',
+     'headerwindow mask=${SOURCES[1]} | pow pow1=2')
+Flow('offset265','offset cdpmask',
+     'headerwindow mask=${SOURCES[1]}')
+Result('cdp','cdp265 offset265',wiggle)
+
+# NMO with water velocity
+Flow('vel','cdp265','window n2=1 | math output=1500')
+Flow('nmo','cdp265 offset265 vel',
+     'nmo half=n offset=${SOURCES[1]} velocity=${SOURCES[2]}')
+Result('nmo','nmo offset265',wiggle)
+
+# Tau-p transform
+Flow('taup','nmo offset265',
+     'radon parab=y np=501 dp=0.0008 p0=-0.2 offset=${SOURCES[1]}')
+Result('taup','grey wanttitle=n')
+
+End()

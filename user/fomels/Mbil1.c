@@ -1,4 +1,4 @@
-/* L1 regression */
+/* Bi-variate L1 regression */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -16,35 +16,13 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <assert.h>
-
 #include <rsf.h>
-
-static int nc;
-static float **cc;
-
-static void fit(bool adj, bool add, int nm, int nd, float *m, float *d)
-{
-    int ic, id;
-
-    sf_adjnull(adj, add, nm, nd, m, d);
-    sf_copy_lop(adj, true, nd, nd, m, d);
-
-    for (ic=0; ic < nc; ic++) {
-	for (id=0; id < nd; id++) {
-	    if (adj) {
-		m[nd+ic] += cc[ic][id]*d[id];
-	    } else {
-		d[id] += cc[ic][id]*m[nd+ic];
-	    }
-	}
-    }
-}
 
 int main(int argc, char* argv[])
 {
-    int nd, n1, niter, liter, iter, i1, nm;
-    float *m, *d, perc;
+    int nd, n1, niter, iter, i;
+    float *n, *d, *a, *b, *r, alfa, beta, perc;
+    double ad, bd, aa, bb, a0, b0, da, db, ab, det;
     sf_file inp, reg, out;
 
     sf_init(argc,argv);
@@ -55,42 +33,69 @@ int main(int argc, char* argv[])
     if (!sf_histint(inp,"n1",&nd)) sf_error("No n1= in input");
     if (!sf_histint(reg,"n1",&n1) || n1 != nd)
 	sf_error("Need n1=%d in reg",nd);
-    if (!sf_histint(reg,"n2",&nc)) nc=1;
-    nm = nd+nc;
+    if (!sf_histint(reg,"n2",&n1) || n1 != 2)
+	sf_error("Need n2=2 in reg");
 
-    sf_putint(out,"n1",nc);
+    sf_putint(out,"n1",2);
     
     d = sf_floatalloc(nd);
-    m = sf_floatalloc(nm);
-    cc = sf_floatalloc2(nd,nc);
+    n = sf_floatalloc(nd);
+    a = sf_floatalloc(nd);
+    b = sf_floatalloc(nd);
+    r = sf_floatalloc(nd);
 
     sf_floatread(d,nd,inp);
-    sf_floatread(cc[0],nd*nc,reg);
+    sf_floatread(a,nd,reg);
+    sf_floatread(b,nd,reg);
     sf_fileclose(reg);
 
-    if (!sf_getint("niter",&niter)) niter=100;
+    if (!sf_getint("niter",&niter)) niter=10;
     /* number of POCS iterations */
-    if (!sf_getint("liter",&liter)) liter=10;
-    /* number of CG iterations */
-
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
 
     sf_sharpen_init(nd,perc);
 
     /* initialize with zero */
-    for (i1=0; i1 < nm; i1++) {
-	m[i1]=0.0;
+    alfa = beta = 0.;
+    for (i=0; i < nd; i++) {
+	n[i] = 0.;
     }
 
     for (iter=0; iter < niter; iter++) {
-	sf_solver(fit,sf_cgstep,nm,nd,m,d,liter,"x0",m,"end");
-	sf_sharpen(m);
-	sf_weight_apply(nd,m);
+	/* Solve |d - alpha * a - beta * b - n|_2 */
+	/* -------------------------------------- */
+	for (i=0; i < nd; i++) {
+	    r[i] = d[i]-n[i]-alfa*a[i]-beta*b[i];
+	}
+	ad=bd=aa=bb=ab=0.;
+	for (i=0; i < nd; i++) {
+	    ad += a[i]*r[i];
+	    bd += b[i]*r[i];
+	    aa += a[i]*a[i];
+	    bb += b[i]*b[i];
+	    ab += a[i]*b[i];
+	}
+	a0 = 1.+aa;
+	b0 = 1.+bb;
+	det = a0*b0-ab*ab;
+	da = (b0*ad-ab*bd)/det;
+	db = (a0*bd-ab*ad)/det;
+	alfa += da;
+	beta += db;
+	for (i=0; i < nd; i++) {
+	    n[i] += r[i] - a[i]*da - b[i]*db;
+	}
+	/* Threshold n */
+	/* ----------- */
+	sf_sharpen(n);
+	sf_weight_apply(nd,n);
+
+	sf_warning("%d %g %g",iter,alfa,beta);
     }
     
-    sf_floatwrite(m+nd,nc,out);
-
+    sf_floatwrite(&alfa,1,out);
+    sf_floatwrite(&beta,1,out);
 
     exit(0);
 }
