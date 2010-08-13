@@ -57,7 +57,7 @@ void twodip2_init(int nx, int ny     /* data size */,
 	nd[1] = ny;
 	rect[0] = fx;
 	rect[1] = fy;
-	sf_multidivn_init(2,2,n,nd,rect,u1[0],NULL,true);
+	sf_multidivn_init(2,2,n,nd,rect,u1[0],NULL,verb);
     } else {
 	u1 = sf_floatalloc2(n,1);
 	dp = sf_floatalloc(n);
