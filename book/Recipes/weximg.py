@@ -38,6 +38,23 @@ def wempar(par):
 
     if(not par.has_key('incore')):  par['incore']='y'
 
+def eicpar(par):
+    p = ' '
+    if(par.has_key('nhx')):
+        p = p + ' nhx='   + str(par['nhx'])
+    if(par.has_key('nhy')):
+        p = p + ' nhy='   + str(par['nhy'])
+    if(par.has_key('nhz')):
+        p = p + ' nhz='   + str(par['nhz'])
+    if(par.has_key('nht')):
+        p = p + ' nht='   + str(par['nht'])
+    if(par.has_key('oht')):
+        p = p + ' oht='   + str(par['oht'])
+    if(par.has_key('dht')):
+        p = p + ' dht='   + str(par['dht'])
+    p = p + ' '
+    return(p)
+
 
 # ------------------------------------------------------------
 # prepare slowness
@@ -173,6 +190,29 @@ def wexTIMG(cig,data,slow,wfls,gg,par):
          cc=${SOURCES[3]}
          ''' % par)
     par.pop('temp')
+
+def migcic(imag,sdat,rdat,slow,custom,par):
+    Flow(imag,[rdat,sdat,slow],
+         '''
+         wexmig
+         adj=1 save=0 feic=0 verb=y
+         swfl=${SOURCES[1]}
+         slo=${SOURCES[2]}
+	 %s 
+         ''' % (param(par)+custom))
+
+def migeic(imag,cips,sdat,rdat,slow,cc,custom,par):
+    Flow([imag,cips],[rdat,sdat,slow,cc],
+         '''
+         wexmig
+         adj=1 save=0 feic=1 verb=y 
+         swfl=${SOURCES[1]}
+         slo=${SOURCES[2]}
+	 cc=${SOURCES[3]}
+         cip=${TARGETS[1]}
+         %s
+         ''' % (param(par)+eicpar(par)+custom))
+
 
 # ------------------------------------------------------------
 # WEXMVA
