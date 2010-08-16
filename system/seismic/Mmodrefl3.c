@@ -29,6 +29,7 @@ The output contains PP and PS tau-p seismograms.
 
 int main(int argc, char* argv[])
 {
+    bool moveout;
     int nt, n1, i1, i2, n2, ns, n1s, ip, np, three;
     float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, *spline=NULL, **pp=NULL, **ps=NULL;
     float dt, tp,ts, a1,a2, b1,b2, r1,r2, eps, rc[4], ang[4];
@@ -49,6 +50,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("sparse",&ns)) ns=10;
     /* sparseness of reflectivity */
+
+    if (!sf_getbool("moveout",&moveout)) moveout=true;
+    /* if apply moveout */
 
     if (!sf_getint("nt",&nt)) sf_error("Need nt=");
     /* time samples */
@@ -122,8 +126,13 @@ int main(int argc, char* argv[])
 		ad1 = d1*sqrtf(1.-as*as)/a2;
 		bd1 = d1*sqrtf(1.-bs*bs)/b2;
 
-		tp += 2.*ad1;
-		ts += ad1 + bd1;
+		if (moveout) {
+		    tp += 2.*ad1;
+		    ts += ad1 + bd1;
+		} else {
+		    tp += 2.*d1/a2;
+		    ts += d1/a2+d1/b2;
+		}
 
 		tpp[i1-1] = tp;
 		tps[i1-1] = ts;

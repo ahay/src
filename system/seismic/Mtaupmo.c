@@ -21,35 +21,45 @@
 #include <rsf.h>
 #include "fint1.h"
 
-static float p, f, dt, *vel, *velx;
+static bool interval;
+static float p, f, t0, dt, *vel, *velx;
 
 static float nmo_map(float t, int it) {
-    float ft;
+    float ft, fi;
 
     ft = vel[it];
     ft = 1.-p*ft*ft;
-    if (ft > 0.)
-	f += sqrtf(ft);
-    return f*dt;
+
+    if (interval) {
+	fi = f*dt;
+	if (ft > 0.)
+	    f += sqrtf(ft);
+    } else {
+	f = sqrtf(ft);
+	fi = f*(t0+it*dt);
+    }
+
+    return fi;
 }
 
 static float anmo_map(float t, int it) {
-    float ft,gt;
+    float ft,fi,gt;
 
     ft = vel[it];
     gt = velx[it];
     gt = 1.-p*gt*gt;
     gt = gt/(gt+p*ft*ft);
+    fi = f*dt;
     if (gt > 0.)
 	f += sqrtf(gt);
-    return f*dt;
+    return fi;
 }
 
 int main (int argc, char* argv[])
 {
     fint1 nmo;
     int ip, ix, nt, np, nx, nw, mute;
-    float t0, dp, p0, str;
+    float dp, p0, str;
     float *trace;
     mapfunc map;
     sf_file taup, nmod, velocity, velocityx;
@@ -78,6 +88,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* interpolation accuracy */
+
+    if (!sf_getbool("interval",&interval)) interval=true;
+    /* use interval velocity */
 
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
