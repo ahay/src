@@ -168,3 +168,12 @@ void sf_setunit(sf_axis AA, const char* unit)
     AA->u = sf_charalloc(len);
     memcpy(AA->u,unit,len);
 }
+
+void sf_copyaxis(     sf_axis AA,
+	 	const sf_axis BB)
+/*< copy axis >*/
+{
+	sf_setn(AA, sf_n(BB));
+	sf_seto(AA, sf_o(BB));
+	sf_setd(AA, sf_d(BB));
+}
