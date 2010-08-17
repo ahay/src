@@ -103,20 +103,33 @@ def bWRwex(data,wfld,slow,par):
          wexwfl verb=y causal=n %s slo=${SOURCES[1]} 
          ''' % param(par))
 
-# Wavefield Reconstruction: forward in time
-def fwex(data,wfld,slow,custom,par):
+# Wavefield Reconstruction
+def wfl(data,wfld,slow,custom,par):
     Flow(wfld,[data,slow],
          '''
-         wex verb=y causal=y %s slo=${SOURCES[1]}
+         wex verb=y irun=wfl causal=n
+         slo=${SOURCES[1]}
+         %s
          ''' % (param(par)+custom))
 
-# Wavefield Reconstruction: backward in time
-def bwex(data,wfld,slow,custom,par):
-    Flow(wfld,[data,slow],
+# Wavefield Datuming
+def dtm(ddtm,data,slow,custom,par):
+    Flow(ddtm,[ddat,slow],
          '''
-         wex verb=y causal=n %s slo=${SOURCES[1]}
+         wex verb=y irun=dtm causal=n
+         slo=${SOURCES[1]}
+         %s
          ''' % (param(par)+custom))
 
+# migration with Conventional Imaging Condition
+def cic(icic,sdat,rdat,slow,custom,par):
+    Flow(icic,[sdat,rdat,slow],
+         '''
+         wex verb=y irun=cic
+         dat=${SOURCES[1]}
+         slo=${SOURCES[2]}
+         %s
+         ''' % (param(par)+custom))
 
 # Causal datuming (forward in time, causal=y)
 # (useful for datuming source wavefields)
