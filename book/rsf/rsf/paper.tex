@@ -1,20 +1,23 @@
-\title{Multidimensional data analysis \\ using the \textsc{Madagascar} software package}
+\title{Reproducible research \\ using the \textsc{Madagascar} software package}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}} 
 
-\author{Sergey Fomel\footnotemark[1], Paul Sava\footnotemark[2], James Jennings, Jules Browaeys, Yang Liu\footnotemark[1], Ioan Vlad, Vladimir Bashkardin\footnotemark[1],  Gilles Hennenfent, Trevor Irons\footnotemark[2], and William Burnett\footnotemark[1]}
+\author{Sergey Fomel\footnotemark[1], Paul Sava\footnotemark[2], Ioan Vlad\footnotemark[3], Yang Liu\footnotemark[1], James Jennings\footnotemark[4], Jules Browaeys\footnotemark[5], Vladimir Bashkardin\footnotemark[1], Xiaolei Song\footnotemark[1], Gilles Hennenfent\footnotemark[6], and Trevor Irons\footnotemark[2]}
 
 \ms{GEO-2010}
 
 \address{
 \footnotemark[1]Bureau of Economic Geology, \\
-John A. and Katherine G. Jackson School of Geosciences \\
-The University of Texas at Austin \\
-University Station, Box X \\
-Austin, TX 78713-8972 \\
+John A. and Katherine G. Jackson School of Geosciences \\ The
+University of Texas at Austin \\ University Station, Box X \\ Austin,
+TX 78713-8972 \\
 \footnotemark[2] Department of Geophysics \\
 Colorado School of Mines \\
-Golden, CO 80401}
+Golden, CO 80401 \\
+\footnotemark[3] Statoil \\
+\footnotemark[4] Shell \\
+\footnotemark[5] Total \\
+\footnotemark[6] Chevron}
 
 \lefthead{Fomel et al.}
 \righthead{\textsc{Madagascar}}
@@ -31,52 +34,65 @@ The goal of this paper is to introduce the \textsc{Madagascar}
 software package. \textsc{Madagascar} provides a collection of
 programs for multidimensional data analysis, including seismic imaging
 and seismic data processing, and an integrated environment for
-conducting data processing workflows and computational experiments.
+conducting data processing workflows and computational
+experiments. \textsc{Madagascar} follows the philosophy of
+reproducible research, introduced by \cite{SEG-1992-0601}.
+Reproducible research implies that the results of computational
+experiments are published along with the software code and, if
+possible, input data so that the reader of an article is able to
+reproduce and verify the experiment \cite[]{matt,intro}.
+
+Why is reproducible research important? ...
 
 It is the need for an integrated and open environment for geophysical
 research that motivated the development of
 \textsc{Madagascar}... reproducible research... ..similarities and
 differences with MATLAB... with SU...
 
-The paper is organized as follows. We start with basic facts about the
-\textsc{Madagascar} development status and organizational
-structure. Next, we describe the core principles that went into
-software design. Finally, we provide guidelines for new users for
-exploring the package and for contributing new software to it. The
-appendix contains a complete example of a small research project
-implemented in \textsc{Madagascar}
+The paper is organized as follows. 
 
-\section{Facts}
+%We start with basic facts about the
+%\textsc{Madagascar} development status and organizational
+%structure. Next, we describe the core principles that went into
+%software design. Finally, we provide guidelines for new users for
+%exploring the package and for contributing new software to it. The
+%appendix contains a complete example of a small research project
+%implemented in \textsc{Madagascar}
+
+\section{Basic facts}
 
 The work on the \textsc{Madagascar} package (previously named RSF for
 \emph{Regularly Sampled Format}) started in 2003.  The package got
 publicly released during an EAGE Workshop on open-source E\&P Software
 in Vienna in June 2006. Since then, more than 25 people have
-contributed to its development, writing more than 250,000 lines of
-code.
+contributed to its development, writing cummulatively almost
+300,000 lines of code.
 
 \href{http://www.ohloh.net/}{Ohloh}, a website that maps the landscape
 of open-source software development, evaluates \textsc{Madagascar} as
 \begin{itemize}
-\item Mature, well-established codebase
-\item Increasing year-over-year development activity
-\item Large, active development team 
+\item Mature, well-established codebase;
+\item Increasing year-over-year development activity;
+\item Large, active development team.
 \end{itemize}
 
 Several events helped promote \textsc{Madagascar} in the geophysical
-and signal processing communities:
-\begin{description}
-\item[2006 School and Workshop on Reproducible Research in
-  Computational Geophysics] took place in Vancouver, Canada, and
-  attracted...
-\item[2007 Short Course on Using and Extending Madagascar] took place
-  in Austin, Texas, and attracted...
-\item[2008 Implementation Workshop] took place in Golden, Colorado, attracted...
-\item[2009 School on Reproducible Computational Geophysics] took place
-  in Delft, the Netherlands, and attracted...
-\item[2009 Madagascar Tutorial] took place in Salvador, Brazil, and attracted...
-\item[2010 MadagascarFest] is planning to take place in Houston, Texas.
-\end{description}
+and signal processing communities (Table~\ref{tbl:events}.)
+
+\tabl{events}{\textsc{Madagascar} annual events}{%
+\begin{center}
+\begin{tabular}{|r|l|l|} \hline
+year & location & name \\ \hline \hline
+2006 & Vancouver, Canada & School and Workshop on Reproducible Research \\
+& &  in Computational Geophysics \\
+2007 & Austin, TX & Short Course on Using and Extending \textsc{Madagascar} \\
+2008 & Golden, CO & Implementation Workshop \\
+2009 & Delft, the Netherlands & School on Reproducible Computational Geophysics \\
+2010 & Houston, TX & School on Reproducible Computational Geophysics \\
+& & and Hands-On Workshop \\ \hline
+\end{tabular}
+\end{center}
+}
 
 \section{Design principles}
 
