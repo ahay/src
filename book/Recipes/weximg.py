@@ -1,5 +1,4 @@
 from rsf.proj import *
-import spmig, sgmig, zomig,fdmod
 
 def param(par):
     p  = ' '
@@ -104,6 +103,21 @@ def bWRwex(data,wfld,slow,par):
          wexwfl verb=y causal=n %s slo=${SOURCES[1]} 
          ''' % param(par))
 
+# Wavefield Reconstruction: forward in time
+def fwex(data,wfld,slow,custom,par):
+    Flow(wfld,[data,slow],
+         '''
+         wex verb=y causal=y %s slo=${SOURCES[1]}
+         ''' % (param(par)+custom))
+
+# Wavefield Reconstruction: backward in time
+def bwex(data,wfld,slow,custom,par):
+    Flow(wfld,[data,slow],
+         '''
+         wex verb=y causal=n %s slo=${SOURCES[1]}
+         ''' % (param(par)+custom))
+
+
 # Causal datuming (forward in time, causal=y)
 # (useful for datuming source wavefields)
 
@@ -136,7 +150,7 @@ def wexMOD(ref,data,slow,wfls,par):
          '''
          rtoc |
          weximg %s
-         adj=0 save=0 feic=0 verb=y nrmax=5
+         adj=0 save=0 feic=0 verb=y
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          ''' %param(par))
@@ -146,11 +160,11 @@ def wexCIMG(img,data,slow,wfls,par):
     Flow(img,[data,slow,wfls],
          '''
          weximg %s
-         adj=1 save=0 feic=0 verb=y nrmax=5
+         adj=1 save=0 feic=0 verb=y
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]} | 
          real
-         ''' % param(par))
+         ''' %param(par))
 
 def wexEIMG(cip,data,slow,wfls,cc,par):
     par['temp'] = param(par)
@@ -158,7 +172,7 @@ def wexEIMG(cip,data,slow,wfls,cc,par):
          '''
          weximg %(temp)s
          nhx=%(nhx)d nhz=%(nhz)d nhy=%(nhy)d nht=%(nht)d dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y nrmax=5
+         adj=1 save=0 feic=1 verb=y
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}
@@ -171,7 +185,7 @@ def wexXIMG(cig,data,slow,wfls,gg,par):
          '''
          weximg %(temp)s
          nhx=%(nhx)d nhz=0 nhy=%(nhy)d nht=0 dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y nrmax=5
+         adj=1 save=0 feic=1 verb=y
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}
@@ -184,7 +198,7 @@ def wexTIMG(cig,data,slow,wfls,gg,par):
          '''
          weximg %(temp)s
          nhx=0 nhz=0 nhy=0 nht=%(nht)d dht=%(dht)g
-         adj=1 save=0 feic=1 verb=y nrmax=5 
+         adj=1 save=0 feic=1 verb=y
          slo=${SOURCES[1]}
          swfl=${SOURCES[2]}
          cc=${SOURCES[3]}
