@@ -1,5 +1,4 @@
-# Copyright (C) 2005-2010 University of Texas at Austin
-#
+# Copyright (C) 2005-2010 University of Texas at Austin #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -1539,7 +1538,8 @@ def java(context):
         need_pkg('java-devel')
     
     context.Message("checking for JAVA_HOME ... ")
-    JAVA_HOME = context.env.get('JAVA_HOME')
+    JAVA_HOME = context.env.get('JAVA_HOME',os.environ.get('JAVA_HOME'))
+    #JAVA_HOME = context.env.get('JAVA_HOME')
     if JAVA_HOME:
         context.Result(JAVA_HOME)
         context.env['JAVA_HOME'] = JAVA_HOME
