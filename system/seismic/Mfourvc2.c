@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     size_t len;
     static kiss_fftr_cfg forw, invs;
     sf_file in=NULL, out=NULL;
+    bool sembl;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -63,6 +64,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
     if (!sf_getfloat("v0",&v0) && 
 	!sf_histfloat(in,"v0",&v0)) sf_error("Need v0=");
+
+    if (!sf_getbool("semblance",&sembl)) sembl=true;
+    /* if y, compute semblance; if n, stack */
 
     if(!sf_histfloat(in,"o3",&h0)) sf_error("No o2= in input");
     if(!sf_histfloat(in,"d3",&dh)) sf_error("No d2= in input");
@@ -207,18 +211,30 @@ int main(int argc, char* argv[])
 		ib = i1-nb > 0? i1-nb: 0;
 		ie = i1+nb+1 < n1? i1+nb+1: n1;
 
-		num = 0.;
-		den = 0.;
+		    num = 0.;
+		    den = 0.;
 
-		for (i2=ib; i2 < ie; i2++) {
-		    t = stack[iv][ix][i2];
-		    num += t*t;
-		    den += stack2[iv][ix][i2];
+		if (sembl) {
+
+		    for (i2=ib; i2 < ie; i2++) {
+			t = stack[iv][ix][i2];
+			num += t*t;
+			den += stack2[iv][ix][i2];
+		    }
+		    
+		    den *= nh;
+		    
+		    trace[i1] = den > 0.? num/den: 0.;
+		} else {
+
+		    for (i2=ib; i2 < ie; i2++) {
+			t = stack[iv][ix][i2];
+			num += t;
+		    }
+
+		    den = nh;
+		    trace[i1] =  num/(den+ FLT_EPSILON);
 		}
-
-		den *= nh;
-
-		trace[i1] = den > 0.? num/den: 0.;
 	    }
 	    sf_floatwrite (trace,n1,out);
 	}
