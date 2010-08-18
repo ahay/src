@@ -21,28 +21,14 @@
 #include <rsf.h>
 
 #include "predict.h"
-
-static float *t0;
-
-static int fermat(const void *a, const void *b)
-/* comparison for traveltime sorting from small to large */
-{
-    float ta, tb;
-
-    ta = t0[*(int *)a];
-    tb = t0[*(int *)b];
-
-    if (ta >  tb) return 1;
-    if (ta == tb) return 0;
-    return -1;
-}
+#include "update.h"
 
 int main (int argc, char *argv[])
 {
     bool verb, up2, up3;
     unsigned char update;
-    int n1,n2,n3, n12, n23, a2,b2,c2, a3,b3,c3, *visit, order, i,j,i1,i2,i3;
-    float eps, **dat, **p, **q, *time, o1, d1, t2;
+    int n1,n2,n3, n12, n23, j2, j3, order, i,j,i1;
+    float eps, **dat, **p, **q, *p2, *p3, *time, *t0, o1, d1;
     sf_file dip, out, seed, cost;
 
     sf_init(argc,argv);
@@ -82,7 +68,6 @@ int main (int argc, char *argv[])
     sf_floatread(q[0],n12,dip);
 
     t0 = sf_floatalloc(n23);
-    visit = sf_intalloc(n23);
     sf_floatread(t0,n23,cost);
 
     if (!sf_getint("order",&order)) order=1;
@@ -90,33 +75,17 @@ int main (int argc, char *argv[])
 
     predict_init(n1,n2, eps*eps, order, 1, true);
 
-    /* sort from small to large traveltime */
-    for (i = 0; i < n23; i++) {
-	visit[i] = i;
-    }
-    qsort(visit, n23, sizeof(int), fermat);
+    update_init(n2,n3,t0);
 
     for (i = 0; i < n23; i++) {
-	j = visit[i];
-	t2 = t0[j];
-
-	i2 = j%n2;
-	i3 = j/n2;
-
-	update = 0;
-
-	a2 = j-1;
-	b2 = j+1;
-	up2 = i2 && (i2 == n2-1 || 1 != fermat(&a2,&b2));
-	c2 = up2? a2:b2;
-	if (t2 > t0[c2]) update |= 1;
-
-	a3 = j-n2;
-	b3 = j+n2;
-	up3 = i3 && (i3 == n3-1 || 1 != fermat(&a3,&b3));
-	c3 = up3? a3:b3;
-	if (t2 > t0[c3]) update |= 2;
+	update = get_update(i,&up2,&up3,&j);
 	
+	j2 = up2? (j-1) :(j+1);
+	j3 = up3? (j-n2):(j+n2);
+
+	p2 = up2? p[j-1]: p[j];
+	p3 = up3? q[j-n2]:q[j];
+
 	switch(update) {
 	    case 0:
 		if (NULL != seed) {
@@ -128,15 +97,14 @@ int main (int argc, char *argv[])
 		}
 		break;
 	    case 1:
-		predict1_step(up2,dat[c2],up2? p[a2]:p[j],dat[j]);
+		predict1_step(up2,dat[j2],p2,dat[j]);
 		break;
 	    case 2:
-		predict1_step(up3,dat[c3],up3? q[a3]:q[j],dat[j]);
+		predict1_step(up3,dat[j3],p3,dat[j]);
 		break;
 	    case 3:
-		predict2_step(up2,up3,dat[c2],dat[c3],
-			      up2? p[a2]:p[j],
-			      up3? q[a3]:q[j],dat[j]);
+		predict2_step(up2,up3,dat[j2],dat[j3],
+			      p2,p3,dat[j]);
 		break;
 	}
     }

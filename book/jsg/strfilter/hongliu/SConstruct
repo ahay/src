@@ -65,6 +65,9 @@ Flow('sgr-dips','sgr-dip1 sgr-dip2','cat axis=4 ${SOURCES[1]}')
 
 # Spray
 Flow('sgr-spray','3dsgr sgr-dip',
+     'pwspray2 ns2=%d ns3=%d dip=${SOURCES[1]}'% (ns2,ns3))
+
+Flow('sgr-spray3','3dsgr sgr-dip',
      'pwspray3 ns2=%d ns3=%d dip=${SOURCES[1]}'% (ns2,ns3))
 
 # LUM filtering

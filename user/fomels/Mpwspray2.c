@@ -16,16 +16,18 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
+
 #include "predict.h"
+#include "update.h"
 
 int main (int argc, char *argv[])
 {
-    bool verb;
-    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3;
-    int order, np, i4, n4, k2, k3, j2, j3, ud, lr;
-    float eps, ****u, ***p1, ***p2, **cost, *trace;
+    bool verb, up2, up3;
+    unsigned char update;
+    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, n23, n12;
+    int order, np, i4, n4, k2, k3, j2, j3, i, jp, j;
+    float eps, ***u, **p1, **p2, **cost, *trace, *q2, *q3;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -36,6 +38,8 @@ int main (int argc, char *argv[])
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(inp,"n3",&n3)) sf_error("No n3= in input");
+    n23 = n2*n3;
+    n12 = n1*n23;
     n4 = sf_leftsize(inp,3);
 
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -64,66 +68,91 @@ int main (int argc, char *argv[])
     }
 
     predict_init (n1, n2, eps*eps, order, 1, true);
+    update_init(np2,np3,*cost);
 
-    u = sf_floatalloc4(n1,np,n2,n3);
-    for (i3=0; i3 < n3; i3++) {
-	for (i2=0; i2 < n2; i2++) {
-	    for (ip=0; ip < np; ip++) {
-		for (i1=0; i1 < n1; i1++) {
-		    u[i3][i2][ip][i1] = 0.;
-		}
+    u = sf_floatalloc3(n1,np,n23);
+    for (i3=0; i3 < n23; i3++) {
+	for (ip=0; ip < np; ip++) {
+	    for (i1=0; i1 < n1; i1++) {
+		u[i3][ip][i1] = 0.;
 	    }
 	}
     }
 
-    p1 = sf_floatalloc3(n1,n2,n3);
-    p2 = sf_floatalloc3(n1,n2,n3);
+    p1 = sf_floatalloc2(n1,n23);
+    p2 = sf_floatalloc2(n1,n23);
 
-    sf_floatread(p1[0][0],n1*n2*n3,dip);
-    sf_floatread(p2[0][0],n1*n2*n3,dip);
+    sf_floatread(p1[0],n12,dip);
+    sf_floatread(p2[0],n12,dip);
 
     for (i4=0; i4 < n4; i4++) {
-	for (i3=0; i3 < n3; i3++) { 
-	    for (i2=0; i2 < n2; i2++) { 
-		sf_floatread(u[i3][i2][ns3*np2+ns2],n1,inp);
+	for (i=0; i < n23; i++) { 
+	    sf_floatread(u[i][ns3*np2+ns2],n1,inp);
+	    
+	    i2 = i%n2;
+	    i3 = i/n2;
 
-		/* write an abstraction analogous to dijkstra_step! */
+	    for (ip=0; ip < np; ip++) {
+		update = get_update(ip,&up2,&up3,&jp);
 		
-		while (dijskstra_step(&k2,&k3,&ud,&lr)) {
-		    
-		    /* predict k3,k2 from k3-lr,k2-ud */
-		    
-		    ip = k3*np2+k2;		    
-		    j2 = i2+k2-ns2;
-		    j3 = i3+k3-ns3;
+		/* from jp to j */
+		k2 = jp%np2;
+		k3 = jp/np2;
+		
+		j2 = i2+k2-ns2;
+		j3 = i3+k3-ns3;
 
-		    if (j2 < 0 || j2 >= n2 || 
-			j3 < 0 || j3 >= n3 ||
-			j2-ud < 0 || j2-ud >= n2 || 
-			j3-lr < 0 || j3-lr >= n3) continue;
+		if (j2 < 0 || j2 >= n2 || 
+		    j3 < 0 || j3 >= n3) continue;
 
-		    trace = u[j3][j2][ip];		    
-		    for (i1=0; i1 < n1; i1++) {
-			trace[i1] = u[j3-lr][j2-ud][ip-lr*np2-ud][i1];
-		    } 
+		j = j2+j3*n2;
+		trace = u[j][jp];
 
-		    if (ud > 0) {
-			predict_step(false,true,trace,p1[j3][j2-ud]);
-		    } else if (ud < 0) {
-			predict_step(false,false,trace,p1[j3][j2]);
+		if (update & 1) {		
+		    if (up2) {
+			if (j2==0) continue;
+			j2 = j-1;
+			q2 = p1[j2];
+			k2 = jp-1;
+		    } else {
+			if (j2==n2-1) continue;
+			j2 = j+1;
+			q2 = p1[j];
+			k2 = jp+1;
 		    }
-		    
-		    if (lr > 0) {
-			predict_step(false,true,trace,p2[j3-lr][j2]);
-		    } else if (lr < 0) {
-			predict_step(false,false,trace,p2[j3][j2]);
+		}
+		if (update & 2) {
+		    if (up3) {
+			if (j3==0) continue;
+			j3 = j-n2;
+			q3 = p2[j3];
+			k3 = jp-np2;
+		    } else {
+			if (j3==n3-1) continue;
+			j3 = j+n2;
+			q3 = p2[j];
+			k3 = jp+np2;
 		    }
+		}
+
+		switch(update) {
+		    case 0:			
+			break;
+		    case 1:
+			predict1_step(up2,u[j2][k2],q2,trace);
+			break;
+		    case 2:
+			predict1_step(up3,u[j3][k3],q3,trace);
+			break;
+		    case 3:
+			predict2_step(up2,up3,u[j2][k2],u[j3][k3],
+				      q2,q3,trace);
+			break;
 		}
 	    }
 	}
-	
 
-	sf_floatwrite(u[0][0][0],n1*n2*n3*np,out);
+	sf_floatwrite(u[0][0],n12*np,out);
     }
 
     exit (0);

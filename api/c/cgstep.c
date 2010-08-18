@@ -53,12 +53,13 @@ void sf_cgstep( bool forget     /* restart flag */,
 	for (i = 0; i < ny; i++) Ss[i] = 0.;
 	beta = 0.0;
 	alfa = cblas_dsdot( ny, gg, 1, gg, 1);
+	/* Solve G . ( R + G*alfa) = 0 */
 	if (alfa <= 0.) return;
 	alfa = - cblas_dsdot( ny, gg, 1, rr, 1) / alfa;
     } else {
 	/* search plane by solving 2-by-2
-	   G . (R - G*alfa - S*beta) = 0
-	   S . (R - G*alfa - S*beta) = 0 */
+	   G . (R + G*alfa + S*beta) = 0
+	   S . (R + G*alfa + S*beta) = 0 */
 	gdg = cblas_dsdot( ny, gg, 1, gg, 1);       
 	sds = cblas_dsdot( ny, Ss, 1, Ss, 1);       
 	gds = cblas_dsdot( ny, gg, 1, Ss, 1);       
@@ -88,7 +89,7 @@ void sf_cgstep( bool forget     /* restart flag */,
 void sf_cgstep_close (void) 
 /*< Free allocated space. >*/ 
 {
-    if (Allocated == true) {
+    if (Allocated) {
 	free (S);
 	free (Ss);
 	Allocated = false;

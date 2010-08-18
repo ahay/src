@@ -234,8 +234,8 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
 	sprintf(key2,"n%d",j+1);
 	sprintf(key1,"n%d",j);
 	if (!sf_histint(in,key1,&ni)) {
-	     sf_putint(out,key2,1);
-	     break;
+	    sf_putint(out,key2,1);
+	    break;
 	}
 	sf_putint(out,key2,ni);
 	n3 *= ni;
