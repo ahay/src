@@ -1,31 +1,70 @@
 /* Make a velocity function v(x,y,z)*/
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright � 2007, Colorado School of Mines,
+  All rights reserved.
   
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
   
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  Redistribution and use in source and binary forms, with or 
+  without modification, are permitted provided that the following 
+  conditions are met:
   
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *  Redistributions of source code must retain the above copyright 
+  notice, this list of conditions and the following disclaimer.
+  *  Redistributions in binary form must reproduce the above 
+  copyright notice, this list of conditions and the following 
+  disclaimer in the documentation and/or other materials provided 
+  with the distribution.
+  *  Neither the name of the Colorado School of Mines nor the names of
+  its contributors may be used to endorse or promote products 
+  derived from this software without specific prior written permission.
+  
+  Warranty Disclaimer:
+  THIS SOFTWARE IS PROVIDED BY THE COLORADO SCHOOL OF MINES AND CONTRIBUTORS 
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+  COLORADO SCHOOL OF MINES OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+  POSSIBILITY OF SUCH DAMAGE.
+  
+  
+  Export Restriction Disclaimer:
+  We believe that CWP/SU: Seismic Un*x is a low technology product that does
+  not appear on the Department of Commerce CCL list of restricted exports.
+  Accordingly, we believe that our product meets the qualifications of
+  an ECCN (export control classification number) of EAR99 and we believe
+  it fits the qualifications of NRR (no restrictions required), and
+  is thus not subject to export restrictions of any variety.
+  
+  Approved Reference Format:
+  In publications, please refer to SU as per the following example:
+  Cohen, J. K. and Stockwell, Jr. J. W., (200_), CWP/SU: Seismic Un*x 
+  Release No. __: an open source software  package for seismic 
+  research and processing, 
+  Center for Wave Phenomena, Colorado School of Mines.
+  
+  Articles about SU in peer-reviewed journals:
+  Saeki, T., (1999), A guide to Seismic Un*x (SU)(2)---examples of data processing (part 1), data input and preparation of headers, Butsuri-Tansa (Geophysical Exploration), vol. 52, no. 5, 465-477.
+  Stockwell, Jr. J. W. (1999), The CWP/SU: Seismic Un*x Package, Computers and Geosciences, May 1999.
+  Stockwell, Jr. J. W. (1997), Free Software in Education: A case study of CWP/SU: Seismic Un*x, The Leading Edge, July 1997.
+  Templeton, M. E., Gough, C.A., (1998), Web Seismic Un*x: Making seismic reflection processing more accessible, Computers and Geosciences.
+  
+  Acknowledgements:
+  SU stands for CWP/SU:Seismic Un*x, a processing line developed at Colorado 
+  School of Mines, partially based on Stanford Exploration Project (SEP) 
+  software.
 */
+/* Modified by Tariq Alkhalifah for inclusion with Madagascar. */
 
 #include <math.h>
 
 #include <rsf.h>
-
-#include "frannor.h"
-
-#define PI 3.14159265359
-
-
+#include <su.h>
 
 /*
  * Extracted from CWP Author: Dave Hale
@@ -130,8 +169,8 @@ main (int argc, char **argv)
 	sf_putfloat(out,"o3",fy);
 	
 	/* compute chirp constants */
-	bc = PI/(z2c-z1c)*(1.0/l2c-1.0/l1c);
-	ac = 2.0*PI/l1c - 2.0*bc*z1c;
+	bc = SF_PI/(z2c-z1c)*(1.0/l2c-1.0/l1c);
+	ac = 2.0*SF_PI/l1c - 2.0*bc*z1c;
 	
 	/* allocate space */
 	v = sf_floatalloc(nz);

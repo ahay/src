@@ -11,5 +11,5 @@ clean:
 
 distclean:
 	$(SCONS) -c install
-	rm .sconsign*
+	rm -r .sconsign* build
 
