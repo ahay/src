@@ -51,7 +51,7 @@ def generate_hard_coded_paths(outdir):
     h = {}
 
     # The wiki should be found at wikirooturl, downloaded to wikiroot_local
-    h['hosting_domain'] = 'http://reproducibility.org'
+    h['hosting_domain'] = 'http://m8r.info'
     h['wiki_basenm']    = 'wiki'
     h['wiki_url']       = h['hosting_domain'] + '/' + h['wiki_basenm']+'/'
     h['wiki_local']     = outdir
