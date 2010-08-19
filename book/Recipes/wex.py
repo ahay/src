@@ -35,8 +35,7 @@ def wempar(par):
     if(not par.has_key('tmx')):     par['tmx']=16
     if(not par.has_key('tmy')):     par['tmy']=16
 
-    if(not par.has_key('incore')):  par['incore']='y'
-
+# ------------------------------------------------------------
 def eicpar(par):
     p = ' '
     if(par.has_key('nhx')):
@@ -87,7 +86,7 @@ def dtm(ddat,data,slow,custom,par):
 
 # ------------------------------------------------------------
 # migration with Conventional Imaging Condition
-def cic(icic,sdat,rdat,slow,custom,par):
+def cicmig(icic,sdat,rdat,slow,custom,par):
     Flow(icic,[sdat,rdat,slow],
          '''
          wex verb=y irun=cic
@@ -95,6 +94,19 @@ def cic(icic,sdat,rdat,slow,custom,par):
          slo=${SOURCES[2]}
          %s
          ''' % (param(par)+custom))
+
+# ------------------------------------------------------------
+# migration with Extended Imaging Condition
+def eicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
+    Flow([icic,ieic],[sdat,rdat,slow,ccoo],
+         '''
+         wex verb=y irun=eic
+         dat=${SOURCES[1]}
+         slo=${SOURCES[2]}
+         coo=${SOURCES[3]}
+         cip=${TARGETS[1]}
+         %s
+         ''' % (param(par)+eicpar(par)+custom))
     
 # ------------------------------------------------------------
 # 3D imaging condition
