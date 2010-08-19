@@ -12,12 +12,13 @@ psava@mines.edu
 \large
 }
 
-\def\WSI{\textbf{WSI}}
-\def\DEL{\Delta}
+\def\WSI{\textbf{WSI}~}
 
 % ------------------------------------------------------------
 % colors
 \definecolor{darkgreen}{rgb}{0,0.4,0}
+\definecolor{LightGray}{rgb}{0.90,0.90,0.90}
+\definecolor{DarkGray}{rgb}{0.85,0.85,0.85}
 
 \def\red#1{\textcolor{red}{#1}}
 \def\blue#1{\textcolor{blue}{#1}}
@@ -26,6 +27,8 @@ psava@mines.edu
 \def\black#1{\textcolor{black}{#1}}
 \def\white#1{\textcolor{white}{#1}}
 \def\yellow#1{\textcolor{yellow}{#1}}
+\def\gray#1{\textcolor{gray}{#1}}
+\def\magenta#1{\textcolor{magenta}{#1}}
 
 % ------------------------------------------------------------
 % madagascar
@@ -41,7 +44,7 @@ psava@mines.edu
 \def\beq{\begin{equation}}
 \def\eeq{  \end{equation}}
 
-\def\req#1{(\ref{#1})}
+%\def\req#1{(\ref{#1})}
 
 \def\lp{\left (}
 \def\rp{\right)}
@@ -132,37 +135,58 @@ a_x \; a_y \; a_z
 % force vector
 \def\ff{{\bf f}}
 
-% distance vector
-\def\xx{{\bf x}}
-
 % wavenumber vector
 \def\kk{{\bf k}}
 
 % ray parameter vector
 \def\pp{{\bf p}}
 
+% distance vector
+\def\xx{{\bf x}}
+\def\kkx{{\kk_\xx}}
+\def\ppx{{\pp_\xx}}
+
+\def\yy{{\bf y}}
+
 % normal vector
 \def\nn{{\bf n}}
+\def\ns{\nn_s}
+\def\nr{\nn_r}
 
 % source vector
 \def\ss{{\bf s}}
+\def\kks{{\kk_\ss}}
+\def\pps{{\pp_\ss}}
 
 % receiver vector
 \def\rr{{\bf r}}
+\def\kkr{{\kk_\rr}}
+\def\ppr{{\pp_\rr}}
 
 % midpoint vector
 \def\mm{{\bf m}}
-\def\km{{\kk_\mm}}
+\def\kkm{{\kk_\mm}}
+\def\ppm{{\pp_\mm}}
 
 % offset vector
 \def\ho{{\bf h}}
-\def\kh{{\kk_\ho}}
+\def\kkh{{\kk_\ho}}
+\def\pph{{\pp_\ho}}
 
 % space-lag vector
 \def\hh{ {\boldsymbol{\lambda}} }
+\def\kkl{{\kk_\hh}}
+\def\ppl{{\pp_\hh}}
+
+% CIP vector
+\def\cc{ {\bf c}}
 
 % time-lag scalar
 \def\tt{\tau}
+\def\tts{\tt_s}
+\def\ttr{\tt_r}
+
+% frequency
 \def\ww{\omega}
 
 %
@@ -209,6 +233,11 @@ a_x \; a_y \; a_z
 \stress = \lambda \; tr \lp \strain \rp {\bf I} + 2 \mu \strain 
 }
 
+\def\CONSTITUTIVElaw{
+\stress = \stiffness \;\strain 
+}
+
+
 \def\NEWTONlaw{
 \rho \ddot{\uu} = \DIV{\stress}
 }
@@ -249,57 +278,70 @@ a_x \; a_y \; a_z
 
 
 % plane wave kernel
-\def\pwker{A e^{i\;k \lp \nn \cdot \xx - v t \rp}}
+\def\pwker{A e^{i k \lp \nn \cdot \xx - v t \rp}}
+
 
 % ------------------------------------------------------------
-\def\nbnote#1{ 
-\vfill 
-\hrule \vspace{0.10in}
-\colorbox{green}{\textbf{\black{\large N.B.}}} 
-        \emph{#1}
-\vspace{0.10in} \hrule }
-
-\def\hyellow#1{ \colorbox{yellow} #1 }
-\def\hgreen #1{ \colorbox{green}  #1 }
-
-% ------------------------------------------------------------
-% details (math, cartoons)
-\def\detail{
-\colorbox{red}{\textbf{\Huge \white{o}}}
+% details for expert audience (math, cartoons)
+\def\expert{
+\colorbox{red}{\textbf{\LARGE \white{!}}}
 }
 
 % ------------------------------------------------------------
 % image, data, wavefields
 
-\def\RR{r}
-\def\US{{u_s}}
-\def\UR{{u_r}}
-\def\UU{u}
+\def\RR{R}
 
-\def\DS{{d_s}}
-\def\DR{{d_r}}
-\def\DD{d}
+\def\UU{W}
+\def\US{{\UU_s}}
+\def\UR{{\UU_r}}
 
-\def\USw{{u_s}}
-\def\URw{{u_r}}
-\def\UUw{u}
+\def\DD{D}
+\def\DS{{\DD_s}}
+\def\DR{{\DD_r}}
 
-\def\DSw{{d_s}}
-\def\DRw{{d_r}}
-\def\DDw{d}
+\def\UUw{\UU}
+\def\USw{{\UU_s}}
+\def\URw{{\UU_r}}
+
+\def\DDw{\DD}
+\def\DSw{{\DD_s}}
+\def\DRw{{\DD_r}}
+
+% perturbations
+
+\def\ds{\Delta s}
+\def\di{\Delta \RR}
+\def\du{\Delta \UU}
+
+\def\dRR{\Delta \RR}
+\def\dUU{\Delta \UU}
+\def\dUS{\Delta \US}
+\def\dUR{\Delta \UR}
+
+\def\dtt{\Delta \tt}
+\def\dhh{\Delta \hh}
+
+% ------------------------------------------------------------
+% Green's functions
+
+\def\GG{G}
+
+\def\GS{{\GG_s}}
+\def\GR{{\GG_r}}
 
 % ------------------------------------------------------------
 % elastic data, wavefields
 
-\def\eRR{\textbf{r}}
+\def\eRR{\textbf{\RR}}
 
-\def\eDS{{\textbf{d}_s}}
-\def\eDR{{\textbf{d}_r}}
-\def\eDD{{\textbf{d}}}
+\def\eDS{{\textbf{\DD}_s}}
+\def\eDR{{\textbf{\DD}_r}}
+\def\eDD{{\textbf{\DD}}}
 
-\def\eUS{{\textbf{u}_s}}
-\def\eUR{{\textbf{u}_r}}
-\def\eUU{{\textbf{u}}}
+\def\eUS{{\textbf{\UU}_s}}
+\def\eUR{{\textbf{\UU}_r}}
+\def\eUU{{\textbf{\UU}}}
 
 % ------------------------------------------------------------
 % sliding bar
@@ -319,6 +361,19 @@ a_x \; a_y \; a_z
 \put(#1,#2){\color{green} \textbf{#3}}
 }
 
+\def\bkarrow#1#2#3{
+\thicklines
+\put(#1,#2){\color{black} \vector(-1,-1){5}}
+\put(#1,#2){\color{black} \textbf{#3}}
+}
+
+
+\def\anarrow#1#2#3#4{
+\thicklines
+\put(#1,#2){\color{#4} \vector(-1,-1){5}}
+\put(#1,#2){\color{#4} \textbf{#3}}
+}
+
 % ------------------------------------------------------------
 % circle on figure
 \def\mycircle#1#2#3{
@@ -333,26 +388,33 @@ a_x \; a_y \; a_z
 }
 
 \def\biglabel#1#2#3{
-\put(#1,#2){\Huge \color{black} \textbf{#3}}
+\put(#1,#2){\Huge \textbf{#3}}
 }
 
+\def\wlabel#1#2#3{ \white{ \biglabel{#1}{#2}{#3} }}
+\def\klabel#1#2#3{ \black{ \biglabel{#1}{#2}{#3} }}
+\def\rlabel#1#2#3{ \red{   \biglabel{#1}{#2}{#3} }}
+\def\glabel#1#2#3{ \green{ \biglabel{#1}{#2}{#3} }}
+\def\blabel#1#2#3{ \blue { \biglabel{#1}{#2}{#3} }}
+\def\ylabel#1#2#3{ \yellow{\biglabel{#1}{#2}{#3} }}
 
 % ------------------------------------------------------------
 % centering
 \def\cen#1{ \begin{center} \textbf{#1} \end{center}}
+\def\cit#1{ \begin{center} \textit{#1} \end{center}}
 
 % emphasis (bold+alert)
 \def\bld#1{ \textbf{\alert{#1}}}
 
 % huge fonts
-\def\big#1{ \begin{center} \LARGE \textbf{#1} \end{center}}
-
-
+\def\big#1{\begin{center} {\LARGE \textbf{#1}} \end{center}}
+\def\hug#1{\begin{center} {\Huge  \textbf{#1}} \end{center}}
 
 % ------------------------------------------------------------
 % separator
 \def\sep{ \vfill \hrule \vfill}
 \def\itab{ \hspace{0.5in}}
+\def\nsp{\\ \vspace{0.1in}}
 
 % ------------------------------------------------------------
 % integrals
@@ -361,6 +423,8 @@ a_x \; a_y \; a_z
 \def\xint#1{\!\!\!\int\!\! #1 d\xx}
 \def\wint#1{\!\!\!\int\!\! #1 d\ww}
 \def\aint#1{\!\!\!\alert{\int}\!\! #1 d\alert{\xx}}
+
+\def\esum#1{\sum\limits_{#1}}
 
 % ------------------------------------------------------------
 \def\CONJ#1{\overline{#1}}
@@ -371,7 +435,9 @@ a_x \; a_y \; a_z
 
 \def\IC{\colorbox{yellow}{\textbf{I.C.}}\;}
 \def\WR{\colorbox{yellow}{\textbf{W.R.}}\;}
+\def\WE{\colorbox{yellow}{\textbf{W.E.}}\;}
 \def\SO{\colorbox{yellow}{\textbf{SOURCE}}\;}
+\def\WS{\colorbox{yellow}{\textbf{W.S.}}\;}
 
 % ------------------------------------------------------------
 % summary/take home message
@@ -386,9 +452,9 @@ a_x \; a_y \; a_z
 \def\dhx{\Delta h_x}
 \def\dhy{\Delta h_y}
 
-\def\kz{k_z}
-\def\kx{k_x}
-\def\ky{k_y}
+\def\kz{{k_z}}
+\def\kx{{k_x}}
+\def\ky{{k_y}}
 
 \def\kmx{k_{m_x}}
 \def\kmy{k_{m_y}}
@@ -398,14 +464,20 @@ a_x \; a_y \; a_z
 \def\why{ \alert{\widehat{{\khy}}}}
 \def\whx{ \alert{\widehat{{\khx}}}}
 
+\def\lx{{\lambda_x}}
+\def\ly{{\lambda_y}}
+\def\lz{{\lambda_z}}
+
 \def\klx{k_{\lambda_x}}
 \def\kly{k_{\lambda_y}}
 \def\klz{k_{\lambda_z}}
 
 \def\mx{{m_x}}
 \def\my{{m_y}}
+\def\mz{{m_z}}
 \def\hx{{h_x}}
 \def\hy{{h_y}}
+\def\hz{{h_z}}
 
 \def\sx{{s_x}}
 \def\sy{{s_y}}
@@ -431,11 +503,13 @@ a_x \; a_y \; a_z
 \def\TR{t_r}
 
 \def\oft{\lp t \rp}
+\def\ofw{\lp \ww \rp}
 
 \def\ofx{\lp \xx \rp}
 \def\ofk{\lp \kk \rp}
 \def\ofs{\lp \ss \rp}
 \def\ofr{\lp \rr \rp}
+\def\ofz{\lp   z \rp}
 
 \def\ofxt{\lp \xx, t  \rp}
 \def\ofst{\lp \ss, t  \rp}
@@ -453,7 +527,7 @@ a_x \; a_y \; a_z
 \def\ofmm{\lp \mm      \rp}
 \def\ofmz{\lp \mm, z   \rp}
 \def\ofmw{\lp \mm, \ww \rp}
-\def\ofkm{\lp \km      \rp}
+\def\ofkm{\lp \kkm     \rp}
 
 % ------------------------------------------------------------
 % source/receiver data and wavefields
@@ -528,12 +602,107 @@ a_x \; a_y \; a_z
 	\sum\limits_{n=1}^{\infty}
 	\onefrac{n}{#1} }
 
+\def\dkzds { \left. \frac{d {\kz}}  {d s} \right|_{s_b} }
+\def\SSX#1#2{\sqrt{ 1 - \lb \frac{\MOD{#2}}{#1} \rb^2} }
+\def\SST#1#2{1 + \sum_{j=1}^N c_j \lb \frac{\MOD{#2}}{#1} \rb^{2j} }
+
 % ------------------------------------------------------------
 % acknowledgment
-\def\ackcwp{\cen{sponsors of the\\Center for Wave Phenomena\\at\\Colorado School of Mines}}
+\def\ackcwp{\cen{the sponsors of the\\Center for Wave Phenomena\\at\\Colorado School of Mines}}
 
 % ------------------------------------------------------------
 % citation in slides
 \def\talkcite#1{{\small \sc #1}}
 
+% ------------------------------------------------------------
+\def\ise{GPGN302: Introduction to Electromagnetic and Seismic Exploration}
+\def\inv{GPGN409: Inversion}
 
+% ------------------------------------------------------------
+\def\model{m}
+\def\data {d}
+
+\def\Lop{ {\mathbf{L}}}
+\def\Sop{ {\mathbf{S}}}
+\def\Eop{ {\mathbf{E}}}
+\def\Iop{ {\mathbf{I}}}
+\def\Aop{ {\mathbf{A}}}
+\def\Pop{ {\mathbf{P}}}
+\def\Fop{ {\mathbf{F}}}
+
+
+% ------------------------------------------------------------
+\def\mybox#1{
+\begin{center}
+\fcolorbox{black}{yellow}
+{\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
+\end{center}
+}
+
+\def\hibox#1{
+\begin{center}
+\fcolorbox{black}{green}
+{\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
+\end{center}
+}
+
+% ------------------------------------------------------------
+% Nota Bene
+\def\nbnote#1{
+\vfill
+\begin{center}
+\colorbox{LightGray}
+{\begin{minipage}{\columnwidth} {\textbf{\black{\large N.B.}} #1} \end{minipage}}
+\end{center}
+}
+
+\def\highlight#1{
+\begin{center}
+\colorbox{cyan}
+{\begin{minipage}{\columnwidth} {#1} \end{minipage}}
+\end{center}
+}
+
+\def\graybox#1{
+\vfill
+\begin{center}
+\colorbox{LightGray}
+{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
+\end{center}
+\vfill
+}
+
+\def\shaded#1{
+\definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
+\begin{shaded} {#1} \end{shaded}
+\definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+}
+
+\def\whitebox#1{
+\vfill
+\begin{center}
+\colorbox{white}
+{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
+\end{center}
+\vfill
+}
+
+\def\yellowbox#1{
+\vfill
+\begin{center}
+\colorbox{yellow}
+{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
+\end{center}
+\vfill
+}
+
+
+%\def\nbnote#1{ 
+%\vfill 
+%\hrule \vspace{0.10in}
+%\colorbox{green}{\textbf{\black{\large N.B.}}} 
+%        \emph{#1}
+%\vspace{0.10in} \hrule }
+
+\def\hyellow#1{ \colorbox{yellow} #1 }
+\def\hgreen #1{ \colorbox{green}  #1 }
