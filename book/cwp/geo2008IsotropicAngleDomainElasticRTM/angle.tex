@@ -1,0 +1,102 @@
+\section{Angle decomposition}
+
+% ------------------------------------------------------------
+\plot{cwgat}{width=\textwidth}{(a) Model showing one shot over
+multiple reflectors dipping at $0^\circ$, $15^\circ$, $30^\circ$,
+$45^\circ$ and $60^\circ$. The vertical dashed line shows a CIG
+location. Incidence ray is vertically down and P to S conversions are
+marked by arrowed \geosout{liens} \geouline{lines} pointing away from
+reflectors. (b) Converted wave angle gather obtained from algorithm
+described by {\cite{sava:2460}}. Notice that converted wave angles are
+always smaller than incidence angles (in this case, the dips of the
+reflectors) except for normal incidence. }
+% ------------------------------------------------------------
+
+As indicated earlier, the main uses of images constructed using
+extended imaging conditions are migration velocity analysis (MVA) and
+amplitude versus angle analysis (AVA). Such \geosout{analysis}
+\geouline{analyses}, however, require that the images be decomposed in
+components corresponding to various angles of incidence \geosout{,
+procedure which is often referred to as angle decomposition}. Angle
+decomposition takes different forms corresponding to the type of
+wavefields involved in imaging. Thus, we can distinguish angle
+decomposition for scalar (acoustic) wavefields and angle decomposition
+for vector (elastic) wavefields.
+
+% ------------------------------------------------------------
+\subsection{Scalar wavefields}
+
+For the case of imaging with the acoustic wave equation, the
+reflection angle corresponding to incidence and reflection of P-wave
+mode can be constructed after imaging, using mapping based on the
+relation \cite[]{sava:947}
+%
+\beq\label{eqn:PPang}
+\tan\theta_a = \frac
+{|\kk_\hh|  }
+{|\kk_\xx|  } \;,
+\eeq
+%
+where $\theta_a$ is the incidence angle, and $\kk_\xx = \kk_\rr-\kk_\ss
+$ and $\kk_\hh = \kk_\rr+\kk_\ss$ are defined using the source and
+receiver wavenumbers, $\kk_\ss$ and $\kk_\rr$. The information
+required for decomposition of the reconstructed wavefields \geouline{as
+  a} function of wavenumbers $\kk_\xx$ and $\kk_\hh$ is readily
+available in the images $\IM{}\ofxlt$ constructed by extended imaging
+conditions \reqs{XICa} or \ren{XICe}.  \geosout{Needless to say, after}
+\geouline{After} angle decomposition, the image $\IM{}\ofxa$ represents a
+mapping of the image $\IM{}\ofxlt$ from offsets to angles. In other
+words, all information for characterizing angle-dependent reflectivity
+is already available in the image obtained by the extended imaging
+conditions.
+
+% ------------------------------------------------------------
+\subsection{Vector wavefields}
+
+A similar approach can be used for decomposition of the reflectivity
+as a function of incidence and reflection angles for elastic
+wavefields imaged with extended imaging conditions \reqs{XICa} or
+\ren{XICe}. The angle $\theta_e$ characterizing the average angle
+between incidence and reflected rays can be computed using the
+expression \cite[]{sava:947}
+%%
+\beq\label{eqn:PSang}
+\tan^2\theta_e = \frac
+{ \lp 1+\gamma \rp^{2} |\kk_\hh|^2 - \lp 1-\gamma \rp^{2} |\kk_\xx|^2 }
+{ \lp 1+\gamma \rp^{2} |\kk_\xx|^2 - \lp 1-\gamma \rp^{2} |\kk_\hh|^2 } \; ,
+\eeq
+%%
+where $\gamma$ is the velocity ratio of the incident and reflected
+waves, e.g. $V_P/V_S$ ratio for incident P mode and reflected S mode.
+\rFg{cwang} shows the schematic and the notations used in \req{PSang},
+\geouline{where $\mathbf{|p_x|=|k_x|}/\omega$,
+$\mathbf{|p_\lambda|=|k_\lambda|}/\omega$, and $\omega$ is the angular
+frequency at the imaging location $\xx$.  } The angle decomposition
+equation \ren{PSang} is designed for PS reflections and reduces to
+\req{PPang} for PP reflections when $\gamma=1$.
+
+Angle decomposition using \req{PSang} requires computation of
+\geouline{an} extended imaging condition with 3D space lags
+($\lambda_x,\lambda_y,\lambda_z$), which is computationally costly.
+Faster computation can be done if we avoid computing the vertical lag
+$\lambda_z$, in which case the angle decomposition can be done using
+the expression \cite[]{sava:947}:
+%
+\beq\label{eqn:PSang_hor}
+\tan\theta_e = \frac
+{ \lp 1+\gamma\rp \lp\ahx+\bmx\rp }
+{ 2\gamma\; \kmz+\sqrt{4\gamma^2\kmz^2+\lp\gamma^2-1\rp \lp\ahx+\bmx\rp \lp\amx+\bhx\rp} } \;,
+\eeq
+%
+where 
+$\ahx=\lp 1+\gamma\rp \khx$,
+$\amx=\lp 1+\gamma\rp \kmx$,
+$\bhx=\lp 1-\gamma\rp \khx$, and 
+$\bmx=\lp 1-\gamma\rp \kmx$.
+%
+\rFg{cwgat} shows a model of five reflectors and the extracted angle
+gathers for these reflectors at the location of the source.  For PP
+reflections, they would occur in the angle gather at angles equal with
+the reflector slopes. However, for PS reflections, as illustrated in
+\rfg{cwgat}, the reflection angles are smaller than the reflector
+slopes, as expected.

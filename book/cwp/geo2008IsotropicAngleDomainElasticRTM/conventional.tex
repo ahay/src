@@ -1,0 +1,142 @@
+% ------------------------------------------------------------
+\section{Conventional elastic imaging conditions}
+% ------------------------------------------------------------
+
+For vector elastic wavefields, the cross-correlation imaging condition
+needs to be implemented on all components of the displacement
+field. The problem with this type of imaging condition is that the
+source and receiver wavefields contain a mix of P- and S-wave modes
+which cross-correlate independently, thus hampering interpretation of
+migrated images. An alternative to this type of imaging \geosout{is to}
+perform\geouline{s} wavefield separation of scalar and vector potentials
+after wavefield reconstruction in the imaging volume, but prior to the
+imaging condition and then cross-correlate pure modes from the source
+and receiver wavefields, as suggested by \cite{GEO55-07-09140919} and
+illustrated by \cite{Cunha.thesis}.
+
+% ------------------------------------------------------------
+\subsection{Imaging with scalar wavefields}
+
+As mentioned earlier, assuming single scattering in the Earth (Born
+approximation), a conventional imaging procedure consists of two
+components: wavefield extrapolation and imaging. Wavefield
+extrapolation is used to reconstruct in the imaging volume the seismic
+wavefield using the recorded data on the acquisition surface as \geouline{a}
+boundary condition, and imaging is used to extract reflectivity
+information from the extrapolated source and receiver wavefields.
+
+Assuming scalar recorded data, wavefield extrapolation using a scalar
+wave equation reconstructs scalar source and receiver wavefields,
+$\US{}\ofxt$ and $\UR{}\ofxt$, at every location \geouline{$\mathbf{x}$}
+in the subsurface. Using the extrapolated scalar wavefields, a
+conventional imaging condition \cite[]{Claerbout.iei} can be
+implemented as cross-correlation at zero-lag time:
+%
+\beq \label{eqn:CIC}
+\IM{}\ofx = \int \US{}\ofxt \UR{}\ofxt dt \;.
+\eeq
+%
+Here, $\IM{}\ofx$ denotes a scalar image obtained from scalar
+wavefields $\US{}\ofxt$ and $\UR{}\ofxt$, $\xx=\{x,y,z\}$ represent
+Cartesian space coordinates, and $t$ represents time.
+
+
+% ------------------------------------------------------------
+\subsection{Imaging with vector displacements}
+
+Assuming vector recorded data, wavefield extrapolation using a vector
+wave equation reconstructs source and receiver wavefields $\uu_s\ofxt$
+and $\uu_r\ofxt$ at every location \geouline{$\mathbf{x}$} in the
+subsurface. Here, $\uu_s$ and $\uu_r$ represent displacement fields
+reconstructed from data recorded by multicomponent geophones at the
+surface boundary. Using the vector extrapolated wavefields
+${\uu}_s=\{{u_s}_x,{u_s}_y,{u_s}_z\}$ and
+${\uu}_r=\{{u_r}_x,{u_r}_y,{u_r}_z\}$, an imaging condition can be
+formulated as a straightforward extension of \req{CIC} by
+cross-correlating all combinations of components of the source and
+receiver wavefields. Such an imaging condition for vector
+displacements can be formulated mathematically as
+%
+\beq \label{eqn:EICij}
+\IM{ij}\ofx = \int \US{i}\ofxt \UR{j}\ofxt dt \;,
+\eeq
+%
+where the quantities $u_i$ and $u_j$ stand for the Cartesian
+components ${x,y,z}$ of the vector source and receiver wavefields,
+$\uu\ofxt$. For example, $\IM{zz}\ofx$ represents the image component
+produced by cross-correlating of the $z$ components of the source and
+receiver wavefields, \geouline{and} $\IM{zx}\ofx$ represents the image component
+produced by cross-correlating of the $z$ component of the source
+wavefield with the $x$ component of the receiver wavefield, etc. In
+general, an image produced with this procedure has nine components at
+every location in space.
+
+The main drawback of applying this type of imaging condition is that
+the wavefield used for imaging contains a combination of P- and S-wave
+modes. Those wavefield vectors interfere with one-another in the
+imaging condition, since the P and S components are not separated in
+the extrapolated wavefields. The crosstalk between various components
+of the wavefield creates artifacts and makes it difficult to interpret
+the images in terms of pure wave modes, e.g. PP or PS
+reflections. This situation is similar to the case of imaging with
+acoustic data contaminated by multiples or other types of coherent
+noise which are mapped in the subsurface using \geouline{an} incorrect
+velocity.
+
+% ------------------------------------------------------------
+\subsection{Imaging with scalar and vector potentials}
+
+An alternative to the elastic imaging condition from \req{EICij} is to
+separate the extrapolated wavefield into P and S potentials after
+extrapolation and image using cross-correlations of the vector and
+scalar potentials \cite[]{GEO55-07-09140919}. Separation of scalar and
+vector potentials can be achieved by Helmholtz decomposition, which is
+applicable to any vector field $\uu\ofxt$:
+%
+\beq \label{eqn:helmholtz}
+\uu = \GRAD{\SPOT} + \CURL{\VPOT} \;,
+\eeq
+%
+where $\SPOT\ofxt$ represents the scalar potential of the wavefield
+$\uu\ofxt$ and $\VPOT\ofxt$ represents the vector potential of the
+wavefield $\uu\ofxt$, and $\DIV{\VPOT}=0$. For isotropic elastic
+wavefields, \req{helmholtz} is not used directly in practice, but the
+scalar and vector components are obtained indirectly by the
+application of the divergence ($\DIV{}$) and curl ($\CURL{}$)
+operators to the extrapolated elastic wavefield $\uu\ofxt$:
+%
+\beqa \label{eqn:PS}
+        P        &=& \DIV {\uu} =  \LAPL{\SPOT} \;, \\
+\mathbf S	 &=& \CURL{\uu} = -\LAPL{\VPOT} \;.
+\eeqa
+%
+For isotropic elastic fields far from the source, quantities $P$ and
+$\textbf S$ describe compressional and transverse components of the
+wavefield, respectively \cite[]{akirichards.2002}.  \geouline{In 2D, the
+  quantity $\textbf S$ corresponds to SV waves that are polarized in
+  the propagation plane.}
+
+Using the separated scalar and vector components, we can formulate an
+imaging condition that combines various incident and reflected wave
+modes. The imaging condition for vector potentials can be formulated
+mathematically as
+%
+\beq \label{eqn:PICij}
+\IM{ij}\ofx = \int \MS{i}\ofxt \MR{j}\ofxt dt \;,
+\eeq
+%
+where the quantities $\alpha_i$ and $\alpha_j$ stand for the various
+wave modes $\alpha=\{P, S\}$ of the vector source and receiver
+wavefields $\uu\ofxt$. For example, $\IM{PP}\ofx$ represents the image
+component produced by cross-correlating of the $P$ wave mode of the
+source and receiver wavefields, and $\IM{PS}\ofx$ represents the image
+component produced by cross-correlating of the $P$ wave mode of the
+source wavefield with the $S$ wave-mode of the receiver wavefield,
+etc. \geouline{In isotropic media}, an image produced with this procedure
+has four \geouline{independent} components at every location in space,
+similar to the image produced by the cross-correlation of the
+various Cartesian components of the vector displacements. However, in
+this case, the images correspond to various combinations of incident P
+or S and reflected P- or S-waves, thus having clear physical meaning
+and being easier to interpret for physical properties.
+

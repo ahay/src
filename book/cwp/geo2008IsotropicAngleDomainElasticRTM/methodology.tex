@@ -1,0 +1,212 @@
+% ------------------------------------------------------------
+\section{Wavefield imaging}
+% ------------------------------------------------------------
+
+Seismic imaging is based on numerical solutions to wave equations,
+which can be classified into ray-based (integral) solutions and
+wavefield-based (differential) solutions. Kirchhoff migration is a
+typical ray-based imaging procedure which is computationally efficient
+but often fails in areas of complex geology, such as sub-salt, because
+the wavefield is severely distorted by lateral velocity variations
+leading to complex multipathing. Wavefield imaging works better for
+complex geology, but is more expensive than Kirchhoff
+migration. Depending on computational time constraints and available
+resources, different levels of approximation are applied to accelerate
+imaging, i.e. one-way vs. two-way, acoustic vs. elastic, isotropic
+vs. anisotropic, etc.
+
+Despite the complexity of various types of wavefield migration
+algorithms, any wavefield imaging method can be separated into two
+parts: wavefield reconstruction followed by the application of an
+imaging condition.  For prestack depth migration, source and receiver
+wavefields have to be reconstructed at all locations in the
+subsurface.  The wavefield reconstruction can be carried out
+\geosout{in both} \geouline{using extrapolation in either} depth
+\geosout{and} \geouline{or} time \geosout{domains}, and with different
+modeling approaches, such as finite-difference\geouline{s}
+\cite[]{GEO51-01-00540066,alford:834}, finite-element\geouline{s}
+\cite[]{GEO41-01-01450151}, \geouline{or} spectral method\geouline{s}
+\cite[]{seriani:1561,seriani:1285,dai:427} \geosout{,etc}. After
+reconstructing wavefields with the recorded data as boundary
+conditions into the subsurface, an imaging condition must be applied
+at all locations in the subsurface in order to obtain a seismic
+image. The simplest types of imaging conditions are based on
+cross-correlation or deconvolution of the reconstructed wavefields
+\cite[]{GEO36-03-04670481}. These imaging conditions can be
+implemented in the time or frequency domain depending on the domain
+in which wavefields have been reconstructed. Here, we concentrate on
+reverse-time migration with wavefield reconstruction and imaging
+condition implemented in the time domain.
+
+\subsection{Reverse-time migration}
+
+Reverse-time migration reconstructs the source wavefield forward in
+time and the receiver wavefield backward in time. It then applies an
+imaging condition to extract reflectivity information out of the
+reconstructed wavefields.  The advantages of reverse-time migration
+over other depth migration techniques are that the extrapolation in
+time does not involve evanescent energy, and no dip limitations exist
+for the imaged structures
+~\cite[]{mcmechan:613,mcmechan:413,whitmore:382,GEO48-11-15141524}. Although
+conceptually simple, reverse-time migration has not been used
+extensively in practice due to its high computational cost. However,
+the algorithm is becoming more and more attractive to the industry
+because of its robustness in imaging complex geology, e.g. sub-salt
+\cite[]{jones:2140,boechat:2427}.
+
+\cite{mcmechan:613,mcmechan:413}, \cite{whitmore:382} and
+\cite{GEO48-11-15141524} first used reverse-time migration for
+poststack or zero-offset data. The procedure underlying poststack
+reverse-time migration is the following: first, reverse the recorded
+data in time; second, use these reversed data as sources along the
+recording surface to propagate the wavefields in the subsurface;
+third, extract the image at zero time, e.g. apply an imaging
+condition. The principle of poststack reverse-time migration is that
+the subsurface reflectors work as exploding reflectors and that the
+wave equation used to propagate data can be applied either forward or
+backward in time by simply reversing the time axis~\cite[]{levin:581}.
+
+\cite{chang:67} apply reverse-time migration to prestack
+data. Prestack reverse-time migration reconstructs source and receiver
+wavefields. The source wavefield is reconstructed forward in time, and
+the receiver wavefield is reconstructed backward in
+time. \cite{chang:67,chang:597} use a so called excitation-time
+imaging condition, where images are formed by extracting the receiver
+wavefield at the time taken by a wave to travel from the source to the
+image point. This imaging condition is a special case of the
+cross-correlation imaging condition of \cite{GEO36-03-04670481}.
+
+\subsection{Elastic imaging vs. acoustic imaging }
+
+Multicomponent elastic data are often recorded in land or marine
+(ocean-bottom) seismic experiments. However, as mentioned earlier,
+elastic vector wavefields are not usually processed by specifically
+designed imaging procedures, but rather by extensions of techniques
+used for scalar wavefields. Thus, seismic data processing does not
+take full advantage of the information contained by elastic
+wavefields. In other words, it does not fully unravel reflections from
+complex geology or correctly preserve imaging amplitudes and estimate
+model parameters, etc.
+
+\geosout{Elastic wave propagation in a homogeneous and arbitrarily
+  anisotropic medium is characterized by the wave equation} 
+\par
+\geosout{
+\parbox{\textwidth}{
+\[
+\rho\dtwo{u_i}{t} - c_{ijkl}\mtwo{u_k}{x_j}{x_l}=f_i \;,
+\]
+}}
+\geosout{
+where $u_i$ is the component $i$ of the displacement vector $\uu$,
+$\rho$ is the density, $c_{ijkl}$ is the stiffness tensor and $f_i$
+are the Cartesian components of the vector source $\mathbf{f}\lp
+t\rp$.}
+
+\geouline{Elastic wave propagation in a infinite homogeneous isotropic
+medium is characterized by the wave equation}
+\cite[]{akirichards.2002}
+%
+\beq\label{eqn:EWE} 
+\rho\dtwo{\uu}{t}
+  =\ff 
+  +\lp\lambda+2\mu \rp\nabla\lp \DIV{\uu} \rp
+  -\mu\CURL{\CURL{\uu}} 
+\eeq
+\geouline{where $\uu$ is the vector displacement wavefield, $t$ is
+  time, $\rho$ is the density, $\ff$ is the body source force,
+  $\lambda$ and $\mu$ are the Lam\'{e} moduli.}  This wave equation
+assumes a slowly varying stiffness tensor over the imaging
+space. \geosout{The coupling of displacements for different directions
+  in the wave equation \ren{EWE} makes it difficult to derive a
+  dispersion relation that can be used to extrapolate wavefields in
+  depth. This makes it natural to extrapolate elastic wavefields in
+  time.} \geouline{For isotropic media, one can process the elastic
+  data either by separating wave-modes and migrating each mode using
+  methods based on acoustic wave theory, or by migrating the whole
+  elastic data set based on the elastic wave \req{EWE}. The elastic
+  wavefield extrapolation using \req{EWE} is usually performed in time
+  by Kirchhoff migration or reverse-time migration.}  \geosout{There
+  are two main options for elastic imaging in the time domain:
+  Kirchhoff migration and reverse-time migration.}
+
+%\subsubsection{Elastic vs. acoustic Kirchhoff migration}
+Acoustic Kirchhoff migration is based on diffraction summation, which
+accumulates the data along diffraction curves in the data space and
+maps them onto the image space. For multicomponent elastic data,
+\cite{kuo:1223} discuss Kirchhoff migration for shot-record
+data. Here, identified PP and PS reflections can be migrated by
+computing source and receiver traveltimes using P-wave velocity for
+the source rays, and P- and S-wave velocities for the receiver
+rays. \cite{hokstad:861} performs multicomponent anisotropic
+Kirchhoff migration for multi-shot, multi-receiver experiments, where
+pure-mode and converted mode images are obtained by \geosout{downward
+continuation of} \geouline{redatuming} visco-elastic vector wavefields and application of
+\geouline{a} survey-sinking imaging condition to the reconstructed vector
+wavefields. The wavefield separation is effectively done by the
+Kirchhoff integral which handles both P- and S-waves, although this
+technique fails in areas of complex geology where ray theory breaks
+down.
+
+%\subsubsection{Elastic vs. acoustic reverse-time migration}
+Elastic reverse-time migration \geosout{have} \geouline{has} the same two
+components as acoustic reverse-time migration: reconstruction of
+source and receiver wavefield and application of an imaging condition.
+The source and receiver wavefields are reconstructed by forward and
+backward propagation in time with various modeling approaches. For
+acoustic reverse-time migration, wavefield reconstruction is done with
+the acoustic wave-equation using the recorded scalar data as boundary
+condition.  In contrast, for elastic reverse-time migration, wavefield
+reconstruction is done with the elastic wave-equation using the
+recorded vector data as boundary condition.
+
+Since pure-mode and converted-mode reflections are mixed on all
+components of recorded data, images produced with reconstructed
+elastic wavefields are characterized by crosstalk due to the
+interference of various wave modes. In order to obtain images with
+clear physical meanings, most imaging conditions separate wave modes
+\geosout{,because they are mixed in all components of the data}. There
+are two potential approaches to separate wavefields and image elastic
+seismic wavefields.  The first option is to separate P and S modes on
+the acquisition surface from the recorded elastic wavefields. This
+procedure involves either approximations for the propagation path and
+polarization direction of the recorded data, or reconstruction of the
+seismic wavefields in the vicinity of the acquisition surface by a
+numerical solution of the elastic wave equation, followed by wavefield
+separation of scalar and vector potentials using Helmholtz
+decomposition \cite[]{etgen:972,GEO62-02-05980613}.  An alternative
+data decomposition using P and S potentials \geosout{is to}
+reconstruct\geouline{s} wavefields in the subsurface using the elastic
+wave equation, then decompose\geouline{s} the wavefields in\geouline{to} P-
+and S-wave modes. \geouline{This is followed by forward extrapolation of}
+the separated wavefields back to the surface using the acoustic wave
+equation with the appropriate propagation velocity for the various
+wave modes \cite[]{sun.elastic.rtm} by conventional procedures used
+for scalar wavefields.
+
+The second option is to extrapolate wavefields in the subsurface using
+a numerical solution to the elastic wave equation and then apply an
+imaging condition that extracts reflectivity information from the
+source and receiver wavefields. \geosout{In case} \geouline{In the case
+  where} extrapolation is implemented by finite-difference methods
+\cite[]{chang:67,chang:597}, this procedure is known as elastic
+reverse-time migration, and is conceptually similar to acoustic
+reverse-time migration \cite[]{GEO48-11-15141524}, which is more
+frequently used in seismic imaging.
+
+Many imaging conditions can be used for reverse-time migration.
+Elastic imaging condition\geouline{s} are more complex than\geosout{an}
+acoustic imaging condition\geouline{s} because both source and receiver
+wavefields are vector fields.  Different elastic imaging conditions
+have been proposed for extracting reflectivity information from
+reconstructed elastic wavefields. \geosout{For example,
+}\cite{GEO63-05-16851695} use elastic reverse-time migration with
+Lam\'e potential methods. \cite{chang:67} use the excitation-time
+imaging condition which extracts reflectivity information from
+extrapolated wavefields at traveltimes from the source to image
+positions computed by ray tracing, etc. Ultimately, these imaging
+conditions represent special cases of a more general type of imaging
+condition that involves time cross-correlation or deconvolution of
+source and receiver wavefields at every location in the subsurface.
+
+
