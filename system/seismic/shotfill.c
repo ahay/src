@@ -268,31 +268,9 @@ void shotfill_apply (const sf_complex *s1,
 #endif
     }
 
-
-    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 
-    s[0] -= (diag[0]-eps)*s0[0] + 
-	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
-    s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
-	conjf(offd[0][1])*s0[2] + conjf(offd[1][1])*s0[3];
-    for (ih=2; ih < nh-2; ih++) {
-	s[ih] -= offd[1][ih-2]*s0[ih-2]+offd[0][ih-1]*s0[ih-1] + 
-	    (diag[ih]-eps)*s0[ih] + 
-	    conjf(offd[0][ih])*s0[ih+1] + conjf(offd[1][ih])*s0[ih+2];
-    }
-    s[nh-2] -= offd[1][nh-4]*s0[nh-4]+offd[0][nh-3]*s0[nh-3] + 
-	(diag[nh-2]-eps)*s0[nh-2] + conjf(offd[0][nh-2])*s0[nh-1];
-    s[nh-1] -= offd[1][nh-3]*s0[nh-3]+offd[0][nh-2]*s0[nh-2] + 
-	(diag[nh-1]-eps)*s0[nh-1];
-    **/
-
     cbanded_solve(s);
     /* inversion in place */
 
-    /*
-    for (ih=0; ih < nh; ih++) {
-	s[ih] += s0[ih];
-    }
-    */
 }
 
 void shotprop_apply (const sf_complex *s1 /* input shot [nh] */,  
@@ -327,29 +305,7 @@ void shotprop_apply (const sf_complex *s1 /* input shot [nh] */,
 #endif
     }
 
-
-    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 
-    s[0] -= (diag[0]-eps)*s0[0] + 
-	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
-    s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
-	conjf(offd[0][1])*s0[2] + conjf(offd[1][1])*s0[3];
-    for (ih=2; ih < nh-2; ih++) {
-	s[ih] -= offd[1][ih-2]*s0[ih-2]+offd[0][ih-1]*s0[ih-1] + 
-	    (diag[ih]-eps)*s0[ih] + 
-	    conjf(offd[0][ih])*s0[ih+1] + conjf(offd[1][ih])*s0[ih+2];
-    }
-    s[nh-2] -= offd[1][nh-4]*s0[nh-4]+offd[0][nh-3]*s0[nh-3] + 
-	(diag[nh-2]-eps)*s0[nh-2] + conjf(offd[0][nh-2])*s0[nh-1];
-    s[nh-1] -= offd[1][nh-3]*s0[nh-3]+offd[0][nh-2]*s0[nh-2] + 
-	(diag[nh-1]-eps)*s0[nh-1];
-    **/
-
     cbanded_solve(s);
     /* inversion in place */
 
-    /*
-    for (ih=0; ih < nh; ih++) {
-	s[ih] += s0[ih];
-    }
-    */
 }
