@@ -5,9 +5,9 @@ import fdmod,pcsutil,wefd
 def data(par):
 
     # ------------------------------------------------------------
-    #Fetch('vp_marmousi-ii.segy',"marm2")
-    #Fetch('vs_marmousi-ii.segy',"marm2")
-    #Fetch('density_marmousi-ii.segy',"marm2")
+    Fetch('vp_marmousi-ii.segy',"marm2")
+    Fetch('vs_marmousi-ii.segy',"marm2")
+    Fetch('density_marmousi-ii.segy',"marm2")
 
     # ------------------------------------------------------------
     for file in ('vp','vs','ro'):

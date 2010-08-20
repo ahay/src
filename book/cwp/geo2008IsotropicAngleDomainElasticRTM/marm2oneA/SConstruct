@@ -65,6 +65,10 @@ Plot('qq','window j2=61 |' + fdmod.qqplot('',par))
 
 # ------------------------------------------------------------
 for file in ('vp','vs','ro'):
+    Fetch('vp_marmousi-ii.segy',"marm2")
+    Fetch('vs_marmousi-ii.segy',"marm2")
+    Fetch('density_marmousi-ii.segy',"marm2")
+
     print file
     if(file=='ro'):
         ifile='density_marmousi-ii.segy'
