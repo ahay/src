@@ -1,4 +1,4 @@
-from rsf.proj import *
+< from rsf.proj import *
 from rsf.recipes.beg import server
 
 Fetch('seismic.segy','cwp',server)

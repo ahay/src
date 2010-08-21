@@ -13,7 +13,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys, tempfile, re
+import os, sys, tempfile, re, subprocess
 import c_m8r as c_rsf
 import numpy
 
@@ -190,14 +190,15 @@ class File(object):
         return s
     def int(self,key,default=None):
         try:
-            inp, out, err = os.popen3('%s %s parform=n < %s' % 
-                                      (Filter('get'),key,self))
-            get = out.read()
+            p = subprocess.Popen('%s %s parform=n < %s' % 
+                                 (Filter('get'),key,self),
+                                 shell=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 close_fds=True)
+            get = p.stdout.read()
         except:
             raise RuntimeError, 'trouble running sfget'
-        inp.close()
-        out.close()
-        err.close()
         if get:
             val = int(get)
         elif default:

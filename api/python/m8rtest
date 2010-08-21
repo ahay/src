@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 '''
 >>> import m8r
 >>> par = m8r.Par(["prog","a=5","b=as","a=100"])
@@ -13,6 +14,11 @@
 >>> spike2 = spike+spike
 >>> spike2.rms()
 2.0
+>>> spike3 = spike2*spike2+spike
+>>> spike3.max()
+5.0
+>>> print spike3.dot(spike2)
+100.0
 '''
 
 import doctest

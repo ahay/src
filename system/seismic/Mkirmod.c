@@ -378,9 +378,6 @@ int main(int argc, char* argv[])
 			ava = rfl[ic][ix]+rgd[ic][ix]*theta*theta;
 			if (ref != inc) ava *= theta;
 			
-			obl = 0.5*(ts->tn + tg->tn);
-			amp = ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON;
-			
 			ampl[ic][ix] = ava*obl*dx/amp;
 		    }
 		}
