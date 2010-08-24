@@ -1,53 +1,28 @@
-import os, sys, re, string, glob
-sys.path.append('../../framework')
-import bldutil
+import os, sys
 
-progs = '''
-afac 
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/psava
+    Import('env bindir pkgdir')
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = pkgdir = None
+    
+targets = bldutil.UserSconsTargets()
+
+# C mains
+targets.c = '''
+distmap
 convolve2
-ederiv
+afac
 ewefd2dd
+ederiv2d
+ederiv3d
 '''
 
-# boxfilter 
-
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
-except: # local version
-    env = bldutil.Debug()
-    root = None
-    SConscript('../../api/c/SConstruct')
-    src = glob.glob('[a-z]*.c')
-
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
-
-for source in src:
-    inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-
-mains = Split(progs)
-for prog in mains:
-    sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
-        env.Install(bindir,prog)
-
-######################################################################
-# SELF-DOCUMENTATION
-######################################################################
-if root:
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
-    doc = env.RSF_Docmerge(main,docs)
-    env.Install(pkgdir,doc)
-#####################################################################
+targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
