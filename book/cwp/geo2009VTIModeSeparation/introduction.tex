@@ -1,0 +1,90 @@
+% ------------------------------------------------------------
+\section{Introduction}
+%Review
+Wave equation migration for elastic data usually consists of two
+steps. The first step is wavefield reconstruction in the subsurface
+from data recorded at the surface. The second step is {the
+application of} an imaging condition which extracts reflectivity
+information from the reconstructed wavefields.
+
+The elastic wave equation migration for multicomponent data can be
+implemented in two ways. The first approach is to separate recorded
+elastic data into compressional and transverse (P and S) modes and
+use the separated data for acoustic wave equation migration
+separately. This acoustic imaging approach to elastic waves is more
+frequently used, but it is fundamentally based on the assumption that
+P and S data can be successfully separated on the surface, which is
+not always true
+\cite[]{etgen:972,GEO62-02-05980613}.
+% elastic wavefield reconstruction (extrapolation), which can be done
+% using various techniques, including RTM (reference)
+The second approach is to not separate P and S modes on the surface,
+but to extrapolate the entire elastic wavefield at once, and then
+separate wave modes prior to applying an imaging condition. The
+reconstruction of elastic wavefields can be implemented using various
+techniques, including reconstruction by time reversal (RTM)
+\cite[]{chang:67,chang:597} or by Kirchhoff integral 
+techniques~\cite[]{hokstad:861}.
+% imaging condition applied to the reconstructed vector wavefields
+% (cite myself)
+
+The imaging condition applied to the reconstructed vector wavefields
+directly determines the quality of the images. Conventional
+crosscorrelation imaging condition does not separate the wave modes
+and crosscorrelates the Cartesian components of the
+elastic.  In general, the various wave
+modes (P and S) are mixed on all wavefield components and cause
+crosstalk and image artifacts.
+% imaging condition requires that cross-correlate performed on
+% separated modes, thus the need for wavefield separation
+\cite{yan:WB19} suggest using imaging conditions based on elastic 
+potentials, which require crosscorrelation of separated modes.
+Potential-based imaging condition creates images that have clear
+physical meaning, in contrast with images obtained with Cartesian
+wavefield components, thus justifying the need for wave mode
+separation.
+
+As the need for anisotropic imaging increases, more processing and
+migration are performed based on anisotropic acoustic one-way wave
+equations~\cite[]{alkhalifah:623,GEO65-04-12391250,shan:2367,
+shan:104,fletcher:WCA179,fowler:S11}.
+However, much less research has been done on anisotropic elastic
+migration based on two-way wave equations. Elastic Kirchhoff
+migration~\cite[]{hokstad:861} obtains pure-mode and converted mode
+images by downward continuation of elastic vector wavefields with a
+visco-elastic wave equation. The wavefield separation is effectively
+done with elastic Kirchhoff integration, which handles both P and S
+waves.  However, Kirchhoff migration does not perform well in areas of
+complex geology where ray theory breaks
+down~\cite[]{GEO66-05-16221640}, thus requiring migration with more
+accurate methods, such as reverse time migration.
+
+
+% ------------------------------------------------------------
+
+%Claim
+One of the complexities that impedes elastic wave equation anisotropic
+migration is the difficulty to separate anisotropic wavefields into
+different wave modes after reconstructing the elastic
+wavefields. However, the proper separation of anisotropic wave modes
+is as important for anisotropic elastic migration as is the separation
+of isotropic wave modes for isotropic elastic migration. The main
+difference between anisotropic and isotropic wavefield separation is
+that Helmholtz decomposition is only suitable for the separation of
+isotropic wavefields and is inadequate for anisotropic wavefields.
+
+%Agenda
+In this chapter, I show how to construct wavefield separators for VTI
+(vertical transverse isotropy) media applicable to models with
+spatially varying parameters.  I apply these operators to anisotropic
+elastic wavefields and show that they successfully separate
+anisotropic wave modes, even for extremely anisotropic media.
+
+The main application of this technique is in the development of
+elastic reverse time migration. In this case, complete wavefields
+containing both P and S wave modes are reconstructed from recorded
+data. The reconstructed wavefields are separated in pure wave modes
+prior to the application of a conventional crosscorrelation imaging
+condition. I limit the scope of this chapter only to the wave-mode
+separation procedure in highly heterogeneous media, although the
+ultimate goal of this procedure is to aid elastic RTM.

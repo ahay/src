@@ -1,0 +1,113 @@
+
+% ------------------------------------------------------------
+\section{Introduction}
+
+%ADD  Elastic imaging context, compare to acoustic imaging
+%Review
+Although acoustic migration is currently the most common seismic
+imaging procedure, elastic imaging, with the addition of
+converted-waves, has been recognized to have potential advantages in
+seeing through gas-charged sediments and in structural and near
+surface imaging~\cite[]{GEO68-01-00400057}. Two options are available
+for elastic imaging: 1) one can separate wave-modes at the surface and
+image with the separated PP and PS data using acoustic migration
+tools~\cite[]{GEO69-01-02860297}, or 2) one can extrapolate the
+recorded multicomponent data and image with the reconstructed elastic
+wavefields by applying an imaging condition to wave-modes separated in the
+vicinity of the image points~\cite[]{yan:S229}.  The first approach
+benefits from the simplicity of imaging with scalar waves, but it is
+based on the assumption that P and S modes can be successfully
+separated on the recording surface, which is difficult for complicated
+datasets. The second approach reconstructs elastic wavefields in the
+subsurface, thus capturing all possible wave-mode transmissions and
+reflections, although it increases the computational cost in elastic
+wavefields modeling. In addition, the elastic migration technique
+requires wave-mode separation before the application of an imaging
+condition to avoid crosstalk between different wave-modes.
+
+% isotropic and VTI, how does separation work
+%Claim
+%MAKE ISOTROPIC AND ANISOTROPIC SYMMETRIC
+In isotropic media, the P- and S-modes (shear waves do not split in
+isotropic media) can easily be separated by taking the divergence and
+curl of the elastic wavefield~\cite[]{akirichards.2002}, and the
+procedure is effective in homogeneous as well as heterogeneous
+media. This is because, in the far field, P- and S-waves are polarized
+parallel and perpendicular to the wave vectors, respectively. The
+polarization directions of the P- and S-waves only depend on the wave
+propagation direction and are not altered by the medium.  Therefore,
+the wave-mode separators are invariant with space, and divergence and
+curl can always be used to separate compressional (scalar) and shear
+(vector) wave-modes.
+
+However, divergence and curl do not fully separate wave-modes in
+anisotropic media, because P- and S-waves are not polarized parallel
+and perpendicular to the wave vectors.
+\cite{GEO55-07-09140919} separate wave-modes in
+homogeneous VTI (vertically transversely isotropic) media by
+projecting the vector wavefields onto the polarization vectors of each
+mode.  In VTI media, the polarization vectors of P- and SV-waves
+depend on the anisotropy parameters $\epsilon$ and
+$\delta$~\cite[]{thomsen:1954} and are spatially-varying when the
+medium is inhomogeneous. Therefore, \cite{yan:WB19} separate
+wave-modes in heterogeneous VTI media by filtering the wavefields with
+spatially varying separators in the space domain and show that
+separation is effective even for complex geology with high
+heterogeneity.
+
+
+% TTI, importance  % TTI, what needs to be changed
+However, VTI models are suitable only for limited geological settings
+with horizontal layering.  Many case studies have shown that TTI
+(tilted transversely isotropic) models better represent complex
+geologies like thrusts and fold belts, e.g., the Canadian
+Foothills~\cite[]{SEG-1991-0207}. Using the VTI assumption to image
+structures characterized by TTI anisotropy introduces both kinematic
+and dynamical errors in migrated images. For
+example, \cite{vestrum:1239} and \cite{isaac:1230} show that seismic
+structures can be mispositioned if isotropy, or even VTI anisotropy,
+is assumed when the medium above the imaging targets is TTI. To carry
+out elastic wave-equation migration for TTI models and apply the
+imaging condition that crosscorrelates the separated wave-modes, the
+wave-mode separation algorithm needs to be adapted to TTI media.  For
+sedimentary layers bent under geological forces, TTI migration models
+usually incorporate locally varying tilts, and the local symmetry axes
+are assumed to be orthogonal to the reflectors throughout the
+model~\cite[]{charles:VE261,AlkhalifahSava.geo.2010}. Therefore, in
+complex TI models, both the local anisotropy parameters $\epsilon$ and
+$\delta$, and the local symmetry axes with tilt $\nu$ and azimuth
+$\alpha$ can be space-dependent.
+%3D VTI
+
+This technique of separation by projecting the vector wavefields onto
+polarization vectors has been applied only to 2D VTI
+models~\cite[]{dellinger.thesis,yan:WB19} and for P-mode separation
+for 3D VTI models~\cite[]{dellinger.thesis}. For 3D models, the main
+challenge resides in the fact that fast and slow shear modes have
+non-linear polarizations along symmetry-axis propagation
+directions. It is possible to apply the 2D separation method to 3D TTI
+models using the following procedure. First, project the elastic
+wavefields onto symmetry planes (which contains P- and SV-modes) and
+their orthogonal directions (which contain the SH-mode only); then
+separate P- and SV-modes in the symmetry planes using divergence and
+curl operators for isotropic media or polarization vector projection
+for TI media. However, this approach is difficult as wavefields are
+usually constructed in Cartesian coordinates and symmetry planes of
+the models do not align with the Cartesian coordinates. Furthermore,
+for heterogeneous models, the symmetry planes change spatially, which
+makes projection of wavefields onto symmetry planes impossible. To
+avoid these problems, I propose a simpler and more straightforward
+solution to separate wave-modes with 3D operators, which eliminates
+the need for projecting the wavefields onto symmetry planes. The new
+approach constructs shear-wave filters by exploiting the mutual
+orthogonality of shear modes with the P mode, whose polarization
+vectors are computed by solving 3D Christoffel equations.
+
+% Agenda
+In this chapter, I briefly review wave-mode separation for 2D VTI media
+and then I extend the algorithm to symmetry planes of TTI media.
+Then, I generalize the wave-mode separation to 3D TI media. Finally,
+I demonstrate wave-mode separation in 2D with homogeneous and
+heterogeneous examples and separation in 3D with a homogeneous TTI
+example.
+

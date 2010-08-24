@@ -1,0 +1,75 @@
+
+
+\section{Discussion}
+\subsection{Computational issues}
+%How to do separation for 3D heterogeneous TI media
+The separation of wave-modes for heterogeneous TI models requires
+non-stationary spatial filtering with large operators (operators of
+$50$ samples in each dimension are used in this chapter), which is
+computationally expensive. The cost is directly proportional to the
+size of the model and to the size of each operator. Furthermore, in a
+simple implementation, the storage for the separation operators of the
+entire model is proportional to the size of the model and to the size
+of each operator.  Suppose that a 3D elastic TTI model is
+characterized by the model parameters $V_{P0}$, $V_{S0}$, Thomsen
+parameters $\epsilon$ and $\delta$, and symmetry axis tilt angle $\nu$
+and azimuth angle $\alpha$.  For a 3D model of $300 \times
+300 \times 300$~grid points, if
+one assumes that all operators have a size of $50 \times 50 \times
+50$~samples, the storage for the operators is $300^3$~grid
+points$~\times 50^3$~samples/independent operator$~\times 3$
+independent operators/grid point$~\times 4$~Bytes/sample
+$=40.5$~TB. This is not feasible in ordinary processing. However,
+since there are relatively few medium parameters, i.e.,the
+$V_{P0}/V_{S0}$ ratio, $\epsilon$, $\delta$, and angles $\nu$ and
+$\alpha$, which determine the properties of the operators, one can
+construct a look-up table of operators as a function of these
+parameters, and search the appropriate operators at every location in
+the model when doing wave-mode separation. For example, suppose one
+knows that $V_{P0}/V_{S0}\in\lb1.5, 2.0\rb$, $\epsilon\in\lb0,
+0.3\rb$, $\delta\in\lb0, 0.1\rb$, and the symmetry axis tilt angle
+$\nu\in\lb-90^{\circ},90^{\circ}\rb$ and azimuth angle
+$\alpha\in\lb-180^{\circ},180^{\circ}\rb$, one can sample the
+$V_{P0}/V_{S0}$ ratio at every $0.1$, $\epsilon$ and $\delta$ at every
+$0.03$, and the angles at every $15^{\circ}$. In this case, one only
+needs a storage of $6 \times 10 \times 3 \times 12 \times 24$
+combinations of medium parameters$\times 50^3$~sample/independent
+operator$\times 3$~independent operators/combination of medium
+parameters$\times$ $4$~Bytes/sample $=77$~GB; this is more manageable,
+although it is still a large volume to store.
+
+\subsection{S wave-mode amplitudes}
+Although the procedure used in this chapter to separate S-waves into SV-
+and SH- modes is simple, the amplitudes of S-modes are not accurate
+because the S-wave separators are not normalized for any given
+wavenumbers. The amplitudes of S-modes obtained in this way are zero
+in the symmetry axis direction and they gradually increase to one in
+the symmetry plane.
+
+%However, since the symmetry axis direction usually corresponds to
+%normal incidence of the elastic waves, it is important to obtain more
+%accurate S-wave amplitudes in this direction.  
+The main problem that prevents one from constructing the 3D global
+shear wave separators is that the SV and SH polarization vectors are
+singular in the symmetry axis direction, i.e., they are not defined by
+the plane-wave solution of the TI elastic wave equation. Various
+studies~\cite[]{Kieslev,Tsvankin} show that S-waves excited by point
+forces can have non-linear polarizations in several special
+directions. For example, in the direction of the source, the S-wave
+can deviate from the linear polarization. This phenomenon exists even
+in isotropic media.  Anisotropic velocity and amplitude variations can
+also cause the S-waves to be polarized non-linearly.  For instance,
+S-wave triplication, S-wave singularities, and S-wave velocity maximum
+can all result in S-wave polarization anomalies. In these special
+directions, SV- and SH-mode polarizations are incorrectly defined by
+my convention.  One possibility for obtaining more accurate S-wave
+amplitudes is to approximate the anomalous polarization with the major
+axes of the quasi-ellipses of the S-wave polarization, which can be
+obtained by incorporating the first-order term in the ray tracing
+method. This extension remains outside the scope of this chapter.
+
+Although the simplified approach used in this chapter ignores the complicated
+polarization behavior in some wave propagation directions, it does
+successfully separate fast and slow shear modes kinematically. This
+allows one to use the separated scalar shear-modes for the subsequent
+imaging condition and obtain images with clear physical meaning.
