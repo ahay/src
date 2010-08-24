@@ -29,6 +29,7 @@ Result('first','line',
 lines = {'S':251,'R':782}
 color = {'S':4, 'R':2}
 for case in 'SR':
+    # X-Y geometry
     Flow(case+'.asc','Line_001.%cPS' % case,'''awk 'NR > 20 {print $8, " ", $9}' ''')
     Flow(case,case+'.asc',
          '''
@@ -40,6 +41,16 @@ for case in 'SR':
          graph symbol=* title=%c plotcol=%d
          min1=684 max1=705 min2=3837 max2=3842
          ''' % (case,color[case]))
+
+    # Static corrections
+    stat = case+'-static'
+    Flow(stat+'.asc','Line_001.%cPS' % case,'''awk 'NR > 20 {print $3}' ''')
+    Flow(stat,stat+'.asc',
+         '''
+         echo in=$SOURCE data_format=ascii_float n1=%d | dd form=native |
+         scale dscale=0.001 | put label=Time unit=s
+         ''' % lines[case],stdin=0)
+    
 Plot('s118','S',
      '''
      window n2=1 f2=117 | scale dscale=0.001 | dd type=complex |
@@ -55,6 +66,26 @@ for shot in range(lines['S']):
     Flow(line,'R','window f2=%d n2=282' % (2*shot))
     shots.append(line)
 Flow('rece',shots,'rcat axis=3 ${SOURCES[1:%d]}' % len(shots))
+Flow('sour','S','spray axis=2 n=282 o=0 d=1')
+
+# Compute static corrections
+shots = []
+for shot in range(lines['S']):
+    line = 'static-line%d' % shot
+    Flow(line,'R-static','window f1=%d n1=282' % (2*shot))
+    shots.append(line)
+Flow('rstat',shots,'rcat axis=2 ${SOURCES[1:%d]}' % len(shots))
+Flow('static','S-static rstat',
+     '''
+     spray axis=1 n=282 o=0 d=1 |
+     add ${SOURCES[1]} 
+     ''')
+Result('static',
+       '''
+       scale dscale=-1 |
+       grey color=j allpos=y scalebar=y title="Static Correction"
+       label2=Offset label1=Shot
+       ''')
 
 Plot('rec','rece',
      '''
@@ -103,26 +134,29 @@ Result('shot118','shot118 boff118',
 ##############################
 Flow('lines','line',
      '''
-     intbin yk=cdpt | window f3=2 |
+     intbin xk=cdpt yk=fldr | window f3=2 |
      put
-     label2=Source d2=0.05  o2=688  unit2=km
-     label3=Offset d3=0.025 o3=-3.5 unit3=km
+     label3=Source d3=0.05  o3=688  unit3=km
+     label2=Offset d2=0.025 o2=-3.5 unit2=km
      label1=Time unit1=s
      ''')
 
 Result('lines',
        '''
        byte gainpanel=each |
+       transp memsize=1000 plane=23 |
        grey3 frame1=500 frame2=100 frame3=120 flat=n
        title="Raw Data"
        ''')
+
+# Apply static correction?
+Flow('lines2','lines static','datstretch datum=${SOURCES[1]}')
 
 ##################
 # Convert to CMPs
 ##################
 Flow('rcmps mask','lines',
      '''
-     transp memsize=1000 plane=23 |
      shot2cmp mask=${TARGETS[1]} half=n |
      put o2=-1.75 label2="Half-offset"
      ''')
@@ -151,8 +185,7 @@ Result('rstack','fold rstack',
 # Select 4 shots every tenth sequential shot
 Flow('inpmute','lines',
      '''
-     window f2=198 j2=10 n2=4 |
-     transp plane=23
+     window f3=198 j3=10 n3=4 
      ''')
 Result('inpmute',
        '''
@@ -174,7 +207,6 @@ Result('outmute',
 # First break muting for all shots
 Flow('mutes','lines',
      '''
-     transp memsize=1000 plane=23 |
      mutter t0=0.1 v0=5.2 | 
      transp memsize=1000 plane=23
      ''' )
