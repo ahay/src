@@ -1,7 +1,7 @@
 # This SConstruct builds and places the JAVA API Jar in the LIB FOLDER
 # that is then installed to RSFROOT
 
-import os,sys
+import os,sys,platform
 sys.path.append('../../framework')
 import bldutil
 
@@ -13,8 +13,10 @@ except:
     root = None
 
 jdk = env.get('JAVA_HOME')
+if not jdk: jdk = env.get('JAVA_SDK')
+
 if not jdk:
-    print 'Please set the JAVA_HOME environmental variable'
+    print 'Please set the JAVA_HOME or JAVA_SDK environmental variable'
     Exit(1)
     
 minesjtk = env.get('MINESJTK')
@@ -36,11 +38,16 @@ if 'java' in env.get('API',[]) and jdk:
                      module+'.i',
                      SWIGFLAGS='-package rsf -java -outdir %s' % pwd)
 
-    java = env.LoadableModule('jrsf',wrap[0],
+    outsuffix = '.so'
+    outfile = 'jrsf'
+    if sys.platform == 'darwin':
+            outsuffix = '.jnilib'
+            outfile = 'libjrsf'
+    java = env.LoadableModule(outfile,wrap[0],
                               CPPPATH=[jdk_inc,include],
                               LIBS='rsf',
                               LIBPATH='../../lib',
-                              LDMODULESUFFIX='.so',
+                              LDMODULESUFFIX=outsuffix,
                               FRAMEWORKSFLAGS='-flat_namespace '
                               '-undefined suppress')
     javafiles = map(lambda x: x+ '.java',files)
