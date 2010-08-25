@@ -4,7 +4,7 @@
 
 from rsf.proj import *
 #sys.path.append('Python')
-import fdmod,stiff,pot,fdd,pot,spk,model,marm,pplot,GetWeights
+import fdmod,stiff,pot,fdd,pot,spk,marm,pplot,model
 
 from math import *
 par=marm.param()
