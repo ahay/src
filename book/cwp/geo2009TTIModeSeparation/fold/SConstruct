@@ -1,7 +1,7 @@
 from rsf.proj import *
 import sys
 sys.path.append('Python')
-import fdmod,stiff,pot,fdd,pot,spk,model,pplot
+import fdmod,stiff,pot,fdd,pot,spk,pplot
 
 from math import *
 
