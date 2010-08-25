@@ -137,10 +137,10 @@ float	propagate_x(int dir,
 	    (*p_ix1) = (*p_ix1) + 1;
 	}
     }
-        assert(dir < 0 || (*p_ix1 >= 0 && *p_ix1 < nx));
+    //assert(dir < 0 || (*p_ix1 >= 0 && *p_ix1 < nx));
 
 	*p_ray_x1 = ox + (*p_ix1) * dx;
-	assert(dir < 0 || (fabs(*p_ray_x1 - ray_x0) > 1e-6f));
+	//assert(dir < 0 || (fabs(*p_ray_x1 - ray_x0) > 1e-6f));
 
 	const float DDx = ray_x0 - *p_ray_x1;
 

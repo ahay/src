@@ -55,7 +55,7 @@ void set_image(sf_file *minpath)
 }
 int main(int argc, char* argv[])
 {
-    float t, z, x, xsrc, l, tolz_dz,tolz, tolx, tolx_dx, xprev, lprev, tprev, eps;
+    float t, z, x, xsrc, l, tolz_dz,tolz, xprev, lprev, tprev, zprev, eps;
     float *tim, *dis, *dep, *len;
 /*
     float **len_min_neg, **tr_time_neg, **src_neg;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("xsrc",&xsrc)) sf_error("No xsrc= ");
     if (!sf_getfloat("tolz",&tolz)) sf_error("No tolz= (float)");
-    if (!sf_getfloat("tolx",&tolx)) sf_error("No tolx= (float)");
+    //if (!sf_getfloat("tolx",&tolx)) sf_error("No tolx= (float)");
     if (!sf_getfloat("frontt0",&front_t0)) sf_error("No frontt0= (float)");
     if (!sf_getfloat("frontdt",&front_dt)) sf_error("No frontdt= (float)");
     if (!sf_getint("frontnt",&front_nt)) sf_error("No frontnt= (int)");
@@ -143,9 +143,8 @@ int main(int argc, char* argv[])
     len_minpath = sf_floatalloc2(nx, nz); 
     front = sf_floatalloc2(nx, nz); 
 
-
     tolz_dz = tolz * dz;
-    tolx_dx = tolx * dx;
+    //tolx_dx = tolx * dx;
 
     assert(tr_time_z0);
 
@@ -174,19 +173,25 @@ int main(int argc, char* argv[])
 	    lprev = len[na-1];
 	    tprev = tim[na-1];
 
-	    if (z > (z0+ tolz_dz))
+	    if (z > (z0+ tolz_dz)) {
 		is_prev_sign = 0; 
+		zprev=1e10;
+	    }
 	    else {
 		if (xprev < xsrc - 1e-5f) {
 		    is_prev_sign = -1;
+		    zprev=z;
 		}
 		else {
-		    if (xprev > xsrc + 1e-5f)
+		    if (xprev > xsrc + 1e-5f) {
 			is_prev_sign = 1;
+			zprev = z;
+		    }
 		    else {
 			/* rare case- hit src exactly */
 			is_prev_sign = 2;
 			tr_time_z0[iz][ix][na-1]=tprev;
+			zprev=1e10;
 		    }
 		}
 	    }
@@ -201,7 +206,7 @@ int main(int argc, char* argv[])
 
 		t = tim[ia];
 
-		if (z > (z0+ tolz_dz)) { /* || fabs(xsrc-x)>2*dx)  */
+		if (z > (z0+ 10*tolz_dz)) { /* || fabs(xsrc-x)>2*dx)  */
 		    
 		    if (t_eik)
 			tr_time_z0[iz][ix][ia]=t_eik[iz][ix];//-0.01f;
@@ -215,25 +220,29 @@ int main(int argc, char* argv[])
 			is_sign = -1;
 		    }
 		    else {
-			if (x > xsrc + 1e-5f)
+			if (x > xsrc + 1e-5f) {
 			    is_sign = 1;
+			}
 			else {
 			    /* rare case- hit src exactly */
-			    is_sign = 2;
-			    tr_time_z0[iz][ix][ia]=t;
-			
-			    if (tr_time_pos[iz][ix] < 0 || tr_time_pos[iz][ix]  > t)
-				tr_time_pos[iz][ix]  = t;
-			    
-			    if (tr_time_minpath[iz][ix] < 0 || len_minpath[iz][ix]  > l) {
-				tr_time_minpath[iz][ix]  = t;
-				len_minpath[iz][ix]=l;
+			    if (z<z0+tolz_dz) {
+				is_sign = 2;
+				tr_time_z0[iz][ix][ia]=t;
+				
+				if (tr_time_pos[iz][ix] < 0 || tr_time_pos[iz][ix]  > t)
+				    tr_time_pos[iz][ix]  = t;
+				
+				if (tr_time_minpath[iz][ix] < 0 || len_minpath[iz][ix]  > l) {
+				    tr_time_minpath[iz][ix]  = t;
+				    len_minpath[iz][ix]=l;
+				}
 			    }
 			}
 		    }
 
-		    if ((is_prev_sign == -1 && is_sign == 1) || 
-			(is_prev_sign == 1 && is_sign == -1))
+		    if (((is_prev_sign == -1 && is_sign == 1) || 
+			 (is_prev_sign == 1 && is_sign == -1)) &&
+			(z < z0+tolz_dz || zprev < z0+tolz_dz))
 		    {
 			/* xprev = dis[ia-1]; */
 			
@@ -259,6 +268,7 @@ int main(int argc, char* argv[])
 		is_prev_sign = is_sign;
 		tprev = t;
 		xprev = x;
+		zprev = z;
 		lprev = len[ia];
 		    
 	    } /* ia */
