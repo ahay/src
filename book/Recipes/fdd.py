@@ -200,9 +200,8 @@ def oneirNS_rot(inp,zdel,xdel,nu,m,n,custom,par):
 def separatorD(zdel,xdel,inp,ccc,stat,domain,tapertype,sigma,order,n,m,par):
 
     Flow([zdel+'-tmp',xdel+'-tmp'],
-         [inp,ccc,
-          'Code/2Dcode/EDERIV2D.x'],
-         '''
+         [inp,ccc],
+         ''' sfederiv2d
          ${SOURCES[2]} verb=y stat=%s domain=%s ompnth=8 
          tapertype=%s sig=%f order=%d
          ccc=${SOURCES[1]}         
@@ -480,10 +479,9 @@ def separator3PSS(pzdel,pxdel,pydel,
     Flow([pzdel,pxdel,pydel,
           vzdel,vxdel,vydel,
           hzdel,hxdel,hydel],
-         [inp,ccc,nu,
-          'Code/EDERIV3PSS.x'],
+         [inp,ccc,nu],
           '''
-         ${SOURCES[3]} verb=y stat=%s domain=%s ompnth=8
+         ederiv3dfilters verb=y stat=%s domain=%s ompnth=8
          ccc=${SOURCES[1]}
           nu=${SOURCES[2]}
          pzdel=${TARGETS[0]}  pxdel=${TARGETS[1]}  pydel=${TARGETS[2]}
@@ -495,10 +493,9 @@ def separator3PSS(pzdel,pxdel,pydel,
 def separator3TTI(zdel,xdel,ydel,inp,ccc,stat,domain,n,m,l,par):
 
     Flow([zdel,xdel,ydel],
-         [inp,ccc,
-          'Code/3Dcode/EDERIV3TTI.x'],
+         [inp,ccc],          
          '''
-         ${SOURCES[2]} verb=y stat=%s domain=%s ompnth=8
+         ederiv3d verb=y stat=%s domain=%s ompnth=8
          ccc=${SOURCES[1]}
          zdel=${TARGETS[0]}
          xdel=${TARGETS[1]} 
