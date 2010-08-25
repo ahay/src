@@ -84,8 +84,8 @@ Flow('wave','ver hor',
 wefd.ewavelet('wave','',par)
 
 # ------------------------------------------------------------
-#shots = range(par['nx']/2-400,par['nx']/2+420,10)
-shots = range(par['nx']/2,par['nx']/2+40,20)
+shots = range(par['nx']/2-400,par['nx']/2+420,10)
+#shots = range(par['nx']/2,par['nx']/2+40,20)
 print shots
 # ------------------------------------------------------------
 for ix in shots:
@@ -160,11 +160,11 @@ for ix in shots:
     wefd.edata('ee'+tag,'ee'+tag,'pclip=98',par)
 
     # elastic RTM
-    wefd.ewfld('ie'+tag,'wave','ee'+tag,'co','ro','ss'+tag,'rr','qq',' opot=n jdata=%(jdata)d '%par,par)
-    wefd.ecic('ie'+tag,'ss','rr','cc','',par)
+    wefd.ewfld('je'+tag,'wave','ee'+tag,'co','ro','ss'+tag,'rr','qq',' opot=y jdata=%(jdata)d '%par,par)
+    wefd.ecic('je'+tag,'ss','rr','cc','',par)
 
     # angle gathers
-    wefd.eeic('ie'+tag,'ss','rr','cc',xcig,'',par)
+    wefd.eeic('je'+tag,'ss','rr','cc',xcig,'',par)
 
 
 
