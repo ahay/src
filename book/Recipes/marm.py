@@ -1,5 +1,5 @@
 from rsf.proj import *
-import fdmod,wefd,pcsutil,zomig,spmig,pplot,fdd,model,jparser,SepInterp3d
+import fdmod,wefd,pcsutil,zomig,spmig,pplot,fdd
 
 def param():
     
