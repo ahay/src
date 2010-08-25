@@ -53,7 +53,6 @@ def eicpar(par):
     p = p + ' '
     return(p)
 
-
 # ------------------------------------------------------------
 # prepare slowness
 def slowness(slow,velo,par):
@@ -101,6 +100,19 @@ def eicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
     Flow([icic,ieic],[sdat,rdat,slow,ccoo],
          '''
          wex verb=y irun=eic
+         dat=${SOURCES[1]}
+         slo=${SOURCES[2]}
+         coo=${SOURCES[3]}
+         cip=${TARGETS[1]}
+         %s
+         ''' % (param(par)+eicpar(par)+custom))
+
+# ------------------------------------------------------------
+# migration with Extended Imaging Condition
+def hicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
+    Flow([icic,ieic],[sdat,rdat,slow,ccoo],
+         '''
+         wex verb=y irun=hic
          dat=${SOURCES[1]}
          slo=${SOURCES[2]}
          coo=${SOURCES[3]}
