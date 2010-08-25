@@ -244,6 +244,7 @@ class Project(Environment):
         
         minesjtk = self.get('MINESJTK',None)
         usejava = self.get('JAVA_HOME',None)
+        if not usejava: usejava = self.get('JAVA_SDK',None)
         if minesjtk or usejava:
             classpath = []
             classpath.append(os.path.join(libdir,'rsf.jar'))
