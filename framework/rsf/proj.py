@@ -242,16 +242,19 @@ class Project(Environment):
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
         
-        minesjtk = self.get('MINESJTK')
-        if minesjtk:
-            usercpath = os.environ.get('CLASSPATH','')
-            rsfcpath = os.path.join(libdir,'rsf.jar')
-            if usercpath == '':
-                self.Append(ENV={'CLASSPATH':'%s:%s:.' % (minesjtk,rsfcpath)})
-            else:
-                self.Append(ENV={'CLASSPATH':'%s:%s:%s:.' % (minesjtk,rsfcpath,usercpath)})    
-            self.Append(JAVACLASSPATH=':'.join([os.path.join(libdir,'rsf.jar'),
-                                                minesjtk,usercpath]))
+        minesjtk = self.get('MINESJTK',None)
+        usejava = self.get('JAVA_HOME',None)
+        if minesjtk or usejava:
+            classpath = []
+            classpath.append(os.path.join(libdir,'rsf.jar'))
+            userclasspath = os.environ.get('CLASSPATH',None)
+            if userclasspath: classpath.append(userclasspath)
+            if minesjtk: 
+                classpath.append(minesjtk) 
+                self.Append(JAVACLASSPATH=':'.join(classpath))
+            classpath.append('.')
+            self.Append(ENV={'CLASSPATH':':'.join(classpath)})
+    
         self.override = os.environ.get('SCONS_OVERRIDE',None)
         # short circuits the dependency tree, forces the build of targets without proper
         # dependencies in SCons
