@@ -27,6 +27,7 @@ ewefd3dtti
 ederiv2d
 ederiv3d
 ederiv3dfilters
+sortdensity
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
