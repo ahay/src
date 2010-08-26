@@ -228,7 +228,7 @@ def density(ref,den,x,y,z,w,custom1,custom2):
          inY=${SOURCES[1]} inZ=${SOURCES[2]} inW=${SOURCES[3]} 
          verb=y '''+custom1)
     
-    Flow(ref,den,'Code/sortden.x  '+custom2)
+    Flow(ref,den,'sortdensity '+custom2)
 
 
 def interpSep2d(wtlst,uAz,uAx,cAref,n,par):   
