@@ -59,7 +59,7 @@ def rtmpar(par):
 # ------------------------------------------------------------
 def velocity(vel,par):
     
-    vstr = '/work/data/sigsbee/sigsbee2a_stratigraphy.sgy'
+    vstr = 'sigsbee2a_stratigraphy.sgy'
     Fetch(vstr,'sigsbee')
     
     Flow('zvstr tzvstr ./shead ./bshead',vstr,
