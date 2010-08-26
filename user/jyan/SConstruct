@@ -17,12 +17,16 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
+stiff3d
 distmap
+density
 convolve2
 afac
 ewefd2dd
+ewefd3dtti
 ederiv2d
 ederiv3d
+ederiv3dfilters
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)

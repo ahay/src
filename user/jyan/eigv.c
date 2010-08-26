@@ -4,6 +4,7 @@
 /*------------------------------------------------------------*/
 void eigval2( float **a,
 	      float  *e)
+/*<test>*/
 {
 /*< return eigenvalues of 2x2 matrix >*/
     float a11,a12,a21,a22;
@@ -26,6 +27,7 @@ void eigval2( float **a,
 void eigvec2( float **a,
 	      float   e,
 	      float  *u)
+/*<test>*/
 {
 /*< return eigenvector for given eigenvalue of 2x2 matrix >*/
     float a11,a12,a21,a22;
