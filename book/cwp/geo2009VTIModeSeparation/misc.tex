@@ -1,0 +1,175 @@
+%\def\cwplogo{
+%\pgfputat{\pgfxy(10,-5)}{\pgfbox[left,bottom]{\includegraphics[width=.1\textwidth]{XFig/Fig/cwp}}}
+%
+%}
+
+
+
+\def\SSMIG{
+\begin{figure}[h]
+\centering
+\setlength{\unitlength}{1in}
+%
+\begin{picture}(4,2.0)
+\thicklines
+\large
+%
+%\put(-0.50,2.00){\makebox(4,0.5){\underline{ \textbf{source/receiver} }}}
+%
+\put(-0.50,1.60){\makebox(4,0.5){\;\;$\us\lp \xx,\zz,\tt \rp$\;\;$\ur\lp \xx,\zz,\tt \rp$ }}
+\put( 1.50,1.60){\vector(0,-1){0.3}}
+\put(-0.50,0.80){\makebox(4,0.5){$\II\lp \xx,\zz,\hx \rp$}}
+\put( 1.50,0.80){\vector(0,-1){0.3}}
+\put(-0.50,0.00){\makebox(4,0.5){$\II\lp \xx,\zz,\mathbf{\theta} \rp$}}
+%
+\put( 2.00,1.20){\makebox(3,0.5)[c]{\textbf{extended I.C.}}}
+\put( 2.00,0.40){\makebox(3,0.5)[c]{\textbf{angle decomposition}}}
+%\put( 2.00,0.00){\makebox(3,0.5)[c]{\textbf{image}}}
+\end{picture}
+\end{figure}
+}
+
+
+
+\def\CURL#1{\nabla \times {#1}}
+\def\GRAD#1{\nabla {#1}}
+\def\DIV#1{\nabla \cdot {#1}}
+\def\LAPL#1{\nabla^2 {#1}}
+
+\def\us{\mathbf {u_s}}
+\def\ur{\mathbf {u_r}}
+\def\xx{\mathbf x}
+\def\zz{\mathbf z}
+\def\tt{\mathbf t}
+\def\hx{\mathbf {h_x}}
+\def\uu{\mathbf u}
+\def\II{\mathbf I}
+
+%\def\xx{ x,z}
+%\def\ofx { \lp \xx   \rp}
+%\def\ofxt{ \lp \xx,t \rp}
+
+\def\IM#1{  {I}_{#1}}  
+\def\US#1{{u_s}_{#1}}
+\def\UR#1{{u_r}_{#1}}
+
+\def\P#1{ \Theta_{#1} }
+\def\S#1{   \Psi_{#1} }
+
+% ------------------------------------------------------------
+\def\zis{
+\put(-4,16){\rotatebox{90}{\normalsize {\bf depth}   }}
+\put(40,-3){               \normalsize {\bf position} }
+}
+
+\def\zi#1#2{
+\put(5,22){\rotatebox{90}{\normalsize {\bf depth}   }}
+\put(40,-3){               \normalsize {\bf position} }
+\put(95,0){               \normalsize {\bf #1} }
+\put(95,55){               \normalsize {\bf #2} }
+}
+%for add a scale bar
+
+\def\zj{
+\put(-8,12){\rotatebox{90}{\normalsize {\bf depth}   }}
+\put(35,-6){               \normalsize {\bf position} }
+}
+
+
+\def\zd{
+\put(-4,45){\rotatebox{90}{\normalsize {\bf time}   }}
+\put(10,-4){               \normalsize {\bf position} }
+}
+
+\def\za{
+\put(-5,45){\rotatebox{90}{\normalsize {\bf }   }}
+\put(15,-4){               \normalsize {\bf angle} }
+\put(-6,100){               \normalsize {\bf -60} }
+\put(20.75,100){               \normalsize {\bf 0} }
+\put(45,100){               \normalsize {\bf 60} }
+}
+
+\def\zc{
+\put(-5,45){\rotatebox{90}{\normalsize {\bf      }   } }
+\put(10,-4){              {\normalsize {\bf space lag}   } }
+
+}
+
+
+\def\zaline{
+\za
+\lvertline
+}
+
+\def\model{
+\put(-5,45){\rotatebox{90}{\normalsize {\bf depth}   }}
+\put(4,-4){               \normalsize {\bf position} }
+}
+
+\def\Ilum
+{\zis
+\put(59,43){\normalsize {\bf S} }
+\put(-2,43){\normalsize {\bf R}   }
+}
+%-------------------------------------------------------------------------
+\def\cig{
+\put(-4,16){\rotatebox{90}{\normalsize {\bf depth}   }}
+\put(40,-3){               \normalsize {\bf position} }
+\put(45,45){\bf CIG }
+\svertline
+}
+\def\svertline{
+\linethickness{1pt}
+\put(50,0.7) {\line(0,1){41}}
+}
+\def\lvertline{
+\linethickness{.5pt}
+\put(25.5,1) {\line(0,1){98}}
+}
+
+% ------------------------------------------------------------
+
+%% 
+ % 45 degree red arrow
+ %%
+\def\arrow45#1#2{
+\thicklines
+\put(#1,#2){\red {\vector(-1,-1){10}} }
+}
+
+% ------------------------------------------------------------
+
+% \put(xcoordinate, ycoordinate){\line(xslope,yslope){length}
+
+%The slope is determined by (x-slope,y-slope) which are signed integers of magnitude less than or equal to 6 and which have no common divisor except for plus or minus one; For example (1,0) is a horizontal line; (1,1) gives a slope of 45 degress; (0,1) is a vertical line; (-1,1) is 135 degrees.
+
+%The horizontal extent of the line is given by the length parameter, except in the case of a vertical line in which case length specifies the vertical height.
+
+
+%% 
+ % define \matrix
+ %%
+\def\mtrx#1 
+{
+\begin{matrix}#1\end{matrix}
+}
+\def\pmtrx#1 
+{
+\begin{pmatrix}#1\end{pmatrix}
+}
+\def\bmtrx#1 
+{
+\begin{bmatrix}#1\end{bmatrix}
+}
+\def\Bmtrx#1 
+{
+\begin{Bmatrix}#1\end{Bmatrix}
+}
+\def\vmtrx#1 
+{
+\begin{vmatrix}#1\end{vmatrix}
+}
+\def\Vmtrx#1 
+{
+\begin{Vmatrix}#1\end{Vmatrix}
+}

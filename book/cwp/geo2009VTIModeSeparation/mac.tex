@@ -1,0 +1,76 @@
+\def\fm{ \mathfrak{M}}
+\def\fd{ \mathfrak{D}}
+\def\fx{ \mathfrak{X}}
+\def\cm{ \mathcal{M}}
+\def\cd{ \mathcal{D}}
+\def\bd{ \mathbf{d}}
+\def\bm{ \mathbf{m}}
+\def\sx{ \mathsf{x}}
+\def\bx{ \mathbf{x}}
+\def\dd{ \mathtt{d}}
+
+\def\posti{ \sigma(\bm,\bd) }
+\def\prori{ \rho(  \bm,\bd)}
+\def\homog{ \mu(   \bm,\bd)}
+\def\theor{ \Theta(\bm,\bd)}
+
+\def\prorid{ \rho_{\fd}(\bd)}
+\def\prorim{ \rho_{\fm}(\bm)}
+\def\homod{   \mu_{\fd}(\bd)}
+\def\homom{   \mu_{\fm}(\bm)}
+
+\def\margm{ \sigma_{\fm}(\bm)}
+
+\def\la{\langle}
+\def\ra{\rangle}
+
+% ----------------------------------------------------------------------------
+\def\sou#1#2{\put(#1,#2){\red{\vector(-1,-1){3}}}}
+
+\def\recv{\put(22.7,20){\red{\circle*{1}}} \put(22.7,22){\red{\circle*{1}}}
+          \put(22.7,24){\red{\circle*{1}}} \put(22.7,26){\red{\circle*{1}}}
+          \put(22.7,28){\red{\circle*{1}}} \put(22.7,30){\red{\circle*{1}}}
+          \put(22.7,32){\red{\circle*{1}}} \put(22.7,34){\red{\circle*{1}}}
+          \put(22.7,36){\red{\circle*{1}}} \put(22.7,38){\red{\circle*{1}}}} 
+
+\def\reci{\put(22.7,17.1){\red{\circle*{1}}} \put(22.7,20.1){\red{\circle*{1}}}
+          \put(22.7,23.2){\red{\circle*{1}}} \put(22.7,26.3){\red{\circle*{1}}}
+          \put(22.7,29.4){\red{\circle*{1}}} \put(22.7,32.5){\red{\circle*{1}}}
+          \put(22.7,35.6){\red{\circle*{1}}} \put(22.7,38.7){\red{\circle*{1}}}
+          \put(22.7,41.8){\red{\circle*{1}}} \put(22.7,44.9){\red{\circle*{1}}}}
+
+\def\rech{\put(7.5,48){\red{\circle*{1}}}   \put(12,48){\red{\circle*{1}}} 
+          \put(17,48){\red{\circle*{1}}}    \put(22,48){\red{\circle*{1}}}  
+          \put(27,48){\red{\circle*{1}}}    \put(31.9,48){\red{\circle*{1}}}
+          \put(36.8,48){\red{\circle*{1}}}  \put(41.7,48){\red{\circle*{1}}}  
+          \put(46.6,48){\red{\circle*{1}}}  \put(51.5,48){\red{\circle*{1}}}  
+          \put(56.4,48){\red{\circle*{1}}}  \put(61.3,48){\red{\circle*{1}}}
+          \put(66.2,48){\red{\circle*{1}}}  \put(71.1,48){\red{\circle*{1}}}  
+          \put(76,48){\red{\circle*{1}}}    \put(80.8,48){\red{\circle*{1}}}  
+          \put(85.7,48){\red{\circle*{1}}}  \put(90.6,48){\red{\circle*{1}}} 
+          \put(95.5,48){\red{\circle*{1}}} }
+
+% ---------------------------------------------------------------------------
+\def\time#1{ \put(93,55){\large \black{time}} 
+\thicklines
+\put( 0,58){\color{black} \vector(1,0){100}}
+\put(#1,58){\color{red}  \circle*{2}}
+}
+
+\def\mdlabel{\put(12, 3){\Large \textbf{d}}
+             \put(70, 5){\Large \textbf{m}}
+             \put(5, 35){\Large \textbf{p}}
+            }
+
+\def\larrow#1#2#3{
+\thicklines
+\put(#1,#2){\color{red} \vector(-1,-1){5}}
+\put(#1,#2){\color{green} \textbf{#3}}
+}
+\def\laglabel#1{\put(-11,77){\large \textbf{#1}}}
+\def\ss{\put(33.1,23.2){\black{\circle*{1}}}}
+
+\def\arrow#1#2{\put(#1,#2){\thicklines \vector(1,-1){5}} \recv}
+% -----------------------------------------------------------------------
+\def\obox#1#2{\thicklines \red 
+                \put(#1,#2){\oval(3,4)}}
