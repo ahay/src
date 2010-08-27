@@ -174,8 +174,8 @@ for ix in shots:
 
 # ------------------------------------------------------------
 # all shots CIG
-allppang =  map(lambda x: 'ie-%04d-Eang11' % x,shots)
-allpsang =  map(lambda x: 'ie-%04d-Eang12' % x,shots)
+allppang =  map(lambda x: 'je-%04d-Eang11' % x,shots)
+allpsang =  map(lambda x: 'je-%04d-Eang12' % x,shots)
 nshots=len(allppang)
 Flow('PPang',allppang,'add ${SOURCES[0:%d]} | smooth rect2=1'%nshots,stdin=0)
 Flow('PSang',allpsang,'add ${SOURCES[0:%d]} | smooth rect2=1'%nshots,stdin=0)
@@ -184,8 +184,8 @@ Result('PSang', adcig.agrey(' title=  grid=y ',par))
 
 
 # stack CIG, then do decomp
-allppcig =  map(lambda x: 'ie-%04d-Ecig11' % x,shots)
-allpscig =  map(lambda x: 'ie-%04d-Ecig12' % x,shots)
+allppcig =  map(lambda x: 'je-%04d-Ecig11' % x,shots)
+allpscig =  map(lambda x: 'je-%04d-Ecig12' % x,shots)
 
 Flow('PPcig',allppcig,
      '''
