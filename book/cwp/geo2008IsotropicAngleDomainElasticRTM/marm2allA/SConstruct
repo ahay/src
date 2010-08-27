@@ -85,8 +85,8 @@ wefd.ewavelet('wave','',par)
 
 # ------------------------------------------------------------
 shots = range(par['nx']/2-400,par['nx']/2+420,10)
-#shots = range(par['nx']/2,par['nx']/2+40,20)
-print shots
+#shots = range(par['nx']/2,par['nx']/2+20,20)
+#print shots
 # ------------------------------------------------------------
 for ix in shots:
     tag = "-%04d-" % ix 

@@ -24,7 +24,7 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
 def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
 
-    print par['fdcustom']
+#    print par['fdcustom']
     
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
@@ -520,13 +520,13 @@ def ewfld(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
 #    Flow(rout+'2',rout,'window n2=1 f2=1')    
     
     par['ntnew']=par['nt']/par['jdata']
-    print par['ntnew'],par['nt'],par['jsnap']
+#    print par['ntnew'],par['nt'],par['jsnap']
 #   re-organize source wavefield for the following imaging conditions
     for i in range(1,3,1):
-	print "comp",i
+#	print "comp",i
 	par['comp']=i-1
 	tag="%01d"%i
-	print sout+tag
+#	print sout+tag
         Flow(sout+tag,sout,
  	    '''window n2=1 f2=%(comp)d | 
                put n1=%(nqz)d n2=%(nqx)d n3=%(ntnew)d 
@@ -581,7 +581,8 @@ def eeic(imag,ss,rr,cc,xcig,custom,par):
             Flow(imag+'Eang'+i+j,[imag+'Ecig'+i+j,'zero','vratio'+i+j],
                  adcig.cig2ssk(300,-1.5,0.01) + '|' +
                  adcig.xsk2ang(320, -80,0.50))
-            Result(imag+'Eang'+i+j,adcig.agrey(' grid=y  ',par))
+            Result(imag+'Ecig'+i+j,adcig.xgrey(' grid=y pclip=98 min2=-.1 max2=.1',par))
+            Result(imag+'Eang'+i+j,adcig.agrey(' grid=y min2=-60 max2=60 ',par))
             
 #            Flow('Ecigall'+i+j,'Elaps'+i+j,'window j3=3 | transp ')
 #            Flow('Eangall'+i+j,['Ecigall'+i+j,'zero','vratio'+i+j],
