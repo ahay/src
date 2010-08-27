@@ -22,7 +22,6 @@
 
 #include <rsf.h>
 
-#include "polydiv.h"
 #include "npolydiv.h"
 #include "regrid.h"
 #include "gradint2.h"
@@ -199,7 +198,7 @@ int main (int argc, char* argv[])
 	sf_fileclose(flt);
 
 	regrid (2, m, n, aa);
-	polydiv_init (nm, aa);
+	sf_polydiv_init (nm, aa);
     } else {
 	if (NULL == (nhfile = sf_getstring("nh")) /* file with filter sizes */
 	    &&
@@ -252,10 +251,10 @@ int main (int argc, char* argv[])
 
 	if (stat) {
 	    if (der) {
-		sf_solver_prec (gradint2_lop, sf_cgstep, polydiv_lop,
+		sf_solver_prec (gradint2_lop, sf_cgstep, sf_polydiv_lop,
 				nm, nm, nd, mm, dd, niter, eps, "end");
 	    } else {
-		sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
+		sf_solver_prec (sf_int2_lop, sf_cgstep, sf_polydiv_lop,
 				nm, nm, nd, mm, dd, niter, eps, "end");
 	    }
 	} else {

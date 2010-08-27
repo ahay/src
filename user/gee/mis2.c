@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "mis2.h"
-#include "polydiv.h" 
 
 void mis2(int niter         /* number of iterations */, 
 	  int nx            /* model size */, 
@@ -36,10 +35,10 @@ void mis2(int niter         /* number of iterations */,
 
     if (doprec) {                          /*  preconditioned */
 	sf_mask_init(known);
-	polydiv_init(nx, aa);
-	sf_solver_prec(sf_mask_lop, sf_cgstep, polydiv_lop, 
+	sf_polydiv_init(nx, aa);
+	sf_solver_prec(sf_mask_lop, sf_cgstep, sf_polydiv_lop, 
 		       nx, nx, nx, xx, xx, niter, eps, "end");
-	polydiv_close();
+	sf_polydiv_close();
     } else {                               /*  regularized */
 	dd = sf_floatalloc(nx);
 	for (ix=0; ix < nx; ix++) {

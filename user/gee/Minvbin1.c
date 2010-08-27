@@ -26,7 +26,6 @@
 #include "tcai1.h"
 #include "pef.h"
 #include "bound.h"
-#include "polydiv.h"
 
 int main (int argc, char* argv[])
 {
@@ -156,8 +155,8 @@ int main (int argc, char* argv[])
 		aa[1] = bb->flt[0];
 		aa[2] = bb->flt[1];
 		if (prec) {
-		    polydiv_init (nx, bb);
-		    sf_solver_prec(lint1_lop, sf_cgstep, polydiv_lop, 
+		    sf_polydiv_init (nx, bb);
+		    sf_solver_prec(lint1_lop, sf_cgstep, sf_polydiv_lop, 
 				   nx, nx, nd, mm, dd, niter, eps, "end");
 		} else {
 		    tcai1_init (3, aa);

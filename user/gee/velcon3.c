@@ -20,7 +20,6 @@
 
 #include "velcon3.h"
 #include "helify.h"
-#include "polydiv.h"
 
 static float *r, *ld, *rd, *rhs, *w, *a, *b1, *b2, **pt, **flt;
 static float v1, v2, dv, t0, dt, a0, cr, g2;
@@ -149,9 +148,9 @@ void velcon3_apply (bool adj, float **p1, float **p2)
 	    for (i=0; i < n; i++) {
 		rhs[i] += a[it]*l[i] + b1[it]*ld[i];
 	    }
-	    polydiv_init (n, aa);
-	    polydiv_lop (true, false, n, n, r, rhs);
-	    polydiv_lop (false,false, n, n, r, rhs);
+	    sf_polydiv_init (n, aa);
+	    sf_polydiv_lop (true, false, n, n, r, rhs);
+	    sf_polydiv_lop (false,false, n, n, r, rhs);
 	    for (i=0; i < n; i++) {
 		r[i] = rhs[i]*w[it];
 	    } 

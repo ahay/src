@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "helify.h"
-#include "polydiv.h"
 
 #define NXY 10000
 
@@ -68,7 +67,7 @@ int main(int argc, char* argv[])
 	aa->lag[it] = nx + 2 - nf + it;
 	sf_warning("aa[%d]=%g",aa->lag[it],aa->flt[it]);
     }
-    polydiv_init (NXY, aa);
+    sf_polydiv_init (NXY, aa);
 
     for (it=0; it < nt; it++) { 
 	sf_floatwrite (q,NXY,out);
@@ -82,8 +81,8 @@ int main(int argc, char* argv[])
 		0.5*alpha*(1. - gamma) * 
 		(q[ix-nx-1] + q[ix-nx+1] + q[ix+nx-1] + q[ix+nx+1]); 
 	}
-	polydiv_lop (true, false,  NXY, NXY, q, d);
-	polydiv_lop (false, false, NXY, NXY, q, d);
+	sf_polydiv_lop (true, false,  NXY, NXY, q, d);
+	sf_polydiv_lop (false, false, NXY, NXY, q, d);
 	for (ix=0; ix < NXY; ix++) {   
 	    q[ix] = d[ix]*scale;
 	}

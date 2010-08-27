@@ -20,7 +20,6 @@
 
 #include "laplacian.h"
 #include "wilson.h"
-#include "polydiv.h"
 #include "compress.h"
 
 static int type,n1,n2,n12;
@@ -100,7 +99,7 @@ void laplacian_init(int type1          /* operator type */,
 	    d2 = s2;
 	    center = -2.0*(2.0*corner+d1+d2);
 
-	    polydiv_init(n1*n2,bb);
+	    sf_polydiv_init(n1*n2,bb);
 	    break;
 	case 4:
 	    dd1 = -d1/12.0;
@@ -129,7 +128,7 @@ void laplacian_close(void)
 	    free(work2);
 	    break;
 	case 3:
-	    polydiv_close();
+	    sf_polydiv_close();
 	    free(work1);
 	    break;
 	default:
@@ -211,8 +210,8 @@ void laplacian(float **uin  /* [nx][nz] */,
 			center*uin[i2][i1];
 		}
 	    }
-	    polydiv_lop(false,false,n12,n12,uout[0],work1);
-	    polydiv_lop(true, false,n12,n12,uout[0],work1);
+	    sf_polydiv_lop(false,false,n12,n12,uout[0],work1);
+	    sf_polydiv_lop(true, false,n12,n12,uout[0],work1);
 	    break;
 	case 4:
 	    for (i2=2; i2 < n2-2; i2++) {

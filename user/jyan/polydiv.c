@@ -1,1 +1,0 @@
-../gee/polydiv.c

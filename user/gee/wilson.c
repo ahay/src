@@ -24,7 +24,6 @@
 /*^*/
 
 #include "wilson.h"
-#include "polydiv.h"
 
 static int n, n2;
 static float *au, *bb, *cc, *b, *c;    
@@ -62,10 +61,10 @@ float wilson_factor(int niter    /* number of iterations */,
     }                   
     
     sf_helicon_init( aa);           /* multiply polynoms */
-    polydiv_init( n2, aa);       /* divide   polynoms */
+    sf_polydiv_init( n2, aa);       /* divide   polynoms */
     for(iter=0; iter < niter; iter++) {
-	polydiv_lop(false,false, n2, n2, au, bb);  /* S/A */
-	polydiv_lop(true, false, n2, n2, cc, bb);  /* S/(AA') */
+	sf_polydiv_lop(false,false, n2, n2, au, bb);  /* S/A */
+	sf_polydiv_lop(true, false, n2, n2, cc, bb);  /* S/(AA') */
 	eps = 0.;
 	for(i=1; i < n; i++) {   /* b = plusside(1+cc) */
 	    b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
@@ -85,7 +84,7 @@ float wilson_factor(int niter    /* number of iterations */,
 void wilson_close( void) 
 /*< free allocated storage >*/
 {
-    polydiv_close();
+    sf_polydiv_close();
     free (au);
     free (bb);
     free (cc);

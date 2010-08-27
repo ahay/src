@@ -20,8 +20,6 @@
 #include <rsf.h>
 /*^*/
 
-#include "polydiv.h"
-
 static sf_filter aa, bb;
 static float *t1, *t2, wt;
 
@@ -46,7 +44,7 @@ void hshape_init( int nd       /* data size */,
     t1 = sf_floatalloc (nd);
     t2 = sf_floatalloc (nd);
 
-    polydiv_init(nd,aa);
+    sf_polydiv_init(nd,aa);
     sf_helicon_init(bb);
 }
 
@@ -65,11 +63,11 @@ void hshape_lop( bool adj, bool add,
 	    t2[i] = wt*yy[i];
 	}
 
-	polydiv_lop (true, false, nx, nx, t1, t2);
+	sf_polydiv_lop (true, false, nx, nx, t1, t2);
 	sf_helicon_lop(true, true, nx, nx, xx, t1);	
     } else {
 	sf_helicon_lop(false, false, nx, nx, xx, t1);
-	polydiv_lop (false, false, nx, nx, t1, t2);
+	sf_polydiv_lop (false, false, nx, nx, t1, t2);
 	
 	for (i=0; i < nx; i++) {
 	    yy[i] += wt*t2[i];
@@ -84,6 +82,6 @@ void hshape_close (void)
     free (t2);
     free (bb->lag);
     free (bb);
-    polydiv_close();
+    sf_polydiv_close();
 }
 

@@ -21,7 +21,6 @@
 /*^*/
 
 #include "signoi.h"
-#include "polydiv.h"
 #include "helicon2.h"
 
 static int niter, nd;
@@ -49,12 +48,12 @@ void signoi_lop (bool adj, bool add, int n1, int n2,
 /*< linear operator >*/
 {
     sf_helicon_init (nn);
-    polydiv_init (nd, ss); 
+    sf_polydiv_init (nd, ss); 
 
     sf_adjnull(adj,add,n1,n2,data,sign);
 
     sf_helicon_lop (false, false, n1, n1, data, dd);
-    sf_solver_prec(sf_helicon_lop, sf_cgstep, polydiv_lop, 
+    sf_solver_prec(sf_helicon_lop, sf_cgstep, sf_polydiv_lop, 
 		   nd, nd, nd, sign, dd, niter, eps, "end");
     sf_cgstep_close();
 
@@ -85,5 +84,5 @@ void signoi_close(void)
 /*< free allocated storage >*/
 {
     free(dd);
-    polydiv_close();
+    sf_polydiv_close();
 }

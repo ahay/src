@@ -16,25 +16,28 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
-/*^*/
+#include <stdlib.h>
 
 #include "polydiv.h"
+#include "alloc.h"
+#include "adjnull.h"
+
+#include "helix.h"
+/*^*/
 
 static sf_filter aa;
 static float* tt;
 
-void polydiv_init( int nd       /* data size */, 
-		   sf_filter bb /* filter */) 
+void sf_polydiv_init( int nd       /* data size */, 
+		      sf_filter bb /* filter */) 
 /*< initialize >*/
 {
     aa = bb;
     tt = sf_floatalloc (nd);
 }
 
-void polydiv_lop( bool adj, bool add, 
-		  int nx, int ny, float* xx, float*yy) 
+void sf_polydiv_lop( bool adj, bool add, 
+		     int nx, int ny, float* xx, float*yy) 
 /*< linear operator >*/
 {
     int ia, iy, ix;
@@ -66,7 +69,7 @@ void polydiv_lop( bool adj, bool add,
     }
 }
 
-void polydiv_close (void) 
+void sf_polydiv_close (void) 
 /*< free allocated storage >*/
 {
     free (tt);

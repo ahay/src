@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "polydiv.h"
-
 int main (int argc, char* argv[])
 {
     bool spline, verb, movie;
@@ -126,7 +124,7 @@ int main (int argc, char* argv[])
     sf_int1_init (offset,x0,dx,nx,spline? sf_spline_int: sf_lg_int,nw,nd);
 
     /* initialize recursive filtering */
-    polydiv_init (nx, aa);
+    sf_polydiv_init (nx, aa);
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -155,7 +153,7 @@ int main (int argc, char* argv[])
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_floatread (dd,nd,in);
 	sf_cdstep_init();
-	sf_solver_prec(sf_int1_lop, sf_cdstep, polydiv_lop, nx, nx, 
+	sf_solver_prec(sf_int1_lop, sf_cdstep, sf_polydiv_lop, nx, nx, 
 		       nd, mm, dd, niter, eps, "verb", verb, "xmov",mmov,
 		       "end");
 	sf_cdstep_close();
