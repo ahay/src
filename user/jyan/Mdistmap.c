@@ -22,19 +22,19 @@
 #include <math.h>
 #define INF(x,y,z) x+y+z
 
-int fx(int x,int ix,int iy,int iz,int ***g)
+static int fx(int x,int ix,int iy,int iz,int ***g)
 {
     return (x-ix)*(x-ix)+g[iy][ix][iz]*g[iy][ix][iz];
 }
 
 
-int fy(int y,int iy,int ix,int iz,int ***g)
+static int fy(int y,int iy,int ix,int iz,int ***g)
 {
     return (y-iy)*(y-iy)+g[iy][ix][iz];
 }
 
 
-int Sepx(int i, int u, int ***g, int iy, int iz)
+static int Sepx(int i, int u, int ***g, int iy, int iz)
 {
     float tmp;
     tmp=(u*u-i*i+
@@ -44,7 +44,7 @@ int Sepx(int i, int u, int ***g, int iy, int iz)
 }
 
 
-int Sepy(int i, int u, int ***g, int ix, int iz)
+static int Sepy(int i, int u, int ***g, int ix, int iz)
 {
     float tmp;
     tmp=(u*u-i*i+
@@ -70,8 +70,10 @@ int main(int argc, char* argv[])
     int ***h;
     int ix,iy,iz,nx,nz,ny,nn;
     float dx,dz,dy,ox,oz,oy;
- 
-    
+
+    int q,u,w;
+    int *s,*t;
+     
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -145,8 +147,6 @@ int main(int argc, char* argv[])
 
 
     /* scan axis 2 */
-    int q,u,w;
-    int *s,*t;
     s=sf_intalloc(nx);
     t=sf_intalloc(nx);   
    

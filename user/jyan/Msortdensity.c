@@ -1,6 +1,21 @@
-/* compute density*/
-
-
+/* sort density*/
+/*
+  Copyright (C) 2010 Colorado School of Mines
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 #include <rsf.h>
 
@@ -20,13 +35,16 @@ int main(int argc, char* argv[])
     sf_axis dena1,dena2,dena3,dena4;
     float ****in;
     float **out;
-    
-
    
     int nx,nz,ny,nw,nn;
     float dx,dz,dy,dw,ox,oz,oy,ow;
     float thrsh;
  
+
+    int ii,jj,kk,ll;
+    float x,y,z,w;
+    int ind=0,n=0;
+    float fx=0,fy=0,fz=0,fw=0;
     
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -74,11 +92,7 @@ int main(int argc, char* argv[])
     /*    /\*------------------------------------------------------------*\/ */
     /*     /\* output files*\/ */
     Fout = sf_output ("out");   
-        
-    int ii,jj,kk,ll;
-    float x,y,z,w;
-    int ind=0,n=0;
-    float fx=0,fy=0,fz=0,fw=0;
+       
     for(ii=0;ii<nx;ii++){
 	for(jj=0;jj<ny;jj++){
 	    for(kk=0;kk<nz;kk++){

@@ -45,6 +45,7 @@ Includes numpy.i by Eric Jones, John Hunter, and Bill Spotz
 Includes cfortran.h by Burkhard Burow
 Includes pnpoly by Wm. Randolph Franklin
 Includes sinint by Gerard Jungman
+Includes dsyevv3 and dsyevc3 by Joachim Kopp
 
 Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
 Includes selected codes from TRIP by William Symes and others (c) Rice University

@@ -71,6 +71,18 @@ int main(int argc, char* argv[])
     float c33,c55,c11,c13,c66,c12;
     float m11,m12,m13,m15,m22,m23,m25,m33,m35,m44,m46,m55,m66;
     float n;
+
+    float ***vp=NULL;        
+    float ***vs=NULL;        
+    float ***ro=NULL;        
+    float ***epsilon=NULL;        
+    float ***delta=NULL;       
+    float ***gamma=NULL;     
+    float ***nu=NULL;        
+    float ***alpha=NULL;   
+	
+    float ****cc=NULL;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -92,16 +104,6 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fvp,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* x coordinates*/
     ay = sf_iaxa(Fvp,3); sf_setlabel(ay,"y"); /* x coordinates*/
     n1 = sf_n(az);    n2 = sf_n(ax); n3=sf_n(ay);
-    float ***vp=NULL;        
-    float ***vs=NULL;        
-    float ***ro=NULL;        
-    float ***epsilon=NULL;        
-    float ***delta=NULL;       
-    float ***gamma=NULL;     
-    float ***nu=NULL;        
-    float ***alpha=NULL;   
-	
-    float ****cc=NULL;
 	
     /* cube axes */
 

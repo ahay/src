@@ -1,18 +1,34 @@
-/* compute density*/
-
-
+/* Compute density */
+/*
+  Copyright (C) 2010 Colorado School of Mines
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 #include <rsf.h>
-
 #include <math.h>
 
-
-
-int inRegion(float val, float min, float max, int n){
+static int inRegion(float val, float min, float max, int n)
+{
     int ind=0;
-    for (int i=0;i<n; i++)    {
-	float xs=min+i*(max-min)/n;
-	float xe=min+(i+1)*(max-min)/n;
+    int i;
+    float xs, xe;
+    
+    for (i=0;i<n; i++)    {
+	xs=min+i*(max-min)/n;
+	xe=min+(i+1)*(max-min)/n;
 	if (val>xs && val<=xe) 	{
 	    ind=i; 
 	    break;
@@ -22,7 +38,6 @@ int inRegion(float val, float min, float max, int n){
     return ind;
     
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -45,7 +60,15 @@ int main(int argc, char* argv[])
     float dw;
  
     int n1,n2,n3,n4;
+
+    float minx=1,maxx=0;
+    float miny=1,maxy=0;
+    float minz=90,maxz=-90;
+    float minw=180,maxw=-180;
     
+    int ii,jj,kk,ll;
+    int indx,indy,indz,indw;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -104,10 +127,6 @@ int main(int argc, char* argv[])
 /*     nr = SF_MIN(nr,1+(smax-smin)/ds); */
    
     /*------------------------------------------------------------*/
-    float minx=1,maxx=0;
-    float miny=1,maxy=0;
-    float minz=90,maxz=-90;
-    float minw=180,maxw=-180;
 
     for (iz=0;iz<nz;iz++){
 	for (ix=0;ix<nx;ix++){
@@ -155,7 +174,6 @@ int main(int argc, char* argv[])
     sf_oaxa(Fout,denaz,3);
     sf_oaxa(Fout,denaw,4);
     
-    int ii,jj,kk,ll;
     for(ii=0;ii<n1;ii++){
 	for(jj=0;jj<n2;jj++){
 	    for(kk=0;kk<n3;kk++){
@@ -166,7 +184,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    int indx,indy,indz,indw;
     for (iz=0;iz<nz;iz++){
 	for (ix=0;ix<nx;ix++){
 	    for (iy=0;iy<ny;iy++){
@@ -193,9 +210,4 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(out[0][0][0],nnn,Fout);
     exit (0);
-    
-    
-    
 }
-
-

@@ -124,6 +124,11 @@ int main(int argc, char* argv[])
     int order;
     float sig;
 /*    float sig;*/
+
+    float k2;
+    int nx,nz;
+    int jx,jz;
+    float kx,kz;
     
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -216,10 +221,6 @@ int main(int argc, char* argv[])
     
     /*------------------------------------------------------------*/
     /* allocate arrays for derivatives */
-    float k2;
-    int nx,nz;
-    int jx,jz;
-    float kx,kz;
     if (domain[0]=='k'){
 	nx=sf_n(sx);
 	nz=sf_n(sz);

@@ -1,9 +1,5 @@
 from rsf.tex import *
 
-
-End(lclass='geophysics',use='''amssymb,
-          amsthm,amsmath,amsbsy,subfigure,latexsym,graphicx,
-          natbib,multirow,rotating''')
-
-
-
+End(use='''amssymb,
+amsthm,amsmath,amsbsy,subfigure,latexsym,graphicx,
+natbib,multirow,rotating''')
