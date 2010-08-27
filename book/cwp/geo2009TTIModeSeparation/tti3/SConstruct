@@ -153,7 +153,7 @@ for i in range(3):
          '''%par )
 #    Result('we3d-'+tag,'we3d-'+tag,fdm.cgrey3d('pclip=100 title="compnent%s"'%tit +center ,par))
 
-pot.cliptogether3('uA3','we3d-0','we3d-1','we3d-2','"\F5 W\_z"','"\F5 W\_x"','"\F5 W\_y"',1,center,'wantaxis=n wanttitle=n',par)
+pot.cliptogether3('uA3','we3d-0','we3d-1','we3d-2','"\F5 W\_z"','"\F5 W\_x"','"\F5 W\_y"',1,center,'',par)
 #fdd.Polar3d('kp',center,par)
 
 # ------------------------------------------------------------
@@ -194,7 +194,7 @@ Flow('nuu3dr','nuu3d','scale rscale=.017453')
 Flow('alp3dr','alp3d','scale rscale=.017453')
 fdd.SepKP3TTI('P','SV','SH','we3d-0','we3d-1','we3d-2','dz','dx','dy','nuu3dr','alp3dr',par)
 
-pot.cliptogether3('pA3','P','SV','SH','"\F5 P"','"\F5 SV"','"\F5 SH"',1,center,'wantaxis=n wanttitle=n',par)
+pot.cliptogether3('pA3','P','SV','SH','"\F5 P"','"\F5 SV"','"\F5 SH"',1,center,'',par)
 
 
 

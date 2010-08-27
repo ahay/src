@@ -1,3 +1,9 @@
 from rsf.tex import *
 
-End()
+
+End(lclass='geophysics',use='''amssymb,
+          amsthm,amsmath,amsbsy,subfigure,latexsym,graphicx,
+          natbib,multirow,rotating''')
+
+
+
