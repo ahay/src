@@ -40,7 +40,7 @@ struct wfs{
     float        *polr; /* eigenvector */ 
     float       **ctfl; /* Christoffel matrix */
     float **UPz, **UPx;
-    fft3d   ftz,   ftx;
+    sf_fft3d   ftz,   ftx;
 };
 /*^*/
 
@@ -61,8 +61,8 @@ wfs2d wfsep_init(sf_axis  ax,
     wfs->UPz  = sf_floatalloc2(sf_n(az),sf_n(ax));
     wfs->UPx  = sf_floatalloc2(sf_n(az),sf_n(ax));
 
-    wfs->ftz=fft3a1_init(sf_n(az),sf_n(ax),1);
-    wfs->ftx=fft3a2_init(sf_n(az),sf_n(ax),1);
+    wfs->ftz=sf_fft3a1_init(sf_n(az),sf_n(ax),1);
+    wfs->ftx=sf_fft3a2_init(sf_n(az),sf_n(ax),1);
 
     return wfs;
 }
@@ -71,8 +71,8 @@ wfs2d wfsep_init(sf_axis  ax,
 void wfsep_close(wfs2d wfs)
 /*< close wavefield separator >*/
 {
-    fft3a1_close(wfs->ftz);
-    fft3a2_close(wfs->ftx);
+    sf_fft3a1_close(wfs->ftz);
+    sf_fft3a2_close(wfs->ftx);
 }
 
 /*------------------------------------------------------------*/
@@ -160,10 +160,10 @@ void wfsep(float **zdel,
 	}
     }   
 
-    cnt3a2(wfs->temp,wfs->ftx);
-    cnt3a1(wfs->temp,wfs->ftz);
-    fft3a2(true,(kiss_fft_cpx***) wfs->temp,wfs->ftx);
-    fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
+    sf_cnt3a2(wfs->temp,wfs->ftx);
+    sf_cnt3a1(wfs->temp,wfs->ftz);
+    sf_fft3a2(true,(kiss_fft_cpx***) wfs->temp,wfs->ftx);
+    sf_fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
     for(    jx=0;jx<nx;jx++){
 	for(jz=0;jz<nz;jz++){
 	    zdel[jx][jz]=crealf(wfs->temp[0][jx][jz]);
@@ -182,10 +182,10 @@ void wfsep(float **zdel,
 	}
     }   
 
-    cnt3a2(wfs->temp,wfs->ftx);
-    cnt3a1(wfs->temp,wfs->ftz);
-    fft3a2(true,(kiss_fft_cpx***) wfs->temp,wfs->ftx);
-    fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
+    sf_cnt3a2(wfs->temp,wfs->ftx);
+    sf_cnt3a1(wfs->temp,wfs->ftz);
+    sf_fft3a2(true,(kiss_fft_cpx***) wfs->temp,wfs->ftx);
+    sf_fft3a1(true,(kiss_fft_cpx***) wfs->temp,wfs->ftz);
     for(    jx=0;jx<nx;jx++){
 	for(jz=0;jz<nz;jz++){
 	    xdel[jx][jz]=crealf(wfs->temp[0][jx][jz]);

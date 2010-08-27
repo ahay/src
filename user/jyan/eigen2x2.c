@@ -33,7 +33,7 @@ void solveSymmetric22(float a[2][2], float v[2][2], float d[2])
   matrix D, then AV = VD. 
   @param a the symmetric matrix A. 
   @param v the array of eigenvectors v[0] and v[1]. 
-  @param d the array of eigenvalues d[0] and d[1]. */
+  @param d the array of eigenvalues d[0] and d[1]. >*/
 {
 
     /* Copy matrix to local variables. */
@@ -48,7 +48,6 @@ void solveSymmetric22(float a[2][2], float v[2][2], float d[2])
     float c,r,s,t,u,vpr,vqr;    
 
     float dt, vt[2];
-
 
     /* If off-diagonal element is non-zero, zero it with a Jacobi rotation. */
     if (a01!=0.0f) {
@@ -86,7 +85,7 @@ void solveSymmetric22(float a[2][2], float v[2][2], float d[2])
 
     /* Sort eigenvalues (and eigenvectors) in descending order. */
     if (d[0]<d[1]) {
-	float dt = d[1];
+	dt = d[1];
 	d[1] = d[0];
 	d[0] = dt;
 	vt[0]= v[1][0];vt[1]=v[1][1];

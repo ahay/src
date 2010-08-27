@@ -21,7 +21,6 @@
 #include "tool3tti.h"
 #include "dsyevv3.h"
 #include "dsyevc3.h"
-#include "ftutil2.h"
 
 /* These are the programs to calculte 3x3 eigenvalues and eigenvectors from Kopp */
 /* 's 2008 paper:  */

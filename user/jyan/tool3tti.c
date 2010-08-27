@@ -4,10 +4,6 @@
 #include "dsyevv3.h"
 #include "dsyevc3.h"
 
-#include "ftutil2.h"
-/*^*/
-
-
 #define  KMAP(i,n) (i<n/2.) ? SF_PI*i/(n/2.) : SF_PI*(-n+i)/(n/2.)
 #define  KMAPK(i,n)  (  ( i-n/2 )*SF_PI/(n/2.)   ) 
 #define  TAPER(k) (k!=0 ?			\
@@ -34,7 +30,7 @@ struct wfs{
     float        *polr; /* eigenvector */ 
     float       **ctfl; /* Christoffel matrix */
     float **UPz, **UPx;    
-    fft3d   ftz,   ftx;
+    sf_fft3d   ftz,   ftx;
     float **Cos, **Sin;
 };
 /*^*/
@@ -53,8 +49,8 @@ wfs2d wfsep_init(sf_axis  ax,
     wfs->UPz  = sf_floatalloc2(sf_n(az),sf_n(ax));
     wfs->UPx  = sf_floatalloc2(sf_n(az),sf_n(ax));
 
-    wfs->ftz=fft3a1_init(sf_n(az),sf_n(ax),1);
-    wfs->ftx=fft3a2_init(sf_n(az),sf_n(ax),1);
+    wfs->ftz=sf_fft3a1_init(sf_n(az),sf_n(ax),1);
+    wfs->ftx=sf_fft3a2_init(sf_n(az),sf_n(ax),1);
 
     wfs->Cos  = sf_floatalloc2(sf_n(az),sf_n(ax));
     wfs->Sin  = sf_floatalloc2(sf_n(az),sf_n(ax));
@@ -72,7 +68,7 @@ struct wfs3{
     float       **ctfl; /* Christoffel matrix */ 
     float        *up;/*eigenvectors */
     float      ***upx,***upy,***upz;
-    fft3d         ftx,fty,ftz;
+    sf_fft3d         ftx,fty,ftz;
 };
 /*^*/
 
@@ -94,9 +90,9 @@ wfs3d wfsep3_init(sf_axis  ax,
     wfs3->upy  = sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
     wfs3->upz  = sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
     
-    wfs3->ftz=fft3a1_init(sf_n(az),sf_n(ax),sf_n(ay));
-    wfs3->ftx=fft3a2_init(sf_n(az),sf_n(ax),sf_n(ay));
-    wfs3->fty=fft3a3_init(sf_n(az),sf_n(ax),sf_n(ay));
+    wfs3->ftz=sf_fft3a1_init(sf_n(az),sf_n(ax),sf_n(ay));
+    wfs3->ftx=sf_fft3a2_init(sf_n(az),sf_n(ax),sf_n(ay));
+    wfs3->fty=sf_fft3a3_init(sf_n(az),sf_n(ax),sf_n(ay));
 
     return wfs3;
 }
@@ -105,9 +101,9 @@ wfs3d wfsep3_init(sf_axis  ax,
 void wfsep3_close(wfs3d wfs3)
 /*< close wavefield separator >*/
 {
-    fft3a1_close(wfs3->ftz);
-    fft3a2_close(wfs3->ftx);
-    fft3a3_close(wfs3->fty);
+    sf_fft3a1_close(wfs3->ftz);
+    sf_fft3a2_close(wfs3->ftx);
+    sf_fft3a3_close(wfs3->fty);
 }
 
 
@@ -436,12 +432,12 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
 	}   
     }
   
-    cnt3a3(wfs3->temp,wfs3->fty);
-    cnt3a2(wfs3->temp,wfs3->ftx);
-    cnt3a1(wfs3->temp,wfs3->ftz);
-    fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);sf_warning("stop a");
-    fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
-    fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);    
+    sf_cnt3a3(wfs3->temp,wfs3->fty);
+    sf_cnt3a2(wfs3->temp,wfs3->ftx);
+    sf_cnt3a1(wfs3->temp,wfs3->ftz);
+    sf_fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);sf_warning("stop a");
+    sf_fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
+    sf_fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);    
     
     for(jy=0;jy<ny;jy++){
 	for(    jx=0;jx<nx;jx++){
@@ -469,12 +465,12 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
 	}
     }
  
-    cnt3a3(wfs3->temp,wfs3->fty);
-    cnt3a2(wfs3->temp,wfs3->ftx);
-    cnt3a1(wfs3->temp,wfs3->ftz);
-    fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);
-    fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
-    fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);
+    sf_cnt3a3(wfs3->temp,wfs3->fty);
+    sf_cnt3a2(wfs3->temp,wfs3->ftx);
+    sf_cnt3a1(wfs3->temp,wfs3->ftz);
+    sf_fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);
+    sf_fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
+    sf_fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);
     for(jy=0;jy<ny;jy++){
 	for(    jx=0;jx<nx;jx++){
 	    for(jz=0;jz<nz;jz++){
@@ -498,12 +494,12 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
 	}
     }
 
-    cnt3a3(wfs3->temp,wfs3->fty);
-    cnt3a2(wfs3->temp,wfs3->ftx);
-    cnt3a1(wfs3->temp,wfs3->ftz);
-    fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);
-    fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
-    fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);
+    sf_cnt3a3(wfs3->temp,wfs3->fty);
+    sf_cnt3a2(wfs3->temp,wfs3->ftx);
+    sf_cnt3a1(wfs3->temp,wfs3->ftz);
+    sf_fft3a3(true,(kiss_fft_cpx***) wfs3->temp,wfs3->fty);
+    sf_fft3a2(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftx);
+    sf_fft3a1(true,(kiss_fft_cpx***) wfs3->temp,wfs3->ftz);
     for(jy=0;jy<ny;jy++){
 	for(    jx=0;jx<nx;jx++){
 	    for(jz=0;jz<nz;jz++){
