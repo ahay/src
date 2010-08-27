@@ -232,8 +232,8 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
     'Build and install C programs'
 
     env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
-            LIBPATH=[os.path.join(bldroot,'lib')],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+                LIBPATH=[os.path.join(bldroot,'lib')],
+                LIBS=[env.get('DYNLIB','')+'rsf'])
 
     if glob_build:
         dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/$USER
@@ -409,12 +409,12 @@ class UserSconsTargets:
         self.py_modules = None # Python modules that do not need SWIG and numpy
     def build_all(self, env, glob_build, srcroot, bindir, pkgdir):
         # Needed for both C and F90 programs:
+        bldroot = '../..' # aka RSFSRC/build
         if glob_build:
             env = env.Clone()
-            bldroot = '../..' # aka RSFSRC/build
         else:
             SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
-            bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+#            bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
         if self.c == None:
             docs_c = None
         else:

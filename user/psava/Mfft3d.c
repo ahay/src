@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "ftutil.h"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -41,7 +39,7 @@ int main(int argc, char* argv[])
     sf_axis a1,a2,a3;
     sf_axis b1=NULL,b2=NULL,b3=NULL;
 
-    fft3d ft1=NULL,ft2=NULL,ft3=NULL; /* FT structures */
+    sf_fft3d ft1=NULL,ft2=NULL,ft3=NULL; /* FT structures */
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -158,72 +156,72 @@ int main(int argc, char* argv[])
 	case 32:
 	    sf_warning("FFT on axes 2 and 3");
 
-	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a2(cc,ft2);
-	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
-	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    ft2=sf_fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a2(cc,ft2);
+	    sf_fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           sf_cnt3a2(cc,ft2);
 
-	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a3(cc,ft3);
-	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
-	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    ft3=sf_fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a3(cc,ft3);
+	    sf_fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           sf_cnt3a3(cc,ft3);
 	    
 	    break;
 	case 13:
 	case 31:
 	    sf_warning("FFT on axes 1 and 3");
 	    
-	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a1(cc,ft1);
-	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
-	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+	    ft1=sf_fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a1(cc,ft1);
+	    sf_fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           sf_cnt3a1(cc,ft1);
 
-	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a3(cc,ft3);
-	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
-	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    ft3=sf_fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a3(cc,ft3);
+	    sf_fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           sf_cnt3a3(cc,ft3);
 	    
 	    break;
 	case 12:
 	case 21:
 	    sf_warning("FFT on axes 1 and 2");
 	    
-	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a1(cc,ft1);
-	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
-	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+	    ft1=sf_fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a1(cc,ft1);
+	    sf_fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           sf_cnt3a1(cc,ft1);
 
-	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a2(cc,ft2);
-	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
-	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    ft2=sf_fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a2(cc,ft2);
+	    sf_fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           sf_cnt3a2(cc,ft2);
 	    
 	    break;
 	case 3:
 	    sf_warning("FFT on axis 3");
 	    
-	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a3(cc,ft3);
-	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
-	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    ft3=sf_fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a3(cc,ft3);
+	    sf_fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           sf_cnt3a3(cc,ft3);
 
 	    break;
 	case 2:
 	    sf_warning("FFT on axis 2");
 	    
-	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a2(cc,ft2);
-	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
-	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    ft2=sf_fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a2(cc,ft2);
+	    sf_fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           sf_cnt3a2(cc,ft2);
 	    
 	    break;
 	case 1:
 	    sf_warning("FFT on axis 1");
 
-	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a1(cc,ft1);
-	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
-	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+	    ft1=sf_fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a1(cc,ft1);
+	    sf_fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           sf_cnt3a1(cc,ft1);
 
 	    break;
 	case 123:
@@ -232,20 +230,20 @@ int main(int argc, char* argv[])
 	default:
 	    sf_warning("FFT on axes 1,2 and 3");
 
-	    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a1(cc,ft1);
-	    fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
-	    if(cnt &&  inv)           cnt3a1(cc,ft1);
+	    ft1=sf_fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a1(cc,ft1);
+	    sf_fft3a1(    inv,(kiss_fft_cpx***) cc,ft1);
+	    if(cnt &&  inv)           sf_cnt3a1(cc,ft1);
 
-	    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a2(cc,ft2);
-	    fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
-	    if(cnt &&  inv)           cnt3a2(cc,ft2);
+	    ft2=sf_fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a2(cc,ft2);
+	    sf_fft3a2(    inv,(kiss_fft_cpx***) cc,ft2);
+	    if(cnt &&  inv)           sf_cnt3a2(cc,ft2);
 
-	    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
-	    if(cnt && !inv)           cnt3a3(cc,ft3);
-	    fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
-	    if(cnt &&  inv)           cnt3a3(cc,ft3);
+	    ft3=sf_fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+	    if(cnt && !inv)           sf_cnt3a3(cc,ft3);
+	    sf_fft3a3(    inv,(kiss_fft_cpx***) cc,ft3);
+	    if(cnt &&  inv)           sf_cnt3a3(cc,ft3);
 
 	    break;
     }
@@ -259,35 +257,35 @@ int main(int argc, char* argv[])
     switch(axis) {
 	case 23:
 	case 32:
-	    fft3a2_close(ft2);
-	    fft3a3_close(ft3);
+	    sf_fft3a2_close(ft2);
+	    sf_fft3a3_close(ft3);
 	    break;
 	case 13:
 	case 31:
-	    fft3a1_close(ft1);
-	    fft3a3_close(ft3);
+	    sf_fft3a1_close(ft1);
+	    sf_fft3a3_close(ft3);
 	    break;
 	case 12:
 	case 21:
-	    fft3a1_close(ft1);
-	    fft3a2_close(ft2);
+	    sf_fft3a1_close(ft1);
+	    sf_fft3a2_close(ft2);
 	    break;
 	case 3:
-	    fft3a3_close(ft3);
+	    sf_fft3a3_close(ft3);
 	    break;		
 	case 2:
-	    fft3a2_close(ft2);
+	    sf_fft3a2_close(ft2);
 	    break;		
 	case 1:
-	    fft3a1_close(ft1);
+	    sf_fft3a1_close(ft1);
 	    break;	
 	case 123:
 	case 321:	
 	case 0:
 	default:
-	    fft3a1_close(ft1);
-	    fft3a2_close(ft2);
-	    fft3a3_close(ft3);
+	    sf_fft3a1_close(ft1);
+	    sf_fft3a2_close(ft2);
+	    sf_fft3a3_close(ft3);
 	    break;
     }
     /*------------------------------------------------------------*/

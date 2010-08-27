@@ -12,7 +12,7 @@ except:
     import bldutil
     env = bldutil.Debug() # Debugging flags for compilers
     bindir = pkgdir = None
-    
+
 targets = bldutil.UserSconsTargets()
 
 # C mains

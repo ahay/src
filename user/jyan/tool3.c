@@ -2,10 +2,6 @@
 #include <math.h>
 #include "eigv.h"
 
-#include "ftutil.h"
-/*^*/
-
-
 #define  KMAP(i,n) (i<n/2.) ? SF_PI*i/(n/2.) : SF_PI*(-n+i)/(n/2.);
 
 /* Joe's taper */

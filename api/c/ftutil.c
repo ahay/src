@@ -18,13 +18,20 @@
 */
 
 #include "ftutil.h"
+#include "alloc.h"
+#include "error.h"
+#include "_defs.h"
+
 #include "kiss_fft.h"
+#include "komplex.h"
+#include "_bool.h"
+/*^*/
 
 #ifndef _sf_ftutil_h
 
 /*------------------------------------------------------------*/
 
-typedef struct sf_fft *fft3d;
+typedef struct sf_fft *sf_fft3d;
 /*^*/
 
 struct sf_fft{
@@ -72,13 +79,13 @@ struct sf_ompsft{
 #endif
 
 /*------------------------------------------------------------*/
-fft3d sf_fft3a1_init(int n1_, 
+sf_fft3d sf_fft3a1_init(int n1_, 
 		     int n2_, 
 		     int n3_)
 /*< initialize FFT on axis 1 >*/
 {
-    fft3d fft;
-    fft = (fft3d) sf_alloc(1,sizeof(*fft));
+    sf_fft3d fft;
+    fft = (sf_fft3d) sf_alloc(1,sizeof(*fft));
 
     fft->n1 = n1_;
     fft->n2 = n2_;
@@ -129,13 +136,13 @@ ompfft3d sf_ompfft3a1_init(int n1_,
 }
 
 /*------------------------------------------------------------*/
-fft3d sf_fft3a2_init(int n1_, 
+sf_fft3d sf_fft3a2_init(int n1_, 
 		     int n2_, 
 		     int n3_)
 /*< initialize FFT on axis 2 >*/
 {
-    fft3d fft;
-    fft = (fft3d) sf_alloc(1,sizeof(*fft));
+    sf_fft3d fft;
+    fft = (sf_fft3d) sf_alloc(1,sizeof(*fft));
 
     fft->n1 = n1_; 
     fft->n2 = n2_;
@@ -190,13 +197,13 @@ ompfft3d sf_ompfft3a2_init(int n1_,
 }
 
 /*------------------------------------------------------------*/
-fft3d sf_fft3a3_init(int n1_, 
+sf_fft3d sf_fft3a3_init(int n1_, 
 		     int n2_, 
 		     int n3_)
 /*< initialize FFT on axis 3 >*/
 {    
-    fft3d fft;
-    fft = (fft3d) sf_alloc(1,sizeof(*fft));
+    sf_fft3d fft;
+    fft = (sf_fft3d) sf_alloc(1,sizeof(*fft));
 
     fft->n1 = n1_; 
     fft->n2 = n2_;
@@ -251,7 +258,7 @@ ompfft3d sf_ompfft3a3_init(int n1_,
 }
 
 /*------------------------------------------------------------*/
-void sf_fft3a1_close(fft3d fft)
+void sf_fft3a1_close(sf_fft3d fft)
 /*< free allocated storage for FFT on axis 1 >*/
 {
     free (fft->forw);
@@ -267,7 +274,7 @@ void sf_ompfft3a1_close(ompfft3d fft)
 }
 
 /*------------------------------------------------------------*/
-void sf_fft3a2_close(fft3d fft)
+void sf_fft3a2_close(sf_fft3d fft)
 /*< free allocated storage for FFT on axis 2 >*/
 {
     free (fft->trace);
@@ -287,7 +294,7 @@ void sf_ompfft3a2_close(ompfft3d fft)
 }
 
 /*------------------------------------------------------------*/
-void sf_fft3a3_close(fft3d fft)
+void sf_fft3a3_close(sf_fft3d fft)
 /*< free allocated storage for FFT on axis 3 >*/
 {
     free (fft->trace);
@@ -310,7 +317,7 @@ void sf_ompfft3a3_close(ompfft3d fft)
 /*------------------------------------------------------------*/
 void sf_fft3a1(bool inv           /* inverse/forward flag */, 
 	       kiss_fft_cpx ***pp /* [n1][n2][n3] */,
-	       fft3d fft) 
+	       sf_fft3d fft) 
 /*< apply FFT on axis 1 >*/
 {
     int i1, i2, i3;
@@ -405,7 +412,7 @@ void sf_ompfft3a1(bool inv           /* inverse/forward flag */,
 /*------------------------------------------------------------*/
 void sf_fft3a2(bool inv           /* inverse/forward flag */, 
 	       kiss_fft_cpx ***pp /* [n1][n2][n3] */,
-	       fft3d fft) 
+	       sf_fft3d fft) 
 /*< apply FFT on axis 2 >*/
 {
     int i1, i2, i3;
@@ -516,7 +523,7 @@ void sf_ompfft3a2(bool inv           /* inverse/forward flag */,
 /*------------------------------------------------------------*/
 void sf_fft3a3(bool inv           /* inverse/forward flag */, 
 	       kiss_fft_cpx ***pp /* [n1][n2][n3] */,
-	       fft3d fft) 
+	       sf_fft3d fft) 
 /*< apply FFT on axis 3 >*/
 {
     int i1, i2, i3;
@@ -626,7 +633,7 @@ void sf_ompfft3a3(bool inv           /* inverse/forward flag */,
 
 /*------------------------------------------------------------*/
 void sf_cnt3a1(sf_complex ***pp,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply centering on axis 1 >*/
 {
     int i1,i2,i3;
@@ -647,7 +654,7 @@ void sf_cnt3a1(sf_complex ***pp,
 
 /*------------------------------------------------------------*/
 void sf_cnt3a2(sf_complex ***pp,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply centering on axis 2 >*/
 {
     int i1,i2,i3;
@@ -667,7 +674,7 @@ void sf_cnt3a2(sf_complex ***pp,
 
 /*------------------------------------------------------------*/
 void sf_cnt3a3(sf_complex ***pp,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply centering on axis 3>*/
 {
     int i1,i2,i3;
@@ -810,7 +817,7 @@ void sf_ompsft3_close(ompsft3d sft)
 /*------------------------------------------------------------*/
 void sf_sft3a3(sf_complex ***pp,
 	       sft3d sft,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply shift on axis 3 >*/
 {
     int i1,i2,i3;
@@ -853,7 +860,7 @@ void sf_ompsft3a3(sf_complex ***pp,
 /*------------------------------------------------------------*/
 void sf_sft3a2(sf_complex ***pp,
 	       sft3d sft,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply shift on axis 2 >*/
 {
     int i1,i2,i3;
@@ -896,7 +903,7 @@ void sf_ompsft3a2(sf_complex ***pp,
 /*------------------------------------------------------------*/
 void sf_sft3a1(sf_complex ***pp,
 	       sft3d sft,
-	       fft3d fft)
+	       sf_fft3d fft)
 /*< apply shift on axis 1 >*/
 {
     int i1,i2,i3;

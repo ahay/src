@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "ftutil.h"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -39,7 +37,7 @@ int main(int argc, char* argv[])
     /* cube axes */
     sf_axis a1,a2,a3;
     int     i1,i2,i3;
-    fft3d ft1=NULL,ft2=NULL,ft3=NULL; /* FT structures */
+    sf_fft3d ft1=NULL,ft2=NULL,ft3=NULL; /* FT structures */
     sft3d sf1=NULL,sf2=NULL,sf3=NULL; /* SF structures */
 
     /*------------------------------------------------------------*/
@@ -67,9 +65,9 @@ int main(int argc, char* argv[])
     }
 
     /* init FFT */
-    ft1=fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
-    ft2=fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));    
-    ft3=fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
+    ft1=sf_fft3a1_init(sf_n(a1),sf_n(a2),sf_n(a3));
+    ft2=sf_fft3a2_init(sf_n(a1),sf_n(a2),sf_n(a3));    
+    ft3=sf_fft3a3_init(sf_n(a1),sf_n(a2),sf_n(a3));
 
     /*------------------------------------------------------------*/
     /* allocate arrays */
@@ -87,30 +85,30 @@ int main(int argc, char* argv[])
 	}
     }
     /*------------------------------------------------------------*/
-    if(sf_n(a1)>1) fft3a1(false,(kiss_fft_cpx***) cc,ft1);
-    if(sf_n(a2)>1) fft3a2(false,(kiss_fft_cpx***) cc,ft2);
-    if(sf_n(a3)>1) fft3a3(false,(kiss_fft_cpx***) cc,ft3);
+    if(sf_n(a1)>1) sf_fft3a1(false,(kiss_fft_cpx***) cc,ft1);
+    if(sf_n(a2)>1) sf_fft3a2(false,(kiss_fft_cpx***) cc,ft2);
+    if(sf_n(a3)>1) sf_fft3a3(false,(kiss_fft_cpx***) cc,ft3);
     /*------------------------------------------------------------*/
 
     /* init shift */
-    if(sf_n(a1)>1) sf1=sft3_init(sf_n(a1),-del1,sf_d(a1));
-    if(sf_n(a2)>1) sf2=sft3_init(sf_n(a2),-del2,sf_d(a2));
-    if(sf_n(a3)>1) sf3=sft3_init(sf_n(a3),-del3,sf_d(a3));
+    if(sf_n(a1)>1) sf1=sf_sft3_init(sf_n(a1),-del1,sf_d(a1));
+    if(sf_n(a2)>1) sf2=sf_sft3_init(sf_n(a2),-del2,sf_d(a2));
+    if(sf_n(a3)>1) sf3=sf_sft3_init(sf_n(a3),-del3,sf_d(a3));
 
     /* apply shift */
-    if(sf_n(a1)>1) sft3a1(cc,sf1,ft1);
-    if(sf_n(a2)>1) sft3a2(cc,sf2,ft2);
-    if(sf_n(a3)>1) sft3a3(cc,sf3,ft3);
+    if(sf_n(a1)>1) sf_sft3a1(cc,sf1,ft1);
+    if(sf_n(a2)>1) sf_sft3a2(cc,sf2,ft2);
+    if(sf_n(a3)>1) sf_sft3a3(cc,sf3,ft3);
 
     /* close shift */
-    if(sf_n(a1)>1) sft3_close(sf1);
-    if(sf_n(a2)>1) sft3_close(sf2);
-    if(sf_n(a3)>1) sft3_close(sf3);
+    if(sf_n(a1)>1) sf_sft3_close(sf1);
+    if(sf_n(a2)>1) sf_sft3_close(sf2);
+    if(sf_n(a3)>1) sf_sft3_close(sf3);
 
     /*------------------------------------------------------------*/
-    if(sf_n(a1)>1) fft3a1( true,(kiss_fft_cpx***) cc,ft1);
-    if(sf_n(a2)>1) fft3a2( true,(kiss_fft_cpx***) cc,ft2);
-    if(sf_n(a3)>1) fft3a3( true,(kiss_fft_cpx***) cc,ft3);
+    if(sf_n(a1)>1) sf_fft3a1( true,(kiss_fft_cpx***) cc,ft1);
+    if(sf_n(a2)>1) sf_fft3a2( true,(kiss_fft_cpx***) cc,ft2);
+    if(sf_n(a3)>1) sf_fft3a3( true,(kiss_fft_cpx***) cc,ft3);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -126,9 +124,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
 
     /* close FFT */
-    fft3a1_close(ft1);
-    fft3a2_close(ft2);
-    fft3a3_close(ft3);
+    sf_fft3a1_close(ft1);
+    sf_fft3a2_close(ft2);
+    sf_fft3a3_close(ft3);
 
     exit (0);
 }

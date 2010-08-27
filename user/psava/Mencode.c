@@ -19,11 +19,10 @@
 */
 
 #include <rsf.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-
-#include "ftutil.h"
 
 int main(int argc, char* argv[])
 {
@@ -102,9 +101,9 @@ int main(int argc, char* argv[])
     sf_floatread (dels[0],sf_n(as)*sf_n(ae),Fd); 
 
     /* init FFT */
-    ompfft = ompfft3a1_init(sf_n(at),sf_n(ax),1,ompnth);
+    ompfft = sf_ompfft3a1_init(sf_n(at),sf_n(ax),1,ompnth);
     /* init SFT */
-    ompsft = ompsft3_init(sf_n(at),0.0,sf_d(at),ompnth);
+    ompsft = sf_ompsft3_init(sf_n(at),0.0,sf_d(at),ompnth);
 
     tmp = sf_complexalloc4(sf_n(at),sf_n(ax),1,ompnth);
     bak = sf_complexalloc3(sf_n(at),sf_n(ax),1);
@@ -130,7 +129,7 @@ int main(int argc, char* argv[])
 		bak[0][ix][it] = sf_cmplx(idat[ix][it],0);
 	    }
 	}
-	ompfft3a1(false,(kiss_fft_cpx***) bak,ompfft,0);
+	sf_ompfft3a1(false,(kiss_fft_cpx***) bak,ompfft,0);
 
 #ifdef _OPENMP
 #pragma omp parallel for \
@@ -150,9 +149,9 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    ompsft3_reset(sf_n(at),-dels[ie][is],sf_d(at),ompsft,ompith);  
-	    ompsft3a1(tmp[ompith],ompsft,ompfft,ompith);
-	    ompfft3a1( true,(kiss_fft_cpx***) tmp[ompith],ompfft,ompith);
+	    sf_ompsft3_reset(sf_n(at),-dels[ie][is],sf_d(at),ompsft,ompith);  
+	    sf_ompsft3a1(tmp[ompith],ompsft,ompfft,ompith);
+	    sf_ompfft3a1( true,(kiss_fft_cpx***) tmp[ompith],ompfft,ompith);
 
 	    for     (ix=0;ix<sf_n(ax);ix++){
 		for (it=0;it<sf_n(at);it++){
@@ -167,8 +166,8 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(odat[0][0],sf_n(at)*sf_n(ax)*ne,Fo); 
  
-    ompfft3a1_close(ompfft);
-    ompsft3_close  (ompsft);    
+    sf_ompfft3a1_close(ompfft);
+    sf_ompsft3_close  (ompsft);    
     /*------------------------------------------------------------*/
 
 
