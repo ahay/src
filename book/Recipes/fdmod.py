@@ -611,7 +611,7 @@ def ewefd2(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
-         ewefd2d
+         ewefd2dtti
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
