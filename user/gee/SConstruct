@@ -3,9 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-autocorr burstnoise conflict conv cube decon deburst despike despike2
-despike3 factorn factorm frame frog hconv heat3 helicon hmiss hole
-hshape idempatch invbin invbin1 invrec1 kolmog levint light lint1
+afac autocorr burstnoise conflict conv cube decon deburst despike
+despike2 despike3 factorn factorm frame frog hconv heat3 helicon hmiss
+hole hshape idempatch invbin invbin1 invrec1 kolmog levint light lint1
 lopef losignoi lpef make maskinv misif miss miss1 msmiss mspef
 nhelicon npef parcel pef pefdeburst pfactor2 tspline qdome sigmoid
 signoi splinebank splineplane synmarine syntop tentwt velcon3

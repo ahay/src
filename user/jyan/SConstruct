@@ -21,7 +21,6 @@ stiff3d
 distmap
 density
 convolve2
-afac
 ewefd2dd
 ewefd3dtti
 ederiv2d
