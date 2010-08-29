@@ -79,9 +79,9 @@ rerun = re.compile(r'\bRerun')
 
 begcom = re.compile(r'^[^%]*\\begin\{comment\}')
 endcom = re.compile(r'^[^%]*\\end\{comment\}')
-isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?' \
+isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[\!htbp]+\])?' \
                     '\{([^\}]+)')
-ismplot = re.compile(r'^[^%]*\\multiplot\*?\s*(?:\[[htbp]+\])?' \
+ismplot = re.compile(r'^[^%]*\\multiplot\*?\s*(?:\[[\!htbp]+\])?' \
                      '\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')

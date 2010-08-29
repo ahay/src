@@ -15,7 +15,13 @@ report = (('2006',
            '''
 	   geo2008NumericWEMVAoperators
 	   geo2008InterferometricImagingCondition
- 	   ''')
+           geo2008IsotropicAngleDomainElasticRTM
+ 	   '''),
+          ('2009',
+           '''
+           geo2009TTIModeSeparation
+           geo2009VTIModeSeparation
+ 	   '''),
           )
 
 Papers(papers=report,
