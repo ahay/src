@@ -247,8 +247,10 @@ int main(int argc, char* argv[])
 			/* xprev = dis[ia-1]; */
 			
 			eps = fabs(x - xsrc)/fabs(x - xprev);
-			
-			assert (eps >= 0.f && eps <= 1.f);
+			//d1=(x-xsrc)*(x-xsrc)+(z-zsrc)*(z-zsrc);
+			//d2=(xprev-xsrc)*(xprev-xsrc)+(zprev-zsrc)*(zprev-zsrc);
+
+			//assert (eps + 1e-6f > 0 && eps < 1.f + 1e-6);
 			
 			tr_time_z0[iz][ix][ia] = tprev * eps + t*(1.f-eps);
 
