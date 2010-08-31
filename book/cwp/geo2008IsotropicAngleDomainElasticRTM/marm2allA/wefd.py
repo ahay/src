@@ -28,7 +28,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
-         sfewefd2dd
+         sfewefd2dtti
          ompchunk=%(ompchunk)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
