@@ -202,7 +202,7 @@ def separatorD(zdel,xdel,inp,ccc,stat,domain,tapertype,sigma,order,n,m,par):
     Flow([zdel+'-tmp',xdel+'-tmp'],
          [inp,ccc],
          ''' sfederiv2d
-         ${SOURCES[2]} verb=y stat=%s domain=%s ompnth=8 
+         verb=y stat=%s domain=%s ompnth=8 
          tapertype=%s sig=%f order=%d
          ccc=${SOURCES[1]}         
          zdel=${TARGETS[0]}
@@ -314,7 +314,7 @@ def SepK(up,us,uz,ux,kz,kx,par):
      put d1=%(dz)f d2=%(dx)f o1=%(oz)f o2=%(ox)f 
      '''%par)
     
-    Result(up,'grey color=E screenratio=1')
+#    Result(up,'grey color=E screenratio=1')
     
     
 
@@ -341,7 +341,7 @@ def SepK(up,us,uz,ux,kz,kx,par):
      put d1=%(dz)f d2=%(dx)f  o1=%(oz)f o2=%(ox)f
      '''%par)
     
-    Result(us,'  grey color=E screenratio=1')
+#    Result(us,'  grey color=E screenratio=1')
 
 
 

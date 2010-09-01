@@ -1,5 +1,5 @@
 from rsf.proj import *
-import fdmod,wefd,pcsutil,zomig,spmig,pplot,fdd
+import fdmod,wefd,pcsutil,zomig,spmig,pplot,fdd,stiff
 
 def param():
     
@@ -33,7 +33,7 @@ def param():
     par['nx']=int( (par['xmax'] -par['ox'])/par['dx'] )+1
     par['ny']=int( (par['ymax'] -par['oy'])/par['dy'] )+2
    
-#    print par['nx'],par['ny'],par['nz'],par['dx'],par['dz']
+
 
     fdmod.param(par)
     par['labelattr']=par['labelattr']+'''
@@ -117,11 +117,6 @@ def grabdata(par):
        
 # ------------------------------------------------------------
 def model(vp,vs,rx,epsilon,delta,nu,par):
-#    par['labelattr']=par['labelattr']+'''
-#    pclip=99 
-#    wantscalebar=y bartype=h font=4 barlabelsz=6  barlabelfat=3
-#    allpos=y color=j 
-#    '''
     label=''
     barattr=''' xll=2 yll=1.3 
          wantscalebar=y bartype=h
@@ -231,6 +226,58 @@ def density(ref,den,x,y,z,w,custom1,custom2):
     Flow(ref,den,'sortdensity '+custom2)
 
 
+# ------------------------------------------------------------
+def AnalyInterp2d(suffix,uAz,uAx,cAref,nepdel,nnu,epsilon,delta,nu,par):   
+    
+    listPnu=[]
+    listSnu=[]
+    for j in range(0,nnu):
+        refnu="%01d"%j
+        nux=nu[j]
+        print nux
+        listP=[]
+        listS=[]
+        Flow('nu'+refnu,'','spike n1=1 mag=%f'%nux)
+        for i in range(0,nepdel): 
+            ref="%01d"%i        
+            ep = epsilon[i]
+            de = delta[i]
+            ca = stiff.tti2d_point(3, 1.5, 2.4, ep, de, nux)
+            Flow('cA'+ref+'_nu'+refnu,'',
+                 'spike n3=6 nsp=6 k3=1,2,3,4,5,6 mag=%f,%f,%f,%f,%f,%f n1=1 n2=1 '
+                 %(ca[0],ca[1],ca[2],ca[3],ca[4],ca[5]) )
+
+            fdd.separatorD('dzK'+ref+'_nu'+refnu,'dxK'+ref+'_nu'+refnu,
+                          'spkk',
+                          'cA'+ref+'_nu'+refnu,
+                          'y','k','gauss',0.866 ,8, 25, 25,par)
+
+            listP.append('PP'+ref+'_nu'+refnu)
+            listS.append('SS'+ref+'_nu'+refnu)
+            fdd.SepK('P'+ref+'_nu'+refnu,'S'+ref+'_nu'+refnu,
+                     'uAz','uAx',
+                     'dzK'+ref+'_nu'+refnu+'-tmp','dxK'+ref+'_nu'+refnu+'-tmp',
+                     par)
+            Flow('PP'+ref+'_nu'+refnu,['wtepdel','P'+ref+'_nu'+refnu],'window n3=1 f3=%d |add ${SOURCES[1]} mode=p'%(i) )
+            Flow('SS'+ref+'_nu'+refnu,['wtepdel','S'+ref+'_nu'+refnu],'window n3=1 f3=%d |add ${SOURCES[1]} mode=p'%(i) )
+        Flow('PP_nu'+refnu,listP,'add ${SOURCES[1:%d]}'%nepdel)    
+        Flow('SS_nu'+refnu,listS,'add ${SOURCES[1:%d]}'%nepdel)    
+
+
+        listPnu.append('sepp_nu'+refnu+'_P_wtd')
+        listSnu.append('sepp_nu'+refnu+'_S_wtd')
+
+        Flow('sepp_nu'+refnu+'_P_wtd',['wtnu','PP_nu'+refnu],
+             'window n3=1 f3=%d |add ${SOURCES[1]} mode=p'%(j) )
+        Flow('sepp_nu'+refnu+'_S_wtd',['wtnu','SS_nu'+refnu],
+             'window n3=1 f3=%d |add ${SOURCES[1]} mode=p'%(j) )
+
+    Flow('PP-'+suffix,listPnu,'add ${SOURCES[1:%d]}'%nepdel)    
+    Flow('SS-'+suffix,listSnu,'add ${SOURCES[1:%d]}'%nepdel)    
+
+    
+# ------------------------------------------------------------
+
 def interpSep2d(wtlst,uAz,uAx,cAref,n,par):   
 
     for j in range(n):
@@ -238,10 +285,10 @@ def interpSep2d(wtlst,uAz,uAx,cAref,n,par):
          ref="-%02d"%j     
          Flow('cA'+ref,'cAref','window n1=1 f1=%d squeeze=n'%j)
          Flow('nu'+ref,'nuref','window n1=1 f1=%d'%j)
-         fdd.separatorsub('dzK'+ref,'dxK'+ref,
-                          'spkk',
-                          'cA'+ref,'nu'+ref,
-                          'y','k',25,25,par)
+         fdd.separatorD('dzK'+ref,'dxK'+ref,
+                        'spkk',
+                        'cA'+ref,
+                        'y','k','gauss', 0.866, 8, 25, 25, par)
          fdd.SepK('P'+ref,'S'+ref,
                   uAz,uAx,
                   'dzK'+ref+'-tmp','dxK'+ref+'-tmp',
@@ -249,7 +296,6 @@ def interpSep2d(wtlst,uAz,uAx,cAref,n,par):
 
          
          for wt in wtlst:
-#             print wt
              Flow('PP'+ref+'-'+wt,['wt'+wt,'P'+ref],
                   'window n3=1 f3=%d | add ${SOURCES[1]} mode=p'%j )
              Flow('SS'+ref+'-'+wt,['wt'+wt,'S'+ref],
@@ -263,10 +309,6 @@ def interpSep2d(wtlst,uAz,uAx,cAref,n,par):
         Flow('SS-'+wt,
              map(lambda x: 'SS-%02d-' % x +wt, range(n)),
                  'add ${SOURCES[1:%d]}'%n )
-        #
-#        model.wfom('sepK-'+wt,
-#               'PP-'+wt,'SS-'+wt,
-#               'vp',3.15,'qP','qS',1,'wantscalebar=n pclip=99.9',par)
 
 
 
