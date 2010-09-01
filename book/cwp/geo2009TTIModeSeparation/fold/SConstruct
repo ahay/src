@@ -181,7 +181,7 @@ fdmod.ewavelet('wave','',par)
 stiff.tti2d('cA','vp','vs','ro','epsilon','delta','nu',par)
 Flow( ['dAu','uA'],['wave','cA','ro','ss','rr'],
          '''
-      	 sfewefd2dd 
+      	 sfewefd2dtti
  	   ompchunk=1 ompnth=0 verb=y free=n snap=y 
            jsnap=200 nb=0 ssou=n opot=n  nbell=5  anitype=t
          ccc=${SOURCES[1]}
