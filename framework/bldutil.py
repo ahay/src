@@ -228,6 +228,35 @@ def chk_exists(prog, ext='c', mainprog=True):
 
 ################################################################################
 
+def build_install_c_mpi(env, progs_c, bindir, glob_build, bldroot):
+    'Build and install C programs with MPI'
+    tenv = env.Clone()
+    tenv.Prepend(
+                CPPPATH=[os.path.join(bldroot,'include')],
+                LIBPATH=[os.path.join(bldroot,'lib')],
+                LIBS=[env.get('DYNLIB','')+'rsf'])
+    tenv['CC'] = tenv['MPICC']
+
+    mains_c = Split(progs_c)
+    for prog in mains_c:
+        if not glob_build:
+            chk_exists(prog)
+        sources = ['M' + prog]
+        depends(tenv, sources, 'M'+prog)
+        prog = tenv.Program(prog, map(lambda x: x + '.c',sources))
+        if glob_build:
+            tenv.Install(bindir,prog)
+
+    if glob_build:
+        docs_c = map(lambda prog: env.Doc(prog,'M'+prog),mains_c)
+    else:
+        docs_c = None
+
+    return docs_c
+
+
+################################################################################
+
 def build_install_c(env, progs_c, bindir, glob_build, bldroot):
     'Build and install C programs'
 
@@ -365,7 +394,7 @@ def py_install(src, env, targetdir):
 
 ################################################################################
 
-def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
+def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None, docs_c_mpi=None):
 
     docs = []
     if docs_c != None:
@@ -374,6 +403,8 @@ def install_self_doc(env, libdir, docs_c=None, docs_py=None, docs_f90=None):
         docs += docs_py
     if docs_f90 != None:
         docs += docs_f90
+    if docs_c_mpi != None:
+        docs += docs_c_mpi
 
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
@@ -403,6 +434,7 @@ class UserSconsTargets:
     'Describes and builds targets that can be found in user SConstructs'
     def __init__(self):
         self.c = None # C mains
+        self.c_mpi = None # C with MPI
         self.c_libs = None
         self.f90 = None # F90 mains
         self.py = None # Python mains
@@ -419,6 +451,11 @@ class UserSconsTargets:
             docs_c = None
         else:
             docs_c = build_install_c(env, self.c, bindir, glob_build, bldroot)
+        if self.c_mpi == None:
+            docs_c_mpi = None
+        else:
+            docs_c_mpi = build_install_c_mpi(env,self.c_mpi,bindir,glob_build,bldroot)
+
         api = env.get('API',[])
         if self.f90 == None:
             docs_f90 = None
@@ -432,4 +469,4 @@ class UserSconsTargets:
                 docs_py = install_py_mains(env, self.py, bindir)
             if self.py_modules != None:
                 install_py_modules(env, self.py_modules, pkgdir)
-            install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90)
+            install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90, docs_c_mpi)
