@@ -94,15 +94,15 @@ int main (int argc, char* argv[])
 	coord2 = sf_floatalloc2(2,nt);
 	coord3 = sf_floatalloc2(2,nt);    
 
-	//first velocity... VNMO
+	/* first velocity... VNMO */
 	if (!sf_getint("nv",&nv)) sf_error("Need nv=");     /* number of velocities */
 	if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");     /* velocity origin */
 	if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");     /* velocity sampling */
-	//second velocity... VH
+	/* second velocity... VH */
 	if (!sf_getint("nvh",&nvh)) nvh=nv;     /* number of HOR velocities  */
 	if (!sf_getfloat("vh0",&vh0)) vh0=v0;     /* HOR velocity origin */
 	if (!sf_getfloat("dvh",&dvh)) dvh=dv;     /* HOR velocity sampling */ 
-	//anellipticity
+	/* anellipticity */
 	if (!sf_getint("ne",&ne))   ne = 101;     /* number of etas */
 	if (!sf_getfloat("e0",&e0)) e0 = -0.5;    /* eta origin */
 	if (!sf_getfloat("de",&de)) de=0.01;      /* eta sampling */ 
@@ -283,11 +283,11 @@ int main (int argc, char* argv[])
 				);
 			    
 			    /* compute Vn int = dtau (tau0 Vn2)/ dtau0_dtau*/
-			    //sqrt(abs( (dtau0_dtau*Vn2_eff+tau0*dVn2_dtau)/dtau0_dtau_n) ) 
+			    /* sqrt(abs( (dtau0_dtau*Vn2_eff+tau0*dVn2_dtau)/dtau0_dtau_n) ) */
 			    v1[it] =
 				sqrtf(fabsf( (dtau0_dtau*Vn2_eff+TAU0[it]*dVn2_dtau) / dtau0_dtau ) ) ;
 			    
-			    //tempvec[it] = v1[it];
+			    /* tempvec[it] = v1[it]; */
 			    
 			    
 			    /*A = S_eff*Vn2_eff/(Vn(it,ip)^2);
@@ -298,10 +298,10 @@ int main (int argc, char* argv[])
 			    A = (S_eff*Vn2_eff/v1[it]/v1[it]);
 			    B = TAU0[it]*Vn2_eff/v1[it]/v1[it]/v1[it]/v1[it]/dtau0_dtau;
 			    C =  Vn2_eff*8*deta_dtau+S_eff*dVn2_dtau;
-			    //sf_warning("\nA %f B %f C %f R %f",A,B,C, ((A + B * C )-1)/8 );
+			    /* sf_warning("\nA %f B %f C %f R %f",A,B,C, ((A + B * C )-1)/8 ); */
 			    v3[it] = ((A + B * C )-1)/8 ;
 			    v2[it] = sqrtf(fabsf( v1[it]*v1[it] * (1+2*v3[it]) 	) );
-			    //sf_warning("\nVn %f eta %f",v1[it],v3[it]);
+			    /* sf_warning("\nVn %f eta %f",v1[it],v3[it]); */
 			    break;
 			case 'e': case 'E':
 			    N=(3*t*R[it]*(dt)+t*p*Q[it]*(dt)-3*R[it]*R[it]*(dt*dt)*p);
@@ -325,7 +325,7 @@ int main (int argc, char* argv[])
 					  (TAU0t[it]*TAU0t[it]*p*p*p*Rt[it]*dt*dp*dp*dp )
 					  ) );
                         
-			    //tempvec[it]= v1[it];
+			    /* tempvec[it]= v1[it]; */
 			    
 			    v2[it] =
 				sqrtf(fabsf( 

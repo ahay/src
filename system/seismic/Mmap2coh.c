@@ -1,5 +1,5 @@
 /* From parameter's attribute map (veltran) to coherency-like plots. 
-  (eventually masked) */
+   (eventually masked) */
 /*
   Copyright (C) 2010 Politecnico di Milano
  
@@ -60,22 +60,22 @@ int main (int argc, char* argv[])
     
     
     
-    //parameter sampling
+    /* parameter sampling */
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");       /* number of velocities */
     if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");     /* velocity origin */
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");     /* velocity sampling */
     
-    // slope/offset window
+    /* slope/offset window */
     if (!sf_getfloat("min2",&min2)) min2=o2;     	   /* min2 */
-	if (min2<o2) min2=o2; 
+    if (min2<o2) min2=o2; 
 	
     if (!sf_getfloat("max2",&max2)) max2=o2+d2*(n2-1);     /* max2 */    
     if (max2>o2+d2*(n2-1)) max2=o2+d2*(n2-1);     
 
-    imin2=(int) roundf((min2-o2)/d2);
-    imax2=(int) roundf((max2-o2)/d2);
+    imin2=(int) floorf((min2-o2)/d2);
+    imax2=(int) ceilf((max2-o2)/d2);
     
-	if (min2>max2) sf_error("min2=%g must be less than max2=%f",min2,max2);
+    if (min2>max2) sf_error("min2=%g must be less than max2=%f",min2,max2);
     sf_warning("imin2=%d imax2=%d",imin2,imax2);
     /* adding the second dimension to the ouput files*/
     sf_putint(coh,"n2",nv);
@@ -86,8 +86,8 @@ int main (int argc, char* argv[])
     
     v  = sf_floatalloc(ntv);
     v2 = sf_floatalloc(ntv);
-	ord = sf_floatalloc(nt);	    
-	M = sf_floatalloc(nt);
+    ord = sf_floatalloc(nt);	    
+    M = sf_floatalloc(nt);
 
     coord = sf_floatalloc2(2,nt);
 
@@ -97,16 +97,11 @@ int main (int argc, char* argv[])
     if (!sf_getint("nw",&nw)) nw=4;
     /* interpolator size (2,3,4,6,8) */
     
-    
-    
-    
-    
     for (ix = 0; ix < nx; ix++) { /* CMP loop*/
 	
 	for (iv=0; iv < ntv; iv++) {
 	    v[iv]=0.;
-	    }
-	
+	}
 
 	sf_seek(cmp,   imin2 * nt * sizeof(float),  SEEK_SET);
 	sf_seek(map,   imin2 * nt * sizeof(float),  SEEK_SET);
@@ -119,8 +114,8 @@ int main (int argc, char* argv[])
 	    sf_floatread (M  , nt ,map);	    
 	    for (it=0; it < nt; it++) { /* time tau loop*/
                 t = t0 + it*dt;
-        		coord[it][0] = t;//T0[it];
-				coord[it][1] = M[it];
+		coord[it][0] = t; /* T0[it]; */
+		coord[it][1] = M[it];
 				
             } /* END t loop */
 	    
@@ -130,7 +125,7 @@ int main (int argc, char* argv[])
 	    
         } /* END slope p loop */
         
-	//sf_warning("QUI");
+	/* sf_warning("QUI"); */
 	/* from spline coefficients to model */
 	if (nw > 2) { /* loop spline */
 	    for (iv=0; iv < nv; iv++) {
@@ -143,7 +138,7 @@ int main (int argc, char* argv[])
 	    }
 	} /* END loop spline */
         
-	    sf_floatwrite (v,ntv,coh);
+	sf_floatwrite (v,ntv,coh);
 	    
     } /* END CMP loop */
  

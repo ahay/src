@@ -112,7 +112,7 @@ void fftshift1d(float *x, int n)
 {
     float tmp;
     int i,n2;
-    n2 = n / 2;    // half of vector length
+    n2 = n / 2;    /* half of vector length */
 
     for (i = 0; i < n2; i++)
     {
@@ -133,10 +133,10 @@ void fftshift2d(float **x, int nx, int nz)
    
     float tmp13, tmp24;
 
-    m2 = nx / 2;    // half of row dimension
-    n2 = nz / 2;    // half of column dimension
+    m2 = nx / 2;    /* half of row dimension */
+    n2 = nz / 2;    /* half of column dimension */
 
-// interchange entries in 4 quadrants, 1 <--> 3 and 2 <--> 4
+/* interchange entries in 4 quadrants, 1 <--> 3 and 2 <--> 4 */
 
     for (i = 0; i < m2; i++)
     {
@@ -183,7 +183,13 @@ void wfsep(float **zdel,
 
 
     float tmp;
-    
+
+    extern float **tpvalue;
+    extern char *tapertype; 
+/*    sf_warning("tapertype= %s",tapertype);*/
+    float v[2][2],A[2][2],d[2];
+    extern char *domain;
+       
     nz = sf_n(az);
     nx = sf_n(ax);
 /*    sf_warning("nx=%d nz=%d",nx,nz);*/
@@ -195,10 +201,7 @@ void wfsep(float **zdel,
 	    xdel[jx][jz]=kx;
 	}
     }
-    extern float **tpvalue;
-    extern char *tapertype; 
-/*    sf_warning("tapertype= %s",tapertype);*/
-    float v[2][2],A[2][2],d[2];
+
     for    (jx=0;jx<nx;jx++){ kx = KMAP(jx,nx);
 	for(jz=0;jz<nz;jz++){ kz = KMAP(jz,nz);
 
@@ -242,8 +245,6 @@ void wfsep(float **zdel,
 	    
 	}
     }
-    extern char *domain;
-   
 
     if (domain[0]=='k'){
 	fftshift2d(xdel,nx,nz);

@@ -30,13 +30,13 @@ bool sf_init_fast_sweep (float *t,
                          float shotz, float shoty, float shotx)
 /*< initialize >*/
 {
-    if (NULL == t)
-        return false;
-
     int i, n123;
     int x = (int)((shotx - o3) / d3 + 0.5f);
     int y = (int)((shoty - o2) / d2 + 0.5f);
     int z = (int)((shotz - o1) / d1 + 0.5f);
+
+    if (NULL == t)
+        return false;
 
     if (x < 0 || x >= n3 ||
         y < 0 || y >= n2 ||

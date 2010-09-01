@@ -136,6 +136,9 @@ void wfsepK3(float ***xdel, float ***ydel, float *** zdel,
    
     float tmp,sigma=1.0;
     int   maxn;
+
+    double A[3][3],w[3],Q[3][3];
+
     nx = sf_n(ax);
     ny = sf_n(ay);
     nz = sf_n(az);
@@ -154,7 +157,6 @@ void wfsepK3(float ***xdel, float ***ydel, float *** zdel,
 	}
     }
 
-    double A[3][3],w[3],Q[3][3];
     for(jy=0;jy<ny;jy++){
 	for(jx=0;jx<nx;jx++){
 	    for(jz=0;jz<nz;jz++){
@@ -301,6 +303,9 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
    
     float tmp=0.0,sigma=1.0;
     int   maxn;
+
+    double A[3][3],w[3],Q[3][3];
+
     nx = sf_n(ax);
     ny = sf_n(ay);
     nz = sf_n(az);
@@ -320,11 +325,7 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
 	    }
 	}
     }
-
-
-
     
-    double A[3][3],w[3],Q[3][3];
     for(jy=0;jy<ny;jy++){
 	for(jx=0;jx<nx;jx++){
 	    for(jz=0;jz<nz;jz++){
