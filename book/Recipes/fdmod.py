@@ -372,7 +372,7 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          'math n1=%d d1=%g o1=%g output="%g+%g*cos(x1/180*3.14)"'
          % (sampling,360./sampling,0.,xcenter,radius) )
     Flow(cc+'_z',None,
-         'math n1=%d d1=%g o1=%g output="%g+%g*sin(x1/180*3.14)"'
+         'math n1=%d d1=%g o1=%g output="%g-%g*sin(x1/180*3.14)"'
          % (sampling,360./sampling,0.,zcenter,radius) )
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
@@ -665,11 +665,13 @@ def wom(wom,wfld,velo,vmean,par):
     Flow(chop,wfld,
          '''
          window
-         min1=%(zmin)g max1=%(zmax)g
-         min2=%(xmin)g max2=%(xmax)g |
-         scale axis=123 |
-         clip clip=%(wclip)g
+         min1=%(zmin)g n1=%(nz)d
+         min2=%(xmin)g n2=%(nx)d |
+         scale axis=123
          ''' % par)
+
+#sfgrey gainpanel=a | xtpen
+
 
     Flow(wom,[velo,chop],
          '''

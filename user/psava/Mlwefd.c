@@ -43,7 +43,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,expl; 
-    int  jsnap;
+    int  jsnap,ntsnap;
     int  jdata;
 
     /* I/O files */
@@ -200,8 +200,16 @@ int main(int argc, char* argv[])
 
 	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
 
-	sf_setn(at,nt/jsnap);
-	sf_setd(at,dt*jsnap);
+	ntsnap=0;
+        for(it=0; it<nt; it++) {
+            if(it%jsnap==0) ntsnap++;
+        }
+        sf_setn(at,  ntsnap);
+        sf_setd(at,dt*jsnap);
+        if(verb) sf_raxa(at);
+
+//	sf_setn(at,nt/jsnap);
+//	sf_setd(at,dt*jsnap);
 
 	sf_oaxa(Fwfl,ac1,1);
 	sf_oaxa(Fwfl,ac2,2);
