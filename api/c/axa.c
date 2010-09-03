@@ -43,6 +43,8 @@ sf_axis sf_maxa(int n   /* length */,
     AA->d=d;
     AA->l=NULL;
     AA->u=NULL;
+    sf_setlabel(AA,"");
+    sf_setunit( AA,"");
 
     return AA;
 }
@@ -105,7 +107,7 @@ void sf_oaxa(sf_file FF, const sf_axis AA, int i)
 void sf_raxa(const sf_axis AA) 
 /*< report information on axis AA >*/
 {    
-    sf_warning("n=%4d \t o=%f \t d=%f \t l=\"%s\" \t u=\"%s\"",
+    sf_warning("n=%4d   o=% 8.3f   d=% 8.3f   l=%s \t u=%s",
 	       AA->n,AA->o,AA->d,AA->l,AA->u);
 }
 

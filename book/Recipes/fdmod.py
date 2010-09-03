@@ -289,7 +289,8 @@ def horizontal(cc,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def horizontal3d(cc,coord,par):
@@ -310,7 +311,8 @@ def horizontal3d(cc,coord,par):
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=3 space=n
-         ${SOURCES[0:3]} | transp plane=13 | transp plane=23
+         ${SOURCES[0:3]} | transp plane=13 | transp plane=23 |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def vertical(cc,coord,par):
@@ -320,7 +322,8 @@ def vertical(cc,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def vertical3d(cc,coordx,coordy,par):
@@ -331,7 +334,8 @@ def vertical3d(cc,coordx,coordy,par):
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 
@@ -342,7 +346,8 @@ def point(cc,xcoord,zcoord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 def point3d(cc,xcoord,ycoord,zcoord,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
@@ -353,7 +358,8 @@ def point3d(cc,xcoord,ycoord,zcoord,par):
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0:3]} | transp
+         ${SOURCES[0:3]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
     
 def point3(cc,xcoord,zcoord,magn,par):
@@ -377,7 +383,8 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def dipping(cc,intercept,slope,par):
@@ -387,7 +394,8 @@ def dipping(cc,intercept,slope,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
@@ -402,7 +410,8 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 
@@ -420,7 +429,8 @@ def hline(cc,sx,ex,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def vline(cc,sz,ez,coord,par):
@@ -434,7 +444,8 @@ def vline(cc,sz,ez,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
 def box(cc,sx,ex,sz,ez,par):
@@ -445,7 +456,8 @@ def box(cc,sx,ex,sz,ez,par):
     vline(cc+'v1',sz,ez,sx,par)
     vline(cc+'v2',sz,ez,ex,par)
 
-    Flow(cc,[cc+'h1',cc+'h2',cc+'v1',cc+'v2'],'cat ${SOURCES[1:4]} space=n axis=2')
+    Flow(cc,[cc+'h1',cc+'h2',cc+'v1',cc+'v2'],
+	'cat ${SOURCES[1:4]} space=n axis=2 | put label1="" unit1="" label2="" unit2=""')
 
 # ------------------------------------------------------------
 

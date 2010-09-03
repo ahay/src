@@ -137,8 +137,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* axes */
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
-    az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
+
     ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
+    az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
 
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
@@ -165,8 +166,8 @@ int main(int argc, char* argv[])
 
     fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
 
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -188,8 +189,12 @@ int main(int argc, char* argv[])
 	dqz=sf_d(az);
 	dqx=sf_d(ax);
 
-	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
-	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
+	acz = sf_maxa(nqz,oqz,dqz);
+	acx = sf_maxa(nqx,oqx,dqx);
+/*	if(verb) {*/
+/*	    sf_raxa(acz);*/
+/*	    sf_raxa(acx);*/
+/*	}*/
 	/* check if the imaging window fits in the wavefield domain */
 
 	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));

@@ -182,9 +182,9 @@ void vc3dread1(sf_file F,
 
     sf_floatread(w[0],3*n1,F);
     for( i1=0; i1<n1; i1++) {
-        ;        v[i1].dx = w[i1][0];
-        ;        v[i1].dy = w[i1][1];
-        ;        v[i1].dz = w[i1][2];
+        v[i1].dx = w[i1][0];
+        v[i1].dy = w[i1][1];
+        v[i1].dz = w[i1][2];
     }
 
     free(*w); free(w);
