@@ -6,6 +6,7 @@ from rsf.proj import *
  # uses the trigonometric convention (counter-clockwise angle variation)
  ##
 
+# ------------------------------------------------------------
 def p2c(pol,car,cco):
 
     # radius
@@ -36,11 +37,13 @@ def p2c(pol,car,cco):
  # TODO: write c2p(cart,polar,cco)
  ##
 
+# ------------------------------------------------------------
 def ovl(ovl,jc,jr,custom,cco):
 
     min=cco['o']
     max=cco['o']+(cco['n']-1)*cco['d']
 
+    # circles
     for ic in range(jc,(cco['n']-1)/2+jc,jc):
         ctag='%02d'%ic
 
@@ -65,16 +68,17 @@ def ovl(ovl,jc,jr,custom,cco):
              %s
              ''' %(min,max,min,max,
                    custom))
-    
+
+    # radii
     for ir in range(0,360,jr):
         rtag='%03d'%ir
 
         Flow(ovl+'_rx'+rtag,None,
              'math n1=%d d1=%g o1=%g output="x1*cos(3.1415*%g/180)"'
-             % (cco['n'],cco['d'],cco['o'],ir) )
+             % ( (cco['n']-1)/2-jc,cco['d'],jc*cco['d'],ir) )
         Flow(ovl+'_rz'+rtag,None,
              'math n1=%d d1=%g o1=%g output="x1*sin(3.1415*%g/180)"'
-             % (cco['n'],cco['d'],cco['o'],ir) )
+             % ( (cco['n']-1)/2-jc,cco['d'],jc*cco['d'],ir) )
         Flow(ovl+rtag,[ovl+'_rx'+rtag,ovl+'_rz'+rtag],
              '''
              cat axis=2 space=n
