@@ -114,6 +114,21 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
 
 #    byte gainpanel=a pclip=100 %s |
 
+# ------------------------------------------------------------
+def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
+
+    dx = (nhx-1)*dhx
+    dy = (nhy-1)*dhy
+    dt =((nht-1)*dht)*v
+
+    par['hratio']=(dt+dy)/(dx+dy);
+    par['hpoint1']=dt/(dt+dy);
+    par['hpoint2']=dx/(dx+dy);
+    
+    if(par['hratio']>=1):
+        par['hheight']=10
+    else:
+        par['hheight']=12*par['hratio']
 
 # ------------------------------------------------------------
 def xparam(nhx,ohx,dhx,nz,oz,dz,par):
@@ -178,6 +193,27 @@ def egrey(custom,par):
             par['ut'],
             par['eratio'],par['eheight'],
             par['epoint1'],par['epoint2'],
+            par['labelattr']+' '+custom )
+
+# ------------------------------------------------------------
+# tau-lx-ly
+def hgrey(custom,par):
+    return '''
+    grey3 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
+    frame1=%d frame2=%d frame3=%d framelabel=n
+    label1="\F10 t\F3      " unit1=%s
+    label2="\F10 l\F3 \_x\^" unit2=%s
+    label3="\F10 l\F3 \_y\^" unit3=%s
+    screenratio=%g screenht=%g
+    point1=%g point2=%g
+    xll=2 yll=1 
+    %s
+    ''' % ( par['nht'], par['nhx'], par['nhy'],
+            par['ut'],
+            par['ux'],
+            par['uy'],
+            par['hratio'],par['hheight'],
+            par['hpoint1'],par['hpoint2'],
             par['labelattr']+' '+custom )
 
 # ------------------------------------------------------------
