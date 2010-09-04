@@ -44,7 +44,7 @@ def ovl(ovl,jc,jr,custom,cco):
     max=cco['o']+(cco['n']-1)*cco['d']
 
     # circles
-    for ic in range(jc,(cco['n']-1)/2+jc,jc):
+    for ic in range(jc,int((cco['n']-1)/2*cco['d']+jc),jc):
         ctag='%02d'%ic
 
         Flow(ovl+'_cx'+ctag,None,
@@ -72,13 +72,13 @@ def ovl(ovl,jc,jr,custom,cco):
     # radii
     for ir in range(0,360,jr):
         rtag='%03d'%ir
-
+        
         Flow(ovl+'_rx'+rtag,None,
              'math n1=%d d1=%g o1=%g output="x1*cos(3.1415*%g/180)"'
-             % ( (cco['n']-1)/2-jc,cco['d'],jc*cco['d'],ir) )
+             % ( (cco['n']-1)/2+1-jc/cco['d'],cco['d'],jc,ir) )
         Flow(ovl+'_rz'+rtag,None,
              'math n1=%d d1=%g o1=%g output="x1*sin(3.1415*%g/180)"'
-             % ( (cco['n']-1)/2-jc,cco['d'],jc*cco['d'],ir) )
+             % ( (cco['n']-1)/2+1-jc/cco['d'],cco['d'],jc,ir) )
         Flow(ovl+rtag,[ovl+'_rx'+rtag,ovl+'_rz'+rtag],
              '''
              cat axis=2 space=n
@@ -102,6 +102,23 @@ def ovl(ovl,jc,jr,custom,cco):
                    custom))
         
     Plot(ovl,
-         map(lambda x: ovl+'%02d' % x,range(jc,(cco['n']-1)/2+jc,jc))+
+         map(lambda x: ovl+'%02d' % x,range(jc,int((cco['n']-1)/2*cco['d']+jc),jc))+
          map(lambda x: ovl+'%03d' % x,range(0,360,jr)),
          'Overlay')
+
+# ------------------------------------------------------------
+def polplot(custom,par):
+    return '''
+    grey title="" pclip=99.9 allpos=n
+    screenratio=0.25 screenht=3.5
+    label1="\F10 q\F3" unit1="\^o\_"
+    label2="\F10 f\F3" unit2="\^o\_"
+    %s
+    ''' % (par['labelrot0']+custom)
+
+def carplot(custom,par):
+    return '''
+    grey title="" pclip=99.9 allpos=n
+    screenratio=1 wantaxis=n
+    %s
+    ''' %(par['labelrot0']+custom)

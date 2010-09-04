@@ -115,9 +115,16 @@ def cgrey(custom,par):
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
            par['labelattr']+custom)
+def ccut3d(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g %s
+    ''' % (par['zmin'],par['zmax'],
+           par['xmin'],par['xmax'],
+           par['ymin'],par['ymax'],
+	   custom)
+
 def cgrey3d(custom,par):
     return '''
-    window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |
     byte gainpanel=a pclip=100 %s |
     grey3 title="" framelabel=n
     label1=%s unit1=%s
@@ -127,9 +134,7 @@ def cgrey3d(custom,par):
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
     xll=2 yll=2
     %s
-    ''' % (par['zmin'],par['zmax'],
-           par['xmin'],par['xmax'],
-           par['ymin'],par['ymax'],
+    ''' % (
            custom,
            par['lz'],par['uz'],
            par['lx'],par['ux'],
