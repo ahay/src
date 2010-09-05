@@ -125,7 +125,6 @@ def ccut3d(custom,par):
 
 def cgrey3d(custom,par):
     return '''
-    byte gainpanel=a pclip=100 %s |
     grey3 title="" framelabel=n
     label1=%s unit1=%s
     label2=%s unit2=%s
@@ -135,7 +134,6 @@ def cgrey3d(custom,par):
     xll=2 yll=2
     %s
     ''' % (
-           custom,
            par['lz'],par['uz'],
            par['lx'],par['ux'],
            par['ly'],par['uy'],
