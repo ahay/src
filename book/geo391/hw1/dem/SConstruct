@@ -1,24 +1,20 @@
 from rsf.proj import *
 
 # Download data
-Fetch('bay.h','bay')
-
-# Window and taper
-Flow('bay','bay.h',
-     '''
-     dd form=native |
-     window f2=500 n2=1600 f1=50 n1=1050 |
-     reverse which=1 |
-     costaper nw1=50 nw2=50
-     ''')
+Fetch('austin-w.HH','bay')
 
 # Convert to byte form
-Flow('byte','bay','byte pclip=99.9 allpos=y')
+Flow('byte','austin-w.HH',
+     '''
+     dd form=native |
+     byte pclip=100 allpos=y
+     ''')
 
 # Display
-Result('bay','byte',
+Result('byte',
        '''
-       grey crowd=0.85 title="Elevation of San Francisco Bay"
+       grey yreverse=n screenratio=1 
+       title="Digital Elevation Map" 
        ''')
 
 # Histogram

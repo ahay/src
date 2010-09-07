@@ -5,9 +5,12 @@
 \begin{abstract}
   This homework has three parts. 
   \begin{enumerate}
-  \item Theoretical questions and computations related to digital representation of numbers.
-  \item Analyzing digital elevation data from the San Francisco Bay Area. You will applying histogram equalization to enhance the image.
-  \item Analyzing seismic reflection data. You will applying an amplitude gain correction to enhance the image.
+  \item Theoretical questions and computations related to the performance of 
+  sorting algorithms.
+  \item Analyzing digital elevation data from the Austin area. You will apply 
+  histogram equalization to enhance the image.
+  \item Analyzing seismic reflection data. You will apply an amplitude gain 
+  correction to enhance the image.
   \end{enumerate}
 \end{abstract}
 
@@ -16,9 +19,9 @@
 Completing the computational part of this homework assignment requires
 \begin{itemize}
 \item \texttt{Madagascar} software environment available from \\
-\url{http://rsf.sourceforge.net}
+\url{http://www.ahay.org/}
 \item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
-\url{http://segtex.sourceforge.net}
+\url{http://www.ahay.org/wiki/SEGTeX}
 \end{itemize}
 To do the assignment on your personal computer, you need to install
 the required environments. Please ask for help if you don't know where
@@ -27,75 +30,100 @@ to start.
 The homework code is available from the \texttt{Madagascar} repository
 by running
 \begin{verbatim}
-svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo391
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo391/hw1
 \end{verbatim}
-
-\newpage
-
-\section{Digital representation of numbers}
 
 You can either write your answers on paper or edit them in the file
 \verb#hw1/paper.tex#. Please show all the mathematical
 derivations that you perform.
 
-\begin{enumerate}
+\newpage
 
-\item UT's ``burnt orange'' color\footnote{``The distinctive burnt
-    orange color employed by The University of Texas at Austin plays a
-    major role in establishing our identity. Legend has it that the
-    burnt orange color was chosen by football coach Darrell Royal, who
-    thought that it would help his players conceal the football when
-    they ran the triple option. This specific shade of orange, known
-    as \emph{Texas Orange} or \emph{Burnt Orange} was made official on
-    June 17,1967, when Chancellor Harry Ransom made a recommendation
-    to the Board of Regents.''
-    \url{http://www.utexas.edu/visualguidelines/vg_colors.html}} is
-    expressed by code \texttt{CC5500}, where each pair of symbols
-    (\texttt{CC}, \texttt{55}, and \texttt{00}) refers to a
-    hexadecimal (base 16) representation of the red, green, and blue
-    components. Convert these numbers to a decimal (base 10)
-    representation.
+\section{Sorting algorithms}
+\inputdir{sort}  
 
-\item The C program listed below, when compiled and run from the
-    command line, takes a string from the user and prints out the
-    string characters. Modify the program to output ASCII integer
-    codes for each character in the string. What is the ASCII code for
-    the special new line character ``\verb+\n+''?
+\begin{itemize}
+\item The cost of the \texttt{quantile} algorithm as 
+a function of the data size $N$ can be estimated using 
+the recursive relationship
+\begin{equation}
+\label{eq:cost}
+P(N)=P(N/2)+C\,N\;,
+\end{equation}
+where $C$ is a constant. The recursion starts with $P(1)=0$. Derive an
+explicit non-recursive formula for $P(N)$.
+\item The rest of the homework involves computational assignments. 
+      The first assignment involves sorting algorithms.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{string.c}
+\lstinputlisting[frame=single]{sort/sort.c}
 
-\item Write a program that prints out ``little'' if the computer is
-  little-endian and ``big'' if the computer is big-endian. Test it on
-  your computer.
+\newpage
 
-\item In the IEEE double-precision floating-point standard, 64 bits
-  (binary digits) are used to represent a real number: 1 bit for the
-  sign, 11 bits for the exponent, and 52 bits for the mantissa. A
-  double-precision normalized non-zero number $x$ can be written in
-  this standard as 
-  \[
-  x = \pm (1.d_1d_2{\cdots}d_{52})_2 \times 2^{n-1023}\,
-  \]
-  with $1 \le n \le 2046$, and $0 \le d_k \le 1$ for
-  $k=1,2,\ldots,52$. What is the largest number that can be expressed
-  in this system?
-
-\end{enumerate}
-
-\section{Histogram equalization}
-\inputdir{bay}
-
-\plot{bay}{width=\textwidth}{Digital elevation map of the San Francisco
-  Bay Area.}
-
-Figure~\ref{fig:bay} shows a digital elevation map of the San
-Francisco Bay Area. Start by reproducing this figure on your screen.
-\begin{enumerate}
-\item Change directory to \verb#geo391/hw1/bay#
+\begin{enumerate}          
+\item Change directory to \verb#geo391/hw1/sort#
 \item Run
 \begin{verbatim}
-scons bay.view
+scons movie.vpl
+\end{verbatim}
+and observe a movie illustrating the slow data sorting algorithm. The
+algorithm is implemented in the \texttt{slow\_sort} function in the
+file \texttt{sort.c}.
+
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to compute the cost of slow sorting experimentally. The output is
+shown in Figure~\ref{fig:cost}.
+
+\plot{cost}{width=\textwidth}{Experimental cost of slow sorting. 
+The logarithm of the cost is shown against the logarithm of the data size.}
+
+If we approximate the cost as $P(N)=N^\epsilon$, what is the value of
+$\epsilon$ observed in the picture?
+
+\item Open the file \texttt{sort.c} in a text editor and edit it to 
+fix the specified line in the \texttt{quick\_sort} function.
+
+\item Open the file \texttt{SConstruct} in a text editor and uncomment 
+      the specified line.
+
+\item Rerun
+\begin{verbatim}
+scons movie.vpl
+\end{verbatim}
+to observe a change in the sorting movie. Debug your changes to the
+program if necessary.
+
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to observe the change in the algorithm cost. What is the new
+experimental value of $\epsilon$?
+
+\item \textbf{EXTRA CREDIT} for improving the speed of the 
+\texttt{quick\_sort} algorithm even further.
+\end{enumerate}
+\end{itemize}   
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{sort/SConstruct}
+
+\section{Histogram equalization}
+\inputdir{dem}
+
+\sideplot{byte}{width=\textwidth}{Digital elevation map of the 
+west Austin area.}
+
+Figure~\ref{fig:byte} shows a digital elevation map of the west Austin
+area. Start by reproducing this figure on your screen.
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw1/dem#
+\item Run
+\begin{verbatim}
+scons byte.view
 \end{verbatim}
 \item Examine the file \texttt{byte.rsf} which refers to the 
 byte (unsigned character) numbers which get displayed on the screen.
@@ -108,15 +136,16 @@ sfin byte.rsf
 to check the data size and format.
 \item Run
 \begin{verbatim}
-sfattr < byte,rsf
+sfattr < byte.rsf
 \end{verbatim}
-to check data attributes. What is the maximum and minimum value? What is the mean value?
-For an explanation of different attributes, run \texttt{sfattr} without input.
+to check data attributes. What is the maximum and minimum value? What
+is the mean value? For an explanation of different attributes,
+run \texttt{sfattr} without input.
 \end{enumerate}
 \end{enumerate}
 
 Each image has a certain distribution of values (a histogram). The
-histogram for the San Francisco elevation map is shown in
+histogram for the west Austin elevation map is shown in
 Figure~\ref{fig:hist}. Notice the digitization artifacts. When
 different values in a histogram are not uniformly distributed, the
 image can have low contrast. One way of improving the contrast is
@@ -148,27 +177,37 @@ F(f) = f_0 + C\,\int\limits_{f_0}^f h(\phi)\,d\phi\;,
 \end{equation}
 where $f_0$ is the minimum value of $f$.
 
-The algorithm of histogram equalization consists of the following three steps:
+The algorithm of histogram equalization consists of the following
+three steps:
 \begin{enumerate}
 \item Taking an input image $f(x,y)$, compute its histogram $h(f)$.
-\item Compute the cumulative histogram $F(f)$ according to equation~(\ref{eq:int}). Choose an appropriate $C$ so that the range of $F$ is the same as the range of $f$.
+\item Compute the cumulative histogram $F(f)$ according to 
+equation~(\ref{eq:int}). Choose an appropriate $C$ so that the range
+of $F$ is the same as the range of $f$.
 \item Map every pixel $f(x,y)$ to the corresponding $F(x,y)$.
 \end{enumerate}
 
 Your task is:
 \begin{enumerate}
-\item Among the \texttt{Madagascar} programs, find a program that implements histogram equalization. Hint: you may find the \texttt{sfdoc} utility useful.
-\item Edit the \texttt{SConstruct} file to add histogram equalization. Create a new figure and compare it with Figure~\ref{fig:bay}. 
-\item Check the effect of equalization by recomputing the histogram in Figure~\ref{fig:hist} with equalized data. Run
+\item Among the \texttt{Madagascar} programs, find a program that 
+implements histogram equalization. \textbf{Hint:} you may find
+the \texttt{sfdoc} utility useful.
+\item Edit the \texttt{SConstruct} file to add histogram equalization. 
+Create a new figure and compare it with Figure~\ref{fig:byte}.
+\item Check the effect of equalization by recomputing the histogram 
+in Figure~\ref{fig:hist} with equalized data. Run
 \begin{verbatim}
 scons hist.view
 \end{verbatim}
 to display the figure on your screen.`
-\item \textbf{EXTRA CREDIT} for implementing the histogram equalization algorithm independently.
+\item \textbf{EXTRA CREDIT} for implementing the histogram
+equalization algorithm independently.
 \end{enumerate}	
 
+\newpage
+
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{bay/SConstruct}
+\lstinputlisting[frame=single]{dem/SConstruct}
 
 \section{Time-power amplitude-gain correction}
 \inputdir{tpow}
@@ -219,14 +258,26 @@ scons tpow.view
 \lstinputlisting[frame=single]{tpow/objective.c}
 
 \item Suggest an algorithm for finding an optimal value of $\alpha$ by
-  minimizing or maximizing the objective function.
-\item \textbf{EXTRA CREDIT} for implementing the algorithm for an automatic 
-estimation of $\alpha$ and testing it on the shot gather from Figure~\ref{fig:tpow}.
+  minimizing or maximizing the objective function. Your algorithm
+  should be able to find the optimal value without scanning all
+  possible values. \textbf{Hint:} if the objective function is
+  $f(\alpha)=F[S_\alpha(x,t)]$ and 
+\begin{equation}
+\label{alpha}                      
+f(\alpha) \approx f(\alpha_0) + 
+  f'(\alpha_0)\,(\alpha-\alpha_0) + \frac{f''(\alpha_0)}{2}\,(\alpha-\alpha_0)^2
+\end{equation}
+then what is the optimal $\alpha$?
+\item \textbf{EXTRA CREDIT} for implementing your algorithm for an automatic 
+estimation of $\alpha$ and testing it on the shot gather from
+Figure~\ref{fig:tpow}.
 
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{tpow/SConstruct}
+
+\newpage
 
 \section{Completing the assignment}
 
@@ -245,4 +296,3 @@ scons pdf
 \item Submit your result (file \texttt{paper.pdf}) on paper or by
 e-mail.
 \end{enumerate}
-
