@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     if (SF_FLOAT != sf_gettype(in))
 	sf_error("Need float input");
+    na = sf_filesize(in); /* data size */
 
     /* cost file */
     cost = sf_output("out");
@@ -98,7 +99,6 @@ int main(int argc, char* argv[])
 	type = "quick"; /* sort type */
 
     /* get data */
-    na = sf_filesize(in);
     arr = sf_floatalloc(na);
     sf_floatread(arr,na,in);
  
