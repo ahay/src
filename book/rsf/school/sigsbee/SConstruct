@@ -15,7 +15,7 @@ fdmod.param(par)       # plotting parameters
 fdmod.boxarray('ss',10,2,0.5,24,8,0.5,par)
 
 # plot sources
-Plot('ss',fdmod.ssplot('plotfat=10 symbol=. wantscalebar=y',par))
+Plot('ss',fdmod.ssplot('plotfat=10 symbol=. wantscalebar=n',par))
 
 # ------------------------------------------------------------
 par['jr']=10  # receiver jump (grid points)
@@ -24,14 +24,11 @@ par['fr']=100 # receivers origin (grid points)
 
 # receiver coordinates
 fdmod.horizontal('tt',par['oz']+par['dz'],par)
-#Flow('rr',
-#     'tt',
-#     'window n2=%(nr)d j2=%(jr)d f2=%(fr)d'%par)
 
 fdmod.vertical('rr',par['ox']+par['nx']/2*par['dx'],par)
 
 # plot receivers
-Plot('rr',fdmod.rrplot('plotfat=10 wantscalebar=y',par)) 
+Plot('rr',fdmod.rrplot('plotfat=10 wantscalebar=n',par)) 
 
 # ------------------------------------------------------------
 # get velocity
@@ -41,7 +38,7 @@ Flow(  'velo',
        'smooth rect1=10 rect2=10 repeat=1')
 
 # plot velocity
-Plot(  'velo',fdmod.cgrey('allpos=y bias=1.43 wantscalebar=y',par))
+Plot(  'velo',fdmod.cgrey('allpos=y bias=1.43 wantscalebar=n',par))
 Result('velo',['velo','ss','rr'],'Overlay')
 
 # density
@@ -72,7 +69,7 @@ Plot('wfld',fdmod.wgrey('pclip=99',par),view=1)
 for i in range(7):
     tag = '-%02d' %(i)
     fdmod.wframe('wfld'+tag,
-                 'wfld',i,'pclip=99 wantscalebar=y',par)
+                 'wfld',i,'pclip=99 wantscalebar=n',par)
     Result( 'wfld'+tag,
            ['wfld'+tag,'ss','rr'],'Overlay')
 
@@ -85,8 +82,6 @@ Flow('data','temp',
      ''' %par)
 
 # plot data
-#Result('data','window j2=4 | transp |'
-#       + fdmod.dgrey('',par))
 Result('data','window j2=4 |'
        + fdmod.egrey('',par))
 
