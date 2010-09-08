@@ -97,5 +97,6 @@ Plot(  'imag','bandpass flo=2 |'
        + fdmod.cgrey('pclip=99.99',par))
 Result('imag',['imag','rr'],'Overlay')
 
+
 # ------------------------------------------------------------
 End()
