@@ -60,7 +60,7 @@ illumination compensation arising from the so-called Beylkin determinant \cite[]
 
 \section{ANGLE-DOMAIN COMMON-IMAGE GATHERS}
 
-ADCIGs can be produced both by Kirchhoff methods \cite[]{Xu,Brandsberg} and wave-equation methods \cite[]{Prucha,Mosher,Xie2002,Sava2003,Biondi2004}. In wave-equation migration methods, angle gathers can be produced either in the data space during imaging or in the image space after imaging \cite[]{Fomel2004}. These methods can be also applied in source-receiver migration \cite[]{Sava2003}, shot-profile migration \cite{Rickett}, and reverse-time migration \cite[]{Biondi2002,Zhang2007}.
+ADCIGs can be produced both by Kirchhoff methods \cite[]{Xu,Brandsberg} and wave-equation methods \cite[]{Prucha0,Mosher,Xie2002,Sava2003,Biondi2004}. In wave-equation migration methods, angle gathers can be produced either in the data space during imaging or in the image space after imaging \cite[]{Fomel2004}. These methods can be also applied in source-receiver migration \cite[]{Sava2003}, shot-profile migration \cite{Rickett}, and reverse-time migration \cite[]{Biondi2002,Zhang2007}.
 
 To extract ADCIGs, in wave equation migration we first compute subsurface offset-domain common-image gathers (ODCIGs) using crosscorrelation imaging condition in space and time, followed by extraction at zero time \cite{Sava2006}:
 \begin{equation}
@@ -144,6 +144,11 @@ The second example involves the Sigsbee2A model \cite[]{Paffenholz}. This datase
 
 \plot{angs}{width=0.9\textwidth}{ADCIGs of the Sigsbee2A Model.}
 
+\multiplot{2}{ang1,simil1}{width=0.45\textwidth}{$0\,^{\circ}$ angle image and (a) its local similarity (b) of the Sigsbee2A model.} 
+\multiplot{2}{ang2,simil2}{width=0.45\textwidth}{$20\,^{\circ}$ angle image and (a) its local similarity (b) of the Sigsbee2A model.} 
+\plot{sigstack}{width=0.9\textwidth}{The image of Sigsbee2A using initial equal-weight stacking.}
+\plot{sigsimistack}{width=0.9\textwidth}{The image of Sigsbee2A using stacking with normalization by local similarity.}
+
 \section{Conclusions}
 
 We have presented a method for stacking angle-domain common-image gathers for illumination normalization in which we use a local similarity cube between initial image and ADCIGs as the approximate fold of local illumination for each image point of the media. Normalization by local fold can restore migration amplitude and attenuate artifacts possibly caused by irregular acquisition geometry or by wave propagation in complex media. Our method is easy to implement and can be seen as a postprocessing step after migration. Two synthetic examples show that this method can be used to enhance migrated images and to restore migration amplitudes.
@@ -151,11 +156,6 @@ We have presented a method for stacking angle-domain common-image gathers for il
 \section{Acknowledgments}
 
 The first author would like to thank Long Jin for inspiring discussions and the China Scholarship Council (grant 2007U44003) for partial support of this work. We would like to thank Paul Sava for help with wave-equation migration code. 
-
-\multiplot{2}{ang1,simil1}{width=0.45\textwidth}{$0\,^{\circ}$ angle image and (a) its local similarity (b) of the Sigsbee2A model.} 
-\multiplot{2}{ang2,simil2}{width=0.45\textwidth}{$20\,^{\circ}$ angle image and (a) its local similarity (b) of the Sigsbee2A model.} 
-\plot{sigstack}{width=0.9\textwidth}{The image of Sigsbee2A using initial equal-weight stacking.}
-\plot{sigsimistack}{width=0.9\textwidth}{The image of Sigsbee2A using stacking with normalization by local similarity.}
 
 \bibliographystyle{seg}
 \bibliography{paper}
