@@ -42,8 +42,8 @@ Result('spiral','dd type=float | grey color=j bias=500 transp=n yreverse=n color
 
 # ------------------------------------------------------------
 for k in range(0,61,2):
-    Flow('man'+str(k/2),None,'mandelbrot n1=1000 n2=1250 niter=%d' %k)
-    Plot('man'+str(k/2),'dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=%d' %k)
+    Flow('man'+str(k//2),None,'mandelbrot n1=1000 n2=1250 niter=%d' %k)
+    Plot('man'+str(k//2),'dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=%d' %k)
 
 allman = map(lambda x: 'man%d.vpl' % x,range(31))
 Plot('manit',allman,'Movie',view=1)
