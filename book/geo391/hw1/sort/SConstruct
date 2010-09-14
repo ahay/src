@@ -36,7 +36,7 @@ Flow('cost',costs,
     
 Result('cost',
        '''
-       math output="log(input+0.01)" |
+       math output="log(input+0.01)/log(2)" |
        graph title=Cost min2=0
        label1="log(N/100)" label2="log(CPU Cycles)" 
        ''')
