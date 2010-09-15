@@ -53,21 +53,28 @@ def slowness(slow,velo,par):
 
 # WR: forward in time
 def fWRwem(data,wfld,slow,par):
-    Flow(wfld,[data,slow],
-         '''
-         wex causal=y %s slo=${SOURCES[1]} |
-         window |
-         transp
-         ''' % param(par))
+#    Flow(wfld,[data,slow],
+#         '''
+#         wex causal=y %s slo=${SOURCES[1]} |
+#         window |
+#         transp
+#         ''' % param(par))
+    Flow(wfld+'_tmp',[data,slow],
+         'wex causal=y %s slo=${SOURCES[1]}' % param(par))
+    Flow(wfld,wfld+'_tmp','window | transp')
 
 # WR: backward in time
 def bWRwem(data,wfld,slow,par):
-    Flow(wfld,[data,slow],
-         '''
-         wex causal=n %s slo=${SOURCES[1]} |
-         window |
-         transp
-         ''' % param(par))
+#    Flow(wfld,[data,slow],
+#         '''
+#         wex causal=n %s slo=${SOURCES[1]} |
+#         window |
+#         transp
+#         ''' % param(par))
+    Flow(wfld+'_tmp',[data,slow],
+         'wex causal=n %s slo=${SOURCES[1]}' % param(par))
+    Flow(wfld,wfld+'_tmp','window | transp')
+
 
 def wemWR(data,wfld,slow,causal,par):
     Flow(wfld,[data,slow],
