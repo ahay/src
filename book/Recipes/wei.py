@@ -68,7 +68,7 @@ def slowness(slow,velo,par):
 def wfl(wfld,data,slow,custom,par):
     Flow(wfld,[data,slow],
          '''
-         wex verb=y irun=wfl causal=n
+         wei verb=y irun=wfl causal=n
          slo=${SOURCES[1]}
          %s
          ''' % (param(par)+custom))
@@ -78,7 +78,7 @@ def wfl(wfld,data,slow,custom,par):
 def dtm(ddat,data,slow,custom,par):
     Flow(ddat,[data,slow],
          '''
-         wex verb=y irun=dtm causal=n
+         wei verb=y irun=dtm causal=n
          slo=${SOURCES[1]}
          %s
          ''' % (param(par)+custom))
@@ -88,7 +88,7 @@ def dtm(ddat,data,slow,custom,par):
 def cicmig(icic,sdat,rdat,slow,custom,par):
     Flow(icic,[sdat,rdat,slow],
          '''
-         wex verb=y irun=cic
+         wei verb=y irun=cic
          dat=${SOURCES[1]}
          slo=${SOURCES[2]}
          %s
@@ -99,7 +99,7 @@ def cicmig(icic,sdat,rdat,slow,custom,par):
 def eicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
     Flow([icic,ieic],[sdat,rdat,slow,ccoo],
          '''
-         wex verb=y irun=eic
+         wei verb=y irun=eic
          dat=${SOURCES[1]}
          slo=${SOURCES[2]}
          coo=${SOURCES[3]}
@@ -112,7 +112,7 @@ def eicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
 def hicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
     Flow([icic,ieic],[sdat,rdat,slow,ccoo],
          '''
-         wex verb=y irun=hic
+         wei verb=y irun=hic
          dat=${SOURCES[1]}
          slo=${SOURCES[2]}
          coo=${SOURCES[3]}

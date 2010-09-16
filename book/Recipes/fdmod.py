@@ -687,9 +687,6 @@ def wom(wom,wfld,velo,vmean,par):
          scale axis=123
          ''' % par)
 
-#sfgrey gainpanel=a | xtpen
-
-
     Flow(wom,[velo,chop],
          '''
          add add=-%g |
