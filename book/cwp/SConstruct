@@ -32,8 +32,10 @@ Papers(papers=report,
                 'geo2007StereographicImagingCondition':'Paul Sava',
                 'geo2008NumericWEMVAoperators':'Paul Sava and Ioan Vlad',
                 'geo2008InterferometricImagingCondition':'Paul Sava and Oleg Poliannikov',
-                'geo2008IsotropicAngleDomainElasticRTM': 'Jia Yan and Paul Sava'},
-       line='Example Report, November 2008',
+                'geo2008IsotropicAngleDomainElasticRTM': 'Jia Yan and Paul Sava',
+                'geo2009TTIModeSeparation': 'Jia Yan and Paul Sava',
+                'geo2009VTIModeSeparation': 'Jia Yan and Paul Sava'},
+       line='Example Report, September 2010',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))
 
