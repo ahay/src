@@ -87,7 +87,7 @@ for i in range(3):
     epsilon=[0,0.25,0.25]
     delta=[0,-0.29,-0.29]
     nu=[0,0,30]
-    taglist=['_ISO','_VTI','_TTI']
+    taglist=['-ISO','-VTI','-TTI']
     tag=taglist[i]
     par['c']=cos(nu[i]*pi/180.)
     par['s']=sin(nu[i]*pi/180.)
@@ -107,7 +107,7 @@ for i in range(3):
     fdd.separatorD('dzK'+tag,'dxK'+tag,'spk','cA'+tag,'y','k','gaussian',1.0,8,25,25,par)
 
     #  operators in the k domain rotated to symmetry axis and isotropy planes        
-    Flow('dzK_rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
+    Flow('dzK-rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
          '''
          add scale=%(c)f,-%(s)f ${SOURCES[1]}|
          put label1=%(lkz)s label2=%(lkx)s
@@ -115,7 +115,7 @@ for i in range(3):
              o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
      '''%par)
     
-    Flow('dxK_rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
+    Flow('dxK-rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
          '''
          add scale=%(s)f,%(c)f ${SOURCES[1]}|
          put label1=%(lkz)s label2=%(lkx)s
@@ -126,28 +126,28 @@ for i in range(3):
     
     #  plot the unrotated and rotated
     pot.cliptogetherK( 'dK'+tag,'dzK'+tag+'-tmp','dxK'+tag+'-tmp','"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
-    pot.cliptogetherK( 'dK_rot'+tag,'dzK_rot'+tag,'dxK_rot'+tag,'"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    pot.cliptogetherK( 'dK-rot'+tag,'dzK-rot'+tag,'dxK-rot'+tag,'"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
     
 #  X domain
 
     fdd.separatorD('dzX'+tag,'dxX'+tag,'spk','cA'+tag,'y','x','gaussian',1.0,8,25,25,par)
-    Flow('dzX_rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
+    Flow('dzX-rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
          '''add scale=%(c)f,-%(s)f ${SOURCES[1]}
      '''%par)
-    Flow('dxX_rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
+    Flow('dxX-rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
          '''
      add scale=%(s)f,%(c)f ${SOURCES[1]}
         '''%par)
     
 
     pot.cliptogetherX( 'dX'+tag, 'dzX'+tag+'-tmp','dxX'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)                     
-    pot.cliptogetherX( 'dX_rot'+tag,'dzX_rot'+tag,      'dxX_rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+    pot.cliptogetherX( 'dX-rot'+tag,'dzX-rot'+tag,      'dxX-rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
                                        
 # ------------------------------------------------------------
 # operators with Gaussian filter different sigma
     for sigindex in range(3):
         sig=0.75+sigindex*0.25
-        sigtag='_sig%01d'%sigindex
+        sigtag='-sig%01d'%sigindex
         print sigtag
         fdd.separatorD('dzK'+sigtag+tag,'dxK'+sigtag+tag,'spk','cA'+tag,'y','k','gaussian',sig,8,25,25,par)
         fdd.separatorD('dzX'+sigtag+tag,'dxX'+sigtag+tag,'spk','cA'+tag,'y','x','gaussian',sig,8,25,25,par)
@@ -162,15 +162,15 @@ for i in range(3):
 ##############################################################
 #   do not apply any taper
 #   k domain
-    fdd.separatorD('dzK_notaper'+tag,'dxK_notaper'+tag,'spk','cA'+tag,'y','k','notaper',1.0,8,25,25,par)
-    Flow('dzK_notaper_rot'+tag,['dzK_notaper'+tag+'-tmp','dxK_notaper'+tag+'-tmp'],
+    fdd.separatorD('dzK-notaper'+tag,'dxK-notaper'+tag,'spk','cA'+tag,'y','k','notaper',1.0,8,25,25,par)
+    Flow('dzK-notaper-rot'+tag,['dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp'],
          '''add scale=%(c)f,-%(s)f ${SOURCES[1]}|
      put  label1=%(lkz)s label2=%(lkx)s
          unit1=%(ukz)s unit2=%(lkx)s
          o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
      '''%par)
 
-    Flow('dxK_notaper_rot'+tag,['dzK_notaper'+tag+'-tmp','dxK_notaper'+tag+'-tmp'],
+    Flow('dxK-notaper-rot'+tag,['dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp'],
          '''
      add scale=%(s)f,%(c)f ${SOURCES[1]}|
      put label1=%(lkz)s label2=%(lkx)s
@@ -180,20 +180,20 @@ for i in range(3):
     
 
 
-    pot.cliptogetherK( 'dK_notaper'+tag, 'dzK_notaper'+tag+'-tmp','dxK_notaper'+tag+'-tmp','"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
-    pot.cliptogetherK( 'dK_notaper_rot'+tag,'dzK_notaper_rot'+tag,      'dxK_notaper_rot'+tag,      '"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    pot.cliptogetherK( 'dK-notaper'+tag, 'dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp','"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    pot.cliptogetherK( 'dK-notaper-rot'+tag,'dzK-notaper-rot'+tag,      'dxK-notaper-rot'+tag,      '"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
                     
 # X domain
-    fdd.separatorD('dzX_notaper'+tag,'dxX_notaper'+tag,'spk','cA'+tag,'y','x','notaper',1.0,8,25,25,par)
-    Flow('dzX_notaper_rot'+tag,['dzX_notaper'+tag+'-tmp','dxX_notaper'+tag+'-tmp'],
+    fdd.separatorD('dzX-notaper'+tag,'dxX-notaper'+tag,'spk','cA'+tag,'y','x','notaper',1.0,8,25,25,par)
+    Flow('dzX-notaper-rot'+tag,['dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp'],
          '''add scale=%(c)f,-%(s)f ${SOURCES[1]}
      '''%par)
-    Flow('dxX_notaper_rot'+tag,['dzX_notaper'+tag+'-tmp','dxX_notaper'+tag+'-tmp'],
+    Flow('dxX-notaper-rot'+tag,['dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp'],
          '''
      add scale=%(s)f,%(c)f ${SOURCES[1]}
         '''%par)
-    pot.cliptogetherX( 'dX_notaper'+tag, 'dzX_notaper'+tag+'-tmp','dxX_notaper'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
-    pot.cliptogetherX( 'dX_notaper_rot'+tag,'dzX_notaper_rot'+tag,      'dxX_notaper_rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+    pot.cliptogetherX( 'dX-notaper'+tag, 'dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+    pot.cliptogetherX( 'dX-notaper-rot'+tag,'dzX-notaper-rot'+tag,      'dxX-notaper-rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
 
 
 
