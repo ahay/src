@@ -84,7 +84,7 @@ Flow('wave','ver hor',
 wefd.ewavelet('wave','',par)
 
 # ------------------------------------------------------------
-shots = range(par['nx']/2-400,par['nx']/2+420,20)
+shots = range(par['nx']/2-400,par['nx']/2+420,40)
 #shots = range(par['nx']/2,par['nx']/2+20,20)
 #print shots
 # ------------------------------------------------------------
