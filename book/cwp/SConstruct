@@ -39,5 +39,5 @@ Papers(papers=report,
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))
 
-End(use='ulem,color,setspace,amssymb,lineno,mathrsfs',options='twocolumn')
+End(use='ulem,color,setspace,amsmath,amssymb,lineno,mathrsfs,hyperref',options='twocolumn')
 
