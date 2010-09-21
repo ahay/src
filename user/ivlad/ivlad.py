@@ -325,6 +325,20 @@ def chk_dir_wx(dir_nm):
 
 ################################################################################
 
+def chk_file_r(filename):
+    'Checks if a file exists, is a regular file and is readable'
+
+    if not os.path.exists(filename):
+        raise m8rex.WrongPath(filename)
+
+    if not os.path.isfile(filename):
+        raise m8rex.NotAValidFile(filename)
+
+    if not os.access(filename, os.R_OK):
+        raise m8rex.NoReadPermissions(filename)
+
+################################################################################
+
 def isvalid(f,chk4nan=False):
     'Determines whether f is a valid RSF file'
     # Also returns msg with invalidity reason, or says if first x bytes are zero

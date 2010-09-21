@@ -107,3 +107,6 @@ class TypeHandlingNotImplemented(Error):
     def __init__(self, typenm):
         self.msg = 'Handling for type %s not implemented yet' % typenm
 
+class WrongPath(Error):
+    def __init__(self, path):
+        self.msg = path + ' does not exist'
