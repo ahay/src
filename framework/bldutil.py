@@ -446,7 +446,7 @@ class UserSconsTargets:
             env = env.Clone()
         else:
             SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
-#            bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
+            bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
         if self.c == None:
             docs_c = None
         else:
