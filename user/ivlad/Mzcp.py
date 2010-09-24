@@ -30,8 +30,8 @@ except: # Use distributed version
 
 def main(par):
 
-    f1 = argv[1] + ' '
-    f2 = argv[2]
+    f1 = sys.argv[1] + ' '
+    f2 = sys.argv[2]
 
     f1_type = ivlad.getout('sfgettype', stdin=f1)
     if f1_type != 'SF_FLOAT':
