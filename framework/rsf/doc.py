@@ -903,6 +903,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         elif lang == 'f90':
             type = ''
             parname = par[0]
+            default = par[2]
             default = re.sub('.true.','y',re.sub('.false.','n',par[2]))
             range = par[3]
             desc = par[4]
@@ -920,9 +921,10 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             desc = par[5]
 
         if type == 'bool':
-            if default == 'true' or default == 'True':
+            bool_default = default.lower().strip()
+            if bool_default == 'true':
                 default = 'y'
-            elif default == 'false' or default == 'False':
+            elif bool_default == 'false':
                 default = 'n'
 
         prog.par(parname,rsfpar(type,default,range,desc))
