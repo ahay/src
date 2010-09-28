@@ -279,7 +279,7 @@ def thesis_intro(target=None,source=None,env=None):
             print "Found %s" % tex
             intro.write('\\input{%s}\n' % pref)
     if univ == 'UT':
-        pass
+        intro.write('\\copyrightpage\n\\commcertpage\n\\titlepage\n')
     else:
         intro.write('\\afterpreface\n')
     intro.close()
