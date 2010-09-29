@@ -111,7 +111,7 @@ void fft2(float *inp      /* [n1*n2] */,
 
 
 void ifft2(float *out     /* [n1*n2] */, 
-	  sf_complex *inp /* [nk*n2] */)
+	   sf_complex *inp /* [nk*n2] */)
 /*< 2-D inverse FFT >*/
 {
     int i1, i2;
@@ -128,7 +128,7 @@ void ifft2(float *out     /* [n1*n2] */,
 	    kiss_fft_stride(icfg1,tmp[i2],ctrace1,1);
 	    for (i1=0; i1 < n1; i1++) {
 		if (i1%2) ctrace1[i1] = sf_cneg(ctrace1[i1]);
-		out[i2*n1+i1] = trace1[i1];
+		out[i2*n1+i1] = crealf(trace1[i1]);
 	    }
 	} else {
 	    kiss_fftri(icfg,tmp[i2],out+i2*n1);
