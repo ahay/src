@@ -15,6 +15,7 @@
 //   along with this program; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <time.h>
+#include <assert.h>
 
 #include <rsf.hh>
 
@@ -27,7 +28,7 @@ static std::valarray<float>  vx, vz, q, t;
 static std::valarray<double> kx, kz;
 static float dt;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -38,8 +39,9 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	float wx = vx[i]*vx[i];
 	float wz = vz[i]*vz[i];
 	float qq = q[i];
-	double c = cos(t[i]);
-	double s = sin(t[i]);
+	float tt = t[i];
+	double c = cos(tt);
+	double s = sin(tt);
 	
 	for(int b=0; b<nc; b++) {
 	    double x0 = kx[cs[b]];
@@ -49,7 +51,8 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    z = wz*z*z;
 	    x = wx*x*x;
 	    double r = x+z;
-	    r = sqrt(0.5*r+0.5*sqrt(r*r-qq*x*z));
+	    r = r+sqrt(r*r-qq*x*z);
+	    r = sqrt(0.5*r);
 	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
@@ -95,6 +98,11 @@ int main(int argc, char** argv)
     for (int im=0; im < m; im++) {
 	q[im] = -8*q[im]/(1.0+2*q[im]);
     }
+
+    /* fram degrees to radians */
+    for (int im=0; im < m; im++) {
+	t[im] *= SF_PI/180.;
+    }
     
     iRSF fft("fft");
 
@@ -118,6 +126,7 @@ int main(int argc, char** argv)
 	for (int iz=0; iz < nkz; iz++) {
 	    kx[i] = 2*SF_PI*(kx0+ix*dkx);
 	    kz[i] = 2*SF_PI*(kz0+iz*dkz);
+	    i++;
 	}
     }
 

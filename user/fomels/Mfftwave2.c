@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb;        
+    bool verb, cmplx;        
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, nm,nk, nzx, nz2, nx2, nzx2, n2;
     float c, old;
@@ -54,7 +54,9 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
     
-    nk = fft2_init(nz,nx,&nz2,&nx2);
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false;
+
+    nk = fft2_init(cmplx,nz,nx,&nz2,&nx2);
 
     nzx = nz*nx;
     nzx2 = nz2*nx2;

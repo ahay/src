@@ -18,24 +18,38 @@
 */
 #include <rsf.h>
 
+static bool cmplx;
 static int n1, n2, nk;
 static float wt;
 static kiss_fftr_cfg cfg, icfg;
-static kiss_fft_cfg cfg2, icfg2;
-static kiss_fft_cpx **tmp, *ctrace;
-static sf_complex *trace;
+static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
+static kiss_fft_cpx **tmp, *ctrace1, *ctrace2;
+static sf_complex *trace1, *trace2;
 
-int fft2_init(int nx,   int ny   /* input data size */, 
+int fft2_init(bool cmplx1        /* if complex transform */,
+	      int nx,   int ny   /* input data size */, 
 	      int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
 {
     int i2;
 
-    nk = kiss_fft_next_fast_size((nx+1)/2)+1;
-    n1 = 2*(nk-1);
+    cmplx = cmplx1;
 
-    cfg  = kiss_fftr_alloc(n1,0,NULL,NULL);
-    icfg = kiss_fftr_alloc(n1,1,NULL,NULL);
+    if (cmplx) {
+	nk = n1 = kiss_fft_next_fast_size(nx);
+	
+	cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
+	icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
+
+	trace1 = sf_complexalloc(n1);
+	ctrace1 = (kiss_fft_cpx *) trace1;
+    } else {
+	nk = kiss_fft_next_fast_size((nx+1)/2)+1;
+	n1 = 2*(nk-1);
+
+	cfg  = kiss_fftr_alloc(n1,0,NULL,NULL);
+	icfg = kiss_fftr_alloc(n1,1,NULL,NULL);
+    }
 
     *nx2 = n1;
 
@@ -52,8 +66,8 @@ int fft2_init(int nx,   int ny   /* input data size */,
 	tmp[i2] = tmp[0]+i2*nk;
     }
 
-    trace = sf_complexalloc(n2);
-    ctrace = (kiss_fft_cpx *) trace;
+    trace2 = sf_complexalloc(n2);
+    ctrace2 = (kiss_fft_cpx *) trace2;
 
     wt =  1.0/(n2*n1);
 
@@ -67,7 +81,15 @@ void fft2(float *inp      /* [n1*n2] */,
     int i1, i2;
 
     for (i2=0; i2 < n2; i2++) {
-	kiss_fftr (cfg,inp+i2*n1,tmp[i2]);
+	if (cmplx) {
+	    for (i1=0; i1 < n1; i1++) {
+		trace1[i1] = sf_cmplx(inp[i2*n1+i1],0.);
+		if (i1%2) ctrace1[i1] = sf_cneg(ctrace1[i1]);
+	    }
+	    kiss_fft_stride(cfg1,ctrace1,tmp[i2],1);
+	} else {
+	    kiss_fftr (cfg,inp+i2*n1,tmp[i2]);
+	}
     }
 
     /* FFT centering */
@@ -78,11 +100,11 @@ void fft2(float *inp      /* [n1*n2] */,
     }
 
     for (i1=0; i1 < nk; i1++) {
-	kiss_fft_stride(cfg2,tmp[0]+i1,ctrace,nk);
+	kiss_fft_stride(cfg2,tmp[0]+i1,ctrace2,nk);
 		
 	/* Transpose */
 	for (i2=0; i2<n2; i2++) {
-	    out[i2*nk+i1] = trace[i2];
+	    out[i2*nk+i1] = trace2[i2];
 	}
     }
 }
@@ -95,13 +117,21 @@ void ifft2(float *out     /* [n1*n2] */,
     int i1, i2;
 
     for (i1=0; i1 < nk; i1++) {
-	kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace,nk);
+	kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace2,nk);
 		
 	for (i2=0; i2<n2; i2++) {
-	    tmp[i2][i1] = sf_crmul(ctrace[i2],i2%2? -wt: wt);
+	    tmp[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wt: wt);
 	}
     }
     for (i2=0; i2 < n2; i2++) {
-	kiss_fftri(icfg,tmp[i2],out+i2*n1);
+	if (cmplx) {
+	    kiss_fft_stride(icfg1,tmp[i2],ctrace1,1);
+	    for (i1=0; i1 < n1; i1++) {
+		if (i1%2) ctrace1[i1] = sf_cneg(ctrace1[i1]);
+		out[i2*n1+i1] = trace1[i1];
+	    }
+	} else {
+	    kiss_fftri(icfg,tmp[i2],out+i2*n1);
+	}
     }
 }

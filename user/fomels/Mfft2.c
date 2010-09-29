@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {   
-    bool inv;
+    bool inv, cmplx;
     int nz,nx,nz2,nx2,nk,ix,n2;
     float *f;
     sf_complex *c; 
@@ -56,7 +56,9 @@ int main(int argc, char* argv[])
 	if (!sf_histint(space,"n2",&nx)) sf_error("No n2= in input");
     }
 
-    nk = fft2_init(nz,nx,&nz2,&nx2);
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false;
+
+    nk = fft2_init(cmplx,nz,nx,&nz2,&nx2);
 
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
