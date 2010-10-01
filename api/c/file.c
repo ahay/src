@@ -229,7 +229,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 sf_file sf_output (/*@null@*/ const char* tag)
 /*< Create an output file structure.
 ---
-Should do output after sf_input. >*/
+Should do output after the first call to sf_input. >*/
 {
     sf_file file;
     char *headname, *dataname, *path, *name, *format;

@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     /* from eta to q */
     for (int im=0; im < m; im++) {
-	q[im] = -8*q[im]/(1.0+2*q[im]);
+	q[im] = 8*q[im]/(1.0+2*q[im]);
     }
 
     /* fram degrees to radians */
