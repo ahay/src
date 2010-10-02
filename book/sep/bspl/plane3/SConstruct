@@ -27,7 +27,7 @@ for nw in (2,4):
          '''
          grey wantaxis=n wheretitle=b titlesz=9 crowd=.88
          title="Spline waves B-%d (%s)"
-         ''' % (nw-1,titles[nw/2-1]))
+         ''' % (nw-1,titles[nw//2-1]))
 
 Result('sthree','three2 three4','SideBySideAniso')
 
