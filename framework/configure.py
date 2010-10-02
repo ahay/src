@@ -561,6 +561,7 @@ def tiff(context):
     #include <tiffio.h>
     int main(int argc,char* argv[]) {
     TIFF *tiffout;
+    tiffout = TIFFOpen("test.tif","wb");
     return 0;
     }\n'''
     tiff = context.env.get('TIFF','tiff')
