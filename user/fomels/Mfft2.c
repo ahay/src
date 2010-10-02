@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {   
     bool inv, cmplx;
-    int nz,nx,nz2,nx2,nk,ix,n2;
+    int nz,nx,nz2,nx2,nk,ix,n2,pad1;
     float *f;
     sf_complex *c; 
     sf_file space, freq;
@@ -56,9 +56,10 @@ int main(int argc, char* argv[])
 	if (!sf_histint(space,"n2",&nx)) sf_error("No n2= in input");
     }
 
-    if (!sf_getbool("cmplx",&cmplx)) cmplx=false;
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
-    nk = fft2_init(cmplx,nz,nx,&nz2,&nx2);
+    nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
 
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);

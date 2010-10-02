@@ -27,6 +27,7 @@ static kiss_fft_cpx **tmp, *ctrace1, *ctrace2;
 static sf_complex *trace1, *trace2;
 
 int fft2_init(bool cmplx1        /* if complex transform */,
+	      int pad1           /* padding on the first axis */,
 	      int nx,   int ny   /* input data size */, 
 	      int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
@@ -36,7 +37,7 @@ int fft2_init(bool cmplx1        /* if complex transform */,
     cmplx = cmplx1;
 
     if (cmplx) {
-	nk = n1 = kiss_fft_next_fast_size(nx);
+	nk = n1 = kiss_fft_next_fast_size(nx*pad1);
 	
 	cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
 	icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
@@ -44,7 +45,7 @@ int fft2_init(bool cmplx1        /* if complex transform */,
 	trace1 = sf_complexalloc(n1);
 	ctrace1 = (kiss_fft_cpx *) trace1;
     } else {
-	nk = kiss_fft_next_fast_size((nx+1)/2)+1;
+	nk = kiss_fft_next_fast_size(pad1*(nx+1)/2)+1;
 	n1 = 2*(nk-1);
 
 	cfg  = kiss_fftr_alloc(n1,0,NULL,NULL);
