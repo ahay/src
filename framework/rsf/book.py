@@ -273,14 +273,28 @@ def thesis_intro(target=None,source=None,env=None):
     else:
         intro.write('\\beforepreface\n')
         intro.write('\\newpage \\ \n')
-    for pref in prefs:
-        tex = pref+'.tex'
-        if os.path.isfile(tex): # input if file exists
-            print "Found %s" % tex
-            intro.write('\\input{%s}\n' % pref)
+
     if univ == 'UT':
         intro.write('\\copyrightpage\n\\commcertpage\n\\titlepage\n')
+        dedication=env.get('dedication')
+        if dedication:
+            intro.write(dedication.join(['\\begin{dedication}\n',
+                                         '\n\\end{dedication}\n']))
+        if os.path.isfile('ack.tex'):
+            print "Found ack.tex"
+            intro.write('\\input{ack}\n'.join(['\\begin{acknowledgments}\n',
+                                               '\\end{acknowledgments}\n']))
+        if os.path.isfile('abs.tex'):
+            print "Found abs.tex"
+            intro.write('\\utabstract\n\\indent\n\\input{abs}\n')
+
+        intro.write('\\tableofcontents\n\\listoftables\n\\listoffigures\n')   
     else:
+        for pref in prefs:
+            tex = pref+'.tex'
+            if os.path.isfile(tex): # input if file exists
+                print "Found %s" % tex
+                intro.write('\\input{%s}\n' % pref)
         intro.write('\\afterpreface\n')
     intro.close()
     return 0
@@ -366,6 +380,9 @@ def report_all(target=None,source=None,env=None):
              '\\addcontentsline{toc}{chapter}{Index}\n',
              '\\index{index}\n',
              '\\printindex\n'])
+    if os.path.isfile('vita.tex'):
+        print "Found vita.tex"
+        all.write('\\begin{vita}\n\\input{./vita}\n\\end{vita}\n')
     all.close()
     return 0
 
@@ -478,7 +495,8 @@ class RSFReport(Environment):
         rsf.tex.Paper('tpg',lclass='stanford-thesis',scons=0)
         # make introductory materials
         kw.update({'action':Action(thesis_intro),
-                   'varlist':['supervisor','committee','univ','degrees']})
+                   'varlist':['supervisor','committee',
+                              'univ','degrees','dedication']})
         apply(self.Command,('intro.tex',None),kw)
         rsf.tex.Paper('intro',lclass='stanford-thesis',scons=0)
         for pref in prefs:

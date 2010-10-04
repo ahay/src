@@ -146,7 +146,7 @@ def convert(vpl,out,format,pen,args):
             print command
             fail = os.system(command)
         else:
-            fail = true
+            fail = True
 
         os.unlink(eps)
 
