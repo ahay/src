@@ -125,6 +125,17 @@ def add(out, files=None, scale=None, add=None, sqrt=None, abs=None, log=None,
 
 ################################################################################
 
+def attr(inp=None, out=None, lval=None, want=None, verb=False, exe=None):
+
+    if exe == None and out==None: # invalid combination, fix the call
+        exe = 'g'
+
+    return __run('sfattr', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
+
+################################################################################
+
 def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None, 
     phase=None, verb=False, exe=None):
     
@@ -155,8 +166,7 @@ def clip(inp=None, out=None, clip=None, verb=False, exe=None):
 ################################################################################
 
 def cp(inp, out, verb=False, exe=None):
-    #if exe == None:
-        #exe = glob_exe
+        
     return __run('sfcp', inp + ' ' + out, 
         None, None, 
         verb, __x(exe,glob_exe))
