@@ -151,8 +151,14 @@ class RSFheader(File):
 
     def __init__(self, path, intent, par=None):
         File.__init__(self, path, intent)
-        if intent == 'out':
-            self.cli_par = par._Par__args
+        # For reproducibility, it would be nice to know the command-line
+        # arguments, and this works with rsf.apibak, but I need to know
+        # how to make it work with rsf.api as well.
+        # if intent == 'out':
+            # self.cli_par = par._Par__args
+        # To write the CLI args to header, have
+        # self.write_dict(self.cli_par, 'From CLI')
+        # in RSFheader.open()
 
     def write_1st_line(self):
         'Writes first line of a program record in the history file'
@@ -219,7 +225,7 @@ class RSFheader(File):
     def open(self):
         self.open_new()
         self.write_1st_line()
-        self.write_dict(self.cli_par, 'From CLI')
+        # self.write_dict(self.cli_par, 'From CLI')
         self.add2hist('in',self.dat)
 
 ################################################################################
