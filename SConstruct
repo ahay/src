@@ -5,6 +5,7 @@ sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
 env = Environment()
+#env['PATH']=os.environ.get('PATH')
 
 if os.path.isfile('config.py'):
     import config

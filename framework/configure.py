@@ -270,7 +270,7 @@ def ar(context):
         need_pkg('ar')
 
 pkg['libs'] = {'fedora':'glibc-headers',
-               'cygwin':'sunrpc (Setup...Libs)'}
+               'cygwin':'sunrpc (Setup...Net)'}
 
 # Failing this check stops the installation.
 def libs(context):
@@ -286,7 +286,7 @@ def libs(context):
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
     elif plat['OS'] == 'cygwin':
-        LIBS.append('rpc')
+        LIBS.append('tirpc')
     elif plat['OS'] == 'darwin':
         LIBS.append('mx')
     elif plat['OS'] == 'interix':
