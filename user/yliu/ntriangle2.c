@@ -81,7 +81,7 @@ void ntriangle2_lop (bool adj, bool add, int nx, int ny, float *x, float *y)
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < n1/n0; j++) {
-	    sf_smooth (tr[i2],j*n0,1,false,false,tmp+i2*n1);
+	    sf_smooth2 (tr[i2],j*n0,1,false,false,tmp+i2*n1);
 	}
     }
 
