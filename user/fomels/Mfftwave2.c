@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     bool verb, cmplx;        
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nt,nz,nx, nm,nk, nzx, nz2, nx2, nzx2, n2, pad1;
+    int nt,nz,nx, m1, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
     float c, old;
 
     float  *ww,*rr;      /* I/O arrays*/
@@ -67,22 +67,22 @@ int main(int argc, char* argv[])
     right = sf_input("right");
     mid = sf_input("mid");
 
-    if (!sf_histint(mid,"n1",&nm)) sf_error("No n1= in mid");
-    if (!sf_histint(mid,"n2",&n2) || n2 != nm) sf_error("Need n2=%d in mid",n2);
+    if (!sf_histint(mid,"n1",&m1)) sf_error("No n1= in mid");
+    if (!sf_histint(mid,"n2",&m2)) sf_error("No n2= in mid");
 
     if (!sf_histint(left,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
-    if (!sf_histint(left,"n2",&n2) || n2 != nm) sf_error("Need n2=%d in left",nm);
+    if (!sf_histint(left,"n2",&n2) || n2 != m1)  sf_error("Need n2=%d in left",m1);
     
-    if (!sf_histint(right,"n1",&n2) || n2 != nm) sf_error("Need n1=%d in right",nm);
+    if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
     if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
  
-    lt = sf_floatalloc2(nzx,nm);
-    mm = sf_floatalloc2(nm,nm);
-    rt = sf_floatalloc2(nm,nk);
+    lt = sf_floatalloc2(nzx,m1);
+    mm = sf_floatalloc2(m1,m2);
+    rt = sf_floatalloc2(m2,nk);
 
-    sf_floatread(lt[0],nzx*nm,left);
-    sf_floatread(rt[0],nm*nk,right);
-    sf_floatread(mm[0],nm*nm,mid);
+    sf_floatread(lt[0],nzx*m1,left);
+    sf_floatread(mm[0],m1*m2,mid);
+    sf_floatread(rt[0],m2*nk,right);
 
     /* read wavelet & reflectivity */
     ww=sf_floatalloc(nt);  sf_floatread(ww,nt ,Fw);
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
-    wave = sf_floatalloc2(nzx2,nm);
+    wave = sf_floatalloc2(nzx2,m2);
 
     for (iz=0; iz < nzx; iz++) {
 	prev[iz]=0.;
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	/* matrix multiplication */
 	fft2(curr,cwave);
 
-	for (im = 0; im < nm; im++) {
+	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
 		cwavem[ik] = cwave[ik]*rt[ik][im];
@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
 		c += c + ww[it] * rr[i] - prev[i];
 		prev[i] = old;
 
-		for (im = 0; im < nm; im++) {
-		    for (ik = 0; ik < nm; ik++) {
+		for (im = 0; im < m2; im++) {
+		    for (ik = 0; ik < m1; ik++) {
 			c += lt[ik][i]*mm[im][ik]*wave[im][j];
 		    }
 		}

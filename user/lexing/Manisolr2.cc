@@ -46,8 +46,10 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	for(int b=0; b<nc; b++) {
 	    double x0 = kx[cs[b]];
 	    double z0 = kz[cs[b]];
+	    // rotation of coordinates
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
+
 	    z = wz*z*z;
 	    x = wx*x*x;
 	    double r = x+z;

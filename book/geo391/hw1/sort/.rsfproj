@@ -1,3 +1,3 @@
 uses=['sfspike', 'sfnoise', 'sfwindow', 'sfgraph', 'sfcat', 'sfput', 'sfmath']
 data=[]
-size=    1862688
+size=    1638496
