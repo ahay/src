@@ -66,7 +66,7 @@ void sf_triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) {
 		for (ir=0; ir < nr; ir++) {
-		    sf_smooth (tr1, i2*n1, 1, false, false, tmp);
+		    sf_smooth2 (tr1, i2*n1, 1, false, false, tmp);
 		}
 	    }
 	}
@@ -74,7 +74,7 @@ void sf_triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) {
 		for (ir=0; ir < nr; ir++) {
-		    sf_smooth (tr2, i1, n1, false, false, tmp);
+		    sf_smooth2 (tr2, i1, n1, false, false, tmp);
 		}
 	    }
 	}
@@ -90,7 +90,7 @@ void sf_triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) { 
 		for (ir=0; ir < nr; ir++) {
-		    sf_smooth (tr2, i1, n1, false, false, tmp);
+		    sf_smooth2 (tr2, i1, n1, false, false, tmp);
 		}
 	    }
 	}
@@ -98,7 +98,7 @@ void sf_triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) { 
 		for (ir=0; ir < nr; ir++) {
-		    sf_smooth (tr1, i2*n1, 1, false, false, tmp);
+		    sf_smooth2 (tr1, i2*n1, 1, false, false, tmp);
 		}
 	    }
 	}
