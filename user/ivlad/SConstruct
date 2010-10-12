@@ -17,7 +17,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-quantile leftsize filedims fileflush create gettype
+quantile leftsize filedims fileflush create gettype lmo
 '''
 
 # F90 mains
