@@ -1,25 +1,25 @@
 from rsf.proj import *
 
 # Download data
-Fetch('bay.h','bay')
+Fetch('austin-w.HH','bay')
 
-# Window and taper
-Flow('bay','bay.h',
+# Convert format, remove mean, and taper
+Flow('dem','austin-w.HH',
      '''
      dd form=native |
-     window f2=500 n2=1600 f1=50 n1=1050 |
+     add add=-191 |
      costaper nw1=50 nw2=50
      ''')
 
 # Display
-Result('bay',
+Result('dem',
        '''
-       grey crowd=0.85 clip=1111 allpos=y yreverse=n
-       title="Elevation of San Francisco Bay"
+       grey clip=150 yreverse=n screenratio=1
+       title="Digital Elevation Map" 
        ''')
 
 # 2-D Fourier Transform
-Flow('fft','bay',
+Flow('fft','dem',
      'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
 Plot('fft',
      '''
@@ -30,42 +30,39 @@ Plot('fft',
 # A. Compression by Windowing
 #############################
 
-cut = 0.1 # Fixed
+cut = 0.05 # Fixed
 
-# Plot a frame
-Flow('frame.asc',None,
-     'echo %s n1=10 in=$TARGET data_format=ascii_float' % 
-     ' '.join(map(str,[cut]*3+[-cut]*4+[cut]*3)))
-Plot('frame','frame.asc',
+# Create a frame
+Flow('frame','fft','real | math output="sqrt(x1*x1+x2*x2)" ')
+Plot('frame',
      '''
-     dd type=complex form=native |
-     graph plotfat=5 plotcol=0
-     min1=-0.5 min2=-0.5 max1=0.5 max2=0.5 screenratio=1
-     wantaxis=n wanttitle=n pad=n transp=y yreverse=y
-     ''')
-
+     contour nc=1 c0=%g plotfat=5 
+     wantaxis=n wanttitle=n screenratio=1
+     ''' % cut)
 Result('fft','fft frame','Overlay')
 
-# Cut a square hole
-Flow('fcut','fft',
+# Cut a hole
+Flow('fcut','frame fft',
      '''
-     cut min1=%g max1=%g min2=%g max2=%g
-     ''' % (-cut,cut,-cut,cut))
+     mask min=%g | 
+     dd type=float | rtoc | 
+     mul ${SOURCES[1]}
+     ''' % cut)
 
 # Inverse FFT
 Flow('cut','fcut',
      'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
 Result('cut',
        '''
-       grey crowd=0.85 clip=1111 yreverse=n
-       title="Compression Noise"
+       grey clip=150 yreverse=n screenratio=1
+       title="Compression Noise" 
        ''')
 
-Flow('sig','bay cut','add scale=1,-1 ${SOURCES[1]}')
+Flow('sig','dem cut','add scale=1,-1 ${SOURCES[1]}')
 Result('sig',
        '''
-       grey crowd=0.85 clip=1111 allpos=y yreverse=n
-       title="Compression Signal"
+       grey clip=150 yreverse=n screenratio=1
+       title="Compression Signal" 
        ''')
 
 # B. Compression by Thresholding
@@ -80,7 +77,7 @@ Plot('hist','fft',
      histogram o1=0 d1=%g n1=101 |
      dd type=float | scale axis=1 |
      graph title="Scaled Histogram" 
-     ''' % (3*thr/100))
+     ''' % (2*thr/100))
 Flow('line.asc',None,
      'echo 0 0 0 1 n1=4 data_format=ascii_float in=$TARGET')
 Plot('line','line.asc',
@@ -98,16 +95,16 @@ Flow('thr','fthr',
      'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
 Result('thr',
        '''
-       grey crowd=0.85 clip=1111 allpos=y yreverse=n
-       title="Compression Signal"
+       grey clip=150 yreverse=n screenratio=1
+       title="Compression Signal" 
        ''')
 
 # Subtract from Data
-Flow('noi','bay thr','add scale=1,-1 ${SOURCES[1]}')
+Flow('noi','dem thr','add scale=1,-1 ${SOURCES[1]}')
 Result('noi',
        '''
-       grey crowd=0.85 clip=1111 yreverse=n
-       title="Compression Noise"
+       grey clip=150 yreverse=n screenratio=1
+       title="Compression Noise" 
        ''')
 
 End()

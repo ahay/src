@@ -1,3 +1,3 @@
 from rsf.tex import *
 
-End(use='hyperref,listings',color='horizon hole pocs',hires='nearest linear')
+End(use='hyperref,listings',hires='nearest linear',color='fft')

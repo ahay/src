@@ -29,7 +29,7 @@ Flow('mask','circle',
      put d1=0.1914 o1=0 d2=0.1914 o2=0
      ''')
 
-for case in ('nearest','linear'): # !!! MODIFY !!!
+for case in ('nearest','linear'): # !!! MODIFY ME !!!
     new = 'circle'
     rotates = []
     for r in range(18):

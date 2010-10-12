@@ -45,7 +45,7 @@ derivations that you perform.
 \item The Taylor series expansion of $Z^s$ around $Z=1$ is
 \begin{equation}
   \label{eq:zs}
-  Z^s = 1 + s\,(Z-1) + \cdots  
+  Z^s = \left(1+(Z-1)\right)^2 = 1 + s\,(Z-1) + \cdots  
 \end{equation}
 \begin{enumerate}
 \item The first term in expansion~(\ref{eq:zs}) can be used to
@@ -60,54 +60,8 @@ derivations that you perform.
   Z^s \approx R(Z) = \frac{a_0(s) + a_1(s)\,Z}{1 + b_1(s)\,Z}
 \end{equation}
 by expanding it in a Taylor series around $Z=1$ and comparing this
-series with expansion~(\ref{eq:zs}).
-\end{enumerate}
-
-\item Consider the parabolic filter $F(Z)$ defines as
-\begin{equation}
-\label{eq:parab}
-F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^{N-1}\;.
-\end{equation} 
-
-\begin{enumerate}
-\item Show that this filter can be implemented with recursive filtering (polynomial division).
-\item What is the advantage of recursive filtering? Does it depend on $N$?
-\end{enumerate}
-
-\item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
-\begin{equation}
-\label{eq:conv}
-\mathbf{F} = \left[\begin{array}{llllll}
-f_1 & f_0 & 0   & 0   & 0   & 0   \\
-f_2 & f_1 & f_0 & 0   & 0   & 0   \\
-f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
-0   & f_3 & f_2 & f_1 & f_0 & 0   \\
-0   & 0   & f_3 & f_2 & f_1 & f_0 \\
-0   & 0   & 0   & f_3 & f_2 & f_1 \\
-\end{array}\right]\;.
-\end{equation}
-
-The operator is implemented in the C code below.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,firstline=15]{conv.c}
-
-\begin{enumerate}
-\item Modify the matrix and the program to implement periodic boundary conditions.
-\item Add the code for the adjoint (matrix transpose) operator.
-\end{enumerate}
-
-\item The following C code (included in \texttt{filter.c} file in
-  directory \texttt{geo391/hw3}) implements a recursive filtering
-  operator.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,firstline=13]{filter.c}
-
-\begin{enumerate}
-\item Express this filter in the $Z$-transform notation as a ratio
-  of two polynomials.
-\item Add code for the adjoint operator.
+series with expansion~(\ref{eq:zs}). What is the advantage of
+recursive filtering?
 \end{enumerate}
 
 \item The parabolic B-spline $\beta_3(x)$ is a function defined as
@@ -143,6 +97,47 @@ and
     Z^s \approx B_3(Z) = \frac{a_0(s)/Z + a_1(s) + a_2(s)\,Z}{b_0/Z + b_1 + b_2\,Z}\;.
   \end{equation}
   Define $a_0(s)$, $a_1(s)$, $a_2(s)$, $b_0$, $b_1$, and $b_2$.
+\end{enumerate}
+
+\newpage
+
+\item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
+\begin{equation}
+\label{eq:conv}
+\mathbf{F} = \left[\begin{array}{llllll}
+f_1 & f_0 & 0   & 0   & 0   & 0   \\
+f_2 & f_1 & f_0 & 0   & 0   & 0   \\
+f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
+0   & f_3 & f_2 & f_1 & f_0 & 0   \\
+0   & 0   & f_3 & f_2 & f_1 & f_0 \\
+0   & 0   & 0   & f_3 & f_2 & f_1 \\
+\end{array}\right]\;.
+\end{equation}
+
+The operator is implemented in the C code below (included
+  in \texttt{conv.c} file in directory \texttt{geo391/hw3}).
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=15]{conv.c}
+
+\begin{enumerate}
+\item Modify the matrix and the program to implement periodic boundary conditions.
+\item Add the code for the adjoint (matrix transpose) operator.
+\end{enumerate}
+
+\newpage
+
+\item The following C code (included in \texttt{filter.c} file in
+  directory \texttt{geo391/hw3}) implements a recursive filtering
+  operator.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=13]{filter.c}
+
+\begin{enumerate}
+\item Express this filter in the $Z$-transform notation as a ratio
+  of two polynomials.
+\item Add code for the adjoint operator.
 \end{enumerate}
 
 \end{enumerate}
@@ -191,7 +186,7 @@ microfracture channels.
 To improve the accuracy further, one needs to employ a longer
 filter. One popular choice is \emph{cubic convolution} interpolation,
 invented by Robert Keys (a geophysicist, currently at ConocoPhillips).
-The cubic convolution filter can be expressed as the filter
+The cubic convolution filter can be expressed as the filter \cite[]{keys}
 \begin{eqnarray}
 \nonumber
 Z^s \approx C(Z) & = & -\frac{s\,(1-s)^2}{2}\,Z^{-1} + \frac{(1-s)\,(2 + 2\,s - 3 s^2)}{2} + \\
@@ -236,10 +231,9 @@ its results with the two other methods.
 \section{Running median and running mean filters}
 \inputdir{running}
 
-\plot{bay}{width=\textwidth}{Digital elevation map of the San Francisco
-  Bay Area.}
+\plot{dem}{width=\textwidth}{Digital elevation map of the West Austin area.}
 
-We return the digital elevation map of the San Francisco Bay Area, shown in Figure~\ref{fig:bay}.
+We return the digital elevation map of the west Austin Area, shown in Figure~\ref{fig:dem}.
 
 In this exercise, we will separate the data into ``signal'' and
 ``noise'' by applying running mean and median filters.  The result of
@@ -248,9 +242,6 @@ figure~\ref{fig:med,res}. Running median effectively smooths the data
 by removing local outliers.
 
 \multiplot{2}{med,res}{width=0.45\textwidth}{Data separated into signal (a) and noise (b) by applying a running median filter.}
-
-%\plot{time}{width=\textwidth}{CPU time for computing the running median with different algorithms as a function of the window size. 
-%The dashed line corresponds to slow sorting in program \texttt{running.c}, the solid line corresponds to the fast \emph{quantile} algorithm.}
 
 The algorithm is implemented in program \texttt{running.c}.
 
@@ -264,11 +255,27 @@ scons view
 \end{verbatim}
 to reproduce the figures on your screen.
 \item Modify the \texttt{running.c} program and the \texttt{SConstruct} file to compute running mean instead of running median. Compare the results.
-\item \textbf{EXTRA CREDIT} for improving the efficiency of the running median algorithm. Run
-\begin{verbatim}
-scons time.vpl
-\end{verbatim}
-to display a figure that compares the efficiency of running median computations using the slow sorting from function \texttt{median} in program \texttt{running.c} and the fast quantile algorithm (library function \verb#sf_quantile# ). Your goal is to make the algorithm even faster. Consider parallelization, reusing previous window results, other fast sorting strategies, etc.
+\item \textbf{EXTRA CREDIT} for implementing the LUM (lower-upper-middle) smoother, which is more flexible than the median \cite[]{Hardie93}. 
+
+Consider a window function containing a set of $N$ samples centered
+about the sample $x^{\star}$. This set of
+observations will be denoted by $\{x_1,x_2,\cdots,x_N\}$. The
+rank-ordered set can be written as
+\[
+   x_{(1)} \le x_{(2)} \le \cdots \le x_{(N)}\,.
+\]
+The output of the LUM
+smoother with parameter $k$ is 
+\begin{equation}
+    y^{\star} = \left\{
+\begin{array}{ll} x_{(k)}, & \mbox{if}\quad x^{\star} < x_{(k)} \\ 
+x_{(N-k+1)}, & \mbox{if}\quad x^{\star} > x_{(N-l+1)}  \\ 
+x^{\star}, & \mbox{otherwise}
+\end{array} \right..
+  \label{eq:lumsm} 
+\end{equation}
+The filter rejects outliers but passes moderate values without change.
+
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
@@ -277,13 +284,15 @@ to display a figure that compares the efficiency of running median computations 
 \section{Fourier compression}
 \inputdir{fourier}
 
-\plot{fft}{width=\textwidth}{Absolute value of the Fourier transform of the digital elevation data. The frame inside shows a window selected for compression.}
+\plot{fft}{width=\textwidth}{Absolute value of the Fourier transform of 
+the digital elevation data. The circle inside shows a window selected
+for compression.}
 
 The goal of your next assignment is to find a compressed
 representation of the data in the Fourier transform
 domain. Figure~\ref{fig:fft} shows the Fourier transform of the
-digital elevation data from Figure~\ref{fig:bay}. We can see that most
-of the energy gets concentrated near the center (zero frequency). 
+digital elevation data from Figure~\ref{fig:dem}. We can see that most
+of the energy gets concentrated near the center (zero frequency).
 
 There are two alternative ways to compress data in the Fourier domain:
 \begin{itemize}
@@ -322,12 +331,14 @@ the same noise level, yet the number of non-zero coefficients in the Fourier dom
 Your final task is to apply one of the data analysis techniques of the
 previous sections to your own data:
 \begin{enumerate}
-\item Select a dataset suitable for interpolation by POCS or for
-  coordinate transformation.
-\item Apply one the algorithm of the previous two sections and choose
+\item Select a dataset suitable for signal and noise separation either 
+      by filtering or by Fourier compression.
+\item Apply one of the algorithms of the previous two sections and choose
   appropriate parameters.
 \item Include the results in your homework.
 \end{enumerate}
+
+\newpage
 
 \section{Completing the assignment}
 
@@ -347,8 +358,6 @@ scons pdf
 \item Submit your result (file \texttt{paper.pdf}) by printing it out
   or by e-mail.
 \end{enumerate}
-
-\nocite{keys}
 
 \bibliographystyle{seg}
 \bibliography{hw3}

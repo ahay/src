@@ -3,25 +3,29 @@
 #include <rsf.h>
 
 static float median(int n, float *a)
-/* find median by slow sorting, changes a */
+/* find median by the fast quantile, changes a */
 {
-    int i, j, k;
-    float t;
+    float *i, *j, ak, *low, *hi, buf, *k;
 
-    for (i=0; i < n; i++) {
-	t = a[i];
-	/* everything less than i is already sorted */
-	for (j=0; j < i; j++) {
-	    if (a[j] > t) {
-		for (k=i; k > j; k--) {
-		    a[k] = a[k-1];
-		}
-		a[j] = t;
-		break;
+    low=a;
+    hi=a+n-1;
+    k=a+n/2; 
+    while (low<hi) {
+	ak = *k;
+	i = low; j = hi;
+	do {
+	    while (*i < ak) i++;     
+	    while (*j > ak) j--;     
+	    if (i<=j) {
+		buf = *i;
+		*i++ = *j;
+		*j-- = buf;
 	    }
-	}
+	} while (i<=j);
+	if (j<k) low = i; 
+	if (k<i) hi = j;
     }
-    return a[n/2];
+    return (*k);
 }
 
 int main(int argc, char* argv[]) 
@@ -52,7 +56,7 @@ int main(int argc, char* argv[])
     win = sf_floatalloc2(w1,w2);
 
     if (!sf_getint("what",&what)) what=0;
-    /* [0,1,2] 0: fast median, 1: slow median, 2: mean */
+    /* [0,1,2] 0: median, 1: mean, 2: LUM */
 
     for (i3=0; i3 < n3; i3++) {
 
@@ -71,14 +75,11 @@ int main(int argc, char* argv[])
 		}}
 
 		switch (what) {
-		    case 0: /* fast median */
-			signal[i2][i1] = 
-			    sf_quantile(nw/2,nw,win[0]);
-			break;
-		    case 1: /* slow median */
+		    case 0: /* median */
 			signal[i2][i1] = median(nw,win[0]);
 			break;
-		    case 2: /* mean */
+		    case 1: /* mean */
+		    case 2: /* LUM  */
 		    default:
 			/* ADD CODE */
 			break;
