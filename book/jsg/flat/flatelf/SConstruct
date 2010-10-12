@@ -42,7 +42,7 @@ Flow('k1.p','cont',
      dd type=int form=ascii format="%d," line=100 --out=$TARGET
      ''',stdout=0)
 Command('k1.par','k1.p',
-         'echo -n "k1=" > $TARGET && cat $SOURCE >> $TARGET')
+         'printf "k1=" > $TARGET && cat $SOURCE >> $TARGET')
 
 Flow('spikes','k1.par',
      '''

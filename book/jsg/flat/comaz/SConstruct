@@ -184,7 +184,7 @@ Flow('k1.p','wcont',
      dd type=int form=ascii format="%d," line=25 --out=$TARGET
      ''',stdout=0)
 Command('k1.par','k1.p',
-        'echo -n "k1=" > $TARGET && cat $SOURCE >> $TARGET')
+        'printf "k1=" > $TARGET && cat $SOURCE >> $TARGET')
 Flow('spikes','k1.par',
      '''
      spike n1=244 nsp=16 par=$SOURCE | smooth rect1=2 repeat=2
