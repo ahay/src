@@ -23,7 +23,7 @@ int main (int argc, char* argv[])
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
     int nrep, irep, n1, n2, i2, i0;
-    bool diff[SF_MAX_DIM], box[SF_MAX_DIM];
+    bool adj, diff[SF_MAX_DIM], box[SF_MAX_DIM];
     char key[6];
     float* data;
     sf_triangle tr;
@@ -65,6 +65,9 @@ int main (int argc, char* argv[])
     if (!sf_getint("repeat",&nrep)) nrep=1;
     /* repeat filtering several times */
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* run in the adjoint mode */
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
 
@@ -74,7 +77,11 @@ int main (int argc, char* argv[])
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    sf_smooth2 (tr,i0,s[i],diff[i],box[i],data);
+		    if (adj) {
+			sf_smooth (tr,i0,s[i],diff[i],box[i],data);
+		    } else {
+			sf_smooth2 (tr,i0,s[i],diff[i],box[i],data);
+		    }
 		}
 	    }
 	    sf_triangle_close(tr);

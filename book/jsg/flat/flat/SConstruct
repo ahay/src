@@ -4,7 +4,7 @@ Flow('sigmoid',None,
      '''
      sigmoid n1=200 n2=210 d2=0.008 |
      put label2=Distance |
-     smooth rect1=3 diff1=1 | smooth rect1=3
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3
      ''')
 Result('sigmoid','grey title="Input" ')
 Plot('sig','sigmoid','grey wanttitle=n clip=0.003')
