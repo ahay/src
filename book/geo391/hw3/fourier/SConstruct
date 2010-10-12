@@ -36,7 +36,7 @@ cut = 0.05 # Fixed
 Flow('frame','fft','real | math output="sqrt(x1*x1+x2*x2)" ')
 Plot('frame',
      '''
-     contour nc=1 c0=%g plotfat=5 
+     contour nc=1 c0=%g plotfat=5 plotcol=3
      wantaxis=n wanttitle=n screenratio=1
      ''' % cut)
 Result('fft','fft frame','Overlay')
