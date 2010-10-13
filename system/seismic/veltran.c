@@ -40,7 +40,8 @@ void veltran_init (bool pull1                     /* pull or push mode */,
     pull = pull1;
     x0 = x01; dx = dx1; nx = nx1;
     s0 = s01; ds = ds1; ns = ns1;
-    nt = nt1; dt = dt1; nt = nt1; 
+    t0 = t01; dt = dt1; nt = nt1; 
+   
     s1 = s11; psun1 = psun11; psun2 = psun21;
     anti = anti1;
 
