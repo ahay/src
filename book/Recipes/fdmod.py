@@ -1010,10 +1010,10 @@ def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
 def quiver(vect,custom,par):
 
 	Plot(vect+'o',vect,'window n1=1|' +
-     	cgraph('squeeze=n plotcol=0 plotfat=5 symbol=o',par))
+     	cgraph('squeeze=n plotcol=0 plotfat=5 symbol=o '+custom,par))
 	
 	Plot(vect+'h',vect,
-	cgraph('squeeze=n plotcol=0 plotfat=5',par))	
+	cgraph('squeeze=n plotcol=0 plotfat=5 '+custom,par))	
 
 	Plot(vect,[vect+'h',vect+'o'],'Overlay')
 

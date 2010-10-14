@@ -67,8 +67,14 @@ void sf_init(int argc,char *argv[])
     pars = sf_simtab_init (argc);
 
     /* set prog */
-    prog = strrchr(argv[0],'/');
-    prog = (NULL == prog)? argv[0]:prog+1;
+    char* tprog = strrchr(argv[0],'/');
+    tprog = (NULL == tprog)? argv[0]:tprog+1;
+    size_t prog_len = strlen(tprog) + 1;
+    prog = (char*)malloc(sizeof(char)*prog_len);
+    strcpy(prog,tprog);
+    
+    //prog = strrchr(argv[0],'/');
+    //prog = (NULL == prog)? argv[0]:prog+1;
 
     /* no pars and input from terminal */
     if (1==argc && !sf_stdin()) {
