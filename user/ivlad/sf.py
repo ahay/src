@@ -50,7 +50,7 @@ def __run(prog, args, inp, out, verb, exe, postproc=None):
         args = ''
     else:
         args = args.strip()
-    cmd  = os.path.join(rsf.prog.RSFROOT,'bin',prog)
+    cmd = os.path.join(rsf.prog.RSFROOT,'bin',prog)
 
     if exe == 'g': # get output
         assert out == None
@@ -130,9 +130,15 @@ def attr(inp=None, out=None, lval=None, want=None, verb=False, exe=None):
     if exe == None and out==None: # invalid combination, fix the call
         exe = 'g'
 
+    def postproc(out_str):
+        if want == 'rms':
+            return float(out_str.split()[2])
+        else:
+            return out_str
+
     return __run('sfattr', __parse(locals()), 
         inp, out, 
-        verb, __x(exe,glob_exe))
+        verb, __x(exe,glob_exe), postproc)
 
 ################################################################################
 
