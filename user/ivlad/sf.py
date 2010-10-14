@@ -131,7 +131,7 @@ def attr(inp=None, out=None, lval=None, want=None, verb=False, exe=None):
         exe = 'g'
 
     def postproc(out_str):
-        if want == 'rms':
+        if want in ('rms','min'):
             return float(out_str.split()[2])
         else:
             return out_str
