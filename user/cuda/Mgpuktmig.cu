@@ -294,6 +294,8 @@ int main (int argc, char* argv[]) {
        higher bandwidth in antialiasing */
     t_i.normalized = false;
     t_i.filterMode = cudaFilterModeLinear;
+    t_i.addressMode[0] = cudaAddressModeClamp;
+    t_i.addressMode[1] = cudaAddressModeClamp;
     /* Array of source coordinates on GPU */
     cudaMalloc ((void**)&d_sxy, btr*sizeof(float2));
     sf_check_gpu_error ("GPU malloc for sxy");
@@ -503,24 +505,27 @@ int main (int argc, char* argv[]) {
         }
 
         /* Run antialiasing preparation */
-        if (aa) {
+        if (aa || diff) {
             if (verb) {
-                sf_warning ("Running GPU antialiasing preparation kernels");
+                sf_warning ("Running GPU trace preparation kernels");
                 sf_timer_start (aux_kernel_timer);
             }
             dimgrid = dim3 (k, 1, 1);
             if (diff) {
                 sf_gpu_ktmig_sbdiff<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
                 cudaThreadSynchronize ();
+                sf_check_gpu_error ("Differentiation kernels invocation");
             }
-            sf_gpu_ktmig_cint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
-            cudaThreadSynchronize ();
-            sf_gpu_ktmig_acint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
-            cudaThreadSynchronize ();
-            sf_check_gpu_error ("Antialiasing preparation kernels invocation");
+            if (aa) {
+                sf_gpu_ktmig_cint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
+                cudaThreadSynchronize ();
+                sf_gpu_ktmig_acint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
+                cudaThreadSynchronize ();
+                sf_check_gpu_error ("Integration kernels invocation");
+            }
             if (verb) {
                 sf_timer_stop (aux_kernel_timer);
-                sf_warning ("Antialiasing preparation kernels execution time: %f ms",
+                sf_warning ("Trace preparation kernels execution time: %f ms",
                             sf_timer_get_diff_time (aux_kernel_timer));
                 sf_timer_start (memcpy_timer);
             }

@@ -278,18 +278,10 @@ __global__ void sf_gpu_ktmig_kernel (float *vrms, float *image,
             /* Scaling factor */
             scale = 1.0f/(1.0f + k);
             scale *= scale;
-            /* The following sequence was used before the above "if"
-               statement. Turns out, that thread divergence is better
-               than addressing memory in case of out-of-range indices. */
-            /*
-            scale *= (1.0f - (float)signbit (c_maxnt - j));
-            scale *= (1.0f - (float)signbit (c_maxnt - j - k - 1.0f));
-            scale *= (1.0f - (float)signbit (j - k - 1.0f));
-            */
             /* Collect samples */
-            smp = 2.0f*tex2D (t_i, j, (float)i)
-                  -tex2D (t_i, j - k - 1.0f, (float)i)
-                  -tex2D (t_i, j + k + 1.0f, (float)i);
+            smp = 2.0f*tex2D (t_i, j + 0.5f, (float)i + 0.5f)
+                  -tex2D (t_i, j - k - 0.5f, (float)i + 0.5f)
+                  -tex2D (t_i, j + k + 1.5f, (float)i + 0.5f);
             /* Contribute to the image point */
             img += scale*smp;
         }
@@ -346,9 +338,9 @@ __global__ void sf_gpu_ktmig_noaa_kernel (float *vrms, float *image,
         /* double root square time = time to source + time to receiver */
         j = (vec1.x + vec1.y - c_ot)*c_idt; /* Input sample index */
         if (j >= 0.0f && j <= c_maxnt) {
-            k = (float)i;
+            k = (float)i + 0.5f;
             /* Contribute to the image point */
-            img += tex2D (t_i, j, k);
+            img += tex2D (t_i, j + 0.5f, k);
         }
     }
 
