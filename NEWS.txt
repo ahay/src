@@ -1,22 +1,44 @@
 Meaningful changes done since the 1.0 release (2010-07-23):
 
-Bug fixes:
+ADDITIONS AND ENHANCEMENTS
 
-* Update of html/txt/spec documentation and man pages triggered by
-  changes in programs or examples through dependence on use.py
-
-Documentation:
-
+To documentation:
 * Update to vplot man pages
 * This file (NEWS.txt)
 
-API enhancements:
-
+To APIs:
 * New, improved Java API: Cleaner, independent from Mines JTK. Not
 compatible with the old API
 
-New papers:
+To the Python package:
+* rsf.user.ivlad: chk_file_r function
+* rsf.user.m8rex: WrongPath exception class
+* rsf.user.sf: attr function
 
+To programs:
+* sflmo (frequency-domain LMO)
+
+To the reproducible documents collection:
 * rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
 * rsf/programming: Jeff Godwin's presentation at Houston-2010 
 * rsf/usp: Yang Liu's presentation at Houston-2010
+
+BUG FIXES:
+
+In documentation:
+* Update of html/txt/spec documentation and man pages triggered by
+  changes in programs or examples through dependence on use.py
+* Show y and n for boolean parameters in F90 programs, instead of .true./.false.
+* Show y and n for boolean params in some Python programs instead of True/False
+    (fix for some cases in which existing mechanism did not work) 
+
+In the Python package:
+* In rsf.user.ivlad (function ndims)
+* In rsf.user.ooio (init of class RSFheader)
+
+In programs:
+* sfbandpass
+* sfzcp
+
+In the reproducible documents collection:
+* Cross-platform (Linux/Mac) solution in book/jsg/flat/*/SConstruct
