@@ -45,10 +45,8 @@ void sf_cosft_close(void)
 {
     free (p);
     free (pp);
-    /* 
-       free (forw);
-       free (invs);
-    */
+    free (forw);
+    free (invs);
 }
 
 void sf_cosft_frw (float *q /* data */, 

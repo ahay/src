@@ -1,4 +1,4 @@
-/* V(z) prestack exploditing reflector. */
+/* 2-D FFT-based prestack exploding reflector modeling/migration  */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -18,16 +18,17 @@
 */
 #include <rsf.h>
 
-#include "cosft3.h"
-#include "lowrank1.h"
+#include "fft3.h"
 
 int main(int argc, char* argv[])
 {
     bool mig;
-    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its, ik, n1, n2, nk, nr, **siz;
-    float dt, dx, dz, dh, c;
-    float ***curr, **img, **dat, ***lft, ***mid, ***rht;
-    sf_file data, image, size, left, middle, right;
+    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
+    int im, i, j, m1, m2, it1, it2, its, ik, n2, nk;
+    float dt, dx, dz, c, old, dh;
+    float *curr, *prev, **img, **dat, **lft, **mid, **rht, **wave;
+    sf_complex *cwave, *cwavem;
+    sf_file data, image, left, middle, right;
 
     sf_init(argc,argv);
 
@@ -87,77 +88,66 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"unit3","s");
     }
 
+    nk = fft3_init(false,1,nh,nx,nz,&nh2,&nx2,&nz2);
+
+    nzx = nz*nx*nh;
+    nzx2 = nz2*nx2*nh2;
+
     img = sf_floatalloc2(nz,nx);
     dat = sf_floatalloc2(nh,nx);
 
-    curr = sf_floatalloc3(nz,nh,nx);
+    /* propagator matrices */
+    left = sf_input("left");
+    right = sf_input("right");
+    middle = sf_input("middle");
 
-    for (ix=0; ix < nx; ix++) {
-	for (ih=0; ih < nh; ih++) {
-	    for (iz=0; iz < nz; iz++) {
-		curr[ix][ih][iz] = 0.;
-	    }
-	}
+    if (!sf_histint(middle,"n1",&m1)) sf_error("No n1= in middle");
+    if (!sf_histint(middle,"n2",&m2)) sf_error("No n2= in middle");
+
+    if (!sf_histint(left,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
+    if (!sf_histint(left,"n2",&n2) || n2 != m1)  sf_error("Need n2=%d in left",m1);
+    
+    if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
+    if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
+ 
+    lft = sf_floatalloc2(nzx,m1);
+    mid = sf_floatalloc2(m1,m2);
+    rht = sf_floatalloc2(m2,nk);
+
+    sf_floatread(lft[0],nzx*m1,left);
+    sf_floatread(mid[0],m1*m2,middle);
+    sf_floatread(rht[0],m2*nk,right);
+
+    curr = sf_floatalloc(nzx2);
+    prev = sf_floatalloc(nzx);
+
+    cwave  = sf_complexalloc(nk);
+    cwavem = sf_complexalloc(nk);
+    wave = sf_floatalloc2(nzx2,m2);
+
+    for (iz=0; iz < nzx; iz++) {
+	prev[iz]=0.;
     }
 
-    nk = nx*nh;
+    for (iz=0; iz < nzx2; iz++) {
+	curr[iz]=0.;
+    }
 
-    size = sf_input("size");
-    if (SF_INT != sf_gettype(size) ||
-	!sf_histint(size,"n1",&n1) || 2  != n1 ||
-	!sf_histint(size,"n2",&n2) || nk != n2) sf_error("Wrong size in size=");
-    siz = sf_intalloc2(2,nk);
-    sf_intread(siz[0],2*nk,size);
-    sf_fileclose(size);
-
-    left =  sf_input("left");
-    if (SF_FLOAT != sf_gettype(left) ||
-	!sf_histint(left,"n1",&n1) || nz != n1 ||
-	!sf_histint(left,"n3",&n2) || nk != n2) sf_error("Wrong size in left=");
-    if (!sf_histint(left,"n2",&nr)) sf_error("No n2= in left");
-    lft = sf_floatalloc3(nz,nr,nk);
-    sf_floatread(lft[0][0],nz*nr*nk,left);
-    sf_fileclose(left);
-
-    middle =  sf_input("middle");
-    if (SF_FLOAT != sf_gettype(middle) ||
-	!sf_histint(middle,"n1",&n1) || nr != n1 ||
-	!sf_histint(middle,"n3",&n2) || nk != n2) sf_error("Wrong size in middle=");
-    mid = sf_floatalloc3(nr,nr,nk);
-    sf_floatread(mid[0][0],nr*nr*nk,middle);
-    sf_fileclose(middle);
-
-    right =  sf_input("right");
-    if (SF_FLOAT != sf_gettype(right) ||
-	!sf_histint(right,"n2",&n1) || nz != n1 ||
-	!sf_histint(right,"n3",&n2) || nk != n2) sf_error("Wrong size in right=");
-    rht = sf_floatalloc3(nr,nz,nk);
-    sf_floatread(rht[0][0],nr*nz*nk,right);
-    sf_fileclose(right);
 
     if (mig) { /* migration */
-	/* initialize image */
-	for (iz=0; iz < nz; iz++) {
-	    for (ix=0; ix < nx; ix++) {
-		img[ix][iz] = 0.;
-	    }
-	}
-
 	/* step backward in time */
 	it1 = nt-1;
 	it2 = -1;
-	its = -1;
-
+	its = -1;	
     } else { /* modeling */
 	sf_floatread(img[0],nz*nx,image);
 
-	/* Initialize model */
-	for (ix=0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		curr[ix][0][iz] = img[ix][iz];
+	/* transpose and initialize at zero offset */
+	for (iz=0; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
+		curr[nh2*(ix+iz*nx2)]=img[ix][iz];
 	    }
 	}
-	cosft12(false,nz,nh,nx,curr);
 	
 	/* step forward in time */
 	it1 = 0;
@@ -165,15 +155,13 @@ int main(int argc, char* argv[])
 	its = +1;
     }
 
-    lowrank1_init(nz,nr);
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
 	sf_warning("it=%d;",it);
 
 	if (mig) { /* migration <- read data */
-	    sf_floatread(dat[0],nh*nx,data);
-	    cosft2(false,nh,nx,dat);	    
+	    sf_floatread(dat[0],nx*nh,data);
 	} else {
 	    for (ix=0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {
@@ -182,42 +170,66 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	sf_cosft_init(nz);
-	
-	ik=0;
+	/* at z=0 */
 	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {		
+	    for (ih=0; ih < nh; ih++) {
 		if (mig) {
-		    curr[ix][ih][0] += dat[ix][ih];
+		    curr[ix*nh2+ih] += dat[ix][ih];
 		} else {
-		    dat[ix][ih] += curr[ix][ih][0];
+		    dat[ix][ih] = curr[ix*nh2+ih];
 		}
-		
-		lowrank1_step(siz[ik][0],siz[ik][1],lft[ik],mid[ik],rht[ik],curr[ix][ih]);
-		ik++;
 	    }
 	}
 
-	sf_cosft_close();
+	/* matrix multiplication */
+	fft3(curr,cwave);
 
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]*rht[ik][im];
+#else
+		cwavem[ik] = sf_crmul(cwave[ik],rht[ik][im]);
+#endif
+	    }
+	    ifft3(wave[im],cwavem);
+	}
+
+	for (iz=0; iz < nz; iz++) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (ih=0; ih < nh; ih++) {	
+		    i = ih+nh*(ix+iz*nx);   /* original grid */
+		    j = ih+nh2*(ix+iz*nx2); /* padded grid */
+		
+		    old = c = curr[j];
+		    c += c - prev[i];
+		    prev[i] = old;
+
+		    for (im = 0; im < m2; im++) {
+			for (ik = 0; ik < m1; ik++) {
+			    c += lft[ik][i]*mid[im][ik]*wave[im][j];
+			}
+		    }
+		    
+		    curr[j] = c;
+		}
+	    }
+	}
+	
 	if (!mig) { /* modeling -> write out data */
-	    cosft2(true,nh,nx,dat);
-	    sf_floatwrite(dat[0],nh*nx,data);
+	    sf_floatwrite(dat[0],nx*nh,data);
 	}
     }
     sf_warning(".");
 
     if (mig) {
-	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {
-		for (iz=1; iz < nz; iz++) {
-		    c = curr[ix][ih][iz];
-		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
-		}
+	/* transpose */
+	for (iz=0; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
+		img[ix][iz] = curr[nh2*(ix+iz*nx2)];
 	    }
 	}
 
-	cosft2(true,nz,nx,img);
 	sf_floatwrite(img[0],nz*nx,image);
     }
 

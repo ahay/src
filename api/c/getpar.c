@@ -70,7 +70,7 @@ void sf_init(int argc,char *argv[])
     char* tprog = strrchr(argv[0],'/');
     tprog = (NULL == tprog)? argv[0]:tprog+1;
     size_t prog_len = strlen(tprog) + 1;
-    prog = (char*)malloc(sizeof(char)*prog_len);
+    prog = sf_charalloc(prog_len);
     strcpy(prog,tprog);
     
     //prog = strrchr(argv[0],'/');

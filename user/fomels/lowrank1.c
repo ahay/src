@@ -38,8 +38,6 @@ void lowrank1_init(int n1 /* data size */,
     for (ix = 0; ix < nx; ix++) {
 	prev[ix] = 0;
     }
-
-    sf_cosft_init(nx);
 }
 
 void lowrank1_close(void)
@@ -60,16 +58,16 @@ void lowrank1_step(int m1, int m2,
 {
     int ix,ik,im;
     float *wavem, old, f;
-
+    
     for (ix = 0; ix < nx; ix++) {
 	cwave[ix] = curr[ix];
     }
     sf_cosft_frw(cwave,0,1);
     
-    for (im = 0; im < m1; im++) {
+    for (im = 0; im < m2; im++) {
 	wavem = wave[im];
 	for (ik = 0; ik < nx; ik++) {
-	    wavem[ik] = cwave[ik]*lft[im][ik];
+	    wavem[ik] = cwave[ik]*rht[ik][im];
 	}
 	sf_cosft_inv(wavem,0,1);
     }
@@ -79,9 +77,9 @@ void lowrank1_step(int m1, int m2,
 	f += f-prev[ix];
 	prev[ix] = old;
 	
-	for (im = 0; im < m1; im++) {
-	    for (ik = 0; ik < m2; ik++) {
-		f += rht[ix][ik]*mid[ik][im]*wave[im][ix];
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < m1; ik++) {
+		f += lft[ik][ix]*mid[im][ik]*wave[im][ix];
 	    }
 	}
 	curr[ix] = f;
