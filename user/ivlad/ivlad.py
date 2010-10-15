@@ -150,11 +150,11 @@ def exe(cmd, verb=False):
 
 ###############################################################################
 
-def __is_x(fname):
-    return os.path.exists(fname) and os.access(fname, os.X_OK)
-
 def which(prog):
     'Same functionality as Unix which'
+
+    def __is_x(fname):
+        return os.path.exists(fname) and os.access(fname, os.X_OK)
 
     fpath, fname = os.path.split(prog)
 
@@ -172,6 +172,46 @@ def which(prog):
 def chk_prog(prog):
     if which(prog) == None:
         raise m8rex.MissingProgram(prog)
+
+###############################################################################
+
+def get1st(file, type='float'):
+    'Get the first element in file'
+
+    out_str = getppout(['sfwindow','sfdisfil'],
+                       [['n1=1','n2=1'],['number=n']],
+                       file)
+
+    out_str = out_str.strip()
+
+    if type == 'float':
+        return float(out_str)
+    elif type == 'int':
+        return int(out_str)        
+
+###############################################################################
+
+def getppout(proglist, arglist=[[]], stdin=None):
+    'Get pipe output'
+
+    if stdin == None:
+        finp = None
+    else:
+        if os.path.isfile(stdin):
+            finp = open(stdin,'r')
+        else:
+            raise m8rex.NotAValidFile(stdin)
+
+    c = [proglist[0]] + arglist[0]
+    clist = [subprocess.Popen(c, stdin=finp, stdout=subprocess.PIPE)]
+
+    for i in range(1,len(proglist)):
+        c = [proglist[i]]+arglist[i]
+        clist.append(subprocess.Popen(c,
+                                      stdin=clist[i-1].stdout,
+                                      stdout=subprocess.PIPE))
+
+    return clist[-1].communicate()[0]
 
 ###############################################################################
 
