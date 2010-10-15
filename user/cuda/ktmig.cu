@@ -245,7 +245,8 @@ __global__ void sf_gpu_ktmig_kernel (float *vrms, float *image,
     const float inv = 1.0f/v;
     const float inv2trf = c_trf*inv*inv;
     /* Pseudodepth^2 at image location */
-    const float depth2 = powf (0.5f*v*(c_oot + tidx*c_odt), 2.0f);
+//  const float depth2 = powf (0.5f*v*(c_oot + tidx*c_odt), 2.0f);
+    const float depth2 = 0.25f*v*v*(c_oot + tidx*c_odt)*(c_oot + tidx*c_odt);
     int i;
     float j, k;
     float img = 0.0f, scale, smp;
@@ -279,9 +280,9 @@ __global__ void sf_gpu_ktmig_kernel (float *vrms, float *image,
             scale = 1.0f/(1.0f + k);
             scale *= scale;
             /* Collect samples */
-            smp = 2.0f*tex2D (t_i, j + 0.5f, (float)i + 0.5f)
-                  -tex2D (t_i, j - k - 0.5f, (float)i + 0.5f)
-                  -tex2D (t_i, j + k + 1.5f, (float)i + 0.5f);
+            smp = 2.0f*tex2D (t_i, j + 0.5f, i + 0.5f)
+                  -tex2D (t_i, j - k - 0.5f, i + 0.5f)
+                  -tex2D (t_i, j + k + 1.5f, i + 0.5f);
             /* Contribute to the image point */
             img += scale*smp;
         }
@@ -317,7 +318,8 @@ __global__ void sf_gpu_ktmig_noaa_kernel (float *vrms, float *image,
     /* Slowness at image location */
     const float inv = 1.0f/v;
     /* Pseudodepth^2 at image location */
-    const float depth2 = powf (0.5f*v*(c_oot + tidx*c_odt), 2.0f);
+//  const float depth2 = powf (0.5f*v*(c_oot + tidx*c_odt), 2.0f);
+    const float depth2 = 0.25f*v*v*(c_oot + tidx*c_odt)*(c_oot + tidx*c_odt);
     int i;
     float j, k;
     float img = 0.0f;
