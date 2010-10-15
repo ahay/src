@@ -11,7 +11,7 @@ To APIs:
 compatible with the old API
 
 To the Python package:
-* rsf.user.ivlad: chk_file_r function
+* rsf.user.ivlad: chk_file_r, getppout, get1st functions
 * rsf.user.m8rex: WrongPath exception class
 * rsf.user.sf: attr function
 
