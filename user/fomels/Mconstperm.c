@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(snaps,"n2",nx);
 	sf_putfloat(snaps,"d2",dx);
-	sf_putstring(snaps,"label2","Modpoint");
+	sf_putstring(snaps,"label2","Midpoint");
 
 	sf_putint(snaps,"n3",nz);
 	sf_putfloat(snaps,"d3",dz);

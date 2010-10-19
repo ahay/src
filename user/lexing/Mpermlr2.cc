@@ -82,36 +82,34 @@ int main(int argc, char** argv)
     fft.get("n2",nkx);
     fft.get("n3",nkz);
 
+    int n = nkh*nkx*nkz;
+
     float dkh,dkx,dkz;
     fft.get("d1",dkh);
     fft.get("d2",dkx);
     fft.get("d3",dkz);
     
     float kh0,kx0,kz0;
-    fft.get("o1",kh0);
+    fft.get("o1",kh0); if (nkh==1) kh0=0.0;
     fft.get("o2",kx0);
     fft.get("o3",kz0);
 
     float kh, kx, kz;
 
-    float eps;
-    par.get("eps",eps,0.001); // regularization
-    eps *= dkz;
-    eps *= eps;
-
-    int n = nkh*nkx*nkz;
     std::valarray<double> k(n);
-    for (int ih=0; ih < nkh; ih++) {
-	kh = kh0+ih*dkh;
-	kh *= kh;
-	for (int ix=0; ix < nkx; ix++) {
-	    kx = kx0+ix*dkx;
-	    kx *= kx;
+    for (int ix=0; ix < nkx; ix++) {
+	kx = kx0+ix*dkx;
+	kx *= kx;
+	for (int ih=0; ih < nkh; ih++) {
+	    kh = kh0+ih*dkh;
+	    kh *= kh;
 	    for (int iz=0; iz < nkz; iz++) {
 		kz = kz0+iz*dkz;
 		kz *= kz;
 
-		k[iz+ix*nkz] = SF_PI*sqrt((kx+kz)*(1+kh/(kz+eps)));
+		kz = SF_MAX(kz,kh);
+		
+		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt((kx+kz)*(1+kh/kz));
 	    }
 	}
     }

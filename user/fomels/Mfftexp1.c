@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool mig;
+    bool mig, cmplx;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
     int im, i, j, m1, m2, it1, it2, its, ik, n2, nk;
     float dt, dx, dz, c, old, dh;
@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"unit3","s");
     }
 
-    nk = fft3_init(false,1,nh,nx,nz,&nh2,&nx2,&nz2);
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    nk = fft3_init(cmplx,1,nh,nx,nz,&nh2,&nx2,&nz2);
 
     nzx = nz*nx*nh;
     nzx2 = nz2*nx2*nh2;
