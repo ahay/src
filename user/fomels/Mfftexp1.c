@@ -24,16 +24,22 @@ int main(int argc, char* argv[])
 {
     bool mig, cmplx;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
-    int im, i, j, m1, m2, it1, it2, its, ik, n2, nk;
+    int im, i, j, m1, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, dh;
     float *curr, *prev, **img, **dat, **lft, **mid, **rht, **wave;
     sf_complex *cwave, *cwavem;
-    sf_file data, image, left, middle, right;
+    sf_file data, image, left, middle, right, snaps;
 
     sf_init(argc,argv);
 
     if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
+
+    if (!sf_getint("snap",&snap)) snap=0;
+    /* interval for snapshots */
+
+    snaps = (snap > 0)? sf_output("snaps"): NULL;
+    /* (optional) snapshot file */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -86,6 +92,25 @@ int main(int argc, char* argv[])
 	sf_putfloat(data,"d3",dt);
 	sf_putstring(data,"label3","Time");
 	sf_putstring(data,"unit3","s");
+    }
+
+     if (NULL != snaps) {
+	sf_putint(snaps,"n1",nh);
+	sf_putfloat(snaps,"d1",dh);
+	sf_putstring(snaps,"label1","Half-Offset");
+
+	sf_putint(snaps,"n2",nx);
+	sf_putfloat(snaps,"d2",dx);
+	sf_putstring(snaps,"label2","Midpoint");
+
+	sf_putint(snaps,"n3",nz);
+	sf_putfloat(snaps,"d3",dz);
+	sf_putstring(snaps,"label3","Depth");
+
+	sf_putint(snaps,"n4",nt/snap);
+	sf_putfloat(snaps,"d4",dt*snap);
+	sf_putfloat(snaps,"o4",0.);
+	sf_putstring(snaps,"label4","Time");
     }
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
@@ -170,6 +195,9 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
+	
+	if (NULL != snaps && 0 == it%snap) 
+	    sf_floatwrite(prev,nzx,snaps);
 
 	/* at z=0 */
 	for (ix=0; ix < nx; ix++) {
