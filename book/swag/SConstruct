@@ -4,6 +4,8 @@ Papers(copyr='KAUST',
        group='Seismic Wave Analysis Group',
        papers=Split('''
        introDTI/article.tex
+       waveds
+       eikds
        '''),
        authors = {'introDTI-article':'Tariq Alkhalifah and Paul Sava'},
        line='Selected papers',
