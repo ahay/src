@@ -1,5 +1,5 @@
 from rsf.proj import *
-import pplot
+import rsf.recipes.pplot as pplot
 
 # default parameters
 def param(par):
@@ -933,7 +933,7 @@ def awefddsV(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     
     Flow([odat,owfl],[idat,velo,dens,sou,rec],
          '''
-         /home/tariq/RSFSRC/user/tariq/awefd2ddsV
+         awefd2ddsV
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
          dabc=%(dabc)s nb=%(nb)d
@@ -951,7 +951,7 @@ def awefdds2ndV(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     
     Flow([odat,owfl],[idat,velo,dens,sou,rec],
          '''
-         /home/tariq/RSFSRC/user/tariq/awefd2dds2ndV
+         awefd2dds2ndV
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
          dabc=%(dabc)s nb=%(nb)d
