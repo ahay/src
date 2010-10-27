@@ -1,0 +1,184 @@
+from rsf.proj import *
+import fdmodds
+
+yshot=0.3
+zshot=0.01
+v0=2.0
+v00=2.04
+dvdx=0.4
+dvdz=0.0
+v00=2.0
+dvdx=0.0
+dvdz=0.0
+dl=0.05
+fileOut='model'
+fileOut2='modelds'
+t='Velocity\ Model'
+
+Flow('const',None,
+     'spike n1=500 n2=500 d1=0.002 d2=0.002 unit1=km unit2=km mag=1')
+     
+Flow(fileOut,None,'makevel v000=%g dvdx2=%g dvdx1=%g n1=500 n2=500 d1=0.002 d2=0.002 vlens=0.25 x1lens=0.5 x2lens=0.6 dlens=0.3 tlens=0.3' % (v0,dvdx,dvdz))
+
+Flow(fileOut2,None,'makevel v000=%g dvdx2=%g dvdx1=%g n1=500 n2=500 d1=0.002 d2=0.002 oo2=%g vlens=0.25 x1lens=0.5 x2lens=0.55 dlens=0.3 tlens=0.3' % (v00,dvdx,dvdz,-dl))
+
+# Plotting Section
+Plot(fileOut,'''window $SOURCE  |
+        grey color=I gainpanel=a allpos=y scalebar=y bias=2 wanttitle=n
+        ttle=%s barlabel=Velocity\(km\/s\) screenratio=0.8 label1='Depth (km)' label2='Lateral (km)'
+        screenht=5 whretitle=t labelsz=6 ttlesz=8 ''' % t)
+Result(fileOut,'Overlay')
+
+# ------------------------------------------------------------
+par = {
+    'nt':4000, 'dt':0.00025,'ot':0,'lt':'t','ut':'s',
+    'nx':500, 'ox':0, 'dx':.002, 'lx':'x','ux':'km',
+    'nz':500,  'oz':0, 'dz':.002, 'lz':'z','uz':'km',
+    'kt':400    # wavelet delay
+    }
+# add F-D modeling parameters
+fdmodds.param(par)
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+         '''spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=15 | scale axis=123 | 
+         put label1=t label2=x label3=y | transp''' % par)
+Result('wav','transp | window n1=1000 | graph title="" label1="t" label2=')
+# ------------------------------------------------------------
+# experiment setup
+Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+# receiver positions
+Flow('zr','r_','math output=.025')
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],'''cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr',fdmodds.rrplot('',par))
+# source positions
+Flow('zs','s_','math output=%g' % zshot)
+Flow('xs','s_','math output=%g' % yshot)
+Flow('rs','s_','math output=1')
+Flow('ss',['xs','zs','rs'],'''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('ss',fdmodds.ssplot('',par))
+# ------------------------------------------------------------
+# density
+Flow('vel',fileOut, 
+      '''
+      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
+      ''' % par)
+Plot('vel',fdmodds.cgrey('''allpos=y bias=2 pclip=97 title=Survey\ Design 
+                  color=F titlesz=6 labelsz=4 wheretitle=t barrevers=y''',par))
+#
+# ------------------------------------------------------------
+# density
+Flow('den','vel','math output=1')
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# density
+Flow('vel2',fileOut2, 
+      '''
+      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
+      ''' % par)
+Plot('vel2',fdmodds.cgrey('''allpos=y bias=2 pclip=97 title=Survey\ Design 
+                  color=F titlesz=6 labelsz=4 wheretitle=t barrevers=y''',par))
+#Result('vel2',['vel2','rr','ss'],'Overlay')
+# ------------------------------------------------------------
+# density
+Flow('den2','vel2','math output=1')
+# ------------------------------------------------------------
+# finite-differences modeling perturbation
+fdmodds.awefdds('dat','wfl','wav','vel','den','ss','rr','free=y dens=y dl=0.05',par)
+
+Plot('wfl',fdmodds.wgrey('pclip=99',par),view=1)
+Result('dat','transp |' + fdmodds.dgrey('''pclip=99 title=Data\ Record label2=Offset 
+            wheretitle=t titlesz=6 labelsz=4''',par))
+
+times=['0.4','0.5','0.6']
+cntr=0
+for item in ['16','20','24']:
+    Plot('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a clip=.0000001 wanttitle=n unit1= unit2=
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12 label1='Depth (km)' label2='Lateral (km)' 
+              ttlesz=6 screenratio=1 screenht=12 whretitle=t''' % (item,times[cntr]))
+    Result('timet'+item,'time'+item,'SideBySideIso')
+    cntr=cntr+1
+
+# finite-differences modeling perturbation 2nd order
+fdmodds.awefdds2nd('dat2n','wfl2n','wav','vel','den','ss','rr','free=y dens=y dl=0.05',par)
+
+Plot('wfl2n',fdmodds.wgrey('pclip=99',par),view=1)
+Result('dat2n','transp |' + fdmodds.dgrey('''pclip=99 title=Data\ Record label2=Offset 
+            wheretitle=t titlesz=6 labelsz=4''',par))
+
+times=['0.4','0.5','0.6']
+cntr=0
+for item in ['16','20','24']:
+    Plot('time2n'+item,'wfl2n','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a clip=.0000001 wanttitle=n unit1= unit2=
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12 label1='Depth (km)' label2='Lateral (km)' 
+              ttlesz=6 screenratio=1 screenht=12 whretitle=t''' % (item,times[cntr]))
+    Result('timet2n'+item,'time'+item,'SideBySideIso')
+    cntr=cntr+1
+
+# ------------------------------------------------------------
+# finite-differences at source 1
+fdmodds.awefd('dats','wfls','wav','vel','den','ss','rr','free=y dens=y',par)
+
+Plot('wfls',fdmodds.wgrey('pclip=99',par),view=1)
+Result('dats','transp |' + fdmodds.dgrey('''pclip=99 title=Data\ Record label2=Offset 
+            wheretitle=t titlesz=6 labelsz=4''',par))
+
+times=['0.4','0.5','0.6']
+cntr=0
+for item in ['16','20','24']:
+    Plot('times'+item,'wfls','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a  wanttitle=n unit1= unit2=
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12 label1='Depth (km)' label2='Lateral (km)' 
+              ttlesz=6 screenratio=1 screenht=12 whretitle=t''' % (item,times[cntr]))
+    cntr=cntr+1
+
+# ------------------------------------------------------------
+# finite-differences modeling at new source
+fdmodds.awefd('dat2','wfl2','wav','vel2','den2','ss','rr','free=y dens=y',par)
+Plot('wfl2',fdmodds.wgrey('pclip=99',par),view=1)
+Result('dat2','transp |' + fdmodds.dgrey('''pclip=99 title=Data\ Record label2=Offset 
+            wheretitle=t titlesz=6 labelsz=4''',par))
+
+times=['0.4','0.5','0.6']
+cntr=0
+for item in ['16','20','24']:
+    Plot('time2'+item,'wfl2','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a  wanttitle=n unit1= unit2=
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12 label1='Depth (km)' label2='Lateral (km)' 
+              ttlesz=8 screenratio=1 screenht=12 whretitle=t''' % (item,times[cntr]))
+    Result('timeSide'+item,['time2'+item,'time'+item,'time2n'+item],'SideBySideIso')
+    cntr=cntr+1
+
+# ------------------------------------------------------------
+# Actual Difference
+times=['0.2','0.3','0.4','0.5','0.6']
+cntr=0
+for item in ['8','12','16','20','24']:
+    Plot('timea'+item,['wfl2','wfls'],'''difference subtracter=${SOURCES[1]} |
+	      window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a clip=.0000001 wanttitle=n unit1= unit2=
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12  label1='Depth (km)' label2='Lateral (km)'
+              titlesz=6 screenratio=1 screenht=12 wheretitle=t''' % (item,times[cntr]))
+    cntr=cntr+1
+
+# ------------------------------------------------------------
+# Difference
+times=['0.2','0.3','0.4','0.5','0.6']
+cntr=0
+for item in ['8','12','16','20','24']:
+    Plot('timed'+item,['wfl2','wfl'],'''difference subtracter=${SOURCES[1]} |
+	      window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a clip=.0000001 wanttitle=n
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12  label1='Depth (km)' label2='Lateral (km)'
+              titlesz=6 screenratio=1 screenht=12 wheretitle=t''' % (item,times[cntr]))
+    Plot('timed2n'+item,['wfl2','wfl2n'],'''difference subtracter=${SOURCES[1]} |
+	      window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a clip=.0000001 wanttitle=n
+              pclip=99 wantframenum=n ttle=Wavefield\ at\ %s\ \(s\) labelsz=12  label1='Depth (km)' label2='Lateral (km)'
+              titlesz=6 screenratio=1 screenht=12 wheretitle=t''' % (item,times[cntr]))
+    Result('timeSide2'+item,['timea'+item,'timed'+item,'timed2n'+item],'SideBySideIso')
+    cntr=cntr+1
+End()

@@ -1,0 +1,97 @@
+from rsf.tex import *
+import glob, os
+
+for handout in glob.glob('handout*.tex'):
+    name = os.path.splitext(handout)[0]
+    Paper(name,
+          lclass='cwphandout',
+          use='hyperref,amsmath,color,listings')
+    
+# ------------------------------------------------------------
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+    
+for notes in glob.glob('notes*.tex'):
+    notesname = os.path.splitext(notes)[0]
+    Paper(notesname,
+          lclass='cwpnotes',
+          options='notesonly',
+          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+    
+# ------------------------------------------------------------
+#for article in glob.glob('article*.tex'):
+#    name = os.path.splitext(article)[0]
+#    Paper(name,
+#          lclass='geophysics',
+#          options='manuscript',
+#          use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem',
+#          include=r'''
+#          \linenumbers*[1]
+#          ''')
+
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='manuscript',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace',
+          include=r'''
+          \linenumbers*[1]
+          ''')
+    
+for report in glob.glob('report*.tex'):
+    name = os.path.splitext(report)[0]
+    Paper(name,lclass='cwpreport',
+          use='mathptm,color,amssymb,mathrsfs,amsbsy,geometry,lineno,ulem',
+          include=r'''
+          \setlength{\paperwidth}{8.5in}
+          \setlength{\paperheight}{11.0in}
+          \setlength{\topmargin}{-0.25in}
+          \setlength{\textheight}{8.75in}
+          \setlength{\textwidth}{6.5in}
+          \setlength{\oddsidemargin}{+.015625in}
+          \setlength{\evensidemargin}{+.015625in}
+          ''')
+    
+for cover in glob.glob('cover*.tex'):
+    name = os.path.splitext(cover)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='12pt',
+          use='')
+# ------------------------------------------------------------
+for segabs in glob.glob('segabs*.tex'):
+    name = os.path.splitext(segabs)[0]
+    Paper(name,
+          lclass='segabs',
+          options='notimes',
+          use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy')
+    
+#          use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem')
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,
+          lclass='eage',
+          options='11pt',
+          use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr')
+for adam in glob.glob('adam*.tex'):
+    name = os.path.splitext(adam)[0]
+    Paper(name,
+          lclass='adam2009',
+          options='11pt',
+          use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr')
+    
+# ------------------------------------------------------------
+#for paper in glob.glob('paper*.tex'):
+#    name = os.path.splitext(paper)[0]
+#    Paper(name,
+#          lclass='geophysics',
+#          options='',
+#          use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem')
+
+#End(lclass='geophysics',use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem,setspace,color')
+
+End()
