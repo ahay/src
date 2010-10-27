@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfmakevel', 'sfwindow', 'sfgrey', 'sfeikonal', 'sfdifference', 'sfmath', 'sfcontour', 'sfeikds']
+data=[]
+size=   32960000

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sfgrey', 'sfeikonal', 'sfcontour', 'sfmath', 'sfdifference', 'sfeikds']
+data=['data/marm/marmvel.hh', 'data/marm/marmsmooth.HH']
+size=    8446964
