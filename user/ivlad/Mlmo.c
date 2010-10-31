@@ -20,7 +20,6 @@
 
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 int main(int argc, char* argv[])
 {
@@ -35,7 +34,7 @@ int main(int argc, char* argv[])
     
     float *wp = NULL; 
     
-    float complex *tr = NULL;
+    sf_complex *tr = NULL;
     
     sf_file in, out;
 
@@ -77,7 +76,11 @@ int main(int argc, char* argv[])
         sf_complexread ( tr, nw, in ); /* Read the gather */
 
         for (iw=1; iw < nw; iw++) {
-            tr[iw] *= cexpf( -I * wp[iw] * x );
+#ifdef SF_HAS_COMPLEX_H
+            tr[iw] *= cexpf(sf_cmplx(0.,-wp[iw] * x ));
+#else
+	    tr[iw] = sf_cmul(tr[iw],cexpf(sf_cmplx(0.,-wp[iw] * x )));
+#endif
         }
     
         sf_complexwrite( tr, nw , out );
