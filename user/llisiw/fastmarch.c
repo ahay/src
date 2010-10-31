@@ -22,44 +22,37 @@
 
 #include "fastmarch.h"
 
-static int *n, order, *in;
-static float *o, *d;
-
-void fastmarch_init (int* n1    /* dimensions */,
-		     float* o1  /* origin */,
-		     float* d1  /* sampling */,
-		     int order1 /* accuracy order */) 
+void fastmarch_init (int n3,int n2,int n1) 
 /*< Initialize data dimensions >*/
 {
     int maxband;
     
-    n = n1;
-    order = order1;
-    o = o1;
-    d = d1;
-
-    in = sf_intalloc(n[0]*n[1]*n[2]);
-
     maxband = 0;
-    if (n[0] > 1) maxband += 2*n[1]*n[2];
-    if (n[1] > 1) maxband += 2*n[0]*n[2];
-    if (n[2] > 1) maxband += 2*n[0]*n[1];
+    if (n1 > 1) maxband += 2*n2*n3;
+    if (n2 > 1) maxband += 2*n1*n3;
+    if (n3 > 1) maxband += 2*n1*n2;
 
     sf_pqueue_init (10*maxband);
 }
 
 void fastmarch (float* time                /* time */, 
 		float* v                   /* slowness squared */, 
-		float* s                   /* source */)
+		int* in                    /* in/front/out flag */, 
+		bool* plane                /* if plane source */,
+		int   n3,  int n2,  int n1 /* dimensions */,
+		float o3,float o2,float o1 /* origin */,
+		float d3,float d2,float d1 /* sampling */,
+		float s3,float s2,float s1 /* source */,
+		int   b3,  int b2,  int b1 /* box around the source */,
+		int order                  /* accuracy order (1,2,3) */)
 /*< Run fast marching eikonal solver >*/
 {
-    float xs[3], *p;
-    int b[3], npoints, i;
-    bool plane[3];
-
-    xs[0] = s[0]-o[0]; b[0] = 1; plane[0] = false;
-    xs[1] = s[1]-o[1]; b[1] = 1; plane[1] = false;
-    xs[2] = s[2]-o[2]; b[2] = 1; plane[2] = false; 
+    float xs[3], d[3], *p;
+    int n[3], b[3], npoints, i;
+    
+    n[0] = n1; xs[0] = s1-o1; b[0] = b1; d[0] = d1;
+    n[1] = n2; xs[1] = s2-o2; b[1] = b2; d[1] = d2;
+    n[2] = n3; xs[2] = s3-o3; b[2] = b3; d[2] = d3;
 
     sf_pqueue_start();
     sf_neighbors_init (in, d, n, order, time);

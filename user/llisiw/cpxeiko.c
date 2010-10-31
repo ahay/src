@@ -93,6 +93,18 @@ void cpxeiko_forw(bool flag   /* real=true / imag=false */,
     }
 }
 
+void cpxeiko_solv(bool flag   /* real=true / imag=false */,
+		  float *out   /* output */,
+		  float *rhs  /* right-hand side */)
+/*< calculate update >*/
+{
+    if (flag) {
+	upgrad_solve(upgreal,rhs,out,NULL);
+    } else {
+	upgrad_solve(upgimag,rhs,out,NULL);
+    }
+}
+
 void cpxeiko_ref(int dim,
 		 int *n,
 		 float *d,

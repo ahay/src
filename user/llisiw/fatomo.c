@@ -21,107 +21,75 @@
 #include "upgrad.h"
 #include "fatomo.h"
 
-static int ns, nm;
-static upgrad *upg;
-static float *t, *tx;
-static bool **mask;
+static int nt, *mask;
+static float *tempt;
+static upgrad upg;
 
-void fatomo_init(int ns1             /* number of sources */,
-		 int dim             /* model dimensions */,
-		 const int *n        /* model size */,
-		 const float *d      /* model sampling */,
-		 bool **masks  /* [ns1][nm1] receiver mask */)
+void fatomo_init(int dim    /* model dimension */,
+		 int *n     /* model size */,
+		 float *d   /* model sampling */)
 /*< initialize >*/
 {
-    int is, i;
+    int i;
 
-    ns = ns1;
-
-    upg = (upgrad*) sf_alloc(ns,sizeof(upgrad));
-
-    for (is=0; is < ns; is++) {
-	upg[is] = upgrad_init(dim,n,d);
-    }
-
-    nm = 1;
+    nt = 1;
     for (i=0; i < dim; i++) {
-	nm *= n[i];
+	nt = nt*n[i];
     }
 
-    t = sf_floatalloc(nm);
-    tx = sf_floatalloc(nm);
+    tempt = sf_floatalloc(nt);
 
-    mask = masks;
+    upg = upgrad_init(dim,n,d);
+}
+
+void fatomo_set(float *t   /* stencil time */,
+		int *m     /* mask */)
+/*< set fatomo operator and right-hand side >*/
+{
+    /* set stencil */
+    upgrad_set(upg,t);
+
+    /* set mask */
+    mask = m;
 }
 
 void fatomo_close(void)
 /*< free allocated storage >*/
 {
-    int is;
-
-    for (is=0; is < ns; is++) {
-	upgrad_close(upg[is]);
-    }
-    free(upg);
-    free(t);
-    free(tx);
-}
-
-void fatomo_set(float **times  /* [ns1][nm] background times */,
-	        float **record /* [ns1][nrhs/ns1] record times */,
-		float *rhs     /* right-hand side */)
-/*< set background traveltime and right-hand side >*/
-{ 
-    int is, im, ir, it;
-
-    ir = 0;
-    for (is=0; is < ns; is++) {
-	upgrad_set(upg[is],times[is]);
-
-	it = 0;
-	for (im=0; im < nm; im++) {
-	    if (mask[is][im]) {
-		rhs[ir] = record[is][it]-times[is][im];
-		it++;
-		ir++;
-	    }
-	}
-    }
+    upgrad_close(upg);
 }
 
 void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
-    int ir, is, im;
-
-    if (nx != nm) sf_error("%s: Wrong dimensions",__FILE__);
+    int it, count;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
-    ir = 0;
-    for (is=0; is < ns; is++) {
-	if (adj) {
-	    for (im=0; im < nm; im++) {
-		if (mask[is][im]) {
-		    t[im] = r[ir];
-		    ir++;
-		} else {
-		    t[im] = 0.;
-		}
+    if (adj) {
+	/* given dt solve ds */
+
+	count = 0;
+	for (it=0; it < nt; it++) {
+	    if (mask[it] == 1) {
+		tempt[it] = r[count];
+		count++;
+	    } else {
+		tempt[it] = 0.;
 	    }
-	    upgrad_inverse(upg[is],tx,t,NULL);
-	    
-            /* accumulate x from different shots */
-	    for (im=0; im < nm; im++) {
-		x[im] += tx[im];
-	    }
-	} else {
-	    upgrad_solve(upg[is],x,t,NULL);
-	    for (im=0; im < nm; im++) {
-		if (mask[is][im]) {
-		    r[ir] += t[im];
-		    ir++;
-		}
+	}
+	
+	upgrad_inverse(upg,x,tempt,NULL);
+    } else {
+	/* given ds solve dt */
+
+	upgrad_solve(upg,x,tempt,NULL);
+
+	count = 0;
+	for (it=0; it < nt; it++) {
+	    if (mask[it] == 1) {
+		r[count] = tempt[it];
+		count++;
 	    }
 	}
     }

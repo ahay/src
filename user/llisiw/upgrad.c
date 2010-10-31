@@ -127,8 +127,10 @@ void upgrad_close(upgrad upg)
 {
     free(*(upg->ww));
     free(upg->ww);
+    free(*(upg->update));
     free(upg->update);
     free(upg->order);
+    free(upg);
 }
 
 void upgrad_solve(upgrad upg,

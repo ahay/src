@@ -24,7 +24,8 @@
 static float *d;
 static int *n, *in;
 
-void fastmarchcpx_init(int *n_in, float *d_in) 
+void fastmarchcpx_init(int *n_in    /* length */, 
+		       float *d_in  /* sampling */) 
 /*< initailize >*/
 {
     int maxband;
@@ -42,9 +43,9 @@ void fastmarchcpx_init(int *n_in, float *d_in)
     in = sf_intalloc(n[0]*n[1]*n[2]);
 }
 
-void fastmarchcpx (float* time                /* time */,
-		   float* t0                  /* fixed traveltime */,
-		   float* v                   /* slowness squared */)
+void fastmarchcpx (float* time  /* time */,
+		   float* t0    /* fixed traveltime */,
+		   float* v     /* slowness squared */)
 /*< Run fast marching eikonal solver >*/
 {
     float *p;
@@ -79,6 +80,3 @@ void fastmarchcpx_close(void)
     sf_pqueue_close();
     free(in);
 }
-
-
-
