@@ -23,7 +23,6 @@
 #include "lapfill.h"
 
 #include "laplac2.h"
-#include "igrad2.h"
 
 static int n12;
 static float* zero;
@@ -48,7 +47,7 @@ void lapfill_init (int m1, int m2 /* model size */,
     }
 
     if (grad) {
-	igrad2_init (m1,m2);
+	sf_igrad2_init (m1,m2);
     } else {
 	laplac2_init (m1,m2);
     }
@@ -66,7 +65,7 @@ void lapfill(int niter   /* number of iterations */,
 /*< interpolate >*/
 {
     if (grad) {
-	sf_solver (igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
+	sf_solver (sf_igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
 		   niter, "x0", mm, "known", known, "end");
     } else {
 	sf_solver (laplac2_lop, sf_cgstep, n12, n12, mm, zero, 

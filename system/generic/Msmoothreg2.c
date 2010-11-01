@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <math.h>
 #include <rsf.h>
-#include "igrad2.h"
 
 int main(int argc, char* argv[])
 {
@@ -49,10 +48,10 @@ int main(int argc, char* argv[])
 
     sf_floatread(trace,n12,in);
 
-    igrad2_init(n1,n2);
+    sf_igrad2_init(n1,n2);
 
     for (ir=0; ir < nr; ir++){
-	sf_solver_reg (sf_copy_lop, sf_cgstep, igrad2_lop, 
+	sf_solver_reg (sf_copy_lop, sf_cgstep, sf_igrad2_lop, 
 		       2*n12, n12, n12, out, trace, 
 		       2*n12, eps, "end");
 	sf_cgstep_close();

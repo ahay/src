@@ -17,14 +17,17 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "igrad2.h" 
 
+#include "error.h"
+#include "adjnull.h"
+
 static int n1, n2, n12; 
 
-void igrad2_init (int n1_in, int n2_in)
+void sf_igrad2_init (int n1_in, int n2_in)
 /*< initialize with data dimensions >*/
 {
     n1 = n1_in; 
@@ -32,7 +35,7 @@ void igrad2_init (int n1_in, int n2_in)
     n12 = n1*n2;
 }
 
-void igrad2_lop (bool adj, bool add, int np, int nr, float* p, float* r)
+void sf_igrad2_lop (bool adj, bool add, int np, int nr, float* p, float* r)
 /*< linear operator, r[n1*n2*2] is the gradient of p[n1*n2] >*/
 {
     int i1,i2,i;
