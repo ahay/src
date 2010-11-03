@@ -1,0 +1,3 @@
+from rsf.tex import *
+
+End(options='short')
