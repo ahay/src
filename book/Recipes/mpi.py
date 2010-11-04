@@ -1,4 +1,8 @@
 from rsf.proj import *
+import os
+
+def processes(nodes):
+    return nodes*os.environ.get('OMP_NUM_THREADS',8)
 
 def _find(np,command):
     ''' Find the mpiexec command, and the command to execute '''
@@ -17,20 +21,25 @@ def encode(encodings, shotGathers, encoding,
     dprefix - data prefix
     nx,ox,dx,ny,oy,dy - output coordinates for encodings
     '''
+    
+    if not '.rsf' in eprefix:
+        fprefix +='.rsf'
+    if not '.rsf' in dprefix:
+        fprefix +='.rsf'
     shotGathers.insert(0,encoding) 
     Flow(encodings, shotGathers,
         '''
         %s
-        eprefix=%s
-        dprefix=%s
         ''' % (_find(np,'sfbigmpiencode'),eprefix,dprefix) + 
+        '''eprefix=''' + eprefix + 
+        '''dprefix=''' + dprefix + 
         '''
         encode=${SOURCES[0]}
         nx=%d ox=%f dx=%f
         ny=%d oy=%f dy=%f
         ''' % (nx,ox,dx,ny,oy,dy) ,stdin=0, stdout=-1)
         
-def stack(stack,files,np,fprefix,oprefix,nx,ox,dx,ny,oy,dy):
+def gridandstack(stack,files,np,fprefix,oprefix,nx,ox,dx,ny,oy,dy):
     ''' stack files using sfbigencode, does not require files
     to be on the same cube, will relocate them in the cube
     
@@ -58,4 +67,34 @@ def stack(stack,files,np,fprefix,oprefix,nx,ox,dx,ny,oy,dy):
         ''')
     encode(stack,files,stack+'-encode',
         np,oprefix,fprefix,nx,ox,dx,ny,oy,dy)
+        
+def stack(stack,np,fprefix,nf,of,jf):
+    ''' stack files using sfmpistack
+    
+    stack - output file
+    np - number of processes
+    fprefix - input file name prefix
+    nf - number of files
+    of - origin of files
+    jf - delta of files
+    see self-doc for more info
+    '''
+    
+
+    filerange = range(of,of+nf*jf,jf)
+    
+    files = [ fprefix % f for f in filerange]
+    
+    
+    if not '.rsf' in fprefix:
+        fprefix +='.rsf'
+        
+    Flow(stack,files,
+        '''
+        %s
+        nf=%d
+        of=%d
+        jf=%d
+        ''' % (_find(np,'sfmpistack'),nf,of,df) + 
+        ''' fprefix='''+fprefix)
         
