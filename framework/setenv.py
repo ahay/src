@@ -16,24 +16,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys
-
-if sys.version_info[:2] < (2, 7):
-    import distutils.sysconfig as sysconfig
-else:
-    import sysconfig
+import os, sys, distutils.sysconfig
 
 ################################################################################
 
 def get_local_site_pkgs(root=None, verb=False):
     'Get the directory that should be added to PYTHONPATH'
 
-    central_site_pkgs = sysconfig.get_python_lib()
+    central_site_pkgs = distutils.sysconfig.get_python_lib()
 
     # This is actually platform dependent (Mac vs. Linux), because Python is not
     # as cross-platform as it should be. When we need to install in a 
     # canonical location on Mac, platform detection will be included
-    prefix = sysconfig.PREFIX
+    prefix = distutils.sysconfig.PREFIX
     
     if root == None:
         root = os.environ.get('RSFROOT', prefix) 
