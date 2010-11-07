@@ -4,9 +4,10 @@ import bldutil
 
 progs = '''
 kirmig kirmig0 drayinte lineiko lintest
-testanal gradient cconst cgconst fatomo
-mkrhs cpxeiko
+testanal gradient cconst cgconst
+fatomo mkrhs cpxeiko
 '''
+
 
 
 try:  # distributed version

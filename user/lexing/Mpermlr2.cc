@@ -107,9 +107,10 @@ int main(int argc, char** argv)
 		kz = kz0+iz*dkz;
 		kz *= kz;
 
-		kz = SF_MAX(kz,kh);
+		// kz = SF_MAX(kz,kh);
+		kh = SF_MIN(100*kz,kh);
 		
-		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt((kx+kz)*(1+kh/kz));
+		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt((kx+kz)*(1+kh/(kz+0.0001)));
 	    }
 	}
     }
