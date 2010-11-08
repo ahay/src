@@ -2,16 +2,16 @@ from rsf.proj import *
 import os
 
 def processes(nodes):
-    return nodes*os.environ.get('OMP_NUM_THREADS',8)
+    return nodes*int(os.environ.get('OMP_NUM_THREADS','8'))
 
-def _find(np,command):
+def _find(np,command,custom=''):
     ''' Find the mpiexec command, and the command to execute '''
-    return '%s -np %d %s' % (WhereIs('mpiexec'),np,WhereIs(command))
+    return '%s -np %d %s %s' % (WhereIs('mpiexec'),np,custom,WhereIs(command))
 
 def encode(encodings, shotGathers, encoding, 
            np, 
            eprefix, dprefix,
-           nx,ox,dx,ny,oy,dy):
+           nx,ox,dx,ny,oy,dy,custom):
     ''' encode using sfbigmpiencode
     encodings - list of produced encoding files
     shotGathers - lsit of shotgathers to encode
@@ -23,16 +23,16 @@ def encode(encodings, shotGathers, encoding,
     '''
     
     if not '.rsf' in eprefix:
-        fprefix +='.rsf'
+        eprefix +='.rsf'
     if not '.rsf' in dprefix:
-        fprefix +='.rsf'
+        dprefix +='.rsf'
     shotGathers.insert(0,encoding) 
     Flow(encodings, shotGathers,
         '''
         %s
-        ''' % (_find(np,'sfbigmpiencode'),eprefix,dprefix) + 
-        '''eprefix=''' + eprefix + 
-        '''dprefix=''' + dprefix + 
+        ''' % (_find(np,'sfbigmpiencode',custom)) + 
+        ''' eprefix=''' + eprefix + 
+        ''' dprefix=''' + dprefix + 
         '''
         encode=${SOURCES[0]}
         nx=%d ox=%f dx=%f
@@ -95,6 +95,6 @@ def stack(stack,np,fprefix,nf,of,jf):
         nf=%d
         of=%d
         jf=%d
-        ''' % (_find(np,'sfmpistack'),nf,of,df) + 
+        ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
         ''' fprefix='''+fprefix)
         
