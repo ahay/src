@@ -1,11 +1,6 @@
 from rsf.proj import *
 from rsf.recipes.velcon import velcon
-
-import os
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
-
+from rsf.recipes.beg import server as private
 
 Fetch('elf0.H','elf',private)
 

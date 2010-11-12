@@ -28,11 +28,11 @@ static int n1, n2, rect;
 static float *t, *t2;
 
 void pbeamform_init(bool gauss1    /* pseudo-gaussian */,
-		   int m1, int m2 /* data dimensions */, 
-		   int rect1      /* triangle radius */)
+		    int m1, int m2 /* data dimensions */, 
+		    int order, 
+		    int rect1      /* triangle radius */)
 /*< initialize >*/
 {
-    const int order=1;
     const float eps=0.01;
 
     n1=m1;

@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj, gauss;
-    int n1, nc, nd, n3, i3, nb, n1c, n1d;
+    int n1, nc, nd, n3, i3, nb, n1c, n1d, order;
     float *dense, *coarse, **slope, d2;
     sf_file in, out, dip;
 
@@ -61,7 +61,10 @@ int main(int argc, char* argv[])
     n1d = n1*nd;
     n1c = n1*nc;
 
-    pbeamform_init(gauss, n1, nd, nb);
+    if (!sf_getint("order",&order)) order=1;
+    /* PWD accuracy order */
+
+    pbeamform_init(gauss, n1, nd, order, nb);
 
     dense = sf_floatalloc(n1d);
     coarse = sf_floatalloc(n1c);
