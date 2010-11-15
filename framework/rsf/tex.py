@@ -675,7 +675,8 @@ Latify = Builder(action = Action(latify,
                  src_suffix='.tex',suffix='.ltx')
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex','lclass',
                                                'options','resdir']),
-              src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
+              source_scanner=LaTeXS,emitter=latex_emit,
+              src_suffix='.ltx',suffix='.pdf')
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
 Figs = Builder(action=Action(copyfigs),
                src_suffix='.pdf',emitter=listoffigs)
@@ -969,7 +970,6 @@ class TeXPaper(Environment):
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)
         pdf = self.Pdf(target=paper,source=paper+'.ltx',
-                       source_scanner=LaTeXS,
                        lclass=lclass,options=options,resdir=resdir)
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
