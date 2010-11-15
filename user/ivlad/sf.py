@@ -339,6 +339,32 @@ exe=None):
 
 ################################################################################
 
+def slant(inp=None, out=None, adj=False, rho=None, anti=None, np=None, dp=None,
+p0=None, x0=None, dx=None, nx=None, p1=None, verb=False, exe=None):
+
+    if adj:
+        if np == None:
+            raise m8rex.ConflictingArgs('np','None','adj','y')
+        if p0 == None:
+            raise m8rex.ConflictingArgs('p0','None','adj','y')
+        if dp == None:
+            raise m8rex.ConflictingArgs('dp','None','adj','y')
+        adj = 'y'
+    else:
+        if nx == None:
+            raise m8rex.ConflictingArgs('nx','None','adj','y')
+        if x0 == None:
+            raise m8rex.ConflictingArgs('x0','None','adj','y')
+        if dx == None:
+            raise m8rex.ConflictingArgs('dx','None','adj','y')
+        adj = 'n'
+
+    return __run('sfslant', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
+
+################################################################################
+
 def split(inp, outdir=None, nthick=None, verb=False, exe=None):
 
     arg_dict = locals()
