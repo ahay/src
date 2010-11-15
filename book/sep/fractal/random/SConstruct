@@ -48,6 +48,16 @@ for case in Split('gauss expo fractal layered isotropic'):
            grey3 flat=n label1=X label2=Y label3=Z wanttitle=n
            ''')
 
+autocorr =  '''
+fft1 | 
+math output="input*conj(input)" |
+fft1 inv=y |
+stack axis=3 |
+stack axis=2 |
+window n1=50 |
+scale axis=1
+'''
+
 for case in Split('layered isotropic'):
     bin = case[:3]+'-bin'
     Flow(bin,case,'mask min=0')
@@ -58,15 +68,17 @@ for case in Split('layered isotropic'):
            grey3 flat=n label1=X label2=Y label3=Z wanttitle=n
            ''')
 
-    auto = case[:3]+'-auto'
-    Flow(auto,case,
-         '''
-         window f3=31 n3=1 |
-         fft1 | fft3 axis=2 |
-         math output="input*conj(input)" |
-         fft3 axis=2 inv=y | fft1 inv=y |
-         stack norm=n | window n1=50
-         ''')
-    
+    auto = case[:3]+'-auto'    
+    Flow(auto,case,autocorr)
 
+    autobin = auto+'bin'
+    Flow(autobin,bin,'dd type=float | add add=-0.5 | ' + autocorr)
+    
+    Result(auto,[auto,autobin],
+           '''
+           cat axis=2 ${SOURCES[1]} |
+           graph dash=0,1 title="Autocorrelation"
+           label1=Lag label2="Normalized Autocorrelation"
+           ''')
+    
 End()

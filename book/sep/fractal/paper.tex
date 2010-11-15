@@ -31,12 +31,12 @@ Solutions to the one-dimensional problem have targeted the study of reflectivity
 series obtained from well logs. 
 Seismic impedance can be modeled as a special type of Markov
 chain, one which is constrained to have a purely exponential correlation
-function \cite{Godfrey}. 
+function \cite[]{Godfrey}. 
 The two-dimensional problem has gained a lot of attention in the 
 recent years from studies of seismic scattering in heterogeneous media, e.g.,  
-\cite{Wu,Frankel,Goff,Holliger1,Holliger2}.  
+\cite[]{Wu,Frankel,Goff,Holliger1,Holliger2}.  
 Three dimensional simulations can 
-be used in fluid flow experiments \cite{Popovici.sep.60.295}.\\ 
+be used in fluid flow experiments \cite[]{Popovici.sep.60.295}.\\ 
 \par
 This paper presents
 a method for simulating three-dimensional anisotropic random fields 
@@ -49,10 +49,10 @@ correlation functions in modeling random sequences.
 This type of correlation function was first introduced by von Karman (1948)
 for characterizing the random velocity field of a turbulent medium. It has 
 since been frequently used in the statistical literature, studies
-of turbulence problems, e.g.\cite{Tatarski},
-and studies of random media such as wave scattering, e.g.\cite{Chernov}.
+of turbulence problems, e.g.\cite[]{Tatarski},
+and studies of random media such as wave scattering, e.g.\cite[]{Chernov}.
 The von Karman functions were identified specifically as belonging to the
-class of continuous correlation functions \cite{Matern}.
+class of continuous correlation functions \cite[]{Matern}.
 Holliger et al. (1993) used von Karman covariance functions to model binary
 fields and defined ``binarization'' as a mapping of all values in
 a continuous field to just two values of the new field.
@@ -67,7 +67,7 @@ increase in medium roughness through the ``binarization'' process.
 We first construct a distribution function P(x)
 for the properties of the medium h(x). From such a probability function, we
 can recover the statistical properties of the distribution (i.e., mean, variance
-, etc.) through its N-point statistical moments \cite{Goff}.
+, etc.) through its N-point statistical moments \cite[]{Goff}.
 \begin{eqnarray}
  C_N(x_1,x_2,...,x_N)& =& <h(x_1)...h(x_N)> \nonumber \\
                      & =& \int_{-\infty}^{+\infty}...\int_{-\infty}^{+\infty}h_1...h_NP(
@@ -107,13 +107,13 @@ autocorrelation function. More generally, an anisotropic random field can be
 described by a monotonically decaying autocorrelation function whose rate of
 decay depends on direction. The roughness of the medium is function of the 
 decay rate of the correlation. The Fourier transform of the autocorrelation is 
-the power spectrum of the field \cite{Bracewell}. Three types of correlation
+the power spectrum of the field \cite[]{Bracewell}. Three types of correlation
 functions were commonly used in the field of seismic modeling: the Gaussian,
 exponential and von Karman functions. These special functions are described by
 analytic expressions of their autocorrelations and Fourier transforms. 
 \par
 Two-dimensional cases have been studied for some
-time\cite{Wu,Frankel,Goff,Holliger1,Holliger2}.
+time\cite[]{Wu,Frankel,Goff,Holliger1,Holliger2}.
 Within the last several years, computer capacity and speed have grown rapidly.
 It is now feasible to extend our models and simulations to the 
 three-dimensional case.
@@ -121,7 +121,7 @@ three-dimensional case.
 \subsection { von Karman correlation functions }
 \inputdir{XFig}
 
-The three-dimensional anisotropic von Karman function is given by \cite{Goff}:
+The three-dimensional anisotropic von Karman function is given by \cite[]{Goff}:
 \begin{equation}
 C(r)=\frac{4\pi{\nu}H^2r^{\nu}K_{\nu}(r)}{K_{\nu}(0)} \
 \label {eq7}
@@ -137,7 +137,7 @@ $a_x$, $a_y$ and $a_z$ are the characteristic scales of the medium along the
 3-dimensions and $k_x$, $k_y$ and $k_z$ are the wavenumber components. 
 $K_\nu$ is the modified Bessel function of order $\nu$, 
 where $0.0<\nu<1.0$ is the 
-Hurst number \cite{Mandelbrot1,Mandelbrot2}. The fractal dimension of a stochastic
+Hurst number \cite[]{Mandelbrot1,Mandelbrot2}. The fractal dimension of a stochastic
 field characterized by a von Karman autocorrelation is given by:
 \begin{equation}
 D=E+1-\nu \
@@ -145,7 +145,7 @@ D=E+1-\nu \
 \end{equation}
 where $E$ is the Euclidean dimension i.e., $E=3$ for the three-dimensional problem.
 The special case of $\nu=0.5$ yields to the exponential covariance 
-function that corresponds to a Markov process \cite{Feller}.
+function that corresponds to a Markov process \cite[]{Feller}.
 \begin{equation}
 C(r)=H^2e^{-r} \
 \label {eq9}
@@ -253,7 +253,7 @@ A von Karman correlation function with a Hurst number smaller than 0.5
 would have given a better fit to the autocorrelation of the impedance series.
 The autocorrelation of the impedance function provides information on the
 depositional pattern in the sedimentary column i.e, cyclic or transitional 
-\cite {ODA}.\
+\cite[] {ODA}.\
 \par
 Figure \ref{fig:imped} shows a comparison of one-dimensional random sequences that simulate
 synthetic impedances with von Karman correlation functions of varying
@@ -268,7 +268,7 @@ Hurst number $\nu$.}
 
 %\section{From Continuous to Binary Fields}
 \section{GENERATING TWO-STATE MODELS}
-\inputdir{imped}
+\inputdir{random}
 
  In the geophysical world we often deal with heterogeneous media 
 whose inhomogeneities are caused by the presence of two different 
@@ -281,7 +281,7 @@ inadequate to describe randomness in similar settings. I seek to describe
 a random field in which the medium can be represented as a two-state model. 
 This new field is called a binary field and the 
 process of deriving the binary field from the continuous field is called 
-``binarization'' \cite{Holliger2}. The problem is to relate the statistics
+``binarization'' \cite[]{Holliger2}. The problem is to relate the statistics
 of the binary field to those of the continuous field. 
 Holliger et al. (1993) gave a brief description of their mapped two-dimensional binary field which I 
 apply in a straightforward generalization to the three-dimensional problem.\
@@ -308,18 +308,18 @@ the same observations for the isotropic random field with Gaussian
 autocorrelation; again the roughness
 of the field has increased as indicated by the steepening in the slope of the
 autocorrelation.
-\activeplot{layered}{height=3.0in}{}{Synthetic continuous random field with
+\plot{layered}{height=3.0in}{Synthetic continuous random field with
 apparent layering and Gaussian autocorrelation; $a_x=5$, $a_y=80$, $a_z=80$.}
-\activeplot{lay-bin}{height=3.0in}{}{Synthetic binary field derived from the
+\plot{lay-bin}{height=3.0in}{Synthetic binary field derived from the
 continuous realization of a layered random field with Gaussian autocorrelation.}
-\activeplot{isotropic}{height=3.0in}{}{Synthetic continuous random field with
+\plot{isotropic}{height=3.0in}{Synthetic continuous random field with
 isotropic Gaussian autocorrelation function; $a_x=15$, $a_y=15$, $a_z=15$. }
-\activeplot{iso-bin}{height=3.0in}{}{Synthetic binary field derived from the
+\plot{iso-bin}{height=3.0in}{Synthetic binary field derived from the
 continuous realization of a random field with Gaussian autocorrelation.}
-\activeplot{auto-expo}{height=2.75in}{}{Autocorrelation functions of the
+\plot{lay-auto}{height=2.75in}{Autocorrelation functions of the
 continuous (solid lines) and binary (dashed lines) fields for the layered
 random medium with exponential correlation.} 
-\activeplot{auto-gauss}{height=2.75in}{}{Autocorrelation functions of the
+\plot{iso-auto}{height=2.75in}{Autocorrelation functions of the
 continuous (solid lines) and binary (dashed lines) fields for the isotropic
 random medium with Gaussian correlation} 
 %
@@ -366,7 +366,7 @@ the Fourier transform of its covariance function:
 P(k)=\int_{-\infty}^{+\infty}\int_{-\infty}^{+\infty}\int_{-\infty}^{+\infty} C(r)e^{-ik\cdot r} d^3r \
 \label {eqA1}
 \end{equation}
-Using the N-dimensional Hankel transform \cite{lord}, the covariance function
+Using the N-dimensional Hankel transform \cite[]{lord}, the covariance function
 and its Fourier transform can be related as follows:
 \begin{equation}
 p(k)=(2\pi)^{N/2}k^{-N/2+1}\int_{0}^{\infty} r^{N/2}J_{N/2-1}(rk)C(r)dr \
@@ -400,6 +400,7 @@ P(k)=4\pi\nu H^2 {(1+k^2)}^{(-\nu-3/2)} \
 \label {eqA7}
 \end{equation}
 
-\putbib[SEP,../nizar2/random]
-%\putbib[SEP,random]
+\bibliographystyle{seg}
+\bibliography{SEP2,random}
+
 
