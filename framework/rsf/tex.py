@@ -121,8 +121,7 @@ def latexscan(node,env,path):
     inputs = filter(os.path.isfile,
                     map(lambda x: x+('.tex','')[os.path.isfile(x)],
                         linput.findall(contents)))
-    tex = os.path.splitext(str(node))[0]+'.tex'
-    inputs.append(tex)
+    inputs.append(top[:-4]+'.tex')
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')
     plots = []
