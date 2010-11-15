@@ -115,7 +115,7 @@ def latexscan(node,env,path):
         geomanuscript = lclass == 'geophysics' and string.rfind(options,'manuscript') >= 0
 
     top = str(node)
-    if top[-4:] != '.tex':
+    if top[-4:] != '.ltx':
         return []
     contents = node.get_contents()
     inputs = filter(os.path.isfile,
@@ -176,9 +176,10 @@ def latexscan(node,env,path):
             file = file+'.bib'
             if os.path.isfile(file):
                 bibs.append(file)
-    return plots + inputs + bibs
+    check = plots + inputs + bibs
+    return check
 
-LaTeX = Scanner(name='LaTeX',function=latexscan,skeys=['.tex'])
+LaTeXS = Scanner(name='LaTeX',function=latexscan,skeys=['.ltx'])
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -671,8 +672,9 @@ def pylab(target=None,source=None,env=None):
 Latify = Builder(action = Action(latify,
                                  varlist=['lclass','options','use',
                                           'include','resdir']),
-                 src_suffix='.tex',suffix='.ltx',source_scanner=LaTeX)
-Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
+                 src_suffix='.tex',suffix='.ltx')
+Pdf = Builder(action=Action(latex2dvi,varlist=['latex','lclass',
+                                               'options','resdir']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
 Figs = Builder(action=Action(copyfigs),
@@ -776,7 +778,7 @@ class TeXPaper(Environment):
 			 'RSF_REPOSITORY': os.environ.get('RSF_REPOSITORY'),
 			 'RSF_ENSCRIPT': WhereIs('enscript'),
                          'HOME': os.environ.get('HOME')},
-                    SCANNERS=LaTeX,
+                    SCANNERS=LaTeXS,
                     BUILDERS={'Latify':Latify,
                               'Pdf':Pdf,
                               'Wiki':Wiki,
@@ -966,7 +968,9 @@ class TeXPaper(Environment):
         ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)
-        pdf = self.Pdf(target=paper,source=paper+'.ltx')
+        pdf = self.Pdf(target=paper,source=paper+'.ltx',
+                       source_scanner=LaTeXS,
+                       lclass=lclass,options=options,resdir=resdir)
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
         pdfinstall = self.Install(self.docdir,paper+'.pdf')

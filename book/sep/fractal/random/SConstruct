@@ -58,4 +58,15 @@ for case in Split('layered isotropic'):
            grey3 flat=n label1=X label2=Y label3=Z wanttitle=n
            ''')
 
+    auto = case[:3]+'-auto'
+    Flow(auto,case,
+         '''
+         window f3=31 n3=1 |
+         fft1 | fft3 axis=2 |
+         math output="input*conj(input)" |
+         fft3 axis=2 inv=y | fft1 inv=y |
+         stack norm=n | window n1=50
+         ''')
+    
+
 End()
