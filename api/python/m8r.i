@@ -297,7 +297,8 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
     {
 	PyObject *array;
 	char *filename, *data;
-	int fd, nd, n[SF_MAX_DIM], type;
+	int id, fd, nd, n[SF_MAX_DIM], type;
+	npy_intp *dims;
 	struct stat statbuf;
 	
 	/* memory map */
@@ -308,6 +309,9 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 	
 	/* dimensions and type */
 	nd = sf_filedims (file, n);
+	dims = sf_alloc(nd,sizeof(*dims));
+	for (id=0; id < nd; id++) dims[id]=n[id];
+
 	switch (sf_gettype(file)) {
 	    case SF_FLOAT:
 		type = PyArray_FLOAT;
@@ -328,8 +332,8 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 		type = PyArray_FLOAT;
 		break;
 	}
-	
-	array = PyArray_FromDimsAndData(nd,n,type,data);
+
+	array = PyArray_SimpleNewFromData(nd,dims,type,data);
 	return array;
     }
 %}
