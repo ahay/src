@@ -100,7 +100,7 @@ void slant_lop (bool adj,
 		t = pull? z + sxx: z - sxx;
 
 		str[it] = t;
-		tx[it] = anti*(s-s1);
+		tx[it] = anti*(s-s1)*dx;
 		amp[it] = 1.;
 	    } /* it */
 
