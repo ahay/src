@@ -45,6 +45,7 @@ void slant_init (bool pull1                     /* pull or push mode */,
     s0 = s01; ds = ds1; ns = ns1;
     t0 = t01; dt = dt1; nt = nt1; 
     s1 = s11; 
+    anti = anti1;
 
     aastretch_init (false, nt, t0, dt, nt);
     if (rho) {
