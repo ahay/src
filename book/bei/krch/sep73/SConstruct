@@ -2,7 +2,7 @@ from rsf.proj import *
 
 Flow('mod3',None,
      '''sigmoid n1=200 d2=.008 n2=200 |
-     smooth rect1=3 diff1=1 |
+     smooth rect1=3 diff1=1 adj=y |
      smooth rect1=3''')
 Flow('dki','mod3',
      'preconstkirch inv=y zero=y vel=1.5 nh=1 h0=0 dh=0')
