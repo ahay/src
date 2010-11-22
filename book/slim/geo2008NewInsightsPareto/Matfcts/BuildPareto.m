@@ -1,4 +1,4 @@
-function BuildPareto(fname,xnname,rnname,xbnname,rbnname,xinname,rinname)
+function BuildPareto(xnname,rnname,xbnname,rbnname,xinname,rinname)
 % Author      : G. Hennenfent
 %               Seismic Laboratory for Imaging and Modeling
 %               Department of Earth & Ocean Sciences
@@ -25,14 +25,45 @@ function BuildPareto(fname,xnname,rnname,xbnname,rbnname,xinname,rinname)
 %  along with this program; if not, write to the Free Software
 %  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+P = generateProblem(901);
+A = P.A;
+y = P.b;
+
+maxiters = 100;
+nbpts = 20;
+xNorm = zeros(1,nbpts);
+rNorm = zeros(1,nbpts);
+gNorm = zeros(1,nbpts);
+
+% set SPGL1 parameters
+opts  = spgSetParms('iterations', maxiters, ...
+                    'verbosity' ,        2, ...
+                    'bpTol'     ,     1e-5, ...
+                    'optTol'    ,     1e-5, ...
+                    'decTol'    ,     1e-3, ...
+                    'subspaceMin',    0     ...
+                    );
+sigma = 0;
+tau   = 0;
+
+% compute Pareto curve
+[x, r, g, info] = spgl1(A, y, tau, sigma, [], opts);
+xNorm = linspace(0,norm(x,1),nbpts);
+rNorm(end) = norm(r,2);
+gNorm(end) = norm(g,2);
+
+xprev = [];
+
+% compute Pareto curve
+for i = 1:(nbpts-1)
+    [x, r, g, info] = spgl1(A, y, xNorm(i), [], xprev, opts);
+    rNorm(i) = info.rNorm;
+    gNorm(i) = info.gNorm;
+    xprev = x;
+end
+
 jump = 6;
 pts  = 1001;
-
-load(fname)
-
-xNorm = xNorm(:);
-rNorm = rNorm(:);
-gNorm = gNorm(:);
 
 xbNorm = xNorm(1:jump:end);
 rbNorm = rNorm(1:jump:end);

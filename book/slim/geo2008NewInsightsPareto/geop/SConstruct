@@ -28,15 +28,15 @@ matROOT = '../Matfcts'
 # define customized plotting function
 def mygrey(title,label1="Time",label2="Offset",unit1="s",unit2="m"):
     return '''
-    sfgrey title="%s" minval=-.5 maxval=.5 clip=.2 crowd1=.5 crowd2=.75
+    sfgrey title="%s" minval=-2 maxval=2 clip=4 crowd1=.5 crowd2=.75
     label1="%s" unit1="%s" label2="%s" unit2="%s" parallel2=n
     '''%(title,label1,unit1,label2,unit2)
 
 # define plot parameters
 min1 = 0
-max1 = 4e3
+max1 = 2.25e4
 min2 = -1
-max2 = 110
+max2 = 250
 
 # define number of iterations
 maxiters = 100
@@ -47,16 +47,10 @@ FTPserver = {
     'login':'anonymous',
     'password':'ghennenfent@eos.ubc.ca'}
 
-loc = '/users/hegilles/papers/spsolvers/geop/'
-fname = 'paretocurve.mat'
-
-# fetch figures from FTP server
-Fetch(fname,loc,FTPserver)
-
 matfun = 'BuildPareto'
-Flow('pxnorms prnorms pbxnorms pbrnorms pixnorms pirnorms',['./'+fname,os.path.join(matROOT,matfun+'.m')],
+Flow('pxnorms prnorms pbxnorms pbrnorms pixnorms pirnorms',[os.path.join(matROOT,matfun+'.m')],
      matlab + '''
-     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$SOURCE','$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
      '''%vars(),stdin=0,stdout=-1)
 Flow('ppath','pxnorms prnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
 Flow('pbpath','pbxnorms pbrnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
