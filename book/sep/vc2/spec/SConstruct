@@ -4,7 +4,7 @@ import math
 Flow('mod',None,
      '''
      sigmoid n1=200 d2=.008 n2=200 |
-     smooth rect1=3 diff1=1 |
+     smooth rect1=3 diff1=1 adj=y |
      smooth rect1=3 |
      scale dscale=150
      ''')

@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int dim, dim1, i, n1, i1, i2, n2, niter, n[SF_MAX_DIM]; 
     int rect[SF_MAX_DIM];
     char key[6];	
-    float done, dtwo;
+    double norm;
     float *one, *two, *rat1, *rat2;
     sf_file in, other, out;
 
@@ -77,34 +77,25 @@ int main(int argc, char* argv[])
 
 	sf_floatread(one,n1,in);
         sf_floatread(two,n1,other);
-
-	/* normalization */
-
-        done = 0.;
-        dtwo = 0.;
-	for (i1=0; i1 < n1; i1++) {
-	    done += one[i1]*one[i1];
-            dtwo += two[i1]*two[i1];
-	}
-        dtwo = sqrtf(n1/dtwo);	
-	done = sqrtf(n1/done)/(dtwo+FLT_EPSILON);
-
+	
         /* first division */
+        norm = sqrt(n1/cblas_dsdot( n1, two, 1, two, 1));	
 
         for (i1=0; i1 < n1; i1++) {
-	    one[i1] *= dtwo;
-	    two[i1] *= dtwo;
+	    one[i1] *= norm;
+	    two[i1] *= norm;
 	}
 	
-        divn(one,two,rat1);
+	divn(one,two,rat1);
 
         /* second division */
+	norm = sqrt(n1/cblas_dsdot( n1, one, 1, one, 1));	
 
         for (i1=0; i1 < n1; i1++) {
-	    one[i1] *= done;
-	    two[i1] *= done;
+	    one[i1] *= norm;
+	    two[i1] *= norm;
 	}
-	
+
         divn(two,one,rat2);
 
 	/* combination */
