@@ -844,6 +844,8 @@ void sf_putint (sf_file file, const char* key, int par)
 {
     char val[256];
 
+    if (NULL == file->dataname) 
+	sf_warning("%s: putint to a closed file",__FILE__);
     snprintf(val,256,"%d",par);
     sf_simtab_enter (file->pars,key,val);
 }
@@ -854,6 +856,8 @@ void sf_putints (sf_file file, const char* key, const int* par, size_t n)
     int i;
     char val[1024], *v;
 
+    if (NULL == file->dataname) 
+	sf_warning("%s: putints to a closed file",__FILE__);
     v = val;
     for (i=0; i < n-1; i++) {
 	v += snprintf(v,1024,"%d,",par[i]);
@@ -868,6 +872,8 @@ void sf_putlargeint (sf_file file, const char* key, off_t par)
 {
     char val[256];
 
+    if (NULL == file->dataname) 
+	sf_warning("%s: putflargeint to a closed file",__FILE__);
     snprintf(val,256,"%lld",(long long int) par);
     sf_simtab_enter (file->pars,key,val);
 }
@@ -877,6 +883,8 @@ void sf_putfloat (sf_file file, const char* key,float par)
 {
     char val[256];
 
+    if (NULL == file->dataname) 
+	sf_warning("%s: putfloat to a closed file",__FILE__);
     snprintf(val,256,"%g",par);
     sf_simtab_enter (file->pars,key,val);
 }
@@ -886,6 +894,8 @@ void sf_putstring (sf_file file, const char* key,const char* par)
 {
     char *val;
     
+    if (NULL == file->dataname) 
+	sf_warning("%s: putstring to a closed file",__FILE__);
     val = (char*) alloca(strlen(par)+3); 
     sprintf(val,"\"%s\"",par);
     sf_simtab_enter (file->pars,key,val);

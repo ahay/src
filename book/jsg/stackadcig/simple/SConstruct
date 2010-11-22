@@ -4,8 +4,7 @@ from rsf.proj import *
 Flow('syn',None,
      '''
      sfspike n1=500 d1=0.001  o1=0 n2=30 d2=0.001 o2=0 nsp=4 mag=1,1,1,1 k1=100,200,300,400  p2=0,0,0,0  | sfricker1 frequency=60 |
-     cut f1=350 n1=100 f2=9 n2=20 | cut f1=250 n1=100 f2=0 n2=10 | noise range=0.050
-     
+     cut f1=350 n1=100 f2=9 n2=20 | cut f1=250 n1=100 f2=0 n2=10 | noise range=0.050 seed=2010     
      ''')
 
 #Result('data','syn','wiggle yreverse=y transp=y poly=y title=data')

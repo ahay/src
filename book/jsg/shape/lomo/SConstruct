@@ -3,7 +3,7 @@ from rsf.proj import *
 Flow('sigmoid',None,
      '''
      sigmoid d1=.004 n1=200 d2=.008 n2=200 |
-     smooth rect1=3 diff1=1 | smooth rect1=3
+     smooth rect1=3 diff1=1 adj=y | smooth rect1=3
      ''')
 
 order = {'sigmoid':2,  'conflict':1,  'dgulf':1, 'yc27':3}

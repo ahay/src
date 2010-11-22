@@ -9,7 +9,7 @@ ns1=4 # spraying radius
 Flow('sigmoid',None,
      '''
      sigmoid d1=.004 n1=200 d2=.008 n2=200 taper=n |
-     smooth rect1=3 diff1=1 | smooth rect1=3
+     smooth rect1=3 diff1=1 adj=y | smooth rect1=3
      ''')
 
 Result('sigmoid1','sigmoid',
