@@ -317,7 +317,7 @@ Flow('cmps','signals',
      '''
      transp memsize=1000 plane=23 |
      mutter v0=3. |
-     shot2cmp half=n | put o2=-1.75 label2="Half-offset"
+     shot2cmp half=n | put o2=-1.75 d2=0.05 label2="Half-offset"
      ''')
 Result('cmps',
        '''
