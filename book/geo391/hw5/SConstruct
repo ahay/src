@@ -1,3 +1,5 @@
 from rsf.tex import *
 
-End(use='hyperref,listings',color='horizon smooth anisod',hires='laplace')
+End(use='hyperref,listings,newalg',
+    color='horizon smooth anisod elev laplac shape trian spec0',
+    hires='laplace')

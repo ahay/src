@@ -1,28 +1,100 @@
 \author{Thomas Bayes}
 %%%%%%%%%%%%%%%%%%%%
-\title{Homework 5}
+\title{Homework 5 \\ Due on Monday, December 13}
 
 \begin{abstract}
-  This homework has three parts. 
+  This homework has five parts. 
   \begin{enumerate}
-  \item Theoretical questions related to Bayesian inversion.
-  \item Missing data interpolation for ocean floor topography.
-  \item Extracting a channel structure from a seismic horizon.
+  \item Theoretical questions related to linear estimation.
+  \item Attenuation of surface-wave noise in land 
+    seismic data using match filtering.
+  \item Missing data interpolation for ocean floor topography. 
+  \item Missing data interpolation for ocean floor topography using data patterns. 
+  \item Spatial interpolation contest using rainfall data from Switzerland.
   \end{enumerate}
 \end{abstract}
 
-\section{Bayesian inversion}
+\section{Linear estimation}
 
-Assuming the model $\mathbf{m}$ has the probability distribution function 
+\begin{enumerate}
+\item The following algorithm finds a solution to
+  the least-squares optimization problem $\min
+  \|\mathbf{F}\,\mathbf{m} - \mathbf{d}\|^2$, where $\mathbf{d}$ is
+  data, $\mathbf{m}$ is the model we want to estimate, and
+  $\mathbf{F}$ is a linear operator that connects them.
+
+ \begin{algorithm}{Conjugate gradients}{\mathbf{F},\mathbf{d},N}
+  \mathbf{m \= 0} \\
+  \mathbf{r \= - d} \\
+  \begin{FOR}{n \= 1, 2, \ldots, N} \\
+    \mathbf{g}_m \= \mathbf{F}^T\,\mathbf{r} \\
+    \mathbf{g}_r \= \mathbf{F}\,\mathbf{g}_m \\
+    \rho \= \mathbf{g}_m^T\,\mathbf{g}_m \\
+    \begin{IF}{n = 1} 
+      \beta \= 0 
+      \ELSE 
+      \beta \= \rho/\hat{\rho} 
+    \end{IF} \\
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \= 
+    \left[\begin{array}{l}
+        \mathbf{g}_m \\
+        \mathbf{g}_r
+      \end{array}\right] + \beta\,
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \\
+    \alpha \= - \rho/(\mathbf{s}_r^T\,\mathbf{s}_r) \\
+    \left[\begin{array}{l}
+        \mathbf{m} \\
+        \mathbf{r}
+      \end{array}\right] \= 
+    \left[\begin{array}{l}
+        \mathbf{m} \\
+        \mathbf{r}
+      \end{array}\right] + \alpha\,
+    \left[\begin{array}{l}
+        \mathbf{s}_m \\
+        \mathbf{s}_r
+      \end{array}\right] \\
+    \hat{\rho} \= \rho
+  \end{FOR} \\        
+  \RETURN \mathbf{m}
+\end{algorithm}
+\begin{enumerate}
+\item  In applications, it is often advantageous to apply \emph{model
+    reparameterization} or \emph{preconditioning}. Suppose that,
+  instead of solving for $\mathbf{m}$ directly, you first solve for
+  $\mathbf{x}$ such that $\mathbf{m} = \mathbf{P}\,\mathbf{x}$. Show
+  how to incorporate the linear preconditioning operator $\mathbf{P}$
+  in the algorithm above.
+\item Prove that the output of the algorithm after $N$ iterations is
+\begin{equation}
+\label{eq:msol}
+\mathbf{m}_N = \sum\limits_{n=1}^{N} \frac{\mathbf{s}_n\,\mathbf{s}_n^T}{\mathbf{s}_n^T\,\mathbf{F}^T\,\mathbf{F}\,\mathbf{s}_n}\,\mathbf{F}^T\,\mathbf{d}\;,
+\end{equation}
+where $\mathbf{s}_n$ is the model step at $n$-th iteration.
+\item Assuming that $\mathbf{m}$ is the true model, show that
+\begin{equation}
+\label{eq:mres}
+\mathbf{m}_N = \sum\limits_{n=1}^{N} \frac{\mathbf{g}_n\,\mathbf{g}_n^T}{\mathbf{g}_n^T\,\mathbf{g}_n}\,\mathbf{m}\;,
+\end{equation}
+where $\mathbf{g}_n$ is the gradient at $n$-th iteration.
+\end{enumerate}
+
+\item Assuming the model $\mathbf{m}$ has the probability distribution function 
 \begin{equation}
 \label{eq:pm}
-P(\mathbf{m}) = \frac{1}{\sqrt{\pi\,\det[\mathbf{C}_m]}}\,e^{-(\mathbf{m}-\mathbf{m}_0)^T\,\mathbf{C}_m^{-1}\,(\mathbf{m}-\mathbf{m}_0)}\;,
+P(\mathbf{m}) = \frac{1}{\left(\pi\,\det[\mathbf{C}_m]\right)^{N/2}}\,e^{-(\mathbf{m}-\mathbf{m}_0)^T\,\mathbf{C}_m^{-1}\,(\mathbf{m}-\mathbf{m}_0)}\;,
 \end{equation}
 where $\mathbf{C}_m$ is the model covariance matrix,
 and the conditional probability of data $\mathbf{d}$ (given model $\mathbf{m}$) is
 \begin{equation}
 \label{eq:pdm}
-P(\mathbf{d}|\mathbf{m}) = \frac{1}{\sqrt{\pi\,\det[\mathbf{C}_n]}}\,e^{-(\mathbf{d}-\mathbf{F}\,\mathbf{m})^T\,\mathbf{C}_n^{-1}\,(\mathbf{d}-\mathbf{F}\,\mathbf{m})}\;,
+P(\mathbf{d}|\mathbf{m}) = \frac{1}{\left(\pi\,\det[\mathbf{C}_n]\right)^{N/2}}\\,e^{-(\mathbf{d}-\mathbf{F}\,\mathbf{m})^T\,\mathbf{C}_n^{-1}\,(\mathbf{d}-\mathbf{F}\,\mathbf{m})}\;,
 \end{equation}
 where $\mathbf{C}_n$ is the noise covariance matrix, Bayesian inversion suggests the model estimate (given data $\mathbf{d}$) of the form
 \begin{equation}
@@ -30,29 +102,79 @@ where $\mathbf{C}_n$ is the noise covariance matrix, Bayesian inversion suggests
 \mathbf{m}_{*} = \mathbf{m}_0 + 
 \mathbf{C}_m\,\mathbf{F}^T\,\left(\mathbf{F}\,\mathbf{C}_m\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)
 \end{equation} 
-
 \begin{enumerate}
-\item Find the \emph{bias} in estimate~(\ref{eq:mest}), i.e. for the true model $\mathbf{m}=\mathbf{m}_1$, find the mathematical expectation of $\mathbf{m}_{*}-\mathbf{m}_1$.
-\item Find the covariance of estimate~(\ref{eq:mest}) (the mathematical expectation of $\mathbf{m}_{*}\,\mathbf{m}_{*}^T$).
-\end{enumerate}
-
-Shaping regularization applied in the data space suggests an estimate
+\item Find the \emph{bias} in estimate~(\ref{eq:mest}), i.e. for the true model $\mathbf{m}$, find the mathematical expectation of $\mathbf{m}_{*}-\mathbf{m}$.
+\item Shaping regularization suggests an estimate
 \begin{equation}
 \label{eq:shape}
-\mathbf{m}_{*} = \mathbf{m}_0 + \mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{F}\,\mathbf{B} - \mathbf{I})\right]^{-1}\,
-\mathbf{S}_d\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)
+\mathbf{m}_{*} = \mathbf{m}_0 + \left[\mathbf{I} + \mathbf{S}\,(\mathbf{B}\,\mathbf{F}-\mathbf{I})\right]^{-1}\,\mathbf{S}\,\mathbf{B}\,\left(\mathbf{d} - \mathbf{F}\,\mathbf{m}_0\right)\;,
 \end{equation}
-where $\mathbf{B}$ is the ``backward'' operator, $\mathbf{S}_d$ is the ``data shaping'' operator, and $\mathbf{I}$ is the identity operator. 
-
-\begin{enumerate}
-\item Find the connection between $\mathbf{B}$,  $\mathbf{S}_d$, $\mathbf{F}$, $\mathbf{C}_m$, and $\mathbf{C}_n$ that makes equations~(\ref{eq:mest}) and~(\ref{eq:shape})
+where $\mathbf{B}$ is the ``backward'' operator, $\mathbf{S}$ is the ``model shaping'' operator, and $\mathbf{I}$ is the identity operator.  Find the connection between $\mathbf{F}$, $\mathbf{B}$,  $\mathbf{S}$, $\mathbf{C}_m$, and $\mathbf{C}_n$ that makes equations~(\ref{eq:mest}) and~(\ref{eq:shape})
 equivalent.
-\item Suppose that the data vector $\mathbf{d}$ consists of two signal components $\mathbf{d}_1$ and $\mathbf{d}_2$, which are uncorrelated and 
-have zero mean and covariances $\mathbf{C}_1$ and $\mathbf{C}_2$ respectively. Use Bayesian inversion to formulate a separation of
-$\mathbf{d}$ into $\mathbf{d}_1$ and $\mathbf{d}_2$.
+\end{enumerate}
+\end{enumerate} 
+
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
+
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
+
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
+
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
+
+A look at the data spectrum (Figure~\ref{fig:spec0} shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
+
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
+
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}_0\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $d$ is the data, $f$ is a \emph{matching filter}, and
+$\mathbf{N}_0$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}_0\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in program \texttt{match.c}. Some parts of this program
+are left out for you to fill.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,firstline=19]{match/match.c}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw5/match#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Test your modifications by running the dot product test.
+\begin{verbatim}
+scons dot.test
+\end{verbatim}
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by either finding better parameters or by finding a better algorithm. 
 \end{enumerate}
 
-\section{Missing ocean floor data interpolation}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{match/SConstruct}
+
+\section{Missing ocean floor data interpolation, part 1}
 \inputdir{seabeam}
 
 SeaBeam is an apparatus for measuring water depth both directly under
@@ -134,7 +256,7 @@ The results of missing data reconstruction from both methods after 10 conjugate-
 
 \plot{interp}{width=\textwidth}{Result of missing data interpolation after 10 iterations using (a) polynomial multiplication and (b) polynomial division on a helix.}
 
-\newpage
+%\newpage
 Your task:
 \begin{enumerate}
 \item Change directory to \verb#geo391/hw5/seabeam#
@@ -156,86 +278,173 @@ to reproduce the figures on your screen.
 \end{eqnarray}
 and repeat the experiment.
 \end{enumerate}
-\item \textbf{EXTRA CREDIT} for finding and implementing a more appropriate filter for this problem than the Laplacian.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{seabeam/SConstruct}
 
-\section{Channel extraction}
-\inputdir{channel}
+\section{Missing ocean floor data interpolation, part 2}
+\inputdir{seabeam2}
 
-In this part of the assignment, we return to the seismic horizon slice
-from a previous homework. Our task is to extract the geometry of a
-sand channel, which is the most prominent geological feature in this
-slice. To perform the extraction, we use an edge detection algorithm
-from the image processing literature \cite[]{canny}. In a nutshell,
-Canny's edge detector picks areas of high gradient that seem to be
-aligned along an edge. The original horizon and extracted channel
-edges are shown in Figure~\ref{fig:horizon}.
+In this section, we return to the problem of interpolating ocean floor
+data, discussed in Homework 5. Program~\texttt{interpolate.c}
+implements two alternative methods: regularized inversion (similar to
+equation~\ref{eq:laplace} but using a multi-dimensional PEF for
+$\mathbf{R}$) and preconditioning, which uses the inverse of
+$\mathbf{R}$ (recursive deconvolution or polynomial division on a
+helix) for model reparameterization.
 
-\plot{horizon}{width=\textwidth}{Horizon slice from 3-D seismic (left) and the result of edge detection (right).}
+\plot{data}{width=0.8\textwidth}{Left: input data. Right: mask for known data values.}
 
-The initial result is not very clear, because it is affected by random
-noise (fluctuations in seismic amplitude). The general method of
-removing the noise is smoothing. Figure~\ref{fig:smooth} shows the
-original horizon after smoothing with a triangle filter. The channel
-can be extracted more reliably. However, its width is enlarged by smoothing.
+The input data and a mask for known values are shown in
+Figure~\ref{fig:data}. Results from the two methods are shown in Figure~\ref{fig:seabeam}.
 
-\plot{smooth}{width=\textwidth}{Horizon smoothed by a triangle smoothing filter (left) and the result of edge detection (right).}
-
-To preserve the original channel shape while removing random noise, we
-need a more sophisticated method. Figure~\ref{fig:anisod} shows
-the result of \emph{anisotropic diffusion} \cite[]{weickert}:
-non-stationary smoothing by solving the nonlinear partial differential equation
-\begin{equation}
-\label{eq:aniso}
-\frac{\partial U}{\partial t} = \frac{a}{|\nabla U|}\,\nabla \cdot \left(\frac{\nabla U}{|\nabla U|}\right)\;,
-\end{equation}
-where $U(\mathbf{x},t)$ is the image evolving in artificial time $t$,
-and $a$ is a scaling coefficient. One finite-difference step with
-equation~(\ref{eq:aniso}) can be understood as a regularized
-least-squares inversion problem. First, approximate the equation with
-\begin{equation}
-\label{eq:aniso}
-\frac{\mathbf{U}_k-\mathbf{U}_{k-1}}{\Delta t} = - a\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\,\mathbf{U}_k\;,
-\end{equation}
-where $\mathbf{U}_t$ is the discretized image at time step $k$,
-$\mathbf{D}$ approximates the gradient operator, and $\mathbf{W}$ is a
-diagonal weight approximating $1/|\nabla U|$. Solving for $\mathbf{U}_k$ produces
-\begin{equation}
-\label{eq:diffuse}
-\mathbf{U}_k = \left(\mathbf{I} + \epsilon^2\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}\right)^{-1}\,\mathbf{U}_{k-1}\,
-\end{equation}
-where $\epsilon=a\,\Delta t$. Equation~(\ref{eq:diffuse}) has the form
-of equation~(\ref{eq:mest}) with $\mathbf{F}=\mathbf{I}$ and
-$\mathbf{C}_m^{-1} =
-\epsilon^2\,\mathbf{D}^T\,\mathbf{W}^T\,\,\mathbf{W}\,\mathbf{D}$. In this homework, we are going to implement both stationary and
-non-stationary diffusion by regularized least-squares inversion with
-equation~(\ref{eq:diffuse}).
-
-\plot{anisod}{width=\textwidth}{Horizon smoothed by anisotropic diffusion (left) and the result of edge detection (right).}
+\plot{seabeam}{width=0.8\textwidth}{Left: missing data interpolation using regularization by convolution with a prediction-error filter. 
+Right: missing data interpolation using model reparameterization by deconvolution (polynomial division) with a prediction-error filter.}
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,firstline=19]{channel/diffuse.c}
+\lstinputlisting[frame=single,firstline=19]{seabeam2/interpolate.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{seabeam2/SConstruct}
 
 Your task:
 \begin{enumerate}
-\item Change directory to \verb#geo391/hw5/channel#
+\item Change directory to \verb#geo391/hw5/seabeam2#
 \item Run 
 \begin{verbatim}
 scons view
 \end{verbatim}
 to reproduce the figures on your screen.
-\item Modify the \texttt{diffuse.c} file to fill in the missing part.
-\item Compare the result of smoothing by regularized inversion with other results. Select the values of critical parameters \texttt{niter=}, \texttt{eps=}, and \texttt{repeat=} that produce the best result.
-\item Modify the \texttt{diffuse.c} program to introduce a weight function in the gradient computation. The weight should scale down gradient values near the edge. 
-Compare your results with other results and select the best values for critical parameters.
-\item \textbf{EXTRA CREDIT} for finding and implementing a better method for channel extraction.
+\item Modify the \texttt{SConstruct} file to implement the following tasks
+\begin{enumerate}
+\item Find the number of iterations required for both methods to achieve similar results.
+\item Generate multiple interpolation realizations using the method of the previous section.
+\item To provide a more quantitative comparison, modify the
+\texttt{interpolate.c} program to output a measure of convergence
+(such as the least-squares model misfit) as a function of the number
+of iterations\footnote{You can study the interfaces to
+the \texttt{sf\_solver} and
+\texttt{sf\_solver\_prec} programs. See
+\url{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/api/c/bigsolver.c?view=markup}}. Generate figures comparing convergence with and without preconditioning.
+\end{enumerate}
+\item Include your results in the paper.
+\end{enumerate}
+
+\section{Spatial interpolation contest}
+\inputdir{rain}
+
+In 1997, the European Communities organized a Spatial Interpolation
+Comparison. Many different organizations participated with the results
+published in a special issue of the \emph{Journal of Geographic
+Information and Decision Analysis} \cite[]{dubois} and a separate
+report \cite[]{rain}.
+
+\sideplot{elev}{width=\textwidth}{Digital elevation map of Switzerland.}
+
+The comparison used a dataset from rainfall measurements in
+Switzerland on the 8th of May 1986, the day of the Chernobyl disaster.
+Figure~\ref{fig:elev} shows the data area: the Digital Elevation Model
+of Switzerland with superimposed country's borders.  A total of 467
+rainfall measurements were taken that day. A randomly selected subset
+of 100 measurements was used as the input data the 1997 Spatial
+Interpolation Comparison in order to interpolate other measurements
+using different techniques and to compare the results with the known
+data. Figure~\ref{fig:raindata} shows the spatial locations of the
+selected data samples and the full dataset.
+
+\plot{raindata}{width=\textwidth}{Left: locations of weather stations used as input data in the spatial interpolation contest.
+Right: all weather stations locations.}
+
+In this assignment, you will try different techniques of spatial data
+interpolation and will participate in the interpolation contest.
+
+\subsection{Delaunay triangulation}
+
+The first technique we are going to try is Delaunay triangulation with
+linear interpolation of rainfall values inside each triangle. The
+result is shown in Figure~\ref{fig:trian}. Does it succeed in hiding
+the acquisition footprint? Figure~\ref{fig:trian-pred} provides a
+comparison between interpolated and known data values. It also
+indicates the value of the correlation coefficient.
+
+\multiplot{2}{trian,trian-pred}{width=0.45\textwidth}{(a) Rainfall data
+interpolated using Delaunay triangulation. (b) Correlation between
+interpolated and true data values.}
+
+\subsection{Laplacian regularization}
+
+An alternative technique is a solution of the regularized
+least-squares optimization problem
+\begin{equation}
+\label{eq:laplace}
+\min\left( \|\mathbf{L}\,\mathbf{m} - \mathbf{d}\|^2 + \epsilon^2 \|\mathbf{R}\,\mathbf{m}\|^2\right)\;,
+\end{equation}
+where $\mathbf{d}$ is irregular data, $\mathbf{m}$ is model estimated
+on a regular grid, $\mathbf{L}$ is forward interpolation from the
+regular grid to irregular locations, $\epsilon$ is a scaling
+parameter, and $\mathbf{R}$ is the regularization operator related to
+the inverse of the assumed model covariance. In this experiment,
+$\mathbf{R}$ is the finite-difference approximation of the Laplacian operator.
+
+\plot{laplac}{width=\textwidth}{Rainfall data
+interpolated using regularization with the Laplacian filter.}
+
+Figure~\ref{fig:laplac} shows the interpolation result after 10 and
+1,000 iterations. Even 1,000 iterations are not enough to converge to
+an acceptable solution, as is evident from the correlation analysis in
+Figure~\ref{fig:laplac1000-pred}.
+
+\sideplot{laplac1000-pred}{width=\textwidth}{Correlation between
+  interpolated and true data values for Laplacian regularization with
+  1,000 iterations.}
+
+\subsection{Shaping regularization}
+
+The next approach is shaping regularization: an iterative solution of the inverse problem
+\begin{equation}
+\widehat{\mathbf{m}} = 
+  \left(\mathbf{L}^T\,\mathbf{L} + \mathbf{S}^{-1} -
+    \mathbf{I}\right)^{-1}\,\mathbf{L}^T\,\mathbf{d}
+  = \left[\mathbf{I} + 
+    \mathbf{S}\,\left(\mathbf{L}^T\,\mathbf{L} - \mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{L}^T\,\mathbf{d}\;,
+  \label{eqn:shape}  
+\end{equation}
+where $\mathbf{S}$ is the shaping operator, which, in this experiment,
+is taken as a two-dimensional triangle smoothing.
+
+\plot{shape}{width=\textwidth}{Rainfall data
+interpolated using shaping regularization with a triangle filter.}
+
+Figure~\ref{fig:shape} shows the interpolation result after 10 and the
+maximum number of iterations. The correlation analysis with the
+ground-truth data is shown in Figure~\ref{fig:shape1000-pred}.
+
+\sideplot{shape1000-pred}{width=\textwidth}{Correlation between
+  interpolated and true data values for Shaping regularization.}
+
+\subsection{Your task}
+
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw5/rain#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to find the number of iterations required by the Laplacian regularization to converge.
+\item What can you conclude about the three methods used in this comparison?
+\item Participate in the Spatial Interpolation Contest. Find and
+implement a method that would provide a better interpolation of the
+missing values than either of the methods we tried so far. You can change any of the parameters in the existing methods or 
+write your own program but you can use only the 100 original data points as input.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{channel/SConstruct}
+\lstinputlisting[frame=single]{rain/SConstruct}
+
+\newpage
 
 \section{Completing the assignment}
 
