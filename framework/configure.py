@@ -106,6 +106,7 @@ def check_all(context):
     pthreads (context) # FDNSI
     omp (context) # FDNSI
     petsc(context) # FDNSI
+    cuda(context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -1023,6 +1024,76 @@ def mpi(context):
         need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
 
+def cuda(context):
+    context.Message("checking for CUDA ... ")
+
+    CUDA_TOOLKIT_PATH = context.env.get('CUDA_TOOLKIT_PATH',
+                                        os.environ.get('CUDA_TOOLKIT_PATH'))
+    if CUDA_TOOLKIT_PATH:
+        context.Result(CUDA_TOOLKIT_PATH)
+        if os.path.isdir(CUDA_TOOLKIT_PATH):
+            context.env['CUDA_TOOLKIT_PATH'] = CUDA_TOOLKIT_PATH
+        else:
+            stderr_write('Set CUDA_TOOLKIT_PATH to the location of CUDA toolkit',
+                         'bold')
+            context.env['CUDA_TOOLKIT_PATH'] = None
+    else:
+        home = os.environ.get('HOME', '')
+        paths = [
+            os.path.join(home, 'NVIDIA_CUDA_TOOLKIT'),
+            os.path.join(home, 'Apps', 'NVIDIA_CUDA_TOOLKIT'),
+            os.path.join(home, 'Apps', 'CudaToolkit'),
+            os.path.join(home, 'Apps', 'CudaTK'),
+            os.path.join('/usr', 'local', 'NVIDIA_CUDA_TOOLKIT'),
+            os.path.join('/usr', 'local', 'CUDA_TOOLKIT'),
+            os.path.join('/usr', 'local', 'cuda_toolkit'),
+            os.path.join('/usr', 'local', 'CUDA'),
+            os.path.join('/usr', 'local', 'cuda'),
+            os.path.join('/Developer', 'NVIDIA CUDA TOOLKIT'),
+            os.path.join('/Developer', 'CUDA TOOLKIT'),
+            os.path.join('/Developer', 'CUDA')
+            ]
+        for path in paths:
+            if os.path.isdir(path):
+                CUDA_TOOLKIT_PATH = path
+                break
+        if CUDA_TOOLKIT_PATH:
+            context.Result(CUDA_TOOLKIT_PATH)
+            context.env['CUDA_TOOLKIT_PATH'] = CUDA_TOOLKIT_PATH
+        else:
+            context.Result(context_failure)
+            context.env['CUDA_TOOLKIT_PATH'] = None
+            return
+
+    path = ':'.join([os.environ['PATH'],os.path.join(CUDA_TOOLKIT_PATH,'bin')])
+    nvcc = context.env.get('NVCC',WhereIs('nvcc',path))
+    if nvcc:
+        context.Message("checking if %s works ... " % nvcc)
+        # Try compiling with nvcc instead of cc
+        text = '''
+        #include <cuda.h>
+        #include <cuda_runtime_api.h>
+        int main(int argc,char* argv[]) {
+        cuInit (0); /* Use first GPU device */
+        cudaSetDevice (0);
+        }\n'''
+        cc = context.env.get('CC')
+        cflags = context.env.get('CCFLAGS')
+        context.env['CC'] = nvcc
+        context.env['CCFLAGS'] = ''
+        res = context.TryCompile(text,'.c')
+        context.env['CC'] = cc
+        context.env['CCFLAGS'] = cflags
+    else:
+        context.Result(context_failure)
+        res = None
+    if res:
+        context.Result(res)
+        context.env['NVCC'] = nvcc
+    else:
+        context.Result(context_failure)
+        context.env['NVCC'] = None
+
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
 
@@ -1671,5 +1742,7 @@ def options(file):
     opts.Add('JAVAC','The Java compiler')
     opts.Add('JAVA_HOME','Location of jdk')
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
-
+    opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
+    opts.Add('NVCC','NVIDIA C compiler')
+    
     return opts
