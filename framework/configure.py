@@ -1080,7 +1080,7 @@ def cuda(context):
         cc = context.env.get('CC')
         cflags = context.env.get('CCFLAGS')
         context.env['CC'] = nvcc
-        context.env['CCFLAGS'] = ''
+        context.env['CCFLAGS'] = '--x=cu'
         res = context.TryCompile(text,'.c')
         context.env['CC'] = cc
         context.env['CCFLAGS'] = cflags
