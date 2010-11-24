@@ -1,4 +1,4 @@
-/* L1 regression */
+/* Linear regression */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -16,26 +16,25 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <assert.h>
-
 #include <rsf.h>
 
-static int nc;
+#include "l1.h"
+#include "l1step.h"
+
 static float **cc;
 
 static void fit(bool adj, bool add, int nm, int nd, float *m, float *d)
 {
-    int ic, id;
+    int im, id;
 
     sf_adjnull(adj, add, nm, nd, m, d);
-    sf_copy_lop(adj, true, nd, nd, m, d);
 
-    for (ic=0; ic < nc; ic++) {
+    for (im=0; im < nm; im++) {
 	for (id=0; id < nd; id++) {
 	    if (adj) {
-		m[nd+ic] += cc[ic][id]*d[id];
+		m[im] += cc[im][id]*d[id];
 	    } else {
-		d[id] += cc[ic][id]*m[nd+ic];
+		d[id] += cc[im][id]*m[im];
 	    }
 	}
     }
@@ -43,8 +42,9 @@ static void fit(bool adj, bool add, int nm, int nd, float *m, float *d)
 
 int main(int argc, char* argv[])
 {
-    int nd, n1, niter, liter, iter, i1, nm;
-    float *m, *d, perc;
+    bool verb;
+    int nc, nd, n1, niter, n1iter, method;
+    float *c, *d, perc;
     sf_file inp, reg, out;
 
     sf_init(argc,argv);
@@ -56,41 +56,46 @@ int main(int argc, char* argv[])
     if (!sf_histint(reg,"n1",&n1) || n1 != nd)
 	sf_error("Need n1=%d in reg",nd);
     if (!sf_histint(reg,"n2",&nc)) nc=1;
-    nm = nd+nc;
 
     sf_putint(out,"n1",nc);
     
     d = sf_floatalloc(nd);
-    m = sf_floatalloc(nm);
+    c = sf_floatalloc(nc);
     cc = sf_floatalloc2(nd,nc);
 
     sf_floatread(d,nd,inp);
     sf_floatread(cc[0],nd*nc,reg);
     sf_fileclose(reg);
 
-    if (!sf_getint("niter",&niter)) niter=100;
-    /* number of POCS iterations */
-    if (!sf_getint("liter",&liter)) liter=10;
+    if (!sf_getint("niter",&niter)) niter=10;
     /* number of CG iterations */
 
-    if (!sf_getfloat("perc",&perc)) perc=90.0;
-    /* percentage for sharpening */
+    if (!sf_getint("method",&method)) method=2;
+    /* method (L1-like or L2) */
 
-    sf_sharpen_init(nd,perc);
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
-    /* initialize with zero */
-    for (i1=0; i1 < nm; i1++) {
-	m[i1]=0.0;
-    }
-
-    for (iter=0; iter < niter; iter++) {
-	sf_solver(fit,sf_cgstep,nm,nd,m,d,liter,"x0",m,"end");
-	sf_sharpen(m);
-	sf_weight_apply(nd,m);
+    switch (method) {
+	case 1:
+	    if (!sf_getint("n1iter",&n1iter)) n1iter=10;
+	    /* number of POCS iterations */
+	    
+	    if (!sf_getfloat("perc",&perc)) perc=90.0;
+	    /* percentage for sharpening */
+	    
+	    l1_init(nd,n1iter,perc,verb);
+	    
+	    sf_solver(fit,l1step,nc,nd,c,d,niter,"verb",verb,"end");
+	    break;
+	case 2:
+	    sf_solver(fit,sf_cgstep,nc,nd,c,d,niter,"verb",verb,"end");
+	    break;
+	default:
+	    sf_error("Unknown method %d",method);
     }
     
-    sf_floatwrite(m+nd,nc,out);
-
+    sf_floatwrite(c,nc,out);
 
     exit(0);
 }
