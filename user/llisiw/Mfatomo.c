@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(t,nt,sout);
 
 	    break;
-
+	    
 	case 't': /* tomography */
 	    ds   = sf_floatalloc(nt);
 	    gs   = sf_floatalloc(nt);
@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
 		grad = NULL;
 	    }
 
-	    /* output L2 norm at each iteration */
+	    /* output misfit L2 norm at each iteration */
 	    if (NULL != sf_getstring("misnorm")) {
 		norm = sf_output("misnorm");
 		sf_putint(norm,"n1",niter+1);
@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 		    if (NULL == sf_getstring("topo"))
 			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,cgiter,eps,"verb",false,"end");
 		    else
-			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,cgiter,eps, "known",k,"x0",x0,"verb",false,"end");
+			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,cgiter,eps,"known",k,"x0",x0,"verb",false,"end");
 		    
 		    sf_cgstep_close();
 
@@ -264,13 +264,13 @@ int main(int argc, char* argv[])
 
 		}
 
-		rate = rhsnorm/rhsnorm0;
+                rate = rhsnorm/rhsnorm0; 
 		sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
 
 		if (grad != NULL) sf_floatwrite(gs,nt,grad);
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 
-		/* update slowness: add regularization here!!! */
+		/* update slowness */
 
 		for (it=0; it < nt; it++) {
 		    s[it] = (s[it]+gs[it])*(s[it]+gs[it])/s[it];
