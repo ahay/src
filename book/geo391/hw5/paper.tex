@@ -287,12 +287,12 @@ and repeat the experiment.
 \inputdir{seabeam2}
 
 In this section, we return to the problem of interpolating ocean floor
-data, discussed in Homework 5. Program~\texttt{interpolate.c}
-implements two alternative methods: regularized inversion (similar to
-equation~\ref{eq:laplace} but using a multi-dimensional PEF for
-$\mathbf{R}$) and preconditioning, which uses the inverse of
-$\mathbf{R}$ (recursive deconvolution or polynomial division on a
-helix) for model reparameterization.
+data, discussed the previous section. Program~\texttt{interpolate.c}
+implements two alternative methods: regularized inversion using
+convolution with a multi-dimensional prediction-error filter (PEF) and
+preconditioning, which uses the inverse operation (recursive
+deconvolution or polynomial division on a helix) for model
+reparameterization.
 
 \plot{data}{width=0.8\textwidth}{Left: input data. Right: mask for known data values.}
 
