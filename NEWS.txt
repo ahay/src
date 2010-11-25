@@ -43,6 +43,8 @@ BUG FIXES:
 In the reproducible documents collection:
 * Cross-platform (Linux/Mac) solution in book/jsg/flat/*/SConstruct
 * Fixed program links in book/bei/fdm and book/bei/ft1
+* Fixed program links in book/gee/ajt and book/gee/hlx
+* High-resolution figures in book/gee/hlx
 
 In documentation:
 * Update of html/txt/spec documentation and man pages triggered by
