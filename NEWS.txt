@@ -2,6 +2,26 @@ Meaningful changes done since the 1.0 release (2010-07-23):
 
 ADDITIONS AND ENHANCEMENTS
 
+To the reproducible documents collection:
+* rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
+* rsf/programming: Jeff Godwin's presentation at Houston-2010 
+* rsf/usp: Yang Liu's presentation at Houston-2010
+* \published{} macro added to all published papers
+* sep/fractal: Modeling 3-D anisotropic fractal media (Chemingui)
+* sep/banana: Traveltime sensitivity kernels: Banana-doughnuts or just
+  plain bananas? (Rickett)
+* swag/eikds: An eikonal based formulation for traveltime perturbation
+  with respect to the source location (Alkhalifah and Fomel)
+* cwp/geo2008IsotropicAngleDomainElasticRTM: Isotropic angle-domain
+  elastic reverse-time migration (Yan and Sava)
+* jsg/stackadcig: Stacking angle-domain common-image gathers for
+  normalization of illumination (Liu et al.)
+* cwp/geo2009VTIModeSeparation: Elastic wave-mode separation for VTI
+  media (Yan and Sava)
+* cwp/geo2009TTIModeSeparation: Elastic wave-mode separation for TTI
+  media (Yan and Sava)
+* jsg/flat: Predictive painting of 3-D seismic volumes (Fomel)
+
 To documentation:
 * Update to vplot man pages
 * This file (NEWS.txt)
@@ -18,12 +38,11 @@ To the Python package:
 To programs:
 * sflmo (frequency-domain LMO)
 
-To the reproducible documents collection:
-* rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
-* rsf/programming: Jeff Godwin's presentation at Houston-2010 
-* rsf/usp: Yang Liu's presentation at Houston-2010
-
 BUG FIXES:
+
+In the reproducible documents collection:
+* Cross-platform (Linux/Mac) solution in book/jsg/flat/*/SConstruct
+* Fixed program links in book/bei/fdm and book/bei/ft1
 
 In documentation:
 * Update of html/txt/spec documentation and man pages triggered by
@@ -31,6 +50,13 @@ In documentation:
 * Show y and n for boolean parameters in F90 programs, instead of .true./.false.
 * Show y and n for boolean params in some Python programs instead of True/False
     (fix for some cases in which existing mechanism did not work) 
+
+In APIs:
+* Appropriate flags for compilation on OpenSolaris
+* Fixed memory leak in getpar.c
+* Fixed memory leak in llist.c
+* Improved accuracy of triangle smoothing
+* Updated numpy interface in m8r.i
 
 In the Python package:
 * In rsf.user.ivlad (function ndims)
@@ -40,5 +66,3 @@ In programs:
 * sfbandpass
 * sfzcp
 
-In the reproducible documents collection:
-* Cross-platform (Linux/Mac) solution in book/jsg/flat/*/SConstruct
