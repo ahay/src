@@ -1079,11 +1079,21 @@ def cuda(context):
         }\n'''
         cc = context.env.get('CC')
         cflags = context.env.get('CCFLAGS')
+        libs = context.env.get('LIBS')
+        libpath = context.env.get('LIBPATH')
+        linkflags = context.env.get('LINKFLAGS')
         context.env['CC'] = nvcc
         context.env['CCFLAGS'] = '--x=cu'
-        res = context.TryCompile(text,'.c')
+        context.env['LIBS'] = ['cuda','cudart']
+        context.env['LIBPATH'] = [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
+                                  os.path.join(CUDA_TOOLKIT_PATH,'lib')]
+        context.env['LINKFLAGS'] = ''
+        res = context.TryLink(text,'.c')
         context.env['CC'] = cc
         context.env['CCFLAGS'] = cflags
+        context.env['LIBS'] = libs
+        context.env['LIBPATH'] = libpath
+        context.env['LINKFLAGS'] = linkflags
     else:
         context.Result(context_failure)
         res = None
