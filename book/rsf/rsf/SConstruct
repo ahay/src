@@ -152,4 +152,4 @@ Paper('houston',
   }}{} 
     ''')
 
-End(options='manuscript',use='hyperref',color='const rand logo')
+End(options='manuscript',use='hyperref',color='const rand logo fern man spiral')
