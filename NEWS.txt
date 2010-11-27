@@ -22,6 +22,9 @@ To the reproducible documents collection:
   media (Yan and Sava)
 * jsg/flat: Predictive painting of 3-D seismic volumes (Fomel)
 
+To SCons:
+* Upgraded to scons-2.0.1
+
 To documentation:
 * Update to vplot man pages
 * This file (NEWS.txt)
@@ -37,6 +40,8 @@ To the Python package:
 
 To programs:
 * sflmo (frequency-domain LMO)
+* sfcp - added functionality to act as a filter
+* sftaupmo - added functionality for effective/interval velocities
 
 BUG FIXES:
 
@@ -67,4 +72,7 @@ In the Python package:
 In programs:
 * sfbandpass
 * sfzcp
+* sfstretch - proper handling of half-offset
+* sfslant and sfvelcon - proper antialiasing
+
 
