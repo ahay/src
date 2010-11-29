@@ -11,8 +11,7 @@ try:
     from enthought.mayavi import mlab
 except Exception, e:
     import sys
-    print \
-'''ERROR: NEED PYTHON API, NUMPY, SCIPY ''', e
+    print '\nERROR: NEED PYTHON API, NUMPY, SCIPY, MAYAVI\n', e
     sys.exit(1)
 
 class Header:

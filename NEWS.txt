@@ -46,6 +46,8 @@ To programs:
 * sfrotate - added functionality for negative rotations
 * sfmedian (median on the first axis)
 * sfregr (linear regression)
+* sfsvd (SVD using scipy)
+* sfthreedcube (3D display using mayavi2)
 
 BUG FIXES:
 
