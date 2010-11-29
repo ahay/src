@@ -42,6 +42,10 @@ To programs:
 * sflmo (frequency-domain LMO)
 * sfcp - added functionality to act as a filter
 * sftaupmo - added functionality for effective/interval velocities
+* sfktmig (prestack time migration
+* sfrotate - added functionality for negative rotations
+* sfmedian (median on the first axis)
+* sfregr (linear regression)
 
 BUG FIXES:
 
@@ -68,6 +72,7 @@ In APIs:
 In the Python package:
 * In rsf.user.ivlad (function ndims)
 * In rsf.user.ooio (init of class RSFheader)
+* CUDA configuration moved to configure.py
 
 In programs:
 * sfbandpass

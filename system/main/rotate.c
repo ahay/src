@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
     dim2=0;
     for (i=0; i < dim; i++) {	
 	snprintf(key,5,"rot%d",i+1);
-	if (!sf_getint(key,rot+i) ||
-	    0 > rot[i]) rot[i]=0;
-	/*( rot#=(0,0,...) length of #-th axis that is moved to the end )*/  
+	if (!sf_getint(key,rot+i)) rot[i]=0;
+	/*( rot#=(0,0,...) length of #-th axis that is moved to the end )*/
+	if (rot[i] < 0) rot[i] += n[i];
 	if (rot[i] >= n[i]) 
 	    sf_error("rot%d=%d must be smaller than n%d=%d",
 		     i,rot[i],i,n[i]);
