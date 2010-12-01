@@ -21,8 +21,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, nc, nd, n3, i3, nb, n1d, id, ic, i1;
-    float *dense, *a, *p, *c, d2;
+    int n1, nc, nd, n3, i3, nb, n1d, id, ic, i1, ib;
+    float *dense, *a, *p, *c, d2, t, dt, ampl;
     sf_file in, out, dip, cur;
 
     sf_init(argc,argv);
@@ -58,6 +58,15 @@ int main(int argc, char* argv[])
 	    sf_floatread(c,n1,cur);
 
 	    for (i1=0; i1 < n1; i1++) {
+		/* beam shape: t = t0+p*(x-x0)+c*(x-x0)^2/2 */
+		for (ib=-nb; ib <= nb; ib++) {
+		    id=ic+ib;
+		    if (id >= nd) break;
+		    if (id < 0) continue;
+		    t = i1+(p[i1]+c[i1]*ib/2)*ib;
+		    dt = 0.; 
+		    ampl = 1.;
+		}
 	    }
 	}
 	sf_floatwrite(dense,n1d,out);

@@ -374,7 +374,7 @@ void sf_settype (sf_file file, sf_datatype type)
 /*< set file type >*/
 {
     file->type = type;
-    sf_putint(file,"esize",(int) sf_esize(file));
+    if (NULL != file->dataname) sf_putint(file,"esize",(int) sf_esize(file));
 }
 
 void sf_setpars (sf_file file)
@@ -423,7 +423,7 @@ void sf_setform (sf_file file, sf_dataform form)
 		free (file->buf);
 		file->buf = NULL;
 	    }
-	    sf_putint(file,"esize",0); /* for compatibility with SEPlib */
+	    if (NULL != file->dataname) sf_putint(file,"esize",0); /* for compatibility with SEPlib */
 	    break;
 	case SF_XDR:
 	    if (NULL == file->buf) {
