@@ -5,12 +5,12 @@ import bldutil
 progs = '''
 abalance analytical angle angle2 approx bdix beamform beamspray bil1
 blur cameron cflow chebvc constperm cosftwave1 cpef dealias deblur
-diffoc dijkstra dip dip2 diplet dips distance divn dix dixshape
-eikonal eikonalvti erf exgr explanesignoi expsignoi fft2 fftexp0
-fftexp1 ffttest fftwave1 fftwave2 focus fpow freqest gaussmooth
-gbeamform imray interpt iphase kron locov lpf lsfit median mffit mig3
-miss3 nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
-ofsemb patch phaserot pick pick3 plane planemis2 planemis3 planereg2
+dijkstra dip dip2 diplet dips distance divn dix dixshape eikonal
+eikonalvti erf exgr explanesignoi expsignoi fft2 fftexp0 fftexp1
+ffttest fftwave1 fftwave2 focus fpow freqest gaussmooth gbeamform
+imray interpt iphase kron locov lpf lsfit median mffit mig3 miss3
+nconv nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 ofsemb
+patch phaserot pick pick3 plane planemis2 planemis3 planereg2
 planereg3 planesignoi pmig pmshape2 predict pwd pwcoh pwdix pwdsigk
 pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2 pwspray3 regr
 rdiv reshape riesz rsin seislet seisigk shape shapesigk shearer
