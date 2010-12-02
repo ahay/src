@@ -96,5 +96,5 @@ def stack(stack,np,fprefix,nf,of,jf):
         of=%d
         jf=%d
         ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
-        ''' fprefix='''+fprefix)
+        ''' fprefix='''+fprefix + ''' oname='''+stack,stdin=0, stdout=-1)
         
