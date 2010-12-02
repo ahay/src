@@ -48,9 +48,9 @@ void cweight_lop (bool adj, bool add, int nx, int ny,
 	}
 #else
 	if (adj) {
-	    xx[i] = sf_cadd(xx[i],sf_crmul(yy[i],conjf(w[i])));
+	    xx[i] = sf_cadd(xx[i],sf_cmul(yy[i],conjf(w[i])));
 	} else {
-	    yy[i] = sf_cadd(yy[i],sf_crmul(xx[i],w[i]));
+	    yy[i] = sf_cadd(yy[i],sf_cmul(xx[i],w[i]));
 	}
 #endif
     }

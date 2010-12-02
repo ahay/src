@@ -21,13 +21,15 @@
 #include <rsf.h>
 
 #include "divn.h"
+#include "cdivn.h"
 
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
+    sf_complex *cnum, *cden, *crat;
     char key[6];
-    bool hertz, band;
+    bool hertz, band, cmplx;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -54,8 +56,17 @@ int main (int argc, char* argv[])
     dtrace = sf_floatalloc(n1);
     dhilb = sf_floatalloc(n1);
 
-    num = sf_floatalloc(n12);
-    den = sf_floatalloc(n12);
+    if (cmplx) {
+	cnum = sf_complexalloc(n12);
+	cden = sf_complexalloc(n12);
+	crat = sf_complexalloc(n12);
+	num = den = NULL;
+    } else {
+	num = sf_floatalloc(n12);
+	den = sf_floatalloc(n12);
+	cnum = cden = crat = NULL;
+    }
+
     phase = sf_floatalloc(n12);
 
     if (!sf_getint("niter",&niter)) niter=100;
@@ -71,6 +82,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("band",&band)) band=false;
     /* if y, compute instantaneous bandwidth */
+
+    if (!sf_getbool("complex",&cmplx)) cmplx=false;
+    /* if y, use complex-valued computations */
 
     sf_hilbert_init(n1, nh, c);
     sf_deriv_init(n1, nh, c);

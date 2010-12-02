@@ -24,7 +24,7 @@
 
 static int *n, s[SF_MAX_DIM], nd, dim;
 static ctriangle *tr;
-static float *tmp;
+static sf_complex *tmp;
 
 void ctrianglen_init (int ndim  /* number of dimensions */, 
 			int *nbox /* triangle radius [ndim] */, 
@@ -45,7 +45,7 @@ void ctrianglen_init (int ndim  /* number of dimensions */,
 	n[i] = ndat[i];
 	nd *= ndat[i];
     }
-    tmp = sf_floatalloc (nd);
+    tmp = sf_complexalloc (nd);
 }
 
 void ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* y)
@@ -81,11 +81,19 @@ void ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	
     if (adj) {
 	for (i=0; i < nd; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[i] += tmp[i];
+#else
+	    x[i] = sf_cadd(x[i],tmp[i]);
+#endif
 	}
     } else {
 	for (i=0; i < nd; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    y[i] += tmp[i];
+#else
+	    y[i] = sf_cadd(y[i],tmp[i]);
+#endif
 	}
     }    
 }

@@ -66,20 +66,40 @@ static void fold (int o, int d, int nx, int nb, int np,
 
     /* reflections from the right side */
     for (j=nb+nx; j < np; j += nx) {
-	for (i=0; i < nx && i < np-j; i++)
+	for (i=0; i < nx && i < np-j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[o+(nx-1-i)*d] += tmp[j+i];
+#else
+	    x[o+(nx-1-i)*d] = sf_cadd(x[o+(nx-1-i)*d],tmp[j+i]);
+#endif
+	}
 	j += nx;
-	for (i=0; i < nx && i < np-j; i++)
+	for (i=0; i < nx && i < np-j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[o+i*d] += tmp[j+i];
+#else
+	    x[o+i*d] = sf_cadd(x[o+i*d],tmp[j+i]);
+#endif
+	}
     }
     
     /* reflections from the left side */
     for (j=nb; j >= 0; j -= nx) {
-	for (i=0; i < nx && i < j; i++)
+	for (i=0; i < nx && i < j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[o+i*d] += tmp[j-1-i];
+#else
+	    x[o+i*d] = sf_cadd(x[o+i*d],tmp[j-1-i]);
+#endif
+	}
 	j -= nx;
-	for (i=0; i < nx && i < j; i++)
+	for (i=0; i < nx && i < j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[o+(nx-1-i)*d] += tmp[j-1-i];
+#else
+	    x[o+(nx-1-i)*d] = sf_cadd(x[o+(nx-1-i)*d],tmp[j-1-i]);
+#endif
+	}
     }
 }
     
@@ -90,18 +110,26 @@ static void doubint (int nx, sf_complex *xx, bool der)
 
 
     /* integrate forward */
-    t=0.;
+    t=sf_cmplx(0.,0.);
     for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	t += xx[i];
+#else
+	t = sf_cadd(t,xx[i]);
+#endif
 	xx[i] = t;
     }
 
     if (der) return;
 
     /* integrate backward */
-    t = 0.;
+    t = sf_cmplx(0.,0.);
     for (i=nx-1; i >= 0; i--) {
+#ifdef SF_HAS_COMPLEX_H
 	t += xx[i];
+#else
+	t = sf_cadd(t,xx[i]);
+#endif
 	xx[i] = t;
     }
 }
@@ -113,27 +141,42 @@ static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_comple
     sf_complex xi;
 
     for (i=0; i < nx + 2*nb; i++) {
-	tmp[i] = 0;
+	tmp[i] = sf_cmplx(0.,0.);
     }
 
     if (box) {
 	wt = 1.0/(2*nb-1);
    
 	for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    xi = wt*x[o+i*d];
 
 	    tmp[i+1]    += xi;
 	    tmp[i+2*nb] -= xi;
+#else
+	    xi = sf_crmul(x[o+i*d],wt);
+
+	    tmp[i+1]    = sf_cadd(tmp[i+1],xi);
+	    tmp[i+2*nb] = sf_cadd(tmp[i+2*nb],sf_cneg(xi));
+#endif
 	}
     } else {
 	wt = 1.0/(nb*nb);
     
 	for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    xi = wt*x[o+i*d];
 
 	    tmp[i]      -=   xi;
 	    tmp[i+nb]   += 2*xi;
 	    tmp[i+2*nb] -=   xi;
+#else
+	    xi = sf_crmul(x[o+i*d],wt);
+
+	    tmp[i]      = sf_cadd(tmp[i],sf_cneg(xi));
+	    tmp[i+nb]   = sf_cadd(tmp[i+nb],sf_crmul(xi,2.));
+	    tmp[i+2*nb] = sf_cadd(tmp[i+2*nb],sf_cneg(xi));
+#endif
 	}
     }
 }
