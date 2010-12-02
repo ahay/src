@@ -26,7 +26,7 @@
 static int niter, n;
 static sf_complex *p;
 
-void divn_init(int ndim   /* number of dimensions */, 
+void cdivn_init(int ndim   /* number of dimensions */, 
 	       int nd     /* data size */, 
 	       int *ndat  /* data dimensions [ndim] */, 
 	       int *nbox  /* smoothing radius [ndim] */, 
@@ -42,7 +42,7 @@ void divn_init(int ndim   /* number of dimensions */,
     p = sf_complexalloc (nd);
 }
 
-void divn_close (void)
+void cdivn_close (void)
 /*< free allocated storage >*/
 {
     ctrianglen_close();
