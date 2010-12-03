@@ -3,6 +3,8 @@ import os
 
 def processes(nodes=None):
     numThreads = int(os.environ.get('OMP_NUM_THREADS','8'))
+    if nodes:
+        return nodes*numThreads
     try:
         nodefile = os.environ['PBS_NODEFILE']
         ff = open(nodefile,'r')
@@ -14,10 +16,7 @@ def processes(nodes=None):
                 unique.append(node)
         return len(unique)*numThreads
     except:
-        if nodes:
-            return nodes*numThreads
-        else:
-            return numThreads
+        return numThreads
 
 def _find(np,command,custom=''):
     ''' Find the mpiexec command, and the command to execute '''
