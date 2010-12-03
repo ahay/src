@@ -1,8 +1,23 @@
 from rsf.proj import *
 import os
 
-def processes(nodes):
-    return nodes*int(os.environ.get('OMP_NUM_THREADS','8'))
+def processes(nodes=None):
+    numThreads = int(os.environ.get('OMP_NUM_THREADS','8'))
+    try:
+        nodefile = os.environ['PBS_NODEFILE']
+        ff = open(nodefile,'r')
+        nodes = ff.readlines()
+        ff.close()
+        unique = []
+        for node in nodes:
+            if node not in unique:
+                unique.append(node)
+        return len(unique)*numThreads
+    except:
+        if nodes:
+            return nodes*numThreads
+        else:
+            return numThreads
 
 def _find(np,command,custom=''):
     ''' Find the mpiexec command, and the command to execute '''
@@ -39,7 +54,12 @@ def encode(encodings, shotGathers, encoding,
         ny=%d oy=%f dy=%f
         ''' % (nx,ox,dx,ny,oy,dy) ,stdin=0, stdout=-1)
         
-def gridandstack(stack,files,np,fprefix,oprefix,nx,ox,dx,ny,oy,dy):
+def gridandstack(stack,files,np,
+                fprefix,
+                nf,of,jf,
+                nx,ox,dx,
+                ny,oy,dy,
+                nz,oz,dz):
     ''' stack files using sfbigencode, does not require files
     to be on the same cube, will relocate them in the cube
     
@@ -49,24 +69,28 @@ def gridandstack(stack,files,np,fprefix,oprefix,nx,ox,dx,ny,oy,dy):
     oprefix - output file prefix (eprefix)
     nx,ox,dx,ny,oy,dy - output stacked file dimensions
     '''
-    
+
     nfiles = len(files)
-    Flow(stack+'-encode-amp',None,
+
+    oprefix=str(stack)
+
+    if not '.rsf' in fprefix:
+        fprefix += '.rsf'
+    if not '.rsf' in oprefix:
+        oprefix += '.rsf'
+
+    Flow(stack,files,
         '''
-        spike n1=%d o1=0 d1=1 n2=1 o2=0 d2=1 |
-        math output="1"
-        ''' % nfiles)
-    Flow(stack+'-encode-pha',None,
+        %s 
+        ''' % (_find(np,'sfbigmpistack')) +
         '''
-        spike n1=%d o1=0 d1=1 n2=1 o2=0 d2=1 |
-        math output="0"
-        ''' % nfiles)
-    Flow(stack+'-encode',[stack+'-encode-amp',stack+'-encode-pha'],
+        nx=%d ny=%d nz=%d
+        ox=%f oy=%f oz=%d
+        dx=%f dy=%f dz=%f
+        nf=%d of=%d jf=%d
+        ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
         '''
-        cat axis=3 ${SOURCES[1]}
-        ''')
-    encode(stack,files,stack+'-encode',
-        np,oprefix,fprefix,nx,ox,dx,ny,oy,dy)
+        prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
         
 def stack(stack,np,fprefix,nf,of,jf):
     ''' stack files using sfmpistack
@@ -97,4 +121,4 @@ def stack(stack,np,fprefix,nf,of,jf):
         jf=%d
         ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
         ''' fprefix='''+fprefix + ''' oname='''+stack,stdin=0, stdout=-1)
-        
+
