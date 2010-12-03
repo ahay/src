@@ -55,10 +55,11 @@ def encode(encodings, shotGathers, encoding,
         
 def gridandstack(stack,files,np,
                 fprefix,
-                nf,of,jf,
                 nx,ox,dx,
                 ny,oy,dy,
-                nz,oz,dz):
+                nz,oz,dz,
+                nf=None,of=None,jf=None,
+                shots=None):
     ''' stack files using sfbigencode, does not require files
     to be on the same cube, will relocate them in the cube
     
@@ -67,6 +68,9 @@ def gridandstack(stack,files,np,
     fprefix - input file prefix (dprefix)
     oprefix - output file prefix (eprefix)
     nx,ox,dx,ny,oy,dy - output stacked file dimensions
+    either specify shots or nf,of,jf:
+        shots - list of shot indices to be put into a file
+        nf,of,jf - number of files in sequential order
     '''
 
     nfiles = len(files)
@@ -78,18 +82,62 @@ def gridandstack(stack,files,np,
     if not '.rsf' in oprefix:
         oprefix += '.rsf'
 
-    Flow(stack,files,
-        '''
-        %s 
-        ''' % (_find(np,'sfbigmpistack')) +
-        '''
-        nx=%d ny=%d nz=%d
-        ox=%f oy=%f oz=%d
-        dx=%f dy=%f dz=%f
-        nf=%d of=%d jf=%d
-        ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
-        '''
-        prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
+    if shots:
+
+        def buildShotlist(target,source,env):
+            shots = env['SHOTLIST']
+            Fshotlist = open(str(target[0]),'w')
+            for shot in shots:
+                Fshotlist.write(str(shot)+'\n')
+            Fshotlist.write('data_format=ascii_int\n')
+            Fshotlist.write('esize=4\n')
+            Fshotlist.write('in=./%s\n' % str(target[0]))
+            Fshotlist.write('n1=%d\n' % len(shots))
+            Fshotlist.write('o1=0\n')
+            Fshotlist.write('d1=1\n')
+            Fshotlist.close()
+
+        bld = Builder(action= buildShotlist,
+                      suffix='.asc')
+
+        proj = Project()
+        proj.Append(BUILDERS = {'ShotList' : bld})
+
+        shotfile = stack+'-shots'
+        proj.ShotList(shotfile,None,SHOTLIST=shots)
+
+        if not '.asc' in shotfile:
+            shotfile += '.asc'
+        files.append(shotfile)
+        Flow(stack,files,
+            '''
+            %s 
+            ''' % (_find(np,'sfbigmpistack')) +
+            '''
+            nx=%d ny=%d nz=%d
+            ox=%f oy=%f oz=%d
+            dx=%f dy=%f dz=%f
+            shots="%s"
+            ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
+            '''
+            prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
+
+    else:
+        if (not of) or (not jf) or (not nf):
+            raise Exception('must specify either shots or nf,of,jf')
+        Flow(stack,files,
+            '''
+            %s 
+            ''' % (_find(np,'sfbigmpistack')) +
+            '''
+            nx=%d ny=%d nz=%d
+            ox=%f oy=%f oz=%d
+            dx=%f dy=%f dz=%f
+            nf=%d of=%d jf=%d
+            ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
+            '''
+            prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
+     
         
 def stack(stack,np,fprefix,nf,of,jf):
     ''' stack files using sfmpistack
