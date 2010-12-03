@@ -56,6 +56,9 @@ int main (int argc, char* argv[])
     dtrace = sf_floatalloc(n1);
     dhilb = sf_floatalloc(n1);
 
+    if (!sf_getbool("complex",&cmplx)) cmplx=false;
+    /* if y, use complex-valued computations */
+
     if (cmplx) {
 	cnum = sf_complexalloc(n12);
 	cden = sf_complexalloc(n12);
@@ -83,9 +86,6 @@ int main (int argc, char* argv[])
     if (!sf_getbool("band",&band)) band=false;
     /* if y, compute instantaneous bandwidth */
 
-    if (!sf_getbool("complex",&cmplx)) cmplx=false;
-    /* if y, use complex-valued computations */
-
     sf_hilbert_init(n1, nh, c);
     sf_deriv_init(n1, nh, c);
 
@@ -105,39 +105,78 @@ int main (int argc, char* argv[])
 	    sf_deriv(hilb,dhilb);
 	}
 
-	for (i1=0; i1 < nh; i1++, i++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
-	}	
+	if (cmplx) {
+	    for (i1=0; i1 < nh; i1++, i++) {
+		cnum[i] = sf_cmplx(0.,0.);
+		cden[i] = sf_cmplx(0.,0.);
+	    }	
+	    
+	    for (i1=nh; i1 < n1-nh; i1++, i++) {
+		cnum[i] = sf_cmplx(dtrace[i1],dhilb[i1]);
+		cden[i] = sf_cmplx( trace[i1], hilb[i1]);
 
-	for (i1=nh; i1 < n1-nh; i1++, i++) {
-	    a = trace[i1];
-	    b = hilb[i1];
-	    if (band) {
-		num[i] = b;
-		den[i] = a;
-	    } else {
-		num[i] = a*dhilb[i1]-b*dtrace[i1];
-		den[i] = a*a+b*b;
+		a = cabsf(cden[i]);
+		mean += a*a;
 	    }
-	    mean += den[i]*den[i];
-	}
-
-	for (i1=n1-nh; i1 < n1; i1++, i++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
-	}
+	    
+	    for (i1=n1-nh; i1 < n1; i1++, i++) {
+		cnum[i] = sf_cmplx(0.,0.);
+		cden[i] = sf_cmplx(0.,0.);
+	    }
+	} else {
+	    for (i1=0; i1 < nh; i1++, i++) {
+		num[i] = 0.;
+		den[i] = 0.;
+	    }	
+	    
+	    for (i1=nh; i1 < n1-nh; i1++, i++) {
+		a = trace[i1];
+		b = hilb[i1];
+		if (band) {
+		    num[i] = b;
+		    den[i] = a;
+		} else {
+		    num[i] = a*dhilb[i1]-b*dtrace[i1];
+		    den[i] = a*a+b*b;
+		}
+		mean += den[i]*den[i];
+	    }
+	    
+	    for (i1=n1-nh; i1 < n1; i1++, i++) {
+		num[i] = 0.;
+		den[i] = 0.;
+	    }
+	} /* cmplx */
 	
-    }
+    } /* i2 */
+
     mean = sqrtf(n12/mean);
     
     for (i=0; i < n12; i++) {
-	num[i] *= mean;
-	den[i] *= mean;
+	if (cmplx) {
+#ifdef SF_HAS_COMPLEX_H
+	    cnum[i] *= mean;
+	    cden[i] *= mean;  
+#else
+	    cnum[i] = sf_crmul(cnum[i],mean);
+	    cden[i] = sf_crmul(cden[i],mean);
+#endif
+	} else {
+	    num[i] *= mean;
+	    den[i] *= mean;
+	}
     }
 
-    divn_init(dim, n12, n, rect, niter, true);
-    divn (num, den, phase);
+    if (cmplx) {
+	cdivn_init(dim, n12, n, rect, niter, true);
+	cdivn (cnum, cden, crat);
+	for (i=0; i < n12; i++) {
+	    phase[i] = cimagf(crat[i]);
+	}
+    } else {
+	divn_init(dim, n12, n, rect, niter, true);
+	divn (num, den, phase);
+    }
 
     if (hertz) {
 	/* convert to Hertz */    

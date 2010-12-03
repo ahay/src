@@ -61,7 +61,7 @@ Result('inv2','specai1 specrefl specricker specconv','TwoRows')
 
 for case in (1,2):
     sf = 'sf%d' % case
-    Flow(sf,'conv','iphase order=10 rect1=%d hertz=y' % (1,250)[case-1])
+    Flow(sf,'conv','iphase order=10 rect1=%d hertz=y complex=%d' % ((1,500)[case-1],case-1))
     Plot(sf,
          '''
          scale dscale=0.05 |
@@ -71,6 +71,7 @@ for case in (1,2):
          labelsz=10 titlesz=12
          ''' % ('Instantaneous','Local')[case-1])
     Result(sf,['conv',sf],'OverUnderAniso')
+
 
 ## REAL SIGNAL
 ##############
@@ -88,12 +89,12 @@ for case in (1,2):
     seis = 'seis%d' % case
     Plot(seis,'pptrace1',
          '''
-         iphase rect1=%d order=10 hertz=y |
+         iphase rect1=%d order=10 hertz=y complex=%d |
          graph title="(c) Seismic %s Frequency"
          min2=-20 max2=100 plotcol=5
          label1="Time (s)" label2="Frequency (Hz)"
          labelsz=10 titlesz=12
-         ''' % ((1,"Instantaneous"),(30,"Local"))[case-1])
+         ''' % ((1,0,"Instantaneous"),(60,1,"Local"))[case-1])
     Result(seis,['seis',seis],'OverUnderAniso')
 
 ## COLLECTING TOGETHER
