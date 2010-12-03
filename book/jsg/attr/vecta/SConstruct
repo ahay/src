@@ -1,8 +1,6 @@
 from rsf.proj import *
-import os
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
+from rsf.recipes.beg import server as private
+import rsf.recipes.warp as warp
 
 trace=300
 
@@ -50,7 +48,6 @@ Result('vnails','fit nails','Overlay')
 
 Flow('fit0','fit','math output=input-x1 | spray o=0 d=1 n=471')
 
-import warp
 warp.warp2('vec','pp','ss','fit0',
            nx=471,
            inter=5,

@@ -128,7 +128,7 @@ def warp3(name,       # name prefix
 
     ifreq = '''
     window j2=%d j3=%d |
-    iphase rect1=%d rect2=%d rect3=%d order=100 |
+    iphase rect1=%d rect2=%d rect3=%d order=100 complex=y |
     transp          memsize=500 |
     spline n1=%d d1=1 o1=%g | transp memsize=500  |
     transp plane=13 memsize=500 |
@@ -326,7 +326,7 @@ def warp2(name,       # name prefix
     abalance rect1=%d rect2=%d order=100 other=${SOURCES[2]}
     ''' % (rect1,rect2)
 
-    ifreq = 'iphase rect1=%d rect2=%d order=100' % (2*rect1,2*rect2)
+    ifreq = 'iphase rect1=%d rect2=%d order=100 complex=y' % (2*rect1,2*rect2)
 
     def freqplot(title):
         return '''
