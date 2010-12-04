@@ -1,5 +1,5 @@
 from rsf.proj import *
-import os,pbs
+import os
 
 
 def processes(nodes=None,single=None):
