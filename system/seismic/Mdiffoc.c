@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
     int it, nt, ix, nx, i2, n2, n3, nw, next;
     float v0, v1, dt, t0, o2, d2, t;
     float **data, *trace, *strace;
+    sf_complex *ctrace;
     fint1 str, istr;
     kiss_fftr_cfg forw, invs;
     sf_file inp, out;
@@ -64,6 +65,7 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc2(nt,nx);
     strace = sf_floatalloc(n3);
+    ctrace = sf_complexalloc(nw);
 
     sf_floatread(data[0],nt*nx,inp);
 
@@ -79,7 +81,7 @@ int main(int argc, char* argv[])
 
 	trace = data[ix];
 
-	/* stretch to t^2 */
+	/* stretch t -> t^2 */
 
 	for (it=0; it < nt; it++) {
 	    trace[it] /= nt;
@@ -99,7 +101,17 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	/* inverse stretch */
+	/* FFT */
+
+	kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
+	ctrace[0]=sf_cmplx(0.,0.); /* dc */
+	
+
+	/* Inverse FFT */
+
+	kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
+
+	/* inverse stretch t^2->t */
 
 	fint1_set(istr,strace);
 

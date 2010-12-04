@@ -19,10 +19,12 @@
 
 #include <rsf.h>
 
+#include "aastretch.h"
+
 int main(int argc, char* argv[])
 {
-    int n1, nc, nd, n3, i3, nb, n1d, id, ic, i1, ib;
-    float *dense, *a, *p, *c, d2, t, dt, ampl;
+    int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
+    float **dense, *a, *p, *c, *time, *delt, *ampl, d1, d2;
     sf_file in, out, dip, cur;
 
     sf_init(argc,argv);
@@ -32,6 +34,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     if (!sf_histint(in,"n2",&nc)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
 
@@ -41,35 +44,46 @@ int main(int argc, char* argv[])
     sf_putint(out,"n2",nd);
     sf_putfloat(out,"d2",d2/nb);
 
-    n1d = n1*nd;
-
-    dense = sf_floatalloc(n1d);
+    dense = sf_floatalloc2(n1,nd);
     a = sf_floatalloc(n1);
     p = sf_floatalloc(n1);
     c = sf_floatalloc(n1);
+
+    time = sf_floatalloc(n1);
+    delt = sf_floatalloc(n1);
+    ampl = sf_floatalloc(n1);
+
+    /*** Initialize stretch ***/
+    aastretch_init (false, n1, 0., d1, n1);
  
     for (i3=0; i3 < n3; i3++) {
-	for (id=0; id < n1d; id++) {
-	    dense[id] = 0.;
+	for (id=0; id < nd; id++) {
+	    for (i1=0; i1 < n1; i1++) {
+		dense[id][i1] = 0.;
+	    }
 	}
 	for (ic=0; ic < nc; ic++) {
 	    sf_floatread(a,n1,in);
 	    sf_floatread(p,n1,dip);
 	    sf_floatread(c,n1,cur);
 
-	    for (i1=0; i1 < n1; i1++) {
-		/* beam shape: t = t0+p*(x-x0)+c*(x-x0)^2/2 */
-		for (ib=-nb; ib <= nb; ib++) {
-		    id=ic+ib;
-		    if (id >= nd) break;
-		    if (id < 0) continue;
-		    t = i1+(p[i1]+c[i1]*ib/2)*ib;
-		    dt = 0.; 
-		    ampl = 1.;
-		}
+	    for (ib=-nb; ib <= nb; ib++) {
+		id=ic*nb+ib;
+		
+		if (id >= nd) break;
+		if (id < 0) continue;
+		
+		for (i1=0; i1 < n1; i1++) {
+		    time[i1] = i1+(p[i1]+c[i1]*ib/2)*ib;
+		    delt[i1] = 0.;
+		    ampl[i1] = 1.;
+		} 
+		
+		aastretch_define (time,delt,NULL);
+		aastretch_lop (false,true,n1,n1,ampl,dense[id]);
 	    }
 	}
-	sf_floatwrite(dense,n1d,out);
+	sf_floatwrite(dense[0],n1*nd,out);
     }
 
     exit(0);

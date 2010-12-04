@@ -1,8 +1,5 @@
 from rsf.proj import *
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
+from rsf.recipes.beg import server as private
 # replace with your own data server
 
 for case in 'abcde':
