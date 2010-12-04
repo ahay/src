@@ -49,6 +49,7 @@ To programs:
 * sfsvd (SVD using scipy)
 * sfthreedcube (3D display using mayavi2)
 * sfiphase -added complex option
+* sfsensitivity (traveltime sensitivity kernels)
 
 BUG FIXES:
 

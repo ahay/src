@@ -24,7 +24,8 @@
 int main(int argc, char* argv[])
 {
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
-    float **dense, *a, *p, *c, *time, *delt, *ampl, d1, d2;
+    float **dense, *a, *p, *c, *time, *delt, *ampl, d2;
+    const float fudge=3.19201;
     sf_file in, out, dip, cur;
 
     sf_init(argc,argv);
@@ -34,11 +35,13 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     if (!sf_histint(in,"n2",&nc)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
 
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+
+    if (!sf_getint("rect",&nb)) nb=3;
+    /* smoothing radius */
 
     nd = (nc-1)*nb+1;
     sf_putint(out,"n2",nd);
@@ -54,7 +57,7 @@ int main(int argc, char* argv[])
     ampl = sf_floatalloc(n1);
 
     /*** Initialize stretch ***/
-    aastretch_init (false, n1, 0., d1, n1);
+    aastretch_init (false, n1, 0., 1.0, n1);
  
     for (i3=0; i3 < n3; i3++) {
 	for (id=0; id < nd; id++) {
@@ -75,8 +78,9 @@ int main(int argc, char* argv[])
 		
 		for (i1=0; i1 < n1; i1++) {
 		    time[i1] = i1+(p[i1]+c[i1]*ib/2)*ib;
-		    delt[i1] = 0.;
-		    ampl[i1] = 1.;
+		    delt[i1] = fudge*c[i1]*ib*ib/4+1.0; 
+                    /* figure out imaginary curvature */ 
+		    ampl[i1] = a[i1];
 		} 
 		
 		aastretch_define (time,delt,NULL);
