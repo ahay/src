@@ -1,7 +1,8 @@
 from rsf.proj import *
-import os
+import os,pbs
 
-def processes(nodes=None):
+
+def processes(nodes=None,single=None):
     numThreads = int(os.environ.get('OMP_NUM_THREADS','8'))
     if nodes:
         return nodes*numThreads
@@ -16,7 +17,10 @@ def processes(nodes=None):
                 unique.append(node)
         return len(unique)*numThreads
     except:
-        return numThreads
+        if single:
+            return 1
+        else:
+            return numThreads
 
 def _find(np,command,custom=''):
     ''' Find the mpiexec command, and the command to execute '''
@@ -159,6 +163,9 @@ def stack(stack,np,fprefix,nf,of,jf):
     
     if not '.rsf' in fprefix:
         fprefix +='.rsf'
+    oname = stack
+    if not '.rsf' in oname:
+        oname += '.rsf'
         
     Flow(stack,files,
         '''
@@ -167,5 +174,5 @@ def stack(stack,np,fprefix,nf,of,jf):
         of=%d
         jf=%d
         ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
-        ''' fprefix='''+fprefix + ''' oname='''+stack,stdin=0, stdout=-1)
+        ''' fprefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
 
