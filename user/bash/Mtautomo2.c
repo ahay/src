@@ -29,7 +29,7 @@ static float *taus; /* [ntau] */
 
 static void sf_tautomo_dtdtau () {
     int itau, ix, it;
-    float t, tprev, p, td, tau, vel, dtdtau;
+    float t, tprev, p, q, td, tau, vel, dtdtau;
 
     /* Loop over events */
     for (itau = 0; itau < ntau; itau++) {
@@ -41,10 +41,13 @@ static void sf_tautomo_dtdtau () {
             tau = 0;
             p = slopes[itau][ix];
             td = tdata[itau][ix];
+            dtdtau = 0;
             while (t < td && tprev < td) {
                 tprev = t;
                 vel = v[it];
-                dtdtau = 1.0/sqrt (1 - p*p*vel*vel);
+                q = 1.0 - p*p*vel*vel;
+                if (q < 0.0) break;
+                dtdtau = 1.0/sqrt (q);
                 t += dt*dtdtau;
                 tau += dt;
                 it++;
@@ -100,7 +103,7 @@ static void sf_tautomo_rdata (float **data, float **pdata) {
 
 int main (int argc, char* argv[]) {
     bool verb = false;
-    int i, k, l, npicks, niter = 10;
+    int i, k, l, iter, npicks, niter = 3;
     float **data;
     sf_file in, out, time, vel0, picks;
 
@@ -128,7 +131,7 @@ int main (int argc, char* argv[]) {
     picks = sf_input ("picks");
     if (!sf_histint (picks, "n1", &npicks)) sf_error ("Need n1= in picks=");
     
-    if (!sf_getint ("niter", &niter)) niter = 10;
+    if (!sf_getint ("niter", &niter)) niter = 3;
     /* Number of iterations */
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* Verbosity flag */
@@ -164,19 +167,24 @@ int main (int argc, char* argv[]) {
             /* Read initial velocities */
             sf_floatread (v, nt, vel0);
             /* Dot test */
+/*
             double dot1[2], dot2[2];
             if (verb) sf_warning ("Dot test");
             sf_dot_test (sf_tautomo_lop, nv, ntau*nx, dot1, dot2);
             sf_warning ("%12.8f ? %12.8f\n", dot1[0], dot1[1]);
             sf_warning ("%12.8f ? %12.8f\n", dot2[0], dot2[1]);
+*/
             /* Prepare right-hand side */
-            if (verb) sf_warning ("Preparing R.H.S.");
-            sf_tautomo_dtdtau ();
-            /* Solve the linear system */
-            sf_solver (sf_tautomo_lop, sf_cgstep, nv, ntau*nx, dv, dtau[0], niter,
-                       "verb", verb, "end");
-            for (l = 0; l < nt; l++)
-                v[l] += dv[l];
+            for (iter = 0; iter < niter; iter++) {
+                memset (dv, 0, nt*sizeof(float));
+                if (verb) sf_warning ("Linear iteration %d", iter + 1);
+                sf_tautomo_dtdtau ();
+                /* Solve the linear system */
+                sf_solver (sf_tautomo_lop, sf_cgstep, nv, ntau*nx, dv, dtau[0], niter,
+                           "verb", verb, "end");
+                for (l = 0; l < nt; l++)
+                    v[l] += dv[l];
+            }
             /* Write results */
             sf_floatwrite (v, nt, out);
             /* Move on to the next ensemble */
