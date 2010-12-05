@@ -174,5 +174,5 @@ def stack(stack,np,fprefix,nf,of,jf):
         of=%d
         jf=%d
         ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
-        ''' fprefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
+        ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
 
