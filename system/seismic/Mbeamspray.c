@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
-    float **dense, *a, *p, *c, *time, *delt, *ampl, d2;
+    float **dense, *a, *p, *c, *time, *delt, *ampl, d2, f;
     const float fudge=3.19201;
     sf_file in, out, dip, cur;
 
@@ -58,6 +58,9 @@ int main(int argc, char* argv[])
 
     /*** Initialize stretch ***/
     aastretch_init (false, n1, 0., 1.0, n1);
+
+    f = fudge;
+    f *= f*f/(nb*nb);
  
     for (i3=0; i3 < n3; i3++) {
 	for (id=0; id < nd; id++) {
@@ -78,9 +81,8 @@ int main(int argc, char* argv[])
 		
 		for (i1=0; i1 < n1; i1++) {
 		    time[i1] = i1+(p[i1]+c[i1]*ib/2)*ib;
-		    delt[i1] = fudge*c[i1]*ib*ib/4+1.0; 
-                    /* figure out imaginary curvature */ 
-		    ampl[i1] = a[i1];
+		    delt[i1] = f*ib*ib+1.0; 
+		    ampl[i1] = a[i1]*(1.-fabsf((float) ib/nb));
 		} 
 		
 		aastretch_define (time,delt,NULL);
