@@ -354,7 +354,11 @@ def install_py_mains(env, progs_py, bindir):
 
     mains_py = Split(progs_py)
     for prog in mains_py:
-        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+        binary = os.path.join(bindir,'sf'+prog)
+        # Copy the program to the right location
+        env.InstallAs(binary,'M'+prog+'.py')
+        # Fix permissions for executable python files
+        env.AddPostAction(binary,Chmod(str(binary),0755))
 	env.RSF_Pycompile('M'+prog+'.py')
 
     # Self-doc
