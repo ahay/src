@@ -42,23 +42,27 @@ static void sf_tautomo_dtdtau () {
             p = slopes[itau][ix];
             td = tdata[itau][ix];
             dtdtau = 0;
+            /* Loop until tau from data is reached */
             while (t < td && tprev < td) {
                 tprev = t;
                 vel = v[it];
                 q = 1.0 - p*p*vel*vel;
                 if (q < 0.0) break;
-                dtdtau = 1.0/sqrt (q);
-                t += dt*dtdtau;
-                tau += dt;
-                it++;
+                t += dt/sqrt (q);
+                /* Accept next step only if it is closer to tau from data */
+                if ((t - td) < (td - tprev)) {
+                    dtdtau = 1.0/sqrt (q);
+                    tau += dt;
+                    it++;
+                }
             }
-            dtau[itau][ix] = dtdtau*(taus[itau] - (tau - dt));
+            dtau[itau][ix] = -dtdtau*(taus[itau] - tau);
         }
     }
 }
 
 static float sf_tautomo_dtdv (int itau, int ix, int iv) {
-    if (iv*dt > taus[itau])
+    if ((iv*dt - taus[itau]) > 0.5*dt)
         return 0.0;
     float p = slopes[itau][ix];
     float vel = v[iv];
@@ -66,7 +70,7 @@ static float sf_tautomo_dtdv (int itau, int ix, int iv) {
     if (q < 0.0)
         return 0.0;
     else
-        return -p*p*dt*vel/sqrt(q*q*q);
+        return p*p*dt*vel/sqrt(q*q*q);
 }
 
 static void sf_tautomo_lop (bool adj, bool add, int nv, int ntau, float *dv, float *dtau)
@@ -109,7 +113,7 @@ int main (int argc, char* argv[]) {
 
     sf_init (argc, argv);
     in = sf_input ("in");
-    /* Flattemed slopes */
+    /* Flattened slopes */
     out = sf_output ("out");
     /* Estimated velocities */
 
@@ -150,7 +154,6 @@ int main (int argc, char* argv[]) {
     sf_floatread (&taus[0], 1, picks);
     while (i < npicks) { /* Loop over picks */
         k++;
-        sf_warning ("%d %d", i, k);
         /* If end of picks for current ensemble or whole dataset */
         if ((npicks - 1) == i ||  taus[k] < taus[k - 1]) {
             if (verb) sf_warning ("Processing CMP #%d", i + 1);
