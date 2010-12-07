@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
     float **dense, *a, *p, *c, *time, *delt, *ampl, d2, f;
     const float fudge=3.19201;
+    char *type;
     sf_file in, out, dip, cur;
 
     sf_init(argc,argv);
@@ -61,6 +62,9 @@ int main(int argc, char* argv[])
 
     f = fudge;
     f *= f*f/(nb*nb);
+
+    if (NULL == (type=sf_getstring("type"))) type="both";
+    /* beam type */
  
     for (i3=0; i3 < n3; i3++) {
 	for (id=0; id < nd; id++) {
@@ -81,8 +85,23 @@ int main(int argc, char* argv[])
 		
 		for (i1=0; i1 < n1; i1++) {
 		    time[i1] = i1+(p[i1]+c[i1]*ib/2)*ib;
-		    delt[i1] = f*ib*ib+1.0; 
-		    ampl[i1] = a[i1]*(1.-fabsf((float) ib/nb));
+
+		    switch (type[0]) {
+			case 't':
+			    delt[i1] = f*ib*ib+1.0; 
+			    ampl[i1] = a[i1];
+			    break;
+			case 'x':
+			    delt[i1] = 1.0;
+			    ampl[i1] = a[i1]*(1.-fabsf((float) ib/nb));
+			    break;
+			case 'b':
+			    delt[i1] = 0.5*f*ib*ib+1.0; 
+			    ampl[i1] = a[i1]*(1.-fabsf(ib/(sqrt(2)*nb)));
+			    break;
+			default:
+			    sf_error("Unknown type \"%s\"",type);
+		    }
 		} 
 		
 		aastretch_define (time,delt,NULL);

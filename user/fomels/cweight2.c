@@ -57,9 +57,18 @@ void cweight2_lop (bool adj, bool add, int nx, int ny, sf_complex* xx, sf_comple
     for (iw=0; iw < nw; iw++) {
 	for (i=0; i < ny; i++) {
 	    if (adj) {
+#ifdef SF_HAS_COMPLEX_H
 		xx[i+iw*ny] += yy[i] * conjf(w[iw][i]);
+#else
+		xx[i+iw*ny] = sf_cadd(xx[i+iw*ny],
+				      sf_cmul(yy[i],conjf(w[iw][i])));
+#endif
 	    } else {
+#ifdef SF_HAS_COMPLEX_H
 		yy[i] += xx[i+iw*ny] * w[iw][i];
+#else
+		yy[i] = sf_cadd(yy[i],sf_cmul(xx[i+iw*ny],w[iw][i]));
+#endif
 	    }
 	}
     }

@@ -131,12 +131,18 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(sscc,n12,out);
 	} else {
 	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] = 0.;
+		trace[i1] = sf_cmplx(0.,0.);
 	    }
 	    sf_complexread(sscc,n12,in);
 	    for (iw=0; iw < nw; iw++) {
 		for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		    trace[i1] += sscc[iw*n1+i1]*conjf(kbsc[iw*n1+i1]);
+#else
+		    trace[i1] = sf_cadd(trace[i1],
+					sf_cmul(sscc[iw*n1+i1],
+						conjf(kbsc[iw*n1+i1])));
+#endif
 		}
 	    }
 	    sf_complexwrite(trace,n1,out);
