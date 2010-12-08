@@ -419,6 +419,25 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
 	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
+def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
+    Flow(cc+'_',None,
+         '''
+         math output=1
+         n1=%d d1=%g o1=%g
+         n2=%d d2=%g o2=%g
+	 n3=%d d3=%g o3=%g
+         ''' % (nz,dz,oz,nx,dx,ox,ny,oy,dy) )
+    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Flow(cc+'_y',cc+'_','math output="x3" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
+         put label1="" unit1="" label2="" unit2="" label3="" unit3=""
+         ''', stdin=0)
+
+
 
 
 # ------------------------------------------------------------
