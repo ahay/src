@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
 	sf_warning("slice %d of %d;",i2+1,n2);
 
 	if (!inv) {
+	    sf_complexread(trace,n1,in);
 	    cmultidivn (trace,sscc,niter);
 	    sf_complexwrite(sscc,n12,out);
 	} else {

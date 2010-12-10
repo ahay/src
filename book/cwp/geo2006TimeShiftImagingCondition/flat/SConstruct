@@ -122,7 +122,7 @@ Flow('w0','wvlt',
      put label1=w label2=x label3=y |
      transp plane=12 | transp plane=23
      ''' % (par['nw'],par['ow'],par['jw'],par['nx']/2,par['nx']))
-Result('w0','w0','window | real | transp | grey pclip=100')
+Result('w0','w0','window | real | transp | grey pclip=100 wanttitle=n')
 
 spmig.model   ('dpw','sp',     'w0','r0',par)
 spmig.model_cw('dcw','sp','ss','w0','r0',par)

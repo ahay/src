@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     float kx,ky,kz;
 
-    int n = nkx*nkz;
+    int n = nkx*nky*nkz;
     std::valarray<double> k(n);
     for (int iy=0; iy < nky; iy++) {
 	ky = ky0+iy*dky;

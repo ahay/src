@@ -225,7 +225,7 @@ for case in ('pp','ps'):
 
         # offset CIGs
         off = case + 'off' + '-'+TYP
-        Flow(off,cig,'window squeeze=y n1=1 min1=%(os)g' % par)
+        Flow(off,cig,'window n1=1 min1=%(os)g' % par)
         if(TYP=='h'):
             Result(off,igrey(olabelx + OSCR))
         else:

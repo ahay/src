@@ -54,7 +54,7 @@ def velcon(data,        # data name
     ckx=data+'-ckx'
     vlf=data+'-vlf'
     vlf2=data+'-vlf2'
-    Flow(ckx,pad,'cosft sign3=1')
+    Flow(ckx,pad,'cosft sign3=1 | put o4=0')
     Flow(vlf,ckx,
          '''
          fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y |
