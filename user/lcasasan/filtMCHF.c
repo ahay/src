@@ -86,8 +86,8 @@ void MCHFfilt_apply(sf_complex *bb /*in*/,
 	float eps;
 
 	
-	bb_for[0] = -1;
-	bb_down[nb] = -1;
+	bb_for[0] = sf_cmplx(-1.,0.);
+	bb_down[nb] = sf_cmplx(-1.,0.);
 
 	
 	for (ib=0; ib<nb;ib++){	

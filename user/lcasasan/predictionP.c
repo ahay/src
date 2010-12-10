@@ -183,13 +183,13 @@ void Pprediction_apply(sf_complex **LPF)
 
 		for (i1=0; i1<nq[i2];i1++) {
 			/*cprint(q[i1]);*/
-			#ifdef SF_HAS_COMPLEX_H
+#ifdef SF_HAS_COMPLEX_H
 			Q[i2][i1]= .5*( Q[i2][i1]+conjf(q[i1]));
 			Qconj[i2][i1]= conjf(Q[i2][i1]);
-			#else
-			Q[i2][i1]= sf_crmul( sf_cadd( Q[i2][i1]+sf_conjf(q[i1]) ) ,  .5 );
-			Qconj[i2][i1]=  sf_conjf( Q[i2][i1] );
-			#endif
+#else
+			Q[i2][i1]= sf_crmul( sf_cadd( Q[i2][i1],conjf(q[i1]) ) ,  .5 );
+			Qconj[i2][i1]=  conjf( Q[i2][i1] );
+#endif
 		}
 		
 		/*sf_warning("####### Q #########");

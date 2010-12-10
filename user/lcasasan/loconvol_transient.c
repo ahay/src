@@ -56,7 +56,7 @@ void loconvol_transient_lop(bool adj, bool add, int nx, int ny,
 }
 
 void loconvol_transient_close()
-/* free */
+/*< free >*/
 {
 	free(yy_pad);
 }

@@ -140,8 +140,8 @@ void spitzfilt_apply(sf_complex* fftL, sf_complex* fft,sf_complex* out)
 	fxPEF_close();
 
 	
-	bb_for[0] = -1;
-	bb_down[nb] = -1;
+	bb_for[0] = sf_cmplx(-1.,0.);
+	bb_down[nb] = sf_cmplx(-1.,0.);
 
 	
 	for (ib=0; ib<nb;ib++){	
