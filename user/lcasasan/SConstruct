@@ -5,6 +5,28 @@ import bldutil
 progs = '''
 intervalVTI
 smoothderLS
+spitz
+spitzbl
+spitzns
+spitzblns
+pwd2ani
+pwdnorm
+smoothder1
+smoothder2
+smoothcur
+pmig1
+joiner
+findmax
+findintval
+multmask
+match1d
+lomatch
+loconv
+Testcdstep
+test1_matchl1
+test2_matchl1
+bil1_new
+lpfL1
 '''
 
 
