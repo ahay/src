@@ -28,17 +28,17 @@
 
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
+    int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic, minix;
     float **rfl, **rgd, **crv, **dip, *trace, *trace2;
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
-    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0;
+    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
     char *type, *type2;
     bool twod, verb, adj, lin, cmp;
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg, **tss, **tgs;
-    sf_file data, refl, curv, modl;
-    
+    sf_file data, refl, curv, modl, picks = NULL, slopes = NULL;
+
     sf_init(argc,argv);
 
     if (!sf_getbool("lin",&lin)) lin=false;
@@ -192,6 +192,52 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		dip[ic][ix] = 0.;
 	    }
+	}
+    }
+
+    if (!lin && !adj) {
+	/* reflectivity (A) */
+	if (NULL != sf_getstring("refl")) {
+	    refl = sf_input("refl");
+	    sf_floatread(rfl[0],nxc,refl);
+	    sf_fileclose(refl);
+	} else {
+	    if (!sf_getfloat("r0",&r0)) r0=1.;
+	    /* normal reflectivity (if constant) */
+	    for (ic=0; ic < nc; ic++) {
+		for (ix=0; ix < nx; ix++) {
+		    rfl[ic][ix] = r0;
+		}
+	    }
+	}
+    }
+
+    if (!lin && !adj) {
+	if (NULL != sf_getstring("picks")) {
+	    picks = sf_output("picks");
+	    /* Output traveltime picks */
+	    sf_putint  (picks,"n1",nc);
+	    sf_putfloat(picks,"o1",0);
+	    sf_putfloat(picks,"d1",1.0);
+	    sf_putint  (picks,"n2",nh);
+	    sf_putfloat(picks,"o2",h0);
+	    sf_putfloat(picks,"d2",dh);
+	    sf_putint  (picks,"n3",ns);
+	    sf_putfloat(picks,"o3",s0);
+	    sf_putfloat(picks,"d3",ds);
+	}
+	if (NULL != sf_getstring("slopes")) {
+	    slopes = sf_output("slopes");
+	    /* Output receiver slopes */
+	    sf_putint  (slopes,"n1",nc);
+	    sf_putfloat(slopes,"o1",0);
+	    sf_putfloat(slopes,"d1",1.0);
+	    sf_putint  (slopes,"n2",nh);
+	    sf_putfloat(slopes,"o2",h0);
+	    sf_putfloat(slopes,"d2",dh);
+	    sf_putint  (slopes,"n3",ns);
+	    sf_putfloat(slopes,"o3",s0);
+	    sf_putfloat(slopes,"d3",ds);
 	}
     }
 
@@ -379,6 +425,25 @@ int main(int argc, char* argv[])
 			if (ref != inc) ava *= theta;
 			
 			ampl[ic][ix] = ava*obl*dx/amp;
+		    }
+		}
+		/* Pick traveltime and/or receiver slope */
+		if (picks || slopes) {
+		    mint = SF_HUGE;
+		    minix = 0;
+		    for (ix=0; ix < nx; ix++) {
+		        if (time[ic][ix] < mint) {
+		            mint = time[ic][ix];
+		            minix = ix;
+		        }
+		    }
+		    if (picks) {
+		        amp = tss[ic][minix]->t + tgs[ic][minix]->t;
+		        sf_floatwrite(&amp,1,picks);
+		    }
+		    if (slopes) {
+		        amp = fabsf(tgs[ic][minix]->tx);
+		        sf_floatwrite(&amp,1,slopes);
 		    }
 		}
 	    }
