@@ -1,4 +1,4 @@
-/* Interval VTI parameters from effective profiles */
+/* Interval/Effective VTI parameters from Effective/Interval profiles */
 /*
   Copyright (C) 2010 Politecnico di Milano
 
@@ -22,75 +22,86 @@
 
 int main (int argc, char* argv[])
 {
-    
+    bool interval;
     int it, nt;
-    float dt, t0, vNint4;
-    float *velN=NULL, *e=NULL, *velN_int=NULL, *velH_int=NULL, *e_int=NULL ,*t=NULL, *f=NULL;
-    sf_file vn=NULL, eta=NULL, vn_int=NULL, vh_int=NULL, eta_int=NULL; 
+    float dt, t0, vnmo4;
+    float v4th[2];
+    float *velN=NULL, *e=NULL, *velN_out=NULL, *velH_out=NULL, *e_out=NULL ,*t=NULL, *v4th_out=NULL;
+    sf_file vn=NULL, eta=NULL, vn_out=NULL, vh_out=NULL, eta_out=NULL;
 
     sf_init (argc,argv);
     vn = sf_input("in");
     
-    vn_int = sf_output("out"); 
+    vn_out = sf_output("out");
 
     
-    if (NULL != sf_getstring("vH_int")) vh_int = sf_output("vH_int"); /*interval HOR vel*/
-    else vh_int = NULL ;
+    if (NULL != sf_getstring("vH_out")) vh_out = sf_output("vH_out"); /*output HOR vel*/
+    else vh_out = NULL ;
     
-    if (NULL != sf_getstring("eta_int")) eta_int = sf_output("eta_int"); /*interval eta*/
-    else eta_int = NULL ; 
+    if (NULL != sf_getstring("eta_out")) eta_out = sf_output("eta_out"); /*output eta*/
+    else eta_out = NULL ;
 	
-    if (NULL != sf_getstring("eta")) eta = sf_input("eta"); /*effective eta*/ 
+    if (NULL != sf_getstring("eta")) eta = sf_input("eta"); /*input eta*/
     else eta = NULL ;
 
+    if (!sf_getbool("interval",&interval)) interval=true;
+    /* output are interval [y] or effective [n] profiles */
 
     if (SF_FLOAT != sf_gettype(vn)) sf_error("Need float input");
     if (!sf_histint(vn,"n1",&nt))   sf_error("No n1= in input");
     if (!sf_histfloat(vn,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(vn,"o1",&t0)) sf_error("No o1= in input");
 
-    /* sf_warning("\nnt %d",nt); */
 
     velN = sf_floatalloc(nt);
-    e = sf_floatalloc(nt);
-    velN_int = sf_floatalloc(nt);
-    velH_int = sf_floatalloc(nt);
-    e_int=sf_floatalloc(nt);  
+    velN_out = sf_floatalloc(nt);
     t = sf_floatalloc(nt);      
-    f = sf_floatalloc(nt);    
 
     sf_floatread(velN,nt,vn);
-    /*velN */
-    sf_floatread(e,nt,eta); 
-    /* sf_warning("velN %f eta %f ",velN[1],e[1]); */
-    
-    for (it=0;it<nt;it++){
-	t[it]=t0+it*dt;
-    }
-    
-    velN_int[0]=velN[0];
-    e_int[0]=e[0];
-    velH_int[0]=velN[0]*sqrt(fabs(1+2*e[0]));
+    velN_out[0]=velN[0]; /*initialization*/
+
+    if (eta!=NULL) {
+        e = sf_floatalloc(nt);
+        e_out=sf_floatalloc(nt);
+        velH_out = sf_floatalloc(nt);
+        v4th_out = sf_floatalloc(nt);
+
+    	sf_floatread(e,nt,eta); /*read eta from file*/
+
+    	e_out[0]=e[0]; /*initialization*/
+        v4th_out[0] = (1+8*e_out[0])*(velN_out[0]*velN_out[0]*velN_out[0]*velN_out[0]);
+	}
     for (it=1;it<nt;it++){
-	velN_int[it]=sqrt(fabs( ( (velN[it]*velN[it]*t[it]) -(velN[it-1]*velN[it-1]*t[it-1]))/ (t[it]-t[it-1]) ) );   
-    
 
-	/*f(i) = Vnmo_eff(i)^2 * (4*Vh_eff(i)^2 - 3*Vnmo_eff(i)^2);*/
-	f[it] = (velN[it]*velN[it])* ( 4 * (velN[it]*velN[it])*(1+2*e[it]) - 3 * (velN[it]*velN[it]) );
+    	t[it]=t0+it*dt;
 
-	vNint4 = velN_int[it]*velN_int[it]*velN_int[it]*velN_int[it];
-	/* velH_int[it] = velN_int[it] * sqrt ( (1/(4*vNint4)) * (f[it]*t[it]-f[it-1]*t[it-1])/(t[it]-t[it-1]) + 3/4  );   */ 
+    	/* Vnmo */
+    	if (interval)
+    		velN_out[it] = sqrt(fabs( ( (velN[it]*velN[it]*t[it]) -(velN[it-1]*velN[it-1]*t[it-1]))/ (t[it]-t[it-1]) ) );
+    	else
+    		velN_out[it] = sqrt(fabs( (velN_out[it-1]*velN_out[it-1]*t[it-1] + velN[it]*velN[it]*(t[it]-t[it-1])  ) / t[it] ) );
 
-	/* eta_int(i) = 1/(8*Vnmo_int(i)^4) * ( (f(i)*to(i)-f(i-1)*to(i-1))/(to(i)-to(i-1)) - Vnmo_int(i)^4  );*/
-	e_int[it] = 1/(8*vNint4) * ( (f[it]*t[it]-f[it-1]*t[it-1])/(t[it]-t[it-1]) - vNint4  );
-	velH_int[it] = velN_int[it]*sqrt(fabs(1+2*e_int[it]) );
+    	/* eta and Vhor */
+		if (eta!=NULL) {
+	        vnmo4=velN_out[it]*velN_out[it]*velN_out[it]*velN_out[it];
+	        v4th[0]=(1+8*e[it])*velN[it]*velN[it]*velN[it]*velN[it];
+
+	        if (interval) {
+		        v4th[1]=(1+8*e[it-1])*velN[it-1]*velN[it-1]*velN[it-1]*velN[it-1];
+		        v4th_out[it] = (v4th[0]*t[it]-v4th[1]*t[it-1])/(t[it]-t[it-1]);
+	        } else
+		        v4th_out[it] = (v4th_out[it-1]*t[it-1] +  v4th[0] *(t[it]-t[it-1]) )/t[it];
+
+	        e_out[it] = 0.125 * ( ( v4th_out[it] / vnmo4 ) - 1 );
+			velH_out[it] = velN_out[it]*sqrt(fabs(1+2*e_out[it]) );
+		}
     }
     
-    sf_floatwrite (velN_int,nt,vn_int);
-    sf_floatwrite (velH_int,nt,vh_int);
-    sf_floatwrite (e_int,nt,eta_int);
-    
-    
-    sf_close();
+    sf_floatwrite (velN_out,nt,vn_out);
+    if ((eta_out!=NULL) && (eta!=NULL))
+		sf_floatwrite (e_out,nt,eta_out);
+    if ((vh_out!=NULL) && (eta!=NULL))
+    	sf_floatwrite (velH_out,nt,vh_out);
+
     exit (0);
 }
