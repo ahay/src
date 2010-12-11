@@ -83,6 +83,8 @@ isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[\!htbp]+\])?' \
                     '\{([^\}]+)')
 ismplot = re.compile(r'^[^%]*\\multiplot\*?\s*(?:\[[\!htbp]+\])?' \
                      '\{[^\}]+\}\s*\{([^\}]+)')
+issmplot = re.compile(r'^[^%]*\\sidemultiplot\*?\s*(?:\[[\!htbp]+\])?' \
+                     '\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 linput = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
@@ -161,6 +163,16 @@ def latexscan(node,env,path):
                      plots.append(os.path.join(resdir2,plot + ressuffix))
                      if re.search('angle=90',line):
                          plotoption[plot+pssuffix] = '-flip r90'
+
+            check = issmplot.search(line)
+            if check:
+                 smplot = check.group(1)
+                 smplot = string.replace(smplot,'\_','_')
+                 for plot in string.split(smplot,','):
+                     plots.append(os.path.join(resdir2,plot + ressuffix))
+                     if re.search('angle=90',line):
+                         plotoption[plot+pssuffix] = '-flip r90'
+
 
             check = isfig.search(line)
             if check:
