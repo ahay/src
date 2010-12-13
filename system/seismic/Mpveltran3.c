@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
     float tau_;
     float *v1=NULL, *v2=NULL, *v3=NULL; /* to compute velocity attribute panels */
     float *Rx=NULL, *Ry=NULL, *Rxy=NULL, **coord1=NULL, **coord2=NULL, **coord3=NULL, *ord=NULL;
-    float *vx=NULL, *vx2=NULL, *vy=NULL, *vy2=NULL, *vxy=NULL, *vxy2=NULL, *TAU0=NULL, *TAU0t=NULL;
+    float *vx=NULL, *vx2=NULL, *vy=NULL, *vy2=NULL, *vxy=NULL, *vxy2=NULL, *TAU0=NULL; /* *TAU0t=NULL; */
 
     sf_file input=NULL, cmp=NULL, dipx=NULL, dipy=NULL, dipxy=NULL;
     /* Input files */
