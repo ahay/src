@@ -1,6 +1,6 @@
 /* Slope-based tau-p moveout in VTI. */
 /*
-  Copyright (C) 2008 University of Texas at Austin
+  Copyright (C) 2010 Politecnico di Milano
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     eps = SF_EPS;
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
-	for (ip = 0; ip < np; ip++) { /* offset */
+	for (ip = 0; ip < np; ip++) { /* slope */
 	    p = p0+ip;
 
 	    sf_floatread (trace,nt,inp);
