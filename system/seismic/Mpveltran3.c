@@ -195,15 +195,15 @@ int main (int argc, char* argv[])
             for (it=0; it < nt; it++) { /* time tau loop*/
                 t = t0 + it*dt;
 
-                if (TAU0[it] <= 0.) {
-                	v1[it] = 0.;
-                	v2[it] = 0.;
-                	v3[it] = 0.;
+                if (TAU0[it] < 0.) {
+                	v1[it] = 0.0;
+                	v2[it] = 0.0;
+                	v3[it] = 0.0;
                 } else {
-                	tau_ = (-1) * (t / TAU0[it] / TAU0[it] );
-                	v3[it] = tau_ * Rxy[it] * dt/(dp1/dp2) + Rx[it] * Ry[it] * dt/dp1 * dt/dp2;
-                	v1[it] = (tau_ * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / (p1*dp1+100*SF_EPS);
-                	v2[it] = (tau_ * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / (p2*dp2+100*SF_EPS);
+                	tau_ = (-1.0) * (t / TAU0[it] / TAU0[it] );
+                	v3[it] = tau_ * Rxy[it] * dt/dp1/dp2 + Rx[it] * Ry[it] * dt/dp1 * dt/dp2;
+                	v1[it] = (tau_ * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 );
+                	v2[it] = (tau_ * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / (p2*dp2 );
 
                 } /* end of if tau0 >= 0 */
                 if (!map) {
@@ -218,7 +218,7 @@ int main (int argc, char* argv[])
             } /* END tau t loop */
 
 			if (map) {
-			stretch4_define (nmo,TAU0);
+				stretch4_define (nmo,TAU0);
 
 				stretch4_apply (nmo,v1,v1); sf_floatwrite (v1,nt,velx);
 				stretch4_apply (nmo,v2,v2); sf_floatwrite (v2,nt,vely);
@@ -231,7 +231,7 @@ int main (int argc, char* argv[])
 				sf_int2_lop (true,true,ntvy,nt,vy,ord);
 
 				sf_int2_init (coord3, t0,vxy0, dt,dvxy, nt,nvxy, sf_spline_int, nw, nt);
-				sf_int2_lop (true,true,ntvy,nt,vy,ord);
+				sf_int2_lop (true,true,ntvy,nt,vxy,ord);
 			}
 	      } /* END slope p1 loop */
         } /* END slope p2 loop */
