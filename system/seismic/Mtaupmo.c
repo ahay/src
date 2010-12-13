@@ -58,11 +58,11 @@ static float anmo_map(float t, int it) {
 int main (int argc, char* argv[])
 {
     fint1 nmo;
-    int ip, ix, nt, np, nx, nw, mute;
+    int ip, ix, nt, np, nx, nw, mute, np2;
     float dp, p0, str;
-    float *trace;
+    float *trace, *paxis;
     mapfunc map;
-    sf_file taup, nmod, velocity, velocityx;
+    sf_file taup, nmod, velocity, velocityx, slope;
 
     sf_init (argc,argv);
     taup = sf_input("in");
@@ -76,8 +76,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(taup,"o1",&t0)) sf_error("No o1= in input");
 
     if (!sf_histint(taup,"n2",&np)) sf_error("No n2= in input");
-    if (!sf_histfloat(taup,"d2",&dp)) sf_error("No d2= in input");
-    if (!sf_histfloat(taup,"o2",&p0)) sf_error("No o2= in input");   
+
 
     nx = sf_leftsize(taup,2);
 
@@ -91,6 +90,24 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("interval",&interval)) interval=true;
     /* use interval velocity */
+
+    if (NULL != sf_getstring("slope")) {
+	slope = sf_input("slope");
+	np2 = sf_filesize(slope);
+	if (np2 != np && np2 != np*nx) sf_error("Wrong dimensions in slope");
+
+	paxis = sf_floatalloc(np2);
+	sf_floatread (paxis,np2,slope);
+	sf_fileclose(slope);
+    } else {
+        if (!sf_histfloat(taup,"d2",&dp)) sf_error("No d2= in input");
+        if (!sf_histfloat(taup,"o2",&p0)) sf_error("No o2= in input");
+
+        np2 = np;
+        paxis = sf_floatalloc(np2);
+        for (ip=0; ip < np; ip++)
+        	paxis[ip] = p0 + ip*dp;
+    }
 
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
@@ -112,7 +129,9 @@ int main (int argc, char* argv[])
 	if (NULL != velx) sf_floatread (velx,nt,velocityx);
 
 	for (ip=0; ip < np; ip++) {
-	    p = p0 + ip*dp;
+
+		p = (np2 == np) ?  paxis[ip] : paxis[ix*np+ip];
+
 	    p *= p;
 
 	    sf_floatread (trace,nt,taup);
