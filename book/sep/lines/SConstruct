@@ -1,6 +1,6 @@
 from rsf.tex import *
 
-End(options='short',include=r'''
+End(options='short',use='hyperref',include=r'''
 \newlength{\boxwidth}
 \setlength{\boxwidth}{\textwidth}
 \addtolength{\boxwidth}{-20pt} 
