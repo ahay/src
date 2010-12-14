@@ -20,4 +20,11 @@ Papers(authors={'aniso':'Sergey Fomel and Vladimir Grechka',
        papers=report)
 
 End(use='hyperref,listings,amsmath',
-    include='\\newcommand{\\RSF}{../../..}')
+    include=r'''
+    \newcommand{\RSF}{../../..}
+    \newlength{\boxwidth}
+    \setlength{\boxwidth}{\textwidth}
+    \addtolength{\boxwidth}{-20pt} 
+    \setlength{\fboxsep}{10pt}
+    \newcommand{\boxit}[1]{\noindent\fbox{\parbox{\boxwidth}{#1}}}
+    ''')
