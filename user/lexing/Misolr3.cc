@@ -122,6 +122,7 @@ int main(int argc, char** argv)
     oRSF middle;
     middle.put("n1",m2);
     middle.put("n2",n2);
+    middle.put("n3",1);
     middle << fmid;
 
     vector<int> midx(m), nidx(n);
@@ -140,6 +141,7 @@ int main(int argc, char** argv)
     oRSF left("left");
     left.put("n1",m);
     left.put("n2",m2);
+    left.put("n3",1);
     left << ldata;
 
     DblNumMat rmat(n2,n);
@@ -152,6 +154,7 @@ int main(int argc, char** argv)
     oRSF right("right");
     right.put("n1",n2);
     right.put("n2",n);
+    right.put("n3",1);
     right << rdata;
 
     return 0;

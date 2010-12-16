@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     bool inv, dip, verb;
-    int i1, n1, iw, nw, i2, n2, rect, niter, n12, nt, ip, np;
+    int i, i1, n1, iw, nw, i2, n2, rect, niter, n12, nt, ip, np;
     char *label;
     float t, d1, w, w0, dw, p0, dp, p;
     sf_complex *trace, *kbsc, *sscc=NULL;
@@ -198,12 +198,12 @@ int main(int argc, char* argv[])
 	    sf_complexread(sscc,n12,in);
 	    for (iw=0; iw < nt; iw++) {
 		for (i1=0; i1 < n1; i1++) {
+		    i = iw*n1+i1;
+
 #ifdef SF_HAS_COMPLEX_H
-		    trace[i1] += sscc[iw*n1+i1]*conjf(kbsc[iw*n1+i1]);
+		    trace[i1] += sscc[i]*kbsc[i];
 #else
-		    trace[i1] = sf_cadd(trace[i1],
-					sf_cmul(sscc[iw*n1+i1],
-						conjf(kbsc[iw*n1+i1])));
+		    trace[i1] = sf_cadd(trace[i1],sf_cmul(sscc[i],kbsc[i]));
 #endif
 		}
 	    }

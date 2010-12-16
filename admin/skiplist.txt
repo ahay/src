@@ -41,6 +41,7 @@ skiplist =  [
                 'book/jsg/time2depth/msyn2',
                 'book/jsg/timelapse/duri',
                 'book/jsg/timelapse/long1',
+                'book/rsf/bash/gpu',
                 'book/rsf/school/sigsbee',
                 'book/sep/angle/agmig',
                 'book/sep/bspl/chirp2',

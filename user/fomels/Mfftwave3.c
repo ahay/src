@@ -147,7 +147,12 @@ int main(int argc, char* argv[])
     if(verb) sf_warning(".");    
 	    	
     /* write wavefield to output */
-    sf_floatwrite(curr+ix*nz2,nz,Fo);
+    
+    for (iy = 0; iy < ny; iy++) {
+	for (ix = 0; ix < nx; ix++) {
+	    sf_floatwrite(curr+nz2*(ix+nx2*iy),nz,Fo);
+	}
+    }
     
     exit (0);
 }
