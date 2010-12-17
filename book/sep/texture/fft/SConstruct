@@ -1,12 +1,12 @@
 from rsf.proj import *
 
-def rand(seed):
+def rand(seed,n=128):
     name = 'rand%d' % seed
     Flow(name,None,
          '''
-         spike n1=128 n2=128 d1=1 d2=1 |
-         noise rep=y seed=%d type=n
-         ''' % seed)
+         spike n1=%d n2=%d d1=1 d2=1 |
+         noise rep=y seed=%d 
+         ''' % (n,n,seed))
     return name
 
 def grey(title):
@@ -14,28 +14,40 @@ def grey(title):
     grey title="%s" crowd=0.86 wantaxis=n
     ''' % title
 
-Flow('rand2d',rand(287293),'smooth rect1=3 rect2=3')
-Plot('rand2d',grey('Training Image'))
+Flow('rand2d',rand(2010),'smooth rect1=3 rect2=3')
+Flow('randph',rand(2011),'rtoc | math output="exp(I*input)" ')
 
-Flow('ft','rand2d','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Fetch('ridges.h','textures')
+Flow('ridges','ridges.h','dd form=native | put d1=1 o1=0 d2=1 o2=0')
 
-Flow('phase','ft','math output="log(input+128)" | imag')
-Plot('phase',grey('Phase Spec.(TI)'))
+for case in ('rand2d','ridges'):
+    Plot(case,grey('Training Image'))
 
-Flow('campl','ft','math output="abs(input)" ')
-Plot('campl','real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
+    fft = 'fft-'+case
 
-Flow('repha',[rand(499244),rand(354279)],'cmplx ${SOURCES[1]} | math output="exp(input)" ')
+    Flow(fft,case,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
 
-Flow('syn','campl repha',
-     '''
-     mul ${SOURCES[1]} |
-     fft3 inv=y axis=2 |
-     fft3 inv=y axis=1 |
-     real
-     ''')
-Plot('syn',grey('FT synthesis'))
+    phase = 'phase-'+case
 
-Result('rand2d-ftsyn','rand2d syn phase campl','TwoRows')
+    Flow(phase,fft,'math output="log(input)*abs(input)" | imag')
+    Plot(phase,grey('Phase Spec.(TI)'))
+
+    campl = 'campl-'+case
+
+    Flow(campl,fft,'math output="abs(input)" ')
+    Plot(campl,'real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
+
+    synth = 'synth-'+case
+
+    Flow(synth,[campl,'randph'],
+         '''
+         mul ${SOURCES[1]} |
+         fft3 inv=y axis=2 |
+         fft3 inv=y axis=1 |
+         real
+         ''')
+    Plot(synth,grey('FT synthesis'))
+
+    Result(case+'-ftsyn',[case,synth,phase,campl],'TwoRows')
 
 End()
