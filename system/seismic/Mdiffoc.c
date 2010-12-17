@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++) {
 	/* loop over wavenumbers */
 	k = ix*dx;
-	k *= k*(v0*v0 - v1*v1);
+	k *= k*(v0*v0 - v1*v1)/16;
 
 	trace = data[ix];
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
 	kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
 
-	/* velocity continuation itself */
+	/* velocity continuation */
 
 	ctrace[0]=sf_cmplx(0.,0.); /* dc */
 

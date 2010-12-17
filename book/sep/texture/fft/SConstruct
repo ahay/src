@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+def rand(seed):
+    name = 'rand%d' % seed
+    Flow(name,None,
+         '''
+         spike n1=128 n2=128 d1=1 d2=1 |
+         noise rep=y seed=%d type=n
+         ''' % seed)
+    return name
+
+def grey(title):
+    return '''
+    grey title="%s" crowd=0.86 wantaxis=n
+    ''' % title
+
+Flow('rand2d',rand(287293),'smooth rect1=3 rect2=3')
+Plot('rand2d',grey('Training Image'))
+
+Flow('ft','rand2d','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+Flow('phase','ft','math output="log(input+128)" | imag')
+Plot('phase',grey('Phase Spec.(TI)'))
+
+Flow('campl','ft','math output="abs(input)" ')
+Plot('campl','real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
+
+Flow('repha',[rand(499244),rand(354279)],'cmplx ${SOURCES[1]} | math output="exp(input)" ')
+
+Flow('syn','campl repha',
+     '''
+     mul ${SOURCES[1]} |
+     fft3 inv=y axis=2 |
+     fft3 inv=y axis=1 |
+     real
+     ''')
+Plot('syn',grey('FT synthesis'))
+
+Result('rand2d-ftsyn','rand2d syn phase campl','TwoRows')
+
+End()
