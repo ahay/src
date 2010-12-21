@@ -27,9 +27,8 @@
 
 int main (int argc, char* argv[])
 {
-    bool map;
+    bool map,interval;
     map4 nmo;
-    char *method;
     int it,ix,ip1,ip2,iv, nt,nx, np1,np2, nvx=0, ntvx=0, nw, nvy=0, ntvy=0, nvxy=0, ntvxy=0;
     float dt, t0, p1, p10, p2, p20, t, dp1,dp2, vx0, dvx, vy0, dvy , vxy0 , dvxy;
     float tau_;
@@ -57,8 +56,8 @@ int main (int argc, char* argv[])
     	else sf_error("Need cmp input when map=y");
     }
 
-    if (NULL == (method = sf_getstring("method"))) method="stripping";
-    /* method to use (stripping,dix,fowler,effective) */
+    if (!sf_getbool("interval",&interval)) interval=false;
+    /* interval values by 3D stripping equations */
     
     if (SF_FLOAT != sf_gettype(input)) sf_error("Need float input");
 
@@ -174,7 +173,7 @@ int main (int argc, char* argv[])
 		vxy[iv]=0.;
 	    }
 	}
-
+	float eps = 100*FLT_EPSILON;
 	for (ip2 = 0; ip2 < np2; ip2++) { /* slope 2 (dimension 3)*/
 		p2 = p20+ip2;
 
@@ -182,7 +181,6 @@ int main (int argc, char* argv[])
 			p1 = p10+ip1;
 
 			//sf_warning("ip1=%d ip2=%d np2=%d",ip1,ip2,np2);
-
 
 			sf_floatread (TAU0, nt,input);
 			sf_floatread (Rx, nt, dipx);
@@ -193,18 +191,29 @@ int main (int argc, char* argv[])
 
 
             for (it=0; it < nt; it++) { /* time tau loop*/
-                t = t0 + it*dt;
 
-                if (TAU0[it] < 0.) {
+            	t = t0 + it*dt;
+
+
+                if (TAU0[it] <= 0.) {
                 	v1[it] = 0.0;
                 	v2[it] = 0.0;
                 	v3[it] = 0.0;
                 } else {
-                	tau_ = (-1.0) * (t / TAU0[it] / TAU0[it] );
-                	v3[it] = tau_ * Rxy[it] * dt/dp1/dp2 + Rx[it] * Ry[it] * dt/dp1 * dt/dp2;
-                	v1[it] = (tau_ * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 );
-                	v2[it] = (tau_ * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / (p2*dp2 );
+                	if (interval) {
+                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
+                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it]) / tau_ ) /(dp1*dp2);
 
+                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
+                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
+                	 }
+                	 else {
+                	   /*tau_ = (-1.0) * (t / (TAU0[it] * TAU0[it] + eps) );*/
+                	   tau_ = (Rx[it]* dt * p1 +  Ry[it] * dt * p2 - t );
+                	   v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
+                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
+                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
+                	 }
                 } /* end of if tau0 >= 0 */
                 if (!map) {
                     coord1[it][0] = TAU0[it];
