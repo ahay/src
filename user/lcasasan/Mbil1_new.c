@@ -1,6 +1,10 @@
-/* Bi-variate L1 regression */
+/* L1 regression 0 ~= d - G * m
+ *
+ * adapted from sfbil1
+ * */
+
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2010 Politecnico di Milano
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,18 +25,19 @@
 
 int main(int argc, char* argv[])
 {
-    int nd, n1, niter, liter, iter, id, ib, nb;
+    bool verb;
+	int nd, n1, niter, liter, iter, id, ib, nb;
     float *n, *d,*dd, *r, *b,*btmp, **A, **Atmp, perc;
     double eb,en;
   //  double ad, bd, aa, bb, a0, b0, da, db, ab, det;
-    sf_file inp, reg, out, tmp=NULL;;
+    sf_file inp, reg, out;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     reg = sf_input("reg");
     out = sf_output("out");
-    tmp = sf_output("tmp");
 
+    if (!sf_getbool("verb",&verb)) verb=false;
 
     if (!sf_histint(inp,"n1",&nd)) sf_error("No n1= in input");
     if (!sf_histint(reg,"n1",&n1) || n1 != nd)
@@ -62,9 +67,11 @@ int main(int argc, char* argv[])
     sf_fileclose(reg);
 
     if (!sf_getint("niter",&niter)) niter=10;
-    sf_putint(tmp,"n1",nd*niter);
     /* number of POCS iterations */
-    liter=1;
+
+    if (!sf_getint("Liter",&liter)) liter=10;
+    /* number of CG iterations */
+
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
 
@@ -117,10 +124,8 @@ int main(int argc, char* argv[])
 	/* ----------- */
 	sf_sharpen(n);
 	sf_weight_apply(nd,n);
-    sf_floatwrite(n,nd,tmp);
 
-
-	sf_warning("%d %g %g",iter,b[0],b[1]);
+	if(verb) sf_warning("%d %g %g",iter,b[0],b[1]);
     }
     
     sf_floatwrite(b,nb,out);
