@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
     map4 nmo;
     int it,ix,ip1,ip2,iv, nt,nx, np1,np2, nvx=0, ntvx=0, nw, nvy=0, ntvy=0, nvxy=0, ntvxy=0;
     float dt, t0, p1, p10, p2, p20, t, dp1,dp2, vx0, dvx, vy0, dvy , vxy0 , dvxy;
-    float tau_;
+    float N,D;
     float *v1=NULL, *v2=NULL, *v3=NULL; /* to compute velocity attribute panels */
     float *Rx=NULL, *Ry=NULL, *Rxy=NULL, **coord1=NULL, **coord2=NULL, **coord3=NULL, *ord=NULL;
     float *vx=NULL, *vx2=NULL, *vy=NULL, *vy2=NULL, *vxy=NULL, *vxy2=NULL, *TAU0=NULL; /* *TAU0t=NULL; */
@@ -201,18 +201,33 @@ int main (int argc, char* argv[])
                 	v3[it] = 0.0;
                 } else {
                 	if (interval) {
-                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
-                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it]) / tau_ ) /(dp1*dp2);
+                   	   N = (Rxy[it]  +   Rx[it] * Ry[it] ) / dp1 /dp2;
+                       D = (Rx[it] * p1 +  Ry[it]  * p2 - 1 );
 
-                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
-                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
+                       v1[it] = ( Rx[it] / dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
+                       v2[it] = ( Ry[it] / dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
+                       v3[it] = N/(D+eps);
+
+//                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
+//                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it])  ) / dp1 /dp2 ;
+//
+//                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
+//                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
                 	 }
                 	 else {
+                  	   N = (Rxy[it] *dt +  (1.0/t+eps) * Rx[it] * Ry[it] *dt *dt) / dp1 /dp2;
+                	   D = (Rx[it]* dt * p1 +  Ry[it] * dt * p2 - t );
+
+                	   v1[it] = ( Rx[it]* dt/dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
+                	   v2[it] = ( Ry[it]* dt/dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
+                	   v3[it] = N/(D+eps);
+
+
+
                 	   /*tau_ = (-1.0) * (t / (TAU0[it] * TAU0[it] + eps) );*/
-                	   tau_ = (Rx[it]* dt * p1 +  Ry[it] * dt * p2 - t );
-                	   v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
-                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
-                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
+//                	   v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
+//                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
+//                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
                 	 }
                 } /* end of if tau0 >= 0 */
                 if (!map) {
