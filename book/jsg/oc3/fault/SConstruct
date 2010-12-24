@@ -1,0 +1,216 @@
+from rsf.proj import *
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all allpos=n %s  bar=bar.rsf|
+    grey3 frame1=68 frame2=750 frame3=256 flat=y point1=0.7 point2=0.7
+    label1=Offset unit1=km label2="Midpoint wavenumber" unit2=1/km
+    label3="Frequency" unit3=Hz title="%s" %s wanttitle=n labelfat=4 font=2
+    titlefat=4 screenratio=0.6 screenht=8 color=i  bar=bar.rsf
+    ''' % (clip,title,extra)
+
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh',
+     '''
+     dd form=native | put d2=0.067 o2=0.134 |
+     pad beg2=2 | pad end2=6 | mutter v0=1.4
+     ''')
+
+# Zero out random traces
+Flow('bei-mask','bei',
+     '''
+     window n1=1 | noise rep=y type=n seed=2008 |
+     mask min=0.2 | cut n1=2 | cut n1=6 f1=26
+     ''')
+
+Flow('bei-zero','bei bei-mask','headercut mask=${SOURCES[1]}')
+
+Result('bei-zero',
+       'transp plane=23 |'
+       +cubeplot('Input','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+############################
+# Velocity scanning and NMO
+############################
+v0=1.4
+nv=48
+dv=0.025
+
+Flow('bei-scn','bei bei-mask',
+     '''
+     mutter v0=%g |
+     vscan semblance=y mask=${SOURCES[1]}
+     v0=%g nv=%d dv=%g
+     ''' % (v0,v0,nv,dv))
+Flow('bei-vel','bei-scn',
+     '''
+     mutter x0=%g v0=%g half=n |
+     pick rect1=%d rect2=%d | window
+     ''' % (1.5,0.67,40,10))   
+
+Flow('bei-nmo','bei-zero bei-vel bei-mask',
+     '''
+     nmo velocity=${SOURCES[1]} mask=${SOURCES[2]} str=0.
+     ''')
+
+############################
+# Interpolation
+############################
+niter=15
+pniter=50
+
+Flow('mask','bei-mask',
+     'dd type=float | math output=1-input | spray axis=1 n=1000 d=0.004 o=0')
+
+forward = '''
+window f1=10 | logstretch | fft1 |
+transp memsize=1000 | transp plane=23 memsize=1000 |
+fft3 axis=2 | fkoclet adj=n inv=n dwt=n verb=n
+'''
+backward = '''
+fkoclet dwt=n adj=y inv=y verb=n | fft3 axis=2 inv=y |
+transp plane=23 memsize=1000 | transp memsize=1000 |
+fft1 inv=y | logstretch inv=y | pad beg1=10
+'''
+
+# Iteration (POCS)
+
+ftdata = 'bei-nmo'
+ftplots = ['bei-nmo']
+for iter in range(pniter): 
+    ftold = ftdata
+    ftdata = 'ftdata%d' % iter
+
+    # 1. Forward OC-seislet
+    # 2. Thresholding
+    # 3. Inverse OC-seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(ftdata,[ftold,'mask','bei-nmo'],
+         forward +
+         '''
+         | threshold pclip=%g |
+         ''' % (5.+((99.-5.)*iter*iter/((pniter-1)*(pniter-1))))
+         + backward +
+         '''
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         ''')
+    
+Flow('bei-final',ftdata,
+     forward +
+     '''
+     | threshold pclip=85. |
+     '''
+     + backward
+     )
+
+# Last frame
+Flow('bei-pocs','bei-final bei-vel','inmo velocity=${SOURCES[1]}')
+Result('bei-pocs',
+       'transp plane=23 memsize=1000 |'
+       +cubeplot('Output','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+Flow('fftd','bei-final','window f1=10 | logstretch | fft1')
+
+# F-K domain
+Flow('fk','fftd',
+     'transp memsize=1000 | transp plane=23 memsize=1000 | fft3 axis=2')
+
+Flow('tran','fk','fkoclet adj=n inv=n dwt=n')
+Flow('dmos','tran bei-vel',
+     '''
+     fft3 axis=2 inv=y |
+     transp plane=23 memsize=1000 | transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | pad beg1=10 |
+     inmo velocity=${SOURCES[1]} |
+     window n2=1
+     ''')
+Result('dmos',
+       '''
+       grey label1=Time unit1=s label2=Midpoint unit2=km
+       screenratio=0.6 screenht=8
+       wanttitle=n labelfat=4 font=2 titlefat=4 o1num=9 d1num=2 n1tic=4
+       ''')
+
+############################
+# 3-D Fourier POCS
+############################
+# 3-D version
+Flow('ccmask','bei-mask',
+     '''
+     dd type=float | 
+     spray axis=1 n=1000 d=0.004 o=0
+     ''')
+
+Flow('tczero','bei-zero','transp plane=23 memsize=1000')
+Flow('tccmask','ccmask','transp plane=23 memsize=1000')
+
+fniter=50
+fforward = '''
+fft1 | fft3 | fft3 axis=3
+'''
+fbackward = '''
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+'''
+fdata = 'bei-zero'
+fplots = ['bei-zero']
+for iter in range(fniter): 
+    fold = fdata
+    fdata = 'fdata%d' % iter
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata,[fold,'mask','bei-zero'],
+         fforward +
+         '''
+         | threshold pclip=%g |
+         ''' % (5.+((99.-5.)*iter*iter/((pniter-1)*(pniter-1))))
+         + fbackward +
+         '''
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         ''')
+
+# Last frame
+Result('bfour3pocs',fdata,
+       'transp plane=23 |'
+       + cubeplot('FPOCS','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+
+Flow('temp',[fdata,'bei-vel'],
+     '''
+     nmo velocity=${SOURCES[1]} str=0. |
+     window f1=10 | logstretch | fft1 |
+     transp memsize=1000 | transp plane=23 memsize=1000 | fft3 axis=2 |
+     fkoclet adj=n inv=n dwt=n
+     ''')
+Flow('fdmos','temp bei-vel',
+     '''
+     fft3 axis=2 inv=y |
+     transp plane=23 memsize=1000 | transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | pad beg1=10 |
+     inmo velocity=${SOURCES[1]} |
+     window n2=1
+     ''')
+
+Result('fdmos',
+       '''
+       grey label1=Time unit1=s label2=Midpoint unit2=km
+       screenratio=0.6 screenht=8
+       wanttitle=n labelfat=4 font=2 titlefat=4 o1num=9 d1num=2 n1tic=4
+       ''')
+
+End()

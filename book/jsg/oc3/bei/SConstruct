@@ -1,0 +1,109 @@
+from rsf.proj import *
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all allpos=n %s  bar=bar.rsf|
+    grey3 frame1=68 frame2=750 frame3=256 flat=y point1=0.7 point2=0.7
+    label1=Offset unit1=km label2="Midpoint wavenumber" unit2=1/km
+    label3="Frequency" unit3=Hz title="%s" %s wanttitle=n labelfat=4 font=2
+    titlefat=4 screenratio=0.6 screenht=8 color=i  bar=bar.rsf
+    ''' % (clip,title,extra)
+
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh',
+     '''
+     dd form=native | put d2=0.067 o2=0.134 |
+     pad beg2=2 | pad end2=6 | mutter v0=1.4
+     ''')
+
+Result('bei',
+       'transp plane=23 |'
+       +cubeplot('Input','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+Flow('bei-mask','bei',
+     'window n1=1 | math output=1 | cut n1=2 | cut n1=6 f1=26 | dd type=int')
+############################
+# Velocity scanning and NMO
+############################
+v0=1.4
+nv=48
+dv=0.025
+
+Flow('bei-scn','bei bei-mask',
+     '''
+     mutter v0=%g |
+     vscan semblance=y mask=${SOURCES[1]}
+     v0=%g nv=%d dv=%g
+     ''' % (v0,v0,nv,dv))
+Flow('bei-vel','bei-scn',
+     '''
+     mutter x0=%g v0=%g half=n |
+     pick rect1=%d rect2=%d | window
+     ''' % (1.5,0.67,40,10))   
+
+Flow('bei-nmo','bei bei-vel bei-mask',
+     '''
+     nmo velocity=${SOURCES[1]} mask=${SOURCES[2]} str=0.
+     ''')
+
+############################
+# Logstretch and double-FFT
+############################
+Flow('bei-fftd','bei-nmo','window f1=10 | logstretch | fft1')
+
+# F-K domain
+Flow('bei-fk','bei-fftd',
+     'transp memsize=1000 | transp plane=23 memsize=1000 | fft3 axis=2')
+
+############################
+# Forward OC-seislet
+############################
+Flow('bei-tran','bei-fk','fkoclet adj=n inv=n dwt=n')
+Result('bei-tran',
+       'put d1=1 o1=0 | real | transp plane=13  memsize=1000 | '
+       + cubeplot('oclet transform','','frame1=250 frame2=250 frame3=0 \
+       label1="Frequency" unit1=Hz label3=Scale unit3= \
+       label2="Midpoint wavenumber" unit2="1/km" \
+       o2num=50 d2num=50 n2tic=2') )
+
+############################
+# Denoising
+############################
+# Thresholding
+Flow('bei-thr','bei-tran','threshold pclip=20')
+
+# Inverse oclet
+Flow('bei-ithr','bei-thr','fkoclet dwt=n adj=y inv=y')
+
+# Return to T-X domain
+Flow('bei-ifftd','bei-ithr',
+     '''
+     fft3 axis=2 inv=y |
+     transp plane=23 memsize=1000 | transp memsize=1000
+     ''')
+
+Flow('bei-iinv','bei-ifftd','fft1 inv=y | logstretch inv=y | pad beg1=10')
+
+Flow('bei-denoise','bei-iinv bei-vel','inmo velocity=${SOURCES[1]}')
+
+Result('bei-denoise',
+       'transp plane=23 memsize=1000|'
+       + cubeplot('Denoising','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+Flow('bei-diff','bei bei-denoise','add scale=1,-1 ${SOURCES[1]}')
+Result('bei-diff',
+       'transp plane=23 |'
+       +cubeplot('Difference','clip=4.05811e+06','frame1=500 frame2=125 \
+       frame3=2 label1="Time" unit1=s label3="Half offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+End()
+
