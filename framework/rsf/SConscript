@@ -6,6 +6,8 @@ import bldutil, rsf.doc
 Import('env bindir pkgdir system user dotproj')
 
 env.Install(pkgdir,'__init__.py')
+env.Install(pkgdir,'version.py')
+
 env.Install(os.path.join(pkgdir,'user'),'__init__.py')
 
 dirs = Split('plot libplot plplot pens sumain suplot') + system + user
