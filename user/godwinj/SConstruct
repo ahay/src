@@ -18,6 +18,8 @@ targets = bldutil.UserSconsTargets()
 targets.py = '''
 svd
 threedcube
+gui
+browser
 '''
 
 try:  # distributed version

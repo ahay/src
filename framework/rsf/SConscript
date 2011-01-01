@@ -36,6 +36,8 @@ for src in Split('latex2wiki sftour'):
 
 env.Install(bindir,'sfdoc')
 
+SConscript(dirs='gui',name='SConscript',exports='env bindir pkgdir system user dotproj')
+
 ##########################################################################
 # Self-documentation
 
