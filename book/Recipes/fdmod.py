@@ -438,6 +438,24 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
          ''', stdin=0)
 
 
+def makebox(box,zmin,zmax,xmin,xmax,par):
+
+    Flow(box+'_z',None,
+         '''
+         spike nsp=5 mag=%g,%g,%g,%g,%g
+         n1=5 o1=0 d1=1 k1=1,2,3,4,5 |
+         transp
+         '''%(zmin,zmax,zmax,zmin,zmin))
+
+    Flow(box+'_x',None,
+         '''
+         spike nsp=5 mag=%g,%g,%g,%g,%g
+         n1=5 o1=0 d1=1 k1=1,2,3,4,5 |
+         transp
+         '''%(xmin,xmin,xmax,xmax,xmin))
+
+    Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
+
 
 
 # ------------------------------------------------------------
@@ -484,6 +502,12 @@ def box(cc,sx,ex,sz,ez,par):
 	'cat ${SOURCES[1:4]} space=n axis=2 | put label1="" unit1="" label2="" unit2=""')
 
 # ------------------------------------------------------------
+def bbplot(custom,par):
+    return '''
+    window n1=2 |
+    dd type=complex |
+    window |
+    ''' + cgraph('plotcol=6 plotfat=2 wantaxis=n %s' % custom,par)
 
 def ssplot(custom,par):
     return '''
