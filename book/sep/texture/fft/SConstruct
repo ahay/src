@@ -50,4 +50,41 @@ for case in ('rand2d','ridges'):
 
     Result(case+'-ftsyn',[case,synth,phase,campl],'TwoRows')
 
+spectra = 'rtoc | fft3 axis=1 pad=1 | math output="abs(input)" | real'
+
+Flow('rand1d',None,
+     '''
+     spike n1=64 | noise rep=y seed=287293 |
+     smooth rect1=3
+     ''')
+Flow('spc','rand1d',spectra)
+
+spcs = []
+label = ''
+for a in (4,10,20):
+    pef = 'pef%d' % a
+    lag = 'lag%d' % a
+    Flow([pef,lag],'rand1d','pef lag=${TARGETS[1]} a=%d' % a)
+    imp = 'imp%d' % a
+    Flow(imp,pef,
+         '''
+         spike n1=64 k1=1 |
+         helicon filt=$SOURCE div=1
+         ''',stdin=0)
+    spc = 'spc%d' % a
+    Flow(spc,imp,spectra)
+    spcs.append(spc)
+    
+    label += ':Inv. PEF Spectrum, Na=%d' % a
+
+Result('rand1d-spec',['rand1d','spc']+spcs,
+       '''
+       cat axis=2 ${SOURCES[1:%d]} |
+       dots dots=0 connect=1 gaineach=1 constsep=1 strings=0 label1=" " 
+       yreverse=y labelsz=7
+       labels="Input:Input Spectrum%s"
+       ''' % (len(spcs)+2,label))
+
+
+
 End()

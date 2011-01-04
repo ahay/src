@@ -21,6 +21,7 @@ To the reproducible documents collection:
 * cwp/geo2009TTIModeSeparation: Elastic wave-mode separation for TTI
   media (Yan and Sava)
 * jsg/flat: Predictive painting of 3-D seismic volumes (Fomel)
+* sep/lines: Random lines in a plane (Claerbout)
 
 To SCons:
 * Upgraded to scons-2.0.1
@@ -50,6 +51,7 @@ To programs:
 * sfthreedcube (3D display using mayavi2)
 * sfiphase -added complex option
 * sfsensitivity (traveltime sensitivity kernels)
+* many new programs in user/lcasasan
 
 BUG FIXES:
 
