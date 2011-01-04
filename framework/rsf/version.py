@@ -8,3 +8,6 @@ development_version = True
 
 # Version
 label = '1.1alpha'
+
+if __name__ == "__main__":
+    print label

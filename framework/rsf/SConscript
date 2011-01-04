@@ -6,8 +6,6 @@ import bldutil, rsf.doc
 Import('env bindir pkgdir system user dotproj')
 
 env.Install(pkgdir,'__init__.py')
-env.Install(pkgdir,'version.py')
-
 env.Install(os.path.join(pkgdir,'user'),'__init__.py')
 
 dirs = Split('plot libplot plplot pens sumain suplot') + system + user
@@ -33,6 +31,10 @@ for src in Split('latex2wiki sftour'):
     bldutil.py_install(src, env, pkgdir)
     env.Command(src,src+'.py','cp $SOURCE $TARGET')
     env.Install(bindir,src)
+
+bldutil.py_install('version.py', env, pkgdir)
+env.Command('sfversion','version.py','cp $SOURCE $TARGET')
+env.Install(bindir,'sfversion')
 
 env.Install(bindir,'sfdoc')
 
