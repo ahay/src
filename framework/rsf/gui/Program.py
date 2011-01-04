@@ -20,7 +20,7 @@ class Program():
         self.pars = {}
         self.also = also
         self.wiki = wiki
-        self.uses = {}
+        self.uses = uses
         self.file = file
         self.vers = vers
           
