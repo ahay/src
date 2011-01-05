@@ -62,6 +62,22 @@ def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
+def getversion(target=None,source=None,env=None):
+    inp = open(str(source[0]),'r')
+    label = inp.readline().rstrip()
+    inp.close()
+    name = str(target[0])
+    out = open(name,'w')
+    out.write('#!/usr/bin/env python\n\n')
+    out.write('label="%s"\n\n' % label)
+    out.write('''
+if __name__ == "__main__":
+    print label
+    ''')
+    out.close()
+    os.chmod(name,0775)
+    return 0
+
 def getprogs(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     out.write('import sys, os\n\n')

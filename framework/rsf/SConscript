@@ -24,7 +24,10 @@ env.Command('use.py',map(lambda x: '#/'+x,dotproj),
             action=Action(rsf.doc.use))
 env.Depends('use.py',['prog.py','conf.py','doc.py'])
 
-for src in Split('path doc flow proj prog tex book suproj conf use'):
+env.Command('version.py','#/VERSION.txt',
+            action=Action(rsf.doc.getversion))
+
+for src in Split('path doc flow proj prog tex book suproj conf use version'):
     bldutil.py_install(src, env, pkgdir)
 
 for src in Split('latex2wiki sftour'):
@@ -32,7 +35,6 @@ for src in Split('latex2wiki sftour'):
     env.Command(src,src+'.py','cp $SOURCE $TARGET')
     env.Install(bindir,src)
 
-bldutil.py_install('version.py', env, pkgdir)
 env.Command('sfversion','version.py','cp $SOURCE $TARGET')
 env.Install(bindir,'sfversion')
 
