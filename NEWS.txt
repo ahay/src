@@ -38,6 +38,7 @@ To the Python package:
 * rsf.user.ivlad: chk_file_r, getppout, get1st functions
 * rsf.user.m8rex: WrongPath exception class
 * rsf.user.sf: attr function
+* rsf.version: info about the software version
 
 To programs:
 * sflmo (frequency-domain LMO)
@@ -85,5 +86,3 @@ In programs:
 * sfzcp
 * sfstretch - proper handling of half-offset
 * sfslant and sfvelcon - proper antialiasing
-
-
