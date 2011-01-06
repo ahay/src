@@ -42,7 +42,7 @@ program Mvelinvww
   integer :: nt,nh,ns
   integer :: it,ih,is
   real    :: dt,dh,ds
-  real    :: ot,oh,os, dot, rwt, mwt, srate,eps, h, z
+  real    :: ot,oh,os, rwt, mwt, srate,eps, h, z
   integer :: niter, savevel, huber,irls,nstep
   type (file) :: infile, outfile, vtr
 
