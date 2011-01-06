@@ -139,3 +139,12 @@ def eic3d(cip,swfl,rwfl,cc,custom,par):
          cc=${SOURCES[2]}
          %(eiccustom)s
          ''' %par)
+
+# ------------------------------------------------------------
+# wavefields from arbitrary sources
+def genwfl(wfl,sou,coo,slo,down,causal,par):
+    Flow(wfl,[sou,slo,coo],
+         '''
+         genwfl verb=y slo=${SOURCES[1]} coo=${SOURCES[2]}
+         down=%s causal=%s
+         ''' %(down,causal))

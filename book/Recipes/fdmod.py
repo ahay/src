@@ -105,7 +105,7 @@ def param(par):
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
@@ -146,7 +146,7 @@ def cgrey3d(custom,par):
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     label1="\F2 %s\F3" unit1=%s
     label2="\F2 %s\F3" unit2=%s
@@ -186,7 +186,7 @@ def ccont(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
@@ -218,7 +218,7 @@ def dgrey3d(custom,par):
 
 def egrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
     min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
     min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
@@ -230,7 +230,7 @@ def egrey(custom,par):
 def fgrey(custom,par):
     return '''
     window | real | transp |
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min2=%g max2=%g label2=%s unit2=%s
     label1="\F2 f\F3" unit1="\F2 Hz\F3"
@@ -256,6 +256,7 @@ def waveplot(custom,par):
     plotfat=5 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
+    parallel2=n
     %s
     ''' % (par['lt'],par['ut'],
            par['labelattr']+' '+custom)

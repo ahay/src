@@ -57,7 +57,7 @@ def tsk2ang(na,oa,da):
 # ------------------------------------------------------------
 def ciggrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=1.5
@@ -74,10 +74,10 @@ def zgrey(custom,par):
     return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3      " unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+custom,par)
+    return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3      " unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+custom,par)
+    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+custom,par)
 # ------------------------------------------------------------
 
 
