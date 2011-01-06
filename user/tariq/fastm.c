@@ -592,7 +592,7 @@ void fastds (float* time                /* time */,
 void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz, 
 	       float s, float dy)
 {
-  float b, c, t1, t2, u, den,tp1,dt1;
+  float b, c, t1=0., t2=0., u, den,tp1,dt1=0.;
   unsigned int k, i;
 
   b = c = 0; i = k = 0;
