@@ -28,12 +28,6 @@
 
 #define INSERT nm--; mask[i] = FMM_FRONT; pt=ttime+i; sf_pqueue_insert (pt)
 
-#define SGN(x) ((x) < 0 ? -1.0 : 1.0)
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
-/*#define INFINITY 1.e+20*/
-
 #define FMM_OUT '\0'
 #define FMM_IN 'i'
 #define FMM_FRONT 'f'
@@ -221,7 +215,7 @@ void fastds (float* time                /* time */,
     dtime  = (float *) malloc (n*sizeof(float));
     mask  = (unsigned char *) malloc (n*sizeof(unsigned char));
     for (i=0; i<nm; i++) {
-	ttime[i] = INFINITY;
+	ttime[i] = SF_HUGE;
 	dtime[i] = 0.0;
 	mask[i] = FMM_OUT;
     }
@@ -236,52 +230,52 @@ void fastds (float* time                /* time */,
     sf_pqueue_init (nh);
     sf_pqueue_start();
 
-    i1 = MAX(MIN(xs[0],n1-2),0);
-    i2 = MAX(MIN(xs[1],n2-2),0);
-    i3 = MAX(MIN(xs[2],n3-2),0);
+    i1 = SF_MAX(SF_MIN(xs[0],n1-2),0);
+    i2 = SF_MAX(SF_MIN(xs[1],n2-2),0);
+    i3 = SF_MAX(SF_MIN(xs[2],n3-2),0);
     i = AT(i1,i2,i3); INSERT; ptt=dtime+i;
-    dtime[i] = SGN(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
+    dtime[i] = SF_SIG(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
     ttime[i] = time[i];
 
     if(n1>1){
       i = AT(i1+1,i2,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
+      dtime[i] = SF_SIG(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n2>1){
       i = AT(i1,i2+1,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
+      dtime[i] = SF_SIG(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
       ttime[i]= time[i];
     }
 
     if(n3>1){
       i = AT(i1,i2,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
+      dtime[i] = SF_SIG(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n2>1){
       i = AT(i1+1,i2+1,i3); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
+      dtime[i] = SF_SIG(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n3>1){
       i = AT(i1+1,i2,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
+      dtime[i] = SF_SIG(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
       ttime[i]= time[i];
     }
 
     if(n2>1 && n3>1){
       i = AT(i1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
+      dtime[i] = SF_SIG(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
       ttime[i]= time[i];
     }
 
     if(n1>1 && n2>1 && n3>1){
       i = AT(i1+1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      dtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
+      dtime[i] =  SF_SIG(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
       ttime[i]= time[i];
     }
 
@@ -454,7 +448,7 @@ void fastds (float* time                /* time */,
 
     ddtime  = (float *) malloc (n*sizeof(float));
     for (i=0; i<nm; i++) {
-	ttime[i] = INFINITY;
+	ttime[i] = SF_HUGE;
 	ddtime[i] = 0.0;
 	mask[i] = FMM_OUT;
     }
@@ -462,52 +456,52 @@ void fastds (float* time                /* time */,
     sf_pqueue_init (nh);
     sf_pqueue_start();
 
-    i1 = MAX(MIN(xs[0],n1-2),0);
-    i2 = MAX(MIN(xs[1],n2-2),0);
-    i3 = MAX(MIN(xs[2],n3-2),0);
+    i1 = SF_MAX(SF_MIN(xs[0],n1-2),0);
+    i2 = SF_MAX(SF_MIN(xs[1],n2-2),0);
+    i3 = SF_MAX(SF_MIN(xs[2],n3-2),0);
     i = AT(i1,i2,i3); INSERT; ptt=dtime+i;
-    ddtime[i] = SGN(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
+    ddtime[i] = SF_SIG(dw[i3][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1]));
     ttime[i] = time[i];
 
     if(n1>1){
       i = AT(i1+1,i2,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
+      ddtime[i] = SF_SIG(dw[i3][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n2>1){
       i = AT(i1,i2+1,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
+      ddtime[i] = SF_SIG(dw[i3][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1]));
       ttime[i] = time[i];
     }
 
     if(n3>1){
       i = AT(i1,i2,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
+      ddtime[i] = SF_SIG(dw[i3+1][i2][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1]));
       ttime[i] = time[i]; 
     }
 
     if(n1>1 && n2>1){
       i = AT(i1+1,i2+1,i3); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
+      ddtime[i] = SF_SIG(dw[i3][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3)*(xs[2]-i3)*d3*d3)*dw[i3][i2+1][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n1>1 && n3>1){
       i = AT(i1+1,i2,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
+      ddtime[i] = SF_SIG(dw[i3+1][i2][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2)*(xs[1]-i2)*d2*d2+(xs[2]-i3-1)*(xs[2]-i3-1)*d3*d3)*dw[i3+1][i2][i1+1]));
       ttime[i] = time[i];
     }
 
     if(n2>1 && n3>1){
       i = AT(i1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] = SGN(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
+      ddtime[i] = SF_SIG(dw[i3+1][i2+1][i1])*sqrt(SF_ABS(((xs[0]-i1)*(xs[0]-i1)*d1*d1+(xs[1]-i2+1)*(xs[1]-i2+1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1]));
       ttime[i] = time[i];
     }
 
     if(n1>1 && n2>1 && n3>1){
       i = AT(i1+1,i2+1,i3+1); INSERT; ptt=dtime+i;
-      ddtime[i] =  SGN(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
+      ddtime[i] =  SF_SIG(dw[i3+1][i2+1][i1+1])*sqrt(SF_ABS(((xs[0]-i1-1)*(xs[0]-i1-1)*d1*d1+(xs[1]-i2-1)*(xs[1]-i2-1)*d2*d2+(xs[2]-i3+1)*(xs[2]-i3+1)*d3*d3)*dw[i3+1][i2+1][i1+1]));
       ttime[i] = time[i];
     }
 
@@ -627,7 +621,7 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
 
   if (!k) return;
 
-  den = (SF_ABS(c) < 0.00000001 ? SGN(c)*100000000. : 1./c);
+  den = (SF_ABS(c) < 0.00000001 ? SF_SIG(c)*100000000. : 1./c);
   /*tp1 = (b-(sqrt(1+2.*eta)-1)*sqrt(1+2.*eta0)*tr2*(1-rsv*tz*tz))*den;*/
   tp1 = (b-s)*den;
   tp = t -tp1*dy;
@@ -705,10 +699,10 @@ void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj
 
   if (!k) return;
 
-  den = (SF_ABS(ccc) < 0.00000001 ? SGN(ccc)*100000000. : 1./ccc);
+  den = (SF_ABS(ccc) < 0.00000001 ? SF_SIG(ccc)*100000000. : 1./ccc);
   /*den = (SF_ABS(ccc) < 0.00000001 ? 0.0 : 1./ccc);*/
   tp1 = (bbb-s)*den;
-  /*tp1 = SGN(tp1)*MIN(SF_ABS(tp1),0.5);*/
+  /*tp1 = SF_SIG(tp1)*SF_MIN(SF_ABS(tp1),0.5);*/
   tp = t-tp1*dy;
   if(show)
     sf_warning("p1=%d p2=%d p3=%d t=%f k=%d tp1=%f bbb=%f ccc=%f tx=%f ty=%f tz=%f",p1,p2,p3,tp,k,tp1,bbb,ccc,tx,ty,tz);

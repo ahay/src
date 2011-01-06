@@ -1,7 +1,7 @@
 #########################################################
 # Setting up
 #########################################################
-from suproj import *
+from rsf.suproj import *
 import string
 
 # lateral axis
