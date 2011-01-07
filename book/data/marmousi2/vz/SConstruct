@@ -10,7 +10,7 @@ Flow('obc_vz_1','obc_vz_1.segy',
      d2=12.32 d3=25''')
 Flow('obc_vz_2','obc_vz_2.segy',
      '''segyread read=d | 
-     put n2=1381 n3=160 o1=0 o2=0 o3=11000
+     put n2=1381 n3=240 o1=0 o2=0 o3=11000
      d2=12.32 d3=25
      ''')
 # Concatinate Datasets
