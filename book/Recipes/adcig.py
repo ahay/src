@@ -71,13 +71,13 @@ def xgrey(custom,par):
     return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+custom,par)
 
 def zgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+' '+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+custom,par)
+    return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+' '+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+custom,par)
+    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+' '+custom,par)
 # ------------------------------------------------------------
 
 
