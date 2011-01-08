@@ -843,7 +843,7 @@ def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.2
         eframe(movie+tag,wfld,iframe,custom,axis,par,xscale,yscale,shift)
         
     allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
-    Result(movie,allframes,'Movie')
+    Plot(movie,allframes,'Movie',view=1)
 
 # ------------------------------------------------------------
 # elastic data

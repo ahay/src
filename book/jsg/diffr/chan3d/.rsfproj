@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sftransp', 'sfbyte', 'sfgrey3', 'sfdip', 'sfpwd', 'sfpwdsmooth2', 'sfadd', 'sfcosft', 'sfpad', 'sfstolt', 'sfspray', 'sffourvc', 'sfpatch', 'sfmath', 'sffft1', 'sfzomig']
+data=[]
+size=  505000000

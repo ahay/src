@@ -1,10 +1,10 @@
 from rsf.proj import *
 from rsf.recipes.beg import server as private
 
-#Fetch('zovol.HH','jim',private)
+Fetch('zovol.HH','jim',private)
 Flow('zovol','zovol.HH','dd form=native | window min1=1.7 max1=2.2')
 
-#Fetch('zovel.HH','jim',private)
+Fetch('zovel.HH','jim',private)
 Flow('zovel','zovel.HH','dd form=native')
 
 def plot3(title):

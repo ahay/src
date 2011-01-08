@@ -642,7 +642,7 @@ void updateds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj,
 void update2ds (int p1, int p2, int p3, float* tj, float* dtj, unsigned char* mj, float t, float tx, float ty, float tz,
 		float s, float dy)
 {
-  float t1, t2, u, dt1;
+  float t1=0., t2=0., u, dt1=0.;
   double den;
   unsigned int k, i;
   double bbb,ccc,ddd,tp1;

@@ -5,6 +5,7 @@ skiplist =  [
                                                                 # Examples that run more than 2 minutes
                 'book/bei/vela/vscan',
                 'book/cwp/geo2006TimeShiftImagingCondition/zicig',
+                'book/cwp/geo2006TimeShiftImagingCondition/flat',
                 'book/cwp/geo2008NumericWEMVAoperators/flatWEMVA',
                 'book/cwp/geo2008NumericWEMVAoperators/saltWEMVA',
                 'book/data/amoco/fdmod',
