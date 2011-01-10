@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 	if (dip) {
 	    w = w0 + i2*dw;
 	    for (ip=0; ip < np; ip++) {
-		p = w*(p0 + ip*dp);
+		p = -w*(p0 + ip*dp);
 		
 		for (i1=0; i1 < n1; i1++) {
 		    t = i1*d1;
