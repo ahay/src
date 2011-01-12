@@ -1,0 +1,427 @@
+\title{Regularizing seismic inverse
+problems by model re-parameterization using plane-wave construction}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\lefthead{Fomel \& Guitton}
+\righthead{Plane-wave construction}
+
+\author{Sergey Fomel\footnotemark[1] and
+  Antoine Guitton\footnotemark[2]}
+
+\address{
+\footnotemark[1]Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972 \\
+\footnotemark[2]3DGeo Development Inc. \\
+4633 Old Ironsides Drive, Suite 401 \\
+Santa Clara, CA 95054}
+
+\maketitle
+
+\begin{abstract}
+  We define plane-wave construction (PWC), an operator for generating
+  data aligned along predefined locally variable slopes, as the
+  inverse of plane-wave destruction, an operator used for measuring
+  the slopes.  PWC can be applied for efficient \old{preconditioning}
+  \new{regularization} of \old{geophysical} \new{seismic} estimation
+  problems. Using simple examples, we demonstrate the applicability of
+  PWC for enhancing the coherency of seismic images, improving
+  velocity estimation methods, and separating primaries and multiples
+  with a pattern-based approach.
+\end{abstract}
+
+\section{Introduction}
+
+\cite{GEO67-06-19461960} describes applications of plane-wave
+destruction filters, a concept originally introduced by \cite{pvi}.
+High-order accurate destruction filters are used for estimating local
+slopes of seismic events and can be applied for such problems as fault
+detection, data regularization, and noise attenuation.  Estimating
+local slopes can also replace traditional velocity analysis and enable
+velocity-independent time-domain seismic imaging \cite[]{pmig}.
+
+In this paper, we introduce \emph{plane-wave construction} (PWC), a
+formal inverse of the plane-wave destruction operator. We show that
+PWC can be used as an efficient \old{preconditioner} \new{regularizer}
+for speeding up iterative optimization that involves models with local
+plane-wave structure.  In that sense, one can view PWC as a
+higher-order generalization of \emph{steering filters}
+\cite[]{SEG-1998-1851,clapp}. We illustrate its applications with
+field data examples.
+
+The immediate effect of PWC is smoothing the data along dominant event
+slopes. In application to coherency enhancement in seismic images,
+iterative least-squares inversion with PWC \old{preconditioning}
+\new{parameterization} extracts portions of the image aligned with the
+dominant slopes. Using PWC in combination with iterative reweighting
+allows us to preserve fault geometry in the coherency enhancing
+process. When applied to the classic velocity estimation problem, PWC
+enforces consistency between the velocity structure and reflector
+geometry. In the multiple elimination problem, PWC
+\old{preconditioning} \new{parameterization} enables separating
+primary and multiple events on the basis of differences in their local
+slopes.
+
+\new{PWC requires seismic traces to be sequentially
+ordered. Therefore, it may not be immediately applicable to 3-D
+problems.  Transformation from plane-wave construction to plane-wave
+shaping \cite[]{shape} addresses this problem \cite[]{us}.}
+
+\begin{comment}
+A more powerful approach to regularization involves shaping operators
+that project the estimated model into the space of acceptable models
+\cite[]{shape}. In the last section of this paper, we show how to
+transform plane-wave construction into plane-wave shaping by following
+an analogy with triangle filtering.
+\end{comment}
+
+\section{Plane-wave construction defined}
+
+Let us represent a seismic section $\mathbf{s}$ as a collection of
+traces: $\mathbf{s} = \left[\mathbf{s}_1 \; \mathbf{s}_2 \; \ldots \;
+\mathbf{s}_N\right]^T$. A plane-wave destruction operator
+\cite[]{GEO67-06-19461960} effectively predicts each trace from its
+neighbor and subtracts the prediction from the original trace. In the
+linear operator notation, we can write the plane-wave destruction
+operation as
+\begin{equation}
+  \label{eq:pwd}
+  \mathbf{r} = \mathbf{D\,s}\;,
+\end{equation}
+where $\mathbf{r}$ is the destruction residual, and $\mathbf{D}$ is the
+destruction operator defined as
+\begin{equation}
+  \label{eq:d}
+  \mathbf{D} = \mathbf{I}_N - \mathbf{P} =
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right]\;,
+\end{equation}
+where $\mathbf{I}$ stands for the identity operator, $\mathbf{P}$ is
+the prediction operator defined by \cite{GEO67-06-19461960}, and
+$\mathbf{P}_{i,j}$ describes prediction of trace $j$ from trace
+$i$. \new{Prediction of a trace consists of shifting the original
+trace along the dominant event slope. The dominant slope is estimated
+by minimizing the prediction error (the output of $\mathbf{D}$) by
+regularized least-squares optimization. Regularization constraints the
+estimated slopes to vary smoothly inside the data space.}
+
+The plane-wave construction (PWC) operator $\mathbf{C}$ is simply the inverse of
+$\mathbf{D}$:
+\begin{eqnarray}
+  \nonumber 
+  \mathbf{C} & = & 
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right]^{-1} \\
+  \nonumber
+  &  = & 
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      \mathbf{P}_{1,2}\,\mathbf{P}_{2,3} & \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      \mathbf{P}_{1,2} \cdots \mathbf{P}_{N-1,N} & 
+      \mathbf{P}_{2,3} \cdots \mathbf{P}_{N-1,N} & \cdots & 
+      \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right] \\
+  &  = & 
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      \mathbf{P}_{1,3} & \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      \mathbf{P}_{1,N} & 
+      \mathbf{P}_{2,N} & \cdots & 
+      \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right]
+  \;,
+  \label{eq:c}
+\end{eqnarray}
+
+For efficiency, it is convenient to apply PWC as a recursive triangular inversion. The output
+of
+\begin{equation}
+  \label{eq:pwc}
+  \mathbf{c} = \mathbf{C\,s} = \left[\mathbf{c}_1 \; \mathbf{c}_2 \; \ldots \;
+    \mathbf{c}_N\right]^T
+\end{equation}
+is computed recursively as follows:
+\begin{equation}
+  \label{eq:rec}
+  \mathbf{c}_1 = \mathbf{s}_1\;,\quad
+  \mathbf{c}_k = \mathbf{s}_k + \mathbf{P}_{k-1,k}\,\mathbf{c}_{k-1}\;\quad
+  k=2,3,\ldots,N
+\end{equation}
+$\mathbf{C}$ is a smoothing operator along local
+plane-waves. \new{Re-parameterization by $\mathbf{C}$ provides
+effective regularization and} can help \old{accelerating}
+\new{accelerate the} convergence of iterative optimization in inverse
+problems \cite[]{harlan,GEO68-02-05770588}.  When applied for model
+\old{preconditioning} \new{re-parameterization} in least-squares
+inversion of the forward modeling operator
+\begin{equation}
+  \label{eq:for}
+  \mathbf{d} = \mathbf{L\,m} = \mathbf{L\,C\,p}\;,
+\end{equation}
+plane-wave construction leads to the formal inversion
+\begin{equation}
+  \label{eq:inv}
+  \widehat{\mathbf{m}} = \mathbf{C}\,\widehat{\mathbf{p}} =
+\mathbf{C\,C}^T\,\left(\mathbf{L\,C\,C}^T\,\mathbf{L}^T + \epsilon^2\,\mathbf{I}_N\right)^{-1}\,\mathbf{d}\;.
+\end{equation}
+Here $\mathbf{m}$ is the model, $\mathbf{p}$ is the \old{preconditioned} \new{re-parameterized}
+model, $\mathbf{d}$ is the observed data, $\epsilon$ is the
+regularization parameter, and $\widehat{\mathbf{m}}$ is the
+regularized model estimate. The $\mathbf{C}\,\mathbf{C}^T$ operator
+plays the role of the model covariance operator. % \cite[]{tarantola}.
+In large-scale
+problems, the inversion in equation~(\ref{eq:inv}) is computed efficiently by
+an iterative conjugate-gradient algorithm.  A different approach to recursive
+filter preconditioning, based on the helix transformation
+\cite[]{GEO63-05-15321541}, was suggested by \cite{GEO68-02-05770588}.
+
+The total cost of plane-wave construction is simply proportional to the data
+size and to the cost of an elementary prediction $\mathbf{P}_{k-1,k}$, which
+operates at the speed of tridiagonal inversion for a matrix of the
+trace-length size \cite[]{GEO67-06-19461960}. This operation is comfortably
+efficient in practical applications.
+
+\section{Applications}
+
+\inputdir{beic}
+
+In this section, we describe three practical applications of
+plane-wave construction in solving inverse problems with
+  model \old{preconditioning} \new{re-parameterization}.
+
+\subsection{Coherency enhancement}
+
+\plot{bei-slp}{width=0.9\columnwidth}{Left: seismic image after prestack time
+  migration. Right: local dips estimated with plane-wave destruction.}
+\plot{bei-vg}{width=0.9\columnwidth}{Left: seismic image after coherency
+  enhancing. Right: difference between the coherency-enhanced image and the
+  original image.}
+
+The simplest kind of regularized inversion involves $\mathbf{L}$ as
+the identity operator $\mathbf{I}_N$. The corresponding application of
+PWC \old{preconditioning} \new{parameterization} results in an
+effective deconvolution that enhances structural consistency and
+continuity of seismic images.
+
+A coherency enhancement operator is
+\begin{equation}
+  \label{eq:vg}
+  \mathbf{h = H\,s} = \mathbf{C\,W\,C}^T\,\left(\mathbf{C\,W\,C}^T + \epsilon^2\,\mathbf{I}_N\right)^{-1}\,\mathbf{s}\;,
+\end{equation}
+where a diagonal weighting operator $\mathbf{W}$ is added to prevent
+plane-wave smoothing across structural discontinuities. We define
+$\mathbf{W}$ as a diagonalized magnitude of $\mathbf{p}$ from an
+unweighted inversion in equation~(\ref{eq:inv}). When repeated
+iteratively, this method corresponds to iteratively reweighted
+least-squares with a simulated $L_1$ norm for vector $\mathbf{p}$
+\cite[]{GEO68-01-03860399}.
+
+We apply coherency enhancement to a time-migrated seismic image from a
+historic Gulf of Mexico dataset \cite[]{bei}, shown in
+Figure~\ref{fig:bei-slp}.  Estimating local event slopes (right plot
+in Figure~\ref{fig:bei-slp}) defines the PWC operator. The output of
+coherency enhancement using equation~(\ref{eq:vg}) and the
+corresponding noise component removed from the data are shown in
+Figure~\ref{fig:bei-vg}. Coherency enhancement highlights locally
+continuous reflectors while preserving the geometry of faults. A
+similar effect was described by \cite{TLE21-03-02380243}, who called
+it ``Van Gogh'' filtering.
+
+\subsection{Velocity estimation}
+
+\plot{bei-pdxw}{width=0.88\textwidth}{Seismic image from
+Figure~\ref{fig:bei-vg} overlaid on top of the interval velocity model
+estimated by PWC-parameterized Dix inversion.}
+\plot{bei-pdx}{width=0.9\columnwidth}{Left: migration velocity used for
+  prestack time migration. Right: migration velocity predicted by regularized
+  Dix inversion.}
+
+
+%Plane-wave construction can be used as a model preconditioning
+%operator \cite[]{GEO59-05-08180829,GEO68-02-05770588} for regularizing
+%inverse problems in the cases, where estimated models have certain
+%structure. In these applictions, plane-wave construction acts as an
+%accurate steering filter in terminology of \cite{clapp}.
+
+To demonstrate an application of PWC to the seismic velocity
+estimation problem, we chose a simple Dix inversion formulation
+\cite[]{GEO20-01-00680086} applied for interval velocity estimation
+using the Gulf of Mexico dataset from Figure~\ref{fig:bei-slp}. When
+Dix inversion is formulated as a regularized estimation problem, the
+forward operator $\mathbf{L}$ \new{in equations~(\ref{eq:for})
+and~(\ref{eq:inv})} turns into simple integration
+\cite[]{Clapp.sep.97.bob1,alejandro}. \old{Preconditioning}
+\new{Parameterization} by plane-wave construction using the dip field
+estimated from the image forces the estimated velocity to follow the
+geological structure.
+
+Figure~\ref{fig:bei-pdxw} shows the resultant interval velocity model.
+Figure~\ref{fig:bei-pdx} shows a comparison between the input and
+predicted RMS (root-mean-square) migration velocity.  We can see that
+both goals of model estimation are achieved: the estimated model
+explains the observed data while following a geological structure
+consistent with the seismic image.
+
+\subsection{Multiple suppression}
+
+Separation of primary and multiple reflections is one of the most
+important tasks in seismic data processing. A distinguishable
+characteristic of surface-related multiple events is different slopes
+because of different apparent velocities. The advantage of using
+slope-based prediction is that, for estimating dominant slopes of
+multiple events, we can utilize models of the multiples that may have
+incorrect amplitudes and wavelets as long as they correctly predict
+event geometry \cite[]{antoine}. An example is shown in
+Figure~\ref{fig:cmp}, which contains a multiple-infested CMP gather
+from the Mobil AVO dataset \cite[]{CSI00-00-00010213}, its prediction
+with the SRME (surface-related multiple elimination) method
+\cite[]{GEO57-09-11661177} and two dominant slopes estimated from the
+data and corresponding to primary and multiple reflections. Even
+though SRME does not provide correct amplitudes and wavelets in
+prediction of the multiple events, it can guide the slope estimation
+method toward extracting the dominant slopes of multiple events.
+
+\inputdir{cmp}
+
+\plot{cmp}{width=\columnwidth}{a: CMP gather from the
+Mobil AVO dataset, b: multiple model from SRME prediction, c: estimated
+dominant slope of the primary reflection events, d: estimated dominant
+slope of the multiple reflection events.}
+
+The model of the data is now \cite[]{GEO65-02-05740583,FBR20-03-01610167}
+\begin{equation}
+\label{eq:splusn}
+  \mathbf{d} = \mathbf{C}_p\,\mathbf{p}+\mathbf{C}_n\,\mathbf{n} = 
+  \left[\begin{array}{cc} \mathbf{C}_p & \mathbf{C}_n \end{array}\right]\,
+  \left[\begin{array}{c} \mathbf{p} \\ \mathbf{n} \end{array}\right]\;,
+\end{equation}
+where $\mathbf{C}_p$ is plane-wave construction along primary slopes
+and \old{$\mathbf{C}_p$} \new{$\mathbf{C}_n$} is plane-wave
+construction along multiple slopes. In accordance with
+equation~(\ref{eq:inv}), the least-squares estimates of the multiples
+is
+\begin{equation}
+\label{eq:mult}
+  \widehat{\mathbf{m}} = \mathbf{C}_n\,\widehat{\mathbf{n}} =
+  \mathbf{C}_n\,\mathbf{C}_n^T\,
+  \left(\mathbf{C}_p\,\mathbf{C}_p^T + \mathbf{C}_n\,\mathbf{C}_n^T + \epsilon^2\,\mathbf{I}_N\right)^{-1}\,\mathbf{d}\;.
+\end{equation}
+
+Figure~\ref{fig:super} shows the estimated primary and multiple events
+and comparison of velocity semblance scans before and after multiple
+suppression. A large portion of the multiple energy is successfully
+removed from the data.
+
+\plot{super}{width=\columnwidth}{a: estimated primary
+reflections (data with multiples removed), b: estimated multiple
+reflections, c: velocity scan of the original gather, d: velocity scan of
+the gather after multiple suppression.}
+
+\begin{comment}
+
+\section{From plane-wave construction to shaping}
+
+Shaping \cite[]{shape} is a powerful approach to
+regularization. Shaping acts as a smoothing operator that projects the
+estimated model into the space of acceptable models.
+
+To transform plane-wave construction to shaping, we can use the
+prediction operator~$\mathbf{P}$ from equation~(\ref{eq:d}) and define
+a box smoother of length $k$ as
+\begin{equation}
+  \label{eq:bk}
+  \mathbf{B}_k = \frac{1}{k}\,\left(\mathbf{I}_N + \mathbf{P} + 
+  \mathbf{P}^2 + \cdots +  \mathbf{P}^k\right)\;.
+\end{equation}
+Implementing equation~(\ref{eq:bk}) directly requires many computational
+operations. Noting that
+\begin{equation}
+  \label{eq:rec}
+  \left(\mathbf{I}_N - \mathbf{P}\right)\,\mathbf{B}_k =
+    \frac{1}{k}\,\left(\mathbf{I}_N - \mathbf{P}^{k+1}\right)\;,
+\end{equation}
+we can rewrite equation~(\ref{eq:bk}) in the compact form
+\begin{equation}
+  \label{eq:bcomp}
+  \mathbf{B}_k = 
+  \frac{1}{k}\,\left(\mathbf{I}_N - \mathbf{P}\right)^{-1}\,
+  \left(\mathbf{I}_N - \mathbf{P}^{k+1}\right) = \frac{1}{k}\,\mathbf{C}\,\left(\mathbf{I}_N - \mathbf{P}^{k+1}\right)\;,
+\end{equation}
+which can be implemented economically.  Finally, combining two
+generalized box smoothers creates a symmetric generalized triangle smoothing operator suitable for shaping regularization
+\begin{equation}
+  \label{eq:tk}
+  \mathbf{T}_k = \mathbf{B}_k^T\,\mathbf{B}_k\;.
+\end{equation}
+A triangle shaper uses local predictions from both the left and the
+right neighbors of a record and averages with triangle weights.
+
+The least-squares inversion regularized by shaping takes the form
+\cite[]{shape}
+\begin{equation}
+  \label{eq:shape}
+  \widehat{\mathbf{m}} = 
+  \mathbf{B}_k\,\left[\epsilon^2\,\mathbf{I}_N + 
+    \mathbf{B}_k^T\,\left(\mathbf{L}^T\,\mathbf{L} - 
+      \epsilon^2\,\mathbf{I}_N\right)\,
+    \mathbf{B}_k\right]^{-1}\,
+  \mathbf{B}_k^T\,\mathbf{L}^T\,\,\mathbf{d}\;.
+\end{equation}
+
+Figure~\ref{fig:bei-smo} shows several impulse responses for shaping with
+$k=20$ for the seismic image used in this study.
+
+%\plot{bei-smo}{width=\columnwidth}{Impulse responses of PWC shaping
+%  for different points inside the image space.}
+
+\end{comment}
+
+\section{Conclusions}
+
+We have introduced plane-wave construction (PWC), an operator that
+generates models aligned with predefined locally variable dips. PWC is
+defined as the inverse of plane-wave destruction, an operator used for
+measuring local dips.  It is applicable as a model
+\old{preconditioner} \new{regularizer} in \old{geophysical}
+\new{seismic} estimation problems such as coherency enhancement,
+\old{seismic} velocity estimation, and multiple suppression. As an
+efficient operator for characterizing data elongated over dominant
+smoothly variable slopes, PWC can be incorporated for regularization
+of any inversion problems that operate with locally planar data. We
+anticipate more applications of the proposed method.
+
+\old{An important limitation of the PWC method is that it is only applicable to
+2-D problems, where seismic traces can be simply ordered. A possible
+extension to 3-D problems is in transformation from plane-wave
+construction to plane-wave shaping and in
+application of shaping regularization}.
+
+\section{Acknowledgments}
+
+The first author thanks Norsk Hydro for partially supporting this
+research. 
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,flat}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
