@@ -28,6 +28,20 @@ for pad in (256,512):
         Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
 Result('fft-imp',ffts,'TwoRows')
 
+
+ffts = []
+for pad in (256,512):
+    spike = 'spike%d' % pad
+    for dv in (1,-1):
+        fft = 'foc%d-%d' % (dv,pad)
+        ffts.append(fft)
+        Flow(fft,spike,
+             '''
+             diffoc pad=%d pad2=%d v=%g v0=%g | window n2=256
+             ''' % (pad,(pad,8*pad)[pad==512],(0.0001,2.0001)[dv==1],(2.0001,0.0001)[dv==1]))
+        Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
+Result('foc-imp',ffts,'TwoRows')
+
 for adj in (0,1):
     fd = 'fd%d' % adj
     Flow(fd,'spike512',

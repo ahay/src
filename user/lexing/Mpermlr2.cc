@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     fft.get("o2",kx0);
     fft.get("o3",kz0);
 
-    float kh, kx, kz;
+    float kh, kx, kz, kzmin;
 
     std::valarray<double> k(n);
     for (int ix=0; ix < nkx; ix++) {
@@ -103,14 +103,15 @@ int main(int argc, char** argv)
 	for (int ih=0; ih < nkh; ih++) {
 	    kh = kh0+ih*dkh;
 	    kh *= kh;
+
+	    kzmin = sqrt(kh*kx);
+
 	    for (int iz=0; iz < nkz; iz++) {
 		kz = kz0+iz*dkz;
 		kz *= kz;
 
-		// kz = SF_MAX(kz,kh);
-		kh = SF_MIN(100*kz,kh);
-		
-		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt((kx+kz)*(1+kh/(kz+0.0001)));
+		kz = SF_MAX(kz,kzmin);
+		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt(kx*kh/kz+kz+kx+kh);
 	    }
 	}
     }
