@@ -9,8 +9,8 @@ report = (('2006',
           ('2007',
            '''
            geo2007StereographicImagingCondition
-           gpr2007RWEHighOrderKernels
            '''),
+          # gpr2007RWEHighOrderKernels
           ('2008',
            '''
 	   geo2008NumericWEMVAoperators
