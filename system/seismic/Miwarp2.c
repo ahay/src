@@ -18,15 +18,13 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
+#include "warp2.h"
 
 int main(int argc, char* argv[])
 {
-    map4 map1, map2;
-    int nt, nx, n1, n2, i1, i2, i3, n3, ntx;
+    int nt, nx, n1, n2, i3, n3, ntx;
     float o1, d1, o2, d2, eps;
-    float *trace1, *trace2;
-    float **slice, **tstr, **xstr, **xstr1, **slice1, **slice2;
+    float **slice, **tstr, **xstr, **slice2;
     sf_file in, out, warp;
 
     sf_init(argc,argv);
@@ -63,44 +61,18 @@ int main(int argc, char* argv[])
     tstr   = sf_floatalloc2(nt,nx);
     xstr   = sf_floatalloc2(nt,nx);
 
-    trace1 = sf_floatalloc(n1);
-    trace2 = sf_floatalloc(n2);
-
-    xstr1  = sf_floatalloc2(nx,n1);
-    slice1 = sf_floatalloc2(nx,n1);
-
     slice2 = sf_floatalloc2(n1,n2);
 
-    map1 = stretch4_init (n1, o1, d1, nt, eps);
-    map2 = stretch4_init (n2, o2, d2, nx, eps);
+    warp2_init(n1, o1, d1,
+	       n2, o2, d2,
+	       nt, nx, eps); 
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(slice[0],ntx,in);
 	sf_floatread(tstr[0],ntx,warp);
 	sf_floatread(xstr[0],ntx,warp);
 
-	for (i2=0; i2 < nx; i2++) {
-	    stretch4_define (map1,tstr[i2]);	    
-
-	    stretch4_apply  (map1,slice[i2],trace1);	
-	    for (i1=0; i1 < n1; i1++) {
-		slice1[i1][i2] = trace1[i1];
-	    }
-
-	    stretch4_apply  (map1,xstr[i2],trace1);
-	    for (i1=0; i1 < n1; i1++) {
-		xstr1[i1][i2] = trace1[i1];
-	    }
-	}
-
-	for (i1=0; i1 < n1; i1++) {
-	    stretch4_define (map2,xstr1[i1]);
-	    stretch4_apply  (map2,slice1[i1],trace2);
-	    
-	    for (i2=0; i2 < n2; i2++) {
-		slice2[i2][i1] = trace2[i2];
-	    }
-	}
+	warp2(slice,tstr,xstr,slice2);
 
 	sf_floatwrite (slice2[0],n1*n2,out);
     }

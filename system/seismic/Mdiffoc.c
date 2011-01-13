@@ -111,6 +111,10 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	for (i2=n2; i2 < n3; i2++) {
+	    strace[i2] = 0.;
+	}
+
 	/* FFT */
 
 	kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);

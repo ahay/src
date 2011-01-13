@@ -55,7 +55,7 @@ Flow('syn_data','syn_cmp noise0 noise1 noise2',
 
 Plot('raster','syn_data','grey title="synthetic cmp in raster"')
 Plot('wiggle','syn_data','wiggle transp=y yreverse=1 wheretitle="b" wherexlabel="t" poly=y title="synthetic cmp in wiggle"')
-Result('syn_data','raster wiggle','SideBySideAniso', vppen='txscale=1.5')
+Result('syn-data','raster wiggle','SideBySideAniso', vppen='txscale=1.5')
 
 ######################################################################
 ####### Best fitting cmp using L2 norm inversion criteria
@@ -68,7 +68,7 @@ Flow('syn_L2','syn_data',
 
 Plot('cmpinv','syn_L2','grey title="Remodelled cmp in LS sense"')
 Plot('velinv','syn_L2_vel','grey label2="Slowness (s/m)" title="LS Velocity spectrum"')
-Result('syn_L2','cmpinv velinv','SideBySideAniso',vppen='txscale=1.5')
+Result('syn-L2','cmpinv velinv','SideBySideAniso',vppen='txscale=1.5')
 
 ######################################################################
 ####### Best fitting cmp using IRLS norm inversion criteria
@@ -101,7 +101,7 @@ Plot('cmpinv_rmw_irls','syn_rmw_IRLS','grey title=" "')
 Plot('velinv_rmw_irls','syn_rmw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
 Plot('syn_rmw_irls','cmpinv_rmw_irls velinv_rmw_irls','OverUnderAniso',vppen='txscale=1.0')
 
-Result('syn_IRLS','syn_rw_irls syn_mw_irls syn_rmw_irls','SideBySideAniso',vppen='txscale=1.')
+Result('syn-IRLS','syn_rw_irls syn_mw_irls syn_rmw_irls','SideBySideAniso',vppen='txscale=1.')
 
 ######################################################################
 ####### Best fitting cmp using CGG norm inversion criteria
@@ -134,7 +134,7 @@ Plot('cmpinv_rmw_cgg','syn_rmw_CGG','grey title=" "')
 Plot('velinv_rmw_cgg','syn_rmw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
 Plot('syn_rmw_cgg','cmpinv_rmw_cgg velinv_rmw_cgg','OverUnderAniso',vppen='txscale=1.0')
 
-Result('syn_CGG','syn_rw_cgg syn_mw_cgg syn_rmw_cgg','SideBySideAniso',vppen='txscale=1.')
+Result('syn-CGG','syn_rw_cgg syn_mw_cgg syn_rmw_cgg','SideBySideAniso',vppen='txscale=1.')
 
 ######################################################################
 ####### Differences between the original and Best fitting cmp
@@ -151,89 +151,8 @@ Flow('syn_diff_CGG','syn_data syn_rmw_CGG',
 
 Plot('diff1','syn_diff_IRLS','grey title=" "')
 Plot('diff2','syn_diff_CGG','grey title=" "')
-Result('syn_diff','diff1 diff2','SideBySideAniso',vppen='txscale=1.5')
+Result('syn-diff','diff1 diff2','SideBySideAniso',vppen='txscale=1.5')
 
 ######################################################################
-####### Real data example
-
-Fetch('wz.08.H','wz')
-
-Flow('wz08','wz.08.H',
-     '''
-     dd form=native |
-     tpow tpow=1.5 | agc 
-     ''')
-
-Plot('wz08','grey title="Real cmp data"')
-
-Flow('wz08_L2','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_L2_vel.rsf 
-     rwt=2. mwt=0. savevel=1
-     ''')
-
-Plot('wz08_L2_cmpinv','wz08_L2','grey title="Inversed cmp in LS"')
-Plot('wz08_L2_velinv','wz08_L2_vel','grey label2="Slowness (s/m)" title="LS Velocity spectrum"')
-Result('wz08_L2','wz08 wz08_L2_cmpinv wz08_L2_velinv','SideBySideAniso',vppen='txscale=2.')
-
-Flow('wz08_rw_IRLS','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_rw_IRLS_vel.rsf 
-     rwt=1. mwt=0. savevel=1 irls=1 nstep=2 srate=0.01
-     ''')
-
-Flow('wz08_mw_IRLS','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_mw_IRLS_vel.rsf 
-     rwt=2. mwt=1. savevel=1 irls=1 nstep=2 srate=0.01
-     ''')
-Flow('wz08_rmw_IRLS','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_rmw_IRLS_vel.rsf 
-     rwt=1. mwt=1. savevel=1 irls=1 nstep=2 srate=0.01
-     ''')
-
-Plot('wz08_cmpinv_rw_irls','wz08_rw_IRLS','grey title=" "')
-#Plot('wz08_rw_irls','wz08_cmpinv_rw_irls wz08_velinv_rw_irls','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_cmpinv_mw_irls','wz08_mw_IRLS','grey title=" "')
-#Plot('wz08_mw_irls','wz08_cmpinv_mw_irls wz08_velinv_mw_irls','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_cmpinv_rmw_irls','wz08_rmw_IRLS','grey title=" "')
-Result('wz08_IRLS','wz08_cmpinv_rw_irls wz08_cmpinv_mw_irls wz08_cmpinv_rmw_irls','SideBySideAniso',vppen='txscale=1.')
-#Plot('wz08_rmw_irls','wz08_cmpinv_rmw_irls wz08_velinv_rmw_irls','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_velinv_rw_irls','wz08_rw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Plot('wz08_velinv_mw_irls','wz08_mw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Plot('wz08_velinv_rmw_irls','wz08_rmw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Result('wz08_IRLS_vel','wz08_velinv_rw_irls wz08_velinv_mw_irls wz08_velinv_rmw_irls','SideBySideAniso',vppen='txscale=2.')
-
-
-Flow('wz08_rw_CGG','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_rw_CGG_vel.rsf 
-     rwt=.5 mwt=0. savevel=1 irls=0 nstep=1 srate=0.01
-     ''')
-
-Flow('wz08_mw_CGG','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_mw_CGG_vel.rsf 
-     rwt=2. mwt=1.5 savevel=1 irls=0 nstep=1 srate=0.01
-     ''')
-Flow('wz08_rmw_CGG','wz08',
-     '''
-     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=wz08_rmw_CGG_vel.rsf 
-     rwt=.5 mwt=1.5 savevel=1 irls=0 nstep=1 srate=0.01
-     ''')
-
-Plot('wz08_cmpinv_rw_cgg','wz08_rw_CGG','grey title=" "')
-#Plot('wz08_rw_cgg','wz08_cmpinv_rw_cgg wz08_velinv_rw_cgg','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_cmpinv_mw_cgg','wz08_mw_CGG','grey title=" "')
-#Plot('wz08_mw_cgg','wz08_cmpinv_mw_cgg wz08_velinv_mw_cgg','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_cmpinv_rmw_cgg','wz08_rmw_CGG','grey title=" "')
-Result('wz08_CGG','wz08_cmpinv_rw_cgg wz08_cmpinv_mw_cgg wz08_cmpinv_rmw_cgg','SideBySideAniso',vppen='txscale=1.')
-#Plot('wz08_rmw_cgg','wz08_cmpinv_rmw_cgg wz08_velinv_rmw_cgg','OverUnderAniso',vppen='txscale=1.0')
-Plot('wz08_velinv_rw_cgg','wz08_rw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Plot('wz08_velinv_mw_cgg','wz08_mw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Plot('wz08_velinv_rmw_cgg','wz08_rmw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
-Result('wz08_CGG_vel','wz08_velinv_rw_cgg wz08_velinv_mw_cgg wz08_velinv_rmw_cgg','SideBySideAniso',vppen='txscale=1.')
-
 
 End()

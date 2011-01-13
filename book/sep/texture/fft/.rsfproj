@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfnoise', 'sfsmooth', 'sfrtoc', 'sfmath', 'sfdd', 'sfput', 'sfgrey', 'sffft3', 'sfimag', 'sfreal', 'sfmul', 'sfpef', 'sfhelicon', 'sfcat', 'sfdots']
-data=['data/textures/ridges.h', 'data/textures/wood.h']
-size=    2494944
+uses=['sfspike', 'sfnoise', 'sfsmooth', 'sfrtoc', 'sfmath', 'sfdd', 'sfput', 'sfmul', 'sfgrey', 'sffft3', 'sfimag', 'sfreal', 'sfpef', 'sfhelicon', 'sfcat', 'sfdots']
+data=['data/textures/ridges.h', 'data/textures/wood.h', 'data/textures/herr.h', 'data/textures/skull.h', 'data/textures/stanford.tree.H']
+size=    5053888

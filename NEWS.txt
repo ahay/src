@@ -44,6 +44,7 @@ To the Python package:
 * rsf.version: info about the software version
 
 To programs:
+* tkMadagascar (sfgui and sfbrowser)
 * sflmo (frequency-domain LMO)
 * sfcp - added functionality to act as a filter
 * sftaupmo - added functionality for effective/interval velocities
@@ -56,6 +57,7 @@ To programs:
 * sfiphase -added complex option
 * sfsensitivity (traveltime sensitivity kernels)
 * sfcltft (complex local time-frequency transform)
+* sfclpf (complex local prediction filter)
 * sfiwarp2 (inverse 2-D warping)
 * many new programs in user/lcasasan
 * user/jun

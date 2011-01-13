@@ -17,11 +17,19 @@ def grey(title):
 Flow('rand2d',rand(2010),'smooth rect1=3 rect2=3')
 Flow('randph',rand(2011),'rtoc | math output="exp(I*input)" ')
 
-for txtr in ('ridges','wood'):
+for txtr in ('ridges','wood','herr','skull'):
     Fetch(txtr + '.h','textures')
     Flow(txtr,txtr + '.h','dd form=native | put d1=1 o1=0 d2=1 o2=0')
 
-for case in ('rand2d','ridges','wood'):
+Fetch('stanford.tree.H','textures')
+Flow('tree-hole','stanford.tree.H herr',
+     '''
+     dd form=native | put d1=1 o1=0 d2=1 o2=0 |
+     mul ${SOURCES[1]}
+     ''')
+Flow('skull-hole','skull herr','mul ${SOURCES[1]}')
+
+for case in ('rand2d','ridges','wood','herr','tree-hole','skull-hole'):
     Plot(case,grey('Training Image'))
 
     # FFT method
@@ -63,7 +71,7 @@ for case in ('rand2d','ridges','wood'):
     Flow([pef,lag,mis+'i'],case,
          '''
          pef niter=40 a=10,10 center=4,0
-         lag=${TARGETS[1]} maskout=${TARGETS[2]}
+         lag=${TARGETS[1]} maskin=$SOURCE maskout=${TARGETS[2]}
          ''')
     Flow(mis,mis+'i','dd type=float')
 
@@ -80,7 +88,11 @@ for case in ('rand2d','ridges','wood'):
     Flow(syn,[rand(2012),pef,lag],'helicon filt=${SOURCES[1]} div=1')
     Plot(syn,grey('Synthesized Image'))
 
+    Plot(case+'-pefsyn',[case,wht,syn],'SideBySideAniso',vppen='txscale=3')
     Result(case+'-pefsyn',[case,wht,syn],'SideBySideIso')
+
+Result('holes','herr-pefsyn tree-hole-pefsyn skull-hole-pefsyn',
+       'OverUnderAniso')
 
 spectra = 'rtoc | fft3 axis=1 pad=1 | math output="abs(input)" | real'
 

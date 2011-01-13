@@ -11,7 +11,7 @@
 
 %\date{\today}
 %
-%\maketitle
+\maketitle
 %{CGG method for robust inversion}
 \begin{abstract}
 This paper proposes a modified conjugate gradient (CG) method,
@@ -131,15 +131,14 @@ the squares of the residual vector as follows:
  min_m ({\mathbf r^T r}) = min_m {(\mathbf L\mathbf m - \mathbf d)^T(\mathbf L\mathbf m - \mathbf d)} .
 \end{equation}
 
-Most iterative solvers for the LS problem search 
-the minimum solution on a line or a plane in the solution space.
-In the CG algorithm, not a line, but rather a plane is searched. 
-A plane is made from an arbitrary linear combination of two vectors.
-One vector is chosen to be the gradient vector.
-The other vector is chosen to be the previous descent step vector.
-Following Claerbout \shortcite{ClaerPVI:92}, 
-a conjugate-gradient algorithm for the LS solution 
-can be summarized as shown in Algorithm~\ref{alg1}.
+Most iterative solvers for the LS problem search the minimum solution
+on a line or a plane in the solution space.  In the CG algorithm, not
+a line, but rather a plane is searched.  A plane is made from an
+arbitrary linear combination of two vectors.  One vector is chosen to
+be the gradient vector.  The other vector is chosen to be the previous
+descent step vector.  Following \cite{ClaerPVI:92}, a
+conjugate-gradient algorithm for the LS solution can be summarized as
+shown in Algorithm~\ref{alg1}.
 
 \begin{algorithm}
 \caption{ CG method for LS solution}
@@ -561,9 +560,9 @@ the least-squares solutions usually will be spread over all the possible solutio
 Other methods may be more useful 
 if we desire a parsimonious representation of the solution. 
 To obtain a more robust solution,
-Nichols~\shortcite{Nichols.sep.82.1} and Trad et al.~\shortcite{GEO68-01-03860399} 
+\cite{Nichols.sep.82.1} and \cite{GEO68-01-03860399} 
 used the IRLS method for $\ell^1$-norm minimization,
-and Guitton and Symes ~\shortcite{GEO68-04-13101319} used 
+and \cite{GEO68-04-13101319} used 
 a quasi-Newton method called limited-memory BFGS 
 ~\cite{Broyden-16-670,Fletcher-13-03170322,Goldfarb-24-023026,Shanno-24-06470657,Nocedal-95-03390353} 
 for Huber-norm minimization.
@@ -578,71 +577,71 @@ LS method and $\ell^1$-norm IRLS method.
 \inputdir{syn}
 To examine the performance of the proposed CGG method,
 a synthetic CMP data set with various types of noise is used.
-Figure~\ref{fig:syn_data} shows the synthetic data
+Figure~\ref{fig:syn-data} shows the synthetic data
 with three types of noise 
 --- Gaussian noise in the background, busty spike noises, 
 and a trace with only Gaussian noises.
-Figure~\ref{fig:syn_data} (right) is the same data as Figure~\ref{fig:syn_data} (left), 
+Figure~\ref{fig:syn-data} (right) is the same data as Figure~\ref{fig:syn-data} (left), 
 but displayed in wiggle format to clearly show the busty spike noises
 that were not discernible because of the clipping in the raster format display.
 The relative amplitudes of three noise types are compared to the maximum amplitude of the hyperbolic data:
 ten times for the busty spikes, two times for the noisy trace, 
 and 0.2 times for the Gaussian noise, respectively.
 %%
-\plot{syn_data}{width=5.2in,height=3.5in}
+\plot{syn-data}{width=5.2in,height=3.5in}
 {Synthetic data with various types of noise in raster format (left) and in wiggle format (right).}
 
-\plot{syn_L2}{height=3.8in,width=5.0in}
+\plot{syn-L2}{height=3.8in,width=5.0in}
 {The remodeled synthetic data (a) from the velocity-stack (b) obtained by LS inversion 
-using CG method for the noisy synthetic data (Figure~\ref{fig:syn_data}).}
+using CG method for the noisy synthetic data (Figure~\ref{fig:syn-data}).}
 
-Figure~\ref{fig:syn_L2} shows 
-the inversion result (Figure ~\ref{fig:syn_L2}b) obtained using the conventional 
-CG algorithm for LS solution and remodeled data (Figure ~\ref{fig:syn_L2}a) from it. 
+Figure~\ref{fig:syn-L2} shows 
+the inversion result (Figure ~\ref{fig:syn-L2}b) obtained using the conventional 
+CG algorithm for LS solution and remodeled data (Figure ~\ref{fig:syn-L2}a) from it. 
 In the CG method, the iteration was performed 30 times 
 and the same number of iterations was also used for all the examples presented in this paper
 (including the number of iterations in the inner loop in the case of IRLS CG method).
-From Figure~\ref{fig:syn_L2} we can clearly see the limit of $\ell^2$-norm minimization.
+From Figure~\ref{fig:syn-L2} we can clearly see the limit of $\ell^2$-norm minimization.
 In the remodeled data, the noise with Gaussian statistics was removed quite well,
 but some spurious events were generated around the busty noise spikes and noisy trace.
 The inversion result obtained as a velocity-stack panel 
 also shows many noisy values that correspond to
 the noise part of the data which was not removed completely.
 
-Figures~\ref{fig:syn_-IRLS}d through ~\ref{fig:synw_IRLS}f show the inversion results 
+Figures~\ref{fig:syn-IRLS}d through ~\ref{fig:syn-IRLS}f show the inversion results 
 obtained using the IRLS algorithm with $\ell^1$-norm residual weight only, 
 $\ell^1$-norm model weight only, and $\ell^1$-norm residual and model weights together, respectively.  
-Figures~\ref{fig:syn_IRLS}a through ~\ref{fig:syn_IRLS}c show the remodeled data 
+Figures~\ref{fig:syn-IRLS}a through ~\ref{fig:syn-IRLS}c show the remodeled data 
 from the corresponding inversion results.
-From the results of $\ell^1$-norm residual weight (Figures~\ref{fig:syn_IRL}a and ~\ref{fig:syn_IRLS}d),
+From the results of $\ell^1$-norm residual weight (Figures~\ref{fig:syn-IRLS}a and ~\ref{fig:syn-IRLS}d),
 we can see the robustness of $\ell^1$-norm residual minimization for the busty noise
 and the successful removal of the Gaussian noise, too.
-From the results of $\ell^1$-norm model weight (Figures~\ref{fig:syn_IRLS}b and ~\ref{fig:syn_IRLS}e),
+From the results of $\ell^1$-norm model weight (Figures~\ref{fig:syn-IRLS}b and ~\ref{fig:syn-IRLS}e),
 we can see the improvement in the parsimony of the model compared 
-to the result of LS inversion (Figure~\ref{fig:syn_L2}b).
+to the result of LS inversion (Figure~\ref{fig:syn-L2}b).
 The $\ell^1$-norm model weight also seems to have some effect to reduce low amplitude noise quite well
 but the result shows some limit in reducing high amplitudes noises by making some spurious event around
-the busty spike noises (Figure~\ref{fig:synws_IRLS}b).
+the busty spike noises (Figure~\ref{fig:syn-IRLS}b).
 From the results with $\ell^1$-norm residual and model weights together 
-(Figures~\ref{fig:syn_IRLS}c and ~\ref{fig:syn_IRLS}f),
+(Figures~\ref{fig:syn-IRLS}c and ~\ref{fig:syn-IRLS}f),
 we can see that the IRLS method can achieve both goals, the robustness to the busty noises
 and the parsimony of the model representation, quite well.
 
-Figures~\ref{fig:syn_CGG}d through ~\ref{fig:syn_CGG}f show the inversion results 
+Figures~\ref{fig:syn-CGG}d through ~\ref{fig:syn-CGG}f show the inversion results 
 obtained using the CGG algorithm with the residual weight only,
 the model weight only, and the residual and the model weights together, respectively.  
-Figures~\ref{fig:syn_CGG}a through ~\ref{fig:syn_CGG}c show the remodeled data 
+Figures~\ref{fig:syn-CGG}a through ~\ref{fig:syn-CGG}c show the remodeled data 
 from the corresponding inversion results.
-From the results of the residual weight (Figures~\ref{fig:syn_CGG}a and ~\ref{fig:syn_CGG}d),
+From the results of the residual weight (Figures~\ref{fig:syn-CGG}a and ~\ref{fig:syn-CGG}d),
 we can also see the robustness of the residual weight for the busty spike noises,
 and also the success in the removal of the Gaussian noise.
 Here the residual weight used was the same residual weight as the one used
 in the $\ell^1$-norm residual minimizing IRLS method.
 Thus we can say that guiding the gradient using the $\ell^1$-norm-like residual weight 
 in the CGG method seems to behave as the $\ell^1$-norm residual minimizing IRLS method does. 
-From the results of model weight (Figures~\ref{fig:syn_CGG}b and ~\ref{fig:syn_CGG}e),
+From the results of model weight (Figures~\ref{fig:syn-CGG}b and ~\ref{fig:syn-CGG}e),
 we can also see the improvement in the parsimony of the model estimation
-compared to the result of LS inversion (Figure~\ref{fig:syn_L2}b)
+compared to the result of LS inversion (Figure~\ref{fig:syn-L2}b)
 and the similar behavior in reducing noises as the $\ell^1$-norm model minimizing IRLS method does.
 For the model weight, I used $diag({\mathbf W_m})_i = |m_i|^{1.5}$, where the exponent 1.5 was decided empirically.
 If we want the model weight as the one used in the $\ell^1$-norm model weight in the IRLS method,
@@ -651,13 +650,13 @@ was not as successful as the IRLS method.
 So the appropriate value for the exponent was decided to be $1.5$ 
 after experiments with several exponent values from 0.5 to 3.  
 From the results of the residual and model weights together 
-(Figures~\ref{fig:syn_CGG}c and ~\ref{fig:syn_CGG}f),
+(Figures~\ref{fig:syn-CGG}c and ~\ref{fig:syn-CGG}f),
 we can see that the CGG method also achieves both goals, the robustness to the busty noises
 and the parsimony of the model representation, quite well,
 and the results of the CGG method are comparable to the results of the IRLS method
-(Figures~\ref{fig:syn_IRLS}c and ~\ref{fig:syn_IRLS}f).
+(Figures~\ref{fig:syn-IRLS}c and ~\ref{fig:syn-IRLS}f).
 
-Figure~\ref{fig:syn_diff} shows the differences of the results of the IRLS method 
+Figure~\ref{fig:syn-diff} shows the differences of the results of the IRLS method 
 and of the CGG method from the original synthetic data, respectively.
 We can see that both differences contain nothing but the noise part of data. 
 This demonstrates that both the IRLS method and the CGG methods 
@@ -669,38 +668,40 @@ In addition, the CGG method requires less computation than the IRLS method
 by solving a linear inversion problem (which requires one iteration loop)
 instead of solving a nonlinear inversion problem (which requires two nested iteration loops).
 
-\plot{syn_IRLS}{height=8.2in,width=6.2in}
+\plot{syn-IRLS}{height=8.2in,width=6.2in}
 {The remodeled data and the velocity-stack inversion results obtained by IRLS method 
 with three different norm criteria : (a) and (d) are for the $\ell^1$-norm residual weight only,
 (b) and (e) are for the $\ell^1$-norm model weight only,
 and (c) and (f) are for the $\ell^1$-norm residual/model weights together.}
 
-\plot{syn_CGG}{height=8.2in,width=6.2in}
+\plot{syn-CGG}{height=8.2in,width=6.2in}
 {The remodeled data and the velocity-stack inversion results obtained by CGG method 
 with three different guiding weights : (a) and (d) are for the residual weight only, 
 (b) and (e) are for the model weight only,
 and (c) and (f) are for the residual/model weights together.}
 
-\plot{syn_diff}{height=3.8in,width=5.0in}
+\plot{syn-diff}{height=3.8in,width=5.0in}
 { (a) The difference of the remodeled data obtained by IRLS method from the original synthetic data: 
-the original noisy synthetic data (Figure~\protect\ref{fig:syn_data}) was subtracted 
- from the remodeled data with IRLS method (Figure~\protect\ref{fig:syn_IRLS}c),
+the original noisy synthetic data (Figure~\protect\ref{fig:syn-data}) was subtracted 
+ from the remodeled data with IRLS method (Figure~\protect\ref{fig:syn-IRLS}c),
 (b) The difference of the remodeled data obtained by CGG method from the original synthetic data: 
-the original noisy synthetic data (Figure~\protect\ref{fig:syn_data}) was subtracted 
- from the remodeled data with CGG method (Figure~\protect\ref{fig:syn_CGG}c).
+the original noisy synthetic data (Figure~\protect\ref{fig:syn-data}) was subtracted 
+ from the remodeled data with CGG method (Figure~\protect\ref{fig:syn-CGG}c).
 }
 
 \subsection{Examples on real data}
+\inputdir{real}
+
 I tested the proposed CGG method on a real data set
 that contains various types of noise.  
 The data set is a shot gather from a land survey. 
 However the trajectories of the events in the data set
 look "hyperbolic" enough to be tested with a hyperbolic inversion.
 
-Figure~\ref{fig:wz08_L2} shows the real data set used for testing
-and the results, the velocity-stack (Figure~\ref{fig:wz08_L2}c) and 
-the remodeled data (Figure~\ref{fig:wz08_L2}b) from it, when we used the conventional LS inversion. 
-We can see that the real data (Figure~\ref{fig:wz08_L2}a) originally contains 
+Figure~\ref{fig:wz08-L2} shows the real data set used for testing
+and the results, the velocity-stack (Figure~\ref{fig:wz08-L2}c) and 
+the remodeled data (Figure~\ref{fig:wz08-L2}b) from it, when we used the conventional LS inversion. 
+We can see that the real data (Figure~\ref{fig:wz08-L2}a) originally contains 
 various types of noise such as the strong ground roll, 
 the amplitude anomalies early at near-offset and 
 late at 0.8km offset, 
@@ -708,58 +709,58 @@ and the time shifts around offsets 1.6 km and 2.0 km.
 The conventional LS inversion generally does a good job in removing most dominant noises
 except some whose characteristics are somehow busty (i.e. the amplitude anomalies early at near-offset and 
 late at 0.8km offset and the time shift around offsets 1.6 km and 2.0 km).
-The resultant velocity-stack panel (Figure~\ref{fig:wz08_L2}c) was filled with various noises that
+The resultant velocity-stack panel (Figure~\ref{fig:wz08-L2}c) was filled with various noises that
 requires some more processing if we want to perform any velocity-stack oriented processing 
 such as velocity picking, multiple removal, and so on.
 
-Figure~\ref{fig:wz08_IRLS} shows the remodeled data
-from the inversion results (Figure~\ref{fig:wz08_IRLS_vel}) obtained using the IRLS method 
+Figure~\ref{fig:wz08-IRLS} shows the remodeled data
+from the inversion results (Figure~\ref{fig:wz08-IRLS-vel}) obtained using the IRLS method 
 with three different weighting combinations ($\ell^1$-norm residual only, $\ell^1$-norm model only,
 and $\ell^1$-norm residual and model together).
 We can see that all three remodeled results show quite successful removal of most noises similarly.
 The main difference among the three inversion results is the degree of parsimony 
-of the corresponding velocity-stacks as shown in Figure~\ref{fig:wz08_IRLS_vel}.
+of the corresponding velocity-stacks as shown in Figure~\ref{fig:wz08-IRLS-vel}.
 Even though the approach of the $\ell^1$-norm residual weight can reduce many noisy signals in 
 the velocity-stack, the result of the $\ell^1$-norm model weight shows better parsimony of the velocity-stack.
 
-Figure~\ref{fig:wz08_CGG} shows the remodeled data
-from the inversion results (Figure~\ref{fig:wz08_CGG_vel})
+Figure~\ref{fig:wz08-CGG} shows the remodeled data
+from the inversion results (Figure~\ref{fig:wz08-CGG-vel})
 obtained using the CGG algorithm with three different guiding types
 (the residual weight only, the model weight only,
 and the residual and the model weights together).
-All three remodeled data (Figures~\ref{fig:wz08_CGG}a through ~\ref{fig:wz08_CGG}c)
-show quite similar quality as the ones obtained with IRLS method (Figure~\ref{fig:wz08_IRLS}).
+All three remodeled data (Figures~\ref{fig:wz08-CGG}a through ~\ref{fig:wz08-CGG}c)
+show quite similar quality as the ones obtained with IRLS method (Figure~\ref{fig:wz08-IRLS}).
 The differences in the parsimony of the velocity-stacks 
 among the different guiding types are also clearly shown 
-in the Figure~\ref{fig:wz08_CGG_vel} and they are similar to the results of IRLS method.
-In the case of the guiding with the residual weight (Figure~\ref{fig:wz08_CGG}a)
+in the Figure~\ref{fig:wz08-CGG-vel} and they are similar to the results of IRLS method.
+In the case of the guiding with the residual weight (Figure~\ref{fig:wz08-CGG}a)
 I used the weight, $diag({\mathbf W_r})_i = |r_i|^{-0.75}$ to achieve 
 the similar quality in the noise removal as the one of the $\ell^1$-norm residual minimizing IRLS method.
 The exponent value $-0.75$ is also decided empirically after experiments with various exponents values.
 
-\plot{wz08_L2}{height=7.0in,width=6.0in}
+\plot{wz08-L2}{height=7.0in,width=6.0in}
 {The real data set (a), the remodeled data from the inversion result (b), and the LS inversion result (c).}
 
-\plot{wz08_IRLS}{height=7.0in,width=6.0in}
-{The remodeled data from the velocity-stack inversion results (Figure~\protect\ref{fig:wz08_IRLS_vel}) 
-of the real data (Figure~\protect\ref{fig:wz08_L2}a) using the IRLS method with
+\plot{wz08-IRLS}{height=7.0in,width=6.0in}
+{The remodeled data from the velocity-stack inversion results (Figure~\protect\ref{fig:wz08-IRLS-vel}) 
+of the real data (Figure~\protect\ref{fig:wz08-L2}a) using the IRLS method with
 different norm criteria: $\ell^1$-norm residual only (a), $\ell^1$-norm model only (b),
 and $\ell^1$-norm residual/model together (c).}
 
-\plot{wz08_IRLS_vel}{height=7.0in,width=6.0in}
+\plot{wz08-IRLS-vel}{height=7.0in,width=6.0in}
 {The velocity-stack inversion results of the real data 
-(Figure~\protect\ref{fig:wz08_L2}a) using the IRLS method with
+(Figure~\protect\ref{fig:wz08-L2}a) using the IRLS method with
 different norm criteria: $\ell^1$-norm residual only (a), $\ell^1$-norm model only (b),
 and $\ell^1$-norm residual/model together (c).}
 
-\plot{wz08_CGG}{height=7.0in,width=6.0in}
-{The remodeled data from the velocity-stack inversion results (Figure~\protect\ref{fig:wz08_CGG_vel}) 
-of the real data (Figure~\protect\ref{fig:wz08_L2}a) using the CGG method with
+\plot{wz08-CGG}{height=7.0in,width=6.0in}
+{The remodeled data from the velocity-stack inversion results (Figure~\protect\ref{fig:wz08-CGG-vel}) 
+of the real data (Figure~\protect\ref{fig:wz08-L2}a) using the CGG method with
 different guiding weights: the residual weight only (a), the model weight only (b),
 and the residual/model weights together (c).}
 
-\plot{wz08_CGG_vel}{height=7.0in,width=6.0in}
-{The velocity-stack inversion results of the real data (Figure~\protect\ref{fig:wz08_L2}a) 
+\plot{wz08-CGG-vel}{height=7.0in,width=6.0in}
+{The velocity-stack inversion results of the real data (Figure~\protect\ref{fig:wz08-L2}a) 
 using the CGG method with
 different guiding weights: the residual weight only (a), the model weight only (b),
 and the residual/model weights together (c).}
