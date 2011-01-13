@@ -652,6 +652,8 @@ def wdfic(cii,
     par['jrec']=5
     par['nrec']=320
     par['orec']=0
+    par['jrec']=10
+    par['nrec']=160
     
     receivers = range(par['orec'],par['orec']+par['nrec']*par['jrec'],par['jrec'])
     # ------------------------------------------------------------
@@ -808,3 +810,4 @@ def igrey(custom,par):
     labelsz=6 labelfat=2 wantaxis=y framelabel=n
     %s
     ''' % (par['nqz'],par['nqx'],par['nqz']/2,par['nqx']/2,par['tcut'],par['labelattr']+custom)
+
