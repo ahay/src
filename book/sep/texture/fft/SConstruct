@@ -17,11 +17,14 @@ def grey(title):
 Flow('rand2d',rand(2010),'smooth rect1=3 rect2=3')
 Flow('randph',rand(2011),'rtoc | math output="exp(I*input)" ')
 
-Fetch('ridges.h','textures')
-Flow('ridges','ridges.h','dd form=native | put d1=1 o1=0 d2=1 o2=0')
+for txtr in ('ridges','wood'):
+    Fetch(txtr + '.h','textures')
+    Flow(txtr,txtr + '.h','dd form=native | put d1=1 o1=0 d2=1 o2=0')
 
-for case in ('rand2d','ridges'):
+for case in ('rand2d','ridges','wood'):
     Plot(case,grey('Training Image'))
+
+    # FFT method
 
     fft = 'fft-'+case
 
@@ -38,7 +41,6 @@ for case in ('rand2d','ridges'):
     Plot(campl,'real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
 
     synth = 'synth-'+case
-
     Flow(synth,[campl,'randph'],
          '''
          mul ${SOURCES[1]} |
@@ -49,6 +51,36 @@ for case in ('rand2d','ridges'):
     Plot(synth,grey('FT synthesis'))
 
     Result(case+'-ftsyn',[case,synth,phase,campl],'TwoRows')
+
+    #------------------------------------------------------------ 
+    # Texture Synthesis via PEF method.
+    #------------------------------------------------------------ 
+    # Minimize ||Data*PEF||^2 for unknown PEF.
+    #------------------------------------------ 
+    pef = 'pef-'+case
+    lag = 'lag-'+case
+    mis = 'mis-'+case
+    Flow([pef,lag,mis+'i'],case,
+         '''
+         pef niter=40 a=10,10 center=4,0
+         lag=${TARGETS[1]} maskout=${TARGETS[2]}
+         ''')
+    Flow(mis,mis+'i','dd type=float')
+
+    # Compute residual for known PEF: res = Data*PEF
+    #-----------------------------------------------
+    wht = 'wht-'+case
+    Flow(wht,[case,pef,lag,mis],
+         'helicon filt=${SOURCES[1]} | mul ${SOURCES[3]}')
+    Plot(wht,grey('Residual = TI*PEF'))
+
+    # Synthesized texture = Random #'s/PEF  ("/" = poly. div.)
+    #---------------------------------------------------------
+    syn = 'syn-'+case
+    Flow(syn,[rand(2012),pef,lag],'helicon filt=${SOURCES[1]} div=1')
+    Plot(syn,grey('Synthesized Image'))
+
+    Result(case+'-pefsyn',[case,wht,syn],'SideBySideIso')
 
 spectra = 'rtoc | fft3 axis=1 pad=1 | math output="abs(input)" | real'
 
