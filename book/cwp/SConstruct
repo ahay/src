@@ -4,8 +4,8 @@ report = (('2006',
            '''
            geo2006TimeShiftImagingCondition
            jse2006RWEImagingOverturningReflections
-           seg2006ConvertedWavesTSIC
            '''),
+          # seg2006ConvertedWavesTSIC
           ('2007',
            '''
            geo2007StereographicImagingCondition
@@ -26,6 +26,7 @@ report = (('2006',
 
 Papers(papers=report,
        copyr='Colorado School of Mines',group='Center for Wave Phenomena',
+       
        authors={'seg2006ConvertedWavesTSIC': 'Paul Sava and Sergey Fomel',
                 'jse2006RWEImagingOverturningReflections':'Paul Sava',
                 'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
