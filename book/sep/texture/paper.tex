@@ -1,13 +1,16 @@
 \lefthead{Brown}
 \righthead{Texture synthesis}
 \footer{SEP--100}
-\keywords{texture, PEF, simulation, helix, coherency, missing data }
+%\keywords{texture, PEF, simulation, helix, coherency, missing data }
 
+\published{SEP report, 100, 211-222 (1999)}
 \title{ Texture synthesis and prediction error filtering}
 \email{morgan@sep.stanford.edu}
 \author{Morgan Brown}
 
-\ABS{ 
+\maketitle
+
+\begin{abstract}
 	The spectrum of a prediction-error filter (PEF) tends toward the inverse spectrum of the
 	data from which it is estimated.  
 	I compute 2-D PEF's from known ``training images'' and use them to synthesize 
@@ -20,14 +23,15 @@
 	analysis by highlighting discontinuities in the data, and may also serve as a measure 
 	of the quality of a given migration velocity model. 
 	Last, I relate the notion of texture synthesis to missing data interpolation and show
-	an example.} 
+	an example.
+\end{abstract} 
 
 \section{Introduction}
 \inputdir{.}
 
 	In terms of digital images, the word {\em texture} might be defined as,
 	``an attribute representing the spatial arrangement of gray levels of the 
-	pixels in a region,'' {\small \cite{IEEE}}.  In the same context, I define
+	pixels in a region,'' {\small \cite[]{IEEE}}.  In the same context, I define
 	{\em texture synthesis} as the process of first estimating the spatial 
 	statistical properties of a known image and then imparting these statistics 
 	onto a second (random) image.  Figure \ref{fig:syn-templ} illustrates the
@@ -43,7 +47,7 @@
 	\par
 	Texture synthesis is an active area of research in the computer 
 	graphics community, owing to the need for realistic, quickly generated surface 
-	textures {\small \cite{simoncelli,heeger,brown-mao}}, but the same notion of texture 
+	textures {\small \cite[]{simoncelli,heeger,brown-mao}}, but the same notion of texture 
 	applies to the earth sciences as well.  Physically measurable quantities, be they
 	geology, gravity, or topography, behave in certain repeatable ways as a function of
 	space, i.e., these quantities have a given texture.  Inversion problems are often
@@ -52,8 +56,8 @@
 	help in suppressing the nullspace of modeling operators.  These a priori constraints 
 	can be conceptualized as textures.  For instance, in velocity analysis and 
 	tomography, the earth's velocity field is sometimes assumed to have a ``blocky''
-	texture {\small \cite{Clapp.sep.97.bob1}}.  Underdetermined inverse interpolation 
-	problems are often regularized by assuming ``smooth'' model texture {\small \cite{gee}}.
+	texture {\small \cite[]{Clapp.sep.97.bob1}}.  Underdetermined inverse interpolation 
+	problems are often regularized by assuming ``smooth'' model texture {\small \cite[]{gee}}.
 
 	\par
 	The prediction-error filter (PEF) is an autoregressive filter which has the distinction 
@@ -61,20 +65,23 @@
 	Because it captures this essential statistical property of the data, the PEF is a 
 	candidate for the generic "filter" operation shown in Figure \ref{fig:syn-templ}.
 
-	\par
-	This paper is intended as a follow-up to the earlier work by Claerbout and Brown
-	{\small \shortcite{claerbout-brown}}, which presented a texture synthesis technique utilizing
-	2-D PEF's and 2-D deconvolution via the helix transform {\small \cite{helix}}.  
-	First I motivate the texture synthesis problem by applying a Fourier transform-based 
-	technique to create synthetic textures of everyday objects, then introduce and apply 
-	a PEF-based technique to synthesize the same images.  
-	I compare the results of the two methods and conclude that the PEF-based method is the 
-	better choice because it more naturally handles missing data. 
-	Next I apply the PEF-based method to a 2-D stacked seismic section.  The nature of
-	the residual error in the PEF estimation of this example suggests application
-	to seismic discontinuity detection and migration velocity analysis.
-	Last, I solve a simple missing data problem to illustrate how regularization
-	with a PEF imparts a reasonable ``texture'' onto the nullspace.
+	\par This paper is intended as a follow-up to the earlier work
+	by \cite{claerbout-brown}, which presented a texture synthesis
+	technique utilizing 2-D PEF's and 2-D deconvolution via the
+	helix transform {\small \cite[]{helix}}.  First I motivate the
+	texture synthesis problem by applying a Fourier
+	transform-based technique to create synthetic textures of
+	everyday objects, then introduce and apply a PEF-based
+	technique to synthesize the same images.  I compare the
+	results of the two methods and conclude that the PEF-based
+	method is the better choice because it more naturally handles
+	missing data.  Next I apply the PEF-based method to a 2-D
+	stacked seismic section.  The nature of the residual error in
+	the PEF estimation of this example suggests application to
+	seismic discontinuity detection and migration velocity
+	analysis.  Last, I solve a simple missing data problem to
+	illustrate how regularization with a PEF imparts a reasonable
+	``texture'' onto the nullspace.
 
 \section{ Fourier transform method }
 \inputdir{fft}
@@ -82,7 +89,7 @@
 	The texture synthesis methodology of this paper really boils down to one of 
 	spectral estimation.  An image's amplitude spectrum contains the relative weights 
 	between frequency components, while the phase spectrum localizes these frequency 
-	components in space {\small \cite{castleman}}.   Therefore, it stands to reason that 
+	components in space {\small \cite[]{castleman}}.   Therefore, it stands to reason that 
 	the texture 
 	of stationary, loosely correlated images is adequately modeled using the amplitude 
 	spectrum alone.  This idea is the basis for the Fourier Transform method of	texture 
@@ -130,9 +137,9 @@
 	The frequency response of the ``inverse PEF'', as computed by deconvolution, is an 
 	$N_a$-point parameterization of the $N_d$-point inverse amplitude spectrum, as illustrated 
 	in Figure \ref{fig:rand1d-spec}.  As the size of the filter increases, the parameterization 
-	becomes more accurate, as expected from theory {\small \cite{fgdp}}.  The notion of PEF
+	becomes more accurate, as expected from theory {\small \cite[]{fgdp}}.  The notion of PEF
 	as ``decorrelator'' is quite akin to decomposition by principal components 
-	{\small \cite{castleman}},
+	{\small \cite[]{castleman}},
 	where the number of principal components used in computation determines the degree of 
 	decorrelation.
 
@@ -149,8 +156,8 @@
 				\mbox{min} \; \| \ t*a \ \|^2  \label{eq:pefest}
 			\end{equation}
 		\item The residual $r = t*a$ is approximately uncorrelated, with the same dimension as the TI,
-			since we use an "internal" convolution algorithm {\small \cite{gee}}.
-			It can be proved that $a$ is a minimum phase filter, {\small \cite{fgdp}} so 
+			since we use an "internal" convolution algorithm {\small \cite[]{gee}}.
+			It can be proved that $a$ is a minimum phase filter, {\small \cite[]{fgdp}} so 
 			deconvolution (polynomial division) robustly and stably reconstructs $t$ given $r$.
 
 			Generate a random residual $r'$ with the same dimension as $r$.  To create the 
@@ -221,7 +228,7 @@
 	Modern reservoir characterization efforts take a pragmatic view of collected data.
 	Rather than wait for collection of the elusive ``perfect'' dataset, the desire 
 	is to incorporate a wide variety of possibly incomplete data types into a single 
-	inversion scheme {\small \cite{caers-journel}}.   
+	inversion scheme {\small \cite[]{caers-journel}}.   
 	Often the only data available is spatially incomplete.
 	Figure \ref{fig:holes} shows the result of texture synthesis on training images with 
 	large void regions.
@@ -248,7 +255,7 @@
 	(plane waves) and sinusoids, but hyperbolas and discontinuities are quite another matter.
 	\par
 	Matthias Schwab used the ``plane wave prediction'' property of the PEF in his Ph.D.
-	thesis {\small \cite{Schwab.sepphd.99}} to create so-called ``coherency cubes'' from 
+	thesis {\small \cite[]{Schwab.sepphd.99}} to create so-called ``coherency cubes'' from 
 	3-D seismic data by nonstationary convolution with small PEF's.  Development of viable
 	seismic coherency attributes merits considerable industrial interest, as evidenced by 
 	the concentration of related articles in the March, 1999 edition of {\em The Leading Edge}. 
@@ -258,7 +265,7 @@
 	residual energy in the data*PEF panel.  
 	Additionally, to the same end, this technique could be used to measure the relative amount 
 	of residual curvature in common reflection point (CRP) gathers, which are flattened when 
-	the correct migration velocity is used \cite{3dsi}.  This preprocessing could be done
+	the correct migration velocity is used \cite[]{3dsi}.  This preprocessing could be done
 	quickly, for the necessary PEF's are small.
 
 	\plot{WGstack-pefsyn}{width=6.0in,height=3.5in}{\small Stacked 2-D seismic section.  }
@@ -266,7 +273,7 @@
 	\subsection{ Preconditioned Missing Data Infill}
 
 	To fill ``holes'' in collected data, we have the familiar SEP formulation 
-	{\small \cite{gee}}:
+	{\small \cite[]{gee}}:
 	\begin{eqnarray}
 		\bf Km - d &\approx& 0 \label{eq:miss1} \\[0.05in]
 		\bf \epsilon Am &\approx& 0 \label{eq:miss2}
@@ -277,7 +284,7 @@
 	Claerbout {\small \shortcite{gee}} preconditions with the inverse of the convolutional 
 	operator $\bf A$ (multidimensional {\em de}convolution).  Provided that
 	$\bf A$ is minimum phase or factorizable into the product of minimum phase filters
-	\cite{Sava.sep.97.paul1},
+	\cite[]{Sava.sep.97.paul1},
 	the helix transform now permits stable multidimensional deconvolution.  Making
 	the change of variables $\bf m = A^{-1}x$, we have the equivalent preconditioned problem:
 	\begin{eqnarray}
@@ -288,7 +295,7 @@
 	a smaller-dimension ``known data space'', so it has a nonempty nullspace.
 	Missing points in model space are completely unconstrained by $\bf K$, so
 	our choice of $\bf A$ wholly determines the behavior of the missing model points, i.e.,
-	their {\em texture} {\small \cite{Fomel.sep.95.sergey1}}.  
+	their {\em texture} {\small \cite[]{Fomel.sep.95.sergey1}}.  
 	The PEF is a perfect choice for $\bf A$, as shown in Figure
 	\ref{fig:tree-hole-filled}.  The preconditioned, PEF-regularized result fills the
 	hole quite believably after only 20 iterations, as opposed to the case where
@@ -306,7 +313,7 @@
 	Nontheless, as a tutorial device, texture synthesis using the PEF is valuble, since
 	it concretely and intuitively illustrates in two dimensions some of the fundamental 
 	concepts of autoregression which are proved only in the one dimensional case 
-	{\small \cite{fgdp}}.  In fact, some of the results shown here and in Claerbout and Brown 
+	{\small \cite[]{fgdp}}.  In fact, some of the results shown here and in Claerbout and Brown 
 	{\small \shortcite{claerbout-brown}} have recently been incorporated into Jon Claerbout's 
 	textbook, {\em Geophysical Estimation by Example} {\small \shortcite{gee}}.  
 
@@ -317,14 +324,14 @@
 	\ref{fig:wood-pefsyn}) the assumption holds, but for others (Figures \ref{fig:ridges-ftsyn},
 	\ref{fig:ridges-pefsyn}) it is obviously violated.  Real digital images and earth
 	phenomena alike often exhibit complex spatial correlation which are modelable only with
-	multiple point templates  {\small \cite{caers-journel, malzbender-spach}}.  Additionally, 
+	multiple point templates  {\small \cite[]{caers-journel, malzbender-spach}}.  Additionally, 
 	I have ignored the 
 	interesting subjects of nonstationarity and spatial scale variance.  By scale-variant,
 	I mean that the characteristic scale of an image's features is not constant with
 	respect to spatial frequency.  Many methods for characterizing scale-variant images 
 	appeal 
 	to the world of wavelets for a methodology known as {\em multiresolution analysis}
-	{\small \cite{simoncelli, heeger, strang}}.  The notion of texture synthesis for nonstationary
+	{\small \cite[]{simoncelli, heeger, strang}}.  The notion of texture synthesis for nonstationary
 	images is ill-defined, since it amounts to a random reordering of filters estimated on
 	locally-stationary patches, followed by deconvolution on the correspondng patches.
 
@@ -349,6 +356,6 @@
 	the reader to use the makefile which accompanies the source
 	code for this paper as a template.	
 
-\bibliographystyle{sep}
-\bibliography{SEP,MISC,paper}
+\bibliographystyle{seg}
+\bibliography{SEP2,paper}
 	

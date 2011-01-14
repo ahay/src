@@ -24,6 +24,8 @@ To the reproducible documents collection:
 * jsg/oc3: OC-seislet: seislet transform construction with
   differential offset continuation (Liu and Fomel)
 * sep/lines: Random lines in a plane (Claerbout)
+* hansung/cgg: Conjugate guided gradient (CGG) method for robust
+  inversion and its application to velocity-stack inversion (Ji)
 * Grave directory for papers that are no longer reproducible
 
 To SCons:

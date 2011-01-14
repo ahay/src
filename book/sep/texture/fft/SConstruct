@@ -29,36 +29,41 @@ Flow('tree-hole','stanford.tree.H herr',
      ''')
 Flow('skull-hole','skull herr','mul ${SOURCES[1]}')
 
-for case in ('rand2d','ridges','wood','herr','tree-hole','skull-hole'):
+Fetch('WGstack.H','book/iee')
+Flow('WGstack','WGstack.H','window f2=500 j2=2 n2=125 n1=250 j1=2')
+
+for case in ('rand2d','ridges','wood','herr',
+             'tree-hole','skull-hole','WGstack'):
     Plot(case,grey('Training Image'))
 
-    # FFT method
+    if case != 'WGstack':
+        # FFT method
 
-    fft = 'fft-'+case
-
-    Flow(fft,case,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
-
-    phase = 'phase-'+case
-
-    Flow(phase,fft,'math output="log(input)*abs(input)" | imag')
-    Plot(phase,grey('Phase Spec.(TI)'))
-
-    campl = 'campl-'+case
-
-    Flow(campl,fft,'math output="abs(input)" ')
-    Plot(campl,'real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
-
-    synth = 'synth-'+case
-    Flow(synth,[campl,'randph'],
-         '''
-         mul ${SOURCES[1]} |
-         fft3 inv=y axis=2 |
-         fft3 inv=y axis=1 |
-         real
-         ''')
-    Plot(synth,grey('FT synthesis'))
-
-    Result(case+'-ftsyn',[case,synth,phase,campl],'TwoRows')
+        fft = 'fft-'+case
+        
+        Flow(fft,case,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+        
+        phase = 'phase-'+case
+        
+        Flow(phase,fft,'math output="log(input)*abs(input)" | imag')
+        Plot(phase,grey('Phase Spec.(TI)'))
+        
+        campl = 'campl-'+case
+        
+        Flow(campl,fft,'math output="abs(input)" ')
+        Plot(campl,'real | ' + grey('Ampl. Spec.(TI)') + ' allpos=y')
+        
+        synth = 'synth-'+case
+        Flow(synth,[campl,'randph'],
+             '''
+             mul ${SOURCES[1]} |
+             fft3 inv=y axis=2 |
+             fft3 inv=y axis=1 |
+             real
+             ''')
+        Plot(synth,grey('FT synthesis'))
+        
+        Result(case+'-ftsyn',[case,synth,phase,campl],'TwoRows')
 
     #------------------------------------------------------------ 
     # Texture Synthesis via PEF method.
@@ -74,6 +79,15 @@ for case in ('rand2d','ridges','wood','herr','tree-hole','skull-hole'):
          lag=${TARGETS[1]} maskin=$SOURCE maskout=${TARGETS[2]}
          ''')
     Flow(mis,mis+'i','dd type=float')
+
+    # Impulse response of inverse PEF - decon of a spike.
+    #----------------------------------------------------
+    Flow('inv'+pef,pef,
+         '''
+         spike k1=64 k2=32 n1=128 n2=128 |
+         helicon filt=$SOURCE div=1
+         ''',stdin=0)
+    Plot(pef,'inv'+pef,grey('spike/PEF'))
 
     # Compute residual for known PEF: res = Data*PEF
     #-----------------------------------------------
@@ -93,6 +107,22 @@ for case in ('rand2d','ridges','wood','herr','tree-hole','skull-hole'):
 
 Result('holes','herr-pefsyn tree-hole-pefsyn skull-hole-pefsyn',
        'OverUnderAniso')
+
+#---------------------------
+# Fill missing data with PEF
+#---------------------------
+Flow('fillpef','tree-hole pef-tree-hole',
+     'miss filt=${SOURCES[1]} padin=20')
+Plot('fillpef',grey('PEF Infilled data'))
+
+#-----------------------------
+# Fill missing data with Lapl. 
+#-----------------------------
+Flow('filllap','tree-hole','lapfill')
+Plot('filllap',grey('Laplacian Infilled data'))
+
+Result('tree-hole-filled','tree-hole pef-tree-hole fillpef filllap',
+       'TwoRows')
 
 spectra = 'rtoc | fft3 axis=1 pad=1 | math output="abs(input)" | real'
 
