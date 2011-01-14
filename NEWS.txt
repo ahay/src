@@ -26,6 +26,8 @@ To the reproducible documents collection:
 * sep/lines: Random lines in a plane (Claerbout)
 * hansung/cgg: Conjugate guided gradient (CGG) method for robust
   inversion and its application to velocity-stack inversion (Ji)
+* sep/texture: Texture synthesis and prediction error filtering
+  (Brown)
 * Grave directory for papers that are no longer reproducible
 
 To SCons:
