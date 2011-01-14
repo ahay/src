@@ -88,30 +88,8 @@ def gridandstack(stack,files,np,
 
     if shots:
 
-        def buildShotlist(target,source,env):
-            shots = env['SHOTLIST']
-            Fshotlist = open(str(target[0]),'w')
-            for shot in shots:
-                Fshotlist.write(str(shot)+'\n')
-            Fshotlist.write('data_format=ascii_int\n')
-            Fshotlist.write('esize=4\n')
-            Fshotlist.write('in=./%s\n' % str(target[0]))
-            Fshotlist.write('n1=%d\n' % len(shots))
-            Fshotlist.write('o1=0\n')
-            Fshotlist.write('d1=1\n')
-            Fshotlist.close()
-
-        bld = Builder(action= buildShotlist,
-                      suffix='.asc')
-
-        proj = Project()
-        proj.Append(BUILDERS = {'ShotList' : bld})
-
         shotfile = stack+'-shots'
-        proj.ShotList(shotfile,None,SHOTLIST=shots)
-
-        if not '.asc' in shotfile:
-            shotfile += '.asc'
+        Flow(shotfile,None,'points x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
         files.append(shotfile)
         Flow(stack,files,
             '''
