@@ -57,6 +57,8 @@ plprefix = 'vp'                 # prefix for vpl commands
 sfsuffix = '.rsf'               # suffix for rsf files
 vpsuffix = '.vpl'               # suffix for vplot files
 
+RSFROOT = rsfprog.RSFROOT       # get root directory of Madagascar installation
+
 ###############################################################################
 
 def handler(signum, frame):
@@ -275,6 +277,10 @@ def main(argv=sys.argv):
     if 'skiplist' in l: skiplist = l['skiplist']
     else:               skiplist = []
         
+################    get list of tools installed in $RSFROOT
+
+    tool_list = os.listdir(os.path.join(RSFROOT,"bin"))
+
 ################    search directory tree
 
     if (list == 'all') or (list == 'filter'):
@@ -317,6 +323,10 @@ def main(argv=sys.argv):
                 string = "   *********  .rsfproj error   *********  %s\n"
                 sys.stdout.write(string % root)
                 sys.stdout.flush()
+                
+            tools = 'yes'
+            for item in uses_list:
+                if (item not in tool_list): tools = 'no '
 
                                                 # calculate directory filter
             options = (skiplist,rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local)
