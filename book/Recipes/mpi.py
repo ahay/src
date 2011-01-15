@@ -151,6 +151,7 @@ def stack(stack,np,fprefix,nf,of,jf):
         nf=%d
         of=%d
         jf=%d
+        seq=y
         ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
         ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
 
