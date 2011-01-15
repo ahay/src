@@ -72,10 +72,8 @@ void sf_llist_add(sf_list l, float *g, double gn)
 {    
     l->current->g = g;
     l->current->gn = gn;
-    l->current->next = (struct Entry *) sf_alloc(1,sizeof(struct Entry)); // never deallocated
+    l->current->next = (struct Entry *) sf_alloc(1,sizeof(struct Entry)); /* never deallocated */
     l->depth++;
-	//fprintf(stderr,"\n add depth = %d",l->depth);
-
 }
 
 void sf_llist_down(sf_list l, float **g, double *gn)
@@ -94,8 +92,7 @@ void sf_llist_close(sf_list l)
     depth = l->depth;
 
     for (i=0; i < depth; i++) {
-    	//fprintf(stderr,"\n del depth = %d",l->depth);
-    	sf_llist_chop(l);
+	sf_llist_chop(l);
     }
 
     free(l->first);
@@ -105,7 +102,7 @@ void sf_llist_close(sf_list l)
 void sf_llist_chop(sf_list l) 
 /*< free the top entry from the list >*/
 {
-    sf_llist_rewind(l); // l->current = l->first;
+    sf_llist_rewind(l); 
 
     l->first = l->current->next;
     if (NULL != l->current->g)

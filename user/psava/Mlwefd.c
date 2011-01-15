@@ -208,8 +208,8 @@ int main(int argc, char* argv[])
         sf_setd(at,dt*jsnap);
         if(verb) sf_raxa(at);
 
-//	sf_setn(at,nt/jsnap);
-//	sf_setd(at,dt*jsnap);
+/*	sf_setn(at,nt/jsnap);
+	sf_setd(at,dt*jsnap); */
 
 	sf_oaxa(Fwfl,ac1,1);
 	sf_oaxa(Fwfl,ac2,2);

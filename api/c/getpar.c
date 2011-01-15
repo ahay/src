@@ -60,22 +60,19 @@ void sf_init(int argc,char *argv[])
     struct passwd* pass;
     struct utsname uhost;
     FILE *fp;
-    size_t len;
-    char *rsf, sfdoc[PATH_MAX], cwd[PATH_MAX], *pwd;
+    size_t len, prog_len;
+    char *rsf, sfdoc[PATH_MAX], cwd[PATH_MAX], *pwd, *tprog;
     extern void sf_close(void);
 
     pars = sf_simtab_init (argc);
 
     /* set prog */
-    char* tprog = strrchr(argv[0],'/');
+    tprog = strrchr(argv[0],'/');
     tprog = (NULL == tprog)? argv[0]:tprog+1;
-    size_t prog_len = strlen(tprog) + 1;
+    prog_len = strlen(tprog) + 1;
     prog = sf_charalloc(prog_len);
     strcpy(prog,tprog);
     
-    //prog = strrchr(argv[0],'/');
-    //prog = (NULL == prog)? argv[0]:prog+1;
-
     /* no pars and input from terminal */
     if (1==argc && !sf_stdin()) {
 	/* selfdoc and exit */
