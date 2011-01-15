@@ -877,7 +877,7 @@ static void update2 (int p1, int p2, int p3, float* tj, unsigned char* mj, float
 
 void update2old (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
 {
-    float b, c, t1, t2, u, d3r=d3*s*rsv;
+    float b, c, t1=0., t2=0., u, d3r=d3*s*rsv;
     float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
     float aaa1,bbb1,m1,m2,m3;
     double tp1,tp2,den,tpp1,tpp2,delta=0;
