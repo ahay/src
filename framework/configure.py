@@ -1620,7 +1620,9 @@ def java(context):
         need_pkg('java-devel')
     
     context.Message("checking for JAVA_HOME ... ")
-    JAVA_HOME = context.env.get('JAVA_HOME',os.environ.get('JAVA_HOME'))
+    JAVA_HOME = context.env.get('JAVA_HOME',
+                                os.environ.get('JAVA_HOME',
+                                               '/usr/lib/jvm/java-6-openjdk'))
     if not JAVA_HOME:  # Check for JAVA_SDK as well, Mac fix
         JAVA_HOME = context.env.get('JAVA_SDK',os.environ.get('JAVA_SDK'))
     if JAVA_HOME:

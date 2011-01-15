@@ -212,15 +212,18 @@ fdm3d fdutil3d_init(bool verb_,
 int omp_init()
 /*< init OMP parameters >*/
 {
-    int ompnth,ompath;
-    int ompchunk;
+#ifdef _OPENMP
+    int ompath;
+#endif
+    int ompnth,ompchunk;
     
-    /* OMP data chunk size */
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
+    /* OMP data chunk size */
+
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OMP available threads */
 
 #ifdef _OPENMP
-    /* OMP available threads */
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
 #pragma omp parallel
     ompath=omp_get_num_threads();
     if(ompnth<1) ompnth=ompath;

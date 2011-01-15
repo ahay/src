@@ -2,16 +2,16 @@
 
 warning()
 {
-    echo -e "\033[1m" # bold
-    echo -n $1
-    echo -e "\033[0m\n" # end highlighting
+    /bin/echo -e "\033[1m" # bold
+    /bin/echo -n $1
+    /bin/echo -e "\033[0m\n" # end highlighting
 }
 
 fatal_error()
 {
-    echo -e "\033[41m\033[93m " # yellow on red background
-    echo -n $1
-    echo -e "\033[0m" # end highlighting
+    /bin/echo -e "\033[41m\033[93m " # yellow on red background
+    /bin/echo -n $1
+    /bin/echo -e "\033[0m" # end highlighting
 }
 
 findprog ()

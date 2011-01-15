@@ -277,8 +277,8 @@ main (int argc,char **argv)
 	x1curve[j]=sf_floatalloc(npair[j]);
 	x2curve[j]=sf_floatalloc(npair[j]);
 	for (i=0; i<npair[j]; i++) {
-	    (void) fscanf(curvefp,"%f",&x1curve[j][i]);
-	    (void) fscanf(curvefp,"%f",&x2curve[j][i]);
+	    if (EOF == fscanf(curvefp,"%f",&x1curve[j][i])) sf_error("%s: scan error:",__FILE__);
+	    if (EOF == fscanf(curvefp,"%f",&x2curve[j][i])) sf_error("%s: scan error:",__FILE__);
 	}
 	fclose(curvefp);
     }

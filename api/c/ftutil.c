@@ -374,7 +374,9 @@ void sf_ompfft3a1(bool inv           /* inverse/forward flag */,
 	/* IFT 1 */
 	for    (i3=0; i3 < fft->n3; i3++) {
 	    for(i2=0; i2 < fft->n2; i2++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft(fft->invs[ompith],pp[i3][i2],pp[i3][i2]);
 	    }
 	}
@@ -401,7 +403,9 @@ void sf_ompfft3a1(bool inv           /* inverse/forward flag */,
 	/* FFT 1 */
 	for    (i3=0; i3 < fft->n3; i3++) {
 	    for(i2=0; i2 < fft->n2; i2++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft(fft->forw[ompith],pp[i3][i2],pp[i3][i2]);
 	    }
 	}
@@ -475,7 +479,9 @@ void sf_ompfft3a2(bool inv           /* inverse/forward flag */,
 	/* IFT 2 */
 	for    (i3=0; i3 < fft->n3; i3++) {
 	    for(i1=0; i1 < fft->n1; i1++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft_stride(fft->invs[ompith],
 				pp[i3][0]+i1,
 				fft->trace[ompith],fft->n1);
@@ -507,7 +513,9 @@ void sf_ompfft3a2(bool inv           /* inverse/forward flag */,
 	/* FFT 2 */
 	for    (i3=0; i3 < fft->n3; i3++) {
 	    for(i1=0; i1 < fft->n1; i1++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft_stride(fft->forw[ompith],
 				pp[i3][0]+i1,
 				fft->trace[ompith],fft->n1);
@@ -586,7 +594,9 @@ void sf_ompfft3a3(bool inv           /* inverse/forward flag */,
 	/* IFT 3 */
 	for    (i2=0; i2 < fft->n2; i2++) {
 	    for(i1=0; i1 < fft->n1; i1++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft_stride(fft->invs[ompith],
 				pp[0][0]+i1+i2*fft->n1,
 				fft->trace[ompith],fft->n1*fft->n2);
@@ -618,7 +628,9 @@ void sf_ompfft3a3(bool inv           /* inverse/forward flag */,
 	/* FFT 3 */
 	for    (i2=0; i2 < fft->n2; i2++) {
 	    for(i1=0; i1 < fft->n1; i1++) {
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 		kiss_fft_stride(fft->forw[ompith],
 				pp[0][0]+i1+i2*fft->n1,
 				fft->trace[ompith],fft->n1*fft->n2);
