@@ -283,8 +283,8 @@ static void update (int p1, int p2, int p3, float* tk, float* tj, unsigned char*
 {
     float r, b, c, t1=0, t2=0, u, d3r= d3*s*rsv, b2;
     float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
-    float A0,A1,A2,A3,A4,m1,m2,m3,tp4,tpA,tp;
-    double tp1,tp2,tp3,den;
+    float A0,A1,A2,A3,A4,m1,m2,m3,tp4,tpA,tp=0.;
+    double tp1,tp2,tp3,den=0.;
     unsigned int k, i;
     int getin=0;
 
@@ -616,10 +616,10 @@ void updateold (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv,
 
 void updateh (int p1, int p2, int p3, float* tj, char* mj, float s, float rsv, float eta)
 {
-    float r, b, c, t1, t2, u, d3r= d3*s*rsv, b2;
+    float r, b, c, t1=0., t2=0., u, d3r= d3*s*rsv, b2;
     float d3rr,c1,b1,f,g,gg,ggg,gggg,ggggg,ff,f1;
     float m1,m2,m3,tpA;
-    double tp1,tp2,tp3,tp4,den;
+    double tp1,tp2,tp3=0.,tp4=0.,den;
     unsigned int k, i;
 
     dd[4] = 1./d3r;
