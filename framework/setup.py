@@ -24,8 +24,8 @@ except ImportError:
     sys.stderr.write('Could not import distutils.\n\n')
     sys.exit(1)
 
-setup(name='murr',
-      version='0.9.9-1',
+setup(name='madagascar-framework',
+      version='1.2-1',
       maintainer='Sergey Fomel',
       maintainer_email='sergey.fomel@gmail.com',
       url='http://www.ahay.org/',
