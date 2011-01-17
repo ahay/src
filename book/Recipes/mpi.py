@@ -121,7 +121,7 @@ def gridandstack(stack,files,np,
                     shots="%s"
                     ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
                     '''
-                    prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',mpi=True,nodes=nodes,ppn=ppn,nodes=nodes,np=np,mpiopts=mpiopts)
+                    prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',mpi=True,nodes=nodes,ppn=ppn,np=np,mpiopts=mpiopts)
         else:
             Flow(stack,files,
                 '''
