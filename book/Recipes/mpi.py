@@ -105,9 +105,8 @@ def gridandstack(stack,files,np,
         oprefix += '.rsf'
 
     if shots:
-
         shotfile = stack+'-shots'
-        Flow(shotfile,None,'points x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
+        Flow(shotfile,None,'points out=${TARGETS[0]} x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
         files.append(shotfile)
         if mpi:
             Flow(stack,files,
