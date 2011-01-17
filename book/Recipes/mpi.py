@@ -35,7 +35,7 @@ def encode(encodings, shotGathers, encoding,
            np, 
            eprefix, dprefix,
            nx,ox,dx,ny,oy,dy,custom,
-           mpi=True,time=1,nodes=4,ppn=8,mpiopts=None):
+           mpi=None,time=None,nodes=None,ppn=None,mpiopts=None):
     ''' encode using sfbigmpiencode
     encodings - list of produced encoding files
     shotGathers - lsit of shotgathers to encode
@@ -83,7 +83,7 @@ def gridandstack(stack,files,np,
                 nz,oz,dz,
                 nf=None,of=None,jf=None,
                 shots=None,
-                mpi=True,time=1,nodes=4,ppn=8,mpiopts=None):
+                mpi=None,time=None,nodes=None,ppn=None,mpiopts=None):
     ''' stack files using sfbigencode, does not require files
     to be on the same cube, will relocate them in the cube
     
@@ -173,7 +173,7 @@ def gridandstack(stack,files,np,
                 prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',
                 mpi=True,ppn=ppn,nodes=nodes,mpiopts=mpiopts,time=time,np=np)
         
-def stack(stack,np,fprefix,nf,of,jf,mpi=False,time=1,ppn=8,nodes=4,mpiopts=None):
+def stack(stack,np,fprefix,nf,of,jf,mpi=None,time=None,ppn=None,nodes=None,mpiopts=None):
     ''' stack files using sfmpistack
     
     stack - output file
