@@ -1,7 +1,9 @@
 try:
     from rsf.cluster import *
+    cluster = True
 except:
     from rsf.proj import *
+    cluster = False
 import os
 
 
@@ -49,7 +51,7 @@ def encode(encodings, shotGathers, encoding,
     if not '.rsf' in dprefix:
         dprefix +='.rsf'
     shotGathers.insert(0,encoding) 
-    if mpi:
+    if mpi and cluster:
         Flow(encodings, shotGathers,
             '''
             sfbigmpiencode
@@ -105,10 +107,13 @@ def gridandstack(stack,files,np,
         oprefix += '.rsf'
 
     if shots:
-        shotfile = stack+'-shots.rsf'
-        Flow(shotfile,None,'points out=${TARGETS[0]} x=%s | transp plane=12' % reduce(lambda x,y: str(x)+','+str(y),shots))
+        shotfile = stack+'-shots'
+        Flow(shotfile+'_',None,'points out=${TARGETS[0]} x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
+        Flow(shotfile,shotfile+'_','transp plane=12')
+       
+        shotfile += '.rsf'
         files.append(shotfile)
-        if mpi:
+        if mpi and cluster:
             Flow(stack,files,
                     '''
                     sfbigmpistack
