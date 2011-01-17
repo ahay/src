@@ -32,7 +32,8 @@ def _find(np,command,custom=''):
 def encode(encodings, shotGathers, encoding, 
            np, 
            eprefix, dprefix,
-           nx,ox,dx,ny,oy,dy,custom):
+           nx,ox,dx,ny,oy,dy,custom,
+           mpi=True,time=1,nodes=4,ppn=8,mpiopts=None):
     ''' encode using sfbigmpiencode
     encodings - list of produced encoding files
     shotGathers - lsit of shotgathers to encode
@@ -48,25 +49,39 @@ def encode(encodings, shotGathers, encoding,
     if not '.rsf' in dprefix:
         dprefix +='.rsf'
     shotGathers.insert(0,encoding) 
-    Flow(encodings, shotGathers,
-        '''
-        %s
-        ''' % (_find(np,'sfbigmpiencode',custom)) + 
-        ''' eprefix=''' + eprefix + 
-        ''' dprefix=''' + dprefix + 
-        '''
-        encode=${SOURCES[0]}
-        nx=%d ox=%f dx=%f
-        ny=%d oy=%f dy=%f
-        ''' % (nx,ox,dx,ny,oy,dy) ,stdin=0, stdout=-1)
-        
+    if mpi:
+        Flow(encodings, shotGathers,
+            '''
+            sfbigmpiencode
+            ''' + 
+            ''' eprefix=''' + eprefix + 
+            ''' dprefix=''' + dprefix + 
+            '''
+            encode=${SOURCES[0]}
+            nx=%d ox=%f dx=%f
+            ny=%d oy=%f dy=%f
+            ''' % (nx,ox,dx,ny,oy,dy), mpi=True,time=time,nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+    else: 
+        Flow(encodings, shotGathers,
+            '''
+            %s
+            ''' % (_find(np,'sfbigmpiencode',custom)) + 
+            ''' eprefix=''' + eprefix + 
+            ''' dprefix=''' + dprefix + 
+            '''
+            encode=${SOURCES[0]}
+            nx=%d ox=%f dx=%f
+            ny=%d oy=%f dy=%f
+            ''' % (nx,ox,dx,ny,oy,dy) ,stdin=0, stdout=-1)
+            
 def gridandstack(stack,files,np,
                 fprefix,
                 nx,ox,dx,
                 ny,oy,dy,
                 nz,oz,dz,
                 nf=None,of=None,jf=None,
-                shots=None):
+                shots=None,
+                mpi=True,time=1,nodes=4,ppn=8,mpiopts=None):
     ''' stack files using sfbigencode, does not require files
     to be on the same cube, will relocate them in the cube
     
@@ -94,37 +109,66 @@ def gridandstack(stack,files,np,
         shotfile = stack+'-shots'
         Flow(shotfile,None,'points x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
         files.append(shotfile)
-        Flow(stack,files,
-            '''
-            %s 
-            ''' % (_find(np,'sfbigmpistack')) +
-            '''
-            nx=%d ny=%d nz=%d
-            ox=%f oy=%f oz=%d
-            dx=%f dy=%f dz=%f
-            shots="%s"
-            ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
-            '''
-            prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
+        if mpi:
+            Flow(stack,files,
+                    '''
+                    sfbigmpistack
+                    ''' + 
+                    '''
+                    nx=%d ny=%d nz=%d
+                    ox=%f oy=%f oz=%d
+                    dx=%f dy=%f dz=%f
+                    shots="%s"
+                    ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
+                    '''
+                    prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',mpi=True,nodes=nodes,ppn=ppn,nodes=nodes,np=np,mpiopts=mpiopts)
+        else:
+            Flow(stack,files,
+                '''
+                %s 
+                ''' % (_find(np,'sfbigmpistack')) +
+                '''
+                nx=%d ny=%d nz=%d
+                ox=%f oy=%f oz=%d
+                dx=%f dy=%f dz=%f
+                shots="%s"
+                ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
+                '''
+                prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
 
     else:
         if (not of) or (not jf) or (not nf):
             raise Exception('must specify either shots or nf,of,jf')
-        Flow(stack,files,
-            '''
-            %s 
-            ''' % (_find(np,'sfbigmpistack')) +
-            '''
-            nx=%d ny=%d nz=%d
-            ox=%f oy=%f oz=%d
-            dx=%f dy=%f dz=%f
-            nf=%d of=%d jf=%d
-            ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
-            '''
-            prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
-     
+
+        if not mpi:
+            Flow(stack,files,
+                '''
+                %s 
+                ''' % (_find(np,'sfbigmpistack')) +
+                '''
+                nx=%d ny=%d nz=%d
+                ox=%f oy=%f oz=%d
+                dx=%f dy=%f dz=%f
+                nf=%d of=%d jf=%d
+                ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
+                '''
+                prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
+        else:
+             Flow(stack,files,
+                '''
+                %s 
+                ''' % (_find(np,'sfbigmpistack')) +
+                '''
+                nx=%d ny=%d nz=%d
+                ox=%f oy=%f oz=%d
+                dx=%f dy=%f dz=%f
+                nf=%d of=%d jf=%d
+                ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,nf,of,jf) + 
+                '''
+                prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',
+                mpi=True,ppn=ppn,nodes=nodes,mpiopts=mpiopts,time=time,np=np)
         
-def stack(stack,np,fprefix,nf,of,jf):
+def stack(stack,np,fprefix,nf,of,jf,mpi=False,time=1,ppn=8,nodes=4,mpiopts=None):
     ''' stack files using sfmpistack
     
     stack - output file
@@ -147,14 +191,26 @@ def stack(stack,np,fprefix,nf,of,jf):
     oname = stack
     if not '.rsf' in oname:
         oname += '.rsf'
-        
-    Flow(stack,files,
-        '''
-        %s
-        nf=%d
-        of=%d
-        jf=%d
-        seq=y
-        ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
-        ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
+    if mpi:
+        Flow(stack,files,
+            '''
+            %s
+            nf=%d
+            of=%d
+            jf=%d
+            seq=y
+            ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
+            ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',mpi=True,
+            np=np,time=time,nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+
+    else:
+        Flow(stack,files,
+            '''
+            %s
+            nf=%d
+            of=%d
+            jf=%d
+            seq=y
+            ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
+            ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',stdin=0, stdout=-1)
 
