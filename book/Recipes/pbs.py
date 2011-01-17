@@ -1,4 +1,7 @@
-from rsf.proj import *
+try:
+    from rsf.cluster import *
+except:
+    from rsf.proj import *
 
 ''' 
 A series of functions that are used by the sfpbswrap program for
