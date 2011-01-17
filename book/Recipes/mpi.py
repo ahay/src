@@ -106,7 +106,7 @@ def gridandstack(stack,files,np,
 
     if shots:
         shotfile = stack+'-shots.rsf'
-        Flow(shotfile,None,'points out=${TARGETS[0]} x=%s' % reduce(lambda x,y: str(x)+','+str(y),shots))
+        Flow(shotfile,None,'points out=${TARGETS[0]} x=%s | transp plane=12' % reduce(lambda x,y: str(x)+','+str(y),shots))
         files.append(shotfile)
         if mpi:
             Flow(stack,files,
@@ -118,6 +118,7 @@ def gridandstack(stack,files,np,
                     ox=%f oy=%f oz=%d
                     dx=%f dy=%f dz=%f
                     shots="%s"
+                    verb=y
                     ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
                     '''
                     prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',mpi=True,nodes=nodes,ppn=ppn,np=np,mpiopts=mpiopts,time=time)
@@ -131,6 +132,7 @@ def gridandstack(stack,files,np,
                 ox=%f oy=%f oz=%d
                 dx=%f dy=%f dz=%f
                 shots="%s"
+                verb=y
                 ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
                 '''
                 prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',stdin=0,stdout=-1)
