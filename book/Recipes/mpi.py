@@ -31,7 +31,43 @@ def _find(np,command,custom=''):
     ''' Find the mpiexec command, and the command to execute '''
     return '%s -np %d %s %s' % (WhereIs('mpiexec'),np,custom,WhereIs(command))
 
-def encode(encodings, shotGathers, encoding, 
+
+def encode(encodings,shotGathers,encoding,
+           np, eprefix,dprefix,mpi=None,time=None,nodes=None,ppn=None,mpiopts=None):
+
+           ''' encode using sfmpiencode.
+
+           '''
+
+    if not '.rsf' in eprefix: eprefix += '.rsf'
+
+    if not '.rsf' in dprefix: dprefix += '.rsf'
+
+    shotGathers.insert(0,encoding)
+
+
+    if mpi:
+        Flow(encodings,shotGathers,
+            '''
+            sfmpiencode
+            ''' + 
+            '''eprefix='''+eprefix+''' dprefix=''' + dprefix + 
+            '''
+            encode=${SOURCES[0]}
+            verb=y
+            ''')
+    else:
+        Flow(encodings,shotGathers,
+            '''
+            %s
+            ''' _find(np,'sfmpiencode','--bynode') + 
+            '''eprefix='''+eprefix+''' dprefix=''' + dprefix + 
+            '''
+            encode=${SOURCES[0]}
+            verb=y
+            ''')
+
+def gridandencode(encodings, shotGathers, encoding, 
            np, 
            eprefix, dprefix,
            nx,ox,dx,ny,oy,dy,custom,
