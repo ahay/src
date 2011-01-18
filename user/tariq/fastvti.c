@@ -1267,7 +1267,7 @@ static void update3 (int p1, int p2, int p3, float* tj, unsigned char* mj, float
     float b, c, t1=0., t2=0., u, d3r=d3*s*rsv;
     float d3rr,c1,b1,g,gg,ggg,gggg,ggggg,ff;
     float aaa1,bbb1,m1,m2,m3;
-    double tp1,tp2,den;
+    double tp1,tp2,den=0.;
     unsigned int k, i;
     double aaa,bbb,ccc,ddd,ddd1;
     unsigned int jjj;
