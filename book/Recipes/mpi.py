@@ -34,17 +34,16 @@ def _find(np,command,custom=''):
 
 def encode(encodings,shotGathers,encoding,
            np, eprefix,dprefix,mpi=None,time=None,nodes=None,ppn=None,mpiopts=None):
+    ''' 
+    encode using sfmpiencode.
 
-           ''' encode using sfmpiencode.
-
-           '''
+    '''
 
     if not '.rsf' in eprefix: eprefix += '.rsf'
 
     if not '.rsf' in dprefix: dprefix += '.rsf'
 
     shotGathers.insert(0,encoding)
-
 
     if mpi:
         Flow(encodings,shotGathers,
@@ -55,7 +54,7 @@ def encode(encodings,shotGathers,encoding,
             '''
             encode=${SOURCES[0]}
             verb=y
-            ''')
+            ''',mpi=True,np=np,nodes=nodes,time=time,ppn=ppn,mpiopts=mpiopts)
     else:
         Flow(encodings,shotGathers,
             '''
