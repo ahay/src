@@ -235,12 +235,12 @@ def stack(stack,np,fprefix,nf,of,jf,shots=None,mpi=None,time=None,ppn=None,nodes
     if mpi:
         Flow(stack,files,
             '''
-            %s
+            sfmpistack
             nf=%d
             of=%d
             jf=%d
             seq=y
-            ''' % (_find(np,'sfmpistack'),nf,of,jf) + 
+            ''' % (nf,of,jf) + 
             ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',mpi=True,
             np=np,time=time,nodes=nodes,ppn=ppn,mpiopts=mpiopts)
 
