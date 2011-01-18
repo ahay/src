@@ -590,7 +590,7 @@ DocCmd: %s
         file.write(contents)
         file.close()
     def html(self,dir,rep):
-        file = open (os.path.join(dir,self.name + '.html'),'w')
+        hfile = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
             name = name + " (%s)" % self.vers
@@ -603,28 +603,25 @@ DocCmd: %s
                            '<a href="%s/%s?view=markup">%s</a>%s' %
                            (rep,self.file,self.file,wiki))
         if self.desc:
-            contents = contents + self.desc
+            contents += self.desc
         if self.snps:
-            contents = contents + \
-                       bigsection('Synopsis','#fffff', '#aa55cc',self.snps)
+            contents += bigsection('Synopsis','#fffff', '#aa55cc',self.snps)
         if self.cmts:
-            contents = contents + self.cmts.replace('\n','<br>\n')
+            contents += self.cmts.replace('\n','<br>\n')
         pars =  self.pars.keys()
         if pars:
             pars.sort()
             pardoc = ''
             bgcol = '#ffc8d8'
             for par in pars:
-                pardoc = pardoc + \
-                         heading(self.pars[par].html(par),'#000000', bgcol,
-                                 self.pars[par].desc.replace('\n','<br>\n'),
-                                 add='') + '\n'
+                pardoc += heading(self.pars[par].html(par),'#000000', bgcol,
+                                  self.pars[par].desc.replace('\n','<br>\n'),
+                                  add='') + '\n'
                 if bgcol=='#ffc8d8':
                     bgcol ='#f0f0f8'
                 else:
                     bgcol = '#ffc8d8'
-            contents = contents + \
-                       bigsection('Parameters','#ffffff', '#ee77aa',pardoc)
+            contents += bigsection('Parameters','#ffffff', '#ee77aa',pardoc)
         books = self.uses.keys()
         if books:
             usedoc = ''
@@ -636,15 +633,13 @@ DocCmd: %s
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
                         proj = os.path.join(chapter,project)
-                        bookdoc = bookdoc + '''
+                        bookdoc += '''
                         <a href="book/%s/%s.html">%s</a><br>
                         ''' % (book,proj,proj)
-                usedoc = usedoc + \
-                         bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
-            contents = contents + \
-                       bigsection('Used In','#ffffff', '#eeaa77',usedoc)
-        file.write(page(self.name,contents))
-        file.close()
+                usedoc += bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
+            contents += bigsection('Used In','#ffffff', '#eeaa77',usedoc)
+        hfile.write(page(self.name,contents))
+        hfile.close()
 
 comment = None
 param = None
