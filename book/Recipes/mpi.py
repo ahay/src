@@ -59,7 +59,7 @@ def encode(encodings,shotGathers,encoding,
         Flow(encodings,shotGathers,
             '''
             %s
-            ''' _find(np,'sfmpiencode','--bynode') + 
+            ''' % _find(np,'sfmpiencode','--bynode') + 
             '''eprefix='''+eprefix+''' dprefix=''' + dprefix + 
             '''
             encode=${SOURCES[0]}
