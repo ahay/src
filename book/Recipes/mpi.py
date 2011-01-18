@@ -86,7 +86,7 @@ def gridandencode(encodings, shotGathers, encoding,
     if not '.rsf' in dprefix:
         dprefix +='.rsf'
     shotGathers.insert(0,encoding) 
-    if mpi and cluster:
+    if mpi :
         Flow(encodings, shotGathers,
             '''
             sfbigmpiencode
@@ -147,7 +147,7 @@ def gridandstack(stack,files,np,
        
         shotfile += '.rsf'
         files.append(shotfile)
-        if mpi and cluster:
+        if mpi:
             Flow(stack,files,
                     '''
                     sfbigmpistack
@@ -197,7 +197,7 @@ def gridandstack(stack,files,np,
              Flow(stack,files,
                 '''
                 %s 
-                ''' % (_find(np,'sfbigmpistack')) +
+                ''' % ('sfbigmpistack') +
                 '''
                 nx=%d ny=%d nz=%d
                 ox=%f oy=%f oz=%d
