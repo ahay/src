@@ -4,8 +4,7 @@ Import('env bindir libdir pkgdir shrdir srcdir')
 
 sys.path.insert(0,os.path.join(srcdir,'build/framework'))
 
-env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
-                'PYTHONPATH':sys.path})
+env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH')})
 env.Prepend(ENV={'PYTHONPATH':pkgdir})
 
 txtdir = os.path.join(shrdir,'txt')
