@@ -13,7 +13,6 @@ provide
     * a convenient and powerful environment
     * a convenient technology transfer tool 
 
-
 for researchers working with digital image and data processing in
 geophysics and related fields. Technology developed using the
 Madagascar project management system is transferred in the form of
@@ -24,8 +23,8 @@ be verified, exchanged, and modified by users of the system.
 Design Principles
 =================
 
-* Madagascar is a modern package. Started in 2003, and publicly released in
-2006 it was developed entirely from scratch. Being a relatively new package,
+* Madagascar is a modern package. Started in 2003 and publicly released in
+2006, it was developed entirely from scratch. Being a relatively new package,
 it follows modern software engineering practices such as module
 encapsulation and test-driven development. A rapid development of a project
 of this scope (more than 300 main programs and more than 3,000 tests) would
@@ -95,5 +94,5 @@ Levin, Rick Ottolini, Joe Dellinger, Steve Cole, Dave Nichols, Martin
 Karrenbach, Biondo Biondi, and Bob Clapp.
 
 Madagascar was started, under the name RSF (Regularly Sampled Format)
-by Sergey Fomel in 2003. Since then, several other people have
+by Sergey Fomel in 2003. Since then, many other people have
 contributed to it. See the AUTHORS.txt file for an incomplete list.
