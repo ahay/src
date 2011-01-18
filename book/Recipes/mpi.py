@@ -173,7 +173,7 @@ def gridandstack(stack,files,np,
                 prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',
                 mpi=True,ppn=ppn,nodes=nodes,mpiopts=mpiopts,time=time,np=np)
         
-def stack(stack,np,fprefix,nf,of,jf,mpi=None,time=None,ppn=None,nodes=None,mpiopts=None):
+def stack(stack,np,fprefix,nf,of,jf,shots=None,mpi=None,time=None,ppn=None,nodes=None,mpiopts=None):
     ''' stack files using sfmpistack
     
     stack - output file
@@ -196,6 +196,7 @@ def stack(stack,np,fprefix,nf,of,jf,mpi=None,time=None,ppn=None,nodes=None,mpiop
     oname = stack
     if not '.rsf' in oname:
         oname += '.rsf'
+
     if mpi:
         Flow(stack,files,
             '''
