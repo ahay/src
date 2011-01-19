@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     const float eps=1.e-5;
     size_t len;
     char *label, *unit, *labels[3], *title, key[8];
-    bool uflag, dflag, norm, axis, axis1, axis2, axis3;
+    bool uflag, dflag, norm, axis, axis1, axis2, axis3, wanttitle;
     sf_file in=NULL;
 
     sf_init(argc,argv);
@@ -103,9 +103,15 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (NULL == (title = sf_getstring("title")) && 
-	NULL == (title = sf_histstring(in,"title")))
+    if (!sf_getbool("wanttitle",&wanttitle)) wanttitle=true;
+
+    if (wanttitle && 
+	NULL == (title = sf_getstring("title")) && 
+	NULL == (title = sf_histstring(in,"title"))) {
 	title = sf_histstring(in,"in");
+    } else {
+	title = NULL;
+    }
 
     if (sf_getfloat("tpow",&tt) && 0. != tt) {
 	/*< tpow=0 time power gain >*/
