@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+Fetch('Nshots.su','nankai')
+
+Flow('shots tshots','Nshots.su','suread suxdr=y tfile=${TARGETS[1]} | window min1=5')
+
+Flow('shots2 smask','shots','intbin mask=${TARGETS[1]} xk=tracf yk=fldr')
+
+Result('smask',
+       '''
+       dd type=float |
+       stack axis=1 norm=n |
+       graph symbol=x title="Nankai Trough"
+       label2="Traces per Shot Gather" 
+       ''')
+
+End()

@@ -165,6 +165,14 @@ int main (int argc, char* argv[])
 	mask = sf_output(header);
 	sf_putint(mask,"n1",nx);
 	sf_putint(mask,"n2",ny);
+	sf_putint (mask,"o1",xmin);
+	sf_putint (mask,"o2",ymin);
+	sf_putint (mask,"d1",1);
+	sf_putint (mask,"d2",1);
+	sf_putstring (mask,"unit1","");
+	sf_putstring (mask,"unit2","");
+	sf_putstring (mask,"label1",(NULL==xk)? "":xk);
+	sf_putstring (mask,"label2",(NULL==yk)? "":yk);
 	sf_settype(mask,SF_INT);
 
 	for (iy=0; iy < ny; iy++) {

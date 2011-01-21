@@ -78,6 +78,8 @@ int main(int argc, char* argv[])
     divn_init(1, n1, &n1, &rect, niter, verb);
 
     for (i2=0; i2 < n2; i2++) {
+	if (!verb) sf_warning("trace %d of %d;",i2+1,n2);
+
 	sf_floatread(trace,n1,inp);
 
 	sf_hilbert(trace,hilbt);
@@ -124,6 +126,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(sim1,n1,sim);
 	}
     }
+    if (!verb) sf_warning(".");
 
     exit(0);
 }
