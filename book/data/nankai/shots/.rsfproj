@@ -1,3 +1,3 @@
-uses=['sfsuread', 'sfwindow', 'sfintbin', 'sfdd', 'sfstack', 'sfgraph']
+uses=['sfsuread', 'sfwindow', 'sfintbin', 'sfdd', 'sfstack', 'sfgraph', 'sfheaderwindow', 'sfwiggle', 'sfspectra', 'sfgrey', 'sfbandpass']
 data=['data/nankai/Nshots.su']
-size=  505638724
+size=  673637116

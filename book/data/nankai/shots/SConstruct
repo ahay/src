@@ -1,8 +1,14 @@
 from rsf.proj import *
 
+# Download data
+
 Fetch('Nshots.su','nankai')
 
+# Convert to RSF
+
 Flow('shots tshots','Nshots.su','suread suxdr=y tfile=${TARGETS[1]} | window min1=5')
+
+# Extract shots
 
 Flow('shots2 smask','shots','intbin mask=${TARGETS[1]} xk=tracf yk=fldr')
 
@@ -12,6 +18,47 @@ Result('smask',
        stack axis=1 norm=n |
        graph symbol=x title="Nankai Trough"
        label2="Traces per Shot Gather" 
+       ''')
+
+Flow('offset','tshots',
+     'window n1=1 f1=11 squeeze=n | dd type=float | intbin head=$SOURCE xk=tracf yk=fldr')
+
+# Display individual shots
+
+for fldr in (1707,1847):
+    shot = 'shot%d' % fldr
+    offset = 'offset%d' % fldr
+    mask = 'mask%d' % fldr
+
+    Flow(mask,'smask','window n2=1 min2=%d' % fldr)
+    
+    Flow(shot,['shots2',mask],
+         'window n3=1 min3=%d squeeze=n | headerwindow mask=${SOURCES[1]}' % fldr)
+    Flow(offset,['offset',mask],
+         'window n3=1 min3=%d squeeze=n | headerwindow mask=${SOURCES[1]}' % fldr)
+
+    Result(shot,[shot,offset],
+           '''
+           window min1=5.8 max1=7.8 |
+           wiggle xpos=${SOURCES[1]} yreverse=y transp=y poly=y
+           title="fldr %d" label2=Offset
+           ''' % fldr)
+
+    fx = 'fx%d' % fldr
+    Flow(fx,shot,'spectra')
+    Result(fx,'grey color=j allpos=y title=FX')
+
+# Resample to 4 ms and extract CMPs
+
+Flow('cmps cmask','shots',
+     'bandpass fhi=125 | window j1=2 | intbin mask=${TARGETS[1]} xk=tracf yk=cdp')
+
+Result('cmask',
+       '''
+       dd type=float |
+       stack axis=1 norm=n |
+       graph symbol=x title="Nankai Trough"
+       label2="Traces per CMP Gather" 
        ''')
 
 End()
