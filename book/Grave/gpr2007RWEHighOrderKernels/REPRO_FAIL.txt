@@ -1,0 +1,14 @@
+The FFD method in diving/ directory gives NaNs (Jan 2011):
+
+< migRC-FFD.rsf sfattr
+*******************************************
+    rms =          nan
+  mean =          nan
+2-norm =          nan
+variance =          nan
+std dev =          nan
+    max =    6.0573e+37 at 135 48
+    min =  -6.09455e+37 at 137 48
+nonzero samples = 405000
+total samples = 405000
+*******************************************
