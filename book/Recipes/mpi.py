@@ -208,7 +208,7 @@ def gridandstack(stack,files,np,
                 prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',
                 mpi=True,ppn=ppn,nodes=nodes,mpiopts=mpiopts,time=time,np=np)
         
-def stack(stack,np,fprefix,nf,of,jf,shots=None,mpi=None,time=None,ppn=None,nodes=None,mpiopts=None):
+def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=None,time=None,ppn=None,nodes=None,mpiopts=None):
     ''' stack files using sfmpistack
     
     stack - output file
@@ -232,17 +232,48 @@ def stack(stack,np,fprefix,nf,of,jf,shots=None,mpi=None,time=None,ppn=None,nodes
     if not '.rsf' in oname:
         oname += '.rsf'
 
-    if mpi:
-        Flow(stack,files,
+    if shots:
+        Flow(stack+'-shots',None,
             '''
-            sfmpistack
-            nf=%d
-            of=%d
-            jf=%d
-            seq=y
-            ''' % (nf,of,jf) + 
-            ''' prefix="'''+fprefix + '''" oname="'''+oname+'''"''',mpi=True,
-            np=np,time=time,nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+            points type=i verb=y x=%s 
+            out=${TARGETS[0]}
+            ''' % (','.join(shots)))
+
+    if mpi:
+        if shots:
+            Flow(stack,files,
+                '''
+                sfmpistack
+                ''' + 
+                ''' prefix="'''+fprefix + 
+                '''" oname="'''+oname+'''"''',
+                mpi=True,np=np,time=time,
+                nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+
+
+        elif nf and of and jf:
+            Flow(stack,files,
+                '''
+                sfmpistack
+                nf=%d
+                of=%d
+                jf=%d
+                seq=y
+                ''' % (nf,of,jf) + 
+                ''' prefix="'''+fprefix + 
+                '''" oname="'''+oname+'''"''',
+                mpi=True,np=np,time=time,
+                nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+        elif files:
+            Flow(stack,files,
+                '''
+                sfmpistack
+                ''' + ' '.join( 
+                ''' prefix="'''+fprefix + 
+                '''" oname="'''+oname+'''"''',
+                mpi=True,np=np,time=time,
+                nodes=nodes,ppn=ppn,mpiopts=mpiopts)
+
 
     else:
         Flow(stack,files,
