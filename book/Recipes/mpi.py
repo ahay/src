@@ -241,15 +241,15 @@ def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=Non
 
     if mpi:
         if shots:
+            files.insert(0,stack+'-shots')
             Flow(stack,files,
                 '''
-                sfmpistack
+                sfmpistack shots=${SOURCES[0]}
                 ''' + 
                 ''' prefix="'''+fprefix + 
                 '''" oname="'''+oname+'''"''',
                 mpi=True,np=np,time=time,
                 nodes=nodes,ppn=ppn,mpiopts=mpiopts)
-
 
         elif nf and of and jf:
             Flow(stack,files,
@@ -268,12 +268,11 @@ def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=Non
             Flow(stack,files,
                 '''
                 sfmpistack
-                ''' + ' '.join( 
+                ''' + ' '.join(files) + 
                 ''' prefix="'''+fprefix + 
                 '''" oname="'''+oname+'''"''',
                 mpi=True,np=np,time=time,
                 nodes=nodes,ppn=ppn,mpiopts=mpiopts)
-
 
     else:
         Flow(stack,files,
