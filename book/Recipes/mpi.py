@@ -160,7 +160,8 @@ def gridandstack(stack,files,np,
                     verb=y
                     ''' % (nx,ny,nz,ox,oy,oz,dx,dy,dz,shotfile) + 
                     '''
-                    prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',mpi=True,nodes=nodes,ppn=ppn,np=np,mpiopts=mpiopts,time=time)
+                    prefix="'''+fprefix+'''" oname="'''+oprefix+'''"''',
+                    mpi=True,nodes=nodes,ppn=ppn,np=np,mpiopts=mpiopts,time=time)
         else:
             Flow(stack,files,
                 '''
@@ -221,11 +222,7 @@ def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=Non
     '''
     
 
-    filerange = range(of,of+nf*jf,jf)
-    
-    files = [ fprefix % f for f in filerange]
-    
-    
+   
     if not '.rsf' in fprefix:
         fprefix +='.rsf'
     oname = stack
@@ -237,8 +234,14 @@ def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=Non
             '''
             points type=i verb=y x=%s 
             out=${TARGETS[0]}
-            ''' % (','.join(shots)))
+            ''' % (','.join([str(shot) for shot in shots])))
 
+    else:
+        filerange = range(of,of+nf*jf,jf)
+        
+        files = [ fprefix % f for f in filerange]
+    
+ 
     if mpi:
         if shots:
             files.insert(0,stack+'-shots')
