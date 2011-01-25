@@ -1,4 +1,4 @@
-/* Make right-hand side for fatomo */
+/* Take out traveltime according to receiver location */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -21,6 +21,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool elev;
     int n[SF_MAX_DIM], it, nt, dim, i, is, nshot, **m, rhs, nrhs;
     float **f, **e;
     sf_file in, mask, out;
@@ -42,9 +43,11 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n4",&nshot)) nshot=1;
     nt /= nshot;
 
+    /* read complete timetable */
     f = sf_floatalloc2(nt,nshot);
     sf_floatread(f[0],nt*nshot,in);
 
+    /* read receiver location */
     m = sf_intalloc2(nt,nshot);
     sf_intread(m[0],nt*nshot,mask);
 
