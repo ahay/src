@@ -241,7 +241,6 @@ def stack(stack,np,fprefix,files=None,nf=None,of=None,jf=None,shots=None,mpi=Non
         
         files = [ fprefix % f for f in filerange]
     
- 
     if mpi:
         if shots:
             files.insert(0,stack+'-shots')
