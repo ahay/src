@@ -23,12 +23,15 @@
 #include "fastmarch.h"
 #include "fatomo.h"
 
+#include "l1.h"
+#include "l1step.c"
+
 int main(int argc, char* argv[])
 {
-    bool adj, velocity, plane[3];
-    int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, cgiter, *k;
+    bool adj, velocity, l1norm, plane[3];
+    int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, stiter, *k;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *t, **t0, *s, **source, *rhs, *ds, *gs, air, *x0;
-    float rhsnorm0, rhsnorm, rate, eps;
+    float rhsnorm0, rhsnorm, rate, eps, perc;
     char key[4], *what;
     upgrad upg;
     sf_file sinp, sout, shot, time, reco, rece, topo, grad, norm;
@@ -90,6 +93,9 @@ int main(int argc, char* argv[])
 	    gs   = sf_floatalloc(nt);
 	    flag = sf_intalloc(nt);
 	    
+	    if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
+	    /* norm for minimization (default L2 norm) */
+
 	    /* read in shot file */
 	    if (NULL == sf_getstring("shot"))
 		sf_error("Need source shot=");
@@ -132,12 +138,12 @@ int main(int argc, char* argv[])
 		k = sf_intalloc(nt);
 		sf_intread(k,nt,topo);
 		sf_fileclose(topo);
-
+		
 		x0 = sf_floatalloc(nt);
-
+		
 		if (!sf_getfloat("air",&air)) air = 0.01;
 		/* air velocity (for fixed topo inversion) */
-
+		
 		for (it=0; it < nt; it++) {
 		    if (k[it] == 0) {
 			k[it] = 1;
@@ -147,7 +153,7 @@ int main(int argc, char* argv[])
 			x0[it] = 0.;
 		    }
 		}
-		    
+		
 	    }
 
 	    t0 = sf_floatalloc2(nrhs,nshot);
@@ -163,8 +169,8 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("niter",&niter)) niter=10;
 	    /* number of slowness inversion iterations */
 
-	    if (!sf_getint("cgiter",&cgiter)) cgiter=200;
-	    /* number of conjugate gradient iterations */
+	    if (!sf_getint("stiter",&stiter)) stiter=200;
+	    /* number of step iterations */
 
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("gradient")) {
@@ -202,6 +208,13 @@ int main(int argc, char* argv[])
 	    /* regularization parameter */
 
 	    sf_igrad2_init(n[0],n[1]);
+
+	    if (l1norm) {
+		if (!sf_getfloat("perc",&perc)) perc=90.;
+		/* thresholding percent for l1_step */
+
+		l1_init(nt,stiter,perc,false);
+	    }
 
 	    /* iterations over inversion */
 	    for (iter=0; iter < niter; iter++) {
@@ -249,19 +262,28 @@ int main(int argc, char* argv[])
 		    rhsnorm += cblas_snrm2(nrhs,rhs,1);
 
 		    /* solve ds */
-		    if (NULL == sf_getstring("topo"))
-			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,cgiter,eps,"verb",false,"end");
-		    else
-			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,cgiter,eps,"known",k,"x0",x0,"verb",false,"end");
+		    if (l1norm) {
+			if (NULL == sf_getstring("topo"))
+			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",false,"end");
+			else
+			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",false,"end");
+			
+			l1step_close();
+		    } else {
+			if (NULL == sf_getstring("topo"))
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",false,"end");
+			else
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",false,"end");
+			
+			sf_cgstep_close();
+		    }
 		    
-		    sf_cgstep_close();
-
 		    /* collect gradients: modify if */
 		    for (it=0; it < nt; it++) {
 			if (m[is][it] != 1)
 			    gs[it] += ds[it]/nshot;
 		    }
-
+		    
 		}
 
                 rate = rhsnorm/rhsnorm0; 
