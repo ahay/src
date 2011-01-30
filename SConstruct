@@ -77,12 +77,20 @@ env.Append(BUILDERS={'RSF_Include':bldutil.Header,
 ##########################################################################
 
 system = filter(lambda x: x[0] != '.', os.listdir('system'))
-user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
-# Avoid crashing when user places some files in RSFSRC/user
-user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
+if os.path.isdir('user'):
+    user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
+    # Avoid crashing when user places some files in RSFSRC/user
+    user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
+    # Avoid crashing when user places directories in RSFSRC/user
+    user = filter(lambda x: os.path.isfile(os.path.join('user',x,'SConstruct')), 
+        user)
+    userdir = ' user'
+else:
+    userdir = ''
+
 dotproj = glob.glob('book/*/*/*/.rsfproj')
 
-frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user dotproj'
+frame_exports = 'env bindir libdir pkgdir shrdir srcdir system dotproj' +userdir
 
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
@@ -149,14 +157,15 @@ for dir in map(lambda x: os.path.join('system',x), system):
 
 if os.path.isdir('user'):
     for dir in map(lambda x: os.path.join('user',x), user):
-        build = os.path.join('build',dir)
-        if configure.version[0] > 1:
-            VariantDir(build,dir)
-        else:
-            BuildDir(build,dir)
-        SConscript(dirs=build,name='SConstruct', 
-            exports='env root bindir pkgdir')
-        Default(build)
+        if os.path.isfile(os.path.join(dir, 'SConstruct')):
+            build = os.path.join('build',dir)
+            if configure.version[0] > 1:
+                VariantDir(build,dir)
+            else:
+                BuildDir(build,dir)
+            SConscript(dirs=build,name='SConstruct', 
+                exports='env root bindir pkgdir')
+            Default(build)
 
 ##########################################################################
 # PLOT BUILD
