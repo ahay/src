@@ -1,6 +1,34 @@
-Meaningful changes done since the 1.0 release (2010-07-23):
+==Release 1.2 (TBD)==
 
-ADDITIONS AND ENHANCEMENTS
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+==Release 1.1 (2011-01-18)==
+
+===Additions and enhancements===
 
 To the reproducible documents collection:
 * rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
@@ -8,26 +36,17 @@ To the reproducible documents collection:
 * rsf/usp: Yang Liu's presentation at Houston-2010
 * \published{} macro added to all published papers
 * sep/fractal: Modeling 3-D anisotropic fractal media (Chemingui)
-* sep/banana: Traveltime sensitivity kernels: Banana-doughnuts or just
-  plain bananas? (Rickett)
-* swag/eikds: An eikonal based formulation for traveltime perturbation
-  with respect to the source location (Alkhalifah and Fomel)
-* cwp/geo2008IsotropicAngleDomainElasticRTM: Isotropic angle-domain
-  elastic reverse-time migration (Yan and Sava)
-* jsg/stackadcig: Stacking angle-domain common-image gathers for
-  normalization of illumination (Liu et al.)
-* cwp/geo2009VTIModeSeparation: Elastic wave-mode separation for VTI
-  media (Yan and Sava)
-* cwp/geo2009TTIModeSeparation: Elastic wave-mode separation for TTI
-  media (Yan and Sava)
+* sep/banana: Traveltime sensitivity kernels: Banana-doughnuts or just plain bananas? (Rickett)
+* swag/eikds: An eikonal based formulation for traveltime perturbation with respect to the source location (Alkhalifah and Fomel)
+* cwp/geo2008IsotropicAngleDomainElasticRTM: Isotropic angle-domain elastic reverse-time migration (Yan and Sava)
+* jsg/stackadcig: Stacking angle-domain common-image gathers for normalization of illumination (Liu et al.)
+* cwp/geo2009VTIModeSeparation: Elastic wave-mode separation for VTI media (Yan and Sava)
+* cwp/geo2009TTIModeSeparation: Elastic wave-mode separation for TTI media (Yan and Sava)
 * jsg/flat: Predictive painting of 3-D seismic volumes (Fomel)
-* jsg/oc3: OC-seislet: seislet transform construction with
-  differential offset continuation (Liu and Fomel)
-* sep/lines: Random lines in a plane (Claerbout)
-* hansung/cgg: Conjugate guided gradient (CGG) method for robust
-  inversion and its application to velocity-stack inversion (Ji)
-* sep/texture: Texture synthesis and prediction error filtering
-  (Brown)
+* jsg/oc3: OC-seislet: seislet transform construction with differential offset continuation (Liu and Fomel)
+* sep/lines: Random lines in a plane (Claerbout) 
+* hansung/cgg: Conjugate guided gradient (CGG) method for robust inversion and its application to velocity-stack inversion (Ji)
+* sep/texture: Texture synthesis and prediction error filtering (Brown)
 * Grave directory for papers that are no longer reproducible
 
 To SCons:
@@ -38,8 +57,7 @@ To documentation:
 * This file (NEWS.txt)
 
 To APIs:
-* New, improved Java API: Cleaner, independent from Mines JTK. Not
-compatible with the old API
+* New, improved Java API: Cleaner, independent from Mines JTK. Not compatible with the old API
 
 To the Python package:
 * rsf.user.ivlad: chk_file_r, getppout, get1st functions
@@ -66,7 +84,7 @@ To programs:
 * many new programs in user/lcasasan
 * user/jun
 
-BUG FIXES:
+===Bug fixes===
 
 In the reproducible documents collection:
 * Cross-platform (Linux/Mac) solution in book/jsg/flat/*/SConstruct
@@ -75,8 +93,7 @@ In the reproducible documents collection:
 * High-resolution figures in book/gee/hlx
 
 In documentation:
-* Update of html/txt/spec documentation and man pages triggered by
-  changes in programs or examples through dependence on use.py
+* Update of html/txt/spec documentation and man pages triggered by changes in programs or examples through dependence on use.py
 * Show y and n for boolean parameters in F90 programs, instead of .true./.false.
 * Show y and n for boolean params in some Python programs instead of True/False
     (fix for some cases in which existing mechanism did not work) 
@@ -98,3 +115,7 @@ In programs:
 * sfzcp
 * sfstretch - proper handling of half-offset
 * sfslant and sfvelcon - proper antialiasing
+
+==Release 1.0 (2010-07-23)==
+
+No release notes for 1.0 or before
