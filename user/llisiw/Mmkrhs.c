@@ -21,7 +21,6 @@
 
 int main(int argc, char* argv[])
 {
-    bool elev;
     int n[SF_MAX_DIM], it, nt, dim, i, is, nshot, **m, rhs, nrhs;
     float **f, **e;
     sf_file in, mask, out;
