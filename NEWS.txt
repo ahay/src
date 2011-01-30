@@ -119,3 +119,6 @@ In programs:
 ==Release 1.0 (2010-07-23)==
 
 No release notes for 1.0 or before
+
+==About this document==
+The definitive version of this document is found under version control, as trunk/NEWS.txt . Before a release, the content of the latest section of this wiki page and that of the corresponding part of NEWS.txt should be reconciled.
