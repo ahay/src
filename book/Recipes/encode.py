@@ -73,6 +73,7 @@ def time2freq(dtime,dfreq,par):
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          transp plane=12 | transp plane=23 | 
          put label1=x label2=y label3=w label4=e
+         o2=%(oy)g dy=%(dy)g unit1=%(ux)s unit2=%(uy)s
          ''' % par)
 
 # ------------------------------------------------------------
