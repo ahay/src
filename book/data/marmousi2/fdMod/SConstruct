@@ -34,7 +34,7 @@ Flow('wav',None,
          ricker1 frequency=15 |
          scale axis=123 |
          put label1=t label2=x label3=y
-         ''' % par)
+         ''' % par, split=[2,123], reduce='add')
 Result('wav','window n1=1000 | graph title="" label1="t" label2=')
 # ------------------------------------------------------------
 
@@ -49,7 +49,7 @@ Flow('rr',['xr','zr'],
      '''
      cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} | transp
-     ''', stdin=0)
+     ''', stdin=0, split=[2,1000],reduce='add')
 Plot('rr',fdmod.rrplot('',par))
 
 # source positions
@@ -60,7 +60,7 @@ Flow('ss',['xs','zs','rs'],
      '''
      cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
-     ''', stdin=0)
+     ''', stdin=0, split=[2, 1000], reduce='add')
 Plot('ss',fdmod.ssplot('',par))
 
 # ------------------------------------------------------------

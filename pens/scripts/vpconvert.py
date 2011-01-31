@@ -65,7 +65,7 @@ def which(prog):
             return os.path.normpath(exe)
     return None
 
-def convert(vpl,out,format,pen,args):
+def convert(vpl,out,format,pen,args,verb=True):
     global pens, formats
 
     if not format in formats:
@@ -155,12 +155,14 @@ def convert(vpl,out,format,pen,args):
     else:
         # default behavior
         run = '%s %s %s > %s' % (exe,args,vpl,out)
-        print run
+        if verb:
+            print run
         os.system(run)
 
     if convert:
         run = '%s %s %s:%s' % (convert,out,format2,out2)
-        print run
+        if verb:
+            print run
         os.system(run)
 
 if __name__ == "__main__":

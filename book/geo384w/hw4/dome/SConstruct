@@ -34,7 +34,7 @@ Flow('modl','ref dip',
      vel=1.5 gradz=0.25 verb=y |
      tpow tpow=1 |
      put d2=0.05 label3=Midpoint unit3=km 
-     ''',split=[1,2001],reduce='add')
+     ''',split=[1,2001], reduce='add')
 
 # Add random noise
 Flow('data','modl','noise var=1e-6 seed=112009')
@@ -67,7 +67,7 @@ Flow('vrms','voft',
 
 # Velocity scan
 Flow('vscan','data',
-     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',split=[3,201])
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',split=[3,201], reduce='cat')
 
 Result('vscan',
        '''

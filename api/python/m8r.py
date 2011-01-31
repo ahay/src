@@ -496,17 +496,23 @@ class Vplot(object):
         'Convert to PNG in the current directory (for use with SAGE)'
         self.png = os.path.basename(self.name)+'.png'
         self.export(self.png,'png')
-    def export(self,name,format=None):
+    def movie(self):
+        'Convert to animated GIF in the current directory (for use with SAGE)'
+        self.gif = os.path.basename(self.name)+'.gif'
+        self.export(self.gif,'gif',args='bgcolor=w')
+    def export(self,name,format=None,pen=None,args=''):
         'Export to different formats'
+        from rsf.vpconvert import convert
         if not format:
             if len(name) > 3:
                 format = name[-3:].lower()
             else:
                 format = 'vpl'
-        if format in ('eps','gif','avi','png'):
-            os.system('vplot2%s %s %s' % (format,self.name,name))
-        else:
-            os.system('cp %s %s' % (self.name,name))
+        convert(self.name,name,format,pen,args,verb=False)
+#        if format in ('eps','gif','avi','png'):
+#            os.system('vplot2%s %s %s' % (format,self.name,name))
+#        else:
+#            os.system('cp %s %s' % (self.name,name))
 
 class _Wrap(object):
      def __init__(self, wrapped):
