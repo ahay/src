@@ -38,6 +38,8 @@ void lowrank1_init(int n1 /* data size */,
     for (ix = 0; ix < nx; ix++) {
 	prev[ix] = 0;
     }
+
+    sf_cosft_init(nx);
 }
 
 void lowrank1_close(void)

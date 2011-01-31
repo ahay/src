@@ -1,0 +1,501 @@
+\title{The adjoint of the viscous wave equation}
+%\keywords{velocity, heat, sources, heat flow, wave equation }
+\email{jon@SEP.Stanford.EDU}
+\author{Jon Claerbout}
+
+\def\figdir{./Fig}
+
+\righthead{Adjoint scalar wave equation}
+\lefthead{Claerbout}
+\footer{SEP--89}
+
+\def\eq{\quad =\quad}
+\def\pluseq{\quad +=\quad}
+\def\CAKEDIR{.}
+
+
+\begin{abstract}
+The scalar wave equation is a linear operator whose output is any
+subset of the wavefield solution and whose input is the source
+function.  Here we show how to compute the adjoint operator, i.e.,
+that whose input is the wavefield subset and whose output is the
+sources.
+\end{abstract}
+
+
+\section{INTRODUCTION}
+
+Mathematical physics presents us with many partial differential equations,
+the heat flow equation, the acoustic wave equation, seismic, electromagnetic, and others,
+many whose essential expression is found in the viscous scalar wave equation.
+Concepts of imaging tell us
+to identify a linear operator, essentially a matrix,
+and then use its transpose (adjoint) to make an image.
+\par
+This paper shows how
+to build the adjoint of the viscous wave equation
+from its finite-difference representation.
+Inversion techniques use the operator and its adjoint
+to solve a wide variety of problems.
+Here we cover basic principles only,
+up to and including the stage of coding the operator and its adjoint
+and proving the adjoint's precision to be ``full word''.
+
+
+\section{DIFFERENTIAL EQUATIONS, CONVOLUTION, AND ADJOINTS}
+\par
+Simple one-dimensional equations of physics (such as vibrating strings)
+when discretized become tridiagonal matrices,
+each row with basically the same three elements
+(that arise from the expression of the second derivative operator).
+Where material properties are constant,
+the three elements are exactly the same from row to row.
+Likewise the convolution matrix representing filtering
+has rows identical to each other,
+except for the shift that aligns them along the diagonal.
+Examine a typical row of any such matrix.
+\begin{eqnarray}
+	\left[
+	\begin{array}{cccccc}
+		a& b& c&  &  &    \\
+		 & a& b& c&  &    \\
+		 &  & a& b& c&    \\
+		 &  &  & a& b&c 
+	\end{array}
+	\right]'
+	\quad = \quad
+	\left[
+	\begin{array}{cccc}
+		 a&  &  &    \\
+		 b& a&  &    \\
+		 c& b& a&    \\
+		  & c& b&a   \\
+		  &  & c&b   \\
+		  &  &  &c   
+	\end{array}
+	\right]
+\end{eqnarray}
+Notice that transposing such a matrix reverses the elements in the row.
+The reversal implies that the adjoint of convolution is crosscorrelation.
+Because of the reversal,
+the transpose of the first derivative matrix
+is the negative of the first derivative matrix itself
+(except at the edges).
+Generalizing, the discrete forms of differential equations
+representing physics in Cartesian coordinates
+show that any one-dimensional differential equation is its own adjoint
+if we set aside complications of boundaries,
+axis polarity, and material property variations.
+We will see something similar in higher dimensional spaces.
+
+
+
+\subsection{Basic ideas and notation}
+The basic idea of adjoint
+is that the adjoint of a row vector
+is a column vector.
+So the adjoint of the equation
+$y=ax_1+bx_2$
+is two equations,
+$\hat x_1 = ay$ and
+$\hat x_2 = by$.
+\par
+Since we often combine operators by addition,
+we often code them in the form
+$y\leftarrow y+ax_1+bx_2$.
+A convenient notation comes from the C computer language
+where such assignments are written as
+{\tt y += a*x1+b*x2}.
+I find the ``+='' notation expecially 
+convenient for describing adjoints.
+
+
+\section{HEAT FLOW EQUATION}
+The one-dimensional heat flow equation is
+\begin{equation}
+{\partial q \over \partial t} \eq \sigma
+{\partial^2 q \over \partial x^2} \ +\ s(x,t)
+\label{eqn:heatpde}
+\end{equation}
+where $q$ is temperature,
+$\sigma$ is heat conductivity divided by heat capacity
+and $s$ is a possible source of heat.
+Discretizing equation (\ref{eqn:heatpde}) with the usual explicit
+finite difference operator gives
+\begin{equation}
+q_{t+1}^x \pluseq q_t^x  \ +\ \sigma ( q_t^{x-1}-2q_t^x+q_t^{x+1} ) \ +\ s_t^x
+\label{eqn:heatfd}
+\end{equation}
+where $t$ takes integer values,
+$\sigma$ is like the $\sigma$ 
+in the differential equation but here it includes
+$\Delta t/\Delta x^2$.
+Ignoring the source $s_t^x$, the adjoint of (\ref{eqn:heatfd}) is
+\begin{equation}
+\begin{array}{lcr}
+q_t^x     &\pluseq&           q_{t+1}^x  	\\
+q_t^{x-1} &\pluseq&    \sigma q_{t+1}^x		\\
+q_t^{x  } &\pluseq&  -2\sigma q_{t+1}^x 	\\
+q_t^{x+1} &\pluseq&    \sigma q_{t+1}^x 
+\end{array}
+\end{equation}
+
+Below is a %Ratfor 
+subroutine that transforms between $q_t$ and $q_{t+1}$,
+denoted by {\tt qq()} and {\tt rr()}.
+%(Unfortunately Ratfor does not admit the $+=$ notation.)
+
+\listing{heatstep.rt}
+
+Let us think about the adjoint calculation.
+It says we can consider in turn
+each temperature value $q_{t+1}^x$.
+From this value we augment (or diminish)
+neighboring temperatures according to the adjoint prescription.
+Strangely, for constant $\sigma$ and far from boundaries,
+this adjoint process is equivalent to the usual
+heat flow process itself (but backwards in time).
+The reason it is equivalent is that each process, forward and adjoint,
+is the same matrix multiplication, the forward grouped by rows
+and the adjoint grouped by columns.
+
+
+
+\subsection{Sources for the heat equation and its adjoint}
+
+Above shows how
+a heat flow operator transforms
+the input $q_t$ to the output $q_{t+1}$.
+What we really want to do is completely different.
+We want to define the input as the source function
+and we want to define the output as some arbitrary subset
+of $q_t$, $q_{t+1}$, $q_{t+2}$, etc.
+The adjoint we seek will carry us
+from the specified subset of  $q_t$
+back to an image $\hat s_t$ of the sources $s_t$.
+
+\par
+Defining $H=[1+\sigma delta_{xx}]$
+(where $delta_{xx}$ is the second difference operator)
+reduces equation (\ref{eqn:heatfd}) to
+\begin{equation}                                          \label{eqn:modeling}
+q_{t} \eq H_{t} q_{t-1} + s_{t}
+\end{equation}
+where each $q_t$ is a function of $x$.
+Recursive use of equation~(\ref{eqn:modeling})
+over three time levels gives the matrix form
+\begin{equation}
+{\bold H}^{-1} \, \bold q \eq
+\left[
+	\begin{array}{cccc}
+		 1  &  .    & .    &  .    \\
+		-H_1&  1    &  .   &  .    \\
+		 .  & -H_2  & 1    &  .    \\
+		 .  &  .    & -H_3 &  1
+	\end{array}
+	\right] \ 
+\left[
+	\begin{array}{c}
+		q_0 \\
+		q_1 \\
+		q_2 \\
+		q_3
+	\end{array}
+	\right]
+\eq
+\left[
+	\begin{array}{c}
+		s_0 \\
+		s_1 \\
+		s_2 \\
+		s_3
+	\end{array}
+	\right]
+\eq \bold s
+\label{eqn:matrecur}
+\end{equation}
+A recursive solution begins at the top
+with $q_0=s_0$ and propagates downward.
+The idea for computing is first to load up $q_{t}$ with the sources
+$q_t\leftarrow s_t$
+and then add in the heat-flow equation solution as you move along with
+\begin{equation}
+q_{t} \pluseq H_{t} q_{t-1} \quad\quad\quad {\rm increasing}\ t
+\end{equation}
+
+\par
+The adjoint of $H$ is $H'$.
+We define the image of the sources $\tilde s_t$ by the recursion
+\begin{equation}
+\tilde s_{t-1} \eq  H'_{t} \  \tilde s_{t} + q_{t-1}
+				 \quad\quad\quad {\rm decreasing}\ t
+\end{equation}
+which can be summarized as
+\begin{equation}
+({\bold H}^{-1})'
+\, \tilde {\bold s}  \eq
+\left[
+	\begin{array}{cccc}
+		1         & -H'_1    &     .    &  .   \\
+		.         & 1        &   -H'_2  &  .   \\
+		.         &.         &     1    &-H'_3 \\
+		.         & .        &.         &  1
+	\end{array}
+	\right]
+\left[
+	\begin{array}{c}
+		\tilde s_0 \\
+		\tilde s_1 \\
+		\tilde s_2 \\
+		\tilde s_3
+		\end{array}
+	\right]
+\eq
+\left[
+	\begin{array}{c}
+		q_0 \\
+		q_1 \\
+		q_2 \\
+		q_3
+		\end{array}
+	\right] \ 
+\eq \bold q
+\label{eqn:toomuch}
+\end{equation}
+Equation (\ref{eqn:matrecur}) implies $\bold q=\bold H \bold s$
+and equation (\ref{eqn:toomuch}) implies
+$\tilde {\bold s} = ((\bold H^{-1})')^{-1}\bold q$.
+Basic mathematics tells us that
+$(\bold H^{-1})'=(\bold H')^{-1}$ which means that
+$((\bold H^{-1})')^{-1}=\bold H'$
+so equation (\ref{eqn:toomuch}) implies $\tilde {\bold s} = \bold H'\bold q$.
+Thus the operators defined by recursive solutions
+of equations (\ref{eqn:matrecur}) and (\ref{eqn:toomuch}) are adjoints.
+\par
+As before, the computing methodology is to preload
+$\tilde s_{t}\leftarrow q_t$ and then use
+C-style augmenting assignments
+\begin{equation}
+\tilde s_{t-1} \pluseq  H'_{t} \  \tilde s_{t}
+\end{equation}
+
+
+\listing{heatsteps0.rt}
+
+The problem with the above subroutine is that
+it wastes memory, assuming that we can store the temperature field
+over all space and time.
+A more realistic assumption is that we can store it over all space
+but only at two time levels.
+Moving the {\tt copy} commands into the inner loops,
+we require memory for only the field at time $t$ and time $t+1$.
+
+\listing{heatsteps2.rt}
+
+%(This became cluttered but I could get nothing simpler
+%to pass the dot-product test.)
+Notice that the input
+{\tt ss(,)}
+and output
+{\tt qq(,)}
+still fill all of time and space so they appear to be impractically large.
+What saves us is that in practice
+there will not be sources everywhere in time and space
+nor will there be recording of the thermal field everywhere either.
+Thus in practice
+the {\tt copy} calls will be reduced to
+copying the application operator inputs and outputs
+which should be much smaller.
+
+\section{WAVE PROCESS CHAIN}
+We have seen how the heat flow operator $H$ marches one step in time.
+Next we will find a pressure operator $P$
+and a velocity operator $V$.
+We will represent the viscous scalar wave equation by the product
+$HVP$ so the adjoint will
+obviously be $P'V'H'$.
+The product concatenation is done by subroutine {\tt wavecat()} below:
+\listing{wavecat.rt}
+
+\subsection{The pressure operator}
+The pressure operator from physics from the
+``equation of state''
+that the time rate of change of the pressure
+is an external source $s(x,y,t)$ minus
+the divergence of the velocity times the incompressibility $K$.
+\begin{equation}
+{\partial p \over \partial t} \eq
+s(x,y,t)
+\ -\ 
+K \left(
+{\partial u \over \partial x} +
+{\partial v \over \partial y}
+\right)
+\end{equation}
+\par
+In the heat flow equation the field variable
+is a scalar (the temperature).
+For wave propagation in two dimensions,
+the wavefield variable has three components,
+pressure and two components of material velocity.
+The pressure operator $P$ transforms
+$p_{t}^{x,y}$ to $p_{t+1}^{x,y}$
+but it is an identity matrix
+for the two components of velocity
+(which will actually be transformed in a later process).
+We distribute the wavefield variables throughout space with this tiling:
+\begin{equation}
+    \begin{array}{ccccccccccccccccccccccc}
+	p&u& p&u& p&u& p&u& & &\longrightarrow x\\
+	v& & v& & v& & v& & \\
+	p&u& p&u& p&u& p&u& \\
+	v& & v& & v& & v& & \\
+	p&u& p&u& p&u& p&u& \\
+	v& & v& & v& & v& & \\
+	\\
+        \downarrow &&&&&&&& \\
+	y
+    \end{array}
+\end{equation}
+We define the basic tile for this discrete mesh as
+\begin{equation}
+%           \left|
+            \begin{array}{|c|c|}
+                                \hline
+                                p & u \\
+                                \hline
+                                v &   \\
+                                \hline
+                        \end{array}
+%           \right|
+\end{equation}
+Computationally we refer to this basic tile on the inputs as $\vec q(x,y)$
+and on the outputs as $\vec r(x,y)$
+although the three components in the tile
+are at slightly different physical locations
+from one another.
+Expressing the pressure equation for these tiles we have
+\begin{equation}
+p_{t+1}^x \eq  s_t^x + p_t^x
+	- \;
+	 {K \Delta t  \over \Delta x} \;
+		[ 
+		(u_t^{x,y}-u_t^{x-1,y}) 
+		+
+		(v_t^{x,y}-v_t^{x,y-1}) 
+		]
+\label{eqn:pressurefd}
+\end{equation}
+In subroutine {\tt pressure()} below
+the input pressure and velocity field is {\tt q(x,y,*)}
+and the output is {\tt r(x,y,*)}.
+Equation (\ref{eqn:pressurefd}) is expressed in the subroutine
+on the line beginning with
+{\tt r(x,y,p)=}.
+
+\listing{pressure.rt}
+Notice that the identity matrix ``pass through''
+of the velocity components
+shows up as two extra assignments in the forward operator
+and thus as two added terms in the adjoint operator.
+
+\activesideplot{frog}{width=3.0in}{.} {
+	A few frogs hopped into the pond.
+	Chirup!
+}
+
+\subsection{The velocity operator}
+For the velocity operator $V$ we use Newton's equations stating
+that the time rate of momentum change
+is the external momentum source minus the pressure gradient.
+\begin{eqnarray}				\label{eqn:horizmomentum}
+\rho \                {\partial u \over \partial t}
+&=& s_u(x,y,t) \ -\   {\partial p \over \partial x} \\
+\rho \                {\partial v \over \partial t}
+&=& s_v(x,y,t) \ -\   {\partial p \over \partial y}
+\end{eqnarray}
+\par
+The spatial tiling we have chosen gives us two independent locations for
+storing density $\rho$,
+one atop the horizontal velocity $u$,
+the other atop the vertical velocity $v$.
+It may seem non physical to have one density
+for vertical accelerations and another for horizontal ones,
+but it is worth maintaining the two densities
+as separate entities.
+Waves arise from many physical paradigms besides the
+acoustical one and some of these
+may require that we maintain this possibility to introduce anisotropy.
+Another way to introduce anisotropy in the present codes
+is to have two compressibilities $K$ in the pressure subroutine.
+These extra parameters might also be helpful if
+we were trying to improve the numerical representation
+of the differential operators.
+Subroutine {\tt velocity()} uses
+{\tt rhou(,)} for $\Delta t/(\Delta x \rho)$ at $u$ and
+{\tt rhov(,)} for $\Delta t/(\Delta x \rho)$ at $v$.
+Equation (\ref{eqn:horizmomentum}) in discrete form
+\begin{equation} 				\label{eqn:velocityufd}
+u_{t+1}^x \eq  s_t^x + u_t^x
+        - \rho_u^{-1} (\Delta t/ \Delta x)
+                (p_t^{x+1,y}-p_t^{x,y})
+\end{equation}
+appears in subroutine {\tt velocity()}
+at the line beginning with {\tt r(x,y,u)=}.
+
+
+\listing{velocity.rt}
+This time we pass through the pressure unchanged
+so we also see an added pressure term in the adjoint.
+
+\subsection{Viscosity}
+Viscosity is included mainly for numerical analysis
+so I chose $\sigma$ to be a constant.
+To create viscosity, the heat flow equation can be applied to the pressure.
+Unfortunately we cannot use the heat flow subroutine itself
+because the viscosity subroutine also needs to pass through the velocity.
+Starting from the heatflow subroutine,
+including the pass through,
+and increasing from
+one to two dimensions
+gives subroutine {\tt viscosity()}
+\listing{viscosity.rt}
+
+
+
+\subsection{Dot-product test of viscous wave equation}
+\par
+As with the heat equation we need sources for wavefields.
+I prepared a
+subroutine for stepping forward
+the $HVP$ operator while adding in sources
+and used it for the dot-product test.
+I find the test $y'(Ax)=(A'y)'x$
+using random numbers for $x$ and $y$
+leads to the expected six digits of numerical accuracy
+in a $100^3$ test.
+
+\par
+I am not showing the wave stepping subroutine here because
+it is just like {\tt heatsteps()} but with minor added complications.
+
+
+
+\section{POSSIBLE DEMONSTRATIONS}
+
+\begin{itemize}
+\item anisotropy modeling
+\item random media modeling
+\item velocity gradient guided waves modeling
+\item reverse-time migration
+\item inversion
+\end{itemize}
+
+\section{Acknowledgments}
+I would like to thank Sergey Fomel and Arnaud Berlioux for proofreading
+and I would like to thank Sergey Fomel
+for showing me how to remove some clutter from the second version
+of the {\tt heatsteps2()} subroutine.
+
+
+
