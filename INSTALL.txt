@@ -32,14 +32,14 @@ Software construction
 
       Change to the top RSF source directory and run
 
-      ./configure -
+      ./configure --prefix=/directory/where/you/want/madagascar/installed
 
       You can examine the config.py file that this command generates. Additional
       options are available. You can obtain a full list of customizable 
       variables by running "scons -h". For example, to install C++ and 
       Fortran-90 API bindings in addition to the basic package, run
 
-      ./configure -prefix=/directory/where/you/want/madagascar/installed \
+      ./configure --prefix=/directory/where/you/want/madagascar/installed \
       API=c++,fortran-90 
 
    2. Building and installing the package.
