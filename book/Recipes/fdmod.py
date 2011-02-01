@@ -64,8 +64,8 @@ def param(par):
     else                    : yxratio=1.0*dx/(dx+dy)
     if ((dz+dy)    == 0.0)  : yzratio=1.0
     else                    : yzratio=1.0*dz/(dz+dy)
-    if ((10*dt+dy) == 0.0)  : ytratio=1.0
-    else                    : ytratio=10.0*dt/(10*dt+dy);
+    if ((5*dt+dy) == 0.0)   : ytratio=1.0
+    else                    : ytratio=5*dt/(5*dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
@@ -77,7 +77,7 @@ def param(par):
     else:
         par['height3d']=11*par['ratio3d']
 
-    par['tratio3d']=(10*dt+dy)/(dx+dy);
+    par['tratio3d']=(5*dt+dy)/(dx+dy);
     if(par['tratio3d']>1):
         par['theight3d']=10
     else:
@@ -531,10 +531,17 @@ def qqplot(custom,par):
     dd type=complex |
     ''' + cgraph('symbol=. plotcol=1 plotfat=5 wantaxis=n %s' % custom,par)
 
-def qqwin(par):
+def qqbox2d(par):
     return '''
-    nq1=%(nq1)d oq1=%(oq1)g dq1=%(dq1)g
-    nq2=%(nq2)d oq2=%(oq2)g dq2=%(dq2)g
+    nqz=%(nqz)d oqz=%(oqz)g
+    nqx=%(nqx)d oqx=%(oqx)g
+    ''' % par
+
+def qqbox3d(par):
+    return '''
+    nqz=%(nqz)d oqz=%(oqz)g
+    nqx=%(nqx)d oqx=%(oqx)g
+    nqy=%(nqy)d oqy=%(oqy)g
     ''' % par
 
 # ------------------------------------------------------------

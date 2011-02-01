@@ -359,23 +359,28 @@ void expand3d(float ***a,
 
 }
 
-
 /*------------------------------------------------------------*/
 void cut2d(float**  a,
 	   float**  b,
 	   fdm2d  fdm,
-	   sf_axis c1, 
-	   sf_axis c2)
+	   sf_axis cz, 
+	   sf_axis cx)
 /*< cut a rectangular wavefield subset >*/
 {
     int iz,ix;
     int fz,fx;
 
-    fz = (floor)((sf_o(c1)-fdm->ozpad)/fdm->dz);
-    fx = (floor)((sf_o(c2)-fdm->oxpad)/fdm->dx);
+    fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
+    fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx);
 
-    for     (ix=0;ix<sf_n(c2);ix++) {
-	for (iz=0;iz<sf_n(c1);iz++) {
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iz)				\
+    shared(a,b,cx,cz,fx,fz)
+#endif
+    for     (ix=0;ix<sf_n(cx);ix++) {
+	for (iz=0;iz<sf_n(cz);iz++) {
 	    b[ix][iz] = a[fx+ix][fz+iz];
 	}
     }
@@ -385,21 +390,27 @@ void cut2d(float**  a,
 void cut3d(float*** a,
 	   float*** b,
 	   fdm3d  fdm,
-	   sf_axis c1, 
-	   sf_axis c2,
-	   sf_axis c3)
+	   sf_axis cz, 
+	   sf_axis cx,
+	   sf_axis cy)
 /*< cut a rectangular wavefield subset >*/
 {
     int iz,ix,iy;
     int fz,fx,fy;
 
-    fz = (floor)((sf_o(c1)-fdm->ozpad)/fdm->dz);
-    fx = (floor)((sf_o(c2)-fdm->oxpad)/fdm->dx);
-    fy = (floor)((sf_o(c3)-fdm->oypad)/fdm->dy);
+    fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
+    fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx);
+    fy = (floor)((sf_o(cy)-fdm->oypad)/fdm->dy);
 
-    for         (iy=0;iy<sf_n(c3);iy++) {
-	for     (ix=0;ix<sf_n(c2);ix++) {
-	    for (iz=0;iz<sf_n(c1);iz++) {
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz)				\
+    shared(a,b,cx,cy,cz,fx,fy,fz)
+#endif
+    for         (iy=0;iy<sf_n(cy);iy++) {
+	for     (ix=0;ix<sf_n(cx);ix++) {
+	    for (iz=0;iz<sf_n(cz);iz++) {
 		b[iy][ix][iz] = a[fy+iy][fx+ix][fz+iz];
 	    }
 	}

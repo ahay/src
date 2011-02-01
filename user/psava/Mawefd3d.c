@@ -198,11 +198,6 @@ int main(int argc, char* argv[])
 	acz = sf_maxa(nqz,oqz,dqz);
 	acx = sf_maxa(nqx,oqx,dqx);
 	acy = sf_maxa(nqy,oqy,dqy);
-/*	if(verb) {*/
-/*	    sf_raxa(acz);*/
-/*	    sf_raxa(acx);*/
-/*	    sf_raxa(acy);*/
-/*	}*/
 	/* check if the imaging window fits in the wavefield domain */
 
 	uc=sf_floatalloc3(sf_n(acz),sf_n(acx),sf_n(acy));

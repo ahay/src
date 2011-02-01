@@ -24,8 +24,9 @@ typedef struct{
 
 #endif
 
-
+/*------------------------------------------------------------*/
 double det3(double *m)
+/*< compute 3D determinant >*/
 {
   double pp,mm;
 
@@ -35,11 +36,14 @@ double det3(double *m)
   return pp-mm;
 }
 
+/*------------------------------------------------------------*/
 double det2(double *m)
+/*< compute 2D determinant >*/
 {
   return m[0]*m[3]-m[1]*m[2];
 }
 
+/*------------------------------------------------------------*/
 double jac3d(pt3d *C, pt3d *T, pt3d *P, pt3d *Q)
 /*< 3D jacobian >*/
 {
@@ -51,7 +55,6 @@ double jac3d(pt3d *C, pt3d *T, pt3d *P, pt3d *Q)
 }
 
 /*------------------------------------------------------------*/
-
 vc3d vec3d(pt3d* O, pt3d* A)
 /*< build 3D vector >*/
 {
@@ -64,6 +67,7 @@ vc3d vec3d(pt3d* O, pt3d* A)
     return V;
 }
 
+/*------------------------------------------------------------*/
 vc3d axa3d( int n)
 /*< build 3D unit vector >*/
 {
@@ -86,12 +90,14 @@ vc3d axa3d( int n)
     return V;
 }
 
+/*------------------------------------------------------------*/
 double scp3d(vc3d* U, vc3d* V)
 /*< scalar product of 3D vectors >*/
 {
     return U->dx*V->dx + U->dy*V->dy + U->dz*V->dz;
 }
 
+/*------------------------------------------------------------*/
 vc3d vcp3d(vc3d* U, vc3d* V)
 /*< vector product of 3D vectors >*/
 {
@@ -104,6 +110,7 @@ vc3d vcp3d(vc3d* U, vc3d* V)
     return W;
 }
 
+/*------------------------------------------------------------*/
 double len3d(vc3d* V)
 /*< 3D vector length >*/
 {
@@ -114,6 +121,7 @@ double len3d(vc3d* V)
     return l;
 }
 
+/*------------------------------------------------------------*/
 vc3d nor3d(vc3d* V)
 /*< normalize 3D vector >*/
 {
@@ -128,6 +136,7 @@ vc3d nor3d(vc3d* V)
     return W;
 }
 
+/*------------------------------------------------------------*/
 double ang3d(vc3d* U, vc3d* V)
 /*< angle between 3D vectors >*/
 {
@@ -146,6 +155,7 @@ double ang3d(vc3d* U, vc3d* V)
     return a;
 }
 
+/*------------------------------------------------------------*/
 pt3d tip3d(pt3d* O, vc3d* V)
 /*< tip of a 3D vector >*/
 {
@@ -159,6 +169,7 @@ pt3d tip3d(pt3d* O, vc3d* V)
     return A;    
 }
 
+/*------------------------------------------------------------*/
 vc3d scl3d(vc3d* V, float s)
 /*< scale a 3D vector >*/
 {
@@ -171,6 +182,7 @@ vc3d scl3d(vc3d* V, float s)
      return W;
 }
 
+/*------------------------------------------------------------*/
 void vc3dread1(sf_file F,
                vc3d   *v,
                size_t  n1)
@@ -188,5 +200,49 @@ void vc3dread1(sf_file F,
     }
 
     free(*w); free(w);
+}
+
+/*------------------------------------------------------------*/
+vc3d* rot3d(vc3d *nn,
+	    vc3d *aa,
+	    float phi)
+/*< rotate a 3D vector around another 3D vector >*/
+{
+    vc3d* qq;
+    float Qxx,Qxy,Qxz, Qyx,Qyy,Qyz, Qzx,Qzy,Qzz;
+    float    nx,ny,nz;
+    float    ax,ay,az;
+    float    qx,qy,qz;
+    float sif,cof;
+
+    qq  = (vc3d*) sf_alloc(1,sizeof(*qq));
+
+    nx=nn->dx; ny=nn->dy; nz=nn->dz;
+    ax=aa->dx; ay=aa->dy; az=aa->dz;
+
+    sif=sinf(phi);
+    cof=cosf(phi);
+
+    Qxx=nx*nx+(ny*ny+nz*nz)*cof;
+    Qxy=nx*ny*(1-cof)-nz*sif;
+    Qxz=nx*nz*(1-cof)+ny*sif;
+    
+    Qyx=ny*nx*(1-cof)+nz*sif;
+    Qyy=ny*ny+(nz*nz+nx*nx)*cof;
+    Qyz=ny*nz*(1-cof)-nx*sif;
+    
+    Qzx=nz*nx*(1-cof)-ny*sif;
+    Qzy=nz*ny*(1-cof)+nx*sif;
+    Qzz=nz*nz+(nx*nx+ny*ny)*cof;
+
+    qx = Qxx*ax + Qxy*ay + Qxz*az;
+    qy = Qyx*ax + Qyy*ay + Qyz*az;
+    qz = Qzx*ax + Qzy*ay + Qzz*az;
+
+    qq->dx=qx;
+    qq->dy=qy;
+    qq->dz=qz;
+    
+    return qq;
 }
 
