@@ -25,30 +25,6 @@ http://m8r.info/wiki/Main_Page
 http://m8r.info/wiki/Installation
 http://m8r.info/wiki/Advanced_Installation
 
-Environmental variables
-=======================
-
-To set environmental variables, append the content of env.sh or
-env.csh (depending on which shell you are using) to ~/.bash_profile or
-~/.chsrc, respectively.
-
-Running 
-
-	source env.sh
-
-or
-
-	source env.csh
-
-should also work.
-
-If you do not know which shell you are using, type the following at the
-command line:
-
-	printenv SHELL
-
-You may want to edit the DATAPATH variable (notice the slash at the end).
-
 Software construction
 =====================
 
