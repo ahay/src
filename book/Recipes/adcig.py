@@ -131,7 +131,7 @@ def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
     if(par['hratio']>=1):
         par['hheight']=10
     else:
-        par['hheight']=12*par['hratio']
+        par['hheight']=14*par['hratio']
 
 # ------------------------------------------------------------
 def xparam(nhx,ohx,dhx,nz,oz,dz,par):
