@@ -14,7 +14,6 @@ for usr in user:
     py = 'sf'+usr+'.py'
     env.InstallAs(os.path.join('.',py),
                   os.path.join('../../user',usr,py))
-#    bldutil.py_install(py, env, pkgdir)
 
 env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
             action=Action(rsf.doc.getprogs))

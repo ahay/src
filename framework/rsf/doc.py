@@ -62,10 +62,17 @@ def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
+def __read_version_file(fname=None):
+    if fname == None:
+        return ''
+    else:
+        inp = open(fname, 'r')
+        label = inp.readline().rstrip()
+        inp.close()
+        return label
+
 def getversion(target=None,source=None,env=None):
-    inp = open(str(source[0]),'r')
-    label = inp.readline().rstrip()
-    inp.close()
+    label = __read_version_file(str(source[0]))
     name = str(target[0])
     out = open(name,'w')
     out.write('#!/usr/bin/env python\n\n')
@@ -988,13 +995,16 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     snps = snps + parline
     base = name[len(rsfprefix):]
     if base in docprogs:
-        wiki = r'http://reproducibility.org/wiki/Guide_to_madagascar_programs#sf'+base
+        wiki = r'http://m8r.info/wiki/Guide_to_madagascar_programs#sf'+base
         prog.weblink(wiki)
         out.write("%s.weblink('%s')\n" % (name,wiki))
     vers = version[lang].search(text)
-    if vers:
-        prog.version(vers.group(1))
-        out.write("%s.version('''%s''')\n" % (name,vers.group(1)))
+    known_version = __read_version_file('VERSION.txt')
+    if known_version[-4:] == '-svn':
+        if vers:
+            known_version += ' ' + vers.group(1)
+    prog.version(known_version)
+    out.write("%s.version('%s')\n" % (name, known_version))
     if not first:
         first = ''
     else:
