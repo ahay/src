@@ -103,9 +103,9 @@ vc3d vcp3d(vc3d* U, vc3d* V)
 {
     vc3d W;
 
-    W.dx=(V->dy*U->dz) - (U->dy*V->dz);
-    W.dy=(U->dx*V->dz) - (V->dx*U->dz);
-    W.dz=(V->dx*U->dy) - (U->dx*V->dy);
+    W.dx=(U->dy*V->dz) - (V->dy*U->dz);
+    W.dy=(U->dz*V->dx) - (V->dz*U->dx);
+    W.dz=(U->dx*V->dy) - (V->dx*U->dy);
 
     return W;
 }
@@ -183,39 +183,16 @@ vc3d scl3d(vc3d* V, float s)
 }
 
 /*------------------------------------------------------------*/
-void vc3dread1(sf_file F,
-               vc3d   *v,
-               size_t  n1)
-/*< input vector3d 1-D vector >*/
+vc3d rot3d(vc3d *nn,
+	   vc3d *aa,
+	   float phi)
 {
-    int i1;
-    float **w;
-    w=sf_floatalloc2(3,n1);
-
-    sf_floatread(w[0],3*n1,F);
-    for( i1=0; i1<n1; i1++) {
-        v[i1].dx = w[i1][0];
-        v[i1].dy = w[i1][1];
-        v[i1].dz = w[i1][2];
-    }
-
-    free(*w); free(w);
-}
-
-/*------------------------------------------------------------*/
-vc3d* rot3d(vc3d *nn,
-	    vc3d *aa,
-	    float phi)
-/*< rotate a 3D vector around another 3D vector >*/
-{
-    vc3d* qq;
+    vc3d qq;
     float Qxx,Qxy,Qxz, Qyx,Qyy,Qyz, Qzx,Qzy,Qzz;
     float    nx,ny,nz;
     float    ax,ay,az;
     float    qx,qy,qz;
     float sif,cof;
-
-    qq  = (vc3d*) sf_alloc(1,sizeof(*qq));
 
     nx=nn->dx; ny=nn->dy; nz=nn->dz;
     ax=aa->dx; ay=aa->dy; az=aa->dz;
@@ -239,10 +216,32 @@ vc3d* rot3d(vc3d *nn,
     qy = Qyx*ax + Qyy*ay + Qyz*az;
     qz = Qzx*ax + Qzy*ay + Qzz*az;
 
-    qq->dx=qx;
-    qq->dy=qy;
-    qq->dz=qz;
+    qq.dx=qx;
+    qq.dy=qy;
+    qq.dz=qz;
     
     return qq;
 }
+
+/*------------------------------------------------------------*/
+void vc3dread1(sf_file F,
+               vc3d   *v,
+               size_t  n1)
+/*< input vector3d 1-D vector >*/
+{
+    int i1;
+    float **w;
+    w=sf_floatalloc2(3,n1);
+
+    sf_floatread(w[0],3*n1,F);
+    for( i1=0; i1<n1; i1++) {
+        v[i1].dx = w[i1][0];
+        v[i1].dy = w[i1][1];
+        v[i1].dz = w[i1][2];
+    }
+
+    free(*w); free(w);
+}
+
+
 
