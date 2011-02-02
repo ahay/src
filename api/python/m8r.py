@@ -508,7 +508,7 @@ class Vplot(object):
         return Movie(self,other)
     def show(self):
         'Show on screen'
-        os.system('xtpen %s' % self.name)
+        os.system('sfpen %s' % self.name)
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
