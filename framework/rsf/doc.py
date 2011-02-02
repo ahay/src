@@ -671,24 +671,36 @@ def html(dir):
     file = open (os.path.join(dir,'index.html'),'w')
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
-    # Read subversion version number, if possible
-    proc = os.popen('svn stat -v SConstruct 2>/dev/null')
-    raw  = proc.read()
-    proc.close()
-    if len(raw) > 0: # SConstruct is under version control
-        try:
-            revnr = raw[13:].rsplit()[0]
-            know_revnr = True
-        except: # Python < 2.4 or strange svn output
+    known_version = __read_version_file('VERSION.txt')
+    rev_add2content = ''
+    if known_version[-4:] == '-svn' or known_version == '':
+        # Read subversion version number, if possible
+        proc = os.popen('svn stat -v SConstruct 2>/dev/null')
+        raw  = proc.read()
+        proc.close()
+        if len(raw) > 0: # SConstruct is under version control
+            try:
+                revnr = raw[13:].rsplit()[0]
+                know_revnr = True
+            except: # Python < 2.4 or strange svn output
+                know_revnr = False
+        else:
             know_revnr = False
+        if know_revnr or known_version != '':
+            rev_add2content = 'development version '
+            if known_version != '':
+                rev_add2content += known_version + ' '
+            if know_revnr:
+                rev_add2content += 'r' + revnr
     else:
-        know_revnr = False
+        rev_add2content = 'version ' + known_version
+            
     if have_datetime_module or know_revnr:
         content += 'Generated'
         if have_datetime_module:
             content += ' on ' + str(datetime.date.today())
-        if know_revnr:
-            content += ' from development version r' + revnr
+        if rev_add2content != '':
+            content += ' from ' + rev_add2content
     dirs = {}
     for prog in progs.keys():
         dir = os.path.dirname(progs[prog].file)
