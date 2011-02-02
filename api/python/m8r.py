@@ -495,7 +495,7 @@ class Vplot(object):
     def image(self):
         'Convert to PNG in the current directory (for use with SAGE)'
         self.png = os.path.basename(self.name)+'.png'
-        self.export(self.png,'png')
+        self.export(self.png,'png',pen='ps')
     def movie(self):
         'Convert to animated GIF in the current directory (for use with SAGE)'
         self.gif = os.path.basename(self.name)+'.gif'
