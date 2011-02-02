@@ -341,19 +341,24 @@ class Output(_File):
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
-class Fetch(object):
-    'Fetch files from the Internet'
-    dataserver = os.environ.get('RSF_DATASERVER',
-                                'http://www.reproducibility.org')
-    def __init__(self,server=dataserver,top='data'):
-        self.server = server
-        self.top = top
-    def get(self,directory,filename):
-        'retrieve a file from remote server'
-        rdir =  os.sep.join([self.server,self.top,
-                             directory,os.path.basename(filename)])
-        urllib.urlretrieve(rdir,filename)
+dataserver = os.environ.get('RSF_DATASERVER',
+                            'http://www.reproducibility.org')
 
+def Fetch(directory,filename,server=dataserver,top='data'):
+    'retrieve a file from remote server'
+    if server == 'local':
+        remote = os.path.join(top,
+                            directory,os.path.basename(filename))
+        try:
+            os.symlink(remote,filename)
+        except:
+            print 'Could not link file "%s" ' % remote
+            os.unlink(filename)
+    else:
+        rdir =  os.path.join(server,top,
+                             directory,os.path.basename(filename))
+        urllib.urlretrieve(rdir,filename)
+        
 class Filter(object):
     'Madgagascar filter'
     plots = ('grey','contour','graph','contour3',
