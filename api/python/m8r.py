@@ -13,7 +13,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys, tempfile, re, subprocess
+import os, sys, tempfile, re, subprocess, urllib
 import c_m8r as c_rsf
 import numpy
 
@@ -341,6 +341,19 @@ class Output(_File):
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
+class Fetch(object):
+    'Fetch files from the Internet'
+    dataserver = os.environ.get('RSF_DATASERVER',
+                                'http://www.reproducibility.org')
+    def __init__(self,server=dataserver,top='data'):
+        self.server = server
+        self.top = top
+    def get(self,directory,filename):
+        'retrieve a file from remote server'
+        rdir =  os.sep.join([self.server,self.top,
+                             directory,os.path.basename(filename)])
+        urllib.urlretrieve(rdir,filename)
+
 class Filter(object):
     'Madgagascar filter'
     plots = ('grey','contour','graph','contour3',
@@ -381,6 +394,8 @@ class Filter(object):
                                  (key,self.prog.name))
             if isinstance(val,str):
                 val = '\''+val+'\''
+            elif isinstance(val,File):
+                val = '\'%s\'' % val
             elif isinstance(val,bool):
                 if val:
                     val = 'y'
