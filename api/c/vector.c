@@ -186,6 +186,7 @@ vc3d scl3d(vc3d* V, float s)
 vc3d rot3d(vc3d *nn,
 	   vc3d *aa,
 	   float phi)
+/*< rotate a 3D vector >*/
 {
     vc3d qq;
     float Qxx,Qxy,Qxz, Qyx,Qyy,Qyz, Qzx,Qzy,Qzz;
