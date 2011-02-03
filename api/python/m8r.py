@@ -97,6 +97,7 @@ class File(object):
         self.temp = temp
         self.narray = None
         for filt in Filter.plots + Filter.diagnostic:
+            # run things like file.grey() or file.sfin()
             setattr(self,filt,Filter(filt,srcs=[self],run=True))
         for attr in File.attrs:
             setattr(self,attr,self.want(attr))
@@ -357,14 +358,17 @@ def Fetch(directory,filename,server=dataserver,top='data'):
     else:
         rdir =  os.path.join(server,top,
                              directory,os.path.basename(filename))
-        urllib.urlretrieve(rdir,filename)
+        try:
+            urllib.urlretrieve(rdir,filename)
+        except:
+            print 'Could not retrieve file "%s" from "%s"' % (filename,rdir)
         
 class Filter(object):
     'Madgagascar filter'
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle')
     diagnostic = ('attr','disfil')
-    def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False):
+    def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False,pipe=False):
         rsfroot = rsf.prog.RSFROOT
         self.plot = False
         self.stdout = True
@@ -383,6 +387,7 @@ class Filter(object):
         self.run=run
         self.command = name
         self.checkpar = checkpar
+        self.pipe = pipe
         if self.prog:
             self.__doc__ =  self.prog.docstring()
     def __str__(self):
@@ -448,7 +453,7 @@ class Filter(object):
         if args:
             self.stdout = args[0]
             self.run = True
-        elif not kw:
+        elif not kw and not self.pipe:
             self.run = True
         self.setcommand(kw,args[1:])
         if self.run:
@@ -458,7 +463,8 @@ class Filter(object):
     def __getattr__(self,attr):
         'Making pipes'
         other = Filter(attr)
-        self.command = '%s | %s' % (self,other) 
+        self.pipe = True
+        self.command = '%s | %s' % (self,other)
         return self
 
 def Vppen(plots,args):
