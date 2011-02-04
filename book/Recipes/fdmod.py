@@ -60,12 +60,12 @@ def param(par):
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
-    if ((dx+dy)    == 0.0)  : yxratio=1.0
-    else                    : yxratio=1.0*dx/(dx+dy)
-    if ((dz+dy)    == 0.0)  : yzratio=1.0
-    else                    : yzratio=1.0*dz/(dz+dy)
-    if ((5*dt+dy) == 0.0)   : ytratio=1.0
-    else                    : ytratio=5*dt/(5*dt+dy);
+    if ((dx+dy)   == 0.0)  : yxratio=1.0
+    else                   : yxratio=1.0*dx/(dx+dy)
+    if ((dz+dy)   == 0.0)  : yzratio=1.0
+    else                   : yzratio=1.0*dz/(dz+dy)
+    if ((3*dt+dy) == 0.0)  : ytratio=1.0
+    else                   : ytratio=3*dt/(3*dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
@@ -77,7 +77,7 @@ def param(par):
     else:
         par['height3d']=11*par['ratio3d']
 
-    par['tratio3d']=(5*dt+dy)/(dx+dy);
+    par['tratio3d']=(3*dt+dy)/(dx+dy);
     if(par['tratio3d']>1):
         par['theight3d']=10
     else:
@@ -130,13 +130,13 @@ def ccut3d(custom,par):
 #    byte gainpanel=a pclip=100 %s |
 def cgrey3d(custom,par):
     return '''
-    grey3 title="" framelabel=n
+    grey3 title="" framelabel=n parallel2=n
     label1=%s unit1=%s
     label2=%s unit2=%s
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1 yll=1
+    xll=2 yll=2
     %s
     ''' % (
            par['lz'],par['uz'],
@@ -201,12 +201,13 @@ def dgrey3d(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |
     byte gainpanel=a pclip=100 %s |
-    grey3 title="" framelabel=n
+    grey3 title="" framelabel=n parallel2=n
     label1=%s unit1=%s
     label2=%s unit2=%s
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    xll=2 yll=2
     %s
     ''' % (par['tmin'],par['tmax'],
            par['xmin'],par['xmax'],
