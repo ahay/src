@@ -5,6 +5,10 @@ Import('env bindir libdir pkgdir shrdir srcdir')
 sys.path.insert(0,os.path.join(srcdir,'build/framework'))
 
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH')})
+
+if env['PLATFORM'] == 'darwin':
+    env.Append(ENV={'DYLD_LIBRARY_PATH':os.environ.get('DYLD_LIBRARY_PATH')})
+
 env.Prepend(ENV={'PYTHONPATH':os.path.dirname(pkgdir)})
 
 txtdir = os.path.join(shrdir,'txt')

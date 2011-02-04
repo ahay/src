@@ -60,6 +60,7 @@ if 'python' in env.get('API',[]):
             pydir = os.path.dirname(pkgdir)
 
             install = env.Install(pydir,pfiles)
+            
             if module == 'm8r':
                 env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
                 env.Install(bindir,module+'test')

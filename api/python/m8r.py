@@ -518,10 +518,10 @@ class Vplot(object):
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
-    def image(self):
+    def image(self,pen='ps'):
         'Convert to PNG in the current directory (for use with SAGE)'
         self.png = os.path.basename(self.name)+'.png'
-        self.export(self.png,'png',pen='ps')
+        self.export(self.png,'png',pen=pen,args='bgcolor=w')
     def movie(self):
         'Convert to animated GIF in the current directory (for use with SAGE)'
         self.gif = os.path.basename(self.name)+'.gif'

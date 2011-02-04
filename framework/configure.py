@@ -240,7 +240,7 @@ def cc(context):
         # Mac OS X include path, library path, and link flags
         if plat['OS'] == 'darwin':
             context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
-                                       ' -framework Accelerate'
+                                       ' -framework Accelerate ' 
             if os.path.isdir('/opt'):   # paths for MacPorts
                 context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
                                          ['/opt/local/include',]
