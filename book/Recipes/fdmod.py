@@ -64,8 +64,8 @@ def param(par):
     else                   : yxratio=1.0*dx/(dx+dy)
     if ((dz+dy)   == 0.0)  : yzratio=1.0
     else                   : yzratio=1.0*dz/(dz+dy)
-    if ((3*dt+dy) == 0.0)  : ytratio=1.0
-    else                   : ytratio=3*dt/(3*dt+dy);
+    if ((2*dt+dy) == 0.0)  : ytratio=1.0
+    else                   : ytratio=2*dt/(3*dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
@@ -77,7 +77,7 @@ def param(par):
     else:
         par['height3d']=11*par['ratio3d']
 
-    par['tratio3d']=(3*dt+dy)/(dx+dy);
+    par['tratio3d']=(2*dt+dy)/(dx+dy);
     if(par['tratio3d']>1):
         par['theight3d']=10
     else:

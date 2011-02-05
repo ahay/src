@@ -72,6 +72,10 @@ def ovl(ovl,jc,jr,custom,cco):
              ''' %(min,max,min,max,
                    custom))
 
+        Plot(ovl+ctag+'l',None,
+             'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+             ((5.6+2.75*ic/90.),(5.1-2.75*ic/90.),"%s"%ic,0,0))
+
     # radii
     for ir in range(0,360,jr):
         rtag='%03d'%ir
@@ -103,10 +107,29 @@ def ovl(ovl,jc,jr,custom,cco):
              %s
              ''' %(min,max,min,max,
                    custom))
-        
+
+    Plot(ovl+'-ann000',None,
+         'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+         (9.65,5,"0",0,0))
+    Plot(ovl+'-ann090',None,
+         'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+         (5.55,9.25,"90",0,0))
+    Plot(ovl+'-ann180',None,
+         'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+         (1.2,5,"180",0,0))
+    Plot(ovl+'-ann270',None,
+         'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+         (5.5,1,"270",0,0))
+
+    Plot(ovl+'-center',None,
+         'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+         (5.6,5.10,"0",0,0))
+    
     Plot(ovl,
          map(lambda x: ovl+'%02d' % x,range(jc,int((cco['n']-1)/2*cco['d']+jc),jc))+
-         map(lambda x: ovl+'%03d' % x,range(0,360,jr)),
+         map(lambda x: ovl+'%03d' % x,range(0,360,jr))+
+         map(lambda x: ovl+'%02dl'% x,range(jc,int((cco['n']-1)/2*cco['d']+jc),jc))+
+         [ovl+'-ann000',ovl+'-ann090',ovl+'-ann180',ovl+'-ann270',ovl+'-center'],
          'Overlay')
 
 # ------------------------------------------------------------
