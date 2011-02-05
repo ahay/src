@@ -20,12 +20,14 @@
 #include <math.h>
 #include <rsf.h>
 
+#include "warp2.h"
+
 int main (int argc, char* argv[])
 {
     bool half, mzo;
-    int it,ix,ih, nt,nx, nh, CDPtype, ntx, nw;
+    int it,ix,ih, nt,nx, nh, CDPtype, ntx;
     float dt, t0, h, h0, t, tm, tp, tx, tq, dh, dx, x0, x;
-    float *px, *ph, **coord, *ord, *img, *img2;
+    float *px, *ph, **xstr, **tstr, **slice, **img, eps;
     sf_file cmp, mig, xdip, hdip;
 
     sf_init (argc,argv);
@@ -59,31 +61,32 @@ int main (int argc, char* argv[])
     if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
     sf_warning("CDPtype=%d",CDPtype);
 
-    if (!sf_getint("nw",&nw)) nw=4;
-    /* interpolator size (2,3,4,6,8) */
-
     ntx = nt*nx;
 
     px = sf_floatalloc(nt);
     ph = sf_floatalloc(nt);
-    coord = sf_floatalloc2(2,nt);
-    ord = sf_floatalloc(nt);
-    img = sf_floatalloc(ntx);
-    img2 = sf_floatalloc(ntx);
+    tstr = sf_floatalloc2(nt,nx);
+    xstr = sf_floatalloc2(nt,nx);
+    slice = sf_floatalloc2(nt,nx);
+    img = sf_floatalloc2(nt,nx);
 
     if (!sf_getbool("mzo",&mzo)) mzo=false;
     /* do migration to zero offset */
 
+    if (!sf_getfloat("eps",&eps)) eps=1.0;
+    /* stretch regularization */    
+
+    warp2_init (nt, t0, dt,
+		nx, x0, dx,
+		nt, nx, eps);
+
     for (ih = 0; ih < nh; ih++) {
-	for (it=0; it < ntx; it++) {
-	    img[it]=0.;
-	}
+	sf_floatread (slice[0], ntx, cmp);
 
 	for (ix = 0; ix < nx; ix++) {
 	    x = x0 + ix*dx;
 	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
-	    	
-	    sf_floatread (ord, nt, cmp);
+
 	    sf_floatread (px, nt, xdip);
 	    sf_floatread (ph, nt, hdip);
 	    
@@ -95,37 +98,24 @@ int main (int argc, char* argv[])
 		tq = tm*tm-tx*tx;
 
 		if (mzo) {
-		    coord[it][0] = 
+		    tstr[ix][it] = 
 			sqrtf(fabsf(t*tq*tq)/
 			      (fabsf(tm*tm*tm)+SF_EPS));
-		    coord[it][1] = x - h*tx/(tm+SF_EPS);
+		    xstr[ix][it] = x - h*tx/(tm+SF_EPS);
 		} else {
-		    coord[it][0] = 
+		    tstr[ix][it] = 
 			sqrtf(fabsf(t*ph[it]*tq*tq)/
 			      (fabsf(tm*tm*tp)+SF_EPS));
-		    coord[it][1] = x - t*h*px[it]/(tp+SF_EPS);
+		    xstr[ix][it] = x - t*h*px[it]/(tp+SF_EPS);
 		}
 	    }
-
-	    sf_int2_init (coord, t0,x0, dt,dx, nt,nx, sf_spline_int, nw, nt);
-	    sf_int2_lop (true,true,ntx,nt,img,ord);	    
 	}
 	
-	/* from spline coefficients to model */
-	if (nw > 2) { 
-	    for (ix=0; ix < nx; ix++) {
-		sf_spline_post (nw, ix*nt, 1, nt, img, img2);
-	    }
-	    for (it=0; it < nt; it++) {
-		sf_spline_post (nw, it, nt, nx, img2, img);
-	    }
-	}
-	
-	sf_floatwrite (img,ntx,mig);
+	warp2(slice,tstr,xstr,img);
+	sf_floatwrite (img[0],ntx,mig);
     }
 
 
     exit (0);
 }
 
-/* 	$Id$	 */

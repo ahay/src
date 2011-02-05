@@ -21,13 +21,15 @@
 #include <float.h>
 #include <rsf.h>
 
+#include "warp2.h"
+
 int main (int argc, char* argv[])
 {
     bool half, inter;
-    int it,ix,ih,iv, nt,nx, nh, CDPtype, nv, ntv, nw;
-    float dt, t0, h, h0, t, f, g, dh, dy, v0, dv;
-    float *p=NULL, *pt=NULL, **coord=NULL, *ord=NULL, *vtr=NULL, *vtr2=NULL;
-    sf_file cmp=NULL, vel=NULL, dip=NULL, dipt=NULL;
+    int it,ix,ih, nt,nx, nh, CDPtype, nv, ntv;
+    float dt, t0, h, h0, t, f, g, dh, dy, v0, dv, eps;
+    float *p, *pt, **tstr, **vstr, **slice, **vtr;
+    sf_file cmp, vel, dip, dipt;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -72,16 +74,13 @@ int main (int argc, char* argv[])
 
     nx = sf_leftsize(cmp,2);
 
-    if (!sf_getint("nw",&nw)) nw=4;
-    /* interpolator size (2,3,4,6,8) */
-
     ntv = nt*nv;
 
     p = sf_floatalloc(nt);
-    coord = sf_floatalloc2(2,nt);
-    ord = sf_floatalloc(nt);
-    vtr = sf_floatalloc(ntv);
-    vtr2 = sf_floatalloc(ntv);
+    tstr = sf_floatalloc2(nt,nh);
+    vstr = sf_floatalloc2(nt,nh);
+    slice = sf_floatalloc2(nt,nh);
+    vtr = sf_floatalloc2(nt,nv);
 
     if (!sf_getbool("interval",&inter)) inter=false;
     /* if y, compute interval velocity */
@@ -94,16 +93,19 @@ int main (int argc, char* argv[])
 	pt = NULL;
     }
 
-    for (ix = 0; ix < nx; ix++) {
+    if (!sf_getfloat("eps",&eps)) eps=0.1;
+    /* stretch regularization */
 
-	for (iv=0; iv < ntv; iv++) {
-	    vtr[iv]=0.;
-	}
+    warp2_init (nt, t0, dt,
+		nv, v0, dv,
+		nt, nh, eps);
+
+    for (ix = 0; ix < nx; ix++) {
+	sf_floatread (slice[0], nt*nh, cmp);
 
 	for (ih = 0; ih < nh; ih++) {
 	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype);
 
-	    sf_floatread (ord, nt, cmp);
 	    sf_floatread (p, nt, dip);
 	    if (inter) sf_floatread (pt, nt, dipt);
 
@@ -112,38 +114,26 @@ int main (int argc, char* argv[])
 		f = t - p[it]*h*dt/dh;
 
 		if (f < 0. || f > t) {
-		    coord[it][0]=t0-10.*dt;
-		    coord[it][1]=0.;
+		    tstr[ih][it]=t0-10.*dt;
+		    vstr[ih][it]=0.;
 		} else {
-		    coord[it][0] = sqrtf(t*f);
+		    tstr[ih][it] = sqrtf(t*f);
 		    if (inter) {
 			g = dt*p[it]+t*pt[it];
-			coord[it][1] = 
+			vstr[ih][it] = 
 			    sqrtf(fabsf(
 				      h*dh*(p[it]*h*g*dt - 2*pt[it]*t*t*dh)/
 				      (p[it]*p[it]*t*(2*t*dh-h*g)+FLT_EPSILON)
 				      ))/dt;
 		    } else {
-			coord[it][1] = h/sqrtf(t*(t-f)+FLT_EPSILON);
+			vstr[ih][it] = h/sqrtf(t*(t-f)+FLT_EPSILON);
 		    }
 		}
 	    }
+	} /* ih */
 
-	    sf_int2_init (coord, t0,v0, dt,dv, nt,nv, sf_spline_int, nw, nt);
-	    sf_int2_lop (true,true,ntv,nt,vtr,ord);
-	}
-
-	/* from spline coefficients to model */
-	if (nw > 2) { 
-	    for (iv=0; iv < nv; iv++) {
-		sf_spline_post (nw, iv*nt, 1, nt, vtr, vtr2);
-	    }
-	    for (it=0; it < nt; it++) {
-		sf_spline_post (nw, it, nt, nv, vtr2, vtr);
-	    }
-	}
-	
-	sf_floatwrite (vtr,ntv,vel);
+	warp2(slice,tstr,vstr,vtr);
+	sf_floatwrite (vtr[0],ntv,vel);
     }
 
     exit (0);

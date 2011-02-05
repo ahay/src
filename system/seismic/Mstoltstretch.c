@@ -44,6 +44,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool ("inv", &inv)) inv=false;
     /* if y, inverse stretch */
 
+    if (!sf_getint("nstretch",&nstr)) nstr=1;
+    /* number of steps */
+
     if (inv) {
 	if (!sf_histint(in,"n1",&ns)) sf_error("No n1= in input");
 	if (!sf_histint(vel,"n1",&nt)) sf_error("No n1= in velocity");
@@ -53,8 +56,6 @@ int main(int argc, char* argv[])
 	if (!sf_getint("pad",&ns)) ns=nt;
 	/* time axis padding */
 	sf_putint(st,"n1",ns);
-	if (!sf_getint("nstretch",&nstr)) nstr=1;
-	/* number of steps */
 	sf_putint(st,"nstretch", nstr);
     }
     nx = sf_leftsize(in,1);
