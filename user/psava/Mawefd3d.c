@@ -19,10 +19,10 @@
 #include <rsf.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #include "fdutil.h"
+#include "omputil.h"
 
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
@@ -137,10 +137,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* axes */
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
-
+    az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
     ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
     ay = sf_iaxa(Fvel,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* space */
-    az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
 
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
@@ -168,9 +167,9 @@ int main(int argc, char* argv[])
 
     fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
 
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad);
-    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad);
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
+    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -195,9 +194,9 @@ int main(int argc, char* argv[])
 	dqx=sf_d(ax);
 	dqy=sf_d(ay);
 
-	acz = sf_maxa(nqz,oqz,dqz);
-	acx = sf_maxa(nqx,oqx,dqx);
-	acy = sf_maxa(nqy,oqy,dqy);
+	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
+	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
+	acy = sf_maxa(nqy,oqy,dqy); sf_raxa(acy);
 	/* check if the imaging window fits in the wavefield domain */
 
 	uc=sf_floatalloc3(sf_n(acz),sf_n(acx),sf_n(acy));
@@ -399,15 +398,15 @@ int main(int argc, char* argv[])
 	    sponge3d_apply(up,spo,fdm);
 	}
 
-	/* extract data */
+	/* extract data at receivers */
 	lint3d_extract(uo,dd,cr);
+	if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
 
+	/* extract wavefield in the "box" */
 	if(snap && it%jsnap==0) {
 	    cut3d(uo,uc,fdm,acz,acx,acy);
 	    sf_floatwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
 	}
-	if(        it%jdata==0) 
-	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 
@@ -430,8 +429,8 @@ int main(int argc, char* argv[])
     free(rr);
     free(dd);
     free(ww);
-    /*------------------------------------------------------------*/
-
 
     exit (0);
 }
+
+

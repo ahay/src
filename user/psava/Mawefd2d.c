@@ -19,10 +19,10 @@
 #include <rsf.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #include "fdutil.h"
+#include "omputil.h"
 
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
@@ -127,19 +127,13 @@ int main(int argc, char* argv[])
     Frec = sf_input ("rec"); /* receivers */
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
-
-    if (NULL != sf_getstring("den")) {
-	Fden = sf_input ("den"); /* density   */
-    } else {
-	Fden = NULL;
-    }
+    Fden = sf_input ("den"); /* density   */
 
     /*------------------------------------------------------------*/
     /* axes */
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
-
-    ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
     az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
+    ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
 
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
@@ -166,8 +160,8 @@ int main(int argc, char* argv[])
 
     fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
 
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad);
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -189,12 +183,8 @@ int main(int argc, char* argv[])
 	dqz=sf_d(az);
 	dqx=sf_d(ax);
 
-	acz = sf_maxa(nqz,oqz,dqz);
-	acx = sf_maxa(nqx,oqx,dqx);
-/*	if(verb) {*/
-/*	    sf_raxa(acz);*/
-/*	    sf_raxa(acx);*/
-/*	}*/
+	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
+	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
 	/* check if the imaging window fits in the wavefield domain */
 
 	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
@@ -251,13 +241,7 @@ int main(int argc, char* argv[])
     vt  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 
     /* input density */
-    if (NULL != Fden) {
-	sf_floatread(tt[0],nz*nx,Fden);     
-    } else {
-	for (ix=0; ix< nz*nx; ix++) tt[0][ix] = 1.0f;
-    }
-    expand(tt,ro ,fdm);
-
+    sf_floatread(tt[0],nz*nx,Fden);     expand(tt,ro ,fdm);
     /* normalized density derivatives */
     for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 	for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
@@ -380,15 +364,15 @@ int main(int argc, char* argv[])
 	    sponge2d_apply(up,spo,fdm);
 	}
 
-	/* extract data */
+	/* extract data at receivers */
 	lint2d_extract(uo,dd,cr);
+	if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
 
+	/* extract wavefield in the "box" */
 	if(snap && it%jsnap==0) {
 	    cut2d(uo,uc,fdm,acz,acx);
 	    sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 	}
-	if(        it%jdata==0) 
-	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 
@@ -398,9 +382,7 @@ int main(int argc, char* argv[])
     free(*up); free(up);
     free(*uo); free(uo);
     free(*ua); free(ua);
-    if(snap) {
-	free(*uc); free(uc);
-    }
+    free(*uc); free(uc);
 
     free(*rox); free(rox);
     free(*roz); free(roz);
@@ -411,7 +393,6 @@ int main(int argc, char* argv[])
     free(ss);
     free(rr);
     free(dd);
-    /*------------------------------------------------------------*/
 
 
     exit (0);
