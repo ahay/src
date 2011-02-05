@@ -366,7 +366,7 @@ def Fetch(directory,filename,server=dataserver,top='data'):
 class Filter(object):
     'Madgagascar filter'
     plots = ('grey','contour','graph','contour3',
-             'dots','graph3','thplot','wiggle')
+             'dots','graph3','thplot','wiggle','grey3')
     diagnostic = ('attr','disfil')
     def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False,pipe=False):
         rsfroot = rsf.prog.RSFROOT
