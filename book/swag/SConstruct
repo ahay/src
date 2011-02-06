@@ -3,11 +3,13 @@ from rsf.book import *
 Papers(copyr='KAUST',
        group='Seismic Wave Analysis Group',
        papers=Split('''
+       anisogath/article.tex
        introDTI/article.tex
        waveds
        eikds
        '''),
-       authors = {'introDTI-article':'Tariq Alkhalifah and Paul Sava'},
+       authors = {'introDTI-article':'Tariq Alkhalifah and Paul Sava',
+                  'anisogath-article':'Tariq Alkhalifah and Sergey Fomel'},
        line='Selected papers',
        fig=('introDTI/Math','kz','width=\\textwidth'))
        
