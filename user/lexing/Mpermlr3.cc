@@ -1,4 +1,4 @@
-// Lowrank decomposition for 2-D prestack exploding reflector in V(z)
+// Lowrank decomposition for 2-D prestack exploding reflector in V(x,z)
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -23,20 +23,65 @@
 
 using namespace std;
 
-static std::valarray<float>  vs;
-static std::valarray<double> ks;
-static float dt;
-static int nh;
+static std::valarray<float>  v;
+static float dt, kh, kx, kz, kzmin;
+static int nh,nx,nz;
+static int nkh,nkx,nkz;
+static float kh0,kx0,kz0;
+static float dkh,dkx,dkz;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+// assuming dx=dh
 {
+    int ix, ih, iz;
+
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0);
-    for(int a=0; a<nr; a++) {
-	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2*(cos(vs[rs[a]/nh]*ks[cs[b]]*dt)-1); 
+    for(int a=0; a<nr; a++) { /* space index */
+	int i = rs[a];
+
+	ih = i%nh; i /= nh; 
+	ix = i%nx; i /= nx; 
+	iz = i%nz; 
+
+	int is = SF_MIN(SF_MAX(0,ix-ih),nx-1);
+	int ir = SF_MIN(SF_MAX(0,ix+ih),nx-1);
+ 
+	float vs = v[is+iz*nx]; vs *= vs;
+	float vr = v[ir+iz*nx]; vr *= vr;
+	float vp = vs+vr;
+	float vm = vs-vr;
+    
+	for(int b=0; b<nc; b++) { /* wavenumber index */
+	    int i = cs[b];
+
+	    ih = i%nkh; i /= nkh; kh = kh0+ih*dkh; 	    
+	    ix = i%nkx; i /= nkx; kx = kx0+ix*dkx; 
+	    iz = i%nkz; i /= nkz; kz = kz0+iz*dkz; 
+	    
+	    float kp = kx+kh; 
+	    float km = kx-kh;
+	    float kxh = kx*kh;
+	    
+	    kp *= kp;
+	    km *= km;
+	    kz *= kz;
+	    kh *= kh;
+	    kx *= kx;
+	    
+	    kzmin = sqrt(kh*kx);
+	    kz = SF_MAX(kz,kzmin);
+	    
+	    float phi = (kh + kz)*(kx + kz)*vr*vs/
+		(kxh*vm + kz*vp + 
+		 sqrt(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr)));
+	    
+	    // v(z) 
+	    // phi = (kh + kz)*(kx + kz)*vs/(4*kz);
+
+	    res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
 	}
     }
     return 0;
@@ -61,62 +106,34 @@ int main(int argc, char** argv)
     par.get("dt",dt); // time step
 
     iRSF vel;
-
-    int nz,nx; // velocity comes transposed
     vel.get("n1",nx);
     vel.get("n2",nz);
-    
-    int m = nx*nz;
-    std::valarray<float> vels(m);
+
+    int nxz = nx*nz;
+
+    std::valarray<float> vels(nxz);
     vel >> vels;    
-    vs.resize(m);
-    vs = vels;
+    v.resize(nxz);
+    v = vels;
 
     par.get("nh",nh); /* number of offsets */
-    m *= nh;
+    int m = nxz*nh;
     
     iRSF fft("fft");
 
-    int nkh,nkx,nkz;
     fft.get("n1",nkh);
     fft.get("n2",nkx);
     fft.get("n3",nkz);
 
     int n = nkh*nkx*nkz;
 
-    float dkh,dkx,dkz;
     fft.get("d1",dkh);
     fft.get("d2",dkx);
     fft.get("d3",dkz);
     
-    float kh0,kx0,kz0;
     fft.get("o1",kh0); if (nkh==1) kh0=0.0;
     fft.get("o2",kx0);
     fft.get("o3",kz0);
-
-    float kh, kx, kz, kzmin;
-
-    std::valarray<double> k(n);
-    for (int ix=0; ix < nkx; ix++) {
-	kx = kx0+ix*dkx;
-	kx *= kx;
-	for (int ih=0; ih < nkh; ih++) {
-	    kh = kh0+ih*dkh;
-	    kh *= kh;
-
-	    kzmin = sqrt(kh*kx);
-
-	    for (int iz=0; iz < nkz; iz++) {
-		kz = kz0+iz*dkz;
-		kz *= kz;
-
-		kz = SF_MAX(kz,kzmin);
-		k[ih+nkh*(ix+iz*nkx)] = SF_PI*sqrt(kx*kh/kz+kz+kx+kh);
-	    }
-	}
-    }
-    ks.resize(n);
-    ks = k;
 
     vector<int> lidx, ridx;
     DblNumMat mid;
