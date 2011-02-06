@@ -1062,6 +1062,19 @@ def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
          scale axis=123 
          ''' % par)
 
+def gauss3d(gaus,xcen,ycen,zcen,xsig,ysig,zsig,par):
+    Flow(gaus,None,
+         '''
+         math output="exp(-((x1-%g)*(x1-%g))/(2*%g)-((x2-%g)*(x2-%g))/(2*%g)-((x3-%g)*(x3-%g))/(2*%g))"
+         ''' % (zcen,zcen,zsig*zsig,xcen,xcen,xsig*xsig,ycen,ycen,ysig*ysig) +
+         '''
+         n1=%(nz)d d1=%(dz)g o1=%(oz)g
+         n2=%(nx)d d2=%(dx)g o2=%(ox)g 
+	 n3=%(ny)d d3=%(dy)g o3=%(oy)g |
+         scale axis=123
+         ''' % par)
+
+
 def quiver(vect,custom,par):
 
 	Plot(vect+'o',vect,'window n1=1|' +

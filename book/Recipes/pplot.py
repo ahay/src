@@ -8,9 +8,10 @@ import fdmod
 def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
 
     alljnk=[]
-    for ix in range(nx):
-        for iy in range(ny):
-            ii = ix*ny+iy
+    for iy in range(ny):
+        for ix in range(nx):
+
+            ii = iy*nx+ix
 
             plt = allplots[ii]
             jnk = '_' + plt
@@ -19,11 +20,14 @@ def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
                  plt,
                  'Overlay',
                  vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f '
-                 % (ys,xs,(ny-iy-1)*yc,ix*xc))
+                 % (ys,xs,iy*yc,ix*xc))
 
             alljnk.append(jnk)
 
     Result(plot,alljnk,'Overlay')
+
+def animate(plot,allplots,ny,nx,ys,xs,yc,xc):
+    Result(plot,allplots,'Movie')
 # ------------------------------------------------------------
 
 def p2x2(plot,p0,p1,p2,p3,ys,xs,yc,xc):
