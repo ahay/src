@@ -49,8 +49,15 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	int is = SF_MIN(SF_MAX(0,ix-ih),nx-1);
 	int ir = SF_MIN(SF_MAX(0,ix+ih),nx-1);
  
-	float vs = v[is+iz*nx]; vs *= vs;
-	float vr = v[ir+iz*nx]; vr *= vr;
+	float vs = v[is+iz*nx]; 
+	float vr = v[ir+iz*nx]; 
+
+	float vp2 = 0.5*(vs+vr);
+	vp2 *= vp2;
+
+	vs *= vs;
+	vr *= vr;
+
 	float vp = vs+vr;
 	float vm = vs-vr;
     
@@ -76,10 +83,10 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    
 	    float phi = (kh + kz)*(kx + kz)*vr*vs/
 		(kxh*vm + kz*vp + 
-		 sqrt(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr)));
+		 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr))));
 	    
 	    // v(z) 
-	    // phi = (kh + kz)*(kx + kz)*vs/(4*kz);
+	    phi = (kh + kz)*(kx + kz)*vs*vr/(4*kz*vp2);
 
 	    res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
 	}
