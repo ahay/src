@@ -65,7 +65,7 @@ def param(par):
     if ((dz+dy)   == 0.0)  : yzratio=1.0
     else                   : yzratio=1.0*dz/(dz+dy)
     if ((2*dt+dy) == 0.0)  : ytratio=1.0
-    else                   : ytratio=2*dt/(3*dt+dy);
+    else                   : ytratio=2*dt/(2*dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
