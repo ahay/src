@@ -23,8 +23,9 @@
 int main(int argc, char* argv[])
 {
     char *unit;
-    int nt, nx, ny, ns, nh, nz, nzx, ix, ih, i, is, ist, iht;
-    float *trace, *out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
+    bool cig;
+    int nt, nx, ny, ns, nh, nz, nzx, ix, ih, is, ist, iht;
+    float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
     float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal, tx;
     sf_file inp, mig, tbl;
 
@@ -60,20 +61,29 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(tbl,"o3",&y0)) sf_error("No o3= in table");
     if (!sf_histfloat(tbl,"d3",&dy)) sf_error("No d3= in table");
 
+    if (!sf_getfloat("antialias",&aal)) aal=1.0;
+    /* antialiasing */
+    if (!sf_getbool("cig",&cig)) cig=false;
+    /* y - output common offset gathers */
+
     sf_putint(mig,"n1",nz);
     sf_putint(mig,"n2",nx);
 
     sf_putfloat(mig,"o1",z0);
     sf_putfloat(mig,"d1",dz);
-    sf_putstring(mig,"label1","Depth");
-    unit = sf_histstring(inp,"unit2");
-    if (NULL != unit) sf_putstring(mig,"unit1",unit);
-
     sf_putfloat(mig,"o2",x0);
     sf_putfloat(mig,"d2",dx);
-
-    if (!sf_getfloat("antialias",&aal)) aal=1.0;
-    /* antialiasing */
+    sf_putstring(mig,"label1","Depth");
+    sf_putstring(mig,"label2","Lateral");
+    unit = sf_histstring(inp,"unit2");
+    if (NULL != unit) sf_putstring(mig,"unit1",unit);
+    if (cig) {
+        sf_putint(mig,"n3",nh);
+        sf_putfloat(mig,"o3",h0);
+        sf_putfloat(mig,"d3",dh);
+        sf_putstring(mig,"label3","Offset");
+        if (NULL != unit) sf_putstring(mig,"unit3",unit);
+    }
 
     nzx = nz*nx;
 
@@ -91,7 +101,7 @@ int main(int argc, char* argv[])
 	tablex = NULL;
     }
 
-    out = sf_floatalloc(nzx);
+    out = sf_floatalloc2(nzx,cig ? nh : 1);
     trace = sf_floatalloc(nt);
 
     for (is=0; is < ns; is++) { /* shot */
@@ -109,10 +119,9 @@ int main(int argc, char* argv[])
 	stable = table[ist];
 	stablex = (NULL==tablex)? NULL:tablex[ist];
 
-	for (i=0; i < nzx; i++) {
-	    out[i] = 0.;
-	}
-	
+        if (!cig || 0 == is)
+	    memset (&out[0][0], 0, cig ? nzx*nh*sizeof(float) : nzx*sizeof(float));
+
 	for (ih=0; ih < nh; ih++) { /* offset */
 	    h = h0+ih*dh;
 
@@ -138,12 +147,14 @@ int main(int argc, char* argv[])
 		
 		tx = (NULL==tablex)? 0.: SF_MAX(fabsf(stablex[ix]*ds),
 						fabsf(rtablex[ix]*dh));
-		out[ix] += pick(ti,tx*aal,trace,nt,dt,t0);
+                out[cig ? ih : 0][ix] += pick(ti,tx*aal,trace,nt,dt,t0);
 	    } 
-	} 
-	
-	sf_floatwrite(out,nzx,mig);        
+	}
+        if (!cig) 
+            sf_floatwrite(out[0],nzx,mig);
     }
+    if (cig)
+        sf_floatwrite(out[0],nzx*nh,mig);
 
     exit(0);
 }
