@@ -472,8 +472,8 @@ int main (int argc, char **argv) {
         sf_warning (" migrated %d traces in total", ktr);
 
     scal = 4.0/sqrt(SF_PI)*dxm/v0;
-    for (ixo = 0; ixo < nxo; ixo++) {
-        for (io = 0; io < noff; io++) {
+    for (io = 0; io < noff; io++) {
+        for (ixo = 0; ixo < nxo; ixo++) {
             for (izo = 0; izo < nzo; ++izo)
                 mig[io][ixo][izo] *=scal;
             /* write out */
@@ -602,30 +602,30 @@ void mig2d (float *trace, int nt, float ft, float dt,
 Migrate one trace 
 ******************************************************************************
 Input:
-*trace                one seismic trace 
-nt                number of time samples in seismic trace
-ft                first time sample of seismic trace
-dt                time sampleing interval in seismic trace
-sx,gx                lateral coordinates of source and geophone 
-aperx                lateral aperature in migration
+*trace                   one seismic trace 
+nt                       number of time samples in seismic trace
+ft                       first time sample of seismic trace
+dt                       time sampleing interval in seismic trace
+sx,gx                    lateral coordinates of source and geophone 
+aperx                    lateral aperature in migration
 nx,fx,dx,nz,fz,dz        dimension parameters of migration region
-ls                =1 for line source; =0 for point source
-mtmax                number of time samples in triangle filter
-dxm                midpoint sampling interval
-fmax                frequency-highcut for input trace         
-angmax                migration angle aperature from vertical          
-tb,pb,cs0b,angb                reference traveltime, lateral slowness, cosine of 
-                incident angle, and emergent angle
-nr                number of lateral samples in reference quantities
-tsum                sum of residual traveltimes from shot and receiver
-nxt,fxt,dxt,nzt,fzt,dzt                dimension parameters of traveltime table
-npv=0                flag of computing quantities for velocity analysis
-cssume                sum of cosine of emergence angles from shot and recerver 
-tvsum                sum of  traveltime variations from shot and recerver 
+ls                       =1 for line source; =0 for point source
+mtmax                    number of time samples in triangle filter
+dxm                      midpoint sampling interval
+fmax                     frequency-highcut for input trace
+angmax                   migration angle aperature from vertical
+tb,pb,cs0b,angb          reference traveltime, lateral slowness, cosine of
+                         incident angle, and emergent angle
+nr                       number of lateral samples in reference quantities
+tsum                     sum of residual traveltimes from shot and receiver
+nxt,fxt,dxt,nzt,fzt,dzt  dimension parameters of traveltime table
+npv=0                    flag of computing quantities for velocity analysis
+cssume                   sum of cosine of emergence angles from shot and recerver
+tvsum                    sum of  traveltime variations from shot and recerver
 
 Output:
-mig                migrated section
-mig1                additional migrated section for velocity analysis if npv>0
+mig                      migrated section
+mig1                     additional migrated section for velocity analysis if npv>0
 *****************************************************************************/
 {
         int nxf,nxe,nxtf,nxte,ix,iz,iz0,izt0,nzp,jrs,jrg,jz,jt,mt,jx;
@@ -654,6 +654,8 @@ mig1                additional migrated section for velocity analysis if npv>0
         pmin = 1.0/(2.0*dxm*fmax);
         
         filt(trace,nt,dt,fmax,ls,mtmax,trf);
+/*        for (int ii = 0; ii < nt; ii++)
+            trf[ii] = trace[ii];*/
 
         xm = 0.5*(sx+gx);
         rxz = (angmax==90)?0.0:1.0/tan(angmax*SF_PI/180.);
@@ -662,7 +664,7 @@ mig1                additional migrated section for velocity analysis if npv>0
         nxte = (xm+aperx-fxt)/dxt+1;
         if(nxte>=nxt) nxte = nxt-1;
 
-        /* compute amplitudes and filter length        */
+        /* compute amplitudes and filter length */
         for(ix=nxtf; ix<=nxte; ++ix){
                 x = fxt+ix*dxt;
                 dis = (xm>=x)?xm-x:x-xm;
@@ -832,14 +834,14 @@ mig1                additional migrated section for velocity analysis if npv>0
 }
 
 void filt (float *trace, int nt, float dt, float fmax, int ls, int m, float *trf)
-/* Low-pass filter, integration and phase shift for input data         
+/* Low-pass filter, integration and phase shift for input data
    input: 
     trace(nt)        single seismic trace
-   fmax        high cut frequency
-    ls                ls=1, line source; ls=0, point source
+    fmax             high cut frequency
+    ls               ls=1, line source; ls=0, point source
   output:
-    trace(nt)         filtered and phase-shifted seismic trace 
-    tracei(nt)         filtered, integrated and phase-shifted seismic trace 
+    trace(nt)        filtered and phase-shifted seismic trace
+    tracei(nt)       filtered, integrated and phase-shifted seismic trace
  */
 {
         static int nfft=0, itaper, nw, nwf;
