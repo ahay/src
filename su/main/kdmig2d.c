@@ -126,10 +126,10 @@ int main (int argc, char **argv) {
     int ns;   /* number of sources                             */
     int noff; /* number of offsets in output data              */
     int nr, nsi, ngi;
-    int is, io, ig, ixo, izo; /* counters */
+    int is, io, iis, iig, ixo, izo; /* counters */
     int ls, ntr, jtr, ktr, mtr, npv, mtmax;
-    int offset, absoff, limoff;
-    float ft, fzt, fxt, fzo, fxo, fs, off0,
+    int absoff, limoff;
+    float ft, fzt, fxt, fzo, fxo, fs, off0, offset,
           dt, dzt, dxt, dzo, dxo, ds, doff, dxm,
           ext, ezt, ezo, exo, es, s, scal;
     float fsi, fgi, dsi, dgi;
@@ -395,7 +395,7 @@ int main (int argc, char **argv) {
 
     jtr = 1;
     ktr = 0;
-    is = ig = 0;
+    iis = iig = 0;
 
     if (verb)
       sf_warning (" fs=%g es=%g offmax=%g", fs, es, offmax);
@@ -407,8 +407,8 @@ int main (int argc, char **argv) {
         /* determine offset index */
         float as,res;
 
-        sx = fsi + is*dsi;
-        gx = sx + fgi + ig*dgi;
+        sx = fsi + iis*dsi;
+        gx = sx + fgi + iig*dgi;
 
         offset = gx - sx;
         if (absoff && offset < 0) offset =-offset;
@@ -461,10 +461,10 @@ int main (int argc, char **argv) {
         }
         /* Next trace */
         jtr++;
-        ig++;
-        if (ngi == ig) { /* Next shot */
-            ig = 0;
-            is++;
+        iig++;
+        if (ngi == iig) { /* Next shot */
+            iig = 0;
+            iis++;
         }
     } while (jtr < ntr);
 
