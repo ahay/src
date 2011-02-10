@@ -104,8 +104,10 @@ int main (int argc,char* argv[]) {
 
     /* Add support for horizons in 3D later */
     sfile = sf_getstring ("horizon");
+    /* File with a reflection interface */
     if (1 == n3 && sfile) {
        hor = sf_input (sfile);
+       /* File with a reflection interface */
        if (!sf_histint (hor, "n1", &nh)) nh = n2;
        if (!sf_histfloat (hor, "o1", &oh)) oh = o2;
        if (!sf_histfloat (hor, "d1", &dh)) dh = d2;
@@ -161,5 +163,5 @@ int main (int argc,char* argv[]) {
     if (horiz)
         sf_eno_close (horiz);
 
-    exit (0);
+    return 0;
 }
