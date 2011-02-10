@@ -268,3 +268,69 @@ void sf_run_fast_sweep (float *t, float *s, int niter,
         }
     }
 }
+
+void sf_insert_horiz_2d (float *v, int n2, int n1,
+                         float o2, float o1, float d2, float d1,
+                         sf_eno horiz, float oh, float dh, int nh)
+/*< modify velocity model acording to horizon interface >*/
+{
+    int ix, iz;
+    float x;
+    for (ix = 0; ix < n2; ix++) {
+        x = o2 + ix*d2;
+        if (x < oh) x = oh;
+        if (x > (oh + (nh - 1)*dh)) x = oh + (nh - 1)*dh;
+        x = (x - oh)/dh;
+        /* Find horizon location in z for this x */
+        sf_eno_apply (horiz, (int)x, x - (int)x, &x, NULL, FUNC);
+        iz = (x - o1)/d1;
+        if (iz < 0 || iz >= n1) continue;
+        x = v[ix*n1 + iz];
+        iz++;
+        /* Spread velocity value fronm above the horizon below it */
+        while (iz < n1) {
+            v[ix*n1 + iz] = x;
+            iz++;
+        }
+    }
+}
+
+void sf_extract_horiz_2d (float *t, float *s, int n2, int n1,
+                          float o2, float o1, float d2, float d1,
+                          sf_eno horiz, float oh, float dh, int nh)
+/*< modify velocity model acording to horizon interface >*/
+{
+    int ix, iz, iiz;
+    float x, th, izf;
+
+    for (ix = 0; ix < n2; ix++) { /* Horizon points */
+        x = o2 + ix*d2;
+        if (x < oh) x = oh;
+        if (x > (oh + (nh - 1)*dh)) x = oh + (nh - 1)*dh;
+        x = (x - oh)/dh;
+        /* Find horizon location in z for this x */
+        sf_eno_apply (horiz, (int)x, x - (int)x, &x, NULL, FUNC);
+        iz = (x - o1)/d1;
+        if (iz < 0 || iz >= n1) continue;
+        izf = (x - o1)/d1 - (float)iz;
+        /* Traveltime on the horizon at x */
+        if (iz < (n1 - 1))
+            th = (1.0 - izf)*t[ix*n1 + iz] + izf*t[ix*n1 + iz + 1];
+        else
+            th = t[ix*n1 + iz];
+        /* Advance to the nearest grid location */
+        t[ix*n1 + iz] = th + s[ix*n1 + iz]*d1*izf;
+        iiz = iz - 1;
+        /* Unset all value above and below */
+        while (iiz >= 0) {
+            t[ix*n1 + iiz] = SF_HUGE;
+            iiz--;
+        }
+        iiz = iz + 1;
+        while (iiz < n1) {
+            t[ix*n1 + iiz] = SF_HUGE;
+            iiz++;
+        }
+    }
+}
+
