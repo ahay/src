@@ -52,7 +52,8 @@ int main (int argc,char* argv[]) {
        deltat = sf_input (sfile);
        /* File with traveltime differences */
        free (sfile); sfile = NULL;
-    }
+    } else
+        sf_error ("Need deltat=");
 
     t1  = sf_floatalloc2 (n1, n2);
     t2  = sf_floatalloc2 (n1, n2);
@@ -94,7 +95,7 @@ int main (int argc,char* argv[]) {
 
         sf_init_lambda_2d_sweep (dt, l, t2, n2, n1, d2, d1);
 
-        sf_run_lambda_2d_sweep (t2, l, niter, n2, n1, d2, d1);
+        sf_run_lambda_2d_sweep2 (t2, l, niter, n2, n1, d2, d1);
 /*
         if (horiz) {
         }
