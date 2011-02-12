@@ -75,7 +75,7 @@ def param(par):
     if(par['ratio3d']>1):
         par['height3d']=10
     else:
-        par['height3d']=11*par['ratio3d']
+        par['height3d']=14*par['ratio3d']
 
     par['tratio3d']=(2*dt+dy)/(dx+dy);
     if(par['tratio3d']>1):
