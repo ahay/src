@@ -110,8 +110,8 @@ def cgrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -151,8 +151,8 @@ def wgrey(custom,par):
     window min1=%g max1=%g min2=%g max2=%g |
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
-    label1="\F2 %s\F3" unit1=%s
-    label2="\F2 %s\F3" unit2=%s
+    label1="\F2 %s\F3 " unit1=%s
+    label2="\F2 %s\F3 " unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],
@@ -165,8 +165,8 @@ def wgrey(custom,par):
 def cgraph(custom,par):
     return '''
     graph labelrot=n wantaxis=n title="" yreverse=y wherexlabel=t
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -177,8 +177,8 @@ def cgraph(custom,par):
 def ccont(custom,par):
     return '''
     contour labelrot=n wantaxis=n title=""
-    min1=%g max1=%g label1=%s unit1="\F2 %s\F3"
-    min2=%g max2=%g label2=%s unit2="\F2 %s\F3"
+    min1=%g max1=%g label1=%s unit1="\F2 %s\F3 "
+    min2=%g max2=%g label2=%s unit2="\F2 %s\F3 "
     screenratio=%g screenht=%g wantscalebar=%s
     plotcol=2 plotfat=3
     %s
@@ -191,8 +191,8 @@ def dgrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -224,8 +224,8 @@ def egrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -237,7 +237,7 @@ def fgrey(custom,par):
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min2=%g max2=%g label2=%s unit2=%s
-    label1="\F2 f\F3" unit1="\F2 Hz\F3"
+    label1="\F2 f\F3 " unit1="\F2 Hz\F3 "
     screenratio=%g screenht=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -350,27 +350,34 @@ def vertical3d(cc,coordx,coordy,par):
 
 
 def point(cc,xcoord,zcoord,par):
-    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
-    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Flow(cc,[cc+'_x',cc+'_z'],
-         '''
-         cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+#    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+#    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
+#    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
+#    Flow(cc,[cc+'_x',cc+'_z'],
+#         '''
+#         cat axis=2 space=n
+#         ${SOURCES[0]} ${SOURCES[1]} | transp |
+#	 put label1="" unit1="" label2="" unit2=""
+#         ''', stdin=0)
+#
+    Flow(cc,None,
+         'spike nsp=2 mag=%g,%g n1=2 k1=1,2'%(xcoord,zcoord))
+    
 def point3d(cc,xcoord,ycoord,zcoord,par):
-    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Flow(cc+'_y',cc+'_','math output="%g"' % ycoord)
-    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
+#    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+#    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
+#    Flow(cc+'_y',cc+'_','math output="%g"' % ycoord)
+#    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
 
-    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
-         '''
-         cat axis=2 space=n
-         ${SOURCES[0:3]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+#    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
+#         '''
+#         cat axis=2 space=n
+#         ${SOURCES[0:3]} | transp |
+#	 put label1="" unit1="" label2="" unit2=""
+#         ''', stdin=0)
+
+    Flow(cc,None,
+         'spike nsp=3 mag=%g,%g,%g n1=3 k1=1,2,3'%(xcoord,ycoord,zcoord))
     
 def point3(cc,xcoord,zcoord,magn,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)

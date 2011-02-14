@@ -31,7 +31,7 @@ def param(par):
 
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=y
+    grey parallel2=n labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100
     min1=%g max1=%g label1=%s unit1=%s 
     min2=%g max2=%g label2=%s unit2=%s
@@ -44,7 +44,7 @@ def cgrey(custom,par):
 
 def rgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -57,7 +57,7 @@ def rgrey(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n
+    grey parallel2=n labelrot=n wantaxis=y wanttitle=n
     title="" pclip=99
     min2=%g max2=%g %s
     %s

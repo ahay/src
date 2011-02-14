@@ -98,7 +98,7 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     Flow(rwfl,twfl,'reverse which=4 opt=i verb=y')
     
     # conventional (cross-correlation zero-lag) imaging condition
-    Flow(imag,[swfl,rwfl],'xcor uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
+    Flow(imag,[swfl,rwfl],'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
 
 # ------------------------------------------------------------
 # elastic reverse-time migration
@@ -137,7 +137,7 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
     for     i in ('1','2'):
         for j in ('1','2'):
             Flow(imag+i+j,[swfl+i,rwfl+j],
-                 'xcor uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
+                 'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
 
     Flow(imag,[imag+'11',imag+'12',imag+'21',imag+'22'],
          'cat axis=3 space=n ${SOURCES[1:4]}')
