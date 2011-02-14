@@ -34,12 +34,14 @@ void mexFunction(int nlhs, mxArray *plhs[],
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
     char *tag=NULL, *argv[] = {"matlab","-"}, *par=NULL, *filename=NULL;
-    double *dr=NULL;
+    double *dr=NULL, *di=NULL;
     float *p=NULL;
+    sf_complex *c=NULL;
     char buf[BUFSIZ], key[5];
     bool same;
     FILE *file2=NULL;
     sf_file file=NULL;
+/*    char string[100]; */
 
     /* Check for proper number of arguments. */
     if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
@@ -107,9 +109,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* Input 2 must be a number. */
     if (!mxIsDouble(prhs[0])) mexErrMsgTxt("Input 2 must be double.");
 
-    /* data pointers */
-    dr = mxGetPr(prhs[0]);
-
     /* get data dimensions */
     ndim=mxGetNumberOfDimensions(prhs[0]);
     dim=mxGetDimensions(prhs[0]);
@@ -126,23 +125,50 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	    sf_putint(file,key,dim[i]);
 	}
     }
+    
+    if (mxIsComplex(prhs[0])) {
+	/* complex data */
+	c = (sf_complex*) buf;
 
-    p = (float*) buf;
-
-    for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
-	if (nbuf > nd) nbuf=nd;
-
-	for (i=0; i < nbuf; i++, j++) {
-	    p[i] = (float) dr[j];
+	dr = mxGetPr(prhs[0]);
+	di = mxGetPi(prhs[0]);
+	
+	for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
+	    if (nbuf > nd) nbuf=nd;
+	    
+	    for (i=0; i < nbuf; i++, j++) {
+		c[i] = sf_cmplx((float) dr[j],(float) di[j]);
+	    }
+	    
+	    if (same) {
+		if (nbuf != fwrite(c,sizeof(sf_complex),nbuf,file2)) 
+		    mexWarnMsgTxt("Writing problems.");
+	    } else {
+		sf_complexwrite(c,nbuf,file);
+	    }
 	}
 
-	if (same) {
-	    if (nbuf != fwrite(p,sizeof(float),nbuf,file2)) 
-		mexWarnMsgTxt("Writing problems.");
-	} else {
-	    sf_floatwrite(p,nbuf,file);
+    } else { 
+	/* real data */
+	p = (float*) buf;
+
+	dr = mxGetPr(prhs[0]);
+
+	for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
+	    if (nbuf > nd) nbuf=nd;
+	    
+	    for (i=0; i < nbuf; i++, j++) {
+		p[i] = (float) dr[j];
+	    }
+	    
+	    if (same) {
+		if (nbuf != fwrite(p,sizeof(float),nbuf,file2)) 
+		    mexWarnMsgTxt("Writing problems.");
+	    } else {
+		sf_floatwrite(p,nbuf,file);
+	    }
 	}
-    }
+    } 
 
     if (same) {
 	fclose(file2);

@@ -28,13 +28,14 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj, velocity, l1norm, plane[3];
+    bool adj, velocity, l1norm, plane[3], verb;
     int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, stiter, *k;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *t, **t0, *s, **source, *rhs, *ds, *gs, air, *x0;
     float rhsnorm0, rhsnorm, rate, eps, perc;
     char key[4], *what;
     upgrad upg;
     sf_file sinp, sout, shot, time, reco, rece, topo, grad, norm;
+    sf_weight weight=NULL;
 
     sf_init(argc,argv);
     sinp = sf_input("in");
@@ -96,6 +97,9 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
 	    /* norm for minimization (default L2 norm) */
 
+	    if (!sf_getbool("verb",&verb)) verb=false;
+	    /* verbosity flag */
+
 	    /* read in shot file */
 	    if (NULL == sf_getstring("shot"))
 		sf_error("Need source shot=");
@@ -153,7 +157,9 @@ int main(int argc, char* argv[])
 			x0[it] = 0.;
 		    }
 		}
-		
+	    } else {
+		k = NULL;
+		x0 = NULL;
 	    }
 
 	    t0 = sf_floatalloc2(nrhs,nshot);
@@ -210,10 +216,13 @@ int main(int argc, char* argv[])
 	    sf_igrad2_init(n[0],n[1]);
 
 	    if (l1norm) {
+		/*
 		if (!sf_getfloat("perc",&perc)) perc=90.;
-		/* thresholding percent for l1_step */
 
 		l1_init(nt,stiter,perc,false);
+		*/
+		weight = sf_l1;
+		sf_irls_init(nt);
 	    }
 
 	    /* iterations over inversion */
@@ -264,16 +273,25 @@ int main(int argc, char* argv[])
 		    /* solve ds */
 		    if (l1norm) {
 			if (NULL == sf_getstring("topo"))
-			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",false,"end");
+			    /*
+			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
+			    */
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",50,"verb",verb,"end");
 			else
-			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",false,"end");
-			
-			l1step_close();
+			    /*
+			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
+			    */
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",50,"known",k,"x0",x0,"verb",verb,"end");
+			    
+			/*
+			  l1step_close();
+			*/
+			sf_cgstep_close();
 		    } else {
 			if (NULL == sf_getstring("topo"))
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",false,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
 			else
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",false,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
 			
 			sf_cgstep_close();
 		    }
