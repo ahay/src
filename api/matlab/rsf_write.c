@@ -41,8 +41,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     bool same;
     FILE *file2=NULL;
     sf_file file=NULL;
-/*    char string[100]; */
-
+    
     /* Check for proper number of arguments. */
     if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
 
@@ -133,7 +132,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	dr = mxGetPr(prhs[0]);
 	di = mxGetPi(prhs[0]);
 	
-	for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
+	for (j=0, nbuf /= sizeof(sf_complex); nd > 0; nd -= nbuf) {
 	    if (nbuf > nd) nbuf=nd;
 	    
 	    for (i=0; i < nbuf; i++, j++) {

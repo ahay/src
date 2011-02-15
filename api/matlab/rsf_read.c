@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int taglen, status, argc=2, dim, n[SF_MAX_DIM], i, esize, len;
     size_t nbuf = BUFSIZ, nd, j;
     char *tag, *argv[] = {"matlab","-"}, *par;
-    double *p;
+    double *pr, *pi=NULL;
     char buf[BUFSIZ];
     off_t pos;
     static off_t shift=0;
@@ -98,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
 
     /* data pointers */
-    p = mxGetPr(prhs[0]);
+    pr = mxGetPr(prhs[0]);
 
     /* get data size */
     nd = mxGetNumberOfElements(prhs[0]);
@@ -113,18 +113,26 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	    case SF_FLOAT:
 		sf_floatread((float*) buf,nbuf,file);
 		for (i=0; i < nbuf; i++, j++) {
-		    p[j] = (double) ((float*) buf)[i];
+		    pr[j] = (double) ((float*) buf)[i];
 		}
 		break;
 	    case SF_INT:
 		sf_intread((int*) buf,nbuf,file);
 		for (i=0; i < nbuf; i++, j++) {
-		    p[j] = (double) ((int*) buf)[i];
+		    pr[j] = (double) ((int*) buf)[i];
+		}
+		break;
+	    case SF_COMPLEX:
+		pi = mxGetPi(prhs[0]);
+		sf_complexread((sf_complex*) buf,nbuf,file);
+		for (i=0; i < nbuf; i++, j++) {
+		    pr[j] = (double) ((float*) buf)[i];
+		    pi[j] = (double) ((float*) buf)[i];
 		}
 		break;
 	    default:
 		mexErrMsgTxt("Unsupported file type.");
-		break;  
+		break;
 	}
     }
 
