@@ -14,6 +14,7 @@ To documentation:
 To APIs:
 
 * Fetch, Movie, and other enhancements in Python API
+* Added reading complex-valued data to rsf_read in Matlab API
 
 To the Python package:
 
