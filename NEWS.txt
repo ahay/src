@@ -4,15 +4,25 @@
 
 To the reproducible documents collection:
 
+* swag/anisogath: Angle gathers in wave-equation imaging for
+  transversely isotropic media (Alkhalifah and Fomel)
+
 To SCons:
 
 To documentation:
 
 To APIs:
 
+* Fetch, Movie, and other enhancements in Python API
+
 To the Python package:
 
 To programs:
+
+* sfkdmig2d: 2-D Prestack Kirchhoff depth migration (borrowed from SU)
+* sfdsrVTI: Prestack 2-D v(z) modeling/migration by DSR and angle
+  gather generation for VTI and DTI media.
+* wanttitle= option in thplot
 
 ===Bug fixes===
 
@@ -22,9 +32,13 @@ In documentation:
 
 In APIs:
 
+* Fixed rsf_write to write complex-valued data
+
 In the Python package:
 
 In programs:
+
+* Fixed parameter-setting bug in sfstoltstretch
 
 ==Release 1.1 (2011-01-18)==
 
