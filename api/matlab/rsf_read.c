@@ -126,8 +126,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		pi = mxGetPi(prhs[0]);
 		sf_complexread((sf_complex*) buf,nbuf,file);
 		for (i=0; i < nbuf; i++, j++) {
-		    pr[j] = (double) ((float*) buf)[i];
-		    pi[j] = (double) ((float*) buf)[i];
+		    /*
+		    pr[j] = sf_creal((sf_double_complex) (((sf_complex*) buf)[i]));
+		    pi[j] = sf_cimag((sf_double_complex) (((sf_complex*) buf)[i]));
+		    */
 		}
 		break;
 	    default:
