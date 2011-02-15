@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool inv;
     int nt, nx, n1, n2, i3, n3, ntx;
     float o1, d1, o2, d2, eps;
     float **slice, **tstr, **xstr, **slice2;
@@ -32,27 +33,43 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     warp = sf_input("warp");
 
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nx)) sf_error("No n1= in input");
+   if (!sf_getbool("inv",&inv)) inv=true;
+    /* inversion flag */
+
+    if (inv) {
+       if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+       if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+    } else {
+       if (!sf_histint(warp,"n1",&nt)) sf_error("No n1= in input");
+       if (!sf_histint(warp,"n2",&nx)) sf_error("No n2= in input");
+
+       if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+       if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    }
     n3 = sf_leftsize(in,2);
 
     ntx = nt*nx;
 
-    if (!sf_getint("n1",&n1)) n1=nt;
+    if (inv && !sf_getint("n1",&n1)) n1=nt;
     if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
 
-    if (!sf_getint("n2",&n2)) n2=nx;
+    if (inv && !sf_getint("n2",&n2)) n2=nx;
     if (!sf_getfloat("d2",&d2) && !sf_histfloat(in,"d2",&d2)) d2=1.;
     if (!sf_getfloat("o2",&o2) && !sf_histfloat(in,"o2",&o2)) o2=0.;
 
-    sf_putint(out,"n1",n1);
-    sf_putfloat(out,"d1",d1);
-    sf_putfloat(out,"o1",o1);
+    if (inv) {
+       sf_putint(out,"n1",n1);
+       sf_putfloat(out,"d1",d1);
+       sf_putfloat(out,"o1",o1);
 
-    sf_putint(out,"n2",n2);
-    sf_putfloat(out,"d2",d2);
-    sf_putfloat(out,"o2",o2);
+       sf_putint(out,"n2",n2);
+       sf_putfloat(out,"d2",d2);
+       sf_putfloat(out,"o2",o2);
+    } else {
+       sf_putint(out,"n1",nt);
+       sf_putint(out,"n2",nx);
+    }
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
@@ -68,13 +85,18 @@ int main(int argc, char* argv[])
 	       nt, nx, eps); 
 
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread(slice[0],ntx,in);
 	sf_floatread(tstr[0],ntx,warp);
 	sf_floatread(xstr[0],ntx,warp);
 
-	warp2(slice,tstr,xstr,slice2);
-
-	sf_floatwrite (slice2[0],n1*n2,out);
+        if (inv) {
+            sf_floatread(slice[0],ntx,in);
+	    warp2(slice,tstr,xstr,slice2);
+	    sf_floatwrite (slice2[0],n1*n2,out);
+        } else {
+            sf_floatread(slice2[0],n1*n2,in);
+	    fwarp2(slice2,tstr,xstr,slice);
+	    sf_floatwrite (slice[0],ntx,out);
+        }
     }
 
     exit(0);
