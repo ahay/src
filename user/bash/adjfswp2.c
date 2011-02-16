@@ -113,7 +113,7 @@ void sf_run_lambda_2d_sweep (float **l, float **grtz, float **grtx, int niter,
 /*< Run lambda calculation over whole domain >*/
 {
     int i, j, k;
-    int imin, imax=0, jmin, jmax;
+    int imin, imax, jmin, jmax;
     float *hor = NULL;
 
     if (horiz) {

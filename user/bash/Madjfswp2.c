@@ -33,7 +33,7 @@ int main (int argc,char* argv[]) {
     char *sfile = NULL;
     sf_eno horiz = NULL;
     sf_eno2 gradt;
-    sf_file time, lambda, horizon, deltat=NULL;
+    sf_file time, lambda, horizon, deltat;
 
     sf_init (argc, argv);
     time = sf_input ("in");
@@ -83,9 +83,6 @@ int main (int argc,char* argv[]) {
 
        horiz = sf_eno_init (5, nh);
        sf_eno_set (horiz, h);
-       /* Collapse extra dimension */
-//       sf_putint (lambda, "n3", nshot);
-//       sf_putint (lambda, "n4", 1);
 
        free (sfile); sfile = NULL;
     } else
