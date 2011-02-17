@@ -67,6 +67,8 @@ int main (int argc,char* argv[]) {
     grtx  = sf_floatalloc2 (n1, n2);
     dt = sf_floatalloc (n2);
 
+    nshot = sf_leftsize (time, 2);
+
     sfile = sf_getstring ("horizon");
     /* File with a reflection interface */
     if (sfile) {
@@ -75,8 +77,8 @@ int main (int argc,char* argv[]) {
        if (!sf_histint (horizon, "n1", &nh)) nh = n2;
        if (!sf_histfloat (horizon, "o1", &oh)) oh = o2;
        if (!sf_histfloat (horizon, "d1", &dh)) dh = d2;
-
-       if (!sf_histint (time, "n4", &nshot)) sf_error ("No n4= in input");
+       /* Time file has both upgoing and downgoing parts */
+       nshot /= 2;
 
        h = sf_floatalloc (nh);
        sf_floatread (h, nh, horizon);
@@ -85,8 +87,7 @@ int main (int argc,char* argv[]) {
        sf_eno_set (horiz, h);
 
        free (sfile); sfile = NULL;
-    } else
-       if (!sf_histint (time, "n3", &nshot)) sf_error ("No n3= in input");
+    }
 
     gradt = sf_eno2_init (3, n1, n2);
 

@@ -63,10 +63,9 @@ int main (int argc,char* argv[]) {
 
         if (SF_FLOAT != sf_gettype (shots)) 
             sf_error ("Need float shotfile");
-        if (!sf_histint (shots, "n2", &nshot))
-            sf_error ("No n2= in shotfile");
         if (!sf_histint (shots, "n1", &ndim) || ndim != 3)
             sf_error ("Need n1=3 in shotfile");
+        nshot = sf_leftsize (shots, 1);
 
         s = sf_floatalloc2 (ndim, nshot);
         sf_floatread (s[0], nshot * ndim, shots);

@@ -65,13 +65,17 @@ static void sf_fast_lsweep_2d_stencil (float **l, float **grtz, float **grtx,
     ip = i + 1; im = i - 1;
     jp = j + 1; jm = j - 1;
     if (i == 0) {
+        if (fzmin != 0.0) return; /* Inflow */
         im = 0;
     } else if ((n1 - 1) == i) {
+        if (fzmax != 0.0) return; /* Inflow */
         ip = n1 - 1;
     }
     if (j == 0) {
+        if (fxmin != 0.0) return; /* Inflow */
         jm = 0;
     } else if ((n2 - 1) == j) {
+        if (fxmax != 0.0) return; /* Inflow */
         jp = n2 - 1;
     }
 
@@ -130,11 +134,7 @@ void sf_run_lambda_2d_sweep (float **l, float **grtz, float **grtx, int niter,
     /* Sweeps */
     for (k = 0; k < niter; k++) {
         jmin = 0; jmax = n2 - 1;
-        if (horiz) {
-            imin = 0;
-        } else {
-            imin = 1; imax = n1 - 1;
-        }
+        imin = 0; imax = n1 - 1;
         for (j = jmin; j <= jmax; j++) {
             if (horiz)
                 imax = hor[j];
