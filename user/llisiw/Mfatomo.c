@@ -276,12 +276,12 @@ int main(int argc, char* argv[])
 			    /*
 			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
 			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",50,"verb",verb,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",1,"verb",verb,"end");
 			else
 			    /*
 			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
 			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",50,"known",k,"x0",x0,"verb",verb,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",1,"known",k,"x0",x0,"verb",verb,"end");
 			    
 			/*
 			  l1step_close();
