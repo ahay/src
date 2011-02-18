@@ -29,7 +29,7 @@
 int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;
-    int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, stiter, *k;
+    int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, stiter, *k, nfreq, nmem;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *t, **t0, *s, **source, *rhs, *ds, *gs, air, *x0;
     float rhsnorm0, rhsnorm, rate, eps, perc;
     char key[4], *what;
@@ -221,6 +221,12 @@ int main(int argc, char* argv[])
 
 		l1_init(nt,stiter,perc,false);
 		*/
+		if (!sf_getint("nfreq",&nfreq)) nfreq=1;
+		/* l1-norm weighting nfreq */
+
+		if (!sf_getint("nmem",&nmem)) nmem=1;
+		/* l1-norm weighting nmem */
+
 		weight = sf_l1;
 		sf_irls_init(nt);
 	    }
@@ -276,12 +282,12 @@ int main(int argc, char* argv[])
 			    /*
 			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
 			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",1,"verb",verb,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"verb",verb,"end");
 			else
 			    /*
 			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
 			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",1,"nmem",1,"known",k,"x0",x0,"verb",verb,"end");
+			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"known",k,"x0",x0,"verb",verb,"end");
 			    
 			/*
 			  l1step_close();
@@ -305,7 +311,10 @@ int main(int argc, char* argv[])
 		}
 
                 rate = rhsnorm/rhsnorm0; 
-		sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
+		if (l1norm)
+		    sf_warning("L1 misfit after iteration %d of %d: %g",iter,niter,rate);
+		else
+		    sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
 
 		if (grad != NULL) sf_floatwrite(gs,nt,grad);
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
@@ -355,7 +364,11 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    rate = rhsnorm/rhsnorm0;
-	    sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
+	    
+	    if (l1norm)
+		sf_warning("L1 misfit after iteration %d of %d: %g",iter,niter,rate);
+	    else
+		sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
 
 	    if (norm != NULL) sf_floatwrite(&rate,1,norm);
 
