@@ -33,7 +33,7 @@ int main (int argc,char* argv[]) {
     char *sfile = NULL;
     sf_eno horiz = NULL;
     sf_eno2 gradt;
-    sf_file time, lambda, horizon, deltat;
+    sf_file time, lambda, horizon, deltat=NULL;
 
     sf_init (argc, argv);
     time = sf_input ("in");

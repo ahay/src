@@ -82,7 +82,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    kz = SF_MAX(kz,kzmin);
 	    
 	    float phi = (kh + kz)*(kx + kz)*vr*vs/
-		(kxh*vm + kz*vp + 
+		(-kxh*vm + kz*vp + 
 		 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr))));
 	    
 	    // v(z) 
