@@ -94,9 +94,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     type = sf_gettype (file);
     esize = sf_esize(file);
 
-    /* Input 1 must be a number. */
-    if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
-
     /* data pointers */
     pr = mxGetPr(prhs[0]);
 
@@ -111,18 +108,24 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	switch(type) {
 	    case SF_FLOAT:
+		if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
+
 		sf_floatread((float*) buf,nbuf,file);
 		for (i=0; i < nbuf; i++, j++) {
 		    pr[j] = (double) ((float*) buf)[i];
 		}
 		break;
 	    case SF_INT:
+		if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
+
 		sf_intread((int*) buf,nbuf,file);
 		for (i=0; i < nbuf; i++, j++) {
 		    pr[j] = (double) ((int*) buf)[i];
 		}
 		break;
 	    case SF_COMPLEX:
+		if(!mxIsComplex(prhs[0])) mexErrMsgTxt("First input must be complex.");
+
 		pi = mxGetPi(prhs[0]);
 
 		sf_complexread((sf_complex*) buf,nbuf,file);
