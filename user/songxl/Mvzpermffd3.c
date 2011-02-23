@@ -63,13 +63,16 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(data,"d3",&dt));
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
-	/* time samples (if migration) */
+	/* depth samples (if migration) */
 	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
-	/* time sampling (if migration) */
+	/* depth sampling (if migration) */
 
 	sf_putint(image,"n1",nz);
 	sf_putfloat(image,"d1",dz);
 	sf_putstring(image,"label1","Depth");
+	sf_putint(image,"n2",nx);
+	sf_putfloat(image,"d2",dx);
+	sf_putstring(image,"label2","Midpoint");
 
 	sf_putint(image,"n3",1); /* stack for now */
     } else { /* modeling */
@@ -95,6 +98,12 @@ int main(int argc, char* argv[])
 	sf_putint(data,"n1",nh);
 	sf_putfloat(data,"d1",dh);
 	sf_putstring(data,"label1","Half-Offset");
+	sf_putstring(data,"unit1","m");
+
+	sf_putint(data,"n2",nx);
+	sf_putfloat(data,"d2",dx);
+	sf_putstring(data,"label2","Midpoint");
+	sf_putstring(data,"unit2","m");
 
 	sf_putint(data,"n3",nt);
 	sf_putfloat(data,"d3",dt);
@@ -127,7 +136,13 @@ int main(int argc, char* argv[])
     nhb = nh + nhl + nhr;
   
     bd3_init(nz,nx,nh,nbt,nbb,nxl,nxr,nhl,nhr,ct,cb,cxl,cxr,chl,chr);
-    img = sf_floatalloc2(nzb,nxb);
+
+    if(mig){
+      img = sf_floatalloc2(nz,nx);
+    }
+    else{
+      img = sf_floatalloc2(nzb,nxb);
+    }
 
 
     prev = sf_floatalloc3(nhb,nxb,nzb);
@@ -183,9 +198,6 @@ int main(int argc, char* argv[])
         a[iz]  = -2.0*(b1[iz]+b2[iz]+b3[iz]+d3[iz])-4.0*(c1[iz]+c2[iz]+c3[iz]);
        
     }
-    //sf_warning("a= %f;         b1=%f;        b3=%f;",a[100],b1[100],b3[100]);
-    //sf_warning("c2= %f;         c3=%f;        d3=%f;",c2[100],c3[100],d3[100]);
-   
 
    if (NULL != snaps) {
 	sf_putint(snaps,"n1",nh);
@@ -218,8 +230,8 @@ int main(int argc, char* argv[])
 
     if (mig) { /* migration */
 	/* initialize image */
-	for (iz=0; iz < nzb; iz++) {
-	    for (ix=0; ix < nxb; ix++) {
+	for (iz=0; iz < nz; iz++) {
+	    for (ix=0; ix < nx; ix++) {
 		img[ix][iz] = 0.;
 	    }
 	}
@@ -267,8 +279,6 @@ int main(int argc, char* argv[])
 	it1 = 0;
 	it2 = nt;
 	its = +1;
-    }
-
 	cosft3(false,nhb,nxb,nzb,curr);
 	for (iz=0; iz < nzb; iz++) {
 	    kz = iz*dkz*2.0*pi;
@@ -276,11 +286,13 @@ int main(int argc, char* argv[])
 		kx = ix*dkx*2.0*pi;
 		for (ih=0; ih < nhb; ih++) {
 		    kh = ih*dkh*2.0*pi;
-                    if(kz < sqrtf(kx*kh)) { curr[iz][ix][ih] = 0. ; continue;}
+                    if(kz < sqrtf(kx*kh)) { curr[iz][ix][ih] = 0.; }
                 }
             }
         }
 	cosft3(true,nhb,nxb,nzb,curr);
+    }
+
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
@@ -288,7 +300,6 @@ int main(int argc, char* argv[])
 
 	if (mig) { /* migration <- read data */
 	    sf_floatread(dat[0],nh*nx,data);
-	    cosft2(false,nh,nx,dat);	    
 	} else {
 	    for (ix=0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {
@@ -307,31 +318,46 @@ int main(int argc, char* argv[])
 	for (ix=0; ix < nx; ix++) {
             for (ih=0; ih < nh; ih++) {
 		if (mig) {
-                    curr[nbt][ix+nxl][ih+nhl] += dat[ix][ih];
-	//c += (iz==nz-1 || iz==0)? dat[ix][ih]*0.5: dat[ix][ih];
+                    //curr[nbt][ix+nxl][ih+nhl] += dat[ix][ih];
+                    curr[nbt][ix+nxl][ih+nhl] = dat[ix][ih];
 		    } else {
-			//dat[ix][ih] += (iz==nz-1 || iz==0)? c*0.5: c;
 			dat[ix][ih] = curr[nbt][ix+nxl][ih+nhl];
 		    }
             }
         }
-	for (iz=0; iz < nzb; iz++) {
-	    for (ix=0; ix < nxb; ix++) {
-		for (ih=0; ih < nhb; ih++) {
-                    tmp[iz][ix][ih] = curr[iz][ix][ih];
+        if (mig){
+	   cosft3(false,nhb,nxb,nzb,curr);
+	   for (iz=0; iz < nzb; iz++) {
+	       kz = iz*dkz*2.0*pi;
+	       for (ix=0; ix < nxb; ix++) {
+	   	   kx = ix*dkx*2.0*pi;
+		   for (ih=0; ih < nhb; ih++) {
+		       kh = ih*dkh*2.0*pi;
+                       if(kz < sqrtf(kx*kh) || kz<epsilon*0.001) { 
+                         curr[iz][ix][ih] = 0.; 
+                        }
+                       tmp[iz][ix][ih] = curr[iz][ix][ih];
+                    }
                 }
-            }
+           }
+	cosft3(true,nhb,nxb,nzb,curr);
         }
+        if(!mig){
+        //if(1){
+	  for (iz=0; iz < nzb; iz++) {
+	      for (ix=0; ix < nxb; ix++) {
+	 	  for (ih=0; ih < nhb; ih++) {
+                      tmp[iz][ix][ih] = curr[iz][ix][ih];
+                  }
+              }
+          }
            
-        //cosftz(false,nh,nx,nzb,curr);
-	cosft3(false,nhb,nxb,nzb,tmp);
-        //cosftz(false,nh,nx,nzb,tmp);
-	//for (iz=1; iz < nz; iz++) {
+	  cosft3(false,nhb,nxb,nzb,tmp);
+        }
 	for (iz=0; iz < nzb; iz++) {
 	    kz = iz*dkz*2.0*pi;
 	    for (ix=0; ix < nxb; ix++) {
 		kx = ix*dkx*2.0*pi;
-		//x = (kz*kz+kx*kx)/kz;
                    
 	       if(!kz) 
 		 x = ((kz+epsilon)*(kz+epsilon)+kx*kx)/(kz+epsilon);
@@ -340,7 +366,7 @@ int main(int argc, char* argv[])
 
 		for (ih=0; ih < nhb; ih++) {
 		    kh = ih*dkh*2.0*pi;
-                    if(kz < sqrtf(kx*kh)) { tmp[iz][ix][ih] = 0. ; continue;}
+                    if(kz < sqrtf(kx*kh) || kz < epsilon*0.001) { tmp[iz][ix][ih] = 0. ; continue;}
         //            if(kz < sqrtf(kx*kh)) { ih = nh; continue;}
 		    //h = (kz*kz+kh*kh)/kz;
 	            if(!kz) 
@@ -368,7 +394,7 @@ int main(int argc, char* argv[])
 	}
 
 	cosft3(true,nhb,nxb,nzb,tmp);
-	sf_warning("      tmp=          %f           ;",tmp[137][145][40]);
+	sf_warning("      tmp=          %f           ;",tmp[102][145][90]);
 	for (iz=0; iz < nzb; iz++) {
 	    for (ix=0; ix < nxb; ix++) {
 		for (ih=0; ih < nhb; ih++) {
@@ -457,26 +483,19 @@ int main(int argc, char* argv[])
 	    //cosft2(true,nh,nx,dat);
 	    sf_floatwrite(dat[0],nh*nx,data);
 	}
-       sf_warning("              tmpq=          %f           ;",curr[137][145][40]);
+       sf_warning("              tmpq=          %f           ;",curr[102][145][90]);
     }
     sf_warning(".");
 
     if (mig) {
 	//for (iz=1; iz < nz; iz++) {
-	for (iz=0; iz < nzb; iz++) {
+	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
-		for (ih=0; ih < nh; ih++) {
-		    c = curr[iz][ix][ih];
-		    img[ix][iz] += (ih==nh-1 || ih==0)? c*0.5: c;
-		}
+		    img[ix][iz] = curr[iz+nbt][ix+nxl][nhl];
 	    }
 	}
 
-	cosft2(true,nzb,nx,img);
-	//sf_floatwrite(img[0],nz*nx,image);
-	for (ix=0; ix < nx; ix++) {
-            sf_floatwrite(img[ix]+nbt,nz,image);
-	}
+        sf_floatwrite(img[0],nz*nx,image);
     }
     bd3_close();
     exit(0);
