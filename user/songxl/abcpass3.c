@@ -84,8 +84,8 @@ void bd3_decay(float ***a /*3-D matrix*/)
     nxb = nx+nxl+nxr;
     nhb = nh+nhl+nhr;
     for (iz=0; iz < nbt; iz++) {  
-        for (ix=0; ix < nx; ix++) {
-            for (ih=0; ih < nh; ih++){
+        for (ix=0; ix < nxb; ix++) {
+            for (ih=0; ih < nhb; ih++){
                 a[iz][ix][ih] *= wt[iz];
             }
         }
@@ -97,7 +97,7 @@ void bd3_decay(float ***a /*3-D matrix*/)
             }
         }
     }
-    for (iz=nbt; iz < nx+nbt; iz++) {  
+    for (iz=nbt; iz < nz+nbt; iz++) {  
         for (ix=0; ix < nxb; ix++) {
             for (ih=0; ih < nhl; ih++){
                 a[iz][ix][ih] *= whl[ih];
@@ -107,7 +107,7 @@ void bd3_decay(float ***a /*3-D matrix*/)
             }
         }
     }
-    for (iz=nbt; iz < nx+nbt; iz++) {  
+    for (iz=nbt; iz < nz+nbt; iz++) {  
         for (ix=0; ix < nxl; ix++) {
             for (ih=nhl; ih < nh+nhl; ih++){
                 a[iz][ix][ih] *= wxl[ih];
