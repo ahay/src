@@ -130,6 +130,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	c = (sf_complex*) buf;
 
 	dr = mxGetPr(prhs[0]);
+
+	/* pointer to imaginary part */
 	di = mxGetPi(prhs[0]);
 	
 	for (j=0, nbuf /= sizeof(sf_complex); nd > 0; nd -= nbuf) {
