@@ -57,7 +57,9 @@ down = '''
 11349
 11750
 12006
+12321
 '''
+
 down = map(int,down.split())
 ind = arange(len(down))
 width=0.75

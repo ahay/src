@@ -152,4 +152,58 @@ Paper('houston',
   }}{} 
     ''')
 
+Paper('kaust',
+      lclass='beamer',
+      use='helvet,hyperref,color,listings,newalg',
+      include=r'''
+    \usefonttheme{structurebold}
+    \setbeamerfont{title}        {size=\LARGE}
+    \setbeamerfont{subtitle}     {size=\Large}
+    \setbeamerfont{section}      {size=\Large}
+    \setbeamerfont{outline}      {size=\Large}
+    \setbeamerfont{frametitle}   {size=\Large}
+    \setbeamerfont{framesubtitle}{size=\large}
+    \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+    \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+    \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+    \setbeamersize{
+    text margin  left=0.05in,
+    text margin right=0.05in
+    }
+    \mode<presentation>{\usetheme{Malmoe}}
+    \usecolortheme{whale}
+    \usepackage[absolute,overlay]{textpos}
+    \setlength{\TPHorizModule}{1mm}
+    \setlength{\TPVertModule}{1mm}
+    \newcommand{\MadLogo}{%
+               \begin{textblock}{30}(100,2)
+               \includegraphics[width=12\TPHorizModule]{Fig/MadLogo}
+               \end{textblock}} 
+    \newcommand{\PTTCLogo}{%
+               \begin{textblock}{30}(55,76)
+               \includegraphics[width=17\TPHorizModule]{Fig/PTTC}
+               \end{textblock}} 
+  \definecolor{gray}{gray}{0.5} 
+  \definecolor{key}{rgb}{0,0.5,0} 
+  \newenvironment{code}[1][]{ 
+  \lstset{ 
+  language=#1, 
+  basicstyle=\ttfamily\tiny, 
+  keywordstyle=\color{blue}, 
+  stringstyle=\color{red}, 
+  showstringspaces=false, 
+  emph={class, pass, in, for, while, if, is, elif, else, not, and, or, 
+  def, print, exec, break, continue, return}, 
+  emphstyle=\color{black}\bfseries, 
+  emph={[2]True, False, None, self}, 
+  emphstyle=[2]\color{key}, 
+  emph={[3]from, import, as}, 
+  emphstyle=[3]\color{blue}, 
+  morecomment=[s]{"""}{"""}, 
+  commentstyle=\color{gray}\slshape, 
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, 
+  rulesepcolor=\color{blue}
+  }}{} 
+    ''')
+
 End(options='manuscript',use='hyperref',color='const rand logo fern man spiral')
