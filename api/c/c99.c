@@ -177,6 +177,10 @@ float ceilf(float x)
 /*< float ceil >*/
 { return (float) ceil(x);}
 
+float roundf(float x) 
+/*< round to nearest integer >*/
+{ return ((x < 0.0)? ceilf(x-0.5): floorf(x+0.5));}
+
 float fmodf(float x, float y) 
 /*< float fmod >*/
 { return (float) fmod(x,y);}

@@ -222,13 +222,13 @@ void vp_putfloat (float w)
 /*< Output an encoded float with scaling >*/
 {
     w *= RPERIN;
-    vp_putint((int) ((w < 0.0)? w-0.5 : w+0.5));
+    vp_putint((int) roundf(w));
 }
 
 void vp_putfloat0 (float w)
 /*< Output an encoded float without scaling >*/
 {
-    vp_putint((int) ((w < 0.0)? w-0.5 : w+0.5));
+    vp_putint((int) roundf(w));
 }
 
 void vp_egroup (void)
@@ -340,9 +340,9 @@ void vp_coltab (int color /* color index */,
 		float b   /* blue */)
 /*< set a color table entry >*/
 {
-    r *= MAX_GUN; r += (r < 0.0)? -0.5: +0.5;
-    g *= MAX_GUN; g += (g < 0.0)? -0.5: +0.5;
-    b *= MAX_GUN; b += (b < 0.0)? -0.5: +0.5;
+    r = roundf(r*MAX_GUN);
+    g = roundf(g*MAX_GUN);
+    b = roundf(b*MAX_GUN);
 
     (void) putc (VP_SET_COLOR_TABLE, pltout);
     vp_putint (color);

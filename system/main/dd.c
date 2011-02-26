@@ -20,9 +20,6 @@
 #include <stdio.h>
 #include <rsf.h>
 
-/* From http://www.cs.tut.fi/~jkorpela/round.html */
-#define roundf(x) ((x)>=0?(float)((x)+0.5):(float)((x)-0.5))
-
 static void ddbreak (sf_datatype itype, sf_datatype otype);
 static float ibm2float (const char* num);
 

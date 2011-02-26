@@ -113,9 +113,7 @@ static kiss_fftr_cfg forw = NULL, invs = NULL;
 
 /* define */
 #define RSCALE_KDMIG 1000.0
-#define NINT(x) ((int)((x)>0.0?(x)+0.5:(x)-0.5))
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
+#define NINT(x) ((int)roundf(x))
 
 int main (int argc, char **argv) {
     int nt;   /* number of time samples in input data          */
@@ -297,8 +295,8 @@ int main (int argc, char **argv) {
     }
 
     /* compute reference traveltime and slowness  */
-    rmax = MAX(es-fxt,ext-fs);
-    rmax = MIN(rmax,0.5*offmax+aperx);
+    rmax = SF_MAX(es-fxt,ext-fs);
+    rmax = SF_MIN(rmax,0.5*offmax+aperx);
     nr = 2+(int)(rmax/dxo);
     tb = sf_floatalloc2 (nzt, nr);
     pb = sf_floatalloc2 (nzt, nr);
@@ -418,8 +416,8 @@ int main (int argc, char **argv) {
         if (io < 0) io = 0;
         if (io >= noff) io = noff-1;
 
-        if (MIN(sx,gx) >= fs && MAX(sx,gx) <= es && 
-            MAX(gx-sx,sx-gx) <= offmax) {
+        if (SF_MIN(sx,gx) >= fs && SF_MAX(sx,gx) <= es && 
+            SF_MAX(gx-sx,sx-gx) <= offmax) {
             /* migrate this trace */
 
             as = (sx-fs)/ds;

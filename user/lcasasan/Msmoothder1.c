@@ -1,9 +1,9 @@
 /* Convert input to its derivative using LS and shaping regularization
  * applied to causint_lop d = L m
 
-Takes: rect1= rect2= ...
+ Takes: rect1= rect2= ...
 
-rectN defines the size of the smoothing stencil in N-th dimension.
+ rectN defines the size of the smoothing stencil in N-th dimension.
 */
 /*
   Copyright (C) 2010 Politecnico di Milano
@@ -33,8 +33,7 @@ int main(int argc, char* argv[])
 {
     int i, niter, nd, dim, n1, n2, i1, i2;
     int n[SF_MAX_DIM], box[SF_MAX_DIM];
-    float **data, **model, *model0; // **wt;
-    float eps;
+    float **data, **model, *model0; /* **wt; */
     char key[6];
     sf_file DATA, MODEL, DATA_OUT;
 
@@ -43,9 +42,6 @@ int main(int argc, char* argv[])
     MODEL = sf_output("out");
 
     dim = sf_filedims (DATA,n);
-
-    //if (!sf_getfloat("eps",&eps)) eps = 1.0; /*dumping factor*/
-
 
     nd = 1;
     for (i=0; i < dim; i++) {
@@ -64,9 +60,9 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc2(n1,n2);
     model = sf_floatalloc2(n1,n2);
-    //model0 = sf_floatalloc2(n1,n2);
+    /* model0 = sf_floatalloc2(n1,n2); */
     model0 = sf_floatalloc(n2);
-    //wt = sf_floatalloc2(n1,n2);
+    /* wt = sf_floatalloc2(n1,n2); */
 
     sf_floatread(data[0],nd,DATA);
 
@@ -77,34 +73,34 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
     	model0[i2] = data[i2][0];
 	for (i1=0; i1 < n1; i1++) {
-	    //model0[i2][i1] = -data[i2][0];
-		data[i2][i1] = data[i2][i1]-model0[i2];
-	   fprintf(stderr,"data = %f\n n1=%d",data[i2][i1],n1);
+	    /* model0[i2][i1] = -data[i2][0]; */
+	    data[i2][i1] = data[i2][i1]-model0[i2];
+	    fprintf(stderr,"data = %f\n n1=%d",data[i2][i1],n1);
 
 	}
     }
     fprintf(stderr,"data = %f",data[0][0]);
-    //sf_repeat_lop(false,true,nd,nd,model0[0],data[0]);
+    /* sf_repeat_lop(false,true,nd,nd,model0[0],data[0]); */
     smoothder(niter, NULL, data[0], model[0]);
  
-//   for (i2=0; i2 < n2; i2++) {
-//	for (i1=0; i1 < n1; i1++) {
-//	    model[i2][i1] -= model0[i2][i1];
-//	}
-//    }
+/*   for (i2=0; i2 < n2; i2++) {
+     for (i1=0; i1 < n1; i1++) {
+     model[i2][i1] -= model0[i2][i1];
+     }
+     } */
 
     sf_floatwrite(model[0],nd,MODEL);
 
     if (NULL != sf_getstring("dataout")) {
 	/* optionally, output predicted data */
-		sf_repeat_lop(false,false,nd,nd,model[0],data[0]);
+	sf_repeat_lop(false,false,nd,nd,model[0],data[0]);
 
     	for (i2=0; i2<n2;i2++) {
-    	    	for (i1=0;i1<n1;i1++) {
-    	    		data[i2][i1] = data[i2][i1]+model0[i2];
-    	    	}
+	    for (i1=0;i1<n1;i1++) {
+		data[i2][i1] = data[i2][i1]+model0[i2];
+	    }
     	}
-    		/* predicted or recalculated data*/
+	/* predicted or recalculated data*/
     	DATA_OUT = sf_output("dataout");
 
 	sf_floatwrite(data[0],nd,DATA_OUT);

@@ -120,7 +120,7 @@
 #include "intl2b.h"
 
 #define   STREQ(s,t) (strcmp(s,t) == 0)
-#define NINT(x) ((int)((x)>0.0?(x)+0.5:(x)-0.5))
+#define NINT(x) ((int) roundf(x))
 
 /* functions defined and used internally */
 /* ZM: interpolate the amplitude from dataset */
