@@ -106,7 +106,7 @@ static void filt2matrix(const sf_complex *filt,
 static void predefine (float w /* log-stretch frequency */)
 {
     float den, h;
-    sf_complex *b;
+    sf_complex *b, a1, a2, b1, b2;
     int ih;
 
     for (ih=1; ih < nh-1; ih++) {
@@ -118,22 +118,24 @@ static void predefine (float w /* log-stretch frequency */)
 	
 	b = a[ih];
 
+	a1 = sf_cmplx(0.,(s-2.)/w);
+	a2 = sf_cmplx(0.,(s+2.)/w);
+
+	b1 = sf_cmplx(2.*h,(s-1.)*w);
+	b2 = sf_cmplx(2.*h,(s+1.)*w);
+
 #ifdef SF_HAS_COMPLEX_H
-	b[0] = b0[0] - 0.5*h*(sf_cmplx(0,(s-2.)/w)+sf_cmplx(2.*h,(s-1.)*w)/den); 
-	b[1] = b0[1] + h*(sf_cmplx(0.,s/w)+sf_cmplx(2.*h,s*w)/den); 
-	b[2] = b0[2] - 0.5*h*(sf_cmplx(0.,(s+2.)/w)+sf_cmplx(2.*h,(s+1.)*w)/den); 
+	b[0] = b0[0] - 0.5*h*(a1+b1/den); 
+	b[1] = b0[1] + h*(sf_cmplx(0.,s/w)+sf_cmplx(2.*h,s*w)/den);
+	b[2] = b0[2] - 0.5*h*(a2+b2/den); 
 #else
-	b[0] = sf_cadd(b0[0],sf_crmul(sf_cadd(sf_cmplx(0,(s-2.)/w),
-					     sf_crmul(sf_cmplx(2.*h,(s-1.)*w),
-						      1.0/den)),
-				      -0.5*h)); 
+	b[0] = sf_cadd(b0[0],
+		       sf_crmul(sf_cadd(a1,sf_crmul(b1,1.0/den)),-0.5*h)); 
 	b[1] = sf_cadd(b0[1],sf_crmul(sf_cadd(sf_cmplx(0.,s/w),
 					      sf_crmul(sf_cmplx(2.*h,s*w),
 						       1.0/den)),h)); 
-	b[2] = sf_cadd(b0[2],sf_crmul(sf_cadd(sf_cmplx(0.,(s+2.)/w),
-					      sf_crmul(sf_cmplx(2.*h,(s+1.)*w),
-						       1.0/den)),
-				      -0.5*h)); 
+	b[2] = sf_cadd(b0[2],
+		       sf_crmul(sf_cadd(a2,sf_crmul(b2,1.0/den)),-0.5*h)); 
 #endif
 	filt2matrix(b,c[ih],cc[ih]);
     }
