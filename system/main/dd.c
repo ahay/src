@@ -1,24 +1,27 @@
 /* Convert between different formats. */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
 
+#include <stdio.h>
 #include <rsf.h>
+
+/* From http://www.cs.tut.fi/~jkorpela/round.html */
+#define roundf(x) ((x)>=0?(float)((x)+0.5):(float)((x)-0.5))
 
 static void ddbreak (sf_datatype itype, sf_datatype otype);
 static float ibm2float (const char* num);
@@ -36,12 +39,15 @@ int main(int argc, char *argv[])
     sf_complex *cbuf;
     unsigned char *ubuf;
     bool ibm = false;
+    bool trunc = false;
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output ("out");
     size = sf_filesize(in);
-    
+    if (!sf_getbool("trunc", &trunc)) trunc=false;
+    /* Truncate or round to nearest when converting from float to int/short */
+
     form = sf_getstring("form");
     /* ascii, native, xdr */
     type = sf_getstring("type");
@@ -95,7 +101,7 @@ int main(int argc, char *argv[])
 
     ein = sf_esize(in);
     eout = sf_esize(out);
-    
+
     /* optimize buffer size */
     bufsiz /= ein;
 
@@ -196,15 +202,31 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_INT:
 			ibuf = (int*) bufout;
-			for (i=j=0; i < nout && j < nin; i++, j++) {
-			    ibuf[i] = fbuf[j]; 
+			/* Avoiding a conditional inside a loop. More code */
+			if (trunc) {
+			    for (i=j=0; i < nout && j < nin; i++, j++) {
+			        ibuf[i] = fbuf[j];
+			    }
+			} else {
+			    for (i=j=0; i < nout && j < nin; i++, j++) {
+			        ibuf[i] = roundf(fbuf[j]);
+			    }
 			}
 			sf_intwrite(ibuf,nout,out);
 			break;
                     case SF_SHORT:
                         sbuf = (short*) bufout;
-                        for (i=0; i < nin; i++) {
-			    sbuf[i] = (short) fbuf[i]; 
+			/* Strange why the structure of the loop is different
+			   for short than for int. Different esize? Should
+			   investigate later */
+			if (trunc) {
+                            for (i=0; i < nin; i++) {
+			        sbuf[i] = (short) fbuf[i];
+			    }
+			} else {
+			    for (i=0; i < nin; i++) {
+			        sbuf[i] = roundf(fbuf[i]);
+			    }
 			}
                         sf_shortwrite(sbuf, nin, out);
 			break;
@@ -345,5 +367,3 @@ static float ibm2float (const char* num)
     memcpy (&y,&s,4);
     return y;
 }
-
-/* 	$Id$	 */
