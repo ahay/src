@@ -63,8 +63,8 @@ Software construction
 
    3. User setup
 
-      If your shell is sh or bash, add to your $HOME/.bash_profile or 
-      $HOME/.bashrc file the line
+      If your shell is sh or bash, add to your $HOME/.bashrc and
+      $HOME/.bash_profile files the line
 
       source RSFROOT/etc/madagascar/env.sh
 
