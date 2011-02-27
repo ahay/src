@@ -197,6 +197,19 @@ def dgrey(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['labelattr']+' '+custom)
+
+def dwigl(custom,par):
+    return '''
+    wiggle parallel2=n labelrot=n wantaxis=y title=""
+    transp=y yreverse=y wherexlabel=t poly=y seamean=y
+    pclip=100
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    %s
+    ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['labelattr']+' '+custom)
+
 def dgrey3d(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g |

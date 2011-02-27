@@ -132,7 +132,7 @@ void zomig3(ssroperator3d weop,
 	ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>;",
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
 				  ompith,iw+1,cub->aw.n);
 	
 	if(inv) { /* MODELING */
@@ -274,8 +274,8 @@ void zodtm3(ssroperator3d weop,
 #pragma omp critical
 #endif
 	    if(cub->verb) sf_warning ("(ith=%d) "
-				      "... <iw=%3d of %3d> "
-				      "... <ie=%3d of %3d>;",
+				      "... <iw=%3d of %3d>"
+				      "... <ie=%3d of %3d>",
 				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
 	    
 	    if(inv) { /* UPWARD DATUMING */
@@ -381,7 +381,7 @@ void zowfl3(ssroperator3d weop,
 	ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>;",
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
 				  ompith,iw+1,cub->aw.n);
 	
 	if(inv) { /*   UPWARD EXTRAPOLATION */
