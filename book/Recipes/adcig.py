@@ -202,7 +202,7 @@ def egrey(custom,par):
 # tau-lx-ly
 def hgrey(custom,par):
     return '''
-    grey3 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3
+    grey3 title="" labelsz=6 labelfat=3 titlesz=12 titlefat=3 parallel2=n
     frame1=%d frame2=%d frame3=%d framelabel=n
     label1="\F10 t\F3      " unit1=%s
     label2="\F10 l\F3 \_x\^" unit2=%s

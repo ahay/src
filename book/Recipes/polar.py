@@ -3,6 +3,7 @@ try:
 except:
     from rsf.proj import *
 
+import math
 ## 
  # mapping from polar to Cartesian coordinates
  # assumes angles measured in degrees!
@@ -73,7 +74,7 @@ def ovl(ovl,jc,jr,custom,cco):
                    custom))
 
         Plot(ovl+ctag+'l',None,
-             'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
+             'box x0=%g y0=%g label="%s\^o\_" xt=%g yt=%g lab_fat=1 boxit=n'%
              ((5.6+2.75*ic/90.),(5.1-2.75*ic/90.),"%s"%ic,0,0))
 
     # radii
@@ -110,16 +111,16 @@ def ovl(ovl,jc,jr,custom,cco):
 
     Plot(ovl+'-ann000',None,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (9.65,5,"0",0,0))
+         (9.65,5,"0\^o\_",0,0))
     Plot(ovl+'-ann090',None,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (5.55,9.25,"90",0,0))
+         (5.55,9.25,"90\^o\_",0,0))
     Plot(ovl+'-ann180',None,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (1.2,5,"180",0,0))
+         (1.2,5,"180\^o\_",0,0))
     Plot(ovl+'-ann270',None,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (5.5,1,"270",0,0))
+         (5.5,1,"270\^o\_",0,0))
 
     Plot(ovl+'-center',None,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
@@ -145,11 +146,33 @@ def polplot(custom,par):
     label1="\F10 q\F3" unit1="\^o\_"
     label2="\F10 f\F3" unit2="\^o\_"
     %s
-    ''' % (par['labelrot0']+custom)
+    ''' % (par['labelrot']+custom)
 
 def carplot(custom,par):
     return '''
     grey title="" pclip=99.9 allpos=n
     screenratio=1 wantaxis=n
     %s
-    ''' %(par['labelrot0']+custom)
+    ''' %(par['labelrot']+custom)
+
+# ------------------------------------------------------------
+def ann(ann,tht,phi,custom,cco):
+
+    min=cco['o']
+    max=cco['o']+(cco['n']-1)*cco['d']
+
+    Flow(ann,None,
+         'spike nsp=2 n1=2 k1=1,2 mag=%g,%g'
+         %(+tht*math.cos(3.1415*phi/180),
+           -tht*math.sin(3.1415*phi/180)))   
+    Plot(ann,
+         '''
+         dd type=complex |
+         graph title=""
+         wantaxis=n yreverse=y screenratio=1 plotcol=0
+         symbol=. symbolsz=20 plotfat=20
+         min1=%d max1=%d min2=%d max2=%d
+         %s
+         ''' %(min,max,min,max,
+               custom))
+    

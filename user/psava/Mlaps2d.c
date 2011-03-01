@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 			for(ihz=0; ihz<nhz2; ihz++) { mcz=mczall[ic][ihz]; pcz=pczall[ic][ihz];
 			    
 			    imag[ic][iht][ihx][ihz] += rCOR(r_us[mct][mcx][mcz],
-							  r_ur[pct][pcx][pcz]);
+							    r_ur[pct][pcx][pcz]);
 			    
 			} // ihz
 		    }     // ihx
