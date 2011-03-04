@@ -58,6 +58,7 @@ down = '''
 11750
 12006
 12321
+12576
 '''
 
 down = map(int,down.split())
