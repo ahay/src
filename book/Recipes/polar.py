@@ -165,14 +165,25 @@ def ann(ann,tht,phi,custom,cco):
          'spike nsp=2 n1=2 k1=1,2 mag=%g,%g'
          %(+tht*math.cos(3.1415*phi/180),
            -tht*math.sin(3.1415*phi/180)))   
-    Plot(ann,
+    Plot(ann+'bg',ann,
          '''
          dd type=complex |
          graph title=""
          wantaxis=n yreverse=y screenratio=1 plotcol=0
-         symbol=. symbolsz=20 plotfat=20
+         symbol=. symbolsz=15 plotfat=10
+         min1=%d max1=%d min2=%d max2=%d
+         %s plotcol=0
+         ''' %(min,max,min,max,
+               custom))
+    Plot(ann+'fg',ann,
+         '''
+         dd type=complex |
+         graph title=""
+         wantaxis=n yreverse=y screenratio=1 plotcol=0
+         symbol=. symbolsz=10 plotfat=10
          min1=%d max1=%d min2=%d max2=%d
          %s
          ''' %(min,max,min,max,
                custom))
+    Plot(ann,[ann+'bg',ann+'fg'],'Overlay')
     
