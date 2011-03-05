@@ -11,6 +11,8 @@ To SCons:
 
 To documentation:
 
+* Info from VERSION.txt being printed in man pages for all programs
+
 To APIs:
 
 * Fetch, Movie, and other enhancements in Python API
