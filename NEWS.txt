@@ -42,6 +42,7 @@ In the Python package:
 In programs:
 
 * Fixed parameter-setting bug in sfstoltstretch
+* Fixed float-to-int truncation bug in sfdd triggered by Intel C Compiler 10
 
 ==Release 1.1 (2011-01-18)==
 
