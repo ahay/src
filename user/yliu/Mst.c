@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     outp = sf_complexalloc(n1*nf);
 
     for (i=0; i < n2; i++)  {
+	sf_warning("slice %d of %d;",i+1,n2);
 	if (!inv) {
 	    sf_shiftdim(in, out, 1);
 	    sf_putint(out,"n2",nf);
@@ -113,7 +114,7 @@ int main(int argc, char *argv[])
 	    sf_floatwrite(inp,n1,out);
 	}
     }
-
+    sf_warning(".");
     exit(0);
 }
 
