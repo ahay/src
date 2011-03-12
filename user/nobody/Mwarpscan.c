@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int wi;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
     float *corr, *win1, *win2, a, b, a2, b2, ab, h, dw;
-    bool taper, diff;
+    bool taper, diff, verb;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -92,6 +92,9 @@ int main(int argc, char* argv[])
     /* window overlap */
     if (!sf_getbool("taper",&taper)) taper=true;
     /* window tapering */
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* w */
+
     if (!sf_getbool("diff",&diff)) diff=false;
     /* if y, compute difference power insted of correlation */
 
@@ -128,7 +131,7 @@ int main(int argc, char* argv[])
     sf_fileclose(other);
 
     for (ig=0; ig < ng; ig++) {
-	sf_warning("scanned %d of %d",ig+1,ng);
+	if (verb) sf_warning("scanned %d of %d",ig+1,ng);
 
 	g = g0 + ig*dg;
 

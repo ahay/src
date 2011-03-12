@@ -55,6 +55,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	float vp2 = 0.5*(vs+vr);
 	vp2 *= vp2;
 
+	float vsr = vs*vr;
 	vs *= vs;
 	vr *= vr;
 
@@ -79,14 +80,21 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    kx *= kx;
 	    
 	    kzmin = sqrt(kh*kx);
-	    kz = SF_MAX(kz,kzmin);
+	    /* kz = SF_MAX(kz,kzmin); */
 	    
 	    float phi = (kh + kz)*(kx + kz)*vr*vs/
 		(-kxh*vm + kz*vp + 
-		 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr))));
+		 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr)))); // exact
 	    
-	    // v(z) 
-	    phi = (kh + kz)*(kx + kz)*vs*vr/(4*kz*vp2);
+	    phi = (kh + kz)*(kx + kz)*vs*vr/(4*kz*vp2); // v(z)-like
+
+	    phi = (vsr*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 2*(kh + kx + 2*kz)*vsr + 
+			vsr*sqrt(((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*vsr*
+				 (vr + vs + 2*vsr) + ((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
+						      2*(kh + kx + 2*kz)*vsr)*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
+									       2*(kh + kx + 2*kz)*vsr)/(vr*vs))))/(8.*(vr + vs + 2*vsr)); // tariq's
+	    
+	    phi = ((kh + kx + kz+sqrt(4*kx*kh+(kh+kx+kz)*(kh+kx+kz)))*vs*vr)/(8.*vp2); // tariq's v(z)-like
 
 	    res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
 	}

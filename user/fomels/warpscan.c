@@ -38,7 +38,8 @@ void warpscan_init(int m1     /* input trace length */,
 		   int dim    /* dimensionality */, 
 		   int *m     /* data dimensions [dim] */, 
 		   int *rect  /* smoothing radius [dim] */, 
-		   int niter  /* number of iterations */)
+		   int niter  /* number of iterations */,
+		   bool verb  /* verbosity */)
 /*< initialize >*/
 {
     n1 = m1;
@@ -62,7 +63,7 @@ void warpscan_init(int m1     /* input trace length */,
     den = sf_floatalloc (n2g);
 
     spl = sf_spline_init (order, n1);     
-    divn_init(dim, n2g, m, rect, niter, true);
+    divn_init(dim, n2g, m, rect, niter, verb);
 }
 
 void warpscan(float** inp /* input data [ntr][n1] */, 
