@@ -170,9 +170,9 @@ def ann(ann,tht,phi,custom,cco):
          dd type=complex |
          graph title=""
          wantaxis=n yreverse=y screenratio=1 plotcol=0
-         symbol=. symbolsz=15 plotfat=10
+         symbol=. symbolsz=25 plotfat=20
          min1=%d max1=%d min2=%d max2=%d
-         %s plotcol=0
+         %s plotcol=7
          ''' %(min,max,min,max,
                custom))
     Plot(ann+'fg',ann,
@@ -180,7 +180,7 @@ def ann(ann,tht,phi,custom,cco):
          dd type=complex |
          graph title=""
          wantaxis=n yreverse=y screenratio=1 plotcol=0
-         symbol=. symbolsz=10 plotfat=10
+         symbol=. symbolsz=20 plotfat=10
          min1=%d max1=%d min2=%d max2=%d
          %s
          ''' %(min,max,min,max,
