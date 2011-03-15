@@ -24,16 +24,18 @@
 using namespace std;
 
 static std::valarray<float>  v;
-static float dt, kh, kx, kz, kzmin;
+static float dt, kh, kx, kz;
 static int nh,nx,nz;
 static int nkh,nkx,nkz;
 static float kh0,kx0,kz0;
 static float dkh,dkx,dkz;
+static int equation;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 // assuming dx=dh
 {
     int ix, ih, iz;
+    float phi;
 
     int nr = rs.size();
     int nc = cs.size();
@@ -79,22 +81,32 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    kh *= kh;
 	    kx *= kx;
 	    
-	    kzmin = sqrt(kh*kx);
-	    /* kz = SF_MAX(kz,kzmin); */
-	    
-	    float phi = (kh + kz)*(kx + kz)*vr*vs/
-		(-kxh*vm + kz*vp + 
-		 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr)))); // exact
-	    
-	    phi = (kh + kz)*(kx + kz)*vs*vr/(4*kz*vp2); // v(z)-like
+	    if ('e'==equation || 'z'==equation) {
+		float kzmin = sqrt(kh*kx);		
+		kz = SF_MAX(kz,kzmin); 
+	    }
 
-	    phi = (vsr*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 2*(kh + kx + 2*kz)*vsr + 
-			vsr*sqrt(((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*vsr*
-				 (vr + vs + 2*vsr) + ((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
-						      2*(kh + kx + 2*kz)*vsr)*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
-									       2*(kh + kx + 2*kz)*vsr)/(vr*vs))))/(8.*(vr + vs + 2*vsr)); // tariq's
-	    
-	    phi = ((kh + kx + kz+sqrt(4*kx*kh+(kh+kx+kz)*(kh+kx+kz)))*vs*vr)/(8.*vp2); // tariq's v(z)-like
+	    switch (equation) {
+		case 0: // exact	    
+		    phi = (kh + kz)*(kx + kz)*vr*vs/
+			(-kxh*vm + kz*vp + 
+			 sqrt(fabs(kz*(2*(kh + kx + 2*kz)*vr*vs - km*vs*vs - kp*vr*vr))));
+		    break;
+		case 1: //  v(z)-like	    
+		    phi = (kh + kz)*(kx + kz)*vs*vr/(4*kz*vp2); 
+		    break;
+		case 2: // tariq's
+		    phi = (vsr*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 2*(kh + kx + 2*kz)*vsr + 
+				vsr*sqrt(((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*((kh + kx - 2*kxh)/vr - (kh + kx + 2*kxh)/vs)*vsr*
+					 (vr + vs + 2*vsr) + ((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
+							      2*(kh + kx + 2*kz)*vsr)*((kh + kx + 2*kxh)*vr + (kh + kx - 2*kxh)*vs + 
+										       2*(kh + kx + 2*kz)*vsr)/(vr*vs))))/(8.*(vr + vs + 2*vsr));
+		    break;
+		case 3: // tariq's v(z)-like
+		default:	    
+		    phi = ((kh + kx + kz+sqrt(4*kx*kh+(kh+kx+kz)*(kh+kx+kz)))*vs*vr)/(8.*vp2);
+		    break;
+	    }
 
 	    res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
 	}
@@ -149,6 +161,8 @@ int main(int argc, char** argv)
     fft.get("o1",kh0); if (nkh==1) kh0=0.0;
     fft.get("o2",kx0);
     fft.get("o3",kz0);
+
+    par.get("equation",equation,3); // equation type
 
     vector<int> lidx, ridx;
     DblNumMat mid;

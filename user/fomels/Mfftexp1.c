@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
 	/* time sampling (if migration) */
 
+	sf_putint(image,"o1",0.);
 	sf_putint(image,"n1",nz);
 	sf_putfloat(image,"d1",dz);
 	sf_putstring(image,"label1","Depth");
@@ -109,7 +110,11 @@ int main(int argc, char* argv[])
 
 	sf_putint(snaps,"n4",nt/snap);
 	sf_putfloat(snaps,"d4",dt*snap);
-	sf_putfloat(snaps,"o4",0.);
+	if (mig) {
+	    sf_putfloat(snaps,"o4",(nt-1)*dt);
+	} else {
+	    sf_putfloat(snaps,"o4",0.);
+	}
 	sf_putstring(snaps,"label4","Time");
     }
 
