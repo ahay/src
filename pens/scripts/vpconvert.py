@@ -140,9 +140,9 @@ def convert(vpl,out,format,pen,args,verb=True):
                               options='color=y fat=1 fatmult=1.5 ' + args)
         epstopdf = which('epstopdf') or which('a2ping')
         if epstopdf:
-            command = 'LD_LIBRARY_PATH=%s %s %s %s --outfile=%s' % \
-                (os.environ.get('LD_LIBRARY_PATH',''),
-                 os.environ.get('GS_OPTIONS',''),epstopdf,eps,out)
+            command = 'LD_LIBRARY_PATH=%s GS_OPTIONS="%s" %s %s --outfile=%s' \
+                % (os.environ.get('LD_LIBRARY_PATH',''),
+                   os.environ.get('GS_OPTIONS',''),epstopdf,eps,out)
             print command
             fail = os.system(command)
         else:
