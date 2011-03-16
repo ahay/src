@@ -38,6 +38,7 @@ struct Map4 {
     bool *m;
     float **w, *diag, *offd[3];
     sf_bands slv;
+    sf_tris tslv;
 };
 
 map4 stretch4_init (int n1, float o1, float d1 /* regular axis */, 
@@ -66,6 +67,7 @@ map4 stretch4_init (int n1, float o1, float d1 /* regular axis */,
     }
   
     str->slv = sf_banded_init (str->nt,3);
+    str->tslv = sf_spline4_init(str->nt);
 
     return str;
 }
@@ -202,7 +204,8 @@ void stretch4_invert (map4 str,
 	mm[it] = mod[it];
     }
 
-    sf_banded_solve (str->slv, mm);
+    sf_tridiagonal_solve(str->tslv, mm);
+
     for (id = 0; id < str->nd; id++) {
 	ord[id] = 0.;
 	if (str->m[id]) continue;
