@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-apef apef2 apefsignoi atm1 atm2 bilstack difference doeps domf
+apef apef2 apefsignoi atm1 atm2 bilstack c1coh difference doeps domf
 dominantf donf dowmf duwt dwt97 epsf fkoclet fkoclet3 fourmis2 freqreg
 freshape geoconvert groll initial kuwahara locorr lpad2 lpfdenoise1
 lpfdenoise2 lrmf ltft lum lum2 lumsmoother lumsharpener matchoper mean
