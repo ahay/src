@@ -201,7 +201,7 @@ def dgrey(custom,par):
 def dwigl(custom,par):
     return '''
     wiggle parallel2=n labelrot=n wantaxis=y title=""
-    transp=y yreverse=y wherexlabel=t poly=y seamean=y
+    transp=y yreverse=y wherexlabel=t poly=y seamean=n
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s

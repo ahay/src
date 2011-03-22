@@ -76,6 +76,19 @@ def time2freq(dtime,dfreq,par):
          o2=%(oy)g dy=%(dy)g unit1=%(ux)s unit2=%(uy)s
          ''' % par)
 
+def freq2time(dfreq,dtime,par):
+    # input  is x-y-w-e
+    # output is t-x-y-e
+
+    Flow(dtime,dfreq,
+         '''
+	 transp plane=23 | transp plane=12 |
+	 pad pad beg1=%(fw)d n1out=%(nt)d |
+         fft1 inv=y opt=n |
+         put label1=t label2=x label3=y label4=e
+         ''' % par)
+
+
 # ------------------------------------------------------------
 def delay(dou,din,delay,par):
 
