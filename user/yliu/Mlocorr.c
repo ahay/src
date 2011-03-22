@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 	    for (ii=0; ii < rect[2]; ii++) {
 		for (jj=0; jj < rect[1]; jj++) {
 		    for (kk=0; kk < rect[0]; kk++) {
-			ind = (ii-half[2])*n[1]*n[0]+(jj-half[1])*n[0]+i1+(kk-half[0]);
+			ind = (ii-half[2])*n[1]*n[0]+(jj-half[1])*n[0]
+			    +i1+(kk-half[0]);
 			if (ind >= 0 && ind < n1) {
 			    win1[ii*rect[1]*rect[0]+jj*rect[0]+kk]=one[ind];
 			    win2[ii*rect[1]*rect[0]+jj*rect[0]+kk]=two[ind];

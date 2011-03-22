@@ -20,6 +20,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int n1, i1, i2, n2, i3, n3, i4, n4, lag1, lag2, lag, ntw, win, w;
     float done, dtwo, corr;
     float *data, *indat, *crossdat;
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("ntw",&ntw)) ntw=3;
     /* Temporal length of the correlation window (default=3) */
 
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
+
     if (0== ntw%2) ntw++;
     win = (ntw-1)/2;
     
@@ -55,6 +59,7 @@ int main(int argc, char* argv[])
 	sf_floatread(data,n1*n2*n3,in);
 
 	for (i3=0; i3 < n3; i3++) {
+	    sf_warning("slice %d of %d;",i3+1,n3);
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    /* inline l-lag crosscorrelation */
@@ -114,7 +119,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(indat,n1*n2*n3,out);
 	}
     }
-
+    sf_warning(".");
     exit(0);
 }
 /* 	$Id$	 */
