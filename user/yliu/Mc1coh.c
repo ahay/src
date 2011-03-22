@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("ntw",&ntw)) ntw=3;
     /* Temporal length of the correlation window (default=3) */
 
-    if (!sf_getbool("verb",&verb)) verb = false;
+    if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
 
     if (0== ntw%2) ntw++;
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 	sf_floatread(data,n1*n2*n3,in);
 
 	for (i3=0; i3 < n3; i3++) {
-	    sf_warning("slice %d of %d;",i3+1,n3);
+	    if (verb) sf_warning("slice %d of %d;",i3+1,n3);
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    /* inline l-lag crosscorrelation */
