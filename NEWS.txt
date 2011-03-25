@@ -16,6 +16,7 @@ To documentation:
 To APIs:
 
 * Fetch, Movie, and other enhancements in Python API
+* Input class (can read int and float pars from stdin) in Python backup API
 * Added reading complex-valued data to rsf_read in Matlab API
 
 To the Python package:
