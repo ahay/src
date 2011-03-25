@@ -1,4 +1,4 @@
-/* Azimuth moveout by log-stretch F-K operator. */
+/* Computes Azimuth Move-Out (AMO) operator in the f-k log-stretch domain */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
