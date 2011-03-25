@@ -1,6 +1,6 @@
 """
-Emergency backup replacement for the 'official' rsf module.
-Installed if swig or numpy/numarray not present or did not work properly.
+Backup replacement for the 'official' rsf module.
+To be used if swig or numpy/numarray not present or did not work properly.
 No facilities that make use of arrays are present. Only parameter reading.
 Attribute noArrays allows distinguishing between the two modules.
 """
@@ -99,3 +99,57 @@ class Par:
                    (key, self.prog))
             sys.stderr.write(msg)
             sys.exit(1)
+
+################################################################################
+
+class Input:
+
+    def __create_variable_dictionary(self, header):
+        'Parse RSF header into a dictionary of variables'
+        self.vd={} # variable dictionary
+        ilist = header.split()
+        pos = 0
+        squot = "'"
+        dquot = '"'
+        while pos < len(ilist):
+            if '=' in ilist[pos]:
+                tokenlist = ilist[pos].split('=')
+                lhs = tokenlist[0]
+                rhs = tokenlist[1]
+                quotmark = None
+                if rhs[0] in (squot, dquot):
+                    if rhs[0] == squot:
+                        quotmark = squot
+                    else:
+                        quotmark = dquot
+                    if rhs[-1] == quotmark:
+                        rhs_out = rhs.strip(quotmark)
+                        pos += 1
+                    else:
+                        rhs_out = rhs.lstrip(quotmark)
+                        while pos < len(ilist):
+                            pos += 1
+                            rhs_out += ' '
+                            if ilist[pos][-1] == quotmark:
+                                rhs_out += ilist[pos][:-1]
+                                break
+                            else:
+                                rhs_out += ilist[pos]
+                else:
+                    rhs_out = rhs
+                    pos += 1
+                self.vd[lhs] = rhs_out
+            else:
+                pos += 1
+
+    def __init__(self):
+        # Temporary solution. Need to scan for \EOL\EOL\EOT, else this will
+        # choke on a .HH file!
+        self.__create_variable_dictionary(sys.stdin.read())
+
+    def int(self, nm):
+        return int(self.vd[nm])
+
+    def float(self, nm):
+        return float(self.vd[nm])
+
