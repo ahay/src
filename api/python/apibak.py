@@ -145,6 +145,8 @@ class Input:
     def __init__(self):
         # Temporary solution. Need to scan for \EOL\EOL\EOT, else this will
         # choke on a .HH file!
+        # Also, need to add capability of reading from another file than
+        # input
         self.__create_variable_dictionary(sys.stdin.read())
 
     def int(self, nm):
@@ -152,4 +154,3 @@ class Input:
 
     def float(self, nm):
         return float(self.vd[nm])
-
