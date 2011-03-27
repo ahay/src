@@ -30,7 +30,8 @@ lines = {'S':251,'R':782}
 color = {'S':4, 'R':2}
 for case in 'SR':
     # X-Y geometry
-    Flow(case+'.asc','Line_001.%cPS' % case,'''awk 'NR > 20 {print $8, " ", $9}' ''')
+    Flow(case+'.asc','Line_001.%cPS' % case,
+         '''awk 'NR > 20 {print $8, " ", $9}' ''')
     Flow(case,case+'.asc',
          '''
          echo in=$SOURCE data_format=ascii_float n1=2 n2=%d | dd form=native 

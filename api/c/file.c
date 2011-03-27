@@ -284,7 +284,7 @@ Should do output after the first call to sf_input. >*/
 	    file->dataname[namelen]='@';
 	    file->dataname[namelen+1]='\0';
 	} else { /* invent a name */
-	    sprintf(name,"%sXXXXXX.rsf@",sf_getprog());
+	    sprintf(name,"%sXXXXXX@",sf_getprog());
 	    (void) close(mkstemp(file->dataname));
 	    /* (void) unlink(file->dataname); */
 	    /* old code for named pipes below */
@@ -1422,7 +1422,7 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     path = gettmpdatapath();
     if (NULL == path) path = getdatapath();
     *dataname = sf_charalloc (NAME_MAX+1);
-    snprintf(*dataname,NAME_MAX,"%s%sXXXXXX.rsf@",path,sf_getprog());
+    snprintf(*dataname,NAME_MAX,"%s%sXXXXXX@",path,sf_getprog());
     
     stemp = mkstemp(*dataname);
     if (stemp < 0) sf_error ("%s: cannot create %s:",__FILE__,*dataname);
