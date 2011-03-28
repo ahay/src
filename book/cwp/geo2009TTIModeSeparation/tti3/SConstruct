@@ -163,9 +163,9 @@ spk.deltx3('spk3',64,64,64,par)
 #fdd.separator3TTI('dz','dx','dy','spk3','cA3d','nuu3d','alp3d','y','k',27,27,27,par)
 fdd.separator3TTI('dz','dx','dy','spk3','cA3d','y','k',27,27,27,par)
 
-Result('dz',fdm.cgrey3d(' movie=1  flat=y  flat=y color=e'+center,par))
-Result('dx',fdm.cgrey3d(' movie=2  flat=y   color=e'+center,par))
-Result('dy',fdm.cgrey3d(' movie=3  flat=y  flat=y color=e'+center,par))
+Plot('dz',fdm.cgrey3d(' movie=1  flat=y  flat=y color=e'+center,par),view=1)
+Plot('dx',fdm.cgrey3d(' movie=2  flat=y   color=e'+center,par),view=1)
+Plot('dy',fdm.cgrey3d(' movie=3  flat=y  flat=y color=e'+center,par),view=1)
 
 
 

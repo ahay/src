@@ -2,8 +2,11 @@ from rsf.proj import *
 
 Fetch('Nstack.su','nankai')
 
-Flow('stack tstack','Nstack.su','suread suxdr=y tfile=${TARGETS[1]} | window min1=5')
+Flow('stack tstack','Nstack.su','suread suxdr=y tfile=${TARGETS[1]}')
+Flow('stack-win','stack','window min1=5')
 
-Result('stack','grey title=Stack')
+for case in ('stack','stack-win'):
+    Plot(case,'grey title=Stack')
+Result('stack','stack stack-win','SideBySideAniso')
 
 End()
