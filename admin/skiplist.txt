@@ -32,6 +32,7 @@ skiplist =  [
                 'book/gpgn658/fdmod/exercise',
                 'book/jsg/diffr/fault',
                 'book/jsg/diffr/gom',
+		'book/jsg/diffr/chan3d',
                 'book/jsg/lpf/plut',
                 'book/jsg/medianfilter/dragon',
                 'book/jsg/pmig/mig',
