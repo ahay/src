@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
     }
 
     if (NULL != sf_getstring("mask")) {
+	/* optional mask file */ 
 	msk = sf_input("mask");
 	mask = sf_intalloc(nh);
     } else {
