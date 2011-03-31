@@ -30,6 +30,7 @@ skiplist =  [
 		'book/geo391/hw1/sort',
                 'book/geo391/hw6/pattern',		
                 'book/gpgn658/fdmod/exercise',
+		'book/jsg/avo/avo2',
                 'book/jsg/diffr/fault',
                 'book/jsg/diffr/gom',
 		'book/jsg/diffr/chan3d',

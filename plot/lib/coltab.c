@@ -59,6 +59,9 @@ void vp_name2coltab (   const char *colname,    /* color table name */
         case 't':
             hnocol = 0.25  * nocol;
             break;
+	case 'd':
+	    hnocol = 0.125  * nocol;
+            break;
         case 'h':
         case 'p':
         case 'b':       
@@ -76,7 +79,7 @@ void vp_name2coltab (   const char *colname,    /* color table name */
     if (reverse == 1) ic = nocol - 1 - i;   /* reverse color table */
     else              ic = i;
     
-    gray = ((float) i)/(nocol - 1.);
+    gray = ((float) i)/(nocol - 1.); /* ranges from 0 to 1 */
 
     switch (c)
     {
@@ -255,6 +258,72 @@ void vp_name2coltab (   const char *colname,    /* color table name */
                 red[ic]   = (hnocol - h)/hnocol; 
                 green[ic] = 0.;
             }
+            break;
+
+	case 'd': /* periodic traffic */
+            blue[ic] = 0.;
+            if (i <= hnocol/2)          /* green up */
+            {
+                red[ic]   = 0.; 
+                green[ic] = (i + hnocol/2)/hnocol; 
+            }
+            else if (i < 3*hnocol/2)    /* red up */
+            {
+                h = i - hnocol/2;
+                red[ic]   = (h + 1.) /hnocol;
+                green[ic] = 1.;
+            }
+            else if (i < 5*hnocol/2)    /* steady yellow */
+            {
+                red[ic]   = 1.;
+                green[ic] = 1.;
+            }
+            else if (i < 7*hnocol/2)    /* green down */
+            {
+                h = i - 5*hnocol/2;
+                red[ic]   = 1;
+                green[ic] = 1.- (h + 1.)/hnocol;
+            }
+            else if (i < 4*hnocol)  /* red down */
+            {
+                h = i - 7*hnocol/2;
+                red[ic]   = (hnocol - h)/hnocol; 
+                green[ic] = 0.;
+            } 
+
+	    /* wrap periodically */
+
+	    
+	    else if (i <= 9*hnocol/2)          /* red up */
+            {
+		h = i - 4*hnocol;
+                green[ic]   = 0.; 
+                red[ic] = (h + hnocol/2)/hnocol; 
+            }
+            else if (i < 11*hnocol/2)    /* green up */
+            {
+                h = i - 9*hnocol/2;
+                green[ic]   = (h + 1.) /hnocol;
+                red[ic] = 1.;
+            }
+            else if (i < 13*hnocol/2)    /* steady yellow */
+            {
+                red[ic]   = 1.;
+                green[ic] = 1.;
+            }
+            else if (i < 15*hnocol/2)    /* red down */
+            {
+                h = i - 13*hnocol/2;
+                green[ic]   = 1;
+                red[ic] = 1.- (h + 1.)/hnocol;
+            }
+            else  /* green down */
+            {
+                h = i - 15*hnocol/2;
+                green[ic]   = (hnocol - h)/hnocol; 
+                red[ic] = 0.;
+            } 
+
             break;
 
         default: /* grayscale */

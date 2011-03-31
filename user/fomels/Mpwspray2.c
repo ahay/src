@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     unsigned char update;
     int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, n23, n12;
     int order, np, i4, n4, k2, k3, j2, j3, i, jp, j;
-    float eps, ***u, **p1, **p2, **cost, *trace, *q2, *q3;
+    float eps, ***u, **p1, **p2, **cost, *trace, *q2=NULL, *q3=NULL;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);

@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
     float two;       /* two */
     int k_scale, num_cfl;
 
-    geomB * arrB = (geomB*)0;
+    /* geomB * arrB = (geomB*)0; */
 
     /* END DECLARATIONS */
     
@@ -150,8 +150,8 @@ int main(int argc, char ** argv) {
 	    
 	    /* construct next time step, overwrite on p0 */
 	    
-	    //step_forward(p0,p1,v,wi.nz,wi.nx,rz,rx,s); 
-	    //step_forward_g(arrB, p0, p1, v, wi.nz, wi.nx, wi.dz, wi.dx, wi.dt, wi.isz, isx); 
+	    /* step_forward(p0,p1,v,wi.nz,wi.nx,rz,rx,s); 
+	       step_forward_g(arrB, p0, p1, v, wi.nz, wi.nx, wi.dz, wi.dx, wi.dt, wi.isz, isx); */
 
 	    num_cfl = step_forward_k(p0,p1,v,wi.nz,wi.nx,rz,rx,s, k_scale, wi.dt, CFL, wi.dx, wi.dz); 
 
