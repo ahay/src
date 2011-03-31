@@ -141,10 +141,13 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("v0",&v0) && !sf_histfloat(cmp,"v0",&v0)) 
 	sf_error("Need v0=");
+    /*(v0 first scanned velocity )*/
     if (!sf_getfloat("dv",&dv) && !sf_histfloat(cmp,"dv",&dv)) 
 	sf_error("Need dv=");
+    /*(dv step in velocity )*/
     if (!sf_getint("nv",&nv) && !sf_histint(cmp,"nv",&nv)) 
 	sf_error("Need nv=");
+    /*(nv number of scanned velocities )*/
 
     sf_putfloat(scan,"o2",v0);
     sf_putfloat(scan,"d2",dv);
