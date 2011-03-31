@@ -102,6 +102,7 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include <math.h> /* for roundf */
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
