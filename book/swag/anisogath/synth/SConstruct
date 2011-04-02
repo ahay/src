@@ -118,13 +118,13 @@ nw = 400 # maximum number of frequencies
 
 def dsr(data,image):
     Flow(image,[data,'velo'],
-         'dsrVTI inv=0 velocity=${SOURCES[1]} eps=1 depth=y nw=%d' % nw, 
+         'dsr inv=0 velocity=${SOURCES[1]} eps=1 depth=y nw=%d' % nw, 
          split=[3,513,[0]])
 
 def adsr(data,image):
     Flow(image,[data,'velo','velz','eta'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} 
+         dsr inv=0 velocity=${SOURCES[1]} 
          velz=${SOURCES[2]} eta=${SOURCES[3]} eps=1 depth=y 
          rule=a arule=a nw=%d
          ''' % nw, split=[3,513,[0]])
@@ -174,12 +174,12 @@ Result('amig','window max2=10 | grey title=Migration')
 def gath(data,image):
     Flow(image,[data,'velo'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} eps=0.1 depth=y na=60 da=1 nw=%d
+         dsr inv=0 velocity=${SOURCES[1]} eps=0.1 depth=y na=60 da=1 nw=%d
          ''' % 400,split=[3,513,[0]])
 def agath(data,image):
     Flow(image,[data,'velo','velz','eta'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} 
+         dsr inv=0 velocity=${SOURCES[1]} 
          velz=${SOURCES[2]} eta=${SOURCES[3]} 
          rule=a eps=0.1 depth=y na=60 da=1 nw=%d
          ''' % 400, split=[3,513,[0]])
@@ -187,7 +187,7 @@ def agath(data,image):
 def aagath(data,image):
     Flow(image,[data,'velo','velz','eta'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} 
+         dsr inv=0 velocity=${SOURCES[1]} 
          velz=${SOURCES[2]} eta=${SOURCES[3]} 
          rule=a arule=a eps=0.1 depth=y na=30 da=2 nw=%d
          ''' % 400, split=[3,513,[0]])
@@ -195,7 +195,7 @@ def aagath(data,image):
 def aagathtest(data,image):
     Flow(image,[data,'velo','velz','eta'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} 
+         dsr inv=0 velocity=${SOURCES[1]} 
          velz=${SOURCES[2]} eta=${SOURCES[3]} 
          rule=a arule=i eps=0.1 depth=y na=30 da=2 nw=%d
          ''' % 400, split=[3,513,[0]])
@@ -203,7 +203,7 @@ def aagathtest(data,image):
 def aigath(data,image):
     Flow(image,[data,'velo','velz','eta'],
          '''
-         dsrVTI inv=0 velocity=${SOURCES[1]} 
+         dsr inv=0 velocity=${SOURCES[1]} 
          velz=${SOURCES[2]} eta=${SOURCES[3]} 
          rule=i arule=a eps=0.1 depth=y na=30 da=2 nw=%d
          ''' % 400, split=[3,513,[0]])

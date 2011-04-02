@@ -26,8 +26,6 @@ To the Python package:
 To programs:
 
 * sfkdmig2d: 2-D Prestack Kirchhoff depth migration (borrowed from SU)
-* sfdsrVTI: Prestack 2-D v(z) modeling/migration by DSR and angle
-  gather generation for VTI and DTI media.
 * wanttitle= option in thplot
 * color=d periodic color table in grey and grey3
 
