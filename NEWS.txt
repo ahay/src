@@ -21,6 +21,8 @@ To APIs:
 
 To the Python package:
 
+* More intuitive interface for rsf.user.ivlad.run()
+
 To programs:
 
 * sfkdmig2d: 2-D Prestack Kirchhoff depth migration (borrowed from SU)
