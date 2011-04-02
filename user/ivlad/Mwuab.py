@@ -47,4 +47,5 @@ def main(par):
 
 ##############################################
 
-ivlad.run(__name__, main, ['prog', 'inp'])
+if __name__ == '__main__':
+    ivlad.run(main, ['prog', 'inp'])

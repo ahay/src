@@ -87,4 +87,5 @@ def main(par):
 
 ##############################################
 
-ivlad.run(__name__, main, ['inp'])
+if __name__ == '__main__':
+    ivlad.run(main, ['inp'])

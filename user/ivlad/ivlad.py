@@ -107,32 +107,30 @@ def show_man_and_out(condition):
 
 ###############################################################################
 
-def run(nm, main_func, cpar=[], nminarg=None, nmaxarg=None):
+def run(main_func, cpar=[], nminarg=None, nmaxarg=None):
     'For eliminating boilerplate code in main programs'
 
-    # nm must be __name__
     # main_func must take a single argument -- par
     # cpar is compulsory parameter list
     # nminarg: minimum number of command-line arguments to the program
     # nmaxarg: max nr of CLI args to prog
 
-    if nm == '__main__':
-        if nminarg != None:
-            show_man_and_out(len(sys.argv) < nminarg+1)
-        if nmaxarg != None:
-            show_man_and_out(len(sys.argv) > nmaxarg+1)
-        par = rsf.Par(sys.argv) # Parse arguments into a parameter table
-        show_man_and_out(par.bool('help', False))
-        for p in cpar:
-            q = par.string(p)
-            show_man_and_out(q == None)
-        try:
-            status = main_func(par) # run the program
-        except m8rex.Error, e:
-            msg(e.msg, True)
-            status = unix_error
+    if nminarg != None:
+        show_man_and_out(len(sys.argv) < nminarg+1)
+    if nmaxarg != None:
+        show_man_and_out(len(sys.argv) > nmaxarg+1)
+    par = rsf.Par(sys.argv) # Parse arguments into a parameter table
+    show_man_and_out(par.bool('help', False))
+    for p in cpar:
+        q = par.string(p)
+        show_man_and_out(q == None)
+    try:
+        status = main_func(par) # run the program
+    except m8rex.Error, e:
+        msg(e.msg, True)
+        status = unix_error
 
-        sys.exit(status)
+    sys.exit(status)
 
 ###############################################################################
 
