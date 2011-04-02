@@ -29,6 +29,7 @@ To programs:
 * sfdsrVTI: Prestack 2-D v(z) modeling/migration by DSR and angle
   gather generation for VTI and DTI media.
 * wanttitle= option in thplot
+* color=d periodic color table in grey and grey3
 
 ===Bug fixes===
 

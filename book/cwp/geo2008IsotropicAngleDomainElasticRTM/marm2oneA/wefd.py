@@ -264,12 +264,12 @@ def emovie(wfld,custom,axis,par):
         if(height>10): height=10
         ratio =0.5*par['ratio']
     
-    Result(wfld,wfld+'all',
-           '''
-           grey title="" wantaxis=y screenratio=%f screenht=%f
-           gainpanel=a pclip=99 %s
-           %s
-           ''' % (ratio,height,par['labelattr'],custom) )
+    Plot(wfld,wfld+'all',
+         '''
+         grey title="" wantaxis=y screenratio=%f screenht=%f
+         gainpanel=a pclip=99 %s
+         %s
+         ''' % (ratio,height,par['labelattr'],custom),view=1)
 
 # ------------------------------------------------------------
 # plot elastic image
