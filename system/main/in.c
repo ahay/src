@@ -1,6 +1,6 @@
 /* Display basic information about RSF files.
 
-Takes: file1.rsf file2.rsf ...
+Takes: [<file0.rsf] file1.rsf file2.rsf ...
 
 n1,n2,... are data dimensions
 o1,o2,... are axis origins
@@ -34,10 +34,10 @@ static void check_zeros (sf_file file, int esize, long long size,
 
 int main (int argc, char* argv[])
 {
-    int i, j, ncheck, esize, dim=SF_MAX_DIM;
+    int i, j, ncheck, esize, nin, dim=SF_MAX_DIM;
     off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
-    char *label, *filename, *dataname, key[8], *val;
+    char *label, **filename, *dataname, key[8], *val;
     char buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
@@ -46,6 +46,9 @@ int main (int argc, char* argv[])
     char pad[] = "              ", out[25];
 
     sf_init (argc,argv);
+
+    filename = (char**) sf_alloc ((size_t) argc,sizeof(char*));
+
     if (!sf_getbool ("info",&info)) info = true;
     /* If n, only display the name of the data file. */
     if (!sf_getfloat ("check",&check)) check = 2.;
@@ -58,11 +61,24 @@ int main (int argc, char* argv[])
 
     memset(zero,0,BUFSIZ);
 
+    if (!sf_stdin()) { /* no input file in stdin */
+	nin=0;
+    } else {
+	filename[0] = "stdin";
+	nin=1;
+    }
+
     for (i = 1; i < argc; i++) {
-	filename = argv[i];
-	if (NULL != strchr (filename, '=')) continue;
+	if (NULL != strchr (argv[i], '=')) 
+	  continue; /* not a file */
+
+	filename[nin] = argv[i];
+	nin++;
+    }
+    if (0==nin) sf_error ("no input");
 	
-	file = sf_input (filename);
+    for (i = 0; i < nin; i++) {
+	file = sf_input (filename[i]);
 	dataname = sf_histstring(file,"in");
 
 	if (!info) {
@@ -71,7 +87,7 @@ int main (int argc, char* argv[])
 	    continue;
 	}
 
-	printf ("%s:\n", filename);
+	printf ("%s:\n", filename[i]);
 	printf ("%sin=\"%s\"\n",pad+10,dataname);
 
 	if (sf_histint(file,"esize",&esize)) {
