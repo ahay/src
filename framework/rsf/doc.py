@@ -588,7 +588,7 @@ DocCmd: %s
         contents = contents + ParamLines + '\n'
         file.write(contents)
         file.close()
-    def html(self,dir,rep,ver):
+    def html(self,dir,rep):
         hfile = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
