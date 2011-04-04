@@ -713,7 +713,8 @@ Prepares file for writing binary data >*/
     }
     
     tm = time (NULL);
-    if (0 >= fprintf(file->stream,"%s\t%s:\t%s@%s\t%s\n",
+    if (0 >= fprintf(file->stream,"%s\t%s\t%s:\t%s@%s\t%s\n",
+		     RSF_VERSION,
 		     sf_getprog(),
 		     sf_getcdir(),
 		     sf_getuser(),

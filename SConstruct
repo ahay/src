@@ -121,6 +121,8 @@ api.insert(0,'c')
 
 bldutil.py_install('api/python/apibak.py', env, pkgdir)
 
+env['version'] = bldutil.__read_version_file('VERSION.txt')
+
 Default('build/include')
 Default('build/lib')
 for dir in map(lambda x: os.path.join('api',x), api):

@@ -27,5 +27,5 @@ for source in Split(src):
     env.Depends(obj,source+'.h')
     objects.append(obj)
 
-inc = env.Command('util.h',includes,Action(bldutil.merge))
+inc = env.Command('util.h',includes,Action(bldutil.__merge))
 lib = env.StaticLibrary('penutil',objects)

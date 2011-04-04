@@ -25,6 +25,7 @@ env.Depends('use.py',['prog.py','conf.py','doc.py'])
 
 env.Command('version.py','#/VERSION.txt',
             action=Action(rsf.doc.getversion))
+env.Depends('version.py','doc.py')
 
 for src in Split('path doc flow proj prog tex book suproj conf use version'):
     bldutil.py_install(src, env, pkgdir)

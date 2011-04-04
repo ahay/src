@@ -27,11 +27,15 @@ except: # local version
     env = bldutil.Debug()
     root = None
 
+
 ##############################################################################
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src2)+Split(src))
+
+version = env.get('version','unknown')
+env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 
 sobjs = []
 dobjs = []
@@ -52,7 +56,7 @@ for source in Split(src2):
 slib = env.StaticLibrary('rsf',sobjs+sources)
 dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
 
-inc = env.Command('rsf.h',includes,Action(bldutil.merge))
+inc = env.Command('rsf.h',includes,Action(bldutil.__merge))
 
 env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)

@@ -62,17 +62,8 @@ def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
-def __read_version_file(fname=None):
-    if fname == None:
-        return ''
-    else:
-        inp = open(fname, 'r')
-        label = inp.readline().rstrip()
-        inp.close()
-        return label
-
 def getversion(target=None,source=None,env=None):
-    label = __read_version_file(str(source[0]))
+    label = env.get('version')
     name = str(target[0])
     out = open(name,'w')
     out.write('#!/usr/bin/env python\n\n')
@@ -150,7 +141,8 @@ def selfdoc(target=None,source=None,env=None):
     rsfprefix = env.get('rsfprefix','sf')
     rsfsuffix = env.get('rsfsuffix','rsf')
     lang = env.get('lang','c')
-    getprog(src,doc,lang,rsfprefix,rsfsuffix)
+    known_version = env.get('version','unknown')
+    getprog(src,doc,lang,rsfprefix,rsfsuffix,known_version=known_version)
     doc.close()
     return 0
 
@@ -596,7 +588,7 @@ DocCmd: %s
         contents = contents + ParamLines + '\n'
         file.write(contents)
         file.close()
-    def html(self,dir,rep):
+    def html(self,dir,rep,ver):
         hfile = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
@@ -665,35 +657,26 @@ def link(name):
     return '%s<a href="%s.html" title="%s">%s</a>' %\
     (prefix, progs[name].name, progs[name].desc, inlink)
 
-def html(dir):
+def html(dir,known_version):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     file = open (os.path.join(dir,'index.html'),'w')
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
-    known_version = __read_version_file('VERSION.txt')
-    rev_add2content = ''
+        
     if known_version[-4:] == '-svn' or known_version == '':
         # Read subversion version number, if possible
-        proc = os.popen('svn stat -v SConstruct 2>/dev/null')
+        proc = os.popen('svn stat -v %s 2>/dev/null' % src)
         raw  = proc.read()
         proc.close()
-        if len(raw) > 0: # SConstruct is under version control
+        if len(raw) > 0: # file is under version control
             try:
                 revnr = raw[13:].rsplit()[0]
-                know_revnr = True
+                known_version += ' r'+revnr
             except: # Python < 2.4 or strange svn output
-                know_revnr = False
-        else:
-            know_revnr = False
-        if know_revnr or known_version != '':
-            rev_add2content = 'development version '
-            if known_version != '':
-                rev_add2content += known_version + ' '
-            if know_revnr:
-                rev_add2content += 'r' + revnr
-    else:
-        rev_add2content = 'version ' + known_version
+                pass
+
+    rev_add2content = 'version ' + known_version
             
     if have_datetime_module or know_revnr:
         content += 'Generated'
@@ -851,7 +834,7 @@ version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
 
 
 def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
-            rsfplotprefix='vp',rsfplotsuffix='vpl'):
+            rsfplotprefix='vp',rsfplotsuffix='vpl',known_version='unknown'):
     global comment, param, params, param2, params2, \
            synopsis, stringpar, inpout, version
     name = rsfprefix + re.sub('^[MX_]','',os.path.basename(file))
@@ -1011,10 +994,8 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         prog.weblink(wiki)
         out.write("%s.weblink('%s')\n" % (name,wiki))
     vers = version[lang].search(text)
-    known_version = __read_version_file('VERSION.txt')
-    if known_version[-4:] == '-svn':
-        if vers:
-            known_version += ' ' + vers.group(1)
+    if vers:
+        known_version += ' ' + vers.group(1)
     prog.version(known_version)
     out.write("%s.version('%s')\n" % (name, known_version))
     if not first:
@@ -1038,16 +1019,19 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:v:')
         dir = None
         typ = None
         rep = os.getcwd()
+        ver = 'unknown'
         for opt, val in opts:
             if opt[0] == '-' and opt[1] in 'wtsmgl':
                 dir = val
                 typ = opt[1]
             elif opt == '-r':
                 rep = val
+            elif opt == '-v':
+                ver = val
             elif opt == '-k':
                 val = val.lower()
                 doc = ''
@@ -1060,7 +1044,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 
         if not args:
             if typ == 'w':
-                html(dir)
+                html(dir,ver)
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
@@ -1122,8 +1106,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s -s <dir> [<prog1> <prog2> ... ]
     Write TKSU block specs in <dir> directory
 
-%(prog)s -w <dir> [-r <rep>] [<prog1> <prog2> ...]
-    Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
+%(prog)s -w <dir> [-r <rep>] [-v <ver>] [<prog1> <prog2> ...]
+    Write program HTML documentaton in <dir> directory, optional <rep> refers to repository, optional <ver> refers to version.
 
 %(prog)s -m <dir>  <prog1> <prog2> ...
     Write program documentaton in MediaWiki format in <dir> directory.

@@ -33,7 +33,25 @@ def __includes(list,file):
     list.append(file)
     fd.close()
 
-def merge(target=None,source=None,env=None):
+def __read_version_file(fname=None):
+    if fname == None:
+        return ''
+    else:
+        inp = open(fname, 'r')
+        known_version = inp.readline().rstrip()
+        inp.close()
+        return known_version
+
+def __version(target=None,source=None,env=None):
+    label=env.get('version')
+    fd = open(str(target[0]),'w')
+    fd.write('#ifndef _RSF_VERSION\n')
+    fd.write('#define _RSF_VERSION "%s"\n' % label)
+    fd.write('#endif')
+    fd.close()
+    return __py_success
+
+def __merge(target=None,source=None,env=None):
     global __local_include
     sources = map(str,source)
     incs = []
@@ -168,6 +186,7 @@ def Debug():
     if  env['PLATFORM'] == 'sunos':
         env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    env['version'] = __read_version_file(os.path.join(srcroot,'VERSION.txt'))
     env.SConsignFile(None)
     env.Append(BUILDERS={'RSF_Include':Header,
                          'RSF_Place':Place},

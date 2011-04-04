@@ -44,7 +44,7 @@ dlib = env.SharedLibrary('rsfplot',dobjects,
                          SHLIBPREFIX='libd',
                          LIBS=['drsf']+env.get('LIBS',[]))
 
-inc = env.Command('rsfplot.h',includes,Action(bldutil.merge))
+inc = env.Command('rsfplot.h',includes,Action(bldutil.__merge))
 env.Install('../../lib',[slib,dlib])
 env.Install('../../include',inc)
 

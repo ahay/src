@@ -32,5 +32,5 @@ for source in Split(src):
     env.Depends(obj,source+'.h')
     objects.append(obj)
 
-inc = env.Command('genpen.h',includes,Action(bldutil.merge))
+inc = env.Command('genpen.h',includes,Action(bldutil.__merge))
 lib = env.StaticLibrary('genpen',objects)
