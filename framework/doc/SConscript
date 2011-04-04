@@ -27,7 +27,10 @@ repos = os.environ.get('RSF_REPOSITORY',srcdir)
 
 sfdoc = '../rsf/sfdoc'
 python = WhereIs('python')
-env.Command(htm,sfdoc,'%s $SOURCE -w %s -r %s' % (python,docdir,repos))
+
+version = env.get('version','')
+env.Command(htm,sfdoc,
+            '%s $SOURCE -w %s -r %s -v %s' % (python,docdir,repos,version))
 env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))
 env.Command(spc,sfdoc,'%s $SOURCE -s %s' % (python,spcdir))
 env.Command(man,sfdoc,'%s $SOURCE -g %s' % (python,mn1dir))
