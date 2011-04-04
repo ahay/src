@@ -62,6 +62,8 @@ for sh in ('sh','csh'):
     env.Alias('config',shrc)
     env.Install(etcdir,shrc)
 
+env['version'] = bldutil.__read_version_file('VERSION.txt')
+
 ##########################################################################
 # CUSTOM BUILDERS
 ##########################################################################
@@ -120,8 +122,6 @@ if type(api) is str:
 api.insert(0,'c')
 
 bldutil.py_install('api/python/apibak.py', env, pkgdir)
-
-env['version'] = bldutil.__read_version_file('VERSION.txt')
 
 Default('build/include')
 Default('build/lib')
