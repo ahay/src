@@ -666,7 +666,7 @@ def html(dir,known_version):
         
     if known_version[-4:] == '-svn' or known_version == '':
         # Read subversion version number, if possible
-        proc = os.popen('svn stat -v %s 2>/dev/null' % src)
+        proc = os.popen('svn stat -v SConstruct 2>/dev/null')
         raw  = proc.read()
         proc.close()
         if len(raw) > 0: # file is under version control
