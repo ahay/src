@@ -75,7 +75,7 @@ def pp(call_list, inp=None, out=None):
         cmd += ' >' + out
     return cmd
 
-###############################################################################
+################################################################################
 
 def mklist(x):
     if type(x) == str:
@@ -85,7 +85,7 @@ def mklist(x):
     elif type(x) == int:
         return [x]
 
-###############################################################################
+################################################################################
 
 def append(string, logfile):
     'Equivalent of echo string >>logfile'
@@ -96,7 +96,7 @@ def append(string, logfile):
     handle.write(string)
     handle.close()
 
-###############################################################################
+################################################################################
 
 def show_man_and_out(condition):
     'Display self-doc (man page) and exit'
@@ -105,7 +105,7 @@ def show_man_and_out(condition):
         rsfprog.selfdoc() # show the man page
         sys.exit(unix_error)
 
-###############################################################################
+################################################################################
 
 def run(main_func, cpar=[], nminarg=None, nmaxarg=None):
     'For eliminating boilerplate code in main programs'
@@ -132,21 +132,37 @@ def run(main_func, cpar=[], nminarg=None, nmaxarg=None):
 
     sys.exit(status)
 
-###############################################################################
+################################################################################
 
-def exe(cmd, verb=False):
+def exe(cmd, verb=False, dryrun=False, logfile=None):
     'Echoes a string command to screen via stderr, then executes it'
 
-    assert type(cmd) == str
+    if type(cmd) == str:
+        cmd_list = [cmd]
+    elif type(cmd) == list:
+        cmd_list = cmd
+    else:
+        raise
 
-    msg(cmd, verb)
+    if logfile != None:
+        assert type(logfile) == str
+
+    for c in cmd_list:
+        assert type(c) == str
+        msg(c, verb)
 
     if have_subprocess:
-        subprocess.call(cmd, shell=True)
+        system_call = lambda x: subprocess.call(x, shell=True)
     else:
-        os.system(cmd)
+        system_call = lambda x: os.system(x)
 
-###############################################################################
+    if not dryrun:
+        for c in cmd_list:
+            if logfile != None:
+                append(c,logfile)
+            system_call(c)
+
+################################################################################
 
 def which(prog):
     'Same functionality as Unix which'
@@ -165,13 +181,13 @@ def which(prog):
         if __is_x(prog):
             return prog
 
-###############################################################################
+################################################################################
 
 def chk_prog(prog):
     if which(prog) == None:
         raise m8rex.MissingProgram(prog)
 
-###############################################################################
+################################################################################
 
 def get1st(file, type='float'):
     'Get the first element in file'
@@ -187,7 +203,7 @@ def get1st(file, type='float'):
     elif type == 'int':
         return int(out_str)        
 
-###############################################################################
+################################################################################
 
 def getppout(proglist, arglist=[[]], stdin=None):
     'Get pipe output'
@@ -211,7 +227,7 @@ def getppout(proglist, arglist=[[]], stdin=None):
 
     return clist[-1].communicate()[0]
 
-###############################################################################
+################################################################################
 
 def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     '''Replacement for commands.getoutput. Arguments:
@@ -274,7 +290,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
 
     return output
 
-###############################################################################
+################################################################################
 
 def getcataxis(filenm):
     'Returns sffiledims(filenm)+1'
@@ -283,7 +299,7 @@ def getcataxis(filenm):
     nds = int(ndims_str.split(':')[0])
     return str(nds+1)
 
-###############################################################################
+################################################################################
 
 def readaxis( inp, axisnr, verb=False ):
     '''Reads n,o,d for one axis of a Madagascar hypercube
@@ -299,7 +315,7 @@ def readaxis( inp, axisnr, verb=False ):
 
     return( int(n), float(o), float(d))
 
-###############################################################################
+################################################################################
 
 def ndims(filename):
     'Returns nr of dims in a file, ignoring trailing length 1 dimensions'
@@ -320,7 +336,7 @@ def ndims(filename):
 
     return dim
 
-####################################################################
+################################################################################
 
 def add_zeros(i, n):
     '''Generates string of zeros + str(i)'''

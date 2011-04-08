@@ -22,6 +22,7 @@ To APIs:
 To the Python package:
 
 * More intuitive interface for rsf.user.ivlad.run()
+* Expanded options for rsf.user.ivlad.exe()
 
 To programs:
 
