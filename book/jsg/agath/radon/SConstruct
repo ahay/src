@@ -1,0 +1,30 @@
+from rsf.proj import *
+
+def angle(zx,zy):
+    return 'angle2 zx=%g zy=%g nx=601 ny=601' % (zx,zy)
+
+def contour(col,fat):
+    return '''
+    contour c0=10 dc=10 nc=10 transp=n yreverse=n wanttitle=n 
+    scalebar=y barlabel=" " plotcol=%d plotfat=%d wantaxis=n
+    '''% (col,fat)
+
+for a in [0,45]:
+    for b in [0,45]:
+        angl = 'angl%d-%d' % (a,b)
+        grey = 'grey%d-%d' % (a,b)
+        cont = 'cont%d-%d' % (a,b)
+        Flow(angl,None,angle(a,b))
+        Plot(grey,angl,
+             '''
+             grey allpos=y transp=n yreverse=n Xcolor=j 
+             scalebar=y barlabel="Reflection Angle (degrees)"
+             title="In-line dip: %d, Cross-line dip: %d"
+             ''' % (a,b))
+        Plot(cont+'a',angl,contour(0,6))
+        Plot(cont+'b',angl,contour(7,1))
+        Result(angl,[grey,cont+'a',cont+'b'],'Overlay')
+
+###########################################################################
+
+End()

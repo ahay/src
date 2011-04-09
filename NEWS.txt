@@ -5,7 +5,9 @@
 To the reproducible documents collection:
 
 * swag/anisogath: Angle gathers in wave-equation imaging for
-  transversely isotropic media (Alkhalifah and Fomel)
+  transversely isotropic media (Alkhalifah and Fomel) 
+* jsg/agath: Theory of 3-D angle gathers in wave-equation seismic
+  imaging (Fomel)
 
 To SCons:
 
@@ -29,6 +31,7 @@ To programs:
 * sfkdmig2d: 2-D Prestack Kirchhoff depth migration (borrowed from SU)
 * wanttitle= option in thplot
 * color=d periodic color table in grey and grey3
+* sfin accepts data from standard input
 
 ===Bug fixes===
 

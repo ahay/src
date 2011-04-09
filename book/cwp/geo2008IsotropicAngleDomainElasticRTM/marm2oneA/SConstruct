@@ -160,7 +160,8 @@ marm2.dipline1('mr',
                 0,1,
                 par['nt'],par['ot'],par['dt'],
                 par['nx'],par['ox'],par['dx'])
-Result('mall','ml mr','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a')
+Plot('mall','ml mr','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a',
+     view=1)
 
 # ------------------------------------------------------------
 # mask for tapering (edges and direct arrival)

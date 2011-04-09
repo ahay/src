@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+Flow('angles',None,
+     'angle nw=3 w0=25 dw=25 vel=1.5 nm=513 nh=513')
+
+def contour(col,fat):
+    return '''
+    contour c0=5 dc=5 nc=20 transp=n yreverse=n wanttitle=n 
+    scalebar=y barlabel=" " plotcol=%d plotfat=%d wantaxis=n
+    '''% (col,fat)
+
+for slice in range(3):
+    angle = 'angle%d' % slice
+    grey = 'grey%d' % slice
+    cont = 'cont%d' %slice
+    Flow(angle,'angles','window n3=1 f3=%d' % slice)
+    Plot(grey,angle,
+         '''
+         grey allpos=y transp=n yreverse=n Xcolor=j 
+         scalebar=y barlabel="Reflection Angle (degrees)"
+         title="Frequency=%d Hz"
+         ''' % (25,50,75)[slice])
+    Plot(cont+'a',angle,contour(0,6))
+    Plot(cont+'b',angle,contour(7,1))
+    Result(angle,[grey,cont+'a',cont+'b'],'Overlay')
+
+###########################################################################
+
+End()
