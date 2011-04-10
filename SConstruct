@@ -1,6 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import os, sys, glob
+import os, sys
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
@@ -90,7 +90,7 @@ if os.path.isdir('user'):
 else:
     userdir = ''
 
-dotproj = glob.glob('book/*/*/*/.rsfproj')
+dotproj = Glob('book/*/*/*/.rsfproj')
 
 frame_exports = 'env bindir libdir pkgdir shrdir srcdir system dotproj' +userdir
 

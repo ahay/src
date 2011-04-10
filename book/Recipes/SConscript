@@ -1,9 +1,6 @@
 Import('env pkgdir')
 
-import glob, os, string
+import os
 
-dir = string.replace(os.getcwd(),'/build','')
-scripts = map(os.path.basename,glob.glob(os.path.join(dir,'*.py')))
-
-for src in scripts:
+for src in Glob('*.py'):
     env.Install(os.path.join(pkgdir,'recipes'),src)

@@ -255,10 +255,6 @@ class Project(Environment):
                 self.Append(JAVACLASSPATH=':'.join(classpath))
             classpath.append('.')
             self.Append(ENV={'CLASSPATH':':'.join(classpath)})
-    
-        self.override = os.environ.get('SCONS_OVERRIDE',None)
-        # short circuits the dependency tree, forces the build of targets without proper
-        # dependencies in SCons
            
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',
@@ -463,8 +459,7 @@ class Project(Environment):
             if binaries:
                 Clean(flow,binaries)
 
-        if self.override:
-            self.Default(flow)
+        self.Default(flow)
             
         return flow
         
@@ -493,7 +488,6 @@ class Project(Environment):
         kw.update({'suffix':suffix})
         plot = apply(self.Plot,(target2,source,flow),kw)
         target2 = target2 + suffix
-        self.Default (plot),
         view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
                             src_suffix=vpsuffix)
         self.view.append(view)

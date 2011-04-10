@@ -19,8 +19,7 @@ env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
             action=Action(rsf.doc.getprogs))
 env.Depends('prog.py',['vpplot.py','doc.py'])
 
-env.Command('use.py',map(lambda x: '#/'+x,dotproj),
-            action=Action(rsf.doc.use))
+env.Command('use.py',dotproj,action=Action(rsf.doc.use))
 env.Depends('use.py',['prog.py','conf.py','doc.py'])
 
 env.Command('version.py','#/VERSION.txt',
