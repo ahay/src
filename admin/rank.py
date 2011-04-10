@@ -54,8 +54,3 @@ for p in projects:
 
 output_rank(Gprog,'prog.txt')
 output_rank(Gproj,'proj.txt')
-
-
-
-
-
