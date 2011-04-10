@@ -6,11 +6,11 @@ try: # distributed version
     Import('env root incdir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.vplot_font')))
 except: # local version
     env = bldutil.Debug()
     root = None
-    src = glob.glob('[a-z]*.vplot_font')
+    
+src = Glob('[a-z]*.vplot_font')
 
 prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
 
@@ -22,7 +22,7 @@ else:
     top = ''
   
 for font in src:
-    base = os.path.splitext(font)[0]
+    base = os.path.splitext(str(font))[0]
     include = base+'.include'
     bin = base+'.bin'
        

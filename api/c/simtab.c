@@ -52,7 +52,7 @@ typedef struct sf_SimTab *sf_simtab; /* Simbol Table structure */
 
 #endif
 
-#define LINELEN 1024
+#define LINELEN ARG_MAX
 
 struct entry {
     char *key, *val;
