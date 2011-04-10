@@ -11,14 +11,18 @@ if env['PLATFORM'] == 'darwin':
 
 env.Prepend(ENV={'PYTHONPATH':os.path.dirname(pkgdir)})
 
-txtdir = os.path.join(shrdir,'txt')
+m8r = 'madagascar'
+
+txtdir = os.path.join(shrdir, m8r, 'txt')
 mandir = os.path.join(shrdir,'man')
 docdir = os.path.join(shrdir,'doc')
-spcdir = os.path.join(shrdir,'spec')
+spcdir = os.path.join(shrdir, m8r, 'spec')
+htmdir = os.path.join(shrdir, m8r, 'html')
 
-mn1dir = os.path.join(mandir,'man1')
+prgdir = os.path.join(htmdir, 'prog')
+mn1dir = os.path.join(mandir, 'man1')
 
-htm = os.path.join(docdir,'index.html')
+htm = os.path.join(prgdir,'index.html')
 txt = os.path.join(txtdir,'INDEX.txt')
 spc = os.path.join(spcdir,'extend.spec')
 man = os.path.join(mn1dir,'index.man')
@@ -29,8 +33,9 @@ sfdoc = '../rsf/sfdoc'
 python = WhereIs('python')
 
 version = env.get('version','')
+
 env.Command(htm,sfdoc,
-            '%s $SOURCE -w %s -r %s -v %s' % (python,docdir,repos,version))
+            '%s $SOURCE -w %s -r %s -v %s' % (python,prgdir,repos,version))
 env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))
 env.Command(spc,sfdoc,'%s $SOURCE -s %s' % (python,spcdir))
 env.Command(man,sfdoc,'%s $SOURCE -g %s' % (python,mn1dir))
