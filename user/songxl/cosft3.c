@@ -263,7 +263,7 @@ void cosftz(bool inv,               /* forward or inverse */
 	     float ***data           /* data [n3][n2][n1] */)
 /*< transform first coordinate z (in place) >*/
 {
-    int i1, i2, i3;
+    int i1, i2; /* i3; */
 
     if (inv) {
 	if (n3 > 1) {

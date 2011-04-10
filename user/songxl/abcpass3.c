@@ -127,7 +127,6 @@ void abc_cal(int nb  /* absorbing layer length*/,
 /*< find absorbing coefficients >*/
 {
     int ib;
-    const float pi=SF_PI;
     if(!nb) return;
     for(ib=0; ib<nb; ib++){
        w[ib]=exp(-c*c*(nb-1-ib)*(nb-1-ib));

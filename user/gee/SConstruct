@@ -1,4 +1,4 @@
-import os, sys, re, string, glob
+import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
@@ -15,13 +15,12 @@ velcon3 wavemovie wilson
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-    src = glob.glob('[a-z]*.c')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

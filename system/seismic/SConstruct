@@ -1,4 +1,4 @@
-import os, sys, re, string, glob, types
+import os, sys, re, string, types
 sys.path.append('../../framework')
 import bldutil
 
@@ -23,8 +23,6 @@ xlagtoang2d zoeppritz zomig zomva
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
     alias = {'segyread': ['suread'],
              'segywrite': ['suwrite'],
              'stretch': map(lambda x: x+ 'stretch',
@@ -33,7 +31,8 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-    src = glob.glob('[a-z]*.c')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

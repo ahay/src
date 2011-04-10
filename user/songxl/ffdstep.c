@@ -115,7 +115,7 @@ float dehf(int k /*current frequency*/,
 /*< high frequency depressing>*/
 {
     int kmax;
-    float pi=SF_PI, depress;
+    float depress;
     kmax = (int) (kn*factor);
     if (k < kmax) {
        depress = 1.0;

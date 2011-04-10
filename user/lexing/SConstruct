@@ -1,4 +1,4 @@
-import os, sys, string, glob
+import os, sys, string
 sys.path.append('../../framework')
 import bldutil
 
@@ -13,13 +13,12 @@ vecmatop
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    inc = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.h*')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c++/SConstruct')
-    inc = glob.glob('[a-z]*.h*')
+
+inc = Glob('[a-z]*.h*')
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')

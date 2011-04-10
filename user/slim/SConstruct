@@ -1,4 +1,4 @@
-import os, sys, re, string, glob, shutil
+import os, sys, re, string, shutil
 sys.path.append('../../framework')
 import bldutil
 
@@ -10,13 +10,12 @@ py_mods = 'hegilles'
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
-    src = glob.glob('[a-z]*.c')
     SConscript('../../api/c/SConstruct')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

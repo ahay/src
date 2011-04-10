@@ -204,7 +204,7 @@ void step_forward_g(geomB * arrB,
     int lenB;
     
     geomB *pB;
-    float e, sum, vel, r1, sum_r1, l2, l02, prod; 
+    float e, sum, vel, r1, sum_r1, prod; /* l2, l02 */ 
     int ix1, iz1, ix2, iz2, k, ioff1, ioff2;
     int nxnz = nx * nz;
     const float dx2 = dx*dx, dz2 = dz*dz;

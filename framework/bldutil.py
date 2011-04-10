@@ -283,11 +283,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
                 LIBPATH=[os.path.join(bldroot,'lib')],
                 LIBS=[env.get('DYNLIB','')+'rsf'])
 
-    if glob_build:
-        dir = string.replace(os.getcwd(),'/build','') # aka RSFSRC/user/$USER
-        src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
-    else:
-        src = glob.glob('[a-z]*.c')
+    src = Glob('[a-z]*.c')
 
     for source in src:
         inc = env.RSF_Include(source,prefix='')

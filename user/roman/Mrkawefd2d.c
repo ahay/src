@@ -109,8 +109,10 @@ int main(int argc, char* argv[])
     float     **uc=NULL;
     /*===================================================*/
     float src_ix_iz,src_ix_plus_1,src_ix_plus_2,src_ix_minus_1,src_ix_minus_2,src_iz_plus_1,src_iz_plus_2,src_iz_minus_1,src_iz_minus_2;
-    float vel, CFL = 0.2, ik2;
+    float vel, ik2;
     int  k, kk, k2;
+
+/* CFL = 0.2, */
 
     /*===================================================*/
     /*------------------------------------------------------------*/
