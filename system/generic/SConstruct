@@ -1,4 +1,4 @@
-import os, sys, re, string, glob, types
+import os, sys, re, string, types
 sys.path.append('../../framework')
 import bldutil
 
@@ -16,16 +16,14 @@ trapez tri2reg trirand unif2 unif3
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
     alias = {'pow':'tpow'}
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-    src = glob.glob('[a-z]*.c')
 
-src.remove('predicates.c')
+src = Glob('[a-z]*.c')
+src.remove(File('predicates.c'))
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],

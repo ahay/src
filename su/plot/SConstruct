@@ -1,4 +1,4 @@
-import os, sys, glob, string
+import os, sys, string
 sys.path.append('../../framework')
 import bldutil
 
@@ -10,13 +10,12 @@ wigb
 try:
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except:
     env = bldutil.Debug()
     root = None
     SConscript('../lib/SConstruct')
-    src = glob.glob('[a-z]*.c')
+
+src = Glob('[a-z]*.c')
 
 xinc = env.get('XINC')
 xlib = env.get('XLIBPATH')

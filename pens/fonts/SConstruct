@@ -1,4 +1,4 @@
-import os, sys, glob, string
+import os, sys, string
 sys.path.append('../../framework')
 import bldutil
 
