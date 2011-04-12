@@ -1,5 +1,5 @@
 /* 2-D Dynamic Ray Tracing */
-/* Cheating: constant velocity appximation for central vertical ray */
+/* Cheating: constant velocity approximation for central vertical ray */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -59,12 +59,12 @@ int main(int argc, char* argv[])
 
     /* Complex source initial condition */
     t[0] = 0.;
-    P[0] = sf_cmplx(0,1/vel[0][0]);
+    P[0] = sf_cmplx(0,1./vel[0][0]);
     Q[0] = sf_cmplx(s,0);
 
     /* Dynamic ray tracing along vertical ray */
     for (i=1; i<nz; i++) {
-	t[i] = t[i-1]+dz/2/vel[0][i-1]+dz/(vel[0][i-1]+vel[0][i]);
+	t[i] = t[i-1]+dz/2./vel[0][i-1]+dz/(vel[0][i-1]+vel[0][i]);
 #ifdef SF_HAS_COMPLEX_H
 	Q[i] = (P[i-1]-dir[0][i-1]*Q[i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))*vel[0][i-1]*dz+Q[i-1];
 	P[i] = -((1.5*dir[0][i-1]+0.5*dir[0][i])*Q[i-1]+(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2*P[i-1])*dz/(vel[0][i-1]*vel[0][i-1]*2)+P[i-1];

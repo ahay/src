@@ -29,11 +29,10 @@
 int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;
-    int dim, i, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot, *flag, order, iter, niter, stiter, *k, nfreq, nmem;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *t, **t0, *s, **source, *rhs, *ds, *gs, air, *x0;
-    float rhsnorm0, rhsnorm, rate, eps, perc;
+    int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds;
+    float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama, clip, max;
     char key[4], *what;
-    upgrad upg;
     sf_file sinp, sout, shot, time, reco, rece, topo, grad, norm;
     sf_weight weight=NULL;
 
@@ -41,58 +40,138 @@ int main(int argc, char* argv[])
     sinp = sf_input("in");
     sout = sf_output("out");
 
-    /* read input dimension */
-    dim = sf_filedims(sinp,n);
-
-    nt = 1;
-    for (i=0; i < dim; i++) {
-	sprintf(key,"d%d",i+1);
-	if (!sf_histfloat(sinp,key,d+i)) sf_error("No %s= in input",key);
-	sprintf(key,"o%d",i+1);
-	if (!sf_histfloat(sinp,key,o+i)) o[i]=0.;
-	nt *= n[i]; plane[i] = false;
-    }
-    if (dim < 3) {
-	n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
-    }
-
     if (NULL == (what = sf_getstring("what"))) what="tomo";
     /* what to compute (default tomography) */
 
-    s = sf_floatalloc(nt);
-    t = sf_floatalloc(nt);
- 
-    sf_floatread(s,nt,sinp);
-
     switch (what[0]) {
 	case 'l': /* linear operator */
+
+	    if (NULL == sf_getstring("time"))
+		sf_error("Need time=");
+	    time = sf_input("time");
+
+	    /* read operator dimension from time table */
+	    dim = sf_filedims(time,n);
+	    
+	    nt = 1;
+	    for (i=0; i < 3; i++) {
+		sprintf(key,"d%d",i+1);
+		if (!sf_histfloat(time,key,d+i)) sf_error("No %s= in input",key);
+		sprintf(key,"o%d",i+1);
+		if (!sf_histfloat(time,key,o+i)) o[i]=0.;
+		nt *= n[i]; plane[i] = false;
+	    }
+	    if (dim < 3) {
+		n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
+	    }
+
+	    dim = 2;
+
+	    /* read in shot file */
+	    if (NULL == sf_getstring("shot"))
+		sf_error("Need source shot=");
+	    shot = sf_input("shot");
+	    
+	    if (!sf_histint(shot,"n2",&nshot)) nshot=1;
+	    sf_fileclose(shot);
+
+	    /* read in receiver file */
+	    m = sf_intalloc2(nt,nshot);
+	    if (NULL == sf_getstring("receiver")) {
+		for (is=0; is < nshot; is++) {
+		    for (it=0; it < nt; it++) {
+			m[is][it] = 1;
+		    }
+		}
+	    } else {
+		rece = sf_input("receiver");
+		sf_intread(m[0],nt*nshot,rece);
+		sf_fileclose(rece);
+	    }
+
+	    /* number of right-hand side */
+	    nrhs = 0;
+	    for (is=0; is < nshot; is++) {
+		for (it=0; it < nt; it++) {
+		    if (m[is][it] == 1) nrhs++;
+		}
+	    }
+	    rhs = sf_floatalloc(nrhs);
+
+	    t = sf_floatalloc2(nt,nshot);
+	    sf_floatread(t[0],nt*nshot,time);
+
 	    if (!sf_getbool("adj",&adj)) adj=false;
 	    /* adjoint flag (for what=linear) */
 
-	    if (NULL == sf_getstring("time"))
-		sf_error("Need background time=");
-	    time = sf_input("time");
-	    sf_floatread(t,nt,time);
-	    sf_fileclose(time);
+	    /* initialize fatomo */
+	    fatomo_init(dim,n,d,nshot);
 
-	    /* set stencil */
-	    upg = upgrad_init(dim,n,d);
-	    upgrad_set(upg,t);
+	    /* set operators */
+	    fatomo_set(t,m);
+
+	    t0 = sf_floatalloc(nt);
 
 	    if (adj) {
-		upgrad_inverse(upg,t,s,NULL);
-	    } else {
-		upgrad_solve(upg,s,t,NULL);
-	    }
+		sf_floatread(rhs,nrhs,sinp);
 
-	    sf_floatwrite(t,nt,sout);
+		fatomo_lop(true,false,nt,nrhs,t0,rhs);
+
+		sf_putint(sout,"n1",nt);
+		sf_putint(sout,"n2",1);
+		sf_putint(sout,"n3",1);
+		sf_floatwrite(t0,nt,sout);
+	    } else {
+		sf_floatread(t0,nt,sinp);
+
+		fatomo_lop(false,false,nt,nrhs,t0,rhs);
+		
+		sf_putint(sout,"n1",nrhs);
+		sf_putint(sout,"n2",1);
+		sf_putint(sout,"n3",1);
+		sf_floatwrite(rhs,nrhs,sout);
+	    }
 
 	    break;
 	    
 	case 't': /* tomography */
-	    ds   = sf_floatalloc(nt);
-	    gs   = sf_floatalloc(nt);
-	    flag = sf_intalloc(nt);
+
+	    /* read input dimension */
+	    dim = sf_filedims(sinp,n);
+	    
+	    nt = 1;
+	    for (i=0; i < dim; i++) {
+		sprintf(key,"d%d",i+1);
+		if (!sf_histfloat(sinp,key,d+i)) sf_error("No %s= in input",key);
+		sprintf(key,"o%d",i+1);
+		if (!sf_histfloat(sinp,key,o+i)) o[i]=0.;
+		nt *= n[i]; plane[i] = false;
+	    }
+	    if (dim < 3) {
+		n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
+	    }
+	    
+	    /* read initial guess */
+	    s = sf_floatalloc(nt);
+	    sf_floatread(s,nt,sinp);
+	    
+	    if (!sf_getbool("velocity",&velocity)) velocity=true;
+	    /* if y, the input is velocity; n, slowness squared */
+
+	    if (velocity) {
+		for (it=0; it < nt; it++) {
+		    s[it] = 1./s[it]*1./s[it];
+		}
+	    }
+
+	    /* allocate memory for temporary data */
+	    ds    = sf_floatalloc(nt);
+	    flag  = sf_intalloc(nt);
+	    
+	    temps = sf_floatalloc(nt);
+	    for (it=0; it < nt; it++) {
+		temps[it] = s[it];
+	    }
 	    
 	    if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
 	    /* norm for minimization (default L2 norm) */
@@ -111,6 +190,9 @@ int main(int argc, char* argv[])
 	    sf_floatread(source[0],3*nshot,shot);
 	    sf_fileclose(shot);
 
+	    /* allocate memory for time table */
+	    t = sf_floatalloc2(nt,nshot);
+
 	    /* read in receiver file */
 	    m = sf_intalloc2(nt,nshot);
 	    if (NULL == sf_getstring("receiver")) {
@@ -124,17 +206,24 @@ int main(int argc, char* argv[])
 		sf_intread(m[0],nt*nshot,rece);
 		sf_fileclose(rece);
 	    }
-
+	    
+	    /* number of right-hand side */
 	    nrhs = 0;
-	    for (it=0; it < nt; it++) {
-		if (m[0][it] == 1) nrhs++;
+	    for (is=0; is < nshot; is++) {
+		for (it=0; it < nt; it++) {
+		    if (m[is][it] == 1) nrhs++;
+		}
 	    }
 	    rhs = sf_floatalloc(nrhs);
-
+	    
 	    /* read in record file */
 	    if (NULL == sf_getstring("record"))
 		sf_error("Need data record=");
 	    reco = sf_input("record");
+
+	    t0 = sf_floatalloc(nrhs);
+	    sf_floatread(t0,nrhs,reco);
+	    sf_fileclose(reco);
 
 	    /* read in topography file */
 	    if (NULL != sf_getstring("topo")) {
@@ -142,41 +231,24 @@ int main(int argc, char* argv[])
 		k = sf_intalloc(nt);
 		sf_intread(k,nt,topo);
 		sf_fileclose(topo);
-		
-		x0 = sf_floatalloc(nt);
-		
-		if (!sf_getfloat("air",&air)) air = 0.01;
-		/* air velocity (for fixed topo inversion) */
-		
-		for (it=0; it < nt; it++) {
-		    if (k[it] == 0) {
-			k[it] = 1;
-			x0[it] = air;
-		    } else {
-			k[it] = 0;
-			x0[it] = 0.;
-		    }
-		}
 	    } else {
 		k = NULL;
-		x0 = NULL;
 	    }
-
-	    t0 = sf_floatalloc2(nrhs,nshot);
-	    sf_floatread(t0[0],nrhs*nshot,reco);
-	    sf_fileclose(reco);
-
+	    
 	    if (!sf_getint("order",&order)) order=2;
 	    /* fast marching accuracy order */
-
-	    if (!sf_getbool("velocity",&velocity)) velocity=true;
-	    /* if y, the input is velocity; n, slowness squared */
 
 	    if (!sf_getint("niter",&niter)) niter=10;
 	    /* number of slowness inversion iterations */
 
 	    if (!sf_getint("stiter",&stiter)) stiter=200;
 	    /* number of step iterations */
+
+	    if (!sf_getfloat("eps",&eps)) eps=0.;
+	    /* regularization parameter */
+
+	    if (!sf_getfloat("clip",&clip)) clip=0.25;
+	    /* update clip */
 
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("gradient")) {
@@ -201,18 +273,10 @@ int main(int argc, char* argv[])
 		norm = NULL;
 	    }
 
-	    if (velocity) {
-		for (it=0; it < nt; it++) {
-		    s[it] = 1./s[it]*1./s[it];
-		}
-	    }
+	    /* initialize fatomo */
+	    fatomo_init(dim,n,d,nshot);
 
-	    rhsnorm0 = 0.;
-	    fatomo_init(dim,n,d);
-
-	    if (!sf_getfloat("eps",&eps)) eps=0.;
-	    /* regularization parameter */
-
+	    /* initialize 2D gradient operator */
 	    sf_igrad2_init(n[0],n[1]);
 
 	    if (l1norm) {
@@ -231,147 +295,135 @@ int main(int argc, char* argv[])
 		sf_irls_init(nt);
 	    }
 
-	    /* iterations over inversion */
-	    for (iter=0; iter < niter; iter++) {
-
-		/* clean-up */
-		for (it=0; it < nt; it++) {
-		    gs[it] = 0.;
-		}
-
-		rhsnorm = 0.;
-
-		/* loop over all shots */
-		for (is=0; is < nshot; is++) {
-		    sf_warning("shot %d of %d, iteration %d of %d",is+1,nshot,iter+1,niter);
-
-		    for (it=0; it < nt; it++) {
-			t[it] = 0.;
-			ds[it] = 0.;
-		    }
-		    
-		    /* forward fast-marching for stencil time */
-		    fastmarch_init(n[2],n[1],n[0]);
-
-		    fastmarch(t,s,flag,plane,
-			      n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-			      source[is][2],source[is][1],source[is][0],1,1,1,order);
-
-		    fastmarch_close();
-/*
-		    sf_floatwrite(t,nt,sout);
-*/
-		    /* prepare for CG */
-		    fatomo_set(t,m[is]);
-
-		    i = 0;
-		    for (it=0; it < nt; it++) {
-			if (m[is][it] == 1) {
-			    rhs[i] = t0[is][i]-t[it];
-			    i++;
-			}
-		    }
-
-		    if (iter == 0)
-			rhsnorm0 += cblas_snrm2(nrhs,rhs,1);
-		    rhsnorm += cblas_snrm2(nrhs,rhs,1);
-
-		    /* solve ds */
-		    if (l1norm) {
-			if (NULL == sf_getstring("topo"))
-			    /*
-			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
-			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"verb",verb,"end");
-			else
-			    /*
-			    sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
-			    */
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"known",k,"x0",x0,"verb",verb,"end");
-			    
-			/*
-			  l1step_close();
-			*/
-			sf_cgstep_close();
-		    } else {
-			if (NULL == sf_getstring("topo"))
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
-			else
-			    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"known",k,"x0",x0,"verb",verb,"end");
-			
-			sf_cgstep_close();
-		    }
-		    
-		    /* collect gradients: modify if */
-		    for (it=0; it < nt; it++) {
-			if (m[is][it] != 1)
-			    gs[it] += ds[it]/nshot;
-		    }
-		    
-		}
-
-                rate = rhsnorm/rhsnorm0; 
-		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d: %g",iter,niter,rate);
-		else
-		    sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
-
-		if (grad != NULL) sf_floatwrite(gs,nt,grad);
-		if (norm != NULL) sf_floatwrite(&rate,1,norm);
-
-		/* update slowness */
-
-		for (it=0; it < nt; it++) {
-		    s[it] = (s[it]+gs[it])*(s[it]+gs[it])/s[it];
-     		}
-
-		/* cheating */
-/*
-		for (it=0; it < nt; it++) {
-		    if (gs[it] < 0.)
-			s[it] = (s[it]+gs[it])*(s[it]+gs[it])/s[it];
-		}
-*/
-	    }
-
-	    rhsnorm = 0.;
-
-	    /* loop over all shots */
+	    /* initial misfit */
+	    fastmarch_init(n[2],n[1],n[0]);
+	    
+	    i = 0;
 	    for (is=0; is < nshot; is++) {
-		for (it=0; it < nt; it++) {
-		    t[it] = 0.;
-		    ds[it] = 0.;
-		}
-		
-		/* forward fast-marching for stencil time */
-		fastmarch_init(n[2],n[1],n[0]);
-		
-		fastmarch(t,s,flag,plane,
+		fastmarch(t[is],s,flag,plane,
 			  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
 			  source[is][2],source[is][1],source[is][0],1,1,1,order);
-		
-		fastmarch_close();
-		
-		i = 0;
+
 		for (it=0; it < nt; it++) {
 		    if (m[is][it] == 1) {
-			rhs[i] = t0[is][i]-t[it];
+			rhs[i] = t0[i]-t[is][it];
 			i++;
 		    }
 		}
-		
-		rhsnorm += cblas_snrm2(nrhs,rhs,1);
 	    }
 	    
-	    rate = rhsnorm/rhsnorm0;
+	    fastmarch_close();
 	    
+	    /* calculate L2 data-misfit */
+	    rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
+	    rhsnorm = rhsnorm0;
+	    rhsnorm1 = rhsnorm;
+	    rate = rhsnorm1/rhsnorm0;
+
 	    if (l1norm)
-		sf_warning("L1 misfit after iteration %d of %d: %g",iter,niter,rate);
+		sf_warning("L1 misfit after iteration 0 of %d: %g",niter,rate);
 	    else
-		sf_warning("L2 misfit after iteration %d of %d: %g",iter,niter,rate);
+		sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rate);
 
 	    if (norm != NULL) sf_floatwrite(&rate,1,norm);
 
+	    /* iterations over inversion */
+	    for (iter=0; iter < niter; iter++) {
+		
+		/* clean-up */
+		for (it=0; it < nt; it++) {
+		    ds[it] = 0.;
+		}
+
+		/* prepare for CG */
+		fatomo_set(t,m);
+
+		/* solve ds */
+		if (l1norm) {
+		    /*
+		      sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
+		    */
+		    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"verb",verb,"end");
+		    
+		    /*
+		      l1step_close();
+		    */
+		    
+		    sf_cgstep_close();
+		} else {
+		    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
+			
+		    sf_cgstep_close();
+		}
+		
+		/* clip update */
+		max = 0.;
+		for (it=0; it < nt; it++) {
+		    if (fabsf(ds[it]) > max) max = fabsf(ds[it]);
+		}
+		for (it=0; it < nt; it++) {
+		    if (fabsf(ds[it]) < clip*max) ds[it] = 0.;
+		}
+		
+		/* line search */
+		gama = 1.;
+		for (count=0; count < 10; count++) {
+		    
+		    /* update slowness */
+		    for (it=0; it < nt; it++) {
+			if (k == NULL || k[it] != 1)
+			    temps[it] = (s[it]+gama*ds[it])*(s[it]+gama*ds[it])/s[it];
+		    }
+
+		    /* forward fast-marching for stencil time */
+		    fastmarch_init(n[2],n[1],n[0]);
+		    
+		    i = 0;
+		    for (is=0; is < nshot; is++) {
+			fastmarch(t[is],temps,flag,plane,
+				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+				  source[is][2],source[is][1],source[is][0],1,1,1,order);
+			
+			for (it=0; it < nt; it++) {
+			    if (m[is][it] == 1) {
+				rhs[i] = t0[i]-t[is][it];
+				i++;
+			    }
+			}
+		    }
+		    
+		    fastmarch_close();
+		    
+		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
+		    rate = rhsnorm/rhsnorm1;
+		    
+		    if (rate < 1.) {
+			for (it=0; it < nt; it++) {
+			    s[it] = temps[it];
+			}
+			rhsnorm1 = rhsnorm;
+			rate = rhsnorm1/rhsnorm0;
+			break;
+		    }
+		    
+		    gama *= 0.5;
+		}
+		
+		if (count == 10) {
+		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);
+		    sf_warning("Dimensions for GRAD and NORM need to be fixed before read.");
+		    break;
+		}
+
+		if (l1norm)
+		    sf_warning("L1 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
+		else
+		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
+		
+		if (grad != NULL) sf_floatwrite(ds,nt,grad);
+		if (norm != NULL) sf_floatwrite(&rate,1,norm);
+	    }
+	    
 	    /* convert to velocity */
 	    if (velocity) {
 		for (it=0; it < nt; it++) {

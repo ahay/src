@@ -1,4 +1,4 @@
-/* First-arrival tomography. */
+/* First-arrival traveltime tomography. */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -21,75 +21,96 @@
 #include "upgrad.h"
 #include "fatomo.h"
 
-static int nt, *mask;
-static float *tempt;
-static upgrad upg;
+static int nt, **mask, ns;
+static float *tempt, *tempx;
+static upgrad *upglist;
 
 void fatomo_init(int dim    /* model dimension */,
 		 int *n     /* model size */,
-		 float *d   /* model sampling */)
+		 float *d   /* model sampling */,
+		 int nshot  /* number of shots */)
 /*< initialize >*/
 {
-    int i;
+    int i, is;
 
     nt = 1;
     for (i=0; i < dim; i++) {
 	nt = nt*n[i];
     }
 
-    tempt = sf_floatalloc(nt);
+    ns = nshot;
 
-    upg = upgrad_init(dim,n,d);
+    tempt = sf_floatalloc(nt);
+    tempx = sf_floatalloc(nt);
+
+    upglist = (upgrad *)malloc(ns*sizeof(upgrad));
+    
+    for (is=0; is < ns; is++) {
+	upglist[is] = upgrad_init(dim,n,d);
+    }
 }
 
-void fatomo_set(float *t   /* stencil time */,
-		int *m     /* mask */)
+void fatomo_set(float **t  /* stencil time */,
+		int **m     /* mask */)
 /*< set fatomo operator and right-hand side >*/
 {
-    /* set stencil */
-    upgrad_set(upg,t);
+    int is;
 
+    /* set stencil */
+    for (is=0; is < ns; is++) {
+	upgrad_set(upglist[is],t[is]);
+    }
+    
     /* set mask */
-    mask = m;
+    mask = m;    
 }
 
 void fatomo_close(void)
 /*< free allocated storage >*/
 {
-    upgrad_close(upg);
+    int is;
+
+    for (is=0; is < ns; is++) {
+	upgrad_close(upglist[is]);
+    }
 }
 
 void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
-    int it, count;
+    int it, is, count;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
 	/* given dt solve ds */
 
-	count = 0;
-	for (it=0; it < nt; it++) {
-	    if (mask[it] == 1) {
-		tempt[it] = r[count];
-		count++;
-	    } else {
-		tempt[it] = 0.;
+	count = 0;	
+	for (is=0; is < ns; is++) {
+	    for (it=0; it < nt; it++) {
+		if (mask[is][it] == 1) {
+		    tempt[it] = r[count];
+		    count++;
+		} else {
+		    tempt[it] = 0.;
+		}
 	    }
+	    
+	    upgrad_inverse(upglist[is],tempx,tempt,NULL);
+	    for (it=0; it < nt; it++) x[it]+=tempx[it];
 	}
-	
-	upgrad_inverse(upg,x,tempt,NULL);
     } else {
 	/* given ds solve dt */
 
-	upgrad_solve(upg,x,tempt,NULL);
-
 	count = 0;
-	for (it=0; it < nt; it++) {
-	    if (mask[it] == 1) {
-		r[count] = tempt[it];
-		count++;
+	for (is=0; is < ns; is++) {
+	    upgrad_solve(upglist[is],x,tempt,NULL);
+
+	    for (it=0; it < nt; it++) {
+		if (mask[is][it] == 1) {
+		    r[count] = tempt[it];
+		    count++;
+		}
 	    }
 	}
     }
