@@ -106,7 +106,7 @@ int main (int argc, char* argv[])
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
     if (!sf_getfloat("str",&str)) str=0.5;
-    /* minimum stretch allowed */
+    /* maximum stretch allowed */
 
     if (!sf_getint("mute",&mute)) mute=12;
     /* mute zone */
