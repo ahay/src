@@ -1,0 +1,30 @@
+from rsf.proj import *
+
+Fetch('hask_mult.HH','haskell')
+
+Flow('hask','hask_mult.HH',
+     'dd form=native | put label1=Time unit1=s label2=Offset unit2=km')
+
+Plot('hask','grey title="Raw Data" clip=0.00004')
+
+Fetch('picks.hask.txt','haskell')
+
+Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
+Flow('picks','picks.txt',
+     '''
+     echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
+     dd form=native 
+     ''',stdin=0)
+Flow('vnmo','picks',
+     '''
+     spline o1=0.0 d1=0.004 n1=1024 |
+     put label1=Time unit1=s 
+     ''')
+Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
+
+Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo','grey title="NMO" clip=0.00004')
+
+Result('nmo','hask nmo','SideBySideAniso')
+
+End()

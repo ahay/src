@@ -105,16 +105,19 @@ makeind = re.compile(r'\\index')
 
 plotoption = {}
 geomanuscript = 0
+slides = 0
 
 def latexscan(node,env,path):
     'Scan LaTeX file for extra dependencies'
-    global plotoption, geomanuscript
+    global plotoption, geomanuscript, slides
     lclass = env.get('lclass','geophysics')
     options = env.get('options')
     if not options:
         geomanuscript = 0
     else:
-        geomanuscript = lclass == 'geophysics' and string.rfind(options,'manuscript') >= 0
+        geomanuscript = lclass == 'geophysics' and \
+            string.rfind(options,'manuscript') >= 0
+    slides = lclass == 'beamer'
 
     top = str(node)
     if top[-4:] != '.ltx':

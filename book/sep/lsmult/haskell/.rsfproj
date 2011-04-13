@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfgrey', 'sfspline', 'sfgraph', 'sfnmo']
+data=['data/haskell/hask_mult.HH', 'data/haskell/picks.hask.txt']
+size=     495720

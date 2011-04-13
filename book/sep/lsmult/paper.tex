@@ -1,0 +1,398 @@
+\lefthead{ Brown }
+\righthead{ Imaging with Multiples }
+\footer{SEP--111}
+
+\title{Least-squares joint imaging of primaries and multiples}
+\email{morgan@sep.stanford.edu}
+\author{Morgan Brown}
+
+\ABS{ Multiple reflections provide redundant, and sometimes additional, information
+	about the corresponding primary reflections.  I implement a least-squares inversion 
+	scheme to jointly image (by normal moveout) primaries and multiples, with the goal of 
+	enforcing consistency between the images and the input data.  Furthermore, to effect 
+	noise (``crosstalk'') suppression, I introduce a novel form of
+	model regularization which exploits kinematic similarities between imaged primaries
+	and multiples, and which also preserves the amplitude-versus-offset (AVO) response of
+	the data.  In tests on synthetic data, my approach exhibits good noise
+	suppression and signal preservation characteristics.  Real data tests highlight
+	the need for careful data preprocessing.  Future work points toward use
+	of migration as the imaging operators, to exploit cases where multiples actually
+	exhibit better angular coverage than primaries, and thus add new information to the
+	inversion.
+}
+
+\section{introduction}
+Multiple reflections have long been treated as noise in the seismic imaging process.
+In contrast to many other types of ``noise'', like surface waves, multiply reflected 
+body waves may still penetrate deep into the earth, and thus have a potential to 
+aid in imaging the prospect zone.  I refer generically to {\em joint imaging with multiples} 
+as any process which creates a ``pseudo-primary'' image from multiples by removing the 
+propogation effects of body waves through arbitrary multiple layer (generator + free 
+surface), and which then seeks to integrate the information provided by the primary 
+and pseudo-primary images.
+\par
+\longcite{GEO56-07-10811086} present an early example of imaging multiples directly 
+using a prestack Kirchhoff scheme.  \longcite{SEG-2001-04560459} describe a 
+cross-correlation method for imaging multiples.  \longcite{SEG-1994-1497} and
+\longcite{Guitton.sep.111.antoine3} apply shot-profile migration for multiples.
+The aforementioned approaches produce separate-but-complementary pseudo-primary and primary 
+images, yet they either do not attempt to, or employ simplistic methods to integrate the information
+contained in the two images; either add \cite{GEO56-07-10811086} or multiply \cite{SEG-2001-04560459} 
+them together.
+%\longcite{GEO66-01-02460255} present a novel migration scheme which solves the two-way elastic 
+%wave equation and simultaneously images all primaries and multiples, though by their own 
+%admission the computer memory requirements of their scheme are staggering, even by today's
+%standards.
+\par
+In this paper, I introduce a new methodology for jointly imaging primaries and multiples.
+In addition to a desire to correctly image the multiples, my approach is driven by three 
+primary motivations:
+\begin{enumerate}
+	\item {\bf Data Consistency} - The primary and pseudo-primary images both should be
+		maximally consistent with the input data.
+	\item {\bf Self-consistency} - The primary and pseudo-primary images should be consistent
+		with one another, both kinematically and in terms of amplitudes. 
+	\item {\bf Noise Suppression} - In the primary image, all orders of multiples should be
+		suppressed.  In the pseudo-primary image created from, say first-order water-bottom 
+		multiples, contributions from primaries and secord-order or greater multiples should be 
+		suppressed.
+\end{enumerate}
+Least squares optimization provides an excellent, and perhaps the only viable approach to 
+address all three requirements.  
+I adopt an approach similar to \longcite{GEO64-01-02080221}, which used a least-squares scheme 
+to jointly image compressional and surface waves, for improved wavefield separation.  
+Data consistency is effected by minimization of a data residual; self-consistency and noise 
+suppression through the use of regularization terms which penalize 1) differences between 
+primary and pseudo-primary images, and 2) attributes which are not characteristic to 
+true primaries or pseudo-primaries.
+\par
+In my approach, I use the simplest possible imaging operation, Normal Moveout (NMO).  I 
+derive an NMO equation for water-bottom multiple reflections, which maps these multiples
+to the same zero-offset traveltime as their associated primaries, creating a ``pseudo-primary''
+section.  To account for the amplitude differences between the primary and pseudo-primary
+sections, I assume constant seafloor AVO behavior and estimate a single water-bottom 
+reflection coefficient from the data.  To address the AVO differences between primary
+and pseudo-primary, I derive an expression -- valid only for constant velocity -- for the
+AVO of the pseudo-primary as a function of the AVO of the primary, and then enforce
+this constraint in the inversion via an offset- and time-dependent regularization term.
+
+\section{methodology}
+\subsection{NMO for Multiple Reflections}
+\inputdir{XFig}
+
+In a horizontally-stratified, $v(z)$ medium, multiple reflections can be treated as 
+kinematically-equivalent primaries with the same source-receiver spacing but additional 
+zero-offset traveltime $\tau^*$, as illustrated in Figure \ref{fig:schem}.  We can write 
+an extension to the NMO equation which flattens multiples to the zero-offset traveltime 
+of the reflector of interest.
+\begin{equation}
+	t^2 = \sqrt{ (\tau+j\tau^{*})^2 + \frac{x^2}{V_{eff}^2} }  \label{eq:nmomult}
+\end{equation}
+$j\tau^{*}$ is the two-way traveltime of a $j^{\mbox{th}}$-order multiple in the
+top layer.  $V_{eff}(\tau)$ is the effective RMS velocity of the 
+equivalent primary shown in the figure.  For the simple case of constant velocity $v^*$ 
+in the multiple-generating layer,
+\begin{equation}
+	V_{eff}(\tau) = \frac{ \tau^{*} v^{*} + \tau V(\tau) }{ \tau^{*} + \tau } \label{eq:veff}
+\end{equation}
+So for the common case of relatively flat reflectors, $v(z)$, and short offsets, equation 
+(\ref{eq:nmomult}) should do a reasonable job of flattening water-bottom multiples of any 
+order to the $\tau$ of interest, assuming that we pick the water bottom ($\tau^{*}$) and 
+that we know the seismic velocity of water.
+
+\sideplot{schem}{width=4.0in,height=2.0in}{ Schematic for NMO of multiples.  From the
+	standpoint of NMO, multiples can be treated as pseudo-primaries with the same source-receiver
+	spacing, but with extra zero-offset traveltime $\tau^*$, assuming that the velocity and 
+	time-thickness of the multiple layer are known.
+ }
+
+\subsection{AVO of Multiple Reflections}
+Even after application of the water-bottom reflection coefficient, the AVO response of the
+pseudo-primary section created by equation (\ref{eq:nmomult}) does not match that of the
+corresponding NMO-corrected primary section.  Refer to Figure \ref{fig:avo} and note that 
+for constant-AVO water-bottom reflection (and a free surface reflection coefficient of
+-1), the amplitude of the water-bottom multiple at 
+offset $h_p+h_m$ is simply the amplitude of the primary at offset $h_p$, scaled by the 
+negative water-bottom reflection coefficient.  Still, the question remains: {\em what are $h_m$
+and $h_p$}?  For the case of constant velocity, we can use trigonometry to derive $h_m$
+and $h_p$ as a function of the zero offset traveltimes of the primary reflection and
+water bottom ($\tau$ and $\tau^*$, respectively), and the source-receiver offset $x$.
+In constant velocity, the multiple and primary legs of the raypath are similar triangles:
+\begin{equation}
+	\frac{\tau v}{h_p} = \frac{\tau^* v}{h_m}. \label{eq:triangles}
+\end{equation}
+Also, for a first-order water-bottom multiple,
+\[ h_p + h_m = x. \]
+These two independent equations can be solved and simplified to give expressions for 
+$h_p$ and $h_m$:
+\begin{equation}
+	h_p = \frac{\tau}{\tau+\tau^*}x \hspace{0.2in} \mbox{ and } \hspace{0.2in}
+	h_m = \frac{\tau^*}{\tau+\tau^*}x. \label{eq:avo}
+\end{equation}
+I omit the general form of the expression for orders of multiple higher than one, although 
+it is straightforward to derive.
+
+\sideplot{avo}{width=3.0in,height=2.5in}{ Assuming a constant AVO water-bottom reflection
+	and constant velocity, we can write the AVO of water-bottom multiples with offset $h_p+h_m$ 
+	as a function of the AVO of the primary recorded at a shorter offset, $h_p$.  }
+\par
+To obtain an estimate of the water-bottom reflection coefficient, I solve a simple least squares
+problem to estimate a function of location, $\bold a(x)$, which when applied to a small window of 
+dimension $nt \times nx$
+around the NMO-corrected water-bottom reflection, $\bold p(t,x)$, optimally resembles the NMO-corrected 
+[equation (\ref{eq:nmomult})] first-order water-bottom multiple reflection, $\bold m(t,x)$.  To achieve 
+this, $\bold a(x)$ is perturbed to minimize the following quadratic functional.
+\begin{equation}
+	\mbox{min} \; \left( \sum_{j=1}^{nx} \sum_{i=1}^{nt} 
+		a(j)*p(i,j) - m(i,j) \right)^2 \label{eq:refl-coeff}
+\end{equation}
+$\bold a(x)$ may not be reliable at far offsets, due to either NMO stretch or non-hyperbolicity,
+so in practice, an estimate of the single best-fitting water-bottom reflection coefficient 
+is made using the $\bold a(x)$ from ``useful'' offsets only.
+
+\subsection{Least-squares imaging of multiples}
+Applied to a common-midpoint gather, equation (\ref{eq:nmomult}) produces an approximate unstacked
+zero-offset image of pseudo-primaries from water bottom multiple reflections.  
+In this section, I introduce a least squares scheme to compute self-consistent images of 
+primaries and pseudo-primaries which are in turn consistent with the data.  First I define 
+some terms:
+\begin{eqnarray*}
+	\bold d   & \leftrightarrow & \mbox{ One CMP gather. } \\
+	\bold m_j & \leftrightarrow & \mbox{ Prestack model vector for multiple order $j$.
+		Produced by applying equation (\ref{eq:nmomult}) to $\bf d$.  } \\
+	\bold N_j & \leftrightarrow & \mbox{ {\em Adjoint} of NMO for multiple of order $j$
+		(primaries: $j=0$). $\bold N_j^T$ applies equation (\ref{eq:nmomult}) to $\bf d$. } \\
+	\bold R_j & \leftrightarrow & \mbox{ Given a single water-bottom reflection coefficient, $r$,
+		[estimated via equation (\ref{eq:refl-coeff})],} \\ 
+	          &                 & \mbox{ this operator scales $\bold m_j$
+		by $1/r^j$ to make the amplitudes of all the $\bold m_j$ comparable.  } \\
+\end{eqnarray*}
+With these definitions in hand, we can now write the forward modeling operator for joint 
+NMO of primaries and multiples of order 1 to $p$.
+\begin{equation}
+	\left[ \bold N_0 \ \ \bold N_1 \bold R_1 \ \cdots \ \bold N_p \bold R_p \right]
+	\left[
+	\begin{array}{c}
+		\bold m_0 \\
+		\bold m_1 \\
+		\vdots    \\
+		\bold m_p 
+	\end{array}
+	\right] = \bf Lm          \label{eq:jointnmo0}
+\end{equation}
+In words, equation (\ref{eq:jointnmo0}) takes a collection of psuedo-primary panels, divides
+each by the appropriate reflection coefficient, applies inverse (adjoint) NMO to each, and
+then sums them together to create something that should resemble ``data''.
+We define the data residual as the difference between the input data and the 
+forward-modeled data:
+\begin{equation}
+	\bold r_d = \bf d - Lm       \label{eq:data-resid}
+\end{equation}
+Viewed as a standard least-squares inversion problem, minimization of $L_2$ norm of the 
+data residual by solution of the normal equations is underdetermined.  Additional regularization
+terms, defined in later sections, force the problem to be overdetermined.
+
+\subsection{Consistency of the Data and the Crosstalk Problem}
+Figure \ref{fig:schem.hask} shows the result of applying the adjoint of equation 
+(\ref{eq:jointnmo0}) to a synthetic CMP gather which was constructed by an elastic modeling
+scheme.  Imagine for a moment that the CMP gather consists {\em only} of primaries and
+first- and second-order water-bottom multiples.   The ``NMO for Primaries'' panel would
+contain flattened primaries (signal) and downward-curving first- and second-order 
+multiples (noise).  Likewise, the ``NMO for multiple 1'' and ``NMO for multiple 2''
+panels contain flattened signal and curving noise.  Why do I call these
+components ``signal'' and ``noise''?  If each of the three panels contained all signal and 
+no noise, then we could 1) perfectly reconstruct the data from the model by applying 
+equation (\ref{eq:jointnmo0}), and 2) be in the enviable position of having a perfect 
+estimate of the primaries.  
+\plot{schem.hask}{width=5.5in,height=3.5in}{From left to right: Raw synthetic CMP gather;
+	Conventional NMO applied to data;  NMO for first-order water-bottom multiple; NMO for 
+	second-order water-bottom multiples.
+}
+\par
+Unfortunately, the curved events -- so-called ``crosstalk'' -- in all three model panels 
+spoil this idealized situation \cite{Claerbout.blackwell.92}.  Because the crosstalk events 
+map back to actual events in the data, they are difficult to suppress in a least-squares 
+minimization of the data residual [equation (\ref{eq:data-resid})].  \longcite{GEO64-01-02080221}
+shows that crosstalk relates directly to non-invertibility of the Hessian ($\bold L^T \bold L$), 
+and that data-space or model-space regularization may partially overcome the difficulty.
+In the following section, I introduce a novel form of model-space regularization which 
+promotes discrimination of signal from crosstalk.
+
+\subsection{Regularization of the Least-Squares Problem}
+Visual inspection of Figure \ref{fig:schem.hask} motivates the two forms of 
+regularization utilized in this paper.  Find any first-order multiple on the section marked 
+``NMO for Primaries''.  Notice that the corresponding event on the first- and second-order 
+pseudo-primary panels, originally second- and third-order multiples, respectively, all have 
+a different moveout.  In fact, the only events which are kinematically consistent across all 
+offsets are the flattened primary and pseudo-primaries.  The other events, all crosstalk, are
+inconsistent between panels.  Therefore, the first regularization 
+operator seeks to penalize the difference between the $\bold m_i$, at fixed $\tau$.  To account
+for the dissimilarity of the AVO of primaries and multiples, this difference is taken at 
+different offsets, as defined in equation (\ref{eq:avo}).  Written in the form of a model 
+residual vector, this difference is:
+\begin{equation}
+	\bold r_m^{[1]}(\tau,x,i) = m_i(\tau,h_p) - m_{i+1}(\tau,x). \label{eq:order-reg}
+\end{equation}
+\par
+The third index in equation (\ref{eq:offset-reg}), $i$, ranges from 0 to $n_p-1$, where
+$n_p$ is the highest order multiple modeled in the inversion [see equation (\ref{eq:jointnmo0})].
+\par
+The second form of regularization used in this paper is the more obvious of the two:
+a difference operator along offset.  This difference exploits the fact that all 
+non-primaries are not flat after NMO.  Again, we can write this difference in the form 
+of a model residual vector:
+\begin{equation}
+	\bold r_m^{[2]}(\tau,x,i) = m_i(\tau,x) - m_i(\tau,x+\Delta x). \label{eq:offset-reg}
+\end{equation}
+The second regularization is applied to all the $\bold m_i$.  A similar approach is used 
+by \longcite{Prucha.sep.108.marie1} to regularize prestack depth migration in the angle 
+domain.
+
+\subsection{Combined Data and Model Residuals}
+To compute the optimal set of $\bold m_i$, a quadratic objective function, $Q(\bf m)$, 
+consisting of sum of the weighted norms of a data residual [equation (\ref{eq:data-resid})] and 
+of two model residuals [equations (\ref{eq:order-reg}) and (\ref{eq:offset-reg})], is 
+minimized via a conjugate gradient scheme:  
+\begin{equation}
+	\mbox{min} Q(\bold m) \; = \; \| \bold r_d \|^2 \; + \; \epsilon_m^2 \| \bold r_m^{[1]} \|^2
+	                       \; + \; \epsilon_x^2 \| \bold r_m^{[2]} \|^2  \label{eq:all-resid}
+\end{equation}
+$\epsilon_m$ and $\epsilon_x$ are scalars which balance the relative weight of the two model 
+residuals with the data residual.
+
+\section{Results}
+\subsection{Testing the Raw Algorithm}
+We begin with the results of testing the proposed algorithm on a single synthetic CMP gather,
+which was shown previously in Figure \ref{fig:schem.hask}.  This gather, generated using 
+Haskell-Thompson elastic modeling, with earth properties drawn from a well log provided with
+the ``Mobil AVO'' dataset (see \cite{Lumley.sep.82.25} for a description of data details), 
+has traditionally found use at SEP as a multiple suppression benchmark 
+\cite{Lumley.sep.82.25,Nichols.sep.82.1,Clapp.sep.102.bob2,Guitton.sep.103.antoine1,Clapp.sep.103.bob2}.  
+The data contain all surface-related and internal multiples, as well as P-to-S-to-P converted waves.
+\par
+Figure \ref{fig:cmps.lsrow.hask} illustrates the application of the proposed algorithm to the
+so-called ``Haskell'' data.  Comparing the raw data and the estimated primary panels 
+[$\bold m_0$ in equation (\ref{eq:jointnmo0})], we see that my algorithm does a decent job of 
+suppressing the strongest multiples, especially at far offsets, though some residual multiple 
+energy remains at the near offsets.  We expect poorer performance at near offsets; recall that 
+the first regularization operator [equation (\ref{eq:order-reg})] penalizes dissimilarity of 
+events across orders of multiple, yet all orders of multiple align at near offsets.  Moreover, 
+the second regularization operator [equation (\ref{eq:offset-reg})] penalizes residual curvature, 
+yet all events in the section, both primaries and the residual multiples, are flat at near offsets. 
+\par
+The difference panel shows little residual primary energy, which illustrates the favorable signal
+preservation capability of my approach.  The bulk of the residual primary energy exists at far 
+offsets and small times, where NMO stretch makes the primaries nonflat, and hence, vulnerable to
+smoothing across offset by equation (\ref{eq:offset-reg}).
+\par
+The bottom three panels in Figure \ref{fig:cmps.lsrow.hask} show the data residual 
+[equation (\ref{eq:data-resid})], and the first two panels of the two model residuals
+[equations (\ref{eq:offset-reg}) and (\ref{eq:order-reg}), respectively].  Put simply, the data 
+residual consists of events which are not modeled by equation (\ref{eq:jointnmo0}) -- hopefully,
+ the multiples only.  The model residuals consist roughly of the portions of the model which 
+were removed by the two regularization terms (again, hopefully multiples only): high-wavenumber 
+events and events which are inconsistent from one panel to the next.  
+\plot{cmps.lsrow.hask}{width=5.0in,height=8.0in}{ 
+	Test of equation (\ref{eq:all-resid}) on Haskell synthetic CMP gather. 
+	Top row, left to right: Raw Haskell data, NMO applied; Estimated primary panel; difference panel.  
+	Bottom row, left to right: Data residual; first panel of model residuals, equations 
+	(\ref{eq:offset-reg}) and (\ref{eq:order-reg}), respectively.
+}
+
+\subsection{Better Understanding the Regularization}
+Figure \ref{fig:cmps.nograd.hask} illustrates the effect of setting $\epsilon_x=0$ in equation
+(\ref{eq:all-resid}), which removes the influence of the regularization term which roughens
+the model across offset [equation (\ref{eq:offset-reg})].  The results are intriguing.  Most
+noticeably, leftover multiple reflections in the ``Estimated Primaries'' panel appear to be 
+scrambled over offset, while primaries appear mostly intact.  Signal-to-noise ratio has increased
+considerably.  The fact that the roughener across offset decorrelates the residual multiples should 
+be further exploited.
+\par
+Notice that the model residual is zero at long offsets and small times.  This is due to the fact that
+the difference is not taken across the same offsets, to account for the AVO multiples, according to
+equation (\ref{eq:avo}).  When $h_p + h_m > h_{max}$, no difference is taken. 
+\plot{cmps.nograd.hask}{width=5.0in,height=8.0in}{ 
+	Only the regularization which roughens across orders of pseudo-primary, equation (\ref{eq:order-reg}),
+	is used in the inversion.  
+	Top row, left to right: Raw Haskell data, NMO applied; Estimated primary panel; difference panel.  
+	Bottom row, left to right: Data residual; first panel of model residuals, equations 
+	(\ref{eq:offset-reg}) and (\ref{eq:order-reg}), respectively.
+}
+
+\subsection{Devil's Advocate: What do the Multiples Add?}
+Figure \ref{fig:cmps.devils.hask} illustrates application of the algorithm without the use of
+multiples.  Only the regularization across offset, equation (\ref{eq:offset-reg}), is in operation.  
+Though we see some suppression of multiples, the results are not nearly as good as those in Figure 
+\ref{fig:cmps.lsrow.hask}.  More insidiously, note the presence of considerable of primary energy
+in the difference panel.  When exploited as a constraint against crosstalk, the
+multiple reflections add considerable information.  My approach integrates this information 
+in a systematic framework.
+\plot{cmps.devils.hask}{width=5.0in,height=8.0in}{ 
+	Only the regularization which roughens across offset, equation (\ref{eq:offset-reg}) is used in the inversion.  
+	Only one order of pseudo-primary is used, so no information is added by the multiples.
+	Top row, left to right: Raw Haskell data, NMO applied; Estimated primary panel; difference panel.  
+	Bottom row, left to right: Data residual; first panel of model residuals, equations 
+	(\ref{eq:offset-reg}) and (\ref{eq:order-reg}), respectively.
+}
+
+\subsection{A Real Data Example}
+I test the proposed algorithm on a single CMP gather from the Mobil AVO dataset, described
+above.  The results are shown in Figure \ref{fig:cmps.lsrow.haskreal}.  Relative to the results 
+seen on the Haskell synthetic, they are fairly poor.  On the bright side, notice decent preservation
+of signal amplitude.  The earliest water-bottom multiples are suppressed quite effectively, although
+the later reverberations are left almost untouched.
+\par
+The reasons for the less-than-perfect are likely numerous.  First, and most important, the multiple
+reflections quickly become incoherent with an increasing number of bounces.  They match well with the 
+primaries only for the strongest reflections.  I estimated a relatively small water-bottom reflection
+coefficient, 0.1, so the multiples are relatively weak in amplitude.  I did not perform any preprocessing
+on the data, and I believe they were donated to SEP as raw gathers.  \longcite{Berlioux.sep.80.349}
+applied cable balancing to the Mobil AVO dataset.  High-wavenumber, offset-variant amplitude variations 
+along events spoil the ability regularization equation (\ref{eq:order-reg}) to discriminate against
+crosstalk.
+\plot{cmps.lsrow.haskreal}{width=6.0in,height=8.0in}{ 
+	Application of equation (\ref{eq:all-resid}) to CMP from Mobil AVO data.
+	Top row, left to right: Raw CMP gather, NMO applied; Estimated primary panel; difference panel.  
+}
+
+\section{Discussion}
+I presented a new approach for the joint imaging of primary and multiple reflections.  
+My approach goes further than the separate imaging of multiples and primaries.  I integrate information
+from the multiples and primaries in a least-squares inversion, via a new regularization term which
+exploits the kinematic similarity of primaries and pseudo-primaries, and the kinematic dissimilarity
+of crosstalk terms to obtain a noise-free image of the primaries.
+\par
+The proposed algorithm demonstrates good noise suppression and signal preservation characteristics in 
+the synthetic tests of Figure \ref{fig:cmps.lsrow.hask}.  Comparison of Figures \ref{fig:cmps.nograd.hask}
+and \ref{fig:cmps.devils.hask} proves the validity of the new regularization term, equation 
+(\ref{eq:order-reg}), and more importantly, that the multiples provide valuable information in the inversion.
+\par
+The results of testing a real data gather were mixed.  I believe the single largest problem in this case is
+poor coherency of the water-bottom multiples.  As the water bottom and most shallow reflectors on the
+Mobil AVO dataset are nearly perfectly flat, geologic complexity is surely not to blame.  More likely, the
+solution(s) to the trouble is(are) more mundane; things like source/cable balancing and spherical 
+divergence.  An accurate RMS velocity function is important to success, but errors can be tolerated.   
+Velocity errors lead to curvature in NMO'ed primaries and pseudo-primaries, but as I have dealt here only 
+with water-layer multiples, the real danger, a large phase shift between primaries and pseudo-primaries,
+is somewhat unlikely.
+\par
+In all tests, the removal of multiples at near offsets was incomplete.  Since the near offsets contribute
+most to residual multiple energy in the stack, it is of crucial importance to improve performance.  
+
+\section{Future Directions}
+The obvious direction in which to move this project is migration.  By using migration, rather than NMO, as
+the imaging operator, the limiting assumptions of NMO ($v(z)$, flat reflectors) can be abandoned.  
+Furthermore, the limitations of operating in the offset domain can be overcome by moving to the more
+intuitive angle domain.  In some cases, multiples provide better angular coverage over a recorded cable
+length.  Systematic integration of this extra information could prove revolutionary in regions of poor
+illumination.  But the fruits of this transition are not without challenges.  Because NMO is a vertical mapping,
+each CMP can be processed independently, making the memory requirements of the current implementation 
+reasonable, and parallelization quite simple.  Correctly handling the transformation of amplitudes between
+primary and pseudo-primary may prove even more of a challenge.  Also, regardless of whether NMO or migration
+is used, the move to 3-D is never a forgiving one from the computational standpoint. 
+
+\section{Acknowledgement}
+Thanks go to ExxonMobil for providing SEP with the Mobil AVO dataset.
+
+\bibliographystyle{sep}
+\bibliography{SEG,SEP,MISC}
