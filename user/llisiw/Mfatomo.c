@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     bool adj, velocity, l1norm, plane[3], verb;
     int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds;
-    float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama, clip, max;
+    float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[4], *what;
     sf_file sinp, sout, shot, time, reco, rece, topo, grad, norm;
     sf_weight weight=NULL;
@@ -247,9 +247,6 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("eps",&eps)) eps=0.;
 	    /* regularization parameter */
 
-	    if (!sf_getfloat("clip",&clip)) clip=0.25;
-	    /* update clip */
-
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("gradient")) {
 		grad = sf_output("gradient");
@@ -354,15 +351,6 @@ int main(int argc, char* argv[])
 		    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
 			
 		    sf_cgstep_close();
-		}
-		
-		/* clip update */
-		max = 0.;
-		for (it=0; it < nt; it++) {
-		    if (fabsf(ds[it]) > max) max = fabsf(ds[it]);
-		}
-		for (it=0; it < nt; it++) {
-		    if (fabsf(ds[it]) < clip*max) ds[it] = 0.;
 		}
 		
 		/* line search */
