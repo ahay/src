@@ -25,6 +25,10 @@ petscdir = env.get('PETSCDIR')
 
 if petscdir:
     petsccc = env.get('PETSCCC')
+    if petsccc == None:
+       petsccc = env.get('MPICC')
+       if petsccc == None:
+          petsccc = env.get('CC')
     petscpath = env.get('PETSCPATH',[])
     petsclibpath = env.get('PETSCLIBPATH',[])
     petsclibs = env.get('PETSCLIBS',[])
