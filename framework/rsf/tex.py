@@ -117,7 +117,7 @@ def latexscan(node,env,path):
     else:
         geomanuscript = lclass == 'geophysics' and \
             string.rfind(options,'manuscript') >= 0
-    slides = lclass == 'beamer'
+    slides = lclass == 'beamer' or lclass == 'cwpslides'
 
     top = str(node)
     if top[-4:] != '.ltx':
@@ -417,6 +417,8 @@ def pstexpen(target=None,source=None,env=None):
                 options += ' color=y'
             if geomanuscript:
                 options += ' serifs=n'
+            elif slides:
+                options += ' fat=3 txscale=2'
             vpconvert.convert(vpl,eps,'eps',None,options)
         except:
             sys.stderr.write('vpconvert failed\n')
