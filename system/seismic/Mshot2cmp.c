@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	    is = sign? (iy - ih)/type : (iy + ih)/type - (nh - 1)/type;
 
 	    if (is >= 0 && is < ns && ih < nh) {
-		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
+		sf_seek(in,pos+ (off_t) (is*nh+ih)*nt,SEEK_SET);
 		sf_charread(trace,nt,in);
 		sf_charwrite(trace,nt,out);
 		if (NULL != msk) mask[ih2++] = 1;
