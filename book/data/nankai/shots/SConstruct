@@ -53,6 +53,8 @@ for fldr in (1707,1847):
 Flow('cmps cmask','shots',
      'bandpass fhi=125 | window j1=2 | intbin mask=${TARGETS[1]} xk=tracf yk=cdp')
 
+Flow('offs','tshots','window n1=1 f1=11 squeeze=n | dd type=float | intbin xk=tracf yk=cdp head=$SOURCE')
+
 Result('cmask',
        '''
        dd type=float |
@@ -60,5 +62,37 @@ Result('cmask',
        graph symbol=x title="Nankai Trough"
        label2="Traces per CMP Gather" 
        ''')
+
+# Window a CMP and determine tpow gain
+
+cmpno = 1280
+
+Flow('cmp','cmps','window n3=1 min3=%d' % cmpno)
+Flow('mask','cmask','window n2=1 min2=%d' % cmpno)
+
+Flow('off','offs mask',
+     '''
+     window n3=1 min3=%d squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''' % cmpno)
+        
+Flow('tpow beta','cmp',
+     '''
+     stack | envelope | fpow beta=${TARGETS[1]} time=y |
+     spray axis=2 n=69 o=28 d=1 | mul $SOURCE
+     ''')
+
+label = {'cmp':'',
+         'tpow':'(Gained)'}
+
+for case in ('cmp','tpow'):
+    Plot(case,[case,'mask','off'],
+         '''
+         headerwindow mask=${SOURCES[1]} |
+         wiggle xpos=${SOURCES[2]} title="CMP %d %s"
+         yreverse=y transp=y poly=y label2=Offset
+         ''' % (cmpno,label[case]))
+
+Result('cmp','cmp tpow','SideBySideAniso')
 
 End()

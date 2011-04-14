@@ -22,9 +22,9 @@ static float newton(float bi, int imin, int imax, const float* spec, const float
 
 int main(int argc, char* argv[])
 {
-    bool verb;
+    bool verb, time;
     int n1, n2, i1, i2, imin, imax, iter, niter, ib, nb, i;
-    float fmin, fmax, d1, *spec, bi, *b, *w, semb, db, deltab, b0, bmin, bmax, oldsemb;
+    float fmin, fmax, o1, d1, *spec, bi, *b, *w, semb, db, deltab, b0, bmin, bmax, oldsemb;
     float omega, rho, eps, tol, smax;
     sf_file inp, out, beta;
 
@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     beta = sf_output("beta");
 
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histfloat(inp,"o1",&o1)) o1=0.0; 
     if (!sf_histfloat(inp,"d1",&d1)) d1=1.0; 
     n2 = sf_leftsize(inp,1);
 
@@ -46,9 +47,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of Newton iterations */
-    if (!sf_getfloat("fmin",&fmin)) fmin=0.0;
+    if (!sf_getfloat("fmin",&fmin)) fmin=o1;
     /* minimum frequency */
-    if (!sf_getfloat("fmax",&fmax)) fmax=(n1-1)*d1;
+    if (!sf_getfloat("fmax",&fmax)) fmax=o1+(n1-1)*d1;
     /* maximum frequency */
     if (!sf_getfloat("bmin",&bmin)) bmin=-1.0;
     /* minimum value of beta */
@@ -63,6 +64,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
+    if (!sf_getbool("time",&time)) time=false;
+    /* time axis */
+
     imin = SF_MAX(floorf(0.5+fmin/d1),0);
     imax = SF_MIN(floorf(1.5+fmax/d1),n1);
 
@@ -71,8 +75,12 @@ int main(int argc, char* argv[])
     rho = 1.0-1.0/n1;
 
     for (i1=0; i1 < n1; i1++) {
-	omega = SF_PI*i1/(n1-1);
-	w[i1] = hypotf(1.-rho*cosf(omega),rho*sinf(omega));
+	if (time) {
+	    w[i1] = o1+i1*d1;
+	} else {
+	    omega = SF_PI*i1/(n1-1);
+	    w[i1] = hypotf(1.-rho*cosf(omega),rho*sinf(omega));
+	}
     }
 
     b = sf_floatalloc(n2);
