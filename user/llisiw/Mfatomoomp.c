@@ -1,4 +1,4 @@
-/* First-arrival Traveltime Tomography */
+/* First-arrival Traveltime Tomography (OMP) */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -22,7 +22,7 @@
 
 #include "upgrad.h"
 #include "fastmarch.h"
-#include "fatomo.h"
+#include "fatomoomp.h"
 
 #include "l1.h"
 #include "l1step.c"
@@ -30,9 +30,9 @@
 int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;
-    int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem;
+    int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem, *rhslist;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds;
-    float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama, clip, max;
+    float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[4], *what;
     sf_file sinp, sout, shot, time, reco, rece, topo, grad, norm;
     sf_weight weight=NULL;
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 	    /* adjoint flag (for what=linear) */
 
 	    /* initialize fatomo */
-	    fatomo_init(dim,n,d,nshot);
+	    fatomo_init(dim,n,d,nshot,rhslist);
 
 	    /* set operators */
 	    fatomo_set(t,m);
@@ -167,7 +167,6 @@ int main(int argc, char* argv[])
 
 	    /* allocate memory for temporary data */
 	    ds    = sf_floatalloc(nt);
-	    flag  = sf_intalloc(nt);
 	    
 	    temps = sf_floatalloc(nt);
 	    for (it=0; it < nt; it++) {
@@ -209,11 +208,15 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    /* number of right-hand side */
+	    rhslist = sf_intalloc(nshot);
+	    
 	    nrhs = 0;
 	    for (is=0; is < nshot; is++) {
 		for (it=0; it < nt; it++) {
-		    if (m[is][it] == 1) nrhs++;
+		    if (m[is][it] == 1)
+			nrhs++;
 		}
+		rhslist[is] = nrhs;
 	    }
 	    rhs = sf_floatalloc(nrhs);
 	    
@@ -225,7 +228,7 @@ int main(int argc, char* argv[])
 	    t0 = sf_floatalloc(nrhs);
 	    sf_floatread(t0,nrhs,reco);
 	    sf_fileclose(reco);
-
+	    
 	    /* read in topography file */
 	    if (NULL != sf_getstring("topo")) {
 		topo = sf_input("topo");
@@ -247,9 +250,6 @@ int main(int argc, char* argv[])
 
 	    if (!sf_getfloat("eps",&eps)) eps=0.;
 	    /* regularization parameter */
-
-	    if (!sf_getfloat("clip",&clip)) clip=0.25;
-	    /* update clip */
 
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("gradient")) {
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* initialize fatomo */
-	    fatomo_init(dim,n,d,nshot);
+	    fatomo_init(dim,n,d,nshot,rhslist);
 
 	    /* initialize 2D gradient operator */
 	    sf_igrad2_init(n[0],n[1]);
@@ -297,23 +297,31 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* initial misfit */
-	    fastmarch_init(n[2],n[1],n[0]);
-	    
-	    i = 0;
-	    for (is=0; is < nshot; is++) {
-		fastmarch(t[is],s,flag,plane,
-			  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-			  source[is][2],source[is][1],source[is][0],1,1,1,order);
+#pragma omp parallel private(flag,i,it)
+	    {
+		flag  = sf_intalloc(nt);
+		fastmarch_init(n[2],n[1],n[0]);
 
-		for (it=0; it < nt; it++) {
-		    if (m[is][it] == 1) {
-			rhs[i] = t0[i]-t[is][it];
-			i++;
+#pragma omp for
+		{
+		    for (is=0; is < nshot; is++) {
+			fastmarch(t[is],s,flag,plane,
+				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+				  source[is][2],source[is][1],source[is][0],1,1,1,order);
+			
+			i = rhslist[is];
+			for (it=nt-1; it >= 0; it--) {
+			    if (m[is][it] == 1) {
+				rhs[i-1] = t0[i-1]-t[is][it];
+				i--;
+			    }
+			}
 		    }
 		}
+		
+		fastmarch_close();
+		free(flag);
 	    }
-	    
-	    fastmarch_close();
 	    
 	    /* calculate L2 data-misfit */
 	    rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
@@ -357,15 +365,6 @@ int main(int argc, char* argv[])
 		    sf_cgstep_close();
 		}
 		
-		/* clip update */
-		max = 0.;
-		for (it=0; it < nt; it++) {
-		    if (fabsf(ds[it]) > max) max = fabsf(ds[it]);
-		}
-		for (it=0; it < nt; it++) {
-		    if (fabsf(ds[it]) < clip*max) ds[it] = 0.;
-		}
-		
 		/* line search */
 		gama = 1.;
 		for (count=0; count < 10; count++) {
@@ -376,24 +375,32 @@ int main(int argc, char* argv[])
 			    temps[it] = (s[it]+gama*ds[it])*(s[it]+gama*ds[it])/s[it];
 		    }
 
-		    /* forward fast-marching for stencil time */
-		    fastmarch_init(n[2],n[1],n[0]);
-		    
-		    i = 0;
-		    for (is=0; is < nshot; is++) {
-			fastmarch(t[is],temps,flag,plane,
-				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-				  source[is][2],source[is][1],source[is][0],1,1,1,order);
+		    /* forward fast-marching for stencil time */		    
+#pragma omp parallel private(flag,i,it)
+		    {
+			flag  = sf_intalloc(nt);
+			fastmarch_init(n[2],n[1],n[0]);
 			
-			for (it=0; it < nt; it++) {
-			    if (m[is][it] == 1) {
-				rhs[i] = t0[i]-t[is][it];
-				i++;
+#pragma omp for
+			{
+			    for (is=0; is < nshot; is++) {
+				fastmarch(t[is],temps,flag,plane,
+					  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+					  source[is][2],source[is][1],source[is][0],1,1,1,order);
+				
+				i = rhslist[is];
+				for (it=nt-1; it >= 0; it--) {
+				    if (m[is][it] == 1) {
+					rhs[i-1] = t0[i-1]-t[is][it];
+					i--;
+				    }
+				}
 			    }
 			}
+			
+			fastmarch_close();
 		    }
 		    
-		    fastmarch_close();
 		    
 		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
 		    rate = rhsnorm/rhsnorm1;
