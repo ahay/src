@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;
     int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem, *rhslist;
+    int mts, its;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds;
     float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[4], *what;
@@ -43,6 +44,15 @@ int main(int argc, char* argv[])
 
     if (NULL == (what = sf_getstring("what"))) what="tomo";
     /* what to compute (default tomography) */
+
+    omp_set_num_threads(8);
+
+#pragma omp parallel
+    {
+	mts = omp_get_max_threads();
+	its = omp_get_thread_num();
+	sf_warning("Thread %d of %d\n",its,mts);
+    }
 
     switch (what[0]) {
 	case 'l': /* linear operator */
@@ -296,11 +306,14 @@ int main(int argc, char* argv[])
 		sf_irls_init(nt);
 	    }
 
+
 	    /* initial misfit */
 #pragma omp parallel private(flag,i,it)
 	    {
 		flag  = sf_intalloc(nt);
 		fastmarch_init(n[2],n[1],n[0]);
+
+		sf_warning("!!!");
 
 #pragma omp for
 		for (is=0; is < nshot; is++) {
@@ -321,6 +334,7 @@ int main(int argc, char* argv[])
 		free(flag);
 	    }
 	    
+
 	    /* calculate L2 data-misfit */
 	    rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
 	    rhsnorm = rhsnorm0;
