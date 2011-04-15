@@ -23,7 +23,7 @@
 #include "fatomoomp.h"
 
 static int nt, **mask, ns, *list;
-static float *tempt, *tempx;
+static float **tempt, **tempx;
 static upgrad *upglist;
 
 void fatomo_init(int dim      /* model dimension */,
@@ -33,7 +33,7 @@ void fatomo_init(int dim      /* model dimension */,
 		 int *rhslist /* rhs list */)
 /*< initialize >*/
 {
-    int i, is;
+    int i, is, mts;
 
     nt = 1;
     for (i=0; i < dim; i++) {
@@ -43,7 +43,6 @@ void fatomo_init(int dim      /* model dimension */,
     ns = nshot;
 
     list = sf_intalloc(ns);
-    tempx = sf_floatalloc(nt);
 
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
     
@@ -52,6 +51,11 @@ void fatomo_init(int dim      /* model dimension */,
     }
     
     list = rhslist;
+    
+    mts = omp_get_max_threads();
+
+    tempt = sf_floatalloc2(nt,mts);
+    tempx = sf_floatalloc2(nt,mts);
 }
 
 void fatomo_set(float **t  /* stencil time */,
@@ -73,7 +77,6 @@ void fatomo_close(void)
 /*< free allocated storage >*/
 {
     int is;
-#pragma omp parallel for
     for (is=0; is < ns; is++) {
 	upgrad_close(upglist[is]);
     }
@@ -82,60 +85,56 @@ void fatomo_close(void)
 void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
-    int it, is, i;
+    int it, is, i, its;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
 	/* given dt solve ds */
 
-#pragma omp parallel private(tempt,i,it)
+#pragma omp parallel private(its,i,it)
 	{
-	    tempt = sf_floatalloc(nt);
+	    its = omp_get_thread_num();
 
 #pragma omp for
 	    for (is=0; is < ns; is++) {
 		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
 		    if (mask[is][it] == 1) {
-			tempt[it] = r[i-1];
+			tempt[its][it] = r[i-1];
 			i--;
 		    } else {
-			tempt[it] = 0.;
+			tempt[its][it] = 0.;
 		    }
 		}
 		
-		upgrad_inverse(upglist[is],tempx,tempt,NULL);
+		upgrad_inverse(upglist[is],tempx[its],tempt[its],NULL);
 
 #pragma omp critical
 		{
-		    for (it=0; it < nt; it++) x[it]+=tempx[it];
+		    for (it=0; it < nt; it++) x[it]+=tempx[its][it];
 		}
 	    }
-
-	    free(tempt);
 	}
     } else {
 	/* given ds solve dt */
 	
-#pragma omp parallel private(tempt,i,it)
+#pragma omp parallel private(its,i,it)
 	{
-	    tempt = sf_floatalloc(nt);
+	    its = omp_get_thread_num();
 
 #pragma omp for
 	    for (is=0; is < ns; is++) {
-		upgrad_solve(upglist[is],x,tempt,NULL);
+		upgrad_solve(upglist[is],x,tempt[its],NULL);
 		
 		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
 		    if (mask[is][it] == 1) {
-			r[i-1] = tempt[it];
+			r[i-1] = tempt[its][it];
 			i--;
 		    }
 		}
 	    }
-	    
-	    free(tempt);
 	}
     }
 }

@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;
     int dim, i, count, n[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order, iter, niter, stiter, *k, nfreq, nmem, *rhslist;
-    int mts, its;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds;
     float rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[4], *what;
@@ -44,15 +43,6 @@ int main(int argc, char* argv[])
 
     if (NULL == (what = sf_getstring("what"))) what="tomo";
     /* what to compute (default tomography) */
-
-    omp_set_num_threads(8);
-
-#pragma omp parallel
-    {
-	mts = omp_get_max_threads();
-	its = omp_get_thread_num();
-	sf_warning("Thread %d of %d\n",its,mts);
-    }
 
     switch (what[0]) {
 	case 'l': /* linear operator */
@@ -101,11 +91,15 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* number of right-hand side */
+	    rhslist = sf_intalloc(nshot);
+	    
 	    nrhs = 0;
 	    for (is=0; is < nshot; is++) {
 		for (it=0; it < nt; it++) {
-		    if (m[is][it] == 1) nrhs++;
+		    if (m[is][it] == 1)
+			nrhs++;
 		}
+		rhslist[is] = nrhs;
 	    }
 	    rhs = sf_floatalloc(nrhs);
 
@@ -229,7 +223,7 @@ int main(int argc, char* argv[])
 		rhslist[is] = nrhs;
 	    }
 	    rhs = sf_floatalloc(nrhs);
-	    
+
 	    /* read in record file */
 	    if (NULL == sf_getstring("record"))
 		sf_error("Need data record=");
@@ -306,35 +300,27 @@ int main(int argc, char* argv[])
 		sf_irls_init(nt);
 	    }
 
-
 	    /* initial misfit */
-#pragma omp parallel private(flag,i,it)
-	    {
-		flag  = sf_intalloc(nt);
-		fastmarch_init(n[2],n[1],n[0]);
-
-		sf_warning("!!!");
-
-#pragma omp for
-		for (is=0; is < nshot; is++) {
-		    fastmarch(t[is],s,flag,plane,
-			      n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-			      source[is][2],source[is][1],source[is][0],1,1,1,order);
-		    
-		    i = rhslist[is];
-		    for (it=nt-1; it >= 0; it--) {
-			if (m[is][it] == 1) {
-			    rhs[i-1] = t0[i-1]-t[is][it];
-			    i--;
-			}
+	    flag  = sf_intalloc(nt);
+	    fastmarch_init(n[2],n[1],n[0]);
+	    
+	    for (is=0; is < nshot; is++) {
+		fastmarch(t[is],s,flag,plane,
+			  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+			  source[is][2],source[is][1],source[is][0],1,1,1,order);
+		
+		i = rhslist[is];
+		for (it=nt-1; it >= 0; it--) {
+		    if (m[is][it] == 1) {
+			rhs[i-1] = t0[i-1]-t[is][it];
+			i--;
 		    }
 		}
-		
-		fastmarch_close();
-		free(flag);
 	    }
 	    
-
+	    fastmarch_close();
+	    free(flag);
+	    
 	    /* calculate L2 data-misfit */
 	    rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
 	    rhsnorm = rhsnorm0;
@@ -388,29 +374,25 @@ int main(int argc, char* argv[])
 		    }
 
 		    /* forward fast-marching for stencil time */		    
-#pragma omp parallel private(flag,i,it)
-		    {
-			flag  = sf_intalloc(nt);
-			fastmarch_init(n[2],n[1],n[0]);
+		    flag  = sf_intalloc(nt);
+		    fastmarch_init(n[2],n[1],n[0]);
+		    
+		    for (is=0; is < nshot; is++) {
+			fastmarch(t[is],temps,flag,plane,
+				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+				  source[is][2],source[is][1],source[is][0],1,1,1,order);
 			
-#pragma omp for
-			for (is=0; is < nshot; is++) {
-			    fastmarch(t[is],temps,flag,plane,
-				      n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-				      source[is][2],source[is][1],source[is][0],1,1,1,order);
-			    
-			    i = rhslist[is];
-			    for (it=nt-1; it >= 0; it--) {
-				if (m[is][it] == 1) {
-				    rhs[i-1] = t0[i-1]-t[is][it];
-				    i--;
-				}
+			i = rhslist[is];
+			for (it=nt-1; it >= 0; it--) {
+			    if (m[is][it] == 1) {
+				rhs[i-1] = t0[i-1]-t[is][it];
+				i--;
 			    }
 			}
-			
-			fastmarch_close();
 		    }
 		    
+		    fastmarch_close();
+		    free(flag);
 		    
 		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
 		    rate = rhsnorm/rhsnorm1;
