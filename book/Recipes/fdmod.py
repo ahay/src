@@ -108,7 +108,8 @@ def param(par):
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey parallel2=n labelrot=n wantaxis=y title=""
+    grey 
+    parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
@@ -312,9 +313,9 @@ def horizontal(cc,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+         ${SOURCES[1]} | transp |
+	     put label1="" unit1="" label2="" unit2=""
+         ''')
 
 def horizontal3d(cc,coord,par):
     Flow(cc+'_',None,
@@ -333,10 +334,10 @@ def horizontal3d(cc,coord,par):
 
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
-         cat axis=3 space=n
-         ${SOURCES[0:3]} | transp plane=13 | transp plane=23 |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+         cat axis=3 space=n ${SOURCES[1:3]} | 
+         transp plane=13 | transp plane=23 |
+	     put label1="" unit1="" label2="" unit2=""
+         ''')
 
 def vertical(cc,coord,par):
     Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
@@ -345,9 +346,10 @@ def vertical(cc,coord,par):
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+         ${SOURCES[1]} | 
+         transp |
+	     put label1="" unit1="" label2="" unit2=""
+         ''')
 
 def vertical3d(cc,coordx,coordy,par):
     Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
@@ -356,10 +358,10 @@ def vertical3d(cc,coordx,coordy,par):
     Flow(cc+'_z',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
-         cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+         cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]} | 
+         transp |
+	     put label1="" unit1="" label2="" unit2=""
+         ''')
 
 
 def point(cc,xcoord,zcoord,par):
@@ -400,8 +402,8 @@ def point3(cc,xcoord,zcoord,magn,par):
     Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
-         ''', stdin=0)
+         ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''')
 
 def circle(cc,xcenter,zcenter,radius,sampling,par):
     Flow(cc+'_x',None,
