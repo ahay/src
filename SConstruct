@@ -235,12 +235,6 @@ if os.path.isdir('su'):
         Default(build)
 
 ##########################################################################
-
-docdir = os.path.join(shrdir, 'doc', 'madagascar-' + env['version'])
-for file in map(lambda x: x+'.txt',['AUTHORS','COPYING','NEWS','README']):
-    env.Install(docdir,file)
-
-##########################################################################
 # INSTALLATION
 ##########################################################################
 
