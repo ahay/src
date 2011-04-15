@@ -1,4 +1,5 @@
 // Lowrank decomposition for 2-D prestack exploding reflector in V(z)
+
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify

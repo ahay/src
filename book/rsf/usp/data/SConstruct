@@ -84,8 +84,8 @@ Flow('static','S-static rstat',
 Result('static',
        '''
        scale dscale=-1 |
-       grey color=j allpos=y scalebar=y title="Static Correction"
-       label2=Offset label1=Shot
+       grey color=j scalebar=y title="Static Correction"
+       label2=Offset label1=Shot bias=0.1
        ''')
 
 Plot('rec','rece',
@@ -118,7 +118,27 @@ Flow('offset','sx sy rx ry',
      output="sqrt((RX-SX)^2+(RY-SY)^2)"
      ''')
 
-Flow('shot118','lines','window n2=1 f2=117')
+##############################
+# Convert to regular geometry
+##############################
+Flow('lines','line',
+     '''
+     intbin xk=cdpt yk=fldr | window f2=2 |
+     put
+     label3=Source d3=0.05  o3=688  unit3=km
+     label2=Offset d2=0.025 o2=-3.5 unit2=km
+     label1=Time unit1=s
+     ''')
+
+Result('lines',
+       '''
+       transp memsize=1000 plane=23 |
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=100 frame3=120 flat=n
+       title="Raw Data"
+       ''')
+
+Flow('shot118','lines','window n3=1 f3=117')
 Flow('offset118','offset','window n2=1 f2=117')
 Flow('boff1','offset118','window n1=141 | math output="-input"')
 Flow('boff2','offset118','window f1=141')
@@ -130,26 +150,6 @@ Result('shot118','shot118 boff118',
        wherexlabel=t wheretitle=b title="Shot 118"
        ''')
 
-##############################
-# Convert to regular geometry
-##############################
-Flow('lines','line',
-     '''
-     intbin xk=cdpt yk=fldr | window f3=2 |
-     put
-     label3=Source d3=0.05  o3=688  unit3=km
-     label2=Offset d2=0.025 o2=-3.5 unit2=km
-     label1=Time unit1=s
-     ''')
-
-Result('lines',
-       '''
-       byte gainpanel=each |
-       transp memsize=1000 plane=23 |
-       grey3 frame1=500 frame2=100 frame3=120 flat=n
-       title="Raw Data"
-       ''')
-
 # Apply static correction?
 Flow('lines2','lines static','datstretch datum=${SOURCES[1]}')
 
@@ -159,12 +159,12 @@ Flow('lines2','lines static','datstretch datum=${SOURCES[1]}')
 Flow('rcmps mask','lines',
      '''
      shot2cmp mask=${TARGETS[1]} half=n |
-     put o2=-1.75 label2="Half-offset"
+     put o2=-1.75 d2=0.05 label2="Half-offset"
      ''')
 Result('rcmps',
        '''
-       byte gainpanel=each |
-       grey3 frame1=500 frame2=35 frame3=643 flat=n
+       byte gainpanel=each | window j3=2 |
+       grey3 frame1=500 frame2=35 frame3=322 flat=n
        point1=0.8 point2=0.4 title="CMPs"
        ''')
 

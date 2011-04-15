@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "veltranc.h"
+#include "velxf.h"
 
 static int nt, nx, ns;
 static float ot, dt, *x2, *z2, *s;
@@ -27,6 +27,7 @@ static bool *mask;
 void velxf_init(int nt1, int nx1, int ns1,
 		float ot1, float dt1,
 		float *xx2, float *zz2, float *ss, bool *mmask)
+/*< initialize >*/
 {
     nt = nt1;
     nx = nx1;
@@ -43,6 +44,7 @@ void velxf_init(int nt1, int nx1, int ns1,
 
 
 void velxf(bool adj, bool add, int nts, int ntx, float* modl, float* data)
+/*< linear operator >*/
 {
     int is, ix, iz, it, endt;
     float x2s, t, ft, gt;
@@ -58,19 +60,21 @@ void velxf(bool adj, bool add, int nts, int ntx, float* modl, float* data)
 	    if ( x2s > z2[nt-1] ) break;
 	    if (!mask[ix]) continue;
 	    
-	    endt = floorf(1.5 + sqrt( z2[nt-1] - x2s )/dt);
+	    endt = floorf(1. + sqrt( z2[nt-1] - x2s )/dt);
 	    
 	    for (iz=0; iz < endt; iz++) {
 		t = sqrtf( z2[iz] + x2s );
-		it = floorf((t-ot)/dt);
-		ft = (it*dt-t)/dt;
-		gt = 1. - ft;
+		ft = (t-ot)/dt;
+
+		it = floorf(ft);
+		ft -= it;
+		gt = 1.-ft;
 		
 		if (adj) {
-		    modl[is*nt+iz] += ft*data[ix*nt+it] + gt*data[ix*nt+it+1];
+		    modl[is*nt+iz] += gt*data[ix*nt+it] + ft*data[ix*nt+it+1];
 		} else {
-		    data[ix*nt+it]   += ft*modl[is*nt+iz];
-		    data[ix*nt+it+1] += gt*modl[is*nt+iz];
+		    data[ix*nt+it]   += gt*modl[is*nt+iz];
+		    data[ix*nt+it+1] += ft*modl[is*nt+iz];
 		}
 	    }
 	}

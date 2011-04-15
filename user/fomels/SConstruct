@@ -15,7 +15,7 @@ planereg2 planereg3 planesignoi pmshape2 predict pwd pwcoh pwdix
 pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2 pwspray3
 regr rdiv reshape riesz rsin seislet seisigk shape shapesigk shearer
 similarity simenv smoothreg taupfit thin timecont timefreq timeshift
-tomo trismooth2 tristack twodip2 twofreq2 velcon vofzperm warp1
+tomo trismooth2 tristack twodip2 twofreq2 velcon velxfc vofzperm warp1
 warpadd warpscan
 '''
 

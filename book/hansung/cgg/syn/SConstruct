@@ -40,12 +40,12 @@ Flow('noise0',None,
 
 Flow('noise1',None,
      '''
-     spike n1=256 n2=128 | noise type=1 | scale axis=12
+     spike n1=256 n2=128 | noise type=1 seed=2011 | scale axis=12
      ''')
 
 Flow('noise2',None,
      '''
-     spike n1=256 | noise type=1 | pad n2=100 | reverse which=2 | pad n2=128 | scale axis=12
+     spike n1=256 | noise type=1 seed=2012 | pad n2=100 | reverse which=2 | pad n2=128 | scale axis=12
      ''')
 
 Flow('syn_data','syn_cmp noise0 noise1 noise2',

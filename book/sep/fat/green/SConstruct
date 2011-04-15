@@ -15,4 +15,28 @@ Result('velfig','marmvel',
        bartype=h
        ''')
 
+nt=1001
+dt=0.0001
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=10
+     '''%(nt,dt))
+
+Flow('fft','marmvel','fft1 | fft3 axis=2 pad=1')
+
+Flow('mid left right','marmvel fft',
+     'isolr2 seed=2011 npk=30 eps=0.00001 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} right=${TARGETS[2]}' % dt)
+
+for s in (5500,6500):
+    source = 'source%d' % s
+    Flow(source,None,'spike n1=751 n2=2301 d1=4 d2=4 k1=5 k2=%d | smooth rect1=2 rect2=2 repeat=3' % (s/4))
+
+    wave = 'wave%d' % s
+    Flow(wave,['source',source,'left','mid','right'],
+         '''
+         fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+         ''')
+
 End()
