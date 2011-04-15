@@ -1,0 +1,27 @@
+from rsf.proj import *
+import sys
+sys.path.append('..')
+import fdmod,saf
+
+xtarget=2.0
+ztarget=0.5
+par=saf.param(xtarget,ztarget)
+par['labelattr']=par['labelattr']+par['labelrot']
+# ------------------------------------------------------------
+# receivers
+saf.safodbh('rr1',par)
+saf.verticalbh('rr2',2.95,par)
+
+Flow('rrs','rr1','window j2=12')
+Flow('rrv','rr2','window j2=40 max2=2.0')
+
+Flow('rr','rrv rrs','cat axis=2 space=n ${SOURCES[1]}')
+
+# sources
+saf.thrsou('ss','wav',par)
+
+# ------------------------------------------------------------
+# imaging
+saf.irandom('ss','wav','rr',4,par)
+
+End()
