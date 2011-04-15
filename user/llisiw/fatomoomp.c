@@ -74,10 +74,8 @@ void fatomo_close(void)
 {
     int is;
 #pragma omp parallel for
-    {
-	for (is=0; is < ns; is++) {
-	    upgrad_close(upglist[is]);
-	}
+    for (is=0; is < ns; is++) {
+	upgrad_close(upglist[is]);
     }
 }
 
@@ -91,12 +89,13 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	/* given dt solve ds */
 
-#pragma omp parallel for private(i,it)
+#pragma omp parallel private(tempt,i,it)
 	{
 	    tempt = sf_floatalloc(nt);
 
+#pragma omp for
 	    for (is=0; is < ns; is++) {
-		i = rhslist[is];
+		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
 		    if (mask[is][it] == 1) {
 			tempt[it] = r[i-1];
@@ -107,8 +106,11 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		}
 		
 		upgrad_inverse(upglist[is],tempx,tempt,NULL);
-		/* !!! reduction !!! */
-		for (it=0; it < nt; it++) x[it]+=tempx[it];
+
+#pragma omp critical
+		{
+		    for (it=0; it < nt; it++) x[it]+=tempx[it];
+		}
 	    }
 
 	    free(tempt);
@@ -116,14 +118,15 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
     } else {
 	/* given ds solve dt */
 	
-#pragma omp parallel for private(i,it)
+#pragma omp parallel private(tempt,i,it)
 	{
 	    tempt = sf_floatalloc(nt);
 
+#pragma omp for
 	    for (is=0; is < ns; is++) {
 		upgrad_solve(upglist[is],x,tempt,NULL);
 		
-		i = rhslist[is];
+		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
 		    if (mask[is][it] == 1) {
 			r[i-1] = tempt[it];
@@ -131,7 +134,7 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		    }
 		}
 	    }
-
+	    
 	    free(tempt);
 	}
     }

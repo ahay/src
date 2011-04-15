@@ -303,18 +303,16 @@ int main(int argc, char* argv[])
 		fastmarch_init(n[2],n[1],n[0]);
 
 #pragma omp for
-		{
-		    for (is=0; is < nshot; is++) {
-			fastmarch(t[is],s,flag,plane,
-				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-				  source[is][2],source[is][1],source[is][0],1,1,1,order);
-			
-			i = rhslist[is];
-			for (it=nt-1; it >= 0; it--) {
-			    if (m[is][it] == 1) {
-				rhs[i-1] = t0[i-1]-t[is][it];
-				i--;
-			    }
+		for (is=0; is < nshot; is++) {
+		    fastmarch(t[is],s,flag,plane,
+			      n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+			      source[is][2],source[is][1],source[is][0],1,1,1,order);
+		    
+		    i = rhslist[is];
+		    for (it=nt-1; it >= 0; it--) {
+			if (m[is][it] == 1) {
+			    rhs[i-1] = t0[i-1]-t[is][it];
+			    i--;
 			}
 		    }
 		}
@@ -382,18 +380,16 @@ int main(int argc, char* argv[])
 			fastmarch_init(n[2],n[1],n[0]);
 			
 #pragma omp for
-			{
-			    for (is=0; is < nshot; is++) {
-				fastmarch(t[is],temps,flag,plane,
-					  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-					  source[is][2],source[is][1],source[is][0],1,1,1,order);
-				
-				i = rhslist[is];
-				for (it=nt-1; it >= 0; it--) {
-				    if (m[is][it] == 1) {
-					rhs[i-1] = t0[i-1]-t[is][it];
-					i--;
-				    }
+			for (is=0; is < nshot; is++) {
+			    fastmarch(t[is],temps,flag,plane,
+				      n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+				      source[is][2],source[is][1],source[is][0],1,1,1,order);
+			    
+			    i = rhslist[is];
+			    for (it=nt-1; it >= 0; it--) {
+				if (m[is][it] == 1) {
+				    rhs[i-1] = t0[i-1]-t[is][it];
+				    i--;
 				}
 			    }
 			}
