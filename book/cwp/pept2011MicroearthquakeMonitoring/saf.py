@@ -3,7 +3,7 @@ import fdmod, gfield, pplot
 
 def wingrey(custom,par):
     return '''
-    grey title="" pclip=99.9 wheretitle=t titlesz=20 titlefat=2
+    grey title="" pclip=99.99 wheretitle=t titlesz=20 titlefat=2
     wantaxis=n screenratio=1 screenht=8 min1=%g max1=%g min2=%g max2=%g
     %s
     ''' %(par['zminq'],par['zmaxq'],par['xminq'],par['xmaxq'],custom)
@@ -266,11 +266,11 @@ def migration(dat,vel,den,ss,rr,qq,uuu,wig,cic,iic,par):
     for k in ([cic,iic]):
 
         # image
-        Plot(  k,fdmod.cgrey('pclip=99.9',par))
+        Plot(  k,fdmod.cgrey('pclip=99.99',par))
         Result(k,[k,ss],'Overlay')
         
         # image (window)
-        Plot(  'win'+k,k,wingrey('pclip=99.9',par))
+        Plot(  'win'+k,k,wingrey('pclip=99.99',par))
         Result('win'+k,['win'+k,'winss'],'Overlay')
         
         # slope decomposition
@@ -324,7 +324,7 @@ def wflplot(wfl,ss,par):
     Flow([wfl+'-plt',wfl+'-bar'],wfl,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=99.99')
         
-    for j in range(10):
+    for j in range(9):
         tag = "-%02d" %j
 
         jdt = 25
