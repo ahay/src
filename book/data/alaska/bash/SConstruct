@@ -1,0 +1,76 @@
+from rsf.proj import * 
+
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+####################
+
+rawsegy=['L23535','L23536','L23537']
+for name in rawsegy:
+    Fetch(name+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    Flow([name,'t'+name,name+'.bin',name+'.asc'],
+         name+'.SGY',
+         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
+
+# Raw data and headers combined
+Flow('rawline',rawsegy,'cat ${SOURCES[1:3]} axis=2')
+Flow('trawline',map(lambda x: 't'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
+
+# Form mask to window out misfires
+Flow('shotmask','trawline',
+     '''
+     window n1=1 f1=2 | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+
+# Window out misfires, test shots and auxiliary traces;
+# define shot and offset dimensions
+Flow('shotline',['rawline','shotmask'],
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67 | window n2=96 f3=10 |
+     put o2=-5225 d2=110 label2=Offset unit2=ft
+         o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+
+# Shot gathers -> CMP gathers
+Flow('cmp','shotline','shot2cmp half=n')
+
+# Semblance for velocity picking
+Flow('semb','cmp',
+     '''
+     window f3=50 j3=10 n3=45 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50
+     ''')
+
+# Velocity picking
+Flow('pick','semb','pick rect1=10 rect2=3')
+
+# Interpolate onto full CMP grid
+Flow('vel','pick',
+     '''
+     transp plane=23 |
+     transp | spline n1=551 d1=55 o1=-2612.5 |
+     transp
+     ''')
+
+# NMO correction on CMP gathers
+Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
+
+# Stacking
+Flow('stack','nmo','stack')
+Result('stack','agc rect1=250 | grey title=Stack')
+
+Flow('mstack','nmo','transp | median')
+Result('mstack','agc rect1=250 | grey title=Median')
+
+
+#Fetch('31_81_PR.SGY',
+#	server='http://certmapper.cr.usgs.gov',
+#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+#      	  dir='PROCESSED')
+
+End()
+
