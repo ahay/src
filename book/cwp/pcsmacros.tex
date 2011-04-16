@@ -16,19 +16,34 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 % colors
-\definecolor{darkgreen}{rgb}{0,0.4,0}
-\definecolor{LightGray}{rgb}{0.90,0.90,0.90}
-\definecolor{DarkGray}{rgb}{0.85,0.85,0.85}
-
 \def\red#1{\textcolor{red}{#1}}
-\def\blue#1{\textcolor{blue}{#1}}
 \def\green#1{\textcolor{green}{#1}}
-\def\darkgreen#1{\textcolor{darkgreen}{#1}}
+\def\blue#1{\textcolor{blue}{#1}}
+\def\yellow#1{\textcolor{yellow}{#1}}
+\def\magenta#1{\textcolor{magenta}{#1}}
+
 \def\black#1{\textcolor{black}{#1}}
 \def\white#1{\textcolor{white}{#1}}
-\def\yellow#1{\textcolor{yellow}{#1}}
 \def\gray#1{\textcolor{gray}{#1}}
-\def\magenta#1{\textcolor{magenta}{#1}}
+
+\definecolor{DarkGreen}{rgb}{0,0.5,0}
+\definecolor{DarkBlue}{rgb}{0,0,0.5}
+\definecolor{DarkRed}{rgb}{0.5,0,0}
+\definecolor{DarkYellow}{rgb}{0.5,0,0}
+\definecolor{LightRed}{rgb}{1.000,0.752,0.796}
+\definecolor{LightGreen}{rgb}{0.792,1.000,0.439}
+\definecolor{LightBlue}{rgb}{0.690,0.886,1.000}
+\definecolor{LightYellow}{rgb}{1.000,0.925,0.545}
+\definecolor{DarkGray}{rgb}{0.45,0.45,0.45}
+\definecolor{LightGray}{rgb}{0.90,0.90,0.90}
+
+\def\darkgreen#1{\textcolor{DarkGreen}{#1}}
+\def\darkblue#1 {\textcolor{DarkBlue}{#1}}
+\def\darkred#1  {\textcolor{DarkRed}{#1}}
+\def\lightred#1 {\textcolor{LightRed}{#1}}
+
+\def\lightgray#1{\textcolor{LightGray}{#1}}
+\def\darkgrey#1 {\textcolor{DarkGray}{#1}}
 
 % ------------------------------------------------------------
 % madagascar
@@ -43,9 +58,6 @@ psava@mines.edu
 
 \def\beq{\begin{equation}}
 \def\eeq{  \end{equation}}
-
-\def\beqa{\begin{eqnarray}}
-\def\eeqa{  \end{eqnarray}}
 
 %\def\req#1{(\ref{#1})}
 
@@ -428,6 +440,7 @@ a_x \; a_y \; a_z
 \def\aint#1{\!\!\!\alert{\int}\!\! #1 d\alert{\xx}}
 
 \def\esum#1{\sum\limits_{#1}}
+\def\eint#1{\int\limits_{#1}}
 
 % ------------------------------------------------------------
 \def\CONJ#1{\overline{#1}}
@@ -509,6 +522,7 @@ a_x \; a_y \; a_z
 \def\ofw{\lp \ww \rp}
 
 \def\ofx{\lp \xx \rp}
+\def\ofh{\lp \hh \rp}
 \def\ofk{\lp \kk \rp}
 \def\ofs{\lp \ss \rp}
 \def\ofr{\lp \rr \rp}
@@ -618,7 +632,7 @@ a_x \; a_y \; a_z
 \def\talkcite#1{{\small \sc #1}}
 
 % ------------------------------------------------------------
-\def\ise{GPGN302: Introduction to Electromagnetic and Seismic Exploration}
+\def\ise{GPGN302: Introduction to EM and Seismic Exploration}
 \def\inv{GPGN409: Inversion}
 
 % ------------------------------------------------------------
@@ -636,76 +650,186 @@ a_x \; a_y \; a_z
 
 % ------------------------------------------------------------
 \def\mybox#1{
-\begin{center}
-\fcolorbox{black}{yellow}
-{\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
-\end{center}
+  \begin{center}
+    \fcolorbox{black}{yellow}
+    {\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
 \def\hibox#1{
-\begin{center}
-\fcolorbox{black}{green}
-{\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
-\end{center}
+  \begin{center}
+    \fcolorbox{black}{LightGreen}
+    {\begin{minipage}{0.8\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
 % ------------------------------------------------------------
 % Nota Bene
 \def\nbnote#1{
-\vfill
-\begin{center}
-\colorbox{LightGray}
-{\begin{minipage}{\columnwidth} {\textbf{\black{\large N.B.}} #1} \end{minipage}}
-\end{center}
+  \vfill
+  \begin{center}
+    \colorbox{LightGray}
+    {\begin{minipage}{\columnwidth} {\textbf{\black{\large N.B.}} #1} \end{minipage}}
+  \end{center}
 }
+
+\def\notabene#1{
+  \begin{leftbar}
+    {\sc Nota Bene:~} #1
+  \end{leftbar}
+}
+
+\def\sidebar#1{
+  \begin{leftbar}
+    {#1}
+  \end{leftbar}
+}
+
 
 \def\highlight#1{
-\begin{center}
-\colorbox{cyan}
-{\begin{minipage}{\columnwidth} {#1} \end{minipage}}
-\end{center}
+  \begin{center}
+    \colorbox{LightRed}
+    {\begin{minipage}{0.95\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
+% ------------------------------------------------------------
+\def\pcsshaded#1{
+  \definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
+  \begin{shaded} {#1} \end{shaded}
+  \definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+}
+
+\def\blueshade#1{
+  \definecolor{shadecolor}{rgb}{0.690,0.886,1.000}
+    \begin{shaded}
+      {#1}
+    \end{shaded}
+  \definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+}
+
+\def\grayshade#1{
+  \definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
+  \begin{shaded}
+    {#1}
+  \end{shaded}
+  \definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+}
+
+\def\yellowshade#1{
+  \definecolor{shadecolor}{rgb}{1.0,1.0,0.0}
+  \begin{shaded}
+    {#1}
+  \end{shaded}
+  \definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+}
+
+
+
+
+% ------------------------------------------------------------
+\def\postit#1{
+  \begin{center}
+    \colorbox{yellow}
+    {\begin{minipage}{0.66\columnwidth} {#1} \end{minipage}} 
+  \end{center}
+}
+
+% ------------------------------------------------------------
 \def\graybox#1{
-\vfill
-\begin{center}
-\colorbox{LightGray}
-{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
-\end{center}
-\vfill
-}
-
-\def\shaded#1{
-\definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
-\begin{shaded} {#1} \end{shaded}
-\definecolor{shadecolor}{rgb}{1.0,1.0,1.0}
+  \begin{center}
+    \colorbox{LightGray}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
 \def\whitebox#1{
-\vfill
-\begin{center}
-\colorbox{white}
-{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
-\end{center}
-\vfill
+  \begin{center}
+    \colorbox{white}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
 \def\yellowbox#1{
-\vfill
-\begin{center}
-\colorbox{yellow}
-{\begin{minipage}{0.90\columnwidth} {#1} \end{minipage}}
-\end{center}
-\vfill
+  \begin{center}
+    \colorbox{LightYellow}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
 }
 
+\def\greenbox#1{
+  \begin{center}
+    \colorbox{LightGreen}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
+}
 
-%\def\nbnote#1{ 
-%\vfill 
-%\hrule \vspace{0.10in}
-%\colorbox{green}{\textbf{\black{\large N.B.}}} 
-%        \emph{#1}
-%\vspace{0.10in} \hrule }
+\def\bluebox#1{
+  \begin{center}
+    \colorbox{LightBlue}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
+}
+
+\def\redbox#1{
+  \begin{center}
+    \colorbox{LightRed}
+    {\begin{minipage}{1.00\columnwidth} {#1} \end{minipage}}
+  \end{center}
+}
 
 \def\hyellow#1{ \colorbox{yellow} #1 }
 \def\hgreen #1{ \colorbox{green}  #1 }
+
+% ------------------------------------------------------------
+% boxes for vectors and matrices
+
+\def\pcsbox#1#2#3#4{
+  % #1 = hmax
+  % #2 = height
+  % #3 = width
+  % #4 = text
+  \begin{picture}(#3,#1)
+    \linethickness{0.5mm}
+    % 
+    \multiput(0,#1)(#3, 0){2}{\line(0,-1){#2}}
+    \multiput(0,#1)(0,-#2){2}{\line(+1,0){#3}}
+    % 
+    \put(1,-10){#4}
+  \end{picture}
+}
+
+% annotate block equations
+\def\pcssym#1#2{
+  \begin{picture}(3,#1)
+    \put(1,-10){#2}
+  \end{picture}
+}
+
+% block equation sign
+\def\pcsops#1#2#3#4{
+  \begin{picture}(#3,#1)
+    \put(0,#2){#4}
+  \end{picture}
+}
+
+\def\sidebyside#1#2{
+  \begin{center}
+    \colorbox{LightBlue}{
+      \begin{minipage}{1.0\columnwidth} {#1} \end{minipage}
+    }
+    \colorbox{LightYellow}{
+      \begin{minipage}{1.0\columnwidth} {#2} \end{minipage}
+    }
+  \end{center}
+}
+
+
+\def\uparrow#1#2#3{
+\thicklines
+\put(#1,#2){\color{green} \vector(0,+1){5}}
+\put(#1,#2){\color{green} \textbf{#3}}
+}
+
+
+\def\ackfig#1#2#3{\blabel{#1}{#2}{\normalsize \sc #3}}
