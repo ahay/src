@@ -268,7 +268,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     if (!sf_getint ("framelabelcol",&framelabelcol)) framelabelcol=VP_YELLOW;
     /* frame labels color */
 
-    if (!sf_getint ("cubelinecol",&cubelinecol)) cubelinecol=VP_WHITE;
+    if (!sf_getint ("cubelinecol",&cubelinecol)) cubelinecol=framelabelcol;
     /* cube lines color */
 
     vp_coordinates();
@@ -445,11 +445,13 @@ static void make_labels (sf_file in, char where1, char where2)
 	    (NULL == (labl=sf_histstring(in,
 					 transp? "label2":"label1")))) {
 	    label1->text = blank;
+	    /*( label1 label on the first axis )*/
 	} else if (((NULL == (unit=sf_getstring(transp? "unit2":"unit1"))) &&
 		    (NULL == (unit=sf_histstring(in,
 						 transp? "unit2":"unit1")))) ||
 		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
 	    label1->text = labl;
+	    /*( unit1 unit on the first axis )*/
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;
 	    label1->text = sf_charalloc(len);
@@ -487,10 +489,12 @@ static void make_labels (sf_file in, char where1, char where2)
 	if ((NULL == (labl=sf_getstring("label3"))) &&
 	    (NULL == (labl=sf_histstring(in,"label3")))) {
 	    label3->text = blank;
+	    /*( label3 label on the third axis )*/
 	} else if (((NULL == (unit=sf_getstring("unit3"))) &&
 		    (NULL == (unit=sf_histstring(in,"unit3")))) ||
 		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
 	    label3->text = labl;
+	    /*( unit3 unit on the third axis )*/
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;
 	    label3->text = sf_charalloc(len);
@@ -554,11 +558,13 @@ static void make_labels (sf_file in, char where1, char where2)
 	    (NULL == (labl=sf_histstring(in,
 					 transp? "label1":"label2")))) {
 	    label2->text = blank;
+	    /*( label2 label on the second axis )*/
 	} else if (((NULL == (unit=sf_getstring(transp? "unit1":"unit2"))) &&
 		    (NULL == (unit=sf_histstring(in,
 						 transp? "unit1":"unit2")))) ||
 		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) { 
 	    label2->text = labl;
+	    /*( unit2 unit on the second axis )*/	    
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;
 	    label2->text = sf_charalloc(len);
@@ -651,7 +657,9 @@ static void make_baraxis (float min, float max)
     }
 
     modify = (bool) (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
+		     /*( dbarnum scalebar tic increment )*/
 		     !sf_getfloat ("obarnum", &(baraxis->num0)));
+    /*( obarnum scalebar tic origin )*/
 
     baraxis->ntic = vp_optimal_scale(baraxis->ntic, 
 				     modify,
@@ -674,6 +682,7 @@ static void make_baraxis (float min, float max)
 
     wherebartics = (bool) ((NULL != (where = sf_getstring ("wherebartics"))) &&
 			   ('a' == *where));
+    /*( wherebartics where to put scalebar ticmarks )*/
 }	
 
 static void make_axes (void)
@@ -817,6 +826,7 @@ static void make_axes (void)
 
     wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
 			('a' == *where));
+    /*( wheretics where to put ticmarks )*/
 }
 
 static void make_grid (bool grid)
@@ -944,6 +954,7 @@ static void make_title (sf_file in, char wheret)
 	NULL == (title->text = sf_histstring(in,"title")) &&
 	NULL == (title->text = sf_histstring(in,"in"))) 
 	title->text = blank;
+    /*( title plot title )*/
 
     titlesz /= 33.;
     vs = titlesz * 0.6;
@@ -1919,8 +1930,6 @@ void vp_cuberaster(int n1, int n2,
 /*< Filling 3-D cube with rasters >*/
 {
     vp_uraster (buf, false, 256, n1, n2, min1,min2,max1,max2, 3);
-/*    cubelinecol = VP_YELLOW;*/
-    if (!sf_getint ("cubelinecol",&cubelinecol)) cubelinecol=framelabelcol;
     vp_cubeframe(f1,f2,f3);
 }
 

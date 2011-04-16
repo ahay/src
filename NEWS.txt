@@ -39,6 +39,7 @@ To programs:
 In the reproducible documents collection:
 
 In documentation:
+* Fixed missing parameter documentation in stdplot
 
 In APIs:
 
