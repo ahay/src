@@ -22,9 +22,9 @@
 
 int main(int argc, char* argv[])
 {
-    float *data, *modl, *x2, *z2, *s;
     bool *mask, adj;
-    int it,ix,is, nt,nx,ns, ntx, nts;
+    int it,ix,is, nt,nx,ns, ntx, nts, niter;
+    float *data, *modl, *x2, *z2, *s;
     float dt,dx,ds, x, z, ot,ox,os;
     sf_file cmp, vtr;
 
@@ -33,6 +33,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adj = 0: from velocity-domain(t,s) to cmp-gather(t,x)
        adj = 1: from cmp-gather(t,x) to velocity-domain(t,s) */
+
+    if (!sf_getint("niter",&niter)) niter=0;
+    /* number of iterations (invoked if adj=y) */
 
     if (adj) {
 	cmp = sf_input("in");
@@ -116,7 +119,12 @@ int main(int argc, char* argv[])
     velxf_init(nt, nx, ns,
 	       ot, dt,
 	       x2, z2, s, mask);
-    velxf(adj,false,nts,ntx,modl,data);
+
+    if (adj && niter > 0) {
+	sf_solver(velxf,sf_cgstep,nts,ntx,modl,data,niter,"verb",true,"end");
+    } else {
+	velxf(adj,false,nts,ntx,modl,data);
+    }
 
     if (adj) {
 	sf_floatwrite(modl, nts, vtr);

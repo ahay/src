@@ -60,14 +60,14 @@ Result('syn-data','raster wiggle','SideBySideAniso', vppen='txscale=1.5')
 ######################################################################
 ####### Best fitting cmp using L2 norm inversion criteria
 
-Flow('syn_L2','syn_data',
+Flow('syn_L2 syn_L2_vel','syn_data',
      '''
-     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_L2_vel.rsf 
+     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=${TARGETS[1]}
      rwt=2. mwt=0. savevel=1
      ''')
 
 Plot('cmpinv','syn_L2','grey title="Remodelled cmp in LS sense"')
-Plot('velinv','syn_L2_vel','grey label2="Slowness (s/m)" title="LS Velocity spectrum"')
+Plot('velinv','syn_L2_vel','grey label2=Slowness unit2=s/m title="LS Velocity spectrum"')
 Result('syn-L2','cmpinv velinv','SideBySideAniso',vppen='txscale=1.5')
 
 ######################################################################
