@@ -32,6 +32,7 @@ To programs:
 * wanttitle= option in thplot
 * color=d periodic color table in grey and grey3
 * sfin accepts data from standard input
+* sfmath accepts sign() function
 
 ===Bug fixes===
 
