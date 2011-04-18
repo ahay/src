@@ -59,7 +59,7 @@ void vp_name2coltab (   const char *colname,    /* color table name */
         case 't':
             hnocol = 0.25  * nocol;
             break;
-	case 'd':
+	case 'w':
 	    hnocol = 0.125  * nocol;
             break;
         case 'h':
@@ -260,68 +260,70 @@ void vp_name2coltab (   const char *colname,    /* color table name */
             }
             break;
 
-	case 'd': /* periodic traffic */
-            blue[ic] = 0.;
-            if (i <= hnocol/2)          /* green up */
+	case 'w': /* wheel */
+            if (i <= hnocol/2)          /* green up*/
             {
                 red[ic]   = 0.; 
-                green[ic] = (i + hnocol/2)/hnocol; 
+                green[ic] = (i + hnocol/2)/hnocol;
+		blue[ic] = 0.;
             }
-            else if (i < 3*hnocol/2)    /* red up */
+            else if (i < 3*hnocol/2)    /* red up*/
             {
                 h = i - hnocol/2;
-                red[ic]   = (h + 1.) /hnocol;
+                red[ic] = (h + 1.) /hnocol;
                 green[ic] = 1.;
+		blue[ic]   = 0.;
             }
-            else if (i < 5*hnocol/2)    /* steady yellow */
+            else if (i < 7*hnocol/2)    /* red steady, green down */
             {
+		h = i - 3*hnocol/2;
                 red[ic]   = 1.;
-                green[ic] = 1.;
+                green[ic] = 1.- (h + 1.)/(hnocol*2.0);
+		blue[ic] = 0.;		
             }
-            else if (i < 7*hnocol/2)    /* green down */
-            {
-                h = i - 5*hnocol/2;
-                red[ic]   = 1;
-                green[ic] = 1.- (h + 1.)/hnocol;
-            }
-            else if (i < 4*hnocol)  /* red down */
+
+            else if (i < 4*hnocol)  /* red down*/
             {
                 h = i - 7*hnocol/2;
                 red[ic]   = (hnocol - h)/hnocol; 
                 green[ic] = 0.;
+		blue[ic] = 0.;
             } 
-
-	    /* wrap periodically */
-
-	    
-	    else if (i <= 9*hnocol/2)          /* red up */
+   
+	    else if (i <= 9*hnocol/2)          /*red up*/
             {
 		h = i - 4*hnocol;
+		blue[ic] = 0.;
                 green[ic]   = 0.; 
                 red[ic] = (h + hnocol/2)/hnocol; 
             }
-            else if (i < 11*hnocol/2)    /* green up */
+            else if (i < 11*hnocol/2)    /* steady red, blue up*/
             {
                 h = i - 9*hnocol/2;
-                green[ic]   = (h + 1.) /hnocol;
+		blue[ic]   = (h + 1.) /hnocol;
+                green[ic]   = 0;
                 red[ic] = 1.;
             }
-            else if (i < 13*hnocol/2)    /* steady yellow */
+            else if (i < 13*hnocol/2)    /* blue steady, red down */
             {
-                red[ic]   = 1.;
-                green[ic] = 1.;
+		h = i - 11*hnocol/2;
+                red[ic]   = (hnocol - h)/hnocol;
+                green[ic] = 0.;
+		blue[ic]  = 1.;
             }
-            else if (i < 15*hnocol/2)    /* red down */
+            else if (i < 15*hnocol/2)    /* green up, blue down*/
             {
                 h = i - 13*hnocol/2;
-                green[ic]   = 1;
-                red[ic] = 1.- (h + 1.)/hnocol;
+		red[ic] = 0.;
+		green[ic]   = (h + 1.) /hnocol;
+                blue[ic] = 1.- (h + 1.)/hnocol;
             }
-            else  /* green down */
+            else  /* green down*/
             {
                 h = i - 15*hnocol/2;
                 green[ic]   = (hnocol - h)/hnocol; 
                 red[ic] = 0.;
+		blue[ic] = 0.;
             } 
 
             break;
