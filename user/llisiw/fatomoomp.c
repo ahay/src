@@ -23,7 +23,7 @@
 #include "fatomoomp.h"
 
 static int nt, **mask, ns, *list;
-static float **tempt, **tempx;
+static float **tempt, **tempx, **psum;
 static upgrad *upglist;
 
 void fatomo_init(int dim      /* model dimension */,
@@ -51,15 +51,12 @@ void fatomo_init(int dim      /* model dimension */,
     }
     
     list = rhslist;
-
-#ifdef _OPENMP	    
+    
     mts = omp_get_max_threads();
-#else
-    mts = 1;
-#endif
 
     tempt = sf_floatalloc2(nt,mts);
     tempx = sf_floatalloc2(nt,mts);
+    psum  = sf_floatalloc2(nt,mts);
 }
 
 void fatomo_set(float **t  /* stencil time */,
@@ -96,15 +93,15 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	/* given dt solve ds */
 
-#ifdef _OPENMP
 #pragma omp parallel private(its,i,it)
 	{
 	    its = omp_get_thread_num();
 
+	    for (it=0; it < nt; it++) {
+		psum[its][it] = 0.;
+	    }
+
 #pragma omp for
-#else
-	    its = 0;
-#endif
 	    for (is=0; is < ns; is++) {
 		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
@@ -118,30 +115,22 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		
 		upgrad_inverse(upglist[is],tempx[its],tempt[its],NULL);
 
-#ifdef _OPENMP
-#pragma omp critical
-		{
-#endif
-		    for (it=0; it < nt; it++) x[it]+=tempx[its][it];
-#ifdef _OPENMP
-		}
-#endif
+		for (it=0; it < nt; it++) psum[its][it]+=tempx[its][it];
 	    }
-#ifdef _OPENMP
+
+#pragma omp critical
+	    {
+		for (it=0; it < nt; it++) x[it]+=psum[its][it];
+	    }
 	}
-#endif
     } else {
 	/* given ds solve dt */
-
-#ifdef _OPENMP	
+	
 #pragma omp parallel private(its,i,it)
 	{
 	    its = omp_get_thread_num();
 
 #pragma omp for
-#else
-	    its = 0;
-#endif
 	    for (is=0; is < ns; is++) {
 		upgrad_solve(upglist[is],x,tempt[its],NULL);
 		
@@ -153,8 +142,6 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		    }
 		}
 	    }
-#ifdef _OPENMP	
 	}
-#endif
     }
 }
