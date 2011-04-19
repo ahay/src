@@ -19,13 +19,15 @@
 #include <rsf.h>
 
 #include "velxf.h"
+#include "l1.h"
+#include "l1step.h"
 
 int main(int argc, char* argv[])
 {
-    bool *mask, adj;
-    int it,ix,is, nt,nx,ns, ntx, nts, niter;
+    bool *mask, adj, robust;
+    int it,ix,is, nt,nx,ns, ntx, nts, niter, nliter;
     float *data, *modl, *x2, *z2, *s;
-    float dt,dx,ds, x, z, ot,ox,os;
+    float dt,dx,ds, x, z, ot,ox,os, perc;
     sf_file cmp, vtr;
 
     sf_init(argc,argv);
@@ -36,6 +38,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=0;
     /* number of iterations (invoked if adj=y) */
+
 
     if (adj) {
 	cmp = sf_input("in");
@@ -121,7 +124,21 @@ int main(int argc, char* argv[])
 	       x2, z2, s, mask);
 
     if (adj && niter > 0) {
-	sf_solver(velxf,sf_cgstep,nts,ntx,modl,data,niter,"verb",true,"end");
+	    if (!sf_getbool("robust",&robust)) robust=false;
+	    /* robust inversion */
+	    
+	    if (robust) {
+		if (!sf_getfloat("perc",&perc)) perc=90.;
+		/* threshold percentage for robust inversion */
+		
+		if (!sf_getint("nliter",&nliter)) nliter=10;
+		/* number of POCS iterations for robust inversion */
+		
+		l1_init(ntx,nliter,perc,true);
+		sf_solver(velxf,l1step,nts,ntx,modl,data,niter,"verb",true,"end");
+	    } else {		
+		sf_solver(velxf,sf_cgstep,nts,ntx,modl,data,niter,"verb",true,"end");
+	    }
     } else {
 	velxf(adj,false,nts,ntx,modl,data);
     }
