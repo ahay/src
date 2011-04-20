@@ -70,13 +70,13 @@ static float noncurved1(float t, int it)
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl, half, slow, dsembl, asembl, weight, squared;
-    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask=NULL;
+    bool sembl, half, slow, dsembl, asembl, weight, squared, trend, ratio;
+    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, ds, smax, num, den, dy, str, sh=0., sh2=0.;
-    float *trace=NULL, ***stack=NULL, ***stack2=NULL, ***stackh=NULL, *hh=NULL;
-    char *time=NULL, *space=NULL, *unit=NULL;
+    float *trace, ***stack, ***stack2, ***stackh, *hh;
+    char *time, *space, *unit, *type;
     size_t len;
-    sf_file cmp=NULL, scan=NULL, offset=NULL, msk=NULL;
+    sf_file cmp, scan, offset, msk;
     mapfunc nmofunc;
 
     sf_init (argc,argv);
@@ -93,6 +93,23 @@ int main(int argc, char* argv[])
     /* if y, compute differential semblance */
     if (sembl || dsembl || !sf_getbool("avosemblance",&asembl)) asembl=false;
     /* if y, compute AVO-friendly semblance */
+
+    if (NULL == (type = sf_getstring("type"))) {
+	/* type of semblance */
+	if (asembl) {
+	    type="avo";
+	} else if (dsembl) {
+	    type="diff";
+	} else if (sembl) {
+	    type="sembl";
+	} else {
+	    type="power";
+	}
+    }
+
+    trend = ('a' == type[0] || 'w' == type[0]);
+    ratio = ('p' != type[0] && 'd' != type[0]);
+
     if (!sf_getint("nb",&nb)) nb=2;
     /* semblance averaging */
     if (!sf_getbool("weight",&weight)) weight=true;
@@ -204,8 +221,8 @@ int main(int argc, char* argv[])
     }
 
     stack =  sf_floatalloc3(nt,nv,ns);
-    stack2 = (sembl || dsembl || asembl)? sf_floatalloc3(nt,nv,ns) : NULL;
-    stackh = asembl? sf_floatalloc3(nt,nv,ns) : NULL;
+    stack2 = (ratio || 'd' == type[0])? sf_floatalloc3(nt,nv,ns): NULL;
+    stackh = trend? sf_floatalloc3(nt,nv,ns): NULL;
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
@@ -224,14 +241,14 @@ int main(int argc, char* argv[])
 
 	for (it=0; it < nt*nv*ns; it++) {
 	    stack[0][0][it] = 0.;
-	    if (sembl || asembl) stack2[0][0][it] = 0.;
-	    if (asembl) stackh[0][0][it] = 0.;
+	    if (ratio) stack2[0][0][it] = 0.;
+	    if (trend) stackh[0][0][it] = 0.;
 	}
 
 	if (NULL != offset) sf_floatread(hh,nh,offset);
 	if (NULL != msk) sf_intread(mask,nh,msk);
 
-	if (asembl) sh = sh2 = 0.;
+	if (trend) sh = sh2 = 0.;
 
 	for (ih=0; ih < nh; ih++) {
 	    sf_floatread(trace,nt,cmp); 
@@ -241,7 +258,7 @@ int main(int argc, char* argv[])
 		h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
 	    if (half) h *= 2.;
 
-	    if (asembl) {
+	    if (trend) {
 		sh  += h;
 		sh2 += h*h;
 	    }
@@ -262,24 +279,35 @@ int main(int argc, char* argv[])
 
 		    for (it=0; it < nt; it++) {
 			amp = weight? fabsf(v)*trace[it]: trace[it];
-			if (dsembl) {
-			    if (ih > 0) {
-				amp2 = amp - stack2[is][iv][it];
-				stack[is][iv][it] += amp2*amp2;
-			    }
-			    stack2[is][iv][it] = amp;
-			} else {
-			    if (sembl || asembl) stack2[is][iv][it] += amp*amp;
-			    if (asembl) stackh[is][iv][it] += amp*h;
-
-			    stack[is][iv][it] += amp;
-			}
-		    }
+			
+			switch(type[0]) {
+			    case 'd':
+				if (ih > 0) {
+				    amp2 = amp - stack2[is][iv][it];
+				    stack[is][iv][it] += amp2*amp2;
+				}
+				stack2[is][iv][it] = amp;
+				break;
+			    case 's':
+				stack2[is][iv][it] += amp*amp;
+				stack[is][iv][it] += amp;
+				break;
+			    case 'a': case 'w':
+				stackh[is][iv][it] += amp*h;
+				stack2[is][iv][it] += amp*amp;
+				stack[is][iv][it] += amp;
+				break;
+			    case 'p':
+			    default:
+				stack[is][iv][it] += amp;
+				break;				
+			} 
+		    } /* t */
 		} /* v */
 	    } /* s */
 	} /* h */
 	
-	if (sembl || asembl) {
+	if (ratio) {
 	    for (is=0; is < ns; is++) {
 		for (iv=0; iv < nv; iv++) {
 		    for (it=0; it < nt; it++) {
@@ -290,19 +318,36 @@ int main(int argc, char* argv[])
 			num = 0.;
 			den = 0.;
 			for (i=ib; i < ie; i++) {
-			    num += stack[is][iv][i]*stack[is][iv][i];
-			    den += stack2[is][iv][i];
+			    switch(type[0]) {
+				case 'a':
+				    /* (h2 s^2 - 2 h s sh + N sh^2)/((-h^2 + h2 N) s2) */
+				    
+				    num += sh2*stack[is][iv][i]*stack[is][iv][i] +
+					nh*stackh[is][iv][i]*stackh[is][iv][i] - 
+					2.*sh*stack[is][iv][i]*stackh[is][iv][i];
+				    den += stack2[is][iv][i];
+				    break;
+				case 'w':
+				    break;
+				case 's':
+				default:
+				    num += stack[is][iv][i]*stack[is][iv][i];
+				den += stack2[is][iv][i];
+				break;
+			    }
+			}
+			    
+			switch(type[0]) {
+			    case 'a':
+				den *= (nh*sh2-sh*sh);
+				break;
+			    case 'w':
+				break;
+			    case 's':
+				den *= nh;
+				break;
+			}
 
-			    /* (h2 s^2 - 2 h s sh + N sh^2)/((-h^2 + h2 N) s2) */
-			    if (asembl) 
-				num += (nh*stackh[is][iv][i]*stackh[is][iv][i] - 
-					2.*sh*stack[is][iv][i]*stackh[is][iv][i])/sh2;
-			}
-			if (asembl) {
-			    den *= (nh-sh*sh/sh2);
-			} else {
-			    den *= nh;
-			}
 			trace[it] = (den > 0.)? num/den: 0.;
 		    }
 		    sf_floatwrite(trace,nt,scan);
@@ -313,6 +358,6 @@ int main(int argc, char* argv[])
 	}
     } /* x */
     sf_warning(".");
-
+    
     exit(0);
 }
