@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool *mask, adj, robust;
     int it,ix,is, nt,nx,ns, ntx, nts, niter, nliter;
     float *data, *modl, *x2, *z2, *s;
-    float dt,dx,ds, x, z, ot,ox,os, perc;
+    float dt,dx,ds, x, z, ot,ox,os, perc, eps;
     sf_file cmp, vtr;
 
     sf_init(argc,argv);
@@ -134,8 +134,11 @@ int main(int argc, char* argv[])
 		if (!sf_getint("nliter",&nliter)) nliter=10;
 		/* number of POCS iterations for robust inversion */
 		
+		if (!sf_getfloat("eps",&eps)) eps=1.;
+		/* regularization parameter for robust inversion */
+
 		l1_init(ntx,nliter,perc,true);
-		sf_solver(velxf,l1step,nts,ntx,modl,data,niter,"verb",true,"end");
+		sf_solver_reg(velxf,l1step,sf_copy_lop,nts,nts,ntx,modl,data,niter,eps,"verb",true,"end");
 	    } else {		
 		sf_solver(velxf,sf_cgstep,nts,ntx,modl,data,niter,"verb",true,"end");
 	    }

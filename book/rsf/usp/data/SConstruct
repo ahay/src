@@ -322,7 +322,7 @@ Flow('cmps','signals',
      ''')
 Result('cmps',
        '''
-       byte gainpanel=each | 
+       byte gainpanel=each | window j3=2 |
        grey3 frame1=500 frame2=36 frame3=642 flat=n
        title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
        ''')
@@ -359,7 +359,7 @@ Flow('nmo','cmps vel',
 
 Result('nmo',
        '''
-       byte gainpanel=each |
+       byte gainpanel=each | window j3=2 |
        grey3 frame1=500 frame2=36 frame3=642 flat=n
        title="NMOed Data" point1=0.7
        label2=Offset label3=Midpoint
