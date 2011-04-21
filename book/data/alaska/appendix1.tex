@@ -1,0 +1,34 @@
+job to translate segy to SU format and make initial QC displays is in the file /home/karl/jobs\\
+/alaska/31-81/load/view1.job.  A listing of the file is: \\
+ \\
+\#!/bin/bash \\
+segyread \ \\
+  hfile=/home/karl/data/alaska/31-81/L23535.hfile \ \\
+  bfile=/home/karl/data/alaska/31-81/L23535.bfile \ \\
+ tape=/home/karl/data/alaska/3181/clientfiles/L23535.SGY \ \\
+$>$/home/karl/data/alaska/31-81/L23535.su \ \\
+ \\
+$<$/home/karl/data/alaska/31-81/L23535.su \ \\
+    surange \\
+ \\
+$<$/home/karl/data/alaska/31-81/L23535.su \ \\
+    suximage \ \\
+        n2=3000 \ \\
+        perc=90 \\
+ \\
+$<$/home/karl/data/alaska/31-81/L23535.su \ \\
+    suxmovie \ \\
+        n2=101 \ \\
+        loop=1  \ \\
+        fframe=1 dframe=1 title="record \%g" \ \\
+        perc=20 \\
+ \\
+$<$/home/karl/data/alaska/31-81/L23535.su \ \\
+    sugethw \ \\
+        key=fldr,tracf  \\
+ \\
+ \\
+ \\
+ \\
+ \\
+ \\

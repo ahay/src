@@ -1,0 +1,71 @@
+Decon (supef), nmo, ags, mute, and stack \\
+The job to apply decon (supef), nmo, ags, mute,  \\
+stack is in the file: \\
+ \\
+$~$/jobs/alaska/31-81/velfilt/velfiltdeconagcstack2.job \\
+ \\
+The file contains: \\
+\\
+\#!/bin/sh \\
+date \\
+rm temp.su \\
+ \\
+cat  /home/karl/data/alaska/31-81/velfiltcdps.su \ \\
+$|$ suwind key=offset min=-5250 max=0 \ \\
+$|$ suchw \ \\
+      key1=offset \ \\
+      key2=offset \ \\
+      a=0 \ \\
+      b=-1 \ \\
+$>$ temp.su \\
+ \\
+cat  /home/karl/data/alaska/31-81/velfiltcdps.su \ \\
+$|$ suwind key=offset min=1 max=5250 \ \\
+$> >$temp.su \\
+ \\
+$>$ temp.su susort \ \\
+    cdp \ \\
+$|$ suchw \ \\
+      key1=tstat \ \\
+      key2=offset \ \\
+      a=-200 \ \\
+      b=.0861 \ \\
+$|$ sustatic \ \\
+      hdrs=1 \ \\
+      sign=1 \ \\
+$|$ supef \ \\
+    maxlag=.2 \ \\
+    pnoise=.01 \ \\
+    mincor=.25 \ \\
+    maxcor=5 \ \\
+$|$ sustatic \ \\
+      hdrs=1 \ \\
+      sign=-1 \ \\
+$|$ sunmo \ \\
+    par=vpick.txt \ \\
+$|$ sugain \ \\
+    agc=1 \ \\
+    wags=.5 \ \\
+$|$ sumute \ \\
+    xmute=55,2970,5225 \ \\
+    tmute=.100,.280,.700 \ \\
+    mode=0 \ \\
+    key=offset \ \\
+$|$ tee /home/karl/data/alaska/31-81/velfiltcdpsnmo.su \ \\
+$|$ sustack \ \\
+    key=cdp \ \\
+    normpow=1 \ \\
+$>$ /home/karl/data/alaska/31-81/velfiltdeconagcstack2.su \\
+ \\
+$<$/home/karl/data/alaska/31-81/velfiltdeconagcstack2.su \ \\
+ suximage title="velfiltdeconagcstack2.su" \ \\
+	 perc=95 \& \\
+ \\
+cat /home/karl/data/alaska/31-81/checkstack.su \ \\
+$|$ sugain \ \\
+    scale=-1.0 \ \\
+$>$ temp.su \\
+$<$ temp.su suximage title="checkstack.su" n2=534 perc=95 \& \\
+ \\
+suxmovie $<$ /home/karl/data/alaska/31-81/velfiltcdpsnmo.su \ \\
+    n2=96 perc=.95 loop=1 fframe=1 dframe=8 title="cdp \%g" $\&$

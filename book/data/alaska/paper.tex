@@ -1,0 +1,216 @@
+\title{A Tutorial for Processing a 2D Land Line using Seismic Unix}                                           % Activate to display a given date or no date
+\author{Karl Schleicher}
+
+\maketitle
+
+\begin{abstract}
+This paper described how to process a public 2D land line data set though a very basic processing sequence using Seismic Unix. The data from the north slopes of Alaska has good signal, although it may be suitable for testing ground roll attenuation programs.  The detailed steps download the data from the internet and process it are described.  You should be able to follow these steps and recreate my results.  I hope this will accelerate the testing and validation of programs developed in research groups.\\
+\\
+The tutorial starts with background information like data downloading, region overview, data aquisition, and previous processing.  The scripts and custom programs to translate to seismic unix, load headers, qc, apply preprocessing (including velocity filtering and decon), cdp gather, velocity analysis, and stack are listed and described.\\
+\\
+Header loading is not described in other Seismic Unix documentation.  One approach to header loading is described here.  The velocity analysis script is better than I found in previous papers.\\
+\\
+My effort to process these data is ongoing.  I have not computed and applied residual statics.  I have not migrated the data.  My current results are not as good as obtained when the data was originally processed by GSI in 1981.  I would like to provide my most current results to anyone who wants to use publicly available software to process seismic data.\\
+\\
+This paper is the beginning of an effort to build a library of open-access seismic datasets and processing scripts using open-source geophysical software.\\
+\end{abstract}
+
+\section{Introduction}
+Seismic Unix (SU) is one of the best known open software packages for seismic processing.  The distribution includes some example processing scripts and there are two books that teach how to use the software, Geophysical Image Processing with Seismic Unix \cite[]{stockwell} and Seismic Processing with Seismic Un*x \cite[]{forel} books cover broad subjects including basic Unix commands, setting up a user environment, basic seismic processing, and more advanced scripting for seismic processing.  You can follow the text and recreate some seismic processing.  These books to not provide much information about creating trace headers or preprocessing.\nocite{cohen} \\
+\\
+This paper assumes you are familiar with Seismic Unix.  I concentrate on providing example scripts and programs to process a 2D  land line using the processing system. I describe the data acquisition and previous data processing.  I provide the custom programs I used to load the trace headers.  The scripts for preprocessing, velocity analysis, and stacking are provided and explained.  These scripts provide the detailed parameters used by the Seismic Unix programs.  The parameters for deconvolution, velocity filter, mute, moveout velocity, and scaling can adapted for use by other seismic processing systems.  Currently I have not applied residual statics or migration.  The results in the deep section are similar to the results obtained in 1981.  The shallow section is not as good as previously obtained.\\
+\\
+This paper provides detailed steps that describe how to download the data from the internet and process it using seismic unix.  You should be able to follow these steps and recreate my results.  The scripts, data, and programs can be modified to allow you to validate your own ideas about seismic processing.  This should accelerate the testing and validation of new seismic research.\\
+
+\section{Background information about the dataset}
+President Warren Harding created the Naval Petroleum Reserve Number 4 in 1923.  It was renamed the National Petroleum Reserve, Alaska (NPRA) in 1976.  Figure 1 is a  map of the region and Figure 2 maps the lines collected and processed between 1974 and 1981.  I selected and processed line 31-81 because it was a short line from the most recent acquisition season.\\
+\\
+The files I found for line 31-81 are: \\
+\\
+L23535.SGY - unprocessed seismic data in segy format\\
+L23536.SGY\\
+L23537.SGY\\
+3181O.PDF - the Observer's log\\
+3181.SGY - segy of the 1981 final stack\\
+3181S.PDF - the surveyor's log\\
+3181.SPT - the textfile of shotpoint, latitude, longitude. \\
+S609.JPG  - A 1981 final stack in jpeg format.\\
+S609.TIF  - A higher resolution stack in tif format\\
+\\
+I downloaded these files into my directory,  /home/karl/data/alaska/31-81/clientfiles.  I was able to view the large JPG and TIF files in OpenOffice.org draw (other programs had problems).  I zoomed the display of S609.TIF to look at the side label that describes the acquisition and processing parameters.\\
+\\   
+The data was acquired 96 trace, 12 fold with a dynamite source.  The shotpoint interval is 440 ft and the receiver interval is 110 ft.  The average shot depth is 75 ft.  The elevation plot on the section header shows the elevation is about 200 ft and there is little variation.\\
+\\
+The processing applied by GSI in 1981 was:\\
+Edit and true amplitude recovery\\
+spherical divergence and exponentiation\\
+alpha - 4.5 db/s, initial time - 0 s, final time - 4.5 s\\
+Velocity filtering dip range -12 to 4 ms/trace\\
+Designature deconvolution\\
+Time-variant scaling (unity)\\
+Apply datum statics\\
+Velocity estimation\\
+Normal moveout correction\\
+Automatic Residual Statics application\\
+First Break Suppression\\
+100 ms at 55 ft\\
+380 ms at 2970 ft\\
+700 ms at 5225 ft\\
+Common depth point stack\\
+Time Variant filtering\\
+16-50 Hz at 700 ms\\
+14-45 Hz at 1400 ms\\
+12-40 Hz at 2000 ms\\
+8-40 Hz at 400 ms\\
+Time variant scaling\\
+
+
+\section{Data Loading and initial data QC}
+I found little documentation about loading data and creating trace headers in precious publications.  This section provides a detailed description.\\
+\\
+I created a script file to load the first segy file, /home/karl/jobs/\\
+alaska/31-81/load/view1.job.  This file is listed in Appendix 1.\\
+\\
+The way I developed this script is by pasting a command or two into a terminal window and picking information from the print of displays to write the next few commands.  The segyread command translates data to SU format.  The surange command prints:
+3030 traces:\\
+
+tracl   1 3030 (1 - 3030)\\
+tracr    1 3030 (1 - 3030)\\
+fldr     101 130 (101 - 130)\\
+tracf   1 101 (1 Ð 101)\\
+trid     1\\
+ns       3000\\
+dt       2000\\
+f1       0.000000 0.000000 (0.000000 - 0.000000)\\
+
+The print indicates there is little information in the input headers.  There are 31 shot records (fldr 101 - 130) and each record has 101 traces (tracf 1 - 101).  The suximage produces Figure 3 and the zoom plot Figure 4.\\
+\\
+The first 10 records in the file are test records.  These tests records are the unuisual traces in the left third of Figure 3.  The Observer Log indicates the first shotpoint is field file identifier (ffid) 110.  There are also 5 auxiliary traces in each shot record.  These auxiliary traces can be seen o nfigures 4 and 5. \\
+\\
+The suxmovie command allows all the shots record on the line to be displayed.  The parameter n2 is set to the number of traces in each shot record, which was based on the tracf range printed in surange (1 - 101).  The movie loops continuously and can be stopped by pressing ÒsÓ.  Once stopped, you can move forward or backward using the ÒfÓ and ÒbÓ.  An example screen is shown in Figure 5.  This plot allowed me to see that traces 1-96 were the data channels and 97-101 were the auxiliary traces.\\
+\\
+The final command in the view1.job file is the sugethw.  This prints the fldr and tracf header keys.  These are the keys I used to map the data to the shotpoint and receiver locations.\\
+\\
+I wrote a custom java program to load the trace headers.  The code is not elegant, but it is straightforward to write and it works.  It is listed in Appendix 2.  This program require files to define the shotpoint elevation and the ÒFFIDÓ/ÓEPÓ relationship.  The surveyor log, downloaded as:\\
+/home/karl/data/alaska/31-81/clientfiles/3181O.PDF \\
+defines the shotpoint elevations.  The observers log, downloaded as:\\
+/home/karl/data/alaska/31-81/clientfiles/3181O.PDF \\
+describes the relationship between the su header keys ÒffidÓ  and ÒepÓ  (these are called ÒREC.Ó and ÒSHOTPOINTÓ by in the observers log).   This information was typed into two files listed in appendices 3 and 4.\\
+\\
+The program to load the headers was run by the script:\\
+/home/karl/jobs/alaska/31-81/load/hdrload1.job \\
+This file is listed in appendix 5.\\
+\\
+The other two segy files were loaded by scripts view2.job, view3.job, hdrload2.job, and hdrload3.job in the same  directory, /home/karl/jobs/alaska/31-81/load.  These scripts differ from the previous scripts only by the names of the input and output file.\\
+\\
+The stack file from the previous process was translated to SU format and displayed using the viewqcstack.job script listed in appendix 6.  This is a straight forward execution of segyread and suximage.  Display of the checkstack is in Figure 6.\\
+
+
+\section{Shot record velocity filter}
+I applied Velocity filtering (sudipfilt) to remove the groundroll.  The receivers leading the shotpoint were processed separately from the trailing receivers.  This allowed an asymmetrical dip filter to be applied (-15,5 ms/trace).  These parameters are loosely based on the 1981 processing that used (-12,4). Sudipfilter was intended for post stack processing, so a loop is required in the script to divide the data into individual shotrecords and seperate the positive and negative offsets.  The script also includes suxmovie of the velocity filtered data.  It is listed in appendix 7.  Figure 7 is an example shot record after velocity filtering,\\
+
+
+\section{Shot record edit, mute, and cdp sort}
+There is a bad shotpoint I removed.  I also applied a mute  and sorted the data to CDP order in the same script.  The script is listed in Appendix 8.  Figure 8 is a display of two cdp gathers.\\
+
+
+\section{Velocity interpretation}
+I used a long script that combined several su program for velocity interpretation.  This script is listed in Appendix 9.   I combined the scripts from Forel et. al. 2005 (iva.sh  section 7.6.7.3 and velanQC.sh section 8.2.2.2).  The script is more practical, because you can start from no velocity function, or review and update and existing velocity field.  The script hos more capabilities, but it is tidier and a little shorter than Forel's script. \\
+\\
+Figure 9 is an example velocity analysis plot.  There are four components of the plot, semblance plot, constant velocity stack (CVS) plot, cmp gather without NMO and cmp gather after NMO.  The semblance plots and CVS plot have the velocity function overplotted.\\
+\\
+The velocities I picked are listed on Appendix 10.\\
+
+
+\section{Stack}
+The script that stacks the data is in Appendix 11.  This script also applied decon using the command supef.  The script also applied AGC.  I wanted to start the decon design gate start time to increase with offset so the shallow data near the mute was not included.  The only way I knew how to do this us SU was to apply linear moveout to move the design gate start time to a constant time.  This was accomplished by removing the sign from the offset header and computing a time static from the offset.  Supef was bracketed with sustatic to apply and remove the offset dependent static.  I compared the stack created in SU to the original processing results created  in 1981 (figures 10 and 11).\\
+\section{Comparison of the SU and the 1981 results}
+Figures 10 and 11 are the results created using SU and the results obtained in 1981.  Some of the differences in the processing sequences are:\\
+\begin{enumerate}
+\item The 1981 processing used GSI's designature process.  This source signature removal applies the same operator to all traces in a shotrecord.  The filter is designed differently from conventional deconvolution and the two types of deconvolution will not produce data with the same wavelet. 
+\item There are many differences in the application of AGC.  For example the GSI used to apply AGC before velocity filtering 
+inverse AGC after velocity filter.
+\item GSI used diversity stack to control the high amplitude noise bursts.
+\item The original processing includes residual statics.
+\end{enumerate}
+Considering all these differences, I think the results are surprisingly similar, especially below 400 ms.  I think residual statics account for most of the differences.  The shallow result on the SU processing is worse than the 1981 processing.\\
+\\
+In general, I found the SU software hard to use.  Sudipfilter was not intended for shotrecord velocity filtering, so a collection of program were required.  Many of my input errors were not trapped by the code.  I was disappointed that the processing applied 30 years ago produced better results than I obtained using SU.  SU is a useful prototyping environment, but it falls short of the commercial packages I have used.\\
+
+
+\section{Plans}
+Some of the ideas I have to continue this work include:\\
+\\
+\begin{enumerate}
+\item Adding more processes, especially residual statics and migration.\\
+\item Process using other software (Open source of proprietary. 
+\item Working on different datasets (marine, 3D, ...).\\
+\item Make scripts and intermediate results available on the internet.\\
+\item Improve open source software.\\
+\end{enumerate}
+
+\section{Conclusions}
+I have provided a set of scripts the process a land line using SU.  These scripts include the processing stages:\\
+\\
+\begin{enumerate}
+\item data load
+\item trace header creation
+\item velocity filtering 
+\item cdp gather
+\item velocity analysis
+\item stack
+\end{enumerate}
+
+Although this sequence omits important processes like residual statics and migration, it illustrates processing stages not presented by Forel or Stockwell.\\
+\\
+My processing results can be recreated by others since the processing scripts are included in appendixes of this paper and the data can be downloaded from the internet.\\
+\\
+The task of loading trace headers is no addressed in other publications.  The custom java program included in this paper is one way to complete this processing stage.\\
+The velocity analysis script (iva.sh in Appendix 9)  improves the scripts in Forel's book.  I was able to pick the velocities on this line using the script.\\
+\\
+Some of the ideas I have to continue this work include:\\
+\begin{enumerate}
+\item Adding more processes, especially residual statics and migration
+\item Process using other software (Open source of proprietary.
+\item Working on more data (Marine, 3D, ...)
+\item Make scripts and intermediate results available on the internet
+\item Improve open source
+\end{enumerate}
+
+
+\bibliographystyle{seg}
+\bibliography{refpaper}
+
+\appendix
+\section{Appendix 1}
+\input{appendix1}
+
+\section{Appendix 2}
+\input{appendix2}
+
+\section{Appendix 3}
+\input{appendix3}
+
+\section{Appendix 4}
+\input{appendix4}
+
+\section{Appendix 5}
+\input{appendix5}
+
+\section{Appendix 6}
+\input{appendix6}
+
+\section{Appendix 7}
+\input{appendix7}
+
+\section{Appendix 8}
+\input{appendix8}
+
+\section{Appendix 9}
+\input{appendix9}
+
+\section{Appendix 10}
+\input{appendix10}
+
+\section{Appendix 11}
+\input{appendix11}
