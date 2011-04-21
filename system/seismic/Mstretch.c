@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     } else if (NULL != strstr (prog,"nmo") || 
 	       NULL == (rule = sf_getstring("rule"))) {
 	/* Stretch rule:
-	   n - normal moveout (nmostretch), default
+	   n - constant-velocity normal moveout (nmostretch), default
 	   l - linear moveout (lmostretch)
 	   L - logarithmic stretch (logstretch)
 	   2 - t^2 stretch (t2stretch)
