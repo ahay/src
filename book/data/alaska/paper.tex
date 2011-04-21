@@ -84,10 +84,10 @@ dt       2000\\
 f1       0.000000 0.000000 (0.000000 - 0.000000)\\
 
 The print indicates there is little information in the input headers.  There are 31 shot records (fldr 101 - 130) and each record has 101 traces (tracf 1 - 101).  The suximage produces Figure 3 and the zoom plot Figure 4.\\
-%\inputdir{31-81}
-%\plot{first}{width=\textwidth}{Initial data display}
+\inputdir{31-81}
+\plot{first}{width=\textwidth}{Initial data display}
 \\
-The first 10 records in the file are test records.  These tests records are the unuisual traces in the left third of Figure 3.  The Observer Log indicates the first shotpoint is field file identifier (ffid) 110.  There are also 5 auxiliary traces in each shot record.  These auxiliary traces can be seen o nfigures 4 and 5. \\
+The first 10 records in the file are test records.  These tests records are the unuisual traces in the left third of Figure~\ref{fig:first}. The Observer Log indicates the first shotpoint is field file identifier (ffid) 110.  There are also 5 auxiliary traces in each shot record.  These auxiliary traces can be seen o nfigures 4 and 5. \\
 \\
 The suxmovie command allows all the shots record on the line to be displayed.  The parameter n2 is set to the number of traces in each shot record, which was based on the tracf range printed in surange (1 - 101).  The movie loops continuously and can be stopped by pressing ÒsÓ.  Once stopped, you can move forward or backward using the ÒfÓ and ÒbÓ.  An example screen is shown in Figure 5.  This plot allowed me to see that traces 1-96 were the data channels and 97-101 were the auxiliary traces.\\
 \\

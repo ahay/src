@@ -1,6 +1,6 @@
 from rsf.tex import *
 import os
 
-Paper('paper',lclass='segabs',color='')
+Paper('paper',color='')
 
 End()
