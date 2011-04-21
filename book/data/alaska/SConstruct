@@ -2,6 +2,5 @@ from rsf.tex import *
 import os
 
 Paper('paper',lclass='segabs',color='')
-End()
 
-#use='amsmath,amsfonts,hyperref,listings'
+End()
