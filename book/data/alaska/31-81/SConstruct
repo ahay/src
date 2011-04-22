@@ -39,7 +39,13 @@ Flow ('line', rawsegy,
 
 Result('first','line',
        '''
-       suximage n2=3000 
+       suximage n2=3000 perc=90
+       ''')
+
+Result('zoomfirst','line',
+       '''
+       suwind key=tracl min=1000 max=1250 tmin=0 tmax=3 |
+       suximage perc=90
        ''')
 
 Result('firstmovie','line',
@@ -47,6 +53,11 @@ Result('firstmovie','line',
        suxmovie n2=101 loop=1 fframe=1 dframe=1 title="record %g" perc=20 
        ''')
 
+Result('firstrec24','line',
+       '''
+       suwind key=tracl min=2324 max=2424 tmin=0 tmax=6 |
+       suximage perc=90
+       ''')
 Flow ('hdrfile.txt','line',
      ''' 
      sugethw output=geom key=tracl,fldr,tracf
@@ -142,6 +153,12 @@ Result('movie_velfilt','allvelfilt_shot',
 	 suxmovie n2=96 loop=1 fframe=1 dframe=1 title="record %g" perc=20
  	''')
 
+Result('velfiltrec24','allvelfilt_shot',
+       '''
+       suwind key=tracl min=2324 max=2424 tmin=0 tmax=6 |
+       suximage perc=90
+       ''')
+
 Flow('velfiltcdpsmute','allvelfilt_shot',
      '''
      susort cdp |
@@ -163,6 +180,12 @@ Result('movie_cdps','velfiltcdpsmute',
 	'''
 	 suxmovie n2=96 loop=1 fframe=1 dframe=1 title="record %g" perc=20
  	''')
+
+Result('cdp250-251','velfiltcdpsmute',
+       '''
+       suwind key=cdp min=250 max=251 tmin=0 tmax=3 |
+       suwigb perc=90
+       ''')
 
 Flow('velfiltcdpsnmo',['velfiltcdpsmute','vpick.txt'],
      '''
