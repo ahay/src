@@ -3,16 +3,18 @@ package rsf;
 public class RSF{
 
     public RSF(String[] args){      
+        String[] targs = null;
         if (args.length == 0){
-            args = new String[]{"java"};
+            targs = new String[]{"java"};
         }  else {
-            String[] targs = new String[args.length+1];
+            targs = new String[args.length+1];
             targs[0] = "java";
             for(int i = 0; i < args.length; ++i){
                 targs[i+1] = args[i];
+                System.err.printf("targs: %d %s\n",i+1,args[i]);
             }
-            m8r.sf_init(targs.length,targs);
         }
+        m8r.sf_init(targs.length,targs);
     }
 
     public boolean getBool(String key, boolean fallback){
