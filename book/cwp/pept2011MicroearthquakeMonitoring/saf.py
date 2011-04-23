@@ -143,13 +143,13 @@ def verticalbh(rr,xrec,par):
 
 def safodbh(rr,par):
 
-    rgx_su = 'data/safod/safod_mh_geom_corr_x_dswp.su'
-    Flow(rr+'x',None,
-         'segyread su=y tape=%s'%rgx_su,stdin=0)
+    rgx_su = 'safod_mh_geom_corr_x_dswp.su'
+    Fetch(rgx_su,'safod')
+    Flow(rr+'x',rgx_su,'suread')
 
-    rgz_su = 'data/safod/safod_mh_geom_corr_z_dswp.su'
-    Flow(rr+'z',None,
-         'segyread su=y tape=%s'%rgz_su,stdin=0)
+    rgz_su = 'safod_mh_geom_corr_z_dswp.su'
+    Fetch(rgz_su,'safod')
+    Flow(rr+'z',rgz_su,'suread')
     Flow(rr,[rr+'x',rr+'z'],
          '''
          cat axis=2 space=n
@@ -163,13 +163,14 @@ def safodbh(rr,par):
 def safodmodel(vel,den,par):
 
     # velocity
-    vfile_su = 'data/safod/safod_velmod_transp_dswp.su'
-    Flow(vel+'_',None,
-         'segyread su=y tape=%s'%vfile_su,stdin=0)
+    vfile_su = 'safod_velmod_transp_dswp.su'
+    Fetch(vfile_su,'safod')
+    Flow(vel+'_',vfile_su,'suread')
+
     # density
-    dfile_su = 'data/safod/safod_denmod_transp_sm_dswp.su'
-    Flow(den+'_',None,
-         'segyread su=y tape=%s'%dfile_su,stdin=0)
+    dfile_su = 'safod_denmod_transp_sm_dswp.su'
+    Fetch(dfile_su,'safod')
+    Flow(den+'_',dfile_su,'suread')
     
     for i in ([vel,den]):
         Flow(i,i+'_',

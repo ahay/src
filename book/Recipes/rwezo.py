@@ -31,6 +31,7 @@ def param(par):
 
 def cgrey(custom,par):
     return '''
+    window j1=2 j2=2 |
     grey parallel2=n labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100
     min1=%g max1=%g label1=%s unit1=%s 
