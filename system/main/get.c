@@ -28,28 +28,37 @@ Takes: par1 par2 ...
 int main (int argc, char* argv[])
 {
     int i;
-    char *string=NULL, *key=NULL;
-    bool parform;
-    sf_file in=NULL;
+    const int tabsize=10;
+    char *string, *key;
+    bool all, parform;
+    sf_simtab table;
 
     sf_init (argc,argv);
-    in = sf_input ("in");
 
     if(!sf_getbool("parform",&parform)) parform=true;
     /* If y, print out parameter=value. If n, print out value. */
 
-    for (i = 1; i < argc; i++) {
-	key = argv[i];
-	if (NULL != strchr(key,'=')) continue;
-	string = sf_histstring(in,key);
-	if (NULL == string) {
-	    sf_warning("No key %s",key);
-	} else {
-	    if (parform) printf ("%s=",key);
-	    printf("%s\n",string);
+    if(!sf_getbool("all",&all)) all=false;
+    /* If output all values. */
+
+    table = sf_simtab_init(tabsize);
+    sf_simtab_input(table, stdin, NULL);
+
+    if (all) {
+	sf_simtab_output(table, stdout);
+    } else {
+	for (i = 1; i < argc; i++) {
+	    key = argv[i];
+	    if (NULL != strchr(key,'=')) continue;
+	    string = sf_simtab_getstring(table,key);
+	    if (NULL == string) {
+		sf_warning("No key %s",key);
+	    } else {
+		if (parform) printf ("%s=",key);
+		printf("%s\n",string);
+	    }
 	}
     }
-
 
     exit(0);
 }
