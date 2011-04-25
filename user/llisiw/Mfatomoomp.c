@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     bool velocity, l1norm, shape, plane[3], verb;
     int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order;
     int iter, niter, stiter, *k, nfreq, nmem, *rhslist;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, **source, *rhs, *ds, *p;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, *dv, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, rece, topo, grad, norm;
@@ -81,6 +81,8 @@ int main(int argc, char* argv[])
 	temps[it] = s[it];
     }
     
+    dv = sf_floatalloc(nt);
+
     if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
     /* norm for minimization (default L2 norm) */
     
@@ -301,6 +303,18 @@ int main(int argc, char* argv[])
 			sf_cgstep_close();
 		    }
 		}
+
+		/* convert to velocity */
+		for (it=0; it < nt; it++) dv[it]=ds[it]/sqrtf(s[it]);
+		
+		if (grad != NULL) {		
+		    if (velocity) {
+			for (it=0; it < nt; it++) dv[it]=-dv[it]/(s[it]+ds[it]);
+			sf_floatwrite(dv,nt,grad);
+		    } else {
+			sf_floatwrite(dv,nt,grad);
+		    }
+		}		
 		
 		/* line search */
 		gama = 1.;
@@ -309,7 +323,7 @@ int main(int argc, char* argv[])
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] != 1)
-			    temps[it] = (s[it]+gama*ds[it])*(s[it]+gama*ds[it])/s[it];
+			    temps[it] = (sqrtf(s[it])+gama*dv[it])*(sqrtf(s[it])+gama*dv[it]);
 		    }
 
 		    /* forward fast-marching for stencil time */		    
@@ -344,7 +358,7 @@ int main(int argc, char* argv[])
 		
 		if (count == 10) {
 		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);
-		    sf_warning("Dimensions for GRAD and NORM need to be fixed before read.");
+		    sf_warning("Dimensions for NORM need to be fixed before read.");
 		    break;
 		}
 
@@ -353,7 +367,6 @@ int main(int argc, char* argv[])
 		else
 		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
 		
-		if (grad != NULL) sf_floatwrite(ds,nt,grad);
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }
 	    
