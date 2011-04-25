@@ -34,6 +34,7 @@ To programs:
 * sfin accepts data from standard input
 * sfmath accepts sign() function
 * all= option in sfget
+* sfbar: separate program for creating scalebar data
 
 ===Bug fixes===
 

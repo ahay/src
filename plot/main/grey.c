@@ -5,7 +5,7 @@ Takes:  > (plot.vpl | char.rsf)
 Can input char values.
 If called "byte", outputs char values.
 
-If called "bar", outputs scalebar.
+If called "bar", outputs scalebar data.
 
 Run "sfdoc stdplot" for more parameters.
 */
