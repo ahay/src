@@ -19,7 +19,7 @@
 #include <rsf.h>
 #include <omp.h>
 
-#include "upgrad.h"
+#include "upgradomp.h"
 #include "fatomoomp.h"
 
 static int nt, **mask, ns, *list;
@@ -44,10 +44,13 @@ void fatomo_init(int dim      /* model dimension */,
 
     list = sf_intalloc(ns);
 
+    upgrad_setup(dim,n,d);
+
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
     
+#pragma omp parallel for
     for (is=0; is < ns; is++) {
-	upglist[is] = upgrad_init(dim,n,d);
+	upglist[is] = upgrad_init();
     }
     
     list = rhslist;
@@ -70,6 +73,7 @@ void fatomo_set(float **t  /* stencil time */,
     int is;
 
     /* set stencil */
+#pragma omp parallel for
     for (is=0; is < ns; is++) {
 	upgrad_set(upglist[is],t[is]);
     }
