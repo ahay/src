@@ -238,8 +238,10 @@ Flow('simil',[ang,'stacks'],'noise var=1e-13 | window min3=2200 max3=5800 | simi
 
 Flow('similtr','simil','transp plane=23')
 
-Result('similtr','smooth rect1=10 rect2=5 rect3=5| byte gainpanel=all pclip=100 bar=bar.rsf | '
-       + igrey3('scalebar=y maxval=1 bar=bar.rsf pclip=99.5 color=j bias=-1 label1="z" label2="x" label3="\F10 q\F3" frame1=290 frame2=180 frame3=110 point2=0.7 point1=0.6 unit1=m unit3="\^o\_" unit2=m'))
+Flow('bar','similtr','bar gainpanel=all pclip=100')
+Result('similtr','similtr bar',
+       'smooth rect1=10 rect2=5 rect3=5| byte gainpanel=all pclip=100 | '
+       + igrey3('scalebar=y maxval=1 bar=${SOURCES[1]} pclip=99.5 color=j bias=-1 label1="z" label2="x" label3="\F10 q\F3" frame1=290 frame2=180 frame3=110 point2=0.7 point1=0.6 unit1=m unit3="\^o\_" unit2=m'))
 #------------------------------------------------------------
 
 Flow('thsimil','simil','threshold pclip=30 ')

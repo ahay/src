@@ -711,11 +711,14 @@ Flow('alpha','pxsmooth pysmooth pxy',
 
 
 ##  Apply PNMO to Alpha Volume
-Flow('alphanmo','alpha pxsmooth pysmooth','pnmo3d dipx=${SOURCES[1]} dipy=${SOURCES[2]}')
-Plot('alphanmo3d','alphanmo',
+Flow('alphanmo','alpha pxsmooth pysmooth',
+     'pnmo3d dipx=${SOURCES[1]} dipy=${SOURCES[2]}')
+Flow('bar','alphanmo','bar')
+Plot('alphanmo3d','alphanmo bar',
      '''
-     byte bar=bar.rsf |
-     grey3 point1=%g title=Azimuth color=j scalebar=y frame1=%d frame2=90 frame3=90 label2="Distance (km)"
+     byte |
+     grey3 point1=%g title=Azimuth color=j scalebar=y bar=${SOURCES[1]} 
+     frame1=%d frame2=90 frame3=90 label2=Distance unit2=km
      screenratio=%g screenwd=%g screenht=%g
      ''' % (p1,it2,sr,sw,sh),local=1)
 #Result('Azimuth','cmp3d PNMO3d alphanmo3d','SideBySideAniso')

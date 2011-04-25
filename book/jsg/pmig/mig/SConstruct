@@ -1,5 +1,5 @@
 from rsf.proj import *
-import pmig
+import rsf.recipes.pmig as pmig
 
 Fetch('beinew.HH','midpts')
 Flow('bei','beinew.HH',
@@ -13,7 +13,11 @@ Flow('bei','beinew.HH',
 
 Flow('cdp','bei','window n3=1')
 Plot('cdp','grey title="(a) Input" ')
-Plot('cdpw','cdp','wiggle transp=y yreverse=y poly=y wherexlabel=t wheretitle=b title="(a) Input" ')
+Plot('cdpw','cdp',
+     '''
+     wiggle transp=y yreverse=y poly=y 
+     wherexlabel=t wheretitle=b title="(a) Input" 
+     ''')
 
 d2=0.0335
 d1=0.004
@@ -72,7 +76,11 @@ Result('mtxt','cdp dip txt','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('pnmo vel','cdp dip3','pnmo dip=${SOURCES[1]} vel=${TARGETS[1]}')
 Plot('pnmo','grey title="(c) Oriented NMO" ')
-Plot('pnmow','pnmo','wiggle transp=y yreverse=y poly=y wherexlabel=t wheretitle=b title="(c) Oriented NMO" ')
+Plot('pnmow','pnmo',
+     '''
+     wiggle transp=y yreverse=y poly=y 
+     wherexlabel=t wheretitle=b title="(c) Oriented NMO" 
+     ''')
 
 Result('pnmo','cdp dip pnmo','SideBySideAniso',vppen='txscale=1.5')
 Result('pnmow','cdpw dip pnmow','SideBySideAniso',vppen='txscale=1.5')
@@ -85,8 +93,16 @@ Flow('vtr','cdp dip05',
      pveltran v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}
      ''')
 
-Flow('vpk','vtr','envelope | scale axis=2 | pick rect1=20 | window min1=1.2 | remap1 pattern=$SOURCE order=2')
-Plot('vpk','graph transp=y yreverse=y pad=n min2=1.495 max2=3.005 plotcol=5 wanttitle=n wantaxis=n')
+Flow('vpk','vtr',
+     '''
+     envelope | scale axis=2 | pick rect1=20 | 
+     window min1=1.2 | remap1 pattern=$SOURCE order=2
+     ''')
+Plot('vpk',
+     '''
+     graph transp=y yreverse=y pad=n min2=1.495 max2=3.005 
+     plotcol=5 wanttitle=n wantaxis=n
+     ''')
 
 Plot('vtr',
      '''
