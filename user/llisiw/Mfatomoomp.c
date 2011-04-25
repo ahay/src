@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=1;
     /* number of slowness inversion iterations */
     
-    if (!sf_getint("stiter",&stiter)) stiter=200;
+    if (!sf_getint("stiter",&stiter)) stiter=100;
     /* number of inner CG iterations (for both Ticknov and Shaping) */
     
     if (!sf_getfloat("eps",&eps)) eps=0.;
