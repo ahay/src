@@ -10,7 +10,7 @@ thplot vplotdiff wiggle
 try:
     Import('env root bindir pkgdir')
     env = env.Clone()
-    alias = {'grey':'byte','grey3':'cubeplot'}
+    alias = {'grey':['byte','bar'],'grey3':['cubeplot']}
 except:
     env = bldutil.Debug()
     root = None
@@ -30,10 +30,11 @@ for prog in mains:
     if root:
          env.Install(bindir,main[0])
          if prog in alias.keys():
-	       copy = string.replace(str(main[0]),prog,alias[prog])
-               env.InstallAs(os.path.join(bindir,copy),main[0])
-               doc = os.path.splitext(copy)[0]
-               docalias[doc] = 'sf'+prog
+             for al in Split(alias[prog]):
+                 copy = string.replace(str(main[0]),prog,al)
+                 env.InstallAs(os.path.join(bindir,copy),main[0])
+                 doc = os.path.splitext(copy)[0]
+                 docalias[doc] = 'sf'+prog
 
 ######################################################################
 # SELF-DOCUMENTATION

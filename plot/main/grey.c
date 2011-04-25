@@ -5,6 +5,8 @@ Takes:  > (plot.vpl | char.rsf)
 Can input char values.
 If called "byte", outputs char values.
 
+If called "bar", outputs scalebar.
+
 Run "sfdoc stdplot" for more parameters.
 */
 /*
@@ -41,7 +43,7 @@ int main(int argc, char* argv[])
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     bool eclip=false, egpow=false, barreverse, mean=false;
-    bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
+    bool scalebar, nomin=true, nomax=true, framenum, sfbyte, sfbar, charin;
     char *gainpanel, *color, *barfile;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
@@ -51,18 +53,22 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     in = sf_input("in");
 
-    byte = (bool) (NULL != strstr (sf_getprog(),"byte"));
+    sfbyte = (bool) (NULL != strstr (sf_getprog(),"byte"));
+    sfbar = (bool) (NULL != strstr (sf_getprog(),"bar"));
 
-    if (byte) {
+    if (sfbyte) {
 	out = sf_output("out");
 	sf_settype(out,SF_UCHAR);
+    } else if (sfbar) {
+	bar = sf_output("out");
+	sf_settype(bar,SF_UCHAR);
     } else {
 	vp_init();
     }
 
     charin = (bool) (SF_UCHAR == sf_gettype(in));
 
-    if (charin && byte) sf_error("Cannot input uchar to byte");
+    if (charin && sfbyte) sf_error("Cannot input uchar to byte");
 
     if (!charin && SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -169,9 +175,11 @@ int main(int argc, char* argv[])
     barfile = sf_getstring("bar");
     /* file for scalebar data */
 
-    if (byte) {
+    if (sfbyte) {
 	scalebar = (bool) (NULL != barfile);
 	if (scalebar) sf_putstring(out,"bar",barfile);
+    } else if (sfbar) {
+	scalebar = true;
     } else {
 	if (!sf_getbool ("wantscalebar",&scalebar) && 
 	    !sf_getbool ("scalebar",&scalebar)) scalebar = false;
@@ -188,9 +196,11 @@ int main(int argc, char* argv[])
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
 	/* if y, go from small to large on the bar scale */
 
-	if (byte) {
-	    bar = sf_output("bar");
-	    sf_settype(bar,SF_UCHAR);
+	if (sfbyte || sfbar) {
+	    if (sfbyte) {
+		bar = sf_output("bar");
+		sf_settype(bar,SF_UCHAR);
+	    }
 	    sf_putint(bar,"n1",VP_BSIZE+2*sizeof(float));
 	    sf_putint(bar,"n2",1);
 	    sf_putint(bar,"n3",n3);
@@ -219,7 +229,7 @@ int main(int argc, char* argv[])
     y1 = o2-0.5*d2;
     y2 = o2+(n2-1)*d2+0.5*d2;
 
-    if (!byte) {
+    if (!sfbyte && !sfbar) {
 	vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
 	vp_frame_init(in,"tlb",false);
 	if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
@@ -250,12 +260,12 @@ int main(int argc, char* argv[])
 			pclip,phalf,&clip,&gpow,mean,&pbias,n3,panel);
 	    if (verb) sf_warning("panel=%d bias=%g clip=%g gpow=%g",
 				 panel,pbias,clip,gpow);
-	    if (byte) sf_putfloat(out,"clip",clip);
+	    if (sfbyte) sf_putfloat(out,"clip",clip);
 	    sf_seek(in,pos,SEEK_SET); /* rewind */
 	}
     }
 
-    if (!byte) {
+    if (!sfbyte && !sfbar) {
 	/* initialize color table */
 	if (NULL == (color = sf_getstring("color"))) color="i";
 	/* color scheme (default is i) */
@@ -316,7 +326,7 @@ int main(int argc, char* argv[])
 	    sf_ucharread(buf[0],n1*n2,in);
 	}
 
-	if (!byte) {
+	if (!sfbyte && !sfbar) {
 	    if (yreverse) {
 		for (i2=0; i2 < n2; i2++) {
 		    for (i1=0; i1 < n1/2; i1++) {			
@@ -379,7 +389,7 @@ int main(int argc, char* argv[])
 		if (nomax) barmax=minmax[1];
 	    }
 
-	    if (byte) {
+	    if (sfbyte || sfbar) {
 		sf_floatwrite(&barmin,1,bar);
 		sf_floatwrite(&barmax,1,bar);
 		sf_ucharwrite(barbuf[0],VP_BSIZE,bar);
@@ -393,9 +403,9 @@ int main(int argc, char* argv[])
 	    }
 	} /* if scalebar */
 
-	if (byte) {
+	if (sfbyte) {
 	    sf_ucharwrite(buf[0],n1*n2,out);
-	} else {
+	} else if (!sfbar) {
 	    vp_purge();
 	} 
     } /* i3 loop */

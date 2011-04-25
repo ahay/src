@@ -57,10 +57,8 @@ for prog in mains:
             for al in Split(alias[prog]):
                 other = string.replace(str(main[0]),prog,al)
                 env.InstallAs(os.path.join(bindir,other),main[0])
-
-                if env['PLATFORM'] == 'cygwin':
-                    other = string.replace(other,'.exe','')
-                docalias[other] = 'sf'+prog
+                doc = os.path.splitext(other)[0]
+                docalias[doc] = 'sf'+prog
 
 for prog in Split('cbanded ctridiagonal veltran'):
     sources = ['Test' + prog,prog]
