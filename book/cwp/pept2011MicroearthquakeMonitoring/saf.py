@@ -212,8 +212,8 @@ def modeling(wav,vel,den,ss,rr,qq,dat,wfl,par):
 
     # wavefield movie
     fdmod.wom(wfl+'om',wfl,vel,4.0,par)
-    Result(   wfl+'om',
-              fdmod.wgrey('pclip=99',par))
+    Plot(     wfl+'om',
+              fdmod.wgrey('pclip=99',par),view=1)
     
     for f in range(0,par['nt']/par['jsnap'],2):
         tag = "-%02d"%f

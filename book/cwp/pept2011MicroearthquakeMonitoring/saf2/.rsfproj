@@ -1,0 +1,3 @@
+uses=['sfsuread', 'sfcat', 'sftransp', 'sfput', 'sfscale', 'sfspike', 'sfpad', 'sfricker1', 'sfwindow', 'sfgraph', 'sfdd', 'sfremap1', 'sfgrey', 'sfawefd2d', 'sfadd', 'sfspray', 'sfmath', 'sfbyte', 'sfreverse', 'sfwigner', 'sfslant']
+data=['data/safod/safod_mh_geom_corr_x_dswp.su', 'data/safod/safod_mh_geom_corr_z_dswp.su', 'data/safod/safod_velmod_transp_dswp.su', 'data/safod/safod_denmod_transp_sm_dswp.su']
+size= 159784020594

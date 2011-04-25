@@ -117,19 +117,28 @@ prepare two computer programs.
 One performs the matrix multiply
 $\bold y =\bold A \bold x$
 and another multiplys by the transpose
-$\tilde{\bold x} =\bold A' \bold y$
+$\tilde{\bold x} =\bold A\T \bold y$
 (without ever having the matrix itself in memory).
 It is always easy to transpose a matrix.
 It is less easy to take a computer program that does
 $\bold y =\bold A \bold x$
 and convert it to another to do
-$\tilde{\bold x} =\bold A' \bold y$.
+$\tilde{\bold x} =\bold A\T \bold y$.
 In this chapter are many examples of increasing complexity.
 At the end of the chapter we will see a test for any program pair
-to see whether the operators $\bold A$ and $\bold A'$ are mutually adjoint
+to see whether the operators $\bold A$ and $\bold A\T$ are mutually adjoint
 as they should be.
 Doing the job correctly (coding adjoints without making approximations)
-will reward us later when we tackle model and image estimation problems.
+will reward us later when we tackle model and image estimation applications.
+
+\par
+Mathematicians often denote the transpose of a matrix
+$\bold F$ by $\bold F^{\rm T}$.
+In physics and engineering we often encounter complex numbers.
+There the adjoint is the complex-conjugate transposed matrix
+denoted $\bold F^\ast$.
+In this book, the adjoint is simply written as $\bold F\T$.
+What this book calls the adjoint is more properly called the Hilbert adjoint.
 
 %\par
 %We will see that computation of the \bx{adjoint}
@@ -176,7 +185,7 @@ The following
 \bx{pseudocode}
 does matrix multiplication
 $\bold y=\bold B\bold x$ and multiplication by the transpose
-$\tilde{\bold x} = \bold{B}' \bold{y}$:
+$\tilde{\bold x} = \bold{B}\T \bold{y}$:
 \par\noindent
 \vbox{\begin{tabbing}
 indent \= atechars \= atechars \=  atechars \= \kill
@@ -226,15 +235,15 @@ That is because Loptran will always erase for you
 the space required for the operator's output.
 Loptran also defines a logical variable {\tt adj}
 for you to distinguish your computation of the adjoint
-{\tt x=x+B'*y}
+$\bold x=\bold x+\bold B\T \bold y$
 from the forward operation
-{\tt y=y+B*x}. 
+$\bold y=\bold y+\bold B\bold x$. 
 In computerese, the two lines beginning \#\% are macro expansions
 that take compact bits of information which expand
 into the verbose boilerplate that Fortran requires.
 Loptran is Fortran with these macro expansions.
 You can always see how they expand by looking at
-\texttt{http://sep.stanford.edu/sep/prof/gee/Lib/}.
+\texttt{http://sep.stanford.edu/sep/prof/}.
 
 \par
 What is new in Fortran 90, and will be a big help to us,
@@ -249,7 +258,7 @@ another named {\tt \_lop}
 for the least-squares problem solver,
 the computer scientist who will not be interested
 in how we specify $\bold B$, but who will be iteratively computing
-$\bold B\bold x$ and $\bold B' \bold y$
+$\bold B\bold x$ and $\bold B\T \bold y$
 to optimize the model fitting.
 \begin{comment}
 The lines beginning with {\tt {\#}{\%}} are expanded by Loptran into
@@ -298,7 +307,7 @@ to find the model that best fits the data.
 Here is why we do so.
 It is important that the math code contain nothing about
 the geophysical particulars.  This enables us to use
-the same math code on many different geophysical problems.
+the same math code on many different geophysical applications.
 This concept of ``information hiding'' arrived late in
 human understanding of what is desireable in a computer language.
 \begin{comment}
@@ -366,7 +375,7 @@ is a collection of $N$ assignments.
 }
 
 \subsection{Adjoint derivative}
-In numerical analysis we represent the derivative a time function
+In numerical analysis we represent the derivative of a time function
 by a finite difference.
 We do this by subtracting each two neighboring time points and then
 dividing by the sample interval $\Delta t$.
@@ -442,6 +451,12 @@ That's why coding the adjoint in this way
 does not require any special work on the ends.
 The present method of coding reminds us that
 the adjoint of a sum of $N$ terms is a collection of $N$ assignments.
+Think of the meaning of
+$y_i=y_i+a_{i,j}x_j$
+for any particular $i$ and $j$.
+The adjoint simply accumulates that same value of $a_{i,j}$
+going the other direction
+$x_j=x_j+a_{i,j}y_i$.
 
 %A complicated way to think about the adjoint of equation
 %(\ref{eqn:ruff1}) is to note that it is the negative of the derivative
@@ -941,11 +956,11 @@ No details of \bx{Fourier transformation} are given here
 and we merely use it as an example of a square matrix $\bold F$.
 We denote the complex-conjugate transpose (or \bx{adjoint}) matrix
 with a prime,
-i.e.,~$\bold F'$.
+i.e.,~$\bold F\T$.
 The adjoint arises naturally whenever we consider energy.
 The statement that Fourier transforms conserve energy is 
-$\bold y'\bold y=\bold x'\bold x$ where $\bold y= \bold F \bold x$.
-Substituting gives $\bold F'\, \bold F = \bold I$, which shows that
+$\bold y\T\bold y=\bold x\T\bold x$ where $\bold y= \bold F \bold x$.
+Substituting gives $\bold F\T\, \bold F = \bold I$, which shows that
 the inverse matrix to Fourier transform
 happens to be the complex conjugate of the transpose of $\bold F$.
 \par
@@ -968,17 +983,17 @@ can be expressed in matrix algebra as
 \end{equation}
 According to matrix algebra, the transpose of a product,
 say $\bold A \bold B = \bold C$,
-is the product $\bold C' = \bold B' \bold A'$ in reverse order.
+is the product $\bold C\T = \bold B\T \bold A\T$ in reverse order.
 So the adjoint routine is given by
 \begin{equation}
-{\rm Program'} \eq
+{\rm Program}\T \eq
  \left[ 
   \begin{array}{cc}
    \bold I & \bold 0
   \end{array}
  \right] 
 \
-\bold F'
+\bold F\T
 \end{equation}
 Thus the adjoint routine
 {\em  truncates} the data {\em  after} the inverse Fourier transform.
@@ -1035,30 +1050,26 @@ you should do your rounding with the C function {\tt floor()}.
 \sx{nearest neighbor binning}
 \sx{data-push binning}
 \inputdir{galilee}
-Binning is putting data values in bins.
-Nearest-neighbor binning is an operator.
-There is both a forward operator and its adjoint.
-Normally the model consists of values given on a uniform mesh,
-and the data consists of pairs of numbers (ordinates at coordinates)
-sprinkled around in the continuum
-(although sometimes the data is uniformly spaced and the model is not).
+A most basic data modeling operation is to copy a number from an $(x,y)$-location on a map
+to a 1-D survey data track $d(s)$, where $s$ is a coordinate running along a survey track.
+This copying proceeds for all $s$.
+The track could be along a straight, curved, or arbitrary line.
+Let the coordinate $s$ take on integral values.
+Then along with the elements $d(s)$ are the coordinates $(x(s),y(s))$ where on the map the data value $d(s)$ would be recorded.
+%This operator, copying $d$ values out from the $(x,y)$-plane
+%has an inverse with a name commonly known in practice, ``binning''
+%so we will use that name, even though the forward modelling operator does the opposite,
+%grabs $d(s)$ values from the $(x,y)$ plane while the adjoint adds $d(s)$ values into the $(x,y)$ mesh,
+%and the inverse operator divides that by the number of data values in each bin.
 \par
-In both the forward and the adjoint operation,
-each data coordinate is examined
-and the nearest mesh point (the bin) is found.
-For the forward operator,
-the value of the bin is added to that of the data.
-The adjoint is the reverse:
-we add the value of the data to that of the bin.
-Both are shown in two dimensions in module \texttt{bin2}.
+Code for the operator is shown
+in module \texttt{bin2}.
 \opdex{bin2}{push data into bin}{46}{55}{user/gee}
-The most typical application requires an additional step, inversion.
-In the inversion applications
-each bin contains a different number of data values.
+To invert this data modeling operation, to go from $d(s)$ to $(x(s),y(s))$ requires more than the adjoint operator.
+Since each bin contains a different number of data values.
 After the adjoint operation is performed,
-the inverse operator divides the bin value
-by the number of points in the bin.
-It is this inversion operator that is generally called binning.
+the inverse operator needs to divide the bin sum by the number of data values that landed in the bin.
+It is this inversion operator that is generally called binning (although we will use that name here for the modeling operator).
 To find the number of data points in a bin,
 we can simply apply the adjoint of \texttt{bin2} to pseudo data of all ones.
 To capture this idea in an equation,
@@ -1068,10 +1079,10 @@ The inverse operation,
 in which the data values in the bin are summed
 and divided by the number in the bin, is represented by
 \begin{equation}
-\bold m \eq {\bf diag}( \bold B' \bold 1)^{-1} \bold B' \bold d
+\bold m \eq {\bf diag}( \bold B\T \bold 1)^{-1} \bold B\T \bold d
 \label{eqn:dpbin}
 \end{equation}
-Empty bins, of course, leave us a problem.
+Empty bins, of course, leave us a problem since we dare not divide by the zero sum they contain.
 That we'll address in chapter \ref{paper:iin}.
 In Figure \ref{fig:galbin}, the empty bins contain zero values.
 \plot{galbin}{width=6in,height=4.0in}{
@@ -1290,7 +1301,7 @@ it is easier to think of equation~(\ref{eqn:leakinteq}) than of~(\ref{eqn:myrecu
 Let the matrix of equation~(\ref{eqn:leakinteq}) be called $\bold C$.
 Transposing to get $\bold C '$ and applying it to $\bold y$
 gives us something back in the space of $\bold x$,
-namely $\tilde{\bold x} = \bold C' \bold y$.
+namely $\tilde{\bold x} = \bold C\T \bold y$.
 From it we see that the adjoint calculation,
 if done recursively,
 needs to be done backwards, as in
@@ -1309,7 +1320,7 @@ The code for anticausal integration is not obvious
 from the code for integration and the adjoint coding tricks we
 learned earlier.
 To understand the adjoint, you need to inspect
-the detailed form of the expression $\tilde{\bold x} = \bold C' \bold y$
+the detailed form of the expression $\tilde{\bold x} = \bold C\T \bold y$
 and take care to get the ends correct.
 Figure \ref{fig:causint} illustrates the program for $\rho = 1$.
 \opdex{causint}{causal integral}{35}{46}{api/c}
@@ -1362,8 +1373,8 @@ a triangle waveform on the bottom row.
 Notice that the triangle waveform is not time aligned
 with the input {\tt in2}.
 Force time alignment with the operator 
-${\bold C' \bold C}$ or
-${\bold C  \bold C'}$.
+${\bold C\T \bold C}$ or
+${\bold C  \bold C\T}$.
 \item
 Modify \texttt{causint} \vpageref{lst:causint} by changing the diagonal to contain
 1/2 instead of 1.
@@ -1496,7 +1507,7 @@ as we did with leaky integration.
 
 
 \par
-A module to backsolve~(\ref{eqn:polydiv}) is \texttt{recfilt}.
+A module to backsolve equation (\ref{eqn:polydiv}) is \texttt{recfilt}.
 \opdex{recfilt}{deconvolve}{49}{75}{api/c}
 
 \par
@@ -1504,15 +1515,15 @@ The more complicated an operator, the more complicated is its adjoint.
 Given a transformation from $\bold x$ to $\bold y$ that is
 $\bold T\bold B \bold y = \bold x$,
 we may wonder if the adjoint transform really is
-$(\bold T\bold B)' \hat{\bold x}= \bold y$.
+$(\bold T\bold B)\T \hat{\bold x}= \bold y$.
 It amounts to asking if the adjoint of
 $\bold y = (\bold T\bold B)^{-1}\bold x$ is
-$\hat{\bold x} = ((\bold T\bold B)')^{-1}\bold y$.
+$\hat{\bold x} = ((\bold T\bold B)\T)^{-1}\bold y$.
 Mathematically we are asking if
 the inverse of a transpose is the transpose of the inverse.
 This is so because in
-$\bold A\bold A^{-1} = \bold I = \bold I' = (\bold A^{-1})'\bold A'$
-the parenthesized object must be the inverse of its neighbor $\bold A'$.
+$\bold A\bold A^{-1} = \bold I = \bold I\T = (\bold A^{-1})\T\bold A\T$
+the parenthesized object must be the inverse of its neighbor $\bold A\T$.
 
 
 
@@ -1589,10 +1600,10 @@ or $Z$-transforms\footnote{
         earlier books, FGDP and ESA-PVI.
         },
 shows the
-Fourier transform of this highpass filter filter
+Fourier transform of this highpass filter 
 to be
 \begin{equation}
-H(Z) \eq {1-Z \over 1-\rho Z}
+H(Z) \eq \frac{1-Z }{ 1-\rho Z}
 \eq
 1
 -(1-\rho) [
@@ -1606,7 +1617,7 @@ Z^1
 \end{equation}
 where the unit-delay operator is $Z=e^{i\omega\Delta t}$
 and where $\omega$ is the frequency.
-A symmetical (noncausal) lowcut filter would filter once forward
+A symmetrical (noncausal) lowcut filter would filter once forward
 with $H(Z)$ and once backwards (adjoint) with $H(1/Z)$.
 This is not the place for a detailed Fourier analysis of this filter
 but it is the place to mention that a cutoff filter is typically
@@ -1650,16 +1661,16 @@ We will do more with multidimensional data in later chapters.
 %One performs the matrix multiply
 %$\bold y =\bold A \bold x$
 %and another multiplys by the transpose
-%$\tilde{\bold x} =\bold A' \bold y$
+%$\tilde{\bold x} =\bold A\T \bold y$
 %(without ever having the matrix itself in memory).
 %It is always easy to transpose a matrix.
 %It is less easy to take a computer program that does
 %$\bold y =\bold A \bold x$
 %and convert it to another to do
-%$\tilde{\bold x} =\bold A' \bold y$.
+%$\tilde{\bold x} =\bold A\T \bold y$.
 %In this chapter are many examples of increasing complexity.
 %At the end of the chapter we will see a test for any program pair
-%to see whether the operators $\bold A$ and $\bold A'$  are mutually adjoint.
+%to see whether the operators $\bold A$ and $\bold A\T$  are mutually adjoint.
 %Doing the job correctly (coding adjoints without making approximations)
 %will reward us later when we tackle model and image estimation problems.
 
@@ -1695,7 +1706,7 @@ We will do more with multidimensional data in later chapters.
 %($\omega^2 < \epsilon^2$)
 %in the output $Y$.
 %\begin{equation}
-%Y \eq {\omega^2 \over \omega^2 + \epsilon^2} \ X
+%Y \eq \frac{\omega^2 }{ \omega^2 + \epsilon^2} \ X
 %\label{eqn:locut}
 %\end{equation}
 %To exercise various popular notations we rewrite this as
@@ -1885,6 +1896,171 @@ We will do more with multidimensional data in later chapters.
   The depth of the Sea of Galilee after roughening.
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% . . JCS Include
+
+\subsection{Smoothing with box and triangle}
+\inputdir{XFig}
+%
+Simple ``\bx{smoothing}'' is a common application of filtering.  A
+smoothing filter is one with all positive coefficients.  On the time
+axis, smoothing is often done with a single-pole damped exponential
+function.  On space axes, however, people generally prefer a
+symmetrical function.  We will begin with rectangle and triangle
+functions. When the function width is chosen to be long, then the
+computation time can be large, but recursion can shorten it
+immensely. 
+%
+\par
+%
+The inverse of any polynomial reverberates forever, although it might
+drop off fast enough for any practical need.  On the other hand, a
+rational filter can suddenly drop to zero and stay there.  Let us look
+at a popular rational filter, the rectangle or ``\bx{box car}'': 
+\begin{equation}
+{ \frac{1- Z^5}{ 1-Z} } \eq 1+Z+Z^2+Z^3+Z^4	\label{eqn:box}
+\end{equation}
+The filter (\ref{eqn:box}) gives a moving average under a {\em
+rectangular} window.  This is a basic smoothing filter.  A clever
+way to apply it is to move the rectangle by adding a new value at one
+end while dropping an old value from the other end.  This approach is
+formalized by the polynomial division algorithm, which can be
+simplified because so many coefficients are either one or zero.  To
+find the recursion associated with $Y(Z)= X(Z)(1-Z^5)/(1-Z)$, we
+identify the coefficient of $Z^t$ in $(1-Z)Y(Z)= X(Z)(1-Z^5)$.  The
+result is 
+\begin{equation}
+y_t \eq  y_{t-1} + x_t - x_{t-5}.
+\end{equation}
+This approach boils down to the program % \texttt{boxconv()} %\vpageref{/prog:boxconv},
+which is so fast it is almost free!
+\moddex{triangle}{box like smoothing}{175}{180}{api/c}
+Its last line scales the output by dividing by the rectangle length.
+With this scaling, the zero-frequency component of the input is
+unchanged, while other frequencies are suppressed. 
+
+\par
+\bxbx{Triangle smoothing}{triangle smoothing} is rectangle smoothing
+done twice.  For a mathematical description of the triangle filter, we
+simply square equation (\ref{eqn:box}).  Convolving a rectangle
+function with itself many times yields a result that mathematically
+tends towards a \bx{Gaussian} function.
+Despite the sharp corner on the top of the triangle function,
+it has a shape that is remarkably similar to a Gaussian. 
+Convolve a triangle with itself and you will see a very nice
+approximation to a Gaussian (the central limit theorem).
+%
+\par
+%
+With filtering, \bx{end effect}s can be a nuisance.  Filtering
+increases the length of the data, but people generally want to keep
+input and output the same length (for various practical reasons).
+This is particularly true when filtering a space axis.  Suppose the
+five-point signal $(1, 1,1,1,1)$ is smoothed using the {\tt boxconv()}
+program with the three-point smoothing filter $(1,1,1)/3$.  The output
+is $5+3-1$ points long, namely, $(1,2,3,3,3,2,1)/3$.  We could simply
+abandon the points off the ends, but I like to \bx{fold} them back in,
+getting instead $(1+2,3,3,3,1+2)$.  An advantage of the folding is
+that a constant-valued signal is unchanged by the smoothing.  This is
+desirable since a smoothing filter is a low-pass filter which
+naturally should pass the lowest frequency $\omega=0$ without
+distortion.  The result is like a wave reflected by a
+\bxbx{zero-slope}{zero slope} end condition.  Impulses are smoothed
+into triangles except near the boundaries.  What happens near the
+boundaries is shown in Figure~\ref{fig:triend}.
+% \sideplot{triend}{width=3in}{
+%	Edge effects when smoothing an impulse with a triangle function.
+%	Inputs are spikes at various distances from the edge.
+%	}
+\sideplot{triend}{width=3in}{
+	Edge effects when smoothing an impulse with a triangle function.
+	Inputs are spikes at various distances from the edge.}
+Note that at the boundary, there is necessarily only half a triangle,
+but it is twice as tall.
+%
+\par
+%
+Figure~\ref{fig:triend} was derived from the routine {\tt triangle()}. %
+%\progdex{triangle}{conv. with triangle} %
+%%%TEMPORTARILY spiced in
+\moddex{triangle}{1D triangle smoothing}{182}{188}{api/c}
+%\begin{verbatim}
+%  module triangle_smooth {
+%    use box_smooth
+%    contains
+%    # Convolve with triangle
+%    #
+%    # input:        nb      rectangle width (points) (Triangle base twice as wide.)
+%    # input:        xx(nd)                is a vector of data.
+%    # output:       yy(nd)                may be on top of uu
+%    subroutine triangle( nb, nd, xx, yy) {
+%      integer,	      intent(in)       ::nb,nd
+%      integer                          ::i,np,nq
+%      real, dimension (:), intent (in) ::xx
+%      real, dimension (:), intent (out)::yy
+%      real, dimension (:), allocatable ::pp,qq
+%      allocate(pp(nd+nb-1), qq(nd+nb+nb-2))
+%      call boxconv( nb, nd, xx, pp);    np = nb+nd-1
+%      call boxconv( nb, np, pp, qq);    nq = nb+np-1
+%      do i=1,nd   { yy(i)     =             qq(i+nb-1)     }
+%      do i=1,nb-1 { yy(i)     =yy(i)      + qq(nb-i  )     } # fold back near end
+%      do i=1,nb-1 { yy(nd-i+1)=yy(nd-i+1) + qq(nd+(nb-1)+i)} # fold back far end
+%      deallocate(pp,qq)
+%    }
+%  }
+%\end{verbatim}
+
+%%%TEMPORTARILY spiced in
+
+%I frequently use this program, so it is cluttered with extra features.
+%For example, the output can share the same location as the input.
+%Further, since it is commonly necessary to smooth along the 2-axis
+%of a two-dimensional array, there are some Fortran-style pointer
+%manipulations to allow the user to smooth either the 1-axis or the
+%2-axis or both.  For those of you unfamiliar with Fortran
+%matrix-handling tricks, I include below another routine, {\tt
+%triangle2()}, that teaches how a two-dimensional array can be
+%smoothed over both its 1-axis and its 2-axis.
+%%\progdex{triangle2}{conv. w. tri. in 2D}%
+%%%%TEMPORTARILY spiced in
+%\moddex{triangle2_smooth}{2D triangle smoothing}
+%
+%%\begin{verbatim}
+%%  module triangle2_smooth {
+%%    use triangle_smooth
+%%    contains
+%%    # smooth by convolving with triangle in two dimensions.
+%%    #
+%%    subroutine triangle2  ( rect1, rect2, n1, n2, xx, yy) {
+%%      integer,intent(in) :: rect1, rect2, n1, n2
+%%      integer            :: i1,i2
+%%      real, intent (in)  ::   xx(:,:)
+%%      real, intent (out) ::   yy(:,:)
+%%      real, allocatable  :: temp(:,:)
+%%      allocate(temp(n1,n2))
+%%      do i2= 1, n2 { call triangle( rect1, n1, xx(1:,i2), temp(1:,i2)) }
+%%      do i1= 1, n1 { call triangle( rect2, n2, temp(i1,1:), yy(i1,1:)) }
+%%      deallocate(temp)
+%%    }
+%%  }
+%\end{verbatim}
+%%%TEMPORTARILY spiced in
+
+%\todo{ \item The program {\tt triangle()} has a bug in the unusual case
+%where {\tt nb $\ge$ nx}.
+%Identify the bug.
+%Recode the program to work for all values of {\tt nb}.
+%}
+
+
+% . . END JCS Include
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
 %\begin{notforlecture}
 \subsection{Nearest-neighbor normal moveout (NMO)}
 \par
@@ -2043,10 +2219,15 @@ Likewise the operator product
 $\bold A = \bold B \bold C \bold D$
 is represented in the in the subroutine 
 \texttt{ chain3( op1, op2, op3,...)}.
-Another way to make more elaborate operators
-is to put operators in a matrix
-such as subroutine \texttt{array}
+\par
+Another amazing thing about matrices is that their elements
+may themselves be matrices.
+A very common example
+is a row matrix containing two elements,
+each element itself a matrix.
+This is done by subroutine \texttt{row}
 also in module \texttt{chain}.
+
 
 
 \moddex{chain}{operator chain and array}{26}{46}{api/c}
@@ -2129,9 +2310,9 @@ with positive values $w(i)\ge 0$ spread along the diagonal,
 and it is denoted $\bold W = {\bf diag}[w(i)]$.
 With this weighting function
 the $L_2$ norm of a data space is denoted
-$\bold d' \bold W \bold d$.
+$\bold d\T \bold W \bold d$.
 Standard notation for norms uses a double absolute value,
-where $||\bold d||=\bold d' \bold W \bold d$.
+where $||\bold d||=\bold d\T \bold W \bold d$.
 A central concept with norms is the triangle inequality,
 $ ||\bold d_1   +   \bold d_2|| \le ||\bold d_1|| + ||\bold d_2|| $
 whose proof you might recall (or reproduce with the use of dot products).
@@ -2162,8 +2343,8 @@ as a matrix multiplication.
 What we find in practice is that an application and its adjoint 
 amounts to two routines. The first routine
 amounts to the matrix multiplication $ \bold F \bold x$.
-The adjoint routine computes $\bold F' \bold y$,
-where $\bold F'$ is the \bx{conjugate-transpose} matrix.
+The adjoint routine computes $\bold F\T \bold y$,
+where $\bold F\T$ is the \bx{conjugate-transpose} matrix.
 In later chapters we will be solving huge sets of simultaneous equations,
 in which both routines are required.
 If the pair of routines are inconsistent,
@@ -2174,14 +2355,14 @@ routines are adjoint to each other.
 \par
 The associative property of linear algebra says that
 we do not need parentheses in a vector-matrix-vector product
-like $\bold y' \bold F \bold x $ because we get the same
+like $\bold y\T \bold F \bold x $ because we get the same
 result no matter where we put the parentheses.
 They serve only to determine the
 sequence of computation.
 Thus,
 \begin{eqnarray}
-\bold y' ( \bold F \bold x ) &=& ( \bold y' \bold F )  \bold x   \\
-\bold y' ( \bold F \bold x ) &=& ( \bold F' \bold y )' \bold x 
+\bold y\T ( \bold F \bold x ) &=& ( \bold y\T \bold F )  \bold x   \\
+\bold y\T ( \bold F \bold x ) &=& ( \bold F\T \bold y )\T \bold x 
 \label{eqn:bilin2}
 \end{eqnarray}
 (In general, the matrix is not square.)
@@ -2189,18 +2370,18 @@ To perform the dot-product test,
 load the vectors $\bold x$ and $\bold y$ with random numbers.
 Using your program for $\bold F$,
 compute the vector $\tilde{\bold{y}} = \bold{F}\bold{x}$,
-and using your program for $\bold{F}'$,
-compute $\tilde{\bold{x}} = \bold{F}'\bold{y}$.
+and using your program for $\bold{F}\T$,
+compute $\tilde{\bold{x}} = \bold{F}\T\bold{y}$.
 Inserting these into equation~(\ref{eqn:bilin2})
 gives you two scalars that should be equal.
 \begin{equation}
-\bold{y}' ( \bold F \bold x ) \eq
-\bold y' \tilde{\bold y} \eq \tilde{\bold x} ' \bold x
-\eq ( \bold F' \bold y )' \bold x
+\bold{y}\T ( \bold F \bold x ) \eq
+\bold y\T \tilde{\bold y} \eq \tilde{\bold x} ' \bold x
+\eq ( \bold F\T \bold y )\T \bold x
 \label{eqn:bilin}
 \end{equation}
 The left and right sides of this equation will be computationally equal
-only if the program doing $\bold F'$ is indeed adjoint
+only if the program doing $\bold F\T$ is indeed adjoint
 to the program doing $\bold F$
 (unless the random numbers do something miraculous).
 A final word: If an operator uses complex arithmetic
@@ -2265,7 +2446,7 @@ may need to be changed to an integral.
 The input or the output or both can be given
 either on a continuum or in a discrete domain.
 So the dot-product test
-$\bold y' \tilde{\bold y} = \tilde{\bold x}' \bold x$
+$\bold y\T \tilde{\bold y} = \tilde{\bold x}\T \bold x$
 could have an integration on one side of the equal sign
 and a summation on the other.
 Linear-operator theory is rich with concepts not developed here.
@@ -2324,7 +2505,7 @@ so to test the validity of adjoints,
 we probe them with random vectors,
 say $\bold x$ and $\bold y$,
 to see whether
-$\bold y'(\bold A\bold x)=(\bold A'\bold y)'\bold x$.
+$\bold y\T(\bold A\bold x)=(\bold A\T\bold y)\T \bold x$.
 Mathematicians define adjoints by this test,
 except that instead of using random vectors,
 they say ``for all functions,'' which includes the continuum.
@@ -2333,14 +2514,14 @@ This defining test makes adjoints look mysterious.
 Careful inspection of operator adjoints,
 however, generally reveals that they are built up from simple matrices.
 Given adjoints
-$\bold A'$,
-$\bold B'$,
+$\bold A\T$,
+$\bold B\T$,
 and
-$\bold C'$,
+$\bold C\T$,
 the adjoint of
 $\bold A\bold B\bold C$
 is
-$\bold C'\bold B'\bold A'$.
+$\bold C\T\bold B\T\bold A\T$.
 Fourier transforms and linear-differential-equation solvers
 are chains of matrices,
 so their adjoints can be assembled
@@ -2359,11 +2540,11 @@ An example of the adjoint of a two-component column operator is
    \bold A \\
    \bold B
   \end{array}
- \right]'
+ \right]\T
 \eq
  \left[
   \begin{array}{cc}
-   \bold A' & \bold B'
+   \bold A\T & \bold B\T
   \end{array}
  \right]
 \end{equation}
@@ -2385,10 +2566,10 @@ are attractive methods of finding them.
 They merely apply
 $\bold A$
 and
-$\bold A'$
+$\bold A\T$
 and use inner products to find coefficients
 of a polynomial in
-$\bold A\bold A'$
+$\bold A\bold A\T$
 that represents the inverse operator.
 \par
 Whenever we encounter a \bx{positive-definite} matrix we should recognize
@@ -2428,9 +2609,9 @@ of the model,
 $\hat {\bold m}_1$ and
 $\hat {\bold m}_2$, where
 \begin{eqnarray}
-\hat {\bold m}_1 &=& (\bold F'\bold F)^{-1}\bold F'\bold d
+\hat {\bold m}_1 &=& (\bold F\T\bold F)^{-1}\bold F\T\bold d
                                                 \label{eqn:overdeterm} \\
-\hat {\bold m}_2 &=& \bold F'(\bold F\bold F')^{-1}\bold d
+\hat {\bold m}_2 &=& \bold F\T(\bold F\bold F\T)^{-1}\bold d
                                                 \label{eqn:underdeterm}
 \end{eqnarray}
 
@@ -2450,10 +2631,10 @@ into equation
 (\ref{eqn:wefit}),
 we get the reasonable statements:
 \begin{eqnarray}
-\hat {\bold m}_1 &=& (\bold F'\bold F)^{-1}(\bold F'\bold F)\bold m \eq\bold m
+\hat {\bold m}_1 &=& (\bold F\T\bold F)^{-1}(\bold F\T\bold F)\bold m \eq\bold m
                                                 \label{eqn:overimplication} \\
 \hat {\bold d}_{\rm theor} &=&
-                     (\bold F\bold F')(\bold F\bold F')^{-1}\bold d \eq\bold d
+                     (\bold F\bold F\T)(\bold F\bold F\T)^{-1}\bold d \eq\bold d
                                                 \label{eqn:underimplication}
 \end{eqnarray}
 Equation (\ref{eqn:overimplication}) says that the estimate $\hat {\bold m}_1$
@@ -2466,7 +2647,7 @@ Both of these statements are delightful.
 Now let us return to the problem of the inverse matrices.
 
 \par
-Strictly speaking, a rectangular matrix does not have an inverse.
+Normally a rectangular matrix does not have an inverse.
 Surprising things often happen, but commonly,
 when $\bold F$ is a tall matrix 
 (more data values than model values)
@@ -2479,16 +2660,16 @@ and when the matrix is wide instead of tall
 (the number of data values is less than the number of model values)
 it is the other way around.
 In many applications neither
-$\bold F'\bold F$ nor
-$\bold F\bold F'$ 
+$\bold F\T\bold F$ nor
+$\bold F\bold F\T$ 
 is invertible.  This difficulty is
 solved by ``\bx{damping}'' as we will see in later chapters.
 The point to notice in this chapter on adjoints
 is that in any application where
-$\bold F \bold F'$
+$\bold F \bold F\T$
 or
-$\bold F' \bold F$ equals $\bold I$ (unitary operator),
-that the adjoint operator $\bold F'$ is the inverse $\bold F^{-1}$
+$\bold F\T \bold F$ equals $\bold I$ (unitary operator),
+that the adjoint operator $\bold F\T$ is the inverse $\bold F^{-1}$
 by either equation (\ref{eqn:overdeterm}) or (\ref{eqn:underdeterm}).
 \par
 Theoreticians like to study inverse problems where $\bold m$
@@ -2496,7 +2677,7 @@ is drawn from the field of continuous functions.
 This is like the vector $\bold m$ having infinitely many components.
 Such problems are hopelessly intractable unless we find,
 or assume, that the operator
-$\bold F' \bold F$
+$\bold F\T \bold F$
 is an identity or diagonal matrix.
 
 \par
@@ -2513,9 +2694,20 @@ but the methods we learn are also excellent for smaller problems.
 Computers are not only able to perform computations; they can do
 mathematics.  Well known software is Mathematica and Maple.  Adjoints
 can also be done by symbol manipulation.  For example
-\href{http://www.fastopt.de/people/ralf/}{Ralf Giering}
+Ralf Giering
 offers a program for converting linear operator programs into their
 adjoints.
+Actually, it does more than that.
+He says:\footnote{ http://www.autodiff.com/tamc/ }
+\begin{quote}
+Given a Fortran routine (or collection of routines) for a function,
+TAMC produces Fortran routines for the computation
+of the derivatives of this function.
+The derivatives are computed in the reverse mode (adjoint model)
+or in the forward mode (tangent-linear model).
+In both modes Jacobian-Matrix products can be computed.
+\end{quote}
+
 
 \begin{exer}
 \item
@@ -2523,7 +2715,7 @@ Suppose a linear operator $\bold F$ has
 its input in the discrete domain and
 its output in the continuum.
 How does the operator resemble a matrix?
-Describe the operator $\bold F'$ that has
+Describe the operator $\bold F\T$ that has
 its input in the discrete domain and
 its output in the continuum.
 To which do you apply the words

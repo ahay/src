@@ -22,6 +22,10 @@ report = (('2006',
            geo2009TTIModeSeparation
            geo2009VTIModeSeparation
  	   '''),
+          ('2011',
+           '''
+           pept2011MicroearthquakeMonitoring
+           '''
           )
 
 Papers(papers=report,

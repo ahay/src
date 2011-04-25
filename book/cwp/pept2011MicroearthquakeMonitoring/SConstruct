@@ -1,6 +1,4 @@
 from rsf.tex import *
-import glob, os
 
-End(lclass='cwppept',
-          options='11pt',
-          use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr,ulem')
+End(use='color,hyperref')
+

@@ -156,12 +156,12 @@ par.update({'jsx':1, 'jsz':1})
 
 srpmig.fwaveslow('shot','mvel',par)
 
-Result('rwav',
-       '''
-       window | math output="abs(input)" | real |
-       grey title=Wavefield
-       label1=Frequency unit1=Hz label2=Distance unit2=km
-       ''',local=1)
+Plot('rwav',
+     '''
+     window | math output="abs(input)" | real |
+     grey title=Wavefield
+     label1=Frequency unit1=Hz label2=Distance unit2=km
+     ''',local=1,view=1)
 
 # PARALLEL
 # --------
