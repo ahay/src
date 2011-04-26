@@ -45,7 +45,11 @@ static int fermat(const void *a, const void *b)
     int its;
     float ta, tb;
 
+#ifdef _OPENMP
     its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
 
     ta = t0[its][*(int *)a];
     tb = t0[its][*(int *)b];
@@ -74,7 +78,11 @@ void upgrad_setup(int mdim        /* number of dimensions */,
 	dd[i] = 1.0/(d[i]*d[i]);
     }
 
+#ifdef _OPENMP
     mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
 
     t0 = (float **)malloc(mts*sizeof(float *));
 }
@@ -100,7 +108,11 @@ void upgrad_set(upgrad upg, float *r0 /* reference */)
     unsigned char *up;
     float t, t2;
 
+#ifdef _OPENMP
     its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
 
     t0[its] = r0;
 

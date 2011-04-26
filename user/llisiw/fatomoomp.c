@@ -47,15 +47,21 @@ void fatomo_init(int dim      /* model dimension */,
     upgrad_setup(dim,n,d);
 
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
-    
+
+#ifdef _OPENMP    
 #pragma omp parallel for
+#endif
     for (is=0; is < ns; is++) {
 	upglist[is] = upgrad_init();
     }
     
     list = rhslist;
 
+#ifdef _OPENMP
     mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
 
     tempt = sf_floatalloc2(nt,mts);
     tempx = sf_floatalloc2(nt,mts);
@@ -69,7 +75,9 @@ void fatomo_set(float **t  /* stencil time */,
     int is;
 
     /* set stencil */
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (is=0; is < ns; is++) {
 	upgrad_set(upglist[is],t[is]);
     }
@@ -97,15 +105,23 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	/* given dt solve ds */
 
+#ifdef _OPENMP
 #pragma omp parallel private(its,i,it)
+#endif
 	{
+#ifdef _OPENMP
 	    its = omp_get_thread_num();
+#else
+	    its = 0;
+#endif
 
 	    for (it=0; it < nt; it++) {
 		psum[its][it] = 0.;
 	    }
 
+#ifdef _OPENMP
 #pragma omp for
+#endif
 	    for (is=0; is < ns; is++) {
 		i = list[is];
 		for (it=nt-1; it >= 0; it--) {
@@ -121,7 +137,9 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		
 		for (it=0; it < nt; it++) psum[its][it]+=tempx[its][it];
 	    }
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 	    {
 		for (it=0; it < nt; it++) x[it]+=psum[its][it];
 	    }
@@ -129,12 +147,20 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 	
     } else {
 	/* given ds solve dt */
-	
-#pragma omp parallel private(its,i,it)
-	{
-	    its = omp_get_thread_num();
 
+#ifdef _OPENMP	
+#pragma omp parallel private(its,i,it)
+#endif
+	{
+#ifdef _OPENMP
+	    its = omp_get_thread_num();
+#else
+	    its = 0;
+#endif
+
+#ifdef _OPENMP
 #pragma omp for
+#endif
 	    for (is=0; is < ns; is++) {
 		upgrad_solve(upglist[is],x,tempt[its],NULL);
 		
