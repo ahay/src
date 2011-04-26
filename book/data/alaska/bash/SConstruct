@@ -1,9 +1,6 @@
 from rsf.proj import * 
 
-#################### 
 # Fetch the dataset and convert to multiple rsf files
-####################
-
 rawsegy=['L23535','L23536','L23537']
 for name in rawsegy:
     Fetch(name+'.SGY',
@@ -25,8 +22,8 @@ Flow('shotmask','trawline',
      add add=-1 | add scale=-1
      ''')
 
-# Window out misfires, test shots and auxiliary traces;
-# define shot and offset dimensions
+# Window out misfires, test shots, and auxiliary traces;
+# define shot and offset dimensions in local survey coordinates
 Flow('shotline',['rawline','shotmask'],
      '''
      headerwindow mask=${SOURCES[1]} |
@@ -34,6 +31,25 @@ Flow('shotline',['rawline','shotmask'],
      put o2=-5225 d2=110 label2=Offset unit2=ft
          o3=0 d3=440 label3=Shot unit3=ft
      ''')
+
+# Shot elevation information
+Flow('spelev','../31-81/spnElev.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
+     dd form=native
+     ''',stdin=0)
+# Elevation header (make shotpoint 100 the origin of the survey coordinate system)
+Flow('helev','spelev','window n1=1 f1=0 | math output="(input - 100)*440"')
+# Elevation data
+Flow('delev','spelev','window n1=1 f1=1')
+# Interpolate to the regular survey coordinate system
+Flow('elev',['delev','helev'],'shapebin1 nx=321 x0=-5280 dx=110 head=${SOURCES[1]} eps=0.1
+     ''')
+# Datum shifts, weathering layer velocity - v0
+Flow('datum',['shotline','elev'],'datshift v0=9000 elev=${SOURCES[1]}')
+
+# Shift traces
+Flow('dshotline',['shotline','datum'],'datstretch datum=${SOURCES[1]}')
 
 # Shot gathers -> CMP gathers
 Flow('cmp','shotline','shot2cmp half=n')
