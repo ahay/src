@@ -151,6 +151,23 @@ def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None,
 
 ################################################################################
 
+def bar(inp=None, out=None, color=None, verb=False, exe=None):
+  
+    return __run('sfbar', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
+
+################################################################################
+
+def byte(inp=None, out=None, allpos=None, bias=None, clip=None, gainpanel=None,
+        pclip=None, verb=False, exe=None):
+
+    return __run('sfbyte', __parse(locals()), 
+        inp, out, 
+        verb, __x(exe,glob_exe))
+
+################################################################################
+
 def cat(out, files=None, axis=None, o=None, d=None, verb=False, exe=None):
 
     aod = __parse({'axis':axis,'o':o,'d':d})
