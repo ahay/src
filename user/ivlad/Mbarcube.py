@@ -69,6 +69,7 @@ def main(par):
         sys.stdout.write(p2.stdout.read())
         p1.stdin.close()
         tmp_file.close()
+        p2.stdout.close()
     
     cmd = sf.rm([tmp_filenm, bar_filenm])
     
