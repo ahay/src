@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-adjfswp2 aspread eikfswp ktmig tpsint wile
+aspread datshift eikfswp ktmig tpsint wile
 '''
 
 try:  # distributed version
