@@ -43,7 +43,8 @@ Flow('helev','spelev','window n1=1 f1=0 | math output="(input - 100)*440"')
 # Elevation data
 Flow('delev','spelev','window n1=1 f1=1')
 # Interpolate to the regular survey coordinate system
-Flow('elev',['delev','helev'],'shapebin1 nx=321 x0=-5280 dx=110 head=${SOURCES[1]} eps=0.1
+Flow('elev',['delev','helev'],'''
+     shapebin1 nx=321 x0=-5280 dx=110 head=${SOURCES[1]} eps=0.1
      ''')
 # Datum shifts, weathering layer velocity - v0
 Flow('datum',['shotline','elev'],'datshift v0=9000 elev=${SOURCES[1]}')
