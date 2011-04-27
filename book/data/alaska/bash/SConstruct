@@ -68,14 +68,14 @@ Flow('dshotline',['shotline','datum'],'datstretch datum=${SOURCES[1]}')
 # Gain correction, T-X -> F-K
 Flow('fkshots','dshotline','tpow tpow=2.0 | bandpass flo=3 fhi=35 | fft1 | fft3 axis=2')
 # F-K filter for one shot
-fkslope = 10000
-kshift = 0.0005
-fshift = 3
+fkslope = 100000
+kshift = 0.0
+fshift = 0.0
 Flow('fkfilter','fkshots','''
      window n3=1 | real |
      math output="-%g*(x2-%g)+x1-%g" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
      math output="(%g*(x2+%g)+x1-%g)*input" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
-     smooth rect1=10 rect2=10 repeat=5
+     smooth rect1=7 rect2=7 repeat=2
      ''' % (fkslope,kshift,fshift,fkslope,kshift,fshift))
 # Apply filter to all shots, convert back to T-X
 Flow('fshotline',['fkfilter','fkshots'],'''
@@ -85,7 +85,7 @@ Flow('fshotline',['fkfilter','fkshots'],'''
      ''')
 
 # Shot gathers -> CMP gathers
-Flow('cmp','fshotline','shot2cmp half=n')
+Flow('cmp','dshotline','shot2cmp half=n')
 
 ##################
 # Velocity picking
@@ -94,7 +94,7 @@ Flow('cmp','fshotline','shot2cmp half=n')
 # Semblance for velocity picking
 Flow('semb','cmp',
      '''
-     window f3=50 j3=5 n3=91 |
+     window f3=50 j3=10 n3=45 |
      sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=40
      ''')
 
@@ -113,12 +113,30 @@ Flow('vel','pick',
      transp
      ''')
 
+###################
+# Karl's velocities
+###################
+
+# Take picked velocities and covert to ascii RSF file
+Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','../31-81/vpick.txt'],'''
+     ./${SOURCES[0]} ${SOURCES[1]} ${TARGETS[1]} |
+     dd form=native
+     ''',stdin=0)
+# Interpolate onto a regular grid
+Flow('kvel','vpick','''
+     window n1=1 f1=2 | 
+     shapebin head=${SOURCES[0]} xkey=0 ykey=1
+              nx=3000 x0=0 dx=0.002 ny=551 y0=-2612.5 dy=55
+              niter=100 filt1=50 filt2=30 eps=0.1 |
+     put label1=Time unit1=s label2=Midpoint unit2=ft
+     ''')
+
+##################
+# NMO and stacking
+##################
+
 # NMO correction on CMP gathers
 Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
-
-##########
-# Stacking
-##########
 
 # Stacking
 Flow('stack','nmo','stack axis=2 norm=n')
