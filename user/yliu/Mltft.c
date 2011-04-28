@@ -237,4 +237,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mltft.c 5416 2010-02-18 22:48:05Z yang_liu $	 */
+/* 	$Id$	 */
