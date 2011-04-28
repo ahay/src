@@ -11,8 +11,7 @@ for name in rawsegy:
 	  server='http://certmapper.cr.usgs.gov',
       	  top='nersl/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
-    Flow([name,'t'+name,name+'.bin',name+'.asc'],
-         name+'.SGY',
+    Flow([name,'t'+name,name+'.bin',name+'.asc'],name+'.SGY',
          'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
 
 # Raw data and headers combined
@@ -85,24 +84,26 @@ Flow('fshotline',['fkfilter','fkshots'],'''
      ''')
 
 # Shot gathers -> CMP gathers
-Flow('cmp','dshotline','shot2cmp half=n')
+Flow('cmp','fshotline','shot2cmp half=n')
 
 ##################
 # Velocity picking
 ##################
 
-# Semblance for velocity picking
+# Semblance for velocity picking from supergathers (100 CMPs each)
 Flow('semb','cmp',
      '''
-     window f3=50 j3=10 n3=45 |
-     sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=40
+     window n3=500 f3=25 | put n4=5 o4=1485 d4=5500 n3=100 o3=-2722.5 |
+     stack axis=3 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=80
      ''')
 
 # Velocity picking
 Flow('pick','semb','''
+     smooth rect1=80 rect2=5 |
      mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
      mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
-     pick rect1=5 rect2=3 vel0=8000
+     pick rect1=80 rect2=3 vel0=8000 an=0.5
      ''')
 
 # Interpolate onto full CMP grid
@@ -145,10 +146,13 @@ Result('stack','agc rect1=250 | grey title=Stack')
 Flow('mstack','nmo','transp | median')
 Result('mstack','agc rect1=250 | grey title=Median')
 
-#Fetch('31_81_PR.SGY',
-#	server='http://certmapper.cr.usgs.gov',
-#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-#      	  dir='PROCESSED')
+# Stack from USGS
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+Flow(['31_81_PR','t31_81_PR','31_81_PR.bin','31_81_PR.asc'],'31_81_PR.SGY',
+     'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
 
 End()
 
