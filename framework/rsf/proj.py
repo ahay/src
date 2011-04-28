@@ -491,14 +491,17 @@ class Project(Environment):
         view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
                             src_suffix=vpsuffix)
         self.view.append(view)
+
         prnt = self.Command(target + '.print',plot,
                             self.pspen + " printer=%s $SOURCES" % printer,
                             src_suffix=vpsuffix)
         self.prnt.append(prnt)
+
         locked = os.path.join(self.figdir,target+suffix)
         self.InstallAs(locked,target2)
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
+
         self.Command(target + '.flip',target2,
                      '%s $SOURCE %s' % (self.sfpen,locked))
         test = self.Test('.test_'+target,target2,

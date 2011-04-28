@@ -79,10 +79,12 @@ class SUProject(rsf.proj.Project):
             self.Alias(target+'.view',target2+'.x11')
             self.views.append(target)
         self.plots.append(target)
-        lock = self.InstallAs(os.path.join(self.resdir,'.'+target+pssuffix),
-                              target2+pssuffix)
-        self.lock.append(lock)
-        self.Alias(target + '.lock',lock)
+
+        locked = os.path.join(self.figdir,target+pssuffix)
+        self.InstallAs(locked,target2+pssuffix)
+        self.Alias(target + '.lock',locked)
+        self.lock.append(locked)
+        
         test = self.Test('.test_'+target,target2+pssuffix)
         self.test.append(test)
         self.Alias(target + '.test',test)
