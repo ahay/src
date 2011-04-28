@@ -107,7 +107,7 @@ def Plot(target,source,flow=None,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow=None,**kw):
     return apply(project.Result,(target,source,flow),kw)
-def Fetch(file,dir,private=0,server='ftp://ftp.cwp.mines.edu/pub'):
-    return project.Fetch(file,dir,private,server=server)
+def Fetch(file,dir,private=0,server='ftp://ftp.cwp.mines.edu/pub',**kw):
+    return apply(project.Fetch,(file,dir,private,server),kw)
 def End():
     return project.End()

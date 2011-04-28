@@ -1,5 +1,5 @@
 from rsf.suproj import * 
-import rsf.proj
+
 # need to add the velocity analysis script
 # need to add migration
 # need to try sudivstack
@@ -12,35 +12,29 @@ import rsf.proj
 
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
-    rsf.proj.Fetch(file+'.SGY',
+    Fetch(file+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
       	  top='nersl/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
-    Flow([file, 'b'+file,  'h'+file],
+    Flow([file, file+'.bin', file+'.asc'],
          file+'.SGY',
          'segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tape=${SOURCE}',
 	 stdin=0)
 
-
-rsf.proj.Fetch('31_81_PR.SGY',
-	server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-      	  dir='PROCESSED')
-
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
 
 # concatinate the input files
 Flow ('line', rawsegy,
-     '''
-     cat L23535.su L23536.su L23537.su
-     ''',
+     'cat L23535.su L23536.su L23537.su',
      stdin=0)
 
 # display the first 3000 traces
 
 Result('first','line',
-       '''
-       suximage n2=3000 perc=90
-       ''')
+       'suximage n2=3000 perc=90')
 
 Result('zoomfirst','line',
        '''
@@ -125,7 +119,7 @@ Result('test','allshots',
 
 # convert stack and view it:
 file='checkstack'
-Flow([file, 'b'+file, 'h'+file],
+Flow([file, file+'.bin', file+'.asc'],
       '31_81_PR.SGY',
       '''
       segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tape=${SOURCE}
