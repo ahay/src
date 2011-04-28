@@ -1,4 +1,4 @@
-/* Short-time Fourier transform. */
+/* Short-time Fourier transform (STFT). */
 /*
   Copyright (C) 2011 Jilin University
   
@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     bool inv, sym, opt;
-    int n1, nt, nw, i, i1, i2, n2, j, nfw, m;
+    int n1, nt, nw, i, i1, i2, n2, j, ntw, m;
     float dw, ow, *p, *inp, d1, o1, wt, shift;
     kiss_fft_cpx *pp, ce;
     sf_complex *outp;
@@ -39,12 +39,12 @@ int main(int argc, char* argv[])
     /* if y, apply symmetric scaling to make the FFT operator Hermitian */
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
-    if (!sf_getint("nfw",&nfw)) nfw=7;
-    /* time window */
+    if (!sf_getint("ntw",&ntw)) ntw=7;
+    /* time-window length */
 
-    if (nfw < 1)  sf_error("Need positive integer input"); 
-    if (nfw%2 == 0)  nfw = (nfw+1);
-    m = (nfw-1)/2;
+    if (ntw < 1)  sf_error("Need positive integer input"); 
+    if (ntw%2 == 0)  ntw = (ntw+1);
+    m = (ntw-1)/2;
 
     if (inv) {
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	n2 = sf_leftsize(in,1);
 	
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nt = opt? 2*kiss_fft_next_fast_size((nfw+1)/2): nfw;
+	nt = opt? 2*kiss_fft_next_fast_size((ntw+1)/2): ntw;
 	if (nt%2) nt++;
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 	if (!inv) {
 	    sf_floatread (inp,n1,in);
 	    for (i=0; i < n1; i++)  {
-		for (j=0; j < nfw; j++) {
+		for (j=0; j < ntw; j++) {
 		    if (i+j-m < 0 || i+j-m >= n1) {
 			p[j] = 0.;
 		    } else {
@@ -109,12 +109,12 @@ int main(int argc, char* argv[])
 		}
 		
 		if (sym) {
-		    for (i1=0; i1 < nfw; i1++) {
+		    for (i1=0; i1 < ntw; i1++) {
 			p[i1] *= wt;
 		    }
 		}
 		
-		for (i1=nfw; i1 < nt; i1++) {
+		for (i1=ntw; i1 < nt; i1++) {
 		    p[i1]=0.0;
 		}
 		
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 		
 		kiss_fftri(cfg,pp,p);
 		
-		for (i1=0; i1 < nfw; i1++) {
+		for (i1=0; i1 < ntw; i1++) {
 		    p[i1] *= wt;
 		    inp[i+i1-m] += p[i1];
 		}
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
 		inp[i] = inp[i]/((i+m+1)*1.);
 	    }
 	    for (i=m; i < n1-m; i++)  {
-		inp[i] = inp[i]/(nfw*1.);
+		inp[i] = inp[i]/(ntw*1.);
 	    }
 	    for (i=n1-m; i < n1; i++) {
 		inp[i] = inp[i]/((n1-i+m)*1.);
