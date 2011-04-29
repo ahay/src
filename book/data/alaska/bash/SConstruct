@@ -107,11 +107,16 @@ Plot('fkshota','fshotline','''
      window n3=1 f3=%d |
      grey title="Shot at %g ft (after F-K)"
      ''' % (fksv,fksv*440))
+Plot('fkspec','fkshots','''
+     window n3=1 f3=%d max1=50 |
+     math output="sqrt(real(input)*real(input)-imag(input)*imag(input))" | 
+     real | grey allpos=y pclip=100 color=j title="F-K spectrum"
+     ''')
 Plot('fkfilt','fkfilter','''
      window max1=50 |
      grey title="F-K filter" allpos=y color=j scalebar=y pclip=100
      ''')
-Result('fkshot',['fkshotb','fkfilt','fkshota'],'SideBySideAniso')
+Result('fkshot',['fkshotb','fkspec','fkfilt','fkshota'],'SideBySideAniso')
 
 # Shot gathers -> CMP gathers
 Flow('cmp','fshotline','shot2cmp half=n')
@@ -135,6 +140,13 @@ Flow('semb2','cmp',
      stack axis=3 |
      sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=80
      ''')
+
+Result('semb1','''
+       grey color=j allpos=y pclip=100 gainpanel=e title="Semblance (every 10th CMP)"
+       ''')
+Result('semb2','''
+       grey color=j allpos=y pclip=100 gainpanel=e title="Semblance (supergathers)"
+       ''')
 
 # Velocity picking
 Flow('pick1','semb1','''
@@ -165,12 +177,12 @@ Flow('vel2','pick2',
 Result('vel1','''
        window n2=450 f2=50 |
        grey allpos=y bias=8000 color=j scalebar=y pclip=100
-            title="Stacking velocities (every 10th CMP)
+            title="Stacking velocities (every 10th CMP)"
        ''')
 Result('vel2','''
        window n2=450 f2=50 |
        grey allpos=y bias=8000 color=j scalebar=y pclip=100
-            title="Stacking velocities (supergathers, 20 CMPs each)
+            title="Stacking velocities (supergathers, 20 CMPs each)"
        ''')
 
 ###################
@@ -190,6 +202,12 @@ Flow('kvel','vpick','''
               niter=100 filt1=50 filt2=30 eps=0.1 |
      put label1=Time unit1=s label2=Midpoint unit2=ft
      ''')
+
+Result('kvel','''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+            title="Karl's velocities"
+       ''')
 
 ##################
 # NMO and stacking
