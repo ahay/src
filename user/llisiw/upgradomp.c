@@ -18,7 +18,10 @@
 */
 
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #ifndef _upgrad_h
 
