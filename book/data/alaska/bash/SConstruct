@@ -109,7 +109,7 @@ Plot('fkshota','fshotline','''
      ''' % (fksv,fksv*440))
 Plot('fkfilt','fkfilter','''
      window max1=50 |
-     grey title="F-K filter" allpos=y color=j scalebar=y
+     grey title="F-K filter" allpos=y color=j scalebar=y pclip=100
      ''')
 Result('fkshot',['fkshotb','fkfilt','fkshota'],'SideBySideAniso')
 
@@ -120,8 +120,16 @@ Flow('cmp','fshotline','shot2cmp half=n')
 # Velocity picking
 ##################
 
+# Try two different approaches here
+
+# Semblance for velocity picking from every 10th CMP
+Flow('semb1','cmp',
+     '''
+     window n3=45 f3=50 j3=10 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=80
+     ''')
 # Semblance for velocity picking from supergathers (20 CMPs each)
-Flow('semb','cmp',
+Flow('semb2','cmp',
      '''
      window n3=500 f3=25 | put n4=25 o4=-660 d4=1100 n3=20 o3=-577.5 |
      stack axis=3 |
@@ -129,19 +137,41 @@ Flow('semb','cmp',
      ''')
 
 # Velocity picking
-Flow('pick','semb','''
+Flow('pick1','semb1','''
+     mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
+     mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
+     pick rect1=80 rect2=3 vel0=8000
+     ''')
+Flow('pick2','semb2','''
      mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
      mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
      pick rect1=80 rect2=3 vel0=8000
      ''')
 
 # Interpolate onto full CMP grid
-Flow('vel','pick',
+Flow('vel1','pick1',
      '''
      transp plane=23 |
      transp | spline n1=551 d1=55 o1=-2612.5 |
      transp
      ''')
+Flow('vel2','pick2',
+     '''
+     transp plane=23 |
+     transp | spline n1=551 d1=55 o1=-2612.5 |
+     transp
+     ''')
+
+Result('vel1','''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+            title="Stacking velocities (every 10th CMP)
+       ''')
+Result('vel2','''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+            title="Stacking velocities (supergathers, 20 CMPs each)
+       ''')
 
 ###################
 # Karl's velocities
@@ -166,7 +196,7 @@ Flow('kvel','vpick','''
 ##################
 
 # NMO correction on CMP gathers
-Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
+Flow('nmo',['cmp','vel1'],'nmo velocity=${SOURCES[1]} half=n')
 
 # Stacking
 Flow('stack','nmo','stack axis=2 norm=n')
