@@ -7,8 +7,11 @@ import rsf.proj
 #################### 
 # Fetch the dataset and convert to multiple rsf files
 ####################
-# the darn site is down again on Saturday 4/9.  Copy the SGY files into
-# the local direcory and comment out the fetch.
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d
+''' % (1-little_endian())
 
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
@@ -16,10 +19,8 @@ for file in rawsegy  :
 	  server='http://certmapper.cr.usgs.gov',
       	  top='nersl/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
-    Flow([file, 'b'+file,  'h'+file],
-         file+'.SGY',
-         'segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tape=${SOURCE}',
-	 stdin=0)
+    Flow([file, file+'.bin',  file+'.asc'],
+         file+'.SGY',segyread,stdin=0)
 
 
 rsf.proj.Fetch('31_81_PR.SGY',
@@ -30,18 +31,13 @@ rsf.proj.Fetch('31_81_PR.SGY',
 
 # concatinate the input files
 Flow ('line', rawsegy,
-     '''
-     cat L23535.su L23536.su L23537.su
-     ''',
+     'cat L23535.su L23536.su L23537.su',
      stdin=0)
 
 # display the first 3000 traces
 
 Result('first','line',
-       '''
-       suwind key=tracl min=1 max=3000 |
-       suximage perc=90
-       ''')
+       'suwind count=3000 | suximage perc=90')
 
 Result('zoomfirst','line',
        '''
@@ -51,7 +47,8 @@ Result('zoomfirst','line',
 
 #Result('firstmovie','line',
 #       '''
-#       suxmovie n2=101 loop=1 fframe=1 dframe=1 title="record %g" perc=20 
+#       suxmovie n2=101 loop=1 fframe=1 dframe=1 
+#                title="record %g" perc=20 
 #       ''')
 
 Result('firstrec24','line',
@@ -60,9 +57,7 @@ Result('firstrec24','line',
        suximage perc=90
        ''')
 Flow ('hdrfile.txt','line',
-     ''' 
-     sugethw output=geom key=tracl,fldr,tracf
-     ''')
+     'sugethw output=geom key=tracl,fldr,tracf')
  
 #Flow ('InterpText.class','InterpText.java',
 #     '''
@@ -84,11 +79,14 @@ Flow ('binary_hdrfile1.dat','hdrfile1.txt',
      a2b n1=13
      ''')
 
+keys='ep,sx,sy,gx,gy,cdp,tracf,offset,' \
+      'selev,gelev,sstat,gstat,tstat'
+
 Flow ('allshots', ['line', 'binary_hdrfile1.dat'],
      '''
      sushw 
      	   infile=binary_hdrfile1.dat 
-    	   key=ep,sx,sy,gx,gy,cdp,tracf,offset,selev,gelev,sstat,gstat,tstat |
+    	   key=%s |
      sushw 
      	   key=f1 
     	   a=0 |
@@ -103,7 +101,7 @@ Flow ('allshots', ['line', 'binary_hdrfile1.dat'],
      suwind 
      	    key=ep 
 	    reject=149
-    ''')
+    ''' % keys)
 
 #Result('test','allshots',
 #	'''
@@ -127,33 +125,28 @@ Flow ('allshots', ['line', 'binary_hdrfile1.dat'],
 
 # convert stack and view it:
 file='checkstack'
-Flow([file, 'b'+file, 'h'+file],
-      '31_81_PR.SGY',
-      '''
-      segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tape=${SOURCE}
-      |   sushw key=ntr a=534 | sushw key=d1 a=0 
-      ''',
-      stdin=0)
+Flow([file, file+'.bin', file+'.asc'],
+     '31_81_PR.SGY',segyread + '''
+     |   sushw key=ntr a=534 | sushw key=d1 a=0 
+     ''',
+     stdin=0)
 
 Result('checkstack','checkstack',
-       '''
-       suximage title="checkstack" perc=90
-       ''')
+       'suximage title="checkstack" perc=90')
 Result('zoomcheckstack','checkstack',
        '''
        suwind tmin=0 tmax=3  |
        suximage title="zoom checkstack" perc=90
        ''')
 
-Flow('allvelfilt_shot',['allshots','alaska_velfilt.sh'],
-     '''
-     ./alaska_velfilt.sh 100 155
-     ''')
+Flow('allvelfilt_shot','allshots alaska_velfilt.sh',
+     './${SOURCES[1]} 100 155')
 
 #Result('movie_velfilt','allvelfilt_shot',
 #	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 title="record %g" perc=20
-# 	''')
+#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+#                 title="record %g" perc=20
+#	''')
 
 Result('velfiltrec24','allvelfilt_shot',
        '''
@@ -161,26 +154,38 @@ Result('velfiltrec24','allvelfilt_shot',
        suximage perc=90
        ''')
 
+# sergey did this, but it did not work.  I just used a string
+#tnmo=[0000,.339,.607,.707,.872,1.125,
+#      1.358,1.652,2.091,2.349,2.859,6.000]
+#vnmo=[7752,8074,7964,7781,8124,08754,
+#      08931,09721,10425,10742,12518,16552]
+#
+#tnmo = ','.join(map(str,tnmo))
+#vnmo = ','.join(map(str,vnmo))
+
+tnmo='0000,.339,.607,.707,.872,1.125,1.358,1.652,2.091,2.349,2.859,6.000'
+vnmo='7752,8074,7964,7781,8124,8754,8931,9721,10425,10742,12518,16552'
 Flow('velfiltcdpsmute','allvelfilt_shot',
      '''
      susort cdp |
      sunmo 
-       tnmo=0000,.339,.607,.707,.872,1.125,1.358,1.652,2.091,2.349,2.859,6.000 
-       vnmo=7752,8074,7964,7781,8124,08754,08931,09721,10425,10742,12518,16552 |
-    sumute \
+       tnmo=%s
+       vnmo=%s |
+     sumute \
        xmute=-5225,-2970,-55,55,2970,5225 \
        tmute=.700,.280,.100,.100,.280,.700 \
        mode=0 \
        key=offset |
-    sunmo 
-       tnmo=0000,.339,.607,.707,.872,1.125,1.358,1.652,2.091,2.349,2.859,6.000 
-       vnmo=7752,8074,7964,7781,8124,08754,08931,09721,10425,10742,12518,16552 
+     sunmo 
+       tnmo=%s
+       vnmo=%s
        invert=1
-     ''') 
+     ''' % (tnmo,vnmo,tnmo,vnmo)) 
 
 #Result('movie_cdps','velfiltcdpsmute',
 #	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 title="record %g" perc=20
+#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+#        title="record %g" perc=20
 # 	''')
 
 Result('cdp250-251','velfiltcdpsmute',
@@ -249,7 +254,7 @@ Flow('statics_in','velfiltcdpsnmo',
      suresamp rf=2
      ''')
 
-Flow(['sourcestatic.dat' ,'recstatic.dat'],
+Flow('sourcestatic.dat recstatic.dat',
      'statics_in',
      '''
      suresstat \
@@ -268,16 +273,12 @@ Flow(['sourcestatic.dat' ,'recstatic.dat'],
      ''',stdout=0)
 
 Result('sourcestatic','sourcestatic.dat',
-       '''
-       xwigb n1=167 title="source static"
-       ''')    
+       'xwigb n1=167 title="source static"')    
 Result('recstatic','recstatic.dat',
-       '''
-       xwigb n1=668 title="receiver static"
-       ''')    
+       'xwigb n1=668 title="receiver static"')    
 
 Flow('rstack',
-     ['velfiltcdpsnmo','sourcestatic.dat' ,'recstatic.dat'],
+     'velfiltcdpsnmo sourcestatic.dat recstatic.dat',
      '''
      sushw key=tstat a=0 
      | sushw key=sstat a=0 
@@ -295,9 +296,7 @@ Flow('rstack',
      ''')
 
 Result('rstack','rstack',
-       '''
-       suximage title="rstack" perc=90
-       ''')
+       'suximage title="rstack" perc=90')
 
 Result('zoomrstack','rstack',
        '''

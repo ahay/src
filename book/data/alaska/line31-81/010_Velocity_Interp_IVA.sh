@@ -41,6 +41,8 @@ done
 # 2D velocity interpolation
 unisam2 nx1=$nsamp dx1=$dt fx1=$fsamp n1=$nsamp d1=$dt f1=$fsamp nx2=$ncdpin dx2=$dcdpin fx2=$fcdpin n2=$ncdpout d2=$dcdpout f2=$fcdpout method1=linear method2=linear <$OUTVEL1 >$OUTVEL2
 
+rm $OUTVEL1
+
 #ximage n1=$nsamp < $OUTVEL2  d1=$dt f2=$fcdpout d2=$dcdpout cmap=rgb11 &
 
 
