@@ -44,7 +44,7 @@ Flow('shotline',['rawline','shotmask'],
 #############################
 
 # Shot elevation information
-Flow('spelev','../31-81/spnElev.txt',
+Flow('spelev','../line31-81/spnElev.txt',
      '''
      echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
      dd form=native
@@ -60,6 +60,21 @@ Flow('datum',['shotline','elev'],'datshift v0=8000 elev=${SOURCES[1]}')
 # Shift traces
 Flow('dshotline',['shotline','datum'],'datstretch datum=${SOURCES[1]}')
 
+Plot('selev','spelev','''
+     dd type=complex | transp | math output="(real(input) - 100)*440 + imag(input)" |
+     graph screenratio=0.3 min2=0 max2=140 min1=-3000 max1=30000
+           title="Elevation profile" symbol="x"
+     ''')
+Plot('ielev','elev','''
+     graph screenratio=0.3 min2=0 max2=140 min1=-3000 max1=30000
+           title="Elevation profile"
+     ''')
+Result('elev',['selev','ielev'],'Overlay')
+Result('datum','''
+       put label3= unit3=s |
+       plsurf mesh=n color=j az=25 alt=45 title="Datum shift"
+       ''')
+
 ################################
 # Filtration, signal enhancement
 ################################
@@ -67,21 +82,36 @@ Flow('dshotline',['shotline','datum'],'datstretch datum=${SOURCES[1]}')
 # Gain correction, T-X -> F-K
 Flow('fkshots','dshotline','tpow tpow=2.0 | bandpass flo=3 fhi=35 | fft1 | fft3 axis=2')
 # F-K filter for one shot
-fkslope = 100000
-kshift = 0.0
-fshift = 0.0
+fkslope = 10000
+fshift = -2.0
 Flow('fkfilter','fkshots','''
      window n3=1 | real |
-     math output="-%g*(x2-%g)+x1-%g" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
-     math output="(%g*(x2+%g)+x1-%g)*input" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
-     smooth rect1=7 rect2=7 repeat=2
-     ''' % (fkslope,kshift,fshift,fkslope,kshift,fshift))
+     math output="-%g*x2+x1-%g" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
+     math output="(%g*x2+x1-%g)*input" | clip2 upper=1 lower=0.99 | math output="input^1e+6" |
+     smooth rect1=5 rect2=5 repeat=2
+     ''' % (fkslope,fshift,fkslope,fshift))
 # Apply filter to all shots, convert back to T-X
 Flow('fshotline',['fkfilter','fkshots'],'''
      rtoc | spray axis=3 n=57 |
-     math s=${SOURCES[1]} output="real(s)*real(input) + I*real(input)*imag(s)" |
+     math s=${SOURCES[1]} output="real(input)*real(s) + real(input)*imag(s)" |
      fft3 axis=2 inv=y | fft1 inv=y
      ''')
+
+# Shot for visualization
+fksv = 27
+Plot('fkshotb','dshotline','''
+     window n3=1 f3=%d | tpow tpow=2.0 |
+     grey title="Shot at %g ft (before F-K)"
+     ''' % (fksv,fksv*440))
+Plot('fkshota','fshotline','''
+     window n3=1 f3=%d |
+     grey title="Shot at %g ft (after F-K)"
+     ''' % (fksv,fksv*440))
+Plot('fkfilt','fkfilter','''
+     window max1=50 |
+     grey title="F-K filter" allpos=y color=j scalebar=y
+     ''')
+Result('fkshot',['fkshotb','fkfilt','fkshota'],'SideBySideAniso')
 
 # Shot gathers -> CMP gathers
 Flow('cmp','fshotline','shot2cmp half=n')
@@ -90,20 +120,19 @@ Flow('cmp','fshotline','shot2cmp half=n')
 # Velocity picking
 ##################
 
-# Semblance for velocity picking from supergathers (100 CMPs each)
+# Semblance for velocity picking from supergathers (20 CMPs each)
 Flow('semb','cmp',
      '''
-     window n3=500 f3=25 | put n4=5 o4=1485 d4=5500 n3=100 o3=-2722.5 |
+     window n3=500 f3=25 | put n4=25 o4=-660 d4=1100 n3=20 o3=-577.5 |
      stack axis=3 |
      sfvscan half=n semblance=y v0=5000 nv=251 dv=50 nb=80
      ''')
 
 # Velocity picking
 Flow('pick','semb','''
-     smooth rect1=80 rect2=5 |
      mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
      mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
-     pick rect1=80 rect2=3 vel0=8000 an=0.5
+     pick rect1=80 rect2=3 vel0=8000
      ''')
 
 # Interpolate onto full CMP grid
@@ -119,7 +148,7 @@ Flow('vel','pick',
 ###################
 
 # Take picked velocities and covert to ascii RSF file
-Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','../31-81/vpick.txt'],'''
+Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','../line31-81/vpick.txt'],'''
      ./${SOURCES[0]} ${SOURCES[1]} ${TARGETS[1]} |
      dd form=native
      ''',stdin=0)
