@@ -3,9 +3,9 @@ from rsf.proj import *
 Fetch('blast.46.H','blast')
 
 Flow('data','blast.46.H','dd form=native | window f1=150 n1=150')
-Flow(['pef','lag'],'data',
+Flow('pef lag','data',
      'pef lag=${TARGETS[1]} maskin=$SOURCE a=7,2,2')
-Flow('miss',['data','pef'],'miss padin=10 filt=${SOURCES[1]} prec=0')
+Flow('miss','data pef','miss padin=10 filt=${SOURCES[1]} prec=0')
 
 for case in ['data','miss']:
     Flow(case+'bin',case,'byte clip=.0007')

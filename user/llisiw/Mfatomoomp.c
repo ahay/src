@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include <omp.h>
 
 #include "upgradomp.h"
 #include "fastmarch.h"
