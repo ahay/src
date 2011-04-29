@@ -150,7 +150,7 @@ Flow('shotline-despike','shotline dsvel',despike())
 Flow('shotline-imute','shotline-despike shotline-mutemask','math m=${SOURCES[1]} output="input*m"')
 
 # 3.) Remove groundroll with omega-p filter
-Flow('shotline-deGR','shotline-despike',degroundroll())
+Flow('shotline-deGR','shotline-imute',degroundroll())
 
 
 
