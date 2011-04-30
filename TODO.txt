@@ -1,0 +1,6 @@
+The Madagascar project trackers for
+* Bugs
+* Feature Requests
+* Patches
+* Support requests
+are located at http://sourceforge.net/tracker/?group_id=162909
