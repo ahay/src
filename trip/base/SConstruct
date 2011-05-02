@@ -26,7 +26,7 @@ for source in Split(src):
     includes.append(inc)
 
 ##############################################################################
-# MAIN LIBRARY
+# LIBRARY
 ##############################################################################
 lib = env.StaticLibrary('tripbase',objects)
 
@@ -39,4 +39,14 @@ if root:
     env.Install(libdir,lib)
     env.Install(os.path.join(incdir,'trip'),inc)
 
+##############################################################################
+# TESTS
+##############################################################################
+
+for prog in Split('iwave_fopen',):
+    sources = ['Test' + prog,prog]
+    bldutil.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
 
