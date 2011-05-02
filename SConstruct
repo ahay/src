@@ -235,6 +235,23 @@ if os.path.isdir('su'):
         Default(build)
 
 ##########################################################################
+# TRIP BUILD
+##########################################################################
+
+if os.path.isdir('trip'):
+    sudirs = ('base',)
+    for dir in map(lambda x: os.path.join('trip',x), sudirs):
+        build = os.path.join('build',dir)
+        if configure.version[0] > 1:
+            VariantDir(build,dir)
+        else:
+            BuildDir(build,dir)
+        trip_exports = 'env root libdir bindir incdir'
+        SConscript(dirs=build,name='SConstruct',
+                   exports=trip_exports)
+        Default(build)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 

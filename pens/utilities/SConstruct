@@ -22,9 +22,9 @@ includes = map(lambda x: x+'.h',Split(src))
 
 objects = []
 for source in Split(src):
-    env.RSF_Include(source,prefix='pen_')
+    inc = env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
-    env.Depends(obj,source+'.h')
+    env.Depends(obj,inc)
     objects.append(obj)
 
 inc = env.Command('util.h',includes,Action(bldutil.__merge))
