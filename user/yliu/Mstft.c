@@ -135,6 +135,7 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(outp,n1*nw,out);
 	} else {
 	    sf_complexread(outp,n1*nw,in);
+
 	    for (i=0; i < n1; i++)  {
 		inp[i] = 0.;
 	    }
@@ -143,7 +144,6 @@ int main(int argc, char* argv[])
 		    pp[i1].r = crealf(outp[i1*n1+i]);
 		    pp[i1].i = cimagf(outp[i1*n1+i]);
 		}
-
 		if (0. != o1) {
 		    for (i1=0; i1 < nw; i1++) {
 			shift = +2.0*SF_PI*i1*dw*ow;
@@ -157,9 +157,12 @@ int main(int argc, char* argv[])
 		
 		for (i1=0; i1 < ntw; i1++) {
 		    p[i1] *= wt;
-		    inp[i+i1-m] += p[i1];
+		    if (i+i1-m >= 0 && i+i1-m < n1) {
+			inp[i+i1-m] += p[i1];
+		    }
 		}
 	    }
+
 	    for (i=0; i < m; i++) {
 		inp[i] = inp[i]/((i+m+1)*1.);
 	    }
@@ -168,8 +171,9 @@ int main(int argc, char* argv[])
 	    }
 	    for (i=n1-m; i < n1; i++) {
 		inp[i] = inp[i]/((n1-i+m)*1.);
-	    }	    
+	    }
 	    sf_floatwrite(inp,n1,out);
+
 	}
     }
     sf_warning(".");
@@ -179,6 +183,7 @@ int main(int argc, char* argv[])
     free(cfg);
     free(inp);
     free(outp);
+    
     exit(0);
 
 }
