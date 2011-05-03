@@ -27,8 +27,8 @@
 
 int main (int argc, char* argv[])
 {
-    bool pef, gauss;
-    int id, nd, nt, it, nx, interp, niter, pad;
+    bool pef, gauss, verb;
+    int id, nd, nt, it, nx, interp, niter, pad, i3, n3;
     float *pp, *mm, *dd, *offset, x0, dx, xmin, xmax, f, filt, eps;
     char *header;
     sf_file in, out, head;
@@ -37,9 +37,11 @@ int main (int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+
     if (!sf_histint(in,"n1",&nd)) nd=1;
     if (!sf_histint(in,"n2",&nt)) nt=1;
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    n3 = sf_leftsize(in,2);
 
     /* create coordinates */
     offset = sf_floatalloc(nd);
@@ -52,16 +54,21 @@ int main (int argc, char* argv[])
 
     head = sf_input(header);
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
-    sf_floatread (offset,nd,head);
-    sf_fileclose (head);
 
-    xmin = +FLT_MAX;
-    xmax = -FLT_MAX;
-    for (id=0; id<nd; id++) {	
-	f = offset[id]; 
-	if (f < xmin) xmin=f;
-	if (f > xmax) xmax=f;
+    if (1==n3) {
+	sf_floatread (offset,nd,head);
+	
+	xmin = +FLT_MAX;
+	xmax = -FLT_MAX;
+	for (id=0; id<nd; id++) {	
+	    f = offset[id]; 
+	    if (f < xmin) xmin=f;
+	    if (f > xmax) xmax=f;
+	}
     }
+
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
  
     /* create model */
     if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
@@ -90,20 +97,6 @@ int main (int argc, char* argv[])
     if (!sf_getint("interp",&interp)) interp=2;
     /* [1,2] forward interpolation method, 1: nearest neighbor, 2: linear */
 
-    switch (interp) {
-	case 1:
-	    sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
-	    sf_warning("Using nearest-neighbor interpolation");
-	    break;
-	case 2:
-	    sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
-	    sf_warning("Using linear interpolation");
-	    break;
-	default:
-	    sf_error("Unsupported interp=%d",interp);
-	    break;
-    }
-
     if (!sf_getfloat("filter",&filt)) filt=3.;
     /* smoothing length */
 
@@ -131,29 +124,48 @@ int main (int argc, char* argv[])
     } else {
 	sf_triangle1_init ((int) filt, nx);
     }
-    sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-10, true, false);
+    sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-10, verb, false);
 
     if (pef) monofshape_init(nx+pad);
 
-    for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_floatread (dd,nd,in);
+    for (i3=0; i3 < n3; i3++) {
+	if (!verb) sf_warning("%d of %d;",i3+1,n3);
 
-	if (gauss) {
-	    sf_conjgrad(NULL, sf_int1_lop, sf_freqfilt_lop, 
-			pp, mm, dd, niter);
-	} else {
-	    sf_conjgrad(NULL, sf_int1_lop, sf_triangle1_lop, 
-			pp, mm, dd, niter);
+	if (n3 > 1) sf_floatread (offset,nd,head);
+
+	switch (interp) {
+	    case 1:
+		sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
+		break;
+	    case 2:
+		sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
+		break;
+	    default:
+		sf_error("Unsupported interp=%d",interp);
+		break;
 	}
 
-	if (pef) {
-	    monofshape_set(0.1,nx,mm,100);
-	    sf_conjgrad(NULL, sf_int1_lop, monofshape_lop, pp, mm, dd, niter);
-	}
+
+	for (it=0; it < nt; it++) { /* loop over time slices */
+	    sf_floatread (dd,nd,in);
+	    
+	    if (gauss) {
+		sf_conjgrad(NULL, sf_int1_lop, sf_freqfilt_lop, 
+			    pp, mm, dd, niter);
+	    } else {
+		sf_conjgrad(NULL, sf_int1_lop, sf_triangle1_lop, 
+			    pp, mm, dd, niter);
+	    }
+
+	    if (pef) {
+		monofshape_set(0.1,nx,mm,100);
+		sf_conjgrad(NULL, sf_int1_lop, monofshape_lop, pp, mm, dd, niter);
+	    }
 	
-    	sf_floatwrite (mm,nx,out);
+	    sf_floatwrite (mm,nx,out);
+	}
     }
-
+    if (!verb) sf_warning(".");
 
     exit(0);
 }

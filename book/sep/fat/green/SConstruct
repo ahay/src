@@ -21,7 +21,7 @@ dt=0.0005
 Flow('source',None,
      '''
      spike n1=%d d1=%g k1=100 | 
-     ricker1 frequency=10
+     ricker1 frequency=20
      '''%(nt,dt))
 
 Flow('vel','marmvel','window n1=1 | spray axis=1 n=751 | cat axis=1 $SOURCE | smooth rect1=3 rect2=3')
