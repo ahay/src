@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include <omp.h>
 
 #include "upgradomp.h"
 #include "fastmarch.h"
@@ -31,7 +32,7 @@ int main(int argc, char* argv[])
     bool velocity, l1norm, shape, plane[3], verb;
     int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order;
     int iter, niter, stiter, *k, nfreq, nmem, *rhslist;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, *dv, **source, *rhs, *ds, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, rece, topo, grad, norm;
@@ -62,14 +63,17 @@ int main(int argc, char* argv[])
     /* read initial guess */
     s = sf_floatalloc(nt);
     sf_floatread(s,nt,sinp);
-    
+
     if (!sf_getbool("velocity",&velocity)) velocity=true;
     /* if y, the input is velocity; n, slowness squared */
     
+    /* convert to slowness squared */
     if (velocity) {
 	for (it=0; it < nt; it++) {
 	    s[it] = 1./s[it]*1./s[it];
 	}
+
+	dv = sf_floatalloc(nt);
     }
     
     /* allocate memory for temporary data */
@@ -79,8 +83,6 @@ int main(int argc, char* argv[])
     for (it=0; it < nt; it++) {
 	temps[it] = s[it];
     }
-    
-    dv = sf_floatalloc(nt);
 
     if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
     /* norm for minimization (default L2 norm) */
@@ -303,18 +305,22 @@ int main(int argc, char* argv[])
 		    }
 		}
 
-		/* convert to velocity */
-		for (it=0; it < nt; it++) dv[it]=ds[it]/sqrtf(s[it]);
+		/* convert to slowness perturbation */
+		for (it=0; it < nt; it++) {
+		    ds[it] = ds[it]/sqrtf(s[it]);
+		}
 		
 		if (grad != NULL) {		
 		    if (velocity) {
-			for (it=0; it < nt; it++) dv[it]=-dv[it]/(s[it]+ds[it]);
+			for (it=0; it < nt; it++) {
+			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
+			}
 			sf_floatwrite(dv,nt,grad);
 		    } else {
-			sf_floatwrite(dv,nt,grad);
+			sf_floatwrite(ds,nt,grad);
 		    }
-		}		
-		
+		}
+
 		/* line search */
 		gama = 1.;
 		for (count=0; count < 10; count++) {
@@ -322,7 +328,7 @@ int main(int argc, char* argv[])
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] != 1)
-			    temps[it] = (sqrtf(s[it])+gama*dv[it])*(sqrtf(s[it])+gama*dv[it]);
+			    temps[it] = (sqrtf(s[it])+gama*ds[it])*(sqrtf(s[it])+gama*ds[it]);
 		    }
 
 		    /* forward fast-marching for stencil time */		    
@@ -343,6 +349,7 @@ int main(int argc, char* argv[])
 		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
 		    rate = rhsnorm/rhsnorm1;
 		    
+		    /* break */
 		    if (rate < 1.) {
 			for (it=0; it < nt; it++) {
 			    s[it] = temps[it];
@@ -365,7 +372,7 @@ int main(int argc, char* argv[])
 		    sf_warning("L1 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
 		else
 		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
-		
+
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }
 	    

@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], nt, dim, i, j, is, nshot, offset, *topo, **mask, left, right;
-    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM];
+    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], temp;
     char key[4];
     sf_file in, shot, out;
     
@@ -66,8 +66,10 @@ int main(int argc, char* argv[])
 
     /* modify for 3D */
     for (is=0; is < nshot; is++) {
-	left  = (source[is][1]-o[1])/d[1]-offset;
-	right = (source[is][1]-o[1])/d[1]+offset;
+	temp = (source[is][1]-o[1])/d[1];
+
+	left  = (int)temp-offset;
+	right = (int)temp+offset;
 	
 	for (j=0; j < n[1]; j++) {
 	    
