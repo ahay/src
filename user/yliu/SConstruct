@@ -11,7 +11,8 @@ mf mig2 miss4 miss43 mlm mtm mlwm multiple nmradon nmult nonloc oclet
 pwcsemb pwd2 pwsfault pwsfault3 pwsmooth pwsmooth3 radonoper rtft
 saltpepper sclet seisavf seishrink seislet97 seismis2 seispocs
 seisreg2 sharpsimi snr st stft svddenoise swell testapef testcasoper
-testmatch threshold2 tvmf variogram vconvert wavemis2 wmf zcwt
+testmatch threshold2 tvmf variogram variogram2 vconvert wavemis2 wmf
+zcwt
 '''
 
 try:  # distributed version
