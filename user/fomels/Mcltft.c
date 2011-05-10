@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
 	    sf_putstring(out,"label2","Slope");
 	    sf_putstring(out,"unit2","");
 
+            if (!sf_histint(in,"n2",&nw)) nw=1;
 	    if (!sf_histfloat(in,"d2",&dw)) dw=1.;
 	    if (!sf_histfloat(in,"o2",&w0)) w0=0.;
 	} else {
@@ -109,6 +110,7 @@ int main(int argc, char* argv[])
 	    if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
 	    if (!sf_histfloat(in,"o2",&p0)) sf_error("No o2= in input");
 
+            if (!sf_histint(in,"n2",&nw)) nw=1;
 	    if (!sf_histfloat(in,"d3",&dw)) dw=1.;
 	    if (!sf_histfloat(in,"o3",&w0)) w0=0.;
 	} else {
@@ -171,7 +173,7 @@ int main(int argc, char* argv[])
 	sf_warning("slice %d of %d;",i2+1,n2);
 
 	if (dip) {
-	    w = w0 + i2*dw;
+	    w = w0 + (i2 % nw)*dw;
 	    for (ip=0; ip < np; ip++) {
 		p = -w*(p0 + ip*dp);
 		
