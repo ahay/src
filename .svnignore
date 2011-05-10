@@ -1,0 +1,8 @@
+config.log
+config.py
+build
+env.sh
+.sconsign.dblite
+env.csh
+.sconf_temp
+Makefile

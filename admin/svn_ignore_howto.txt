@@ -1,0 +1,4 @@
+Place the filenames/patterns (wildcard only) in a .svnignore file in the
+directory, then
+
+svn propset svn:ignore -F .svnignore .
