@@ -18,13 +18,17 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
+dynlib = ('' != env.get('DYNLIB',''))
 ##############################################################################
 # INCLUDES
 ##############################################################################
 includes = map(lambda x: x+'.h',psrc)
 
 objects = []
-dobjects = []
+
+if dynlib:
+    dobjects = []
+
 for source in psrc:
     env.RSF_Include(source,prefix='vp_')
 
@@ -32,27 +36,34 @@ for source in psrc:
     env.Depends(obj,source+'.h')
     objects.append(obj)
 
-    obj = env.SharedObject(source+'.c')
-    env.Depends(obj,source+'.h')
-    dobjects.append(obj)
+    if dynlib:
+        obj = env.SharedObject(source+'.c')
+        env.Depends(obj,source+'.h')
+        dobjects.append(obj)
 
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
 slib = env.StaticLibrary('rsfplot',objects)
-dlib = env.SharedLibrary('rsfplot',dobjects,
+if dynlib:
+    dlib = env.SharedLibrary('rsfplot',dobjects,
                          SHLIBPREFIX='libd',
                          LIBS=['drsf']+env.get('LIBS',[]))
 
 inc = env.Command('rsfplot.h',includes,Action(bldutil.__merge))
-env.Install('../../lib',[slib,dlib])
+env.Install('../../lib',slib)
+if dynlib:
+    env.Install('../../lib',dlib)
 env.Install('../../include',inc)
 
 if root:
-    install = env.Install(libdir,[slib,dlib])
+    install_list = [slib]
+    if dynlib:
+        install_list.append(dlib)
+    install = env.Install(libdir,install_list)
     env.Install(incdir,inc)
 
-    if env['PLATFORM'] == 'darwin':                
+    if dynlib and env['PLATFORM'] == 'darwin':                
         env.AddPostAction(install,
                           'install_name_tool -change '
                           'build/api/c/libdrsf.dylib '

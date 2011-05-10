@@ -55,6 +55,9 @@ In programs:
 * Fixed float-to-int truncation bug in sfdd triggered by Intel C Compiler 10
 * Fixed large-file-support bug in sfshot2cmp
 
+In the build system:
+* Madagascar now compiling with CC=icc LINKFLAGS=-static-intel
+
 ==Release 1.1 (2011-01-18)==
 
 ===Additions and enhancements===
