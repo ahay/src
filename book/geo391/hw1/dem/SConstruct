@@ -39,4 +39,34 @@ Result('hist','hist cumu',
 
 # ADD HISTOGRAM EQUALIZATION
 
+
+# Variogram
+Flow('vari','byte',
+     '''
+     dd type=float |
+     variogram dh=4 oh=10 semi=y
+     ''')
+Result('vari',
+       '''
+       window n2=1 f2=600 | 
+       graph min2=0 label2=Variance title=Variogram
+       ''')
+
+# Horizontal variogram
+Flow('vari2','byte',
+     '''
+     dd type=float |
+     variogram2 dh1=10 oh1=10 dh2=10 oh2=10 semi=y verb=y
+     ''')
+
+Plot('contour','vari2',
+     'contour scalebar=y screenratio=1 yreverse=n wantaxis=n wanttitle=n')
+Plot('vari2',
+     '''
+     grey color=j bias=5000 title="Horizontal variogram"
+     yreverse=n screenratio=1 scalebar=y
+     ''')
+Result('vari2','vari2 contour','Overlay')
+
+
 End()
