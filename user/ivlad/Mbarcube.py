@@ -27,12 +27,22 @@ except: # Use distributed version
     import rsf.user.sf as sf
 
 ################################################################################
+# <inp sfbar >bar.rsf
+
+#<i11.transp.w.rsf sfbyte gainpanel=a pclip=98 | sfgrey3 frame1=105 frame2=235 frame3=2 scalebar=y color=j bar=bar_noarg.rsf >junk.vpl
 
 def main(par):
 
     verb   = par.bool('verb'  , False)
     dryrun = par.bool('dryrun', False)
-    color  = par.string('color', 'i')
+    
+    # sfbyte arguments:
+    bytepars = {}
+    for key in ['gainpanel', 'pclip', 'clip']:
+        bytepars[key] = par.string(key, None)
+
+    # sfgrey3 arguments:
+    color  = par.string('color', None)
     
     lbl = int(100000000*random.random())
     suffix = '.' + str(lbl) + ivlad.ext

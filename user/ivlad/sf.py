@@ -151,7 +151,7 @@ def bandpass(inp=None, out=None, fhi=None, flo=None, nphi=None, nplo=None,
 
 ################################################################################
 
-def bar(inp=None, out=None, color=None, verb=False, exe=None):
+def bar(inp=None, out=None, verb=False, exe=None):
   
     return __run('sfbar', __parse(locals()), 
         inp, out, 
