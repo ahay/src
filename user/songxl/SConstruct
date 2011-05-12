@@ -1,30 +1,38 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-wave1 wave4 wave124 sbd waveab integral rfilter wave2dss 
-wave2domp wavefft waveffte wavefftb
-wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1  ffdv0b1
-                                 fdb1 fd2bs 
-                                 pspif2 pspifs2 
-                                 pspifcos2 pspifscos2 pspifcos2b pspifcos2bs 
-                                 ffdcos2 ffdcos2b ffdcos2bc ffdcos2bs ffd2b
-                                 ffdan2b ffdan4b ffdantti4b ffdanttic
-                                 ffdantti4b_smsr ffd2b_smsr
-                                 ffdantti4b_rvr  ffd2b_rvr ffd2_ps
-trycos lmm laplace
+wave1 wave4 wave124 sbd waveab wave2dss wavefft wavefftb
+wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1
+                                 fdb1 fd2bs
+                                 pspif2 pspifs2 pspifcos2 pspifscos2 pspifcos2b pspifcos2bs
+                                 ffdcos2 ffdcos2b ffd2b ffdcos2bs
+                                 ffdan2b ffdan4b ffdantti4b
+                                 ffdantti4b_smsr ffd2_ps
+                                 ffdantti4b_rvr  ffd2b_rvr
+laplace laplace2
+ffd2dehf sp 
+ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10 
+ofd2_25
+lffd1_10 lffd2_4 lffd2_4_c
 '''
+#constpermffd constpermkz
+#vzpermffd vz1
+#vzpermffd3 permffd3
+#permf
 
+#lfdc1_10
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-
-src = Glob('[a-z]*.c')
+    src = glob.glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
