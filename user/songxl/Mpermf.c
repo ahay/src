@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     sf_file data, image, snaps, vel; 
     int nvz;
     float dvz, vz;
-//    int ihp,ihm,ixp,ixm,izp,izm,izpp,izmm;
+    int ihp,ihm,ixp,ixm,izp,izm,izpp,izmm;
 
     sf_init(argc,argv);
 
@@ -407,17 +407,17 @@ int main(int argc, char* argv[])
                 }
             }
         }
-	for (iz=2; iz < nzb-2; iz++) {
-	    for (ix=1; ix < nxb-1; ix++) {
-		for (ih=1; ih < nhb-1; ih++) {
-                    tmpq[iz][ix][ih] = a[iz]*tmp[iz][ix][ih] + b1[iz]*(tmp[iz][ix][ih-1]+tmp[iz][ix][ih+1])+b2[iz]*(tmp[iz][ix-1][ih]+tmp[iz][ix+1][ih])+b3[iz]*(tmp[iz+1][ix][ih]+tmp[iz-1][ix][ih]) + d3[iz]*(tmp[iz+2][ix][ih]+tmp[iz-2][ix][ih])+c1[iz]*(tmp[iz-1][ix-1][ih]+tmp[iz-1][ix+1][ih]+tmp[iz+1][ix-1][ih]+tmp[iz+1][ix+1][ih])+c2[iz]*(tmp[iz-1][ix][ih-1]+tmp[iz-1][ix][ih+1]+tmp[iz+1][ix][ih-1]+tmp[iz+1][ix][ih+1])+c3[iz]*(tmp[iz][ix-1][ih-1]+tmp[iz][ix-1][ih+1]+tmp[iz][ix+1][ih-1]+tmp[iz][ix+1][ih+1]);
-                }
-        }
-       }
-/*
 	for (iz=0; iz < nzb; iz++) {
 	    for (ix=0; ix < nxb; ix++) {
 		for (ih=0; ih < nhb; ih++) {
+                    ixp = ix+1<nxb?ix+1:ix+1-nxb;
+                    ihp = ih+1<nhb?ih+1:ih+1-nhb;
+                    izp = iz+1<nzb?iz+1:iz+1-nzb;
+                    izpp = iz+2<nzb?iz+2:iz+2-nzb;
+                    ixm = ix-1>-1?ix-1:ix-1+nxb;
+                    ihm = ih-1>-1?ih-1:ih-1+nhb;
+                    izm = iz-1>-1?iz-1:iz-1+nzb;
+                    izmm = iz-2>-1?iz-2:iz-2+nzb;
                     tmpq[iz][ix][ih] = a[iz]*tmp[iz][ix][ih] + b1[iz]*(tmp[iz][ix][ihm]+tmp[iz][ix][ihp])+b2[iz]*(tmp[iz][ixm][ih]+tmp[iz][ixp][ih])+b3[iz]*(tmp[izp][ix][ih]+tmp[izm][ix][ih]) + d3[iz]*(tmp[izpp][ix][ih]+tmp[izmm][ix][ih])+c1[iz]*(tmp[izm][ixm][ih]+tmp[izm][ixp][ih]+tmp[izp][ixm][ih]+tmp[izp][ixp][ih])+c2[iz]*(tmp[izm][ix][ihm]+tmp[izm][ix][ihp]+tmp[izp][ix][ihm]+tmp[izp][ix][ihp])+c3[iz]*(tmp[iz][ixm][ihm]+tmp[iz][ixm][ihp]+tmp[iz][ixp][ihm]+tmp[iz][ixp][ihp]);
                 }
         }
@@ -426,13 +426,6 @@ int main(int argc, char* argv[])
 	for (iz=0; iz < nzb; iz++) {
 	    for (ix=0; ix < nxb; ix++) {
 		for (ih=0; ih < nhb; ih++) {
-	for (iz=2; iz < nzb-2; iz++) {
-	    for (ix=1; ix < nxb-1; ix++) {
-		for (ih=1; ih < nhb-1; ih++) {
-*/
-	for (iz=nbt; iz < nzb-2; iz++) {
-	    for (ix=nxl; ix < nxb-1; ix++) {
-		for (ih=nhl; ih < nhb-1; ih++) {
                     tmpq[iz][ix][ih]  += (2.0*curr[iz][ix][ih]-prev[iz][ix][ih]);
                     prev[iz][ix][ih]  = curr[iz][ix][ih];
                     curr[iz][ix][ih]  = tmpq[iz][ix][ih];
