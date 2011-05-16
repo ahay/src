@@ -248,6 +248,9 @@ Result('zoombrutestack','brutestack',
        suximage title="brutestack" perc=90
        ''')
 
+# do inverse nmo, 1 function nmo and compare residual statics.  compare
+# velanalysis after residual statics.
+
 Flow('statics_in','velfiltcdpsnmo',
      '''
      suwind tmin=1.0 tmax=3.0 | 
@@ -316,19 +319,49 @@ Result('vfile','stkvel1.intp2.bin',
 
 Flow('mig',['rstack','stkvel1.intp2.bin'],
      '''
+     sufrac power=.5 sign=1 |
      suktmig2d vfile=stkvel1.intp2.bin dx=55 hoffset=0 
      ''')
 
 Result('mig','mig',
        '''
-       sufilter f=4,8,200,240 |
        suximage title="mig" perc=90
        ''')
 Result('zoommig','mig',
        '''
-       sufilter f=4,8,200,240 |
        suwind tmin=0 tmax=3.0  |
        suximage title="mig" perc=90
+       ''')
+
+# it looks like one offset is used for the whole offset gather
+# documentation says use sufrac before migration
+Flow('premig',['velfiltcdpsnmo','vpick.txt','stkvel1.intp2.bin'],
+     './mig.sh')
+
+Flow('premigstack','premig',
+     '''
+     susort | 
+     sustack 
+        key=cdp 
+        normpow=1 
+     ''')
+
+Result('premigstack','premigstack',
+       '''
+       sufilter f=4,8,200,240 |
+       suximage title="premigstack" perc=90
+       ''')
+Result('zoompremigstack','premigstack',
+       '''
+       sufilter f=4,8,200,240 |
+       suwind tmin=0 tmax=3.0  |
+       suximage title="premigstack" perc=90
+       ''')
+
+Result('premigmovie','premig',
+       '''
+       suxmovie n2=536 loop=1 fframe=1 dframe=1 
+                title="record %g" perc=20 
        ''')
 
 End()
