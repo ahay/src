@@ -44,13 +44,14 @@ void loconvol_transient_lop(bool adj, bool add, int nx, int ny,
 		  float *xx, float *yy)
 /*< convolve >*/
 {
+    int i;
 	helix_tcai_init(aa);
     aa++;
     sf_warning("\nnx=%d ny=%d nh=%d ntot=%d",nx,ny,aa->nh-1,ny+(aa->nh-1));
 
     helix_tcai_lop(adj, add, nx, ny+(aa->nh-1), xx, yy_pad);
     //memcpy(yy,yy_pad+nh2, ny);
-    for (int i=0;i<ny;i++)
+    for (i=0;i<ny;i++)
     	yy[i] = yy_pad[i+nh2];
 
 }

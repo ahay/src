@@ -83,7 +83,7 @@ float f_hyper_t2(float H2, float sa2, float ca2, float xc, float V_0_2, float m,
 int main(int argc, char* argv[])
 {
     float H2, sa2,  ca2,  xc, alpha, sa, ca, H, V2;
-    int  Nm, Nh, im0;
+    int  Nm, Nh, im0, im, ih;
     float dm, om, dh, oh, x0,  A1, A2, B, sum, max_err;
     
     float **t;                    /* surface to fit */
@@ -169,16 +169,16 @@ int main(int argc, char* argv[])
     x0 = om + dm * im0;
     t0 = t[im0][0];
     t02 = t0 * t0;
-    for (int im = 0; im < Nm; im ++) {
+    for (im = 0; im < Nm; im ++) {
 	m_mids[im] = /*1000.f* */( (om + im * dm) - x0);
     }
 
-    for (int ih = 0; ih < Nh; ih ++) {
+    for (ih = 0; ih < Nh; ih ++) {
 	h_halfoffset[ih] = /*1000.f* */(oh + ih*dh);
     }
 
-    for (int im = 0; im < Nm; im ++) {
-	for (int ih = 0; ih < Nh; ih ++) {
+    for (im = 0; im < Nm; im ++) {
+	for (ih = 0; ih < Nh; ih ++) {
 	    dT2[im][ih] = t[im][ih]*t[im][ih] - t02;
 	}
     }
@@ -233,8 +233,8 @@ end
     //t02 == f_hyper_t2( H2, sa2, ca2, xc, V2, 0, 0);
     //dT2(im,ix)=f_hyper_t2( H2, sa2, ca2, xc, V2, m(im), x(ix) ) - t02;
 
-    for (int im = 0; im < Nm; im ++) {
-	for (int ih = 0; ih < Nh; ih ++) {
+    for (im = 0; im < Nm; im ++) {
+	for (ih = 0; ih < Nh; ih ++) {
 
 
 	    dT2crs[im][ih] = //f_nonhcrs(m_mids[im], h_halfoffset[ih], A1, A2, B, t0, t02);

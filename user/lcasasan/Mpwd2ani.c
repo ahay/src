@@ -73,6 +73,9 @@ int main (int argc, char *argv[])
 	ani = sf_floatalloc(n12);
 	
 	for (i3=0; i3 < n3; i3++) {
+
+            int i12;
+
 	    /* read data */
 	    sf_floatread(u1,n12,in);
 	    
@@ -81,7 +84,7 @@ int main (int argc, char *argv[])
 		if (NULL != aniso)  
 			sf_floatread(ani,n12,aniso);		
 		else 
-			for (int i12=0; i12<n12; i12++) {
+			for (i12=0; i12<n12; i12++) {
 				ani[i12]=1;
 			}
 		

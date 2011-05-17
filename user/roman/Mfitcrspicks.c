@@ -34,22 +34,23 @@ Output:
 
 double sum(float * m, int Nm, int k)
 {
+    int i;
     double s = 0.f;
 
     if (1 == k) {
-	for (int i = 0; i < Nm; i++) 
+	for (i = 0; i < Nm; i++) 
 	    s += m[i];
     }
     else if (2 == k) {
-	for (int i = 0; i < Nm; i++) 
+	for (i = 0; i < Nm; i++) 
 	    s += m[i] * m[i];
     } else { 
 	if (3 == k) {
-	    for (int i = 0; i < Nm; i++) 
+	    for (i = 0; i < Nm; i++) 
 		s += m[i] * m[i] * m[i];	
 	} else { 
 	    assert(4 == k);
-	    for (int i = 0; i < Nm; i++) 
+	    for (i = 0; i < Nm; i++) 
 		s += m[i] * m[i] * m[i] * m[i];
 	}
     }
@@ -83,11 +84,12 @@ double crs_dt(double a[3], float m, float h)
 // output: Tcrs[h][m] and err=Sum Sum (T-Tcrs)^2 dm dh
 double f_crs(float **dT2, double a[3], float **dT2crs, int Nm, int Nh, float * m, float * h, int **mask)
 {
+    int im, ih;
     double d, sum = 0.f;
 
-    for (int im = 0; im < Nm; im++) {
+    for (im = 0; im < Nm; im++) {
 
-	for (int ih = 0; ih < Nh; ih++) {
+	for (ih = 0; ih < Nh; ih++) {
 	    
 	    dT2crs[im][ih] = crs_dt(a, m[im], h[ih]);
 
@@ -104,13 +106,14 @@ double f_crs(float **dT2, double a[3], float **dT2crs, int Nm, int Nh, float * m
 // grad[3]
 void f_grad_crs(double grad[3], float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs, int **mask)
 {
+    int im, ih;
     double delta_dT;
 
     grad[0] = grad[1] = grad[2] = 0.;
 
-    for (int im = 0; im < Nm; im++) {
+    for (im = 0; im < Nm; im++) {
 
-	for (int ih = 0; ih < Nh; ih++) {
+	for (ih = 0; ih < Nh; ih++) {
 
 	    delta_dT = dT2[im][ih] - dT2crs[im][ih];
 
@@ -130,6 +133,7 @@ void f_grad_crs(double grad[3], float * m, int Nm, float * h, int Nh, float **dT
 }
 void inverse_mat(double h[3][3], double i[3][3])
 {
+    int j, k, l;
     double d = 
 
 	-h[0][2]*h[1][1]*h[2][0] + h[0][1]*h[1][2]*h[2][0] + h[0][2]*h[1][0]*h[2][1]
@@ -148,10 +152,10 @@ void inverse_mat(double h[3][3], double i[3][3])
     i[2][1] = i[1][2];
     i[2][2] = (- h[0][1] * h[1][0] + h[0][0] * h[1][1]) / d;
 
-    for (int l=0;l<3;l++) {
-	for (int j=0;j < 3; j++) {
+    for (l=0;l<3;l++) {
+	for (j=0;j < 3; j++) {
 	    d = 0;
-	    for (int k=0;k<3;k++) {
+	    for (k=0;k<3;k++) {
 		d += h[l][k]*i[k][j];
 	    }
 	    if (l == j) 
@@ -164,6 +168,7 @@ void inverse_mat(double h[3][3], double i[3][3])
 }
 double fit_crs_params(float * m, int Nm, float * h, int Nh, float **dT2, float **dT2crs, int **mask, double a0[3], double a[3], double * sum_old)
 {
+    int i, k;
 
     *sum_old = f_crs(dT2, a0, dT2crs, Nm, Nh, m, h, mask);
 
@@ -178,11 +183,11 @@ double fit_crs_params(float * m, int Nm, float * h, int Nh, float **dT2, float *
     //Hinv = H^-1
     inverse_mat(Hess, invH);
     // da = -H^-1 * grad
-    for(int i=0; i < 3; i++) {
+    for(i=0; i < 3; i++) {
 	
 	da[i] = 0.;
 
-	for(int k=0; k < 3; k++) {
+	for(k=0; k < 3; k++) {
 	    da[i] -= invH[i][k] * grad[k];	
 	}
     }
@@ -201,15 +206,15 @@ void pick_first_picks(float *** Ttraces,
 		      float ot, float dt, int Nm, int Nh, int Nt)
  // t - the times corresponding to 1st local maximum
 {
-    int it_max;
+    int it_max, im, ih, it;
     float t_max;
-    for (int im=0; im < Nm; im++) {
-	for (int ih = 0; ih < Nh; ih++) {
+    for (im=0; im < Nm; im++) {
+	for (ih = 0; ih < Nh; ih++) {
 
 	    t_max = -1000.f;
 	    it_max = -1;
 
-	    for (int it = 0; it < Nt; it++) {
+	    for (it = 0; it < Nt; it++) {
 		if (Ttraces[im][ih][it] > t_max) {
 		    t_max = Ttraces[im][ih][it];
 		    it_max = it;
@@ -227,7 +232,7 @@ void pick_first_picks(float *** Ttraces,
 int main(int argc, char* argv[])
 {
     
-    int  itmp, Nm, Nh, im0;
+    int  itmp, Nm, Nh, im0, im, ih;
     float dm, om, dh, oh, x0, grad_norm;
     
     float **t;                    /* surface to fit */
@@ -329,16 +334,16 @@ int main(int argc, char* argv[])
     x0 = om + dm * (Nm - 1.f)/2.f; /* im0; */
     t0 = t[im0][0];
     t02 = t0 * t0;
-    for (int im = 0; im < Nm; im ++) {
+    for (im = 0; im < Nm; im ++) {
 	m_mids[im] = /*1000.f* */( (om + im * dm) - x0);
     }
 
-    for (int ih = 0; ih < Nh; ih ++) {
+    for (ih = 0; ih < Nh; ih ++) {
 	h_halfoffset[ih] = /*1000.f* */(oh + ih*dh);
     }
 
-    for (int im = 0; im < Nm; im ++) 
-	for (int ih = 0; ih < Nh; ih ++) 		
+    for (im = 0; im < Nm; im ++) 
+	for (ih = 0; ih < Nh; ih ++) 		
 	    dT2[im][ih] = t[im][ih]*t[im][ih] - t02;
 
     crs_a0[0] = crs_a0[1] = crs_a0[2] = 0.f;
@@ -368,8 +373,8 @@ int main(int argc, char* argv[])
     //if (out_tcrs_file) {
 	// BUGBUG
 	 //sf_intwrite(t_colors[0][0],nz*nx*na,out_colors);
-	for (int im = 0; im < Nm; im ++) 
-	    for (int ih = 0; ih < Nh; ih ++) 		
+	for (im = 0; im < Nm; im ++) 
+	    for (ih = 0; ih < Nh; ih ++) 		
 		tcrs[im][ih] = sqrt(dT2crs[im][ih] + t02);
 
        sf_floatwrite(tcrs[0],Nm*Nh,out_tcrs);
