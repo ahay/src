@@ -83,4 +83,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mlorenz.c 7186 2011-04-28 10:00:36Z yang_liu $	 */
+/* 	$Id$	 */
