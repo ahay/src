@@ -5,14 +5,14 @@ import bldutil
 progs = '''
 apef apef2 apefsignoi atm1 atm2 bilstack c1coh difference doeps domf
 dominantf donf dowmf duwt dwt97 epsf fkoclet fkoclet3 fourmis2 freqreg
-freshape geoconvert groll initial kuwahara locorr lpad2 lpfdenoise1
-lpfdenoise2 lrmf ltft lum lum2 lumsmoother lumsharpener matchoper mean
-mf mig2 miss4 miss43 mlm mtm mlwm multiple nmradon nmult nonloc oclet
-pwcsemb pwd2 pwsfault pwsfault3 pwsmooth pwsmooth3 radonoper rtft
-saltpepper sclet seisavf seishrink seislet97 seismis2 seispocs
-seisreg2 sharpsimi snr st stft svddenoise swell testapef testcasoper
-testmatch threshold2 tvmf variogram variogram2 vconvert wavemis2 wmf
-zcwt
+freshape geoconvert groll initial kuwahara lorenz locorr lpad2
+lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother lumsharpener
+matchoper mean mf mig2 miss4 miss43 mlm mtm mlwm multiple nmradon
+nmult nonloc oclet pwcsemb pwd2 pwsfault pwsfault3 pwsmooth pwsmooth3
+radonoper rtft saltpepper sclet seisavf seishrink seislet97 seismis2
+seispocs seisreg2 sharpsimi snr st stft svddenoise swell testapef
+testcasoper testmatch threshold2 tvmf variogram variogram2 vconvert
+wavemis2 wmf zcwt
 '''
 
 try:  # distributed version

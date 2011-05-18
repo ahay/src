@@ -48,4 +48,30 @@ for k in range(0,61,2):
 allman = map(lambda x: 'man%d.vpl' % x,range(31))
 Plot('manit',allman,'Movie',view=1)
 
+# ------------------------------------------------------------
+for p in range(1,1000002,5000):
+    Flow('lorenz'+str(p//5000),None,'lorenz niter=%d' %p)
+    Plot('lorenz'+str(p//5000),
+         '''
+         window n2=1 f2=1 | 
+         graph min1=-20 max1=20 min2=5 max2=50 
+         screenht=10 screenwd=12.5 title=%d
+         ''' %p)
+lorenzs = map(lambda x: 'lorenz%d.vpl' % x,range(200))
+Plot('lorenzs',lorenzs,'Movie',view=1)
+Result('lorenzs','lorenz200','Overlay')
+
+# Generate animated vpl
+#allorenz =[]
+#for p in range(1,500000,5000):
+#    Flow('lorenz'+str(p//5000),None,'lorenz n=500000 niter=%d' %p)
+#    allorenz.append('lorenz'+str(p//5000))
+#Flow('allorenz',allorenz,'cat axis=3 ${SOURCES[1:%d]}' % 99)
+#Result('allorenz',
+#       '''
+#       window n2=1 f2=1 squeeze=n | 
+#       graph min1=-20 max1=20 min2=5 max2=50 screenht=10 
+#       screenwd=12.5 title="Lorenz attractor (X-Y plane)"
+#       ''')
+
 End()
