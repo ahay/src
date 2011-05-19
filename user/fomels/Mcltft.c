@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	sf_shiftdim(in, out, 2);
 
 	if (!sf_getint("rect",&rect)) rect=10;
-	/* smoothing radius */
+	/* smoothing radius (in time, samples) */
 	if (!sf_getint("niter",&niter)) niter=100;
 	/* number of inversion iterations */
 

@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	sf_settype(out,SF_COMPLEX);
 
 	if (!sf_getint("rect",&rect0)) rect0=10;
-	/* smoothing radius */
+	/* smoothing radius (in time, samples) */
 	if (!sf_getint("niter",&niter)) niter=100;
 	/* number of inversion iterations */
 	if (!sf_getfloat("alpha",&alpha)) alpha=0.;
