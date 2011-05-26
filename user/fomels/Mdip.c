@@ -1,4 +1,7 @@
-/* 3-D dip estimation by plane wave destruction. */
+/* 3-D dip estimation by plane wave destruction. 
+
+The output is dimensionless (stepout in time measured in time samples). 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
