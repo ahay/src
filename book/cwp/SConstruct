@@ -26,7 +26,7 @@ report = (('2006',
            '''
            pept2011MicroearthquakeMonitoring
            '''
-          )
+          ))
 
 Papers(papers=report,
        copyr='Colorado School of Mines',group='Center for Wave Phenomena',
