@@ -1,3 +1,3 @@
-uses=['sffern', 'sfgraph', 'sfput', 'sfspray', 'sfreal', 'sfmath', 'sfmask', 'sfdd', 'sfrtoc', 'sfadd', 'sfmandelbrot', 'sfgrey']
+uses=['sffern', 'sfgraph', 'sfput', 'sfspray', 'sfreal', 'sfmath', 'sfmask', 'sfdd', 'sfrtoc', 'sfadd', 'sfmandelbrot', 'sfgrey', 'sflorenz', 'sfwindow']
 data=[]
-size=  165600000
+size=   34600024
