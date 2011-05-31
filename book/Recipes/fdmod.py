@@ -111,8 +111,8 @@ def cgrey(custom,par):
     grey 
     parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],

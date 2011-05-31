@@ -71,7 +71,7 @@ def ciggrey(custom,par):
         par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+' '+custom,par)
 
 def zgrey(custom,par):
     return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+' '+custom,par)
@@ -96,7 +96,7 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
 #    dx=hxmax-hxmin
 #    dy=hymax-hymin
 #    dz=hzmax-hzmin
-#    yxratio=dx/(dx+dy);
+#    yxeatio=dx/(dx+dy);
 #    yzratio=dz/(dz+dy);
 #    par['eratio3']=(dz+dy)/(dx+dy);
 #    par['epointz']=yzratio;
@@ -241,3 +241,15 @@ def sgrey(custom,par):
             par['labelattr']+' '+custom )
 
 
+def lgrey(custom,par):
+    return '''
+    grey title="" pclip=100
+    label2="\F10 l\F3 \_x\^" unit2=%s
+    label1="\F10 t\F3      " unit1=%s
+    screenratio=%g
+    xll=2 yll=1
+    %s
+    ''' % (par['ux'],
+           par['ut'],
+	   par['lratio'],
+	   par['labelattr']+' '+custom)
