@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(vrms,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(vrms,"n2",&n2)) sf_error("No n2= in input");
     nd = n1*n2;
+    if (sf_leftsize(vrms,2) > 1) sf_error("Can handle 2D only");
 
     if (!sf_getint("rect1",&rect1)) rect1=3;
     if (!sf_getint("rect2",&rect2)) rect2=3;
