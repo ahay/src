@@ -28,7 +28,7 @@ The axes in the output are {time,offset,midpoint}
 int main(int argc, char* argv[])
 {
     int type;
-    off_t pos;
+    off_t pos, step;
     bool sign, half;
     int   ns,    ny,    nh, nh2, nt;
     int   is,    iy,    ih, ih2=0, *mask;
@@ -121,7 +121,11 @@ int main(int argc, char* argv[])
 	    is = sign? (iy - ih)/type : (iy + ih)/type - (nh - 1)/type;
 
 	    if (is >= 0 && is < ns && ih < nh) {
-		sf_seek(in,pos+ (off_t) (is*nh+ih)*nt,SEEK_SET);
+		step = (off_t) is*nh+ih;
+		step *= nt;
+
+		sf_seek(in,pos+step,SEEK_SET);
+
 		sf_charread(trace,nt,in);
 		sf_charwrite(trace,nt,out);
 		if (NULL != msk) mask[ih2++] = 1;
