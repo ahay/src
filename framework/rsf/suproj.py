@@ -89,8 +89,11 @@ class SUProject(rsf.proj.Project):
         self.test.append(test)
         self.Alias(target + '.test',test)
     def End(self):
+        self.Command('.suproj',self.lock,
+                     action=self.Action(self.Info,var='su,suffix'),
+                     su=1,suffix='.su')
         if self.plots: # if any results
-            self.Alias('lock',self.lock)
+            self.Alias('lock',self.lock+['.suproj'])
             self.Alias('test',self.test)
         if self.views:
             self.Alias('view',map(lambda x: x+'.view',self.views))

@@ -22,18 +22,22 @@ for a list of RSF files.  Non-RSF files are ignored.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 
 #include <rsf.h>
 
 int main (int argc, char* argv[])
 {
     char            *filename=NULL, *prefix=" KMGT";
-    int             i, j, esize;
+    int             i, j, esize, st;
     off_t           bytes, total, p1024[5];
     float           size_human;
-    bool            files, human;
+    bool            files, human, su;
+    struct stat     buf;
     sf_file         file=NULL;
 
     sf_init (argc,argv);
@@ -43,6 +47,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("human",&human)) human=false;
     /* If y, print human-readable file size.  If n, print byte count. */
+
+    if (!sf_getbool("su",&su)) su=false;
+    /* Same for Seismic Unix */
 
     /* Set up powers of 1024 */
     p1024[0] = 1;
@@ -59,20 +66,30 @@ int main (int argc, char* argv[])
         if (NULL != strchr(filename,'=')) continue;
 
                                 /* Skip if not rsf file         */
-        if (strcmp(&filename[strlen(filename)-4],".rsf") != 0) continue;
 
-                                /* Get file properties          */
-        file = sf_input(filename);
-        if (NULL == file) continue;
+	if (su) {
+	    if (strcmp(&filename[strlen(filename)-3],".su") != 0) continue;
 
-        bytes = sf_bytes(file);
-        if (bytes < 0) { /* reading from "stdin" */
-            bytes = sf_filesize (file);
-            if (!sf_histint(file,"esize",&esize) || esize <= 0)
-            sf_error("%s: need esize > 0 in input",__FILE__);
-            bytes *= esize;
-        }
-        sf_fileclose(file);
+	    st = stat(filename,&buf);
+	    if (0 != st) sf_error ("%s: cannot find file size:",__FILE__);
+
+	    bytes = buf.st_size;
+	} else {
+	    if (strcmp(&filename[strlen(filename)-4],".rsf") != 0) continue;
+
+	    /* Get file properties          */
+	    file = sf_input(filename);
+	    if (NULL == file) continue;
+
+	    bytes = sf_bytes(file);
+	    if (bytes < 0) { /* reading from "stdin" */
+		bytes = sf_filesize (file);
+		if (!sf_histint(file,"esize",&esize) || esize <= 0)
+		    sf_error("%s: need esize > 0 in input",__FILE__);
+		bytes *= esize;
+	    }
+	    sf_fileclose(file);
+	}
 
         total += bytes;
 

@@ -8,8 +8,14 @@ To the reproducible documents collection:
   transversely isotropic media (Alkhalifah and Fomel) 
 * jsg/agath: Theory of 3-D angle gathers in wave-equation seismic
   imaging (Fomel)
+* cwp/pept2011MicroearthquakeMonitoring: Micro-earthquake monitoring
+  with sparsely-sampled data (Sava)
 
 To SCons:
+
+* New directory structure:
+  documentation under $RSFROOT/share/doc/madagascar
+  other supplemental files under $RSFROOT/share/madagascar
 
 To documentation:
 
@@ -35,6 +41,7 @@ To programs:
 * sfmath accepts sign() function
 * all= option in sfget
 * sfbar: separate program for creating scalebar data
+* sflorenz (generate Lorenz attractor)
 
 ===Bug fixes===
 
@@ -46,6 +53,7 @@ In documentation:
 In APIs:
 
 * Fixed rsf_write to write complex-valued data
+* Enabled building of dynamic libraries
 
 In the Python package:
 

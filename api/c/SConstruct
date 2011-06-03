@@ -27,8 +27,6 @@ except: # local version
     env = bldutil.Debug()
     root = None
 
-dynlib = ('' != env.get('DYNLIB',''))
-
 ##############################################################################
 # INCLUDES
 ##############################################################################
@@ -39,9 +37,7 @@ version = env.get('version','unknown')
 env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 
 sobjs = []
-
-if dynlib:
-    dobjs = []
+dobjs = []
 
 for source in Split(src2):
     env.RSF_Include(source,prefix='sf_')
@@ -49,33 +45,27 @@ for source in Split(src2):
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     sobjs.append(obj)
-    
-    if dynlib:
-        obj = env.SharedObject(source+'.c')
-        env.Depends(obj,source+'.h')
-        dobjs.append(obj)
+ 
+    obj = env.SharedObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    dobjs.append(obj)
 
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
 slib = env.StaticLibrary('rsf',sobjs+sources)
-
-if dynlib:
-    dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
+dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
 
 inc = env.Command('rsf.h',includes,Action(bldutil.__merge))
 
 env.Install('../../lib',slib)
-
-if dynlib:
-    env.Install('../../lib',dlib)
+env.Install('../../lib',dlib)
 
 env.Install('../../include',inc)
 
 if root:
     env.Install(libdir,slib)
-    if dynlib:
-        env.Install(libdir,dlib)
+    env.Install(libdir,dlib)
     env.Install(incdir,inc)
 
 ##############################################################################

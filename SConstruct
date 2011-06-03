@@ -22,7 +22,8 @@ libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 shrdir = os.path.join(root,'share')
 pkgdir = setenv.get_pkgdir(root)
-etcdir = os.path.join(root, 'etc', 'madagascar')
+
+etcdir = os.path.join(shrdir, 'madagascar', 'etc')
 
 ##########################################################################
 # CONFIGURATION
@@ -56,11 +57,17 @@ env.InstallAs('#/build/framework/rsf/conf.py','framework/configure.py')
 
 # ----------- Environment variable setup scripts -----------
 
+etcdir2 = os.path.join(root, 'etc', 'madagascar')
+
 for sh in ('sh','csh'):
     shrc  = env.Command('env.'+sh,  '', setenv.shell_script,
                         varlist=('shell'),shell=sh)
     env.Alias('config',shrc)
     env.Install(etcdir,shrc)
+
+    # backward compatibility
+    if os.path.isdir(etcdir2):
+        env.Install(etcdir2,shrc)
 
 env['version'] = bldutil.__read_version_file('VERSION.txt')
 
@@ -255,5 +262,12 @@ if os.path.isdir('trip'):
 # INSTALLATION
 ##########################################################################
 
+docdir = os.path.join(shrdir, 'doc', 'madagascar') 	 
+for docfile in Split('AUTHORS COPYING NEWS README'): 	 
+    env.Install(docdir,docfile+'.txt')
+
 env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
 
+# backward compatibility
+if os.path.isdir(etcdir2):
+    env.Alias('install',etcdir2)

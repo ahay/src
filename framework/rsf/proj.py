@@ -200,7 +200,7 @@ class Project(Environment):
         self.pspen = os.path.join(self.bindir,'pspen')
         self.vppen = os.path.join(self.bindir,'vppen')
         
-        self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','figs'))
+        self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
         
         cwd = os.getcwd()
         self.cwd = cwd
@@ -527,8 +527,10 @@ class Project(Environment):
         info.write('uses=' + str(self.coms) + '\n')
         info.write('data=' + str(self.data) + '\n')        
         info.close()
-        sizes = os.path.join(self.bindir,'sfsizes')
-        os.system('%s files=n *%s >> %s' % (sizes,sfsuffix,infofile))
+        sizes = os.path.join(self.get('RSFROOT',rsf.prog.RSFROOT),'bin','sfsizes')
+        su = env.get('su',0)
+        suffix = env.get('suffix',sfsuffix)
+        os.system('%s files=n su=%d *%s >> %s' % (sizes,su,suffix,infofile))
         return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if private:

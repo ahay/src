@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
     map4 nmo; /* using cubic spline interpolation */
     bool slow,interval;
     int it,ix,iy, nt, nx, ny, nw, i4, n4, n;
-    float dt, t0, x, y, x0, y0, f, ft, dx, dy, eps, den;
+    float dt, t0, x, y, x0, y0, f=0., ft, dx, dy, eps, den;
     float *trace=NULL, *vx=NULL, *vy=NULL, *vxy=NULL, *str=NULL, *out=NULL;
     sf_file cmp=NULL, nmod=NULL, vel=NULL;
 

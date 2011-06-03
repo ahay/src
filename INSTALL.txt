@@ -66,13 +66,13 @@ Software construction
       If your shell is sh or bash, add to your $HOME/.bashrc and
       $HOME/.bash_profile files the line
 
-      source RSFROOT/etc/madagascar/env.sh
+      source RSFROOT/share/madagascar/etc/env.sh
 
       where RSFROOT is the install directory you specified in the --prefix 
       option to ./configure. If your shell is (t)csh, add to your $HOME/.cshrc
       file the line
 
-      source RSFROOT/etc/madagascar/env.csh
+      source RSFROOT/share/madagascar/etc/env.csh
 
       Be aware that on some systems the default value for DATAPATH set in the 
       script above may get automatically cleaned at some intervals, so if you 
