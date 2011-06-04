@@ -10,6 +10,8 @@ To the reproducible documents collection:
   imaging (Fomel)
 * cwp/pept2011MicroearthquakeMonitoring: Micro-earthquake monitoring
   with sparsely-sampled data (Sava)
+* jsg/vc3: Azimuthally anisotropic 3D velocity continuation (Burnett
+  and Fomel)
 
 To SCons:
 
