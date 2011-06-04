@@ -414,7 +414,7 @@ class RSFReport(Environment):
                      os.path.basename(cwd))
 
         root = rsf.prog.RSFROOT
-        self.doc = os.environ.get('RSFBOOK',os.path.join(root,'share','madagascar','book'))
+        self.doc = os.environ.get('RSFBOOK',os.path.join(root,'share','madagascar'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
