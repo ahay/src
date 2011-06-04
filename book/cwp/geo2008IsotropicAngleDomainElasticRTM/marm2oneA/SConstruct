@@ -190,7 +190,7 @@ Result('ma','transp|' + fdmod.dgrey('',par))
 # acoustic modeling
 fdmod.awefd('da','wa','wava','vp','rx','ss','rr','',par)
 fdmod.wom('wam','wa','vp',1.5,par)
-Result('wam',          fdmod.wgrey('pclip=100',par))
+Plot('wam',          fdmod.wgrey('pclip=100',par),view=1)
 Result('da','transp | bandpass flo=8 |'
        +fdmod.dgrey('pclip=99 screenratio=2.5 labelsz=5 labelfat=2 wantaxis=n',par))
 
