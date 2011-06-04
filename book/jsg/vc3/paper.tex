@@ -24,12 +24,12 @@ We provide synthetic diffraction imaging examples to illustrate the concept and 
 
 \section{Introduction}
 
-Velocity continuation \cite{fomel94, GEO68-05-16501661} provides a framework for describing how a seismic image changes given a change in the migration velocity model.  
+Velocity continuation \cite[]{fomel94, GEO68-05-16501661} provides a framework for describing how a seismic image changes given a change in the migration velocity model.  
 Similar in concept to residual migration \cite[]{GEO50-01-01100126} and cascaded migrations \cite[]{GEO52-05-06180643}, velocity continuation is a continuous formulation of the same process.  
 Velocity continuation has found applications in migration velocity analysis \cite[]{GEO68-05-16621672, schleicher_etal08a} and diffraction imaging \cite[]{novais_etal06, fomel_landa_taner07}.
 
 
-Fomel \cite{fomel94} and Hubral et al. \cite{hubral_etal96} point out that velocity continuation is a wave propagation process.  
+\cite{fomel94} and \cite{hubral_etal96} point out that velocity continuation is a wave propagation process.  
 Instead of wavefronts propagating as a function of time, images propagate as a function of migration velocity.  
 Recent work has extended the concept to heterogeneous and anisotropic velocity models \cite[]{Alkhalifah.sep.94.tariq3, GEO67-01-01260134, iversen06, schleicher_alexio07, schleicher_etal08b, duchkov_dehoop09}.  
 To account for anisotropy, the seismic velocity model must become multi-parameter.  
@@ -44,8 +44,7 @@ Azimuthal seismic imaging commonly requires iterations between velocity analysis
 Residual azimuthal variations in traveltime after migration can be measured by using migration binning schemes which preserve both offset and azimuth information \cite[]{cary99,vermeer99}.
 After the first pass of (isotropic) migration, azimuthal variations in velocity are detected from residual moveout, which then provides the velocity model for anisotropic migration.  
 Iterative processing flows that use these strategies are popular not only because they are fairly efficient and intuitive, but also because they can be implemented with minimal modification to existing software.  However, iterative imaging flows cannot guarantee convergence to the correct or optimal velocity model \cite[]{FBR08-06-02240234}.  
-Velocity continuation has the underlying strategy of performing velocity analysis and imaging simultaneously, and can thus be used to directly find an optimal velocity model without iteration.  
-Sicking et al. \cite{sicking_nelan_mclain07} have demonstrated the success of a similar strategy of using imaging as a velocity analysis tool for 3D multiazimuth reflection seismic data.  
+Velocity continuation has the underlying strategy of performing velocity analysis and imaging simultaneously, and can thus be used to directly find an optimal velocity model without iteration.  \cite{sicking_nelan_mclain07} have demonstrated the success of a similar strategy of using imaging as a velocity analysis tool for 3D multiazimuth reflection seismic data.  
 Azimuthal velocity continuation can provide a theoretical framework for this approach.  
 With these benefits as motivation, we extend time-domain velocity continuation to 3D, accounting for the case of azimuthally variable migration velocity.
 
@@ -58,9 +57,11 @@ Starting with a geometrical description of the image, a corresponding kinematic 
 Subsequently, the kinematic equation is used to derive a corresponding wave equation, which describes the dynamic behavior of the image as an evolution through imaging parameter coordinates. 
 This section outlines the key steps of this derivation, starting with a traveltime equation that permits azimuthal variations in velocity. 
 
-Grechka and Tsvankin \cite{GEO63-03-10791092} truncate a two-dimensional Taylor series expansion for a generally inhomogeneous anisotropic media to derive the ``NMO ellipse'' moveout equation. 
-Geometrically, the NMO ellipse model still assumes that events have hyperbolic moveout with offset, but it allows the velocity to change with azimuth. 
-We start here by using the same truncated 2D Taylor series expansion to describe an azimuth-dependent traveltime equation for the summation surface of zero-offset time migration,
+\cite{GEO63-03-10791092} truncate a two-dimensional Taylor series expansion for a generally inhomogeneous anisotropic media to derive the ``NMO ellipse'' moveout equation. Geometrically, the NMO ellipse model still assumes that events have
+hyperbolic moveout with offset, but it allows the velocity to change
+with azimuth.  We start here by using the same truncated 2D Taylor
+series expansion to describe an azimuth-dependent traveltime equation
+for the summation surface of zero-offset time migration,
 
 \begin{equation}
 \label{eq:TofW}
@@ -119,14 +120,14 @@ S^2(\theta )=W_{slow}\cos^2(\theta -\beta )+W_{fast}\sin^2(\theta -\beta).
 
 Equations \ref{eq:lambda}-\ref{eq:S} allow one to convert the mathematically convenient parameters of $\tensor{W}$ to more intuitive parameters, such as the fastest and slowest propagation velocities ($V_{fast}$,$V_{slow}$), the azimuth of the slowest velocity ($\beta $), and the percent anisotropy ($\sigma = 100\times \left( 1-V_{slow}/V_{fast}\right)$).
 Alternatively, $\tensor{W}$ can be converted into other common geophysical parametrizations. 
-For example, Grechka and Tsvankin \cite{GEO63-03-10791092} show that once the effective parameters $\tensor{W}$ have been converted to slowness as a function of azimuth by equation \ref{eq:S}, they can be expressed in terms of horizontal transverse isotropy parameters as,
+For example, \cite{GEO63-03-10791092} show that once the effective parameters $\tensor{W}$ have been converted to slowness as a function of azimuth by equation \ref{eq:S}, they can be expressed in terms of horizontal transverse isotropy parameters as,
 
 \begin{equation}
 \label{eq:thomsen-GT98-HTI}
 S^2(\theta )=\frac{1}{V_{P0}^2}\frac{1+2\delta ^{(v)}\sin^2(\theta)}{1+2\delta ^{(v)}},
 \end{equation}
 
-\noindent where $\delta ^{(v)}$ is the Thomsen-style parameter \cite{GEO51-10-19541966}, introduced by Tsvankin \cite{GEO62-02-06140629}, and $V_{P0}$ is the vertical P-wave velocity.
+\noindent where $\delta ^{(v)}$ is the Thomsen-style parameter \cite[]{GEO51-10-19541966}, introduced by \cite{GEO62-02-06140629}, and $V_{P0}$ is the vertical P-wave velocity.
 
 Conventionally, one assumes that equation \ref{eq:TofW} characterizes a particular event defined in image coordinates ($\mathbf{x},\tau $), but one can also describe how that event would transform given a change in the image parameters $\tensor{W}$. Regardless of the velocity model, the traveltime $T$ must remain unchanged between different images.  From this observation, we arrive at the following set of conditions:
 
@@ -185,8 +186,11 @@ In a vector notation, this becomes
 
 \noindent where $\nabla _{\mathbf{x}}$ and $\nabla _{\tensor{W}}$ are in the form given by equations \ref{eq:dTdx} and \ref{eq:dTdW}.
 
-The method of characteristics \cite[]{courant_hilbert89} provides a link between a kinematic equation (such as \ref{eq:kinematictau}) and its corresponding wave-type equation. 
-Fomel \cite{GEO68-05-16501661} demonstrates specifically how the method can be used to derive a velocity continuation wave equation from its kinematic counterpart. 
+The method of characteristics \cite[]{courant_hilbert89} provides a
+link between a kinematic equation (such as \ref{eq:kinematictau}) and
+its corresponding wave-type equation. \cite{GEO68-05-16501661}
+demonstrates specifically how the method can be used to derive a
+velocity continuation wave equation from its kinematic counterpart.
 By first setting the characteristic surface condition,
 
 \begin{equation}
@@ -224,7 +228,7 @@ Then, by introducing $\tensor{P}_{xx}$ as the spatial Hessian matrix of the wave
 \end{equation}
 
 \noindent In the isotropic case, $\tensor{W}$ is diagonal and $W_{11}=W_{22}$.  
-Equation \ref{eq:wave} then reduces to the isotropic velocity continuation equation first derived by Claerbout \cite{Claerbout.sep.48.79}.
+Equation \ref{eq:wave} then reduces to the isotropic velocity continuation equation first derived by \cite{Claerbout.sep.48.79}.
 
 \section{Method}
 Since velocity continuation is described by a wave equation, it can be implemented in analogous ways to seismic migration.  Here, we demonstrate a spectral implementation of equation \ref{eq:wave}.  
@@ -275,7 +279,7 @@ In the second example, we apply the method to a synthetic post-stack image of a 
 The second example illustrates fracture characterization through diffraction imaging as a potential application for 3D azimuthal velocity continuation.
 The data in both examples are modeled using equation \ref{eq:TofW}, which geometrically approximates a diffraction surface as an elliptical-hyperbolic surface.
 Field data and more accurately modeled data will generally also exhibit nonhyperbolic moveout, for which equation \ref{eq:TofW} does not account.
-The physical validity and limitations of equation \ref{eq:TofW} are thoroughly discussed by Grechka and Tsvankin \cite{GEO63-03-10791092}, but we focus here on how well diffractions can be collapsed, and how well the velocity parameters can be measured, if the data are ideally described by equation \ref{eq:TofW}. 
+The physical validity and limitations of equation \ref{eq:TofW} are thoroughly discussed by \cite{GEO63-03-10791092}, but we focus here on how well diffractions can be collapsed, and how well the velocity parameters can be measured, if the data are ideally described by equation \ref{eq:TofW}. 
 
 
 Figure \ref{fig:images}a shows a single diffraction event, modeled using equation \ref{eq:TofW}.  
@@ -298,7 +302,7 @@ Since only a single diffraction is present in this example, we can measure kurto
 Figure \ref{fig:focus} is a 2D slice of the kurtosis volume at the correct $W_{11}=1/V_{x_1}^2$ value of 0.0935 = 1/(3.27 km/s)$^2$.  
 The peak of the kurtosis map is near the correct values of $\sigma $=7 and $\beta $=105$^{\circ }$.
 Once the peak of the kurtosis map is identified, one could refine the increments around the peak to yield more accurate estimates.
-The physical limitations of resolving azimuthal velocity parameters are discussed by Al-Dajani and Alkhalifah \cite{GEO65-01-02220231}. 
+The physical limitations of resolving azimuthal velocity parameters are discussed by \cite{GEO65-01-02220231}. 
 
 In practice, a conventional in-line 2D velocity analysis directly yields $W_{11}$ from $1/V_{x_1}^2$, so Figure~\ref{fig:focus} could illustrate a realistic scenario for using 3D velocity continuation to improve upon a previous isotropic velocity model.  
 In such a case, one would use previous $V_{x_1}$ picks to hold $W_{11}$ constant, and then effectively test a variety of $W_{12}$ and $W_{22}$ values.  
@@ -316,8 +320,8 @@ characterization.
 Figure \ref{fig:images-mig-all}a shows a 3D synthetic
 post-stack diffraction data set, equivalent to the ideal separation of
 diffractions from specular reflections in post-stack data following 
-Fomel et al. \cite{fomel_landa_taner07}.  
-A fault map from Hargrove \cite{hargrove10} (shown in Figure \ref{fig:images-mig-all}a) was digitized and used to create a 3D fracture model.  
+\cite{fomel_landa_taner07}.  
+A fault map from \cite{hargrove10} (shown in Figure \ref{fig:images-mig-all}a) was digitized and used to create a 3D fracture model.  
 Each fault location was used to generate a point diffraction in a homogeneous anisotropic
 background via equation \ref{eq:TofW}. 
 A timeslice of the modeled diffraction data is shown in Figure \ref{fig:images-mig-all}b.
@@ -343,19 +347,19 @@ anisotropy information may be possible.
 
 \inputdir{fracs}
 \plot*{images-mig-all}{width=\textwidth}
-{(a) Fault map from Northwest Scotland \cite{hargrove10} used to model diffraction data. (b) Synthetic post-stack diffraction data modeled using equation \ref{eq:TofW} and a 3D model based on the fault map in (a).  (c) Diffractions from (b) migrated using an isotropic velocity model.  (d) Diffractions from (b) migrated by anisotropic 3D velocity continuation.}
+{(a) Fault map from Northwest Scotland \cite[]{hargrove10} used to model diffraction data. (b) Synthetic post-stack diffraction data modeled using equation \ref{eq:TofW} and a 3D model based on the fault map in (a).  (c) Diffractions from (b) migrated using an isotropic velocity model.  (d) Diffractions from (b) migrated by anisotropic 3D velocity continuation.}
 
 \section{Discussion and Conclusions}
 By extending time-domain velocity continuation to the azimuth\-ally anisotropic 3D case, we have combined the concepts of azimuthal imaging and diffraction imaging.  We assume a three-parameter migration slowness model that allows velocity to vary elliptically with azimuth.  We have provided simple examples to illustrate the potential application of our meth\-od to fracture characterization through diffraction imaging.  By treating diffractions as signal, our method performs azimuthal analysis on post-stack data, without the requirement for common-offset-vector or offset-vector-tile binning schemes.  This is possible because, unlike reflections, diffractions can preserve azimuthal information post-stack.  Post-stack data volumes have obvious advantages over pre-stack or vector-binned data for analysis, including smaller memory size, and improved signal-to-noise ratio.
 
-Allowing azimuthal variation in the migration velocity will result in improved imaging, which is clearly a benefit of 3D velocity continuation.  However, the potential for fracture characterization may be even more useful.  Our method has many of the same ideas as the azimuthal imaging and fracture characterization flow proposed by Sicking et al. \cite{sicking_nelan_mclain07} for reflection data.  
+Allowing azimuthal variation in the migration velocity will result in improved imaging, which is clearly a benefit of 3D velocity continuation.  However, the potential for fracture characterization may be even more useful.  Our method has many of the same ideas as the azimuthal imaging and fracture characterization flow proposed by \cite{sicking_nelan_mclain07} for reflection data.  
 Under the velocity continuation framework, we can extend the azimuthal imaging idea to 3D diffraction imaging.  
 Since diffraction-generating fractures and faults are often nearly vertical and preferentially aligned, they can be associated with azimuthal anisotropy. 
-Fomel et al. \cite{fomel_landa_taner07} demonstrate that it is possible to separate diffractions from specular reflections, and then image their associated discontinuities through the use of velocity continuation.  
+\cite{fomel_landa_taner07} demonstrate that it is possible to separate diffractions from specular reflections, and then image their associated discontinuities through the use of velocity continuation.  
 Their method operates on post-stack data, as they show that diffractions are highly sensitive to migration velocity, even in the zero-offset case.
-Al-Dajani and Fomel \cite{aldajani_fomel10} have successfully demonstrated zero-offset diffraction image focusing as a fracture detection attribute on azimuth-sectored 3D field data.
+\cite{aldajani_fomel10} have successfully demonstrated zero-offset diffraction image focusing as a fracture detection attribute on azimuth-sectored 3D field data.
 Our proposed method uses multi-azimuth image focusing primarily as a velocity analysis criterion, but kurtosis could also be used as an image attribute. 
-In cases where subsurface fractures cause azimuthal anisotropy, kurtosis as an attribute may be indicative of fracture intensity \cite{aldajani_fomel10}.
+In cases where subsurface fractures cause azimuthal anisotropy, kurtosis as an attribute may be indicative of fracture intensity \cite[]{aldajani_fomel10}.
 By applying velocity continuation to 3D diffraction imaging, one may be able to estimate both the orientation and the intensity of fractures from the resulting anisotropic velocity model and maximum kurtosis volumes, respectively.  
 This information can be useful in reservoir development, as it can provide insight to subsurface fluid flow behavior.  
 
