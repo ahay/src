@@ -295,7 +295,7 @@ The correct parameters are used in Figure \ref{fig:images}d, where the image is 
 %%%%
 
 \inputdir{threedim}
-\plot*{images}{width=1.0\textwidth}
+\plot{images}{width=1.0\textwidth}
 {(a) A single azimuthally anisotropic diffraction. (b) The diffraction migrated by velocity continuation using correct parameters except $\sigma $=10, resulting in overmigration along $x_2$.  (c) Migration using the correct $W_{11}$, but assuming isotropy. The result is now undermigrated along $x_2$. (d) Migration using correct parameters.  The image is well focused in both directions.}
 
 Since only a single diffraction is present in this example, we can measure kurtosis over a window spanning the entirety of each 3D image, reducing the kurtosis volume from 6D to 3D.  
@@ -346,7 +346,7 @@ imaging of steep and detailed features while simultaneously extracting
 anisotropy information may be possible.
 
 \inputdir{fracs}
-\plot*{images-mig-all}{width=\textwidth}
+\plot{images-mig-all}{width=\textwidth}
 {(a) Fault map from Northwest Scotland \cite[]{hargrove10} used to model diffraction data. (b) Synthetic post-stack diffraction data modeled using equation \ref{eq:TofW} and a 3D model based on the fault map in (a).  (c) Diffractions from (b) migrated using an isotropic velocity model.  (d) Diffractions from (b) migrated by anisotropic 3D velocity continuation.}
 
 \section{Discussion and Conclusions}
