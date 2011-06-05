@@ -54,8 +54,9 @@ print w2m
 diffs='diffs.HH'
 
 Fetch(diffs,'rpsea',beg.server)
+Flow('diffs',diffs,'dd form=native')
 
-Plot('diffs',diffs,
+Plot('diffs',
        '''
        window max1=2.9 max2=14.9 |
        byte gainpanel=all pclip=99 |
@@ -64,7 +65,7 @@ Plot('diffs',diffs,
        label2="x\_1\^" label3="x\_2\^"
        color=e
        ''')
-Plot('diff_slice',diffs,
+Plot('diff_slice','diffs',
      '''
      window n1=1 f1=200 |
      transp |
@@ -76,7 +77,7 @@ Plot('diff_slice',diffs,
 ## Velocity Continuation--Migration
 
 ## t^2 Time stretch + CosFT in space + FFT in time
-Flow('fft',diffs,'t2stretch | pad end1=1024 | fft1 | fft3 axis=3 | fft3 axis=2')
+Flow('fft','diffs','t2stretch | pad end1=1024 | fft1 | fft3 axis=3 | fft3 axis=2')
 Plot('fft',
        '''
        real |
@@ -132,8 +133,8 @@ Plot('mig_slice','vc_mig',
 
 # noise==100 --> SNR~0.8
 noise=100
-Flow('noise',diffs,'math output="0.0" | noise mean=0 range=%g seed=314'%(noise))
-Flow('noisy_diffs',diffs,'noise mean=0 range=%g seed=314'%(noise))
+Flow('noise','diffs','math output="0.0" | noise mean=0 range=%g seed=314'%(noise))
+Flow('noisy_diffs','diffs','noise mean=0 range=%g seed=314'%(noise))
 Plot('noisy_diffs',
        '''
        window max1=2.9 max2=14.9 |

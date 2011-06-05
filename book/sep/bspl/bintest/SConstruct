@@ -9,7 +9,7 @@ eps=0.0001
 
 for f in (2,4): 
     flt = 'flt%d' % f
-    spl = spline[f/2-1]
+    spl = spline[f//2-1]
     ns = len(spl)-1
 
     Flow(flt+'.asc',None,

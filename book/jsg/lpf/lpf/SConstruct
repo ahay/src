@@ -7,7 +7,7 @@ Flow('spike',None,'spike n1=%d d1=1 o1=1 label1=Sample unit1=' % n1)
 
 waves = []
 freqs = []
-for j in range(n1/15,n1,n1/5):
+for j in range(n1//15,n1,n1//5):
     wave = 'wave%d' % j
     waves.append(wave)
     Flow(wave,'spike',
