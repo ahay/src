@@ -25,6 +25,7 @@ memsize=1 command-line parameter to force out-of-core operation.
 #define _LARGEFILE_SOURCE
 #endif
 #include <sys/types.h>
+#include <limits.h>
 #include <unistd.h>
 
 #include <stdio.h>
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (n2 < memsize) { /* keep map incore */
+    if (n2 < memsize && memsize < INT_MAX) { /* keep map incore */
 	map = sf_intalloc (n2);
 	nbuf = 0;
 
