@@ -897,7 +897,10 @@ class TeXPaper(Environment):
         for fig in eps.keys():
             ps = eps[fig]
             resdir2 = os.path.join(self.docdir,os.path.dirname(ps))
-            self.Build(ps,fig)
+            if fig[-3:] == vpsuffix[-3:]:
+                self.Build(ps,fig)
+            else:
+                self.InstallAs(ps,fig)
             if epstopdf:
                 pdf = re.sub(pssuffix+'$','.pdf',ps)
                 self.PDFBuild(pdf,ps)

@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+Flow('puckin',None,'aliasp - | noise var=0.001 seed=2011')
+
+for niter in (1,5):
+    dip = 'dip%d' % niter
+    pwd = 'pwd%d' % niter
+
+    Flow(dip,'puckin','dip order=12 p0=2 rect1=100 rect2=10 niter=%d' % niter)
+    Result(dip,'grey color=j scalebar=y title=Slope')
+
+    Flow(pwd,['puckin',dip],'pwd dip=${SOURCES[1]} order=12')
+
+for case in Split('puckin pwd1 pwd5'):
+    Result(case,'dots gaineach=n')
+
+End()

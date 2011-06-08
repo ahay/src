@@ -15,7 +15,7 @@ Result('velfig','marmvel',
        bartype=h
        ''')
 
-nt=2001
+nt=2101
 dt=0.0005
 
 Flow('source',None,
@@ -41,4 +41,47 @@ for s in (5500,6500):
          fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
          ''')
 
+    time = 'time%d' % s
+    Flow(time,'vel','eikonal yshot=%d zshot=3000' % s)
+
+    for t in (600,1000):
+        n1 = (376,751)[t==1000]
+        nb = (1250,2500)[t==1000]
+        
+        snap = 'snap%d-%d' % (s,t)
+        Flow(snap,wave,
+             '''
+             window n3=1 min3=%g n1=%d f1=751 min2=%d max2=%d |
+             put o1=0 unit2=m label1=Depth unit1=m
+             ''' % (0.001*t+0.05,n1,s-nb,s+nb))
+        Plot(snap,'grey title="(%c)" ' % ('ab'[s==6500]))
+
+        cont = 'cont%d-%d' % (s,t)
+        Plot(cont,time,
+             '''
+             window n1=%d f1=751 min2=%d max2=%d |
+             contour wanttitle=n wantaxis=n nc=1 c0=%g dash=1 plotfat=10
+             ''' % (n1,s-nb,s+nb,0.001*t+0.01))
+
+        Plot(snap+'c',[snap,cont],'Overlay')
+
+Result('snap0','snap5500-1000c snap6500-1000c','SideBySideIso')
+
+Plot('snap1','snap5500-600c snap6500-600c','SideBySideIso')
+
+for s in (5500,6500):
+    source = 'dsource%d' % s
+    Flow(source,None,'spike n1=1502 n2=2301 d1=4 d2=4 k1=1126 k2=%d | smooth rect1=3 rect2=3 repeat=3' % (s/4))
+
+    wave = 'dwave%d' % s
+    Flow(wave,['source',source,'left','mid','right'],
+         '''
+         window n1=1000 |
+         fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+         ''')
+
+    time = 'dtime%d' % s
+    Flow(time,'vel','eikonal yshot=%d zshot=4500' % s)
+
+    
 End()

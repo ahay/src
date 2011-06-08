@@ -102,14 +102,47 @@ Result('cmp','cmp tpow','SideBySideAniso')
 # Apply t^2 gain
 Flow('cmpt','cmps','pow pow1=2')
 
-# Velocity scan 
+# Velocity analysis and NMO
 Flow('vscan','tpow off mask',
      '''
      vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
-     v0=1000 nv=120 dv=25 semblance=y nb=5
+     v0=1400 nv=101 dv=10 semblance=y 
      ''')
 Plot('vscan','grey color=j allpos=y title="Velocity Scan" unit2=m/s')
 
-Result('vscan','tpow vscan','SideBySideAniso')
+Flow('pick','vscan','mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25')
+Plot('pick','graph transp=y yreverse=y plotcol=7 plotfat=3 pad=n min2=1400 max2=2400 wanttitle=n wantaxis=n')
+
+Plot('vscanp','vscan pick','Overlay')
+
+Flow('nmo','tpow off mask pick','nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]}')
+
+Plot('tpowg','tpow','grey title="CMP %d" labelsz=12 titlesz=18' % cmpno)
+Plot('nmog','nmo','grey title="Normal Moveout" labelsz=12 titlesz=18')
+Plot('nmo','tpowg nmog','SideBySideAniso')
+
+Result('vscan','tpow vscanp nmo','SideBySideAniso')
+
+# Apply to all CMPs
+
+Flow('vscans','cmpt offs cmask',
+     '''
+     vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     v0=1400 nv=101 dv=10 semblance=y nb=5
+     ''')
+Flow('picks','vscans','mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25 rect2=10')
+
+Result('picks',
+       '''
+       window | grey color=j mean=y scalebar=y title="NMO Velocity"
+       label2=CMP barreverse=y barlabel=Velocity barunit=m/s
+       ''')
+
+Flow('nmos','cmpt offs cmask picks',
+     'nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]}')
+
+Flow('stack','nmos','stack')
+
+Result('stack','window min1=5.5 max1=8 | grey title="NMO Stack" ')
 
 End()

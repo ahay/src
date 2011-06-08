@@ -1,0 +1,3 @@
+uses=['sfaliasp', 'sfnoise', 'sfdip', 'sfgrey', 'sfpwd', 'sfdots']
+data=[]
+size=     460800
