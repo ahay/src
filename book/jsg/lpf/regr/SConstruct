@@ -194,6 +194,6 @@ for j in range(3):
                graph symbol=* title="\F2 %s" screenratio=1 plotfat=3
                wheretitle=b wherexlabel=t wanttitle=n  parallel2=n 
                label1="\F2 Eigenvalue number" label2="\F2 Magnitude"
-               ''' % title)
+              ''' % title)
 
 End()

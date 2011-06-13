@@ -48,56 +48,56 @@ void st (int len            /* data size              */,
 
     s = 0.;
     for (i = 0; i < len; i++) {
-	d[i].r = data[i];
-	d[i].i = 0.;
-	s += data[i];
-    }
+		d[i].r = data[i];
+		d[i].i = 0.;
+		s += data[i];
+	}
     s /= len;
     
     for (i=len; i < nw; i++) {
-	d[i].r = 0.;
-	d[i].i = 0.;
+		d[i].r = 0.;
+		d[i].i = 0.;
     }		    
 
     kiss_fft_stride (tfft,d,pp,1);
     
     l2 = (nw+1)/2;
     for (i=1; i < l2; i++) {
-	pp[i].r *= 2.;
-	pp[i].i *= 2.;
+		pp[i].r *= 2.;
+		pp[i].i *= 2.;
     }
     l2 = nw/2+1;
     for (i=l2; i < nw; i++) {
-	pp[i].r = 0.;
-	pp[i].i = 0.;
+		pp[i].r = 0.;
+		pp[i].i = 0.;
     }
 
     for (i1=lo; i1 <= hi; i1++) {
-	if (0 == i1) {
-	    for (i=0; i < len; i++) {
-		result[(i1-lo)*len+i] = sf_cmplx(s,0.);
-	    }	
-	} else {
-	    g[0] = gauss(i1, 0);
-	    l2 = nw/2 + 1;
-	    for (i=1; i < l2; i++) {
-		g[i] = g[nw-i] = gauss(i1, i);
-	    }
+		if (0 == i1) {
+			for (i=0; i < len; i++) {
+				result[(i1-lo)*len+i] = sf_cmplx(s,0.);
+			}	
+		} else {
+			g[0] = gauss(i1, 0);
+			l2 = nw/2 + 1;
+			for (i=1; i < l2; i++) {
+				g[i] = g[nw-i] = gauss(i1, i);
+			}
 	    
-	    for (i=0; i < nw; i++) {
-		s = g[i];
-		k = i1 + i;
-		if (k >= nw) k -= nw;
-		qq[i].r = pp[k].r * s;
-		qq[i].i = pp[k].i * s;
-	    }
+			for (i=0; i < nw; i++) {
+				s = g[i];
+				k = i1 + i;
+				if (k >= nw) k -= nw;
+				qq[i].r = pp[k].r * s;
+				qq[i].i = pp[k].i * s;
+			}
 	    
-	    kiss_fft_stride(itfft,qq,d,1);
+			kiss_fft_stride(itfft,qq,d,1);
 	    
-	    for (i=0; i < len; i++) {
-		result[(i1-lo)*len+i] = sf_cmplx(d[i].r/len,d[i].i/len);
-	    }
-	}	    
+			for (i=0; i < len; i++) {
+				result[(i1-lo)*len+i] = sf_cmplx(d[i].r/len,d[i].i/len);
+			}
+		}	    
     }
     free(pp);
     free(qq);

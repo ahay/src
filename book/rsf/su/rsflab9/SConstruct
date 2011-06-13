@@ -1,7 +1,7 @@
 from rsf.proj import *
 from rsf.recipes.beg import server
 
-Fetch('seismic3.su','cwp',server)
+#Fetch('seismic3.su','cwp',server)
 title = {'seismic3':'Stacked data'}
 
 Flow('seismic3','seismic3.su',
@@ -50,12 +50,12 @@ Result('vint','vrms vint',
 # Stolt migration
 Flow('stoltm','cosft vint',
      '''
-     stoltstretch velocity=${SOURCES[1]} vel=1.5 pad=4000 |
+     stoltstretch velocity=${SOURCES[1]} nstretch=5 vel=1.5 pad=4000 |
      stolt vel=1.5 minstr=0.5
      ''',split=[2,2142])
 Flow('stolt','stoltm vint',
      '''
-     stoltstretch velocity=${SOURCES[1]} vel=1.5 inv=y |
+     stoltstretch velocity=${SOURCES[1]} nstretch=5 vel=1.5 inv=y |
      cosft sign2=-1
      ''')
 title['stolt'] = 'Stolt time section'

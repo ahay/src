@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], n0[SF_MAX_DIM];
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
-    int dim, n123, i, niter, na, *kk;
+    int dim, n123, i, niter, na, *kk,      nd;
     float *dd, tol;
     sf_filter aa;   
     char varname[6], *lagfile;
@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
     if (!sf_getints("a",a,dim)) sf_error("Need a=");
 
     if (!sf_getints("center",center,dim)) {
-	for (i=0; i < dim; i++) {
-	    center[i] = (i+1 < dim && a[i+1] > 1)? a[i]/2: 0;
-	}
+		for (i=0; i < dim; i++) {
+			center[i] = (i+1 < dim && a[i+1] > 1)? a[i]/2: 0;
+		}
     }
 
     if (!sf_getint("na",&na)) na=0;
@@ -66,30 +66,34 @@ int main(int argc, char* argv[])
     /* tolerance for filter compression */
 
     if (0 == na) {
-	if (!sf_getints("gap",gap,dim)) {
-	    for (i=0; i < dim; i++) {
-		gap[i] = 0;
-	    }
-	}
+		if (!sf_getints("gap",gap,dim)) {
+			for (i=0; i < dim; i++) {
+				gap[i] = 0;
+			}
+		}
 
-	aa = createhelix(dim, n, center, gap, a); /* allocate PEF */
-	
-	for (i=0; i < dim; i++) {	    
-	    n0[i] = n[i];
-	}
+		aa = createhelix(dim, n, center, gap, a); /* allocate PEF */
+		
+		sf_warning("aa.nh=%d",aa->nh);
+		for (i=0; i<aa->nh; i++) 
+			sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
+		
+		for (i=0; i < dim; i++) {	    
+			n0[i] = n[i];
+		}
     } else {
-	aa =  sf_allocatehelix (na);
-	if (!sf_getints ("lags", aa->lag, na)) sf_error("Need lags=");
-	if (!sf_getints ("n", n0, dim)) {
-	    for (i=0; i < dim; i++) {	    
-		n0[i] = n[i];
-	    }
-	}
+		aa =  sf_allocatehelix (na);
+		if (!sf_getints ("lags", aa->lag, na)) sf_error("Need lags=");
+		if (!sf_getints ("n", n0, dim)) {
+			for (i=0; i < dim; i++) {	    
+				n0[i] = n[i];
+			}
+		}
     }
 
     n123 = 1;
     for (i=0; i < dim; i++) {
-	n123 *= n[i];
+		n123 *= n[i];
     }
 
     dd = sf_floatalloc(n123);
@@ -101,41 +105,54 @@ int main(int argc, char* argv[])
 
 	switch (sf_gettype(mask)) {
 	    case SF_INT:
-		sf_intread (kk,n123,mask);
-		break;
+			sf_intread (kk,n123,mask);
+			break;
 	    case SF_FLOAT:
-		sf_floatread (dd,n123,mask);
-		for (i=0; i < n123; i++) {
-		    kk[i] = (dd[i] != 0.);
-		}
-		break;
+			sf_floatread (dd,n123,mask);
+			for (i=0; i < n123; i++) {
+				kk[i] = (dd[i] != 0.);
+			}
+			break;
 	    default:
-		sf_error ("Wrong data type in maskin");
-		break;
-	}
+			sf_error ("Wrong data type in maskin");
+			break;
+		}
 
-	sf_fileclose (mask);
+		sf_fileclose (mask);
     } else {
-	for (i=0; i < n123; i++) {
-	    kk[i] = 1;
-	}
+		for (i=0; i < n123; i++) {
+			kk[i] = 1;
+		}
     }
 
     sf_floatread (dd,n123,in);
 
     bound (dim, n0, n, a, aa); 
-    find_mask(n123, kk, aa);   /* account for missing data */
+	sf_warning("===After bound===");
+	sf_warning("aa.nh=%d",aa->nh);
+	for (i=0; i<aa->nh; i++) 
+		sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
+	for (i=0, nd=1; i<dim; i++) nd*=n[i]; 
+	for (i=0; i<nd; i++) 
+		if (aa->mis[i])	sf_warning("aa.mis[%d]=%d",i,aa->mis[i]);
 
-    if (NULL != sf_getstring("maskout")) {
-	/* optional output mask file */
-	mask = sf_output("maskout");
-
-	for (i=0; i < n123; i++) {
-	    kk[i] = aa->mis[i]? 0.: 1.;
-	}
 	
-	sf_settype(mask,SF_INT);
-	sf_intwrite (kk,n123,mask);
+    find_mask(n123, kk, aa);   /* account for missing data */
+	sf_warning("===After find_mask===");
+	sf_warning("aa.nh=%d",aa->nh);
+	for (i=0; i<aa->nh; i++) 
+		sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
+	
+    if (NULL != sf_getstring("maskout")) {
+		/* optional output mask file */
+		mask = sf_output("maskout");
+
+		for (i=0; i < n123; i++) {
+			kk[i] = aa->mis[i]? 0.: 1.;
+		}
+	
+		sf_settype(mask,SF_INT);
+		sf_intwrite (kk,n123,mask);
     }
 
     if(!sf_getint("niter",&niter)) niter=2*(aa->nh);
@@ -149,9 +166,9 @@ int main(int argc, char* argv[])
     sf_putint(lag,"n1",aa->nh);
 
     for (i=1; i < dim; i++) {
-	sprintf(varname,"n%d",i+1);
-	sf_putint(filt,varname,1);
-	sf_putint(lag,varname,1);
+		sprintf(varname,"n%d",i+1);
+		sf_putint(filt,varname,1);
+		sf_putint(lag,varname,1);
     }
 
     sf_intwrite(aa->lag,aa->nh,lag);

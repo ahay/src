@@ -39,15 +39,15 @@ int main(int argc, char* argv[])
 
     nm = 1;
     for (i=0; i < dim; i++) {
-	nm *= n[i];
+		nm *= n[i];
 
-	if (n[i] > 1) {
-	    snprintf(key,6,"rect%d",i+1);
-	    if (!sf_getint(key,rect+i)) rect[i]=1;
-	    /*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
-	} else {
-	    rect[i]=1;
-	}
+		if (n[i] > 1) {
+			snprintf(key,6,"rect%d",i+1);
+			if (!sf_getint(key,rect+i)) rect[i]=1;
+			/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
+		} else {
+			rect[i]=1;
+		}
     }
 
     if (!sf_getint("niter",&niter)) niter=100;
@@ -64,14 +64,14 @@ int main(int argc, char* argv[])
 
     lsum = 0.;
     for (i = 0; i < nm; i++) {
-	li = limit[i];
-	lsum += li*li;
+		li = limit[i];
+		lsum += li*li;
     }
     lsum = sqrtf (lsum/nm);
 
     for (i=0; i < nm; i++) {
-	limit[i] /= lsum;
-	rough[i] *= limit[i];
+		limit[i] /= lsum;
+		rough[i] *= limit[i];
     }
     
     divn(rough,limit,smooth);

@@ -44,22 +44,22 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=1.;
     /* regularization parameter */
     if (NULL == (norm = sf_getstring("norm"))) {
-	/* norm to use in IRLS (cauchy,l1) */
-	weight=sf_cauchy;
-    } else {
-	sf_warning("got %s",norm);
-
-	switch(norm[0]) {
-	    case 'c': case 'C':
+		/* norm to use in IRLS (cauchy,l1) */
 		weight=sf_cauchy;
-		break;
-	    case 'l': case 'L':
-		weight=sf_l1;
-		break;
-	    default:
-		sf_error("unknown norm %s",norm);
-		break;
-	}
+	} else {
+		sf_warning("got %s",norm);
+
+		switch(norm[0]) {
+			case 'c': case 'C':
+				weight=sf_cauchy;
+				break;
+			case 'l': case 'L':
+				weight=sf_l1;
+				break;
+			default:
+				sf_error("unknown norm %s",norm);
+				break;
+		}
     }
 
     sf_irls_init(n1);

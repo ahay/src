@@ -46,10 +46,8 @@ int main(int argc, char* argv[])
     /* Number of iterations */
     if (!sf_getbool("exact",&exact)) exact=true;
     /* If y, preserve the known data values (when prec=y) */
-
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
-
     if (!sf_getint("padin",&padin)) padin=0;
     /* Pad beginning */
     if (!sf_getint("padout",&padout)) padout=0;
@@ -62,36 +60,36 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
  
     if (!sf_histints(filt,"a",a,dim)) {
-	for (j=0; j < dim; j++) {
-	    a[j]=1;
-	}
+		for (j=0; j < dim; j++) {
+			a[j]=1;
+		}
     }
     if (NULL == (lagfile = sf_histstring(filt,"lag"))) {
-	if (NULL == (lagfile = sf_getstring("lag"))) {
-	    /* optional input file with filter lags */
-	    for (ia=0; ia < na; ia++) {
-		aa->lag[ia]=ia+1;
-	    }
-	    lag = NULL;
-	    if (!sf_getints("n",m,dim)) {
-		for (j=0; j < dim; j++) {
-		    m[j]=n[j];
+		if (NULL == (lagfile = sf_getstring("lag"))) {
+			/* optional input file with filter lags */
+			for (ia=0; ia < na; ia++) {
+				aa->lag[ia]=ia+1;
+			}
+			lag = NULL;
+			if (!sf_getints("n",m,dim)) {
+				for (j=0; j < dim; j++) {
+					m[j]=n[j];
+				}
+			}
+		} else {
+			lag = sf_input("lag");
 		}
-	    }
-	} else {
-	    lag = sf_input("lag");
-	}
     } else {
-	lag = sf_input(lagfile);
+		lag = sf_input(lagfile);
     }
 
     if (NULL != lag) {
-	if (SF_INT != sf_gettype(lag)) 
-	    sf_error("Need int data in lag file '%s'",lagfile);
-	if (!sf_histints(lag,"n",m,dim)) sf_error("No n= in lag");
+		if (SF_INT != sf_gettype(lag)) 
+			sf_error("Need int data in lag file '%s'",lagfile);
+		if (!sf_histints(lag,"n",m,dim)) sf_error("No n= in lag");
 
-	sf_intread(aa->lag,na,lag);
-	sf_fileclose(lag);
+		sf_intread(aa->lag,na,lag);
+		sf_fileclose(lag);
     }
 
     bound (dim, m, n, a, aa);
@@ -117,9 +115,9 @@ int main(int argc, char* argv[])
     known = sf_boolalloc(n2);
 
     for (i=0; i < n2; i++) {
-	mm[i]=0.;
-	kk[i]=0.;
-	known[i]=false;
+		mm[i]=0.;
+		kk[i]=0.;
+		known[i]=false;
     }
 
     sf_floatread(mm+p1,p2,in);

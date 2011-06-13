@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
 
     random_init (1993);
     for (i1=0; i1 < ns; i1++) {
-	s1[i1] = powf(random0()-0.5,(float) p);
-	s2[i1] = powf(random0()-0.5,(float) p);
+		s1[i1] = powf(random0()-0.5,(float) p);
+		s2[i1] = powf(random0()-0.5,(float) p);
     }
 
     if (!sf_getint("t1",&t1)) t1=4;

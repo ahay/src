@@ -46,49 +46,49 @@ void riesz (int nx, int ny,       /* data size */
     int i, ix, iy;
     
     for (iy=0; iy < ny; iy++) {
-	for (ix=0; ix < nx; ix++) {
-	    dx[iy][ix] = d[iy][ix];
-	    dy[iy][ix] = 0.;
-	}
+		for (ix=0; ix < nx; ix++) {
+			dx[iy][ix] = d[iy][ix];
+			dy[iy][ix] = 0.;
+		}
     }
     
     for (i=n; i >= 1; i--) {
-	/* Add proper boundary conditions */
+		/* Add proper boundary conditions */
 
-	for (iy=2; iy < ny-2; iy++) {
-	    for (ix=2; ix < nx-2; ix++) {
-		dy[iy][ix] = dx[iy][ix]+(dx[iy+2][ix]+dx[iy][ix+2]-4.*dx[iy][ix]+
-					 dx[iy-2][ix]+dx[iy][ix-2])*c2;
-	    }
-	}
-	for (iy=0; iy < ny; iy++) {
-	    for (ix=0; ix < nx; ix++) {
-		dx[iy][ix] = d[iy][ix] + dy[iy][ix]*(2*i-1)/(2*i);
-	    }
-	}
+		for (iy=2; iy < ny-2; iy++) {
+			for (ix=2; ix < nx-2; ix++) {
+				dy[iy][ix] = dx[iy][ix]+(dx[iy+2][ix]+dx[iy][ix+2]-4.*dx[iy][ix]+
+										 dx[iy-2][ix]+dx[iy][ix-2])*c2;
+			}
+		}
+		for (iy=0; iy < ny; iy++) {
+			for (ix=0; ix < nx; ix++) {
+				dx[iy][ix] = d[iy][ix] + dy[iy][ix]*(2*i-1)/(2*i);
+			}
+		}
     }
 
     for (iy=0; iy < ny; iy++) {
-	for (ix=0; ix < nx; ix++) {
-	    d[iy][ix] = dx[iy][ix];
-	}
+		for (ix=0; ix < nx; ix++) {
+			d[iy][ix] = dx[iy][ix];
+		}
     }
 
     for (iy=0; iy < ny; iy++) {
-	dx[iy][0] = 2.*(d[iy][0]-d[iy][1])*c;
-	for (ix=1; ix < nx-1; ix++) {
-	    dx[iy][ix] = (d[iy][ix-1]-d[iy][ix+1])*c;
-	}
-	dx[iy][nx-1] = 2.*(d[iy][nx-2]-d[iy][nx-1])*c;
+		dx[iy][0] = 2.*(d[iy][0]-d[iy][1])*c;
+		for (ix=1; ix < nx-1; ix++) {
+			dx[iy][ix] = (d[iy][ix-1]-d[iy][ix+1])*c;
+		}
+		dx[iy][nx-1] = 2.*(d[iy][nx-2]-d[iy][nx-1])*c;
     }
 
     for (ix=0; ix < nx; ix++) {
-	dy[0][ix] = 2.*(d[0][ix]-d[1][ix])*c;
+		dy[0][ix] = 2.*(d[0][ix]-d[1][ix])*c;
 
-	for (iy=1; iy < ny-1; iy++) {
-	    dy[iy][ix] = (d[iy-1][ix]-d[iy+1][ix])*c;
-	}
-	dy[ny-1][ix] = 2.*(d[ny-2][ix]-d[ny-1][ix])*c;
+		for (iy=1; iy < ny-1; iy++) {
+			dy[iy][ix] = (d[iy-1][ix]-d[iy+1][ix])*c;
+		}
+		dy[ny-1][ix] = 2.*(d[ny-2][ix]-d[ny-1][ix])*c;
     }
 }
 

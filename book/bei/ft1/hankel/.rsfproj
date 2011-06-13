@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfhalfint', 'sfdots']
+uses=['sfspike', 'sfhalfint']
 data=[]
 size=          0

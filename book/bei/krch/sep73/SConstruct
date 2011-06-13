@@ -1,9 +1,21 @@
 from rsf.proj import *
 
+
+Flow('mod3o',None,
+     '''sigmoid n1=200 d2=.008 n2=200''')
+Plot('mod3o','grey title="Original"')
+
 Flow('mod3',None,
      '''sigmoid n1=200 d2=.008 n2=200 |
      smooth rect1=3 diff1=1 adj=y |
      smooth rect1=3''')
+Plot('mod3','grey title="Smoothed"')
+Result('orismo','mod3o mod3','SideBySideAniso')
+Flow('smod3o','mod3o','spectra all=y')
+Plot('smod3o','grey title="mod3o spectrum"')
+Result('smod3o','graph')
+
+
 Flow('dki','mod3',
      'preconstkirch inv=y zero=y vel=1.5 nh=1 h0=0 dh=0')
 

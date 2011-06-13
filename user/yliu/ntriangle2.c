@@ -41,7 +41,7 @@ void ntrianglen2_init(int nw      /* number of components */,
     tr = (sf_triangle *) sf_alloc(nw,sizeof(*tr));
 
     for (i2=0; i2 < n2; i2++) {
-	tr[i2] = sf_triangle_init (nbox[i2],n0);
+		tr[i2] = sf_triangle_init (nbox[i2],n0);
     }
 }
 
@@ -51,7 +51,7 @@ void ntriangle2_close(void)
     int i2;
 
     for (i2=0; i2 < n2; i2++) {
-	sf_triangle_close(tr[i2]);
+		sf_triangle_close(tr[i2]);
     }
 
     free(tr);
@@ -70,28 +70,28 @@ void ntriangle2_lop (bool adj, bool add, int nx, int ny, float *x, float *y)
     sf_adjnull (adj, add, nx, ny, x, y);
 
     if (adj) {
-	for (i=0; i < nx; i++) {
-	    tmp[i] = y[i];
-	}
+		for (i=0; i < nx; i++) {
+			tmp[i] = y[i];
+		}
     } else {
-	for (i=0; i < nx; i++) {
-	    tmp[i] = x[i];
-	}
+		for (i=0; i < nx; i++) {
+			tmp[i] = x[i];
+		}
     }
 
     for (i2=0; i2 < n2; i2++) {
-	for (j=0; j < n1/n0; j++) {
-	    sf_smooth2 (tr[i2],j*n0,1,false,false,tmp+i2*n1);
-	}
+		for (j=0; j < n1/n0; j++) {
+			sf_smooth2 (tr[i2],j*n0,1,false,false,tmp+i2*n1);
+		}
     }
 
     if (adj) {
     	for (i=0; i < nx; i++) {
-	    x[i] += tmp[i];
-	}
+			x[i] += tmp[i];
+		}
     } else {
-	for (i=0; i < nx; i++) {
-	    y[i] += tmp[i];
-	}
+		for (i=0; i < nx; i++) {
+			y[i] += tmp[i];
+		}
     }
 }

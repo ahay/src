@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
 
     divn_init(dim1, n1, n, rect, niter, verb);
 	
-    one = sf_floatalloc(n1);
-    two = sf_floatalloc(n1);
+    one  = sf_floatalloc(n1);
+    two  = sf_floatalloc(n1);
     rat1 = sf_floatalloc(n1);
     rat2 = sf_floatalloc(n1);
 
@@ -82,8 +82,8 @@ int main(int argc, char* argv[])
         norm = sqrt(n1/cblas_dsdot( n1, two, 1, two, 1));	
 
         for (i1=0; i1 < n1; i1++) {
-	    one[i1] *= norm;
-	    two[i1] *= norm;
+		one[i1] *= norm;
+		two[i1] *= norm;
 	}
 	
 	divn(one,two,rat1);
@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 	norm = sqrt(n1/cblas_dsdot( n1, one, 1, one, 1));	
 
         for (i1=0; i1 < n1; i1++) {
-	    one[i1] *= norm;
-	    two[i1] *= norm;
+		one[i1] *= norm;
+		two[i1] *= norm;
 	}
 
         divn(two,one,rat2);

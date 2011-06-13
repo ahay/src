@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
     sf_init(argc,argv);
 
-    in = sf_input("in");
+    in  = sf_input("in");
     out = sf_output("out");
     
     if (!sf_getbool("inv",&inv)) inv=false;
@@ -41,55 +41,55 @@ int main(int argc, char *argv[])
     if (!sf_histfloat(in,"d1",&d1)) d1=0.004;
 
     if (!inv) {
-	n2 = sf_leftsize(in,1);
+		n2 = sf_leftsize(in,1);
 
-	if (!sf_getfloat("flo",&flo)) {
-	    /* Low frequency in band, default is 0 */
-	    flo=0.;
-	} else if (0. > flo) {
-	    sf_error("Negative flo=%g",flo);
-	} else {
-	    flo *= d1;
-	}
+		if (!sf_getfloat("flo",&flo)) {
+			/* Low frequency in band, default is 0 */
+			flo=0.;
+		} else if (0. > flo) {
+			sf_error("Negative flo=%g",flo);
+		} else {
+			flo *= d1;
+		}
 	
-	if (!sf_getfloat("fhi",&fhi)) {
-	    /* High frequency in band, default is Nyquist */	
-	    fhi=0.5;
-	    if (flo/d1 > fhi/d1) 
-		sf_error("Need flo < fhi, "
-			 "got flo=%g, fhi=%g(Nyquist)",flo/d1,fhi/d1);
-	} else {
-	    fhi *= d1;	
-	    if (flo > fhi) 
-		sf_error("Need flo < fhi, "
-			 "got flo=%g, fhi=%g",flo/d1,fhi/d1);
-	    if (0.5 < fhi)
-		sf_error("Need fhi < Nyquist, "
-			 "got fhi=%g, Niquist=%g",fhi/d1,0.5/d1);
-	}
+		if (!sf_getfloat("fhi",&fhi)) {
+			/* High frequency in band, default is Nyquist */	
+			fhi=0.5;
+			if (flo/d1 > fhi/d1) 
+				sf_error("Need flo < fhi, "
+						 "got flo=%g, fhi=%g(Nyquist)",flo/d1,fhi/d1);
+			} else {
+				fhi *= d1;	
+				if (flo > fhi) 
+					sf_error("Need flo < fhi, "
+							 "got flo=%g, fhi=%g",flo/d1,fhi/d1);
+				if (0.5 < fhi)
+					sf_error("Need fhi < Nyquist, "
+							 "got fhi=%g, Niquist=%g",fhi/d1,0.5/d1);
+			}
 
-	nflo = (int) (flo*n1+0.5);
-	nfhi = (int) (fhi*n1+0.5);
-	nf = nfhi-nflo+1;
+			nflo = (int) (flo*n1+0.5);
+			nfhi = (int) (fhi*n1+0.5);
+			nf = nfhi-nflo+1;
 	
-    } else {
-	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
-	if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
-	if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
-	flo = o2*d1;
-	fhi = (o2+(nw-1)*d2)*d1;
-	n2 = sf_leftsize(in,2);
-	nflo = (int) (flo*n1+0.5);
-	nfhi = (int) (fhi*n1+0.5);
-	nf = nfhi-nflo+1;
-	if(nw!=nf) {
-	    sf_warning("n2!=nf, (n2=%d, nf=%d)",nw,nf);
-	    nf = nw;
-	}
-    }
+		} else {
+			if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
+			if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
+			if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
+			flo = o2*d1;
+			fhi = (o2+(nw-1)*d2)*d1;
+			n2 = sf_leftsize(in,2);
+			nflo = (int) (flo*n1+0.5);
+			nfhi = (int) (fhi*n1+0.5);
+			nf = nfhi-nflo+1;
+			if(nw!=nf) {
+				sf_warning("n2!=nf, (n2=%d, nf=%d)",nw,nf);
+				nf = nw;
+			}
+		}
     
-    inp = sf_floatalloc(n1);
-    outp = sf_complexalloc(n1*nf);
+		inp = sf_floatalloc(n1);
+		outp = sf_complexalloc(n1*nf);
 
     for (i=0; i < n2; i++)  {
 	sf_warning("slice %d of %d;",i+1,n2);

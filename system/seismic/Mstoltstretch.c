@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
     /* number of steps */
 
     if (inv) {
-	if (!sf_histint(in,"n1",&ns)) sf_error("No n1= in input");
-	if (!sf_histint(vel,"n1",&nt)) sf_error("No n1= in velocity");
-	sf_putint(st,"n1",nt);
+		if (!sf_histint(in,"n1",&ns)) sf_error("No n1= in input");
+		if (!sf_histint(vel,"n1",&nt)) sf_error("No n1= in velocity");
+		sf_putint(st,"n1",nt);
     } else {
 	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
 	if (!sf_getint("pad",&ns)) ns=nt;
