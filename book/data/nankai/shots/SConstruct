@@ -145,4 +145,16 @@ Flow('stack','nmos','stack')
 
 Result('stack','window min1=5.5 max1=8 | grey title="NMO Stack" ')
 
+# Velocity continuation
+
+Flow('first','stack',
+     '''
+     put o2=0 d2=16.667 label2=Distance unit2=m |
+     cosft sign2=1 | pad beg1=1250 |
+     stolt vel=1400 |
+     window f1=1250 | cosft sign2=-1
+     ''')
+
+Result('first','window min1=5.5 max1=8 | grey title="Migration with 1400 m/s" ')
+
 End()

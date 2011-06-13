@@ -229,6 +229,7 @@ int main (int argc, char* argv[])
 	    for (i=0; i < nin; i++) {
 		sf_floatread(fbuf[i],nbuf,in[i]);
 	    }
+            /* fill x1, x2, etc */
 	    for (k=0; k < nbuf; k++, j++) {
 		sf_large_line2cart(dim,n,j,ii);
 		for (i=0; i < dim; i++) {

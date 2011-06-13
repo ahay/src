@@ -71,17 +71,33 @@ Plot('snap1','snap5500-600c snap6500-600c','SideBySideIso')
 
 for s in (5500,6500):
     source = 'dsource%d' % s
-    Flow(source,None,'spike n1=1502 n2=2301 d1=4 d2=4 k1=1126 k2=%d | smooth rect1=3 rect2=3 repeat=3' % (s/4))
+    Flow(source,None,
+         'window n1=1001 | spike n1=1502 n2=2301 d1=4 d2=4 k1=1126 k2=%d | smooth rect1=3 rect2=3 repeat=3' % (s/4))
 
     wave = 'dwave%d' % s
     Flow(wave,['source',source,'left','mid','right'],
          '''
-         window n1=1000 |
          fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
          ''')
 
     time = 'dtime%d' % s
     Flow(time,'vel','eikonal yshot=%d zshot=4500' % s)
+        
+    snap = 'dsnap%d' % s
+    Flow(snap,wave,
+         '''
+         window n3=1 min3=%g n1=376 f1=1126 min2=%d max2=%d |
+         put o1=0 unit2=m label1=Depth unit1=m
+         ''' % (0.3+0.05,s-1250,s+1250))
+    Plot(snap,'grey title="(%c)" ' % ('cd'[s==6500]))
 
+    cont = 'dcont%d' % s
+    Plot(cont,time,
+         '''
+         window n1=376 f1=1126 min2=%d max2=%d |
+         contour wanttitle=n wantaxis=n nc=1 c0=%g dash=1 plotfat=10
+         ''' % (s-1250,s+1250,0.3+0.01))
+
+    Plot(snap+'c',[snap,cont],'Overlay')
     
 End()
