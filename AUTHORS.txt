@@ -20,6 +20,7 @@ Doug McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 James Rickett <jrickett@slb.com>
 Colin Russell <crussell@eos.ubc.ca>
+Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
 Jeffrey Shragge <jshragge@gmail.com>
 Xiaolei Song <songxl1984@gmail.com>
