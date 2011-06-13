@@ -38,7 +38,11 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     
     if (!sf_getint("levels",&levels)) levels = 3;  
-    /*levels of quantization [2,3,5].*/
+    /*levels of quantization [2,3,5].
+	  levels=2	1: zero crossing or zero; 0: otherwise
+	  levels=3	1: positive to negative zc; -1 negative to positive zc; 0: otherwise
+	  levels=5	+/-2: positive/negative values; +/-1: as in levels=3; 0: zero. 
+	 */
     
     if (!sf_histint(in,"n1",&nt)) sf_error("Need n1=");
     
