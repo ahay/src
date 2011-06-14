@@ -58,9 +58,9 @@ Flow('diffs',diffs,'dd form=native')
 
 Plot('diffs',
        '''
-       window max1=2.9 max2=14.9 |
+       window max1=2.9 max2=14.9 j3=2 j2=2 |
        byte gainpanel=all pclip=99 |
-       grey3 frame1=200 frame2=250 frame3=250
+       grey3 frame1=200 frame2=125 frame3=125
        title="a) Fault Diffractions" 
        label2="x\_1\^" label3="x\_2\^"
        color=e
@@ -110,9 +110,9 @@ Plot('vcfft',
 Flow('vc_mig','vcfft','fft3 axis=2 inv=y | fft3 axis=3 inv=y | fft1 inv=y | window n1=376 | t2stretch inv=y')
 Plot('vc_mig',
        '''
-       window max1=2.9 max2=14.9 |
+       window max1=2.9 max2=14.9 j2=2 j3=2 |
        byte gainpanel=all pclip=99 |
-       grey3 frame1=200 frame2=250 frame3=250
+       grey3 frame1=200 frame2=125 frame3=125
        title="b) Anisotropic Velocity Continuation" 
        label2="x\_1\^" label3="x\_2\^"
        color=e
@@ -225,9 +225,9 @@ Plot('vcfftiso',
 Flow('vc_iso','vcfftiso','fft3 axis=2 inv=y | fft3 axis=3 inv=y | fft1 inv=y | window n1=376 | t2stretch inv=y')
 Plot('vc_iso',
        '''
-       window max1=2.9 max2=14.9 |
+       window max1=2.9 max2=14.9 j2=2 j3=2 |
        byte gainpanel=all pclip=99 |
-       grey3 frame1=200 frame2=250 frame3=250
+       grey3 frame1=200 frame2=125 frame3=125
        title="c) Isotropic Velocity Continuation" 
        label2="x\_1\^" label3="x\_2\^"
        color=e

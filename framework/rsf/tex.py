@@ -858,7 +858,7 @@ class TeXPaper(Environment):
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories
-        for info in glob.glob('%s/[a-z]*/.rsfproj' % topdir):
+        for info in glob.glob('%s/[a-z]*/.*proj' % topdir):
             dir = os.path.dirname(info)
             scons = os.path.join(dir,'SConstruct')
 
