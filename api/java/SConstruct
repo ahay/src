@@ -45,7 +45,7 @@ if 'java' in env.get('API',[]) and jdk:
             outfile = 'libjrsf'
     java = env.LoadableModule(outfile,wrap[0],
                               CPPPATH=[jdk_inc,include],
-                              LIBS='rsf',
+                              LIBS='drsf',
                               LIBPATH='../../lib',
                               LDMODULESUFFIX=outsuffix,
                               FRAMEWORKSFLAGS='-flat_namespace '
