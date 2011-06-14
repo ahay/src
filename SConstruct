@@ -1,4 +1,4 @@
-EnsureSConsVersion(0, 96)
+EnsureSConsVersion(1,0)
 
 import os, sys
 sys.path.insert(0,'./framework')

@@ -117,13 +117,12 @@ have not pulled away from the wavefield as they have in Figure~\ref{fig:snap0}.
 by contours of finite-difference traveltime. Snapshots (a) and (b) are
 taken at a time of 1.05 s for two  different source locations.}
 
-\activeplot{snapdatum}{width=6.0in,height=6.0in}{.}
-{The result of acoustic wavefield modeling for the Marmousi model overlain
+\plot{snapdatum}{width=\textwidth}{The result of acoustic wavefield modeling for the Marmousi model overlain
 by contours of finite-difference traveltime. Snapshots (a) and (b) are
-taken at a time of 0.6 s for the same two source locations depicted
-in Figure \protect \ref{fig:snap0}. Snapshots (c) and (d) 
-are taken at a time of 0.3 s with sources at a depth of 1500 m 
-and the same lateral positions as in (a) and (b).}
+taken at a time of 0.6 s for the same two source locations depicted in
+Figure \protect \ref{fig:snap0}. Snapshots (c) and (d) are taken at a
+time of 0.3 s with sources at a depth of 1500 m and the same lateral
+positions as in (a) and (b).}
 
 These properties of first-arrival traveltimes, and the observation that
 Kirchhoff migration using first-arrival traveltimes usually produces an
@@ -137,6 +136,7 @@ algorithm (Bevc, 1993), and an industry standard Kirchhoff
 migration code to generate the results.
 
 \section{LAYER-STRIPPING KIRCHHOFF MIGRATION}
+\inputdir{XFig}
 
 The layer-stripping migration method can be thought of as a hybrid 
 algorithm that incorporates some of the advantages of shot-profile
@@ -175,19 +175,17 @@ multiple arrivals are handled. Because the paths are shorter than
 in Figure~\ref{fig:kirch}, first-arrival traveltimes are more likely to 
 be valid.
 
-\activesideplot{s-g}{width=3.0in}{.}
-{Propagation paths from the surface to an image point for shot 
+\sideplot{s-g}{width=3.0in}{Propagation paths from the surface to an image point for shot 
 profile migration.}
 
-\activesideplot{kirch}{width=3.0in}{.}
-{Propagation paths from the surface to an image point for Kirchhoff downward
+\sideplot{kirch}{width=3.0in}{Propagation paths from the surface to an image point for Kirchhoff downward
 continuation.}
 
-\activesideplot{datum}{width=3.0in}{.}
-{Propagation paths from the surface to a depth point for layer-stripping
+\sideplot{datum}{width=3.0in}{Propagation paths from the surface to a depth point for layer-stripping
 Kirchhoff downward continuation.}
 
 \section{MARMOUSI EXAMPLE}
+\inputdir{marmousi}
 
 Figure~\ref{fig:eikmarmcggmig} is the result of
 an industry standard Kirchhoff migration
