@@ -16,7 +16,7 @@ pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2 pwspray3
 regr rdiv reshape riesz rsin seislet seisigk shape shapesigk shearer
 similarity simenv smoothreg taupfit thin timecont timefreq timeshift
 tomo trismooth2 tristack twodip2 twofreq2 velcon velinv vofzperm warp1
-warpadd warpscan
+warpadd warpscan zero
 '''
 
 pyprogs = 'fft rcat results zoom'
