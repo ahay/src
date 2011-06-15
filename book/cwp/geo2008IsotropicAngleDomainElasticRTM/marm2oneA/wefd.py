@@ -304,7 +304,7 @@ def edata(plot,data,custom,par):
                'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
                +fdmod.dgrey('pclip=98 %s' %custom,par))        
         Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
-               'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
+               'window n2=1 f2=%d j3=10 bar=${SOURCES[1]} | transp |' % i
                +fdmod.dgrey('pclip=98 %s' %custom,par))   
 
 # ------------------------------------------------------------

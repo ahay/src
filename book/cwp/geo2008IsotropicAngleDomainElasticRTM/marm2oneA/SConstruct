@@ -184,14 +184,14 @@ Flow('me','ma',
      spray axis=3 n=2 o=0 d=1 |
      transp plane=23
      ''')
-Result('ma','transp|' + fdmod.dgrey('',par))
+Result('ma','window j2=10 | transp|' + fdmod.dgrey('',par))
 
 # ------------------------------------------------------------
 # acoustic modeling
 fdmod.awefd('da','wa','wava','vp','rx','ss','rr','',par)
 fdmod.wom('wam','wa','vp',1.5,par)
 Plot('wam',          fdmod.wgrey('pclip=100',par),view=1)
-Result('da','transp | bandpass flo=8 |'
+Result('da','window j2=10 | transp | bandpass flo=8 |'
        +fdmod.dgrey('pclip=99 screenratio=2.5 labelsz=5 labelfat=2 wantaxis=n',par))
 
 # elastic modeling
@@ -213,7 +213,7 @@ Flow(  'ea','da ma',
        transp | bandpass flo=10 | transp |
        add mode=p ${SOURCES[1]}       
        ''')
-Result('ea','transp |'+fdmod.dgrey('pclip=99',par))
+Result('ea','window j2=10 | transp |'+fdmod.dgrey('pclip=99',par))
 
 Flow('ee','de me',
      '''

@@ -385,15 +385,17 @@ which, on inserting $p=-({\bf x} \cdot {\bf t})/({\bf t} \cdot {\bf t})$, leads 
 C \eq \frac{ {\bf x} \cdot {\bf t} } { \sqrt{ ( {\bf x} \cdot {\bf x} ) ( {\bf t}\cdot{\bf t}) }}
 \end{equation} 
 is known as the ``{\bf normalized correlation}.''   
-The program for this calculation is straightforward.
-The name {\tt puck2d()}  denotes {\it picking} on a contin{\it uu}m. 
+%The program for this calculation is straightforward.
+%The name {\tt puck2d()}  denotes {\it picking} on a contin{\it uu}m. 
 
-\moddex{puck2d}{puck2d()}
+%\moddex{puck2d}{puck2d()}
+
+\inputdir{puck}
 
 \sideplot{puckin}{width=3in}{
 	Input synthetic seismic data includes a low level of noise.\viewit{puckin}}  
 
-\sideplot{residual}{width=3in}{
+\sideplot{residual5}{width=3in}{
 	Residuals, i.e., an evaluation of $U_x + pU_t$.
 	\viewit{residual}}  
 
