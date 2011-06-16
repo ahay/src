@@ -1,0 +1,86 @@
+from rsf.proj import *
+
+#Velocity model
+###############
+vel='marmvel.hh'
+Fetch(vel,"marm")
+d=0.004
+
+# Convert to RSF and update header
+Flow('vel',vel,
+     '''
+     dd form=native | 
+     scale rscale=.001 | put
+     label1=Depth label2=Position unit1=km unit2=km
+     label=Velocity unit=km/s
+     d1=%f d2=%f
+     ''' % (d,d))
+
+# Plot
+Result('vel',
+       '''
+       grey color=j allpos=y scalebar=y 
+       title="Marmousi" screenratio=.326
+       screenht=3 labelsz=4 titlesz=6
+       barreverse=y bias=1
+       ''')
+
+##################################################
+# Data
+##################################################
+
+shots = "marmrefl.hh"
+
+Fetch(shots,"marm")
+
+# Convert Files to RSF and update header
+Flow('data',shots,
+     '''
+     dd form=native | put
+     label1=Time label2=Offset unit2=km unit1=s
+     label3=Shot unit3=km d2=-.025 d3=.025 o2=2.575 o3=3
+     ''')
+
+# Plot
+Result('near-offset','data',
+       'window min2=.200 n2=1 | grey title=Near\ Offset')
+
+Result('shot20','data',
+       'window min3=3.500 n3=1 | grey title=Shot\ 20') 
+
+###################
+# Traveltime tables
+###################
+
+Flow('yshot','data','window n1=1 n2=1 | math output=x1')
+Flow('szero','yshot','math output=0')
+Flow('shots','szero yshot','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
+
+ds=0.025
+
+Flow('tables','vel shots',
+     'eikonal shotfile=${SOURCES[1]}',split=[2,240,[1]],reduce='cat axis=4')
+
+Flow('table','tables','window | put o3=0 d3=%g label3=Shot' % ds)
+Plot('table',
+     'window j3=10 | grey color=j title=Traveltime scalebar=y allpos=y clip=3.5 maxval=3.5 minval=0',view=1)
+
+Flow('tablex','table',
+     '''
+     transp plane=13 |
+     deriv |
+     transp plane=13 |
+     scale dscale=%g
+     ''' % (1/ds),split=[2,2301])
+
+#########################
+# Prestack migration
+#########################
+
+Flow('psdmig','data table tablex',
+     'kirmig table=${SOURCES[1]} tablex=${SOURCES[2]} verb=y',split=[3,240,[0]])
+
+Flow('eikmarmcggmig','psdmig','stack axis=3')
+Result('eikmarmcggmig','grey title=standard')
+
+End()
