@@ -1,5 +1,4 @@
 from rsf.suproj import * 
-import rsf.proj
 # need to add the velocity analysis script
 # need to add migration
 # need to try sudivstack
@@ -15,7 +14,7 @@ tape=$SOURCE endian=%d
 
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
-    rsf.proj.Fetch(file+'.SGY',
+    Fetch(file+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
       	  top='nersl/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
@@ -23,10 +22,10 @@ for file in rawsegy  :
          file+'.SGY',segyread,stdin=0)
 
 
-rsf.proj.Fetch('31_81_PR.SGY',
-	server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-      	  dir='PROCESSED')
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
 
 
 # concatinate the input files

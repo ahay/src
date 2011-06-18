@@ -12,16 +12,19 @@ Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@mines.edu>
 Jim Jennings <jenningsjwj@mac.com>
 Long Jin <long.jin@shell.com>
+Parvaneh Karimi <parvaneh.karimi@mail.utexas.edu>
 Roman Kazinnik <roman.only@gmail.com>
 Siwei Li <llisiw@hotmail.com>
 Guochang Liu <guochang.liu@yahoo.com>
 Yang Liu <yangliu1979@gmail.com> 
-Doug McCowan <dwmccowan@windstream.net>
+Douglas McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 James Rickett <jrickett@slb.com>
+Sean Ross-Ross <srossross@gmail.com>
 Colin Russell <crussell@eos.ubc.ca>
 Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
+Karl Schleicher <k_schleicher@hotmail.com>
 Jeffrey Shragge <jshragge@gmail.com>
 Xiaolei Song <songxl1984@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
