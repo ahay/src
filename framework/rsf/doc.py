@@ -990,7 +990,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     snps = snps + parline
     base = name[len(rsfprefix):]
     if base in docprogs:
-        wiki = r'http://m8r.info/wiki/Guide_to_madagascar_programs#sf'+base
+        wiki = r'http://ahay.org/wiki/Guide_to_madagascar_programs#sf'+base
         prog.weblink(wiki)
         out.write("%s.weblink('%s')\n" % (name,wiki))
     vers = version[lang].search(text)

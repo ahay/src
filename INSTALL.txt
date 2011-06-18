@@ -21,9 +21,9 @@ configure scripts will attempt to install it for you if you don't have
 it already.
 
 For more information see:
-http://m8r.info/wiki/Main_Page
-http://m8r.info/wiki/Installation
-http://m8r.info/wiki/Advanced_Installation
+http://ahay.org/wiki/Main_Page
+http://ahay.org/wiki/Installation
+http://ahay.org/wiki/Advanced_Installation
 
 Software construction
 =====================

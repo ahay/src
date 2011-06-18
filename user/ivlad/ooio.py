@@ -232,7 +232,7 @@ class RSFheader(File):
 
 class RSFfile(MetaFile):
     '''Regularly Sampled Format metafile (header+data).
-    See http://m8r.info/wiki/RSF_Comprehensive_Description'''
+    See http://ahay.org/wiki/RSF_Comprehensive_Description'''
 
     def set_defaults_and_constants(self):
         self.ndim_max = 9

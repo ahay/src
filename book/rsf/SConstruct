@@ -14,7 +14,7 @@ Papers(copyr='Madagascar Community',
        '''),
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis'},
-       line='\\url{http://m8r.info/}',
+       line='\\url{http://ahay.org/}',
        fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
 End(use='hyperref,color,amsmath,amssymb,fancybox,jfc,desclist,makeidx',

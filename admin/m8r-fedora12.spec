@@ -1,5 +1,5 @@
 # Spec file for making madagascar 1.0 RPMs for Fedora 12
-# Usage details at http://m8r.info/wiki/Packaging_madagascar#RPM
+# Usage details at http://ahay.org/wiki/Packaging_madagascar#RPM
 
 %define version 1.0
 # If you change version number, remember to also change it in the sed hack in the install section
@@ -11,7 +11,7 @@ Release:   1%{?dist}
 License:   GPLv2+
 Summary:   Utilities for geophysical data processing and numerical experiments
 Group:     Applications/Engineering
-URL:       http://m8r.info
+URL:       http://ahay.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: %{_arch}
 Requires:  binutils, gcc, glibc-headers, scons, gcc-c++, gcc-gfortran, numpy, python, swig, libgomp, blas, blas-devel, atlas, atlas-devel, libXaw-devel 
