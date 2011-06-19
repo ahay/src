@@ -50,7 +50,7 @@ static float rad_frw    (float t, int it) { return t0-t*x0/(h-x0); }
 int main(int argc, char* argv[])
 {
     fint1 str;
-    bool inv, half;
+    bool inv, half, verb;
     int i2, n1,n2, i3, n3, n, dens, nw, CDPtype, mute, rlen;
     float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3, maxstr;
     float **datum = NULL;
@@ -70,6 +70,8 @@ int main(int argc, char* argv[])
     /* if y, do inverse stretching */
     if (!sf_getint("dens",&dens)) dens=1;
     /* axis stretching factor */
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
 
     if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
@@ -121,7 +123,7 @@ int main(int argc, char* argv[])
 		CDPtype=1;
 	    } else if (1 != CDPtype) {
 		sf_histint(in,"CDPtype",&CDPtype);
-	    	sf_warning("CDPtype=%d",CDPtype);
+	    	if (verb) sf_warning("CDPtype=%d",CDPtype);
 	    }
 	} 	    
 	
@@ -231,7 +233,7 @@ int main(int argc, char* argv[])
     str = fint1_init(nw,n1,mute);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_warning("CMP %d of %d;",i3+1,n3);
+	if (verb) sf_warning("CMP %d of %d;",i3+1,n3);
 	for (i2=0; i2 < n2; i2++) {
 	    if ( 'l' == rule[0] || 
 		 'n' == rule[0] || 
@@ -257,7 +259,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (stretched,n,out);
 	}
     }
-    sf_warning(".");
+    if (verb) sf_warning(".");
 
     exit (0);
 }
