@@ -22,8 +22,10 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i1, i2, i3, n3, iter, ibreg, nbreg, cnum, cutting, num; 
-    float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL, eps, perc, ordert, iperc, orderc, inum;
+    int i, niter, nw, n1, n2, n12, i1, i2, i3, n3;
+    int iter, cnum, cutting, num; 
+    float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL;
+    float eps, perc, ordert, iperc, orderc, inum;
     char *type, *oper;
     bool verb, *known, cut;
     sf_file in, out, dip, mask=NULL;
@@ -120,9 +122,6 @@ int main(int argc, char* argv[])
 	    break;
 
 	case 'b':
-	    if (!sf_getint("nbreg",&nbreg)) nbreg=1;
-	    /* number of iterations for Bregman iteration */
-	    
 	    sf_sharpen_init(n12,perc);
 	    seislet_init(n1,n2,true,true,eps,type[0]);
 	    dd2 = sf_floatalloc(n12);
@@ -165,7 +164,8 @@ int main(int argc, char* argv[])
 
 	    case 'c': 
 		/* Seislet construct */
-		sf_solver_prec(sf_mask_lop, sf_cgstep, seislet_construct, n12, n12, n12, dd, dd, niter,
+		sf_solver_prec(sf_mask_lop, sf_cgstep, seislet_construct, 
+			       n12, n12, n12, dd, dd, niter,
 			       0., "verb", verb, "end"); 
 		for(i=0; i < n12; i++) {
 		    if (!known[i]) dd[i] = - dd[i];
@@ -194,7 +194,9 @@ int main(int argc, char* argv[])
 			if(orderc==0.) {
 			    inum = (float)cnum;
 			} else {
-			    inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
+			    inum = cnum*1. + 
+				((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/
+				pow(niter,orderc) + 1.;
 			    if(inum<0.) inum = 0.;
 			}
 			cutting = (int)inum;
@@ -212,7 +214,8 @@ int main(int argc, char* argv[])
 			if(ordert==0.) {
 			    iperc = perc;
 			} else {
-			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/
+				pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
 			sf_sharpen_init(n12,iperc);
@@ -245,7 +248,9 @@ int main(int argc, char* argv[])
 			if(orderc==0.) {
 			    inum = (float)cnum;
 			} else {
-			    inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
+			    inum = cnum*1. + 
+				((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/
+				pow(niter,orderc) + 1.;
 			    if(inum<0.) inum = 0.;
 			}
 			cutting = (int)inum;
@@ -263,7 +268,8 @@ int main(int argc, char* argv[])
 			if(ordert==0.) {
 			    iperc = perc;
 			} else {
-			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
+			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/
+				pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
 			sf_sharpen_init(n12,iperc);
@@ -292,58 +298,52 @@ int main(int argc, char* argv[])
 		    dd2[i1] = dd[i1];
 		    dd3[i1] = dd[i1];
 		}
-		for (iter=0; iter < niter; iter++) { /* Outer iteration */
+		for (iter=0; iter < niter; iter++) { /* Bregman iteration */
 		    if (verb)
-			sf_warning("Outer iteration %d of %d",iter+1,niter);
+			sf_warning("Bregman iteration %d of %d",iter+1,niter);
 		    
-		    for (ibreg=0; ibreg < nbreg; ibreg++) { /* Inner iteration */
-			if (verb)
-			    sf_warning("Inner iteration %d of %d",ibreg+1,nbreg);
-
-			for (i1=0; i1 < n12; i1++) {
-			    if (known[i1]) dd2[i1] = 0.;
+		    for (i1=0; i1 < n12; i1++) {
+			if (known[i1]) {
+			    dd2[i1] = dd3[i1];
 			}
-			for (i1=0; i1 < n12; i1++) {
-			    dd2[i1] += dd3[i1];
-			}
-
-			seislet_lop(true,false,n12,n12,mm,dd2);
-
-			if (cut) {
-			    /* Cutting */
-			    if(orderc==0.) {
-				inum = (float)cnum;
-			    } else {
-				inum = cnum*1. + ((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/pow(niter,orderc) + 1.;
-				if(inum<0.) inum = 0.;
-			    }
-			    cutting = (int)inum;
-			    
-			    for (num=1; num < cutting; num *= 2) ;
-			    num /= 2;		
-			    
-			    for (i1=0; i1 < n1; i1++) {
-				for (i2=num; i2 < n2; i2++) {
-				    mm[i2*n1+i1] = 0.;
-				}
-			    }
+		    }
+		    
+		    seislet_lop(true,false,n12,n12,mm,dd2);
+		    
+		    if (cut) {
+			/* Cutting */
+			if(orderc==0.) {
+			    inum = (float)cnum;
 			} else {
-			    /* Thresholding */
-			    sf_sharpen(mm);
-			    sf_weight_apply(n12, mm);
+			    inum = cnum*1. + 
+				((n2*1.-cnum*1.)*pow((iter+1),orderc)*1.)/
+				pow(niter,orderc) + 1.;
+			    if(inum<0.) inum = 0.;
 			}
+			cutting = (int)inum;
 			
-			seislet_lop(false,false,n12,n12,mm,dd2);
-		    } /* End inner interation */
-
+			for (num=1; num < cutting; num *= 2) ;
+			num /= 2;		
+			
+			for (i1=0; i1 < n1; i1++) {
+			    for (i2=num; i2 < n2; i2++) {
+				mm[i2*n1+i1] = 0.;
+			    }
+			}
+		    } else {
+			/* Thresholding */
+			sf_sharpen(mm);
+			sf_weight_apply(n12, mm);
+		    }
+		    
+		    seislet_lop(false,false,n12,n12,mm,dd2);
+		    
 		    for (i1=0; i1 < n12; i1++) {
 			if (known[i1]) {
 			    dd3[i1]= dd[i1]+dd3[i1]-dd2[i1]; 
-			} else {
-			    dd3[i1] = 0.;
 			}
 		    }
-		} /* End outer interation */
+		} /* End Linear Bregman interation */
 		
 		for (i1=0; i1 < n12; i1++) {
 		    dd[i1] = dd2[i1];
