@@ -1,6 +1,6 @@
 EnsureSConsVersion(1,0)
 
-import os, sys
+import atexit, os, sys
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
@@ -172,8 +172,11 @@ if os.path.isdir('user'):
                 VariantDir(build,dir)
             else:
                 BuildDir(build,dir)
+            user_dir_exports = 'env root bindir pkgdir'
+            if dir == 'seplib_compat':
+                user_dir_exports += ' incdir'
             SConscript(dirs=build,name='SConstruct', 
-                exports='env root bindir pkgdir')
+                exports=user_dir_exports)
             Default(build)
 
 ##########################################################################
@@ -271,3 +274,22 @@ env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
 # backward compatibility
 if os.path.isdir(etcdir2):
     env.Alias('install',etcdir2)
+
+##########################################################################
+# End-of-build message
+##########################################################################
+
+def msgEndInstall():
+    from SCons.Script import GetBuildFailures
+    if not GetBuildFailures():
+        print '''
+---------------------------------------------------------
+To start using madagascar, source env.sh or env.csh from:
+    %s/
+Local documentation center at:
+    %s/
+Documentation wiki at http://www.ahay.org
+---------------------------------------------------------
+''' % (etcdir, docdir)
+
+atexit.register(msgEndInstall)
