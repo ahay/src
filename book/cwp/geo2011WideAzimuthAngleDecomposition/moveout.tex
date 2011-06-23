@@ -1,0 +1,194 @@
+\section{Moveout function}
+
+%% 
+ % goal of this section 
+ %%
+In this section, we derive the formula for the moveout function
+characterizing reflections in the extended $\{\hh,\tt\}$ domain. The
+purpose of this derivation is to find a procedure for angle
+decomposition, i.e. a representation of reflectivity as a function of
+reflection and azimuth angles.
+
+%% 
+ % introduce the planar assumption
+ % angles are formed between vectors (planes) - implicit assumption
+ %%
+An implicit assumption made by all methods of angle decomposition is
+that we can describe the reflection process by locally planar
+objects. Such methods assume that (locally) the reflector is a plane,
+and that the incident and reflected wavefields are also (locally)
+planar. Only with these assumptions we can define vectors in-between
+which we measure angles like the angles of incidence and reflection,
+as well as the azimuth angle of the reflection plane. Our method uses
+this assumption explicitly.
+%
+However, we do not assume that the wavefronts are planar. Instead, we
+consider each (complex) wavefront as a superposition of planes with
+different orientations. In the following, we discuss how each one of
+these planes would behave during the extended imaging and angle
+decomposition. Thus, our method applies equally well for simple and
+complex wavefields characterized by multipathing. 
+
+We define the following unit vectors to describe the reflection
+geometry and the conventional and extended imaging conditions:
+\begin{itemize}
+   \item $\nn$: a unit vector aligned with the reflector normal;
+   \item $\aa$: a unit vector representing the projection of the azimuth
+     vector $\vv$ in the reflector plane;
+   \item $\ns$: a unit vector orthogonal to the source wavefront;
+   \item $\nr$: a unit vector orthogonal to the receiver wavefront;
+   \item $\qq$: a unit vector at the intersection of the reflection
+     plane and the reflector plane.
+\end{itemize}
+By construction, vectors $\nn$, $\ns$, $\nr$ and $\qq$ are co-planar
+and vectors $\nn$ and $\qq$ are orthogonal, \rfg{eicawfl}.
+
+% reformulate the CIC with planes
+% set the origin of the time axis 
+With these definitions, the (planar) source and receiver wavefields
+are given by the expressions:
+%
+\bea
+\ns \cdot \xx &=& v t_s \label{eqn:CICsou} \;, \\
+\nr \cdot \xx &=& v t_r \label{eqn:CICrec} \;.
+\eea
+%
+Here, $\xx$ are space coordinates, $t_s$ and $t_r$ are times defining
+the planes under consideration, and $v$ represents velocity.
+\rEqs{CICsou} and \ren{CICrec} define the conventional imaging
+condition given by \reqs{CICt} and \ren{CICw}. This condition states
+that an image is formed when the source and receiver wavefields are
+time-coincident at reflection points. In \rEqs{CICsou} and
+\ren{CICrec}, we explicitly impose the condition that the source and
+receiver planes and the reflector plane intersect at the image point.
+
+% reformulate the EIC with planes
+Similarly, we can rewrite the extended imaging condition using the
+planar approximation of the source and receiver wavefields using the
+expressions:
+%
+\bea
+\ns \cdot \lp \xx - \hh \rp &=& v \lp t_s - \tt \rp \label{eqn:EICsou} \;, \\
+\nr \cdot \lp \xx + \hh \rp &=& v \lp t_r + \tt \rp \label{eqn:EICrec} \;.
+\eea
+%
+As discussed earlier, $\hh$ and $\tt$ are space- and time-lags, and
+$v$ represents the local velocity at the image point, assumed to be
+constant in the immediate vicinity of this point. This assumption is
+justified by the need to operate with planar objects, as indicated
+earlier. With this construction, the source and receiver planes are
+shifted relative to one-another by equal quantities in the positive
+and negative directions and in space and time, \reqs{EICt}-\ren{EICw}.
+
+% substitute CIC into EIC - remove variable $\xx$
+We can eliminate the space variable $\xx$ by substituting \req{CICsou}
+in \req{EICsou} and \req{CICrec} in \req{EICrec}:
+%
+\bea 
+\ns \cdot \hh &=& v \tt \label{eqn:EXTsou} \;, \\
+\nr \cdot \hh &=& v \tt \label{eqn:EXTrec} \;.
+\eea
+%
+Furthermore, we can re-arrange the system given by \reqs{EXTsou} and
+\ren{EXTrec} by sum and difference of the equations:
+%
+\bea
+\lp \ns + \nr \rp \cdot \hh &=& 2 v \tt \label{eqn:EXTsum} \;, \\
+\lp \ns - \nr \rp \cdot \hh &=& 0       \label{eqn:EXTdif} \;.
+\eea
+
+% Snell's law
+So far, we have not assumed any relation between the vectors
+characterizing the source and receiver planes, $\ns$ and
+$\nr$. However, if the source and receiver wavefields correspond to a
+reflection from a planar interface, these vectors are not independent
+of one-another, but are related by Snell's law which can be formulated
+as
+%
+\beq \label{eqn:Snell}
+\nr = \ns - 2\lp \ns \cdot \nn \rp \nn \;.
+\eeq
+%
+This relations follows from geometrical considerations and it is based
+on the conservation of ray vector projection along the
+reflector. \rEq{Snell} is only valid for PP reflections in an
+isotropic medium.
+
+Substituting Snell's law into the system \ren{EXTsum}-\ren{EXTdif},
+and after trivial manipulations of the equations, we obtain the
+system:
+%
+\bea
+\lb \ns - \lp \ns \cdot \nn \rp \nn \rb \cdot \hh &=& v \tt \label{eqn:EXTmov} \;, \\
+\lp \ns \cdot \nn \rp \lp \nn \cdot \hh \rp       &=& 0     \label{eqn:EXTort} \;. 
+\eea
+%
+In general, the plane characterizing the source wavefield is not
+orthogonal to the reflection plane (there would be no reflection in
+that case), therefore we can simplify \req{EXTort} by dropping the
+term $\lp\ns\cdot\nn\rp\ne0$. Moreover, we can replace in \req{EXTmov}
+the expression in the square bracket with the quantity
+$\qq\sin\theta$, where $\qq$ is the unit vector characterizing the
+line at the intersection of the reflection and reflector planes, and
+$\theta$ is the reflection angle contained in the reflection
+plane. With these simplifications, the system
+\ren{EXTmov}-\ren{EXTort} can be re-written as:
+%
+\bea
+\lp \qq \cdot \hh \rp \sin\theta &=& v \tt \label{eqn:CONstk} \;, \\
+\nn \cdot \hh                    &=& 0     \label{eqn:CONort} \;. 
+\eea
+%
+The system \ren{CONstk}-\ren{CONort} allows for a straightforward
+physical interpretation of the extended imaging condition. First, the
+expression \ren{CONort} indicates that of all possible space-lags that
+can be applied to the reconstructed wavefields, the only ones that
+contribute to the extended image are those for which the space-lag
+vector $\hh$ is orthogonal to the reflector normal vector
+$\nn$. Furthermore, assuming that the space-shift applied to the
+source and receiver planes is contained in the reflector plane,
+i.e. $\hh \perp \nn$, then the expression \ren{CONstk} describe the
+moveout function in an extended gather as a function of the space-lag
+$\hh$, the time lag $\tt$, the reflection angle $\theta$, the
+orientation vector $\qq$. The vector $\qq$ is orthogonal to the
+reflector normal and depends on the reflection azimuth angle $\phi$.
+
+\rFgs{eicawfl}-\rfn{eictshift1} illustrate the process involved in the
+extended imaging condition and describe pictorially its physical
+meaning. \rFg{eicawfl} shows the source and receiver planes, as well
+as the reflector plane together with their unit vector
+normals. \rFg{eicxshift1} shows the source and receiver planes
+displaced by the space lag vector $\hh$ contained in the reflector
+plane, as indicated by \req{CONort}. The displaced planes do not
+intersect at the reflection plane, thus they do not contribute to the
+extended image at this point. However, with the application of time
+shifts with the quantity $\tt=\lp \qq \cdot \hh \rp \sin\theta/v$,
+i.e. a translation in the direction of plane normals, the source and
+receiver planes are restored to the image point, thus contributing to
+the extended image, \rfg{eictshift1}.
+
+% ------------------------------------------------------------
+\inputdir{Matlab}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\plot{eicawfl}{width=0.65\textwidth} {The reflector plane (of normal
+  $\nn$), together with the source and receiver planes (of normals
+  $\ns$ and $\nr$, respectively). The figure represents the
+  source/receiver planes in their original position, i.e. as obtained
+  by wavefield reconstruction. }
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\plot{eicxshift1}{width=0.65\textwidth} {The reflector plane (of
+  normal $\nn$), together with the source and receiver planes (of
+  normals $\ns$ and $\nr$, respectively). The figure represents the
+  source/receiver planes displaced with the space-lag $\hh$
+  constrained in the reflector plane.}
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\plot{eictshift1}{width=0.65\textwidth} {The reflector plane (of
+  normal $\nn$), together with the source and receiver planes (of
+  normals $\ns$ and $\nr$, respectively). The figure represents the
+  source/receiver planes displaced with space-lag $\hh$ and time-lag
+  $\tt$.  The space and time-lags are related by \req{CONstk}.}
+% ------------------------------------------------------------
