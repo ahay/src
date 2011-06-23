@@ -33,6 +33,7 @@ boxfilter
 awefd lwefd
 awefd2d awefd3d ewefd2d ewefd3d
 anifd2d
+hic2ang
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
