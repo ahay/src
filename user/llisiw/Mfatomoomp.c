@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 	sf_trianglen_init(dim,rect,n);
 	sf_repeat_init(nt,1,sf_trianglen_lop);
 
-	sf_conjgrad_init(nt,nt,nrhs,nrhs,eps,tol,verb,NULL);
+	sf_conjgrad_init(nt,nt,nrhs,nrhs,eps,tol,verb,false);
 	p = sf_floatalloc(nt);
     }
     

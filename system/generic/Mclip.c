@@ -51,9 +51,9 @@ int main(int argc, char* argv[])
 
 	for (i=0; i < nbuf; i++) {
 #ifdef sun
-	    nan = !finite(trace[i]);
+	    nan = (bool) !finite(trace[i]);
 #else
-	    nan = !isnormal(trace[i]);
+	    nan = (bool) !isnormal(trace[i]);
 #endif
 	    if (nan) trace[i] = SF_SIG(trace[i])*clip; 
 	    else if (trace[i] >  clip) trace[i]= clip;

@@ -32,7 +32,7 @@ sf_complex* helmholtz(float w        /* frequency */,
 		      sf_complex *f  /* source term */)
 /* Helmholtz solver */
 {
-    
+    return f;
 }
 
 void search(float w        /* frequency */,
