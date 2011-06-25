@@ -1,0 +1,89 @@
+\section{Field data example}
+
+\inputdir{cmp}
+
+\plot{dataP}{width=\textwidth}{ \taup or Radon transformed data
+from a marine acquisition (a). The data are fairly clean even though
+there is a slight decrease in SNR for later and steepest
+events. The CMP maximum offset-to-depth ratio 
+reaches 1.5 for larger value of the horizontal slope $p$.
+Dominant local-slope field (b) measured using PWD
+algorithm. Using the slopes we estimate the zero-slope time $\tau_0$
+mapping fields (c) that predicts reflection curves by which we flatten
+the original gather (d).}
+
+\rFg{dataP} presents the results of the proposed \taup processing on a
+ field data example from a marine acquisition.  \rFg{dataP}a \old{is
+ the} \new{shows a} \taup transformed CMP gather. The data are taken
+ from a deep water (3.5 s of sea-depth) dataset with poor offset
+ sampling ($\sim 100~m$) that aliases the steepest seismic
+ events. Spatial aliasing creates artifacts in \taup domain that bias
+ the PWD slope estimate.  In order to mitigate the effect of the
+ aliasing, we interpolated the raw data by means of an FX algorithm
+ \citep{spitz:785}.  The original trace recording is 7.0~s long but,
+ since the SNR\ decreases \new{significantly} after 5.0~s, \old{such
+ that even semblance analysis is less reliable,} we window the CMP
+ gather and \old{we} process seismic events only between 3.0 and
+ 6.0~s.  \new{The CMP maximum offset-to-depth ratio reaches 1.5 for
+ larger value of the horizontal slope $p$. As for the synthetic case,
+ the data should carry enough information to well resolve the
+ horizontal velocity and the anellipticity parameter.}  \rFg{dataP}b
+ shows the \old{data} dominant local-slope $R$ field \old{we}
+ automatically measure from the data using the PWD algorithm. As in
+ the synthetic case, we use these slopes to construct the prediction
+ operator that allows \new{us} to paint the zero-slope traveltime map
+ $\tau_0$ along the reflection events (\rFg{dataP}c).  The $\tau_0$
+ values are finally used to unwrap the trace shifts until the gather
+ is completely flattened. The good alignment of the NMO corrected
+ traces (\rFg{dataP}d) confirms the robustness of predictive painting
+ with real data.  \rFg{int-painting-mask} shows spectra of the
+ recovered interval parameters using Fowler's equations \ren{fowler1}
+ and \ren{fowler2}. The plots are overlaid with the profiles (yellow
+ curves) recovered using a layer-based \tx Dix inversion
+ \citep{ferla:296} and by the profiles obtained after an automated
+ picking of the recovered trends. Our solution (red curves) follows
+ the Dix trends (yellow curves) even though it exhibits a slight
+ decrease in accuracy.  The poor SNR for later and steeper events and
+ the numerical differentiation of the zero-slope traveltime $\tau_0$
+ and slope $R$ make the field data results noisier. As expected, the
+ high-order moveout parameters appear to be more sensitive to the
+ noise. Moreover, the more pronounced enlargement of the $\hat{\eta}$
+ trend \old{than} \new{in comparison with the} $\hat{V}_H$ trend
+ confirms that the latter parameter is better constrained by the data
+ \citep{ilyabook2006}.
+
+\plot{int-painting-mask}{width=\textwidth}{Parameters spectra for
+interval normal moveout (a), horizontal velocity (b) and anellipticity
+parameter $\eta $ (c). These spectra result from the application of
+Fowler's equations using painted $\tau_0$ field. The red lines are the
+profiles after an automated picking of the estimated spectra. The
+yellow lines are the recovered profiles after a layer-based \tx Dix
+inversion procedure \citep{ferla:296}. }
+
+
+%As in the synthetic example, the CMP gather is properly flattened by the
+%application of oriented NMO equation \ref{eqn:tau0mapping} using local event
+%slopes. The effective $V_{N},$ $V_{H}$ and $\eta $ mapping after oriented
+%NMO is shown in figure \ref{fig:dataCongoOriented}: the superimposed dotted
+%blue curves represent the effective parameter trend picked after
+%conventional two parameters semblance analysis. Again we can notice a
+%significantly higher resolution in parameters estimates.
+
+
+
+
+%\plot{dataNMO1}{width=0.8\textwidth}{(a) Time mapping of each data sample from $\tau -p$ time to
+%the zero-slope time $\tau _{0}$ according to relation \ref%
+%{eqn:tau0mapping}. (b) The output of oriented velocity independent NMO for
+%the field data set investigated: the event are correctly flattened without
+%knowing the velocity model. \label{fig:dataCongoNMO}}
+
+
+
+%\plot{eff}{width=0.8\textwidth}{Effective normal moveout velocity (a), horizontal velocity (b) and
+%anellipticity parameter $\eta $ (c) computed as a data attribute
+%through the local estimate of slopes and curvature. These values are mapped
+%to the appropriate zero-slope $\tau _{0}$ time by using oriented NMO
+%equation given in \ref{eqn:tau0mapping}. The blue dotted lines
+%indicate the values obtained from two-parameters anisotropic velocity-scan
+%for the field data in figure \ref{fig:dataCongoFX} (a). \label{fig:dataCongoOriented}}

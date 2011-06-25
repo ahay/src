@@ -1,0 +1,17 @@
+from rsf.tex import *
+
+Paper('article')
+
+#\usepackage{times}
+#\usepackage{natbib}
+#\usepackage{amsmath}
+#\usepackage{graphicx}
+#\usepackage{color}
+#\usepackage{amssymb}
+#\usepackage{amsbsy}
+#\usepackage{lineno}
+#\usepackage{ulem}
+#\usepackage{setspace}
+
+
+End()

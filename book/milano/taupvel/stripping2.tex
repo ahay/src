@@ -1,0 +1,62 @@
+\subsection{Stripping equations}
+The first alternative to the Dix inversion is what we call
+\textit{stripping equations} \citep{casasantafomel}. Starting from the integral
+\req{taup_int} for \taup reflection moveout and employing the chain
+rule (\req{B4}), we first deduce an expression for slope
+$R_{\tau}$ (\req{B5}) and curvature $Q_{\tau}$ (\req{B6}) using
+$\tau$-derivatives, that now depend on the interval parameters. Then,
+solving for $\hat{V}_{N}$ and $\hat{V}_{H}$, we obtain the following
+expressions:
+\begin{eqnarray}
+\hat{V}_{N}^{2}(\tau, p) &=&-\frac{1}{p}\frac{{16R_{{\tau }}^{3}}}{{\hat{N}\hat{D}}},
+\label{eqn:strippingVN} \\
+\hat{V}_{H}^{2}(\tau, p) &=&\frac{1}{{p^{2}}}\dfrac{{\hat{N}-4R}_{{\tau }}}{{\hat{N}}}%
+,  \label{eqn:strippingVH}
+\end{eqnarray}
+and
+\begin{equation}
+\hat{\eta}(\tau, p)=\frac{1}{p}\frac{{\hat{N}(4{R}_{{\tau }}-\hat{D})}}{{32\tau {R}_{{%
+\tau }}^{3}}},  \label{eqn:strippingETA}
+\end{equation}
+which provide an estimate for the interval parameters. In the above equations,
+$\hat{N}={pQ}_{{\tau }}{+~3R}_{{\tau }}{-3p{R}_{{\tau }}^{2}}$
+and 
+$\hat{D}=p{Q}_{{\tau }}+3{R}_{{\tau }}+p{{R}_{{\tau }}^{2}},$
+which corresponds to the interval values of the numerator $N$ and
+denominator $D$ of the square root in equation \ref{eqn:tau0mapping}.
+These relations are very similar to those previously derived for the
+effective parameters (equations
+\ref{eqn:vNmap}--\ref{eqn:etamap}). However, they require the $\tau$
+derivative of \new{the} slope and curvature fields (Table
+\ref{tbl:velocities}). This result agrees with the discussion above
+about layer stripping in $\tau$-$p$. In this domain, layer stripping
+\old{is just a matter of} \new{reduces to} computing traveltime differences
+(\req{taup_layers}) at each horizontal slowness $p$. Therefore,
+differentiating the effective slope $R$ and curvature $Q$ fields in
+$\tau$ provides the necessary information to access the interval
+parameters directly. This is the power of the \taup domain as opposed
+to \tx, where the only practical path to interval parameters is
+through Dix inversion that requires the knowledge of effective
+parameters. The zero-slope time $\tau_0$ \old{function} is needed to map the
+interval parameter estimates to the correct vertical time (Table
+\ref{tbl:velocities}).
+
+%Figure \ref{fig:dataSynthStrip} shows the interval NMO velocity $\hat{V}_{N}$
+%(a) $,$ interval horizontal velocity $\hat{V}_{H}$ (b) and interval
+%anellipticity $\hat{\eta}$ (c) oriented mapping obtained after applying the
+%stripping equations to the synthetic data example shown in figure \ref%
+%{fig:dataSynth} (a). Again we observe a good match between the exact and the
+%recovered \ interval parameters profiles, although $\hat{V}_{H}$ and $\hat{%
+%\eta}$ display a loss in resolution mainly due to instabilities of numerical
+%differentiation of slopes $R(\tau ,p)$ and curvature $Q(\tau ,p)$ fields.
+%Moreover these results confirm the equivalence of all the three inversion
+%methods we propose, even though they are derived in different ways.
+%Numerical instabilities affected the field data processing even more and the
+%method produces a reliable estimate of the NMO\ velocity profile only
+%(Figure \ref{fig:dataCongoInterval} (c)).
+
+%\plot{int_Syn}{width=0.8\textwidth}{Oriented inversion for interval parameters %using stripping
+%equations: normal moveout (a) and horizontal velocity (b) and anellipticity
+%parameter $\eta $ (c). Blue dotted lines represent the exact values
+%used for generating the synthetic dataset in figure \ref%
+%{fig:dataSynth} (a).\label{fig:dataSynthStrip}}

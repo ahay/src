@@ -1,0 +1,213 @@
+\append{Local plane-waves operators}
+
+Local plane-wave operators model seismic data \old{using local plane-waves} \cite[]{FomelPWD} . The mathematical basis is the local plane differential equation
+\begin{equation}
+  \frac{\partial P}{\partial x} + 
+  \sigma\,\frac{\partial P}{\partial t} = 0\;,
+  \label{eqn:pde}
+\end{equation}
+where $P(t,x)$ is the wave field and $\sigma$ the local slope field \cite[]{ClareboutESA}. 
+In the case of a constant slope, the solution of equation~\ref{eqn:pde} is a simple plane wave
+$ P(t,x) = f(t - \sigma x)$ where $f(t)$ is an arbitrary waveform. Assuming
+that the slope $\sigma=\sigma(t,x)$ varies in time and space, one can design
+a local operator to propagate each trace to its neighbors. Let $\mathbf{s}$ represent a seismic section as a collection of traces: $\mathbf{s} =
+\left[\mathbf{s}_1 \; \mathbf{s}_2 \; \ldots \;
+\mathbf{s}_N\right]^T$, where $\mathbf{s}_k$ corresponds to $P(t,x_k)$
+for $k=1,2,\ldots$ A plane-wave destruction operator (PWD) effectively
+predicts each trace from its neighbor and subtracts the prediction
+from the original trace \citep{FomelPWD}.  In linear operator
+notation, the plane-wave destruction operation can be defined as
+\begin{equation}
+  \label{eq:pwd}
+  \mathbf{r} = \mathbf{D(\sigma)\,s}\;,
+\end{equation}
+where $\mathbf{r}$ is the destruction residual, and $\mathbf{D}$ is the
+destruction operator defined as
+\begin{equation}
+  \label{eq:d}
+  \mathbf{D}(\sigma) = 
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{P}_{1,2}(\sigma) & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{P}_{2,3}(\sigma) & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{P}_{N-1,N}(\sigma) & \mathbf{I} \\
+    \end{array}\right]\;,
+\end{equation}
+where $\mathbf{I}$ stands for the identity operator, and
+$\mathbf{P}_{i,j}(\sigma)$ describes prediction of trace $j$ from
+trace $i$. Prediction of a trace consists of shifting the original
+trace along dominant event slopes $\sigma$. The dominant slopes are
+estimated by minimizing the prediction residual $\mathbf{r}$ in a
+least-squares sense. Since the prediction operators \ref{eq:d} depends
+on the slopes themselves, the inverse problem is nonlinear and must
+be solved in a iterative fashion by subsequent linearizations. We 
+employ shaping regularization \citep{FomelShaping} for controlling the
+smoothness of the estimated slope field.
+
+Once the local slope field $\sigma$ has been computed, prediction of a
+trace from a distant neighbor can be accomplished by simple
+recursion. Predicting trace $k$ from trace $1$ is
+\begin{equation}
+  \label{eq:pred}
+  \mathbf{P}_{1,k} = \mathbf{P}_{k-1,k}\,
+  \cdots\,\mathbf{P}_{2,3}\,\mathbf{P}_{1,2}\;.
+\end{equation}
+If $\mathbf{s}_r$ is a reference trace, then the prediction of trace
+  $\mathbf{s}_k$ is $\mathbf{P}_{r,k}\,\mathbf{s}_r$. \cite{fomel:A25}
+  called the recursive operator $\mathbf{P}_{r,k}$ predictive
+  painting. The elementary prediction operators in equation~\ref{eq:d}
+  spread information from a given trace to its neighbors recursively
+  by following the local structure of seismic events. \rFg{dataPsynth}
+  in the main text illustrates the painting concept.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dix Equations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\append{Mathematical derivation of slope-based Dix inversion}
+
+The Dix formula \citep{dix:68} can be written in the differential form
+\begin{equation}
+\hat{\mu}=\frac{d}{{d\tau _{0}}}\left[ {\tau _{0}\mu (\tau _{0})}\right] ,
+\label{eqn:dix}
+\end{equation}
+where $\hat{\mu}$ is the interval parameter corresponding to
+zero-slope time ${\tau _{0}}$ {and }${\mu (\tau _{0})}$ is the
+vertically-variable general effective parameter. Using the chain
+rule, we rewrite the Dix's formula \ref{eqn:dix} as follows:
+\begin{equation}
+\hat{\mu}=\frac{d}{{d\tau }}\left[ {\tau _{0}(\tau )\mu (\tau )}\right] %
+\left[ \frac{d{\tau }_{0}}{{d\tau }}\right] ^{-1}.  \label{eqn:dixchain2}
+\end{equation}
+
+At first, let us consider the VTI NMO velocity as an effective parameter,
+hence ${\mu =}V_{N}^{2}$.  Using the expression for ${\tau _{0}(\tau
+)}$ (equation \ref{eqn:tau0mapping}) and $V_{N}^{2}{(\tau )}$
+(equation \ref{eqn:vNmap}), we obtain, after some algebra, 
+\begin{equation}
+\frac{{d\tau _{0}}}{{d\tau }}=\frac{1}{{2\tau _{0}}}\frac{{\tau (2ND+\tau
+(N_{\tau }D-D_{\tau }N))}}{{D^{2}}},  \label{eqn:dixVNVTI1}
+\end{equation}%
+\begin{equation}
+\frac{{d\left[ {\tau _{0}(\tau )V_{N}^{2}(\tau )}\right] }}{{d\tau }}=
+-\frac{{8\tau }^{2}{R^{2}(\tau )\left[ {6\tau DNR_{\tau }-\tau DRN_{\tau }-3\tau
+NRD_{\tau }+4DNR}\right] }}{{pD^{3}N\tau _{0}}}, \label{eqn:dixVNVTI2}
+\end{equation}
+where ${R_{\tau }=}\partial {R/}\partial \tau $~,~ ${Q_{\tau }=}\partial {Q/}\partial \tau $ and
+\begin{equation}
+N_{\tau }=\partial N/\partial \tau =\left( {3\tau -6pR}\right) R_{\tau
+}+p\tau Q_{\tau }+3R+pQ,  \label{eqn:numerator_tau}
+\end{equation}%
+\begin{equation}
+D_{\tau }=\partial D/\partial \tau =\left( {3\tau +2pR}\right) R_{\tau
+}+p\tau Q_{\tau }+3R+pQ.  \label{eqn:denominator_tau}
+\end{equation}
+Inserting equation \ref{eqn:dixVNVTI1} and \ref{eqn:dixVNVTI2}
+in \ref{eqn:dixchain2} leads to
+\begin{equation}
+\hat{V}_{N}=-\frac{{16\tau R^{2}}}{{pDN}}\frac{{\left[ {6\tau DNR_{\tau
+}-\tau DRN_{\tau }-3\tau NRD_{\tau }+4DNR}\right] }}{{\left[ {2ND+\tau
+N_{\tau }D-\tau D_{\tau }N}\right] }}  \label{eqn:vNdixVTI}
+\end{equation}.
+
+To compute the interval $\hat{V}_H$ or $\hat{\eta}$, we employ as
+effective value ${\mu =}S$ $V_{N}^{4}$ \ as described in equation
+\ref{eqn:4thmoment}. In this case, the modified Dix formula (equation
+\ref{eqn:dixchain2}) can be rewritten as follows
+\begin{equation}
+\hat{S}=\frac{1}{{\hat{V}_{N}^{4}(\tau )}}\frac{d}{{d\tau }}\left[ {\tau
+_{0}(\tau )S(\tau )V_{N}^{4}(\tau )}\right] \left[ \frac{d{\tau }_{0}}{{d\tau }}\right] ^{-1},  
+\label{eqn:dixchainETA}
+\end{equation}
+which, after substituting the chain relation for the interval
+${\hat{V}_{N}^{2}(\tau )=}\frac{{d\left[ {\tau _{0}(\tau
+)V_{N}^{2}(\tau )}\right] }}{{d\tau }}\left[ \frac{d{\tau
+}_{0}}{{d\tau }}\right] ^{-1}$ and some simplifications, leads to
+the relation	
+\begin{equation}
+\hat{S}={S(\tau )}\frac{{V_{N}^{2}(\tau )}}{{\hat{V}_{N}^{2}(\tau )}}+\tau
+_{0}(\tau )\frac{{V_{N}^{2}(\tau )}}{{\hat{V}_{N}^{4}(\tau )}}\frac{{d}}{{%
+d\tau }}\left[ {S(\tau )V_{N}^{2}(\tau )}\right] \left[ \frac{d{\tau }_{0}}{{%
+d\tau }}\right] ^{-1},  \label{eqn:etaDIX}
+\end{equation}
+which involves only the mapping relations for the zero-slope time
+$\tau _{0}(\tau)$ (formula \ref{eqn:tau0mapping}) effective NMO\
+velocity $V_{N}^{2}(\tau )$ (formula \ref{eqn:vNmap}), and the
+anellipticity parameter obtained by equation \ref{eqn:etamap} as
+$S(\tau )=1+8\eta (\tau )$. From the interval parameter $\hat{S}$, we
+can go back to interval
+$\hat{V}_{H}^{2}=\hat{V}_{N}^{2}\,(\hat{S}+3)/4$ and
+$\hat{\eta}=(\hat{S}-1)/8$.
+
+In the case of isotropy or elliptical anisotropy ($\hat{V}_{N}=\hat{V}_{H}$), equations \ref{eqn:dixVNVTI1} and
+\ref{eqn:dixVNVTI2} simplify to
+\begin{equation}
+\frac{{d\tau _{0}}}{{d\tau }}=\frac{{2\tau -p(R+\tau R_{\tau })}}{{2\tau _{0}%
+}},  \label{eqn:dixISO1}
+\end{equation}%
+\begin{equation}
+\frac{{d\left[ {\tau _{0}(\tau )V_{N}^{2}(\tau )}\right] }}{{d\tau }}=\frac{1%
+}{2}\frac{{pR(R+\tau R_{\tau })-2R_{\tau }\tau ^{2}}}{{\tau _{0}p(pR-\tau )}}%
+\label{eqn:dixISO2}
+\end{equation}
+
+Inserting equations \ref{eqn:dixISO1} and \ref{eqn:dixISO2} in
+formula \ref{eqn:dixchain2}, we get
+\begin{equation}
+\hat{V}_{N}=\frac{1}{{p(pR-\tau )}}\frac{{pR(R+\tau R_{\tau })-2R_{\tau
+}\tau ^{2}}}{{{2\tau -p(R+\tau R_{\tau })}}}.  \label{eqn:vNdixISO}
+\end{equation}
+This equation is the analog of equation 15 in \citep{fomel:2046}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% STRIPPING AND FOWLER'S
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\append{Mathematical derivation of stripping equations}
+
+Starting from the integral representation of \taup signature in equation \ref{eqn:taup_int}, we arrive at the expression of
+the slope $R$ and the curvature $Q$ fields as the following integrals:
+\begin{eqnarray}
+R (\tau_{0},p)&=&\int\limits_{0}^{\tau _{0}}\mathcal{F'}(p,\xi)d\xi ,\\
+\label{eqn:B1}
+Q (\tau_{0},p)&=&\int\limits_{0}^{\tau _{0}}\mathcal{F''}(p,\xi)d\xi ,
+\label{eqn:B2}
+\end{eqnarray}
+where 
+\[
+\mathcal{F}(\tau_{0},p)=\sqrt{\frac{1-\hat{V}_{H}^{2}(\tau_{0})p^{2}}{1-[\hat{V}_{H}^{2}(\tau_{0} )-\hat{V}_{N}^{2}(\tau_{0} )]p^{2}}}\;,
+\]
+$\mathcal{F'}=\frac{d\mathcal{F}}{dp}$ and $\mathcal{F''}=\frac{d^2\mathcal{F}}{dp^2}$. According to \req{taup_int}, it descends that
+\begin{equation}
+\tau_{0,\tau} (\tau ,p) =\left[ \dfrac{\partial \tau_{0}}{\partial \tau}\right] ^{-1} =\dfrac{1}{\mathcal{F}(p,\tau)}.
+\label{eqn:B3}
+\end{equation}
+Therefore, applying the chain rule 
+\begin{equation}
+\dfrac{\partial }{\partial \tau} = \left[ \dfrac{\partial \tau}{\partial \tau_{0}}\right] ^{-1} \dfrac{\partial }{\partial \tau_{0}}=\dfrac{1}{\mathcal{F}(\tau,p)}\dfrac{\partial}{ \partial \tau_{0}},
+\label{eqn:B4}
+\end{equation} 
+we obtain
+\begin{eqnarray}
+R_{\tau}(\tau ,p)&=&\dfrac{1}{\mathcal{F}(\tau,p)} \dfrac{\partial R}{\partial \tau_0} =\dfrac{\mathcal{F'}(\tau ,p)}{\mathcal{F}(\tau ,p)}\;,
+\label{eqn:B5} \\
+Q_{\tau}(\tau ,p)&=&\dfrac{1}{\mathcal{F}(\tau,p)}\dfrac{\partial Q}{\partial \tau_0} =\dfrac{\mathcal{F''}(\tau, p)}{\mathcal{F}(\tau ,p)}\;.
+\label{eqn:B6} 
+\end{eqnarray} 
+
+Solving equations \ren{B5} and \ren{B6} for $\hat{V}_N$ and $\hat{V}_H$ leads to
+the \textit{stripping equations} \ren{strippingVN} and
+\ren{strippingVH} in the main text. Alternatively, if we replace
+the $\tau$ derivative of the curvature (\req{B4}~) with the squared
+derivative of the zero-slope traveltime $\tau^2_{0,\tau}$
+(\req{B2}~) and solve again for $\hat{V}_N$ and $\hat{V}_H$, we obtain
+\textit{Fowler's equations} \ren{fowler1} and \ren{fowler2} in the
+main text.
+
+Note that no approximations were made here, other than Alkhalifah's
+\textit{acoustic approximation} in equation~\ref{eqn:taup_int}. In the
+case of isotropic or elliptical anisotropy
+($\hat{V}_{N}=\hat{V}_{H}$), %since
+%$\mathcal{F}(\tau_{0},p)=\tiny{\sqrt{1-\hat{V}_{N}^{2}(\tau_{0})p^{2}}}$,
+one can just solve \req{B5} for $\hat{V}_{N}$ obtaining \req{Clarebout}
+in the main text.

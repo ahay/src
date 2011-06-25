@@ -1,0 +1,113 @@
+\section{Discussion}
+
+In the conventional NMO processing, one needs to scan over a range of
+possible velocities and pick the \new{appropriate} velocity trend from
+semblance maxima. Therefore, the cost of velocity scanning is roughly
+proportional to the number of scanned velocities $N_{V}$ times the
+input data size.  Anisotropic velocity analysis is performed by
+simultaneously scanning two (or more) parameters. Consequently, the
+number of trial velocities/parameters squares, which increases the
+computational time dramatically. In oriented processing, the effective
+anisotropy parameters turn into data attributes according to equations
+\ref{eqn:vNmap}--\ref{eqn:etamap}. These parameters are directly
+mapped from the slope field $R$ to the correct zero-slope/offset
+traveltime $\tau_0$. The cost of local slope estimation with
+plane-wave destruction method is proportional to the data size times
+the number of estimation iterations $N_{I}$ times the 2D filter size
+$N_{F}$. Typically $N_{I}=10$ and $N_{F}=6,$ which roughly correspond
+to scanning $N_{V}=60$ velocities. However, unlike semblance analysis,
+this cost does not increase if we are estimating one, two or more
+parameters. The cost of the semblance scan becomes even more
+prohibitive when processing wide-azimuth data. The computational
+advantages of our approach are \old{really} encouraging especially
+\old{towards} \new{with respect to} multi-azimuth processing and
+orthorhombic velocity analysis, where time processing is controlled by
+at least five parameters \citep{ilyabook2006}.
+
+Automation, in addition to speed, is \old{the other real} \new{another
+clear} advantage of \new{the} slope-based processing.  Slope
+estimation provided by plane-wave destruction represents an automated
+approach to velocity analysis. It may require a limited
+user-interaction in choosing input parameters. A user-supplied initial
+guess for the slope field can \old{help} \new{accelerate} the
+nonlinear optimization \old{in convergence}, thereby providing a more
+reliable estimate for the slopes. The smoothness of the output slopes
+is controlled by shaping regularization; the length of a 2-D
+triangular smoothing filter controls smoothness along $p$ and $\tau $
+direction in the \taup transformed CMP data. If the \new{input}
+seismic data are not regularly and properly sampled in space, as often
+happens in wide-azimuth acquisition, the \taup transform may add to
+the data coherent-noise artifacts. This can affect the final result of
+PWD slope estimation. Thus, if the seismic \taup data are \old{very}
+noisy, increasing the length of smoothing filters can help in
+achieving a more stable solution, despite some loss in resolution. In
+contrast, for high SNR\ data, less smoothing yields better-resolved
+slope fields.
+
+All the equations we have developed in this paper hold for S-wave data
+as long as we use two parameters S-wave phase-velocity
+approximation \citep{stovas:2506}. The combination of the results from
+P-wave and S-wave processing may enable a retrieval of all the elastic
+parameters needed to build an initial VTI anisotropic model suitable
+for depth processing.
+
+The application of the proposed method is also limited by the
+underlying assumption of vertical variation of the velocity model with
+the horizontal symmetry plane. In principle, the method can handle
+limited lateral variation of the velocity. \old{Thus} \new{Therefore},
+it can be used for dense anisotropic moveout analysis at the early
+stages of processing.
+
+\section{Conclusions}
+
+Local slopes of seismic events carry complete information about the
+structure of the subsurface. We have developed a velocity-independent
+\taup imaging approach to perform moveout correction in 2D layered
+VTI\ media. We process Radon-transformed data because \taup is the
+natural domain for anisotropic parameter estimation in
+vertically-variable media.
+%In \taup domain, moveout modeling and inversion are simpler and more
+%accurate than traditional formulation based on traveltime series
+%expansion or group velocity approximation.  
+Effective VTI parameters turn into data attributes through the use of
+slopes and are directly mappable to the zero-slope
+traveltime. Interval parameters turn into data attributes as well. We
+have developed the analytical theory for the slope-based Dix inversion
+in \taup, as well as two alternative sets of equations that can be
+regarded as an extension of Claerbout's method for
+\textit{straightedge determination of interval velocity}. Both sets of
+equations exploit the intrinsic layer stripping power of the \taup
+domain to estimate interval parameters directly without involving
+effective parameters.
+
+The equations we have introduced to retrieve both effective and
+interval parameters in VTI media require directly or indirectly an
+estimation of the local data curvature.
+%Unlike slopes, we don't have yet a direct method for estimating the curvature field $Q$. Practically we compute the curvature field $Q$
+%by numerical differentiation of the slope estimates $R$. This
+%procedure can lead to a noisy estimate of curvature field that can affect
+%the NMO correction and parameters estimation, especially if we are
+%processing real data set. 
+On the other hand, Fowler's equations do not require an explicit use
+of the curvature. Therefore, we propose bypassing the curvature
+estimation by exploiting a curvature-independent estimation of the
+zero-slope time $\tau_{0}$ field that, together with the slopes,
+provides the input to Fowler's method. The zero-slope time can be
+found efficiently by employing the predictive painting algorithm.  A
+reference trace at the zero-slope time $\tau _{0}$ is spread along the
+local data slope to predict the $\tau_0$ field along reflection curves
+in the $\tau$-$p$ CMP gather. This estimation appears robust and
+efficient enough to enable automated, slope-based, dense estimation of
+interval parameters.
+
+\begin{comment}
+This processing can be straightforwardly extended to pure S-waves data
+using the dispersion relations introduced by \cite{stovas:2506}.
+Moreover, we believe that our \taup slope-based processing can be
+applied to 3D data as an alternative to \cite{burnett:WB129} and
+\cite{wang:WB117} approaches.  We have demonstrated the practical
+applicability of our method for interval VTI velocity estimations, on
+both synthetic and field-data examples.
+\end{comment}
+
+

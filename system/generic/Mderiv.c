@@ -1,4 +1,6 @@
-/* First derivative with a maximally linear FIR differentiator. */
+/* First derivative with a maximally linear FIR differentiator. 
+
+Division by dx is not included. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 

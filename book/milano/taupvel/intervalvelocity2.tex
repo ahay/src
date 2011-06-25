@@ -1,0 +1,179 @@
+\section{Estimation of interval parameters}
+
+Similarly to effective parameters, interval parameters can also be
+regarded as data attributes obtained from local slopes. Unlike the \tx
+domain, the \taup domain offers us several alternatives to
+conventional \citet{dix:68} processing for retrieving interval values.
+In this section, we analyze three different options for extracting
+interval parameters in the \taup domain.
+
+\tabl{velocities}{This table lists the inputs required to retrieve
+both effective and interval VTI parameters as data attributes obtained
+from local slopes. The zero-slope time $\tau_0$ function is always
+required to map the attributes to their correct position in
+time. Processing data in \taup domain offers two more alternatives
+than conventional Dix's processing in \tx domain. Moreover, we observe
+that Fowler's is the only set of equations that {does not} require an
+explicit use of the curvature.}{
+\begin{center}
+\large
+\begin{tabular}{ cr | c | c | c | c | c | c |}
+\cline{3-8}
+	\multicolumn{2}{c}{}	  & \multicolumn{1}{|c|}{$\tau_{0}$} & $R$ &  $Q$  & $R_{\tau}$  & $Q_{\tau}$ & $\tau_{0,\tau}$ \\
+\hline
+\multicolumn{2}{|c|}{Effective $V_N$ $V_H$ $\eta$} & \tick & \tick & \tick  &   &  &\\
+\hline
+\multicolumn{1}{|c|}{\multirow{3}{*}{{Interval $\hat{V}_N$ $\hat{V}_H$ $\hat{\eta}$}}}
+& {{Dix}}        & \tick  & \tick & \tick & \tick  & \tick &   \\
+\cline{2-8}
+\multicolumn{1}{|c|}{} 
+& {{Stripping}} & \tick &         &       & \tick  & \tick &   \\
+\cline{2-8}
+\multicolumn{1}{|c|}{} 
+& {{Fowler}}    & \tick  &         &       &  \tick &           & \tick  \\
+\hline
+\end{tabular}
+\end{center}
+}
+\input{dix2}
+
+\subsection{Claerbout's straightedge method}
+\cite{Claerbout.sep.14.13} suggested that interval velocity in an
+isotropic (\mbox{$\hat{V}_N=\hat{V}_H$}) layered medium could be
+estimated with a \textit{pen and a straightedge} by measuring the
+offset difference $\Delta x$ between equal slope $p$ points on two
+reflection events (\rFg{commonray}a).  The computation of $\Delta x$
+is straightforward after a CMP gather has been transformed into the
+\taup domain. In fact, the \taup transform naturally aligns seismic
+events with equal slope along the same trace
+(\rFg{commonray}b). Moreover, local slopes $R(\tau,p)=d\tau/dp$ are
+related to the emerging offset $x=-R$  \citep{baan:719} , therefore
+Claerbout's inversion formula can be expressed as
+\begin{equation}
+\hat{V}_N^{2}(\tau,p)=\dfrac{R_{\tau}}{p^2R_{\tau}-p},  \label{eqn:Clarebout}
+\end{equation}
+where $R_{\tau}=\partial R(\tau,p)/\partial \tau$ and $\hat{V}_N$ is the
+NMO interval velocity that we map back to zero-slope time $\tau_0$ using the
+isotropic velocity independent \taup NMO, as suggested by \cite{fomel:S139}. The details of the derivation are in appendix C.
+
+The two methods discussed next can be thought of as two alternative
+extensions for VTI media of the original Claerbout's straightedge
+method.
+
+\input{stripping2}
+\input{fowler2}
+
+\section{Flattening by predictive painting}
+
+As shown in Table \ref{tbl:velocities}, Fowler's is the only set of
+equations that do not require an explicit use of the curvature
+$Q$. The dependence on the curvature is absorbed by the $\tau_0$
+function. The other two sets of equations, Dix and stripping formulas,
+as well as the equations for effective parameters, do need
+curvature. The curvature computation can be problematic when the data
+are contaminated by noise. This makes these three methods (effective,
+stripping, and Dix) less practical when applied to real data with poor
+SNR. However, Fowler's rules represent a way to circumvent the
+problem. In fact, if we can find an algorithm that estimates the $\tau_0$
+mapping function directly from the data, all the curvature issues
+will get solved.
+
+%So next the question is: is there exist such an algorithm?
+
+\inputdir{flattening}
+%\plot{flat-0-all}{width=0.8\textwidth}{Sythetic image form
+%\cite{claerbout:2006} (a), local dip estimate (b), flattened image
+%(c) using the predicted time of reflecting surfaces (d) obtained
+%after painting of a single reference time-trace. This example is
+%adapted from \cite{fomel:A25}.}
+
+The desired algorithm exists and is known as seismic image flattening. 
+\begin{comment}
+Flattening is a common task in geophysical interpretation and is
+typically used to identify stratigraphic features within a seismic
+image. It attempts to reverse the effects of geologic processes by
+removing all the complex structures (\rFg{flat-0-all}a) present in the
+image to make these structural features flat (\rFg{flat-0-all}c). A
+flattened image is typically created by shifting samples in the
+original image up or down. In the recent past we can find in the
+literature different approaches and solutions to make this process
+fully automated. The methods proposed by \cite{lomask:P13},
+\cite{parks:2010} and \cite{fomel:acc} use an estimate of local image
+slopes to estimate the vertical shift field at each sample in the
+image.
+\end{comment}
+The idea
+of using local slopes for automatic flattening was introduced by
+\cite{bienati} and \cite{lomask:P13}. 
+Flattening by predictive painting (appendix A)
+%\cite[]{fomel:A25}  
+uses the local-slope field 
+%(\rfg{flat-0-all}b) 
+to construct a recursive prediction operator (equation \ref{eq:pred}) that spreads a traveltime reference trace in the image and predicts the reflecting surfaces 
+%(\rfg{flat-0-all}d) 
+which are then unwrapped until the image is flattened.
+%(\rfg{flat-0-all} (c) ).
+
+\inputdir{synth}
+
+We propose bypassing the issue of estimating the zero-slope time $\tau
+_{0}$ field by using the predictive painting \old{method}
+\new{approach}. Let us discuss how it works on the previously shown
+synthetic data in \rFg{dataPsynth}a.
+%\citep{fomel:864,fomel:acc}. Predictive painting is a numerical
+%algorithm for automatic spreading of information along seismic data,
+%according to the local structure of seismic events. Structure is
+%commonly characterized by dominant local slopes
+%\citep{ClareboutESA}. Thus, the method first finds slope-based
+%prediction operators of each trace in the data from its neighbor
+%traces.
+% (equation 5 in \citep{fomel:864}). 
+%In the second step, prediction operators are used to spread
+%information along the local data slopes. 
+\rFg{dataPsynth}b shows local event slope $R$ measured from the data
+using the PWD algorithm. \rFg{dataPsynth}c shows how predictive
+painting spreads a zero-slope time $\tau _{0}$ reference trace along
+local data slopes to predict the zero-slope time $\tau _{0}$ mapping
+field and hence the geometry of the traveltime reflection curves along
+\taup CMP gather. Because this procedure does not involve curvature
+computations, it represents a much more robust way of obtaining the
+$\tau _{0}$ field that is needed by the inversion formulas in
+equations \ref{eqn:fowler1} and \ref{eqn:fowler2}. After $\tau _{0}$
+has been found, we also have what we need to perform gather flattening
+\citep{burnett:WB129,burnett:3710}.
+% which is effectively an alternative velocity-independent procedure for accomplishing
+%\taup moveout correction.  
+Unshifting each trace (\rFg{dataPsynth}d) automatically flattens the
+data, thus performing a velocity-independent \taup NMO correction. As
+expected, all events are perfectly aligned, and the correction does
+not suffer from instabilities of curvature estimation.  Moreover,
+predictive painting is automatic and does not require any prior
+assumptions about the moveout shape.
+%These properties makes the procedure also suitable for other
+%tasks, such as the inversion of interval parameters for SV-wave data
+%proposed by \cite{stovas:2506}.
+
+\plot*{dataPsynth}{width=\linewidth}{Synthetic  CMP $\tau$-$p$ transformed gather (a), estimated local slopes (b), zero slope time $\tau_0$ obtained by predictive painting (c), and the gather flattened (d). \label{fig:dataSYNTH}}
+
+Now, given the slope field $R$ and its zero-slope time field $\tau
+_{0}$, we retrieve interval parameters using equations
+\ref{eqn:fowler1} and \ref{eqn:fowler2}. In \rFg{intPmasksynth}, the
+estimated NMO (a) horizontal velocities (b) and the anellipticity (c)
+parameter are mapped to the appropriate zero-slope time using the
+painted zero-slope time $\tau _{0}$ field (\rFg{dataPsynth}c).
+%Since the synthetic are noiseless, the results are similar and the
+%following observations still hold for the other approaches that employ
+%Dix inversion, stripping equation and also Fowler's equation in which
+%$\tau_0$ comes from the velocity independent moveout \req{tau0mapping}.
+The exact interval profiles (yellow lines) are recovered \new{nearly}
+perfectly although the resolution slightly worsens with respect to the
+effective profiles (\rFg{eff-Syn}). The main reason is the instability
+of the additional numerical differentiation along the $\tau $
+direction that all the approaches require.
+
+\inputdir{synth} 
+\plot{intPmasksynth}{width=\textwidth}{Fowler's equation based
+  inversion to interval normal moveout (a) horizontal velocity (b) and
+  anellipticity parameter $\eta $ (c).  The yellow lines represent the
+  exact values used for generating the synthetic dataset in figure
+  \ref{fig:dataSynth} (a). }
