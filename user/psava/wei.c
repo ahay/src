@@ -1255,9 +1255,12 @@ weico3d weicoo_init(weicub3d cub,
     eico->czmax = sf_o(cub->az)  + (sf_n(cub->az) -1-nhz)*sf_d(cub->az);
     /*------------------------------------------------------------*/
     for(ic=0; ic<sf_n(cub->ac); ic++) {            
-	eico->ccin[ic]=(eico->cc[ic].x>=eico->cxmin && eico->cc[ic].x<=eico->cxmax &&
-			eico->cc[ic].y>=eico->cymin && eico->cc[ic].y<=eico->cymax &&
-			eico->cc[ic].z>=eico->czmin && eico->cc[ic].z<=eico->czmax)?1:0;
+	eico->ccin[ic]=(bool) (eico->cc[ic].x>=eico->cxmin && 
+			       eico->cc[ic].x<=eico->cxmax &&
+			       eico->cc[ic].y>=eico->cymin && 
+			       eico->cc[ic].y<=eico->cymax &&
+			       eico->cc[ic].z>=eico->czmin && 
+			       eico->cc[ic].z<=eico->czmax);
 	
 	if(eico->ccin[ic]) {
 	    
@@ -1329,9 +1332,12 @@ weico3d gencoo_init(weicub3d cub,
 
     /*------------------------------------------------------------*/
     for(ic=0; ic<sf_n(cub->ac); ic++) {
-        eico->ccin[ic]=(eico->cc[ic].x>=eico->cxmin && eico->cc[ic].x<=eico->cxmax &&
-                        eico->cc[ic].y>=eico->cymin && eico->cc[ic].y<=eico->cymax &&
-                        eico->cc[ic].z>=eico->czmin && eico->cc[ic].z<=eico->czmax)?1:0;
+        eico->ccin[ic]=(bool) (eico->cc[ic].x>=eico->cxmin && 
+			       eico->cc[ic].x<=eico->cxmax &&
+			       eico->cc[ic].y>=eico->cymin && 
+			       eico->cc[ic].y<=eico->cymax &&
+			       eico->cc[ic].z>=eico->czmin && 
+			       eico->cc[ic].z<=eico->czmax);
 
         if(eico->ccin[ic]) {
             icx = 0.5+(eico->cc[ic].x-sf_o(cub->amx))/sf_d(cub->amx);

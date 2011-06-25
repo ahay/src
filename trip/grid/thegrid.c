@@ -102,7 +102,7 @@ int fprint_axis(FILE * fp, axis a)
 f@param[in] a (axis) - axis to be printed
  >*/
 {
-  fprintf(fp,"axis: n=%d d=%e o=%e id=%d\n",a.n,a.d,a.o,a.id);
+    fprintf(fp,"axis: n=%d d=%e o=%e id=%d\n",(int) a.n,a.d,a.o,a.id);
   return 0;
 }
 
@@ -168,7 +168,7 @@ int fprint_grid(FILE * fp, grid a)
 >*/
 {
   int i;
-  fprintf(fp,"Grid data structure, consisting of %d axes:\n",a.dim);
+  fprintf(fp,"Grid data structure, consisting of %d axes:\n",(int) a.dim);
   for (i=0;i<a.dim;i++) fprint_axis(fp,a.axes[i]);
   return 0;
 }

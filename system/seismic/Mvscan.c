@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
 	}
     }
 
-    trend = ('a' == type[0] || 'w' == type[0]);
-    ratio = ('p' != type[0] && 'd' != type[0]);
+    trend = (bool) ('a' == type[0] || 'w' == type[0]);
+    ratio = (bool) ('p' != type[0] && 'd' != type[0]);
 
     if (!sf_getint("nb",&nb)) nb=2;
     /* semblance averaging */
