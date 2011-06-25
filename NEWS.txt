@@ -12,6 +12,8 @@ To the reproducible documents collection:
   with sparsely-sampled data (Sava)
 * jsg/vc3: Azimuthally anisotropic 3D velocity continuation (Burnett
   and Fomel)
+* milano/taupvel: Velocity-independent tau-p moveout in a
+  horizontally-layered VTI medium (Casasanta and Fomel)
 
 To SCons:
 
