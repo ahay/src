@@ -37,7 +37,7 @@ float* psitti(vc3d *nn,
     float *ttipar;
     vc3d bb;
     int ips;
-    float psi,v_s,v_r; /* output variables */
+    float psi,v_s=0.,v_r=0.; /* output variables */
     float ps_,vs_,vr_; /*  local variables */
     float     ts_,tr_;
     float     t_s,t_r;
