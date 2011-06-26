@@ -25,6 +25,7 @@ SOURCE
 
 import os, sys, socket, datetime, time, getpass, struct
 import rsf.path
+import rsf.version as version
 
 try: # Give precedence to local version
     import ivlad
@@ -35,8 +36,7 @@ except: # Use distributed version
 
 stdout = 'stdout'
 
-EOL = '\014'
-EOT = '\004'
+RSF_hdr_stream_end = 2*'\014' + '\004'
 
 dtype_avl = ('int','float') # Acceptable Value List
 ################################################################################
@@ -147,6 +147,21 @@ class MetaFile(BaseFile):
 
 ################################################################################
 
+def first_line_rsf_hdr_entry():
+    'Returns the first line of a program entry in the history file'
+    # Defined outside the class because called directly from outside
+
+    vers = version.label
+    prog = sys.argv[0]
+    cwd  = os.getcwd()
+    user = getpass.getuser()
+    host = socket.gethostname()
+    date = datetime.date.today()
+    now = time.strftime('%a %b %d %X %Y')
+    return '%s %s %s: %s@%s %s\n\n' % (vers, prog, cwd, user, host, now)
+
+################################################################################
+
 class RSFheader(File):
 
     def __init__(self, path, intent, par=None):
@@ -161,14 +176,9 @@ class RSFheader(File):
         # in RSFheader.open()
 
     def write_1st_line(self):
-        'Writes first line of a program record in the history file'
-        cwd  = os.getcwd()
-        user = getpass.getuser()
-        host = socket.gethostname()
-        date = datetime.date.today()
-        now = time.strftime('%a %b %d %X %Y')
-        self.handle.write('%s %s %s %s %s\n\n' % \
-                         (sys.argv[0], cwd, user, host, now))
+        'Writes to history file the first line of a program entry'
+
+        self.handle.write(first_line_rsf_hdr_entry())
 
     def add2hist(self, item, val, comment=None):
         'Write variable to a RSF history file'
@@ -286,7 +296,7 @@ class RSFfile(MetaFile):
                 all_ax_dict[k+str(i+1)] = self.ax[i][k]
         self.hdr.write_dict(all_ax_dict)
         if self.writing_to_stdout_pipe:
-            self.hdr.handle.write(2*EOL+EOT)
+            self.hdr.handle.write(RSF_hdr_stream_end)
         elif not self.writing_to_stdout:
             self.hdr.close()
             del self.open_files[self.hdr.full_nm]

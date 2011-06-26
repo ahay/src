@@ -174,9 +174,11 @@ if os.path.isdir('user'):
                 BuildDir(build,dir)
             user_dir_exports = 'env root bindir pkgdir'
             if dir == 'seplib_compat':
-                user_dir_exports += ' incdir'
+                user_exports = user_dir_exports + ' incdir'
+            else:
+                user_exports = user_dir_exports
             SConscript(dirs=build,name='SConstruct', 
-                exports=user_dir_exports)
+                exports=user_exports)
             Default(build)
 
 ##########################################################################
