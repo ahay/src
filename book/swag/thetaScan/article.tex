@@ -368,7 +368,7 @@ Using an elliptical anisotropic background model with axis-direction
 velocity equal to 2 km/s velocity, $\delta=0.2$, and tilt angle $\theta$=$20^{o}$, 
 I compare \geouline{the traveltime errors of} the moveout equations extracted from our eikonal based formulations with
 those that are used for pure moveout approximations, equations~\ref{eqn:eikeqnTT} and~\ref{eqn:eiksena}. 
-For a reflector at depth $z$=2 km, Figure~\ref{fig:ErrTEll3f} shows the percentage traveltime errors as a function of
+For a reflector at depth $z$=2 km, Figure~\ref{fig:errTEll3f} shows the percentage traveltime errors as a function of
 offset for the equations given above. Clearly, equations~\ref{eqn:eikeqnTT} and~\ref{eqn:eiksena}, given by the solid grey and
 dashed curves, respectively,
  are less accurate in describing the traveltime behavior overall than
@@ -376,20 +376,20 @@ the new formula (solid black curve),
 equation~\ref{eqn:eikeqn2}. The moveout equations have faired well
 for the vertical direction but performed poorly for larger offset.
 \inputdir{Math}
-\plot{ErrTEll3f}{width=6in}{The relative traveltime error as a function of offset for an elliptically anisotropic
+\plot{errTEll3f}{width=6in}{The relative traveltime error as a function of offset for an elliptically anisotropic
  model with $v$=2 km/s, $\delta=0.2$, $\theta=20^{0}$, and a reflector depth $z$=2 km for
 the new expansion in $\theta$ (solid black curve), the nonhyperbolic moveout equation~\protect\ref{eqn:eikeqnT}  (solid gray curve), 
 and for the Sena approximation
 (dashed black curve).}
 
-Moreover, for a more practical case of TI, in which $\eta$=0.2, the errors, as shown in Figure~\ref{fig:ErrTTI3fNew}, 
+Moreover, for a more practical case of TI, in which $\eta$=0.2, the errors, as shown in Figure~\ref{fig:errTTI3fNew}, 
 are \geosout{less} \geouline{smaller} overall for the new equation (solid black curve) than the other
 approximations. Despite the larger error of our approximation near vertical, the departure
 of the other approximations from the accurate value at large offset
 reflect their near-offset based expansion. In the new equation, the
 expansion is with respect to small tilt, and thus, has \geouline{an unbiased} representation of the traveltime with respect to
 offset. As a result, the accuracy of the new equation is higher over all.
-\plot{ErrTTI3fNew}{width=6in}{The relative 
+\plot{errTTI3fNew}{width=6in}{The relative 
 traveltime error as a function of offset for a model with $v$=2 km/s, $\eta$=0.2, $\theta=20^{0}$, and a reflector depth $z$=2 km for
 the new expansion in $\theta$ (solid black curve), the nonhyperbolic moveout equation~\protect\ref{eqn:eikeqnT}  (dashed gray curve), 
 and~\protect\ref{eqn:eikeqnTT} (solid gray curve) and for Sena's approximation
@@ -417,7 +417,7 @@ Setting $x=0$ in equation~\ref{eqn:eikeqn2}, and considering
 t(x=0,z)=2 \frac{z}{v_{t}} \left(1-\frac{1}{2} \sin^{2}\theta \left(1-\frac{v_{t}^{2}}{v^{2}} \right) \right),
 \label{eqn:eikeqn3}
 \eeqa
-which \geosout{clearly} includes terms related to the symmetry-axis \geouline{direction}. From Figure~\ref{fig:ErrTEll3f} we can see how well this
+which \geosout{clearly} includes terms related to the symmetry-axis \geouline{direction}. From Figure~\ref{fig:errTEll3f} we can see how well this
 approximation predicted the vertical traveltime. This equation is convenient to use along with
 well information to predict the velocities along the symmetry
 axis. Actually, for $\eta \ne 0$ \geosout{not equal to zero} (\geouline{anelliptic} TI media), 
@@ -474,8 +474,8 @@ with respect to offset, $x$.
 allows us to predict the accuracy  of 
 equations~\ref{eqn:eikeqn3} and~\ref{eqn:eikeqn5} as they are derived
 from equation~\ref{eqn:shanks1m1}.}
-Figure~\ref{fig:Verticaleta0} repeats the example of
-Figure~\ref{fig:ErrTEll3f} with a tilt of $5^{o}$ (a), $10^{o}$
+Figure~\ref{fig:verticaleta0} repeats the example of
+Figure~\ref{fig:errTEll3f} with a tilt of $5^{o}$ (a), $10^{o}$
 (b), and $20^{o}$ (c), and a focus on small offsets (near vertical). Of
 course, errors increase with the increase in the tilt angle as all
 approximations are \geosout{with respect to} \geouline{for} small tilt angles from vertical. Though the vertical \geouline{direction} error in the case of the
@@ -486,12 +486,12 @@ is critical since the errors associated with the other approximations
 NMO representation \geouline{are} large. This also explains the higher accuracy of
 the new equations at
 higher offsets as the error gradient is small. \geouline{It is also clear from
-Figure~\ref{fig:Verticaleta0} that using Pade
+Figure~\ref{fig:verticaleta0} that using Pade
 approximations to predict the higher-order terms of the expansion in
 $\theta$ did not increase the accuracy much (the difference between
 solid and dashed black curves). This is also \geosou2{observe} \geoulin2{observed} for
 anelliptic TI as we will see next.}
-\plot{Verticaleta0}{width=7in}{The relative traveltime error as a function of
+\plot{verticaleta0}{width=\textwidth}{The relative traveltime error as a function of
   offset (near zero offset) for an elliptical anisotropic
  model with $v$=2 km/s, $\delta=\epsilon=0.2$, $\theta=20^{0}$, and a reflector depth $z$=2 km for
 the new expansion (equation~\protect\ref{eqn:shanks1m1}) in $\theta$
@@ -500,14 +500,14 @@ and for the Sena approximation
 (solid gray curve). The plots correspond to (a) a 5 degree tilt,
 (b) a 10 degree tilt, and (c) a 20 degree tilt.}
 
-For anelliptic TI media with $\delta=0.1$ and $\epsilon=0.2$, \geosou2{we} \geoulin2{I} obtain similar results. Figure~\ref{fig:Vertical}
+For anelliptic TI media with $\delta=0.1$ and $\epsilon=0.2$, \geosou2{we} \geoulin2{I} obtain similar results. Figure~\ref{fig:vertical}
 shows the traveltime error over a limited offset for three symmetry
 tilt angles: (a) $5^{o}$, (b) $10^{o}$, and (c) $20^{o}$. Again,
 the accuracy of the new equations is apparent in the slope of the
 error \geouline{near zero offset}, implying that the NMO velocity representation is highly
 accurate. The errors in the vertical velocity, though, \geosout{is} \geouline{are} the largest
 for the new equations. However, the vertical velocity genrally has less influence than the NMO velocity on time processing objectives.
-\plot{Vertical}{width=7in}{The relative traveltime error as a function of
+\plot{vertical}{width=\textwidth}{The relative traveltime error as a function of
   offset (near zero offset) for a TI
  model with $v$=2 km/s, $\delta=0.1$, $\epsilon=0.2$, $\theta=20^{0}$, and a reflector depth $z$=2 km for
 the new expansion (equation~\protect\ref{eqn:shanks1m1}) in $\theta$
@@ -517,15 +517,15 @@ and for the Sena approximation
 (b) a 10 degree tilt, and (c) a 20 degree tilt.}
 
 Finally, for a TI medium with $\delta=0.0$ and $\epsilon=0.2$
-(Figure~\ref{fig:Verticaleta2}) we observe
+(Figure~\ref{fig:verticaleta2}) we observe
 similar behavior with \geosout{less} \geouline{smaller} overall \geouline{relative} errors compared to
-Figures~\ref{fig:Verticaleta0} and ~\ref{fig:Vertical}. As $\delta$
+Figures~\ref{fig:verticaleta0} and ~\ref{fig:vertical}. As $\delta$
 decreases, \geouline{the anisotropy influence} near the vertical direction decreases, and the effect of the
 tilt is less pronounced. However, \geosout{in the larger tilt case}\geouline{when the tilt is larger},
-Figure~\ref{fig:Verticaleta2}c, the errors are large and comparable
-to those in Figures~\ref{fig:Verticaleta0}c and ~\ref{fig:Vertical}c as the influence
+Figure~\ref{fig:verticaleta2}c, the errors are large and comparable
+to those in Figures~\ref{fig:verticaleta0}c and ~\ref{fig:vertical}c as the influence
 of $\eta$ starts to appear.
-\plot{Verticaleta2}{width=7in}{The traveltime error as a function of
+\plot{verticaleta2}{width=\textwidth}{The traveltime error as a function of
   offset (near zero offset) for a TI anisotropic
  model with $v$=2 km/s, $\delta=0.0$, $\epsilon=0.2$, $\theta=20^{0}$, and a reflector depth $z$=2 km for
 the new expansion (equation~\protect\ref{eqn:shanks1m1}) in $\theta$
@@ -649,7 +649,7 @@ $\eta$ and the tilt angles, we can allow them to vary
 effective values to interval ones in generally inhomogeneous media is not trivial and might require a tomographic treatment
 of its own.
 
-\plot{EtaTheta}{width=7in}{The traveltime difference between the TTI model computed using equation~\protect\ref{eqn:eikeqn2} and the elliptically
+\plot{etaTheta}{width=\textwidth}{The traveltime difference between the TTI model computed using equation~\protect\ref{eqn:eikeqn2} and the elliptically
 anisotropic with a vertical symmetry axis background model for (a) an offset of 1 km, (b) an offset of 2 km, and (c) an offset of 4 km.  
 The medium has $v_{t}$=2 km/s, $v$=2 km/s ($\delta=0$), and a reflector depth, $z$=2 km.}
 In 3D, the search for $\eta$ and the symmetry direction angles can be applied \geouline{either} 
@@ -661,15 +661,15 @@ $\eta$ and the tilt angles. Conventionally, the information for $\eta$ \geosout{
 which is assumed here, from long offsets and dipping reflectors. The tilt information resolution in 3D requires a 3D coverage
 (i.e. wide azimuth or even narrow azimuth for small tilt azimuth). There is also a general tradeoff, even in 2D media, between $\eta$ and the
 tilt angle, which may require some a priori information for $\eta$ or constraining the tilt angle to be normal to the reflector dip \cite[]{SEG-2000-09650968}.
-Figure~\ref{fig:EtaTheta} shows the dependence of traveltime in the 2D case, based on equation~\ref{eqn:eikeqn2}, on the 
+Figure~\ref{fig:etaTheta} shows the dependence of traveltime in the 2D case, based on equation~\ref{eqn:eikeqn2}, on the 
 parameters $\eta$ and $\theta$. For a single offset, clearly there are combinations of $\eta$ and $\theta$ (given by the contour lines) that provide
-equal traveltimes. Nevertheless these curves clearly vary from one offset to another. Specifically, near offsets (Figure~\ref{fig:EtaTheta}a,
+equal traveltimes. Nevertheless these curves clearly vary from one offset to another. Specifically, near offsets (Figure~\ref{fig:etaTheta}a,
 where $x/z=0.5$), for mostly small tilt angles, show little
 dependence of traveltime on $\eta$, and more dependence on $\theta$. 
 On the other hand, as the tilt angle increases the resolution of $\eta$ increases as
 its influence starts to affect even the shorter offsets. The dependence of the traveltime
-on $\eta$ increases for $x/z=1$ (Figure~\ref{fig:EtaTheta}b) and $x/z=2$ 
-(Figure~\ref{fig:EtaTheta}c), which implies that $\eta$ is better resolved at large offsets for small tilt angles. However, it is resolved even better for
+on $\eta$ increases for $x/z=1$ (Figure~\ref{fig:etaTheta}b) and $x/z=2$ 
+(Figure~\ref{fig:etaTheta}c), which implies that $\eta$ is better resolved at large offsets for small tilt angles. However, it is resolved even better for
 large tilt angles in all cases. Meanwhile, larger offsets with reasonable $\eta$ values result in less dependence of \geouline{the} traveltime on tilt angle.
 
 The availability of multi-offset data will increase our chances in resolving both $\eta$ and the tilt angle in 2D. The addition
