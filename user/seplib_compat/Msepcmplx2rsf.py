@@ -53,11 +53,14 @@ def main(par):
     ivlad.chk_file_r(f_nm)
     
     if file_is_not_old_seplib_cmplx(f_nm):
-        ivlad.msg('Conversion not necessary: ' + f_nm, verb)
+        ivlad.msg(f_nm + ': Conversion not necessary', verb)
         return ivlad.unix_success
 
     if not os.access(f_nm, os.W_OK):
-        raise m8rex.NoWritePermissions(f_nm)
+        # Not using an exception because this program may be called on long
+        # lists of files
+        ivlad.msg(f_nm + ': NEED WRITE PERMISSION', True)
+        return ivlad.unix_error
 
     if preserve_t: 
         tstamp = get_timestamp(f_nm)
@@ -75,7 +78,7 @@ def main(par):
     if preserve_t:
         os.utime(f_nm, tstamp)
 
-    ivlad.msg('Converted: ' + f_nm, verb)
+    ivlad.msg(f_nm + ': Converted', verb)
 
     return ivlad.unix_success
 
