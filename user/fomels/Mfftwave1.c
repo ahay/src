@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[]) 
 {
+    bool sub;
     int nx, nx2, nk, nt, m1, m2, ix, ik, it, im, n2;
     float dt, f, old;
     float *curr, *prev, **lft, **rht, **mid, **wave;
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nt",&nt)) sf_error("No nt= in input");
     if (!sf_getfloat("dt",&dt)) sf_error("No dt= in input");
+
+    if (!sf_getbool("sub",&sub)) sub=true;
+    /* if -1 is included in the matrix */
 
     sf_putint(out,"n2",nt);
     sf_putfloat(out,"d2",dt);
@@ -125,8 +129,11 @@ int main(int argc, char* argv[])
 	}
 
 	for (ix = 0; ix < nx; ix++) {
-	    old = f = curr[ix];
-	    f += f-prev[ix];
+	    old = curr[ix];
+	    
+	    f = sub? 2*old: 0.0f;
+
+	    f -= prev[ix];
 	    prev[ix] = old;
 
 	    if (NULL == mat) {

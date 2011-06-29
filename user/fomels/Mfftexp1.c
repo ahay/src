@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool mig, cmplx;
+    bool mig, cmplx, sub;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
     int im, i, j, m1, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, dh;
@@ -132,6 +132,9 @@ int main(int argc, char* argv[])
     right = sf_input("right");
     middle = sf_input("middle");
 
+    if (!sf_histbool(left,"sub",&sub) && !sf_getbool("sub",&sub)) sub=true;
+    /* if -1 is included in the matrix */
+
     if (!sf_histint(middle,"n1",&m1)) sf_error("No n1= in middle");
     if (!sf_histint(middle,"n2",&m2)) sf_error("No n2= in middle");
 
@@ -234,9 +237,15 @@ int main(int argc, char* argv[])
 		for (ih=0; ih < nh; ih++) {	
 		    i = ih+nh*(ix+iz*nx);   /* original grid */
 		    j = ih+nh2*(ix+iz*nx2); /* padded grid */
+
+		    
 		
-		    old = c = curr[j];
-		    c += c - prev[i];
+		    old = curr[j];
+
+		    c = sub? 2*old: 0.0f;
+
+		    c -= prev[i];
+
 		    prev[i] = old;
 
 		    for (im = 0; im < m2; im++) {

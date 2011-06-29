@@ -31,6 +31,7 @@ static int nkh,nkx,nkz;
 static float kh0,kx0,kz0;
 static float dkh,dkx,dkz;
 static int equation;
+static bool sub;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 // assuming dx=dh
@@ -82,7 +83,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    kh *= kh;
 	    kx *= kx;
 	    
-	    if ('e'==equation || 'z'==equation) {
+	    if (0==equation || 1==equation) {
 		float kzmin = sqrt(kh*kx);		
 		kz = SF_MAX(kz,kzmin); 
 	    }
@@ -109,7 +110,11 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		    break;
 	    }
 
-	    res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
+	    if (sub) {
+		res(a,b) = 2*(cos(2*SF_PI*sqrt(phi)*dt)-1); 
+	    } else {
+		res(a,b) = 2*cos(2*SF_PI*sqrt(phi)*dt);
+	    }
 	}
     }
     return 0;
@@ -165,6 +170,8 @@ int main(int argc, char** argv)
 
     par.get("equation",equation,3); // equation type
 
+    par.get("sub",sub,true); // if subtract one
+
     vector<int> lidx, ridx;
     DblNumMat mid;
 
@@ -200,6 +207,7 @@ int main(int argc, char** argv)
     oRSF left("left");
     left.put("n1",m);
     left.put("n2",m2);
+    left.put("sub",sub);
     left << ldata;
 
     DblNumMat rmat(n2,n);
