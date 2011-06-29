@@ -14,6 +14,8 @@ To the reproducible documents collection:
   and Fomel)
 * milano/taupvel: Velocity-independent tau-p moveout in a
   horizontally-layered VTI medium (Casasanta and Fomel)
+* swag/thetaScan: Traveltime approximations for transversely isotropic
+  media with an inhomogeneous background (Alkhalifah)
 
 To SCons:
 
