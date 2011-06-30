@@ -30,8 +30,7 @@ Fetch('31_81_PR.SGY',
 
 # concatinate the input files
 Flow ('line', rawsegy,
-     'cat L23535.su L23536.su L23537.su',
-     stdin=0)
+     'cat ${SOURCES[:3]}',stdin=0)
 
 # display the first 3000 traces
 
@@ -81,10 +80,10 @@ Flow ('binary_hdrfile1.dat','hdrfile1.txt',
 keys='ep,sx,sy,gx,gy,cdp,tracf,offset,' \
       'selev,gelev,sstat,gstat,tstat'
 
-Flow ('allshots', ['line', 'binary_hdrfile1.dat'],
+Flow ('allshots', 'line binary_hdrfile1.dat',
      '''
      sushw 
-     	   infile=binary_hdrfile1.dat 
+     	   infile=${SOURCES[1]}
     	   key=%s |
      sushw 
      	   key=f1 

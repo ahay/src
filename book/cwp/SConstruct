@@ -24,6 +24,7 @@ report = (('2006',
  	   '''),
           ('2011',
            '''
+           geo2011WideAzimuthAngleDecomposition
            pept2011MicroearthquakeMonitoring
            '''
           ))
@@ -39,8 +40,9 @@ Papers(papers=report,
                 'geo2008InterferometricImagingCondition':'Paul Sava and Oleg Poliannikov',
                 'geo2008IsotropicAngleDomainElasticRTM': 'Jia Yan and Paul Sava',
                 'geo2009TTIModeSeparation': 'Jia Yan and Paul Sava',
-                'geo2009VTIModeSeparation': 'Jia Yan and Paul Sava'},
-       line='Example Report, September 2010',
+                'geo2009VTIModeSeparation': 'Jia Yan and Paul Sava',
+                'geo2011WideAzimuthAngleDecomposition': 'Paul Sava and Ioan Vlad'},
+       line='Example Report, June 2011',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))
 

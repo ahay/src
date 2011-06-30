@@ -1,0 +1,64 @@
+from rsf.proj import *
+
+############################
+# Data fetching, SEG-Y -> RSF
+#############################
+
+rawsegy=['L23535','L23536','L23537']
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    Flow([file, file+'.bin',  file+'.asc', 't'+file],
+         file+'.SGY',
+         '''
+         segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         ''')
+
+# concatinate the input files
+
+Flow('line',rawsegy,'cat axis=2 ${SOURCES[1:3]}')
+Flow('tline',map(lambda x: 't'+x,rawsegy),'cat axis=2 ${SOURCES[1:3]}')
+
+# display the first 3000 traces
+
+Result('first','line',
+       'window n2=3000 | grey pclip=90 title="First 3,000 Traces" ')
+
+Result('zoomfirst','line',
+       '''
+       window min2=1000 max2=1250 min1=0 max1=3 |
+       grey pclip=90 title=Zoom
+       ''')
+
+Result('firstrec24','line',
+       '''
+       window min2=2324 max2=2424 min1=0 max1=6 |
+       grey pclip=90 title="First Record"
+       ''')
+
+# Window out misfires
+Flow('shotmask','tline',
+     '''
+     window n1=1 f1=2 | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+Flow('linemask','line shotmask',
+     'headerwindow mask=${SOURCES[1]}')
+Flow('tlinemask','tline shotmask',
+     'headerwindow mask=${SOURCES[1]}')
+
+# Convert to shots
+Flow('shots','linemask tlinemask',
+     '''
+     intbin head=${SOURCES[1]} xk=tracf yk=fldr |
+     window f3=10 n2=96
+     ''')
+
+#############################
+# Elevation profile, datuming
+#############################
+
+End()

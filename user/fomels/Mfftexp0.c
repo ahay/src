@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     bool mig;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2;
     int im, i, j, m1, m2, it1, it2, its, ik, n2, nk;
-    float dt, dx, dz, c, old;
+    float dt, dx, dz, c, old, x0;
     float *curr, *prev, **img, *dat, **lft, **mid, **rht, **wave;
     sf_complex *cwave, *cwavem;
     sf_file data, image, left, middle, right;
@@ -39,11 +39,12 @@ int main(int argc, char* argv[])
 	data = sf_input("in");
 	image = sf_output("out");
 
-	if (!sf_histint(data,"n1",&nx));
-	if (!sf_histfloat(data,"d1",&dx));
+	if (!sf_histint(data,"n1",&nx)) sf_error("No n1= in input");
+	if (!sf_histfloat(data,"d1",&dx)) sf_error("No d1= in input");
+	if (!sf_histfloat(data,"o1",&x0)) x0=0.; 
 
-	if (!sf_histint(data,"n2",&nt));
-	if (!sf_histfloat(data,"d2",&dt));
+	if (!sf_histint(data,"n2",&nt)) sf_error("No n2= in input");
+	if (!sf_histfloat(data,"d2",&dt)) sf_error("No d2= in input");
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -52,20 +53,23 @@ int main(int argc, char* argv[])
 
 	sf_putint(image,"n1",nz);
 	sf_putfloat(image,"d1",dz);
+	sf_putfloat(image,"o1",0.);
 	sf_putstring(image,"label1","Depth");
 
 	sf_putint(image,"n2",nx);
 	sf_putfloat(image,"d2",dx);
+	sf_putfloat(image,"o2",x0);
 	sf_putstring(image,"label2","Distance");
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
 
-	if (!sf_histint(image,"n1",&nz));
-	if (!sf_histfloat(image,"d1",&dz));
+	if (!sf_histint(image,"n1",&nz)) sf_error("No n1= in input");
+	if (!sf_histfloat(image,"d1",&dz)) sf_error("No d1= in input");
 
-	if (!sf_histint(image,"n2",&nx));
-	if (!sf_histfloat(image,"d2",&dx));
+	if (!sf_histint(image,"n2",&nx))  sf_error("No n2= in input");
+	if (!sf_histfloat(image,"d2",&dx)) sf_error("No d2= in input");
+	if (!sf_histfloat(image,"o2",&x0)) x0=0.; 	
 
 	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
 	/* time samples (if modeling) */
@@ -74,10 +78,12 @@ int main(int argc, char* argv[])
 
 	sf_putint(data,"n1",nx);
 	sf_putfloat(data,"d1",dx);
+	sf_putfloat(data,"o1",x0);
 	sf_putstring(data,"label1","Distance");
 
 	sf_putint(data,"n2",nt);
 	sf_putfloat(data,"d2",dt);
+	sf_putfloat(data,"o2",0.);
 	sf_putstring(data,"label2","Time");
 	sf_putstring(data,"unit2","s");
     }

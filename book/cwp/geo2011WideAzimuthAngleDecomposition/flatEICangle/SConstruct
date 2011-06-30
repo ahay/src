@@ -265,12 +265,12 @@ Flow('dat-3d',['dd-3d','do-3d','dm-3d'],
      put n1=%(nx)d o1=%(ox)g d1=%(dx)g label1=%(lx)s unit1=%(ux)s
      n2=%(ny)d o2=%(oy)g d2=%(dy)g label2=%(ly)s unit2=%(uy)s
      ''' % par)
-Result('dat-3d',
-       '''
-       transp plane=23 |
-       transp plane=12 |
-       ''' % par
-       + fdmod.dgrey3d('pclip=99.9'+center+' frame1=1 movie=1 dframe=25 ',par))
+Plot('dat-3d',
+     '''
+     transp plane=23 |
+     transp plane=12 |
+     ''' % par
+     + fdmod.dgrey3d('pclip=99.9'+center+' frame1=1 movie=1 dframe=25 ',par),view=1)
 
 # ------------------------------------------------------------
 # WEM data - time domain
