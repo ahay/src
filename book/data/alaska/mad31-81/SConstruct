@@ -39,26 +39,55 @@ Result('firstrec24','line',
        grey pclip=90 title="First Record"
        ''')
 
-# Window out misfires
+# Window out misfire
 Flow('shotmask','tline',
      '''
      window n1=1 f1=2 | mask min=157 max=157 |
      add add=-1 | add scale=-1
      ''')
-Flow('linemask','line shotmask',
-     'headerwindow mask=${SOURCES[1]}')
-Flow('tlinemask','tline shotmask',
-     'headerwindow mask=${SOURCES[1]}')
 
 # Convert to shots
-Flow('shots','linemask tlinemask',
+Flow('shots','line shotmask',
      '''
-     intbin head=${SOURCES[1]} xk=tracf yk=fldr |
-     window f3=10 n2=96
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67 |
+     window n2=96 f3=10 |
+     put o3=100 d3=1
+     ''')
+
+Flow('tshots','tline shotmask',
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67 |
+     window n2=96 f3=10 |
+     put o3=100 d3=1
      ''')
 
 #############################
 # Elevation profile, datuming
 #############################
+
+Flow('spelev','../line31-81/spnElev.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
+     dd form=native
+     ''',stdin=0)
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     min2=75 max2=125 min1=85 max1=165
+     ''')
+
+Flow('elev','spelev','spline o1=85 d1=1 n1=81')
+Plot('elev',
+     '''
+     graph title=Elevation label1=Shot 
+     min2=75 max2=125 min1=85 max1=165 
+     ''')
+Result('elev','elev celev','Overlay')
+
+
 
 End()
