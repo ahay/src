@@ -25,7 +25,7 @@
 
 #include "fint1.h"
 
-static float t0, dt, x0, h=0.;
+static float t0, dt, x0, s, h=0.;
 
 static float msqrt      (float t, int it) { return sqrtf(t); }
 static float t2_cheb    (float t, int it) { 
@@ -46,6 +46,7 @@ static float nmo        (float t, int it)
 static float lmo        (float t, int it) { return t + h; } 
 static float rad_inv    (float t, int it) { return (t-t0)*(h+x0)/x0; }
 static float rad_frw    (float t, int it) { return t0-t*x0/(h-x0); }
+static float scale      (float t, int it) { return s*t; }
 
 int main(int argc, char* argv[])
 {
@@ -89,6 +90,8 @@ int main(int argc, char* argv[])
 	rule="rad";
     } else if (NULL != strstr (prog, "dat")) {
 	rule="dat";
+    } else if (NULL != strstr (prog, "scale")) {
+	rule="scale";
     } else if (NULL != strstr (prog,"nmo") || 
 	       NULL == (rule = sf_getstring("rule"))) {
 	/* Stretch rule:
@@ -99,6 +102,7 @@ int main(int argc, char* argv[])
 	   c - t^2 chebyshev stretch (t2chebstretch)
 	   r - radial moveout (radstretch)
 	   d - datuming (datstretch)
+	   s - s*t scaling stretch (scalestretch)
 	*/
 	rule="nmo";
     }
@@ -191,6 +195,16 @@ int main(int argc, char* argv[])
 	    sf_fileclose(dat);
 	    
 	    break;
+	case 's':
+	    forward = inverse = scale;
+	    
+	    if (!sf_getfloat("scale",&s)) sf_error("Need scale=");
+            /* scaling factor for rule=scale */
+	    if (scale==0) sf_error("Scale cannot be zero."); 
+	    if (inv) {
+		s=1.0/s;
+	    }
+	    break;
 	default:
 	    sf_error("rule=%s is not implemented",rule);
 	    break;
@@ -248,7 +262,7 @@ int main(int argc, char* argv[])
 	    } else if ('d' == rule[0]) {
 		h = datum[i3][i2];
 		if (inv) h = -h;
-	    }
+	    } 
 
 	    sf_floatread (trace,n1,in);
 	    fint1_set(str,trace);
