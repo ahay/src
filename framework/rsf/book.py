@@ -369,10 +369,7 @@ def report_all(target=None,source=None,env=None):
     all.write('%% end of paper list\n')
     for tex in misc.keys():
         all.write(include(os.path.splitext(tex)[0]))
-    biblio = env.get('biblio')
-    if biblio:
-        all.write('\\newpage\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
-                  % biblio)
+    
     index = env.get('index')
     if index:
         map(all.write,
@@ -380,6 +377,10 @@ def report_all(target=None,source=None,env=None):
              '\\addcontentsline{toc}{chapter}{Index}\n',
              '\\index{index}\n',
              '\\printindex\n'])
+    biblio = env.get('biblio')
+    if biblio:
+        all.write('\\cleardoublepage\n\\addcontentsline{toc}{chapter}{Bibliography}\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
+                  % biblio)
     if os.path.isfile('vita.tex'):
         print "Found vita.tex"
         all.write('\\begin{vita}\n\\input{./vita}\n\\end{vita}\n')
