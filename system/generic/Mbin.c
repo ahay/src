@@ -176,15 +176,15 @@ int main (int argc, char* argv[])
 	switch (interp) {
 	    case 0:
 		medbin_init (xy[i4], x0,y0,dx,dy,nx,ny, nd);
-		sf_warning("Using median interpolation (i4= %d of %d)", i4+1,n4);
+		sf_warning("Using median interpolation (i4= %d of %d);", i4+1,n4);
 		break;
 	    case 1:
 		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
-		sf_warning("Using nearest-neighbor interpolation (i4= %d of %d)", i4+1,n4);
+		sf_warning("Using nearest-neighbor interpolation (i4= %d of %d);", i4+1,n4);
 		break;
 	    case 2:
 		sf_int2_init (xy[i4], x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
-		sf_warning("Using linear interpolation (i4= %d of %d)", i4+1,n4);
+		sf_warning("Using linear interpolation (i4= %d of %d);", i4+1,n4);
 		break;
 	    default:
 		sf_error("Unsupported interp=%d",interp);
@@ -221,6 +221,7 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (mm,nm,out);
 	}
     } /* i4 */
+    sf_warning(".");
 
 
     exit(0);
