@@ -86,7 +86,7 @@ Plot('elev',
      graph title=Elevation label1=Shot 
      min2=75 max2=125 min1=85 max1=165 
      ''')
-Result('elev','elev celev','Overlay')
+Result('elev','elev spelev','Overlay')
 
 
 
