@@ -16,6 +16,8 @@ To the reproducible documents collection:
   horizontally-layered VTI medium (Casasanta and Fomel)
 * swag/thetaScan: Traveltime approximations for transversely isotropic
   media with an inhomogeneous background (Alkhalifah)
+* cwp/geo2011WideAzimuthAngleDecomposition: Wide-azimuth angle gathers
+  for wave-equation migration (Sava and Vlad)
 
 To SCons:
 
