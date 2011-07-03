@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
 	    
 	    if (!sf_getfloat("scale",&s)) sf_error("Need scale=");
             /* scaling factor for rule=scale */
-	    if (scale==0) sf_error("Scale cannot be zero."); 
+	    if (0.==s) sf_error("Scale cannot be zero."); 
 	    if (inv) {
 		s=1.0/s;
 	    }

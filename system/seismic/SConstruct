@@ -26,7 +26,7 @@ try:  # distributed version
     alias = {'segyread': ['suread'],
              'segywrite': ['suwrite'],
              'stretch': map(lambda x: x+ 'stretch',
-                            Split('log t2 t2cheb lmo nmo rad dat'))}
+                            Split('log t2 t2cheb lmo nmo rad dat scale'))}
 except: # local version
     env = bldutil.Debug()
     root = None
