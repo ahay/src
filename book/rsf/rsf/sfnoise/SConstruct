@@ -16,7 +16,7 @@ pars = {
 }
 
 for case in pars.keys():
-    Flow(case,'sin','noise rep=y seed=2011 %s' % pars[case])
+    Flow(case,'sin','noise rep=y seed=2011  %s ' % pars[case])
     Plot(case,'window j1=100 | graph title="%s"' % pars[case])
 
     hist = case+'-hist'
