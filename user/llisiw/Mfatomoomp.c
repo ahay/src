@@ -18,7 +18,10 @@
 */
 
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "upgradomp.h"
 #include "fastmarch.h"
