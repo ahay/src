@@ -27,19 +27,13 @@ man = os.path.join(mn1dir,'index.man')
 
 repos = os.environ.get('RSF_REPOSITORY',srcdir)
 
-sfdoc = '../rsf/sfdoc'
+docs = map(lambda x: os.path.join('..','rsf',x),
+           Split('sfdoc doc.py prog.py use.py'))
 python = WhereIs('python')
 
 version = env.get('version','')
-env.Command(htm,sfdoc,
+env.Command(htm,docs,
             '%s $SOURCE -w %s -r %s -v %s' % (python,htmdir,repos,version))
-env.Command(txt,sfdoc,'%s $SOURCE -t %s' % (python,txtdir))
-env.Command(spc,sfdoc,'%s $SOURCE -s %s' % (python,spcdir))
-env.Command(man,sfdoc,'%s $SOURCE -g %s' % (python,mn1dir))
-
-uses = os.path.join(pkgdir,'use.py')
-
-env.Depends(htm,uses)
-env.Depends(txt,uses)
-env.Depends(spc,uses)
-env.Depends(man,uses)
+env.Command(txt,docs,'%s $SOURCE -t %s' % (python,txtdir))
+env.Command(spc,docs,'%s $SOURCE -s %s' % (python,spcdir))
+env.Command(man,docs,'%s $SOURCE -g %s' % (python,mn1dir))

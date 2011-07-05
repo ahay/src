@@ -61,7 +61,7 @@ ds=0.025
 Flow('tables','vel shots',
      'eikonal shotfile=${SOURCES[1]}',split=[2,240,[1]],reduce='cat axis=4')
 
-Flow('table','tables','window | put o3=0 d3=%g label3=Shot' % ds)
+Flow('table','tables','window | put o3=3 d3=%g label3=Shot' % ds)
 Plot('table',
      'window j3=10 | grey color=j title=Traveltime scalebar=y allpos=y clip=3.5 maxval=3.5 minval=0',view=1)
 
