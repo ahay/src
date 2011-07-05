@@ -51,6 +51,7 @@ To programs:
 * all= option in sfget
 * sfbar: separate program for creating scalebar data
 * sflorenz (generate Lorenz attractor)
+* sfcat/sfmerge accept order= parameter
 
 ===Bug fixes===
 
