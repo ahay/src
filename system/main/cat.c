@@ -31,12 +31,24 @@ sfmerge inserts additional space between merged data.
 
 #include <rsf.h>
 
+static int *order, *sort;
+
+static int sort_order(const void *a, const void *b) 
+{
+    int ia, ib;
+
+    ia = sort[(int*) a - order];
+    ib = sort[(int*) b - order];
+
+    return (ia < ib)? -1: (ia > ib)? 1: 0;
+}
+
 static void check_compat (int esize, int nin, sf_file *in, int axis, 
 			  int dim, const off_t *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
-    int i, j, axis, *naxis, nin, open_max;
+    int i, j, k, axis, *naxis, nin, open_max;
     int dim, dim1, esize, nspace;
     float f;
     off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
@@ -62,6 +74,16 @@ int main (int argc, char* argv[])
 	nin++;
     }
     if (0==nin) sf_error ("no input");
+
+    order = sf_intalloc(nin);
+    for (j=0; j < nin; j++) order[j]=j;
+
+    sort = sf_intalloc(nin);
+    if (sf_getints("order",sort,nin)) {
+	/* concatenation order */
+	qsort(order,nin,sizeof(int),sort_order);
+    }
+    free(sort);
 
     open_max = sysconf(_SC_OPEN_MAX);
     if (open_max > 0 && 2*nin+5 > open_max)
@@ -154,9 +176,10 @@ int main (int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
+	    k = order[j];
 	    for (ni = n1*naxis[j]*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
-		sf_charread (buf,nbuf,in[j]);
+		sf_charread (buf,nbuf,in[k]);
 		sf_charwrite (buf,nbuf,out);
 	    }
 	    if (!space || j == nin-1) continue;
