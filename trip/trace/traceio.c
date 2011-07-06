@@ -1703,7 +1703,7 @@ int init_tracegeom(tracegeom * tg,
   if (tg->ntraces) tg->buf =(float *)malloc(tg->ntraces * tg->nt * sizeof(float));
   if (tg->ntraces && !tg->buf) {
     fprintf(stream,"Error: tracegeom_init - failed to allocate trace\n");
-    fprintf(stream,"buffer of length %ld\n", tg->ntraces*tg->nt*sizeof(float));
+    fprintf(stream,"buffer of length %ld\n", (long) (tg->ntraces*tg->nt*sizeof(float)));
     fflush(stream);
 #ifdef IWAVE_USE_MPI
     MPI_Abort(retrieveGlobalComm(),E_ALLOC);
@@ -1725,7 +1725,7 @@ int init_tracegeom(tracegeom * tg,
     work=(float *)malloc(wlen*sizeof(float));
     if (!work) {
       fprintf(stream,"Error: tracegeom_init - failed to allocate work\n");
-      fprintf(stream,"buffer of length %ld\n",wlen*sizeof(float));
+      fprintf(stream,"buffer of length %ld\n",(long) (wlen*sizeof(float)));
       fflush(stream);
 #ifdef IWAVE_USE_MPI
       MPI_Abort(retrieveGlobalComm(),E_ALLOC);
@@ -1893,7 +1893,7 @@ void fprint_tracegeom(tracegeom const * tg,FILE *fp)
   fprintf(fp,"xrec      = %12.1d\n",tg->xrec);
   fprintf(fp,"first     = %12.1d\n",tg->first);
   fprintf(fp,"last      = %12.1d\n",tg->last);
-  fprintf(fp,"recoff    = %12.1ld\n",tg->recoff[tg->irec]);
+  fprintf(fp,"recoff    = %12.1ld\n",(long) tg->recoff[tg->irec]);
   fprintf(fp,"ndim      = %12.1d\n",tg->ndim);
   fprintf(fp,"dvol      = %12.4e\n",tg->dvol);
   if (tg->ndim > 0) fprintf(fp,"sz        = %12.4e\n",tg->src[tg->irec][0]);
@@ -1941,7 +1941,7 @@ void fprint_tracegeom(tracegeom const * tg,FILE *fp)
     if (tg->ndim > 1) fprintf(fp,"   %10.4e",tg->rg[i][tg->axord[1]]);
     if (tg->ndim > 2) fprintf(fp,"   %10.4e",tg->rg[i][tg->axord[2]]);
     if (tg->ndim > 0) fprintf(fp," %6.1d",tg->tracr[i]);
-    if (tg->ndim > 0) fprintf(fp," %10.1ld",tg->troff[i]);
+    if (tg->ndim > 0) fprintf(fp," %10.1ld",(long) tg->troff[i]);
     fprintf(fp,"\n");
   }
   fprintf(fp, "\n");
