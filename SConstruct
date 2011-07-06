@@ -251,7 +251,7 @@ if os.path.isdir('su'):
 ##########################################################################
 
 if os.path.isdir('trip'):
-    sudirs = ('base','grid')
+    sudirs = ('base','grid','trace')
     for dir in map(lambda x: os.path.join('trip',x), sudirs):
         build = os.path.join('build',dir)
         if configure.version[0] > 1:

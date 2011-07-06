@@ -2,7 +2,7 @@ import os, sys, string, re
 sys.path.append('../../framework')
 import bldutil
 
-src = 'cubicadjw'
+src = 'cubicadjw cubicw lci traceio verifytrace'
 
 try: # distribution version
     Import('env root libdir incdir')
@@ -11,6 +11,7 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../base/SConstruct')
+    SConscript('../../su/lib/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'])
 

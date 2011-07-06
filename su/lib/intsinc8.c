@@ -61,6 +61,7 @@
 */
 
 #include <rsf.h>
+/*^*/
 
 /* these are used by both ints8c and ints8r */
 #define LTABLE 8

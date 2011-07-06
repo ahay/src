@@ -5,7 +5,10 @@ import bldutil
 #############################################################################
 # SU LIBRARY
 #############################################################################
-src = 'frannor intsinc8 inttable8 mksinc sinc toeplitz'
+src = '''
+atopkge fgettr filestat fputtr frannor hdrpkge intsinc8 inttable8
+mksinc sinc swapbyte toeplitz valpkge
+'''
 
 try: # distribution version
     Import('env root libdir incdir')
