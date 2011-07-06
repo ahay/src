@@ -32,8 +32,14 @@ copyright holder.
 
 **************************************************************************/
 
-#include <rsf.h>
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
+#include <unistd.h>
 /*^*/
+
+#include <rsf.h>
 
 #include <trip/base.h>
 
@@ -2708,7 +2714,7 @@ int writetraces(tracegeom const * tg,
       }
 	  
 #ifdef VERBOSE
-      fprintf(stream,"writetraces: rk 0 write trace %d tracr=%d offset=%ld\n",nb,otr.tr.tracr,otr.m);
+      fprintf(stream,"writetraces: rk 0 write trace %d tracr=%d offset=%ld\n",nb,otr.tr.tracr,(long) otr.m);
 #endif
       err=fseeko(tg->fpout,otr.m,SEEK_SET);
       if (err) {
