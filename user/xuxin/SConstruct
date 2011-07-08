@@ -1,0 +1,58 @@
+import os, sys, re, string 
+srcroot = os.environ.get('RSFSRC',os.path.join(os.environ['HOME'],'RSFSRC'))
+rsfroot = os.environ.get('RSF',os.path.join(os.environ['HOME'],'RSF'))
+sys.path.append(os.path.join(srcroot,'framework'))
+import bldutil
+
+# distributed
+progs = '''
+pseudodepth reflectivity2 wave2 wave2tau fftwave4 integral1 fftexp4 fftstable
+'''
+# wave2er tauwave2er fftexp4 
+
+# local
+locprogs = '''
+wave2
+'''
+# expandtest kissfftomp interptest lrmatrix
+
+try:  # distributed version
+    Import('env root pkgdir bindir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript(os.path.join(srcroot,'api/c/SConstruct'))
+    progs = locprogs
+
+src = Glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=os.path.join(rsfroot,'include'),
+            LIBPATH=os.path.join(rsfroot,'lib'),
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    env.Depends(docs,'#/framework/rsf/doc.py')    
+
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)
