@@ -121,8 +121,9 @@ int main(int argc, char *argv[])
 
     /* loop over n4 */
     for (i4=0; i4 < n4; i4++) {
+	if (verb) sf_warning("slice %d of %d",i4+1,n4);
 	for (iw=0; iw < nw; iw++) { /* loop over frequency */
-	    if (verb) sf_warning("frequency %d of %d",iw+1,nw);
+	    if (verb) sf_warning("frequency %d of %d;",iw+1,nw);
 	    sf_complexread(dd,n1*n2,in);
 	    if (NULL != dif) {
 		sf_complexread(ref,n1*n2,dif);
@@ -298,7 +299,9 @@ int main(int argc, char *argv[])
 		    sf_complexwrite(mm,n1*n2,out);
 		}
 	    }		
-	}       
+	}   
+	if (verb) sf_warning(".");
+    
     }
 
     exit(0);
