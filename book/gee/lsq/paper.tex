@@ -438,10 +438,12 @@ These high frequencies may have a poorer signal to noise ratio than the raw data
 To compensate for that, I commonly integrate (or leaky integrate)
 the time axis on the raw data before I begin.
 
+\inputdir{lomask}
+
 \par
-Once the stepout $p = d t /d x$ is known between each of the signals, it is a simple matter to integrate to get the total time shift.  A real-life example is shown in Figure~\ref{fig:TwoD}.
+Once the stepout $p = d t /d x$ is known between each of the signals, it is a simple matter to integrate to get the total time shift.  A real-life example is shown in Figure~\ref{fig:twod}.
 %
-\sideplot{TwoD}{width=3in}{
+\sideplot{twod}{width=3in}{
 	A seismic line before and after flattening.\viewit{TwoD}}  
 %
 In this case the flattening was a function of $x$ only.  More interesting (and more complicated) cases arise when the stepout $p = d t /d x$ is a function of both $x$ and $t$.  The code shown here should work well in such cases.
@@ -2274,8 +2276,6 @@ wave fields become much more complex at wide offset.
 NMO soon fails,
 but wave-equation forward modeling
 offers interesting opportunities for inversion.
-
-\begin{comment}
 
 \section{FLATTENING 3-D SEISMIC DATA}
 

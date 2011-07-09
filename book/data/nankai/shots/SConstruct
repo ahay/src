@@ -151,10 +151,37 @@ Flow('first','stack',
      '''
      put o2=0 d2=16.667 label2=Distance unit2=m |
      cosft sign2=1 | pad beg1=1250 |
-     stolt vel=1400 |
-     window f1=1250 | cosft sign2=-1
+     stolt vel=1400 
      ''')
 
-Result('first','window min1=5.5 max1=8 | grey title="Migration with 1400 m/s" ')
+Result('first',
+       '''
+       window min1=5.5 max1=8 | 
+       cosft sign2=-1 |
+       grey title="Migration with 1400 m/s"
+       ''')
+
+Flow('velcon','first',
+     '''
+     spray axis=2 n=1 o=0 d=1 |
+     put o4=0 |
+     fourvc nv=101 dv=10 v0=1400 verb=y |
+     window min1=5.5 max1=8 | 
+     transp plane=23 memsize=1000 |
+     cosft sign2=-1
+     ''')
+Plot('velcon','grey title="Velocity Continuation"',view=1)
+
+# Migration with the stacking velocity
+Flow('mpick','picks','window min1=5.5 max1=8')
+Flow('mstack','velcon mpick',
+     '''
+     transp plane=23 memsize=1000 |
+     slice pick=${SOURCES[1]}
+     ''')
+Result('mstack',
+       'grey title="Migration with Stacking Velocity"')
+
+# Separating diffractions
 
 End()
