@@ -1,5 +1,6 @@
 /* 2-D Prestack Kirchhoff time migration with antialiasing. 
 The axes in the input are {time,midpoint,offset}
+The axes in the offset are {1,midpoint,offset}
 The axes in the output are {time,midpoint}
 The axes in the "image gather" are {time,midpoint,offset}
 */
@@ -52,10 +53,10 @@ static float pick(float ti, float deltat,
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, nh, ix, ih, iy, i, nn, it, **fold, apt;
-    float *trace, **out, **v, rho, **outd, *pp;
+    int nt, nx, nh, nh2, ix, ih, iy, i, nn, it, **fold, apt;
+    float *trace, **out, **v, rho, **outd, *pp, *off;
     float h, x, t, h0, dh, dx, ti, tx, t0, t1, t2, dt, vi, aal;
-    sf_file inp, mig, vel, gather;
+    sf_file inp, mig, vel, gather, offset;
     bool half, verb;
 
     sf_init (argc,argv);
@@ -70,8 +71,6 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1=");
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1=");
     if (!sf_histfloat(inp,"d2",&dx)) sf_error("No d2=");
-    if (!sf_histfloat(inp,"o3",&h0)) sf_error("No o3=");
-    if (!sf_histfloat(inp,"d3",&dh)) sf_error("No d3=");
 
     sf_putint(mig,"n3",1);
     sf_putfloat(mig,"d3",1.);
@@ -100,6 +99,28 @@ int main(int argc, char* argv[])
 
     if (!half) dh *= 0.5;
 
+    if (NULL != sf_getstring("offset")) {
+	offset = sf_input("offset");
+	nh2 = sf_filesize(offset);
+
+	if (nh2 != nh*nx) sf_error("Wrong dimensions in offset");
+
+	off = sf_floatalloc(nh2);	
+	sf_floatread (off,nh2,offset);
+	sf_fileclose(offset);
+    } else {
+	if (!sf_histfloat(inp,"o3",&h0)) sf_error("No o3=");
+	if (!sf_histfloat(inp,"d3",&dh)) sf_error("No d3=");
+
+	off = sf_floatalloc(nh*nx);
+	for (ix = 0; ix < nx; ix++) {
+	    for (ih = 0; ih < nh; ih++) {
+		off[ih*nx+ix] = h0 + ih*dh; 
+	    }
+	}
+	offset = NULL;
+    }
+
     v = sf_floatalloc2(nt,nx);
     sf_floatread(v[0],nt*nx,vel);
 
@@ -120,7 +141,6 @@ int main(int argc, char* argv[])
 
     for (ih=0; ih < nh; ih++) {
         if (verb) sf_warning("offset %d of %d;",ih+1,nh);
-	h = h0+ih*dh;
 	for (i=0; i < nt*nx; i++) {
 	    out[0][i] = 0.;
 	}
@@ -128,7 +148,8 @@ int main(int argc, char* argv[])
 	for (iy=0; iy < nx; iy++) { 
 	    sf_floatread (trace,nt,inp);
 	    sf_doubint(true, nt,trace);
-        
+	    h = fabsf(off[ih*nx+iy]);
+
 	    for (ix=0; ix < nx; ix++) { 
 	        x = (ix-iy)*dx;
 		if (fabs(ix-iy) > apt) continue;
