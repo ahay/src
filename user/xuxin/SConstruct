@@ -1,5 +1,5 @@
 import os, sys
-srcroot = os.environ.get('RSFSRC',os.path.join(os.environ['HOME'],'RSFSRC'))
+srcroot = os.environ.get('RSFSRC','../..')
 sys.path.append(os.path.join(srcroot,'framework'))
 import bldutil
 
