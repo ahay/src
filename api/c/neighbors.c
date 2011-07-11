@@ -489,7 +489,7 @@ int sf_neighbors_nearsource(float* xs   /* source location [3] */,
 
 		delta2 = 0.;
 		for (j=0; j < 3; j++) {
-		    if (!plane[j]) delta2 += delta[j]*delta[j];
+		    if (!plane[2-j]) delta2 += delta[j]*delta[j];
 		}
 
 		/* analytical formula (Euclid) */ 

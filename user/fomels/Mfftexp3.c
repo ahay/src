@@ -1,4 +1,4 @@
-/* 2-D FFT-based zero-offset exploding reflector modeling/migration  */
+/* 3-D FFT-based zero-offset exploding reflector modeling/migration  */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -18,15 +18,15 @@
 */
 #include <rsf.h>
 
-#include "fft2.h"
+#include "fft3.h"
 
 int main(int argc, char* argv[])
 {
     bool mig;
-    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2;
+    int it, nt, ix, nx, iy, ny, iz, nz, nx2, ny2, nz2, nxy, nzx, nzx2;
     int im, i, j, m1, m2, it1, it2, its, ik, n2, nk;
-    float dt, dx, dz, c, old, x0;
-    float *curr, *prev, **img, *dat, **lft, **mid, **rht, **wave;
+    float dt, dx, dy, dz, c, old, x0, y0;
+    float *curr, *prev, ***img, **dat, **lft, **mid, **rht, **wave;
     sf_complex *cwave, *cwavem;
     sf_file data, image, left, middle, right;
 
@@ -43,8 +43,12 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(data,"d1",&dx)) sf_error("No d1= in input");
 	if (!sf_histfloat(data,"o1",&x0)) x0=0.; 
 
-	if (!sf_histint(data,"n2",&nt)) sf_error("No n2= in input");
-	if (!sf_histfloat(data,"d2",&dt)) sf_error("No d2= in input");
+	if (!sf_histint(data,"n2",&ny)) sf_error("No n2= in input");
+	if (!sf_histfloat(data,"d2",&dy)) sf_error("No d2= in input");
+	if (!sf_histfloat(data,"o2",&y0)) y0=0.; 
+
+	if (!sf_histint(data,"n3",&nt)) sf_error("No n3= in input");
+	if (!sf_histfloat(data,"d3",&dt)) sf_error("No d3= in input");
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -59,7 +63,12 @@ int main(int argc, char* argv[])
 	sf_putint(image,"n2",nx);
 	sf_putfloat(image,"d2",dx);
 	sf_putfloat(image,"o2",x0);
-	sf_putstring(image,"label2","Distance");
+	sf_putstring(image,"label2","Inline");
+
+	sf_putint(image,"n3",ny);
+	sf_putfloat(image,"d3",dy);
+	sf_putfloat(image,"o3",y0);
+	sf_putstring(image,"label3","Crossline");
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
@@ -71,6 +80,10 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(image,"d2",&dx)) sf_error("No d2= in input");
 	if (!sf_histfloat(image,"o2",&x0)) x0=0.; 	
 
+	if (!sf_histint(image,"n3",&ny)) sf_error("No n3= in input");
+	if (!sf_histfloat(image,"d3",&dy)) sf_error("No d3= in input");
+	if (!sf_histfloat(image,"o3",&y0)) y0=0.; 
+
 	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
 	/* time samples (if modeling) */
 	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
@@ -79,22 +92,28 @@ int main(int argc, char* argv[])
 	sf_putint(data,"n1",nx);
 	sf_putfloat(data,"d1",dx);
 	sf_putfloat(data,"o1",x0);
-	sf_putstring(data,"label1","Distance");
+	sf_putstring(data,"label1","Inline");
 
-	sf_putint(data,"n2",nt);
-	sf_putfloat(data,"d2",dt);
-	sf_putfloat(data,"o2",0.);
-	sf_putstring(data,"label2","Time");
-	sf_putstring(data,"unit2","s");
+	sf_putint(data,"n2",ny);
+	sf_putfloat(data,"d2",dy);
+	sf_putfloat(data,"o2",y0);
+	sf_putstring(data,"label2","Crossline");
+
+	sf_putint(data,"n3",nt);
+	sf_putfloat(data,"d3",dt);
+	sf_putfloat(data,"o3",0.);
+	sf_putstring(data,"label3","Time");
+	sf_putstring(data,"unit3","s");
     }
 
-    nk = fft2_init(false,1,nx,nz,&nx2,&nz2);
+    nk = fft3_init(false,1,nx,ny,nz,&nx2,&ny2,&nz2);
 
-    nzx = nz*nx;
-    nzx2 = nz2*nx2;
+    nxy = nx*ny;
+    nzx = nz*nx*ny;
+    nzx2 = nz2*nx2*ny2;
 
-    img = sf_floatalloc2(nz,nx);
-    dat = sf_floatalloc(nx);
+    img = sf_floatalloc3(nz,nx,ny);
+    dat = sf_floatalloc2(nx,ny);
 
     /* propagator matrices */
     left = sf_input("left");
@@ -140,12 +159,14 @@ int main(int argc, char* argv[])
 	it2 = -1;
 	its = -1;	
     } else { /* modeling */
-	sf_floatread(img[0],nzx,image);
+	sf_floatread(img[0][0],nzx,image);
 
 	/* transpose */
-	for (ix=0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		curr[ix+iz*nx2]=img[ix][iz];
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    curr[ix+nx2*(iy+iz*ny2)]=img[iy][ix][iz];
+		}
 	    }
 	}
 	
@@ -161,23 +182,27 @@ int main(int argc, char* argv[])
 	sf_warning("it=%d;",it);
 
 	if (mig) { /* migration <- read data */
-	    sf_floatread(dat,nx,data);
+	    sf_floatread(dat[0],nxy,data);
 	} else {
-	    for (ix=0; ix < nx; ix++) {
-		dat[ix] = 0.;
+	    for (iy=0; iy < ny; iy++) {
+		for (ix=0; ix < nx; ix++) {
+		    dat[iy][ix] = 0.;
+		}
 	    }
 	}
 
-	for (ix=0; ix < nx; ix++) {
-	    if (mig) {
-		curr[ix] += dat[ix];
-	    } else {
-		dat[ix] = curr[ix];
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		if (mig) {
+		    curr[ix+nx2*iy] += dat[iy][ix];
+		} else {
+		    dat[iy][ix] = curr[ix+nx2*iy];
+		}
 	    }
 	}
 
 	/* matrix multiplication */
-	fft2(curr,cwave);
+	fft3(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
@@ -187,13 +212,13 @@ int main(int argc, char* argv[])
 		cwavem[ik] = sf_crmul(cwave[ik],rht[ik][im]);
 #endif
 	    }
-	    ifft2(wave[im],cwavem);
+	    ifft3(wave[im],cwavem);
 	}
 
 	for (ix = 0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {
-		i = ix+iz*nx;  /* original grid */
-		j = ix+iz*nx2; /* padded grid */
+		i = ix+nx*(iy+iz*ny);   /* original grid */
+		j = ix+nx2*(iy+iz*ny2); /* padded grid */
 		
 		old = c = curr[j];
 		c += c - prev[i];
@@ -210,21 +235,23 @@ int main(int argc, char* argv[])
 	}
 	
 	if (!mig) { /* modeling -> write out data */
-	    sf_floatwrite(dat,nx,data);
+	    sf_floatwrite(dat[0],nxy,data);
 	}
     }
     sf_warning(".");
 
     if (mig) {
 	/* transpose */
-	for (ix=0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		img[ix][iz] = curr[ix+iz*nx2];
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    img[iy][ix][iz] = curr[ix+nx2*(iy+iz*ny2)];
+		}
 	    }
 	}
 
-	sf_floatwrite(img[0],nzx,image);
+	sf_floatwrite(img[0][0],nzx,image);
     }
-
+    
     exit(0);
 }
