@@ -86,7 +86,7 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
 {
     int i1, i2, i3;
 
-    for (i3=0; i3 < ny; i3++) {
+    for (i3=0; i3 < nx; i3++) {
 	for (i2=0; i2 < ny; i2++) {
 	    stretch4_define (map1,coord1[i3][i2]);	    
 	
