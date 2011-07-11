@@ -1,6 +1,5 @@
-import os, sys, re, string 
+import os, sys
 srcroot = os.environ.get('RSFSRC',os.path.join(os.environ['HOME'],'RSFSRC'))
-rsfroot = os.environ.get('RSF',os.path.join(os.environ['HOME'],'RSF'))
 sys.path.append(os.path.join(srcroot,'framework'))
 import bldutil
 
@@ -27,8 +26,8 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-env.Prepend(CPPPATH=os.path.join(rsfroot,'include'),
-            LIBPATH=os.path.join(rsfroot,'lib'),
+env.Prepend(CPPPATH=os.path.join(srcroot,'include'),
+            LIBPATH=os.path.join(srcroot,'lib'),
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
 for source in src:
