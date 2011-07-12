@@ -49,9 +49,9 @@ void warp3_init(int n1_in, float o1, float d1,
 	       n3,o3,d3,
 	       ny,nx,eps);
     
-    str2   = sf_floatalloc3(ny,nx,n1);
-    str3   = sf_floatalloc3(ny,nx,n1);
-    slice1 = sf_floatalloc3(ny,nx,n1);
+    str2   = sf_floatalloc3(nx,ny,n1);
+    str3   = sf_floatalloc3(nx,ny,n1);
+    slice1 = sf_floatalloc3(nx,ny,n1);
 }
 
 void warp3_close(void)
@@ -92,17 +92,17 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
 	
 	    stretch4_apply  (map1,slice[i3][i2],trace1);	
 	    for (i1=0; i1 < n1; i1++) {
-		slice1[i1][i3][i2] = trace1[i1];
+		slice1[i1][i2][i3] = trace1[i1];
 	    }
 	
 	    stretch4_apply  (map1,coord2[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
-		str2[i1][i3][i2] = trace1[i1];
+		str2[i1][i2][i3] = trace1[i1];
 	    }
 
 	    stretch4_apply  (map1,coord3[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
-		str3[i1][i3][i2] = trace1[i1];
+		str3[i1][i2][i3] = trace1[i1];
 	    }
 	}
     }
