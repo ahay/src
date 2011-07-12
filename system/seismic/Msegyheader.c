@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 	    if (SF_INT != sf_gettype(keys[i]))
 		sf_error("Need integer data in file \"%s\"",arg); 
 	    if (n2 != sf_filesize(keys[i])) 
-		sf_error("Need filesize=%lld in file \"%s\"",n2); 
+		sf_error("Need filesize=%lld in file \"%s\"",n2,arg); 
 	    free(arg);
 
 	    buf[i] = sf_intalloc(nbuf);
