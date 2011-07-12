@@ -5,7 +5,7 @@ from rsf.proj import *
 def paramwin():
     par = {
         'nx':1601, 'ox':25.000,'dx':0.025,  'lx':'x', 'ux':'km',
-        'nz':601,  'oz':4.5,   'dz':0.025,  'lz':'z', 'uz':'km',
+        'nz':801,  'oz':4.5,   'dz':0.025,  'lz':'z', 'uz':'km',
         'nt':1500, 'ot':0,     'dt':0.008,  'lt':'t', 'ut':'s'
         }
     
@@ -16,7 +16,7 @@ def paramwin():
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
 
-    par['jsnap']=150
+    par['jsnap']=200
 
     return par
 

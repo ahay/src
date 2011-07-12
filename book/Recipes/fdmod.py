@@ -245,6 +245,20 @@ def egrey(custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['labelattr']+' '+custom)
 
+def ewigl(custom,par):
+    return '''
+    transp |
+    wiggle parallel2=n labelrot=n wantaxis=y title=""
+    transp=n yreverse=y wherexlabel=t poly=y seamean=n
+    pclip=100
+    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    %s
+    ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+           par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['labelattr']+' '+custom)
+
+
 def fgrey(custom,par):
     return '''
     window | real | transp |
@@ -734,7 +748,7 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 
 # ------------------------------------------------------------    
 # exploding-reflector reverse-time migration
-def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
+def oldzom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 
     rwfl = imag+'_ur' # receiver wavefield
     rout = imag+'_dr' # receiver data (not the input rdat)
@@ -747,6 +761,27 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
 
     Flow(imag,twfl,'window n3=1 f3=1')
+
+# ------------------------------------------------------------
+# exploding-reflector reverse-time migration
+def zom(imag,data,velo,dens,racq,custom,par):
+
+    tdat = imag+'_tds'
+    jwfl = imag+'_tur'
+    jdat = imag+'_jnk'
+
+    Flow(tdat,data,'reverse which=2 opt=i verb=y')
+    awefd(jdat,
+	  jwfl,
+    	  tdat,
+	  velo,
+	  dens,
+	  racq,
+	  racq,
+	  custom+' jsnap=%d' % (par['nt']-1),par)
+
+    Flow(imag,jwfl,'window n3=1 f3=1')
+
 
 # ------------------------------------------------------------
 # wavefield-over-model plot
