@@ -20,7 +20,15 @@ def cubeplot(title,clip='',extra=''):
     title="%s" %s screenratio=1 labelsz=5
     ''' % (clip,title,extra)
 
-Result('chev',cubeplot(' '))
+Result('chev',
+       '''
+       window n1=34 n2=450 n3=450 |
+       byte |
+       grey3 wanttitle=n screenht=7.25 screenratio=0.5 
+       flat=y frame1=22 frame2=183 frame3=65 point1=0.1 point2=0.5 
+       ''')
+
+
 Plot('chev',cubeplot(' '))
 
 patch = 'patch w=84,250,250 p=1,2,2 | put n4=1 n5=4 n6=1'
@@ -132,18 +140,33 @@ Plot('picks',
 Result('picks','chev picks','Overlay')
 
 
-Plot('before','chev',
-     '''
-     reverse which=4 opt=n |
-     window n3=1 f3=150 |
-     grey title=Unflattened
-     ''')
-Plot('after','flats',
-     '''
-     reverse which=4 opt=n |
-     window n3=1 f3=150 |
-     grey title=Flattened
-     ''')
-Result('twod','before after','SideBySideAniso')
+title= {
+    'chev':'Unflattened',
+    'flats':'Flattened'
+    }
+
+for case in title.keys():
+    line = case+'-line'
+
+    Plot(line,case,
+         '''
+         reverse which=4 opt=n |
+         window n3=1 f3=150 |
+         grey title=%s
+         ''' % title[case])
+
+    slice = case+'-slice'
+    
+    Plot(slice,case,
+         '''
+         window n1=1 f1=%d |
+         grey pclip=98 transp=n yreverse=n
+         label1=x unit1=ft label2=y unit2=ft
+         title=%s 
+         ''' % ((21,22)[case=='chev'],title[case]))
+
+Result('twod','chev-line flats-line','SideBySideAniso')
+Result('slicecomp22','chev-slice flats-slice','OverUnderAniso')
+
 
 End()

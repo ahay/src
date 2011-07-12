@@ -147,21 +147,23 @@ Result('stack','window min1=5.5 max1=8 | grey title="NMO Stack" ')
 
 # Velocity continuation
 
-Flow('first','stack',
+Flow('stolt','stack',
      '''
      put o2=0 d2=16.667 label2=Distance unit2=m |
      cosft sign2=1 | pad beg1=1250 |
      stolt vel=1400 
      ''')
 
-Result('first',
-       '''
-       window min1=5.5 max1=8 | 
-       cosft sign2=-1 |
-       grey title="Migration with 1400 m/s"
-       ''')
+Flow('first','stolt',
+     '''
+     window min1=5 | 
+     cosft sign2=-1
+     ''')
 
-Flow('velcon','first',
+Result('first',
+       'window min1=5.5 max1=8 | grey title="Migration with 1400 m/s" ')
+
+Flow('velcon','stolt',
      '''
      spray axis=2 n=1 o=0 d=1 |
      put o4=0 |
@@ -183,5 +185,37 @@ Result('mstack',
        'grey title="Migration with Stacking Velocity"')
 
 # Separating diffractions
+
+Flow('dip','first','dip rect1=20 rect2=10')
+Result('dip',
+       '''
+       grey color=j scalebar=y wanttitle=n barlabel=Slope barunit=samples
+       ''')
+
+Flow('refl','first dip','pwspray dip=${SOURCES[1]} ns=5 | stack')
+Result('refl','window min1=5.5 max1=8 | grey title="Reflections" ')
+
+Flow('diff','first refl','add scale=1,-1 ${SOURCES[1]}')
+Result('diff','window min1=5.5 max1=8 | grey title="Diffractions" ')
+
+Flow('stoltd','diff',
+     '''
+     cosft sign2=1 |
+     pad beg1=1250
+     ''')
+
+Flow('velcond','stoltd',
+     '''
+     spray axis=2 n=1 o=0 d=1 |
+     put o4=0 |
+     fourvc nv=101 dv=10 v0=1400 verb=y pad2=3000 |
+     window min1=5.5 max1=8 | 
+     transp plane=23 memsize=1000 |
+     cosft sign2=-1
+     ''')
+Plot('velcond','grey title="Velocity Continuation"',view=1)
+
+Flow('focus','velcond','focus rect1=40 rect2=20 | math output="1/abs(input)" ')
+
 
 End()
