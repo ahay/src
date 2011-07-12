@@ -103,7 +103,7 @@ RSFROOT=$root $scons $args config
 echo "------------------------"
 echo "Done with configuration."
 
-M8R_PY_PATH=`framework/setenv.py`
+M8R_PY_PATH=`RSFROOT=$root framework/setenv.py`
 if [ -n "$PYTHONPATH" ]; then
 PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
 else

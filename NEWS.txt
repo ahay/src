@@ -74,6 +74,7 @@ In programs:
 * Fixed float-to-int truncation bug in sfdd triggered by Intel C Compiler 10
 * Fixed large-file-support bug in sfshot2cmp
 * Fixed plane#= bug is sfeikonal
+* Fixed error message bug in sfsegyheader
 
 In the build system:
 * Madagascar now compiling with CC=icc LINKFLAGS=-static-intel
