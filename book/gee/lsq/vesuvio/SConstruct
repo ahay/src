@@ -4,7 +4,12 @@ Fetch('vesuvio.H','vesuvio')
 
 Flow('vesuvio','vesuvio.H','sed s/xdr_float/xdr_complex/ | dd form=native')
 
-Flow('amp','vesuvio','math output="sqrt(abs(input))" | real')
-Flow('pha','vesuvio','math output="sqrt(abs(input))" | real')
+Flow('amp','vesuvio','math output="sqrt(sqrt(abs(input)))" | real')
+Flow('phz','vesuvio','math output="log(input)" | imag')
+
+Plot('amp','grey title=Amplitude')
+Plot('phz','grey title=Phase')
+
+Result('vesuvio','amp phz','SideBySideAniso')
 
 End()
