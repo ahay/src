@@ -1,13 +1,16 @@
 from rsf.proj import *
-import fdmod
+import fdmod as f
 
 # ------------------------------------------------------------
 # Sigsbee 2A parameters
 par = {
-    'nx':1601, 'ox':25.0, 'dx':0.025, 'lx':'x', 'ux':'km',
-    'nz':801,  'oz':4.50, 'dz':0.025, 'lz':'z', 'uz':'km',
-    'nt':4001, 'ot':0,    'dt':0.001, 'lt':'t', 'ut':'s'
+    'nx':1601,'ox':25.0,'dx':0.025,'lx':'x',
+    'nz':801, 'oz':4.50,'dz':0.025,'lz':'z',
+    'nt':5001,'ot':0,   'dt':0.001,'lt':'t'
     }
+par['jsnap']=200 # snapshot jump
+par['kt']=100    # wavelet delay (samples) 
+par['nb']=100    # boundary (grid points)
 
 # ------------------------------------------------------------
 # convert coordinates from ft to km
@@ -17,64 +20,63 @@ par['dx']=par['dx']*par['ft2km']
 par['oz']=par['oz']*par['ft2km']
 par['dz']=par['dz']*par['ft2km']
 
-par['jsnap']=200       # wavefield snapshop (samples)
-par['kt']=100          # wavelet delay (samples) 
-par['nb']=100          # boundary (grid points)
+# ------------------------------------------------------------
+# set axes labels
+par['ux']='km'
+par['uz']='km'
+par['ut']='s'
 
 # ------------------------------------------------------------
 # set plotting parameters
-fdmod.param(par)
+f.param(par)
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
-fdmod.boxarray('ss',
-               5,   # vertical number
-               5,   # vertical origin 
-               0.5, # vertical sampling
-               14,  # horizontal number
-               10,  # horizontal origin
-               0.5, # horizontal sampling
-               par)
+f.boxarray('ss',
+           5,   # vertical number
+           5,   # vertical origin 
+           0.5, # vertical sampling
+           14,  # horizontal number
+           10,  # horizontal origin
+           0.5, # horizontal sampling
+           par)
 
-# plot sources
-Plot('ss',fdmod.ssplot('plotfat=10 symbol=.  ',par))
-
-# ------------------------------------------------------------
-# horizontal receivers
-fdmod.horizontal('tH',
-                 1.5, # vertical array at z=1.5km
-                 par)
-
-# window horizontal array
-par['nrH']=100  # number of receivers
-par['orH']=12.0 # receivers origin
-par['jrH']=10   # receivers jump (grid points)
-Flow('rH',
-     'tH',
-     'window j2=%(jrH)d min2=%(orH)g n2=%(nrH)d'%par)
-
-# plot horizontal array
-Plot('rH',fdmod.rrplot('plotfat=5 plotcol=1',par)) 
+Plot('ss',f.ssplot('plotfat=10 symbol=.',par))
 
 # ------------------------------------------------------------
-# vertical receivers
-fdmod.vertical('tV',
-               8.5, # horizontal array at x=8.5km
-               par)
+# horizontal array @ z=1.5km
+f.horizontal('tH',1.5,par)
+par['jrH']=10   # jump (grid points)
+par['orH']=14.0 # origin
+par['nrH']=75   # number
+par['crH']=1    # color
 
-par['nrV']=25  # number of receivers
-par['orV']=2.5 # receivers origin
-par['jrV']=20  # receivers jump (grid points)
-Flow('rV',
-     'tV',
-     'window j2=%(jrV)d min2=%(orV)g n2=%(nrV)d'%par)
+# vertical array @ x=8.5km
+f.vertical('tV',8.5,par)
+par['jrV']=20   # jump (grid points)
+par['orV']=2.5  # origin
+par['nrV']=25   # number
+par['crV']=2    # color
 
-# plot vertical array
-Plot('rV',fdmod.rrplot('plotfat=5 plotcol=2' ,par)) 
+for j in ('H','V'):
+
+    # window array
+    Flow('r'+j,
+         't'+j,
+         'window j2=%d min2=%g n2=%d'%
+         (par['jr'+j],  # jump
+          par['or'+j],  # origin
+          par['nr'+j])) # number
+    
+    # plot array
+    Plot('r'+j,
+         f.rrplot('plotcol=%d'%par['cr'+j],par)) 
 
 # ------------------------------------------------------------
 # merge receiver files
-Flow('rA','rH rV','cat axis=2 space=n ${SOURCES[1]}')
+Flow('rA',
+     'rH rV',
+     'cat axis=2 space=n ${SOURCES[1]}')
 
 # overlay receiver arrays
 Plot('rA','rH rV','Overlay')
@@ -83,19 +85,17 @@ Plot('rA','rH rV','Overlay')
 # get stratigraphic velocity
 strvelfile = 'sigsbee2a_stratigraphy.sgy'
 Fetch(strvelfile,'sigsbee')
-
 Flow('vstr-raw',strvelfile,'segyread read=data')
+
 Flow('vstr',
      'vstr-raw',
      '''
      scale rscale=%g |
-     put 
-     o1=%g d1=%g label1=%s unit1=%s
-     o2=%g d2=%g label2=%s unit2=%s |
+     put o1=%g d1=%g o2=%g d2=%g |
      window n1=%d min1=%g n2=%d min2=%g
      ''' % (par['ft2km']*0.001,
-            0.0                ,0.0250*par['ft2km'],par['lz'],par['uz'],
-            10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux'],
+            0              ,0.025*par['ft2km'],
+            10*par['ft2km'],0.025*par['ft2km'],
             par['nz'],par['oz'],
             par['nx'],par['ox']
             ))
@@ -109,7 +109,7 @@ Flow('vsmo',
 # ------------------------------------------------------------
 # plot velocities
 for v in ('vstr','vsmo'):
-    Plot(  v,fdmod.cgrey('allpos=y bias=1.43',par))
+    Plot(  v,f.cgrey('allpos=y bias=1.43',par))
 
     # overlay sources and receivers
     Result(v,[v,'ss','rH','rV'],'Overlay')
@@ -120,32 +120,32 @@ Flow('dens','vsmo','math output=1')
 
 # ------------------------------------------------------------
 # construct wavelet
-fdmod.wavelet('wav_',10,par) 
+f.wavelet('wav_',10,par) 
 
 # transpose wavelet
 Flow(  'wav','wav_','transp')      
 
 # plot wavelet
 Result('wav','window n2=1000 |'
-       + fdmod.waveplot('',par)) 
+       + f.waveplot('',par)) 
 
 # ------------------------------------------------------------
 # run FD modeling
-fdmod.awefd1('tmpA',  # data file (for all receivers)
-             'wfld',  # wavefield snapshots
-             'wav',   # source wavelet
-             'vsmo',  # velocity
-             'dens',  # density
-             'ss',    # source coordinates
-             'rA',    # receiver coordinates
-             'free=n',# optional flags
-             par)
+f.awefd1('tmpA',  # data file (for all receivers)
+         'wfld',  # wavefield snapshots
+         'wav',   # source wavelet
+         'vsmo',  # velocity
+         'dens',  # density
+         'ss',    # source coordinates
+         'rA',    # receiver coordinates
+         'free=n',# optional flags
+         par)
 
 # ------------------------------------------------------------
 # plot wavefield frames
 for i in range( (par['nt']-1)/par['jsnap']):
     tag = '-%02d' %(i)
-    fdmod.wframe('wfld'+tag,
+    f.wframe('wfld'+tag,
                  'wfld',i,'pclip=99  ',par)
     Result( 'wfld'+tag,
            ['wfld'+tag,'ss','rH','rV'],'Overlay')
@@ -171,9 +171,9 @@ Flow('datH',
 
 # plot data from the horizontal array
 Result('datH',       'window j2=4 | transp|'
-       + fdmod.dgrey('screenratio=%(ratio)g screenht=%(height)g'%par,par))
+       + f.dgrey(''%par,par))
 Result('wigH','datH','window j2=4 | transp|'
-       + fdmod.dwigl('screenratio=%(ratio)g screenht=%(height)g pclip=99'%par,par))
+       + f.dwigl('pclip=99'%par,par))
 
 # ------------------------------------------------------------
 # window data from the vertical array
@@ -186,25 +186,25 @@ Flow('datV',
     
 # plot data from the vertical array
 Result('datV',       'window j2=4 |'
-       + fdmod.egrey('screenratio=%(ratio)g screenht=%(height)g'%par,par))
+       + f.egrey(''%par,par))
 Result('wigV','datV','window j2=4 |'
-       + fdmod.ewigl('screenratio=%(ratio)g screenht=%(height)g'%par,par))
+       + f.ewigl(''%par,par))
     
 # ------------------------------------------------------------
 # run FD migration
 for j in ('H','V','A'):
-    fdmod.zom('img'+j,  # image
-              'dat'+j,  # data
-              'vsmo',   # velocity
-              'dens',   # density
-              'r'+j,    # receiver coordinates
-              'free=n', # optional flags
-              par)
-
+    f.zom('img'+j,  # image
+          'dat'+j,  # data
+          'vsmo',   # velocity
+          'dens',   # density
+          'r'+j,    # receiver coordinates
+          'free=n', # optional flags
+          par)
+    
     # plot image
     Plot(  'img'+j,'bandpass flo=2 |'
-           + fdmod.cgrey('pclip=99.99',par))
-
+           + f.cgrey('pclip=99.99',par))
+    
     # overlay receivers
     Result('img'+j,['img'+j,'r'+j],'Overlay')
     
