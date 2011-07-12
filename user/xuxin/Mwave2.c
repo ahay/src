@@ -50,13 +50,16 @@ int main(int argc, char* argv[])
     float **vel=NULL,**den=NULL,**rox=NULL,**roz=NULL,**um=NULL,**uo=NULL,**up=NULL,**ua=NULL,**vt2=NULL,**tt=NULL;
     float *ww=NULL,*dd=NULL,*xs=NULL,*zs=NULL,*xr=NULL,*zr=NULL;
     int nx,nz,ix,iz,nbx,nbz,npx,npz,x,z,nt,it,ns,nr,n;
-    int jsnap,ompnth,ompath,ompchunk,srf;
+    int jsnap,ompnth,ompchunk,srf;
     float ox,oz,dx,dz,idx,idz,idx2,idz2,ot,dt;    
     sf_axis ax,az,at,aj;
     wave2dp wave=NULL;
     abcone2dp abc=NULL;
     sponge2dp spo=NULL;
     lint2dp lints=NULL,lintr=NULL;
+#ifdef _OPENMP
+    int ompath;
+#endif
 
     sf_init(argc,argv);
     /* files */
