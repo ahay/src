@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     }
     n4 = sf_leftsize(in,3);
 
-    ntxy= nt*nx*ny;
+    ntxy= nt*ny*nx;
 
     if (inv && !sf_getint("n1",&n1)) n1=nt;
     if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
