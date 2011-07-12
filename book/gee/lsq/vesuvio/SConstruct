@@ -1,3 +1,10 @@
 from rsf.proj import *
 
+Fetch('vesuvio.H','vesuvio')
+
+Flow('vesuvio','vesuvio.H','sed s/xdr_float/xdr_complex/ | dd form=native')
+
+Flow('amp','vesuvio','math output="sqrt(abs(input))" | real')
+Flow('pha','vesuvio','math output="sqrt(abs(input))" | real')
+
 End()
