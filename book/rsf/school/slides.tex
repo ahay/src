@@ -10,20 +10,11 @@ psava@mines.edu
 }
 \date{}
 \logo{WSI}
-\large
+
+%\lstset{language=python,showstringspaces=false}
 
 \def\big#1{\begin{center} \LARGE \textbf{#1} \end{center}}
 \def\cen#1{\begin{center}        \textbf{#1} \end{center}}
-
-\definecolor{LightGray}{rgb}{0.90,0.90,0.90}
-\def\graybox#1{
-\vfill
-\begin{center}
-\colorbox{LightGray}
-{\begin{minipage}{\columnwidth} {#1} \end{minipage}}
-\end{center}
-\vfill
-}
 
 % ------------------------------------------------------------
 \mode<beamer> { \cwpcover }
@@ -35,216 +26,190 @@ psava@mines.edu
 % ------------------------------------------------------------
 \begin{frame} \frametitle{assignment}
 
-\cen{modify the acquisition parameters to explore the illumination at
-different locations in the subsurface}
-
+  \big{modify the acquisition parameters to explore the illumination
+    at different locations in the subsurface}
+  
 \end{frame}
 \cwpnote{}
-\lstset{language=python,showstringspaces=false}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{import packages}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=1,lastline=3]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-
-\begin{frame} \frametitle{import packages}
-  \begin{itemize}
-  \item \texttt{sigsbee}: model-specific python module
-  \item \texttt{fdmod}: generic modeling and plotting module
-  \end{itemize}
+\lstinputlisting[firstline=1,lastline=3]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{setup main parameters}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=6,lastline=11]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-
-\begin{frame} \frametitle{setup main parameters}
-  \begin{itemize}
-  \item \texttt{par}: dictionary containing all parameters
-  \item override parameters in the \texttt{SConstruct}
-  \end{itemize}
+\lstinputlisting[firstline=6,lastline=13]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{source coordinates}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=14,lastline=18]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-
-\begin{frame} \frametitle{source coordinates}
- \begin{itemize}
-  \item \texttt{5,2,1}: $n$, $o$, $d$ in the z direction
-  \item \texttt{12,8,1}: $n$, $o$, $d$ in the x direction
-  \end{itemize}
+\begin{frame} \frametitle{convert to metric units}
+\lstinputlisting[firstline=17,lastline=21]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{receiver coordinates}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=21,lastline=32]
-		{sigsbee/SConstruct}
-}
+\begin{frame} \frametitle{set-up axes labels}
+\lstinputlisting[firstline=25,lastline=27]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{velocity/density models}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=35,lastline=46]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-% ------------------------------------------------------------
-\begin{frame} \plot{velo}{width=\textwidth}{} \end{frame} \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{source wavelet}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=49,lastline=57]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-% ------------------------------------------------------------
-\begin{frame} \plot{wav}{height=\textheight}{} \end{frame} \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{FD modeling}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=60,lastline=64]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-
-\begin{frame} \frametitle{FD modeling parameters}
-\cen{
-  data, \\
-  wavefield, \\
-  wavelet, \\
-  velocity, \\
-  density, \\
-  source coordinates, \\
-  receiver coordinates, \\
-  optional parameters, \\
-  parameter dictionary}
+\begin{frame} \frametitle{set-up plotting parameters}
+\lstinputlisting[firstline=31,lastline=31]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{plot wavefield}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=65,lastline=75]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-% ------------------------------------------------------------
-\begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-01}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-03}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-04}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-05}{width=\textwidth}{} \end{frame} \cwpnote{}
-\begin{frame} \plot{wfld-06}{width=\textwidth}{} \end{frame} \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{plot data}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=76,lastline=87]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-% ------------------------------------------------------------
-\begin{frame} \plot{data}{height=\textheight}{} \end{frame} \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{FD migration}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=90,lastline=94]
-		{sigsbee/SConstruct}
-}
+\begin{frame} \frametitle{make the source coordinates}
+\lstinputlisting[firstline=35,lastline=44]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{plot image}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=95,lastline=99]
-		{sigsbee/SConstruct}
-}
-\end{frame}
-\cwpnote{}
-% ------------------------------------------------------------
-\begin{frame} \plot{imag}{width=\textwidth}{} \end{frame} \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{closing rules}
-\graybox{
-\normalsize 
-\lstinputlisting[firstline=102,lastline=102]
-		{sigsbee/SConstruct}
-}
+\begin{frame} \frametitle{make the horizontal receiver array}
+\lstinputlisting[firstline=48,lastline=52]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the vertical receiver array}
+\lstinputlisting[firstline=55,lastline=59]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{the contest}
+\begin{frame} \frametitle{plot the receiver arrays}
+\lstinputlisting[firstline=61,lastline=73]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
 
-  \cen{ Assuming that each receiver costs a fixed amount of $\$$,
-    construct the receiver array that gives you the best image for the
-    lowest cost.}
+% ------------------------------------------------------------
+\begin{frame} \frametitle{group the receivers}
+\lstinputlisting[firstline=76,lastline=82]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
 
-\vfill \hrule \vfill
+% ------------------------------------------------------------
+\begin{frame} \frametitle{read the velocity}
+\lstinputlisting[firstline=86,lastline=88]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
 
-\begin{itemize}
-   \item you can consider multiple arrays
-   \item you can place the receivers anywhere on the surface
-\end{itemize}
+% ------------------------------------------------------------
+\begin{frame} \frametitle{format the velocity}
+\lstinputlisting[firstline=90,lastline=101]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} \frametitle{smooth the velocity}
+\lstinputlisting[firstline=105,lastline=107]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the velocities}
+\lstinputlisting[firstline=111,lastline=115]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{vstr}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{vsmo}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the density}
+\lstinputlisting[firstline=119,lastline=119]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the wavelet}
+\lstinputlisting[firstline=122,lastline=130]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{wav}{width=0.9\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{run FD modeling}
+\lstinputlisting[firstline=134,lastline=142]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the wavefield}
+\lstinputlisting[firstline=146,lastline=151]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-04}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-06}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-08}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-10}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-12}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-14}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-16}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-18}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-20}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-22}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-24}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{remove the wavelet delay}
+\lstinputlisting[firstline=155,lastline=161]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{set-up the horizontal array data}
+\lstinputlisting[firstline=164,lastline=176]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{datH}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wigH}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{set-up the horizontal array data}
+\lstinputlisting[firstline=179,lastline=191]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{datV}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wigV}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{run FD migration}
+\lstinputlisting[firstline=195,lastline=209]{sigsbee/SConstruct}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \plot{imgH}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{imgV}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{imgA}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{close}
+\lstinputlisting[firstline=212,lastline=212]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
 
-\big{\url{http://reproducibility.org}}
-
-\vfill
-
-\begin{center}
-\pgfuseimage{logo}
-\end{center}
-
+  \big{\url{http://reproducibility.org}}
+  
+  \vfill
+  
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+  
 \end{frame}
 \cwpnote{}
 

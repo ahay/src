@@ -194,9 +194,11 @@ def dgrey(custom,par):
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    screenratio=%g screenht=%g 
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
+	   par['ratio'],par['height'],
            par['labelattr']+' '+custom)
 
 def dwigl(custom,par):
@@ -206,9 +208,11 @@ def dwigl(custom,par):
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
+	   par['ratio'],par['height'],
            par['labelattr']+' '+custom)
 
 def dgrey3d(custom,par):
@@ -240,9 +244,11 @@ def egrey(custom,par):
     pclip=100
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['ratio'],par['height'],
            par['labelattr']+' '+custom)
 
 def ewigl(custom,par):
@@ -253,9 +259,11 @@ def ewigl(custom,par):
     pclip=100
     min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
     min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
+    screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['ratio'],par['height'],
            par['labelattr']+' '+custom)
 
 
