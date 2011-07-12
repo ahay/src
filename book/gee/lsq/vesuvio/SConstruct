@@ -2,14 +2,24 @@ from rsf.proj import *
 
 Fetch('vesuvio.H','vesuvio')
 
-Flow('vesuvio','vesuvio.H','sed s/xdr_float/xdr_complex/ | dd form=native')
+Flow('vesuvio','vesuvio.H','dd form=native')
 
 Flow('amp','vesuvio','math output="sqrt(sqrt(abs(input)))" | real')
 Flow('phz','vesuvio','math output="log(input)" | imag')
 
-Plot('amp','grey title=Amplitude')
+Plot('amp','grey title=Amplitude allpos=y')
 Plot('phz','grey title=Phase')
 
 Result('vesuvio','amp phz','SideBySideAniso')
+
+Flow('wind8','vesuvio','window j1=8 j2=8')
+Flow('real','vesuvio','real | boxsmooth rect1=8 rect2=8')
+Flow('imag','vesuvio','imag | boxsmooth rect1=8 rect2=8')
+Flow('squee','real imag','cmplx ${SOURCES[1]} | window j1=8 j2=8')
+
+Plot('wind8','math output="log(input)" | imag | grey title=Decimated')
+Plot('squee','math output="log(input)" | imag | grey title=Smoothed')
+
+Result('squeeze','wind8 squee','SideBySideAniso')
 
 End()
