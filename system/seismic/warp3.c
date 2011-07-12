@@ -43,7 +43,7 @@ void warp3_init(int n1_in, float o1, float d1,
     map1 = stretch4_init (n1, o1, d1, nt, eps);
 
     trace1 = sf_floatalloc(n1);
-    trace2 = sf_floatalloc2(n2,n3);
+    trace2 = sf_floatalloc2(n3,n2);
 
     warp2_init(n2,o2,d2,
 	       n3,o3,d3,
