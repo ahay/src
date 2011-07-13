@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
 	Fd = sf_input("den");
     } else {
 	dens = false;
+	Fd = NULL;
     }
     
     if (!sf_getint("order",&order)) order=6;
