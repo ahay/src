@@ -56,12 +56,12 @@ weissr3d weissr_init(weicub3d cub,
     int  ilx,ily;
     int ompith;
     float **sum, d;
+    weissr3d ssr;
 
     d = 0.0;
     sum = sf_floatalloc2(sf_n(cub->amx),sf_n(cub->amy));
 
     /*------------------------------------------------------------*/
-    weissr3d ssr;
     ssr = (weissr3d) sf_alloc(1,sizeof(*ssr));
 
     ssr->bxx=sf_maxa(1,0,1);

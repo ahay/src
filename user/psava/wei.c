@@ -35,39 +35,54 @@
 #include "weiutl.h"
 /*^*/
 
+#ifdef SF_HAS_COMPLEX_H
 #define cWGH(a,b,c) ((conjf(a)*b)*c)
 #define cAWGH(a,b,c) ((a*b)*c)
+#else
+#define cWGH(a,b,c) sf_cmul(sf_cmul(conjf(a),b),c)
+#define cAWGH(a,b,c) sf_cmul(sf_cmul(a,b),c)
+#endif
 
 #define cACOR(a,b)   (     (a)*b)
 #define  cCOR(a,b)   (conjf(a)*b)
 
+#ifdef SF_HAS_COMPLEX_H
 #define cHIC(a,b,w)   crealf( ((conjf(a)*b)*w) )
 #define dHIC(a,b,w,e) crealf( ((conjf(a)*b)*w)/(conj(a)*a + e) )
+#else
+#define cHIC(a,b,w)   crealf(sf_cmul(sf_cmul(conjf(a),b),w))
+#define dHIC(a,b,w,e) (crealf(sf_cmul(sf_cmul(conjf(a),b),w))/(sf_crealf(sf_cmul(conjf(a),a)) + e))
+#endif
 
+#ifdef SF_HAS_COMPLEX_H
 #define cCIC(a,b)   crealf( (conjf(a)*b) )
 #define dCIC(a,b,e) crealf( (conjf(a)*b)/(conj(a)*a + e) )
+#else
+#define cCIC(a,b)   crealf( (sf_cmul(conjf(a),b)) )
+#define dCIC(a,b,e) (crealf(sf_cmul(conjf(a),b))/(crealf(sf_cmul(conjf(a),a)) + e))
+#endif
 
-#define  YXLOOP(a) for(iy=0;iy<sf_n(cub->amy);iy++){ \
-	           for(ix=0;ix<sf_n(cub->amx);ix++){ \
-		       {a} }} /*  yx loop */
+#define  YXLOOP(a) for(iy=0;iy<sf_n(cub->amy);iy++){	\
+	for(ix=0;ix<sf_n(cub->amx);ix++){		\
+	    {a} }} /*  yx loop */
 
-#define CICLOOP(a) for(iz=0;iz<sf_n(cub->az) ;iz++){ \
-	           for(iy=0;iy<sf_n(cub->amy);iy++){ \
-	           for(ix=0;ix<sf_n(cub->amx);ix++){ \
-		       {a} }}} /* zyx loop */
+#define CICLOOP(a) for(iz=0;iz<sf_n(cub->az) ;iz++){	\
+	for(iy=0;iy<sf_n(cub->amy);iy++){		\
+	    for(ix=0;ix<sf_n(cub->amx);ix++){		\
+		{a} }}} /* zyx loop */
 
-#define EICLOOP(a) for(ic=0;  ic<sf_n(cub->ac); ic++ ) { \
-                   for(iht=0;iht<sf_n(cub->aht);iht++) { \
-	           for(ihz=0;ihz<sf_n(cub->ahz);ihz++) { \
-		   for(ihy=0;ihy<sf_n(cub->ahy);ihy++) { \
-		   for(ihx=0;ihx<sf_n(cub->ahx);ihx++) { \
-		       {a} }}}}} /* cc-ht-hz-hy-hx loop */
+#define EICLOOP(a) for(ic=0;  ic<sf_n(cub->ac); ic++ ) {	\
+	for(iht=0;iht<sf_n(cub->aht);iht++) {			\
+	    for(ihz=0;ihz<sf_n(cub->ahz);ihz++) {		\
+		for(ihy=0;ihy<sf_n(cub->ahy);ihy++) {		\
+		    for(ihx=0;ihx<sf_n(cub->ahx);ihx++) {	\
+			{a} }}}}} /* cc-ht-hz-hy-hx loop */
 
-#define HICLOOP(a) for(ic=0;  ic<sf_n(cub->ac); ic++ ) { \
-                   for(iht=0;iht<sf_n(cub->aht);iht++) { \
-		   for(ihy=0;ihy<sf_n(cub->ahy);ihy++) { \
-		   for(ihx=0;ihx<sf_n(cub->ahx);ihx++) { \
-		       {a} }}}} /* cc-ht-hy-hx loop */
+#define HICLOOP(a) for(ic=0;  ic<sf_n(cub->ac); ic++ ) {	\
+	for(iht=0;iht<sf_n(cub->aht);iht++) {			\
+	    for(ihy=0;ihy<sf_n(cub->ahy);ihy++) {		\
+		for(ihx=0;ihx<sf_n(cub->ahx);ihx++) {		\
+		    {a} }}}} /* cc-ht-hy-hx loop */
 
 /*------------------------------------------------------------*/
 weicub3d wei_cube(bool verb_,
@@ -513,8 +528,8 @@ void weiwfl(weiop3d weop,
     weisign=causal?+1:-1;
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,w,iz) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,w,iz)			\
     shared(Fdat,Fwfl,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -570,7 +585,7 @@ void adjsou(weicub3d cub,
             sf_file Feic,
             sf_file Fbwf,
             sf_file Faso,
-               bool conj)
+	    bool conj)
 /*< adjoint source construction >*/
 {
 
@@ -588,8 +603,8 @@ void adjsou(weicub3d cub,
     /*------------------------------------------------------------*/
     /* loop over frequency */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)  \
-    private(ompith,iw,iz,iy,ix)              \
+#pragma omp parallel for schedule(dynamic)	\
+    private(ompith,iw,iz,iy,ix)			\
     shared(cub,eico)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -653,8 +668,8 @@ void genwfl(weiop3d weop,
 
     if(down){ /* downward continuation */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,w,iz,ix,iy) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,eico,gensou)
 #endif
         for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -671,7 +686,7 @@ void genwfl(weiop3d weop,
 #endif
             {
                 if(cub->verb) sf_warning ("DC WFL ... (ith=%2d) ... <iw=%3d of %3d>",
-                                         ompith,iw+1,sf_n(cub->aw));
+					  ompith,iw+1,sf_n(cub->aw));
 
 
                 /* wavefield injection */
@@ -704,8 +719,8 @@ void genwfl(weiop3d weop,
     }
     else{ /* upward continuation */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,w,iz,ix,iy) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,eico,gensou)
 #endif
         for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -720,7 +735,7 @@ void genwfl(weiop3d weop,
 #endif
             {
                 if(cub->verb) sf_warning ("UC WFL ... (ith=%2d) ... <iw=%3d of %3d>",
-                                         ompith,iw+1,sf_n(cub->aw));
+					  ompith,iw+1,sf_n(cub->aw));
 
                 iz=sf_n(cub->az)-1; /* @ the bottom */
                 /* wavefield injection */
@@ -772,8 +787,8 @@ void adjwfl(weiop3d weop,
 
     if(down){ /* downward continuation */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,w,iz,ix,iy) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,Fsou,cub,ssr,tap,slo,sou)
 #endif
         for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -790,7 +805,7 @@ void adjwfl(weiop3d weop,
 #endif
             {
                 if(cub->verb) sf_warning ("DC WFL ... (ith=%2d) ... <iw=%3d of %3d>",
-                                         ompith,iw+1,sf_n(cub->aw));
+					  ompith,iw+1,sf_n(cub->aw));
 
                 /* read data */
                 sf_seek(Fsou,cub->nxy*sf_n(cub->az)*iw*sizeof(sf_complex),SEEK_SET);
@@ -799,7 +814,11 @@ void adjwfl(weiop3d weop,
 
             iz=0; /* @ the surface */
             /* wavefield injection */
+#ifdef SF_HAS_COMPLEX_H
             YXLOOP( weop->wfld[ompith][iy][ix] += sou[ompith][iz][iy][ix]; );
+#else
+	    YXLOOP( weop->wfld[ompith][iy][ix] = sf_cadd(weop->wfld[ompith][iy][ix],sou[ompith][iz][iy][ix]); );
+#endif
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -815,7 +834,11 @@ void adjwfl(weiop3d weop,
                 weitap(   weop->wfld[ompith],tap);                        /* taper */
 
                 /* wavefield injection */
+#ifdef SF_HAS_COMPLEX_H
                 YXLOOP( weop->wfld[ompith][iy][ix] += sou[ompith][iz+1][iy][ix]; );
+#else
+		YXLOOP( weop->wfld[ompith][iy][ix] = sf_cadd(weop->wfld[ompith][iy][ix],sou[ompith][iz+1][iy][ix]); );
+#endif
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -829,8 +852,8 @@ void adjwfl(weiop3d weop,
     }
     else{ /* upward continuation */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,w,iz,ix,iy) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,sou)
 #endif
         for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -846,7 +869,7 @@ void adjwfl(weiop3d weop,
 #endif
             {
                 if(cub->verb) sf_warning ("UC WFL ... (ith=%2d) ... <iw=%3d of %3d>",
-                                         ompith,iw+1,sf_n(cub->aw));
+					  ompith,iw+1,sf_n(cub->aw));
                 /* read data */
                 sf_seek(Fsou,cub->nxy*sf_n(cub->az)*iw*sizeof(sf_complex),SEEK_SET);
                 sf_complexread(sou[ompith][0][0],cub->nxy*sf_n(cub->az),Fsou);
@@ -854,8 +877,11 @@ void adjwfl(weiop3d weop,
 
             iz=sf_n(cub->az)-1; /* @ the bottom */
             /* wavefield injection */
+#ifdef SF_HAS_COMPLEX_H
             YXLOOP( weop->wfld[ompith][iy][ix] += sou[ompith][iz][iy][ix]; );
-
+#else
+	    YXLOOP( weop->wfld[ompith][iy][ix] = sf_cadd(weop->wfld[ompith][iy][ix],sou[ompith][iz][iy][ix]); );
+#endif
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -871,28 +897,32 @@ void adjwfl(weiop3d weop,
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-            {
-                /* write wavefield */
-                sf_seek(Fwfl,sizeof(sf_complex)*cub->nxy*(sf_n(cub->az)*iw+iz),SEEK_SET);
-                sf_complexwrite(weop->wfld[ompith][0],cub->nxy,Fwfl);
-            }
+		{
+		    /* write wavefield */
+		    sf_seek(Fwfl,sizeof(sf_complex)*cub->nxy*(sf_n(cub->az)*iw+iz),SEEK_SET);
+		    sf_complexwrite(weop->wfld[ompith][0],cub->nxy,Fwfl);
+		}
 
                 weissr1(w,weop->wfld[ompith],cub,ssr,slo,iz,ompith,down);   /* wei   */
                 weitap(   weop->wfld[ompith],tap);                          /* taper */
 
 
                 /* wavefield injection */
+#ifdef SF_HAS_COMPLEX_H
                 YXLOOP( weop->wfld[ompith][iy][ix] += sou[ompith][iz-1][iy][ix]; );
+#else
+		YXLOOP( weop->wfld[ompith][iy][ix] = sf_cadd(weop->wfld[ompith][iy][ix],sou[ompith][iz-1][iy][ix]); );
+#endif
             } /* z */
-  /*          sf_warning("iz=%d,wfl=%f+%f",0,crealf(weop->wfld[ompith][0][250]),cimagf(weop->wfld[ompith][0][250])); */
+	    /*          sf_warning("iz=%d,wfl=%f+%f",0,crealf(weop->wfld[ompith][0][250]),cimagf(weop->wfld[ompith][0][250])); */
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-             {
+	    {
                 /* output wavefield */
                 sf_seek(Fwfl,sizeof(sf_complex)*cub->nxy*(sf_n(cub->az)*(iw)),SEEK_SET);
                 sf_complexwrite(weop->wfld[ompith][0],cub->nxy,Fwfl);
-             }
+	    }
         } /* w */
     }
 
@@ -904,7 +934,7 @@ void gradient(weicub3d cub,
               sf_file Fsou,
               sf_file Frec,
               sf_file Fgrd,
-                 bool conj)
+	      bool conj)
 /*< wei gradient >*/
 {
     int iz,ix,iy,iw,ompith=0;
@@ -936,8 +966,8 @@ void gradient(weicub3d cub,
 
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,iz,ix,iy) \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,iz,ix,iy)			\
     shared(Fsou,Frec,cub,conj)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -951,7 +981,7 @@ void gradient(weicub3d cub,
 #endif
         {
             if(cub->verb) sf_warning ("Gradient ... (ith=%2d) ... <iw=%3d of %3d>",
-                                         ompith,iw+1,sf_n(cub->aw));
+				      ompith,iw+1,sf_n(cub->aw));
 
             /* read data */
             sf_seek(Fsou,cub->nxy*sf_n(cub->az)*iw*sizeof(sf_complex),SEEK_SET);
@@ -975,7 +1005,7 @@ void gradient(weicub3d cub,
 
     free( ***sou); free( **sou); free( *sou); free( sou);
     free( ***rec); free( **rec); free( *rec); free( rec);
-                   free( **cic); free( *cic); free( cic);
+    free( **cic); free( *cic); free( cic);
 
 }
 
@@ -1081,8 +1111,8 @@ void weific(weiop3f weop,
 
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1)  \
-    private(ompith,iw,ws,wr,iz)		     \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,ws,wr,iz)			\
     shared(Fsou,Frec,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -1162,8 +1192,8 @@ void weicic(weiop3d weop,
 
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1)  \
-    private(ompith,iw,ws,wr,iz)		     \
+#pragma omp parallel for schedule(dynamic,1)	\
+    private(ompith,iw,ws,wr,iz)			\
     shared(Fsou,Frec,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -1397,13 +1427,12 @@ void wei_timelag(weicub3d cub,
 /*< time delay init >*/
 {
     int iw,iht;
-    float ht;
-    sf_complex ww;
+    float ht, ww;
 
     eico->tt=sf_complexalloc2(sf_n(cub->aht),sf_n(cub->aw));
 
     for(iw=0; iw<sf_n(cub->aw); iw++) {
-	ww = -( sf_o(cub->aw)+iw*sf_d(cub->aw) );
+	ww = -( sf_o(cub->aw)+iw*sf_d(cub->aw));
 	
 	for(iht=0; iht<sf_n(cub->aht); iht++) {
 	    ht = sf_o(cub->aht) + (iht)*sf_d(cub->aht);
@@ -1483,7 +1512,7 @@ void weihic(weiop3d weop,
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero HIC image...");
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)		\
+#pragma omp parallel for schedule(static)	\
     private(ihx,ihy,iht,ic) shared(weop,cub)
 #endif
     HICLOOP(weop->ihic[ic][iht][ihy][ihx]=0;);
@@ -1492,8 +1521,8 @@ void weihic(weiop3d weop,
 
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)  \
-    private(ompith,iw,ws,wr,iz)		     \
+#pragma omp parallel for schedule(dynamic)	\
+    private(ompith,iw,ws,wr,iz)			\
     shared(Fsou,Frec,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<sf_n(cub->aw); iw++) {
@@ -1622,8 +1651,8 @@ void weieic(weiop3d weop,
 	/* W.R. loop */
 	/*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) \
-    private(ompith,iw,jw,ws,wr,iz) \
+#pragma omp parallel for schedule(dynamic,1)				\
+    private(ompith,iw,jw,ws,wr,iz)					\
     shared(Fsou,Frec,Feic,Fcic,weop,cub,ssr,tap,slo,eico,nw,ibk)
 #endif
 	for (jw=0;jw<nw;jw++) {
@@ -1839,7 +1868,7 @@ void weific_one(weiop3f weop,
 		weicub3d cub,
 		int ompith,
 		int iz,
-        int iw)
+		int iw)
 /*< apply FIC at one z >*/
 {
     int ix,iy;
@@ -1936,9 +1965,9 @@ void weihic_one(weiop3d weop,
 /*------------------------------------------------------------*/
 void gensou_inject(sf_complex **wfl,
                    sf_complex **sou,
-                     weico3d  eico,
-                          int iz,
-                          int iw)
+		   weico3d  eico,
+		   int iz,
+		   int iw)
 /*< inject generalized source into wavefield >*/
 {
     int ic, jc, icx, icy;
@@ -1948,42 +1977,53 @@ void gensou_inject(sf_complex **wfl,
         icy = eico->mcyall[ic][0];
         icx = eico->mcxall[ic][0];
 
+#ifdef SF_HAS_COMPLEX_H
         wfl[icy][icx] += sou[iw][ic];
+#else
+	wfl[icy][icx] = sf_cadd(wfl[icy][icx],sou[iw][ic]);
+#endif
     } /* cc */
 }
 
 /*------------------------------------------------------------*/
 void for_cic(weicub3d cub,
-       sf_complex ***swfl,
-       sf_complex ***rwfl,
-       sf_complex  ***cic,
-                 bool conj)
+	     sf_complex ***swfl,
+	     sf_complex ***rwfl,
+	     sf_complex  ***cic,
+	     bool conj)
 /*< apply forward C.I.C. >*/
 {
 
     int iy, ix, iz;
 
     for(  iz=sf_n(cub->az)-1; iz>-1; iz--){
-      for(  iy=0; iy<sf_n(cub->amy); iy++){
-        for(ix=0; ix<sf_n(cub->amx); ix++){
-           if(conj)
-             cic[iz][iy][ix] += cWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69));
-           else
-             cic[iz][iy][ix] += cAWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69));
-        } /* loop over ax */
-        sf_warning("iz=%d,ps=%1.2f+%1.2f,pw=%1.7f+%1.7f,bw=%f+%f",iz,crealf(cic[iz][0][250]),cimagf(cic[iz][0][250]),crealf(rwfl[iz][0][250]),cimagf(rwfl[iz][0][250]),crealf(swfl[iz][0][250]),cimagf(swfl[iz][0][250]));
-      } /* loop over ay */
+	for(  iy=0; iy<sf_n(cub->amy); iy++){
+	    for(ix=0; ix<sf_n(cub->amx); ix++){
+#ifdef SF_HAS_COMPLEX_H
+		if(conj)
+		    cic[iz][iy][ix] += cWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69));
+		else
+		    cic[iz][iy][ix] += cAWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69));
+#else
+		if(conj)
+		    cic[iz][iy][ix] = sf_cadd(cic[iz][iy][ix],cWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69)));
+		else
+		    cic[iz][iy][ix] = sf_cadd(cic[iz][iy][ix],cAWGH(swfl[iz][iy][ix],rwfl[iz][iy][ix],sf_cmplx(0.0,-0.69)));
+#endif
+	    } /* loop over ax */
+	    sf_warning("iz=%d,ps=%1.2f+%1.2f,pw=%1.7f+%1.7f,bw=%f+%f",iz,crealf(cic[iz][0][250]),cimagf(cic[iz][0][250]),crealf(rwfl[iz][0][250]),cimagf(rwfl[iz][0][250]),crealf(swfl[iz][0][250]),cimagf(swfl[iz][0][250]));
+	} /* loop over ay */
     } /* loop over az */
 }
 
 /*------------------------------------------------------------*/
 void adj_eic(weicub3d cub,
              weico3d eico,
-       sf_complex ***swfl,
-       sf_complex ***asou,
-      sf_complex *****cip,
-                 bool cjg,
-                   int iw)
+	     sf_complex ***swfl,
+	     sf_complex ***asou,
+	     sf_complex *****cip,
+	     bool cjg,
+	     int iw)
 /*< apply adjoint E.I.C. >*/
 {
     int ihx,ihy,ihz,iht,ic;
@@ -1997,10 +2037,17 @@ void adj_eic(weicub3d cub,
             for        (ihz=0; ihz<sf_n(cub->ahz); ihz++) { mcz=eico->mczall[ic][ihz]; pcz=eico->pczall[ic][ihz];
                 for    (ihy=0; ihy<sf_n(cub->ahy); ihy++) { mcy=eico->mcyall[ic][ihy]; pcy=eico->pcyall[ic][ihy];
                     for(ihx=0; ihx<sf_n(cub->ahx); ihx++) { mcx=eico->mcxall[ic][ihx]; pcx=eico->pcxall[ic][ihx];
-                      if(cjg)
-                        asou[mcz][mcy][mcx] += cAWGH(swfl[pcz][pcy][pcx],cip[ic][iht][ihz][ihy][ihx],(wt));
-                      else
-                        asou[pcz][pcy][pcx] += cAWGH(swfl[mcz][mcy][mcx],cip[ic][iht][ihz][ihy][ihx],conjf(wt));
+#ifdef SF_HAS_COMPLEX_H
+			if(cjg)
+			    asou[mcz][mcy][mcx] += cAWGH(swfl[pcz][pcy][pcx],cip[ic][iht][ihz][ihy][ihx],(wt));
+			else
+			    asou[pcz][pcy][pcx] += cAWGH(swfl[mcz][mcy][mcx],cip[ic][iht][ihz][ihy][ihx],conjf(wt));
+#else
+			if(cjg)
+			    asou[mcz][mcy][mcx] = sf_cadd(asou[mcz][mcy][mcx],cAWGH(swfl[pcz][pcy][pcx],cip[ic][iht][ihz][ihy][ihx],(wt)));
+			else
+			    asou[pcz][pcy][pcx] = sf_cadd(asou[pcz][pcy][pcx],cAWGH(swfl[mcz][mcy][mcx],cip[ic][iht][ihz][ihy][ihx],conjf(wt)));
+#endif
                     }
                 }
             }
@@ -2016,15 +2063,23 @@ void weicic_apply(weiop3d weop,
     int ix,iy,iz;
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)			\
-    private(ix,iy,iz)						\
+#pragma omp parallel for schedule(static)	\
+    private(ix,iy,iz)				\
     shared(weop)
 #endif
+#ifdef SF_HAS_COMPLEX_H
     CICLOOP(
 	;            weop->icic[iz][iy][ix] +=
 	crealf(conjf(weop->sone[iz][iy][ix])
 	       *     weop->rone[iz][iy][ix]);
 	);
+#else
+    CICLOOP(
+	;            weop->icic[iz][iy][ix] +=
+	crealf(sf_cmul(conjf(weop->sone[iz][iy][ix]),
+		       weop->rone[iz][iy][ix]));
+	);
+#endif
 }
 
 /*------------------------------------------------------------*/
