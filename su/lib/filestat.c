@@ -78,6 +78,7 @@ CWP: Jack Cohen
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "filestat.h"
 
