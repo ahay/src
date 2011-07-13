@@ -43,7 +43,9 @@ int main(int argc, char* argv[])
     sf_axis ahx,ahy,ahz,aht,ac,ath,aph,aps,aj;
     int     ihx,ihy,ihz,iht,ic,ith,iph;
 
+#ifdef _OPENMP
     int ompnth=1;
+#endif
     
     /* angle parameters */
     int   nth,nph,nps,nhx,nhy,nhz,nht;

@@ -574,7 +574,7 @@ void adjsou(weicub3d cub,
 /*< adjoint source construction >*/
 {
 
-    int ix, iy, iz, iw, ompith;
+    int ix, iy, iz, iw, ompith=0;
     sf_complex *****eic, ****bwf, ****asou;
 
     eic = sf_complexalloc5(sf_n(cub->ahx),sf_n(cub->ahy),sf_n(cub->ahz),sf_n(cub->aht),sf_n(cub->ac));
