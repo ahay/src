@@ -107,6 +107,8 @@ def shell_script(target, source=None, env=None):
                 myrc += 'if [ -n "$%s" ]; then\n' % par
                 myrc += 'export %s=%s:${%s}\n' % (par,value,par)
                 myrc += 'else\n'
+            if par == 'MANPATH':
+                myrc += 'unset MANPATH\n' # necessary for recent bash shells
             myrc += 'export %s=%s\n' % (par,value)
             if redefine:
                 myrc += 'fi\n' 
