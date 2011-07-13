@@ -34,7 +34,6 @@ int main(int argc, char* argv[])
     int i, niter, nd, dim, n1, n2, i1, i2;
     int n[SF_MAX_DIM], box[SF_MAX_DIM];
     float **data, **model, **model0; // **wt;
-    float eps;
     char key[6];
     sf_file DATA, MODEL, DATA_OUT;
 

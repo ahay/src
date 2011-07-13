@@ -39,6 +39,7 @@ void moment(float *data, int n, float *mean, float* var);
 
 
 void spitz(float *in,float *out, int *n, int order, int ntraces, bool norm)
+/*< spitz method >*/
 {
     float EPS=100*FLT_EPSILON;
     bool verb=false, inv;    

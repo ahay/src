@@ -70,6 +70,9 @@ Authors: SEP: Einar Kjartansson, Stew Levin CWP: Shuki Ronen, Jack Cohen
 #include "filestat.h"
 #include "fgettr.h"
 
+extern int fseeko(FILE *stream, off_t offset, int whence);
+extern off_t ftello (FILE *stream);
+
 #ifndef TEST
 
 #ifdef SU_LINE_HEADER
@@ -255,10 +258,10 @@ int fgettr_internal(FILE *fp, segy *tp, cwp_Bool fixed_length)
 	}
 
 	if(infoptr->ftype == DISK) { /* compute ntr */
-	    curoff = eftello(fp); 
-	    efseeko(fp,(off_t) 0,SEEK_END);
-	    infoptr->ntr = eftello(fp)/infoptr->nsegy;
-	    efseeko(fp, curoff, SEEK_SET); /* restore location */
+	    curoff = ftello(fp); 
+	    fseeko(fp,(off_t) 0,SEEK_END);
+	    infoptr->ntr = ftello(fp)/infoptr->nsegy;
+	    fseeko(fp, curoff, SEEK_SET); /* restore location */
 	}
 
 
@@ -319,15 +322,15 @@ int fgettra(FILE *fp, segy *tp, int itr)
 		break;
 	}
 
-	efseeko(fp,(off_t) 0,SEEK_END);
-	infoptr->ntr = eftello(fp)/infoptr->nsegy;
+	fseeko(fp,(off_t) 0,SEEK_END);
+	infoptr->ntr = ftello(fp)/infoptr->nsegy;
     } /* end first entry initialization */
 
     /* Check on requested trace number */
     if(itr >= infoptr->ntr) err("%s: trying to read off end of file",__FILE__);
 
     /* Position file pointer at start of requested trace */
-    if(0 > efseeko(fp, ((off_t) itr) * ((off_t) infoptr->nsegy), SEEK_SET)) {
+    if(0 > fseeko(fp, ((off_t) itr) * ((off_t) infoptr->nsegy), SEEK_SET)) {
 	err("%s: unable to seek xdr disk file to trace %d",__FILE__,itr);
     }
 

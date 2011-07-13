@@ -27,7 +27,7 @@ static float *mm;
 static sf_filter aa;
 
 static void fit(bool adj, bool add, int nm, int nd, float *m, float *d)
-/*< L1 fitting criterion >*/
+/* L1 fitting criterion */
 {
 
     sf_adjnull(adj, add, nm, nd, m, d);

@@ -221,6 +221,8 @@ int main(int argc, char* argv[])
 	sf_setunit (aps,"deg");
 
 	if(verb) sf_raxa(aps);
+    } else {
+	aps = NULL;
     }
 
     /*------------------------------------------------------------*/
