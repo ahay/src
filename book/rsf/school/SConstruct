@@ -2,7 +2,8 @@ from rsf.tex import *
 
 Paper('slides',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
+      color='ALL')
 
 Paper('slidesMadFast',
       lclass='cwpslides',

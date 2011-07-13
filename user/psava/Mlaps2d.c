@@ -230,12 +230,12 @@ int main(int argc, char* argv[])
 			    imag[ic][iht][ihx][ihz] += rCOR(r_us[mct][mcx][mcz],
 							    r_ur[pct][pcx][pcz]);
 			    
-			} // ihz
-		    }     // ihx
-		}         // iht
+			} /* ihz */
+		    }     /* ihx */
+		}         /* iht */
 		
 	    }
-	} // ic
+	} /* ic */
 	
 	/* update wavefield index (cycle) */
 	for(iht=0;iht<nht2;iht++) {
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
 	}
 	lht = (lht+1) % nht2;
 	
-    } // it
+    } /* it */
     if(verb) fprintf(stderr,"\n");
     
     /* write image */

@@ -247,12 +247,12 @@ def chk_exists(prog, ext='c', mainprog=True):
 
 ################################################################################
 
-def build_install_c_mpi(env, progs_c, bindir, glob_build, bldroot):
+def build_install_c_mpi(env, progs_c, srcroot, bindir, glob_build, bldroot):
     'Build and install C programs with MPI'
     tenv = env.Clone()
     tenv.Prepend(
-                CPPPATH=[os.path.join(bldroot,'include')],
-                LIBPATH=[os.path.join(bldroot,'lib')],
+                CPPPATH=[os.path.join(srcroot,'include')],
+                LIBPATH=[os.path.join(srcroot,'lib')],
                 LIBS=[env.get('DYNLIB','')+'rsf'])
     tenv['CC'] = tenv['MPICC']
 
@@ -276,11 +276,11 @@ def build_install_c_mpi(env, progs_c, bindir, glob_build, bldroot):
 
 ################################################################################
 
-def build_install_c(env, progs_c, bindir, glob_build, bldroot):
+def build_install_c(env, progs_c, srcroot, bindir, glob_build, bldroot):
     'Build and install C programs'
 
-    env.Prepend(CPPPATH=[os.path.join(bldroot,'include')],
-                LIBPATH=[os.path.join(bldroot,'lib')],
+    env.Prepend(CPPPATH=[os.path.join(srcroot,'include')],
+                LIBPATH=[os.path.join(srcroot,'lib')],
                 LIBS=[env.get('DYNLIB','')+'rsf'])
 
     src = Glob('[a-z]*.c')
@@ -309,7 +309,7 @@ def build_install_c(env, progs_c, bindir, glob_build, bldroot):
 
 ################################################################################
 
-def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
+def build_install_f90(env, progs_f90, srcroot, bindir, api, bldroot, glob_build):
     'Build and install Fortran90 programs'
 
     mains_f90 = Split(progs_f90)
@@ -325,7 +325,7 @@ def build_install_f90(env, progs_f90, bindir, api, bldroot, glob_build):
             env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
         env.Prepend(LIBS='rsff90', # order matters when linking
-                    F90PATH=os.path.join(bldroot,'include'))
+                    F90PATH=os.path.join(srcroot,'include'))
 
         for prog in mains_f90:
             if not glob_build:
@@ -469,17 +469,17 @@ class UserSconsTargets:
         if self.c == None:
             docs_c = None
         else:
-            docs_c = build_install_c(env, self.c, bindir, glob_build, bldroot)
+            docs_c = build_install_c(env, self.c, srcroot, bindir, glob_build, bldroot)
         if self.c_mpi == None:
             docs_c_mpi = None
         else:
-            docs_c_mpi = build_install_c_mpi(env,self.c_mpi,bindir,glob_build,bldroot)
+            docs_c_mpi = build_install_c_mpi(env,self.c_mpi, srcroot, bindir,glob_build,bldroot)
 
         api = env.get('API',[])
         if self.f90 == None:
             docs_f90 = None
         else:
-            docs_f90 = build_install_f90(env, self.f90, bindir, api, bldroot,
+            docs_f90 = build_install_f90(env, self.f90, srcroot, bindir, api, bldroot,
                                          glob_build)
         if glob_build:
             if self.py == None:

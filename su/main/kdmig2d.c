@@ -139,6 +139,7 @@ int main (int argc, char **argv) {
     char *ttfile, *tvfile, *csfile, *outfile1, *unit;
     sf_file infp, outfp, ttfp, tvfp = NULL, out1fp = NULL,  csfp = NULL;
     bool verb;
+    float as,res;
 
     sf_init (argc, argv);
 
@@ -403,7 +404,6 @@ int main (int argc, char **argv) {
     do {
         sf_floatread (data, nt, infp); 
         /* determine offset index */
-        float as,res;
 
         sx = fsi + iis*dsi;
         gx = sx + fgi + iig*dgi;
