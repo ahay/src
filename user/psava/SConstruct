@@ -3,7 +3,7 @@ import os, sys
 try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
-    srcroot = os.path.abspath('../../..') # cwd is RSFSRC/build/user/psava
+    srcroot = '../..' # cwd is RSFSRC/build/user/psava
     Import('env bindir pkgdir')
 except:
     glob_build = False # scons command launched in the local directory

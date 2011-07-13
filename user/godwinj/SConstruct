@@ -3,7 +3,7 @@ import os, sys
 try:
     import bldutil
     glob_build = True 
-    srcroot = os.path.abspath('../../..')
+    srcroot = '../..'
     Import('env bindir pkgdir')
 except:
     glob_build = False
