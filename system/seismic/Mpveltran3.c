@@ -41,6 +41,8 @@ int main (int argc, char* argv[])
     sf_file velx=NULL, vely=NULL, velxy=NULL;
     /* Output Files */
 
+    float eps = 100*FLT_EPSILON;
+
     sf_init (argc,argv);
     input = sf_input("in");
 
@@ -173,14 +175,13 @@ int main (int argc, char* argv[])
 		vxy[iv]=0.;
 	    }
 	}
-	float eps = 100*FLT_EPSILON;
 	for (ip2 = 0; ip2 < np2; ip2++) { /* slope 2 (dimension 3)*/
 		p2 = p20+ip2;
 
 		for (ip1 = 0; ip1 < np1; ip1++) { /* slope 1 (dimension 2)*/
 			p1 = p10+ip1;
 
-			//sf_warning("ip1=%d ip2=%d np2=%d",ip1,ip2,np2);
+			/* sf_warning("ip1=%d ip2=%d np2=%d",ip1,ip2,np2); */
 
 			sf_floatread (TAU0, nt,input);
 			sf_floatread (Rx, nt, dipx);
@@ -208,11 +209,13 @@ int main (int argc, char* argv[])
                        v2[it] = ( Ry[it] / dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
                        v3[it] = N/(D+eps);
 
-//                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
-//                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it])  ) / dp1 /dp2 ;
-//
-//                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
-//                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
+/*
+                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
+                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it])  ) / dp1 /dp2 ;
+
+                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
+                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
+*/
                 	 }
                 	 else {
                   	   N = (Rxy[it] *dt +  (1.0/t+eps) * Rx[it] * Ry[it] *dt *dt) / dp1 /dp2;
@@ -225,9 +228,11 @@ int main (int argc, char* argv[])
 
 
                 	   /*tau_ = (-1.0) * (t / (TAU0[it] * TAU0[it] + eps) );*/
-//                	   v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
-//                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
-//                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
+/*
+     v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
+                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
+                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
+*/
                 	 }
                 } /* end of if tau0 >= 0 */
                 if (!map) {

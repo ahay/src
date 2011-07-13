@@ -97,8 +97,6 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("rho",&rho)) rho = 1.-1./nt;
     /* Leaky integration constant */
 
-    if (!half) dh *= 0.5;
-
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
 	nh2 = sf_filesize(offset);
@@ -111,6 +109,8 @@ int main(int argc, char* argv[])
     } else {
 	if (!sf_histfloat(inp,"o3",&h0)) sf_error("No o3=");
 	if (!sf_histfloat(inp,"d3",&dh)) sf_error("No d3=");
+	
+	if (!half) dh *= 0.5;
 
 	off = sf_floatalloc(nh*nx);
 	for (ix = 0; ix < nx; ix++) {

@@ -120,7 +120,7 @@ void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
 			 adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
 	    } else {
 		sf_chain(aastretch_lop,sf_halfint_lop,
-			 !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
+			 (bool) !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
 	    }
 	} /* ix */
     } /* is */

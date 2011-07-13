@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 
     if (!inv) {
 	sscc = sf_floatalloc(n12);
-	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, verb && (n2 < 500)); 
+	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, (bool) (verb && (n2 < 500))); 
     }
     
     if (NULL != sf_getstring("mask")) {

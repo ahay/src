@@ -788,7 +788,7 @@ void oglmenu (int value)
             oglbuildmenu ();
             break;
         case MENU_STRETCHY:
-            stretchy = !stretchy;
+            stretchy = (bool) !stretchy;
             oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
             oglbuildmenu ();
             break;
@@ -872,7 +872,7 @@ void oglkeyboard (unsigned char key, int x, int y)
             break;
         case 'T': /* Stretchy */
         case 't':
-            stretchy = !stretchy;
+            stretchy = (bool) !stretchy;
             oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
             oglbuildmenu ();
             break;

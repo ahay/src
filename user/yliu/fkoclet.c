@@ -735,7 +735,7 @@ void fkoclet_lop(bool adj, bool add, int nx, int ny,
 	}
     } 
 
-    transform(!adj);    
+    transform((bool) !adj);    
 
     if (adj) {
 	if (unit) {

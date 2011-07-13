@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 	}
 	
 	if(0==niter) {
-	    veltran_lop(!adj,false,ntv,ntx,vscan,cmp);
+	    veltran_lop((bool) !adj,false,ntv,ntx,vscan,cmp);
 	} else { 
 	    if (nc > 0) {
 		for (ic=0; ic < nc; ic++) {

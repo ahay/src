@@ -1166,7 +1166,7 @@ static void stretch_proc(
     XtPointer  x1        /* closure */,  /* data the application registered */
     XtPointer  x2  
     ){ 
-    xt_stretchy = !xt_stretchy;  /* toggle the "stretchy" attribute */
+    xt_stretchy = (bool) !xt_stretchy;  /* toggle the "stretchy" attribute */
 
     if( wantButtons ){
 
