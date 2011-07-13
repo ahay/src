@@ -1,3 +1,5 @@
+\input{pcsmacros}
+
 \pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
 
 \title[]{seismic imaging tutorial}
@@ -26,9 +28,28 @@ psava@mines.edu
 % ------------------------------------------------------------
 \begin{frame} \frametitle{assignment}
 
-  \big{modify the acquisition parameters to explore the illumination
+  \cen{modify the acquisition parameters \\
+    to explore the seismic illumination \\
     at different locations in the subsurface}
   
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{acoustic wave propagation}
+
+\[
+\frac{1}{v^2} \ddot{\UU} = 
+\rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} -f
+\]
+
+\sep
+
+\begin{itemize}
+   \item \textbf{modeling}: propagate waves forward
+   \item \textbf{migration}: propagate waves backward 
+\end{itemize}
+
 \end{frame}
 \cwpnote{}
 
@@ -86,6 +107,8 @@ psava@mines.edu
 \end{frame}
 \cwpnote{}
 
+\begin{frame} \plot{dens}{width=\textwidth}{} \end{frame}
+
 % ------------------------------------------------------------
 \begin{frame} \frametitle{group the receivers}
 \lstinputlisting[firstline=76,lastline=82]{sigsbee/SConstruct}
@@ -127,7 +150,7 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the wavelet}
-\lstinputlisting[firstline=122,lastline=130]{sigsbee/SConstruct}
+\lstinputlisting[firstline=124,lastline=132]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
@@ -135,39 +158,51 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD modeling}
-\lstinputlisting[firstline=134,lastline=142]{sigsbee/SConstruct}
+\lstinputlisting[firstline=136,lastline=144]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the wavefield}
-\lstinputlisting[firstline=146,lastline=151]{sigsbee/SConstruct}
+\lstinputlisting[firstline=148,lastline=153]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 \begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-01}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-03}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-04}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-05}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-06}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-07}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-08}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-09}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-10}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-11}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-12}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-13}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-14}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-15}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-16}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-17}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-18}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-19}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-20}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-21}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-22}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-23}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-24}{width=\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{remove the wavelet delay}
-\lstinputlisting[firstline=155,lastline=161]{sigsbee/SConstruct}
+\lstinputlisting[firstline=157,lastline=163]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{set-up the horizontal array data}
-\lstinputlisting[firstline=164,lastline=176]{sigsbee/SConstruct}
+\lstinputlisting[firstline=166,lastline=180]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
@@ -175,8 +210,8 @@ psava@mines.edu
 \begin{frame} \plot{wigH}{width=\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{set-up the horizontal array data}
-\lstinputlisting[firstline=179,lastline=191]{sigsbee/SConstruct}
+\begin{frame} \frametitle{set-up the vertical array data}
+\lstinputlisting[firstline=182,lastline=195]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
@@ -185,7 +220,7 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD migration}
-\lstinputlisting[firstline=195,lastline=209]{sigsbee/SConstruct}
+\lstinputlisting[firstline=199,lastline=213]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
@@ -195,7 +230,7 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{close}
-\lstinputlisting[firstline=212,lastline=212]{sigsbee/SConstruct}
+\lstinputlisting[firstline=216,lastline=216]{sigsbee/SConstruct}
 \end{frame}
 \cwpnote{}
 
@@ -204,6 +239,10 @@ psava@mines.edu
 
   \big{\url{http://reproducibility.org}}
   
+  \vfill
+
+  \big{\texttt{\$RSF/book/rsf/school}}
+
   \vfill
   
   \begin{center}

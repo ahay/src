@@ -41,7 +41,7 @@ f.boxarray('ss',
            0.5, # horizontal sampling
            par)
 
-Plot('ss',f.ssplot('plotfat=10 symbol=.',par))
+Plot('ss',f.ssplot('plotfat=5 symbol=. plotcol=5',par))
 
 # ------------------------------------------------------------
 # horizontal array @ z=1.5km
@@ -117,6 +117,8 @@ for v in ('vstr','vsmo'):
 # ------------------------------------------------------------
 # make constant density
 Flow('dens','vsmo','math output=1')
+Plot('dens',f.cgrey('allpos=y bias=1.43',par))
+Result('dens',['dens','ss','rH','rV'],'Overlay')
 
 # ------------------------------------------------------------
 # construct wavelet
@@ -131,7 +133,7 @@ Result('wav','window n2=1000 |'
 
 # ------------------------------------------------------------
 # run FD modeling
-f.awefd1('tmpA',  # data file (for all receivers)
+f.awefd1('tmpA',  # data file (all receivers)
          'wfld',  # wavefield snapshots
          'wav',   # source wavelet
          'vsmo',  # velocity
@@ -144,11 +146,11 @@ f.awefd1('tmpA',  # data file (for all receivers)
 # ------------------------------------------------------------
 # plot wavefield frames
 for i in range( (par['nt']-1)/par['jsnap']):
-    tag = '-%02d' %(i)
+    tag = '-%02d'%i
     f.wframe('wfld'+tag,
-                 'wfld',i,'pclip=99  ',par)
-    Result( 'wfld'+tag,
-           ['wfld'+tag,'ss','rH','rV'],'Overlay')
+             'wfld',i,'pclip=99',par)
+    Result(  'wfld'+tag,
+            ['wfld'+tag,'ss','rH','rV'],'Overlay')
     
 # ------------------------------------------------------------
 # undo wavelet delay
@@ -167,13 +169,14 @@ Flow('datH',
      '''
      window squeeze=n n1=%d |
      put o1=%g d1=%g
-     '''%(par['nrH'],par['orH'],par['dx']*par['jrH']))
+     '''%(par['nrH'],
+          par['orH'],
+          par['jrH']*par['dx']))
 
-# plot data from the horizontal array
 Result('datH',       'window j2=4 | transp|'
        + f.dgrey(''%par,par))
 Result('wigH','datH','window j2=4 | transp|'
-       + f.dwigl('pclip=99'%par,par))
+       + f.dwigl('pclip=98'%par,par))
 
 # ------------------------------------------------------------
 # window data from the vertical array
@@ -182,13 +185,14 @@ Flow('datV',
      '''
      window squeeze=n f1=%d |
      put o1=%g d1=%g
-     '''%(par['nrH'],par['orV'],par['dz']*par['jrV']))
+     '''%(par['nrH'],
+          par['orV'],
+          par['jrV']*par['dz']))
     
-# plot data from the vertical array
 Result('datV',       'window j2=4 |'
        + f.egrey(''%par,par))
 Result('wigV','datV','window j2=4 |'
-       + f.ewigl(''%par,par))
+       + f.ewigl('pclip=98'%par,par))
     
 # ------------------------------------------------------------
 # run FD migration
@@ -205,8 +209,8 @@ for j in ('H','V','A'):
     Plot(  'img'+j,'bandpass flo=2 |'
            + f.cgrey('pclip=99.99',par))
     
-    # overlay receivers
-    Result('img'+j,['img'+j,'r'+j],'Overlay')
+    # overlay sources and receivers
+    Result('img'+j,['img'+j,'ss','r'+j],'Overlay')
     
 # ------------------------------------------------------------
 End()
