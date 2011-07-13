@@ -21,7 +21,7 @@ Specify either n1= o1= d1= or pattern=
 */
 
 #include <rsf.h>
-#include <su.h>
+#include <rsf_su.h>
 
 int main(int argc, char* argv[])
 {

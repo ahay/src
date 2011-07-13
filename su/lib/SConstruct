@@ -41,7 +41,7 @@ for source in Split(src):
 # MAIN LIBRARY
 ##############################################################################
 lib = env.StaticLibrary('su',objects)
-inc = env.Command('su.h',includes,Action(bldutil.__merge))
+inc = env.Command('rsf_su.h',includes,Action(bldutil.__merge))
 env.Install('../../lib',lib)
 env.Install('../../include',inc)
 

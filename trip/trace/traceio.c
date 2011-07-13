@@ -43,7 +43,7 @@ copyright holder.
 
 #include <trip/base.h>
 
-#include <su.h>
+#include <rsf_su.h>
 /*^*/
 
 #include "traceio.h"

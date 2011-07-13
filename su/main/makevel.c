@@ -64,7 +64,7 @@
 #include <math.h>
 
 #include <rsf.h>
-#include <su.h>
+#include <rsf_su.h>
 
 /*
  * Extracted from CWP Author: Dave Hale

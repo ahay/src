@@ -31,7 +31,7 @@ dealings in this Software without prior written authorization of the
 copyright holder.
 
 **************************************************************************/
-#include <su.h>
+#include <rsf_su.h>
 
 #include "verifytrace.h"
 #include "lci.h"

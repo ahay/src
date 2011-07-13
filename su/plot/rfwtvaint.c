@@ -60,7 +60,7 @@
 */
 
 #include <rsf.h>
-#include <su.h>
+#include <rsf_su.h>
 
 void rfwtvaint (int n               /* number of samples in array to rasterize */, 
 		float *z            /* [n] array to rasterize */, 
