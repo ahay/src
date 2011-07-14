@@ -1,4 +1,4 @@
-/* Generate 3-D cube plot.
+/* Generate movie of 3-D cube plots.
    
 Takes: > plot.vpl
 
@@ -27,8 +27,9 @@ Requires an "unsigned char" input (the output of sfbyte).
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
-    int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
+    off_t n4, i4, shift;
+    int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0;
+    int n1pix,n2pix, m1pix,m2pix, n1front,n2front;
     float point1, point2, barmin, barmax, minmax[2];
     bool flat, scalebar, nomin=true, nomax=true, barreverse;
     char *color, *barfile;
@@ -43,7 +44,8 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
-    n3 = sf_leftsize(in,2);
+    if (!sf_histint(in,"n3",&n3)) n3=1;
+    n4 = sf_leftsize(in,3);
 
     if (!sf_getfloat("point1",&point1)) point1=0.5;
     /* fraction of the vertical axis for front face */
@@ -64,35 +66,6 @@ int main(int argc, char* argv[])
     if (frame1 >= n1) frame1 = n1-1;
     if (frame2 >= n2) frame2 = n2-1;
     if (frame3 >= n3) frame3 = n3-1;
-
-    if (!sf_getint("movie",&movie)) movie=0;
-    /* 0: no movie, 1: movie over axis 1, 2: axis 2, 3: axis 3 */
-
-    if (!sf_getint("dframe",&dframe)) dframe=1;
-    /* frame increment in a movie */
-
-    switch (movie) {
-	case 0:
-	    nframe = 1;
-	    break;
-	case 1:
-	    nframe = (n1-frame1)/dframe;
-	    break;
-	case 2:
-	    nframe = (n2-frame2)/dframe;
-	    break;
-	case 3:
-	    nframe = (n3-frame3)/dframe;
-	    break;
-	default:
-	    sf_error("movie=%d is outside [0,3]",movie);
-	    break;
-    }
-    
-    if (sf_getint("nframe",&iframe) && iframe < nframe) nframe=iframe;
-    /* number of frames in a movie */
-
-    if (nframe < 1) nframe=1;
     
     if (!sf_getint("n1pix",&n1pix)) n1pix = n1/point1+n3/(1.-point1);
     /* number of vertical pixels */
@@ -150,7 +123,7 @@ int main(int argc, char* argv[])
 	/* maximum value for scalebar */
     }
 
-    sf_unpipe(in,(off_t) n1*n2*n3);
+    sf_unpipe(in,(off_t) n1*n2*n3*n4);
 
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
@@ -189,76 +162,72 @@ int main(int argc, char* argv[])
 	}
     }
 
-    for (iframe=0; iframe < nframe; iframe++) {
+    for (i4=0; i4 < n4; i4++) {
 	/* read data and fill display buffer */
 
-	if (0 == iframe || 3 == movie) { 
-	    sf_seek(in,(off_t) frame3*n1*n2,SEEK_SET);
-	    sf_ucharread(front[0],n1*n2,in);
+	shift = i4*n1*n2*n3;
+
+	sf_seek(in,shift + (off_t) frame3*n1*n2,SEEK_SET);
+	sf_ucharread(front[0],n1*n2,in);
 	    
-	    for (i=0; i < n2front; i++) {
-		i2 = n2*i/(float) n2front;
+	for (i=0; i < n2front; i++) {
+	    i2 = n2*i/(float) n2front;
+	    for (j=0; j < n1front; j++) {
+		i1 = n1*(n1front-j-0.5)/(float) n1front;
+		buf[i][j] = front[i2][i1];
+	    }
+	}
+	    
+	if (scalebar) {
+	    sf_seek(bar,(i4*n3 + frame3)*(VP_BSIZE+2*sizeof(float)),SEEK_SET);
+	    
+	    sf_floatread(minmax,2,bar);
+	    sf_ucharread(barbuf[0],VP_BSIZE,bar);
+	    
+	    if (nomin) barmin=minmax[0];
+	    if (nomax) barmax=minmax[1];
+	}
+
+	for (i3=0; i3 < n3; i3++) {
+	    sf_seek(in,shift + (off_t) i3*n1*n2+frame2*n1,SEEK_SET);
+	    sf_ucharread(side[i3],n1,in);
+	}
+
+	for (i=n2front; i < n2pix; i++) {
+	    i3 = n3*(i-n2front)/(float) (n2pix-n2front);
+	    if (flat) {
 		for (j=0; j < n1front; j++) {
 		    i1 = n1*(n1front-j-0.5)/(float) n1front;
-		    buf[i][j] = front[i2][i1];
+		    buf[i][j] = side[i3][i1];
 		}
-	    }
-	    
-	    if (scalebar) {
-		sf_seek(bar,(off_t) frame3*(VP_BSIZE+2*sizeof(float)),SEEK_SET);
-
-		sf_floatread(minmax,2,bar);
-		sf_ucharread(barbuf[0],VP_BSIZE,bar);
-
-		if (nomin) barmin=minmax[0];
-		if (nomax) barmax=minmax[1];
-	    }
-	}
-
-	if (0 == iframe || 2 == movie) {
-	    for (i3=0; i3 < n3; i3++) {
-		sf_seek(in,(off_t) i3*n1*n2+frame2*n1,SEEK_SET);
-		sf_ucharread(side[i3],n1,in);
-	    }
-
-	    for (i=n2front; i < n2pix; i++) {
-		i3 = n3*(i-n2front)/(float) (n2pix-n2front);
-		if (flat) {
-		    for (j=0; j < n1front; j++) {
-		    i1 = n1*(n1front-j-0.5)/(float) n1front;
-			buf[i][j] = side[i3][i1];
-		    }
-		} else {
-		    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
-		    for (j=j0; j < n1pix; j++) {
+	    } else {
+		j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
+		for (j=j0; j < n1pix; j++) {
 		    i1 = n1*(n1front+j0-j-0.5)/(float) n1front;
-			if (i1 >= 0)
-			    buf[i][j] = side[i3][i1];
-		    }
+		    if (i1 >= 0)
+			buf[i][j] = side[i3][i1];
 		}
 	    }
 	}
 
-	if (0 == iframe || 1 == movie) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,(off_t) i3*n1*n2+i2*n1+frame1,SEEK_SET);
-		    sf_ucharread(&top[i2][i3],1,in);
-		}
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		sf_seek(in,shift + (off_t) i3*n1*n2+i2*n1+frame1,SEEK_SET);
+		sf_ucharread(&top[i2][i3],1,in);
 	    }
-
-	    if (flat) {
-		for (i=0; i < n2front; i++) {
-		    i2 = n2*i/(float) n2front;
-		    for (j=n1front; j < n1pix; j++) {
-			i3 = n3*(j-n1front)/(float) (n1pix-n1front);
-			buf[i][j] = top[i2][i3];
-		    }
-		}
-	    } 
 	}
 
-	if ((0 == iframe || 1 == movie || 2 == movie) && !flat) {
+	if (flat) {
+	    for (i=0; i < n2front; i++) {
+		i2 = n2*i/(float) n2front;
+		for (j=n1front; j < n1pix; j++) {
+		    i3 = n3*(j-n1front)/(float) (n1pix-n1front);
+		    buf[i][j] = top[i2][i3];
+		}
+	    }
+	}
+
+	if (!flat) {
 	    for (j=n1front; j < n1pix; j++) {
 		i3 = n3*(j-n1front)/(float) (n1pix-n1front);
 		i0 = (j-n1front)*(n2pix-n2front)/(float) (n1pix-n1front);
@@ -270,7 +239,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (iframe > 0) vp_erase (); 
+	if (i4 > 0) vp_erase (); 
 
 	vp_cuberaster(n1pix,n2pix,buf,frame1,frame2,frame3);
 	
@@ -283,20 +252,6 @@ int main(int argc, char* argv[])
 	    vp_barraster(VP_BSIZE, barbuf);
 	}	    
 
-	switch (movie) {
-	    case 1:
-		frame1 += dframe;
-		break;
-	    case 2:
-		frame2 += dframe;
-		break;
-	    case 3:
-		frame3 += dframe;
-		break;
-	    default:
-		break;
-	}
-
 	vp_purge(); 
     } /* frame loop */
 
@@ -304,4 +259,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id$	 */
+

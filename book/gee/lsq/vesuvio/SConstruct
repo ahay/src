@@ -12,14 +12,33 @@ Plot('phz','grey title=Phase')
 
 Result('vesuvio','amp phz','SideBySideAniso')
 
-Flow('wind8','vesuvio','window j1=8 j2=8')
-Flow('real','vesuvio','real | boxsmooth rect1=8 rect2=8')
-Flow('imag','vesuvio','imag | boxsmooth rect1=8 rect2=8')
-Flow('squee','real imag','cmplx ${SOURCES[1]} | window j1=8 j2=8')
+for box in (4,8):
+    wind = 'wind%d' % box
+    real = 'real%d' % box
+    imag = 'imag%d' % box
+    sque = 'sque%d' % box
+    box2 = (box,box)
+    
+    Flow(wind,'vesuvio','window j1=%d j2=%d' % box2)
+    Flow(real,'vesuvio','real | boxsmooth rect1=%d rect2=%d' % box2)
+    Flow(imag,'vesuvio','imag | boxsmooth rect1=%d rect2=%d' % box2)
+    Flow(sque,[real,imag],'cmplx ${SOURCES[1]} | window j1=%d j2=%d' % box2)
 
-Plot('wind8','math output="log(input)" | imag | grey title=Decimated')
-Plot('squee','math output="log(input)" | imag | grey title=Smoothed')
+    Plot(wind,'math output="log(input)" | imag | grey title=Decimated')
+    Plot(sque,'math output="log(input)" | imag | grey title=Smoothed')
 
-Result('squeeze','wind8 squee','SideBySideAniso')
+    bad = 'bad%d' % box
+    Flow(bad,sque,'ungrad badness=$TARGET niter=0',stdout=0)
+
+Result('squeeze','wind8 sque8','SideBySideAniso')
+
+Flow('altitude','sque8','ungrad niter=100')
+Plot('altitude','grey title="Altitude as density," mean=y')
+Plot('contour','altitude','contour title="as contours." allpos=n')
+Result('veshigh','altitude contour','SideBySideAniso')
+
+Plot('bad4','grey title="Fine badness" ')
+Plot('bad8','grey title="Coarse badness" ')
+Result('screw','bad8 bad4','SideBySideAniso')
 
 End()
