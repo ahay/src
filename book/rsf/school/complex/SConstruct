@@ -1022,7 +1022,7 @@ Result('full_terms_top','vph_top full_pAS_vB0_topt full_vAS_pB0_topt','SideBySid
 Flow('full_Integrand_top','full_pAS_vB0_topt full_vAS_pB0_topt','add ${SOURCES[1]} scale=1,1')
 
 Result('full_Integrand_top',
-       ''' grey title="top: total integrand" pclip=99 grid=y 
+       '''window j1=10 | grey title="top: total integrand" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_Integrand_top',
