@@ -62,8 +62,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("o2",&o2) && !sf_histfloat(in,"o2",&o2)) o2=0.;
 
     if (inv && !sf_getint("n3",&n3)) n3=nx;
-    if (!sf_getfloat("d3",&d3) && !sf_histfloat(in,"d3",&d2)) d3=1.;
-    if (!sf_getfloat("o3",&o3) && !sf_histfloat(in,"o3",&o2)) o3=0.;
+    if (!sf_getfloat("d3",&d3) && !sf_histfloat(in,"d3",&d3)) d3=1.;
+    if (!sf_getfloat("o3",&o3) && !sf_histfloat(in,"o3",&o3)) o3=0.;
 
     if (inv) {
        sf_putint(out,"n1",n1);
