@@ -1,17 +1,14 @@
 import os, sys
-srcroot = os.environ.get('RSFSRC','../..')
-sys.path.append(os.path.join(srcroot,'framework'))
+sys.path.append('../../framework')
 import bldutil
 
 # distributed
 progs = '''
-pseudodepth reflectivity2 wave2 wave2tau fftwave4 integral1 fftexp4 fftstable
+pseudodepth fftwave4 integral1 fftstable
 '''
-# wave2er tauwave2er fftexp4 
 
 # local
 locprogs = '''
-wave2
 '''
 # expandtest kissfftomp interptest lrmatrix
 
@@ -21,13 +18,13 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript(os.path.join(srcroot,'api/c/SConstruct'))
+    SConscript('../../api/c/SConstruct')
     progs = locprogs
 
 src = Glob('[a-z]*.c')
 
-env.Prepend(CPPPATH=os.path.join(srcroot,'include'),
-            LIBPATH=os.path.join(srcroot,'lib'),
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
 for source in src:
