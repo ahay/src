@@ -12,13 +12,17 @@ locprogs = '''
 '''
 # expandtest kissfftomp interptest lrmatrix
 
+ccprogs = '''
+isolr2tau isolr2one
+'''
+
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../lexing/SConstruct')
     progs = locprogs
 
 src = Glob('[a-z]*.c')
@@ -40,6 +44,26 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
+                      'vecmatop']+lapack)
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-std=gnu99','')
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+    
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -47,7 +71,9 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)+\
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,
+                                    lang='c++'),ccmains)
     env.Depends(docs,'#/framework/rsf/doc.py')    
 
     doc = env.RSF_Docmerge(main,docs)
