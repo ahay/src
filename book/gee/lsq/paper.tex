@@ -365,9 +365,9 @@ Likewise there is an analogous expression for the $x$-derivative with $t$ and $x
 \end{equation}
 where the two-dimensional convolution with the differential operator is denoted ${\bf A}$.
 \par
-The module {\tt wavekill()}  applies the operator a $\delta_x + b \delta_t$, which can be specialized to the operators we will actually need, namely $\delta_x, \delta_t, \delta_x+p_i\delta_t$. 
-\moddex{wavekill}{wavekill()}
-\par
+%The module {\tt wavekill()}  applies the operator a $\delta_x + b \delta_t$, which can be specialized to the operators we will actually need, namely $\delta_x, \delta_t, \delta_x+p_i\delta_t$. 
+%\moddex{wavekill}{wavekill()}
+%\par
 Now let us find the numerical value of $p$ that fits a plane wave $u(t-px)$ to  observations $u (t , x )$. Let $x$ be an abstract vector whose components are values of $\partial u /\partial x$ taken everywhere on a 2-D mesh in $(t,x)$. Likewise, let $t$ contain $\partial u /\partial t$.  Since we want ${\bf x} + p {\bf t} \approx {\bf 0}$, we minimize the quadratic function of $p$, 
 \begin{equation}
 Q( p) = ({\bf x} + p {\bf t}) \cdot ({\bf x} + p {\bf t}) 
@@ -393,15 +393,13 @@ is known as the ``{\bf normalized correlation}.''
 \inputdir{puck}
 
 \sideplot{puckin}{width=3in}{
-	Input synthetic seismic data includes a low level of noise.\viewit{puckin}}  
+	Input synthetic seismic data includes a low level of noise.}  
 
 \sideplot{residual5}{width=3in}{
-	Residuals, i.e., an evaluation of $U_x + pU_t$.
-	\viewit{residual}}  
+	Residuals, i.e., an evaluation of $U_x + pU_t$.}  
 
 \sideplot{puckout}{width=3in}{
 	Output values of $p$ are shown by the slope of short line segments.
-	\viewit{puckout}
 	}
 
 Subroutine {\tt puck2d} shows the code that generated
@@ -444,7 +442,7 @@ the time axis on the raw data before I begin.
 Once the stepout $p = d t /d x$ is known between each of the signals, it is a simple matter to integrate to get the total time shift.  A real-life example is shown in Figure~\ref{fig:twod}.
 %
 \sideplot{twod}{width=3in}{
-	A seismic line before and after flattening.\viewit{TwoD}}  
+	A seismic line before and after flattening.}  
 %
 In this case the flattening was a function of $x$ only.  More interesting (and more complicated) cases arise when the stepout $p = d t /d x$ is a function of both $x$ and $t$.  The code shown here should work well in such cases.
 \par
@@ -1867,7 +1865,7 @@ the conjugate vectors $G$ and $S$ in the program are denoted by
 The inner part of the conjugate-direction task is in
 function {\tt cgstep()}.%
 %\moddex[f90]{cgstep}{one step of CD}
-\moddex{cgstep}{one step of CD}{51}{85}{api/c}
+\moddex{cgstep}{one step of CD}{51}{86}{api/c}
 \par
 Observe the \texttt{cgstep()} function has a logical parameter
 called \texttt{forget}.
@@ -1923,7 +1921,7 @@ A basic solver is \texttt{tinysolver}. It is simplified substantially from the l
 which has a much longer list of optional arguments. (The \texttt{forget} parameter
 is not needed by the solvers we discuss first.)
 
-\moddex{tinysolver}{tiny solver}{23}{57}{api/c}
+\moddex{tinysolver}{tiny solver}{23}{58}{api/c}
 
 \par
 The two most important arguments in \texttt{tinysolver()}
@@ -2337,11 +2335,11 @@ Expressed as a regression equation~(\ref{eqn:TauFields}) becomes
 	Chevron data cube from the Gulf of Mexico.
 	A salt dome (lower left corner in the top plane) has pushed upwards,
 	dragging bedding planes (seen in the 
-	bottom two orthogonal planes) along with it.
-	\viewit{chev}}
+	bottom two orthogonal planes) along with it.}
 Let us see how the coming 3-D illustrations were created.
 First we need code for vector gradient with its adjoint,
-negative vector divergence. Here it is: \opdex{igrad2}{igrad} 
+negative vector divergence. Here it is: 
+\moddex{igrad2}{igrad} {48}{60}{api/c}
 In a kind of magic, all we need to fit our regression~(\ref{eqn:TauFields})
 is to pass the {\tt igrad2} 
 module to the Krylov subspace solver,
@@ -2368,7 +2366,7 @@ into a single column vector {\bf d} like in
 equation~(\ref{eqn:TauFields}).
 Tell the simple solver to make its steps
 with to use {\tt cgstep} with the linear operator {\tt igrad2}. 
-\moddex{dipinteg}{dipinteg}
+%\moddex{dipinteg}{dipinteg}
 
 \subsection{Gulf of Mexico Salt Piercement Example (Jesse Lomask) }
 Figure~\ref{fig:chev} shows a 3-D seismic data cube from the Gulf of Mexico provided by 
@@ -2411,8 +2409,7 @@ rings are replace by a bedding plane.
 	Slices of constant time before and after flattening.
 	Notice the rings surrounding the dome are gone giving
 	the dome a reduced diameter. 
-	(Ignore the inside of the dome.)
-	\viewit{slicecomp22}}
+	(Ignore the inside of the dome.)}
 %
 
 \section{VESUVIUS PHASE UNWRAPPING}
@@ -2472,7 +2469,7 @@ plane of the real part and the plane of the imaginary part.
 Putting them back together again showed that the phase
 angle of the averaged data behaves much more consistently.
 This adds evidence that the data is not troubled by noise bursts.
-\plot{squeeze}{width=6in,height=3in}{ER}{
+\plot{squeeze}{width=6in,height=3in}{
   Phase based on decimated data (left)
   and smoothed data (right).
 }
@@ -2635,7 +2632,7 @@ like the modules \texttt{cgmeth()}
 and 
 \texttt{invstack()}
 %\vpageref{/prog:invstack}.
-\moddex{unwrap}{Inverse 2-D gradient}
+\moddex{unwrap}{Inverse 2-D gradient}{65}{67}{user/gee}
 An open question is whether the required number of iterations is reasonable
 or whether we would need to uncover a preconditioner
 or more rapid solution method.
@@ -2644,8 +2641,7 @@ I adjusted the frame size
 so that I would get the solution in about ten seconds with 400 iterations.
 Results are shown in Figure~\ref{fig:veshigh}.
 \plot{veshigh}{width=6in,height=3in}{
-        Estimated altitude.
-        \viewit{veshigh90}}
+        Estimated altitude.}
 
 \begin{comment}
 When we are working with figures like Figure~\ref{fig:veshigh},
@@ -3106,15 +3102,15 @@ directions, I always refer them to the \bx{Paige and Saunders
 implicitly (including both the standard literature and the book3
 method) square the condition number, that is, they are twice as
 susceptible to rounding error as is {\tt LSQR}. The Paige and
-Saunders method is reviewed by Nolet in a geophysical context. I
-include module \texttt{lsqr}
+Saunders method is reviewed by Nolet in a geophysical context. 
+%I include module \texttt{lsqr}
 %\vpageref{/prog:lsqr}
-without explaining
-why it works. The interface is similar to \texttt{solver}
+%without explaining
+%why it works. The interface is similar to \texttt{solver}
 %\vpageref{/prog:smallsolver}.
-Note that the residual vector does not appear
-explicitly in the program and that we cannot start from a nonzero
-initial model.  \moddex{lsqr}{LSQR solver}
+%Note that the residual vector does not appear
+%explicitly in the program and that we cannot start from a nonzero
+%initial model.  \moddex{lsqr}{LSQR solver}
 
 \subsection{Understanding CG magic and advanced methods}
 This section includes Sergey Fomel's explanation on the ``magic''

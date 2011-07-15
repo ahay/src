@@ -166,7 +166,7 @@ for case in title.keys():
          ''' % ((21,22)[case=='chev'],title[case]))
 
 Result('twod','chev-line flats-line','SideBySideAniso')
-Result('slicecomp22','chev-slice flats-slice','OverUnderAniso')
+Result('slicecomp22','chev-slice flats-slice','OverUnderIso')
 
 
 End()

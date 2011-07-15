@@ -63,7 +63,8 @@ void unwraper(int n1, int n2, /* dimensions */
     grad2init(n1,n2, zz,rt);
 
     sf_igrad2_init(n1,n2);
-    sf_solver(sf_igrad2_lop,sf_cgstep,n1*n2,n1*n2*2,hh,rt[0][0],niter,"end");
+    sf_tinysolver(sf_igrad2_lop,sf_cgstep,
+		  n1*n2,n1*n2*2,hh,NULL,rt[0][0],niter);
     sf_cgstep_close();
 
     free(**rt);

@@ -48,7 +48,7 @@ void sf_igrad2_lop (bool adj, bool add, int np, int nr, float* p, float* r)
     for (i2=0; i2 < n2-1; i2++) {  
 	for (i1=0; i1 < n1-1; i1++) {
 	    i = i1+i2*n1;
-	    if (adj == true) {
+	    if (adj) {
 		p[i+1]  += r[i]; 
 		p[i+n1] += r[i+n12];
 		p[i]    -= (r[i] + r[i+n12]);

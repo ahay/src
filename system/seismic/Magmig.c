@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     sf_floatread (dat[0][0],nt*nx*nh,in);
 
     for (ig=0; ig < ng; ig++) {
-	sf_warning("angle %d if %d",ig+1,ng);
+	sf_warning("angle %d of %d;",ig+1,ng);
 	g = g0 + ig * dg;
 	for (ix=0; ix < nx; ix++) {
 	    for (it=0; it < nt; it++) {
@@ -142,6 +142,7 @@ int main(int argc, char *argv[])
 
 	sf_floatwrite(img[0],nt*nx,out);
     } /* ig */
+    sf_warning(".");
 
     exit(0);
 }
