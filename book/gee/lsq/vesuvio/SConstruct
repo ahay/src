@@ -41,4 +41,15 @@ Plot('bad4','grey title="Fine badness" ')
 Plot('bad8','grey title="Coarse badness" ')
 Result('screw','bad8 bad4','SideBySideAniso')
 
+Flow('z',None,
+     '''
+     math n1=301 n2=101 o1=-50 d1=0.333333 o2=-25 d2=0.5
+     output="10*exp(-(x1*x1+x2*x2)/100)"
+     ''')
+Flow('x','z','math output="x1+(input-5)*1.5" ')
+Flow('mount','z x','iwarp warp=${SOURCES[1]} n1=101 d1=0.5 o1=-25 eps=1')
+Plot('grey','mount','grey yreverse=n allpos=y crowd=1')
+Plot('cont','mount','contour yreverse=n crowd=1')
+Result('synmod','grey cont','SideBySideAniso')
+
 End()
