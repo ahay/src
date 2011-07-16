@@ -1317,24 +1317,21 @@ static void load_font (int ifont)
  * In either case we also getpar for "fontXX" to see if the user has specified
  * an overriding file name on the command line.
  */
-    vplotfontdirset = -1;
-
     if (ttxfont < NUM_FONTS) {
 	vplotfontdirset = YES;
 
 	if ((stringptr = getenv ("VPLOTFONTDIR")) != NULL) {
 	    sprintf (filename, "%s%s.bin", stringptr, font[ttxfont].name);
-	    vplotfontdirset = YES;
 	} else {
 	    if ((rsfroot = getenv("RSFROOT")) == NULL) rsfroot="/usr";
 	    sprintf (filename, "%s/include/%s.bin", rsfroot, font[ttxfont].name);
 	}
     } else {
+	vplotfontdirset = -1;
 /*
  * The default place to look for a user-specified vplot binary font.
  */
 	sprintf (filename, "./font%d.bin", ifont);
-	vplotfontdirset = -1;
     }
 
 /*
