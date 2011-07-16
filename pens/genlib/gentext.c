@@ -148,8 +148,8 @@ double   up_orient_dx, up_orient_dy;
 
 static void swab_font (char *stuff, int bytecount)
 {
-int             icount;
-char            temp;
+    int             icount;
+    char            temp;
 
     for (icount = 0;
 	 icount < bytecount - sizeof (int) + 1;
@@ -167,36 +167,36 @@ char            temp;
 void gentext (char *string, float pathx, float pathy, float upx, float upy)
 /*< interpret characters into vectors >*/
 {
-double          fpathx, fpathy, fupx, fupy;
-double          up, path;
-double          xp, yp;
-float           tfat;
-int             add;
-int             ixp, iyp;
-int            *istring;
-unsigned int   *glyphptr, glyph_stroke;
-double          xtxshift, ytxshift;
-int             a, b, ii, jj, kk;
-int             string_length;
-double          last_widthl, last_widthr;
-double          widthl_1st_char, char_width, total_width = 0.;
-int             tsize, first, ttxfont_save=0, txfont_checked;
-int             ghost = 0;
-double          th_symb, th_symb_s=0, tv_symb, tv_symb_s=0;
-double          char_width_s[NMARK];
-double          total_width_s[NMARK];
-int             mark_flag[NMARK];
-double          last_widthl_s[NMARK], last_widthr_s[NMARK];
-double          xold_f_s[NMARK];
-double          yold_f_s[NMARK];
-double          maxtop, minbot;
-double          vspace, hspace, vline;
-int             flag;
-char           *charp;
-int             polycount, xxx[MAXPOLY], yyy[MAXPOLY];
-int            *ligp;
-static int      one_error = YES;
-int             linecount;
+    double          fpathx, fpathy, fupx, fupy;
+    double          up, path;
+    double          xp, yp;
+    float           tfat;
+    int             add;
+    int             ixp, iyp;
+    int            *istring;
+    unsigned int   *glyphptr, glyph_stroke;
+    double          xtxshift, ytxshift;
+    int             a, b, ii, jj, kk;
+    int             string_length;
+    double          last_widthl, last_widthr;
+    double          widthl_1st_char, char_width, total_width = 0.;
+    int             tsize, first, ttxfont_save=0, txfont_checked;
+    int             ghost = 0;
+    double          th_symb, th_symb_s=0, tv_symb, tv_symb_s=0;
+    double          char_width_s[NMARK];
+    double          total_width_s[NMARK];
+    int             mark_flag[NMARK];
+    double          last_widthl_s[NMARK], last_widthr_s[NMARK];
+    double          xold_f_s[NMARK];
+    double          yold_f_s[NMARK];
+    double          maxtop, minbot;
+    double          vspace, hspace, vline;
+    int             flag;
+    char           *charp;
+    int             polycount, xxx[MAXPOLY], yyy[MAXPOLY];
+    int            *ligp;
+    static int      one_error = YES;
+    int             linecount;
 
     if (*string == '\0')
 	return;
@@ -245,7 +245,7 @@ int             linecount;
     if (font[ERRFONT].load == NO)
     {
 	ERR (FATAL,name,
-	  "(gentext) Font %d, the ERRFONT, must be loaded at compile time!",
+	     "(gentext) Font %d, the ERRFONT, must be loaded at compile time!",
 	     ERRFONT);
     }
 
@@ -299,137 +299,137 @@ int             linecount;
 	switch ((int) (*charp))
 	{
 /* Check for special ASCII characters first */
-	case ' ':
-	case NL:
-	case CR:
-	case BS:
-	    istring[2 * ii] = -(int) (*charp);
-	    continue;
-	    break;
-/* Check for \ commands */
-	case '\\':
-	    charp++;
-	    switch (*charp)
-	    {
-/* \\ just falls through and makes a \ with no special properties */
-	    case '\\':
-		break;
-/* \ commands with no arguments */
-	    case '-':
-	    case '>':
-	    case '<':
-	    case '^':
-	    case '_':
-	    case 'g':
-	    case 'G':
-	    case 'n':
-	    case 'h':
+	    case ' ':
+	    case NL:
+	    case CR:
+	    case BS:
 		istring[2 * ii] = -(int) (*charp);
 		continue;
 		break;
-/* \ commands with arguments */
-	    case 's':
-	    case 'f':
-	    case 'F':
-	    case 'k':
-	    case 'r':
-	    case 'm':
-	    case 'M':
-	    case 'v':
-	    case 'c':
-		istring[2 * ii] = -(int) (*charp);
+/* Check for \ commands */
+	    case '\\':
 		charp++;
-/* default value of the argument is 0 if they just leave a space */
-		istring[2 * ii + 1] = 0;
-/* read the argument */
-		sscanf (charp, "%d ", &istring[2 * ii + 1]);
-/* skip past it and check for syntax */
-		do
+		switch (*charp)
 		{
-		    if ((*charp >= '0' && *charp <= '9') ||
-			*charp == '-' || *charp == '+')
-		    {
+/* \\ just falls through and makes a \ with no special properties */
+		    case '\\':
+			break;
+/* \ commands with no arguments */
+		    case '-':
+		    case '>':
+		    case '<':
+		    case '^':
+		    case '_':
+		    case 'g':
+		    case 'G':
+		    case 'n':
+		    case 'h':
+			istring[2 * ii] = -(int) (*charp);
+			continue;
+			break;
+/* \ commands with arguments */
+		    case 's':
+		    case 'f':
+		    case 'F':
+		    case 'k':
+		    case 'r':
+		    case 'm':
+		    case 'M':
+		    case 'v':
+		    case 'c':
+			istring[2 * ii] = -(int) (*charp);
 			charp++;
-		    }
-		    else
-			ERR (FATAL, name, "In text \\%c must be followed by an integer and then a space.", (char) (-istring[2 * ii]));
-		} while (*charp != ' ');
+/* default value of the argument is 0 if they just leave a space */
+			istring[2 * ii + 1] = 0;
+/* read the argument */
+			sscanf (charp, "%d ", &istring[2 * ii + 1]);
+/* skip past it and check for syntax */
+			do
+			{
+			    if ((*charp >= '0' && *charp <= '9') ||
+				*charp == '-' || *charp == '+')
+			    {
+				charp++;
+			    }
+			    else
+				ERR (FATAL, name, "In text \\%c must be followed by an integer and then a space.", (char) (-istring[2 * ii]));
+			} while (*charp != ' ');
 
-		if (istring[2 * ii] == -(int) ('v'))
-		{
+			if (istring[2 * ii] == -(int) ('v'))
+			{
 /*
  * The \v command.
  * Make an ordinary character with the proper value.
  */
-		    istring[2 * ii] = istring[2 * ii + 1];
-		    istring[2 * ii + 1] = 0;
-		}
-		else
-		if (istring[2 * ii] == -(int) ('F'))
-		{
+			    istring[2 * ii] = istring[2 * ii + 1];
+			    istring[2 * ii + 1] = 0;
+			}
+			else
+			    if (istring[2 * ii] == -(int) ('F'))
+			    {
 /* Font change command */
-		    if (istring[2 * ii + 1] >= 0)
-		    {
-			ttxfont = istring[2 * ii + 1] % NUMGENFONT;
+				if (istring[2 * ii + 1] >= 0)
+				{
+				    ttxfont = istring[2 * ii + 1] % NUMGENFONT;
 
 /* Perform serif font substitution once and for all here, if needed */
-                        if (! serifs_OK)
-                        {
-                            if (ttxfont == DEFAULT_HARDCOPY_FONT) ttxfont = DEFAULT_SANSSERIF_FONT;
-                            if (ttxfont == GREEK_SERIF_FONT) ttxfont = GREEK_SANSSERIF_FONT;
-                        }
+				    if (! serifs_OK)
+				    {
+					if (ttxfont == DEFAULT_HARDCOPY_FONT) ttxfont = DEFAULT_SANSSERIF_FONT;
+					if (ttxfont == GREEK_SERIF_FONT) ttxfont = GREEK_SANSSERIF_FONT;
+				    }
 
 /* On this first pass through, load all the fonts we're going to need */
-			if (font[ttxfont].load == NO)
-			{
-			    load_font (istring[2 * ii + 1]);
-			}
-			istring[2 * ii + 1] = ttxfont;
-		    }
-		    else
-		    {
+				    if (font[ttxfont].load == NO)
+				    {
+					load_font (istring[2 * ii + 1]);
+				    }
+				    istring[2 * ii + 1] = ttxfont;
+				}
+				else
+				{
 /* \F-1  means the default font again. */
-			if (istring[2 * ii + 1] == -1)
-			    istring[2 * ii + 1] = txfont_checked;
-			else
-			    istring[2 * ii + 1] = ERRFONT;
-		    }
-		}
-		else
-		if (istring[2 * ii] == -(int) ('c'))
-		{
+				    if (istring[2 * ii + 1] == -1)
+					istring[2 * ii + 1] = txfont_checked;
+				    else
+					istring[2 * ii + 1] = ERRFONT;
+				}
+			    }
+			    else
+				if (istring[2 * ii] == -(int) ('c'))
+				{
 /* Color change command */
-		    if (istring[2 * ii + 1] == -1)
-		    {
+				    if (istring[2 * ii + 1] == -1)
+				    {
 /*
  * They want to return to the original text color.
  * This has already been checked to be within range and
  * properly mapped, so just use it!
  */
-			istring[2 * ii + 1] = cur_color_save;
-		    }
-		    else
-		    {
+					istring[2 * ii + 1] = cur_color_save;
+				    }
+				    else
+				    {
 /*
  * Map from the color asked for to the colors that are available.
  * Normally only dovplot is allowed to do this, but this is an
  * unusual case where dovplot can't do it for us.
  */
-			if (istring[2 * ii + 1] > MAX_COL || istring[2 * ii + 1] < 0)
-			    ERR (FATAL, name, "(gentext) bad color number %d (max %d, min 0)",
-				 istring[2 * ii + 1], MAX_COL);
-			istring[2 * ii + 1] = COLOR_MAP (istring[2 * ii + 1]);
-		    }
+					if (istring[2 * ii + 1] > MAX_COL || istring[2 * ii + 1] < 0)
+					    ERR (FATAL, name, "(gentext) bad color number %d (max %d, min 0)",
+						 istring[2 * ii + 1], MAX_COL);
+					istring[2 * ii + 1] = COLOR_MAP (istring[2 * ii + 1]);
+				    }
+				}
+			continue;
+			break;
+		    default:
+			ERR (WARN, name, "(gentext) Unknown command \\%c.", *charp);
+			charp--;
+			break;
 		}
-		continue;
-		break;
 	    default:
-		ERR (WARN, name, "(gentext) Unknown command \\%c.", *charp);
-		charp--;
 		break;
-	    }
-	default:
-	    break;
 	}
 /* Normal character */
 	istring[2 * ii] = (int) (*charp);
@@ -496,7 +496,7 @@ int             linecount;
 		    ii += ligp[0] - 1;
 		    goto success;
 		}
-	failed:
+	    failed:
 		continue;
 	    }
 /* No ligatures for this one. Copy it across unchanged */
@@ -505,7 +505,7 @@ int             linecount;
  * Don't need to look at any more ligatures for this character
  * (Ligatures don't nest)
  */
-    success:
+	success:
 	    continue;
 	}
 /* Update the length of the string */
@@ -572,119 +572,119 @@ int             linecount;
 	{
 	    switch (-istring[2 * ii])
 	    {
-	    case 'n':
-	    case NL:
-		linecount++;
-	    case CR:
-		flag = 0;
-		break;
-	    case 'h':
-	    case BS:
-		total_width -= font[ttxfont].dim[LETTER] *
-		 SIZE_FACTOR (path) + char_width;
-		break;
-	    case 'F':
+		case 'n':
+		case NL:
+		    linecount++;
+		case CR:
+		    flag = 0;
+		    break;
+		case 'h':
+		case BS:
+		    total_width -= font[ttxfont].dim[LETTER] *
+			SIZE_FACTOR (path) + char_width;
+		    break;
+		case 'F':
 /* Change the font */
-		ttxfont = istring[2 * ii + 1];
-		break;
-	    case 's':
+		    ttxfont = istring[2 * ii + 1];
+		    break;
+		case 's':
 /* Change the size. This affects the SIZE_FACTOR. */
-		tsize = istring[2 * ii + 1];
-		break;
-	    case 'k':
-		if (flag)
-		{
+		    tsize = istring[2 * ii + 1];
+		    break;
+		case 'k':
+		    if (flag)
+		    {
 /*
  * Add in the blank space created by horizontal 'k'earning.
  * This is measured in percent of the width of a space in this font.
  *
  * Similar vertical movements are ignored for the purposes of justification.
  */
-		    total_width += font[ttxfont].dim[SPACE]
-		     * SIZE_FACTOR (path) * (istring[2 * ii + 1] / 100.);
-		}
-		break;
-	    case 'm':
-		if (istring[2 * ii + 1] < 0 || istring[2 * ii + 1] >= NMARK)
-		    ERR (FATAL, name,
-			 "(gentext) Too high a mark number %d", istring[2 * ii + 1]);
+			total_width += font[ttxfont].dim[SPACE]
+			    * SIZE_FACTOR (path) * (istring[2 * ii + 1] / 100.);
+		    }
+		    break;
+		case 'm':
+		    if (istring[2 * ii + 1] < 0 || istring[2 * ii + 1] >= NMARK)
+			ERR (FATAL, name,
+			     "(gentext) Too high a mark number %d", istring[2 * ii + 1]);
 /* Save all relevant parameters as they are at this instant */
-		if (flag)
-		{
+		    if (flag)
+		    {
 /* Vertical symbol alignment position */
-		    tv_symb_s = tv_symb;
+			tv_symb_s = tv_symb;
 /* Horizontal symbol alignment position */
-		    th_symb_s = th_symb;
+			th_symb_s = th_symb;
 /* Width of this character (in case the next thing is a backspace) */
-		    char_width_s[istring[2 * ii + 1]] = char_width;
+			char_width_s[istring[2 * ii + 1]] = char_width;
 /* The width so far up to this point */
-		    total_width_s[istring[2 * ii + 1]] = total_width;
-		}
-		mark_flag[istring[2 * ii + 1]] = 1;
-		break;
-	    case 'M':
-		if (istring[2 * ii + 1] < 0 || istring[2 * ii + 1] >= NMARK)
-		    ERR (FATAL, name,
-			 "(gentext) Too high a mark number %d", istring[2 * ii + 1]);
+			total_width_s[istring[2 * ii + 1]] = total_width;
+		    }
+		    mark_flag[istring[2 * ii + 1]] = 1;
+		    break;
+		case 'M':
+		    if (istring[2 * ii + 1] < 0 || istring[2 * ii + 1] >= NMARK)
+			ERR (FATAL, name,
+			     "(gentext) Too high a mark number %d", istring[2 * ii + 1]);
 /* Make sure it isn't junk */
-		if (!mark_flag[istring[2 * ii + 1]])
-		    ERR (FATAL, name,
-			 "(gentext) Attempt to use undefined mark number %d",
-			 istring[2 * ii + 1]);
+		    if (!mark_flag[istring[2 * ii + 1]])
+			ERR (FATAL, name,
+			     "(gentext) Attempt to use undefined mark number %d",
+			     istring[2 * ii + 1]);
 /*
  * Restore the parameters previously saved. All events after that point
  * are now ignored for the purposes of justification.
  */
-		if (flag)
-		{
-		    tv_symb = tv_symb_s;
-		    th_symb = th_symb_s;
-		    char_width = char_width_s[istring[2 * ii + 1]];
-		    total_width = total_width_s[istring[2 * ii + 1]];
-		}
-		break;
-	    case '-':		/* Nothing */
-		break;
-	    case '>':		/* Forward one inter-letter space */
-		if (flag)
-		    total_width += font[ttxfont].dim[LETTER]
-		     * SIZE_FACTOR (path);
-		break;
-	    case '<':		/* Remove one inter-letter space */
-		if (flag)
-		    total_width -= font[ttxfont].dim[LETTER]
-		     * SIZE_FACTOR (path);
-		break;
-	    case '^':		/* Up a half letter */
-	    case '_':		/* Down a half letter */
-	    case 'g':		/* Make text invisible */
-	    case 'G':		/* Make text visible again */
-		break;
-	    case ' ':		/* Space */
-		if (flag)
-		{
-		    char_width = font[ttxfont].dim[SPACE]
-		     * SIZE_FACTOR (path);
-		    th_symb = char_width / 2.;
-		    tv_symb = (font[ttxfont].dim[HALF] - ALIGN_HEIGHT)
-		     * SIZE_FACTOR (up);
-		    total_width += char_width;
-		    if (first)
+		    if (flag)
 		    {
-/* If it is the first character, remember the left half width */
-			widthl_1st_char = font[ttxfont].dim[SPACE] * .5
-			 * SIZE_FACTOR (path);
-/* No longer at the first printable character */
-			first = 0;
+			tv_symb = tv_symb_s;
+			th_symb = th_symb_s;
+			char_width = char_width_s[istring[2 * ii + 1]];
+			total_width = total_width_s[istring[2 * ii + 1]];
 		    }
-		    else
-		    {
-/* else add inter-letter space between it and the previous character */
+		    break;
+		case '-':		/* Nothing */
+		    break;
+		case '>':		/* Forward one inter-letter space */
+		    if (flag)
 			total_width += font[ttxfont].dim[LETTER]
-			 * SIZE_FACTOR (path);
+			    * SIZE_FACTOR (path);
+		    break;
+		case '<':		/* Remove one inter-letter space */
+		    if (flag)
+			total_width -= font[ttxfont].dim[LETTER]
+			    * SIZE_FACTOR (path);
+		    break;
+		case '^':		/* Up a half letter */
+		case '_':		/* Down a half letter */
+		case 'g':		/* Make text invisible */
+		case 'G':		/* Make text visible again */
+		    break;
+		case ' ':		/* Space */
+		    if (flag)
+		    {
+			char_width = font[ttxfont].dim[SPACE]
+			    * SIZE_FACTOR (path);
+			th_symb = char_width / 2.;
+			tv_symb = (font[ttxfont].dim[HALF] - ALIGN_HEIGHT)
+			    * SIZE_FACTOR (up);
+			total_width += char_width;
+			if (first)
+			{
+/* If it is the first character, remember the left half width */
+			    widthl_1st_char = font[ttxfont].dim[SPACE] * .5
+				* SIZE_FACTOR (path);
+/* No longer at the first printable character */
+			    first = 0;
+			}
+			else
+			{
+/* else add inter-letter space between it and the previous character */
+			    total_width += font[ttxfont].dim[LETTER]
+				* SIZE_FACTOR (path);
+			}
 		    }
-		}
-		break;
+		    break;
 	    }
 	    continue;
 	}
@@ -704,14 +704,14 @@ int             linecount;
 /* OK glyph */
 /* In case it's the last one, save its vertical symbol position */
 		    tv_symb = (font[ttxfont].symbol[istring[2 * ii + 1]] - ALIGN_HEIGHT)
-		     * SIZE_FACTOR (up);
+			* SIZE_FACTOR (up);
 /* And in case we back up later its width */
 		    char_width = (font[ttxfont].swidthl[istring[2 * ii + 1]] +
 				  font[ttxfont].swidthr[istring[2 * ii + 1]])
-		     * SIZE_FACTOR (path);
+			* SIZE_FACTOR (path);
 /* and horizontal symbol position */
 		    th_symb = font[ttxfont].swidthr[istring[2 * ii + 1]]
-		     * SIZE_FACTOR (path);
+			* SIZE_FACTOR (path);
 /* See if it sets a new record high */
 		    if ((font[ttxfont].dim[TOP] - ALIGN_HEIGHT) * SIZE_FACTOR (up) > maxtop)
 			maxtop = (font[ttxfont].dim[TOP] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
@@ -719,20 +719,20 @@ int             linecount;
 		    if ((font[ttxfont].dim[BOTTOM] - ALIGN_HEIGHT)
 			* SIZE_FACTOR (up) < minbot)
 			minbot = (font[ttxfont].dim[BOTTOM] - ALIGN_HEIGHT)
-			 * SIZE_FACTOR (up);
+			    * SIZE_FACTOR (up);
 /* Add it into the total width */
 		    total_width += char_width;
 		    if (first)
 		    {
 /* If it's the first remember its left half width */
 			widthl_1st_char = font[ttxfont].swidthl[istring[2 * ii + 1]]
-			 * SIZE_FACTOR (path);
+			    * SIZE_FACTOR (path);
 		    }
 		    else
 		    {
 /* or if not first add in the space between it and the previous glyph */
 			total_width += font[ttxfont].dim[LETTER]
-			 * SIZE_FACTOR (path);
+			    * SIZE_FACTOR (path);
 		    }
 		}
 		else
@@ -758,10 +758,10 @@ int             linecount;
 		istring[2 * ii + 1] = ERRGLYPH;
 		char_width = (font[ttxfont].swidthl[ERRGLYPH] +
 			      font[ttxfont].swidthr[ERRGLYPH])
-		 * SIZE_FACTOR (path);
+		    * SIZE_FACTOR (path);
 		th_symb = font[ttxfont].swidthr[ERRGLYPH] * SIZE_FACTOR (path);
 		tv_symb = (font[ttxfont].symbol[ERRGLYPH] - ALIGN_HEIGHT)
-		 * SIZE_FACTOR (up);
+		    * SIZE_FACTOR (up);
 		if ((font[ttxfont].dim[TOP] - ALIGN_HEIGHT) * SIZE_FACTOR (up) > maxtop)
 		    maxtop = (font[ttxfont].dim[TOP] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
 		if ((font[ttxfont].dim[BOTTOM] - ALIGN_HEIGHT) * SIZE_FACTOR (up) < minbot)
@@ -812,20 +812,20 @@ int             linecount;
  */
     switch (txalign.hor)
     {
-    case TH_SYMBOL:
-	xtxshift = total_width - widthl_1st_char - th_symb;
-	break;
-    case TH_CENTER:
-	xtxshift = total_width / 2. - widthl_1st_char;
-	break;
-    case TH_RIGHT:
-	xtxshift = total_width - widthl_1st_char;
-	break;
-    case TH_NORMAL:
-    case TH_LEFT:
-    default:
-	xtxshift = -widthl_1st_char;
-	break;
+	case TH_SYMBOL:
+	    xtxshift = total_width - widthl_1st_char - th_symb;
+	    break;
+	case TH_CENTER:
+	    xtxshift = total_width / 2. - widthl_1st_char;
+	    break;
+	case TH_RIGHT:
+	    xtxshift = total_width - widthl_1st_char;
+	    break;
+	case TH_NORMAL:
+	case TH_LEFT:
+	default:
+	    xtxshift = -widthl_1st_char;
+	    break;
     }
 
     tsize = 100;
@@ -839,26 +839,26 @@ int             linecount;
  */
     switch (txalign.ver)
     {
-    case TV_SYMBOL:
-	ytxshift = tv_symb;
-	break;
-    case TV_TOP:
-	ytxshift = maxtop;
-	break;
-    case TV_CAP:
-	ytxshift = (font[ttxfont].dim[CAP] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
-	break;
-    case TV_HALF:
-	ytxshift = (font[ttxfont].dim[HALF] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
-	break;
-    case TV_BOTTOM:
-	ytxshift = minbot;
-	break;
-    case TV_NORMAL:
-    case TV_BASE:
-    default:
-	ytxshift = (font[ttxfont].dim[BASE] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
-	break;
+	case TV_SYMBOL:
+	    ytxshift = tv_symb;
+	    break;
+	case TV_TOP:
+	    ytxshift = maxtop;
+	    break;
+	case TV_CAP:
+	    ytxshift = (font[ttxfont].dim[CAP] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
+	    break;
+	case TV_HALF:
+	    ytxshift = (font[ttxfont].dim[HALF] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
+	    break;
+	case TV_BOTTOM:
+	    ytxshift = minbot;
+	    break;
+	case TV_NORMAL:
+	case TV_BASE:
+	default:
+	    ytxshift = (font[ttxfont].dim[BASE] - ALIGN_HEIGHT) * SIZE_FACTOR (up);
+	    break;
     }
 
 
@@ -952,138 +952,138 @@ int             linecount;
 	{
 	    switch (-istring[2 * ii])
 	    {			/* standard carriage controls */
-	    case 'h':
-	    case BS:
-		mov (-font[ttxfont].dim[LETTER] * SIZE_FACTOR (path) -
-		     (last_widthl + last_widthr), 0.);
-		break;
-	    case NL:
-	    case 'n':
-		xold_f = xorigin_f;
-		yold_f = yorigin_f;
-		mov (0., -(
-			   (font[ttxfont].dim[TOP] - font[ttxfont].dim[BOTTOM] + font[ttxfont].dim[LINE])
-			   * SIZE_FACTOR (up)));
-		xorigin_f = xold_f;
-		yorigin_f = yold_f;
-		first = 1;
-		break;
-	    case CR:
-		xold_f = xorigin_f;
-		yold_f = yorigin_f;
-		first = 1;
-		break;
-	    case 'F':
-		ttxfont = istring[2 * ii + 1];
-		break;
-	    case 'c':
-		if (cur_color != istring[2 * ii + 1] || need_devcolor)
-		{
-		    cur_color = istring[2 * ii + 1];
-		    dev.attributes (SET_COLOR, cur_color, 0, 0, 0);
-		    need_devcolor = NO;
-		}
-		break;
-	    case 's':
-		tsize = istring[2 * ii + 1];
-		break;
-	    case 'f':
-		tfat += istring[2 * ii + 1] * fatmult;
-		break;
-	    case 'k':
+		case 'h':
+		case BS:
+		    mov (-font[ttxfont].dim[LETTER] * SIZE_FACTOR (path) -
+			 (last_widthl + last_widthr), 0.);
+		    break;
+		case NL:
+		case 'n':
+		    xold_f = xorigin_f;
+		    yold_f = yorigin_f;
+		    mov (0., -(
+			     (font[ttxfont].dim[TOP] - font[ttxfont].dim[BOTTOM] + font[ttxfont].dim[LINE])
+			     * SIZE_FACTOR (up)));
+		    xorigin_f = xold_f;
+		    yorigin_f = yold_f;
+		    first = 1;
+		    break;
+		case CR:
+		    xold_f = xorigin_f;
+		    yold_f = yorigin_f;
+		    first = 1;
+		    break;
+		case 'F':
+		    ttxfont = istring[2 * ii + 1];
+		    break;
+		case 'c':
+		    if (cur_color != istring[2 * ii + 1] || need_devcolor)
+		    {
+			cur_color = istring[2 * ii + 1];
+			dev.attributes (SET_COLOR, cur_color, 0, 0, 0);
+			need_devcolor = NO;
+		    }
+		    break;
+		case 's':
+		    tsize = istring[2 * ii + 1];
+		    break;
+		case 'f':
+		    tfat += istring[2 * ii + 1] * fatmult;
+		    break;
+		case 'k':
 /* Horizontal motion */
-		mov (font[ttxfont].dim[SPACE] * SIZE_FACTOR (path) *
-		     (istring[2 * ii + 1] / 100.), 0.);
-		break;
-	    case 'r':
+		    mov (font[ttxfont].dim[SPACE] * SIZE_FACTOR (path) *
+			 (istring[2 * ii + 1] / 100.), 0.);
+		    break;
+		case 'r':
 /* Vertical motion */
-		mov (0., (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
-		     * SIZE_FACTOR (up) * (istring[2 * ii + 1] / 100.));
-		break;
-	    case 'm':
+		    mov (0., (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
+			 * SIZE_FACTOR (up) * (istring[2 * ii + 1] / 100.));
+		    break;
+		case 'm':
 /*
  * Save the current position. No need to check mark number valid; this
  * was checked when we did the justification
  */
-		last_widthl_s[istring[2 * ii + 1]] = last_widthl;
-		last_widthr_s[istring[2 * ii + 1]] = last_widthr;
-		xold_f_s[istring[2 * ii + 1]] = xold_f;
-		yold_f_s[istring[2 * ii + 1]] = yold_f;
-		break;
-	    case 'M':
+		    last_widthl_s[istring[2 * ii + 1]] = last_widthl;
+		    last_widthr_s[istring[2 * ii + 1]] = last_widthr;
+		    xold_f_s[istring[2 * ii + 1]] = xold_f;
+		    yold_f_s[istring[2 * ii + 1]] = yold_f;
+		    break;
+		case 'M':
 /*
  * Restore the current position
  */
-		last_widthl = last_widthl_s[istring[2 * ii + 1]];
-		last_widthr = last_widthr_s[istring[2 * ii + 1]];
-		xold_f = xold_f_s[istring[2 * ii + 1]];
-		yold_f = yold_f_s[istring[2 * ii + 1]];
-		break;
-	    case 'G':
-		ghost = 0;
-		break;
-	    case 'g':
-		ghost = 1;
-		break;
-	    case '^':
+		    last_widthl = last_widthl_s[istring[2 * ii + 1]];
+		    last_widthr = last_widthr_s[istring[2 * ii + 1]];
+		    xold_f = xold_f_s[istring[2 * ii + 1]];
+		    yold_f = yold_f_s[istring[2 * ii + 1]];
+		    break;
+		case 'G':
+		    ghost = 0;
+		    break;
+		case 'g':
+		    ghost = 1;
+		    break;
+		case '^':
 /* Up half a character */
-		mov (0.,
-		     (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
-		     * (.5) * SIZE_FACTOR (up));
-		break;
-	    case '_':
+		    mov (0.,
+			 (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
+			 * (.5) * SIZE_FACTOR (up));
+		    break;
+		case '_':
 /* Down half a character */
-		mov (0., -(
-			   (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
-			   * (.5) * SIZE_FACTOR (up)));
-		break;
-	    case '-':
-		break;
-	    case '>':
+		    mov (0., -(
+			     (font[ttxfont].dim[CAP] - font[ttxfont].dim[BASE])
+			     * (.5) * SIZE_FACTOR (up)));
+		    break;
+		case '-':
+		    break;
+		case '>':
 /* Right an inter-letter space */
-		mov (font[ttxfont].dim[LETTER] * SIZE_FACTOR (path), 0.);
-		break;
-	    case '<':
+		    mov (font[ttxfont].dim[LETTER] * SIZE_FACTOR (path), 0.);
+		    break;
+		case '<':
 /* Left an inter-letter space */
-		mov (-(font[ttxfont].dim[LETTER] * SIZE_FACTOR (path)), 0.);
-		break;
-	    case -(UNDEFINED):
-		/* Don't overload them with error messages */
-		if (one_error)
-		{
-		    ERR (WARN, name,
-			 "(gentext) Attempt(s) to use undefined glyph(s) in font %d",
-			 ttxfont);
-		    one_error = NO;
-		}
+		    mov (-(font[ttxfont].dim[LETTER] * SIZE_FACTOR (path)), 0.);
+		    break;
+		case -(UNDEFINED):
+		    /* Don't overload them with error messages */
+		    if (one_error)
+		    {
+			ERR (WARN, name,
+			     "(gentext) Attempt(s) to use undefined glyph(s) in font %d",
+			     ttxfont);
+			one_error = NO;
+		    }
 /* Switch to use the ERROR glyph, and the treat it as a regular glyph */
-		ttxfont_save = ttxfont;
-		ttxfont = ERRFONT;
-		goto not_special;
-		break;
-	    case ' ':
-	    default:
-		if (!first)
-		{
-		    mov (
-			 (font[ttxfont].dim[SPACE] * .5 +
-			  font[ttxfont].dim[LETTER])
-			 * SIZE_FACTOR (path)
-			 + last_widthr
-			 ,0.);
-		}
-		else
-		{
-		    first = 0;
-		}
-		last_widthl = font[ttxfont].dim[SPACE] * .5 * SIZE_FACTOR (path);
-		last_widthr = font[ttxfont].dim[SPACE] * .5 * SIZE_FACTOR (path);
-		break;
+		    ttxfont_save = ttxfont;
+		    ttxfont = ERRFONT;
+		    goto not_special;
+		    break;
+		case ' ':
+		default:
+		    if (!first)
+		    {
+			mov (
+			    (font[ttxfont].dim[SPACE] * .5 +
+			     font[ttxfont].dim[LETTER])
+			    * SIZE_FACTOR (path)
+			    + last_widthr
+			    ,0.);
+		    }
+		    else
+		    {
+			first = 0;
+		    }
+		    last_widthl = font[ttxfont].dim[SPACE] * .5 * SIZE_FACTOR (path);
+		    last_widthr = font[ttxfont].dim[SPACE] * .5 * SIZE_FACTOR (path);
+		    break;
 	    }
 	}
 	else
 	{
-    not_special:
+	not_special:
 /*
  *  Printable character.
  *  Pull out the actual strokes that make up each glyph.
@@ -1102,20 +1102,20 @@ int             linecount;
 	    if (!first)
 	    {
 		mov (
-		     (font[ttxfont].swidthl[istring[2 * ii + 1]] +
-		      font[ttxfont].dim[LETTER])
-		     * SIZE_FACTOR (path)
-		     + last_widthr
-		     ,0.);
+		    (font[ttxfont].swidthl[istring[2 * ii + 1]] +
+		     font[ttxfont].dim[LETTER])
+		    * SIZE_FACTOR (path)
+		    + last_widthr
+		    ,0.);
 	    }
 	    else
 		first = 0;
 
 /* Save the left and right half-widths of this glyph */
 	    last_widthl = font[ttxfont].swidthl[istring[2 * ii + 1]]
-	     * SIZE_FACTOR (path);
+		* SIZE_FACTOR (path);
 	    last_widthr = font[ttxfont].swidthr[istring[2 * ii + 1]]
-	     * SIZE_FACTOR (path);
+		* SIZE_FACTOR (path);
 
 /*
  * Calculate where to position each character in high precision.
@@ -1183,9 +1183,9 @@ int             linecount;
  * "orient_dx"'s and "orient_dy"'s contain the direction cosines
  */
 		xp += SIZE_FACTOR (path) * a * path_orient_dx +
-		 SIZE_FACTOR (up) * b * up_orient_dx;
+		    SIZE_FACTOR (up) * b * up_orient_dx;
 		yp += SIZE_FACTOR (path) * a * path_orient_dy +
-		 SIZE_FACTOR (up) * b * up_orient_dy;
+		    SIZE_FACTOR (up) * b * up_orient_dy;
 		ixp = ROUND (xp);
 		iyp = ROUND (yp);
 
@@ -1208,26 +1208,26 @@ int             linecount;
 		    polycount = 0;
 		}
 		else
-		if (INPOLY)
-		{
+		    if (INPOLY)
+		    {
 /*
  * We're still saving up the polygon. Save this vertex.
  */
-		    xxx[polycount] = ixp;
-		    yyy[polycount] = iyp;
-		    polycount++;
-		    if (polycount > MAXPOLY - 1)
-		    {
-			ERR (FATAL, name,
-			     "(gentext) Too many points in polygon.");
+			xxx[polycount] = ixp;
+			yyy[polycount] = iyp;
+			polycount++;
+			if (polycount > MAXPOLY - 1)
+			{
+			    ERR (FATAL, name,
+				 "(gentext) Too many points in polygon.");
+			}
 		    }
-		}
-		else
-		{
+		    else
+		    {
 /* No polygons, just output the vector */
-		    if (DRAW && !ghost)
-			dev.vector (xnew, ynew, ixp, iyp, ROUND (tfat), 0);
-		}
+			if (DRAW && !ghost)
+			    dev.vector (xnew, ynew, ixp, iyp, ROUND (tfat), 0);
+		    }
 
 		xnew = ixp;
 		ynew = iyp;
@@ -1275,17 +1275,18 @@ static void mov (double hadd, double vadd)
 
 static void load_font (int ifont)
 {
-int             fd, length;
-char            filename[120], *fname;
-char            string[80];
-char           *newfont;
-int             offs[7];
-static int      done[NUMGENFONT];
-char           *stringptr;
-int             fontcheck;
-int             need_swab, file_ok;
-int             nread;
-int             vplotfontdirset;
+    int             fd, length;
+    char            filename[120], *fname;
+    char            string[80];
+    char           *newfont;
+    int             offs[7];
+    static int      done[NUMGENFONT];
+    char           *stringptr;
+    int             fontcheck;
+    int             need_swab, file_ok;
+    int             nread;
+    int             vplotfontdirset;
+    char           *rsfroot;
 
     if (done[ttxfont])
     {
@@ -1318,29 +1319,22 @@ int             vplotfontdirset;
  */
     vplotfontdirset = -1;
 
-    if (ttxfont < NUM_FONTS)
-    {
-	if ((stringptr = getenv ("VPLOTFONTDIR")) != NULL)
-	{
-	    vplotfontdirset = YES;
+    if (ttxfont < NUM_FONTS) {
+	vplotfontdirset = YES;
+
+	if ((stringptr = getenv ("VPLOTFONTDIR")) != NULL) {
 	    sprintf (filename, "%s%s.bin", stringptr, font[ttxfont].name);
-	}
-	else
-	{
 	    vplotfontdirset = YES;
-	    sprintf (filename, "%s%s.bin", VPLOT_FONT_DIR, font[ttxfont].name);
-/*
-	    vplotfontdirset = NO;
-	    sprintf (filename, "%s%s.bin", SYSTEM_FONT_DIRECTORY, font[ttxfont].name);
-*/
+	} else {
+	    if ((rsfroot = getenv("RSFROOT")) == NULL) rsfroot="/usr";
+	    sprintf (filename, "%s/include/%s.bin", rsfroot, font[ttxfont].name);
 	}
-    }
-    else
-    {
+    } else {
 /*
  * The default place to look for a user-specified vplot binary font.
  */
 	sprintf (filename, "./font%d.bin", ifont);
+	vplotfontdirset = -1;
     }
 
 /*
@@ -1370,17 +1364,17 @@ int             vplotfontdirset;
 		 "(gentext) Perhaps you need to setenv VPLOTFONTDIR on this machine?");
 	}
 	else
-	if (vplotfontdirset == YES)
-	{
-	    ERR (COMMENT, name,
-		 "(gentext) Is your environmental variable VPLOTFONTDIR correct?");
-	}
-	else
-	{
-	    ERR (COMMENT, name,
-	    "(gentext) Is the command-line parameter font%d=\"%s\" correct?",
-		 ifont, fname);
-	}
+	    if (vplotfontdirset == YES)
+	    {
+		ERR (COMMENT, name,
+		     "(gentext) Is your environmental variable VPLOTFONTDIR correct?");
+	    }
+	    else
+	    {
+		ERR (COMMENT, name,
+		     "(gentext) Is the command-line parameter font%d=\"%s\" correct?",
+		     ifont, fname);
+	    }
 	ttxfont = ERRFONT;
 	return;
     }
@@ -1438,7 +1432,7 @@ int             vplotfontdirset;
 
     if (file_ok == NO)
     {
-font_garbled:
+    font_garbled:
 /*
  * I guess if I were really tidy I would free up the memory allocated
  * to a font found to be truncated on disk. This way the partial

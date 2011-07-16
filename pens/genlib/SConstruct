@@ -18,9 +18,7 @@ except: # local version
     SConscript('../fonts/SConstruct')
     SConscript('../utilities/SConstruct')
 
-incdir = os.environ.get('VPLOTFONTDIR',incdir+os.sep)
-env.Prepend(CPPPATH=['../../include'],
-            CPPDEFINES=['VPLOT_FONT_DIR=\'\"%s\"\'' % incdir])
+env.Prepend(CPPPATH=['../../include'])
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
