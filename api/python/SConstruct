@@ -42,8 +42,10 @@ if 'python' in env.get('API',[]):
         python = 'python%s' % sys.version[:3]
         env.Prepend(LIBPATH=['/usr/lib/%s/config' % python],
                     LIBS = ['librsfplot','librsf',python])
+        ldmsuffix = '.dll' 
     else:
         env.Replace(LIBS=['drsfplot','drsf'])
+        ldmsuffix = '.so'
 
     for module in modules:
         wrap = env.CFile(module,module+'.i',SWIGFLAGS='-python')
@@ -51,7 +53,7 @@ if 'python' in env.get('API',[]):
 
         python = env.LoadableModule(module,wrap[0],
                                     LDMODULEPREFIX='_c_',
-                                    LDMODULESUFFIX='.so',
+                                    LDMODULESUFFIX=ldmsuffix,
                                     FRAMEWORKSFLAGS='-flat_namespace '
                                     '-undefined suppress')
 
