@@ -47,6 +47,8 @@ if 'python' in env.get('API',[]):
 
     for module in modules:
         wrap = env.CFile(module,module+'.i',SWIGFLAGS='-python')
+        env.Depends(wrap,'numpy.i')
+
         python = env.LoadableModule(module,wrap[0],
                                     LDMODULEPREFIX='_c_',
                                     LDMODULESUFFIX='.so',
