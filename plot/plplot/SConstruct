@@ -23,8 +23,8 @@ inc = env.RSF_Include('plvpl')
 
 if plplot:
     env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],
-                LIBPATH=['../../lib'],
-                CPPDEFINES=['RSF_LIB=\'\"%s\"\'' % libdir])
+                LIBPATH=['../../lib'])
+
     if plplotlibpath:
         env.Prepend(LIBPATH=[plplotlibpath])
 

@@ -40,6 +40,7 @@ int main (int argc, char *argv[]) {
     PLFLT *clevel = NULL;
     PLFLT zmin, zmax, step;
 
+    char *rsfroot = NULL;
     char *color, *title = NULL;
     char *label1, *label2, *label3;
     char *unit1, *unit2, *unit3;
@@ -80,7 +81,11 @@ int main (int argc, char *argv[]) {
     if (!sf_histfloat (in, "d3", &d3)) d3 = 1.;
 
     /* Set up loadable driver directory */
-    setenv ("PLPLOT_DRV_DIR", RSF_LIB, 1);
+    rsfroot = getenv("RSFROOT");
+    if (rsfroot == NULL) {
+        rsfroot="/usr";
+    }
+    setenv ("PLPLOT_DRV_DIR", rsfroot, 1);
 
     /* Initialize plplot */
     plinit (); 
