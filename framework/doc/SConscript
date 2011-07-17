@@ -25,7 +25,8 @@ txt = os.path.join(txtdir,'INDEX.txt')
 spc = os.path.join(spcdir,'extend.spec')
 man = os.path.join(mn1dir,'index.man')
 
-repos = os.environ.get('RSF_REPOSITORY',srcdir)
+repos = os.environ.get('RSF_REPOSITORY',
+                       'http://rsf.svn.sourceforge.net/viewvc/rsf/trunk')
 
 docs = map(lambda x: os.path.join('..','rsf',x),
            Split('sfdoc doc.py prog.py use.py'))
