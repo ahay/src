@@ -3,7 +3,7 @@
 # Fedora Live Spin with m8r and the a minimal version of the XFCE Desktop
 #
 # Usage:
-# 0. Have a machine with Fedora 13 x86_64
+# 0. Have a machine with Fedora 15 x86_64
 # 1. Install dependencies. As root:
 #    yum -y install livecd-tools system-config-kickstart spin-kickstarts
 # 2. Set SELinux to permissive mode. As root:
@@ -14,7 +14,7 @@
 %include /usr/share/spin-kickstarts/fedora-live-base.ks
 %include /usr/share/spin-kickstarts/fedora-live-minimization.ks
 
-repo --name=Madagascar --includepkgs=madagascar --baseurl=http://ahay.org/yum/repo/fedora/12/x86_64
+repo --name=Madagascar --includepkgs=madagascar --baseurl=http://ahay.org/yum/repo/fedora/15/x86_64
 
 %packages
 
@@ -34,8 +34,6 @@ firefox
 -remmina
 
 # More Desktop stuff
-# java plugin
-java-1.6.0-openjdk-plugin
 NetworkManager-vpnc
 NetworkManager-openvpn
 NetworkManager-gnome
@@ -72,17 +70,14 @@ xfce4-netload-plugin
 xfce4-places-plugin
 xfce4-power-manager
 xfce4-quicklauncher-plugin
--xfce4-remmina-plugin
 xfce4-screenshooter-plugin
 xfce4-sensors-plugin
 xfce4-smartbookmark-plugin
-xfce4-stopwatch-plugin
 xfce4-systemload-plugin
 xfce4-taskmanager
 xfce4-time-out-plugin
 xfce4-timer-plugin
 xfce4-verve-plugin
-xfce4-volstatus-icon
 xfce4-xfswitch-plugin
 xfce4-xkb-plugin
 -xfwm4-themes
@@ -132,8 +127,6 @@ xfce4-xkb-plugin
 -fedora-release* 
 generic-logos
 generic-release
-# This package gives an error
--ibus-pinyin-open-phrase
 
 # m8r dependencies
 binutils
@@ -198,7 +191,7 @@ mkdir /home/liveuser/Desktop
 cp /usr/share/applications/liveinst.desktop /home/liveuser/Desktop
 
 # Madagascar configuration
-echo 'source /etc/madagascar/env.sh' >> /home/liveuser/.bashrc
+echo 'export DATAPATH=/var/tmp/' >> /home/liveuser/.bashrc
 
 # this goes at the end after all other changes. 
 chown -R liveuser:liveuser /home/liveuser
