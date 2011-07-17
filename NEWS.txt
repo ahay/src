@@ -32,6 +32,7 @@ In programs:
 In the build system:
 * Fixed bug that resulted in BLAS/ATLAS-based programs to not install in Fedora
 * Eliminated hardcoded paths that made it impossible to package m8r
+* Workaround for SCons bug #1488 
 
 ==Release 1.2 (2011-07-14)==
 
