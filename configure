@@ -92,6 +92,10 @@ if test "$scons" = "no"; then
 	fatal_error "Please install SCons manually!"
 	exit 2
     fi
+    # Workaround for SCons bug # 1488
+    if [ -d "$RSFROOT/lib64" ] && [ ! -d "$RSFROOT/lib" ]; then
+        ln -s $RSFROOT/lib64 $RSFROOT/lib
+    fi
 fi
 scons_v=`$scons -v 2>&1 | awk 'NR==2 {print $2}' | sed s/,//`
 echo "checking SCons version ... $scons_v"
