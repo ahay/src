@@ -107,6 +107,7 @@ def check_all(context):
     omp (context) # FDNSI
     petsc(context) # FDNSI
     cuda(context) # FDNSI
+    epydoc(context) #FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -1560,6 +1561,18 @@ def matlab(context):
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
+pkg['epydoc'] = {'fedora':'epydoc'}
+
+def epydoc(context):
+    context.Message("checking for Epydoc ...")
+    epydoc_exec = WhereIs('epydoc')
+    if epydoc_exec:
+        context.Result(epydoc_exec)
+        context.env['EPYDOC'] = epydoc_exec
+    else:
+        context.Result(context_failure)
+        need_pkg('epydoc')
+
 pkg['octave'] = {'fedora':'octave',
                  'ubuntu':'octave'}
 
@@ -1579,11 +1592,9 @@ def octave(context):
             context.env['MKOCTFILE'] = mkoctfile
         else:
             context.Result(context_failure)
-            stderr_write('Please install mkoctfile.','bold')
             need_pkg('mkoctfile')
     else: # octave not found
         context.Result(context_failure)
-        stderr_write('Please install Octave.','bold')
         need_pkg('octave')
 
 pkg['swig'] = {'fedora':'swig',
@@ -1684,6 +1695,9 @@ def options(file):
         opts=Options(file)
     else:
         opts=Variables(file)
+
+    # Switch pattern below to a single opts.AddVariables() call after Linux
+    # distros that came with SCons 1.2 or older stop being supported
 
     opts.Add('ENV','SCons environment')
     opts.Add('RSFROOT','Top Madagascar installation directory')
