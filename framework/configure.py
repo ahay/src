@@ -1571,7 +1571,7 @@ def epydoc(context):
         context.env['EPYDOC'] = epydoc_exec
     else:
         context.Result(context_failure)
-        need_pkg('epydoc')
+        need_pkg('epydoc',False)
 
 pkg['octave'] = {'fedora':'octave',
                  'ubuntu':'octave'}
@@ -1658,7 +1658,8 @@ def java(context):
                 os.path.basename(MINESJTK) == 'edu_mines_jtk.jar':            
             context.env['MINESJTK'] = MINESJTK
         else:
-            stderr_write('Set MINESJTK to the location of edu_mines_jtk.jar',
+            stderr_write('Please set MINESJTK to the '
+                         'location of edu_mines_jtk.jar and rerun ./configure',
                          'bold')
             context.env['MINESJTK'] = None
     else:
