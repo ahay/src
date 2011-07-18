@@ -277,9 +277,7 @@ env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
 if os.path.isdir(etcdir2):
     env.Alias('install',etcdir2)
 
-##########################################################################
-# End-of-build message
-##########################################################################
+# End-of-installation message
 
 def msgEndInstall():
     from SCons.Script import GetBuildFailures
@@ -294,4 +292,5 @@ Documentation wiki at http://www.ahay.org
 ---------------------------------------------------------
 ''' % (etcdir, docdir)
 
-atexit.register(msgEndInstall)
+if 'install' in COMMAND_LINE_TARGETS:
+    atexit.register(msgEndInstall)
