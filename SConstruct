@@ -277,8 +277,7 @@ env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
 if os.path.isdir(etcdir2):
     env.Alias('install',etcdir2)
 
-# End-of-installation message
-
+# end-of-installation message
 def msgEndInstall():
     from SCons.Script import GetBuildFailures
     if not GetBuildFailures():
@@ -294,3 +293,14 @@ Documentation wiki at http://www.ahay.org
 
 if 'install' in COMMAND_LINE_TARGETS:
     atexit.register(msgEndInstall)
+
+##########################################################################
+# PYTHON PACKAGE DOCUMENTATION
+##########################################################################
+
+if env.get('EPYDOC',[]):
+    epydir = os.path.join(docdir,'epydoc')
+    envcmd = 'env PYTHONPATH=' + os.path.dirname(pkgdir.rstrip(os.path.sep))
+    epyargs = '--exclude rsf.use --exclude rsf.vplot --exclude rsf.sf* '
+    epyargs += '--html -qqq --no-private --graph classtree rsf'
+    env.Command(epydir, pkgdir, envcmd + ' epydoc -o $TARGET ' + epyargs)

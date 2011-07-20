@@ -1561,7 +1561,8 @@ def matlab(context):
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
-pkg['epydoc'] = {'fedora':'epydoc'}
+pkg['epydoc'] = {'fedora':'epydoc',
+                 'ubuntu':'python-epydoc'}
 
 def epydoc(context):
     context.Message("checking for Epydoc ...")
@@ -1708,7 +1709,8 @@ def options(file):
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
     opts.Add('OPENGLPATH','Path to OpenGL headers')
     opts.Add('MPICC','MPI C compiler')
-    opts.Add('PETSCDIR','Portable, Extensible Toolkit for Scientific computation - installation directory')
+    opts.Add('PETSCDIR',
+    'Portable, Extensible Toolkit for Scientific computation - installation directory')
     opts.Add('PETSCPATH','PETSc - path to headers')
     opts.Add('PETSCLIBPATH','PETSc - path to libraries')
     opts.Add('PETSCLIBS','PETSc - libraries')
@@ -1774,5 +1776,6 @@ def options(file):
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
     opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
     opts.Add('NVCC','NVIDIA C compiler')
+    opts.Add('EPYDOC','RSF Python package HTML documentation')
     
     return opts
