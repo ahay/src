@@ -450,12 +450,10 @@ class Project(Environment):
             
         flow = self.Command(targets,sources,command)
 
-        if suffix == sfsuffix and \
-               sys.platform[:6] != 'cygwin' and \
-               sys.platform[:7] != 'interix':            
+        if suffix == sfsuffix:
             binaries = map(lambda x, self=self: self.path + x + '@',
                            filter(lambda x, suffix=suffix:
-                                  x[-len(suffix):] == suffix,targets))
+                                      x[-len(suffix):] == suffix,targets))
             if binaries:
                 Clean(flow,binaries)
 
