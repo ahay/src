@@ -118,6 +118,13 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
     }
 }
 
+
+void fwarp3(float ***slice2 /* [n3][n2][n1] output */,
+	   float ***coord1 /* [nx][ny][nt] coordinates */,
+	   float ***coord2 /* [nx][ny][nt] coordinates */,
+	   float ***coord3 /* [nx][ny][nt] coordinates */,
+	   float ***slice  /* [nx][ny][nt] input */)
+
 /*< Apply Forward Warping >*/
 {
     int i1, i2, i3;
