@@ -110,12 +110,12 @@ void fwarp2(float **slice2 /* [n2][n1] input */,
     }
 
    for (i1=0; i1 < n1; i1++) {	
-	stretch4_define (map2,xstr1[i1]);
-
+	
 	for (i2=0; i2 < n2; i2++) {
 	    trace2[i2] = slice2[i2][i1];
 	}
-
+        
+        stretch4_define (map2,xstr1[i1]);
 	stretch4_invert (map2,slice1[i1],trace2);
     }
 
