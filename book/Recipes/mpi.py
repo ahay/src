@@ -125,8 +125,8 @@ def gridandstack(stack,files,np,
     oprefix - output file prefix (eprefix)
     nx,ox,dx,ny,oy,dy - output stacked file dimensions
     either specify shots or nf,of,jf:
-        shots - list of shot indices to be put into a file
-        nf,of,jf - number of files in sequential order
+    -> shots - list of shot indices to be put into a file
+    -> nf,of,jf - number of files in sequential order
     '''
 
     nfiles = len(files)

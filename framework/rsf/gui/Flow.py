@@ -43,10 +43,10 @@ class Flow():
         '''
         Create a new Flow.
         
-        program is an instance of Program, which tells this flow, 
-            which parameters it has and it's program name.
-        id is a number that uniquely identifies this flow.
-        ftype is the type of the Flow (see enumerated types in Flow class)
+         - program is an instance of Program, which tells this flow, 
+           which parameters it has and it's program name.
+         - id is a number that uniquely identifies this flow.
+         - ftype is the type of the Flow (see enumerated types in Flow class)
         '''
         
         # Save identifying variables
@@ -636,7 +636,7 @@ class LinkedFlow():
         Pass a tag for a new Linked Flow, if necessary.
         
         Returns: a list of unlinked Flows and/or LinkedFlows that include all
-                 Flows that are split as a result of this action.
+        Flows that are split as a result of this action.
         '''
 
         index = self.flows.index(flow)

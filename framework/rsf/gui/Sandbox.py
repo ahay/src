@@ -88,11 +88,11 @@ class Sandbox(Canvas):
         
         If index, return the item corresponding to that index from the list.
         Example:  
-            If there are two Flows then index=0 returns the top-most Flow.
-                   OR                   index=1 returns the bottom   Flow.
+        -> If there are two Flows then index=0 returns the top-most Flow.
+        ->        OR                   index=1 returns the bottom   Flow.
         
         For LinkedFlows: index=1 returns the Flow under the cursor instead of 
-            the LinkedFlow.
+        the LinkedFlow.
         '''       
         ids = self.find_overlapping(x,y,x+1,y+1)
         unique = None
