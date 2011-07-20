@@ -36,7 +36,7 @@ static int framecol, frame2, frame3, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static int framelabelcol=VP_YELLOW;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
-static bool cube=false, flat, xreverse, yreverse;
+static bool cube=false, movie=false, flat, xreverse, yreverse;
 static char blank[]=" ";
 static const float aspect=0.8, ticksep=1.75;
 
@@ -328,7 +328,8 @@ void vp_coordinates (void)
 
 void vp_cubeplot_init (int n1pix, int n2pix,      /* total pixels */ 
 		       int n1front, int n2front,  /* front face pixels */
-		       bool flat1                 /* flat flag */) 
+		       bool flat1                 /* flat flag */,
+                       bool movie1                /* movie flag */) 
 /*< Initializing 3-D cube plot. >*/
 {
     min1 = -0.5;
@@ -341,6 +342,7 @@ void vp_cubeplot_init (int n1pix, int n2pix,      /* total pixels */
 
     cube = true;
     flat = flat1;
+    movie = movie1;
 
     vp_stdplot_init (min1,max1,min2,max2, true, false, false, false);
     swap(&mid1,&mid2); /* transp=true */
@@ -368,7 +370,7 @@ static void make_labels (sf_file in, char where1, char where2)
 	l1min = o2-0.5*d2;
 	l1max = o2+(n2-0.5)*d2;
 
-	n3 = sf_leftsize(in,2);
+	if (!movie || !sf_histint(in,"n3",&n3)) n3 = sf_leftsize(in,2);
 	if (!sf_histfloat(in,"o3",&o3)) o3=0.;
 	if (!sf_histfloat(in,"d3",&d3)) d3=1.;
 	l3min = o3-0.5*d3;

@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 
     sf_unpipe(in,(off_t) n1*n2*n3);
 
-    vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
+    vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat, false); 
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 

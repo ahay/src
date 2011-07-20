@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
 
-    vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
+    vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat, false); 
     vp_frame_init (in,"blt",false);
     vp_plot_init(n3);
     cnt = vp_contour_init(false,n1,o1,d1,n2,o2,d2); 
