@@ -160,7 +160,7 @@ void fwarp3(float ***slice2 /* [n3][n2][n1] output */,
             for (i1=0; i1 < n1; i1++) {
                 trace1[i1] = slice1[i1][i2][i3];
             }												
-	    stretch4_invert (map1,slice[i3][i2],trace1)
+	    stretch4_invert (map1,slice[i3][i2],trace1);
         	   
 	}
     }
