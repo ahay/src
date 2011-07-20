@@ -107,9 +107,9 @@ int main(int argc, char* argv[])
 	    warp3(slice,tstr,ystr,xstr,slice2);
 	    sf_floatwrite (slice2[0][0],n1*n2*n3,out);
         } else {
-	    sf_error("forward warping is not implemented yet");
+	    /*sf_error("forward warping is not implemented yet");*/
             sf_floatread(slice2[0][0],n1*n2*n3,in);
-	    /* fwarp3(slice2,tstr,ystr,xstr,slice); */
+	    fwarp3(slice2,tstr,ystr,xstr,slice);
 	    sf_floatwrite (slice[0][0],ntxy,out);
         }
     }
