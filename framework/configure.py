@@ -156,7 +156,7 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'debian'
                 plat['version'] = dist()[1]   
-            elif dist()[0] == 'SuSE':
+            elif dist()[0].lower() == 'suse':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'suse'        
             elif name[-7:] == 'generic':
