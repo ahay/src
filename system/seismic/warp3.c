@@ -137,12 +137,13 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
     }
     
     for (i1=0; i1 < n1; i1++) {
-	warp2(trace2,str2[i1],str3[i1],slice1[i1]);
         for (i3=0; i3 < nx; i3++) {
 	    for (i2=0; i2 < ny; i2++) {
                 slice2[i3][i2][i1] = trace2[i3][i2];
 	    }
 	}
+        
+        fwarp2(trace2,str2[i1],str3[i1],slice1[i1]); 
     }
     
     for (i3=0; i3 < nx; i3++) {
