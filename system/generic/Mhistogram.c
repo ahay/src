@@ -1,4 +1,6 @@
-/* Compute a histogram of data values. */
+/* Compute a histogram of data values.
+The output grid is not centered on the bins; it marks their "left edge".
+I.e., the first sample holds the number of values between o1 and o1+d1*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
