@@ -17,6 +17,7 @@ To programs:
 
 * sfgrey4: generate movie of 3-D cube plots.
 * sfungrad: phase unwrapping by least squares.
+* sfhistogram: takes integer input
 
 ===Bug fixes===
 
