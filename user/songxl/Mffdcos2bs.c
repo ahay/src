@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
          aa[iz][ix][0] = w-2.0*aa[iz][ix][1]-2.0*aa[iz][ix][2];
         }
       }
-    if(nb) wb =  sf_floatalloc(nb);
+    wb = nb? sf_floatalloc(nb): NULL;
     abc_cal(0,nb,c,wb);
 
 

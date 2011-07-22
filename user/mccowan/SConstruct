@@ -35,7 +35,7 @@ for prog in mains:
 
 threads = env.get('PTHREADS')
 if threads:
-    prog = env.Program('Mthreads.c')
+    prog = env.Program('threads','Mthreads.c')
 else:
     prog = env.RSF_Place('sfthreads',None,var='PTHREADS')
 if root:
