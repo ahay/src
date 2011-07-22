@@ -36,7 +36,9 @@ Plot('eik','eik','contour title=Overlay nc=45 plotfat=5 min1=0 max1=200 min2=0 m
 Result('fig7','v eik','Overlay')
 
 # sfgrey3
-Fetch('shots.hh','shots',top=os.path.join(os.environ['SWAGM'],'data'),server='local')
+Fetch('shots.hh','shots')
+# top=os.path.join(os.environ['SWAGM'],'data'),
+#      server='local')
 
 Flow('shots','shots.hh','''
     dd form=native type=float | 

@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfcat', 'sfadd', 'sfgrey', 'sfeikonal', 'sfcontour', 'sfdd', 'sfwindow', 'sftransp', 'sfput', 'sfbyte', 'sfgrey3', 'sfspike', 'sfricker1', 'sfnoise', 'sfheadersort', 'sfinmo', 'sfwiggle']
+data=['data/shots/shots.hh']
+size=    3753800

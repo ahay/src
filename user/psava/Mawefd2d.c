@@ -1,4 +1,5 @@
-/* 2D acoustic time-domain FD modeling
+/* 2D acoustic time-domain FD modeling.
+
 4th order in space, 2nd order in time. Absorbing boundary conditions*/
 /*
   Copyright (C) 2007 Colorado School of Mines

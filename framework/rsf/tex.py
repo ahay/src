@@ -418,7 +418,7 @@ def pstexpen(target=None,source=None,env=None):
             if geomanuscript:
                 options += ' serifs=n'
             elif slides:
-                options += ' fat=3 txscale=2'
+                options += ' fat=2 txscale=1.25'
             vpconvert.convert(vpl,eps,'eps',None,options)
         except:
             sys.stderr.write('vpconvert failed\n')
