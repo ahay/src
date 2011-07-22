@@ -6,11 +6,13 @@ Fetch('Nshots.su','nankai')
 
 # Convert to RSF
 
-Flow('shots tshots','Nshots.su','suread suxdr=y tfile=${TARGETS[1]} | window min1=5')
+Flow('shots tshots','Nshots.su',
+     'suread suxdr=y tfile=${TARGETS[1]} | window min1=5')
 
 # Extract shots
 
-Flow('shots2 smask','shots','intbin mask=${TARGETS[1]} xk=tracf yk=fldr')
+Flow('shots2 smask','shots',
+     'intbin mask=${TARGETS[1]} xk=tracf yk=fldr')
 
 Result('smask',
        '''
@@ -21,39 +23,56 @@ Result('smask',
        ''')
 
 Flow('offset','tshots',
-     'window n1=1 f1=11 squeeze=n | dd type=float | intbin head=$SOURCE xk=tracf yk=fldr')
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin head=$SOURCE xk=tracf yk=fldr
+     ''')
 
 # Display individual shots
 
-for fldr in (1707,1847):
-    shot = 'shot%d' % fldr
-    offset = 'offset%d' % fldr
-    mask = 'mask%d' % fldr
+Flow('mask1707','smask','window n2=1 min2=1707')
 
-    Flow(mask,'smask','window n2=1 min2=%d' % fldr)
-    
-    Flow(shot,['shots2',mask],
-         'window n3=1 min3=%d squeeze=n | headerwindow mask=${SOURCES[1]}' % fldr)
-    Flow(offset,['offset',mask],
-         'window n3=1 min3=%d squeeze=n | headerwindow mask=${SOURCES[1]}' % fldr)
+Flow('shot1707','shots2 mask1707',
+     '''
+     window n3=1 min3=1707 squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''')
+Flow('offset1707','offset mask1707',
+     '''
+     window n3=1 min3=1707 squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''')
 
-    Result(shot,[shot,offset],
-           '''
-           window min1=5.8 max1=7.8 |
-           wiggle xpos=${SOURCES[1]} yreverse=y transp=y poly=y
-           title="fldr %d" label2=Offset
-           ''' % fldr)
+Result('shot1707','shot1707 offset1707',
+       '''
+       window min1=5.8 max1=7.8 |
+       wiggle xpos=${SOURCES[1]} yreverse=y transp=y poly=y
+       title="fldr 1707" label2=Offset
+       ''')
 
-    fx = 'fx%d' % fldr
-    Flow(fx,shot,'spectra')
-    Result(fx,'grey color=j allpos=y title=FX')
+Flow('fx1707','shot1707','spectra')
+Result('fx1707','grey color=j allpos=y title="FX spectra"')
 
-# Resample to 4 ms and extract CMPs
+# Resample to 4 ms
 
-Flow('cmps cmask','shots',
-     'bandpass fhi=125 | window j1=2 | intbin mask=${TARGETS[1]} xk=tracf yk=cdp')
+Flow('subsamples','shots',
+     '''
+     bandpass fhi=125 | window j1=2
+     ''')
+Result('spectra','subsamples',
+       'spectra all=y | graph title="Average Spectra"')
 
-Flow('offs','tshots','window n1=1 f1=11 squeeze=n | dd type=float | intbin xk=tracf yk=cdp head=$SOURCE')
+# Extract CMPs
+Flow('cmps cmask','subsamples',
+     '''
+     intbin mask=${TARGETS[1]} xk=tracf yk=cdp
+     ''')
+
+Flow('offs','tshots',
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin xk=tracf yk=cdp head=$SOURCE
+     ''')
 
 Result('cmask',
        '''
@@ -63,65 +82,67 @@ Result('cmask',
        label2="Traces per CMP Gather" 
        ''')
 
-# Window a CMP and determine tpow gain
-
-cmpno = 1280
-
-Flow('mask','cmask','window n2=1 min2=%d' % cmpno)
-
-Flow('cmp','cmps mask',
-     '''
-     window n3=1 min3=%d |
-     headerwindow mask=${SOURCES[1]}
-     ''' % cmpno)
-Flow('off','offs mask',
-     '''
-     window n3=1 min3=%d squeeze=n |
-     headerwindow mask=${SOURCES[1]}
-     ''' % cmpno)
-        
-Flow('tpow beta','cmp',
-     '''
-     stack | envelope | fpow beta=${TARGETS[1]} time=y |
-     spray axis=2 n=48 o=28 d=1 | mul $SOURCE
-     ''')
-
-label = {'cmp':'',
-         'tpow':'(Gained)'}
-
-for case in ('cmp','tpow'):
-    Plot(case,[case,'off'],
-         '''
-         wiggle xpos=${SOURCES[1]} title="CMP %d %s"
-         yreverse=y transp=y poly=y label2=Offset unit2=m
-         wherexlabel=t wheretitle=b
-         ''' % (cmpno,label[case]))
-
-Result('cmp','cmp tpow','SideBySideAniso')
-
 # Apply t^2 gain
 Flow('cmpt','cmps','pow pow1=2')
+Flow('mask','cmask','window n2=1 min2=1280')
 
+Flow('cmp1','cmps mask',
+     '''
+     window n3=1 min3=1280 | headerwindow mask=${SOURCES[1]}
+     ''')
+
+Flow('cmpt1','cmpt mask',
+     '''
+     window n3=1 min3=1280 | headerwindow mask=${SOURCES[1]}
+     ''')
+Flow('off','offs mask',
+     '''
+     window n3=1 min3=1280 squeeze=n | headerwindow mask=${SOURCES[1]}
+     ''')
+Plot('cmp1','cmp1 off',
+     '''
+     wiggle xpos=${SOURCES[1]} title="CMP 1280"
+     yreverse=y transp=y poly=y label2=Offset unit2=m
+     wherexlabel=t wheretitle=b
+     ''')
+Plot('cmpt1','cmpt1 off',
+     '''
+     wiggle xpos=${SOURCES[1]} title="CMP 1280 (Gained)"
+     yreverse=y transp=y poly=y label2=Offset unit2=m
+     wherexlabel=t wheretitle=b
+     ''')
+Result('cmp','cmp1 cmpt1','SideBySideAniso')
+
+       
 # Velocity analysis and NMO
-Flow('vscan','tpow off mask',
+Flow('vscan','cmpt1 off mask',
      '''
      vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
      v0=1400 nv=101 dv=10 semblance=y 
      ''')
 Plot('vscan','grey color=j allpos=y title="Velocity Scan" unit2=m/s')
 
-Flow('pick','vscan','mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25')
-Plot('pick','graph transp=y yreverse=y plotcol=7 plotfat=3 pad=n min2=1400 max2=2400 wanttitle=n wantaxis=n')
+Flow('pick','vscan',
+     'mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25')
+Plot('pick',
+     '''
+     graph transp=y yreverse=y plotcol=7 plotfat=3
+     pad=n min2=1400 max2=2400 wanttitle=n wantaxis=n
+     ''')
 
 Plot('vscanp','vscan pick','Overlay')
 
-Flow('nmo','tpow off mask pick','nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]}')
+Flow('nmo','cmpt1 off mask pick',
+     '''
+     nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     velocity=${SOURCES[3]}
+     ''')
 
-Plot('tpowg','tpow','grey title="CMP %d" labelsz=12 titlesz=18' % cmpno)
+Plot('tpowg','cmpt1','grey title="CMP 1280" labelsz=12 titlesz=18')
 Plot('nmog','nmo','grey title="Normal Moveout" labelsz=12 titlesz=18')
 Plot('nmo','tpowg nmog','SideBySideAniso')
 
-Result('vscan','tpow vscanp nmo','SideBySideAniso')
+Result('vscan','cmpt1 vscanp nmo','SideBySideAniso')
 
 # Apply to all CMPs
 
@@ -130,7 +151,11 @@ Flow('vscans','cmpt offs cmask',
      vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
      v0=1400 nv=101 dv=10 semblance=y nb=5
      ''')
-Flow('picks','vscans','mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25 rect2=10')
+Flow('picks','vscans',
+     '''
+     mutter inner=y half=n t0=5 x0=1400 v0=75 |
+     pick v0=1500 rect1=25 rect2=10
+     ''')
 
 Result('picks',
        '''
@@ -139,43 +164,50 @@ Result('picks',
        ''')
 
 Flow('nmos','cmpt offs cmask picks',
-     'nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]}')
+     '''
+     nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     velocity=${SOURCES[3]}
+     ''')
 
 Flow('stack','nmos','stack')
 
-Result('stack','window min1=5.5 max1=8 | grey title="NMO Stack" ')
+Result('stack','window min1=5.5 max1=8.0 | grey title="NMO Stack" ')
 
 # Velocity continuation
-
-Flow('stolt','stack',
+Flow('first','stack',
      '''
      put o2=0 d2=16.667 label2=Distance unit2=m |
      cosft sign2=1 | pad beg1=1250 |
      stolt vel=1400 
      ''')
 
-Flow('first','stolt',
-     '''
-     window min1=5 | 
-     cosft sign2=-1
-     ''')
-
 Result('first',
-       'window min1=5.5 max1=8 | grey title="Migration with 1400 m/s" ')
+       '''
+       window min1=5.5 max1=8.0 | 
+       cosft sign2=-1 |
+       grey title="Migration with 1400 m/s"
+       ''')
 
-Flow('velcon','stolt',
+Flow('velcon','first',
      '''
      spray axis=2 n=1 o=0 d=1 |
      put o4=0 |
      fourvc nv=101 dv=10 v0=1400 verb=y |
-     window min1=5.5 max1=8 | 
+     window min1=5.5 max1=8.0 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
      ''')
-Plot('velcon','grey title="Velocity Continuation"',view=1)
+Result('velcon',
+       '''
+       byte gainpanel=a | 
+       grey3 frame1=300 frame2=200 frame3=50 
+       point1=0.8 point2=0.8 flat=n unit3=m/s
+       title="Velocity Continuation"
+       ''')
+Plot('movie','velcon','grey title="velocity continuation"',view=1)
 
 # Migration with the stacking velocity
-Flow('mpick','picks','window min1=5.5 max1=8')
+Flow('mpick','picks','window min1=5.5 max1=8.0')
 Flow('mstack','velcon mpick',
      '''
      transp plane=23 memsize=1000 |
@@ -216,6 +248,5 @@ Flow('velcond','stoltd',
 Plot('velcond','grey title="Velocity Continuation"',view=1)
 
 Flow('focus','velcond','focus rect1=40 rect2=20 | math output="1/abs(input)" ')
-
 
 End()
