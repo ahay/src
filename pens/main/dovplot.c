@@ -1845,7 +1845,7 @@ static void reset (void)
     fat = fatmult * (float) (fatbase);
     dev.attributes (NEW_FAT, fat, 0, 0, 0);
 
-    if (cur_color != COLOR_MAP (DEFAULT_COLOR));
+    if (cur_color != COLOR_MAP (DEFAULT_COLOR))
     {
 	need_devcolor = YES;
 	cur_color = COLOR_MAP (DEFAULT_COLOR);
