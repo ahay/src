@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!inv) cmultidivn_init(nt, 1, n1, &n1, &rect, kbsc, verb && (n2 < 500)); 
+    if (!inv) cmultidivn_init(nt, 1, n1, &n1, &rect, kbsc, (bool) (verb && (n2 < 500)));
 
     for (i2=0; i2 < n2; i2++) {
 	sf_warning("slice %d of %d;",i2+1,n2);
