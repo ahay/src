@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     int n123, n1, i, ik, dim, nk, nf, sf, niter, nw;
     int n[SF_MAX_DIM], w[SF_MAX_DIM], k[SF_MAX_DIM];
     int sa[SF_MAX_DIM], na[SF_MAX_DIM], sc[SF_MAX_DIM], nc[SF_MAX_DIM];
+    int ma[SF_MAX_DIM], mc[SF_MAX_DIM]; 
     float *data, *wind, *sign, eps, di, dabs;
     char varname[6], *lagfile;
     sf_filter saa, naa, sbb, nbb, scc, ncc;
@@ -125,7 +126,13 @@ int main(int argc, char* argv[])
     }
 
     wind = sf_floatalloc(nw);
-    tent (dim, w, (sc < nc)? sc: nc, (sa < na)? sa: na, wind);
+
+    for (i=0; i < dim; i++) {
+	mc[i] = SF_MIN(sc[i],nc[i]);
+	ma[i] = SF_MIN(sa[i],na[i]);
+    }
+
+    tent (dim, w, mc, ma, wind);
  
     for (i=0; i < n123-n1+1; i += n1) {
 	signoi_init (naa, saa, niter, nw, eps);
