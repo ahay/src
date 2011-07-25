@@ -42,7 +42,8 @@ static void circle(int corners,
 
 int main (int argc, char* argv[])
 {
-    int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize, font;
+    int i, i1,n1, i2,n2, i3, n3, ir;
+    int labelsz, connect, corners, dots, newsize, font;
     size_t len;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
     float epsilon, dd1, dd2, axis, hi=0., lo=0., av, maxab, range;
@@ -350,8 +351,8 @@ int main (int argc, char* argv[])
 	} /* i2 */
 
 	if(NULL != label) 
-	    vp_simple_axis(marginl, marginb*0.8,  
-			   screenwide-marginr, marginb*0.8,
+	    vp_simple_axis(marginl+dd1/2,        marginb*0.8,  
+			   marginl+(n1-0.5)*dd1, marginb*0.8,
 			   o1, o1+(n1-1)*d1, 0., 0., 
 			   .25, label, 0.03*labelsz);
 

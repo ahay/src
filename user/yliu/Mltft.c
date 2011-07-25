@@ -25,11 +25,11 @@
 int main(int argc, char* argv[])
 {
     bool inv, verb;
-    int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12;
+    int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12, n1w;
     int m[SF_MAX_DIM], *rect;
     float t, d1, w, w0, dw, mean, alpha;
     float *trace, *kbsc, *mkbsc=NULL,*sscc=NULL, *mm=NULL;
-    sf_complex *outp;
+    sf_complex *outp, *cbsc;
     sf_file in, out, mask, basis;
    
     sf_init(argc,argv);
@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
 
     if (NULL != sf_getstring("basis")) {
 	basis = sf_output("basis");
+	sf_settype(basis,SF_COMPLEX);
     } else {
 	basis = NULL;
     }
@@ -97,20 +98,22 @@ int main(int argc, char* argv[])
 
     if (NULL != basis) {
 	sf_shiftdim(in, basis, 2);
-	sf_putint(basis,"n2",nw*2);
+	sf_putint(basis,"n2",nw);
 	sf_putfloat(basis,"d2",dw);
 	sf_putfloat(basis,"o2",w0);
 	sf_putstring(basis,"label2","Frequency");
 	sf_putstring(basis,"unit2","Hz");
     }
-	
-    n12 = 2*n1*nw;
+
+    n1w = n1*nw;
+    n12 = 2*n1w;
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
 
     trace = sf_floatalloc(n1);
     kbsc    = sf_floatalloc(n12);
-    outp = sf_complexalloc(n1*nw);
+    outp = sf_complexalloc(n1w);
+    cbsc = sf_complexalloc(n1w);
 
     rect = sf_intalloc(2*nw);
     for (iw=0; iw < nw; iw++) {
@@ -119,7 +122,8 @@ int main(int argc, char* argv[])
 
     if (!inv) {
 	sscc = sf_floatalloc(n12);
-	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, (bool) (verb && (n2 < 500))); 
+	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, 
+			(bool) (verb && (n2 < 500))); 
     }
     
     if (NULL != sf_getstring("mask")) {
@@ -135,12 +139,10 @@ int main(int argc, char* argv[])
     /* sin and cos basis */
     for (iw=0; iw < nw; iw++) {
         w = w0 + iw*dw;
-	if (0.==w) { /* zero frequency */
-	    for (i1=0; i1 < n1; i1++) {
+	for (i1=0; i1 < n1; i1++) {
+	    if (0.==w) { /* zero frequency */
 		kbsc[iw*n1+i1] = 0.;
-	    }
-	} else {
-	    for (i1=0; i1 < n1; i1++) {
+	    } else {
 		t = i1*d1;
 		kbsc[iw*n1+i1] = sinf(w*t);
 	    }
@@ -148,26 +150,27 @@ int main(int argc, char* argv[])
     }
     for (iw=0; iw < nw; iw++) {
         w = w0 + iw*dw;
-	if (0.==w) { /* zero frequency */
-	    for (i1=0; i1 < n1; i1++) {
+	for (i1=0; i1 < n1; i1++) {
+	    if (0.==w) { /* zero frequency */
 		kbsc[(iw+nw)*n1+i1] = 0.5;
-	    }
-	} else {
-	    for (i1=0; i1 < n1; i1++) {
+	    } else {
 		t = i1*d1;
 		kbsc[(iw+nw)*n1+i1] = cosf(w*t);
 	    }
+
+	    cbsc[iw*n1+i1] = sf_cmplx(kbsc[(iw+nw)*n1+i1],
+				      kbsc[iw*n1+i1]);
 	}
+    }
+
+    if (NULL != basis) {
+	sf_complexwrite(cbsc,n1w,basis);
     }
     
     if (NULL != mm) {
 	for (iw=0; iw < n12; iw++) {
 	    mkbsc[iw] = kbsc[iw];
 	}
-    }
-
-    if (NULL != basis) {
-	sf_floatwrite(kbsc,n12,basis);
     }
 
     mean = 0.;
@@ -216,12 +219,12 @@ int main(int argc, char* argv[])
 					      sscc[iw*n1+i1]);
 		}
 	    }
-	    sf_complexwrite(outp,n1*nw,out);
+	    sf_complexwrite(outp,n1w,out);
 	} else {
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1] = 0.;
 	    }
-	    sf_complexread(outp,n1*nw,in);
+	    sf_complexread(outp,n1w,in);
 	    for (iw=0; iw < nw; iw++) {
 		for (i1=0; i1 < n1; i1++) {
 		    trace[i1] += crealf(outp[iw*n1+i1])*kbsc[(iw+nw)*n1+i1]

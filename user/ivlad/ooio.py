@@ -247,7 +247,7 @@ class RSFfile(MetaFile):
     def set_defaults_and_constants(self):
         self.ndim_max = 9
         self.defaults = {'n':1,'o':0.0,'d':'1.0','unit':'unknown',
-        'lbl':'unknown'}
+        'label':'unknown'}
         self.hdr_flushed = False
         # To do: implement XDR and ASCII encodings
         self.encoding = 'native'
@@ -316,7 +316,7 @@ class RSFfile(MetaFile):
         self.ax = []
         for i in range(ndim):
             self.ax.append(
-                {'n':None,'o':None,'d':None, 'unit':None, 'lbl':None})
+                {'n':None,'o':None,'d':None, 'unit':None, 'label':None})
         self.set_ndim(ndim)
         self.set_intent(intent)
         self.hdr = RSFheader(hdr_nm, intent, par)
@@ -342,7 +342,7 @@ class RSFfile(MetaFile):
         self.__list2dict(o, 'o')
         self.__list2dict(d, 'd')
         self.__list2dict(unit, 'unit')
-        self.__list2dict(lbl, 'lbl')
+        self.__list2dict(lbl, 'label')
 
     def write(self,val):
         if not self.hdr_flushed:
