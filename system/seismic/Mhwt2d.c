@@ -26,6 +26,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;
+    bool rays;
 
     sf_axis az,ax;  /* Cartesian coordinates */
     sf_axis at,ag;  /* Ray coordinates */
@@ -50,6 +51,7 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
+    if(! sf_getbool("rays",&rays)) rays=false;
 
     /* velocity file */
     Fv = sf_input ("in");
@@ -133,7 +135,7 @@ int main (int argc, char *argv[])
     for (it=2; it<nt; it++) {
 	if(verb) fprintf(stderr,"it=%d\n",it);
 	
-	if(ng>3) {
+	if(ng>3 && !rays) {
 	    /* boundaries */
 	    ig=0;      wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 	    ig=ng-1; wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);

@@ -4,9 +4,9 @@ import fdmod as f
 # ------------------------------------------------------------
 # Sigsbee 2A parameters
 par = {
-    'nx':1601,'ox':25.0,'dx':0.025,'lx':'x',
-    'nz':801, 'oz':4.50,'dz':0.025,'lz':'z',
-    'nt':5001,'ot':0,   'dt':0.001,'lt':'t'
+    'nx':1601,'ox':25.,'dx':0.025,'lx':'x',
+    'nz':801, 'oz':4.5,'dz':0.025,'lz':'z',
+    'nt':5001,'ot':0,  'dt':0.001,'lt':'t'
     }
 par['jsnap']=200 # snapshot jump
 par['kt']=100    # wavelet delay (samples) 
@@ -41,7 +41,7 @@ f.boxarray('ss',
            0.5, # horizontal sampling
            par)
 
-Plot('ss',f.ssplot('plotfat=5 symbol=. plotcol=5',par))
+Plot('ss',f.ssplot('plotcol=5',par))
 
 # ------------------------------------------------------------
 # horizontal array @ z=1.5km
@@ -145,7 +145,7 @@ f.awefd1('tmpA',  # data file (all receivers)
 
 # ------------------------------------------------------------
 # plot wavefield frames
-for i in range( (par['nt']-1)//par['jsnap']):
+for i in range( (par['nt']-1)/par['jsnap'] ):
     tag = '-%02d'%i
     f.wframe('wfld'+tag,
              'wfld',i,'pclip=99',par)
