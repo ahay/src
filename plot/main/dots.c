@@ -1,6 +1,9 @@
 /* Plot signal with lollipops.
 
 Takes: > plot.vpl
+
+The axis is displayed only if label1= is present in the input
+file or the command line.  
 */
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
