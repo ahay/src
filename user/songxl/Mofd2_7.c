@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, nz, iz, isx, isz, nxz, na;
     float dt, dx, dz;
-    float **new,  **old,  **cur, *wav;
+    float **nxt,  **old,  **cur, *wav;
     float **a, **b1, **b2, **c1, **c2, **d1, **d2; 
     sf_file out, vel, source, G;
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nz,nx);
     cur    =  sf_floatalloc2(nz,nx);
-    new    =  sf_floatalloc2(nz,nx);
+    nxt    =  sf_floatalloc2(nz,nx);
 
     a     =  sf_floatalloc2(nz,nx);
     b1    =  sf_floatalloc2(nz,nx);
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
         sf_floatwrite(cur[0],nz*nx,out);
         for (ix=0; ix < nx; ix++) {
             for (iz=0; iz < nz; iz++) {
-                  new[ix][iz] = 0.0; 
+                  nxt[ix][iz] = 0.0; 
                 }
          }  
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 
 	 for (ix=2; ix < nx-2; ix++) {  
 	     for (iz=2; iz < nz-2; iz++) {  
-                 new[ix][iz]  = cur[ix][iz]*(a[ix][iz])
+                 nxt[ix][iz]  = cur[ix][iz]*(a[ix][iz])
                               + 0.5*(cur[ix][iz-1]+cur[ix][iz+1])*b1[ix][iz]
                               + 0.5*(cur[ix][iz-2]+cur[ix][iz+2])*b2[ix][iz]
                               + 0.5*(cur[ix-1][iz]+cur[ix+1][iz])*c1[ix][iz]
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
                               - old[ix][iz];
 
 /*
-                 new[ix][iz]  = 
+                 nxt[ix][iz]  = 
                                0.5*(cur[ix][iz-1]+cur[ix][iz+1]-2.0*cur[ix][iz])*b1[ix][iz]
                               + 0.5*(cur[ix][iz-2]+cur[ix][iz+2]-2.0*cur[ix][iz])*b2[ix][iz]
                               + 0.5*(cur[ix-1][iz]+cur[ix+1][iz]-2.0*cur[ix][iz])*c1[ix][iz]
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 	 for (ix=2; ix < nx-2; ix++) {  
 	     for (iz=2; iz < nz-2; iz++) {  
                  old[ix][iz] = cur[ix][iz];
-                 cur[ix][iz] = new[ix][iz];
+                 cur[ix][iz] = nxt[ix][iz];
              }
          }  
          cur[isx][isz] += wav[it];

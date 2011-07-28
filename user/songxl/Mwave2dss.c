@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int nx, nz, nt, ix, iz, it, sl, what, nb1, nbx, nb2, nbz;
     float dt, dx, dz, w1, w2, h1, h2, a1, a2, a3, a4, lmd=0.015;
-    float **old, **new, **cur, *sig, **v, **vx, **vz, **a, **b10, **b20, **b01, **b02; 
+    float **old, **nxt, **cur, *sig, **v, **vx, **vz, **a, **b10, **b20, **b01, **b02; 
     sf_file inp, out, vel, grad1, grad2;
     #ifdef _OPENMP
     int nth;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     nbz = nb2 + nz;
     sig = sf_floatalloc(nt);
     old = sf_floatalloc2(nbx,nbz);
-    new = sf_floatalloc2(nbx,nbz);
+    nxt = sf_floatalloc2(nbx,nbz);
     cur = sf_floatalloc2(nbx,nbz);
     v = sf_floatalloc2(nbx,nbz);
     vx = sf_floatalloc2(nbx,nbz);
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     nth = omp_get_num_threads();
     sf_warning("using %d threads",nth);
     #pragma omp for private(iz,ix,w1,w2,h1,h2,a1,a2,a3,a4) 
-               //     shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,new)
+               //     shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,nxt)
     #endif        
           for (iz=0; iz < nbz; iz++) {
           
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
 	      /* initial conditions */
 	      cur[iz][ix] = 0.;
-	      new[iz][ix] = 0.;
+	      nxt[iz][ix] = 0.;
               }
            }
            free(v);
@@ -153,38 +153,38 @@ int main(int argc, char* argv[])
 
           #ifdef _OPENMP
           #pragma omp parallel for private(iz,ix) 
-                   // shared(nbz,nbx,old,cur,new)
+                   // shared(nbz,nbx,old,cur,nxt)
           #endif        
               for (iz=0; iz < nbz; iz++) { 
           
 	         for (ix=0; ix < nbx; ix++) {
 	              old[iz][ix] = cur[iz][ix];
-	              cur[iz][ix] = new[iz][ix];
+	              cur[iz][ix] = nxt[iz][ix];
                      }   
                   }  
             
 	  /* Stencil */
-          new[0][0] = cur[0][0]*a[0][0] + cur[0][1]*b20[0][0] + cur[1][0]*b02[0][0]-old[0][0];
-          new[0][nbx-1] = cur[0][nbx-1]*a[0][nbx-1] + cur[0][nbx-2]*b10[0][nbx-1] + cur[1][nbx-1]*b02[0][nbx-1]-old[0][nbx-1];
-          new[nbz-1][0] = cur[nbz-1][0]*a[nbz-1][0] + cur[nbz-1][1]*b20[nbz-1][0] + cur[nbz-2][0]*b01[nbz-1][0]-old[nbz-1][0];
-          new[nbz-1][nbx-1] = cur[nbz-1][nbx-1]*a[nbz-1][nbx-1] + cur[nbz-1][nbx-2]*b10[nbz-1][nbx-1] + cur[nbz-2][nbx-1]*b01[nbz-1][nbx-1]-old[nbz-1][nbx-1];
+          nxt[0][0] = cur[0][0]*a[0][0] + cur[0][1]*b20[0][0] + cur[1][0]*b02[0][0]-old[0][0];
+          nxt[0][nbx-1] = cur[0][nbx-1]*a[0][nbx-1] + cur[0][nbx-2]*b10[0][nbx-1] + cur[1][nbx-1]*b02[0][nbx-1]-old[0][nbx-1];
+          nxt[nbz-1][0] = cur[nbz-1][0]*a[nbz-1][0] + cur[nbz-1][1]*b20[nbz-1][0] + cur[nbz-2][0]*b01[nbz-1][0]-old[nbz-1][0];
+          nxt[nbz-1][nbx-1] = cur[nbz-1][nbx-1]*a[nbz-1][nbx-1] + cur[nbz-1][nbx-2]*b10[nbz-1][nbx-1] + cur[nbz-2][nbx-1]*b01[nbz-1][nbx-1]-old[nbz-1][nbx-1];
 	  for (ix=1; ix < nbx-1; ix++) 
-             { new[0][ix] = cur[0][ix]*a[0][ix] + cur[0][ix-1]*b10[0][ix] +
+             { nxt[0][ix] = cur[0][ix]*a[0][ix] + cur[0][ix-1]*b10[0][ix] +
                             cur[0][ix+1]*b20[0][ix] + cur[1][ix]*b02[0][ix] - old[0][ix]; 
-               new[nbz-1][ix] = cur[nbz-1][ix]*a[nbz-1][ix] + cur[nbz-1][ix-1]*b10[nbz-1][ix] +
+               nxt[nbz-1][ix] = cur[nbz-1][ix]*a[nbz-1][ix] + cur[nbz-1][ix-1]*b10[nbz-1][ix] +
                                 cur[nbz-1][ix+1]*b20[nbz-1][ix] + cur[nbz-2][ix]*b01[nbz-1][ix] -old[nbz-1][ix];
               }
-          new[0][sl+nb1] += sig[it]; // Source Location
+          nxt[0][sl+nb1] += sig[it]; // Source Location
 
           #ifdef _OPENMP
           #pragma omp parallel for private(iz,ix)\
-                      shared(nbz,nbx,old,cur,new,a,b10,b20,b01,b02)
+                      shared(nbz,nbx,old,cur,nxt,a,b10,b20,b01,b02)
           #endif        
           for (iz=1; iz < nbz-1; iz++) { 
-          new[iz][0] = 0.;
-          new[iz][nbx-1] = 0.;
+          nxt[iz][0] = 0.;
+          nxt[iz][nbx-1] = 0.;
 	  for (ix=1; ix < nbx-1; ix++) {
-	      new[iz][ix] = cur[iz][ix]*a[iz][ix] + cur[iz][ix-1]*b10[iz][ix] + 
+	      nxt[iz][ix] = cur[iz][ix]*a[iz][ix] + cur[iz][ix-1]*b10[iz][ix] + 
                             cur[iz][ix+1]*b20[iz][ix] + cur[iz-1][ix]*b01[iz][ix] + 
                             cur[iz+1][ix]*b02[iz][ix] - old[iz][ix];
               } 
@@ -193,30 +193,30 @@ int main(int argc, char* argv[])
           for (iz=0; iz < nb2; iz++) {
           for (ix=0; ix < nbx; ix++) {
 
-               new[nz+iz][ix] *= exp(-lmd*iz*iz*lmd);
-             //  new[nz+iz][ix] *= exp(-lmd*lmd*(iz+1)*(iz+1));
+               nxt[nz+iz][ix] *= exp(-lmd*iz*iz*lmd);
+             //  nxt[nz+iz][ix] *= exp(-lmd*lmd*(iz+1)*(iz+1));
               }
           }
           #ifdef _OPENMP
           #pragma omp parallel for private(iz,ix)\
-                    shared(nbz,nb1,nx,lmd,new)
+                    shared(nbz,nb1,nx,lmd,nxt)
           #endif        
           for (iz=0; iz < nbz; iz++) {
           for (ix=0; ix < nb1; ix++) {
-              //new[iz][nb1-1-ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
-             // new[iz][nb1+nx+ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
-              new[iz][nb1-1-ix] *= exp(-lmd*ix*ix*lmd);
-              new[iz][nb1+nx+ix] *= exp(-lmd*ix*ix*lmd);
+              //nxt[iz][nb1-1-ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
+             // nxt[iz][nb1+nx+ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
+              nxt[iz][nb1-1-ix] *= exp(-lmd*ix*ix*lmd);
+              nxt[iz][nb1+nx+ix] *= exp(-lmd*ix*ix*lmd);
               }
           }
-	 //if (it < 500) {new[nb] = sig[it];} 
+	 //if (it < 500) {nxt[nb] = sig[it];} 
          
 	 for (iz=0; iz < nz; iz++) {
-         sf_floatwrite(new[iz]+nb1,nx,out);
+         sf_floatwrite(nxt[iz]+nb1,nx,out);
          }
        }
         
-    free(new);
+    free(nxt);
     free(old);
     free(cur);
     free(sig);

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nx,  nz, ix, iz, nbt, nbb, nbl, nbr, nxb, nzb;
     float dx, dz;
-    float **new,  **old;
+    float **nxt,  **old;
     sf_file out, img;
      
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 
 
     old    =  sf_floatalloc2(nxb,nzb);
-    new    =  sf_floatalloc2(nx,nz);
+    nxt    =  sf_floatalloc2(nx,nz);
     
     bd_init(nx,nz,nbt,nbb,nbl,nbr,0,0,0,0);
 
@@ -85,16 +85,16 @@ int main(int argc, char* argv[])
  
     for (iz=0; iz < nz; iz++){
          for (ix=0; ix < nx; ix++) {
-             new[iz][ix] = (old[iz+nbt][ix+nbl-2]-16.0*old[iz+nbt][ix+nbl-1]+30.0*old[iz+nbt][ix+nbl]-16.0*old[iz+nbt][ix+nbl+1]+old[iz+nbt][ix+nbl+2])/(12.0*dx*dx)
+             nxt[iz][ix] = (old[iz+nbt][ix+nbl-2]-16.0*old[iz+nbt][ix+nbl-1]+30.0*old[iz+nbt][ix+nbl]-16.0*old[iz+nbt][ix+nbl+1]+old[iz+nbt][ix+nbl+2])/(12.0*dx*dx)
                         + (old[iz+nbt-2][ix+nbl]-16.0*old[iz+nbt-1][ix+nbl]+30.0*old[iz+nbt][ix+nbl]-16.0*old[iz+nbt+1][ix+nbl]+old[iz+nbt+2][ix+nbl])/(12.0*dz*dz);
          }
     }
 
-    sf_floatwrite(new[0],nx*nz,out);
+    sf_floatwrite(nxt[0],nx*nz,out);
     bd_close();
-    free(*new);     
+    free(*nxt);     
     free(*old);     
-    free(new);     
+    free(nxt);     
     free(old);     
     exit(0); 
 }           

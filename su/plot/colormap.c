@@ -70,8 +70,9 @@
 #include <rsf.h>
 /*^*/
 
+#include "colormap.h"
+
 unsigned long truecolor_pixel[256];
-/*^*/
 
 # define RGB_BLACK	{0x00, 0x00, 0x00}
 # define RGB_WHITE	{0xff, 0xff, 0xff}

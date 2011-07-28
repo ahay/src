@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, nz, iz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI;
-    float **new,  **old,  **cur,  **uk;
+    float **nxt,  **old,  **cur,  **uk;
     float  **v, v0, ***aa, w, g1, g2; 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nx,nz);
     cur    =  sf_floatalloc2(nx,nz);
-    new    =  sf_floatalloc2(nx,nz);
+    nxt    =  sf_floatalloc2(nx,nz);
     uk     =  sf_floatalloc2(nx,nz);
     aa     =  sf_floatalloc3(3,nx,nz);
     
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 
          for (iz=0; iz < nz; iz++){
              for (ix=0; ix < nx; ix++){ 
-                  new[iz][ix] = 0.0; 
+                  nxt[iz][ix] = 0.0; 
                   uk[iz][ix] = cur[iz][ix]; 
                 }
          }  
@@ -172,49 +172,49 @@ int main(int argc, char* argv[])
 
 	 for (iz=1; iz < nz-1; iz++) {  
 	     for (ix=1; ix < nx-1; ix++) {  
-                 new[iz][ix]  = uk[iz][ix]*aa[iz][ix][0]
+                 nxt[iz][ix]  = uk[iz][ix]*aa[iz][ix][0]
                               + (uk[iz][ix-1]+uk[iz][ix+1])*aa[iz][ix][1]
                               + (uk[iz-1][ix]+uk[iz+1][ix])*aa[iz][ix][2];
              }
          }  
     
-         new[0][0] = uk[0][0]*aa[0][0][0] + uk[0][1]*aa[0][0][1] + uk[1][0]*aa[0][0][2];
-         new[0][nx-1] = uk[0][nx-1]*aa[0][nx-1][0] + uk[0][nx-2]*aa[0][nx-1][1] + uk[1][nx-1]*aa[0][nx-1][2];
-         new[nz-1][0] = uk[nz-1][0]*aa[nz-1][0][0] + uk[nz-1][1]*aa[nz-1][0][1] + uk[nz-2][0]*aa[nz-1][0][2];
-         new[nz-1][nx-1] = uk[nz-1][nx-1]*aa[nz-1][nx-1][0] + uk[nz-1][nx-2]*aa[nz-1][nx-1][1] + uk[nz-2][nx-1]*aa[nz-1][nx-1][2];
+         nxt[0][0] = uk[0][0]*aa[0][0][0] + uk[0][1]*aa[0][0][1] + uk[1][0]*aa[0][0][2];
+         nxt[0][nx-1] = uk[0][nx-1]*aa[0][nx-1][0] + uk[0][nx-2]*aa[0][nx-1][1] + uk[1][nx-1]*aa[0][nx-1][2];
+         nxt[nz-1][0] = uk[nz-1][0]*aa[nz-1][0][0] + uk[nz-1][1]*aa[nz-1][0][1] + uk[nz-2][0]*aa[nz-1][0][2];
+         nxt[nz-1][nx-1] = uk[nz-1][nx-1]*aa[nz-1][nx-1][0] + uk[nz-1][nx-2]*aa[nz-1][nx-1][1] + uk[nz-2][nx-1]*aa[nz-1][nx-1][2];
           
 	 for (ix=1; ix < nx-1; ix++) {  
-             new[0][ix] = uk[0][ix]*aa[0][ix][0] + (uk[0][ix-1]+uk[0][ix+1])*aa[0][ix][1] + uk[1][ix]*aa[0][ix][2];
-             new[nz-1][ix] = uk[nz-1][ix]*aa[nz-1][ix][0] + (uk[nz-1][ix-1]+uk[nz-1][ix+1])*aa[nz-1][ix][1] + uk[nz-2][ix]*aa[nz-1][ix][2];
+             nxt[0][ix] = uk[0][ix]*aa[0][ix][0] + (uk[0][ix-1]+uk[0][ix+1])*aa[0][ix][1] + uk[1][ix]*aa[0][ix][2];
+             nxt[nz-1][ix] = uk[nz-1][ix]*aa[nz-1][ix][0] + (uk[nz-1][ix-1]+uk[nz-1][ix+1])*aa[nz-1][ix][1] + uk[nz-2][ix]*aa[nz-1][ix][2];
          }
 	 for (iz=1; iz < nz-1; iz++) {  
-             new[iz][0] = uk[iz][0]*aa[iz][0][0] + uk[iz][1]*aa[iz][0][1] + (uk[iz-1][0]+uk[iz+1][0])*aa[iz][0][2]; 
-             new[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
+             nxt[iz][0] = uk[iz][0]*aa[iz][0][0] + uk[iz][1]*aa[iz][0][1] + (uk[iz-1][0]+uk[iz+1][0])*aa[iz][0][2]; 
+             nxt[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
          }
 	 for (iz=0; iz < nz; iz++) {  
              for(ix=0; ix<nx; ix++){
-                new[iz][ix] += 2.0*cur[iz][ix]-old[iz][ix];
+                nxt[iz][ix] += 2.0*cur[iz][ix]-old[iz][ix];
              }
          }
  
 	 for (iz=0; iz < nz; iz++) {  
              for(ix=0; ix<nx; ix++){
 	        old[iz][ix] = cur[iz][ix]; 
-	        cur[iz][ix] = new[iz][ix]; 
+	        cur[iz][ix] = nxt[iz][ix]; 
              }
          }
-         sf_floatwrite(new[0],nz*nx,out);
+         sf_floatwrite(nxt[0],nz*nx,out);
     }
     free(**aa);
     free(*aa);
     free(aa);
     free(*v);     
-    free(*new);     
+    free(*nxt);     
     free(*cur);     
     free(*old);     
     free(*uk);     
     free(v);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(uk);     

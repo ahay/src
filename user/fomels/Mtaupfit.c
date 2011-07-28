@@ -20,7 +20,7 @@
 
 int main(int argc, char* argv[])
 {
-    char *type;
+    const char *type;
     int np, ip, nc, i2, n2, nc2;
     float dp, p0, p;
     float *c, *t, **dt;

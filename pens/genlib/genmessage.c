@@ -29,7 +29,7 @@
 #include	"../include/mesgcom.h"
 #include	"../include/enum.h"
 
-void genmessage (int command, char *string)
+void genmessage (int command, const char *string)
 /*< Device independent subroutine to handle message operations >*/
 {
 

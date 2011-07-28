@@ -448,7 +448,7 @@ B<graphics/vplot/filters>
 =cut
 
 */
-char *documentation[] = {
+const char *documentation[] = {
 " ",
 "NAME",
 #ifdef SEP

@@ -121,7 +121,7 @@
 #include <stdlib.h>
 
 /* should be defined in stdlib */
-extern int mkstemp (char *template);
+extern int mkstemp (char *tmpl);
 
 #include	<stdio.h>
 #include	<math.h>
@@ -337,7 +337,7 @@ static FILE* tempcopy(FILE* infile,char* filename )
 /* temp copy */
 {
     FILE *temp;
-    int len,total;
+    size_t len,total;
     char xfer_buf[ XFER_SIZE];
 
     temp = sf_tempfile(&tspoolnm,"w+");

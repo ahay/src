@@ -1,5 +1,5 @@
 
-char *documentation[] = {
+const char *documentation[] = {
 "NAME",
 #ifdef SEP
 "	X11pen - SEPLIB vplot filter for X-Windows",

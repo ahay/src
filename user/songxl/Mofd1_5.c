@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it;
     float dt, dx;
-    float *old, *new, *cur, *sig, *a, *b1, *b2, *b3, *b4, *b5;
+    float *old, *nxt, *cur, *sig, *a, *b1, *b2, *b3, *b4, *b5;
     float tmp1, tmp2, tmp3;
     sf_file in, out, Gmatrix, vel;
     int im,im2,im3,im4,im5,ip,ip2,ip3,ip4,ip5;
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
 
     a = sf_floatalloc(nx);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++){
         cur[ix] =  sig[ix];
         old[ix] =  0.0;
-	new[ix] = 0.0;
+	nxt[ix] = 0.0;
     }
     /* propagation in time */
     for (it=0; it < nt; it++) {
@@ -92,13 +92,13 @@ int main(int argc, char* argv[])
             tmp1 = 0.5*(cur[im]+cur[ip])*b1[ix];
             tmp2 = 0.5*(cur[im2]+cur[ip2])*b2[ix] + 0.5*(cur[im3]+cur[ip3])*b3[ix];
             tmp3 = 0.5*(cur[im4]+cur[ip4])*b4[ix] +  0.5*(cur[im5]+cur[ip5])*b5[ix];
-	    new[ix] = (tmp2+tmp3)+tmp1;
-            new[ix] += (cur[ix]*a[ix]-old[ix]);
+	    nxt[ix] = (tmp2+tmp3)+tmp1;
+            nxt[ix] += (cur[ix]*a[ix]-old[ix]);
        }
 
        for (ix=0; ix < nx; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	}
     }
     exit(0);

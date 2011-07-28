@@ -66,6 +66,8 @@
 
 #include "colormap.h"
 
+extern unsigned long truecolor_pixel[];
+
 XImage *xNewImage (Display *dpy         /* display pointer */, 
 		   unsigned long pmin   /* minimum pixel value (corresponding to byte=0) */, 
 		   unsigned long pmax   /* maximum pixel value (corresponding to byte=255) */,
@@ -113,7 +115,7 @@ Author:		Dave Hale, Colorado School of Mines, 06/08/90
 
 	/* allocate memory for image data */
 	widthpad = (1+(width-1)/(BitmapPad(dpy)/8))*BitmapPad(dpy)/8;
-	data = sf_alloc(widthpad*height,byte_perpixel);
+	data = (unsigned char*) sf_alloc(widthpad*height,byte_perpixel);
 
 	xim=XCreateImage(	(Display *) dpy,
 				(Visual *) DefaultVisual(dpy,scr),

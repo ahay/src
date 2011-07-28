@@ -29,7 +29,7 @@ unit1,unit2,... are axis units
 
 #include <rsf.h>
 
-static void check_zeros (sf_file file, int esize, long long size, 
+static void check_zeros (sf_file file, int esize, off_t size, 
 			 int ncheck, char buf[], char zero[]);
 
 int main (int argc, char* argv[])
@@ -37,7 +37,8 @@ int main (int argc, char* argv[])
     int i, j, ncheck, esize, nin, dim=SF_MAX_DIM;
     off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
-    char *label, **filename, *dataname, key[8], *val;
+    char *label, *dataname, key[8], *val;
+    const char **filename;
     char buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
@@ -47,7 +48,7 @@ int main (int argc, char* argv[])
 
     sf_init (argc,argv);
 
-    filename = (char**) sf_alloc ((size_t) argc,sizeof(char*));
+    filename = (const char**) sf_alloc ((size_t) argc,sizeof(char*));
 
     if (!sf_getbool ("info",&info)) info = true;
     /* If n, only display the name of the data file. */
@@ -119,7 +120,11 @@ int main (int argc, char* argv[])
 	    snprintf(key,8,"n%d",j+1);
 	    if (!sf_histlargeint(file,key,&nj)) break;
 
+#if defined(__cplusplus) || defined(c_plusplus)
+	    snprintf(out,25,"%s=%lu",key,(long) nj);
+#else
 	    snprintf(out,25,"%s=%llu",key,(long long) nj);
+#endif
 	    printf("%s%s%s",pad+10,out,pad+strlen(out));
 	    size *= nj;
 
@@ -160,16 +165,25 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-static void check_zeros (sf_file file, int esize, long long size, int ncheck,
+static void check_zeros (sf_file file, int esize, off_t size, int ncheck,
 			 char buf[], char zero[])
 {
-    long long bytes;
+    off_t bytes;
     int nzero, nleft, nbuf;
 
+#if defined(__cplusplus) || defined(c_plusplus)
     if (0==esize) {
-	printf("\t%lld elements\n",size);
+	printf("\t%ld elements\n",(long int) size);
     } else {
-	printf("\t%lld elements %lld bytes\n",size,size * esize);
+	printf("\t%ld elements %ld bytes\n",(long int) size,
+	       (long int) size * esize);
+#else
+    if (0==esize) {
+	printf("\t%lld elements\n",(long long int) size);
+    } else {
+	printf("\t%lld elements %lld bytes\n",(long long int ) size,
+	       (long long int) size * esize);	
+#endif
 	bytes = sf_bytes(file);
 	size *= esize;
 	

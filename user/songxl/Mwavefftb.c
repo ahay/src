@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, ix, it, ik ;
     float dt, dx, x,  dk, k0, k, tmp, tmpdt, pi=SF_PI;
-    float *sig,  *new,  *old;
+    float *sig,  *nxt,  *old;
     sf_complex  *uk, *cur; 
     sf_complex  tmpex;
     kiss_fft_cfg cfg;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     sig    =  sf_floatalloc(nx);
     old    =  sf_floatalloc(nx);
     cur    =  sf_complexalloc(nx);
-    new    =  sf_floatalloc(nx);
+    nxt    =  sf_floatalloc(nx);
 
     v = sf_floatalloc(nx);
     vx = sf_floatalloc(nx);
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 #endif
 
 	for (ix=0; ix < nx; ix++) {
-	    new[ix] = 0.0;
+	    nxt[ix] = 0.0;
 	    // x = x0 + ix * dx;
 	    x =  ix * dx;
 #ifdef SF_HAS_COMPLEX_H
@@ -119,8 +119,8 @@ int main(int argc, char* argv[])
 		tmpdt = v[ix]*fabs(k)*dt;
 		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
 		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
-		if (ik == 0 || ik == nk/2) {new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
-		else { new[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
+		if (ik == 0 || ik == nk/2) {nxt[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*2.0;}
+		else { nxt[ix] += creal(uk[ik]*tmpex)*cosf(tmpdt)*4.0;}
 	    }
 
 #else
@@ -130,14 +130,14 @@ int main(int argc, char* argv[])
 		tmpdt = v[ix]*fabs(k)*dt;
 		tmp = x*k +0.5*v[ix]*(vx[ix]*k)*dt*dt;
 		tmpex = sf_cmplx(cosf(tmp),sinf(tmp));
-                if (ik == 0 || ik == nk/2){new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*2.0));}
-                else {new[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*4.0));}
+                if (ik == 0 || ik == nk/2){nxt[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*2.0));}
+                else {nxt[ix] += sf_crealf(sf_crmul(sf_cmul(uk[ik],tmpex),cosf(tmpdt)*4.0));}
 	    }
 #endif
-	    new[ix] /= nk;
-	    new[ix] -= old[ix];
+	    nxt[ix] /= nk;
+	    nxt[ix] -= old[ix];
 	}
-	sf_floatwrite(new,nx,out);
+	sf_floatwrite(nxt,nx,out);
 
 	for(ix=0; ix<nx; ix++){
 #ifdef SF_HAS_COMPLEX_H
@@ -145,13 +145,13 @@ int main(int argc, char* argv[])
 #else
 	    old[ix] =  sf_crealf(cur[ix]);
 #endif
-	    cur[ix] =sf_cmplx(new[ix],0.0);
+	    cur[ix] =sf_cmplx(nxt[ix],0.0);
 	}
     }
 
     free(v);     
     free(vx);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(uk);     

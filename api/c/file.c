@@ -234,7 +234,7 @@ Should do output after the first call to sf_input. >*/
     sf_file file;
     char *headname, *dataname, *path, *name, *format;
     size_t namelen;
-    extern int mkstemp (char *template);
+    extern int mkstemp (char *tmpl);
     extern off_t ftello (FILE *stream);
 
     file = (sf_file) sf_alloc(1,sizeof(*file));
@@ -860,7 +860,7 @@ void sf_putints (sf_file file, const char* key, const int* par, size_t n)
     if (NULL == file->dataname) 
 	sf_warning("%s: putints to a closed file",__FILE__);
     v = val;
-    for (i=0; i < n-1; i++) {
+    for (i=0; i < (int) n-1; i++) {
 	v += snprintf(v,1024,"%d,",par[i]);
     }
     snprintf(v,1024,"%d",par[n-1]);
@@ -875,7 +875,7 @@ void sf_putlargeint (sf_file file, const char* key, off_t par)
 
     if (NULL == file->dataname) 
 	sf_warning("%s: putflargeint to a closed file",__FILE__);
-    snprintf(val,256,"%lld",(long long int) par);
+    snprintf(val,256,"%ld",(long int) par);
     sf_simtab_enter (file->pars,key,val);
 }
 
@@ -1418,7 +1418,7 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     char *path;
     int stemp;
     extern FILE * fdopen (int fd, const char *mode);
-    extern int mkstemp (char *template);
+    extern int mkstemp (char *tmpl);
     
     path = gettmpdatapath();
     if (NULL == path) path = getdatapath();
@@ -1494,7 +1494,7 @@ void sf_close(void)
 
     if (NULL == infiles) return;
     
-    for (i=0; i <= ifile; i++) {
+    for (i=0; i <= (int) ifile; i++) {
 	file = infiles[i];
 
 	if (NULL != file && 

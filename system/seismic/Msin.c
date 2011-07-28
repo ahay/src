@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int i1, n1, i2, n2, niter, iter, rect=1;
     bool adj, verb, *known;
-    char *oper, *type;
+    const char *type, *oper;
     sf_complex *z0, *x, *y, *y2=NULL;
     float *m=NULL, perc, eps;
     sf_coperator coper=NULL;

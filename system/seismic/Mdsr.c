@@ -50,8 +50,8 @@ int main (int argc, char **argv)
     bool depth;           /* time or depth migration      */
     float eps;            /* dip filter constant          */   
     
-    char *rule;         /* phase-shuft interpolation rule */
-    char *arule;        /* angle gather rule */
+    const char *rule;   /* phase-shuft interpolation rule */
+    const char *arule;    /* angle gather rule */
             
     sf_file vel, velz=NULL, eta=NULL, in, out;
 

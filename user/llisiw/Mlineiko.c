@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
     int dim, i, n[SF_MAX_DIM], it, nt, niter, iter, *m;
     float d[SF_MAX_DIM], *t, *dt, *s, *ds, *t0, tol;
     double err;
-    char key[4], *what;
+    char key[4];
+    const char *what;
     upgrad upg;
     sf_file dtime, time, slow, mask, time0;
     

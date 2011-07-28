@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, nz, iz, isx, isz, nxz, na;
     float dt, dx, dz, ox, oz;
-    float **new,  **old,  **cur, *wav;
+    float **nxt,  **old,  **cur, *wav;
     float ***B;  
     int len;
     int *s1, *s2, is;
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nz,nx);
     cur    =  sf_floatalloc2(nz,nx);
-    new    =  sf_floatalloc2(nz,nx);
+    nxt    =  sf_floatalloc2(nz,nx);
 
     B   =  sf_floatalloc3(nz,nx,len);
     sf_floatread(B[0][0],nz*nx*len,G);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
         sf_floatwrite(cur[0],nz*nx,out);
         for (ix=0; ix < nx; ix++) {
             for (iz=0; iz < nz; iz++) {
-                  new[ix][iz] = 0.0; 
+                  nxt[ix][iz] = 0.0; 
                 }
          }  
 
@@ -116,15 +116,15 @@ int main(int argc, char* argv[])
 	 for (ix=4; ix < nx-4; ix++) {  
 	     for (iz=4; iz < nz-4; iz++) {  
                  for (is=0; is < len; is++) {
-                     new[ix][iz]  += 0.5*(cur[ix+s2[is]][iz+s1[is]]+cur[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
+                     nxt[ix][iz]  += 0.5*(cur[ix+s2[is]][iz+s1[is]]+cur[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
                  }
              }
          }
 	 for (ix=4; ix < nx-4; ix++) {  
 	     for (iz=4; iz < nz-4; iz++) {  
-                 new[ix][iz]  -= old[ix][iz];
+                 nxt[ix][iz]  -= old[ix][iz];
                  old[ix][iz] = cur[ix][iz];
-                 cur[ix][iz] = new[ix][iz];
+                 cur[ix][iz] = nxt[ix][iz];
              }
          }  
          

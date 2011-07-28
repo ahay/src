@@ -48,11 +48,11 @@ static void text_marker (char *txbuffer, int size, int npts, int *pvec);
 void genmarker (int npts, int type, int size, int *pvec)
 /*< device-independent marker >*/
 {
-int             savetxfont, savetxprec, savetxovly, savefat;
-struct txalign  savealign;
-extern float    fatmult_orig;
-char            txbuf[10];
-char           *txbuffer = txbuf;
+    int             savetxfont, savetxprec, savetxovly, savefat;
+    struct s_txalign  savealign;
+    extern float    fatmult_orig;
+    char            txbuf[10];
+    char           *txbuffer = txbuf;
 
     savealign.hor = txalign.hor;
     savealign.ver = txalign.ver;
@@ -82,81 +82,81 @@ char           *txbuffer = txbuf;
 	text_marker (txbuffer, size, npts, pvec);
     }
     else
-    if (type >= 127)		/* special non-ASCII character */
-    {
-	sprintf (txbuffer, "\\v%d ", type);
-	text_marker (txbuffer, size, npts, pvec);
-    }
-    else			/* 0 through 5 are pre-defined; 6 through 20
-				 * reserved */
-    {
-	switch (type)
+	if (type >= 127)		/* special non-ASCII character */
 	{
-	case 0:
-	case 1:
-	    while (npts--)
-	    {
-		dev.point (*pvec, *(pvec + 1));
-		pvec += 2;
-	    }
-	    break;
-	case 2:		/* '+' */
-	    dev.txfont = MATH;
-	    *txbuffer = (char) 57;
-	    *(txbuffer + 1) = '\0';
+	    sprintf (txbuffer, "\\v%d ", type);
 	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 3:		/* '*' */
-	    dev.txfont = MATH;
-	    *txbuffer = (char) 33;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 4:		/* circle */
-	    dev.txfont = MISC;
-	    *txbuffer = (char) 105;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 5:		/* 'X' */
-	    dev.txfont = MATH;
-	    *txbuffer = (char) 60;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 20:		/* square */
-	    dev.txfont = MISC;
-	    *txbuffer = (char) 72;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 21:		/* triangle */
-	    dev.txfont = MISC;
-	    *txbuffer = (char) 73;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 22:		/* diamond */
-	    dev.txfont = MISC;
-	    *txbuffer = (char) 74;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	case 23:		/* star */
-	    dev.txfont = MISC;
-	    *txbuffer = (char) 75;
-	    *(txbuffer + 1) = '\0';
-	    text_marker (txbuffer, size, npts, pvec);
-	    break;
-	default:
-	    while (npts--)
-	    {
-		dev.point (*pvec, *(pvec + 1));
-		pvec += 2;
-	    }
-	    break;
 	}
-    }
+	else			/* 0 through 5 are pre-defined; 6 through 20
+				 * reserved */
+	{
+	    switch (type)
+	    {
+		case 0:
+		case 1:
+		    while (npts--)
+		    {
+			dev.point (*pvec, *(pvec + 1));
+			pvec += 2;
+		    }
+		    break;
+		case 2:		/* '+' */
+		    dev.txfont = MATH;
+		    *txbuffer = (char) 57;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 3:		/* '*' */
+		    dev.txfont = MATH;
+		    *txbuffer = (char) 33;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 4:		/* circle */
+		    dev.txfont = MISC;
+		    *txbuffer = (char) 105;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 5:		/* 'X' */
+		    dev.txfont = MATH;
+		    *txbuffer = (char) 60;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 20:		/* square */
+		    dev.txfont = MISC;
+		    *txbuffer = (char) 72;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 21:		/* triangle */
+		    dev.txfont = MISC;
+		    *txbuffer = (char) 73;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 22:		/* diamond */
+		    dev.txfont = MISC;
+		    *txbuffer = (char) 74;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		case 23:		/* star */
+		    dev.txfont = MISC;
+		    *txbuffer = (char) 75;
+		    *(txbuffer + 1) = '\0';
+		    text_marker (txbuffer, size, npts, pvec);
+		    break;
+		default:
+		    while (npts--)
+		    {
+			dev.point (*pvec, *(pvec + 1));
+			pvec += 2;
+		    }
+		    break;
+	    }
+	}
 
     txalign.hor = savealign.hor;
     txalign.ver = savealign.ver;
@@ -176,20 +176,20 @@ static void text_marker (char *txbuffer, int size, int npts, int *pvec)
 	if (dev.txfont < NUMGENFONT)
 	{
 	    gentext (txbuffer,
-	    /* Character path direction */
+		     /* Character path direction */
 		     (float) size * dev.aspect_ratio,
 		     (float) 0,
-	    /* Character up vector direction */
+		     /* Character up vector direction */
 		     (float) 0,
 		     (float) size);
 	}
 	else
 	{
 	    dev.text (txbuffer,
-	    /* Character path direction */
+		      /* Character path direction */
 		      (float) size * dev.aspect_ratio,
 		      (float) 0,
-	    /* Character up vector direction */
+		      /* Character up vector direction */
 		      (float) 0,
 		      (float) size);
 	}

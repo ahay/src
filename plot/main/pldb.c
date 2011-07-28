@@ -37,7 +37,7 @@ See also vplotdiff. */
 
 static void text (void);
 
-static char  *documentation[] = {
+static const char  *documentation[] = {
     "",
     "",
     "NAME",

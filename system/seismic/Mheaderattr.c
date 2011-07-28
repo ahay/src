@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     inp = sf_intalloc(n1);
     max = sf_intalloc(n1);
     min = sf_intalloc(n1);
-    mean = sf_alloc(n1,sizeof(double));
+    mean = (double*) sf_alloc(n1,sizeof(double));
 
     sf_intread(inp,n1,head);
     imax = imin = 0;

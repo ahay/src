@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     float **rfl, **rgd, **crv, **dip, *trace, *trace2;
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
-    char *type, *type2;
+    const char *type, *type2;
     bool twod, verb, adj, lin, cmp;
     surface inc, ref;
     velocity vel, vel2;
@@ -230,8 +230,8 @@ int main(int argc, char* argv[])
 	    slopes = sf_output("slopes");
 	    /* Output receiver slopes */
 	    sf_putint  (slopes,"n1",nc);
-	    sf_putfloat(slopes,"o1",0);
-	    sf_putfloat(slopes,"d1",1.0);
+	    sf_putfloat(slopes,"o1",0.0f);
+	    sf_putfloat(slopes,"d1",1.0f);
 	    sf_putint  (slopes,"n2",nh);
 	    sf_putfloat(slopes,"o2",h0);
 	    sf_putfloat(slopes,"d2",dh);
@@ -262,7 +262,6 @@ int main(int argc, char* argv[])
     if (NULL==type) {
 	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
     } else if ((vel->gx)==0. && (vel->gz)==0. && (vel->n)==0.) {
-	free(type);
 	type = "const"; 
     } else if ('s'==type[0]) {
 	/* linear slowness squared */
@@ -295,7 +294,6 @@ int main(int argc, char* argv[])
     if (NULL==type2) {	
 	type2=type;
     } else if ((vel2->gx)==0. && (vel2->gz)==0. && (vel2->n)==0.) {
-	free(type2);
 	type2 = "const"; 
     } else if ('s'==type2[0]) {
 	/* linear slowness squared */

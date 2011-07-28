@@ -83,7 +83,7 @@ swaphval: CWP: John Stockwell
 /*^*/
 
 static struct {
-	char *key;	char *type;	int offs;
+	const char *key;	const char *type;	int offs;
 } hdr[] = {
 	{   "tracl",		"i",		0},
 	{   "tracr",		"i",		4},
@@ -168,7 +168,7 @@ static struct {
 };
 
 static struct {
-        char *key;      char *type;     int offs;
+        const char *key;      const char *type;     int offs;
 } bhdr[] = {
             {"jobid",             "i",            0},
             {"lino",              "i",            4},
@@ -273,7 +273,7 @@ void putbhval(bhed *bh, int index, Value *valp)
 }
 
 
-void gethdval(const segy *tr, char *key, Value *valp)
+void gethdval(const segy *tr, const char *key, Value *valp)
 /*< get a trace header word by name >*/
 {
 	int index = getindex(key);
@@ -299,7 +299,7 @@ void gethdval(const segy *tr, char *key, Value *valp)
 }
 
 
-void puthdval(segy *tr, char *key, Value *valp)
+void puthdval(segy *tr, const char *key, Value *valp)
 /*< put a trace header word by name >*/
 {
 	int index = getindex(key);
@@ -325,7 +325,7 @@ void puthdval(segy *tr, char *key, Value *valp)
 }
 
 
-char *hdtype(const char *key)
+const char *hdtype(const char *key)
 /*< get the data type of a trace header word by name >*/
 {
 	int index = getindex(key);
@@ -386,7 +386,7 @@ void printftype(register cwp_String key)
 
 #define   STREQ(s,t) (strcmp(s,t) == 0)
 
-char *getkey(const int index)
+const char *getkey(const int index)
 {
 	return (index < SU_NKEYS && index >= 0) ? hdr[index].key : NULL;
 }
@@ -673,7 +673,7 @@ typedef struct {        /* tapesegy - trace identification header */
  */ 
 
 static struct {
-        char *key;      char *type;     int offs;
+        const char *key;      const char *type;     int offs;
 } tapehdr[] = {
            {"tracl",             "P",            0},
            {"tracr",             "P",            4},
@@ -749,7 +749,7 @@ static struct {
 };
 
 static struct {
-        char *key;      char *type;     int offs;
+        const char *key;      const char *type;     int offs;
 } tapebhdr[] = {
            {"jobid",             "P",            0},
            {"lino",              "P",            4},
@@ -968,9 +968,9 @@ void printheader(const segy *tp)
 	int i;			/* index over header fields		*/
 	int j;			/* index over non-null header fields	*/
 	Value val;		/* value in header field		*/
-	cwp_String type;	/* ... its data type			*/
-	cwp_String key;		/* ... the name of the header field	*/
-	Value zeroval;		 /* zero value to compare with		*/
+	const char* type;	/* ... its data type			*/
+	const char* key;	/* ... the name of the header field	*/
+	Value zeroval;		/* zero value to compare with		*/
 
 	zeroval.l = 0;
 	j = 0;

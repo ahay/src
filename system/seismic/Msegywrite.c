@@ -35,7 +35,8 @@ int main(int argc, char *argv[])
 			      "     with the Madagascar package",
 			      "     http://www.ahay.org/"};
     sf_file in=NULL, hdr=NULL;
-    int format=1, i, ns, nk, nsegy, itr, ntr, *itrace=NULL;
+    size_t nsegy;
+    int format=1, i, ns, nk, itr, ntr, *itrace=NULL;
     FILE *head=NULL, *file=NULL;
     float *ftrace=NULL, dt;
 

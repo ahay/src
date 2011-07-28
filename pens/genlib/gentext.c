@@ -72,6 +72,8 @@
 
 #include "../utilities/util.h"
 
+#include "gentext.h"
+
 #define		NMARK   8	/* Maximum number of marks to use */
 #define		MAXPOLY 100	/* Maximum number of points in polygon */
 
@@ -132,12 +134,6 @@ extern int      color_set[MAX_COL + 1][_NUM_PRIM];
 
 extern void drawpolygon (int npts, int *x, int *y);
 
-struct txalign {
-    int hor;
-    int ver;
-} txalign;
-/*^*/
-
 static void load_font (int ifont);
 static void mov (double hadd, double vadd);
 
@@ -152,7 +148,7 @@ static void swab_font (char *stuff, int bytecount)
     char            temp;
 
     for (icount = 0;
-	 icount < bytecount - sizeof (int) + 1;
+	 icount < bytecount - (int) sizeof (int) + 1;
 	 icount += sizeof (int))
     {
 	temp = stuff[icount + 0];
@@ -1275,7 +1271,8 @@ static void mov (double hadd, double vadd)
 
 static void load_font (int ifont)
 {
-    int             fd, length;
+    int             fd;
+    size_t          length;
     char            filename[120], *fname;
     char            string[80];
     char           *newfont;
@@ -1284,9 +1281,9 @@ static void load_font (int ifont)
     char           *stringptr;
     int             fontcheck;
     int             need_swab, file_ok;
-    int             nread;
+    size_t          nread;
     int             vplotfontdirset;
-    char           *rsfroot;
+    const char     *rsfroot;
 
     if (done[ttxfont])
     {
@@ -1456,7 +1453,7 @@ static void load_font (int ifont)
     if (need_swab)
 	swab_font ((char *) &length, (int) sizeof (int));
 
-    newfont = (char *) malloc ((unsigned) length);
+    newfont = sf_charalloc (length);
     if (newfont == NULL)
     {
 	close (fd);

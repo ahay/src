@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
     float xdis, ydis, pscale, x,y;
     int color, fat, ii, font;
     bool pointer, rev, boxit;
-    char *string;
+    const char *string;
 
     sf_init(argc,argv);
 

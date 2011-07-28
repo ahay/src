@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, ik, ix, it, nft;
     float dt, dx, dk, k;
-    float *old, *new, *cur, *sig, *v, *newtmp, v0, **aa, tv, tv0, dv, pi=SF_PI, tmpk;
+    float *old, *nxt, *cur, *sig, *v, *nxttmp, v0, **aa, tv, tv0, dv, pi=SF_PI, tmpk;
     sf_file in, out, vel;
     bool opt;    /* optimal padding */
     sf_complex  *uk, *uktmp; 
@@ -55,8 +55,8 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
-    newtmp = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
+    nxttmp = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v = sf_floatalloc(nx);
     aa = sf_floatalloc2(2,nx);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++){
         cur[ix] =  sig[ix];
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
     }
 
     free(v);
@@ -110,25 +110,25 @@ int main(int argc, char* argv[])
              uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpk)-1.0)/tv0);
          }
 #endif
-	 kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,newtmp);
+	 kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,nxttmp);
 
-	for (ix=0; ix < nx; ix++) newtmp[ix] /= (float)nft; 
+	for (ix=0; ix < nx; ix++) nxttmp[ix] /= (float)nft; 
 
 	/* Stencil */
-	new[0] = newtmp[0]*aa[0][0] + newtmp[0]*aa[0][0] + newtmp[1]*aa[0][1];
+	nxt[0] = nxttmp[0]*aa[0][0] + nxttmp[0]*aa[0][0] + nxttmp[1]*aa[0][1];
 	for (ix=1; ix < nx-1; ix++) {
-	    new[ix] = newtmp[ix]*aa[ix][0] + newtmp[ix+1]*aa[ix][1] + newtmp[ix-1]*aa[ix][1];
+	    nxt[ix] = nxttmp[ix]*aa[ix][0] + nxttmp[ix+1]*aa[ix][1] + nxttmp[ix-1]*aa[ix][1];
 	}
-	new[nx-1] = newtmp[nx-1]*aa[nx-1][1] + newtmp[nx-1]*aa[nx-1][0] + newtmp[nx-2]*aa[nx-1][1];
+	nxt[nx-1] = nxttmp[nx-1]*aa[nx-1][1] + nxttmp[nx-1]*aa[nx-1][0] + nxttmp[nx-2]*aa[nx-1][1];
 	
 	for (ix=0; ix < nx; ix++) {
-	    new[ix] +=  2*cur[ix] - old[ix];
+	    nxt[ix] +=  2*cur[ix] - old[ix];
 	}
 
-	sf_floatwrite(new,nx,out);
+	sf_floatwrite(nxt,nx,out);
 	for (ix=0; ix < nx; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	}
     }
 

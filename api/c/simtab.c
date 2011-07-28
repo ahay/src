@@ -87,7 +87,7 @@ static unsigned int hash (const char *key, int size)
 }
 
 static char *
-strsep1(char **stringp, char *delim)
+strsep1(char **stringp, const char *delim)
 /* portable strsep */
 {
     char *start = *stringp;
@@ -216,7 +216,7 @@ bool sf_simtab_getlargeint (sf_simtab table, const char* key,/*@out@*/ off_t* pa
 /*< extract a sf_largeint parameter from the table >*/
 {
     char* val;
-    long long int i;
+    off_t i;
 
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
@@ -440,7 +440,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 			      __FILE__,key,fval);
 		fvali++;
 		j = strtol(fvali,NULL,10);
-		if (ERANGE == errno || i < INT_MIN || i > INT_MAX) 
+		if (ERANGE == errno || j < INT_MIN || j > INT_MAX) 
 		    sf_error ("%s: Wrong value in %s='%s':",__FILE__,key,fval);
 		for (; i < n && i < (size_t) num; i++) {
 		    par[i] = (int) j;

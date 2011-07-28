@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     int n1, i2, n2;
     bool adj;
-    char *op;
+    const char *op;
     float *c0, *x, *y;
     sf_operator oper=NULL;
     sf_file in, out, root;

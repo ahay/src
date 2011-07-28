@@ -269,7 +269,7 @@ bool mono;
 int             pltoutfd, stderrfd, controlfd;
 FILE *pltout;
 
-void  (*message) (int command, char* string) = genmessage;
+void  (*message) (int command, const char* string) = genmessage;
 struct stat     stderrstat;
 struct stat     pltoutstat;
 FILE           *pltin;
@@ -784,23 +784,6 @@ void reset_parameters (void)
     ywmax = yWmax;
     ywmin = yWmin;
     reset_windows ();
-}
-
-void add_a_cor (char *filename, int xcor, int ycor)
-{
-static int      first_time = YES;
-static FILE    *outfp;
-
-    if (first_time == YES)
-    {
-	outfp = fopen (filename, "w");
-	if (outfp == NULL)
-	{
-	    ERR (FATAL, name, "Can't open interact output file %s!", filename);
-	}
-	first_time = NO;
-    }
-    fprintf (outfp, "%f\t%f\n", (float) xcor / RPERIN, (float) ycor / RPERIN);
 }
 
 void wlimit (int min, int max, int *xmin, int *xmax)

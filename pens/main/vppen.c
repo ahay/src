@@ -79,7 +79,7 @@ int             vpalign = NO;
 bool             vpstyle = true;
 bool             vpblast = true;
 int             vpbit = 0;
-char            *vpaligns;
+const char     *vpaligns;
 int             vparray[2] = {0, 0};
 int             vpasize[2] = {0, 0};
 int             vpframe = -1;
@@ -829,7 +829,7 @@ void vpderase (int command)
 
 static int      saveitlog;
 
-void vplogmessage (int command, char *string)
+void vplogmessage (int command, const char *string)
 /*< logged message >*/ 
 {
     switch (command)
@@ -909,7 +909,7 @@ void vpmarker (int npts, int type, int size, int *pvec)
 static int      saveit;
 static char     savestring[80 * 24];
 
-void vpmessage (int command, char *string)
+void vpmessage (int command, const char *string)
 /*< message >*/
 {
     switch (command)

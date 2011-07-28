@@ -72,7 +72,7 @@ int main (int argc, char* argv[])
     float t0, dt, fo[3]={20.,8.,5.}, tscale;
     float *tim, *pp, *ps, *ss, *tpp, *tss, *tps;
     float *ts, *dtpp, *tmean, *p2ss, *p2ps, *dtss, *dtps, *rs;
-    char* func;
+    const char* func;
     sf_file mod, vpvs;
 
     sf_init (argc,argv);
@@ -167,8 +167,6 @@ int main (int argc, char* argv[])
 		break;
 	}
     }
-
-    free (func);
 
     sf_floatwrite(tmean,nr,vpvs);
     sf_floatwrite(p2ss,nr,vpvs);

@@ -98,123 +98,123 @@ static int      halftone32[64] = {
 
 
 void
-dithline (inpline, outline, npixels, linenum, imethod)
-    unsigned char  *inpline, *outline;
-    int             npixels, linenum, imethod;
+dithline (unsigned char *inpline, 
+	  unsigned char *outline, int npixels, int linenum, int imethod)
+/*< dithered line >*/
 {
-int             greydata;
-int             i1, ipoint, jpoint;
-float           pixel, pixerr, nexterr;
-int             irand;
+    int             greydata;
+    int             i1, ipoint, jpoint;
+    float           pixel, pixerr, nexterr;
+    int             irand;
 
     switch (imethod)
     {
 /* Random Dither */
-    case 1:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-	    irand = (rand () & 255);
-	    if (greydata > irand)
-	    {
-		outline[i1] = pix_off;
-	    }
-	    else
-	    {
-		outline[i1] = pix_on;
-	    }
-	}
-	break;
-
-/* Ordered Dither */
-    case 2:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-	    ipoint = i1 % 16;
-	    jpoint = linenum % 16;
-	    ipoint = ipoint * 16 + jpoint;
-	    if (greydata > dith256[ipoint])
-	    {
-		outline[i1] = pix_off;
-	    }
-	    else
-	    {
-		outline[i1] = pix_on;
-	    }
-	}
-	break;
-
-/* Floyd-Steinberg */
-    case 3:
-	if (ialloc < npixels)
-	{
-	    if (ialloc > 0)
-	    {
-		free ((void *) errline);
-		ialloc = 0;
-	    }
-	    if ((errline = (float *) malloc ((unsigned) npixels * sizeof (float))) == NULL)
-	    {
-		ERR (FATAL, name, "Can't allocate space for Floyd-Steinberg\n");
-		return;
-	    }
-	    ialloc = npixels;
+	case 1:
 	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		errline[i1] = 0.;
+		greydata = inpline[i1];
+		irand = (rand () & 255);
+		if (greydata > irand)
+		{
+		    outline[i1] = pix_off;
+		}
+		else
+		{
+		    outline[i1] = pix_on;
+		}
 	    }
-	}
-	nexterr = errline[0];
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    pixel = inpline[i1];
-	    pixel += nexterr;
-	    if (pixel < 128)
+	    break;
+
+/* Ordered Dither */
+	case 2:
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_on;
-		pixerr = pixel;
+		greydata = inpline[i1];
+		ipoint = i1 % 16;
+		jpoint = linenum % 16;
+		ipoint = ipoint * 16 + jpoint;
+		if (greydata > dith256[ipoint])
+		{
+		    outline[i1] = pix_off;
+		}
+		else
+		{
+		    outline[i1] = pix_on;
+		}
 	    }
-	    else
+	    break;
+
+/* Floyd-Steinberg */
+	case 3:
+	    if (ialloc < npixels)
 	    {
-		outline[i1] = pix_off;
-		pixerr = pixel - 255;
+		if (ialloc > 0)
+		{
+		    free ((void *) errline);
+		    ialloc = 0;
+		}
+		if ((errline = (float *) malloc ((unsigned) npixels * sizeof (float))) == NULL)
+		{
+		    ERR (FATAL, name, "Can't allocate space for Floyd-Steinberg\n");
+		    return;
+		}
+		ialloc = npixels;
+		for (i1 = 0; i1 < npixels; i1++)
+		{
+		    errline[i1] = 0.;
+		}
 	    }
-	    if (i1 < npixels - 1)
+	    nexterr = errline[0];
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		nexterr = errline[i1 + 1] + pixerr * alpha;
-		errline[i1 + 1] = pixerr * delta;
+		pixel = inpline[i1];
+		pixel += nexterr;
+		if (pixel < 128)
+		{
+		    outline[i1] = pix_on;
+		    pixerr = pixel;
+		}
+		else
+		{
+		    outline[i1] = pix_off;
+		    pixerr = pixel - 255;
+		}
+		if (i1 < npixels - 1)
+		{
+		    nexterr = errline[i1 + 1] + pixerr * alpha;
+		    errline[i1 + 1] = pixerr * delta;
+		}
+		if (i1 > 0)
+		{
+		    errline[i1 - 1] += pixerr * beta;
+		}
+		if (i1 == 0)
+		    errline[i1] = pixerr * gama;
+		else
+		    errline[i1] += pixerr * gama;
 	    }
-	    if (i1 > 0)
-	    {
-		errline[i1 - 1] += pixerr * beta;
-	    }
-	    if (i1 == 0)
-		errline[i1] = pixerr * gama;
-	    else
-		errline[i1] += pixerr * gama;
-	}
-	break;
+	    break;
 
 /* 32 element halftone at 45 degrees */
-    case 4:
-    default:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-	    ipoint = i1 % 8;
-	    jpoint = linenum % 8;
-	    ipoint = ipoint * 8 + jpoint;
-	    if (greydata > halftone32[ipoint])
+	case 4:
+	default:
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_off;
+		greydata = inpline[i1];
+		ipoint = i1 % 8;
+		jpoint = linenum % 8;
+		ipoint = ipoint * 8 + jpoint;
+		if (greydata > halftone32[ipoint])
+		{
+		    outline[i1] = pix_off;
+		}
+		else
+		{
+		    outline[i1] = pix_on;
+		}
 	    }
-	    else
-	    {
-		outline[i1] = pix_on;
-	    }
-	}
-	break;
+	    break;
     }
     return;
 }

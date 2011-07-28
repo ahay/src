@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
     float da,oa;                   /* increment in output angle, starting position */
     float dt,ot;                   /* increment in polar angle, starting position */
-    float dr,or;                   /* increment in radius, starting position */
+    float dr,orig;                 /* increment in radius, starting position */
     float dvx,ovx;                 /* increment of velocity in x, starting velocity */
     float dvy,ovy;                 /* increment of velocity in y, starting velocity */
     float s0;                      /* reference slowness */
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dr",&dr)) dr=dvx;
     /* radius sampling. */
 
-    or = 1./s0 + 0.5*dr;
+    orig = 1./s0 + 0.5*dr;
    /* radius greater than or equal to 1/s0 */
 
     if (!sf_getint("extend",&ext)) ext=4;
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 
     /* inverse radius values on radial line */
     for (ir = 0; ir < nr; ir++) {
-	tmp[ir] = 1./(or + ir*dr);
+	tmp[ir] = 1./(orig + ir*dr);
     }
 
     /* Loop on polar angle directions */
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
             /* cos(d-t) for radial line equals inverse radius */
 	    ri = cosf((d-t)/180.*SF_PI);
 
-	    f = (ri - 1/or)*dr;
+	    f = (ri - 1/orig)*dr;
 	    fint = f;
 
             /* cumulative sum */

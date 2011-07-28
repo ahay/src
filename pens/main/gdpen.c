@@ -27,7 +27,7 @@
 #include "../include/closestat.h"
 #include "../include/enum.h"
 
-#include "../genlib/genpen.h"
+#include "../genlib/genpen.h" 
 #include "../utilities/util.h"
 
 #include "dovplot.h"
@@ -51,7 +51,7 @@ char            name[] = "gdpen";
 static gdImagePtr image;
 static bool light = false;
 static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
-static char *image_type;
+static const char *image_type;
 
 #ifdef FFMPEG
 static AVCodec *codec = NULL;
@@ -72,7 +72,8 @@ static void ffmpeg_write (void);
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    char newpath[60], *color;
+    char newpath[60];
+    const char *color;
     int value;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;

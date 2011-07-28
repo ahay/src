@@ -25,7 +25,7 @@ To be deprecated in favor of zomig3 */
 
 int main (int argc, char *argv[])
 {
-    char *mode;           /* mode of operation */
+    const char *mode;     /* mode of operation */
     bool verb;            /* verbosity */
     bool incore;          /* in core execution */
     bool inv;             /* forward or adjoint */

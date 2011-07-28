@@ -313,7 +313,7 @@ B<graphics/vplot/filters>
 
 */
 
-char *documentation[] = {
+const char *documentation[] = {
 " ",
 "NAME",
 #ifdef SEP

@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, iv, nv, nz, iz, isx, isz;
     float dt, dx, dkx, kx,  dz, dkz, kz, dv, tmpdt, pi=SF_PI, vmax, vmin, wsum;
-    float **new,  **old,  **cur,  **newc, *wav, **uk, **uktmp;
+    float **nxt,  **old,  **cur,  **nxtc, *wav, **uk, **uktmp;
     //sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; 
     //kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     float  **v, *vc, ***weight; 
@@ -81,10 +81,10 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nx,nz);
     cur    =  sf_floatalloc2(nx,nz);
-    new    =  sf_floatalloc2(nx,nz);
+    nxt    =  sf_floatalloc2(nx,nz);
     uk     =  sf_floatalloc2(nx,nz);
     uktmp  =  sf_floatalloc2(nx,nz);
-    newc   =  sf_floatalloc2(nx,nz);
+    nxtc   =  sf_floatalloc2(nx,nz);
     vc     =  sf_floatalloc(nv);
     wav    =  sf_floatalloc(nt);
     weight =  sf_floatalloc3(nx,nz,nv);
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
         for (ix=0; ix < nx; ix++) {
             old[iz][ix] =  0.0; 
             cur[iz][ix] =  0.0; 
-            newc[iz][ix] =  0.0; 
+            nxtc[iz][ix] =  0.0; 
            }
          }
     cur[isz][isx] = wav[0];
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
          for (iz=0; iz < nz; iz++){
              for (ix=0; ix < nx; ix++){ 
-                  new[iz][ix] = 0.0; 
+                  nxt[iz][ix] = 0.0; 
                   uk[iz][ix] = cur[iz][ix]; 
                 }
            }  
@@ -192,37 +192,37 @@ int main(int argc, char* argv[])
 
 	      for (iz=0; iz < nz; iz++) {  
 	          for (ix=0; ix < nx; ix++) {  
-                      newc[iz][ix]  = uktmp[iz][ix];
-                   //   newc[iz][ix] /= nkx * nkz; 
-		      newc[iz][ix] *= weight[iv][iz][ix];
-                      new[iz][ix] += newc[iz][ix];
+                      nxtc[iz][ix]  = uktmp[iz][ix];
+                   //   nxtc[iz][ix] /= nkx * nkz; 
+		      nxtc[iz][ix] *= weight[iv][iz][ix];
+                      nxt[iz][ix] += nxtc[iz][ix];
                   }
               }  
          }
 	 for (iz=0; iz < nz; iz++) {  
              for(ix=0; ix<nx; ix++){
-                new[iz][ix] *= v[iz][ix]*v[iz][ix]*dt*dt;
-                new[iz][ix] += 2.0*cur[iz][ix]-old[iz][ix];
+                nxt[iz][ix] *= v[iz][ix]*v[iz][ix]*dt*dt;
+                nxt[iz][ix] += 2.0*cur[iz][ix]-old[iz][ix];
              }
          }
-         //new[isz][isx] += wav[it];
-         new[isz][isx] += wav[it];
-         //new[isz][isx] += wav[it]*v[isz][isx]*v[isz][isx]*dt*dt;
+         //nxt[isz][isx] += wav[it];
+         nxt[isz][isx] += wav[it];
+         //nxt[isz][isx] += wav[it]*v[isz][isx]*v[isz][isx]*dt*dt;
 	 for (iz=0; iz < nz; iz++) {  
              for(ix=0; ix<nx; ix++){
 	        old[iz][ix] = cur[iz][ix]; 
 	        //old[iz][ix] = creal(curcmp[iz][ix]);
-	        cur[iz][ix] = new[iz][ix]; 
-	       // curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
+	        cur[iz][ix] = nxt[iz][ix]; 
+	       // curcmp[iz][ix] = sf_cmplx(nxt[iz][ix],0.0);
              }
          }
-         sf_floatwrite(new[0],nz*nx,out);
+         sf_floatwrite(nxt[0],nz*nx,out);
     }
 
     free(v);     
     free(vc);     
-    free(new);     
-    free(newc);     
+    free(nxt);     
+    free(nxtc);     
     free(old);     
     free(uk);     
     free(uktmp);     

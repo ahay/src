@@ -266,7 +266,7 @@ void datawrite(segy *tp, struct outsegyinfo *iptr, cwp_Bool fixed_length)
     int nwritten = (int) fwrite((char *) (&((tp->data)[0])), 1, databytes,
 				iptr->outfp);
 
-    if (nwritten != databytes)
+    if (nwritten != (int) databytes)
 	sf_error("%s: on trace #%ld, tried to write %d bytes, "
 		 "wrote %d bytes",
 		 __FILE__, (infoptr->itr)+1, databytes, nwritten);

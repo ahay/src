@@ -75,9 +75,9 @@ Point* heap_extract (void)
   v = *x1;
   *(xi = x1) = t = *(xn--);
   n = xn-x;
-  for (c = 2; c <= n; c <<= 1) {
+  for (c = 2; c <= (unsigned int) n; c <<= 1) {
     xc = x + c;
-    if (c < n && (*xc)->v < (*(xc+1))->v) {
+    if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
       c++; xc++;
     }
     if (t->v >= (*xc)->v) break;
@@ -96,9 +96,9 @@ void heap_update (Point *v)
 
   xi = v->h; *xi = v; 
   n = xn-x; c = xi-x;
-  for (c <<= 1; c <= n; c <<= 1) {
+  for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
     xc = x + c;
-    if (c < n && (*xc)->v < (*(xc+1))->v) {
+    if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
       c++; xc++;
     }
     if (v->v >= (*xc)->v) break;

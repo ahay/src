@@ -99,7 +99,7 @@ static void fix_neighbor(int s1, int s2 /* location */,
 	status[s2+lr][s1+ud] = SF_FRONT;
 	sf_pqueue_insert (neighbor);
 	np++;
-	st = path[s2+lr][s1+ud] = sf_alloc(1,sizeof(struct Step));	
+	st = path[s2+lr][s1+ud] = (step) sf_alloc(1,sizeof(struct Step));	
     } else if (newcost < *neighbor) {
 	*neighbor = newcost;
 	st = path[s2+lr][s1+ud];

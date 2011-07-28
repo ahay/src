@@ -362,7 +362,7 @@ B<graphics/vplot/filters>
 =cut
 
 */
-char *documentation[] = {
+const char *documentation[] = {
 "NAME",
 #ifdef SEP
 "	Xtpen - SEPLIB vplot filter for X windows using the X Toolkit (Xt)",

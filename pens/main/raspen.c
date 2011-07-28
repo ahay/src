@@ -309,7 +309,7 @@ void ras_write (void)
     called=true;
 
     jpeg_start_compress(jpeg, TRUE);
-    while (jpeg->next_scanline < ymax) {
+    while ((int) jpeg->next_scanline < ymax) {
 	scan = image + jpeg->next_scanline * xmax * 3;
 	jpeg_write_scanlines(jpeg, &scan, 1);
     }
@@ -324,7 +324,8 @@ void ras_write (void)
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    char newpath[60], *color;
+    char newpath[60];
+    const char *color;
     float pixels_per_inch, aspect_ratio;
 
     dev.txfont = DEFAULT_HARDCOPY_FONT;
@@ -403,7 +404,7 @@ void opendev (int argc, char* argv[])
 #endif
 
 #ifdef _JPEG
-    jpeg = sf_alloc(1,sizeof(*jpeg));
+    jpeg = (struct jpeg_compress_struct *) sf_alloc(1,sizeof(*jpeg));
     jpeg->err = jpeg_std_error(&jpeg_err);
     jpeg_create_compress(jpeg);
     jpeg_stdio_dest(jpeg, pltout);

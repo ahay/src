@@ -159,8 +159,8 @@
 #include	"../include/round.h"
 #include	"../include/device.h"
 
+#include "../genlib/genpen.h" 
 #include "../utilities/util.h"
-#include "../genlib/genpen.h"
 
 #include "dovplot.h"
 #include "init_vplot.h"
@@ -215,7 +215,6 @@ extern int      color_set[MAX_COL + 1][_NUM_PRIM];
 extern int      greycorr ();
 extern int      num_col_8;
 extern int      xret, yret;
-extern int      add_a_cor ();
 extern char     interact[];
 extern float    dashsum;
 extern float    dashpos;
@@ -228,9 +227,7 @@ int             ras_allgrey = YES;
 #include <stdlib.h>
 
 long int        ftell ();
-extern void     dithline ();
 extern void     wlimit ();
-extern short    geth ();
 
 int             need_devcolor = NO;
 
@@ -566,7 +563,7 @@ void dovplot (void)
 		if (npts == 0)
 		    break;
 		/* allocate space for the points */
-		marker_vec = (int *) malloc ((unsigned) (npts * 2 * sizeof (int)));
+		marker_vec = sf_intalloc (npts * 2);
 		mvec = marker_vec;
 		if (mvec == NULL)
 		    ERR (FATAL, name, "Can't malloc memory for markers!");
@@ -1088,23 +1085,19 @@ void dovplot (void)
 
 		    if (nx_mult * ny_mult > 0)
 		    {
-			if ((ptr = (int *) malloc ((unsigned) (nx_mult * ny_mult * sizeof (int)))) == NULL)
-			    ERR (FATAL, name, "cannot alloc memory to load pattern");
+			ptr = sf_intalloc (nx_mult * ny_mult);
 			pat[ipat].patbits = ptr;
 		    }
 		    else
 		    {
-			if ((ptr = (int *) malloc ((unsigned) (1 * sizeof (int)))) == NULL)
-			    ERR (FATAL, name, "cannot alloc memory to load dummy pattern");
+			ptr = sf_intalloc (1);
 			pat[ipat].patbits = ptr;
 			ptr[0] = 0;
 		    }
 
 		    if (nx * ny > 0)
 		    {
-			if ((tempbuf = (int *) malloc ((unsigned) (nx * ny * sizeof (int)))) == NULL)
-			    ERR (FATAL, name,
-				 "cannot alloc memory to load pattern's temporary buffer");
+			tempbuf = sf_intalloc (nx * ny);
 		    }
 		    else
 			tempbuf = NULL;
@@ -1167,8 +1160,7 @@ void dovplot (void)
 		    {
 			free ((char *) pat[ipat].patbits);
 		    }
-		    if ((ptr = (int *) malloc ((unsigned) (nx * 4 * 2 * sizeof (int)))) == NULL)
-			ERR (FATAL, name, "cannot alloc memory to load pattern");
+		    ptr = sf_intalloc ((unsigned) (nx * 4 * 2));
 		    pat[ipat].patbits = ptr;
 
 		    for (i = 0; i < nx * 2; i++)
@@ -1522,10 +1514,8 @@ void dovplot (void)
 			xr_max = xr_min;
 		    }
 
-		    rasterline  = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
-		    rasterline2 = (unsigned char *) malloc (((xpix + 7 + 2) * sizeof (unsigned char)));
-		    if (rasterline == NULL || rasterline2 == NULL)
-			ERR (FATAL, name, "cannot alloc memory to load raster line");
+		    rasterline  = sf_ucharalloc(xpix + 7 + 2);
+		    rasterline2 = sf_ucharalloc(xpix + 7 + 2);
 
 /*
  * See whether we need to dither or not.
@@ -1535,24 +1525,16 @@ void dovplot (void)
 
 		    if (xr_max > xr_min)
 		    {
-			outraster2 = (unsigned char **) malloc (sizeof (unsigned char*));
-			if (outraster2 == NULL)
-			    ERR (FATAL, name, "cannot alloc memory to load raster image");
-			outraster2[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
+			outraster2 = sf_ucharalloc2(xr_max - xr_min,1);
 
 			if (dither_it)
 			{
-			    outraster = (unsigned char **) malloc (sizeof (unsigned char*));
-			    if (outraster == NULL)
-				ERR (FATAL, name, "cannot alloc memory to load raster image");
-			    outraster[0] = (unsigned char *) malloc ((xr_max - xr_min) * sizeof (unsigned char));
+			    outraster = sf_ucharalloc2(xr_max - xr_min,1);
 			}
 			else
 			{
 			    outraster = outraster2;
 			}
-			if (outraster2 == NULL || outraster == NULL)
-			    ERR (FATAL, name, "cannot alloc memory to load raster line");
 		    }
 		    else
 		    {
@@ -1689,7 +1671,9 @@ void dovplot (void)
 			{
 			    if (dither_it)
 			    {
-				dithline (outraster2, outraster, xr_max - xr_min, yr_max - 1 - i, dither);
+				dithline (outraster2[0], outraster[0], 
+					  xr_max - xr_min, 
+					  yr_max - 1 - i, dither);
 			    }
 			    /* Dumb forms */
       
@@ -2048,7 +2032,8 @@ static int getpolygon (int npts)
     {
 	free ((char *) vxbuffer);
 	vxbuffer =
-	    (struct vertex *) malloc ((unsigned) ((npts + 1) * sizeof (struct vertex)));
+	    (struct vertex *) sf_alloc ((unsigned) (npts + 1),
+					sizeof (struct vertex));
     }
     vertex = vxbuffer;
     GETXY (xnew, ynew);
@@ -2084,6 +2069,23 @@ static void update_color (void)
 	dev.attributes (SET_COLOR, cur_color, 0, 0, 0);
 	need_devcolor = NO;
     }
+}
+
+static void add_a_cor (char *filename, int xcor, int ycor)
+{
+    static int      first_time = YES;
+    static FILE    *outfp;
+
+    if (first_time == YES)
+    {
+	outfp = fopen (filename, "w");
+	if (outfp == NULL)
+	{
+	    ERR (FATAL, name, "Can't open interact output file %s!", filename);
+	}
+	first_time = NO;
+    }
+    fprintf (outfp, "%f\t%f\n", (float) xcor / RPERIN, (float) ycor / RPERIN);
 }
 
 void getapoint (void)

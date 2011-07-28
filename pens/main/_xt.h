@@ -37,7 +37,7 @@ typedef struct
 {
 	FILE	*stream;
 	char	name[MAXFLEN+1];
-	int	new;
+	int	fnew;
 } FileInfo;
  
 /* global definitions */
@@ -58,8 +58,6 @@ extern unsigned long *pen_colors;
 extern int xt_endframe;
 
 /* picture scaling info */
-extern void xt_size_n_scale();
-
 extern unsigned long color;
 extern int x_num_col;
 extern int xmono;
@@ -105,10 +103,6 @@ extern Pixmap pen_pixmap;
 extern int pen_width,pen_height;
 
 extern int have_pixmap;
-
-extern void clear_pixmap();
-extern void create_pixmap();
-extern void remove_pixmap();
 
 #if defined(__STDC__) || defined (__stdc__)
 extern Pixmap MyCreatePixmap( Display *, Drawable,unsigned int,
@@ -198,6 +192,5 @@ typedef struct {
 
 extern AppData app_data;
 
-extern int xt_app_data();
 
 

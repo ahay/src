@@ -23,7 +23,7 @@
 int main(int argc, char *argv[])
 {
     int n1, n2, i2, is, ir, ns, nr, fold;
-    float *data, *result, ds, dr, os, or;
+    float *data, *result, ds, dr, os, r0;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     if (!sf_getfloat("os",&os)) os=0.;
     /* shot origin */
-    if (!sf_getfloat("or",&or)) or=0.;
+    if (!sf_getfloat("or",&r0)) r0=0.;
     /* receiver origin */
 
     fold = 1;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     sf_putint(out,"n2",ns);
     sf_putfloat(out,"d1",dr);
     sf_putfloat(out,"d2",ds);
-    sf_putfloat(out,"o1",or);
+    sf_putfloat(out,"o1",r0);
     sf_putfloat(out,"o2",os);
     sf_putstring(out,"label1","Offset");
     sf_putstring(out,"label2","Shot");

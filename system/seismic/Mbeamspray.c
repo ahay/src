@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
     float **dense, *a, *p, *c, *time, *delt, *ampl, d2, f;
     const float fudge=3.19201;
-    char *type;
+    const char *type;
     sf_file in, out, dip, cur;
 
     sf_init(argc,argv);

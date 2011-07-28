@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, ik, ix, it, nft;
     float dt, dx, dk, k, k0;
-    float *old, *new, *cur, *sig, *v, *newtmp, v0, pi=SF_PI, tmpk;
+    float *old, *nxt, *cur, *sig, *v, *nxttmp, v0, pi=SF_PI, tmpk;
     float *a, *b1, *b2, *b3, *b4, *b5;
     sf_file in, out, Gmatrix, vel;
     sf_complex  *uk, *uktmp; 
@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
     k0 = 0.;
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
-    newtmp = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
+    nxttmp = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v = sf_floatalloc(nx);
     a = sf_floatalloc(nx);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++){
         cur[ix] =  sig[ix];
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
     }
 
     free(v);
@@ -104,25 +104,19 @@ int main(int argc, char* argv[])
     for (it=0; it < nt; it++) {
         sf_floatwrite(cur,nx,out);
 	kiss_fftr(cfg,cur,(kiss_fft_cpx*)uk);/*compute  u(k) */
-#ifdef SF_HAS_COMPLEX_H
         for (ik=0; ik < nk; ik++) {
             k = k0 + ik * dk*2.0*pi;
             tmpk = v0*k*dt;
+#ifdef SF_HAS_COMPLEX_H
             uktmp[ik] = uk[ik]*2.0*(cosf(tmpk));
-            if (fabs(k) > factor*kmax) {uktmp[ik]=0.; } 
-         }
-
 #else
-         for (ik=0; ik < nk; ik++) {
-             k =  k0 + ik * dk*2.0*pi;
-             tmpk = v0*k*dt;
-             uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpk)));
-             if (fabs(k) > factor*kmax) {uktmp[ik]=0.; } 
-         }
+	    uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpk)));
 #endif
-	 kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,newtmp);
+	    if (fabs(k) > factor*kmax) {uktmp[ik]=sf_cmplx(0.,0.); } 
+	}
+	kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,nxttmp);
 
-	for (ix=0; ix < nx; ix++) newtmp[ix] /= (float)nft; 
+	for (ix=0; ix < nx; ix++) nxttmp[ix] /= (float)nft; 
 
 	/* Stencil */
 	for (ix=0; ix < nx; ix++) {
@@ -136,21 +130,21 @@ int main(int argc, char* argv[])
             ip3 =(ix+3+nx)%nx;
             ip4 =(ix+4+nx)%nx;
             ip5 =(ix+5+nx)%nx;
-	    new[ix] = newtmp[ix]*a[ix]  
-                    + (newtmp[im]+newtmp[ip])*0.5*b1[ix]
-                    + (newtmp[im2]+newtmp[ip2])*0.5*b2[ix]
-                    + (newtmp[im3]+newtmp[ip3])*0.5*b3[ix]
-                    + (newtmp[im4]+newtmp[ip4])*0.5*b4[ix]
-                    + (newtmp[im5]+newtmp[ip5])*0.5*b5[ix];
+	    nxt[ix] = nxttmp[ix]*a[ix]  
+                    + (nxttmp[im]+nxttmp[ip])*0.5*b1[ix]
+                    + (nxttmp[im2]+nxttmp[ip2])*0.5*b2[ix]
+                    + (nxttmp[im3]+nxttmp[ip3])*0.5*b3[ix]
+                    + (nxttmp[im4]+nxttmp[ip4])*0.5*b4[ix]
+                    + (nxttmp[im5]+nxttmp[ip5])*0.5*b5[ix];
 	}
 	
 	for (ix=0; ix < nx; ix++) {
-	    new[ix] +=   - old[ix];
+	    nxt[ix] +=   - old[ix];
 	}
 
 	for (ix=0; ix < nx; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	}
     }
 

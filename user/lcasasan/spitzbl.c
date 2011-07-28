@@ -40,7 +40,9 @@
 void moment(float *data, int n, float *mean, float* var);
 
 
-void spitzbl(float *in,float *out, int *n, int order, int ntraces, float* f, bool norm)
+void spitzbl(float *in,float *out, int *n, int order, 
+	     int ntraces, float* f, bool norm)
+/*< main action >*/
 {
     float EPS=100*FLT_EPSILON;
     bool verb=false, inv;    

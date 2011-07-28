@@ -89,7 +89,7 @@ typedef char *cwp_String;
 
 #endif
 
-int vtoi(register cwp_String type, Value val)
+int vtoi(const char* type, Value val)
 /*< cast Value variable as an int >*/
 {
 	switch(*type) {
@@ -128,7 +128,7 @@ long vtol(register cwp_String type, Value val)
 }
 
 
-float vtof(register cwp_String type, Value val)
+float vtof(const char* type, Value val)
 /*< cast Value variable as a float >*/
 {
 	switch(*type) {
@@ -168,7 +168,7 @@ double vtod(register cwp_String type, Value val)
 }
 
 
-int valcmp(register cwp_String type, Value val1, Value val2)
+int valcmp(const char* type, Value val1, Value val2)
 /*< compare Value variables >*/
 {
 	switch(*type) {
@@ -219,7 +219,7 @@ int valcmp(register cwp_String type, Value val1, Value val2)
 }
 
 
-void printfval(register cwp_String type, Value val)
+void printfval(const char* type, Value val)
 /*< printf a Value variable >*/
 {
 	switch(*type) {

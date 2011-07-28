@@ -20,7 +20,7 @@
 #include <math.h>
 #include <rsf.h>
 #include "radonoper.h"
-#include "radon.c"     
+#include "radon.h"     
 
 static int nt;                  /* number of time samples */
 static int nt2;                 /* extended number of time samples */

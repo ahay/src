@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, nft, ix, it, ik, iv, nv, nb, nxb, abc;
     float dt, dx, dk, k, dv, tmpdt, pi=SF_PI, vmax, vmin, wsum;
-    float *sig,  *new,  *old, *cur, *newc, *w, *dercur, *derold;
+    float *sig,  *nxt,  *old, *cur, *nxtc, *w, *dercur, *derold;
     sf_complex  *uk,*uktmp; 
     kiss_fftr_cfg cfg,cfgi;
    // float  *v, *vx, *weight; 
@@ -79,8 +79,8 @@ int main(int argc, char* argv[])
     sig    =  sf_floatalloc(nx);
     old    =  sf_floatalloc(nxb);
     cur    =  sf_floatalloc(nxb);
-    new    =  sf_floatalloc(nxb);
-    newc   =  sf_floatalloc(nxb);
+    nxt    =  sf_floatalloc(nxb);
+    nxtc   =  sf_floatalloc(nxb);
     vc     =  sf_floatalloc(nv);
     weight =  sf_floatalloc2(nxb,nv);
     dercur = sf_floatalloc(nxb);
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
         }
     for (ix=0; ix < nxb; ix++){
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
         derold[ix] = cur[ix]/dt ;
     }
 
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
     /* propagation in time */
     for (it=1; it < nt; it++) {
 
-        for (ix=0; ix < nxb; ix++) new[ix] = 0.0; 
+        for (ix=0; ix < nxb; ix++) nxt[ix] = 0.0; 
 
 	kiss_fftr(cfg,cur,(kiss_fft_cpx*)uk);/*compute  u(k) */
 
@@ -171,39 +171,39 @@ int main(int argc, char* argv[])
                   uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpdt)-1)/(vc[iv]*vc[iv]*dt*dt));
                   }
 #endif
-	      kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,newc);/*compute  u(k) */
+	      kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,nxtc);/*compute  u(k) */
 	      for (ix=0; ix < nxb; ix++) {  
-                   newc[ix] /= nft; 
-		  // newc[ix] -= old[ix];
-		   newc[ix] *= weight[iv][ix];
-                   new[ix] += newc[ix];
+                   nxtc[ix] /= nft; 
+		  // nxtc[ix] -= old[ix];
+		   nxtc[ix] *= weight[iv][ix];
+                   nxt[ix] += nxtc[ix];
                    }
                }  
         for(ix=0; ix < nxb; ix++){
-                new[ix] *= (v[ix]*v[ix]*dt);
+                nxt[ix] *= (v[ix]*v[ix]*dt);
               } 
 	for (ix=0; ix < nxb; ix++){
-            dercur[ix]= derold[ix] + new[ix];
+            dercur[ix]= derold[ix] + nxt[ix];
             } 
 	for (ix=0; ix < nxb; ix++) {
-	    new[ix] =  cur[ix] + dercur[ix]*dt;
+	    nxt[ix] =  cur[ix] + dercur[ix]*dt;
 	}
         for (ix=0; ix < nb; ix++){
-            new[ix] *= w[ix];
-            new[ix+nb+nx] *= w[nb-1-ix];
+            nxt[ix] *= w[ix];
+            nxt[ix+nb+nx] *= w[nb-1-ix];
             dercur[ix] *= w[ix];
             dercur[ix+nb+nx] *= w[nb-1-ix];
         }
-	sf_floatwrite(new+nb,nx,out);
+	sf_floatwrite(nxt+nb,nx,out);
 	for (ix=0; ix < nxb; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	    derold[ix] = dercur[ix];
 	}
 }
 
-   /*free(new);     
-   free(newc);     
+   /*free(nxt);     
+   free(nxtc);     
    free(cur);     
    free(old);     
    free(uk);     

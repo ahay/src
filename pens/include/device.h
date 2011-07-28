@@ -26,7 +26,7 @@ struct device{
     /* control routines */
     void (*open)(int argc, char* argv[]);
     void (*reset)(void);
-    void (*message)(int command, char *string);
+    void (*message)(int command, const char *string);
     void (*erase)(int command);
     void (*close)(int status);
     
@@ -51,6 +51,11 @@ struct device{
     void (*startpoly)(int npts);
     void (*midpoly)(int x, int y);
     void (*endpoly)(int last);
+};
+
+struct s_txalign {
+    int hor;
+    int ver;
 };
 
 #endif

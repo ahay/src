@@ -55,8 +55,8 @@ static struct Label {
 static struct Axis {
     bool parallel;
     int ntic, maxstrlen;
-    float or, dnum, num0;
-    char *format;
+    float orig, dnum, num0;
+    const char *format;
 }   /*@null@*/ *axis1=NULL, 
     /*@null@*/ *axis2=NULL, 
     /*@null@*/ *axis3=NULL, 
@@ -632,12 +632,12 @@ static void make_baraxis (float min, float max)
     if (NULL == baraxis) 
 	baraxis = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-    if (!sf_getfloat ("axisorbar",&(baraxis->or))) {
+    if (!sf_getfloat ("axisorbar",&(baraxis->orig))) {
 	/* bar origin */
 	if (vertbar) {
-	    baraxis->or = (barlabel->where == 'l'? barmin: barmax);
+	    baraxis->orig = (barlabel->where == 'l'? barmin: barmax);
 	} else {
-	    baraxis->or = (barlabel->where == 'b'? barmin: barmax);
+	    baraxis->orig = (barlabel->where == 'b'? barmin: barmax);
 	}
     }
 
@@ -697,8 +697,8 @@ static void make_axes (void)
 	if (NULL == axis1) 
 	    axis1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-	if (!sf_getfloat ("axisor1",&(axis1->or)))
-	    axis1->or = (label1->where == 'b'? min2: max2);
+	if (!sf_getfloat ("axisor1",&(axis1->orig)))
+	    axis1->orig = (label1->where == 'b'? min2: max2);
 	/* first axis origin */
 
 	if (!sf_getbool ("parallel1",&(axis1->parallel)) &&
@@ -733,8 +733,8 @@ static void make_axes (void)
 	if (NULL == axis2)
 	    axis2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-	if (!sf_getfloat ("axisor2",&(axis2->or)))
-	    axis2->or = (label2->where == 'l'? min1: max1);
+	if (!sf_getfloat ("axisor2",&(axis2->orig)))
+	    axis2->orig = (label2->where == 'l'? min1: max1);
 	/* second axis origin */
 
 	if (!sf_getbool ("parallel2",&(axis2->parallel)) &&
@@ -769,8 +769,8 @@ static void make_axes (void)
 	if (NULL == axis3)
 	    axis3 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-	if (!sf_getfloat ("axisor3",&(axis3->or)))
-	    axis3->or = min1;
+	if (!sf_getfloat ("axisor3",&(axis3->orig)))
+	    axis3->orig = min1;
 	/* third axis origin */
 
 	if (!sf_getbool ("parallel3",&(axis3->parallel)) &&
@@ -803,7 +803,7 @@ static void make_axes (void)
 	if (NULL == axis4)
 	    axis4 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
-	axis4->or       = axis2->or;
+	axis4->orig       = axis2->orig;
 	axis4->parallel = axis2->parallel;
 	axis4->format   = axis2->format;
 	
@@ -847,7 +847,7 @@ static void make_grid (bool grid)
 	    if (!sf_getfloat ("g1num0",&(grid1->num0))) 
 		grid1->num0 = axis1->num0;
 	    /*( g1num0 grid mark origin on first axis )*/
-	    grid1->or = axis1->or;
+	    grid1->orig = axis1->orig;
 
 	    if (!sf_getfloat ("g1num",&(grid1->dnum))) {
 		/*( g1num grid mark sampling on first axis )*/
@@ -880,7 +880,7 @@ static void make_grid (bool grid)
 	    if (!sf_getfloat ("g2num0",&(grid2->num0))) 
 		grid2->num0 = axis2->num0;
 	    /*( g2num0 grid mark origin on second axis )*/
-	    grid2->or = axis2->or;
+	    grid2->orig = axis2->orig;
 	    
 	    if (!sf_getfloat ("g2num",&(grid2->dnum))) {
 		/*( g2num grid mark sampling on second axis )*/
@@ -911,7 +911,7 @@ static void make_grid (bool grid)
 	/* to draw grid */
 
 	grid3->num0 = axis3->num0;
-	grid3->or = axis3->or;
+	grid3->orig = axis3->orig;
 	grid3->dnum = axis3->dnum;
 	grid3->ntic = axis3->ntic;
     }
@@ -1333,7 +1333,7 @@ void vp_frame(void)
 		yc = min2;
 	    } else {
 		xc = num;
-		yc = axis1->or;
+		yc = axis1->orig;
 	    }
 
 	    vp_umove (xc, yc);
@@ -1411,7 +1411,7 @@ void vp_frame(void)
 		xc = min1;
 	    } else {
 		yc = num;
-		xc = axis2->or;
+		xc = axis2->orig;
 	    }	    
 
 	    /* draw the tick */
@@ -1865,7 +1865,7 @@ void vp_barframe(void)
 	    
 	    if (vertbar) {
 		yc = bar0 + i*dbar;
-		xc = baraxis->or;
+		xc = baraxis->orig;
 		
 		vp_move (xc, yc);
 		vp_draw (xc+vs, yc);
@@ -1887,7 +1887,7 @@ void vp_barframe(void)
 		}
 	    } else { /* horizontal bar */
 		xc = bar0 + i*dbar;
-		yc = baraxis->or;
+		yc = baraxis->orig;
 
 		vp_move (xc, yc);
 		vp_draw (xc, yc+vs);

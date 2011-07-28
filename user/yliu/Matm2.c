@@ -36,7 +36,7 @@ int main (int argc, char* argv[])
     int nfw2;    /*nfw is the filter-window length in trace direction*/
     int m2;
     float alpha;
-    char *type;
+    const char *type;
    
     int i,j,k,ii,kk,jj;
     bool boundary, verb;

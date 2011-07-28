@@ -53,12 +53,13 @@ int main (int argc, char* argv[])
     float f;
     off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
     sf_file *in, out;
-    char *prog, key[3], buf[BUFSIZ], **filename;
+    char *prog, key[3], buf[BUFSIZ];
+    const char **filename;
     bool space;
     
     sf_init(argc,argv);
     
-    filename = (char**) sf_alloc ((size_t) argc,sizeof(char*));
+    filename = (const char**) sf_alloc ((size_t) argc,sizeof(char*));
 
     if (!sf_stdin()) { /* no input file in stdin */
 	nin=0;
@@ -212,7 +213,11 @@ static void check_compat (int esize, int nin, sf_file *in, int axis, int dim,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || (id != axis && ni != n[id-1]))
-		sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
+#if defined(__cplusplus) || defined(c_plusplus)
+		sf_error("%s mismatch: need %ld",key,(long int) n[id-1]);
+#else
+	        sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
+#endif
 	    if (id == axis) naxis[i] = ni;
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&d)) {

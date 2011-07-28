@@ -29,9 +29,8 @@ int main (int argc, char* argv[])
     short *sbuf;
     size_t bufsiz = BUFSIZ, nbuf, j;
     off_t size;
-    char* format, *buf;
-    char* header;
-    char* trailer;
+    const char* format;
+    char *buf, *header, *trailer;
     float *fbuf;
     sf_complex *cbuf;
     unsigned char *ubuf;

@@ -103,7 +103,7 @@ int             Allgone;/* Communicate to polygon whether we ever got
 static int edge (int x, int y);
 
 static void insert (int where, int x, int y, int z);
-static void delete (int where);
+static void delete_vert (int where);
 
 static void scan (void);
 
@@ -336,14 +336,14 @@ void polystart (void)
 				 * two! 
 				 */
 				/* Clean up by removing the repeated vertices */
-				delete (pedge[k]);
+				delete_vert (pedge[k]);
 				pedge[k] = 0;
 				/*
 				 * Point this to a place we know is marked as
 				 * an interior point. Always fails checks to
 				 * see if it is on the edge we want. 
 				 */
-				delete (temp2);
+				delete_vert (temp2);
 				flag = 1;
 				double_check = 1;
 			    }
@@ -393,9 +393,9 @@ void polystart (void)
 					 */
 				    }
 				    /* clean up */
-				    delete (pedge[k]);
+				    delete_vert (pedge[k]);
 				    pedge[k] = 0;
-				    delete (temp2);
+				    delete_vert (temp2);
 				    flag = 1;
 				    double_check = 1;
 				}
@@ -470,7 +470,7 @@ int             temp;
     poly[poly[temp][2]][3] = temp;
 }
 
-static void delete (int where)
+static void delete_vert (int where)
 {
 int             temp;
 
@@ -535,10 +535,10 @@ int             where;
 		where = poly[firstpoint][2];
 		while (firstpoint != where)
 		{
-		    delete (where);
+		    delete_vert (where);
 		    where = poly[firstpoint][2];
 		}
-		delete (firstpoint);
+		delete_vert (firstpoint);
 	    }
 	    else
 	    {

@@ -193,7 +193,7 @@ static int check_state (const char *command1, const char *command2,
 			struct warn_state *needtocheck1,
 			struct warn_state *needtocheck2);
 
-static char *documentation[] = {
+static const char *documentation[] = {
     "",
     "",
     "NAME",
@@ -292,8 +292,8 @@ main (int argc, char *argv[])
     state1 = reset_state;
     state2 = reset_state;
 
-    cstate1 = sf_alloc(1,sizeof(*cstate1));
-    cstate2 = sf_alloc(1,sizeof(*cstate2));
+    cstate1 = (struct color_table_current_state *) sf_alloc(1,sizeof(*cstate1));
+    cstate2 = (struct color_table_current_state *) sf_alloc(1,sizeof(*cstate2));
 
     cstate1->largest = -1;
     for (ii = 0; ii <= MAX_COL; ii++)

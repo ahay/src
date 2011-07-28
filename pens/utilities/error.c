@@ -63,7 +63,7 @@ extern void removtemp(void);
 
 #include <stdarg.h>
 
-int ERR (int type, char *filter, char *fmt,...)
+int ERR (int type, char *filter, const char *fmt,...)
 /*<  error reporting for VPLOT filters
  * To print text to the outside world, other routines must go through err,
  * which in turn must go through message. >*/

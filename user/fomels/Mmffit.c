@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    char *type;
+    const char *type;
     int nh, nm, ih, im, nc;
     float dh, h0, h, dm, m0, m, f, f0, x0, xp, xm, q;
     float fp0, fp, fm0, fm;

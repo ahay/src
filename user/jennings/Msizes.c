@@ -32,7 +32,8 @@ for a list of RSF files.  Non-RSF files are ignored.
 
 int main (int argc, char* argv[])
 {
-    char            *filename=NULL, *prefix=" KMGT";
+    char            *filename=NULL;
+    const char      *prefix=" KMGT";
     int             i, j, esize, st;
     off_t           bytes, total, p1024[5];
     float           size_human;
@@ -103,7 +104,11 @@ int main (int argc, char* argv[])
                         filename,size_human,prefix[j-1]);
             }
                                 /* ... or simple byte count     */
-            else printf ("%s: \t %10lld\n",filename,(long long) bytes);
+#if defined(__cplusplus) || defined(c_plusplus)
+            else printf ("%s: \t %10ld\n",filename,(long) bytes);
+#else
+	    else printf ("%s: \t %10lld\n",filename,(long long) bytes);
+#endif
         }
     }
 
@@ -115,7 +120,11 @@ int main (int argc, char* argv[])
         printf ("size= %6.1f %cB\n",size_human,prefix[j-1]);
     }
                                 /* ... or simple byte count     */
+#if defined(__cplusplus) || defined(c_plusplus)
+    else printf ("size= %10ld\n",(long) total);
+#else
     else printf ("size= %10lld\n",(long long) total);
+#endif
 
     exit (0);
 }

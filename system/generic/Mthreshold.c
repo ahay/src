@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	cdat = sf_complexalloc(n);
 	sf_complexread(cdat,n,in);
 	for (i=0; i < n; i++) {
-	    adat[i] = sf_cabs(cdat[i]);
+	    adat[i] = cabsf(cdat[i]);
 	}
     } else {
 	sf_error("Need float or complex input");
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(dat,n,out);
     } else {
 	for (i=0; i < n; i++) {
-	    d = sf_cabs(cdat[i]);
+	    d = cabsf(cdat[i]);
 	    if (d < -t) {
 #ifdef SF_HAS_COMPLEX_H
 		cdat[i] *= (d+t)/d;

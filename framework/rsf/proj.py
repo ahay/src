@@ -258,7 +258,7 @@ class Project(Environment):
            
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',
-                'cygwin': '/usr/X11R6/bin'}
+                'cygwin': '/usr/X11R6/bin:/usr/lib/lapack'}
         for plat in path.keys():
             if sys.platform[:len(plat)] == plat:           
                 self['ENV']['PATH'] = ':'.join([path[plat],

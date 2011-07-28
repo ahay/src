@@ -297,7 +297,7 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 {
 	int i,wrap;
 	float drleft,drorig,frac,cmax,umaxl,uminr,uminm,umaxm,oda=1/da,
-		uu,unew,uold,ueol,ueor,wor,or,*wtemp,*s;
+		uu,unew,uold,ueol,ueor,wor,invr,*wtemp,*s;
 	float a,b,c,x;
 	/*float xx[na],duda[na][4];
 	
@@ -458,7 +458,7 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 		
 		/* update radial coordinate and its inverse */
 		r += dr;
-		or = 1.0/r;
+		invr = 1.0/r;
 		
 		/* linearly interpolate slowness for new r */
 		frac = drleft/drorig;
@@ -468,7 +468,7 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 		/* update w and u; integrate u to get t */
 		for (i=0; i<na; i++) {
 			wn[i] = wtemp[i];
-			wor = wn[i]*or;
+			wor = wn[i]*invr;
 			uu = (s[i]-wor)*(s[i]+wor);
 			/*if(uu<=0) err("\tRaypath has a too large curvature!\n\t A smoother velocity is required. \n");*/
 			uu=MAX(0,uu);

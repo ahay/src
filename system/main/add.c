@@ -90,7 +90,8 @@ int main (int argc, char* argv[])
     sf_file *in, out;
     float *scale, *add;
     bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
-    char cmode, *mode, *buf, *bufi, *prog;
+    char cmode, *buf, *bufi, *prog;
+    const char *mode;
     sf_datatype type;
 
     /* init RSF */
@@ -441,8 +442,13 @@ check_compat (sf_datatype type /* data type */,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
-		sf_error("%s mismatch: need %lld",key,
+#if defined(__cplusplus) || defined(c_plusplus)
+		sf_error("%s mismatch: need %ld",key,
+			 (long int) n[id-1]);
+#else
+	        sf_error("%s mismatch: need %lld",key,
 			 (long long int) n[id-1]);
+#endif
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&d)) {
 		if (!sf_histfloat(in[i],key,&di) || 

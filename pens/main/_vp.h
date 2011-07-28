@@ -22,7 +22,7 @@ extern int vpfit;
 extern float xsize, ysize;
 extern bool vpbig;
 extern bool vpstyle;
-extern char *vpaligns;
+extern const char *vpaligns;
 extern int vpcolor, vpfat;
 extern int vpsetflag;
 extern bool vpblast;

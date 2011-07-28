@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0, v0;
-    float **new,  **old,  **cur,  **ukr, **v, *wav;
+    float **nxt,  **old,  **cur,  **ukr, **v, *wav;
     float k, kmax;
     float ***B; 
     kiss_fft_cpx **uk, *ctracex, *ctracez;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nz,nx);
     cur    =  sf_floatalloc2(nz,nx);
-    new    =  sf_floatalloc2(nz,nx);
+    nxt    =  sf_floatalloc2(nz,nx);
     ukr     =  sf_floatalloc2(nz,nx);
 
     B   =  sf_floatalloc3(nz,nx,len);
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
 
          for (ix=0; ix < nx; ix++){
              for (iz=0; iz < nz; iz++){ 
-                  new[ix][iz] = 0.0; 
+                  nxt[ix][iz] = 0.0; 
                   uk[ix][iz].r = cur[ix][iz];
                   uk[ix][iz].i = 0.0; 
                 }
@@ -208,28 +208,28 @@ int main(int argc, char* argv[])
 	 for (ix=4; ix < nx-4; ix++) {  
 	     for (iz=4; iz < nz-4; iz++) {  
                  for (is=0; is < len; is++) {
-                     new[ix][iz]  += 0.5*(ukr[ix+s2[is]][iz+s1[is]]+ukr[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
+                     nxt[ix][iz]  += 0.5*(ukr[ix+s2[is]][iz+s1[is]]+ukr[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
                  }
              }
          }
                  
 	 for (ix=0; ix < nx; ix++) {  
              for(iz=0; iz < nz; iz++) {
-                new[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz];
+                nxt[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz];
 	        old[ix][iz] = cur[ix][iz]; 
-	        cur[ix][iz] = new[ix][iz]; 
+	        cur[ix][iz] = nxt[ix][iz]; 
              }
          }
     }
     bd_close();
     srcsm_close();
     free(*v);     
-    free(*new);     
+    free(*nxt);     
     free(*cur);     
     free(*old);     
     free(*uk);     
     free(v);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(uk);     

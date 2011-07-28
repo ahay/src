@@ -215,7 +215,7 @@ def cc(context):
     if string.rfind(CC,'gcc') >= 0 and \
            string.rfind(CC,'pgcc') < 0:
         oldflag = context.env.get('CCFLAGS')
-        for flag in ('-std=gnu99 -Wall -pedantic',
+        for flag in ('-x=c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):

@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, iv, nv, nz, iz ;
     float dt, dx, dkx, kx, kx0, dz, dkz, kz, kz0, dv, tmpdt, pi=SF_PI, vmax, vmin, wsum;
-    float **sig,  **new,  **old,  **newc;
+    float **sig,  **nxt,  **old,  **nxtc;
     sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; 
     kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     float  **v, *vc, ***weight; 
@@ -88,8 +88,8 @@ int main(int argc, char* argv[])
 
     sig    =  sf_floatalloc2(nx,nz);
     old    =  sf_floatalloc2(nx,nz);
-    new    =  sf_floatalloc2(nx,nz);
-    newc   =  sf_floatalloc2(nx,nz);
+    nxt    =  sf_floatalloc2(nx,nz);
+    nxtc   =  sf_floatalloc2(nx,nz);
     vc     =  sf_floatalloc(nv);
     weight =  sf_floatalloc3(nx,nz,nv);
     
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 
          for (iz=0; iz < nz; iz++){
              for (ix=0; ix < nx; ix++){ 
-                  new[iz][ix] = 0.0; 
+                  nxt[iz][ix] = 0.0; 
                 }
            }  
 /* compute u(kx,kz) */
@@ -192,27 +192,27 @@ int main(int argc, char* argv[])
              }
 	      for (iz=0; iz < nz; iz++) {  
 	           for (ix=0; ix < nx; ix++) {  
-                         newc[iz][ix]  = crealf(uktmp[iz][ix]);
-                         newc[iz][ix] /= nkx * nkz; 
-		         newc[iz][ix] -= old[iz][ix];
-		         newc[iz][ix] *= weight[iv][iz][ix];
-                         new[iz][ix] += newc[iz][ix];
+                         nxtc[iz][ix]  = crealf(uktmp[iz][ix]);
+                         nxtc[iz][ix] /= nkx * nkz; 
+		         nxtc[iz][ix] -= old[iz][ix];
+		         nxtc[iz][ix] *= weight[iv][iz][ix];
+                         nxt[iz][ix] += nxtc[iz][ix];
                    }
                }  
       }
 	      for (iz=0; iz < nz; iz++) {  
                   for(ix=0; ix<nx; ix++){
 	             old[iz][ix] = crealf(curcmp[iz][ix]);
-	             curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
+	             curcmp[iz][ix] = sf_cmplx(nxt[iz][ix],0.0);
                    }
               }
-         sf_floatwrite(new[0],nz*nx,out);
+         sf_floatwrite(nxt[0],nz*nx,out);
   }
 
    free(v);     
    free(vc);     
-   free(new);     
-   free(newc);     
+   free(nxt);     
+   free(nxtc);     
    free(curcmp);     
    free(old);     
    free(uk);     

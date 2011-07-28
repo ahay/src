@@ -120,7 +120,7 @@ static byte ASCtoEBC[256] = {
 };
 
 typedef struct Segy {
-    char *name;
+    const char *name;
     unsigned int size;
 } segy;
 
@@ -816,7 +816,7 @@ int segykey (const char* key)
     return 0;
 }
 
-char* segykeyword (int k) 
+const char* segykeyword (int k) 
 /*< Find a SEGY key from its number >*/
 {
     return segy_key[k].name;

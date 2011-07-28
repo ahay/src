@@ -56,7 +56,8 @@ int main(int argc, char* argv[])
     float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3, maxstr;
     float **datum = NULL;
     mapfunc forward = NULL, inverse = NULL;
-    char *rule, *nin, *prog;
+    const char *rule;
+    char *nin, *prog;
     sf_file in, out, dat;
 
     sf_init (argc,argv);

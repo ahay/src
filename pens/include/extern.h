@@ -12,7 +12,7 @@
 /*
  * these must be DECLARED in dev.conf
  */
-extern char *documentation[];
+extern const char *documentation[];
 extern int doclength;
 extern char name[];
 
@@ -71,7 +71,8 @@ extern FILE *pltin;
 extern FILE *pltout;
 
 extern struct device dev;
-extern void (*message)(int command, char* string);
+extern struct s_txalign txalign;
+extern void (*message)(int command, const char* string);
 
 /*
  * options

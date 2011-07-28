@@ -29,8 +29,8 @@ Created: February 2006
 
 #include <rsf.h>
 
-static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
-		      float thr);
+static void thrsample(sf_file in, sf_file out, bool complex_data, 
+		      const char* mode, float thr);
 
 int main(int argc, char* argv[])
 {
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     float *fthrsample;
     sf_file fthr = NULL;
     bool complex_data = false;/* true if input data is complex */
-    char* mode;
+    const char* mode;
     sf_file in, out; /* Input and output files */
   
     /* Initialize RSF */
@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
-		      float thr)
+static void thrsample(sf_file in, sf_file out, bool complex_data, 
+		      const char* mode, float thr)
 {
     float *isample=NULL;
     float *osample=NULL;

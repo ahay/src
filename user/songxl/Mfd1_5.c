@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, isx;
     float dt, dx, dx2;
-    float *old, *new, *cur, *sig, *v;
+    float *old, *nxt, *cur, *sig, *v;
     sf_file in, out, vel;
     int im,im2,im3,im4,im5,ip,ip2,ip3,ip4,ip5;
     float a, b1, b2, b3, b4, b5;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v   = sf_floatalloc(nx);
     
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++){
         cur[ix] =  sig[ix];
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
     }
     
     dx2 = dx*dx;
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
             ip4 = (ix+4 > nx-1)? (ix+4-nx):(ix+4);
             ip5 = (ix+5 > nx-1)? (ix+5-nx):(ix+5);
 
-	    new[ix] = dt*dt*v[ix]*v[ix]*(a*cur[ix] +b1* (cur[im]+cur[ip]) 
+	    nxt[ix] = dt*dt*v[ix]*v[ix]*(a*cur[ix] +b1* (cur[im]+cur[ip]) 
                     +b2* (cur[im2]+cur[ip2])+b3* (cur[im3]+cur[ip3]) 
                     +b4* (cur[im4]+cur[ip4])+b5* (cur[im5]+cur[ip5])) 
                     +2.0*cur[ix]- old[ix];
@@ -102,14 +102,14 @@ int main(int argc, char* argv[])
             ip3 =(ix+3+nx)%nx;
             ip4 =(ix+4+nx)%nx;
             ip5 =(ix+5+nx)%nx;
-	    new[ix] = dt*dt*v[ix]*v[ix]*(a*cur[ix] +b1* (cur[im]+cur[ip]) 
+	    nxt[ix] = dt*dt*v[ix]*v[ix]*(a*cur[ix] +b1* (cur[im]+cur[ip]) 
                     +b2* (cur[im2]+cur[ip2])+b3* (cur[im3]+cur[ip3]) 
                     +b4* (cur[im4]+cur[ip4])+b5* (cur[im5]+cur[ip5])) 
                     +2.0*cur[ix]- old[ix];
 	}
        for (ix=0; ix < nx; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	}
     }
     exit(0);

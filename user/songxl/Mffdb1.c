@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, ik, ix, it, nft, nb, nxb, abc, v0kind;
     float dt, dx, dk, k;
-    float *old, *new, *cur, *sig, *v, *newtmp, 
+    float *old, *nxt, *cur, *sig, *v, *nxttmp, 
     v0, **aa, tv, tv0, dv, pi=SF_PI, tmpk, 
     *w, *dercur, *derold;
     sf_file in, out, vel;
-    bool opt,try;    /* optimal padding */
+    bool opt,pad;    /* optimal padding */
     sf_complex  *uk, *uktmp; 
     kiss_fftr_cfg cfg, cfgi;
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_getbool("opt",&opt)) opt=true;
-    if (!sf_getbool("try",&try)) try=false;
+    if (!sf_getbool("try",&pad)) pad=false;
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
     if (!sf_getint("nt",&nt)) sf_error("Need nt input");
     if (!sf_getint("nb",&nb)) nb =20; 
@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nxb);
-    new = sf_floatalloc(nxb);
-    newtmp = sf_floatalloc(nxb);
+    nxt = sf_floatalloc(nxb);
+    nxttmp = sf_floatalloc(nxb);
     cur = sf_floatalloc(nxb);
     dercur = sf_floatalloc(nxb);
     derold = sf_floatalloc(nxb);
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
         }
     for (ix=0; ix < nxb; ix++){
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
         derold[ix] = cur[ix]/dt ;
     }
 
@@ -166,12 +166,12 @@ int main(int argc, char* argv[])
              uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpk)-1.0)/tv0);
          }
 #endif
-	 kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,newtmp);
+	 kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,nxttmp);
 
-	for (ix=0; ix < nxb; ix++) newtmp[ix] /= (float)nft; 
+	for (ix=0; ix < nxb; ix++) nxttmp[ix] /= (float)nft; 
  /*       for (ix=0; ix < nb; ix++){
-            newtmp[ix] *= w1[ix]; 
-            newtmp[ix+nb+nx] *= w1[nb-1-ix];
+            nxttmp[ix] *= w1[ix]; 
+            nxttmp[ix+nb+nx] *= w1[nb-1-ix];
             cur[ix] *= w1[ix] ;
             cur[ix+nb+nx] *= w1[nb-1-ix];
             old[ix] *= w1[ix]; 
@@ -179,30 +179,30 @@ int main(int argc, char* argv[])
         } */
 
 	/* Stencil */
-//	new[0] = newtmp[0]*aa[0][0] + newtmp[0]*aa[0][0] + newtmp[1]*aa[0][1];
-	new[0] = newtmp[0]*aa[0][0] +  newtmp[1]*aa[0][1];
+//	nxt[0] = nxttmp[0]*aa[0][0] + nxttmp[0]*aa[0][0] + nxttmp[1]*aa[0][1];
+	nxt[0] = nxttmp[0]*aa[0][0] +  nxttmp[1]*aa[0][1];
 	for (ix=1; ix < nxb-1; ix++) {
-	    new[ix] = newtmp[ix]*aa[ix][0] + newtmp[ix+1]*aa[ix][1] + newtmp[ix-1]*aa[ix][1];
+	    nxt[ix] = nxttmp[ix]*aa[ix][0] + nxttmp[ix+1]*aa[ix][1] + nxttmp[ix-1]*aa[ix][1];
 	}
-//	new[nxb-1] = newtmp[nxb-1]*aa[nxb-1][1] + newtmp[nxb-1]*aa[nxb-1][0] + newtmp[nxb-2]*aa[nxb-1][1];
-	new[nxb-1] = newtmp[nxb-1]*aa[nxb-1][0] + newtmp[nxb-2]*aa[nxb-1][1];
+//	nxt[nxb-1] = nxttmp[nxb-1]*aa[nxb-1][1] + nxttmp[nxb-1]*aa[nxb-1][0] + nxttmp[nxb-2]*aa[nxb-1][1];
+	nxt[nxb-1] = nxttmp[nxb-1]*aa[nxb-1][0] + nxttmp[nxb-2]*aa[nxb-1][1];
 	
 	for (ix=0; ix < nxb; ix++){
-            dercur[ix]= derold[ix] + new[ix]/dt;
+            dercur[ix]= derold[ix] + nxt[ix]/dt;
             } 
 	for (ix=0; ix < nxb; ix++) {
-	    new[ix] =  cur[ix] + dercur[ix]*dt;
+	    nxt[ix] =  cur[ix] + dercur[ix]*dt;
 	}
         for (ix=0; ix < nb; ix++){
-            new[ix] *= w[ix];
-            new[ix+nb+nx] *= w[nb-1-ix];
+            nxt[ix] *= w[ix];
+            nxt[ix+nb+nx] *= w[nb-1-ix];
             dercur[ix] *= w[ix];
             dercur[ix+nb+nx] *= w[nb-1-ix];
         }
-	sf_floatwrite(new+nb,nx,out);
+	sf_floatwrite(nxt+nb,nx,out);
 	for (ix=0; ix < nxb; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	    derold[ix] = dercur[ix];
 	}
     }

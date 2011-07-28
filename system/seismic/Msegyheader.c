@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
     float d1;
     sf_file in=NULL, keys[SF_NKEYS], out=NULL;
     off_t n2, nleft;
-    char *key=NULL, *arg=NULL, zero[BUFSIZ];
+    const char *key;
+    char *arg=NULL, zero[BUFSIZ];
 
     sf_init (argc,argv);
     in = sf_input ("in");

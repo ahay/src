@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, nb, nxb, abc, order;
     float dt, dx;
-    float *old, *new, *cur, *sig, *v, 
+    float *old, *nxt, *cur, *sig, *v, 
     *w, *dercur, *derold;
     sf_file in, out, vel;
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nxb);
-    new = sf_floatalloc(nxb);
+    nxt = sf_floatalloc(nxb);
     cur = sf_floatalloc(nxb);
     dercur = sf_floatalloc(nxb);
     derold = sf_floatalloc(nxb);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         }
     for (ix=0; ix < nxb; ix++){
         old[ix] =  0.0; 
-	new[ix] = 0.;
+	nxt[ix] = 0.;
         derold[ix] = cur[ix]/dt ;
     }
 
@@ -106,28 +106,28 @@ int main(int argc, char* argv[])
 
     /* propagation in time */
     for (it=1; it < nt; it++) {
-/*	new[0] = cur[1]-2*cur[0];
+/*	nxt[0] = cur[1]-2*cur[0];
 	for (ix=1; ix < nxb-1; ix++) {
-	    new[ix] = cur[ix+1]+cur[ix-1]-2.0*cur[ix]; 
+	    nxt[ix] = cur[ix+1]+cur[ix-1]-2.0*cur[ix]; 
 	}
-	new[nxb-1] = cur[nxb-2]-2.0*cur[nxb-1]; */
-        lap1(cur,new,order);
+	nxt[nxb-1] = cur[nxb-2]-2.0*cur[nxb-1]; */
+        lap1(cur,nxt,order);
 	for (ix=0; ix < nxb; ix++){
-            dercur[ix]= derold[ix] + new[ix]*v[ix]*v[ix]*dt/(dx*dx);
+            dercur[ix]= derold[ix] + nxt[ix]*v[ix]*v[ix]*dt/(dx*dx);
             } 
 	for (ix=0; ix < nxb; ix++) {
-	    new[ix] =  cur[ix] + dercur[ix]*dt;
+	    nxt[ix] =  cur[ix] + dercur[ix]*dt;
 	}
         for (ix=0; ix < nb; ix++){
-            new[ix] *= w[ix];
-            new[ix+nb+nx] *= w[nb-1-ix];
+            nxt[ix] *= w[ix];
+            nxt[ix+nb+nx] *= w[nb-1-ix];
             dercur[ix] *= w[ix];
             dercur[ix+nb+nx] *= w[nb-1-ix];
         }
-	sf_floatwrite(new+nb,nx,out);
+	sf_floatwrite(nxt+nb,nx,out);
 	for (ix=0; ix < nxb; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	    derold[ix] = dercur[ix];
 	}
     }

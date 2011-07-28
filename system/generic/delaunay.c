@@ -421,7 +421,7 @@ void InsertEdge (Edge ab)
 {
     Triangle abc;
     Edge old;
-    Node midpoint, new;
+    Node midpoint, newpoint;
     int i;
 
     midpoint = (Node) malloc (sizeof (*midpoint));
@@ -441,8 +441,8 @@ void InsertEdge (Edge ab)
 	return;
     }
     if ((old = IsNode (abc, ab)) != NULL) {
-	new = CrossNode (old->ends,ab->ends);
-	if (new == NULL) {
+	newpoint = CrossNode (old->ends,ab->ends);
+	if (newpoint == NULL) {
 	    fprintf (stderr,"Too bad\n");
 	    return;
 	}
@@ -452,21 +452,21 @@ void InsertEdge (Edge ab)
 	    return;
 	}
     } else {
-	new = NULL;
+	newpoint = NULL;
 	for (i=0; i<3; i++) {
 	    old = abc->edge[i];
 	    if (old->face[0] == NULL || 
 		old->face[1] == NULL) continue;
-	    if ((new = CrossNode (old->ends,ab->ends)) != NULL) break;
+	    if ((newpoint = CrossNode (old->ends,ab->ends)) != NULL) break;
 	}
-	if (new == NULL) {
+	if (newpoint == NULL) {
 	    fprintf (stderr,"Disaster\n");
 	    return;
 	}
     }
-    InsertEdgeNode (new,old);    
-    InsertEdge (AppendEdge (new, ab->ends[0],EMPTY));
-    InsertEdge (AppendEdge (new, ab->ends[1],EMPTY));
+    InsertEdgeNode (newpoint,old);    
+    InsertEdge (AppendEdge (newpoint, ab->ends[0],EMPTY));
+    InsertEdge (AppendEdge (newpoint, ab->ends[1],EMPTY));
 }
 
 static Edge IsEdge (Triangle abc, Edge ab)

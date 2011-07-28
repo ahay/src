@@ -34,7 +34,7 @@
 
 int main (int argc, char *argv[])
 {
-    char *mode;           /* mode of osperation */
+    const char *mode;     /* mode of operation */
     bool verb;            /* verbosity */
     bool inv;             /* forward or adjoint */
     bool twoway;          /* two-way traveltime */

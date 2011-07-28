@@ -5,7 +5,7 @@
 /*#include "fdutil3d.h"*/
 
 
-#ifndef _fdutil_h
+#ifndef _fdutil3d_h
 
 typedef struct fdm2 *fdm2d;
 /*^*/
@@ -25,7 +25,7 @@ typedef struct abc2 *abcone2d;
 typedef struct abc3 *abcone3d;
 /*^*/
 
-typedef struct spon *sponge;
+typedef struct spon *sponge1d;
 /*^*/
 typedef struct sponge *sponge2d;
 /*^*/
@@ -1078,14 +1078,14 @@ void abcone3d_apply(float  ***uo,
 
 
 /*------------------------------------------------------------*/
-sponge sponge_make(int nb)
+sponge1d sponge_make(int nb)
 /*< init boundary sponge >*/
 {
-    sponge spo;
+    sponge1d spo;
     int   ib;
     float sb,fb;
     
-    spo = (sponge) sf_alloc(1,sizeof(*spo));    
+    spo = (sponge1d) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(nb);
 
     sb = 4.0*nb;               
@@ -1098,7 +1098,7 @@ sponge sponge_make(int nb)
 
 /*------------------------------------------------------------*/
 void sponge2d_apply(float**   uu,
-		    sponge   spo,
+		    sponge1d spo,
 		    fdm2d    fdm)
 /*< apply boundary sponge >*/
 {
@@ -1131,7 +1131,7 @@ void sponge2d_apply(float**   uu,
 
 /*------------------------------------------------------------*/
 void sponge3d_apply(float  ***uu,
-		    sponge   spo,
+		    sponge1d spo,
 		    fdm3d    fdm)
 /*< apply boundary sponge >*/
 {

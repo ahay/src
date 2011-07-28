@@ -61,7 +61,11 @@ int main(int argc, char* argv[])
     }
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    data[i2][i1] /= maxd;
+#ifdef SF_HAS_COMPLEX_H
+	    data[i2][i1] = data[i2][i1]/maxd;
+#else
+	    data[i2][i1] = sf_crmul(data[i2][i1],1.0f/maxd);
+#endif
 	}
     }
 

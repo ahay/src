@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it;
     float dt, dx, w, g;
-    float *old, *new, *cur, *sig, *v, *vx, **a, aa,bb;
+    float *old, *nxt, *cur, *sig, *v, *vx, **a, aa,bb;
     sf_file inp, out, vel, grad;
 
     sf_init(argc,argv);
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
     sig = sf_floatalloc(nx);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v = sf_floatalloc(nx);
     vx = sf_floatalloc(nx);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
 	/* initial conditions */
 	cur[ix] = 0.;
-	new[ix] = 0.;
+	nxt[ix] = 0.;
     }
 
     free(v);
@@ -78,21 +78,21 @@ int main(int argc, char* argv[])
 
 	for (ix=0; ix < nx; ix++) {
 	    old[ix] = cur[ix];
-	    cur[ix] = new[ix];
+	    cur[ix] = nxt[ix];
 	}
 
 	/* Stencil */
-	new[0] = cur[0]*a[0][1] + cur[1]*a[0][0] + cur[0]*a[0][2];
+	nxt[0] = cur[0]*a[0][1] + cur[1]*a[0][0] + cur[0]*a[0][2];
 	for (ix=1; ix < nx-1; ix++) {
-	    new[ix] = cur[ix]*a[ix][1] + cur[ix+1]*a[ix][0] + cur[ix-1]*a[ix][2];
+	    nxt[ix] = cur[ix]*a[ix][1] + cur[ix+1]*a[ix][0] + cur[ix-1]*a[ix][2];
 	}
-	new[nx-1] = cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0] + cur[nx-2]*a[nx-1][2];
+	nxt[nx-1] = cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0] + cur[nx-2]*a[nx-1][2];
 	
 	for (ix=0; ix < nx; ix++) {
-	    new[ix] += sig[ix] + 2*cur[ix] - old[ix];
+	    nxt[ix] += sig[ix] + 2*cur[ix] - old[ix];
 	}
 
-	sf_floatwrite(new,nx,out);
+	sf_floatwrite(nxt,nx,out);
     }
 
     exit(0);

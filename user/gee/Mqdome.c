@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     bool impedance;
     float ranget,o1,d1,o2,d2,o3,d3;
-    float gaussvel, throw, rand, t1, t2;
+    float gaussvel, thro, rand, t1, t2;
     float frac1, frac2, f1, zrad, xnew;
     float thetac, dr, x, y, z, rmax;
     float xp, yp, rcap, rad2, dz;
@@ -60,7 +60,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("o3",&o3)) o3=-3.*d3; sf_putfloat(mod,"o3",o3);
     
     if (!sf_getfloat("gaussvel",&gaussvel)) gaussvel=2.5;
-    if (!sf_getfloat("throw",&throw)) throw=0.01;
+    if (!sf_getfloat("throw",&thro)) thro=0.01;
     if (!sf_getint("endtaper",&endtaper)) endtaper=20;
     if (!sf_getint("slicei",&slicei)) slicei=40;
 
@@ -171,8 +171,8 @@ int main (int argc, char* argv[])
 			zrad = (rad2 - r)/rcap; 
 		    else     
 			zrad = 0.0;  /* no faulting after center */ 
-		    t1  +=  throw * n1 * zrad; 
-		    t2  +=  throw * n1 * zrad; 
+		    t1  +=  thro * n1 * zrad; 
+		    t2  +=  thro * n1 * zrad; 
 		}
 		it1  = t1;
 		it2  = t2;

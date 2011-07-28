@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2;
-    float **new,  **old,  **cur,  **uk, **dercur, **derold, *wav;
+    float **nxt,  **old,  **cur,  **uk, **dercur, **derold, *wav;
     float  **v, v0, ***aa, w, g1, g2, ct, cb, cl, cr; //top, bottom, left, right 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nxb,nzb);
     cur    =  sf_floatalloc2(nxb,nzb);
-    new    =  sf_floatalloc2(nxb,nzb);
+    nxt    =  sf_floatalloc2(nxb,nzb);
     uk     =  sf_floatalloc2(nxb,nzb);
     derold    =  sf_floatalloc2(nxb,nzb);
     dercur    =  sf_floatalloc2(nxb,nzb);
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 
          for (iz=0; iz < nzb; iz++){
              for (ix=0; ix < nxb; ix++){ 
-                  new[iz][ix] = 0.0; 
+                  nxt[iz][ix] = 0.0; 
                   uk[iz][ix] = cur[iz][ix]; 
                 }
          }  
@@ -222,48 +222,48 @@ int main(int argc, char* argv[])
 
 	 for (iz=1; iz < nzb-1; iz++) {  
 	     for (ix=1; ix < nxb-1; ix++) {  
-                 new[iz][ix]  = uk[iz][ix]*aa[iz][ix][0]
+                 nxt[iz][ix]  = uk[iz][ix]*aa[iz][ix][0]
                               + (uk[iz][ix-1]+uk[iz][ix+1])*aa[iz][ix][1]
                               + (uk[iz-1][ix]+uk[iz+1][ix])*aa[iz][ix][2];
              }
          }  
     
-         new[0][0] = uk[0][0]*aa[0][0][0] + uk[0][1]*aa[0][0][1] + uk[1][0]*aa[0][0][2];
-         new[0][nxb-1] = uk[0][nxb-1]*aa[0][nxb-1][0] + uk[0][nxb-2]*aa[0][nxb-1][1] + uk[1][nxb-1]*aa[0][nxb-1][2];
-         new[nzb-1][0] = uk[nzb-1][0]*aa[nzb-1][0][0] + uk[nzb-1][1]*aa[nzb-1][0][1] + uk[nzb-2][0]*aa[nzb-1][0][2];
-         new[nzb-1][nxb-1] = uk[nzb-1][nxb-1]*aa[nzb-1][nxb-1][0] + uk[nzb-1][nxb-2]*aa[nzb-1][nxb-1][1] + uk[nzb-2][nxb-1]*aa[nzb-1][nxb-1][2];
+         nxt[0][0] = uk[0][0]*aa[0][0][0] + uk[0][1]*aa[0][0][1] + uk[1][0]*aa[0][0][2];
+         nxt[0][nxb-1] = uk[0][nxb-1]*aa[0][nxb-1][0] + uk[0][nxb-2]*aa[0][nxb-1][1] + uk[1][nxb-1]*aa[0][nxb-1][2];
+         nxt[nzb-1][0] = uk[nzb-1][0]*aa[nzb-1][0][0] + uk[nzb-1][1]*aa[nzb-1][0][1] + uk[nzb-2][0]*aa[nzb-1][0][2];
+         nxt[nzb-1][nxb-1] = uk[nzb-1][nxb-1]*aa[nzb-1][nxb-1][0] + uk[nzb-1][nxb-2]*aa[nzb-1][nxb-1][1] + uk[nzb-2][nxb-1]*aa[nzb-1][nxb-1][2];
           
 	 for (ix=1; ix < nxb-1; ix++) {  
-             new[0][ix] = uk[0][ix]*aa[0][ix][0] + (uk[0][ix-1]+uk[0][ix+1])*aa[0][ix][1] + uk[1][ix]*aa[0][ix][2];
-             new[nz-1][ix] = uk[nz-1][ix]*aa[nz-1][ix][0] + (uk[nz-1][ix-1]+uk[nz-1][ix+1])*aa[nz-1][ix][1] + uk[nz-2][ix]*aa[nz-1][ix][2];
+             nxt[0][ix] = uk[0][ix]*aa[0][ix][0] + (uk[0][ix-1]+uk[0][ix+1])*aa[0][ix][1] + uk[1][ix]*aa[0][ix][2];
+             nxt[nz-1][ix] = uk[nz-1][ix]*aa[nz-1][ix][0] + (uk[nz-1][ix-1]+uk[nz-1][ix+1])*aa[nz-1][ix][1] + uk[nz-2][ix]*aa[nz-1][ix][2];
          }
 	 for (iz=1; iz < nzb-1; iz++) {  
-             new[iz][0] = uk[iz][0]*aa[iz][0][0] + uk[iz][1]*aa[iz][0][1] + (uk[iz-1][0]+uk[iz+1][0])*aa[iz][0][2]; 
-             new[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
+             nxt[iz][0] = uk[iz][0]*aa[iz][0][0] + uk[iz][1]*aa[iz][0][1] + (uk[iz-1][0]+uk[iz+1][0])*aa[iz][0][2]; 
+             nxt[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
          }
           
-         new[isz+nbt][isx+nbl] += wav[it];
+         nxt[isz+nbt][isx+nbl] += wav[it];
 
 	 for (iz=0; iz < nzb; iz++) {  
              for (ix=0; ix < nxb; ix++) {
-                 dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
-                 new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
+                 dercur[iz][ix]= derold[iz][ix] + nxt[iz][ix]/dt;
+                 nxt[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
              }
          }
  
-    //     new[isz+nb][isx+nb] += wav[it];
-         bd_decay(new); 
+    //     nxt[isz+nb][isx+nb] += wav[it];
+         bd_decay(nxt); 
          bd_decay(dercur); 
                  
 	 for (iz=0; iz < nzb; iz++) {  
              for(ix=0; ix < nxb; ix++) {
 	        old[iz][ix] = cur[iz][ix]; 
-	        cur[iz][ix] = new[iz][ix]; 
+	        cur[iz][ix] = nxt[iz][ix]; 
 	        derold[iz][ix] = dercur[iz][ix]; 
              }
          }
          for (iz=nbt; iz<nz+nbt; iz++){
-             sf_floatwrite(new[iz]+nbl,nx,out);
+             sf_floatwrite(nxt[iz]+nbl,nx,out);
          }  
     }
     bd_close();
@@ -271,14 +271,14 @@ int main(int argc, char* argv[])
     free(*aa);
     free(aa);
     free(*v);     
-    free(*new);     
+    free(*nxt);     
     free(*cur);     
     free(*old);     
     free(*dercur);     
     free(*derold);     
     free(*uk);     
     free(v);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(dercur);     

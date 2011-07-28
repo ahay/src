@@ -106,7 +106,7 @@ static void oglquit (int status) {
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
-    char *color;
+    const char *color;
     int dwidth, dheight, mwidth, mheight;
     int win_width, win_height;
 
@@ -701,7 +701,7 @@ void oglredraw (void)
                 (curr_frame % LIST_CHUNK)*2);
     glutSwapBuffers ();
 
-    if (frames_num > 1 && curr_title_frame != curr_frame) {
+    if (frames_num > 1 && curr_title_frame != (int) curr_frame) {
         curr_title_frame = curr_frame;
         snprintf (title_strbuf, MAX_TITLE_STR - 1, "%s: frame %d of %d",
                   pen_title, curr_title_frame + 1, frames_num);

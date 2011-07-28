@@ -36,6 +36,8 @@
 #include "../include/extern.h"
 #include "../include/round.h"
 
+static double dashmod (double a, double b);
+
 /*
  * dash1, gap1, dash2, gap2
  * in inches.
@@ -45,11 +47,10 @@ void dashvec (int x1, int y1, int x2, int y2, int nfat, int dashon)
 /*< Utility routine to make dashed lines. 
  * Should ONLY be called if dashon > 0 >*/
 {
-double          dash_ahead, dash_behind, dashdist, dist, sine, cosine;
-double          deltax, deltay, lambda1, lambda2;
-int             i, nextdash;
-double          dashmod ();
-int             xv1, xv2, yv1, yv2;
+    double          dash_ahead, dash_behind, dashdist, dist, sine, cosine;
+    double          deltax, deltay, lambda1, lambda2;
+    int             i, nextdash;
+    int             xv1, xv2, yv1, yv2;
 
 /*
  * If not a dashed line, should never have even been called.
@@ -89,9 +90,9 @@ int             xv1, xv2, yv1, yv2;
     for (dashdist = 0.;
 	 dash_ahead - dashpos < dist;
 	 dashdist += dash_ahead - dash_behind,
-	 dash_behind = dash_ahead,
-	 nextdash++,
-	 dash_ahead += dashes[nextdash % (dashon * 2)])
+	     dash_behind = dash_ahead,
+	     nextdash++,
+	     dash_ahead += dashes[nextdash % (dashon * 2)])
     {
 	if (nextdash % 2 == 0)
 	{
@@ -121,9 +122,7 @@ int             xv1, xv2, yv1, yv2;
 /*
  * mod subroutine
  */
-double
-dashmod (a, b)
-    double          a, b;
+static double dashmod (double a, double b)
 {
     return (a - floor (a / b) * b);
 }

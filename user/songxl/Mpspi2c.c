@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz,  nz, iz ;
     float dt, dx, dkx, kx, kx0, dz, dkz, kz, kz0, tmpdt, pi=SF_PI, vc;
-    float **sig,  **new,  **old;
+    float **sig,  **nxt,  **old;
     sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; 
     kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     float  **v; 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 
     sig    =  sf_floatalloc2(nx,nz);
     old    =  sf_floatalloc2(nx,nz);
-    new    =  sf_floatalloc2(nx,nz);
+    nxt    =  sf_floatalloc2(nx,nz);
     
     v = sf_floatalloc2(nx,nz);
 
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
 	for (iz=0; iz < nz; iz++){
 	    for (ix=0; ix < nx; ix++){ 
-		new[iz][ix] = 0.0; 
+		nxt[iz][ix] = 0.0; 
 	    }
 	}  
 /* compute u(kx,kz) */
@@ -163,22 +163,22 @@ int main(int argc, char* argv[])
 	}
 	for (iz=0; iz < nz; iz++) {  
 	    for (ix=0; ix < nx; ix++) {  
-		new[iz][ix]  = crealf(uktmp[iz][ix]);
-		new[iz][ix] /= (nkx * nkz); 
-		new[iz][ix] -= old[iz][ix];
+		nxt[iz][ix]  = crealf(uktmp[iz][ix]);
+		nxt[iz][ix] /= (nkx * nkz); 
+		nxt[iz][ix] -= old[iz][ix];
 	    }
 	}  
 	for (iz=0; iz < nz; iz++) {  
 	    for(ix=0; ix<nx; ix++){
 		old[iz][ix] = crealf(curcmp[iz][ix]);
-		curcmp[iz][ix] = sf_cmplx(new[iz][ix],0.0);
+		curcmp[iz][ix] = sf_cmplx(nxt[iz][ix],0.0);
 	    }
 	}
-	sf_floatwrite(new[0],nz*nx,out);
+	sf_floatwrite(nxt[0],nz*nx,out);
     }
 
     free(v);     
-    free(new);     
+    free(nxt);     
     free(curcmp);     
     free(old);     
     free(uk);     

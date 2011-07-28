@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nk, nft, ix, it, ik, iv, nv ;
     float dt, dx, dk, k, dv, tmpdt, pi=SF_PI, vmax, vmin, wsum;
-    float *sig,  *new,  *old, *cur, *newc;
+    float *sig,  *nxt,  *old, *cur, *nxtc;
     sf_complex  *uk,*uktmp; 
     kiss_fftr_cfg cfg,cfgi;
    // float  *v, *vx, *weight; 
@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
     sig    =  sf_floatalloc(nx);
     old    =  sf_floatalloc(nx);
     cur    =  sf_floatalloc(nx);
-    new    =  sf_floatalloc(nx);
-    newc   =  sf_floatalloc(nx);
+    nxt    =  sf_floatalloc(nx);
+    nxtc   =  sf_floatalloc(nx);
     vc     =  sf_floatalloc(nv);
     weight =  sf_floatalloc2(nx,nv);
     
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     /* propagation in time */
     for (it=1; it < nt; it++) {
 
-        for (ix=0; ix < nx; ix++) new[ix] = 0.0; 
+        for (ix=0; ix < nx; ix++) nxt[ix] = 0.0; 
 
 	kiss_fftr(cfg,cur,(kiss_fft_cpx*)uk);/*compute  u(k) */
 
@@ -144,28 +144,28 @@ int main(int argc, char* argv[])
                   uktmp[ik] = sf_crmul(uk[ik],2.0*(cosf(tmpdt)-1)/(vc[iv]*vc[iv]*dt*dt));
                   }
 #endif
-	      kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,newc);/*compute  u(k) */
+	      kiss_fftri(cfgi,(kiss_fft_cpx*)uktmp,nxtc);/*compute  u(k) */
 	      for (ix=0; ix < nx; ix++) {  
-                   newc[ix] /= nft; 
-		  // newc[ix] -= old[ix];
-		   newc[ix] *= weight[iv][ix];
-                   new[ix] += newc[ix];
+                   nxtc[ix] /= nft; 
+		  // nxtc[ix] -= old[ix];
+		   nxtc[ix] *= weight[iv][ix];
+                   nxt[ix] += nxtc[ix];
                    }
                }  
             for(ix=0; ix<nx; ix++){
-                new[ix] *= (v[ix]*v[ix]*dt*dt);
-                new[ix] += 2.0*cur[ix]-old[ix];
+                nxt[ix] *= (v[ix]*v[ix]*dt*dt);
+                nxt[ix] += 2.0*cur[ix]-old[ix];
               } 
             for(ix=0; ix<nx; ix++){
 	     old[ix] = cur[ix];
-	     cur[ix] = new[ix];
+	     cur[ix] = nxt[ix];
               }
-         sf_floatwrite(new,nx,out);
+         sf_floatwrite(nxt,nx,out);
          }
 
    free(v);     
-   free(new);     
-   free(newc);     
+   free(nxt);     
+   free(nxtc);     
    free(cur);     
    free(old);     
    free(uk);     

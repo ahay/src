@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, nz, iz, nb, nxb, nzb, isx, isz;
     float dt, dx, dz;
-    float **new,  **old,  **cur,  **dercur, **derold, *wav;
+    float **nxt,  **old,  **cur,  **dercur, **derold, *wav;
     float  **v, **aa, *wb, c; 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nxb,nzb);
     cur    =  sf_floatalloc2(nxb,nzb);
-    new    =  sf_floatalloc2(nxb,nzb);
+    nxt    =  sf_floatalloc2(nxb,nzb);
     derold    =  sf_floatalloc2(nxb,nzb);
     dercur    =  sf_floatalloc2(nxb,nzb);
     aa     =  sf_floatalloc2(3,2);
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
          for (iz=0; iz < nzb; iz++){
              for (ix=0; ix < nxb; ix++){ 
-                  new[iz][ix] = 0.0; 
+                  nxt[iz][ix] = 0.0; 
                 }
          }  
 
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
 	 for (iz=2; iz < nzb-2; iz++) {  
 	     for (ix=2; ix < nxb-2; ix++) {  
-                 new[iz][ix]  = cur[iz][ix]*(aa[0][0]+aa[1][0])
+                 nxt[iz][ix]  = cur[iz][ix]*(aa[0][0]+aa[1][0])
                               + (cur[iz][ix-1]+cur[iz][ix+1])*aa[0][1]
                               + (cur[iz][ix-2]+cur[iz][ix+2])*aa[0][2]
                               + (cur[iz-1][ix]+cur[iz+1][ix])*aa[1][1]
@@ -152,68 +152,68 @@ int main(int argc, char* argv[])
          }  
     
           
-         new[isz+nb+2][isx+nb+2] += wav[it]/(v[isz+nb][isx+nb]*v[isz+nb][isx+nb]*dt*dt);
+         nxt[isz+nb+2][isx+nb+2] += wav[it]/(v[isz+nb][isx+nb]*v[isz+nb][isx+nb]*dt*dt);
 
 	 for (iz=2; iz < nzb-2; iz++) {  
              for (ix=2; ix < nxb-2; ix++) {
-                 dercur[iz][ix]= derold[iz][ix] + new[iz][ix]*dt*v[iz-2][ix-2]*v[iz-2][ix-2];
-                 new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
+                 dercur[iz][ix]= derold[iz][ix] + nxt[iz][ix]*dt*v[iz-2][ix-2]*v[iz-2][ix-2];
+                 nxt[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
              }
          }
 
  
-    //     new[isz+nb][isx+nb] += wav[it];
+    //     nxt[isz+nb][isx+nb] += wav[it];
          
                  
 	 for (iz=0; iz < nb; iz++) {  
              for (ix=nb+2; ix < nx+nb+2; ix++) {
-                 new[iz+2][ix] *= wb[iz];
-                 new[iz+nb+nz+2][ix] *= wb[nb-1-iz];
+                 nxt[iz+2][ix] *= wb[iz];
+                 nxt[iz+nb+nz+2][ix] *= wb[nb-1-iz];
                  dercur[iz+2][ix] *= wb[iz];
                  dercur[iz+nb+nz+2][ix] *= wb[nb-1-iz];
              }
          }
 	 for (iz=nb+2; iz < nz+nb+2; iz++) {  
              for (ix=0; ix < nb; ix++) {
-                 new[iz][ix+2] *= wb[ix];
-                 new[iz][ix+nx+nb+2] *= wb[nb-1-ix]; 
+                 nxt[iz][ix+2] *= wb[ix];
+                 nxt[iz][ix+nx+nb+2] *= wb[nb-1-ix]; 
                  dercur[iz][ix+2] *= wb[ix];
                  dercur[iz][ix+nx+nb+2] *= wb[nb-1-ix];
              }
          }
 	 for (iz=0; iz < nb; iz++) {  
              for (ix=0; ix < nb; ix++) {
-                 new[iz+2][ix+2] *= wb[ix>iz?ix:iz];
+                 nxt[iz+2][ix+2] *= wb[ix>iz?ix:iz];
                  dercur[iz+2][ix+2] *= wb[ix>iz?ix:iz];
-                 new[iz+2][ix+nx+nb+2] *= wb[iz>(nb-1-ix)?iz:(nb-1-ix)]; 
+                 nxt[iz+2][ix+nx+nb+2] *= wb[iz>(nb-1-ix)?iz:(nb-1-ix)]; 
                  dercur[iz+2][ix+nx+nb+2] *= wb[iz>(nb-1-ix)?iz:(nb-1-ix)]; 
-                 new[iz+nb+nz+2][ix+2] *= wb[ix>(nb-1-iz)?ix:(nb-1-iz)];
+                 nxt[iz+nb+nz+2][ix+2] *= wb[ix>(nb-1-iz)?ix:(nb-1-iz)];
                  dercur[iz+nb+nz+2][ix+2] *= wb[ix>(nb-1-iz)?ix:(nb-1-iz)];
-                 new[iz+nb+nz+2][ix+nb+nz+2] *= wb[ix<iz?(nb-1-ix):(nb-1-iz)];
+                 nxt[iz+nb+nz+2][ix+nb+nz+2] *= wb[ix<iz?(nb-1-ix):(nb-1-iz)];
                  dercur[iz+nb+nz+2][ix+nb+nz+2] *= wb[ix<iz?(nb-1-ix):(nb-1-iz)];
              }
          }
 	 for (iz=0; iz < nzb; iz++) {  
              for(ix=0; ix < nxb; ix++) {
 	        old[iz][ix] = cur[iz][ix]; 
-	        cur[iz][ix] = new[iz][ix]; 
+	        cur[iz][ix] = nxt[iz][ix]; 
 	        derold[iz][ix] = dercur[iz][ix]; 
              }
          }
          for (iz=nb+2; iz<nz+nb+2; iz++){
-             sf_floatwrite(new[iz]+nb+2,nx,out);
+             sf_floatwrite(nxt[iz]+nb+2,nx,out);
          }  
     }
     free(*aa);
     free(aa);
     free(*v);     
-    free(*new);     
+    free(*nxt);     
     free(*cur);     
     free(*old);     
     free(*dercur);     
     free(*derold);     
     free(v);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(dercur);     

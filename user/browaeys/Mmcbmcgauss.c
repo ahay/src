@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int n,nr,iseed;
 
     float m1,s1;           /* mean and standard deviation */
-    float dr,or,r;         /* correlation coefficient */
+    float dr,orig,r;         /* correlation coefficient */
     float x1,y1,x2,y2;     /* Gaussian distributed correlated random deviates */
     float cs12,irm1,irm2;
 
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     /* correlation coefficient grid */
     if (!sf_histint(in,"n1",&nr)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dr)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&or)) sf_error("No o1= in input");
+    if (!sf_histfloat(in,"o1",&orig)) sf_error("No o1= in input");
 
     if (!sf_getint("n",&n)) n=100;
     /* number of random deviates pairs */
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     for (k = 0; k < nr; k++) {
 
-	r = or + k*dr;
+	r = orig + k*dr;
 
 	mc[k] = 0.0;
 

@@ -94,9 +94,9 @@ float* sf_pqueue_extract (void)
     *(xi = x1) = t = *(xn--);
     n = (int) (xn-x);
     if (n < 0) return NULL;
-    for (c = 2; c <= n; c <<= 1) {
+    for (c = 2; c <= (unsigned int) n; c <<= 1) {
 	xc = x + c;
-	if (c < n && **xc > **(xc+1)) {
+	if (c < (unsigned int) n && **xc > **(xc+1)) {
 	    c++; xc++;
 	}
 	if (*t <= **xc) break;
@@ -118,9 +118,9 @@ float* sf_pqueue_extract2 (void)
     *(xi = x1) = t = *(xn--);
     n = (int) (xn-x);
     if (n < 0) return NULL;
-    for (c = 2; c <= n; c <<= 1) {
+    for (c = 2; c <= (unsigned int) n; c <<= 1) {
 	xc = x + c;
-	if (c < n && **xc < **(xc+1)) {
+	if (c < (unsigned int) n && **xc < **(xc+1)) {
 	    c++; xc++;
 	}
 	if (*t >= **xc) break;
@@ -139,9 +139,9 @@ void sf_pqueue_update (float **v)
 
   xi = v; 
   n = (int) (xn-x); c = (unsigned int) (xi-x);
-  for (c <<= 1; c <= n; c <<= 1) {
+  for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
       xc = x + c;
-      if (c < n && **xc > **(xc+1)) {
+      if (c < (unsigned int) n && **xc > **(xc+1)) {
 	  c++; xc++;
       }
       if (**v <= **xc) break;

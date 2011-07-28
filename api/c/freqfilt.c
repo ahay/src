@@ -64,7 +64,7 @@ void sf_freqfilt_set(float *filt /* frequency filter [nw] */)
     }
 }
 
-#ifndef __cplusplus
+/* #ifndef __cplusplus */
 /*^*/
 
 void sf_freqfilt_cset(kiss_fft_cpx *filt /* frequency filter [nw] */)
@@ -138,7 +138,6 @@ void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     } 
 }
 
-#endif
-/*^*/
+/* #endif */
 
 /* 	$Id$	 */

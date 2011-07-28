@@ -346,7 +346,7 @@ lpr -Ppostscript   (override with $PSPRINTER environment variable.)
 
 #include <stdlib.h>
 
-extern int mkstemp (char *template);
+extern int mkstemp (char *tmpl);
 
 #include <stdio.h>
 #include <string.h>
@@ -1164,7 +1164,6 @@ void psclose (int status)
 #define TEXT_HEIGHT	50
 #define TEXT_PAD	18
 
-float           psscale;
 static float    ps_ypapersize;
 static int      ncopies_document = 1;
 static int      hold;
@@ -1287,7 +1286,6 @@ char            ps_paper[80];
 
 char            mapfile[100] = "default";
 int             default_ps_font = DEFAULT_HARDCOPY_FONT;
-float           psscale;
 
 extern int      red[], green[], blue[];
 
@@ -1842,10 +1840,7 @@ void opendev (int argc, char* argv[])
 void dateget (char *date)
 /*< get the date >*/
 {
-    time_t          time ();
     time_t          clock;
-    struct tm      *localtime ();
-    char           *asctime ();
 
     clock = time (0);
     sprintf (date, "%.16s", asctime (localtime (&clock)));
@@ -2070,7 +2065,7 @@ int             ii;
  *  font name definitions
  *  font numbers start with 100
  */
-static char *psfonts[] = {
+static const char *psfonts[] = {
 	"Courier-Bold",
 	"Courier-BoldOblique",
 	"Courier-Oblique",

@@ -52,7 +52,11 @@ int main (int argc, char *argv[])
         ecount = sf_filesize(fpt);
         sf_histint(fpt,"esize",&esize);
         eleft=ecount*esize;
-        if (DBG) sf_warning("%s %s %lu %d %llu\n",argv[i],iname,ecount,esize,(long long) eleft);
+#if defined(__cplusplus) || defined(c_plusplus)
+        if (DBG) sf_warning("%s %s %lu %d %lu\n",argv[i],iname,ecount,esize,(long) eleft);
+#else
+	if (DBG) sf_warning("%s %s %lu %d %llu\n",argv[i],iname,ecount,esize,(long long) eleft);
+#endif
         if (strcmp(iname,"stdin")==0)
         {
             sf_file FPT;

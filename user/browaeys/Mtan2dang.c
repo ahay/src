@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
     int na,nr,nlive,isxm,isym;
 
     float osx,dsx,osy,dsy,oz,dz;
-    float oa,da,or,dr;
+    float oa,da,orig,dr;
     float a,sum,r,sx,sy,tsx,tsy;
 
     float **slw, *dip;
@@ -80,7 +80,7 @@ int main (int argc, char* argv[])
     /* line summation samples */
     if (!sf_getfloat("dr",&dr)) dr = 0.5*dsx;
     /* line summation sampling */
-    if (!sf_getfloat("or",&or)) or = osx;
+    if (!sf_getfloat("or",&orig)) orig = osx;
     /* line summation origin */
 
     /* memory allocations */
@@ -102,7 +102,7 @@ int main (int argc, char* argv[])
 
 	    for (i = 0; i < nr; i++) { /* line sum */
 
-		r = or + i*dr;
+		r = orig + i*dr;
 
 		sx = -r*sin(a);
 		sy =  r*cos(a);

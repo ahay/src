@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     float slow, dx, x0, dy, y0, dt, t0, aper, x, y, dx1, dy1, dx2, dy2;
     float dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
     float theta, ava, amp, obl, ***time, ***ampl, ***delt, **geom, freq;
-    char *type;
+    const char *type;
     velocity3 vel;
     ktable ts, tg;
     sf_file refl, curv, modl, head;
@@ -229,7 +229,6 @@ int main(int argc, char* argv[])
     if (NULL==type) {
 	type= ((vel->gx)==0. && (vel->gy)==0. && (vel->gz)==0.)?"const":"veloc";
     } else if ((vel->gx)==0. && (vel->gy)==0. && (vel->gz)==0.) {
-	free(type);
 	type = "const"; 
     } else if ('s'==type[0]) {
 	/* linear slowness squared */

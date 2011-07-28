@@ -279,8 +279,9 @@ unass2:  unassigned 236
 int main(int argc, char *argv[])
 {
     bool verbose, su, xdr, suxdr;
+    const char *read, *headname;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *headname, *filename, *trace, *read, *prog;
+    char *filename, *trace, *prog;
     sf_file out, hdr, msk=NULL;
     int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask, nkeys;
     off_t pos, nsegy;

@@ -21,23 +21,23 @@
 
 void select_t_l_x(float l, float t, float src_dist, float dx, float *p_src_neg, float *p_len_min_neg, float *p_tr_time_neg)
 {
-	if ( (*p_src_neg > src_dist && src_dist > dx) ||
-	     (*p_src_neg > dx && src_dist < dx) ||
-	     (*p_src_neg < dx && src_dist < dx && *p_len_min_neg > l)) 
-        {
-                *p_src_neg = src_dist;
-		*p_len_min_neg = l;
-		*p_tr_time_neg = t;
-	}
+    if ( (*p_src_neg > src_dist && src_dist > dx) ||
+	 (*p_src_neg > dx && src_dist < dx) ||
+	 (*p_src_neg < dx && src_dist < dx && *p_len_min_neg > l)) 
+    {
+	*p_src_neg = src_dist;
+	*p_len_min_neg = l;
+	*p_tr_time_neg = t;
+    }
 }
 
-int nz, nx, ny, nz, na, nb;
+int nz, nx, ny, na, nb;
 float dz, z0, dx, x0, dy,  y00, xsrc, ysrc;
 
-    float ***len_min1, ***tr_time1, ***src1;
-    float ***len_min2, ***tr_time2, ***src2;
-    float ***len_min3, ***tr_time3, ***src3;
-    float ***len_min4, ***tr_time4, ***src4;
+float ***len_min1, ***tr_time1, ***src1;
+float ***len_min2, ***tr_time2, ***src2;
+float ***len_min3, ***tr_time3, ***src3;
+float ***len_min4, ***tr_time4, ***src4;
 
 float *p_len_min1, *p_tr_time1, *p_src1, *p_srcY1;
 float *p_len_min2, *p_tr_time2, *p_src2, *p_srcY2;
@@ -46,21 +46,21 @@ float *p_len_min4, *p_tr_time4, *p_src4, *p_srcY4;
 
 void init_ptrs()
 {
-	p_len_min1 = len_min1[0][0];
-	p_src1 = src1[0][0];
-	p_tr_time1 = tr_time1[0][0];
+    p_len_min1 = len_min1[0][0];
+    p_src1 = src1[0][0];
+    p_tr_time1 = tr_time1[0][0];
 
-	p_len_min2 = len_min2[0][0];
-	p_src2 = src2[0][0];
-	p_tr_time1 = tr_time1[0][0];
+    p_len_min2 = len_min2[0][0];
+    p_src2 = src2[0][0];
+    p_tr_time1 = tr_time1[0][0];
 
-	p_len_min3 = len_min3[0][0];
-	p_src3 = src3[0][0];
-	p_tr_time3 = tr_time3[0][0];
+    p_len_min3 = len_min3[0][0];
+    p_src3 = src3[0][0];
+    p_tr_time3 = tr_time3[0][0];
 
-	p_len_min4 = len_min4[0][0];
-	p_src4 = src4[0][0];
-	p_tr_time4 = tr_time4[0][0];
+    p_len_min4 = len_min4[0][0];
+    p_src4 = src4[0][0];
+    p_tr_time4 = tr_time4[0][0];
 }
 
 void init_vals()
@@ -208,51 +208,51 @@ int main(int argc, char* argv[])
 
 	    init_ptrs();
 
-	for (iy=0; iy < ny; iy++) {					
+	    for (iy=0; iy < ny; iy++) {					
 
-	    for (ix=0; ix < nx; ix++) {					
+		for (ix=0; ix < nx; ix++) {					
 
-	    sf_floatread(tim,nz,time);
-	    sf_floatread(dis,nz,dist);
-	    sf_floatread(disY,nz,distY);
-	    sf_floatread(dep,nz,dept);
-	    sf_floatread(len,nz,lent);
+		    sf_floatread(tim,nz,time);
+		    sf_floatread(dis,nz,dist);
+		    sf_floatread(disY,nz,distY);
+		    sf_floatread(dep,nz,dept);
+		    sf_floatread(len,nz,lent);
 
-	/* shooting 360+- angles may not be dense enough:
-	best way: if xsrc \in [a, a+-1] => add t=(t_a + t_a+-1)/2,
-	here now: keep the closest to the src */
-	    for (iz=0; iz < nz; iz++, move_ptrs())
-	    {
-		z = dep[iz];
+		    /* shooting 360+- angles may not be dense enough:
+		       best way: if xsrc \in [a, a+-1] => add t=(t_a + t_a+-1)/2,
+		       here now: keep the closest to the src */
+		    for (iz=0; iz < nz; iz++, move_ptrs())
+		    {
+			z = dep[iz];
 
-		x = dis[iz];
+			x = dis[iz];
 
-		y = disY[iz];
+			y = disY[iz];
 
-		if (z > (z0+ dz)) /* || fabs(xsrc-x)>2*dx)  */
-			continue;
+			if (z > (z0+ dz)) /* || fabs(xsrc-x)>2*dx)  */
+			    continue;
 
-		l = len[iz];
+			l = len[iz];
 
-		t = tim[iz];
+			t = tim[iz];
 
-		src_dist2 = (xsrc - x)*(xsrc - x) + (ysrc - y)*(ysrc - y);
+			src_dist2 = (xsrc - x)*(xsrc - x) + (ysrc - y)*(ysrc - y);
 
-		if (x < xsrc) {
-		    if (y < ysrc) 
-			select_t_l_x(l, t, src_dist2, dr2, p_src1, p_len_min1, p_tr_time1);
-		    else
-			select_t_l_x(l, t, src_dist2, dr2, p_src2, p_len_min2, p_tr_time2);
-		}
-		else {
-		    if (y < ysrc) 
-			select_t_l_x(l, t, src_dist2, dr2, p_src3, p_len_min3, p_tr_time3);
-		    else
-			select_t_l_x(l, t, src_dist2, dr2, p_src4, p_len_min4, p_tr_time4);
-		}
-	    } /* iz */
-	    } /* ix */
-	} /* iy */
+			if (x < xsrc) {
+			    if (y < ysrc) 
+				select_t_l_x(l, t, src_dist2, dr2, p_src1, p_len_min1, p_tr_time1);
+			    else
+				select_t_l_x(l, t, src_dist2, dr2, p_src2, p_len_min2, p_tr_time2);
+			}
+			else {
+			    if (y < ysrc) 
+				select_t_l_x(l, t, src_dist2, dr2, p_src3, p_len_min3, p_tr_time3);
+			    else
+				select_t_l_x(l, t, src_dist2, dr2, p_src4, p_len_min4, p_tr_time4);
+			}
+		    } /* iz */
+		} /* ix */
+	    } /* iy */
 	} /* ia */
     } /* ib */
 

@@ -61,7 +61,7 @@ void pt2dwrite1(sf_file F,
     float **w;
     w=sf_floatalloc2(k,n1);
 
-    for( i1=0; i1<n1; i1++) {
+    for( i1=0; i1<(int)n1; i1++) {
 	;        w[i1][0] = v[i1].x; 
 	;        w[i1][1] = v[i1].z; 
 	if(k==3) w[i1][2] = v[i1].v;
@@ -82,8 +82,8 @@ void pt2dwrite2(sf_file F,
     float ***w;
     w=sf_floatalloc3(k,n1,n2);
 
-    for( i2=0; i2<n2; i2++) {
-	for( i1=0; i1<n1; i1++) {
+    for( i2=0; i2<(int)n2; i2++) {
+	for( i1=0; i1<(int)n1; i1++) {
 	    ;        w[i2][i1][0] = v[i2][i1].x; 
 	    ;        w[i2][i1][1] = v[i2][i1].z; 
 	    if(k==3) w[i2][i1][2] = v[i2][i1].v;
@@ -106,7 +106,7 @@ void pt3dwrite1(sf_file F,
     float **w;
     w=sf_floatalloc2(k,n1);
 
-    for( i1=0; i1<n1; i1++) {
+    for( i1=0; i1<(int)n1; i1++) {
 	;        w[i1][0] = v[i1].x;
 	;        w[i1][1] = v[i1].y;
 	;        w[i1][2] = v[i1].z;
@@ -128,8 +128,8 @@ void pt3dwrite2(sf_file F,
     float ***w;
     w=sf_floatalloc3(k,n1,n2);
 
-    for( i2=0; i2<n2; i2++) {
-	for( i1=0; i1<n1; i1++) {
+    for( i2=0; i2<(int)n2; i2++) {
+	for( i1=0; i1<(int)n1; i1++) {
 	    ;        w[i2][i1][0] = v[i2][i1].x;
 	    ;        w[i2][i1][1] = v[i2][i1].y;
 	    ;        w[i2][i1][2] = v[i2][i1].z;
@@ -154,7 +154,7 @@ void pt2dread1(sf_file F,
     w=sf_floatalloc2(k,n1);
 
     sf_floatread(w[0],k*n1,F);
-    for( i1=0; i1<n1; i1++) {
+    for( i1=0; i1<(int)n1; i1++) {
 	;        v[i1].x = w[i1][0]; 
 	;        v[i1].z = w[i1][1];
 	if(k==3) v[i1].v = w[i1][2];
@@ -175,8 +175,8 @@ void pt2dread2(sf_file F,
     w=sf_floatalloc3(k,n1,n2);
 
     sf_floatread(w[0][0],k*n1*n2,F);
-    for( i2=0; i2<n2; i2++) {
-	for( i1=0; i1<n1; i1++) {
+    for( i2=0; i2<(int)n2; i2++) {
+	for( i1=0; i1<(int)n1; i1++) {
 	    ;        v[i2][i1].x = w[i2][i1][0]; 
 	    ;        v[i2][i1].z = w[i2][i1][1];
 	    if(k==3) v[i2][i1].v = w[i2][i1][2];
@@ -199,7 +199,7 @@ void pt3dread1(sf_file F,
     w=sf_floatalloc2(k,n1);
 
     sf_floatread(w[0],k*n1,F);
-    for( i1=0; i1<n1; i1++) {
+    for( i1=0; i1<(int)n1; i1++) {
 	;        v[i1].x = w[i1][0];
 	;        v[i1].y = w[i1][1]; 
 	;        v[i1].z = w[i1][2];
@@ -221,8 +221,8 @@ void pt3dread2(sf_file F,
     w=sf_floatalloc3(k,n1,n2);
 
     sf_floatread(w[0][0],k*n1*n2,F);
-    for( i2=0; i2<n2; i2++) {
-	for( i1=0; i1<n1; i1++) {
+    for( i2=0; i2<(int)n2; i2++) {
+	for( i1=0; i1<(int)n1; i1++) {
 	    ;        v[i2][i1].x = w[i2][i1][0];
 	    ;        v[i2][i1].y = w[i2][i1][1]; 
 	    ;        v[i2][i1].z = w[i2][i1][2];

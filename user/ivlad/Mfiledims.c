@@ -60,7 +60,11 @@ main (int argc, char *argv[])
 
     for (i=0; i<ndims; i++) {
 	if (large) {
+#if defined(__cplusplus) || defined(c_plusplus)
+	    printf( "%ld", (long) n[i] );
+#else
 	    printf( "%lld", (long long) n[i] );
+#endif
 	} else {
 	    printf( "%d", n[i] );
 	}

@@ -45,3 +45,5 @@ struct device dev = {
     nullmidpoly,		/* midpoly */
     nullclose		/* endpoly */
 };
+
+struct s_txalign txalign;

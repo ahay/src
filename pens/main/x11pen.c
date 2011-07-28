@@ -429,14 +429,13 @@ Colormap	pen_colormap;
 int		own_colormap;
 float           win_xfrac = .77;
 float           win_yfrac = .56;
-char            *align;
+char           *align;
 
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
     int             win_x, win_y, i;
     char            title[50], *ap, *option;
-    extern char     name[];
     Display        *OpenDisplay ();
     XEvent		event;
 
@@ -476,10 +475,12 @@ void opendev (int argc, char* argv[])
     /* pen window alignment- win_x & win_y */
     align = sf_getstring("align");
     if (NULL == align) {
+	align = sf_charalloc(5);
+
 	if ((option = XGetDefault (pen_display, name, "Align")) != NULL) {
 	    strcpy (align, option);
 	} else {
-	    align = "tr";
+	    strcpy (align, "tr");
 	}
     }
     
@@ -514,7 +515,11 @@ void opendev (int argc, char* argv[])
     dev.num_col = DisplayCells(pen_display, pen_screen);
     if( dev.num_col <= 2 ) mono=true;
 
+#if defined(__cplusplus) || defined(c_plusplus)
+    if ( pen_visual->c_class == PseudoColor ){
+#else
     if ( pen_visual->class == PseudoColor ){
+#endif	
 	pen_colormap = XCreateColormap(pen_display,
 				       RootWindow(pen_display, pen_screen), pen_visual,  AllocAll);
 	own_colormap = 1;

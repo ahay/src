@@ -28,14 +28,14 @@ int main(int argc, char* argv[])
     int nw, nx, ny, iw, ix, iy, i3, n3, dim;
     float x0,dx,x, y0,dy,y, w0,dw,w, vel,v, minx;
     float ang1, ang2, ang3, ang4, v1, v2, v3, v4, factor, *ctrace;
-    bool angle, pass, compl;
+    bool angle, pass, cmplx;
     sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
-    compl = (bool) (SF_COMPLEX == sf_gettype(in));
+    cmplx = (bool) (SF_COMPLEX == sf_gettype(in));
 
     if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	dy=dx;
 	n3 = sf_leftsize(in,2);
     }
-    ctrace = sf_floatalloc(compl? 2*nw: nw);
+    ctrace = sf_floatalloc(cmplx? 2*nw: nw);
 
     if (!sf_getbool("angle",&angle)) angle=false;
     /* Filter based on angle (or velocity) */
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 		x = x0 + ix*dx;
 		x = hypotf(x,y)+minx;
 
-		sf_floatread(ctrace,compl? 2*nw: nw,in);
+		sf_floatread(ctrace,cmplx? 2*nw: nw,in);
 
 		for (iw=0; iw < nw; iw++) {
 		    w = w0+iw*dw;	    
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 			
 		    if (pass) factor=1.-factor;
 		    
-		    if (compl) {
+		    if (cmplx) {
 			ctrace[2*iw] *= factor;
 			ctrace[2*iw+1] *= factor;
 		    } else {
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		    }
 		} /* iw */
 
-		sf_floatwrite(ctrace,compl? 2*nw: nw,out);
+		sf_floatwrite(ctrace,cmplx? 2*nw: nw,out);
 	    } /* ix */
 	} /* iy */
     } /* i3 */

@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, what;
     float dt, dx, w, g, a0, a1, a2, a3, a4, a5;
-    float *old, *new, *cur, *sig, *v, *vx, **a; 
+    float *old, *nxt, *cur, *sig, *v, *vx, **a; 
     sf_file inp, out, vel, grad;
 
     sf_init(argc,argv);
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("what",&what)) what=2; /* 2nd or 4th order for FD*/
     sig = sf_floatalloc(nt);
     old = sf_floatalloc(nx);
-    new = sf_floatalloc(nx);
+    nxt = sf_floatalloc(nx);
     cur = sf_floatalloc(nx);
     v = sf_floatalloc(nx);
     vx = sf_floatalloc(nx);
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 
 		/* initial conditions */
 		cur[ix] = 0.;
-		new[ix] = 0.;
+		nxt[ix] = 0.;
 	    }
 
 	    free(v);
@@ -89,21 +89,21 @@ int main(int argc, char* argv[])
 
 		for (ix=0; ix < nx; ix++) {
 		    old[ix] = cur[ix];
-		    cur[ix] = new[ix];
+		    cur[ix] = nxt[ix];
 		}   
 
 		/* Stencil */
-		new[0] = sig[it]; 
+		nxt[0] = sig[it]; 
 		for (ix=1; ix < nx-1; ix++) {
-		    new[ix] = cur[ix]*a[ix][1] + cur[ix+1]*a[ix][0] + cur[ix-1]*a[ix][2];
+		    nxt[ix] = cur[ix]*a[ix][1] + cur[ix+1]*a[ix][0] + cur[ix-1]*a[ix][2];
 		}
-		new[nx-1] = cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0] + cur[nx-2]*a[nx-1][2];
+		nxt[nx-1] = cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0] + cur[nx-2]*a[nx-1][2];
 	
 		for (ix=1; ix < nx; ix++) {
-		    new[ix] += 2*cur[ix] - old[ix];
+		    nxt[ix] += 2*cur[ix] - old[ix];
 		} 
 
-		sf_floatwrite(new,nx,out);
+		sf_floatwrite(nxt,nx,out);
 	    }
 	    break;
         
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
 		/* initial conditions */
 		cur[ix] = 0.;
-		new[ix] = 0.;
+		nxt[ix] = 0.;
 	    }
 
 	    free(v);
@@ -140,27 +140,27 @@ int main(int argc, char* argv[])
 
 		for (ix=0; ix < nx; ix++) {
 		    old[ix] = cur[ix];
-		    cur[ix] = new[ix];
+		    cur[ix] = nxt[ix];
 		}  
 
 		/* Stencil */
-		new[0] = sig[it]; 
-		new[1] = cur[0]*a[1][4] +cur[0]*a[1][3] +cur[1]*a[1][2] 
+		nxt[0] = sig[it]; 
+		nxt[1] = cur[0]*a[1][4] +cur[0]*a[1][3] +cur[1]*a[1][2] 
 		    + cur[2]*a[1][1] + cur[3]*a[1][0];
 		for (ix=2; ix < nx-2; ix++) {
-		    new[ix] = cur[ix+2]*a[ix][0] + cur[ix+1]*a[ix][1] + cur[ix]*a[ix][2]
+		    nxt[ix] = cur[ix+2]*a[ix][0] + cur[ix+1]*a[ix][1] + cur[ix]*a[ix][2]
 			+ cur[ix-1]*a[ix][3] + cur[ix-2]*a[ix][4];
 
 		}
-		new[nx-2] = cur[nx-4]*a[nx-2][4] + cur[nx-3]*a[nx-2][3] + cur[nx-2]*a[nx-2][2]
+		nxt[nx-2] = cur[nx-4]*a[nx-2][4] + cur[nx-3]*a[nx-2][3] + cur[nx-2]*a[nx-2][2]
 	            + cur[nx-1]*a[nx-2][1] + cur[nx-1]*a[nx-2][0];
-		new[nx-1] = cur[nx-3]*a[nx-1][4] + cur[nx-2]*a[nx-1][3] + cur[nx-1]*a[nx-1][2]
+		nxt[nx-1] = cur[nx-3]*a[nx-1][4] + cur[nx-2]*a[nx-1][3] + cur[nx-1]*a[nx-1][2]
 	            + cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0];
 		for (ix=1; ix < nx; ix++) {
-		    new[ix] += 2*cur[ix] - old[ix];
+		    nxt[ix] += 2*cur[ix] - old[ix];
 		}  
 
-		sf_floatwrite(new,nx,out);
+		sf_floatwrite(nxt,nx,out);
 	    } 
 	    break;
  
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 
 		/* initial conditions */
 		cur[ix] = 0.;
-		new[ix] = 0.;
+		nxt[ix] = 0.;
 	    }
 
 	    free(v);
@@ -202,31 +202,31 @@ int main(int argc, char* argv[])
 
 		for (ix=0; ix < nx; ix++) {
 		    old[ix] = cur[ix];
-		    cur[ix] = new[ix];
+		    cur[ix] = nxt[ix];
 		}  
 
 		/* Stencil */
-		new[0] = sig[it]; 
-		new[1] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[0]*a[1][4] +cur[1]*a[1][3] +cur[2]*a[1][2] 
+		nxt[0] = sig[it]; 
+		nxt[1] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[0]*a[1][4] +cur[1]*a[1][3] +cur[2]*a[1][2] 
 		    + cur[3]*a[1][1] + cur[4]*a[1][0];
-		new[2] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[1]*a[1][4] +cur[2]*a[1][3] +cur[3]*a[1][2] 
+		nxt[2] = cur[0]*a[1][6] +cur[0]*a[1][5] +cur[1]*a[1][4] +cur[2]*a[1][3] +cur[3]*a[1][2] 
 		    + cur[4]*a[1][1] + cur[5]*a[1][0];
 		for (ix=3; ix < nx-3; ix++) {
-		    new[ix] = cur[ix+3]*a[ix][0] +cur[ix+2]*a[ix][1] + cur[ix+1]*a[ix][2] + cur[ix]*a[ix][3]
+		    nxt[ix] = cur[ix+3]*a[ix][0] +cur[ix+2]*a[ix][1] + cur[ix+1]*a[ix][2] + cur[ix]*a[ix][3]
 			+ cur[ix-1]*a[ix][4] + cur[ix-2]*a[ix][5]+ cur[ix-3]*a[ix][6];
 
 		}
-		new[nx-3] = cur[nx-6]*a[nx-3][6] + cur[nx-5]*a[nx-3][5] + cur[nx-4]*a[nx-3][4] + cur[nx-3]*a[nx-3][3]
+		nxt[nx-3] = cur[nx-6]*a[nx-3][6] + cur[nx-5]*a[nx-3][5] + cur[nx-4]*a[nx-3][4] + cur[nx-3]*a[nx-3][3]
 	            + cur[nx-2]*a[nx-3][2]+ cur[nx-1]*a[nx-3][1] + cur[nx-1]*a[nx-3][0];
-		new[nx-2] = cur[nx-5]*a[nx-2][6] + cur[nx-4]*a[nx-2][5] + cur[nx-3]*a[nx-2][4] + cur[nx-2]*a[nx-2][3]
+		nxt[nx-2] = cur[nx-5]*a[nx-2][6] + cur[nx-4]*a[nx-2][5] + cur[nx-3]*a[nx-2][4] + cur[nx-2]*a[nx-2][3]
 	            + cur[nx-1]*a[nx-2][2] + cur[nx-1]*a[nx-2][1] + cur[nx-1]*a[nx-2][0];
-		new[nx-1] = cur[nx-4]*a[nx-1][6] + cur[nx-3]*a[nx-1][5] + cur[nx-2]*a[nx-1][4] + cur[nx-1]*a[nx-1][3]
+		nxt[nx-1] = cur[nx-4]*a[nx-1][6] + cur[nx-3]*a[nx-1][5] + cur[nx-2]*a[nx-1][4] + cur[nx-1]*a[nx-1][3]
 	            + cur[nx-1]*a[nx-1][2] + cur[nx-1]*a[nx-1][1] + cur[nx-1]*a[nx-1][0];
 		for (ix=1; ix < nx; ix++) {
-		    new[ix] += 2*cur[ix] - old[ix];
+		    nxt[ix] += 2*cur[ix] - old[ix];
 		}  
 
-		sf_floatwrite(new,nx,out);
+		sf_floatwrite(nxt,nx,out);
 	    } 
 
 

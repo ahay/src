@@ -10,21 +10,20 @@
 
 #include <stdio.h>
 
-short
-geth(iop)
-register FILE *iop;
+short geth(FILE *iop)
+/*< get short >*/
 {
-        union {
-	    unsigned short w;
-	    short s;
-	    } r;
+    union {
+	unsigned short w;
+	short s;
+    } r;
 
-	r.w = getc(iop);
-	r.w += (getc(iop) << 8);
+    r.w = getc(iop);
+    r.w += (getc(iop) << 8);
 #ifdef CRAY
     if( r.s > 0x8000 ) r.s = r.s - 0x10000;
 #endif
-	if (feof(iop))
-		return(EOF);
-	return((int)r.s);
+    if (feof(iop))
+	return(EOF);
+    return((int)r.s);
 }

@@ -58,7 +58,7 @@ enum {
      * factor too big, though, or we risk very large text overflowing
      * the maximum possible integer.)
      */
-    TEXTVECSCALE=10,
+    TEXTVECSCALE=10
 };
 /*^*/
 
@@ -1026,7 +1026,7 @@ void vp_setdash (const float *dash, const float *gapp, int np)
     }
 }
 
-void vp_bgroup(char *string /* group name */)
+void vp_bgroup(const char *string /* group name */)
 /*< begin group >*/
 {
     char c;

@@ -81,8 +81,13 @@ int main (int argc, char *argv[])
 	}
 	if (f[i] < 0) {
 	    f[i] = n[i]+f[i];
+#if defined(__cplusplus) || defined(c_plusplus)
+	    if (f[i] < 0) sf_error("Negative f%d=%ld",
+				   i+1,(long int) f[i]);
+#else
 	    if (f[i] < 0) sf_error("Negative f%d=%lld",
 				   i+1,(long long int) f[i]);
+#endif
 	}
 
 	/* new values for o and d */

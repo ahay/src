@@ -74,7 +74,8 @@ int main(int argc, char* argv[])
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, ds, smax, num, den, dy, str, sh=0., sh2=0.;
     float *trace, ***stack, ***stack2, ***stackh, *hh;
-    char *time, *space, *unit, *type;
+    char *time, *space, *unit;
+    const char *type;
     size_t len;
     sf_file cmp, scan, offset, msk;
     mapfunc nmofunc;

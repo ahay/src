@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                     break;
 		case SF_COMPLEX:
 		    c=((sf_complex*)buf)[i];
-		    f=sf_cabs(c);
+		    f=cabsf(c);
 		    break;
 		case SF_UCHAR:
 		    f=(float) ((unsigned char*) buf)[i];
@@ -226,10 +226,17 @@ int main(int argc, char* argv[])
 	    location(minloc,dim,n);
 	}
     }
+#if defined(__cplusplus) || defined(c_plusplus)
+    if(NULL==want || 0==strcmp(want,"nonzero"))
+	printf("nonzero samples = %ld \n",(long int) (nsiz-nzero));
+    if(NULL==want || 0==strcmp(want,"samples"))
+	printf("  total samples = %ld \n",(long int) nsiz);
+#else
     if(NULL==want || 0==strcmp(want,"nonzero"))
 	printf("nonzero samples = %lld \n",(long long int) (nsiz-nzero));
     if(NULL==want || 0==strcmp(want,"samples"))
 	printf("  total samples = %lld \n",(long long int) nsiz);
+#endif
     if(NULL==want) {
 	printf("******************************************* \n");
     }
@@ -250,7 +257,11 @@ static void location(size_t loc     /* liner location index */,
     off_t ni;
 
     for (ni=1, i=0; i < dim; ni *= n[i], i++) {
+#if defined(__cplusplus) || defined(c_plusplus)
+	printf("%ld ",(long int) (1+(loc/ni)%n[i]));
+#else
 	printf("%lld ",(long long int) (1+(loc/ni)%n[i]));
+#endif
     }
     printf("\n");
 }

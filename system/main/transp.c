@@ -37,7 +37,8 @@ static int make_map (int dim1, int dim2, const off_t* n, int i2);
 
 int main(int argc, char* argv[])
 {
-    int i, dim, n1, n3, nbuf;
+    size_t nbuf;
+    int i, dim, n1, n3;
     int dim1, dim2, i2, i3, *map;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t n[SF_MAX_DIM], pos, memsize, n2, nsiz;
@@ -144,7 +145,7 @@ int main(int argc, char* argv[])
 
 	for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
 	    if (nbuf > nsiz) nbuf=nsiz;
-	    for (i=0; i < nbuf; i++, i2++) {
+	    for (i=0; i < (int) nbuf; i++, i2++) {
 		map[i] = make_map (dim1, dim2, n, i2);
 	    }
 	    if (nbuf != fwrite(map,sizeof(int),nbuf,mapfile)) 
@@ -186,7 +187,7 @@ int main(int argc, char* argv[])
 		    if (nbuf > nsiz) nbuf=nsiz;
 		    if (nbuf != fread(map,sizeof(int),nbuf,mapfile)) 
 			sf_error("map read error:");
-		    for (i=0; i < nbuf; i++) {
+		    for (i=0; i < (int) nbuf; i++) {
 			sf_seek(in,pos+(off_t) (map[i]+i3*n2)*n1,SEEK_SET);
 			sf_charread (buf,n1,in);
 			sf_charwrite(buf,n1,out);

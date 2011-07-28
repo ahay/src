@@ -293,7 +293,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, stretchy ),
 	XtRString,
-	"False",
+	(XtPointer) "False",
     },
     {
 	XtNusePixmaps,
@@ -302,7 +302,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, pixmaps ),
 	XtRString,
-	"False",
+	(XtPointer) "False",
     },
     {
 	XtNuseImages,
@@ -311,7 +311,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, images ),
 	XtRString,
-	"True",
+	(XtPointer) "True",
     },
     {
 	XtNshowButtons,
@@ -320,7 +320,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, buttons ),
 	XtRString,
-	"True",
+	(XtPointer) "True",
     },
     {
 	XtNshowLabels,
@@ -329,7 +329,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, labels ),
 	XtRString,
-	"True",
+	(XtPointer) "True",
     },
     {
 	XtNshowText,
@@ -338,7 +338,7 @@ static XtResource resources[] = {
 	sizeof(Boolean),
 	XtOffset( AppDataPtr, textpane ),
 	XtRString,
-	"True",
+	(XtPointer) "True",
     },
     {
 	XtNnumCol,
@@ -347,7 +347,7 @@ static XtResource resources[] = {
 	sizeof(int),
 	XtOffset( AppDataPtr, num_col ),
 	XtRString,
-	"0",
+	(XtPointer) "0",
     },
     { 
 	XtNvisDepth,
@@ -356,7 +356,7 @@ static XtResource resources[] = {
 	sizeof(int),
 	XtOffset( AppDataPtr, vis_depth ),
 	XtRString,
-	"32",
+	(XtPointer) "32",
     },
     {
 	XtNpause,
@@ -365,7 +365,7 @@ static XtResource resources[] = {
 	sizeof(float),
 	XtOffset( AppDataPtr, pause ),
 	XtRString,
-	"0.",
+	(XtPointer) "0.",
     }
 };
 
@@ -381,41 +381,50 @@ Visual		*pen_visual;
 unsigned long	*pen_colors;
 Colormap	pen_colormap;
 Widget		xtpen, vpane, control_panel, pen_picture; 
-Widget		text_region=(Widget)0;
-				    XtAppContext	pen_context;
-				    int		own_colormap;
-				    int		x_num_col;
-				    int		num_col_req = 0;
-				    int		num_col_max = 128;
-				    int		num_col_min = 16;
-				    int             xmono = NO;
-				    int             xtruecol = NO;
-				    int		screen_depth;
-				    int		visual_depth;
-				    long		screen_black, screen_white;
-				    bool             xt_stretchy;
-				    bool 		boxy,want_images,greedy_pixmaps,see_progress;
-				    char 	*message_text;
-				    int		plotting_started = 0;
+Widget		text_region=NULL;
 
-				    String fallback_resources[] = {
-					"*text.scrollVertical:            whenNeeded",
-					"*text.autoFill:                  True",
-					"*text.Wrap:                      word",
-					"*text.height:                    50",
-					"*Font:                           fixed",
-					"*Foreground:                     black",
-					"*Background:                     white",
-					NULL,
-				    };
+XtAppContext	pen_context;
+int		own_colormap;
+int		x_num_col;
+int		num_col_req = 0;
+int		num_col_max = 128;
+int		num_col_min = 16;
+int             xmono = NO;
+int             xtruecol = NO;
+int		screen_depth;
+int		visual_depth;
+long		screen_black, screen_white;
+bool             xt_stretchy;
+bool 		boxy,want_images,greedy_pixmaps,see_progress;
+const char 	*message_text;
+int		plotting_started = 0;
 
-extern void PenRepaint();
+static void  create_pixmap(int width, int height );
+static void choose_visual(Display* display, int screen, int max_depth, 
+			  XVisualInfo* vinfo);
+static void clear_pixmap(void);
+static void remove_pixmap(void);
+static void xt_size_n_scale(Dimension *width, Dimension *height);
+static void PenRepaint (Widget w, XEvent *event, String *params, 
+			Cardinal *num_params);
+
+String fallback_resources[] = {
+    "*text.scrollVertical:            whenNeeded",
+    "*text.autoFill:                  True",
+    "*text.Wrap:                      word",
+    "*text.height:                    50",
+    "*Font:                           fixed",
+    "*Foreground:                     black",
+    "*Background:                     white",
+    NULL,
+};
 
 /* 	 <ColormapNotify>:	PenRepaint() \n\
          <ConfigureNotify>:	PenRepaint() \n\ */
 
 /* default translation table for pen_picture widget */
-static char trans[] =
+
+static const char trans[] =
     "<Expose>:		PenRepaint() \n\
          <ConfigureNotify>:	PenRepaint() \n\
          <Btn1Down>:            xt_print_coord() \n\
@@ -440,8 +449,9 @@ static char trans[] =
          None<KeyPress>9: 	xt_number(9)\n\
 	 None<KeyPress>Return:	xt_goto_frame() xt_reset_number()";
 
+
 static XtActionsRec window_actions[] = {
-    {"PenRepaint",	      PenRepaint},
+    {"PenRepaint",	  PenRepaint},
     {"xt_quit",           actionQuit},	
     {"xt_next",           actionNext},	
     {"xt_stretchy",       actionStretch},	
@@ -462,8 +472,7 @@ extern int xt_next_num;
 
 char            name[] = "xtpen";
 
-int xt_app_data( app )
-Widget  app;
+int xt_app_data(Widget app)
 {
 
     XtVaGetApplicationResources( app,
@@ -485,11 +494,11 @@ typedef union
 static Widget PopUpWidget;
 static Widget PointLabelWidget;
 static Widget xOffset,yOffset;
-static Widget xLabel,yLabel;
+static Widget xLabel,yLabel; 
 static Widget Color,Fat,Boxit,Size,XOVAL,YOVAL,POINTER;
 
-static FILE* outfp;
 static float vpx, vpy;
+static FILE *outfp;
 
 void PopupConfirm(
     Widget     w         /* widget */,
@@ -542,8 +551,7 @@ void actionPointPopupCancel(Widget w, XEvent *event,
 			    String *params, Cardinal *num_params)
 { PopupCancel(w,NULL,NULL); }
 
-static void set_labels(x,y)
-float x,y;
+static void set_labels(float x, float y)
 {
     Arg arg[1];
     char text[32];
@@ -558,9 +566,7 @@ float x,y;
 }
 
 
-void doPointPopup( fp, x, y )
-FILE* fp;
-float x,y;
+void doPointPopup(FILE* fp, float x, float y )
 {
     Arg argList[20];
     int args;
@@ -695,7 +701,7 @@ float x,y;
 	sprintf( size_string, "%6.3f", .25);
 	XtSetArg( argList[0], XtNvalue, (XtArgVal)size_string ); args++;
 	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Size" ); args++;
-	XtSetArg( argList[2], XtNfromHoriz, Color); args++;
+	XtSetArg( argList[2], XtNfromHoriz, (XtArgVal) Color); args++;
 	Size = XtCreateManagedWidget("dialog5", dialogWidgetClass,
 				     otherBox2, argList, args);
 
@@ -703,7 +709,7 @@ float x,y;
 	sprintf( box_string, "%s","yes");
 	XtSetArg( argList[0], XtNvalue, (XtArgVal)box_string ); args++;
 	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Box" ); args++;
-	XtSetArg( argList[2], XtNfromHoriz, Size); args++;
+	XtSetArg( argList[2], XtNfromHoriz, (XtArgVal) Size); args++;
 	Boxit = XtCreateManagedWidget("dialog6", dialogWidgetClass,
 				      otherBox2, argList, args);
 
@@ -903,11 +909,10 @@ unsigned long  map[SEP_MAP_SIZE]  ;
  * the array "map".
  */
 
-int xtnumcol( mincol, maxcol )
-int mincol,maxcol;
+int xtnumcol(int mincol, int maxcol)
 {
     Colormap colormap;
-    unsigned int ncol ;
+    int ncol ;
     int sucess;
     int i;
     unsigned long planeMask;
@@ -1004,8 +1009,7 @@ void xt_set_color_table(int col, int ired, int igreen, int iblue )
 }
 
 /* save the current colormap in the structure associated with this frame */
-void xt_save_colormap( frame )
-xtFrame *frame;
+void xt_save_colormap(xtFrame *frame)
 {
     int i;
 
@@ -1021,8 +1025,7 @@ xtFrame *frame;
 }
 
 /* restore the saved  current colormap from this frame */
-void xt_restore_colormap( frame )
-xtFrame *frame;
+void xt_restore_colormap(xtFrame *frame)
 {
     XColor*           pen_color;
     int i;
@@ -1051,7 +1054,7 @@ xtFrame *frame;
 	
     XSetWindowBackground( pen_display, pen_window, map[0]);
 
-    XtFree((void*) pen_color );
+    XtFree((char*) pen_color );
 }
 
 /* variable that control the existance of buttons and labels */
@@ -1059,8 +1062,6 @@ static int wantButtons = 0;
 static int  first_time = YES;
 extern char     interact[];
 static int wantLabels = 0;
-static FILE *outfp;
-
 
 /* The buttons that go into the control panel */
 Widget quit_button, next_button, prev_button,  restart_button;
@@ -1069,14 +1070,14 @@ Widget mode_button, frame_label, delay_label;
 
 
 /* static variables that are set when a button is pressed */
-static int didNEXT = NO, didPREV = NO, didQUIT = NO, didTIME=NO;
+static int didNEXT = NO, didPREV = NO, didQUIT = NO, didTIME=NO; 
 static int didFRAM1 = NO,  didRUN = NO, didSTOP=NO , didCHANGE = NO;
 
 
 /* Function active? flags. We can't use XtIsSensitive because we might
  * not have active buttons */
 static int next_on=NO ,prev_on=NO ,quit_on=NO ,restart_on=NO ;
-static int run_on=NO , stop_on=NO, size_on=NO;
+static int run_on=NO , stop_on=NO, size_on=NO; 
 
 static void  dummy_proc () { return; }
 
@@ -1188,8 +1189,8 @@ void actionStretch(Widget w, XEvent *ev, String *p, Cardinal *np)
 
 /* the timeout proc called in run mode by an application timer */
 static void timeout_proc(
-    XtPointer      x1     /* closure */,
-    XtIntervalId*  id1     /* id */
+    XtPointer      x1,     /* closure */
+    XtIntervalId*  id1     /* id */ 
     ){    didTIME = YES; return; }
 
 static void set_delay_label(float delay)
@@ -1276,8 +1277,7 @@ void actionGoto(Widget w, XEvent *ev, String *p, Cardinal *np)
 /* toggle run mode between Forward, Backward, Both-ways */
 
 /* this routine sets the mode label */
-void set_mode_label(newlab)
-char* newlab;
+void set_mode_label(const char *newlab)
 { 
     Arg arg[1];
     char text[32];
@@ -1549,14 +1549,14 @@ void xt_dovplot (int nn, FILE **inpltin, char **innames)
     going_forwards = YES;
 
     /* allocate space for array inFiles[] */
-    inFiles = (FileInfo *) malloc (nn * sizeof (FileInfo));
+    inFiles = (FileInfo *) sf_alloc (nn,sizeof (FileInfo));
 
     /* fill array inFiles */
     for (i = 0; i < nn; i++)
     {
 	inFiles[i] .stream = inpltin[i];
 	strcpy (inFiles[i] .name, innames[i]);
-	inFiles[i] .new = YES;
+	inFiles[i] .fnew = YES;
     }
 
     /* ready to go! Generate an expose event */
@@ -1826,9 +1826,7 @@ xtFrameList* xt_new_list(xtFrameList*  old_list, int *frames, int num_frame)
        
 
 /* constructor for an new xtFrame object */       
-xtFrame* xt_new_frame( filenum, filepos )
-int filenum;
-int filepos;
+xtFrame* xt_new_frame(int filenum, int filepos)
 {
     xtFrame *newfr;
 
@@ -1890,10 +1888,7 @@ xtFrame* xt_frame_num(xtFrameList* list, int num)
     return found;
 }
  
-xtFrame* xt_find_frame( list, filenum, filepos )
-xtFrameList* list;
-int filenum;
-int filepos;
+xtFrame* xt_find_frame(xtFrameList *list, int filenum, int filepos)
 {
     xtFrame *curr, *start;
     xtFrame *found;
@@ -2139,8 +2134,7 @@ int xtinteract (int what, FILE *controltty, char *string)
 
 }
 
-void xtaddText( str )
-char *str;
+void xtaddText(const char *str)
 {
   
     if ( text_region ) {
@@ -2190,7 +2184,8 @@ char *str;
 	    char *eol = strchr( currentString, '\n');
       
 	    if ( eol != 0 && eol < &currentString[TEXT_BUFFER_SIZE] ) {
-		XawTextReplace( text_region, 0, eol-currentString+1, &empty_tblk );
+		XawTextReplace( text_region, 0, eol-currentString+1, 
+				&empty_tblk );
 		start -= eol - currentString + 1;
 	    }
 	    else {
@@ -2213,7 +2208,7 @@ char *str;
 }
 
 
-void xtmessage (int command, char *text)
+void xtmessage (int command, const char *text)
 /*< message >*/
 {
     static int eatit = NO;
@@ -2241,8 +2236,6 @@ void xtmessage (int command, char *text)
     }
 }
 
-static void choose_visual();
-
 void opendev (int argc, char* argv[])
 /*< open >*/
 {
@@ -2265,7 +2258,7 @@ void opendev (int argc, char* argv[])
     Cardinal        myxargc;
 #endif
     char ** myxargv;
-    char *color;
+    const char *color;
     
     dev.message = xtmessage;
     dev.erase = xterase;
@@ -2584,8 +2577,7 @@ void opendev (int argc, char* argv[])
 extern float user_xscale;
 extern float user_yscale;
 
-void xt_size_n_scale( width, height)
-Dimension *width,*height;
+static void xt_size_n_scale(Dimension *width, Dimension *height)
 {  
 
     Position left, top;
@@ -2636,11 +2628,8 @@ Dimension *width,*height;
   
 }
 
-static void choose_visual( display, screen, max_depth, vinfo )
-Display* display;
-int screen;
-int max_depth;
-XVisualInfo* vinfo;
+static void choose_visual(Display* display, int screen, int max_depth, 
+			  XVisualInfo* vinfo)
 {
 
     /* try and figure out a good visual */
@@ -2694,10 +2683,7 @@ XVisualInfo* vinfo;
 	x_num_col = 2;
     }else{
 	ERR(FATAL,name,"Could not obtain a suitable visual");
-    }
-
-
-   
+    }   
 }
 
 int             in_repaint = NO;
@@ -2741,11 +2727,11 @@ void xt_draw_file(int start_file,
         pltin = inFiles[file_num] .stream;
         strcpy (pltname, inFiles[file_num].name);
 
-	if( start_pos==0 && inFiles[file_num].new ){
-            inFiles[file_num].new = NO;
+	if( start_pos==0 && inFiles[file_num].fnew ){
+            inFiles[file_num].fnew = NO;
     	    dovplot ();
 	}else{
-            inFiles[file_num].new = NO;
+            inFiles[file_num].fnew = NO;
 
 	    if( start_pos < -1 ){
 		/* start_pos will be < -1 for a pipe input */
@@ -2892,12 +2878,8 @@ void xtredraw (void)
  * repaint plot by copying in-memory pixmap to canvas
  */
 
-void
-PenRepaint (w, event, params, num_params)
-Widget w;
-XExposeEvent *event;
-String *params;
-Cardinal *num_params;
+static void
+PenRepaint (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     Dimension width, height;
     Position left, top;
@@ -2940,14 +2922,16 @@ int pen_height = -1;
 int have_pixmap;
 
 /* draw a filled rectangle on the pixmap to clear it */
-void clear_pixmap(){
+static void clear_pixmap(void)
+{
     XSetForeground(pen_display, pen_gc, map[0] );
     XFillRectangle(pen_display, pen_pixmap, pen_gc,
 		   0,0,pen_width,pen_height);
     XSetForeground(pen_display, pen_gc, color );
 }
 
-void remove_pixmap(){
+static void remove_pixmap(void)
+{
     if( pen_pixmap != (Pixmap)0 ) {
         XFreePixmap(pen_display,pen_pixmap);
 	pen_pixmap = (Pixmap)0;
@@ -2957,9 +2941,7 @@ void remove_pixmap(){
 /* this is the pixmap we draw onto, it should only be created when we
    first create a plot or when it is resized */
 
-void  create_pixmap( width, height )
-int width;
-int height;
+static void  create_pixmap(int width, int height )
 {
 
     /* Make sure we have a pixmap of the correct size */
@@ -2997,21 +2979,17 @@ int height;
 
 /* pixmap allocation with an error handler to detect failed allocation */
 
-static int attachfailed;
+static int attachfailed; 
  
-static int MyHandler(dpy,errorevent)
-Display *dpy;
-XErrorEvent * errorevent;
+static int MyHandler(Display *dpy, XErrorEvent *errorevent)
 {
     attachfailed = 1;
     return(0);
 }
 
-Pixmap MyCreatePixmap( display,drawable,width,height,depth )
-Display *display;
-Drawable drawable;
-unsigned int width,height;
-unsigned int depth;
+Pixmap MyCreatePixmap(Display *display, Drawable drawable,
+		      unsigned int width,
+		      unsigned int height, unsigned int depth)
 {
     Pixmap pix;
 

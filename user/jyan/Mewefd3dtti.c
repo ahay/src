@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     /* FDM structure */
     fdm3d    fdm=NULL;
     abcone3d abcp=NULL,abcs=NULL;
-    sponge   spo=NULL;
+    sponge1d  spo=NULL;
 
     /* I/O arrays */
     float***ww=NULL;           /* wavelet   */

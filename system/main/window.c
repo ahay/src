@@ -99,7 +99,11 @@ int main (int argc, char *argv[])
 	    }
 	}
 	if (f[i]+(m[i]-1)*j[i] > n[i]) 
-	    sf_error ("m%d=%lld is too big",i+1,(long long) m[i]);
+#if defined(__cplusplus) || defined(c_plusplus)
+	    sf_error ("m%d=%ld is too big",i+1,(long) m[i]);
+#else
+            sf_error ("m%d=%lld is too big",i+1,(long long) m[i]);	
+#endif
 
 	/* get labels */
 	snprintf(key,7,"label%d",i+1);
@@ -115,10 +119,18 @@ int main (int argc, char *argv[])
 
     if (verb) {
 	for (i=0; i < dim; i++) {
-	    if (m[i] != n[i]) 
-		sf_warning("Windowing f%d=%lld j%d=%d n%d=%lld min%d=%g max%d=%g",
+	    if (m[i] != n[i])
+ #if defined(__cplusplus) || defined(c_plusplus)
+		sf_warning("Windowing f%d=%ld j%d=%d n%d=%ld"
+			   " min%d=%g max%d=%g",
+			   i+1,(long) f[i],i+1,j[i],i+1,(long) m[i],
+			   i+1,o[i],i+1,o[i]+(m[i]-1)*d[i]);
+#else
+	        sf_warning("Windowing f%d=%lld j%d=%d n%d=%lld"
+			   " min%d=%g max%d=%g",
 			   i+1,(long long) f[i],i+1,j[i],i+1,(long long) m[i],
 			   i+1,o[i],i+1,o[i]+(m[i]-1)*d[i]);
+#endif
 	}
     }
 

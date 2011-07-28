@@ -58,9 +58,9 @@ su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
      dt = time sampling of traces
    */
 
-  char *headname;		/* holds name of file with trace headers */
+  const char *headname;		/* holds name of file with trace headers */
   char *trace;
-  char *read;			/* for similarly-named input parameter */
+  const char *read;		/* for similarly-named input parameter */
   sf_file out;			/* tag for stdout */
   sf_file hdr;			/* tag for file with trace headers */
   sf_file msk = NULL;		/* tag of mask file */

@@ -1397,7 +1397,7 @@ void wei_hicindex(weicub3d cub,
     int iz,ic;
 
     eico->ncofz =sf_intalloc (sf_n(cub->az));
-    eico->icofz =sf_alloc    (sf_n(cub->az),sizeof(int*));
+    eico->icofz =(int**) sf_alloc    (sf_n(cub->az),sizeof(int*));
 
     for(iz=0; iz<sf_n(cub->az); iz++) {
 
@@ -1408,7 +1408,7 @@ void wei_hicindex(weicub3d cub,
 	    }
 	}
 
-	eico->icofz[iz] = sf_alloc(eico->ncofz[iz]+1,sizeof(int));	
+	eico->icofz[iz] = sf_intalloc(eico->ncofz[iz]+1);	
 
 	eico->ncofz[iz]=0;
 	for(ic=0; ic<sf_n(cub->ac); ic++) {

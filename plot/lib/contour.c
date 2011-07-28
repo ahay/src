@@ -49,7 +49,7 @@ vp_contour vp_contour_init(bool transp,                /* transpose flag */
 {
     vp_contour cnt;
 
-    cnt = sf_alloc(1,sizeof(*cnt));
+    cnt = (vp_contour) sf_alloc(1,sizeof(*cnt));
     
     cnt->transp = transp;
     cnt->n1 = n1; cnt->o1 = o1; cnt->d1 = d1;

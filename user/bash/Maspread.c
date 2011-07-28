@@ -66,7 +66,8 @@ int main (int argc, char* argv[]) {
     int nsp, n1, t0, t1;
     float **fbuf, ***p, ***a, d[SF_MAX_DIM], o[SF_MAX_DIM], *trace;
     float f, fpeak, d1, o1;
-    char key[7], *label, *unit, **pos, **amp;
+    char key[7], **pos, **amp;
+    const char *label, *unit;
     bool conv, grad;
     sf_file out;
 
@@ -134,8 +135,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nsp", &nsp) || nsp < 1) nsp = 1;
     /* Number of surfaces */
 
-    pos = (char**)malloc (nsp * sizeof (char*));
-    amp = (char**)malloc ((nsp + 2) * sizeof (char*));
+    pos = (char**) sf_alloc (nsp,    sizeof (char*));
+    amp = (char**) sf_alloc (nsp + 2,sizeof (char*));
 
     /* expressions for positions and amplitudes */
     amp[0] = NULL;

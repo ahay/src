@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0, v0;
-    float **new,  **old,  **cur,  **ukr, **v, *wav;
+    float **nxt,  **old,  **cur,  **ukr, **v, *wav;
     float k, kmax;
     float **a, **b1, **b2, **c1, **c2, **d1, **d2; 
     kiss_fft_cpx **uk, *ctracex, *ctracez;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nz,nx);
     cur    =  sf_floatalloc2(nz,nx);
-    new    =  sf_floatalloc2(nz,nx);
+    nxt    =  sf_floatalloc2(nz,nx);
     ukr     =  sf_floatalloc2(nz,nx);
     a     =  sf_floatalloc2(nz,nx);
     b1    =  sf_floatalloc2(nz,nx);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
          for (ix=0; ix < nx; ix++){
              for (iz=0; iz < nz; iz++){ 
-                  new[ix][iz] = 0.0; 
+                  nxt[ix][iz] = 0.0; 
                   uk[ix][iz].r = cur[ix][iz];
                   uk[ix][iz].i = 0.0; 
                 }
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
          }
          for (ix=2; ix < nx-2; ix++) {  
 	     for (iz=2; iz < nz-2; iz++) {  
-                 new[ix][iz]  = ukr[ix][iz]*a[ix][iz]
+                 nxt[ix][iz]  = ukr[ix][iz]*a[ix][iz]
                               + 0.5*(ukr[ix][iz-1]+ukr[ix][iz+1])*b1[ix][iz]
                               + 0.5*(ukr[ix][iz-2]+ukr[ix][iz+2])*b2[ix][iz]
                               + 0.5*(ukr[ix-1][iz]+ukr[ix+1][iz])*c1[ix][iz]
@@ -209,26 +209,26 @@ int main(int argc, char* argv[])
                               - old[ix][iz];
              }
          }  
-         new[isx][isz] += wav[it];
-      //   source_smooth(new,isx,isz,wav[it]);
+         nxt[isx][isz] += wav[it];
+      //   source_smooth(nxt,isx,isz,wav[it]);
 
                  
 	 for (ix=0; ix < nx; ix++) {  
              for(iz=0; iz < nz; iz++) {
 	        old[ix][iz] = cur[ix][iz]; 
-	        cur[ix][iz] = new[ix][iz]; 
+	        cur[ix][iz] = nxt[ix][iz]; 
              }
          }
     }
     bd_close();
     srcsm_close();
     free(*v);     
-    free(*new);     
+    free(*nxt);     
     free(*cur);     
     free(*old);     
     free(*uk);     
     free(v);     
-    free(new);     
+    free(nxt);     
     free(cur);     
     free(old);     
     free(uk);     

@@ -125,14 +125,14 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_INT:
                         ibuf = (int*) bufout;
-                        for (i=0; i < nin; i++) {
+                        for (i=0; i < (int) nin; i++) {
 			    ibuf[i] = sbuf[i]; 
 			}
                         sf_intwrite(ibuf, nin, out);
 			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
-			for (i=0; i < nin; i++) {
+			for (i=0; i < (int) nin; i++) {
 			    fbuf[i] = sbuf[i]; 
 			}
 			sf_floatwrite(fbuf,nin,out);
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
                     case SF_SHORT:
 			nout = nin;
                         sbuf = (short*) bufout;
-                        for (i=0; i < nin; i++) {
+                        for (i=0; i < (int) nin; i++) {
 			    sbuf[i] = (short) ibuf[i]; 
 			}
                         sf_shortwrite(sbuf, nin, out);
@@ -167,12 +167,12 @@ int main(int argc, char *argv[])
                                there is no format for storing float headers in Madagascar,
                                they come in as integers. We catch them here and
                                do a proper conversion from IBM floats to IEEE floats */
-			    for (i=j=0; i < nin && j < nout; i++, j++) {
+			    for (i=j=0; i < (int) nin && j < nout; i++, j++) {
 			        fbuf[j] = ibm2float ((const char*)&ibuf[i]);
 			    }
                         } else {
                             /* Regular conversion from integer to float */
-			    for (i=j=0; i < nin && j < nout; i++, j++) {
+			    for (i=j=0; i < (int) nin && j < nout; i++, j++) {
 			        fbuf[j] = ibuf[i]; 
 			    }
                         }
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_COMPLEX:
 			cbuf = (sf_complex*) bufout;
-			for (i=j=0; i < nin && j < nout; i+=2, j++) {
+			for (i=j=0; i < (int) nin && j < nout; i+=2, j++) {
 			    cbuf[j] = sf_cmplx(ibuf[i],ibuf[i+1]); 
 			}
 			sf_complexwrite(cbuf,nout,out);
@@ -201,11 +201,11 @@ int main(int argc, char *argv[])
 			ibuf = (int*) bufout;
 			/* Avoiding a conditional inside a loop. More code */
 			if (trunc) {
-			    for (i=j=0; i < nout && j < nin; i++, j++) {
+			    for (i=j=0; i < nout && j < (int) nin; i++, j++) {
 			        ibuf[i] = fbuf[j];
 			    }
 			} else {
-			    for (i=j=0; i < nout && j < nin; i++, j++) {
+			    for (i=j=0; i < nout && j < (int) nin; i++, j++) {
 			        ibuf[i] = roundf(fbuf[j]);
 			    }
 			}
@@ -217,11 +217,11 @@ int main(int argc, char *argv[])
 			   for short than for int. Different esize? Should
 			   investigate later */
 			if (trunc) {
-                            for (i=0; i < nin; i++) {
+                            for (i=0; i < (int) nin; i++) {
 			        sbuf[i] = (short) fbuf[i];
 			    }
 			} else {
-			    for (i=0; i < nin; i++) {
+			    for (i=0; i < (int) nin; i++) {
 			        sbuf[i] = roundf(fbuf[i]);
 			    }
 			}
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_COMPLEX:
 			cbuf = (sf_complex*) bufout;
-			for (i=j=0; i < nout && j < nin; i++, j+=2) {
+			for (i=j=0; i < nout && j < (int) nin; i++, j+=2) {
 			    cbuf[i] = sf_cmplx(fbuf[j],fbuf[j+1]); 
 			}
 			sf_complexwrite(cbuf,nout,out);
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 			break;
 		    case SF_FLOAT:
 			fbuf = (float*) bufout;
-			for (i=j=0; i < nout && j < nin; i+=2, j++) {
+			for (i=j=0; i < nout && j < (int) nin; i+=2, j++) {
 			    fbuf[i]   = crealf(cbuf[j]); 
 			    fbuf[i+1] = cimagf(cbuf[j]);
 			}
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 		switch (otype) {
 		    case SF_FLOAT:
 			fbuf = (float *) bufout;
-			for (i=0; i < nin; i++) {
+			for (i=0; i < (int) nin; i++) {
 			    fbuf[i] = (float) ubuf[i];
 			}
 			sf_floatwrite(fbuf,nin,out);
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 		switch (otype) {
 		    case SF_FLOAT:
 			fbuf = (float *) bufout;
-			for (i=0; i < nin; i++) {
+			for (i=0; i < (int) nin; i++) {
 			    fbuf[i] = (float) bufin[i];
 			}
 			sf_floatwrite(fbuf,nin,out);

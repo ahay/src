@@ -65,7 +65,7 @@ static func functable[] = {
 
 static sf_complex myabs(sf_complex c)
 {
-    c = sf_cmplx(sf_cabs(c),0.);
+    c = sf_cmplx(cabsf(c),0.);
     return c;
 }
 
