@@ -32,7 +32,7 @@ for prog in mains:
         prog = env.Program(cfile,
                            CC=NVCC,
                            LINKFLAGS='',
-                           CCFLAGS=('--x=cu','--x=cu -g')[root==None])
+                           CFLAGS=('--x=cu','--x=cu -g')[root==None])
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''

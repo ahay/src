@@ -1,4 +1,4 @@
-char *documentation[] = {
+const char *documentation[] = {
 " ",
 #include "../include/gendoc.h"
 " ",

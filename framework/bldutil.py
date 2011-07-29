@@ -182,9 +182,9 @@ def Debug():
     srcroot = os.environ.get('RSFSRC', '../..')
     opts = configure.options(os.path.join(srcroot,'config.py'))
     opts.Update(env)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    env['CFLAGS'] = env.get('CFLAGS','').replace('-O2','-g')
     if  env['PLATFORM'] == 'sunos':
-        env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+        env['CFLAGS'] = string.replace(env.get('CFLAGS',''),'-xO2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env['version'] = __read_version_file(os.path.join(srcroot,'VERSION.txt'))
     env.SConsignFile(None)
