@@ -145,7 +145,7 @@ f.awefd1('tmpA',  # data file (all receivers)
 
 # ------------------------------------------------------------
 # plot wavefield frames
-for i in range( (par['nt']-1)/par['jsnap'] ):
+for i in range( int((par['nt']-1)/par['jsnap']) ):
     tag = '-%02d'%i
     f.wframe('wfld'+tag,
              'wfld',i,'pclip=99',par)

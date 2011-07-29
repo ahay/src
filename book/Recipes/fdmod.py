@@ -111,8 +111,8 @@ def cgrey(custom,par):
     grey 
     parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -152,8 +152,8 @@ def wgrey(custom,par):
     window min1=%g max1=%g min2=%g max2=%g |
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
-    label1="\F2 %s\F3" unit1=%s
-    label2="\F2 %s\F3" unit2=%s
+    label1=%s unit1=%s
+    label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],
@@ -166,8 +166,8 @@ def wgrey(custom,par):
 def cgraph(custom,par):
     return '''
     graph labelrot=n wantaxis=n title="" yreverse=y wherexlabel=t
-    min2=%g max2=%g label2="\F2 %s\F3 " unit2=%s
-    min1=%g max1=%g label1="\F2 %s\F3 " unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
@@ -178,8 +178,8 @@ def cgraph(custom,par):
 def ccont(custom,par):
     return '''
     contour labelrot=n wantaxis=n title=""
-    min1=%g max1=%g label1=%s unit1="\F2 %s\F3"
-    min2=%g max2=%g label2=%s unit2="\F2 %s\F3"
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     plotcol=2 plotfat=3
     %s
@@ -192,8 +192,8 @@ def dgrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g 
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
@@ -206,8 +206,8 @@ def dwigl(custom,par):
     wiggle parallel2=n labelrot=n wantaxis=y title=""
     transp=y yreverse=y wherexlabel=t poly=y seamean=n
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
@@ -242,8 +242,8 @@ def egrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
@@ -257,8 +257,8 @@ def ewigl(custom,par):
     wiggle parallel2=n labelrot=n wantaxis=y title=""
     transp=n yreverse=y wherexlabel=t poly=y seamean=n
     pclip=100
-    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
-    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
@@ -273,7 +273,7 @@ def fgrey(custom,par):
     grey parallel2=n labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min2=%g max2=%g label2=%s unit2=%s
-    label1="\F2 f\F3 " unit1="\F2 Hz\F3 "
+    label1="f" unit1="Hz"
     screenratio=%g screenht=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['lx'],par['ux'],
