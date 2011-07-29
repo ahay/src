@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o1",o1);
     sf_putfloat(out,"d1",d1);
 
-    /* If input n2, n3... are defined, replace them with 1's in output.
-       Probably workaround for a bug in a different program */
+    /* If input n2, n3... are defined, replace them with 1's in output */
+
     for (i=1; i < SF_MAX_DIM; i++) {
         int this_n;
         char key[5];
