@@ -214,29 +214,29 @@ def cc(context):
         need_pkg('libc')
     if string.rfind(CC,'gcc') >= 0 and \
            string.rfind(CC,'pgcc') < 0:
-        oldflag = context.env.get('CCFLAGS')
-        for flag in ('-x=c -std=gnu99 -Wall -pedantic',
+        oldflag = context.env.get('CFLAGS')
+        for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):
             context.Message("checking if gcc accepts '%s' ... " % flag)
-            context.env['CCFLAGS'] = oldflag + ' ' + flag
+            context.env['CFLAGS'] = oldflag + ' ' + flag
             res = context.TryCompile(text,'.c')
             context.Result(res)
             if res:
                 break        
         if not res:
-            context.env['CCFLAGS'] = oldflag
+            context.env['CFLAGS'] = oldflag
         # large file support
         (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
         if not status and lfs:
-            oldflag = context.env.get('CCFLAGS')
+            oldflag = context.env.get('CFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
-            context.env['CCFLAGS'] = oldflag + ' ' + lfs
+            context.env['CFLAGS'] = oldflag + ' ' + lfs
             res = context.TryCompile(text,'.c')
             context.Result(res)
             if not res:
-                context.env['CCFLAGS'] = oldflag
+                context.env['CFLAGS'] = oldflag
 
         # Mac OS X include path, library path, and link flags
         if plat['OS'] == 'darwin':
@@ -255,7 +255,7 @@ def cc(context):
   
 
     elif plat['OS'] == 'sunos':
-        context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
+        context.env['CFLAGS'] = string.replace(context.env.get('CFLAGS',''),
                                                 '-O2','-xO2')
 
 pkg['ar']={'fedora':'binutils'}
@@ -1082,19 +1082,19 @@ def cuda(context):
         cudaSetDevice (0);
         }\n'''
         cc = context.env.get('CC')
-        cflags = context.env.get('CCFLAGS')
+        cflags = context.env.get('CFLAGS')
         libs = context.env.get('LIBS')
         libpath = context.env.get('LIBPATH')
         linkflags = context.env.get('LINKFLAGS')
         context.env['CC'] = nvcc
-        context.env['CCFLAGS'] = '--x=cu'
+        context.env['CFLAGS'] = '--x=cu'
         context.env['LIBS'] = ['cuda','cudart']
         context.env['LIBPATH'] = [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
                                   os.path.join(CUDA_TOOLKIT_PATH,'lib')]
         context.env['LINKFLAGS'] = ''
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
-        context.env['CCFLAGS'] = cflags
+        context.env['CFLAGS'] = cflags
         context.env['LIBS'] = libs
         context.env['LIBPATH'] = libpath
         context.env['LINKFLAGS'] = linkflags
@@ -1214,23 +1214,23 @@ def omp(context):
     context.Message("checking for OpenMP ... ")
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
-    flags = context.env.get('CCFLAGS','')
+    flags = context.env.get('CFLAGS','')
     lflags = context.env.get('LINKFLAGS','')
     pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if pgcc:
-        CCFLAGS = flags + ' -mp'
+        CFLAGS = flags + ' -mp'
         LINKFLAGS = lflags + ' -mp'
     elif gcc:
         LIBS.append('gomp')
-        CCFLAGS = flags + ' -fopenmp'
+        CFLAGS = flags + ' -fopenmp'
         LINKFLAGS = lflags
     elif icc:
-        CCFLAGS = flags + ' -openmp -D_OPENMP'
+        CFLAGS = flags + ' -openmp -D_OPENMP'
         LINKFLAGS = lflags + ' -openmp' 
     else:
-        CCFLAGS = flags
+        CFLAGS = flags
         LINKFLAGS = lflags
 
     text = '''
@@ -1246,7 +1246,7 @@ def omp(context):
     '''
 
     context.env['LIBS'] = LIBS
-    context.env['CCFLAGS'] = CCFLAGS
+    context.env['CFLAGS'] = CFLAGS
     context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
@@ -1258,7 +1258,7 @@ def omp(context):
         if gcc:
             LIBS.pop()
         context.env['LIBS'] = LIBS
-        context.env['CCFLAGS'] = flags
+        context.env['CFLAGS'] = flags
         context.env['LINKFLAGS'] = lflags
         context.env['OMP'] = False
 
@@ -1737,7 +1737,7 @@ def options(file):
     opts.Add('SFPEN','Preference for sfpen')
     opts.Add('DYNLIB','Compiling with dynamic libraries')
     opts.Add('CC','The C compiler')
-    opts.Add('CCFLAGS','General options that are passed to the C compiler',
+    opts.Add('CFLAGS','General options that are passed to the C compiler',
              '-O2')
     opts.Add('CPPPATH',
              'The list of directories that the C preprocessor will search')

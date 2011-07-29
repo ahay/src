@@ -81,8 +81,6 @@ extern void inactivate_buttons();
 extern int epause;   /* user sepcified pause in seconds */
 extern float fpause; /* pause between frames in seconds */
 
-extern void doPointPopup(FILE*, float, float);
-
 /* "button press" values returned by xt_pause  */
 enum {NEXT,PREV,RESTART,QUIT,RUN,STOP,CHANGED,TIME};  
 

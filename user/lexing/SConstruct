@@ -30,7 +30,6 @@ if lapack:
                 LIBPATH=['../../lib'],
                 LIBS=[env.get('DYNLIB','')+'rsf++',
                       env.get('DYNLIB','')+'rsf']+lapack)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-std=gnu99','')
 
     ccfiles = map(lambda x: x+'.cc',Split(subs))
 

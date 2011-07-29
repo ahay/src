@@ -111,7 +111,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp)
     snprintf(key,kl,"o%d",i+1);
     if (ps_ffreal(par,key,&(g->axes[i].o))) g->axes[i].o=0.0;
     /* determine dim by finding least axis index with n>1 */
-    if (g->axes[i].n>1) g->dim=iwave_max(g->dim,i+1);
+    if (g->axes[i].n>1) g->dim=iwave_max((int)g->dim,i+1);
   }
   /*  fprintf(stderr,"order params - dim=%d\n",g->dim);*/
   if (g->dim > 0) { 
@@ -119,7 +119,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp)
     ps_ffint(par,"z_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"z axis tmp=%d\n",tmp);*/
-    if (tmp<0 || tmp>g->dim-1) {
+    if (tmp<0 || tmp>(int)g->dim-1) {
       fprintf(fp,"Error: read_grid\n");
       /*      fprintf(stderr,"Error: read_grid\n");*/
       fprintf(fp,"z_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
@@ -132,9 +132,9 @@ int par_grid(grid * g, PARARRAY par, FILE * fp)
     ps_ffint(par,"x_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"x axis tmp=%d\n",tmp);*/
-    if (tmp<0 || tmp>g->dim-1) {
+    if (tmp<0 || tmp>(int)g->dim-1) {
       fprintf(fp,"Error: read_grid\n");
-      fprintf(fp,"x_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
+      fprintf(fp,"x_axis index = %d out of range for dim = %d\n",tmp,(int)g->dim);
       return E_OTHER;
     }
     g->axes[tmp].id=1;
@@ -144,7 +144,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp)
     ps_ffint(par,"y_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"y axis tmp=%d\n",tmp);*/
-    if (tmp<0 || tmp>g->dim-1) {
+    if (tmp<0 || tmp>(int)g->dim-1) {
       fprintf(fp,"Error: read_grid\n");
       fprintf(fp,"x_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
       return E_OTHER;
@@ -438,7 +438,7 @@ int rsfread(ireal * a,
 
   /* figger out array intersection. special case: if there is no
      intersection, read nearest part of data */
-  for (ii=0; ii < g.dim; ii++) {
+  for (ii=0; ii < (int)g.dim; ii++) {
     gsa[ii] = iwave_max(gs[ii], rags[ii]);
     gea[ii] = iwave_min(gs[ii] + n[ii] - 1, rags[ii] + ran[ii] - 1);
     na[ii]  = iwave_max(gea[ii] - gsa[ii] + 1, 0);
@@ -516,7 +516,7 @@ int rsfread(ireal * a,
 
   /* D.S. 01.01.11: extended-model related --> */
   /* get size of every model panel */
-  for (ii=0; ii< g.dim; ii++){
+  for (ii=0; ii< (int)g.dim; ii++){
     panel_size *= (n[ii]);   
   }
   /* compute current starting position
@@ -543,12 +543,12 @@ int rsfread(ireal * a,
     for (i=0;i<noffs;i++) {
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfread from fseeko at file offset %jd\n",(intmax_t)goffs[i]); 
+	fprintf(stream,"Error: rsfread from fseeko at file offset %lld\n",(intmax_t)goffs[i]); 
 	err=E_FILE;
       }
       /* read in byte string */
-      if (!err && (gl_na[0] != fread(fbuf,sizeof(float),gl_na[0],fp))) {
-	fprintf(stream,"Error: rsfread from fread at array offset %jd\n",(intmax_t)loffs[i]);
+      if (!err && (gl_na[0] != (int) fread(fbuf,sizeof(float),gl_na[0],fp))) {
+	fprintf(stream,"Error: rsfread from fread at array offset %lld\n",(intmax_t)loffs[i]);
 	err=E_FILE;
       }
       /* convert to ireal */
@@ -580,12 +580,12 @@ int rsfread(ireal * a,
 
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfread from fseeko at file offset %jd\n",(intmax_t)goffs[i]);
+	fprintf(stream,"Error: rsfread from fseeko at file offset %lld\n",(intmax_t)goffs[i]);
 	err=E_FILE;
       }
       /* read in byte array */
       if (!err && (recsize_b != fread(buf,sizeof(char),recsize_b,fp))) {
-	fprintf(stream,"Error: rsfread from fread at array offset %jd\n",(intmax_t)loffs[i]);
+	fprintf(stream,"Error: rsfread from fread at array offset %lld\n",(intmax_t)loffs[i]);
 	err=E_FILE;
       }
       
@@ -647,7 +647,7 @@ int rsfread(ireal * a,
   /* scaling loop */
   /*  fprintf(stream,"gridio: SCALE=%d\n",scale);*/
   ntot=1;
-  for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
+  for (ii=0;ii<(int)g.dim;ii++) ntot*=ran[ii];
   if (scale>0) for (ii=0;ii<scale;ii++) scfac *= 10.0;
   if (scale<0) for (ii=0;ii<-scale;ii++) scfac *= 0.10;
   a_max=scfac*a[0];
@@ -789,7 +789,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
   /* scaling loop note that scale should be inverse of read */
   /*  fprintf(stream,"gridio: SCALE=%d\n",scale);*/
   ntot=1;
-  for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
+  for (ii=0;ii<(int)g.dim;ii++) ntot*=ran[ii];
   /* invert scale */
   scale=-scale;
   if (scale>0) for (ii=0;ii<scale;ii++) scfac *= 10.0;
@@ -847,7 +847,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
   
   /* D.S. 01.01.11: extended-model related --> */
   /* get size of every model panel */
-  for (ii=0; ii< g.dim; ii++){
+  for (ii=0; ii< (int)g.dim; ii++){
     panel_size *= (n[ii]);   
   }
   /* compute current starting position */
@@ -865,10 +865,10 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
       /* seek to write segment */
       /*      fprintf(stderr,"seek trace %d\n",i);*/
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfwrite from fseeko at file offset %jd\n",(intmax_t)goffs[i]); 
+	fprintf(stream,"Error: rsfwrite from fseeko at file offset %lld\n",(intmax_t)goffs[i]); 
 	fprintf(stream,"possible cause: attempt to write off end of file\n");
 	fseeko(fp,0L,SEEK_END);
-	fprintf(stream,"file length = %jd:\n",(intmax_t)ftello(fp));
+	fprintf(stream,"file length = %lld:\n",(intmax_t)ftello(fp));
 	fprintf(stream,"note that new file can only be written in contiguous,\n");
 	fprintf(stream,"consecutive blocks\n");
 	err=E_FILE;
@@ -878,8 +878,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
 	for (j=0;j<na[0];j++) { *(fbuf+j)=*(a+loffs[i]+j); }
       }
       /* write out float buffer */
-      if (!err && (na[0] != fwrite(fbuf,sizeof(float),na[0],fp))) {
-	fprintf(stream,"Error: rsfwrite from fwrite at array offset %jd\n",(intmax_t)loffs[i]);
+      if (!err && (na[0] != (int) fwrite(fbuf,sizeof(float),na[0],fp))) {
+	fprintf(stream,"Error: rsfwrite from fwrite at array offset %lld\n",(intmax_t)loffs[i]);
 	fprintf(stream,"failed to write %d words\n",na[0]);
 	err=E_FILE;
       }
@@ -907,11 +907,11 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
 
       /* seek to write segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos, SEEK_SET)) {
-	fprintf(stream,"Error: rsfwrite from fseeko at file offset %jd\n",(intmax_t)goffs[i]);
+	fprintf(stream,"Error: rsfwrite from fseeko at file offset %lld\n",(intmax_t)goffs[i]);
 	fprintf(stream,"possible cause: attempt to write off end of file\n");
 	j=0;
 	fseeko(fp,j,SEEK_END);
-	fprintf(stream,"file length = %jd:\n",(intmax_t)ftello(fp));
+	fprintf(stream,"file length = %lld:\n",(intmax_t)ftello(fp));
 	fprintf(stream,"note that new file can only be written in contiguous,\n");
 	fprintf(stream,"consecutive blocks\n");
 	err=E_FILE;
@@ -928,7 +928,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, FILE * stream
       }
       /* write out byte array */
       if (!err && (recsize_b != fwrite(buf,sizeof(char),recsize_b,fp))) {
-	fprintf(stream,"Error: rsfwrite from fwrite at array offset %jd\n",(intmax_t)loffs[i]);
+	fprintf(stream,"Error: rsfwrite from fwrite at array offset %lld\n",(intmax_t)loffs[i]);
 	err=E_FILE;
       }
       

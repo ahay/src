@@ -70,7 +70,7 @@ static inline int flt_start(char *str)
     if ( (*str == '+') || (*str == '-') ) ++str;
     /* TODO: check inf here */
     if ( *str == '.' ) ++str;
-    return isdigit(*str);
+    return isdigit((int) *str);
 }
 /*----------------------------------------------------------------------------*/
 /*
@@ -83,7 +83,7 @@ char *str :  null-terminated string.
 static inline int int_start(char *str)
 {
     if ( (*str == '+') || (*str == '-') ) ++str;
-    return isdigit(*str);
+    return isdigit((int) *str);
 }
 /*----------------------------------------------------------------------------*/
 

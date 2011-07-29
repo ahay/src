@@ -169,7 +169,7 @@ int fprint_grid(FILE * fp, grid a)
 {
   int i;
   fprintf(fp,"Grid data structure, consisting of %d axes:\n",(int) a.dim);
-  for (i=0;i<a.dim;i++) fprint_axis(fp,a.axes[i]);
+  for (i=0;i<(int)a.dim;i++) fprint_axis(fp,a.axes[i]);
   return 0;
 }
 
@@ -189,7 +189,7 @@ int compare_grid(grid g1, grid g2)
   int err=0;
   int i;
   if (g1.dim != g2.dim) return 1;
-  for (i=0;i<g1.dim;i++) err = err || compare_axis(g1.axes[i],g2.axes[i]);
+  for (i=0;i<(int)g1.dim;i++) err = err || compare_axis(g1.axes[i],g2.axes[i]);
   return err;
 }
 
@@ -203,7 +203,7 @@ int get_datasize_grid(grid g)
   int i;
   int sz=1;
   get_n(_n,g);
-  for (i=0;i<g.dim;i++) sz*=_n[i];
+  for (i=0;i<(int)g.dim;i++) sz*=_n[i];
   return sz;
 }
 
@@ -253,7 +253,7 @@ int get_gs(_IPNT gs, grid g)
 >*/
 {
   int i;
-  for (i=0;i<g.dim;i++) {
+  for (i=0;i<(int)g.dim;i++) {
     if (g.axes[i].o<0) gs[i]=(int)((g.axes[i].o-g.axes[i].d*TOL)/(g.axes[i].d));
     else gs[i]=(int)((g.axes[i].o+g.axes[i].d*TOL)/(g.axes[i].d));
   }

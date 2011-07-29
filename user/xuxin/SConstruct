@@ -52,7 +52,6 @@ else:
 if lapack:
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
                       'vecmatop']+lapack)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-std=gnu99','')
 
 ccmains = Split(ccprogs)
 for prog in ccmains:
