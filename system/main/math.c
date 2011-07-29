@@ -20,7 +20,8 @@ output='sin((x+2*y)^power)' > out.rsf
 sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
 sfmath n1=100 type=complex output="exp(I*x1)" > out.rsf
 
-Arguments which are not treated as variables in mathematical expre
+Arguments which are not treated as variables in mathematical expressions:
+datapath=, type=, out=
 
 See also: sfheadermath.*/
 
