@@ -15,12 +15,14 @@ less versatile.
 
 Examples:
 
-sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
+sfmath x=file1.rsf y=file2.rsf power=file3.rsf \
+output='sin((x+2*y)^power)' > out.rsf
 sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
 sfmath n1=100 type=complex output="exp(I*x1)" > out.rsf
 
-See also: sfheadermath.
-*/
+Arguments which are not treated as variables in mathematical expre
+
+See also: sfheadermath.*/
 
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -89,10 +91,11 @@ int main (int argc, char* argv[])
 	arg = argv[i];
 	eq  = strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
-	if (0 == strncmp(arg,"output=",7) ||
-	    0 == strncmp(arg,  "type=",5) ||
-	    0 == strncmp(arg,   "out=",4) ||
-	    0 == strncmp(arg,     "--",2) ||
+    if (0 == strncmp(arg,"datapath=",9) ||
+        0 == strncmp(arg,  "output=",7) ||
+        0 == strncmp(arg,    "type=",5) ||
+        0 == strncmp(arg,     "out=",4) ||
+        0 == strncmp(arg,       "--",2) ||
 	    (eq-arg == 2 &&
 	     (arg[0] == 'n' || 
 	      arg[0] == 'd' || 
