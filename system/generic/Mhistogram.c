@@ -32,7 +32,6 @@ int main(int argc, char* argv[])
     float *fbuf=NULL; /* Input buffer for reading floats */
     float o1, d1;     /* Output axis origin and sampling */
     sf_file in=NULL, out=NULL; /* Input, output files */
-    bool float_inp=false, int_inp=false; /* Input flags */
     sf_datatype inp_type; /* Input data type */
 
     sf_init(argc,argv);
@@ -43,12 +42,10 @@ int main(int argc, char* argv[])
     inp_type = sf_gettype(in);
 
     if (inp_type == SF_FLOAT) {
-        float_inp = true;
         nbuf = BUFSIZ/sizeof(float);
         fbuf = sf_floatalloc(nbuf);
     }
     else if (inp_type == SF_INT) {
-        int_inp = true;
         nbuf = BUFSIZ/sizeof(int);
         ibuf = sf_intalloc(nbuf);
     }
@@ -85,7 +82,7 @@ int main(int argc, char* argv[])
 
     /* Duplicating boilerplate code to avoid conditionals inside loops */
 
-    if (float_inp) {
+    if (inp_type == SF_FLOAT) {
 
         for (; n > 0; n -= nbuf) {
 
@@ -100,7 +97,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    else if (int_inp) {
+    else if (inp_type == SF_INT) {
 
         for (; n > 0; n -= nbuf) {
 
