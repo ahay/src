@@ -478,6 +478,7 @@ class rsfprog(object):
             contents = contents + '.SH COMMENTS\n%s\n' % self.cmts
         pars =  self.pars.keys()
         if pars:
+            contents += '.SH PARAMETERS\n\n'
             pars.sort()
             for par in pars:
                 contents = contents + self.pars[par].man(par)
