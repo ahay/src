@@ -421,13 +421,23 @@ class rsfprog(object):
         books = self.uses.keys()
         if books:
             usedoc = ''
+            usedoc_i = 0
+            usedoc_max = 10
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
-                        usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
+                        if usedoc_i < usedoc_max:
+                            usedoc += '%s/%s/%s\n' % (book,chapter,project)
+                        usedoc_i += 1
+            if usedoc:
+                if usedoc_i > usedoc_max:
+                    usedoc += '%d more examples listed in:\n' % \
+                              (usedoc_i - usedoc_max) 
+                    usedoc += '$RSFROOT/share/doc/madagascar/html/%s.html\n'%\
+                              self.name
             doc = doc + section('used in',usedoc.rstrip())
         doc = doc + section('source',self.file)
         if self.wiki:
@@ -485,16 +495,25 @@ class rsfprog(object):
         books = self.uses.keys()
         if books:
             usedoc = ''
+            usedoc_i = 0
+            usedoc_max = 10
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
-                        usedoc = usedoc + \
-                            '.TP\n.I %s/%s/%s\n' % (book,chapter,project)
+                        if usedoc_i < usedoc_max:
+                            usedoc += '.TP\n.I %s/%s/%s\n' % \
+                                      (book,chapter,project)
+                        usedoc_i += 1
             if usedoc:
                 contents = contents + '.SH USED IN\n%s' % usedoc
+                if usedoc_i > usedoc_max:
+                    contents += '.TP\n%d more examples listed in:\n' % \
+                                (usedoc_i - usedoc_max)
+                    contents += '.TP\n$RSFROOT/share/doc/madagascar/html/%s.html\n'%\
+                                 name
         contents = contents + '.SH SOURCE\n.I %s\n' % self.file
         if self.wiki:
             contents = contents + '.SH DOCUMENTATION\n.BR %s\n' % self.wiki
