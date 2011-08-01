@@ -25,7 +25,6 @@ int main(int argc, char* argv[])
     float *old, *nxt, *cur, *sig, *a, *b1, *b2, *b3, *b4, *b5;
     sf_file in, out, Gmatrix, vel;
     int im,im2,im3,im4,im5,ip,ip2,ip3,ip4,ip5;
-    float pi=SF_PI;
 
     sf_init(argc,argv);
     in  = sf_input("in");
