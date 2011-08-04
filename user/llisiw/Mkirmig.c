@@ -88,14 +88,14 @@ int main(int argc, char* argv[])
     nzx = nz*nx;
 
     table = sf_floatalloc2(nzx,ny);
-    sf_floatread(table[0],nzx*ny,tbl);
+    sf_floatread(table[0],(off_t)nzx*(off_t)ny,tbl);
     sf_fileclose(tbl);
 
     if (NULL != sf_getstring("tablex")) {
 	tbl = sf_input("tablex");
 
 	tablex = sf_floatalloc2(nzx,ny);
-	sf_floatread(tablex[0],nzx*ny,tbl);
+	sf_floatread(tablex[0],(off_t)nzx*(off_t)ny,tbl);
 	sf_fileclose(tbl);
     } else {
 	tablex = NULL;
@@ -151,10 +151,11 @@ int main(int argc, char* argv[])
 	    } 
 	}
         if (!cig) 
-            sf_floatwrite(out[0],nzx,mig);
+            sf_floatwrite(out[0],(off_t)nzx,mig);
     }
     if (cig)
-        sf_floatwrite(out[0],nzx*nh,mig);
+        sf_floatwrite(out[0],(off_t)nzx*(off_t)nh,mig);
 
     exit(0);
 }
+
