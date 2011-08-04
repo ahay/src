@@ -21,13 +21,14 @@
 
 #include <rsf.h>
 
-static off_t seektable (int dim, off_t *n, off_t *m, off_t *f, int *j, 
-			int n1, int n2, off_t *table);
+static off_t seektable (int dim, off_t *n, off_t *m, off_t *f, off_t *j, 
+			off_t n1, off_t n2, off_t *table);
 
 int main (int argc, char *argv[])
 {
-    int i, esize, dim, n1, n2, m1, i2, i1, j1, jump;
-    int i0, j[SF_MAX_DIM];
+    int i, esize, dim, tmp;
+    off_t n1, n2, m1, i2, i1, j1, jump;
+    off_t i0, j[SF_MAX_DIM];
     off_t n[SF_MAX_DIM], m[SF_MAX_DIM], f[SF_MAX_DIM], *table, maxsize;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *label[SF_MAX_DIM], *unit[SF_MAX_DIM], *buf;
@@ -54,7 +55,7 @@ int main (int argc, char *argv[])
 
 	/* get j's */
 	snprintf(key,3,"j%d",i+1);
-	if (!sf_getint(key,j+i)) {
+	if (!sf_getint(key,&tmp)) {
 	    /*( j#=(1,...) jump in #-th dimension )*/
 	    snprintf(key,3,"d%d",i+1);
 	    if (sf_getfloat(key,&a)) {
@@ -63,7 +64,8 @@ int main (int argc, char *argv[])
 	    } else {
 		j[i] = 1;
 	    }
-	} 
+	} else
+            j[i] = tmp;
 
 	/* get f's */	
 	snprintf(key,3,"f%d",i+1);
@@ -194,7 +196,7 @@ int main (int argc, char *argv[])
 
     maxsize = seektable(dim,n,m,f,j,n1,n2,table);
 
-    if (verb) sf_warning("maxsize=%lld",maxsize);
+    if (verb) sf_warning("maxsize=%zu",maxsize);
 
     sf_unpipe(in,maxsize);
 
@@ -216,10 +218,10 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-static off_t seektable(int dim, off_t *n, off_t *m, off_t *f, int *j, 
-		       int n1, int n2, off_t *table)
+static off_t seektable(int dim, off_t *n, off_t *m, off_t *f, off_t *j, 
+		       off_t n1, off_t n2, off_t *table)
 {
-    int i2, i, ii[SF_MAX_DIM];
+    off_t i2, i, ii[SF_MAX_DIM];
     off_t t, t2;
 
     t2 = sf_large_cart2line (dim-1, n+1, f+1);

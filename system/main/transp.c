@@ -33,15 +33,14 @@ memsize=1 command-line parameter to force out-of-core operation.
 
 #include <rsf.h>
 
-static int make_map (int dim1, int dim2, const off_t* n, int i2);
+static off_t make_map (int dim1, int dim2, const off_t* n, off_t i2);
 
 int main(int argc, char* argv[])
 {
-    size_t nbuf;
     int i, dim, n1, n3;
-    int dim1, dim2, i2, i3, *map;
+    int dim1, dim2;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t n[SF_MAX_DIM], pos, memsize, n2, nsiz;
+    off_t n[SF_MAX_DIM], pos, memsize, n2, nsiz, i2, i3, *map, nbuf;
     char key1[7], key2[7], *val, **dat1, **dat2, *buf, *mapf;
     sf_file in, out;
     FILE *mapfile;
@@ -129,8 +128,8 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (n2 < memsize && memsize < INT_MAX) { /* keep map incore */
-	map = sf_intalloc (n2);
+    if (n2 < memsize) { /* keep map incore */
+	map = (off_t*)sf_alloc (n2, sizeof(off_t));
 	nbuf = 0;
 
 	for (i2=0; i2 < n2; i2++) {
@@ -139,13 +138,13 @@ int main(int argc, char* argv[])
 
 	mapfile = NULL;
     } else { /* put map out of core */
-	nbuf = BUFSIZ/sizeof(int);
-	map = sf_intalloc(nbuf);
+	nbuf = BUFSIZ/sizeof(off_t);
+	map = (off_t*)sf_alloc(nbuf, sizeof(off_t));
 	mapfile = sf_tempfile(&mapf,"w+b");
 
 	for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
 	    if (nbuf > nsiz) nbuf=nsiz;
-	    for (i=0; i < (int) nbuf; i++, i2++) {
+	    for (i=0; i < nbuf; i++, i2++) {
 		map[i] = make_map (dim1, dim2, n, i2);
 	    }
 	    if (nbuf != fwrite(map,sizeof(int),nbuf,mapfile)) 
@@ -153,21 +152,21 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if ((off_t) n1*n2 < memsize) {
+    if ((off_t)n1*(off_t)n2 < memsize) {
 	dat1 = sf_charalloc2 (n1,n2);
 	dat2 = sf_charalloc2 (n1,n2);
 	
 	for (i3=0; i3 < n3; i3++) {
-	    sf_charread(dat1[0],n1*n2,in);
+	    sf_charread(dat1[0],(off_t)n1*(off_t)n2,in);
 	    for (i2=0; i2 < n2; i2++) {
 		memcpy(dat2[i2],dat1[map[i2]],n1); 
 	    }
-	    sf_charwrite(dat2[0],n1*n2,out);
+	    sf_charwrite(dat2[0],(off_t)n1*(off_t)n2,out);
 	}
     } else {
 	sf_warning("Going out of core... "
-		   "(increase memsize=%lld for in-core)",memsize/(1 << 20));
-	sf_unpipe(in,(off_t) n1*n2*n3);
+		   "(increase memsize=%zu for in-core)",memsize/(1 << 20));
+	sf_unpipe(in,(off_t)n1*(off_t)n2*(off_t)n3);
 
 	buf = sf_charalloc (n1);
 	
@@ -175,7 +174,7 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) {
 	    if (NULL == mapfile) {
 		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,pos+(off_t) (map[i2]+i3*n2)*n1,SEEK_SET);
+		    sf_seek(in,pos+(off_t) (map[i2]+i3*(off_t)n2)*(off_t)n1,SEEK_SET);
 		    sf_charread (buf,n1,in);
 		    sf_charwrite(buf,n1,out);
 		}
@@ -187,8 +186,8 @@ int main(int argc, char* argv[])
 		    if (nbuf > nsiz) nbuf=nsiz;
 		    if (nbuf != fread(map,sizeof(int),nbuf,mapfile)) 
 			sf_error("map read error:");
-		    for (i=0; i < (int) nbuf; i++) {
-			sf_seek(in,pos+(off_t) (map[i]+i3*n2)*n1,SEEK_SET);
+		    for (i=0; i < nbuf; i++) {
+			sf_seek(in,pos+(off_t) (map[i]+i3*(off_t)n2)*(off_t)n1,SEEK_SET);
 			sf_charread (buf,n1,in);
 			sf_charwrite(buf,n1,out);
 		    }
@@ -205,10 +204,9 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-static int make_map (int dim1, int dim2, const off_t* n, int i2)
+static off_t make_map (int dim1, int dim2, const off_t* n, off_t i2)
 {
-    int i, j;
-    int ii[SF_MAX_DIM];
+    off_t i, j, ii[SF_MAX_DIM];
 
     /* from line (output) to cartesian */
     ii[dim2-1] = i2%n[dim2-1];
