@@ -413,7 +413,7 @@ of missing data values.
 Note:
 Here I take the main goal to be the clarity of the code,
 not the efficiency or accuracy of the solution.
-So, if your problem consumes too many resources,
+So, if your application consumes too many resources,
 and if you have many more known points than missing ones,
 maybe you should fit
 $\bold y \approx \bold F_u \bold m_u$
@@ -492,11 +492,11 @@ As usual, we find a direction to go $\Delta \bold m$
 by the gradient of the residual energy.
 \begin{equation}
 \Delta\bold m
-\eq {\partial \over\partial \bold m'}\ \bold r'\bold r
-\eq \left( {\partial \over\partial \bold m'} \ \bold r' \right) \bold r
-\eq \left( {\partial \over\partial \bold m'} \
-(\bold m'\bold J'\bold F' + \bold r'_0)                 \right) \bold r
-\eq  \bold J' \bold F' \bold r
+\eq \frac{\partial }{\partial \bold m\T}\ \bold r\T\bold r
+\eq \left( \frac{\partial }{\partial \bold m\T} \ \bold r\T \right) \bold r
+\eq \left( \frac{\partial }{\partial \bold m\T} \
+(\bold m\T\bold J\T\bold F\T + \bold r\T_0)                 \right) \bold r
+\eq  \bold J\T \bold F\T \bold r
 \label{eqn:fooo}
 \end{equation}
 
@@ -511,10 +511,10 @@ With this initialization completed,
 we begin an iteration loop.
 First we compute $\Delta m$ from equation (\ref{eqn:fooo}).
 \begin{equation}
-\Delta\bold m \quad\longleftarrow\quad \bold J' \bold F' \bold r
+\Delta\bold m \quad\longleftarrow\quad \bold J\T \bold F\T \bold r
 \end{equation}
-$\bold F'$ applies a {\it crosscorrelation} of the filter to the residual
-and then $\bold J'$ sets to zero any changes proposed to known data values.
+$\bold F\T$ applies a {\it crosscorrelation} of the filter to the residual
+and then $\bold J\T$ sets to zero any changes proposed to known data values.
 Next, compute the change in residual $\Delta\bold r$
 from the proposed change in the data $\Delta\bold m$.
 \begin{equation}
@@ -630,7 +630,7 @@ like as if we had never calculated the extra  $\Delta \bold m$'s.
 \item
         Show that the interpolation curve in Figure~\ref{fig:mparab} is not
         parabolic as it appears, but cubic.
-        ({\sc hint}:  First show that $(\nabla^2)'\nabla^2 u = \bold 0$.)
+        ({\sc hint}:  First show that $(\nabla^2)\T\nabla^2 u = \bold 0$.)
         \item
         Verify by a program example that the number of iterations
         required with simple constraints is the number of free parameters.
@@ -800,8 +800,8 @@ We have already coded a 2-D gradient operator
 Let us combine it with its adjoint to get the 2-D laplacian operator.
 (You might notice that the laplacian operator is ``self-adjoint'' meaning
 that the operator does the same calculation that its adjoint does.
-Any operator of the form $\bold A'\bold A$ is self-adjoint because
-$(\bold A'\bold A)'=\bold A'\bold A''=\bold A'\bold A$. )
+Any operator of the form $\bold A\T\bold A$ is self-adjoint because
+$(\bold A\T\bold A)\T=\bold A\T (\bold A\T)\T=\bold A\T\bold A$. )
 \par
 \opdex{laplac2}{Laplacian in 2-D}{34}{78}{system/generic} 
 Subroutine \texttt{lapfill()}
@@ -816,7 +816,7 @@ implemented by module \texttt{laplac2} \vpageref{lst:laplac2}.
 
 \par
 Subroutine \texttt{lapfill()}
-can be used for each of our two problems,
+can be used for each of our two applications,
 (1) extending the seismic data to fill space, and
 (2) fitting the map exactly to the wells and approximately to the seismic data.
 When extending the seismic data,
@@ -880,8 +880,8 @@ and $\nabla^2$ interpolates with cubics.
 This is because the fitting goal
 $\bold 0 \approx \nabla \bold m$,
 leads to
-${\partial \over\partial \bold m'} \bold m'\nabla'\nabla \bold m = \bold 0$
-or $\nabla'\nabla \bold m = \bold 0$, whereas the fitting goal 
+$\frac{\partial }{\partial \bold m\T} \bold m\T\nabla'\nabla \bold m = \bold 0$
+or $\nabla\T\nabla \bold m = \bold 0$, whereas the fitting goal 
         $\bold 0 \approx \nabla^2 \bold m$
 leads to
         $\nabla^4 \bold m = \bold 0$
@@ -950,7 +950,7 @@ I used the gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
 % I used the \bx{roughening operator} \texttt{rufftri2()} \vpageref{lst:rufftri2},
 % which is an impulse minus a broad smoothing operator.
 The solver is \texttt{grad2fill()}.
-\moddex{igrad2}{finite-difference gradient}{45}{57}{system/generic}
+\moddex{igrad2}{finite-difference gradient}{45}{57}{api/c}
 \moddex{grad2fill}{low cut missing data}{52}{60}{system/generic}
 
 %\par
@@ -1163,7 +1163,7 @@ with the adjoint operator:
  \quad\longleftarrow\quad
  \left[
  \begin{array}{cc}
-   \bold F' &   \bold A'
+   \bold F\T &   \bold A\T
  \end{array}
  \right]
  \
@@ -1239,10 +1239,10 @@ between data points
 so the solution there is a straight line.
 Theoretically it should be a straight line
 because a straight line has a vanishing second derivative,
-and that condition arises by differentiating by $\bold x'$,
+and that condition arises by differentiating by $\bold x\T$,
 the minimized quadratic form
-$\bold x' \bold A' \bold A \bold x$, and getting
-$         \bold A' \bold A \bold x=\bold 0$.
+$\bold x\T \bold A\T\bold A \bold x$, and getting
+$         \bold A\T\bold A \bold x=\bold 0$.
 (By this logic, the curves between data points in Figure \ref{fig:im1-2+1}
 must be cubics.)
 The $(1,-1)$ result is shown in Figure \ref{fig:im1-1a}.
@@ -1284,7 +1284,7 @@ at high frequencies but need not do so at low frequencies.
 \end{equation}
 \par
 Although (\ref{eqn:toldisregression}) is the way I originally formulated
-the well-fitting problem, I abandoned it for several reasons:
+the well-fitting application, I abandoned it for several reasons:
 First, the map had ample pixel resolution compared to other sources of error,
 so I switched from linear interpolation to binning.
 Once I was using binning,
@@ -1386,19 +1386,15 @@ My simplest suggestion is to choose $\epsilon$
 so that the residual of data fitting matches that of model styling.
 Thus
 \begin{equation}
-\epsilon \eq \sqrt{
-\bold r_d \cdot \bold r_d
-\over
-\bold r_m \cdot \bold r_m 
-}
+\epsilon \eq \sqrt{\frac{ \bold r_d \cdot \bold r_d }{ \bold r_m \cdot \bold r_m }}
 \end{equation}
 My second suggestion is to think of the force on our final solution.
 In physics, force is associated with a gradient.
 We have a gradient for the data fitting
 and another for the model styling:
 \begin{eqnarray}
-\bold g_d &=& \bold L' \bold W' \bold r_d  \\
-\bold g_m &=& \bold A' \bold r_m
+\bold g_d &=& \bold L\T \bold W\T \bold r_d  \\
+\bold g_m &=& \bold A\T \bold r_m
 \end{eqnarray}
 We could balance these forces by the choice
 \begin{equation}
@@ -1410,7 +1406,7 @@ We could balance these forces by the choice
 \end{equation}
 
 Although we often ignore $\epsilon$ in discussing the formulation
-of a problem, when time comes to solve the problem, reality intercedes.
+of an application, when time comes to solve the problem, reality intercedes.
 Generally, $\bold r_d$ has different physical units than $\bold r_m$
 (likewise $\bold g_d$ and $\bold g_m$)
 and we cannot allow our solution
@@ -1431,7 +1427,7 @@ recompute $\epsilon$, and solve the problem again.
 I have never seen a case where more than one iteration was necessary.
 
 \par
-People who work with small problems
+People who work with small applications
 (less than about $10^3$ vector components)
 have access to an attractive theoretical approach
 called cross-validation.
@@ -1445,7 +1441,7 @@ The quality of these predictions
 is a function of $\epsilon$
 and this provides a guide to finding it.
 My objections to cross validation are two-fold:
-First, I don't know how to apply it in the large problems
+First, I don't know how to apply it in the large applications
 like we solve in this book
 (I should think more about it);
 and second,

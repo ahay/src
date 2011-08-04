@@ -350,6 +350,7 @@ extern int mkstemp (char *tmpl);
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include <unistd.h>
 #include <sys/time.h>
