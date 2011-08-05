@@ -1296,7 +1296,7 @@ for i in range(5):
 	Flow('full_Integrand_bot_'+str(i+2),['full_pAS_vB0_bott_'+str(i+2),'full_vAS_pB0_bott_'+str(i+2)],'add ${SOURCES[1]} mode=a scale=1,1')
 
 	Result('full_Integrand_bot_'+str(i+2),
-	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
+	       '''window j1=10 | grey title="bottom #%d: total integrand" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('full_Integrand_bot_'+str(i+2),
