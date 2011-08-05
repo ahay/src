@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
     /* if y, compute AVO-friendly semblance */
 
     if (NULL == (type = sf_getstring("type"))) {
-	/* type of semblance */
+	/* type of semblance (avo,diff,sembl,power,weighted) */
 	if (asembl) {
 	    type="avo";
 	} else if (dsembl) {

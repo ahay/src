@@ -324,7 +324,8 @@ def build_install_f90(env, progs_f90, srcroot, bindir, api, bldroot, glob_build)
         elif F90base == 'ifort':
             env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
-        env.Prepend(LIBS='rsff90', # order matters when linking
+        env.Prepend(LIBS=['rsff90','rsf'], # order matters when linking
+                    LIBPATH=[os.path.join(srcroot,'lib')],
                     F90PATH=os.path.join(srcroot,'include'))
 
         for prog in mains_f90:
@@ -464,28 +465,32 @@ class UserSconsTargets:
         if glob_build:
             env = env.Clone()
         else:
-            SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
             bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
-        if self.c == None:
+            if self.f90:
+                SConscript(os.path.join(srcroot, 'api', 'f90', 'SConstruct'))
+            else:
+                SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
+            
+        if not self.c:
             docs_c = None
         else:
             docs_c = build_install_c(env, self.c, srcroot, bindir, glob_build, bldroot)
-        if self.c_mpi == None:
+        if not self.c_mpi:
             docs_c_mpi = None
         else:
             docs_c_mpi = build_install_c_mpi(env,self.c_mpi, srcroot, bindir,glob_build,bldroot)
 
         api = env.get('API',[])
-        if self.f90 == None:
+        if not self.f90:
             docs_f90 = None
         else:
             docs_f90 = build_install_f90(env, self.f90, srcroot, bindir, api, bldroot,
                                          glob_build)
         if glob_build:
-            if self.py == None:
+            if not self.py:
                 docs_py = None
             else:
                 docs_py = install_py_mains(env, self.py, bindir)
-            if self.py_modules != None:
+            if self.py_modules:
                 install_py_modules(env, self.py_modules, pkgdir)
             install_self_doc(env, pkgdir, docs_c, docs_py, docs_f90, docs_c_mpi)
