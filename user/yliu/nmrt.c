@@ -99,7 +99,7 @@ void drecov_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
 void nmrt_oper (bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< linear operator >*/
 {
-    sf_adjnull (!adj, add, nm, nd, mod, dat);
+    sf_adjnull ((bool)!adj, add, nm, nd, mod, dat);
 
     if (adj) {
 	if (freq) {

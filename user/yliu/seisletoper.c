@@ -749,7 +749,7 @@ void seislet_destruct(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j, i1;
-    inv=!adj;
+    inv=(bool)!adj;
 
     sf_adjnull (adj,add,nx,ny,x,y);
 
@@ -793,7 +793,7 @@ void seislet_destruct(bool adj, bool add, int nx, int ny, float *x, float *y)
 
     }
 
-    transform(!adj);
+    transform((bool)!adj);
 
     if (adj) {
 	for (it=0; it < nx; it++) {
@@ -829,7 +829,7 @@ void seislet_construct(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j, i1;
-    inv=!adj; 
+    inv=(bool)!adj; 
 
     sf_adjnull (adj,add,nx,ny,x,y);
 

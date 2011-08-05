@@ -115,9 +115,9 @@ void slant_lop (bool adj,
 	    } else {
 		if (rho) {
 		    sf_chain(aastretch_lop,sf_halfint_lop,
-			     !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
+			     (bool)!adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
 		} else {
-		    aastretch_lop(!adj,true,nt,nt,data+ix*nt,modl+is*nt);
+		    aastretch_lop((bool)!adj,true,nt,nt,data+ix*nt,modl+is*nt);
 		}
 	    }
 	} /* ix */
