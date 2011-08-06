@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool mig, cmplx, sub;
+    bool mig, cmplx, sub, stat;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
     int im, i, j, m1, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, dh;
@@ -45,14 +45,14 @@ int main(int argc, char* argv[])
 	data = sf_input("in");
 	image = sf_output("out");
 
-	if (!sf_histint(data,"n1",&nh));
-	if (!sf_histfloat(data,"d1",&dh));
+	stat = sf_histint(data,"n1",&nh);
+	stat = sf_histfloat(data,"d1",&dh);
 
-	if (!sf_histint(data,"n2",&nx));
-	if (!sf_histfloat(data,"d2",&dx));
+	stat = sf_histint(data,"n2",&nx);
+	stat = sf_histfloat(data,"d2",&dx);
 
-	if (!sf_histint(data,"n3",&nt));
-	if (!sf_histfloat(data,"d3",&dt));
+	stat = sf_histint(data,"n3",&nt);
+	stat = sf_histfloat(data,"d3",&dt);
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -69,11 +69,11 @@ int main(int argc, char* argv[])
 	image = sf_input("in");
 	data = sf_output("out");
 
-	if (!sf_histint(image,"n1",&nz));
-	if (!sf_histfloat(image,"d1",&dz));
+	stat = sf_histint(image,"n1",&nz);
+	stat = sf_histfloat(image,"d1",&dz);
 
-	if (!sf_histint(image,"n2",&nx));
-	if (!sf_histfloat(image,"d2",&dx));
+	stat = sf_histint(image,"n2",&nx);
+	stat = sf_histfloat(image,"d2",&dx);
 
 	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
 	/* time samples (if modeling) */

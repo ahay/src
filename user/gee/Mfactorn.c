@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool *mm;
+    bool *mm, stat;
     int ntxy, nt, nx, ny, pt, px, i, niter, npx, npy, miter, n[3], m[3];
     float eps, *pp, *qq, *x;
     nfilter pfilt;
@@ -44,8 +44,8 @@ int main(int argc, char* argv[])
     n[0] = nt; n[1] = nx; n[2] = ny;
 
     if (!sf_getfloat("eps",&eps)) eps=0.001;
-    if (!sf_getint("nt",&pt));
-    if (!sf_getint("nx",&px));
+    stat = sf_getint("nt",&pt);
+    stat = sf_getint("nx",&px);
     m[0] = pt; m[1] = px; m[2] = px;
 
     if (!sf_getint("npx",&npx)) npx=100;
