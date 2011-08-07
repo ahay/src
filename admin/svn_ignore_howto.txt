@@ -3,6 +3,8 @@ directory, then
 
 svn propset svn:ignore -F .svnignore .
 
+The command above has to be repeated after each new edit of .svnignore
+
 Alternately, use
 
 svn propedit svn:ignore .
