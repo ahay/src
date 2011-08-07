@@ -1605,6 +1605,10 @@ pkg['numpy'] = {'fedora':'numpy',
                 'ubuntu':'python-scipy, python-numpy-dev'}
 
 def python(context):
+    if '-static-intel' in context.env.get('LINKFLAGS',''):
+        stderr_write(
+        'The Python API needs shared libs that cannot be built with -static-intel',
+        'yellow_on_red')
     context.Message("checking for SWIG ... ")
     if 'swig' in Environment().get('TOOLS'):
         context.Result( WhereIs('swig') )
