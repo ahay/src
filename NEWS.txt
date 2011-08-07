@@ -20,6 +20,7 @@ To programs:
 * sfhistogram now takes integer input as well
 * sfhist2: 2-D float with integer or float inputs
 * in-core large-file (>4Gb) support in sfwindow and sftransp
+* sfsparsify: put nonzero elements of 2-D array into sparse form
 
 ===Bug fixes===
 

@@ -9,3 +9,4 @@ sfseekwin
 sfgettype
 sffileflush
 sfleftsize
+sfsparsify
