@@ -93,7 +93,11 @@ for file in ('axis','stdplot'):
 if root:
     main = 'sflibplot.py'
 
-    docs = map(env.Doc,['stdplot.c'])
+    env.Command('Mstdplot.c',['stdplot.c','gplot.c'],
+                'cat $SOURCES > $TARGET')
+
+    docs = [env.Doc('stdplot','Mstdplot')]
+    env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
 
     env.Install('../../framework/rsf',doc)

@@ -7,11 +7,11 @@
 #include "axis.h"
 #include "vplot.h"
 
-static int axisfat, axiscol, labelfat, *fat, *symbolsz, *col, titlefat;
+static int axisfat, axiscol, labelfat, *fat, *col, titlefat;
 static float labelsz, min1, max1, min2, max2, inch1, inch2, titlesz; 
 static float backcol[3],fillcol[3], xur, xll, yur, yll, *dashtype;
 static float screenratio, screenht, screenwd;
-static char *symbol, *title, blank[]=" ";
+static char *title, blank[]=" ";
 static bool transp, yreverse, xreverse, where1, where2, labelrot, wheretics;
 static bool fmin1, fmax1, fmin2, fmax2, wheretitle, verttitle, wanttitle;
 
@@ -656,37 +656,39 @@ void vp_plot_init(int n2)
 
     dashtype = sf_floatalloc(n2);
     if (!sf_getfloats ("dash",dashtype,n2)) {
+	/*  line dash type	
+	    0 continuos (default)
+	    1 fine dash
+	    2 fine dot
+	    3 dash
+	    4 large dash
+	    5 dot dash
+	    6 large dash small dash
+	    7 double dot
+	    8 double dash
+	    9 loose dash  The part after the decimal point determines the pattern repetition interval */	   
 	for (i = 0; i < n2; i++) 
 	    dashtype[i] = 0.;
     }
 
-    if (NULL == (symbol = sf_getstring("symbol"))) {	
-	symbol = sf_charalloc(n2);
-	memset(symbol,' ',n2);
-    } else {
-	len = strlen(symbol);
-	if (len < n2) {
-	    symbol = (char*) sf_realloc(symbol,n2,sizeof(char));
-	    for (i=len; i < n2; i++) {
-		symbol[i] = symbol[i % len];
-	    }
-	}
-    }
-
     fat = sf_intalloc(n2);
     if (!sf_getints("plotfat",fat,n2)) {
+	/* line fatness */
 	for (i = 0; i < n2; i++)
 	    fat[i] = 0;
-    }
-
-    symbolsz = sf_intalloc(n2);
-    if (!sf_getints("symbolsz",symbolsz,n2)) {
-	for (i = 0; i < n2; i++)
-	    symbolsz[i] = 2;
     }
     
     col = sf_intalloc(n2);
     if (!sf_getints("plotcol",col,n2)) {
+	/* line color 
+	   7 white
+	   6 yellow (default)
+	   5 cyan
+	   4 green
+	   3 magenta
+	   2 red
+	   1 blue
+	   0 black */
 	for (i = 0; i < n2; i++)
 	    col[i] = 6 - (i % 6);
     }
