@@ -36,7 +36,7 @@ static void getminmax(const float* f, float* min, float* max);
 
 int main(int argc, char* argv[])
 {
-    bool transp;
+    bool transp, start;
     int n1, n2, n3, i1, i2, i3, len;
     float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    
@@ -149,6 +149,8 @@ int main(int argc, char* argv[])
 		symsize = symbolsz[i2];
 	    } 
 
+	    start = true;
+
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
 		yi = y[i2][i1];
@@ -160,11 +162,14 @@ int main(int argc, char* argv[])
 			vp_where (&xc, &yc);
 			vp_tjust (TH_SYMBOL, TV_SYMBOL);
 			vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
-		    } else if (i1==0) {
+		    } else if (start) {
 			vp_umove(xi,yi);
+			start=false;
 		    } else {
 			vp_udraw(xi,yi);
 		    }
+		} else {
+		    start=true;
 		}
 	    }
 	}
