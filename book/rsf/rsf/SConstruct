@@ -284,26 +284,26 @@ Paper('slides',lclass='beamer',use='',
       ''')
 
 # speaker's handout
-Paper('handout',lclass='beamer',use='',
-      options='mathserif,12pt,handout,compress,notes=show',
-      include=r'''
-      \mode<presentation>{\usetheme{Boadilla}}
-      \usepackage{color}
-      \usepackage{listings}
-      \usepackage{amsmath}
-      \usepackage{amssymb}
-      \usepackage{amsbsy}
-      \usepackage[absolute,overlay]{textpos}
-      \AtBeginSection[]{
-          \begin{frame}<bemaer>
-              \frametitle{Outline}
-              \tableofcontents[currentsection,currentsubsection]
-          \end{frame}
-      }
-      ''')
+#Paper('handout',lclass='beamer',use='',
+#      options='mathserif,12pt,handout,compress,notes=show',
+#      include=r'''
+#      \mode<presentation>{\usetheme{Boadilla}}
+#      \usepackage{color}
+#      \usepackage{listings}
+#      \usepackage{amsmath}
+#      \usepackage{amssymb}
+#      \usepackage{amsbsy}
+#      \usepackage[absolute,overlay]{textpos}
+#      \AtBeginSection[]{
+#          \begin{frame}<bemaer>
+#              \frametitle{Outline}
+#              \tableofcontents[currentsection,currentsubsection]
+#          \end{frame}
+#      }
+#      ''')
 
 End(options='manuscript',use='hyperref',
     color='''
-          const rand logo fern man spiral
+          const rand logo fern man spiral t10
           fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9
           ''')
