@@ -22,19 +22,15 @@
 #------------------------------------------------
 # CMPs for analysis
 
-cmp1=181 cmp2=229 cmp3=277 
-cmp4=325
-cmp5=373 cmp6=421 cmp7=469 
-cmp8=517 cmp9=565
-
-numCMPs=9
-
+eval $1
+echo parm1 is $1
+echo  cmp1 and numCMPs $cmp1 $numCMPs
 #------------------------------------------------
 # File names
 
-indata=/home/karl/data/alaska/31-81/velfiltcdpsmute.su 
-outpicks=vpick.txt  # ASCII file
-inpicks=$outpicks
+indata=$2
+outpicks=$3  # ASCII file
+inpicks=$4
 
 #######################################################3
 #######################################################3
@@ -56,7 +52,7 @@ XBOXVELAN=10 # kls 1350 puts it on second screen
 # these parameters work nicely to put plots on
 # my 2nd screen. I turn them on by changing 
 # the next line to:    if [ 1 ] 
-if [ 0 -eq 1 ]  
+if [ 1 -eq 1 ]  
 then
     echo "******** in if ***"
     HBOX=1000    # originally 450
@@ -73,14 +69,17 @@ XBOXNMOCMP=`expr $XBOXCMP + $WBOXCMP`
 # Processing variables
 
 # Semblance variables
-nvs=100  # number of velocities
-dvs=100   # velocity intervals
-fvs=7000 # first velocity
+nvs=101   # number of velocities
+dvs=$6   # velocity interval
+fvs=$5    # first velocity
+
+# Compute last semblance (velan) velocity
+lvs=`echo "$fvs + (( $nvs - 1 ) * $dvs )" | bc -l`
 
 # CVS variables
-fc=7000 # first CVS velocity
-lc=16000 # last CVS velocity
-nc=10   # number of CVS velocities (panels)
+fc=$fvs # first CVS velocity
+lc=$lvs # last CVS velocity - now same at the last semblance velocity
+nc=11   # number of CVS velocities (panels)
 SPAN=11   # ODD number of CMPs to stack into central CVS
 
 #================================================
@@ -90,9 +89,6 @@ SPAN=11   # ODD number of CMPs to stack into central CVS
 # Last Vel =  fvs + (( nvs-1 ) * dvs ) = lvs
 #     5000 =  500 + ((  99-1 ) * 45  )
 #     3900 = 1200 + (( 100-1 ) * 27  )
-
-# Compute last semblance (velan) velocity
-lvs=`echo "$fvs + (( $nvs - 1 ) * $dvs )" | bc -l`
 
 #------------------------------------------------
 
