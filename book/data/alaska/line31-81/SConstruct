@@ -1,11 +1,39 @@
 from rsf.suproj import * 
-# need to add the velocity analysis script
-# need to add migration
 # need to try sudivstack
 
 #################### 
 # Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
 ####################
+
+# first download the display of the previous stack
+# download and view the image of the previous stack:
+Fetch('31_81_IM.JPG',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='IMAGES')
+Result('prevstack','31_81_IM.JPG',
+       'oodraw ${SOURCES[0]}',stdin=0)
+
+# download and view the survey notes:
+Fetch('31_81_S.PDF',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='DOCUMENTS')
+Result('surveylog','31_81_S.PDF',
+       'acroread ${SOURCES[0]}',stdin=0)
+
+# download and view the observer notes:
+Fetch('31_81_O.PDF',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='DOCUMENTS')
+Result('observerlog','31_81_O.PDF',
+       'acroread ${SOURCES[0]}',stdin=0)
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
@@ -21,16 +49,21 @@ for file in rawsegy  :
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
 
-
-Fetch('31_81_PR.SGY',
-      server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
-      dir='PROCESSED')
-
-
 # concatinate the input files
 Flow ('line', rawsegy,
      'cat ${SOURCES[:3]}',stdin=0)
+
+# you can make this list with the command scons list1.su
+Flow('list1','line','surange; echo list1 complete',stdout=0)
+
+# you can make this list with the command scons list2.su
+Flow('list2','line',
+     '''
+     suwind count=3000 
+     | sugethw key=fldr,tracf,cdp,cdpt,offset ;
+     echo list2 complete
+     ''',
+     stdout=0)
 
 # display the first 3000 traces
 
@@ -43,31 +76,23 @@ Result('zoomfirst','line',
        suximage perc=90
        ''')
 
-#Result('firstmovie','line',
-#       '''
-#       suxmovie n2=101 loop=1 fframe=1 dframe=1 
-#                title="record %g" perc=20 
-#       ''')
+Result('firstmovie','line',
+       '''
+       suxmovie n2=101 loop=1 fframe=1 dframe=1 
+                title="record %g" perc=20 
+       ''')
 
 Result('firstrec24','line',
        '''
        suwind key=tracl min=2324 max=2424 tmin=0 tmax=6 |
        suximage perc=90
        ''')
+
 Flow ('hdrfile.txt','line',
      'sugethw output=geom key=tracl,fldr,tracf')
  
-#Flow ('InterpText.class','InterpText.java',
-#     '''
-#     javac ${SOURCE}
-#     ''', stdin=0)
-
-#Flow ('hdrfile1.txt',['hdrfile.txt','InterpText.class'],
-#     ''' 
-#     java InterpText
-#     ''',stdin=0)
-
-Flow ('hdrfile1.txt',['hdrfile.txt','InterpText.py'],
+Flow ('hdrfile1.txt',
+      'hdrfile.txt InterpText.py spnElev.txt recnoSpn.txt',
      ''' 
      ./InterpText.py
      ''',stdin=0)
@@ -108,20 +133,11 @@ Flow ('allshots', 'line binary_hdrfile1.dat',
 # 	''')
 
 	
-# display traces 1010-1250 first 3100 ms (or 1550 samples)
-#Result('second','line',
-#       '''
-#       window f2=1010 n2=240 n1=1550 |
-#       agc rect1=250 rect2=100 |
-#       grey title="First 3000 traces" pclip=70
-#       ''')
-
-#Fetch('31_81_PR.SGY',
-#	server='http://certmapper.cr.usgs.gov',
-#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-#      	  dir='PROCESSED')
-
-# convert stack and view it:
+# download, convert, and view previous processing stack
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
 file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],
      '31_81_PR.SGY',segyread + '''
@@ -137,14 +153,14 @@ Result('zoomcheckstack','checkstack',
        suximage title="zoom checkstack" perc=90
        ''')
 
-Flow('allvelfilt_shot','allshots alaska_velfilt.sh',
+Flow('allvelfilt_shot','allshots alaskavelfilt.sh',
      './${SOURCES[1]} 100 155')
 
-#Result('movie_velfilt','allvelfilt_shot',
-#	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-#                 title="record %g" perc=20
-#	''')
+Result('movie_velfilt','allvelfilt_shot',
+	'''
+	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+                 title="record %g" perc=20
+	''')
 
 Result('velfiltrec24','allvelfilt_shot',
        '''
@@ -152,39 +168,27 @@ Result('velfiltrec24','allvelfilt_shot',
        suximage perc=90
        ''')
 
-# sergey did this, but it did not work.  I just used a string
-#tnmo=[0000,.339,.607,.707,.872,1.125,
-#      1.358,1.652,2.091,2.349,2.859,6.000]
-#vnmo=[7752,8074,7964,7781,8124,08754,
-#      08931,09721,10425,10742,12518,16552]
-#
-#tnmo = ','.join(map(str,tnmo))
-#vnmo = ','.join(map(str,vnmo))
-
-tnmo='0000,.339,.607,.707,.872,1.125,1.358,1.652,2.091,2.349,2.859,6.000'
-vnmo='7752,8074,7964,7781,8124,8754,8931,9721,10425,10742,12518,16552'
 Flow('velfiltcdpsmute','allvelfilt_shot',
      '''
      susort cdp |
      sunmo 
-       tnmo=%s
-       vnmo=%s |
-     sumute \
-       xmute=-5225,-2970,-55,55,2970,5225 \
-       tmute=.700,.280,.100,.100,.280,.700 \
-       mode=0 \
-       key=offset |
+       par=vbruteorig.txt |
+     sumute 
+       xmute=-5225,-2970,-55,55,2970,5225 
+       tmute=.700,.280,.100,.100,.280,.700 
+       mode=0 
+       key=offset 
+       taper=50 |
      sunmo 
-       tnmo=%s
-       vnmo=%s
+       par=vbruteorig.txt
        invert=1
-     ''' % (tnmo,vnmo,tnmo,vnmo)) 
+     ''' ) 
 
-#Result('movie_cdps','velfiltcdpsmute',
-#	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-#        title="record %g" perc=20
-# 	''')
+Result('movie_cdps','velfiltcdpsmute',
+	'''
+	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+        title="record %g" perc=20
+ 	''')
 
 Result('cdp250-251','velfiltcdpsmute',
        '''
@@ -192,7 +196,14 @@ Result('cdp250-251','velfiltcdpsmute',
        suwigb perc=90
        ''')
 
-Flow('velfiltcdpsnmo',['velfiltcdpsmute','vpick.txt'],
+Flow('vbrute.txt','vbruteorig.txt velfiltcdpsmute',
+     '''
+     ./iva.sh
+     "cmp1=373 numCMPs=1" 
+     ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
+     ''',stdout=0,stdin=0)
+
+Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
      '''
      suchw 
        key1=tstat 
@@ -211,7 +222,7 @@ Flow('velfiltcdpsnmo',['velfiltcdpsmute','vpick.txt'],
        hdrs=1 
        sign=-1 
      | sunmo 
-       par=vpick.txt 
+       par=${SOURCES[1]}
      | sugain 
        agc=1 
        wagc=.1 
@@ -220,13 +231,14 @@ Flow('velfiltcdpsnmo',['velfiltcdpsmute','vpick.txt'],
        tmute=.100,.280,.700 
        mode=0 
        key=offset
-   ''')	
-
-#Result('movie_velfiltcdpsnmo','velfiltcdpsnmo',
-#	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-#                  title="velfiltcdpsnmo record %g" perc=20
-# 	''')
+       taper=50
+   ''')
+	
+Result('movie_velfiltcdpsnmo','velfiltcdpsnmo',
+	'''
+	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+                  title="velfiltcdpsnmo record %g" perc=20
+ 	''')
 
 Flow('brutestack','velfiltcdpsnmo',
      '''
@@ -246,24 +258,24 @@ Result('zoombrutestack','brutestack',
        suximage title="brutestack" perc=90
        ''')
 
-# do inverse nmo, 1 function nmo and compare residual statics.  compare
-# velanalysis after residual statics.
-
+# apply bandpass filter, select time window, and resample to 1 ms before
+# residual statics.  
 Flow('statics_in','velfiltcdpsnmo',
      '''
+     sufilter f=2,6,50,60 |
      suwind tmin=1.0 tmax=3.0 | 
-     suresamp rf=2
+     suresamp rf=2 comment="upsample to 1 ms"
      ''')
 
 Flow('sourcestatic.dat recstatic.dat',
      'statics_in',
      '''
      suresstat \
-        ssol=sourcestatic.dat 
-        rsol=recstatic.dat 
+        ssol=${TARGETS[0]}
+        rsol=${TARGETS[1]}
         niter=5 
         ntraces=5280 
-        ntpick=100 samples 
+        ntpick=25 comment="samples at 1 ms"
         nshot=167
         nr=668 
         nc=636 
@@ -278,10 +290,95 @@ Result('sourcestatic','sourcestatic.dat',
 Result('recstatic','recstatic.dat',
        'xwigb n1=668 title="receiver static"')    
 
-Flow('rstack',
-     'velfiltcdpsnmo sourcestatic.dat recstatic.dat',
+Flow('velfiltcdpsmuterstat',
+     'velfiltcdpsnmo ' \
+     'sourcestatic.dat recstatic.dat ' \
+     'vbrute.txt',
      '''
      sushw key=tstat a=0 
+     | sushw key=sstat a=0 
+     | sushw key=gstat a=0 
+     | sustatic 
+         hdrs=3 
+         sou_file=${SOURCES[1]} 
+         rec_file=${SOURCES[2]} 
+         ns=167 
+         nr=668 
+         no=96 
+     | sunmo 
+         par=${SOURCES[3]} 
+         invert=1
+     ''')
+
+Flow('vpick.txt','vpickorig.txt velfiltcdpsmuterstat',
+     '''
+     ./iva.sh
+     "cmp1=181 cmp2=229 cmp3=277 cmp4=325 cmp5=373 
+      cmp6=421 cmp7=469 cmp8=517 cmp9=565 numCMPs=9" 
+     ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
+     ''',stdout=0,stdin=0)
+
+Flow('rstack','velfiltcdpsmuterstat vpick.txt',
+     '''
+     sunmo 
+        par=vpick.txt
+     | sustack 
+       key=cdp 
+       normpow=1 
+     ''')
+
+Result('rstack','rstack',
+       'suximage title="rvstack" perc=90')
+
+Result('zoomrstack','rstack',
+       '''
+       suwind tmin=0 tmax=3.0  |
+       suximage title="rvstack" perc=90
+       ''')
+
+#Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
+#     '''
+#     ./010_Velocity_Interp_IVA.sh
+#     ''')
+
+#Result('vfile','stkvel1.intp2.bin',
+#       '''
+#       ximage n1=3000 d1=.002 f2=101 d2=1 cmap=rgb11 
+#          wclip=8000 bclip=12000
+#       ''')
+
+# update residual statics with the final velocity field
+Flow('statics_in1','velfiltcdpsmuterstat vpick.txt',
+     '''
+     sufilter f=2,6,50,60 |
+     suwind tmin=.3 1.0 tmax=3.0 |
+     sunmo par=vpick.txt |
+     suresamp rf=2 comment="upsample to 1 ms"
+     ''')
+
+Flow('sourcestatic1.dat recstatic1.dat',
+     'statics_in1',
+     '''
+     suresstat \
+        ssol=${TARGETS[0]}
+        rsol=${TARGETS[1]} 
+        niter=5 
+        ntraces=5280 
+        ntpick=25 comment="samples at 1 ms"
+        nshot=167
+        nr=668 
+        nc=636 
+        sfold=96 
+        rfold=96 
+        cfold=48 
+        verbose=1
+     ''',stdout=0)
+
+Flow('rstack1',
+     'velfiltcdpsmuterstat sourcestatic1.dat recstatic1.dat',
+     '''
+     sunmo par=vpick.txt
+     | sushw key=tstat a=0 
      | sushw key=sstat a=0 
      | sushw key=gstat a=0 
      | sustatic 
@@ -296,13 +393,13 @@ Flow('rstack',
        normpow=1 
      ''')
 
-Result('rstack','rstack',
-       'suximage title="rstack" perc=90')
+Result('rstack1','rstack1',
+       'suximage title="rvrstack" f2=101 perc=90')
 
-Result('zoomrstack','rstack',
+Result('zoomrstack1','rstack1',
        '''
        suwind tmin=0 tmax=3.0  |
-       suximage title="rstack" perc=90
+       suximage title="rvrstack" f2=101 perc=90
        ''')
 
 Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
@@ -312,13 +409,23 @@ Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
 
 Result('vfile','stkvel1.intp2.bin',
        '''
-       ximage n1=3000 d1=.002 f2=101 d2=1 cmap=rdb11
+       ximage n1=3000 d1=.002 f2=101 d2=1 cmap=rgb11 
+          wclip=8000 bclip=12000
+       ''')
+Result('contourvfile','stkvel1.intp2.bin',
+       '''
+       xcontour n1=3000 d1=.002 f2=101 d2=1 cmap=rdb11 
+          wclip=8000 bclip=12000
        ''')
 
-Flow('mig',['rstack','stkvel1.intp2.bin'],
+# I think I can work arround bug in suktmig2d by setting 
+# dcdp=1 fcdpdata=1 firstcdp=101
+
+Flow('mig','rstack1 stkvel1.intp2.bin',
      '''
      sufrac power=.5 sign=1 |
-     suktmig2d vfile=stkvel1.intp2.bin dx=55 hoffset=0 
+     suktmig2d vfile=${SOURCES[1]} dx=55 hoffset=0 
+        verbose=1 dcdp=1 fcdpdata=1 firstcdp=101 
      ''')
 
 Result('mig','mig',
@@ -331,43 +438,26 @@ Result('zoommig','mig',
        suximage title="mig" perc=90
        ''')
 
-# it looks like one offset is used for the whole offset gather
-# documentation says use sufrac before migration
-Flow('premig',['velfiltcdpsnmo','vpick.txt','stkvel1.intp2.bin'],
-     './mig.sh')
+# prestack kirchhoff requires all offsets planes to be the
+# same length.  I cannot figure out how to do this.
 
-Flow('premigstack','premig',
+Flow('migps','rstack1',
      '''
-     susort | 
-     sustack 
-        key=cdp 
-        normpow=1 
+     sumigps
+        dx=55 dt=.002 
+	tmig=.15,.45,.87,1.36,1.91,2.41,4.31  
+	vmig=7612,8051,9512,12590,12315,15031,15700 
+	nxpad=500 ltaper=20 verbose=1 tmpdir=.
      ''')
 
-Result('premigstack','premigstack',
+Result('migps','migps',
        '''
-       sufilter f=4,8,200,240 |
-       suximage title="premigstack" perc=90
+       suximage title="migps" perc=90
        ''')
-Result('zoompremigstack','premigstack',
+Result('zoommigps','migps',
        '''
-       sufilter f=4,8,200,240 |
        suwind tmin=0 tmax=3.0  |
-       suximage title="premigstack" perc=90
+       suximage title="migps" perc=90
        ''')
-
-Plot('premigmovie','premig',
-     '''
-     suxmovie n2=536 loop=1 fframe=1 dframe=1 
-     title="record %g" perc=20 
-     ''')
 
 End()
-
-
-
-
-
-
-
-
