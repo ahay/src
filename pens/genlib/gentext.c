@@ -209,8 +209,8 @@ void gentext (char *string, float pathx, float pathy, float upx, float upy)
     fupx = (double) upx;
     fupy = (double) upy;
 
-    path = sqrt ((double) (fpathx * fpathx + fpathy * fpathy));
-    up = sqrt ((double) (fupx * fupx + fupy * fupy));
+    path = hypot ((double) fpathx, (double) fpathy);
+    up = hypot ((double) fupx, (double) fupy);
 
     if (path == 0. || up == 0.)
     {
@@ -1271,8 +1271,7 @@ static void mov (double hadd, double vadd)
 
 static void load_font (int ifont)
 {
-    int             fd;
-    size_t          length;
+    int             fd, length;
     char            filename[120], *fname;
     char            string[80];
     char           *newfont;
@@ -1454,15 +1453,6 @@ static void load_font (int ifont)
 	swab_font ((char *) &length, (int) sizeof (int));
 
     newfont = sf_charalloc (length);
-    if (newfont == NULL)
-    {
-	close (fd);
-	ERR (WARN, name,
-	     "(gentext) Can't allocate memory for Font %d file \"%s\".",
-	     ttxfont, fname);
-	ttxfont = ERRFONT;
-	return;
-    }
 
 /* Offsets to the 7 structures defining the font... */
     nread = read (fd, (char *) offs, 7 * sizeof (int));

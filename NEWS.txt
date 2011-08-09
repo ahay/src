@@ -28,6 +28,9 @@ In the reproducible documents collection:
 
 In documentation:
 
+* Included previously undocumented parameters (dash,plotcol,plotfat)
+  in stdplot.
+
 In APIs:
 
 In the Python package:
