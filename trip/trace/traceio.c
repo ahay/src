@@ -1095,7 +1095,7 @@ int init_tracegeom(tracegeom * tg,
     externally (arg dt), determines buffer allocation. Time unit is ms. It
     is ASSUMED that any common spatial data (eg. scalel, scalco) is
     uniform, and may be read from any trace.
-
+    *
     The data to be sampled repeatedly to form traces are assumed to
     functions on a uniform rectangular grid. The construction of
     samples differentiates between a LOCAL grid, meaning the grid on
@@ -1104,34 +1104,34 @@ int init_tracegeom(tracegeom * tg,
     are defined by the GLOBAL grid. The sampling function (below) is
     supplied with the index tuple of the LOCAL grid origin, which
     enables conversion from global indices to local offset.
-
+    *
     This function does several tasks, using the tracegeom struct to 
     record its results:
-
+    *
     - timestepping setup: records time steps, determines number of 
       time steps necessary;
-
+      *
     - sampling setup: determines source and receiver positions
       relative to a GLOBAL grid, and sets up sampling coefficients
       ("rectangular barycentric coordinates") for traces which lie in a
       LOCAL subgrid. This task requires two sets of origin coordinates, one 
       for the GLOBAL grid, one for the LOCAL subgrid. Also allocates buffer 
       into which samples may be recorded;
-    
+      *
     - trace output setup: records headers necessary to write
       output to traces, and computes output time sampling info 
       either from the input trace header or from input arguments;
-
+      *
     - data input: optionally initializes sampling buffer by reading 
       data from file.
-
+      *
     The routine may be called several times to initialize any number
     of time series on the same internal time grid. This internal
     (stepping) time grid is fixed by the requirement tha (1) the step
     be given by the input argument dt, and (2) t=0 is a sample point.
-    
+    *
     arguments:
-    
+    *
     @param[out] tg (\ref tracegeom *) trace geometry object to be initialized
     @param[in] og (\ref RPNT)
        coordinates of GLOBAL grid origin (grid point with all indices = 0) 
@@ -1180,20 +1180,20 @@ int init_tracegeom(tracegeom * tg,
         and transferred to the internal simulation (tg->dt,tg->nt,tg->t0) grid by adjoint cubic
 	interpolation (see \ref cubic). To avoid temp storage, this option implemented by
 	another pass through file.
-
+	*
 	ADDED 22.10.08: AXIS ORDERING
-
+	*
 	@param[in] axord (int) The axord argument codes axis order as follows:
 	<ol>
 	<li>for 1D, who cares - z index is zero in any case, so check that axord[0]=0;</li>
 	<li>for 2D, axord[0]=index of z, axord[1]=index of x - check that values are legit;</li>
 	<li>for 3D, axord[0]=index of z, axord[1]=index of x, axord[2]=index of y - check that values are legit.
 </ol>
-
+*
 @param[in] order (int) interpolation order for non-grid source and receiver positions - current legal values are 0 and 1
-      
+*     
 @param[in] stream (FILE *) verbose output stream
-
+*
 @return 0 on successful completion, else error code as in base/include/utils.h. 
 >*/
 {
