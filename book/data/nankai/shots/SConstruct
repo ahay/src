@@ -181,10 +181,14 @@ Flow('first','stack',
      stolt vel=1400 
      ''')
 
-Result('first',
+Flow('mig0','first',
+     '''
+     window min1=5.5 max1=8.0 | 
+     cosft sign2=-1
+     ''')
+
+Result('first','mig0',
        '''
-       window min1=5.5 max1=8.0 | 
-       cosft sign2=-1 |
        grey title="Migration with 1400 m/s"
        ''')
 
@@ -218,16 +222,16 @@ Result('mstack',
 
 # Separating diffractions
 
-Flow('dip','first','dip rect1=20 rect2=10')
+Flow('dip','mig0','dip rect1=20 rect2=10 order=2')
 Result('dip',
        '''
        grey color=j scalebar=y wanttitle=n barlabel=Slope barunit=samples
        ''')
 
-Flow('refl','first dip','pwspray dip=${SOURCES[1]} ns=5 | stack')
+Flow('refl','mig0 dip','pwspray dip=${SOURCES[1]} ns=5 order=2 | stack')
 Result('refl','window min1=5.5 max1=8 | grey title="Reflections" ')
 
-Flow('diff','first refl','add scale=1,-1 ${SOURCES[1]}')
+Flow('diff','mig0 refl','add scale=1,-1 ${SOURCES[1]}')
 Result('diff','window min1=5.5 max1=8 | grey title="Diffractions" ')
 
 Flow('stoltd','diff',
@@ -248,5 +252,30 @@ Flow('velcond','stoltd',
 Plot('velcond','grey title="Velocity Continuation"',view=1)
 
 Flow('focus','velcond','focus rect1=40 rect2=20 | math output="1/abs(input)" ')
+
+Flow('fpik','focus','transp plane=23 | pick v0=1500 rect1=25 rect2=10')
+
+Result('fpik',
+       '''
+       window | grey color=j allpos=y bias=1500 scalebar=y title="Focusing Velocity"
+       label2=CMP barreverse=y barlabel=Velocity barunit=m/s
+       ''')
+
+Flow('mdif','velcond fpik',
+     '''
+     transp plane=23 memsize=1000 |
+     slice pick=${SOURCES[1]}
+     ''')
+Result('mdif',
+       'grey title="Focused Diffractions"')
+
+Flow('mfpik','velcon fpik',
+     '''
+     transp plane=23 memsize=1000 |
+     slice pick=${SOURCES[1]}
+     ''')
+Result('mfpik',
+       'grey title="Migration with Focusing Velocity"')
+
 
 End()

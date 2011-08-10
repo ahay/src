@@ -1,6 +1,14 @@
 from rsf.proj import *
+import sys
 
-prog = Program('mpihello.c',CC='mpicc')
+mpicc = WhereIs('mpicc')
+
+if not mpicc:
+    print
+    sys.stderr.write("No MPI.\n")
+    sys.exit(1)
+
+prog = Program('mpihello.c',CC=mpicc)
 exe = str(prog[0])
 
 Flow('a',None,'math n1=512 n2=256 output="x1+x2"')
