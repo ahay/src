@@ -4,8 +4,10 @@ import bldutil
 
 src = 'cubicadjw cubicw lci traceio verifytrace'
 
+progs = 'verify'
+
 try: # distribution version
-    Import('env root libdir incdir')
+    Import('env root libdir bindir incdir pkgdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -13,7 +15,9 @@ except: # local version
     SConscript('../base/SConstruct')
     SConscript('../../su/lib/SConstruct')
 
-env.Prepend(CPPPATH=['../../include'])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['su',env.get('DYNLIB','')+'rsf'])
 
 ##############################################################################
 # INCLUDES
@@ -44,7 +48,29 @@ if root:
     env.Install(os.path.join(incdir,'trip'),inc)
 
 ##############################################################################
-# TESTS
+# MAINS
 ##############################################################################
 
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+
+if root:
+    main = 'sftriptrace.py'
+    
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    env.Depends(docs,'#/framework/rsf/doc.py')
+
+    doc = env.RSF_Docmerge(main,docs)
+
+    env.Install('../../framework/rsf',doc)
+    env.Install(pkgdir,doc)
 

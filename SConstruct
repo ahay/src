@@ -258,7 +258,7 @@ if os.path.isdir('trip'):
             VariantDir(build,dir)
         else:
             BuildDir(build,dir)
-        trip_exports = 'env root libdir bindir incdir'
+        trip_exports = 'env root libdir bindir incdir pkgdir'
         SConscript(dirs=build,name='SConstruct',
                    exports=trip_exports)
         Default(build)
