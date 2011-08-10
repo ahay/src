@@ -8,7 +8,7 @@ http://matplotlib.sourceforge.net/examples/pylab_examples/scatter_star_poly.html
 
 Quick test to check that it works:
 sfspike n1=5 n2=3 nsp=3 k1=1,3,4 k2=1,2,3 mag=1,4,2 |\
-sfsparsify nonzero=3 | ./Mplotsparse.py
+sfsparsify nonzero=3 | sfscatterplot
 '''
 
 # Copyright (C) 2011 Ioan Vlad

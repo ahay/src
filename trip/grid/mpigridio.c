@@ -95,11 +95,6 @@ int rsfread(ireal * a,
 		    );
 }
 
-/*< * read rarray from SEP77/RSF file structure by  
-    reading a chunk of data, then broadcasting to every process 
- *  
- *  @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
->*/
 int mpirsfread(ireal * a, 
                IPNT rags, 
                IPNT ran, 
@@ -108,7 +103,11 @@ int mpirsfread(ireal * a,
                FILE * stream,
 	       int panelindex  /* D.S. 01.01.11: extended-model related */
 	       ) 
-
+/*< * read rarray from SEP77/RSF file structure by  
+    reading a chunk of data, then broadcasting to every process 
+ *  
+ *  @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
+>*/
 {
   
   /**************************
@@ -344,7 +343,7 @@ int mpirsfread(ireal * a,
       
       fprintf(stream, "--- mpirsfread: current file cursor : %lld , moving to cus_pos: %lld \n", ftello(fp), cur_pos);
       fseeko(fp,cur_pos,SEEK_SET); 
-      /*<-- D.S. 01.01.11: extended-model related */
+      /*-- D.S. 01.01.11: extended-model related */
 
 #ifdef SUXDR
       if (!strcmp(type,"xdr_float")) {
@@ -900,7 +899,7 @@ int mpirsfwrite(ireal * a,
 	
 	fprintf(stream, "--- mpirsfwrite: rank=%d current file cursor : %lld, moving to cus_pos: %lld\n",wrank, ftello(fp), cur_pos);
 	fseeko(fp,cur_pos,SEEK_SET); 
-	/*<-- D.S. 01.01.11: extended-model related */
+	/*-- D.S. 01.01.11: extended-model related */
 	
       }
 #ifdef SUXDR

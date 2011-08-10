@@ -31,6 +31,8 @@ targets.py = '''
 pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf wuab ximage
 '''
 
+# scatterplot
+
 # Python modules that do not need SWIG+numpy
 targets.py_modules = '''
 ivlad m8rex ooio sf
