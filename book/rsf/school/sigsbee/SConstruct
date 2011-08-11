@@ -3,28 +3,15 @@ import fdmod as f
 
 # ------------------------------------------------------------
 # Sigsbee 2A parameters
-par = {
-    'nx':1601,'ox':25.,'dx':0.025,'lx':'x',
-    'nz':801, 'oz':4.5,'dz':0.025,'lz':'z',
-    'nt':5001,'ot':0,  'dt':0.001,'lt':'t'
-    }
-par['jsnap']=200 # snapshot jump
-par['kt']=100    # wavelet delay (samples) 
-par['nb']=100    # boundary (grid points)
-
-# ------------------------------------------------------------
-# convert coordinates from ft to km
-par['ft2km']=0.3048
-par['ox']=par['ox']*par['ft2km']
-par['dx']=par['dx']*par['ft2km']
-par['oz']=par['oz']*par['ft2km']
-par['dz']=par['dz']*par['ft2km']
-
-# ------------------------------------------------------------
-# set axes labels
-par['ux']='km'
-par['uz']='km'
-par['ut']='s'
+f2m=0.3048     # convert ft to m
+par = dict(
+    nx=1601,ox=25.*f2m,dx=0.025*f2m,lx='x',ux='km',
+    nz=801, oz=4.5*f2m,dz=0.025*f2m,lz='z',uz='km',
+    nt=5001,ot=0.0,    dt=0.001,    lt='t',ut='s',
+    jsnap=200, # snapshot jump
+    kt=100,    # wavelet delay (samples) 
+    nb=100     # boundary (grid points)
+    )
 
 # ------------------------------------------------------------
 # set plotting parameters
@@ -93,9 +80,9 @@ Flow('vstr',
      scale rscale=%g |
      put o1=%g d1=%g o2=%g d2=%g |
      window n1=%d min1=%g n2=%d min2=%g
-     ''' % (par['ft2km']*0.001,
-            0              ,0.025*par['ft2km'],
-            10*par['ft2km'],0.025*par['ft2km'],
+     ''' % (0.001*f2m,
+            0     ,0.025*f2m,
+            10*f2m,0.025*f2m,
             par['nz'],par['oz'],
             par['nx'],par['ox']
             ))

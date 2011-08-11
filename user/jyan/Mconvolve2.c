@@ -1,4 +1,4 @@
-/* 3D convolution with arbitrary filter */
+/* 2D convolution with arbitrary filter */
 /*
   Copyright (C) 2008 Colorado School of Mines
   
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 			for(k1=0; k1<sf_n(f1); k1++) {
 			    i1=j1-k1+m1;
 			    if( INBOUND(0,sf_n(a1),i1)) {   
-				y[j2][j1] += x[i2][i1] * f[k2][k1];				
+				y[j2][j1] += x[i2][i1] * f[k2][k1];
 			    }
 			} /* k1 loop */
 		    }

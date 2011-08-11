@@ -1116,6 +1116,24 @@ def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          ''' % par)
 
 # ------------------------------------------------------------
+def gauss1x(gaus,xcen,xsig,par):
+    Flow(gaus,None,
+         '''
+         math output="exp(-((x1-%g)*(x1-%g))/(2*%g))"
+         ''' % (xcen,xcen,xsig*xsig) +
+         '''
+         n1=%(nx)d d1=%(dx)g o1=%(ox)g |
+         scale axis=123
+         ''' % par)
+def gauss1z(gaus,zcen,zsig,par):
+    Flow(gaus,None,
+         '''
+         math output="exp(-((x1-%g)*(x1-%g))/(2*%g))"
+         ''' % (zcen,zcen,zsig*zsig) +
+         '''
+         n1=%(nz)d d1=%(dz)g o1=%(oz)g |
+         scale axis=123
+         ''' % par)
 def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
     Flow(gaus,None,
          '''
@@ -1138,6 +1156,25 @@ def gauss3d(gaus,xcen,ycen,zcen,xsig,ysig,zsig,par):
 	 n3=%(ny)d d3=%(dy)g o3=%(oy)g |
          scale axis=123
          ''' % par)
+
+# ------------------------------------------------------------
+def rbox2d(rbox,xlow,xhig,zlow,zhig,par):
+
+    kx=int((xlow-par['ox'])/par['dx'])
+    lx=int((xhig-par['ox'])/par['dx'])
+    kz=int((zlow-par['oz'])/par['dz'])
+    lz=int((zhig-par['oz'])/par['dz'])
+    
+    Flow(rbox,None,
+         '''
+         spike nsp=1 mag=1
+         n1=%(nz)d d1=%(dz)g o1=%(oz)g
+         n2=%(nx)d d2=%(dx)g o2=%(ox)g
+         ''' % par +
+         '''
+         k1=%d l1=%d k2=%d l2=%d |
+         scale axis=123
+         '''%(kz,lz,kx,lx))
 
 
 def quiver(vect,custom,par):

@@ -16,6 +16,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <rsf.h>
 #include "wilson.h"
 #include "wilson2.h"
@@ -29,9 +30,9 @@ int main(int argc, char* argv[])
     bool verb,stable;
     int  ompchunk; 
 
-    sf_file Fa=NULL; /* autocorrelation */
-    sf_file Ff=NULL; /* filter */
-    sf_file Fl=NULL;
+    sf_file Fa=NULL; /* autocorrelation     */
+    sf_file Ff=NULL; /* filter coefficients */
+    sf_file Fl=NULL; /* filter lags         */
 
     /* cube axes */
     sf_axis a1,a2,af,aj;
@@ -54,9 +55,9 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;/* OMP chunk size */
-    if(! sf_getbool("verb",&verb)) verb=false;       /* verbosity flag */
-    if (!sf_getbool("stable",&stable)) stable=false; /* stability flag */
+    if(! sf_getint ("ompchunk",&ompchunk)) ompchunk=1;     /* OMP chunk size */
+    if(! sf_getbool("verb",    &verb))         verb=false; /* verbosity flag */
+    if (!sf_getbool("stable",  &stable))     stable=false; /* stability flag */
 
     Fa = sf_input ("in" );
     Ff = sf_output("out");
@@ -65,29 +66,31 @@ int main(int argc, char* argv[])
     /* input axes */
     a1 = sf_iaxa(Fa,1);
     a2 = sf_iaxa(Fa,2);
-
-    if(! sf_getint("niter",&niter)) niter=20; /* Wilson iterations */
-    if(! sf_getint("nn",&nn)) nn=1000; /* Helix diameter */
-    if(! sf_getint("nf",&nf)) nf=32;   /* factor coefficients */
-
     if(verb) { 
 	sf_raxa(a1); 
 	sf_raxa(a2); 
     }
 
-    /*------------------------------------------------------------*/
-    /* allocate arrays */
-    ain=sf_floatalloc2(sf_n(a1),sf_n(a2)); /* autocorrelaton */
+    if(! sf_getint("niter",&niter)) niter=20; /* Wilson iterations */
+    if(! sf_getint("nn",   &nn))    nn=1000; /* Helix diameter */
+    if(! sf_getint("nf",   &nf))    nf=32;   /* factor coefficients */
 
     /*------------------------------------------------------------*/
-    sf_floatread(ain[0],sf_n(a1)*sf_n(a2),Fa); /* read data         */
+    /* allocate autocorrelation */
+    ain=sf_floatalloc2(sf_n(a1),sf_n(a2));
 
+    /* read autocorrelation */
+    sf_floatread(ain[0],sf_n(a1)*sf_n(a2),Fa);
+
+    /* display autocorrelation */
     if(verb) {
+	sf_warning("=======================================");
 	for    (i2=0; i2<sf_n(a2); i2++) {
 	    for(i1=0; i1<sf_n(a1); i1++) {
 		sf_warning("%2d %2d: %3.6g",i2,i1,ain[i2][i1]);
 	    }
 	}
+	sf_warning("=======================================");
     }
 
     /*------------------------------------------------------------*/
