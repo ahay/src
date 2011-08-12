@@ -114,6 +114,12 @@ int main (int argc, char* argv[])
     dim = sf_largefiledims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
     /* Axis being merged */
+    if (0 == axis) {
+       axis = SF_MAX_DIM;
+       /* Find last axis */
+       while (n[axis - 1] <= 1 && axis >= 1)
+           axis--;
+    }
     if (1 > axis) sf_error("axis=%d < 1",axis);
 
     dim1 = dim;
