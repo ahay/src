@@ -1,4 +1,4 @@
-/* Prestack 2-D v(z) modeling/migration by DSR with angle gathers. */
+/* Prestack 2-D VTI v(z) modeling/migration by DSR with angle gathers. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
