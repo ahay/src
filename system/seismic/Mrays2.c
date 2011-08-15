@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 
     /* specify output dimensions */
     nt1 = nt+1;
-    sf_putint (rays,"n1",escvar ? 3 : nt1);
+    sf_putint (rays,"n1",escvar ? 4 : nt1);
     sf_putint (rays,"n2",nr);
     if( nshot > 1 ) sf_putint (rays,"n3",nshot);
     sf_putfloat(rays,"o1",0.);
@@ -185,8 +185,24 @@ int main(int argc, char* argv[])
 
             if (escvar) {
                 /* Write escape variables only */
-                sf_floatwrite (traj[it],ndim,rays);
-                t = it*dt;
+                sf_floatwrite (traj[it],ndim,rays); /* z, x */
+                t = it*dt; /* t */
+                sf_floatwrite (&t,1,rays);
+                /* a */
+                if (it > 0) {
+                    i = it >= 2 ? it - 2 : it - 1;
+                    /* Escape vector */
+                    x[0] = traj[it][0];
+                    x[1] = traj[it][1];
+                    x[0] -= traj[i][0];
+                    x[1] -= traj[i][1];
+                    /* Dot product with unit vector pointing upward */
+                    t = sqrt(x[0]*x[0] + x[1]*x[1]); /* Length */
+                    t = acos(-x[0]/t);
+                    if (x[1] < 0) t = -t;
+                } else
+                    t = a[ir];
+                t /= deg2rad;
                 sf_floatwrite (&t,1,rays);
             } else {
                 /* Write full trajectory */
