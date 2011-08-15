@@ -73,11 +73,12 @@ int main(int argc, char* argv[])
 		}
 
 		aa = createhelix(dim, n, center, gap, a); /* allocate PEF */
-		
+
+/*		
 		sf_warning("aa.nh=%d",aa->nh);
 		for (i=0; i<aa->nh; i++) 
 			sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
-		
+*/		
 		for (i=0; i < dim; i++) {	    
 			n0[i] = n[i];
 		}
@@ -128,21 +129,21 @@ int main(int argc, char* argv[])
     sf_floatread (dd,n123,in);
 
     bound (dim, n0, n, a, aa); 
-	sf_warning("===After bound===");
-	sf_warning("aa.nh=%d",aa->nh);
-	for (i=0; i<aa->nh; i++) 
-		sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
+/*	sf_warning("===After bound===");
+  sf_warning("aa.nh=%d",aa->nh); 
+  for (i=0; i<aa->nh; i++) 
+  sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]); */
 	for (i=0, nd=1; i<dim; i++) nd*=n[i]; 
-	for (i=0; i<nd; i++) 
-		if (aa->mis[i])	sf_warning("aa.mis[%d]=%d",i,aa->mis[i]);
+/*	for (i=0; i<nd; i++) 
+  if (aa->mis[i])	sf_warning("aa.mis[%d]=%d",i,aa->mis[i]); */
 
 	
     find_mask(n123, kk, aa);   /* account for missing data */
-	sf_warning("===After find_mask===");
-	sf_warning("aa.nh=%d",aa->nh);
-	for (i=0; i<aa->nh; i++) 
-		sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]);
-	
+/*	sf_warning("===After find_mask===");
+  sf_warning("aa.nh=%d",aa->nh); 
+  for (i=0; i<aa->nh; i++) 
+	sf_warning("aa.flt[%d]=%g aa.lag[%d]=%d",i,aa->flt[i],i,aa->lag[i]); */
+    
     if (NULL != sf_getstring("maskout")) {
 		/* optional output mask file */
 		mask = sf_output("maskout");

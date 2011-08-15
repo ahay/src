@@ -251,9 +251,18 @@ Flow('velcond','stoltd',
      ''')
 Plot('velcond','grey title="Velocity Continuation"',view=1)
 
-Flow('focus','velcond','focus rect1=40 rect2=20 | math output="1/abs(input)" ')
+Flow('focus','velcond',
+     '''
+     transp plane=23 | 
+     pad beg1=1250
+     focus rect1=40 rect3=20 |
+     window min1=5.5 |
+     math output="1/abs(input)" |
+     clip clip=8 |
+     scale axis=2
+     ''')
 
-Flow('fpik','focus','transp plane=23 | pick v0=1500 rect1=25 rect2=10')
+Flow('fpik','focus','pick v0=1500 rect1=25 rect2=10')
 
 Result('fpik',
        '''

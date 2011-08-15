@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool spitz;
+    bool spitz, verb;
     int niter, sa, na, j, dim, nx, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float *dd, *ss, eps, na0, sa0;
     char varname[6], *lagfile;
@@ -98,7 +98,10 @@ int main(int argc, char* argv[])
     if (!sf_getbool("spitz",&spitz)) spitz=false;
     /* if use Spitz method */
 
-    signoi_init (naa, saa, niter, nx, eps);
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
+    signoi_init (naa, saa, niter, nx, eps, verb);
 
     if (spitz) {
 	signoi2_lop  (false,false,nx,nx,dd,ss);

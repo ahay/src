@@ -23,6 +23,7 @@
 #include "signoi.h"
 #include "helicon2.h"
 
+static bool verb;
 static int niter, nd;
 static float eps, *dd;
 static sf_filter nn, ss;
@@ -32,7 +33,8 @@ void signoi_init(sf_filter nn_in /* noise PEF */,
 		 sf_filter ss_in /* signal PEF */, 
 		 int niter_in    /* number of iterations */, 
 		 int nd_in       /* data size */, 
-		 float eps_in    /* regularization parameter (signal/noise) */)
+		 float eps_in    /* regularization parameter (signal/noise) */,
+		 bool verb_in    /* verbosity flag */)
 /*< initialize >*/
 {
     nn = nn_in;
@@ -40,6 +42,7 @@ void signoi_init(sf_filter nn_in /* noise PEF */,
     niter = niter_in;
     nd = nd_in;
     eps = eps_in;
+    verb = verb_in;
     dd = sf_floatalloc(nd);
 }
 
@@ -54,7 +57,8 @@ void signoi_lop (bool adj, bool add, int n1, int n2,
 
     sf_helicon_lop (false, false, n1, n1, data, dd);
     sf_solver_prec(sf_helicon_lop, sf_cgstep, sf_polydiv_lop, 
-		   nd, nd, nd, sign, dd, niter, eps, "end");
+		   nd, nd, nd, sign, dd, niter, eps, 
+		   "verb", verb, "end");
     sf_cgstep_close();
 
     nn++;
@@ -72,7 +76,8 @@ void signoi2_lop (bool adj, bool add, int n1, int n2,
 
     helicon2_lop (false, false, n1, n1, data, dd);
     sf_solver_reg(helicon2_lop, sf_cgstep, sf_helicon_lop, 
-		  nd, nd, nd, sign, dd, niter, eps, "end");
+		  nd, nd, nd, sign, dd, niter, eps, 
+		  "verb", verb, "end");
     sf_cgstep_close();
 
     nn++;
