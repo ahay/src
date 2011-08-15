@@ -1,5 +1,10 @@
+\lefthead{Schleicher}
+\righthead{Alaska}
+\footer{Data Processing}
+
 \title{A tutorial for processing a 2D land line using Seismic Unix}                                           % Activate to display a given date or no date
-\author{Karl Schleicher k\_schleicher@hotmail.com}
+\author{Karl Schleicher}
+\email{k\_schleicher@hotmail.com}
 
 \maketitle
 
@@ -7,8 +12,8 @@
 This paper describes how to process a public 2D land line data set
 though a very basic processing sequence using Seismic Unix. The data
 from the Alaska North Slope has good signal, although it may be
-suitable for testing ground roll attenuation programs.  The detailed
-steps download the data from the internet and process it are
+suitable for testing ground-roll attenuation programs.  The detailed
+steps download the data from the Internet and process it are
 described.  You should be able to follow these steps and recreate my
 results.  I hope this will accelerate the testing and validation of
 programs developed in research groups.
@@ -31,15 +36,15 @@ and progress on other software and data.
 \end{abstract}
 
 \section{Introduction}
-Seismic Unix (SU) is the most popular open seismic processing 
-software package.  The distribution includes some example processing
+Seismic Unix (SU) is a popular open-source seismic processing 
+software package \cite[]{TLE16-07-10451049}.  The distribution includes some example processing
 scripts and there are two books that teach how to use the software,
-Geophysical Image Processing with Seismic Unix \cite[]{stockwell} and
-Seismic Processing with Seismic Un*x \cite[]{forel} books cover broad
+\emph{Geophysical Image Processing with Seismic Unix} \cite[]{stockwell} and
+\emph{Seismic Processing with Seismic Un*x} \cite[]{forel} books cover broad
 subjects including basic Unix commands, setting up a user environment,
 basic seismic processing, and more advanced scripting for seismic
 processing.  You can follow the text and recreate some seismic
-processing.  These books to not provide much information about
+processing.  These books do not provide much information about
 creating trace headers or preprocessing.\nocite{cohen}
 
 I assume you are familiar with Seismic Unix.  I concentrate
@@ -526,5 +531,5 @@ parameters.
 \end{enumerate}
 
 \bibliographystyle{seg}
-\bibliography{refpaper}
+\bibliography{refpaper,SEG}
 

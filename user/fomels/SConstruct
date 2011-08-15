@@ -19,6 +19,8 @@ timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon velinv
 vofzperm warp1 warpadd warpscan zero
 '''
 
+ccprogs = 'isolr2 isolr3'
+
 pyprogs = 'fft rcat results zoom'
 pymods = 'dottest conjgrad'
 
@@ -28,7 +30,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../lexing/SConstruct')
 
 src = Glob('[a-z]*.c')
 
@@ -46,6 +48,25 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
+                      'vecmatop']+lapack)
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 
@@ -105,8 +126,9 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-        map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
-        map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
+           map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

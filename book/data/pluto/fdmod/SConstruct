@@ -82,7 +82,7 @@ Flow('den','vel','math output=1')
 fdmod.awefd('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
 Result('wfl','window n3=1 f3=33 j1=2 j2=2 | ' + fdmod.wgrey('pclip=99',par))
-Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
+Result('dat','window j2=10 j1=2 | transp |'   + fdmod.dgrey('pclip=99',par))
 
 End()
 

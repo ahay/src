@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-anisolr2 lrmatrix isolr2 isolr3 permlr1 permlr2 permlr3
+anisolr2 lrmatrix permlr1 permlr2 permlr3
 '''
 
 subs = '''

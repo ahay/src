@@ -812,7 +812,7 @@ laplacian
 implemented by module \texttt{laplac2} \vpageref{lst:laplac2}. 
 
 
-\moddex{lapfill}{Find 2-D missing data}{63}{76}{system/generic}
+\moddex{lapfill}{Find 2-D missing data}{62}{75}{system/generic}
 
 \par
 Subroutine \texttt{lapfill()}
@@ -950,8 +950,8 @@ I used the gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
 % I used the \bx{roughening operator} \texttt{rufftri2()} \vpageref{lst:rufftri2},
 % which is an impulse minus a broad smoothing operator.
 The solver is \texttt{grad2fill()}.
-\moddex{igrad2}{finite-difference gradient}{45}{57}{api/c}
-\moddex{grad2fill}{low cut missing data}{52}{60}{system/generic}
+\moddex{igrad2}{finite-difference gradient}{48}{60}{api/c}
+\moddex{grad2fill}{low cut missing data}{50}{58}{system/generic}
 
 %\par
 %Having a roughener with an adjustable width in the smoothing operator
@@ -1007,7 +1007,7 @@ as the extraction of values from between mesh points.
 In a typical setup (occasionally the role of data and model are swapped),
 a model is given on a uniform mesh
 and we solve the easy problem of extracting values
-between the mesh points with subroutine \texttt{lint1()} \vpageref{lst:lint1}.
+between the mesh points with subroutine \texttt{lint1()} % \vpageref{lst:lint1}.
 The genuine problem is the inverse problem, which we attack here.
 Data values are sprinkled all around,
 and we wish to find a function on a uniform mesh
@@ -1176,7 +1176,7 @@ with the adjoint operator:
 \end{equation}
 \begin{comment}
 I chose to implement the model roughening operator $\bold A$
-with the convolution subroutine \texttt{tcai1()} \vpageref{lst:tcai1},
+with the convolution subroutine \texttt{tcai1()} % \vpageref{lst:tcai1},
 which has transient end effects
 (and an output length equal to the input length plus the filter length).
 The adjoint of subroutine {\tt tcai1()} suggests perturbations
