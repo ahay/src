@@ -1,0 +1,35 @@
+scons -c 
+echo "export PATH=./subin:\${PATH}" > doit.job 
+
+makejobsub prevstack view
+makejobsub surveylog view 
+makejobsub observerlog view
+makejobsub list1 su
+makejobsub list2 su 
+makejobsub first view 
+makejobsub zoomfirst view
+makejobsub firstrec24 view
+makejobsub firstmovie view
+makejobsub allshots su
+makejobsub checkstack view 
+makejobsub zoomcheckstack view
+makejobsub velfiltrec24 view 
+makejobsub cdp250-251 view 
+makejobsub vbrute txt
+makejobsub brutestack view
+makejobsub zoombrutestack view
+makejobsub movie_velfiltcdpsnmo view
+makejobsub zoomrstack view
+makejobsub vfile view
+makejobsub rstack1 view
+makejobsub zoomrstack1 view
+makejobsub zoombrutestack view
+makejobsub zoomrstack1 view
+makejobsub mig view
+makejobsub migps view
+
+chmod 777 doit.job
+
+scons -cn | grep -v scons | sed -e 's#Removed#rm#g' | tee clean.job
+chmod 777 clean.job
+

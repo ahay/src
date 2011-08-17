@@ -1,0 +1,11 @@
+
+scons $1.$2 -n \
+| grep -v scons \
+| sed -e 's#/home/karl/su/bin#./subin#g' \
+| tee $1.job
+
+chmod 777 $1.job
+
+echo ./$1.job >> doit.job
+
+scons $1.$2
