@@ -16,6 +16,8 @@ Fetch('31_81_IM.JPG',
       server='http://certmapper.cr.usgs.gov',
       top='nersl/NPRA/SEISMIC/1981/31_81',
       dir='IMAGES')
+#THis can be done using:
+# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
 Result('prevstack','31_81_IM.JPG',
        'oodraw ${SOURCES[0]}',stdin=0)
 
