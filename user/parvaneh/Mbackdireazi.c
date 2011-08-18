@@ -1,0 +1,90 @@
+/*Background directivity(Azimuth). */
+/*
+Copyright (C) 2011 University of Texas at Austin
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+
+int main (int argc, char *argv[])
+{
+    /*differentiation coefficient*/
+    float c0=-1./12., c1=+2./3.;
+    bool verb;  /*verbose flag*/
+    sf_file Zi=NULL,Zo=NULL,Zz=NULL;
+    sf_axis at,ay,ax;
+    int it,iy,ix;
+    int nt,ny,nx;
+    float idt,idy,dx,dt,dy;
+   
+    
+    float ***tz,***tt,***azimuth,***tzt,***tzy;
+    
+    /*sf_init(!sf_getbool("verb",&verb)) verb=0;*/
+    
+    sf_init(argc,argv);
+    Zi=sf_input("ti");
+    Zz=sf_input("in");
+    Zo=sf_output("out");
+    
+    at=sf_iaxa(Zi,1); nt=sf_n(at); dt=sf_d(at);
+    ay=sf_iaxa(Zi,2); ny=sf_n(ay); dy=sf_d(ay);
+    ax=sf_iaxa(Zi,3); nx=sf_n(ax); dx=sf_d(ax);
+
+    sf_oaxa(Zo,at,1);
+    sf_oaxa(Zo,ay,2);
+    sf_oaxa(Zo,ax,3);
+
+    idt=1/dt;
+    idy=1/dy;
+
+    tt=sf_floatalloc3(nt,ny,nx); sf_floatread(tt[0][0],nt*ny*nx,Zi);
+    tz=sf_floatalloc3(nt,ny,nx); sf_floatread(tt[0][0],nt*ny*nx,Zz);
+
+    azimuth=sf_floatalloc3(nt,ny,nx);
+    tzt=sf_floatalloc3(nt,ny,nx);
+    tzy=sf_floatalloc3(nt,ny,nx);
+
+    for (it=0; it<nt; it++) {
+	for (iy=0; iy<ny; iy++) {
+	    for (ix=0; ix<nx; ix++) {
+		 azimuth[ix][iy][it]=0;
+	    }
+	}
+    }
+
+    for (it=0; it<nt; it++) {
+	for (iy=0; iy<ny; iy++) {
+	    for (ix=0; ix<nx; ix++) {
+		 tzt[ix][iy][it]=
+		     idt*(c0*(tz[ix][iy][it+2]-tz[ix][iy][it-2])+
+			  c1*(tz[ix][iy][it+1]-tz[ix][iy][it-1]));
+
+		 tzy[ix][iy][it]=
+		     idy*(c0*(tz[ix][iy+2][it]-tz[ix][iy-2][it])+
+			  c1*(tz[ix][iy+1][it]-tz[ix][iy-1][it]));
+		 
+		 azimuth[ix][iy][it]=-(tzy[ix][iy][it]/tzt[ix][iy][it]);
+	    }
+	}
+    }
+
+    sf_floatwrite(azimuth[0][0],nt*ny*nx,Zo);
+    
+    sf_close();
+
+    exit (0);
+}    
