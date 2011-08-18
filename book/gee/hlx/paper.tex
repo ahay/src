@@ -14,7 +14,7 @@ The helical coordinate system makes a giant step
 towards overcoming this difficulty.
 
 \par
-Many geophysical map estimation problems appear to be multidimensional,
+Many geophysical map estimation applications appear to be multidimensional,
 but actually they are not.
 To see the tip of the iceberg, consider this example:
 On a two-dimensional cartesian mesh, the function
@@ -48,7 +48,7 @@ $.
 Likewise, on a one-dimensional cartesian mesh,
 \par\noindent
 the function $
-\mathcal{B} =
+%\mathcal{B} =
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
  1&1&0&0& \cdots& 0& 1&1
         \\ \hline
@@ -56,7 +56,7 @@ the function $
 $
 \par\noindent
 has the autocorrelation
-$ \mathcal{R} =
+$ %\mathcal{R} =
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
  1&2&1&0&\cdots&0&2&4&2&0&\cdots&1&2&1
         \\ \hline
@@ -239,7 +239,7 @@ Let us associate $x$- and $y$-derivatives with
 a finite-difference stencil or template.
 (For simplicity take $\Delta x=\Delta y=1$.)
 \begin{equation}
- {\partial \over \partial x } \eq
+ \frac{\partial }{ \partial x } \eq
  \begin{array}{|c|c|} \hline
    1    & -1
    \\ \hline
@@ -247,7 +247,7 @@ a finite-difference stencil or template.
  \label{eqn:partialx}
 \end{equation}
 \begin{equation}
-  {\partial \over \partial y } \eq
+ \frac{\partial }{ \partial y } \eq
   \begin{array}{|r|} \hline
     1  \\
     \hline
@@ -730,14 +730,14 @@ to find this wavelet $\mathcal{H}$:
 According to the Kolmogoroff theory,
 if we form the autocorrelation of
 $\mathcal{H}$,
-we will get $\mathcal{R}$.
+we will get $-\nabla^2$.
 This is not obvious from the numbers themselves
 because the computation requires a little work.
 \par
 Let the time reversed version of
 $\mathcal{H}$
 be denoted
-$\mathcal {H}'$.
+$\mathcal {H}\T$.
 This notation is consistant with an idea from
 Chapter \ref{paper:ajt} that the adjoint of a filter matrix
 is another filter matrix with a reversed filter.
@@ -749,7 +749,7 @@ is a convolution of the
 signal $\mathcal{H}$
 with its time reverse (adjoint)
 can be written as
-$ \mathcal{H}' \ast \mathcal{H} = \mathcal{H} \ast \mathcal{H}' = \mathcal{R}$.
+$ \mathcal{H}\T \ast \mathcal{H} = \mathcal{H} \ast \mathcal{H}\T = \mathcal{R}$.
 
 
 
@@ -777,7 +777,7 @@ vertical-axis helix to see its two-dimensional shape $\mathcal{R}_2$:
 
 This 2-D filter is the negative of the finite-difference representation
 of the Laplacian operator, generally denoted
-$\nabla^2= {\partial^2\over \partial x^2} + {\partial^2\over \partial y^2} $.
+$\nabla^2 = \frac{\partial^2}{ \partial x^2} + \frac{\partial^2}{ \partial y^2} $.
 Now for the magic:
 Wind the signal $\mathcal{H}$ around the same helix
 to see its two-dimensional shape $\mathcal{H}_2$
@@ -804,11 +804,11 @@ if you drop the small values, say 0.2 and smaller.
 
 \par
 Since the autocorrelation of $\mathcal{H}$ is
-$\mathcal{H}' \ast \mathcal{H} = \mathcal{R} =-\nabla^2$
+$\mathcal{H}\T \ast \mathcal{H} = \mathcal{R} =-\nabla^2$
 is a second derivative,
 the operator $\mathcal{H}$ must be something like a first derivative.
 As a geophysicist, I found it natural to compare
-the operator ${\partial\over\partial y}$
+the operator $\frac{\partial}{\partial y}$
 with $\mathcal{H}$ by applying them to a local topographic map.
 The result shown in
 Figure \ref{fig:helocut}
@@ -888,7 +888,7 @@ Using $\mathcal{H}$ in one-dimensional polynomial division,
 we can solve many formerly difficult problems very rapidly.
 Consider the Laplace equation with sources (Poisson's equation).
 Polynomial division and its reverse (adjoint) gives us
-$\mathcal{P} =(\mathcal{Q}/\mathcal{H})/\mathcal{H}'$
+$\mathcal{P} =(\mathcal{Q}/\mathcal{H})/\mathcal{H}\T$
 which means that we have solved
 $\nabla^2 \mathcal{P} = -\mathcal{Q}$
 by using polynomial division on a helix.
@@ -903,7 +903,7 @@ An example is shown in Figure \ref{fig:lapfac}.
   Amounts to solving the Poisson equation.
   Left is $\mathcal{Q}$;
   Middle is $\mathcal{Q}/\mathcal{H}$;
-  Right is $(\mathcal{Q}/\mathcal{H})/\mathcal{H}'$.
+  Right is $(\mathcal{Q}/\mathcal{H})/\mathcal{H}\T$.
 }
 
 \par
@@ -1046,7 +1046,7 @@ If you will allow me some truncation approximations,
 I now claim that the laplacian represented by the
 matrix in equation (\ref{eqn:huge})
 is factored into two parts
-$-\nabla^2 =\bold A'\bold A$
+$-\nabla^2 =\bold A\T\bold A$
 which are upper and lower triangular matrices
 whose product forms the autocorrelation seen in (\ref{eqn:huge}).
 Recall that triangular matrices
@@ -1055,7 +1055,7 @@ That is what we do with our
 deconvolution program.
 
 
-\section{CAUSALITY AND SPECTAL FACTORIZATION}
+\section{CAUSALITY AND SPECTRAL FACTORIZATION}
 
 Mathematics sometimes seems a mundane subject,
 like when it does the ``accounting'' for an engineer.
@@ -1141,9 +1141,9 @@ the first divergent
 (filter coefficients at infinite lag are infinitely strong),
 the second convergent but noncausal.
 \begin{eqnarray}
-{1\over \rho -Z} &=& { 1\over\rho}\ ( 1 +Z/\rho +Z^2/\rho^2+ \cdots)
+\frac{1}{ \rho -Z} &=& \frac{ 1}{\rho}\ ( 1 +Z/\rho +Z^2/\rho^2+ \cdots)
 \\
-{1\over \rho -Z} &=& {-1\over Z}\ ( 1 + \rho/Z + \rho^2/Z^2 + \cdots)
+\frac{1}{ \rho -Z} &=& \frac{-1}{ Z}\ ( 1 + \rho/Z + \rho^2/Z^2 + \cdots)
 \end{eqnarray}
 (Please multiply each equation by $\rho -Z$ and see it reduce to $1=1$).
 
@@ -1199,7 +1199,7 @@ a real, positive function of frequency.
 I once achieved minor fame by starting with a real, positive function of space,
 a total magnetic field $\sqrt{H_x^2 +H_z^2}$ measured along the $x$-axis
 and I reconstructed the magnetic field components $H_x$ and $H_z$
-that were minimally wiggly in space.
+that were minimally wiggly in space (FGDP p.61).
 
 
 
@@ -1214,7 +1214,7 @@ could have been found by Cholesky factorization of (\ref{eqn:huge}).
 The Cholesky algorithm takes a positive-definite matrix
 $\bold Q$ and factors it into a triangular matrix
 times its transpose,
-say $\bold Q = \bold T' \bold T$.
+say $\bold Q = \bold T\T \bold T$.
 %Equation (\ref{ajt/eqn:polydiv}) is an example of a banded triangular matrix.
 
 \par
@@ -1222,7 +1222,7 @@ It is easy to reinvent the Cholesky factorization algorithm.
 To do so,
 simply write all the components of a $3\times 3$ triangular matrix
 $\bold T$ and then explicitly multiply these elements
-times the transpose matrix $\bold T'$.
+times the transpose matrix $\bold T\T$.
 You will find that you have everything you need
 to recursively build the elements of $\bold T$
 from the elements of $\bold Q$.
@@ -1235,7 +1235,7 @@ Sometimes they are polynomials such as $Z$-transforms.
 To avoid square roots there is a variation
 of the Cholesky method.
 In this variation, we factor $\bold Q$ into
-$\bold Q=\bold T'\bold D\bold T$
+$\bold Q=\bold T\T\bold D\bold T$
 where $\bold D$ is a diagonal matrix.
 
 \par
@@ -1245,14 +1245,14 @@ is simply a matter of two backsubstitutions:
 (We looked at a special case of backsubstitution
 with equation (\ref{eqn:polydiv}).)
 For example, we often encounter simultaneous equations of the form
-$\bold B'\bold B\bold m=\bold B'\bold d$.
+$\bold B\T\bold B\bold m=\bold B\T\bold d$.
 Suppose the positive-definite matrix
-$\bold B'\bold B$ has been factored into triangle form
-$\bold T'\bold T\bold m=\bold B'\bold d$.
+$\bold B\T\bold B$ has been factored into triangle form
+$\bold T\T\bold T\bold m=\bold B\T\bold d$.
 To find 
 $\bold m$
 we first backsolve
-$\bold T'\bold x=\bold B'\bold d$
+$\bold T\T\bold x=\bold B\T\bold d$
 for the vector
 $\bold x$.
 Then we backsolve
@@ -1278,7 +1278,7 @@ but the solution would diverge.
 \par
 Being a matrix method, the Cholesky method of factorization
 has a cost proportional to the cube of the size of the matrix.
-Because our problems are very large
+Because our applications are very large
 and because the Cholesky method
 does not produce a useful result if we stop part way to completion,
 we look further.
@@ -1336,7 +1336,6 @@ A problem many people would like to solve is how to handle a matrix
 that is ``almost'' a band matrix --- a matrix where any band
 changes slowly with location.
 
-\begin{comment}
 \subsection{Blind deconvolution}
 A area of applications that leads directly to spectral factorization
 is ``blind deconvolution.''
@@ -1348,7 +1347,8 @@ This topic deserves a fuller exposition, say for example
 as defined in some of my earlier books.
 Here we inspect a novel example that incorporates the helix.
 
-\activeplot{solar}{width=6in,height=3.3in}{NR}{
+\inputdir{.}
+\plot{solar}{width=6in,height=3.3in}{
 	Raw seismic data on the sun (left).
 	Impulse response of the sun (right)
 	derived by Helix-Kolmogoroff spectral factorization.
@@ -1404,7 +1404,6 @@ When a ray goes down and back up to the sun surface,
 it reflects and takes off again with the same ray shape.
 The result is that a given slope on the traveltime curve
 can be found again at twice the distance at twice the time.
-\end{comment}
 
 \section{WILSON-BURG SPECTRAL FACTORIZATION}
 (If you are new to this material, you should pass over this section.)
@@ -1469,7 +1468,7 @@ shown after the Wilson-Burg theory.
 \subsection{Wilson-Burg theory}
 Newton's iteration for square roots
 \begin{equation}
-a_{t+1} \eq {1\over 2} \ \left( a_t \ +\ {s\over a_t} \right)
+a_{t+1} \eq \frac{1}{ 2} \ \left( a_t \ +\ \frac{s}{ a_t} \right)
 \label{eqn:newton}
 \end{equation}
 converges quadratically starting from any real initial guess $a_0$ except zero.
@@ -1504,18 +1503,18 @@ Where the first guess $a_0$ happens to match $\sqrt{s}$,
 it will match $\sqrt{s}$ at all iterations.
 The Newton iteration is
 \begin{equation}
-2\ {a_{t+1}\over a_t} \eq   1 \ +\ {s\over a_t^2}
+2\ \frac{a_{t+1}}{ a_t} \eq   1 \ +\ \frac{s}{ a_t^2}
 \end{equation}
 Something inspires Wilson to
 express the spectrum $S=\bar A A$ as a $Z$-transform
 and then write the iteration
 %\cite{wilson}
 \begin{equation}
- {\bar A_{t+1}(1/Z) \over \bar A_t(1/Z)}
+  \frac{\bar A_{t+1}(1/Z) }{ \bar A_t(1/Z)}
  \ +\ 
- {A_{t+1}(Z) \over A_t(Z)}
+ \frac{A_{t+1}(Z) }{ A_t(Z)}
 \eq
-1 \ +\ {S(Z) \over \bar A_t(1/Z)\  A_t(Z)}
+1 \ +\ \frac{S(Z) }{ \bar A_t(1/Z)\  A_t(Z)}
 \label{eqn:wilson}
 \end{equation}
 \par
@@ -1593,11 +1592,11 @@ Fomel's factorization:
 A simple trick to avoid division in square root computation is to run
 Newton's method on the inverse square root instead.
 The iteration is then
-$R' = {1\over 2} R(3-R^2 X^2)$
+$R' = \frac{1}{ 2} R(3-R^2 X^2)$
 where $R$ converges (quadratically) to $1/\sqrt{X^2}$.
 To get the square root, just multiply $R$ by $X^2$.
 This leads to a reciprocal version of the Wilson-Burg algorithm.
-$A'/A + \bar A'/ \bar A = 3 - A \bar A  S $
+$A\T/A + \bar A\T/ \bar A = 3 - A \bar A  S $
 Here is how it can work:
 Construct an inverse autocorrelation ---
 for example,
@@ -1605,7 +1604,7 @@ an ideal isotropic smoother;
 make a guess for $A$ (min-phase roughener); iterate:
 (1) compute $3 - A A* S$,
 (2) take its causal part,
-(3) convolve with $A$ to get $A'$.
+(3) convolve with $A$ to get $A\T$.
 Each iteration involves just three convolutions
 (could be even done without helix).
 \end{exer}
@@ -1664,7 +1663,7 @@ but along the way
 I found a simpler parameter that is very effective in practice.
 We'll look at it first.
 
-\sideplot{mam}{width=3.5in,height=3.5in}{
+\sideplot{mam}{width=3.8in,height=3.8in}{
   Mammogram (medical X-ray).
   The cancer is the ``spoked wheel.''
   (I apologize for the inability of paper publishing technology
@@ -1867,7 +1866,10 @@ the mammogram itself.
 Now Figure \ref{fig:scratch} shows it to be
 perhaps even clearer than on the helix derivative.
 \plot{scratch}{width=6in,height=3.0in}{
-  Not a scratch.
+        Not a scratch.
+        Reducing the $(x,y)$-space range of the illustration
+	allowed boosting the gain,
+	thus making the non-scratch more prominent.
 }
 
 \begin{comment}
@@ -2005,7 +2007,7 @@ its one-dimensional index
 \end{verbatim}
 When the filter cube is stored in an array
 with the same dimensions as the data,
-\texttt{data\ldots[n3][n2][n1]},
+\texttt{data[n3][n2][n1]},
 the formula for \texttt{ia} is
 \begin{verbatim}
   ia = i1 +n1*i2 +n1*n2*i3 + ...
@@ -2175,7 +2177,7 @@ Using these arguments, I used
 I set all the helix filter coefficients to 2.
 Then I used module \texttt{boxfilter} \vpageref{lst:boxfilter}
 to put it in a convenient form for display.
-%After this conversion, the coefficient \texttt{aa(3,2,1)} is 1, not 2.
+%After this conversion, the coefficient \texttt{aa[0][1][2]} is 1, not 2.
 Finally, I printed it:
 \par\noindent
 \footnotesize

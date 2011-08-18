@@ -321,14 +321,16 @@ int main(int argc, char* argv[])
 			for (i=ib; i < ie; i++) {
 			    switch(type[0]) {
 				case 'a':
-				    /* (h2 s^2 - 2 h s sh + N sh^2)/((-h^2 + h2 N) s2) */
-				    
+				    /* (N*saf^2 + sa1^2*sf2 - 2*sa1*saf*sf)/((N*sf2 - sf^2)*sa2) */
+
 				    num += sh2*stack[is][iv][i]*stack[is][iv][i] +
 					nh*stackh[is][iv][i]*stackh[is][iv][i] - 
 					2.*sh*stack[is][iv][i]*stackh[is][iv][i];
 				    den += stack2[is][iv][i];
 				    break;
 				case 'w':
+				    /* 4*(sa1*sfa2 - sa2*saf)*(N*saf - sa1*sf)/(N*sfa2 - sa2*sf)^2 */
+
 				    break;
 				case 's':
 				default:
