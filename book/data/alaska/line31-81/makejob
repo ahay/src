@@ -23,11 +23,10 @@ makejobsub vbrute txt
 makejobsub brutestack view
 makejobsub zoombrutestack view
 makejobsub movie_velfiltcdpsnmo view
+makejobsub rstack view
 makejobsub zoomrstack view
 makejobsub vfile view
 makejobsub rstack1 view
-makejobsub zoomrstack1 view
-makejobsub zoombrutestack view
 makejobsub zoomrstack1 view
 makejobsub mig view
 makejobsub migps view
