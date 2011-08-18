@@ -40,13 +40,13 @@ Seismic Unix (SU) is a popular open-source seismic processing
 software package \cite[]{TLE16-07-10451049} \cite[]{cohen}.  The 
 distribution includes some example processing
 scripts and there are two books that teach how to use the software,
-\emph{Geophysical Image Processing with Seismic Unix} \cite[]{stockwell} and
-\emph{Seismic Processing with Seismic Un*x} \cite[]{forel} books cover broad
-subjects including basic Unix commands, setting up a user environment,
-basic seismic processing, and more advanced scripting for seismic
-processing.  You can follow the text and recreate some seismic
-processing.  These books do not provide much information about
-creating trace headers or preprocessing.\nocite{cohen}
+\emph{Geophysical Image Processing with Seismic Unix} \cite[]{stockwell} 
+and \emph{Seismic Processing with Seismic Un*x} \cite[]{forel}.  These 
+reference cover broad subjects including basic Unix commands, setting 
+up a user environment, basic seismic processing, and more advanced 
+scripting for seismic processing.  You can follow the text and recreate 
+some seismic processing.  These books do not provide much information 
+about creating trace headers or preprocessing.\nocite{cohen}
 
 I assume you are familiar with Seismic Unix.  I concentrate
 on providing example scripts and programs to process a 2D land line
@@ -57,8 +57,8 @@ analysis, and stacking are provided and explained.  These scripts
 provide the detailed parameters used by the Seismic Unix programs.
 The parameters for deconvolution, velocity filter, mute, moveout
 velocity, and scaling can adapted for use by other seismic processing
-systems. The results in the deep section are similar to the results 
-obtained in 1981. 
+systems. The results are similar to the results obtained in 1981 using
+GSI's proprietary software.  
 
 You can download Seismic Unix, the field data, and the scripts, and 
 recreate my results.  The scripts, data, and programs can be modified 
@@ -77,7 +77,7 @@ line from the last acquisition season.
 Reserve in Alaska from wikipedia entry about the National Petroleum
 Reserve Alaska.}
 \plot{mapusgs}{width=\textwidth}{Map of seismic lines collects between
-1974 and 1981 from the internet site 
+1974 and 1981 from the Internet site 
 http://energy.usgs.gov/GeochemistryGeophysics/ SeismicDataProcessingInterpretation/NPRASeismicDataArchive.aspx}
 
 \section{Setting up and reading the data documentation}
@@ -86,10 +86,9 @@ Install Madagascar and you should have files to process line 31-81 in
 the directory:
 \$RSFROOT/book/data/alaska/line31-81
 
-Change into this directory.  The SConstruct file contains the rules used 
-to create the command that process this line.  This SConstruct file is 
-listed in the appendixes, but I really intend for you to install the 
-software and process the data with commands I describe in this paper.
+Change into this directory.  This paper lists commands and the SConstruct 
+file contains the rules that translate the commands into SU tesks 
+to process the data.
 
 An alternative to installing Madagascar is to go to the website\\
 http://dl.dropbox.com/u/37269048/open\_lib\_demo\_2011.tar.gz
@@ -111,20 +110,20 @@ cat doit.job
 Then you can run the processing by typing:\\  
 ./doit.job
 
-You can run individual tasks with from scripts. For example to view the 
-previous final stack when the text says run:\\
+You can also run the individual tasks with the scripts in the tar file. 
+For example, to view the previous final stack, the text says run:\\
 scons prevstack.view \\
 
 You can run the script from the tar file:\\
 ./prevstack.job
 
-The scons will download the file 31\_81\_IM.JPG from the internet and 
+The scons will download the file 31\_81\_IM.JPG from the Internet and 
 display it using open office draw (oodraw).  The tar file supplies the 
-files so the scripts download is skipped.  ./prevstack.job will display
+files so the scripts skip the download.  ./prevstack.job just displays
 the file using oodraw.
 
 There used to be a higher resolution image of the stack display, the 
-file S609.TIF.  This file is no longer available on the USGS internet 
+file S609.TIF.  This file is no longer available on the USGS Internet 
 site.  I was able to view this file in OpenOffice.org draw 
 and zoom to read the side label that describes the acquisition and 
 processing parameters.
@@ -151,7 +150,7 @@ The processing applied by GSI in 1981 was:
 380 ms at 2970 ft\\
 700 ms at 5225 ft
 \item Common depth point stack
-\item Time Variant filtering
+\item Time Variant filtering \\
 16-50 Hz at 700 ms\\
 14-45 Hz at 1400 ms\\
 12-40 Hz at 2000 ms\\
@@ -166,11 +165,11 @@ scons surveylog.view \\
 scons observerlog.view
 
 I read the surveyor's log and typed the elevations into the spnElev.txt 
-file.  snpElev.txt contains two columns.  The first is the shotpoint 
+file.  spnElev.txt contains two columns.  The first is the shotpoint 
 number and the second is the elevation.  I read the observer's log and 
 typed the relationship between the field record numbers the shotpoint 
-numbers into the recnoSpn.txt file.  recnoSpn contains two columns.  The 
-first column is the field record number and the second column is the 
+numbers into the recnoSpn.txt file.  recnoSpn.txt contains two columns.  
+The first column is the field record number and the second column is the 
 shotpoint number. I used a shotpoint number -999999 to reject bad field 
 records.  These files will be used in the next section to load the trace 
 headers.
@@ -217,17 +216,17 @@ fldr=102 tracf=2    cdp=0  cdpt=0  offset=0 \\
 ...
 
 A first display of the seismic data and a zoom of the same data 
-(Figures~\ref{fig:first} and ~\ref{fig:zoomfirst}) are
+(figures~\ref{fig:first} and ~\ref{fig:zoomfirst}) are
 produced with the commands: \\
 scons first.view \\
 scons zoomfirst.view
 
-\plot{first}{width=\textwidth}{First 3000 traces on the first tape.}
-\plot{zoomfirst}{width=\textwidth}{Zoom of figure~\ref{fig:first}. The 
+\plot{first}{width=\textwidth}{First 3000 traces on the first segy file.}
+\plot{zoomfirst}{width=\textwidth}{Zoom of Figure~\ref{fig:first}. The 
 first look at the data. Notice the ground roll and good signal. There 
 are 101 traces in each shotpoint, 5 auxiliary traces and 96 data traces.}
 
-The first 10 records in the file are test records.  These tests
+The first 10 records in the file are test records.  These test
 records are the unusual traces in the left third of
 Figure~\ref{fig:first}. The Observer Log does not mention these test
 records, but indicates the first shotpoint is field file identifier 
@@ -240,7 +239,7 @@ scons firstrec24.view
 
 This display as created using suwind to select traces 2324 through 2424, 
 so it is the 24th record in the input file (including the test records). 
-This plot confirms that the 5 auxiliary are tracf 97 through 101.
+This plot confirms that the 5 auxiliary traces are tracf 97 through 101.
 
 \plot{firstrec24}{width=\textwidth}{The 24th shot record without 
 processing.  The last 5 traces traces are auxiliary traces.  There is 
@@ -275,7 +274,7 @@ to be loaded
 
 InterpText.py is a custom python program to load the trace headers.  The
 code is not elegant, but it is straightforward and works.  This program 
-require files to define the shotpoint elevation and the 'FFID'/'EP' 
+require files to define the shotpoint elevation and the 'ffid'/'ep' 
 relationship.  The surveyor log defines the shotpoint elevations.  The 
 observers log describes the relationship between the su header keys 
 'ffid' and 'ep' (these are called 'REC' and 'SHOTPOINT' by in the observers 
@@ -298,17 +297,17 @@ from the 1981 processing.}
 \section{Shot record velocity filter}
 I applied Velocity filtering (sudipfilt) to remove the groundroll.
 I processed the receivers leading the shotpoint separately from the
-trailing receivers (i.e. I split the shots) so I could use an 
-asymmetrical dip filter (-15,5 ms/trace).  That dip filter is similar 
-to the 1981 processing that used (-12,4). Sudipfilter was intended for post
-stack processing, so I wrote the script alaskavelfilt.sh to loop over the 
-shots and divide individual shotrecords into positive and negative offsets.  
-Figure~\ref{fig:velfiltrec24} is the same shotpoint as plotted in 
-Figure~\ref{fig:zoomfirst} with velocity filtering applied.
+trailing receivers (i.e. I split the shots).  I plit the shots so I 
+could use an asymmetrical dip filter (-15,5 ms/trace).  That dip filter 
+is similar to the 1981 processing that used (-12,4). Sudipfilter was 
+intended for post stack processing, so I wrote the script alaskavelfilt.sh 
+to loop over the shots and divide individual shotrecords into positive 
+and negative offsets.  Figure~\ref{fig:velfiltrec24} is the same shotpoint 
+as plotted in Figure~\ref{fig:zoomfirst} with velocity filtering applied.
 
 The command:\\
 scons velfiltrec24.view \\
-applied velocity filterring and produces the figure.
+applies velocity filterring and produces the figure.
 
 \plot{velfiltrec24}{width=\textwidth}{The 24th shot record after 
 agc and velocity filter.}
@@ -317,7 +316,7 @@ agc and velocity filter.}
 
 The command\\
 scons cdp250-251.view \\
-sorts the data to CDP order, apply a mute and display cdps 250 and 
+sorts the data to CDP order, applies a mute and display cdps 250 and 
 251.  This result is shown in Figure~\ref{fig:cdp250-251}.  I picked 
 the mute from the stacked section.  The first trace on the stack is 
 created from a single far offset which, of course, has moveout applied.  
@@ -349,7 +348,8 @@ static processes.
 \section{First Pass Velocity analysis}
 I used a long script, iva.sh, that combines several su programs for velocity 
 interpretation.  My iva.sh is a combination of the scripts iva.sh and 
-velanQC.sh in sections 7.6.7.3 and 8.2.2.2 \cite[]{forel}.  My script is 
+velanQC.sh in sections 7.6.7.3 and 8.2.2.2 of 
+\emph{Seismic Processing with Seismic Un*x} \cite[]{forel}.  My script is 
 more practical, because you can start from no velocity function, or review 
 and update an existing velocity field.  The script has more capabilities, 
 is tidier, and is a little shorter than Forel's script.
@@ -475,7 +475,8 @@ shotrecord.  The filter is designed differently from conventional
 deconvolution and the two types of deconvolution will not produce data 
 with the same phase. 
 \item There are many differences in the application of AGC.  For example 
-GSI applied AGC before velocity filtering inverse AGC after velocity filter.
+GSI applied AGC before velocity filtering and inverse AGC after velocity 
+filter.
 \item GSI used diversity stack to control the high amplitude noise bursts.
 \end{enumerate}
 Considering all these differences, I think the results are surprisingly 
@@ -517,7 +518,7 @@ I have provided a set of scripts the process a land line using SU.  These script
 
 My processing illustrates processing stages not presented by Forel
 or Stockwell. The results can be recreated by others since the processing
-scripts and the data can be downloaded from the internet.
+scripts and the data can be downloaded from the Internet.
 
 The task of loading trace headers is not addressed in other
 publications.  The custom python program included in this paper is one
