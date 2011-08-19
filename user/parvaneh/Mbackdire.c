@@ -57,9 +57,9 @@ int main (int argc, char *argv[])
     tzt=sf_floatalloc3(nt,ny,nx);
     tzx=sf_floatalloc3(nt,ny,nx);
 
-   for (it=0; it<nt; it++) {
-	for (iy=0; iy<ny; iy++) {
-	    for (ix=0; ix<nx; ix++) {
+   for (it=2; it<nt-2; it++) {
+	for (iy=2; iy<ny-2; iy++) {
+	    for (ix=2; ix<nx-2; ix++) {
 		 dip[ix][iy][it]=0;
 	    }
 	}
