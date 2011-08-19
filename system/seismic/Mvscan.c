@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     bool sembl, half, slow, dsembl, asembl, weight, squared, trend, ratio;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, ds, smax, num, den, dy, str, sh=0., sh2=0.;
-    float *trace, ***stack, ***stack2, ***stackh, *hh;
+    float *trace, ***stack, ***stack2, ***stack2h, ***stackh, *hh;
     char *time, *space, *unit;
     const char *type;
     size_t len;
@@ -222,8 +222,9 @@ int main(int argc, char* argv[])
     }
 
     stack =  sf_floatalloc3(nt,nv,ns);
-    stack2 = (ratio || 'd' == type[0])? sf_floatalloc3(nt,nv,ns): NULL;
+    stack2 = ('p' != type[0])? sf_floatalloc3(nt,nv,ns): NULL;
     stackh = trend? sf_floatalloc3(nt,nv,ns): NULL;
+    stack2h = ('w' == type[0])? sf_floatalloc3(nt,nv,ns): NULL;
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
@@ -260,8 +261,8 @@ int main(int argc, char* argv[])
 	    if (half) h *= 2.;
 
 	    if (trend) {
-		sh  += h;
-		sh2 += h*h;
+		sh  += h;    /* sf  */
+		sh2 += h*h;  /* sf2 */
 	    }
 
 	    for (it=0; it < nt; it++) {
@@ -293,10 +294,16 @@ int main(int argc, char* argv[])
 				stack2[is][iv][it] += amp*amp;
 				stack[is][iv][it] += amp;
 				break;
-			    case 'a': case 'w':
-				stackh[is][iv][it] += amp*h;
-				stack2[is][iv][it] += amp*amp;
-				stack[is][iv][it] += amp;
+			    case 'a': 
+				stackh[is][iv][it] += amp*h;    /* saf */
+				stack2[is][iv][it] += amp*amp;  /* sa2 */
+				stack[is][iv][it] += amp;       /* sa1 */
+				break;
+			    case 'w':
+				stackh[is][iv][it] += amp*h;       /* saf */
+				stack2h[is][iv][it] += amp*amp*h;  /* sfa2 */
+				stack2[is][iv][it] += amp*amp;     /* sa2 */
+				stack[is][iv][it] += amp;          /* sa1 */
 				break;
 			    case 'p':
 			    default:
@@ -323,14 +330,21 @@ int main(int argc, char* argv[])
 				case 'a':
 				    /* (N*saf^2 + sa1^2*sf2 - 2*sa1*saf*sf)/((N*sf2 - sf^2)*sa2) */
 
-				    num += sh2*stack[is][iv][i]*stack[is][iv][i] +
-					nh*stackh[is][iv][i]*stackh[is][iv][i] - 
+				    num += nh*stackh[is][iv][i]*stackh[is][iv][i] + 
+					sh2*stack[is][iv][i]*stack[is][iv][i] - 
 					2.*sh*stack[is][iv][i]*stackh[is][iv][i];
 				    den += stack2[is][iv][i];
 				    break;
 				case 'w':
 				    /* 4*(sa1*sfa2 - sa2*saf)*(N*saf - sa1*sf)/(N*sfa2 - sa2*sf)^2 */
 
+				    num += 
+					(stack[is][iv][i]*stack2h[is][iv][i]-
+					 stack2[is][iv][i]*stackh[is][iv][i])*
+					(nh*stackh[is][iv][i]-stack[is][iv][i]*sh);
+				    den += 
+					(nh*stack2h[is][iv][i]-stack2[is][iv][i]*sh)*
+					(nh*stack2h[is][iv][i]-stack2[is][iv][i]*sh);
 				    break;
 				case 's':
 				default:
@@ -345,6 +359,7 @@ int main(int argc, char* argv[])
 				den *= (nh*sh2-sh*sh);
 				break;
 			    case 'w':
+				num *= 4.0f;
 				break;
 			    case 's':
 				den *= nh;

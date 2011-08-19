@@ -184,7 +184,7 @@ int main (int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
 	    k = order[j];
-	    for (ni = n1*naxis[j]*esize; ni > 0; ni -= nbuf) {
+	    for (ni = n1*naxis[k]*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
 		sf_charread (buf,nbuf,in[k]);
 		sf_charwrite (buf,nbuf,out);
