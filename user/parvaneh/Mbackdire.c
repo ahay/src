@@ -23,7 +23,6 @@ int main (int argc, char *argv[])
 {
     /*differentiation coefficient*/
     float c0=-1./12., c1=+2./3.;
-    bool verb;  /*verbose flag*/
     sf_file Zi=NULL,Zo=NULL,Zz=NULL;
     sf_axis at,ay,ax;
     int it,iy,ix;
@@ -51,7 +50,7 @@ int main (int argc, char *argv[])
     idx=1/dx;
 
     tt=sf_floatalloc3(nt,ny,nx); sf_floatread(tt[0][0],nt*ny*nx,Zi);
-    tz=sf_floatalloc3(nt,ny,nx); sf_floatread(tt[0][0],nt*ny*nx,Zz);
+    tz=sf_floatalloc3(nt,ny,nx); sf_floatread(tz[0][0],nt*ny*nx,Zz);
 
     dip=sf_floatalloc3(nt,ny,nx);
     tzt=sf_floatalloc3(nt,ny,nx);
