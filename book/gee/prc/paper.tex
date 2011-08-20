@@ -50,17 +50,17 @@ We'll also come to understand why the gradient is such a poor direction
 both for steepest descent and for conjugate gradients.
 An indication of our path is found in the contrast between
 and exact solution
-$\bold m = (\bold A'\bold A)^{-1}\bold A'\bold d$ and the
+$\bold m = (\bold A\T\bold A)^{-1}\bold A\T\bold d$ and the
 gradient
-$\Delta \bold m = \bold A'\bold d$
+$\Delta \bold m = \bold A\T\bold d$
 (which is the first step starting from $\bold m =\bold 0$).
 Notice that $\Delta \bold m$ differs from $\bold m$
-by the factor $(\bold A'\bold A)^{-1}$.
+by the factor $(\bold A\T\bold A)^{-1}$.
 This factor is sometimes called a spectrum
 and in some situations it literally is a frequency spectrum.
 In these cases, $\Delta \bold m$ simply gets a different
 spectrum from $\bold m$ and many iterations are required to fix it.
-Here we'll find that for many problems,
+Here we'll find that for many applications,
 ``preconditioning'' with the helix is a better way.
 
 
@@ -100,9 +100,9 @@ to get the solution to the original problem.
 We hope this change of variables has saved effort.
 For each iteration, there is a little more work:
 Instead of the iterative application of
-                                                $\bold F$ and $\bold F'$
+                                                $\bold F$ and $\bold F\T$
 we have iterative application of
-                                        $\bold F\bold S$ and $\bold S'\bold F'$.
+                                        $\bold F\bold S$ and $\bold S\T\bold F\T$.
 
 Our hope is that the number of iterations decreases because we are clever,
 or because we have been lucky in our choice of $\bold S$.
@@ -131,6 +131,52 @@ reduces the number of adjustable parameters,
 changes the solution,
 gets it quicker, but lower resolution.
 
+\subsection{ Monkeying with the gradient }
+An essential part of any model update is the gradient
+\begin{equation}
+\Delta \bold m = \partial \bold r / \partial \bold m\T = \bold F\T \bold r 
+\end{equation}
+which vanishes $\bold 0=\bold F\T \bold r$ at the ultimate solution.
+\par
+With the change of variables $\bold m = \bold S \bold p$ the gradient changes as
+$\Delta \bold m = \bold S \Delta \bold p$.
+In terms of $\bold p$ the regression
+$\bold 0 \approx \bold r = \bold F \bold m - \bold d$
+becomes
+$\bold 0 \approx \bold r = \bold F \bold S \bold p - \bold d$
+with a gradient
+$\Delta \bold p = \bold S\T \bold F\T \bold r$.
+Changing variables back to $\bold m$ gives
+\begin{equation}
+\Delta \bold m = \bold S \Delta \bold p = \bold S \bold S\T \bold F\T \bold r
+\end{equation}
+The ultimate solution is when the gradient vanishes $\bold 0 = (\bold S\bold S\T) \bold F\T \bold r$.
+Most often the ultimate solution is the same with or without the change of variables
+because most often the transformation matrix $\bold S$
+is chosen invertible so $ (\bold S\bold S\T)$ has an inverse which will cancel it.
+\par
+We conclude that when a gradient is multiplied by any
+positive definite matrix $\bold S\bold S\T$
+we are simply solving the original problem in a new coordinate system.
+%In linear problems,
+%we'd be doing the preconditioning (choosing the coordinate system)
+%to maximize the speed of convergence.
+%In nonlinear problems,
+%as described in a later chapter,
+%we are chosing a descent path that honors prior information
+%hence is less likely to fall into a local minimum.
+%\par
+Choosing $\bold S\bold S\T$
+really matters only when the problem is big so it converges slowly,
+or when the physics or statistical approach is non-linear (later chapter).
+The choice of $\bold S$ is a subjective matter.
+It's an area where prior information or your physical intuition is relevant.
+Calling both $\bold m$ and $\bold p$ model space,
+obvious choices for $\bold S$ are weighting functions
+and filtering functions in model space.
+You would weight the model space smaller where your intuition
+tells you your ultimate model will be small or where it might not be
+learnable from the data.
 
 
 \subsection{Preconditioner with a starting guess}
@@ -382,6 +428,8 @@ Even the rapid convergence predicted for the 10-th iteration
 is delayed until the 12-th.
 %\end{notforlecture}
 
+\begin{comment}
+
 \subsection{Statistical interpretation}
 This book is not a statistics book.
 Never-the-less, many of you have some statistical knowledge
@@ -451,6 +499,130 @@ not be itself white, so we should solve first for another variable,
 the whitened map image, and as a final step,
 transform it to the ``natural colored'' map.
 
+\end{comment}
+
+\subsection{You better make your residuals IID!}
+In the statistical literature is a concept that repeatedly arises,
+the idea that some statistical variables are IID, namely Independent, Identically Distributed.
+In practice we'll see many random looking variables,
+some much closer than others to IID.
+Theoretically, the ID part of IID means the random variables come from identical
+probability functions.
+In practice, the ID part mostly means the variables have the same variance.
+The ``I'' before the ID means that the variables are statistically independent of one another.
+In the subject area of this book, signals, images, and earth volumes,
+the ``I'' before the ID means that our residual spaces are white --
+have all frequencies present in roughly equal amounts.
+In other words the ``I'' means the statistical variables
+have no significant correlation in time or space.
+IID random variables have fairly uniform variance in both physical space and in Fourier space.
+\boxit{
+IID random variables have uniform variance in both physical space and Fourier space.
+}
+
+\par
+In a geophysical project
+it is important the residual between observed data and theoretical data is not far from IID.
+We fit the data difference by minimizing the sum of the squared residuals,
+so if any collection of residuals is small,
+their squares are really small,
+so such regression equations are effectively ignored.
+We would hardly ever want that.
+Consider reflection seismograms.   They get weak at late time.
+So even with a bad fit the difference between real and theoretical seismograms
+is necessarly weak at late times.
+We don't want the data at late times to be ignored.
+So we boost up the residual there.
+We choose $\bold W$ to be a diagonal matrix that boosts late times
+in the regression $\bold 0 \approx \bold r = \bold W(\bold F\bold m-\bold d)$
+\par
+An example with too much low (spatial) frequency in a residual might arise in a topographic study.
+It is not unusual for the topographic wavelength to exceed the survey size.
+Here we should choose $\bold W$ to be a filter to boost up the higher frequencies.
+Perhaps $\bold W$ should contain a derivative or a Laplacian.
+If you set up and solve a data modeling problem
+and then find $\bold r$ is not IID,
+you should consider changing your $\bold W$.
+\par
+Now let us include regularization $\bold 0 \approx\bold A\bold m$
+and a preconditioning variable $\bold p$.
+We have our data fitting goal and our model styling goal,
+the first with a residual $\bold r_d$
+in data space, the second with a residual $\bold r_m$
+in model space.
+We have had to choose a regularization operator $\bold A$ and a scaling factor $\epsilon$.
+\begin{eqnarray}
+0 & \approx& \bold r_d  \ = \ \bold F \bold A^{-1}\bold p -\bold d 
+\\
+0 & \approx& \bold r_m  \ = \ \epsilon \bold p
+\end{eqnarray}
+This system of two regressions could be packed into one;
+the two residual vectors stacked on top of each other,
+likewise the operators $\bold F$ and $\epsilon \bold I$.
+The IID notion seems to apply to this unified system.
+That gives us a clue
+how we should have chosen the regularization operator $\bold A$.
+Not only should $\bold r_d$ be IID, but also should $\bold r_m$.
+But within a scale $\epsilon$, $\bold r_m=\bold p$.
+Thus the preconditioning variable is not simply something to speed computational convergence.
+It is a variable that should be IID.
+If it is not coming out that way, we should consider changing $\bold A$.
+Chapter \ref{paper:mda} addresses the task of chosing an $\bold A$
+so that $\bold r_m$ comes out IID.
+\par
+\boxit{We should choose a weighting function (and/or operator) $\bold W$
+so data residuals are IID.
+We should also choose our regularization operator $\bold A$
+so the precondioning variable $\bold p$ comes out IID.}
+
+\par
+Finally, the $\epsilon$.  How should we choose this number?
+Let $\E(|r_d|)$ be read as the Expected average value of $|r_d|$.
+The concept that each component in the vector $\bold r = (\bold r_d,\bold r_m)\T$
+should have the same expected absolute value leads to the notion that
+the value of epsilon should be
+$\epsilon=\E(|r_d|)/\E(|p|)$.
+(I vaguely remember trying this once and discovering that epsilon
+could not be bootstrapped.  It either diverged to infinity
+or converged to zero depending on its starting value.
+Perhaps the epsilon we should use is the starting value poised between each divergence!
+I don't trust my memory for an important issue like this.
+Somebody else should try this again.)
+
+\par
+There is another strange idea here which is a consequence
+of the notion that elements in  $\bold r = (\bold r_d,\bold r_m)\T$
+should be IID.
+It means elements of $\bold r_d$ and $\bold r_m$ should not be correlated.
+``But wait'', you say, ``it makes no sense to correlate spaces of different dimension.''
+That is where the formal statistical notion of ``ensemble'' arises.
+If there are many worlds, and if we may speak of an average over worlds,
+then we can have an array of averages,
+the array being of dimension the number of components of $r_d$ by that of $r_m$
+each an average over the many "worlds".
+How can a practioner absorb this notion?
+Perhaps in some cases the model and data space have a natural alignment
+such that a product of the two spaces can be locally averaged.
+Post stack migration suggests the example
+that a hyperbola in data space hitting its top in model space.
+This suggests we use a $2\times 2$ weight matrix
+\begin{equation}
+\left[
+\begin{array}{cc}
+	W_{dd}  &  W_{dm}
+	\\
+	W_{dm}  &  W_{mm}
+\end{array}
+\right]
+\end{equation}
+The closest I have come to seeing something like this in practice is in
+Chapter \ref{paper:noiz}
+where two parts of model space,
+the water bottom and the water top
+came out correlated.
+They should not have been so,
+because their fluctuations had different mechanisms.
+
 
 \subsection{The preconditioned solver}
 Summing up the ideas above,
@@ -497,6 +669,63 @@ the regularized solver
 \end{comment}
 
 
+\subsection{Need for an invertible preconditioner}
+It is important to use regularization to solve many examples.
+It is important to precondition because in practice computer power
+is often a limiting factor.
+It is important to be able to begin from a nonzero starting solution
+because in nonlinear problems then we must restart from 
+the result of an earlier solution.
+Putting all three requirements together leads to a little problem.
+It turns out the three together lead us to needing 
+a preconditioning transformation that is invertible.
+Let us see why this is so.
+
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main}
+\bold 0 &\approx& \bold F \bold m \ -\  \bold d \\
+\bold 0 &\approx& \bold A \bold m
+\end{array}
+\end{equation}
+First we change variables from $\bold m$ to $\bold u = \bold m - \bold m_0$.
+Clearly $\bold u$ starts from $\bold u_0=0$, and $\bold m = \bold u + \bold m_0$.
+Then our regression pair becomes
+
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main}
+\bold 0 &\approx& \bold F \bold u \ +\  (\bold F\bold m_0 -\bold d) \\
+\bold 0 &\approx& \bold A \bold u \ +\  \bold A \bold m_0
+\end{array}
+\end{equation}
+This result differs from the original regression in only two minor ways,
+(1) revised data, and (2) a little more general form of the regularization,
+the extra term $\bold A \bold m_0$.
+
+Now let us introduce preconditioning.  From the regularization
+we see this introduces the preconditioning variable $\bold p = \bold A\bold u$.
+Our regression pair becomes:
+
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main}
+\bold 0 &\approx& \bold F \bold A^{-1} \bold p \ +\  (\bold F\bold m_0 -\bold d) \\
+\bold 0 &\approx&                      \bold p \ +\  \bold A \bold m_0
+\end{array}
+\end{equation}
+Here is the problem:
+Now we require both $\bold A$ and $\bold A^{-1}$ operators.
+In 2- and 3-dimensional spaces we don't know very many operators
+with an easy inverse.
+Indeed, that is why I found myself pushed to come up with the helix methodology 
+of the previous chapter -- because it provides invertible operators for
+smoothing and roughening.
+
+
+
+
+
 \section{OPPORTUNITIES FOR SMART DIRECTIONS}
 Recall the fitting goals (\ref{eqn:precsummary})
 \begin{equation}
@@ -514,7 +743,7 @@ Without preconditioning we have the search direction
 \Delta \bold m_{\rm bad} \eq
 \left[
 	\begin{array}{cc}
-	\bold F' & \bold A'
+	\bold F\T & \bold A\T
 	\end{array}
 \right]
 \left[
@@ -529,7 +758,7 @@ and with preconditioning we have the search direction
 \Delta \bold p_{\rm good} \eq
 \left[
 	\begin{array}{cc}
-	(\bold F\bold A^{-1})' & \bold I
+	(\bold F\bold A^{-1})\T & \bold I
 	\end{array}
 \right]
 \left[
@@ -543,22 +772,22 @@ and with preconditioning we have the search direction
 The essential feature of preconditioning is not that we perform
 the iterative optimization in terms of the variable $\bold p$.
 The essential feature is that we use a search direction
-that is a gradient with respect to $\bold p'$ not $\bold m'$.
+that is a gradient with respect to $\bold p\T$ not $\bold m\T$.
 Using $\bold A\bold m=\bold p$ we have
 $\bold A\Delta \bold m=\Delta \bold p$.
 This enables us to define a good search direction in model space.
 \begin{equation}
 \Delta \bold m_{\rm good} \eq \bold A^{-1}
 \Delta \bold p_{\rm good} \eq
-	\bold A^{-1} (\bold A^{-1})'
-	\bold F' \bold r_d + \bold  A^{-1} \bold r_m
+	\bold A^{-1} (\bold A^{-1})\T
+	\bold F\T \bold r_d + \bold  A^{-1} \bold r_m
 \end{equation}
-Define the gradient by $\bold g=\bold F'\bold r_d$ and
+Define the gradient by $\bold g=\bold F\T\bold r_d$ and
 notice that $\bold r_m=\bold p$.
 \begin{equation}
 \Delta \bold m_{\rm good} \eq
-	\bold A^{-1} (\bold A^{-1})' \ \bold g
-%	{ \bold g \over \bold A \bold A'}
+	\bold A^{-1} (\bold A^{-1})\T \ \bold g
+%	{ \bold g \over \bold A \bold A\T}
 	+ \bold m
 \label{eqn:newdirection}
 \end{equation}
@@ -574,7 +803,7 @@ a positive definite matrix and we can still expect
 the conjugate-direction algorithm to descend, as always,
 to the ``exact'' answer in a finite number of steps.
 This is because modifying the search direction with
-$ \bold A^{-1} (\bold A^{-1})'$ is equivalent to solving
+$ \bold A^{-1} (\bold A^{-1})\T$ is equivalent to solving
 a conjugate-gradient problem in $\bold p$.
 
 %\subsubsection{Implications for better preconditioning}
@@ -589,14 +818,14 @@ a conjugate-gradient problem in $\bold p$.
 %Actually, we do polynomial division
 %followed by truncation of the infinite series.
 %Because of the truncation we really do not properly construct
-%$ \bold A^{-1} (\bold A^{-1})'$, and for this we can expect
+%$ \bold A^{-1} (\bold A^{-1})\T$, and for this we can expect
 %some difficulty at one boundary.
 
 %\par
 %The good news is that we now see new preconditioning opportunities.
 %Formerly we began from a preconditioning 
 %operator $\bold A^{-1}$ but now we see that we really only
-%need its spectrum $\bold A^{-1} (\bold A^{-1})'$.
+%need its spectrum $\bold A^{-1} (\bold A^{-1})\T$.
 %That might not be any real advantage since our basic representation
 %of a positive definite matrix is any matrix times its transpose.
 %Anyway, we can conclude that the operator $\bold A$
@@ -604,11 +833,105 @@ a conjugate-gradient problem in $\bold p$.
 %
 %\par
 %We are also reminded that what we really need
-%is not simply $\bold A^{-1} (\bold A^{-1})'$
-%but $(\bold F'\bold F+\bold A'\bold A)^{-1}$.
+%is not simply $\bold A^{-1} (\bold A^{-1})\T$
+%but $(\bold F\T\bold F+\bold A\T\bold A)^{-1}$.
 %Likewise we imagine this being built of
 %any cascade of weighting and filtering operators
 %followed by the adjoint.
+
+\subsection{The meaning of the preconditioning variable $\bold p$}
+
+To accelerate convergence of iterative methods we often change variables.
+The model-styling regression $\bold 0 \approx \epsilon \bold A \bold m$
+is changed to $\bold 0 \approx \epsilon \bold p$.
+Experience shows, however, that the variable $\bold p$ is often more interesting
+to look at than the model $\bold m$.
+Why should a new variable introduced for computational convenience
+turn out to have more interpretive value?
+There is a little theory underlying this.  Begin from
+\begin{eqnarray}
+\bold 0 &\approx& \bold W (\bold F \bold m -\bold d)
+\\
+\bold 0 &\approx& \epsilon \bold A \bold m
+\end{eqnarray}
+Introduce the preconditioning variable $\bold p$.
+\begin{eqnarray}
+\bold 0 &\approx& \bold W (\bold F \bold A^{-1}\bold p -\bold d)
+\\
+\bold 0 &\approx& \epsilon \bold p
+\end{eqnarray}
+Rewrite this as a single regression
+\begin{equation}
+\label{eqn:singlereg}
+\bold 0 
+\quad\approx\quad
+\left[
+\begin{array}{c}
+\bold r_d \\
+\bold r_m
+\end{array}
+\right]
+\quad=\quad
+\left[
+\begin{array}{c}
+\bold W\bold F\bold A^{-1} \\
+\epsilon \bold I
+\end{array}
+\right]
+\bold p
+\quad - \quad
+\left[
+\begin{array}{c}
+\bold d \\
+\bold 0
+\end{array}
+\right]
+\end{equation}
+In Chapter \ref{paper:lsq} we learned the least squares solution
+is when the residual is orthogonal to the fitting functions.
+The fitting functions are the columns of the matrix or the rows of its transpose.
+Thus we simply multiply the regression
+(\ref{eqn:singlereg})
+by the adjoint operator and replace the $\approx$ by $=$.
+Thus
+\begin{equation}
+\label{eqn:fight}
+\bold 0 \quad=\quad (\bold W\bold F\bold A^{-1})\T\bold r_d + \epsilon \bold r_m 
+\end{equation}
+Equation (\ref{eqn:fight}) tells us at the best solution to the regression
+there is a fight between the data space residual and the model space residual.
+It's a battle between our preconceived statistical model
+expressed in our model styling
+and the model wanted by the data.
+Except for the scale factor $\epsilon$,
+the model space residual $\bold r_m$ is the preconditioning variable $\bold p$.
+That's why the variable $\bold p$ is interesting to inspect and interpret.
+The variable $\bold p$ is not simply a computational convenience.
+Its size measures (in model space)
+the conflict of our acquired data with our preconceived theory.
+It points to locations of interest.
+\par
+\boxit{
+The preconditioning variable $\bold p$ is not simply a computational convenience.
+Its size measures (in model space)
+the conflict of our acquired data with our preconceived theory
+expressed by our model styling.
+It points to locations of interest.
+}
+
+\par
+If I were young and energetic like you
+I would write a new basic tool for optimization.
+Instead of scanning only the space of the gradient and previous step,
+it would scan also over the ``smart'' direction.  
+This should offer the benefit of preconditioning
+the regularization at early interations
+while offering more assured fitting data at late iterations.
+The improved 
+module for \texttt{cgstep}
+%\vpageref{/prog:cgstep}
+would need to solve a $3\times 3$ matrix.
+%XXX
 
 
 
@@ -1133,7 +1456,7 @@ For the roughening operator $\bold A$,
 we'll take the helix derivative $\bold H$.
 This is logically equivalent to roughening with the gradient $\bold \nabla$
 because the (negative) laplacian operator is
-$\bold\nabla'\bold\nabla = \bold H'\bold H $.
+$\bold\nabla\T\bold\nabla = \bold H\T\bold H $.
 
 %Later, in Chapter
 %\ref{mda/paper:mda}
@@ -1291,10 +1614,10 @@ Construct theoretical data with
         \label{eqn:theordata}
 \end{equation}
 Assume there are fewer data points than model points
-and that the matrix $\bold F \bold F'$ is invertible.
+and that the matrix $\bold F \bold F\T$ is invertible.
 From the theoretical data we estimate a model $\bold m_0$ with
 \begin{equation}
-         \bold m_0 \eq \bold F' (\bold F \bold F')^{-1} \bold d
+         \bold m_0 \eq \bold F\T (\bold F \bold F\T)^{-1} \bold d
         \label{eqn:underdetest}
 \end{equation}
 To verify the validity of the estimate,
@@ -1306,8 +1629,8 @@ Notice that equation
 as equation (\ref{eqn:sln}) which we derived much earlier.
 What's the difference?
 The central issue is which matrix of
-$\bold F \bold F'$ and
-$\bold F' \bold F$ actually has an inverse.
+$\bold F \bold F\T$ and
+$\bold F\T \bold F$ actually has an inverse.
 If $\bold F$ is a rectangular matrix,
 then it is certain that one of the two is not invertible.
 (There are plenty of real cases where neither matrix is invertible.
@@ -1322,9 +1645,9 @@ that does {\em  not} use Lagrange multipliers.)
 First split (\ref{eqn:underdetest}) into an intermediate
 result $\bold d_0$ and final result:
 \begin{eqnarray}
-        \bold d_0 &=& (\bold F \bold F')^{-1} \bold d
+        \bold d_0 &=& (\bold F \bold F\T)^{-1} \bold d
 	\\
-        \bold m_0 &=& \bold F' \bold d_0
+        \bold m_0 &=& \bold F\T \bold d_0
 \end{eqnarray}
 Consider another model ($\bold x$ not equal to zero)
 \begin{equation}
@@ -1342,26 +1665,26 @@ that $\bold x$ is a null space vector.
 First we see that $\bold m_0$ is orthogonal to $\bold x$ because
 \begin{equation}
          \bold m_0' \bold x \eq
-         (\bold F' \bold d_0)' \bold x \eq
+         (\bold F\T \bold d_0)\T \bold x \eq
          \bold d_0' \bold F \bold x \eq
          \bold d_0' \bold 0 \eq 0
 	\label{eqn:dzero}
 \end{equation}
 Therefore,
 \begin{equation}
-\bold m' \bold m \eq
-\bold m_0' \bold m_0 + \bold x'\bold x + 2 \bold x' \bold m_0 \eq
-\bold m_0' \bold m_0 + \bold x'\bold x \quad\ge\quad \bold m_0' \bold m_0 
+\bold m\T \bold m \eq
+\bold m_0' \bold m_0 + \bold x\T\bold x + 2 \bold x\T \bold m_0 \eq
+\bold m_0' \bold m_0 + \bold x\T\bold x \quad\ge\quad \bold m_0' \bold m_0 
 \end{equation}
 so adding null space to $\bold m_0$ can only increase its energy.
 In summary,
 the solution
-$\bold m_0 = \bold F' (\bold F \bold F')^{-1} \bold d$
+$\bold m_0 = \bold F\T (\bold F \bold F\T)^{-1} \bold d$
 has less energy than any other model that satisfies the data.
 
 \par
 Not only does the theoretical solution
-$\bold m_0 = \bold F' (\bold F \bold F')^{-1} \bold d$
+$\bold m_0 = \bold F\T (\bold F \bold F\T)^{-1} \bold d$
 have minimum energy,
 but the result of iterative descent will too,
 provided that we begin iterations from $\bold m_0=0$ or any $\bold m_0$
@@ -1369,8 +1692,8 @@ with no null-space component.
 In (\ref{eqn:dzero}) we see that the 
 orthogonality $\bold m_0'\bold x=0$
 does not arise because $\bold d_0$ has any particular value.
-It arises because $\bold m_0$ is of the form $\bold F'\bold d_0$.
-Gradient methods contribute $\Delta\bold m =\bold F' \bold r$
+It arises because $\bold m_0$ is of the form $\bold F\T\bold d_0$.
+Gradient methods contribute $\Delta\bold m =\bold F\T \bold r$
 which is of the required form.
 
 %\section{VIRTUAL-RESIDUAL PRECONDITIONING}
@@ -1429,7 +1752,7 @@ which is of the required form.
 %As the iteration begins we have gradients
 %of the two parts of the model
 %\begin{eqnarray}
-%\bold g_m &=& \bold S' \bold F' \hat{\bold r} \\
+%\bold g_m &=& \bold S\T \bold F\T \hat{\bold r} \\
 %\bold g_d &=& \epsilon \        \hat{\bold r}
 %\end{eqnarray}
 %which imply a perturbation in the theoretically zero residual
@@ -1487,16 +1810,16 @@ the notation $ {\bf diag\ }\bold m$ means
 Given the usual linearized fitting goal between
 data space and model space, $ \bold d \approx \bold F \bold m$,
 the simplest image of the model space results from
-application of the adjoint operator $ \hat{\bold m} = \bold F' \bold d$.
+application of the adjoint operator $ \hat{\bold m} = \bold F\T \bold d$.
 Unless $\bold F$ has no physical units, however,
 the physical units of $\hat{\bold m}$ do not match those of $\bold m$,
 so we need a scaling factor.
 The theoretical solution
-$\bold m_{\rm theor} = (\bold F'\bold F)^{-1}\bold F'\bold d$
-tells us that the scaling units should be those of $(\bold F'\bold F)^{-1}$.
-We are going to approximate $(\bold F'\bold F)^{-1}$ by a diagonal matrix
+$\bold m_{\rm theor} = (\bold F\T\bold F)^{-1}\bold F\T\bold d$
+tells us that the scaling units should be those of $(\bold F\T\bold F)^{-1}$.
+We are going to approximate $(\bold F\T\bold F)^{-1}$ by a diagonal matrix
 $\bold W^2$ with the correct units so
-$\hat{\bold m} = \bold W^2 \bold F'\bold d$.
+$\hat{\bold m} = \bold W^2 \bold F\T\bold d$.
 
 \par
 What we use for $\bold W$ will be a guess, simply a guess.
@@ -1512,11 +1835,7 @@ To get the right physical dimensions we choose
 $\tilde {\bold m}=\bold 1$, a vector of all ones and choose
 \begin{equation}
 \bold W^2 \eq
-	{
-		1
-			\over
-		{\bf diag\ } {\bold F'\bold F\bold 1}
-	}
+	\frac{ 1 }{ {\bf diag\ } {\bold F\T\bold F\bold 1} }
 \label{eqn:adjointwt}
 \end{equation}
 A problem with the choice
@@ -1535,12 +1854,12 @@ we iterate
 with the operator $\bold  F\bold W$ instead of with $\bold F$.
 As usual, the first step of the iteration is to use the adjoint
 of $\bold d\approx \bold F\bold W\bold p$ to form the image
-$\hat{\bold p}=(\bold F\bold W)'\bold d$.
+$\hat{\bold p}=(\bold F\bold W)\T\bold d$.
 At the end of the iterations,
 we convert from  $\bold p$ back to  $\bold m$
 with $\bold m=\bold W\bold p$.
 The result after the first iteration
-$\hat{\bold m}=\bold W\hat{\bold p}=\bold W(\bold F\bold W)'\bold d=\bold W^2\bold F'\bold d$
+$\hat{\bold m}=\bold W\hat{\bold p}=\bold W(\bold F\bold W)\T\bold d=\bold W^2\bold F\T\bold d$
 turns out to be the same as scaling.
 \par
 By (\ref{eqn:adjointwt}), $\bold W$ has physical units inverse to $\bold F$.
@@ -1553,19 +1872,16 @@ with its more theoretical model units.
 
 \par
 The theoretical solution for underdetermined systems
-         $\bold m =\bold F' (\bold F \bold F')^{-1} \bold d$
+         $\bold m =\bold F\T (\bold F \bold F\T)^{-1} \bold d$
 suggests
 an alternate approach using instead
-         $\hat{\bold m} =\bold F' \bold W_d^2 \bold d$.
+         $\hat{\bold m} =\bold F\T \bold W_d^2 \bold d$.
 This diagonal weighting matrix $\bold W_d^2$ must be drawn
 from vectors in data space.
 Again I chose a vector of all 1's getting the weight
 \begin{equation}
 \bold W_d^2 \eq
-	{
-		1
-			\over
-		{\bf diag\ } {\bold F\bold F'\bold 1}
+	\frac{ 1 }{ {\bf diag\ } {\bold F\bold F\T\bold 1}
 	}
 \label{eqn:datawtadjoint}
 \end{equation}
@@ -1575,7 +1891,7 @@ My choice of a vector of 1's is quite arbitrary.
 I might as well have chosen a vector of random numbers.
 Bill Symes, who suggested this approach to me,
 suggests using an observed data vector $\bold d$ for the data space weight,
-and $\bold F' \bold d$ for the model space weight.
+and $\bold F\T \bold d$ for the model space weight.
 This requires an additional step, dividing out the units of the data $\bold d$.
 
 \par
@@ -1584,7 +1900,7 @@ Appropriate scaling is required in both data space and model space.
 We need two other weights
 $\bold W_m$ and
 $\bold W_d$ where
-$\hat{\bold m} = \bold W_m \bold F'\bold W_d \bold d$.
+$\hat{\bold m} = \bold W_m \bold F\T\bold W_d \bold d$.
 
 %\par
 %I have a useful practical example (stacking in $v(z)$ media)
@@ -1617,7 +1933,7 @@ Unitary means it is energy conserving and that the inverse
 is simply the conjugate transpose.
 \par
 What good is it that
-$(\bold W_d \bold F \bold W_m)'
+$(\bold W_d \bold F \bold W_m)\T
 (\bold W_d \bold F \bold W_m) \approx \bold I$?
 It gives us the most rapid convergence of least squares problems of the form
 \begin{equation}
@@ -1663,32 +1979,32 @@ $\tilde{\bold d}_1 = \bold D \bold d_1$, etc for other vectors.
 We complain we do not know $\bold M$ and $\bold D$.
 They reply that we do not really need to know them
 but we do need to have the inverses (aack!) of
-$\bold M'\bold M$ and
-$\bold D'\bold D$.
+$\bold M\T\bold M$ and
+$\bold D\T\bold D$.
 A pre-existing common notation is
-$\bold\sigma_m^{-2} = \bold M'\bold M$ and
-$\bold\sigma_d^{-2} = \bold D'\bold D$.
+$\bold\sigma_m^{-2} = \bold M\T\bold M$ and
+$\bold\sigma_d^{-2} = \bold D\T\bold D$.
 Now the mathematician buries the mysterious new positive-definite
 matrix inverses in the definition of dot product
-$<\bold m_1,\bold m_2> = \bold m'_1 \bold M'\bold M \bold m_2 = \bold m'_1 \bold \sigma_m^{-2} \bold m_2$
+$<\bold m_1,\bold m_2> = \bold m\T_1 \bold M\T\bold M \bold m_2 = \bold m_1\T \bold \sigma_m^{-2} \bold m_2$
 and likewise with
 $<\bold d_1,\bold d_2>$.
 This suggests a total reorganization of our programs.
 Instead of computing
-$(\bold m'_1 \bold M') (\bold M \bold m_2)$
-we could compute $\bold m'_1 (\bold\sigma_m^{-2} \bold m_2)$.
+$(\bold m_1\T \bold M\T) (\bold M \bold m_2)$
+we could compute $\bold m_1\T (\bold\sigma_m^{-2} \bold m_2)$.
 Indeed, this is the ``conventional'' approach.
 This definition of dot product would be buried in the solver code.
 The other thing that would change would be the search direction
 $\Delta \bold m$.
 Instead of being the gradient as we have defined it
-$\Delta \bold m=\bold L'\bold r$,
+$\Delta \bold m=\bold L\T\bold r$,
 it would be
-$\Delta \bold m=\bold\sigma_m^{-2} \bold L'\bold\sigma_d^{-2}\bold r$.
+$\Delta \bold m=\bold\sigma_m^{-2} \bold L\T\bold\sigma_d^{-2}\bold r$.
 A mathematician would
 {\em define} the adjoint of $\bold L$ to be
-$\bold\sigma_m^{-2} \bold L'\bold\sigma_d^{-2}$.
-(Here $\bold L'$ remains matrix transpose.)
+$\bold\sigma_m^{-2} \bold L\T\bold\sigma_d^{-2}$.
+(Here $\bold L\T$ remains matrix transpose.)
 You might notice this approach nicely incorporates
 both residual weighting and preconditioning
 while yet evading the issue of where we get the matrices
@@ -1699,15 +2015,15 @@ in image estimation problems,
 to obtain sensible estimates of the elusive operators $\bold M$ and $\bold D$.
 Paranthetically, modeling calculations in physics and engineering
 often use similar mathematics
-in which the role of $\bold M'\bold M$ is not so mysterious.
+in which the role of $\bold M\T\bold M$ is not so mysterious.
 Kinetic energy is mass times velocity squared.
-Mass can play the role of $\bold M'\bold M$.
+Mass can play the role of $\bold M\T\bold M$.
 
 \par
 So, should we continue to use
-$(\bold m'_1 \bold M') (\bold M \bold m_2)$
+$(\bold m_1\T \bold M\T) (\bold M \bold m_2)$
 or should we take the conventional route and go with
-$\bold m'_1 (\bold\sigma_m^{-2} \bold m_2)$?
+$\bold m_1\T (\bold\sigma_m^{-2} \bold m_2)$?
 One day while benchmarking a wide variety of computers I was shocked
 to see some widely differing numerical results.  Now I know why.
 Consider adding $10^7$ identical positive floating point numbers, say 1.0's,
@@ -1748,19 +2064,6 @@ transpose operators are computed with insufficient precision.
 %I learned from Dave Nichols, Bill Symes, Bill Harlan, and Sergey Fomel.
 
 \unboldmath
-%\activeplot{name}{width=6in,height=}{}{caption}
-%\activesideplot{name}{height=1.5in,width=}{}{caption}
-%
-%\begin{equation}
-%\label{eqn:}
-%\end{equation}
-%
-%\ref{fig:}
-%(\ref{eqn:})
 
-
-
-
-%\end{notforlecture}
 
 \clearpage

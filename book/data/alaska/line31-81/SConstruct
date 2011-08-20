@@ -18,24 +18,33 @@ Fetch('31_81_IM.JPG',
       dir='IMAGES')
 #THis can be done using:
 # wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
-Result('prevstack','31_81_IM.JPG',
-       'oodraw ${SOURCES[0]}',stdin=0)
+
+oodraw = WhereIs('oodraw')
+
+if oodraw:
+    Result('prevstack','31_81_IM.JPG',
+           oodraw + ' $SOURCE',stdin=0)
 
 # download and view the survey notes:
-Fetch('31_81_S.PDF',
-      server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
-      dir='DOCUMENTS')
-Result('surveylog','31_81_S.PDF',
-       'acroread ${SOURCES[0]}',stdin=0)
 
-# download and view the observer notes:
-Fetch('31_81_O.PDF',
-      server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
-      dir='DOCUMENTS')
-Result('observerlog','31_81_O.PDF',
-       'acroread ${SOURCES[0]}',stdin=0)
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+
+if pdfread:
+    Fetch('31_81_S.PDF',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+          dir='DOCUMENTS')
+    Result('surveylog','31_81_S.PDF',
+           pdfread + ' $SOURCE',stdin=0)
+    
+    # download and view the observer notes:
+    Fetch('31_81_O.PDF',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+          dir='DOCUMENTS')
+    Result('observerlog','31_81_O.PDF',
+           pdfread + ' $SOURCE',stdin=0)
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
@@ -78,11 +87,11 @@ Result('zoomfirst','line',
        suximage perc=90
        ''')
 
-Result('firstmovie','line',
-       '''
-       suxmovie n2=101 loop=1 fframe=1 dframe=1 
-                title="record %g" perc=20 
-       ''')
+Plot('firstmovie','line',
+     '''
+     suxmovie n2=101 loop=1 fframe=1 dframe=1 
+     title="record %g" perc=20 
+     ''')
 
 Result('firstrec24','line',
        '''
@@ -158,11 +167,11 @@ Result('zoomcheckstack','checkstack',
 Flow('allvelfilt_shot','allshots alaskavelfilt.sh',
      './${SOURCES[1]} 100 155')
 
-Result('movie_velfilt','allvelfilt_shot',
-	'''
-	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-                 title="record %g" perc=20
-	''')
+Plot('movie_velfilt','allvelfilt_shot',
+     '''
+     suxmovie n2=96 loop=1 fframe=1 dframe=1 
+     title="record %g" perc=20
+     ''')
 
 Result('velfiltrec24','allvelfilt_shot',
        '''
@@ -186,11 +195,11 @@ Flow('velfiltcdpsmute','allvelfilt_shot',
        invert=1
      ''' ) 
 
-Result('movie_cdps','velfiltcdpsmute',
-	'''
-	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-        title="record %g" perc=20
- 	''')
+Plot('movie_cdps','velfiltcdpsmute',
+     '''
+     suxmovie n2=96 loop=1 fframe=1 dframe=1 
+     title="record %g" perc=20
+     ''')
 
 Result('cdp250-251','velfiltcdpsmute',
        '''
@@ -236,11 +245,11 @@ Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
        taper=50
    ''')
 	
-Result('movie_velfiltcdpsnmo','velfiltcdpsnmo',
-	'''
-	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-                  title="velfiltcdpsnmo record %g" perc=20
- 	''')
+Plot('movie_velfiltcdpsnmo','velfiltcdpsnmo',
+     '''
+     suxmovie n2=96 loop=1 fframe=1 dframe=1 
+     title="velfiltcdpsnmo record %g" perc=20
+     ''')
 
 Flow('brutestack','velfiltcdpsnmo',
      '''
