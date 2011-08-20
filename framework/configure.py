@@ -1600,7 +1600,8 @@ def octave(context):
 
 pkg['swig'] = {'fedora':'swig',
                'suse'  :'swig',
-               'ubuntu':'swig'}
+               'ubuntu':'swig',
+               'darwin':'swig-python'}
 pkg['numpy'] = {'fedora':'numpy',
                 'ubuntu':'python-scipy, python-numpy-dev'}
 
