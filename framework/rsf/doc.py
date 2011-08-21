@@ -345,7 +345,7 @@ class rsfpar(object):
         return tex + self.desc + '\\\\ \n'
     def man(self,name):
         troff = '.TP\n.I %s\n.B %s\n.B %s\n.R %s%s\n' % \
-            (self.type,name,self.default,self.range,self.desc)
+            (self.type,name,self.default,self.range,self.desc.rstrip())
         return troff
 class rsfdata(object):
     def __init__(self,name):
@@ -401,7 +401,7 @@ class rsfprog(object):
         if not self.uses[book].has_key(chapter):
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
-    def docstring(self):
+    def docstring(self,usedoc_max):
         doc = section('name',self.name)
         if self.desc:
             doc = doc + section('description',self.desc)
@@ -422,7 +422,6 @@ class rsfprog(object):
         if books:
             usedoc = ''
             usedoc_i = 0
-            usedoc_max = 10
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
@@ -445,8 +444,8 @@ class rsfprog(object):
         if self.vers:
             doc = doc + section('version',self.vers)
         return doc
-    def document(self):
-        doc = self.docstring()
+    def document(self,usedoc_max):
+        doc = self.docstring(usedoc_max)
         pydoc.pager(doc)
     def mwiki(self,dir,name=None):
         if not name:
@@ -470,7 +469,7 @@ class rsfprog(object):
         contents = contents+'|}\n'
         file.write(contents)
         file.close()
-    def man(self,dir,name=None):
+    def man(self,dir,usedoc_max,name=None):
         if not name:
             name = self.name
         file = open (os.path.join(dir,name + '.1'),'w')
@@ -488,15 +487,14 @@ class rsfprog(object):
             contents = contents + '.SH COMMENTS\n%s\n' % self.cmts
         pars =  self.pars.keys()
         if pars:
-            contents += '.SH PARAMETERS\n\n'
+            contents += '.SH PARAMETERS\n.PD 0\n'
             pars.sort()
             for par in pars:
-                contents = contents + self.pars[par].man(par)
+                contents += self.pars[par].man(par)
         books = self.uses.keys()
         if books:
             usedoc = ''
             usedoc_i = 0
-            usedoc_max = 10
             books.sort()
             for book in books:
                 chapters = self.uses[book].keys()
@@ -1039,11 +1037,12 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:v:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:v:u:')
         dir = None
         typ = None
         rep = os.getcwd()
         ver = 'unknown'
+        usedoc_max = 25
         for opt, val in opts:
             if opt[0] == '-' and opt[1] in 'wtsmgl':
                 dir = val
@@ -1052,6 +1051,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 rep = val
             elif opt == '-v':
                 ver = val
+            elif opt == '-u':
+                usedoc_max = int(val)
             elif opt == '-k':
                 val = val.lower()
                 doc = ''
@@ -1086,7 +1087,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
-                        main.man(dir)
+                        main.man(dir,usedoc_max)
             else:
                 raise BadUsage
 
@@ -1106,18 +1107,18 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 elif typ == 'm':
                     main.mwiki(dir,prog)
                 elif typ == 'g':
-                    main.man(dir,prog)
+                    main.man(dir,usedoc_max,prog)
                 elif typ == 'l':
                     main.latex(dir,prog)
                 else:
-                    main.document()
+                    main.document(usedoc_max)
             else:
                 print "No program %s in Madagascar." % prog
 
     except (getopt.error, BadUsage):
         print '''sfdoc - the RSF documentation tool
 
-%(prog)s <prog1> <prog2> ...
+%(prog)s [-u 25] <prog1> <prog2> ...
     Show documentation on programs.
 
 %(prog)s -t <dir> [<prog1> <prog2> ... ]
@@ -1129,10 +1130,10 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s -w <dir> [-r <rep>] [-v <ver>] [<prog1> <prog2> ...]
     Write program HTML documentaton in <dir> directory, optional <rep> refers to repository, optional <ver> refers to version.
 
-%(prog)s -m <dir>  <prog1> <prog2> ...
+%(prog)s -m <dir> <prog1> <prog2> ...
     Write program documentaton in MediaWiki format in <dir> directory.
 
-%(prog)s -g <dir>  <prog1> <prog2> ...
+%(prog)s -g <dir> [-u 25]  <prog1> <prog2> ...
     Write program documentaton in groff (man page) format in <dir> directory.
 
 %(prog)s -l <dir> <prog1> <prog2> ...
