@@ -401,7 +401,7 @@ class rsfprog(object):
         if not self.uses[book].has_key(chapter):
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
-    def docstring(self,usedoc_max):
+    def docstring(self,usedoc_max,rsfroot):
         doc = section('name',self.name)
         if self.desc:
             doc = doc + section('description',self.desc)
@@ -435,8 +435,8 @@ class rsfprog(object):
                 if usedoc_i > usedoc_max:
                     usedoc += '%d more examples listed in:\n' % \
                               (usedoc_i - usedoc_max) 
-                    usedoc += '$RSFROOT/share/doc/madagascar/html/%s.html\n'%\
-                              self.name
+                    usedoc += '%s/share/doc/madagascar/html/%s.html\n'%\
+                              (rsfroot,self.name)
             doc = doc + section('used in',usedoc.rstrip())
         doc = doc + section('source',self.file)
         if self.wiki:
@@ -444,8 +444,8 @@ class rsfprog(object):
         if self.vers:
             doc = doc + section('version',self.vers)
         return doc
-    def document(self,usedoc_max):
-        doc = self.docstring(usedoc_max)
+    def document(self,usedoc_max,rsfroot):
+        doc = self.docstring(usedoc_max,rsfroot)
         pydoc.pager(doc)
     def mwiki(self,dir,name=None):
         if not name:
@@ -469,7 +469,7 @@ class rsfprog(object):
         contents = contents+'|}\n'
         file.write(contents)
         file.close()
-    def man(self,dir,usedoc_max,name=None):
+    def man(self,dir,usedoc_max,rsfroot,name=None):
         if not name:
             name = self.name
         file = open (os.path.join(dir,name + '.1'),'w')
@@ -510,8 +510,8 @@ class rsfprog(object):
                 if usedoc_i > usedoc_max:
                     contents += '.TP\n%d more examples listed in:\n' % \
                                 (usedoc_i - usedoc_max)
-                    contents += '.TP\n$RSFROOT/share/doc/madagascar/html/%s.html\n'%\
-                                 name
+                    contents += '.TP\n%s/share/doc/madagascar/html/%s.html\n'%\
+                                 (rsfroot,name)
         contents = contents + '.SH SOURCE\n.I %s\n' % self.file
         if self.wiki:
             contents = contents + '.SH DOCUMENTATION\n.BR %s\n' % self.wiki
@@ -1036,6 +1036,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     this = sys.argv.pop(0)
     class BadUsage: pass
 
+    root = rsf.prog.RSFROOT
+
     try:
         opts, args = getopt.getopt(sys.argv, 'k:w:t:s:m:g:l:r:v:u:')
         dir = None
@@ -1087,7 +1089,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
-                        main.man(dir,usedoc_max)
+                        main.man(dir,usedoc_max,root)
             else:
                 raise BadUsage
 
@@ -1107,11 +1109,11 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 elif typ == 'm':
                     main.mwiki(dir,prog)
                 elif typ == 'g':
-                    main.man(dir,usedoc_max,prog)
+                    main.man(dir,usedoc_max,root,prog)
                 elif typ == 'l':
                     main.latex(dir,prog)
                 else:
-                    main.document(usedoc_max)
+                    main.document(usedoc_max,root)
             else:
                 print "No program %s in Madagascar." % prog
 

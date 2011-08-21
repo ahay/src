@@ -8,6 +8,8 @@ To SCons:
 
 To documentation:
 * Python API documented with Epydoc
+*Limited the number of USED IN examples displayed by selfdoc and man
+ pages (25 by default, controled by -u parameter in sfdoc)
 
 To APIs:
 
