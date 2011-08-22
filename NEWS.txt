@@ -23,6 +23,7 @@ To programs:
 * sfhist2: 2-D float with integer or float inputs
 * in-core large-file (>2Gb) support in sfwindow and sftransp
 * sfsparsify: put nonzero elements of 2-D array into sparse form
+* sfmoveout: put spikes at an arbitrary moveout.
 
 ===Bug fixes===
 
@@ -43,6 +44,7 @@ In programs:
 * Fixed sfdots axis-positioning bug
 * Fixed sfmath crash when datapath was specified
 * Fixed handling of infinite values in sfgraph
+* Fixed handling of different output size in sfiwarp
 
 In the build system:
 * Fixed bug that resulted in BLAS/ATLAS-based programs to not install in Fedora

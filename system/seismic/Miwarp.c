@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     map4 mo;
     bool inv;
-    int nt, n1, i2, n2;
-    float o1, d1, eps;
+    int nt, n1, ns, i2, n2;
+    float o1, d1, t0, dt, eps;
     float *trace=NULL, *str=NULL, *trace2=NULL;
     sf_file in=NULL, out=NULL, warp=NULL;
 
@@ -34,19 +34,34 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     warp = sf_input("warp");
 
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
-
-    if (!sf_getint("n1",&n1)) n1=nt;
-    if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
-    if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
-
     if (!sf_getbool("inv",&inv)) inv=true;
     /* inversion flag */
 
-    sf_putint(out,"n1",n1);
-    sf_putfloat(out,"d1",d1);
-    sf_putfloat(out,"o1",o1);
+    if (inv) {
+	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+	
+	if (!sf_getint("n1",&n1)) n1=nt;
+	if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
+	if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
+	
+	sf_putint(out,"n1",n1);
+	sf_putfloat(out,"d1",d1);
+	sf_putfloat(out,"o1",o1);
+    } else {
+	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+
+	if (!sf_histint(warp,"n1",&nt)) sf_error("No n1= in warp");
+	if (!sf_histfloat(warp,"d1",&dt)) dt=d1;
+	if (!sf_histfloat(warp,"o1",&t0)) t0=o1;
+	
+	sf_putint(out,"n1",nt);
+	sf_putfloat(out,"d1",dt);
+	sf_putfloat(out,"o1",t0);
+    }
+
+    n2 = sf_leftsize(in,1);
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
@@ -58,16 +73,18 @@ int main(int argc, char* argv[])
     mo = stretch4_init (n1, o1, d1, nt, eps);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(trace,nt,in);
 	sf_floatread(str,nt,warp);
-
 	stretch4_define (mo,str);
+
 	if (inv) {
+	    sf_floatread(trace,nt,in);
 	    stretch4_apply (mo,trace,trace2);
+	    sf_floatwrite (trace2,n1,out);
 	} else {
-	    stretch4_invert (mo,trace2,trace);
+	    sf_floatread(trace2,n1,in);
+	    stretch4_invert (mo,trace,trace2);
+	    sf_floatwrite (trace,nt,out);
 	}
-	sf_floatwrite (trace2,n1,out);
     }
 
     exit(0);
