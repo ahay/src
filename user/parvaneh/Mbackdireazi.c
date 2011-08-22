@@ -74,7 +74,7 @@ int main (int argc, char *argv[])
 		     idy*(c0*(tz[ix][iy+2][it]-tz[ix][iy-2][it])+
 			  c1*(tz[ix][iy+1][it]-tz[ix][iy-1][it]));
 		 
-		 azimuth[ix][iy][it]=(-(tzy[ix][iy][it]/tzt[ix][iy][it])*180)/3.1415;
+		 azimuth[ix][iy][it]=(atan(-(tzy[ix][iy][it]/tzt[ix][iy][it]))*180)/3.1415;
 	    }
 	}
     }
