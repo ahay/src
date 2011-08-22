@@ -23,24 +23,23 @@ int main (int argc, char *argv[])
 {
     /*differentiation coefficient*/
     float c0=-1./12., c1=+2./3.;
-    sf_file Zi=NULL,Zo=NULL,Zz=NULL;
+    sf_file Zo=NULL,Zz=NULL;
     sf_axis at,ay,ax;
     int it,iy,ix;
     int nt,ny,nx;
     float idt,idx,dx,dt,dy;
     
-    float ***tz,***tt,***dip,***tzt,***tzx;
+    float ***tz,***dip,***tzt,***tzx;
     
     /*sf_init(!sf_getbool("verb",&verb)) verb=0;*/
 
     sf_init(argc,argv);
-    Zi=sf_input("ti");
     Zz=sf_input("in");
     Zo=sf_output("out");
     
-    at=sf_iaxa(Zi,1); nt=sf_n(at); dt=sf_d(at);
-    ay=sf_iaxa(Zi,2); ny=sf_n(ay); dy=sf_d(ay);
-    ax=sf_iaxa(Zi,3); nx=sf_n(ax); dx=sf_d(ax);
+    at=sf_iaxa(Zz,1); nt=sf_n(at); dt=sf_d(at);
+    ay=sf_iaxa(Zz,2); ny=sf_n(ay); dy=sf_d(ay);
+    ax=sf_iaxa(Zz,3); nx=sf_n(ax); dx=sf_d(ax);
 
     sf_oaxa(Zo,at,1);
     sf_oaxa(Zo,ay,2);
@@ -49,7 +48,6 @@ int main (int argc, char *argv[])
     idt=1/dt;
     idx=1/dx;
 
-    tt=sf_floatalloc3(nt,ny,nx); sf_floatread(tt[0][0],nt*ny*nx,Zi);
     tz=sf_floatalloc3(nt,ny,nx); sf_floatread(tz[0][0],nt*ny*nx,Zz);
 
     dip=sf_floatalloc3(nt,ny,nx);
@@ -75,7 +73,7 @@ int main (int argc, char *argv[])
 		     idx*(c0*(tz[ix+2][iy][it]-tz[ix-2][iy][it])+
 			  c1*(tz[ix+1][iy][it]-tz[ix-1][iy][it]));
 		 
-		 dip[ix][iy][it]=-(tzx[ix][iy][it]/tzt[ix][iy][it]);
+		 dip[ix][iy][it]=(-(tzx[ix][iy][it]/tzt[ix][iy][it])*180)/3.1415;
 	    }
 	}
     }
