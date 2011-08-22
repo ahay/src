@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
 		     idx*(c0*(tz[ix+2][iy][it]-tz[ix-2][iy][it])+
 			  c1*(tz[ix+1][iy][it]-tz[ix-1][iy][it]));
 		 
-		 dip[ix][iy][it]=(-(tzx[ix][iy][it]/tzt[ix][iy][it])*180)/3.1415;
+		 dip[ix][iy][it]=(atan(-(tzx[ix][iy][it]/tzt[ix][iy][it]))*180)/3.1415;
 	    }
 	}
     }
