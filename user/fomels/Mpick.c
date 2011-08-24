@@ -65,7 +65,8 @@ int main(int argc, char* argv[])
     if (i0 < 0) i0=0;
     if (i0 >= n2) i0=n2-1;
 
-    sf_putint(pik,"n2",1);
+    sf_unshiftdim(scn,pik,2);
+
     if (NULL != (label = sf_histstring(scn,"label2"))) 
 	sf_putstring(pik,"label",label);
     if (NULL != (label = sf_histstring(scn,"unit2"))) 
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
 	} else {
 	    rect[i]=1;
 	}
-    }
+    }  
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */

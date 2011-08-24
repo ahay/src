@@ -24,6 +24,9 @@ To programs:
 * in-core large-file (>2Gb) support in sfwindow and sftransp
 * sfsparsify: put nonzero elements of 2-D array into sparse form
 * sfmoveout: put spikes at an arbitrary moveout.
+* sfcconv: 1-D convolution with complex numbers.
+* sfpyramid: pyramid transform.
+* sfshapeagc: automatic gain control by shaping regularization.
 
 ===Bug fixes===
 

@@ -37,8 +37,8 @@ intervals (e.g., 4ms and 25m). Since seismic velocity does not change with time,
 many operators become time invariant and can be applied more economically in 
 the temporal frequency domain (sometimes with the aid of the log-stretch 
 transform). 
-Spatial prediction for signal/noise separation \cite{SEG.1984.S10.1} and
-spatial prediction for interpolation \cite{GEO56.06.07850794} are two 
+Spatial prediction for signal/noise separation \cite[]{SEG-1984-S10.1} and
+spatial prediction for interpolation \cite[]{GEO56-06-07850794} are two 
 examples in the frequency-space (F-X-Y) domain. In the above two applications, 
 the operators are conducted respectively from one frequency to another.
 \par
@@ -78,7 +78,7 @@ low frequency noise, whereas the prediction filter obtained in the conventional
 \par
 Assume v is medium velocity, $\delta x$ is trace interval and $\theta$ is 
 dip angle, the maximum threshold frequency that is not aliased is as follows
-\cite{SDP00.00.00090522}:
+\cite[]{SDP00-00-05260526}:
 \begin{equation}
         f_{\rm max} = \frac{v}{4\delta x \sin\theta}
 \end{equation}
@@ -129,7 +129,7 @@ have oversampled the data. Therefore, the next question is what is the
 disadvantage of oversampling the data?
 
 \inputdir{model}
-\sideplot{sin-value}{width=3.0in,height=2.5in}{$\frac{v}{4f\delta x}$ versus {\tt f}. The solid curve represents the frequency-independent grids. The dash line represents the frequency-dependent grids.}
+\sideplot{sin-value}{width=3.0in}{$\frac{v}{4f\delta x}$ versus {\tt f}. The solid curve represents the frequency-independent grids. The dash line represents the frequency-dependent grids.}
 
 Unless carefully constrained, an over-parameterized model may
 contain illegal components that will fit noisy data better
@@ -137,7 +137,7 @@ than a better model which does not include high wavenumbers
 for low frequencies. 
 \par
 Spatial prediction filters become the same for all frequencies
-\cite {Nichols.1996}.
+\cite[] {Nichols.1996}.
 Since the prediction filter is independent of frequency, 
 it will become more stable and more 
 insensitive to the noise. Also, we do not need to estimate independent
@@ -159,7 +159,7 @@ Each of the remaining filters can only be applied to one frequency slice,
 which is also the base of that pyramid. 
 
 \inputdir{XFig}
-\plot{pyramid}{width=4.0in,height=2.5in}{The size of the pyramid(in 2-D, it is actually a triangle) is changing when $(f>\bar{f})$.} 
+\plot{pyramid}{width=4.0in}{The size of the pyramid(in 2-D, it is actually a triangle) is changing when $(f>\bar{f})$.} 
 \par
 The basic and most important requirement for pyramid 
 transform is that this transform is invertible. In other words, ``forward'' 
@@ -167,20 +167,23 @@ transform can turn a rectangular {\tt f-x} domain to a pyramid domain and
 ``inverse'' transform can turn a pyramid domain back to a rectangular {\tt f-x}
  domain, as shown in Figure \ref{fig:transform}.
 
-\plot{transform}{width=4.0in,height=2.5in}{Schematic demonstration of forward/inverse pyramid transform.}
+\plot{transform}{width=4.0in}{Schematic demonstration of forward/inverse pyramid transform.}
 
 \inputdir{model}
 
 How do we guarantee this transform invertible? The key is to find a good 
-complex-valued interpolation scheme. Here, we use Dave Hale's 8-point sinc 
+complex-valued interpolation scheme. 
+\begin{comment}
+Here, we use Dave Hale's 8-point sinc 
 interpolation program in SU. Some more accurate and complicated interpolation 
 scheme can be found in Wade's paper \shortcite{SEG.1988.SP1.6}. 
+\end{comment}
 Figure \ref{fig:forward-inverse-transform} is one example using 8-point sinc 
 interpolation. 
 The result shows that our scheme is very accurate. There is little difference 
 between input and output.
 
-\plot{forward-inverse-transform}{width=4.0in,height=2.5in}{The left is the input dataset, the middle is the result after forward/inverse transform, and the right one is the difference.(Displayed at the same scale)}
+\plot{forward-inverse-transform}{width=4.0in}{The left is the input dataset, the middle is the result after forward/inverse transform, and the right one is the difference.(Displayed at the same scale)}
  
 \section{ESTIMATION OF SPATIAL PREDICTION FILTERS}
 
@@ -201,7 +204,7 @@ As shown in Figure \ref{fig:one-plane-wave}, this wavefield in the {\tt t-x} dom
 	w(t,x) = \delta (t-t_1-p_1x)
 \end{equation}
 
-\sideplot{one-plane-wave}{width=3.0in,height=2.5in}{A synthetic wavefield composed of a single plane wave.}
+\sideplot{one-plane-wave}{width=3.0in}{A synthetic wavefield composed of a single plane wave.}
 
 After Fourier transform along the time axis, we get the expression in the 
 {\tt f-x} domain: 
@@ -248,7 +251,7 @@ expressed by
 	w(t,x) = a_1\delta(t-t_1-p_1x)+a_2\delta(t-t_2-p_2x)
 \end{equation}
 
-\sideplot{two-plane-wave}{width=3.0in,height=2.5in}{A synthetic wavefield composed of two plane waves.}
+\sideplot{two-plane-wave}{width=3.0in}{A synthetic wavefield composed of two plane waves.}
 
 In the {\rm f-x} domain, it has another expression
 \begin{equation}
@@ -335,7 +338,7 @@ where $N_2$ is the length of the spatial axis.
 \par
 Determination of the coefficients $C_{\rm j}$ can be treated as an optimization
  problem. Here we choose conjugate gradient code {\tt cgplus} 
-\cite{Claerbout.tdf.82} as the solver. Originally, {\tt cgplus} was used for 
+\cite[]{Claerbout.tdf.82} as the solver. Originally, {\tt cgplus} was used for 
 real-valued optimization. We extend it to complex-valued optimization.  
 Between the two gridding schemes, the most important difference is that
 \begin{itemize}
@@ -361,6 +364,7 @@ expect that the result from {\bf FDG} will more stable.
 
 
 \section{APPLICATION AND DISCUSSION}
+
 \par
 In this section, we compare our new sampling scheme in the application of 
 signal/noise separation with F-X noise suppression. We expect that our scheme 
@@ -368,45 +372,55 @@ will produce better results. Figure \ref{fig:flow-chart} shows the relation and
 difference between the two implementations:
 
 \inputdir{XFig}
-\plot{flow-chart}{width=4.0in,height=3.5in}{The relation between F-X noise suppression and our scheme. We estimate the spatial prediction filter in the pyramid domain. The dashed-line box includes all the operations in the pyramid domain.}
+\plot{flow-chart}{width=4.0in}{The relation between F-X noise suppression and our scheme. We estimate the spatial prediction filter in the pyramid domain. The dashed-line box includes all the operations in the pyramid domain.}
 \par
 The input dataset is composed of one horizontal event, four dipping events.
 This dataset has no random noise. Therefore, it is fully predictable. 
 We use this data to test whether subsampling will influence the predictability 
 of each frequency slice. Figure \ref{fig:input1} shows the data
 in both {\tt t-x} and {\tt f-x} domain.  
-\activeplot{input1}{width=6.0in,height=3.5in}{.}{Input data in the {\tt t-x} domain and {\tt f-k} domain.}
+
+\inputdir{pyramid}
+
+\plot{input1}{width=6.0in}{Input data in the {\tt t-x} domain and {\tt f-k} domain.}
 \par
 F-X noise suppression algorithm estimates the spatial prediction filter for 
 each frequency slice and then applies it to the input data. 
-Figure \ref{fig:FIG1} shows that there is little difference 
+Figure \ref{fig:fig1} shows that there is little difference 
 between input and output. This means that if there is no noise or aliased 
 energy in the dataset, the prediction filter will produce a dataset which is 
 the same as the input.
-\activeplot{FIG1}{width=6.0in,height=3.5in}{.}{Result from F-X noise suppression algorithm in the {\tt t-x} domain. The left is the output and the right is the difference between input and output.} 
+
+\plot{fig1}{width=6.0in}{Result from F-X noise suppression algorithm in the {\tt t-x} domain. The left is the output and the right is the difference between input and output.} 
 \par
-Figure \ref{fig:FDG1} is the corresponding result from our scheme. It is clear 
+Figure \ref{fig:fdg1} is the corresponding result from our scheme. It is clear 
 that subsampling does not make the frequency slice more unpredictable. All 
 the five events have been retained after convolving the prediction filter with 
 the input dataset.
-\activeplot{FDG1}{width=6.0in,height=3.5in}{.}{Result from Pyramid Transform scheme in the {\tt t-x} domain. The left is the output and the right is the difference between input and output.}
+
+\plot{fdg1}{width=6.0in}{Result from Pyramid Transform scheme in the {\tt t-x} domain. The left is the output and the right is the difference between input and output.}
 Figure \ref{fig:error1} is the relative residual error for each frequency. 
 It is interesting to notice that subsampled dataset is even more predictable 
 than the oversampled dataset. 
-\activesideplot{error1}{width=3.0in,height=3.5in}{.}{Squared error for both F-X noise suppression and Pyramid scheme. Notice that the subsampled dataset is even more predictable than the oversampled dataset.} 
+
+\sideplot{error1}{width=3.0in}{Squared error for both F-X noise suppression and Pyramid scheme. Notice that the subsampled dataset is even more predictable than the oversampled dataset.} 
 \par
 The second dataset is the same as the first one, except that we introduce 
 random noise into it, as shown in Figure \ref{fig:input2}. 
-\activeplot{input2}{width=6.0in,height=3.5in}{.}{Input data in the {\tt t-x} domain and {\tt f-k} domain. There is no random noise in the low frequency, high wavenumber part.}
+
+\plot{input2}{width=6.0in}{Input data in the {\tt t-x} domain and {\tt f-k} domain. There is no random noise in the low frequency, high wavenumber part.}
 \par
 Unfortunately, we have not got very good results from noisy data. As shown in 
-Figure \ref{fig:FIG2}, F-X noise suppression cannot remove low frequency noise. 
+Figure \ref{fig:fig2}, F-X noise suppression cannot remove low frequency noise. 
 Therefore, the difference is very small. Although Pyramid scheme can remove 
 some parts of low frequency noise, it can also hurt the signal at the same 
 time. We will keep working on it and try to get a better result.
-\activeplot{FIG2}{width=6.0in,height=3.5in}{.}{Result from F-X scheme. The left is the output, the middle is the difference between input and output, and the right is the output in {\tt f-k} domain. Only some high frequency noise is eliminated from the input. Therefore the difference is very small.} 
-\activeplot{FDG2}{width=6.0in,height=3.5in}{.}{Result from Pyramid scheme. The left is the output, the middle is the difference between input and output, and the right is the difference between input and output, and the right is the output in {\tt f-k} domain. Pyramid scheme can remove both high and low frequency noise. But it also remove some signal components.}
-\activesideplot{error2}{width=3.0in,height=3.5in}{.}{Squared error for both schemes.} 
+
+\plot{fig2}{width=6.0in}{Result from F-X scheme. The left is the output, the middle is the difference between input and output, and the right is the output in {\tt f-k} domain. Only some high frequency noise is eliminated from the input. Therefore the difference is very small.} 
+
+\plot{fdg2}{width=6.0in}{Result from Pyramid scheme. The left is the output, the middle is the difference between input and output, and the right is the difference between input and output, and the right is the output in {\tt f-k} domain. Pyramid scheme can remove both high and low frequency noise. But it also remove some signal components.}
+
+\sideplot{error2}{width=3.0in}{Squared error for both schemes.} 
 
 \section{CONCLUSION AND FUTURE WORK}
 \par
@@ -422,5 +436,7 @@ oversampled one. Pyramid scheme can eliminate low frequency noise, but it
 also hurts the signal as well. We will continue this project and try to get 
 better results.
   
-\bibliographystyle{sep}\bibliography{MISC,SEP,GEOTLE,SEGCON,SEGBKS,../yalei1/paper}
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper}
+
 \input{appendix}

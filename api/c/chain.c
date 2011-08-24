@@ -89,6 +89,29 @@ void sf_array( sf_operator oper1     /* top operator */,
     }
 }
 
+void sf_carray( sf_coperator oper1     /* top operator */, 
+	       sf_coperator oper2     /* bottom operator */, 
+	       bool adj              /* adjoint flag */, 
+	       bool add              /* addition flag */, 
+	       int nm                /* model size */, 
+	       int nd1               /* top data size */, 
+	       int nd2               /* bottom data size */, 
+	       /*@out@*/ sf_complex* mod  /* [nm] model */, 
+	       /*@out@*/ sf_complex* dat1 /* [nd1] top data */, 
+	       /*@out@*/ sf_complex* dat2 /* [nd2] bottom data */) 
+/*< Constructs an array of two complex operators, 
+  computing {oper1{mod},oper2{mod}} or its adjoint. >*/
+{
+    if (adj) {
+	oper1 (true, add,  nm, nd1, mod, dat1);
+	oper2 (true, true, nm, nd2, mod, dat2);
+    } else {
+	oper1 (false, add, nm, nd1, mod, dat1);
+	oper2 (false, add, nm, nd2, mod, dat2);
+    }
+}
+
+
 void sf_normal (sf_operator oper /* operator */, 
 		bool add         /* addition flag */, 
 		int nm           /* model size */, 

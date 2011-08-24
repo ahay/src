@@ -1035,6 +1035,233 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
     }
 }
 
+void sf_csolver_reg (sf_coperator oper   /* linear operator */, 
+		     sf_csolverstep solv /* stepping function */,
+		     sf_coperator reg    /* regularization operator */, 
+		     int nreg            /* size of reg{x} */, 
+		     int nx              /* size of x */, 
+		     int ny              /* size of dat */, 
+		     sf_complex* x           /* estimated model */, 
+		     const sf_complex* dat   /* data */, 
+		     int niter          /* number of iterations */, 
+		     float eps          /* regularization parameter */, 
+		    ...                /* variable number of arguments */) 
+/*< Generic regularized linear solver.
+  ---
+  Solves
+  oper{x}    =~ dat
+  eps reg{x} =~ 0
+  ---
+  The last parameter in the call to this function should be "end".
+  Example: 
+  ---
+  sf_solver_reg (oper_lop,sf_cgstep,reg_lop,
+  np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+  ---
+  Parameters in ...:
+  
+  "x0":     sf_complex*:         initial model
+  "nloper": sf_operator:    nonlinear operator  
+  "nlreg":  sf_operator:    nonlinear regularization operator
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   sf_complex**:        model iteration
+  "rmov":   sf_complex**:        residual iteration
+  "err":    float*:         final error
+  "res":    sf_complex*:         final residual
+  "resm":   sf_complex*:         final model residual
+  >*/
+{
+
+    va_list args;
+    char* par;
+    sf_complex* x0 = NULL;
+    sf_coperator nloper = NULL;
+    sf_coperator nlreg = NULL;
+    bool verb = false;
+    bool* known = NULL;
+    int nmem = -1;
+    int nfreq = 0;
+    sf_complex** xmov = NULL;
+    sf_complex** rmov = NULL;
+    float* err = NULL;
+    sf_complex* res = NULL;
+    sf_complex* resm = NULL;
+    sf_complex *g, *rr, *gg, *tr;
+    float dpr, dpg, dpr0, dpg0;
+    int i, iter;
+    bool forget = false;
+
+    va_start (args, eps);
+    for (;;) {
+	par = va_arg (args, char *);
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"x0"))      
+	{                    x0 = va_arg (args, sf_complex*);}
+	else if (0 == strcmp (par,"nloper"))      
+	{                    nloper = va_arg (args, sf_coperator);}
+	else if (0 == strcmp (par,"nlreg"))      
+	{                    nlreg = va_arg (args, sf_coperator);}
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
+	{                    known = va_arg (args, bool*);}  
+	else if (0 == strcmp (par,"nmem"))      
+	{                    nmem = va_arg (args, int);}
+	else if (0 == strcmp (par,"nfreq"))      
+	{                    nfreq = va_arg (args, int);}
+	else if (0 == strcmp (par,"xmov"))      
+	{                    xmov = va_arg (args, sf_complex**);}
+	else if (0 == strcmp (par,"rmov"))      
+	{                    rmov = va_arg (args, sf_complex**);}
+	else if (0 == strcmp (par,"err"))      
+	{                    err = va_arg (args, float*);}
+	else if (0 == strcmp (par,"res"))      
+	{                    res = va_arg (args, sf_complex*);}
+	else if (0 == strcmp (par,"resm"))      
+	{                    resm = va_arg (args, sf_complex*);}
+	else 
+	{ sf_error ("%s: unknown parameter %s",__FILE__,par);}
+    }
+    va_end (args);
+ 
+    g =  sf_complexalloc (nx);
+    tr = sf_complexalloc (nreg);
+    rr = sf_complexalloc (ny+nreg);
+    gg = sf_complexalloc (ny+nreg);
+
+    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
+	rr[i] = - dat[i];
+#else
+	rr[i] = sf_cneg(dat[i]);
+#endif
+    }
+    if (x0 != NULL) {
+	for (i=0; i < nx; i++) {
+	    x[i] = x0[i];
+	} 
+	if (nloper != NULL) {
+	    nloper (false, true, nx, ny, x, rr); 
+	} else {
+	    oper (false, true, nx, ny, x, rr); 
+	}
+	if (nlreg != NULL) {
+	    nlreg  (false, false, nx, nreg, x, rr+ny);
+	} else {
+	    reg  (false, false, nx, nreg, x, rr+ny);            
+	}
+	cblas_csscal(nreg,eps,rr+ny,1);
+    } else {
+	for (i=0; i < nx; i++) {
+	    x[i] = 0.0;
+	} 
+	for (i=0; i < nreg; i++) {
+	    rr[i+ny] = 0.0;
+	}
+    }
+
+    dpr0 = cblas_scnrm2(ny, rr, 1);
+    dpg0 = 1.;
+
+    for (iter=0; iter < niter; iter++) {
+	if ( nmem >= 0) {  /* restart */
+	    forget = (bool) (iter >= nmem);
+	}
+	for (i=0; i < nreg; i++) {
+#ifdef SF_HAS_COMPLEX_H
+	    tr[i] = rr[i+ny]*eps;
+#else
+	    tr[i] = sf_crmul(rr[i+ny],eps);
+#endif
+	}
+	sf_carray (oper, reg, true, false, nx, ny, nreg, g, rr, tr);
+	if (known != NULL) {
+	    for (i=0; i < nx; i++) {
+		if (known[i]) g[i] = sf_cmplx(0.0,0.0);
+	    }
+	} 
+	sf_carray (oper, reg, false, false, nx, ny, nreg, g, gg, gg+ny);
+
+	cblas_csscal(nreg,eps,gg+ny,1);
+
+	if (forget && nfreq != 0) { /* periodic restart */
+	    forget = (bool) (0 == (iter+1)%nfreq);
+	}
+
+	if (iter == 0) {
+	    dpg0  = cblas_scnrm2 (nx, g, 1);
+	    dpr = 1.;
+	    dpg = 1.;
+	} else {
+	    dpr = cblas_scnrm2 (ny, rr, 1)/dpr0;	    
+	    dpg = cblas_scnrm2 (nx, g , 1)/dpg0;
+	} 
+
+	if (verb) 
+	    sf_warning ("iteration %d res dat %f res mod %f mod %f grad %f",
+			iter, dpr, cblas_scnrm2 (nreg, rr+ny, 1), cblas_scnrm2 (nx, x, 1), dpg);
+
+	if (dpr < TOLERANCE || dpg < TOLERANCE) {
+	    if (verb) 
+		sf_warning("convergence in %d iterations",iter+1);
+	    break;
+	}
+
+	solv (forget, nx, ny+nreg, x, g, rr, gg);
+	forget = false;
+
+	if (nloper != NULL) {
+	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
+		rr[i] = -dat[i]; 
+#else
+		rr[i] = sf_cneg(dat[i]);
+#endif
+	    }
+	    nloper (false, true, nx, ny, x, rr);
+	}
+	if (nlreg != NULL) {
+	    nlreg  (false, false, nx, nreg, x, rr+ny); 
+
+	    cblas_csscal(nreg,eps,rr+ny,1);
+	}
+	if (xmov != NULL) {
+	    for (i=0; i < nx; i++) {
+		xmov[iter][i] =  x[i];
+	    }
+	}
+	if (rmov != NULL) {
+	    for (i=0; i < ny; i++) {
+		rmov[iter][i] =  rr[i];
+	    }
+	}
+    
+	if (err != NULL) {
+	    err[iter] = cblas_scnrm2(ny, rr, 1);
+	}
+    }
+
+    if (resm != NULL) {
+	for (i=0; i < nreg; i++) {
+	    resm[i] = rr[i+ny];
+	}
+    }
+    if (res != NULL) {
+	for (i=0; i < ny; i++) {
+	    res[i] = rr[i];
+	}
+    }
+
+    free (tr);
+    free (g); 
+    free (rr);
+    free (gg);
+}
+
+
 void sf_solver (sf_operator oper   /* linear operator */, 
 		sf_solverstep solv /* stepping function */, 
 		int nx             /* size of x */, 

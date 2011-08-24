@@ -24,10 +24,10 @@ int main(int argc, char* argv[])
 {
     map4 mo;
     bool inv;
-    int nt, n1, ns, i2, n2;
+    int nt, n1, i2, n2;
     float o1, d1, t0, dt, eps;
-    float *trace=NULL, *str=NULL, *trace2=NULL;
-    sf_file in=NULL, out=NULL, warp=NULL;
+    float *trace, *str, *trace2;
+    sf_file in, out, warp;
 
     sf_init(argc,argv);
     in = sf_input("in");

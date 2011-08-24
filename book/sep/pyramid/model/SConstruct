@@ -59,20 +59,8 @@ Plot('input',
      title="before transform" 
      ''')
 
-Flow('real','omega','real | transp')
-Flow('imag','omega','imag | transp')
-
-Flow('map','real','math output="x1*x2" ')
-
-Flow('preal','real map','iwarp warp=${SOURCES[1]} d1=250 n1=512')
-Flow('pimag','imag map','iwarp warp=${SOURCES[1]} d1=250 n1=512')
-
-Flow('pyramid','preal pimag','cmplx ${SOURCES[1]} | transp')
-
-Flow('breal','preal map','iwarp warp=${SOURCES[1]} inv=n')
-Flow('bimag','pimag map','iwarp warp=${SOURCES[1]} inv=n')
-
-Flow('back','breal bimag','cmplx ${SOURCES[1]} | transp | fft1 inv=y')
+Flow('pyramid','omega','transp | pyramid du=256 nu=512')
+Flow('back','pyramid','pyramid inv=y | transp | fft1 inv=y')
 
 Plot('back',
      '''

@@ -170,6 +170,25 @@ void cblas_sscal(int n, float alpha, float *x, int sx)
     }
 }
 
+void cblas_csscal(int n, float alpha, void *x, int sx)
+/*< x = alpha*x >*/
+{
+    int i, ix;
+    sf_complex* c;
+
+    c = (sf_complex*) x;
+
+    for (i=0; i < n; i++) {
+        ix = i*sx;
+#ifdef SF_HAS_COMPLEX_H
+	c[ix] *= alpha;
+#else
+	c[ix] = sf_crmul(c[ix],alpha);
+#endif
+    }
+}
+
+
 void cblas_cdotc_sub(int n, 
 		     const void *x, int sx,
 		     const void *y, int sy, void *dot)
