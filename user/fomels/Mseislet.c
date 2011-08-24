@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     int n1, n2, i3, n3, n12, order;
-    bool inv, adj, unit;
+    bool inv, adj, unit, verb;
     char *type;
     float *pp, *qq, **dd, eps;
     sf_file in, out, dip;
@@ -62,10 +62,15 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
+
     seislet_init(n1,n2,inv,unit,eps,order,type[0]);
     seislet_set(dd);
 
     for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+
 	sf_floatread(pp,n12,in);
 	sf_floatread(dd[0],n12,dip);
 
