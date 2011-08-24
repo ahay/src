@@ -4,6 +4,11 @@
 
 To the reproducible documents collection:
 
+* jsg/reversible: A reversible transform for seismic data processing
+  (Burnett and Ferguson) 
+* sep/pyramid: The pyramid transform and its application to
+  signal/noise separation (Sun and Ronen)
+
 To SCons:
 
 To documentation:
