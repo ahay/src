@@ -10,7 +10,9 @@ Papers(copyr='The University of Texas at Austin',
                 'simistack': 'Guochang Liu, Sergey Fomel, Long Jin, and Xiaohong Chen',
                 'stackadcig': 'Guochang Liu, Sergey Fomel, and Xiaohong Chen',
                 'strfilter': 'Yang Liu, Sergey Fomel, and Guochang Liu',
-                'oc3': 'Yang Liu and Sergey Fomel'},
+                'oc3': 'Yang Liu and Sergey Fomel',
+                'reversible': 'William Burnett and Robert Ferguson',
+                },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
 End(use='amsmath,newalg')

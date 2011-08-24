@@ -157,6 +157,7 @@ for dir in map(lambda x: os.path.join('system',x), system):
         VariantDir(build,dir)
     else:
         BuildDir(build,dir)
+        
     SConscript(dirs=build,name='SConstruct',exports='env root bindir pkgdir')
     Default(build)
 
@@ -177,6 +178,7 @@ if os.path.isdir('user'):
                 user_exports = user_dir_exports + ' incdir'
             else:
                 user_exports = user_dir_exports
+                
             SConscript(dirs=build,name='SConstruct', 
                 exports=user_exports)
             Default(build)
