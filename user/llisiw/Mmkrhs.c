@@ -21,8 +21,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n[SF_MAX_DIM], it, nt, dim, i, is, nshot, **m, rhs, nrhs;
-    float **f, **e;
+    int n[SF_MAX_DIM], it, nt, dim, i, is, nshot, **m, rhs, nrhs, temp;
+    float **full, **extract;
     sf_file in, mask, out;
     
     sf_init(argc,argv);
@@ -43,20 +43,28 @@ int main(int argc, char* argv[])
     nt /= nshot;
 
     /* read complete timetable */
-    f = sf_floatalloc2(nt,nshot);
-    sf_floatread(f[0],nt*nshot,in);
+    full = sf_floatalloc2(nt,nshot);
+    sf_floatread(full[0],nt*nshot,in);
 
     /* read receiver location */
     m = sf_intalloc2(nt,nshot);
     sf_intread(m[0],nt*nshot,mask);
 
-    nrhs = 0;
-    for (it=0; it < nt; it++) {
-	if (m[0][it]==1) 
-	    nrhs++;
+    /* maximum receiver count per shot */
+    if (!sf_getint("nrhs",&nrhs)) {
+	nrhs = 0;
+	for (is=0; is < nshot; is++) {
+	    temp = 0;
+	    for (it=0; it < nt; it++) {
+		if (m[is][it] == 1) 
+		    temp++;
+	    }
+	    if (temp > nrhs) nrhs=temp;
+	}
     }
-
-    e = sf_floatalloc2(nrhs,nshot);
+    
+    /* allocate memory for output */
+    extract = sf_floatalloc2(nrhs,nshot);
 
     sf_putint(out,"n1",nrhs);
     sf_putint(out,"n2",nshot);
@@ -68,14 +76,20 @@ int main(int argc, char* argv[])
 	
 	rhs = 0;
 	for (it=0; it < nt; it++) {
-	    if (m[is][it]==1) {
-		e[is][rhs] = f[is][it];
+	    if (m[is][it] == 1) {
+		extract[is][rhs] = full[is][it];
 		rhs++;
+		if (rhs > nrhs) sf_error("Input nrhs must be maximum receiver count per shot.");
 	    }
 	}
+	
+	/* negative flag for void space */
+	if (rhs < nrhs)
+	    for (i=rhs; i < nrhs; i++)
+		extract[is][i] = -1.0;
     }
 
-    sf_floatwrite(e[0],nrhs*nshot,out);
+    sf_floatwrite(extract[0],nrhs*nshot,out);
 
     exit(0);
 }

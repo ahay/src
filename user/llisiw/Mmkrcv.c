@@ -1,4 +1,4 @@
-/* Make receiver mask for Mfatomo */
+/* Make receiver mask for Mfatomo/Mfatomoomp */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -21,7 +21,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n[SF_MAX_DIM], nt, dim, i, j, is, nshot, offset, *topo, **mask, left, right;
+    int n[SF_MAX_DIM], nt, dim, i, j, k, is, nshot, *topo, **mask;
+    int offset1, offset2, left1, right1, left2, right2;
     float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], temp;
     char key[4];
     sf_file in, shot, out;
@@ -32,6 +33,8 @@ int main(int argc, char* argv[])
     
     /* read input dimension */
     dim = sf_filedims(in,n);
+
+    if (dim < 3) dim = 3;
 
     nt = 1;
     for (i=0; i < dim; i++) {
@@ -56,38 +59,39 @@ int main(int argc, char* argv[])
     sf_floatread(source[0],3*nshot,shot);
     sf_fileclose(shot);
 
-    if (!sf_getint("offset",&offset)) offset=1;
-    /* receiver offset (on each side) */
+    if (!sf_getint("offset1",&offset1)) offset1=1;
+    /* receiver offset inline (on each side) */
+
+    if (!sf_getint("offset2",&offset2)) offset2=1;
+    /* receiver offset crossline (on each side) */
 
     /* allocate memory for output */
     mask = sf_intalloc2(nt,nshot);
 
+    /* write output header */
     sf_putint(out,"n4",nshot);
 
-    /* modify for 3D */
     for (is=0; is < nshot; is++) {
-	temp = (source[is][1]-o[1])/d[1];
+	temp   = (source[is][1]-o[1])/d[1];
+	left1  = (int)temp-offset1;
+	right1 = (int)temp+offset1;
 
-	left  = (int)temp-offset;
-	right = (int)temp+offset;
-	
-	for (j=0; j < n[1]; j++) {
-	    
-	    if (j < left || j > right) {
-		
-		for (i=0; i < n[0]; i++) {
-		    mask[is][j*n[0]+i] = 0;
-		}
+	temp   = (source[is][2]-o[2])/d[2];
+	left2  = (int)temp-offset2;
+	right2 = (int)temp+offset2;
 
-	    } else {
-
-		for (i=0; i < n[0]; i++) {
-		    mask[is][j*n[0]+i] = topo[j*n[0]+i];
-		}
-		
-	    }
+	for (k=0; k < n[2]; k++) {
+		for (j=0; j < n[1]; j++) {
+		    
+		    if (left1 <= j && j <= right1 && left2 <= k && k <= right2) {
+			for (i=0; i < n[0]; i++)
+			    mask[is][k*n[1]*n[0]+j*n[0]+i] = topo[k*n[1]*n[0]+j*n[0]+i];
+		    } else {
+			for (i=0; i < n[0]; i++)
+			    mask[is][k*n[1]*n[0]+j*n[0]+i] = 0;
+		    }
+		}	    
 	}
-        
     }
     
     sf_intwrite(mask[0],nt*nshot,out);
