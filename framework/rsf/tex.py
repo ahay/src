@@ -644,7 +644,7 @@ def eps2pdf(target=None,source=None,env=None):
     if gs_options:
         gs_options = "GS_OPTIONS='%s'" % gs_options
 
-    command = "LD_LIBRARY_PATH=%s %s %s %s" % \
+    command = "LD_LIBRARY_PATH=%s %s %s --hires %s" % \
               (os.environ.get('LD_LIBRARY_PATH',''),gs_options,epstopdf,eps)
     
     print command
@@ -765,7 +765,7 @@ if epstopdf:
     if mathematica:
         Math = Builder(action = '%s -batchoutput '
                        '< $SOURCE >& /dev/null > /dev/null && '
-                       '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
+                       '%s --hires junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
                        (mathematica,epstopdf),
                        suffix='.pdf',src_suffix='.ma')
     if matlab:

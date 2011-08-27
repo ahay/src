@@ -72,5 +72,6 @@ g = ParametricPlot3D[{Sqrt[X[n, 1, r, 1]], r, 100 GenErr[n, 1, r]},
  {r, 0, 4}, {n, 0.1, 1}, PlotRange -> {{0, 4}, All, All}, 
  BoxRatios -> {1, 1, 0.4}, PlotLabel -> "(d) Generalized", 
  AxesLabel -> {"x/H", "R/H", "%"}]; 
-GraphicsArray[{{h, m}, {a, g}}];
-Export["junk_ma.eps", %, ImageSize -> 600];
+ga = GraphicsArray[{{Rasterize[h], Rasterize[m]}, 
+                    {Rasterize[a], Rasterize[g]}}];
+Export["junk_ma.eps", ga, "EPS"];

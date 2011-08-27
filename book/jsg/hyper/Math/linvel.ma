@@ -26,5 +26,6 @@ ef = ParametricPlot3D[{x[g,t], g, err[[4]]}, {g, 1.001, 4}, {t, 0, 1},
  BoxRatios -> {1, 1, 0.4}, PlotLabel -> "(d) Generalized", 
  AxesLabel -> {"x/H", "v(H)/v0", "%         "}, 
  PlotRange -> {{0, 4}, All, All}];
-GraphicsArray[{{eh, es}, {ea, ef}}];
-Export["junk_ma.eps", %, ImageSize -> 600];
+ga = GraphicsArray[{{Rasterize[eh], Rasterize[es]}, 
+                    {Rasterize[ea], Rasterize[ef]}}];
+Export["junk_ma.eps", ga, "EPS"];

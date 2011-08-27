@@ -90,10 +90,13 @@ int main(int argc, char* argv[])
     sf_floatread(slice[0][0],ntpx,in);
 
     for (iv=0; iv < nv; iv++) {
+	sf_warning("step %d of %d;",iv+1,nv);
+
 	warp3(slice,tstr,pstr,xstr,slice);
 	
 	sf_floatwrite (slice[0][0],ntpx,out);
     }
+    sf_warning(".");
 
     exit(0);
 }

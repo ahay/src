@@ -25,7 +25,7 @@ Show[Graphics3D[{
       Line[{{-1, -1, -1}, {1, -1, -1}}], Text["h", {1.9, 0.05, -1}],
       Polygon[{{-1, -1, -1}, {-0.9, -1.025, -1}, {-0.9, -0.975, -1}}]}, 
     ViewPoint -> {1.3, 0, 3}]];
-Show[{%, %%}, PlotRange -> {All, All, {0, -1}}, Boxed -> False];
+left = Show[{%, %%}, PlotRange -> {All, All, {0, -1}}, Boxed -> False];
 Show[Graphics[{
       Arrow[{{1, -1}, {3, 1}}], Text["y", {2.85, 1}], Arrow[{{1, -1}, {2, -2}}], 
       Text["g", {3, -0.85}],
@@ -36,6 +36,6 @@ Show[Graphics[{
   AspectRatio -> Automatic];
 ParametricPlot[{slice[1, a, 1][[2]] + 2, -slice[1, a, 1][[1]]}, {a, 0, 2 Pi}, 
   PlotPoints -> 100, Axes -> False];
-Show[{%%, %}, AspectRatio -> Automatic];
-Show[GraphicsArray[{%%%%, %}]];
+right = Show[{%%, %}, AspectRatio -> Automatic];
+Show[GraphicsArray[{Rasterize[left], Rasterize[right]}]];
 Export["junk_ma.eps",%, "EPS"];
