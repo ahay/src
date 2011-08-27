@@ -14,8 +14,13 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, tempfile, re, subprocess, urllib
-import c_m8r as c_rsf
 import numpy
+
+try:
+    import c_m8r as c_rsf
+    has_swig_api = True
+except:
+    has_swig_api = False
 
 import rsf.doc
 import rsf.prog
@@ -25,15 +30,47 @@ import rsf.path
 
 class Par(object):
     def __init__(self,argv=sys.argv):
-        c_rsf.sf_init(len(argv),argv)
-        self.prog = c_rsf.sf_getprog()
+        if has_swig_api:
+            c_rsf.sf_init(len(argv),argv)
+            self.prog = c_rsf.sf_getprog()
+        else:
+            self.noArrays = True
+            self.prog = argv[0]
+            self.__args = self.__argvlist2dict(argv[1:])
+
+        'function definitions'
         for type in ('int','float','bool'):
             setattr(self,type,self.__get(type))
             setattr(self,type+'s',self.__gets(type))
+    def __argvlist2dict(self,argv):
+        """Eliminates duplicates in argv and makes it a dictionary"""
+        argv = self.__filter_equal_sign(argv)
+        args = {}
+        for a in argv:
+            key = a.split('=')[0]
+            args[key] = a.replace(key+'=','')
+        return args
+    def __filter_equal_sign(self,argv):
+        """Eliminates "par = val", "par= val" and "par =val" mistakes."""
+        argv2 = []
+        # Could not use the simpler 'for elem in argv'...argv.remove because
+        # lonely '=' signs are treated weirdly. Many things did not work as
+        # expected -- hence long and ugly code. Test everything.
+        for i in range( len(argv) ):
+            if argv[i] != '=':
+                if argv[i].find('=') != 0:
+                    if argv[i].find('=') != -1:
+                        if argv[i].find('=') != len(argv[i])-1:
+                            argv2.append(argv[i])
+        return argv2
     def close(self):
-        c_rsf.sf_parclose()
+        if has_swig_api:
+            c_rsf.sf_parclose()
     def __get(self,type):
-        func = getattr(c_rsf,'sf_get'+type)
+        if has_swig_api:
+            func = getattr(c_rsf,'sf_get'+type)
+        else:
+            func = self.__getfunc(type)
         def _get(key,default=None):
             get,par = func(key)
             if get:
@@ -43,8 +80,23 @@ class Par(object):
             else:
                 return None
         return _get
+    def __getfunc(self,type):
+        def _get(key):
+            if self.__args.has_key(key):
+                par = self.__args[key]
+                if type == 'int':
+                    par = int(par)
+                elif type == 'float':
+                    
+                return True, par 
+            else:
+                 return False, None
+        return _get   
     def __gets(self,type):
-        func = getattr(c_rsf,'get'+type+'s')
+        if has_swig_api:
+            func = getattr(c_rsf,'get'+type+'s')
+        else:
+            func = self.__getfuncs()
         def _gets(key,num,default=None):
             pars = func(key,num)
             if pars:
@@ -54,8 +106,19 @@ class Par(object):
             else:
                 return None
         return _gets
+    def __getfuncs(self):
+        def _get(key,num):
+            if self.__args.has_key(key):
+                 return self.__args[key]
+            else:
+                 return None
+        return _get
     def string(self,key,default=None):
-        par = c_rsf.sf_getstring(key)
+        'return string argument'
+        if has_swig_api:
+            par = c_rsf.sf_getstring(key)
+        else:
+            par = self.__get(key)
         if par:
             return par
         elif default:
