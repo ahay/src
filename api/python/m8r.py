@@ -14,13 +14,8 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, tempfile, re, subprocess, urllib
+import c_m8r as c_rsf
 import numpy
-
-try:
-    import c_m8r as c_rsf
-    has_swig_api = True
-except:
-    has_swig_api = False
 
 import rsf.doc
 import rsf.prog
@@ -30,47 +25,15 @@ import rsf.path
 
 class Par(object):
     def __init__(self,argv=sys.argv):
-        if has_swig_api:
-            c_rsf.sf_init(len(argv),argv)
-            self.prog = c_rsf.sf_getprog()
-        else:
-            self.noArrays = True
-            self.prog = argv[0]
-            self.__args = self.__argvlist2dict(argv[1:])
-
-        'function definitions'
+        c_rsf.sf_init(len(argv),argv)
+        self.prog = c_rsf.sf_getprog()
         for type in ('int','float','bool'):
             setattr(self,type,self.__get(type))
             setattr(self,type+'s',self.__gets(type))
-    def __argvlist2dict(self,argv):
-        """Eliminates duplicates in argv and makes it a dictionary"""
-        argv = self.__filter_equal_sign(argv)
-        args = {}
-        for a in argv:
-            key = a.split('=')[0]
-            args[key] = a.replace(key+'=','')
-        return args
-    def __filter_equal_sign(self,argv):
-        """Eliminates "par = val", "par= val" and "par =val" mistakes."""
-        argv2 = []
-        # Could not use the simpler 'for elem in argv'...argv.remove because
-        # lonely '=' signs are treated weirdly. Many things did not work as
-        # expected -- hence long and ugly code. Test everything.
-        for i in range( len(argv) ):
-            if argv[i] != '=':
-                if argv[i].find('=') != 0:
-                    if argv[i].find('=') != -1:
-                        if argv[i].find('=') != len(argv[i])-1:
-                            argv2.append(argv[i])
-        return argv2
     def close(self):
-        if has_swig_api:
-            c_rsf.sf_parclose()
+        c_rsf.sf_parclose()
     def __get(self,type):
-        if has_swig_api:
-            func = getattr(c_rsf,'sf_get'+type)
-        else:
-            func = self.__getfunc(type)
+        func = getattr(c_rsf,'sf_get'+type)
         def _get(key,default=None):
             get,par = func(key)
             if get:
@@ -80,23 +43,8 @@ class Par(object):
             else:
                 return None
         return _get
-    def __getfunc(self,type):
-        def _get(key):
-            if self.__args.has_key(key):
-                par = self.__args[key]
-                if type == 'int':
-                    par = int(par)
-                elif type == 'float':
-                    
-                return True, par 
-            else:
-                 return False, None
-        return _get   
     def __gets(self,type):
-        if has_swig_api:
-            func = getattr(c_rsf,'get'+type+'s')
-        else:
-            func = self.__getfuncs()
+        func = getattr(c_rsf,'get'+type+'s')
         def _gets(key,num,default=None):
             pars = func(key,num)
             if pars:
@@ -106,19 +54,8 @@ class Par(object):
             else:
                 return None
         return _gets
-    def __getfuncs(self):
-        def _get(key,num):
-            if self.__args.has_key(key):
-                 return self.__args[key]
-            else:
-                 return None
-        return _get
     def string(self,key,default=None):
-        'return string argument'
-        if has_swig_api:
-            par = c_rsf.sf_getstring(key)
-        else:
-            par = self.__get(key)
+        par = c_rsf.sf_getstring(key)
         if par:
             return par
         elif default:
@@ -562,7 +499,6 @@ class Vplot(object):
         'Constructor'
         self.name = name
         self.temp = temp
-        self.png = None
     def __del__(self):
         'Destructor'
         if self.temp:
@@ -582,19 +518,10 @@ class Vplot(object):
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
-    def image(self,pen='ps',bgcolor='w',ppi=72):
+    def image(self,pen='ps'):
         'Convert to PNG in the current directory (for use with SAGE)'
         self.png = os.path.basename(self.name)+'.png'
-        self.export(self.png,'png',pen=pen,
-                    args='bgcolor=%s ppi=%d' % (bgcolor,ppi))
-    def _repr_png_(self):
-        'return PNG representation'
-        if not self.png:
-            self.image()
-        png = open(self.png,'rb')
-        guts = png.read()
-        png.close()
-        return guts
+        self.export(self.png,'png',pen=pen,args='bgcolor=w')
     def movie(self):
         'Convert to animated GIF in the current directory (for use with SAGE)'
         self.gif = os.path.basename(self.name)+'.gif'
