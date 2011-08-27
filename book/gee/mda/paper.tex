@@ -65,13 +65,13 @@ the following complications:
 \par
 We will not have difficulty with any of these complications here,
 because we will stay in the time domain
-and set up and solve optimization problems by use of
+and set up and solve optimization applications by use of
 the conjugate-direction method.
 Thus we will be able to cope with great complexity in goal formulation
 and get the right answer without approximations.
 By contrast, analytic or partly analytic methods
 can be more economical, but they generally solve
-somewhat different problems than those given to us by nature.
+somewhat different applications than those given to us by nature.
 
 \section{SOURCE WAVEFORM, MULTIPLE REFLECTIONS}
 \sx{source waveform}
@@ -113,14 +113,14 @@ can be zero, or small.
 This difficulty can be attacked by use of a positive number $\epsilon$
 to \bx{stabilize} it.
 For example, multiply equation~(\ref{eqn:FF}) on top and bottom
-by $P'(\omega )$ and add $\epsilon >0$ to the denominator.
+by $P(\omega )\T$ and add $\epsilon >0$ to the denominator.
 This gives
 \begin{equation}
 F(\omega )\eq
-- \ {M(\omega ) P'(\omega ) \over P(\omega )P'(\omega ) + \epsilon}
+- \ \frac{M(\omega ) P(\omega )\T}{P(\omega )P(\omega )\T + \epsilon}
 \label{eqn:epsilon}
 \end{equation}
-where $ P'(\omega )$ is the complex conjugate of $P(\omega )$.
+where $ P(\omega )\T$ is the complex conjugate of $P(\omega )$.
 Although the $\epsilon$ stabilization seems nice,
 it apparently produces a nonphysical model.
 For $\epsilon$ large or small, the time-domain response
@@ -139,7 +139,7 @@ to specify filters whose time duration is not unreasonably long,
 we can revise equation~(\ref{eqn:epsilon}) to
 \begin{equation}
 F(\omega )\eq
-- \ {<M(\omega ) P'(\omega )> \over <P(\omega )P'(\omega )  >}
+- \ \frac{<M(\omega ) P(\omega )\T>}{<P(\omega )P(\omega )\T  >}
 \label{eqn:smoothit}
 \end{equation}
 where
@@ -234,10 +234,10 @@ each column being the ``primary''.
 
 \section{TIME-SERIES AUTOREGRESSION}
 Given $y_t$ and $y_{t-1}$, you might like to predict $y_{t+1}$.
-The prediction could be a scaled sum or difference
-of $y_t$ and $y_{t-1}$.
-This is called ``\bx{autoregression}''
-because a signal is regressed on itself.
+Earliest application of the ideas in this chapter
+came in the predictions of markets.
+Prediction of a signal from its past is called ``\bx{autoregression}''
+because a signal is regressed on itself ``auto''.
 To find the scale factors you would optimize the fitting goal below,
 for the \bx{prediction filter} $(f_1,f_2)$:
 \sx{filter ! prediction}
@@ -389,7 +389,7 @@ we write
 \end{equation}
 Let us move from this specific fitting goal to the general case.
 (Notice the similarity of the free-mask matrix $\bold K$
-in this filter estimation problem with the
+in this filter estimation application with the
 free-mask matrix $\bold J$ in missing data goal (\ref{eqn:migraine}).)
 The fitting goal is,
 \begin{eqnarray}
@@ -406,7 +406,7 @@ which means we initialize the residual with
 $ \bold r_0 = \bold y$.
 and then iterate with
 \begin{eqnarray}
-\Delta \bold a    &\longleftarrow& \bold K' \bold Y'\        \bold r \\
+\Delta \bold a    &\longleftarrow& \bold K\T \bold Y\T\        \bold r \\
 \Delta \bold r    &\longleftarrow& \bold Y  \bold K \ \Delta \bold a 
 \end{eqnarray}
 
@@ -416,6 +416,23 @@ and then iterate with
 %\end{notforlecture}
 
 \section{PREDICTION-ERROR FILTER OUTPUT IS WHITE}
+In Chapter \ref{paper:prc} we learned that least squares residuals
+should be IID (Independent, Identically Distributed)
+which in practical terms means in both Fourier space and physical
+space they should have a uniform variance.
+Further, not only should residuals have the IID property,
+but we should choose a preconditioning tranformation
+so that our unknowns have the same IID nature.
+It is easy enough to achieve flattening in physical space
+by means of weighting functions.
+Here we see that Prediction-error filters (PEFs) enable
+us to flatten in fourier space.
+\par
+	\boxit{
+	PEFs transform signals and images to whiteness.
+	Residuals and preconditioned models should be white.
+	}
+
 
 \subsubsection{The relationship between spectrum and PEF}
 Knowledge of an autocorrelation function
@@ -436,7 +453,7 @@ the filter in equation (\ref{eqn:simplepef}).
 
 \par
 Take equation  (\ref{eqn:simplepef}) for $\bold r$ and multiply it
-by the adjoint $\bold r'$ getting a quadratic form in the PEF
+by the adjoint $\bold r\T$ getting a quadratic form in the PEF
 coefficients.  Minimizing this quadratic form determines the PEF.
 This quadratic form depends only on the autocorrelation
 of the original data $y_t$, not on the data $y_t$ itself.
@@ -448,7 +465,9 @@ is equivalent to knowledge of the autocorrelation or the spectrum.
 
 \subsubsection{Undoing convolution in nature}
 \inputdir{XFig}
-Prediction-error filtering is also called ``\bx{deconvolution}''.
+Prediction-error filtering is called
+``\bx{blind deconvolution}''.
+In the exploration industry it is simply called ``\bx{deconvolution}''.
 This word goes back to very basic models and concepts.
 In this model one envisions
 a random white-spectrum excitation function $\bold x$
@@ -621,14 +640,14 @@ and a hundred components wide.
           b_2 \end{array} \right]
 \label{eqn:tworegrs}
 \end{equation}
-When the energy $\bold r'\bold r$
+When the energy $\bold r\T\bold r$
 of a residual has been minimized,
 the residual $\bold r$ is orthogonal to the fitting functions.
 For example, choosing $a_2$ to minimize
-$\bold r'\bold r$
+$\bold r\T\bold r$
 gives
-$0=\partial\bold r'\bold r/\partial a_2=2\bold r'\partial\bold r/\partial a_2$.
-This shows that $\bold r'$ is perpendicular to $\partial \bold r / \partial a_2$
+$0=\partial\bold r\T\bold r/\partial a_2=2\bold r\T\partial\bold r/\partial a_2$.
+This shows that $\bold r\T$ is perpendicular to $\partial \bold r / \partial a_2$
 which is the rightmost column of the $\bold Y_a$ matrix.
 Thus the vector $\bold r_a$
 is orthogonal to all the columns in the $\bold Y_a$ matrix
@@ -867,7 +886,7 @@ impulse at zero delay time.
 Applying this idea to
 the helix in Figure %\CHAPFIG{hlx}{sergey-helix}
 shows us that we can consider a 2-D PEF
-to be a small halfplane like
+to be a small halfplane % like
 %\CHAPEQN{hlx}{2dpef}
 with an impulse along a side.
 These shapes are what we see here in
@@ -971,7 +990,7 @@ the filter is enlarged.
 It seems that we could design whitening autoregression filters
 for $45^\circ$ rotations also,
 and we could also design them for hexagonal coordinate systems.
-In some physical problems,
+In some physical applications,
 you might find the nonuniqueness unsettling.
 Does it mean the ``final solution'' is nonunique?
 Usually not, or not seriously so.
@@ -1092,7 +1111,7 @@ Figures~\ref{fig:specdecon}-\ref{fig:zof}
 are based on exploration seismic data from the Gulf of Mexico deep water.
 A ship carries an air gun and tows a streamer with some hundreds of geophones.
 First we look at a single pop of the gun.
-We use all the geophone signals to create a single 1-D PEF for the time axis.
+We use all the hydrophone signals to create a single 1-D PEF for the time axis.
 This changes the average temporal frequency spectrum
 as shown in Figure~\ref{fig:specdecon}.
 \plot{specdecon}{width=6in,height=2in}{
@@ -1244,7 +1263,7 @@ We have already coded
 equation (\ref{eqn:contran1}),
 operator
 \texttt{helicon} \vpageref{lst:helicon}.
-That operator was useful in missing data problems.
+That operator was useful in missing data applications.
 Now we want to find a prediction-error filter
 so we need the other case,
 equation (\ref{eqn:contran2}),
@@ -1925,6 +1944,33 @@ that are most predictable.
 The filled hole is devoid of the unpredictable noise
 that is a part of all real data.
 
+%Figure \ref{fig:channel-elita} is
+%an interesting seismic image showing ancient river channels now deeply buried.
+%Such river channels are often filled with sand,
+%hence are good petroleum prospects.
+%Prediction error methodology fails to simulate these channels.
+%We can give the reason that the channels are not statistically stationary.
+%The methodology also fails to extrapolate them very far from a known
+%region into a hidden region.
+
+%\plot{channel-elita}{width=6.0in,height=6.0in}{
+%	Upper left shows an interesting seismic image with
+%	ancient river channels now deeply buried.
+%	In the upper right a portion of the image is removed.
+%	Lower left attempts to fill the gap
+%	using a prediction-error filter
+%	continuing channels into the gap.
+%	Data are poorly continued.
+%	This image may be thought of as the mean of
+%	a random variable.
+%	Lower right fills the gap by the ``geostat'' technique
+%	adding noise of an appropriate variance and covariance while
+%	matching the boundary conditions.
+%	The synthetic data added there
+%	shows no interesting channels,
+%	though it might replicate some channel trends
+%	from the fitting region.
+%	The methodology cannot cope with the nonstationarity.}
 
 
 %\newslide
@@ -2140,7 +2186,7 @@ wrap around the 2-axis.
 \par
 Suppose you acquire data on a hexagonal mesh as below
 \par\noindent
-%\scriptsize
+\scriptsize
 \begin{verbatim}
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
@@ -2155,14 +2201,14 @@ Suppose you acquire data on a hexagonal mesh as below
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
 \end{verbatim}
-%\normalsize
+\normalsize
 \par\noindent
 and some of the data values are missing.
 How can we apply the methods of this chapter?
 The solution is to append the given data by more missing data
 shown by the commas below.
 \par\noindent
-%\scriptsize
+\scriptsize
 \begin{verbatim}
                  . . . . . . . . . . . . . . . . , , , , , ,
                 . . . . . . . . . . . . . . . . , , , , , ,
@@ -2178,7 +2224,7 @@ shown by the commas below.
       , , , , , . . . . . . . . . . . . . . . . ,
      , , , , , , . . . . . . . . . . . . . . . . 
 \end{verbatim}
-%\normalsize
+\normalsize
 \par\noindent
 Now we have a familiar two-dimensional coordinate system
 in which we can find missing values,
@@ -2571,8 +2617,8 @@ Then we iterate over equations (\ref{eqn:progfirst}) to (\ref{eqn:proglast}).
  \quad\longleftarrow\quad
         \left[
         \begin{array}{c}
-        \bold J' \bold A' \\
-        \bold K' \bold Y'
+        \bold J\T \bold A\T \\
+        \bold K\T \bold Y\T
         \end{array}
         \right]
         \
@@ -2920,8 +2966,8 @@ $\bold a = (1,-2,1)$ as I did for the examples here.
 % \quad\longleftarrow\quad
 %       \left[
 %       \begin{array}{cc}
-%       \bold L'  &  \bold A' \\
-%       \bold 0   &  \bold K' \bold M'
+%       \bold L\T  &  \bold A\T \\
+%       \bold 0   &  \bold K\T \bold M\T
 %       \end{array}
 %       \right]
 %       %
@@ -3118,7 +3164,7 @@ forces the data to be on a uniform mesh
 and requires there not be too many empty mesh locations.
 
 \par
-For the 2-D nonlinear problem,
+For the 2-D nonlinear application,
 we follow the same approach we used in one dimension,
 equations
 (\ref{eqn:nirvana1}) and
@@ -3237,7 +3283,7 @@ I've been trying to coax younger,
 more energetic people to think about it.
 The problem arises when there is too much missing data.
 \par
-\boxit{The bane of PEF estimation is too much missing data}
+\boxit{The bane of PEF estimation is too much missing data.}
 \par\noindent
 Then {\em all} the regression equations disappear.
 The nonlinear methods are particularly bad
@@ -3270,7 +3316,7 @@ is provided by eigenvectors and eigenvalues.
 In statistical signal processing
 we handle a third type of spectrum, the multivariate spectrum.
 \par
-Working in an optimization problem,
+Working in an optimization application,
 we begin from residuals between theory and practice.
 These residuals can be scaled to make new optimization residuals
 before we start minimizing their energy.
@@ -3356,8 +3402,8 @@ of data, ranges over time or space,
 over soundings or over receiver locations.
 The experimenter writes
 \begin{eqnarray}
-\bold R &=& E ( \bold y \bold y' ) \\
-\bold R &=& E ( \bold B \bold x \bold x' \bold B' )
+\bold R &=& E ( \bold y \bold y\T ) \\
+\bold R &=& E ( \bold B \bold x \bold x\T \bold B\T )
 \end{eqnarray}
 Given a random variable $r$,
 the expectation of $2r$ is simply $E(2r)=2E(r)$.
@@ -3365,7 +3411,7 @@ The $E()$ symbol is a summation on random variables,
 but constants like the coefficients of $\bold B$ pass
 right through it.  Thus,
 \begin{eqnarray}
-\bold R &=&   \bold B\ E(\bold x \bold x')\ \bold B' \\
+\bold R &=&   \bold B\ E(\bold x \bold x\T)\ \bold B\T \\
 \bold R &=&   \bold B\
   E \left(
       \left[
@@ -3380,7 +3426,7 @@ right through it.  Thus,
         \end{array}
       \right]
   \right)
-\bold B'
+\bold B\T
                         \\
 \bold R &=&   \bold B
       \left[
@@ -3389,21 +3435,21 @@ right through it.  Thus,
           E(x_2 x_1) & E(x_2 x_2)
         \end{array}
       \right]
-\bold B'
+\bold B\T
                         \\
-\bold R &=&   \bold B \bold B'
+\bold R &=&   \bold B \bold B\T
 \end{eqnarray}
 \par
 Given a matrix $\bold R$,
 there is a simple well-known method
 called the \bx{Cholesky factorization} method that will factor $\bold R$
-into two parts like $\bold B$ and $\bold B'$.
+into two parts like $\bold B$ and $\bold B\T$.
 The method creates for us either an upper or a lower triangular
 matrix (our choice) for $\bold B$.
 You can easily reinvent the Cholesky method
 if you multiply
 the symbols for two triangular matrices like
-$\bold B$ and $\bold B'$ and notice the procedure that
+$\bold B$ and $\bold B\T$ and notice the procedure that
 works backwards from $\bold R$ to $\bold B$.
 The experimenter seeks not $\bold B$, however, but its inverse,
 the matrix that takes us from the experimental residuals
@@ -3422,7 +3468,7 @@ instead of matrices.
         The multivariate spectrum of experimental residuals
         $\bold y$
         is the matrix
-        $\bold R = E ( \bold y \bold y')$.
+        $\bold R = E ( \bold y \bold y\T)$.
         For optimum model finding,
         the experimental residuals (squared)
         should be weighted inversely
@@ -3448,7 +3494,7 @@ is a diagonal weighting matrix
 
 
 \subsection{What should we optimize?}
-Least-squares problems often present themselves as fitting goals such as
+Least-squares applications often present themselves as fitting goals such as
 \begin{eqnarray}
 \bold 0 &\approx&  \bold F \bold m - \bold d\\
 \bold 0 &\approx&          \bold m
@@ -3457,15 +3503,15 @@ To balance our possibly contradictory goals we need weighting functions.
 The quadratic form that we should minimize is
 \begin{equation}
 \min_m \quad
-(\bold F \bold m - \bold d)'
-\bold A'_n \bold A_n
+(\bold F \bold m - \bold d)\T
+\bold A\T_n \bold A_n
 (\bold F \bold m - \bold d)
          +
-         \bold m' \bold A'_m \bold A_m \bold m
+         \bold m\T \bold A\T_m \bold A_m \bold m
 \end{equation}
-where $\bold A'_n \bold A_n$ is the inverse multivariate spectrum of the noise
+where $\bold A\T_n \bold A_n$ is the inverse multivariate spectrum of the noise
 (data-space residuals) and
-$\bold A'_m \bold A_m$ is the inverse multivariate spectrum of the model.
+$\bold A\T_m \bold A_m$ is the inverse multivariate spectrum of the model.
 In other words,
 $\bold A_n$ is a leveler on the data fitting error and
 $\bold A_m$ is a leveler on the model.
@@ -3502,9 +3548,9 @@ to a more subtle level
 by statistical textbooks that usually define weighting functions
 in terms of variances instead of spectra.
 This is particularly confusing with the noise spectrum
-$(\bold A'_n \bold A_n)^{-1}$.
+$(\bold A_n\T \bold A_n)^{-1}$.
 It is often referred to as the ``\bx{data covariance}''
-defined as $E[(\bold d-E(\bold d))(\bold d-E(\bold d))']$.
+defined as $E[(\bold d-E(\bold d))(\bold d-E(\bold d))\T]$.
 Clearly, the noise spectrum is the same as the data covariance
 only if we accept the theoretician's definition
 that $E(\bold d)=\bold F\bold m$.
@@ -3537,6 +3583,10 @@ Avoiding the word ``covariance'' avoids the problem.
 %\end{notforlecture}
 
 \subsection{Hermeneutics}
+\boxit{
+	In seismology the data is usually better than the theory.
+	}
+\par
 Hermeneutics is the
 study of the methodological principles of interpretation.
 Historically, it refers to bible study.
@@ -3558,15 +3608,15 @@ then there are two fundamental questions:
 
 \par
 Here is a perspective drawn from analysis of the human genome:
-"The problem is that
+``The problem is that
 it is possible to use empirical data to calibrate a model
 that generates simulated data that
 is similar to the empirical data.
 The point of using such a calibrated model
 is to be able to show how strange certain regions are
 if they don't fit the simulated distribution,
-which is based on the empirical distribution."
-In other words, "inversion" is just the process of calibrating a model.
+which is based on the empirical distribution.''
+In other words, ``inversion'' is just the process of calibrating a model.
 To learn something new we study the {\it failures} of such models.
 
 
