@@ -25,7 +25,7 @@
 #include "upgradomp.h"
 #include "fatomoomp.h"
 
-static int nt, **mask, ns, *list;
+static int nt, **mask, ns, *list, maxrecv;
 static float **tempt, **tempx, **psum;
 static upgrad *upglist;
 
@@ -72,7 +72,8 @@ void fatomo_init(int dim      /* model dimension */,
 }
 
 void fatomo_set(float **t  /* stencil time */,
-		int **m     /* mask */)
+		int **m    /* mask */,
+		int nrecv  /* max recv count */)
 /*< set fatomo operator and right-hand side >*/
 {
     int is;
@@ -86,7 +87,10 @@ void fatomo_set(float **t  /* stencil time */,
     }
     
     /* set mask */
-    mask = m;    
+    mask = m;
+
+    /* set maxrecv */
+    maxrecv = nrecv;
 }
 
 void fatomo_close(void)
@@ -126,13 +130,14 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 #pragma omp for
 #endif
 	    for (is=0; is < ns; is++) {
+		for (it=0; it <= nt; it++)
+		    tempt[its][it] = 0.;
+		
 		i = list[is];
-		for (it=nt-1; it >= 0; it--) {
-		    if (mask[is][it] == 1) {
-			tempt[its][it] = r[i-1];
+		for (it=maxrecv-1; it >= 0; it--) {
+		    if (mask[is][it] >= 0) {
+			tempt[its][mask[is][it]] = r[i-1];
 			i--;
-		    } else {
-			tempt[its][it] = 0.;
 		    }
 		}
 		
@@ -168,9 +173,9 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		upgrad_solve(upglist[is],x,tempt[its],NULL);
 		
 		i = list[is];
-		for (it=nt-1; it >= 0; it--) {
-		    if (mask[is][it] == 1) {
-			r[i-1] = tempt[its][it];
+		for (it=maxrecv-1; it >= 0; it--) {
+		    if (mask[is][it] >= 0) {
+			r[i-1] = tempt[its][mask[is][it]];
 			i--;
 		    }
 		}

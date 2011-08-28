@@ -33,12 +33,12 @@
 int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, plane[3], verb;
-    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, nrhs, is, nshot=1, *flag, order;
-    int iter, niter, stiter, *k, nfreq, nmem, *rhslist;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, *t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
+    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, *flag, order;
+    int iter, niter, stiter, *k, nfreq, nmem, nrhs, *rhslist, nrecv;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, rece, topo, grad, norm;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm;
     sf_weight weight=NULL;
 
     sf_init(argc,argv);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     nt = 1;
     for (i=0; i < dim; i++) {
 	sprintf(key,"d%d",i+1);
-	if (!sf_histfloat(sinp,key,d+i)) sf_error("No %s= in input",key);
+	if (!sf_histfloat(sinp,key,d+i)) sf_error("No %s= in input.",key);
 	sprintf(key,"o%d",i+1);
 	if (!sf_histfloat(sinp,key,o+i)) o[i]=0.;
 	nt *= n[i]; plane[i] = false;
@@ -107,43 +107,37 @@ int main(int argc, char* argv[])
     sf_floatread(source[0],3*nshot,shot);
     sf_fileclose(shot);
     
-    /* allocate memory for time table */
-    t = sf_floatalloc2(nt,nshot);
-    
-    /* read in receiver file */
-    m = sf_intalloc2(nt,nshot);
-    if (NULL == sf_getstring("receiver")) {
-	for (is=0; is < nshot; is++) {
-	    for (it=0; it < nt; it++) {
-		m[is][it] = 1;
-	    }
-	}
-    } else {
-	rece = sf_input("receiver");
-	sf_intread(m[0],nt*nshot,rece);
-	sf_fileclose(rece);
-    }
-    
+    /* read in receiver list */
+    if (NULL == sf_getstring("receiver"))
+	sf_error("Need list receiver=");
+    recv = sf_input("receiver");
+
+    if (!sf_histint(recv,"n1",&nrecv)) sf_error("No nrecv in receiver list.");
+
+    m = sf_intalloc2(nrecv,nshot);
+    sf_intread(m[0],nrecv*nshot,recv);
+    sf_fileclose(recv);
+
     /* number of right-hand side */
     rhslist = sf_intalloc(nshot);
     
     nrhs = 0;
     for (is=0; is < nshot; is++) {
-	for (it=0; it < nt; it++) {
-	    if (m[is][it] == 1)
+	for (it=0; it < nrecv; it++) {
+	    if (m[is][it] >= 0)
 		nrhs++;
 	}
 	rhslist[is] = nrhs;
     }
     rhs = sf_floatalloc(nrhs);
     
-    /* read in record file */
+    /* read in record list */
     if (NULL == sf_getstring("record"))
-	sf_error("Need data record=");
+	sf_error("Need list record=");
     reco = sf_input("record");
     
-    t0 = sf_floatalloc(nrhs);
-    sf_floatread(t0,nrhs,reco);
+    t0 = sf_floatalloc2(nrecv,nshot);
+    sf_floatread(t0[0],nrecv*nshot,reco);
     sf_fileclose(reco);
     
     /* read in topography file */
@@ -191,6 +185,9 @@ int main(int argc, char* argv[])
 	norm = NULL;
     }
     
+    /* allocate memory for time table */
+    t = sf_floatalloc2(nt,nshot);
+
     /* initialize fatomo */
     fatomo_init(dim,n,d,nshot,rhslist);
     
@@ -235,7 +232,7 @@ int main(int argc, char* argv[])
     
     flag  = sf_intalloc(nt);
     fastmarch_init(n[2],n[1],n[0]);
-
+    
     /* initial misfit */
     for (is=0; is < nshot; is++) {
 	fastmarch(t[is],s,flag,plane,
@@ -243,9 +240,9 @@ int main(int argc, char* argv[])
 		  source[is][2],source[is][1],source[is][0],1,1,1,order);
 	
 	i = rhslist[is];
-	for (it=nt-1; it >= 0; it--) {
-	    if (m[is][it] == 1) {
-		rhs[i-1] = t0[i-1]-t[is][it];
+	for (it=nrecv-1; it >= 0; it--) {
+	    if (m[is][it] >= 0) {
+		rhs[i-1] = t0[is][it]-t[is][m[is][it]];
 		i--;
 	    }
 	}
@@ -267,7 +264,7 @@ int main(int argc, char* argv[])
     switch (what[0]) {
 	case 'l': /* linear operator */
 
-	    fatomo_set(t,m);
+	    fatomo_set(t,m,nrecv);
 	    fatomo_lop(true,false,nt,nrhs,ds,rhs);
 
 	    for (it=0; it < nt; it++) {
@@ -290,7 +287,7 @@ int main(int argc, char* argv[])
 		}
 		
 		/* prepare for CG */
-		fatomo_set(t,m);
+		fatomo_set(t,m,nrecv);
 		
 		/* solve ds */
 		if (l1norm) {
@@ -341,9 +338,9 @@ int main(int argc, char* argv[])
 				  source[is][2],source[is][1],source[is][0],1,1,1,order);
 			
 			i = rhslist[is];
-			for (it=nt-1; it >= 0; it--) {
-			    if (m[is][it] == 1) {
-				rhs[i-1] = t0[i-1]-t[is][it];
+			for (it=nrecv-1; it >= 0; it--) {
+			    if (m[is][it] >= 0) {
+				rhs[i-1] = t0[is][it]-t[is][m[is][it]];
 				i--;
 			    }
 			}
@@ -372,9 +369,9 @@ int main(int argc, char* argv[])
 		}
 
 		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
+		    sf_warning("L1 misfit after iteration %d of %d: %g (line-search %d).",iter+1,niter,rate,count);
 		else
-		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
+		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d).",iter+1,niter,rate,count);
 
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }
