@@ -1,4 +1,4 @@
-/* Make receiver list for first-arrival traveltime tomography */
+/* Make topography mask / receiver list / record list for first-arrival traveltime tomography */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -19,56 +19,51 @@
 
 #include <rsf.h>
 
+#include "fastmarch.h"
+
 int main(int argc, char* argv[])
 {
-    int n[SF_MAX_DIM], nt, dim, i, j, k, is, nshot, nrecv, *mask, **recv;
+    bool velocity, plane[3], skip;
+    int n[SF_MAX_DIM], nt, dim, *flag, order, i, j, k, is, ns, nrecv, *mask, *recv;
     int offset1, offset2, left1, right1, left2, right2, count;
-    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], temp, **t0, **reco;
+    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, *t, *reco, temp;
     char key[4];
-    sf_file in, topo, table, out, record;
+    sf_file in, shot, out, record, topo;
     
     sf_init(argc,argv);
     in     = sf_input("in");
     out    = sf_output("out");
     record = sf_output("record");
     
-    /* read input shot file */
-    if (!sf_histint(in,"n2",&nshot)) nshot=1;
-
-    source = sf_floatalloc2(3,nshot);
-    sf_floatread(source[0],3*nshot,in);
-
-    /* read model dimension from topography file */
-    if (NULL == sf_getstring("topo"))
-	sf_error("Need topography file topo=");
-    topo = sf_input("topo");
-    
-    dim = sf_filedims(topo,n);
+    /* read model dimensions */
+    dim = sf_filedims(in,n);
 
     nt = 1;
     for (i=0; i < dim; i++) {
 	sprintf(key,"d%d",i+1);
-	if (!sf_histfloat(topo,key,d+i)) sf_error("No %s= in input",key);
+	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input",key);
 	sprintf(key,"o%d",i+1);
-	if (!sf_histfloat(topo,key,o+i)) o[i]=0.;
-	nt *= n[i];
+	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
+	nt *= n[i]; plane[i] = false;
     }
     if (dim < 3) {
-	n[2] = 1; o[2] = o[1]; d[2] = d[1];
+	n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
     }
+    
+    /* read model */
+    s = sf_floatalloc(nt);
+    sf_floatread(s,nt,in);
 
-    mask = sf_intalloc(nt);
-    sf_intread(mask,nt,topo);
-    sf_fileclose(topo);
+    /* read shot list */
+    if (NULL == sf_getstring("shot"))
+	sf_error("Need shot list shot=");
+    shot = sf_input("shot");
 
-    /* read complete time table */
-    if (NULL == sf_getstring("table"))
-	sf_error("Need complete time file table=");
-    table = sf_input("table");
+    if (!sf_histint(shot,"n2",&ns)) ns=1;
 
-    t0 = sf_floatalloc2(nt,nshot);
-    sf_floatread(t0[0],nt*nshot,table);
-    sf_fileclose(table);
+    source = sf_floatalloc2(3,ns);
+    sf_floatread(source[0],3*ns,shot);
+    sf_fileclose(shot);
 
     if (!sf_getint("offset1",&offset1)) offset1=0;
     /* receiver offset inline (on each side) */
@@ -79,31 +74,102 @@ int main(int argc, char* argv[])
     nrecv = ((2*offset1+1)*(2*offset2+1)>n[1]*n[2])?n[1]*n[2]:(2*offset1+1)*(2*offset2+1);
 
     /* allocate memory for output */
-    recv = sf_intalloc2(nrecv,nshot);
-    reco = sf_floatalloc2(nrecv,nshot);
+    recv = sf_intalloc(nrecv);
+    reco = sf_floatalloc(nrecv);
+
+    if (NULL != sf_getstring("topo")) {
+	topo = sf_output("topo");
+	mask = sf_intalloc(nt);
+    } else {
+	topo = NULL;
+	mask = NULL;
+    }
 
     /* write output header */
     sf_putint(out,"n1",nrecv);
-    sf_putint(record,"n1",nrecv);
+    sf_putint(out,"n2",ns);
+    sf_putint(out,"n3",1);
     sf_settype(out,SF_INT);
 
-    for (is=0; is < nshot; is++) {
+    sf_putint(record,"n1",nrecv);
+    sf_putint(record,"n2",ns);
+    sf_putint(record,"n3",1);
+    
+    if (topo != NULL) sf_settype(topo,SF_INT);
+
+    if (!sf_getfloat("air",&air)) air=0.5;
+    /* air velocity for thresholding topography mask */
+
+    if (!sf_getint("order",&order)) order=2;
+    /* fast marching accuracy order */
+
+    if (!sf_getbool("velocity",&velocity)) velocity=true;
+    /* if y, the input is velocity; n, slowness squared */
+
+    /* convert to slowness squared */
+    if (velocity) {
+	for (i=0; i < nt; i++) {
+	    s[i] = 1./s[i]*1./s[i];
+	}
+
+	air = 1./air*1./air;
+    }
+    
+    /* allocate temporary memory */
+    t     = sf_floatalloc(nt);
+    flag  = sf_intalloc(nt);
+    
+    /* make topography mask */
+    if (topo != NULL) {
+	for (k=0; k < n[2]; k++) {
+	    for (j=0; j < n[1]; j++) {
+
+		skip = true;
+		for (i=0; i < n[0]; i++) {
+
+		    if (s[k*n[1]*n[0]+j*n[0]+i] < air && skip) {
+			mask[k*n[1]*n[0]+j*n[0]+i] = 1;
+			skip = false;
+		    } else {
+			mask[k*n[1]*n[0]+j*n[0]+i] = 0;
+		    }
+		}
+	    }
+	}
+
+	sf_intwrite(mask,nt,topo);
+    }
+    
+    /* make receiver list and record list */
+    fastmarch_init(n[2],n[1],n[0]);
+
+    for (is=0; is < ns; is++) {
+	fastmarch(t,s,flag,plane,
+		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
+		  source[is][2],source[is][1],source[is][0],1,1,1,order);
+
 	temp   = (source[is][1]-o[1])/d[1];
 	left1  = (int)temp-offset1;
 	right1 = (int)temp+offset1;
-
+	
 	temp   = (source[is][2]-o[2])/d[2];
 	left2  = (int)temp-offset2;
 	right2 = (int)temp+offset2;
-
+	
 	count = 0;
 	for (k=0; k < n[2]; k++) {
 		for (j=0; j < n[1]; j++) {
+
 		    if (left1 <= j && j <= right1 && left2 <= k && k <= right2) {
+
+			skip = false;
 			for (i=0; i < n[0]; i++) {
-			    if (mask[k*n[1]*n[0]+j*n[0]+i] == 1) {
-				recv[is][count] = k*n[1]*n[0]+j*n[0]+i;
-				reco[is][count] = t0[is][k*n[1]*n[0]+j*n[0]+i];
+			    if (skip) break;
+			    
+			    if (s[k*n[1]*n[0]+j*n[0]+i] < air) {
+				recv[count] = k*n[1]*n[0]+j*n[0]+i;
+				reco[count] = t[k*n[1]*n[0]+j*n[0]+i];
+				skip = true;
 				count++;
 			    }
 			}
@@ -114,14 +180,14 @@ int main(int argc, char* argv[])
 	/* negative flag for void space */
 	if (count < nrecv) {
 	    for (i=count; i < nrecv; i++) {
-		recv[is][i] = -1;
-		reco[is][i] = -1.0;
+		recv[i] = -1;
+		reco[i] = -1.0;
 	    }
 	}
+
+	sf_intwrite(recv,nrecv,out);
+	sf_floatwrite(reco,nrecv,record);
     }
-    
-    sf_intwrite(recv[0],nrecv*nshot,out);
-    sf_floatwrite(reco[0],nrecv*nshot,record);
     
     exit(0);
 }
