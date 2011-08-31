@@ -40,6 +40,25 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     return 0;
 }
 
+static void output(const char* name, DblNumMat& mat)
+{
+    int m=mat.m();
+    int n=mat.n();
+    int mn = m*n;
+
+    double *dmat = mat.data();
+
+    std::valarray<float> fmat(mn);
+    for (int k=0; k < mn; k++) {
+	fmat[k] = dmat[k];
+    }
+	
+    oRSF mfile(name);
+    mfile.put("n1",m);
+    mfile.put("n2",n);
+    mfile << fmat;
+}
+
 int main(int argc, char** argv)
 {   
     sf_init(argc,argv); // Initialize RSF
@@ -55,6 +74,9 @@ int main(int argc, char** argv)
 
     int npk;
     par.get("npk",npk,20); // maximum rank
+
+    int outputs;
+    par.get("outputs",outputs,3); // number of outputs (2 or 3)
 
     iRSF in;
     oRSF out;
@@ -80,17 +102,6 @@ int main(int argc, char** argv)
 
     int m2=mid.m();
     int n2=mid.n();
-    double *dmid = mid.data();
-
-    std::valarray<float> fmid(m2*n2);
-    for (int k=0; k < m2*n2; k++) {
-	fmid[k] = dmid[k];
-    }
-
-    oRSF middle("mid");
-    middle.put("n1",m2);
-    middle.put("n2",n2);
-    middle << fmid;
 
     for (int k=0; k < m; k++) 
 	midx[k] = k;
@@ -99,31 +110,24 @@ int main(int argc, char** argv)
 
     DblNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
-    double *ldat = lmat.data();
-
-    std::valarray<float> ldata(m*m2);
-    for (int k=0; k < m*m2; k++) 
-	ldata[k] = ldat[k];
-    oRSF left("left");
-    left.put("n1",m);
-    left.put("n2",m2);
-    left << ldata;
 
     DblNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    double *rdat = rmat.data();
-
-    std::valarray<float> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) 
-	rdata[k] = rdat[k];
-    oRSF right("right");
-    right.put("n1",n2);
-    right.put("n2",n);
-    right << rdata;
 
     DblNumMat tmp1(m,n2);
     iC( dgemm(1.0, lmat, mid, 0.0, tmp1) );
+
+    if (outputs > 2) {
+	output("mid",mid);
+	output("left",lmat);
+    } else {
+	output("left",tmp1);
+    }
+
+    output("right",rmat);
+
     iC( dgemm(1.0, tmp1, rmat, 0.0, mat) );
+    
     for (int k=0; k < m*n; k++) 
 	fdata[k] = data[k];
     out << fdata;

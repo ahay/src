@@ -1,0 +1,25 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+# replace with your own data server
+
+Fetch(['overthrust.vites.h','overthrust.vites'],'overthrust',private)
+
+Flow('overthrust',['overthrust.vites.h','overthrust.vites'],
+     '''
+     (cat ${SOURCES[0]} ; echo data_format=xdr_float) |
+     dd form=native |
+     scale dscale=0.001 |
+     put label1=X label2=Y label3=Z unit1=km unit2=km unit3=km
+     label=Velocity unit=km/s d1=0.025 d2=0.025 d3=0.025
+     ''',stdin=0)
+
+Result('overthrust',
+       '''
+       byte gainpanel=all mean=y |
+       grey3 frame1=400 frame2=400 frame3=80
+       title="SEG/EAGE Overthrust Model"
+       color=j point1=0.81 point2=0.81
+       screenratio=1
+       ''')
+
+End()
