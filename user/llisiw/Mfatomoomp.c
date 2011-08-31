@@ -24,8 +24,8 @@
 #endif
 
 #include "upgradomp.h"
-#include "fastmarch.h"
 #include "fatomoomp.h"
+#include "fastmarchomp.h"
 
 #include "l1.h"
 #include "l1step.c"
@@ -33,7 +33,7 @@
 int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, plane[3], verb;
-    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, *flag, order;
+    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, **flag, order, its, mts;
     int iter, niter, stiter, *k, nfreq, nmem, nrhs, *rhslist, nrecv;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	for (it=0; it < nt; it++) {
 	    s[it] = 1./s[it]*1./s[it];
 	}
-
+	
 	dv = sf_floatalloc(nt);
     }
     
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=2;
     /* fast marching accuracy order */
     
-    if (!sf_getint("niter",&niter)) niter=1;
+    if (!sf_getint("niter",&niter)) niter=0;
     /* number of slowness inversion iterations */
     
     if (!sf_getint("stiter",&stiter)) stiter=100;
@@ -230,12 +230,26 @@ int main(int argc, char* argv[])
 	p = sf_floatalloc(nt);
     }
     
-    flag  = sf_intalloc(nt);
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    flag = sf_intalloc2(nt,mts);
     fastmarch_init(n[2],n[1],n[0]);
     
     /* initial misfit */
+#ifdef _OPENMP
+#pragma omp parallel for private(its,i,it)
+#endif
     for (is=0; is < nshot; is++) {
-	fastmarch(t[is],s,flag,plane,
+#ifdef _OPENMP
+	its = omp_get_thread_num();
+#else
+	its = 0;
+#endif
+	fastmarch(t[is],s,flag[its],plane,
 		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
 		  source[is][2],source[is][1],source[is][0],1,1,1,order);
 	
@@ -261,6 +275,11 @@ int main(int argc, char* argv[])
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
+    if (niter == 0) {
+	sf_putint(sout,"n4",nshot);
+	sf_floatwrite(t,nt*nshot,sout);
+    }
+
     switch (what[0]) {
 	case 'l': /* linear operator */
 
@@ -331,9 +350,17 @@ int main(int argc, char* argv[])
 			    temps[it] = (sqrtf(s[it])+gama*ds[it])*(sqrtf(s[it])+gama*ds[it]);
 		    }
 
-		    /* forward fast-marching for stencil time */		    
+		    /* forward fast-marching for stencil time */
+#ifdef _OPENMP
+#pragma omp parallel for private(its,i,it)
+#endif		    
 		    for (is=0; is < nshot; is++) {
-			fastmarch(t[is],temps,flag,plane,
+#ifdef _OPENMP
+			its = omp_get_thread_num();
+#else
+			its = 0;
+#endif
+			fastmarch(t[is],temps,flag[its],plane,
 				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
 				  source[is][2],source[is][1],source[is][0],1,1,1,order);
 			
