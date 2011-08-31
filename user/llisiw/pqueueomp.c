@@ -38,8 +38,12 @@ void pqueue_init (int n)
     mts = 1;
 #endif
 
+    x = (float ***) sf_alloc (mts,sizeof (float **));
+    xn = (float ***) sf_alloc (mts,sizeof (float **));
+    x1 = (float ***) sf_alloc (mts,sizeof (float **));
+
     for (its=0; its < mts; its++)
-	x[its] = (float **) sf_alloc ((n+1),sizeof (float *)); 
+	x[its] = (float **) sf_alloc ((n+1),sizeof (float *));    
 }
 
 void pqueue_start (void)

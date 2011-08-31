@@ -447,7 +447,6 @@ int neighbors_nearsource(float* xs   /* source location [3] */,
     int npoints, ic, i, j, is, start[3], endx[3], ix, iy, iz;
     double delta[3], delta2;
     
-
     /* initialize everywhere */
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
 	in[i] = SF_OUT;

@@ -32,8 +32,8 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, l1norm, shape, plane[3], verb;
-    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, **flag, order, its, mts;
+    bool velocity, l1norm, shape, verb;
+    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, *k, nfreq, nmem, nrhs, *rhslist, nrecv;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
@@ -57,10 +57,10 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(sinp,key,d+i)) sf_error("No %s= in input.",key);
 	sprintf(key,"o%d",i+1);
 	if (!sf_histfloat(sinp,key,o+i)) o[i]=0.;
-	nt *= n[i]; plane[i] = false;
+	nt *= n[i];
     }
     if (dim < 3) {
-	n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
+	n[2] = 1; o[2] = o[1]; d[2] = d[1];
     }
     
     /* read initial guess */
@@ -230,28 +230,16 @@ int main(int argc, char* argv[])
 	p = sf_floatalloc(nt);
     }
     
-#ifdef _OPENMP
-    mts = omp_get_max_threads();
-#else
-    mts = 1;
-#endif
+    fastmarch_init(n,o,d,order);
 
-    flag = sf_intalloc2(nt,mts);
-    fastmarch_init(n[2],n[1],n[0]);
-    
     /* initial misfit */
+    fastmarch_set(s);
+
 #ifdef _OPENMP
-#pragma omp parallel for private(its,i,it)
+#pragma omp parallel for private(i,it)
 #endif
     for (is=0; is < nshot; is++) {
-#ifdef _OPENMP
-	its = omp_get_thread_num();
-#else
-	its = 0;
-#endif
-	fastmarch(t[is],s,flag[its],plane,
-		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-		  source[is][2],source[is][1],source[is][0],1,1,1,order);
+	fastmarch(t[is],source[is][0],source[is][1],source[is][2]);
 	
 	i = rhslist[is];
 	for (it=nrecv-1; it >= 0; it--) {
@@ -349,20 +337,15 @@ int main(int argc, char* argv[])
 			if (k == NULL || k[it] != 1)
 			    temps[it] = (sqrtf(s[it])+gama*ds[it])*(sqrtf(s[it])+gama*ds[it]);
 		    }
+		    
+		    fastmarch_set(temps);
 
 		    /* forward fast-marching for stencil time */
 #ifdef _OPENMP
-#pragma omp parallel for private(its,i,it)
+#pragma omp parallel for private(i,it)
 #endif		    
 		    for (is=0; is < nshot; is++) {
-#ifdef _OPENMP
-			its = omp_get_thread_num();
-#else
-			its = 0;
-#endif
-			fastmarch(t[is],temps,flag[its],plane,
-				  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-				  source[is][2],source[is][1],source[is][0],1,1,1,order);
+			fastmarch(t[is],source[is][0],source[is][1],source[is][2]);
 			
 			i = rhslist[is];
 			for (it=nrecv-1; it >= 0; it--) {
