@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
     
     if (niter == 0) {
 	sf_putint(sout,"n4",nshot);
-	sf_floatwrite(t,nt*nshot,sout);
+	sf_floatwrite(t[0],nt*nshot,sout);
     }
 
     switch (what[0]) {
