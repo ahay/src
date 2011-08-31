@@ -36,7 +36,7 @@ float* pqueue_extract(void);
 int neighbours(float* time, int i);
 int update(float value, float* time, int i);
 float qsolve(float* time, int i);
-bool updaten (int i, int m, float* res, struct Upd *vv[]);
+bool updaten(int i, int m, float* res, struct Upd *vv[]);
 
 static float ***x, ***xn, ***x1;
 static int **in, *n, s[3], order;
@@ -143,7 +143,7 @@ void fastmarch_close (void)
 
 int neighbors_nearsource(float* time /* time */,
 			 float* xs   /* source location [3] */)
-/*< initialize point source, return number of wave front points >*/
+/* initialize point source, return number of wave front points */
 {
     int its;
     int np, ic, i, j, is, start[3], endx[3], ix, iy, iz;
@@ -223,7 +223,7 @@ int neighbors_nearsource(float* time /* time */,
 }
 
 void pqueue_insert(float* v1)
-/*< Insert an element (smallest first) >*/
+/* Insert an element (smallest first) */
 {
     int its;
     float **xi, **xq;
@@ -247,7 +247,7 @@ void pqueue_insert(float* v1)
 }
 
 float* pqueue_extract(void)
-/*< Extract the smallest element >*/
+/* Extract the smallest element */
 {
     int its;
     unsigned int c;
@@ -278,7 +278,7 @@ float* pqueue_extract(void)
 }
 
 int neighbours(float* time, int i) 
-/*< Update neighbors of gridpoint i, return number of updated points >*/
+/* Update neighbors of gridpoint i, return number of updated points */
 {
     int its;
     int j, k, ix, np;
@@ -307,7 +307,7 @@ int neighbours(float* time, int i)
 }
 
 int update(float value, float* time, int i)
-/*< Update gridpoint i with new value and modify wave front >*/
+/* Update gridpoint i with new value and modify wave front */
 {
     int its;
 
@@ -331,7 +331,7 @@ int update(float value, float* time, int i)
 }
 
 float qsolve(float* time, int i)
-/*< Find new traveltime at gridpoint i >*/
+/* Find new traveltime at gridpoint i */
 {
     int its;
     int j, k, ix;
@@ -421,8 +421,8 @@ float qsolve(float* time, int i)
     return SF_HUGE;
 }
 
-bool updaten (int i, int m, float* res, struct Upd *vv[]) 
-/*< Calculate new traveltime >*/
+bool updaten(int i, int m, float* res, struct Upd *vv[])
+/* Calculate new traveltime */
 {
     double a, b, c, discr, t;
     int j;
