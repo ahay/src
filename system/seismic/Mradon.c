@@ -13,7 +13,7 @@ The high-resolution transform (adj=y inv=y spk=n)  is experimental
 and may not work properly. The general idea is from:
 
 Sacchi, M., and Ulrych, T., 1995, High-resolution velocity gathers and
-offset space reconstruction: Geophysics, 60, 1169–1177.
+offset space reconstruction: Geophysics, 60, 1169-1177.
 
 Trad, D., T. Ulrych, and M. Sacchi, 2003, Latest views of the sparse
 Radon transform: Geophysics, 68, 386–399.*/

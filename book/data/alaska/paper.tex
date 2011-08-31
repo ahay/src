@@ -74,30 +74,30 @@ Figure~\ref{fig:mapusgs} maps the lines collected and processed between 1974
 and 1981.  I selected and processed line 31-81 because it was a short
 line from the last acquisition season.
 \plot{mapnpra}{width=\textwidth}{Map of the National Petroleum
-Reserve in Alaska from wikipedia entry about the National Petroleum
-Reserve Alaska.}
+Reserve in Alaska from the \href{http://en.wikipedia.org/wiki/National_Petroleum_Reserve\%E2\%80\%93Alaska}{Wikipedia entry about the National Petroleum
+Reserve Alaska}.}
 \plot{mapusgs}{width=\textwidth}{Map of seismic lines collects between
-1974 and 1981 from the Internet site 
-http://energy.usgs.gov/GeochemistryGeophysics/ SeismicDataProcessingInterpretation/NPRASeismicDataArchive.aspx}
+1974 and 1981 from the Internet site \url{http://energy.usgs.gov/GeochemistryGeophysics/SeismicDataProcessingInterpretation/NPRASeismicDataArchive.aspx}}
 
 \section{Setting up and reading the data documentation}
 \inputdir{line31-81}
-Install Madagascar and you should have files to process line 31-81 in 
+\href{http://www.ahay.org/wiki/Download}{Download Madagascar} and you should have files to process line 31-81 in 
 the directory:
-\$RSFROOT/book/data/alaska/line31-81
+\$RSFSRC/book/data/alaska/line31-81
 
 Change into this directory.  This paper lists commands and the SConstruct 
 file contains the rules that translate the commands into SU tesks 
 to process the data.
 
-An alternative to installing Madagascar is to go to the website\\
-http://dl.dropbox.com/u/37269048/open\_lib\_demo\_2011.tar.gz
+An alternative to installing Madagascar is to go to the website \url{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/book/data/alaska/?view=tar}
 
 This will download a tar file that you can install.  On my system I
-do this with the commands:\\
-cd\\
-mv Downloads/open\_lib\_demo\_2011.tar.gz . \\
-tar -xvf open\_lib\_demo\_2011.tar.gz
+do this with the commands:
+\begin{verbatim}
+cd
+mv Downloads/rsf-alaska.tar.gz .
+tar xvzf rsf-alaska.tar.gz
+\end{verbatim}
 
 This will untar the directory.  When it completes, continue:\\
 cd open\_lib\_demo\_2011\\

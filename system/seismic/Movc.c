@@ -25,9 +25,10 @@ Axis order: t, p, x
 
 int main(int argc, char* argv[])
 {
+    bool lagrange;
     int it, nt, ip, np, ix, nx, ntpx, iv, nv;
     float eps, t, t0, dt, p, p0, dp, x, x0, dx, v1, v0, dv, sq;
-    float ***slice, ***tstr, ***pstr, ***xstr;
+    float ***slice, ***slice0, ***tstr, ***pstr, ***xstr;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -53,14 +54,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nv",&nv)) nv=1; /* number of velocity steps */
 
+    if (!sf_getbool("lagrange",&lagrange)) lagrange=false;
+    /* Use Lagrangian method */
+
     sf_putint(out,"n4",nv);
 
     if (!sf_getfloat("v0",&v0)) v0=0.; /* starting velocity */
     if (!sf_getfloat("vmax",&v1)) sf_error("Need vmax="); /* end velocity */
 
-    dv = 0.25*(v1*v1-v0*v0)/nv;
-
-    slice  = sf_floatalloc3(nt,np,nx);
     tstr   = sf_floatalloc3(nt,np,nx);
     pstr   = sf_floatalloc3(nt,np,nx);
     xstr   = sf_floatalloc3(nt,np,nx); 
@@ -70,29 +71,55 @@ int main(int argc, char* argv[])
                nx, x0, dx,
 	       nt, np, nx, eps); 
 
-    for (ix=0; ix < nx; ix++) {
-	x = x0+ix*dx;
-	for (ip=0; ip < np; ip++) {
-	    p = p0+ip*dp;
-	    sq = sqrtf(1-p*p*dv);
-
-	    for (it=0; it < nt; it++) {
-		t = t0+it*dt;
-
-		tstr[ix][ip][it] = t*sq;
-		pstr[ix][ip][it] = p/sq;
-		xstr[ix][ip][it] = x - t*p*dv;
+    dv = 0.25*(v1*v1-v0*v0)/nv;
+    
+    if (lagrange) {
+	slice0 = sf_floatalloc3(nt,np,nx);
+	slice  = sf_floatalloc3(nt,np,nx);
+    } else {
+	for (ix=0; ix < nx; ix++) {
+	    x = x0+ix*dx;
+	    for (ip=0; ip < np; ip++) {
+		p = p0+ip*dp;
+		sq = sqrtf(1-p*p*dv);
+		
+		for (it=0; it < nt; it++) {
+		    t = t0+it*dt;
+		    
+		    tstr[ix][ip][it] = t*sq;
+		    pstr[ix][ip][it] = p/sq;
+		    xstr[ix][ip][it] = x - t*p*dv;
+		}
 	    }
 	}
-    }
+	slice  = sf_floatalloc3(nt,np,nx);	
+	slice0 = slice;
+    } 
 		
-
-    sf_floatread(slice[0][0],ntpx,in);
+    sf_floatread(slice0[0][0],ntpx,in);
 
     for (iv=0; iv < nv; iv++) {
 	sf_warning("step %d of %d;",iv+1,nv);
 
-	warp3(slice,tstr,pstr,xstr,slice);
+	if (lagrange) {	    
+	    for (ix=0; ix < nx; ix++) {
+		x = x0+ix*dx;
+		for (ip=0; ip < np; ip++) {
+		    p = p0+ip*dp;
+		    sq = sqrtf(1-(iv+1)*p*p*dv);
+		    
+		    for (it=0; it < nt; it++) {
+			t = t0+it*dt;
+			
+			tstr[ix][ip][it] = t*sq;
+			pstr[ix][ip][it] = p/sq;
+			xstr[ix][ip][it] = x - (iv+1)*t*p*dv;
+		    }
+		}
+	    }
+	}
+
+	warp3(slice0,tstr,pstr,xstr,slice);
 	
 	sf_floatwrite (slice[0][0],ntpx,out);
     }
