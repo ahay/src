@@ -1,6 +1,6 @@
 /* First-arrival Traveltime Tomography (OMP) */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=2;
     /* fast marching accuracy order */
     
-    if (!sf_getint("niter",&niter)) niter=0;
+    if (!sf_getint("niter",&niter)) niter=1;
     /* number of slowness inversion iterations */
     
     if (!sf_getint("stiter",&stiter)) stiter=100;
@@ -263,11 +263,6 @@ int main(int argc, char* argv[])
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
-    if (niter == 0) {
-	sf_putint(sout,"n4",nshot);
-	sf_floatwrite(t[0],nt*nshot,sout);
-    }
-
     switch (what[0]) {
 	case 'l': /* linear operator */
 

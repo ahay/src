@@ -1,6 +1,6 @@
-/* Fast marching main interface (OMP) */
+/* Fast marching interface (OMP) */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
 		     float *o1  /* grid origin [3] */,
 		     float *d1  /* grid sampling [3] */,
 		     int order1 /* accuracy order */)
-/*< Initialize >*/
+/*< Initialize model dimensions and upwind order >*/
 {
     int its, mts;
     int maxband;
@@ -57,9 +57,11 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
     mts = 1;
 #endif
 
+    /* model dimensions */
     n = n1; order = order1; o = o1; d = d1;
     s[0] = 1; s[1] = n[0]; s[2] = n[0]*n[1];
 
+    /* allocate shared memory for OMP fast marching */
     in = sf_intalloc2(n[0]*n[1]*n[2],mts);
     
     x  = (float ***) sf_alloc (mts,sizeof (float **));
@@ -76,14 +78,14 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
 }
 
 void fastmarch_set (float *v1  /* slowness squared */)
-/*< set velocity model >*/
+/*< set velocity model (slowness squared) >*/
 {
     v = v1;
 }
 
 void fastmarch (float* time                /* time */,
 		float s0,float s1,float s2 /* source */)
-/*< Run fast marching eikonal solver >*/
+/*< Run OMP fast marching eikonal solver >*/
 {
     int its;
     float xs[3], *p;
@@ -95,11 +97,14 @@ void fastmarch (float* time                /* time */,
     its = 0;
 #endif
    
+    /* source distance from origin */
     xs[0] = s0-o[0]; xs[1] = s1-o[1]; xs[2] = s2-o[2];
 
+    /* initialize priority queue */
     xn[its] = x[its];
     x1[its] = x[its]+1;
 
+    /* fast marching */
     for (npoints =  neighbors_nearsource (time,xs);
 	 npoints > 0;
 	 npoints -= neighbours(time,i)) {
@@ -118,7 +123,7 @@ void fastmarch (float* time                /* time */,
 }
 
 void fastmarch_close (void)
-/*< Free allocated storage >*/
+/*< Free allocated memory >*/
 {
     int its, mts;
 
@@ -138,7 +143,7 @@ void fastmarch_close (void)
 
 int neighbors_nearsource(float* time /* time */,
 			 float* xs   /* source location [3] */)
-/*< initialize the source >*/
+/*< initialize point source, return number of wave front points >*/
 {
     int its;
     int np, ic, i, j, is, start[3], endx[3], ix, iy, iz;
@@ -178,6 +183,7 @@ int neighbors_nearsource(float* time /* time */,
 	}
     }
     
+    /* source index */
     ic = (start[0]+endx[0])/2 + 
 	n[0]*((start[1]+endx[1])/2 +
 	      n[1]*(start[2]+endx[2])/2);
@@ -190,6 +196,7 @@ int neighbors_nearsource(float* time /* time */,
 		np--;
 		i = iz + n[0]*(iy + n[1]*ix);
 
+		/* distance from source */
 		delta[0] = xs[0]-iz*d[0];
 		delta[1] = xs[1]-iy*d[1];
 		delta[2] = xs[2]-ix*d[2];
@@ -285,6 +292,8 @@ int neighbours(float* time, int i)
     np = 0;
     for (j=0; j < 3; j++) {
 	ix = (i/s[j])%n[j];
+
+	/* try both directions */
 	if (ix+1 <= n[j]-1) {
 	    k = i+s[j]; 
 	    if (in[its][k] != SF_IN) np += update(qsolve(time,k),time,k);
@@ -298,7 +307,7 @@ int neighbours(float* time, int i)
 }
 
 int update(float value, float* time, int i)
-/* update gridpoint i with new value */
+/*< Update gridpoint i with new value and modify wave front >*/
 {
     int its;
 
@@ -308,6 +317,7 @@ int update(float value, float* time, int i)
     its = 0;
 #endif
     
+    /* only update when smaller than current value */
     if (value < time[i]) {
 	time[i] = value;
 	if (in[its][i] == SF_OUT) { 
@@ -321,7 +331,7 @@ int update(float value, float* time, int i)
 }
 
 float qsolve(float* time, int i)
-/* find new traveltime at gridpoint i */
+/*< Find new traveltime at gridpoint i >*/
 {
     int its;
     int j, k, ix;
@@ -360,6 +370,7 @@ float qsolve(float* time, int i)
 	    xj->stencil = xj->value = b;
 	}
 
+	/* second order local upwind stencil */
 	if (order > 1) {
 	    if (a < b  && ix-2 >= 0) { 
 		k = i-2*s[j];
@@ -396,14 +407,14 @@ float qsolve(float* time, int i)
 	}
     }
 
-    if(vv[2]->value < SF_HUGE) {   /* ALL THREE DIRECTIONS CONTRIBUTE */
+    if(vv[2]->value < SF_HUGE) {   /* update from all three directions */
 	if (updaten(i,3,&res,vv) || 
 	    updaten(i,2,&res,vv) || 
 	    updaten(i,1,&res,vv)) return res;
-    } else if(vv[1]->value < SF_HUGE) { /* TWO DIRECTIONS CONTRIBUTE */
+    } else if(vv[1]->value < SF_HUGE) { /* update from two directions */
 	if (updaten(i,2,&res,vv) || 
 	    updaten(i,1,&res,vv)) return res;
-    } else if(vv[0]->value < SF_HUGE) { /* ONE DIRECTION CONTRIBUTES */
+    } else if(vv[0]->value < SF_HUGE) { /* update from only one direction */
 	if (updaten(i,1,&res,vv)) return res;
     }
 	
@@ -411,11 +422,12 @@ float qsolve(float* time, int i)
 }
 
 bool updaten (int i, int m, float* res, struct Upd *vv[]) 
-/* updating */
+/*< Calculate new traveltime >*/
 {
     double a, b, c, discr, t;
     int j;
 
+    /* solve quadratic equation */
     a = b = c = 0.;
 
     for (j=0; j<m; j++) {
