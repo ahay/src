@@ -131,7 +131,10 @@ def latexscan(node,env,path):
     inputdir = env.get('inputdir','.')
     plots = []
     for file in inputs:
-        inp = open(file,'r')
+        try:
+            inp = open(file,'r')
+        except:
+            return []
         comment = 0
         for line in inp.readlines():
             if comment:
