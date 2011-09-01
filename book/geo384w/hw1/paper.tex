@@ -8,7 +8,7 @@
   derive some new forms of ray tracing equations and their solutions.
   In the computational part, you will experiment with wave propagation
   in a simple synthetic model.  In the programming part, you can
-  modify the modeling program to implement anisotropic wave propagation.
+  modify a wave modeling program to implement anisotropic wave propagation.
 \end{abstract}
 
 \section{Prerequisites}
@@ -16,9 +16,9 @@
 Completing the computational part of this homework assignment requires
 \begin{itemize}
 \item \texttt{Madagascar} software environment available from \\
-\url{http://rsf.sourceforge.net}
+\url{http://www.ahay.org}
 \item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
-\url{http://segtex.sourceforge.net}
+\url{http://www.ahay.org/wiki/SEGTeX}
 \end{itemize}
 
 You are welcome to do the assignment on your personal computer by
@@ -28,8 +28,8 @@ homework assignments from the \texttt{Madagascar} repository by running
 svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
 \end{verbatim}
 
-The necessary environment is also installed in your class account on
-all Unix computers in the Department of Geological Sciences.
+The necessary environment is also installed in a computer lab
+at the Department of Geological Sciences.
 
 \section{Theoretical part}
 
@@ -110,7 +110,7 @@ derivations that you perform.
     \nabla^2 P + \cdots
   \end{equation}
   with omitted possible first- and zero-order terms. 
-  equation~(\ref{eq:eleik})? What wave equation corresponds to equation~(\ref{eq:eleik})?
+  What wave equation corresponds to equation~(\ref{eq:eleik})?
   \begin{equation}
     {\frac{\partial^2 P}{\partial t^2}} =
     \label{eq:anisowave}
@@ -119,7 +119,7 @@ derivations that you perform.
 \end{enumerate}
 
 \section{Computational part}
-\inputdir{simple}
+\inputdir{wave}
 
 In this part, we will simulate and observe acoustic wave propagation
 in a simple velocity model shown in Figure~\ref{fig:model}. A wave snapshot is shown in Figure~\ref{fig:snap}.
@@ -127,7 +127,7 @@ in a simple velocity model shown in Figure~\ref{fig:model}. A wave snapshot is s
 \multiplot{2}{model,snap}{width=0.8\textwidth}{(a) Velocity model for simple wave propagation experiments. (b) Wave snapshot with overlaid first-arrival wavefront.}
 
 \begin{enumerate}
-\item Change directory to \verb#geo384w/hw1/simple#
+\item Change directory to \verb#geo384w/hw1/wave#
 \item Run
 \begin{verbatim}
 scons model.view
@@ -142,7 +142,7 @@ to generate and observe a propagating wave on your screen.
 \begin{verbatim}
 scons fronts.vpl
 \end{verbatim}
-to generate and observe a propagating wavefront on your screen.
+to generate and observe a propagating first-arrival wavefront on your screen.
 \item Run
 \begin{verbatim}
 scons snap.view
@@ -152,21 +152,16 @@ to generate and view a wave snapshot selected at 1~s as shown in Figure~\ref{fig
 \begin{itemize}
 \item Find a parameter responsible for selecting the time frame for the snapshot in Figure~\ref{fig:snap}. 
 Modify it to increase the time from 1~s to your favorite point in the movie. Run \texttt{scons snap.view} again to verify your change.
-\item Can you observe a geometrical part of the wave that is not captured by the wavefront? What is its physical meaning?
+\item Can you observe a geometrical part of the wave that is not captured by the first-arrival wavefront? What is its physical meaning?
 \item Find a parameter in the \texttt{SConstruct} file 
 responsible for the vertical smoothness of the model in Figure~\ref{fig:model}. Modify it to increase the smoothness of the model in such a way 
 that the first-arrival wavefront follows the wave geometry exactly. Run \texttt{scons snap.view} again to verify your change.
 \item (EXTRA CREDIT) For extra credit, modify  \texttt{SConstruct} to generate a movie of pictures like Figure~\ref{fig:snap} for a gradually increasing smoothness.
 \end{itemize}
-\item When you are satisfied with your results, run
-\begin{verbatim}
-scons lock
-\end{verbatim}
-to lock the figures.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{simple/SConstruct}
+\lstinputlisting[frame=single]{wave/SConstruct}
 
 \section{Programming part (extra credit)}
 \inputdir{code}
@@ -177,20 +172,20 @@ modified from the original version by Paul Sava) implements wave
 modeling with equation
 \begin{equation}
    \label{eq:isowave2}
-      S^2(\mathbf{x})\,\frac{\partial^2 P}{\partial t^2} =
-             \nabla^2 P + F(\mathbf{x},t)\;,
+   {{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 P}{\partial t^2}}} =
+   {\nabla^2 P} + {F(\mathbf{x},t)}\;,
 \end{equation} 
 where $F(\mathbf{x},t)$ is the source term. The implementation uses
 finite-difference discretization (second-order in time and fourth-order in space). 
 Stepping in time involves the following computations:
 \begin{equation}
-\mathbf{P}_{t+\Delta t} = \left[ \nabla^2 \mathbf{P}_t - F(\mathbf{x},t)\right] V^2(\mathbf{x}) \Delta t^2 + 2 \mathbf{P}_{t} - \mathbf{P}_{t-\Delta t} \;,
+\mathbf{P}_{t+\Delta t} = \left[ \nabla^2 \mathbf{P}_t + F(\mathbf{x},t)\right] V^2(\mathbf{x}) \Delta t^2 + 2 \mathbf{P}_{t} - \mathbf{P}_{t-\Delta t} \;,
 \label{eq:step}
 \end{equation}
 where $\mathbf{P}$ represents the propagating wavefield discretized at different time steps.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{code/afdmc.c}
+\lstinputlisting[frame=single]{code/wave.c}
 
 Your task is to modify the code to implement your anisotropic
 equation~(\ref{eq:anisowave}). You will test your implementation using a constant velocity example shown in Figure~\ref{fig:wave}.
@@ -204,17 +199,12 @@ equation~(\ref{eq:anisowave}). You will test your implementation using a constan
 scons wave.vpl
 \end{verbatim}
 to compile and run the program and to observe a propagating wave on your screen.
-\item Open the file \texttt{afdmc.c} in your favorite editor and modify it to implement the wave operator from equation~(\ref{eq:anisowave}).
+\item Open the file \texttt{wave.c} in your favorite editor and modify it to implement the wave operator from equation~(\ref{eq:anisowave}).
 \item Run
 \begin{verbatim}
 scons wave.vpl
 \end{verbatim}
 again to compile and test your program. If you want to add additional tests, modify the file \texttt{SConstruct}.
-\item When you are satisfied with your results, run
-\begin{verbatim}
-scons lock
-\end{verbatim}
-to lock the figures.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
@@ -228,8 +218,19 @@ to lock the figures.
 first line to have your name instead of Newton's.
 \item Run
 \begin{verbatim}
-> scons pdf
+sftour scons lock
 \end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+  to remove intermediate files.
+\item Run
+\begin{verbatim} 
+scons pdf
+\end{verbatim}
+to create the final document.
 \item Submit your result (file \texttt{paper.pdf}) on paper or by
 e-mail.
 \end{enumerate}
