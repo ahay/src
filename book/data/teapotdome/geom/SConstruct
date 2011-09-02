@@ -7,18 +7,17 @@ import math
 Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
      '''
      segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=npr3_field.sgy
-              gdel=180 sdel=184 swdep=188 gwdep=192
      ''',stdin=0)
 
 # Xline/Inline numbers
-Flow('ix','tteapot','dd type=float | headermath output="gdel"')
-Flow('il','tteapot','dd type=float | headermath output="sdel"')
+Flow('ix','tteapot','dd type=float | headermath output="cdpx"')
+Flow('il','tteapot','dd type=float | headermath output="cdpy"')
 Flow('ixilcoord',['ix','il'],'cmplx ${SOURCES[1]}')
 Result('ixilcoord','graph symbol="+" title="Xline/Inline coordinates" plotcol=2')
 
 # Xline/Inline coordinates
-Flow('ixc','tteapot','dd type=float | headermath output="swdep"')
-Flow('ilc','tteapot','dd type=float | headermath output="gwdep"')
+Flow('ixc','tteapot','dd type=float | headermath output="iline"')
+Flow('ilc','tteapot','dd type=float | headermath output="xline"')
 Flow('ixil',['ixc','ilc'],'cmplx ${SOURCES[1]}')
 Result('ixil','graph symbol="+" title="Xline/Inline locations" plotcol=4 transp=y')
 
