@@ -185,7 +185,7 @@ Stepping in time involves the following computations:
 where $\mathbf{P}$ represents the propagating wavefield discretized at different time steps.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{code/afdmc.c}
+\lstinputlisting[frame=single]{wave/wave.c}
 
 Your task is to modify the code to implement your anisotropic
 equation~(\ref{eq:anisowave}). You will test your implementation using a constant velocity example shown in Figure~\ref{fig:wave}.
@@ -199,7 +199,7 @@ equation~(\ref{eq:anisowave}). You will test your implementation using a constan
 scons wave.vpl
 \end{verbatim}
 to compile and run the program and to observe a propagating wave on your screen.
-\item Open the file \texttt{afdmc.c} in your favorite editor and modify it to implement the wave operator from equation~(\ref{eq:anisowave}).
+\item Open the file \texttt{wave.c} in your favorite editor and modify it to implement the wave operator from equation~(\ref{eq:anisowave}).
 \item Run
 \begin{verbatim}
 scons wave.vpl

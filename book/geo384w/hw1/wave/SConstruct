@@ -63,7 +63,7 @@ Flow('source',None,
 exe = Program('wave.c')
 Flow('wave','source %s wavelet emodel' % exe[0],
      '''
-     ./${SOURCES[1]} wav=${SOURCES[2]} vel=${SOURCES[3]}
+     ./${SOURCES[1]} wav=${SOURCES[2]} vel1=${SOURCES[3]} vel2=${SOURCES[3]}
      jt=5 ft=200
      ''')
 
