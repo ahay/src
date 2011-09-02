@@ -6,7 +6,8 @@ import rsf.proj
 Flow(['line', 'line.bin',  'line.asc'],'npr3_field.sgy',
      '''
      segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-        tape=$SOURCE endian=%d 
+        tape=$SOURCE endian=%d conv=1
+	remap=tracl,tracr byte=189l,193l
      ''' % (1-little_endian()),stdin=0)
 	      
 Result('first','line',
