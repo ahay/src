@@ -126,7 +126,7 @@ You can learn more about the contents of spike.rsf with
 The following command applies a bandpass filter to spike.rsf and puts
 the result in filter.rsf:
 
-	sfbandpass fhi=2 phase=1 < spike.rsf > filter.rsf
+	sfbandpass fhi=2 phase=y < spike.rsf > filter.rsf
 
 The following command makes a graphics file from filter.rsf:
 
@@ -140,7 +140,7 @@ environment variable is set correctly, you can display the graphics file with:
 You can pipe Madagascar commands together and do the whole thing at once like
 this:
 
-	sfspike n1=1000 k1=300 | sfbandpass fhi=2 phase=1 | \
+	sfspike n1=1000 k1=300 | sfbandpass fhi=2 phase=y | \
 	sfwiggle clip=0.02 title="Welcome to Madagascar" | sfpen
 
 If you have SCons installed, you can use it to automate Madagascar processing.
@@ -155,14 +155,12 @@ from rsf.proj import *
 #
 # Make filter.rsf
 #
-Flow('filter',None,
-     'spike n1=1000 k1=300 | bandpass fhi=2 phase=1')
+Flow('filter',None, 'spike n1=1000 k1=300 | bandpass fhi=2 phase=y')
 
 #
 # Make filter.vpl
 #
-Result('filter',
-       'wiggle clip=0.02 title="Welcome to Madagascar"')
+Result('filter','wiggle clip=0.02 title="Welcome to Madagascar"')
 
 End()
 ####################################

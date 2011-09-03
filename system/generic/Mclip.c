@@ -1,4 +1,12 @@
-/* Clip the data. */
+/* Clip the data.
+
+The output is 
+ clip if input > clip
+-clip if input < -clip
+input if |input| < clip 
+
+See also sfclip2.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
