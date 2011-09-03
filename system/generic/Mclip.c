@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("clip",&clip)) sf_error("Need clip=");
     /* clip value */
 
-    /* allocate floating point array */
+    /* allocate floating point buffer */
     nbuf = sf_bufsiz(in)/sizeof(float);
     trace = sf_floatalloc (nbuf);
 
-    /* loop over traces */
+    /* process buffers */
     for (n = sf_filesize(in); n > 0; n -= nbuf) {
 	if (nbuf > n) nbuf=n;
 

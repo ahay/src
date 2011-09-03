@@ -238,25 +238,24 @@ def cc(context):
             if not res:
                 context.env['CFLAGS'] = oldflag
 
-        # Mac OS X include path, library path, and link flags
-        if plat['OS'] == 'darwin':
-            context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
-                                       ' -framework Accelerate ' 
-            if os.path.isdir('/opt'):   # paths for MacPorts
-                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                                         ['/opt/local/include',]
-                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                                         ['/opt/local/lib',]
-            if os.path.isdir('/sw'):    # paths for Fink
-                context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                                         ['/sw/include',]
-                context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                                         ['/sw/lib',]
-  
-
+    # Mac OS X include path, library path, and link flags
+    if plat['OS'] == 'darwin':
+        context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
+            ' -framework Accelerate ' 
+        if os.path.isdir('/opt'):   # paths for MacPorts
+            context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                ['/opt/local/include',]
+            context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                ['/opt/local/lib',]
+        if os.path.isdir('/sw'):    # paths for Fink
+            context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                ['/sw/include',]
+            context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                ['/sw/lib',]
+    # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = string.replace(context.env.get('CFLAGS',''),
-                                                '-O2','-xO2')
+                                               '-O2','-xO2')
 
 pkg['ar']={'fedora':'binutils'}
 
