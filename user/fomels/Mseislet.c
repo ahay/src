@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     seislet_set(dd);
 
     for (i3=0; i3 < n3; i3++) {
-	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+	if (verb) sf_warning("slice %d of %d;",i3+1,n3);
 
 	sf_floatread(pp,n12,in);
 	sf_floatread(dd[0],n12,dip);
@@ -81,6 +81,6 @@ int main(int argc, char *argv[])
 	}
 	sf_floatwrite(qq,n12,out);
     }
-
+    sf_warning(".");
     exit(0);
 }
