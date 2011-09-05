@@ -23,19 +23,23 @@
 #endif
 
 #include "upgradomp.h"
+#include "fastmarchomp.h"
 #include "fatomoomp.h"
 
 static int nt, **mask, ns, *list, maxrecv;
-static float **tempt, **tempx, **psum;
+static float **tempt, **tempx, **psum, **data;
 static upgrad *upglist;
 
 void fatomo_init(int dim      /* model dimension */,
 		 int *n       /* model size */,
+		 float *o     /* model origin */,
 		 float *d     /* model sampling */,
+		 int order    /* fast march order */,
 		 int nshot    /* number of shots */,
 		 int *rhslist /* rhs list */,
-		 int **m      /* mask */,
-		 int nrecv    /* max recv count */)
+		 int **recv   /* receiver list */,
+		 int nrecv    /* max recv count */,
+		 float **reco /* record list */)
 /*< initialize >*/
 {
     int i, is, mts;
@@ -60,8 +64,6 @@ void fatomo_init(int dim      /* model dimension */,
 	upglist[is] = upgrad_init();
     }
     
-    list = rhslist;
-
 #ifdef _OPENMP
     mts = omp_get_max_threads();
 #else
@@ -72,8 +74,12 @@ void fatomo_init(int dim      /* model dimension */,
     tempx = sf_floatalloc2(nt,mts);
     psum  = sf_floatalloc2(nt,mts);
 
-    mask = m;
+    list    = rhslist;
+    mask    = recv;
     maxrecv = nrecv;
+    data    = reco;
+
+    fastmarch_init(n,o,d,order);
 }
 
 void fatomo_set(float **t  /* stencil time */)
@@ -96,6 +102,39 @@ void fatomo_close(void)
     int is;
     for (is=0; is < ns; is++) {
 	upgrad_close(upglist[is]);
+    }
+
+    free(upglist);
+    free(tempt);
+    free(tempx);
+    free(psum);
+
+    fastmarch_close();
+}
+
+void fatomo_fastmarch(float *slow    /* slowness squared */,
+		      float **time   /* time */,
+		      float **source /* source */,
+		      float *rhs     /* rhs */)
+/* fast marching */
+{
+    int is, i, it;
+
+    fastmarch_set(slow);
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i,it)
+#endif
+    for (is=0; is < ns; is++) {
+	fastmarch(time[is],source[is]);
+	
+	i = list[is];
+	for (it=maxrecv-1; it >= 0; it--) {
+	    if (mask[is][it] >= 0) {
+		rhs[i-1] = data[is][it]-time[is][mask[is][it]];
+		i--;
+	    }
+	}
     }
 }
 

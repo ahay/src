@@ -25,7 +25,6 @@
 
 #include "upgradomp.h"
 #include "fatomoomp.h"
-#include "fastmarchomp.h"
 
 #include "l1.h"
 #include "l1step.c"
@@ -187,9 +186,6 @@ int main(int argc, char* argv[])
     
     /* allocate memory for time table */
     t = sf_floatalloc2(nt,nshot);
-
-    /* initialize fatomo */
-    fatomo_init(dim,n,d,nshot,rhslist,m,nrecv);
     
     /* initialize 2D gradient operator */
     sf_igrad2_init(n[0],n[1]);
@@ -230,25 +226,11 @@ int main(int argc, char* argv[])
 	p = sf_floatalloc(nt);
     }
     
-    fastmarch_init(n,o,d,order);
+    /* initialize fatomo */
+    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,nrecv,t0);
 
     /* initial misfit */
-    fastmarch_set(s);
-
-#ifdef _OPENMP
-#pragma omp parallel for private(i,it)
-#endif
-    for (is=0; is < nshot; is++) {
-	fastmarch(t[is],source[is]);
-	
-	i = rhslist[is];
-	for (it=nrecv-1; it >= 0; it--) {
-	    if (m[is][it] >= 0) {
-		rhs[i-1] = t0[is][it]-t[is][m[is][it]];
-		i--;
-	    }
-	}
-    }
+    fatomo_fastmarch(s,t,source,rhs);
     
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
@@ -333,24 +315,9 @@ int main(int argc, char* argv[])
 			    temps[it] = (sqrtf(s[it])+gama*ds[it])*(sqrtf(s[it])+gama*ds[it]);
 		    }
 		    
-		    fastmarch_set(temps);
+		    /* forward fast-marching for stencil time */		    
+		    fatomo_fastmarch(temps,t,source,rhs);
 
-		    /* forward fast-marching for stencil time */
-#ifdef _OPENMP
-#pragma omp parallel for private(i,it)
-#endif		    
-		    for (is=0; is < nshot; is++) {
-			fastmarch(t[is],source[is]);
-			
-			i = rhslist[is];
-			for (it=nrecv-1; it >= 0; it--) {
-			    if (m[is][it] >= 0) {
-				rhs[i-1] = t0[is][it]-t[is][m[is][it]];
-				i--;
-			    }
-			}
-		    }
-		    
 		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
 		    rate = rhsnorm/rhsnorm1;
 		    
