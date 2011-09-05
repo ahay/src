@@ -62,10 +62,10 @@ static int fermat(const void *a, const void *b)
     return -1;
 }
 
-void upgrad_setup(int mdim        /* number of dimensions */,
-		  const int *mm   /* [dim] data size */,
-		  const float *d  /* [dim] data sampling */)
-/*< set up constants >*/
+void upgrad_init(int mdim        /* number of dimensions */,
+		 const int *mm   /* [dim] data size */,
+		 const float *d  /* [dim] data sampling */)
+/*< initialize >*/
 {
     int i, mts;
 
@@ -90,8 +90,8 @@ void upgrad_setup(int mdim        /* number of dimensions */,
     t0 = (float **)malloc(mts*sizeof(float *));
 }
 
-upgrad upgrad_init()
-/*< initialize >*/
+upgrad upgrad_alloc()
+/*< allocate memory for stencil >*/
 {
     upgrad upg;
 

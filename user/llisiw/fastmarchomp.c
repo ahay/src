@@ -46,7 +46,7 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
 		     float *o1  /* grid origin [3] */,
 		     float *d1  /* grid sampling [3] */,
 		     int order1 /* accuracy order */)
-/*< Initialize model dimensions and upwind order >*/
+/*< initialize model dimensions and upwind order >*/
 {
     int its, mts;
     int maxband;
@@ -64,9 +64,9 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
     /* allocate shared memory for OMP fast marching */
     in = sf_intalloc2(n[0]*n[1]*n[2],mts);
     
-    x  = (float ***) sf_alloc (mts,sizeof (float **));
-    xn = (float ***) sf_alloc (mts,sizeof (float **));
-    x1 = (float ***) sf_alloc (mts,sizeof (float **));
+    x  = (float ***) sf_alloc(mts,sizeof (float **));
+    xn = (float ***) sf_alloc(mts,sizeof (float **));
+    x1 = (float ***) sf_alloc(mts,sizeof (float **));
 
     maxband = 0;
     if (n[0] > 1) maxband += 2*n[1]*n[2];
@@ -85,7 +85,7 @@ void fastmarch_set (float *v1  /* slowness squared */)
 
 void fastmarch (float* time   /* time */,
 		float *source /* source */)
-/*< Run OMP fast marching eikonal solver >*/
+/*< run OMP fast marching eikonal solver >*/
 {
     int its;
     float xs[3], *p;
@@ -125,7 +125,7 @@ void fastmarch (float* time   /* time */,
 }
 
 void fastmarch_close (void)
-/*< Free allocated memory >*/
+/*< free allocated memory >*/
 {
     int its, mts;
 
@@ -225,7 +225,7 @@ int neighbors_nearsource(float* time /* time */,
 }
 
 void pqueue_insert(float* v1)
-/* Insert an element (smallest first) */
+/* insert an element (smallest first) */
 {
     int its;
     float **xi, **xq;
@@ -249,7 +249,7 @@ void pqueue_insert(float* v1)
 }
 
 float* pqueue_extract(void)
-/* Extract the smallest element */
+/* extract the smallest element */
 {
     int its;
     unsigned int c;
@@ -280,7 +280,7 @@ float* pqueue_extract(void)
 }
 
 int neighbours(float* time, int i) 
-/* Update neighbors of gridpoint i, return number of updated points */
+/* update neighbors of gridpoint i, return number of updated points */
 {
     int its;
     int j, k, ix, np;
@@ -309,7 +309,7 @@ int neighbours(float* time, int i)
 }
 
 int update(float value, float* time, int i)
-/* Update gridpoint i with new value and modify wave front */
+/* update gridpoint i with new value and modify wave front */
 {
     int its;
 
@@ -333,7 +333,7 @@ int update(float value, float* time, int i)
 }
 
 float qsolve(float* time, int i)
-/* Find new traveltime at gridpoint i */
+/* find new traveltime at gridpoint i */
 {
     int its;
     int j, k, ix;
@@ -424,7 +424,7 @@ float qsolve(float* time, int i)
 }
 
 bool updaten(int i, int m, float* res, struct Upd *vv[])
-/* Calculate new traveltime */
+/* calculate new traveltime */
 {
     double a, b, c, discr, t;
     int j;

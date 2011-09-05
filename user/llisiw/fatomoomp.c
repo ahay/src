@@ -51,17 +51,14 @@ void fatomo_init(int dim      /* model dimension */,
 
     ns = nshot;
 
-    list = sf_intalloc(ns);
-
-    upgrad_setup(dim,n,d);
-
+    upgrad_init(dim,n,d);
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
 
 #ifdef _OPENMP    
 #pragma omp parallel for
 #endif
     for (is=0; is < ns; is++) {
-	upglist[is] = upgrad_init();
+	upglist[is] = upgrad_alloc();
     }
     
 #ifdef _OPENMP
@@ -116,7 +113,7 @@ void fatomo_fastmarch(float *slow    /* slowness squared */,
 		      float **time   /* time */,
 		      float **source /* source */,
 		      float *rhs     /* rhs */)
-/* fast marching */
+/*< fast marching >*/
 {
     int is, i, it;
 
