@@ -338,7 +338,7 @@ float qsolve(float* time, int i)
     float a, b, res;
     struct Upd *vv[3], xx[3], *xj;
     
- #ifdef _OPENMP
+#ifdef _OPENMP
     its = omp_get_thread_num();
 #else
     its = 0;
