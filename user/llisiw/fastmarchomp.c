@@ -83,8 +83,8 @@ void fastmarch_set (float *v1  /* slowness squared */)
     v = v1;
 }
 
-void fastmarch (float* time                /* time */,
-		float s0,float s1,float s2 /* source */)
+void fastmarch (float* time   /* time */,
+		float *source /* source */)
 /*< Run OMP fast marching eikonal solver >*/
 {
     int its;
@@ -98,7 +98,9 @@ void fastmarch (float* time                /* time */,
 #endif
    
     /* source distance from origin */
-    xs[0] = s0-o[0]; xs[1] = s1-o[1]; xs[2] = s2-o[2];
+    xs[0] = source[0]-o[0];
+    xs[1] = source[1]-o[1];
+    xs[2] = source[2]-o[2];
 
     /* initialize priority queue */
     xn[its] = x[its];

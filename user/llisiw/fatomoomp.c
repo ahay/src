@@ -33,7 +33,9 @@ void fatomo_init(int dim      /* model dimension */,
 		 int *n       /* model size */,
 		 float *d     /* model sampling */,
 		 int nshot    /* number of shots */,
-		 int *rhslist /* rhs list */)
+		 int *rhslist /* rhs list */,
+		 int **m      /* mask */,
+		 int nrecv    /* max recv count */)
 /*< initialize >*/
 {
     int i, is, mts;
@@ -69,11 +71,12 @@ void fatomo_init(int dim      /* model dimension */,
     tempt = sf_floatalloc2(nt,mts);
     tempx = sf_floatalloc2(nt,mts);
     psum  = sf_floatalloc2(nt,mts);
+
+    mask = m;
+    maxrecv = nrecv;
 }
 
-void fatomo_set(float **t  /* stencil time */,
-		int **m    /* mask */,
-		int nrecv  /* max recv count */)
+void fatomo_set(float **t  /* stencil time */)
 /*< set fatomo operator and right-hand side >*/
 {
     int is;
@@ -85,12 +88,6 @@ void fatomo_set(float **t  /* stencil time */,
     for (is=0; is < ns; is++) {
 	upgrad_set(upglist[is],t[is]);
     }
-    
-    /* set mask */
-    mask = m;
-
-    /* set maxrecv */
-    maxrecv = nrecv;
 }
 
 void fatomo_close(void)

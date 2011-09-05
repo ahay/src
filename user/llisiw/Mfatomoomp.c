@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     t = sf_floatalloc2(nt,nshot);
 
     /* initialize fatomo */
-    fatomo_init(dim,n,d,nshot,rhslist);
+    fatomo_init(dim,n,d,nshot,rhslist,m,nrecv);
     
     /* initialize 2D gradient operator */
     sf_igrad2_init(n[0],n[1]);
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
 #pragma omp parallel for private(i,it)
 #endif
     for (is=0; is < nshot; is++) {
-	fastmarch(t[is],source[is][0],source[is][1],source[is][2]);
+	fastmarch(t[is],source[is]);
 	
 	i = rhslist[is];
 	for (it=nrecv-1; it >= 0; it--) {
@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
     switch (what[0]) {
 	case 'l': /* linear operator */
 
-	    fatomo_set(t,m,nrecv);
+	    fatomo_set(t);
 	    fatomo_lop(true,false,nt,nrhs,ds,rhs);
 
 	    for (it=0; it < nt; it++) {
@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 		}
 		
 		/* prepare for CG */
-		fatomo_set(t,m,nrecv);
+		fatomo_set(t);
 		
 		/* solve ds */
 		if (l1norm) {
@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
 #pragma omp parallel for private(i,it)
 #endif		    
 		    for (is=0; is < nshot; is++) {
-			fastmarch(t[is],source[is][0],source[is][1],source[is][2]);
+			fastmarch(t[is],source[is]);
 			
 			i = rhslist[is];
 			for (it=nrecv-1; it >= 0; it--) {
