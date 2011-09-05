@@ -26,12 +26,16 @@ int main(int argc, char* argv[])
     char key[6];	
     float done, dtwo;
     float *one, *two, *win1, *win2, *cor;
+    bool verb;
     sf_file in, other, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
     other = sf_input("other");
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity */
 
     if (SF_FLOAT != sf_gettype(in) ||
         SF_FLOAT != sf_gettype(other)) sf_error("Need float input");
@@ -84,6 +88,7 @@ int main(int argc, char* argv[])
         sf_floatread(two,n1,other);
 
 	for (i1=0; i1 < n1; i1++) {
+	    if (verb) sf_warning("record %d of %d;",i1+1,n1);
 
 	    for (ii=0; ii < rect[2]; ii++) {
 		for (jj=0; jj < rect[1]; jj++) {
@@ -113,6 +118,7 @@ int main(int argc, char* argv[])
 	}
         sf_floatwrite(cor,n1,out);
     }
+    if (verb) sf_warning(".");
 
     exit(0);
 }
