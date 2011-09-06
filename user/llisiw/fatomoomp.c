@@ -26,7 +26,7 @@
 #include "fastmarchomp.h"
 #include "fatomoomp.h"
 
-static int nt, **mask, ns, **list, maxrecv;
+static int nt, **mask, ns, **list;
 static float **tempt, **tempx, **psum, **data;
 static upgrad *upglist;
 
@@ -38,7 +38,6 @@ void fatomo_init(int dim      /* model dimension */,
 		 int nshot    /* number of shots */,
 		 int **rhslist /* rhs list */,
 		 int **recv   /* receiver list */,
-		 int nrecv    /* max recv count */,
 		 float **reco /* record list */)
 /*< initialize >*/
 {
@@ -73,7 +72,6 @@ void fatomo_init(int dim      /* model dimension */,
 
     list    = rhslist;
     mask    = recv;
-    maxrecv = nrecv;
     data    = reco;
 
     fastmarch_init(n,o,d,order);

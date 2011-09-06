@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     }
     
     /* initialize fatomo */
-    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,nrecv,t0);
+    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,t0);
 
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
