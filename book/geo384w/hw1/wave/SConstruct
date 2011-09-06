@@ -60,7 +60,7 @@ Flow('source',None,
      ''')
 
 # Modeling
-exe = Program('wave.c')
+exe = Program('wave.c',CPPDEFINES='NO_BLAS')
 Flow('wave','source %s wavelet emodel' % exe[0],
      '''
      ./${SOURCES[1]} wav=${SOURCES[2]} vel1=${SOURCES[3]} vel2=${SOURCES[3]}
