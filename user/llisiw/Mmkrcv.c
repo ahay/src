@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
 {
     bool velocity, plane[3], skip;
     int n[SF_MAX_DIM], nt, dim, *flag, order, i, j, k, is, ns, nrecv, *mask, *recv;
-    int offset1, offset2, left1, right1, left2, right2, count;
-    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, *t, *reco, temp;
+    int temp[2], offset[2], left[2], right[2], count;
+    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, *t, *reco;
     char key[4];
     sf_file in, shot, out, record, topo;
     
@@ -65,13 +65,14 @@ int main(int argc, char* argv[])
     sf_floatread(source[0],3*ns,shot);
     sf_fileclose(shot);
 
-    if (!sf_getint("offset1",&offset1)) offset1=0;
+    if (!sf_getint("offset1",&offset[1])) offset[1]=0;
     /* receiver offset inline (on each side) */
 
-    if (!sf_getint("offset2",&offset2)) offset2=0;
+    if (!sf_getint("offset2",&offset[2])) offset[2]=0;
     /* receiver offset crossline (on each side) */
 
-    nrecv = ((2*offset1+1)*(2*offset2+1)>n[1]*n[2])?n[1]*n[2]:(2*offset1+1)*(2*offset2+1);
+    nrecv = ((2*offset[1]+1)*(2*offset[2]+1)>n[1]*n[2])?n[1]*n[2]
+	:(2*offset[1]+1)*(2*offset[2]+1)-1;
 
     /* allocate memory for output */
     recv = sf_intalloc(nrecv);
@@ -148,20 +149,24 @@ int main(int argc, char* argv[])
 		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
 		  source[is][2],source[is][1],source[is][0],1,1,1,order);
 
-	temp   = (source[is][1]-o[1])/d[1];
-	left1  = (int)temp-offset1;
-	right1 = (int)temp+offset1;
+	temp[1]  = (source[is][1]-o[1])/d[1]+0.5;
+	left[1]  = temp[1]-offset[1];
+	right[1] = temp[1]+offset[1];
 	
-	temp   = (source[is][2]-o[2])/d[2];
-	left2  = (int)temp-offset2;
-	right2 = (int)temp+offset2;
+	temp[2]  = (source[is][2]-o[2])/d[2]+0.5;
+	left[2]  = temp[2]-offset[2];
+	right[2] = temp[2]+offset[2];
 	
 	count = 0;
 	for (k=0; k < n[2]; k++) {
 		for (j=0; j < n[1]; j++) {
 
-		    if (left1 <= j && j <= right1 && left2 <= k && k <= right2) {
+		    if (left[1] <= j && j <= right[1] 
+			&& left[2] <= k && k <= right[2]) {
 
+			if (j == temp[1] && k == temp[2])
+			    continue;
+			
 			skip = false;
 			for (i=0; i < n[0]; i++) {
 			    if (skip) break;
