@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, verb;
     int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
-    int iter, niter, stiter, *k, nfreq, nmem, nrhs, *rhslist, nrecv;
+    int iter, niter, stiter, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
     char key[6], *what;
@@ -111,14 +111,15 @@ int main(int argc, char* argv[])
 	sf_error("Need list receiver=");
     recv = sf_input("receiver");
 
-    if (!sf_histint(recv,"n1",&nrecv)) sf_error("No nrecv in receiver list.");
+    if (!sf_histint(recv,"n1",&nrecv)) 
+	sf_error("No nrecv in receiver list.");
 
     m = sf_intalloc2(nrecv,nshot);
     sf_intread(m[0],nrecv*nshot,recv);
     sf_fileclose(recv);
 
     /* number of right-hand side */
-    rhslist = sf_intalloc(nshot);
+    rhslist = sf_intalloc2(2,nshot);
     
     nrhs = 0;
     for (is=0; is < nshot; is++) {
@@ -126,7 +127,10 @@ int main(int argc, char* argv[])
 	    if (m[is][it] >= 0)
 		nrhs++;
 	}
-	rhslist[is] = nrhs;
+	
+	rhslist[is][1] = nrhs;
+	rhslist[is][2] = (is==0)?rhslist[is][1]
+	    :rhslist[is][1]-rhslist[is-1][1];
     }
     rhs = sf_floatalloc(nrhs);
     

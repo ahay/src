@@ -26,7 +26,7 @@
 #include "fastmarchomp.h"
 #include "fatomoomp.h"
 
-static int nt, **mask, ns, *list, maxrecv;
+static int nt, **mask, ns, **list, maxrecv;
 static float **tempt, **tempx, **psum, **data;
 static upgrad *upglist;
 
@@ -36,7 +36,7 @@ void fatomo_init(int dim      /* model dimension */,
 		 float *d     /* model sampling */,
 		 int order    /* fast march order */,
 		 int nshot    /* number of shots */,
-		 int *rhslist /* rhs list */,
+		 int **rhslist /* rhs list */,
 		 int **recv   /* receiver list */,
 		 int nrecv    /* max recv count */,
 		 float **reco /* record list */)
@@ -125,12 +125,10 @@ void fatomo_fastmarch(float *slow    /* slowness squared */,
     for (is=0; is < ns; is++) {
 	fastmarch(time[is],source[is]);
 	
-	i = list[is];
-	for (it=maxrecv-1; it >= 0; it--) {
-	    if (mask[is][it] >= 0) {
-		rhs[i-1] = data[is][it]-time[is][mask[is][it]];
-		i--;
-	    }
+	i = list[is][1];
+	for (it=list[is][2]-1; it >= 0; it--) {
+	    rhs[i-1] = data[is][it]-time[is][mask[is][it]];
+	    i--;
 	}
     }
 }
@@ -166,12 +164,10 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		for (it=0; it <= nt; it++)
 		    tempt[its][it] = 0.;
 		
-		i = list[is];
-		for (it=maxrecv-1; it >= 0; it--) {
-		    if (mask[is][it] >= 0) {
-			tempt[its][mask[is][it]] = r[i-1];
-			i--;
-		    }
+		i = list[is][1];
+		for (it=list[is][2]-1; it >= 0; it--) {
+		    tempt[its][mask[is][it]] = r[i-1];
+		    i--;
 		}
 		
 		upgrad_inverse(upglist[is],tempx[its],tempt[its],NULL);
@@ -205,12 +201,10 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    for (is=0; is < ns; is++) {
 		upgrad_solve(upglist[is],x,tempt[its],NULL);
 		
-		i = list[is];
-		for (it=maxrecv-1; it >= 0; it--) {
-		    if (mask[is][it] >= 0) {
-			r[i-1] = tempt[its][mask[is][it]];
-			i--;
-		    }
+		i = list[is][1];
+		for (it=list[is][2]-1; it >= 0; it--) {
+		    r[i-1] = tempt[its][mask[is][it]];
+		    i--;
 		}
 	    }
 	}
