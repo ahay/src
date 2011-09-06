@@ -27,6 +27,7 @@ Inspired by SU's unif2.
 int main(int argc, char **argv)
 {
     int n1, n2, ninf, i1, i2, i, *inter2;
+    char *label, *unit;
     float o1, d1, o2, d2, x, z;
     float *v0, *dvdx, *dvdz, *x0, *z0, *trace, **inter;
     sf_file model, surface;
@@ -41,9 +42,7 @@ int main(int argc, char **argv)
     if (!sf_histfloat(surface,"d1",&d2)) sf_error("No d1= in input");
     if (!sf_histfloat(surface,"o1",&o2)) o2=0.;
 
-    sf_putint(model,"n2",n2);
-    sf_putfloat(model,"d2",d2);
-    sf_putfloat(model,"o2",o2);
+    sf_shiftdim(surface, model, 1);
 
     if (!sf_histint(surface,"n2",&ninf)) ninf=1; 
 
@@ -57,6 +56,13 @@ int main(int argc, char **argv)
     sf_putint(model,"n1",n1);
     sf_putfloat(model,"d1",d1);
     sf_putfloat(model,"o1",o1);
+
+    if (NULL == (label = sf_getstring("label1"))) label="Depth";
+    /* depth axis label */
+    sf_putstring(model,"label1",label);
+
+    if (NULL != (unit = sf_getstring("unit1"))) /* depth axis unit */
+	sf_putstring(model,"unit1",unit);
 
     inter = sf_floatalloc2(n2,ninf);
     inter2 = sf_intalloc(ninf);

@@ -246,11 +246,13 @@ int main(int argc, char* argv[])
     vel2 = (velocity) sf_alloc(1,sizeof(*vel2));
 
     if (!sf_getfloat("vel",&(vel->v0))) sf_error("Need vel=");
-    /* velocity */
+    /*( vel velocity) */
     
     if (!sf_getfloat("gradx",&(vel->gx))) (vel->gx)=0.;
+    /*( gradz horizontal velocity gradient )*/
+
     if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
-    /* velocity gradient */
+    /*( gradz vertical velocity gradient )*/
 
     if (!sf_getfloat("velz",&(vel->vz))) (vel->vz)=vel->v0;
     /* vertical velocity (for anisotropy) */

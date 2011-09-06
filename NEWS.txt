@@ -45,6 +45,7 @@ In documentation:
 In APIs:
 
 In the Python package:
+* Hires Bounding Box detection in Mathematica plots
 
 In programs:
 * Fixed sfpen (via dovplot) bug
@@ -58,6 +59,8 @@ In the build system:
 * Fixed bug that resulted in BLAS/ATLAS-based programs to not install in Fedora
 * Eliminated hardcoded paths that made it impossible to package m8r
 * Workaround for SCons bug #1488 
+* Fixed MacPorts and Fink path detection for compilers other than gcc
+  on Mac
 
 ==Release 1.2 (2011-07-14)==
 
