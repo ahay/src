@@ -24,13 +24,14 @@
 #include <omp.h>
 #endif
 
+#include "upgradomp.h"
 #include "fastmarchomp.h"
 
 struct Upd {
     double stencil, value, delta;
 };
 
-int neighbors_nearsource(float* time, float* xs);
+int neighbors_nearsource(float* time, float* xs, upgrad upg);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 int neighbours(float* time, int i);
@@ -42,10 +43,10 @@ static float ***x, ***xn, ***x1;
 static int **in, *n, s[3], order;
 static float *v, *o, *d;
 
-void fastmarch_init (int *n1    /* grid samples [3] */, 
-		     float *o1  /* grid origin [3] */,
-		     float *d1  /* grid sampling [3] */,
-		     int order1 /* accuracy order */)
+void fastmarch_init(int *n1    /* grid samples [3] */, 
+		    float *o1  /* grid origin [3] */,
+		    float *d1  /* grid sampling [3] */,
+		    int order1 /* accuracy order */)
 /*< initialize model dimensions and upwind order >*/
 {
     int its, mts;
@@ -61,7 +62,7 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
     n = n1; order = order1; o = o1; d = d1;
     s[0] = 1; s[1] = n[0]; s[2] = n[0]*n[1];
 
-    /* allocate shared memory for OMP fast marching */
+    /* allocate shared memory */
     in = sf_intalloc2(n[0]*n[1]*n[2],mts);
     
     x  = (float ***) sf_alloc(mts,sizeof (float **));
@@ -77,54 +78,82 @@ void fastmarch_init (int *n1    /* grid samples [3] */,
 	x[its] = (float **) sf_alloc ((10*maxband+1),sizeof (float *));
 }
 
-void fastmarch_set (float *v1  /* slowness squared */)
+void fastmarch_set(float *v1  /* slowness squared */)
 /*< set velocity model (slowness squared) >*/
 {
     v = v1;
 }
 
-void fastmarch (float* time   /* time */,
-		float *source /* source */)
-/*< run OMP fast marching eikonal solver >*/
+int fastmarch(float *time   /* time */,
+	      float *source /* source */,
+	      int *list     /* list */,
+	      int *mask     /* recv */,
+	      float *data   /* reco */,
+	      float *rhs    /* rhs */,
+	      upgrad upg    /* stencil */)
+/*< run fast marching eikonal solver >*/
 {
     int its;
     float xs[3], *p;
-    int npoints, i;
+    int npoints, i, j, k, count, length;
  
 #ifdef _OPENMP
     its = omp_get_thread_num();
 #else
     its = 0;
 #endif
-   
+    
     /* source distance from origin */
     xs[0] = source[0]-o[0];
     xs[1] = source[1]-o[1];
     xs[2] = source[2]-o[2];
-
+    
     /* initialize priority queue */
     xn[its] = x[its];
     x1[its] = x[its]+1;
-
+    
+    count = 0;
+    length = 1;
+    
     /* fast marching */
-    for (npoints =  neighbors_nearsource (time,xs);
+    for (npoints =  neighbors_nearsource(time,xs,upg);
 	 npoints > 0;
 	 npoints -= neighbours(time,i)) {
 
+	/* smallest value in queue */
 	p = pqueue_extract();
-
+	
 	if (p == NULL) {
 	    sf_warning("%s: heap exausted!",__FILE__);
 	    break;
 	}
 	
-	i = p - time;
+	i = p-time;
 
+	/* update wave front */
 	in[its][i] = SF_IN;
+
+	/* update stencil */
+	upgrad_set(upg,time,i,in[its],length);
+	length++;
+	
+	/* update rhs */
+	k = list[1];
+	for (j=0; j < list[2]; j++) {
+	    if (i == mask[j]) {
+		rhs[k+j] = data[j]-time[i];
+		count++;
+	    }
+	}
+
+	/* break for limited acquisition */
+	if (count == list[2]) break;
     }
+    
+    return(length);
 }
 
-void fastmarch_close (void)
+void fastmarch_close(void)
 /*< free allocated memory >*/
 {
     int its, mts;
@@ -144,11 +173,12 @@ void fastmarch_close (void)
 }
 
 int neighbors_nearsource(float* time /* time */,
-			 float* xs   /* source location [3] */)
+			 float* xs   /* source location [3] */,
+			 upgrad upg  /* stencil */)
 /* initialize point source, return number of wave front points */
 {
     int its;
-    int np, ic, i, j, is, start[3], endx[3], ix, iy, iz;
+    int np, ic, i, j, is[3], start[3], endx[3], ix, iy, iz;
     double delta[3], delta2;
 
 #ifdef _OPENMP
@@ -165,9 +195,9 @@ int neighbors_nearsource(float* time /* time */,
 
     /* Find index of the source location and project it to the grid */
     for (j=0; j < 3; j++) {
-	is = xs[j]/d[j]+0.5;
-	start[j] = is-1; 
-	endx[j]  = is+1;
+	is[j] = xs[j]/d[j]+0.5;
+	start[j] = is[j]-1; 
+	endx[j]  = is[j]+1;
     } 
     
     for (j=0; j < 3; j++) {
@@ -220,6 +250,9 @@ int neighbors_nearsource(float* time /* time */,
 	    }
 	}
     }
+    
+    /* start stencil from source */
+    upgrad_set(upg,time,is[0]+n[0]*(is[1]+n[1]*is[2]),in[its],0);
     
     return np;
 }

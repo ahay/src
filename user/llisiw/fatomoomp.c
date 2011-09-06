@@ -26,7 +26,7 @@
 #include "fastmarchomp.h"
 #include "fatomoomp.h"
 
-static int nt, **mask, ns, **list;
+static int nt, **mask, ns, **list, *upgnum;
 static float **tempt, **tempx, **psum, **data;
 static upgrad *upglist;
 
@@ -42,15 +42,23 @@ void fatomo_init(int dim      /* model dimension */,
 /*< initialize >*/
 {
     int i, is, mts;
-
+    
+    /* read in parameters */
     nt = 1;
     for (i=0; i < dim; i++) {
 	nt = nt*n[i];
     }
 
-    ns = nshot;
+    ns   = nshot;
+    list = rhslist;
+    mask = recv;
+    data = reco;
 
+    /* initialize upwind stencil and fast marching */
     upgrad_init(dim,n,d);
+    fastmarch_init(n,o,d,order);
+
+    /* allocate shared memory */
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
 
 #ifdef _OPENMP    
@@ -60,6 +68,8 @@ void fatomo_init(int dim      /* model dimension */,
 	upglist[is] = upgrad_alloc();
     }
     
+    upgnum = sf_intalloc(ns);
+
 #ifdef _OPENMP
     mts = omp_get_max_threads();
 #else
@@ -69,26 +79,6 @@ void fatomo_init(int dim      /* model dimension */,
     tempt = sf_floatalloc2(nt,mts);
     tempx = sf_floatalloc2(nt,mts);
     psum  = sf_floatalloc2(nt,mts);
-
-    list    = rhslist;
-    mask    = recv;
-    data    = reco;
-
-    fastmarch_init(n,o,d,order);
-}
-
-void fatomo_set(float **t  /* stencil time */)
-/*< set fatomo operator and right-hand side >*/
-{
-    int is;
-
-    /* set stencil */
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (is=0; is < ns; is++) {
-	upgrad_set(upglist[is],t[is]);
-    }
 }
 
 void fatomo_close(void)
@@ -113,21 +103,18 @@ void fatomo_fastmarch(float *slow    /* slowness squared */,
 		      float *rhs     /* rhs */)
 /*< fast marching >*/
 {
-    int is, i, it;
+    int is;
 
+    /* set background slowness squared */
     fastmarch_set(slow);
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,it)
+#pragma omp parallel for
 #endif
     for (is=0; is < ns; is++) {
-	fastmarch(time[is],source[is]);
-	
-	i = list[is][1];
-	for (it=list[is][2]-1; it >= 0; it--) {
-	    rhs[i-1] = data[is][it]-time[is][mask[is][it]];
-	    i--;
-	}
+	upgnum[is] = fastmarch(time[is],source[is],
+			       list[is],mask[is],data[is],
+			       rhs,upglist[is]);
     }
 }
 
@@ -163,12 +150,12 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		    tempt[its][it] = 0.;
 		
 		i = list[is][1];
-		for (it=list[is][2]-1; it >= 0; it--) {
-		    tempt[its][mask[is][it]] = r[i-1];
-		    i--;
+		for (it=0; it < list[is][2]; it++) {
+		    tempt[its][mask[is][it]] = r[i];
+		    i++;
 		}
 		
-		upgrad_inverse(upglist[is],tempx[its],tempt[its],NULL);
+		upgrad_inverse(upgnum[is],upglist[is],tempx[its],tempt[its],NULL);
 		
 		for (it=0; it < nt; it++) psum[its][it]+=tempx[its][it];
 	    }
@@ -197,12 +184,12 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 #pragma omp for
 #endif
 	    for (is=0; is < ns; is++) {
-		upgrad_solve(upglist[is],x,tempt[its],NULL);
+		upgrad_solve(upgnum[is],upglist[is],x,tempt[its],NULL);
 		
 		i = list[is][1];
-		for (it=list[is][2]-1; it >= 0; it--) {
-		    r[i-1] = tempt[its][mask[is][it]];
-		    i--;
+		for (it=0; it < list[is][2]; it++) {
+		    r[i] = tempt[its][mask[is][it]];
+		    i++;
 		}
 	    }
 	}

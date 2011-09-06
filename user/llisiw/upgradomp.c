@@ -19,10 +19,6 @@
 
 #include <rsf.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #ifndef _upgrad_h
 
 typedef struct Upgrad *upgrad;
@@ -40,34 +36,13 @@ struct Upgrad {
 static int ndim, nt, ss[3];
 static const int *nn;
 static float dd[3];
-static float **t0;
-
-static int fermat(const void *a, const void *b)
-/* comparison for traveltime sorting from small to large */
-{
-    int its;
-    float ta, tb;
-
-#ifdef _OPENMP
-    its = omp_get_thread_num();
-#else
-    its = 0;
-#endif
-
-    ta = t0[its][*(int *)a];
-    tb = t0[its][*(int *)b];
-
-    if (ta >  tb) return 1;
-    if (ta == tb) return 0;
-    return -1;
-}
 
 void upgrad_init(int mdim        /* number of dimensions */,
 		 const int *mm   /* [dim] data size */,
 		 const float *d  /* [dim] data sampling */)
 /*< initialize >*/
 {
-    int i, mts;
+    int i;
 
     if (mdim > 3) sf_error("%s: dim=%d > 3",__FILE__,mdim);
 
@@ -80,14 +55,6 @@ void upgrad_init(int mdim        /* number of dimensions */,
 	nt *= nn[i];
 	dd[i] = 1.0/(d[i]*d[i]);
     }
-
-#ifdef _OPENMP
-    mts = omp_get_max_threads();
-#else
-    mts = 1;
-#endif
-
-    t0 = (float **)malloc(mts*sizeof(float *));
 }
 
 upgrad upgrad_alloc()
@@ -104,52 +71,43 @@ upgrad upgrad_alloc()
     return upg;
 }
 
-void upgrad_set(upgrad upg, float *r0 /* reference */)
+void upgrad_set(upgrad upg /* stencil */,
+		float *r0  /* reference */,
+		int index  /* index */,
+		int *flag  /* flag */,
+		int length /* length */)
 /*< supply reference >*/
 {
-    int i, m, it, jt, ii[3], a, b, its;
+    int i, m, ii[3], a, b, c;
     unsigned char *up;
     float t, t2;
 
-#ifdef _OPENMP
-    its = omp_get_thread_num();
-#else
-    its = 0;
-#endif
+    upg->order[length] = index;
 
-    t0[its] = r0;
-
-    /* sort from small to large traveltime */
-    for (it = 0; it < nt; it++) {
-	upg->order[it] = it;
-    }
-    qsort(upg->order, nt, sizeof(int), fermat);
-     
-    for (it = 0; it < nt; it++) {
-	jt = upg->order[it];
-
-	sf_line2cart(ndim,nn,jt,ii);
-	up = upg->update[it];
-	up[0] = up[1] = 0;
-	t = t0[its][jt];
-	upg->ww[it][ndim] = 0.;
-	for (i=0, m=1; i < ndim; i++, m <<= 1) {
-	    a = jt-ss[i];
-	    b = jt+ss[i];
-	    if ((ii[i] == 0) || 
-		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
-		up[1] |= m;
-		t2 = t0[its][b];
-	    } else {
-		t2 = t0[its][a];
-	    }
-
-	    if (t2 < t) {
-		up[0] |= m;
-		upg->ww[it][i] = (t-t2)*dd[i];
-		upg->ww[it][ndim] += upg->ww[it][i];
-	    }	    
+    sf_line2cart(ndim,nn,index,ii);
+    up = upg->update[length];
+    up[0] = up[1] = 0;
+    t = r0[index];
+    upg->ww[length][ndim] = 0.;
+    for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	a = index-ss[i];
+	b = index+ss[i];
+	if ((ii[i] == 0) || 
+	    (ii[i] != nn[i]-1 && r0[a] > r0[b])) {
+	    up[1] |= m;
+	    t2 = r0[b];
+	    c = b;
+	} else {
+	    t2 = r0[a];
+	    c = a;
 	}
+	
+	/* accept only from upwind direction */
+	if ((t2 < t) && (flag[c] == SF_IN)) {
+	    up[0] |= m;
+	    upg->ww[length][i] = (t-t2)*dd[i];
+	    upg->ww[length][ndim] += upg->ww[length][i];
+	}	    
     }
 }
 
@@ -164,7 +122,8 @@ void upgrad_close(upgrad upg)
     free(upg);
 }
 
-void upgrad_solve(upgrad upg,
+void upgrad_solve(int length       /* length */,
+		  upgrad upg       /* stencil */,
 		  const float *rhs /* right-hand side */, 
 		  float *x         /* solution */,
 		  const float *x0  /* initial solution */)
@@ -174,7 +133,7 @@ void upgrad_solve(upgrad upg,
     unsigned char *up;
     float num, den;
    
-    for (it = 0; it < nt; it++) {
+    for (it = 0; it < length; it++) {
 	jt = upg->order[it];
 
 	num = rhs[jt];
@@ -197,7 +156,8 @@ void upgrad_solve(upgrad upg,
     }
 }
 
-void upgrad_inverse(upgrad upg,
+void upgrad_inverse(int length       /* length */,
+		    upgrad upg       /* stencil */,
 		    float *rhs       /* right-hand side */,
 		    const float *x   /* solution */,
 		    const float *x0  /* initial solution */)
@@ -211,14 +171,14 @@ void upgrad_inverse(upgrad upg,
 	rhs[it] = 0.;
     }
    
-    for (it = nt-1; it >= 0; it--) {
+    for (it = length-1; it >= 0; it--) {
 	jt = upg->order[it];
 
 	rhs[jt] += x[jt];
 
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
-
+	
 	if (den == 0.) { /* at the source, use boundary conditions */
 	    rhs[jt] = (NULL != x0)? x0[jt]: 0.;
 	} else {
@@ -235,7 +195,8 @@ void upgrad_inverse(upgrad upg,
     }
 }
 
-void upgrad_forw(upgrad upg,
+void upgrad_forw(int length     /* length */,
+		 upgrad upg     /* stencil */,
 		 const float *x /* solution */,
 		 float *rhs     /* right-hand side */)
 /*< forward operator >*/
@@ -244,7 +205,7 @@ void upgrad_forw(upgrad upg,
     unsigned char *up;
     float num, x2;
    
-    for (it = 0; it < nt; it++) {
+    for (it = 0; it < length; it++) {
 	jt = upg->order[it];
 
 	x2 = x[jt];
@@ -262,7 +223,8 @@ void upgrad_forw(upgrad upg,
     }
 }
 
-void upgrad_adj(upgrad upg,
+void upgrad_adj(int length       /* length */,
+		upgrad upg       /* stencil */,
 		float *x         /* solution */,
 		const float *rhs /* right-hand side */)
 /*< adjoint operator >*/
@@ -275,7 +237,7 @@ void upgrad_adj(upgrad upg,
 	x[it] = 0.;
     }
    
-    for (it = nt-1; it >= 0; it--) {
+    for (it = length-1; it >= 0; it--) {
 	jt = upg->order[it];
 	up = upg->update[it];
 

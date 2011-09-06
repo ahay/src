@@ -123,12 +123,13 @@ int main(int argc, char* argv[])
     
     nrhs = 0;
     for (is=0; is < nshot; is++) {
+	rhslist[is][1] = nrhs;
+	
 	for (it=0; it < nrecv; it++) {
 	    if (m[is][it] >= 0)
 		nrhs++;
 	}
 	
-	rhslist[is][1] = nrhs;
 	rhslist[is][2] = (is==0)?rhslist[is][1]
 	    :rhslist[is][1]-rhslist[is-1][1];
     }
@@ -252,7 +253,6 @@ int main(int argc, char* argv[])
     switch (what[0]) {
 	case 'l': /* linear operator */
 
-	    fatomo_set(t);
 	    fatomo_lop(true,false,nt,nrhs,ds,rhs);
 
 	    for (it=0; it < nt; it++) {
@@ -273,9 +273,6 @@ int main(int argc, char* argv[])
 		for (it=0; it < nt; it++) {
 		    ds[it] = 0.;
 		}
-		
-		/* prepare for CG */
-		fatomo_set(t);
 		
 		/* solve ds */
 		if (l1norm) {
