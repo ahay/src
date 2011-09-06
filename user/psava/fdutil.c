@@ -599,10 +599,10 @@ void lint2d_inject(float**uu,
     for (ia=0;ia<ca->n;ia++) {
 	wa = ww[ia];
 	
-	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] -= wa * ca->w00[ia];
-	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= wa * ca->w01[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= wa * ca->w10[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= wa * ca->w11[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w00[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w01[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w10[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w11[ia];
     }
 }
 
@@ -621,14 +621,14 @@ void lint3d_inject(float***uu,
     for (ia=0;ia<ca->n;ia++) {
 	wa = ww[ia];
 	
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] -= wa * ca->w000[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= wa * ca->w001[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= wa * ca->w010[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= wa * ca->w011[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] -= wa * ca->w100[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= wa * ca->w101[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= wa * ca->w110[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= wa * ca->w111[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w000[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w001[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w010[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w011[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w100[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w101[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w110[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w111[ia];
     }
 }
 
@@ -645,10 +645,10 @@ void lint2d_inject1(float**uu,
 #endif
     for (ia=0;ia<ca->n;ia++) {
 
-	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] -= ww * ca->w00[ia];
-	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= ww * ca->w01[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= ww * ca->w10[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= ww * ca->w11[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w00[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w01[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w10[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w11[ia];
     }
 }
 
@@ -665,14 +665,14 @@ void lint3d_inject1(float***uu,
 #endif
     for (ia=0;ia<ca->n;ia++) {
 
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] -= ww * ca->w000[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= ww * ca->w001[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= ww * ca->w010[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= ww * ca->w011[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] -= ww * ca->w100[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] -= ww * ca->w101[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] -= ww * ca->w110[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] -= ww * ca->w111[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w000[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w001[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w010[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w011[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w100[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w101[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w110[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w111[ia];
     }
 }
 
