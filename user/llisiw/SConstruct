@@ -5,10 +5,8 @@ import bldutil
 progs = '''
 kirmig kirmig0 drayinte lineiko lintest
 testanal gradient cconst cgconst
-fatomo fatomoomp mkrcv cpxeiko lineiko2
+fatomo fatomoomp mkrcv
 '''
-
-
 
 try:  # distributed version
     Import('env root pkgdir bindir')
