@@ -53,6 +53,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("source",&source)) source=o[1]+(n[1]-1)/2*d[1];
     /* source location */
+
+    /* project source to grid point */
+    s = (source-o[1])/d[1];
     
     /* read velocity model */
     vel = sf_floatalloc2(n[0],n[1]);
@@ -66,9 +69,15 @@ int main(int argc, char* argv[])
 	sf_fileclose(deriv);
     } else {
 	deriv = NULL;
-	for (j=0; j < n[1]; j++)
+
+	/* use finite difference for derivative if available */
+	if (0 < s && s < n[1]-1) {
 	    for (i=0; i < n[0]; i++)
-		der[j][i] = 0.;
+		der[s][i] = (vel[s+1][i]-2*vel[s][i]+vel[s-1][i])/(d[1]*d[1]);
+	} else {
+	    for (i=0; i < n[0]; i++)
+		der[s][i] = 0.;
+	}
     }
     
     /* write output header */
@@ -80,9 +89,6 @@ int main(int argc, char* argv[])
     Q  = sf_complexalloc(n[0]);
     beam = sf_complexalloc2(n[0],n[1]);
 
-    /* project source to grid point */
-    s = (source-o[1])/d[1];
-
     /* complex source initial condition */
     t[0] = 0.;
     P[0] = sf_cmplx(0,1./vel[s][0]);
@@ -92,13 +98,15 @@ int main(int argc, char* argv[])
     for (i=1; i<n[0]; i++) {
 	t[i] = t[i-1]+d[0]/2./vel[s][i-1]+d[0]/(vel[s][i-1]+vel[s][i]);
 #ifdef SF_HAS_COMPLEX_H
-	Q[i] = (P[i-1]-der[s][i-1]*Q[i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4))*vel[s][i-1]*d[0]+Q[i-1];
-	P[i] = -((1.5*der[s][i-1]+0.5*der[s][i])*Q[i-1]+(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2*P[i-1])*d[0]/(vel[s][i-1]*vel[s][i-1]*2)+P[i-1];
+	Q[i] = (P[i-1]-der[s][i-1]*Q[i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4))
+	    *vel[s][i-1]*d[0]+Q[i-1];
+	P[i] = -((1.5*der[s][i-1]+0.5*der[s][i])*Q[i-1]+(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2*P[i-1])
+	    *d[0]/(vel[s][i-1]*vel[s][i-1]*2)+P[i-1];
 #else
-	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],sf_crmul(Q[i-1],-der[s][i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4))),vel[s][i-1]*d[0]),Q[i-1]);
-	P[i] = sf_cadd(
-	    sf_crmul(
-		sf_cadd(sf_crmul(Q[i-1],-((1.5*der[s][i-1]+0.5*der[s][i]))),sf_crmul(P[i-1],(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2)),d[0]/(vel[s][i-1]*vel[s][i-1]*2)),P[i-1]);
+	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],sf_crmul(Q[i-1],-der[s][i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4)))
+				,vel[s][i-1]*d[0]),Q[i-1]);
+	P[i] = sf_cadd(sf_crmul(sf_cadd(sf_crmul(Q[i-1],-((1.5*der[s][i-1]+0.5*der[s][i]))),
+					sf_crmul(P[i-1],(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2)),d[0]/(vel[s][i-1]*vel[s][i-1]*2)),P[i-1]);
 #endif
     }
 
