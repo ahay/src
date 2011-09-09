@@ -1,7 +1,7 @@
-/* 2-D Dynamic Ray Tracing */
-/* Cheating: constant velocity approximation for central vertical ray */
+/* 2D Dynamic Ray Tracing */
+/* NOTE: domain must be (0,z)*(0,x) with a central vertial ray at (0,0) */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,72 +22,100 @@
 
 int main(int argc, char* argv[])
 {
-    int nz, nx, i, j;
-    float **dir, **vel;
-    float t0, s, z0, x0, dz, dx, *t;
-    sf_file in, ve, cmplx;
-    sf_complex *P, *Q, *cpxtbl;
-
+    int dim, n[SF_MAX_DIM], i, j, s;
+    float **der, **vel;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], t0, shift, source, *t, dist;
+    char key[6];
+    sf_complex *P, *Q, **beam;
+    sf_file in, deriv, out;
+    
     sf_init(argc,argv);
     in = sf_input("in");
-    ve = sf_input("vel");
-    cmplx = sf_output("out");
-
-    if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-
-    if (!sf_histfloat(in,"o1",&z0)) sf_error("No o1= in input");
-    if (!sf_histfloat(in,"d1",&dz)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
-    if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
-
-    if (!sf_getfloat("t0",&t0)) t0=.0;
-    if (!sf_getfloat("s",&s)) s=1.0;
-
-    dir = sf_floatalloc2(nz,nx);
-    vel = sf_floatalloc2(nz,nx);
-    t = sf_floatalloc(nz);
-    P = sf_complexalloc(nz);
-    Q = sf_complexalloc(nz);
-    cpxtbl = sf_complexalloc(nz*nx);
-
-    sf_settype(cmplx,SF_COMPLEX);
+    out = sf_output("out");
     
-    sf_floatread(dir[0],nz*nx,in);
-    sf_floatread(vel[0],nz*nx,ve);
-    sf_fileclose(ve);
+    /* read input dimension */
+    dim = sf_filedims(in,n);
 
-    /* Complex source initial condition */
+    if (dim > 2) sf_error("Only works for 2D.");
+
+    for (i=0; i < dim; i++) {
+	sprintf(key,"d%d",i+1);
+	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
+	sprintf(key,"o%d",i+1);
+	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
+    }
+
+    if (!sf_getfloat("t0",&t0)) t0=0.;
+    /* time origin at source */
+    
+    if (!sf_getfloat("shift",&shift)) shift=1.;
+    /* complex source shift */
+
+    if (!sf_getfloat("source",&source)) source=o[1]+(n[1]-1)/2*d[1];
+    /* source location */
+    
+    /* read velocity model */
+    vel = sf_floatalloc2(n[0],n[1]);
+    sf_floatread(vel[0],n[0]*n[1],in);
+    
+    /* read derivative file */
+    der = sf_floatalloc2(n[0],n[1]);
+    if (NULL != sf_getstring("deriv")) {
+	deriv = sf_input("deriv");
+	sf_floatread(der[0],n[0]*n[1],deriv);
+	sf_fileclose(deriv);
+    } else {
+	deriv = NULL;
+	for (j=0; j < n[1]; j++)
+	    for (i=0; i < n[0]; i++)
+		der[j][i] = 0.;
+    }
+    
+    /* write output header */
+    sf_settype(out,SF_COMPLEX);
+
+    /* allocate memory for temporary data */
+    t  = sf_floatalloc(n[0]);
+    P  = sf_complexalloc(n[0]);
+    Q  = sf_complexalloc(n[0]);
+    beam = sf_complexalloc2(n[0],n[1]);
+
+    /* project source to grid point */
+    s = (source-o[1])/d[1];
+
+    /* complex source initial condition */
     t[0] = 0.;
-    P[0] = sf_cmplx(0,1./vel[0][0]);
-    Q[0] = sf_cmplx(s,0);
+    P[0] = sf_cmplx(0,1./vel[s][0]);
+    Q[0] = sf_cmplx(shift,0);
 
-    /* Dynamic ray tracing along vertical ray */
-    for (i=1; i<nz; i++) {
-	t[i] = t[i-1]+dz/2./vel[0][i-1]+dz/(vel[0][i-1]+vel[0][i]);
+    /* dynamic ray tracing along central ray (4th order Runge-Kutta) */
+    for (i=1; i<n[0]; i++) {
+	t[i] = t[i-1]+d[0]/2./vel[s][i-1]+d[0]/(vel[s][i-1]+vel[s][i]);
 #ifdef SF_HAS_COMPLEX_H
-	Q[i] = (P[i-1]-dir[0][i-1]*Q[i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))*vel[0][i-1]*dz+Q[i-1];
-	P[i] = -((1.5*dir[0][i-1]+0.5*dir[0][i])*Q[i-1]+(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2*P[i-1])*dz/(vel[0][i-1]*vel[0][i-1]*2)+P[i-1];
+	Q[i] = (P[i-1]-der[s][i-1]*Q[i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4))*vel[s][i-1]*d[0]+Q[i-1];
+	P[i] = -((1.5*der[s][i-1]+0.5*der[s][i])*Q[i-1]+(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2*P[i-1])*d[0]/(vel[s][i-1]*vel[s][i-1]*2)+P[i-1];
 #else
-	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],sf_crmul(Q[i-1],-dir[0][i-1]*dz/(vel[0][i-1]*vel[0][i-1]*4))),vel[0][i-1]*dz),Q[i-1]);
+	Q[i] = sf_cadd(sf_crmul(sf_cadd(P[i-1],sf_crmul(Q[i-1],-der[s][i-1]*d[0]/(vel[s][i-1]*vel[s][i-1]*4))),vel[s][i-1]*d[0]),Q[i-1]);
 	P[i] = sf_cadd(
 	    sf_crmul(
-		sf_cadd(sf_crmul(Q[i-1],-((1.5*dir[0][i-1]+0.5*dir[0][i]))),sf_crmul(P[i-1],(dir[0][i-1]+dir[0][i])/2*vel[0][i-1]*dz/2)),dz/(vel[0][i-1]*vel[0][i-1]*2)),P[i-1]);
+		sf_cadd(sf_crmul(Q[i-1],-((1.5*der[s][i-1]+0.5*der[s][i]))),sf_crmul(P[i-1],(der[s][i-1]+der[s][i])/2*vel[s][i-1]*d[0]/2)),d[0]/(vel[s][i-1]*vel[s][i-1]*2)),P[i-1]);
 #endif
     }
 
-    /* Gaussian beam complex travel time */
-    for (j=0; j<nx; j++) {
-	for (i=0; i<nz; i++) {
+    /* Gaussian beam */
+    for (j=0; j<n[1]; j++) {
+	dist = (j-s)*d[1];
+	
+	for (i=0; i<n[0]; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	    cpxtbl[i+j*nz] = t0+t[i]+0.5*(j*dx*j*dx)*P[i]/Q[i];	
+	    beam[j][i] = t0+t[i]+0.5*dist*dist*P[i]/Q[i];
 #else
-	    cpxtbl[i+j*nz] = sf_cadd(sf_cmplx(t0+t[i],0.),sf_crmul(sf_cdiv(P[i],Q[i]),0.5*(j*dx*j*dx)));	
+	    beam[j][i] = sf_cadd(sf_cmplx(t0+t[i],0.),sf_crmul(sf_cdiv(P[i],Q[i]),0.5*dist*dist));
 #endif
 	}
     }
 
-    sf_complexwrite(cpxtbl,nz*nx,cmplx);
+    sf_complexwrite(beam[0],n[0]*n[1],out);
 
     exit(0);
 }
