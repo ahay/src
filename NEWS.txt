@@ -11,10 +11,14 @@ To the reproducible documents collection:
 
 To SCons:
 
+* Upgraded to scons-2.1.0
+
 To documentation:
+
 * Python API documented with Epydoc
-*Limited the number of USED IN examples displayed by selfdoc and man
+* Limited the number of USED IN examples displayed by selfdoc and man
  pages (25 by default, controled by -u parameter in sfdoc)
+* book/tutorial: A brief introduction to Madagascar (Jeff Godwin)
 
 To APIs:
 
