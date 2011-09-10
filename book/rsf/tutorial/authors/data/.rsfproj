@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfnoise', 'sfbandpass', 'sfgraph', 'sffft1', 'sfreal', 'sfimag', 'sfmath']
+data=[]
+size=       2844

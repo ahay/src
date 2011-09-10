@@ -1,0 +1,163 @@
+\title{A really good thesis}
+\degree{Master of Science}
+\discipline{Geophysics}
+\department{Geophysics}
+
+\author{Jeffrey A. Godwin}
+\advisor{Dr. Who}
+% Comment out the following line if you do not have a co-advisor:
+%\coadvisor{Dr. Secondary B. Advisor}
+\dpthead{Dr. Awesome}{Professor and Head}
+
+% Parts of a Thesis
+
+%% Parts of a Thesis - Front Matter
+
+\frontmatter
+
+%%% Parts of a Thesis - Front Matter - Title Page (required)
+
+\maketitle
+\newpage
+
+%%% Parts of a Thesis - Front Matter - Copyright Page (optional)
+
+% If the copyright for your document spans multiple years, or does not match the current year, then replace ''\the\year`` below with the appropriate text.
+\makecopyright{\the\year}
+\newpage
+
+%%% Parts of a Thesis - Front Matter - Signature Page (required)
+
+\makesubmittal
+\newpage
+
+\begin{abstract}
+    Your abstract goes here.
+\end{abstract}
+\newpage
+
+%%% Parts of a Thesis - Front Matter - Table of Contents (required)
+
+\tableofcontents
+\newpage
+
+%%% Parts of a Thesis - Front Matter - List of Figures (if applicable)
+%%% Parts of a Thesis - Front Matter - List of Tables (if applicable)
+
+% NOTE: If you have more than 2 items in both lists they must be separate
+% If you need to do that then comment this out.
+\listoffiguresandtables
+\newpage
+
+% ... and then uncomment this to use separate lists:
+%\listoffigures
+%\newpage
+%\listoftables
+%\newpage
+
+
+%% NOTE: If included in the front matter, a glossary, a list of abbreviations, or a list of symbols is placed as the last list. If these lists are included in the back matter, they are placed immediately before the REFERENCES CITED.
+
+%%% Parts of a Thesis - Front Matter - Glossary (if applicable)
+%\glossary
+
+%\listofabbreviations
+%\newpage
+%\include{abbreviations}
+
+% Note that you may define abbreviations anywhere in the document, when you re-run LaTeX they
+% will be added to the list (just like all other lists)
+%%% Parts of a Thesis - Front Matter - List of Symbols (if applicable)
+% To call the “List of Symbols” “Nomenclature” instead use:
+%\listofsymbols[Nomenclature]
+%\listofsymbols
+%\newpage
+%\include{symbols}
+\newpage
+
+%\include{acknowledgements}
+%\newpage
+
+%%% Parts of a Thesis - Front Matter - Dedication (optional)
+
+%\include{dedication}
+%\newpage
+
+%% Parts of a Thesis - Body
+
+\bodymatter
+
+
+%%% Parts of a Thesis - Body - Introduction (optional)
+
+%%% Parts of a Thesis - Body - All Chapters and Sections (required)
+
+\chapter{Introduction}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec lacus urna, porta nec facilisis eget, ultricies non purus. Donec dui leo, vestibulum ut rutrum in, fringilla sit amet dui. Sed cursus, nunc ac congue varius, ante nisi commodo velit, ut auctor lorem magna nec neque. Vivamus et tempor augue. Sed vulputate congue nulla, non feugiat dolor auctor a. Etiam lectus diam, fringilla at adipiscing non, blandit sit amet nunc. Donec tincidunt, erat id molestie tincidunt, libero ligula facilisis tellus, ac cursus justo nulla sed magna. Aenean arcu mi, fermentum eu mattis ut, scelerisque sit amet sem. Cras vitae dictum felis. Ut ut ante fermentum metus posuere consectetur at sed ligula. Maecenas eget ante et lorem dignissim pretium. Curabitur quam sem, malesuada a porta quis, rhoncus ut dui. Ut malesuada sapien in lectus lobortis molestie. Sed non tellus tincidunt ligula congue convallis et auctor dolor.
+
+\chapter{Theory}
+
+Morbi porttitor, tortor eu pulvinar luctus, nisl mi placerat sem, id iaculis lacus ipsum at urna. Vivamus adipiscing semper sem placerat volutpat. Proin luctus mattis pulvinar. Vivamus auctor dui vel odio vestibulum in convallis lacus vehicula. Vivamus nec leo libero. Nam eu neque in massa posuere congue nec ut neque. Nullam et tortor dolor, a scelerisque diam. Sed pulvinar neque vitae lorem cursus eget laoreet lacus tempus. Phasellus dapibus, mi porttitor dignissim rhoncus, mauris nisi egestas dui, sed laoreet risus dolor quis dolor. Vivamus et elit sapien, non vulputate metus. Vivamus risus lorem, tristique nec tristique ac, iaculis elementum lacus. Sed id libero porttitor diam mollis iaculis. Vestibulum eget nisi non ante fringilla rutrum. Nam nibh nisi, convallis at tincidunt a, elementum vitae enim. Quisque sit amet tincidunt dolor.
+
+\chapter{Demonstration}
+
+Here's a short demo of how to use some common features inside of the provided \LaTeX classes.
+
+\subsection{Equations}
+Here's a demo of an equation.
+\begin{equation}
+    \nabla^2 u - \alpha \frac{\partial u}{\partial t} = 0
+\label{eqn:demo}
+\end{equation}
+Here is how we use equations: ~\ref{eqn:demo}. 
+
+\subsection{Citations}
+
+Here is how we can make citations \cite[]{godwin_blended_2010,krebs_fast_2009,duquet_3d_1999}. Or we can cite inline as in \cite{godwin_blended_2010}.
+
+\subsection{Plots}
+
+We can also make figures using our Madagascar plots.  There are two ways to do so, 1 - using built-in macros and 2 - using the default \LaTeX macros.
+
+The first way:
+\inputdir{data}
+\plot{noise}{width=0.45\textwidth}{A plot of our signal.}
+\sideplot{spectra}{width=0.45\textwidth}{The amplitude spectrum of our signal.}
+
+\multiplot{2}{noise,spectra}{width=0.45\textwidth}{The signal (a), and the amplitude spectrum (b) plotted using multiplot (which is great for making large plots across columns).}
+
+Or we could use includegraphics as usual:
+\begin{figure}
+    \includegraphics[width=0.45\textwidth]{data/Fig/noise} 
+    \caption{The signal.}
+\label{Fig:noise}
+\end{figure}
+
+To reference figures we use Figure~\ref{fig:noise}, or we can use, Figures~\ref{fig:noise}-~\ref{fig:spectra}. Note, the example here has bad numbering because we plot the same figure multiple times which confuses \LaTeX.  No normal paper would plot the same figure multiple times, and numbering would be correct.
+
+We can also use any other \LaTeX commands as usual.  You just have to include the correct packages in your SConstruct.
+
+\chapter{Results}
+
+Sed vitae elit neque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Phasellus rhoncus, augue in egestas egestas, elit neque tempor diam, eget vulputate nisi odio sit amet neque. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; In scelerisque lectus a est gravida ut blandit nunc condimentum. Nam faucibus eros sit amet mauris fringilla fermentum. Donec vel odio urna. Nunc sit amet nibh sed tortor volutpat tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dui tortor, egestas sit amet scelerisque porta, tempus ut nulla. Cras aliquam ornare luctus. Etiam condimentum orci eu odio luctus aliquet. Vestibulum commodo faucibus nulla, in feugiat velit tincidunt et. In consequat placerat ligula quis lacinia.
+
+\chapter{Conclusions}
+
+Nulla ultricies convallis massa, et rutrum nisi dictum a. Donec id ligula in arcu adipiscing eleifend vel sed erat. Nulla et urna at purus accumsan pharetra ac vel enim. Sed metus nunc, dictum non facilisis quis, ullamcorper eu lorem. Curabitur congue porttitor orci, ut accumsan dui tincidunt non. Aliquam metus urna, faucibus sed posuere eget, pharetra id est. Nunc in nisi eget dolor tempus accumsan a condimentum dolor. Sed est dui, varius quis tempus sodales, egestas et odio. Ut aliquet ullamcorper neque in condimentum.
+
+%% Parts of a Thesis - Back Matter
+
+%%% Parts of a Thesis - Back Matter - References Cited (required)
+
+% Use "Advanced" Bibliography Techniques
+\bibliographystyle{seg}
+\bibliography{demobib}
+
+%%% Parts of a Thesis - Back Matter - Selected Bibliography (optional)
+%\cleardoublepage
+%\begin{selected-bibliography}
+% Your selected bibliogrpahy would go here, a page break might also be necessary above.
+%\end{selected-bibliography}
+
+%%% Parts of a Thesis - Back Matter - Appendices (if applicable)
