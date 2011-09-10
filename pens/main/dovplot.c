@@ -591,6 +591,7 @@ void dovplot (void)
 		ii = ftell (pltin) - 1;
 		getvpstring ();
 		strncpy (group_name, txbuffer, MAXFLEN);
+		group_name[MAXFLEN] = '\0';
 		dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
 		group_number++;
 		break;
