@@ -525,8 +525,10 @@ int sf_neighbors_surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
 	}
     }
 
+    /* save velocity */
     vv = vv1;
 
+    /* number of out points */
     npoints = (n[0]-1)*n[1]*n[2];
 
     for (ix=0; ix < n[2]; ix++) {
@@ -567,13 +569,13 @@ int sf_neighbors_mask(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
 	if (known[i]) {
 	    in[i] = SF_IN;
 	    ttime[i] = tref[i];
-
+	    
 	    if (forw) {
 		sf_pqueue_insert (ttime+i);
 	    } else {
 		sf_pqueue_insert2 (ttime+i);
 	    }
-
+	    
 	    npoints--;
 	} else {
 	    in[i] = SF_OUT;

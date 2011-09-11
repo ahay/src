@@ -38,24 +38,24 @@ void fastmarchcpx_init(int *n_in    /* length */,
     if (n[1] > 1) maxband += 2*n[0]*n[2];
     if (n[2] > 1) maxband += 2*n[0]*n[1];
 
-    sf_pqueue_init (10*maxband);
+    sf_pqueue_init(10*maxband);
 
     in = sf_intalloc(n[0]*n[1]*n[2]);
 }
 
-void fastmarchcpx (float* time  /* time */,
-		   float* t0    /* fixed traveltime */,
-		   float* v     /* slowness squared */)
+void fastmarchcpx (float* time /* time */,
+		   float* t0   /* fixed traveltime */,
+		   bool* m     /* known mask */,
+		   float* v    /* slowness squared */)
 /*< Run fast marching eikonal solver >*/
 {
     float *p;
     int npoints, i;
 
     sf_pqueue_start();
-    sf_neighbors_init (in, d, n, 1, time);
+    sf_neighbors_init(in,d,n,2,time);
 
-    for (npoints =  sf_neighbors_surface (v, t0, true);
-/*    for (npoints =  sf_neighbors_mask (v, t0, m ,true); */
+    for (npoints =  sf_neighbors_mask(v,t0,m,true);
 	 npoints > 0;
 	 npoints -= sf_neighbours(i)) {
 	/* Pick smallest value in the NarrowBand
