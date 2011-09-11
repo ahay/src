@@ -32,10 +32,10 @@
 int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, verb;
-    int dim, i, count, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
-    int iter, niter, stiter, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
+    int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
+    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
-    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, gama;
+    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm;
     sf_weight weight=NULL;
@@ -163,6 +163,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("stiter",&stiter)) stiter=100;
     /* number of inner CG iterations (for both Ticknov and Shaping) */
     
+    if (!sf_getint("nstep",&nstep)) nstep=10;
+    /* number of linesearch */
+
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter (for both Ticknov and Shaping) */
     
@@ -244,9 +247,9 @@ int main(int argc, char* argv[])
     rate = rhsnorm1/rhsnorm0;
     
     if (l1norm)
-	sf_warning("L1 misfit after iteration 0 of %d: %g",niter,rate);
+	sf_warning("L1 misfit after iteration 0 of %d:\t %g",niter,rate);
     else
-	sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rate);
+	sf_warning("L2 misfit after iteration 0 of %d:\t %g",niter,rate);
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
@@ -307,13 +310,12 @@ int main(int argc, char* argv[])
 		}
 
 		/* line search */
-		gama = 1.;
-		for (count=0; count < 10; count++) {
+		for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
 		    
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] != 1)
-			    temps[it] = (sqrtf(s[it])+gama*ds[it])*(sqrtf(s[it])+gama*ds[it]);
+			    temps[it] = (sqrtf(s[it])+step*ds[it])*(sqrtf(s[it])+step*ds[it]);
 		    }
 		    
 		    /* forward fast-marching for stencil time */		    
@@ -331,20 +333,18 @@ int main(int argc, char* argv[])
 			rate = rhsnorm1/rhsnorm0;
 			break;
 		    }
-		    
-		    gama *= 0.5;
 		}
 		
-		if (count == 10) {
+		if (istep == 10) {
 		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);
 		    sf_warning("Dimensions for NORM need to be fixed before read.");
 		    break;
 		}
 
 		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d: %g (line-search %d).",iter+1,niter,rate,count);
+		    sf_warning("L1 misfit after iteration %d of %d:\t %g (line-search %d).",iter+1,niter,rate,istep);
 		else
-		    sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d).",iter+1,niter,rate,count);
+		    sf_warning("L2 misfit after iteration %d of %d:\t %g (line-search %d).",iter+1,niter,rate,istep);
 
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }
