@@ -45,6 +45,7 @@ void fastmarchcpx_init(int *n_in    /* length */,
 
 void fastmarchcpx (float* time  /* time */,
 		   float* t0    /* fixed traveltime */,
+		   bool* m      /* known mask */,
 		   float* v     /* slowness squared */)
 /*< Run fast marching eikonal solver >*/
 {
@@ -55,8 +56,7 @@ void fastmarchcpx (float* time  /* time */,
     sf_neighbors_init (in, d, n, 1, time);
 
     /* initialize from boundary */
-    for (npoints =  sf_neighbors_surface (v, t0, true);
-/*    for (npoints =  sf_neighbors_mask (v, t0, m ,true); */
+    for (npoints =  sf_neighbors_mask (v, t0, m ,true);
 	 npoints > 0;
 	 npoints -= sf_neighbours(i)) {
 	/* Pick smallest value in the NarrowBand

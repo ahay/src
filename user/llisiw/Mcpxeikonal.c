@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool *k, velocity, verb;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0;
-    float *w, *wr, *wi, *dw, *rhs, *x0, *fix, *exact;
+    float *w, *wr, *wi, *dw, *rhs, *x0, *fix;
     sf_complex *t, *t0;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
@@ -147,31 +147,25 @@ int main(int argc, char* argv[])
     }
 
     t0    = sf_complexalloc(nt);
-    tr0   = sf_floatalloc(n[1]);
-    ti0   = sf_floatalloc(n[1]);
+    tr0   = sf_floatalloc(nt);
+    ti0   = sf_floatalloc(nt);
     fix   = sf_floatalloc(nt);
-    exact = sf_floatalloc(nt);
     
     ref = sf_input("ref");
     sf_complexread(t0,nt,ref);
     sf_fileclose(ref);
     
-    for (it=0; it < n[1]; it++) {
-	tr0[it] = crealf(t0[it*n[0]]);
-	ti0[it] = cimagf(t0[it*n[0]]);
+    for (it=0; it < nt; it++) {
+	tr0[it] = crealf(t0[it]);
+	ti0[it] = cimagf(t0[it]);
     }
     
-    for (it=0; it < nt; it++) {
-	exact[it] = cimagf(t0[it]);
-    }
-    cpxeiko_ref(dim,n,d,exact,fix);
+    cpxeiko_ref(dim,n,d,ti0,fix);
 
     free(m);
     free(t0);
-    free(exact);
     m = NULL;
     t0 = NULL;
-    exact = NULL;
 
     /* allocate temporary memory */
     w     = sf_floatalloc(nt);
@@ -234,8 +228,8 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    /* forward fast-marching for stencil time */
-	    fastmarchcpx(tr,tr0,wr);
-	    fastmarchcpx(ti,ti0,wi);
+	    fastmarchcpx(tr,tr0,k,wr);
+	    fastmarchcpx(ti,ti0,k,wi);
 	    
 	    cpxeiko_set(tr,ti);
 	    
