@@ -41,7 +41,7 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
+dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 libs = os.environ.get('LIBS',"")
 
 resdir = None

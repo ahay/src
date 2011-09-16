@@ -57,11 +57,17 @@ int main(int argc, char* argv[])
     if (!sf_getbool("lagrange",&lagrange)) lagrange=false;
     /* Use Lagrangian method */
 
-    sf_putint(out,"n4",nv);
-
     if (!sf_getfloat("v0",&v0)) v0=0.; /* starting velocity */
     if (!sf_getfloat("vmax",&v1)) sf_error("Need vmax="); /* end velocity */
 
+    dv = (v1-v0)/nv;
+
+    sf_putint(out,"n4",nv);
+    sf_putfloat(out,"o4",v0+dv);
+    sf_putfloat(out,"d4",dv);
+
+    dv = 0.25*(v1*v1-v0*v0)/nv;
+    
     tstr   = sf_floatalloc3(nt,np,nx);
     pstr   = sf_floatalloc3(nt,np,nx);
     xstr   = sf_floatalloc3(nt,np,nx); 
@@ -71,8 +77,6 @@ int main(int argc, char* argv[])
                nx, x0, dx,
 	       nt, np, nx, eps); 
 
-    dv = 0.25*(v1*v1-v0*v0)/nv;
-    
     if (lagrange) {
 	slice0 = sf_floatalloc3(nt,np,nx);
 	slice  = sf_floatalloc3(nt,np,nx);

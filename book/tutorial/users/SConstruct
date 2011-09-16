@@ -3,4 +3,4 @@ from rsf.tex import *
 for n in range(6):
     Paper('users%d' % n,use='hyperref,comment,verbatim,moreverb,tabularx')
 
-End(lclass='paper',use='hyperref,comment,verbatim,moreverb,tabularx')
+End(use='hyperref,comment,verbatim,moreverb,tabularx')

@@ -465,10 +465,10 @@ _pos = 0
 
 
 def _proglink(name):
-    link = '<a href="/RSF/%s.html">%s</a>' % (rsf.doc.progs[name].name, name)
+    link = '<a href="http://www.ahay.org/RSF/%s.html">%s</a>' % (rsf.doc.progs[name].name, name)
     return link
 
-dataserver = os.environ.get('RSF_DATASERVER','http://www.reproducibility.org')
+dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
 def _datalink(name):
     global dataserver
