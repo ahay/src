@@ -256,3 +256,27 @@ void upgrad_adj(upgrad upg,
 	}
     }
 }
+
+void upgrad_print(upgrad upg,
+		  int **dir   /* direction */)
+/*< print out stencil (for debug) >*/
+{
+    int it, jt, i, m;
+    unsigned char *up;
+    
+    for (it = 0; it < nt; it++) {
+	jt = upg->order[it];
+	up = upg->update[it];
+	
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		if (up[1] & m)
+		    dir[i][jt] = 1;
+		else
+		    dir[i][jt] = -1;
+	    } else {
+		dir[i][jt] = 0;
+	    }
+	}
+    }
+}

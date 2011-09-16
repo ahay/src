@@ -1,4 +1,4 @@
-/* Iterative Complex Eikonal Solver */
+/* Iterative complex eikonal solver */
 /*
   Copyright (C) 2011 University of Texas at Austin
   
@@ -24,14 +24,15 @@
 
 int main(int argc, char* argv[])
 {
-    bool *k, velocity, verb;
+    bool *known, velocity, verb;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0;
-    float *w, *wr, *wi, *dw, *rhs, *x0, *fix;
+    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol;
     sf_complex *t, *t0;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
-    sf_file in, out, vel, mask, ref, witer, dwiter, rhsiter;
+    int **pdir;
+    sf_file in, out, vel, mask, ref, gap, witer, dwiter, rhsiter, stencil, x0iter, titer, wtiter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -125,9 +126,50 @@ int main(int argc, char* argv[])
 	rhsiter = NULL;
     }
     
+    /* output stencil at each iteration */
+    if (NULL != sf_getstring("stencil")) {
+	stencil = sf_output("stencil");
+	sf_settype(stencil,SF_INT);
+	sf_putint(stencil,"n3",n[2]);
+	sf_putint(stencil,"n4",dim);
+	sf_putint(stencil,"n5",niter);
+	pdir = sf_intalloc2(nt,dim);
+    } else {
+	stencil = NULL;
+	pdir = NULL;
+    }
+    
+    /* output x0 at each iteration */
+    if (NULL != sf_getstring("x0iter")) {
+	x0iter = sf_output("x0iter");
+	sf_settype(x0iter,SF_FLOAT);
+	sf_putint(x0iter,"n3",n[2]);
+	sf_putint(x0iter,"n4",niter+1);
+    } else {
+	x0iter = NULL;
+    }
+
+    /* output t at each iteration */
+    if (NULL != sf_getstring("titer")) {
+	titer = sf_output("titer");
+	sf_putint(titer,"n3",n[2]);
+	sf_putint(titer,"n4",niter+1);
+    } else {
+	titer = NULL;
+    }
+
+    /* output wt at each iteration */
+    if (NULL != sf_getstring("wtiter")) {
+	wtiter = sf_output("wtiter");
+	sf_putint(wtiter,"n3",n[2]);
+	sf_putint(wtiter,"n4",niter);
+    } else {
+	wtiter = NULL;
+    }
+
     /* read boundary condition */
-    k = sf_boolalloc(nt);
     m = sf_intalloc(nt);
+    known = sf_boolalloc(nt);
 
     if (NULL != sf_getstring("mask")) {
 	mask = sf_input("mask");
@@ -136,13 +178,13 @@ int main(int argc, char* argv[])
 
 	for (it=0; it < nt; it++) {
 	    if (m[it] != 0)
-		k[it] = true;
+		known[it] = true;
 	    else
-		k[it] = false;
+		known[it] = false;
 	}
     } else {
 	for (it=0; it < nt; it++) {
-	    k[it] = false;
+	    known[it] = false;
 	}
     }
 
@@ -167,10 +209,25 @@ int main(int argc, char* argv[])
     m = NULL;
     t0 = NULL;
 
+    /* read model weighting */
+    wt = sf_floatalloc(nt);
+
+    if (NULL != sf_getstring("gap")) {
+	gap = sf_input("gap");
+	sf_floatread(wt,nt,gap);
+	sf_fileclose(gap);
+    } else {
+	for (it=0; it < nt; it++) {
+	    wt[it] = 1.;
+	}
+    }
+    
     /* allocate temporary memory */
     w     = sf_floatalloc(nt);
-    wr    = sf_floatalloc(nt);
-    wi    = sf_floatalloc(nt);
+    rhsr    = sf_floatalloc(nt);
+    rhsi    = sf_floatalloc(nt);
+    wr   = sf_floatalloc(nt);
+    wi   = sf_floatalloc(nt);
     x0    = sf_floatalloc(nt);
     dw    = sf_floatalloc(nt);
     rhs   = sf_floatalloc(nt);
@@ -184,22 +241,63 @@ int main(int argc, char* argv[])
     /* initial misfit */
     cpxeiko_set(tr,ti);
 
+/*
     cpxeiko_forw(false,ti,w);
-    for (it=0; it < nt; it++) x0[it] = fix[it]-w[it];
     
-    cpxeiko_forw(false,tr,wr);
-    cpxeiko_forw(true, ti,wi);
-    for (it=0; it < nt; it++) rhs[it] = -wr[it]-wi[it];
+    for (it=0; it < nt; it++) {
+	if (known[it]) {
+	    wi[it] = fix[it];
+	} else {
+	    wi[it] = w[it];
+	    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+	}
+	
+	wr[it] = s[it]+wi[it];
+    }
+    
+    fastmarchcpx(tr,tr0,known,wr);
+    fastmarchcpx(ti,ti0,known,wi);
+
+    cpxeiko_set(tr,ti);
+*/
+    
+    cpxeiko_forw(false,ti,w);
+
+/*
+    for (it=0; it < nt; it++) 
+	w[it] = wi[it];
+*/  
+    for (it=0; it < nt; it++) 
+	x0[it] = fix[it]-w[it];
+    
+    cpxeiko_forw(false,tr,rhsr);
+    cpxeiko_forw(true, ti,rhsi);
+    
+    for (it=0; it < nt; it++) {
+	rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+    }
     
     if (NULL != witer) sf_floatwrite(w,nt,witer);
     if (NULL != rhsiter) sf_floatwrite(rhs,nt,rhsiter);
-    
+    if (NULL != x0iter) sf_floatwrite(x0,nt,x0iter);
+    if (NULL != titer) {
+	for (it=0; it < nt; it++)
+	    t[it] = sf_cmplx(tr[it],ti[it]);
+	
+	sf_complexwrite(t,nt,titer);
+    }
+
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nt,rhs,1);
     rhsnorm1 = rhsnorm0;
     rhsnorm = rhsnorm0;
     
-    sf_warning("Iteration 0 of %d:\t misfit=%g, w=%g.",niter,rhsnorm/rhsnorm0,cblas_snrm2(nt,w,1));
+    sf_warning("Iteration 0 of %d:\t misfit=%g, w=%g.",niter,rhsnorm,cblas_snrm2(nt,w,1));
+
+    if (NULL != stencil) {
+	cpxeiko_print(true,pdir);
+	sf_intwrite(pdir[0],nt*dim,stencil);
+    }
 
     for (iter=0; iter < niter; iter++) {
 
@@ -209,53 +307,115 @@ int main(int argc, char* argv[])
 	}
 	
 	/* solve dw */
-	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",k,"x0",x0,"verb",verb,"end");
+	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
 	sf_cgstep_close();
 	
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
+
+	gama = 1.;
+	tol = 1.e-8;
+	
+        /* trying to avoid the points where w is very close to zero */
+	for (it=0; it < nt; it++) {
+	    if (dw[it] < 0. && w[it] > tol) {
+		ratio = -w[it]/dw[it];
+		gama = (gama<ratio)?gama:ratio;
+	    }
+	}
 
 	/* linesearch */
 	for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
 
 	    /* update real and imaginary slowness */
 	    for (it=0; it < nt; it++) {
-		wi[it] = w[it]+step*dw[it];
-
-		/* clip negative slowness squared */
-		if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+		if (known[it]) {
+		    wi[it] = w[it]+dw[it];
+		} else {
+		    wi[it] = w[it]+gama*step*dw[it];
+		    
+		    /* clip negative slowness squared */
+		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+		}
 		
 		wr[it] = s[it]+wi[it];
 	    }
 	    
 	    /* forward fast-marching for stencil time */
-	    fastmarchcpx(tr,tr0,k,wr);
-	    fastmarchcpx(ti,ti0,k,wi);
+	    fastmarchcpx(tr,tr0,known,wr);
+	    fastmarchcpx(ti,ti0,known,wi);
 	    
 	    cpxeiko_set(tr,ti);
 	    
-	    cpxeiko_forw(false,tr,wr);
-	    cpxeiko_forw(true, ti,wi);	    
-	    for (it=0; it < nt; it++) rhs[it] = -wr[it]-wi[it];
+	    cpxeiko_forw(false,tr,rhsr);
+	    cpxeiko_forw(true, ti,rhsi);	    
+	    for (it=0; it < nt; it++) {
+		rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+	    }
 	    
 	    rhsnorm = cblas_snrm2(nt,rhs,1);
 	    
 	    /* break */
-	    if (rhsnorm < rhsnorm1) {
-		for (it=0; it < nt; it++) w[it] = wi[it];		
-		rhsnorm1 = rhsnorm;
-		break;
-	    }
+	    if (rhsnorm < rhsnorm1) break;
 	}	
+
+/*
+	if (istep == nstep) {
+	    for (it=0; it < nt; it++) {
+		if (known[it]) {
+		    wi[it] = w[it]+dw[it];
+		} else {
+		    wi[it] = w[it];
+		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+		}
+		
+		wr[it] = s[it]+wi[it];
+	    }
+	}
+
+	fastmarchcpx(tr,tr0,known,wr);
+	fastmarchcpx(ti,ti0,known,wi);
 	
+	cpxeiko_set(tr,ti);
+
+	cpxeiko_forw(false,tr,rhsr);
+	cpxeiko_forw(true, ti,rhsi);	    
+	for (it=0; it < nt; it++) {
+	    rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+	}
+
+	rhsnorm = cblas_snrm2(nt,rhs,1);
+*/
+	
+	rhsnorm1 = rhsnorm;
+/*	
 	cpxeiko_forw(false,ti,w);
-	for (it=0; it < nt; it++) x0[it] = fix[it]-w[it];
-	
+*/
+	for (it=0; it < nt; it++) 
+	    w[it] = wi[it];
+
+	for (it=0; it < nt; it++) 
+	    x0[it] = fix[it]-w[it];
+  	
 	if (NULL != witer) sf_floatwrite(w,nt,witer);
 	if (NULL != rhsiter) sf_floatwrite(rhs,nt,rhsiter);
+	if (NULL != x0iter) sf_floatwrite(x0,nt,x0iter);
+	if (NULL != titer) {
+	    for (it=0; it < nt; it++)
+		t[it] = sf_cmplx(tr[it],ti[it]);
+	    
+	    sf_complexwrite(t,nt,titer);
+	}
+	if (NULL != wtiter) {
+	    for (it=0; it < nt; it++)
+		t[it] = sf_cmplx(wr[it],wi[it]);
+	    
+	    sf_complexwrite(t,nt,wtiter);
+	}
 	
-	sf_warning("Iteration %d of %d:\t misfit=%g, w=%g, dw=%g (line-search %d).",iter+1,niter,rhsnorm/rhsnorm0,cblas_snrm2(nt,w,1),cblas_snrm2(nt,dw,1),istep);
+	sf_warning("Iteration %d of %d:\t misfit=%g, w=%g, dw=%g (gama %g, line-search %d).",
+		   iter+1,niter,rhsnorm,cblas_snrm2(nt,w,1),cblas_snrm2(nt,dw,1),gama,istep);
     }
-
+    
     for (it=0; it < nt; it++)
 	t[it] = sf_cmplx(tr[it],ti[it]);
 

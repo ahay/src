@@ -120,6 +120,17 @@ void cpxeiko_ref(int dim,
     upgrad_forw(ref,r0,rhs);
 }
 
+void cpxeiko_print(bool flag   /* real=true / imag=false */,
+		   int **dir   /* output direction */)
+/*< print out stencil >*/
+{
+    if (flag) {
+	upgrad_print(upgreal,dir);
+    } else {
+	upgrad_print(upgimag,dir);
+    }
+}
+
 void cpxeiko_close()
 /*< free allocated memory >*/
 {
