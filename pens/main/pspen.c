@@ -1,7 +1,7 @@
 /* Vplot filter for Postscript. 
 
-output is in PostScript language; if not redirected, it is sent to
-lpr -Ppostscript   (override with $PSPRINTER environment variable.)
+   output is in PostScript language; if not redirected, it is sent to
+   lpr -Ppostscript   (override with $PSPRINTER environment variable.)
 */
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
@@ -394,26 +394,27 @@ static bool rgb_colorspace;
 static char *label;
 extern FILE *pltout;
 
+static int      ps_oldx = 0, ps_oldy = 0;
+
 static void rgb_to_cmyk (int red, int green, int blue,
-                  int *cyan, int *magenta, int *yellow, int *black);
+			 int *cyan, int *magenta, int *yellow, int *black);
 
 void psarea (int npts, struct vertex  *verlist)
 /*< area >*/
 {
-unsigned char   mask, outchar;
-int             nx, ny, nxold, nyold, i, ix, iy;
-int            *bptr;
-struct vertex  *v;
-static int      ever_called = 0;
-static int      error_size = 0;
-static int      error_square = 0;
-int             all_black, all_white;
-static int      last_pattern = 0;
-extern float    ps_curcolor;
+    unsigned char   mask, outchar;
+    int             nx, ny, nxold, nyold, i, ix, iy;
+    int            *bptr;
+    struct vertex  *v;
+    static int      ever_called = 0;
+    static int      error_size = 0;
+    static int      error_square = 0;
+    int             all_black, all_white;
+    static int      last_pattern = 0;
+    extern float    ps_curcolor;
 
-int             ps_oldx = 0, ps_oldy = 0;
-char            stringd[80];
-char            stringr[80];
+    char            stringd[80];
+    char            stringr[80];
 
     endpath ();
 
@@ -752,7 +753,7 @@ static int      ps_done_clipping_gsave = NO;
 void psattributes (int command, int value, int v1, int v2, int v3)
 /*< attributes >*/
 {
-int             xmin, ymin, xmax, ymax;
+    int             xmin, ymin, xmax, ymax;
 
 /*
  * Are we in the middle of a move - draw - draw - draw ... sequence?
@@ -763,37 +764,37 @@ int             xmin, ymin, xmax, ymax;
 
     switch (command)
     {
-    case SET_COLOR:
-	ps_set_color (value);
-	break;
+	case SET_COLOR:
+	    ps_set_color (value);
+	    break;
 
-    case SET_COLOR_TABLE:
+	case SET_COLOR_TABLE:
 /*
  * Note this will never be called if monochrome.
  */
-	red[value] = v1;
-	green[value] = v2;
-	blue[value] = v3;
+	    red[value] = v1;
+	    green[value] = v2;
+	    blue[value] = v3;
 
 #ifdef PSDEBUG
-	fprintf (stderr, "Color %d is now %d %d %d\n", value, v1, v2, v3);
+	    fprintf (stderr, "Color %d is now %d %d %d\n", value, v1, v2, v3);
 #endif
 
 /*
  * Used for greyscale raster
  */
-	ps_grey_map (value);
+	    ps_grey_map (value);
 
 /*
  * Check to see if the color they've just redefined is the one we're
  * currently using!
  */
-	if (ps_curcolor_no == value)
-	{
-	    ps_curcolor_set = NO;
-	    ps_set_color (ps_curcolor_no);
-	}
-	break;
+	    if (ps_curcolor_no == value)
+	    {
+		ps_curcolor_set = NO;
+		ps_set_color (ps_curcolor_no);
+	    }
+	    break;
 
 /*
  * It is important that the clipping code begins with a grestore
@@ -808,7 +809,7 @@ int             xmin, ymin, xmax, ymax;
  * (xmin > xmax or ymin > ymax) here, because PostScript will not
  * catch this case.
  */
-    case SET_WINDOW:
+	case SET_WINDOW:
 /*
  * We have to bump the box out by one unit in each direction, because
  * postscript doesn't include the boundary, but vplot does. At least, so says
@@ -821,59 +822,59 @@ int             xmin, ymin, xmax, ymax;
  * through when plotting on the SPARC, unfortunately, but this seems the
  * best compromise to me. -- Joe D.
  */
-	xmin = value - 1;
-	ymin = v1 - 1;
-	xmax = v2 + 1;
-	ymax = v3 + 1;
+	    xmin = value - 1;
+	    ymin = v1 - 1;
+	    xmax = v2 + 1;
+	    ymax = v3 + 1;
 
 /*
  * Inside-out clipping window test. We use (value,v1) and (v2,v3) instead
  * of (xmin,ymin) and (xmax,ymax), because we need to do the test according
  * to vplot's idea of how clipping windows work, not Postscript's.
  */
-	if (value > v2)
-	    xmin = xmax;
-	if (v1 > v3)
-	    ymin = ymax;
+	    if (value > v2)
+		xmin = xmax;
+	    if (v1 > v3)
+		ymin = ymax;
 
-	if (ps_done_clipping_gsave == YES)
-	    fprintf (pltout, "grestore\n");
+	    if (ps_done_clipping_gsave == YES)
+		fprintf (pltout, "grestore\n");
 
-	fprintf (pltout, "/clippingpath\n");
-	fprintf (pltout, " {newpath\n");
-	fprintf (pltout, " %d %d m\n", xmin, ymin);
-	fprintf (pltout, " %d %d d\n", xmax, ymin);
-	fprintf (pltout, " %d %d d\n", xmax, ymax);
-	fprintf (pltout, " %d %d d\n", xmin, ymax);
-	fprintf (pltout, " closepath} def\n");
+	    fprintf (pltout, "/clippingpath\n");
+	    fprintf (pltout, " {newpath\n");
+	    fprintf (pltout, " %d %d m\n", xmin, ymin);
+	    fprintf (pltout, " %d %d d\n", xmax, ymin);
+	    fprintf (pltout, " %d %d d\n", xmax, ymax);
+	    fprintf (pltout, " %d %d d\n", xmin, ymax);
+	    fprintf (pltout, " closepath} def\n");
 
-	fprintf (pltout, "gsave clippingpath eoclip\n");
-	ps_done_clipping_gsave = YES;
+	    fprintf (pltout, "gsave clippingpath eoclip\n");
+	    ps_done_clipping_gsave = YES;
 
-	fprintf (pltout, "newpath\n");
+	    fprintf (pltout, "newpath\n");
 
-	/*
-	 * The grestore caused postscript to forget most of the current
-	 * state. Set it all back up again.
-	 */
-	ps_fixup_after_grestore ();
+	    /*
+	     * The grestore caused postscript to forget most of the current
+	     * state. Set it all back up again.
+	     */
+	    ps_fixup_after_grestore ();
 
-	/* Global plot parameters fixed; we can exit now. */
-	break;
+	    /* Global plot parameters fixed; we can exit now. */
+	    break;
 
-    case NEW_DASH:
-	ps_set_dash (value);
-	break;
+	case NEW_DASH:
+	    ps_set_dash (value);
+	    break;
 
-    default:
-	break;
+	default:
+	    break;
     }
 }
 
 int             ps_last_fat = -1;
 
 void ps_fixup_after_grestore (void)
-/*< ? >*/
+/*< restore postscript state >*/
 {
 /*
  * Alas, when we did the "gerestore" above ALL GLOBAL PLOT SETTINGS WERE LOST!
@@ -904,7 +905,7 @@ void ps_fixup_after_grestore (void)
 void ps_grey_map (int coltab)
 /*< grey map >*/
 {
-int             grey;
+    int             grey;
 
     /*
      * Calculate the grey level that goes with this color.
@@ -973,11 +974,11 @@ void ps_set_color (int value)
                 }
 
 
-	/*
-	 * Use the setcmykcolor command instead of the setrgbcolor command.
-	 * Note, the setcmykcolor command is not guaranteed to
-	 * to be supported in Level 1 postscript interpreters.
-	 */
+		/*
+		 * Use the setcmykcolor command instead of the setrgbcolor command.
+		 * Note, the setcmykcolor command is not guaranteed to
+		 * to be supported in Level 1 postscript interpreters.
+		 */
 	        fprintf (pltout, "%.2g %.2g %.2g %.2g setcmykcolor\n", cmyk_cyan / 255., cmyk_magenta / 255., cmyk_yellow / 255., cmyk_black / 255.);
             }
 
@@ -994,8 +995,8 @@ void ps_set_dash (int value)
  * A local variable named dashon. This routine has no business resetting
  * the global variable of the same name.
  */
-int             dashon;
-int             ii;
+    int             dashon;
+    int             ii;
 
     dashon = value;
 
@@ -1023,7 +1024,7 @@ static int             ps_set_papersize = NO;
 static char            psprintertype[80] = "default";
 static int             file_created = NO;
 static char            *scratch_file;
-static int             tex = NO;
+static bool            tex = false;
 
 void psclose (int status)
 /*< Routine to finish up >*/
@@ -1038,122 +1039,122 @@ void psclose (int status)
 
     switch (status)
     {
-    case CLOSE_NORMAL:
-	/*
-	 * if(tex == YES) fprintf(pltout, "%c", POP);
-	 */
+	case CLOSE_NORMAL:
+	    /*
+	     * if(tex == YES) fprintf(pltout, "%c", POP);
+	     */
 
 #ifndef NOCOMMENTS
-	if ((strcmp (psprintertype, "default") != 0)
-	    || (dev.pixels_per_inch != DEFAULT_PIXELS_PER_INCH))
-	{
-	    ERR (COMMENT, name,
-		 "Printer is of type \"%s\", with %g pixels per inch.",
-		 psprintertype, dev.pixels_per_inch);
-	}
-#endif
-
-	/*
-	 * If we created a temporary file, spool it.
-	 */
-	if (file_created)
-	{
-	    fclose (pltout);
-
-	    if ((stringptr = getenv ("PSPRINTER")) != NULL)
-		strcpy (printer, stringptr);
-	    else if (mono)
-		strcpy (printer, "postscript");
-	    else
-		strcpy (printer, "colorps");
-
-	    if (NULL != (printer0 = sf_getstring ("printer"))) 
-		strcpy(printer,printer0);
-	    /* what printer to send it to */
-
-	    if (ps_set_papersize)
-	    {
-		sprintf (system_call,
-			 "lpr -r -s -P%s -CX%.2f,Y%.2f %s",
-			 printer, ps_ylength, ps_xlength, scratch_file);
-	    }
-	    else
-	    {
-		sprintf (system_call,
-			 "lpr -r -s -P%s %s", printer, scratch_file);
-	
-	    }
-
-#ifndef NOCOMMENTS
-	    if (ps_set_papersize)
+	    if ((strcmp (psprintertype, "default") != 0)
+		|| (dev.pixels_per_inch != DEFAULT_PIXELS_PER_INCH))
 	    {
 		ERR (COMMENT, name,
-		     "Spooling plot using command \"%s\".", system_call);
-	    }
-	    else
-	    {
-		ERR (COMMENT, name,
-		     "Spooling plot to printer \"%s\".", printer);
+		     "Printer is of type \"%s\", with %g pixels per inch.",
+		     psprintertype, dev.pixels_per_inch);
 	    }
 #endif
-	    ecode = system (system_call);
 
 	    /*
-	     * Shift 8 bits over; what's left contains the exit code from lpr
+	     * If we created a temporary file, spool it.
 	     */
-	    if ((ecode & 0xFF) != 0)
+	    if (file_created)
 	    {
-		ERR (WARN, name,
-		"Signal stopped or killed system call \"%s\".", system_call);
-		ERR (WARN, name,
-		     "Output postscript file may have been left behind in \"%s\".",
-		     scratch_file);
-	    }
-	    else
-	    {
-		ecode = (ecode > 8);
-		if (ecode != 0)
+		fclose (pltout);
+
+		if ((stringptr = getenv ("PSPRINTER")) != NULL)
+		    strcpy (printer, stringptr);
+		else if (mono)
+		    strcpy (printer, "postscript");
+		else
+		    strcpy (printer, "colorps");
+
+		if (NULL != (printer0 = sf_getstring ("printer"))) 
+		    strcpy(printer,printer0);
+		/* what printer to send it to */
+
+		if (ps_set_papersize)
+		{
+		    sprintf (system_call,
+			     "lpr -r -s -P%s -CX%.2f,Y%.2f %s",
+			     printer, ps_ylength, ps_xlength, scratch_file);
+		}
+		else
+		{
+		    sprintf (system_call,
+			     "lpr -r -s -P%s %s", printer, scratch_file);
+	
+		}
+
+#ifndef NOCOMMENTS
+		if (ps_set_papersize)
+		{
+		    ERR (COMMENT, name,
+			 "Spooling plot using command \"%s\".", system_call);
+		}
+		else
+		{
+		    ERR (COMMENT, name,
+			 "Spooling plot to printer \"%s\".", printer);
+		}
+#endif
+		ecode = system (system_call);
+
+		/*
+		 * Shift 8 bits over; what's left contains the exit code from lpr
+		 */
+		if ((ecode & 0xFF) != 0)
 		{
 		    ERR (WARN, name,
-			 "Exit code %d from lpr. Is \"%s\" a valid printer?",
-			 ecode, printer);
-		    if (stringptr == NULL)
-		    {
-			ERR (COMMENT, name,
-			     "Perhaps you need to do \"setenv PSPRINTER printer_name\"?");
-		    }
-		    else
-		    {
-			ERR (COMMENT, name,
-			     "Is your environment variable $PSPRINTER = \"%s\" correct?",
-			     printer);
-		    }
+			 "Signal stopped or killed system call \"%s\".", system_call);
 		    ERR (WARN, name,
-			 "The output postscript file may have been left behind in \"%s\".",
+			 "Output postscript file may have been left behind in \"%s\".",
 			 scratch_file);
 		}
+		else
+		{
+		    ecode = (ecode > 8);
+		    if (ecode != 0)
+		    {
+			ERR (WARN, name,
+			     "Exit code %d from lpr. Is \"%s\" a valid printer?",
+			     ecode, printer);
+			if (stringptr == NULL)
+			{
+			    ERR (COMMENT, name,
+				 "Perhaps you need to do \"setenv PSPRINTER printer_name\"?");
+			}
+			else
+			{
+			    ERR (COMMENT, name,
+				 "Is your environment variable $PSPRINTER = \"%s\" correct?",
+				 printer);
+			}
+			ERR (WARN, name,
+			     "The output postscript file may have been left behind in \"%s\".",
+			     scratch_file);
+		    }
+		}
 	    }
-	}
-	file_created = NO;
-	break;
-    case CLOSE_ERROR:
-    case CLOSE_NOTHING:
-    case CLOSE_INTERRUPT:
-	break;
-    case CLOSE_DONE:
-	/*
-	 * If we created a temporary file, remove it
-	 */
-	if (file_created)
-	    unlink (scratch_file);
-	break;
-    case CLOSE_FLUSH:
-	fflush (pltout);
-	break;
-    case CLOSE_PAUSE:
-	break;
-    default:			/* not meant for us, ignore */
-	break;
+	    file_created = NO;
+	    break;
+	case CLOSE_ERROR:
+	case CLOSE_NOTHING:
+	case CLOSE_INTERRUPT:
+	    break;
+	case CLOSE_DONE:
+	    /*
+	     * If we created a temporary file, remove it
+	     */
+	    if (file_created)
+		unlink (scratch_file);
+	    break;
+	case CLOSE_FLUSH:
+	    fflush (pltout);
+	    break;
+	case CLOSE_PAUSE:
+	    break;
+	default:			/* not meant for us, ignore */
+	    break;
     }
 }
 
@@ -1172,105 +1173,105 @@ static int      hold;
 void pserase (int command)
 /*< erase >*/
 {
-char            full_label[100];
-static int      page_count = 1;
+    char            full_label[100];
+    static int      page_count = 1;
 
     endpath ();
 
     switch (command)
     {
-    case ERASE_MIDDLE:
-    case ERASE_END:
+	case ERASE_MIDDLE:
+	case ERASE_END:
 /*
  * put on label if desired
  */
-	if (label[0] != '\0')
-	{
-	    if (page_count == 1 && command == ERASE_END)
+	    if (label[0] != '\0')
 	    {
-		sprintf (full_label, "%s", label);
-	    }
-	    else
-	    {
-		sprintf (full_label, "%s : Page %d.", label, page_count);
-	    }
-	    /*
-	     * Do a grestore so any clipping window currently in force won't
-	     * clip away the plot label. Also do a gsave, because by
-	     * convention the plot ends with a grestore.
-	     */
-	    fprintf (pltout, "grestore gsave\n");
-	    fprintf (pltout, "/labelshow\n");
-	    fprintf (pltout, " {dup stringwidth pop\n");
-	    fprintf (pltout, "  dup dup %d exch sub\n", dev.xmax - 50);
-	    fprintf (pltout, "  newpath %d m\n", TEXT_YPOS);
-	    fprintf (pltout, "  gsave 0 %d rlineto\n", -TEXT_PAD);
-	    fprintf (pltout, "  0 rlineto\n");
-	    fprintf (pltout, "  0 %d rlineto\n", TEXT_HEIGHT + TEXT_PAD);
-	    fprintf (pltout, "  neg 0 rlineto\n");
-	    fprintf (pltout, "  closepath 1 setgray fill grestore\n");
-	    fprintf (pltout, "  gsave 0 setgray\n");
-	    fprintf (pltout, "  show grestore} def\n");
+		if (page_count == 1 && command == ERASE_END)
+		{
+		    sprintf (full_label, "%s", label);
+		}
+		else
+		{
+		    sprintf (full_label, "%s : Page %d.", label, page_count);
+		}
+		/*
+		 * Do a grestore so any clipping window currently in force won't
+		 * clip away the plot label. Also do a gsave, because by
+		 * convention the plot ends with a grestore.
+		 */
+		fprintf (pltout, "grestore gsave\n");
+		fprintf (pltout, "/labelshow\n");
+		fprintf (pltout, " {dup stringwidth pop\n");
+		fprintf (pltout, "  dup dup %d exch sub\n", dev.xmax - 50);
+		fprintf (pltout, "  newpath %d m\n", TEXT_YPOS);
+		fprintf (pltout, "  gsave 0 %d rlineto\n", -TEXT_PAD);
+		fprintf (pltout, "  0 rlineto\n");
+		fprintf (pltout, "  0 %d rlineto\n", TEXT_HEIGHT + TEXT_PAD);
+		fprintf (pltout, "  neg 0 rlineto\n");
+		fprintf (pltout, "  closepath 1 setgray fill grestore\n");
+		fprintf (pltout, "  gsave 0 setgray\n");
+		fprintf (pltout, "  show grestore} def\n");
 
-            if (serifs_OK)
-	    {
-	        fprintf (pltout, "/Helvetica-BoldOblique findfont %d scalefont setfont\n", TEXT_HEIGHT);
+		if (serifs_OK)
+		{
+		    fprintf (pltout, "/Helvetica-BoldOblique findfont %d scalefont setfont\n", TEXT_HEIGHT);
+		}
+		else
+		{
+		    /* SEG doesn't like bold or oblique fonts either */
+		    fprintf (pltout, "/Helvetica findfont %d scalefont setfont\n", TEXT_HEIGHT);
+		}
+		fprintf (pltout, "(%s) labelshow\n", full_label);
 	    }
-	    else
+	    if (!tex)
 	    {
-	        /* SEG doesn't like bold or oblique fonts either */
-	        fprintf (pltout, "/Helvetica findfont %d scalefont setfont\n", TEXT_HEIGHT);
-	    }
-	    fprintf (pltout, "(%s) labelshow\n", full_label);
-	}
-	if (tex == NO)
-	{
-	    if (ncopies_document != 1)
-	    {
-		fprintf (pltout, "/#copies %d def\n", ncopies_document);
-	    }
-	    if (hold == YES)
-	    {
-		fprintf (pltout, "statusdict begin\n");
-		fprintf (pltout, "/manualfeed true def\n");
-		fprintf (pltout, "/manualfeedtimeout 300 def\n");
-		fprintf (pltout, "end\n");
-	    }
-	}
-
-        if (ps_done_clipping_gsave == YES)
-            fprintf (pltout, "grestore\n");
-        ps_done_clipping_gsave = NO;
-
-	fprintf (pltout, "grestore\n");
-	fprintf (pltout, "showpage\n");
-
-	if (command == ERASE_MIDDLE)
-	{
-	    if (tex == NO)
-	    {
-		fprintf (pltout, "initgraphics 1 setlinecap 1 setlinejoin\n");
-		fprintf (pltout, "%d rotate", 90);
-		fprintf (pltout, " 0 %.2f translate %.2f %.2f scale gsave\n",
-			 -ps_ypapersize * PSPERIN, psscale, psscale);
-	    }
-	    else
-	    {
-		fprintf (pltout, " %.2f %.2f scale gsave\n", psscale, psscale);
-		fprintf (pltout, " 1 setlinecap 1 setlinejoin\n");
+		if (ncopies_document != 1)
+		{
+		    fprintf (pltout, "/#copies %d def\n", ncopies_document);
+		}
+		if (hold == YES)
+		{
+		    fprintf (pltout, "statusdict begin\n");
+		    fprintf (pltout, "/manualfeed true def\n");
+		    fprintf (pltout, "/manualfeedtimeout 300 def\n");
+		    fprintf (pltout, "end\n");
+		}
 	    }
 
-	    /*
-	     * Postscript has forgetten most of the current state. Set it all
-	     * back up again.
-	     */
-	    ps_fixup_after_grestore ();
-	}
-	page_count++;
-	break;
-    case ERASE_START:
-    default:
-	break;
+	    if (ps_done_clipping_gsave == YES)
+		fprintf (pltout, "grestore\n");
+	    ps_done_clipping_gsave = NO;
+
+	    fprintf (pltout, "grestore\n");
+	    fprintf (pltout, "showpage\n");
+
+	    if (command == ERASE_MIDDLE)
+	    {
+		if (!tex)
+		{
+		    fprintf (pltout, "initgraphics 1 setlinecap 1 setlinejoin\n");
+		    fprintf (pltout, "%d rotate", 90);
+		    fprintf (pltout, " 0 %.2f translate %.2f %.2f scale gsave\n",
+			     -ps_ypapersize * PSPERIN, psscale, psscale);
+		}
+		else
+		{
+		    fprintf (pltout, " %.2f %.2f scale gsave\n", psscale, psscale); 
+		    fprintf (pltout, " 1 setlinecap 1 setlinejoin\n");
+		}
+
+		/*
+		 * Postscript has forgetten most of the current state. Set it all
+		 * back up again.
+		 */
+		ps_fixup_after_grestore ();
+	    }
+	    page_count++;
+	    break;
+	case ERASE_START:
+	default:
+	    break;
     }
 }
 
@@ -1492,7 +1493,7 @@ void opendev (int argc, char* argv[])
 		if (ps_ylength <= 0.)
 		{
 		    ERR (FATAL, name,
-		    "Height and width of paper are both negative or zero!");
+			 "Height and width of paper are both negative or zero!");
 		}
 		else
 		    ps_xlength = 2. * ps_xborder + (ps_ylength - 2. * ps_yborder) / VP_SCREEN_RATIO;
@@ -1683,11 +1684,9 @@ void opendev (int argc, char* argv[])
 	pltout = sf_tempfile(&scratch_file,"w");
     }
 
-    if (!sf_getbool("tex",&yesget)) yesget=false;
-    if (yesget) tex = YES;
- 
+    if (!sf_getbool("tex",&tex)) tex=false;
 
-    if (tex == YES)
+    if (tex)
     {
 	/*
 	 * allow as big a plot as we can and make sure our plot is in
@@ -1718,7 +1717,7 @@ void opendev (int argc, char* argv[])
 /*
  * Initialize the PostScript file
  */
-    if (tex == NO)
+    if (!tex)
     {
 	fprintf (pltout, "%%!\n");
 
@@ -1749,10 +1748,10 @@ void opendev (int argc, char* argv[])
     /* in case colorimage command is not known by this device */
     if (rgb_colorspace)
     {
-       /*
-        * If they require the CMYK color space we just have to hope
-        * the colorimage command is known.
-        */
+	/*
+	 * If they require the CMYK color space we just have to hope
+	 * the colorimage command is known.
+	 */
         fprintf (pltout, " \n");
         fprintf (pltout, "systemdict /colorimage known not { \n");
         fprintf (pltout, "  /colortograyscale { \n");
@@ -1848,7 +1847,6 @@ void dateget (char *date)
 }
 
 static int      where = -1;
-static int      ps_oldx = 0, ps_oldy = 0;
 
 void psplot (int x, int y, int draw)
 /*< plot >*/
@@ -1877,8 +1875,8 @@ void addpath (int x,int y)
     /*
      * Just in case, allow lots of extra room
      */
-char            stringd[80];
-char            stringr[80];
+    char            stringd[80];
+    char            stringr[80];
 
     /* If where is -1 here it is a BUG! */
     if (where)
@@ -1940,15 +1938,15 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 		     unsigned char **raster_block, int orient, int dither_it)
 /*< raster >*/
 {
-int             i,j;
-int             xshift, yshift;
-int             xscale, yscale;
-int             rangle;
+    int             i,j;
+    int             xshift, yshift;
+    int             rxscale, ryscale;
+    int             rangle;
 
     endpath ();
 
-    xscale = xmax - xmin;
-    yscale = ymax - ymin;
+    rxscale = xmax - xmin;
+    ryscale = ymax - ymin;
 
     switch (orient) {
 	case 0:
@@ -1976,49 +1974,50 @@ int             rangle;
 
     fprintf (pltout, "gsave /picstr %d string def\n", xpix);
 
-    fprintf (pltout, "%d %d translate %d %d scale %d rotate\n", xshift, yshift, xscale, yscale, rangle);
+    fprintf (pltout, "%d %d translate %d %d scale %d rotate\n", 
+	     xshift, yshift, rxscale, ryscale, rangle);
 
-		fflush(pltout);
+    fflush(pltout);
     if ( mono || ras_allgrey ) {
-    fprintf (pltout, "/raster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop} image} def\n", xpix, ypix, xpix, -ypix, ypix);
+	fprintf (pltout, "/raster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop} image} def\n", xpix, ypix, xpix, -ypix, ypix);
 
-    fprintf (pltout, "raster\n");
+	fprintf (pltout, "raster\n");
 
-    if (dither_it)
-    {
-	for (j = 0; j < xpix*ypix; j+=80)
+	if (dither_it)
 	{
+	    for (j = 0; j < xpix*ypix; j+=80)
+	    {
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
 		    fprintf (pltout, "%2.2x", 255 - (int) raster_block[0][i]);
 	   	}
     	   	fprintf (pltout, "\n");
+	    }
 	}
-    }
-    else
-    {
-	for (j = 0; j < xpix*ypix; j+=80)
+	else
 	{
+	    for (j = 0; j < xpix*ypix; j+=80)
+	    {
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
 		    fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[0][i]]);
 	   	}
     	   	fprintf (pltout, "\n");
+	    }
 	}
-    }
     } else if (rgb_colorspace) {
         fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 3 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
 
         fprintf (pltout, "colraster\n");
 
-	    for (j = 0; j < xpix*ypix; j+=80)
+	for (j = 0; j < xpix*ypix; j+=80)
+	{
+	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
-		    for (i=j; (i<j+80 && i<xpix*ypix); i++)
-		    {
-	    	    fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
-		    }
-    		    fprintf (pltout, "\n");
+		fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
 	    }
+	    fprintf (pltout, "\n");
+	}
     } else {
         /* RGB=no. Use CMYK colorspace */
 /*
@@ -2029,18 +2028,18 @@ int             rangle;
 
         fprintf (pltout, "colraster\n");
 
-	    for (j = 0; j < xpix*ypix; j+=80)
+	for (j = 0; j < xpix*ypix; j+=80)
+	{
+	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
-		    for (i=j; (i<j+80 && i<xpix*ypix); i++)
-		    {
-		    rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
-		    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
+			    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
 
-	    	    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
-                    cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
-		    }
-    		    fprintf (pltout, "\n");
+		fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
+			 cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
 	    }
+	    fprintf (pltout, "\n");
+	}
     }
 
     fprintf (pltout, "grestore\n");
@@ -2049,7 +2048,7 @@ int             rangle;
 void psreset (void)
 /*< reset >*/
 {
-int             ii;
+    int             ii;
 
     if (mono)
     {
@@ -2067,41 +2066,41 @@ int             ii;
  *  font numbers start with 100
  */
 static const char *psfonts[] = {
-	"Courier-Bold",
-	"Courier-BoldOblique",
-	"Courier-Oblique",
-	"Courier",
-	"Helvetica-Bold",
-	"Helvetica-BoldOblique",
-	"Helvetica-Oblique",
-	"Helvetica",
-	"Symbol",
-	"Times-Bold",
-	"Times-BoldItalic",
-	"Times-Italic",
-	"Times-Roman",
-	"AvantGarde-Book",
-	"AvantGarde-BookOblique",
-	"AvantGarde-Demi",
-	"AvantGarde-DemiOblique",
-	"Bookman-Demi",
-	"Bookman-DemiItalic",
-	"Bookman-Light",
-	"Bookman-LightItalic",
-	"Helvetica-Narrow-Bold",
-	"Helvetica-Narrow-BoldOblique",
-	"Helvetica-Narrow-Oblique",
-	"Helvetica-Narrow",
-	"NewCenturySchlbk-Bold",
-	"NewCenturySchlbk-BoldItalic",
-	"NewCenturySchlbk-Italic",
-	"NewCenturySchlbk-Roman",
-	"Palatino-Bold",
-	"Palatino-BoldItalic",
-	"Palatino-Roman",
-	"Palatino-Italic",
-	"ZapfChancery-MediumItalic",
-	"ZapfDingbats"
+    "Courier-Bold",
+    "Courier-BoldOblique",
+    "Courier-Oblique",
+    "Courier",
+    "Helvetica-Bold",
+    "Helvetica-BoldOblique",
+    "Helvetica-Oblique",
+    "Helvetica",
+    "Symbol",
+    "Times-Bold",
+    "Times-BoldItalic",
+    "Times-Italic",
+    "Times-Roman",
+    "AvantGarde-Book",
+    "AvantGarde-BookOblique",
+    "AvantGarde-Demi",
+    "AvantGarde-DemiOblique",
+    "Bookman-Demi",
+    "Bookman-DemiItalic",
+    "Bookman-Light",
+    "Bookman-LightItalic",
+    "Helvetica-Narrow-Bold",
+    "Helvetica-Narrow-BoldOblique",
+    "Helvetica-Narrow-Oblique",
+    "Helvetica-Narrow",
+    "NewCenturySchlbk-Bold",
+    "NewCenturySchlbk-BoldItalic",
+    "NewCenturySchlbk-Italic",
+    "NewCenturySchlbk-Roman",
+    "Palatino-Bold",
+    "Palatino-BoldItalic",
+    "Palatino-Roman",
+    "Palatino-Italic",
+    "ZapfChancery-MediumItalic",
+    "ZapfDingbats"
 };
 
 int psmaxfont = {(sizeof(psfonts) / sizeof(psfonts[0])) + 100};
@@ -2111,11 +2110,11 @@ extern int      default_ps_font;
 void pstext (char *string, float pathx, float pathy, float upx, float upy)
 /*< text >*/
 {
-double          fpathx, fpathy, fupx, fupy;
-double          path;
-int             size, orient;
-double          yfact, xfact;
-static char     last_size = 0, last_font;
+    double          fpathx, fpathy, fupx, fupy;
+    double          path;
+    int             txsize, orient;
+    double          yfact, xfact;
+    static char     last_size = 0, last_font;
 
     endpath ();
 
@@ -2152,7 +2151,7 @@ static char     last_size = 0, last_font;
  * by cap height, so we have to rescale by (1000./700.).
  * But I find that 570 is a better number!
  */
-    size = ROUND (path * 1000. / 570.);
+    txsize = ROUND (path * 1000. / 570.);
     orient = ROUND (acos (path_orient_dx) * 180 / SF_PI);
     if (pathy < 0)
 	orient *= -1;
@@ -2160,11 +2159,11 @@ static char     last_size = 0, last_font;
 /*
  *   Set the font and size
  */
-    if ((size != last_size) || (dev.txfont != last_font))
+    if ((txsize != last_size) || (dev.txfont != last_font))
     {
 	fprintf (pltout, "/%s findfont %d scalefont setfont\n",
-		 psfonts[dev.txfont - 100], size);
-	last_size = size;
+		 psfonts[dev.txfont - 100], txsize);
+	last_size = txsize;
 	last_font = dev.txfont;
     }
 
@@ -2187,17 +2186,17 @@ static char     last_size = 0, last_font;
     switch (txalign.ver)
     {
 	case TV_TOP:
-	    yfact = -0.81 * (float) size;	/* was -1.0 */
+	    yfact = -0.81 * (float) txsize;	/* was -1.0 */
 	    break;
 	case TV_CAP:
-	    yfact = -0.654 * (float) size;	/* was -0.8 */
+	    yfact = -0.654 * (float) txsize;	/* was -0.8 */
 	    break;
 	case TV_SYMBOL:		/* CHECK THIS!!! */
 	case TV_HALF:
-	    yfact = -0.327 * (float) size;	/* was -0.45 */
+	    yfact = -0.327 * (float) txsize;	/* was -0.45 */
 	    break;
 	case TV_BOTTOM:
-	    yfact = .1666666667 * (float) size;	/* was - */
+	    yfact = .1666666667 * (float) txsize;	/* was - */
 	    break;
 	case TV_BASE:
 	default:
@@ -2231,7 +2230,7 @@ static char     last_size = 0, last_font;
 void psvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
 /*< vector >*/
 {
-static int      xlst, ylst;
+    static int      xlst, ylst;
 
 /* Negative fatness? Skip it. */
     if (nfat < 0)
@@ -2361,30 +2360,30 @@ void rgb_to_cmyk (int red, int green, int blue,
  * First, calculate the color using just Cyan, Magenta, and Yellow
  * ink.
  */
-*cyan = 255 - red;
-*magenta = 255 - green;
-*yellow = 255 - blue;
+    *cyan = 255 - red;
+    *magenta = 255 - green;
+    *yellow = 255 - blue;
 
 /*
  * Find the minimum of the three.
  */
-*black = 255;
-if (*black > *cyan) *black = *cyan;
-if (*black > *magenta) *black = *magenta;
-if (*black > *yellow) *black = *yellow;
+    *black = 255;
+    if (*black > *cyan) *black = *cyan;
+    if (*black > *magenta) *black = *magenta;
+    if (*black > *yellow) *black = *yellow;
 
-if (*black == 255)
-{
+    if (*black == 255)
+    {
 /* Their color is black. So just use black ink with no color inks. */
-*cyan = 0;
-*magenta = 0;
-*yellow = 0;
-}
-else
-{
+	*cyan = 0;
+	*magenta = 0;
+	*yellow = 0;
+    }
+    else
+    {
 /* Use as much black as possible, then as much of other colors as needed */
-*cyan    = (int) (.5 + 255. * (float) (*cyan - *black) / (float) (255 - *black));
-*magenta = (int) (.5 + 255. * (float) (*magenta - *black) / (float) (255 - *black));
-*yellow  = (int) (.5 + 255. * (float) (*yellow - *black) / (float) (255 - *black));
-}
+	*cyan    = (int) (.5 + 255. * (float) (*cyan - *black) / (float) (255 - *black));
+	*magenta = (int) (.5 + 255. * (float) (*magenta - *black) / (float) (255 - *black));
+	*yellow  = (int) (.5 + 255. * (float) (*yellow - *black) / (float) (255 - *black));
+    }
 }

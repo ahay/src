@@ -76,7 +76,7 @@ int             cur_color_save;
     /*
      * allocate storage for scan line cross points 
      */
-    crosses = (int *) malloc ((unsigned) npts * sizeof (int));
+    crosses = sf_intalloc ((unsigned) npts);
 
     /*
      * double link the vertices. (head) is set to the node with the maximum

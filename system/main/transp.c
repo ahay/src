@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 	    for (i=0; i < nbuf; i++, i2++) {
 		map[i] = make_map (dim1, dim2, n, i2);
 	    }
-	    if (nbuf != fwrite(map,sizeof(int),nbuf,mapfile)) 
+	    if (nbuf != fwrite(map,sizeof(off_t),nbuf,mapfile)) 
 		sf_error("map write error:");
 	}
     }
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
 
 		for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
 		    if (nbuf > nsiz) nbuf=nsiz;
-		    if (nbuf != fread(map,sizeof(int),nbuf,mapfile)) 
+		    if (nbuf != fread(map,sizeof(off_t),nbuf,mapfile)) 
 			sf_error("map read error:");
 		    for (i=0; i < nbuf; i++) {
 			sf_seek(in,pos+(off_t) (map[i]+i3*(off_t)n2)*(off_t)n1,SEEK_SET);

@@ -58,6 +58,7 @@ In programs:
 * Fixed sfmath crash when datapath was specified
 * Fixed handling of infinite values in sfgraph
 * Fixed handling of different output size in sfiwarp
+* Fixed sftransp off-core I/O bug 
 
 In the build system:
 * Fixed bug that resulted in BLAS/ATLAS-based programs to not install in Fedora
