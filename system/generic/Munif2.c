@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     if (!sf_histfloat(surface,"o1",&o2)) o2=0.;
 
     sf_shiftdim(surface, model, 1);
+    sf_putint(model,"n3",1);
 
     if (!sf_histint(surface,"n2",&ninf)) ninf=1; 
 
