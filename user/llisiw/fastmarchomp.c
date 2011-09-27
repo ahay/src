@@ -175,7 +175,7 @@ void fastmarch_close(void)
 int neighbors_nearsource(float* time /* time */,
 			 float* xs   /* source location [3] */,
 			 upgrad upg  /* stencil */)
-/* initialize point source, return number of wave front points */
+/* initialize point source */
 {
     int its;
     int np, ic, i, j, is[3], start[3], endx[3], ix, iy, iz;
@@ -196,8 +196,12 @@ int neighbors_nearsource(float* time /* time */,
     /* Find index of the source location and project it to the grid */
     for (j=0; j < 3; j++) {
 	is[j] = xs[j]/d[j]+0.5;
+/*
 	start[j] = is[j]-1; 
 	endx[j]  = is[j]+1;
+*/
+	start[j] = is[j];
+	endx[j] = is[j];
     } 
     
     for (j=0; j < 3; j++) {

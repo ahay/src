@@ -242,6 +242,9 @@ int main(int argc, char* argv[])
     
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
+
+    sf_warning("rhsnorm0=%g",rhsnorm0);
+
     rhsnorm = rhsnorm0;
     rhsnorm1 = rhsnorm;
     rate = rhsnorm1/rhsnorm0;
@@ -258,15 +261,17 @@ int main(int argc, char* argv[])
 
 	    fatomo_lop(true,false,nt,nrhs,ds,rhs);
 
-	    for (it=0; it < nt; it++) {
-		if (k == NULL || k[it] != 1)
-		    s[it] = (s[it]+ds[it]/nshot)*(s[it]+ds[it]/nshot)/s[it];
+	    if (velocity) {
+		for (it=0; it < nt; it++) {
+		    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
+		}
+		sf_floatwrite(dv,nt,sout);
+	    } else {
+		sf_floatwrite(ds,nt,sout);
 	    }
-
-	    sf_floatwrite(s,nt,sout);
-
+	    
 	    break;
-
+	    
 	case 't': /* tomography */
 	    
 	    /* iterations over inversion */
