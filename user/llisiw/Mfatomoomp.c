@@ -305,7 +305,7 @@ int main(int argc, char* argv[])
 			for (it=0; it < nt; it++) {
 			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
 			}
-			sf_floatwrite(ds,nt,grad);
+			sf_floatwrite(dv,nt,grad);
 		    } else {
 			sf_floatwrite(ds,nt,grad);
 		    }
