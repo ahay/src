@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
     }
 
     for (ip=0; ip < np; ip++) {
+	sf_warning("slope %d of %d:",ip+1,np);
+
 	p = p0+ip*dp;
 
 	for (ix=0; ix < nx; ix++) {
@@ -105,6 +107,7 @@ int main(int argc, char* argv[])
 	    } /* v */
 	} /* x */
     } /* p */
+    sf_warning(".");
 
     sf_floatwrite (stack[0],nt*nv,scan);
     exit(0);
