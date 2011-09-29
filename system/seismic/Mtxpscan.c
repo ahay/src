@@ -24,7 +24,7 @@ static float v,p,x;
 
 static float vscan(float t, int it)
 {
-    return t+p*x*x/(x+t*p*v*v);
+    return t+fabsf(p)*x*x/(fabsf(x)+t*fabsf(p)*v*v+SF_EPS);
 }
 
 int main(int argc, char* argv[])
