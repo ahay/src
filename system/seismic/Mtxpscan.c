@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     }
 
     for (ip=0; ip < np; ip++) {
-	sf_warning("slope %d of %d:",ip+1,np);
+	sf_warning("slope %d of %d;",ip+1,np);
 
 	p = p0+ip*dp;
 
