@@ -89,6 +89,9 @@ void upgrad_set(upgrad upg /* stencil */,
     up[0] = up[1] = 0;
     t = r0[index];
     upg->ww[length][ndim] = 0.;
+
+    if (length == 0) return;
+
     for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	a = index-ss[i];
 	b = index+ss[i];

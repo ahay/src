@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 		nrhs++;
 	}
 	
-	rhslist[is][2] = (is==0)?rhslist[is][1]
+	rhslist[is][2] = (is==0)?nrhs
 	    :rhslist[is][1]-rhslist[is-1][1];
     }
     rhs = sf_floatalloc(nrhs);
@@ -242,9 +242,6 @@ int main(int argc, char* argv[])
     
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
-
-    sf_warning("rhsnorm0=%g",rhsnorm0);
-
     rhsnorm = rhsnorm0;
     rhsnorm1 = rhsnorm;
     rate = rhsnorm1/rhsnorm0;
@@ -265,7 +262,7 @@ int main(int argc, char* argv[])
 		for (it=0; it < nt; it++) {
 		    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
 		}
-		sf_floatwrite(dv,nt,sout);
+		sf_floatwrite(ds,nt,sout);
 	    } else {
 		sf_floatwrite(ds,nt,sout);
 	    }
@@ -308,7 +305,7 @@ int main(int argc, char* argv[])
 			for (it=0; it < nt; it++) {
 			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
 			}
-			sf_floatwrite(dv,nt,grad);
+			sf_floatwrite(ds,nt,grad);
 		    } else {
 			sf_floatwrite(ds,nt,grad);
 		    }

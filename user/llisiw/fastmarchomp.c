@@ -34,6 +34,7 @@ struct Upd {
 int neighbors_nearsource(float* time, float* xs, upgrad upg);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
+void pqueue_update(float** vv);
 int neighbours(float* time, int i);
 int update(float value, float* time, int i);
 float qsolve(float* time, int i);
@@ -145,7 +146,7 @@ int fastmarch(float *time   /* time */,
 		count++;
 	    }
 	}
-
+	
 	/* break for limited acquisition */
 	if (count == list[2]) break;
     }
@@ -275,7 +276,8 @@ void pqueue_insert(float* v1)
 #endif
 
     xi = ++xn[its];
-    *xi = v1;
+/*  TEMP: the next line seems to be redundant; to be checked later...*/
+    *xi = v1;    
     q = (unsigned int) (xn[its]-x[its]);
     for (q >>= 1; q > 0; q >>= 1) {
 	xq = x[its] + q;
@@ -300,10 +302,13 @@ float* pqueue_extract(void)
     its = 0;
 #endif
 
+    /* check if queue is empty */
+    nn = (int) (xn[its]-x[its]);
+    if (nn == 0) return NULL;
+
     vv = *(x1[its]);
     *(xi = x1[its]) = t = *(xn[its]--);
-    nn = (int) (xn[its]-x[its]);
-    if (nn < 0) return NULL;
+    nn--;
     for (c = 2; c <= (unsigned int) nn; c <<= 1) {
 	xc = x[its] + c;
 	if (c < (unsigned int) nn && **xc > **(xc+1)) {
@@ -314,6 +319,39 @@ float* pqueue_extract(void)
     }
     *xi = t;
     return vv;
+}
+
+void pqueue_update(float** vv)
+/* restore the heap */
+{
+    int its;
+    unsigned int c;
+    int n;
+    float **xc, **xi;
+    
+#ifdef _OPENMP
+    its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
+
+    xi = vv; 
+    n = (int) (xn[its]-x[its]); c = (unsigned int) (xi-x[its]);
+    for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
+	xc = x[its] + c;
+	if (c < (unsigned int) n && **xc > **(xc+1)) {
+	    c++; xc++;
+	}
+	if (**vv <= **xc) break;
+	*xi = *xc; xi = xc;
+    }
+    xi = vv; c = (unsigned int) (xi-x[its]);
+    for (c >>= 1; c > 0; c >>= 1) {
+	xc = x[its] + c;
+	if (**vv > **xc) break;
+	*xi = *xc; xi = xc; 
+    }
+    *xi = *vv; 
 }
 
 int neighbours(float* time, int i) 
@@ -365,7 +403,9 @@ int update(float value, float* time, int i)
 	    return 1;
 	}
     }
-    
+/*
+    pqueue_update(&(time+i));
+*/
     return 0;
 }
 
