@@ -389,7 +389,7 @@ class Filter(object):
         self.checkpar = checkpar
         self.pipe = pipe
         if self.prog:
-            self.__doc__ =  self.prog.docstring()
+            self.__doc__ =  self.prog.docstring(25,rsf.prog.RSFROOT)
     def __str__(self):
         return self.command
     def __or__(self,other):
