@@ -96,6 +96,8 @@ int main(int argc, char* argv[])
 		trace[it] /= nt*np*nx;
 	    }
 
+	    fint1_set(nmo,trace);
+
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + iv * dv;
 

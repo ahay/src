@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
     int n[SF_MAX_DIM], rect[SF_MAX_DIM];
     int n1, n2, i2, niter, dim, dim1, i1, i;
     char key[6];
-    float *data, *gain, *igain, *one;
+    float *data, *gain, *igain, *one, norm;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -58,11 +58,7 @@ int main (int argc, char* argv[])
     data = sf_floatalloc (n1);
     gain = sf_floatalloc (n1);
     igain = sf_floatalloc (n1);
-
     one = sf_floatalloc (n1);
-    for (i1=0; i1 < n1; i1++) {
-	one[i1] = 1.0f;
-    }
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -78,11 +74,25 @@ int main (int argc, char* argv[])
 	    gain[i1] = fabsf(data[i1]);
 	}
 
-	divn(one,gain,igain);
-
+	norm = 0.;
 	for (i1=0; i1 < n1; i1++) {
-	    data[i1] *= igain[i1];
+	    norm += gain[i1]*gain[i1];
 	}
+	if (norm > 0.0) { 
+	    norm = sqrtf(n1/norm);
+	    
+	    for (i1=0; i1 < n1; i1++) {
+		one[i1] = norm;
+		gain[i1] *= norm;
+	    }
+	    
+	    divn(one,gain,igain);
+
+	    for (i1=0; i1 < n1; i1++) {
+		data[i1] *= igain[i1];
+	    }
+	}
+
 	sf_floatwrite(data,n1,out);
     }
 
