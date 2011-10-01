@@ -14,7 +14,7 @@ Plot('agc','window max1=2.5 | grey title="sfagc rect1=100" ')
 
 Result('arctic','arctic pow agc','SideBySideAniso')
 
-Flow('shagc','arctic','shapeagc rect1=100 verb=y')
+Flow('shagc','arctic','shapeagc rect1=100')
 Plot('shagc','window max1=2.5 | grey title="sfshapeagc rect1=100" ')
 
 Result('agc','agc shagc','SideBySideAniso')

@@ -24,14 +24,14 @@ static float v,p,x;
 
 static float vscan(float t, int it)
 {
-    return t+fabsf(p)*x*x/(fabsf(x)+t*fabsf(p)*v*v+SF_EPS);
+    return t+p*x*x/(x+t*p*v+SF_EPS);
 }
 
 int main(int argc, char* argv[])
 {
     fint1 nmo;
     int it, nt, ix, nx, ip, np, iv, nv, nw, mute;
-    float t0, x0, p0, v0, dt, dx, dp, dv, str;
+    float t0, x0, p0, v0, dt, dx, dp, dv, str, smin, smax; 
     float *trace, **stack;
     sf_file cmp, scan;
 
@@ -45,8 +45,10 @@ int main(int argc, char* argv[])
     
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
+
     if (!sf_histfloat(cmp,"o2",&x0)) sf_error("No o2= in input");
     if (!sf_histfloat(cmp,"d2",&dx)) sf_error("No d2= in input");
+
     if (!sf_histfloat(cmp,"o3",&p0)) sf_error("No o3= in input");
     if (!sf_histfloat(cmp,"d3",&dp)) sf_error("No d3= in input");
 
@@ -71,6 +73,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("str",&str)) str=0.5;
     /* maximum stretch allowed */
+
+    if (!sf_getfloat("smin",&smin)) smin=1.0;
+    /* minimum heterogeneity */
+
+    if (!sf_getfloat("smax",&smax)) smax=2.0;
+    /* maximum heterogeneity */
     
     trace = sf_floatalloc(nt);
     nmo = fint1_init(nw,nt,mute);
@@ -84,12 +92,14 @@ int main(int argc, char* argv[])
     for (ip=0; ip < np; ip++) {
 	sf_warning("slope %d of %d;",ip+1,np);
 
-	p = p0+ip*dp;
+	p = fabsf(p0+ip*dp);
+
+	
 
 	for (ix=0; ix < nx; ix++) {
-	    x = x0+ix*dx;
-
 	    sf_floatread(trace,nt,cmp); 
+
+	    x = fabsf(x0+ix*dx);
 
 	    /* normalize */
 	    for (it=0; it < nt; it++) {
@@ -100,6 +110,7 @@ int main(int argc, char* argv[])
 
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + iv * dv;
+		v *= v;
 
 		stretch(nmo,vscan,nt,dt,t0,nt,dt,t0,trace,str);
 

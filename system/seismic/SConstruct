@@ -17,8 +17,8 @@ refer ricker ricker1 rweab rwesrmig rwezomig s2ofz s2ofz2 segy2rsf
 segyheader segyread segywrite shifts shoot2 shot2cmp shotconstkirch
 shotholes shotprop sin slant srmva srsyn sstep2 stolt stolt2
 stoltstretch stretch su2rsf tan2ang taupmo time2depth tlagtoang2d
-tshift txpscan velmod veltran voft vofz vscan xlagtoang2d zoeppritz
-zomig zomva
+tshift txpscan txpnmo velmod veltran voft vofz vscan xlagtoang2d
+zoeppritz zomig zomva
 '''
 
 try:  # distributed version
