@@ -24,6 +24,7 @@
 #include <omp.h>
 #endif
 
+#include <assert.h>
 #include "upgradomp.h"
 #include "fastmarchomp.h"
 
@@ -34,13 +35,15 @@ struct Upd {
 int neighbors_nearsource(float* time, float* xs, upgrad upg);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
-void pqueue_update(float** vv);
+void pqueue_update(int index);
 int neighbours(float* time, int i);
 int update(float value, float* time, int i);
 float qsolve(float* time, int i);
 bool updaten(int i, int m, float* res, struct Upd *vv[]);
 
 static float ***x, ***xn, ***x1;
+static float **t;
+static int **offsets;
 static int **in, *n, s[3], order;
 static float *v, *o, *d;
 
@@ -70,13 +73,18 @@ void fastmarch_init(int *n1    /* grid samples [3] */,
     xn = (float ***) sf_alloc(mts,sizeof (float **));
     x1 = (float ***) sf_alloc(mts,sizeof (float **));
 
+    offsets = (int **) sf_alloc(mts,sizeof (int *));
+    t = (float **) sf_alloc(mts,sizeof (float *));
+
     maxband = 0;
     if (n[0] > 1) maxband += 2*n[1]*n[2];
     if (n[1] > 1) maxband += 2*n[0]*n[2];
     if (n[2] > 1) maxband += 2*n[0]*n[1];
 
-    for (its=0; its < mts; its++)
+    for (its=0; its < mts; its++) {
 	x[its] = (float **) sf_alloc ((10*maxband+1),sizeof (float *));
+	offsets[its] = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
+    }
 }
 
 void fastmarch_set(float *v1  /* slowness squared */)
@@ -104,6 +112,9 @@ int fastmarch(float *time   /* time */,
     its = 0;
 #endif
     
+    /* point t to time for pqueue operations */
+    t[its] = time;
+
     /* source distance from origin */
     xs[0] = source[0]-o[0];
     xs[1] = source[1]-o[1];
@@ -179,7 +190,7 @@ int neighbors_nearsource(float* time /* time */,
 /* initialize point source */
 {
     int its;
-    int np, ic, i, j, is[3], start[3], endx[3], ix, iy, iz;
+    int ic, i, j, is[3];
     double delta[3], delta2;
 
 #ifdef _OPENMP
@@ -192,80 +203,43 @@ int neighbors_nearsource(float* time /* time */,
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
 	in[its][i] = SF_OUT;
 	time[i] = SF_HUGE;
+	offsets[its][i] = -1;
     }
 
     /* Find index of the source location and project it to the grid */
+    delta2 = 0.;
+
     for (j=0; j < 3; j++) {
 	is[j] = xs[j]/d[j]+0.5;
-/*
-	start[j] = is[j]-1; 
-	endx[j]  = is[j]+1;
-*/
-	start[j] = is[j];
-	endx[j] = is[j];
-    } 
-    
-    for (j=0; j < 3; j++) {
-	if (start[j] < 0) {
-	    start[j]=0;
-	} else if (start[j] >= n[j]) {
-	    start[j]=n[j]-1;
+
+	if (is[j] < 0) {
+	    is[j]=0;
+	} else if (is[j] >= n[j]) {
+	    is[j]=n[j]-1;
 	}
-    }
-    for (j=0; j < 3; j++) {
-	if (endx[j] < 0) {
-	    endx[j]=0;
-	} else if (endx[j] >= n[j]) {
-	    endx[j]=n[j]-1;
-	}
+
+	delta[j] = xs[j]-is[j]*d[j];
+	delta2 += delta[j]*delta[j];
     }
     
     /* source index */
-    ic = (start[0]+endx[0])/2 + 
-	n[0]*((start[1]+endx[1])/2 +
-	      n[1]*(start[2]+endx[2])/2);
+    ic = is[0]+n[0]*(is[1]+n[1]*is[2]);
     
-    /* loop in a small box around the source */
-    np = n[0]*n[1]*n[2];
-    for (ix=start[2]; ix <= endx[2]; ix++) {
-	for (iy=start[1]; iy <= endx[1]; iy++) {
-	    for (iz=start[0]; iz <= endx[0]; iz++) {
-		np--;
-		i = iz + n[0]*(iy + n[1]*ix);
-
-		/* distance from source */
-		delta[0] = xs[0]-iz*d[0];
-		delta[1] = xs[1]-iy*d[1];
-		delta[2] = xs[2]-ix*d[2];
-
-		delta2 = 0.;
-		for (j=0; j < 3; j++) {
-		    delta2 += delta[j]*delta[j];
-		}
-
-		/* analytical formula (Euclid) */ 
-		time[i] = sqrtf(((double)v[ic])*delta2);
-		in[its][i] = SF_IN;
-
-		if ((n[0] > 1 && (iz == start[0] || iz == endx[0])) ||
-		    (n[1] > 1 && (iy == start[1] || iy == endx[1])) ||
-		    (n[2] > 1 && (ix == start[2] || ix == endx[2]))) {
-		    pqueue_insert(time+i);
-		}
-	    }
-	}
-    }
+    /* initialize source */
+    time[ic] = sqrtf(((double)v[ic])*delta2);
+    in[its][ic] = SF_IN;
+    pqueue_insert(time+ic);
     
     /* start stencil from source */
-    upgrad_set(upg,time,is[0]+n[0]*(is[1]+n[1]*is[2]),in[its],0);
+    upgrad_set(upg,time,ic,in[its],0);
     
-    return np;
+    return (n[0]*n[1]*n[2]-1);
 }
 
 void pqueue_insert(float* v1)
 /* insert an element (smallest first) */
 {
-    int its;
+    int its, newOffset, tIndex;
     float **xi, **xq;
     unsigned int q;
     
@@ -275,6 +249,7 @@ void pqueue_insert(float* v1)
     its = 0;
 #endif
 
+
     xi = ++xn[its];
 /*  TEMP: the next line seems to be redundant; to be checked later...*/
     *xi = v1;    
@@ -282,18 +257,30 @@ void pqueue_insert(float* v1)
     for (q >>= 1; q > 0; q >>= 1) {
 	xq = x[its] + q;
 	if (*v1 > **xq) break;
-	*xi = *xq; xi = xq;
+	*xi = *xq;
+
+	/* now that it moved down, update its offset */
+	newOffset = xi-x[its];
+	tIndex = (*xi)-t[its];
+	offsets[its][tIndex] = newOffset;
+
+	xi = xq;
     }
     *xi = v1; 
+    
+    /* now that we moved it far enough up, record the offset */
+    newOffset = xi-x[its];
+    tIndex = v1-t[its];
+    offsets[its][tIndex] = newOffset;
 }
 
 float* pqueue_extract(void)
 /* extract the smallest element */
 {
-    int its;
+    int its, newOffset, tIndex;
     unsigned int c;
     int nn;
-    float *vv, *t;
+    float *vv, *formerlyLast;
     float **xi, **xc;
     
 #ifdef _OPENMP
@@ -307,26 +294,46 @@ float* pqueue_extract(void)
     if (nn == 0) return NULL;
 
     vv = *(x1[its]);
-    *(xi = x1[its]) = t = *(xn[its]--);
+    /* label vv to be out by set its offset as -1 */
+    tIndex = vv-t[its];
+    offsets[its][tIndex] = -1;
+
+    *(xi = x1[its]) = formerlyLast = *(xn[its]--);
+    /* note: formerlyLast's offset is inconsistent until the very last step */
     nn--;
     for (c = 2; c <= (unsigned int) nn; c <<= 1) {
 	xc = x[its] + c;
 	if (c < (unsigned int) nn && **xc > **(xc+1)) {
 	    c++; xc++;
 	}
-	if (*t <= **xc) break;
-	*xi = *xc; xi = xc;
+	if (*formerlyLast <= **xc) break;
+	*xi = *xc; 
+
+	/* now that it moved up, update its offset */
+	newOffset = xi-x[its];
+	tIndex = (*xi)-t[its];
+	offsets[its][tIndex] = newOffset;
+
+	xi = xc;
     }
-    *xi = t;
+    *xi = formerlyLast;
+
+    /* now that we moved it far enough down, record the offset */
+    newOffset = xi-x[its];
+    tIndex = *xi-t[its];
+    offsets[its][tIndex] = newOffset;
+
     return vv;
 }
 
-void pqueue_update(float** vv)
+void pqueue_update(int index)
 /* restore the heap */
 {
-    int its;
+    int its, newOffset, tIndex;
     unsigned int c;
+/*
     int n;
+*/
     float **xc, **xi;
     
 #ifdef _OPENMP
@@ -334,8 +341,11 @@ void pqueue_update(float** vv)
 #else
     its = 0;
 #endif
-
-    xi = vv; 
+    
+    c = offsets[its][index];
+    xi = x[its]+c;
+    /* do not need to visit its children */
+/*
     n = (int) (xn[its]-x[its]); c = (unsigned int) (xi-x[its]);
     for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
 	xc = x[its] + c;
@@ -345,13 +355,25 @@ void pqueue_update(float** vv)
 	if (**vv <= **xc) break;
 	*xi = *xc; xi = xc;
     }
-    xi = vv; c = (unsigned int) (xi-x[its]);
+*/
     for (c >>= 1; c > 0; c >>= 1) {
 	xc = x[its] + c;
-	if (**vv > **xc) break;
-	*xi = *xc; xi = xc; 
+	if (t[its][index] > **xc) break;
+	*xi = *xc;
+	
+	/* now that it moved down, update its offset */
+	newOffset = xi-x[its];
+	tIndex = (*xi)-t[its];
+	offsets[its][tIndex] = newOffset;
+	
+	xi = xc; 
     }
-    *xi = *vv; 
+    *xi = t[its]+index; 
+
+    /* now that we moved it far enough up, record the offset */
+    newOffset = xi-x[its];
+    tIndex = *xi-t[its];
+    offsets[its][tIndex] = newOffset;
 }
 
 int neighbours(float* time, int i) 
@@ -401,11 +423,12 @@ int update(float value, float* time, int i)
 	    in[its][i] = SF_FRONT;      
 	    pqueue_insert(time+i);
 	    return 1;
+	} else {
+	    assert(in[its][i] == SF_FRONT);
+	    pqueue_update(i);
 	}
     }
-/*
-    pqueue_update(&(time+i));
-*/
+
     return 0;
 }
 

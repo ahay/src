@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, recv, topo, grad, norm;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep;
     sf_weight weight=NULL;
 
     sf_init(argc,argv);
@@ -180,6 +180,17 @@ int main(int argc, char* argv[])
 	grad = NULL;
     }
     
+    /* output steepest-descent at each iteration */
+    if (NULL != sf_getstring("steep")) {
+	steep = sf_output("steep");
+	sf_putint(grad,"n3",n[2]);
+	sf_putfloat(grad,"d3",d[2]);
+	sf_putfloat(grad,"o3",o[2]);
+	sf_putint(grad,"n4",niter);
+    } else {
+	steep = NULL;
+    }
+
     /* output misfit L2 norm at each iteration */
     if (NULL != sf_getstring("misnorm")) {
 	norm = sf_output("misnorm");
@@ -262,7 +273,7 @@ int main(int argc, char* argv[])
 		for (it=0; it < nt; it++) {
 		    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
 		}
-		sf_floatwrite(ds,nt,sout);
+		sf_floatwrite(dv,nt,sout);
 	    } else {
 		sf_floatwrite(ds,nt,sout);
 	    }
@@ -279,6 +290,24 @@ int main(int argc, char* argv[])
 		    ds[it] = 0.;
 		}
 		
+		if (steep != NULL) {
+		    fatomo_lop(true,false,nt,nrhs,ds,rhs);
+
+		    if (velocity) {
+			for (it=0; it < nt; it++) {
+			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
+			}
+			sf_floatwrite(dv,nt,steep);
+		    } else {
+			sf_floatwrite(ds,nt,steep);
+		    }
+		}
+
+		/* clean-up */
+		for (it=0; it < nt; it++) {
+		    ds[it] = 0.;
+		}
+
 		/* solve ds */
 		if (l1norm) {
 		    /* sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end"); */
@@ -300,7 +329,7 @@ int main(int argc, char* argv[])
 		    ds[it] = ds[it]/sqrtf(s[it]);
 		}
 		
-		if (grad != NULL) {		
+		if (grad != NULL) {
 		    if (velocity) {
 			for (it=0; it < nt; it++) {
 			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);

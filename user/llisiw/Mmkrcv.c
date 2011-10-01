@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     for (is=0; is < ns; is++) {
 	fastmarch(t,s,flag,plane,
 		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-		  source[is][2],source[is][1],source[is][0],1,1,1,order);
+		  source[is][2],source[is][1],source[is][0],0,0,0,order);
 
 	temp[1]  = (source[is][1]-o[1])/d[1]+0.5;
 	left[1]  = temp[1]-offset[1];

@@ -275,6 +275,9 @@ int main(int argc, char* argv[])
     
     for (it=0; it < nt; it++) {
 	rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+/*
+	rhs[it] = -rhsr[it]-rhsi[it];
+*/
     }
     
     if (NULL != witer) sf_floatwrite(w,nt,witer);
