@@ -183,10 +183,10 @@ int main(int argc, char* argv[])
     /* output steepest-descent at each iteration */
     if (NULL != sf_getstring("steep")) {
 	steep = sf_output("steep");
-	sf_putint(grad,"n3",n[2]);
-	sf_putfloat(grad,"d3",d[2]);
-	sf_putfloat(grad,"o3",o[2]);
-	sf_putint(grad,"n4",niter);
+	sf_putint(steep,"n3",n[2]);
+	sf_putfloat(steep,"d3",d[2]);
+	sf_putfloat(steep,"o3",o[2]);
+	sf_putint(steep,"n4",niter);
     } else {
 	steep = NULL;
     }
