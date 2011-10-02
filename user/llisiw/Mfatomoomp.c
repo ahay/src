@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
-    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
+    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep;
     sf_weight weight=NULL;
@@ -66,6 +66,12 @@ int main(int argc, char* argv[])
     s = sf_floatalloc(nt);
     sf_floatread(s,nt,sinp);
 
+    if (!sf_getfloat("min",&min)) min=0.;
+    /* minimum allowed velocity */
+
+    if (!sf_getfloat("max",&max)) max=SF_HUGE;
+    /* maximum allowed velocity */
+
     if (!sf_getbool("velocity",&velocity)) velocity=true;
     /* if y, the input is velocity; n, slowness squared */
     
@@ -76,6 +82,9 @@ int main(int argc, char* argv[])
 	}
 	
 	dv = sf_floatalloc(nt);
+	
+	min = (min==0.)?SF_HUGE:(1./min);
+	max = (max==SF_HUGE)?0.:(1./max);
     }
     
     /* allocate memory for temporary data */
@@ -94,7 +103,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
-    
+
     /* read in shot file */
     if (NULL == sf_getstring("shot"))
 	sf_error("Need source shot=");
@@ -340,13 +349,30 @@ int main(int argc, char* argv[])
 		    }
 		}
 
+		/* avoid overshot */
+		gama = 1.;
+
+		for (it=0; it < nt; it++) {
+		    /* go below minimum allowed value */
+		    if (ds[it]>0. && (sqrtf(s[it])+ds[it])>min) {
+			ratio = (min-sqrtf(s[it]))/ds[it];
+			gama = (gama<ratio)?gama:ratio;
+		    }
+
+		    /* go beyond maximum allowed value */
+		    if (ds[it]<0. && (sqrtf(s[it])+ds[it])<max) {
+			ratio = (max-sqrtf(s[it]))/ds[it];
+			gama = (gama<ratio)?gama:ratio;
+		    }
+		}
+
 		/* line search */
 		for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
 		    
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] != 1)
-			    temps[it] = (sqrtf(s[it])+step*ds[it])*(sqrtf(s[it])+step*ds[it]);
+			    temps[it] = (sqrtf(s[it])+gama*step*ds[it])*(sqrtf(s[it])+gama*step*ds[it]);
 		    }
 		    
 		    /* forward fast-marching for stencil time */		    
@@ -373,9 +399,9 @@ int main(int argc, char* argv[])
 		}
 
 		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d:\t %g (line-search %d).",iter+1,niter,rate,istep);
+		    sf_warning("L1 misfit after iteration %d of %d:\t %g (gama = %g, istep = %d).",iter+1,niter,rate,gama,istep);
 		else
-		    sf_warning("L2 misfit after iteration %d of %d:\t %g (line-search %d).",iter+1,niter,rate,istep);
+		    sf_warning("L2 misfit after iteration %d of %d:\t %g (gama = %g, istep = %d).",iter+1,niter,rate,gama,istep);
 
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }
