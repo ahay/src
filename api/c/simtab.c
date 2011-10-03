@@ -203,7 +203,7 @@ bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par)
 
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
-    
+ 
     errno = 0;
     i = strtol(val,NULL,10);
     if (ERANGE == errno || i < INT_MIN || i > INT_MAX) return false;
