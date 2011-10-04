@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
 	nt *= n[i]; plane[i] = false;
     }
     if (dim < 3) {
+	/*NOTE: need debugging inconsistancy between source[2]*/
 	n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
     }
     
@@ -145,6 +146,7 @@ int main(int argc, char* argv[])
     fastmarch_init(n[2],n[1],n[0]);
 
     for (is=0; is < ns; is++) {
+	/* NOTE: no constant box around source */
 	fastmarch(t,s,flag,plane,
 		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
 		  source[is][2],source[is][1],source[is][0],0,0,0,order);

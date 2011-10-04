@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep, titer;
     sf_weight weight=NULL;
 
     sf_init(argc,argv);
@@ -200,6 +200,18 @@ int main(int argc, char* argv[])
 	steep = NULL;
     }
 
+    /* output time at each iteration */
+    if (NULL != sf_getstring("titer")) {
+	titer = sf_output("titer");
+	sf_putint(titer,"n3",n[2]);
+	sf_putfloat(titer,"d3",d[2]);
+	sf_putfloat(titer,"o3",o[2]);
+	sf_putint(titer,"n4",nshot);
+	sf_putint(titer,"n5",niter);
+    } else {
+	titer = NULL;
+    }
+
     /* output misfit L2 norm at each iteration */
     if (NULL != sf_getstring("misnorm")) {
 	norm = sf_output("misnorm");
@@ -260,6 +272,9 @@ int main(int argc, char* argv[])
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
     
+    if (titer != NULL)
+	sf_floatwrite(t[0],nt*nshot,titer);
+
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
     rhsnorm = rhsnorm0;
@@ -388,6 +403,10 @@ int main(int argc, char* argv[])
 			}
 			rhsnorm1 = rhsnorm;
 			rate = rhsnorm1/rhsnorm0;
+
+			if (titer != NULL)
+			    sf_floatwrite(t[0],nt*nshot,titer);
+
 			break;
 		    }
 		}
