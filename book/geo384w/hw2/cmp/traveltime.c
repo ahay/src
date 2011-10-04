@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
 		    t[ih] = sqrtf(t2+h2/v2);
 		    break;
-		case 's': /* acceleration term */
+		case 's': /* shifted hyperbola */
 
 		    /* !!! MODIFY BELOW !!! */
 
