@@ -1,6 +1,6 @@
 \author{Charles Hewitt Dix} 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Homework 3}
+\title{Homework 2}
 
 \begin{abstract}
   This homework has three parts. In the theoretical part, you will
@@ -23,11 +23,14 @@ Completing the computational part of this homework assignment requires
 \end{itemize}
 
 You are welcome to do the assignment on your personal computer by
-installing the required environments. In this case, you can obtain all
-homework assignments from the \texttt{Madagascar} repository by running
+installing the required environments. In this case, you can obtain this
+homework assignment from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw2
 \end{verbatim}
+
+The necessary environment is also installed in a computer lab
+at the Department of Geological Sciences.
 
 \section{Theoretical part}
 
@@ -68,6 +71,21 @@ show that the amplitude continuation along a ray is given by equation
   \left(\frac{\rho_0\,V_0\,J_0}{\rho_1\,V_1\,J_1}\right)^{1/2}\;, 
 \end{equation}
 where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
+\item (EXTRA CREDIT) Consider the elastic wave equation
+\begin{equation}
+  \label{eq:ewave}
+  \rho\,\ddot{u}_i = C_{ijkl,j}\,u_{k,l} + C_{ijkl}\,u_{k,lj}\;
+\end{equation}
+in the case of an isotropic elasticity
+\begin{equation}
+  \label{eq:lame}
+  C_{ijkl} = \lambda\,\delta_{ij}\,\delta_{kl} + 
+  \mu\,(\delta_{ik}\,\delta_{jl} + \delta_{il}\,\delta_{jk})\;.
+\end{equation}
+Using the geometrical representation~(\ref{eq:gwave}) with the P-wave
+polarization given by equation~(\ref{eq:vamp}), show that the
+corresponding amplitude equation is similar to
+equation~(\ref{eq:avj}).
 \end{enumerate}
 \item Consider a medium with a constant gradient of slowness squared
   \begin{equation}
@@ -117,15 +135,15 @@ More accurate approximations, involving additional parameters, are possible.
 \item Consider the following three-parameter approximation
   \begin{equation}
     \label{eq:taner}
-    T(h) \approx \sqrt{T_0^2 + \frac{h^2}{V_0^2+a\,h^2}}\;,
+    T(h) \approx T_0\,\left(1-\frac{1}{S}\right) + 
+\frac{1}{S}\,\sqrt{T_0^2+S\,\frac{h^2}{V_0^2}}\;,
   \end{equation}
-  where $a$ is the velocity ``acceleration'' parameter
-  \cite[]{taner1,taner2,blias2}. 
+  where $S$ is the so-called ``heterogeneity'' parameter. 
 
-Evaluate parameter $a$ in terms of the velocity $V(z)$ and the reflector depth $z_0$.
+Evaluate parameter $S$ in terms of the velocity $V(z)$ and the reflector depth $z_0$.
 \begin{equation}
   \label{eq:a}
-  a =
+  S =
 \end{equation}
 by expanding
   equation~(\ref{eq:taner}) in a Taylor series around the zero offset
@@ -133,15 +151,24 @@ by expanding
   traveltime. The exact traveltime is given by the parametric equations
   \begin{eqnarray}
 \label{eq:xofp}
-h(p) & = & \int\limits_0^{z_0} \frac{p\,V(z)\,dz}{\sqrt{1-p^2 V^2(z)}}\;, \\
+h & = & \int\limits_0^{z_0} \frac{p\,V(z)\,dz}{\sqrt{1-p^2 V^2(z)}}\;, \\
 \label{eq:tofp}
-T(p) & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
+T & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
 \end{eqnarray}
-
+\item Let $\tau = T-p\,h$. Show that $\tau$ can be approximated to the same accuracy by
+\begin{equation}
+    \label{eq:taner}
+    \tau(p) \approx \tau_0\,\left(1-\frac{1}{S_{\tau}}\right) + 
+\frac{\tau_0}{S_{\tau}}\,\sqrt{1-S_{tau}\,{V_{\tau}^2}}\;.
+  \end{equation}
+Find $\tau_0$, $V_{\tau}$, and $S_{\tau}$.
 \end{enumerate}
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\newpage
+
 
 \section{Computational part}
 \inputdir{cmp}
@@ -172,7 +199,7 @@ CMP gather after NMO.
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd ~/geo384w/hw3/cmp
+cd hw2/cmp
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -200,12 +227,10 @@ scons view
 
 {\small \lstinputlisting[frame=single]{cmp/SConstruct}}
 
-\section{Programming part}
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{cmp/traveltime.c}
-
 \newpage
+
+
+\section{Programming part}
 
 \sideplot{time}{width=\textwidth}{Traveltime in a $V(z)$ medium.}
 
@@ -224,12 +249,16 @@ p_{n+1} = p_n - \frac{h(p_n)-h}{h'(p_n)}\;.
 \item For the traveltime in Figure~\ref{fig:time}, find the offset, where the absolute error of the nonhyperbolic approximation~(\ref{eq:taner}) exceeds~0.1 s. 
 \end{enumerate}
 
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{cmp/traveltime.c}
+
 \newpage
 
 \section{Completing the assignment}
 
 \begin{enumerate}
-\item Change directory to \verb#geo384w/hw3#.
+\item Change directory to \verb#hw2#.
 \item Edit the file \texttt{paper.tex} in your favorite editor and change the
   first line to have your name instead of Dix's.
 \item Run

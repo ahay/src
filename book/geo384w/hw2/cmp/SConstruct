@@ -20,9 +20,8 @@ Plot('vscan','grey color=j allpos=y title="Semblance Scan" ')
 prog = Program('traveltime.c')
 exe = str(prog[0])
 
-# !!! CHANGE BELOW !!!
 ##############################
-grad = 0.5 # Velocity gradient
+grad = 0.3 # Velocity gradient
 ##############################
 
 cmps = []
@@ -56,7 +55,7 @@ for iv in range(21):
     Plot(time+'g',time,
          '''
          graph yreverse=y pad=n min2=0 max2=3.996
-         wantaxis=n wanttitle=n
+         wantaxis=n wanttitle=n plotfat=10
          ''')
     Plot(time,['cmp',time+'g'],'Overlay')
 
@@ -100,8 +99,6 @@ for iv in range(21):
     cmps.append(cmp)
 Plot('cmps',cmps,'Movie',view=1)
 
-
-# !!! CHANGE BELOW !!!
 ###############################
 frame = 10
 ###############################
@@ -115,7 +112,7 @@ Flow('time',['vint%d' % frame,exe],
 Result('time',
        '''
        graph title=Traveltime
-       label2=Time unit2=s
+       label2=Time unit2=s yreverse=y
        label1=Offset unit1=km
        ''')
 

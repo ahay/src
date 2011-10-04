@@ -5,7 +5,7 @@ int main(int argc, char* argv[])
 {
     char *type;
     int ih, nh, it, nt, ir, nr, *r, iter, niter;
-    float h, dh, h0, dt, t0, t2, h2, v2, a, p, hp, tp;
+    float h, dh, h0, dt, t0, t2, h2, v2, s, p, hp, tp;
     float *v, *t;
     sf_file vel, tim;
 
@@ -78,11 +78,11 @@ int main(int argc, char* argv[])
 
 		    t[ih] = sqrtf(t2+h2/v2);
 		    break;
-		case 'a': /* acceleration term */
+		case 's': /* acceleration term */
 
 		    /* !!! MODIFY BELOW !!! */
 
-		    a = 0.0;
+		    s = 0.0;
 
 		    v2 = 0.0;
 		    for (it=0; it < nt; it++) {
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 		    }
 		    v2 /= nt;
 
-		    t[ih] = sqrtf(t2+h2/(v2+a*h2));
+		    t[ih] = sqrtf(t2+h2/v2);
 		    break;
 		case 'e': /* exact */
 		    
