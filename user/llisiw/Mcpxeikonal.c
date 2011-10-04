@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
     int **pdir;
-    sf_file in, out, vel, mask, ref, gap, witer, dwiter, rhsiter, stencil, x0iter, titer, wtiter;
+    sf_file in, out, vel, mask, ref, gap, witer, dwiter, rhsiter, stencil, x0iter, titer, wtiter, liniter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -149,6 +149,16 @@ int main(int argc, char* argv[])
 	x0iter = NULL;
     }
 
+    /* output linearized cost function at each iteration */
+    if (NULL != sf_getstring("liniter")) {
+	liniter = sf_output("liniter");
+	sf_settype(liniter,SF_FLOAT);
+	sf_putint(liniter,"n3",n[2]);
+	sf_putint(liniter,"n4",niter);
+    } else {
+	liniter = NULL;
+    }
+
     /* output t at each iteration */
     if (NULL != sf_getstring("titer")) {
 	titer = sf_output("titer");
@@ -175,7 +185,7 @@ int main(int argc, char* argv[])
 	mask = sf_input("mask");
 	sf_intread(m,nt,mask);
 	sf_fileclose(mask);
-
+	
 	for (it=0; it < nt; it++) {
 	    if (m[it] != 0)
 		known[it] = true;
@@ -233,7 +243,8 @@ int main(int argc, char* argv[])
     rhs   = sf_floatalloc(nt);
 
     /* initialize fastmarchcpx */
-    fastmarchcpx_init(n,d);
+    /* NOTE: default accuracy 2nd order */
+    fastmarchcpx_init(n,o,d,2);
 
     /* initialize cpxeiko */
     cpxeiko_init(dim,n,nt,d);
@@ -314,6 +325,11 @@ int main(int argc, char* argv[])
 	sf_cgstep_close();
 	
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
+
+	if (NULL != liniter) {
+	    cpxeiko_operator(false,false,nt,nt,dw,rhsr);
+	    sf_floatwrite(rhsr,nt,liniter);
+	}
 
 	gama = 1.;
 	tol = 1.e-8;

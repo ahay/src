@@ -320,7 +320,7 @@ static bool updaten (int m, float* res, struct Upd *v[])
     if (discr < 0.) return false;
     
     t = b + sqrt(discr);
-    if (t < v[m-1]->value) return false;
+    if (t <= v[m-1]->value) return false;
 
     *res = t;
     return true;
@@ -346,7 +346,7 @@ static bool updaten2 (int m, float* res, struct Upd *v[])
     if (discr < 0.) return false;
     
     t = b - sqrt(discr);
-    if (t > v[m-1]->value) return false;
+    if (t >= v[m-1]->value) return false;
 
     *res = t;
     return true;
