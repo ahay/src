@@ -1156,10 +1156,10 @@ void sf_csolver_reg (sf_coperator oper   /* linear operator */,
 	cblas_csscal(nreg,eps,rr+ny,1);
     } else {
 	for (i=0; i < nx; i++) {
-	    x[i] = 0.0;
+	    x[i] = sf_cmplx(0.0,0.0);
 	} 
 	for (i=0; i < nreg; i++) {
-	    rr[i+ny] = 0.0;
+	    rr[i+ny] = sf_cmplx(0.0,0.0);
 	}
     }
 
