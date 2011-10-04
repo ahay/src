@@ -237,7 +237,7 @@ void sf_out(sf_file out          /* output file */,
     int ndim;
     off_t n[SF_MAX_DIM];
     sf_file inp;
-    FILE *ofile;
+    FILE *ofile=NULL;
 
     ofile = sf_tempfile(&oname,"w+b");
     

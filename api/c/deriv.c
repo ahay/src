@@ -38,7 +38,7 @@ void sf_deriv_init(int nt1  /* transform length */,
     n = n1;
     nt = nt1;
     c = 1./(2*sqrtf(c1));
-    c2 = c*c;
+    c2 = c*c; c2=c2*1.0;
     h = sf_floatalloc(nt);
 }
 
