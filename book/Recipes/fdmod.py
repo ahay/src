@@ -55,6 +55,9 @@ def param(par):
             par['height']=10
         else:
             par['height']=13*par['ratio']
+
+    if(not par.has_key('dratio')): par['dratio']=1.0*(par['tmax']-par['tmin'])/(par['xmax']-par['xmin'])
+    par['dheight']=10
             
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
@@ -198,7 +201,7 @@ def dgrey(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-	   par['ratio'],par['height'],
+	   par['dratio'],par['dheight'],
            par['labelattr']+' '+custom)
 
 def dwigl(custom,par):
@@ -212,7 +215,7 @@ def dwigl(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-	   par['ratio'],par['height'],
+	   par['dratio'],par['dheight'],
            par['labelattr']+' '+custom)
 
 def dgrey3d(custom,par):
