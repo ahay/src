@@ -120,15 +120,10 @@ void cpxeiko_ref(int dim,
     upgrad_forw(ref,r0,rhs);
 }
 
-void cpxeiko_print(bool flag   /* real=true / imag=false */,
-		   int **dir   /* output direction */)
+void cpxeiko_sten(sf_complex **dir /* output stencil */)
 /*< print out stencil >*/
 {
-    if (flag) {
-	upgrad_print(upgreal,dir);
-    } else {
-	upgrad_print(upgimag,dir);
-    }
+    upgrad_sten(upgreal,upgimag,dir);
 }
 
 void cpxeiko_close()

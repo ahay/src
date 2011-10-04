@@ -25,14 +25,14 @@
 int main(int argc, char* argv[])
 {
     bool *known, velocity, verb;
-    int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
+    int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep, count;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0;
-    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol;
-    sf_complex *t, *t0;
+    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, *unit;
+    sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
-    int **pdir;
-    sf_file in, out, vel, mask, ref, gap, witer, dwiter, rhsiter, stencil, x0iter, titer, wtiter, liniter;
+    sf_file in, out, vel, mask, ref, gap;
+    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -127,16 +127,33 @@ int main(int argc, char* argv[])
     }
     
     /* output stencil at each iteration */
-    if (NULL != sf_getstring("stencil")) {
-	stencil = sf_output("stencil");
-	sf_settype(stencil,SF_INT);
-	sf_putint(stencil,"n3",n[2]);
-	sf_putint(stencil,"n4",dim);
-	sf_putint(stencil,"n5",niter);
-	pdir = sf_intalloc2(nt,dim);
+    /* NOTE: only first iteration */
+    if (NULL != sf_getstring("upiter")) {
+	upiter = sf_output("upiter");
+	sf_putint(upiter,"n3",n[2]);
+	sf_putint(upiter,"n4",dim);
+	sf_putint(upiter,"n5",1);
+	pdir = sf_complexalloc2(nt,dim);
     } else {
-	stencil = NULL;
+	upiter = NULL;
 	pdir = NULL;
+    }
+    
+    /* output operator at each iteration */
+    /* NOTE: only first iteration */
+    if (NULL != sf_getstring("operiter")) {
+	operiter = sf_output("operiter");
+	sf_settype(operiter,SF_FLOAT);
+	sf_putint(operiter,"n1",nt);
+	sf_putint(operiter,"n2",nt);
+	sf_putint(operiter,"n3",2);
+	sf_putint(operiter,"n4",1);
+	oper = sf_floatalloc3(nt,nt,2);
+	unit = sf_floatalloc(nt);
+    } else {
+	operiter = NULL;
+	oper = NULL;
+	unit = NULL;
     }
     
     /* output x0 at each iteration */
@@ -198,10 +215,10 @@ int main(int argc, char* argv[])
 	}
     }
 
-    t0    = sf_complexalloc(nt);
-    tr0   = sf_floatalloc(nt);
-    ti0   = sf_floatalloc(nt);
-    fix   = sf_floatalloc(nt);
+    t0  = sf_complexalloc(nt);
+    tr0 = sf_floatalloc(nt);
+    ti0 = sf_floatalloc(nt);
+    fix = sf_floatalloc(nt);
     
     ref = sf_input("ref");
     sf_complexread(t0,nt,ref);
@@ -286,9 +303,6 @@ int main(int argc, char* argv[])
     
     for (it=0; it < nt; it++) {
 	rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
-/*
-	rhs[it] = -rhsr[it]-rhsi[it];
-*/
     }
     
     if (NULL != witer) sf_floatwrite(w,nt,witer);
@@ -308,9 +322,29 @@ int main(int argc, char* argv[])
     
     sf_warning("Iteration 0 of %d:\t misfit=%g, w=%g.",niter,rhsnorm,cblas_snrm2(nt,w,1));
 
-    if (NULL != stencil) {
-	cpxeiko_print(true,pdir);
-	sf_intwrite(pdir[0],nt*dim,stencil);
+    if (NULL != upiter) {
+	cpxeiko_sten(pdir);
+	sf_complexwrite(pdir[0],nt*dim,upiter);
+    }
+
+    if (NULL != operiter) {
+	count = 0;
+
+	for (i=0; i < nt; i++) {
+	    for (it=0; it < nt; it++) {
+		if (it == i)
+		    unit[it] = 1.;
+		else
+		    unit[it] = 0.;
+	    }
+
+	    cpxeiko_operator(false,false,nt,nt,unit,oper[0][i]);
+	    cpxeiko_operator(true,false,nt,nt,oper[1][i],unit);
+	    
+	    count++;
+	}
+
+	sf_floatwrite(oper[0][0],nt*nt*2,operiter);
     }
 
     for (iter=0; iter < niter; iter++) {

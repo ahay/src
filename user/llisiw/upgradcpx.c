@@ -257,26 +257,53 @@ void upgrad_adj(upgrad upg,
     }
 }
 
-void upgrad_print(upgrad upg,
-		  int **dir   /* direction */)
+void upgrad_sten(upgrad upg1,
+		 upgrad upg2,
+		 sf_complex **dir /* direction */)
 /*< print out stencil (for debug) >*/
 {
     int it, jt, i, m;
     unsigned char *up;
+    float **temp1, **temp2;
     
+    temp1 = sf_floatalloc2(nt,ndim);
+    temp2 = sf_floatalloc2(nt,ndim);
+
     for (it = 0; it < nt; it++) {
-	jt = upg->order[it];
-	up = upg->update[it];
+	jt = upg1->order[it];
+	up = upg1->update[it];
 	
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {
 		if (up[1] & m)
-		    dir[i][jt] = 1;
+		    temp1[i][jt] = 1.;
 		else
-		    dir[i][jt] = -1;
+		    temp1[i][jt] = -1.;
 	    } else {
-		dir[i][jt] = 0;
+		temp1[i][jt] = 0.;
 	    }
+	}
+    }
+
+    for (it = 0; it < nt; it++) {
+	jt = upg2->order[it];
+	up = upg2->update[it];
+	
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		if (up[1] & m)
+		    temp2[i][jt] = 1.;
+		else
+		    temp2[i][jt] = -1.;
+	    } else {
+		temp2[i][jt] = 0.;
+	    }
+	}
+    }
+
+    for (it = 0; it < nt; it++) {
+	for (i = 0; i < ndim; i++) {
+	    dir[i][it] = sf_cmplx(temp1[i][it],temp2[i][it]);
 	}
     }
 }
