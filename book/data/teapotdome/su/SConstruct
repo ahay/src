@@ -38,7 +38,7 @@ file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],'filt_mig.sgy',
      '''
      segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-       tape=$SOURCE endian=%d 
+       tape=$SOURCE endian=%d conv=1
      | segyclean
      ''' % (1-little_endian()))
 
