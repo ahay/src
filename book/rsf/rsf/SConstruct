@@ -4,7 +4,7 @@ import os
 import rsf.doc
 import rsf.prog
 
-root = default.get('RSFROOT')
+root = rsf.prog.RSFROOT
 libdir = os.path.join(root,'lib')
 bindir = os.path.join(root,'bin')
 sfdoc  = os.path.join(bindir,'sfdoc')
