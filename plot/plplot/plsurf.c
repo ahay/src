@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 
 #include <rsf.h>
 #include <rsfplot.h>
@@ -40,7 +41,7 @@ int main (int argc, char *argv[]) {
     PLFLT *clevel = NULL;
     PLFLT zmin, zmax, step;
 
-    char *rsfroot = NULL;
+    char *rsfroot = NULL, *plplotdir = NULL;
     char *color, *title = NULL;
     char *label1, *label2, *label3;
     char *unit1, *unit2, *unit3;
@@ -83,9 +84,13 @@ int main (int argc, char *argv[]) {
     /* Set up loadable driver directory */
     rsfroot = getenv("RSFROOT");
     if (rsfroot == NULL) {
-        rsfroot="/usr";
+        plplotdir = strdup ("/usr/lib");
+    } else {
+        plplotdir = (char*)sf_ucharalloc (strlen (rsfroot) + 5);
+        strcpy (plplotdir, rsfroot);
+        strcpy (&plplotdir[strlen (rsfroot)], "/lib");
     }
-    setenv ("PLPLOT_DRV_DIR", rsfroot, 1);
+    setenv ("PLPLOT_DRV_DIR", plplotdir, 1);
 
     /* Initialize plplot */
     plinit (); 
