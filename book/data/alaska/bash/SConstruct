@@ -72,7 +72,7 @@ Plot('ielev','elev','''
 Result('elev',['selev','ielev'],'Overlay')
 Result('datum','''
        put label3= unit3=s |
-       plsurf mesh=n color=j az=25 alt=45 title="Datum shift"
+       grey color=j allpos=y pclip=100 bias=0.02 scalebar=y title="Datum shift"
        ''')
 
 ################################
@@ -163,13 +163,11 @@ Flow('pick2','semb2','''
 # Interpolate onto full CMP grid
 Flow('vel1','pick1',
      '''
-     transp plane=23 |
      transp | spline n1=551 d1=55 o1=-2612.5 |
      transp
      ''')
 Flow('vel2','pick2',
      '''
-     transp plane=23 |
      transp | spline n1=551 d1=55 o1=-2612.5 |
      transp
      ''')
@@ -190,7 +188,7 @@ Result('vel2','''
 ###################
 
 # Take picked velocities and covert to ascii RSF file
-Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','../line31-81/vpick.txt'],'''
+Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','../line31-81/vpickorig.txt'],'''
      ./${SOURCES[0]} ${SOURCES[1]} ${TARGETS[1]} |
      dd form=native
      ''',stdin=0)
@@ -218,10 +216,10 @@ Flow('nmo',['cmp','vel1'],'nmo velocity=${SOURCES[1]} half=n')
 
 # Stacking
 Flow('stack','nmo','stack axis=2 norm=n')
-Result('stack','agc rect1=250 | grey title=Stack')
+Result('stack','agc rect1=250 | grey title="Stack"')
 
-Flow('mstack','nmo','transp | median')
-Result('mstack','agc rect1=250 | grey title=Median')
+Flow('mstack','nmo','transp | despike2 | median')
+Result('mstack','agc rect1=250 | grey title="Despike + Median"')
 
 # Stack from USGS
 Fetch('31_81_PR.SGY',
