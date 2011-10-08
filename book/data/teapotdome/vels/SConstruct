@@ -1,0 +1,18 @@
+from rsf.proj import *
+
+Flow('vvol',['npr3_dmo.vel','interpvel.py'],'''
+     /usr/bin/python ${SOURCES[1]}
+     ''')
+
+xline=120
+minclip=8800
+maxclip=20000
+
+Result('vel_xline%d' % xline,'vvol','''
+       window min2=%d max2=%d | clip clip=%d | clip2 lower=%d upper=%d |
+       grey color=j scalebar=y allpos=y pclip=100 bias=%d
+            title="Velocity ar xline %d" label1=Time unit1=ms label2=Inline unit2=
+       ''' % (xline, xline, maxclip, minclip, maxclip, minclip, xline))
+
+End()
+
