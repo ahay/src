@@ -25,14 +25,14 @@
 int main(int argc, char* argv[])
 {
     bool *known, velocity, verb;
-    int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep, count;
-    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0;
-    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, *unit;
+    int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
+    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat;
+    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
     sf_file in, out, vel, mask, ref, gap;
-    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter;
+    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -96,6 +96,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nstep",&nstep)) nstep=10;
     /* number of linesearch */
     
+    if (!sf_getfloat("tol",&tol)) tol=1.e-8;
+    /* thresholding for gradient scaling */
+
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
 	witer = sf_output("witer");
@@ -149,10 +152,44 @@ int main(int argc, char* argv[])
 	sf_putint(operiter,"n3",2);
 	sf_putint(operiter,"n4",1);
 	oper = sf_floatalloc3(nt,nt,2);
-	unit = sf_floatalloc(nt);
     } else {
 	operiter = NULL;
 	oper = NULL;
+    }
+    
+    /* output operator at each iteration */
+    /* NOTE: only first iteration */
+    if (NULL != sf_getstring("matriter")) {
+	matriter = sf_output("matriter");
+	sf_settype(matriter,SF_FLOAT);
+	sf_putint(matriter,"n1",nt);
+	sf_putint(matriter,"n2",nt);
+	sf_putint(matriter,"n3",4);
+	sf_putint(matriter,"n4",1);
+	mat1 = sf_floatalloc3(nt,nt,4);
+    } else {
+	matriter = NULL;
+	mat1 = NULL;
+    }
+
+    /* output operator at each iteration */
+    /* NOTE: only first iteration */
+    if (NULL != sf_getstring("matiiter")) {
+	matiiter = sf_output("matiiter");
+	sf_settype(matiiter,SF_FLOAT);
+	sf_putint(matiiter,"n1",nt);
+	sf_putint(matiiter,"n2",nt);
+	sf_putint(matiiter,"n3",4);
+	sf_putint(matiiter,"n4",1);
+	mat2 = sf_floatalloc3(nt,nt,4);
+    } else {
+	matiiter = NULL;
+	mat2 = NULL;
+    }
+
+    if (operiter != NULL || matriter != NULL || matiiter != NULL) {
+	unit = sf_floatalloc(nt);
+    } else {
 	unit = NULL;
     }
     
@@ -192,6 +229,18 @@ int main(int argc, char* argv[])
 	sf_putint(wtiter,"n4",niter);
     } else {
 	wtiter = NULL;
+    }
+
+    /* output gamma at each iteration */
+    if (NULL != sf_getstring("gamiter")) {
+	gamiter = sf_output("gamiter");
+	sf_settype(gamiter,SF_FLOAT);
+	sf_putint(gamiter,"n3",n[2]);
+	sf_putint(gamiter,"n4",niter);
+	gammat = sf_floatalloc(nt);
+    } else {
+	gamiter = NULL;
+	gammat = NULL;
     }
 
     /* read boundary condition */
@@ -269,6 +318,8 @@ int main(int argc, char* argv[])
     /* initial misfit */
     cpxeiko_set(tr,ti);
 
+/* NOTE: the following lines recompute initial R and I according to
+   w from I, but with boundary conditions for traveltime. */
 /*
     cpxeiko_forw(false,ti,w);
     
@@ -327,9 +378,8 @@ int main(int argc, char* argv[])
 	sf_complexwrite(pdir[0],nt*dim,upiter);
     }
 
-    if (NULL != operiter) {
-	count = 0;
-
+    /* output operators in matrix form */
+    if (NULL != operiter || NULL != matriter || NULL != matiiter ) {
 	for (i=0; i < nt; i++) {
 	    for (it=0; it < nt; it++) {
 		if (it == i)
@@ -338,13 +388,34 @@ int main(int argc, char* argv[])
 		    unit[it] = 0.;
 	    }
 
-	    cpxeiko_operator(false,false,nt,nt,unit,oper[0][i]);
-	    cpxeiko_operator(true,false,nt,nt,oper[1][i],unit);
-	    
-	    count++;
-	}
+	    if (NULL != operiter) {
+		cpxeiko_operator(false,false,nt,nt,unit,oper[0][i]);
+		cpxeiko_operator(true,false,nt,nt,oper[1][i],unit);
+	    }	    
 
-	sf_floatwrite(oper[0][0],nt*nt*2,operiter);
+	    if (NULL != matriter) {
+		cpxeiko_mat(false,0,nt,nt,unit,mat1[0][i]);
+		cpxeiko_mat(false,1,nt,nt,unit,mat1[1][i]);
+		cpxeiko_mat(false,2,nt,nt,unit,mat1[2][i]);
+		cpxeiko_mat(false,3,nt,nt,unit,mat1[3][i]);
+	    }
+	    if (NULL != matiiter) {
+		cpxeiko_mat(true,0,nt,nt,unit,mat2[0][i]);
+		cpxeiko_mat(true,1,nt,nt,unit,mat2[1][i]);
+		cpxeiko_mat(true,2,nt,nt,unit,mat2[2][i]);
+		cpxeiko_mat(true,3,nt,nt,unit,mat2[3][i]);
+	    }
+	}
+	
+	if (NULL != operiter) {
+	    sf_floatwrite(oper[0][0],nt*nt*2,operiter);
+	}
+	if (NULL != matriter) {
+	    sf_floatwrite(mat1[0][0],nt*nt*4,matriter);
+	}
+	if (NULL != matiiter) {
+	    sf_floatwrite(mat2[0][0],nt*nt*4,matiiter);
+	}
     }
 
     for (iter=0; iter < niter; iter++) {
@@ -366,15 +437,22 @@ int main(int argc, char* argv[])
 	}
 
 	gama = 1.;
-	tol = 1.e-8;
 	
         /* trying to avoid the points where w is very close to zero */
 	for (it=0; it < nt; it++) {
+	    if (NULL != gammat) gammat[it] = 0.;
+
 	    if (dw[it] < 0. && w[it] > tol) {
 		ratio = -w[it]/dw[it];
-		gama = (gama<ratio)?gama:ratio;
+
+		if (gama > ratio) {
+		    gama = ratio;
+		    gammat[it] = 1.;
+		}
 	    }
 	}
+
+	if (NULL != gamiter) sf_floatwrite(gammat,nt,gamiter);
 
 	/* linesearch */
 	for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
@@ -411,6 +489,8 @@ int main(int argc, char* argv[])
 	    if (rhsnorm < rhsnorm1) break;
 	}	
 
+/* NOTE: the following lines supplies boundary condition but force 
+   other w to be the same as previous iteration. */
 /*
 	if (istep == nstep) {
 	    for (it=0; it < nt; it++) {
@@ -440,6 +520,8 @@ int main(int argc, char* argv[])
 */
 	
 	rhsnorm1 = rhsnorm;
+/* NOTE: the following line is trying to recompute w from forward modeled I.
+   This will introduce differences at least at boundaries. */
 /*	
 	cpxeiko_forw(false,ti,w);
 */

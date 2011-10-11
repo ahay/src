@@ -5,9 +5,8 @@ import bldutil
 progs = '''
 kirmig kirmig0 drayinte lineiko
 testanal gradient cconst cgconst
-fatomo fatomoomp mkrcv
+fatomo fatomoomp mkrcv cpxeikonal
 '''
-#cpxeikonal
 
 
 

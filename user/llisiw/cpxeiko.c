@@ -126,6 +126,32 @@ void cpxeiko_sten(sf_complex **dir /* output stencil */)
     upgrad_sten(upgreal,upgimag,dir);
 }
 
+void cpxeiko_mat(bool sign, int type, int nm, int nd, float *m, float *d)
+/*< print out matrix >*/
+{
+    if (sign) {
+	/* imaginary matrix */
+	if (type == 0)
+	    upgrad_forw(upgimag,m,d);
+	else if (type == 1)
+	    upgrad_adj(upgimag,d,m);
+	else if (type == 2)
+	    upgrad_solve(upgimag,m,d,NULL);
+	else if (type == 3)
+	    upgrad_inverse(upgimag,d,m,NULL);
+    } else {
+	/* real matrix */
+	if (type == 0)
+	    upgrad_forw(upgreal,m,d);
+	else if (type == 1)
+	    upgrad_adj(upgreal,d,m);
+	else if (type == 2)
+	    upgrad_solve(upgreal,m,d,NULL);
+	else if (type == 3)
+	    upgrad_inverse(upgreal,d,m,NULL);
+    }
+}
+
 void cpxeiko_close()
 /*< free allocated memory >*/
 {
