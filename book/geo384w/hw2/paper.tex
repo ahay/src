@@ -134,7 +134,7 @@ More accurate approximations, involving additional parameters, are possible.
 \begin{enumerate}
 \item Consider the following three-parameter approximation
   \begin{equation}
-    \label{eq:taner}
+    \label{eq:shifted}
     T(h) \approx T_0\,\left(1-\frac{1}{S}\right) + 
 \frac{1}{S}\,\sqrt{T_0^2+S\,\frac{h^2}{V_0^2}}\;,
   \end{equation}
@@ -146,7 +146,7 @@ Evaluate parameter $S$ in terms of the velocity $V(z)$ and the reflector depth $
   S =
 \end{equation}
 by expanding
-  equation~(\ref{eq:taner}) in a Taylor series around the zero offset
+  equation~(\ref{eq:shifted}) in a Taylor series around the zero offset
   $h=0$ and comparing it with the corresponding Taylor series of the exact
   traveltime. The exact traveltime is given by the parametric equations
   \begin{eqnarray}
@@ -157,7 +157,7 @@ T & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
 \end{eqnarray}
 \item Let $\tau = T-p\,h$. Show that $\tau$ can be approximated to the same accuracy by
 \begin{equation}
-    \label{eq:taner}
+    \label{eq:tauofp}
     \tau(p) \approx \tau_0\,\left(1-\frac{1}{S_{\tau}}\right) + 
 \frac{\tau_0}{S_{\tau}}\,\sqrt{1-S_{\tau}\,{V_{\tau}^2}}\;.
   \end{equation}

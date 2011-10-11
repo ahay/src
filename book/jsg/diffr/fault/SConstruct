@@ -50,4 +50,9 @@ for cig in (41,83,110,137,165):
 
 Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 
+Flow('pred','bei-dip','pwpaint i0=125 eps=0.1')
+Plot('stk','bei-stk2','grey title=Intepretation label2=Distance unit2=km label1=Time unit1=s')
+Plot('pred','contour wanttitle=n wantaxis=n plotfat=5')
+Result('pred','stk pred','Overlay')
+
 End()
