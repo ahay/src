@@ -17,7 +17,7 @@ Flow('vscan','cmp',
      'vscan half=n v0=1.4 nv=111 dv=0.01 semblance=y')
 Plot('vscan','grey color=j allpos=y title="Semblance Scan" ')
 
-prog = Program('traveltime.c',CPPDEFINES='NO_BLAS')
+prog = Program('traveltime.c',CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
 exe = str(prog[0])
 
 ##############################
