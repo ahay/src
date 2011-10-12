@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-import sys, re
+import sys, re, os
 from numpy import *
 from scipy.interpolate import interp1d
-from scipy.interpolate import griddata
 from scipy.interpolate import Rbf
 
 # Dump RSF text header to standard output
@@ -23,19 +22,13 @@ def interp_from_t (t, v, tint):
 
 # Interpolation of velocities in a constant-t slice
 def interp_for_const_t (p, v, gx, gy):
-    # Do triangulation and mark points outside of the convex hull with NaNs
-    trslice = griddata (p, v, (gx, gy), method='linear')
-    # Do radial-basis function interpolation
-    slice = Rbf(pnt[:,0], pnt[:,1], v, function='thin_plate')(gx, gy)
-    # Mark points outside of the convex hull with NaNs
-    slice[where (isnan (trslice) == True)] = nan
-    return slice.astype (float32)
+    return Rbf(pnt[:,0], pnt[:,1], v, function='thin_plate')(gx, gy).T.astype (float32)
 
 # Visualize one slice after interpolation
 def show_slice (slice, pnt, nx, ny, title='Constant time slice'):
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
-    plt.imshow (slice.T, interpolation='nearest', cmap=cm.jet,
+    plt.imshow (slice, interpolation='nearest', cmap=cm.jet,
                 extent = (1,nx,1,ny), origin='lower')
     plt.title (title)
     plt.plot (pnt[:,0], pnt[:,1], 'k.')
@@ -109,6 +102,14 @@ vint = append (vint, interp_from_t (ts, vs, tint).reshape (nt, 1),
 # End of standard input scanning, proceed to interpolation
 #
 
+# Read survey mask
+mask = ones ((ninline, nxline))
+maskfile = 'surveymask.dat'
+if (len(sys.argv) > 1):
+    maskfile = sys.argv[1]
+if (os.path.exists (maskfile)):
+    mask = fromfile (maskfile, dtype = float32).reshape (ninline, nxline)
+
 # Number of points per time slice
 np = len (ils)
 
@@ -119,19 +120,17 @@ pnt = array (xls, dtype = float32).reshape (np, 1)
 pnt = append (pnt, array (ils, dtype = float32).reshape (np, 1), axis = 1)
 
 # Get one slice and visualize for test
-#slice = interp_for_const_t (pnt, vint[500,:], gx, gy)
+#slice = mask*interp_for_const_t (pnt, vint[500,:], gx, gy)
 #show_slice (slice, pnt, nxline, ninline, title="t=1.0s")
 
 #
 # Veloicty volume
-vvol = arange (0, dtype = float32)
-vvol = vvol.reshape (nxline, ninline, 0)
+vvol = zeros ((nt, ninline, nxline), dtype = float32)
 
 # Gor along time slices and do triangulation
 for it in range (nt):
     print >> sys.stderr, "Processing slice", it + 1, "of", nt
-    vvol = append (vvol, interp_for_const_t (pnt, vint[it,:], gx, gy).reshape (nxline, ninline, 1),
-                   axis = 2)
+    vvol[it] = mask*interp_for_const_t (pnt, vint[it,:], gx, gy)
 
 # Finally, dump trace by trace to binary file
 binfile = 'vvol.dat' # Binary part
@@ -140,7 +139,7 @@ print vvol.shape
 for il in range (ninline):
     print >> sys.stderr, "Saving inline", il + 1, "of", ninline
     for xl in range (nxline):
-        vvol[xl,il,:].tofile (bfid)
+        vvol[:,il,xl].tofile (bfid)
 bfid.flush ()
 bfid.close ()
 
