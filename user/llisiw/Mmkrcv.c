@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("offset2",&offset[1])) offset[1]=0;
     /* receiver offset crossline (on each side) */
 
-    nrecv = ((2*offset[0]+1)*(2*offset[1]+1)>n[1]*n[2])?n[1]*n[2]
+    nrecv = ((2*offset[0]+1)*(2*offset[1]+1)>n[1]*n[2])?n[1]*n[2]-1
 	:(2*offset[0]+1)*(2*offset[1]+1)-1;
 
     /* allocate memory for output */
@@ -169,15 +169,12 @@ int main(int argc, char* argv[])
 			if (j == temp[0] && k == temp[1])
 			    continue;
 			
-			skip = false;
 			for (i=0; i < n[0]; i++) {
-			    if (skip) break;
-			    
 			    if (s[k*n[1]*n[0]+j*n[0]+i] < air) {
 				recv[count] = k*n[1]*n[0]+j*n[0]+i;
 				reco[count] = t[k*n[1]*n[0]+j*n[0]+i];
-				skip = true;
 				count++;
+				break;
 			    }
 			}
 		    }
@@ -188,7 +185,7 @@ int main(int argc, char* argv[])
 	if (count < nrecv) {
 	    for (i=count; i < nrecv; i++) {
 		recv[i] = -1;
-		reco[i] = -1.0;
+		reco[i] = 0.;
 	    }
 	}
 
