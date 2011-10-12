@@ -72,7 +72,7 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* Verbosity flag */
     if (!sf_getbool ("time", &time)) time = false;
-    /* Total time measurement time */
+    /* Measure execution time */
     if (!sf_getbool ("aa", &aa)) aa = true;
     /* Antialiaing flag */
     if (!sf_getbool ("diff", &diff)) diff = true;
@@ -124,7 +124,7 @@ int main (int argc, char* argv[]) {
     sxsy = sf_input ("sxsy");
     if (SF_COMPLEX != sf_gettype (sxsy)) sf_error ("Need complex sxsy");
     if (!sf_histint (sxsy, "n2", &n)) sf_error ("No n2= in sxsy");
-    if (n != ntr) sf_error ("Number of values in sxsy is not equal to number of input traces");
+    if (n < ntr) sf_error ("Number of values in sxsy is less than number of input traces");
 
     gxgyfile = sf_getstring ("gxgy");
     /* File with receiver coordinates */
@@ -132,7 +132,7 @@ int main (int argc, char* argv[]) {
     gxgy = sf_input ("gxgy");
     if (SF_COMPLEX != sf_gettype (gxgy)) sf_error ("Need complex gxgy");
     if (!sf_histint (gxgy, "n2", &n)) sf_error ("No n2= in gxgy");
-    if (n != ntr) sf_error ("Number of values in gxgy is not equal to number of input traces");
+    if (n < ntr) sf_error ("Number of values in gxgy is less than number of input traces");
 
     cxcyfile = sf_getstring ("cxcy");
     /* File with midpoint coordinates */
@@ -140,7 +140,7 @@ int main (int argc, char* argv[]) {
     cxcy = sf_input ("cxcy");
     if (SF_COMPLEX != sf_gettype (cxcy)) sf_error ("Need complex cxcy");
     if (!sf_histint (cxcy, "n2", &n)) sf_error ("No n2= in cxcy");
-    if (n != ntr) sf_error ("Number of values in cxcy is not equal to number of input traces");
+    if (n < ntr) sf_error ("Number of values in cxcy is less than number of input traces");
 
     if (!sf_getint ("apx", &apx)) apx = onx/2;
     /* Apperture half-width in x direction */
@@ -297,10 +297,14 @@ int main (int argc, char* argv[]) {
             /* Loop over image traces within aperture */
             for (n = 0; n < l; n++) {
                 oidx = ap[n];
+                /* Skip positions outside of survey definition */
+                if (v[oidx*ont] < odx)
+                    continue;
                 ox = oox + (oidx % onx)*odx;
                 oy = ooy + (oidx / onx)*ody;
-                sf_ktmig_kernel (&t[m*nt], &v[oidx*ont], &img[oidx*ont], ox, oy, sx, sy, gx, gy,
-                                 nt, ont, ot, dt, oot, odt, maxtri, trfact, aa);
+                sf_ktmig_kernel (&t[m*nt], &v[oidx*ont], &img[oidx*ont],
+                                 ox, oy, sx, sy, gx, gy, nt, ont,
+                                 ot, dt, oot, odt, maxtri, trfact, aa);
             }
             if (verb) {
                 sf_timer_stop (main_kernel_timer);
@@ -325,7 +329,7 @@ int main (int argc, char* argv[]) {
                     sf_timer_get_total_time (main_kernel_timer));
     }
     if (verb || time)
-        sf_warning ("Total kernels + GPU I/O + disk I/O time: %f ms",
+        sf_warning ("Total kernels + disk I/O time: %f ms",
                     sf_timer_get_total_time (total_timer));
 
     free (ap);
