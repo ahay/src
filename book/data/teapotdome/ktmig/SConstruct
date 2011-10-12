@@ -66,7 +66,7 @@ Flow('teaimg',['datumcmps','vel','sxsycoord','gxgycoord','ixilcoord'],
            sxsy=${SOURCES[2]}
            gxgy=${SOURCES[3]}
            cxcy=${SOURCES[4]}
-           apx=200 apy=250 aa=y
+           apx=200 apy=250 aa=y diff=n
            trfact=%g maxtri=13
            verb=y time=y dbtr=64 |
      put o2=%g d2=%g o3=%g d3=%g
