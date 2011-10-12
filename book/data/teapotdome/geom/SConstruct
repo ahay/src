@@ -10,16 +10,16 @@ Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
      ''',stdin=0)
 
 # Xline/Inline numbers
-Flow('ix','tteapot','dd type=float | headermath output="cdpx"')
-Flow('il','tteapot','dd type=float | headermath output="cdpy"')
-Flow('ixilcoord',['ix','il'],'cmplx ${SOURCES[1]}')
-Result('ixilcoord','graph symbol="+" title="Xline/Inline coordinates" plotcol=2')
+Flow('ix','tteapot','dd type=float | headermath output="xline"')
+Flow('il','tteapot','dd type=float | headermath output="iline"')
+Flow('ixil',['ix','il'],'cmplx ${SOURCES[1]}')
+Result('ixil','graph symbol="+" title="Xline/Inline" plotcol=2')
 
 # Xline/Inline coordinates
-Flow('ixc','tteapot','dd type=float | headermath output="iline"')
-Flow('ilc','tteapot','dd type=float | headermath output="xline"')
-Flow('ixil',['ixc','ilc'],'cmplx ${SOURCES[1]}')
-Result('ixil','graph symbol="+" title="Xline/Inline locations" plotcol=4 transp=y')
+Flow('ixc','tteapot','dd type=float | headermath output="cdpx"')
+Flow('ilc','tteapot','dd type=float | headermath output="cdpy"')
+Flow('ixilcoord',['ixc','ilc'],'cmplx ${SOURCES[1]}')
+Result('ixilcoord','graph symbol="+" title="Xline/Inline coordinates" plotcol=4')
 
 # Shot coordinates
 Flow('sx','tteapot','dd type=float | headermath output="sx"')

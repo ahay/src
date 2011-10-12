@@ -17,7 +17,7 @@ Flow('surveymask.dat',['ixil','surveymask.py'],'''
      ''')
 
 # Interpolate velocities from t-v ASCII pairs
-Flow('vvol',['npr3_dmo.vel','interpvel.py','surveymask.dat'],'''
+Flow(['vvol','vvol.dat'],['npr3_dmo.vel','interpvel.py','surveymask.dat'],'''
      /usr/bin/python ${SOURCES[1]} ${SOURCES[2]}
      ''')
 
