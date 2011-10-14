@@ -66,6 +66,7 @@ In the build system:
 * Workaround for SCons bug #1488 
 * Fixed MacPorts and Fink path detection for compilers other than gcc
   on Mac
+* Fixed bug preventing spaces in ./configure arguments
 
 ==Release 1.2 (2011-07-14)==
 
