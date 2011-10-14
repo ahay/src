@@ -479,18 +479,20 @@ int main(int argc, char* argv[])
 	
         /* trying to avoid the points where w is very close to zero */
 	for (it=0; it < nt; it++) {
-	    if (NULL != gammat) gammat[it] = 0.;
-
 	    if (dw[it] < 0. && w[it] > tol) {
 		ratio = -w[it]/dw[it];
 
-		if (gama > ratio) {
-		    gama = ratio;
+		if (gama > ratio) gama = ratio;
+	    }
+	    
+	    if (NULL != gammat) {
+		if (w[it]+dw[it] < 0.)
 		    gammat[it] = 1.;
-		}
+		else
+		    gammat[it] = 0.;
 	    }
 	}
-
+	
 	if (NULL != gamiter) sf_floatwrite(gammat,nt,gamiter);
 
 	/* linesearch */
