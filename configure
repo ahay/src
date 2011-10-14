@@ -41,18 +41,19 @@ echo "checking Python version ... $python_v"
 # Detect RSFROOT. Priority: (1) --prefix= ; (2) env. variable; (3) sys.prefix
 # Also collect the list of all arguments other than --prefix= because this one
 # generates an error when passed to "scons"
-args='' 
+i=1
+prefixparnum=-1
 if test -n "$*"; then
-    for arg in $*;
+   for opt in "$@";
     do
-        case $arg in
+        case "$opt" in
         --prefix=*)
-	        root=`echo $arg | sed 's/[-a-zA-Z0-9]*=//'`
-		    ;;
-        *)
-            args=$args" "$arg
-            ;;
+	        root=`echo $opt | sed 's/[-a-zA-Z0-9]*=//'`
+                prefixparnum=$i
+		break
+ 	;;
         esac
+        i=$(( $i + 1 )) 
     done
 fi
 
@@ -102,8 +103,22 @@ echo "checking SCons version ... $scons_v"
 
 echo "Running RSFROOT=$root $scons $args config ..."
 rm -rf env.*sh .scon* config.py
+
+first=1
+arglist=""
+for i in "$@"
+do
+    if test $first -ne $prefixparnum; then
+        arglist=""$arglist" \"\$"$first"\""
+    fi
+    first=$(( $first + 1 )) 
+done
+
 echo "------------------------"
-RSFROOT=$root $scons $args config
+command1=`/bin/echo -e "$arglist config"`
+command2="RSFROOT=$root $scons `/bin/echo -e $command1`"
+echo $command2
+eval $command2
 echo "------------------------"
 echo "Done with configuration."
 
