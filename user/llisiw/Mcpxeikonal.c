@@ -26,13 +26,13 @@ int main(int argc, char* argv[])
 {
     bool *known, velocity, verb, symm, prec;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
-    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale;
+    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
-    sf_file in, out, vel, mask, ref, gap;
-    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter;
+    sf_file in, out, vel, mask, ref, wght;
+    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -104,11 +104,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("prec",&prec)) prec=false;
     /* rhs preconditioning */
-
-    if (prec)
-	scale = sf_floatalloc(nt);
-    else
-	scale = NULL;
 
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
@@ -198,6 +193,7 @@ int main(int argc, char* argv[])
 	mat2 = NULL;
     }
 
+    /* unit vector */
     if (operiter != NULL || matriter != NULL || matiiter != NULL) {
 	unit = sf_floatalloc(nt);
     } else {
@@ -254,6 +250,16 @@ int main(int argc, char* argv[])
 	gammat = NULL;
     }
 
+    /* output preconditioning at each iteration */
+    if (NULL != sf_getstring("preciter")) {
+	preciter = sf_output("preciter");
+	sf_settype(preciter,SF_FLOAT);
+	sf_putint(preciter,"n3",n[2]);
+	sf_putint(preciter,"n4",niter+1);
+    } else {
+	preciter = NULL;
+    }
+
     /* read boundary condition */
     m = sf_intalloc(nt);
     known = sf_boolalloc(nt);
@@ -296,16 +302,18 @@ int main(int argc, char* argv[])
     m = NULL;
     t0 = NULL;
 
-    /* read model weighting */
+    /* read right-hand side weighting */
     wt = sf_floatalloc(nt);
+    scale = sf_floatalloc(nt);
+    cost = sf_floatalloc(nt);
 
-    if (NULL != sf_getstring("gap")) {
-	gap = sf_input("gap");
-	sf_floatread(wt,nt,gap);
-	sf_fileclose(gap);
+    if (NULL != sf_getstring("wght")) {
+	wght = sf_input("wght");
+	sf_floatread(scale,nt,wght);
+	sf_fileclose(wght);
     } else {
 	for (it=0; it < nt; it++) {
-	    wt[it] = 1.;
+	    scale[it] = 1.;
 	}
     }
     
@@ -351,13 +359,25 @@ int main(int argc, char* argv[])
     cpxeiko_set(tr,ti);
 */
 
-    cpxeiko_forw(false,ti,w);
+    cpxeiko_forw(false,ti,wi);
 
-/*
     for (it=0; it < nt; it++) 
 	w[it] = wi[it];
-*/  
 
+    /* right-hand side preconditioning */
+    if (prec) {
+	for (it=0; it < nt; it++) {
+	    if (w[it] > 0.)
+		wt[it] = scale[it]/sqrtf(wi[it]*(s[it]+wi[it]));
+	    else
+		wt[it] = 0.;
+	}
+    } else {
+	for (it=0; it < nt; it++) {
+	    wt[it] = scale[it];
+	}
+    }
+    
     for (it=0; it < nt; it++) 
 	x0[it] = fix[it]-w[it];
     
@@ -365,10 +385,13 @@ int main(int argc, char* argv[])
     cpxeiko_forw(true, ti,rhsi);
     
     for (it=0; it < nt; it++) {
-	if (symm)
-	    rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
-	else
-	    rhs[it] = wt[it]*(-rhsi[it]-rhsi[it]);
+	if (symm) {
+	    rhs[it] = -rhsr[it]-rhsi[it];
+	} else {
+	    rhs[it] = -rhsi[it]-rhsi[it];
+	}
+
+	cost[it] = wt[it]*rhs[it];
     }
     
     if (NULL != witer) sf_floatwrite(w,nt,witer);
@@ -380,9 +403,10 @@ int main(int argc, char* argv[])
 	
 	sf_complexwrite(t,nt,titer);
     }
+    if (NULL != preciter) sf_floatwrite(wt,nt,preciter);
 
     /* calculate L2 data-misfit */
-    rhsnorm0 = cblas_snrm2(nt,rhs,1);
+    rhsnorm0 = cblas_snrm2(nt,cost,1);
     rhsnorm1 = rhsnorm0;
     rhsnorm = rhsnorm0;
     
@@ -439,23 +463,9 @@ int main(int argc, char* argv[])
 	for (it=0; it < nt; it++) {
 	    dw[it] = 0.;
 	}
-	
-	/* rhs preconditioning */
-	if (prec) {
-	    for (it=0; it < nt; it++) {
-		if (w[it] > 0.)
-		    scale[it] = wt[it]/sqrtf(w[it]*(s[it]+w[it]));
-		else
-		    scale[it] = 0.;
-	    }
-	}
 
 	/* solve dw */
-	if (prec)
-	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",scale,"verb",verb,"end");
-	else
-	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
-	
+	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
 	sf_cgstep_close();
 
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
@@ -503,18 +513,35 @@ int main(int argc, char* argv[])
 	    fastmarchcpx(tr,tr0,known,wr);
 	    fastmarchcpx(ti,ti0,known,wi);
 	    
+	    /* right-hand side preconditioning */
+	    if (prec) {
+		for (it=0; it < nt; it++) {
+		    if (wi[it] > 0.)
+			wt[it] = scale[it]/sqrtf(wi[it]*(s[it]+wi[it]));
+		    else
+			wt[it] = 0.;
+		}
+	    } else {
+		for (it=0; it < nt; it++) {
+		    wt[it] = scale[it];
+		}
+	    }
+	    
 	    cpxeiko_set(tr,ti);
 	    
 	    cpxeiko_forw(false,tr,rhsr);
 	    cpxeiko_forw(true, ti,rhsi);	    
 	    for (it=0; it < nt; it++) {
-		if (symm)
-		    rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
-		else
-		    rhs[it] = wt[it]*(-rhsi[it]-rhsi[it]);
+		if (symm) {
+		    rhs[it] = -rhsr[it]-rhsi[it];
+		} else {
+		    rhs[it] = -rhsi[it]-rhsi[it];
+		}
+
+		cost[it] = wt[it]*rhs[it];
 	    }
 	    
-	    rhsnorm = cblas_snrm2(nt,rhs,1);
+	    rhsnorm = cblas_snrm2(nt,cost,1);
 	    
 	    /* break */
 	    if (rhsnorm < rhsnorm1) break;
@@ -571,6 +598,7 @@ int main(int argc, char* argv[])
 	    
 	    sf_complexwrite(t,nt,titer);
 	}
+	if (NULL != preciter) sf_floatwrite(wt,nt,preciter);
 	if (NULL != wtiter) {
 	    for (it=0; it < nt; it++)
 		t[it] = sf_cmplx(wr[it],wi[it]);
