@@ -24,9 +24,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb;
+    bool *known, velocity, verb, symm, prec;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
-    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat;
+    float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
@@ -98,6 +98,17 @@ int main(int argc, char* argv[])
     
     if (!sf_getfloat("tol",&tol)) tol=1.e-8;
     /* thresholding for gradient scaling */
+
+    if (!sf_getbool("symm",&symm)) symm=true;
+    /* symmetric right-hand side */
+
+    if (!sf_getbool("prec",&prec)) prec=false;
+    /* rhs preconditioning */
+
+    if (prec)
+	scale = sf_floatalloc(nt);
+    else
+	scale = NULL;
 
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
@@ -299,14 +310,14 @@ int main(int argc, char* argv[])
     }
     
     /* allocate temporary memory */
-    w     = sf_floatalloc(nt);
-    rhsr    = sf_floatalloc(nt);
-    rhsi    = sf_floatalloc(nt);
+    w    = sf_floatalloc(nt);
+    rhsr = sf_floatalloc(nt);
+    rhsi = sf_floatalloc(nt);
     wr   = sf_floatalloc(nt);
     wi   = sf_floatalloc(nt);
-    x0    = sf_floatalloc(nt);
-    dw    = sf_floatalloc(nt);
-    rhs   = sf_floatalloc(nt);
+    x0   = sf_floatalloc(nt);
+    dw   = sf_floatalloc(nt);
+    rhs  = sf_floatalloc(nt);
 
     /* initialize fastmarchcpx */
     /* NOTE: default accuracy 2nd order */
@@ -339,13 +350,14 @@ int main(int argc, char* argv[])
 
     cpxeiko_set(tr,ti);
 */
-    
+
     cpxeiko_forw(false,ti,w);
 
 /*
     for (it=0; it < nt; it++) 
 	w[it] = wi[it];
 */  
+
     for (it=0; it < nt; it++) 
 	x0[it] = fix[it]-w[it];
     
@@ -353,7 +365,10 @@ int main(int argc, char* argv[])
     cpxeiko_forw(true, ti,rhsi);
     
     for (it=0; it < nt; it++) {
-	rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+	if (symm)
+	    rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+	else
+	    rhs[it] = wt[it]*(-rhsi[it]-rhsi[it]);
     }
     
     if (NULL != witer) sf_floatwrite(w,nt,witer);
@@ -425,10 +440,24 @@ int main(int argc, char* argv[])
 	    dw[it] = 0.;
 	}
 	
+	/* rhs preconditioning */
+	if (prec) {
+	    for (it=0; it < nt; it++) {
+		if (w[it] > 0.)
+		    scale[it] = wt[it]/sqrtf(w[it]*(s[it]+w[it]));
+		else
+		    scale[it] = 0.;
+	    }
+	}
+
 	/* solve dw */
-	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
-	sf_cgstep_close();
+	if (prec)
+	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",scale,"verb",verb,"end");
+	else
+	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
 	
+	sf_cgstep_close();
+
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
 
 	if (NULL != liniter) {
@@ -464,7 +493,6 @@ int main(int argc, char* argv[])
 		} else {
 		    wi[it] = w[it]+gama*step*dw[it];
 		    
-		    /* clip negative slowness squared */
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
 		}
 		
@@ -480,7 +508,10 @@ int main(int argc, char* argv[])
 	    cpxeiko_forw(false,tr,rhsr);
 	    cpxeiko_forw(true, ti,rhsi);	    
 	    for (it=0; it < nt; it++) {
-		rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+		if (symm)
+		    rhs[it] = wt[it]*(-rhsr[it]-rhsi[it]);
+		else
+		    rhs[it] = wt[it]*(-rhsi[it]-rhsi[it]);
 	    }
 	    
 	    rhsnorm = cblas_snrm2(nt,rhs,1);
