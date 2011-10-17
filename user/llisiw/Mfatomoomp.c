@@ -113,8 +113,10 @@ int main(int argc, char* argv[])
     
     source = sf_floatalloc2(3,nshot);
     sf_floatread(source[0],3*nshot,shot);
+/*
     sf_fileclose(shot);
-    
+*/  
+  
     /* read in receiver list */
     if (NULL == sf_getstring("receiver"))
 	sf_error("Need list receiver=");
@@ -125,7 +127,9 @@ int main(int argc, char* argv[])
 
     m = sf_intalloc2(nrecv,nshot);
     sf_intread(m[0],nrecv*nshot,recv);
+/*
     sf_fileclose(recv);
+*/
 
     /* number of right-hand side */
     rhslist = sf_intalloc2(2,nshot);
@@ -143,7 +147,7 @@ int main(int argc, char* argv[])
 	    :rhslist[is][1]-rhslist[is-1][1];
     }
     rhs = sf_floatalloc(nrhs);
-    
+
     /* read in record list */
     if (NULL == sf_getstring("record"))
 	sf_error("Need list record=");
@@ -151,8 +155,10 @@ int main(int argc, char* argv[])
     
     t0 = sf_floatalloc2(nrecv,nshot);
     sf_floatread(t0[0],nrecv*nshot,reco);
+/*
     sf_fileclose(reco);
-    
+*/    
+
     /* read in topography file */
     if (NULL != sf_getstring("topo")) {
 	topo = sf_input("topo");
