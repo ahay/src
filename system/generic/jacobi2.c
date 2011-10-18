@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <float.h>
+#include <math.h>
 
 #include <rsf.h>
 
@@ -43,11 +44,13 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
    method for complex eigenvalues: Journal of Physics A: Mathematical
    and General, v. 37, L567-L572. */
 {
-    int i;
+    int i, j1,j2;
     sf_complex t, s, akl;
 
-    if (k==l || cabsf(a[k][l]) < FLT_EPSILON) return 0.0f;
-    
+    if (k==l || cabsf(a[k][l]) < FLT_EPSILON) {
+		sf_warning("k==l or abs(a(k,l) = 0");
+		return 0.0f;
+    }
 
 #ifdef SF_HAS_COMPLEX_H
     t = 0.5*(a[l][l]-a[k][k]);
@@ -57,19 +60,22 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
     s = csqrtf(sf_cadd(sf_cmul(t,t),sf_cmul(a[l][k],a[k][l])));
 #endif
 
-    if (cabsf(t) < FLT_EPSILON && cabsf(s) < FLT_EPSILON) return 0.0f;
-
+    if (cabsf(t) < FLT_EPSILON && cabsf(s) < FLT_EPSILON) {
+		sf_warning("abs(t) and abs(s) = 0");
+		return 0.0f;
+	}
+	
 #ifdef SF_HAS_COMPLEX_H
     if (cabsf(t+s) > cabsf(t-s)) {
-	t = a[k][l]/(t+s);
+		t = a[k][l]/(t+s);
     } else {
-	t = a[k][l]/(t-s);
+		t = a[k][l]/(t-s);
     }
 #else
     if (cabsf(sf_cadd(t,s)) > cabsf(sf_cadd(t,sf_cneg(s)))) {
-	t = sf_cdiv(a[k][l],sf_cadd(t,s));
+		t = sf_cdiv(a[k][l],sf_cadd(t,s));
     } else {
-	t = sf_cdiv(a[k][l],sf_cadd(t,sf_cneg(s)));
+		t = sf_cdiv(a[k][l],sf_cadd(t,sf_cneg(s)));
     }
 #endif
 
@@ -83,22 +89,33 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
 #endif
     for (i=0; i < n; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	ak[i] = a[i][l] + t*a[i][k];
+		ak[i] = a[i][l] + t*a[i][k];
 #else
-	ak[i] = sf_cadd(a[i][l],sf_cmul(t,a[i][k]));
+		ak[i] = sf_cadd(a[i][l],sf_cmul(t,a[i][k]));
 #endif
     }
     for (i=0; i < n; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	a[k][i] -= t*a[l][i];
+		a[k][i] -= t*a[l][i];
 #else
-	a[k][i] = sf_cadd(a[k][i],sf_cmul(t,a[l][i]));
+		a[k][i] = sf_cadd(a[k][i],sf_cmul(t,a[l][i]));
 #endif
     }
     for (i=0; i < n; i++) {
-	a[i][l] = ak[i];
+		a[i][l] = ak[i];
     }
-    a[k][l] = akl;
+		a[k][l] = akl;
+	
+	sf_warning("t=%f+i%f (after),   |t|=%f,   akl=%f + i%f\n",
+			   crealf(t),cimagf(t), cabsf(t),crealf(akl),cimagf(akl)); 
+	for (j1=0; j1<n; j1++) {
+		for (j2=0; j2<n; j2++) {
+			if (cabsf(a[j2][j1])>FLT_EPSILON)
+				sf_warning("a[%d,%d] = %f + i%f",j1,j2,
+						   crealf(a[j2][j1]),cimagf(a[j2][j1]));
+		}
+	}
+	
 
     return cabsf(t);
 }
