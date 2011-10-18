@@ -46,6 +46,9 @@ derivative operator.
 Using the theory of geometrical integration, show that $R(\tau,p)$
 will contain a geometrical event $A_1(p)\,f\left(\tau-T_1(p)\right)$.
 Determine $T_1(p)$ and $A_1(p)$.
+
+\newpage
+
 \item Consider source and receiver coordinates $s$ and $r$ on the
   surface of a 2-D constant-velocity medium with velocity
   $V$. 
@@ -73,17 +76,21 @@ Determine $T_1(p)$ and $A_1(p)$.
 \item In the first part, you will experiment with creating and 
   imaging a synthetic seismic reflection dataset.
 
-  \inputdir{dome}
+  \inputdir{synth}
 
-  \multiplot{2}{ref,data}{width=0.45\textwidth}{(a) Reflector model. (b) 2-D synthetic data.}
+ \plot{data}{width=0.9\textwidth}{2-D synthetic data.}
+  \sideplot{model}{width=\textwidth}{(a) Synthetic model: curved
+    reflectors in a $V(z)$ velocity.}
   \plot{vscan}{width=0.9\textwidth}{Velocity semblance scan.}
   \plot{vnmo}{width=0.9\textwidth}{RMS velocity (a) and picked NMO velocity (b).}
-  \multiplot{2}{dstack,zoff}{width=0.45\textwidth}{(a) DMO stack. (b) Zero-offset section.}
-  \multiplot{2}{tmig,dmig2}{width=0.45\textwidth}{(a) Kirchhoff poststack time migration. 
-  (b) Time migration converted to depth, with reflectors overlaid.}
+  \multiplot{2}{dstack,zoff}{width=0.45\textwidth}{(a) DMO stack. (b)
+    Zero-offset section.}
+  \plot{tmig}{width=0.9\textwidth}{Kirchhoff poststack time
+    migration.}
+  \sideplot{dmig2}{width=\textwidth}{Time migration converted to depth, with reflectors overlaid.}
 
 Figure~\ref{fig:data} shows a synthetic reflection dataset computed
-from a reflector model shown in Figure~\ref{fig:ref} and assuming a
+from a reflector model shown in Figure~\ref{fig:model} and assuming a
 velocity model with a constant vertical gradient $V(z) = 1.5 +
 0.25\,z$. A small amount of random noise is added to the synthetic data.
 
@@ -97,7 +104,7 @@ migration before and after conversion from time to depth.
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd hw3/dome
+cd hw3/synth
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -129,10 +136,10 @@ as well, different data processing strategies are possible.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{dome/SConstruct}
+\lstinputlisting[frame=single]{synth/SConstruct}
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{dome/kirchhoff.c}
+\lstinputlisting[frame=single]{synth/kirchhoff.c}
 
 \newpage
 

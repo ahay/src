@@ -2,30 +2,69 @@ from rsf.proj import *
 
 # Generate a reflector model
 
-Flow('dome',None,
-     '''
-     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Distance
-     output="5-3*exp(-(x1-5)^2/9)"
-     ''')
-Flow('ref','dome',
-     '''
-     spray axis=2 n=5 o=0 d=0.25 |
-     math output="(input-1)*x2*x2+1"
-     ''')
-Flow('dip','ref',
-     'math output="2*(x1-5)/3*exp(-(x1-5)^2/9)*x2*x2" ')
+layers = (
+     ((0,2),(3.5,2),(4.5,2.5),(5,2.25),
+       (5.5,2),(6.5,2.5),(10,2.5)),
+     ((0,2.5),(10,3.5)),
+     ((0,3.2),(3.5,3.2),(5,3.7),
+       (6.5,4.2),(10,4.2)),
+     ((0,4.5),(10,4.5))
+)
 
-Plot('ref',
+nlays = len(layers)
+for i in range(nlays):
+     inp = 'inp%d' % i
+     Flow(inp+'.asc',None,
+          '''
+          echo %s in=$TARGET
+          data_format=ascii_float n1=2 n2=%d
+          ''' % \
+          (' '.join(map(lambda x: ' '.join(map(str,x)),
+                           layers[i])),len(layers[i])))
+
+dim1 = 'o1=0 d1=0.01 n1=1001'
+Flow('lay1','inp0.asc',
+     'dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay2',None  ,
+     'math %s output="2.5+x1*0.1" '      % dim1)
+Flow('lay3','inp2.asc',
+     'dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay4',None  ,'math %s output=4.5'  % dim1)
+
+Flow('lays','lay1 lay2 lay3 lay4',
+     'cat axis=2 ${SOURCES[1:4]}')
+
+graph = '''
+graph min1=2.5 max1=7.5 min2=0 max2=5
+yreverse=y wantaxis=n wanttitle=n screenratio=1
+'''
+Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
+Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
+Plot('lays2','lays',graph + ' plotfat=2')
+
+# Velocity
+
+Flow('vofz',None,
      '''
-     graph min1=0 max1=10 min2=0 max2=5.5 
-     yreverse=y wanttitle=n label2=Depth unit2=km
-     wheretitle=b wherexlabel=t
+     math output="1.5+0.25*x1"
+     d2=0.01 n2=1001 d1=0.01 n1=501
+     label1=Depth unit1=km
+     label2=Distance unit2=km
+     label=Velocity unit=km/s
      ''')
-Result('ref','Overlay')
+Plot('vofz',
+     '''
+     window min2=2.75 max2=7.25 |
+     grey color=j allpos=y bias=1.5
+     title=Model screenratio=1
+     ''')
+
+Result('model','vofz lays0 lays1','Overlay')
 
 # Model data
 
-Flow('modl','ref dip',
+Flow('dips','lays','deriv | scale dscale=100')
+Flow('modl','lays dips',
      '''
      kirmod cmp=y dip=${SOURCES[1]} 
      nh=51  dh=0.1  h0=0
@@ -34,16 +73,16 @@ Flow('modl','ref dip',
      vel=1.5 gradz=0.25 verb=y |
      tpow tpow=1 |
      put d2=0.05 label3=Midpoint unit3=km 
-     ''',split=[1,2001], reduce='add')
+     ''',split=[1,1001], reduce='add')
 
 # Add random noise
-Flow('data','modl','noise var=1e-6 seed=112009')
+Flow('data','modl','noise var=1e-6 seed=101811')
 
 Result('data',
        '''
        byte |
        transp plane=23 |
-       grey3 flat=n frame1=500 frame2=160 frame3=10 
+       grey3 flat=n frame1=750 frame2=100 frame3=10 
        label1=Time unit1=s 
        label3=Half-Offset unit3=km 
        title=Data point1=0.8 point2=0.8
@@ -51,12 +90,6 @@ Result('data',
 
 # Velocity estimation
 #####################
-
-# Ideal velocity
-Flow('vofz',None,
-     '''
-     math d1=0.01 n1=801 n2=201 d2=0.05 output="1.5+0.25*x1"
-     ''')
 Flow('voft','vofz',
      'depth2time velocity=$SOURCE dt=0.004 nt=1501')
 Flow('vrms','voft',
@@ -67,13 +100,14 @@ Flow('vrms','voft',
 
 # Velocity scan
 Flow('vscan','data',
-     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',split=[3,201], reduce='cat')
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,201], reduce='cat')
 
 Result('vscan',
        '''
        byte allpos=y gainpanel=all |
        transp plane=23 |
-       grey3 flat=n frame1=500 frame2=160 frame3=10 
+       grey3 flat=n frame1=750 frame2=100 frame3=25 
        label1=Time unit1=s color=j
        label3=Velocity unit3=km/s 
        label2=Midpoint unit2=km
@@ -86,13 +120,12 @@ Flow('vnmo','vscan','pick rect1=100 rect2=10 | window')
 for vel in ('vrms','vnmo'):
     Plot(vel,
      '''
-     window max1=4 |
-     grey color=j allpos=y bias=1.5 clip=0.8 
-     scalebar=y barreverse=y barlabel=Velocity barunit=km/s
+     grey color=j allpos=y bias=1.5 clip=0.7
+     scalebar=y barreverse=y barunit=km/s
      label2=Midpoint unit2=km label1=Time unit1=s
-     title="%s Velocity"
+     title="%s Velocity" 
      ''' % vel[1:].upper())
-Result('vnmo','vrms vnmo','SideBySideAniso')
+Result('vnmo','vrms vnmo','SideBySideIso')
 
 # Stacking
 ##########
@@ -125,7 +158,7 @@ stacks = {
 for stack in stacks.keys():
     Result(stack,
            '''
-           window min1=1 max1=5 | 
+           window min1=1.5 max1=5 min2=1 max2=9 | 
            grey title="%s" 
            ''' % stacks[stack])
 
@@ -140,20 +173,25 @@ exe = str(prog[0])
 Flow('tmig','dstack %s vrms' % prog[0],
      './${SOURCES[1]} vel=${SOURCES[2]} antialias=0')
 
-Result('tmig','grey title="Time Migration" ')
+Result('tmig',
+       '''
+       window min2=2.5 max2=7.5 |
+       grey title="Time Migration"
+       ''')
 
 # Using vofz is CHEATING
 ########################
-Flow('dmig','tmig vofz','time2depth velocity=${SOURCES[1]}')
+Flow('dmig','tmig vofz',
+     'time2depth velocity=${SOURCES[1]}')
 
 Plot('dmig',
      '''
-     window max1=5.5 | 
-     grey title="Time -> Depth" 
+     window max1=5 min2=2.5 max2=7.5 | 
+     grey title="Time -> Depth" screenratio=1
      label2=Distance label1=Depth unit1=km
      ''')
 
 Result('dmig','Overlay')
-Result('dmig2','dmig ref','Overlay')
+Result('dmig2','dmig lays2','Overlay')
 
 End()
