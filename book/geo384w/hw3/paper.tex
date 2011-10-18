@@ -1,11 +1,11 @@
 \author{Gustav Kirchhoff} 
 %%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Homework 4}
+\title{Homework 3}
 
 \begin{abstract}
   This homework has two parts. In the theoretical part, you will
-  perform several analytical derivations: amplitudes of elastic waves,
-  geometrical slant stacks, elliptical reflections. In the
+  perform several analytical derivations related to 
+  geometrical inetgration and reflections from elliptical reflections. In the
   computational part, you will experiment with imaging a synthetic
   dataset and a field dataset from the Gulf of Mexico.
 \end{abstract}
@@ -22,38 +22,18 @@ You are welcome to do the assignment on your personal computer by
 installing the required environments. In this case, you can obtain all
 homework assignments from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw3 
 \end{verbatim}
 
 \section{Theoretical part}
 
 \begin{enumerate}
-\item Consider the elastic wave equation
-\begin{equation}
-  \label{eq:ewave}
-  \rho\,\ddot{u}_i = C_{ijkl,j}\,u_{k,l} + C_{ijkl}\,u_{k,lj}\;
-\end{equation}
-in the case of an isotropic elasticity
-\begin{equation}
-  \label{eq:lame}
-  C_{ijkl} = \lambda\,\delta_{ij}\,\delta_{kl} + 
-  \mu\,(\delta_{ik}\,\delta_{jl} + \delta_{il}\,\delta_{jk})\;.
-\end{equation}
-Using the geometrical representation
-\begin{equation}
-  u_i(\mathbf{x},t) = a_i(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
-  \label{eq:gwave}
-\end{equation}
-and assuming the P-wave polarization in the direction of the gradient
-of $T$, derive the elastic P-wave amplitude transport equation and
-show its similarity to the corresponding equation for the case of
-acoustic variable-density wave propagation.
 \item Consider a 2-D common-midpoint gather $G(t,x)$, which
   contains a geometrical event $A_0\,f\left(t-T(x)\right)$ with a
-  constant amplitude $A_0$ along a hyperbolic shape
+  constant amplitude $A_0$ along a parabolic shape
 \begin{equation}
 \label{eq:hyper}
-T(x) = \sqrt{t_0^2+\frac{x^2}{v^2}}\;.
+T(x) = t_0+a\,x^2\;.
 \end{equation}
 The gather gets transformed by the slant-stack (Radon transform) operator
 \begin{equation}
@@ -84,7 +64,7 @@ Determine $T_1(p)$ and $A_1(p)$.
     reflection surface and apply Fermat's principle to find the reflection
     traveltime $T_0(x_0)$ for observations with sources and receivers coincident at $x_0$.
   \end{enumerate}
-  
+
 \end{enumerate}
 
 \section{Computational part}
@@ -117,7 +97,7 @@ migration before and after conversion from time to depth.
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd ~/geo384w/hw4/dome
+cd hw3/dome
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -165,7 +145,7 @@ to process a 2-D field dataset from the Gulf of Mexico, shown in Figure~\ref{fig
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd ~/geo384w/hw4/gulf
+cd hw3/gulf
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -184,7 +164,7 @@ Make sure to select appropriate processing parameters.
 \section{Completing the assignment}
 
 \begin{enumerate}
-\item Change directory to \verb#~/geo384w/hw4#.
+\item Change directory to \verb#hw3#.
 \item Edit the file \texttt{paper.tex} in your favorite editor and change the
   first line to have your name instead of Kirchhoff's.
 \item Run
@@ -205,4 +185,3 @@ to remove intermediate files.
 \item Submit your result (file \texttt{paper.pdf}) on paper or by
   e-mail. 
 \end{enumerate}
-
