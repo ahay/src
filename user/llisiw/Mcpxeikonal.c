@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, symm, prec;
+    bool *known, velocity, verb, symm, prec, *tknown, recom;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit;
@@ -102,9 +102,12 @@ int main(int argc, char* argv[])
     if (!sf_getbool("symm",&symm)) symm=true;
     /* symmetric right-hand side */
 
-    if (!sf_getbool("prec",&prec)) prec=false;
+    if (!sf_getbool("prec",&prec)) prec=true;
     /* rhs preconditioning */
 
+    if (!sf_getbool("recom",&recom)) recom=true;
+    /* recompute initial R according to w estimated from I */
+    
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
 	witer = sf_output("witer");
@@ -210,12 +213,12 @@ int main(int argc, char* argv[])
 	x0iter = NULL;
     }
 
-    /* output linearized cost function at each iteration */
+    /* output linesearch at 1st iteration */
     if (NULL != sf_getstring("liniter")) {
 	liniter = sf_output("liniter");
 	sf_settype(liniter,SF_FLOAT);
 	sf_putint(liniter,"n3",n[2]);
-	sf_putint(liniter,"n4",niter);
+	sf_putint(liniter,"n4",nstep);
     } else {
 	liniter = NULL;
     }
@@ -339,35 +342,39 @@ int main(int argc, char* argv[])
 
 /* NOTE: the following lines recompute initial R and I according to
    w from I, but with boundary conditions for traveltime. */
-/*
-    cpxeiko_forw(false,ti,w);
-    
-    for (it=0; it < nt; it++) {
-	if (known[it]) {
-	    wi[it] = fix[it];
-	} else {
+    if (recom) {
+	tknown = sf_boolalloc(nt);
+
+	cpxeiko_forw(false,ti,w);
+	
+	for (it=0; it < nt; it++) {
+	    if (w[it] <= 1.e-8) {
+		tknown[it] = true;
+	    } else {
+		tknown[it] = false;
+	    }
+	    
 	    wi[it] = w[it];
-	    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+	    wr[it] = s[it]+wi[it];
 	}
 	
-	wr[it] = s[it]+wi[it];
+	fastmarchcpx(tr,tr0,tknown,wr);
+	fastmarchcpx(ti,ti0,tknown,wi);
+	
+	cpxeiko_set(tr,ti);
+    } else {
+	tknown = NULL;
+
+	cpxeiko_forw(false,ti,wi);
     }
     
-    fastmarchcpx(tr,tr0,known,wr);
-    fastmarchcpx(ti,ti0,known,wi);
-
-    cpxeiko_set(tr,ti);
-*/
-
-    cpxeiko_forw(false,ti,wi);
-
     for (it=0; it < nt; it++) 
 	w[it] = wi[it];
-
+    
     /* right-hand side preconditioning */
     if (prec) {
 	for (it=0; it < nt; it++) {
-	    if (w[it] > 0.)
+	    if (wi[it] > 0.)
 		wt[it] = scale[it]/sqrtf(wi[it]*(s[it]+wi[it]));
 	    else
 		wt[it] = 0.;
@@ -470,11 +477,6 @@ int main(int argc, char* argv[])
 
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
 
-	if (NULL != liniter) {
-	    cpxeiko_operator(false,false,nt,nt,dw,rhsr);
-	    sf_floatwrite(rhsr,nt,liniter);
-	}
-
 	gama = 1.;
 	
         /* trying to avoid the points where w is very close to zero */
@@ -541,6 +543,10 @@ int main(int argc, char* argv[])
 		}
 
 		cost[it] = wt[it]*rhs[it];
+	    }
+	    
+	    if (iter == 0 && NULL != liniter) {
+		sf_floatwrite(cost,nt,liniter);
 	    }
 	    
 	    rhsnorm = cblas_snrm2(nt,cost,1);
