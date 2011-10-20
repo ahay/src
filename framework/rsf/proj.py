@@ -228,6 +228,7 @@ class Project(Environment):
 
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,
+                         'OMP_NUM_THREADS':os.environ.get('OMP_NUM_THREADS',1),
                          'TMPDATAPATH': tmpdatapath,
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',

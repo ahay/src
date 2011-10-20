@@ -8,7 +8,7 @@ Import('env bindir pkgdir system user dotproj')
 bldutil.py_install('__init__', env, pkgdir)
 bldutil.py_install('__init__', env, os.path.join(pkgdir,'user'))
 
-dirs = Split('plot libplot plplot pens sumain suplot triptrace') + system + user
+dirs = Split('plot libplot plplot pens') + system + user
 
 for usr in user:
     py = 'sf'+usr+'.py'
@@ -26,7 +26,7 @@ env.Command('version.py','#/VERSION.txt',
             action=Action(rsf.doc.getversion))
 env.Depends('version.py','doc.py')
 
-for src in Split('path doc flow proj prog tex book suproj conf use version'):
+for src in Split('path doc flow proj prog tex book conf use version'):
     bldutil.py_install(src, env, pkgdir)
 
 for src in Split('latex2wiki sftour'):
