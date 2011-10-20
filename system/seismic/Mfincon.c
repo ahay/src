@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     slv = ctridiagonal_init (nx);
 
     for (iw=0; iw < nw; iw++) {
-	sf_warning("frequency %d of %d",iw+1,nw);
+	sf_warning("frequency %d of %d;",iw+1,nw);
 
 	w = w0+iw*dw; 
 	w2 = w*w;
@@ -156,6 +156,7 @@ int main(int argc, char* argv[])
 	}
 	sf_complexwrite (out,nx,output);
     }
+    sf_warning(".");
 
     exit(0);
 }
