@@ -127,6 +127,97 @@ Result('ltft',
        point1=0.8 point2=0.8 wanttitle=n scalbar=y 
        ''') 
 
+Flow('thr1','ltft',
+     '''
+     real | transp plane=23 memsize=1000 | 
+     mutter t0=-0.2 v0=1.1 | cut min3=12
+     ''' )#mutter inner=y v0=0.3 |
+Flow('thr2','ltft',
+     '''
+     imag | transp plane=23 memsize=1000 |
+     mutter t0=-0.2 v0=1.1 | cut min3=12
+     ''')#mutter inner=y v0=0.3 |
+Flow('complx','thr1 thr2',
+     '''
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000
+     ''')
+Plot('complx',
+     '''
+     window n3=88 f3=5 max2=50 | put o3=0.017 |
+     math output="abs(input)" | real |
+     byte allpos=y gainpanel=40 pclip=100 |
+     grey3 color=j frame1=375 frame2=18 frame3=15 label1=Time flat=y 
+     unit1=s label3=Distance label2=Frequency unit3=Hz
+     point1=0.8 point2=0.2 wanttitle=n
+     ''',view=1)
+
+Flow('maskthr1','ltft',
+     '''
+     real | transp plane=23 memsize=1000 |
+     math output=1. |
+     mutter t0=-0.2 v0=1.1 | cut min3=12 |
+     math output="1-input"
+     ''' )#mutter inner=y v0=0.3 |
+Flow('maskthr2','ltft',
+     '''
+     imag | transp plane=23 memsize=1000 |
+     math output=1. |
+     mutter t0=-0.2 v0=1.1 | cut min3=12 |
+     math output="1-input"
+     ''')#mutter inner=y v0=0.3 |
+Flow('maskcomplx','maskthr1 maskthr2',
+     '''
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000
+     ''')
+Result('mask','maskcomplx',
+       '''
+       window n3=88 f3=5 max2=50 | put o3=0.017 |
+       math output="abs(input)" | real |
+       byte allpos=y gainpanel=40 pclip=100 |
+       transp plane=23 memsize=1000 | 
+       grey3 frame1=375 frame3=15 frame2=18 label1=Time flat=n 
+       unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
+       screenht=10 screenratio=0.7 color=g
+       point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
+       parallel2=n format2=%3.1f
+       ''')
+
+Flow('iltft','complx','ltft inv=y verb=n')
+Result('wiltft','iltft',
+       '''
+       window n2=88 f2=5 | put o2=0.017 |
+       agc rect1=50 repeat=5 |
+       wiggle label2="Offset" unit2=km label1="Time" unit1=s
+       screenht=10 screenratio=0.7 title="Difference"
+       labelfat=4 font=2 titlefat=4  clip=2.74044
+       parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
+       transp=y yreverse=y poly=y
+       ''')
+
+Flow('siltft','dat iltft','add scale=1,-1 ${SOURCES[1]}')
+## Result('siltft',
+##        '''
+##        window n2=88 f2=5 | put o2=0.017 |
+##        agc rect1=50 repeat=5 |
+##        grey label2="Offset" unit2=km label1="Time" unit1=s
+##        screenht=10 screenratio=0.7 title="LTF Transform"
+##        labelfat=4 font=2 titlefat=4
+##        parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
+##        ''')
+
+Result('wsiltft','siltft',
+       '''
+       window n2=88 f2=5 | put o2=0.017 |
+       agc rect1=50 repeat=5 |
+       wiggle label2="Offset" unit2=km label1="Time" unit1=s
+       screenht=10 screenratio=0.7 title="LTF Transform"
+       labelfat=4 font=2 titlefat=4
+       parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
+       transp=y yreverse=y poly=y
+       ''')
+
 #############################
 # Elevation profile, datuming
 #############################
