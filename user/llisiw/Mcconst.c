@@ -1,6 +1,6 @@
-/* Test Exact and Beam for constant velocity background */
+/* Gaussian beam and exact complex eikonal for constant velocity medium */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,22 +16,26 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
-    int  n1, n2, *m;
-    float  o1, o2, d1, d2, source, s, v0, sin, cos, z, x, real, imag;
+/*
+NOTE: the current code only works in 2D and source on surface.
+*/
+    int  n1, n2, iz, ix;
+    float  o1, o2, d1, d2, source, s, v0, angle;
+    float sin, cos, z, x, real, imag;
     char *what;
-    int iz, ix;
     sf_complex *output;
-    sf_file in, out, mask;
+    sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    mask = sf_output("mask");
 
+    /* NOTE: the input only provides dimensional information. */
     if (!sf_histint(in,"n1",&n1)) sf_warning("No n1 in input.");
     if (!sf_histint(in,"n2",&n2)) n2=1;
 
@@ -42,36 +46,33 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&d2)) d2 = d1;
 
     if (!sf_getfloat("source",&source)) source=o2;
-    /* real source point */
+    /* real source point (on surface) */
 
     if (!sf_getfloat("s",&s)) s=0.;
-    /* imaginary source point */
+    /* complex source shift */
 
     if (!sf_getfloat("v0",&v0)) v0=1.;
     /* constant velocity background */
 
-    if (!sf_getfloat("sin",&sin)) sin=sqrtf(2)/2;
-    /* angle */ 
+    if (!sf_getfloat("angle",&angle)) angle=45.;
+    /* rotation angle (counter-clock wise with respect to vertically downward) */ 
  
-    if (NULL==(what=sf_getstring("what"))) what="exact";
+    if (NULL == (what = sf_getstring("what"))) what="exact";
     /* what to compute */
    
     output = sf_complexalloc(n1*n2);
-    m = sf_intalloc(n1*n2);
-
     sf_settype(out,SF_COMPLEX);
-    sf_settype(mask,SF_INT);
 
+    sin = sinf(angle/180.*3.14159265359);
     cos = sqrtf(1-sin*sin);
 
     switch (what[0]) {
 	case 'e': /* exact solution */
 	    for (ix=0; ix < n2; ix++) {
 		for (iz=0; iz < n1; iz++) {
-/*
-		    x = 1/sqrtf(2)*(o2+ix*d2-source+o1+iz*d1);
-		    z = 1/sqrtf(2)*(o1+iz*d1-o2-ix*d2+source);
-*/
+		    
+		    z = 
+		    
 		    x = (o2+ix*d2-source)*cos+(o1+iz*d1)*sin;
 		    z = (o1+iz*d1)*cos-(o2+ix*d2-source)*sin;
 		    
@@ -113,19 +114,13 @@ int main(int argc, char* argv[])
 		    if (z == 0.)
 		    {
 			output[iz+ix*n1] = sf_cmplx(0.,x*x/2/s/v0);
-			m[iz+ix*n1] = 0;
 		    }
 		    else {
 			output[iz+ix*n1] = sf_cmplx((z+x*x*z/(2*(z*z+s*s)))/v0,(x*x*s/(2*(z*z+s*s)))/v0+0.001);
-			if ((x*x*s/(2*(z*z+s*s)))/v0 <= 0.00001)
-			    m[iz+ix*n1] = 0;
-			else
-			    m[iz+ix*n1] = 1;
 		    }
 		}
 	    }
 	    sf_complexwrite(output,n1*n2,out);
-	    sf_intwrite(m,n1*n2,mask);
 	    break;
     }
 
