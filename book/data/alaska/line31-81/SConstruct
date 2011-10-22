@@ -48,7 +48,8 @@ if pdfread:
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-tape=$SOURCE endian=%d
+tape=$SOURCE endian=%d |
+segyclean
 ''' % (1-little_endian())
 
 rawsegy=['L23535','L23536','L23537']
@@ -62,7 +63,7 @@ for file in rawsegy  :
 
 # concatinate the input files
 Flow ('line', rawsegy,
-     'cat ${SOURCES[:3]}',stdin=0)
+     'cat ${SOURCES}',stdin=0)
 
 # you can make this list with the command scons list1.su
 Flow('list1','line','surange; echo list1 complete',stdout=0)
@@ -87,10 +88,10 @@ Result('zoomfirst','line',
        suximage perc=90
        ''')
 
-Plot('firstmovie','line',
+Result('firstmovie','line',
      '''
      suxmovie n2=101 loop=1 fframe=1 dframe=1 
-     title="record %g" perc=20 
+              title="record %g" perc=20 
      ''')
 
 Result('firstrec24','line',
@@ -151,9 +152,7 @@ Fetch('31_81_PR.SGY',
       dir='PROCESSED')
 file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],
-     '31_81_PR.SGY',segyread + '''
-     |   sushw key=ntr a=534 | sushw key=d1 a=0 
-     ''',
+     '31_81_PR.SGY',segyread,
      stdin=0)
 
 Result('checkstack','checkstack',
@@ -167,10 +166,10 @@ Result('zoomcheckstack','checkstack',
 Flow('allvelfilt_shot','allshots alaskavelfilt.sh',
      './${SOURCES[1]} 100 155')
 
-Plot('movie_velfilt','allvelfilt_shot',
+Result('movie_velfilt','allvelfilt_shot',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
-     title="record %g" perc=20
+              title="record %g" perc=20
      ''')
 
 Result('velfiltrec24','allvelfilt_shot',
@@ -195,10 +194,10 @@ Flow('velfiltcdpsmute','allvelfilt_shot',
        invert=1
      ''' ) 
 
-Plot('movie_cdps','velfiltcdpsmute',
+Result('movie_cdps','velfiltcdpsmute',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
-     title="record %g" perc=20
+              title="record %g" perc=20
      ''')
 
 Result('cdp250-251','velfiltcdpsmute',
@@ -245,10 +244,10 @@ Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
        taper=50
    ''')
 	
-Plot('movie_velfiltcdpsnmo','velfiltcdpsnmo',
+Result('movie_velfiltcdpsnmo','velfiltcdpsnmo',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
-     title="velfiltcdpsnmo record %g" perc=20
+              title="velfiltcdpsnmo record %g" perc=20
      ''')
 
 Flow('brutestack','velfiltcdpsnmo',
