@@ -26,7 +26,7 @@ NOTE: the current code only works in 2D and source on surface.
 */
     int  n1, n2, iz, ix;
     float  o1, o2, d1, d2, source, s, v0, angle;
-    float sin, cos, z, x, real, imag;
+    float sin, cos, z, x, real, imag, amp, pha;
     char *what;
     sf_complex *output;
     sf_file in, out;
@@ -58,11 +58,12 @@ NOTE: the current code only works in 2D and source on surface.
     /* rotation angle (counter-clock wise with respect to vertically downward) */ 
  
     if (NULL == (what = sf_getstring("what"))) what="exact";
-    /* what to compute */
+    /* what to compute (default exact solution) */
    
     output = sf_complexalloc(n1*n2);
     sf_settype(out,SF_COMPLEX);
 
+    /* convert angle to sin and cos */
     sin = sinf(angle/180.*3.14159265359);
     cos = sqrtf(1-sin*sin);
 
@@ -71,36 +72,44 @@ NOTE: the current code only works in 2D and source on surface.
 	    for (ix=0; ix < n2; ix++) {
 		for (iz=0; iz < n1; iz++) {
 		    
-		    z = 
+		    /* coordinate rotation and shift */
+		    z = (o1+iz*d1)*cos+(o2+ix*d2-source)*sin;
+		    x = -(o1+iz*d1)*sin+(o2+ix*d2-source)*cos;
 		    
-		    x = (o2+ix*d2-source)*cos+(o1+iz*d1)*sin;
-		    z = (o1+iz*d1)*cos-(o2+ix*d2-source)*sin;
+		    /* real and imaginary traveltime in reference coordinate */
+		    real = z*z-s*s+x*x;
+		    imag = -2.*z*s;
 		    
-		    real = x*x+z*z-s*s;
-		    imag = -2*z*s;
-		    
-		    if (z > 0.)
-		    {
-			if ((imag/sqrtf(2*(hypotf(real,imag)+real))+s)/v0 >= 0.)
-			    output[iz+ix*n1] = sf_cmplx(sqrtf((hypotf(real,imag)+real)/2)/v0,(imag/sqrtf(2*(hypotf(real,imag)+real))+s)/v0+0.001);
-			else
-			    output[iz+ix*n1] = output[iz+ix*n1-1];
-		    }
-		    if (z == 0.)
-		    {
-			if (real >= 0.)
-			    output[iz+ix*n1] = sf_cmplx(sqrtf(real)/v0,s/v0);
-			else
-			    output[iz+ix*n1] = sf_cmplx(0.,(-sqrtf(-real)+s)/v0);
-		    }
+		    /* choose correct branch of square-root */
+		    amp = sqrtf(sqrtf(real*real+imag*imag));
+
+		    if (real > 0. && imag > 0.)
+			pha = atanf(imag/real)/2.;
+		    if (real < 0. && imag > 0.)
+			pha = (atanf(imag/real)+3.14159265359)/2.;
+		    if (real < 0. && imag < 0.)
+			pha = (atanf(imag/real)-3.14159265359)/2.;
+		    if (real > 0. && imag < 0.)
+			pha = atanf(imag/real)/2.;
+		    if (real >= 0. && imag == 0.)
+			pha = 0.;
+		    if (real == 0. && imag > 0.)
+			pha = 3.14159265359/4.;
+		    if (real < 0. && imag == 0.)
+			pha = -3.14159265359/2.;
+		    if (real == 0. && imag < 0.)
+			pha = -3.14159265359/4.;
+/*
 		    if (z < 0.)
-		    {
-			output[iz+ix*n1] = sf_cmplx(sqrtf((hypotf(real,imag)+real)/2)/v0,(-imag/sqrtf(2*(hypotf(real,imag)+real))+s)/v0+0.001);
-		    }
+			pha = pha-3.14159265359;
+*/
+
+		    output[iz+ix*n1] = sf_cmplx(amp*cosf(pha)/v0,(amp*sinf(pha)+s)/v0);
 		}
 	    }
 	    sf_complexwrite(output,n1*n2,out);
 	    break;
+
 	case 'b': /* beam */
 	    for (ix=0; ix < n2; ix++) {
 		for (iz=0; iz < n1; iz++) {
