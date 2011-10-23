@@ -83,6 +83,9 @@ NOTE: the current code only works in 2D and source on surface.
 		    /* choose correct branch of square-root */
 		    amp = sqrtf(sqrtf(real*real+imag*imag));
 
+		    if (imag > 0.)
+			imag = -imag;
+
 		    if (real > 0. && imag > 0.)
 			pha = atanf(imag/real)/2.;
 		    if (real < 0. && imag > 0.)
