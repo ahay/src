@@ -79,6 +79,14 @@ iRSF::operator>> (std::valarray<int> &array) const
     return *this;
 }
 
+const iRSF&
+iRSF::operator>> (std::valarray<sf_complex> &array) const
+{
+    if (NULL == file_) sf_error("Cannot write data to parameter file");
+    sf_complexread(&(array[0]),array.size(),file_);
+    return *this;
+}
+
 // Writing data
 // ------------
 const oRSF&
@@ -95,6 +103,12 @@ oRSF::operator<< (std::valarray<int> &array) const
     return *this;
 }
 
+const oRSF&
+oRSF::operator<< (std::valarray<sf_complex> &array) const
+{
+    sf_complexwrite(&(array[0]),array.size(),file_);
+    return *this;
+}
 
 // Reading parameters
 /////////////////////

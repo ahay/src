@@ -25,6 +25,7 @@ public:
     // reading data
     const iRSF& operator>> (std::valarray <float> &vect) const;
     const iRSF& operator>> (std::valarray <int> &vect) const;
+    const iRSF& operator>> (std::valarray <sf_complex> &vect) const;
     // reading parameters
     void get (const char* name,   int& value,   int defolt) const;
     void get (const char* name,   int& value) const;
@@ -63,6 +64,7 @@ public:
     // writing data
     const oRSF& operator<< (std::valarray <float> &vect) const;
     const oRSF& operator<< (std::valarray <int> &vect) const;
+    const oRSF& operator<< (std::valarray <sf_complex> &vect) const;
     // set file data type
     void type (sf_datatype type);
     // writing parameters
