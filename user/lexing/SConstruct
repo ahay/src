@@ -3,11 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-anisolr2 lrmatrix permlr1 permlr2 permlr3
+anisolr2 hradon lrmatrix permlr1 permlr2 permlr3
 '''
 
 subs = '''
-vecmatop
+vecmatop bfio bfio_eval
 '''
 
 try:  # distributed version

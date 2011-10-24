@@ -491,3 +491,14 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&),
   return 0;
 }
 
+//-------------------------------------------------------------------------
+//just the transpose,
+int ztran(const CpxNumMat& A, CpxNumMat& B)
+{
+  B.resize(A.n(), A.m());
+  for(int i=0; i<B.m(); i++)
+    for(int j=0; j<B.n(); j++)
+      B(i,j) = A(j,i);
+  return 0;
+}
+

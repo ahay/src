@@ -36,5 +36,7 @@ int pinv(const DblNumMat& M, double eps, DblNumMat& R);
 int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&), double eps, int npk,
 	    vector<int>& cidx, vector<int>& ridx, DblNumMat& mid);
 
+int ztran(const CpxNumMat& A, CpxNumMat& B);
+
 #endif
 
