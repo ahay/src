@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     bool velocity, l1norm, shape, verb;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, **t1, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep, titer;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 
     m = sf_intalloc2(nrecv,nshot);
     sf_intread(m[0],nrecv*nshot,recv);
-/*
+/*  Degug:
     sf_fileclose(recv);
 */
 
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     
     t0 = sf_floatalloc2(nrecv,nshot);
     sf_floatread(t0[0],nrecv*nshot,reco);
-/*
+/*  Debug:
     sf_fileclose(reco);
 */    
 
@@ -209,13 +209,13 @@ int main(int argc, char* argv[])
     /* output time at each iteration */
     if (NULL != sf_getstring("titer")) {
 	titer = sf_output("titer");
-	sf_putint(titer,"n3",n[2]);
-	sf_putfloat(titer,"d3",d[2]);
-	sf_putfloat(titer,"o3",o[2]);
-	sf_putint(titer,"n4",nshot);
-	sf_putint(titer,"n5",niter);
+	sf_putint(titer,"n1",nrecv);
+	sf_putint(titer,"n2",nshot);
+	sf_putint(titer,"n3",niter);
+	t1 = sf_floatalloc2(nrecv,nshot);
     } else {
 	titer = NULL;
+	t1 = NULL;
     }
 
     /* output misfit L2 norm at each iteration */
@@ -277,9 +277,6 @@ int main(int argc, char* argv[])
 
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
-    
-    if (titer != NULL)
-	sf_floatwrite(t[0],nt*nshot,titer);
 
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
@@ -410,13 +407,24 @@ int main(int argc, char* argv[])
 			rhsnorm1 = rhsnorm;
 			rate = rhsnorm1/rhsnorm0;
 
-			if (titer != NULL)
-			    sf_floatwrite(t[0],nt*nshot,titer);
-
 			break;
 		    }
 		}
 		
+		/* output forward-modeled record */
+		if (titer != NULL) {		    		
+		    for (is=0; is < nshot; is++) {
+			for (it=0; it < nrecv; it++) {
+			    if (m[is][it] >= 0)
+				t1[is][it] = t[is][m[is][it]];
+			    else
+				t1[is][it] = 0.;
+			}
+		    }
+		    
+		    sf_floatwrite(t1[0],nrecv*nshot,titer);
+		}
+
 		if (istep == 10) {
 		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);
 		    sf_warning("Dimensions for NORM need to be fixed before read.");

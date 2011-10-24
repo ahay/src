@@ -26,7 +26,8 @@ NOTE: the current code only works in 2D and source on surface.
 */
     int  n1, n2, iz, ix;
     float  o1, o2, d1, d2, source, s, v0, angle;
-    float sin, cos, z, x, real, imag, amp, pha;
+    double sine, cosine, z, x, real, imag, amp, pha;
+    double pi=3.14159265358979323846264338327950288;
     char *what;
     sf_complex *output;
     sf_file in, out;
@@ -64,8 +65,8 @@ NOTE: the current code only works in 2D and source on surface.
     sf_settype(out,SF_COMPLEX);
 
     /* convert angle to sin and cos */
-    sin = sinf(angle/180.*3.14159265359);
-    cos = sqrtf(1-sin*sin);
+    sine = sin(angle/180.*pi);
+    cosine = sqrt(1.-sine*sine);
 
     switch (what[0]) {
 	case 'e': /* exact solution */
@@ -73,65 +74,61 @@ NOTE: the current code only works in 2D and source on surface.
 		for (iz=0; iz < n1; iz++) {
 		    
 		    /* coordinate rotation and shift */
-		    z = (o1+iz*d1)*cos+(o2+ix*d2-source)*sin;
-		    x = -(o1+iz*d1)*sin+(o2+ix*d2-source)*cos;
+		    z = (o1+iz*d1)*cosine+(o2+ix*d2-source)*sine;
+		    x = -(o1+iz*d1)*sine+(o2+ix*d2-source)*cosine;
 		    
+		    /* mirror */
+		    if (z < 0.)
+			z = -z;
+
 		    /* real and imaginary traveltime in reference coordinate */
 		    real = z*z-s*s+x*x;
 		    imag = -2.*z*s;
 		    
+		    amp = sqrt(sqrt(real*real+imag*imag));
+		    pha = 0.;
+		    
 		    /* choose correct branch of square-root */
-		    amp = sqrtf(sqrtf(real*real+imag*imag));
-
-		    if (imag > 0.)
-			imag = -imag;
-
 		    if (real > 0. && imag > 0.)
-			pha = atanf(imag/real)/2.;
+			pha = atan(imag/real)/2.;
 		    if (real < 0. && imag > 0.)
-			pha = (atanf(imag/real)+3.14159265359)/2.;
+			pha = (atan(imag/real)+pi)/2.;
 		    if (real < 0. && imag < 0.)
-			pha = (atanf(imag/real)-3.14159265359)/2.;
+			pha = (atan(imag/real)-pi)/2.;
 		    if (real > 0. && imag < 0.)
-			pha = atanf(imag/real)/2.;
+			pha = atan(imag/real)/2.;
 		    if (real >= 0. && imag == 0.)
 			pha = 0.;
 		    if (real == 0. && imag > 0.)
-			pha = 3.14159265359/4.;
+			pha = pi/4.;
 		    if (real < 0. && imag == 0.)
-			pha = -3.14159265359/2.;
+			pha = -pi/2.;
 		    if (real == 0. && imag < 0.)
-			pha = -3.14159265359/4.;
-/*
-		    if (z < 0.)
-			pha = pha-3.14159265359;
-*/
-
-		    output[iz+ix*n1] = sf_cmplx(amp*cosf(pha)/v0,(amp*sinf(pha)+s)/v0);
+			pha = -pi/4.;
+		    
+		    output[iz+ix*n1] = sf_cmplx((float)(amp*cos(pha)/v0),(float)((amp*sin(pha)+s)/v0));
 		}
 	    }
+	    
 	    sf_complexwrite(output,n1*n2,out);
 	    break;
 
 	case 'b': /* beam */
 	    for (ix=0; ix < n2; ix++) {
 		for (iz=0; iz < n1; iz++) {
-/*
-		    x = 1/sqrtf(2)*(o2+ix*d2-source+o1+iz*d1);
-		    z = 1/sqrtf(2)*(o1+iz*d1-o2-ix*d2+source);
-*/
-		    x = (o2+ix*d2-source)*cos+(o1+iz*d1)*sin;
-		    z = (o1+iz*d1)*cos-(o2+ix*d2-source)*sin;
 
-		    if (z == 0.)
-		    {
-			output[iz+ix*n1] = sf_cmplx(0.,x*x/2/s/v0);
-		    }
-		    else {
-			output[iz+ix*n1] = sf_cmplx((z+x*x*z/(2*(z*z+s*s)))/v0,(x*x*s/(2*(z*z+s*s)))/v0+0.001);
-		    }
+		    /* coordinate rotation and shift */
+		    z = (o1+iz*d1)*cosine+(o2+ix*d2-source)*sine;
+		    x = -(o1+iz*d1)*sine+(o2+ix*d2-source)*cosine;
+
+		    /* mirroe */
+		    if (z < 0.)
+			z = -z;
+
+		    output[iz+ix*n1] = sf_cmplx((float)((z+z*x*x/(2.*(z*z+s*s)))/v0),(float)((s*x*x/(2.*(z*z+s*s)))/v0));
 		}
 	    }
+	    
 	    sf_complexwrite(output,n1*n2,out);
 	    break;
     }
