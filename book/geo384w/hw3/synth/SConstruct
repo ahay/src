@@ -165,7 +165,7 @@ for stack in stacks.keys():
 # Kirchhoff Migration
 #####################
 
-prog = Program('kirchhoff.c')
+prog = Program('kirchhoff.c',CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
 exe = str(prog[0])
 
 # Using vrms is CHEATING

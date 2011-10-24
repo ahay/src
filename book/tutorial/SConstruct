@@ -1,4 +1,5 @@
 from rsf.book import *
+from rsf.tex import Paper
 
 chapters=Split(
 '''
@@ -9,8 +10,10 @@ quick
 ''')
 
 Book(chapters,
-       author='Jeff Godwin',
-              title='A brief introduction to Madagascar')
+     author='Jeff Godwin',
+     title='A brief introduction to Madagascar')
+
+Paper('intro')
 
 End(options='book',
    use='graphicx,color,amsmath,amssymb,amsbsy,hyperref,listings,framed,tabularx')
