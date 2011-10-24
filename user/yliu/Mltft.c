@@ -163,9 +163,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (NULL != basis) {
-	sf_complexwrite(cbsc,n1w,basis);
-    }
     
     if (NULL != mm) {
 	for (iw=0; iw < n12; iw++) {
@@ -184,6 +181,9 @@ int main(int argc, char* argv[])
     
     for (i2=0; i2 < n2; i2++) {
 	sf_warning("slice %d of %d;",i2+1,n2);
+
+	if (NULL != basis) sf_complexwrite(cbsc,n1w,basis);
+
 	if (NULL != mm) {
 	    sf_floatread(mm,n1,mask);
 	    for (iw=0; iw < 2*nw; iw++) {
