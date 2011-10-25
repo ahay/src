@@ -624,15 +624,12 @@ int main(int argc, char* argv[])
 	    /* sponge ABC */
 	    sponge3d_apply(umz,spo,fdm);
 	    sponge3d_apply(uoz,spo,fdm);
-	    sponge3d_apply(upz,spo,fdm);
 	    
 	    sponge3d_apply(umx,spo,fdm);
 	    sponge3d_apply(uox,spo,fdm);
-	    sponge3d_apply(upx,spo,fdm);
 
 	    sponge3d_apply(umy,spo,fdm);
 	    sponge3d_apply(uoy,spo,fdm);
-	    sponge3d_apply(upy,spo,fdm);
 	}	    
 
 	/*------------------------------------------------------------*/

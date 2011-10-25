@@ -515,11 +515,9 @@ int main(int argc, char* argv[])
 	    /* sponge ABC */
 	    sponge2d_apply(umz,spo,fdm);
 	    sponge2d_apply(uoz,spo,fdm);
-	    sponge2d_apply(upz,spo,fdm);
 	    
 	    sponge2d_apply(umx,spo,fdm);
 	    sponge2d_apply(uox,spo,fdm);
-	    sponge2d_apply(upx,spo,fdm);
 	}	    
 
 	/*------------------------------------------------------------*/

@@ -424,12 +424,10 @@ int main(int argc, char* argv[])
 	abcone2d_apply(buo,bum,NOP,abc,fdm);
 	sponge2d_apply(bum,        spo,fdm);
 	sponge2d_apply(buo,        spo,fdm);
-	sponge2d_apply(bup,        spo,fdm);
 
 	abcone2d_apply(suo,sum,NOP,abc,fdm);
 	sponge2d_apply(sum,        spo,fdm);
 	sponge2d_apply(suo,        spo,fdm);
-	sponge2d_apply(sup,        spo,fdm);
 
 	/* extract data */
 	lint2d_extract(buo,bdd,cr);
