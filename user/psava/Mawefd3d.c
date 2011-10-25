@@ -395,7 +395,6 @@ int main(int argc, char* argv[])
 	    abcone3d_apply(uo,um,NOP,abc,fdm);
 	    sponge3d_apply(um,spo,fdm);
 	    sponge3d_apply(uo,spo,fdm);
-	    sponge3d_apply(up,spo,fdm);
 	}
 
 	/* extract data at receivers */

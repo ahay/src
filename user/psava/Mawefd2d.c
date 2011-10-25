@@ -363,7 +363,6 @@ int main(int argc, char* argv[])
 	    abcone2d_apply(uo,um,NOP,abc,fdm);
 	    sponge2d_apply(um,spo,fdm);
 	    sponge2d_apply(uo,spo,fdm);
-	    sponge2d_apply(up,spo,fdm);
 	}
 
 	/* extract data at receivers */
