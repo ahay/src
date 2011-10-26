@@ -340,15 +340,16 @@ int main(int argc, char* argv[])
     /* initial misfit */
     cpxeiko_set(tr,ti);
 
-/* NOTE: the following lines recompute initial R and I according to
-   w from I, but with boundary conditions for traveltime. */
+/* NOTE: the following lines recompute initial R and I according to w from I. */
     if (recom) {
 	tknown = sf_boolalloc(nt);
 
 	cpxeiko_forw(false,ti,w);
 	
 	for (it=0; it < nt; it++) {
-	    if (w[it] <= 1.e-8) {
+
+	    /* Only central ray is used as boundary condition */
+	    if (ti[it] < 1.e-8) {
 		tknown[it] = true;
 	    } else {
 		tknown[it] = false;
