@@ -3,10 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref vscancrs rkawefd2d
+fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref vscancrs 
 wavegeom rtmgeom cigangle opsmigrk gsray2rays2d gsrayvti traveltimelen traveltime2d traveltimelen3d
 '''
-# traveltime2d
+# traveltime2d rkawefd2d
 
 try:  # distributed version
     Import('env root pkgdir bindir')

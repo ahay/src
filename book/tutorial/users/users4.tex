@@ -16,23 +16,36 @@ To replicate this behavior using SCons we need to tell our \textbf{Flow} stateme
 Flow('catted',['file','file1','file2','file3','file4'],
     'sfcat axis=2 ${SOURCES[1:-1]}')
 \end{verbatimtab} 
+or, equivalently,
+\begin{verbatimtab}[4]
+Flow('catted','file file1 file2 file3 file4',
+    'sfcat axis=2 ${SOURCES[1:-1]}')
+\end{verbatimtab} 
 As you may have noticed, there are two new items in this \textbf{Flow} statement, but let's start by discussing only the list of file names: \textbf{['file','file1','file2','file3','file4']}.  The list of file names is simply a Python list of strings that contains each of the names of the files that we want to use in this Flow command.  As usual, we don't have to append the '.rsf' suffix to the end of these names because SCons adds it for us.  
 
-The second new part to the \textbf{Flow} command is: \textbf{\${SOURCES[1:-1]}}, referred to as the SCons source list, which tells SCons about the presence of additional input files in the command, and to substitute the names into the command automatically.  Without this command, SCons would not include the files in the final command.  As an example of what the SCons source list does, compare the two SConstructs below against one another.  The top is correct, the bottom is incorrectly configured:
-\begin{verbatimtab}[4]
+The second new part to the \textbf{Flow} command is:
+\textbf{\${SOURCES[1:-1]}}, referred to as the SCons source list,
+which tells SCons about the presence of additional input files in the
+command, and to substitute the names into the command automatically.
+Without this command, SCons would not include the files in the final
+command.  As an example of what the SCons source list does, compare
+the two SConstructs below against one another.  The top is correct,
+the bottom is incorrectly configured:
+\lstset{language=python,showstringspaces=false}
+\begin{lstlisting}
 # Correct
 from rsf.proj import *
 Flow('file',None,'spike n1=100')
-Flow('file1',None,'spike n1=100')
-Flow('file2',None,'spike n1=100')
-Flow('file3',None,'spike n1=100')
-Flow('file4',None,'spike n1=100')
+Flow('file1',None,'spike n1=100 mag=2')
+Flow('file2',None,'spike n1=100 mag=3')
+Flow('file3',None,'spike n1=100 mag=4')
+Flow('file4',None,'spike n1=100 mag=5')
 
 Flow('catted',['file','file1','file2','file3','file4'],
     'sfcat axis=2 ${SOURCES[1:-1]}')
 End()
-\end{verbatimtab}
-\begin{verbatim}
+\end{lstlisting}
+\begin{lstlisting}
 # Wrong
 from rsf.proj import *
 Flow('file',None,'spike n1=100')
@@ -43,7 +56,7 @@ Flow('file4',None,'spike n1=100')
 
 Flow('catted',['file','file1','file2','file3','file4'],'sfcat axis=2')
 End()
-\end{verbatim}
+\end{lstlisting}
 If you noticed the command line output from SCons, you would find that for the incorrect SConstruct, SCons ran the following command:
 \begin{verbatim}
 < file.rsf sfcat axis=2 > catted.rsf
@@ -92,7 +105,6 @@ Sometimes, \textbf{Flow}s are created that don't have an input file.  For exampl
 \begin{verbatim}
 Flow('spike',None,'sfspike n1=100')
 \end{verbatim}
-Note:  \textbf{Plot} and \textbf{Result} may not be created with None inputs.
 
 \subsection{Toggling standard input and standard output}
 When None inputs are used, then standard input is no longer needed and can be disabled. To turn off standard input on a \textbf{Flow}, add another argument to the \textbf{Flow} statement:
@@ -107,7 +119,7 @@ Likewise, we can toggle output to standard output as well.  Standard output has 
 \begin{verbatim}
 Flow('spike',None,'sfspike n1=100',stdout=-1)
 \end{verbatim}
-OR to redirect to null:
+OR to redirect to \texttt{/dev/null}:
 \begin{verbatim}
 Flow('spike',None,'sfspike n1=100',stdout=0)
 \end{verbatim}

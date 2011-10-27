@@ -73,16 +73,17 @@ By using dictionaries with string substitution, we can add flexibility to our sc
 \subsection{Loops}
 
 Perhaps the most useful construct from Python that can be added to SConstructs are loops.  By using loops, we can automate many redundant processes.  To use a Python loop we just use the standard Python syntax in the following fashion:
-\begin{verbatimtab}[4]
+\lstset{language=python,showstringspaces=false}
+\begin{lstlisting}
 from rsf.proj import *
 
 for i in range(10):
 	count = str(i) # Convert integer to string
-	Flow('spike-'+count,None,'sfspike n1=100')
+	Flow('spike-'+count,None,'sfspike n1=100 mag=%d' % i)
 	Plot('spike-'+count,'sfgraph')
 	
 End()
-\end{verbatimtab}
+\end{lstlisting}
 In order for the loop to work, you need to make sure that all the files that are created have a unique file name.  The easiest way to do so is to use the loop index in the filename, the count variable in this case.  The count variable must be a string, because only strings can be concatenated together in Python.   If you want to make more complicated file names (from nested loops) then examine the printf like syntax for Python strings. 
 
 All the usual Python rules apply to these loops.  Typically, for loops are easier to understand than while loops in Python, and so we recommend using for loops for most purposes.
@@ -136,7 +137,7 @@ ricker('wave',**parameters)
 which will look for all the named arguments to the ricker function in the parameter dictionary, and send their values to the function.  When there are many parameters, and you have already set them in the dictionary, then automatic parameter fetching is the best way to go.
 
 \subsection{Modules}
-Of course, functions can be compiled into groups and then placed into Python modules for widespread re-use throughout your SConstructs.  Python modules are currently located in \$RSFROOT/book/Recipes, which is where you should place your modules as well.  As usual, you must use correct Python syntax to access functions contained within modules.  For example, if you create a module called myutil.py, then you can access your functions in the following manner:
+Of course, functions can be compiled into groups and then placed into Python modules for widespread re-use throughout your SConstructs.  Commonly used Python modules are currently located in \texttt{\$RSFROOT/book/Recipes}, which is where you should place your modules as well.  As usual, you must use correct Python syntax to access functions contained within modules.  For example, if you create a module called myutil.py, then you can access your functions in the following manner:
 
 \begin{verbatimtab}[4]
 import myutil

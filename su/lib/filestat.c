@@ -103,6 +103,7 @@ CWP: Jack Cohen
 
 #ifndef major	/* major() is a macro for getting the major device number */
 #include <sys/sysmacros.h>
+#include <sys/types.h>
 #endif
 
 #ifndef _sf_filestat_h
