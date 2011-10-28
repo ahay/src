@@ -270,6 +270,10 @@ def thesis_intro(target=None,source=None,env=None):
         degrees = env.get('degrees')
         if degrees:
             intro.write('\\previousdegrees{%s}\n' % degrees)
+	master = env.get('master')
+        if master:
+            intro.write('\\degree{MASTER OF SCIENCE}\n\\degreeabbr{M.S.}\n')
+            intro.write('\\masterthesis\n')
     else:
         intro.write('\\beforepreface\n')
         intro.write('\\newpage \\ \n')
@@ -496,7 +500,7 @@ class RSFReport(Environment):
         rsf.tex.Paper('tpg',lclass='stanford-thesis',scons=0)
         # make introductory materials
         kw.update({'action':Action(thesis_intro),
-                   'varlist':['supervisor','committee',
+                   'varlist':['supervisor','committee','master',
                               'univ','degrees','dedication']})
         apply(self.Command,('intro.tex',None),kw)
         rsf.tex.Paper('intro',lclass='stanford-thesis',scons=0)
