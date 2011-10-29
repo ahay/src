@@ -94,7 +94,7 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
       }
     }
     DblNumMat ss(m,n), cc(m,n);
-    int TTL = m*n;
+//    int TTL = m*n;
     //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++) {
@@ -125,7 +125,7 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
 	tmp(i,j) = tmp1[i]*(k(0)*k(0)) + tmp2[i]*(k(1)*k(1));
       }
     }
-    int TTL = m*n;
+//    int TTL = m*n;
     DblNumMat phs(m,n);
     //vdsqrt_(&TTL, tmp.data(), phs.data());
     for(int i=0; i<m; i++)      for(int j=0; j<n; j++)	phs(i,j) = sqrt(tmp(i,j));
@@ -164,7 +164,7 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
       }
     }
     DblNumMat ss(m,n), cc(m,n);
-    int TTL = m*n;
+//    int TTL = m*n;
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++) {
 	ss(i,j) = sin(phs(i,j));
@@ -198,7 +198,7 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
       }
     }
     DblNumMat ss(m,n), cc(m,n);
-    int TTL = m*n;
+//    int TTL = m*n;
     //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++) {

@@ -5,8 +5,9 @@ Fetch('Nstack.su','nankai')
 Flow('stack tstack','Nstack.su','suread suxdr=y tfile=${TARGETS[1]}')
 Flow('stack-win','stack','window min1=5')
 
-for case in ('stack','stack-win'):
-    Plot(case,'grey title=Stack')
+Plot('stack','window j1=2 j2=2 | grey title=Stack')
+Plot('stack-win','window  j2=2 | grey title="Stack (Window)" ')
+    
 Result('stack','stack stack-win','SideBySideAniso')
 
 End()

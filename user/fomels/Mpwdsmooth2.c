@@ -80,4 +80,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mtrismooth2.c 752 2004-08-22 21:57:40Z fomels $	 */
+

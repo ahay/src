@@ -76,7 +76,7 @@ int main(int argc, char** argv)
   ck0 = clock();
   iC( bfio.check(f,u,NC,relerr) );
   ck1 = clock();
-  double time_chck = double(ck1-ck0)/CLOCKS_PER_SEC * nw * nw / double(NC);
+  //  double time_chck = double(ck1-ck0)/CLOCKS_PER_SEC * nw * nw / double(NC);
   //
   // printf("RESULT\n");
   // printf("N  %d\n", N);
