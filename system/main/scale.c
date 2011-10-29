@@ -27,7 +27,7 @@ To scale by a constant factor, you can also use sfmath.
 int main (int argc, char* argv[])
 {
     off_t n1, n2, n[SF_MAX_DIM];
-    int axis, ndim, i, i2, nsize, nbuf = BUFSIZ, *ibuf;
+    int axis, ndim, i, i2, nsize, nbuf, *ibuf;
     sf_file in=NULL;
     sf_file out=NULL;
     float* fbuf, f, dscale;
@@ -39,6 +39,7 @@ int main (int argc, char* argv[])
     out = sf_output ("out");
 
     type = sf_gettype(in);
+    nbuf = sf_bufsiz(in);
     if (SF_INT == type) sf_settype(out,SF_FLOAT);
 
     sf_fileflush(out,in);

@@ -29,7 +29,7 @@ The output can be used with sfheaderwindow.
 
 int main(int argc, char* argv[]) {
     int *ibuf, imin=-INT_MAX, imax=INT_MAX;
-    size_t nbuf, j;
+    size_t nbuf, j, bufsiz;
     off_t nsiz;
     float *fbuf=NULL, fmin=-FLT_MAX, fmax=FLT_MAX;
     sf_datatype type;
@@ -40,11 +40,12 @@ int main(int argc, char* argv[]) {
     out = sf_output("out");
 
     type = sf_gettype(in);
+    bufsiz = sf_bufsiz(in);
     sf_settype(out,SF_INT);
 
     switch(type) {
 	case SF_FLOAT:
-	    nbuf = BUFSIZ/sizeof(float);
+	    nbuf = bufsiz/sizeof(float);
 	    fbuf = sf_floatalloc (nbuf);
 
 	    sf_getfloat("min",&fmin);
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]) {
 	    /* maximum header value */
 	    break;
 	case SF_INT:
-	    nbuf = BUFSIZ/sizeof(int);
+	    nbuf = bufsiz/sizeof(int);
 
 	    sf_getint("min",&imin);
 	    /* minimum header value */

@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
 {
     int nin, i, k, dim, nbuf;
     off_t j, nsiz, ii[SF_MAX_DIM], n[SF_MAX_DIM]; 
-    size_t len;
+    size_t len, bufsiz;
     sf_file *in, out;
     char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
@@ -78,6 +78,7 @@ int main (int argc, char* argv[])
     
     in = (sf_file*) sf_alloc ((size_t) argc-1,sizeof(sf_file));    
     out = sf_output ("out");
+    bufsiz = sf_bufsiz(out);
 
     /* find number of input files */
     if (!sf_stdin()) { /* no input file in stdin */
@@ -204,14 +205,14 @@ int main (int argc, char* argv[])
     len = sf_math_parse (output,out,type);
     
     if (SF_FLOAT == type) { /* float type */
-	nbuf = BUFSIZ/sizeof(float);
+	nbuf = bufsiz/sizeof(float);
 	
 	fbuf = sf_floatalloc2(nbuf,nin+dim);
 	fst  = sf_floatalloc2(nbuf,len+2);
 	cbuf = NULL;
 	cst  = NULL; 
     } else {                /* complex type */
-	nbuf = BUFSIZ/sizeof(sf_complex);
+	nbuf = bufsiz/sizeof(sf_complex);
 	
 	fbuf = NULL;
 	fst  = NULL;

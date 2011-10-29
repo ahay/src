@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 {
     int cols, *ibuf, esize, i;
     short *sbuf;
-    size_t bufsiz = BUFSIZ, nbuf, j;
+    size_t bufsiz, nbuf, j;
     off_t size;
     const char* format;
     char *buf, *header, *trailer;
@@ -62,7 +62,8 @@ int main (int argc, char* argv[])
     trailer = sf_getstring("trailer");
     /* Optional trailer string to output after data */
 
-    if (!sf_histint(in,"esize",&esize)) esize=4;
+    esize = sf_esize(in);
+    bufsiz = sf_bufsiz(in);
     if (0 != esize) bufsiz /= esize;
     size = sf_filesize(in);
     

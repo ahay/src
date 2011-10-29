@@ -26,10 +26,10 @@ static float ibm2float (const char* num);
 int main(int argc, char *argv[])
 {
     off_t size;
-    size_t nin, nout, bufsiz=BUFSIZ, ein, eout;
+    size_t nin, nout, bufsiz, ein, eout;
     int line, n1, i, j, *ibuf;
     sf_file in, out;
-    char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
+    char *form, *type, *format, *bufin, *bufout;
     sf_datatype itype, otype;
     float *fbuf;
     short *sbuf;
@@ -100,6 +100,9 @@ int main(int argc, char *argv[])
     eout = sf_esize(out);
 
     /* optimize buffer size */
+    bufsiz = sf_bufsiz(in);
+    bufin  = sf_charalloc(bufsiz);
+    bufout = sf_charalloc(bufsiz);
     bufsiz /= ein;
 
     if (SF_UCHAR != itype && SF_CHAR != itype && 

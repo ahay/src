@@ -49,11 +49,11 @@ static void location(size_t loc, size_t dim, const off_t *n);
 int main(int argc, char* argv[])
 {
     sf_file in=NULL;
-    char *want=NULL, buf[BUFSIZ];
+    char *want=NULL, *buf;
     off_t n[SF_MAX_DIM], nsiz, nzero;
     int lval;
     size_t i, nbuf, nleft, dim, minloc=0, maxloc=0;
-    size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
+    size_t bufsiz, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float f, fmin, fmax;
     double fsum, fsqr, flval, frms, fmean, fnorm, fvar, fstd;
     sf_complex c, cmin1, cmin2, cmax1, cmax2;
@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }
+    bufsiz = sf_bufsiz(in);
+    buf = sf_charalloc(bufsiz);
     bufsiz /= sf_esize(in);
 
     type = sf_gettype (in);
