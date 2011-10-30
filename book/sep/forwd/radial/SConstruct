@@ -34,4 +34,24 @@ for nw in (2,4,8):
 
 Result('radial','rad2 rad4 err2 err4','TwoRows')
 
+Flow('rad','dat',
+     'transp | radial2 vmin=0 vmax=0.65 nv=250 tp=0.2 eps=0.001 | transp')
+Plot('rad',
+     '''
+     grey label2="Radial velocity (km/s)" label1="time (s)"
+     crowd1=0.83 clip=300 title="Interpolation"
+     ''')
+Flow('err','rad dat',
+     '''
+     transp | radial2 tp=0.2 inv=y eps=0.001 | transp |
+     add scale=1,-1 ${SOURCES[1]}
+     ''')
+Plot('err',
+     '''
+     grey label2="Offset (km)" label1="time (s)" wanttitle=n
+     crowd1=0.83 clip=300 title="Error"
+     ''')
+
+Result('radial2','rad err','SideBySideIso')
+
 End()
