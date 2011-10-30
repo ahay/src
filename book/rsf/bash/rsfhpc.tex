@@ -4,7 +4,7 @@
 \newcommand{\ccode}[4]
 {
   \begin{block}{#3}
-  \vspace{-5mm}
+%  \vspace{-5mm}
   \lstinputlisting[basicstyle=\sffamily\footnotesize,language=C,
                    keywordstyle={\color{darkgreen}\bf},
                    commentstyle=\color{darkblue},
@@ -40,7 +40,7 @@
 \section{HPC terminology and frameworks}
 
 \begin{frame}
-  \vspace{1.0cm}
+%  \vspace{1.0cm}
   \begin{figure}
   \includegraphics[scale=0.65]{Fig/hpc.pdf}
   \end{figure}
@@ -109,7 +109,7 @@ but have to be submitted to a queue.
     \$ scons -j {\bf 16} {\bf CLUSTER}='hostname1 {\bf 8} hostname2 {\bf 8}'
   \end{block}
   \begin{block}{What happens inside}
-    \vspace{-5mm}
+%    \vspace{-5mm}
     \begin{enumerate}
       \item Source file gets split into several independent temporary files
       \item SCons executes same workflow on cluster nodes for each file
@@ -120,7 +120,7 @@ but have to be submitted to a queue.
 \end{frame}
 
 \begin{frame}
-  \vspace{1.25cm}
+%  \vspace{1.25cm}
   \begin{figure}
   \includegraphics[scale=0.45]{Fig/pscons.pdf}
   \caption{Parallel workflows with PSCons}
@@ -163,14 +163,14 @@ but have to be submitted to a queue.
 \begin{frame}
   \begin{block}{'Hello World' program of HPC world}
     \[ \mathbf{c} = \mathbf{a} + \mathbf{b}. \]
-    \vspace{2mm}
+%    \vspace{2mm}
   \end{block}
   \begin{figure}
   \includegraphics[scale=0.35]{Fig/abcfig.pdf}
   \end{figure}
   \begin{block}{Approaches}
     \begin{itemize}
-      \vspace{-2mm}
+%      \vspace{-2mm}
       \item First, the obvious one - {\bf pscons}
       \item Then, let us assume that this problem is not data parallel and
 explicit parallellism has to be expressed at the level of source code
@@ -180,7 +180,7 @@ explicit parallellism has to be expressed at the level of source code
 
 \begin{frame}
   \begin{block}{Obvious solution}
-  \vspace{-5mm}
+%  \vspace{-5mm}
   \lstinputlisting[basicstyle=\sffamily\footnotesize,language=Python,
                    keywordstyle={\color{darkgreen}\bf},
                    commentstyle=\color{darkblue},
@@ -190,7 +190,7 @@ explicit parallellism has to be expressed at the level of source code
     \$ pscons
   \end{block}
   \begin{block}{Note}
-    \vspace{-5mm}
+%    \vspace{-5mm}
     \begin{itemize}
       \item This approach will work on any type of system and on a
 single-CPU machine as well
@@ -214,7 +214,7 @@ single-CPU machine as well
 \subsection{OpenMP}
 
 \begin{frame}
-  \vspace{1.0cm}
+%  \vspace{1.0cm}
   \begin{figure}
   \includegraphics[scale=0.55]{Fig/abcomp.pdf}
   \caption{Summation of vectors with OpenMP}
@@ -248,7 +248,7 @@ compiled as sequential
 \subsection{MPI}
 
 \begin{frame}
-  \vspace{1.0cm}
+%  \vspace{1.0cm}
   \begin{figure}
   \includegraphics[scale=0.55]{Fig/abcmpi.pdf}
   \caption{Summation of vectors with MPI}
@@ -287,7 +287,7 @@ compiled as sequential
 \subsection{GPU/CUDA}
 
 \begin{frame}
-  \vspace{1.0cm}
+%  \vspace{1.0cm}
   \begin{figure}
   \includegraphics[scale=0.55]{Fig/abcgpu.pdf}
   \caption{Summation of vectors on GPU}

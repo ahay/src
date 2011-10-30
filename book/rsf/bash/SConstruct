@@ -9,6 +9,7 @@ Paper('rsfplot',lclass='beamer',options='onlymath',use='listings',
       \input{lstlist.sty}
       \mode<presentation>
       {
+      \beamertemplatenavigationsymbolsempty
       \setbeamersize{text margin left=0.2cm,text margin right=0.2cm}
       }
       ''',
@@ -28,6 +29,7 @@ Paper('rsfhpc',lclass='beamer',options='onlymath',use='listings',
       include=r'''
       \mode<presentation>
       {
+      \beamertemplatenavigationsymbolsempty
       \setbeamersize{text margin left=0.5cm,text margin right=0.5cm}
       }
       ''')
