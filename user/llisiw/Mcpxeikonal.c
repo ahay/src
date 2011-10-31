@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, symm, prec, *tknown, recom, reg, pvar;
+    bool *known, velocity, verb, symm, prec, *tknown, recom, pvar;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, *w0;
@@ -99,24 +99,21 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tol",&tol)) tol=1.e-8;
     /* thresholding for gradient scaling */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.;
-    /* regularization parameter (Ticknov) */
-
     if (!sf_getbool("symm",&symm)) symm=true;
     /* symmetric right-hand side */
 
     if (!sf_getbool("prec",&prec)) prec=true;
     /* rhs preconditioning (default yes) */
 
-    if (!sf_getbool("pvar",&pvar)) pvar=false;
-    /* allow preconditioning to change over iterations (default no) */
+    if (!sf_getfloat("eps",&eps)) eps=1.e-2;
+    /* stable division of preconditioner */
+    
+    if (!sf_getbool("pvar",&pvar)) pvar=true;
+    /* allow preconditioning to change over iterations (default yes) */
 
     if (!sf_getbool("recom",&recom)) recom=true;
     /* recompute initial R according to w estimated from I (default yes) */
     
-    if (!sf_getbool("reg",&reg)) reg=false;
-    /* Regularization (default Tikhnov) */
-
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
 	witer = sf_output("witer");
@@ -346,20 +343,15 @@ int main(int argc, char* argv[])
     /* initialize cpxeiko */
     cpxeiko_init(dim,n,nt,d);
 
-    /* initialize 2D gradient operator */
-    if (reg) {
-	sf_igrad2_init(n[0],n[1]);
-    }
-    
     /* initial misfit */
     cpxeiko_set(tr,ti);
 
     /* w Gaussian beam */
     if (pvar) {
+	w0 = NULL;
+    } else {
 	w0 = sf_floatalloc(nt);
 	cpxeiko_forw(false,ti,w0);
-    } else {
-	w0 = NULL;
     }
 
 /* NOTE: the following lines recompute initial R and I according to w from I. */
@@ -398,13 +390,13 @@ int main(int argc, char* argv[])
     if (prec) {
 	for (it=0; it < nt; it++) {
 	    if (pvar) {
-		if (w0[it] > 0.)
-		    wt[it] = scale[it]/sqrtf(w0[it]*(s[it]+w0[it]));
+		if (wi[it] > 0.)
+		    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
 		else
 		    wt[it] = 0.;
 	    } else {
-		if (wi[it] > 0.)
-		    wt[it] = scale[it]/sqrtf(wi[it]*(s[it]+wi[it]));
+		if (w0[it] > 0.)
+		    wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
 		else
 		    wt[it] = 0.;
 	    }
@@ -502,11 +494,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* solve dw */
-	if (reg) {
-	    sf_solver_reg(cpxeiko_operator,sf_cgstep,sf_igrad2_lop,2*nt,nt,nt,dw,rhs,cgiter,eps,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
-	} else {
-	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
-	}    
+	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
 	sf_cgstep_close();
 	
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
@@ -555,13 +543,13 @@ int main(int argc, char* argv[])
 	    if (prec) {
 		for (it=0; it < nt; it++) {
 		    if (pvar) {
-			if (w0[it] > 0.)
-			    wt[it] = scale[it]/sqrtf(w0[it]*(s[it]+w0[it]));
+			if (wi[it] > 0.)
+			    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
 			else
 			    wt[it] = 0.;
 		    } else {
-			if (wi[it] > 0.)
-			    wt[it] = scale[it]/sqrtf(wi[it]*(s[it]+wi[it]));
+			if (w0[it] > 0.)
+			    wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
 			else
 			    wt[it] = 0.;
 		    }
