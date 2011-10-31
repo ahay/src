@@ -24,10 +24,10 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, symm, prec, *tknown, recom, pvar;
+    bool *known, velocity, verb, symm, prec, *tknown, recom, pvar, reg;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
-    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, *w0;
+    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, namda, *w0;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4];
@@ -103,16 +103,22 @@ int main(int argc, char* argv[])
     /* symmetric right-hand side */
 
     if (!sf_getbool("prec",&prec)) prec=true;
-    /* rhs preconditioning (default yes) */
+    /* rhs preconditioning */
+
+    if (!sf_getbool("reg",&reg)) reg=false;
+    /* regularization (Ticknov) */
 
     if (!sf_getfloat("eps",&eps)) eps=1.e-2;
     /* stable division of preconditioner */
     
+    if (!sf_getfloat("namda",&namda)) namda=0.1;
+    /* regularization parameter (Ticknov) */
+
     if (!sf_getbool("pvar",&pvar)) pvar=true;
-    /* allow preconditioning to change over iterations (default yes) */
+    /* allow preconditioning to change over iterations */
 
     if (!sf_getbool("recom",&recom)) recom=true;
-    /* recompute initial R according to w estimated from I (default yes) */
+    /* recompute initial R according to w estimated from I */
     
     /* output w at each iteration */
     if (NULL != sf_getstring("witer")) {
@@ -186,7 +192,7 @@ int main(int argc, char* argv[])
 	matriter = NULL;
 	mat1 = NULL;
     }
-
+    
     /* output operator at each iteration */
     /* NOTE: only first iteration */
     if (NULL != sf_getstring("matiiter")) {
@@ -201,7 +207,7 @@ int main(int argc, char* argv[])
 	matiiter = NULL;
 	mat2 = NULL;
     }
-
+    
     /* unit vector */
     if (operiter != NULL || matriter != NULL || matiiter != NULL) {
 	unit = sf_floatalloc(nt);
@@ -218,7 +224,7 @@ int main(int argc, char* argv[])
     } else {
 	x0iter = NULL;
     }
-
+    
     /* output linesearch at 1st iteration */
     if (NULL != sf_getstring("liniter")) {
 	liniter = sf_output("liniter");
@@ -228,7 +234,7 @@ int main(int argc, char* argv[])
     } else {
 	liniter = NULL;
     }
-
+    
     /* output t at each iteration */
     if (NULL != sf_getstring("titer")) {
 	titer = sf_output("titer");
@@ -237,7 +243,7 @@ int main(int argc, char* argv[])
     } else {
 	titer = NULL;
     }
-
+    
     /* output wt at each iteration */
     if (NULL != sf_getstring("wtiter")) {
 	wtiter = sf_output("wtiter");
@@ -246,7 +252,7 @@ int main(int argc, char* argv[])
     } else {
 	wtiter = NULL;
     }
-
+    
     /* output gamma at each iteration */
     if (NULL != sf_getstring("gamiter")) {
 	gamiter = sf_output("gamiter");
@@ -258,7 +264,7 @@ int main(int argc, char* argv[])
 	gamiter = NULL;
 	gammat = NULL;
     }
-
+    
     /* output preconditioning at each iteration */
     if (NULL != sf_getstring("preciter")) {
 	preciter = sf_output("preciter");
@@ -268,7 +274,7 @@ int main(int argc, char* argv[])
     } else {
 	preciter = NULL;
     }
-
+    
     /* read boundary condition */
     m = sf_intalloc(nt);
     known = sf_boolalloc(nt);
@@ -289,7 +295,7 @@ int main(int argc, char* argv[])
 	    known[it] = false;
 	}
     }
-
+    
     t0  = sf_complexalloc(nt);
     tr0 = sf_floatalloc(nt);
     ti0 = sf_floatalloc(nt);
@@ -305,17 +311,17 @@ int main(int argc, char* argv[])
     }
     
     cpxeiko_ref(dim,n,d,ti0,fix);
-
+    
     free(m);
     free(t0);
     m = NULL;
     t0 = NULL;
-
+    
     /* read right-hand side weighting */
     wt = sf_floatalloc(nt);
     scale = sf_floatalloc(nt);
     cost = sf_floatalloc(nt);
-
+    
     if (NULL != sf_getstring("wght")) {
 	wght = sf_input("wght");
 	sf_floatread(scale,nt,wght);
@@ -335,17 +341,20 @@ int main(int argc, char* argv[])
     x0   = sf_floatalloc(nt);
     dw   = sf_floatalloc(nt);
     rhs  = sf_floatalloc(nt);
-
+    
+    /* initialize 2D gradient operator */
+    sf_igrad2_init(n[0],n[1]);
+    
     /* initialize fastmarchcpx */
     /* NOTE: default accuracy 2nd order */
     fastmarchcpx_init(n,o,d,2);
-
+    
     /* initialize cpxeiko */
     cpxeiko_init(dim,n,nt,d);
-
+    
     /* initial misfit */
     cpxeiko_set(tr,ti);
-
+    
     /* w Gaussian beam */
     if (pvar) {
 	w0 = NULL;
@@ -494,7 +503,11 @@ int main(int argc, char* argv[])
 	}
 
 	/* solve dw */
-	sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
+	if (reg)
+	    sf_solver_reg(cpxeiko_operator,sf_cgstep,sf_igrad2_lop,2*nt,nt,nt,dw,rhs,cgiter,namda,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
+	else
+	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
+	
 	sf_cgstep_close();
 	
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
@@ -529,7 +542,11 @@ int main(int argc, char* argv[])
 		} else {
 		    wi[it] = w[it]+gama*step*dw[it];
 		    
+		    /* NOTE: use old value or replace with FLT_EPSILON */
+		    /*
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
+		    */
+		    if (wi[it] <= 0.) wi[it] = w[it];
 		}
 		
 		wr[it] = s[it]+wi[it];
@@ -593,6 +610,7 @@ int main(int argc, char* argv[])
 		    wi[it] = w[it]+dw[it];
 		} else {
 		    wi[it] = w[it];
+
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
 		}
 		
