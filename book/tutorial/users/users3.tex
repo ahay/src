@@ -39,7 +39,7 @@ Python functions can take many arguments, and arguments of different types, but 
 Somtimes in Python you will need to nest a string within a string.  To do use one of the string representations for the outer string, and use a different one for the inner string.  For example:
 \begin{verbatim}
 """sfgraph title="my plot" """  OR
-''' sfgraph title="my plot" '''   OR
+''' sfgraph title="my plot" ''' OR
 '   sfgraph title="my plot" ' 
 \end{verbatim}
 
@@ -50,7 +50,7 @@ Flow(output file,input file,command)
 \end{verbatim}
 where, target and source are file names (strings), and command is a string that contains the Madagascar program to be used, along with the command line parameters needed for that program to run.  For example:
 \begin{verbatim}
-Flow("spike1","spike","scale dscale=4.0") ,
+Flow("spike1","spike","scale dscale=4.0")
 \end{verbatim}
 creates a dependency relationship between the output file 'spike1' and the input file 'spike'.  The dependency indicates that 'spike1' cannot be created without 'spike' and that if 'spike' changes then 'spike1' also changes.  The relationship in this case is that 'spike1' should be 'spike' scaled by four times.  The equivalent command on the command line would be: 
 \begin{verbatim}
@@ -162,7 +162,7 @@ In this case, SCons tells you exactly which file is missing and which output fil
 
 The second error, is caused by having a misconfigured command.  To demonstrate this type of error change your SConstruct to:
 
-\begin{verbatim}
+\begin{lstlisting}
 from rsf.proj import *  # Remember, this statement comes first... ALWAYS
 
 \textbf{Flow}("spike",None,"sfspike n1=100 k1=50") 
@@ -178,7 +178,7 @@ from rsf.proj import *  # Remember, this statement comes first... ALWAYS
 \textbf{Result}("noise",'sfgraph title="noisy" pclip=75 ')
 
 End() # Remember, this always ends the script.
-\end{verbatim}
+\end{lstlisting}
 In this case, we've introduced a typo into one of our commands.  When running scons, the result is:
 \begin{verbatim}
 scons: Reading SConscript files ...

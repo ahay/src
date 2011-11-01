@@ -24,8 +24,8 @@ Flow('tline',map(lambda x: 't'+x,rawsegy),'cat axis=2 ${SOURCES[1:3]}')
 
 # display the first 3000 traces
 
-Result('first','line',
-       'window n2=3000 | grey pclip=90 title="First 3,000 Traces" ')
+Plot('first','line',
+     'window n2=3000 | grey pclip=90 title="First 3,000 Traces" ')
 
 Result('zoomfirst','line',
        '''

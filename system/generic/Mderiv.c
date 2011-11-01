@@ -1,6 +1,4 @@
-/* First derivative with a maximally linear FIR differentiator. 
-
-Division by dx is not included. */
+/* First derivative with a maximally linear FIR differentiator. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -23,8 +21,9 @@ Division by dx is not included. */
 
 int main (int argc, char* argv[])
 {
-    int n1,n2, i2, n;
-    float *dat, *der;
+    bool scale;
+    int n1,n2, i1,i2, n;
+    float d1, *dat, *der;
     sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
@@ -39,13 +38,24 @@ int main (int argc, char* argv[])
     der = sf_floatalloc(n1);
 
     if (!sf_getint("order",&n)) n=6;
-    /* Filter order */
+    /* filter order */
+
+    if (!sf_getbool("scale",&scale) || 
+	!sf_histfloat(in,"d1",&d1)) scale=false;
+    /*(scale=n if scale by 1/dx )*/
 
     sf_deriv_init(n1, n, 0.);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,in);
 	sf_deriv(dat,der);
+
+	if (scale) {
+	    for (i1=0; i1 < n1; i1++) {
+		der[i1] /= d1;
+	    }
+	}
+
 	sf_floatwrite(der,n1,out);
     }
 
