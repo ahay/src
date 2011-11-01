@@ -1,0 +1,108 @@
+\author{Alexey Malovichko} 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+  This homework has two parts. In the theoretical part, you will
+  perform analytical derivations related to the shifted hyperbola
+  approximation. In the computational part, you will experiment with
+  imaging a synthetic dataset and a field dataset from ...
+\end{abstract}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw4 
+\end{verbatim}
+
+\section{Theoretical part}
+
+\begin{enumerate}
+\item Consider 
+\end{enumerate}
+
+\section{Computational part}
+
+\begin{enumerate}
+\item In the first part, you will experiment with creating and 
+  imaging a synthetic seismic reflection dataset.
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw3/synth
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate the figures and display them on your screen.
+If you are on a computer with multiple CPUs, you
+can also try
+\begin{verbatim}
+pscons view
+\end{verbatim}
+to run certain computations in parallel.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{synth/SConstruct}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{synth/kirchhoff.c}
+
+\item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data, 
+to process a 2-D field dataset from ...
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw3/gulf
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate the figures and display them on your screen.
+\item Edit the \texttt{SConstruct} file to implement your processing strategy. 
+Make sure to select appropriate processing parameters.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{gulf/SConstruct}
+
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#hw4#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Malovichko's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+ \begin{verbatim} 
+ scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. 
+\end{enumerate}
