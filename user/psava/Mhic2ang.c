@@ -22,7 +22,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #include "aniang.h"
@@ -32,6 +31,7 @@ int main(int argc, char* argv[])
     bool verb;
     bool  adj;
     bool anis;
+    int ompnth=1;
 
     sf_file Fcip=NULL;	/*   lag-domain CIPs */
     sf_file Fang=NULL;	/* angle-domain CIPs */
@@ -43,9 +43,6 @@ int main(int argc, char* argv[])
     sf_axis ahx,ahy,ahz,aht,ac,ath,aph,aps,aj;
     int     ihx,ihy,ihz,iht,ic,ith,iph;
 
-#ifdef _OPENMP
-    int ompnth=1;
-#endif
     
     /* angle parameters */
     int   nth,nph,nps,nhx,nhy,nhz,nht;

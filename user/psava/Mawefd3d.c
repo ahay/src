@@ -22,7 +22,6 @@
 #endif
 
 #include "fdutil.h"
-#include "omputil.h"
 
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
@@ -49,11 +48,7 @@ int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,expl,dabc; 
     int  jsnap,ntsnap,jdata;
-
-    /* OMP parameters */
-#ifdef _OPENMP
-    int ompnth;
-#endif 
+    int ompnth=1;
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */

@@ -19,7 +19,6 @@
 #include <rsf.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #include "fdutil.h"
@@ -88,11 +87,7 @@ int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,ssou,dabc,opot;
     int  jsnap,ntsnap,jdata;
-
-    /* OMP parameters */
-#ifdef _OPENMP
-    int ompnth;
-#endif 
+    int ompnth=1;
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */

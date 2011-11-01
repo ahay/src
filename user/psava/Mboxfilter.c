@@ -19,7 +19,6 @@
 #include <rsf.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #define INBOUND(imin,imax,i) ((i>=imin && i<imax)?true:false)
@@ -27,9 +26,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,stat;
-
-    /* OMP parameters */
-    int ompith=0, ompnth=1;
+    int ompnth=1,ompith;
 
     sf_file Fx=NULL; /* input  */
     sf_file Fy=NULL; /* output */
