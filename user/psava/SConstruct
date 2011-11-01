@@ -29,13 +29,14 @@ shift fft3d
 randcut
 encode shot2grid
 boxfilter
-awefd lwefd
+lwefd
 awefd2d awefd3d ewefd2d ewefd3d
-anifd2d
 hic2ang
 wei
 '''
 
 # paradd
+# anifd2d
+# awefd
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
