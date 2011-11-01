@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+
+rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
+         'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
+         'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
+         'U32A_16','U32A_17','U32A_18','U32A_19','U32A_20',
+	 'U32A_21']
+for file in rawsegy  :
+    command="surange <" +file+ ".su"
+    print command
+    os.system(command)
+
+ 

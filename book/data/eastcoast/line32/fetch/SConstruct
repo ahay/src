@@ -1,0 +1,43 @@
+from rsf.suproj import * 
+
+#http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   #http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
+# download and view the observer notes:
+Fetch('32obslog.pdf',
+      server='http://cotuit.er.usgs.gov',
+      top='Data/1978-015-FA/NL/001/01',
+      dir='32-obslogs')
+rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
+         'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
+         'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
+         'U32A_16','U32A_17','U32A_18','U32A_19','U32A_20',
+	 'U32A_21',
+	 'U32B_01','U32B_02','U32B_03',
+	 'U32C_01','U32C_02','U32C_03','U32C_04',
+	 'U32_01']
+# there are also 'U32B_01','U32B_02','U32B_03'
+# and  'U32C_01','U32C_02','U32C_03'
+# and 'U32_01'
+# I think the line is collected in 3 parts. 32, 32a, and 32b
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+          server='http://cotuit.er.usgs.gov',
+    	  top='Data/1978-015-FA/SE/001',
+      	  dir='18')
+
+Fetch('CSDS32_1.SGY',
+      server='http://cotuit.er.usgs.gov',
+      top='Data/1978-015-FA/SE/001',
+      dir='39')
+
+End()
