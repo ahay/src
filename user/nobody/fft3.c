@@ -178,7 +178,7 @@ void sft3_init(float o1, float d1,
     k3=n3/2;
 
     shf1 = sf_complexalloc(n1);
-    for(i1=0; i1<n1; i1++) { shf1[i1]=sf_cmplx(1.0,0.0); }
+    for(i1=0; i1<n1; i1++) { shf1[i1]=1.0; }
 
     for(i1=0; i1<k1; i1++) {
 	shift = w1 * i1;
@@ -189,7 +189,7 @@ void sft3_init(float o1, float d1,
     }
 
     shf2 = sf_complexalloc(n2);
-    for(i2=0; i2<n2; i2++) { shf2[i2]=sf_cmplx(1.0,0.0); }
+    for(i2=0; i2<n2; i2++) { shf2[i2]=1.0; }
 
     for(i2=0; i2<k2; i2++) {
 	shift = w2 * i2;
@@ -200,7 +200,7 @@ void sft3_init(float o1, float d1,
     }
 
     shf3 = sf_complexalloc(n3);
-    for(i3=0; i3<n3; i3++) { shf3[i3]=sf_cmplx(1.0,0.0); }
+    for(i3=0; i3<n3; i3++) { shf3[i3]=1.0; }
 
     for(i3=0; i3<k3; i3++) {
 	shift = w3 * i3;
@@ -210,8 +210,6 @@ void sft3_init(float o1, float d1,
 	shf2[k3+i3] = sf_cmplx(cosf(shift),sinf(shift));
     }
 }
-
-
 
 /*------------------------------------------------------------*/
 void sft3_close()
@@ -243,49 +241,3 @@ void sft3(sf_complex ***pp)
     }
 
 }
-
-/*------------------------------------------------------------*/
-void cnt3(sf_complex ***pp)
-/*< apply centering >*/
-{
-    int i1,i2,i3;
-
-    for        (i3=0; i3<n3; i3++) {
-	for    (i2=0; i2<n2; i2++) {
-	    for(i1=1; i1<n1; i1+=2){
-#ifdef SF_HAS_COMPLEX_H
-		pp[i3][i2][i1] = - pp[i3][i2][i1];
-#else
-		pp[i3][i2][i1] = sf_cneg(pp[i3][i2][i1]);
-#endif
-	    }
-	}
-	
-    }
-
-    for        (i3=0; i3<n3; i3++) {
-	for    (i2=1; i2<n2; i2+=2){
-	    for(i1=0; i1<n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		pp[i3][i2][i1] = - pp[i3][i2][i1];
-#else
-		pp[i3][i2][i1] = sf_cneg(pp[i3][i2][i1]);
-#endif
-	    }
-	}
-    }
-
-    for        (i3=0; i3<n3; i3+=2){
-	for    (i2=1; i2<n2; i2++) {
-	    for(i1=0; i1<n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		pp[i3][i2][i1] = - pp[i3][i2][i1];
-#else
-		pp[i3][i2][i1] = sf_cneg(pp[i3][i2][i1]);
-#endif
-	    }
-	}
-    }
-    
-}
-
