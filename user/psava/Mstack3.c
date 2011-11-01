@@ -23,7 +23,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 int main(int argc, char* argv[])
@@ -31,10 +30,7 @@ int main(int argc, char* argv[])
     bool verb;
     int  axis;
     bool norm;
-
-#ifdef _OPENMP
-    int ompnth=0;
-#endif
+    int ompnth=1;
 
     sf_file Fi,Fo;       /* I/O files */
     sf_axis a1,a2,a3,aa; /* cube axes */

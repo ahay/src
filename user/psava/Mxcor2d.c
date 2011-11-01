@@ -22,7 +22,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #define rCOR(a,b) (a*b)
@@ -37,6 +36,7 @@ int main(int argc, char* argv[])
 {
     bool verb,rflg;
     int  axis;
+    int ompnth=1;
 
     sf_file Fs,Fr,Fi;    /* I/O files */
     sf_axis a1,a2,a3,aa; /* cube axes */
@@ -48,10 +48,6 @@ int main(int argc, char* argv[])
     sf_complex ***c_us=NULL,***c_ur=NULL;
 
     float scale;
-
-#ifdef _OPENMP
-    int ompnth=0;
-#endif
 
     /*------------------------------------------------------------*/
     /* init RSF */

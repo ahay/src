@@ -4,7 +4,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #ifndef _fdutil_h

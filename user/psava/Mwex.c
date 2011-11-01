@@ -22,7 +22,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #include "wex.h"
@@ -42,6 +41,7 @@ int main (int argc, char *argv[])
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
     int wexsign;
+    int ompnth=1;
 
     sf_axis amx,amy,az;
     sf_axis alx,aly;
@@ -57,7 +57,6 @@ int main (int argc, char *argv[])
     sf_fslice data=NULL;
     sf_fslice wfld=NULL;
 
-    int ompnth=1;
 
     wexcub3d cub; /* wavefield hypercube */
     wextap3d tap; /* tapering */

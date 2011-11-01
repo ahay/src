@@ -27,7 +27,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include "omputil.h"
 #endif
 
 #define rCOR(a,b) (a*b)
@@ -35,6 +34,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,buf;
+    int ompnth=1;
 
     sf_file Fs,Fr,Fi,Fc;           /* I/O files */
     sf_axis ax,ay,az,at,ac,aa;     /* cube axes */
@@ -60,9 +60,6 @@ int main(int argc, char* argv[])
     int  *mctall,  *pctall;
     int lht;
 
-#ifdef _OPENMP
-    int ompnth=0;
-#endif
 
     /*------------------------------------------------------------*/
     /* init RSF */
