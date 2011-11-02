@@ -356,12 +356,8 @@ int main(int argc, char* argv[])
     cpxeiko_set(tr,ti);
     
     /* w Gaussian beam */
-    if (pvar) {
-	w0 = NULL;
-    } else {
-	w0 = sf_floatalloc(nt);
-	cpxeiko_forw(false,ti,w0);
-    }
+    w0 = sf_floatalloc(nt);
+    cpxeiko_forw(false,ti,w0);
 
 /* NOTE: the following lines recompute initial R and I according to w from I. */
     if (recom) {
@@ -399,7 +395,10 @@ int main(int argc, char* argv[])
     if (prec) {
 	for (it=0; it < nt; it++) {
 	    if (pvar) {
+		/*
 		if (wi[it] > 0.)
+		*/
+		if (w0[it] > 0.)
 		    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
 		else
 		    wt[it] = 0.;
@@ -540,19 +539,29 @@ int main(int argc, char* argv[])
 		if (known[it]) {
 		    wi[it] = w[it]+dw[it];
 		} else {
+		    /*
 		    wi[it] = w[it]+gama*step*dw[it];
+		    */
 		    
+		    wi[it] = w[it]*expf(gama*step*dw[it]/w[it]);
+		    
+
 		    /* NOTE: use old value or replace with FLT_EPSILON */
+
 		    /*
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
 		    */
 		    if (wi[it] <= 0.) wi[it] = w[it];
-		}
+		    /*
+		    if (wi[it] <= 0.) wi[it] = 0.;
+		    */
+		    }
 		
 		wr[it] = s[it]+wi[it];
 	    }
 	    
 	    /* forward fast-marching for stencil time */
+
 	    fastmarchcpx(tr,tr0,known,wr);
 	    fastmarchcpx(ti,ti0,known,wi);
 	    
@@ -560,7 +569,10 @@ int main(int argc, char* argv[])
 	    if (prec) {
 		for (it=0; it < nt; it++) {
 		    if (pvar) {
+			/*
 			if (wi[it] > 0.)
+			*/
+			if (w0[it] > 0.)
 			    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
 			else
 			    wt[it] = 0.;

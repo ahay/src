@@ -281,7 +281,7 @@ int update(float value, float* time, int i)
 	    pqueue_update(i);
 	}
     }
-
+    
     return 0;
 }
 
@@ -375,23 +375,29 @@ bool updaten(int i, int m, float* res, struct Upd *vv[])
     double a, b, c, discr, t;
     int j;
 
-    /* solve quadratic equation */
-    a = b = c = 0.;
-
-    for (j=0; j<m; j++) {
-	a += vv[j]->delta;
-	b += vv[j]->stencil*vv[j]->delta;
-	c += vv[j]->stencil*vv[j]->stencil*vv[j]->delta;
-    }
-    b /= a;
-
-    discr=b*b+(((double)v[i])-c)/a;
-
-    if (discr < 0.) return false;
+    if (m == 1) {
+	/* special coded to ensure that a one-sided update is always successful */
+	t = vv[0]->stencil+sqrt((double)v[i]/vv[0]->delta);
     
-    t = b + sqrt(discr);
-    /* NOTE: change from <= to < for complex eikonal */
-    if (t < vv[m-1]->value) return false;
+    } else{
+	/* solve quadratic equation */
+	a = b = c = 0.;
+
+	for (j=0; j<m; j++) {
+	    a += vv[j]->delta;
+	    b += vv[j]->stencil*vv[j]->delta;
+	    c += vv[j]->stencil*vv[j]->stencil*vv[j]->delta;
+	}
+	b /= a;
+
+	discr=b*b+(((double)v[i])-c)/a;
+
+	if (discr < 0.) return false;
+    
+	t = b + sqrt(discr);
+	/* NOTE: change from <= to < for complex eikonal */
+	if (t < vv[m-1]->value) return false;
+    }
 
     *res = t;
     return true;
