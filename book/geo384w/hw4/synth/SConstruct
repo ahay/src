@@ -47,7 +47,7 @@ Plot('lays2','lays',graph + ' plotfat=2')
 Flow('vofz',None,
      '''
      math output="1.5+0.25*x1"
-     d2=0.01 n2=1001 d1=0.01 n1=501
+     d2=0.05 n2=201 d1=0.01 n1=501
      label1=Depth unit1=km
      label2=Distance unit2=km
      label=Velocity unit=km/s
@@ -113,16 +113,68 @@ Result('mig',
 Flow('thk','mig',
      'window | transp plane=23 | cosft sign3=1')
 Flow('velconk','thk',
-     'fourvc nv=51 dv=0.02 v0=1.5 verb=y',
+     'fourvc nv=81 dv=0.01 v0=1.5 verb=y',
      split=[3,201])
-Flow('velcon','velconk',
-     'cosft sign3=-1 | transp plane=23 memsize=1000')
+Flow('velcon','velconk','cosft sign3=-1')
 
 Plot('velcon',
      '''
+     transp plane=23 memsize=1000 |
      window min2=2.5 max2=7.5 |
      grey title="Velocity Continuation"
      ''',view=1)
 
+# Continue data squared
+Flow('thk2','mig',
+     'mul $SOURCE | window | transp plane=23 | cosft sign3=1')
+Flow('velconk2','thk2',
+     'fourvc nv=81 dv=0.01 v0=1.5 verb=y',
+     split=[3,201])
+Flow('velcon2','velconk2','cosft sign3=-1')
+
+# Compute semblance
+Flow('semb','velcon velcon2',
+     '''
+     mul $SOURCE | divn den=${SOURCES[1]} rect1=25
+     ''',split=[3,201])
+
+Plot('semb',
+     '''
+     byte gainpanel=all allpos=y |
+     transp plane=23 |
+     grey3 flat=n frame1=750 frame2=0 frame3=48 
+     label1=Time unit1=s color=j 
+     label3=Velocity unit3=km/s movie=2 dframe=5
+     title=Semblance point1=0.8 point2=0.8
+     ''',view=1)
+
+# Extracting images
+###################
+Flow('voft','vofz',
+     'depth2time velocity=$SOURCE dt=0.004 nt=1501')
+Flow('vrms','voft',
+     '''
+     add mode=p $SOURCE | causint | 
+     math output="sqrt(input*0.004/(x1+0.004))" 
+     ''')
+
+# Using vrms is CHEATING
+########################
+Flow('slice','velcon vrms','slice pick=${SOURCES[1]}')
+
+# Using vofz is CHEATING
+########################
+Flow('dmig','slice vofz',
+     'time2depth velocity=${SOURCES[1]}')
+
+Plot('dmig',
+     '''
+     window max1=5 min2=2.5 max2=7.5 | 
+     grey title="Time -> Depth" screenratio=1
+     label2=Distance label1=Depth unit1=km
+     ''')
+
+Result('dmig','Overlay')
+Result('dmig2','dmig lays2','Overlay')
 
 End()
