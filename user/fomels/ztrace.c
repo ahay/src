@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "ztrace.h"
-#include "grad2fill.h"
 
 #ifndef _ztrace_h
 
@@ -69,7 +68,7 @@ void ztrace_init (int order        /* interpolation order for velocity */,
 
     known = sf_boolalloc (nax);
 
-    grad2fill_init (na, nx);
+    sf_grad2fill_init (na, nx);
 
     for (is=0; is < NS; is++) {
 	fslc[is] = sf_eno2_init (iorder, na, nx);
@@ -89,7 +88,7 @@ void ztrace_close (void)
 	sf_eno2_close (fslc[is]);
     }
 
-    grad2fill_close ();
+    sf_grad2fill_close ();
 }
 
 void ztrace_step (int kz) 
@@ -203,7 +202,7 @@ void ztrace_step (int kz)
 	fprintf(stderr,"known=%d (%d)\n",nk,nax);
 	nk = SF_MIN(SF_MIN(na,nx),nax-nk);
 	for (is=0; is < NS; is++) {
-	    grad2fill (nk, slice[is], known);
+	    sf_grad2fill (nk, slice[is], known);
 	}
     }
 }

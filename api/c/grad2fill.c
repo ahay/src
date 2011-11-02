@@ -17,15 +17,20 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "grad2fill.h"
+
+#include "_bool.h"
 /*^*/
 
-#include "grad2fill.h"
+#include "alloc.h"
+#include "igrad2.h"
+#include "bigsolver.h"
+#include "cgstep.h"
 
 static int n12;
 static float* zero;
 
-void grad2fill_init (int m1, int m2)
+void sf_grad2fill_init (int m1, int m2)
 /*< Initialize with data dimensions >*/
 {
     int i;
@@ -41,13 +46,13 @@ void grad2fill_init (int m1, int m2)
     sf_igrad2_init (m1,m2);
 }
 
-void grad2fill_close (void)
+void sf_grad2fill_close (void)
 /*< Free allocate storage >*/
 {
     free (zero);
 }
 
-void grad2fill(int niter   /* number of iterations */, 
+void sf_grad2fill(int niter   /* number of iterations */, 
 	       float* mm   /* estimated model */, 
 	       bool *known /* mask */)
 /*< Run optimization >*/

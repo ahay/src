@@ -11,9 +11,10 @@ int omp_init()
 /*< init OMP parameters >*/
 {
     int ompnth=1;
-    int ompath=1;
     
 #ifdef _OPENMP
+    int ompath=1;
+
     /* OMP allowed threads */
     if(! sf_getint("ompnth",&ompnth)) ompnth=0;
 

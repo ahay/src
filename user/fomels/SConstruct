@@ -16,7 +16,7 @@ pwdix pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2
 pwspray3 regr rdiv reshape riesz rsin seislet seisigk shape shapeagc
 shapesigk shearer similarity simenv smoothreg taupfit thin timecont
 timefreq timeshift tomo trismooth2 tristack twodip2 twofreq2 velcon
-velinv vofzperm warp1 warpadd warpscan zero
+velinv vofzperm warp1 warpadd warpscan zero ztrace
 '''
 
 ccprogs = 'isolr2 isolr3'
