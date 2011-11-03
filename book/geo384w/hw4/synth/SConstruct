@@ -126,7 +126,10 @@ Plot('velcon',
 
 # Continue data squared
 Flow('thk2','mig',
-     'mul $SOURCE | window | transp plane=23 | cosft sign3=1')
+     '''
+     mul $SOURCE |
+     window | transp plane=23 | cosft sign3=1
+     ''')
 Flow('velconk2','thk2',
      'fourvc nv=81 dv=0.01 v0=1.5 verb=y',
      split=[3,201])

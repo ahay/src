@@ -93,8 +93,8 @@ Result('anglemig',
        '''
        window min2=2 |
        transp | transp plane=23 memsize=1000 | 
-       byte gainpanel=all |
-       grey3 frame1=1000 frame2=200 frame3=60 unit3="\^o\_"
+       byte gainpanel=all | grey3
+       frame1=1000 frame2=200 frame3=60 unit3="\^o\_"
        title="Dip Angle Gathers" point1=0.7 point2=0.7
        ''')
 
