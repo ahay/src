@@ -24,13 +24,13 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, symm, prec, *tknown, recom, pvar, reg;
+    bool *known, velocity, verb, symm, *tknown, recom, pvar, reg;
     int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, namda, *w0;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
-    char key[4];
+    char key[4], *prec, *bound;
     sf_file in, out, vel, mask, ref, wght;
     sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
     
@@ -102,8 +102,11 @@ int main(int argc, char* argv[])
     if (!sf_getbool("symm",&symm)) symm=true;
     /* symmetric right-hand side */
 
-    if (!sf_getbool("prec",&prec)) prec=true;
-    /* rhs preconditioning */
+    if (NULL == (prec = sf_getstring("prec"))) prec="angle";
+    /* rhs preconditioning (default angle) */
+
+    if (NULL == (bound = sf_getstring("bound"))) bound="add";
+    /* avoid overshoot when update (default add) */
 
     if (!sf_getbool("reg",&reg)) reg=false;
     /* regularization (Ticknov) */
@@ -392,27 +395,56 @@ int main(int argc, char* argv[])
 	w[it] = wi[it];
     
     /* right-hand side preconditioning */
-    if (prec) {
-	for (it=0; it < nt; it++) {
-	    if (pvar) {
-		/*
-		if (wi[it] > 0.)
-		*/
-		if (w0[it] > 0.)
-		    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
-		else
-		    wt[it] = 0.;
-	    } else {
-		if (w0[it] > 0.)
-		    wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
-		else
-		    wt[it] = 0.;
+    switch (prec[0]) {
+	case 'n': /* none */
+
+	    for (it=0; it < nt; it++) {
+		wt[it] = scale[it];
 	    }
-	}
-    } else {
-	for (it=0; it < nt; it++) {
-	    wt[it] = scale[it];
-	}
+
+	    break;
+
+	case 'a': /* angle */
+
+	    for (it=0; it < nt; it++) {
+		if (pvar) {
+		    /*
+		      if (wi[it] > 0.)
+		    */
+		    if (w0[it] > 0.)
+			wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
+		    else
+			wt[it] = 0.;
+		} else {
+		    if (w0[it] > 0.)
+			wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
+		    else
+			wt[it] = 0.;
+		}
+	    }
+	    
+	    break;
+	    
+	case 'e': /* exponential */
+	    
+	    for (it=0; it < nt; it++) {
+		if (pvar) {
+		    /*
+		      if (wi[it] > 0.)
+		    */
+		    if (w0[it] > 0.)
+			wt[it] = scale[it]/(expf(wi[it])+eps);
+		    else
+			wt[it] = 0.;
+		} else {
+		    if (w0[it] > 0.)
+			wt[it] = scale[it]/(expf(w0[it])+eps);
+		    else
+			wt[it] = 0.;
+		}
+	    }
+	    
+	    break;
     }
     
     for (it=0; it < nt; it++) 
@@ -539,21 +571,42 @@ int main(int argc, char* argv[])
 		if (known[it]) {
 		    wi[it] = w[it]+dw[it];
 		} else {
-		    /*
-		    wi[it] = w[it]+gama*step*dw[it];
-		    */
-		    
-		    wi[it] = w[it]*expf(gama*step*dw[it]/w[it]);
-		    
+		    switch (bound[0]) {
+			case 'a': /* add */
 
-		    /* NOTE: use old value or replace with FLT_EPSILON */
+			    wi[it] = w[it]+gama*step*dw[it];
+			    
+			    break;
 
+			case 'e': /* exponential */
+
+			    wi[it] = w[it]*expf(gama*step*dw[it]/w[it]);
+
+			    break;
+
+			case 'h': /* hybrid */
+
+			    /* DEBUG!!! */
+			    if (dw[it] >= 0.)
+				wi[it] = w[it]+gama*step*dw[it];
+			    else
+				wi[it] = w[it]*expf(gama*step*dw[it]/w[it]);
+
+			    break;
+		    }
+		    
+		    /* NOTE: what to do with overshoot (lower bound) */
 		    /*
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
 		    */
 		    if (wi[it] <= 0.) wi[it] = w[it];
 		    /*
 		    if (wi[it] <= 0.) wi[it] = 0.;
+		    */
+
+		    /* NOTE: what to do with overshoot (upper bound) */
+		    /*
+		      
 		    */
 		    }
 		
@@ -566,27 +619,56 @@ int main(int argc, char* argv[])
 	    fastmarchcpx(ti,ti0,known,wi);
 	    
 	    /* right-hand side preconditioning */
-	    if (prec) {
-		for (it=0; it < nt; it++) {
-		    if (pvar) {
-			/*
-			if (wi[it] > 0.)
-			*/
-			if (w0[it] > 0.)
-			    wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
-			else
-			    wt[it] = 0.;
-		    } else {
-			if (w0[it] > 0.)
-			    wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
-			else
-			    wt[it] = 0.;
+	    switch (prec[0]) {
+		case 'n': /* none */
+		    
+		    for (it=0; it < nt; it++) {
+			wt[it] = scale[it];
 		    }
-		}
-	    } else {
-		for (it=0; it < nt; it++) {
-		    wt[it] = scale[it];
-		}
+		    
+		    break;
+		    
+		case 'a': /* angle */
+		    
+		    for (it=0; it < nt; it++) {
+			if (pvar) {
+			    /*
+			      if (wi[it] > 0.)
+			    */
+			    if (w0[it] > 0.)
+				wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
+			    else
+				wt[it] = 0.;
+			} else {
+			    if (w0[it] > 0.)
+				wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
+			    else
+				wt[it] = 0.;
+			}
+		    }
+		    
+		    break;
+		    
+		case 'e': /* exponential */
+		    
+		    for (it=0; it < nt; it++) {
+			if (pvar) {
+			    /*
+			      if (wi[it] > 0.)
+			    */
+			    if (w0[it] > 0.)
+				wt[it] = scale[it]/(expf(wi[it])+eps);
+			    else
+				wt[it] = 0.;
+			} else {
+			    if (w0[it] > 0.)
+				wt[it] = scale[it]/(expf(w0[it])+eps);
+			    else
+				wt[it] = 0.;
+			}
+		    }
+
+		    break;
 	    }
 	    
 	    cpxeiko_set(tr,ti);
