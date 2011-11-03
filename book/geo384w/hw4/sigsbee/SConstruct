@@ -1,0 +1,98 @@
+from rsf.proj import *
+
+# Download velocity model from the data server
+##############################################
+vstr = 'sigsbee2a_stratigraphy.sgy'
+Fetch(vstr,'sigsbee')
+Flow('zvstr',vstr,'segyread read=data')
+
+Flow('vel','zvstr',
+     '''
+     put d1=0.00762 o2=3.05562 d2=0.00762
+     label1=Depth unit1=km label2=Distance unit2=km
+     label=Velocity unit=km/s |
+     scale dscale=0.0003048
+     ''')
+Result('vel',
+       '''
+       grey wanttitle=n color=j allpos=y 
+       screenratio=0.3125 screenht=4 labelsz=4
+       scalebar=y barreverse=y
+       ''')
+
+# Window a portion
+Flow('vel2','vel','window max2=9.5')
+
+dt = 0.002
+nt = 5001
+
+# Bandlimited reflectivity
+Flow('ref','vel2',
+     '''
+     depth2time velocity=$SOURCE nt=%d dt=%g |
+     ai2refl | ricker1 frequency=10 |
+     time2depth velocity=$SOURCE
+     ''' % (nt,dt))
+
+Flow('fft','ref','transp | fft1 | fft3 axis=2 pad=1')
+Flow('mid left right','vel2 fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2011 dt=%g fft=${SOURCES[1]} 
+     left=${TARGETS[1]} right=${TARGETS[2]} 
+     ''' % dt)
+
+# Exploding reflector modeling
+Flow('exp','ref left mid right',
+     '''
+     fftexp0
+     left=${SOURCES[1]} middle=${SOURCES[2]} right=${SOURCES[3]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+Flow('data','exp','transp | halfint inv=y | window j1=2 j2=2')
+
+Result('data',
+       'grey title="Zero-Offset Data" ')
+
+# Slope estimation
+Flow('dip','data','dip rect1=100 rect2=10')
+Result('dip','grey color=j scalebar=y title=Slope barlabel=Shift barunit=samples')
+
+# Plane-wave destruction
+Flow('dif','data dip','pwd dip=${SOURCES[1]}')
+Result('dif','grey title="Separated Diffractions" ')
+
+# Velocity continuation
+Flow('fourier','dif','cosft sign2=1')
+Flow('velconf','fourier',
+     '''
+     stolt vel=1.5 | spray axis=2 n=1 o=0 d=1 |
+     fourvc pad2=4096 nv=51 dv=0.02 v0=1.5 verb=y
+     ''',split=[2,424],reduce='cat axis=3')
+Flow('velcon','velconf',
+     '''
+     transp plane=23 memsize=1000 |
+     cosft sign2=-1  |
+     transp plane=23 memsize=1000
+     ''')
+
+# Focusing measure
+Flow('focus','velcon',
+     '''
+     focus rect1=100 rect3=10 |
+     math output="1/abs(input)" |
+     cut max1=3 
+     ''')
+
+# Path integral
+Flow('path','velcon','stack norm=n')
+# Double path integral
+Flow('path2','velcon','math output="x2*input" | stack norm=n')
+# Smooth division
+Flow('fvel','path2 path','divn den=${SOURCES[1]} rect1=100 rect2=10')
+
+Result('fvel','grey color=j scalebar=y mean=y title="Focusing Velocity" ')
+
+
+End()

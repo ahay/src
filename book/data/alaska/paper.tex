@@ -160,11 +160,11 @@ The processing applied by GSI in 1981 was:
 \item Time variant scaling
 \end{enumerate}
 
-The surveyor and observer logs are downloaded and displayed with Adobe 
-Acrobat (acroread) using the commands:
-\\
-scons surveylog.view \\
+The surveyor and observer logs are downloaded and displayed using the commands:
+\begin{verbatim}
+scons surveylog.view 
 scons observerlog.view
+\end{verbatim}
 
 I read the surveyor's log and typed the elevations into the spnElev.txt 
 file.  spnElev.txt contains two columns.  The first is the shotpoint 
@@ -428,20 +428,27 @@ scons vfile.view
 field interpreted after residual statics.}
 
 \section{Second Pass Residual Statics}
-The command:\\
-scons rstack1.view\\
+The command:
+\begin{verbatim}
+scons rstack1.view
+\end{verbatim}
 creates a stack with second pass residuals shown in Figure~\ref{fig:rstack1}.  
 I compared figures~\ref{fig:rstack} and~\ref{fig:rstack1} and did not see 
 any improvement.\\
 \\  
-A zoom plot can be produce with the command:\\
+A zoom plot can be produced with the command:
+\begin{verbatim}
 scons zoomrstack1.view
+\end{verbatim}
 
 I enjoyed comparing the zoom plots of the initial brute stack and the stack 
 with two iterations of residual statics and velocity analysis.  These plots
-are not included in the paper, but you can create them with the commands:\\
-scons zoombrutestack.view\& \\
-scons zoomrstack1.view\& \\
+are not included in the paper, but you can create them with the
+commands:
+\begin{verbatim}
+scons zoombrutestack.view\& 
+scons zoomrstack1.view\& 
+\end{verbatim}
 Make the plots full screen size and toggle between the windows using the 
 buttons on the bottom run bar.  The event disruptions that line up vertically
 are static problems solved by the residual statics process.
@@ -496,14 +503,14 @@ short of the commercial packages I have used.
 Some of the ideas I have to continue this work include:
 
 \begin{enumerate}
-\item Process using other software (Open source or proprietary). 
-\item Study difference and see if the open source software can be improved.
+\item Process using other software (open source or proprietary). 
+\item Study difference and see if the open-source software can be improved.
 \item Working on different datasets (marine, 3D, ...).
 \end{enumerate}
 
 \section{Conclusions}
-I have provided a set of scripts the process a land line using SU.  These scripts include the processing stages:
-
+I have provided a set of scripts the process a land line using SU.
+These scripts include the following processing stages:
 \begin{enumerate}
 \item Data load
 \item Trace header creation
