@@ -36,14 +36,17 @@ int main (int argc, char* argv[])
     imag = sf_output ("out");
 
     /* get dimensions */
-    if (!sf_histint (data, "n1", &nt)) sf_error ("No n1= in input");
-    if (!sf_histint (data, "n2", &nx)) sf_error ("No n2= in input");
-    if (!sf_histfloat (data, "d1", &dt)) sf_error ("No d1= in input");
-    if (!sf_histfloat (data, "d2", &dx)) sf_error ("No d2= in input");
+    if (!sf_histint (data, "n1", &nt))   sf_error ("n1");
+    if (!sf_histint (data, "n2", &nx))   sf_error ("n2");
+    if (!sf_histfloat (data, "d1", &dt)) sf_error ("d1");
+    if (!sf_histfloat (data, "d2", &dx)) sf_error ("d2");
 
-    if (!sf_getint("na",&na)) sf_error("Need na="); /* number of angles */
-    if (!sf_getfloat("da",&da)) sf_error("Need da="); /* angle increment */
-    if (!sf_getfloat("a0",&a0)) sf_error("Need a0="); /* initial angle */
+    if (!sf_getint("na",&na)) sf_error("Need na="); 
+    /* number of angles */
+    if (!sf_getfloat("da",&da)) sf_error("Need da="); 
+    /* angle increment */
+    if (!sf_getfloat("a0",&a0)) sf_error("Need a0="); 
+    /* initial angle */
 
     sf_shiftdim(data, imag, 1);
 
@@ -56,7 +59,8 @@ int main (int argc, char* argv[])
     a0 *= SF_PI/180.;
     da *= SF_PI/180.;
 
-    if (!sf_getfloat("vel",&vel)) vel=1.5; /* constant velocity */
+    if (!sf_getfloat("vel",&vel)) vel=1.5; 
+    /* constant velocity */
 
     dat = sf_floatalloc2(nt,nx);
     sf_floatread (dat[0],nt*nx, data);
@@ -74,10 +78,13 @@ int main (int argc, char* argv[])
             for (ia = 0; ia < na; ia++) { 
 		a = a0+ia*da;
 		
-		t = z/cosf(a);           /* escape time */
-		y = x+0.5*vel*t*sinf(a); /* escape location */
+		t = z/cosf(a);           
+                /* escape time */
+		y = x+0.5*vel*t*sinf(a); 
+                /* escape location */
 
-		img[ia] = get_sample (dat,t,y,0.,0.,dt,dx,nt,nx);
+		img[ia] = get_sample (dat,t,y,0.,0.,
+				      dt,dx,nt,nx);
 	    }
 
             sf_floatwrite (img, na, imag);

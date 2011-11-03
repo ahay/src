@@ -75,11 +75,16 @@ Flow('velcon','velconf',
 #################
 Flow('dimage','velcon vrms',
      'slice pick=${SOURCES[1]}')
-Result('dimage','window min1=3 | grey title="Imaged Diffractions" ')
+Result('dimage',
+       '''
+       window min1=3 |
+       grey title="Imaged Diffractions"
+       ''')
 
 # Angle-gather migration
 ########################
-prog = Program('anglemig.c',CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
+prog = Program('anglemig.c',
+               CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
 
 Flow('anglemig','dif %s' % prog[0],
      './${SOURCES[1]} vel=2.5 na=90 a0=-45 da=1')

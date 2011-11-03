@@ -6,7 +6,8 @@
   This homework has two parts. In the theoretical part, you will
   perform analytical derivations related to the shifted hyperbola
   approximation. In the computational part, you will experiment with
-  imaging a synthetic dataset and a field dataset from ...
+  imaging two synthetic datasets and a field dataset from the Gulf of
+  Mexico using velocity continuation.
 \end{abstract}
 
 Completing the computational part of this homework assignment requires
@@ -26,13 +27,35 @@ svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw4
 
 \section{Theoretical part}
 
+Using the hyperbolic traveltime approximation
+\begin{equation}
+T = \sqrt{\left(T_0-\frac{z}{V(x_0,T_0)}\right)^2 + \frac{(x_0-x)^2}{V^2(x_0,T_0)}}
+\end{equation}
+makes the geometrical imaging analysis equivalent to analyzing wave
+propagation in a constant-velocity medium. In particular, we can easily
+verify that the traveltime satisfies the isotropic eikonal equation 
+\begin{equation}
+\left(\frac{\partial T}{\partial x}\right)^2 + \left(\frac{\partial T}{\partial z}\right)^2 = \frac{1}{V^2}\;.
+\end{equation}
+
+Suppose that you switch to the more accurate shifted hyperbola approximation
+\begin{equation}
+T = \left(T_0-\frac{z}{V}\right)\,(1-\frac{1}{S}) + \frac{1}{S}\,\sqrt{\left(T_0-\frac{z}{V}\right)^2 + S\,\frac{(x_0-x)^2}{V^2}}
+\end{equation}
+
 \begin{enumerate}
-\item Consider 
+\item How would you need to modify the eikonal equation?
+\item How would you need to modify the following expressions for the escape time and location for use in the angle-domain time migration?
+\begin{eqnarray}
+\hat{T} & = & \frac{T_0-z/V}{\cos{\theta}} \\
+\hat{x} & = & x_0 + V\,\left(T_0-\frac{z}{V}\right)\,\tan{\theta}
+\end{eqnarray}
 \end{enumerate}
 
 \section{Computational part}
 
-\item In the first part, you will experiment with 
+\begin{enumerate}
+\item In the first part of the computational assignment, you will experiment with 
   imaging a synthetic seismic reflection dataset from Homework 3 using
   prestack velocity continuation.
 
@@ -91,16 +114,29 @@ velocity continuation.
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 {\small	\lstinputlisting[frame=single]{synth/SConstruct}}
 
-\item In the second part, we will use velocity continuation again but
-  this time on a synthetic zero-offset section containing diffraction events.
+\item In the second part of the computational assignment, we will use velocity continuation again but
+  this time on a synthetic zero-offset section containing diffraction
+  events.
 
+  Figure~\ref{fig:vel} shows a famous Sigsbee synthetic velocity
+  model. We will focus on the left part of the model, which is
+  appropriate for time-domain imaging. A synthetically generated
+  zero-offset section is shown in Figure~\ref{fig:data}. 
+  
+  Our processing strategy is to extract diffractions from the data
+  (Figure~\ref{fig:dif}) and to image them using zero-offset velocity
+  continuation (Figure~\ref{fig:dimage}). In addition, we are going to
+  analyze the image by expanding it in dip angles by using dip-angle
+  migration (Figure~\ref{fig:anglemig}).
+
+\inputdir{sigsbee}
 \sideplot{vel}{width=\textwidth}{Sigsbee velocity model.}
-\plot{data}{width=0.9\textwidth}{Zero-offset synthetic data.}
-\plot{dif}{width=0.9\textwidth}{Diffractions extracted from the data
+\plot{data}{width=0.7\textwidth}{Zero-offset synthetic data.}
+\plot{dif}{width=0.7\textwidth}{Diffractions extracted from the data
   by plane-wave destruction.}
-\plot{dimage}{width=0.9\textwidth}{Time-migrated image of
+\plot{dimage}{width=0.7\textwidth}{Time-migrated image of
   diffractions.}
-\plot{anglemig}{width=0.9\textwidth}{Dip angle gathers.}
+\plot{anglemig}{width=0.7\textwidth}{Dip angle gathers from constant-velocity angle-domain migration.}
 
 \begin{enumerate}
 \item Change directory 
@@ -118,36 +154,48 @@ can also try
 pscons view
 \end{verbatim}
 to run certain computations in parallel.
+\item Generate a movie displaying the velocity continuation process. Is it possible to detect velocities from focusing zero-offset diffractions?
+\item Modify the program in the \texttt{anglemig.c} file to input a variable migration velocity instead of using a constant velocity. 
+Regenerate Figure~\ref{fig:anglemig} using a variable velocity 
+\begin{verbatim}
+pscons anglemig.view
+\end{verbatim}
+Do you notice a difference?
+\item For EXTRA CREDIT, find a way to estimate migration velocity from the data.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-{\small	\lstinputlisting[frame=single]{sigsbee/SConstruct}}
+{\small \lstinputlisting[frame=single]{sigsbee/SConstruct}}
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{sigsbee/anglemig.c}
 
+\item In the final part of the computational assignment, we return to the 2-D field dataset from the Gulf of Mexico.
+The zero-offset data after a DMO stack are shown in Figure~\ref{fig:stack}.
 
-\item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data, 
-to process a 2-D field dataset from ...
+\inputdir{gulf}
+\plot{stack}{width=0.8\textwidth}{2-D field dataset from the Gulf of Mexico after DMO stack.}
 
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd hw3/gulf
+cd hw4/gulf
 \end{verbatim}
 \item Run
 \begin{verbatim}
 scons view
 \end{verbatim}
-to generate the figures and display them on your screen.
-\item Edit the \texttt{SConstruct} file to implement your processing strategy. 
-Make sure to select appropriate processing parameters.
+to generate Figure~\ref{fig:stack} and display it on your screen.
+\item Edit the \texttt{SConstruct} file to implement a processing flow involving velocity continuation and 
+angle-gather migration. Make sure to select appropriate processing parameters.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-%\lstinputlisting[frame=single]{gulf/SConstruct}
+\lstinputlisting[frame=single]{gulf/SConstruct}
 
 \end{enumerate}
+
+\newpage
 
 \section{Completing the assignment}
 
