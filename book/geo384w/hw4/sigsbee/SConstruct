@@ -26,38 +26,32 @@ Flow('vel2','vel','window max2=9.5')
 dt = 0.002
 nt = 5001
 
-# Bandlimited reflectivity
-Flow('ref','vel2',
+# Convert to RMS
+Flow('voft','vel2',
+     'depth2time velocity=$SOURCE dt=%g nt=%d' % (dt,nt))
+Flow('vrms','voft',
      '''
-     depth2time velocity=$SOURCE nt=%d dt=%g |
-     ai2refl | ricker1 frequency=10 |
-     time2depth velocity=$SOURCE
-     ''' % (nt,dt))
+     add mode=p $SOURCE | causint | 
+     math output="sqrt(input*%g/(x1+%g))" |
+     window j1=2 j2=2
+     ''' % (dt,dt))
 
-Flow('fft','ref','transp | fft1 | fft3 axis=2 pad=1')
-Flow('mid left right','vel2 fft',
-     '''
-     transp | scale dscale=0.5 |
-     isolr2 seed=2011 dt=%g fft=${SOURCES[1]} 
-     left=${TARGETS[1]} right=${TARGETS[2]} 
-     ''' % dt)
-
-# Exploding reflector modeling
-Flow('exp','ref left mid right',
-     '''
-     fftexp0
-     left=${SOURCES[1]} middle=${SOURCES[2]} right=${SOURCES[3]} 
-     nt=%d dt=%g 
-     ''' % (nt,dt))
-
-Flow('data','exp','transp | halfint inv=y | window j1=2 j2=2')
+# Download zero-offset from the data server
+###########################################
+Fetch('data0.rsf','sigsbee')
+Flow('data','data0','dd form=native')
 
 Result('data',
        'grey title="Zero-Offset Data" ')
 
 # Slope estimation
 Flow('dip','data','dip rect1=100 rect2=10')
-Result('dip','grey color=j scalebar=y title=Slope barlabel=Shift barunit=samples')
+Result('dip',
+       '''
+       grey color=j scalebar=y
+       title="Dominant Slope"
+       barlabel=Slope barunit=samples
+       ''')
 
 # Plane-wave destruction
 Flow('dif','data dip','pwd dip=${SOURCES[1]}')
@@ -68,7 +62,7 @@ Flow('fourier','dif','cosft sign2=1')
 Flow('velconf','fourier',
      '''
      stolt vel=1.5 | spray axis=2 n=1 o=0 d=1 |
-     fourvc pad2=4096 nv=51 dv=0.02 v0=1.5 verb=y
+     fourvc pad2=4096 nv=61 dv=0.02 v0=1.4 verb=y
      ''',split=[2,424],reduce='cat axis=3')
 Flow('velcon','velconf',
      '''
@@ -77,22 +71,26 @@ Flow('velcon','velconf',
      transp plane=23 memsize=1000
      ''')
 
-# Focusing measure
-Flow('focus','velcon',
-     '''
-     focus rect1=100 rect3=10 |
-     math output="1/abs(input)" |
-     cut max1=3 
-     ''')
+# Picking a slice
+#################
+Flow('dimage','velcon vrms',
+     'slice pick=${SOURCES[1]}')
+Result('dimage','window min1=3 | grey title="Imaged Diffractions" ')
 
-# Path integral
-Flow('path','velcon','stack norm=n')
-# Double path integral
-Flow('path2','velcon','math output="x2*input" | stack norm=n')
-# Smooth division
-Flow('fvel','path2 path','divn den=${SOURCES[1]} rect1=100 rect2=10')
+# Angle-gather migration
+########################
+prog = Program('anglemig.c',CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
 
-Result('fvel','grey color=j scalebar=y mean=y title="Focusing Velocity" ')
+Flow('anglemig','dif %s' % prog[0],
+     './${SOURCES[1]} vel=2.5 na=90 a0=-45 da=1')
 
+Result('anglemig',
+       '''
+       window min2=2 |
+       transp | transp plane=23 memsize=1000 | 
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=200 frame3=60 unit3="\^o\_"
+       title="Dip Angle Gathers" point1=0.7 point2=0.7
+       ''')
 
 End()

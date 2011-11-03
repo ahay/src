@@ -32,14 +32,80 @@ svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw4
 
 \section{Computational part}
 
-\begin{enumerate}
-\item In the first part, you will experiment with creating and 
-  imaging a synthetic seismic reflection dataset.
+\item In the first part, you will experiment with 
+  imaging a synthetic seismic reflection dataset from Homework 3 using
+  prestack velocity continuation.
+
+  \inputdir{synth}
+
+\plot{data}{width=0.9\textwidth}{2-D synthetic data.}
+  \sideplot{model}{width=\textwidth}{(a) Synthetic model: curved
+    reflectors in a $V(z)$ velocity.}
+  \plot{mig}{width=0.9\textwidth}{Initial constant-velocity migration.}
+  \plot{dmig2}{width=0.9\textwidth}{Time migration converted to depth, with reflectors overlaid.}
+
+Figure~\ref{fig:data} shows a synthetic reflection dataset computed
+from a reflector model shown in Figure~\ref{fig:ref} and assuming a
+velocity model with a constant vertical gradient $V(z) = 1.5 +
+0.25\,z$. A small amount of random noise is added to the data.
+
+Figure~\ref{fig:mig} shows an initial prestack common-offset time
+migration using a constant velocity of 1.5 km/s. 
+Figure~\ref{fig:dmig2} shows the result of prestack time
+migration after velocity continuation, extraction of a velocity slice,
+and conversion from time to depth.
 
 \begin{enumerate}
 \item Change directory 
 \begin{verbatim}
-cd hw3/synth
+cd hw4/synth
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate the figures and display them on your screen.
+If you are on a computer with multiple CPUs, you
+can also try
+\begin{verbatim}
+pscons view
+\end{verbatim}
+to run certain computations in parallel.
+\item Run 
+\begin{verbatim}
+pscons velcon.vpl
+\end{verbatim}
+to display a movie of the velocity continuation process.
+\item Run 
+\begin{verbatim}
+pscons semb.vpl
+\end{verbatim}
+to display a movie slicing through a semblance cube computed from
+velocity continuation.
+\item The processing flow in the \texttt{SConstruct} file involves
+  some cheating: the exact RMS velocity is used to extract the final
+  image. Modify the processing flow so that only properties estimated
+  from the data get used. 
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small	\lstinputlisting[frame=single]{synth/SConstruct}}
+
+\item In the second part, we will use velocity continuation again but
+  this time on a synthetic zero-offset section containing diffraction events.
+
+\sideplot{vel}{width=\textwidth}{Sigsbee velocity model.}
+\plot{data}{width=0.9\textwidth}{Zero-offset synthetic data.}
+\plot{dif}{width=0.9\textwidth}{Diffractions extracted from the data
+  by plane-wave destruction.}
+\plot{dimage}{width=0.9\textwidth}{Time-migrated image of
+  diffractions.}
+\plot{anglemig}{width=0.9\textwidth}{Dip angle gathers.}
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw4/sigsbee
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -55,10 +121,11 @@ to run certain computations in parallel.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-%\lstinputlisting[frame=single]{synth/SConstruct}
+{\small	\lstinputlisting[frame=single]{sigsbee/SConstruct}}
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-%\lstinputlisting[frame=single]{synth/kirchhoff.c}
+\lstinputlisting[frame=single]{sigsbee/anglemig.c}
+
 
 \item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data, 
 to process a 2-D field dataset from ...

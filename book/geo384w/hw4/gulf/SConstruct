@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+Fetch('bei-stack.rsf','midpts')
+Flow('stack','bei-stack',
+     '''
+     dd form=native |
+     put label2=Distance unit2=km label1=Time unit1=s
+     ''')
+
+Result('stack','grey title="DMO Stack" ')
+
+End()
