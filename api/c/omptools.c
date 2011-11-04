@@ -1,6 +1,7 @@
 #include "_defs.h"
 #include "getpar.h"
 #include "omptools.h"
+#include "error.h"
 
 #ifdef _OPENMP
 #include <omp.h>
