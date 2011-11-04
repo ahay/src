@@ -587,10 +587,10 @@ int main(int argc, char* argv[])
 			case 'h': /* hybrid */
 
 			    /* DEBUG!!! */
-			    if (dw[it] >= 0.)
-				wi[it] = w[it]+gama*step*dw[it];
-			    else
+			    if (dw[it] < 0. && w[it] <= namda)
 				wi[it] = w[it]*expf(gama*step*dw[it]/w[it]);
+			    else
+				wi[it] = w[it]+gama*step*dw[it];
 
 			    break;
 		    }
@@ -603,7 +603,6 @@ int main(int argc, char* argv[])
 		    /*
 		    if (wi[it] <= 0.) wi[it] = 0.;
 		    */
-
 		    /* NOTE: what to do with overshoot (upper bound) */
 		    /*
 		      
