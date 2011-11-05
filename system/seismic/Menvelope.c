@@ -1,4 +1,4 @@
-/* Compute data envelope. */
+/* Compute data envelope or phase rotation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

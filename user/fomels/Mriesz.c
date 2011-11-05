@@ -1,4 +1,4 @@
-/* Compute data envelope. */
+/* Compute 2-D Riesz transform. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
