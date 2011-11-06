@@ -1,6 +1,6 @@
 from rsf.tex import *
 
-Paper('envelope')
+Paper('envelope',use='amsmath')
 
 #Paper('seg2006',lclass='segabs')
 
