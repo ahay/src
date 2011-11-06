@@ -36,6 +36,7 @@ To programs:
 * sfcconv: 1-D convolution with complex numbers.
 * sfpyramid: pyramid transform.
 * sfshapeagc: automatic gain control by shaping regularization.
+* modified sfsuwrite for consistency with sfsuread
 
 ===Bug fixes===
 
