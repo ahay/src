@@ -296,9 +296,8 @@ int main(int argc, char* argv[])
      *  MAIN LOOP
      */
     /*------------------------------------------------------------*/
-    if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+	if(verb) sf_warning("time %d of %d;",it+1,nt);
 
 #ifdef _OPENMP
 #pragma omp parallel for				\
@@ -370,7 +369,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 	}
     }
-    if(verb) fprintf(stderr,"\n");    
+    if(verb) sf_warning(".");    
 
     /*------------------------------------------------------------*/
     /* deallocate arrays */

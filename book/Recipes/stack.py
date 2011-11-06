@@ -204,6 +204,8 @@ def diffimg(name,
     vlf=name+'-vlf'
     Flow(vlf,pwd,velcon)
 
+    Flow(vlf+'q',pwd,'mul $SOURCE |' + velcon + '| clip2 lower=0')
+
     if j3 > 1:
         focus = 'window j3=%d | ' % j3
     else:
@@ -218,6 +220,13 @@ def diffimg(name,
     foc=name+'-foc'
     Flow(foc,vlf,focus)
 
+    sem=name+'-sem'
+    Flow(sem,[vlf,vlf+'q'],
+         '''
+         mul $SOURCE |
+         divn den=${SOURCES[1]} rect1=%d rect3=%d
+         ''' % (rect1,rect2))
+
     pik=name+'-pik'
 
     if vslope:
@@ -225,7 +234,7 @@ def diffimg(name,
     else:
         pick = ''
 
-    pick = pick + 'clip clip=8 | scale axis=2 | pick an=%g rect1=%d rect2=%d | window' % (an,rect1,rect2)
+    pick = pick + 'scale axis=2 | pick an=%g rect1=%d rect2=%d | window' % (an,rect1,rect2)
 
 
     if j3 > 1:
@@ -237,7 +246,7 @@ def diffimg(name,
     else:
         pick2 = pick
         
-    Flow(pik,foc,pick2)
+    Flow(pik,sem,pick2)
     Result(pik,velgrey('Migration Velocity'))
 
     slc=name+'-slc'
@@ -250,7 +259,7 @@ def diffimg(name,
 
     Result(slc+'2',grey('Migrated Stack'))
 
-    Flow(slc+'1',slc+'2','agc rect1=200')
+    Flow(slc+'1',slc+'2','shapeagc rect1=200')
 
     Result(slc+'1',grey('Migrated Stack'))
 

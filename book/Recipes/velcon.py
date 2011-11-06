@@ -50,23 +50,49 @@ def velcon(data,        # data name
         Flow(pad,cip,'pad n3=%d' % padx)
     else:
         pad=cip
+        padx=nx
 
     ckx=data+'-ckx'
     vlf=data+'-vlf'
-    vlf2=data+'-vlf2'
-    Flow(ckx,pad,'cosft sign3=1 | put o4=0')
-    Flow(vlf,ckx,
-         '''
-         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y |
-         cosft sign3=-1 | window n3=%d
-         ''' % (nv,dv,v0,padt,padt2,nx))
 
-    Flow(vlf2,pad,
+    ckx2=data+'-ckx2'
+    vlf2=data+'-vlf2'
+    
+    Flow(ckx,pad,'cosft sign3=1 | put o4=0')
+    Flow(ckx+'v',ckx,
          '''
-         transp plane=23 memsize=500 |
-         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
-         window n2=%d | transp plane=23 memsize=500
-         ''' % (nv,dv,v0,padt,padt2,nx))
+         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y 
+         ''' % (nv,dv,v0,padt,padt2),
+         split=[3,padx])    
+    Flow(vlf,ckx+'v',
+         '''
+         cosft sign3=-1 | window n3=%d
+         ''' % nx)
+    
+    Flow(ckx2,pad,'mul $SOURCE | cosft sign3=1 | put o4=0')
+    Flow(ckx2+'v',ckx2,
+         '''
+         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y 
+         ''' % (nv,dv,v0,padt,padt2),
+         split=[3,padx])    
+    Flow(vlf2,ckx2+'v',
+         '''
+         cosft sign3=-1 | window n3=%d | clip2 lower=0
+         ''' % nx)
+
+    sem = data+'-sem'
+    Flow(sem,[vlf,vlf2],
+         '''
+         mul $SOURCE |
+         divn den=${SOURCES[1]} rect1=%d rect3=%d
+         ''' % (rect1,rect2))
+
+#    Flow(vlf2,pad,
+#         '''
+#         transp plane=23 memsize=500 |
+#         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
+#         window n2=%d | transp plane=23 memsize=500
+#         ''' % (nv,dv,v0,padt,padt2,nx))
     
     if v1:
         Flow(mig+'1',data,'preconstkirch vel=%g' % v1,split=[4,nh])
@@ -91,15 +117,15 @@ def velcon(data,        # data name
     if vslope:
         pick = '''
         mutter x0=%g v0=%g half=n |
-        pick rect1=%d rect2=%d | transp plane=23 memsize=500
+        scale axis=2 | pick rect1=%d rect2=%d | transp plane=23 memsize=500
         ''' % (vx0,vslope,rect1,rect2)
     else:
         pick = '''
-        pick rect1=%d rect2=%d | transp plane=23 memsize=500
+        scale axis=2 | pick rect1=%d rect2=%d | transp plane=23 memsize=500
         ''' % (rect1,rect2)
 
     npk = data+'-npk'
-    Flow(npk,vlf2,pick)
+    Flow(npk,sem,pick)
     Plot(npk, 	 
          ''' 	 
          grey pclip=100 color=j bias=%g 	 
@@ -132,5 +158,5 @@ def velcon(data,        # data name
 
     Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
-    Flow(agc+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
+    Flow(agc+'2',[sem,npk],'slice pick=${SOURCES[1]} | window')
     

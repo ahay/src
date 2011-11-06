@@ -19,10 +19,10 @@ velcon('sig',
        padt2=2048, # extra time padding
        padx=521,   # lateral padding
        v1=1.5,     # other velocity
-       rect1=100,  # vertical smoothing
+       rect1=10,   # vertical smoothing
        rect2=10)   # lateral  smoothing
 
-Plot('vel','sig-vlf2',
+Plot('vel','sig-sem',
      '''
      window min3=1 n3=1 | contour nc=25 title="Velocity Continuation"
      ''')

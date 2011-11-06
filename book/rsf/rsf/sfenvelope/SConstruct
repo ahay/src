@@ -82,10 +82,12 @@ SU = os.environ.get('CWPROOT')
 if SU:
     suhilb = os.path.join(SU,'bin','suhilb')
 
-    Flow('tspike','spike','segyheader | dd form=xdr')
-    Flow('spike.su','spike tspike','dd form=xdr | suwrite tfile=${SOURCES[1]}')
+    Flow('tspike','spike','segyheader')
+    Flow('spike.su','spike tspike',
+         'suwrite suxdr=y tfile=${SOURCES[1]}')
     Flow('hilb.su','spike.su',suhilb)
-    Flow('sutime','hilb.su','suread read=d')
+    Flow('sutime','hilb.su',
+         'suread suxdr=y read=d | put d1=1 o1=-256')
     Flow('sufreq','sutime',fft)
 
     Result('sufreq','sufreq freq100',

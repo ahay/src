@@ -29,17 +29,17 @@ for cig in (41,83,110,137,165):
     panel = 'cig%d' % cig
     panels.append(panel)
 
-    Plot(panel+'g','bei-foc',
+    Plot(panel+'g','bei-sem',
          '''
-         window min1=1 max1=4 n3=1 f3=%d | grey allpos=y
+         window min1=1 max1=3 n3=1 f3=%d | grey allpos=y
          label1=Time unit1=s label2=Velocity unit2=km/s
-         labelsz=15 titlesz=18 color=j bias=3 title="IG at %d km"
+         labelsz=15 titlesz=18 color=j title="IG at %d km"
          ''' % (cig,int(7.705+0.0335*cig)))
 
     pik = 'pik%d' % cig
     Plot(pik,'bei-pik',
          '''
-         window min1=1 max1=4 n2=1 f2=%d |
+         window min1=1 max1=3 n2=1 f2=%d |
          graph transp=y yreverse=y pad=n
          wanttitle=n labelsz=15 titlesz=18 wantaxis=n
          min2=1.425 max2=2.6 plotcol=7 plotfat=10
@@ -47,12 +47,12 @@ for cig in (41,83,110,137,165):
 
     Plot(panel,[panel+'g',pik],'Overlay')
     
-
 Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 
 Flow('pred','bei-dip','pwpaint i0=125 eps=0.1')
 Plot('stk','bei-stk2','grey title=Intepretation label2=Distance unit2=km label1=Time unit1=s')
 Plot('pred','contour wanttitle=n wantaxis=n plotfat=5')
 Result('pred','stk pred','Overlay')
+
 
 End()
