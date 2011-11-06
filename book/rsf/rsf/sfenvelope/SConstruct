@@ -29,17 +29,18 @@ Flow('ntime','nfreq',
 
 Flow('spike',None,'spike n1=512 k1=257 d1=1 o1=-256')
 
+fft = '''
+rtoc |
+fft3 axis=1 pad=1 opt=n |
+math output="input*exp(-I*x1*%g)"
+''' % shift
+
 for order in (10,100):
     time = 'time%d' % order
     freq = 'freq%d' % order
     Flow(time,'spike',
          'envelope hilb=y order=%d' % order)
-    Flow(freq,time,
-         '''
-         rtoc |
-         fft3 axis=1 pad=1 opt=n |
-         math output="input*exp(-I*x1*%g)"
-         ''' % shift)
+    Flow(freq,time,fft)
 
 Result('freq','nfreq freq10 freq100',
        '''
@@ -61,12 +62,7 @@ for r in range(3):
     time = 'time%d' % r
     freq = 'freq%d' % r
     Flow(time,'spike','envelope hilb=y ref=%g' % ref[r])
-    Flow(freq,time,
-         '''
-         rtoc |
-         fft3 axis=1 pad=1 opt=n |
-         math output="input*exp(-I*x1*%g)"
-         ''' % shift)
+    Flow(freq,time,fft)
     
 Result('rfreq','freq0 freq1 freq2',
        '''
@@ -88,8 +84,21 @@ if SU:
 
     Flow('tspike','spike','segyheader')
     Flow('spike.su','spike tspike','dd form=xdr | suwrite tfile=${SOURCES[1]}')
-    Flow('hilb.su',['spike.su',suhilb],suhilb)
-    Flow('suhilb','hilb.su','suread read=d')
+    Flow('hilb.su','spike.su',suhilb)
+    Flow('sutime','hilb.su','suread read=d')
+    Flow('sufreq','sutime',fft)
 
+    Result('sufreq','sufreq freq100',
+       '''
+       cat axis=2 ${SOURCES[1]} | imag |
+       reverse which=1 |
+       dots labels=SU:Madagascar
+       ''')
+    Result('sutime','sutime time100',
+       '''
+       cat axis=2 ${SOURCES[1:3]} |
+       window min1=-33 max1=33 |
+       dots unit1=sample labels=SU:Madagascar
+       ''')
 
 End()
