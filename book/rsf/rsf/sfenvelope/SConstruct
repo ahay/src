@@ -82,7 +82,7 @@ SU = os.environ.get('CWPROOT')
 if SU:
     suhilb = os.path.join(SU,'bin','suhilb')
 
-    Flow('tspike','spike','segyheader')
+    Flow('tspike','spike','segyheader | dd form=xdr')
     Flow('spike.su','spike tspike','dd form=xdr | suwrite tfile=${SOURCES[1]}')
     Flow('hilb.su','spike.su',suhilb)
     Flow('sutime','hilb.su','suread read=d')
@@ -96,7 +96,7 @@ if SU:
        ''')
     Result('sutime','sutime time100',
        '''
-       cat axis=2 ${SOURCES[1:3]} |
+       cat axis=2 ${SOURCES[1]} |
        window min1=-33 max1=33 |
        dots unit1=sample labels=SU:Madagascar
        ''')

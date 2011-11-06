@@ -28,7 +28,7 @@ Merges trace headers with data.
 
 int main(int argc, char *argv[])
 {
-    bool verbose, su, xdr;
+    bool verbose, su, xdr, suxdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *headname=NULL, *filename=NULL, *trace=NULL, count[4], *prog=NULL;
     const char *myheader[] = {"      This dataset was created",
@@ -46,8 +46,17 @@ int main(int argc, char *argv[])
 
     if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
-    if (!sf_getbool("endian",&xdr)) xdr = endian();
-    /* big/little endian flag. The default is estimated automatically */
+
+    if (!sf_getbool("endian",&xdr)) xdr=true;
+    /* Whether to automatically estimate endianness or not */
+    if (xdr) endian();
+
+    if (su) {
+	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
+	/* y, SU has XDR support */
+    } else {
+	suxdr = true;
+    }
 
     if (!sf_getbool("su",&su)) {
 	/* y if input is SU, n if input is SEGY */
@@ -143,12 +152,10 @@ int main(int argc, char *argv[])
     if (verbose) sf_warning("Detected trace length of %d",ns);
 
     if (su) {
-	if (xdr) {
-	    if (SF_XDR != sf_getform(in)) sf_error("Need xdr input");
-	} else {
-	    if (SF_NATIVE != sf_getform(in)) sf_error("Need native input");
-	}
-	sf_setform(in,SF_NATIVE);
+	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
+	/* y, SU has XDR support */
+
+	if (suxdr) format=5;
     }
 
     nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);
@@ -171,12 +178,12 @@ int main(int argc, char *argv[])
 	sf_intread(itrace,SF_NKEYS,hdr);	
 	head2segy(trace, itrace, SF_NKEYS);
 	
-	if (su) {
-	    sf_charread(trace + SF_HDRBYTES,ns*sizeof(float),in);
-	} else {
+	if (suxdr) {
 	    sf_floatread (ftrace,ns,in);
 	    trace2segy(trace + SF_HDRBYTES, ftrace, ns,format);
-	}
+	} else {
+	    sf_charread(trace + SF_HDRBYTES,ns*sizeof(float),in);
+	} 
 
 	if (nsegy != fwrite(trace, 1, nsegy, file))
 	    sf_error ("Error writing trace %d",itr+1);
