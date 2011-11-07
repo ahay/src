@@ -50,6 +50,7 @@ if mpicc:
 else:
     prog = env.RSF_Place('sfmpi',None,var='MPI')
 if root:
+    mains.append('mpi')
     env.Install(bindir,prog[0])
 
 omp = env.get('OMP')
@@ -58,6 +59,7 @@ if omp:
 else:
     prog = env.RSF_Place('sfomp',None,var='OMP')
 if root:
+    mains.append('omp')
     env.Install(bindir,prog[0])
 
 if root:
@@ -68,7 +70,7 @@ if root:
 ######################################################################
 if root:    
     main = 'sfmain.py'
-    
+
     docs = map(lambda prog: env.Doc(prog),mains)
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
