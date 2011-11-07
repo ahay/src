@@ -152,8 +152,6 @@ Flow('shotline-imute','shotline-despike shotline-mutemask','math m=${SOURCES[1]}
 # 3.) Remove groundroll with omega-p filter
 Flow('shotline-deGR','shotline-imute',degroundroll())
 
-
-
 ####################################################################################################
 
 #Shot gathers -> CMP gathers
@@ -173,23 +171,26 @@ Flow('semb-deGR','cmp-deGR',
      ''')
 
 # Velocity picking
-Flow('pick','semb','pick rect1=10 rect2=3')
+Flow('pick','semb',
+     '''
+     pick rect1=10 rect2=3
+     ''')
+
 Flow('pick-deGR','semb-deGR','pick rect1=10 rect2=3')
 
 # Interpolate onto full CMP grid
 Flow('vel','pick',
      '''
-     transp plane=23 |
      transp | spline n1=551 d1=55 o1=-2612.5 |
      transp
      ''')
 Flow('vel-deGR','pick-deGR',
      '''
-     transp plane=23 |
      transp | spline n1=551 d1=55 o1=-2612.5 |
      transp
      ''')
 
+Result('vel','grey mean=y title=n')
 # NMO correction on CMP gathers
 Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
 Flow('nmo-deGR',['cmp-deGR','vel-deGR'],'nmo velocity=${SOURCES[1]} half=n')
@@ -205,11 +206,9 @@ Result('stack-deGR','agc rect1=250 | grey title="De-Groundroll Stack"')
 Flow('mstack','nmo','transp | median')
 Result('mstack','agc rect1=250 | grey title=Median')
 
-
 #Fetch('31_81_PR.SGY',
 #	server='http://certmapper.cr.usgs.gov',
 #      	  top='nersl/NPRA/SEISMIC/1981/31_81',
 #      	  dir='PROCESSED')
 
 End()
-

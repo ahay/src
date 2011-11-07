@@ -1,5 +1,8 @@
 from rsf.proj import *
 
+# Compare m8r with su
+
+# Fetch data
 rawsegy=['L23535','L23536','L23537']
 for name in rawsegy:
     Fetch(name+'.SGY',
@@ -14,15 +17,20 @@ for name in rawsegy:
 Flow('rawline',rawsegy,'cat ${SOURCES[1:3]} axis=2')
 Flow('trawline',map(lambda x: 't'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
 
+# Show raw data
+Flow('demoraw','rawline','window n2=3000')
+Result('demoraw','grey pclip=80 title="Raw Line"')
+Flow('gathers','rawline','window n2=250 f2=1000 n1=1500')
+Result('gathers','grey pclip=80 title="Gathers"')
+Flow('gather','rawline','window n2=96 f2=2325')
+Result('gather','grey pclip=80 title="Gather"')
+
 # Form mask to window out misfires
 Flow('shotmask','trawline',
      '''
      window n1=1 f1=2 | mask min=157 max=157 |
      add add=-1 | add scale=-1
      ''')
-
-# Window out misfires, test shots and auxiliary traces;
-# define shot and offset dimensions
 Flow('shotline',['rawline','shotmask'],
      '''
      headerwindow mask=${SOURCES[1]} |
@@ -30,270 +38,28 @@ Flow('shotline',['rawline','shotmask'],
      put o2=-5225 d2=110 label2=Offset unit2=ft
          o3=0 d3=440 label3=Shot unit3=ft
      ''')
+#Result('shotline','grey pclip=80 title="Gathers"')
 
-###############################################################################
-par = {
-    'nx':96,   'dx':110.0,       'ox':-5225.0,       # offset (feet)
-    'ns':57,   'ds':440.0,       'os':0.0,           # shots (feet)
-    'nt':3000, 'dt':0.002,      'ot':0.0,            # time (s)
-    'fhi':60, 'flo':4,                               # bandpass filter limits
-    'vinner0':200.0, 'vinner1':300.0, 'tinner0':1.0, # inner mute parameters
-    'p0':-0.0002, 'dp':0.000000758, 'np':527,        # tau-p txfm parameters
-    'wptaper':50,                                    # omega-p tapering parameter
-    'gainpow':1.4,                                   # gain correction 
-    'medwindow':4, 'medvel':8000                     # de-spiking parameters
-    }
-
-par['slopep']=1.0/par['vinner1']
-###############################################################################
-
-## Remove spikes using constant nmo and median filter
-def despike():
-    return '''
-    tpow tpow=%(gainpow)g | 
-    nmo velocity=${SOURCES[1]} half=n |
-    despike2 wide=%(medwindow)d |
-    inmo velocity=${SOURCES[1]} half=n
-    '''% (par)
-
-## Inner Mute on Selected Shots
-imuteshots=[3,4,5,6,8,11,16,17,22,23,24,33,35,36,37,41,999999]
-Flow('shot-ones','shotline','window n3=1 | math output="1.0"')
-Flow('shot-mutemask','shot-ones','mutter inner=y v0=%(vinner0)g t0=%(tinner0)g slopep=%(slopep)g'%(par))
-shotlist=[]
-j=0
-for i in range(par['ns']):
-    shot='shot-zeros-'+str(i)
-    shotlist.append(shot)
-    print "Checking shot "+str(i)+"..."
-    if i==imuteshots[j]:
-        print "Shot "+str(i)+" will be inner-muted."
-        j=j+1       
-        Flow(shot,'shot-mutemask','cp')
-    else:
-        Flow(shot,'shot-ones','cp')
-Flow('shotline-mutemask',shotlist,'rcat ${SOURCES[1:%d]}'%(par['ns']))
-
-#Design flow on test gather(s)
-
-Flow('testdsvel','dsvel',
-     'window n3=1 f3=35')
-
-#De-spike
-Flow('testshot','shotline testdsvel',
-     'window n3=1 f3=35 | '+despike())
-Plot('testshot','grey title=Before')
-
-#Inner-mute and omega-p transform
-Flow('testwp','testshot',
-     '''
-     mutter inner=y v0=%(vinner0)g t0=%(tinner0)g slopep=%(slopep)g |
-     slant x0=%(ox)g dx=%(dx)g nx=%(nx)d p0=%(p0)g dp=%(dp)g np=%(np)d adj=y |
-     cosft sign1=1 |
-     put label1=Frequency label2=Slowness unit2="s/ft" 
-     '''% (par))
-Plot('testwp',
-       '''
-       sfgrey color=j title="Omega-p Before"
-       ''')
-
-#Apply flow to line
-# 1.) Despike with median filter
-Flow('dsvel','shotline','window n2=1 | math output=%(medvel)g'%(par))
-Flow('shotline-despike','shotline dsvel',despike())
-
-# 2.) Inner-mute for noisiest near-offsets 
-Flow('shotline-imute','shotline-despike shotline-mutemask','math m=${SOURCES[1]} output="input*m"')
-
-#Shot gathers -> CMP gathers
+# Shot gathers -> CMP gathers
 Flow('cmp','shotline','shot2cmp half=n')
+#Result('cmp','grey title="CMP Gathers"')
+
+# checkstack
+#Fetch('31_81_PR.SGY',
+#	server='http://certmapper.cr.usgs.gov',
+#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+#      	  dir='PROCESSED')
+
+#prs='31_81_PR.SGY'
+#Flow([prs,tprs,prs.bin,prs.asc],
+#         31_81_PR.SGY,
+#         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
 
 # Stacking
 Flow('stack','cmp','stack')
 Result('stack','agc rect1=250 | grey title=Stack')
 
-Flow('partstack','stack','window n2=551')
-Result('partstack','agc rect1=250 | grey')
-
-Flow('ltft','stack','ltft rect=10 nw=151 dw=1')
-
-Result('ltft',
-       '''
-       math output="abs(input)" | real |
-       transp plane=23 |
-       byte allpos=y gainpanel=a pclip=85 |
-       grey3 color=j label1=Time flat=n 
-       unit1=s label2=Offset unit2=ft label3=Frequency unit3=Hz
-       point1=0.8 point2=0.8 wanttitle=n scalbar=y 
-       ''') 
-
-Flow('thr1','ltft',
-     '''
-     real | transp plane=23 memsize=1000 | 
-     mutter t0=-0.2 v0=1.1 | cut min3=12
-     ''' )#mutter inner=y v0=0.3 |
-Flow('thr2','ltft',
-     '''
-     imag | transp plane=23 memsize=1000 |
-     mutter t0=-0.2 v0=1.1 | cut min3=12
-     ''')#mutter inner=y v0=0.3 |
-Flow('complx','thr1 thr2',
-     '''
-     cmplx ${SOURCES[1:2]} | 
-     transp plane=23 memsize=1000
-     ''')
-Plot('complx',
-     '''
-     window n3=88 f3=5 max2=50 | put o3=0.017 |
-     math output="abs(input)" | real |
-     byte allpos=y gainpanel=40 pclip=100 |
-     grey3 color=j frame1=375 frame2=18 frame3=15 label1=Time flat=y 
-     unit1=s label3=Distance label2=Frequency unit3=Hz
-     point1=0.8 point2=0.2 wanttitle=n
-     ''',view=1)
-
-Flow('maskthr1','ltft',
-     '''
-     real | transp plane=23 memsize=1000 |
-     math output=1. |
-     mutter t0=-0.2 v0=1.1 | cut min3=12 |
-     math output="1-input"
-     ''' )#mutter inner=y v0=0.3 |
-Flow('maskthr2','ltft',
-     '''
-     imag | transp plane=23 memsize=1000 |
-     math output=1. |
-     mutter t0=-0.2 v0=1.1 | cut min3=12 |
-     math output="1-input"
-     ''')#mutter inner=y v0=0.3 |
-Flow('maskcomplx','maskthr1 maskthr2',
-     '''
-     cmplx ${SOURCES[1:2]} | 
-     transp plane=23 memsize=1000
-     ''')
-Result('mask','maskcomplx',
-       '''
-       window n3=88 f3=5 max2=50 | put o3=0.017 |
-       math output="abs(input)" | real |
-       byte allpos=y gainpanel=40 pclip=100 |
-       transp plane=23 memsize=1000 | 
-       grey3 frame1=375 frame3=15 frame2=18 label1=Time flat=n 
-       unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
-       screenht=10 screenratio=0.7 color=g
-       point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
-       parallel2=n format2=%3.1f
-       ''')
-
-Flow('iltft','complx','ltft inv=y verb=n')
-Result('wiltft','iltft',
-       '''
-       window n2=88 f2=5 | put o2=0.017 |
-       agc rect1=50 repeat=5 |
-       wiggle label2="Offset" unit2=km label1="Time" unit1=s
-       screenht=10 screenratio=0.7 title="Difference"
-       labelfat=4 font=2 titlefat=4  clip=2.74044
-       parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
-       transp=y yreverse=y poly=y
-       ''')
-
-Flow('siltft','dat iltft','add scale=1,-1 ${SOURCES[1]}')
-## Result('siltft',
-##        '''
-##        window n2=88 f2=5 | put o2=0.017 |
-##        agc rect1=50 repeat=5 |
-##        grey label2="Offset" unit2=km label1="Time" unit1=s
-##        screenht=10 screenratio=0.7 title="LTF Transform"
-##        labelfat=4 font=2 titlefat=4
-##        parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
-##        ''')
-
-Result('wsiltft','siltft',
-       '''
-       window n2=88 f2=5 | put o2=0.017 |
-       agc rect1=50 repeat=5 |
-       wiggle label2="Offset" unit2=km label1="Time" unit1=s
-       screenht=10 screenratio=0.7 title="LTF Transform"
-       labelfat=4 font=2 titlefat=4
-       parallel2=n format2=%3.1f n2tic=6 o2num=0. d2num=0.5
-       transp=y yreverse=y poly=y
-       ''')
-
-#############################
-# Elevation profile, datuming
-#############################
-
-Flow('spelev','../line31-81/spnElev.txt',
-     '''
-     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
-     dd form=native
-     ''',stdin=0)
-
-Plot('spelev',
-     '''
-     dd type=complex |
-     window |
-     graph wanttitle=n wantaxis=n symbol=o plotcol=5
-     min2=75 max2=125 min1=85 max1=165
-     ''')
-
-Flow('elev','spelev','spline o1=85 d1=1 n1=81')
-
-Plot('elev',
-     '''
-     graph title=Elevation label1=Shot
-     min2=75 max2=125 min1=85 max1=165 
-     ''')
-Result('elevinterp','elev spelev','Overlay')
-
-elev1 = 'elev1.txt'
-Flow('elevone',elev1,
-     '''
-     echo n1=2 n2=33 in=$SOURCE data_format=ascii_float |
-     dd form=native     
-     ''',stdin=0)
-
-elev2 = 'elev2.txt'
-
-Flow('elevtwo',elev2,
-     '''
-     echo n1=2 n2=90 in=$SOURCE data_format=ascii_float |
-     dd form=native     
-     ''',stdin=0)
-
-Plot('elevtwo',
-     '''
-     dd type=complex |
-     graph title=Elevation label1=Shot symbol="-o" plotcol=5
-     min2=75 max2=125 min1=85 max1=165
-     ''')
-Result('elevlap','elev elevtwo','Overlay')
-
-Flow('intpelevtwo','elevtwo','spline o1=85 d1=1 n1=81')
-
-Plot('intpelevtwo',
-     '''
-     graph title=Elevation label1=Shot plotcol=2
-     min2=75 max2=125 min1=85 max1=165 
-     ''')
-Result('elevlap2','intpelevtwo elev','Overlay')
-
-Flow('xcor','spelev','window n1=1 f1=0')
-
-Flow('elevmiss',['spelev','xcor'],
-     '''
-     window n1=1 f1=1 |
-     invbin1 head=${SOURCES[1]} nx=80 dx=1 filter=1 x0=85 prec=y verb=y
-             niter=50 xmin=85 xmax=165
-     ''')
-
-Plot('elevmiss',
-     '''
-     graph title=Elevation label1=Shot symbol="-*" plotcol=2
-     min2=75 max2=125 min1=85 max1=165     
-     ''')
-
-Result('elevinterp2','elevmiss spelev elevtwo','Overlay')
-
-
+Flow('demostack','stack','window n2=530')
+Result('demostack','grey title=Stack')
 
 End()

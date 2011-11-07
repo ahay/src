@@ -1,9 +1,6 @@
 from rsf.proj import *
 import math
 
-#
-# Read SEG-Y
-#
 Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
      '''
      segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=npr3_field.sgy
