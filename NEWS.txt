@@ -52,6 +52,7 @@ In APIs:
 
 In the Python package:
 * Hires Bounding Box detection in Mathematica plots
+* Location of config.py in configure.py 
 
 In programs:
 * Fixed sfpen (via dovplot) bug
