@@ -19,6 +19,7 @@ To documentation:
 * Limited the number of USED IN examples displayed by selfdoc and man
  pages (25 by default, controled by -u parameter in sfdoc)
 * book/tutorial: A brief introduction to Madagascar (Jeff Godwin)
+* Added selfdoc for sfomp and sfmpi
 
 To APIs:
 
