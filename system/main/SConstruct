@@ -47,19 +47,19 @@ for prog in mains:
 mpicc = env.get('MPICC')
 if mpicc:
     prog = env.Program('sfmpi','mpi.c',CC=mpicc)
+    mains.append('mpi')
 else:
     prog = env.RSF_Place('sfmpi',None,var='MPI')
 if root:
-    mains.append('mpi')
     env.Install(bindir,prog[0])
 
 omp = env.get('OMP')
 if omp:
     prog = env.Program('sfomp','omp.c')
+    mains.append('omp')
 else:
     prog = env.RSF_Place('sfomp',None,var='OMP')
-if root:
-    mains.append('omp')
+if root:    
     env.Install(bindir,prog[0])
 
 if root:
