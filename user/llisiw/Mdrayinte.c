@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
 
     /* complex source initial condition */
     t[0] = 0.;
-    P[0] = sf_cmplx(0,1./vel[s][0]);
-    Q[0] = sf_cmplx(shift,0);
+    P[0] = sf_cmplx(0.,1./vel[s][0]);
+    Q[0] = sf_cmplx(shift,0.);
 
     /* dynamic ray tracing along central ray (4th order Runge-Kutta) */
     for (i=1; i<n[0]; i++) {
