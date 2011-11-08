@@ -25,6 +25,35 @@ Result('gathers','grey pclip=80 title="Shot Gathers"')
 Flow('gather','rawline','window n2=96 f2=2325')
 Result('gather','grey pclip=80 title="Shot Gathers"')
 
+par = {
+    'nx':96,   'dx':110.0,       'ox':-5225.0,       # offset (feet)
+    'ns':57,   'ds':440.0,       'os':0.0,           # shots (feet)
+    'nt':3000, 'dt':0.002,      'ot':0.0,            # time (s)
+    'fhi':60, 'flo':4,                               # bandpass filter limits
+    'vinner0':200.0, 'vinner1':300.0, 'tinner0':1.0, # inner mute parameters
+    'gainpow':1.4,                                   # gain correction 
+    }
+par['slopep']=1.0/par['vinner1']
+
+# Inner Mute on Selected Shots
+imuteshots=[3,4,5,6,8,11,16,17,22,23,24,33,35,36,37,41,999999]
+Flow('shot-ones','shotline','window n3=1 | math output="1.0"')
+Flow('shot-mutemask','shot-ones','mutter inner=y v0=%(vinner0)g t0=%(tinner0)g slopep=%(slopep)g'%(par))
+shotlist=[]
+j=0
+for i in range(par['ns']):
+    shot='shot-zeros-'+str(i)
+    shotlist.append(shot)
+    print "Checking shot "+str(i)+"..."
+    if i==imuteshots[j]:
+        print "Shot "+str(i)+" will be inner-muted."
+        j=j+1       
+        Flow(shot,'shot-mutemask','cp')
+    else:
+        Flow(shot,'shot-ones','cp')
+Flow('shotmute',shotlist,'rcat ${SOURCES[1:%d]}'%(par['ns']))
+Result('shotmute','grey')
+
 # checkstack
 Fetch('31_81_PR.SGY',
 	server='http://certmapper.cr.usgs.gov',
@@ -82,17 +111,5 @@ Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
 # Brute stacking
 Flow('stack','nmo','stack')
 Result('stack','agc rect1=250 | grey title="Brute Stack" font=2 titlefat=4 label2=''')
-
-# Prestack Kirchhoff time migration
-Flow('tcmps','cmp','transp memsize=1000 plane=23')
-Flow('pstm','tcmps vel',
-     '''
-     mig2 vel=${SOURCES[1]} apt=5 antialias=1
-     ''',split=[3,71,[0]],reduce='add')
-Result('pstm',
-       '''
-       grey title="Prestack kirchhoff time migration"
-       labelfat=4 font=2 titlefat=4 pclip=90
-       ''')
 
 End()
