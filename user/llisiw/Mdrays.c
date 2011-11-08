@@ -25,20 +25,21 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, sym, verb, escvar;
+    bool velocity, verb;
     int is, n[2], im, nm, order, nshot, ndim;
-    int nt, nt1, nr, ir, it, i;
-    float t, dt, da=0., a0, amax, v0, deg2rad, shift;
-    float x[2], p[2], d[2], o[2], **traj, *slow, **s, *a;
-    sf_complex ***dynaM, ***dynaN;
+    int nt, nt1, nr, ir, it, i, iz, iy, x0;
+    float t, dt, da=0., a0, amax, v0, deg2rad, shift, real, imag;
+    float x[2], p[2], d[2], o[2], **traj, *slow, **s, *a, tempx[2];
+    sf_complex ***dynaM, ***dynaN, ***dynaK, **ctime;
     raytrace rt;
-    sf_file shots, vel, rays, angles, dynaP, dynaX;
+    sf_file shots, vel, rays, angles, dynaP, dynaX, gbeam;
 
     sf_init (argc,argv);
     vel = sf_input("in");
     rays = sf_output("out");
     dynaP = sf_output("dynaP");
     dynaX = sf_output("dynaX");
+    gbeam = sf_output("gbeam");
 
     /* get 2-D grid parameters */
     if (!sf_histint(vel,"n1",n))     sf_error("No n1= in input");
@@ -59,13 +60,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
     /* Sampling in time */
 
-    if (!sf_getbool("sym",&sym)) sym=true;
-    /* if y, use symplectic integrator */
-
     if(!sf_getbool("verb",&verb)) verb=true;
     /* Verbosity flag */
-    if(!sf_getbool("escvar",&escvar)) escvar=false;
-    /* If y - output escape values, n - trajectories */
 
     if (!sf_getfloat("shift",&shift)) shift=0.5;
     /* Complex source shift */
@@ -125,7 +121,7 @@ int main(int argc, char* argv[])
 
     /* specify output dimensions */
     nt1 = nt+1;
-    sf_putint (rays,"n1",escvar ? 4 : nt1);
+    sf_putint (rays,"n1",nt1);
     sf_putint (rays,"n2",nr);
     if( nshot > 1 ) sf_putint (rays,"n3",nshot);
     sf_putfloat(rays,"o1",0.);
@@ -137,14 +133,13 @@ int main(int argc, char* argv[])
     sf_putstring(rays,"label1","time");
     sf_putstring(rays,"label2","angle");
     sf_putstring(rays,"unit2","deg");
-    if (!escvar)
-        sf_settype (rays,SF_COMPLEX);
+    sf_settype (rays,SF_COMPLEX);
     sf_fileflush (rays,NULL);
     sf_settype (rays,SF_FLOAT);
 
     sf_putint (dynaP,"n1",2);
     sf_putint (dynaP,"n2",2);
-    sf_putint (dynaP,"n3",escvar ? 4 : nt1);
+    sf_putint (dynaP,"n3",nt1);
     sf_putint (dynaP,"n4",nr);
     if( nshot > 1 ) sf_putint (dynaP,"n5",nshot);
     sf_putfloat(dynaP,"o3",0.);
@@ -160,7 +155,7 @@ int main(int argc, char* argv[])
 
     sf_putint (dynaX,"n1",2);
     sf_putint (dynaX,"n2",2);
-    sf_putint (dynaX,"n3",escvar ? 4 : nt1);
+    sf_putint (dynaX,"n3",nt1);
     sf_putint (dynaX,"n4",nr);
     if( nshot > 1 ) sf_putint (dynaX,"n5",nshot);
     sf_putfloat(dynaX,"o3",0.);
@@ -174,6 +169,16 @@ int main(int argc, char* argv[])
     sf_putstring(dynaX,"unit4","deg");
     sf_settype (dynaX,SF_COMPLEX);
 
+    sf_putint (gbeam,"n3",nr);
+    if( nshot > 1 ) sf_putint (gbeam,"n4",nshot);
+    if (NULL == angles) {
+        sf_putfloat(gbeam,"o3",a0/deg2rad);
+        sf_putfloat(gbeam,"d3",da/deg2rad);
+    }
+    sf_putstring(gbeam,"label3","angle");
+    sf_putstring(gbeam,"unit3","deg");
+    sf_settype (gbeam,SF_COMPLEX);
+
     /* get slowness squared */
     nm = n[0]*n[1];
     slow = sf_floatalloc(nm);
@@ -186,13 +191,15 @@ int main(int argc, char* argv[])
     }
 
     /* initialize ray tracing object */
-    rt = raytrace_init (2, sym, nt, dt, n, o, d, slow, order);
+    rt = trace_init (2, nt, dt, n, o, d, slow, order);
 
     free (slow);
     
-    traj = sf_floatalloc2 (sym? ndim: 2*ndim,nt1);
-    dynaM = sf_complexalloc3 (sym? ndim: 2*ndim,sym? ndim: 2*ndim,nt1);
-    dynaN = sf_complexalloc3 (sym? ndim: 2*ndim,sym? ndim: 2*ndim,nt1);
+    traj = sf_floatalloc2 (ndim,nt1);
+    dynaM = sf_complexalloc3 (ndim,ndim,nt1);
+    dynaN = sf_complexalloc3 (ndim,ndim,nt1);
+    dynaK = sf_complexalloc3 (ndim,ndim,nt1);
+    ctime = sf_complexalloc2 (n[0],n[1]);
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
         /* initialize angles */
@@ -218,42 +225,49 @@ int main(int argc, char* argv[])
             it = trace_ray (rt, x, p, shift, traj, dynaM, dynaN);
             if (it < 0) it = -it; /* keep side-exiting rays */
 
-            if (escvar) {
-                /* Write escape variables only */
-                sf_floatwrite (traj[it],ndim,rays); /* z, x */
-                t = it*dt; /* t */
-                sf_floatwrite (&t,1,rays);
-                /* a */
-                if (it > 0) {
-                    i = it >= 2 ? it - 2 : it - 1;
-                    /* Escape vector */
-                    x[0] = traj[it][0];
-                    x[1] = traj[it][1];
-                    x[0] -= traj[i][0];
-                    x[1] -= traj[i][1];
-                    /* Dot product with unit vector pointing upward */
-                    t = sqrt(x[0]*x[0] + x[1]*x[1]); /* Length */
-                    t = acos(-x[0]/t);
-                    if (x[1] < 0) t = -t;
-                } else
-                    t = a[ir];
-                t /= deg2rad;
-                sf_floatwrite (&t,1,rays);
-            } else {
-                /* Write full trajectory */
-                for (i=0; i < nt1; i++) {
-                    if (0==it || it > i) {
-                        sf_floatwrite (traj[i],ndim,rays);
-			sf_complexwrite (dynaM[i][0],2*2,dynaP);
-			sf_complexwrite (dynaN[i][0],2*2,dynaX);
-                    } else {
-                        sf_floatwrite (traj[it],ndim,rays);
-			sf_complexwrite (dynaM[it][0],2*2,dynaP);
-			sf_complexwrite (dynaN[it][0],2*2,dynaX);
-                    }
-                }
-            }
-        }
+            
+	    /* Write full trajectory */
+	    for (i=0; i < nt1; i++) {
+		if (0==it || it > i) {
+		    sf_floatwrite (traj[i],ndim,rays);
+		    sf_complexwrite (dynaM[i][0],2*2,dynaP);
+		    sf_complexwrite (dynaN[i][0],2*2,dynaX);
+		    
+		    dray_assemble (dynaM[i],dynaN[i],dynaK[i]);
+		    
+		} else {
+		    sf_floatwrite (traj[it],ndim,rays);
+		    sf_complexwrite (dynaM[it][0],2*2,dynaP);
+		    sf_complexwrite (dynaN[it][0],2*2,dynaX);
+		    
+		    /* NOTE: add lines here */
+		}
+	    }
+
+	    for (iy=0; iy < n[1]; iy++) {
+		tempx[1] = iy*d[1];
+
+		for (iz=0; iz < n[0]; iz++) {
+		    tempx[0] = iz*d[0];
+
+		    x0 = dray_search (traj,it==0?nt1:it,tempx);
+		    
+		    real = x0*dt+0.5*crealf((tempx[0]-traj[x0][0])*(tempx[0]-traj[x0][0])*dynaK[x0][0][0]+
+					    (tempx[0]-traj[x0][0])*(tempx[1]-traj[x0][1])*dynaK[x0][0][1]+
+					    (tempx[1]-traj[x0][1])*(tempx[0]-traj[x0][0])*dynaK[x0][1][0]+
+					    (tempx[1]-traj[x0][1])*(tempx[1]-traj[x0][1])*dynaK[x0][1][1]);
+
+		    imag = 0.5*cimagf((tempx[0]-traj[x0][0])*(tempx[0]-traj[x0][0])*dynaK[x0][0][0]+
+				      (tempx[0]-traj[x0][0])*(tempx[1]-traj[x0][1])*dynaK[x0][0][1]+
+				      (tempx[1]-traj[x0][1])*(tempx[0]-traj[x0][0])*dynaK[x0][1][0]+
+				      (tempx[1]-traj[x0][1])*(tempx[1]-traj[x0][1])*dynaK[x0][1][1]);
+
+		    ctime[iy][iz] = sf_cmplx(real,imag);
+		}
+	    }
+
+	    sf_complexwrite (ctime[0],n[0]*n[1],gbeam);
+	}
     }
     if (verb)
         sf_warning (".");

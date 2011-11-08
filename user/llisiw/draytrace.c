@@ -21,7 +21,6 @@
 
 #include "draytrace.h"
 #include "grid2.h"
-#include "grid3.h"
 #include "atela.h"
 
 #ifndef _draytrace_h
@@ -33,10 +32,8 @@ typedef struct RayTrace* raytrace;
 #endif
 
 struct RayTrace {
-    bool sym;
     int dim, nt;
     float dt, z0;
-    grid3 grd3;
     grid2 grd2;
 
     /* NOTE: add term for second-order derivatives */
@@ -45,62 +42,13 @@ struct RayTrace {
 };
 /* concrete data type */
 
-static void iso_rhs(void* par, float* y, float* f)
-/* right-hand side for isotropic raytracing */
-{    
-    raytrace rt;
-    int i, dim;
-    float s2, sds[3];
-
-    rt = (raytrace) par;
-    dim = rt->dim;
-
-    switch (dim) {
-	case 2:
-	    s2 = grid2_vel(rt->grd2,y);
-	    grid2_vgrad(rt->grd2,y,sds);
-	    break;
-	case 3:
-	    s2 = grid3_vel(rt->grd3,y);
-	    grid3_vgrad(rt->grd3,y,sds);
-	    break;
-	default:
-	    s2 = 0.;
-	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
-    }
-
-    for (i=0; i < dim; i++) {
-	f[i]   = y[i+dim]/s2; /* p/s^2 */
-	f[i+dim] = sds[i]/s2; /* 1/2 grad(s^2)/s^2 */
-    }
-}
- 
-static int term(void* par, float* y)
-/* grid termination */
-{
-    raytrace rt;
-    
-    rt = (raytrace) par;
-
-    switch (rt->dim) {
-	case 2:
-	    return grid2_term(rt->grd2,y);
-	case 3:
-	    return grid3_term(rt->grd3,y);
-	default:
-	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,rt->dim);
-	    return 0;
-    }
-}
-
-raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */, 
-		       bool sym,          /* if symplectic */
-		       int nt             /* number of ray tracing steps */, 
-		       float dt           /* ray tracing step (in time) */,
-		       int* n             /* slowness dimensions [dim] */, 
-		       float* o, float* d /* slowness grid [dim] */,
-		       float* slow2       /* slowness squared [n3*n2*n1] */, 
-		       int order          /* interpolation order */)
+raytrace trace_init(int dim            /* dimensionality (2 or 3) */, 
+		    int nt             /* number of ray tracing steps */, 
+		    float dt           /* ray tracing step (in time) */,
+		    int* n             /* slowness dimensions [dim] */, 
+		    float* o, float* d /* slowness grid [dim] */,
+		    float* slow2       /* slowness squared [n3*n2*n1] */, 
+		    int order          /* interpolation order */)
 /*< Initialize ray tracing object. 
  * Increasing order increases accuracy but
  decreases efficiency. Recommended values: 3 or 4.
@@ -116,7 +64,6 @@ raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */,
     rt = (raytrace) sf_alloc (1,sizeof(*rt));
 
     rt->dim = dim;
-    rt->sym = sym;
     rt->nt = nt;
     rt->dt = dt;
     rt->z0 = o[0];
@@ -153,12 +100,6 @@ raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */,
 				   n[1], o[1], d[1],
 				   sorty, order);
 	    break;
-	case 3:
-	    rt->grd3 = grid3_init (n[0], o[0], d[0], 
-				   n[1], o[1], d[1],
-				   n[2], o[2], d[2],
-				   slow2, order);
-	    break;
 	default:
 	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
     }
@@ -166,7 +107,7 @@ raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */,
     return rt;
 }
 
-void raytrace_close (raytrace rt)
+void trace_close (raytrace rt)
 /*< Free internal storage >*/
 {
     switch (rt->dim) {
@@ -174,9 +115,6 @@ void raytrace_close (raytrace rt)
 	    grid2_close (rt->grd2);
 	    grid2_close (rt->derz);
 	    grid2_close (rt->dery);
-	    break;
-	case 3:
-	    grid3_close (rt->grd3);
 	    break;
     }
     free (rt);
@@ -209,56 +147,21 @@ int trace_ray (raytrace rt  /* ray tracing object */,
  nt*dt if (it = 0); abs(it)*dt otherwise 
  >*/
 {
-    int i, dim, it=0, nt;
-    float y[6], s2;
+    int dim, it=0, nt;
 
     dim = rt->dim;
     nt = rt->nt;
-
-    if (!rt->sym) {
-	switch (dim) {
-	    case 2:
-		s2 = grid2_vel(rt->grd2,x);
+    
+    switch (dim) {
+	case 2:
+	    it = atela_step (dim, nt, rt->dt, shift, true, x, p,
+			     rt->grd2, rt->derz, rt->dery,
+			     grid2_vgrad, grid2_vel, grid2_term, 
+			     traj, dynaM, dynaN);
 	    break;
-	    case 3:
-		s2 = grid3_vel(rt->grd3,x);
-		break;
-	    default:
-		s2 = 0.;
-		sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
-	}
-
-	for (i=0; i < dim; i++) {
-	    y[i] = x[i];
-	    y[i+dim] = p[i]*sqrtf(s2);
-	}
-
-	sf_runge_init(2*dim, nt, rt->dt);
-	it = sf_ode23_step (y, rt,iso_rhs,term,traj);
-	sf_runge_close();
-
-	for (i=0; i < dim; i++) {
-	    x[i] = y[i];
-	    p[i] = y[i+dim];
-	}
-    } else {
-	switch (dim) {
-	    case 2:
-		it = atela_step (dim, nt, rt->dt, shift, true, x, p,
-				 rt->grd2, rt->derz, rt->dery,
-				 grid2_vgrad, grid2_vel, grid2_term, 
-				 traj, dynaM, dynaN);
-		break;
-	    case 3:
-		it = atela_step (rt->dim, nt, rt->dt, shift, true, x, p,
-				 rt->grd3, rt->derz, rt->dery,
-				 grid3_vgrad, grid3_vel, grid3_term, 
-				 traj, dynaM, dynaN);
-		break;
-	    default:
-		sf_error("%s: cannot handle %d dimensions",__FILE__,rt->dim);
-		break;
-	}
+	default:
+	    sf_error("%s: cannot handle %d dimensions",__FILE__,rt->dim);
+	    break;
     }
     
     if (it > 0 && x[0] > rt->z0) {
@@ -266,6 +169,44 @@ int trace_ray (raytrace rt  /* ray tracing object */,
     } else {
 	return it;
     }
+}
+
+void dray_assemble (sf_complex** dynaM, sf_complex** dynaN, sf_complex** dynaK)
+/*< assemble dynamic matrix >*/
+{
+    sf_complex det, inv[2][2];
+
+    det = dynaN[0][0]*dynaN[1][1]-dynaN[1][0]*dynaN[0][1];
+
+    inv[0][0] = dynaN[1][1]/det;
+    inv[1][0] = -dynaN[1][0]/det;
+    inv[0][1] = -dynaN[0][1]/det;
+    inv[1][1] = dynaN[0][0]/det;
+    
+    dynaK[0][0] = dynaM[0][0]*inv[0][0]+dynaM[1][0]*inv[0][1];
+    dynaK[1][0] = dynaM[0][0]*inv[1][0]+dynaM[1][0]*inv[1][1];
+    dynaK[0][1] = dynaM[0][1]*inv[0][0]+dynaM[1][1]*inv[0][1];
+    dynaK[1][1] = dynaM[0][1]*inv[1][0]+dynaM[1][1]*inv[1][1];
+}
+
+int dray_search (float** traj, int length, float *x)
+/*< search for nearest point on the ray >*/
+{
+    int it, x0;
+    double dist, min;
+
+    min = 1.e10;
+    x0 = 0;
+    for (it=0; it < length; it++) {
+	dist = hypot((double)traj[it][0]-x[0],(double)traj[it][1]-x[1]);
+
+	if (dist < min) {
+	    min = dist;
+	    x0 = it;
+	}
+    }
+
+    return x0;
 }
 
 /* 	$Id: raytrace.c 5023 2009-11-23 01:19:26Z sfomel $	 */
