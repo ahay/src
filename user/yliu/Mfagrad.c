@@ -89,7 +89,11 @@ int main(int argc, char* argv[])
 		    break;
 		}
 	    }
-	    fdg[i1] = (e2-e1)/(f2-f1);
+	    if (f1 == f2) {
+		fdg[i1] = 0.;
+	    } else {
+		fdg[i1] = (e2-e1)/(f2-f1);
+	    }
 	}
 	sf_floatwrite(fdg,n1,out);
     }
