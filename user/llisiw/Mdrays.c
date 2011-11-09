@@ -209,8 +209,8 @@ int main(int argc, char* argv[])
                 a[ir] = a0+da*ir;
             }
         }
-        if (verb)
-            sf_warning ("Shooting from z=%g, x=%g;",s[is][0],s[is][1]);
+
+        if (verb) sf_warning("Shooting from (z=%g, x=%g):",s[is][0],s[is][1]);
 
         for (ir = 0; ir < nr; ir++) { /* loop over rays */
             /* initialize position */
@@ -224,6 +224,7 @@ int main(int argc, char* argv[])
             it = trace_ray (rt,x,p,shift,traj,dire,dynaM,dynaN);
             if (it < 0) it = -it; /* keep side/buttom exiting rays */
 
+	    if (verb) sf_warning("Ray angle=%g exit at t=%g",a[ir],it==0?nt*dt:it*dt);
             
 	    /* write central ray trajectory and/or associated complex matrix */
 	    for (i=0; i < nt1; i++) {
@@ -242,10 +243,10 @@ int main(int argc, char* argv[])
 	    
 	    /* construct Gaussian beam */
 	    for (iy=0; iy < n[1]; iy++) {
-		tempx[1] = iy*d[1];
+		tempx[1] = o[1]+iy*d[1];
 
 		for (iz=0; iz < n[0]; iz++) {
-		    tempx[0] = iz*d[0];
+		    tempx[0] = o[0]+iz*d[0];
 
 		    /* search for projection on central ray */
 		    x0 = dray_search (traj,it==0?nt1:it,tempx);
@@ -272,7 +273,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (verb) sf_warning (".");
+    if (verb) sf_warning(".");
 
     exit (0);
 }
