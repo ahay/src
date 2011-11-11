@@ -80,12 +80,12 @@ int main(int argc, char* argv[])
 		ecum += e[iw*n1+i1];
 		if (!sign && ecum >= 0.65*etotal) {
 		    f1 = w0+iw*dw;
-		    e1 = ecum;
+		    e1 = e[iw*n1+i1];
 		    sign = true;
 		}
 		if (ecum >= 0.85*etotal) {
 		    f2 = w0+iw*dw;
-		    e2 = ecum;
+		    e2 = e[iw*n1+i1];
 		    break;
 		}
 	    }
