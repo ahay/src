@@ -166,6 +166,55 @@ Result('zoomcheckstack','checkstack',
 Flow('allvelfilt_shot','allshots alaskavelfilt.sh',
      './${SOURCES[1]} 100 155')
 
+velfilt = []
+for ep in range(100,156):
+    shot = 'shot%d' % ep
+    Flow(shot,'allshots',
+         '''
+         suwind 
+         key=ep 
+         min=${EP} 
+         max=${EP} 
+         | sustatic hdrs=1 sign=-1 
+         | sugain 
+         tpow=1 
+         | sumute 
+         xmute=-5280,0,5280 
+         tmute=.488,0,.488 
+         | sugain  agc=1 wagc=.5
+         ''')
+    neg = 'neg%d' % ep
+    pos = 'pos%d' % ep
+    Flow(neg,shot,
+         '''
+         suwind key=offset min=-999998 max=0 
+         | sudipfilt 
+         bias=-.003 
+         dx=1 
+         slopes=-.014,-.012,.004,.006 
+         amps=0.0,1.0,1.0,0.0 
+         | suchw 
+         key1=offset 
+         key2=offset 
+         a=0 
+         b=-1
+         ''')
+    Flow(pos,shot,
+         '''
+         suwind key=offset min=0 max=999998 
+         | sudipfilt 
+         bias=.003 
+         dx=1 
+         slopes=-.006,-.004,.012,.014 
+         amps=0.0,1.0,1.0,0.0
+         ''')
+    filt = 'filt%d' % ep
+    Flow(filt,[neg,pos],'cat ${SOURCES[:2]}',stdin=0)
+
+    velfilt.append(filt)
+Flow('allvelfilt_shot2',velfilt,
+     'cat ${SOURCES[:%d]}' % len(velfilt),stdin=0)
+
 Result('movie_velfilt','allvelfilt_shot',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 

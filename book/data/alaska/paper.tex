@@ -6,6 +6,13 @@
 \author{Karl Schleicher}
 \email{k\_schleicher@hotmail.com}
 
+\address{
+k\_schleicher@hotmail.com \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
 \maketitle
 
 \begin{abstract}
@@ -295,7 +302,7 @@ to be loaded
 \end{enumerate}
 \end{enumerate}
 
-InterpText.py is a custom Python program to load the trace headers.  The
+\texttt{InterpText.py} is a custom Python script to load the trace headers.  The
 code is not elegant, but it is straightforward and works.  This program 
 requires files to define the shotpoint elevation and the 'ffid'/'ep' 
 relationship.  The surveyor log defines the shotpoint elevations.  The 
@@ -305,6 +312,20 @@ log).  This information was typed into two files (\texttt{recnoSpn.txt} and
 \texttt{spnElev.txt}).  In addition to interpolating the record number/shotpoint 
 table and the elevation data the program also computes the geometry 
 including the receiver locations and the CDP numbers.
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{line31-81/InterpText.py}
+
+Just a portion:
+\lstinputlisting[firstline=11,lastline=15,frame=single]{line31-81/SConstruct}
+
+
+\begin{lstlisting}
+Flow ('binary_hdrfile1.dat','hdrfile1.txt',
+     ''' 
+     a2b n1=13
+     ''')
+\end{lstlisting}
 
 The stack file from the previous process is downloaded and displayed 
 using the commands: 
@@ -326,8 +347,8 @@ trailing receivers (i.e. I split the shots).  I decided to split the
 shots so that I could use an asymmetrical dip filter (-15,5 ms/trace).
 That dip filter is similar to the 1981 processing that used
 (-12,4). Sudipfilter was intended for post stack processing, so I
-wrote the script alaskavelfilt.sh to loop over the shots and divide
-individual shotrecords into positive and negative offsets.
+wrote the script \texttt{alaskavelfilt.sh} to loop over the shots and
+divide individual shotrecords into positive and negative offsets.
 Figure~\ref{fig:velfiltrec24} is the same shotpoint as plotted in
 Figure~\ref{fig:zoomfirst} with velocity filtering applied.
 
