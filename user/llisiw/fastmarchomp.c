@@ -68,7 +68,7 @@ void fastmarch_init(int *n1    /* grid samples [3] */,
 
     /* allocate shared memory */
     in = sf_intalloc2(n[0]*n[1]*n[2],mts);
-    
+
     x  = (float ***) sf_alloc(mts,sizeof (float **));
     xn = (float ***) sf_alloc(mts,sizeof (float **));
     x1 = (float ***) sf_alloc(mts,sizeof (float **));
@@ -136,7 +136,7 @@ int fastmarch(float *time   /* time */,
 	p = pqueue_extract();
 	
 	if (p == NULL) {
-	    sf_warning("%s: heap exausted!",__FILE__);
+	    sf_warning("%s: shot (%g,%g,%g) heap exausted!",__FILE__,source[0],source[1],source[2]);
 	    break;
 	}
 	

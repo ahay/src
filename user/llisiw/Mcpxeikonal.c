@@ -25,13 +25,13 @@
 int main(int argc, char* argv[])
 {
     bool *known, velocity, verb, symm, *tknown, recom, pvar, reg;
-    int dim, i, n[SF_MAX_DIM], *m, it, nt, iter, niter, cgiter, istep, nstep;
+    int dim, i, n[SF_MAX_DIM], *m, *tm, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
     float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, namda, *w0;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
     char key[4], *prec, *bound;
-    sf_file in, out, vel, mask, ref, wght;
+    sf_file in, out, vel, mask, ref, wght, cray;
     sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
     
     sf_init(argc,argv);
@@ -368,17 +368,35 @@ int main(int argc, char* argv[])
 
 	cpxeiko_forw(false,ti,w);
 	
-	for (it=0; it < nt; it++) {
+	if (NULL != sf_getstring("cray")) {
+	    cray = sf_input("cray");
+	    tm = sf_intalloc(nt);
+	    sf_intread(tm,nt,cray);
+	    sf_fileclose(cray);
 
-	    /* Only central ray is used as boundary condition */
-	    if (ti[it] < 1.e-8) {
-		tknown[it] = true;
-	    } else {
-		tknown[it] = false;
+	    for (it=0; it < nt; it++) {
+		if (tm[it] == 1) {
+		    tknown[it] = true;
+		} else {
+		    tknown[it] = false;
+		}
+
+		wi[it] = w[it];
+		wr[it] = s[it]+wi[it];
 	    }
-	    
-	    wi[it] = w[it];
-	    wr[it] = s[it]+wi[it];
+		
+	    free(tm);
+	} else {
+	    for (it=0; it < nt; it++) {
+		if (ti[it] < 1.e-8) {
+		    tknown[it] = true;
+		} else {
+		    tknown[it] = false;
+		}
+		
+		wi[it] = w[it];
+		wr[it] = s[it]+wi[it];
+	    }
 	}
 	
 	fastmarchcpx(tr,tr0,tknown,wr);
@@ -395,6 +413,8 @@ int main(int argc, char* argv[])
 	w[it] = wi[it];
     
     /* right-hand side preconditioning */
+    /* NOTE: for ray-traced beam the central ray may not be charaterized by w0[it]==0. 
+       use eps != 0. and scale == 0. to avoid 0./0. = NAN issue. */
     switch (prec[0]) {
 	case 'n': /* none */
 
@@ -618,6 +638,8 @@ int main(int argc, char* argv[])
 	    fastmarchcpx(ti,ti0,known,wi);
 	    
 	    /* right-hand side preconditioning */
+	    /* NOTE: for ray-traced beam the central ray may not be charaterized by w0[it]==0. 
+	       use eps != 0. and scale == 0. to avoid 0./0. = NAN issue. */
 	    switch (prec[0]) {
 		case 'n': /* none */
 		    

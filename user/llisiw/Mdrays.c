@@ -29,12 +29,12 @@ int main(int argc, char* argv[])
 {
     bool velocity, verb;
     int is, n[2], im, order, nshot, ndim;
-    int nt, nt1, nr, ir, it, i, iz, iy, x0;
+    int nt, nt1, nr, ir, it, i, iz, iy, x0, *m;
     float dt, da=0., a0, amax, v0, deg2rad, shift, real, imag;
     float x[2], p[2], d[2], o[2], **traj, **dire, *slow, **s, *a, tempx[2];
     sf_complex ***dynaM, ***dynaN, ***dynaK, **ctime;
     raytrace rt;
-    sf_file shots, vel, rays, angles, dmat, gbeam;
+    sf_file shots, vel, rays, angles, dmat, gbeam, proj, mask;
 
     sf_init (argc,argv);
     vel = sf_input("in");
@@ -164,6 +164,40 @@ int main(int argc, char* argv[])
 	dmat = NULL;
     }
 
+    /* output proj contains projection of grid points on central ray */
+    if (NULL != sf_getstring("proj")) {
+	proj = sf_output("proj");
+	sf_putint(proj,"n3",nr);
+	if (nshot>1) sf_putint(proj,"n4",nshot);
+	if (NULL == angles) {
+	    sf_putfloat(proj,"o3",a0/deg2rad);
+	    sf_putfloat(proj,"d3",da/deg2rad);
+	}
+	sf_putstring(proj,"label3","angle");
+	sf_putstring(proj,"unit3","deg");
+	sf_putstring(proj,"label4","shot");
+	sf_settype(proj,SF_INT);
+    } else {
+	proj = NULL;
+    }
+
+    /* output mask contains projection of central ray onto grid */
+    if (NULL != sf_getstring("mask")) {
+	mask = sf_output("mask");
+	sf_putint(mask,"n3",nr);
+	if (nshot>1) sf_putint(mask,"n4",nshot);
+	if (NULL == angles) {
+	    sf_putfloat(mask,"o3",a0/deg2rad);
+	    sf_putfloat(mask,"d3",da/deg2rad);
+	}
+	sf_putstring(mask,"label3","angle");
+	sf_putstring(mask,"unit3","deg");
+	sf_putstring(mask,"label4","shot");
+	sf_settype(mask,SF_INT);
+    } else {
+	mask = NULL;
+    }
+
     /* output gbeam contains complex traveltime for each central ray */
     sf_putint(gbeam,"n3",nr);
     if (nshot>1) sf_putint(gbeam,"n4",nshot);
@@ -241,6 +275,16 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    
+	    /* write central ray mask */
+	    if (NULL != mask) {
+		m = sf_intalloc(n[0]*n[1]);
+		
+		for (i=0; i < n[0]*n[1]; i++) m[i] = 0;
+		dray_central (traj,it==0?nt1:it,o,d,n,m);
+
+		sf_intwrite (m,n[0]*n[1],mask);
+	    }
+
 	    /* construct Gaussian beam */
 	    for (iy=0; iy < n[1]; iy++) {
 		tempx[1] = o[1]+iy*d[1];
@@ -248,9 +292,11 @@ int main(int argc, char* argv[])
 		for (iz=0; iz < n[0]; iz++) {
 		    tempx[0] = o[0]+iz*d[0];
 
-		    /* search for projection on central ray */
+		    /* search for projection on central ray, return projection */
 		    x0 = dray_search (traj,it==0?nt1:it,tempx);
 		    
+		    if (NULL != proj) sf_intwrite(&x0,1,proj);
+
 		    /* quadratic function away from central ray */
 		    /* T(x) = T(x0)+p(x0)*(x-x0)+1/2*(x-x0)*K(x0)*(x-x0) */
 		    real = x0*dt + dire[x0][0]*(tempx[0]-traj[x0][0])+dire[x0][1]*(tempx[1]-traj[x0][1])+

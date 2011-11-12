@@ -34,12 +34,12 @@ int main(int argc, char* argv[])
     bool velocity, l1norm, shape, verb;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, **t1, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep, titer;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep, time;
     sf_weight weight=NULL;
-
+    
     sf_init(argc,argv);
     sinp = sf_input("in");
     sout = sf_output("out");
@@ -207,15 +207,15 @@ int main(int argc, char* argv[])
     }
 
     /* output time at each iteration */
-    if (NULL != sf_getstring("titer")) {
-	titer = sf_output("titer");
-	sf_putint(titer,"n1",nrecv);
-	sf_putint(titer,"n2",nshot);
-	sf_putint(titer,"n3",niter);
-	t1 = sf_floatalloc2(nrecv,nshot);
+    if (NULL != sf_getstring("time")) {
+	time = sf_output("time");
+	sf_putint(time,"n3",n[2]);
+	sf_putfloat(time,"d3",d[2]);
+	sf_putfloat(time,"o3",o[2]);
+	sf_putint(time,"n4",nshot);
+	sf_putint(time,"n5",niter+1);
     } else {
-	titer = NULL;
-	t1 = NULL;
+	time = NULL;
     }
 
     /* output misfit L2 norm at each iteration */
@@ -278,6 +278,9 @@ int main(int argc, char* argv[])
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
 
+    /* output forward-modeled record */
+    if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
+    
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
     rhsnorm = rhsnorm0;
@@ -412,18 +415,7 @@ int main(int argc, char* argv[])
 		}
 		
 		/* output forward-modeled record */
-		if (titer != NULL) {		    		
-		    for (is=0; is < nshot; is++) {
-			for (it=0; it < nrecv; it++) {
-			    if (m[is][it] >= 0)
-				t1[is][it] = t[is][m[is][it]];
-			    else
-				t1[is][it] = 0.;
-			}
-		    }
-		    
-		    sf_floatwrite(t1[0],nrecv*nshot,titer);
-		}
+		if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
 
 		if (istep == 10) {
 		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);

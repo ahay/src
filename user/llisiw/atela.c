@@ -162,6 +162,7 @@ int atela_step (int dim      /* dimensionality */,
 	}
      
 	/* extrapolate complex matrix */
+	/* one step, first-order accuracy */
 	vgrad (devz,x,qz);
 	vgrad (devy,x,qy);
 

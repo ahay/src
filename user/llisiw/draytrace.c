@@ -1,4 +1,4 @@
-/* Ray tracing interface. */
+/* Dynamic ray tracing interface. */
 /*
   Copyright (C) 2011 University of Texas at Austin
   
@@ -80,10 +80,10 @@ raytrace trace_init(int dim            /* dimensionality */,
 	    /* pre-compute s*grad_z(s) and s*grad_y(s) on grid points */
 	    deriv = sf_floatalloc2(2,n[0]*n[1]);
 	    for (iy=0; iy < n[1]; iy++) {
-		temp[1] = iy*d[1];
+		temp[1] = o[1]+iy*d[1];
 
 		for (iz=0; iz < n[0]; iz++) {
-		    temp[0] = iz*d[0];
+		    temp[0] = o[0]+iz*d[0];
 		    
 		    grid2_vgrad ((void *)rt->grd2,temp,deriv[iy*n[0]+iz]);
 		}
@@ -198,7 +198,32 @@ void dray_assemble (sf_complex** dynaM, sf_complex** dynaN, sf_complex** dynaK)
     dynaK[1][1] = dynaM[0][1]*inv[1][0]+dynaM[1][1]*inv[1][1];
 }
 
-int dray_search (float** traj, int length, float *x)
+void dray_central (float** traj, int length, float* o, float* d, int* n, int* m)
+/*< project traced ray onto grid >*/
+{
+    int it, i, j;
+    int tempz, tempy;
+    
+    for (it=0; it < length; it++) {
+	/* NOTE: debug */
+/*
+	tempz = (int)floorf((traj[it][0]-o[0])/d[0]);
+	tempy = (int)floorf((traj[it][1]-o[1])/d[1]);
+
+	for (j=tempy; j <= (tempy+1<n[1]? tempy+1: tempy); j++) {
+	    for (i=tempz; i <= (tempz+1<n[0]? tempz+1: tempz); i++) {
+		m[j*n[0]+i] = 1;
+	    }
+	}
+*/
+	tempz = (int)floorf((traj[it][0]-o[0])/d[0]+0.5);
+	tempy = (int)floorf((traj[it][1]-o[1])/d[1]+0.5);
+		
+	m[tempy*n[0]+tempz] = 1;
+    }
+}
+
+int dray_search (float** traj, int length, float* x)
 /*< search for nearest point, return index on central ray >*/
 {
     int it, x0;
