@@ -113,9 +113,7 @@ int main(int argc, char* argv[])
     
     source = sf_floatalloc2(3,nshot);
     sf_floatread(source[0],3*nshot,shot);
-/*
     sf_fileclose(shot);
-*/  
   
     /* read in receiver list */
     if (NULL == sf_getstring("receiver"))
@@ -127,24 +125,21 @@ int main(int argc, char* argv[])
 
     m = sf_intalloc2(nrecv,nshot);
     sf_intread(m[0],nrecv*nshot,recv);
-/*  Degug:
     sf_fileclose(recv);
-*/
 
     /* number of right-hand side */
     rhslist = sf_intalloc2(2,nshot);
     
     nrhs = 0;
     for (is=0; is < nshot; is++) {
-	rhslist[is][1] = nrhs;
+	rhslist[is][0] = nrhs;
 	
 	for (it=0; it < nrecv; it++) {
 	    if (m[is][it] >= 0)
 		nrhs++;
 	}
 	
-	rhslist[is][2] = (is==0)?nrhs
-	    :rhslist[is][1]-rhslist[is-1][1];
+	rhslist[is][1] = (is==0)? nrhs: (nrhs-rhslist[is-1][0]-rhslist[is-1][1]);
     }
     rhs = sf_floatalloc(nrhs);
 
@@ -155,9 +150,7 @@ int main(int argc, char* argv[])
     
     t0 = sf_floatalloc2(nrecv,nshot);
     sf_floatread(t0[0],nrecv*nshot,reco);
-/*  Debug:
     sf_fileclose(reco);
-*/    
 
     /* read in topography file */
     if (NULL != sf_getstring("topo")) {

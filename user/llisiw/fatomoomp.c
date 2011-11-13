@@ -149,8 +149,8 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		for (it=0; it <= nt; it++)
 		    tempt[its][it] = 0.;
 		
-		i = list[is][1];
-		for (it=0; it < list[is][2]; it++) {
+		i = list[is][0];
+		for (it=0; it < list[is][1]; it++) {
 		    tempt[its][mask[is][it]] = r[i];
 		    i++;
 		}
@@ -186,8 +186,8 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    for (is=0; is < ns; is++) {
 		upgrad_solve(upgnum[is],upglist[is],x,tempt[its],NULL);
 		
-		i = list[is][1];
-		for (it=0; it < list[is][2]; it++) {
+		i = list[is][0];
+		for (it=0; it < list[is][1]; it++) {
 		    r[i] = tempt[its][mask[is][it]];
 		    i++;
 		}

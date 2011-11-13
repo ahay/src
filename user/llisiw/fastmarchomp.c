@@ -150,8 +150,8 @@ int fastmarch(float *time   /* time */,
 	length++;
 	
 	/* update rhs */
-	k = list[1];
-	for (j=0; j < list[2]; j++) {
+	k = list[0];
+	for (j=0; j < list[1]; j++) {
 	    if (i == mask[j]) {
 		rhs[k+j] = data[j]-time[i];
 		count++;
@@ -159,7 +159,7 @@ int fastmarch(float *time   /* time */,
 	}
 	
 	/* break for limited acquisition */
-	if (count == list[2]) break;
+	if (count == list[1]) break;
     }
     
     return(length);
