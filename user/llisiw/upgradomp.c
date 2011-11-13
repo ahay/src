@@ -255,3 +255,26 @@ void upgrad_adj(int length       /* length */,
 	}
     }
 }
+
+void upgrad_ray(int length       /* length */,
+		upgrad upg       /* stencil */,
+		int *ray         /* ray */)
+/*< extract ray density >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+
+    for (it = length-1; it >= 0; it--) {
+	jt = upg->order[it];
+
+	if (ray[jt] != 0) {
+	    up = upg->update[it];
+	    for (i=0, m=1; i < ndim; i++, m <<= 1) {
+		if (up[0] & m) {
+		    j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		    ray[j]++;
+		}
+	    }
+	}
+    }
+}

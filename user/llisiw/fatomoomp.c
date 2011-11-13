@@ -195,3 +195,23 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 	}
     }
 }
+
+void fatomo_ray(int **ray)
+/*< extract ray density >*/
+{
+    int it, is;
+
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (is=0; is < ns; is++) {
+	for (it=0; it <= nt; it++)
+	    ray[is][it] = 0;
+	
+	for (it=0; it < list[is][1]; it++) {
+	    ray[is][mask[is][it]] = 1;
+	}
+	
+	upgrad_ray(upgnum[is],upglist[is],ray[is]);
+    }
+}

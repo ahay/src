@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, verb;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
-    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
+    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv, **ray;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
     char key[6], *what;
@@ -194,9 +194,12 @@ int main(int argc, char* argv[])
 	sf_putint(steep,"n3",n[2]);
 	sf_putfloat(steep,"d3",d[2]);
 	sf_putfloat(steep,"o3",o[2]);
-	sf_putint(steep,"n4",niter);
+	sf_putint(steep,"n4",niter+1);
+	sf_settype(steep,SF_INT);
+	ray = sf_intalloc2(nt,nshot);
     } else {
 	steep = NULL;
+	ray = NULL;
     }
 
     /* output time at each iteration */
@@ -287,6 +290,12 @@ int main(int argc, char* argv[])
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
+/**/
+    if (steep != NULL) {
+	fatomo_ray(ray);
+	sf_intwrite(ray[0],nt*nshot,steep);
+    }
+/**/
     switch (what[0]) {
 	case 'l': /* linear operator */
 
@@ -314,16 +323,8 @@ int main(int argc, char* argv[])
 		}
 		
 		if (steep != NULL) {
-		    fatomo_lop(true,false,nt,nrhs,ds,rhs);
-
-		    if (velocity) {
-			for (it=0; it < nt; it++) {
-			    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
-			}
-			sf_floatwrite(dv,nt,steep);
-		    } else {
-			sf_floatwrite(ds,nt,steep);
-		    }
+		    fatomo_ray(ray);
+		    sf_intwrite(ray[0],nt*nshot,steep);
 		}
 
 		/* clean-up */
