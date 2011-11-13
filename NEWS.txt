@@ -71,6 +71,8 @@ In the build system:
   on Mac
 * Fixed bug preventing spaces in ./configure arguments
 
+===Changes in defaults===
+
 ==Release 1.2 (2011-07-14)==
 
 ===Additions and enhancements===
