@@ -155,6 +155,7 @@ int fastmarch(float *time   /* time */,
 	    if (i == mask[j]) {
 		rhs[k+j] = data[j]-time[i];
 		count++;
+		break;
 	    }
 	}
 	
