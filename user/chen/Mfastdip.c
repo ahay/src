@@ -18,8 +18,7 @@
 */
 #include <rsf.h>
 
-#include "fastdip.h"
-#include "divn.h"
+#include "fastpwd.h"
 
 int main(int argc, char* argv[])
 {
@@ -56,13 +55,13 @@ int main(int argc, char* argv[])
     num = sf_floatalloc2(n1,n2);
     den = sf_floatalloc2(n1,n2);
 
-    fastdip_init(n1,n2);
-    divn_init(2, n12, n, rect, niter, verb);
+    fastpwd_init(n1,n2);
+    sf_divn_init(2, n12, n, rect, niter, verb);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(wav[0],n12,inp);
 
-	fastdip(wav,num,den);
+	fastpwd(wav,num,den);
 
 	/* smooth division */
 	norm = 0.;
@@ -75,7 +74,7 @@ int main(int argc, char* argv[])
 	    num[0][id] *= norm;
 	    den[0][id] *= norm;
 	}
-	divn (num[0], den[0], dip[0]);
+	sf_divn (num[0], den[0], dip[0]);
 
 	sf_floatwrite(dip[0],n12,out);
     }

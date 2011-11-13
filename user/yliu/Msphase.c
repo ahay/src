@@ -20,8 +20,6 @@
 
 #include <rsf.h>
 
-#include "divn.h"
-
 int main (int argc, char* argv[])
 {
     int nh, n1,n2,i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
@@ -98,8 +96,8 @@ int main (int argc, char* argv[])
 	den[i] *= mean;
     }
     
-    divn_init(dim, n12, n, rect, niter, true);
-    divn (num, den, phase);
+    sf_divn_init(dim, n12, n, rect, niter, true);
+    sf_divn (num, den, phase);
     
     for (i=0; i < n12; i++) {
 	

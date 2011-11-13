@@ -20,8 +20,6 @@
 
 #include <rsf.h>
 
-#include "divn.h"
-
 int main (int argc, char* argv[])
 {
     int i3, n3, dim1, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
@@ -61,7 +59,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     
-    divn_init(dim1, n12, n, rect, niter,true);
+    sf_divn_init(dim1, n12, n, rect, niter,true);
     
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dat,n12,in);
@@ -78,16 +76,16 @@ int main (int argc, char* argv[])
 	    den[i] = dat[i]*mean;
 	}
 	
-	divn (num, den, rat1);
+	sf_divn (num, den, rat1);
 	
 	for (i=0; i < n12; i++) {
 	    den[i] = 1.;
 	    num[i] = dat[i];
 	}
 	
-	divn (num, den, rat2);
+	sf_divn (num, den, rat2);
 	
-	divn_combine (rat1, rat2, rat1);
+	sf_divn_combine (rat1, rat2, rat1);
 	
 	sf_floatwrite(rat1,n12,out);
     }

@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 {
     int i, dim, nm, niter, n[SF_MAX_DIM], rect[SF_MAX_DIM];
@@ -53,7 +51,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     
-    divn_init(dim,nm,n,rect,niter,true);
+    sf_divn_init(dim,nm,n,rect,niter,true);
     
     rough = sf_floatalloc(nm);
     smooth = sf_floatalloc(nm);
@@ -74,7 +72,7 @@ int main(int argc, char* argv[])
 		rough[i] *= limit[i];
     }
     
-    divn(rough,limit,smooth);
+    sf_divn(rough,limit,smooth);
 
     sf_floatwrite(smooth,nm,out);
 

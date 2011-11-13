@@ -17,19 +17,24 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "_bool.h"
+/*^*/
 
 #include "divn.h"
+#include "alloc.h"
+#include "conjgrad.h"
+#include "trianglen.h"
+#include "weight.h"
 
 static int niter, n;
 static float *p;
 
-void divn_init(int ndim   /* number of dimensions */, 
-	       int nd     /* data size */, 
-	       int *ndat  /* data dimensions [ndim] */, 
-	       int *nbox  /* smoothing radius [ndim] */, 
-	       int niter1 /* number of iterations */,
-	       bool verb  /* verbosity */) 
+void sf_divn_init(int ndim   /* number of dimensions */, 
+		  int nd     /* data size */, 
+		  int *ndat  /* data dimensions [ndim] */, 
+		  int *nbox  /* smoothing radius [ndim] */, 
+		  int niter1 /* number of iterations */,
+		  bool verb  /* verbosity */) 
 /*< initialize >*/
 {
     niter = niter1;
@@ -40,7 +45,7 @@ void divn_init(int ndim   /* number of dimensions */,
     p = sf_floatalloc (nd);
 }
 
-void divn_close (void)
+void sf_divn_close (void)
 /*< free allocated storage >*/
 {
     sf_trianglen_close();
@@ -48,14 +53,14 @@ void divn_close (void)
     free (p);
 }
 
-void divn (float* num, float* den,  float* rat)
+void sf_divn (float* num, float* den,  float* rat)
 /*< smoothly divide rat=num/den >*/
 {
     sf_weight_init(den);
     sf_conjgrad(NULL, sf_weight_lop,sf_trianglen_lop,p,rat,num,niter); 
 }
 
-void divn_combine (const float* one, const float* two, float *prod)
+void sf_divn_combine (const float* one, const float* two, float *prod)
 /*< compute product of two divisions >*/
 {
     int i;

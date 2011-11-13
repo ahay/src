@@ -5,6 +5,7 @@ William Burnett <will.burnett@gmail.com>
 Cody Brown <cbrown@eos.ubc.ca>
 Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
+Zhonghuan Chen <isaacthu@gmail.com>
 Joseph Dellinger <geojoe@freeusp.org>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 

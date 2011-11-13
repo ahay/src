@@ -28,7 +28,6 @@ Reproducible version in RSFSRC/book/jsg/avo */
 #include <rsf.h>
 
 #include "dynprog.h"
-#include "divn.h"
 
 int main(int argc, char* argv[])
 {
@@ -107,7 +106,7 @@ int main(int argc, char* argv[])
 	pick2 = sf_floatalloc(nm);	
 	ampl = sf_floatalloc(nm);
 
-	divn_init(dim,nm,n,rect,niter,true);
+	sf_divn_init(dim,nm,n,rect,niter,true);
     } else {
 	pick = NULL;
 	pick2 = sf_floatalloc(n1);
@@ -165,7 +164,7 @@ int main(int argc, char* argv[])
 	    pick[i] = (o2+pick[i]*d2-vel0)*ampl[i];
 	}
     
-	divn(pick,ampl,pick2);
+	sf_divn(pick,ampl,pick2);
 
 	for(i=0; i < nm; i++) {
 	    pick2[i] += vel0;

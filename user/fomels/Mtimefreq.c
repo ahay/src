@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 {
     bool phase;
@@ -79,7 +77,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("phase",&phase)) phase=false;
     /* output phase instead of amplitude */
 
-    divn_init(1,n1,&n1,&rect,niter,false);
+    sf_divn_init(1,n1,&n1,&rect,niter,false);
 
     if (NULL != sf_getstring("mask")) {
 	mask = sf_input("mask");
@@ -107,7 +105,7 @@ int main(int argc, char* argv[])
 		    bc[i1] = 0.5;
 		    if (NULL != mm) bc[i1] *= mm[i1];
 		}
-		divn(trace,bc,cc);
+		sf_divn(trace,bc,cc);
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
 		    t = i1*d1;
@@ -118,8 +116,8 @@ int main(int argc, char* argv[])
 			bc[i1] *= mm[i1];
 		    }
 		}
-		divn(trace,bs,ss);
-		divn(trace,bc,cc);
+		sf_divn(trace,bs,ss);
+		sf_divn(trace,bc,cc);
 	    }
 
 	    for (i1=0; i1 < n1; i1++) {

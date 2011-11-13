@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 {
     bool inv, verb;
@@ -75,7 +73,7 @@ int main(int argc, char* argv[])
     /* smoothing radius */
 
     sf_hilbert_init(n1, n, c);
-    divn_init(1, n1, &n1, &rect, niter, verb);
+    sf_divn_init(1, n1, &n1, &rect, niter, verb);
 
     for (i2=0; i2 < n2; i2++) {
 	if (!verb) sf_warning("trace %d of %d;",i2+1,n2);
@@ -112,10 +110,10 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* compute similarity */
-	    divn(rotat,envel,sim1);
-	    divn(envel,rotat,sim2);
+	    sf_divn(rotat,envel,sim1);
+	    sf_divn(envel,rotat,sim2);
 
-	    divn_combine(sim1,sim2,sim1);
+	    sf_divn_combine(sim1,sim2,sim1);
 
 	    if (inv) {
 		for (i1=0; i1 < n1; i1++) {

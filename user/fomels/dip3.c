@@ -24,7 +24,6 @@
 #include <rsf.h>
 
 #include "dip3.h"
-#include "divn.h"
 #include "allp3.h"
 
 static float *u1, *u2, *dp, *p0;
@@ -50,7 +49,7 @@ void dip3_init(int m1, int m2, int m3       /* dimensions */,
     nn[1]=n2;
     nn[2]=n3;
 
-    divn_init (3, n, nn, rect, niter, verb);
+    sf_divn_init (3, n, nn, rect, niter, verb);
 }
 
 void dip3_close(void)
@@ -59,7 +58,7 @@ void dip3_close(void)
     free (u1);
     free (u2);
     free (dp);
-    divn_close();
+    sf_divn_close();
 }
 
 void dip3(bool left               /* left or right prediction */,
@@ -124,7 +123,7 @@ void dip3(bool left               /* left or right prediction */,
 	    }
 	}
 
-	divn (u2, u1, dp);
+	sf_divn (u2, u1, dp);
 
 	lam = 1.;
 	for (k=0; k < 8; k++) {

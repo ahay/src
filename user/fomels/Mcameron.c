@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 int main(int argc, char *argv[])
 {
     bool verb;
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    divn_init(1,nx,&nx,&rect,niter,verb);
+    sf_divn_init(1,nx,&nx,&rect,niter,verb);
 
     den = sf_floatalloc(nx);
     num = sf_floatalloc(nx);
@@ -119,7 +117,7 @@ int main(int argc, char *argv[])
 	    }
 	    z0[ix] = z1[ix];
 	}
-	divn(num,den,z1);
+	sf_divn(num,den,z1);
 	sf_floatwrite(z1,nx,zx);  
 
 	for (ix=0; ix < nx; ix++) {
@@ -144,7 +142,7 @@ int main(int argc, char *argv[])
 	    }
 	    x0[ix] = x1[ix];
 	}
-	divn(num,den,x1);
+	sf_divn(num,den,x1);
 
 	for (ix=0; ix < nx; ix++) {
 	    x2[ix] = x1[ix] + ox+ix*dx;

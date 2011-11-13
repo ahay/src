@@ -38,6 +38,7 @@ To programs:
 * sfpyramid: pyramid transform.
 * sfshapeagc: automatic gain control by shaping regularization.
 * modified sfsuwrite for consistency with sfsuread
+* user/chen: new contributor (Zhonghuan Chen)
 
 ===Bug fixes===
 

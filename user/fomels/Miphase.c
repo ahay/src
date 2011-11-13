@@ -20,7 +20,6 @@
 
 #include <rsf.h>
 
-#include "divn.h"
 #include "cdivn.h"
 
 int main (int argc, char* argv[])
@@ -174,8 +173,8 @@ int main (int argc, char* argv[])
 	    phase[i] = cimagf(crat[i]);
 	}
     } else {
-	divn_init(dim, n12, n, rect, niter, true);
-	divn (num, den, phase);
+	sf_divn_init(dim, n12, n, rect, niter, true);
+	sf_divn (num, den, phase);
     }
 
     if (hertz) {

@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
 static int n2g, ntr, n1, n2, ng, order;
 static sf_bands spl;
@@ -63,7 +61,7 @@ void warpscan_init(int m1     /* input trace length */,
     den = sf_floatalloc (n2g);
 
     spl = sf_spline_init (order, n1);     
-    divn_init(dim, n2g, m, rect, niter, verb);
+    sf_divn_init(dim, n2g, m, rect, niter, verb);
 }
 
 void warpscan(float** inp /* input data [ntr][n1] */, 
@@ -112,7 +110,7 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 	}
     }
 
-    divn(num,den,rat1);
+    sf_divn(num,den,rat1);
 	
     for (i2=0; i2 < ntr; i2++) {
 	for (ig=0; ig < ng; ig++) {
@@ -123,9 +121,9 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 	    }
 	}
     }
-    divn(num,den,rat2);
+    sf_divn(num,den,rat2);
     
-    divn_combine(rat1,rat2,rat1);
+    sf_divn_combine(rat1,rat2,rat1);
 }
 
 /* 	$Id: Mwarpscan.c 744 2004-08-17 18:46:07Z fomels $	 */

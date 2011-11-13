@@ -22,8 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h> 
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 { 
     int i, i1, i2, m2, n1, n2, nd, dim, order, iter, nliter, niter;
@@ -144,7 +142,7 @@ int main(int argc, char* argv[])
     
     if (verb) sf_warning("Initialization completed");
   
-    divn_init(dim, nd, n, rect, niter,true);
+    sf_divn_init(dim, nd, n, rect, niter,true);
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
@@ -156,8 +154,8 @@ int main(int argc, char* argv[])
 	}
 
 	if (!noamp) {
-	    divn_close();
-	    divn_init(dim, nd, n, rect2, niter,true);
+	    sf_divn_close();
+	    sf_divn_init(dim, nd, n, rect2, niter,true);
 
 	    mean = 0.;
 	    for (i=0; i < nd; i++) {
@@ -173,20 +171,20 @@ int main(int argc, char* argv[])
 /*	    divlap2 (diva, m2, num, den, NULL, ampl); */
 /*	    divide2 (diva, m2, num, den, ampl); */
 
-	    divn (num, den, ampl);
+	    sf_divn (num, den, ampl);
 	    
 	    for (i=0; i < nd; i++) {
 		num[i] = (oth[i]-2.*ampl[i]*out[i])*der[i]*mean;
 	    }
 
-	    divn (num, den, ampl);
+	    sf_divn (num, den, ampl);
 	
 	    for (i=0; i < nd; i++) {
 		der[i] = ampl[i]*der[i] + out[i]*damp[i];
 	    }
 
-	    divn_close();
-	    divn_init(dim, nd, n, rect, niter, true);
+	    sf_divn_close();
+	    sf_divn_init(dim, nd, n, rect, niter, true);
 	} /* if amp */
 
 	error = 0.;
@@ -211,7 +209,7 @@ int main(int argc, char* argv[])
 	    der[i] *= der[i]*mean;
 	}
 
-	divn(out, der, warp);
+	sf_divn(out, der, warp);
 
 	for (i=0; i < nd; i++) {
 	    coord[i] -= warp[i]*d2;

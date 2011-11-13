@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "dynprog3.h"
-#include "divn.h"
 
 int main(int argc, char* argv[])
 {
@@ -82,7 +81,7 @@ int main(int argc, char* argv[])
 	pick2 = sf_floatalloc2(n1,2);	
 	ampl = sf_floatalloc(n1);
 
-	divn_init(1,n1,&n1,&rect,niter,true);
+	sf_divn_init(1,n1,&n1,&rect,niter,true);
     } else {
 	pick = NULL;
 	pick2 = sf_floatalloc2(n1,2);
@@ -156,8 +155,8 @@ int main(int argc, char* argv[])
 	    pick[1][i1] = (o3+pick2[1][i1]*d3)*ampl[i1];
 	}
     
-	divn(pick[0],ampl,pick2[0]);
-	divn(pick[1],ampl,pick2[1]);
+	sf_divn(pick[0],ampl,pick2[0]);
+	sf_divn(pick[1],ampl,pick2[1]);
 
 	for(i1=0; i1 < n1; i1++) {
 	    pick2[0][i1] += vel0;

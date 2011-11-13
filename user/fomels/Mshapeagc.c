@@ -20,8 +20,6 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "divn.h"
-
 int main (int argc, char* argv[]) 
 {
     bool verb;
@@ -66,7 +64,7 @@ int main (int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity */
 
-    divn_init(dim1+1,n1,n,rect,niter,verb);
+    sf_divn_init(dim1+1,n1,n,rect,niter,verb);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
@@ -86,7 +84,7 @@ int main (int argc, char* argv[])
 		gain[i1] *= norm;
 	    }
 	    
-	    divn(one,gain,igain);
+	    sf_divn(one,gain,igain);
 
 	    for (i1=0; i1 < n1; i1++) {
 		data[i1] *= igain[i1];

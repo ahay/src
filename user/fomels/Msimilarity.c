@@ -18,8 +18,6 @@
 */
 #include <rsf.h>	
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -63,7 +61,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* maximum number of iterations */
 
-    divn_init(dim1, n1, n, rect, niter, verb);
+    sf_divn_init(dim1, n1, n, rect, niter, verb);
 	
     one  = sf_floatalloc(n1);
     two  = sf_floatalloc(n1);
@@ -86,7 +84,7 @@ int main(int argc, char* argv[])
 		two[i1] *= norm;
 	}
 	
-	divn(one,two,rat1);
+	sf_divn(one,two,rat1);
 
         /* second division */
 	norm = sqrt(n1/cblas_dsdot( n1, one, 1, one, 1));	
@@ -96,10 +94,10 @@ int main(int argc, char* argv[])
 		two[i1] *= norm;
 	}
 
-        divn(two,one,rat2);
+        sf_divn(two,one,rat2);
 
 	/* combination */
-	divn_combine (rat1,rat2,rat1);
+	sf_divn_combine (rat1,rat2,rat1);
         sf_floatwrite(rat1,n1,out);
     }
     if (!verb) sf_warning(".");
