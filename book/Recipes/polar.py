@@ -74,7 +74,7 @@ def ovl(ovl,jc,jr,custom,cco):
                    custom))
 
         Plot(ovl+ctag+'l',None,
-             'box x0=%g y0=%g label="%s\^o\_" xt=%g yt=%g lab_fat=1 boxit=n'%
+             'box x0=%g y0=%g label="%s\^o\_" xt=%g yt=%g lab_fat=1 lab_color=3 boxit=n'%
              ((5.6+2.75*ic/90.),(5.1-2.75*ic/90.),"%s"%ic,0,0))
 
     # radii

@@ -1079,7 +1079,7 @@ def awefd3d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          '''
          awefd3d
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
-         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d jdata=%(jdata)d
          nb=%(nb)d dabc=%(dabc)s
          vel=${SOURCES[1]}
          den=${SOURCES[2]}
