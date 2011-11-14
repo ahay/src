@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv, **ray;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
-    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, min, max, gama, ratio;
+    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, steep, time;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time;
     sf_weight weight=NULL;
     
     sf_init(argc,argv);
@@ -66,12 +66,6 @@ int main(int argc, char* argv[])
     s = sf_floatalloc(nt);
     sf_floatread(s,nt,sinp);
 
-    if (!sf_getfloat("min",&min)) min=0.;
-    /* minimum allowed velocity */
-
-    if (!sf_getfloat("max",&max)) max=SF_HUGE;
-    /* maximum allowed velocity */
-
     if (!sf_getbool("velocity",&velocity)) velocity=true;
     /* if y, the input is velocity; n, slowness squared */
     
@@ -82,9 +76,6 @@ int main(int argc, char* argv[])
 	}
 	
 	dv = sf_floatalloc(nt);
-	
-	min = (min==0.)?SF_HUGE:(1./min);
-	max = (max==SF_HUGE)?0.:(1./max);
     }
     
     /* allocate memory for temporary data */
@@ -116,9 +107,9 @@ int main(int argc, char* argv[])
     sf_fileclose(shot);
   
     /* read in receiver list */
-    if (NULL == sf_getstring("receiver"))
-	sf_error("Need list receiver=");
-    recv = sf_input("receiver");
+    if (NULL == sf_getstring("recv"))
+	sf_error("Need receiver list recv=");
+    recv = sf_input("recv");
 
     if (!sf_histint(recv,"n1",&nrecv)) 
 	sf_error("No nrecv in receiver list.");
@@ -144,9 +135,9 @@ int main(int argc, char* argv[])
     rhs = sf_floatalloc(nrhs);
 
     /* read in record list */
-    if (NULL == sf_getstring("record"))
-	sf_error("Need list record=");
-    reco = sf_input("record");
+    if (NULL == sf_getstring("reco"))
+	sf_error("Need record list reco=");
+    reco = sf_input("reco");
     
     t0 = sf_floatalloc2(nrecv,nshot);
     sf_floatread(t0[0],nrecv*nshot,reco);
@@ -178,8 +169,8 @@ int main(int argc, char* argv[])
     /* regularization parameter (for both Ticknov and Shaping) */
     
     /* output gradient at each iteration */
-    if (NULL != sf_getstring("gradient")) {
-	grad = sf_output("gradient");
+    if (NULL != sf_getstring("grad")) {
+	grad = sf_output("grad");
 	sf_putint(grad,"n3",n[2]);
 	sf_putfloat(grad,"d3",d[2]);
 	sf_putfloat(grad,"o3",o[2]);
@@ -188,17 +179,18 @@ int main(int argc, char* argv[])
 	grad = NULL;
     }
     
-    /* output steepest-descent at each iteration */
-    if (NULL != sf_getstring("steep")) {
-	steep = sf_output("steep");
-	sf_putint(steep,"n3",n[2]);
-	sf_putfloat(steep,"d3",d[2]);
-	sf_putfloat(steep,"o3",o[2]);
-	sf_putint(steep,"n4",niter+1);
-	sf_settype(steep,SF_INT);
+    /* output ray density/coverage at each iteration */
+    if (NULL != sf_getstring("rayd")) {
+	rayd = sf_output("rayd");
+	sf_putint(rayd,"n3",n[2]);
+	sf_putfloat(rayd,"d3",d[2]);
+	sf_putfloat(rayd,"o3",o[2]);
+	sf_putint(rayd,"n4",nshot);
+	sf_putint(rayd,"n5",niter+1);
+	sf_settype(rayd,SF_INT);
 	ray = sf_intalloc2(nt,nshot);
     } else {
-	steep = NULL;
+	rayd = NULL;
 	ray = NULL;
     }
 
@@ -277,6 +269,12 @@ int main(int argc, char* argv[])
     /* output forward-modeled record */
     if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
     
+    /* output ray density/coverage */
+    if (rayd != NULL) {
+	fatomo_ray(ray);
+	sf_intwrite(ray[0],nt*nshot,rayd);
+    }
+
     /* calculate L2 data-misfit */
     rhsnorm0 = cblas_snrm2(nrhs,rhs,1);
     rhsnorm = rhsnorm0;
@@ -290,12 +288,6 @@ int main(int argc, char* argv[])
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
-/**/
-    if (steep != NULL) {
-	fatomo_ray(ray);
-	sf_intwrite(ray[0],nt*nshot,steep);
-    }
-/**/
     switch (what[0]) {
 	case 'l': /* linear operator */
 
@@ -322,11 +314,6 @@ int main(int argc, char* argv[])
 		    ds[it] = 0.;
 		}
 		
-		if (steep != NULL) {
-		    fatomo_ray(ray);
-		    sf_intwrite(ray[0],nt*nshot,steep);
-		}
-
 		/* clean-up */
 		for (it=0; it < nt; it++) {
 		    ds[it] = 0.;
@@ -364,30 +351,13 @@ int main(int argc, char* argv[])
 		    }
 		}
 
-		/* avoid overshot */
-		gama = 1.;
-
-		for (it=0; it < nt; it++) {
-		    /* go below minimum allowed value */
-		    if (ds[it]>0. && (sqrtf(s[it])+ds[it])>min) {
-			ratio = (min-sqrtf(s[it]))/ds[it];
-			gama = (gama<ratio)?gama:ratio;
-		    }
-
-		    /* go beyond maximum allowed value */
-		    if (ds[it]<0. && (sqrtf(s[it])+ds[it])<max) {
-			ratio = (max-sqrtf(s[it]))/ds[it];
-			gama = (gama<ratio)?gama:ratio;
-		    }
-		}
-
 		/* line search */
 		for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
 		    
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] != 1)
-			    temps[it] = (sqrtf(s[it])+gama*step*ds[it])*(sqrtf(s[it])+gama*step*ds[it]);
+			    temps[it] = (s[it]+step*ds[it])*(s[it]+step*ds[it])/s[it];
 		    }
 		    
 		    /* forward fast-marching for stencil time */		    
@@ -411,6 +381,12 @@ int main(int argc, char* argv[])
 		/* output forward-modeled record */
 		if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
 
+		/* output ray density/coverage */
+		if (rayd != NULL) {
+		    fatomo_ray(ray);
+		    sf_intwrite(ray[0],nt*nshot,rayd);
+		}
+
 		if (istep == 10) {
 		    sf_warning("Line-search Failure. Iteration terminated at %d of %d.",iter+1,niter);
 		    sf_warning("Dimensions for NORM need to be fixed before read.");
@@ -418,9 +394,9 @@ int main(int argc, char* argv[])
 		}
 
 		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d:\t %g (gama = %g, istep = %d).",iter+1,niter,rate,gama,istep);
+		    sf_warning("L1 misfit after iteration %d of %d:\t %g (istep = %d).",iter+1,niter,rate,istep);
 		else
-		    sf_warning("L2 misfit after iteration %d of %d:\t %g (gama = %g, istep = %d).",iter+1,niter,rate,gama,istep);
+		    sf_warning("L2 misfit after iteration %d of %d:\t %g (istep = %d).",iter+1,niter,rate,istep);
 
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }

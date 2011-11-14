@@ -202,7 +202,7 @@ void fatomo_ray(int **ray)
     int it, is;
 
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for private(it)
 #endif
     for (is=0; is < ns; is++) {
 	for (it=0; it <= nt; it++)
