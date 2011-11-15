@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     bool velocity, l1norm, shape, verb;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv, **ray;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time;
@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
     
     nrhs = 0;
     for (is=0; is < nshot; is++) {
+	/* rhslist[is][0]: where this shot starts in rhs vector */
 	rhslist[is][0] = nrhs;
 	
 	for (it=0; it < nrecv; it++) {
@@ -130,6 +131,7 @@ int main(int argc, char* argv[])
 		nrhs++;
 	}
 	
+	/* rhslist[is][1]: how many receivers there are for this shot */
 	rhslist[is][1] = (is==0)? nrhs: (nrhs-rhslist[is-1][0]-rhslist[is-1][1]);
     }
     rhs = sf_floatalloc(nrhs);
@@ -194,16 +196,16 @@ int main(int argc, char* argv[])
 	ray = NULL;
     }
 
-    /* output time at each iteration */
+    /* output forward-modeled record at each iteration */
     if (NULL != sf_getstring("time")) {
 	time = sf_output("time");
-	sf_putint(time,"n3",n[2]);
-	sf_putfloat(time,"d3",d[2]);
-	sf_putfloat(time,"o3",o[2]);
-	sf_putint(time,"n4",nshot);
-	sf_putint(time,"n5",niter+1);
+	sf_putint(time,"n1",nrecv);
+	sf_putint(time,"n2",nshot);
+	sf_putint(time,"n3",niter+1);
+	modl = sf_floatalloc2(nrecv,nshot);
     } else {
 	time = NULL;
+	modl = NULL;
     }
 
     /* output misfit L2 norm at each iteration */
@@ -267,7 +269,18 @@ int main(int argc, char* argv[])
     fatomo_fastmarch(s,t,source,rhs);
 
     /* output forward-modeled record */
-    if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
+    if (time != NULL) {
+	for (is=0; is < nshot; is++) {
+	    for (it=0; it < nrecv; it++) {
+		if (it < rhslist[is][1])
+		    modl[is][it] = t0[is][it]-rhs[rhslist[is][0]+it];
+		else
+		    modl[is][it] = 0.;
+	    }
+	}
+
+	sf_floatwrite(modl[0],nrecv*nshot,time);
+    }
     
     /* output ray density/coverage */
     if (rayd != NULL) {
@@ -334,12 +347,8 @@ int main(int argc, char* argv[])
 			sf_cgstep_close();
 		    }
 		}
-
-		/* convert to slowness perturbation */
-		for (it=0; it < nt; it++) {
-		    ds[it] = ds[it]/sqrtf(s[it]);
-		}
 		
+		/* output computed gradient (before line-search) */
 		if (grad != NULL) {
 		    if (velocity) {
 			for (it=0; it < nt; it++) {
@@ -379,8 +388,19 @@ int main(int argc, char* argv[])
 		}
 		
 		/* output forward-modeled record */
-		if (time != NULL) sf_floatwrite(t[0],nt*nshot,time);
-
+		if (time != NULL) {
+		    for (is=0; is < nshot; is++) {
+			for (it=0; it < nrecv; it++) {
+			    if (it < rhslist[is][1])
+				modl[is][it] = rhs[rhslist[is][0]+it];
+			    else
+				modl[is][it] = 0.;
+			}
+		    }
+		    
+		    sf_floatwrite(modl[0],nrecv*nshot,time);
+		}
+		
 		/* output ray density/coverage */
 		if (rayd != NULL) {
 		    fatomo_ray(ray);

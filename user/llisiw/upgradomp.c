@@ -272,7 +272,7 @@ void upgrad_ray(int length       /* length */,
 	    for (i=0, m=1; i < ndim; i++, m <<= 1) {
 		if (up[0] & m) {
 		    j = (up[1] & m)? jt+ss[i]:jt-ss[i];
-		    ray[j]++;
+		    ray[j] = 1;
 		}
 	    }
 	}
