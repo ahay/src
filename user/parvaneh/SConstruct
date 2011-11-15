@@ -3,10 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-backdireazi backdire 
+backdireazi backdire curvature
 '''
-
-# curvature
 
 try:  # distributed version
     Import('env root pkgdir bindir')

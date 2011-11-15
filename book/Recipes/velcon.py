@@ -20,6 +20,8 @@ def velcon(data,        # data name
            vslope=None, # semblance muting
            vx0=0,       # semblance muting
            x0=0,        # lateral origin
+           srect1=3,    # semblance vertical smoothing
+           srect2=1,    # semblance lateral smoothing
            rect1=10,    # vertical smoothing
            rect2=10):   # lateral  smoothing
     '''Velocity continuation'''
@@ -85,7 +87,7 @@ def velcon(data,        # data name
          '''
          mul $SOURCE |
          divn den=${SOURCES[1]} rect1=%d rect3=%d
-         ''' % (rect1,rect2))
+         ''' % (srect1,srect2))
 
 #    Flow(vlf2,pad,
 #         '''
@@ -117,11 +119,11 @@ def velcon(data,        # data name
     if vslope:
         pick = '''
         mutter x0=%g v0=%g half=n |
-        scale axis=2 | pick rect1=%d rect2=%d | transp plane=23 memsize=500
+        scale axis=2 | pick rect1=%d rect2=%d 
         ''' % (vx0,vslope,rect1,rect2)
     else:
         pick = '''
-        scale axis=2 | pick rect1=%d rect2=%d | transp plane=23 memsize=500
+        scale axis=2 | pick rect1=%d rect2=%d 
         ''' % (rect1,rect2)
 
     npk = data+'-npk'

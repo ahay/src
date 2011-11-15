@@ -19,6 +19,8 @@ velcon('sig',
        padt2=2048, # extra time padding
        padx=521,   # lateral padding
        v1=1.5,     # other velocity
+       srect1=10,  # semblance vertical smoothing
+       srect2=10,  # semblance lateral  smoothing
        rect1=10,   # vertical smoothing
        rect2=10)   # lateral  smoothing
 

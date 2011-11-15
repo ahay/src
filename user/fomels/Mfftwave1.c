@@ -57,32 +57,46 @@ int main(int argc, char* argv[])
     cwave = sf_complexalloc(nk);
     prop = sf_input("prop");
 
-    if (NULL != sf_getstring("left")) {
+    if (NULL != sf_getstring("right")) {
 	if (SF_FLOAT != sf_gettype(prop)) sf_error("Need float prop");
 
-	left = sf_input("left");
 	right = sf_input("right");
 
-	if (!sf_histint(prop,"n1",&m1)) sf_error("No n1= in prop");
-	if (!sf_histint(prop,"n2",&m2)) sf_error("No n2= in prop");
+	if (NULL != sf_getstring("left")) {
+	    left = sf_input("left");
+	    
+	    if (!sf_histint(prop,"n1",&m1)) sf_error("No n1= in prop");
+	    if (!sf_histint(prop,"n2",&m2)) sf_error("No n2= in prop");
+	    
+	    if (!sf_histint(left,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
+	    if (!sf_histint(left,"n2",&n2) || n2 != m1) sf_error("Need n2=%d in left",m1);
+	    
+	    if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
+	    if (!sf_histint(right,"n2",&n2) || n2 != nx) sf_error("Need n2=%d in right",nx);
+	    
+	    mid = sf_floatalloc2(m1,m2);
+	    sf_floatread(mid[0],m1*m2,prop);
+	    sf_fileclose(prop);
+	} else {
+	    left = prop;
+	    mid  = NULL;
 
-	if (!sf_histint(left,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
-	if (!sf_histint(left,"n2",&n2) || n2 != m1) sf_error("Need n2=%d in left",m1);
-	
+	    if (!sf_histint(prop,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
+	    if (!sf_histint(prop,"n2",&m2)) sf_error("Need n2=%d in left",m1);
+	    m1 = m2;
+	}
+
 	if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
 	if (!sf_histint(right,"n2",&n2) || n2 != nx) sf_error("Need n2=%d in right",nx);
 
 	lft = sf_floatalloc2(nk,m1);
-	mid = sf_floatalloc2(m1,m2);
 	rht = sf_floatalloc2(m2,nx);
 
 	sf_floatread(lft[0],nk*m1,left);
 	sf_floatread(rht[0],nx*m2,right);
-	sf_floatread(mid[0],m1*m2,prop);
-
+	
 	sf_fileclose(left);
 	sf_fileclose(right);
-	sf_fileclose(prop);
 
 	mat = NULL;
 
@@ -137,9 +151,15 @@ int main(int argc, char* argv[])
 	    prev[ix] = old;
 
 	    if (NULL == mat) {
-		for (im = 0; im < m1; im++) {
+		if (NULL == mid) {
 		    for (ik = 0; ik < m2; ik++) {
-			f += rht[ix][ik]*mid[ik][im]*wave[im][ix];
+			f += rht[ix][ik]*wave[ik][ix];
+		    }
+		} else {
+		    for (im = 0; im < m1; im++) {
+			for (ik = 0; ik < m2; ik++) {
+			    f += rht[ix][ik]*mid[ik][im]*wave[im][ix];
+			}
 		    }
 		}
 	    } else {

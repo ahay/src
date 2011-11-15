@@ -12,7 +12,7 @@ uncert('bei',
        nh=48,        # number of offsets
        padt=1024,   # time padding
        padt2=2048,  # extra time padding
-       vslope=0.67, #
+#       vslope=0.67, #
        vx0=1.5,     #
        padx=521,    # lateral padding
        n1=876,      # vertical extent
@@ -20,7 +20,7 @@ uncert('bei',
        dx=0.0335,   # lateral sampling
        x0=7.705,    # lateral origin
        rect1=15,    # vertical smoothing
-       rect2=15)    # lateral  smoothing
+       rect2=5)    # lateral  smoothing
 
 Flow('left0','bei-unc','math output=x1-0.5*input')
 Flow('rite0','bei-unc','math output=x1+0.5*input')
@@ -41,7 +41,7 @@ Result('arr',
        label1=Time unit1=s label2=Lateral unit2=km       
        ''')
 
-Flow('scan','bei-vlf2','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
+Flow('scan','bei-sem','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
 Plot('scan','grey color=j allpos=y title="Semblance Scan" label1=Time unit1=s label2=Velocity unit2=km/s')
 
 Flow('pick','scan','pick rect1=15')
@@ -76,7 +76,7 @@ Result('scan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
 
 Result('slice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
 
-Flow('smb','bei-vlf2','window n3=1 | mutter half=n v0=0.67 x0=1.5 | put unit2=km/s')
+Flow('smb','bei-sem','window n3=1 | mutter half=n v0=0.67 x0=1.5 | put unit2=km/s')
 Plot('smb','grey title=Semblance wheretitle=t allpos=y wherexlabel=b')
 
 eps = (10,50)

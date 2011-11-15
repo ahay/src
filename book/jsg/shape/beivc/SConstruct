@@ -13,15 +13,15 @@ velcon('bei',
        nh=48,       # number of offsets
        padt=1024,   # time padding
        padt2=2048,  # extra time padding
-       vslope=0.67, #
-       vx0=1.5,     #
+#       vslope=0.67, 
+#       vx0=1.5,     
        padx=521,    # lateral padding
        n1=876,      # vertical extent
        v1=1.8,      # other velocity
        dx=0.0335,   # lateral sampling
        x0=7.705,    # lateral origin
        rect1=15,    # vertical smoothing
-       rect2=15)    # lateral  smoothing
+       rect2=5)     # lateral  smoothing
 
 dix('bei',       # data name
     'bei-agc',   # migrated image
@@ -33,7 +33,7 @@ dix('bei',       # data name
     dx=0.0335,   # midpoint sampling
     x0=7.705,    # lateral origin
     rect1=30,    # vertical smoothing
-    rect2=30)    # lateral  smoothing
+    rect2=10)    # lateral  smoothing
 
 End()
        
