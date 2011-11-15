@@ -157,17 +157,6 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
-    /* expand domain for FD operators and ABC */
-    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
-
-    fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
-
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
-    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
-    /*------------------------------------------------------------*/
-
-    /*------------------------------------------------------------*/
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
 
@@ -209,6 +198,17 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,acy,3);
 	sf_oaxa(Fwfl,at, 4);
     }
+
+    /*------------------------------------------------------------*/
+    /* expand domain for FD operators and ABC */
+    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
+
+    fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
+
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
+    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
+    /*------------------------------------------------------------*/
 
     if(expl) {
 	ww = sf_floatalloc( 1);
