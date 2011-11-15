@@ -1,4 +1,4 @@
-/* OpenMP lagged-products in the time- or freq-domain */
+/* OpenMP lagged-products in the time-domain */
 
 /*
   Copyright (C) 2011 Colorado School of Mines

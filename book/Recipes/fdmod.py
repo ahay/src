@@ -51,10 +51,10 @@ def param(par):
     if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
 
     if(not par.has_key('height')):
-        if(par['ratio']>1):
+        if(par['ratio']>=1):
             par['height']=10
         else:
-            par['height']=13*par['ratio']
+            par['height']=13.625*par['ratio']
 
     if(not par.has_key('dratio')): par['dratio']=1.0*(par['tmax']-par['tmin'])/(par['xmax']-par['xmin'])
     if(not par.has_key('dheight')):
@@ -214,11 +214,9 @@ def dwigl(custom,par):
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
-    screenratio=%g screenht=%g
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-	   par['dratio'],par['dheight'],
            par['labelattr']+' '+custom)
 
 def dgrey3d(custom,par):
@@ -602,9 +600,9 @@ def qqbox3d(par):
 def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
 
     Plot(hwt+'ray',hwt,'window squeeze=n j1=%d j2=%d f2=%d | transp |' %(j1ray,j2ray,j2wft)
-         + cgraph('plotcol=6 wantaxis=n '+custom,par))
+         + cgraph('plotcol=5 wantaxis=n '+custom,par))
     Plot(hwt+'wft',hwt,'window j1=%d j2=%d f2=%d |'          %(j1wft,j2wft,j2wft)
-         + cgraph('plotcol=5 squeeze=n wantaxis=n symbol=. '+custom,par))
+         + cgraph('plotcol=2 squeeze=n wantaxis=n symbol=. '+custom,par))
 
     Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
 
