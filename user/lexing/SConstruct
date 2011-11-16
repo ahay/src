@@ -11,7 +11,7 @@ vecmatop bfio bfio_eval
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root bindir pkgdir incdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -47,6 +47,7 @@ for prog in mains:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
+        env.Install(incdir,'bfio.bin')
 
 ######################################################################
 # SELF-DOCUMENTATION

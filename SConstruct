@@ -174,7 +174,7 @@ if os.path.isdir('user'):
             else:
                 BuildDir(build,dir)
             user_dir_exports = 'env root bindir pkgdir'
-            if dir == 'seplib_compat':
+            if dir[-6:] == 'lexing':
                 user_exports = user_dir_exports + ' incdir'
             else:
                 user_exports = user_dir_exports

@@ -185,6 +185,7 @@ def Debug():
     env['CFLAGS'] = env.get('CFLAGS','').replace('-O2','-g')
     if  env['PLATFORM'] == 'sunos':
         env['CFLAGS'] = string.replace(env.get('CFLAGS',''),'-xO2','-g')
+    env['CXXFLAGS'] = env.get('CXXFLAGS','').replace('-O2','-g')
     env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
     env['version'] = __read_version_file(os.path.join(srcroot,'VERSION.txt'))
     env.SConsignFile(None)

@@ -36,7 +36,7 @@ int serialize(const Entry& e, ostream& os, const vector<int>& mask)
 {
   iC( serialize(e._grid, os, mask) );
   iC( serialize(e._mats, os, mask) );
-  iC( serialize(e._dir, os, mask) );
+  iC( serialize(e._dirc, os, mask) );
   return 0;
 }
 
@@ -44,26 +44,60 @@ int deserialize(Entry& e, istream& is, const vector<int>& mask)
 {
   iC( deserialize(e._grid, is, mask) );
   iC( deserialize(e._mats, is, mask) );
-  iC( deserialize(e._dir, is, mask) );
+  iC( deserialize(e._dirc, is, mask) );
   return 0;
 }
 
 //---------------------------------------
-int BFIO::setup(iRSF &par) // map<string,string>& opts)
+int BFIO::setup(iRSF &par, iRSF &inp) // map<string,string>& opts)
 {
-//    char *datfile;
     vector<int> all(1,1);
 
-//    par.get("N",_N);
-    par.get("EPS",_EPS);
+    par.get("EPSx1",_EPSx1,7); // number of chebyshev points
+    par.get("EPSx2",_EPSx2,7);
+    par.get("EPSk1",_EPSk1,7);
+    par.get("EPSk2",_EPSk2,7);
     par.get("fi",_fi);
 
     ifstream fin("bfio.bin");
 
     iC( deserialize(_e2dmap, fin, all) );
-    cerr<<_EPS<<" "<<_e2dmap.size()<<endl;
+
+    int nw;
+    float w0,dw;
+    inp.get("n1",nw);
+    inp.get("o1",w0);
+    inp.get("d1",dw);
+    wmin = w0;
+    wmax = w0+(nw-1)*dw;
+
+    int nx;
+    float x0,dx;
+    inp.get("n1",nx);
+    inp.get("o1",x0);
+    inp.get("d1",dx);
+    zmin = x0;
+    zmax = x0+(nx-1)*dx;
+
+    int nt;
+    float t0,dt;
+    par.get("nt",nt);
+    par.get("t0",t0);
+    par.get("dt",dt);
+    tmin = t0;
+    tmax = t0+(nt-1)*dt;
+
+    int np;
+    float p0,dp;
+    par.get("np",np);
+    par.get("p0",p0);
+    par.get("dp",dp);
+    pmin = p0;
+    pmax = p0+(np-1)*dp;
+
     return 0;
 }
+
 
 //---------------------------------------
 int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
@@ -179,18 +213,15 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
     //--------------------------
     int m = xs.size();
     int n = ks.size();
-    double tstt = 0.25;
-    double tlen = 0.5;
-    double pstt = 0;
-    double plen = 1;
+
     vector<double> ts(m), ps(m);
-    for(int i=0; i<m; i++)      ts[i] = (xs[i](0)/double(N))*tlen + tstt;
-    for(int i=0; i<m; i++)      ps[i] = (xs[i](1)/double(N))*plen + pstt;
+    for(int i=0; i<m; i++)      ts[i] = (xs[i](0)/double(N))*(tmax-tmin) + tmin;
+    for(int i=0; i<m; i++)      ps[i] = (xs[i](1)/double(N))*(pmax-pmin) + pmin;
     vector<double> ws(n), zs(n);
-    for(int i=0; i<n; i++)      ws[i] = ks[i](0)/double(N);
-    for(int i=0; i<n; i++)      zs[i] = ks[i](1)/double(N); //z is x
+    for(int i=0; i<n; i++)      ws[i] = (ks[i](0)/double(N))*(wmax-wmin) + (wmax+wmin)/double(2);
+    for(int i=0; i<n; i++)      zs[i] = (ks[i](1)/double(N))*(zmax-zmin) + (zmax+zmin)/double(2); //z is x
     DblNumMat phs(m,n);
-    double COEF = 2*M_PI*N;
+    double COEF = 2*M_PI;
     for(int j=0; j<n; j++) {
       for(int i=0; i<m; i++) {
 	double pz = ps[i]*zs[j];
@@ -218,28 +249,31 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
 }
 
 //---------------------------------------
-int BFIO::check(const CpxNumMat& f, const CpxNumMat& u, int NC, double& relerr)
+int BFIO::check(int N, const CpxNumMat& f, const CpxNumMat& u, int NC, double& relerr)
 {
-  int N = f.m();
+  int N1 = f.m();
+  int N2 = f.n();
+  int M1 = u.m();
+  int M2 = u.n();
   vector<Point2> src;
-  for(int j=0; j<N; j++)
-    for(int i=0; i<N; i++)
-      src.push_back( Point2(i-N/2, j-N/2) );
+  for(int j=0; j<N2; j++)
+    for(int i=0; i<N1; i++)
+      src.push_back( Point2(double(i*N)/double(N1)-double(N/2), double(j*N)/double(N2)-double(N/2)) );
   vector<cpx> app(NC);
   vector<cpx> dir(NC);
-
+  //
   for(int g=0; g<NC; g++) {
-    int x1 = int( floor(drand48()*N) );
-    int x2 = int( floor(drand48()*N) );
+    int x1 = int( floor(drand48()*M1) );
+    int x2 = int( floor(drand48()*M2) );
     //
     app[g] = u(x1,x2);
     //
-    vector<Point2> trg;    trg.push_back( Point2(x1,x2) );
-    CpxNumMat res(1,N*N); iC( kernel(N, trg, src, res) );
-    CpxNumMat resaux(N,N,false,res.data());
+    vector<Point2> trg;    trg.push_back( Point2(double(x1*N)/double(M1),double(x2*N)/double(M2)) );
+    CpxNumMat res(1,N1*N2); iC( kernel(N, trg, src, res) );
+    CpxNumMat resaux(N1,N2,false,res.data());
     cpx ttl(0,0);
-    for(int j=0; j<N; j++)
-      for(int i=0; i<N; i++)
+    for(int j=0; j<N2; j++)
+      for(int i=0; i<N1; i++)
 	ttl = ttl + resaux(i,j) * f(i,j);
     dir[g] = ttl;
   }
@@ -258,3 +292,4 @@ int BFIO::check(const CpxNumMat& f, const CpxNumMat& u, int NC, double& relerr)
   //
   return 0;
 }
+
