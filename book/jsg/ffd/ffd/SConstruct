@@ -32,12 +32,12 @@ Flow('wavp7',['source7','vel7'],
      pspifcos2bs vel=${SOURCES[1]}  dt=%g nt=%d nv=%d isx=256 isz=256 nb=0 c=0.01 
      '''%(dt,nt,nv) )
 
-Result('wavp7',
-       ''' 
-       window j3=20 |
-       grey poly=y label2="Z" label1="X" title="pspif2"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavp7',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="Z" label1="X" title="pspif2" unit1="m" unit2="m"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 #Flow('wavp_dehf7',['source7','vel7'],
 #     '''
 #     pspifcos2bs_dehf vel=${SOURCES[1]}  dt=%g nt=%d nv=%d isx=256 isz=256 nb=0 c=0.01 ax=1.0 az=1.0 factor=0.9 
@@ -47,7 +47,7 @@ Result('wavp7',
 #       ''' 
 #       window j3=20 |
 #       grey poly=y label2="Z" label1="X" title="pspif2"
-#       yreverse=y transp=n gainpanel=each pclip=100
+#       yreverse=y transp=n gainpanel=each pclip=100 unit1="m" unit2="m"
 #       ''' )
 #Flow('wavf7',['source7','vel7'],
 #     '''
@@ -62,8 +62,8 @@ Plot('wavf7',
      ''' 
      window j3=20 |
      grey poly=y label2="Z" label1="X" title="ffd2"
-     yreverse=y transp=n gainpanel=each pclip=100
-     ''',view=1)
+     yreverse=y transp=n gainpanel=each pclip=100 unit1="m" unit2="m"
+     ''',view=0)
 Flow('wavfd7',['source7','vel7'],
      '''
      fd2bs vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
@@ -72,9 +72,9 @@ Flow('wavfd7',['source7','vel7'],
 Plot('wavfd7',
      ''' 
      window j3=20 |
-     grey poly=y label2="Z" label1="X" title="fd2"
+     grey poly=y label2="Z" label1="X" title="fd2" unit1="m" unit2="m"
      yreverse=y transp=n gainpanel=each pclip=100
-     ''',view=1)
+     ''',view=0)
 Flow('wavsp7',['source7','vel7'],
      '''
      sp vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 ax=1.0 az=1.0 factor=0.7 
@@ -83,9 +83,9 @@ Flow('wavsp7',['source7','vel7'],
 Plot('wavfd7',
      ''' 
      window j3=20 |
-     grey poly=y label2="Z" label1="X" title="fd2"
+     grey poly=y label2="Z" label1="X" title="fd2" unit1="m" unit2="m"
      yreverse=y transp=n gainpanel=each pclip=100
-     ''',view=1)
+     ''',view=0)
 Flow('wavfd_7','wavfd7','window n3=1 f3=800')
 Flow('wavffd_7','wavf7','window n3=1 f3=800')
 Flow('wavpspi_7','wavp7','window n3=1 f3=800')
@@ -113,105 +113,31 @@ Plot('wavpspi_7',
 #Plot('wavpspi_dehf7',
 #       '''
 #       grey poly=y label2="Z" label1="X" title=d screenratio=1
-#       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m
+#       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m labelsz=6
 #       ''' )
 Plot('wavsp_7',
        '''
        grey poly=y label2="Z" label1="X" title=d screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m
+       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m labelsz=6
        ''' )
 Result('wavfd','wavfd_7',
        '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m
+       grey poly=y label2="Depth" label1="Distance" title= screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 unit1=m unit2=m labelsz=6 
        ''' )
 Result('wavffd','wavffd_7',
        '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99
+       grey poly=y label2="Depth" label1="Distance" title= screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 unit1="m" unit2="m" labelsz=6
        ''' )
 Result('wavpspi','wavpspi_7',
        '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99
+       grey poly=y label2="Depth" label1="Distance" title= screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 unit1="m" unit2="m" labelsz=6
        ''' )
-#Result('wavpspi_dehf','wavpspi_dehf7',
-#       '''
-#       grey poly=y label2="Z" label1="X" title= screenratio=1
-#       yreverse=y transp=n gainpanel=all pclip=99
-#       ''' )
 Result('wavsp','wavsp_7',
        '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99
-       ''' )
-Result('compare_7',
-       '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99
-       ''' )
-Result('wav_7','vel7 wavfd_7 wavffd_7 wavpspi_7','TwoRows')
-Flow('diff_7','wavffd_7 wavpspi_7','add scale=1,-1 | cat ${SOURCES[0]} axis=3')
-Result('diff','diff_7',
-       '''
-       grey poly=y label2="Z" label1="X" title= screenratio=1
-       yreverse=y transp=n gainpanel=all pclip=99
-       ''' )
-Flow('pspi_zm','wavpspi_7',
-     '''
-     window n1=50 n2=50 f1=400 f2=400  
-     ''')
-Plot('pspi_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=c screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Flow('ffd_zm','wavffd_7',
-     '''
-     window n1=50 n2=50 f1=400 f2=400  
-     ''')
-Plot('ffd_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=d screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Flow('fd_zm','wavfd_7',
-     '''
-     window n1=50 n2=50 f1=400 f2=400  
-     ''')
-Plot('fd_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=a screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Flow('sp_zm','wavsp_7',
-     '''
-     window n1=50 n2=50 f1=400 f2=400  
-     ''')
-Plot('sp_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=b screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Result('zm','fd_zm sp_zm pspi_zm ffd_zm','TwoRows')
-Result('pspi_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=c screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Result('ffd_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=d screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Result('fd_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=a screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
-       ''' )
-Result('sp_zm',
-       '''
-       grey poly=y label2="Z" label1="X" title=b screenratio=1 
-       yreverse=y transp=n pclip=99 screenht=7
+       grey poly=y label2="Depth" label1="Distance" title= screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 unit1="m" unit2="m" labelsz=6
        ''' )
 End()

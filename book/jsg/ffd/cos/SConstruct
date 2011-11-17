@@ -64,12 +64,15 @@ Result('cos','cos ffd fd ffd4 sp cos0',
 Plot('cos_side1','cos ffd ffd4 cos0',
      '''
      sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | 
-     sfgraph dash=0,3,2,0 plotfat=3 label1=k unit1= title=b min2=-3 
+     sfgraph dash=0,3,2,0 plotfat=3 label1=k unit1="1/km" title=b min2=-3 label2="Function value" labelsz=10
+ 
      ''')
 Plot('cos_side2','cos fd sp',
      '''
      sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} | 
-     sfgraph dash=0,3,2 plotfat=3 label1=k unit1= title=a min2=-3 
+     sfgraph dash=0,3,2 plotfat=3 label1=k unit1="1/km" title=a min2=-3  label2="Function value" labelsz=10
+
+
      ''')
 Result('cos_side1','cos_side2 cos_side1','SideBySideIso')
 Flow('cos_diff','cos','math output="0.0"')
@@ -82,13 +85,16 @@ Plot('diff1','cos_diff ffd_diff ffd4_diff cos0_diff',
      '''
      sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | 
      sfgraph dash=0,3,2,0 plotfat=3 label1=k min2=-1.5
-     unit1= title=b
+     unit1="1/km" title=b labelsz=10     
+     label2="Error"
      ''')
 Plot('diff2','cos_diff fd_diff sp_diff',
      '''
      sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} | 
      sfgraph dash=0,3,2 plotfat=3 label1=k min2=-1.5 
-     unit1= title=a
+     unit1="1/km" title=a labelsz=10
+     label2="Error"
+
      ''')
 Result('diff1','diff2 diff1','SideBySideIso')
 Result('diff','cos_diff ffd_diff fd_diff cos0_diff',
