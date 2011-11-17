@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(nh);
 
     for (iw=0; iw < nw; iw++) {
-	sf_warning("frequency %d of %d",iw,nw-1); 
+	sf_warning("frequency %d of %d;",iw,nw-1); 
 	w = w0+iw*dw;
 	w *= 4.*w;
 	for (im=0; im < nm; im++) {
@@ -95,6 +95,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,nh,angle);
 	}
     }
+    sf_warning(".");
 
     exit(0);
 }

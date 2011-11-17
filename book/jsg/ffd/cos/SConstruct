@@ -74,7 +74,7 @@ Plot('cos_side2','cos fd sp',
 
 
      ''')
-Result('cos_side1','cos_side2 cos_side1','SideBySideIso')
+Result('cos-side1','cos_side2 cos_side1','SideBySideIso')
 Flow('cos_diff','cos','math output="0.0"')
 Flow('cos0_diff','cos0 cos','add scale=1,-1 ${SOURCES[1]}')
 Flow('ffd_diff','ffd cos','add scale=1,-1 ${SOURCES[1]}')

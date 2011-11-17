@@ -156,14 +156,14 @@ through finite differences (approximation~\ref{eq:approximate}) with coefficient
 This approach is analogous to the FFD method proposed by \cite{ffd} for one-way extrapolation in depth.\\ 
 
 \inputdir{cos}
-Figure~\ref{fig:cos_side1} (a) shows approximations for $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$  
-by the 4th-order FD method (dash line) and pseudo-spectral method (dotted line). Figure~\ref{fig:cos_side1} (b) shows approximations by the FFD method (2nd-order: dash line, 4th-order: dotted line). 
+Figure~\ref{fig:cos-side1} (a) shows approximations for $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$  
+by the 4th-order FD method (dash line) and pseudo-spectral method (dotted line). Figure~\ref{fig:cos-side1} (b) shows approximations by the FFD method (2nd-order: dash line, 4th-order: dotted line). 
 The solid lines stand for the exact values for function $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$ with true velocity: $v=4.0 km/s$ (bottom solid line) and $v_0=2.0 km/s$ (top solid line), which indicates a significant velocity contrast ($100\%$ difference).
 In this situation, all the approximations deviate from the exact solution as the wavenumber $|k|$ becomes large.
 However, the 4th-order FFD method approximates the exact solution with the most accuracy, as shown in the error plot (Figure~\ref{fig:diff1}).
 In order to enhance the stability, one can suppress the wavefield at high wavenumbers for both pseudo-spectral and the FFD method. \\
 
-\plot{cos_side1}{width=0.9\textwidth}{Different approximations for $\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$. 
+\plot{cos-side1}{width=0.9\textwidth}{Different approximations for $\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$. 
 Solid lines: exact solution ($\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$) for $v=4.0$ km/s and $v_0=2.0$ km/s.
 (a) Dash line: the 4th-order FD. Dotted line: pseudo-spectral method. (b) Dash line: the 2nd-order FFD method. Dotted line: the 4th-order FFD with $v_0$ as reference velocity.  $\Delta t=0.001$ s. 
 $\Delta x=0.005\,km$.}
