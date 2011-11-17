@@ -44,11 +44,11 @@ Flow('wavffd_smsr',['source','vel'],
      ct=0.01 cb=0.01 cl=0.01 cr=0.01
      '''%(dt,nt) )
 
-Result('wavffd_smsr',
-       ''' 
-       window j3=200 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_smsr',
+     ''' 
+     window j3=200 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 Flow('wavsnap','wavffd_smsr','window n3=1 f3=3200 n1=500 f1=700')
 
 Result('wavsnap',
@@ -69,11 +69,11 @@ Result('wavsnap_dehf',
       grey poly=y label2="Z" label1="X" title=" " unit1=m unit2=m
       yreverse=y transp=n 
       ''' )
-Result('wavffd_dehf',
-       ''' 
-       window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_dehf"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_dehf',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_dehf"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 Flow('wavffd_smsr2',['sourcesub','vel'],
      '''
      ffd2_ps vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
@@ -92,11 +92,11 @@ Flow('wavffd_dehf2',['source','vel'],
      ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0
      '''%(dt*2,nt/2) )
 
-Result('wavffd_dehf2',
-       ''' 
-       window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_dehf2',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 Flow('wavsnap_dehf2','wavffd_dehf2','window n3=1 f3=1600 n1=500 f1=700')
 
 Result('wavsnap_dehf2',
@@ -111,11 +111,11 @@ Flow('wavffd_dehf3',['source','vel'],
      ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0 
      '''%(dt*2,nt/2) )
 
-Result('wavffd_dehf3',
-       ''' 
-       window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_dehf3',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 Flow('wavsnap_dehf3','wavffd_dehf3','window n3=1 f3=1600 n1=500 f1=700')
 
 Result('wavsnap_dehf3',
@@ -130,11 +130,11 @@ Flow('wavffd_dehf5',['source','vel'],
      ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0 
      '''%(dt*4,nt/4) )
 
-Result('wavffd_dehf5',
-       ''' 
-       window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_dehf5',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 Flow('wavsnap_dehf5','wavffd_dehf5','window n3=1 f3=800 n1=500 f1=700')
 
 Result('wavsnap_dehf5',
@@ -157,10 +157,10 @@ Flow('wavffd_dehf4',['source4','vel'],
      ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0  
      '''%(dt*2,300) )
 
-Result('wavffd_dehf4',
-       ''' 
-       window j3=50 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
-       yreverse=y transp=n gainpanel=each pclip=100
-       ''' )
+Plot('wavffd_dehf4',
+     ''' 
+     window j3=50 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
 End()
 

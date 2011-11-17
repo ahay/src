@@ -228,10 +228,10 @@ Result('yita2','yita',
      % (0,
      0,
      ))
-Result('wavffdend2',
+Plot('wavffdend2',
      ''' 
      window j3=300 |
      grey poly=y label2="Z" label1="X" title="TTI" transp=n min1=38 max1=56
      yreverse=y transp=n gainpanel=each pclip=100 unit1="km" unit2="km"
-     ''')
+     ''',view=1)
 End()

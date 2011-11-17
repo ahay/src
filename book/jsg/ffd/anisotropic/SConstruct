@@ -70,12 +70,12 @@ Flow('wavffd4_TTI_45_sm',['source','velx','velz','yita_c','seta_45'],
      ffdantti4b_smsr velx=${SOURCES[1]}  velz=${SOURCES[2]} yita=${SOURCES[3]} seta=${SOURCES[4]} dt=%g nt=%d isx=256 isz=256 nbt=0 nbb=0 nbl=0 nbr=0 
      ct=0.01 cb=0.01 cl=0.01 cr=0.01
      '''%(dt,2*nt) )
-Result('wavffd4_TTI_45_sm',
-       ''' 
-       window j3=50  |
-       grey poly=y label2="Z" label1="X" title="TTI 45"
-       yreverse=y transp=n gainpanel=each pclip=100 screenratio=1
-       ''' )
+Plot('wavffd4_TTI_45_sm',
+     ''' 
+     window j3=50  |
+     grey poly=y label2="Z" label1="X" title="TTI 45"
+     yreverse=y transp=n gainpanel=each pclip=100 screenratio=1
+     ''',view=1)
 Flow('TTI-snapshot','wavffd4_TTI_45_sm','window n3=1 f3=1000')
 Result('TTI-snapshot',
      '''
