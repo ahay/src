@@ -42,7 +42,9 @@ rsf.Flow('rsfsufirst','suline.su',
 rsf.Plot('rsfsufirst',
 	   'grey pclip=80 title="su Shot Gathers" label2=''')
 
-rsf.Flow('diffirst','rsfsufirst rsffirst','add scale=-1 ${SOURCES[1]}')
+
+rsf.Flow('diffirst','rsfsufirst rsffirst',
+         'add scale=-1 | add ${SOURCES[1]}')
 rsf.Plot('diffirst',
 	   'grey pclip=80 title="difference" label2=''')
 rsf.Result('combinefirst','rsfsufirst rsffirst diffirst','SideBySideAniso')
