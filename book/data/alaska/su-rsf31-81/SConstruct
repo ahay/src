@@ -1,0 +1,54 @@
+import rsf.proj as rsf
+import rsf.suproj as su
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d |
+segyclean
+''' % (1-su.little_endian())
+
+rawsegy=['L23535','L23536','L23537']
+for file in rawsegy  :
+    su.Flow(['su'+file, 'su'+file+'.bin',  'su'+file+'.asc'],
+         '../line31-81/'+file+'.SGY',segyread,stdin=0)
+    rsf.Flow(['rsf'+file,'t'+'rsf'+file,'rsf'+file+'.bin','rsf'+file+'.asc'],
+         '../line31-81/'+file+'.SGY',
+         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
+
+# concatinate the input files
+su.Flow ('suline', map(lambda x: 'su'+x, rawsegy),
+     'cat ${SOURCES}',stdin=0)
+rsf.Flow('rsfline' ,map(lambda x: 'rsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2')
+rsf.Flow('trsfline',map(lambda x: 'trsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
+
+#su.Result('sufirst','suline',
+#       'suwind count=3000 | suximage perc=90')
+#su.Result('suzoomfirst','suline',
+#          '''
+#	  suwind key=tracl min=1000 max=1250 tmin=0 tmax=3 | 
+#	  suximage perc=90
+#	  ''')
+#Flow('demoraw','rawline','window n2=3000')
+#rsf.Result('demoraw','grey pclip=80 title="Shot Gathers" label2=''')
+rsf.Flow('rsffirst','rsfline','window n2=3000')
+rsf.Plot('rsffirst',
+	   'grey pclip=80 title="rsf Shot Gathers" label2=''')
+
+#now plot the su results with rsf
+rsf.Flow('rsfsufirst','suline.su',
+         '''
+	 segyread su=y endian=n tfile=trsfsufirst.rsf | window n2=3000
+	 ''')
+rsf.Plot('rsfsufirst',
+	   'grey pclip=80 title="su Shot Gathers" label2=''')
+
+rsf.Flow('diffirst','rsfsufirst rsffirst','add scale=-1 ${SOURCES[1]}')
+rsf.Plot('diffirst',
+	   'grey pclip=80 title="difference" label2=''')
+rsf.Result('combinefirst','rsfsufirst rsffirst diffirst','SideBySideAniso')
+
+rsf.Flow('catfirst','rsfsufirst rsffirst diffirst',
+	 'cat ${SOURCES[1]} ${SOURCES[2]} axis=2')
+rsf.Result('catfirst','grey pclip=80 title="su rsf diff" label2=''')
+su.End()
+rsf.End()
