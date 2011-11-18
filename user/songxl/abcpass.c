@@ -21,7 +21,7 @@
 
 #include "abcpass.h"
 
-static int nx, nz, nbt, nbb, nbl, nbr;
+static int nx, nz, nh, nbt, nbb, nbl, nbr;
 static float ct, cb, cl, cr;
 static float *wt, *wb, *wl, *wr;
 
@@ -107,6 +107,60 @@ void bd_decay(float **a /*2-D matrix*/)
     for (iz=0; iz < nbb; iz++) {  
         for (ix=0; ix < nbr; ix++) {
             a[nz+nbt+nbb-1-iz][nx+nbl+nbr-1-ix] *= iz>ix? wr[ix]:wb[iz];
+        }
+    }
+}
+
+void bdz_init(int n1, int n2, int n3 /*model size:x*/,
+             int nb1, int nb2  /*top, bottom*/,
+             int nb3, int nb4  /*left, right*/,
+             float c1, float c2 /*top, bottom*/,
+             float c3, float c4 /*left, right*/)
+/*< initialization >*/
+{
+    int c;
+    nx = n1;  
+    nz = n2;  
+    nh = n3;
+    nbt = nb1;  
+    nbb = nb2;  
+    nbl = nb3;  
+    nbr = nb4;  
+    ct = c1;  
+    cb = c2;  
+    cl = c3;  
+    cr = c4;  
+    if(nbt) wt =  sf_floatalloc(nbt);
+    if(nbb) wb =  sf_floatalloc(nbb);
+    if(nbl) wl =  sf_floatalloc(nbl);
+    if(nbr) wr =  sf_floatalloc(nbr);
+    c=0;
+    abc_cal(c,nbt,ct,wt);
+    abc_cal(c,nbb,cb,wb);
+    abc_cal(c,nbl,cl,wl);
+    abc_cal(c,nbr,cr,wr);
+}
+   
+
+
+
+
+void bdz_decay(float ***a /*3-D matrix*/) 
+/*< boundary decay>*/
+{
+    int iz, ix, ih;
+    for (iz=0; iz < nbt; iz++) {  
+        for (ix=0; ix < nx; ix++) {
+            for (ih=0; ih < nh; ih++){
+                a[iz][ix][ih] *= wt[iz];
+            }
+        }
+    }
+    for (iz=0; iz < nbb; iz++) {  
+        for (ix=0; ix < nx; ix++) {
+            for (ih=0; ih < nh; ih++){
+                a[iz+nz+nbt][ix][ih] *= wb[nbb-1-iz];
+            }
         }
     }
 }

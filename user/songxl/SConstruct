@@ -12,10 +12,16 @@ wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1
                                  ffdantti4b_smsr ffd2_ps
                                  ffdantti4b_rvr  ffd2b_rvr
 laplace laplace2
-ffd2dehf sp 
-ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10 
-ofd2_25
-lffd1_10 lffd2_4 lffd2_4_c
+ffd2dehf sp pspifcos2bs_dehf
+ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10 ofd2_20 ofd2_12
+ffdtti4
+ofd2_25 lfd2_25 lfd2_25b
+lffd1_10 lffd2_10 lffd2_4 lffd2_4_c lffd2_an_25
+constpermffd constpermkz
+vzpermffd vz1
+vzpermffd3 permffd3
+permf
+nxtfftn
 '''
 #constpermffd constpermkz
 #vzpermffd vz1

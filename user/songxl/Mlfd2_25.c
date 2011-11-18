@@ -23,9 +23,9 @@
 #include "srcsm.h"
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, ix, it, nz, iz, isx, isz, nxz, na;
+    int nx, nt, ix, it, nz, iz, isx, isz, nxz, na, jm;
     float dt, dx, dz, ox, oz;
-    float **nxt,  **old,  **cur, *wav;
+    float **new,  **old,  **cur, *wav;
     float ***B;  
     int len;
     int *s1, *s2, is;
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(G,"n2",&na)) sf_error("No n2= in input");
     if (nx*nz != nxz) sf_error("nx*nz != nxz");
     if (!sf_histint(files1,"n1",&len)) sf_error("No n1= in input");
+    if (!sf_getint("jm",&jm)) jm=10;
     sf_warning("len=%d",len);
 
     sf_putint(out,"n1",nz);
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
     sf_putint(out,"n2",nx);
     sf_putfloat(out,"d2",dx);
     sf_putfloat(out,"o2",ox); 
-    sf_putint(out,"n3",nt);
+    sf_putint(out,"n3",(nt-1)/jm+1);
     sf_putfloat(out,"d3",dt);
     sf_putfloat(out,"o3",0.0); 
 
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
 
     old    =  sf_floatalloc2(nz,nx);
     cur    =  sf_floatalloc2(nz,nx);
-    nxt    =  sf_floatalloc2(nz,nx);
+    new    =  sf_floatalloc2(nz,nx);
 
     B   =  sf_floatalloc3(nz,nx,len);
     sf_floatread(B[0][0],nz*nx*len,G);
@@ -103,28 +104,31 @@ int main(int argc, char* argv[])
          cur[isx][isz] += wav[it];
          source_smooth(cur,isx,isz,wav[it]);
 
-        sf_floatwrite(cur[0],nz*nx,out);
+        if(!(it%jm)) {
+          sf_floatwrite(cur[0],nz*nx,out);
+     //     for (ix=0; ix < nx; ix++) sf_floatwrite(cur[nbl+ix]+nbt,nz,out);
+        }
         for (ix=0; ix < nx; ix++) {
             for (iz=0; iz < nz; iz++) {
-                  nxt[ix][iz] = 0.0; 
+                  new[ix][iz] = 0.0; 
                 }
          }  
 
 
 
 
-	 for (ix=8; ix < nx-8; ix++) {  
-	     for (iz=8; iz < nz-8; iz++) {  
+	 for (ix=4; ix < nx-4; ix++) {  
+	     for (iz=4; iz < nz-4; iz++) {  
                  for (is=0; is < len; is++) {
-                     nxt[ix][iz]  += 0.5*(cur[ix+s2[is]][iz+s1[is]]+cur[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
+                     new[ix][iz]  += 0.5*(cur[ix+s2[is]][iz+s1[is]]+cur[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
                  }
              }
          }
 	 for (ix=4; ix < nx-4; ix++) {  
 	     for (iz=4; iz < nz-4; iz++) {  
-                 nxt[ix][iz]  -= old[ix][iz];
+                 new[ix][iz]  -= old[ix][iz];
                  old[ix][iz] = cur[ix][iz];
-                 cur[ix][iz] = nxt[ix][iz];
+                 cur[ix][iz] = new[ix][iz];
              }
          }  
          

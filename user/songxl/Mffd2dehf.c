@@ -159,8 +159,6 @@ int main(int argc, char* argv[])
 
     for (it=0; it < nt; it++) {
 
-        bd_decay(old); 
-        bd_decay(cur); 
         ffdstep_dehf(old, cur, aa, nxb, nzb, v0, dt, ax, az, factor); 
         old[isz+nbt][isx+nbl] += wav[it];
         source_smooth(old,isz+nbt,isx+nbl,wav[it]);
