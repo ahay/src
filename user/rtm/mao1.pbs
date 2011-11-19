@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q parallel@escmn
+#PBS -l nodes=30:ppn=1:amps
+#PBS -o /users/xias/Model/amps.log
+#PBS -e /users/xias/Model/amps.err
+#PBS -j oe
+#PBS -V
+
+cd /users/xias/Model
+echo $PBS_NODEFILE
+
+/util/mpich/mpich-1.2.7p1/bin/mpirun -np `wc -l $PBS_NODEFILE`  -machinefile $PBS_NODEFILE $RSFROOT/bin/sftti4_omp_mpi  source=source.rsf velx=Vx.rsf velz=Vp.rsf yita=Eta.rsf seta=theta.rsf dt=0.0006 nt=23401 isz=3 nbt=96 nbb=95 nbl=160 nbr=159 ct=0.005 cb=0.005 cl=0.003 cr=0.003 de=n  geo=geo1.rsf irz=3  nr=5601 err=0.000001 factor=1.0 ax=2 az=2 jm=15 

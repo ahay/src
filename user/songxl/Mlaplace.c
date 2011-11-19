@@ -1,4 +1,4 @@
-/* 2-D Laplace operator */
+/* 2-D Fourier finite-difference wave extrapolation */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -25,13 +25,9 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx,  nz,  ix, iz;
-    int nkx, nkz, ikx, ikz;
-    float dx, dkx, kx, dz, dkz, kz, kx0, kz0, pi=SF_PI, o1, o2;
-    float **old;
-    kiss_fft_cpx **uk, *ctracex, *ctracez;
-    kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
-
+    int nx,  nz, ix, iz, nbt, nbb, nbl, nbr, nxb, nzb;
+    float dx, dz;
+    float **new,  **old;
     sf_file out, img;
      
 
@@ -45,111 +41,61 @@ int main(int argc, char* argv[])
     if (!sf_histint(img,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(img,"d2",&dz)) sf_error("No d2= in input");
 
-    if (!sf_histfloat(img,"o1",&o1)) o1=0.0;
-    if (!sf_histfloat(img,"o2",&o2)) o2=0.0;
-
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-    sf_putfloat(out,"o1",o1);
-
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
-    sf_putfloat(out,"o2",o2);
 
-    nkx = kiss_fft_next_fast_size(nx);
-    nkz = kiss_fft_next_fast_size(nz);
-    if (nkx != nx) sf_warning("nkx padded to %d",nkx);
-    if (nkz != nz) sf_warning("nkz padded to %d",nkz);
-//    dkx =  1./(2.0*kiss_fft_next_fast_size(nx-1)*dx);
-//    dkz =  1./(2.0*kiss_fft_next_fast_size(nz-1)*dz);
-    dkx = 1./(nkx*dx);
-    kx0 = -0.5/dx;
-    dkz = 1./(nkz*dz);
-    kz0 = -0.5/dz;
-
-    cfgx = kiss_fft_alloc(nkx,0,NULL,NULL);
-    cfgxi = kiss_fft_alloc(nkx,1,NULL,NULL);
-    cfgz = kiss_fft_alloc(nkz,0,NULL,NULL);
-    cfgzi = kiss_fft_alloc(nkz,1,NULL,NULL);
+    nbl =2;
+    nbr =2;
+    nbt =2;
+    nbb =2; 
+    nxb = nx + nbl + nbr;
+    nzb = nz + nbt + nbb;
 
 
-    uk = (kiss_fft_cpx **) sf_complexalloc2(nkx,nkz);
-    ctracex = (kiss_fft_cpx *) sf_complexalloc(nkx);
-    ctracez = (kiss_fft_cpx *) sf_complexalloc(nkz);
 
-           
-           
-           
-    old     =  sf_floatalloc2(nx,nz);
-    sf_floatread(old[0],nx*nz,img);
 
-    for (iz=0; iz < nz; iz++){
-        for (ix=0; ix < nx; ix++){
-             uk[iz][ix].r = old[iz][ix];
-             uk[iz][ix].i = 0.0;
-           }
+    old    =  sf_floatalloc2(nxb,nzb);
+    new    =  sf_floatalloc2(nx,nz);
+    
+    bd_init(nx,nz,nbt,nbb,nbl,nbr,0,0,0,0);
+
+    /*input & extend image*/
+    for (iz=nbt; iz<nz+nbt; iz++){
+        sf_floatread(old[iz]+nbl,nx,img);
+         for (ix=0; ix<nbl; ix++){
+             old[iz][ix] = old[iz][nbl];
+         }
+         for (ix=0; ix<nbr; ix++){
+             old[iz][nx+nbl+ix] = old[iz][nx+nbl-1];
+         }     
+    }
+    for (iz=0; iz<nbt; iz++){
+        for (ix=0; ix<nxb; ix++){
+            old[iz][ix] = old[nbt][ix];
+        }
+    }
+    for (iz=0; iz<nbb; iz++){
+        for (ix=0; ix<nxb; ix++){
+            old[nz+nbt+iz][ix] = old[nz+nbt-1][ix];
+        }
     }
 
-/* compute  u(kx,kz) */
+ 
     for (iz=0; iz < nz; iz++){
-         /* Fourier transform x to kx */
-            for (ix=1; ix < nx; ix+=2){
-                uk[iz][ix] = sf_cneg(uk[iz][ix]);
-                }
-            kiss_fft_stride(cfgx,uk[iz],ctracex,1);
-            for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ikx];
+         for (ix=0; ix < nx; ix++) {
+             new[iz][ix] = (old[iz+nbt][ix+nbl-2]-16.0*old[iz+nbt][ix+nbl-1]+30.0*old[iz+nbt][ix+nbl]-16.0*old[iz+nbt][ix+nbl+1]+old[iz+nbt][ix+nbl+2])/(12.0*dx*dx)
+                        + (old[iz+nbt-2][ix+nbl]-16.0*old[iz+nbt-1][ix+nbl]+30.0*old[iz+nbt][ix+nbl]-16.0*old[iz+nbt+1][ix+nbl]+old[iz+nbt+2][ix+nbl])/(12.0*dz*dz);
          }
-     for (ikx=0; ikx < nkx; ikx++){
-         /* Fourier transform z to kz */
-            for (ikz=1; ikz<nkz; ikz+=2){
-                uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
-                }
-            kiss_fft_stride(cfgz,uk[0]+ikx,ctracez,nkx);
-            for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ikz];
-           }
+    }
 
-/*    #ifdef _OPENMP
-    #pragma omp parallel for private(ik,ix,x,k,tmp,tmpex,tmpdt) 
-    #endif
-*/        
-          
-         for (ikz=0; ikz < nkz; ikz++) {
-              kz = ikz* dkz*2.0*pi;
-           
-              for (ikx=0; ikx < nkx; ikx++) {
-                  kx = ikx * dkx*2.0*pi;
-                  uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],(kx*kx+kz*kz));
-              }
-           
-         }   
-/* Inverse FFT*/
-         for (ikx=0; ikx < nkx; ikx++){
-         /* Inverse Fourier transform kz to z */
-             kiss_fft_stride(cfgzi,(kiss_fft_cpx *)uk[0]+ikx,(kiss_fft_cpx *)ctracez,nkx);
-             for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ikz],ikz%2?-1.0:1.0);
-              }
-             for (ikz=0; ikz < nkz; ikz++){
-             /* Inverse Fourier transform kx to x */
-                 kiss_fft_stride(cfgxi,(kiss_fft_cpx *)uk[ikz],(kiss_fft_cpx *)ctracex,1);
-                 for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ikx],ikx%2?-1.0:1.0);
-             }
-
-         for (iz=0; iz < nz; iz++){
-             for (ix=0; ix < nx; ix++){
-                  old[iz][ix] = sf_crealf(uk[iz][ix]);
-                  old[iz][ix] /= (nkx*nkz);
-                }
-         }
-
-
-    sf_floatwrite(old[0],nx*nz,out);
+    sf_floatwrite(new[0],nx*nz,out);
+    bd_close();
+    free(*new);     
     free(*old);     
+    free(new);     
     free(old);     
-    free(*uk);
-    free(uk);
-    free(ctracex);
-    free(ctracez);
-    
     exit(0); 
 }           
            

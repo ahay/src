@@ -1,42 +1,18 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
-
-progs = '''
-intervalVTI
-smoothderLS
-spitz
-spitzbl
-spitzns
-spitzblns
-pwdnorm
-smoothder1
-smoothder2
-smoothcur
-pmig1
-joiner
-findmax
-findintval
-multmask
-match1d
-lomatch
-Testcdstep
-test1_matchl1
-test2_matchl1
-bil1_new
-lpfL1
-'''
 
 
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-
-src = Glob('[a-z]*.c')
+    src = glob.glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -47,14 +23,23 @@ for source in src:
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
-mains = Split(progs)
-for prog in mains:
-    sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
-        env.Install(bindir,prog)
+#mains = prog
+#for prog in mains:
+#    sources = []
+#    bldutil.depends(env,sources,'M'+prog)
+#    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+#    if root:
+#        env.Install(bindir,prog)
 
+mains = Split('tti4_omp_mpi') 
+mpicc = env.get('MPICC')
+if mpicc:
+    prog = 'tti4_omp_mpi'
+    prog = env.Program(prog,'Mtti4_omp_mpi.c',CC=mpicc)
+else:
+    prog = env.RSF_Place('sftti4_omp_mpi',None,var='MPI')
+if root:
+   env.Install(bindir,prog[0])
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -66,3 +51,5 @@ if root:
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
+
+
