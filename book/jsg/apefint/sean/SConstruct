@@ -1,0 +1,150 @@
+from rsf.proj import *
+
+##################
+# Input
+##################
+Fetch('sean.HH','bp')
+
+def grey(title):
+    return '''
+    grey title="%s" label2=Trace label1="Time" unit1=s screenratio=1.5
+    parallel2=n format2="%%3.1f" labelsz=6 titlesz=7.5 clip=675.48
+    font=2 labelfat=2 titlefat=2 d2num=0.5 o2num=2 n2tic=4
+    ''' % title
+
+Flow('sean','sean.HH',
+     'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
+Result('sean',grey('Original')) 
+     
+Flow('sean2','sean','window j2=2 | put d2=1')
+Result('sean2',grey('Decimated'))
+
+#Result('sean2','sean sean2','SideBySideAniso')
+Flow('pad mask','sean2','lpad jump=2 mask=${TARGETS[1]}')
+
+##################
+# Nonstationary PEFs
+##################
+Flow('dmask','pad','math output=1')
+Flow('sapef maskout','pad dmask',
+     '''
+     apef a=15,5 jump=2 rect1=50 rect2=20 niter=400 verb=y
+     maskin=${SOURCES[1]} maskout=${TARGETS[1]}
+     ''')
+Flow('samiss','pad sapef mask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y | put d2=1')
+
+Flow('serr','samiss sean','add scale=1,-1 ${SOURCES[1]}')
+Result('samiss',grey('RNA Interpolation'))
+Result('serr',grey('Interpolation error'))
+#Result('ssean2-int','smis serr','SideBySideIso')
+
+Flow('smcoe','sapef',
+     '''
+     put d4=1 |cut n1=8 n2=1 | stack axis=2 norm=n |
+     stack axis=1 norm=n
+     ''')
+Result('smcoe',
+       '''
+       grey title="Mean Coefficient" screenratio=1.4 bias=0.
+       wheretitle=b wherexlabel=t color=i gainpanel=e scalebar=y
+       barwidth=0.2 parallel2=n format2="%3.1f" labelsz=6 titlesz=7.5
+       label1=Time unit1=s label2=Trace
+       font=2 labelfat=2 titlefat=2 d2num=0.5 o2num=2 n2tic=4 nbartic=20
+       ''')
+
+Flow('sfcoe','sapef','put d4=1 | window n1=1 f1=8 n2=1')
+Result('sfcoe',
+       '''
+       grey title="First Coefficient" screenratio=1.4 bias=0.5
+       wheretitle=b wherexlabel=t color=i gainpanel=e scalebar=y
+       barwidth=0.2 parallel2=n format2="%3.1f" labelsz=6 titlesz=7.5
+       label1=Time unit1=s label2=Trace
+       font=2 labelfat=2 titlefat=2 d2num=0.5 o2num=2 n2tic=4 nbartic=20
+       ''')
+
+Result('win','sean',
+       'window min1=2.5 max1=3.1 max2=120 | ' \
+       + grey('Original') + 'd2num=0.1 o2num=2.5 n2tic=7')
+Result('win2','samiss',
+       'window min1=2.5 max1=3.1 max2=120 | ' \
+       + grey('RNA Interpolation')+ 'd2num=0.1 o2num=2.5 n2tic=7')
+Plot('sdiff2','serr',
+     'window min1=2.5 max1=3.1 max2=120 | ' \
+     + grey('RNA Error')+ 'd2num=0.1 o2num=2.5 n2tic=7')
+
+
+#Result('sean2-close','win win2','SideBySideAniso')
+
+# Choose different parameters
+Flow('sapef1','pad dmask',
+     '''
+     apef a=15,2 jump=2 rect1=50 rect2=20 niter=400 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('samiss1','pad sapef1 mask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+
+Flow('serr1','samiss1 sean','add scale=1,-1 ${SOURCES[1]}')
+Plot('samiss1',grey('RNA Interpolation'))
+Plot('serr1',grey('RNA Error'))
+
+##################
+# Nonstationary PWD
+##################
+def twodip2(extra):
+    return 'twodip2 order=2 nj1=2 nj2=2 eps=8 verb=y gauss=n ' + extra 
+
+Flow('pq','sean2',twodip2('niter=10'))
+Flow('pq1','sean2 pq',twodip2('both=n dip1=${SOURCES[1]} dip2=${SOURCES[1]}'))
+Flow('pq2','sean2 pq pq1',twodip2('dip1=${SOURCES[1]} dip2=${SOURCES[2]}'))
+Flow('pq3','pq2','transp | spline n1=180 o1=0 d1=1 | transp')
+
+def twodip0(extra):
+    return 'twodip2 order=2 eps=8 verb=y gauss=n ' + extra 
+
+Flow('ppq','sean',twodip0('niter=10'))
+Flow('ppq1','sean ppq',twodip0('both=n dip1=${SOURCES[1]} dip2=${SOURCES[1]}'))
+Flow('ppq2','sean ppq ppq1',twodip0('dip1=${SOURCES[1]} dip2=${SOURCES[2]}'))
+
+Plot('dip1','pq2',
+     'window n3=1 | %s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('dip2','pq2',
+     'window f3=1 | %s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Plot('sean2-dip','dip1 dip2','SideBySideIso')
+
+Plot('ddip1','ppq2',
+     'window n3=1 | %s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('ddip2','ppq2',
+     'window f3=1 | %s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Plot('sean0-dip','ddip1 ddip2','SideBySideIso')
+
+Flow('separ','sean ppq2','pwdsigk dips=${SOURCES[1]} verb=y niter=200 eps=1')
+
+Flow('seans','sean','window n2=128')
+Flow('ppq2s','ppq2','window n2=128')
+
+Flow('separs','seans ppq2s',
+     'seisigk dips=${SOURCES[1]} verb=y niter=200 eps=0.1')
+
+Plot('sean3','pad',grey(' '))
+
+Flow('mis','pad mask pq3',
+     '''
+     planemis2 mask=${SOURCES[1]} dip=${SOURCES[2]} order=2 verb=y |
+     bandpass fhi=70
+     ''')
+Flow('err','mis sean','add scale=1,-1 ${SOURCES[1]}')
+Plot('mis',grey('Interpolation Result'))
+Plot('err',grey('Interpolation Error'))
+#Result('sean2-int','mis err','SideBySideIso')
+
+#Plot('win','sean',
+#     'window min1=2.5 max1=3.1 max2=120 | ' + grey('Original'))
+Plot('win3','mis',
+     'window min1=2.5 max1=3.1 max2=120 | ' + grey('PWD'))
+#Result('sean2-close','win win2','SideBySideAniso')
+Plot('sdiff3','err',
+     'window min1=2.5 max1=3.1 max2=120 | ' + grey('RNA'))
+
+End()

@@ -1,0 +1,118 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+###########################################################################
+
+input = 'input.curve.segy' 
+Fetch(input,'ray',private)
+Flow('curve hcurve bcurve',input,
+     '''
+     segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+     ''',stdin=0)
+####################
+# TEST ONE
+####################
+Flow('curve2','curve','window min1=1.2 max1=2 | bandpass fhi=60')
+Plot('curve','curve2',
+     'grey clip=0.02 yreverse=y transp=y poly=y title=Input')
+Plot('jcurve','curve2',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position title=Input
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+     labelfat=2 font=2 titlefat=2
+     ''')
+
+# Nonstationary PEFs
+Flow('cpad cmask','curve2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('cdmask','cpad','math output=1.')
+Flow('capef','cpad cdmask',
+     '''
+     apef a=20,3 jump=4 rect1=20 rect2=3 niter=200 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('cacov','cpad capef cmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('cacov',
+     '''
+     grey clip=0.02 yreverse=y transp=y poly=y title="RNA Interpolation"
+     ''')
+Plot('jcacov','cacov',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position title="RNA Interpolation"
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+     labelfat=2 font=2 titlefat=2
+     ''')
+
+#Result('curve-comp','curve cscov cacov','OverUnderAniso')
+
+# Adaptive coefficients
+Flow('mcoe','capef','stack axis=2 norm=y | stack axis=1 norm=y')
+Plot('jmcoe','mcoe',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position title="Mean coefficient"
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7 
+     labelfat=2 font=2 titlefat=2 color=j gainpanel=e scalebar=y barwidth=0.2
+     ''')
+
+# Mask for random traces
+Flow('mcut','cacov',
+     '''
+     window n1=1 |
+     noise rep=y type=n seed=2010 |
+     math output="input^1" |
+     mask min=0.2
+     ''')
+
+# Zero out random traces
+Flow('zero','cacov mcut','headercut mask=${SOURCES[1]}')
+Result('zero',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title="Missing 70% traces"
+       screenratio=0.4 screenht=5.9 labelsz=5. titlesz=7 clip=0.02 
+       parallel2=n format2="%3.1f"
+       font=2 labelfat=2 titlefat=2 d2num=0.2 o2num=1.2 n2tic=5
+       ''')
+       
+# Yang's recovery
+Flow('mask','mcut','spray axis=1 n=401 d=0.002 | dd type=float')
+Plot('mask',
+       '''
+       grey title=Mask label2=Trace
+       label1="Time" unit1=s
+       labelfat=4 font=2 titlefat=4 color=j scalebar=y
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7
+       ''')
+
+# Adaptive PEFs
+Flow('apef mask2','zero mask',
+     '''
+     apef maskin=${SOURCES[1]} maskout=${TARGETS[1]} jump=1
+     a=4,2 niter=1000 rect1=50 rect2=10 verb=y
+     ''')
+Plot('mask2',
+     '''
+     grey title=Mask2 label2=Trace
+     label1="Time" unit1=s
+     labelfat=4 font=2 titlefat=4 color=j scalebar=y
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7
+     ''')
+
+Flow('amiss','zero apef mask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=1000 verb=y')
+Result('jamiss','amiss',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title="RNA Interpolation"
+       screenratio=0.4 screenht=5.9 labelsz=5. titlesz=7 clip=0.02 
+       parallel2=n format2="%3.1f"
+       font=2 labelfat=2 titlefat=2 d2num=0.2 o2num=1.2 n2tic=5
+       ''')
+Flow('diff','cacov amiss','add scale=1,-1 ${SOURCES[1]}')
+Plot('jdiff','diff',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position title="Difference"
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+     labelfat=2 font=2 titlefat=2
+     ''')
+End()
