@@ -206,7 +206,7 @@ void dray_central (float** traj, int length, float* o, float* d, int* n, int* m)
     
     for (it=0; it < length; it++) {
 	/* NOTE: debug */
-/*
+
 	tempz = (int)floorf((traj[it][0]-o[0])/d[0]);
 	tempy = (int)floorf((traj[it][1]-o[1])/d[1]);
 
@@ -215,10 +215,10 @@ void dray_central (float** traj, int length, float* o, float* d, int* n, int* m)
 		m[j*n[0]+i] = 1;
 	    }
 	}
-*/
+/*
 	tempz = (int)floorf((traj[it][0]-o[0])/d[0]+0.5);
 	tempy = (int)floorf((traj[it][1]-o[1])/d[1]+0.5);
-		
+*/	
 	m[tempy*n[0]+tempz] = 1;
     }
 }
