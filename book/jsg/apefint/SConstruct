@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+End(use='listings,amsmath,amsfonts',
+    hires='''
+    jaliasp dealias jamiss jcurve jcscov jcacov
+    zero jamiss sean sean2 samiss serr win win2
+    zero ramiss diff sean3 zero3 amiss3 diff3
+    ''')

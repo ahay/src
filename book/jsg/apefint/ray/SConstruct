@@ -1,0 +1,378 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+###########################################################################
+
+for dat in ('curve','linear','random','marm'):
+    input = 'input.%s.segy' % dat
+    Fetch(input,'ray',private)
+    Flow([dat,'./A'+dat,'./B'+dat],input,
+         '''
+         segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+         ''',stdin=0)
+####################
+# TEST ONE
+####################
+Flow('curve2','curve','window min1=1.2 max1=2 | bandpass fhi=60')
+Plot('curve','curve2',
+     'grey clip=0.02 yreverse=y transp=y poly=y title=Input')
+Result('jcurve','curve2',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=Input
+       screenratio=0.4 screenht=5.9 labelsz=5. titlesz=7 clip=0.02 
+       parallel2=n format2="%3.1f"
+       font=2 labelfat=2 titlefat=2 d2num=0.2 o2num=1.2 n2tic=5
+       ''')
+
+# nonstationary PWD
+Flow('left','curve2','window n2=15')
+Flow('right','curve2','window f2=15')
+
+Flow('ldip2','left',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n | window f3=1') 
+Flow('ldip1','left ldip2',
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=10 rect2=3')
+Flow('ldip','ldip1',
+      'transp | spline n1=60 o1=0 d1=0.25 | transp')
+
+Flow('rdip2','right',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n') 
+Flow('rdip1','right rdip2',
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=10 rect2=3')
+Flow('rdip','rdip1',
+      'transp | spline n1=180 o1=15 d1=0.25 | transp')
+
+Flow('left4 lones4','left','lpad jump=4 mask=${TARGETS[1]}')
+Flow('ldeal','left4 ldip lones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+
+Flow('right4 rones4','right','lpad jump=4 mask=${TARGETS[1]}')
+Flow('rdeal','right4 rdip rones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+
+Flow('deal','ldeal rdeal','cat axis=2 ${SOURCES[1]}')
+Plot('deal',
+     'grey clip=0.02 yreverse=y transp=y poly=y title=Interpolated')
+
+Plot('curve-deal','curve deal','OverUnderAniso')
+
+# Stationary PEFs
+Flow('cpef clag','curve2','lpef lag=${TARGETS[1]} a=50,5 jump=4')
+Flow('cscov','cpad cmask cpef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('cscov',
+     'grey clip=0.02 yreverse=y transp=y poly=y title="Stationary PEF"')
+Result('jcscov','cscov',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title="Stationary PEF"
+       screenratio=0.4 screenht=5.9 labelsz=5. titlesz=7 clip=0.02 
+       parallel2=n format2="%3.1f"
+       font=2 labelfat=2 titlefat=2 d2num=0.2 o2num=1.2 n2tic=5
+       ''')
+
+# Nonstationary PEFs
+Flow('cpad cmask','curve2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('cdmask','cpad','math output=1.')
+Flow('capef','cpad cdmask',
+     '''
+     apef a=20,3 jump=4 rect1=20 rect2=3 niter=200 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('cacov','cpad capef cmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('cacov',
+     '''
+     grey clip=0.02 yreverse=y transp=y poly=y title="Adaptive PEF"
+     ''')
+Result('jcacov','cacov',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title="Adaptive PEF"
+       screenratio=0.4 screenht=5.9 labelsz=5. titlesz=7 clip=0.02 
+       parallel2=n format2="%3.1f"
+       font=2 labelfat=2 titlefat=2 d2num=0.2 o2num=1.2 n2tic=5
+       ''')
+
+Plot('curve-comp','curve cscov cacov','OverUnderAniso')
+
+# Adaptive coefficients
+Flow('mcoe','capef','stack axis=2 norm=y | stack axis=1 norm=y')
+Plot('jmcoe','mcoe',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position title="Mean coefficient"
+     screenratio=0.4 screenht=6. labelsz=5. titlesz=7 
+     labelfat=2 font=2 titlefat=2 color=j gainpanel=e scalebar=y barwidth=0.2
+     ''')
+
+
+####################
+# TEST TWO
+####################
+Flow('linear2','linear','window min1=0.5 max1=2.7 | bandpass fhi=60')
+Plot('linear','linear2',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position 
+     title=Input
+     ''')
+Plot('jlinear','linear2',
+     '''
+     window n2=11 f2=23 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b clip=0.0451806 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     ''')
+
+# nonstationary PWD
+Flow('lindip','linear2','twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n')
+Flow('lindip2','lindip',
+     'transp | spline n1=240 o1=0 d1=0.25 | transp')
+
+Flow('lin4 linones4','linear2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('lindeal','lin4 lindip2 linones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+Plot('lindeal','grey yreverse=y transp=y poly=y title=Interpolated')
+
+Plot('linear-deal','linear lindeal','SideBySideAniso')
+
+# Stationary PEFs
+Flow('lpef llag','linear2','lpef lag=${TARGETS[1]} a=10,4 jump=4')
+Flow('lscov','lpad lmask lpef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('lscov',
+     'grey yreverse=y transp=y poly=y title="Stationary PEF"')
+
+# Nonstationary PEFs
+Flow('lpad lmask','linear2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('lapef','lpad','apef a=15,4 jump=2 rect1=20 rect2=5 niter=200 verb=y')
+Flow('lacov','lpad lapef lmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('lacov',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position
+     title="Adaptive PEF"
+     ''')
+
+Plot('jlacov','lacov',
+     '''
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title="Adaptive PEF" wheretitle=b clip=0.0225903 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     ''')
+
+Plot('linear-comp','linear lacov','SideBySideAniso')
+
+####################
+# TEST THREE
+####################
+Flow('random2','random','window')
+Plot('random','random2',
+     'grey yreverse=y transp=y poly=y title=Input')
+Plot('jrandom','random2',
+     '''
+     window n2=50 f2=9 n1=350 f1=44 | put d1=1 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b labelsz=5. titlesz=7 clip=1.981224
+     labelfat=2 font=2 titlefat=2 screenratio=1.
+     ''')
+
+# nonstationary PWD
+Flow('randip','random2','twodip2 order=3 nj1=4 nj2=4 eps=20 gauss=n')
+Flow('randip2','randip',
+     'transp | spline n1=240 o1=0 d1=0.25 | transp')
+
+Flow('ran4 ranones4','random2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('randeal','ran4 randip2 ranones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+Plot('randeal','grey yreverse=y transp=y poly=y title=Interpolated')
+
+Plot('random-deal','random randeal','OverUnderAniso')
+
+# Stationary PEFs
+Flow('rpef rlag','random2','lpef lag=${TARGETS[1]} a=10,4 jump=4')
+Flow('rscov','rpad rmask rpef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('rscov',
+     'grey yreverse=y transp=y poly=y title="Stationary PEF"')
+
+# Nonstationary PEFs (weak smooth)
+Flow('rpad rmask','random2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('rapef','rpad','apef a=5,2 jump=2 rect1=1 rect2=2 niter=200 verb=y')
+Flow('racov','rpad rapef rmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('racov',
+     'grey yreverse=y transp=y poly=y title="Adaptive PEF"')
+Plot('jracov','racov',
+     '''
+     window n2=50 f2=19 j2=2 n1=350 f1=44 | put d1=1 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title="Adaptive PEF (weak smooth)" labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2 wheretitle=b clip=1.981224
+     ''')#clip=0.990612
+
+# Nonstationary PEFs (Moderate smooth)
+Flow('rapef1','rpad','apef a=5,2 jump=2 rect1=5 rect2=3 niter=200 verb=y')
+Flow('racov1','rpad rapef1 rmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('jracov1','racov1',
+     '''
+     window n2=50 f2=19 j2=2 n1=350 f1=44 | put d1=1 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title="Adaptive PEF (Moderate smooth)" labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2 wheretitle=b clip=1.981224
+     ''')#clip=0.990612
+
+# Nonstationary PEFs (Normal smooth)
+Flow('rapef2','rpad','apef a=5,2 jump=2 rect1=20 rect2=5 niter=200 verb=y')
+Flow('racov2','rpad rapef2 rmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('jracov2','racov2',
+     '''
+     window n2=50 f2=19 j2=2 n1=350 f1=44 | put d1=1 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title="Adaptive PEF (Normal smooth)" labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1. wheretitle=b clip=1.981224 
+     ''')#clip=0.990612
+
+Plot('random-comp','random rscov racov','OverUnderAniso')
+
+####################
+# TEST FOUR
+####################
+Flow('marm2','marm','window | bandpass fhi=30')
+Plot('marm','marm2',
+     'wiggle yreverse=y transp=y poly=y title=Input')
+Result('jmarm','marm2',
+       '''
+       put d1=1 label1=Sample unit1= |
+       wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+       title="Input" labelsz=5. titlesz=7 wheretitle=b clip=800
+       parallel2=n d2num=50 o2num=0 n2tic=6 screenratio=0.7 screenht=8.
+       labelfat=2 titlefat=2 font=2
+       ''')
+
+# nonstationary PWD
+Flow('mleft','marm2','window n2=16')
+Flow('mright','marm2','window f2=16')
+
+Flow('mldip2','mleft',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n')
+Flow('mldip0','mldip2','window f3=1')
+Flow('mldip1','mleft mldip0',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n dip2=${SOURCES[1]}')
+Flow('mldip','mldip1',
+     'transp | spline n1=64 o1=0 d1=0.25 | transp')
+
+Flow('mrdip2','mright',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n')
+Flow('mrdip0','mrdip2','window n3=1')
+Flow('mrdip1','mright mrdip0',
+     'twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n dip1=${SOURCES[1]}')
+Flow('mrdip','mrdip1',
+     'transp | spline n1=96 o1=16 d1=0.25 | transp')
+
+Flow('mleft4 mlones4','mleft','lpad jump=4 mask=${TARGETS[1]}')
+Flow('mldeal','mleft4 mldip mlones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+
+Flow('mright4 mrones4','mright','lpad jump=4 mask=${TARGETS[1]}')
+Flow('mrdeal','mright4 mrdip mrones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+
+Flow('marmdip0','mldip1 mrdip1','cat axis=2 ${SOURCES[1]}')
+Flow('mdip1','marmdip0','window n3=1')
+Flow('mdip2','marmdip0','window f3=1')
+
+Flow('marmdip','marm2 mdip1 mdip2',
+     '''
+     twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n niter=10
+     dip1=${SOURCES[1]} dip2=${SOURCES[2]}
+     ''')
+Flow('marmdip4','marmdip','transp | spline n1=160 o1=0 d1=0.25 | transp')
+
+Flow('marm4 marmones4','marm2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('marmdeal','marm4 marmdip4 marmones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y prec=y')
+Plot('marmdeal','grey yreverse=y transp=y poly=y title=Interpolated')
+
+Plot('marm-deal','marm marmdeal','OverUnderAniso')
+
+# Stationary PEFs
+Flow('mpef mlag','marm2','lpef lag=${TARGETS[1]} a=10,4 jump=4')
+Flow('mscov','mpad mmask mpef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('mscov',
+     'grey yreverse=y transp=y poly=y title="Stationary PEF"')
+
+# Nonstationary PEFs
+Flow('mpad mmask','marm2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('mdmask','mpad','math output=1.')
+Flow('mapef','mpad mdmask',
+     '''
+     apef a=7,5 jump=2 rect1=40 rect2=30 niter=400 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('macov','mpad mapef mmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=400 verb=y')
+Plot('macov',
+     'put d2=1 | wiggle yreverse=y transp=y poly=y title="Adaptive PEF"')
+
+Plot('marm1','marm','Overlay')
+Plot('jmacov1','macov','Overlay')
+
+Flow('mpad1 mmask1','macov','lpad jump=2 mask=${TARGETS[1]}')
+Flow('dmask1','mpad1','math output=1.')
+Flow('mapef1','mpad1 dmask1',
+     '''
+     apef a=7,5 jump=2 rect1=40 rect2=30 niter=400 verb=y
+     maskin=${SOURCES[1]}     
+     ''')
+Flow('macov1','mpad1 mapef1 mmask1',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=400  verb=y')
+Plot('macov1',
+     'grey yreverse=y transp=y poly=y title="Adaptive PEF"')
+Result('jmacov','macov',
+       '''
+       put d1=1 label1=Sample unit1= |
+       wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+       title="RNA Interpolation" labelsz=5. titlesz=7 wheretitle=b clip=300
+       parallel2=n d2num=50 o2num=0 n2tic=6 screenratio=0.7 screenht=8.
+       labelfat=2 titlefat=2 font=2
+       ''')
+
+Plot('marm-comp','marm macov','OverUnderIso')
+
+# Zoom in
+Plot('zmarmdeal','marmdeal',
+     '''
+     window j2=2 | put d2=1 |
+     wiggle transp=y yreverse=y poly=y wanttitle=n
+     ''')
+
+Plot('marm','marm2',
+     '''
+     wiggle transp=y yreverse=y poly=y wanttitle=n wantaxis=n
+     screenht=7.5 screenwd=13.5
+     ''')
+
+Flow('marmcomp','marmdeal marmdip4',
+     'pwdsigk dips=${SOURCES[1]} verb=y eps=10')
+Plot('mcomp1','marmcomp','window f3=1 | grey title="First Component" ')
+Plot('mcomp2','marmcomp','window n3=1 | grey title="Second Component" ')
+
+Plot('marm1-comp','mcomp1 mcomp2','OverUnderAniso')
+
+Flow('deals','marmdeal','window n2=128')
+Flow('dip4s','marmdip4','window n2=128')
+
+Flow('comps','deals dip4s',
+     'seisigk dips=${SOURCES[1]} verb=y niter=200')
+
+Plot('comp1s','comps','window f3=1 | grey title="First Component" ')
+Plot('comp2s','comps','window n3=1 | grey title="Second Component" ')
+
+Plot('comps','comp1s comp2s','OverUnderAniso')
+
+###########################################################################
+End()

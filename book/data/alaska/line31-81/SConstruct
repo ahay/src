@@ -25,26 +25,25 @@ if oodraw:
     Result('prevstack','31_81_IM.JPG',
            oodraw + ' $SOURCE',stdin=0)
 
-# download and view the survey notes:
-
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
           WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 
 if pdfread:
+    # download and view the survey notes:
     Fetch('31_81_S.PDF',
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
-    Result('surveylog','31_81_S.PDF',
-           pdfread + ' $SOURCE',stdin=0)
+    Command('surveylog.view','31_81_S.PDF',
+            pdfread + ' $SOURCE')
     
     # download and view the observer notes:
     Fetch('31_81_O.PDF',
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
-    Result('observerlog','31_81_O.PDF',
-           pdfread + ' $SOURCE',stdin=0)
+    Command('observerlog.view','31_81_O.PDF',
+            pdfread + ' $SOURCE')
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}

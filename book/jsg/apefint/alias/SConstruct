@@ -1,0 +1,111 @@
+from rsf.proj import *
+
+Flow('aliasp',None,
+     'aliasp cycles=24 n2=30 | put label1=Sample label2=Position')
+Plot('aliasp','window n1=575 n2=24 | grey title=Input crowd=0.85')
+Result('jaliasp','aliasp',
+       '''
+       window n1=425 n2=24 f1=150 |
+       grey yreverse=y transp=y poly=y title=Input
+       screenratio=1.0 labelsz=5. titlesz=7 
+       parallel2=n font=2 labelfat=2 titlefat=2 d2num=50 o2num=150 n2tic=9
+       ''')
+
+Flow('dip2','aliasp',
+     'twodip2 order=3 nj1=4 nj2=4 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip1','aliasp dip2',
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=7 rect2=3')
+Flow('dip','dip1',
+     'transp | spline n1=120 o1=0 d1=0.25 | transp')
+
+Flow('aliasp4 ones4','aliasp','lpad jump=4 mask=${TARGETS[1]}')
+
+for prec in [0,1]:
+    dealias = 'dealias%d' % prec
+    
+    Flow(dealias,'aliasp4 dip ones4',
+         '''
+         planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y prec=%d
+         ''' % prec)
+    Plot(dealias,'window n1=575 n2=96 | grey title=Output crowd=0.85')
+
+    Plot('aliasp%d' % prec,['aliasp',dealias],'SideBySideAniso')
+
+Flow('dip3','aliasp',
+     'twodip2 order=12 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip4','dip3',
+     '''
+     window n3=1 |
+     transp | spline n1=120 o1=0 d1=0.25 | transp |
+     scale dscale=0.25
+     ''')
+
+Flow('dealias','aliasp4 dip4 ones4',
+     '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=12 verb=y prec=0
+     ''')
+Result('dealias',
+       '''
+       window n1=425 n2=96 f1=150 |
+       grey yreverse=y transp=y poly=y title="PWD"
+       screenratio=1.0 labelsz=5. titlesz=7 
+       parallel2=n font=2 labelfat=2 titlefat=2 d2num=50 o2num=150 n2tic=9
+       ''')
+#Result('aliasp','aliasp dealias','SideBySideAniso')
+
+# Stationary PEFs
+Flow('pef lag','aliasp','lpef lag=${TARGETS[1]} a=10,4 jump=4')
+Flow('nmiss','aliasp4 ones4 pef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('nmiss','window n1=575 n2=96 | grey title=Output crowd=0.85')
+
+# Nonstationary PEFs
+Flow('admask','aliasp4','math output=1.')
+Flow('apef maskout','aliasp4 admask',
+     '''
+     apef a=10,2 jump=4 rect1=50 rect2=2 niter=200 verb=y
+     maskin=${SOURCES[1]} maskout=${TARGETS[1]}
+     ''')
+Flow('amiss','aliasp4 apef ones4',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('amiss','window n1=575 n2=96 | grey title=Output crowd=0.85')
+Result('jamiss','amiss',
+       '''
+       window n1=425 n2=96 f1=150 |
+       grey yreverse=y transp=y poly=y title="RNA"
+       screenratio=1.0 labelsz=5. titlesz=7 
+       parallel2=n font=2 labelfat=2 titlefat=2 d2num=50 o2num=150 n2tic=9
+       ''')
+
+#Result('miss','nmiss amiss','SideBySideAniso')
+##########################
+## nx = 2;
+## ny = 5
+## n1 = 128;
+## n2 = 64;
+
+## shifts = []
+## for x in range(nx):
+##     for y in range(1,ny+1):
+##         shift = 's-%d-%d' % (x,y)
+##         Flow(shift,'bound',
+##              '''
+##              pad beg1=%d end2=%d | window n1=%d f2=%d
+##              ''' % (2*(ny+1-y),2*x,n1,2*x))
+##         shifts.append(shift)
+
+##     for z in range(ny):
+##         shift = 's-%d+%d' % (x,z)
+##         Flow(shift,'bound',
+##              'pad end1=%d end2=%d | window f1=%d f2=%d' % (2*z,2*x,2*z,2*x))
+##         shifts.append(shift)
+
+   
+## Flow('shift',shifts,
+##      'cat axis=3 ${SOURCES[1:%d]} | cut n3=6 | put o1=0' % len(shifts))
+
+## Flow('apef pre','shift bound',
+##      'lpf match=${SOURCES[1]} rect1=5 rect2=5 pred=${TARGETS[1]}')
+## Plot('pre',grey("Prediction"))
+
+End()
