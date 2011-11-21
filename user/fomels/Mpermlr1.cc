@@ -90,11 +90,6 @@ int main(int argc, char** argv)
 
     int nk = nkx*nkh;
 
-    oRSF middle;
-    middle.put("n1",npk);
-    middle.put("n2",npk);
-    middle.put("n3",nk);
-
     oRSF left("left");
     left.put("n1",nz);
     left.put("n2",npk);
@@ -116,7 +111,6 @@ int main(int argc, char** argv)
     for (int k=0; k < nkz; k++) 
 	nidx[k] = k;    
 
-    std::valarray<float> fmid(npk*npk);
     std::valarray<float> ldata(nz*npk);
     std::valarray<float> rdata(npk*nkz);  
     std::valarray<int>   nsize(2); 
@@ -130,18 +124,14 @@ int main(int argc, char** argv)
 
 	    int m2=mid.m();
 	    int n2=mid.n();
-	    double *dmid = mid.data();
-
-	    for (int j=0; j < n2; j++) {
-		for (int i=0; i < m2; i++) {
-		    fmid[i+j*npk] = dmid[i+j*m2];
-		}
-	    }
-	    middle << fmid;
 
 	    DblNumMat lmat(nz,m2);   
 	    iC ( sample(midx,lidx,lmat) );
-	    double *ldat = lmat.data();
+
+	    DblNumMat lmat2(nz,n2);
+	    iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
+
+	    double *ldat = lmat2.data();
 
 	    for (int k=0; k < nz*m2; k++) 
 		ldata[k] = ldat[k];
