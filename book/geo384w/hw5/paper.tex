@@ -1,18 +1,31 @@
-\author{Joseph Fourier} 
-%%%%%%%%%%%%%%%%%%%%%%%%%
+\author{Jean Baptiste Joseph Fourier} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Homework 5}
 
 \begin{abstract}
   This homework has only a computational part but it will require you
   to make some theoretical developments as well.  The theme of the
-  homework is one-way wavefield extrapolation. You will develop
-  efficient approximations for one-way wave extrapolators for a
+  homework is wavefield extrapolation. You will develop efficient
+  approximations for one-way and two-way wave extrapolators for a
   constant velocity and for a highly variable velocity.
 \end{abstract}
 
-\section{Computational part}
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
 
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw4 
+\end{verbatim}
+
+\section{Computational part}
 
 \begin{enumerate}
 
@@ -76,8 +89,16 @@
 
 \sideplot{phase}{width=\textwidth}{Phase of the extrapolation operator at 5 Hz frequency as a function of the wave propagation angle. Solid line: exact extrapolator. Dashed line: approximate extrapolator.}
 
-{\small
-  \lstinputlisting[frame=single]{hyper/SConstruct}}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small \lstinputlisting[frame=single]{hyper/SConstruct}}
+
+\item Next, we will approach...
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small \lstinputlisting[frame=single]{hyper2/SConstruct}}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small \lstinputlisting[frame=single]{hyper2/rtm.c}}
 
 \item The second example is the Sigsbee synthetic velocity model that
   we also encountered previously. The model is shown in
@@ -130,8 +151,8 @@
 
 \plot{phase2}{width=\textwidth}{Phase of the wavefield extrapolation operators for a depth slice at 15 kft and frequency of 5 Hz as a function of space $x$ and wavenumber $k$. Top: Exact mixed-domain extrapolator. Bottom: Split-step approximation.}
 
-{\small
-  \lstinputlisting[frame=single]{sigsbee/SConstruct}}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+{\small \lstinputlisting[frame=single]{sigsbee/SConstruct}}
 
 \end{enumerate}
 
