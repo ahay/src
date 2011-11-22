@@ -28,7 +28,7 @@ Flow('dip','refl','math output="x1/input" ')
 # Kirchoff modeling
 Flow('shot','refl dip',
      '''
-     kirmod nt=2001 ns=1 s0=1 ds=0.01 nh=1001 dh=0.01 h0=-5
+     kirmod nt=1501 ns=1 s0=1 ds=0.01 nh=801 dh=0.01 h0=-4
      twod=y vel=1 freq=10 dip=${SOURCES[1]} verb=y |
      costaper nw2=200
      ''')
@@ -53,13 +53,8 @@ dx2 = 2*pi*dx
 dz2 = 2*pi*dz
 a = 0.5*dz2/(dx2*dx2)
 
-Flow('evanescent','kw',
-     '''
-     real | math output="x1*x1-x2*x2" |
-     mask min=0 | dd type=float | rtoc
-     ''')
-Flow('exact','evanescent',
-     'math output="input*exp(I*sqrt(x1*x1-x2*x2)*%g)" ' % dz2)
+Flow('exact','kw',
+     'math output="exp(I*sqrt(x1*x1-x2*x2)*%g)" ' % dz2)
 
 Flow('approximate','kw',
      '''
@@ -104,5 +99,10 @@ Result('phase','angle-exact angle-approximate',
        graph title=Phase dash=0,1 
        label1="Angle From Vertical" unit1="\^o\_"
        ''')
+
+## TWO-WAY WAVE EXTRAPOLATION
+#############################
+
+
 
 End()
