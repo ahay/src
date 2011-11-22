@@ -13,7 +13,6 @@ Flow('model0','refl',
      smooth rect1=3
      ''')
 
-# Plot model
 Plot('model0',
      '''
      window min2=-1 max2=2 |
@@ -27,10 +26,9 @@ Plot('refl',
      ''') 
 Result('model0','model0 refl','Overlay')
 
-# Reflector dip
+# Kirchoff zero-offset modeling
 Flow('dip','refl','math output="x1/input" ')
 
-# Kirchoff zero-offset modeling
 Flow('data0','refl dip',
      '''
      kirmod nt=1501 dt=0.004 freq=10
@@ -51,7 +49,7 @@ Flow('image0 wave0','model0 %s data0' % exe[0],
      '''
      pad beg1=200 end1=200 | math output=0.5 |
      ./${SOURCES[1]} data=${SOURCES[2]} 
-     wave=${TARGETS[1]} jt=30 n0=200
+     wave=${TARGETS[1]} jt=20 n0=200
      ''')
 
 # Display wave propagation movie
