@@ -126,6 +126,18 @@ void cpxeiko_sten(sf_complex **dir /* output stencil */)
     upgrad_sten(upgreal,upgimag,dir);
 }
 
+void cpxeiko_wupg(bool flag       /* real=true / imag=false */,
+		  const float *in /* data */,
+		  float *wupg     /* w upwind */)
+/*< compute slowness of R/I but with upwind defined by I/R >*/
+{
+    if (flag) {
+	upgrad_wupg(upgreal,in,wupg);
+    } else {
+	upgrad_wupg(upgimag,in,wupg);
+    }
+}
+
 void cpxeiko_mat(bool sign, int type, int nm, int nd, float *m, float *d)
 /*< print out matrix >*/
 {

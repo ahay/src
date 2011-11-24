@@ -24,13 +24,14 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, symm, *tknown, recom, pvar, reg;
+    bool *known, velocity, verb, *tknown, recom, pvar, reg, term, wupg;
     int dim, i, n[SF_MAX_DIM], *m, *tm, it, nt, iter, niter, cgiter, istep, nstep;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
-    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, gama, ratio, tol, ***oper, ***mat1, ***mat2, *unit, eps, namda, *w0;
+    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, ***oper, ***mat1, ***mat2, *unit, *w0, *wir, *wri;
+    float gama, ratio, tol, eps, namda, alpha;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
-    char key[4], *prec, *bound;
+    char key[4], *prec, *bound, *symm;
     sf_file in, out, vel, mask, ref, wght, cray;
     sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
     
@@ -99,8 +100,14 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tol",&tol)) tol=1.e-8;
     /* thresholding for gradient scaling */
 
-    if (!sf_getbool("symm",&symm)) symm=true;
-    /* symmetric right-hand side */
+    if (NULL == (symm = sf_getstring("symm"))) symm="both";
+    /* right-hand side evaluation L_R*I or L_I*R (default both) */
+
+    if(!sf_getbool("wupg",&wupg)) wupg=true;
+    /* compute w for angle preconditioning */
+
+    if (!sf_getbool("term",&term)) term=false;
+    /* early termination if line-search failure */
 
     if (NULL == (prec = sf_getstring("prec"))) prec="angle";
     /* rhs preconditioning (default angle) */
@@ -116,6 +123,9 @@ int main(int argc, char* argv[])
     
     if (!sf_getfloat("namda",&namda)) namda=0.1;
     /* regularization parameter (Ticknov) */
+
+    if (!sf_getfloat("alpha",&alpha)) alpha=1.;
+    /* exponential scaling of preconditioning */
 
     if (!sf_getbool("pvar",&pvar)) pvar=true;
     /* allow preconditioning to change over iterations */
@@ -313,6 +323,7 @@ int main(int argc, char* argv[])
 	ti0[it] = cimagf(t0[it]);
     }
     
+    /* NOTE: w_exact */
     cpxeiko_ref(dim,n,d,ti0,fix);
     
     free(m);
@@ -366,6 +377,7 @@ int main(int argc, char* argv[])
     if (recom) {
 	tknown = sf_boolalloc(nt);
 
+	/* NOTE: w_gaussian */
 	cpxeiko_forw(false,ti,w);
 	
 	if (NULL != sf_getstring("cray")) {
@@ -412,9 +424,28 @@ int main(int argc, char* argv[])
     for (it=0; it < nt; it++) 
 	w[it] = wi[it];
     
+    /* NOTE: replace the central ray tube of fix with w Gaussian beam (2D only) */
+    for (i=0; i < n[1]; i++) {
+	for (it=1; it < n[0]; it++) {
+	    if (known[i*n[0]+it]) {
+		fix[i*n[0]+it] = w[i*n[0]+it];
+		tr0[i*n[0]+it] = tr[i*n[0]+it];
+		ti0[i*n[0]+it] = ti[i*n[0]+it];
+	    }
+	}
+    }
+
     /* right-hand side preconditioning */
     /* NOTE: for ray-traced beam the central ray may not be charaterized by w0[it]==0. 
        use eps != 0. and scale == 0. to avoid 0./0. = NAN issue. */
+    if (wupg) {
+	wir = sf_floatalloc(nt);
+	wri = sf_floatalloc(nt);
+    } else {
+	wir = NULL;
+	wri = NULL;
+    }
+
     switch (prec[0]) {
 	case 'n': /* none */
 
@@ -426,18 +457,33 @@ int main(int argc, char* argv[])
 
 	case 'a': /* angle */
 
+	    if (wupg) {
+		cpxeiko_wupg(false,tr,wir);
+		cpxeiko_wupg(true,ti,wri);
+	    }
+
 	    for (it=0; it < nt; it++) {
 		if (pvar) {
-		    /*
-		      if (wi[it] > 0.)
-		    */
-		    if (w0[it] > 0.)
-			wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
-		    else
-			wt[it] = 0.;
+		    if (wupg) {
+			/*
+			  if (wi[it] > 0.)
+			*/
+			if (w0[it] > 0.)
+			    wt[it] = scale[it]/(sqrtf(powf(wi[it],alpha)*wir[it])+eps);
+			else
+			    wt[it] = 0.;
+		    } else {
+			/*
+			  if (wi[it] > 0.)
+			*/
+			if (w0[it] > 0.)
+			    wt[it] = scale[it]/(sqrtf(powf(wi[it],alpha)*(s[it]+wi[it]))+eps);
+			else
+			    wt[it] = 0.;
+		    }
 		} else {
 		    if (w0[it] > 0.)
-			wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
+			wt[it] = scale[it]/(sqrtf(powf(w0[it],alpha)*(s[it]+w0[it]))+eps);
 		    else
 			wt[it] = 0.;
 		}
@@ -474,12 +520,20 @@ int main(int argc, char* argv[])
     cpxeiko_forw(true, ti,rhsi);
     
     for (it=0; it < nt; it++) {
-	if (symm) {
-	    rhs[it] = -rhsr[it]-rhsi[it];
-	} else {
-	    rhs[it] = -rhsi[it]-rhsi[it];
-	}
+	switch (symm[0]) {
+	    case 'b': /* both L_R*I and L_I*R */
+		rhs[it] = -rhsr[it]-rhsi[it];
+		break;
 
+	    case 'r': /* L_R*I */
+		rhs[it] = -rhsi[it]-rhsi[it];
+		break;
+
+	    case 'i': /* L_I*R */
+		rhs[it] = -rhsr[it]-rhsr[it];
+		break;
+	}
+	
 	cost[it] = wt[it]*rhs[it];
     }
     
@@ -651,18 +705,33 @@ int main(int argc, char* argv[])
 		    
 		case 'a': /* angle */
 		    
+		    if (wupg) {
+			cpxeiko_wupg(false,tr,wir);
+			cpxeiko_wupg(true,ti,wri);
+		    }
+		    
 		    for (it=0; it < nt; it++) {
 			if (pvar) {
-			    /*
-			      if (wi[it] > 0.)
-			    */
-			    if (w0[it] > 0.)
-				wt[it] = scale[it]/(sqrtf(wi[it]*(s[it]+wi[it]))+eps);
-			    else
-				wt[it] = 0.;
+			    if (wupg) {
+				/*
+				  if (wi[it] > 0.)
+				*/
+				if (w0[it] > 0.)
+				    wt[it] = scale[it]/(sqrtf(powf(wi[it],alpha)*wir[it])+eps);
+				else
+				    wt[it] = 0.;
+			    } else {
+				/*
+				  if (wi[it] > 0.)
+				*/
+				if (w0[it] > 0.)
+				    wt[it] = scale[it]/(sqrtf(powf(wi[it],alpha)*(s[it]+wi[it]))+eps);
+				else
+				    wt[it] = 0.;
+			    }
 			} else {
 			    if (w0[it] > 0.)
-				wt[it] = scale[it]/(sqrtf(w0[it]*(s[it]+w0[it]))+eps);
+				wt[it] = scale[it]/(sqrtf(powf(w0[it],alpha)*(s[it]+w0[it]))+eps);
 			    else
 				wt[it] = 0.;
 			}
@@ -697,12 +766,20 @@ int main(int argc, char* argv[])
 	    cpxeiko_forw(false,tr,rhsr);
 	    cpxeiko_forw(true, ti,rhsi);	    
 	    for (it=0; it < nt; it++) {
-		if (symm) {
-		    rhs[it] = -rhsr[it]-rhsi[it];
-		} else {
-		    rhs[it] = -rhsi[it]-rhsi[it];
+		switch (symm[0]) {
+		    case 'b': /* both L_R*I and L_I*R */
+			rhs[it] = -rhsr[it]-rhsi[it];
+			break;
+			
+		    case 'r': /* L_R*I */
+			rhs[it] = -rhsi[it]-rhsi[it];
+			break;
+			
+		    case 'i': /* L_I*R */
+			rhs[it] = -rhsr[it]-rhsr[it];
+			break;
 		}
-
+		
 		cost[it] = wt[it]*rhs[it];
 	    }
 	    
@@ -715,6 +792,13 @@ int main(int argc, char* argv[])
 	    /* break */
 	    if (rhsnorm < rhsnorm1) break;
 	}	
+
+	/* early termination if line-search failed */
+	if (term && (istep == nstep)) {
+	    sf_warning("Line-search failure. Output dimensions need to be fixed before read.");
+
+	    break;
+	}
 
 /* NOTE: the following lines supplies boundary condition but force 
    other w to be the same as previous iteration. */

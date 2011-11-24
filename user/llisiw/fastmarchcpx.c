@@ -56,10 +56,14 @@ void fastmarchcpx_init(int *n_in    /* length */,
     s[0] = 1; s[1] = n[0]; s[2] = n[0]*n[1];
 
     maxband = 0;
+    /*
     if (n[0] > 1) maxband += 2*n[1]*n[2];
     if (n[1] > 1) maxband += 2*n[0]*n[2];
     if (n[2] > 1) maxband += 2*n[0]*n[1];
-
+    */
+    /* NOTE: maxband above might be insufficient for cpxeikonal source wave-front */
+    maxband = n[0]*n[1]*n[2];
+    
     x = (float **) sf_alloc ((10*maxband+1),sizeof (float *));
     in = sf_intalloc(n[0]*n[1]*n[2]);
 
@@ -89,7 +93,7 @@ void fastmarchcpx(float* time /* time */,
 	 npoints -= neighbours(t,i)) {
 	/* Pick smallest value in the NarrowBand
 	   mark as good, decrease points_left */
-	
+
 	p = pqueue_extract();
 
 	if (p == NULL) {
@@ -134,7 +138,7 @@ int neighbors_mask(float* tref /* reference traveltime */,
 	    offsets[i] = -1;
 	}
     }
-
+    
     return npoints;
 }
 

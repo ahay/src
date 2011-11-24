@@ -307,3 +307,42 @@ void upgrad_sten(upgrad upg1,
 	}
     }
 }
+
+void upgrad_wupg(upgrad upg      /* upwind for grad */,
+		 const float *x /* time */,
+		 float *wupg     /* grad(time)*grad(time) */)
+/*< compute slowness of R/I but with upwind defined by I/R >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+    float num, x2;
+
+    for (it = 0; it < nt; it++) {
+	jt = upg->order[it];
+
+	x2 = x[jt];
+	up = upg->update[it];
+	num = 0.;
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		num += (x2-x[j])*(x2-x[j])*dd[i];
+	    } else {
+		/* NOTE: restore upwind from input if that of upg has only one dimension */
+		if ((jt-ss[i]) < 0) {
+		    num += (x2-x[jt+ss[i]])*(x2-x[jt+ss[i]])*dd[i];
+		} else if ((jt+ss[i]) >= nn[i]) {
+		    num += (x2-x[jt-ss[i]])*(x2-x[jt-ss[i]])*dd[i];
+		} else {
+		    if (x[jt+ss[i]] < x[jt-ss[i]])
+			num += (x2-x[jt+ss[i]])*(x2-x[jt+ss[i]])*dd[i];
+		    else
+			num += (x2-x[jt-ss[i]])*(x2-x[jt-ss[i]])*dd[i];
+		}
+	    }
+	}
+	
+	wupg[jt] = num;
+    }
+}
