@@ -133,7 +133,7 @@ int main(int argc, char** argv)
 
 	    double *ldat = lmat2.data();
 
-	    for (int k=0; k < nz*m2; k++) 
+	    for (int k=0; k < nz*n2; k++) 
 		ldata[k] = ldat[k];
 	    left << ldata;
 

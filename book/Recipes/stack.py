@@ -204,7 +204,12 @@ def diffimg(name,
     vlf=name+'-vlf'
     Flow(vlf,pwd,velcon)
 
-    Flow(vlf+'q',pwd,'mul $SOURCE |' + velcon + '| clip2 lower=0')
+    Flow(vlf+'q',pwd,
+         '''
+         halfint inv=y adj=y |
+         math output="input*input" |
+         halfint adj=y | %s | clip2 lower=0
+         ''' % velcon)
 
     if j3 > 1:
         focus = 'window j3=%d | ' % j3
@@ -224,7 +229,7 @@ def diffimg(name,
     Flow(sem,[vlf,vlf+'q'],
          '''
          mul $SOURCE |
-         divn den=${SOURCES[1]} rect1=%d rect3=%d
+         divn den=${SOURCES[1]} rect1=%d rect2=2 rect3=%d
          ''' % (rect1,rect2))
 
     pik=name+'-pik'
