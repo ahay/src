@@ -360,8 +360,8 @@ int main(int argc, char* argv[])
     sf_igrad2_init(n[0],n[1]);
     
     /* initialize fastmarchcpx */
-    /* NOTE: default accuracy 2nd order */
-    fastmarchcpx_init(n,o,d,2);
+    /* NOTE: default accuracy 1st order */
+    fastmarchcpx_init(n,o,d,1);
     
     /* initialize cpxeiko */
     cpxeiko_init(dim,n,nt,d);
