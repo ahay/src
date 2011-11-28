@@ -145,7 +145,7 @@ def cgrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=2 yll=2
+    xll=1.5 yll=1.5
     %s
     ''' % (
            par['lz'],par['uz'],
@@ -229,7 +229,7 @@ def dgrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=2 yll=2
+    xll=1.5 yll=1.5
     %s
     ''' % (
            par['xmin'],par['xmax'],
