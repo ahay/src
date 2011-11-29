@@ -55,7 +55,7 @@ void trianglen_topo (int *topo /* topography */,
 		     int seg   /* maximum number of segments */)
 /*< pre-process topography >*/
 {
-    int i, j, k, t, size, count;
+    int i, j, k, t, size;
     bool new;
 
     nn = sf_intalloc (dim);
@@ -84,7 +84,7 @@ void trianglen_topo (int *topo /* topography */,
 			new = false;
 		    }
 		    if (topo[k+t*s[i]]!=1) new = true;
-		    if (!new) il[i][nn[i]]++;
+		    if (!new) il[i][nn[i]-1]++;
 		}
 	    }
 	}

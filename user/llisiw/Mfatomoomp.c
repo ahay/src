@@ -25,6 +25,7 @@
 
 #include "upgradomp.h"
 #include "fatomoomp.h"
+#include "trianglen.h"
 
 #include "l1.h"
 #include "l1step.c"
@@ -32,7 +33,7 @@
 int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, verb;
-    int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order;
+    int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order, seg;
     int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv, **ray;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
@@ -158,6 +159,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=2;
     /* fast marching accuracy order */
     
+    if (!sf_getint("seg",&seg)) seg=3;
+    /* maximum number of segments of topography */
+
     if (!sf_getint("niter",&niter)) niter=1;
     /* number of slowness inversion iterations */
     
@@ -255,8 +259,14 @@ int main(int argc, char* argv[])
 	}
 
 	/* triangle smoothing operator */
-	sf_trianglen_init(dim,rect,n);
-	sf_repeat_init(nt,1,sf_trianglen_lop);
+	if (topo != NULL) {
+	    trianglen_init(dim,rect,n);
+	    trianglen_topo(k,seg);
+	    sf_repeat_init(nt,1,trianglen_lop);
+	} else {
+	    sf_trianglen_init(dim,rect,n);
+	    sf_repeat_init(nt,1,sf_trianglen_lop);
+	}
 
 	sf_conjgrad_init(nt,nt,nrhs,nrhs,eps,tol,verb,false);
 	p = sf_floatalloc(nt);
@@ -365,7 +375,7 @@ int main(int argc, char* argv[])
 		    
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
-			if (k == NULL || k[it] != 1)
+			if (k == NULL || k[it] == 1)
 			    temps[it] = (s[it]+step*ds[it])*(s[it]+step*ds[it])/s[it];
 		    }
 		    

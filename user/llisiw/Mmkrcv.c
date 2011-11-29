@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, plane[3], skip;
+    bool velocity, plane[3];
     int n[SF_MAX_DIM], nt, dim, *flag, order, i, j, k, is, ns, nrecv, *mask, *recv;
     int temp[2], offset[2], left[2], right[2], count;
     float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, *t, *reco;
@@ -123,22 +123,13 @@ int main(int argc, char* argv[])
     
     /* make topography mask */
     if (topo != NULL) {
-	for (k=0; k < n[2]; k++) {
-	    for (j=0; j < n[1]; j++) {
-
-		skip = true;
-		for (i=0; i < n[0]; i++) {
-
-		    if (s[k*n[1]*n[0]+j*n[0]+i] < air && skip) {
-			mask[k*n[1]*n[0]+j*n[0]+i] = 1;
-			skip = false;
-		    } else {
-			mask[k*n[1]*n[0]+j*n[0]+i] = 0;
-		    }
-		}
-	    }
+	for (i=0; i < nt; i++) {
+	    if (s[i] < air)
+		mask[i] = 1;
+	    else
+		mask[i] = 0;
 	}
-
+	
 	sf_intwrite(mask,nt,topo);
     }
     
