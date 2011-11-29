@@ -1,6 +1,20 @@
 import rsf.proj as rsf
 import rsf.suproj as su
 
+def cat_su_rsf_diff(out,sufile,rsffile):
+    rsf.Flow(out+"temp",   [sufile,rsffile],
+            '''
+	    segyread su=y endian=n tfile=t${TARGETS}.rsf
+            | add scale=-1 
+            | add ${SOURCES[1]}
+            ''')
+    rsf.Flow(out,[sufile,rsffile,out+"temp"],
+             '''
+             segyread su=y endian=n tfile=t${TARGETS}.rsf
+             | cat ${SOURCES[1]} ${SOURCES[2]} axis=2
+	     ''')
+
+
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
 tape=$SOURCE endian=%d |
@@ -18,39 +32,22 @@ for file in rawsegy  :
 # concatinate the input files
 su.Flow ('suline', map(lambda x: 'su'+x, rawsegy),
      'cat ${SOURCES}',stdin=0)
+
 rsf.Flow('rsfline' ,map(lambda x: 'rsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2')
 rsf.Flow('trsfline',map(lambda x: 'trsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
 
-#su.Result('sufirst','suline',
-#       'suwind count=3000 | suximage perc=90')
-#su.Result('suzoomfirst','suline',
-#          '''
-#	  suwind key=tracl min=1000 max=1250 tmin=0 tmax=3 | 
-#	  suximage perc=90
-#	  ''')
-#Flow('demoraw','rawline','window n2=3000')
-#rsf.Result('demoraw','grey pclip=80 title="Shot Gathers" label2=''')
-rsf.Flow('rsffirst','rsfline','window n2=3000')
-rsf.Plot('rsffirst',
-	   'grey pclip=80 title="rsf Shot Gathers" label2=''')
+rsf.Flow('rsflinewind','rsfline','window n2=3000')
 
-#now plot the su results with rsf
-rsf.Flow('rsfsufirst','suline.su',
-         '''
-	 segyread su=y endian=n tfile=trsfsufirst.rsf | window n2=3000
-	 ''')
-rsf.Plot('rsfsufirst',
-	   'grey pclip=80 title="su Shot Gathers" label2=''')
+su.Flow('sulinewind','suline','suwind count=3000')
 
+#Use a function to compute the difference and cat the su, rsf, diff data 
+cat_su_rsf_diff('rsf_minus_su','sulinewind.su','rsflinewind')
+rsf.Result('rsf_minus_su',
+           '''
+	   grey pclip=80 title="su rsf diff" label2="no processing"
+	   ''')
 
-rsf.Flow('diffirst','rsfsufirst rsffirst',
-         'add scale=-1 | add ${SOURCES[1]}')
-rsf.Plot('diffirst',
-	   'grey pclip=80 title="difference" label2=''')
-rsf.Result('combinefirst','rsfsufirst rsffirst diffirst','SideBySideAniso')
+# compare the function for spreading in Madagascar and su
 
-rsf.Flow('catfirst','rsfsufirst rsffirst diffirst',
-	 'cat ${SOURCES[1]} ${SOURCES[2]} axis=2')
-rsf.Result('catfirst','grey pclip=80 title="su rsf diff" label2=''')
 su.End()
 rsf.End()
