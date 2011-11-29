@@ -51,22 +51,41 @@ void trianglen_init (int ndim  /* number of dimensions */,
     tmp = sf_floatalloc (nd);
 }
 
-void trianglen_topo (int *topo /* topography */)
+void trianglen_topo (int *topo /* topography */,
+		     int seg   /* maximum number of segments */)
 /*< pre-process topography >*/
 {
-    int i, j, t;
+    int i, j, k, t, size, count;
+    bool new;
 
     nn = sf_intalloc (dim);
 
-    /* NOTE: allocate (max(n2*n3,n1*n3,n1*n2)*?,dim) */
-    i0 = sf_intalloc2 (dim,dim);
-    il = sf_intalloc2 (dim,dim);
+    size = 1;
+    for (i=0; i < dim; i++) {
+	size = (nd/n[i] > size)? (nd/n[i]): size;
+    }
+    
+    i0 = sf_intalloc2 (size*seg,dim);
+    il = sf_intalloc2 (size*seg,dim);
 
     for (i=0; i < dim; i++) {
+	nn[i] = 0;
+	
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
-		t = sf_first_index (i,j,dim,n,s);
-		/* code */
+		k = sf_first_index (i,j,dim,n,s);
+		
+		new = true;
+		for (t=0; t < n[i]; t++) {
+		    if (topo[k+t*s[i]]==1 && new) {
+			i0[i][nn[i]] = k+t*s[i];
+			il[i][nn[i]] = 1;
+			nn[i]++;
+			new = false;
+		    }
+		    if (topo[k+t*s[i]]!=1) new = true;
+		    if (!new) il[i][nn[i]]++;
+		}
 	    }
 	}
     }
