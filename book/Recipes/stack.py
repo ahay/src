@@ -54,9 +54,9 @@ def stack(name,
 
     def velgrey(title):
         return grey(title) + '''
-        color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
+        color=j scalebar=y mean=y barlabel=Velocity barunit="%s/s"
         barreverse=y
-        ''' % (v0+0.5*nv*dv,units)
+        ''' % units
 
     Flow(vel,scn,pick)   
     Result(vel,velgrey('RMS Velocity'))
@@ -229,7 +229,7 @@ def diffimg(name,
     Flow(sem,[vlf,vlf+'q'],
          '''
          mul $SOURCE |
-         divn den=${SOURCES[1]} rect1=%d rect2=2 rect3=%d
+         divn den=${SOURCES[1]} rect1=%d rect3=%d
          ''' % (rect1,rect2))
 
     pik=name+'-pik'

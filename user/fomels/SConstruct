@@ -19,7 +19,7 @@ timecont timefreq timeshift tomo trace2 trismooth2 tristack twodip2
 twofreq2 velcon velinv vofzperm warp1 warpadd warpscan zero ztrace
 '''
 
-ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2'
+ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
 pyprogs = 'fft rcat results zoom'
 pymods = 'dottest conjgrad'

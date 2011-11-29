@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
 {
     bool mig, cmplx, sub, stat;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ih, nh, nh2;
-    int im, i, j, m1, m2, it1, it2, its, ik, n2, nk, snap;
+    int im, i, j, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, dh;
-    float *curr, *prev, **img, **dat, **lft, **mid, **rht, **wave;
+    float *curr, *prev, **img, **dat, **lft, **rht, **wave;
     sf_complex *cwave, *cwavem;
-    sf_file data, image, left, middle, right, snaps;
+    sf_file data, image, left, right, snaps;
 
     sf_init(argc,argv);
 
@@ -130,26 +130,20 @@ int main(int argc, char* argv[])
     /* propagator matrices */
     left = sf_input("left");
     right = sf_input("right");
-    middle = sf_input("middle");
 
     if (!sf_histbool(left,"sub",&sub) && !sf_getbool("sub",&sub)) sub=true;
     /* if -1 is included in the matrix */
 
-    if (!sf_histint(middle,"n1",&m1)) sf_error("No n1= in middle");
-    if (!sf_histint(middle,"n2",&m2)) sf_error("No n2= in middle");
-
     if (!sf_histint(left,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
-    if (!sf_histint(left,"n2",&n2) || n2 != m1)  sf_error("Need n2=%d in left",m1);
+    if (!sf_histint(left,"n2",&m2))  sf_error("No n2= in left");
     
     if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
     if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
  
-    lft = sf_floatalloc2(nzx,m1);
-    mid = sf_floatalloc2(m1,m2);
+    lft = sf_floatalloc2(nzx,m2);
     rht = sf_floatalloc2(m2,nk);
 
-    sf_floatread(lft[0],nzx*m1,left);
-    sf_floatread(mid[0],m1*m2,middle);
+    sf_floatread(lft[0],nzx*m2,left);
     sf_floatread(rht[0],m2*nk,right);
 
     curr = sf_floatalloc(nzx2);
@@ -249,9 +243,7 @@ int main(int argc, char* argv[])
 		    prev[i] = old;
 
 		    for (im = 0; im < m2; im++) {
-			for (ik = 0; ik < m1; ik++) {
-			    c += lft[ik][i]*mid[im][ik]*wave[im][j];
-			}
+			c += lft[im][i]*wave[im][j];
 		    }
 		    
 		    curr[j] = c;

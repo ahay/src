@@ -156,7 +156,8 @@ int main(int argc, char** argv)
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
 	rdata[k] = rdat[k];
-    oRSF right("right");
+
+    oRSF right;
     right.put("n1",n2);
     right.put("n2",n);
     right << rdata;

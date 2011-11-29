@@ -179,17 +179,6 @@ int main(int argc, char** argv)
 
     int m2=mid.m();
     int n2=mid.n();
-    double *dmid = mid.data();
-
-    std::valarray<float> fmid(m2*n2);
-    for (int k=0; k < m2*n2; k++) {
-	fmid[k] = dmid[k];
-    }
-
-    oRSF middle;
-    middle.put("n1",m2);
-    middle.put("n2",n2);
-    middle << fmid;
 
     vector<int> midx(m), nidx(n);
     for (int k=0; k < m; k++) 
@@ -199,14 +188,19 @@ int main(int argc, char** argv)
 
     DblNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
-    double *ldat = lmat.data();
 
-    std::valarray<float> ldata(m*m2);
-    for (int k=0; k < m*m2; k++) 
+    DblNumMat lmat2(m,n2);
+    iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
+
+    double *ldat = lmat2.data();
+
+    std::valarray<float> ldata(m*n2);
+    for (int k=0; k < m*n2; k++) 
 	ldata[k] = ldat[k];
+
     oRSF left("left");
     left.put("n1",m);
-    left.put("n2",m2);
+    left.put("n2",n2);
     left.put("sub",sub);
     left << ldata;
 
@@ -217,7 +211,8 @@ int main(int argc, char** argv)
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
 	rdata[k] = rdat[k];
-    oRSF right("right");
+
+    oRSF right;
     right.put("n1",n2);
     right.put("n2",n);
     right << rdata;

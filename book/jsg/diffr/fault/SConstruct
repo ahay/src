@@ -6,7 +6,7 @@ Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
 
 stack.stack('bei',
             v0=1.4,
-            nv=48,
+            nv=51,
             dv=0.025,
             x0=7.705,
             dx=0.0335,
