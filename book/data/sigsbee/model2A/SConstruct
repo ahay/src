@@ -11,7 +11,7 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
     if(c=='migration_velocity'):
         v='vmig2A'
         o=3.055
-        d=.0143
+        d=.01143
         s=.0003048
         l='Migration\ Velocity'
         a='y'
