@@ -22,6 +22,7 @@ vzpermffd vz1
 vzpermffd3 permffd3
 permf
 nxtfftn
+orthowave
 '''
 
 mpi_progs = 'tti4rtm'
@@ -32,6 +33,8 @@ mpi_progs = 'tti4rtm'
 #permf
 
 #lfdc1_10
+ccprogs = 'ortholr'
+
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
@@ -73,6 +76,24 @@ for prog in mpi_mains:
     if root:
         env.Install(bindir,prog)
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
+                      'vecmatop']+lapack)
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -80,7 +101,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
