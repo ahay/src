@@ -22,8 +22,8 @@ vzpermffd vz1
 vzpermffd3 permffd3
 permf
 nxtfftn
-orthowave
 '''
+#orthowave
 
 mpi_progs = 'tti4rtm'
 
