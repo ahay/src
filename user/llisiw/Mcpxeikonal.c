@@ -24,16 +24,16 @@
 
 int main(int argc, char* argv[])
 {
-    bool *known, velocity, verb, *tknown, recom, pvar, reg, term, wupg;
-    int dim, i, n[SF_MAX_DIM], *m, *tm, it, nt, iter, niter, cgiter, istep, nstep;
+    bool *knownr, *knowni, velocity, verb, *tknown, recom, pvar, reg, term, wupg, smooth;
+    int dim, i, n[SF_MAX_DIM], *m, *tm, it, nt, iter, niter, cgiter, istep, nstep, rect[SF_MAX_DIM], irep, repeat;
     float d[SF_MAX_DIM], o[SF_MAX_DIM], *s, *tr, *ti, *tr0, *ti0, *gammat, *scale, *cost;
-    float *w, *wr, *wi, *dw, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, ***oper, ***mat1, ***mat2, *unit, *w0, *wir, *wri;
+    float *w, *wr, *wi, *dw, *dws, *rhs, *rhsr, *rhsi, *x0, *fix, *wt, ***oper, ***mat1, ***mat2, *unit, *w0, *wir, *wri;
     float gama, ratio, tol, eps, namda, alpha;
     sf_complex *t, *t0, **pdir;
     float rhsnorm, rhsnorm0, rhsnorm1, step;
-    char key[4], *prec, *bound, *symm;
-    sf_file in, out, vel, mask, ref, wght, cray;
-    sf_file witer, dwiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
+    char key[6], *prec, *bound, *symm;
+    sf_file in, out, vel, maskr, maski, ref, wght, cray;
+    sf_file witer, dwiter, dwsiter, rhsiter, upiter, x0iter, titer, wtiter, liniter, operiter, matriter, matiiter, gamiter, preciter;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -109,6 +109,12 @@ int main(int argc, char* argv[])
     if (!sf_getbool("term",&term)) term=false;
     /* early termination if line-search failure */
 
+    if (!sf_getbool("smooth",&smooth)) smooth=false;
+    /* smooth update after conjugate-gradient */
+
+    if (!sf_getint("repeat",&repeat)) repeat=1;
+    /* number of smoothings */
+
     if (NULL == (prec = sf_getstring("prec"))) prec="angle";
     /* rhs preconditioning (default angle) */
 
@@ -151,6 +157,16 @@ int main(int argc, char* argv[])
 	sf_putint(dwiter,"n4",niter);
     } else {
 	dwiter = NULL;
+    }
+
+    /* output dws at each iteration */
+    if (NULL != sf_getstring("dwsiter")) {
+	dwsiter = sf_output("dwsiter");
+	sf_settype(dwsiter,SF_FLOAT);
+	sf_putint(dwsiter,"n3",n[2]);
+	sf_putint(dwsiter,"n4",niter);
+    } else {
+	dwsiter = NULL;
     }
 
     /* output rhs at each iteration */
@@ -290,25 +306,43 @@ int main(int argc, char* argv[])
     
     /* read boundary condition */
     m = sf_intalloc(nt);
-    known = sf_boolalloc(nt);
+    knownr = sf_boolalloc(nt);
+    knowni = sf_boolalloc(nt);
 
-    if (NULL != sf_getstring("mask")) {
-	mask = sf_input("mask");
-	sf_intread(m,nt,mask);
-	sf_fileclose(mask);
+    if (NULL != sf_getstring("maskr")) {
+	maskr = sf_input("maskr");
+	sf_intread(m,nt,maskr);
+	sf_fileclose(maskr);
 	
 	for (it=0; it < nt; it++) {
 	    if (m[it] != 0)
-		known[it] = true;
+		knownr[it] = true;
 	    else
-		known[it] = false;
+		knownr[it] = false;
 	}
     } else {
 	for (it=0; it < nt; it++) {
-	    known[it] = false;
+	    knownr[it] = false;
 	}
     }
     
+    if (NULL != sf_getstring("maski")) {
+	maski = sf_input("maski");
+	sf_intread(m,nt,maski);
+	sf_fileclose(maski);
+	
+	for (it=0; it < nt; it++) {
+	    if (m[it] != 0)
+		knowni[it] = true;
+	    else
+		knowni[it] = false;
+	}
+    } else {
+	for (it=0; it < nt; it++) {
+	    knowni[it] = false;
+	}
+    }
+
     t0  = sf_complexalloc(nt);
     tr0 = sf_floatalloc(nt);
     ti0 = sf_floatalloc(nt);
@@ -354,11 +388,20 @@ int main(int argc, char* argv[])
     wi   = sf_floatalloc(nt);
     x0   = sf_floatalloc(nt);
     dw   = sf_floatalloc(nt);
+    dws  = sf_floatalloc(nt);
     rhs  = sf_floatalloc(nt);
     
     /* initialize 2D gradient operator */
     sf_igrad2_init(n[0],n[1]);
     
+    /* initialize triangular smoother */
+    for (i=0; i < dim; i++) {
+	sprintf(key,"rect%d",i+1);
+	if (!sf_getint(key,rect+i)) rect[i]=1;
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/
+    }
+    sf_trianglen_init(dim,rect,n);
+
     /* initialize fastmarchcpx */
     /* NOTE: default accuracy 1st order */
     fastmarchcpx_init(n,o,d,1);
@@ -427,7 +470,7 @@ int main(int argc, char* argv[])
     /* NOTE: replace the central ray tube of fix with w Gaussian beam (2D only) */
     for (i=0; i < n[1]; i++) {
 	for (it=1; it < n[0]; it++) {
-	    if (known[i*n[0]+it]) {
+	    if (knownr[i*n[0]+it]) {
 		fix[i*n[0]+it] = w[i*n[0]+it];
 		tr0[i*n[0]+it] = tr[i*n[0]+it];
 		ti0[i*n[0]+it] = ti[i*n[0]+it];
@@ -609,14 +652,31 @@ int main(int argc, char* argv[])
 
 	/* solve dw */
 	if (reg)
-	    sf_solver_reg(cpxeiko_operator,sf_cgstep,sf_igrad2_lop,2*nt,nt,nt,dw,rhs,cgiter,namda,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
+	    sf_solver_reg(cpxeiko_operator,sf_cgstep,sf_igrad2_lop,2*nt,nt,nt,dw,rhs,cgiter,namda,"known",knowni,"x0",x0,"wt",wt,"verb",verb,"end");
 	else
-	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",known,"x0",x0,"wt",wt,"verb",verb,"end");
+	    sf_solver(cpxeiko_operator,sf_cgstep,nt,nt,dw,rhs,cgiter,"known",knownr,"x0",x0,"wt",wt,"verb",verb,"end");
 	
 	sf_cgstep_close();
 	
 	if (NULL != dwiter) sf_floatwrite(dw,nt,dwiter);
 	
+	/* NOTE: smooth dw before line-search */
+/*
+	if (smooth) {
+	    for (irep=0; irep < repeat; irep++) {
+		sf_trianglen_lop(false,false,nt,nt,dw,dws);
+
+		for (it=0; it < nt; it++) {
+		    if (knownr[it])
+			dw[it] = x0[it];
+		    else
+			dw[it] = dws[it];
+		}
+	    }
+	}
+
+	if (NULL != dwsiter) sf_floatwrite(dw,nt,dwsiter);
+*/
 	gama = 1.;
 	
         /* trying to avoid the points where w is very close to zero */
@@ -642,7 +702,7 @@ int main(int argc, char* argv[])
 
 	    /* update real and imaginary slowness */
 	    for (it=0; it < nt; it++) {
-		if (known[it]) {
+		if (knowni[it]) {
 		    wi[it] = w[it]+dw[it];
 		} else {
 		    switch (bound[0]) {
@@ -673,10 +733,11 @@ int main(int argc, char* argv[])
 		    /*
 		    if (wi[it] <= 0.) wi[it] = FLT_EPSILON;
 		    */
-		    if (wi[it] <= 0.) wi[it] = w[it];
 		    /*
-		    if (wi[it] <= 0.) wi[it] = 0.;
+		    if (wi[it] <= 0.) wi[it] = w[it];
 		    */
+		    if (wi[it] <= 0.) wi[it] = 0.;
+
 		    /* NOTE: what to do with overshoot (upper bound) */
 		    /*
 		      
@@ -686,11 +747,34 @@ int main(int argc, char* argv[])
 		wr[it] = s[it]+wi[it];
 	    }
 	    
+	    if (smooth) {
+		for (irep=0; irep < repeat; irep++) {
+		    sf_trianglen_lop(false,false,nt,nt,wi,dws);
+		    for (it=0; it < nt; it++) {
+			if (knowni[it])
+			    wi[it] = w[it]+dw[it];
+			else
+			    wi[it] = dws[it];
+		    }
+		    
+		    sf_trianglen_lop(false,false,nt,nt,wr,dws);
+		    for (it=0; it < nt; it++) {
+			if (knowni[it])
+			    wr[it] = s[it]+wi[it];
+			else
+			    wr[it] = dws[it];
+		    }
+		}
+	    }
+
 	    /* forward fast-marching for stencil time */
 
-	    fastmarchcpx(tr,tr0,known,wr);
-	    fastmarchcpx(ti,ti0,known,wi);
-	    
+	    fastmarchcpx(tr,tr0,knownr,wr);
+	    /* NOTE: only supply I boundary condition on central ray
+	    fastmarchcpx(ti,ti0,knowni,wi);
+	    */
+	    fastmarchcpx(ti,ti0,knowni,wi);
+
 	    /* right-hand side preconditioning */
 	    /* NOTE: for ray-traced beam the central ray may not be charaterized by w0[it]==0. 
 	       use eps != 0. and scale == 0. to avoid 0./0. = NAN issue. */

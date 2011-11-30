@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
 	sf_intread(k,nt,topo);
 	sf_fileclose(topo);
     } else {
+	topo = NULL;
 	k = NULL;
     }
     

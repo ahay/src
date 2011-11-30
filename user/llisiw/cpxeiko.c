@@ -22,6 +22,7 @@
 
 static upgrad upgreal, upgimag;
 static float *temp1, *temp2, *temp;
+static float *wt;
 
 void cpxeiko_init(int dim,
 		  int *n,
@@ -172,4 +173,31 @@ void cpxeiko_close()
     free(temp1);
     free(temp2);
     free(temp);
+}
+
+void cpxeiko_smooth_init(int *n, float *prec)
+/*< initialize smoothing operator >*/
+{
+    sf_igrad2_init(n[0],n[1]);
+    wt = prec;
+}
+
+void cpxeiko_smooth(bool adj, bool add, int np, int nr, float* p, float* r)
+/*< smoothing operator for regularization >*/
+{
+    int it;
+
+    if (adj) {
+	sf_igrad2_lop(false,add,np,nr,temp,r);
+
+	for (it=0; it < np; it++) {
+	    p[it] = wt[it]*temp[it];
+	}
+    } else {
+	for (it=0; it < np; it++) {
+	    temp[it] = wt[it]*p[it];
+	}
+
+	sf_igrad2_lop(true,add,np,nr,temp,r);
+    }
 }
