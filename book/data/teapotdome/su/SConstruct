@@ -3,7 +3,7 @@ import rsf.proj
 
 #rsf.proj.Fetch('Nshots.su','nankai')
 
-Flow(['line', 'line.bin',  'line.asc'],'npr3_field.sgy',
+Flow(['line', 'line.bin',  'line.asc'],'../../teapotdata/npr3_field.sgy',
      '''
      segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
         tape=$SOURCE endian=%d conv=1
@@ -35,7 +35,7 @@ Flow('list2.su','line',
      stdout=0)
 
 file='checkstack'
-Flow([file, file+'.bin', file+'.asc'],'filt_mig.sgy',
+Flow([file, file+'.bin', file+'.asc'],'../../teapotdata/filt_mig.sgy',
      '''
      segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
        tape=$SOURCE endian=%d conv=1
