@@ -82,6 +82,7 @@ void trianglen_topo (int *topo /* topography */,
 			il[i][nn[i]] = 1;
 			nn[i]++;
 			new = false;
+			continue;
 		    }
 		    if (topo[k+t*s[i]]!=1) new = true;
 		    if (!new) il[i][nn[i]-1]++;
