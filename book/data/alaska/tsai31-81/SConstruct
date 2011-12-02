@@ -1,7 +1,5 @@
 from rsf.proj import *
 
-# Compare m8r with su
-
 # Fetch data
 rawsegy=['L23535','L23536','L23537']
 for name in rawsegy:
@@ -17,13 +15,17 @@ for name in rawsegy:
 Flow('rawline',rawsegy,'cat ${SOURCES[1:3]} axis=2')
 Flow('trawline',map(lambda x: 't'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
 
+Flow('linepow','rawline','tpow tpow=2')
+Flow('line','linepow','agc')
+
 # Show raw data
-Flow('demoraw','rawline','window n2=3000')
+Flow('demoraw','line','window n2=3000')
 Result('demoraw','grey pclip=80 title="Shot Gathers" label2=''')
-Flow('gathers','rawline','window n2=250 f2=1000 n1=1500')
+Flow('gathers','line','window n2=250 f2=1000 n1=1500')
 Result('gathers','grey pclip=80 title="Shot Gathers"')
-Flow('gather','rawline','window n2=96 f2=2325')
+Flow('gather','line','window n2=96 f2=2325')
 Result('gather','grey pclip=80 title="Shot Gathers"')
+
 
 par = {
     'nx':96,   'dx':110.0,       'ox':-5225.0,       # offset (feet)
@@ -81,7 +83,7 @@ Flow('shotline',['rawline','shotmask'],
      put o2=-5225 d2=110 label2=Offset unit2=ft
          o3=0 d3=440 label3=Shot unit3=ft
      ''')
-#Result('shotline','grey pclip=80 title="Gathers"')
+Result('shotline','grey pclip=80 title="Gathers"')
 
 # Shot gathers -> CMP gathers
 Flow('cmp','shotline','shot2cmp half=n')
@@ -111,5 +113,18 @@ Flow('nmo',['cmp','vel'],'nmo velocity=${SOURCES[1]} half=n')
 # Brute stacking
 Flow('stack','nmo','stack')
 Result('stack','agc rect1=250 | grey title="Brute Stack" font=2 titlefat=4 label2=''')
+
+Flow('tcmps','nmo','transp memsize=1000 plane=23')
+
+Flow('pstm','tcmps vel',
+     '''
+     mig2 vel=${SOURCES[1]} apt=0.01 antialias=1
+     ''')
+
+Result('pstm',
+       '''
+       grey title="Prestack Kirchhoff Time Migration"
+       labelfat=4 font=2 titlefat=4 pclip=85
+       ''')
 
 End()
