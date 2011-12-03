@@ -52,7 +52,7 @@ XBOXVELAN=10 # kls 1350 puts it on second screen
 # these parameters work nicely to put plots on
 # my 2nd screen. I turn them on by changing 
 # the next line to:    if [ 1 ] 
-if [ 1 -eq 1 ]  
+if [ 1 -eq 0 ]  
 then
     echo "******** in if ***"
     HBOX=1000    # originally 450
