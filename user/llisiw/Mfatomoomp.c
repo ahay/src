@@ -403,7 +403,7 @@ int main(int argc, char* argv[])
 		    for (is=0; is < nshot; is++) {
 			for (it=0; it < nrecv; it++) {
 			    if (it < rhslist[is][1])
-				modl[is][it] = rhs[rhslist[is][0]+it];
+				modl[is][it] = t0[is][it]-rhs[rhslist[is][0]+it];
 			    else
 				modl[is][it] = 0.;
 			}
