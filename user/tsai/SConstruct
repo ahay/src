@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
+nlle
 '''
-# nll
 
 try:  # distributed version
     Import('env root pkgdir bindir')
