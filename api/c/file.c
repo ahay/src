@@ -314,10 +314,12 @@ Should do output after the first call to sf_input. >*/
 	nfile=1;
     } 
 
-    if (NULL != infiles[0] && 
-	NULL != (format = sf_histstring(infiles[0],"data_format"))) {
-	sf_setformat(file,format);
-	free (format);
+    if (NULL != infiles[0]) { 
+	if (NULL == infiles[0]->pars) sf_error("The input file was closed prematurely.");
+	if (NULL != (format = sf_histstring(infiles[0],"data_format"))) {
+	    sf_setformat(file,format);
+	    free (format);
+	}
     } else {
 	sf_setformat(file,"native_float");
     }
