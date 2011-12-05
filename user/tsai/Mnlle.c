@@ -164,9 +164,9 @@ int main(int argc, char* argv[])
 /*pa2 numerator*/
 	    pa2m2 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
 /*pa1m2 numerator*/
-	    pa1m2 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+	    pa1m2 = (r2s2p*r1sd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
 /*pa2m1 numerator*/
-	    pa2m1 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+
 
 	    ap = (rpd-2.*rpr*a)/(r2 + eps);
 	    num =  a*(rpd-rpr*a)+ap*(rd-r2*a);     
