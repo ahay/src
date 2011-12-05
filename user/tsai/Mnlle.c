@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 	    denpm1 = denpm2 = (r1s2*r2s2-r1sr2s2)*(r1s2*r2s2-r1sr2s2);
 
 /*pA1 numerator*/
-
+	    
 
 /*pA2 numberator*/
 
