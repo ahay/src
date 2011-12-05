@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     float f0, df, f, f2, m, m0, m2, m3, *data, *r, *rp, m1f0, m1f, m1f2, m1f3, m2f0, m2f, m2f2, m2f3;
     float rd, r2, rpd, rp2, rpr, ap, num, den, a, e, dm, eps, di, d2, a1, a2, *r1s, r1s2, *r2s, r2s2;
     float r1sd, r2sd, r1spd, r2spd, r1sp2, r1spr1s, r2sp2, r2spr2s, e1, e2, *r1sp, *r2sp, r1sr2s, r1sr2s2;
-    float denpm1, denpm2;
+    float denpm1, denpm2, r1spr2s, r1sr2sp, r1s2p, r2s2p, pa1m1, pa2m2, pa1m2, pa2m1;
     bool verb;
     sf_file in, out, ma;
 
@@ -126,6 +126,8 @@ int main(int argc, char* argv[])
 		/*added*/
 		r1s[ia] = e1*f2/m1f2;
 		r2s[ia] = e2*f2/m2f2;
+		r1sp[ia] = 2.*e1*f2*(f2-m1f2)/(m1f3*m1f2);
+		r2sp[ia] = 2.*e2*f2*(f2-m2f2)/(m2f3*m2f2);
 		/*removed later*/
 		rd += r[ia]*data[ia];
 		r2 += r[ia]*r[ia];
@@ -138,7 +140,15 @@ int main(int argc, char* argv[])
 		r2sd += r2s[ia]*data[ia];
 		r2s2 += r2s[ia]*r2s[ia];
 		r1sr2s += r1s[ia]*r2s[ia];
-		
+		r1spd += r1sp[ia]*data[ia];
+		r2spd += r2sp[ia]*data[ia];
+		r1sp2 += r1sp[ia]*r1sp[ia];
+		r2sp2 += r2sp[ia]*r2sp[ia];
+		r1spr2s += r1sp[ia]*r2s[ia];
+		r1sr2sp += r1s[ia]*r2sp[ia];
+		r1s2p += 2*r1s[ia]*r1sp[ia];
+		r1spr2s += r1sp[ia]*r2s[ia];
+		r2s2p += 2*r2s[ia]*r2sp[ia];
 	    }
             r1sr2s2 = r1sr2s*r1sr2s;  
 /*removed later*/
@@ -146,16 +156,17 @@ int main(int argc, char* argv[])
 /*added*/
 	    a1 = (r1sd*r2s2-r1sr2s*r2sd)/(r1s2*r2s2-r1sr2s2);
 	    a2 = (r2sd*r1s2-r1sr2s*r1sd)/(r1s2*r2s2-r1sr2s2);
-
-/*pA over pm*/
-
+/*pa over pm*/
 	    denpm1 = denpm2 = (r1s2*r2s2-r1sr2s2)*(r1s2*r2s2-r1sr2s2);
 
-/*pA1 numerator*/
-	    
-
-/*pA2 numberator*/
-
+/*pa1 numerator*/
+	    pa1m1 = (r2s2*r1spd-r2sd*r1spr2s)*(r1s2*r2s2-r1sr2s2)-(r1sd*r2s2-r2sd*r1sr2s)*(r1s2p*r2s2-2*r1sr2s*r1spr2s);
+/*pa2 numerator*/
+	    pa2m2 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+/*pa1m2 numerator*/
+	    pa1m2 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+/*pa2m1 numerator*/
+	    pa2m1 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
 
 	    ap = (rpd-2.*rpr*a)/(r2 + eps);
 	    num =  a*(rpd-rpr*a)+ap*(rd-r2*a);     
