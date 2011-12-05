@@ -1,3 +1,5 @@
+/*under construction*/
+
 /* multiple terms ricker wavelet estimation. */
 /*
   Copyright (C) 2011 University of Texas at Austin
