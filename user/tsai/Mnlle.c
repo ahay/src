@@ -154,19 +154,19 @@ int main(int argc, char* argv[])
 /*removed later*/
 	    a = rd/(r2 + eps);
 /*added*/
-	    a1 = (r1sd*r2s2-r1sr2s*r2sd)/(r1s2*r2s2-r1sr2s2);
-	    a2 = (r2sd*r1s2-r1sr2s*r1sd)/(r1s2*r2s2-r1sr2s2);
+	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
+	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 /*pa over pm*/
-	    denpm1 = denpm2 = (r1s2*r2s2-r1sr2s2)*(r1s2*r2s2-r1sr2s2);
+	    denpm1 = denpm2 = ((r1s2+eps)*(r2s2+eps)-r1sr2s2)*((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 
 /*pa1 numerator*/
-	    pa1m1 = (r2s2*r1spd-r2sd*r1spr2s)*(r1s2*r2s2-r1sr2s2)-(r1sd*r2s2-r2sd*r1sr2s)*(r1s2p*r2s2-2*r1sr2s*r1spr2s);
+	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2*r1sr2s*r1spr2s);
 /*pa2 numerator*/
-	    pa2m2 = (r1s2*r2spd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+	    pa2m2 = ((r1s2+eps)*r2spd-r1sd*r1sr2sp)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r2sd*(r1s2+eps)-r1sd*r1sr2s)*(r2s2p*(r1s2+eps)-2*r1sr2s*r1sr2sp);
 /*pa1m2 numerator*/
-	    pa1m2 = (r2s2p*r1sd-r1sd*r1sr2sp)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r2s2p*r1s2-2*r1sr2s*r1sr2sp);
+	    pa1m2 = (r2sp2*r1sd-r2sd*r1sr2sp)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r1s2+eps)-r2sd*r1sr2s)*((r1s2+eps)*r2s2p-2*r1sr2s*r1sr2sp);
 /*pa2m1 numerator*/
-
+	    pa2m1 = (r1s2p*r2sd-r1spd*r1spr2s)*(r1s2*r2s2-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r1s2p*r2s2-2*r1sr2s*r1spr2s);
 
 	    ap = (rpd-2.*rpr*a)/(r2 + eps);
 	    num =  a*(rpd-rpr*a)+ap*(rd-r2*a);     
