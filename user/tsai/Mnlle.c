@@ -216,8 +216,12 @@ int main(int argc, char* argv[])
 	m2f = fabsf(dm2f);
 	m2f2 = m2f*m2f;
 
-	sf_floatwrite(&m2,1,ma);
-	sf_floatwrite(&a,1,ma);
+	sf_floatwrite(&m1f2,1,ma);
+	sf_floatwrite(&a1,1,ma);
+
+	sf_floatwrite(&m2f2,1,ma);
+	sf_floatwrite(&a2,1,ma);
+
         
 	for (ia = 0; ia < na; ia++) {
 	    f = f0 + ia*df;
