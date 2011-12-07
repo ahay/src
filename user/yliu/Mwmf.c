@@ -71,7 +71,7 @@ int main (int argc, char* argv[])
     
     for(j=0; j < n2; j++) {
 	if ((verb && 0==j%100) || (n2-1)==j) 
-	    sf_warning("slice %d of %d",j+1,n2);
+	    sf_warning("slice %d of %d;",j+1,n2);
 	sf_floatread(trace,n1,in);
 	if (NULL != weights) {
 	    sf_floatread(wei,n1,weights);
@@ -113,6 +113,7 @@ int main (int argc, char* argv[])
 	
 	sf_floatwrite(trace,n1,out);
     }
+    if (verb) sf_warning(".");
 
     exit (0);
 }
