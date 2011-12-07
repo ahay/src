@@ -35,9 +35,17 @@ def param(par):
     if(not par.has_key('nt')):       par['nt']=1
     if(not par.has_key('dt')):       par['dt']=1.
 
+    if(not par.has_key('ox')):       par['ox']=0.
+    if(not par.has_key('nx')):       par['nx']=1
+    if(not par.has_key('dx')):       par['dx']=1.
+
     if(not par.has_key('oy')):       par['oy']=0.
     if(not par.has_key('ny')):       par['ny']=1
     if(not par.has_key('dy')):       par['dy']=1.
+
+    if(not par.has_key('oz')):       par['oz']=0.
+    if(not par.has_key('nz')):       par['nz']=1
+    if(not par.has_key('dz')):       par['dz']=1.
 
     if(not par.has_key('tmin')):     par['tmin']=par['ot']
     if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
@@ -48,7 +56,16 @@ def param(par):
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-    if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    dx=par['xmax']-par['xmin'];
+    dy=par['ymax']-par['ymin'];
+    dz=par['zmax']-par['zmin'];
+    dt=par['tmax']-par['tmin'];
+
+    if(not par.has_key('ratio')):
+        if(dx==0.0):
+            par['ratio']=1.0
+        else:
+            par['ratio']=1.0*(dz)/(dx)
 
     if(not par.has_key('height')):
         if(par['ratio']>=1):
@@ -56,18 +73,18 @@ def param(par):
         else:
             par['height']=13.625*par['ratio']
 
-    if(not par.has_key('dratio')): par['dratio']=1.0*(par['tmax']-par['tmin'])/(par['xmax']-par['xmin'])
+    if(not par.has_key('dratio')):
+        if(dx==0.0):
+            par['dratio']=1.0
+        else:
+            par['dratio']=1.0*(dt)/(dx)
+
     if(not par.has_key('dheight')):
         if(par['dratio']>1):
             par['dheight']=10
         else:
             par['dheight']=13*par['dratio']
-#    par['dheight']=10
-            
-    dx=par['xmax']-par['xmin'];
-    dy=par['ymax']-par['ymin'];
-    dz=par['zmax']-par['zmin'];
-    dt=par['tmax']-par['tmin'];
+
     if ((dx+dy)   == 0.0)  : yxratio=1.0
     else                   : yxratio=1.0*dx/(dx+dy)
     if ((dz+dy)   == 0.0)  : yzratio=1.0
@@ -79,13 +96,21 @@ def param(par):
     par['pointz']=yzratio;
     par['pointx']=yxratio;
 
-    par['ratio3d']=(dz+dy)/(dx+dy);
+    if ((dx+dy) == 0.0):
+        par['ratio3d']=1
+    else:
+        par['ratio3d']=(dz+dy)/(dx+dy)
+    
     if(par['ratio3d']>1):
         par['height3d']=10
     else:
         par['height3d']=14*par['ratio3d']
 
-    par['tratio3d']=(2*dt+dy)/(dx+dy);
+    if ((dx+dy) == 0.0):
+        par['tratio3d']=1
+    else:
+        par['tratio3d']=(2*dt+dy)/(dx+dy)
+        
     if(par['tratio3d']>1):
         par['theight3d']=10
     else:
