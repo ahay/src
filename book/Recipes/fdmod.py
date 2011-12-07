@@ -6,46 +6,29 @@ import pplot
 
 # default parameters
 def param(par):
-    if(not par.has_key('lt')):       par['lt']='t'
-    if(not par.has_key('lz')):       par['lz']='z'
-    if(not par.has_key('lx')):       par['lx']='x'
-
-    if(not par.has_key('ut')):       par['ut']='s'
-    if(not par.has_key('uz')):       par['uz']='m'
-    if(not par.has_key('ux')):       par['ux']='m'
-
-    if(not par.has_key('nb')):       par['nb']=0
-    if(not par.has_key('nbz')):      par['nbz']=100
-    if(not par.has_key('nbx')):      par['nbx']=100
-    if(not par.has_key('tz')):       par['tz']=0.0035
-    if(not par.has_key('tx')):       par['tx']=0.0035
-
-    if(not par.has_key('nbell')):    par['nbell']=5
-
-    if(not par.has_key('snap')):     par['snap']='y'
-    if(not par.has_key('jsnap')):    par['jsnap']=100
-    if(not par.has_key('jdata')):    par['jdata']=1
-    if(not par.has_key('dabc')):     par['dabc']='y'
-
-    if(not par.has_key('ompchunk')): par['ompchunk']=1
-    if(not par.has_key('ompnth')):   par['ompnth']=0
-    if(not par.has_key('free')):     par['free']='n'
-   
     if(not par.has_key('ot')):       par['ot']=0.
     if(not par.has_key('nt')):       par['nt']=1
     if(not par.has_key('dt')):       par['dt']=1.
-
+    if(not par.has_key('lt')):       par['lt']='t'
+    if(not par.has_key('ut')):       par['ut']='s'
+            
     if(not par.has_key('ox')):       par['ox']=0.
     if(not par.has_key('nx')):       par['nx']=1
     if(not par.has_key('dx')):       par['dx']=1.
-
+    if(not par.has_key('lx')):       par['lx']='x'
+    if(not par.has_key('ux')):       par['ux']='km'
+    
     if(not par.has_key('oy')):       par['oy']=0.
     if(not par.has_key('ny')):       par['ny']=1
     if(not par.has_key('dy')):       par['dy']=1.
-
+    if(not par.has_key('ly')):       par['ly']='y'    
+    if(not par.has_key('uy')):       par['uy']='km'
+     
     if(not par.has_key('oz')):       par['oz']=0.
     if(not par.has_key('nz')):       par['nz']=1
     if(not par.has_key('dz')):       par['dz']=1.
+    if(not par.has_key('lz')):       par['lz']='z'
+    if(not par.has_key('uz')):       par['uz']='km'
 
     if(not par.has_key('tmin')):     par['tmin']=par['ot']
     if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
@@ -61,6 +44,23 @@ def param(par):
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
 
+    if(not par.has_key('nbx')):      par['nbx']=0
+    if(not par.has_key('nby')):      par['nby']=0
+    if(not par.has_key('nbz')):      par['nbz']=0
+    if(not par.has_key('tx')):       par['tx']=0.0035
+    if(not par.has_key('ty')):       par['ty']=0.0035
+    if(not par.has_key('tz')):       par['tz']=0.0035
+
+    if(not par.has_key('nb')):       par['nb']=0
+    if(not par.has_key('nbell')):    par['nbell']=5
+    if(not par.has_key('snap')):     par['snap']='y'
+    if(not par.has_key('jsnap')):    par['jsnap']=100
+    if(not par.has_key('jdata')):    par['jdata']=1
+    if(not par.has_key('dabc')):     par['dabc']='y'
+    if(not par.has_key('ompchunk')): par['ompchunk']=1
+    if(not par.has_key('ompnth')):   par['ompnth']=0
+    if(not par.has_key('free')):     par['free']='n'
+   
     if(not par.has_key('ratio')):
         if(dx==0.0):
             par['ratio']=1.0
@@ -85,18 +85,18 @@ def param(par):
         else:
             par['dheight']=13*par['dratio']
 
-    if ((dx+dy)   == 0.0)  : yxratio=1.0
-    else                   : yxratio=1.0*dx/(dx+dy)
-    if ((dz+dy)   == 0.0)  : yzratio=1.0
-    else                   : yzratio=1.0*dz/(dz+dy)
-    if ((2*dt+dy) == 0.0)  : ytratio=1.0
-    else                   : ytratio=2*dt/(2*dt+dy);
+    if((dx+dy)   == 0.0)  : yxratio=1.0
+    else                  : yxratio=1.0*dx/(dx+dy)
+    if((dz+dy)   == 0.0)  : yzratio=1.0
+    else                  : yzratio=1.0*dz/(dz+dy)
+    if((2*dt+dy) == 0.0)  : ytratio=1.0
+    else                  : ytratio=2*dt/(2*dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
     par['pointx']=yxratio;
 
-    if ((dx+dy) == 0.0):
+    if((dx+dy) == 0.0):
         par['ratio3d']=1
     else:
         par['ratio3d']=(dz+dy)/(dx+dy)
@@ -106,7 +106,7 @@ def param(par):
     else:
         par['height3d']=14*par['ratio3d']
 
-    if ((dx+dy) == 0.0):
+    if((dx+dy) == 0.0):
         par['tratio3d']=1
     else:
         par['tratio3d']=(2*dt+dy)/(dx+dy)
@@ -117,8 +117,7 @@ def param(par):
         par['theight3d']=11*par['tratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
-    # parallel2=n
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     
     if(not par.has_key('nqz')): par['nqz']=par['nz']
     if(not par.has_key('oqz')): par['oqz']=par['oz']
@@ -128,9 +127,10 @@ def param(par):
     if(not par.has_key('oqx')): par['oqx']=par['ox']
     if(not par.has_key('dqx')): par['dqx']=par['dx']
 
-    par['xratio']=2
-    par['tratio']=2
-    par['aratio']=2
+#    par['xratio']=2
+#    par['yratio']=2
+#    par['tratio']=2
+#    par['aratio']=2
 
     par['labelrot'] =' parallel2=n '
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
