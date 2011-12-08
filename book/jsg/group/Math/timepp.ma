@@ -71,6 +71,6 @@ ParametricPlot[{Sqrt[1/AngP[Cos[a], Sin[a]]-1],
                       Sqrt[1 - AngP[Cos[a], Sin[a]]],1/(2 (1+q))]] - 
 	   1./Sqrt[GruP[Cos[a],Sin[a]]])]} /. MGP /. GS, {a, 0, 1.33}];	
 Show[{%,%%,%%%},Frame->True,FrameLabel->{"Half-offset (km)",
-"Absolute Error (ms)",None,None},
+"Absolute Error (ms)",None,None},AspectRatio->1/GoldenRatio,
 PlotLabel->"Traveltime Approximation Error", PlotRange->All];
 Display["junk_ma.eps",%,"EPS"];

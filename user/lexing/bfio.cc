@@ -48,15 +48,17 @@ int deserialize(Entry& e, istream& is, const vector<int>& mask)
   return 0;
 }
 
+#define CHEB_POINTS 13 /* number of chebyshev points */
+
 //---------------------------------------
 int BFIO::setup(iRSF &par, iRSF &inp) // map<string,string>& opts)
 {
     vector<int> all(1,1);
 
-    par.get("EPSx1",_EPSx1,7); // number of chebyshev points
-    par.get("EPSx2",_EPSx2,7);
-    par.get("EPSk1",_EPSk1,7);
-    par.get("EPSk2",_EPSk2,7);
+    par.get("EPSx1",_EPSx1,CHEB_POINTS); 
+    par.get("EPSx2",_EPSx2,CHEB_POINTS);
+    par.get("EPSk1",_EPSk1,CHEB_POINTS);
+    par.get("EPSk2",_EPSk2,CHEB_POINTS);
     par.get("fi",_fi);
 
     ifstream fin("bfio.bin");

@@ -78,5 +78,6 @@ ParametricPlot[{ArcCos[Sqrt[AngP[Cos[a], Sin[a]]]] 180/Pi, 100
 		PlotStyle->AbsoluteDashing[{2}]];
 Show[{%,%%},PlotRange->All,
 Frame->True,FrameLabel->{"Group Angle (degrees)",
-"Relative Error (%)",None,None},PlotLabel->"Group Velocity Error"];
+"Relative Error (%)",None,None},PlotLabel->"Group Velocity Error",
+AspectRatio->1/GoldenRatio,PlotRange->All];
 Display["junk_ma.eps",%,"EPS"];

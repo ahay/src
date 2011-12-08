@@ -22,5 +22,6 @@ ParametricPlot[{a 180/Pi, 100
           Abs[Sqrt[Fow[Cos[a], Sin[a],1/2]]/Sqrt[PhaP[Cos[a], Sin[a]]] - 
               1]} /. MPP /. GS, {a, 0, Pi/2}];
 Show[{%,%%,%%%},Frame->True,FrameLabel->{"Phase Angle (degrees)",
-"Relative Error (%)",None,None},PlotLabel->"Phase Velocity Error"];
+"Relative Error (%)",None,None},PlotLabel->"Phase Velocity Error",
+AspectRatio->1/GoldenRatio,PlotRange->All];
 Display["junk_ma.eps",%,"EPS"];

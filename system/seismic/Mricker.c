@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		e = exp(-f2/m2);
               
 		r[ia] = e*f2/m2;
-		rp[ia] = 2.*e*f2*(f2-m2)/(m3*m2);
+		rp[ia] = 2.*e*f2*(f2-m2)/(m3*m2); /* dr/dm */
 		
 		rd += r[ia]*data[ia];
 		r2 += r[ia]*r[ia];
@@ -96,13 +96,14 @@ int main(int argc, char* argv[])
 	    }
               
 	    a = rd/(r2 + eps);
-	    ap = (rpd-2.*rpr*a)/(r2 + eps);
+	    ap = (rpd-2.*rpr*a)/(r2 + eps); /* da/dm */
+
 	    num =  a*(rpd-rpr*a)+ap*(rd-r2*a);
-	    den = a*a*rp2 + 2.*a*ap*rpr + ap*ap*(r2+eps) + eps;
+	    den = a*a*rp2 + 2.*a*ap*rpr + ap*ap*r2 + eps;
         
 	    dm = num/den;
         
-	    r2 = d2 - 2.*rd*a + r2*a*a;
+	    r2 = d2 - 2.*rd*a + r2*a*a; /* ||d - a*r||^2 */ 
 	    rp2 = dm*dm;
 
 	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
