@@ -160,9 +160,9 @@ int main(int argc, char* argv[])
             m2f += dm2f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
 	}     
-	m1f = fabsf(dm1f);
+	m1f = fabsf(m1f);
 	m1f2 = m1f*m1f;
-	m2f = fabsf(dm2f);
+	m2f = fabsf(m2f);
 	m2f2 = m2f*m2f;
 
 	sf_floatwrite(&m1f2,1,ma);
