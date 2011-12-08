@@ -196,11 +196,8 @@ int main(int argc, char* argv[])
 	    rp2 = dm*dm;
 
 /*added*/
-
-
 	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
 					      iter,r2,rp2,m,a);
-
 	    m += dm;
 	    m1f += dm1f;
             m2f += dm2f;
@@ -226,11 +223,11 @@ int main(int argc, char* argv[])
 	for (ia = 0; ia < na; ia++) {
 	    f = f0 + ia*df;
 	    f2 = f*f;
-	    /*    data[ia] = a*exp(-f2/m2)*f2/m2;*/
+	    /* data[ia] = a*exp(-f2/m2)*f2/m2;*/
 	    data[ia] = a1*exp(-f2/m1f2)*f2/m1f2+a2*exp(-f2/m2f2)*f2/m2f2;
 	}
         
-	if (verb) sf_warning("m=%g a=%g",m,a*m*sqrtf(SF_PI)*0.5);
+	if (verb) sf_warning("m1f=%g m2f=%g a1=%g a2=%g",m1f,m2f,a1*m1f*sqrtf(SF_PI)*0.5,a2*m2f*sqrtf(SF_PI)*0.5);
 	if (verb) sf_warning ("%d of %d, %d iterations", i2+1, n2, iter);
         
 	sf_floatwrite (data,na,out);
