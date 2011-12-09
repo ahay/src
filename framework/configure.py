@@ -515,7 +515,10 @@ def ppm(context):
     context.Message("checking for ppm ... ")
 
     oldpath = context.env.get('CPPPATH',[])
-    ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
+    if plat['OS'] == 'darwin':
+	ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
+    else:
+    	ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
     if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
         context.env['CPPPATH'] = oldpath + [ppmpath]
     else:
