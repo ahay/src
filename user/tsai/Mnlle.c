@@ -154,6 +154,9 @@ int main(int argc, char* argv[])
 
 	    dm2f = numm2/denm2;
 /*added*/
+/*	    r2 = d2 - 2.*rd*a + r2*a*a;*/ /* ||d - a*r||^2 */ 
+/*	    rp2 = dm*dm;*/
+
 	    if (verb && 5000 > n2) sf_warning("iter=%d r1s2=%g r2s2=%g r1sp2=%g r2sp2=%g m1f=%g m2f=%g a1=%g a2=%g",
 					      iter,r1s2,r2s2,r1sp2,r2sp2,m1f,m2f,a1,a2);
 	    m1f += dm1f;
