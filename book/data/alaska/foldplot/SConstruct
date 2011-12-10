@@ -1,78 +1,35 @@
 from rsf.proj import *
 
+# this fold plot assumes you created allshots.su using the su scons
+# file in ../line31-81.  This will build trace headers.
+
 # Program compilation
 #####################
 
 exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
 
-# Constant velocity test
-########################
-
-# Source wavelet
 segyread = '''
-segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-tape=$SOURCE endian=%d |
-segyclean
-''' % (1-su.little_endian())
+             segyread su=y endian=n tfile=${TARGETS[1]}
+           '''
 
-rawsegy=['L23535','L23536','L23537']
-for file in rawsegy  :
-    Flow(['rsf'+file,'t'+'rsf'+file,'rsf'+file+'.bin','rsf'+file+'.asc'],
-         '../line31-81/'+file+'.SGY',
-         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
-
-Flow('rsfline' ,map(lambda x: 'rsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2')
-Flow('trsfline',map(lambda x: 'trsf'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
+Flow(['rsfallshots','trsfallshots'],
+      '../line31-81/allshots.su',
+      segyread)
 
 
-Flow('foldplot','trsfline %s' % exe[0],
+Flow('foldplot','trsfallshots %s' % exe[0],
     '''
-      ./${SOURCES[1]} offmin=-5200 0 offmax=cat ${SOURCES[1:3]} axis=2') 
+      dd type=float |
+      ./${SOURCES[1]} 
+          o1=-5200 n1=96 d1=110 label1=offset
+          o2=101 n2=636 d2=1 label2=cdp
+          o3=0 n3=1 d3=10000 label3=iline
+          
+    ''')
 
-
-
-
-
-
-
-
-
-
-Flow('wavelet',None,
+Result('foldplot','foldplot.rsf',
      '''
-     spike nsp=1 n1=1000 d1=0.001 k1=201 |
-     ricker1 frequency=10
+     grey  title=foldplot
      ''')
-
-# Source location
-Flow('source',None,
-     '''
-     spike n1=201 n2=301 d1=0.01 d2=0.01
-     label1=x1 unit1=km label2=x2 unit2=km
-     k1=101 k2=151     
-     ''')
-
-# Velocity model
-Flow('v1','source','math output=1')
-Flow('v2','source','math output=1.5')
-
-# Modeling
-Flow('wave','source %s wavelet v1 v2' % exe[0],
-     '''
-     ./${SOURCES[1]} wav=${SOURCES[2]}
-     vel1=${SOURCES[3]} vel2=${SOURCES[4]} 
-     ''')
-
-Plot('wave',
-     '''
-     window j3=5 f3=200 |
-     grey gainpanel=all title=Wave
-     ''',view=1)
-
-Result('wave',
-       '''
-       window n3=1 min3=0.9 |
-       grey title=Wave screenht=8 screenwd=12
-       ''')
 
 End()
