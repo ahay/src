@@ -127,10 +127,10 @@ def param(par):
     if(not par.has_key('oqx')): par['oqx']=par['ox']
     if(not par.has_key('dqx')): par['dqx']=par['dx']
 
-#    par['xratio']=2
-#    par['yratio']=2
-#    par['tratio']=2
-#    par['aratio']=2
+    par['xratio']=2
+    par['yratio']=2
+    par['tratio']=2
+    par['aratio']=2
 
     par['labelrot'] =' parallel2=n '
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
