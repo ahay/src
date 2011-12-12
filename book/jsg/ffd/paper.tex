@@ -231,7 +231,11 @@ and $\hat{k}_1$ and $\hat{k}_2$ stand for the wavenumbers evaluated in a rotated
  \end{array}
 \end{equation}
 
-where $\theta$ is the tilt angle measured with respect to vertical and $\phi$ is the angle between the projection of the symmetry axis in the horizontal plane and the original X-coordinate. The symmetry axis has the direction of $\left\{-\sin\theta\sin\phi,-\sin\theta\cos\phi,\cos\theta\right\}$. \\
+where $\theta$ is the tilt angle measured with respect to vertical and
+$\phi$ is the angle between the projection of the symmetry axis in the
+horizontal plane and the original X-coordinate. The symmetry axis has
+the direction of
+$\left\{-\sin\theta\sin\phi,-\sin\theta\cos\phi,\cos\theta\right\}$.
 
 Using these definitions, 
 we develop a finite-difference approximation analogous to equation~\ref{eq:approximate} for FFD in TTI media. The details of the derivation are given in the appendix.
@@ -253,7 +257,7 @@ For the 2D TTI case, the corresponding FFD algorithm is as following:
 where $i$ is the grid index of $x_i$ direction;
 \item $p(\mathbf{x},t+\Delta t) \leftarrow q(\mathbf{x},t+\Delta t) + 2p(\mathbf{x},t) - p(\mathbf{x}, t-\Delta t)$.
 \end{enumerate}
-Here, $q(\mathbf{x},t)$ and $\hat{q}(\mathbf{k},t)$ are temporary functions.\\
+Here, $q(\mathbf{x},t)$ and $\hat{q}(\mathbf{k},t)$ are temporary functions.
 
 
 
@@ -262,25 +266,31 @@ Here, $q(\mathbf{x},t)$ and $\hat{q}(\mathbf{k},t)$ are temporary functions.\\
 %\subsection{Isotropic Cases}
 
 \inputdir{ffd}
-Our first example is a comparison of four methods: the 4th-order finite differences, pseudo-spectral method, velocity interpolation, and the FFD method 
-in a velocity model with smooth variation, formulated as 
+Our first example is a comparison of four methods: the 4th-order
+finite differences, pseudo-spectral method, velocity interpolation,
+and the FFD method in a velocity model with smooth variation,
+formulated as
 $$v(x,z)\,=\,550+1.5\times10^{-4}(x-800)^2+10^{-4}(z-500)^2;$$
 $$0\le x\le2560,\;0\le z\le2560.$$
 The velocity is between 550 m/s and 1439 m/s.
-A Ricker-wavelet source with maximum frequency 70 Hz is located at the center of the model. For all the numerical simulations based on this model, we use the same grid size: $\Delta x\,=\,5$ m and $\Delta t\,=\,2$ ms.\\
+A Ricker-wavelet source with maximum frequency 70 Hz is located at the center of the model. For all the numerical simulations based on this model, we use the same grid size: $\Delta x\,=\,5$ m and $\Delta t\,=\,2$ ms.
 
-Figure~\ref{fig:wavfd} shows an obvious numerical dispersion from the snapshot of the acoustic wavefield computed by the 4th-order finite difference method. 
-Figure~\ref{fig:wavsp} shows a slight dispersion from the snapshot computed by pseudo-spectral method \cite[]{reshef}. 
-Figure~\ref{fig:wavpspi} shows the corresponding snapshot of the velocity-interpolation method \cite[]{etgen,crawley}, calculated using two reference velocities. 
-It is practically free of dispersion thanks to spectral compensation.
-Figure~\ref{fig:wavffd} shows a snapshot of the proposed FFD method. 
-It is almost exactly the same as Figure~\ref{fig:wavpspi}; 
-however, only one reference velocity is used instead of two.
-As comparison between Figure~\ref{fig:wavffd} and Figure~\ref{fig:wavpspi} implies, 
-the FFD method has practically the same accuracy as the velocity interpolation method 
-while having only one reference velocity and therefore  
-replacing the cost of one additional FFT with the cost of a low-order finite-difference operator. 
-\\
+Figure~\ref{fig:wavfd} shows an obvious numerical dispersion from the
+snapshot of the acoustic wavefield computed by the 4th-order finite
+difference method.  Figure~\ref{fig:wavsp} shows a slight dispersion
+from the snapshot computed by pseudo-spectral method \cite[]{reshef}.
+Figure~\ref{fig:wavpspi} shows the corresponding snapshot of the
+velocity-interpolation method \cite[]{etgen,crawley}, calculated using
+two reference velocities.  It is practically free of dispersion thanks
+to spectral compensation.  Figure~\ref{fig:wavffd} shows a snapshot of
+the proposed FFD method.  It is almost exactly the same as
+Figure~\ref{fig:wavpspi}; however, only one reference velocity is used
+instead of two.  As comparison between Figure~\ref{fig:wavffd} and
+Figure~\ref{fig:wavpspi} implies, the FFD method has practically the
+same accuracy as the velocity interpolation method while having only
+one reference velocity and therefore replacing the cost of one
+additional FFT with the cost of a low-order finite-difference
+operator.
 
 \inputdir{ffd}
 
@@ -342,7 +352,10 @@ The method can be used in reverse-time migration to enhance its accuracy and sta
 
 \section{Acknowledgement}
 
-We thank BP for releasing benchmark synthetic models, Bjorn Enquist, Paul Fowler and Lexing Ying for useful discussions, and John Etgen, Stig Hestholm, Erik Saenger and two anonymous reviewers for helpful reviews. 
+We thank BP for releasing benchmark synthetic models, Bjorn Enquist,
+Paul Fowler and Lexing Ying for useful discussions, and John Etgen,
+Stig Hestholm, Erik Saenger and two anonymous reviewers for helpful
+reviews.
 
 This publication is authorized by the Director, Bureau of Economic
 Geology, The University of Texas at Austin.
@@ -356,15 +369,26 @@ To develop a 25-point finite-difference scheme analogous to equation~\ref{eq:app
 \displaystyle & a + 2 \sum^{3}_{n=1}{(b_n\cos(k_n\Delta x_n)+d_n\cos(2k_n\Delta x_n))} \nonumber \\
 \displaystyle & + 2 \sum^{3}_{n=1}{c_n [\cos(k_i\Delta x_i+k_j\Delta x_j) + \cos(k_i\Delta x_i-k_j\Delta x_j)]} \nonumber \;,\nonumber 
 \end{eqnarray} 
-where $i,j=1,2,3;\,i\neq j;\,i,j\neq n$.\\
+where $i,j=1,2,3;\,i\neq j;\,i,j\neq n$.
 
 In approximation~\ref{eq:ttiapprox},
-$f(\mathbf{v},\mathbf{\hat{k}},\eta)$ is a function as in expression~\ref{eq:ttiexact} and $a$, $b_n$, $c_n$ and $d_n$ are coefficients determined from the Taylor expansion around $k=0$.\\ 
+$f(\mathbf{v},\mathbf{\hat{k}},\eta)$ is a function as in
+expression~\ref{eq:ttiexact} and $a$, $b_n$, $c_n$ and $d_n$ are
+coefficients determined from the Taylor expansion around $k=0$.
 
-Notice that we multiply the left-hand side with $|\mathbf{\hat{k}}|^2$, so one needs to multiply $\hat{p}(\mathbf{\hat{k},t})$ with $\displaystyle\frac{2[\cos(f(\mathbf{v_0},\mathbf{k},\eta_0)\Delta t)-1]}{|\mathbf{\hat{k}}|^2}$.\\ 
+Notice that we multiply the left-hand side with
+$|\mathbf{\hat{k}}|^2$, so one needs to multiply
+$\hat{p}(\mathbf{\hat{k},t})$ with
+$\displaystyle\frac{2[\cos(f(\mathbf{v_0},\mathbf{k},\eta_0)\Delta
+t)-1]}{|\mathbf{\hat{k}}|^2}$.
 
-The coefficients for Equation~\ref{eq:ttiapprox} are derived in Table~\ref{tbl:equations} and Table~\ref{tbl:wh}.
-$w_{n0}$, $h_{n0}$, $p_{n0}$ and $q_{n0}$ have similar expressions as above in Table~\ref{tbl:wh} with $\mathbf{v}$, $\eta$ and $\theta$ substited by the corresponding reference values: RMS velocity $\mathbf{v}_0$, average anisotropic parameter $\eta_0$ and average tilt angles $\theta_0$ and $\phi_0$. 
+The coefficients for Equation~\ref{eq:ttiapprox} are derived in
+Table~\ref{tbl:equations} and Table~\ref{tbl:wh}.  $w_{n0}$, $h_{n0}$,
+$p_{n0}$ and $q_{n0}$ have similar expressions as above in
+Table~\ref{tbl:wh} with $\mathbf{v}$, $\eta$ and $\theta$ substited by
+the corresponding reference values: RMS velocity $\mathbf{v}_0$,
+average anisotropic parameter $\eta_0$ and average tilt angles
+$\theta_0$ and $\phi_0$.
 \tabl{equations}{Coefficients for equation~\ref{eq:ttiapprox}.}
 {
     \begin{center}
