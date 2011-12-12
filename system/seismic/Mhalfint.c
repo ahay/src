@@ -40,10 +40,10 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("rho",&rho)) rho = 1.-1./n1;
     /* Leaky integration constant */
 
-    if (adj) {
-	sf_warning("%s half-order differentiation",inv? "anticausal":"causal");
+    if (inv) {
+	sf_warning("%s half-order differentiation",adj? "anticausal":"causal");
     } else {
-	sf_warning("%s half-order integration",inv? "anticausal":"causal");
+	sf_warning("%s half-order integration",adj? "anticausal":"causal");
     }
 
     nn = 2*kiss_fft_next_fast_size((n1+1)/2);

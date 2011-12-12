@@ -34,20 +34,25 @@ Austin, TX 78713-8924}
 
 \section{Introduction}
 
-The wavefield extrapolation problem refers to advancement of a wavefield through space or time. 
-Both extrapolation in depth and extrapolation in time can be used in seismic modeling and seismic migration. 
-Reverse time migration, or RTM \cite[]{baysal,McMechan,whitmore,levin}, involves wave extrapolation 
-forward and backward in time. RTM is useful for accurate imaging in complex areas and is drawing more and more attention as the most powerful depth-imaging method \cite[]{yoon,sym,fletcher,fowler}.\\
+The wavefield extrapolation problem refers to advancement of a
+wavefield through space or time.  Both extrapolation in depth and
+extrapolation in time can be used in seismic modeling and seismic
+migration.  Reverse time migration, or RTM
+\cite[]{baysal,McMechan,whitmore,levin}, involves wave extrapolation
+forward and backward in time. RTM is useful for accurate imaging in
+complex areas and is drawing more and more attention as the most
+powerful depth-imaging method \cite[]{yoon,sym,fletcher,fowler}.\\
 
 Reverse-time migration can correctly handle complex velocity models
-without dip limitations on the image.  
-However, it has large memory requirements and needs a significant amount of computation. 
-The most popular and straightforward way to implement reverse-time migration is 
-the method of explicit finite differences, 
-which is only conditionally stable because of the limit on time-step size. 
-Finite-difference methods also suffer from numerical dispersion problems, 
-which can be overcome either by decreasing the time step or by high-order schemes \cite[]{Wu,liu}. 
-Several alternative algorithms have been developed for seismic wave extrapolation in variable velocity media.  
+without dip limitations on the image.  However, it has large memory
+requirements and needs a significant amount of computation.  The most
+popular and straightforward way to implement reverse-time migration is
+the method of explicit finite differences, which is only conditionally
+stable because of the limit on time-step size.  Finite-difference
+methods also suffer from numerical dispersion problems, which can be
+overcome either by decreasing the time step or by high-order schemes
+\cite[]{Wu,liu}.  Several alternative algorithms have been developed
+for seismic wave extrapolation in variable velocity media.
 \cite{yu} introduced an algorithm based on a high-order differential operator, 
 which allows a large extrapolation time step by solving a coefficient optimization problem.
 \cite{zhang} proposed one-step extrapolation method by introducing a square-root operator. This method can formulate the two-way wave equation as a first-order partial differential equation in time similar to the one-way wave equation.
@@ -61,14 +66,18 @@ Our method combines FFT and finite differences.
 We call it the Fourier Finite Difference method 
 because it is analogous to the concept introduced previously for one-way wave extrapolation by \cite{ffd}.\\ 
 
-As a chain operator of Fast Fourier Transform and Finite Difference operators, 
-the proposed extrapolator can be as accurate as the parameter interpolation approach employed by \cite{etgen}
-but at a cost of only one Fast Fourier Transform (FFT) and inverse Fast Fourier Transform (IFFT) operation.
-The advantages of the FFD operator are even more apparent in the anisotropic case: 
-no need for several interpolations for different parameters with 
-the corresponding computational burden of several FFTs and IFFTs. 
-In addition, the operator can overcome the coupling of qP-waves and qSV-waves \cite[]{zhang2}. 
-We demonstrate the method on synthetic examples and propose to incorporate FFD into reverse-time migration in order to enhance migration accuracy and stability.
+As a chain operator of Fast Fourier Transform and Finite Difference
+operators, the proposed extrapolator can be as accurate as the
+parameter interpolation approach employed by \cite{etgen} but at a
+cost of only one Fast Fourier Transform (FFT) and inverse Fast Fourier
+Transform (IFFT) operation.  The advantages of the FFD operator are
+even more apparent in the anisotropic case: no need for several
+interpolations for different parameters with the corresponding
+computational burden of several FFTs and IFFTs.  In addition, the
+operator can overcome the coupling of qP-waves and qSV-waves
+\cite[]{zhang2}.  We demonstrate the method on synthetic examples and
+propose to incorporate FFD into reverse-time migration in order to
+enhance migration accuracy and stability.
 
 \section{Theory}
 
@@ -84,7 +93,7 @@ Assuming a constant velocity $v$, after Fourier transform in space,
  we can get the following explicit expression:
 \begin{equation}
 \label{eq:ode} 
-\frac{d^2\hat{p}}{dt^2} = v^2|\mathbf{k}|^2\hat{p}\;,
+\frac{d^2\hat{p}}{dt^2} = - v^2|\mathbf{k}|^2\hat{p}\;,
 \end{equation}
 where
 \begin{equation}
@@ -121,7 +130,7 @@ by combining different parameters and
 computing the corresponding forward and inverse FFTs 
 for each of the velocity parameters, thus increasing the computational burden.
 Other FFT-based solutions include the optimized separable approximation or OSA \cite[]{song,morton,zhang,du} 
-and the lowrank approximation \cite[]{ying}.\\
+and the lowrank approximation \cite[]{ying}.
 
 We propose an alternative approach.
 First, we adopt the following form of the right-hand side of equation~\ref{eq:exact} in the variable velocity case: 
@@ -146,14 +155,13 @@ where coefficients $a$ and $b_n$ are defined using the Taylor expansion around $
 \end{equation}
 and $\Delta x_n$ is the sampling in the n-th direction. 
 We only need to calculate these coefficients once. After completing the calculation, they can be used at each time step during the wave extrapolation process.
-\\
 
 
 Equation~\ref{eq:numerator} consists of two terms: the first term is independent of $\mathbf{x}$ and  only depends on $\mathbf{k}$. 
 For this part, we use inverse FFT to return to the space domain from the wavenumber domain.
 For the remaining part, however, we can avoid phase shift in the wavenumber domain by implementing space shifts 
 through finite differences (approximation~\ref{eq:approximate}) with coefficients provided by equation~\ref{eq:coefficient}.
-This approach is analogous to the FFD method proposed by \cite{ffd} for one-way extrapolation in depth.\\ 
+This approach is analogous to the FFD method proposed by \cite{ffd} for one-way extrapolation in depth.
 
 \inputdir{cos}
 Figure~\ref{fig:cos-side1} (a) shows approximations for $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$  
@@ -161,7 +169,7 @@ by the 4th-order FD method (dash line) and pseudo-spectral method (dotted line).
 The solid lines stand for the exact values for function $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$ with true velocity: $v=4.0 km/s$ (bottom solid line) and $v_0=2.0 km/s$ (top solid line), which indicates a significant velocity contrast ($100\%$ difference).
 In this situation, all the approximations deviate from the exact solution as the wavenumber $|k|$ becomes large.
 However, the 4th-order FFD method approximates the exact solution with the most accuracy, as shown in the error plot (Figure~\ref{fig:diff1}).
-In order to enhance the stability, one can suppress the wavefield at high wavenumbers for both pseudo-spectral and the FFD method. \\
+In order to enhance the stability, one can suppress the wavefield at high wavenumbers for both pseudo-spectral and the FFD method. 
 
 \plot{cos-side1}{width=0.9\textwidth}{Different approximations for $\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$. 
 Solid lines: exact solution ($\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$) for $v=4.0$ km/s and $v_0=2.0$ km/s.

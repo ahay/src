@@ -1,7 +1,7 @@
 from rsf.proj import *
 from rsf.recipes.beg import server
 
-#Fetch('seismic3.su','cwp',server)
+Fetch('seismic3.su','cwp',server)
 title = {'seismic3':'Stacked data'}
 
 Flow('seismic3','seismic3.su',

@@ -71,7 +71,13 @@ def velcon(data,        # data name
          cosft sign3=-1 | window n3=%d
          ''' % nx)
     
-    Flow(ckx2,pad,'mul $SOURCE | cosft sign3=1 | put o4=0')
+    Flow(ckx2,pad,
+         '''
+         halfint inv=y adj=n |
+         math output="input*input" |
+         halfint adj=n |
+         cosft sign3=1 | put o4=0
+         ''')
     Flow(ckx2+'v',ckx2,
          '''
          fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d verb=y 
