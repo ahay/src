@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     bool verb, cmplx;        
     int it,iz,im,ik,ix,iy,i,j, snap;     /* index variables */
-    int nt,nz,nx,ny, m1, m2, nk, nzx, nz2, nx2, ny2, nzx2, n2, pad1;
+    int nt,nz,nx,ny, m2, nk, nzx, nz2, nx2, ny2, nzx2, n2, pad1;
     float c, old, dt;
 
     float  *ww,*rr;      /* I/O arrays*/
@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax,ay;    /* cube axes */
 
-    float **lt, **rt, **mm;
-    sf_file left, right, mid, snaps;
+    float **lt, **rt;
+    sf_file left, right, snaps;
 
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=true; /* verbosity */
@@ -85,23 +85,17 @@ int main(int argc, char* argv[])
     /* propagator matrices */
     left = sf_input("left");
     right = sf_input("right");
-    mid = sf_input("mid");
-
-    if (!sf_histint(mid,"n1",&m1)) sf_error("No n1= in mid");
-    if (!sf_histint(mid,"n2",&m2)) sf_error("No n2= in mid");
 
     if (!sf_histint(left,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
-    if (!sf_histint(left,"n2",&n2) || n2 != m1)  sf_error("Need n2=%d in left",m1);
+    if (!sf_histint(left,"n2",&m2))  sf_error("Need n2=%d in left",m2);
     
     if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
     if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
  
-    lt = sf_floatalloc2(nzx,m1);
-    mm = sf_floatalloc2(m1,m2);
+    lt = sf_floatalloc2(nzx,m2);
     rt = sf_floatalloc2(m2,nk);
 
-    sf_floatread(lt[0],nzx*m1,left);
-    sf_floatread(mm[0],m1*m2,mid);
+    sf_floatread(lt[0],nzx*m2,left);
     sf_floatread(rt[0],m2*nk,right);
 
     /* read wavelet & reflectivity */
@@ -153,9 +147,7 @@ int main(int argc, char* argv[])
 		    prev[i] = old;
 
 		    for (im = 0; im < m2; im++) {
-			for (ik = 0; ik < m1; ik++) {
-			    c += lt[ik][i]*mm[im][ik]*wave[im][j];
-			}
+			c += lt[im][i]*wave[im][j];
 		    }
 		    
 		    curr[j] = c;

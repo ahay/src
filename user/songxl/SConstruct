@@ -33,7 +33,8 @@ mpi_progs = 'tti4rtm'
 #permf
 
 #lfdc1_10
-ccprogs = 'ortholr lrtest ortlr'
+ccprogs = 'ortholr'
+# lrtest ortlr
 
 try:  # distributed version
     Import('env root pkgdir bindir')
