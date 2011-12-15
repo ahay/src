@@ -31,8 +31,16 @@ Flow('foldplot','tteapot %s' % exe[0],
     ''')
 Result('foldplot','foldplot.rsf',
      '''
-     grey  title=foldplot gainpanel=308
+     grey  title=foldplot pclip=100 
      ''')
+Result('foldplot3','foldplot.rsf',
+     '''
+     grey3  title=foldplot pclip=100 
+     ''')
+
+Flow('foldplot_off','foldplot',
+     'transp plane=13')
+Result('foldplot_off','grey title=foldplot_off pclip=100')
 
 # Xline/Inline numbers
 Flow('ix','tteapot','dd type=float | headermath output="xline"')
