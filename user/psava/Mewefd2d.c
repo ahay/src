@@ -172,8 +172,9 @@ int main(int argc, char* argv[])
     Fden = sf_input ("den"); /* density   */
     Fsou = sf_input ("sou"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
-    Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
+    if(snap)
+	Fwfl = sf_output("wfl"); /* wavefield */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -279,9 +280,6 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
-/*    idz = 2/dz;*/
-/*    idx = 2/dx;*/
-
     idz = 1/dz;
     idx = 1/dx;
 
@@ -594,7 +592,9 @@ int main(int argc, char* argv[])
     free(*txx); free(txx);
     free(*tzx); free(tzx);
 
-    free(*uc);  free(uc);    
+    if(snap) {
+	free(*uc);  free(uc);    
+    }
 
     if(opot) {
 	free(*qp);  free(qp);    
