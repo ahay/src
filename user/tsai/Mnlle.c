@@ -21,10 +21,7 @@
 #include <math.h>
 #include <rsf.h>
 
-/*
-remove m, m0, m2, m3, r, rp later.
-m1f, m2f: peak frequencies to estimate; r1s, r2s: ricker spectrum 
-*/
+/* m1f, m2f: peak frequencies to estimate; r1s, r2s: ricker spectrum */
 
 int main(int argc, char* argv[])
 {
