@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
 {
     int n2, i2, na, ia, niter, iter;
     float f0, df, f, f2, *data, m1f0, m1f, m1f2, m1f3, m2f0, m2f, m2f2, m2f3, dm1f, dm2f;
-    float eps, di, d2, a1, a2, *r1s, r1s2, *r2s, r2s2;
+    float eps, di, d2, a1, a2, *r1s, r1s2, *r2s, r2s2, r2;
     float r1sd, r2sd, r1spd, r2spd, r1sp2, r1spr1s, r2sp2, r2spr2s, e1, e2, *r1sp, *r2sp, r1sr2s, r1sr2s2;
-    float denpm1, denpm2, r1spr2s, r1sr2sp, r1s2p, r2s2p, pa1m1, pa2m2, pa1m2, pa2m1, allden;
+    float denpm1, denpm2, r1spr2s, r1sr2sp, r1s2p, r2s2p, pa1m1, pa2m2, pa1m2, pa2m1, allden, r1p2, r2p2;
     float a1m1, a2m2, a1m2, a2m1, numm1, numm2, denm1, denm2;
     bool verb;
     sf_file in, out, ma;
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     sf_fileflush(ma,in);
 
     data = sf_floatalloc(na);
-/*added*/
+
     r1s = sf_floatalloc(na);
     r1sp = sf_floatalloc(na);
     r2s = sf_floatalloc(na);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
 		e1 = exp(-f2/m1f2);
 		e2 = exp(-f2/m2f2);
-		/*added*/
+
 		r1s[ia] = e1*f2/m1f2;
 		r2s[ia] = e2*f2/m2f2;
 		r1sp[ia] = 2.*e1*f2*(f2-m1f2)/(m1f3*m1f2);
@@ -122,40 +122,43 @@ int main(int argc, char* argv[])
 		r2spr2s += r2sp[ia]*r2s[ia];
 	    }
             r1sr2s2 = r1sr2s*r1sr2s;  
-/*added*/
+
 	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 /*pa over pm*/
 	    denpm1 = denpm2 = ((r1s2+eps)*(r2s2+eps)-r1sr2s2)*((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 /*pa1 numerator*/
-	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2*r1sr2s*r1spr2s);
+	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
 /*pa2 numerator*/
 	    pa2m2 = ((r1s2+eps)*r2spd-r1sd*r1sr2sp)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r2sd*(r1s2+eps)-r1sd*r1sr2s)*(r2s2p*(r1s2+eps)-2.*r1sr2s*r1sr2sp);
 /*pa1m2 numerator*/
-	    pa1m2 = (r2sp2*r1sd-r2sd*r1sr2sp)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r1s2+eps)-r2sd*r1sr2s)*((r1s2+eps)*r2s2p-2.*r1sr2s*r1sr2sp);
+	    pa1m2 = (r2sp2*r1sd-r2spd*r1sr2sp)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r2s2p*(r1s2+eps)-2.*r1sr2s*r1sr2sp);
 /*pa2m1 numerator*/
-	    pa2m1 = (r1s2p*r2sd-r1spd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r2sd*r1s2-r1sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
+	    pa2m1 = (r1s2p*r2sd-r1spd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r2sd*(r1s2+eps)-r1sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
 /*common denominator*/
-	    allden = ((r1s2+eps)*(r2s2+eps)-r1sr2s2);
+	    allden = ((r1s2+eps)*(r2s2+eps)-r1sr2s2)*((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 	    a1m1 = pa1m1/allden;
 	    a2m2 = pa2m2/allden;
 	    a1m2 = pa1m2/allden;
 	    a2m1 = pa2m1/allden;
-/*added*/
-	    numm1 = pa1m1*r1sd+a1*r1spd+pa1m2*r1sd-a1*pa1m1*r1s2-a1*a1*r1spr1s-a1*pa1m2*r1s2;
+
+	    numm1 = pa1m1*r1sd+a1*r1spd+pa1m2*r1sd-pa1m1*a1*r1s2-a1*a1*r1spr1s-pa1m2*a1*r1s2;
 	    denm1 = pa1m1*pa1m1*r1s2+a1*a1*r1sp2+pa1m2*pa1m2*r1s2+2.*pa1m1*a1*r1spr1s+2.*pa1m1*pa1m2*r1s2+2.*a1*pa1m2*r1spr1s;
 	    dm1f = numm1/denm1;
 
 	    numm2 = pa2m1*r2sd+pa2m2*r2sd+a2*r2spd-a1*pa2m1*r1sr2s-a1*pa2m2*r1sr2s-a1*a2*r1sr2sp-a2*pa2m1*r2s2-pa2m2*a2*r2s2-a2*a2*r2spr2s;
 	    denm2 = pa2m1*pa2m1*r2s2+pa2m2*pa2m2*r2s2+a2*a2*r2sp2+2.*pa2m1*pa2m2*r2s2+2.*pa2m1*a2*r2spr2s+2.*pa2m2*a2*r2spr2s;
-
 	    dm2f = numm2/denm2;
 /*added*/
 /*	    r2 = d2 - 2.*rd*a + r2*a*a;*/ /* ||d - a*r||^2 */ 
 /*	    rp2 = dm*dm;*/
 
-	    if (verb && 5000 > n2) sf_warning("iter=%d r1s2=%g r2s2=%g r1sp2=%g r2sp2=%g m1f=%g m2f=%g a1=%g a2=%g",
-					      iter,r1s2,r2s2,r1sp2,r2sp2,m1f,m2f,a1,a2);
+	    r2 = d2+a1*a1*r1s2+a2*a2*r2s2-2.*a1*r1sd-2.*a2*r2sd+2.*a1*a2*r1sr2s;
+	    r1p2 = dm1f*dm1f;
+	    r2p2 = dm2f*dm2f;
+
+	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g r1p2=%g r2p2=%g m1f=%g m2f=%g a1=%g a2=%g",
+					      iter,r2,r1p2,r2p2,m1f,m2f,a1,a2);
 	    m1f += dm1f;
             m2f += dm2f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
