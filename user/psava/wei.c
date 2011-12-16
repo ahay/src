@@ -619,7 +619,7 @@ void adjsou(weicub3d cub,
 #pragma omp critical
 #endif
         {
-            if(cub->verb) sf_warning ("adjoint source ... <iw=%3d of %3d>",iw+1,sf_n(cub->aw));
+            if(cub->verb) sf_warning ("ADJ SO ... <iw=%3d of %3d>",iw+1,sf_n(cub->aw));
             sf_seek(Fbwf,sizeof(sf_complex)*cub->nxy*sf_n(cub->az)*iw,SEEK_SET);
             sf_complexread(bwf[ompith][0][0],cub->nxy*sf_n(cub->az),Fbwf);
         }
@@ -980,7 +980,7 @@ void gradient(weicub3d cub,
 #pragma omp critical
 #endif
         {
-            if(cub->verb) sf_warning ("Gradient ... (ith=%2d) ... <iw=%3d of %3d>",
+            if(cub->verb) sf_warning ("GRD ... (ith=%2d) ... <iw=%3d of %3d>",
 				      ompith,iw+1,sf_n(cub->aw));
 
             /* read data */

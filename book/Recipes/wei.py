@@ -148,6 +148,7 @@ def eic3d(cip,swfl,rwfl,cc,custom,par):
 def genwfl(wfl,sou,coo,slo,down,causal,par):
     Flow(wfl,[sou,slo,coo],
          '''
-         genwfl verb=y slo=${SOURCES[1]} coo=${SOURCES[2]}
-         down=%s causal=%s
-         ''' %(down,causal))
+         weigwf verb=y slo=${SOURCES[1]} coo=${SOURCES[2]}
+         down=%s causal=%s 
+	 %s
+         ''' %(down,causal,param(par)))
