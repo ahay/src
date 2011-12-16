@@ -81,21 +81,21 @@ int main(int argc, char* argv[])
 	    if (di < 0.) data[ia] = -di;
 	    d2 += di*di;
 	}
-/*added*/
+
 	m1f = m1f0;
 	m2f = m2f0;
 	for (iter = 0; iter < niter; iter++) {
-/*added*/	    
+	    
 	    m1f2 = m1f*m1f;
 	    m1f3 = m1f2*m1f;
 	    m2f2 = m2f*m2f;
 	    m2f3 = m2f2*m2f;
-/*added*/
+
 	    r1sd = r1s2 = r2sd = r2s2 = r1spd = r2spd = r1sp2 = r1spr1s = r2sp2 = r2spr2s = 0.;
 	    for (ia = 0; ia < na; ia++) {
 		f = f0 + ia*df;
 		f2 = f*f;
-/*added*/
+
 		e1 = exp(-f2/m1f2);
 		e2 = exp(-f2/m2f2);
 		/*added*/
