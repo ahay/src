@@ -745,6 +745,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          ewefd2d
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
+	 ssou=%(ssou)s
          ccc=${SOURCES[1]}
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
@@ -960,12 +961,16 @@ def edata(plot,data,custom,par):
          'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
     
     for i in range(2):
-        Plot(  plot+str(i+1),[plot+'_plt',plot+'_bar'],
+	ctag = "-%d"%i
+	
+        Plot(  plot+ctag,[plot+'_plt',plot+'_bar'],
                'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
-               + dgrey('%s' % custom,par))
-        Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
-               'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
-               + dgrey('%s' % custom,par))
+               + dgrey('screenratio=1.75 screenht=20 %s' % custom,par))
+    pplot.p1x2(plot,plot+'-0',plot+'-1',0.5,0.5,-11)
+
+    #    Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
+    #           'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
+    #           + dgrey('%s' % custom,par))
 
 # ------------------------------------------------------------
 # elastic image
