@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float f0, df, f, f2, *data, m1f0, m1f, m1f2, m1f3, m2f0, m2f, m2f2, m2f3, dm1f, dm2f;
     float eps, di, d2, a1, a2, *r1s, r1s2, *r2s, r2s2, r2;
     float r1sd, r2sd, r1spd, r2spd, r1sp2, r1spr1s, r2sp2, r2spr2s, e1, e2, *r1sp, *r2sp, r1sr2s, r1sr2s2;
-    float denpm1, denpm2, r1spr2s, r1sr2sp, r1s2p, r2s2p, pa1m1, pa2m2, pa1m2, pa2m1, allden, r1p2, r2p2;
+    float r1spr2s, r1sr2sp, r1s2p, r2s2p, pa1m1, pa2m2, pa1m2, pa2m1, allden, r1p2, r2p2;
     float a1m1, a2m2, a1m2, a2m1, numm1, numm2, denm1, denm2;
     bool verb;
     sf_file in, out, ma;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&df)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
 
-/*the following two lines added*/
+
     if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.05*(na-1)*df;
     if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.25*(na-1)*df;
     /* initial frequency */
@@ -125,8 +125,9 @@ int main(int argc, char* argv[])
 
 	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
-/*pa over pm*/
-	    denpm1 = denpm2 = ((r1s2+eps)*(r2s2+eps)-r1sr2s2)*((r1s2+eps)*(r2s2+eps)-r1sr2s2);
+
+
+
 /*pa1 numerator*/
 	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
 /*pa2 numerator*/
