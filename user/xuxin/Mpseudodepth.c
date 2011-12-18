@@ -18,64 +18,48 @@
 */
 
 #include <rsf.h>
-#include <stdio.h>
-#include "interp.h"
+#include "spline.h"
 
-int main(int argc, char* argv[])
+int main(int argc,char *argv[])
 {
-    sf_file Fi,Fo,Fh;  
-    sf_axis ax,az,ah;
-    int nx,nz,nh,ix,n;
-    float oz,oh,dz,dh,**aa,**bb,**hh,*h;
-    lint1dp L;
+	int n1,n2,n,i;
+	float o,d,*z,*zz,*u,*uu;
+	sf_file Fin,Fz,Fout;
+	Spl *spl;
 
-    sf_init(argc,argv);
-    Fi = sf_input("in");    /* f(z) */
-    Fh = sf_input("depth"); /* h(z) */
-    Fo = sf_output("out");  /* f(h) */
+	sf_init(argc,argv);
 
-    az = sf_iaxa(Fi,1); 
-    ax = sf_iaxa(Fi,2); 
-    nx = sf_n(ax); 
-    nz = sf_n(az);
-    dz = sf_d(az);
-    oz = sf_o(az);
-    if (!sf_histint(Fh,"n1",&n) || n != nz) sf_error("Need n1=%d in depth",nz);
-    if (!sf_histint(Fh,"n2",&n) || n != nx) sf_error("Need n2=%d in depth",nx);
+	Fin = sf_input("in");    /* f(z)  */
+	Fz  = sf_input("depth"); /* zz(z) */
+	Fout= sf_output("out");	 /* f(zz) */
 
-    if (!sf_getint("n",&nh))   nh = nz;
-    /* target nz */
-    if (!sf_getfloat("o",&oh)) oh = oz;
-    /* target oz */
-    if (!sf_getfloat("d",&dh)) dh = dz;
-    /* target dz */    
-    ah =sf_maxa(nh,oh,dh);
+	n2 = sf_leftsize(Fin,1);
+	if (!sf_histint(Fin,"n1",&n1) || n1 < 3  ||
+		!sf_histint(Fz, "n1",&n ) || n != n1 ||
+		sf_leftsize(Fz,1) != n2)
+		sf_error("Need same n1=(n1>2) and n2= in input and x.");
+	if (!sf_getint("n1",&n))   sf_error("Need n1="); /* new depth n */
+	if (!sf_getfloat("o1",&o)) o = 0.;               /* new depth o */
+	if (!sf_getfloat("d1",&d)) sf_error("Need d1="); /* new depth d */
 
-    aa = sf_floatalloc2(nz,nx); 
-    bb = sf_floatalloc2(nh,nx);
-    hh = sf_floatalloc2(nz,nx);
+	zz= sf_floatalloc(n);
+	for (zz[0]=o, i=1; i < n; i++) zz[i] = zz[i-1] + d;
+	
+	sf_putint(Fout,"n1",n);	sf_putfloat(Fout,"o1",o);
+	sf_putint(Fout,"n2",n2);sf_putfloat(Fout,"d1",d); 
 
-    sf_floatread(aa[0],nx*nz,Fi);  
-    sf_floatread(hh[0],nx*nz,Fh);
+	u = sf_floatalloc(n1);
+	z = sf_floatalloc(n1);
+	uu= sf_floatalloc(n);
+	for (i=0; i < n2; i++) {
+		sf_floatread(u,n1,Fin);
+		sf_floatread(z,n1,Fz );
+		spl = spline_init(u,z,n1);
+		spline_eval(uu,zz,n,spl);
+		spline_free(spl);
+		sf_floatwrite(uu,n,Fout);
+	}
 
-    /* regular axis */
-    h  = sf_floatalloc(nh);
-    for (h[0]=oh, ix=1; ix < nh; ix++) {
-	h[ix] = h[ix-1] + dh;
-    }
-
-    /* interpolation */
-    for (ix=0; ix < nx; ix++) {
-	L = lint1d_init(hh[ix],nz,h,nh);
-	lint1d_extract(aa[ix],bb[ix],L);
-	free(L);
-    }
-
-    /* write */
-    sf_oaxa(Fo,ah,1);
-    sf_oaxa(Fo,ax,2);
-    sf_floatwrite(bb[0],nx*nh,Fo);
-
-    exit (0);
+	sf_fileclose(Fin); sf_fileclose(Fz); sf_fileclose(Fout);
+	return 0;
 }
-
