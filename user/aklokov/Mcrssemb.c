@@ -255,7 +255,7 @@ int main (int argc, char* argv[]) {
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		
-		sf_warning ("CIG %d of %d", ix + 1, xNum_);
+		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
 		
 		// xapp for the currect core CIG; it can be changed by the checkBoundary ()
 		int curxapp = xapp_; 
@@ -275,6 +275,8 @@ int main (int argc, char* argv[]) {
 		
 		free (ptrToSembPanel_);
 	}
+
+	sf_warning (".");
 
 	sf_fileclose (inDags_);
 	sf_fileclose (inDagsSq_);
