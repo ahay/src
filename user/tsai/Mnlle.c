@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
 
 
-    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.05*(na-1)*df;
-    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.25*(na-1)*df;
+    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.08*(na-1)*df;
+    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.28*(na-1)*df;
     /* initial frequency */
     if (!sf_getint("niter",&niter)) niter = 100;
     /* number of iterations */
@@ -126,8 +126,6 @@ int main(int argc, char* argv[])
 	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 
-
-
 /*pa1 numerator*/
 	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
 /*pa2 numerator*/
@@ -155,11 +153,11 @@ int main(int argc, char* argv[])
 /*	    rp2 = dm*dm;*/
 
 	    r2 = d2+a1*a1*r1s2+a2*a2*r2s2-2.*a1*r1sd-2.*a2*r2sd+2.*a1*a2*r1sr2s;
-	    r1p2 = dm1f*dm1f;
-	    r2p2 = dm2f*dm2f;
+	    /*   r1p2 = dm1f*dm1f;
+		 r2p2 = dm2f*dm2f;*/
 
-	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g r1p2=%g r2p2=%g m1f=%g m2f=%g a1=%g a2=%g",
-					      iter,r2,r1p2,r2p2,m1f,m2f,a1,a2);
+	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g numm1=%g denm1=%g dm1=%g numm2=%g denm2=%g dm2=%g m1f=%g m2f=%g a1=%g a2=%g",
+					      iter,r2,numm1,denm1,dm1f,numm2,denm2,dm2f,m1f,m2f,a1,a2);
 	    m1f += dm1f;
             m2f += dm2f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
@@ -179,7 +177,7 @@ int main(int argc, char* argv[])
 	    f = f0 + ia*df;
 	    f2 = f*f;
 
-	    data[ia] = a1*exp(-f2/m1f2)*f2/m1f2+a2*exp(-f2/m2f2)*f2/m2f2;
+	    data[ia] = a1*m1f*sqrtf(SF_PI)*0.5*exp(-f2/m1f2)*f2/m1f2+a2*m2f*sqrtf(SF_PI)*0.5*exp(-f2/m2f2)*f2/m2f2;
 	}
         
 	if (verb) sf_warning("m1f=%g m2f=%g a1=%g a2=%g",m1f,m2f,a1*m1f*sqrtf(SF_PI)*0.5,a2*m2f*sqrtf(SF_PI)*0.5);

@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 	for (ia = 0; ia < na; ia++) {
 	    f = f0 + ia*df;
 	    f2 = f*f;
-	    data[ia] = a*exp(-f2/m2)*f2/m2;
+	    data[ia] = a*m*sqrtf(SF_PI)*0.5*exp(-f2/m2)*f2/m2;
 	}
         
 	if (verb) sf_warning("m=%g a=%g",m,a*m*sqrtf(SF_PI)*0.5);
