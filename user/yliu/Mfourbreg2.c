@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 	}
 	for (iter=0; iter < niter; iter++) { /* Outer iteration */
 	    if (verb)
-		sf_warning("Bregman iteration %d of %d",iter+1,niter);
+		sf_warning("Bregman iteration %d of %d;",iter+1,niter);
 	    
 	    for (i1=0; i1 < n12; i1++) {
 		if (known[i1]) {
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    if (!verb) sf_warning(".");
+    sf_warning(".");
     
     exit(0);
 }
