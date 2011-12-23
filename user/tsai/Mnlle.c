@@ -103,11 +103,12 @@ int main(int argc, char* argv[])
 		r2s[ia] = e2*f2/m2f2;
 		r1sp[ia] = 2.*e1*f2*(f2-m1f2)/(m1f3*m1f2);
 		r2sp[ia] = 2.*e2*f2*(f2-m2f2)/(m2f3*m2f2);
-		/*added*/
+
 		r1sd += r1s[ia]*data[ia];
 		r1s2 += r1s[ia]*r1s[ia];
 		r2sd += r2s[ia]*data[ia];
 		r2s2 += r2s[ia]*r2s[ia];
+		
 		r1sr2s += r1s[ia]*r2s[ia];
 		r1spd += r1sp[ia]*data[ia];
 		r2spd += r2sp[ia]*data[ia];
@@ -123,8 +124,13 @@ int main(int argc, char* argv[])
 	    }
             r1sr2s2 = r1sr2s*r1sr2s;  
 
-	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
-	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
+	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s);
+	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s);
+
+/*
+	    a1 = r1sd/(r1s2+eps);
+	    a2 = r2sd/(r2s2+eps);
+*/
 
 /*pa1 numerator*/
 	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
@@ -153,8 +159,8 @@ int main(int argc, char* argv[])
 /*	    rp2 = dm*dm;*/
 
 	    r2 = d2+a1*a1*r1s2+a2*a2*r2s2-2.*a1*r1sd-2.*a2*r2sd+2.*a1*a2*r1sr2s;
-	    /*   r1p2 = dm1f*dm1f;
-		 r2p2 = dm2f*dm2f;*/
+	    r1p2 = dm1f*dm1f;
+	    r2p2 = dm2f*dm2f;
 
 	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g numm1=%g denm1=%g dm1=%g numm2=%g denm2=%g dm2=%g m1f=%g m2f=%g a1=%g a2=%g",
 					      iter,r2,numm1,denm1,dm1f,numm2,denm2,dm2f,m1f,m2f,a1,a2);
@@ -162,6 +168,9 @@ int main(int argc, char* argv[])
             m2f += dm2f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
 	}     
+
+	m1f = 10;
+	m2f = 35;
 	m1f = fabsf(m1f);
 	m1f2 = m1f*m1f;
 	m2f = fabsf(m2f);
@@ -177,7 +186,7 @@ int main(int argc, char* argv[])
 	    f = f0 + ia*df;
 	    f2 = f*f;
 
-	    data[ia] = a1*m1f*sqrtf(SF_PI)*0.5*exp(-f2/m1f2)*f2/m1f2+a2*m2f*sqrtf(SF_PI)*0.5*exp(-f2/m2f2)*f2/m2f2;
+	    data[ia] = a1*exp(-f2/m1f2)*f2/m1f2+a2*exp(-f2/m2f2)*f2/m2f2;
 	}
         
 	if (verb) sf_warning("m1f=%g m2f=%g a1=%g a2=%g",m1f,m2f,a1*m1f*sqrtf(SF_PI)*0.5,a2*m2f*sqrtf(SF_PI)*0.5);
