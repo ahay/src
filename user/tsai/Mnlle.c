@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
 
 
-    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.08*(na-1)*df;
-    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.28*(na-1)*df;
+    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.05*(na-1)*df;
+    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.30*(na-1)*df;
     /* initial frequency */
     if (!sf_getint("niter",&niter)) niter = 100;
     /* number of iterations */
