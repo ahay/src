@@ -165,8 +165,6 @@ int main(int argc, char* argv[])
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
 	}     
 
-	m1f = 10;
-	m2f = 35;
 	m1f = fabsf(m1f);
 	m1f2 = m1f*m1f;
 	m2f = fabsf(m2f);
