@@ -128,11 +128,6 @@ int main(int argc, char* argv[])
 	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 
-/*
-	    a1 = r1sd/(r1s2+eps);
-	    a2 = r2sd/(r2s2+eps);
-*/
-
 /*pa1 numerator*/
 	    pa1m1 = ((r2s2+eps)*r1spd-r2sd*r1spr2s)*((r1s2+eps)*(r2s2+eps)-r1sr2s2)-(r1sd*(r2s2+eps)-r2sd*r1sr2s)*(r1s2p*(r2s2+eps)-2.*r1sr2s*r1spr2s);
 /*pa2 numerator*/
