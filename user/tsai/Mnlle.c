@@ -92,6 +92,7 @@ int main(int argc, char* argv[])
 	    m2f3 = m2f2*m2f;
 
 	    r1sd = r1s2 = r2sd = r2s2 = r1spd = r2spd = r1sp2 = r1spr1s = r2sp2 = r2spr2s = 0.;
+	    r1sr2s = r1spr2s = r1sr2sp = r1s2p = r2s2p = 0.;
 	    for (ia = 0; ia < na; ia++) {
 		f = f0 + ia*df;
 		f2 = f*f;
@@ -122,10 +123,10 @@ int main(int argc, char* argv[])
 		r1spr1s += r1sp[ia]*r1s[ia];
 		r2spr2s += r2sp[ia]*r2s[ia];
 	    }
-            r1sr2s2 = r1sr2s*r1sr2s;  
+            r1sr2s2 = r1sr2s*r1sr2s;
 
-	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s);
-	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s);
+	    a1 = (r1sd*(r2s2+eps)-r1sr2s*r2sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
+	    a2 = (r2sd*(r1s2+eps)-r1sr2s*r1sd)/((r1s2+eps)*(r2s2+eps)-r1sr2s2);
 
 /*
 	    a1 = r1sd/(r1s2+eps);
