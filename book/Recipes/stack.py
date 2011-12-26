@@ -206,9 +206,9 @@ def diffimg(name,
 
     Flow(vlf+'q',pwd,
          '''
-         halfint inv=y adj=n |
+         halfint inv=y adj=y |
          math output="input*input" |
-         halfint adj=n | %s | clip2 lower=0
+         halfint adj=y | %s | clip2 lower=0
          ''' % velcon)
 
     if j3 > 1:

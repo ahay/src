@@ -30,17 +30,21 @@ def velcon(data,        # data name
     vm = v0+0.5*nv*dv
     
     mig=data+'-mig'
-    Flow(mig,data,'preconstkirch vel=%g' % v0,split=[4,nh])
+    Flow(mig,data,
+         '''
+         halfint inv=y adj=y |
+         preconstkirch vel=%g
+         ''' % v0,split=[4,nh])
 
     if n1:
         mig2cip = '''
         transp plane=34 memsize=500 |
-        transp plane=23 | halfint inv=1 adj=1 | window n1=%d
+        transp plane=23 | window n1=%d
         ''' % n1
     else:
         mig2cip = '''
         transp plane=34 memsize=500 |
-        transp plane=23 | halfint inv=1 adj=1
+        transp plane=23 
         '''
         n1=100
 
@@ -73,9 +77,9 @@ def velcon(data,        # data name
     
     Flow(ckx2,pad,
          '''
-         halfint inv=y adj=n |
+         halfint inv=y adj=y |
          math output="input*input" |
-         halfint adj=n |
+         halfint adj=y |
          cosft sign3=1 | put o4=0
          ''')
     Flow(ckx2+'v',ckx2,
