@@ -1,0 +1,78 @@
+from rsf.suproj import * 
+
+#http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   #http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
+# download and view the observer notes:
+Fetch('32obslog.pdf',
+      server='http://cotuit.er.usgs.gov',
+      top='Data/1978-015-FA/NL/001/01',
+      dir='32-obslogs')
+rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
+         'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
+         'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
+         'U32A_16','U32A_17','U32A_18','U32A_19','U32A_20',
+	 'U32A_21']
+# there are also 'U32B_01','U32B_02','U32B_03'
+# and  'U32C_01','U32C_02','U32C_03'
+# and 'U32_01'
+# the line is collected in 3 parts. 32, 32a, and 32b
+
+# this directory is to fatch the data.  Simple displays provides
+# the results that scons wants to avoid message 
+# There is nothing to view
+# The ntg does not have the recording delay applied, so the deep 
+# water portion of the line is displayed without the 1, 2, 3, or 4 seconds 
+# delay applied.
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d
+| segyclean
+| suwind tmax=12.28
+| suwind key=tracf min=48 max=48
+''' % (1-little_endian())
+
+ntgsu = []
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+          server='http://cotuit.er.usgs.gov',
+    	  top='Data/1978-015-FA/SE/001',
+      	  dir='18')
+    Flow([file+'ntg', file+'.bin',  file+'.asc'],
+         file+'.SGY',segyread,stdin=0)
+    ntgsu.append(file+'ntg') 
+
+# concatinate the *ntg.su files. One for each SEGY file and display
+Result('ntg',ntgsu,
+       'cat ${SOURCES} | suximage perc=90 title=ntg f2=1')
+
+# download, convert, and view previous processing stack
+Fetch('CSDS32_1.SGY',
+      server='http://cotuit.er.usgs.gov',
+      top='Data/1978-015-FA/SE/001',
+      dir='39')
+
+Flow(['checkstack','checkstack.bin','checkstack.asc'],
+        'CSDS32_1.SGY',
+        '''
+	    segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+	        tape=$SOURCE endian=%d
+	    | segyclean 
+            | suximage title="checkstack" perc=90
+	''' % (1-little_endian()),
+     stdin=0)
+
+Result('checkstack','checkstack',
+       'suximage title="checkstack" perc=90',
+	stdin=0)
+
+End()
