@@ -18,4 +18,10 @@ targets = bldutil.UserSconsTargets()
 targets.c = '''
 integral1 pseudodepth
 '''
+
+if env.get('LAPACK'):
+	env.Append(LIBS=['lapack'])
+else:
+	targets.c.replace('pseudodepth','')
+
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
