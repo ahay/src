@@ -11,6 +11,8 @@ To the reproducible documents collection:
 * jsg/ffd: Fourier finite-difference wave propagation (Song and Fomel)
 * jsg/apefint: Seismic data interpolation beyond aliasing using
   regularized nonstationary autoregression (Liu and Fomel)
+* jsg/timefreq: Time-frequency analysis of seismic data using local
+  attributes (Liu, Fomel, and Chen)
 
 To SCons:
 
