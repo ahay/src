@@ -82,7 +82,7 @@ static void quadratic(float aa, float bb, float cc,
 		      float *num, float *den)
 /* solution of a*x^2+2*b*x+c=0 is num/den */
 {
-    float d, f;
+    float d;
 
     d = bb*bb-aa*cc;
     
@@ -95,16 +95,10 @@ static void quadratic(float aa, float bb, float cc,
     d = sqrtf(d);
 
     if (bb > 0) {
-	f = bb+d;
+	*den = bb+d;
     } else {
-	f = bb-d;
+	*den = bb-d;
     }
 	
-    if (f*f < fabsf(aa*cc)) {
-	*num = f;
-	*den = -aa;
-    } else {
 	*num = -cc;
-	*den = f;
-    }
 }

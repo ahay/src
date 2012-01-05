@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fastpwd
+fastpwd psefd pscefd
 '''
 
 try:  # distributed version
@@ -18,7 +18,7 @@ src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsf','fftw3f'] )
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -32,6 +32,8 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
+
+
 
 ######################################################################
 # SELF-DOCUMENTATION
