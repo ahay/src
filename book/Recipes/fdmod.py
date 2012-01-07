@@ -744,7 +744,8 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          '''
          ewefd2d
          ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
-         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d jdata=%(jdata)d
+	 nb=%(nb)d nbell=%(nbell)d
 	 ssou=%(ssou)s
          ccc=${SOURCES[1]}
          den=${SOURCES[2]}
@@ -1024,12 +1025,12 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
               ''' % par + ' '
     
     # source wavefield (z,x,t)
-    awefd(sout,swfl,sdat,velo,dens,sacq,iacq,custom+iwindow,par)
+    awefd(sout,swfl,sdat,velo,dens,sacq,iacq,iwindow+custom,par)
     
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awefd(rout,twfl,tdat,velo,dens,racq,iacq,custom+iwindow,par)
+    awefd(rout,twfl,tdat,velo,dens,racq,iacq,iwindow+custom,par)
     Flow(rwfl,twfl,'reverse which=4 opt=i verb=y')
     
     # conventional (cross-correlation zero-lag) imaging condition
