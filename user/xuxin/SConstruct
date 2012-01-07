@@ -16,7 +16,7 @@ except:
 targets = bldutil.UserSconsTargets()
 
 targets.c = '''
-integral1 pseudodepth
+integral1 pseudodepth swapbyte
 '''
 
 if env.get('LAPACK'):
