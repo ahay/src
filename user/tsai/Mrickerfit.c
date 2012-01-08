@@ -137,13 +137,15 @@ int main(int argc, char* argv[])
             r2sr3s2 = r2sr3s*r2sr3s;
 
 
-	    a1num = (r1sd*r3s2-r3sd*r1sr3s)*(r2s2*r3s2-r2sr3s2)-(r1sr2s*r3s2-r2sr3s*r1sr3s)*(r2sd*r3s2-r3sd*r2sr3s);
-	    a1den = (r1s2*r3s2-r1sr3s2)*(r2s2*r3s2-r2sr3s2)-(r1sr2s*r3s2-r1sr3s*r2sr3s)*(r1sr2s*r3s2-r2sr3s*r1sr3s);
+	    a1num = (r1sd*(r3s2+eps)-r3sd*r1sr3s)*((r2s2+eps)*(r3s2+eps)-r2sr3s2)-(r1sr2s*(r3s2+eps)-r2sr3s*r1sr3s)*(r2sd*(r3s2+eps)-r3sd*r2sr3s);
+	    a1den = ((r1s2+eps)*(r3s2+eps)-r1sr3s2)*((r2s2+eps)*(r3s2+eps)-r2sr3s2)-(r1sr2s*(r3s2+eps)-r1sr3s*r2sr3s)*(r1sr2s*(r3s2+eps)-r2sr3s*r1sr3s);
 	    a1 = a1num/a1den;
-	    a2num = (r2sd*r3s2-r3sd*r2sr3s)-a1*(r1sr2s*r3s2-r1sr3s*r2sr3s);
-	    a2den = r2s2*r3s2-r2sr3s2;
+
+	    a2num = (r2sd*(r3s2+eps)-r3sd*r2sr3s)-a1*(r1sr2s*(r3s2+eps)-r1sr3s*r2sr3s);
+	    a2den = (r2s2+eps)*(r3s2+eps)-r2sr3s2;
 	    a2 = a2num/a2den;
-	    a3 = (r3sd-a2*r2sr3s-a1*r1sr3s)/r3s2;
+
+	    a3 = (r3sd-a2*r2sr3s-a1*r1sr3s)/(r3s2+eps);
 
 	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g numm1=%g denm1=%g dm1=%g numm2=%g denm2=%g dm2=%g m1f=%g m2f=%g a1=%g a2=%g",
 					      iter,r2,numm1,denm1,dm1f,numm2,denm2,dm2f,m1f,m2f,a1,a2);
@@ -153,8 +155,8 @@ int main(int argc, char* argv[])
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps || r3s2 < eps) break;
 	}     
 
-	m1f = 5;
-	m2f = 20;
+	m1f = 6;
+	m2f = 28;
 	m3f = 60;
 
 	m1f = fabsf(m1f);

@@ -6,7 +6,7 @@ from rsf.proj import *
 # Program compilation
 #####################
 
-exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
+#exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
 
 segyread = '''
              segyread su=y endian=n tfile=${TARGETS[1]}
@@ -27,7 +27,7 @@ Flow('foldplot','trsfallshots %s' % exe[0],
           
     ''')
 
-Result('foldplot','foldplot.rsf',
+Result('foldplot','foldplot',
      '''
      grey  title=foldplot
      ''')

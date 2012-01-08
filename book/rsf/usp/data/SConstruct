@@ -328,9 +328,9 @@ Result('cmps',
        ''')
 
 # Set up velocity scan parameters
-v0 = 2.15
+v0 = 1.0
 dv = 0.025
-nv = 100
+nv = 150
 
 # Velocity scanning for all CMP gathers
 Flow('scn','cmps',

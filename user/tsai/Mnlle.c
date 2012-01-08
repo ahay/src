@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
 
     if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.05*(na-1)*df;
-    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.30*(na-1)*df;
+    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.25*(na-1)*df;
     /* initial frequency */
     if (!sf_getint("niter",&niter)) niter = 100;
     /* number of iterations */
@@ -164,6 +164,9 @@ int main(int argc, char* argv[])
             m2f += dm2f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps) break;
 	}     
+
+	m1f = 6.5;
+	m2f = 30.0;
 
 	m1f = fabsf(m1f);
 	m1f2 = m1f*m1f;

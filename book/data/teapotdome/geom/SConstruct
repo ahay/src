@@ -3,44 +3,47 @@ import math
 
 Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
      '''
-     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=npr3_field.sgy
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=/home/yihua/research/geophysics/process_club/TeapotDome/Prestack/npr3_field.sgy
      ''',stdin=0)
 
-exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
-exe1 = Program('dumphdr.c',CPPDEFINES='NO_BLAS')
+#exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
+#exe1 = Program('dumphdr.c',CPPDEFINES='NO_BLAS')
 
-Flow('hdrdump','tteapot %s' % exe1[0],
-    '''
-      dd type=float |
-      ./${SOURCES[1]} 
-          o1=0 n1=96  d1=200 label1=offset
-          o2=1 n2=188 d2=1   label2=tracf
-          o3=1 n3=345 d3=1   label3=ep
-          verbose=3 
-    ''')
+#Flow('hdrdump','tteapot %s' % exe1[0],
+#    '''
+#      dd type=float |
+#      ./${SOURCES[1]} 
+#          o1=0 n1=96  d1=200 label1=offset
+#          o2=1 n2=188 d2=1   label2=tracf
+#          o3=1 n3=345 d3=1   label3=ep
+#          verbose=3 
+#    ''')
 
-Flow('foldplot','tteapot %s' % exe[0],
+Flow('foldplot1','tteapot foldplot',
     '''
       dd type=float |
       ./${SOURCES[1]} 
           verbose=1
           o1=0 n1=96  d1=200 label1=offset
           o2=1 n2=188 d2=1   label2=xline
-          o3=1 n3=345 d3=1   label3=iline
-          
+          o3=1 n3=345 d3=1   label3=iline        
     ''')
-Result('foldplot','foldplot.rsf',
+
+Result('foldplot1','foldplot1',
      '''
      grey  title=foldplot pclip=100 
      ''')
-Result('foldplot3','foldplot.rsf',
+
+Result('foldplot3','foldplot',
      '''
+     byte gainpanel=all |
      grey3  title=foldplot pclip=100 
      ''')
 
 Flow('foldplot_off','foldplot',
      'transp plane=13')
-Result('foldplot_off','grey title=foldplot_off pclip=100')
+
+Result('foldplot_off','grey title=foldplot pclip=100')
 
 # Xline/Inline numbers
 Flow('ix','tteapot','dd type=float | headermath output="xline"')

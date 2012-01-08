@@ -11,8 +11,8 @@
 /* I do not know how to include this header or like to the right library
    obviously this is a terrible cludge */
 
-#include "/home/karl/m8r/madagascar/build/system/seismic/segy.h"
-#include "/home/karl/m8r/madagascar/build/system/seismic/segy.c"
+#include "/home/yihua/RSFSRC/build/system/seismic/segy.h"
+#include "/home/yihua/RSFSRC/build/system/seismic/segy.c"
 
 /* I cannot get the round function from math.h.  This is an obvious cludge */
 
