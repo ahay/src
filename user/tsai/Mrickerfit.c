@@ -51,9 +51,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
 
 
-    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.05*(na-1)*df;
-    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.25*(na-1)*df;
-    if (!sf_getfloat("m",&m3f0)) m3f0 = f0+0.40*(na-1)*df;
+    if (!sf_getfloat("m",&m1f0)) m1f0 = f0+0.08*(na-1)*df;
+    if (!sf_getfloat("m",&m2f0)) m2f0 = f0+0.28*(na-1)*df;
+    if (!sf_getfloat("m",&m3f0)) m3f0 = f0+1.20*(na-1)*df;
     /* initial frequency */
     if (!sf_getint("niter",&niter)) niter = 100;
     /* number of iterations */
@@ -147,17 +147,17 @@ int main(int argc, char* argv[])
 
 	    a3 = (r3sd-a2*r2sr3s-a1*r1sr3s)/(r3s2+eps);
 
-	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g numm1=%g denm1=%g dm1=%g numm2=%g denm2=%g dm2=%g m1f=%g m2f=%g a1=%g a2=%g",
-					      iter,r2,numm1,denm1,dm1f,numm2,denm2,dm2f,m1f,m2f,a1,a2);
+	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g numm1=%g denm1=%g dm1=%g numm2=%g denm2=%g dm2=%g m1f=%g m2f=%g m3f=%g a1=%g a2=%g",
+					      iter,r2,numm1,denm1,dm1f,numm2,denm2,dm2f,m1f,m2f,m3f,a1,a2);
 	    m1f += dm1f;
             m2f += dm2f;
 	    m3f += dm3f;
 	    if (r1s2 < eps || r2s2 < eps || r1sp2 < eps || r2sp2 < eps || r3s2 < eps) break;
 	}     
 
-	m1f = 6;
-	m2f = 28;
-	m3f = 60;
+	m1f = 10;
+	m2f = 35;
+	m3f = 150;
 
 	m1f = fabsf(m1f);
 	m1f2 = m1f*m1f;
