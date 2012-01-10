@@ -74,7 +74,6 @@ void count()
 
 int main(int argc, char *argv[])
 {
-	char *type;
 	void *p;
 	bool verb;
 	off_t filesize;
@@ -86,14 +85,13 @@ int main(int argc, char *argv[])
 	Fout= sf_output("out");
 
 	if(!sf_getbool("verb",&verb)) verb = false; /* verbosity */
-	type = sf_getstring("type"); /* int, float */
 
 	sf_seek(Fin,0,SEEK_END);
 	filesize = sf_tell(Fin);
 	sf_seek(Fin,0,SEEK_SET);
 
-	switch (type[0]) {
-	case 'i' :
+	switch (sf_gettype(Fin)) {
+	case SF_INT :
 		p = (void *)sf_alloc(1,size = sizeof(int));
 		while(sf_tell(Fin) < filesize) {
 			sf_intread(p,1,Fin);
@@ -102,8 +100,7 @@ int main(int argc, char *argv[])
 			if (verb) count();
 		}
 		break;
-	case 'f' :
-	default  :
+	case SF_FLOAT :
 		p = (void *)sf_alloc(1,size = sizeof(float));
 		while(sf_tell(Fin) < filesize) {
 			sf_floatread(p,1,Fin);
@@ -111,6 +108,9 @@ int main(int argc, char *argv[])
 			sf_floatwrite(p,1,Fout);
 			if (verb) count();
 		}
+		break;
+	default  :
+		sf_error("need type={int,float} in input");
 	}
 	if (verb) sf_warning("\n");
 
