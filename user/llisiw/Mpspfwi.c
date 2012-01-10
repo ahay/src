@@ -1,6 +1,6 @@
-/* Full-waveform Inversion by Preconditioned Helmholtz Solver */
+/* Full-waveform Inversion by Parallel Helmholtz Solver */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,28 +19,32 @@
 
 #include <rsf.h>
 
-#include  "pspfwi.h"
+#include "helm.h"
+#include "pspfwi.h"
 
 int main(int argc, char* argv[])
 {
-    int n[SF_MAX_DIM], dim, i, nt, it, iter, niter, is, ns, iw, nw;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], dw, ow;
-    float *s, *ds, **source;
-    sf_complex ***recv, *a, *b, *e;
-    char key[4];
-    sf_file shot, reco;
+    int n[SF_MAX_DIM], dim, i, nt, it, is, ns, iw, nw;
+    int shift, **mask, water, iter, niter, cgiter, istep, nstep;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], dw, ow, *s;
+    sf_complex **source, **data, *ds, *dp;
+    char key[4], *what;
+    sf_file in, out, shot, recv, reco;
 
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
 
-    /* read dimensions */
+    if (NULL == (what = sf_getstring("what"))) what="inversion";
+    /* what to compute (default inversion) */
+
+    /* read model dimensions [n0*n1*n2] */
     dim = sf_filedims(in,n);
 
     nt = 1;
     for (i=0; i < dim; i++) {
 	sprintf(key,"d%d",i+1);
-	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input",key);
+	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
 	sprintf(key,"o%d",i+1);
 	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
 	nt *= n[i];
@@ -52,81 +56,155 @@ int main(int argc, char* argv[])
 
     /* read initial slowness */
     s  = sf_floatalloc(nt);
-    ds = sf_floatalloc(nt);
     sf_floatread(s,nt,in);
 
-    /* read shot file */
-    if (NULL == sf_getstring("shot")) sf_error("Need source");
+    /* read receiver [n1*n2][ns] */
+    mask = sf_intalloc2(n[1]*n[2],ns);
     
-    shot = sf_input("shot");
+    if (NULL == sf_getstring("recv")) {
+	recv = NULL;
 
-    if (!sf_histint(shot,"n2",&ns)) ns=1;
-    
-    source = sf_floatalloc2(nt,ns);
-    sf_floatread(source[0],nt*ns,shot);
-    sf_fileclose(shot);
-
-    /* read record file */
-    if (NULL == sf_getstring("record")) sf_error("Need record");
- 
-    reco = sf_input("record");
-
-    if (SF_COMPLEX != sf_gettype(reco)) sf_error("Record must be complex");
-
-    if (!sf_histint(reco,"n1",nw)) sf_error("No nw in record");
-    if (!sf_histfloat(reco,"d1",dw)) sf_error("No dw in record");
-    if (!sf_histfloat(reco,"o1",ow)) sf_error("No ow in record");
-
-    recv = sf_complexalloc3(nw,n[1]*n[2],ns);
-    sf_complexread(recv[0][0],nw*n[1]*n[2]*ns,reco);
-    sf_fileclose(reco);
-
-    /* temporary arrays */
-    a = sf_complexalloc(nt);
-    b = sf_complexalloc(nt);
-    e = sf_complexalloc(nt);
-
-    for (it=0; it < nt; it++) {
-	e[it] = sf_cmplx(0.,0.);
-    }
-
-    if (!sf_getint("niter",niter)) niter=1;
-    /* number of inversion iterations */
-
-    /* loop over iterations */
-    for (iter=0; iter < niter; iter++) {
-	
-	for (it=0; it < nt; it++) {
-	    ds[it] = 0.;
-	}
-
-	/* loop over shots */
+	/* receiver everywhere */
 	for (is=0; is < ns; is++) {
-	    
-	    /* loop over frequencies */
-	    for (iw=0; iw < nw; iw++) {
-		w = w0 + iw*dw;
-
-		b = helmholtz(w,s,source[is]);
-
-		/* right-hand side: e = d-b */
-		for (it=0; it < n[1]*[2]; it++) {
-		    e[it*n[1]*n[2]] = recv[is][it][iw] - b[it*n[1]*n[2]];
-		}
-		
-		a = helmholtz(w,s,e);
-		
-		/* slowness update: ds = -w*w*a*b */
-		for (it=0; it < nt; it++) {
-		    ds[it] += -w*w*a[it]*b[it];
-		}
+	    for (it=0; it < n[1]*n[2]; it++) {
+		mask[is][it] = 1;
 	    }
 	}
-	
-	for (it=0; it < nt; it++) {
-	    s[it] += ds[it];
-	}
+    } else {
+	recv = sf_input("recv");
 
+	if (SF_INT != sf_gettype(recv)) sf_error("Receiver must be integer.");
+
+	sf_intread(mask[0],n[1]*n[2]*ns,recv);
+	sf_fileclose(recv);
+    }
+
+    if (!sf_getint("shift",shift)) shift=0;
+    /* receiver shift */
+
+    /* read shot file [n0*n1*n2][ns][nw] */
+    if (NULL == sf_getstring("shot")) sf_error("Need source.");   
+    shot = sf_input("shot");
+
+    if (SF_COMPLEX != sf_gettype(shot)) sf_error("Shot must be complex.");
+
+    if (!sf_histint(shot,"n4",&ns)) ns=1;
+
+    /* NOTE: shot frequency by frequency */
+    source = sf_complexalloc2(nt,ns);
+
+    /* NOTE: data frequency by frequency */
+    data = sf_complexalloc2(n[1]*n[2],ns);
+    
+    /* temporary array */
+    ds = sf_complexalloc(nt);
+
+    switch (what[0]) {
+	case 'f': /* foward modeling */
+
+	    reco = NULL;
+	    dp = NULL;
+
+	    if (!sf_getint("nw",nw)) nw=1;
+	    /* number of frequency */
+	    if (!sf_getfloat("dw",dw)) dw=1.;
+	    /* frequency increment */
+	    if (!sf_getfloat("ow",ow)) ow=5.;
+	    /* starting frequency */
+
+	    /* write output dimensions [n1][n2][ns][nw] */
+	    sf_settype(out,SF_COMPLEX);
+	    
+	    sf_putint(out,"n1",n[1]); sf_putfloat(out,"d1",d[1]); sf_putfloat(out,"o1",o[1]);
+	    sf_putint(out,"n2",n[2]); sf_putfloat(out,"d2",d[2]); sf_putfloat(out,"o2",o[2]);
+	    sf_putint(out,"n3",ns);   sf_putfloat(out,"d3",1.);   sf_putfloat(out,"o3",1.);
+	    sf_putint(out,"n4",nw);   sf_putfloat(out,"d4",dw);   sf_putfloat(out,"o4",ow);
+
+	    /* loop over frequency */
+	    for (iw=0; iw < nw; iw++) {
+		w = ow + iw*dw;
+
+		sf_complexread(source[0],nt*ns,shot);
+
+		/* helmholtz setup */
+		helm_setup(s,w);
+
+		/* loop over shot */
+		for (is=0; is < ns; is++) {
+
+		    /* helmholtz solve */
+		    helm_solve(source[is],ds);
+
+		    /* receiver */
+		    for (it=0; it < n[1]*n[2]; it++) {
+			if (mask[is][it])
+			    data[is][it] = ds[shift+it*n[0]];
+			else
+			    data[is][it] = sf_cmplx(0.,0.);
+		    }
+		}
+
+		sf_complexwrite(data[0],n[1]*n[2]*ns,out);
+	    }
+
+	    break;
+	    
+	case 'i': /* inversion */
+
+	    /* read record file [n1*n2*ns][nw] */
+	    if (NULL == sf_getstring("reco")) sf_error("Need record.");	    
+	    reco = sf_input("reco");
+	    
+	    if (SF_COMPLEX != sf_gettype(reco)) sf_error("Record must be complex.");
+	    
+	    if (!sf_histint(reco,"n4",nw)) sf_error("No nw in record");
+	    if (!sf_histfloat(reco,"d4",dw)) sf_error("No dw in record");
+	    if (!sf_histfloat(reco,"o4",ow)) sf_error("No ow in record");
+	    
+	    if (!sf_getint("niter",niter)) niter=1;
+	    /* number of inversion iterations */
+
+	    if (!sf_getint("cgiter",cgiter)) cgiter=20;
+	    /* number of conjugate-gradient iterations */
+	    
+	    if (!sf_getint("water",water)) water=0;
+	    /* water layer depth */
+
+	    /* temporary array */
+	    dp = sf_complexalloc(n[1]*n[2]*ns);
+
+	    /* initialize */
+	    fwi_init(nt,n,ns,shift,mask,water);
+	    
+	    /* loop over frequency */
+	    for (iw=0; iw < nw; iw++) {
+		w = ow + iw*dw;
+
+		sf_complexread(source[0],nt*ns,shot);
+		sf_complexread(data[0],n[1]*n[2]*ns,reco);
+
+		/* fwi setup */
+		fwi_setup(s,w);
+		
+		/* update data-misfit */
+		fwi_foward(source,data,dp);
+
+		/* iteration per frequency */
+		for (iter=0; iter < niter; iter++) {
+
+		    /* compute update */
+		    sf_csolver(fwi_operator,sf_ccgstep,nt,n[1]*n[2]*ns,ds,dp,cgiter,"end");
+
+		    /* line search */
+		    for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
+			rhsnorm = cblas_scnrm2(n[1]*n[2]*ns,dp,1);
+		    }
+
+		}
+
+	    }
+
+	    break;
     }
 
     exit(0);

@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
 {
     bool velocity, l1norm, shape, verb;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order, seg;
-    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv, **ray;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl;
+    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl, **ray;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time;
@@ -194,8 +194,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(rayd,"o3",o[2]);
 	sf_putint(rayd,"n4",nshot);
 	sf_putint(rayd,"n5",niter+1);
-	sf_settype(rayd,SF_INT);
-	ray = sf_intalloc2(nt,nshot);
+	ray = sf_floatalloc2(nt,nshot);
     } else {
 	rayd = NULL;
 	ray = NULL;
@@ -296,7 +295,7 @@ int main(int argc, char* argv[])
     /* output ray density/coverage */
     if (rayd != NULL) {
 	fatomo_ray(ray);
-	sf_intwrite(ray[0],nt*nshot,rayd);
+	sf_floatwrite(ray[0],nt*nshot,rayd);
     }
 
     /* calculate L2 data-misfit */
@@ -363,7 +362,11 @@ int main(int argc, char* argv[])
 		if (grad != NULL) {
 		    if (velocity) {
 			for (it=0; it < nt; it++) {
+			    /*
 			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
+			    dv[it] = 1./sqrtf(s[it]+2.*ds[it])-1./sqrtf(s[it]);
+			    */
+			    dv[it] = ds[it];
 			}
 			sf_floatwrite(dv,nt,grad);
 		    } else {
@@ -377,7 +380,10 @@ int main(int argc, char* argv[])
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] == 1)
+			    /*
 			    temps[it] = (s[it]+step*ds[it])*(s[it]+step*ds[it])/s[it];
+			    */
+			    temps[it] = s[it]+step*2.*ds[it];
 		    }
 		    
 		    /* forward fast-marching for stencil time */		    
@@ -415,7 +421,7 @@ int main(int argc, char* argv[])
 		/* output ray density/coverage */
 		if (rayd != NULL) {
 		    fatomo_ray(ray);
-		    sf_intwrite(ray[0],nt*nshot,rayd);
+		    sf_floatwrite(ray[0],nt*nshot,rayd);
 		}
 
 		if (istep == 10) {
