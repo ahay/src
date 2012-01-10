@@ -19,10 +19,10 @@ Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
 #          verbose=3 
 #    ''')
 
-Flow('foldplot1','tteapot foldplot',
+Flow('foldplot1','tteapot',
     '''
       dd type=float |
-      ./${SOURCES[1]} 
+      foldplot
           verbose=1
           o1=0 n1=96  d1=200 label1=offset
           o2=1 n2=188 d2=1   label2=xline

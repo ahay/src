@@ -1,5 +1,5 @@
 from rsf.proj import *
-import rwezo,zomig,fdmod
+from rsf.recipes import rwezo,zomig,fdmod
 
 par = {    
     'nz':1201, 'dz':0.025,  'oz':0,     'lz':'z', 'uz':'km', 

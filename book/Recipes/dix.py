@@ -11,7 +11,9 @@ def dix(data,        # data name
         x0=0,        # lateral origin
         units='km',  # lateral units
         rect1=10,    # vertical smoothing
-        rect2=10):   # lateral  smoothing
+        rect2=10,    # lateral  smoothing
+        jw=2,        # windowing for wiggle traces
+        ):   
     '''Dix inversion'''
 
     Plot(npk,
@@ -150,17 +152,17 @@ def dix(data,        # data name
     
     Plot(agc+'w',agc,
          '''
-         window j2=2 |
+         window j2=%d |
          wiggle transp=y yreverse=y scalebar=y wantaxis=n wanttitle=n
          plotcol=7 poly=y
-         ''')
+         ''' % jw)
     
     Plot(vg+'w',vg,
          '''
-         window j2=2 |
+         window j2=%d |
          wiggle transp=y yreverse=y scalebar=y wantaxis=n wanttitle=n
          plotcol=7 poly=y
-         ''')
+         ''' % jw)
     
     Result(dix+'w',[dix,agc+'w'],'Overlay')
 #    Result(pdx+'w',[pdx,vg+'w'],'Overlay')

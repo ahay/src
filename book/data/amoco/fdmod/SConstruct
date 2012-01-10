@@ -74,8 +74,10 @@ Flow('den','vel','math output=1')
 fdmod.awefd1('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
 Plot('wfl',fdmod.wgrey('pclip=99',par),view=1)
-Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offset 
-            wheretitle=t titlesz=6 labelsz=4''',par))
+Result('dat','window j2=5 | transp |' + fdmod.dgrey('''
+pclip=99 title=Data\ Record label2=Offset 
+wheretitle=t titlesz=6 labelsz=4
+''',par))
 times=['5','10','15','20']
 cntr=0
 for item in ['5','10','15','20']:

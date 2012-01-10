@@ -193,7 +193,7 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
         Result(par['prefix']+migRC+sfx,migRC+sfx,'window | transp |' % par
                + rgrey('pclip=99.9',par))
         
-        Plot(migCC+sfx,'window | transp |'
+        Plot(migCC+sfx,'window j1=2 j2=2 | transp |'
              + fdmod.cgrey('pclip=100',par))
         Result(par['prefix']+migCC+sfx,[migCC+sfx,cos],'Overlay' % par)
 

@@ -1,31 +1,40 @@
-/* 
-   build a fold map
-   Program change history:
-   date       Who             What
-   12/10/2011 Karl Schleicher Original program
+/* Build a seismic fold map. */
+/*
+  Copyright (C) 2012 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+/* 12/10/2011 Karl Schleicher Original program */
 
 #include <string.h>
 #include <rsf.h>
 
-/* I do not know how to include this header or like to the right library
-   obviously this is a terrible cludge */
-
-#include "/home/yihua/RSFSRC/build/system/seismic/segy.h"
-#include "/home/yihua/RSFSRC/build/system/seismic/segy.c"
+#include "segy.h"
 
 /* I cannot get the round function from math.h.  This is an obvious cludge */
-
-int roundf1(float number){
-  if(number>0) 
-    return (int) (number+0.5);
-  else
-    return (int) (number-0.5);
+static int roundf1(float number){
+    if(number>0) 
+	return (int) (number+0.5);
+    else
+	return (int) (number-0.5);
 }
 
 int main(int argc, char* argv[])
 {
-  int verbose;
+    int verbose;
     float o1,o2,o3;
     int n1,n2,n3;
     float d1,d2,d3;
@@ -95,7 +104,7 @@ int main(int argc, char* argv[])
     */
 
     if (!sf_histint(in,"n1",&n1_input)) 
-      sf_error("input file does not define n1");
+	sf_error("input file does not define n1");
 
     n_input = sf_leftsize(in,1); /* left dimensions after the first two */
 
@@ -136,27 +145,27 @@ int main(int argc, char* argv[])
 
     if(verbose >=1)fprintf(stderr,"loop processing input trace headers\n");
     for (i_input=0 ; i_input<n_input; i_input++) {
-      int iiline,ixline,ioffset;
-      sf_floatread(hdrin,n1_input,in);
-      ioffset=roundf1((hdrin[idx_offset]-o1)/d1);
-      ixline =roundf1((hdrin[idx_xline ]-o2)/d2);
-      iiline =roundf1((hdrin[idx_iline ]-o3)/d3);
-      if(verbose>2){
-	fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
-	       hdrin[idx_offset],
-	       hdrin[idx_xline ],
-	       hdrin[idx_iline ]);
-	fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
-		        ioffset   ,ixline   ,iiline);
-      }
-      if(ioffset>=0 && ioffset< n1 &&
-	 ixline >=0 && ixline < n2 &&
-	 iiline >=0 && iiline < n3 ){
-	if(verbose>2)
-	  fprintf(stderr,"increment fold at %d,%d,%d\n",
-		         iiline,ixline,ioffset); 
-	foldplot[iiline][ixline][ioffset]++;
-      }
+	int iiline,ixline,ioffset;
+	sf_floatread(hdrin,n1_input,in);
+	ioffset=roundf1((hdrin[idx_offset]-o1)/d1);
+	ixline =roundf1((hdrin[idx_xline ]-o2)/d2);
+	iiline =roundf1((hdrin[idx_iline ]-o3)/d3);
+	if(verbose>2){
+	    fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
+		    hdrin[idx_offset],
+		    hdrin[idx_xline ],
+		    hdrin[idx_iline ]);
+	    fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
+		    ioffset   ,ixline   ,iiline);
+	}
+	if(ioffset>=0 && ioffset< n1 &&
+	   ixline >=0 && ixline < n2 &&
+	   iiline >=0 && iiline < n3 ){
+	    if(verbose>2)
+		fprintf(stderr,"increment fold at %d,%d,%d\n",
+			iiline,ixline,ioffset); 
+	    foldplot[iiline][ixline][ioffset]++;
+	}
     }
     if(verbose >=1)fprintf(stderr,"write foldplot to output\n");
     /* write the output in one big write */
