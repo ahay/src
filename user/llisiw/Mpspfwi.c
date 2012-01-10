@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], dim, i, nt, it, is, ns, iw, nw;
     int shift, **mask, water, iter, niter, cgiter, istep, nstep;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], dw, ow, *s;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], dw, ow, *s, *temps, step, misnorm, misnorm0, misnorm1;
     sf_complex **source, **data, *ds, *dp;
     char key[4], *what;
     sf_file in, out, shot, recv, reco;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     }
 
     /* read initial slowness */
-    s  = sf_floatalloc(nt);
+    s = sf_floatalloc(nt);
     sf_floatread(s,nt,in);
 
     /* read receiver [n1*n2][ns] */
@@ -157,9 +157,9 @@ int main(int argc, char* argv[])
 	    
 	    if (SF_COMPLEX != sf_gettype(reco)) sf_error("Record must be complex.");
 	    
-	    if (!sf_histint(reco,"n4",nw)) sf_error("No nw in record");
-	    if (!sf_histfloat(reco,"d4",dw)) sf_error("No dw in record");
-	    if (!sf_histfloat(reco,"o4",ow)) sf_error("No ow in record");
+	    if (!sf_histint(reco,"n4",nw)) sf_error("No nw in record.");
+	    if (!sf_histfloat(reco,"d4",dw)) sf_error("No dw in record.");
+	    if (!sf_histfloat(reco,"o4",ow)) sf_error("No ow in record.");
 	    
 	    if (!sf_getint("niter",niter)) niter=1;
 	    /* number of inversion iterations */
@@ -167,11 +167,15 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("cgiter",cgiter)) cgiter=20;
 	    /* number of conjugate-gradient iterations */
 	    
+	    if (!sf_getint("nstep",nstep)) nstep=3;
+	    /* number of line-search iterations */
+
 	    if (!sf_getint("water",water)) water=0;
 	    /* water layer depth */
 
 	    /* temporary array */
 	    dp = sf_complexalloc(n[1]*n[2]*ns);
+	    temps = sf_floatalloc(nt);
 
 	    /* initialize */
 	    fwi_init(nt,n,ns,shift,mask,water);
@@ -180,28 +184,61 @@ int main(int argc, char* argv[])
 	    for (iw=0; iw < nw; iw++) {
 		w = ow + iw*dw;
 
+		sf_warning("frequency %g start:",w);
+		
 		sf_complexread(source[0],nt*ns,shot);
 		sf_complexread(data[0],n[1]*n[2]*ns,reco);
 
 		/* fwi setup */
 		fwi_setup(s,w);
 		
-		/* update data-misfit */
-		fwi_foward(source,data,dp);
+		/* forward */
+		fwi_forward(source,data,dp);
 
-		/* iteration per frequency */
+		/* initial misfit norm */
+		misnorm = cblas_scnrm2(n[1]*n[2]*ns,dp,1);
+		misnorm0 = misnorm;
+
+		/* iteration */
 		for (iter=0; iter < niter; iter++) {
 
 		    /* compute update */
 		    sf_csolver(fwi_operator,sf_ccgstep,nt,n[1]*n[2]*ns,ds,dp,cgiter,"end");
+		    sf_ccgstep_close();
 
 		    /* line search */
 		    for (istep=0, step=1.; istep < nstep; istep++, step *= 0.5) {
-			rhsnorm = cblas_scnrm2(n[1]*n[2]*ns,dp,1);
+
+			/* take only real part of ds */
+			for (it=0; it < nt; it++) {
+			    temps[it] = s[it]+step*crealf(ds[it]);
+			}
+
+			/* compare misfit */
+			fwi_setup(temps,w);
+			fwi_forward(source,data,dp);
+
+			misnorm1 = cblas_scnrm2(n[1]*n[2]*ns,dp,1);
+
+			/* break if misfit norm decreases */
+			if (misnorm1 < misnorm0) {
+			    for (it=0; it < nt; it++) {
+				s[it] = temps[it];
+			    }
+
+			    sf_warning("relative misfit %g after iteration %d (line search %d)",misnorm1/misnorm,iter+1,istep);
+
+			    misnorm0 = misnorm1;
+			    break;
+			}
 		    }
 
+		    /* line search failure */
+		    if (istep == nstep) {
+			sf_warning("line search failed... jump to next frequency...");
+			break;
+		    }
 		}
-
 	    }
 
 	    break;
