@@ -21,9 +21,7 @@
 
 #define MB 1048576
 
-bool verb;
-int size;
-static int b,mb;
+size_t size;
 
 int is_little_endian(void)
 {
@@ -66,10 +64,11 @@ void swap_float_4(float *p)
 
 void count()
 {
+	static int b=0, mb=0;
+
 	if ((b += size) >= MB) {
 		b = 0;
-		if (!(++mb % 100))
-			sf_warning("%d MB written;",mb);
+		sf_warning("%d MB written;",++mb);
 	}
 }
 
@@ -77,6 +76,7 @@ int main(int argc, char *argv[])
 {
 	char *type;
 	void *p;
+	bool verb;
 	off_t filesize;
 	sf_file Fin,Fout;
 
@@ -91,8 +91,6 @@ int main(int argc, char *argv[])
 	sf_seek(Fin,0,SEEK_END);
 	filesize = sf_tell(Fin);
 	sf_seek(Fin,0,SEEK_SET);
-
-	b = mb = 0;
 
 	switch (type[0]) {
 	case 'i' :
