@@ -140,6 +140,9 @@ void fastmarch(float *time   /* time */,
 
 void fastmarch_planewave()
 /*< plane-wave source >*/
+{
+
+}
 
 void fastmarch_close(void)
 /*< free allocated memory >*/
@@ -210,6 +213,9 @@ int neighbors_nearsource(float* time /* time */,
 
 int neighbors_planewave()
 /* initialize plane-wave source */
+{
+    return (0);
+}
 
 void pqueue_insert(float* v1)
 /* insert an element (smallest first) */
