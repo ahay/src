@@ -101,7 +101,7 @@ void fwi_operator(bool adj, bool add, int nx, int nr, sf_complex *x, sf_complex 
 {
     int i0, iw, is;
 
-    sf_adjnull(adj,add,nx,nr,x,r);
+    sf_cadjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
 	/* given dp solve ds */

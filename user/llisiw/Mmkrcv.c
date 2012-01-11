@@ -19,14 +19,18 @@
 
 #include <rsf.h>
 
-#include "fastmarch.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+#include "mkrcv.h"
 
 int main(int argc, char* argv[])
 {
-    bool velocity, plane[3];
-    int n[SF_MAX_DIM], nt, dim, *flag, order, i, j, k, is, ns, nrecv, *mask, *recv;
+    bool velocity;
+    int n[SF_MAX_DIM], nt, dim, order, i, j, k, is, ns, nrecv, *mask, **recv;
     int temp[2], offset[2], left[2], right[2], count;
-    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, *t, *reco;
+    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, *s, **t, **reco;
     char key[4];
     sf_file in, shot, out, record, topo;
     
@@ -44,11 +48,11 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input",key);
 	sprintf(key,"o%d",i+1);
 	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
-	nt *= n[i]; plane[i] = false;
+	nt *= n[i];
     }
     if (dim < 3) {
 	/*NOTE: need debugging inconsistancy between source[2]*/
-	n[2] = 1; o[2] = o[1]; d[2] = d[1]; plane[2] = false;
+	n[2] = 1; o[2] = o[1]; d[2] = d[1];
     }
     
     /* read model */
@@ -76,8 +80,8 @@ int main(int argc, char* argv[])
 	:(2*offset[0]+1)*(2*offset[1]+1)-1;
 
     /* allocate memory for output */
-    recv = sf_intalloc(nrecv);
-    reco = sf_floatalloc(nrecv);
+    recv = sf_intalloc2(nrecv,ns);
+    reco = sf_floatalloc2(nrecv,ns);
 
     if (NULL != sf_getstring("topo")) {
 	topo = sf_output("topo");
@@ -118,8 +122,7 @@ int main(int argc, char* argv[])
     }
     
     /* allocate temporary memory */
-    t     = sf_floatalloc(nt);
-    flag  = sf_intalloc(nt);
+    t = sf_floatalloc2(nt,ns);
     
     /* make topography mask */
     if (topo != NULL) {
@@ -133,14 +136,17 @@ int main(int argc, char* argv[])
 	sf_intwrite(mask,nt,topo);
     }
     
-    /* make receiver list and record list */
-    fastmarch_init(n[2],n[1],n[0]);
+    /* initialize */
+    fastmarch_init(n,o,d,order);
 
+    /* set background slowness */
+    fastmarch_set(s);
+
+#ifdef _OPENMP
+#pragma omp parallel for private(temp,left,right,count,k,j,i)
+#endif
     for (is=0; is < ns; is++) {
-	/* NOTE: no constant box around source */
-	fastmarch(t,s,flag,plane,
-		  n[2],n[1],n[0],o[2],o[1],o[0],d[2],d[1],d[0],
-		  source[is][2],source[is][1],source[is][0],0,0,0,order);
+	fastmarch(t[is],source[is]);
 
 	temp[0]  = (source[is][1]-o[1])/d[1]+0.5;
 	left[0]  = temp[0]-offset[0];
@@ -162,8 +168,8 @@ int main(int argc, char* argv[])
 			
 			for (i=0; i < n[0]; i++) {
 			    if (s[k*n[1]*n[0]+j*n[0]+i] < air) {
-				recv[count] = k*n[1]*n[0]+j*n[0]+i;
-				reco[count] = t[k*n[1]*n[0]+j*n[0]+i];
+				recv[is][count] = k*n[1]*n[0]+j*n[0]+i;
+				reco[is][count] = t[is][k*n[1]*n[0]+j*n[0]+i];
 				count++;
 				break;
 			    }
@@ -175,14 +181,14 @@ int main(int argc, char* argv[])
 	/* negative flag for void space */
 	if (count < nrecv) {
 	    for (i=count; i < nrecv; i++) {
-		recv[i] = -1;
-		reco[i] = 0.;
+		recv[is][i] = -1;
+		reco[is][i] = 0.;
 	    }
 	}
-
-	sf_intwrite(recv,nrecv,out);
-	sf_floatwrite(reco,nrecv,record);
     }
+
+    sf_intwrite(recv[0],nrecv*ns,out);
+    sf_floatwrite(reco[0],nrecv*ns,record);
     
     exit(0);
 }
