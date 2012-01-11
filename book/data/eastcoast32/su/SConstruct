@@ -31,10 +31,10 @@ from rsf.suproj import *
 #       'acroread ${SOURCES[0]}',stdin=0)
 
 # download and view the observer notes:
-Fetch('32obslog.pdf',
-      server='http://cotuit.er.usgs.gov',
-      top='Data/1978-015-FA/NL/001/01',
-      dir='32-obslogs')
+#Fetch('32obslog.pdf',
+#      server='http://cotuit.er.usgs.gov',
+#      top='Data/1978-015-FA/NL/001/01',
+#      dir='32-obslogs')
 Result('observerlog','../fetch/32obslog.pdf',
        'acroread ${SOURCES[0]}',stdin=0)
 

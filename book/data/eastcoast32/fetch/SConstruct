@@ -16,6 +16,10 @@ Fetch('32obslog.pdf',
       server='http://cotuit.er.usgs.gov',
       top='Data/1978-015-FA/NL/001/01',
       dir='32-obslogs')
+Result('observerlog','32obslog.pdf',
+       'acroread ${SOURCES[0]}',stdin=0)
+
+
 rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
          'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
          'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
