@@ -362,11 +362,7 @@ int main(int argc, char* argv[])
 		if (grad != NULL) {
 		    if (velocity) {
 			for (it=0; it < nt; it++) {
-			    /*
 			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
-			    dv[it] = 1./sqrtf(s[it]+2.*ds[it])-1./sqrtf(s[it]);
-			    */
-			    dv[it] = ds[it];
 			}
 			sf_floatwrite(dv,nt,grad);
 		    } else {
@@ -380,10 +376,7 @@ int main(int argc, char* argv[])
 		    /* update slowness */
 		    for (it=0; it < nt; it++) {
 			if (k == NULL || k[it] == 1)
-			    /*
 			    temps[it] = (s[it]+step*ds[it])*(s[it]+step*ds[it])/s[it];
-			    */
-			    temps[it] = s[it]+step*2.*ds[it];
 		    }
 		    
 		    /* forward fast-marching for stencil time */		    
