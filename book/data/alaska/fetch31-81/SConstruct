@@ -1,0 +1,73 @@
+from rsf.suproj import * 
+# need to try sudivstack
+
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
+# first download the display of the previous stack
+# download and view the image of the previous stack:
+Fetch('31_81_IM.JPG',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='IMAGES')
+#THis can be done using:
+# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
+
+oodraw = WhereIs('oodraw')
+
+if oodraw:
+    Result('prevstack','31_81_IM.JPG',
+           oodraw + ' $SOURCE',stdin=0)
+
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+pdfread = 'acroread'
+
+if pdfread:
+    # download and view the survey notes:
+    Fetch('31_81_S.PDF',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+          dir='DOCUMENTS')
+    Command('surveylog.view','31_81_S.PDF',
+            pdfread + ' $SOURCE')
+    
+    # download and view the observer notes:
+    Fetch('31_81_O.PDF',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+          dir='DOCUMENTS')
+    Result('observerlog','31_81_O.PDF',
+            pdfread + ' $SOURCE')
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d |
+segyclean
+''' % (1-little_endian())
+
+rawsegy=['L23535','L23536','L23537']
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    Flow([file, file+'.bin',  file+'.asc'],
+         file+'.SGY',segyread,stdin=0)
+
+# concatinate the input files
+Flow ('line', rawsegy,
+     'cat ${SOURCES}',stdin=0)
+
+# display the first 3000 traces
+
+Result('first','line',
+       'suwind count=3000 | suximage perc=90')
+
+End()
