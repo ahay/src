@@ -76,7 +76,6 @@ Flow(['checkstack','checkstack.bin','checkstack.asc'],
      stdin=0)
 
 Result('checkstack','checkstack',
-       'suximage title="checkstack" perc=90',
-	stdin=0)
+       'suximage title="checkstack" perc=90')
 
 End()
