@@ -32,6 +32,7 @@ struct Upd {
 };
 
 int neighbors_nearsource(float* time, float* xs);
+int neighbors_planewave(float *time, int nshot, float **slist, float *tlist);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
@@ -92,8 +93,8 @@ void fastmarch_set(float *v1  /* slowness squared */)
     v = v1;
 }
 
-void fastmarch(float *time   /* time */,
-	       float *source /* source */)
+void fastmarch_point(float *time   /* time */,
+		     float *source /* source */)
 /*< run fast marching eikonal solver >*/
 {
     int its;
@@ -138,10 +139,47 @@ void fastmarch(float *time   /* time */,
     }
 }
 
-void fastmarch_planewave()
+void fastmarch_planewave(float *time   /* time */,
+			 int ns        /* number of shots */,
+			 float **slist /* source list */,
+			 float *tlist  /* time list */)
 /*< plane-wave source >*/
 {
+    int its;
+    float *p;
+    int npoints, i;
+ 
+#ifdef _OPENMP
+    its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
+    
+    /* point t to time for pqueue operations */
+    t[its] = time;
+    
+    /* initialize priority queue */
+    xn[its] = x[its];
+    x1[its] = x[its]+1;
+    
+    /* fast marching */
+    for (npoints =  neighbors_planewave(time,ns,slist,tlist);
+	 npoints > 0;
+	 npoints -= neighbours(time,i)) {
 
+	/* smallest value in queue */
+	p = pqueue_extract();
+	
+	if (p == NULL) {
+	    sf_warning("%s: heap exausted!",__FILE__);
+	    break;
+	}
+	
+	i = p-time;
+
+	/* update wave front */
+	in[its][i] = SF_IN;
+    }
 }
 
 void fastmarch_close(void)
@@ -211,10 +249,49 @@ int neighbors_nearsource(float* time /* time */,
     return (n[0]*n[1]*n[2]-1);
 }
 
-int neighbors_planewave()
+int neighbors_planewave(float *time   /* time */,
+			int nshot     /* number of shots */,
+			float **slist /* source list */,
+			float *tlist  /* time list */)
 /* initialize plane-wave source */
 {
-    return (0);
+    int its;
+    int ic, i, j, is[3], ishot;
+
+#ifdef _OPENMP
+    its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
+    
+    /* initialize everywhere */
+    for (i=0; i < n[0]*n[1]*n[2]; i++) {
+	in[its][i] = SF_OUT;
+	time[i] = SF_HUGE;
+	offsets[its][i] = -1;
+    }
+
+    for (ishot=0; ishot < nshot; ishot++) {
+	for (j=0; j < 3; j++) {
+	    is[j] = slist[ishot][j]/d[j]+0.5;
+	    
+	    if (is[j] < 0) {
+		is[j]=0;
+	    } else if (is[j] >= n[j]) {
+		is[j]=n[j]-1;
+	    }
+	}
+
+	/* source index */
+	ic = is[0]+n[0]*(is[1]+n[1]*is[2]);
+
+	/* initialize source */
+	time[ic] = tlist[ishot];
+	in[its][ic] = SF_IN;
+	pqueue_insert(time+ic);
+    }
+
+    return (n[0]*n[1]*n[2]-nshot);
 }
 
 void pqueue_insert(float* v1)
