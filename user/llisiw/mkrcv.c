@@ -287,7 +287,8 @@ int neighbors_planewave(float *time   /* time */,
 
 	/* initialize source */
 	time[ic] = tlist[ishot];
-	in[its][ic] = SF_IN;
+	/* NOTE: initialize as SF_FRONT instead of SF_IN */
+	in[its][ic] = SF_FRONT;
 	pqueue_insert(time+ic);
     }
 
@@ -389,9 +390,6 @@ void pqueue_update(int index)
 {
     int its, newOffset, tIndex;
     unsigned int c;
-/*
-    int n;
-*/
     float **xc, **xi;
     
 #ifdef _OPENMP

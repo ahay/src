@@ -155,11 +155,19 @@ int main(int argc, char* argv[])
     /* write output header */
     sf_putint(out,"n1",nrecv);
     sf_putint(out,"n2",nc);
+    if (plane) {
+	sf_putfloat(out,"o2",p0);
+	sf_putfloat(out,"d2",dp);
+    }
     sf_putint(out,"n3",1);
     sf_settype(out,SF_INT);
 
     sf_putint(record,"n1",nrecv);
     sf_putint(record,"n2",nc);
+    if (plane) {
+	sf_putfloat(record,"o2",p0);
+	sf_putfloat(record,"d2",dp);
+    }
     sf_putint(record,"n3",1);
     
     if (topo != NULL) sf_settype(topo,SF_INT);
