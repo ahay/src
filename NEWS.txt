@@ -44,6 +44,7 @@ To programs:
 * sfshapeagc: automatic gain control by shaping regularization.
 * modified sfsuwrite for consistency with sfsuread
 * user/chen: new contributor (Zhonghuan Chen)
+* sffoldplot: build a seismic fold map
 
 ===Bug fixes===
 

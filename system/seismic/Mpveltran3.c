@@ -121,9 +121,9 @@ int main (int argc, char* argv[])
 	sf_putfloat(velxy,"d2",dvxy);
 
 	if(!map) {
-		sf_putint(velx,"n3",1);
-		sf_putint(vely,"n3",1);
-		sf_putint(velxy,"n3",1);
+	    sf_putint(velx,"n3",1);
+	    sf_putint(vely,"n3",1);
+	    sf_putint(velxy,"n3",1);
 	}
 
 
@@ -148,18 +148,18 @@ int main (int argc, char* argv[])
     /* Auxiliary inputs */
     TAU0 = sf_floatalloc(nt);
 
-	if (NULL != sf_getstring("dipx")) dipx = sf_input("dipx");
-	else sf_error("Need dipx input");
+    if (NULL != sf_getstring("dipx")) dipx = sf_input("dipx");
+    else sf_error("Need dipx input");
 
-	if (NULL != sf_getstring("dipy")) dipy = sf_input("dipy");
-	else sf_error("Need dipy input");
+    if (NULL != sf_getstring("dipy")) dipy = sf_input("dipy");
+    else sf_error("Need dipy input");
 
-	if (NULL != sf_getstring("dipxy")) dipxy = sf_input("dipxy");
-	else sf_error("Need dipxy input");
+    if (NULL != sf_getstring("dipxy")) dipxy = sf_input("dipxy");
+    else sf_error("Need dipxy input");
 
-	Rx = sf_floatalloc(nt);
-	Ry = sf_floatalloc(nt);
-	Rxy = sf_floatalloc(nt);
+    Rx = sf_floatalloc(nt);
+    Ry = sf_floatalloc(nt);
+    Rxy = sf_floatalloc(nt);
 
     
     for (ix = 0; ix < nx; ix++) { /* CMP loop*/
@@ -176,93 +176,93 @@ int main (int argc, char* argv[])
 	    }
 	}
 	for (ip2 = 0; ip2 < np2; ip2++) { /* slope 2 (dimension 3)*/
-		p2 = p20+ip2;
+	    p2 = p20+ip2;
 
-		for (ip1 = 0; ip1 < np1; ip1++) { /* slope 1 (dimension 2)*/
-			p1 = p10+ip1;
+	    for (ip1 = 0; ip1 < np1; ip1++) { /* slope 1 (dimension 2)*/
+		p1 = p10+ip1;
 
-			/* sf_warning("ip1=%d ip2=%d np2=%d",ip1,ip2,np2); */
+		/* sf_warning("ip1=%d ip2=%d np2=%d",ip1,ip2,np2); */
 
-			sf_floatread (TAU0, nt,input);
-			sf_floatread (Rx, nt, dipx);
-			sf_floatread (Ry, nt, dipy);
-			sf_floatread (Rxy,nt, dipxy);
+		sf_floatread (TAU0, nt,input);
+		sf_floatread (Rx, nt, dipx);
+		sf_floatread (Ry, nt, dipy);
+		sf_floatread (Rxy,nt, dipxy);
 
-			if (!map) sf_floatread (ord, nt, cmp);
-
-
-            for (it=0; it < nt; it++) { /* time tau loop*/
-
-            	t = t0 + it*dt;
+		if (!map) sf_floatread (ord, nt, cmp);
 
 
-                if (TAU0[it] <= 0.) {
+		for (it=0; it < nt; it++) { /* time tau loop*/
+
+		    t = t0 + it*dt;
+
+
+		    if (TAU0[it] <= 0.) {
                 	v1[it] = 0.0;
                 	v2[it] = 0.0;
                 	v3[it] = 0.0;
-                } else {
+		    } else {
                 	if (interval) {
-                   	   N = (Rxy[it]  +   Rx[it] * Ry[it] ) / dp1 /dp2;
-                       D = (Rx[it] * p1 +  Ry[it]  * p2 - 1 );
+			    N = (Rxy[it]  +   Rx[it] * Ry[it] ) / dp1 /dp2;
+			    D = (Rx[it] * p1 +  Ry[it]  * p2 - 1 );
 
-                       v1[it] = ( Rx[it] / dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
-                       v2[it] = ( Ry[it] / dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
-                       v3[it] = N/(D+eps);
+			    v1[it] = ( Rx[it] / dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
+			    v2[it] = ( Ry[it] / dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
+			    v3[it] = N/(D+eps);
 
 /*
-                	   tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
-                	   v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it])  ) / dp1 /dp2 ;
+  tau_ = (Rx[it] * p1  +  Ry[it] * p2  - 1.0);
+  v3[it] =  ( (Rxy[it]  +  Rx[it] * Ry[it])  ) / dp1 /dp2 ;
 
-                	   v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
-                	   v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
+  v1[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p2*dp2 - Rx[it] * 1.0/dp1 )/(p1*dp1*tau_+eps);
+  v2[it] = -1.0 * ( (Rx[it] * Ry[it] * 1.0/dp1 * 1.0/dp2 + Rxy[it] * 1.0/dp1/dp2)*p1*dp1 - Ry[it] * 1.0/dp2 )/(p2*dp2*tau_+eps);
 */
-                	 }
-                	 else {
-                  	   N = (Rxy[it] *dt +  (1.0/t+eps) * Rx[it] * Ry[it] *dt *dt) / dp1 /dp2;
-                	   D = (Rx[it]* dt * p1 +  Ry[it] * dt * p2 - t );
-
-                	   v1[it] = ( Rx[it]* dt/dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
-                	   v2[it] = ( Ry[it]* dt/dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
-                	   v3[it] = N/(D+eps);
-
-
-
-                	   /*tau_ = (-1.0) * (t / (TAU0[it] * TAU0[it] + eps) );*/
-/*
-     v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
-                	   v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
-                	   v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
-*/
-                	 }
-                } /* end of if tau0 >= 0 */
-                if (!map) {
-                    coord1[it][0] = TAU0[it];
-                    coord2[it][0] = TAU0[it];
-                    coord3[it][0] = TAU0[it];
-
-                    coord1[it][1] = v1[it];
-                    coord2[it][1] = v2[it];
-                    coord3[it][1] = v3[it];
-                }
-            } /* END tau t loop */
-
-			if (map) {
-				stretch4_define (nmo,TAU0);
-
-				stretch4_apply (nmo,v1,v1); sf_floatwrite (v1,nt,velx);
-				stretch4_apply (nmo,v2,v2); sf_floatwrite (v2,nt,vely);
-				stretch4_apply (nmo,v3,v3); sf_floatwrite (v3,nt,velxy);
-			} else {
-				sf_int2_init (coord1, t0,vx0, dt,dvx, nt,nvx, sf_spline_int, nw, nt);
-				sf_int2_lop (true,true,ntvx,nt,vx,ord);
-
-				sf_int2_init (coord2, t0,vy0, dt,dvy, nt,nvy, sf_spline_int, nw, nt);
-				sf_int2_lop (true,true,ntvy,nt,vy,ord);
-
-				sf_int2_init (coord3, t0,vxy0, dt,dvxy, nt,nvxy, sf_spline_int, nw, nt);
-				sf_int2_lop (true,true,ntvy,nt,vxy,ord);
 			}
-	      } /* END slope p1 loop */
+			else {
+			    N = (Rxy[it] *dt +  (1.0/t+eps) * Rx[it] * Ry[it] *dt *dt) / dp1 /dp2;
+			    D = (Rx[it]* dt * p1 +  Ry[it] * dt * p2 - t );
+
+			    v1[it] = ( Rx[it]* dt/dp1 - N * p2*dp2 ) / (D*p1*dp1 + eps);
+			    v2[it] = ( Ry[it]* dt/dp2 - N * p1*dp1 ) / (D*p2*dp2 + eps);
+			    v3[it] = N/(D+eps);
+
+
+
+			    /*tau_ = (-1.0) * (t / (TAU0[it] * TAU0[it] + eps) );*/
+/*
+  v3[it] =  1.0/(tau_+eps) * (Rxy[it] * dt/dp1/dp2 + 1/(t+eps)* Rx[it] * Ry[it] * dt/dp1 * dt/dp2);
+  v1[it] = ( 1.0/(tau_+eps) * Rx[it] *(dt/dp1) - v3[it] * p2*dp2) / ( p1*dp1 + eps);
+  v2[it] = ( 1.0/(tau_+eps) * Ry[it] *(dt/dp2) - v3[it] * p1*dp1) / ( p2*dp2 + eps);
+*/
+			}
+		    } /* end of if tau0 >= 0 */
+		    if (!map) {
+			coord1[it][0] = TAU0[it];
+			coord2[it][0] = TAU0[it];
+			coord3[it][0] = TAU0[it];
+
+			coord1[it][1] = v1[it];
+			coord2[it][1] = v2[it];
+			coord3[it][1] = v3[it];
+		    }
+		} /* END tau t loop */
+
+		if (map) {
+		    stretch4_define (nmo,TAU0);
+
+		    stretch4_apply (nmo,v1,v1); sf_floatwrite (v1,nt,velx);
+		    stretch4_apply (nmo,v2,v2); sf_floatwrite (v2,nt,vely);
+		    stretch4_apply (nmo,v3,v3); sf_floatwrite (v3,nt,velxy);
+		} else {
+		    sf_int2_init (coord1, t0,vx0, dt,dvx, nt,nvx, sf_spline_int, nw, nt);
+		    sf_int2_lop (true,true,ntvx,nt,vx,ord);
+
+		    sf_int2_init (coord2, t0,vy0, dt,dvy, nt,nvy, sf_spline_int, nw, nt);
+		    sf_int2_lop (true,true,ntvy,nt,vy,ord);
+
+		    sf_int2_init (coord3, t0,vxy0, dt,dvxy, nt,nvxy, sf_spline_int, nw, nt);
+		    sf_int2_lop (true,true,ntvy,nt,vxy,ord);
+		}
+	    } /* END slope p1 loop */
         } /* END slope p2 loop */
         
 	if (!map) {

@@ -80,7 +80,9 @@ Plot('spelev',
      min2=75 max2=125 min1=85 max1=165
      ''')
 
-Flow('elev','spelev','spline o1=85 d1=1 n1=81')
+Flow('coord','spelev','window n1=1')
+Flow('elev','spelev coord',
+     'window f1=1 | invbin1 eps=0 head=${SOURCES[1]} x0=85 dx=1 nx=81')
 Plot('elev',
      '''
      graph title=Elevation label1=Shot 
@@ -88,5 +90,38 @@ Plot('elev',
      ''')
 Result('elev','elev spelev','Overlay')
 
+###########################
+# Previous Stack
+###########################
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+
+file='checkstack'
+Flow([file, file+'.bin',  file+'.asc', 't'+file],
+     '31_81_PR.SGY',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tfile=${TARGETS[3]}
+     ''')
+
+Result('checkstack','grey title="Check Stack" pclip=90')
+Result('zoomcheckstack','checkstack',
+       '''
+       window max1=3 |
+       grey title="Zoom Check Stack" pclip=90
+       ''')
+
+# Local slope
+Flow('dip','checkstack','dip rect1=50 rect2=10 order=2')
+Result('dip','grey color=j scalebar=y title=Slope')
+
+Flow('pwd','checkstack dip','pwd dip=${SOURCES[1]} order=2')
+Result('pwd','grey title=PWD')
+Result('zoompwd','pwd',
+       '''
+       window max1=3 |
+       grey title="Zoom PWD" pclip=90
+       ''')
 
 End()

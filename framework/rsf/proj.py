@@ -78,10 +78,12 @@ def echo(target,source,env):
         trg = open(str(target[0]),'w')
         if type(obj) is types.ListType:
             obj = string.join(obj)
-            trg.write(obj+'\n')
+        trg.write(obj+'\n')
         trg.close()
     err = env.get('err','')
     if err:
+        if type(err) is types.ListType:
+            err = string.join(err)
         sys.stderr.write(err+'\n')
     return 0
 
@@ -511,7 +513,7 @@ class Project(Environment):
         return plot
     def End(self):
         self.Command('.rsfproj',self.lock,action=Action(self.Info))
-        self.Echo('results',None,out=self.rest)
+        self.Echo('results',None,err=self.rest)
         if self.view: # if any results
             self.Alias('view',self.view)
             self.Alias('print',self.prnt)
