@@ -32,7 +32,7 @@ struct Upd {
     double stencil, value, delta;
 };
 
-int neighbors_nearsource(float* time, float* xs, upgrad upg);
+int neighbors_nearsource(float* time, float* xs);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
@@ -125,10 +125,10 @@ int fastmarch(float *time   /* time */,
     x1[its] = x[its]+1;
     
     count = 0;
-    length = 1;
+    length = 0;
     
     /* fast marching */
-    for (npoints =  neighbors_nearsource(time,xs,upg);
+    for (npoints =  neighbors_nearsource(time,xs);
 	 npoints > 0;
 	 npoints -= neighbours(time,i)) {
 
@@ -186,8 +186,7 @@ void fastmarch_close(void)
 }
 
 int neighbors_nearsource(float* time /* time */,
-			 float* xs   /* source location [3] */,
-			 upgrad upg  /* stencil */)
+			 float* xs   /* source location [3] */)
 /* initialize point source */
 {
     int its;
@@ -228,11 +227,9 @@ int neighbors_nearsource(float* time /* time */,
     
     /* initialize source */
     time[ic] = sqrtf(((double)v[ic])*delta2);
+/*  TEMP: the next line seems to be redundant; to be checked later...*/
     in[its][ic] = SF_IN;
     pqueue_insert(time+ic);
-    
-    /* start stencil from source */
-    upgrad_set(upg,time,ic,in[its],0);
     
     return (n[0]*n[1]*n[2]-1);
 }
