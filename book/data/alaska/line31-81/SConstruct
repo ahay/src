@@ -1,3 +1,4 @@
+
 from rsf.suproj import * 
 # need to try sudivstack
 
@@ -34,7 +35,7 @@ if pdfread:
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
-    Command('surveylog.view','31_81_S.PDF',
+    Result('surveylog','31_81_S.PDF',
             pdfread + ' $SOURCE')
     
     # download and view the observer notes:
@@ -42,7 +43,7 @@ if pdfread:
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
-    Command('observerlog.view','31_81_O.PDF',
+    Result('observerlog','31_81_O.PDF',
             pdfread + ' $SOURCE')
 
 segyread = '''
@@ -137,11 +138,11 @@ Flow ('allshots', 'line binary_hdrfile1.dat',
 	    reject=149
     ''' % keys)
 
-#Result('test','allshots',
-#	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-#            title="allshots record %g" perc=20
-# 	''')
+Result('allshots','allshots',
+	'''
+	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+            title="allshots record %g" perc=20
+ 	''')
 
 	
 # download, convert, and view previous processing stack
