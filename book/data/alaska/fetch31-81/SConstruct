@@ -70,4 +70,15 @@ Flow ('line', rawsegy,
 Result('first','line',
        'suwind count=3000 | suximage perc=90')
 
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+file='checkstack'
+Flow([file, file+'.bin', file+'.asc'],
+     '31_81_PR.SGY',segyread,
+     stdin=0)
+Result('checkstack','checkstack',
+       'suximage title="checkstack" perc=90')
+
 End()
