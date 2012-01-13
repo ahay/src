@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fastpwd
+fdip
 '''
 
 try:  # distributed version
