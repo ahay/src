@@ -4,12 +4,12 @@ import rsf.suproj as su
 def cat_su_rsf_diff(out,sufile,rsffile):
     rsf.Flow(out+"temp",   [sufile,rsffile],
             '''
-	    segyread su=y endian=y tfile=t${TARGETS}.rsf
+	    segyread su=y endian=n tfile=t${TARGETS}.rsf
             | add scale=-1,1 ${SOURCES[1]}
             ''')
     rsf.Flow(out,[sufile,rsffile,out+"temp"],
              '''
-             segyread su=y endian=y tfile=t${TARGETS}.rsf
+             segyread su=y endian=n tfile=t${TARGETS}.rsf
              | cat ${SOURCES[1]} ${SOURCES[2]} axis=2
 	     ''')
 
@@ -36,7 +36,7 @@ su.Flow('sulinewind','../line31-81/line.su','suwind count=3000')
 cat_su_rsf_diff('linewind_rsf_minus_su','sulinewind.su','linewind')
 rsf.Result('linewind_rsf_minus_su',
            '''
-	   grey pclip=80 title="line su rsf diff" label2="no processing"
+	   grey pclip=80 title="su rsf diff" label2="no processing"
 	   ''')
 
 # Form mask to window out misfires
