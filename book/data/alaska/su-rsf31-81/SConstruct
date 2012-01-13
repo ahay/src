@@ -4,16 +4,14 @@ import rsf.suproj as su
 def cat_su_rsf_diff(out,sufile,rsffile):
     rsf.Flow(out+"temp",   [sufile,rsffile],
             '''
-	    segyread su=y endian=n tfile=t${TARGETS}.rsf
-            | add scale=-1 
-            | add ${SOURCES[1]}
+	    segyread su=y endian=y tfile=t${TARGETS}.rsf
+            | add scale=-1,1 ${SOURCES[1]}
             ''')
     rsf.Flow(out,[sufile,rsffile,out+"temp"],
              '''
-             segyread su=y endian=n tfile=t${TARGETS}.rsf
+             segyread su=y endian=y tfile=t${TARGETS}.rsf
              | cat ${SOURCES[1]} ${SOURCES[2]} axis=2
 	     ''')
-
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
@@ -40,12 +38,6 @@ rsf.Result('linewind_rsf_minus_su',
            '''
 	   grey pclip=80 title="line su rsf diff" label2="no processing"
 	   ''')
-
-
-
-
-
-
 
 # Form mask to window out misfires
 rsf.Flow('shotmask','tline',
@@ -76,6 +68,8 @@ rsf.Result('shotline',
            '''
 	   grey pclip=20 title="shotline from rsf" label2="no processing"
 	   ''')
+
+
 
 # compare the function for spreading in Madagascar and su
 # 
