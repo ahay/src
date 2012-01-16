@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float eps, d2, f, f0, f2, df, di;
     float *m0, *a, *m, *m2, *m3, *e; /*initial frequency*/
     float *data, **r, **rt, **rs, **rp; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
-    float *rd, *r2, *rpd, **rpr, *rpa, *dd;
+    float *rd, *r2, *rpd, **rpr, *rpa, *dd, *ap, *arp, *gamma;
     bool verb;
     sf_file in, out, ma;    
     
@@ -144,13 +144,28 @@ int main(int argc, char* argv[])
 	    rpa[ncol] += rpr[nrow][ncol]*a[nrow];
 	    }
     }
-
-    for () {
-	dd[] = ; 
+    ap = sf_floatalloc(n);
+    dd = sf_floatalloc(n);
+    for (nrow=1; nrow<n; nrow++) {
+	dd[nrow] = rpd[nrow]-rpa[nrow]; 
     }
 	gaussel_init(n);
-	gaussel_solve(rs, rd, a);
+	gaussel_solve(rs, dd, ap);	
+	arp = sf_floatalloc(n);
+	for (nrow=1; nrow<n; nrow++) {
+	    arp[nrow] = a[nrow]*ap[nrow];
+	}
 
+	for (nrow=1; nrow<n; nrow++) {
+	    aparp[nrow] = ap[nrow]+arp[nrow];
+	}
+
+	gamma = sf_floatalloc(na);
+
+	for () {
+
+
+	}
 
     sf_warning(".");
     exit (0);
