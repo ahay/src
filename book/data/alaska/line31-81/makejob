@@ -9,7 +9,7 @@ export PATH=$CWPROOT/bin:$PATH
 
 scons -c 
 
-echo "#\!/bin/sh" | sed -e 's#\\##g' >setupenv.sh
+echo "#\!/bin/bash" | sed -e 's#\\##g' >setupenv.sh
 echo "export CWPROOT=\`pwd\`" >>setupenv.sh
 echo "export PATH=\$CWPROOT/bin:\$PATH" >>setupenv.sh
 chmod 777 setupenv.sh
