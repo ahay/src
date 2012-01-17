@@ -38,6 +38,25 @@ from rsf.suproj import *
 Result('observerlog','../fetch/32obslog.pdf',
        'acroread ${SOURCES[0]}',stdin=0)
 
+# convert, and view previous processing stack
+file='checkstack'
+Flow([file, file+'.bin', file+'.asc'],
+     '../fetch/CSDS32_1.SGY',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+     	      tape=$SOURCE endian=%d
+     | segyclean
+     ''' % (1-little_endian()),
+     stdin=0)
+
+Result('checkstack','checkstack',
+       'suximage title="checkstack" perc=90')
+Result('zoomcheckstack','checkstack',
+       '''
+       suwind tmin=0 tmax=3  |
+       suximage title="zoom checkstack" perc=90
+       ''')
+
 # i added suwind to padd all traces to the same time length
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
@@ -148,7 +167,7 @@ Result('zoomfirst','line',
 Result('firstmovie','line',
        '''
        suwind count=4800 
-       | suxmovie n2=48 loop=1 fframe=1 dframe=1 
+       | suxmovie n2=48 loop=1 fframe=1 dframe=1  d1=.004
                 title="record %g" perc=20 
        ''')
 
@@ -205,11 +224,36 @@ Flow('ntgdelay','allshots',
 Result('ntgdelay','ntgdelay',
        'suximage perc=90 title=ntgdelay f2=1')
 
+# plot the first 1000 traces of ntg with spreading, decon, and nmo
+# pick waterbottom and waterbottom multiple on first trace.  I get 5.139 and
+# 10.230.  The delay to apply to make the multiple twicwe the watbot time
+# is .048.  I remember GSI required a 51 ms instrument delay.
+
+Result('ntg_pick_delay','ntgdelay',
+       '''
+       suwind count=1000 
+       |  sugain tpow=1.0 
+       | supef maxlag=.100 
+       | sunmo tnmo=0 vnmo=1500 
+       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       ''')
+# remove 51 ms delay and plot data to check work
+Result('ntg_static','ntgdelay',
+       '''
+       suwind count=1000 
+       | suchw key1=tstat a=51 b=0 key2=offset 
+       | sustatic hdrs=1 sign=1
+       | sugain tpow=1.0 
+       | supef maxlag=.100 
+       | sunmo tnmo=0 vnmo=1500 
+       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       ''')
+
 Result('secondmovie','allshots',
        '''
        suwind count=9600 
-       | suxmovie n2=192 loop=1 fframe=1 dframe=1 
-                title="record %g" perc=20 
+       | suxmovie n2=192 loop=1 fframe=1 dframe=1  d1=.004
+                title="record %g" perc=99 
        ''')
 Result('thirdmovie','allshots',
        '''
@@ -218,19 +262,23 @@ Result('thirdmovie','allshots',
        | sumute xmute=0,3000 tmute=0,3 mode=0 
          key=offset 
          taper=50 
-       | suxmovie n2=192 loop=1 fframe=1 dframe=1 
-                title="record %g" perc=99
+       | suxmovie n2=192 loop=1 fframe=1 dframe=1 d1=.004
+                title="sugain, sumute record %g" perc=99
        ''')
 
+# I see no noise for velfilt.  may need 51 ms delay, decon, and radon
 Flow('cdps','allshots',
      '''
      susort cdp offset 
+     | suchw key1=tstat a=51 b=0 key2=offset 
+     | sustatic hdrs=1 sign=1
      | sugain tpow=1.0 
      | sumute 
        xmute=0,3000 tmute=0,3 
        mode=0 
        key=offset 
        taper=50 
+     | supef maxlag=.100
      ''' ) 
 
 Flow('vels.txt','velsorig.txt cdps',
@@ -243,23 +291,33 @@ Flow('vels.txt','velsorig.txt cdps',
 
 #Result('test','allshots',
 #	'''
-#	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
+#	 suxmovie n2=96 loop=1 fframe=1 dframe=1  d1=.004
 #            title="allshots record %g" perc=20
 # 	''')
 
-	
-# convert, and view previous processing stack
-file='checkstack'
-Flow([file, file+'.bin', file+'.asc'],
-     '../fetch/CSDS32_1.SGY',segyread,
-     stdin=0)
+Flow('stack','cdps vels.txt',
+     '''
+     sunmo 
+       par=${SOURCES[1]}
+     | sustack 
+        key=cdp 
+        normpow=1 
+     ''')
 
-Result('checkstack','checkstack',
-       'suximage title="checkstack" perc=90')
-Result('zoomcheckstack','checkstack',
+Result('stack','stack',
        '''
-       suwind tmin=0 tmax=3  |
-       suximage title="zoom checkstack" perc=90
+       suximage title="stack" perc=90
+       ''')
+
+Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
+     '''
+     ./010_Velocity_Interp_IVA.sh
+     ''')
+
+Result('vfile','stkvel1.intp2.bin',
+       '''
+       ximage n1=3071 d1=.004 f2=1575 d2=1 cmap=rgb11 
+          wclip=1300 bclip=3000
        ''')
 
 End()
