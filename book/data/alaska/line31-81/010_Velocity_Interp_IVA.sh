@@ -1,6 +1,14 @@
 #! /bin/sh
+# File: 010_Velocity_Interp_IVA.sh
 
-# Velocity interpolation for text file produced by 008_IVA.sh
+#############################################################################
+# Velocity interpolation for text file in format for sunmo to prepare it for
+# input to suktmig2d
+# Credits:
+# 2011 Befriko Murdianto - provided script to seisunix@mailman.mines.edu.
+# 2011 Schleicher -  Used to process Alaska land line 31-81
+#############################################################################
+
 
 # Input data and directories
 VELDIR=.
