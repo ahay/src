@@ -21,8 +21,10 @@ tlagtoang2d tshift txpscan txpnmo velmod veltran voft vofz vscan
 xlagtoang2d zoeppritz zomig zomva
 '''
 
+libsrc = 'segy'
+
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
     alias = {'segyread': ['suread'],
              'segywrite': ['suwrite'],
@@ -39,12 +41,31 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
+objects = []
+includes = []
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+    if os.path.splitext(str(source))[0] in libsrc:
+        objects.append(obj)
+        includes.append(inc)
+
 mains = Split(progs)
+
+##############################################################################
+# LIBRARY
+##############################################################################
+lib = env.StaticLibrary('rsfsegy',objects)
+inc = env.Command('rsfsegy.h',includes,Action(bldutil.__merge))
+
+env.Install('../../lib',lib)
+env.Install('../../include',inc)
+
+if root:
+    env.Install(libdir,lib)
+    env.Install(incdir,inc)
 
 docalias = {}
 for prog in mains:

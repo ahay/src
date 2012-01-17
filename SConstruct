@@ -158,7 +158,7 @@ for dir in map(lambda x: os.path.join('system',x), system):
     else:
         BuildDir(build,dir)
         
-    SConscript(dirs=build,name='SConstruct',exports='env root bindir pkgdir')
+    SConscript(dirs=build,name='SConstruct',exports='env root bindir pkgdir libdir incdir')
     Default(build)
 
 ##########################################################################
