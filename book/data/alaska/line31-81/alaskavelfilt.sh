@@ -17,7 +17,7 @@ do
 	tmute=.488,0,.488 \
     | sugain  agc=1 wagc=.5  \
     > temp${PID}.su
-    cat temp$$.su | suwind key=offset min=-999998 max=0 \
+    cat temp${PID}.su | suwind key=offset min=-999998 max=0 \
     | sudipfilt \
         bias=-.003 \
         dx=1 \
