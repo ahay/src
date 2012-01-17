@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     bool verb;
     sf_file in, out, ma;    
     
-    sf_init (argc,argv);
+        sf_init (argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
     ma  = sf_output("ma");
@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
 		  rpd[i3] += rp[i3][ia]*data[ia];
 	       }    
 	    }
+
 	    /*ricker spectrum matrix transpose*/
 	    for (ib = 0; ib < na; ib++) {
 		for (i4 = 0; i4 < n; i4++) {
@@ -117,8 +118,8 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    /*ricker spectrum, partial ricker spectrum multiplication */
-		       for (ic = 1; ic < n; ic++) {
-			   for (id = 1; id < n; id++) {
+		       for (ic = 0; ic < n; ic++) {
+			   for (id = 0; id < n; id++) {
 			       rs[ic][id] = 0;
 			       rpr[ic][id] = 0;
 			       for (ie = 1; ie < na; ie++) {
@@ -128,39 +129,38 @@ int main(int argc, char* argv[])
 			   }
 		       }
 		       /*partial ricker spectrum*/
-		       for (nrow = 1; nrow < n; nrow++) {
-			   for (ncol = 1; ncol < n; ncol++) {
+		       for (nrow = 0; nrow < n; nrow++) {
+			   for (ncol = 0; ncol < n; ncol++) {
 			       if (nrow == ncol)
 				     {
 					 rpr[nrow][ncol] = 2*rpr[nrow][ncol];
 				     }
 			   }
 		       }
-	}
+
 	gaussel_init(n);
-	/*getting amplitude*/
+	/*soliving for amplitude*/
 	gaussel_solve(rs, rd, a);
-    }
-    rpa = sf_floatalloc(n);
-    for (nrow=1; nrow<n; nrow++) {
-	rpa[nrow] = 0;
-	for (ncol=1; ncol<n; ncol++) {
-	    rpa[ncol] += rpr[nrow][ncol]*a[nrow];
+	rpa = sf_floatalloc(n);
+	for (nrow=0; nrow<n; nrow++) {
+	    rpa[nrow] = 0;
+	    for (ncol=0; ncol<n; ncol++) {
+		rpa[ncol] += rpr[nrow][ncol]*a[nrow];
 	    }
-    }
-    ap = sf_floatalloc(n);
-    dd = sf_floatalloc(n);
-    for (nrow=1; nrow<n; nrow++) {
-	dd[nrow] = rpd[nrow]-rpa[nrow]; 
-    }
+	}
+	ap = sf_floatalloc(n);
+	dd = sf_floatalloc(n);
+	for (nrow=0; nrow<n; nrow++) {
+	    dd[nrow] = rpd[nrow]-rpa[nrow]; 
+	}
 	gaussel_init(n);
 	/*solving for partial amplitude*/
 	gaussel_solve(rs, dd, ap);
 
 	arp = sf_floatalloc2(n,na);
 	/*column is each frequency, dot product*/
-	for (ncol=1; ncol<na; ncol++) {
-	    for (nrow=1; nrow<n; nrow++) {
+	for (ncol=0; ncol<na; ncol++) {
+	    for (nrow=0; nrow<n; nrow++) {
 		arp[nrow][ncol] = a[nrow]*rp[nrow][ncol];
 	    }
 	}
@@ -180,8 +180,8 @@ int main(int argc, char* argv[])
 	}
 
 	aparp = sf_floatalloc2(n,na);
-	for (nrow=1; nrow<n; nrow++) {
-	    for (ncol=1; ncol<n; ncol++) {
+	for (nrow=0; nrow<n; nrow++) {
+	    for (ncol=0; ncol<n; ncol++) {
 	    aparp[nrow][ncol] = arp[nrow][ncol]+ap[nrow];
 	    }
 	}
@@ -189,18 +189,27 @@ int main(int argc, char* argv[])
 	aparpt = sf_floatalloc2(na,n);
 	/*aparp transpose*/
 	for (ncol=0; ncol<na; ncol++) {
-	    for (nrow=1; nrow<n; nrow++) {
+	    for (nrow=0; nrow<n; nrow++) {
 		aparpt[ncol][nrow] = aparp[nrow][ncol];
 	    }
 	}
-/*
+
 	dm = sf_floatalloc2(n,na);
+/*
 	for (ia=0; ia<na; ia++) {
 	    gaussel_init(na);
 	    gaussel_solve(aparpt[ia], gamma[ia], dm[ia]);
-	}
 */
 
+
+
+
+	}
+
+
+
+    }
     sf_warning(".");
+
     exit (0);
 }
