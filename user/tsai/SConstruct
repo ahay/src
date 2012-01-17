@@ -2,8 +2,10 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = '''rickerfit2 rickerfit3 rickerfit
+progs = '''rickerfit2 rickerfit3
 '''
+
+# Mrickerfit.c needs gaussel.c to compile.
 
 try:  # distributed version
     Import('env root pkgdir bindir')
