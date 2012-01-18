@@ -38,15 +38,19 @@ def select_file(entry):
     entry.delete(0, tk.END)
     entry.insert(0, filename)
 
-def convert(vpl,format,args):
+def convert(vpl,format,opts,pars):
     '''Convert a VPL file'''
     if not os.path.isfile(vpl):
         showerror("ERROR", "Can't find " + vpl)
         return
 
-    new = '.'.join([os.path.splitext(vpl)[0],format.lower()]) 
-    fail = vpconvert.convert(vpl,new,format,None,args,False)
-    run = "%s to %s using \"%s\"" % (vpl,new,args)
+    new = '.'.join([os.path.splitext(vpl)[0],format.lower()])
+    opts = ' '.join(map(lambda x: '='.join([x, str(pars[x].get())]), 
+                        pars.keys())) + ' ' + opts
+    
+    fail = vpconvert.convert(vpl,new,format,None,opts,False)
+    
+    run = "%s to %s using \"%s\"" % (vpl,new,opts)
     if fail:
         showerror("Could not convert",run)
     else:
@@ -65,6 +69,8 @@ def main():
               command=lambda: select_file(vpl)).pack(side=tk.LEFT)
     frame.pack()
 
+    pars = {}
+
     # Format
     fmt = tk.StringVar()
     fmt.set("png") # default value
@@ -82,18 +88,22 @@ def main():
     subframe.pack(side=tk.LEFT)
     frame.pack(fill=tk.X,pady=10)
 
- 
-    frame = tk.Frame(root)
+    pars['format'] = fmt
 
     # Fat
     fat = tk.IntVar()
     fat.set(1)
 
+
+    frame = tk.Frame(root)
+    
     tk.Label(frame, text="Fat:").pack(side=tk.LEFT)
     scale = tk.Scale(frame,orient=tk.HORIZONTAL,variable=fat,from_=1,to=10,length=330)
     scale.pack(side=tk.LEFT)
 
     frame.pack(fill=tk.X,pady=10)
+
+    pars['fat'] = fat
 
     # bgcolor
 
@@ -107,6 +117,8 @@ def main():
     tk.Radiobutton(frame,text="Black",value="black",bg="black",fg="white",variable=bgcolor).pack(side=tk.LEFT)
     tk.Radiobutton(frame,text="White",value="white",bg="white",variable=bgcolor).pack(side=tk.LEFT)
 
+    pars['bgcolor'] = bgcolor
+
     # Serifs
     serifs = tk.IntVar()
     serifs.set(1)
@@ -114,6 +126,8 @@ def main():
     tk.Checkbutton(frame,text="Serifs",variable=serifs,padx=10).pack(side=tk.RIGHT)
 
     frame.pack(fill=tk.X,pady=10)
+
+    pars['serifs'] = serifs
 
     # Other options
     options = tk.StringVar()
@@ -124,14 +138,13 @@ def main():
     tk.Entry(frame,textvariable=options,width=60).pack(side=tk.LEFT)
     frame.pack(fill=tk.X,pady=10)
 
-    opts = "fat=%d bgcolor=%s serifs=%d %s" % (fat.get(),bgcolor.get(),serifs.get(),options.get())
-
     # [Convert] [Quit]
     frame = tk.Frame(root)
     run = tk.Button(frame,text="Convert",background="yellow",
                     command=lambda: convert(vpl.get(),
                                             fmt.get(),
-                                            opts))
+                                            options.get(),
+                                            pars))
     run.pack(side=tk.LEFT)
     tk.Button(frame,text="Quit",command=root.quit).pack(side=tk.RIGHT)
     frame.pack(fill=tk.X,pady=10)
