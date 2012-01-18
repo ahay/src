@@ -5,7 +5,8 @@
 
 static int nw,nx;
 static float f0,dz,dx2;
-static float **vel,*buf;
+static float **vel;
+static kiss_fft_cpx *buf;
 
 void sf_psefd_init(int nx0,int nw0,
 	float dx,float dz0,
@@ -20,10 +21,10 @@ void sf_psefd_init(int nx0,int nw0,
 	vel=v0;
 
 	dx2=(dx*dx);
-	buf=(float*)malloc(nx*2*sizeof(float));
+	buf=(kiss_fft_cpx*)sf_complexalloc(nx);
 }
 
-void sf_psefd_step3(int iz,float **io) 
+void sf_psefd_step3(int iz,kiss_fft_cpx **io) 
 /*< step in depth >*/
 {
 	int iw,ix;
@@ -43,14 +44,14 @@ void sf_psefd_step3(int iz,float **io)
 		br=f0*dz*iw/vel[ix][iz];
 		bi=sin(br);
 		br=cos(br);
-		cr=	+ io[iw][ix*2]
-			- io[iw][ix*2+1] * a1i
-			- io[iw][ix*2+3] * a2i;
-		ci=	+ io[iw][ix*2+1]
-			+ io[iw][ix*2] * a1i
-			+ io[iw][ix*2+2] * a2i;
-		buf[ix*2]   = cr*br - ci*bi;	
-		buf[ix*2+1] = cr*bi + ci*br;		
+		cr=	+ io[iw][ix].r
+			- io[iw][ix].i   * a1i
+			- io[iw][ix+1].i * a2i;
+		ci=	+ io[iw][ix].i
+			+ io[iw][ix].r   * a1i
+			+ io[iw][ix+1].r * a2i;
+		buf[ix].r = cr*br - ci*bi;	
+		buf[ix].i = cr*bi + ci*br;		
 
 		for(ix=1;ix<nx-1;ix++)
 		{        
@@ -60,16 +61,16 @@ void sf_psefd_step3(int iz,float **io)
 			br=f0*dz*iw/vel[ix][iz];
 			bi=sin(br);
 			br=cos(br);
-			cr=	  io[iw][ix*2] 
-				- io[iw][ix*2-1] * a0i
-				- io[iw][ix*2+1] * a1i
-				- io[iw][ix*2+3] * a2i;
-			ci=	+ io[iw][ix*2+1]
-				+ io[iw][ix*2-2] * a0i
-				+ io[iw][ix*2] * a1i
-				+ io[iw][ix*2+2] * a2i;
-			buf[ix*2]   = cr*br - ci*bi;	
-			buf[ix*2+1] = cr*bi + ci*br;	
+			cr=	  io[iw][ix].r 
+				- io[iw][ix-1].i * a0i
+				- io[iw][ix].i   * a1i
+				- io[iw][ix+1].i * a2i;
+			ci=	+ io[iw][ix].i
+				+ io[iw][ix-1].r * a0i
+				+ io[iw][ix].r   * a1i
+				+ io[iw][ix+1].r * a2i;
+			buf[ix].r = cr*br - ci*bi;	
+			buf[ix].i = cr*bi + ci*br;		
 		}
 
 		//ix=nx-1 boundary
@@ -78,25 +79,25 @@ void sf_psefd_step3(int iz,float **io)
 		br=f0*dz*iw/vel[ix][iz];
 		bi=sin(br);
 		br=cos(br);
-		cr=	+ io[iw][ix*2]
-			- io[iw][ix*2-1] * a0i
-			- io[iw][ix*2+1] * a1i;
-		ci=	+ io[iw][ix*2+1] 
-			+ io[iw][ix*2] * a1i
-			+ io[iw][ix*2+2] * a1i;
-		buf[ix*2]   = cr*br - ci*bi;	
-		buf[ix*2+1] = cr*bi + ci*br;	
+		cr=	+ io[iw][ix].r
+			- io[iw][ix-1].i * a0i
+			- io[iw][ix].i   * a1i;
+		ci=	+ io[iw][ix].i 
+			+ io[iw][ix-1].r * a0i
+			+ io[iw][ix].r   * a1i;
+		buf[ix].r = cr*br - ci*bi;	
+		buf[ix].i = cr*bi + ci*br;	
 		
 		for(ix=0;ix<nx;ix++)
 		{
-			io[iw][ix*2]=buf[ix*2];
-			io[iw][ix*2+1]=buf[ix*2+1];
+			io[iw][ix].r = buf[ix].r;
+			io[iw][ix].i = buf[ix].i;
 		}
 	}
 	for(ix=0;ix<nx;ix++)
 	{
-		io[0][ix*2]=0.0;
-		io[0][ix*2+1]=0.0;
+		io[0][ix].r = 0.0;
+		io[0][ix].i = 0.0;
 	}
 }
 

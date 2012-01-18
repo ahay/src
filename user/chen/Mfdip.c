@@ -2,7 +2,6 @@
 
 #include <rsf.h>
 #include "fdip.h"
-#include <time.h>
 
 int main(int argc,char**argv)
 {
@@ -11,7 +10,6 @@ int main(int argc,char**argv)
 	float *u,*p;
 	char key[4];
 	sf_file in, out;
-	clock_t start,end;
 
 	sf_init(argc,argv);
 	in = sf_input ("in");
@@ -59,20 +57,17 @@ int main(int argc,char**argv)
 	if(n4==0 || n4==1)	p=sf_floatalloc(n123);
 	else	p=sf_floatalloc(n123*2);
 
-	fdip3_init(n[0], n[1], n[2], rect, liter, verb);
+	fdip_init(n[0], n[1], n[2], rect, liter, verb);
 	
-	start=clock();
 	for(ir=0;ir<nr;ir++){
 		sf_warning(" %d/%d;", ir, nr);
 		sf_floatread(u,n123,in);
-		fdip3( u, p, n4);
+		fdip( u, p, n4);
 		if( n4 == 2 )	sf_floatwrite(p, n123*2, out);
 		else	sf_floatwrite(p, n123, out);
 	}
-	end=clock();
 
-	sf_warning("time cost=%f", (double)(end-start)/CLOCKS_PER_SEC);
-	fdip3_close();
+	fdip_close();
 	exit(0);
 }
 

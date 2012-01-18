@@ -1,20 +1,22 @@
-/* cascade phase shift wave extrapolation with EFD. */
+/* EFD phase shift wave extrapolation. */
 
 #include <rsf.h>
-#include <fftw3.h>
 
-#include "pscefd.h"
+#include "psefd.h"
 
 
 int main(int argc, char* argv[])
 {
 	int iw,it,ix,iz,jt,njt;
 	float dt,dx,dz;
-	int nw,nx,nz,nt,nz0,cas;
-	float *v1; // fft buffer
+	int nw,nx,nz,nt,nz0,nt2;
+
+	kiss_fftr_cfg cfg,icfg;
+	float *v1; 		// fft buffer
+	kiss_fft_cpx *v2,**u1; // fft buffer
+
 	float ox;
-	float **u1,**u2,**u3,**vel;  
-	fftwf_plan plan;
+	float **u2,**u3,**vel;  
 
 	sf_file modl,data,wave,imag;
 
@@ -38,8 +40,6 @@ int main(int argc, char* argv[])
     /* time step for wave data */
     if (!sf_getint("nz",&nz)) nz=nz0; 
     /* depth number */
-    if (!sf_getint("cascade",&cas)) cas=5; 
-    /* number of cascade filter */
 
     sf_putint(imag,"n1",nz);
     sf_putint(imag,"n2",nx);
@@ -56,20 +56,25 @@ int main(int argc, char* argv[])
     sf_putfloat(wave,"d3",dz);
     sf_putfloat(wave,"o3",0);
 
-	nw=nt/2+1;
+	
+	nw=kiss_fft_next_fast_size((nt+1)/2);
+    nt2 = 2*(nw-1);
+
+    cfg  = kiss_fftr_alloc(nt2,0,NULL,NULL);
+    icfg = kiss_fftr_alloc(nt2,1,NULL,NULL);
 
     /* read data and velocity */
     vel = sf_floatalloc2(nz,nx);
     sf_floatread(vel[0],nz*nx,modl);
 
-    v1 = sf_floatalloc(nw*2);
+    v1 = sf_floatalloc(nt2);
+    v2 = (kiss_fft_cpx *) sf_complexalloc(nw);
 
-    u1 = sf_floatalloc2(nx*2,nw);	// U_z(x,w)
+    u1 = (kiss_fft_cpx *) sf_complexalloc2(nx,nw);	// U_z(x,w)
     u2 = sf_floatalloc2(njt,nx);	// u_z(x,t)
     u3 = sf_floatalloc2(nz,nx);		// u(x,z,0)
 
-	plan = fftwf_plan_dft_r2c_1d(nt, v1, 
-		(fftwf_complex*)v1,  FFTW_ESTIMATE);
+	for(it=nt;it<nt2;it++) v1[it]=0.0;
 
 	for(ix=0;ix<nx;ix++)	
 	{
@@ -77,38 +82,33 @@ int main(int argc, char* argv[])
 		for(it=0;it<njt;it++)   u2[ix][it]=v1[it*jt];
         u3[ix][0]=v1[0];  // imag iz =0
 
-		fftwf_execute(plan);
+		kiss_fftr(cfg,v1,v2);
 		for(iw=0;iw<nw;iw++) 
 		{
-			u1[iw][ix*2]=v1[iw*2]; 
-			u1[iw][ix*2+1]=v1[iw*2+1]; 
+			u1[iw][ix].r=v2[iw].r; 
+			u1[iw][ix].i=v2[iw].i; 
 		}
 	}
 	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
 
-	fftwf_destroy_plan(plan);
-
-	plan = fftwf_plan_dft_c2r_1d(nt, (fftwf_complex*)v1,
-		v1,  FFTW_ESTIMATE);
-
-	sf_pscefd_init(cas, nx,nw,dx,dz,
-		1.0/(nt*dt),vel);
+	sf_psefd_init(nx,nw,dx,dz,
+		1.0/(nt2*dt),vel);
 
 
 	for(iz=1;iz<nz;iz++)
 	{
-		sf_pscefd_step3(iz,u1);
+		sf_psefd_step3(iz,u1);
 
 		for(ix=0;ix<nx;ix++)
 		{
 			for(iw=0;iw<nw;iw++)
 			{
-				v1[iw*2]=u1[iw][ix*2];
-				v1[iw*2+1]=u1[iw][ix*2+1];
+				v2[iw].r=u1[iw][ix].r;
+				v2[iw].i=u1[iw][ix].i;
 			}
-			fftwf_execute(plan);
-			for(it=0;it<njt;it++)	u2[ix][it]=v1[it*jt]/nt;
-			u3[ix][iz]=v1[0]/nt;
+			kiss_fftri(icfg,v2,v1);
+			for(it=0;it<njt;it++)	u2[ix][it]=v1[it*jt]/nt2;
+			u3[ix][iz]=v1[0]/nt2;
 		}
 		sf_floatwrite(u2[0],njt*nx,wave); 
 
@@ -117,8 +117,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(u3[0],nz*nx,imag);
  
-	fftwf_destroy_plan(plan);
-	sf_pscefd_exit();
+	sf_psefd_exit();
 
 	return 0;
 }

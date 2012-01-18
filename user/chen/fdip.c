@@ -7,13 +7,13 @@
 static int n,n1,n2,n3,n1x3,n12x3;
 static float *u1,*num,*den;
 
-static void fdip3_flt1(float *in,float *out);
-static void fdip3_dim2(const float *in,float *out);
-static void fdip3_dim3(const float *in,float *out);
+static void fdip_flt1(float *in,float *out);
+static void fdip_dim2(const float *in,float *out);
+static void fdip_dim3(const float *in,float *out);
 static void quadratic(float aa, float bb, float cc, 
 		      float *num, float *den);
 
-void fdip3_init(int m1,int m2,int m3,int *rect, int niter, bool verb)
+void fdip_init(int m1,int m2,int m3,int *rect, int niter, bool verb)
 /*< initialize >*/
 {
 	int nn[3];
@@ -38,7 +38,7 @@ void fdip3_init(int m1,int m2,int m3,int *rect, int niter, bool verb)
 	else sf_divn_init (2, n, nn, rect, niter, verb);
 }
 
-void fdip3_close()
+void fdip_close()
 /*< release work space >*/
 {
 	free(u1);
@@ -48,7 +48,7 @@ void fdip3_close()
 }
 
 
-void fdip3(float *in,float *out,
+void fdip(float *in,float *out,
 	int dim /* 0 - inline; 1 - xline; X - both*/)
 /*< 3D dip estimation >*/
 {	
@@ -56,21 +56,21 @@ void fdip3(float *in,float *out,
 
 	n23=n2*n3;
 	for(i23=0;i23<n23;i23++)
-		fdip3_flt1(in+n1*i23,u1+n1x3*i23);
+		fdip_flt1(in+n1*i23,u1+n1x3*i23);
 	
 	if(dim != 1) // need inline
 	{
-		fdip3_dim2(u1,out);
+		fdip_dim2(u1,out);
 		out += n;
 	}
 
 	if(dim != 0) // need xline
 	{
-		fdip3_dim3(u1,out);
+		fdip_dim3(u1,out);
 	}
 }
 
-static void fdip3_flt1(float *in,float *out)
+static void fdip_flt1(float *in,float *out)
 // filter in time direction
 {
 	int i1;
@@ -93,7 +93,7 @@ static void fdip3_flt1(float *in,float *out)
 	in++;
 }
 
-static void fdip3_dim2(const float *in,float *out)
+static void fdip_dim2(const float *in,float *out)
 {
 	int i1,i2,i3,i123;
 	float a,b,c,*p2,*p3,norm;
@@ -133,7 +133,7 @@ static void fdip3_dim2(const float *in,float *out)
 	sf_divn (num, den, out);
 }
 
-static void fdip3_dim3(const float *in,float *out)
+static void fdip_dim3(const float *in,float *out)
 {
 	int i1,i2,i3,i123;
 	float a,b,c,*p2,*p3,norm;
@@ -185,8 +185,8 @@ static void quadratic(float aa, float bb, float cc,
     d = bb*bb-aa*cc;
     
     if (d < 0.) {
-	*num=0.0;
-	*den=0.0;
+	*num=-bb;
+	*den=aa;
 	return;
     }
 

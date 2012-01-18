@@ -1,7 +1,6 @@
 /* EFD phase shift wave extrapolation. */
 
 #include <rsf.h>
-#include <fftw3.h>
 
 #include "psss.h"
 
@@ -10,11 +9,9 @@ int main(int argc, char* argv[])
 {
 	int it,ix,iz,jt,njt;
 	float dt,dx,dz;
-	int nx,nz,nt,nz0,nw;
-	float ox,**v0;
-	double *v1,*v2;
-	float **u2,**u3,**vel;  
-	fftw_plan plan;
+	int nx,nz,nt,nz0,nw,nt1,nx1;
+	float ox, **ptx, **ptx1,**pim,**pwvz,**vel;  
+	kiss_fft_cpx **pfk;
 
 	sf_file modl,data,wave,imag;
 
@@ -54,60 +51,54 @@ int main(int argc, char* argv[])
     sf_putfloat(wave,"d3",dz);
     sf_putfloat(wave,"o3",0);
 
-	nw=nt/2+1;
+	nw=fft2_init(0,1,nt,nx, &nt1, &nx1);
 
     /* read data and velocity */
     vel = sf_floatalloc2(nz,nx);
     sf_floatread(vel[0],nz*nx,modl);
 
-    v0 = sf_floatalloc2(nt,nx);	// U_z(t,x)
-    v1 = (double*)malloc(nt*nx*sizeof(double));	// U_z(t,x)
-    v2 = (double*)malloc(nw*2*nx*sizeof(double));	// U_z(t,x)
-	
-    u2 = sf_floatalloc2(njt,nx);	// u_z(x,t)
-    u3 = sf_floatalloc2(nz,nx);		// u(x,z,0)
+    ptx  = sf_floatalloc2(nt,nx);	// U_z(t,x)
+    ptx1 = sf_floatalloc2(nt1,nx1);	// U_z(t,x)
+    pwvz = sf_floatalloc2(njt,nx);	// u_z(x,t)
+    pim  = sf_floatalloc2(nz,nx);		// u(x,z,0)
+	pfk  = sf_complexalloc2(nw,nx1);
 
-	plan = fftw_plan_dft_r2c_2d(nx, nt, v1, 
-		(fftw_complex*)v2,  FFTW_ESTIMATE);
-
-    sf_floatread(v0[0],nt*nx,data);
+    sf_floatread(ptx[0],nt*nx,data);
 
 	for(ix=0;ix<nx;ix++)	
 	{
-		for(it=0;it<njt;it++)  { u2[ix][it]=v0[ix][it*jt]; v1[ix*nt+it]=v0[ix][it];}
-        u3[ix][0]=u2[ix][0];  // imag iz =0
+		for(it=0;it<njt;it++)  	pwvz[ix][it]=ptx[ix][it*jt]; 
+		for(it=0;it<nt;it++)  	ptx1[ix][it]=ptx[ix][it]; 
+		for(it=nt;it<nt1;it++)  	ptx1[ix][it]=0.0; 
+        pim[ix][0]=pwvz[ix][0];  // imag iz =0
 	}
-	fftw_execute(plan);
-	fftw_destroy_plan(plan);
+	for(ix=nx;ix<nx1;ix++)	memset(ptx1[ix],0,nt1*sizeof(float));
 
-	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
+	fft2(ptx1[0],pfk[0]);
 
+	sf_floatwrite(pwvz[0],njt*nx,wave); // wave slice iz=0
 
-	plan = fftw_plan_dft_c2r_2d(nx,nt, (fftw_complex*)v2,
-		v1,  FFTW_ESTIMATE);
-
-	sf_psss_init(nw,nx,nz,
-		1.0/(dt*nt),dx,dz,vel);
+	sf_psss_init(nw,nx1,nz,
+		1.0/(dt*nt1),dx,dz,vel);
 
 
 	for(iz=1;iz<nz;iz++)
 	{
-//		sf_psss_step(iz,v2);
+		sf_psss_step(iz,pfk);
 
-		fftw_execute(plan);
+		ifft2(pfk[0],ptx1[0]);
 		for(ix=0;ix<nx;ix++)	
 		{
-//			for(it=0;it<njt;it++)   u2[ix][it]=v1[ix][it*jt]/(nt*nx);
-			u3[ix][iz]=u2[ix][0];  // imag iz =0
+			for(it=0;it<njt;it++)   pwvz[ix][it]=ptx1[ix][it*jt];
+			pim[ix][iz]=pwvz[ix][0];  // imag iz =0
 		}
-		sf_floatwrite(u2[0],njt*nx,wave); 
+		sf_floatwrite(pwvz[0],njt*nx,wave); 
 
 		sf_warning("%d;",iz);
 	}
 
-	sf_floatwrite(u3[0],nz*nx,imag);
+	sf_floatwrite(pim[0],nz*nx,imag);
  
-	fftw_destroy_plan(plan);
 	sf_psss_exit();
 
 	return 0;

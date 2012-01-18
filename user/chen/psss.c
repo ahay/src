@@ -28,24 +28,24 @@ void sf_psss_init(int nw0,int nx0,int nz,
 	}
 }
 
-void sf_psss_step(int iz,float **io) 
+void sf_psss_step(int iz,kiss_fft_cpx **io) 
 /*< step in depth >*/
 {
 	int iw,ix;
-	float ar,ai,br,bi;
+	kiss_fft_cpx a,b;
 
 	for(ix=0;ix<nx;ix++)
 	{
 		for(iw=0;iw<nw;iw++)	
 		{
-			ar = io[ix][iw*2];
-			ai = io[ix][iw*2+1];
-			br = sqrt(vel[iz]*iw*iw-ix*ix)*dz/(dx*nx);
-			bi = sin(br);
-			br = cos(br);
+			a.r = io[ix][iw].r;
+			a.i = io[ix][iw].i;
+			b.r = sqrt(vel[iz]*iw*iw-ix*ix)*dz/(dx*nx);
+			b.i = sin(b.r);
+			b.r = cos(b.r);
 			
-			io[ix][iw*2]   = ar*br-ai*bi;
-			io[ix][iw*2+1] = ar*bi+ai*br;
+			io[ix][iw].r = a.r*b.r-a.i*b.i;
+			io[ix][iw].i = a.r*b.i+a.i*b.r;
 		}
 	}
 }
