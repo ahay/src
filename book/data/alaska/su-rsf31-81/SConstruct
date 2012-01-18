@@ -5,7 +5,7 @@ def cat_su_rsf_diff(out,sufile,rsffile):
     rsf.Flow(out+"temp",   [sufile,rsffile],
             '''
 	    segyread su=y endian=y tfile=t${TARGETS}.rsf
-            | add scale=-1,1 ${SOURCES[1]} 
+            | add scale=-1,1 ${SOURCES[1]}
             ''')
     rsf.Flow(out,[sufile,rsffile,out+"temp"],
              '''
@@ -36,11 +36,7 @@ su.Flow('sulinewind','../line31-81/line.su','suwind count=3000')
 cat_su_rsf_diff('linewind_rsf_minus_su','sulinewind.su','linewind')
 rsf.Result('linewind_rsf_minus_su',
            '''
-<<<<<<< .mine
-	   grey pclip=90 title="line su rsf diff" label2="no processing"
-=======
 	   grey pclip=80 title="su rsf diff" label2="no processing"
->>>>>>> .r8038
 	   ''')
 
 # Form mask to window out misfires
@@ -62,11 +58,16 @@ rsf.Flow('shotline_before',['line','shotmask'],
 
 rsf.Result('shotline_before',
            '''
-	   grey pclip=85 title="shotline from rsf" label2="no processing"
+	   grey pclip=20 title="shotline from rsf" label2="no processing"
 	   ''')
 
 # zero shot at x=21560ft by splitting data into 3 pieces, multiple center 
 # part by 0 and merging three pieces.
+
+rsf.Result('shotline',
+           '''
+	   grey pclip=20 title="shotline from rsf" label2="no processing"
+	   ''')
 
 
 
