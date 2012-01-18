@@ -157,13 +157,13 @@ def convert(vpl,out,format,pen,args,verb=True):
         run = '%s %s %s > %s' % (exe,args,vpl,out)
         if verb:
             print run
-        os.system(run)
+        return os.system(run)
 
     if convert:
         run = '%s %s %s:%s' % (convert,out,format2,out2)
         if verb:
             print run
-        os.system(run)
+        return os.system(run)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API

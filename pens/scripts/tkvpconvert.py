@@ -45,8 +45,12 @@ def convert(vpl,format,args):
         return
 
     new = '.'.join([os.path.splitext(vpl)[0],format.lower()]) 
-    vpconvert.convert(vpl,new,format,None,args,False)
-    showinfo("Converted", "%s converted to %s" % (vpl,new))
+    fail = vpconvert.convert(vpl,new,format,None,args,False)
+    run = "%s to %s using \"%s\"" % (vpl,new,args)
+    if fail:
+        showerror("Could not convert",run)
+    else:
+        showinfo("Converted",run)
 
 def main():
     root = tk.Tk()
@@ -120,12 +124,14 @@ def main():
     tk.Entry(frame,textvariable=options,width=60).pack(side=tk.LEFT)
     frame.pack(fill=tk.X,pady=10)
 
+    opts = "fat=%d bgcolor=%s serifs=%d %s" % (fat.get(),bgcolor.get(),serifs.get(),options.get())
+
     # [Convert] [Quit]
     frame = tk.Frame(root)
     run = tk.Button(frame,text="Convert",background="yellow",
                     command=lambda: convert(vpl.get(),
                                             fmt.get(),
-                                            options.get()))
+                                            opts))
     run.pack(side=tk.LEFT)
     tk.Button(frame,text="Quit",command=root.quit).pack(side=tk.RIGHT)
     frame.pack(fill=tk.X,pady=10)
