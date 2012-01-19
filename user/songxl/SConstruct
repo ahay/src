@@ -23,18 +23,11 @@ vzpermffd3 permffd3
 permf
 nxtfftn orthowave
 '''
-#orthowave
 
 mpi_progs = 'tti4rtm'
 
-#constpermffd constpermkz
-#vzpermffd vz1
-#vzpermffd3 permffd3
-#permf
 
-#lfdc1_10
 ccprogs = 'ortholr'
-# lrtest ortlr
 
 try:  # distributed version
     Import('env root pkgdir bindir')

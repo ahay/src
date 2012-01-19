@@ -39,7 +39,8 @@ int fft3_init(bool cmplx1        /* if complex transform */,
     /* axis 1 */
 
     if (cmplx) {
-	nk = n1 = kiss_fft_next_fast_size(nx*pad1);
+	n1 = kiss_fft_next_fast_size(nx*pad1);
+        nk = n1;
 	
 	cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
 	icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);

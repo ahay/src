@@ -23,7 +23,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vx, vy, vz, yi1, yi2, mu;
+static std::valarray<float>  vx, vy, vz, yi1, yi2, mu, q1, q2;
 static std::valarray<double> kx, ky, kz;
 static float dt;
 
@@ -42,18 +42,28 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
         float e1 = yi1[i];
         float e2 = yi2[i];
         float e3 = mu[i];
+        float s1 = sin(q1[i]);
+        float s2 = sin(q2[i]);
+        float c1 = cos(q1[i]);
+        float c2 = cos(q2[i]);
 
 	for(int b=0; b<nc; b++) {
            int j=cs[b];
-           double x=kx[j]*kx[j];
-           double y=ky[j]*ky[j];
-           double z=kz[j]*kz[j];
-           
+	   double x0 = kx[j];
+	   double y0 = ky[j];
+	   double z0 = kz[j];
+	    // rotation of coordinates
+	   double x = x0*c2+y0*s2;
+           double y =-x0*s2*c1+y0*c2*c1+z0*s1;
+	   double z = x0*s2*s1-y0*c2*s1+z0*c1;
+           x *= x;
+           y *= y;
+           z *= z;
            double aa=(2*e1+1)*wx*x+(2*e2+1)*wy*y+wz*z;
            double bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
            //double cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
            double cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
+           //double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
            // cerr<<"aa="<<aa<<" ";    cerr<<endl;
            // cerr<<"bb="<<bb<<" ";    cerr<<endl;
           // if(cc) {  cerr<<"cc="<<cc<<" ";    cerr<<endl; }
@@ -96,7 +106,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF velz, velx("velx"), vely("vely"), etax("etax"), etay("etay"), muz("mu");
+    iRSF velz, velx("velx"), vely("vely"), etax("etax"), etay("etay"), muz("mu"), seta1("seta1"); // seta2("seta2");
 
     int nz,nx,ny;
     velz.get("n1",nz);
@@ -110,13 +120,23 @@ int main(int argc, char** argv)
     yi1.resize(m);
     yi2.resize(m);
     mu.resize(m);
+    q1.resize(m);
+    q2.resize(m);
     velx >> vx;
     vely >> vy;
     velz >> vz;
     etax >> yi1;
     etay >> yi2;
     muz  >> mu;
+    seta1 >> q1;
+    seta1 >> q2;
     
+    /* from degrees to radians */
+    for (int im=0; im < m; im++) {
+	q1[im] *= SF_PI/180.;
+	q2[im] *= SF_PI/180.;
+    }
+
     iRSF fft("fft");
 
     int nkz,nkx,nky;

@@ -1,4 +1,4 @@
-// Lowrank decomposition for 3-D orthorhombic wave propagation. 
+// Lowrank decomposition for 3-D orthorhombic wave propagation with linearization. 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vx, vy, vz, yi1, yi2, mu;
+static std::valarray<float>  vx, dv, vz, yi1, dyi, dmu;
 static std::valarray<double> kx, ky, kz;
 static float dt;
 
@@ -37,18 +37,25 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     for(int a=0; a<nr; a++) {
         int i=rs[a];
         float wx = vx[i]*vx[i];
-        float wy = vy[i]*vy[i];
+        float wy = wx;
         float wz = vz[i]*vz[i];
+        float dw = dv[i]*vx[i];
         float e1 = yi1[i];
-        float e2 = yi2[i];
-        float e3 = mu[i];
+        float e2 = dyi[i];
+        float e3 = dmu[i];
 
 	for(int b=0; b<nc; b++) {
            int j=cs[b];
            double x=kx[j]*kx[j];
            double y=ky[j]*ky[j];
            double z=kz[j]*kz[j];
-           
+          
+           wx *= x;
+           wy *= y;
+           wz *= z;
+           dw *= y;
+	   double phi0 
+          /* 
            double aa=(2*e1+1)*wx*x+(2*e2+1)*wy*y+wz*z;
            double bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
            //double cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
@@ -72,6 +79,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
             r = sqrt(abs(r));
       //      r = sqrt(wz*(x+y+z));
       //      cerr<<r<<" ";    cerr<<endl;
+       */
 	   res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
