@@ -30,14 +30,14 @@ int main(int argc, char* argv[])
     bool velocity, fix, plane;
     int n[SF_MAX_DIM], nt, dim, order, ip, np, i, j, k, is, ns, ic, nc, nrecv, *mask, **recv;
     int its, mts, temp[2], offset[2], left[2], right[2], count;
-    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, p, p0, dp, *s, **t, **reco, **code;
+    float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, p, p0, dp, *s, **t, **data, **code;
     char key[4];
-    sf_file in, shot, out, record, topo;
+    sf_file in, shot, out, reco, topo, time;
     
     sf_init(argc,argv);
-    in     = sf_input("in");
-    out    = sf_output("out");
-    record = sf_output("record");
+    in   = sf_input("in");
+    out  = sf_output("out");
+    reco = sf_output("reco");
     
     /* read model dimensions */
     dim = sf_filedims(in,n);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
     /* allocate memory for output */
     recv = sf_intalloc2(nrecv,nc);
-    reco = sf_floatalloc2(nrecv,nc);
+    data = sf_floatalloc2(nrecv,nc);
 
     if (NULL != sf_getstring("topo")) {
 	topo = sf_output("topo");
@@ -150,6 +150,12 @@ int main(int argc, char* argv[])
     } else {
 	topo = NULL;
 	mask = NULL;
+    }
+
+    if (NULL != sf_getstring("time")) {
+	time = sf_output("time");
+    } else {
+	time = NULL;
     }
 
     /* write output header */
@@ -162,16 +168,18 @@ int main(int argc, char* argv[])
     sf_putint(out,"n3",1);
     sf_settype(out,SF_INT);
 
-    sf_putint(record,"n1",nrecv);
-    sf_putint(record,"n2",nc);
+    sf_putint(reco,"n1",nrecv);
+    sf_putint(reco,"n2",nc);
     if (plane) {
-	sf_putfloat(record,"o2",p0);
-	sf_putfloat(record,"d2",dp);
+	sf_putfloat(reco,"o2",p0);
+	sf_putfloat(reco,"d2",dp);
     }
-    sf_putint(record,"n3",1);
+    sf_putint(reco,"n3",1);
     
     if (topo != NULL) sf_settype(topo,SF_INT);
     
+    if (time != NULL) sf_putint(time,"n4",nc);
+
     /* make topography mask */
     if (topo != NULL) {
 	for (i=0; i < nt; i++) {
@@ -197,8 +205,8 @@ int main(int argc, char* argv[])
     mts = 1;
 #endif
     
-    t = sf_floatalloc2(nt,mts);
-    
+    t = sf_floatalloc2(nt,nc);
+
 #ifdef _OPENMP
 #pragma omp parallel for private(its,count,temp,left,right,k,j,i)
 #endif
@@ -210,9 +218,9 @@ int main(int argc, char* argv[])
 #endif
 	
 	if (plane)
-	    fastmarch_planewave(t[its],ns,source,code[ic]);
+	    fastmarch_plane(t[ic],ns,source,code[ic]);
 	else
-	    fastmarch_point(t[its],source[ic]);
+	    fastmarch_point(t[ic],source[ic]);
 	
 	if (fix) {
 	    
@@ -229,7 +237,7 @@ int main(int argc, char* argv[])
 		    for (i=0; i < n[0]; i++) {
 			if (s[k*n[1]*n[0]+j*n[0]+i] < air) {
 			    recv[ic][count] = k*n[1]*n[0]+j*n[0]+i;
-			    reco[ic][count] = t[its][k*n[1]*n[0]+j*n[0]+i];
+			    data[ic][count] = t[ic][k*n[1]*n[0]+j*n[0]+i];
 			    count++;
 			    break;
 			}
@@ -260,7 +268,7 @@ int main(int argc, char* argv[])
 			for (i=0; i < n[0]; i++) {
 			    if (s[k*n[1]*n[0]+j*n[0]+i] < air) {
 				recv[ic][count] = k*n[1]*n[0]+j*n[0]+i;
-				reco[ic][count] = t[its][k*n[1]*n[0]+j*n[0]+i];
+				data[ic][count] = t[ic][k*n[1]*n[0]+j*n[0]+i];
 				count++;
 				break;
 			    }
@@ -275,14 +283,15 @@ int main(int argc, char* argv[])
 	if (count < nrecv) {
 	    for (i=count; i < nrecv; i++) {
 		recv[ic][i] = -1;
-		reco[ic][i] = 0.;
+		data[ic][i] = 0.;
 	    }
 	}
 	
     }
     
     sf_intwrite(recv[0],nrecv*nc,out);
-    sf_floatwrite(reco[0],nrecv*nc,record);
-    
+    sf_floatwrite(data[0],nrecv*nc,reco);
+    if (NULL != time) sf_floatwrite(t[0],nt*nc,time);
+
     exit(0);
 }

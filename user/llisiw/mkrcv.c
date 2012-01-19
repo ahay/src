@@ -139,15 +139,15 @@ void fastmarch_point(float *time   /* time */,
     }
 }
 
-void fastmarch_planewave(float *time   /* time */,
-			 int ns        /* number of shots */,
-			 float **slist /* source list */,
-			 float *tlist  /* time list */)
+void fastmarch_plane(float *time   /* time */,
+		     int ns        /* number of shots */,
+		     float **slist /* source list */,
+		     float *tlist  /* time list */)
 /*< plane-wave source >*/
 {
     int its;
     float *p;
-    int npoints, i;
+    int npoints, i, temp;
  
 #ifdef _OPENMP
     its = omp_get_thread_num();
@@ -165,7 +165,7 @@ void fastmarch_planewave(float *time   /* time */,
     /* fast marching */
     for (npoints =  neighbors_planewave(time,ns,slist,tlist);
 	 npoints > 0;
-	 npoints -= neighbours(time,i)) {
+	 npoints--) {
 
 	/* smallest value in queue */
 	p = pqueue_extract();
@@ -179,6 +179,8 @@ void fastmarch_planewave(float *time   /* time */,
 
 	/* update wave front */
 	in[its][i] = SF_IN;
+
+	temp = neighbours(time,i);
     }
 }
 
@@ -292,7 +294,10 @@ int neighbors_planewave(float *time   /* time */,
 	pqueue_insert(time+ic);
     }
 
+    /*
     return (n[0]*n[1]*n[2]-nshot);
+    */
+    return (n[0]*n[1]*n[2]);
 }
 
 void pqueue_insert(float* v1)
