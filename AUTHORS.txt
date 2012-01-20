@@ -30,6 +30,7 @@ Paul Sava <psava@mines.edu>
 Karl Schleicher <k_schleicher@hotmail.com>
 Jeffrey Shragge <jshragge@gmail.com>
 Xiaolei Song <songxl1984@gmail.com>
+I-Hua Tsai <caiyihua@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Ioan Vlad <i.vlad@yahoo.com>
 Jia Yan <jyan@mines.edu>
