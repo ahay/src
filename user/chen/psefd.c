@@ -1,7 +1,6 @@
 /* explicit finite difference phase shift */
 
 #include <rsf.h>
-#include <malloc.h>
 
 static int nw,nx;
 static float f0,dz,dx2;

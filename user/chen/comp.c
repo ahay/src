@@ -1,6 +1,6 @@
 /* vector compare modules */
-#include <malloc.h>
-#include <math.h>
+#include <rsf.h>
+//#include <math.h>
 
 static int n;
 static double *ref, pr;
@@ -12,7 +12,7 @@ void comp_init(int m, float *r)
 
 	n = m;
 
-	ref = (double*) malloc(n*sizeof(double));
+	ref = (double*) sf_alloc(n,sizeof(double));
 	for(i=0, pr=0.0; i<n; i++)
 	{
 		pr += r[i]*r[i];

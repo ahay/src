@@ -1,7 +1,6 @@
 /* explicit finite difference phase shift */
 
 #include <rsf.h>
-#include <malloc.h>
 
 static int nw,nx,cas;
 static float f0,dz,dx2;
@@ -21,7 +20,7 @@ void sf_pscefd_init(int cascade,int nx0,int nw0,
 	vel=v0;
 
 	dx2=(dx*dx);
-	buf=(float*)malloc(nx*2*sizeof(float));
+	buf=sf_floatalloc(nx*2);
 }
 
 

@@ -1,7 +1,6 @@
 /* step split phase shift */
 
 #include <rsf.h>
-#include <malloc.h>
 
 static int nw,nx;
 static float dz,dx;
@@ -17,7 +16,7 @@ void sf_psss_init(int nw0,int nx0,int nz,
 
 	dz=dz0;
 
-	vel=(float*)malloc(nz*sizeof(float));
+	vel=(float*)sf_floatalloc(nz);
 
 	for(iz=0;iz<nz;iz++)
 	{
