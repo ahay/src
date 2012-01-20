@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
     bool velocity, fix, plane;
     int n[SF_MAX_DIM], nt, dim, order, ip, np, i, j, k, is, ns, ic, nc, nrecv, *mask, **recv;
-    int its, mts, temp[2], offset[2], left[2], right[2], count;
+    int temp[2], offset[2], left[2], right[2], count;
     float **source, d[SF_MAX_DIM], o[SF_MAX_DIM], air, p, p0, dp, *s, **t, **data, **code;
     char key[4];
     sf_file in, shot, out, reco, topo, time;
@@ -199,24 +199,13 @@ int main(int argc, char* argv[])
     fastmarch_set(s);
 
     /* allocate temporary memory */
-#ifdef _OPENMP
-    mts = omp_get_max_threads();
-#else
-    mts = 1;
-#endif
-    
     t = sf_floatalloc2(nt,nc);
 
 #ifdef _OPENMP
-#pragma omp parallel for private(its,count,temp,left,right,k,j,i)
+#pragma omp parallel for private(count,temp,left,right,k,j,i)
 #endif
     for (ic=0; ic < nc; ic++) {
-#ifdef _OPENMP
-	its = omp_get_thread_num();
-#else
-	its = 0;
-#endif
-	
+
 	if (plane)
 	    fastmarch_plane(t[ic],ns,source,code[ic]);
 	else
