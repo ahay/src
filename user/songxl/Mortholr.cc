@@ -53,7 +53,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
            double bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
            //double cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
            double cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
+           // double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
            // cerr<<"aa="<<aa<<" ";    cerr<<endl;
            // cerr<<"bb="<<bb<<" ";    cerr<<endl;
           // if(cc) {  cerr<<"cc="<<cc<<" ";    cerr<<endl; }
