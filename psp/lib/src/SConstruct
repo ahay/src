@@ -1,0 +1,27 @@
+import sys
+
+sys.path.append('../../../framework')
+import bldutil
+
+env = bldutil.Debug()
+
+sources = '''
+DistHelmholtz
+'''
+
+MPICXX = WhereIs('mpicxx')
+
+objects = []
+for source in Split(sources):    
+    obj = env.StaticObject(source,source+'.cpp',
+                           CPPPATH=['../include','../../clique/include','../../elemental/include'],
+                           CXX=MPICXX,CPPDEFINES=['RELEASE','BLAS_POST','LAPACK_POST','WITHOUT_PMRRR',
+                                                  ('RESTRICT','')])
+    objects.append(obj)
+
+##############################################################################
+# LIBRARY
+##############################################################################
+lib = env.StaticLibrary('psp',objects)
+
+env.Install('../../../lib',lib)

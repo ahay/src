@@ -1,0 +1,27 @@
+import sys
+
+sys.path.append('../../../framework')
+import bldutil
+
+env = bldutil.Debug()
+
+sources = '''
+blas global lapack mpi mpi_ops parallel_lcg
+'''
+
+MPICXX = WhereIs('mpicxx')
+
+objects = []
+for source in Split(sources):
+    obj = env.StaticObject(source,source+'.cpp',CPPPATH=['../include'],
+                           CXX=MPICXX,CPPDEFINES=['RELEASE','BLAS_POST','LAPACK_POST','WITHOUT_PMRRR',
+                                                  ('RESTRICT','')])
+    objects.append(obj)
+
+##############################################################################
+# LIBRARY
+##############################################################################
+lib = env.StaticLibrary('elemental',objects)
+
+env.Install('../../../lib',lib)
+

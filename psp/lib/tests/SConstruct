@@ -1,0 +1,26 @@
+import sys
+
+sys.path.append('../../../framework')
+import bldutil
+
+env = bldutil.Debug()
+
+SConscript('../../clique/src/SConstruct')
+SConscript('../../elemental/src/SConstruct')
+SConscript('../src/SConstruct')
+
+progs = '''
+EngquistYing  EngquistYing-flat  Random Uniform
+'''
+
+MPICXX = WhereIs('mpicxx')
+
+env.Prepend(CPPPATH=['../include','../../clique/include','../../elemental/include'],
+            LIBPATH=['../../../lib'],
+            LIBS=['psp','clique','elemental','lapack'])
+
+mains = Split(progs)
+for prog in mains:
+    prog = env.Program(prog,prog+'.cpp',CXX=MPICXX,
+                       CPPDEFINES=['RELEASE','BLAS_POST','LAPACK_POST','WITHOUT_PMRRR',
+                                   ('RESTRICT','')]) # try __restrict__ if it works

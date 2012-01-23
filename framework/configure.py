@@ -938,18 +938,18 @@ def blas(context):
         atlas_dir_64 = '/usr/lib64/atlas/'
         if os.path.isdir(atlas_dir_64):
             context.env['LIBPATH'].append(atlas_dir_64)
+        LIBS.pop()
         LIBS.append('cblas')
         LIBS.append('atlas')
         res = context.TryLink(text,'.c')
         if res:
             context.Result(res)
             context.env['LIBS'] = LIBS
-            context.env['BLAS'] = blas
+            context.env['BLAS'] = 'cblas'
         else:
             context.Result(context_failure)
             context.env['CPPDEFINES'] = \
                 context.env.get('CPPDEFINES',[]) + ['NO_BLAS']
-            LIBS.pop()
             LIBS.pop()
             LIBS.pop()
             context.env['BLAS'] = None
@@ -980,6 +980,7 @@ def lapack(context):
                                          ':/lib/lapack'
     else:
         # some systems require cblas and atlas
+        LIBS.pop()
         mylibs.extend(['cblas','atlas'])
         LIBS.extend(['cblas','atlas'])
         res = context.TryLink(text,'.c')
@@ -990,7 +991,6 @@ def lapack(context):
             context.Result(context_failure)
             context.env['LAPACK'] = None
             need_pkg('lapack', fatal=False)
-        LIBS.pop()
         LIBS.pop()
     LIBS.pop()
     LIBS.pop()
