@@ -24,7 +24,7 @@
 const double tol = 1.e-6;
 
 void ferrari(double a, double b, double c, double d, double e /* coefficients */,
-	     double *root /* root */)
+	     sf_complex *root /* root */)
 /*< quartic solve (Ferrari's method) >*/
 {
     /* a*x^4 + b*x^3 + c*x^2 + d*x + e = 0. */
@@ -39,16 +39,6 @@ void ferrari(double a, double b, double c, double d, double e /* coefficients */
     gama  = -3./256.*pow(b,4.)/pow(a,4.)+1./16.*c*pow(b,2.)/pow(a,3.)-1./4.*b*d/pow(a,2.)+e/a;
 
     /* second step */
-    if (fabs(beta) <= tol) {
-	root[0] = sf_cmplx(-1./4.*b/a+sqrt((-alpha+sqrt(pow(alpha,2.)-4.*gama))/2.),0.);
-	root[1] = sf_cmplx(-1./4.*b/a-sqrt((-alpha+sqrt(pow(alpha,2.)-4.*gama))/2.),0.);
-	root[2] = sf_cmplx(-1./4.*b/a+sqrt((-alpha-sqrt(pow(alpha,2.)-4.*gama))/2.),0.);
-	root[3] = sf_cmplx(-1./4.*b/a-sqrt((-alpha-sqrt(pow(alpha,2.)-4.*gama))/2.),0.);
-
-	return();
-    }
-
-    /* third step */
     P = -1./12.*pow(alpha,2.)-gama;
     Q = -1./108.*pow(alpha,3.)+1./3.*alpha*gama-1./8.*pow(beta,2.);
     R = -1./2.*Q+sqrt(1./4.*pow(Q,2.)+1./27.*pow(P,3.));
@@ -64,8 +54,19 @@ void ferrari(double a, double b, double c, double d, double e /* coefficients */
     W = sqrt(alpha+2.*y);
 
     /* final step */
-    root[0] = -1./4.*b/a+(W+sqrt(-(3.*alpha+2.*y+2.*beta/W)))/2.;
-    root[1] = -1./4.*b/a+(-W+sqrt(-(3.*alpha+2.*y-2.*beta/W)))/2.;
-    root[2] = -1./4.*b/a+(W-sqrt(-(3.*alpha+2.*y+2.*beta/W)))/2.;
-    root[3] = -1./4.*b/a+(-W-sqrt(-(3.*alpha+2.*y-2.*beta/W)))/2.;
+    if (3.*alpha+2.*y+2.*beta/W <= 0.) {
+	root[0] = sf_cmplx(-1./4.*b/a+(W+sqrt(-(3.*alpha+2.*y+2.*beta/W)))/2.,0.);
+	root[1] = sf_cmplx(-1./4.*b/a+(W-sqrt(-(3.*alpha+2.*y+2.*beta/W)))/2.,0.);
+    } else {
+	root[0] = sf_cmplx(-1./4.*b/a+W/2.,sqrt(3.*alpha+2.*y+2.*beta/W)/2.);
+	root[1] = sf_cmplx(-1./4.*b/a+W/2.,-sqrt(3.*alpha+2.*y+2.*beta/W)/2.);
+    }
+
+    if (3.*alpha+2.*y-2.*beta/W <= 0.) {
+	root[2] = sf_cmplx(-1./4.*b/a+(-W+sqrt(-(3.*alpha+2.*y-2.*beta/W)))/2.,0.);
+	root[3] = sf_cmplx(-1./4.*b/a+(-W-sqrt(-(3.*alpha+2.*y-2.*beta/W)))/2.,0.);
+    } else {
+	root[2] = sf_cmplx(-1./4.*b/a-W/2.,sqrt(3.*alpha+2.*y-2.*beta/W)/2.);
+	root[3] = sf_cmplx(-1./4.*b/a-W/2.,-sqrt(3.*alpha+2.*y-2.*beta/W)/2.);
+    }
 }
