@@ -314,7 +314,7 @@ float qsolve(float* time, int i)
 	}
 	
 	xj = xx+j;
-	xj->delta = 1./(d[j]*d[j]);;
+	xj->delta = 1./(d[j]*d[j]);
 
 	if (a < b) {
 	    xj->stencil = xj->value = a;

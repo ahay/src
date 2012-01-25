@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
     t = sf_floatalloc(ns*n[1]);
 
     /* initialize */
-    dsreiko_init(dim,n,o,d,s);
+    dsreiko_init(n,o,d);
 
     /* compute */
-    dsreiko_fastmarch();
+    dsreiko_fastmarch(t,s);
 
     /* write output dimension */
     sf_putint(out,"n3",n[1]);

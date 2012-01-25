@@ -22,6 +22,11 @@
 #include <assert.h>
 #include "dsreiko.h"
 
+struct Upd {
+    double stencil, value, delta;
+    int label;
+};
+
 static const double tol = 1.e-6;
 
 static float *o, *v, *d;
@@ -33,27 +38,12 @@ static float *t;
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
-
-double newton(double a,double b,double c,double d,double e /* coefficients */,
-	      double guess /* initial guess */)
-/*< quartic solve (Newton's method) >*/
-{
-    double val, der, root;
-
-    root = guess;
-
-    val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
-    while (fabs(val) > tol) {
-	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
-
-	if (fabs(der) <= tol) sf_error("local minimum");
-
-	root -= val/der;
-	val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
-    }
-
-    return(root);
-}
+int neighbors_default();
+int neighbours(float* time, int i);
+int update(float value, float* time, int i);
+float qsolve(float* time, int i);
+bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix);
+double newton(double a,double b,double c,double d,double e, double guess);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
@@ -79,8 +69,6 @@ void dsreiko_init(int *n_in   /* length */,
     in = sf_intalloc(n[0]*n[1]*n[2]);
 
     offsets = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
-
-    order = order_in;
 }
 
 void dsreiko_fastmarch(float *time /* time */,
@@ -245,17 +233,17 @@ int neighbors_default()
     /* set zero-offset plane to be zero */
     for (j=0; j < n[1]; j++) {
 	for (i=0; i < n[0]; i++) {
-	    in[i] = SF_IN;
-	    t[i] = 0.;
+	    in[j*s[2]+j*s[1]+i] = SF_IN;
+	    t[j*s[2]+j*s[1]+i] = 0.;
 
-	    pqueue_insert(t+i);
+	    pqueue_insert(t+j*s[2]+j*s[1]+i);
 	}
     }
     
     return (nxy-n[0]*n[1]);
 }
 
-int neighbours(float* time, int i) 
+int neighbours(float* time, int i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
     int j, k, ix, np;
@@ -299,21 +287,22 @@ int update(float value, float* time, int i)
 float qsolve(float* time, int i)
 /* find new traveltime at gridpoint i */
 {
-    int j, k, ix;
+    int j, k, ix[3];
     float a, b, res;
     struct Upd *vv[3], xx[3], *xj;
 
+    for (j=0; j<3; j++) 
+	ix[j] = (i/s[j])%n[j];
+
     for (j=0; j<3; j++) {
-	ix = (i/s[j])%n[j];
-	
-	if (ix > 0) { 
+	if (ix[j] > 0) { 
 	    k = i-s[j];
 	    a = time[k];
 	} else {
 	    a = SF_HUGE;
 	}
 	
-	if (ix < n[j]-1) {
+	if (ix[j] < n[j]-1) {
 	    k = i+s[j];
 	    b = time[k];
 	} else {
@@ -321,33 +310,23 @@ float qsolve(float* time, int i)
 	}
 	
 	xj = xx+j;
-	xj->delta = 1./(d[j]*d[j]);;
-
+	xj->label = j;
+	xj->delta = 1./(d[j]*d[j]);
+	if (j == 0)
+	    xj->stencil = v[ix[1]*s[1]+ix[0]]+v[ix[2]*s[1]+ix[0]];
+	if (j == 1)
+	    xj->stencil = v[ix[1]*s[1]+ix[0]]-v[ix[2]*s[1]+ix[0]];
+	if (j == 2)
+	    xj->stencil = v[ix[2]*s[1]+ix[0]]-v[ix[1]*s[1]+ix[0]];
+	
 	if (a < b) {
-	    xj->stencil = xj->value = a;
+	    xj->value = a;
 	} else {
-	    xj->stencil = xj->value = b;
-	}
-
-	/* second order local upwind stencil */
-	if (order > 1) {
-	    if (a < b  && ix-2 >= 0) { 
-		k = i-2*s[j];
-		if (in[k] != SF_OUT && a >= time[k]) {
-		    xj->delta *= 2.25;
-		    xj->stencil = (4.0*xj->value - time[k])/3.0;
-		}
-	    }
-	    if (a > b && ix+2 <= n[j]-1) { 
-		k = i+2*s[j];
-		if (in[k] != SF_OUT && b >= time[k]) {
-		    xj->delta *= 2.25;
-		    xj->stencil = (4.0*xj->value - time[k])/3.0;
-		}
-	    }
+	    xj->value = b;
 	}
     }
 
+    /* sort from smallest to largest */
     if (xx[0].value <= xx[1].value) {
 	if (xx[1].value <= xx[2].value) {
 	    vv[0] = xx; vv[1] = xx+1; vv[2] = xx+2;
@@ -367,49 +346,121 @@ float qsolve(float* time, int i)
     }
 
     if(vv[2]->value < SF_HUGE) {   /* update from all three directions */
-	if (updaten(i,3,&res,vv) || 
-	    updaten(i,2,&res,vv) || 
-	    updaten(i,1,&res,vv)) return res;
+	if (updaten(i,3,&res,vv,ix) || 
+	    updaten(i,2,&res,vv,ix) || 
+	    updaten(i,1,&res,vv,ix)) return res;
     } else if(vv[1]->value < SF_HUGE) { /* update from two directions */
-	if (updaten(i,2,&res,vv) || 
-	    updaten(i,1,&res,vv)) return res;
+	if (updaten(i,2,&res,vv,ix) || 
+	    updaten(i,1,&res,vv,ix)) return res;
     } else if(vv[0]->value < SF_HUGE) { /* update from only one direction */
-	if (updaten(i,1,&res,vv)) return res;
+	if (updaten(i,1,&res,vv,ix)) return res;
     }
 	
     return SF_HUGE;
 }
 
-bool updaten(int i, int m, float* res, struct Upd *vv[])
+bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
 /* calculate new traveltime */
 {
-    double a, b, c, discr, t;
+    double a, b, c, d, e, t;
+    double vs, vr;
     int j;
 
-    if (m == 1) {
-	/* special coded to ensure that a one-sided update is always successful */
-	t = vv[0]->stencil+sqrt((double)v[i]/vv[0]->delta);
-    
-    } else{
-	/* solve quadratic equation */
-	a = b = c = 0.;
+    a = b = c = d = e = 0.;
 
-	for (j=0; j<m; j++) {
-	    a += vv[j]->delta;
-	    b += vv[j]->stencil*vv[j]->delta;
-	    c += vv[j]->stencil*vv[j]->stencil*vv[j]->delta;
-	}
-	b /= a;
+    vs = (double)v[ix[2]*s[1]+ix[0]];
+    vr = (double)v[ix[1]*s[1]+ix[0]];
 
-	discr=b*b+(((double)v[i])-c)/a;
+    if (m == 2 && vv[2]->label == 0) {
+	/* add lines here! */
+	return true;
+    } 
 
-	if (discr < 0.) return false;
-    
-	t = b + sqrt(discr);
-	/* NOTE: change from <= to < for complex eikonal */
-	if (t < vv[m-1]->value) return false;
+    /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
+    for (j=0; j<m; j++) {
+	a += pow(vv[j]->delta,2.);
+	b += -4.*vv[j]->value*pow(vv[j]->delta,2.);
+	c += 6.*pow(vv[j]->value,2.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*vv[j]->delta;
+	d += -4.*pow(vv[j]->value,3.)*pow(vv[j]->delta,2.)+4.*vv[j]->stencil*vv[j]->value*vv[j]->delta;
+	e += pow(vv[j]->value,4.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*pow(vv[j]->value,2.)*vv[j]->delta;
     }
+    
+    e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
+
+    if (m == 3) {
+	a += -2.*vv[1]->delta*vv[2]->delta
+	     +2.*vv[0]->delta*vv[2]->delta
+	     +2.*vv[1]->delta*vv[0]->delta;
+
+	b +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value+vv[2]->value)
+	     -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value+vv[2]->value)
+	     -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value+vv[0]->value);
+
+	c += -2.*vv[1]->delta*vv[2]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[2]->value+pow(vv[2]->value,2.))
+	     +2.*vv[0]->delta*vv[2]->delta*(pow(vv[0]->value,2.)+4.*vv[0]->value*vv[2]->value+pow(vv[2]->value,2.))
+	     +2.*vv[1]->delta*vv[0]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[0]->value+pow(vv[0]->value,2.));
+
+	d +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[1]->value,2.))
+	     -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[0]->value,2.))
+	     -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value*pow(vv[0]->value,2.)+vv[0]->value*pow(vv[1]->value,2.));
+
+	e += -2.*vv[1]->delta*vv[2]->delta*pow(vv[1]->value,2.)*pow(vv[2]->value,2.)
+	     +2.*vv[0]->delta*vv[2]->delta*pow(vv[0]->value,2.)*pow(vv[2]->value,2.)
+	     +2.*vv[1]->delta*vv[0]->delta*pow(vv[1]->value,2.)*pow(vv[0]->value,2.);
+    }
+	
+    if (m == 2) {
+	if (vv[2]->label == 0) {
+	    a += -2.*vv[1]->delta*vv[2]->delta;
+	    b +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value+vv[2]->value);
+	    c += -2.*vv[1]->delta*vv[2]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[2]->value+pow(vv[2]->value,2.));
+	    d +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[1]->value,2.));
+	    e += -2.*vv[1]->delta*vv[2]->delta*pow(vv[1]->value,2.)*pow(vv[2]->value,2.);
+	}
+	if (vv[2]->label == 1) {
+	    a +=  2.*vv[0]->delta*vv[2]->delta;
+	    b += -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value+vv[2]->value);
+	    c +=  2.*vv[0]->delta*vv[2]->delta*(pow(vv[0]->value,2.)+4.*vv[0]->value*vv[2]->value+pow(vv[2]->value,2.));
+	    d += -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[0]->value,2.));
+	    e +=  2.*vv[0]->delta*vv[2]->delta*pow(vv[0]->value,2.)*pow(vv[2]->value,2.);
+	}
+	if (vv[2]->label == 2) {
+	    a +=  2.*vv[1]->delta*vv[0]->delta;;
+	    b += -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value+vv[0]->value);
+	    c +=  2.*vv[1]->delta*vv[0]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[0]->value+pow(vv[0]->value,2.));
+	    d += -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value*pow(vv[0]->value,2.)+vv[0]->value*pow(vv[1]->value,2.));
+	    e +=  2.*vv[1]->delta*vv[0]->delta*pow(vv[1]->value,2.)*pow(vv[0]->value,2.);
+	}
+    }
+
+    t = newton(a,b,c,d,e,vv[m-1]->value);
+
+    if (t <= vv[m-1]->value) return false;
 
     *res = t;
     return true;
+}
+
+double newton(double a,double b,double c,double d,double e /* coefficients */,
+	      double guess /* initial guess */)
+/* quartic solve (Newton's method) */
+{
+    double val, der, root;
+
+    root = guess;
+
+    val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
+    while (fabs(val) > tol) {
+	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
+
+	if (fabs(der) <= tol) {
+	    sf_warning("FAILURE: Newton's method meets local minimum.");
+	    return SF_HUGE;
+	}
+
+	root -= val/der;
+	val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
+    }
+
+    return root;
 }
