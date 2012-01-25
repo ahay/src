@@ -23,23 +23,61 @@
 
 int main(int argc, char* argv[])
 {
-    float a, b, c, d, e;
-    sf_complex root[4];
+    bool velocity;
+    int dim, i, n[SF_MAX_DIM], is, ns;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
+    char key[6];
+    sf_file in, out;
 
     sf_init(argc,argv);
-    
-    if (!sf_getfloat("a",&a)) a=1.;
-    if (!sf_getfloat("b",&b)) b=1.;
-    if (!sf_getfloat("c",&c)) c=1.;
-    if (!sf_getfloat("d",&d)) d=1.;
-    if (!sf_getfloat("e",&e)) e=1.;
+    in  = sf_input("in");
+    out = sf_output("out");
 
-    ferrari((double)a,(double)b,(double)c,(double)d,(double)e,root);
-    
-    sf_warning("root 1: (%g,%g)",crealf(root[0]),cimagf(root[0]));
-    sf_warning("root 2: (%g,%g)",crealf(root[1]),cimagf(root[1]));
-    sf_warning("root 3: (%g,%g)",crealf(root[2]),cimagf(root[2]));
-    sf_warning("root 4: (%g,%g)",crealf(root[3]),cimagf(root[3]));
+    /* read input dimension */
+    dim = sf_filedims(in,n);
+
+    ns = 1;
+    for (i=0; i < dim; i++) {
+	sprintf(key,"d%d",i+1);
+	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
+	sprintf(key,"o%d",i+1);
+	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
+	ns *= n[i];
+    }
+    if (dim < 3) {
+	/* extend the third dimension for output */
+	n[2] = n[1]; d[2] = d[1]; o[2] = o[1];
+    }
+
+    /* read input */
+    s = sf_floatalloc(ns);
+    sf_floatread(s,ns,in);
+
+    if (!sf_getbool("velocity",&velocity)) velocity=true;
+    /* if y, the input is velocity; n, slowness squared */
+
+    /* convert to slowness squared */
+    if (velocity) {
+	for (is=0; is < ns; is++)
+	    s[is] = 1./s[is]*1./s[is];
+    }
+
+    /* allocate memory for output */
+    t = sf_floatalloc(ns*n[1]);
+
+    /* initialize */
+    dsreiko_init(dim,n,o,d,s);
+
+    /* compute */
+    dsreiko_fastmarch();
+
+    /* write output dimension */
+    sf_putint(out,"n3",n[1]);
+    sf_putfloat(out,"d3",d[1]);
+    sf_putfloat(out,"o3",o[1]);
+
+    /* write output */
+    sf_floatwrite(t,ns*n[1],out);
 
     exit(0);
 }
