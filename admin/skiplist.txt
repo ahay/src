@@ -1,7 +1,9 @@
 skiplist =  [
                 'book/slim/geo2008NewInsightsPareto/pareto',    # Matlab not installed
+		'book/slim/geo2008NewInsightsPareto/geop',      # Matlab not installed
                 'book/slim/slimUserManual/sffdct',              # PyCurvelab not installed
-                
+                'book/rsf/programming/svd',                     # SciPy not installed
+
                                                                 # Examples that run more than 2 minutes
                 'book/bei/vela/vscan',
                 'book/cwp/geo2006TimeShiftImagingCondition/zicig',
