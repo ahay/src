@@ -284,8 +284,8 @@ Flow('cdps','allshots',
 Flow('vels.txt','velsorig.txt cdps',
      '''
      ./iva.sh
-     "cmp1=1601 cmp2=2601 cmp3=3601 cmp4=4601 cmp5=5601 cmp6=6601
-      cmp7=7601 cmp8=8601 cmp9=9601 cmp10=10601 numCMPs=10" 
+     "cmp1=851 cmp2=1351 cmp3=1851 cmp4=2351 cmp5=2851 cmp6=3351
+      cmp7=3851 cmp8=4351 cmp9=4851 cmp10=5351 numCMPs=10" 
      ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 1400 20
      ''',stdout=0,stdin=0)
 

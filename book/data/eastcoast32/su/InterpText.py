@@ -86,9 +86,12 @@ for line in open('hdrfile.txt'):
         # shotx = (6087-511)*50 
         # neartracex = shotx+470
         # smallestmidpointx=  (6087-511)*50.0 + 470.0/2.0
-        # cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/25.0+101       
+        # cdpinterval is 50 mt.  Half the smallest group interval is 25,
+        # but this makes every other cdp zero until you reach the finer
+        # group interval on the far traces.
+        # cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101       
         smallestmidpointx=  (6087-511)*50 + 470.0/2.0
-        cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/25.0+101.0       
+        cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101.0       
 
         sx=long(round(r_sx))
         sy=long(round(r_sy))
