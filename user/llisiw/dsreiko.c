@@ -372,8 +372,15 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
     vr = (double)v[ix[1]*s[1]+ix[0]];
 
     if (m == 2 && vv[2]->label == 0) {
-	/* add lines here! */
-	return true;
+	if (fabs(vv[1]->value-vv[0]->value) <= tol) {
+	    /* assumes h_r = h_s */
+	    t = sqrt(0.5*(vs+vr)/vv[0]->delta)+vv[0]->value;
+
+	    if (t <= vv[0]->value) return false;
+
+	    *res = t;
+	    return true;
+	}
     } 
 
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
