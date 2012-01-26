@@ -32,6 +32,7 @@ static int compare(const void * a, const void * b)
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int j, k, n, m, i2, n2, iter, niter;
     sf_complex **a=NULL, *e=NULL;
     float s2,s0=1.,tol;
@@ -51,11 +52,14 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tol",&tol)) tol=1.0e-6;
     /* tolerance for convergence */
 
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
+
     sf_putint(root,"n1",n-1);
 
     a = sf_complexalloc2(n,n);
     e = sf_complexalloc(n);
-    jacobi2_init(n);
+    jacobi2_init(n,verb);
 
     for (i2=0; i2 < n2; i2++) {
 		sf_complexread(e,n,poly);
@@ -87,7 +91,7 @@ int main(int argc, char* argv[])
 					s2 += jacobi2(a,m,j,k);
 				}
 			}
-			sf_warning("iter=%d s2=%g",iter+1,s2);
+			if (verb) sf_warning("iter=%d s2=%g",iter+1,s2);
 			if (0==iter) {
 				s0 = s2;
 			} else {

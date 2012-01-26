@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     a = sf_complexalloc2(n,n);
     e = sf_complexalloc(n);
-    jacobi2_init(n);
+    jacobi2_init(n,true);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_complexread(a[0],n*n,mat);

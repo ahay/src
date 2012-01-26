@@ -22,11 +22,14 @@
 #include <rsf.h>
 
 static sf_complex *ak;
+static bool verb;
 
-void jacobi2_init(int n /* matrix size */)
+void jacobi2_init(int n /* matrix size */,
+		  bool verb1 /* verbosity */)
 /*< initialize >*/
 {
     ak = sf_complexalloc(n);
+    verb = verb1;
 }
 
 void jacobi2_close(void)
@@ -48,8 +51,8 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
     sf_complex t, s, akl;
 
     if (k==l || cabsf(a[k][l]) < FLT_EPSILON) {
-		sf_warning("k==l or abs(a(k,l) = 0");
-		return 0.0f;
+	if (verb) sf_warning("k==l or abs(a(k,l) = 0");
+	return 0.0f;
     }
 
 #ifdef SF_HAS_COMPLEX_H
@@ -61,21 +64,21 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
 #endif
 
     if (cabsf(t) < FLT_EPSILON && cabsf(s) < FLT_EPSILON) {
-		sf_warning("abs(t) and abs(s) = 0");
-		return 0.0f;
-	}
+	if (verb) sf_warning("abs(t) and abs(s) = 0");
+	return 0.0f;
+    }
 	
 #ifdef SF_HAS_COMPLEX_H
     if (cabsf(t+s) > cabsf(t-s)) {
-		t = a[k][l]/(t+s);
+	t = a[k][l]/(t+s);
     } else {
-		t = a[k][l]/(t-s);
+	t = a[k][l]/(t-s);
     }
 #else
     if (cabsf(sf_cadd(t,s)) > cabsf(sf_cadd(t,sf_cneg(s)))) {
-		t = sf_cdiv(a[k][l],sf_cadd(t,s));
+	t = sf_cdiv(a[k][l],sf_cadd(t,s));
     } else {
-		t = sf_cdiv(a[k][l],sf_cadd(t,sf_cneg(s)));
+	t = sf_cdiv(a[k][l],sf_cadd(t,sf_cneg(s)));
     }
 #endif
 
@@ -89,33 +92,34 @@ float jacobi2(sf_complex** a /* matrix to rotate */,
 #endif
     for (i=0; i < n; i++) {
 #ifdef SF_HAS_COMPLEX_H
-		ak[i] = a[i][l] + t*a[i][k];
+	ak[i] = a[i][l] + t*a[i][k];
 #else
-		ak[i] = sf_cadd(a[i][l],sf_cmul(t,a[i][k]));
+	ak[i] = sf_cadd(a[i][l],sf_cmul(t,a[i][k]));
 #endif
     }
     for (i=0; i < n; i++) {
 #ifdef SF_HAS_COMPLEX_H
-		a[k][i] -= t*a[l][i];
+	a[k][i] -= t*a[l][i];
 #else
-		a[k][i] = sf_cadd(a[k][i],sf_cmul(t,a[l][i]));
+	a[k][i] = sf_cadd(a[k][i],sf_cmul(t,a[l][i]));
 #endif
     }
     for (i=0; i < n; i++) {
-		a[i][l] = ak[i];
+	a[i][l] = ak[i];
     }
-		a[k][l] = akl;
+    a[k][l] = akl;
 	
+    if (verb) {
 	sf_warning("t=%f+i%f (after),   |t|=%f,   akl=%f + i%f\n",
-			   crealf(t),cimagf(t), cabsf(t),crealf(akl),cimagf(akl)); 
+		   crealf(t),cimagf(t), cabsf(t),crealf(akl),cimagf(akl)); 
 	for (j1=0; j1<n; j1++) {
-		for (j2=0; j2<n; j2++) {
-			if (cabsf(a[j2][j1])>FLT_EPSILON)
-				sf_warning("a[%d,%d] = %f + i%f",j1,j2,
-						   crealf(a[j2][j1]),cimagf(a[j2][j1]));
-		}
+	    for (j2=0; j2<n; j2++) {
+		if (cabsf(a[j2][j1])>FLT_EPSILON)
+		    sf_warning("a[%d,%d] = %f + i%f",j1,j2,
+			       crealf(a[j2][j1]),cimagf(a[j2][j1]));
+	    }
 	}
-	
+    }
 
     return cabsf(t);
 }
