@@ -1689,9 +1689,12 @@ def intel(context):
 def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
-    config = os.path.join(RSFROOT, 'share', 'madagascar','etc','config.py')
-    if not os.path.isfile(config):
-        return
+
+    config = os.path.join(os.environ('HOME'),'madagascar-config.py')
+    if not os.path.isfile(config):    
+        config = os.path.join(RSFROOT, 'share', 'madagascar','etc','config.py')
+        if not os.path.isfile(config):
+            return
     opts = options(config)
     if my_opts:
         for opt in my_opts.keys():

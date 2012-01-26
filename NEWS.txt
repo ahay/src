@@ -32,6 +32,9 @@ To APIs:
 
 To the Python package:
 
+* an option for the user to overwrite the installed config.py with
+  ~/madagascar-config.py
+
 To programs:
 
 * sfgrey4: generate movie of 3-D cube plots.

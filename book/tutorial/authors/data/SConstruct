@@ -1,7 +1,7 @@
 from rsf.proj import *
 
 
-Flow('noise',None,'spike n1=201 | noise | bandpass flo=20 fhi=40')
+Flow('noise',None,'spike n1=201 | noise seed=2012 | bandpass flo=20 fhi=40')
 Result('noise','graph title=""')
 
 Flow('fourier','noise','fft1 inv=n opt=n')

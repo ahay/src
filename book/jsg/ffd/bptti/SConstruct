@@ -106,7 +106,7 @@ Result('ttisnapshot','wavffdend2',
 
 Plot('vp2','vp',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel=%s scalebar=y
      labelsz=6 titlesz=8 barreverse=y
      wanttitle=y allpos=%d bias=%g barunit=%s
@@ -120,7 +120,7 @@ Plot('vp2','vp',
      ))
 Plot('epsilon2','epsilon',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel=%s scalebar=y
      labelsz=6 titlesz=8 barreverse=y
      wanttitle=y allpos=%d bias=%g barunit=%s
@@ -134,7 +134,7 @@ Plot('epsilon2','epsilon',
      ))
 Plot('delta2','delta',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel=%s scalebar=y
      labelsz=6 titlesz=8 barreverse=y
      wanttitle=y allpos=%d bias=%g barunit=%s
@@ -148,7 +148,7 @@ Plot('delta2','delta',
      ))
 Plot('theta2','theta',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel=%s scalebar=y
      labelsz=6 titlesz=8 barreverse=y
      wanttitle=y allpos=%d bias=%g barunit=%s
@@ -163,7 +163,7 @@ Plot('theta2','theta',
 Result('ttimodel','vp2 epsilon2 delta2 theta2','TwoRows')
 Result('vp2','vp',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
@@ -174,7 +174,7 @@ Result('vp2','vp',
      ))
 Result('epsilon2','epsilon',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
@@ -185,7 +185,7 @@ Result('epsilon2','epsilon',
      ))
 Result('delta2','delta',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
@@ -196,7 +196,7 @@ Result('delta2','delta',
      ))
 Result('theta2','theta',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
@@ -208,7 +208,7 @@ Result('theta2','theta',
      ))
 Result('vx2','vx',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
@@ -219,7 +219,7 @@ Result('vx2','vx',
      ))
 Result('yita2','yita',
      '''
-     window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 |
+     window j1=4 j2=2 | window  n1=1024 f1=1381 n2=900 |
      grey color=j barlabel= scalebar=y
      labelsz=9 titlesz=10 barreverse=y
      wanttitle=n allpos=%d bias=%g 
