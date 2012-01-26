@@ -11,10 +11,9 @@ Flow('mod3',None,
      smooth rect1=3''')
 Plot('mod3','grey title="Smoothed"')
 Result('orismo','mod3o mod3','SideBySideAniso')
-Flow('smod3o','mod3o','spectra all=y')
-Plot('smod3o','grey title="mod3o spectrum"')
-Result('smod3o','graph')
 
+Flow('smod3o','mod3o','spectra all=y')
+Result('smod3o','graph title="mod3o spectrum" label2= unit2=')
 
 Flow('dki','mod3',
      'preconstkirch inv=y zero=y vel=1.5 nh=1 h0=0 dh=0')
