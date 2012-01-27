@@ -4,6 +4,7 @@ skiplist =  [
                 'book/slim/slimUserManual/sffdct',              # PyCurvelab not installed
                 'book/rsf/programming/svd',                     # SciPy not installed
                 'book/rsf/rsf/sfenvelope',                      # SU not installed
+                'book/rsf/bash/plot',                           # plplot not installed
 
 								# Examples with movies
 		'book/rsf/rsf/fractal',

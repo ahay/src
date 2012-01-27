@@ -1690,11 +1690,14 @@ def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
 
-    config = os.path.join(os.environ.get('HOME'),'madagascar-config.py')
-    if not os.path.isfile(config):    
-        config = os.path.join(RSFROOT, 'share', 'madagascar','etc','config.py')
-        if not os.path.isfile(config):
-            return
+    # look for it in current directory, then home directory, then system
+    config = '.rsfrc.py'
+    if not os.path.isfile(config):
+        config = os.path.join(os.environ.get('HOME',''),'.rsfrc.py')
+        if not os.path.isfile(config):    
+            config = os.path.join(RSFROOT, 'share', 'madagascar','etc','config.py')
+            if not os.path.isfile(config):
+                return
     opts = options(config)
     if my_opts:
         for opt in my_opts.keys():

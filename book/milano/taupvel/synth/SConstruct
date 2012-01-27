@@ -481,7 +481,7 @@ Result('velocity4','vNeff2 vHeff2 vNint42 vHint42','SideBySideAniso')
 
 Flow('seed','tau0','window n2=1')
 Flow('t0paint','dipwin seed','pwpaint seed=${SOURCES[1]} verb=y')
-Plot('t0paint1','t0paint','contour nc=30 c0=0 dc=0.1 plotcol=5 plotfat=3 wanttitle=n wantaxis=n')
+Plot('t0paint1','t0paint','contour nc=30 c0=0 dc=0.1 plotcol=5 plotfat=3 wanttitle=n wantaxis=n' + pl_Op)
 
 Result('t0paint','datawin t0paint1','Overlay')
 
@@ -601,7 +601,7 @@ Flow('X','dipwin t0paint vNintE','iwarp warp=${SOURCES[1]} | math output="(-1)*i
 Flow('XD','X D','math D=${SOURCES[1]} output="input/(D+1e-6)"')
 Flow('theta','XD','math output="atan(input)/3.14*180" ')
 
-Result('XD','XD','grey bias=0.75 clip=0.75 scalebar=y color=j minval=0.0 maxval=1.5')
-Result('theta','theta',' grey bias=22.5 clip=20 scalebar=y color=j minval=0.0 maxval=45.0')
+Result('XD','XD','grey wanttitle=n bias=0.75 clip=0.75 scalebar=y color=j minval=0.0 maxval=1.5')
+Result('theta','theta','grey wanttitle=n bias=22.5 clip=20 scalebar=y color=j minval=0.0 maxval=45.0')
 
 End()

@@ -29,7 +29,7 @@ Flow('s1-0',None,
      put label1=Time unit1=s label2=Amplitude 
      ''' % (nt,dt,wf,wf,wf))
 Flow('add-0',None,'spike n1=%d o1=0 d1=%g n2=1 nsp=2 mag=10,10 k1=%d,%d' % (nt,dt,nt/2,nt/2+40))
-Flow('s-0','s1-0 add-0','add ${SOURCES[1]} | noise var=%g' % (nlevel0))
+Flow('s-0','s1-0 add-0','add ${SOURCES[1]} | noise seed=2012 var=%g' % (nlevel0))
 
 Result('s-0','graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude label1=Time unit1=s crowd2=0.3 wanttitle=n')
 
@@ -140,7 +140,7 @@ Flow('s2-3',None,
      ''' % (1000,dt2,0.202*nt))
 
 
-Flow('s-2','s2-1 s2-2 s2-3 s2-4','add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}| noise var=5e-5 | math output="input/2" ')
+Flow('s-2','s2-1 s2-2 s2-3 s2-4','add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}| noise seed=12012 var=5e-5 | math output="input/2" ')
 
 
 
@@ -217,13 +217,14 @@ dt6=0.001
 nlevel6=0
 Flow('ref-6',None,
      '''
-     math n1=%d d1=%g o1=%g output=0 | noise var=1 
+     math n1=%d d1=%g o1=%g output=0 | noise seed=22012 var=1 
      ''' % (nt6,dt6,ot))
 Flow('freq-6','ref-6','math output="25*x1*x1+15"')
 Flow('phase-6','ref-6','math output=0')
 Flow('s-6','ref-6 freq-6 phase-6',
      '''
-     ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]} norm=n hiborder=100  | noise var=%g  | agc rect1=100 
+     ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]} norm=n hiborder=100  | 
+     noise seed=32012 var=%g  | agc rect1=100 
      ''' % nlevel6)
 Result('ref-6','graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude label1=Time unit1=s crowd2=0.3 wanttitle=n')
 Result('s-6','graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude label1=Time unit1=s crowd2=0.3 wanttitle=n')

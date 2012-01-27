@@ -33,7 +33,7 @@ To APIs:
 To the Python package:
 
 * an option for the user to overwrite the installed config.py with
-  ~/madagascar-config.py
+  ~/.rsfrc.py
 
 To programs:
 
