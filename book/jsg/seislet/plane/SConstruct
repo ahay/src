@@ -77,8 +77,8 @@ Result('fft2',
 
 # Estimate plane wave slopes
 
-Flow('p1','fft1','cpef nf=5 | roots niter=100')
-Flow('p2','fft2','cpef nf=5 | roots niter=100')
+Flow('p1','fft1','cpef nf=5 | roots niter=100 verb=n')
+Flow('p2','fft2','cpef nf=5 | roots niter=100 verb=n')
 
 # 1-D seislet transform
 
@@ -132,7 +132,7 @@ Result('rec',
 
 Flow('rec1','freq z',
      '''
-     cut n2=1 f2=3 |
+     cut n2=1 f2=1 |
      freqlet freq=${SOURCES[1]}
      inv=y type=bio |
      transp |
