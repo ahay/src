@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include <assert.h>
 #include "dsreiko.h"
 
 struct Upd {
@@ -217,7 +216,7 @@ void pqueue_update(int index)
 }
 
 int neighbors_default()
-/* initialize by setting zero-offset plane time to be zeros */
+/* initialize source */
 {
     int i, j, nxy;
     double vs, vr;
@@ -232,7 +231,7 @@ int neighbors_default()
 	offsets[i] = -1;
     }
     
-    /* set zero-offset plane to be zero */
+    /* zero-offset */
     for (j=0; j < n[1]; j++) {
 	for (i=0; i < n[0]; i++) {
 	    in[j*s[2]+j*s[1]+i] = SF_IN;
@@ -240,25 +239,33 @@ int neighbors_default()
 	}
     }
 
+    /* h = r-s */
     for (j=0; j < n[1]-1; j++) {
 	for (i=0; i < n[0]; i++) {
 	    vs = (double)v[j*s[1]+i];
 	    vr = (double)v[(j+1)*s[1]+i];
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
+	    /*
 	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
+	    */
+	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
     }
     
+    /* h = s-r */
     for (j=1; j < n[1]; j++) {
 	for (i=0; i < n[0]; i++) {
 	    vs = (double)v[j*s[1]+i];
 	    vr = (double)v[(j-1)*s[1]+i];
 
 	    in[j*s[2]+(j-1)*s[1]+i] = SF_FRONT;
+	    /*
 	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
+	    */
+	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j-1)*s[1]+i);
 	}
@@ -300,7 +307,6 @@ int update(float value, float* time, int i)
 	    pqueue_insert(time+i);
 	    return 1;
 	} else {
-	    assert(in[i] == SF_FRONT);
 	    pqueue_update(i);
 	}
     }
@@ -336,6 +342,7 @@ float qsolve(float* time, int i)
 	xj = xx+j;
 	xj->label = j;
 	xj->delta = 1./(d[j]*d[j]);
+
 	if (j == 0)
 	    xj->stencil = v[ix[1]*s[1]+ix[0]]+v[ix[2]*s[1]+ix[0]];
 	if (j == 1)
@@ -390,15 +397,19 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
     double vs, vr;
     int j;
 
+    /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
 
     vs = (double)v[ix[2]*s[1]+ix[0]];
     vr = (double)v[ix[1]*s[1]+ix[0]];
 
+    /* z direction dimishes and t_s = t_r */
     if (m == 2 && vv[2]->label == 0) {
 	if (fabs(vv[1]->value-vv[0]->value) <= tol) {
-	    /* assumes h_r = h_s */
+	    /*
 	    t = sqrt(0.5*(vs+vr)/vv[0]->delta)+vv[0]->value;
+	    */
+	    t = sqrt(vr/vv[0]->delta)+vv[0]->value;
 
 	    if (t <= vv[0]->value) return false;
 
@@ -407,17 +418,17 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
 	}
     } 
 
-    /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
+    /* collect independent terms */
     for (j=0; j<m; j++) {
 	a += pow(vv[j]->delta,2.);
 	b += -4.*vv[j]->value*pow(vv[j]->delta,2.);
 	c += 6.*pow(vv[j]->value,2.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*vv[j]->delta;
 	d += -4.*pow(vv[j]->value,3.)*pow(vv[j]->delta,2.)+4.*vv[j]->stencil*vv[j]->value*vv[j]->delta;
 	e += pow(vv[j]->value,4.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*pow(vv[j]->value,2.)*vv[j]->delta;
-    }
-    
+    }    
     e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
 
+    /* collect interacting terms */
     if (m == 3) {
 	a += -2.*vv[1]->delta*vv[2]->delta
 	     +2.*vv[0]->delta*vv[2]->delta
@@ -483,8 +494,10 @@ double newton(double a,double b,double c,double d,double e /* coefficients */,
 
     root = guess;
 
+    /* evaluate functional */
     val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
     while (fabs(val) > tol) {
+	/* evaluate derivative */
 	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
 
 	if (fabs(der) <= tol) {
@@ -515,6 +528,7 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 
     delta = 1./4.*pow(Q,2.)+1./27.*pow(P,3.);
 
+    /* R could be complex, any complex root will work */
     if (delta >= 0.)
 	R = -1./2.*Q+sqrt(delta)+I*0.;
     else
@@ -522,28 +536,36 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
     
     U = cpow(R,1./3.);
 
+    /* rotate U by exp(i*2*pi/3) until W is real*/
     if (2.*creal(U) <= alpha/3.)
 	U *= -0.5+I*(sqrt(3.)/2.);
     if (2.*creal(U) <= alpha/3.)
 	U *= -0.5+I*(sqrt(3.)/2.);
 
-    y = -5./6.*alpha+2.*creal(U);
+    /* y must be real since a,b,c,d,e are all real */
+    if (cabs(U) <= 1.e-10)
+	if (Q >= 0.)
+	    y = -5./6.*alpha-pow(Q,1./3.);
+	else
+	    y = -5./6.*alpha+pow(-Q,1./3.);
+    else
+	y = -5./6.*alpha+2.*creal(U);
 
     W = sqrt(alpha+2.*y);
 
     root = -1.;
 
-    delta = -3.*alpha-2.*y-2.*beta/W;
-    
+    /* return the largest real root */
+    delta = -3.*alpha-2.*y-2.*beta/W;    
     if (delta >= 0.) {
 	temp = -1./4.*b/a+1./2.*(W+sqrt(delta));
 	if (temp > root) root = temp;
+	
 	temp = -1./4.*b/a+1./2.*(W-sqrt(delta));
 	if (temp > root) root = temp;
     }
 
-    delta = -3.*alpha-2.*y+2.*beta/W;
-    
+    delta = -3.*alpha-2.*y+2.*beta/W;    
     if (delta >= 0.) {
 	temp = -1./4.*b/a+1./2.*(-W+sqrt(delta));
 	if (temp > root) root = temp;

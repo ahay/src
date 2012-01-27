@@ -1,4 +1,4 @@
-/* Double square-root eikonal solver */
+/* Double square-root eikonal solver (2D) */
 /*
   Copyright (C) 2011 University of Texas at Austin
   
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	ns *= n[i];
     }
     if (dim < 3) {
-	/* extend the third dimension for output */
+	/* extend the third dimension for output (copy second dimension) */
 	n[2] = n[1]; d[2] = d[1]; o[2] = o[1];
     }
 
