@@ -44,6 +44,7 @@ int update(float value, float* time, int i);
 float qsolve(float* time, int i);
 bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix);
 double newton(double a,double b,double c,double d,double e, double guess);
+double ferrari(double a,double b,double c,double d,double e);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
@@ -219,6 +220,7 @@ int neighbors_default()
 /* initialize by setting zero-offset plane time to be zeros */
 {
     int i, j, nxy;
+    double vs, vr;
 
     /* total number of points */
     nxy = n[0]*n[1]*n[2];
@@ -235,12 +237,34 @@ int neighbors_default()
 	for (i=0; i < n[0]; i++) {
 	    in[j*s[2]+j*s[1]+i] = SF_IN;
 	    t[j*s[2]+j*s[1]+i] = 0.;
+	}
+    }
 
-	    pqueue_insert(t+j*s[2]+j*s[1]+i);
+    for (j=0; j < n[1]-1; j++) {
+	for (i=0; i < n[0]; i++) {
+	    vs = (double)v[j*s[1]+i];
+	    vr = (double)v[(j+1)*s[1]+i];
+
+	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
+	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
+
+	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
     }
     
-    return (nxy-n[0]*n[1]);
+    for (j=1; j < n[1]; j++) {
+	for (i=0; i < n[0]; i++) {
+	    vs = (double)v[j*s[1]+i];
+	    vr = (double)v[(j-1)*s[1]+i];
+
+	    in[j*s[2]+(j-1)*s[1]+i] = SF_FRONT;
+	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
+
+	    pqueue_insert(t+j*s[2]+(j-1)*s[1]+i);
+	}
+    }
+
+    return (nxy-n[0]*n[1]-2*n[0]*(n[1]-1));
 }
 
 int neighbours(float* time, int i)
@@ -440,7 +464,10 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
 	}
     }
 
+    /*
     t = newton(a,b,c,d,e,vv[m-1]->value);
+    */
+    t = ferrari(a,b,c,d,e);
 
     if (t <= vv[m-1]->value) return false;
 
@@ -462,11 +489,66 @@ double newton(double a,double b,double c,double d,double e /* coefficients */,
 
 	if (fabs(der) <= tol) {
 	    sf_warning("FAILURE: Newton's method meets local minimum.");
-	    return SF_HUGE;
+	    return -1.;
 	}
 
 	root -= val/der;
 	val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
+    }
+
+    return root;
+}
+
+double ferrari(double a,double b,double c,double d,double e /* coefficients */)
+/* quartic solve (Ferrari's method) */
+{
+    double alpha, beta, gama, P, Q, y, W;
+    double delta, root, temp;
+    double complex R, U;
+
+    alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
+    beta  = 1./8.*pow(b,3.)/pow(a,3.)-1./2.*b*c/pow(a,2.)+d/a;
+    gama  = -3./256.*pow(b,4.)/pow(a,4.)+1./16.*c*pow(b,2.)/pow(a,3.)-1./4.*b*d/pow(a,2.)+e/a;
+
+    P = -1./12.*pow(alpha,2.)-gama;
+    Q = -1./108.*pow(alpha,3.)+1./3.*alpha*gama-1./8.*pow(beta,2.);
+
+    delta = 1./4.*pow(Q,2.)+1./27.*pow(P,3.);
+
+    if (delta >= 0.)
+	R = -1./2.*Q+sqrt(delta)+I*0.;
+    else
+	R = -1./2.*Q+I*sqrt(-delta);
+    
+    U = cpow(R,1./3.);
+
+    if (2.*creal(U) <= alpha/3.)
+	U *= -0.5+I*(sqrt(3.)/2.);
+    if (2.*creal(U) <= alpha/3.)
+	U *= -0.5+I*(sqrt(3.)/2.);
+
+    y = -5./6.*alpha+2.*creal(U);
+
+    W = sqrt(alpha+2.*y);
+
+    root = -1.;
+
+    delta = -3.*alpha-2.*y-2.*beta/W;
+    
+    if (delta >= 0.) {
+	temp = -1./4.*b/a+1./2.*(W+sqrt(delta));
+	if (temp > root) root = temp;
+	temp = -1./4.*b/a+1./2.*(W-sqrt(delta));
+	if (temp > root) root = temp;
+    }
+
+    delta = -3.*alpha-2.*y+2.*beta/W;
+    
+    if (delta >= 0.) {
+	temp = -1./4.*b/a+1./2.*(-W+sqrt(delta));
+	if (temp > root) root = temp;
+	temp = -1./4.*b/a+1./2.*(-W-sqrt(delta));
+	if (temp > root) root = temp;
     }
 
     return root;
