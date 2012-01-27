@@ -1,4 +1,3 @@
-
 from rsf.suproj import * 
 # need to try sudivstack
 
@@ -65,9 +64,11 @@ for file in rawsegy  :
 Flow ('line', rawsegy,
      'cat ${SOURCES}',stdin=0)
 
+# print trace hdr summary
 # you can make this list with the command scons list1.su
 Flow('list1','line','surange; echo list1 complete',stdout=0)
 
+# print selected headers on first 3000 traces.  Only fldr and tracf are non-zero
 # you can make this list with the command scons list2.su
 Flow('list2','line',
      '''
@@ -78,42 +79,56 @@ Flow('list2','line',
      stdout=0)
 
 # display the first 3000 traces
-
 Result('first','line',
        'suwind count=3000 | suximage perc=90')
 
+# plot 251 traces, 0-3 seconds.  This is a zoom of first.view
 Result('zoomfirst','line',
        '''
        suwind key=tracl min=1000 max=1250 tmin=0 tmax=3 |
        suximage perc=90
        ''')
 
+# make a movie of the all the shots on input files
 Result('firstmovie','line',
      '''
      suxmovie n2=101 loop=1 fframe=1 dframe=1 
               title="record %g" perc=20 
      ''')
 
+# select the 24th record on the line and display it.
 Result('firstrec24','line',
        '''
        suwind key=tracl min=2324 max=2424 tmin=0 tmax=6 |
        suximage perc=90
        ''')
 
+#####################################################################
+# start a series of flows that loads the geometry into trace headers
+#####################################################################
+
+# make a text file with one line for each trace in line.su 
 Flow ('hdrfile.txt','line',
      'sugethw output=geom key=tracl,fldr,tracf')
  
+# InterpText.py creates a text file with one line for each tract in 
+# line.su that has the key geometry headers like ep, sx, sy, cdp, ...
+# this file had dummy values like -999 or -999999 for dummy traces
 Flow ('hdrfile1.txt',
       'hdrfile.txt InterpText.py spnElev.txt recnoSpn.txt',
      ''' 
      ./InterpText.py
      ''',stdin=0)
 
+# convert the asci file header1.txt to binary (sushw requires binary input)
 Flow ('binary_hdrfile1.dat','hdrfile1.txt',
      ''' 
      a2b n1=13
      ''')
 
+# merge the binary_header.dat into the headers of line.su
+# and throw way aux traces, noise records, and other "do not process"
+# traces.
 keys='ep,sx,sy,gx,gy,cdp,tracf,offset,' \
       'selev,gelev,sstat,gstat,tstat'
 
@@ -138,6 +153,8 @@ Flow ('allshots', 'line binary_hdrfile1.dat',
 	    reject=149
     ''' % keys)
 
+# make a movie of the shots after loading geometry and throwing 
+# out "donot process" traces
 Result('allshots','allshots',
 	'''
 	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
@@ -145,7 +162,7 @@ Result('allshots','allshots',
  	''')
 
 	
-# download, convert, and view previous processing stack
+# download, convert, and view the stack from legacy processing
 Fetch('31_81_PR.SGY',
       server='http://certmapper.cr.usgs.gov',
       top='nersl/NPRA/SEISMIC/1981/31_81',
@@ -155,6 +172,7 @@ Flow([file, file+'.bin', file+'.asc'],
      '31_81_PR.SGY',segyread,
      stdin=0)
 
+# view the legacy stack section and the zoom plot
 Result('checkstack','checkstack',
        'suximage title="checkstack" perc=90')
 Result('zoomcheckstack','checkstack',
@@ -163,73 +181,32 @@ Result('zoomcheckstack','checkstack',
        suximage title="zoom checkstack" perc=90
        ''')
 
+# condition data with datum statics, spreading correction, AGC,
+# and apply fk velocity filtering
 Flow('allvelfilt_shot','allshots alaskavelfilt.sh',
      './${SOURCES[1]} 100 155')
 
-velfilt = []
-for ep in range(100,156):
-    shot = 'shot%d' % ep
-    Flow(shot,'allshots',
-         '''
-         suwind 
-         key=ep 
-         min=${EP} 
-         max=${EP} 
-         | sustatic hdrs=1 sign=-1 
-         | sugain 
-         tpow=1 
-         | sumute 
-         xmute=-5280,0,5280 
-         tmute=.488,0,.488 
-         | sugain  agc=1 wagc=.5
-         ''')
-    neg = 'neg%d' % ep
-    pos = 'pos%d' % ep
-    Flow(neg,shot,
-         '''
-         suwind key=offset min=-999998 max=0 
-         | sudipfilt 
-         bias=-.003 
-         dx=1 
-         slopes=-.014,-.012,.004,.006 
-         amps=0.0,1.0,1.0,0.0 
-         | suchw 
-         key1=offset 
-         key2=offset 
-         a=0 
-         b=-1
-         ''')
-    Flow(pos,shot,
-         '''
-         suwind key=offset min=0 max=999998 
-         | sudipfilt 
-         bias=.003 
-         dx=1 
-         slopes=-.006,-.004,.012,.014 
-         amps=0.0,1.0,1.0,0.0
-         ''')
-    filt = 'filt%d' % ep
-    Flow(filt,[neg,pos],'cat ${SOURCES[:2]}',stdin=0)
-
-    velfilt.append(filt)
-Flow('allvelfilt_shot2',velfilt,
-     'cat ${SOURCES[:%d]}' % len(velfilt),stdin=0)
-
+# make a movie of the data after velocity filter
 Result('movie_velfilt','allvelfilt_shot',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
               title="record %g" perc=20
      ''')
 
+# plot record 24 after velocity filter
 Result('velfiltrec24','allvelfilt_shot',
        '''
        suwind key=tracl min=2324 max=2424 tmin=0 tmax=6 |
        suximage perc=90
        ''')
 
+# sort to cdp, use ep to preserve trace order for split shot
+# cdp gathers.  Mute was picked on stack, so it is inside nmo/inverse
+# moveout pair using a brute velocity function.
+ 
 Flow('velfiltcdpsmute','allvelfilt_shot',
      '''
-     susort cdp |
+     susort cdp ep |
      sunmo 
        par=vbruteorig.txt |
      sumute 
@@ -243,18 +220,23 @@ Flow('velfiltcdpsmute','allvelfilt_shot',
        invert=1
      ''' ) 
 
+# display movie of cdpgathers with mute.  Fold varies, but 96 traces
+# is about 8 gathers.
 Result('movie_cdps','velfiltcdpsmute',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
               title="record %g" perc=20
      ''')
 
+# make wiggle plot of two cdp gathers
 Result('cdp250-251','velfiltcdpsmute',
        '''
        suwind key=cdp min=250 max=251 tmin=0 tmax=3 |
        suwigb perc=90
        ''')
 
+# run velocity analysis at one location, near the center of the line.
+# starting velocity is the one I picked, which is pretty good.
 Flow('vbrute.txt','vbruteorig.txt velfiltcdpsmute',
      '''
      ./iva.sh
@@ -262,6 +244,10 @@ Flow('vbrute.txt','vbruteorig.txt velfiltcdpsmute',
      ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
      ''',stdout=0,stdin=0)
 
+# apply decon and moveout the cdp gathers using the brute velocity function.
+# decon (supef) is inside linear moveout/inverse linear moveout pair so I 
+# can make the decon design gate start time increase with offset and start
+# below the mute.
 Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
      '''
      suchw 
@@ -292,13 +278,17 @@ Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
        key=offset
        taper=50
    ''')
-	
+
+# make movie of cdp gathers after brute nmo
 Result('movie_velfiltcdpsnmo','velfiltcdpsnmo',
      '''
      suxmovie n2=96 loop=1 fframe=1 dframe=1 
               title="velfiltcdpsnmo record %g" perc=20
      ''')
 
+##########################################
+# brute stack, display, and zoom display
+##########################################
 Flow('brutestack','velfiltcdpsnmo',
      '''
      sustack 
@@ -326,6 +316,8 @@ Flow('statics_in','velfiltcdpsnmo',
      suresamp rf=2 comment="upsample to 1 ms"
      ''')
 
+# residual statics extimation.  Plot the shot and receiver
+# statics as a wiggle trace.
 Flow('sourcestatic.dat recstatic.dat',
      'statics_in',
      '''
@@ -349,6 +341,7 @@ Result('sourcestatic','sourcestatic.dat',
 Result('recstatic','recstatic.dat',
        'xwigb n1=668 title="receiver static"')    
 
+# apply residual statics and remove the brute nmo
 Flow('velfiltcdpsmuterstat',
      'velfiltcdpsnmo ' \
      'sourcestatic.dat recstatic.dat ' \
@@ -369,6 +362,7 @@ Flow('velfiltcdpsmuterstat',
          invert=1
      ''')
 
+# second pass velocity analysis at 9 locations.
 Flow('vpick.txt','vpickorig.txt velfiltcdpsmuterstat',
      '''
      ./iva.sh
@@ -377,6 +371,7 @@ Flow('vpick.txt','vpickorig.txt velfiltcdpsmuterstat',
      ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
      ''',stdout=0,stdin=0)
 
+# stack, display, and zoom display with residual statics and final velocity field
 Flow('rstack','velfiltcdpsmuterstat vpick.txt',
      '''
      sunmo 
@@ -406,7 +401,10 @@ Result('zoomrstack','rstack',
 #          wclip=8000 bclip=12000
 #       ''')
 
+########################################################
 # update residual statics with the final velocity field
+########################################################
+# bandpass filter and apply final velocity field
 Flow('statics_in1','velfiltcdpsmuterstat vpick.txt',
      '''
      sufilter f=2,6,50,60 |
@@ -415,6 +413,7 @@ Flow('statics_in1','velfiltcdpsmuterstat vpick.txt',
      suresamp rf=2 comment="upsample to 1 ms"
      ''')
 
+# estimate second pass residual statics
 Flow('sourcestatic1.dat recstatic1.dat',
      'statics_in1',
      '''
@@ -433,6 +432,8 @@ Flow('sourcestatic1.dat recstatic1.dat',
         verbose=1
      ''',stdout=0)
 
+# apply second pass residual statics and stack (first pass residual static
+# are already on the input file.
 Flow('rstack1',
      'velfiltcdpsmuterstat sourcestatic1.dat recstatic1.dat',
      '''
@@ -452,6 +453,7 @@ Flow('rstack1',
        normpow=1 
      ''')
 
+# display final residual statics stack.  Also make zoom plot. 
 Result('rstack1','rstack1',
        'suximage title="rvrstack" f2=101 perc=90')
 
@@ -461,11 +463,13 @@ Result('zoomrstack1','rstack1',
        suximage title="rvrstack" f2=101 perc=90
        ''')
 
+# grid the velocity to every cdp and every sample for kirchhoff migration
 Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
      '''
      ./010_Velocity_Interp_IVA.sh
      ''')
 
+# diplsay gridded velocity field
 Result('vfile','stkvel1.intp2.bin',
        '''
        ximage n1=3000 d1=.002 f2=101 d2=1 cmap=rgb11 
@@ -477,9 +481,9 @@ Result('contourvfile','stkvel1.intp2.bin',
           wclip=8000 bclip=12000
        ''')
 
+# kirchhoff migration, display and zoom display
 # I think I can work arround bug in suktmig2d by setting 
 # dcdp=1 fcdpdata=1 firstcdp=101
-
 Flow('mig','rstack1 stkvel1.intp2.bin',
      '''
      sufrac power=.5 sign=1 |
@@ -500,6 +504,7 @@ Result('zoommig','mig',
 # prestack kirchhoff requires all offsets planes to be the
 # same length.  I cannot figure out how to do this.
 
+# phase shift migration, display and zoom display
 Flow('migps','rstack1',
      '''
      sumigps
