@@ -26,7 +26,7 @@ follow these steps and recreate my results.  I hope this will
 accelerate the testing and validation of programs developed in different
 research groups.
 \par
-The tutorial starts with background information such as data downloading,
+The paper starts with background information such as data downloading,
 region overview, data acquisition, and previous processing.  The
 scripts and custom programs for Seismic Unix translation, header load, 
 qc, shotrecord velocity filter, deconvolution, CDP gather, velocity 
@@ -47,23 +47,24 @@ and data.
 \section{Introduction}
 Seismic Unix (SU) is a popular open-source seismic processing software
 package \cite[]{TLE16-07-10451049,cohen}.  The distribution
-includes some example processing scripts and two books that
-teach how to use the software are \emph{Seismic Processing with Seismic
-  Un*x} \cite[]{forel} and \emph{Geophysical Image Processing with
-  Seismic Unix} \cite[]{stockwell} .  These reference cover broad
-subjects including basic Unix commands, setting up a user environment,
-basic seismic processing, and more advanced scripting for seismic
+includes some example processing scripts and three books that
+teach how to use the software are \emph{Seismic Processing with Seismic 
+Un*x} \cite[]{forel}, \emph{Geophysical Image Processing with Seismic 
+Unix} \cite[]{stockwell}, and \emph{Theory of Seismic Imaging} 
+\cite[]{Scales} .  These reference cover broad subjects including basic 
+Unix commands, setting up a user environment, basic seismic processing, 
+migration theory, programming, and advanced scripting for seismic
 processing.  You can follow the text and recreate some seismic
 processing examples.  These books do not provide good examples of 
 geometry definition and how to load trace headers.\nocite{cohen}
 
 I hope to assist a processing geophysicst working or studing independently 
-at a University or company that need field data.  I assume he is familiar 
+at a University or company that needs field data.  I assume he is familiar 
 with Seismic Unix.  I providing example scripts,  programs, and field data 
 to process a 2D land line using the processing system. I describe the data 
 acquisition and previous data processing.  I provide the custom programs 
 that load the trace headers.  The scripts for data reformat to Seismic 
-Unix format, header loadingm qc display, shot record velocity filter, 
+Unix format, header loading qc display, shot record velocity filter, 
 deconvoution, CDP gather, velocity analysis, residual statics, stack, 
 and post stack migration can be downloaded and this paper describes 
 the scripts.  This is a more complete processing sequence and a 
@@ -206,8 +207,8 @@ section to load the trace headers.
 \section{Data Loading and initial data QC}
 
 I found little documentation about loading data and creating trace
-headers in previous publications.  This section provides a more
-detailed description.
+headers in previous publications.  This section described how I loaded 
+the headers.
 
 The three field data SEGY files are downloaded, converted to Seismic 
 Unix format, concatenated, and a print created of the range of each trace 
@@ -215,7 +216,7 @@ header using the command:
 \begin{verbatim}
 scons list1.su
 \end{verbatim}
-Or using the tar file type:
+Or to use the tar file type:
 \begin{verbatim}
 ./list1.job
 \end{verbatim}
@@ -247,7 +248,7 @@ If you are using the tar file type:
 ./list2.job
 \end{verbatim}
 
-The first part of the print is: 
+Part of the print is: 
 \begin{verbatim}
 fldr=101 tracf=1  cdp=0	 cdpt=0  offset=0 
 fldr=101 tracf=2  cdp=0	 cdpt=0  offset=0 	
@@ -458,7 +459,7 @@ Or using the tar file:
 ./vbrute.job
 \end{verbatim}
 
-There are four components of the plot, semblance plot, constant velocity 
+There are four components of the plot: semblance plot, constant velocity 
 stack (CVS) plot, cmp gather without NMO, and cmp gather after NMO.  The 
 semblance plots and CVS plot have the velocity function over plotted.  
 The velocity analysis can be picked by pointing on the semblance and 
@@ -617,15 +618,13 @@ or
 apply post stack to the second pass residual statics stack
 (Figure~\ref{fig:rstack1}). The first command produces the Kirchhoff
 migration shown in Figure~\ref{fig:mig} and the second command
-produces the phase shift migration shown in Figure~\ref{fig:migps}.
+produces the phase shift migration which is not shown.
 The Kirchhoff data used the final stacking velocity field
 (Figure~\ref{fig:vfile}).  The phase-shift migration used a single
 interval velocity.  I converted to interval velocity using Dix'
 equation \cite[]{GEO20-01-00680086} in a spreadsheet.
 
 \plot{mig}{width=\textwidth}{Post stack Kirchhoff migration of the 
-final stack.}
-\plot{migps}{width=\textwidth}{Post stack Kirchhoff migration of the 
 final stack.}
 
 \section{Comparison of the 2011 and 1981 results}
@@ -659,11 +658,13 @@ industry.  I look forward to future improvements.
 This processing sequence produces many datasets, but the best files for 
 additional processing are:
 \begin{enumerate}
-\item allshots.su - unprocessed field data with geometry in headers
-\item velfiltcdpsmuterstat - preprocessed cdp gathers with residual static applied ready for normal moveout
-\item vpickorig.txt - final stacking velocities
-\item rstack1.su - final residual statics stack
-\item mig.su - post stack kirchhoff migrated data
+\item allshots.su - unprocessed field data with geometry in headers.  Bad 
+traces and aux traces removed.
+\item velfiltcdpsmuterstat - preprocessed cdp gathers with residual static 
+applied ready for normal moveout.
+\item vpickorig.txt - final stacking velocities.
+\item rstack1.su - final residual statics stack.
+\item mig.su - post stack kirchhoff migrated data.
 \end{enumerate}
 
 \section{Plans}
@@ -692,13 +693,13 @@ Seismic Unix. These scripts include the following processing stages:
 \item Post stack phase shift migration
 \end{enumerate}
 
-My processing illustrates processing stages not presented by Forel
+My processing demonstrates processing stages not presented by Forel
 or Stockwell. The results can be recreated by others since the processing
 scripts and the data can be downloaded from the Internet.
 
 The task of loading trace headers is not addressed in other
 publications.  The custom Python program included in this paper is one
-way to complete this processing stage.  The velocity analysis script 
+way to accomplish this processing stage.  The velocity analysis script 
 improves the scripts in Forel's book.  I was able to pick the velocities 
 on this line using the script.
 
