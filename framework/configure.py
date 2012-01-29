@@ -1690,15 +1690,20 @@ def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
 
-    # look for it in current directory, then home directory, then system
-    config = '.rsfrc.py'
-    if not os.path.isfile(config):
-        config = os.path.join(os.environ.get('HOME',''),'.rsfrc.py')
-        if not os.path.isfile(config):    
-            config = os.path.join(RSFROOT, 'share', 'madagascar','etc','config.py')
+    config = 'rsfcfg.py'
+    if os.path.isfile(config):
+        sys.stderr.write('Found rsfcgf.py in the current directory\n')
+    else:
+        config = os.path.join(os.environ.get('HOME',''),'.rsfcfg.py')
+        if os.path.isfile(config):
+            sys.stderr.write('Found .rsfcfg.py in the home directory\n')
+        else:
+            config = os.path.join(RSFROOT, 'share','madagascar','etc','config.py')
             if not os.path.isfile(config):
                 return
+            
     opts = options(config)
+
     if my_opts:
         for opt in my_opts.keys():
             opts.Add(opt,my_opts[opt])
