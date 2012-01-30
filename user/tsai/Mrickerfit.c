@@ -25,15 +25,16 @@
 
 int main(int argc, char* argv[])
 {
-    int n2, i2, na, ia, ib, ic, ie, id, niter, iter, n, k, i3, i4, nrow, ncol;
-    float eps, d2, f, f0, f2, df, di;
-    float *m0, *a, *m, *m2, *m3, *e; /*initial frequency*/
-    float *data, **r, **rt, **rs, **rp; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
-    float *rd, *r2, *rpd, **rpr, *rpa, *dd, *ap, **arp, *ra, *gamma, **dm, **aparp, **aparpt;
+    int n2, na, ia, i, j, niter, k, iter, n, l, ib;
+    float eps, f, f0, f2, df;
+    float *m0, *a, *m, *m2, *m3, *e, *ap; /*initial frequency*/
+    float *data, **r, **rt, **rs, **rp, **rpt; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
+    float *rtd, **rptr, **rtrp, *dd, *ra, *gamma, **rk, *rka, *rptd, *rkd; 
+    float **arp, **apr, **aprarp, **aprarpt, **mt, *gt, *dm, d, est, *temp, r2;
     bool verb;
     sf_file in, out, ma;    
     
-        sf_init (argc,argv);
+    sf_init (argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
     ma  = sf_output("ma");
@@ -48,11 +49,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("n",&n)) n = 3;
 
     m0 = sf_floatalloc(n);
-    for (k=1; k < n; k++) {
-/*	gu = 125; */
-	/*1 Hz per step, up to na steps, equally distributed k steps*/
-	if (!sf_getfloat("m",&m0[k])) m0[k] = f0+0.008*(na-1)*df;
-    }
+
+    if (!sf_getfloats("m",m0,n)) {
+	    for (i=0;i<n;i++) {
+		m0[i] = f0+(na/n)*df*i;
+	    }
+	}
 
     if (!sf_getint("niter",&niter)) niter=100;
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -64,149 +66,243 @@ int main(int argc, char* argv[])
     sf_fileflush(ma,in);
 
     data = sf_floatalloc(na);
-
-    r = sf_floatalloc2(n,na);
-    rt = sf_floatalloc2(na,n);    
-    rp = sf_floatalloc2(n,na);  
-    rs = sf_floatalloc2(n,n);
     eps = 10.*FLT_EPSILON;
     eps *= eps;
 
-    for (i2=0; i2 < n2; i2++) {
-	sf_warning("slice %d of %d;",i2+1,n2);
+
+    for (i=0; i < n2; i++) {
+	sf_warning("slice %d of %d;",i+1,n2);
 	sf_floatread(data,na,in);
 
-	d2 = 0.;
-	for (ia=0; ia < na; ia++) {
-	    di = data[ia];
-	    if (di < 0.) data[ia] = -di;
-	    d2 += di*di;
+	m = sf_floatalloc(n);
+	for (j = 0; j < n; j++) {
+	m[j] = m0[j];
 	}
 
-	m = m0;
 	m2 = sf_floatalloc(n);
 	m3 = sf_floatalloc(n);
 	e = sf_floatalloc(n);
 	a = sf_floatalloc(n);
 
-	for (iter = 0; iter < niter; iter++) {
-	    for (i3 = 0; i3 < n; i3++) {
-		m[i3] = m0[i3];
-		m2[i3] = m[i3]*m[i3];
-		m3[i3] = m2[i3]*m[i3];
+	rt = sf_floatalloc2(n,na);
+	rpt = sf_floatalloc2(n,na);
+	rtd = sf_floatalloc(n);
+	rptd = sf_floatalloc(n);
 
-		rd = sf_floatalloc(n);
-		r2 = sf_floatalloc(n);
-		rpd = sf_floatalloc(n);
-		rpr = sf_floatalloc2(n,n);
+	r = sf_floatalloc2(na,n);
+	rp = sf_floatalloc2(na,n);
+
+	for (iter = 0; iter < niter; iter++) {
+	    for (k = 0; k < n; k++) {
+		m[k] = m0[k];
+		m2[k] = m[k]*m[k];
+		m3[k] = m2[k]*m[k];
 
 	      for (ia = 0; ia < na; ia++) {
 		  f = f0 + ia*df;
 		  f2 = f*f;
-		  e[i3] = exp(-f2/m2[i3]);  
-		  r[i3][ia] = e[i3]*f2/m2[i3];
-		  rp[i3][ia] = 2.*e[i3]*f2*(f2-m2[i3])/(m3[i3]*m2[i3]);
-		  rd[i3] += r[i3][ia]*data[ia];
-		  rpd[i3] += rp[i3][ia]*data[ia];
+		  e[k] = exp(-f2/m2[k]);
+		  
+		  rt[k][ia] = e[k]*f2/m2[k];
+		  rpt[k][ia] = 2.*e[k]*f2*(f2-m2[k])/(m3[k]*m2[k]);
+		  rtd[k] += rt[k][ia]*data[ia];
+		  rptd[k] += rpt[k][ia]*data[ia];
 	       }    
 	    }
 
+	    sf_warning("!!!");
+
 	    /*ricker spectrum matrix transpose*/
-	    for (ib = 0; ib < na; ib++) {
-		for (i4 = 0; i4 < n; i4++) {
-		    rt[ib][i4] = r[i3][ia];
+	    for (l = 0; l < n; l++) {
+		for (ib = 0; ib < na; ib++) {
+		    r[ib][l] = rt[l][ib];
+		    rp[ib][l] = rpt[l][ib];
 		}
 	    }
+
+	    sf_warning("!!!");
+
+	    rs = sf_floatalloc2(n,n);
+	    rptr = sf_floatalloc2(n,n);
+	    rtrp = sf_floatalloc2(n,n);
 	    /*ricker spectrum, partial ricker spectrum multiplication */
-		       for (ic = 0; ic < n; ic++) {
-			   for (id = 0; id < n; id++) {
-			       rs[ic][id] = 0;
-			       rpr[ic][id] = 0;
-			       for (ie = 1; ie < na; ie++) {
-				   rs[ic][id] += r[ic][ie]*rt[ie][id];
-				   rpr[ic][id] += rp[ic][ie]*rt[ie][id];
+		       for (k = 0; k < n; k++) {
+			   for (l = 0; l < n; l++) {
+			       rs[k][l] = 0;
+			       rptr[k][l] = 0;
+			       rtrp[k][l] = 0;
+			       for (ib = 0; ib < na; ib++) {
+				   rs[k][l] += rt[k][ib]*r[ib][l];
+				   rptr[k][l] += rpt[k][ib]*r[ib][l];
+				   rtrp[k][l] += rt[k][ib]*rp[ib][l];
 			       }
 			   }
 		       }
-		       /*partial ricker spectrum*/
-		       for (nrow = 0; nrow < n; nrow++) {
-			   for (ncol = 0; ncol < n; ncol++) {
-			       if (nrow == ncol)
-				     {
-					 rpr[nrow][ncol] = 2*rpr[nrow][ncol];
-				     }
+
+		       for (k = 0; k < n; k++) {
+			   for (l = 0; l < n; l++) {
+			       if (k == l) {
+				   rs[k][l] = rs[k][l]+eps;
+			       }
 			   }
 		       }
 
-	gaussel_init(n);
+		       gaussel_init(n);
 	/*soliving for amplitude*/
-	gaussel_solve(rs, rd, a);
-	rpa = sf_floatalloc(n);
-	for (nrow=0; nrow<n; nrow++) {
-	    rpa[nrow] = 0;
-	    for (ncol=0; ncol<n; ncol++) {
-		rpa[ncol] += rpr[nrow][ncol]*a[nrow];
-	    }
-	}
-	ap = sf_floatalloc(n);
-	dd = sf_floatalloc(n);
-	for (nrow=0; nrow<n; nrow++) {
-	    dd[nrow] = rpd[nrow]-rpa[nrow]; 
-	}
-	gaussel_init(n);
-	/*solving for partial amplitude*/
-	gaussel_solve(rs, dd, ap);
-
-	arp = sf_floatalloc2(n,na);
-	/*column is each frequency, dot product*/
-	for (ncol=0; ncol<na; ncol++) {
-	    for (nrow=0; nrow<n; nrow++) {
-		arp[nrow][ncol] = a[nrow]*rp[nrow][ncol];
+		       gaussel_solve(rs, rtd, a);
+	
+	rk = sf_floatalloc2(n,n);
+	for (k = 0; k < n; k++) {
+	    for (l = 1; l < n; l++) {
+	    rk[k][l] = rptr[k][l]+rtrp[k][l];
 	    }
 	}
 
-	gamma = sf_floatalloc(na);
-	ra = sf_floatalloc(na);
-	for (nrow=1; nrow<n; nrow++) {
-	    for (ia=0; ia<na; ia++) {
-		ra[ia] = 0;
-		ra[ia] += rt[ia][nrow]*a[nrow];
-	    }
+	rka = sf_floatalloc(n);
+	for (k = 0; k < n; k++) {
+	    rka[k] = 0;
+	    for (l = 0; l < n; l++) {
+		rka[k] += rk[k][l]*a[l];
+		}
 	}
 
-	for (ia=0; ia<na; ia++) {
-	    gamma[ia] = 0;
-	    gamma[ia] = data[ia]-ra[ia];
-	}
-
-	aparp = sf_floatalloc2(n,na);
-	for (nrow=0; nrow<n; nrow++) {
-	    for (ncol=0; ncol<n; ncol++) {
-	    aparp[nrow][ncol] = arp[nrow][ncol]+ap[nrow];
+	rptd = sf_floatalloc(n);
+	for (k = 0; k < n ; k++) {
+	    rptd[k] = 0;
+	    for (ib = 0; ib < na; ib++) {
+		rptd[k] += rpt[k][ib]*data[ib];
 	    }
 	}
 	
-	aparpt = sf_floatalloc2(na,n);
-	/*aparp transpose*/
-	for (ncol=0; ncol<na; ncol++) {
-	    for (nrow=0; nrow<n; nrow++) {
-		aparpt[ncol][nrow] = aparp[nrow][ncol];
+	rkd = sf_floatalloc(n);
+	for (k = 0; k < n; k++) {
+	    rkd[k] = rptd[k]-rka[k];
+	}
+
+	ap = sf_floatalloc(n);
+
+	gaussel_init(n);
+	/*soliving for amplitude partial*/
+	gaussel_solve(rs, rkd, ap);
+
+/*DM=inverse((X transpose X)) X transpose Y */
+/*aprarp is X; gamma is Y*/
+	dd = sf_floatalloc(n);
+
+	gamma = sf_floatalloc(na);
+	ra = sf_floatalloc(na);
+	for (ib = 0; ib < na; ib++) {
+	    for (k = 0; k < n; k++) {
+		ra[ib] = 0;
+		ra[ib] += r[ib][k]*a[k];
+	    }
+	}
+	for (ib = 0; ib < na; ib++) {
+	    gamma[ib] = data[ib]-ra[ib];
+	}
+
+	aprarp = sf_floatalloc2(na,n);
+	arp = sf_floatalloc2(na,n);
+	apr = sf_floatalloc2(na,n);
+
+	for (ib = 0; ib < na; ib++) {
+	    for (k = 0; k < n; k++) {
+		arp[ib][k] = a[k]*rp[ib][k];
 	    }
 	}
 
-	dm = sf_floatalloc2(n,na);
-/*
-	for (ia=0; ia<na; ia++) {
-	    gaussel_init(na);
-	    gaussel_solve(aparpt[ia], gamma[ia], dm[ia]);
-*/
-
-
-
-
+	for (ib = 0; ib < na; ib++) {
+	    for (k = 0; k < n; k++) {
+		apr[ib][k] = ap[k]*r[ib][k];
+	    }
 	}
 
+	for (ib = 0; ib < na; ib++) {
+	    for (k = 0; k < n; k++) {
+		aprarp[ib][k] =apr[ib][k] + arp[ib][k];
+	    }
+	}
 
+	aprarpt = sf_floatalloc2(n,na);
+
+	for (k = 0; k < n; k++) {
+	    for (ib = 0; ib < na ; ib++) {
+		aprarpt[k][ib] = aprarp[ib][k];
+	    }
+	}
+
+	/*mt is the product of aprarp and aprarpt*/
+	mt = sf_floatalloc2(n,n);
+	for (k = 0; k < n; k++) {
+	    for (l = 0; l < n; l++) {
+		mt[k][l] = 0;
+		for (ib = 0; ib < na; ib++) {
+		    mt[k][l] += aprarpt[k][ib]*aprarp[ib][l];
+		}
+	    }
+	}
+	/*gt is the product of aprarpt and gamma*/
+	gt = sf_floatalloc(n);
+	for (k = 0; k < n; k++) {
+	    gt[k] = 0;
+	    for (ib = 0; ib < na; ib++) {
+		gt[k] += aprarpt[k][ib]*gamma[ib];
+	    }
+	}
+
+	dm = sf_floatalloc(n);
+	gaussel_init(n);
+	/*soliving for amplitude partial*/
+	gaussel_solve(mt, gt, dm);
+
+	est = 0;
+	for (k = 0; k < n; k++) {
+	est +=ra[k] ;
+	}
+	
+	d = 0;
+	for (ib = 0; ib < na; ib++) {
+	    d += data[ib];
+	}
+	r2 = (d - est)*(d - est); 
+	
+	if (verb && 5000 > n2) sf_warning("iter=%d r2=%g", iter,r2);
+
+	for (k = 0; k < n; k++) {
+	    m[k] +=dm[k];
+	}
+	    if (r2 < eps) break;
+	}
+
+	for (k = 0; k < 3; k++) {
+	    m[k] = 15*(k+1);
+	    m2[k] = m[k]*m[k];
+	}
+
+/*
+	for (k = 0; k < n; k++) {
+	    m[k] = fabsf(m[k]);
+	    m2[k] = m[k]*m[k];
+	}
+
+*/      
+	sf_floatwrite(m2,n,ma);
+	sf_floatwrite(a,n,ma);
+
+	data = sf_floatalloc(na);
+        temp = sf_floatalloc(na);
+	for (ib = 0; ib < na; ib++) {
+	    f = f0 + ib*df;
+	    f2 = f*f;
+	    temp[ib] = 0;
+	    data[ib] = 0;
+	    for (k = 0; k < n; k++) {
+		temp[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];	
+	    }
+	    data[ib] = temp[ib];
+	}
+        
+       	sf_floatwrite(data,na,out);
 
     }
     sf_warning(".");
