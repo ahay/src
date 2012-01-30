@@ -1,4 +1,4 @@
-/* byte swapping (LP64) */
+/* endianness conversion */
 /*
   Copyright (C) 2011 KAUST
 
