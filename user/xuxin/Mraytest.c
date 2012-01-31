@@ -114,8 +114,8 @@ void rk4(float *u,       /* [NU*nt] */
 
 int main(int argc,char *argv[])
 {
-	int i,n,nxz;
-	float theta,xs,zs,u0[NU],*u;
+	int i,j,nxz,ns;
+	float theta,s0,ds,zs,u0[NU],*u,*s;
 	sf_file F,Fx,Fz,Fv,Fvx,Fvz;
 
 	sf_init(argc,argv);
@@ -130,13 +130,13 @@ int main(int argc,char *argv[])
 	if (!sf_histfloat(Fv,"o2",&x0)) x0 = 0.;
 
 	Fvx = sf_input("vx");
-	if (!sf_histint(Fvx,"n1",&n) || n != nz ||
-		!sf_histint(Fvx,"n2",&n) || n != nx)
+	if (!sf_histint(Fvx,"n1",&i) || i != nz ||
+		!sf_histint(Fvx,"n2",&i) || i != nx)
 		sf_error("Need n1=%d n2=%d in vx",nz,nx);
 
 	Fvz = sf_input("vz");
-	if (!sf_histint(Fvz,"n1",&n) || n != nz ||
-		!sf_histint(Fvz,"n2",&n) || n != nx)
+	if (!sf_histint(Fvz,"n1",&i) || i != nz ||
+		!sf_histint(Fvz,"n2",&i) || i != nx)
 		sf_error("Need n1=%d n2=%d in vz",nz,nx);
 
 	x = sf_floatalloc(nx);
@@ -144,23 +144,32 @@ int main(int argc,char *argv[])
 	for (x[0]=x0, i=1; i < nx; i++) x[i]=x[i-1] + dx;
 	for (z[0]=z0, i=1; i < nz; i++) z[i]=z[i-1] + dz;
 
-	if (!sf_getfloat("xs",&xs)) xs = x[nx/2];
-	if (!sf_getfloat("zs",&zs)) zs = z[nz/2];
+	if (!sf_getfloat("ds",&ds)) ds = 1;       /* shot x */
+	if (!sf_getint  ("ns",&ns)) ns = 1;       /* shot x */
+	if (!sf_getfloat("s0",&s0)) s0 = x[nx/2]; /* shot x */
+	if (!sf_getfloat("zs",&zs)) zs = z[nz/2]; /* shot z */
 	if (!sf_getint  ("nt",&nt)) nt = 1;
 	if (!sf_getfloat("dt",&dt)) dt = 1;
 	if (!sf_getfloat("theta",&theta)) theta = 0; /* shooting angle zpos (degree) */
 	if (!sf_getbool ("arc",&arc)) arc = false; /* if true, arclength; if false, traveltime */
+
+	s = sf_floatalloc(ns);
+	for (s[0]=s0, i=1; i < ns; i++) s[i]=s[i-1] + ds;
 
 	Fx = sf_output("x");
 	Fz = sf_output("z");
 	for (i=0; i < 2; i++) {
 		F = i ? Fx : Fz;
 		sf_putint   (F,"n1",nt);
-		sf_putint   (F,"n2",1);
+		sf_putint   (F,"n2",ns);
 		sf_putfloat (F,"d1",dt);
+		sf_putfloat (F,"d2",ds);
 		sf_putfloat (F,"o1",0.);
+		sf_putfloat (F,"o2",s0);
 		sf_putstring(F,"label1",arc ? "arc" : "time");
 		sf_putstring(F,"unit1" ,arc ? "m"   : "sec");
+		sf_putstring(F,"label2","shot");
+		sf_putstring(F,"unit2","");
 	}
 
 	nxz = nx * nz;
@@ -171,16 +180,19 @@ int main(int argc,char *argv[])
 	sf_floatread(vz,nxz,Fvz);
 	sf_floatread(vx,nxz,Fvx);
 
-	u0[0] = xs;
+	u = sf_floatalloc(NU*nt);
 	u0[2] = zs;
 	u0[1] = sinf(theta * M_PI/180.);
 	u0[3] = cosf(theta * M_PI/180.);
+	for (i=0; i < ns; i++) {
+		sf_warning("ray %d;",i+1);
+		u0[0] = s[i];
+		rk4(u,u0);
 
-	u = sf_floatalloc(NU*nt);
-	rk4(u,u0);
-
-	for (i=0; i < nt; i++) sf_floatwrite(&u[i*NU]  ,1,Fx);
-	for (i=0; i < nt; i++) sf_floatwrite(&u[i*NU+2],1,Fz);
+		for (j=0; j < nt; j++) sf_floatwrite(&u[j*NU]  ,1,Fx);
+		for (j=0; j < nt; j++) sf_floatwrite(&u[j*NU+2],1,Fz);
+	}
+	sf_warning("\n");
 
 	sf_fileclose(Fv);	sf_fileclose(Fvx);
 	sf_fileclose(Fvz); 	sf_fileclose(Fx);
