@@ -21,7 +21,7 @@
 
 #include "upgraddsr.h"
 
-#ifndef _upgrad_h
+#ifndef _upgraddsr_h
 
 typedef struct Upgrad *upgrad;
 /* abstract data type */
@@ -29,3 +29,266 @@ typedef struct Upgrad *upgrad;
 
 #endif
 
+struct Upgrad {
+    int *order, **pos;
+    unsigned char **update;
+    float **ww, **qq;
+    bool *source;
+};
+
+static const float tol=1.e-6;
+
+static int ndim, nt, ss[3];
+static const int *nn;
+static float dd[3];
+static const float *t0, *w0;
+
+static int fermat(const void *a, const void *b)
+/* comparison for traveltime sorting from small to large */
+{
+    float ta, tb;
+
+    ta = t0[*(int *)a];
+    tb = t0[*(int *)b];
+
+    if (ta >  tb) return 1;
+    if (ta == tb) return 0;
+    return -1;
+}
+
+upgrad upgrad_init(int mdim        /* number of dimensions */,
+		   const int *mm   /* [dim] data size */,
+		   const float *d  /* [dim] data sampling */)
+/*< initialize >*/
+{
+    upgrad upg;
+    int i;
+    float medium;
+
+    if (mdim > 3) sf_error("%s: dim=%d > 3",__FILE__,mdim);
+
+    ndim = mdim;
+    nn = mm;
+
+    nt = 1;
+    for (i=0; i < ndim; i++) {
+	ss[i] = nt;
+	nt *= nn[i];
+	dd[i] = 1.0/(d[i]*d[i]);
+    }
+
+    medium = (dd[0]+dd[1]+dd[2])/3.;
+    dd[0] /= medium;
+    dd[1] /= medium;
+    dd[2] /= medium;
+
+    upg = (upgrad) sf_alloc(1,sizeof(*upg));
+
+    upg->update = sf_ucharalloc2(2,nt);
+    upg->ww = sf_floatalloc2(ndim+1,nt);
+    upg->qq = sf_floatalloc2(2,nt);
+    upg->order = sf_intalloc(nt);
+    upg->source = sf_boolalloc(nt);
+    upg->pos = sf_intalloc2(2,nt);
+
+    return upg;
+}
+
+void upgrad_set(upgrad upg      /* upwind stencil */,
+		const float *r0 /* reference time */,
+		const float *s0 /* reference slowness-squared */)
+/*< supply reference >*/
+{
+    int i, m, it, jt, ii[3], a, b;
+    unsigned char *up;
+    float t, t2, dt[3], ws, wr;
+
+    t0 = r0;
+    w0 = s0;
+
+    /* sort from small to large traveltime */
+    for (it = 0; it < nt; it++) {
+	upg->order[it] = it;
+    }
+    qsort(upg->order, nt, sizeof(int), fermat);
+     
+    for (it = 0; it < nt; it++) {
+	jt = upg->order[it];
+
+	sf_line2cart(ndim,nn,jt,ii);
+
+	up = upg->update[it];
+	up[0] = up[1] = 0;
+	t = t0[jt];
+	upg->ww[it][ndim] = 0.;
+	upg->source[it] = true;
+
+	upg->pos[jt][0] = ii[2]*ss[1]+ii[0];
+	upg->pos[jt][1] = ii[1]*ss[1]+ii[0];
+
+	ws = w0[upg->pos[jt][0]];
+	wr = w0[upg->pos[jt][1]];
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    a = jt-ss[i];
+	    b = jt+ss[i];
+	    if ((ii[i] == 0) || 
+		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
+		up[1] |= m;
+		t2 = t0[b];
+	    } else {
+		t2 = t0[a];
+	    }
+
+	    if (t2 < t) {
+		up[0] |= m;
+		upg->source[it] = false;
+		dt[i] = t-t2;
+	    } else {
+		dt[i] = 0.;
+	    }
+	}
+
+	/* do sth special when t_z=0 and t_r=t_s */
+	if (dt[0] == 0. && fabsf(dt[1]- dt[2]) < tol && !upg->source[it]) {
+	    upg->ww[it][0] = 0.;
+	    upg->ww[it][1] = 2.*dt[1]*dd[1];
+	    upg->ww[it][2] = 0.;
+
+	    upg->ww[it][ndim] = upg->ww[it][1];
+
+	    upg->qq[jt][0] = 0.;
+	    upg->qq[jt][1] = 1.;
+
+	    continue;
+	}
+
+	upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]+dt[1]*dt[1]*dd[1]-ws-wr);
+	upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr);
+	upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr);
+	if (!upg->source[it])
+	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1]+upg->ww[it][2];
+
+	upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
+	upg->qq[jt][1] = dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+    }
+}
+
+void upgrad_close(upgrad upg)
+/*< free allocated storage >*/
+{
+    free(*(upg->ww));
+    free(upg->ww);
+    free(*(upg->qq));
+    free(upg->qq);
+    free(*(upg->update));
+    free(upg->update);
+    free(upg->order);
+    free(upg->source);
+    free(*(upg->pos));
+    free(upg->pos);
+    free(upg);
+}
+
+void upgrad_solve(upgrad upg,
+		  const float *rhs /* right-hand side */, 
+		  float *x         /* solution */,
+		  const float *x0  /* initial solution */)
+/*< inv(alpha) >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+    float num, den;
+   
+    for (it = 0; it < nt; it++) {
+	jt = upg->order[it];
+
+	num = rhs[jt];
+	up = upg->update[it];
+	den = upg->ww[it][ndim];
+
+	if (upg->source[it]) { /* at the source, use boundary conditions */
+	    x[jt] = (NULL != x0)? x0[jt]: 0.;
+	    continue;
+	}
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
+		num += upg->ww[it][i]*x[j];		
+	    }
+	}
+	
+	x[jt] = num/den;
+    }
+}
+
+void upgrad_inverse(upgrad upg,
+		    float *rhs      /* right-hand side */,
+		    const float *x  /* solution */,
+		    const float *x0 /* initial solution */)
+/*< adjoint inv(alpha) >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+    float den, w;
+
+    for (it = 0; it < nt; it++) {
+	rhs[it] = 0.;
+    }
+   
+    for (it = nt-1; it >= 0; it--) {
+	jt = upg->order[it];
+
+	rhs[jt] += x[jt];
+
+	up = upg->update[it];
+	den = upg->ww[it][ndim];
+
+	if (upg->source[it]) { /* at the source, use boundary conditions */
+	    rhs[jt] = (NULL != x0)? x0[jt]: 0.;
+	} else {
+	    rhs[jt] = rhs[jt]/den;
+	}
+
+	if (rhs[jt] >= 1.e9) {
+	    sf_warning("z: %g",upg->ww[it][0]);
+	    sf_warning("r: %g",upg->ww[it][1]);
+	    sf_warning("s: %g",upg->ww[it][2]);
+	    sf_error("ERROR:rhs=%g,den=%g,it=%d,jt=%d",rhs[jt],den,it,jt);
+	    }
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		w = upg->ww[it][i]*rhs[jt];
+		rhs[j] += w;
+	    }
+	}
+    }
+}
+
+void upgrad_collect(upgrad upg,
+		    const float *rhs /* right-hand side */, 
+		    float *x         /* solution */)
+/*< beta >*/
+{
+    int it;
+
+    for (it = 0; it < nt; it++) {
+	x[it] = upg->qq[it][0]*rhs[upg->pos[it][0]]+upg->qq[it][1]*rhs[upg->pos[it][1]];
+    }
+}
+
+void upgrad_spread(upgrad upg,
+		   float *rhs     /* right-hand side */,
+		   const float *x /* solution */)
+/*< adjoint beta >*/
+{
+    int it;
+
+    for (it = 0; it < nt; it++) {
+	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
+	rhs[upg->pos[it][1]] += upg->qq[it][1]*x[it];
+    }
+}

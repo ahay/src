@@ -23,11 +23,11 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj;
+    bool adj, velocity;
     int dim, i, n[SF_MAX_DIM], it, nt;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t, *w;
     char key[6];
-    sf_file in, out, time;
+    sf_file in, out, time, velo;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -53,15 +53,6 @@ int main(int argc, char* argv[])
 	nt *= n[i];
     }
     
-    /* read input */
-    if (adj) {
-	dt = sf_floatalloc(nt);
-	sf_floatread(dt,nt,in);
-    } else {
-	dt = sf_floatalloc(nt/n[2]);
-	sf_floatread(dt,nt/n[2],in);
-    }
-
     /* output dimension */
     if (adj) {
 	sf_putint(out,"n3",1);
@@ -71,35 +62,56 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"o3",o[1]);
     }
 
-    /* output array */
-    if (adj) {
-	dw = sf_floatalloc(nt/n[2]);
-    } else {
-	dw = sf_floatalloc(nt);
-    }
+    /* allocate temporary array */
+    dt = sf_floatalloc(nt);
+    dw = sf_floatalloc(nt/n[2]);
+
+    /* read input */
+    if (adj) 
+	sf_floatread(dt,nt,in);
+    else
+	sf_floatread(dw,nt/n[2],in);
 
     /* read stencil time */
     t = sf_floatalloc(nt);
     sf_floatread(t,nt,time);
     sf_fileclose(time);
 
+    /* read background velocity */
+    if (NULL == sf_getstring("velo"))
+	sf_error("Need velocity velo=");
+    velo = sf_input("velo");
+
+    w = sf_floatalloc(nt/n[2]);
+    sf_floatread(w,nt/n[2],velo);
+    sf_fileclose(velo);
+
+    if (!sf_getbool("velocity",&velocity)) velocity=true;
+    /* if y, the input is velocity; n, slowness squared */
+
+    /* convert to slowness squared */
+    if (velocity) {
+	for (it=0; it < nt/n[2]; it++)
+	    w[it] = 1./w[it]*1./w[it];
+    }
+
     /* initialize */
     dsrtomo_init(dim,n,d);
 
     /* set operator */
-    dsrtomo_set(t);
+    dsrtomo_set(t,w);
 
     /* operator */
     if (adj)
-	dsrtomo_oper(true,false,n[0]*n[1],n[0]*n[1]*n[1],dw,dt);
+	dsrtomo_oper(true,false,nt/n[2],nt,dw,dt);
     else
-	dsrtomo_oper(false,false,n[0]*n[1],n[0]*n[1]*n[1],dw,dt);
+	dsrtomo_oper(false,false,nt/n[2],nt,dw,dt);
 
     /* write output */
     if (adj) {
 	sf_floatwrite(dw,nt/n[2],out);
     } else {
-	sf_floatwrite(dw,nt,out);
+	sf_floatwrite(dt,nt,out);
     }
 
     exit(0);

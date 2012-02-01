@@ -24,6 +24,7 @@
 
 static int nt;
 static upgrad upg;
+static float *temp;
 
 void dsrtomo_init(int dim  /* model dimension */,
 		  int *n   /* model size */,
@@ -38,12 +39,15 @@ void dsrtomo_init(int dim  /* model dimension */,
     }
 
     upg = upgrad_init(dim,n,d);
+
+    temp = sf_floatalloc(nt);
 }
 
-void dsrtomo_set(float *t /* stencil time */)
+void dsrtomo_set(float *t /* stencil time */,
+		 float *w /* stencil slowness-squared */)
 /*< set operator >*/
 {
-    upgrad_set(upg,t);
+    upgrad_set(upg,t,w);
 }
 
 void dsrtomo_close(void)
@@ -55,5 +59,17 @@ void dsrtomo_close(void)
 void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
-    
+    sf_adjnull(adj,add,nx,nr,x,r);
+
+    if (adj) {
+	/* given dt solve dw */
+
+	upgrad_inverse(upg,temp,r,NULL);
+	upgrad_spread(upg,x,temp);
+    } else {
+	/* given dw solve dt */
+
+	upgrad_collect(upg,x,temp);
+	upgrad_solve(upg,temp,r,NULL);
+    }
 }
