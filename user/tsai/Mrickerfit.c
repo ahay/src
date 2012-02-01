@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     float *m0, *a, *m, *m2, *m3, *e, *ap; /*initial frequency*/
     float *data, **rt, **r, **rs, **rp, **rpt; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
     float *rtd, **rptr, **rtrp, *dd, *ra, *gamma, **rk, *rka, *rptd, *rkd; 
-    float **arp, **apr, **aprarp, **aprarpt, **mt, *gt, *dm, d, est, *temp, r2;
+    float **rpa, **rap, **raprpa, **raprpat, **mt, *gt, *dm, d, est, r2;
     bool verb;
     sf_file in, out, ma;    
     
@@ -203,11 +203,15 @@ int main(int argc, char* argv[])
 	    /*soliving for amplitude partial*/
 	    gaussel_solve(rs, rkd, ap);
 
+//delete me
+	    for (k = 0; k < n; k++) {
+		sf_warning("ap = %g", ap[k]);
+	    }
+//
 
 /*DM=inverse((X transpose X)) X transpose Y */
 /*aprarp is X; gamma is Y*/
 	    dd = sf_floatalloc(n);
-
 	    gamma = sf_floatalloc(na);
 	    ra = sf_floatalloc(na);
 	    for (ib = 0; ib < na; ib++) {
@@ -221,57 +225,62 @@ int main(int argc, char* argv[])
 		gamma[ib] = data[ib]-ra[ib];
 	    }
 
-	    aprarp = sf_floatalloc2(na,n);
-	    arp = sf_floatalloc2(na,n);
-	    apr = sf_floatalloc2(na,n);
+	    raprpa = sf_floatalloc2(n,na);
+	    rpa = sf_floatalloc2(n,na);
+	    rap = sf_floatalloc2(n,na);
 
-	    sf_warning("!!!!!"); 
+	    sf_warning("!000!"); 
 
-	    for (k = 0; k < n; k++) {
-		for (ib = 0; ib < na; ib++) {
-		    arp[k][ib] = a[k]*rp[k][ib];
+//for both rpa and arp, it is not matrix multiplication
+	    for (ib = 0; ib < na; ib++) {
+		for (k = 0; k < n; k++) {
+		    rpa[ib][k] = rp[ib][k]*a[k];
 		}
 	    }
+
+    	    sf_warning("!000!");
 
     	    sf_warning("!!!!!");
-
-	    for (k = 0; k < n; k++) {
-		for (ib = 0; ib < na; ib++) {
-		    apr[k][ib] = ap[k]*r[k][ib];
+	    for (ib = 0; ib < na; ib++) {
+		for (k = 0; k < n; k++) {
+		    rap[ib][k] = r[ib][k]*ap[k];
 		}
 	    }
+    	    sf_warning("!!!!!");
 
-	    for (k = 0; k < n; k++) {
-		for (ib = 0; ib < na; ib++) {
-		    aprarp[k][ib] = apr[k][ib] + arp[k][ib];
+    	    sf_warning("!9999!");
+	    for (ib = 0; ib < na; ib++) {
+		for (k = 0; k < n; k++) {
+		    raprpa[ib][k] = rap[ib][k] + rpa[ib][k];
 		}
 	    }
+    	    sf_warning("!9999!");
 
-
-	    aprarpt = sf_floatalloc2(n,na);
-
+	    raprpat = sf_floatalloc2(na,n);
+// transpose for least squares
 	    for (k = 0; k < n; k++) {
 		for (ib = 0; ib < na ; ib++) {
-		    aprarpt[k][ib] = aprarp[ib][k];
+		    raprpat[k][ib] = raprpa[ib][k];
 		}
 	    }
 
-	    /*mt is the product of aprarp and aprarpt*/
+// least squares for delta m.	    
+	    /*mt is the product of raprpa and raprpat*/
 	    mt = sf_floatalloc2(n,n);
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    mt[k][l] = 0;
 		    for (ib = 0; ib < na; ib++) {
-			mt[k][l] += aprarpt[k][ib]*aprarp[ib][l];
+			mt[k][l] += raprpat[k][ib]*raprpa[ib][l];
 		    }
 		}
 	    }
-	    /*gt is the product of aprarpt and gamma*/
+	    /*gt is the product of raprpat and gamma*/
 	    gt = sf_floatalloc(n);
 	    for (k = 0; k < n; k++) {
 		gt[k] = 0;
 		for (ib = 0; ib < na; ib++) {
-		    gt[k] += aprarpt[k][ib]*gamma[ib];
+		    gt[k] += raprpat[k][ib]*gamma[ib];
 		}
 	    }
 
@@ -280,6 +289,7 @@ int main(int argc, char* argv[])
 	    /*soliving for amplitude partial*/
 	    gaussel_solve(mt, gt, dm);
 
+//estimation, residual
 	    est = 0;
 	    for (k = 0; k < n; k++) {
 		est +=ra[k] ;
@@ -294,37 +304,39 @@ int main(int argc, char* argv[])
 	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g", iter,r2);
 
 	    for (k = 0; k < n; k++) {
-		m[k] +=dm[k];
+		m[k] = 0;
+	    }
+
+	    for (k = 0; k < n; k++) {
+		m[k] += dm[k];
 	    }
 	    if (r2 < eps) break;
 	}
 
-	for (k = 0; k < 3; k++) {
-	    m[k] = 15*(k+1);
+//	for (k = 0; k < 3; k++) {
+//	    m[k] = 15*(k+1);
+//	    sf_warning("m = %g", m[k]);
+//	    m2[k] = m[k]*m[k];
+//	}
+
+
+	for (k = 0; k < n; k++) {
+	    m[k] = fabsf(m[k]);
 	    m2[k] = m[k]*m[k];
 	}
 
-/*
-  for (k = 0; k < n; k++) {
-  m[k] = fabsf(m[k]);
-  m2[k] = m[k]*m[k];
-  }
-
-*/      
+      
 	sf_floatwrite(m2,n,ma);
 	sf_floatwrite(a,n,ma);
 
 	data = sf_floatalloc(na);
-        temp = sf_floatalloc(na);
 	for (ib = 0; ib < na; ib++) {
 	    f = f0 + ib*df;
 	    f2 = f*f;
-	    temp[ib] = 0;
 	    data[ib] = 0;
 	    for (k = 0; k < n; k++) {
-		temp[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];	
+		data[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];	
 	    }
-	    data[ib] = temp[ib];
 	}
         
        	sf_floatwrite(data,na,out);
