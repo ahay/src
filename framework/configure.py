@@ -629,8 +629,9 @@ def gd(context):
             context.env['GIFANIM'] = None
     else:
         context.Result(context_failure)
-        need_pkg('libgd', fatal=False)
         context.env['GD'] = None
+        stderr_write('gdpen will not be built.','bold')
+        need_pkg('libgd', fatal=False)
     LIBS.pop()
 
 pkg['plplot'] = {'fedora':'plplot-devel',

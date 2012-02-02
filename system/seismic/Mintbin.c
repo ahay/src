@@ -1,4 +1,8 @@
-/* Data binning. */
+/* Data binning by trace sorting. 
+
+The input is 2-D (n1 x ntr). The output is 3-D (n1 x n2 x n3), n2 and
+n3 correspond to two selected keys from the header file.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
