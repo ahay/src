@@ -46,13 +46,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&df)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
     /*number of terms*/
-    if (!sf_getint("n",&n)) n = 1;
+    if (!sf_getint("n",&n)) n = 3;
 
     m0 = sf_floatalloc(n);
 
     if (!sf_getfloats("m",m0,n)) {
 	for (i = 0; i < n; i++) {
-	    m0[i] = f0+0.15*(i+1)*(na-1)*df;
+	    m0[i] = f0+0.10*(i+1)*(na-1)*df;
 	}
     }
 
@@ -167,12 +167,12 @@ int main(int argc, char* argv[])
 		}
 	    }
 //	    sf_warning("!!");
-	    sf_warning("eps=%g", eps);
+//	    sf_warning("eps=%g", eps);
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    if (k == l) {
 			rs[k][l] = rs[k][l]+eps;
-			sf_warning ("rs=%g", rs[k][l]);
+//			sf_warning ("rs=%g", rs[k][l]);
 		    }
 		}
 	    }
@@ -181,9 +181,9 @@ int main(int argc, char* argv[])
 	    /*soliving for amplitude*/
 	    gaussel_solve(rs, rtd, a);
 
-	    for (k=0;k<n;k++) {
-		sf_warning ("a=%g",a[k]);
-	    }
+//	    for (k=0;k<n;k++) {
+//		sf_warning ("a=%g",a[k]);
+//	    }
 	    
 	    
 	    rk = sf_floatalloc2(n,n);
@@ -327,11 +327,6 @@ int main(int argc, char* argv[])
 
 	    if (r2 < eps) break;
 	}
-
-//	for (k = 0; k < n; k++) {
-//	    m[k] = (k+1)*15;
-//	    sf_warning("m = %g", m[k]);
-//	}
 
 	for (k = 0; k < n; k++) {
 	    m[k] = fabsf(m[k]);
