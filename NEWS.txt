@@ -13,6 +13,8 @@ To the reproducible documents collection:
   regularized nonstationary autoregression (Liu and Fomel)
 * jsg/timefreq: Time-frequency analysis of seismic data using local
   attributes (Liu, Fomel, and Chen)
+* data/alaska: Open Data/Open Source: Seismic Unix scripts to process
+  a 2D land line (Schleicher)
 
 To SCons:
 
@@ -84,6 +86,7 @@ In the build system:
 * Fixed MacPorts and Fink path detection for compilers other than gcc
   on Mac
 * Fixed bug preventing spaces in ./configure arguments
+* Fixed cfortran.h dependency in api/f77
 
 ===Changes in defaults===
 

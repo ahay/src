@@ -93,7 +93,7 @@ fdd.separator3PSS('PdzX','PdxX','PdyX',
                   'spkx3','cA3d','zero3d','y','x',27,27,27,par)
 
 
-windowcmd='window min1=20 max1=44 min2=20 max2=44 min3=20 max3=44|'
+windowcmd='window min1=20 max1=44 min2=20 max2=44 min3=20 max3=44 |'
 Plot('PdzX',windowcmd+pot.plotop3d(xformat+' point1=.5 title="\F5 P: L\_z"',par))
 Plot('PdxX',windowcmd+pot.plotop3d(xformat+' title="\F5 P: L\_x"',par))
 Plot('PdyX',windowcmd+pot.plotop3d(xformat+' title="\F5 P: L\_y"',par))

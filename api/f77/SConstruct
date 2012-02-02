@@ -25,10 +25,12 @@ if 'f77' in env.get('API',[]):
     elif F77base == 'ifort':
         env.Append(CPPDEFINES=['INTEL_COMPILER'])
         
-    env.Object('fortran.o','fortran.c')
+    obj = env.Object('fortran.o','fortran.c')
 
     lib = env.StaticLibrary('rsff','fortran.o')
     env.Install('../../lib',lib)
+
+    env.Depends(obj,'cfortran.h')
     
     if root:
         env.Install(libdir,lib)

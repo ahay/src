@@ -194,7 +194,7 @@ pot.displacementsC('uA','uA','uAz','uAx',7,'',par)
 pot.cliptogether( 'uA','uAz','uAx','"\F5 W\_z"','"\F5 W\_x"',1,'pclip=98 labelsz=12 yll=1.7 xll=2.3',par)
 
 
-nframe=(par['nt']-1)/par['jsnap']+1
+nframe=(par['nt']-1)//par['jsnap']+1
 Flow('uAc','uA','window n1=%(nz)d n2=%(nx)d f1=%(nbell)d f2=%(nbell)d |scale axis=123|scale rscale=10'%par)
 Flow('uAwom',['vp','uAc'],'add add=-2.4 | spray axis=3 n=2|spray axis=4 n=%d | scale axis=123|add ${SOURCES[1]}'%nframe)
 fdmod.emovie('uAmovie','uAwom',nframe,'pclip=98',2,par)
