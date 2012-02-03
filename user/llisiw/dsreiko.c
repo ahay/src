@@ -41,7 +41,7 @@ int neighbors_default();
 int neighbours(float* time, int i);
 int update(float value, float* time, int i);
 float qsolve(float* time, int i);
-bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix);
+bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd* xj[], double vr, double vs);
 double newton(double a,double b,double c,double d,double e, double guess);
 double ferrari(double a,double b,double c,double d,double e);
 
@@ -219,7 +219,7 @@ int neighbors_default()
 /* initialize source */
 {
     int i, j, nxy;
-    double vs, vr;
+    double vr;
 
     /* total number of points */
     nxy = n[0]*n[1]*n[2];
@@ -242,13 +242,9 @@ int neighbors_default()
     /* h = r-s */
     for (j=0; j < n[1]-1; j++) {
 	for (i=0; i < n[0]; i++) {
-	    vs = (double)v[j*s[1]+i];
 	    vr = (double)v[(j+1)*s[1]+i];
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
-	    /*
-	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
-	    */
 	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
@@ -258,13 +254,9 @@ int neighbors_default()
     /* h = s-r */
     for (j=1; j < n[1]; j++) {
 	for (i=0; i < n[0]; i++) {
-	    vs = (double)v[j*s[1]+i];
 	    vr = (double)v[(j-1)*s[1]+i];
 
 	    in[j*s[2]+(j-1)*s[1]+i] = SF_FRONT;
-	    /*
-	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(0.5*(vs+vr)*d[1]*d[1]);
-	    */
 	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j-1)*s[1]+i);
@@ -319,10 +311,14 @@ float qsolve(float* time, int i)
 {
     int j, k, ix[3];
     float a, b, res;
-    struct Upd *vv[3], xx[3], *xj;
+    double vr, vs;
+    struct Upd *vv[3], xx[3], *xj[3];
 
     for (j=0; j<3; j++) 
 	ix[j] = (i/s[j])%n[j];
+
+    vr = v[ix[1]*s[1]+ix[0]];
+    vs = v[ix[2]*s[1]+ix[0]];
 
     for (j=0; j<3; j++) {
 	if (ix[j] > 0) { 
@@ -339,23 +335,24 @@ float qsolve(float* time, int i)
 	    b = SF_HUGE;
 	}
 	
-	xj = xx+j;
-	xj->label = j;
-	xj->delta = 1./(d[j]*d[j]);
+	xj[j] = xx+j;
+	xj[j]->label = j;
+	xj[j]->delta = 1./(d[j]*d[j]);
 
-	if (j == 0)
-	    xj->stencil = v[ix[1]*s[1]+ix[0]]+v[ix[2]*s[1]+ix[0]];
-	if (j == 1)
-	    xj->stencil = v[ix[1]*s[1]+ix[0]]-v[ix[2]*s[1]+ix[0]];
-	if (j == 2)
-	    xj->stencil = v[ix[2]*s[1]+ix[0]]-v[ix[1]*s[1]+ix[0]];
-	
 	if (a < b) {
-	    xj->value = a;
+	    xj[j]->value = a;
+	    if (j == 2 && ix[j] > 0)
+		vs = v[(ix[2]-1)*s[1]+ix[0]];
 	} else {
-	    xj->value = b;
+	    xj[j]->value = b;
+	    if (j == 2 && ix[j] < n[j]-1)
+		vs = v[(ix[2]+1)*s[1]+ix[0]];
 	}
     }
+
+    xj[0]->stencil = vr+vs;
+    xj[1]->stencil = vr-vs;
+    xj[2]->stencil = vs-vr;
 
     /* sort from smallest to largest */
     if (xx[0].value <= xx[1].value) {
@@ -377,48 +374,93 @@ float qsolve(float* time, int i)
     }
 
     if(vv[2]->value < SF_HUGE) {   /* update from all three directions */
-	if (updaten(i,3,&res,vv,ix) || 
-	    updaten(i,2,&res,vv,ix) || 
-	    updaten(i,1,&res,vv,ix)) return res;
+	if (updaten(i,3,&res,vv,xj,vr,vs) || 
+	    updaten(i,2,&res,vv,xj,vr,vs) || 
+	    updaten(i,1,&res,vv,xj,vr,vs)) return res;
     } else if(vv[1]->value < SF_HUGE) { /* update from two directions */
-	if (updaten(i,2,&res,vv,ix) || 
-	    updaten(i,1,&res,vv,ix)) return res;
+	if (updaten(i,2,&res,vv,xj,vr,vs) || 
+	    updaten(i,1,&res,vv,xj,vr,vs)) return res;
     } else if(vv[0]->value < SF_HUGE) { /* update from only one direction */
-	if (updaten(i,1,&res,vv,ix)) return res;
+	if (updaten(i,1,&res,vv,xj,vr,vs)) return res;
     }
 	
     return SF_HUGE;
 }
 
-bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
+bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], double vr, double vs)
 /* calculate new traveltime */
 {
-    double a, b, c, d, e, t;
-    double vs, vr;
-    int j;
+    double a, b, c, d, e, t, discr;
+    int j;    
 
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
 
-    vs = (double)v[ix[2]*s[1]+ix[0]];
-    vr = (double)v[ix[1]*s[1]+ix[0]];
+    /* one-sided */
+    if (m == 1 && vv[0]->label == 0) {
+	t = (sqrt(vs)+sqrt(vr))/sqrt(vv[0]->delta)+vv[0]->value;
+	
+	*res = t;
+	return true;
+    }
+    
+    if (m == 1 && vv[0]->label == 1) {
+	t = sqrt(vr/vv[0]->delta)+vv[0]->value;
 
-    /* z direction dimishes and t_s = t_r */
+	*res = t;
+	return true;
+    }
+
+    if (m == 1 && vv[0]->label == 2) {
+	t = sqrt(vs/vv[0]->delta)+vv[0]->value;
+
+	*res = t;
+	return true;
+    }
+
+    /* two-sided */
     if (m == 2 && vv[2]->label == 0) {
-	if (fabs(vv[1]->value-vv[0]->value) <= tol) {
-	    /*
-	    t = sqrt(0.5*(vs+vr)/vv[0]->delta)+vv[0]->value;
-	    */
-	    t = sqrt(vr/vv[0]->delta)+vv[0]->value;
+	t = sqrt(vr/vv[0]->delta)+vv[0]->value;
+	
+	*res = t;
+	return true;
+    }
 
-	    if (t <= vv[0]->value) return false;
+    if (m == 2 && vv[2]->label == 1) {
+	a = xj[0]->delta+xj[2]->delta;
+	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta+sqrt(vr*xj[0]->delta);
+	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[2]->value,2.)*xj[2]->delta+2.*sqrt(vr*xj[0]->delta)*xj[0]->value+(vr-vs);
+	b /= a;
 
-	    *res = t;
-	    return true;
-	}
-    } 
+	discr=b*b-c/a;
 
-    /* collect independent terms */
+	if (discr < 0.) return false;
+
+	t = b + sqrt(discr);
+	if (t <= vv[m-1]->value) return false;
+
+	*res = t;
+	return true;
+    }
+
+    if (m == 2 && vv[2]->label == 2) {
+	a = xj[0]->delta+xj[1]->delta;
+	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta+sqrt(vs*xj[0]->delta);
+	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[1]->delta+2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
+	b /= a;
+
+	discr=b*b-c/a;
+
+	if (discr < 0.) return false;
+
+	t = b + sqrt(discr);
+	if (t <= vv[m-1]->value) return false;
+
+	*res = t;
+	return true;
+    }
+
+    /* three-sided */
     for (j=0; j<m; j++) {
 	a += pow(vv[j]->delta,2.);
 	b += -4.*vv[j]->value*pow(vv[j]->delta,2.);
@@ -428,53 +470,27 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], int *ix)
     }    
     e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
 
-    /* collect interacting terms */
-    if (m == 3) {
-	a += -2.*vv[1]->delta*vv[2]->delta
-	     +2.*vv[0]->delta*vv[2]->delta
-	     +2.*vv[1]->delta*vv[0]->delta;
 
-	b +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value+vv[2]->value)
-	     -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value+vv[2]->value)
-	     -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value+vv[0]->value);
-
-	c += -2.*vv[1]->delta*vv[2]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[2]->value+pow(vv[2]->value,2.))
-	     +2.*vv[0]->delta*vv[2]->delta*(pow(vv[0]->value,2.)+4.*vv[0]->value*vv[2]->value+pow(vv[2]->value,2.))
-	     +2.*vv[1]->delta*vv[0]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[0]->value+pow(vv[0]->value,2.));
-
-	d +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[1]->value,2.))
-	     -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[0]->value,2.))
-	     -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value*pow(vv[0]->value,2.)+vv[0]->value*pow(vv[1]->value,2.));
-
-	e += -2.*vv[1]->delta*vv[2]->delta*pow(vv[1]->value,2.)*pow(vv[2]->value,2.)
-	     +2.*vv[0]->delta*vv[2]->delta*pow(vv[0]->value,2.)*pow(vv[2]->value,2.)
-	     +2.*vv[1]->delta*vv[0]->delta*pow(vv[1]->value,2.)*pow(vv[0]->value,2.);
-    }
-	
-    if (m == 2) {
-	if (vv[2]->label == 0) {
-	    a += -2.*vv[1]->delta*vv[2]->delta;
-	    b +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value+vv[2]->value);
-	    c += -2.*vv[1]->delta*vv[2]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[2]->value+pow(vv[2]->value,2.));
-	    d +=  4.*vv[1]->delta*vv[2]->delta*(vv[1]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[1]->value,2.));
-	    e += -2.*vv[1]->delta*vv[2]->delta*pow(vv[1]->value,2.)*pow(vv[2]->value,2.);
-	}
-	if (vv[2]->label == 1) {
-	    a +=  2.*vv[0]->delta*vv[2]->delta;
-	    b += -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value+vv[2]->value);
-	    c +=  2.*vv[0]->delta*vv[2]->delta*(pow(vv[0]->value,2.)+4.*vv[0]->value*vv[2]->value+pow(vv[2]->value,2.));
-	    d += -4.*vv[0]->delta*vv[2]->delta*(vv[0]->value*pow(vv[2]->value,2.)+vv[2]->value*pow(vv[0]->value,2.));
-	    e +=  2.*vv[0]->delta*vv[2]->delta*pow(vv[0]->value,2.)*pow(vv[2]->value,2.);
-	}
-	if (vv[2]->label == 2) {
-	    a +=  2.*vv[1]->delta*vv[0]->delta;;
-	    b += -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value+vv[0]->value);
-	    c +=  2.*vv[1]->delta*vv[0]->delta*(pow(vv[1]->value,2.)+4.*vv[1]->value*vv[0]->value+pow(vv[0]->value,2.));
-	    d += -4.*vv[1]->delta*vv[0]->delta*(vv[1]->value*pow(vv[0]->value,2.)+vv[0]->value*pow(vv[1]->value,2.));
-	    e +=  2.*vv[1]->delta*vv[0]->delta*pow(vv[1]->value,2.)*pow(vv[0]->value,2.);
-	}
-    }
-
+    a += -2.*xj[1]->delta*xj[2]->delta
+	 +2.*xj[0]->delta*xj[2]->delta
+	 +2.*xj[1]->delta*xj[0]->delta;
+    
+    b +=  4.*xj[1]->delta*xj[2]->delta*(xj[1]->value+xj[2]->value)
+	 -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value+xj[2]->value)
+	 -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value+xj[0]->value);
+    
+    c += -2.*xj[1]->delta*xj[2]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[2]->value+pow(xj[2]->value,2.))
+	 +2.*xj[0]->delta*xj[2]->delta*(pow(xj[0]->value,2.)+4.*xj[0]->value*xj[2]->value+pow(xj[2]->value,2.))
+	 +2.*xj[1]->delta*xj[0]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[0]->value+pow(xj[0]->value,2.));
+    
+    d +=  4.*xj[1]->delta*xj[2]->delta*(xj[1]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[1]->value,2.))
+	 -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[0]->value,2.))
+	 -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value*pow(xj[0]->value,2.)+xj[0]->value*pow(xj[1]->value,2.));
+    
+    e += -2.*xj[1]->delta*xj[2]->delta*pow(xj[1]->value,2.)*pow(xj[2]->value,2.)
+	 +2.*xj[0]->delta*xj[2]->delta*pow(xj[0]->value,2.)*pow(xj[2]->value,2.)
+	 +2.*xj[1]->delta*xj[0]->delta*pow(xj[1]->value,2.)*pow(xj[0]->value,2.);
+    
     /*
     t = newton(a,b,c,d,e,vv[m-1]->value);
     */
@@ -517,7 +533,10 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 {
     double alpha, beta, gama, P, Q, y, W;
     double delta, root, temp;
+    /*
     sf_double_complex R, U;
+    */
+    double complex R, U;
 
     alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
     beta  = 1./8.*pow(b,3.)/pow(a,3.)-1./2.*b*c/pow(a,2.)+d/a;
@@ -530,17 +549,29 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 
     /* R could be complex, any complex root will work */
     if (delta >= 0.)
+	/*
 	R = sf_dcmplx(-1./2.*Q+sqrt(delta),0.);
+	*/
+	R = -1./2.*Q+sqrt(delta)+I*0.;
     else
+	/*
 	R = sf_dcmplx(-1./2.*Q,sqrt(delta));
+	*/
+	R = -1./2.*Q+I*sqrt(-delta);
     
     U = cpow(R,1./3.);
 
     /* rotate U by exp(i*2*pi/3) until W is real*/
     if (2.*creal(U) <= alpha/3.)
+	/*
 	U *= sf_dcmplx(-1./2.,sqrt(3.)/2.);
+	*/
+	U *= -0.5+I*(sqrt(3.)/2.);
     if (2.*creal(U) <= alpha/3.)
+	/*
 	U *= sf_dcmplx(-1./2.,sqrt(3.)/2.);
+	*/
+	U *= -0.5+I*(sqrt(3.)/2.);
 
     /* y must be real since a,b,c,d,e are all real */
     if (cabs(U) <= 1.e-10)

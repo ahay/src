@@ -19,100 +19,165 @@
 
 #include <rsf.h>
 
+#include "dsreiko.h"
 #include "dsrtomo.h"
 
 int main(int argc, char* argv[])
 {
-    bool adj, velocity;
-    int dim, i, n[SF_MAX_DIM], it, nt;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t, *w;
-    char key[6];
-    sf_file in, out, time, velo;
+    bool velocity, verb;
+    int dim, i, n[SF_MAX_DIM], iw, nw, it, nt;
+    int iter, niter, cgiter, count;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t, *w, *t0, *w1;
+    float rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
+    char key[4];
+    sf_file in, out, reco, grad;
 
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("adj",&adj)) adj=true;
-    /* adjoint flag */
-
-    /* read in time table */
-    if (NULL == sf_getstring("time"))
-	sf_error("Need time table time=");
-    time = sf_input("time");
-
     /* read dimension */
-    dim = sf_filedims(time,n);
+    dim = sf_filedims(in,n);
 
-    nt = 1;
+    nw = 1;
     for (i=0; i < dim; i++) {
 	sprintf(key,"d%d",i+1);
-	if (!sf_histfloat(time,key,d+i)) sf_error("No %s= in input.",key);
+	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
 	sprintf(key,"o%d",i+1);
-	if (!sf_histfloat(time,key,o+i)) o[i]=0.;
-	nt *= n[i];
-    }
-    
-    /* output dimension */
-    if (adj) {
-	sf_putint(out,"n3",1);
-    } else {
-	sf_putint(out,"n3",n[1]);
-	sf_putfloat(out,"d3",d[1]);
-	sf_putfloat(out,"o3",o[1]);
+	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
+	nw *= n[i];
     }
 
-    /* allocate temporary array */
-    dt = sf_floatalloc(nt);
-    dw = sf_floatalloc(nt/n[2]);
+    if (dim > 2) sf_error("Only works for 2D now.");
 
-    /* read input */
-    if (adj) 
-	sf_floatread(dt,nt,in);
-    else
-	sf_floatread(dw,nt/n[2],in);
+    dim = 3; n[2] = n[1]; d[2] = d[1]; o[2] = o[1]; nt = nw*n[2];
 
-    /* read stencil time */
-    t = sf_floatalloc(nt);
-    sf_floatread(t,nt,time);
-    sf_fileclose(time);
-
-    /* read background velocity */
-    if (NULL == sf_getstring("velo"))
-	sf_error("Need velocity velo=");
-    velo = sf_input("velo");
-
-    w = sf_floatalloc(nt/n[2]);
-    sf_floatread(w,nt/n[2],velo);
-    sf_fileclose(velo);
+    /* read initial velocity */
+    w = sf_floatalloc(nw);
+    sf_floatread(w,nw,in);
 
     if (!sf_getbool("velocity",&velocity)) velocity=true;
     /* if y, the input is velocity; n, slowness squared */
 
     /* convert to slowness squared */
     if (velocity) {
-	for (it=0; it < nt/n[2]; it++)
-	    w[it] = 1./w[it]*1./w[it];
+	for (iw=0; iw < nw; iw++)
+	    w[iw] = 1./w[iw]*1./w[iw];
     }
 
-    /* initialize */
+    /* read record file */
+    if (NULL == sf_getstring("reco"))
+	sf_error("Need record reco=");
+    reco = sf_input("reco");
+
+    t0 = sf_floatalloc(nt);
+    sf_floatread(t0,nt,reco);
+    sf_fileclose(reco);
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
+    if (!sf_getint("niter",&niter)) niter=5;
+    /* number of inversion iterations */
+    
+    if (!sf_getint("cgiter",&cgiter)) cgiter=25;
+    /* number of conjugate-gradient iterations */
+
+    /* output gradient at each iteration */
+    if (NULL != sf_getstring("grad")) {
+	grad = sf_output("grad");
+	sf_putint(grad,"n3",niter);
+    } else {
+	grad = NULL;
+    }
+    
+    /* allocate temporary array */
+    t  = sf_floatalloc(nt);
+    dw = sf_floatalloc(nw);
+    dt = sf_floatalloc(nt);
+    w1 = sf_floatalloc(nw);
+
+    /* initialize eikonal */
+    dsreiko_init(n,o,d);
+
+    /* initialize operator */
     dsrtomo_init(dim,n,d);
 
-    /* set operator */
-    dsrtomo_set(t,w);
+    /* initial misfit */
+    dsreiko_fastmarch(t,w);
 
-    /* operator */
-    if (adj)
-	dsrtomo_oper(true,false,nt/n[2],nt,dw,dt);
-    else
-	dsrtomo_oper(false,false,nt/n[2],nt,dw,dt);
+    /* calculate L2 data-misfit */
+    for (it=0; it < nt; it++)
+	dt[it] = t0[it]-t[it];
 
-    /* write output */
-    if (adj) {
-	sf_floatwrite(dw,nt/n[2],out);
-    } else {
-	sf_floatwrite(dt,nt,out);
+    rhsnorm0 = cblas_snrm2(nt,dt,1);
+    rhsnorm = rhsnorm0;
+    rhsnorm1 = rhsnorm;
+    rate = rhsnorm1/rhsnorm0;
+    
+    sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rate);
+
+    /* iterations over inversion */
+    for (iter=0; iter < niter; iter++) {
+	
+	/* clean-up */
+	for (iw=0; iw < nw; iw++)
+	    dw[iw] = 0.;
+
+	/* set operator */
+	dsrtomo_set(t,w);
+
+	/* solve dw */
+	sf_solver(dsrtomo_oper,sf_cgstep,nw,nt,dw,dt,cgiter,"verb",verb,"end");
+	sf_cgstep_close();
+	
+	/* line search */
+	gama = 0.5;
+	for (count=0; count < 5; count++) {
+	
+	    /* update slowness */
+	    for (iw=0; iw < nw; iw++)
+		w1[iw] = (w[iw]+gama*dw[iw])*(w[iw]+gama*dw[iw])/w[iw];
+
+	    /* compute new misfit */
+	    dsreiko_fastmarch(t,w1);
+
+	    for (it=0; it < nt; it++)
+		dt[it] = t0[it]-t[it];
+	    
+	    rhsnorm = cblas_snrm2(nt,dt,1);
+	    rate = rhsnorm/rhsnorm1;
+
+	    if (rate < 1.) {
+		for (iw=0; iw < nw; iw++)
+		    w[iw] = w1[iw];
+
+		rhsnorm1 = rhsnorm;
+		rate = rhsnorm1/rhsnorm0;
+		break;
+	    }
+	    
+	    gama *= 0.5;
+	}
+
+	if (count == 5) {
+	    sf_warning("Line-search failure at iteration %d of %d.",iter+1,niter);
+	    break;
+	}
+	
+	sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
+
+	if (grad != NULL) sf_floatwrite(dw,nw,grad);
     }
+
+    /* convert to velocity */
+    if (velocity) {
+	for (iw=0; iw < nw; iw++) {
+	    w[iw] = 1./sqrtf(w[iw]);
+	}
+    }
+    
+    sf_floatwrite(w,nw,out);
 
     exit(0);
 }
