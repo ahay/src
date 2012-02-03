@@ -38,6 +38,7 @@ Flow('shotline',['rawline','shotmask'],
      put o2=-5225 d2=110 label2=Offset unit2=ft
          o3=0 d3=440 label3=Shot unit3=ft
      ''')
+Result('shotline','grey pclip=80 title="Line" label2=''')
 
 #############################
 # Elevation profile, datuming
@@ -62,11 +63,11 @@ Flow('dshotline',['shotline','datum'],'datstretch datum=${SOURCES[1]}')
 
 Plot('selev','spelev','''
      dd type=complex | transp | math output="(real(input) - 100)*440 + imag(input)" |
-     graph screenratio=0.3 min2=0 max2=140 min1=-3000 max1=30000
+     graph screenratio=1.0 min2=0 max2=140 min1=-3000 max1=30000
            title="Elevation profile" symbol="x"
      ''')
 Plot('ielev','elev','''
-     graph screenratio=0.3 min2=0 max2=140 min1=-3000 max1=30000
+     graph screenratio=1.0 min2=0 max2=140 min1=-3000 max1=30000
            title="Elevation profile"
      ''')
 Result('elev',['selev','ielev'],'Overlay')

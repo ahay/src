@@ -46,13 +46,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&df)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
     /*number of terms*/
-    if (!sf_getint("n",&n)) n = 3;
+    if (!sf_getint("n",&n)) n = 5;
 
     m0 = sf_floatalloc(n);
 
     if (!sf_getfloats("m",m0,n)) {
 	for (i = 0; i < n; i++) {
-	    m0[i] = f0+0.10*(i+1)*(na-1)*df;
+	    m0[i] = f0+0.1*(i+1)*(na-1)*df;
 	}
     }
 
