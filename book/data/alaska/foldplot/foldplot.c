@@ -8,20 +8,8 @@
 #include <string.h>
 #include <rsf.h>
 
-/* I do not know how to include this header or like to the right library
-   obviously this is a terrible cludge */
-
-#include "/home/karl/m8r/madagascar/build/system/seismic/segy.h"
-#include "/home/karl/m8r/madagascar/build/system/seismic/segy.c"
-
-/* I cannot get the round function from math.h.  This is an obvious cludge */
-
-int roundf1(float number){
-  if(number>0) 
-    return (int) (number+0.5);
-  else
-    return (int) (number-0.5);
-}
+#include "/home/karl/madagascar/build/system/seismic/segy.h"
+#include "/home/karl/madagascar/build/system/seismic/segy.c"
 
 int main(int argc, char* argv[])
 {
@@ -138,9 +126,9 @@ int main(int argc, char* argv[])
     for (i_input=0 ; i_input<n_input; i_input++) {
       int iiline,ixline,ioffset;
       sf_floatread(hdrin,n1_input,in);
-      ioffset=roundf1((hdrin[idx_offset]-o1)/d1);
-      ixline =roundf1((hdrin[idx_xline ]-o2)/d2);
-      iiline =roundf1((hdrin[idx_iline ]-o3)/d3);
+      ioffset=roundf((hdrin[idx_offset]-o1)/d1);
+      ixline =roundf((hdrin[idx_xline ]-o2)/d2);
+      iiline =roundf((hdrin[idx_iline ]-o3)/d3);
       if(verbose>2){
 	fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
 	       hdrin[idx_offset],
