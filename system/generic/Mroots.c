@@ -20,12 +20,14 @@
 #include <rsf.h>
 #include "jacobi2.h"
 
+static float (*func)(sf_complex);
+
 static int compare(const void * a, const void * b)
 {
     float aa, bb;
 
-    aa = crealf(* (sf_complex*) a);
-    bb = crealf(* (sf_complex*) b);
+    aa = func(* (sf_complex*) a);
+    bb = func(* (sf_complex*) b);
 
     return (aa<bb)? -1: (aa>bb)? 1:0;
 }
@@ -33,6 +35,7 @@ static int compare(const void * a, const void * b)
 int main(int argc, char* argv[])
 {
     bool verb;
+    char *sort;
     int j, k, n, m, i2, n2, iter, niter;
     sf_complex **a=NULL, *e=NULL;
     float s2,s0=1.,tol;
@@ -54,6 +57,25 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+
+    if (NULL == (sort = sf_getstring("sort"))) sort="real";
+    /* attribute for sorting */
+
+    switch (sort[0]) {
+	case 'p':
+	    func = cargf;
+	    break;
+	case 'a':
+	    func = cabsf;
+	    break;
+	case 'i':
+	    func = cimagf;
+	    break;
+	case 'r':
+	default:
+	    func = crealf;
+	break;
+    }
 
     sf_putint(root,"n1",n-1);
 

@@ -74,6 +74,7 @@ public:
     // writing parameter arrays
     void put (const char* name, int size, const int*   value) const;
 //     void put (const char* name, int size, const float* value) const;
+    void flush();
 private:
     sf_file file_; 
     // copy constructor - undefined to prevent misuse

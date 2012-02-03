@@ -21,6 +21,8 @@
 #ifndef PSP_GRID_DATA_HPP
 #define PSP_GRID_DATA_HPP 1
 
+#include <rsf.hh>
+
 namespace psp {
 
 enum GridDataOrder {
@@ -93,39 +95,55 @@ public:
     int ZLocalSize() const;
     GridDataOrder Order() const;
 
-    void WritePlane
+    void WriteVTKPlane
     ( PlaneType planeType, int whichPlane, const std::string baseName ) const;
     template<typename R>
-    struct WritePlaneHelper
+    struct WriteVTKPlaneHelper
     {
         static void Func
         ( const GridData<R>& parent, 
           PlaneType planeType, int whichPlane, const std::string baseName );
     };
     template<typename R>
-    struct WritePlaneHelper<std::complex<R> >
+    struct WriteVTKPlaneHelper<std::complex<R> >
     {
         static void Func
         ( const GridData<std::complex<R> >& parent, 
           PlaneType planeType, int whichPlane, const std::string baseName );
     };
-    template<typename R> friend struct WritePlaneHelper;
+    template<typename R> friend struct WriteVTKPlaneHelper;
 
-    void WriteVolume( const std::string baseName ) const;
+    void WriteVTKVolume( const std::string baseName ) const;
     template<typename R>
-    struct WriteVolumeHelper
+    struct WriteVTKVolumeHelper
     {
         static void Func
         ( const GridData<R>& parent, const std::string baseName );
     };
     template<typename R>
-    struct WriteVolumeHelper<std::complex<R> >
+    struct WriteVTKVolumeHelper<std::complex<R> >
     {
         static void Func
         ( const GridData<std::complex<R> >& parent, 
           const std::string baseName );
     };
-    template<typename R> friend struct WriteVolumeHelper;
+    template<typename R> friend struct WriteVTKVolumeHelper;
+
+    void WriteRSFVolume( const std::string baseName ) const;
+    template<typename R>
+    struct WriteRSFVolumeHelper
+    {
+        static void Func
+        ( const GridData<R>& parent, const std::string baseName );
+    };
+    template<typename R>
+    struct WriteRSFVolumeHelper<std::complex<R> >
+    {
+        static void Func
+        ( const GridData<std::complex<R> >& parent, 
+          const std::string baseName );
+    };
+    template<typename R> friend struct WriteRSFVolumeHelper;
 
 private:
     int numScalars_;
@@ -139,7 +157,7 @@ private:
     int xLocalSize_, yLocalSize_, zLocalSize_;
     std::vector<T> localData_;
 
-    void RedistributeForVtk( std::vector<T>& localBox ) const;
+    void RedistributeInBlocks( std::vector<T>& localBox ) const;
 };
 
 //----------------------------------------------------------------------------//
@@ -295,13 +313,13 @@ inline int GridData<T>::LocalIndex( int x, int y, int z ) const
 }
 
 template<typename T>
-inline void GridData<T>::WritePlane
+inline void GridData<T>::WriteVTKPlane
 ( PlaneType planeType, int whichPlane, const std::string baseName ) const
-{ return WritePlaneHelper<T>::Func( *this, planeType, whichPlane, baseName ); }
+{ return WriteVTKPlaneHelper<T>::Func( *this, planeType, whichPlane, baseName ); }
 
 template<typename T>
 template<typename R>
-inline void GridData<T>::WritePlaneHelper<R>::Func
+inline void GridData<T>::WriteVTKPlaneHelper<R>::Func
 ( const GridData<R>& parent, 
   PlaneType planeType, int whichPlane, const std::string baseName )
 {
@@ -780,7 +798,7 @@ inline void GridData<T>::WritePlaneHelper<R>::Func
 
 template<typename T>
 template<typename R>
-inline void GridData<T>::WritePlaneHelper<std::complex<R> >::Func
+inline void GridData<T>::WriteVTKPlaneHelper<std::complex<R> >::Func
 ( const GridData<std::complex<R> >& parent, 
   PlaneType planeType, int whichPlane, const std::string baseName )
 {
@@ -1307,7 +1325,7 @@ inline void GridData<T>::WritePlaneHelper<std::complex<R> >::Func
 }
 
 template<typename T>
-inline void GridData<T>::RedistributeForVtk( std::vector<T>& localBox ) const
+inline void GridData<T>::RedistributeInBlocks( std::vector<T>& localBox ) const
 {
     const int commSize = elemental::mpi::CommSize( comm_ );
 
@@ -1467,12 +1485,12 @@ inline void GridData<T>::RedistributeForVtk( std::vector<T>& localBox ) const
 }
 
 template<typename T>
-inline void GridData<T>::WriteVolume( const std::string baseName ) const
-{ return WriteVolumeHelper<T>::Func( *this, baseName ); }
+inline void GridData<T>::WriteVTKVolume( const std::string baseName ) const
+{ return WriteVTKVolumeHelper<T>::Func( *this, baseName ); }
 
 template<typename T>
 template<typename R>
-inline void GridData<T>::WriteVolumeHelper<R>::Func
+inline void GridData<T>::WriteVTKVolumeHelper<R>::Func
 ( const GridData<R>& parent, const std::string baseName )
 {
     const int commRank = elemental::mpi::CommRank( parent.comm_ );
@@ -1501,7 +1519,7 @@ inline void GridData<T>::WriteVolumeHelper<R>::Func
 
     // Form the local box
     std::vector<R> localBox;
-    parent.RedistributeForVtk( localBox );
+    parent.RedistributeInBlocks( localBox );
 
     // Have the root process create the parallel description
     if( commRank == 0 )
@@ -1636,7 +1654,7 @@ inline void GridData<T>::WriteVolumeHelper<R>::Func
 template<typename T>
 template<typename R>
 inline void 
-GridData<T>::WriteVolumeHelper<std::complex<R> >::Func
+GridData<T>::WriteVTKVolumeHelper<std::complex<R> >::Func
 ( const GridData<std::complex<R> >& parent, const std::string baseName )
 {
     const int commRank = elemental::mpi::CommRank( parent.comm_ );
@@ -1665,7 +1683,7 @@ GridData<T>::WriteVolumeHelper<std::complex<R> >::Func
 
     // Form the local box
     std::vector<std::complex<R> > localBox;
-    parent.RedistributeForVtk( localBox );
+    parent.RedistributeInBlocks( localBox );
 
     // Have the root process create the parallel description
     if( commRank == 0 )
@@ -1834,6 +1852,296 @@ GridData<T>::WriteVolumeHelper<std::complex<R> >::Func
         delete realFiles[k];
         delete imagFiles[k];
     }
+}
+
+template<typename T>
+inline void GridData<T>::WriteRSFVolume( const std::string baseName ) const
+{ return WriteRSFVolumeHelper<T>::Func( *this, baseName ); }
+
+template<typename T>
+template<typename R>
+inline void GridData<T>::WriteRSFVolumeHelper<R>::Func
+( const GridData<R>& parent, const std::string baseName )
+{
+    const int commRank = elemental::mpi::CommRank( parent.comm_ );
+    const int px = parent.px_;
+    const int py = parent.py_;
+    const int pz = parent.pz_;
+    const int nx = parent.nx_;
+    const int ny = parent.ny_;
+    const int nz = parent.nz_;
+    const int numScalars = parent.numScalars_;
+
+    // Compute our local box
+    const int xMainSize = nx / px;
+    const int yMainSize = ny / py;
+    const int zMainSize = nz / pz;
+    const int xLeftoverSize = xMainSize + (nx % px);
+    const int yLeftoverSize = yMainSize + (ny % py);
+    const int zLeftoverSize = zMainSize + (nz % pz);
+
+    // For display purposes, set the width of the box to one in the dimension
+    // with the largest number of grid points, and then scale the other 
+    // dimensions proportionally.
+    int maxPoints = std::max(nx,ny);
+    maxPoints = std::max(nz,maxPoints);
+    const R h = 1.0/(maxPoints+1.0);
+
+    // Form the local box
+    std::vector<R> localBox;
+    parent.RedistributeInBlocks( localBox );
+
+    // Have the root process create the parallel description
+    if( commRank == 0 )
+    {
+        std::vector<oRSF> files(numScalars);
+        for( int k=0; k<numScalars; ++k )
+        {
+            std::ostringstream os;
+            os << baseName << "_" << k << ".rsf";
+            files[k] = oRSF( os.str().c_str() );
+        }
+
+        for( int zProc=0; zProc<pz; ++zProc )
+        {
+            int zBoxSize = ( zProc==pz-1 ? zLeftoverSize : zMainSize );
+            int zStart = zProc*zMainSize;
+
+            for( int yProc=0; yProc<py; ++yProc )
+            {
+                int yBoxSize = ( yProc==py-1 ? yLeftoverSize : yMainSize );
+                int yStart = yProc*yMainSize;
+
+                for( int xProc=0; xProc<px; ++xProc )
+                {
+                    int xBoxSize = ( xProc==px-1 ? xLeftoverSize : xMainSize );
+                    int xStart = xProc*xMainSize;
+
+                    int proc = xProc + yProc*px + zProc*px*py;
+		    
+		    std::ostringstream n1,n2,n3;
+
+                    n1 << "n1_block" << proc;
+		    n2 << "n2_block" << proc;
+		    n3 << "n3_block" << proc;
+
+		    std::ostringstream s1,s2,s3;
+
+		    s1 << "s1_block" << proc;
+		    s2 << "s2_block" << proc;
+		    s3 << "s3_block" << proc;
+
+                    for( int k=0; k<numScalars; ++k ) {
+			files[k].put(n1.str().c_str(),xBoxSize);
+			files[k].put(n2.str().c_str(),yBoxSize);
+			files[k].put(n3.str().c_str(),zBoxSize);
+
+                        files[k].put(s1.str().c_str(),xStart);
+			files[k].put(s2.str().c_str(),yStart);
+			files[k].put(s3.str().c_str(),zStart);
+		    }
+		}
+	    }
+	}
+
+	for( int k=0; k<numScalars; ++k )
+        {
+	    files[k].flush();
+        }
+    } // end root process
+
+    // Have each process create their individual data file
+    const int xShift = parent.xShift_;
+    const int yShift = parent.yShift_;
+    const int zShift = parent.zShift_;
+    const int xBoxStart = xMainSize*xShift;
+    const int yBoxStart = yMainSize*yShift;
+    const int zBoxStart = zMainSize*zShift;
+    const int xBoxSize = ( xShift==px-1 ? xLeftoverSize : xMainSize );
+    const int yBoxSize = ( yShift==py-1 ? yLeftoverSize : yMainSize );
+    const int zBoxSize = ( zShift==pz-1 ? zLeftoverSize : zMainSize );
+
+    std::vector<oRSF> files(numScalars);
+    std::valarray<float> alpha(xBoxSize*yBoxSize*zBoxSize);
+
+    for( int k=0; k<numScalars; ++k )
+    {
+        std::ostringstream os;    
+        os << baseName << "_" << k << "_" << commRank << ".rsf";
+	files[k] = oRSF( os.str().c_str() );
+	files[k].type(SF_FLOAT); // set type to float
+
+	files[k].put("n1",xBoxSize);
+	files[k].put("n2",yBoxSize);
+	files[k].put("n3",zBoxSize);
+
+	files[k].put("s1",xBoxStart);
+	files[k].put("s2",yBoxStart);
+	files[k].put("s3",zBoxStart);
+  
+
+	// write data
+	for( int zLocal=0; zLocal<zBoxSize; ++zLocal )
+	{
+	    for( int yLocal=0; yLocal<yBoxSize; ++yLocal )
+	    {
+		for( int xLocal=0; xLocal<xBoxSize; ++xLocal )
+		{
+		    const int offset = 
+			xLocal + yLocal*xBoxSize + zLocal*xBoxSize*yBoxSize;
+
+		    alpha[offset] = localBox[offset*numScalars+k];
+                }
+            }
+
+	}
+
+	files[k] << alpha;
+     }
+}
+
+template<typename T>
+template<typename R>
+inline void GridData<T>::WriteRSFVolumeHelper<std::complex<R> >::Func
+( const GridData<std::complex<R> >& parent, const std::string baseName )
+{
+    const int commRank = elemental::mpi::CommRank( parent.comm_ );
+    const int px = parent.px_;
+    const int py = parent.py_;
+    const int pz = parent.pz_;
+    const int nx = parent.nx_;
+    const int ny = parent.ny_;
+    const int nz = parent.nz_;
+    const int numScalars = parent.numScalars_;
+
+    // Compute our local box
+    const int xMainSize = nx / px;
+    const int yMainSize = ny / py;
+    const int zMainSize = nz / pz;
+    const int xLeftoverSize = xMainSize + (nx % px);
+    const int yLeftoverSize = yMainSize + (ny % py);
+    const int zLeftoverSize = zMainSize + (nz % pz);
+
+    // For display purposes, set the width of the box to one in the dimension
+    // with the largest number of grid points, and then scale the other 
+    // dimensions proportionally.
+    int maxPoints = std::max(nx,ny);
+    maxPoints = std::max(nz,maxPoints);
+    const R h = 1.0/(maxPoints+1.0);
+
+    // Form the local box
+    std::vector<std::complex<R> > localBox;
+    parent.RedistributeInBlocks( localBox );
+
+    // Have the root process create the parallel description
+    if( commRank == 0 )
+    {
+        std::vector<oRSF> files(numScalars);
+        for( int k=0; k<numScalars; ++k )
+        {
+            std::ostringstream os;
+            os << baseName << "_" << k << ".rsf";
+            files[k] = oRSF( os.str().c_str() );
+        }
+
+        for( int zProc=0; zProc<pz; ++zProc )
+        {
+            int zBoxSize = ( zProc==pz-1 ? zLeftoverSize : zMainSize );
+            int zStart = zProc*zMainSize;
+
+            for( int yProc=0; yProc<py; ++yProc )
+            {
+                int yBoxSize = ( yProc==py-1 ? yLeftoverSize : yMainSize );
+                int yStart = yProc*yMainSize;
+
+                for( int xProc=0; xProc<px; ++xProc )
+                {
+                    int xBoxSize = ( xProc==px-1 ? xLeftoverSize : xMainSize );
+                    int xStart = xProc*xMainSize;
+
+                    int proc = xProc + yProc*px + zProc*px*py;
+		    
+		    std::ostringstream n1,n2,n3;
+
+                    n1 << "n1_block" << proc;
+		    n2 << "n2_block" << proc;
+		    n3 << "n3_block" << proc;
+
+		    std::ostringstream s1,s2,s3;
+
+		    s1 << "s1_block" << proc;
+		    s2 << "s2_block" << proc;
+		    s3 << "s3_block" << proc;
+
+                    for( int k=0; k<numScalars; ++k ) {
+			files[k].put(n1.str().c_str(),xBoxSize);
+			files[k].put(n2.str().c_str(),yBoxSize);
+			files[k].put(n3.str().c_str(),zBoxSize);
+
+                        files[k].put(s1.str().c_str(),xStart);
+			files[k].put(s2.str().c_str(),yStart);
+			files[k].put(s3.str().c_str(),zStart);
+		    }
+		}
+	    }
+	}
+
+	for( int k=0; k<numScalars; ++k )
+        {
+	    files[k].flush();
+        }
+    } // end root process
+
+    // Have each process create their individual data file
+    const int xShift = parent.xShift_;
+    const int yShift = parent.yShift_;
+    const int zShift = parent.zShift_;
+    const int xBoxStart = xMainSize*xShift;
+    const int yBoxStart = yMainSize*yShift;
+    const int zBoxStart = zMainSize*zShift;
+    const int xBoxSize = ( xShift==px-1 ? xLeftoverSize : xMainSize );
+    const int yBoxSize = ( yShift==py-1 ? yLeftoverSize : yMainSize );
+    const int zBoxSize = ( zShift==pz-1 ? zLeftoverSize : zMainSize );
+
+    std::vector<oRSF> files(numScalars);
+    std::valarray<sf_complex> alpha(xBoxSize*yBoxSize*zBoxSize);
+
+    for( int k=0; k<numScalars; ++k )
+    {
+        std::ostringstream os;    
+        os << baseName << "_" << k << "_" << commRank << ".rsf";
+	files[k] = oRSF( os.str().c_str() );
+	files[k].type(SF_COMPLEX); // set type to float
+
+	files[k].put("n1",xBoxSize);
+	files[k].put("n2",yBoxSize);
+	files[k].put("n3",zBoxSize);
+
+	files[k].put("s1",xBoxStart);
+	files[k].put("s2",yBoxStart);
+	files[k].put("s3",zBoxStart);
+  
+
+	// write data
+	for( int zLocal=0; zLocal<zBoxSize; ++zLocal )
+	{
+	    for( int yLocal=0; yLocal<yBoxSize; ++yLocal )
+	    {
+		for( int xLocal=0; xLocal<xBoxSize; ++xLocal )
+		{
+		    const int offset = 
+			xLocal + yLocal*xBoxSize + zLocal*xBoxSize*yBoxSize;
+
+                    const float alphaReal = std::real(localBox[offset*numScalars+k]);
+                    const float alphaImag = std::imag(localBox[offset*numScalars+k]);
+                    alpha[offset] = sf_cmplx(alphaReal,alphaImag);
+                }
+            }
+
+	}
+
+	files[k] << alpha;
+     }
 }
 
 } // namespace psp

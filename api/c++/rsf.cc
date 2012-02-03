@@ -45,6 +45,13 @@ oRSF::~oRSF()
     sf_fileclose(file_);
 }
 
+// flush header
+// ----------------
+void oRSF::flush()
+{
+    sf_fileflush(file_,NULL);
+}
+
 
 // file size
 // ----------------

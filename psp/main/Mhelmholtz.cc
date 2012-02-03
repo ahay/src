@@ -167,6 +167,7 @@ main( int argc, char* argv[] )
         const int zShift = velocity.ZShift();
         std::ostringstream os;
         os << "overthrust_" << commRank << ".dat";
+
         std::ifstream velocityFile;
         velocityFile.open( os.str().c_str(), std::ios::in|std::ios::binary );
         velocityFile.read
@@ -175,9 +176,9 @@ main( int argc, char* argv[] )
         velocityFile.close();
 
 // visualize velocity
-//        velocity.WritePlane( XY, Nz/2, "velocity-middleXY" );
-//        velocity.WritePlane( XZ, Ny/2, "velocity-middleXZ" );
-//        velocity.WritePlane( YZ, Nx/2, "velocity-middleYZ" );
+//        velocity.WriteVTKPlane( XY, Nz/2, "velocity-middleXY" );
+//        velocity.WriteVTKPlane( XZ, Ny/2, "velocity-middleXZ" );
+//        velocity.WriteVTKPlane( YZ, Nx/2, "velocity-middleYZ" );
         if( fullVisualize )
         {
             if( commRank == 0 )
@@ -185,7 +186,7 @@ main( int argc, char* argv[] )
                 std::cout << "Writing full velocity data...";
                 std::cout.flush();
             }
-            velocity.WriteVolume("velocity");
+            velocity.WriteVTKVolume("velocity");
             elemental::mpi::Barrier( comm );
             if( commRank == 0 )
                 std::cout << "done" << std::endl;
@@ -259,9 +260,9 @@ main( int argc, char* argv[] )
             }
         }
 
-	// B.WritePlane( XY, Nz/2, "source-middleXY" );
-        // B.WritePlane( XZ, Ny/2, "source-middleXZ" );
-        // B.WritePlane( YZ, Nx/2, "source-middleYZ" );
+	// B.WriteVTKPlane( XY, Nz/2, "source-middleXY" );
+        // B.WriteVTKPlane( XZ, Ny/2, "source-middleXZ" );
+        // B.WriteVTKPlane( YZ, Nx/2, "source-middleYZ" );
         if( fullVisualize )
         {
             if( commRank == 0 )
@@ -269,7 +270,7 @@ main( int argc, char* argv[] )
                 std::cout << "Writing source data...";
                 std::cout.flush();
             }
-            B.WriteVolume("source");
+            B.WriteVTKVolume("source");
             if( commRank == 0 )
                 std::cout << "done" << std::endl;
         }
@@ -298,9 +299,9 @@ main( int argc, char* argv[] )
             std::cerr << "Finished solve: " << solveTime << " seconds." 
 		      << std::endl;
 
-//        B.WritePlane( XY, Nz/2, "solution-middleXY" );
-//        B.WritePlane( XZ, Ny/2, "solution-middleXZ" );
-//        B.WritePlane( YZ, Nx/2, "solution-middleYZ" );
+//        B.WriteVTKPlane( XY, Nz/2, "solution-middleXY" );
+//        B.WriteVTKPlane( XZ, Ny/2, "solution-middleXZ" );
+//        B.WriteVTKPlane( YZ, Nx/2, "solution-middleYZ" );
         if( fullVisualize )
         {
             if( commRank == 0 )
@@ -308,7 +309,7 @@ main( int argc, char* argv[] )
                 std::cout << "Writing solution data...";
                 std::cout.flush();
             }
-            B.WriteVolume("solution");
+            B.WriteVTKVolume("solution");
             if( commRank == 0 )
                 std::cout << "done" << std::endl;
         }
