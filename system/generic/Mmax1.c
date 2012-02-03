@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 {
     int i1, n1, i2, n2, ip, np;
     float o1, d1, t0, t1, t2, t, a, *trace=NULL;
+    float min, max, x;
     sf_complex *pick=NULL;
     sf_file in=NULL, out=NULL;
 
@@ -45,6 +46,12 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+
+    if (!sf_getfloat("min",&min)) min=o1;
+    /* minimum value of time */
+
+    if (!sf_getfloat("max",&max)) max=o1+(n1-1)*d1; 
+    /* maximum value of time */ 
 
     if (!sf_getint("np",&np)) np=n1;
     /* maximum number of picks */
@@ -77,8 +84,12 @@ int main(int argc, char* argv[])
 		    a=t2;
 		} 
 
-		pick[ip] = sf_cmplx(o1+(i1-1+t)*d1,a);
-		ip++;
+		x = o1+(i1-1+t)*d1;
+
+		if (x >= min && x <= max) {
+			pick[ip] = sf_cmplx(x,a);	
+			ip++;
+		}
 	    }
 
 	    t0 = t1;
