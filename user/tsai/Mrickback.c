@@ -88,6 +88,8 @@ int main(int argc, char* argv[])
 	e = sf_floatalloc(n);
 	a = sf_floatalloc(n);
 
+//	sf_warning ("%d %d", na, n);
+
 	r = sf_floatalloc2(n,na);
 	rp = sf_floatalloc2(n,na);
 	rt = sf_floatalloc2(na,n);
@@ -101,6 +103,7 @@ int main(int argc, char* argv[])
 	}
 
 	for (iter = 0; iter < niter; iter++) {
+//	    sf_warning("????");
 	    for (k = 0; k < n; k++) {
 		m2[k] = m[k]*m[k];
 		m3[k] = m2[k]*m[k];
@@ -120,11 +123,17 @@ int main(int argc, char* argv[])
 	    for (i=0;i<n;i++) {
 		sf_warning ("rtd of %d =%g",i,rtd[i]);
 	    }
+//	    sf_warning("????");
+//	    sf_warning("!");
 
 	    for (ib = 0; ib < na; ib++) {	    
 		for (l = 0; l < n; l++) {
+		    // sf_warning ("ib=%d of %d", ib, na);
+		    // sf_warning ("l=%d of %d", l, n);    
+		    // sf_warning ("rt=%g", rt[l][ib]);
 		    r[ib][l] = rt[l][ib];
 		    rp[ib][l] = rpt[l][ib];
+		    // sf_warning ("r=%g", r[ib][l]);
 		}
 	    }
 
@@ -140,22 +149,25 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-
+//	    sf_warning("!");
 /* partial ricker spectrum multiplication */
-
+//	    sf_warning("!!");
 	    for (l = 0; l < n; l++) {
 		for (k = 0; k < n; k++) {
 		    rptr[l][k] = 0.;
 		    rtrp[l][k] = 0.;
 		    for (ib = 0; ib < na; ib++) {
-
+//			sf_warning ("l=%d of %d", l, n);
+//			sf_warning ("ib=%d of %d", ib, na);
 			rptr[l][k] += rpt[l][ib]*r[ib][k];
 			rtrp[l][k] += rt[l][ib]*rp[ib][k];
-
+//		        sf_warning ("rptr=%g", rptr[l][k]);
+//			sf_warning ("rtrp=%g", rtrp[l][k]);
 		    }
 		}
 	    }
-
+//	    sf_warning("!!");
+//	    sf_warning("eps=%g", eps);
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    if (k == l) {
@@ -166,9 +178,14 @@ int main(int argc, char* argv[])
 	    }
 
 	    gaussel_init(n);
-
+	    /*soliving for amplitude*/
 	    gaussel_solve(rs, rtd, a);
 
+//	    for (k=0;k<n;k++) {
+//		sf_warning ("a=%g",a[k]);
+//	    }
+	    
+	    
 	    rk = sf_floatalloc2(n,n);
 	    for (k = 0; k < n; k++) {
 		for (l = 1; l < n; l++) {
@@ -200,7 +217,14 @@ int main(int argc, char* argv[])
 	    ap = sf_floatalloc(n);
 
 	    gaussel_init(n);
+	    /*soliving for amplitude partial*/
 	    gaussel_solve(rs, rkd, ap);
+
+//delete me
+//	    for (k = 0; k < n; k++) {
+//		sf_warning("ap = %g", ap[k]);
+//	    }
+//
 
 /*DM=inverse((X transpose X)) X transpose Y */
 /*aprarp is X; gamma is Y*/
@@ -222,26 +246,35 @@ int main(int argc, char* argv[])
 	    rpa = sf_floatalloc2(n,na);
 	    rap = sf_floatalloc2(n,na);
 
+//	    sf_warning("!000!"); 
+
+//for both rpa and arp, it is not matrix multiplication
 	    for (ib = 0; ib < na; ib++) {
 		for (k = 0; k < n; k++) {
 		    rpa[ib][k] = rp[ib][k]*a[k];
 		}
 	    }
 
+//    	    sf_warning("!000!");
+
+//    	    sf_warning("!!!!!");
 	    for (ib = 0; ib < na; ib++) {
 		for (k = 0; k < n; k++) {
 		    rap[ib][k] = r[ib][k]*ap[k];
 		}
 	    }
+//    	    sf_warning("!!!!!");
 
+//    	    sf_warning("!9999!");
 	    for (ib = 0; ib < na; ib++) {
 		for (k = 0; k < n; k++) {
 		    raprpa[ib][k] = rap[ib][k] + rpa[ib][k];
 		}
 	    }
+//    	    sf_warning("!9999!");
 
 	    raprpat = sf_floatalloc2(na,n);
-
+// transpose for least squares
 	    for (k = 0; k < n; k++) {
 		for (ib = 0; ib < na ; ib++) {
 		    raprpat[k][ib] = raprpa[ib][k];
@@ -249,6 +282,7 @@ int main(int argc, char* argv[])
 	    }
 
 // least squares for delta m.	    
+	    /*mt is the product of raprpa and raprpat*/
 	    mt = sf_floatalloc2(n,n);
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
@@ -258,7 +292,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-
+	    /*gt is the product of raprpat and gamma*/
 	    gt = sf_floatalloc(n);
 	    for (k = 0; k < n; k++) {
 		gt[k] = 0;
