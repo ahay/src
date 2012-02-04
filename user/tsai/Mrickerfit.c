@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	}
 	else if (n==4 && !sf_getfloats("m",m0,n)) {
 	    for (i=0; i<n; i++) {
-		m0[i] = f0+0.11*(i+1)*(na-1)*df;
+		m0[i] = f0+0.12*(i+1)*(na-1)*df;
 	    }    
 	}
 	else if (n==5 && !sf_getfloats("m",m0,n)) {
