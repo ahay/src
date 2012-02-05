@@ -219,7 +219,7 @@ int neighbors_default()
 /* initialize source */
 {
     int i, j, nxy;
-    double vr;
+    double vr, vs;
 
     /* total number of points */
     nxy = n[0]*n[1]*n[2];
@@ -243,9 +243,10 @@ int neighbors_default()
     for (j=0; j < n[1]-1; j++) {
 	for (i=0; i < n[0]; i++) {
 	    vr = (double)v[(j+1)*s[1]+i];
+	    vs = (double)v[j*s[1]+i];
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
-	    t[j*s[2]+(j+1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
+	    t[j*s[2]+(j+1)*s[1]+i] = sqrt((vr+vs)/2.*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
@@ -255,9 +256,10 @@ int neighbors_default()
     for (j=1; j < n[1]; j++) {
 	for (i=0; i < n[0]; i++) {
 	    vr = (double)v[(j-1)*s[1]+i];
+	    vs = (double)v[j*s[1]+i];
 
 	    in[j*s[2]+(j-1)*s[1]+i] = SF_FRONT;
-	    t[j*s[2]+(j-1)*s[1]+i] = sqrt(vr*d[1]*d[1]);
+	    t[j*s[2]+(j-1)*s[1]+i] = sqrt((vr+vs)/2.*d[1]*d[1]);
 
 	    pqueue_insert(t+j*s[2]+(j-1)*s[1]+i);
 	}
@@ -341,12 +343,16 @@ float qsolve(float* time, int i)
 
 	if (a < b) {
 	    xj[j]->value = a;
+	    /*
 	    if (j == 2 && ix[j] > 0)
 		vs = v[(ix[2]-1)*s[1]+ix[0]];
+	    */
 	} else {
 	    xj[j]->value = b;
+	    /*
 	    if (j == 2 && ix[j] < n[j]-1)
 		vs = v[(ix[2]+1)*s[1]+ix[0]];
+	    */
 	}
     }
 
@@ -420,7 +426,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
     /* two-sided */
     if (m == 2 && vv[2]->label == 0) {
-	t = sqrt(vr/vv[0]->delta)+vv[0]->value;
+	t = ((sqrt(vr/xj[1]->delta)+xj[1]->value)+(sqrt(vs/xj[2]->delta)+xj[2]->value))/2.;
 	
 	*res = t;
 	return true;
