@@ -218,7 +218,7 @@ void pqueue_update(int index)
 int neighbors_default()
 /* initialize source */
 {
-    int i, j, nxy;
+    int i, j, k, nxy;
     double vr, vs;
 
     /* total number of points */
@@ -231,11 +231,13 @@ int neighbors_default()
 	offsets[i] = -1;
     }
     
-    /* zero-offset */
+    /* zero-offset and h = s-r */
     for (j=0; j < n[1]; j++) {
-	for (i=0; i < n[0]; i++) {
-	    in[j*s[2]+j*s[1]+i] = SF_IN;
-	    t[j*s[2]+j*s[1]+i] = 0.;
+	for (k=0; k <= j; k++) {
+	    for (i=0; i < n[0]; i++) {
+		in[j*s[2]+k*s[1]+i] = SF_IN;
+		t[j*s[2]+k*s[1]+i] = 0.;
+	    }
 	}
     }
 
@@ -252,20 +254,7 @@ int neighbors_default()
 	}
     }
     
-    /* h = s-r */
-    for (j=1; j < n[1]; j++) {
-	for (i=0; i < n[0]; i++) {
-	    vr = (double)v[(j-1)*s[1]+i];
-	    vs = (double)v[j*s[1]+i];
-
-	    in[j*s[2]+(j-1)*s[1]+i] = SF_FRONT;
-	    t[j*s[2]+(j-1)*s[1]+i] = sqrt((vr+vs)/2.*d[1]*d[1]);
-
-	    pqueue_insert(t+j*s[2]+(j-1)*s[1]+i);
-	}
-    }
-
-    return (nxy-n[0]*n[1]-2*n[0]*(n[1]-1));
+    return (nxy-n[0]*(n[1]*n[1]+3*n[1]-2)/2);
 }
 
 int neighbours(float* time, int i)
@@ -343,16 +332,8 @@ float qsolve(float* time, int i)
 
 	if (a < b) {
 	    xj[j]->value = a;
-	    /*
-	    if (j == 2 && ix[j] > 0)
-		vs = v[(ix[2]-1)*s[1]+ix[0]];
-	    */
 	} else {
 	    xj[j]->value = b;
-	    /*
-	    if (j == 2 && ix[j] < n[j]-1)
-		vs = v[(ix[2]+1)*s[1]+ix[0]];
-	    */
 	}
     }
 
@@ -539,9 +520,6 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 {
     double alpha, beta, gama, P, Q, y, W;
     double delta, root, temp;
-    /*
-    sf_double_complex R, U;
-    */
     double complex R, U;
 
     alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
@@ -555,32 +533,20 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 
     /* R could be complex, any complex root will work */
     if (delta >= 0.)
-	/*
-	R = sf_dcmplx(-1./2.*Q+sqrt(delta),0.);
-	*/
 	R = -1./2.*Q+sqrt(delta)+I*0.;
     else
-	/*
-	R = sf_dcmplx(-1./2.*Q,sqrt(delta));
-	*/
 	R = -1./2.*Q+I*sqrt(-delta);
     
     U = cpow(R,1./3.);
 
     /* rotate U by exp(i*2*pi/3) until W is real*/
     if (2.*creal(U) <= alpha/3.)
-	/*
-	U *= sf_dcmplx(-1./2.,sqrt(3.)/2.);
-	*/
 	U *= -0.5+I*(sqrt(3.)/2.);
     if (2.*creal(U) <= alpha/3.)
-	/*
-	U *= sf_dcmplx(-1./2.,sqrt(3.)/2.);
-	*/
 	U *= -0.5+I*(sqrt(3.)/2.);
 
     /* y must be real since a,b,c,d,e are all real */
-    if (cabs(U) <= 1.e-10)
+    if (cabs(U) <= 1.e-15)
 	if (Q >= 0.)
 	    y = -5./6.*alpha-pow(Q,1./3.);
 	else
