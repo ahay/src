@@ -72,6 +72,31 @@ int main(int argc, char* argv[])
 		m0[i] = f0+0.10*(i+1)*(na-1)*df;
 	    }    
 	}
+	else if (n==6 && !sf_getfloats("m",m0,n)) {
+	    for (i=0; i<n; i++) {
+		m0[i] = f0+0.09*(i+1)*(na-1)*df;
+	    }    
+	}
+	else if (n==7 && !sf_getfloats("m",m0,n)) {
+	    for (i=0; i<n; i++) {
+		m0[i] = f0+0.075*(i+1)*(na-1)*df;
+	    }    
+	}
+	else if (n==8 && !sf_getfloats("m",m0,n)) {
+	    for (i=0; i<n; i++) {
+		m0[i] = f0+0.07*(i+1)*(na-1)*df;
+	    }    
+	}
+	else if (n==9 && !sf_getfloats("m",m0,n)) {
+	    for (i=0; i<n; i++) {
+		m0[i] = f0+0.06*(i+1)*(na-1)*df;
+	    }    
+	}
+	else if (n==10 && !sf_getfloats("m",m0,n)) {
+	    for (i=0; i<n; i++) {
+		m0[i] = f0+0.05*(i+1)*(na-1)*df;
+	    }    
+	}
     } 
     else
     {
