@@ -90,7 +90,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     if(verb) fprintf(stderr,"init slo...");
-    slo = weislo_init(cub,Fslo);
+    slo = weizoslo_init(cub,Fslo);
     if(verb) fprintf(stderr,"OK\n");
     if(verb) weislo_report(slo);
     /*------------------------------------------------------------*/

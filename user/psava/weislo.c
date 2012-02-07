@@ -25,10 +25,11 @@
 
 #include "weislo.h"
 
-#define SOOP(a) for(ily=0;ily<sf_n(cub->aly);ily++){ \
-	        for(ilx=0;ilx<sf_n(cub->alx);ilx++){ \
-		    {a}				     \
-		}}
+#define XOOP(a) for(iz=0;  iz<sf_n(cub->az); iz++){ \
+                for(ily=0;ily<sf_n(cub->aly);ily++){ \
+                for(ilx=0;ilx<sf_n(cub->alx);ilx++){ \
+                    {a}                              \
+                }}}
 
 /*------------------------------------------------------------*/
 weislo3d weislo_init(weicub3d cub,
@@ -69,6 +70,46 @@ weislo3d weislo_init(weicub3d cub,
 	}
     }
     
+    return slo;
+}
+
+/*------------------------------------------------------------*/
+weislo3d weizoslo_init(weicub3d cub,
+                     sf_file  Fslo  /* slowness file */
+    )
+/*< initialize slowness >*/
+{
+    int iz,jj, ily, ilx;
+    int nrmax;
+    weislo3d slo;
+
+    if (!sf_getint(  "nrmax",&nrmax )) nrmax =     1; /* maximum references */
+    /*------------------------------------------------------------*/
+    slo = (weislo3d) sf_alloc(1,sizeof(*slo));
+
+    slo->F=Fslo;
+    slo->nrmax=nrmax;
+    slo->dsmax=cub->dsmax;
+    slo->s  = sf_floatalloc3(sf_n(cub->alx),sf_n(cub->aly),sf_n(cub->az));
+    slo->sm = sf_floatalloc2(slo->nrmax,sf_n(cub->az));  /* ref slowness squared */
+    slo->nr = sf_intalloc              (sf_n(cub->az));  /* nr of ref slownesses @ z */
+
+    sf_seek(slo->F,0,SEEK_SET);
+    sf_floatread(slo->s[0][0],sf_n(cub->alx)*sf_n(cub->aly)*sf_n(cub->az),slo->F);
+    XOOP( slo->s[iz][ily][ilx] *= 2.0; );
+
+    for (iz=0; iz<sf_n(cub->az); iz++) {
+        slo->nr[iz] = weislo(slo->nrmax,
+                             slo->dsmax,
+                             sf_n(cub->alx)*sf_n(cub->aly),
+                             slo->s[iz][0],
+                             slo->sm[iz]);
+    }
+    for (iz=0; iz<sf_n(cub->az)-1; iz++) {
+        for (jj=0; jj<slo->nr[iz]; jj++) {
+            slo->sm[iz][jj] = 0.5*(slo->sm[iz][jj]+slo->sm[iz+1][jj]);
+        }
+    }
     return slo;
 }
 
