@@ -1247,6 +1247,152 @@ void weicic(weiop3d weop,
 }
 
 /*------------------------------------------------------------*/
+void weizocic(weiop3d weop,
+            weicub3d cub,
+            weissr3d ssr,
+            weitap3d tap,
+            weislo3d slo,
+            sf_file Fdat,
+            sf_file Fcic)
+/*< zero-offset migration >*/
+{
+    int ix,iy,iz,iw;
+    sf_complex ws;
+    int ompith=0;
+
+    /*------------------------------------------------------------*/
+    if(cub->verb) fprintf(stderr,"zero CIC image...");
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)       \
+    private(ix,iy,iz) shared(weop,cub)
+#endif
+    CICLOOP(weop->icic[iz][iy][ix]=0;);
+    if(cub->verb) fprintf(stderr,"OK\n");
+    /*------------------------------------------------------------*/
+
+    /*------------------------------------------------------------*/
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1)  \
+    private(ompith,iw,ws,iz)                 \
+    shared(Fdat,weop,cub,ssr,tap,slo)
+#endif
+    for (iw=0; iw<sf_n(cub->aw); iw++) {
+#ifdef _OPENMP
+        ompith = omp_get_thread_num();
+#endif
+
+        /* frequency */
+        ws = sf_cmplx( cub->eps*sf_d(cub->aw), (-1) * (sf_o(cub->aw)+iw*sf_d(cub->aw)) );
+
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        {
+            if(cub->verb) sf_warning ("WEI ... (ith=%2d) ... <iw=%3d of %3d>",
+                                      ompith,iw+1,sf_n(cub->aw));
+            /* read data */
+            sf_seek(Fdat,cub->nxy*iw*sizeof(sf_complex),SEEK_SET);
+            sf_complexread(weop->swfl[ompith][0],cub->nxy,Fdat);
+        }
+        iz=0; /* I.C. @ iz=0 */
+        weizocic_one(weop,cub,ompith,iz);
+
+        /*------------------------------------------------------------*/
+        /* loop over z */
+        for (iz=1; iz<sf_n(cub->az); iz++) {
+
+            weissr(ws,weop->swfl[ompith],cub,ssr,slo,iz-1,ompith);
+            weitap(   weop->swfl[ompith],tap);
+
+            weizocic_one(weop,cub,ompith,iz);
+        } /* z */
+        /*------------------------------------------------------------*/
+    } /* w */
+
+    /*------------------------------------------------------------*/
+    if(cub->verb) fprintf(stderr,"write CIC image...");
+    weicic_write(weop,cub,Fcic);
+    if(cub->verb) fprintf(stderr,"OK\n");
+    /*------------------------------------------------------------*/
+}
+
+/*------------------------------------------------------------*/
+void weizomod(weiop3d weop,
+            weicub3d cub,
+            weissr3d ssr,
+            weitap3d tap,
+            weislo3d slo,
+            sf_file Fdat,
+            sf_file Fcic)
+/*< zero-offset modeling >*/
+{
+    int ix,iy,iz,iw;
+    sf_complex ws;
+    int ompith=0;
+
+    sf_complex ***img;
+    img=  sf_complexalloc3(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az));
+    /*------------------------------------------------------------*/
+    sf_complexread(img[0][0],cub->nxy*sf_n(cub->az),Fcic);
+    /*------------------------------------------------------------*/
+
+    /*------------------------------------------------------------*/
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1)  \
+    private(ompith,iw,ws,iz,ix,iy)                   \
+    shared(Fdat,weop,cub,ssr,tap,slo)
+#endif
+    for (iw=0; iw<sf_n(cub->aw); iw++) {
+#ifdef _OPENMP
+        ompith = omp_get_thread_num();
+#endif
+
+        YXLOOP( weop->swfl[ompith][iy][ix] = sf_cmplx(0.0,0.0); );
+
+        /* frequency */
+        ws = sf_cmplx( cub->eps*sf_d(cub->aw), (+1) * (sf_o(cub->aw)+iw*sf_d(cub->aw)) );
+
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        {
+            if(cub->verb) sf_warning ("WEI ... (ith=%2d) ... <iw=%3d of %3d>",
+                                      ompith,iw+1,sf_n(cub->aw));
+        }
+        /*------------------------------------------------------------*/
+        /* loop over z */
+        for (iz=sf_n(cub->az)-1; iz>0; iz--) {
+#ifdef SF_HAS_COMPLEX_H
+            YXLOOP( weop->swfl[ompith][iy][ix] += img[iz][iy][ix]; );
+#else
+            YXLOOP( weop->swfl[ompith][iy][ix] = sf_cadd(weop->swfl[ompith][iy][ix],img[iz][iy][ix]); );
+#endif
+            weitap(   weop->swfl[ompith],tap);
+            weissr(ws,weop->swfl[ompith],cub,ssr,slo,iz-1,ompith);
+
+        } /* z */
+
+        /*------------------------------------------------------------*/
+#ifdef SF_HAS_COMPLEX_H
+        YXLOOP( weop->swfl[ompith][iy][ix] += img[0][iy][ix]; );
+#else
+        YXLOOP( weop->swfl[ompith][iy][ix] = sf_cadd(weop->swfl[ompith][iy][ix],img[0][iy][ix]); );
+#endif
+        weitap(   weop->swfl[ompith],tap);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        {
+          sf_seek(Fdat,cub->nxy*iw*sizeof(sf_complex),SEEK_SET);
+          sf_complexwrite(weop->swfl[ompith][0],cub->nxy,Fdat);
+        }
+    } /* w */
+
+    /*------------------------------------------------------------*/
+    free( **img); free( *img); free( img);
+}
+
+/*------------------------------------------------------------*/
 weico3d weicoo_init(weicub3d cub,
 		    sf_file Fcoo)
 /*< EIC coordinates >*/
@@ -1861,6 +2007,20 @@ void weicic_one(weiop3d weop,
 	}
     }
     
+}
+
+/*------------------------------------------------------------*/
+void weizocic_one(weiop3d weop,
+                weicub3d cub,
+                int ompith,
+                int iz)
+/*< apply CIC at one z >*/
+{
+    int ix,iy;
+
+    for(iy=0;iy<sf_n(cub->amy);iy++)
+        for(ix=0;ix<sf_n(cub->amx);ix++)
+            weop->icic[iz][iy][ix] += weop->swfl[ompith][iy][ix];
 }
 
 /*------------------------------------------------------------*/
