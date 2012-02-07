@@ -1332,7 +1332,6 @@ void weizomod(weiop3d weop,
 
     sf_complex ***img;
     img=  sf_complexalloc3(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az));
-    /*------------------------------------------------------------*/
     sf_complexread(img[0][0],cub->nxy*sf_n(cub->az),Fcic);
     /*------------------------------------------------------------*/
 
@@ -1346,12 +1345,10 @@ void weizomod(weiop3d weop,
 #ifdef _OPENMP
         ompith = omp_get_thread_num();
 #endif
-
         YXLOOP( weop->swfl[ompith][iy][ix] = sf_cmplx(0.0,0.0); );
 
         /* frequency */
         ws = sf_cmplx( cub->eps*sf_d(cub->aw), (+1) * (sf_o(cub->aw)+iw*sf_d(cub->aw)) );
-
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -1369,7 +1366,6 @@ void weizomod(weiop3d weop,
 #endif
             weitap(   weop->swfl[ompith],tap);
             weissr(ws,weop->swfl[ompith],cub,ssr,slo,iz-1,ompith);
-
         } /* z */
 
         /*------------------------------------------------------------*/
@@ -2020,7 +2016,7 @@ void weizocic_one(weiop3d weop,
 
     for(iy=0;iy<sf_n(cub->amy);iy++)
         for(ix=0;ix<sf_n(cub->amx);ix++)
-            weop->icic[iz][iy][ix] += weop->swfl[ompith][iy][ix];
+            weop->icic[iz][iy][ix] += crealf(weop->swfl[ompith][iy][ix]);
 }
 
 /*------------------------------------------------------------*/
