@@ -21,7 +21,7 @@ if 'matlab' in env.get('API',[]):
     if mex:
         mexcom = mex + " CC=$CC CFLAGS='$CFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
 
-    for inp in Split('par dim read write create'):
+    for inp in Split('par dim read write write_all create'):
         cfile = 'rsf_' + inp
 
         if mex:
