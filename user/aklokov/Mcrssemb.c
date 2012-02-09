@@ -7,6 +7,8 @@ Input:
 	inDags_.rsf   - dip-angle gathers - stack in the scattering-angle direction
 	InDagsSq_.rsf - stack of amplitude squares in the scattering-angle direction
 
+	Working with just dip-angle gathers use default value of "scatnum" parameter
+
 Output:
 	sembFile_.rsf - crs-based semblance file; has the same dimensions as the input files
 */
@@ -114,39 +116,41 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
 void getSemblanceForTrace (int gathersNum, int tracesNum, float* stack, float* stackSq, float* semb) {
    
     double sumOutput, sumInput;
-    int im, it, j;
+    int im, it;
 
     const int targetZNum     = zNum_; 
-	const int fullZNumber    = halfCoher_ + zNum_;
+	const int zNumFull    = 2 * halfCoher_ + zNum_;
 
 	float stackVal   = 0.f;
 	float stackSqVal = 0.f;
 
-	float* traceSumOutput = sf_floatalloc (fullZNumber);
-	float* traceSumInput  = sf_floatalloc (fullZNumber);
+	float* traceSumOutput = sf_floatalloc (zNumFull);
+	float* traceSumInput  = sf_floatalloc (zNumFull);
+    memset (traceSumOutput, 0, zNumFull * sizeof (float));   
+    memset (traceSumInput,  0, zNumFull * sizeof (float));   
 
-	for (it = 0; it < fullZNumber; ++it) {
-		traceSumOutput[it] = traceSumInput[it] = 0.f;
+	for (it = 0; it < targetZNum; ++it) {
+		const int trInd = it + halfCoher_;
         for (im = 0; im < gathersNum; ++im){
 			const int ind = im * zNum_ + it;
 			stackVal   = stack[ind];
 			stackSqVal = stackSq[ind];
 
-		    traceSumOutput[it] += stackVal;
-		    traceSumInput[it]  += stackSqVal;
+		    traceSumOutput[trInd] += stackVal;
+		    traceSumInput[trInd]  += stackSqVal;
 		}
-		traceSumOutput[it] *= traceSumOutput[it];
+		traceSumOutput[trInd] *= traceSumOutput[trInd];
 	}
  
-    for (int ind = 0, it = 0; ind < targetZNum; ++it, ++ind) {
+    for (int it = 0; it < targetZNum; ++it) {
         sumOutput = 0.f;
         sumInput  = 0.f;
 		const int temp = it + coher_;
-		for (j = it; j < temp; ++j) {
+		for (int j = it; j < temp; ++j) {
 		    sumOutput += traceSumOutput[j];
 		    sumInput  += traceSumInput[j];
 		}
-		semb[ind] = sumInput ? sumOutput / (tracesNum * sumInput) : 0.f;
+		semb[it] = sumInput ? sumOutput / (tracesNum * sumInput) : 0.f;
     }
 
     free (traceSumOutput);
@@ -171,6 +175,8 @@ void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
 	
 		float* stackGrid   = sf_floatalloc (stackGridSize);
 		float* stackSqGrid = sf_floatalloc (stackGridSize);
+		memset (stackGrid,   0, stackGridSize * sizeof (float));
+		memset (stackSqGrid, 0, stackGridSize * sizeof (float));
 		
 	    int tracesNum = 0;
 			
@@ -183,7 +189,7 @@ void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
 			float* ptrDataStack   = ptrToDags_ + dataShift;
 			float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
 
-			const int stackShift = tracesNum * zNum_ + halfCoher_;
+			const int stackShift = tracesNum * zNum_;
 
 			float* ptrStackGrid   = stackGrid + stackShift;
 			float* ptrStackSqGrid = stackSqGrid + stackShift;
@@ -272,7 +278,6 @@ int main (int argc, char* argv[]) {
 		free (ptrToDagsSq_);
 
 		sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
-		
 		free (ptrToSembPanel_);
 	}
 
