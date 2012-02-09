@@ -1,7 +1,7 @@
-/* Read data from a RSF file.
+/* Read complete RSF file, both header and data, in one call.
  *
  * MATLAB usage:
- *   [data[,size[,dalta[,origin[,label[,unit]]]]]] = rsf_read_all(file)
+ *   [data[ size[ dalta[ origin[ label[ unit]]]]]] = rsf_read_all(file)
  *
  */
 /*
