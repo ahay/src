@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
     /* compute */
     dsreiko_fastmarch(t,s);
 
+    /* mirror */
+    dsreiko_mirror(t);
+
     /* write output dimension */
     sf_putint(out,"n3",n[1]);
     sf_putfloat(out,"d3",d[1]);

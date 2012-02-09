@@ -64,6 +64,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	/* given dt solve dw */
 
+	upgrad_paste(r);
 	upgrad_inverse(upg,temp,r,NULL);
 	upgrad_spread(upg,x,temp);
     } else {
@@ -71,5 +72,6 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	upgrad_collect(upg,x,temp);
 	upgrad_solve(upg,temp,r,NULL);
+	upgrad_copy(r);
     }
 }

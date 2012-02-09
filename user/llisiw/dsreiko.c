@@ -104,6 +104,20 @@ void dsreiko_fastmarch(float *time /* time */,
     }
 }
 
+void dsreiko_mirror(float *time /*time*/)
+/*< source-receiver reciprocity >*/
+{
+    int i, j, k;
+
+    for (k=1; k < n[1]; k++) {
+	for (j=0; j < k; j++) {
+	    for (i=0; i < n[0]; i++) {
+		time[k*s[2]+j*s[1]+i] = time[j*s[2]+k*s[1]+i];
+	    }
+	}
+    }
+}
+
 void dsreiko_close()
 /*< finalize >*/
 {
@@ -248,7 +262,7 @@ int neighbors_default()
 	    vs = (double)v[j*s[1]+i];
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
-	    t[j*s[2]+(j+1)*s[1]+i] = sqrt((vr+vs)/2.*d[1]*d[1]);
+	    t[j*s[2]+(j+1)*s[1]+i] = (sqrt(vr)*d[1]+sqrt(vs)*d[2])/2.;
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
@@ -385,21 +399,21 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
     /* one-sided */
     if (m == 1 && vv[0]->label == 0) {
-	t = (sqrt(vs)+sqrt(vr))/sqrt(vv[0]->delta)+vv[0]->value;
+	t = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
 	*res = t;
 	return true;
     }
     
     if (m == 1 && vv[0]->label == 1) {
-	t = sqrt(vr/vv[0]->delta)+vv[0]->value;
+	t = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
 	*res = t;
 	return true;
     }
 
     if (m == 1 && vv[0]->label == 2) {
-	t = sqrt(vs/vv[0]->delta)+vv[0]->value;
+	t = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
 	*res = t;
 	return true;
@@ -500,6 +514,7 @@ double newton(double a,double b,double c,double d,double e /* coefficients */,
     /* evaluate functional */
     val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
     while (fabs(val) > tol) {
+
 	/* evaluate derivative */
 	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
 
