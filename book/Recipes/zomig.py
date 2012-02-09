@@ -92,7 +92,7 @@ def slowness(slow,velo,par):
 def model(data,slow,imag,par):
     Flow(data,[imag,slow],
          '''
-         zomig mode=m inv=y %s %s
+         zowei mode=m inv=y %s %s
          slo=${SOURCES[1]}
          ''' % (param(par),freqs(par)))
     
@@ -100,7 +100,7 @@ def model(data,slow,imag,par):
 def image(imag,slow,data,par):
     Flow(imag,[data,slow],
          '''
-         zomig mode=m inv=n %s
+         zowei mode=m inv=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
 
