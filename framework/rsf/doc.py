@@ -103,7 +103,7 @@ def selfdoc():
 
     prog = rsf.doc.progs.get(prognm)
     if prog != None:
-        prog.document()
+        prog.document(25,RSFROOT)
     else:
         sys.stderr.write('No installed man page for ' + prognm+'\\n')
 ''' % env.get('RSFROOT'))

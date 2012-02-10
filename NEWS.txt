@@ -62,6 +62,7 @@ In documentation:
 
 * Included previously undocumented parameters (dash,plotcol,plotfat)
   in stdplot.
+* Fixed selfdoc for Python scripts
 
 In APIs:
 
