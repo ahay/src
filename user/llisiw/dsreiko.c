@@ -31,7 +31,7 @@ static const double tol = 1.e-6;
 static float *o, *v, *d;
 static int *n, *in, s[3];
 static float **x, **xn, **x1;
-static int *offsets;
+static int *offsets, *flag;
 static float *t;
 
 void pqueue_insert(float* v1);
@@ -39,9 +39,9 @@ float* pqueue_extract(void);
 void pqueue_update(int index);
 int neighbors_default();
 int neighbours(float* time, int i);
-int update(float value, float* time, int i);
-float qsolve(float* time, int i);
-bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd* xj[], double vr, double vs);
+int update(float value, float* time, int i, int f);
+float qsolve(float* time, int i, int *f);
+bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd* xj[], double vr, double vs, int *f);
 double newton(double a,double b,double c,double d,double e, double guess);
 double ferrari(double a,double b,double c,double d,double e);
 
@@ -72,7 +72,8 @@ void dsreiko_init(int *n_in   /* length */,
 }
 
 void dsreiko_fastmarch(float *time /* time */,
-		       float *v_in /* slowness squared */)
+		       float *v_in /* slowness squared */,
+		       int *f_in   /* upwind flag */)
 /*< fast-marching solver >*/
 {
     float *p;
@@ -80,6 +81,7 @@ void dsreiko_fastmarch(float *time /* time */,
 
     t = time;
     v = v_in;
+    flag = f_in;
 
     xn = x;
     x1 = x+1;
@@ -251,6 +253,7 @@ int neighbors_default()
 	    for (i=0; i < n[0]; i++) {
 		in[j*s[2]+k*s[1]+i] = SF_IN;
 		t[j*s[2]+k*s[1]+i] = 0.;
+		if (flag != NULL) flag[j*s[2]+k*s[1]+i] = 0;
 	    }
 	}
     }
@@ -263,6 +266,7 @@ int neighbors_default()
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
 	    t[j*s[2]+(j+1)*s[1]+i] = (sqrt(vr)*d[1]+sqrt(vs)*d[2])/2.;
+	    if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 4;
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
@@ -275,7 +279,9 @@ int neighbours(float* time, int i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
     int j, k, ix, np;
-    
+    float ttemp;
+    int ftemp;
+
     np = 0;
     for (j=0; j < 3; j++) {
 	ix = (i/s[j])%n[j];
@@ -283,22 +289,29 @@ int neighbours(float* time, int i)
 	/* try both directions */
 	if (ix+1 <= n[j]-1) {
 	    k = i+s[j]; 
-	    if (in[k] != SF_IN) np += update(qsolve(time,k),time,k);
+	    if (in[k] != SF_IN) {
+		ttemp = qsolve(time,k,&ftemp);
+		np += update(ttemp,time,k,ftemp);
+	    }
 	}
 	if (ix-1 >= 0 ) {
 	    k = i-s[j];
-	    if (in[k] != SF_IN) np += update(qsolve(time,k),time,k);
+	    if (in[k] != SF_IN) {
+		ttemp = qsolve(time,k,&ftemp);
+		np += update(ttemp,time,k,ftemp);
+	    }
 	}
     }
     return np;
 }
 
-int update(float value, float* time, int i)
+int update(float value, float* time, int i, int f)
 /* update gridpoint i with new value and modify wave front */
 {
     /* only update when smaller than current value */
     if (value < time[i]) {
 	time[i] = value;
+	if (flag != NULL) flag[i] = f;
 	if (in[i] == SF_OUT) { 
 	    in[i] = SF_FRONT;      
 	    pqueue_insert(time+i);
@@ -311,7 +324,7 @@ int update(float value, float* time, int i)
     return 0;
 }
 
-float qsolve(float* time, int i)
+float qsolve(float* time, int i, int *f)
 /* find new traveltime at gridpoint i */
 {
     int j, k, ix[3];
@@ -375,20 +388,20 @@ float qsolve(float* time, int i)
     }
 
     if(vv[2]->value < SF_HUGE) {   /* update from all three directions */
-	if (updaten(i,3,&res,vv,xj,vr,vs) || 
-	    updaten(i,2,&res,vv,xj,vr,vs) || 
-	    updaten(i,1,&res,vv,xj,vr,vs)) return res;
+	if (updaten(i,3,&res,vv,xj,vr,vs,f) || 
+	    updaten(i,2,&res,vv,xj,vr,vs,f) || 
+	    updaten(i,1,&res,vv,xj,vr,vs,f)) return res;
     } else if(vv[1]->value < SF_HUGE) { /* update from two directions */
-	if (updaten(i,2,&res,vv,xj,vr,vs) || 
-	    updaten(i,1,&res,vv,xj,vr,vs)) return res;
+	if (updaten(i,2,&res,vv,xj,vr,vs,f) || 
+	    updaten(i,1,&res,vv,xj,vr,vs,f)) return res;
     } else if(vv[0]->value < SF_HUGE) { /* update from only one direction */
-	if (updaten(i,1,&res,vv,xj,vr,vs)) return res;
+	if (updaten(i,1,&res,vv,xj,vr,vs,f)) return res;
     }
 	
     return SF_HUGE;
 }
 
-bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], double vr, double vs)
+bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], double vr, double vs, int *f)
 /* calculate new traveltime */
 {
     double a, b, c, d, e, t, discr;
@@ -397,11 +410,14 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
 
+    *f = 0;
+
     /* one-sided */
     if (m == 1 && vv[0]->label == 0) {
 	t = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
 	*res = t;
+	*f = 1;
 	return true;
     }
     
@@ -409,6 +425,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	t = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
 	*res = t;
+	*f = 2;
 	return true;
     }
 
@@ -416,6 +433,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	t = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
 	*res = t;
+	*f = 3;
 	return true;
     }
 
@@ -424,6 +442,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	t = ((sqrt(vr/xj[1]->delta)+xj[1]->value)+(sqrt(vs/xj[2]->delta)+xj[2]->value))/2.;
 	
 	*res = t;
+	*f = 4;
 	return true;
     }
 
@@ -441,6 +460,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	if (t <= vv[m-1]->value) return false;
 
 	*res = t;
+	*f = 5;
 	return true;
     }
 
@@ -458,6 +478,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	if (t <= vv[m-1]->value) return false;
 
 	*res = t;
+	*f = 6;
 	return true;
     }
 
@@ -500,6 +521,7 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
     if (t <= vv[m-1]->value) return false;
 
     *res = t;
+    *f = 7;
     return true;
 }
 

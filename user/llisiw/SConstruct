@@ -9,8 +9,6 @@ fatomo fatomoomp mkrcv cpxeikonal
 drays dsreiko dsrtomo
 '''
 
-
-
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()

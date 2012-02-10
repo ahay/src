@@ -90,7 +90,8 @@ upgrad upgrad_init(int mdim        /* number of dimensions */,
 
 void upgrad_set(upgrad upg      /* upwind stencil */,
 		const float *r0 /* reference time */,
-		const float *s0 /* reference slowness-squared */)
+		const float *s0 /* reference slowness-squared */,
+		const int *f0   /* reference flag */)
 /*< supply reference >*/
 {
     int i, m, it, jt, ii[3], a, b;
@@ -142,7 +143,9 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 		dt[i] = t-t2;
 
 		/* NOTE: avoid fake three-sided update */
+		/*
 		if (dt[i] <= 1.e-4) dt[i] = 0.;
+		*/
 	    } else {
 		dt[i] = 0.;
 	    }
@@ -154,7 +157,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	if (upg->source[it]) continue;
 
 	/* one-sided */
-	if (dt[1] == 0. && dt[2] == 0.) {
+	if ((f0 == NULL && dt[1] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 1)) {
 	    upg->ww[it][0] = sqrtf(dd[0]);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 0.;
@@ -167,7 +170,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    continue;
 	}
 
-	if (dt[0] == 0. && dt[2] == 0.) {
+	if ((f0 == NULL && dt[0] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 2)) {
 	    upg->ww[it][0] = 0.;
 	    upg->ww[it][1] = 2.*dt[1]*dd[1];
 	    upg->ww[it][2] = 0.;
@@ -180,7 +183,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    continue;
 	}
 
-	if (dt[0] == 0. && dt[1] == 0.) {
+	if ((f0 == NULL && dt[0] == 0. && dt[1] == 0.) || (f0 != NULL && f0[jt] == 3)) {
 	    upg->ww[it][0] = 0.;
 	    upg->ww[it][1] = 0.;	    
 	    upg->ww[it][2] = 2.*dt[2]*dd[2];
@@ -194,7 +197,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	}
 
 	/* two-sided */
-	if (dt[0] == 0.) {
+	if ((f0 == NULL && dt[0] == 0.) || (f0 != NULL && f0[jt] == 4)) {
 	    upg->ww[it][0] = 0.;
 	    upg->ww[it][1] = sqrtf(dd[1]);
 	    upg->ww[it][2] = sqrtf(dd[2]);
@@ -207,7 +210,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    continue;
 	}
 
-	if (dt[1] == 0.) {
+	if ((f0 == NULL && dt[1] == 0.) || (f0 != NULL && f0[jt] == 5)) {
 	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrtf(wr*dd[0]);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 2.*dt[2]*dd[2];
@@ -220,7 +223,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    continue;
 	}
 
-	if (dt[2] == 0.) {
+	if ((f0 == NULL && dt[2] == 0.) || (f0 != NULL && f0[jt] == 6)) {
 	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrtf(ws*dd[0]);
 	    upg->ww[it][1] = 2.*dt[1]*dd[1];
 	    upg->ww[it][2] = 0.;
@@ -234,14 +237,16 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	}
 
 	/* three-sided */
-	upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]+dt[1]*dt[1]*dd[1]-ws-wr);
-	upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr);
-	upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr);
-
-	upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1]+upg->ww[it][2];
-
-	upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
-	upg->qq[jt][1] = dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+	if ((f0 == NULL) || (f0 != NULL && f0[jt] == 7)) {
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]+dt[1]*dt[1]*dd[1]-ws-wr);
+	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr);
+	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr);
+	    
+	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1]+upg->ww[it][2];
+	    
+	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
+	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+	}
     }
 }
 

@@ -27,10 +27,11 @@ int main(int argc, char* argv[])
     bool velocity, verb, adj;
     int dim, i, n[SF_MAX_DIM], iw, nw, it, nt;
     int iter, niter, cgiter, count;
+    int *f;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t, *w, *t0, *w1;
     float rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[4], *what;
-    sf_file in, out, reco, grad;
+    sf_file in, out, reco, grad, flag;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -55,6 +56,12 @@ int main(int argc, char* argv[])
 		sf_error("Need velocity grad=");
 	    grad = sf_input("grad");
 	    
+	    /* read flag file */
+	    if (NULL == sf_getstring("flag"))
+		flag = NULL;
+	    else
+		flag = sf_input("flag");
+
 	    /* read dimension */
 	    dim = sf_filedims(reco,n);
 
@@ -75,9 +82,17 @@ int main(int argc, char* argv[])
 	    t  = sf_floatalloc(nt);
 	    dt = sf_floatalloc(nt);
 
+	    if (flag != NULL)
+		f  = sf_intalloc(nt);
+	    else
+		f = NULL;
+
 	    /* read file */
 	    sf_floatread(w,nw,grad);
 	    sf_floatread(t,nt,reco);
+
+	    if (flag != NULL)
+		sf_intread(f,nt,flag);
 
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
@@ -104,7 +119,7 @@ int main(int argc, char* argv[])
 	    dsrtomo_init(dim,n,d);
 
 	    /* set operator */
-	    dsrtomo_set(t,w);	    
+	    dsrtomo_set(t,w,f);	    
 
 	    if (adj)
 		dsrtomo_oper(true,false,nw,nt,dw,dt);
@@ -180,7 +195,8 @@ int main(int argc, char* argv[])
 	    dw = sf_floatalloc(nw);
 	    dt = sf_floatalloc(nt);
 	    w1 = sf_floatalloc(nw);
-	    
+	    f  = sf_intalloc(nt);
+
 	    /* initialize eikonal */
 	    dsreiko_init(n,o,d);
 	    
@@ -188,7 +204,7 @@ int main(int argc, char* argv[])
 	    dsrtomo_init(dim,n,d);
 	    
 	    /* initial misfit */
-	    dsreiko_fastmarch(t,w);
+	    dsreiko_fastmarch(t,w,f);
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
@@ -210,7 +226,7 @@ int main(int argc, char* argv[])
 		    dw[iw] = 0.;
 		
 		/* set operator */
-		dsrtomo_set(t,w);
+		dsrtomo_set(t,w,f);
 		
 		/* solve dw */
 		sf_solver(dsrtomo_oper,sf_cgstep,nw,nt,dw,dt,cgiter,"verb",verb,"end");
@@ -225,7 +241,7 @@ int main(int argc, char* argv[])
 			w1[iw] = (w[iw]+gama*dw[iw])*(w[iw]+gama*dw[iw])/w[iw];
 		    
 		    /* compute new misfit */
-		    dsreiko_fastmarch(t,w1);
+		    dsreiko_fastmarch(t,w1,f);
 		    dsreiko_mirror(t);
 		    
 		    for (it=0; it < nt; it++)

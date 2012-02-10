@@ -44,10 +44,11 @@ void dsrtomo_init(int dim  /* model dimension */,
 }
 
 void dsrtomo_set(float *t /* stencil time */,
-		 float *w /* stencil slowness-squared */)
+		 float *w /* stencil slowness-squared */,
+		 int *f   /* stencil flag */)
 /*< set operator >*/
 {
-    upgrad_set(upg,t,w);
+    upgrad_set(upg,t,w,f);
 }
 
 void dsrtomo_close(void)
