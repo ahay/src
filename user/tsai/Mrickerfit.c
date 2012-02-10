@@ -29,8 +29,8 @@ int main(int argc, char* argv[])
     float eps, f, f0, f2, df;
     float *m0=NULL, *a, *m, *m2, *m3, *e, *ap; /*initial frequency*/
     float *data, *dataout, **rt, **r, **rs, **rp, **rpt; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
-    float *rtd, **rptr, **rtrp, *dd, *ra, *gamma, **rk, *rka, *rptd, *rkd; 
-    float **rpa, **rap, **raprpa, **raprpat, **mt, *gt, *dm, d, est, r2, rss;
+    float *rtd, **rptr, **rtrp, *ra, *gamma, **rk, *rka, *rptd, *rkd; 
+    float **rpa, **rap, **raprpa, **raprpat, **mt, *gt, *dm, *est, r2, rss;
     bool verb;
     sf_file in, out, ma;    
     
@@ -87,14 +87,29 @@ int main(int argc, char* argv[])
 	m3 = sf_floatalloc(n);
 	e = sf_floatalloc(n);
 	a = sf_floatalloc(n);
-
 	r = sf_floatalloc2(n,na);
 	rp = sf_floatalloc2(n,na);
 	rt = sf_floatalloc2(na,n);
 	rpt = sf_floatalloc2(na,n);
-
 	rtd = sf_floatalloc(n);
 	rptd = sf_floatalloc(n);
+	rs = sf_floatalloc2(n,n);
+	rptr = sf_floatalloc2(n,n);
+	rtrp = sf_floatalloc2(n,n);
+	rk = sf_floatalloc2(n,n);
+	rka = sf_floatalloc(n);
+	rptd = sf_floatalloc(n);
+	rkd = sf_floatalloc(n);
+	raprpa = sf_floatalloc2(n,na);
+	rpa = sf_floatalloc2(n,na);
+	rap = sf_floatalloc2(n,na);
+	ap = sf_floatalloc(n);
+	gamma = sf_floatalloc(na);
+	ra = sf_floatalloc(na);
+	raprpat = sf_floatalloc2(na,n);
+	dm = sf_floatalloc(n);
+	est = sf_floatalloc(na);
+	mt = sf_floatalloc2(n,n);
 
 	for (k=0;k<n;k++) {
 	    m[k] = m0[k];
@@ -117,10 +132,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    for (i=0;i<n;i++) {
-		sf_warning ("rtd of %d =%g",i,rtd[i]);
-	    }
-
 	    for (ib = 0; ib < na; ib++) {	    
 		for (l = 0; l < n; l++) {
 		    r[ib][l] = rt[l][ib];
@@ -128,9 +139,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    rs = sf_floatalloc2(n,n);
-	    rptr = sf_floatalloc2(n,n);
-	    rtrp = sf_floatalloc2(n,n);
 	    /*ricker square*/
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
@@ -147,10 +155,8 @@ int main(int argc, char* argv[])
 		    rptr[l][k] = 0.;
 		    rtrp[l][k] = 0.;
 		    for (ib = 0; ib < na; ib++) {
-
 			rptr[l][k] += rpt[l][ib]*r[ib][k];
 			rtrp[l][k] += rt[l][ib]*rp[ib][k];
-
 		    }
 		}
 	    }
@@ -159,23 +165,19 @@ int main(int argc, char* argv[])
 		for (l = 0; l < n; l++) {
 		    if (k == l) {
 			rs[k][l] = rs[k][l]+eps;
-//			sf_warning ("rs=%g", rs[k][l]);
 		    }
 		}
 	    }
 
 	    gaussel_init(n);
-
 	    gaussel_solve(rs, rtd, a);
 
-	    rk = sf_floatalloc2(n,n);
 	    for (k = 0; k < n; k++) {
 		for (l = 1; l < n; l++) {
 		    rk[k][l] = rptr[k][l]+rtrp[k][l];
 		}
 	    }
 
-	    rka = sf_floatalloc(n);
 	    for (k = 0; k < n; k++) {
 		rka[k] = 0;
 		for (l = 0; l < n; l++) {
@@ -183,7 +185,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    rptd = sf_floatalloc(n);
 	    for (k = 0; k < n ; k++) {
 		rptd[k] = 0;
 		for (ib = 0; ib < na; ib++) {
@@ -191,35 +192,28 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    rkd = sf_floatalloc(n);
 	    for (k = 0; k < n; k++) {
 		rkd[k] = rptd[k]-rka[k];
 	    }
-
-	    ap = sf_floatalloc(n);
 
 	    gaussel_init(n);
 	    gaussel_solve(rs, rkd, ap);
 
 /*DM=inverse((X transpose X)) X transpose Y */
 /*aprarp is X; gamma is Y*/
-	    dd = sf_floatalloc(n);
-	    gamma = sf_floatalloc(na);
-	    ra = sf_floatalloc(na);
-	    for (ib = 0; ib < na; ib++) {
-		for (k = 0; k < n; k++) {
-		    ra[ib] = 0;
-		    ra[ib] += r[ib][k]*a[k];
-		}
+
+	for (ib = 0; ib < na; ib++) {
+	    f = f0 + ib*df;
+	    f2 = f*f;
+	    ra[ib] = 0;
+	    for (k = 0; k < n; k++) {
+		ra[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
 	    }
+	}    
 
 	    for (ib = 0; ib < na; ib++) {
 		gamma[ib] = data[ib]-ra[ib];
 	    }
-
-	    raprpa = sf_floatalloc2(n,na);
-	    rpa = sf_floatalloc2(n,na);
-	    rap = sf_floatalloc2(n,na);
 
 	    for (ib = 0; ib < na; ib++) {
 		for (k = 0; k < n; k++) {
@@ -239,8 +233,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    raprpat = sf_floatalloc2(na,n);
-
 	    for (k = 0; k < n; k++) {
 		for (ib = 0; ib < na ; ib++) {
 		    raprpat[k][ib] = raprpa[ib][k];
@@ -248,7 +240,6 @@ int main(int argc, char* argv[])
 	    }
 
 // least squares for delta m.	    
-	    mt = sf_floatalloc2(n,n);
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    mt[k][l] = 0;
@@ -265,20 +256,23 @@ int main(int argc, char* argv[])
 		    gt[k] += raprpat[k][ib]*gamma[ib];
 		}
 	    }
-	    dm = sf_floatalloc(n);
 	    gaussel_init(n);
-	    /*soliving for amplitude partial*/
 	    gaussel_solve(mt, gt, dm);
 
-	    est = 0;
-	    for (k = 0; k < n; k++) {
-		est +=ra[k] ;
-	    }
-	    d = 0;
+	    r2 = 0;
 	    for (ib = 0; ib < na; ib++) {
-		d += data[ib];
+		f = f0 + ib*df;
+		f2 = f*f;
+		est[ib] = 0;
+		for (k = 0; k < n; k++) {
+		    est[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
+		}
+		r2 += (est[ib]-data[ib])*(est[ib]-data[ib]);
 	    }
-	    r2 = (d - est)*(d - est); 
+
+	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g", iter, r2);
+
+	    if (r2 < eps ) break;
 
 	    for (k = 0; k < n; k++) {
 		m[k] += dm[k];
@@ -287,17 +281,10 @@ int main(int argc, char* argv[])
 	    for (k = 0; k < n; k++) {
 		sf_warning("m=%g",m[k]);
 	    }
-
-	    if (verb && 5000 > n2) sf_warning("iter=%d", iter);
-
-//	    if (verb && 5000 > n2) sf_warning("iter=%d r2=%g", iter,r2);
-
-	    if (r2 < eps) break;
 	}
 
 	for (k = 0; k < n; k++) {
 	    m[k] = fabsf(m[k]);
-	    sf_warning("m = %g", m[k]);
 	    m2[k] = m[k]*m[k];
 	}
       
@@ -313,7 +300,7 @@ int main(int argc, char* argv[])
 		dataout[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
 	    }
 	    rss += (data[ib]-dataout[ib])*(data[ib]-dataout[ib]);
-	}       
+	}    
 	sf_warning("Residual sum of squares equals %g",rss);
 	sf_floatwrite(dataout,na,out);
     }
