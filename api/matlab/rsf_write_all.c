@@ -1,7 +1,7 @@
 /* Write complete RSF file, both header and data, in one call.
  *
  * MATLAB usage:
- *   rsf_write_all(file,data[,dalta[,origin[,label[,unit]]]])
+ *   rsf_write_all(file,cmdargs,data[,dalta[,origin[,label[,unit]]]])
  *
  * Written by Henryk Modzelewski, UBC EOS SLIM
  * Created February 2012
@@ -31,10 +31,10 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc=2, i, ndim, odim, len;
+    int strlen, status, argc, i, ndim, odim, len;
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *strtag=NULL, *argv[] = {"matlab","-"}, *par=NULL, *filename=NULL;
+    char *strtag=NULL, **argv, *par=NULL, *filename=NULL;
     double *dr=NULL, *di=NULL;
     double *ddlt=NULL, *dorg=NULL;
     mxArray *pca;
@@ -44,8 +44,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_file file=NULL;
     
     /* Check for proper number of arguments. */
-    if (nrhs < 2 || nrhs > 6)
-	 mexErrMsgTxt("2 to 6 inputs required:\n\tfile,data[,dalta[,origin[,label[,unit]]]]");
+    if (nrhs < 3 || nrhs > 7)
+	 mexErrMsgTxt("3 to 7 inputs required:\n\tfile,cmdargs,data[,dalta[,origin[,label[,unit]]]]");
     if (nlhs != 0)
 	 mexErrMsgTxt("This function has no outputs");
 
@@ -60,49 +60,64 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
-    /* Data must be a double array. */
-    if (!mxIsDouble(prhs[1])) mexErrMsgTxt("Data must be a double array.");
-    /* get data dimensions */
-    ndim=mxGetNumberOfDimensions(prhs[1]);
-    dim=mxGetDimensions(prhs[1]);
-    /* get data size */
-    nd = mxGetNumberOfElements(prhs[1]);
-
-    /* Deltas must be a double row vector. */
-    if (nrhs > 2) {
-	if (!mxIsDouble(prhs[2])) mexErrMsgTxt("Delta must be double.");
-	if (mxGetM(prhs[2]) != 1) mexErrMsgTxt("Deltas must be a row vector.");
-	odim = mxGetN(prhs[2]);
-	ddlt = mxGetPr(prhs[2]);
-	if (odim != ndim) mexErrMsgTxt("Deltas has wrong number of elements.");
+    /* Command line argumens must be a cell array */
+    if (!mxIsCell(prhs[1])) mexErrMsgTxt("Labels must be a cell array.");
+    odim = mxGetNumberOfElements(prhs[1]);
+    argc = 2;
+    argv = mxCalloc((argc+odim),sizeof(char*));
+    argv[0] = malloc(7*sizeof(char*)); sprintf(argv[0],"matlab");
+    argv[1] = malloc(2*sizeof(char*)); sprintf(argv[1],"-");
+    for (i=0; i<odim; i++) {
+    	pca = mxGetCell(prhs[1], i);
+	strlen = mxGetN(pca) + 1;
+	argv[argc] = mxCalloc(strlen, sizeof(char));
+	status = mxGetString(pca, argv[argc], strlen);
+	argc++;
     }
 
-    /* Origins must be a double row vector. */
+    /* Data must be a double array. */
+    if (!mxIsDouble(prhs[2])) mexErrMsgTxt("Data must be a double array.");
+    /* get data dimensions */
+    ndim=mxGetNumberOfDimensions(prhs[2]);
+    dim=mxGetDimensions(prhs[2]);
+    /* get data size */
+    nd = mxGetNumberOfElements(prhs[2]);
+
+    /* Deltas must be a double row vector. */
     if (nrhs > 3) {
 	if (!mxIsDouble(prhs[3])) mexErrMsgTxt("Delta must be double.");
 	if (mxGetM(prhs[3]) != 1) mexErrMsgTxt("Deltas must be a row vector.");
 	odim = mxGetN(prhs[3]);
-	dorg = mxGetPr(prhs[3]);
+	ddlt = mxGetPr(prhs[3]);
 	if (odim != ndim) mexErrMsgTxt("Deltas has wrong number of elements.");
     }
 
-    /* Labels must be a cell array of strings. */
+    /* Origins must be a double row vector. */
     if (nrhs > 4) {
-	if (!mxIsCell(prhs[4])) mexErrMsgTxt("Labels must be a cell array.");
-	odim = mxGetNumberOfElements(prhs[4]);
+	if (!mxIsDouble(prhs[4])) mexErrMsgTxt("Origins must be double.");
+	if (mxGetM(prhs[4]) != 1) mexErrMsgTxt("Origins must be a row vector.");
+	odim = mxGetN(prhs[4]);
+	dorg = mxGetPr(prhs[4]);
+	if (odim != ndim) mexErrMsgTxt("Origins has wrong number of elements.");
+    }
+
+    /* Labels must be a cell array of strings. */
+    if (nrhs > 5) {
+	if (!mxIsCell(prhs[5])) mexErrMsgTxt("Labels must be a cell array.");
+	odim = mxGetNumberOfElements(prhs[5]);
 	if (odim != ndim) mexErrMsgTxt("Labels has wrong number of elements.");
     }
 
     /* Units must be a cell array of strings. */
-    if (nrhs > 5) {
-	if (!mxIsCell(prhs[5])) mexErrMsgTxt("Units must be a cell array.");
-	odim = mxGetNumberOfElements(prhs[5]);
+    if (nrhs > 6) {
+	if (!mxIsCell(prhs[6])) mexErrMsgTxt("Units must be a cell array.");
+	odim = mxGetNumberOfElements(prhs[6]);
 	if (odim != ndim) mexErrMsgTxt("Units has wrong number of elements.");
     }
 
     sf_init(argc,argv);
     file = sf_output(filename);
-    sf_setformat(file,mxIsComplex(prhs[1])?"native_complex":"native_float");
+    sf_setformat(file,mxIsComplex(prhs[2])?"native_complex":"native_float");
 
     /* Write header */
     for (i=0; i < ndim; i++) {
@@ -111,15 +126,15 @@ void mexFunction(int nlhs, mxArray *plhs[],
         sf_putint(file,key,(int)dim[i]);
 	/* deltas */
         sprintf(key,"d%d",i+1);
-        if (nrhs > 2) sf_putfloat(file,key,(float)ddlt[i]);
+        if (nrhs > 3) sf_putfloat(file,key,(float)ddlt[i]);
         else sf_putfloat(file,key,1.);
 	/* origins */
         sprintf(key,"o%d",i+1);
-        if (nrhs > 3) sf_putfloat(file,key,(float)dorg[i]);
+        if (nrhs > 4) sf_putfloat(file,key,(float)dorg[i]);
         else sf_putfloat(file,key,0.);
 	/* labels */
-	if (nrhs > 4) {
-	    pca = mxGetCell(prhs[4], i);
+	if (nrhs > 5) {
+	    pca = mxGetCell(prhs[5], i);
 	    if (!mxIsChar(pca)) mexErrMsgTxt("Label must be a string.");
 	    strlen = mxGetN(pca) + 1;
 	    strtag = mxCalloc(strlen, sizeof(char));
@@ -129,8 +144,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	    mxFree(strtag);
 	}
 	/* units */
-	if (nrhs > 5) {
-	    pca = mxGetCell(prhs[5], i);
+	if (nrhs > 6) {
+	    pca = mxGetCell(prhs[6], i);
 	    if (!mxIsChar(pca)) mexErrMsgTxt("Unit must be a string.");
 	    strlen = mxGetN(pca) + 1;
 	    strtag = mxCalloc(strlen, sizeof(char));
@@ -142,14 +157,14 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
     
     /* Write data */
-    if (mxIsComplex(prhs[1])) {
+    if (mxIsComplex(prhs[2])) {
 	/* complex data */
 	c = (sf_complex*) buf;
 
-	dr = mxGetPr(prhs[1]);
+	dr = mxGetPr(prhs[2]);
 
 	/* pointer to imaginary part */
-	di = mxGetPi(prhs[1]);
+	di = mxGetPi(prhs[2]);
 	
 	for (j=0, nbuf /= sizeof(sf_complex); nd > 0; nd -= nbuf) {
 	    if (nbuf > nd) nbuf=nd;
@@ -165,7 +180,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	/* real data */
 	p = (float*) buf;
 
-	dr = mxGetPr(prhs[1]);
+	dr = mxGetPr(prhs[2]);
 
 	for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
 	    if (nbuf > nd) nbuf=nd;
@@ -180,4 +195,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     sf_fileclose(file);
     sf_close();
+
+    for (i=0;i<argc;i++) mxFree(argv[i]); mxFree(argv);
 }
