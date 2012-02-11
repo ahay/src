@@ -94,7 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     /* Origins must be a double row vector. */
     if (nrhs > 4) {
-	if (!mxIsDouble(prhs[4])) mexErrMsgTxt("Origins must be double.");
+	if (!mxIsDouble(prhs[4])) mexErrMsgTxt("Origin must be double.");
 	if (mxGetM(prhs[4]) != 1) mexErrMsgTxt("Origins must be a row vector.");
 	odim = mxGetN(prhs[4]);
 	dorg = mxGetPr(prhs[4]);
