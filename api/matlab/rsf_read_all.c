@@ -45,7 +45,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     /* Check for proper number of arguments. */
     if (nlhs==0 && nrhs==0) {
-	printf("RSF_READ_ALL Reads entire RSF file into MATLAB\n");
+	printf("RSF_READ_ALL Reads complete RSF file into MATLAB\n");
 	printf("Usage:\n");
 	printf("\t[data[ size[ delta[ origin[ label[ unit]]]]]] = rsf_read_all(file)\n");
 	printf("Where:\n");
