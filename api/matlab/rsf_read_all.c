@@ -1,7 +1,7 @@
 /* Read complete RSF file, both header and data, in one call.
  *
  * MATLAB usage:
- *   [data[ size[ dalta[ origin[ label[ unit]]]]]] = rsf_read_all(file)
+ *   [data[ size[ delta[ origin[ label[ unit]]]]]] = rsf_read_all(file)
  *
  * Written by Henryk Modzelewski, UBC EOS SLIM
  * Created February 2012
@@ -24,8 +24,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <mex.h>
+#include <stdio.h>
 #include <string.h>
+#include <mex.h>
 #include <rsf.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], 
@@ -43,9 +44,26 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int nn[SF_MAX_DIM];
 
     /* Check for proper number of arguments. */
+    if (nlhs==0 && nrhs==0) {
+	printf("RSF_READ_ALL Reads entire RSF file into MATLAB\n");
+	printf("Usage:\n");
+	printf("\t[data[ size[ delta[ origin[ label[ unit]]]]]] = rsf_read_all(file)\n");
+	printf("Where:\n");
+	printf("\tInput:\n");
+	printf("\t\tfile is the RSF-file name\n");
+	printf("\tOutput:\n");
+	printf("\t\tdata holds the data array\n");
+	printf("\tOptional output:\n");
+	printf("\t\tsize is size(data); vector of n# int values from header\n");
+	printf("\t\tdelta holds vector of d# float values from header\n");
+	printf("\t\torigin holds vector of o# float values from header\n");
+	printf("\t\tlabel holds cell array of label# string values from header\n");
+	printf("\t\tunit holds cell array of unit# string values from header\n");
+    	return;
+    }
     if (nrhs != 1) mexErrMsgTxt("1 input required: file");
     if (nlhs < 0 || nlhs > 6)
-	 mexErrMsgTxt("1 to 6 outputs required:\n\tdata[,size[,dalta[,origin[,label[,unit]]]]]");
+	 mexErrMsgTxt("1 to 6 outputs required:\n\tdata[,size[,delta[,origin[,label[,unit]]]]]");
 
     /* File name must be a string. */
     if (!(mxIsChar(prhs[0])&&mxGetM(prhs[0])==1)) mexErrMsgTxt("Second input must be a string.");

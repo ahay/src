@@ -1,7 +1,9 @@
 /* Write complete RSF file, both header and data, in one call.
  *
  * MATLAB usage:
- *   rsf_write_all(file,cmdargs,data[,dalta[,origin[,label[,unit]]]])
+ *   rsf_write_all(file,cmdargs,data[,delta[,origin[,label[,unit]]]])
+ *
+ *   Note! Only cmdargs={'out=stdout'} was tested
  *
  * Written by Henryk Modzelewski, UBC EOS SLIM
  * Created February 2012
@@ -24,8 +26,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <mex.h>
+#include <stdio.h>
 #include <string.h>
+#include <mex.h>
 #include <rsf.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], 
@@ -44,8 +47,25 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_file file=NULL;
     
     /* Check for proper number of arguments. */
+    if (nlhs==0 && nrhs==0) {
+	printf("RSF_WRITE_ALL Writes complete RSF file from MATLAB\n");
+	printf("Usage:\n");
+	printf("\trsf_write_all(file,cmdargs,data[,delta[,origin[,label[,unit]]]])\n");
+	printf("Where:\n");
+	printf("\tInput:\n");
+	printf("\t\tfile is the RSF-file name\n");
+	printf("\t\tcmdargs holds cell array of strings with RSF comman-line options\n");
+	printf("\t\t\t(only cmdargs={'out=stdout'} was tested)\n");
+	printf("\t\tdata holds the data array\n");
+	printf("\tOptional output:\n");
+	printf("\t\tdelta holds row vector of d# float values for header\n");
+	printf("\t\torigin holds row vector of o# float values for header\n");
+	printf("\t\tlabel holds cell array of label# string for from header\n");
+	printf("\t\tunit holds cell array of unit# string values for header\n");
+    	return;
+    }
     if (nrhs < 3 || nrhs > 7)
-	 mexErrMsgTxt("3 to 7 inputs required:\n\tfile,cmdargs,data[,dalta[,origin[,label[,unit]]]]");
+	 mexErrMsgTxt("3 to 7 inputs required:\n\tfile,cmdargs,data[,delta[,origin[,label[,unit]]]]\n\t Note! Only cmdargs={'out=stdout'} was tested.");
     if (nlhs != 0)
 	 mexErrMsgTxt("This function has no outputs");
 
@@ -60,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
-    /* Command line argumens must be a cell array */
+    /* Command line options must be a cell array of strings */
     if (!mxIsCell(prhs[1])) mexErrMsgTxt("Labels must be a cell array.");
     odim = mxGetNumberOfElements(prhs[1]);
     argc = 2;
@@ -69,6 +89,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     argv[1] = malloc(2*sizeof(char*)); sprintf(argv[1],"-");
     for (i=0; i<odim; i++) {
     	pca = mxGetCell(prhs[1], i);
+	if (!(mxIsChar(pca)&&mxGetM(pca)==1)) mexErrMsgTxt("Command-line option must be a string.");
 	strlen = mxGetN(pca) + 1;
 	argv[argc] = mxCalloc(strlen, sizeof(char));
 	status = mxGetString(pca, argv[argc], strlen);
