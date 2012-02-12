@@ -13,16 +13,9 @@ except:
     env = bldutil.Debug()
     bindir = pkgdir = None
 
-has_fftw = False # True
-
 progs = '''
-integral1 pseudodepth swapbyte raytest vtiwave
+integral1 pseudodepth swapbyte raytest
 '''
-
-if has_fftw:
-	env.Append(CPPPATH='/usr/include',LIBS='fftw3f')
-else:
-	progs = progs.replace('vtiwave','')
 
 if env.get('LAPACK'):
 	env.Append(LIBS='lapack')

@@ -23,12 +23,12 @@
 
 #define NU 4
 
-int nx; float x0,dx,*x;
 int nz; float z0,dz,*z;
+int nx; float x0,dx,*x;
 int nt; float dt;
-float *v;
-float *vx;
-float *vz;
+
+float *v,*vz,*vx;
+
 bool arc;
 
 /* bilinear interpolation */
@@ -65,13 +65,13 @@ void evalf(float *f,
 
 	c[0] = u[2];
 	c[1] = u[0];
-	ve  = int2(v,c);
+	ve  = int2(v ,c);
 	vex = int2(vx,c);
 	vez = int2(vz,c);
 
 	f[0] = u[1] * ve;
-	f[1] = (u[1]*u[1] - 1.) * vex + u[1]*u[3] * vez;
 	f[2] = u[3] * ve;
+	f[1] = (u[1]*u[1] - 1.) * vex + u[1]*u[3] * vez;
 	f[3] = (u[3]*u[3] - 1.) * vez + u[1]*u[3] * vex;
 	
 	if (arc)
@@ -150,8 +150,9 @@ int main(int argc,char *argv[])
 	if (!sf_getfloat("zs",&zs)) zs = z[nz/2]; /* shot z */
 	if (!sf_getint  ("nt",&nt)) nt = 1;
 	if (!sf_getfloat("dt",&dt)) dt = 1;
-	if (!sf_getfloat("theta",&theta)) theta = 0; /* shooting angle zpos (degree) */
-	if (!sf_getbool ("arc",&arc)) arc = false; /* if true, arclength; if false, traveltime */
+	if (!sf_getfloat("theta",&theta)) theta = 0; /* takeoff angle (degree) */
+	if (!sf_getbool ("arc",&arc)) arc = false;
+    /* if true, arclength; if false, traveltime */
 
 	s = sf_floatalloc(ns);
 	for (s[0]=s0, i=1; i < ns; i++) s[i]=s[i-1] + ds;
@@ -173,10 +174,10 @@ int main(int argc,char *argv[])
 	}
 
 	nxz = nx * nz;
-	v = sf_floatalloc(nxz);
+	v  = sf_floatalloc(nxz);
 	vz = sf_floatalloc(nxz);
 	vx = sf_floatalloc(nxz);
-	sf_floatread(v,nxz,Fv);
+	sf_floatread(v ,nxz,Fv );
 	sf_floatread(vz,nxz,Fvz);
 	sf_floatread(vx,nxz,Fvx);
 
