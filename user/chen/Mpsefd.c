@@ -3,20 +3,21 @@
 #include <rsf.h>
 
 #include "psefd.h"
+#include "rfft1.h"
 
 
 int main(int argc, char* argv[])
 {
-	int iw,it,ix,iz,jt,njt;
+	int it,ix,iz,jt,njt;
 	float dt,dx,dz;
 	int nw,nx,nz,nt,nz0,nt2;
 
-	kiss_fftr_cfg cfg,icfg;
-	float *v1; 		// fft buffer
-	kiss_fft_cpx *v2,**u1; // fft buffer
+	float *v1; 
+	sf_complex **u1; 
 
 	float ox;
 	float **u2,**u3,**vel;  
+	void * h;
 
 	sf_file modl,data,wave,imag;
 
@@ -56,25 +57,18 @@ int main(int argc, char* argv[])
     sf_putfloat(wave,"d3",dz);
     sf_putfloat(wave,"o3",0);
 
-	
-	nw=kiss_fft_next_fast_size((nt+1)/2);
-    nt2 = 2*(nw-1);
-
-    cfg  = kiss_fftr_alloc(nt2,0,NULL,NULL);
-    icfg = kiss_fftr_alloc(nt2,1,NULL,NULL);
+	nt2 = nt;
+	h = sf_rfft1_init(&nt2, &nw);
+    v1 = sf_floatalloc(nt);	
 
     /* read data and velocity */
     vel = sf_floatalloc2(nz,nx);
     sf_floatread(vel[0],nz*nx,modl);
 
-    v1 = sf_floatalloc(nt2);
-    v2 = (kiss_fft_cpx *) sf_complexalloc(nw);
-
-    u1 = (kiss_fft_cpx *) sf_complexalloc2(nx,nw);	// U_z(x,w)
+    u1 = sf_complexalloc2(nw,nx);	// U_z(w,x)
     u2 = sf_floatalloc2(njt,nx);	// u_z(x,t)
     u3 = sf_floatalloc2(nz,nx);		// u(x,z,0)
 
-	for(it=nt;it<nt2;it++) v1[it]=0.0;
 
 	for(ix=0;ix<nx;ix++)	
 	{
@@ -82,12 +76,8 @@ int main(int argc, char* argv[])
 		for(it=0;it<njt;it++)   u2[ix][it]=v1[it*jt];
         u3[ix][0]=v1[0];  // imag iz =0
 
-		kiss_fftr(cfg,v1,v2);
-		for(iw=0;iw<nw;iw++) 
-		{
-			u1[iw][ix].r=v2[iw].r; 
-			u1[iw][ix].i=v2[iw].i; 
-		}
+		sf_rfft1(h, v1, u1[ix]);
+		sf_rifft1(h,  u1[ix],v1);
 	}
 	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
 
@@ -101,12 +91,7 @@ int main(int argc, char* argv[])
 
 		for(ix=0;ix<nx;ix++)
 		{
-			for(iw=0;iw<nw;iw++)
-			{
-				v2[iw].r=u1[iw][ix].r;
-				v2[iw].i=u1[iw][ix].i;
-			}
-			kiss_fftri(icfg,v2,v1);
+			sf_rifft1(h, u1[ix], v1);
 			for(it=0;it<njt;it++)	u2[ix][it]=v1[it*jt]/nt2;
 			u3[ix][iz]=v1[0]/nt2;
 		}
@@ -117,7 +102,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(u3[0],nz*nx,imag);
  
-	sf_psefd_exit();
+	sf_psefd_release();
 
 	return 0;
 }

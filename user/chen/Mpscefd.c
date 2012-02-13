@@ -2,7 +2,7 @@
 
 #include <rsf.h>
 
-#include "psefd.h"
+#include "pscefd.h"
 
 
 int main(int argc, char* argv[])
@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
         u3[ix][0]=v1[0];  // imag iz =0
 
 		kiss_fftr(cfg,v1,v2);
+		kiss_fftri(icfg,v2,v1);
 		for(iw=0;iw<nw;iw++) 
 		{
 			u1[iw][ix].r=v2[iw].r; 
@@ -91,13 +92,13 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
 
-	sf_psefd_init(nx,nw,dx,dz,
-		1.0/(nt2*dt),vel);
+//	sf_pscefd_init(nx,nw,dx,dz,
+//		1.0/(nt2*dt),vel);
 
 
 	for(iz=1;iz<nz;iz++)
 	{
-		sf_psefd_step3(iz,u1);
+//		sf_pscefd_step3(iz,u1);
 
 		for(ix=0;ix<nx;ix++)
 		{
@@ -117,7 +118,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(u3[0],nz*nx,imag);
  
-	sf_psefd_exit();
+//	sf_pscefd_exit();
 
 	return 0;
 }
