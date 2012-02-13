@@ -1,4 +1,3 @@
-/* None linear Ricker wavelet spectral fit. */
 /*
   Copyright (C) 2011 University of Texas at Austin
   
@@ -49,7 +48,7 @@ int main(int argc, char* argv[])
     if (sf_getint("n",&n) && !sf_getfloats("m",m0,n)) {
 	m0 = sf_floatalloc(n);
 	for (i=0; i<n; i++) {
-	    m0[i] = f0+0.5/n*(i+1)*(na-1)*df;
+	    m0[i] = f0+0.4/n*(i+1)*(na-1)*df;
 	}
     } 
     else
@@ -139,7 +138,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    /*ricker square*/
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    rs[k][l] = 0.;
@@ -149,7 +147,6 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-/* partial ricker spectrum multiplication */
 	    for (l = 0; l < n; l++) {
 		for (k = 0; k < n; k++) {
 		    rptr[l][k] = 0.;
@@ -199,17 +196,16 @@ int main(int argc, char* argv[])
 	    gaussel_init(n);
 	    gaussel_solve(rs, rkd, ap);
 
-/*DM=inverse((X transpose X)) X transpose Y */
 /*aprarp is X; gamma is Y*/
 
-	for (ib = 0; ib < na; ib++) {
-	    f = f0 + ib*df;
-	    f2 = f*f;
-	    ra[ib] = 0;
-	    for (k = 0; k < n; k++) {
-		ra[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
-	    }
-	}    
+	    for (ib = 0; ib < na; ib++) {
+		f = f0 + ib*df;
+		f2 = f*f;
+		ra[ib] = 0;
+		for (k = 0; k < n; k++) {
+		    ra[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
+		}
+	    }    
 
 	    for (ib = 0; ib < na; ib++) {
 		gamma[ib] = data[ib]-ra[ib];
@@ -277,12 +273,7 @@ int main(int argc, char* argv[])
 	    for (k = 0; k < n; k++) {
 		m[k] += dm[k];
 	    }
-
-	    for (k = 0; k < n; k++) {
-		sf_warning("m=%g",m[k]);
-	    }
 	}
-
 	for (k = 0; k < n; k++) {
 	    m[k] = fabsf(m[k]);
 	    m2[k] = m[k]*m[k];
@@ -301,10 +292,16 @@ int main(int argc, char* argv[])
 	    }
 	    rss += (data[ib]-dataout[ib])*(data[ib]-dataout[ib]);
 	}    
+
+	for (k = 0; k < n; k++) {
+	    sf_warning("m=%g a=%g",m[k],a[k]*m[k]*sqrtf(SF_PI)*0.5);
+	}
 	sf_warning("Residual sum of squares equals %g",rss);
 	sf_floatwrite(dataout,na,out);
     }
+
     sf_warning(".");
 
     exit (0);
 }
+
