@@ -1226,3 +1226,21 @@ def quiver(vect,custom,par):
 
 
 
+# ------------------------------------------------------------
+def hic2d(hic,wfs,wfr,cc,custom,par):
+    Flow(hic,[wfs,wfr,cc],
+         '''
+         laps2d verb=y
+         nhx=%(nhx)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
+         ur=${SOURCES[1]}
+         cc=${SOURCES[2]}
+         ''' %par + ' %s '%custom)
+
+def hic3d(hic,wfs,wfr,cc,custom,par):
+    Flow(hic,[wfs,wfr,cc],
+         '''
+         laps3d verb=y
+         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
+         ur=${SOURCES[1]}
+         cc=${SOURCES[2]}
+         ''' %par + ' %s '%custom)
