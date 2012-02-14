@@ -3,10 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psefd mdfd4
+fdip comp psefd mdfd4 resample
 '''
 
-# resample
 
 try:  # distributed version
 	Import('env root pkgdir bindir')

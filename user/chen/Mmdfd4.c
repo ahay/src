@@ -105,6 +105,13 @@ int main(int argc, char* argv[])
 	sf_putfloat(wave, "d2", dx);
 	sf_putfloat(wave, "d3", dt*jt);
 
+	sf_putint(div, "n1", nz);
+	sf_putint(div, "n2", nx);
+	sf_putint(div, "n3", nwv);
+	sf_putfloat(div, "d1", dz);
+	sf_putfloat(div, "d2", dx);
+	sf_putfloat(div, "d3", dt);
+
 
 	dt2 = dt*dt;
 	
