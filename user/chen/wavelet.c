@@ -34,5 +34,22 @@ void sf_wvlt_rck(int nt,
 }
 
 
+void sf_wvlt_harmonic(int nt,
+	float *buf,		// in time index; out = ricker wavelet
+	float *par)		/* 0 ref freq, 1 phase */
+/*< harmonics: sin signal >*/
+{
+	int it;
+	double d1, w0;
+
+	w0 = 2.0*M_PI*par[0];
+	for(it=0; it<nt; it++)
+	{
+		d1 = w0 * buf[it];
+		buf[it] = sin(d1+par[1]);
+	}
+}
+
+
 
 

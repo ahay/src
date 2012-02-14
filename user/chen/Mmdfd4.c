@@ -62,19 +62,29 @@ int main(int argc, char* argv[])
 
 	nwv=0; owv=0;
 	if (!sf_getint("wvlt", &wvlt)) wvlt=0; 
-	/* wavelet type "ricker/other" */
+	/* wavelet type "ricker/harmonic/other" */
+	if (!sf_getfloat("w0",&u2)) u2=35.0; 
+	/* central frequency for ricker/harmonic wavelet */
+	wvp[0] = u2;
+	wvp[1] = 0.0;	// zero phase
 	switch(wvlt)
 	{
-	case 0:
-		if (!sf_getfloat("w0",&u2)) u2=35.0; 
-		/* central frequency of ricker wavelet */
-		wvp[0] = u2;
-		wvp[1] = 0.0;
+	case 0:		// ricker wavelet
 		owv = 5.0 /(u2*dt);
 		owv = (owv<nt)? -owv:-nt;
 		nwv = nt- owv;
+		pwv = sf_floatalloc(nwv);
+		for(it=owv; it<nt; it++) pwv[it-owv] = dt*it;
+		sf_wvlt_rck(nwv, pwv, wvp);
 		break;
-	case 1:
+	case 1:		// sin signal
+		nwv = nt;
+		owv = 0;
+		pwv = sf_floatalloc(nwv);
+		for(it=owv; it<nt; it++) pwv[it-owv] = dt*it;
+		sf_wvlt_harmonic(nwv, pwv, wvp);
+		break;
+	default:
 		sf_error("wvlt = %d not support", wvlt);
 	}
 
@@ -82,11 +92,6 @@ int main(int argc, char* argv[])
 	if (!sf_histint(modl,"n2", &nx)) sf_error("n2");
 	if (!sf_histfloat(modl,"d1", &dz)) sf_error("d1");
 	if (!sf_histfloat(modl,"d2", &dx)) sf_error("d2");
-
-
-	pwv = sf_floatalloc(nwv);
-	for(it=owv; it<nt; it++) pwv[it-owv] = dt*it;
-	sf_wvlt_rck(nwv, pwv, wvp);
 
 	sf_putint(data, "n1", nt);
 	sf_putint(data, "n2", nx);
@@ -128,7 +133,7 @@ int main(int argc, char* argv[])
 	{
 		sf_fd4_laplacian(h, u1, ud);
 		ud[sx][sz] += pwv[it-owv];
-		if(div!=NULL) sf_floatwrite(ud[0], nz*nx, div);
+//		if(div!=NULL) sf_floatwrite(ud[0], nz*nx, div);
 
 		for (ix=0; ix<nx; ix++) 
 		{
