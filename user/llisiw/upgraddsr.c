@@ -32,7 +32,7 @@ typedef struct Upgrad *upgrad;
 struct Upgrad {
     int *order, **pos;
     unsigned char **update;
-    float **ww, **qq;
+    double **ww, **qq;
     bool *source;
 };
 
@@ -40,7 +40,7 @@ static const float tol=1.e-6;
 
 static int ndim, nt, ss[3];
 static const int *nn;
-static float dd[3];
+static double dd[3];
 static const float *t0, *w0;
 
 static int fermat(const void *a, const void *b)
@@ -79,8 +79,17 @@ upgrad upgrad_init(int mdim        /* number of dimensions */,
     upg = (upgrad) sf_alloc(1,sizeof(*upg));
 
     upg->update = sf_ucharalloc2(2,nt);
-    upg->ww = sf_floatalloc2(ndim+1,nt);
-    upg->qq = sf_floatalloc2(2,nt);
+
+    upg->ww = (double **) sf_alloc(nt, sizeof(double *));
+    for (i=0; i < nt; i++) {
+	upg->ww[i] = (double *) sf_alloc(ndim+1, sizeof(double));
+    }
+
+    upg->qq = (double **) sf_alloc(nt, sizeof(double *));
+    for (i=0; i < nt; i++) {
+	upg->qq[i] = (double *) sf_alloc(2, sizeof(double));
+    }
+
     upg->order = sf_intalloc(nt);
     upg->source = sf_boolalloc(nt);
     upg->pos = sf_intalloc2(2,nt);
@@ -96,7 +105,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 {
     int i, m, it, jt, ii[3], a, b;
     unsigned char *up;
-    float t, t2, dt[3], ws, wr;
+    double t, t2, dt[3], ws, wr;
 
     t0 = r0;
     w0 = s0;
@@ -158,14 +167,14 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 
 	/* one-sided */
 	if ((f0 == NULL && dt[1] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 1)) {
-	    upg->ww[it][0] = sqrtf(dd[0]);
+	    upg->ww[it][0] = sqrt(dd[0]);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0];
 	    
-	    upg->qq[jt][0] = 1./(2.*sqrtf(ws));
-	    upg->qq[jt][1] = 1./(2.*sqrtf(wr));
+	    upg->qq[jt][0] = 1./(2.*sqrt(ws));
+	    upg->qq[jt][1] = 1./(2.*sqrt(wr));
 	    
 	    continue;
 	}
@@ -199,38 +208,38 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	/* two-sided */
 	if ((f0 == NULL && dt[0] == 0.) || (f0 != NULL && f0[jt] == 4)) {
 	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = sqrtf(dd[1]);
-	    upg->ww[it][2] = sqrtf(dd[2]);
+	    upg->ww[it][1] = sqrt(dd[1]);
+	    upg->ww[it][2] = sqrt(dd[2]);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][1]+upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = 1./(2.*sqrtf(ws));
-	    upg->qq[jt][1] = 1./(2.*sqrtf(wr));
+	    upg->qq[jt][0] = 1./(2.*sqrt(ws));
+	    upg->qq[jt][1] = 1./(2.*sqrt(wr));
 	    
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[1] == 0.) || (f0 != NULL && f0[jt] == 5)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrtf(wr*dd[0]);
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrt(wr*dd[0]);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 2.*dt[2]*dd[2];
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][2];
 	    
 	    upg->qq[jt][0] = 1.;
-	    upg->qq[jt][1] = dt[0]*sqrtf(dd[0])/sqrtf(wr)-1.;
+	    upg->qq[jt][1] = dt[0]*sqrt(dd[0])/sqrt(wr)-1.;
 	    
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[2] == 0.) || (f0 != NULL && f0[jt] == 6)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrtf(ws*dd[0]);
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrt(ws*dd[0]);
 	    upg->ww[it][1] = 2.*dt[1]*dd[1];
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1];
 	    
-	    upg->qq[jt][0] = dt[0]*sqrtf(dd[0])/sqrtf(ws)-1.;
+	    upg->qq[jt][0] = dt[0]*sqrt(dd[0])/sqrt(ws)-1.;
 	    upg->qq[jt][1] = 1.;
 	    
 	    continue;
@@ -274,7 +283,7 @@ void upgrad_solve(upgrad upg,
 {
     int it, jt, i, m, j;
     unsigned char *up;
-    float num, den;
+    double num, den;
    
     for (it = 0; it < nt; it++) {
 	jt = upg->order[it];
@@ -307,7 +316,7 @@ void upgrad_inverse(upgrad upg,
 {
     int it, jt, i, m, j;
     unsigned char *up;
-    float den, w;
+    double den, w;
 
     for (it = 0; it < nt; it++) {
 	rhs[it] = 0.;
