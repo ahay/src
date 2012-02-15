@@ -3,53 +3,56 @@
 #include <rsf.h>
 
 static int nw,nx;
-static float dz,dx;
+static float dz;
 static float *vel;
+static int *k2;
 
 void sf_psss_init(int nw0,int nx0,int nz,
-	float dw,float dx, float dz0, float **v0)
+	float dw,float dx, float dz0, float *v0)
 /*< initialize >*/
 {
-	int iz,ix;
+	int i;
 	nw=nw0;
 	nx=nx0;
 
-	dz=dz0;
+	dz=dz0*2.0*M_PI/(dx*nx);
 
 	vel=(float*)sf_floatalloc(nz);
+	k2=(int*)sf_intalloc(nx);
 
-	for(iz=0;iz<nz;iz++)
+	for(i=0; i<nx/2+1; i++)		k2[i] = i*i;
+	for(i=nx/2+1; i<nx; i++) 	k2[i] = (i-nx)*(i-nx);
+
+	for(i=0; i<nz; i++)
 	{
-		vel[iz] = 0.0;
-		for(ix=0;ix<nx;ix++)	vel[iz] += v0[ix][iz];
-		vel[iz] = dw/(vel[iz]*dx*nx);
-		vel[iz] *= vel[iz];
+		vel[i] = dw*dx*nx/v0[i];
+		vel[i] *= vel[i];
 	}
 }
 
-void sf_psss_step(int iz,kiss_fft_cpx **io) 
+void sf_psss_step(int iz, sf_complex **io) 
 /*< step in depth >*/
 {
 	int iw,ix;
-	kiss_fft_cpx a,b;
+	float t1;
+	sf_complex a;
 
 	for(ix=0;ix<nx;ix++)
 	{
 		for(iw=0;iw<nw;iw++)	
 		{
-			a.r = io[ix][iw].r;
-			a.i = io[ix][iw].i;
-			b.r = sqrt(vel[iz]*iw*iw-ix*ix)*dz/(dx*nx);
-			b.i = sin(b.r);
-			b.r = cos(b.r);
-			
-			io[ix][iw].r = a.r*b.r-a.i*b.i;
-			io[ix][iw].i = a.r*b.i+a.i*b.r;
+			t1  = (vel[iz]*iw*iw-k2[ix]);
+			if(t1>0) 
+			{
+				t1 = sqrt(t1)*dz;
+				a = cos(t1) + I*sin(t1);
+			}else	a = 0.0;
+			io[ix][iw] *= a;
 		}
 	}
 }
 
-void sf_psss_exit()
+void sf_psss_release()
 /*< free allocated storage >*/
 {
 	free(vel);

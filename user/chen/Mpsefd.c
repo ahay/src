@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         u3[ix][0]=v1[0];  // imag iz =0
 
 		sf_rfft1(h, v1, u1[ix]);
-		sf_rifft1(h,  u1[ix],v1);
+//		sf_rifft1(h,  u1[ix],v1);
 	}
 	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
 
@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 		for(ix=0;ix<nx;ix++)
 		{
 			sf_rifft1(h, u1[ix], v1);
-			for(it=0;it<njt;it++)	u2[ix][it]=v1[it*jt]/nt2;
-			u3[ix][iz]=v1[0]/nt2;
+			for(it=0;it<njt;it++)	u2[ix][it]=v1[it*jt];
+			u3[ix][iz]=v1[0];
 		}
 		sf_floatwrite(u2[0],njt*nx,wave); 
 

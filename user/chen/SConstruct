@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psefd mdfd4 resample
+fdip comp psss psefd mdfd4 resample
 '''
 
 
