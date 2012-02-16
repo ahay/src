@@ -1,53 +1,30 @@
-import os, sys, re, string
-sys.path.append('../../framework')
-import bldutil
+import os, sys
 
-progs = '''
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = '../..' # cwd is RSFSRC/build/user/jeff
+    Import('env bindir pkgdir')
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = pkgdir = None
+    
+targets = bldutil.UserSconsTargets()
+
+# C mains
+targets.c = '''
+modelcreate
+ewefd2d_omp
+ewefd3d_omp
+'''
+
+# F90 mains
+targets.f90 = '''
 rwe2d
 '''
 
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-except: # local version
-    root = None
-    env = bldutil.Debug()
-    SConscript('../../api/f90/SConstruct')
-
-F90 = env.get('F90')
-api = env.get('API',[])
- 
-env.Prepend(F90PATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=['rsff90',env.get('DYNLIB','')+'rsf'])
-
-mains = Split(progs)
-
-if 'f90' in api and F90:
-
-    F90base =  os.path.basename(F90)
-
-    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
-        env.Append(F90FLAGS=' -J${SOURCE.dir}')
-    elif F90base == 'ifort':
-        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
-
-    for prog in mains:
-        sources = ['M' + prog]
-        bldutil.depends90(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.f90',sources),
-                           LINK=F90)
-        if root:
-            env.Install(bindir,prog)
-
-######################################################################
-# SELF-DOCUMENTATION
-######################################################################
-if root:
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    
-    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains)
-    env.Depends(docs,'#/framework/rsf/doc.py')
-    doc = env.RSF_Docmerge(main,docs)
-    env.Install(pkgdir,doc)
+targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
