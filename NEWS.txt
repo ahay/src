@@ -53,6 +53,9 @@ To programs:
 * user/chen: new contributor (Zhonghuan Chen)
 * sffoldplot: build a seismic fold map
 * tkvpconvert: GUI for vpconvert
+* user/rweiss: new contributor (Robin Weiss)
+* sfewefd2d_gpu: 2d FDTD wave equation with GPU
+* sfewefd3d_gpu: 3d FDTD wave equation with GPU
 
 ===Bug fixes===
 
