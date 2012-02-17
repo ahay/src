@@ -163,8 +163,8 @@ Flow('rcmps mask','lines',
      ''')
 Result('rcmps',
        '''
-       byte gainpanel=each | window j3=2 |
-       grey3 frame1=500 frame2=35 frame3=322 flat=n
+       byte gainpanel=each | window j3=3 |
+       grey3 frame1=500 frame2=35 frame3=214 flat=n
        point1=0.8 point2=0.4 title="CMPs"
        ''')
 

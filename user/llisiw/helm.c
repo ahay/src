@@ -23,7 +23,7 @@
 
 void helm_setup(float *s /* slowness */,
 		float w /* frequency */)
-/* Helmholtz setup */
+/*< Helmholtz setup >*/
 {
     /* call function to setup preconditioner */
     /* NOTE: preconditioner needs to be outputed and stored? */
@@ -31,7 +31,7 @@ void helm_setup(float *s /* slowness */,
 
 void helm_solve(sf_complex *f  /* source term */,
 		sf_complex *p  /* wavefield */)
-/* Helmholtz solver */
+/*< Helmholtz solver >*/
 {
     /* call function to solve Helmholtz */
     /* NOTE: can it handle multiple sources at one time? */

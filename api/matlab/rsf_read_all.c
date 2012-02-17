@@ -33,12 +33,12 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc=2, dim, n[SF_MAX_DIM], i, esize, len;
+    int strlen, status, argc=2, dim, n[SF_MAX_DIM], i, esize; /* len; */
     size_t nbuf = BUFSIZ, nd, j;
-    char *strtag, *argv[] = {"matlab","-"}, *par;
+    char *strtag, *argv[] = {"matlab","-"}; /* *par; */
     double *pr, *pi=NULL;
     char buf[BUFSIZ];
-    static off_t shift=0;
+/*    static off_t shift=0; */
     sf_datatype type;
     sf_file file;
     char key[8];

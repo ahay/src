@@ -139,7 +139,7 @@ fcb = {
     }
 
 # Plot white noise 
-Result('wgauss','grey color=j parallel2=n bias=%g title="White noise"' % (fcb['bcg']))
+Result('wgauss','window j2=4 | grey color=j parallel2=n bias=%g title="White noise"' % (fcb['bcg']))
 
 # Fourier transform of white noise
 Flow('fwgauss','wgauss',fft2)
@@ -177,6 +177,7 @@ Result('fcgaussbp',
 # Plot correlated spatial random medium
 Result('cgaussb',
        '''
+       window j2=4 |
        grey color=b bias=%g 
        parallel2=n n2tic=8 o2num=200 d2num=100
        title="\F5 b\_x\^\F2 \k70 =\k70 2500\k10 m\g \G \F5 b\_z\^\F2 \k60 =\k60 10\k10 m\g \G \F5 H\F2 \k60 =\k60 \F15 8\F2 0.5" font=2

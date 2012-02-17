@@ -137,9 +137,9 @@ Flow('noise','diffs','math output="0.0" | noise mean=0 range=%g seed=314'%(noise
 Flow('noisy_diffs','diffs','noise mean=0 range=%g seed=314'%(noise))
 Plot('noisy_diffs',
        '''
-       window max1=2.9 max2=14.9 |
+       window max1=2.9 max2=14.9 j2=2 j3=2 |
        byte gainpanel=all pclip=99 |
-       grey3 frame1=200 frame2=250 frame3=250
+       grey3 frame1=200 frame2=125 frame3=125
        title="b) Noisy Fault Diffractions" 
        label2="x\_1\^" label3="x\_2\^"
        color=e flat=n 
