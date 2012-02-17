@@ -28,6 +28,7 @@
 #include <string.h>
 #include <mex.h>
 #include <rsf.h>
+#include <sys/stat.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
@@ -42,6 +43,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_file file;
     char key[8];
     int nn[SF_MAX_DIM];
+    struct stat fstat;
 
     /* Check for proper number of arguments. */
     if (nlhs==0 && nrhs==0) {
@@ -77,13 +79,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
     sf_init(argc,argv);
+    if (stat(strtag, &fstat))
+       {printf("FATAL ERROR: file %s does not exist\n",strtag); sf_close(); return;}
     file = sf_input(strtag);
     type = sf_gettype (file);
     esize = sf_esize(file);
     dim = sf_filedims(file,n);
     for (i=0; i < dim; i++) {
 	sprintf(key,"n%d",i+1);
-     	sf_histint(file,key,&nn[i]);
+     	if (!sf_histint(file,key,&nn[i]))
+	   {printf("FATAL ERROR: missing %s in file %s\n",key,strtag); sf_close(); return;}
     }
 
     /* Crete data array and pointers */
