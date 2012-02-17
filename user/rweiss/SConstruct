@@ -21,12 +21,9 @@ MPI_INC = '/usr/lib/openmpi/include'		# MPI include directory	(contains mpi.h)
 mpi_err = 0
 
 if not os.path.exists(MPI_LIB + "/libmpi.so"):
-	#sys.stderr.write("\n####################################\nWHILE BUILDING user/rweiss DIRECTORY\n####################################\nUnable to locate libmpi.so (mpi lib directory).\nSet MPI_LIB variable in SContruct file from user/rweiss to correct.\n\n")
 	mpi_err += 1
 
-
 if not os.path.exists(MPI_INC + "/mpi.h"):
-	#sys.stderr.write("\n####################################\nWHILE BUILDING user/rweiss DIRECTORY\n####################################\nUnable to locate mpi.h (mpi include directory).\nSet MPI_INC variable in SContruct file from user/rweiss to correct.\n\n")
 	mpi_err += 1
 
 
@@ -64,7 +61,7 @@ for prog in cuda_mains:
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
-                             Please check if CUDA and MPI are not missing and is installed correctly.
+                             Please ensure CUDA is installed correctly.
                              Rerun Madagascar installation after it has been fixed.
                              ''')
     if root:
@@ -82,7 +79,8 @@ for prog in cuda_mpi_mains:
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
-                             Please check if CUDA and MPI are not missing and is installed correctly.
+                             Please ensure CUDA and MPI are installed correctly.
+                             Install script was unable to locate your mpi lib and/or include directory
                              Rerun Madagascar installation after it has been fixed.
                              ''')
     if root:
