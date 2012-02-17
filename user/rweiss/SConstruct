@@ -12,15 +12,37 @@ except: # local version
 	SConscript('../../api/c/SConstruct')
 
 
-progs = '''
+
+# MPI_LIB and MPI_INC must be defined for your specific system
+MPI_LIB = '/usr/lib/openmpi/lib'		# MPI lib directory (contains libmpi.so)
+MPI_INC = '/usr/lib/openmpi/include'		# MPI include directory	(contains mpi.h)
+
+
+mpi_err = 0
+
+if not os.path.exists(MPI_LIB + "/libmpi.so"):
+	sys.stderr.write("\n####################################\nWHILE BUILDING user/rweiss DIRECTORY\n####################################\nUnable to locate libmpi.so (mpi lib directory).\nSet MPI_LIB variable in SContruct file from user/rweiss to correct.\n\n")
+	mpi_err += 1
+
+
+if not os.path.exists(MPI_INC + "/mpi.h"):
+	sys.stderr.write("\n####################################\nWHILE BUILDING user/rweiss DIRECTORY\n####################################\nUnable to locate mpi.h (mpi include directory).\nSet MPI_INC variable in SContruct file from user/rweiss to correct.\n\n")
+	mpi_err += 1
+
+
+cuda_progs = '''
 ewefd2d_gpu
 ewefd3d_gpu_p2p
+'''
+
+cuda_mpi_progs = '''
 ewefd3d_gpu_mpi
 '''
 
+
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
-mpicc = env.get('MPICC')
+
 
 env.Append(LIBS=[env.get('DYNLIB','')+'rsf'],
            CPPPATH=['../../include'],
@@ -31,18 +53,36 @@ if CTP:
                LIBPATH=[os.path.join(CTP,'lib64'),os.path.join(CTP,'lib')])
 
 
-mains = Split(progs)
-for prog in mains:
-    if CTP and NVCC and mpicc:
+cuda_mains = Split(cuda_progs)
+for prog in cuda_mains:
+    if CTP and NVCC:
         cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         prog = env.Program(cfile,
                            CC=NVCC,
-                           LINKFLAGS='-lmpi',
+                           LINKFLAGS=' ',
                            CFLAGS='-prec-div=true -arch=sm_21 --x=cu')
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
-                             Please check if CUDA and MPI is not missing and is installed correctly.
+                             Please check if CUDA and MPI are not missing and is installed correctly.
+                             Rerun Madagascar installation after it has been fixed.
+                             ''')
+    if root:
+        env.Install(bindir,prog)
+
+
+cuda_mpi_mains = Split(cuda_mpi_progs)
+for prog in cuda_mpi_mains:
+    if CTP and NVCC and (mpi_err == 0):
+        cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+        prog = env.Program(cfile,
+                           CC=NVCC,
+                           LINKFLAGS='-L'+MPI_LIB+' -lmpi',
+                           CFLAGS='-I'+MPI_INC+' -prec-div=true -arch=sm_21 --x=cu')
+    else:
+        prog = env.RSF_Place('sf'+prog,None,
+                             message='''
+                             Please check if CUDA and MPI are not missing and is installed correctly.
                              Rerun Madagascar installation after it has been fixed.
                              ''')
     if root:
@@ -56,7 +96,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     
     doc = env.RSF_Docmerge(main,docs)
