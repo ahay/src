@@ -12,24 +12,15 @@ except: # local version
 	SConscript('../../api/c/SConstruct')
 
 
-
-# these must be defined for your specific system
-MPI_LIB = '/usr/lib/openmpi/lib'		# MPI lib directory
-MPI_INC = '/usr/lib/openmpi/include'		# MPI include directory
-
-
-
 progs = '''
 ewefd2d_gpu
 ewefd3d_gpu_p2p
 ewefd3d_gpu_mpi
 '''
 
-
-
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
-mpicc = WhereIs('mpicc')
+mpicc = env.get('MPICC')
 
 env.Append(LIBS=[env.get('DYNLIB','')+'rsf'],
            CPPPATH=['../../include'],
@@ -42,16 +33,16 @@ if CTP:
 
 mains = Split(progs)
 for prog in mains:
-    if CTP and NVCC:
+    if CTP and NVCC and mpicc:
         cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         prog = env.Program(cfile,
                            CC=NVCC,
-                           LINKFLAGS='-L'+MPI_LIB+' -lmpi',
-                           CFLAGS='-I'+MPI_INC+' -prec-div=true -arch=sm_21 --x=cu')
+                           LINKFLAGS='-lmpi',
+                           CFLAGS='-prec-div=true -arch=sm_21 --x=cu')
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
-                             Please check if CUDA is not missing and is installed correctly.
+                             Please check if CUDA and MPI is not missing and is installed correctly.
                              Rerun Madagascar installation after it has been fixed.
                              ''')
     if root:
