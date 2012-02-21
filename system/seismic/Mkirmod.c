@@ -399,7 +399,9 @@ int main(int argc, char* argv[])
 		/* convolve with Ricker wavelet */
 		sf_freqfilt_lop(true,false,nt,nt,trace,trace2);
 	    
-		aastretch_lop (true,false,nxc,nt,ampl[0],trace);
+		aastretch_lop (true,false,nxc,nt,ampl[0],trace); 
+
+                /* aastretch_lop (true,false,nxc,nt,ampl[0],trace2); */
 	    }
 
 	    for (ic=0; ic < nc; ic++) {
@@ -454,7 +456,9 @@ int main(int argc, char* argv[])
 		/* convolve with Ricker wavelet */
 		sf_freqfilt_lop(false,false,nt,nt,trace,trace2);
 	    
-		sf_floatwrite(trace2,nt,modl);
+		sf_floatwrite(trace2,nt,modl); 
+
+                /* sf_floatwrite(trace,nt,modl); */
 	    }
 	}
     }

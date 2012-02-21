@@ -26,6 +26,7 @@
 /*^*/
 
 #include "alloc.h"
+#include "komplex.h"
 #include "error.h"
 #include "adjnull.h"
 #include "kiss_fftr.h"
@@ -124,7 +125,11 @@ void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 
     kiss_fftr(forw, tmp, cdata);
     for (iw=0; iw < nw; iw++) {
-	C_MUL(c,cdata[iw],shape[iw]);
+        if (adj) {
+	    C_MUL(c,cdata[iw],sf_conjf(shape[iw]));
+        } else {
+            C_MUL(c,cdata[iw],shape[iw]);
+        }
 	cdata[iw]=c;
     }
     kiss_fftri(invs, cdata, tmp);
