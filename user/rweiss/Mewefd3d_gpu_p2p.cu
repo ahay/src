@@ -790,12 +790,12 @@ int main(int argc, char* argv[]) {
 			}
 			
 			// low halo region of d_t arrays on GPU (ngpu-1) to GPU (ngpu-2)
-			cudaMemcpy(d_tzz[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_tzz[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
-			cudaMemcpy(d_tyy[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_tyy[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
-			cudaMemcpy(d_txx[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_txx[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
-			cudaMemcpy(d_txy[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_txy[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
-			cudaMemcpy(d_tyz[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_tyz[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
-			cudaMemcpy(d_tzx[ngpu-2] + (fdm->nxpad * fdm->nzpad * nyinterior), d_tzx[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_tzz[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_tzz[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_tyy[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_tyy[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_txx[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_txx[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_txy[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_txy[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_tyz[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_tyz[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
+			cudaMemcpy(d_tzx[ngpu-2] + (fdm->nxpad * fdm->nzpad * (nylocal[ngpu-2] - 4)), d_tzx[ngpu-1] + (4 * fdm->nxpad * fdm->nzpad), 4 * fdm->nxpad * fdm->nzpad * sizeof(float), cudaMemcpyDefault);
 			
 		}
 		
