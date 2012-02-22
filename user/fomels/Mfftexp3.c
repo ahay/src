@@ -209,20 +209,22 @@ int main(int argc, char* argv[])
 	    ifft3(wave[im],cwavem);
 	}
 
-	for (ix = 0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		i = ix+nx*(iy+iz*ny);   /* original grid */
-		j = ix+nx2*(iy+iz*ny2); /* padded grid */
-		
-		old = c = curr[j];
-		c += c - prev[i];
-		prev[i] = old;
+	for (iy=0; iy < ny; iy++) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = ix+nx*(iy+iz*ny);   /* original grid */
+		    j = ix+nx2*(iy+iz*ny2); /* padded grid */
+		    
+		    old = c = curr[j];
+		    c += c - prev[i];
+		    prev[i] = old;
 
-		for (im = 0; im < m2; im++) {
-		    c += lft[im][i]*wave[im][j];
+		    for (im = 0; im < m2; im++) {
+			c += lft[im][i]*wave[im][j];
+		    }
+		    
+		    curr[j] = c;
 		}
-
-		curr[j] = c;
 	    }
 	}
 	
