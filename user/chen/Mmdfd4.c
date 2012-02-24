@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(wave, "d1", dz);
 	sf_putfloat(wave, "d2", dx);
 	sf_putfloat(wave, "d3", dt*jt);
+	sf_putfloat(wave, "o3", 0.0);
 
 	sf_putint(div, "n1", nz);
 	sf_putint(div, "n2", nx);

@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     sf_putfloat(wave,"o3",0);
 
 	nt2 = nt;
-	h = sf_rfft1_init(&nt2, &nw);
+	h = sf_rfft1_init(&nt2, &nw, 1);
     v1 = sf_floatalloc(nt);	
 
     /* read data and velocity */

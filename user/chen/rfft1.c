@@ -13,7 +13,7 @@ typedef struct tag_rfft1
 	float 		*outbuf;
 }rfft1;
 
-void *sf_rfft1_init(int *nt, int *nk)
+void *sf_rfft1_init(int *nt, int *nk, int pad)
 /*< initialize: return a handle to avoid public data >*/
 {
 	rfft1 *p;
@@ -24,8 +24,9 @@ void *sf_rfft1_init(int *nt, int *nk)
 
 	n1 = kiss_fft_next_fast_size( (*nt+1)/2 );
 	p->nt = *nt;
-	p->nfft = n1*2;
-	p->nk = n1+1;
+	if(pad) p->nfft = n1*4;
+	else	p->nfft = n1*2;
+	p->nk = p->nfft/2+1;
 
 	p->inbuf = sf_floatalloc(p->nk*4);
 	if(p->inbuf==NULL) {free(p);  return NULL;}
