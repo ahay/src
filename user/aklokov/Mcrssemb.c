@@ -45,6 +45,10 @@ float* ptrToDags_;          // pointer to the dip-angle gathers data
 float* ptrToDagsSq_;        //  --"--  --"--  square gathers data 
 float* ptrToSembPanel_;     //  --"--  --"--  result - crs-based semblance
 
+float* ptrToData_;          // pointer to the dip-angle gathers data
+float* ptrToDataSq_;        //  --"--  --"--  square gathers data 
+
+
 // dip-angle gathers dimensions:
 int zNum_;                 
 float zStart_;
@@ -64,6 +68,7 @@ int coher_;                 // height (in samples) of a vertical window for semb
 int halfCoher_;             // half of the "coher"
 int xapp_;                  // number of CIGs in the inline-direction processed simultaneously
 int halfXapp_;              // half of the "xapp"
+int xdipapp_;               // number of traces in the x-dip direction processed simultaneously
 
 // FUNCTIONS
 
@@ -97,19 +102,53 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
     checkBoundary (&startX, curXapp);
 	*leftShift = xPos - startX;
 	const int pointsNumToRead = dagSize_ * (*curXapp);
+
 	ptrToDags_   = sf_floatalloc (pointsNumToRead);
 	ptrToDagsSq_ = sf_floatalloc (pointsNumToRead);
 	memset (ptrToDags_,   0, pointsNumToRead * sizeof (float));
 	memset (ptrToDagsSq_, 0, pointsNumToRead * sizeof (float));
+
+	ptrToData_   = sf_floatalloc (pointsNumToRead);
+	ptrToDataSq_ = sf_floatalloc (pointsNumToRead);
+	memset (ptrToData_,   0, pointsNumToRead * sizeof (float));
+	memset (ptrToDataSq_, 0, pointsNumToRead * sizeof (float));			
 
 	const int startPos = startX * dagSize_ * sizeof (float);
 
 	sf_seek (inDags_,   startPos, SEEK_SET);
 	sf_seek (inDagsSq_, startPos, SEEK_SET);
 
-	sf_floatread (ptrToDags_,   pointsNumToRead, inDags_);
-	sf_floatread (ptrToDagsSq_, pointsNumToRead, inDagsSq_);
-	
+	sf_floatread (ptrToData_,   pointsNumToRead, inDags_);
+	sf_floatread (ptrToDataSq_, pointsNumToRead, inDagsSq_);
+
+	// substacking in the x-dip direction
+		
+	for (int ix = 0; ix < *curXapp; ++ix) {
+		for (int id = 0; id < dipNum_; ++id) {
+			
+			const int tracesShift = ix * dipNum_ + id;
+			float* ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
+			float* ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
+
+			for (int ida = 0; ida < xdipapp_; ++ida) {		
+				int ind = id - xdipapp_ / 2 + ida;
+				if (ind < 0 || ind >= dipNum_) continue;		
+				
+				const int dataShift = ix * dipNum_ + ind;
+				float* ptrFrom   = ptrToData_   + dataShift * zNum_;
+				float* ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
+
+				float* ptrTo     = ptrToTrace;
+				float* ptrSqTo   = ptrToTraceSq;
+
+				for (int iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
+					*ptrTo += *ptrFrom;
+					*ptrSqTo += *ptrSqFrom;
+				}
+			}
+		}
+	}
+
 	return;
 }
 
@@ -220,6 +259,7 @@ int main (int argc, char* argv[]) {
 // Input files
     inDags_   = sf_input("in");
     inDagsSq_ = sf_input("dataSq");
+
 // check that the input is float 
     if ( SF_FLOAT != sf_gettype (inDags_) )   sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
@@ -245,6 +285,10 @@ int main (int argc, char* argv[]) {
     if ( !sf_getint ("xapp",    &xapp_) )    xapp_ = 1;
     /* number of CIGs in the inline-direction processed simultaneously */
 	if (!xapp_) {sf_warning ("xapp value is changed to 1"); xapp_ = 1;}
+
+    if ( !sf_getint ("dipapp",    &xdipapp_) ) xdipapp_ = 1;
+    /* number of traces in the x-dip direction processed simultaneously */
+	if (!xdipapp_) {sf_warning ("dipapp value is changed to 1"); xdipapp_ = 1;}
 
     if ( !sf_getint ("coher",   &coher_) )   coher_ = 11;
 	/* height of a vertical window for semblance calculation */
@@ -276,6 +320,9 @@ int main (int argc, char* argv[]) {
 
 		free (ptrToDags_);
 		free (ptrToDagsSq_);
+
+		free (ptrToData_);
+		free (ptrToDataSq_);
 
 		sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
 		free (ptrToSembPanel_);
