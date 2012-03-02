@@ -161,6 +161,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
 
 # run migration
 def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
+    par['j2'] = par.get('j2',1)
     for i in (['SSF','FFD','PSC',
                'F15','F45','F60']):
         sfx = '-' + i
@@ -190,7 +191,7 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
 
         Plot  (migRC+sfx,'window | transp |'
                + rgrey('pclip=99.9',par))
-        Result(par['prefix']+migRC+sfx,migRC+sfx,'window | transp |' % par
+        Result(par['prefix']+migRC+sfx,migRC+sfx,'window j2=%(j2)d | transp |' % par
                + rgrey('pclip=99.9',par))
         
         Plot(migCC+sfx,'window j1=2 j2=2 | transp |'

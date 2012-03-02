@@ -9,7 +9,7 @@ par = {
     'kt':100,    # wavelet delay 
     'nT':1600, 'dT':0.004,  'oT':0,
     'ow':1, 'nw': 795,
-    'nbz':250,'nbx':250
+    'nbz':250,'nbx':250, 'j2': 5
     }
 
 par['ox']*=0.3048
@@ -236,7 +236,7 @@ for i in ('1','2'):
     
     # slowness
     rwezo.slow(  'sloCC','sloRC'+i,'velo','cos'+i,par)
-    Result('sloRC'+i,'transp |'
+    Result('sloRC'+i,'window j2=5 | transp |'
            + rwezo.rgrey('pclip=99 allpos=y color=j bias=0.061',par))
 
     # surface and salt
