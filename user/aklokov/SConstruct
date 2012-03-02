@@ -1,20 +1,33 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-crssemb
+crssemb diptaper
 '''
+
+mpi_progs = ''
+
+
+ccprogs = 'tmigda'
+
+subs = '''
+support sembler
+tmigratorBase tmigrator2D tmigrator3D 
+curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
+'''
+
 
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../../api/c/SConstruct')
-
-src = Glob('[a-z]*.c')
+    src = glob.glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -33,6 +46,33 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+inc = Glob('[a-z]*.h*')
+
+if lapack:
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++','subs']+lapack)
+
+    ccfiles = map(lambda x: x+'.cc', Split(subs))
+
+    lib = env.StaticLibrary('subs',ccfiles,CCFLAGS='')
+#    lib = env.StaticLibrary('subs',ccfiles,CCFLAGS='-fopenmp')
+    env.Install('../../lib',lib)
+    env.Install('../../include',inc)
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program (prog, map (lambda x: x + '.cc', sources),CCFLAGS='')
+#        prog = env.Program (prog, map (lambda x: x + '.cc', sources),CCFLAGS='-fopenmp')
+    else:
+        prog = env.RSF_Place ('sf' + prog, None, var='LAPACK', package='lapack')
+    if root:
+        env.Install(bindir,prog)
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -40,7 +80,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog),ccmains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
