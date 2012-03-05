@@ -257,13 +257,13 @@ int main (int argc, char* argv[]) {
 	// velocity model
 	// time - in ms
 	corUnit = "ms"; unit = sf_histstring (velFile, "unit1");
-	if ( strcmp (corUnit, unit) ) { dp.zStep *= 1000; dp.zStart *= 1000; }
+	if ( strcmp (corUnit, unit) ) { vp.zStep *= 1000; vp.zStart *= 1000; }
 	// inline - in m
 	corUnit = "m"; unit = sf_histstring (velFile, "unit2");
-	if ( strcmp (corUnit, unit) ) { dp.xStep *= 1000; dp.xStart *= 1000; }
+	if ( strcmp (corUnit, unit) ) { vp.xStep *= 1000; vp.xStart *= 1000; }
 	// crossline - in m
 	corUnit = "m"; unit = sf_histstring (velFile, "unit3");
-	if ( strcmp (corUnit, unit) ) { dp.yStep *= 1000; dp.yStart *= 1000; }
+	if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
 	
 	// VELOCITY MODEL PARAMS
