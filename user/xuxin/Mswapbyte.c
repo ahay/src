@@ -48,14 +48,14 @@ void swap8(unsigned long *p)
 	*p = ((*p >> 32) & 0x00000000ffffffff) | ((*p << 32) & 0xffffffff00000000);
 }
 
-void swap_int_4(int *p)
+void swap4_int(int *p)
 {
 	unsigned int n = *(unsigned int *)p;
 	swap4(&n);
 	*p = *(int *)&n;
 }
 
-void swap_float_4(float *p)
+void swap4_float(float *p)
 {
 	unsigned int n = *(unsigned int *)p;
 	swap4(&n);
@@ -74,45 +74,66 @@ void count()
 
 int main(int argc, char *argv[])
 {
+    int i,n,n1;
+	off_t s,s1;
 	void *p;
 	bool verb;
-	off_t filesize;
 	sf_file Fin,Fout;
+    sf_datatype type;
 
 	sf_init(argc,argv);
 
 	Fin = sf_input("in");
 	Fout= sf_output("out");
 
-	if(!sf_getbool("verb",&verb)) verb = false; /* verbosity */
+    n1 = sf_filesize(Fin);
 
-	sf_seek(Fin,0,SEEK_END);
-	filesize = sf_tell(Fin);
+    if (!sf_getlargeint("n",(off_t *)&n)) n = n1;
+    /* num of elements to convert */
+	if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity */
+
+    if (n < n1) {
+        sf_putlargeint(Fout,"n1",(off_t)n);
+
+        if (sf_leftsize(Fin,1) > 1) {
+		sf_warning("squeez");
+			if (sf_histint(Fin,"n2",&i)) sf_putint(Fout,"n2",1);
+			if (sf_histint(Fin,"n3",&i)) sf_putint(Fout,"n3",1);
+			if (sf_histint(Fin,"n4",&i)) sf_putint(Fout,"n4",1);
+		}
+    }
+
+    switch (type = sf_gettype(Fin)) {
+    case SF_INT   : size = sizeof(int  ); break;
+    case SF_FLOAT : size = sizeof(float); break;
+    default : sf_error("need type={int,float} in input");
+    }
+
+    s = n * size;
+    s1= n1* size;
+    p = (void *)sf_alloc(1,size);
+
 	sf_seek(Fin,0,SEEK_SET);
 
-	switch (sf_gettype(Fin)) {
-	case SF_INT :
-		p = (void *)sf_alloc(1,size = sizeof(int));
-		while(sf_tell(Fin) < filesize) {
+    while(sf_tell(Fin) < s) {
+        switch (sf_gettype(Fin)) {
+        case SF_INT :
 			sf_intread(p,1,Fin);
-			swap_int_4((int *)p);
+			swap4_int((int *)p);
 			sf_intwrite(p,1,Fout);
-			if (verb) count();
-		}
-		break;
-	case SF_FLOAT :
-		p = (void *)sf_alloc(1,size = sizeof(float));
-		while(sf_tell(Fin) < filesize) {
+            break;
+        case SF_FLOAT :
 			sf_floatread(p,1,Fin);
-			swap_float_4((float *)p);
+			swap4_float((float *)p);
 			sf_floatwrite(p,1,Fout);
-			if (verb) count();
+            break;
+        default  :
+            sf_error("need type={int,float} in input");
 		}
-		break;
-	default  :
-		sf_error("need type={int,float} in input");
+        if (verb) count();
 	}
-	if (verb) sf_warning("\n");
+	if (verb) sf_warning("%\nd of %d elements converted\n",sf_tell(Fin) / size,n1);
 
 	sf_fileclose(Fin);
 	sf_fileclose(Fout);
