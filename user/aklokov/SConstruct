@@ -38,7 +38,7 @@ else:
     lapack = None
 
 if lapack:
-    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++','subs']+lapack)
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++']+lapack)
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
