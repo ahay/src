@@ -254,17 +254,6 @@ int main (int argc, char* argv[]) {
 	// offset - in m
 	corUnit = "m"; unit = sf_histstring (dataFile, "unit4");
 	if ( strcmp (corUnit, unit) ) { dp.hStep *= 1000; dp.hStart *= 1000; }
-	// velocity model
-	// time - in ms
-	corUnit = "ms"; unit = sf_histstring (velFile, "unit1");
-	if ( strcmp (corUnit, unit) ) { vp.zStep *= 1000; vp.zStart *= 1000; }
-	// inline - in m
-	corUnit = "m"; unit = sf_histstring (velFile, "unit2");
-	if ( strcmp (corUnit, unit) ) { vp.xStep *= 1000; vp.xStart *= 1000; }
-	// crossline - in m
-	corUnit = "m"; unit = sf_histstring (velFile, "unit3");
-	if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
-
 	
 	// VELOCITY MODEL PARAMS
 
@@ -279,6 +268,16 @@ int main (int argc, char* argv[]) {
     if ( !sf_histint   (velFile, "n3", &vp.yNum) )   sf_error ("Need n3= in velocity file");
     if ( !sf_histfloat (velFile, "d3", &vp.yStep) )  sf_error ("Need d3= in velocity file");
     if ( !sf_histfloat (velFile, "o3", &vp.yStart) ) sf_error ("Need o3= in velocity file");
+
+	// time - in ms
+	corUnit = "ms"; unit = sf_histstring (velFile, "unit1");
+	if ( strcmp (corUnit, unit) ) { vp.zStep *= 1000; vp.zStart *= 1000; }
+	// inline - in m
+	corUnit = "m"; unit = sf_histstring (velFile, "unit2");
+	if ( strcmp (corUnit, unit) ) { vp.xStep *= 1000; vp.xStart *= 1000; }
+	// crossline - in m
+	corUnit = "m"; unit = sf_histstring (velFile, "unit3");
+	if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
 	// IMAGE PARAMS
 	if (!sf_getint ("itn", &ip.zNum))        ip.zNum = dp.zNum;	
