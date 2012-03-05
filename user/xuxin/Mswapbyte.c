@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		}
         if (verb) count();
 	}
-	if (verb) sf_warning("%\nd of %d elements converted\n",sf_tell(Fin) / size,n1);
+	if (verb) sf_warning("\n%d of %d elements converted\n",sf_tell(Fin) / size,n1);
 
 	sf_fileclose(Fin);
 	sf_fileclose(Fout);
