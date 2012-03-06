@@ -1,4 +1,4 @@
-/* EFD phase shift wave extrapolation. */
+/* phase shift wave extrapolation. */
 
 #include <rsf.h>
 
@@ -8,10 +8,10 @@
 
 int main(int argc, char* argv[])
 {
-	int ix, iz, jt, njt;
+	int ix, iz, jz, njz;
 	float dt,dx,dz;
-	int nx,nz,nt,nz0,nw,nt1,nx1;
-	float ox, **ptx, **pim, **vel, *vv;  
+	int nx,nz,nt,nz0,nw,nt1,nx1,rz;
+	float ox, **ptx, **pim, *vel;  
 	sf_complex **pfk;
 	void *h;
 
@@ -19,9 +19,9 @@ int main(int argc, char* argv[])
 
 	sf_init(argc,argv);
 
-	modl = sf_input("in"); 		/* velocity model m(z,x) */
+	data = sf_input("in");  	/* seismic data, zero offset u(t,0,x) */
 	imag = sf_output ("out"); 	/* image data: u(0,z,x) */
-	data = sf_input("data");  	/* seismic data, zero offset u(t,0,x) */
+	modl = sf_input("vel"); 	/* velocity model m(z,x) */
 	wave = sf_output("wave"); 	/* wavefield: u(t,z,x) */
 
 	if (!sf_histint(modl,"n1",&nz0)) sf_error("n1");
@@ -33,16 +33,20 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(modl,"d1",&dz)) sf_error("d1");
 	if (!sf_histfloat(modl,"d2",&dx)) sf_error("d2");
 
-	if (!sf_getint("jt",&jt)) jt=40; 
+	if (!sf_getint("jz",&jz)) jz=40; 
 	/* depth step for wave data */
-	if (!sf_getint("nz",&nz)) nz=nz0; 
+	if (!sf_getint("rz",&rz)) rz=0; 
+	/* receiver depth */
+	if (!sf_getint("nz",&nz)) nz=nz0-rz; 
 	/* depth number */
 
 	sf_putint(imag,"n1",nz);
 	sf_putint(imag,"n2",nx);
+	sf_putfloat(imag,"o1",dz*rz);
+	sf_putfloat(imag,"d1",dz*jz);
 	sf_putfloat(imag,"o2",ox);
 
-	njt=1+(nz-1)/jt;
+	njz=1+(nz-1)/jz;
 
 	sf_putint(wave,"n1",nt);
 	sf_putfloat(wave,"d1",dt);
@@ -50,24 +54,17 @@ int main(int argc, char* argv[])
 	sf_putint(wave,"n2",nx);
 	sf_putfloat(wave,"d2",dx);
 	sf_putfloat(wave,"o2",ox);
-	sf_putint(wave,"n3",njt);
-	sf_putfloat(wave,"d3",dz*jt);
-	sf_putfloat(wave,"o3",0);
+	sf_putint(wave,"n3",njz);
+	sf_putfloat(wave,"d3",dz*jz);
+	sf_putfloat(wave,"o3",dz*rz);
 
 	nt1 = nt;
 	nx1 = nx;
 	h = sf_rfft2_init(&nt1, &nx1, &nw, 1);
 
 	/* read data and velocity */
-	vel = sf_floatalloc2(nz,nx);
-	vv  = sf_floatalloc(nz);
-	sf_floatread(vel[0],nz*nx,modl);
-	for(iz=0; iz<nz; iz++)	
-	{
-		vv[iz] = 0.0;
-		for(ix=0; ix<nx; ix++)	vv[iz] += vel[ix][iz];
-		vv[iz] /= nx;
-	}
+	vel = sf_floatalloc(nz);
+	sf_floatread(vel,nz,modl);
 
 	ptx  = sf_floatalloc2(nt,nx);	// U_z(t,x)
 	pim  = sf_floatalloc2(nz,nx);		// u(x,z,0)
@@ -83,18 +80,18 @@ int main(int argc, char* argv[])
 	sf_floatwrite(ptx[0],nt*nx,wave); // wave slice iz=0
 
 	sf_psss_init(nw,nx1,nz,
-		1.0/(dt*nt1),dx,dz,vv);
+		1.0/(dt*nt1),dx,dz,vel);
 
 
 	for(iz=1;iz<nz;iz++)
 	{
-		sf_psss_step(iz, pfk);
+		sf_psss_step(iz-1+rz, pfk);
 
 		sf_rifft2(h, pfk, ptx);
 		for(ix=0;ix<nx;ix++)	
 			pim[ix][iz]=ptx[ix][0];  // imag iz =0
 
-		if(iz % jt == 0)
+		if((iz) % jz == 0)
 			sf_floatwrite(ptx[0],nt*nx,wave); 
 		sf_warning("%d;",iz);
 	}
@@ -104,6 +101,13 @@ int main(int argc, char* argv[])
 	sf_psss_release();
 	sf_rfft2_release(h);
 
+	free(vel);
+	free(ptx[0]);
+	free(pim[0]);
+	free(pfk[0]);
+	free(ptx);
+	free(pim);
+	free(pfk);
 	return 0;
 }
 
