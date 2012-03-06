@@ -154,7 +154,7 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
 	if (itMiddle < 0 || itMiddle >= zNum_) return 0.f;
 
 	const int xSamp = (geoX - xStart_) / xStep_;
-	if (xSamp < 0 || xSamp >= zNum_) return 0.f;
+	if (xSamp < 0 || xSamp >= xNum_) return 0.f;
 
 	float* const trace = ptrToData_ + xSamp * zNum_;
 
