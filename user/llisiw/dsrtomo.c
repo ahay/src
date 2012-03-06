@@ -22,7 +22,7 @@
 #include "upgraddsr.h"
 #include "dsrtomo.h"
 
-static int nt;
+static int nt, *m;
 static upgrad upg;
 static float *temp;
 
@@ -45,10 +45,13 @@ void dsrtomo_init(int dim  /* model dimension */,
 
 void dsrtomo_set(float *t /* stencil time */,
 		 float *w /* stencil slowness-squared */,
-		 int *f   /* stencil flag */)
+		 int *f   /* stencil flag */,
+		 int *m0  /* receiver mask */)
 /*< set operator >*/
 {
     upgrad_set(upg,t,w,f);
+
+    m = m0;
 }
 
 void dsrtomo_close(void)
@@ -60,19 +63,35 @@ void dsrtomo_close(void)
 void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
+    int i;
+
     sf_adjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
 	/* given dt solve dw */
-
+	
+	if (m != NULL) {
+	    for (i=0; i < nt; i++) {
+		if (m[i] != 1)
+		    r[i] = 0.;
+	    }
+	}
+	
 	upgrad_paste(r);
 	upgrad_inverse(upg,temp,r,NULL);
 	upgrad_spread(upg,x,temp);
     } else {
 	/* given dw solve dt */
-
+	
 	upgrad_collect(upg,x,temp);
 	upgrad_solve(upg,temp,r,NULL);
 	upgrad_copy(r);
+	
+	if (m != NULL) {
+	    for (i=0; i < nt; i++) {
+		if (m[i] != 1)
+		    r[i] = 0.;
+	    }
+	}
     }
 }

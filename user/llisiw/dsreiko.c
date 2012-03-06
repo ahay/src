@@ -26,7 +26,7 @@ struct Upd {
     int label;
 };
 
-static const double tol = 1.e-6;
+static double tau1, tau2;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
@@ -43,11 +43,13 @@ int update(float value, float* time, int i, int f);
 float qsolve(float* time, int i, int *f);
 bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd* xj[], double vr, double vs, int *f);
 double newton(double a,double b,double c,double d,double e, double guess);
-double ferrari(double a,double b,double c,double d,double e);
+double ferrari(double a,double b,double c,double d,double e, double t0);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
-		  float *d_in /* increment */)
+		  float *d_in /* increment */,
+		  float tau1_in,
+		  float tau2_in)
 /*< initialize >*/
 {
     int maxband;
@@ -69,6 +71,9 @@ void dsreiko_init(int *n_in   /* length */,
     in = sf_intalloc(n[0]*n[1]*n[2]);
 
     offsets = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
+
+    tau1 = tau1_in;
+    tau2 = tau2_in;
 }
 
 void dsreiko_fastmarch(float *time /* time */,
@@ -404,8 +409,8 @@ float qsolve(float* time, int i, int *f)
 bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], double vr, double vs, int *f)
 /* calculate new traveltime */
 {
-    double a, b, c, d, e, t, discr;
-    int j;    
+    double a, b, c, d, e, tt, temp[4], discr;
+    int j, cc, count;    
 
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
@@ -414,39 +419,43 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
     /* one-sided */
     if (m == 1 && vv[0]->label == 0) {
-	t = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
+	tt = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
-	*res = t;
+	*res = tt;
 	*f = 1;
 	return true;
     }
     
     if (m == 1 && vv[0]->label == 1) {
-	t = sqrt(vr/xj[1]->delta)+xj[1]->value;
+	tt = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
-	*res = t;
+	*res = tt;
 	*f = 2;
 	return true;
     }
 
     if (m == 1 && vv[0]->label == 2) {
-	t = sqrt(vs/xj[2]->delta)+xj[2]->value;
+	tt = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
-	*res = t;
+	*res = tt;
 	*f = 3;
 	return true;
     }
 
     /* two-sided */
     if (m == 2 && vv[2]->label == 0) {
-	t = ((sqrt(vr/xj[1]->delta)+xj[1]->value)+(sqrt(vs/xj[2]->delta)+xj[2]->value))/2.;
+	tt = ((sqrt(vr/xj[1]->delta)+xj[1]->value)+(sqrt(vs/xj[2]->delta)+xj[2]->value))/2.;
 	
-	*res = t;
+	*res = tt;
 	*f = 4;
 	return true;
     }
 
     if (m == 2 && vv[2]->label == 1) {
+	/**/
+	count = 0;
+	/**/
+
 	a = xj[0]->delta+xj[2]->delta;
 	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta+sqrt(vr*xj[0]->delta);
 	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[2]->value,2.)*xj[2]->delta+2.*sqrt(vr*xj[0]->delta)*xj[0]->value+(vr-vs);
@@ -454,30 +463,92 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
 	discr=b*b-c/a;
 
+	/**/
+	if (discr >= 0.) {
+	    temp[count++] = b+sqrt(discr);
+	    temp[count++] = b-sqrt(discr);
+	}
+
+	a = xj[0]->delta+xj[2]->delta;
+	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta-sqrt(vr*xj[0]->delta);
+	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[2]->value,2.)*xj[2]->delta-2.*sqrt(vr*xj[0]->delta)*xj[0]->value+(vr-vs);
+	b /= a;
+
+	discr=b*b-c/a;
+
+	if (discr >= 0.) {
+	    temp[count++] = b+sqrt(discr);
+	    temp[count++] = b-sqrt(discr);
+	}
+
+	if (count == 0) tt = -1.;
+	if (count == 1) tt = temp[0];
+
+	tt = temp[0];
+	for (cc=1; cc < count; cc++) {
+	    if (temp[cc] < tt && temp[cc] > vv[m-1]->value+tau2) tt = temp[cc];
+	}
+
+	if (tt <= vv[m-1]->value) return false;
+	/**/
+	/*
 	if (discr < 0.) return false;
 
-	t = b + sqrt(discr);
-	if (t <= vv[m-1]->value) return false;
-
-	*res = t;
+	tt = b + sqrt(discr);
+	if (tt <= vv[m-1]->value) return false;
+	*/
+	*res = tt;
 	*f = 5;
 	return true;
     }
 
     if (m == 2 && vv[2]->label == 2) {
+	/**/
+	count = 0;
+	/**/
+
 	a = xj[0]->delta+xj[1]->delta;
 	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta+sqrt(vs*xj[0]->delta);
-	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[1]->delta+2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
+	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[2]->delta+2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
 	b /= a;
 
 	discr=b*b-c/a;
 
+	/**/
+	if (discr >= 0.) {
+	    temp[count++] = b+sqrt(discr);
+	    temp[count++] = b-sqrt(discr);
+	}
+
+	a = xj[0]->delta+xj[1]->delta;
+	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta-sqrt(vs*xj[0]->delta);
+	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[2]->delta-2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
+	b /= a;
+
+	discr=b*b-c/a;
+
+	if (discr >= 0.) {
+	    temp[count++] = b+sqrt(discr);
+	    temp[count++] = b-sqrt(discr);
+	}
+
+	if (count == 0) tt = -1.;
+	if (count == 1) tt = temp[0];
+
+	tt = temp[0];
+	for (cc=1; cc < count; cc++) {
+	    if (temp[cc] < tt && temp[cc] > vv[m-1]->value+tau2) tt = temp[cc];
+	}
+
+	if (tt <= vv[m-1]->value) return false;
+	/**/
+	/*
 	if (discr < 0.) return false;
 
-	t = b + sqrt(discr);
-	if (t <= vv[m-1]->value) return false;
-
-	*res = t;
+	tt = b + sqrt(discr);
+	if (tt <= vv[m-1]->value) return false;
+	*/
+	*res = tt;
 	*f = 6;
 	return true;
     }
@@ -514,13 +585,13 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 	 +2.*xj[1]->delta*xj[0]->delta*pow(xj[1]->value,2.)*pow(xj[0]->value,2.);
     
     /*
-    t = newton(a,b,c,d,e,vv[m-1]->value);
+    tt = newton(a,b,c,d,e,vv[m-1]->value);
     */
-    t = ferrari(a,b,c,d,e);
+    tt = ferrari(a,b,c,d,e,vv[m-1]->value);
 
-    if (t <= vv[m-1]->value) return false;
+    if (tt <= vv[m-1]->value) return false;
 
-    *res = t;
+    *res = tt;
     *f = 7;
     return true;
 }
@@ -535,12 +606,12 @@ double newton(double a,double b,double c,double d,double e /* coefficients */,
 
     /* evaluate functional */
     val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
-    while (fabs(val) > tol) {
+    while (fabs(val) > tau1) {
 
 	/* evaluate derivative */
 	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
 
-	if (fabs(der) <= tol) {
+	if (fabs(der) <= tau1) {
 	    sf_warning("FAILURE: Newton's method meets local minimum.");
 	    return -1.;
 	}
@@ -552,12 +623,14 @@ double newton(double a,double b,double c,double d,double e /* coefficients */,
     return root;
 }
 
-double ferrari(double a,double b,double c,double d,double e /* coefficients */)
+double ferrari(double a,double b,double c,double d,double e /* coefficients */,
+	       double t0 /* reference time */)
 /* quartic solve (Ferrari's method) */
 {
     double alpha, beta, gama, P, Q, y, W;
-    double delta, root, temp;
+    double delta, root[4], temp;
     double complex R, U;
+    int cc, count;
 
     alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
     beta  = 1./8.*pow(b,3.)/pow(a,3.)-1./2.*b*c/pow(a,2.)+d/a;
@@ -593,25 +666,65 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */)
 
     W = sqrt(alpha+2.*y);
 
-    root = -1.;
+    /* return the smallest but causal real root */
+    count = 0;
 
-    /* return the largest real root */
     delta = -3.*alpha-2.*y-2.*beta/W;    
     if (delta >= 0.) {
-	temp = -1./4.*b/a+1./2.*(W+sqrt(delta));
-	if (temp > root) root = temp;
-	
-	temp = -1./4.*b/a+1./2.*(W-sqrt(delta));
-	if (temp > root) root = temp;
+	root[count++] = -1./4.*b/a+1./2.*(W+sqrt(delta));
+	root[count++] = -1./4.*b/a+1./2.*(W-sqrt(delta));
     }
 
     delta = -3.*alpha-2.*y+2.*beta/W;    
     if (delta >= 0.) {
-	temp = -1./4.*b/a+1./2.*(-W+sqrt(delta));
-	if (temp > root) root = temp;
-	temp = -1./4.*b/a+1./2.*(-W-sqrt(delta));
-	if (temp > root) root = temp;
+	root[count++] = -1./4.*b/a+1./2.*(-W+sqrt(delta));
+	root[count++] = -1./4.*b/a+1./2.*(-W-sqrt(delta));
     }
 
-    return root;
+    if (count == 0) return -1.;
+
+    temp = root[0];
+    for (cc=1; cc < count; cc++) {
+	if (root[cc] < temp && root[cc] > t0+tau2) temp = root[cc];
+    }
+
+    if (temp > t0+tau1)
+	return temp;
+    else
+	return -1.;
+
+    /*
+    toy:  1.e-3
+    test: 5.e-4
+    Marmousi: 1.e-3
+    */
+
+    /*
+    return temp;
+    */
+
+    /* return the largest real root */
+    /*
+    root[0] = -1.;
+
+    delta = -3.*alpha-2.*y-2.*beta/W;
+    if (delta >= 0.) {
+	temp = -1./4.*b/a+1./2.*(W+sqrt(delta));
+	if (temp > root[0]) root[0] = temp;
+
+	temp = -1./4.*b/a+1./2.*(W-sqrt(delta));
+	if (temp > root[0]) root[0] = temp;
+    }
+
+    delta = -3.*alpha-2.*y+2.*beta/W;
+    if (delta >= 0.) {
+	temp = -1./4.*b/a+1./2.*(-W+sqrt(delta));
+	if (temp > root[0]) root[0] = temp;
+
+	temp = -1./4.*b/a+1./2.*(-W-sqrt(delta));
+	if (temp > root[0]) root[0] = temp;
+    }
+
+    return root[0];
+    */
 }

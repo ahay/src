@@ -24,14 +24,14 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, verb, adj;
-    int dim, i, n[SF_MAX_DIM], iw, nw, it, nt;
+    bool velocity, verb, adj, shape;
+    int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
     int iter, niter, cgiter, count;
-    int *f;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *t, *w, *t0, *w1;
-    float rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
-    char key[4], *what;
-    sf_file in, out, reco, grad, flag;
+    int *f, *m0;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
+    float eps, tol, tau1, tau2, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
+    char key[6], *what;
+    sf_file in, out, reco, grad, flag, mask;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -62,11 +62,17 @@ int main(int argc, char* argv[])
 	    else
 		flag = sf_input("flag");
 
+	    /* read receiver file */
+	    if (NULL == sf_getstring("mask"))
+		mask = NULL;
+	    else
+		mask = sf_input("mask");
+
 	    /* read dimension */
-	    dim = sf_filedims(reco,n);
+	    dimt = sf_filedims(reco,n);
 
 	    nt = 1;
-	    for (i=0; i < dim; i++) {
+	    for (i=0; i < dimt; i++) {
 		sprintf(key,"d%d",i+1);
 		if (!sf_histfloat(reco,key,d+i)) sf_error("No %s= in input.",key);
 		sprintf(key,"o%d",i+1);
@@ -87,12 +93,17 @@ int main(int argc, char* argv[])
 	    else
 		f = NULL;
 
+	    if (mask != NULL)
+		m0  = sf_intalloc(nt);
+	    else
+		m0 = NULL;
+
 	    /* read file */
 	    sf_floatread(w,nw,grad);
 	    sf_floatread(t,nt,reco);
 
-	    if (flag != NULL)
-		sf_intread(f,nt,flag);
+	    if (flag != NULL) sf_intread(f,nt,flag);
+	    if (mask != NULL) sf_intread(m0,nt,mask);
 
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
@@ -101,6 +112,8 @@ int main(int argc, char* argv[])
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
+
+		dv = sf_floatalloc(nw);
 	    }
 
 	    if (adj) {
@@ -116,30 +129,39 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    /* initialize operator */
-	    dsrtomo_init(dim,n,d);
+	    dsrtomo_init(dimt,n,d);
 
 	    /* set operator */
-	    dsrtomo_set(t,w,f);	    
+	    dsrtomo_set(t,w,f,m0);	    
 
-	    if (adj)
+	    if (adj) {
 		dsrtomo_oper(true,false,nw,nt,dw,dt);
-	    else
-		dsrtomo_oper(false,false,nw,nt,dw,dt);
+	    } else {
+		dsrtomo_oper(false,false,nw,nt,dw,dt);	    
+	    }
+	    
+	    if (adj) {
+		if (velocity) {
+		    for (iw=0; iw < nw; iw++)
+			dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
 
-	    if (adj)
-		sf_floatwrite(dw,nw,out);
-	    else
+		    sf_floatwrite(dv,nw,out);
+		} else {
+		    sf_floatwrite(dw,nw,out);
+		}
+	    } else {
 		sf_floatwrite(dt,nt,out);
+	    }
 
 	    break;
 	    
 	case 't': /* tomography */
 
 	    /* read dimension */
-	    dim = sf_filedims(in,n);
+	    dimw = sf_filedims(in,n);
 	    
 	    nw = 1;
-	    for (i=0; i < dim; i++) {
+	    for (i=0; i < dimw; i++) {
 		sprintf(key,"d%d",i+1);
 		if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
 		sprintf(key,"o%d",i+1);
@@ -147,9 +169,10 @@ int main(int argc, char* argv[])
 		nw *= n[i];
 	    }
 	    
-	    if (dim > 2) sf_error("Only works for 2D now.");
+	    if (dimw > 2) sf_error("Only works for 2D now.");
 	    
-	    dim = 3; n[2] = n[1]; d[2] = d[1]; o[2] = o[1]; nt = nw*n[2];
+	    n[2] = n[1]; d[2] = d[1]; o[2] = o[1]; 
+	    dimt = 3; nt = nw*n[2];
 	    
 	    /* read initial velocity */
 	    w = sf_floatalloc(nw);
@@ -158,10 +181,15 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
 	    
+	    if (!sf_getbool("shape",&shape)) shape=false;
+	    /* shaping regularization (default no) */
+
 	    /* convert to slowness squared */
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
+
+		dv = sf_floatalloc(nw);
 	    }
 	    
 	    /* read record file */
@@ -173,6 +201,18 @@ int main(int argc, char* argv[])
 	    sf_floatread(t0,nt,reco);
 	    sf_fileclose(reco);
 	    
+	    /* read receiver file */
+	    if (NULL == sf_getstring("mask")) {
+		mask = NULL;
+		m0 = NULL;
+	    } else {
+		mask = sf_input("mask");
+		
+		m0 = sf_intalloc(nt);
+		sf_intread(m0,nt,mask);
+		sf_fileclose(mask);
+	    }	    
+
 	    if (!sf_getbool("verb",&verb)) verb=false;
 	    /* verbosity flag */
 	    
@@ -182,6 +222,12 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("cgiter",&cgiter)) cgiter=25;
 	    /* number of conjugate-gradient iterations */
 	    
+	    if (!sf_getfloat("tau1",&tau1)) tau1=1.e-3;
+	    /* tau1 */
+
+	    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
+	    /* tau2 */
+
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("grad")) {
 		grad = sf_output("grad");
@@ -190,6 +236,30 @@ int main(int argc, char* argv[])
 		grad = NULL;
 	    }
 	    
+	    if (!sf_getfloat("eps",&eps)) eps=0.;
+	    /* regularization parameter */
+
+	    if (shape) {
+		if (!sf_getfloat("tol",&tol)) tol=1.e-6;
+		/* tolerance for shaping regularization */
+
+		for (i=0; i < dimw; i++) {
+		    sprintf(key,"rect%d",i+1);
+		    if (!sf_getint(key,rect+i)) rect[i]=1;
+		    /*( rect#=(1,1,...) smoothing radius on #-th axis )*/
+		}
+		
+		/* triangle smoothing operator */
+		sf_trianglen_init(dimw,rect,n);
+		sf_repeat_init(nw,1,sf_trianglen_lop);
+		
+		sf_conjgrad_init(nw,nw,nt,nt,eps,tol,verb,false);
+		p = sf_floatalloc(nw);
+	    } else {
+		/* initialize 2D gradient operator */
+		sf_igrad2_init(n[0],n[1]);
+	    }
+
 	    /* allocate temporary array */
 	    t  = sf_floatalloc(nt);
 	    dw = sf_floatalloc(nw);
@@ -198,18 +268,22 @@ int main(int argc, char* argv[])
 	    f  = sf_intalloc(nt);
 
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d);
+	    dsreiko_init(n,o,d,tau1,tau2);
 	    
 	    /* initialize operator */
-	    dsrtomo_init(dim,n,d);
+	    dsrtomo_init(dimt,n,d);
 	    
 	    /* initial misfit */
 	    dsreiko_fastmarch(t,w,f);
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
-	    for (it=0; it < nt; it++)
-		dt[it] = t0[it]-t[it];
+	    for (it=0; it < nt; it++) {
+		if (m0 == NULL || m0[it] == 1)
+		    dt[it] = t0[it]-t[it];
+		else
+		    dt[it] = 0.;
+	    }
 	    
 	    rhsnorm0 = cblas_snrm2(nt,dt,1);
 	    rhsnorm = rhsnorm0;
@@ -226,12 +300,30 @@ int main(int argc, char* argv[])
 		    dw[iw] = 0.;
 		
 		/* set operator */
-		dsrtomo_set(t,w,f);
+		dsrtomo_set(t,w,f,m0);
 		
 		/* solve dw */
-		sf_solver(dsrtomo_oper,sf_cgstep,nw,nt,dw,dt,cgiter,"verb",verb,"end");
-		sf_cgstep_close();
-		
+		if (shape) {
+		    sf_conjgrad(NULL,dsrtomo_oper,sf_repeat_lop,p,dw,dt,cgiter);
+		} else {
+		    /*
+		    sf_solver(dsrtomo_oper,sf_cgstep,nw,nt,dw,dt,cgiter,"verb",verb,"end");
+		    */
+		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nt,dw,dt,cgiter,eps,"verb",verb,"end");
+		    sf_cgstep_close();
+		}
+
+		if (grad != NULL) {
+		    if (velocity) {
+			for (iw=0; iw < nw; iw++)
+			    dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
+			
+			sf_floatwrite(dv,nw,grad);
+		    } else {
+			sf_floatwrite(dw,nw,grad);
+		    }
+		}
+
 		/* line search */
 		gama = 0.5;
 		for (count=0; count < 5; count++) {
@@ -244,8 +336,12 @@ int main(int argc, char* argv[])
 		    dsreiko_fastmarch(t,w1,f);
 		    dsreiko_mirror(t);
 		    
-		    for (it=0; it < nt; it++)
-			dt[it] = t0[it]-t[it];
+		    for (it=0; it < nt; it++) {
+			if (m0 == NULL || m0[it] == 1)
+			    dt[it] = t0[it]-t[it];
+			else
+			    dt[it] = 0.;
+		    }
 		    
 		    rhsnorm = cblas_snrm2(nt,dt,1);
 		    rate = rhsnorm/rhsnorm1;
@@ -268,8 +364,6 @@ int main(int argc, char* argv[])
 		}
 		
 		sf_warning("L2 misfit after iteration %d of %d: %g (line-search %d)",iter+1,niter,rate,count);
-		
-		if (grad != NULL) sf_floatwrite(dw,nw,grad);
 	    }
 	    
 	    /* convert to velocity */

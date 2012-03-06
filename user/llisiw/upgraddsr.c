@@ -36,8 +36,6 @@ struct Upgrad {
     bool *source;
 };
 
-static const float tol=1.e-6;
-
 static int ndim, nt, ss[3];
 static const int *nn;
 static double dd[3];
@@ -150,58 +148,53 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 		up[0] |= m;
 		upg->source[it] = false;
 		dt[i] = t-t2;
-
-		/* NOTE: avoid fake three-sided update */
-		/*
-		if (dt[i] <= 1.e-4) dt[i] = 0.;
-		*/
 	    } else {
 		dt[i] = 0.;
 	    }
 	}
 
-	/* throw away h = s-r  */
+	/* throw away h <= 0  */
 	if (upg->pos[jt][0] > upg->pos[jt][1]) upg->source[it] = true;
 
 	if (upg->source[it]) continue;
 
 	/* one-sided */
 	if ((f0 == NULL && dt[1] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 1)) {
-	    upg->ww[it][0] = sqrt(dd[0]);
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]-ws-wr);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0];
 	    
-	    upg->qq[jt][0] = 1./(2.*sqrt(ws));
-	    upg->qq[jt][1] = 1./(2.*sqrt(wr));
+	    upg->qq[jt][0] = dt[0]*dt[0]*dd[0]-ws+wr;
+	    upg->qq[jt][1] = dt[0]*dt[0]*dd[0]+ws-wr;
 	    
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[0] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 2)) {
 	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = 2.*dt[1]*dd[1];
+	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]+ws-wr);
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][1];
 	    
-	    upg->qq[jt][0] = 0.;
-	    upg->qq[jt][1] = 1.;
-	    
+	    upg->qq[jt][0] = -dt[1]*dt[1]*dd[1]-ws+wr;
+	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]+ws-wr;
+
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[0] == 0. && dt[1] == 0.) || (f0 != NULL && f0[jt] == 3)) {
 	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = 0.;	    
-	    upg->ww[it][2] = 2.*dt[2]*dd[2];
+	    upg->ww[it][1] = 0.;
+	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-ws+wr);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = 1.;
-	    upg->qq[jt][1] = 0.;
-	    
+	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-ws+wr;
+	    upg->qq[jt][1] = -dt[2]*dt[2]*dd[2]+ws-wr;
+
 	    continue;
 	}
 
@@ -220,28 +213,28 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	}
 
 	if ((f0 == NULL && dt[1] == 0.) || (f0 != NULL && f0[jt] == 5)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrt(wr*dd[0]);
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]-ws-wr);
 	    upg->ww[it][1] = 0.;
-	    upg->ww[it][2] = 2.*dt[2]*dd[2];
+	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]-ws+wr);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = 1.;
-	    upg->qq[jt][1] = dt[0]*sqrt(dd[0])/sqrt(wr)-1.;
-	    
+	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]-ws+wr;
+	    upg->qq[jt][1] = -dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[2] == 0.) || (f0 != NULL && f0[jt] == 6)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]-2.*sqrt(ws*dd[0]);
-	    upg->ww[it][1] = 2.*dt[1]*dd[1];
+	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[1]*dt[1]*dd[1]-ws-wr);
+	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]+ws-wr);
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1];
 	    
-	    upg->qq[jt][0] = dt[0]*sqrt(dd[0])/sqrt(ws)-1.;
-	    upg->qq[jt][1] = 1.;
-	    
+	    upg->qq[jt][0] = -dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
+	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]+ws-wr;
+
 	    continue;
 	}
 
@@ -335,7 +328,9 @@ void upgrad_inverse(upgrad upg,
 	} else {
 	    rhs[jt] = rhs[jt]/den;
 	}
-
+	/*
+	if (rhs[jt] >= 100.) sf_error("rhs[%d] = %g, it = %d",jt,rhs[jt],it);
+	*/
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {
 		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
@@ -366,6 +361,13 @@ void upgrad_spread(upgrad upg,
     int it;
 
     for (it = 0; it < nt; it++) {
+	/*
+	if (upg->pos[it][0] == 6315)
+	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g",rhs[upg->pos[it][0]],it,upg->qq[it][0],it,x[it]);
+	if (upg->pos[it][1] == 6315)
+	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g",rhs[upg->pos[it][1]],it,upg->qq[it][1],it,x[it]);
+	*/
+
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
 	rhs[upg->pos[it][1]] += upg->qq[it][1]*x[it];
     }

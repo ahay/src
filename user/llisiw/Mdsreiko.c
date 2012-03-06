@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     int dim, i, n[SF_MAX_DIM], is, ns;
     int *f;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
+    float tau1, tau2;
     char key[6];
     sf_file in, out, flag;
 
@@ -63,6 +64,12 @@ int main(int argc, char* argv[])
 	    s[is] = 1./s[is]*1./s[is];
     }
 
+    if (!sf_getfloat("tau1",&tau1)) tau1=1.e-3;
+    /* tau1 */
+
+    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
+    /* tau2 */
+
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");
 	sf_settype(flag,SF_INT);
@@ -79,7 +86,7 @@ int main(int argc, char* argv[])
     t = sf_floatalloc(ns*n[1]);
 
     /* initialize */
-    dsreiko_init(n,o,d);
+    dsreiko_init(n,o,d,tau1,tau2);
 
     /* compute */
     dsreiko_fastmarch(t,s,f);

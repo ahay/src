@@ -318,7 +318,10 @@ int main(int argc, char* argv[])
 
 	    if (velocity) {
 		for (it=0; it < nt; it++) {
+		    /*
 		    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
+		    */
+		    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
 		}
 		sf_floatwrite(dv,nt,sout);
 	    } else {
@@ -362,6 +365,9 @@ int main(int argc, char* argv[])
 		if (grad != NULL) {
 		    if (velocity) {
 			for (it=0; it < nt; it++) {
+			    /*
+			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
+			    */
 			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
 			}
 			sf_floatwrite(dv,nt,grad);
