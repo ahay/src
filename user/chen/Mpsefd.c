@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[])
 {
-	int it,ix,iz,jz,njz;
+	int it,iw,ix,iz,jz,njz;
 	float dt,dx,dz;
 	int nw,nx,nz,nt,nz0,nt2,rz;
 
@@ -93,13 +93,24 @@ int main(int argc, char* argv[])
 	{
 		sf_psefd_step3(iz+rz,u1);
 
-		for(ix=0;ix<nx;ix++)
+		if(iz % jz == 0 )
 		{
-			sf_rifft1(h, u1[ix], v1);
-			for(it=0;it<nt;it++)	u2[ix][it]=v1[it];
-			u3[ix][iz]=v1[0];
+			for(ix=0;ix<nx;ix++)
+			{
+				sf_rifft1(h, u1[ix], v1);
+				for(it=0;it<nt;it++)	u2[ix][it]=v1[it];
+				u3[ix][iz]=v1[0];
+			}
+			sf_floatwrite(u2[0],nt*nx,wave); 
+		} else {
+			for(ix=0;ix<nx;ix++)
+			{
+				u3[ix][iz]=0.0;
+				for(iw=0;iw<nw-1;iw++)
+					u3[ix][iz] += creal(u1[ix][iw]);
+				u3[ix][iz]*=2.0/nt2;
+			}
 		}
-		if(iz%jz == 0)sf_floatwrite(u2[0],nt*nx,wave); 
 
 		sf_warning("%d;",iz);
 	}

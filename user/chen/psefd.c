@@ -43,7 +43,7 @@ void sf_psefd_step3(int iz, sf_complex **io)
 		a1 = 1.0 - I*t1*vel[ix][iz];
 		a2 = 0 + I*0.5*t1*vel[ix+1][iz];
 		t2 = df*dz*iw/vel[ix][iz];
-		b = cos(t1) + I*sin(t1);
+		b = cos(t2) + I*sin(t2);
 		buf[ix] = b * (io[ix][iw]*a1 + io[ix+1][iw]*a2);
 
 		for(ix=1;ix<nx-1;ix++)
@@ -52,22 +52,22 @@ void sf_psefd_step3(int iz, sf_complex **io)
 			a1 = 1.0 - I*t1*vel[ix][iz];
 			a2 = 0 + I*0.5*t1*vel[ix+1][iz];
 			t2 = df*dz*iw/vel[ix][iz];
-			b = cos(t1) + I*sin(t1);
-			buf[ix] = b * (io[ix][iw]*a0 + io[ix][iw]*a1 + io[ix+1][iw]*a2);
+			b = cos(t2) + I*sin(t2);
+			buf[ix] = b * (io[ix-1][iw]*a0 + io[ix][iw]*a1 + io[ix+1][iw]*a2);
 		}
 
 		//ix=nx-1 boundary
 		a0 = 0 + I*0.5*t1*vel[ix-1][iz];
 		a1 = 1.0 - I*t1*vel[ix][iz];
 		t2 = df*dz*iw/vel[ix][iz];
-		b = cos(t1) + I*sin(t1);
-		buf[ix] = b * (io[ix][iw]*a0 + io[ix][iw]*a1);
+		b = cos(t2) + I*sin(t2);
+		buf[ix] = b * (io[ix-1][iw]*a0 + io[ix][iw]*a1);
 		
 		for(ix=0;ix<nx;ix++)
 			io[ix][iw] = buf[ix];
 	}
-	for(ix=0;ix<nx;ix++)
-		io[ix][0] = 0.0;
+//	for(ix=0;ix<nx;ix++)
+//		io[ix][0] = 0.0;
 #else
 	int iw,ix;
 	float t1,a0i,a1i,a2i, br,bi,cr,ci;

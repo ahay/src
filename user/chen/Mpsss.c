@@ -42,20 +42,21 @@ int main(int argc, char* argv[])
 
 	sf_putint(imag,"n1",nz);
 	sf_putint(imag,"n2",nx);
-	sf_putfloat(imag,"o1",dz*rz);
 	sf_putfloat(imag,"d1",dz*jz);
+	sf_putfloat(imag,"d2",dx);
+	sf_putfloat(imag,"o1",dz*rz);
 	sf_putfloat(imag,"o2",ox);
 
 	njz=1+(nz-1)/jz;
 
 	sf_putint(wave,"n1",nt);
-	sf_putfloat(wave,"d1",dt);
-	sf_putfloat(wave,"o1",0);
 	sf_putint(wave,"n2",nx);
-	sf_putfloat(wave,"d2",dx);
-	sf_putfloat(wave,"o2",ox);
 	sf_putint(wave,"n3",njz);
+	sf_putfloat(wave,"d1",dt);
+	sf_putfloat(wave,"d2",dx);
 	sf_putfloat(wave,"d3",dz*jz);
+	sf_putfloat(wave,"o1",0);
+	sf_putfloat(wave,"o2",ox);
 	sf_putfloat(wave,"o3",dz*rz);
 
 	nt1 = nt;
@@ -63,8 +64,8 @@ int main(int argc, char* argv[])
 	h = sf_rfft2_init(&nt1, &nx1, &nw, 1);
 
 	/* read data and velocity */
-	vel = sf_floatalloc(nz);
-	sf_floatread(vel,nz,modl);
+	vel = sf_floatalloc(nz0);
+	sf_floatread(vel,nz0,modl);
 
 	ptx  = sf_floatalloc2(nt,nx);	// U_z(t,x)
 	pim  = sf_floatalloc2(nz,nx);		// u(x,z,0)
@@ -79,7 +80,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(ptx[0],nt*nx,wave); // wave slice iz=0
 
-	sf_psss_init(nw,nx1,nz,
+	sf_psss_init(nw,nx1,nz0,
 		1.0/(dt*nt1),dx,dz,vel);
 
 
