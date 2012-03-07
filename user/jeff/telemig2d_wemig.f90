@@ -1,57 +1,48 @@
-! Module for Teleseismic 2D Migration code
-
-!!$  Copyright (C) 2012 The University of Western Australia
-!!$  
-!!$  This program is free software; you can redistribute it and/or modify
-!!$  it under the terms of the GNU General Public License as published by
-!!$  the Free Software Foundation; either version 2 of the License, or
-!!$  (at your option) any later version.
-!!$  
-!!$  This program is distributed in the hope that it will be useful,
-!!$  but WITHOUT ANY WARRANTY; without even the implied warranty of
-!!$  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!!$  GNU General Public License for more details.
-!!$  
-!!$  You should have received a copy of the GNU General Public License
-!!$  along with this program; if not, write to the Free Software
-!!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 module telemig2d_wemig
-  	use telemig2d_kernel
-
+  	use telemig2d_kernel       !! GOGI's 80 degree code
+	use fft
+	use rsf
+	
   	implicit none  
  
-  	integer :: nx,nz,nw,nh,ih,ix,iz,ith,nth,iw
-  	real :: ox,dx,oz,dz,ow,dz,oh,dh,nth,nxtap
-  	real :: pi,eps
-  	logical :: source_norm,forward
+  	integer,private :: nx,nz,nw,nh,ih,ix,iz,iw,id,ntaper
+  	real,private :: ox,dx,oz,dz,ow,dw,oh,dh,nxtap,pi,eps
+  	logical ,private:: source_norm,forward,verbose
   
   	real,allocatable,dimension(:) :: tap,ww,saxmax
-  	real,allocatable,dimension(:,:) :: sax,rax
-  	real,allocatable,dimension(:,:,:,:) :: Timg
+  	complex,allocatable,dimension(:,:) :: sax,rax
+  	real,allocatable,dimension(:,:,:) :: Timg
+  	real,allocatable,dimension(:,:,:,:) :: Tcig
 
 contains
   	!----------------------------------------------------------------
   	!! . . Initialization routine - parameter passing and array allocation
-  	subroutine wemig_axes_init(nx_in,ox_in,dz_in,nz_in,oz_in,dz_in,nw_in,ow_in,dw_in,nh_in,oh_in,dh_in)
-    	integer ::nx_in,nz_in,nw_in,nh_in
+  	subroutine wemig_axes_init(nx_in,ox_in,dx_in,nz_in,oz_in,dz_in,nw_in,ow_in,dw_in,nh_in,oh_in,dh_in,&
+  	         source_norm_in,verbose_in,forward_in,ntaper_in)
+    	integer ::nx_in,nz_in,nw_in,nh_in,ntaper_in
      	real :: ox_in,dx_in,oz_in,dz_in,ow_in,dw_in,oh_in,dh_in
-
+        logical :: source_norm_in, verbose_in,forward_in
+        
 		!! For OMP
     	integer, external :: omp_get_num_threads,omp_get_thread_num
-    	integer  :: nth,ith,ix,iz,ih
+    	integer  :: ix,iz,ih,nth,ith
      	
      	!! . . Distance
-     	nx = nx_in;     ox = ox_in;     dx = dx_in
+     	nx = nx_in; ox = ox_in; dx = dx_in
      
      	!! . . Depth
-     	nz = nz_in;     oz = oz_in;     dz = dz_in
+     	nz = nz_in; oz = oz_in; dz = dz_in
+     
+       	!! . . Offset
+       	nh = nh_in; oh=oh_in; dh=dh_in
      
      	!! . . Frequency
      	pi=acos(-1.)
-     	nw=nw_in;     dw=2.*pi*dw_in;      ow=2.*pi*ow_in
-
-     	call wemig_param_init()
+     	nw=nw_in; dw=2.*pi*dw_in; ow=2.*pi*ow_in
+  	 	
+  	 	source_norm = source_norm_in
+  	 	verbose = verbose_in
+  	 	ntaper=ntaper_in
   	 	
   	 	!$OMP PARALLEL
     		nth = omp_get_num_threads()
@@ -59,29 +50,42 @@ contains
 
     	!! Velocity and fields
     	allocate( tap(nx),sax(nx,nth),rax(nx,nth),ww(nth))
-    	allocate( Timg(nx,nh,nz,nth) )
+    	allocate( Tcig(nh,nx,nz,nth) )
+    	allocate( Timg(nx,nz,nth) )
     	allocate( saxmax(nth) )
 
     	!$OMP PARALLEL DO PRIVATE(ith,iz,ih,ix) 
    	 	do ith=2,nth
 			do iz=1,nz
-        		do ih=1,nh
-	        		do ix=1,nx
-                		Timg(ix,ih,iz,ith)=0.
+	        	do ix=1,nx
+                	Timg(ix,iz,ith)=0.
+              	end do
+			end do
+		end do
+    	!$OMP END PARALLEL DO
+ 
+ 		!$OMP PARALLEL DO PRIVATE(ith,iz,ih,ix) 
+   	 	do ith=2,nth
+			do iz=1,nz
+	        	do ix=1,nx
+        			do ih=1,nh
+                		Tcig(ih,ix,iz,ith)=0.
               		end do
         		end do
 			end do
 		end do
     	!$OMP END PARALLEL DO
-    
-    	call rwetaper_init() !! Initialize the taper program
+    	
+    	!! .. Set up taper
+    	tap=1.
+    	call rwetaper_init(ntaper) !! Initialize the taper program
   	end subroutine wemig_axes_init
  	
  	!----------------------------------------------------------------
   	!! . . Main wavefield extrapolation and imaging routine
-  	subroutine wemig(velS,velR,swf,rwf,img)
+  	subroutine wemig(velS,velR,swf,rwf,img,cig)
     	real    :: rarg,sarg,ss,w,vminS,vminR
-   		real    :: velS(:,:), velR(:,:), img(:,:,:)
+   		real    :: velS(:,:), velR(:,:), img(:,:),cig(:,:,:)
     	complex :: swf(:,:),rwf(:,:)
 
     	!! For OMP
@@ -104,8 +108,7 @@ contains
  		!! . . Initialize the migration kernel
     	call shot_ker_init(nth, nx, dx, dz, 0., 0., .11)
 
-    	!$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(iw,id,ix,ih,iz) &
-    	SHARED(nw,ow,dw,nz,nh,nx,rarg,sarg,Timg,sax,rax,saxmax,tap)
+    	!$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(iw,id,ix,ih,iz) 
     	Frequency_loop: do iw=1,nw  !! FREQUENCY LOOP       
     
     		!! . . Thread ID number
@@ -129,7 +132,7 @@ contains
        		call rwetaper(rax,id) 
 
        		!! . . Find the max amplitude of the SWF for normalization
-       		if (source_norm) saxmax(id) = maxval( real(conjg(sax(:,id))*sax(:,id)))
+       		if (source_norm) saxmax(id) = maxval( real(conjg(sax(:,id))*sax(:,id)) )
 
        		Extrap_loop: do iz=2,nz  
 
@@ -145,37 +148,40 @@ contains
           		call rwetaper(rax,id) 
 
           		!! . . High-angle filter  FFT to kx
-          		call SAX_Forward(sax,id)
-          		call RAX_Forward(rax,id)
+          		call fth(.true., .false., sax(:,id) )
+          		call fth(.true., .false., rax(:,id) )
 
           		!! . . Phase correction routine
          		call wemig_phs_correction(id,sax,ww(id),vminS,sarg)
           		call wemig_phs_correction(id,rax,ww(id),vminR,rarg)
 
           		!! . . FFT to x
-          		call SAX_Backward(sax,id)
-          		call RAX_Backward(rax,id)
+          		call fth(.false., .false., sax(:,id) )
+          		call fth(.false., .false., rax(:,id) )
 
           		!! . . Taper
           		call rwetaper(sax,id) 
           		call rwetaper(rax,id) 
 
           		!! . . Imaging condition
-         		if (nh .eq. 1 .and. source_norm) then
+         		if (source_norm) then
             		do ix=1,nx
-                		Timg(ix,1,iz,id) = Timg(ix,1,ig,id) + real( rax(ix,id)*conjg(sax(ix,id)) ) &
+                		Timg(ix,iz,id) = Timg(ix,iz,id) + real( rax(ix,id)*conjg(sax(ix,id)) ) &
                 		/ ( real( sax(ix,id)*conjg(sax(ix,id))) + 0.00000000001 + eps*saxmax(id))
              		end do
-          		else if (nh1 .eq. 1) then
+          		else 
             		do ix=1,nx
-            	   		Timg(ix,1,iz,id)=Timg(ix,1,iz,id)+ real( rax(ix,id)*conjg(sax(ix,id)) )
+            	   		Timg(ix,iz,id)=Timg(ix,iz,id)+ real( rax(ix,id)*conjg(sax(ix,id)) )
            		  	end do
-          		else
-            		do ix=1,nx
-            			do ih=1,nh
+          		endif
+          		
+          		!! . . CIGS
+          		 if (nh .gt. 0) then
+            		do ih=1,nh
+            			do ix=1,nx
             	    	   if ( ix-(nh+1)/2+ih .ge. 1 .and. ix-(nh+1)/2+ih .le. nx .and. &
             	            	ix+(nh+1)/2-ih .ge. 1 .and. ix+(nh+1)/2-ih .le. nx  ) then
-            		          		Timg(ix,ih,iz,id) = Timg(ix,ih,ix,id) +  &
+            		          		Tcig(ih,ix,iz,id) = Tcig(ih,ix,iz,id) +  &
                 	      		real( rax(ix-(nh+1)/2+ih,id) * conjg( sax(ix+(nh+1)/2-ih,id)) ) 
                 	   		end if
                 		end do
@@ -184,41 +190,87 @@ contains
 
 	       	end do Extrap_loop
 
-    	   	if (verbose .and. id .eq. 1 ) write(0,'(a,i5,i5,i5,2f11.6,2f11.6)')' * ST: F%,is,ns,w,im: ',100*iw/nw,& 
-       			ww(id)/2./pi,maxval(Timg(:,:,:,id))
+    	   	if (id .eq. 1 ) write(0,'(a,i5,2f11.6,2f11.6)')' * ST: F%,w,im: ',100*iw/nw,& 
+       			ww(id)/2./pi,maxval(Timg(:,:,id))
 
     	end do Frequency_loop
     	!$OMP END PARALLEL DO
 
+write(0,*) 'IMG OUTPUT',maxval(Timg)
+
     	!! SUMMATION OVER OUTSIDE IMAGE CONDITION
     	do ith=1,nth
-    		!$OMP PARALLEL DO PRIVATE(ie3,ih1,ie1) 
+    		!$OMP PARALLEL DO PRIVATE(ix,ih,iz) 
     	   	do iz=1,nz
-    	      	do ih=1,nh
     	   	      	do ix=1,nx
-       		         	img(ix,ih,iz)=img(ix,ih,iz) + Timg(ix,ih,iz,ith)
-       	     	 	end do
+       		         	img(ix,iz) = img(ix,iz) + Timg(ix,iz,ith)
           		end do
     		end do
        		!$OMP END PARALLEL DO
    		end do
 
-    	!$OMP PARALLEL DO PRIVATE(ith,iz,ih,ix) 
+    	!! SUMMATION OVER OUTSIDE CIG 
     	do ith=1,nth
-    		do i=1,ne3
+    		!$OMP PARALLEL DO PRIVATE(ix,ih,iz) 
+    	   	do iz=1,nz
+    	   		do ix=1,nx
+    	      		do ih=1,nh
+       		         	cig(ih,ix,iz) = cig(ih,ix,iz) + Tcig(ih,ix,iz,ith)
+       	     	 	end do
+          		end do
+    		end do
+       		!$OMP END PARALLEL DO
+   		end do
+   		
+   		
+   		!$OMP PARALLEL DO PRIVATE(ith,iz,ix) 
+    	do ith=1,nth
+    		do iz=1,nz
+       			do ix=1,nx
+       	        	Timg(ix,iz,ith)=0.
+       	   		 end do
+			end do
+		end do
+ 		!$OMP END PARALLEL DO
+
+   		!$OMP PARALLEL DO PRIVATE(ith,iz,ih,ix) 
+    	do ith=1,nth
+    		do iz=1,nz
     	   		do ih=1,nh
        		      	do ix=1,nx
-       	        	 	Timg(ix,ih,iz,ith)=0.
+       	        	 	Tcig(ih,ix,iz,ith)=0.
        	   		  	end do
     			end do
 			end do
 		end do
-   		!$OMP END PARALLEL DO
-
+ 		!$OMP END PARALLEL DO
+ 		
     	call shot_ker_release()
 
 	end subroutine wemig
 
+  	!----------------------------------------------------------------
+  	!! . . Setup Taper 
+  subroutine rwetaper_init(ntap)
+    integer :: itap,jtap,ntap
+    real :: pi
+    pi=acos(-1.)
+
+    if (ntap .gt. 1) then
+
+       do itap=1,ntap
+          jtap = abs(ntap-itap)
+          tap(   itap  ) = cos(pi/2.* jtap/(ntap-1))
+       end do
+
+       do itap=1,ntap
+          jtap = abs(ntap-itap)
+          tap(nx-itap+1) = cos(pi/2.* jtap/(ntap-1))
+       end do
+
+    end if
+
+  end subroutine rwetaper_init
   	!----------------------------------------------------------------
   	!! . . Apply Taper to wavefield
   	subroutine rwetaper(dax,id)
