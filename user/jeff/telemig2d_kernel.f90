@@ -1,21 +1,3 @@
-! Kernel Module for Teleseismic 2D Migration code
-
-!!$  Copyright (C) 2012 The University of Western Australia
-!!$  
-!!$  This program is free software; you can redistribute it and/or modify
-!!$  it under the terms of the GNU General Public License as published by
-!!$  the Free Software Foundation; either version 2 of the License, or
-!!$  (at your option) any later version.
-!!$  
-!!$  This program is distributed in the hope that it will be useful,
-!!$  but WITHOUT ANY WARRANTY; without even the implied warranty of
-!!$  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!!$  GNU General Public License for more details.
-!!$  
-!!$  You should have received a copy of the GNU General Public License
-!!$  along with this program; if not, write to the Free Software
-!!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 module telemig2d_kernel
   
 	implicit none
@@ -30,7 +12,7 @@ module telemig2d_kernel
   	!! . . Define arrays
   	real,   allocatable :: cax(:,:),cbx(:,:)
   	complex,allocatable :: dax(:,:),rbx(:,:),rcx(:,:),ux(:,:),vx(:,:)
-  	real   ,allocatable :: KKX(:)
+  	real   ,allocatable :: KKX(:),xav(:,:)
    
 contains
 
@@ -56,28 +38,23 @@ contains
     	ker_par%tx=trick   
     
     	allocate ( dax(nx,nth),rbx(nx,nth),rcx(nx,nth),ux(nx,nth),vx(nx,nth))
-    	allocate ( cax(nx,nth),cbx(nx,nth),KKX(nx) )
+    	allocate ( cax(nx,nth),cbx(nx,nth),KKX(nx),xav(nx,nth) )
 	
    	 	call klinemap(KKX,nx,dx,0)
 
   	end subroutine shot_ker_init
 
-	!----------------------------------------------------------------
-  	!! . . Release the kernel memory
-  	subroutine shot_ker_release
-    	deallocate(dax,rbx,rcx,cax,cbx,ux,vx,xav,KKX)
- 	end subroutine shot_ker_release
 
 	!----------------------------------------------------------------
 	!! . . Propagate a wavefield one extrapolation step
   	subroutine shot_ker_onestep(id,wld,vel,w,signn)
-    	integer :: ix,iy,id
+    	integer :: ix,id
     	real    :: vel(:),w,signn
     	complex :: wld(:,:)
 
     	!! . . Define RWE coefficients 
     	do ix=1,ker_par%nx
-    	   xav(ix,id)=vel(ix)/w
+    	   xav(ix,id)=vel(ix) / w
     	end do
 
     	!! . . Split-step propagation
@@ -92,10 +69,10 @@ contains
 
 	!---------------------------------------------------------------
 	!! . . The split-step extrapolation part
-  	subroutine shot_ker_ssf(id,wld,w,vel,x,ker_par,signn)
+  	subroutine shot_ker_ssf(id,wld,w,vel,ker_par,signn)
     	type(ker_par_type) :: ker_par
     	integer :: ix,id
-    	real    :: w,vel(:),signn,phsft,tmp
+    	real    :: w,vel(:),signn,phsft
     	complex :: wld(:,:)
 
     	!! . . Apply appropriate w-x phase-shift
@@ -200,7 +177,7 @@ contains
 	!! . . Fourier-domain phase shift correction
  	 subroutine wemig_phs_correction(id,dax,w,vmin,darg)
     	integer :: ikx,iky,id,nx,ny
-    	real    :: w,kr2,darg,vmin,kx,ky,,avX,avY
+    	real    :: w,kr2,darg,vmin,kx,ky,avX,avY
     	real    :: tx,bx,ty,by,xav,yav
     	complex :: dax(:,:)
     	real    :: w_v0,sr2,phsft,dz,a1,a2,b1,b2,wv2
@@ -262,9 +239,15 @@ contains
        		k=0. !! make sure k=0 if n=1
     	end if
 
-    	k = k / dble(n*d)       !! 1/length
+    	k = k / real(n*d)       !! 1/length
     	k = 2. * acos(-1.) * k  !! radians
 
   	end subroutine klinemap
+
+	!----------------------------------------------------------------
+  	!! . . Release the kernel memory
+  	subroutine shot_ker_release
+    	deallocate(dax,rbx,rcx,cax,cbx,ux,vx,xav,KKX)
+ 	end subroutine shot_ker_release
 
 end module telemig2d_kernel
