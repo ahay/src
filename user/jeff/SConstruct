@@ -25,7 +25,7 @@ ewefd3d_omp
 # F90 mains
 targets.f90 = '''
 rwe2d
-telemig2d
+telemig2D
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
