@@ -1,4 +1,4 @@
-!  Riemannian Wavefield Extrapolation for SHOT-PROFILE migration in  2D generalized coordinates.
+!  Riemannian Wavefield Extrapolation for SHOT-PROFILE migration in 2D generalized coordinates.
 !
 !		The key concept is that wave-equation migration can be performed
 !		on almost any type of grid called Riemannian coordintes
