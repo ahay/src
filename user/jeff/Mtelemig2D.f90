@@ -18,7 +18,7 @@
 program Mtelemig2d
   use rsf              !! Basic SEPlib I/O 
   use fft
-  use telemig2D_wemig  !! Migration driver module
+  use telemig2d_wemig  !! Migration driver module
 
   implicit none
 
