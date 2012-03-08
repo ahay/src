@@ -141,6 +141,7 @@ float TimeMigrator2D::getSampleByRay (const float yCIG, const float xCIG, const 
 float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, const float ti, const float p) {
 	
 	int zNum_ = dp_->zNum;
+	int xNum_ = dp_->xNum;
 
 	float zStep_ = dp_->zStep;
 	float xStep_ = dp_->xStep;

@@ -189,7 +189,7 @@ int main (int argc, char **argv)
     cd = sf_complexalloc2 (nw,nx);
 
     for (ic = 0; ic < nc; ic++) { /* loop over CMPs */
-	if(verb) sf_warning("i=%d of %d",ic+1,nc);
+	if(verb) sf_warning("i=%d of %d;",ic+1,nc);
 
 	if (adj) {
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
@@ -282,7 +282,7 @@ int main (int argc, char **argv)
 	  }
 	}
     } /* loop over CMPs */
-
+    if(verb) sf_warning(".");
 
     exit (0);
 }

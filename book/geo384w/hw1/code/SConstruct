@@ -3,7 +3,9 @@ from rsf.proj import *
 # Program compilation
 #####################
 
-exe = Program('wave.c',CPPDEFINES='NO_BLAS')
+proj = Project()
+
+exe = proj.Program('wave.c',CPPDEFINES='NO_BLAS')
 
 # Constant velocity test
 ########################
