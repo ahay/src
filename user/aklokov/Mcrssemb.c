@@ -113,7 +113,7 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
 	memset (ptrToData_,   0, pointsNumToRead * sizeof (float));
 	memset (ptrToDataSq_, 0, pointsNumToRead * sizeof (float));			
 
-	const int startPos = startX * dagSize_ * sizeof (float);
+	const size_t startPos = (size_t) startX * dagSize_ * sizeof (float);
 
 	sf_seek (inDags_,   startPos, SEEK_SET);
 	sf_seek (inDagsSq_, startPos, SEEK_SET);
