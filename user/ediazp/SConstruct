@@ -17,5 +17,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
+despike2-ed
+despike1-ed
 '''
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
