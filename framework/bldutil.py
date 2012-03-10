@@ -128,7 +128,7 @@ def __docmerge(target=None,source=None,env=None):
     for prog in alias.keys():
         out.write("rsf.doc.progs['%s']=%s\n" % (prog,alias[prog]))
     out.close()
-    print outfile
+#    print outfile
     py_compile.compile(outfile,outfile+'c')
     return __py_success
 

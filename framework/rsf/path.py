@@ -94,3 +94,39 @@ def getpath(cwd):
         mkdir(path)
     path = os.path.join(path,os.path.basename(top))
     return path
+
+def cpus(): 
+    '''
+    Returns the number of CPUs in the system
+    '''
+    try:
+        # Tested on CentOS, Fedora and Cygwin 1.7
+        import multiprocessing # module added in Python 2.6
+        return multiprocessing.cpu_count()
+    except: 
+        # Thanks to Lawrence Oluyede on python-list 
+        num = 0
+        
+        if sys.platform == 'win32':
+            try:
+                num = int(os.environ['NUMBER_OF_PROCESSORS'])
+            except (ValueError, KeyError):
+                pass
+        elif sys.platform == 'darwin':
+            try:
+                num = int(os.popen('sysctl -n hw.ncpu').read())
+            except ValueError:
+                pass
+        else:
+            # A better way: parse /proc/cpuinfo for physical CPUs
+            # rather than virtual CPUs from hyperthreading
+            
+            try:
+                num = os.sysconf('SC_NPROCESSORS_ONLN')
+            except (ValueError, OSError, AttributeError):
+                pass
+            
+        if num >= 1:
+            return num
+        else:
+            raise NotImplementedError

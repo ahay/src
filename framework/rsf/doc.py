@@ -862,6 +862,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         name = re.sub('\.f\d*$','',name)
     else:
         name = re.sub('\.c(c|u)?$','',name)
+    cname = re.sub('\-','',name)
     src = open(file,"r")   # open source
     text = ''.join(src.readlines())
     src.close()
@@ -875,7 +876,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     prog = rsfprog(name,file,desc)
     file = re.sub('^[^\/]*\/','',file)
     out.write("%s = rsf.doc.rsfprog('%s','%s','''%s''')\n" %
-              (name,name,file,desc))
+              (cname,name,file,desc))
     files = inpout[lang].findall(text)
     snps = name
     valid = {}
@@ -902,7 +903,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
                 desc = 'auxiliary %s file name' % iotype
                 prog.par(tag,rsfpar(type,desc=desc))
                 out.write("%s.par('%s',rsf.doc.rsfpar('%s',desc='''%s'''))\n" %
-                          (name,tag,type,desc))
+                          (cname,tag,type,desc))
             snps = snps + iostring
         valid[filename]=0
     if re.match(rsfplotprefix,name):
@@ -919,7 +920,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
 
             prog.par(parname,rsfpar(type,None,range,desc))
             out.write("%s.par('%s',rsf.doc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                      (name,parname,type,'',range,desc))
+                      (cname,parname,type,'',range,desc))
             parline = parline + " %s=" % parname
     pars = param[lang].findall(text)
     for par in pars:
@@ -959,7 +960,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
 
         prog.par(parname,rsfpar(type,default,range,desc))
         out.write("%s.par('%s',rsf.doc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                  (name,parname,type,default,range,desc))
+                  (cname,parname,type,default,range,desc))
         parline = parline + " %s=%s" % (parname,default)
     pars = params2.get(lang)
     if pars:
@@ -973,7 +974,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
 
             prog.par(parname,rsfpar(type,default,range,desc))
             out.write("%s.par('%s',rsf.doc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                      (name,parname,type,default,range,desc))
+                      (cname,parname,type,default,range,desc))
             parline = parline + " %s=%s" % (parname,default)
     pars = param2.get(lang)
     if pars:
@@ -986,7 +987,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
 
             prog.par(parname,rsfpar(type,default,range,desc))
             out.write("%s.par('%s',rsf.doc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                      (name,parname,type,default,range,desc))
+                      (cname,parname,type,default,range,desc))
             parline = parline + " %s=%s" % (parname,default)
     pars = stringpar.get(lang)
     if pars:
@@ -1004,18 +1005,18 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
                 parline = parline + " %s=" % (parname)
             prog.par(parname,rsfpar(type,desc=desc))
             out.write("%s.par('%s',rsf.doc.rsfpar('%s',desc='''%s'''))\n" %
-                      (name,parname,type,desc))
+                      (cname,parname,type,desc))
     snps = snps + parline
     base = name[len(rsfprefix):]
     if base in docprogs:
         wiki = r'http://ahay.org/wiki/Guide_to_madagascar_programs#sf'+base
         prog.weblink(wiki)
-        out.write("%s.weblink('%s')\n" % (name,wiki))
+        out.write("%s.weblink('%s')\n" % (cname,wiki))
     vers = version[lang].search(text)
     if vers:
         known_version += ' ' + vers.group(1)
     prog.version(known_version)
-    out.write("%s.version('%s')\n" % (name, known_version))
+    out.write("%s.version('%s')\n" % (cname, known_version))
     if not first:
         first = ''
     else:
@@ -1024,8 +1025,8 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             snps = snps + ' ' + info.group(1).lstrip()
             first = info.group(2).lstrip()
     prog.synopsis(snps,first)
-    out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,first))
-    out.write("rsf.doc.progs['%s']=%s\n\n" % (name,name))
+    out.write("%s.synopsis('''%s''','''%s''')\n" % (cname,snps,first))
+    out.write("rsf.doc.progs['%s']=%s\n\n" % (name,cname))
 
 def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     # Implements own UI instead of Madagascar's standard Python API
