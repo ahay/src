@@ -25,9 +25,9 @@
 int main(int argc, char* argv[])
 {
     bool velocity, verb, adj, shape;
-    int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
+    int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
     int iter, niter, cgiter, count;
-    int *f, *m0;
+    int *f, *m0, offset;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
     float eps, tol, tau1, tau2, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[6], *what;
@@ -93,17 +93,32 @@ int main(int argc, char* argv[])
 	    else
 		f = NULL;
 
-	    if (mask != NULL)
-		m0  = sf_intalloc(nt);
-	    else
-		m0 = NULL;
+	    m0  = sf_intalloc(nt);
 
 	    /* read file */
 	    sf_floatread(w,nw,grad);
 	    sf_floatread(t,nt,reco);
 
 	    if (flag != NULL) sf_intread(f,nt,flag);
-	    if (mask != NULL) sf_intread(m0,nt,mask);
+	    if (mask != NULL) {
+		sf_intread(m0,nt,mask);
+	    } else {
+		if (!sf_getint("offset",&offset)) offset=n[1];
+		/* offset */
+
+		for (k=0; k < n[2]; k++) {
+		    for (j=0; j < n[1]; j++) {
+			if (abs(j-k) <= offset)
+			    m0[j*n[0]+k*n[0]*n[1]] = 1;
+			else
+			    m0[j*n[0]+k*n[0]*n[1]] = 0;
+
+			for (i=1; i < n[0]; i++){
+			    m0[i+j*n[0]+k*n[0]*n[1]] = 0;
+			}
+		    }
+		}
+	    }
 
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
@@ -202,13 +217,29 @@ int main(int argc, char* argv[])
 	    sf_fileclose(reco);
 	    
 	    /* read receiver file */
+	    m0 = sf_intalloc(nt);
+
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-		m0 = NULL;
+		
+		if (!sf_getint("offset",&offset)) offset=n[1];
+		/* offset */
+
+		for (k=0; k < n[2]; k++) {
+		    for (j=0; j < n[1]; j++) {
+			if (abs(j-k) <= offset)
+			    m0[j*n[0]+k*n[0]*n[1]] = 1;
+			else
+			    m0[j*n[0]+k*n[0]*n[1]] = 0;
+			
+			for (i=1; i < n[0]; i++){
+			    m0[i+j*n[0]+k*n[0]*n[1]] = 0;
+			}
+		    }
+		}
 	    } else {
 		mask = sf_input("mask");
 		
-		m0 = sf_intalloc(nt);
 		sf_intread(m0,nt,mask);
 		sf_fileclose(mask);
 	    }	    
