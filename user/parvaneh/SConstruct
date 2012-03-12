@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-backdireazi backdire curvature
+backdireazi backdire curvature rtmpar kir33
 '''
 
 try:  # distributed version
