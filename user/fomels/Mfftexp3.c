@@ -18,13 +18,17 @@
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "fft3.h"
 
 int main(int argc, char* argv[])
 {
     bool mig;
     int it, nt, ix, nx, iy, ny, iz, nz, nx2, ny2, nz2, nxy, nzx, nzx2;
-    int im, i, j, m2, it1, it2, its, ik, n2, nk;
+    int im, i, j, m2, it1, it2, its, ik, n2, nk, ompchunk;
     float dt, dx, dy, dz, c, old, x0, y0;
     float *curr, *prev, ***img, **dat, **lft, **rht, **wave;
     sf_complex *cwave, *cwavem;
@@ -34,6 +38,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -209,6 +215,9 @@ int main(int argc, char* argv[])
 	    ifft3(wave[im],cwavem);
 	}
 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iy,ix,iz,i,j,im,old,c) shared(curr,prev,lft,wave)
+#endif	
 	for (iy=0; iy < ny; iy++) {
 	    for (ix = 0; ix < nx; ix++) {
 		for (iz=0; iz < nz; iz++) {

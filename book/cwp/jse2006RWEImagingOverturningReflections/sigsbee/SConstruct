@@ -244,7 +244,7 @@ for i in ('1','2'):
            '''
            add ${SOURCES[1]} | transp |
            c2r rays=${SOURCES[2]} adj=n | transp | bandpass fhi=10 |
-           scale axis=123 |
+           scale axis=123 | window j1=5 |
            '''+ rwezo.rgrey('pclip=99 scalebar=y',par))
     
     # ------------------------------------------------------------
