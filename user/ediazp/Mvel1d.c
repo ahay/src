@@ -1,4 +1,7 @@
-/* Hungs a 1d velocity function from the Water bottom
+/* Hungs a 1d velocity function from the Water bottom.
+   Should work for 2D models
+
+
 
    stdin    1D velocity function to be used 
    file mask [required]   The water bottom is read from the mask file.
@@ -6,8 +9,13 @@
                           0 bellow the WB
 
    file stdout The output velocity model has dimensions of the mask file.
+   float vel [1.5]    velocity to use above the horizon (usually water velocity) 
 
-   should work for 2D and 3D models
+
+
+   Syntaxis:
+   
+   sfvel1d < 1dvel.rsf  mask=WB.rsf vel=1.5  >velocity.rsf
 
 */
 /*
@@ -32,90 +40,116 @@
 
 int main (int argc, char* argv[])
 {
+
+    int i1,i2,i3,j1,j2;
+
     int n1,n2,n3;
     float o1,o2,o3;
     float d1,d2,d3;
+    
+    sf_axis ax1,m1,m2,m3;
 
     int n1d;     // samples of 1d function
     float o1d;   // origin of 1d function (has to be zero)
     float d1d;   // 1D function smapling (has to be the same as d1)
 
-    int arr_size, t2loop;
-    int m;
-    int klo, khi;
-    float sigma;
-    float *uo,*der,*der_tmp;
+    float vel;
+    float *v1d,**mask,**vmod,*wb;
 
-    float sum; 
-    
-    sf_file in=NULL, out=NULL;
+    sf_file in=NULL, out=NULL, mask1=NULL, wbot=NULL;
+
+
 
     sf_init (argc,argv);
     in = sf_input("in");
+    mask1= sf_input("mask");
     out = sf_output("out");
+    wbot=sf_output("wb");
 
-    
-    
     //=====================================================    
     //Get parameters from command line:
     
-    if (! sf_getint("window",&m)) m=20;
-    if (! sf_getfloat("sigma", &sigma)) sigma=3.0;
-    
-    
+    if (! sf_getfloat("vel", &vel)) vel=1.5;
     
     //=====================================================
-    //Get parameters from input file
+    //Get parameters from stdin file
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    arr_size=n1;
-    t2loop=sf_leftsize(in,1) ;
+    
+   /* parameters from input file*/
+    ax1=sf_iaxa(in,1);
+    n1d=sf_n(ax1); o1d=sf_o(ax1); d1d=sf_d(ax1);
 
-    uo  = sf_floatalloc(arr_size);
-    der = sf_floatalloc(arr_size);
-    der_tmp = sf_floatalloc(arr_size);
-    fprintf(stderr,"%4d \n",t2loop);
 
-    for (i3=0; i3<t2loop; i3++) {
-        sf_floatread(uo,arr_size,in);
- 
-        for (i1=0; i1<arr_size; i1++){
-            
-            sum=0.0;
-            klo=i1-m ; if(klo<0) klo=0;
-            khi=i1+m ; if(khi>=arr_size) khi=arr_size;
-            for (i2=klo ; i2<=khi ; i2++){
-                k=i2;
-                sum= sum+ uo[k];
-            }
-            sum *= 1.0/(2.0*m+1.0);
-            der_tmp[i1]=sum;
+    m1=sf_iaxa(mask1,1);
+    m2=sf_iaxa(mask1,2);
+    m3=sf_iaxa(mask1,3);
+
+    n1=sf_n(m1);  o1=sf_o(m1); d1=sf_d(m1); 
+    n2=sf_n(m2);  o2=sf_o(m2); d2=sf_d(m2); 
+    n3=sf_n(m3);  o3=sf_o(m3); d3=sf_d(m3); 
+
+	sf_oaxa(out,m1,1);
+	sf_oaxa(out,m2,2);
+	sf_oaxa(wbot,m2,1);
+
+    
+    if( d1!=d1d)  sf_error("1d vel has different sampling par than mask");
+
+
+
+
+//  =======================================
+    //allocate input mask file
+    mask=sf_floatalloc2(n1,n2);
+
+    //allocate output model file
+    vmod=sf_floatalloc2(n1,n2);
+
+    // water bottom vector
+    wb= sf_floatalloc(n2);
+
+    // stdin 1d function
+    v1d= sf_floatalloc(n1);
+
+    //read 1d function
+    sf_floatread(v1d,n1d,in);
+
+    //read mask
+    sf_floatread(mask[0],n1*n2,mask1);
+
+//  =======================================
+
+    for (i2=0; i2<n2; i2++) {
+        for (i1=1; i1<n1; i1++){
+           if(mask[i2][i1]-mask[i2][i1-1] != 0.0) wb[i2]=i1*d1+o1;
         }
-        
-        for (i1=0; i1<arr_size; i1++){
-            sum=0.0;
-            klo=i1-m ; if(klo<0) klo=0;
-            khi=i1+m ; if(khi>=arr_size) khi=arr_size;
-            for (i2=klo ; i2<=khi ; i2++){
-                k=i2;
-                sum= sum+ (uo[k]-der_tmp[k])*(uo[k]-der_tmp[k]);                
-            }
-            sum *= 1.0/(2.0*m+1.0);
-            if(fabsf(uo[i1]-der_tmp[i1])/sum >sigma){
-                der[i1]=der_tmp[i1] +(uo[i1]-der_tmp[i1])*sigma*sum/(fabsf(uo[i1]-der_tmp[i1]));
-            }else {
-                der[i1]=uo[i1];
-            }                                                             
-            
-        }
-        sf_floatwrite(der,arr_size,out);
     }
 
-    free (der); 
-    free(der_tmp); 
-    free(uo);
+    for (i2=0; i2<n2; i2++) {
+        j1=(int) ((wb[i2]-o1)/d1);
+        for (i1=0; i1<j1; i1++){
+             vmod[i2][i1]=vel;
+        }
+        for (i1=j1; i1<n1 ;i1++){
+            j2=i1-j1;
+            if(j2>n1d-1){ 
+                vmod[i2][i1]=v1d[n1d-1];
+            }else {
+                vmod[i2][i1]=v1d[j2];
+            }
+            
+        }
+    }
+
+    sf_floatwrite(vmod[0],n1*n2,out);
+    sf_floatwrite(wb,n2,wbot);
+    free (*mask); free (mask); 
+    free (*vmod); free (vmod); 
+    free (wb); 
+    free (v1d);
+
     exit(0);
 }
