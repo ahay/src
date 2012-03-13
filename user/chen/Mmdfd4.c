@@ -23,42 +23,38 @@
 
 int main(int argc, char* argv[])
 {
-	int it, ix, iz;		// index
-	int sx, sy, sz;		// shot positions
-	int nt, nx, nz, nwv;	 		// dimensions
-	float dt, dx, dz, dt2;				// increments
-	int wvlt, owv;						// arguments
+	int it, ix, iz;			// index
+	int sx, sz;			// shot positions
+	int rx0, rz, nr, dr;			// recevier positions
+	int nt, nx, nz, nwv;	 	// dimensions
+	float dt, dx, dz, dt2;		// increments
+	int wvlt, owv;				// arguments
 	float wvp[4], *pwv;
-	int jt, rz;
+	int jt;
 
 	float **vv, **pout;
 	float **u0,**u1, **ud, u2; 	// tmp arrays 
 	void * h;
-	sf_file data, modl, wave, div; /* I/O files */
+	sf_file data, modl, wave; /* I/O files */
 
 	sf_init(argc,argv);
 
 	modl = sf_input ("in");   //- velocity model 
 	data = sf_output("out");  //- seismic data
  
-	wave = sf_output("wave"); /* wavefield movie file */
-	div  = sf_output("div"); /* wavefield movie file */
+	if(sf_getstring("wave")!=NULL) 
+		wave = sf_output("wave"); /* wavefield movie file */
+	else wave=NULL;
+
+//	div  = sf_output("div"); /* wavefield movie file */
 	
 	if (!sf_getint("nt",&nt)) nt=1000; 
 	/* time samples */
 	if (!sf_getfloat("dt",&dt)) dt=0.004; 
 	/* time interval */
-	if (!sf_getint("jt",&jt)) jt=20; 
+	if (!sf_getint("jt",&jt)) jt=40; 
 	/* wave movie time interval */
-	if (!sf_getint("rz",&rz)) rz=0; 
-	/* reciever depth */
 
-	if (!sf_getint("sx",&sx)) sx=0; 
-	/* shot x position for 2/3D modeling  */
-	if (!sf_getint("sy",&sy)) sy=0; 
-	/* shot y position for 3D modeling */
-	if (!sf_getint("sz",&sz)) sz=0; 
-	/* shot z position for 2/3D modeling */
 
 	nwv=0; owv=0;
 	if (!sf_getint("wvlt", &wvlt)) wvlt=0; 
@@ -70,8 +66,8 @@ int main(int argc, char* argv[])
 	switch(wvlt)
 	{
 	case 0:		// ricker wavelet
-		owv = 5.0 /(u2*dt);
-		owv = (owv<nt)? -owv:-nt;
+//		owv = 2.0 /(u2*dt);
+//		owv = (owv<nt)? -owv:-nt;
 		nwv = nt- owv;
 		pwv = sf_floatalloc(nwv);
 		for(it=owv; it<nt; it++) pwv[it-owv] = dt*it;
@@ -93,25 +89,53 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(modl,"d1", &dz)) sf_error("d1");
 	if (!sf_histfloat(modl,"d2", &dx)) sf_error("d2");
 
+	if (!sf_getint("sx",&sx)) sx=0; 
+	/* x position index of the source */
+	if (!sf_getint("sz",&sz)) sz=0; 
+	/* z position index of the source */
+	if(sx < 0 || sx >= nx) 
+		sf_error("sx (= %d) should between (0,%d)",sx,nx-1);
+	if(sz < 0 || sz >= nz) 
+		sf_error("sz (= %d) should between (0,%d)",sz,nz-1);
+
+
+	if (!sf_getint("rx0",&rx0)) rx0=0; 
+	/* x position index of first receiver */
+	if (!sf_getint("nr",&nr)) nr=1; 
+	/* receiver numbers */
+	if (!sf_getint("dr",&dr)) dr=1; 
+	/* receiver interval of unit "dx" */
+	if (!sf_getint("rz",&rz)) rz=0; 
+	/* z position index of receivers */
+	if(rx0 < 0 || rx0+dr*(nr-1) >= nx) 
+		sf_error("rx0+dr*(nr-1) should between (0,%d)",nx-1);
+	if(rz < 0 || rz >= nz) 
+		sf_error("rz (= %d) should between (0,%d)",rz,nz-1);
+	
+
 	sf_putint(data, "n1", nt);
-	sf_putint(data, "n2", nx);
+	sf_putint(data, "n2", nr);
 	sf_putfloat(data, "d1", dt);
-	sf_putfloat(data, "d2", dx);
+	sf_putfloat(data, "d2", dr*dx);
+	sf_putfloat(data, "o2", rx0*dx);
 
-	sf_putint(wave, "n1", nz);
-	sf_putint(wave, "n2", nx);
-	sf_putint(wave, "n3", nt/jt);
-	sf_putfloat(wave, "d1", dz);
-	sf_putfloat(wave, "d2", dx);
-	sf_putfloat(wave, "d3", dt*jt);
-	sf_putfloat(wave, "o3", 0.0);
+	if(wave!=NULL)
+	{
+		sf_putint(wave, "n1", nz);
+		sf_putint(wave, "n2", nx);
+		sf_putint(wave, "n3", nt/jt);
+		sf_putfloat(wave, "d1", dz);
+		sf_putfloat(wave, "d2", dx);
+		sf_putfloat(wave, "d3", dt*jt);
+		sf_putfloat(wave, "o3", 0.0);
+	}
 
-	sf_putint(div, "n1", nz);
-	sf_putint(div, "n2", nx);
-	sf_putint(div, "n3", nwv);
-	sf_putfloat(div, "d1", dz);
-	sf_putfloat(div, "d2", dx);
-	sf_putfloat(div, "d3", dt);
+//	sf_putint(div, "n1", nz);
+//	sf_putint(div, "n2", nx);
+//	sf_putint(div, "n3", nwv);
+//	sf_putfloat(div, "d1", dz);
+//	sf_putfloat(div, "d2", dx);
+//	sf_putfloat(div, "d3", dt);
 
 
 	dt2 = dt*dt;
@@ -120,7 +144,7 @@ int main(int argc, char* argv[])
 
 	/* allocate temporary arrays */
 	vv = sf_floatalloc2(nz, nx);
-	pout = sf_floatalloc2(nt, nx);
+	pout = sf_floatalloc2(nt, nr);
 	u0=sf_floatalloc2(nz,nx);		// previous data
 	u1 = sf_floatalloc2(nz, nx);
 	ud=sf_floatalloc2(nz,nx);	// updata
@@ -129,10 +153,10 @@ int main(int argc, char* argv[])
 
 	for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
+			vv[ix][iz] = vv[ix][iz] * vv[ix][iz]*dt2;
 			ud[ix][iz] = 0.0;
 			u0[ix][iz] = 0.0;
 			u1[ix][iz] = 0.0;
-			vv[ix][iz] = vv[ix][iz] * vv[ix][iz]*dt2;
 		}
 	}
 
@@ -141,8 +165,8 @@ int main(int argc, char* argv[])
 	{
 		sf_fd4_laplacian(h, u1, ud);
 		ud[sx][sz] += pwv[it-owv];
-//		if(div!=NULL) sf_floatwrite(ud[0], nz*nx, div);
-
+		//		if(div!=NULL) sf_floatwrite(ud[0], nz*nx, div);
+	
 		for (ix=0; ix<nx; ix++) 
 		{
 			for (iz=0; iz<nz; iz++) 
@@ -155,24 +179,32 @@ int main(int argc, char* argv[])
 				u0[ix][iz] = u1[ix][iz];
 				u1[ix][iz] = u2;
 			}
-			if(it>=0) pout[ix][it] = u0[ix][rz];
 		}
-		if(it>=0 && it%jt == 0)// wave
+		if(it>=0)
+		{
+			for(ix=0; ix<nr; ix++)
+				pout[ix][it] = u0[ix*dr+rx0][rz];
+		}
+		if(wave!=NULL && it>=0 && it%jt == 0)// wave
 		{
 			sf_floatwrite(u1[0], nz*nx, wave);
 		}
 	}
-
 	/* output seismic data */
-	sf_floatwrite(pout[0], nt*nx, data);
+	sf_floatwrite(pout[0], nt*nr, data);
 
 	sf_fd4_release(h);
 	
 	free(pwv);
-//	sf_free(vv[0]);
-//	sf_free(u0[0]);
-//	sf_free(u1[0]);
-//	sf_free(pout[0]);
-//	sf_free(ud[0]);
+	free(vv[0]);
+	free(u0[0]);
+	free(u1[0]);
+	free(pout[0]);
+	free(ud[0]);
+	free(vv);
+	free(u0);
+	free(u1);
+	free(pout);
+	free(ud);
 	return (0);
 }
