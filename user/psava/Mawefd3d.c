@@ -410,7 +410,9 @@ int main(int argc, char* argv[])
     free(**up); free(*up); free(up);
     free(**uo); free(*uo); free(uo);
     free(**ua); free(*ua); free(ua);
-    free(**uc); free(*uc); free(uc);
+    if (snap) {
+        free(**uc); free(*uc); free(uc);
+    }
 
     free(**rox); free(*rox); free(rox);
     free(**roy); free(*roy); free(roy);
