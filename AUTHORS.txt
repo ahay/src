@@ -37,6 +37,8 @@ Eduardo Filpo Silva <effsilva@mines.edu>
 Ioan Vlad <i.vlad@yahoo.com>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
+Esteban Diaz <ediazpan@mines.edu>
+
 
 Vplot authors:
 
