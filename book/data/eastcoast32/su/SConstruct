@@ -259,7 +259,7 @@ Result('thirdmovie','allshots',
        '''
        suwind count=9600 
        | sugain tpow=1.0 
-       | sumute xmute=0,3000 tmute=0,3 mode=0 
+       | sumute xmute=0,4000 tmute=0,4 mode=0 
          key=offset 
          taper=50 
        | suxmovie n2=192 loop=1 fframe=1 dframe=1 d1=.004
@@ -274,7 +274,7 @@ Flow('cdps','allshots',
      | sustatic hdrs=1 sign=1
      | sugain tpow=1.0 
      | sumute 
-       xmute=0,3000 tmute=0,3 
+       xmute=0,4000 tmute=0,4 
        mode=0 
        key=offset 
        taper=50 
@@ -306,7 +306,7 @@ Flow('stack','cdps vels.txt',
 
 Result('stack','stack',
        '''
-       suximage title="stack" perc=90
+       suximage title="stack" f2=838 perc=90
        ''')
 
 Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
@@ -316,7 +316,7 @@ Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
 
 Result('vfile','stkvel1.intp2.bin',
        '''
-       ximage n1=3071 d1=.004 f2=1575 d2=1 cmap=rgb11 
+       ximage n1=3071 d1=.004 f2=838 d2=1 cmap=rgb11 
           wclip=1300 bclip=3000
        ''')
 
