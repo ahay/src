@@ -76,8 +76,8 @@ for line in open('hdrfile.txt'):
         if tracf > 24 :
             offset= (48-tracf) * 100 + nearoff
         else:
-            offset=23*100+nearoff+75+50*(23-tracf)
-        r_gx=r_sx+offset
+            offset=23*100+nearoff+75+50+50*(23-tracf)
+        r_gx=r_sx-offset
         r_gy=0
         
         # cdps should increase in the opposite direction to the fldr
@@ -91,7 +91,7 @@ for line in open('hdrfile.txt'):
         # group interval on the far traces.
         # cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101       
         smallestmidpointx=  (6087-511)*50 + 470.0/2.0
-        cdp = (smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101.0       
+        cdp = round((smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101.0)-44
 
         sx=long(round(r_sx))
         sy=long(round(r_sy))
