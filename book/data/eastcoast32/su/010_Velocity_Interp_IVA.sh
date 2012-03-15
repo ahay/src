@@ -23,7 +23,7 @@ fsamp=0
 ncdpin=10
 fcdpin=851
 dcdpin=500
-ncdpout=4839
+ncdpout=4841
 fcdpout=838
 dcdpout=1
 
