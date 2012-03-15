@@ -10,7 +10,7 @@ src = 'kiss_fft kiss_fftr mt19937ar'
 src2 = '''
 adjnull alloc axa banded bigsolver blas c99 causint ccdstep ccgstep
 cconjgrad ccopy cell celltrace cdstep cgstep chain clist conjgrad
-conjprec copy cosft decart deriv divn dottest doubint edge eno eno2
+conjprec copy cosft decart deriv divn dottest doubint edge eno eno2 eno3
 error fftlabel file files freqfilt freqfilt2 ftutil fzero getpar
 grad2fill halfint helicon helix hilbert igrad1 igrad2 impl2 int1 int2
 int3 interp interp_spline irls komplex llist mask math1 multidivn

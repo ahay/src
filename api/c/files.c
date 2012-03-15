@@ -303,6 +303,48 @@ off_t sf_shiftdim2(sf_file in, sf_file out, int axis)
     return n3;
 }
 
+off_t sf_shiftdimn(sf_file in, sf_file out, int axis, int n) 
+/*< shift grid after axis by n dimension forward >*/
+{
+    int j, ni;
+    float f;
+    off_t n3;
+    char key1[7], key2[7], *val;
+
+    n3 = 1;
+    for (j=axis; j < SF_MAX_DIM; j++) {
+	if ((j+n) >= SF_MAX_DIM) sf_error ("Dimension shift is out of bounds");
+	sprintf(key2,"n%d",j+n);
+	sprintf(key1,"n%d",j);
+	if (!sf_histint(in,key1,&ni)) {
+	     sf_putint(out,key2,1);
+	     break;
+	}
+	sf_putint(out,key2,ni);
+	n3 *= ni;
+	
+	sprintf(key2,"o%d",j+n);
+	sprintf(key1,"o%d",j);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
+
+	sprintf(key2,"d%d",j+n);
+	sprintf(key1,"d%d",j);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
+
+	sprintf(key2,"label%d",j+n);
+	sprintf(key1,"label%d",j);
+	if (NULL != (val = sf_histstring(in,key1))) 
+	    sf_putstring(out,key2,val);
+
+	sprintf(key2,"unit%d",j+n);
+	sprintf(key1,"unit%d",j);
+	if (NULL != (val = sf_histstring(in,key1))) 
+	    sf_putstring(out,key2,val);
+    }
+
+    return n3;
+}
+
 off_t sf_unshiftdim(sf_file in, sf_file out, int axis) 
 /*< shift grid after axis by one dimension backward >*/
 {
