@@ -20,7 +20,7 @@ This paper describes how to process an internet downloadable 2D land
 line data set though a very basic processing sequence using Seismic 
 Unix. The data from the Alaska North Slope has good signal, 
 although it may be suitable for testing ground-roll and noise burst 
-attenuation programs.  The detailed steps to download the dataset from 
+attenuation programs.  The detailed steps to download the data set from 
 the Internet and process it are described.  You should be able to 
 follow these steps and recreate my results.  I hope this will 
 accelerate the testing and validation of programs developed in different
@@ -29,7 +29,7 @@ research groups.
 The paper starts with background information such as data downloading,
 region overview, data acquisition, and previous processing.  The
 scripts and custom programs for Seismic Unix translation, header load, 
-qc, shotrecord velocity filter, deconvolution, CDP gather, velocity 
+qc, shot record velocity filter, deconvolution, CDP gather, velocity 
 analysis, residual statics, stack, and post stack migration can be 
 downloaded to your computer.
 
@@ -58,7 +58,7 @@ processing.  You can follow the text and recreate some seismic
 processing examples.  These books do not provide good examples of 
 geometry definition and how to load trace headers.\nocite{cohen}
 
-I hope to assist a processing geophysicst working or studing independently 
+I hope to assist a processing geophysicst working or studying independently 
 at a University or company that needs field data.  I assume he is familiar 
 with Seismic Unix.  I providing example scripts,  programs, and field data 
 to process a 2D land line using the processing system. I describe the data 
@@ -68,7 +68,7 @@ Unix format, header loading qc display, shot record velocity filter,
 deconvoution, CDP gather, velocity analysis, residual statics, stack, 
 and post stack migration can be downloaded and this paper describes 
 the scripts.  This is a more complete processing sequence and a 
-different dataset than provided in previous publications.  The scripts 
+different data set than provided in previous publications.  The scripts 
 provide the detailed parameters used by the Seismic Unix programs.  The 
 parameters for deconvolution, velocity filter, mute, moveout velocity, 
 and scaling can adapted for use by other seismic processing  systems. The 
@@ -382,7 +382,7 @@ shots so that I could use an asymmetrical dip filter (-15,5 ms/trace).
 That dip filter is similar to the 1981 processing that used
 (-12,4). Sudipfilter was intended for post stack processing, so I
 wrote the script \texttt{alaskavelfilt.sh} to loop over the shots and
-divide individual shotrecords into positive and negative offsets.
+divide individual shot records into positive and negative offsets.
 Figure~\ref{fig:velfiltrec24} shows the Figure~\ref{fig:zoomfirst} 
 shotpoint with velocity filtering applied.
 
@@ -460,7 +460,7 @@ Or using the tar file:
 \end{verbatim}
 
 There are four components of the plot: semblance plot, constant velocity 
-stack (CVS) plot, cmp gather without NMO, and cmp gather after NMO.  The 
+stack (CVS) plot, cdp gather without NMO, and cdp gather after NMO.  The 
 semblance plots and CVS plot have the velocity function over plotted.  
 The velocity analysis can be picked by pointing on the semblance and 
 'selecting' by pressing the 's' key.  To 'quit' the location press the 
@@ -634,7 +634,7 @@ Some of the differences in the processing sequences are:
 \begin{enumerate}
 \item The 1981 processing used GSI's designature process.  This source 
 signature removal technique applies the same operator to all traces in a 
-shotrecord.  The filter is designed differently from conventional 
+shot record.  The filter is designed differently from conventional 
 deconvolution and the two types of deconvolution will not produce data 
 with the same phase. 
 \item There are many differences in the application of AGC.  For example 
@@ -648,14 +648,14 @@ similar, especially below 400 ms.  The shallow results are better on the
 
 \section{Discussion of the Seismic Unix processing}
 I found the SU software hard to use.  The \texttt{sudipfilter} program
-was not intended for shotrecord velocity filtering, so a collection of
+was not intended for shot record velocity filtering, so a collection of
 programs were required.  Many of my input errors were not trapped by
 the code so I struggled to debug my scripts.  SU is a useful
 prototyping environment, but it falls short of the packages I used in 
 industry.  I look forward to future improvements.
 
-\section{key datasets produced}
-This processing sequence produces many datasets, but the best files for 
+\section{key data sets produced}
+This processing sequence produces many data sets, but the best files for 
 additional processing are:
 \begin{enumerate}
 \item allshots.su - unprocessed field data with geometry in headers.  Bad 
@@ -664,7 +664,7 @@ traces and aux traces removed.
 applied ready for normal moveout.
 \item vpickorig.txt - final stacking velocities.
 \item rstack1.su - final residual statics stack.
-\item mig.su - post stack kirchhoff migrated data.
+\item mig.su - post stack Kirchhoff migrated data.
 \end{enumerate}
 
 \section{Plans}
@@ -673,7 +673,7 @@ Some of the ideas I have to continue this work include:
 \begin{enumerate}
 \item Process using other software (open-source or proprietary). 
 \item Study difference and see if the open-source software can be improved.
-\item Working on different datasets (marine, 3D, ...).
+\item Working on different data sets (marine, 3D, ...).
 \end{enumerate}
 
 \section{Conclusions}
@@ -708,7 +708,7 @@ Some of the ideas I have to continue this work include:
 \item Improve results by selecting different SU programs or different 
 parameters. 
 \item Process using other software (open-source or proprietary).
-\item Working on different datasets (marine, 3D, ...).
+\item Working on different data sets (marine, 3D, ...).
 \item Contribute source improvements back to SU.
 \end{enumerate}
 
