@@ -328,9 +328,7 @@ void upgrad_inverse(upgrad upg,
 	} else {
 	    rhs[jt] = rhs[jt]/den;
 	}
-	/*
-	if (rhs[jt] >= 100.) sf_error("rhs[%d] = %g, it = %d",jt,rhs[jt],it);
-	*/
+	
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {
 		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
@@ -362,10 +360,10 @@ void upgrad_spread(upgrad upg,
 
     for (it = 0; it < nt; it++) {
 	/*
-	if (upg->pos[it][0] == 6315)
-	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g",rhs[upg->pos[it][0]],it,upg->qq[it][0],it,x[it]);
-	if (upg->pos[it][1] == 6315)
-	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g",rhs[upg->pos[it][1]],it,upg->qq[it][1],it,x[it]);
+	if (upg->pos[it][0] == 15100)
+	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g, add = %g",rhs[upg->pos[it][0]],it,upg->qq[it][0],it,x[it],upg->qq[it][0]*x[it]);
+	if (upg->pos[it][1] == 15100)
+	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g, add = %g",rhs[upg->pos[it][1]],it,upg->qq[it][1],it,x[it],upg->qq[it][1]*x[it]);
 	*/
 
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
@@ -398,5 +396,17 @@ void upgrad_paste(float *time)
 		time[k*ss[2]+j*ss[1]+i] += time[j*ss[2]+k*ss[1]+i];
 	    }
 	}
+    }
+}
+
+void upgrad_debug(upgrad upg, float *den)
+/*< debug >*/
+{
+    int it, jt;
+
+    for (it = nt-1; it >= 0; it--) {
+	jt = upg->order[it];
+
+	den[jt] = upg->ww[it][ndim];
     }
 }

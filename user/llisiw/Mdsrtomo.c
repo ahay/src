@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
     int iter, niter, cgiter, count;
     int *f, *m0, offset;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
-    float eps, tol, tau1, tau2, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
+    float eps, tol, tau1, tau2, angle, *th, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
     char key[6], *what;
-    sf_file in, out, reco, grad, flag, mask;
+    sf_file in, out, reco, grad, flag, mask, debug;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -67,6 +67,12 @@ int main(int argc, char* argv[])
 		mask = NULL;
 	    else
 		mask = sf_input("mask");
+
+	    /* output debug file */
+	    if (NULL == sf_getstring("debug"))
+		debug = NULL;
+	    else
+		debug = sf_output("debug");	    
 
 	    /* read dimension */
 	    dimt = sf_filedims(reco,n);
@@ -120,6 +126,16 @@ int main(int argc, char* argv[])
 		}
 	    }
 
+	    if (debug != NULL) {
+		den = sf_floatalloc(nt);
+
+		if (!adj) {
+		    sf_putint(debug,"n3",n[2]);
+		    sf_putfloat(debug,"d3",d[2]);
+		    sf_putfloat(debug,"o3",o[2]);
+		}
+	    }
+
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
 	    
@@ -155,7 +171,14 @@ int main(int argc, char* argv[])
 		dsrtomo_oper(false,false,nw,nt,dw,dt);	    
 	    }
 	    
+	    if (debug != NULL) {
+		dsrtomo_debug(den);
+
+		sf_floatwrite(den,nt,debug);
+	    }
+
 	    if (adj) {
+		/*
 		if (velocity) {
 		    for (iw=0; iw < nw; iw++)
 			dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
@@ -164,6 +187,9 @@ int main(int argc, char* argv[])
 		} else {
 		    sf_floatwrite(dw,nw,out);
 		}
+		*/
+
+		sf_floatwrite(dw,nw,out);
 	    } else {
 		sf_floatwrite(dt,nt,out);
 	    }
@@ -259,6 +285,9 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
 	    /* tau2 */
 
+	    if (!sf_getfloat("angle",&angle)) angle=0.1;
+	    /* angle */
+
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("grad")) {
 		grad = sf_output("grad");
@@ -297,15 +326,16 @@ int main(int argc, char* argv[])
 	    dt = sf_floatalloc(nt);
 	    w1 = sf_floatalloc(nw);
 	    f  = sf_intalloc(nt);
+	    th = sf_floatalloc(nt);
 
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d,tau1,tau2);
+	    dsreiko_init(n,o,d,tau1,tau2,angle);
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
 	    
 	    /* initial misfit */
-	    dsreiko_fastmarch(t,w,f);
+	    dsreiko_fastmarch(t,w,f,th);
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
@@ -364,7 +394,7 @@ int main(int argc, char* argv[])
 			w1[iw] = (w[iw]+gama*dw[iw])*(w[iw]+gama*dw[iw])/w[iw];
 		    
 		    /* compute new misfit */
-		    dsreiko_fastmarch(t,w1,f);
+		    dsreiko_fastmarch(t,w1,f,th);
 		    dsreiko_mirror(t);
 		    
 		    for (it=0; it < nt; it++) {
