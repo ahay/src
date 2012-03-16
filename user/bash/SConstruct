@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-datshift eikfswp ktmig wile
+datshift eikfswp ktmig maskval wile
 '''
 
 try:  # distributed version
