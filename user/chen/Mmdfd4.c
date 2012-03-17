@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	int nt, nx, nz, nwv;	 	// dimensions
 	float dt, dx, dz, dt2;		// increments
 	int wvlt, owv;				// arguments
-	float wvp[4], *pwv;
+	float wvp[4], *pwv=NULL;
 	int jt;
 
 	float **vv, **pout;

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
+    if(!sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
 
     if (mig) { /* migration */
 	data = sf_input("in");
