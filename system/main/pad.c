@@ -90,7 +90,7 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_histint(in,"esize",&esize)) {
-	esize=4;
+	esize=sf_esize(in);
     } else if (0>=esize) {
 	sf_error("cannot handle esize=%d",esize);
     }
