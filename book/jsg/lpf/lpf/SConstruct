@@ -36,7 +36,7 @@ Plot('freq',
      parallel2=n format2="%3.1f"
      ''')
 
-Flow('shift','in','shift1 ns=3')
+Flow('shift','in','shift1 ns=2')
 Flow('pef pre','shift in',
      'lpf match=${SOURCES[1]} rect1=7 pred=${TARGETS[1]}')
 Flow('err','pre in','add scale=-1,1 ${SOURCES[1]}')
