@@ -31,12 +31,13 @@ int main(int argc, char* argv[])
     float *rtd, **rptr, **rtrp, *ra, *gamma, **rk, *rka, *rptd, *rkd; 
     float **rpa, **rap, **raprpa, **raprpat, **mt, *gt, *dm, *est, r2, rss;
     bool verb;
-    sf_file in, out, ma;    
+    sf_file in, out, ma1, ma2;    
     
     sf_init (argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
-    ma  = sf_output("ma");
+    ma1 = sf_output("ma1");
+    ma2 = sf_output("ma2");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&na)) sf_error("No n1= in input");
@@ -62,11 +63,18 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     if (!sf_getbool("verb",&verb)) verb=false;
 
-    sf_putint(ma,"n1",2);
-    sf_putint(ma,"nf",na);
-    sf_putfloat(ma,"df",df);
-    sf_putfloat(ma,"f0",f0);
-    sf_fileflush(ma,in);
+    sf_putint(ma1,"n1",n);
+    sf_putint(ma1,"nf",na);
+    sf_putfloat(ma1,"df",df);
+    sf_putfloat(ma1,"f0",f0);
+    sf_fileflush(ma1,in);
+
+    sf_putint(ma2,"n1",n);
+    sf_putint(ma2,"nf",na);
+    sf_putfloat(ma2,"df",df);
+    sf_putfloat(ma2,"f0",f0);
+    sf_fileflush(ma2,in);
+
 
     data = sf_floatalloc(na);
     eps = 10.*FLT_EPSILON;
@@ -279,8 +287,10 @@ int main(int argc, char* argv[])
 	    m2[k] = m[k]*m[k];
 	}
       
-	sf_floatwrite(m2,n,ma);
-	sf_floatwrite(a,n,ma);
+	sf_floatwrite(m2,n,ma1);
+
+	sf_floatwrite(a,n,ma2);
+
 	rss = 0;
 	dataout = sf_floatalloc(na);
 	for (ib = 0; ib < na; ib++) {
@@ -297,6 +307,7 @@ int main(int argc, char* argv[])
 	    sf_warning("m=%g a=%g",m[k],a[k]*m[k]*sqrtf(SF_PI)*0.5);
 	}
 	sf_warning("Residual sum of squares equals %g",rss);
+
 	sf_floatwrite(dataout,na,out);
     }
 
