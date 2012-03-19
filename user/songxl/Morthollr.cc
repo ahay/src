@@ -33,7 +33,6 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0);
-    double con2 = pow(2.0,1/3.0);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
         float wx = vx[i]*vx[i];
@@ -50,37 +49,23 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
            double y=ky[j]*ky[j];
            double z=kz[j]*kz[j];
           
-           wx *= x;
-           wy *= y;
-           wz *= z;
-           dw *= y;
-	   double phi0 
-          /* 
-           double aa=(2*e1+1)*wx*x+(2*e2+1)*wy*y+wz*z;
-           double bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
-           //double cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
-           double cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           // cerr<<"aa="<<aa<<" ";    cerr<<endl;
-           // cerr<<"bb="<<bb<<" ";    cerr<<endl;
-          // if(cc) {  cerr<<"cc="<<cc<<" ";    cerr<<endl; }
-          //  if (dd) {cerr<<"dd="<<dd<<" ";    cerr<<endl; }
-           double r = (81*cc+6*aa*(2*aa*aa+9*bb))*cc-3*bb*bb*(aa*aa+4*bb);
-         //   if (r>0) {cerr<<"r="<<r<<" ";    cerr<<endl;}
-            //cerr<<"r="<<r<<" ";    cerr<<endl;
-            r = sqrt(abs(r))-9*cc;
-            double mm = -2*aa*aa*aa+3*r-9*aa*bb;
-            if (mm<0) r = -pow(-mm,1/3.0);
-            else r = pow(mm,1/3.0);
-      //      cerr<<r<<" ";    cerr<<endl;
-            if (abs(r) < 0.000001) {r = 0.0;}
-            else { r = 1/6.0*(-con2*con2*r-2*con2*(aa*aa+3*bb)/r+2*aa);} 
-       //     if (r < 0) cerr<<r<<endl;
-            r = sqrt(abs(r));
-      //      r = sqrt(wz*(x+y+z));
-      //      cerr<<r<<" ";    cerr<<endl;
-       */
-	   res(a,b) = 2*(cos(r*dt)-1); 
+           double wxx = wx*x;
+           double wyy = wy*y;
+           double wzz = wz*z;
+           double wxy = dw*y;
+           double tmp1 = (wxx+wyy)*(1+2*e1);
+	   double phi0 = tmp1*tmp1+wzz*wzz-2.0*(wxx+wyy)*wzz*(2*e1-1);
+           phi0 = sqrt(phi0) + tmp1 + wzz; 
+           double phi02 = phi0/2.0;
+           phi0 = sqrt(phi02);
+           double tmp2 = 2.0*tmp1*phi0*phi02+3.0*phi0*phi02*phi02+2*wzz*phi0*(phi02-(wxx+wyy)*e1);
+           double tmp3 = -2.0*tmp1*phi0*phi02+3.0*phi0*phi02*phi02-2*wzz*phi0*(phi02-(wxx+wyy)*e1);
+           double phiv = (abs(tmp2)>1.0e-7)?wxy*(wxx*(1+2.0*e1)-phi02)*(-2.0*wzz*e1+(1+2.0*e1)*phi02)/tmp2:0;
+           double phie = (abs(tmp2)>1.0e-7)?wyy*((wxx*(1+2.0*e1)-phi02)*phi02+wzz*(-2.0*wxx*e1+phi02))/tmp2:0;
+           double phig = (abs(tmp3)>1.0e-6)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/tmp3:0;
+           //double phig = (abs(tmp2)>1.0e-7)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/(-tmp2):0;
+           double phi = phi0 + phiv + phie*e2 + phig*e3;
+	   res(a,b) = 2*(cos(phi*dt)-1); 
 	}
     }
     return 0;
@@ -113,18 +98,20 @@ int main(int argc, char** argv)
     int m = nx*ny*nz;
 
     vx.resize(m);
-    vy.resize(m);
     vz.resize(m);
     yi1.resize(m);
-    yi2.resize(m);
-    mu.resize(m);
+    dmu.resize(m);
+    dv.resize(m);
+    dyi.resize(m);
+
     velx >> vx;
-    vely >> vy;
+    vely >> dv;
     velz >> vz;
     etax >> yi1;
-    etay >> yi2;
-    muz  >> mu;
-    
+    etay >> dyi;
+    muz  >> dmu;
+     
+
     iRSF fft("fft");
 
     int nkz,nkx,nky;
@@ -147,7 +134,7 @@ int main(int argc, char** argv)
     kx.resize(n);
     ky.resize(n);
     kz.resize(n);
-    int i = 0;
+    int i = 0; 
     for (int iy=0; iy < nky; iy++) {
         for (int ix=0; ix < nkx; ix++) {
             for (int iz=0; iz < nkz; iz++) {
@@ -159,6 +146,13 @@ int main(int argc, char** argv)
         }
     }
 
+    for (i=0; i < m; i++){
+         dv[i]  -=  vx[i];
+         dyi[i] -=  yi1[i];
+         dmu[i] -=  1.0;
+    }
+
+        
 
     vector<int> lidx, ridx;
     DblNumMat mid;
