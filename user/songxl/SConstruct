@@ -17,17 +17,15 @@ ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10
 ffdtti4
 ofd2_25 lfd2_25 lfd2_25b
 lffd1_10 lffd2_4 lffd2_4_c lffd2_an_25
-constpermffd constpermkz
-vzpermffd vz1
-vzpermffd3 permffd3
-permf
 nxtfftn orthowave
+permffdxzc
+ffd2_den_omp
 '''
 
 mpi_progs = 'tti4rtm'
 
 
-ccprogs = 'ortholr'
+ccprogs = 'ortholr ortlr orthollr permlr4'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
