@@ -101,7 +101,7 @@ def get_authors(source,default):
                     if names:
                         last = names.pop() # last name
                         person = string.join((person,last),'~')
-                        authors[person]=last
+                        authors[person]=last.capitalize()
     all = map(lambda k: (authors[k],k),authors.keys())
     all.sort()
     return all

@@ -19,9 +19,9 @@ ofd2_25 lfd2_25 lfd2_25b
 lffd1_10 lffd2_4 lffd2_4_c lffd2_an_25
 nxtfftn orthowave
 ffd2_den_omp
+permffdxzc
 '''
 
-#permffdxzc
 
 mpi_progs = 'tti4rtm'
 

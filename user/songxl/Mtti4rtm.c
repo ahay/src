@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     int nr, jr, r0, nl, fsize, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
     float ax, az, factor;
-    MPI_Status stat;
+    /* MPI_Status stat; */
      
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nt",&nt)) sf_error("Need nt input");
     if (!sf_getint("isz",&isz)) sf_error("Need isz input");
     if (!sf_getint("irz",&irz)) irz=isz;
-    //if (!sf_getint("r0",&r0)) r0=0;
+    /* if (!sf_getint("r0",&r0)) r0=0; */
     if (!sf_getint("jr",&jr)) jr=1;
     if (!sf_getint("jm",&jm)) jm=20;
     if (!sf_getint("nr",&nr)) sf_error("Need nr input");/*streamer total length*/
@@ -1042,7 +1042,7 @@ float dehf(float k /*current frequency*/,
 {
     float kmax, kmax2;
     float depress;
-    float pi=SF_PI;
+    //float pi=SF_PI;
     kmax =  (kn*factor);
     kmax2 = (kmax+kn)/2.0;
     if (fabs(k) < kmax) {
