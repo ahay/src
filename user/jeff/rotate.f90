@@ -31,9 +31,9 @@ contains
     else
        pmag=-sqrt(p1**2+p2**2)  !! . . Magnitudes and Angles
     end if
-    pi = atan(1.)*4.
-    sini=sin(irot * (pi/180))
-    cosi=cos(irot * (pi/180))
+    pi = acos(-1.)
+    sini=sin(irot * (pi/180.))
+    cosi=cos(irot * (pi/180.))
     sina=sin(atan2(p2,p1))
     cosa=cos(atan2(p2,p1))
     slow=pmag                !! . . Constant Definitions
@@ -45,8 +45,36 @@ contains
     Frsv= 2*beta *qb*(1-2.*slow**2*beta**2)/delta
     Fzsv= 4.*beta**3*slow*qa*qb            /delta
     invfact=1./(-Frsv*Fzp+Frp*Fzsv)
- 
+
     if (adj) then   !! . . Model to Data
+
+       write(0,*) 'APPLYING ADJOINT OPERATOR'
+      !! . . Data to Model
+       do jj=1,n2
+          do ii=1,n1            !! . . Rotation to go from [UN,UE,UD] to [u1,u2,u3]
+             tmp(ii,jj,1)=  cosi*data(ii,jj,1) + sini*data(ii,jj,2)
+             tmp(ii,jj,2)= -sini*data(ii,jj,1) + cosi*data(ii,jj,2)
+             tmp(ii,jj,3)=       data(ii,jj,3)
+          end do
+       end do
+       do jj=1,n2
+          do ii=1,n1            !! . . Rotation to go from [u1,u2,u3] to [Ur,Ut,Uz]
+             tmp2(ii,jj,1)=  cosa*tmp(ii,jj,1) + sina*tmp(ii,jj,2)
+             tmp2(ii,jj,2)= -sina*tmp(ii,jj,1) + cosa*tmp(ii,jj,2)
+             tmp2(ii,jj,3)=       tmp(ii,jj,3)
+          end do
+       end do
+       do jj=1,n2       
+          do ii=1,n1            !! . . From [Ur,Ut,Uz] to [SV,SH,P]
+             modl(ii,jj,1)= -Fzp/invfact*tmp2(ii,jj,1) +  Frp/invfact*tmp2(ii,jj,3)
+             modl(ii,jj,2)=        - 0.5*tmp2(ii,jj,2)
+             modl(ii,jj,3)= Fzsv/invfact*tmp2(ii,jj,1) - Frsv/invfact*tmp2(ii,jj,3)
+          end do
+       end do
+      
+    else
+  
+      write(0,*) 'APPLYING FORWARD OPERATOR'
        do ii=1,n1            !! . . Decompose section from [SV,SH,P] to [R,T,Z]
           do jj=1,n2 
              tmp(ii,jj,1)= Frsv*modl(ii,jj,1) + Fzsv*modl(ii,jj,3)
@@ -67,29 +95,6 @@ contains
              data(ii,jj,1)= cosi*tmp2(ii,jj,1) - sini*tmp2(ii,jj,2)
              data(ii,jj,2)= sini*tmp2(ii,jj,1) + cosi*tmp2(ii,jj,2)
              data(ii,jj,3)=      tmp2(ii,jj,3)
-          end do
-       end do
-
-    else                     !! . . Data to Model
-       do jj=1,n2
-          do ii=1,n1            !! . . Rotation to go from [UN,UE,UD] to [u1,u2,u3]
-             tmp(ii,jj,1)=  cosi*data(ii,jj,1) + sini*data(ii,jj,2)
-             tmp(ii,jj,2)= -sini*data(ii,jj,1) + cosi*data(ii,jj,2)
-             tmp(ii,jj,3)=       data(ii,jj,3)
-          end do
-       end do
-       do jj=1,n2
-          do ii=1,n1            !! . . Rotation to go from [u1,u2,u3] to [Ur,Ut,Uz]
-             tmp2(ii,jj,1)=  cosa*tmp(ii,jj,1) + sina*tmp(ii,jj,2)
-             tmp2(ii,jj,2)= -sina*tmp(ii,jj,1) + cosa*tmp(ii,jj,2)
-             tmp2(ii,jj,3)=       tmp(ii,jj,3)
-          end do
-       end do
-       do jj=1,n2       
-          do ii=1,n1            !! . . From [Ur,Ut,Uz] to [SV,SH,P]
-             modl(ii,jj,1)= -Fzp/invfact*tmp2(ii,jj,1) +  Frp/invfact*tmp2(ii,jj,3)
-             modl(ii,jj,2)=        - 0.5*tmp2(ii,jj,2)
-             modl(ii,jj,3)= Fzsv/invfact*tmp2(ii,jj,1) - Frsv/invfact*tmp2(ii,jj,3)
           end do
        end do
     end if

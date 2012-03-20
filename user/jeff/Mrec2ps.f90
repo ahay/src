@@ -5,10 +5,10 @@ program rec2ps
 
   implicit none 
 
-  integer                                 :: n1,n2,n3		
-  real, dimension(:,:,:), allocatable     :: in,out
-  real	                                  :: alpha,beta,p1,p2,irot
-
+  integer                            :: n1,n2,n3		
+  real, dimension(:,:,:), allocatable:: data,modl
+  real	                             :: alpha,beta,p1,p2,irot
+  logical                            :: adj
   type(file) :: infile,outfile
   
   call sf_init()
@@ -26,16 +26,27 @@ program rec2ps
   call from_par("alpha", alpha,6.2) ! P-wave Velocity at surface
   call from_par("beta",  beta,3.5) ! S-wave velocity at surface
   call from_par("irot",  irot, 0.) ! Rotation of array w.r.t. 1st axis
+  call from_par("adj", adj,.true.)
+  allocate( data(n1,n2,n3),modl(n1,n2,n3) )
 
-  allocate( in(n1,n2,n3),out(n1,n2,n3) )
+  call rotatedata_init(n1,n2,n3,alpha,beta,p1,p2,irot)
 
 !! . . Read in File
-  call rsf_read(infile,in)
-  call rotatedata_init(n1,n2,n3,alpha,beta,p1,p2,irot)
-  call rotatedata(.true.,.false.,in,out)
+  if (adj) then
+     call rsf_read(infile,data)
+  else
+     call rsf_read(infile,modl)
+  end if
+
+  call rotatedata(adj,.false.,data,modl)
 
   !! . . Output file
-  call rsf_write(outfile,out)
-  deallocate(in,out)
+  if (adj) then
+     call rsf_write(outfile,modl)
+  else
+     call rsf_write(outfile,data)
+  end if
+
+  deallocate(data,modl)
   call exit()
 end program rec2ps 
