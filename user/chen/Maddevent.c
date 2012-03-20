@@ -12,7 +12,7 @@ int main(int argc,char**argv)
 	float w0, f0, t0, v0, a0, qv, qa, wvp[4];
 	int event, wvtype, a0ref;
 	float d1, d2, o1, o2;
-	int n1, n2, i1, i2, nfft;
+	int n1, n2, i2, nfft;
 	sf_complex * buf;
 
 	sf_init(argc,argv);
@@ -28,19 +28,20 @@ int main(int argc,char**argv)
     if (!sf_histfloat(in, "o2", &o2)) sf_error("No o2= in input");
 
 	if(!sf_getint("wvtype", &wvtype)) wvtype =0;
-	/* 0: ricker; x: not support */
+	/* 0: ricker; 1: sinc; x: not support */
 	switch(wvtype)
 	{
 	case 0:
+	case 1:
 		if(!sf_getfloat("w0", &w0) ) w0 = 35.0;
-		/* central frequency of Ricker wavelet */
+		/* central frequency of Ricker wavelet or bandwidth of sinc wavelet */
 		wvp[0] = w0;
 		break;
 	}
 
 	if(!sf_getint("event", &event)) event =2;
 	/* 0: linear; 1: parabolic; 2:hyperbolic */
-	if(!sf_getint("nfft", &nfft)) nfft = n1*2;
+	if(!sf_getint("nfft", &nfft)) sf_error("nfft= must given");
 	/* fft length */
 	if(!sf_getfloat("t0", &t0)) t0 =0.3;
 	/* event travel time at x=0 */

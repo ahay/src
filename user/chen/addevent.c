@@ -64,6 +64,13 @@ void* sf_addevent_init(int nfft, float of, float df, 	// time domain sampling pa
 		}
 		sf_wvlt_frck(pp->nf, pp->wvlt, wvp);
 		break;
+	case 1:
+		for(ifreq=0;ifreq<pp->nf;ifreq++)
+		{
+			if(fabs(ifreq*df+of) < wvp[0]) pp->wvlt[ifreq] = 1.0;
+			else pp->wvlt[ifreq] = 0.0;
+		}
+		break;
 	default:
 		break;
 	}
