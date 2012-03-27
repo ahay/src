@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
     float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc, *sknown;
     char *type;
-    bool verb, *dknown, smooth;
+    bool verb, *dknown;
     sf_file in, out, dip, mask=NULL, convex=NULL;
 
     sf_init (argc,argv);
@@ -52,9 +52,6 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    if (!sf_getbool("smooth",&smooth)) smooth = false;
-    /* smoothing flag */
-
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
 
@@ -74,13 +71,10 @@ int main(int argc, char* argv[])
 	convex = sf_input("convex");
     } else {
 	convex = NULL;
-    }
-
-    if (smooth) {
 	if (!sf_getfloat("perc",&perc)) perc=90.;
         /* percentage for smooth */
 	sf_sharpen_init(n12,perc);
-    }	
+    }
 
     if (NULL != mask) {
 	sf_floatread(m,n12,mask);
@@ -95,9 +89,7 @@ int main(int argc, char* argv[])
     }
      if (NULL != convex) {
 	sf_floatread(sknown,n12,convex);
-    } else {
-	 sf_error("No convex set in input");
-    }   
+    }  
 
     seislet_init(n1,n2,true,true,eps,type[0]);
     dd2 = sf_floatalloc(n12);
@@ -119,23 +111,20 @@ int main(int argc, char* argv[])
 		sf_warning("Iteration %d of %d",iter+1,niter);
 
 	    seislet_lop(true,false,n12,n12,mm,dd2);
-	    for (i1=0; i1 < n12; i1++) {
-		mm[i1]*=sknown[i1];
+	    if (NULL != convex) {
+		for (i1=0; i1 < n12; i1++) {
+		    mm[i1]*=sknown[i1];
+		}
+	    } else {
+		sf_sharpen(mm);
+		sf_weight_apply(n12,mm);
 	    }
-
 	    seislet_lop(false,false,n12,n12,mm,dd2);
 	    for (i1=0; i1 < n12; i1++) {
 		if (dknown[i1]) dd2[i1]=dd[i1];
 	    }
 	}
 	
-	if (smooth) {
-	    seislet_lop(true,false,n12,n12,mm,dd2);
-	    sf_sharpen(mm);
-	    sf_weight_apply(n12,mm);
-	    seislet_lop(false,false,n12,n12,mm,dd2);
-	}
-
 	sf_floatwrite (dd2,n12,out);
     }
 

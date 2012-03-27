@@ -166,4 +166,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mseisbreg2.c 7291 2011-06-20 05:32:40Z yang_liu $	 */
+/* 	$Id$	 */
