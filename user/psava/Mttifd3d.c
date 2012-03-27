@@ -121,7 +121,9 @@ int main(int argc, char* argv[])
     bool verb,fsrf,snap,expl,dabc,sout,uses;
     int  jsnap,ntsnap,jdata;
     char *atype;
+#ifdef _OPENMP
     int ompnth=1;
+#endif
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
