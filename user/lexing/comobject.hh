@@ -1,5 +1,5 @@
-#ifndef _COMOBJECT_HPP_
-#define _COMOBJECT_HPP_
+#ifndef _COMOBJECT_HH_
+#define _COMOBJECT_HH_
 
 #include "commoninc.hh"
 

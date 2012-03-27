@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
     CDPtype=1;
     if (sf_histfloat(scan,"d3",&dy)) {
 	CDPtype=0.5+0.5*dh/dy;
+	if (0 == CDPtype) CDPtype=1;
 	if (1 != CDPtype) sf_histint(scan,"CDPtype",&CDPtype);
     }
     sf_warning("CDPtype=%d",CDPtype);
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
     /* if y, use slowness instead of velocity */
 
     for (ix=0; ix < nx; ix++) {
-	sf_warning("scan %d of %d",ix+1,nx);
+	sf_warning("scan %d of %d;",ix+1,nx);
 
 	for (it=0; it < nt*nh; it++) {
 	    stack[0][it] = 0.;
@@ -131,6 +132,7 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite (stack[0],nt*nh,cmp);
     } /* x */
+    sf_warning(".");
 
     exit(0);
 }

@@ -1,5 +1,5 @@
-#ifndef _OFFVEC_HPP_
-#define _OFFVEC_HPP_
+#ifndef _OFFVEC_HH_
+#define _OFFVEC_HH_
 
 #include "commoninc.hh"
 
@@ -83,9 +83,9 @@ template <class F> inline void setvalue(OffVec<F>& vec, F val)
 {
   for(int i=vec.s(); i<vec.s()+vec.m(); i++)	 vec(i) = val;
 }
-template <class F> inline double energy(OffVec<F>& vec)
+template <class F> inline float energy(OffVec<F>& vec)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=vec.s(); i<vec.s()+vec.m(); i++)
 	sum += abs(vec(i)*vec(i));
   return sum;
@@ -94,6 +94,7 @@ template <class F> inline double energy(OffVec<F>& vec)
 typedef OffVec<bool>   BolOffVec;
 typedef OffVec<int>    IntOffVec;
 typedef OffVec<double> DblOffVec;
+typedef OffVec<float>  FltOffVec;
 typedef OffVec<cpx>    CpxOffVec;
 
 

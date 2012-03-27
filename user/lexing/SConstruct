@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-hradon lrmatrix
+lrmatrix hradon hradon32 hradon23 sthres hufft hufft1
 '''
 
 subs = '''

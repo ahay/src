@@ -1,5 +1,5 @@
-#ifndef _OFFMAT_HPP_
-#define _OFFMAT_HPP_
+#ifndef _OFFMAT_HH_
+#define _OFFMAT_HH_
 
 #include "offvec.hh"
 
@@ -93,9 +93,9 @@ template <class F> inline void setvalue(OffMat<F>& M, F val)
 	  M(i,j) = val;
 }
 
-template <class F> inline double energy(OffMat<F>& M)
+template <class F> inline float energy(OffMat<F>& M)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=M.s(); i<M.s()+M.m(); i++)
 	for(int j=M.t(); j<M.t()+M.n(); j++)
 	  sum += abs(M(i,j)*M(i,j));
@@ -106,6 +106,7 @@ template <class F> inline double energy(OffMat<F>& M)
 typedef OffMat<bool>   BolOffMat;
 typedef OffMat<int>    IntOffMat;
 typedef OffMat<double> DblOffMat;
+typedef OffMat<float>  FltOffMat;
 typedef OffMat<cpx>    CpxOffMat;
 
 #endif

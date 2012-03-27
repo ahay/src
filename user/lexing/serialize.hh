@@ -1,5 +1,5 @@
-#ifndef _SERIALIZE_HPP_
-#define _SERIALIZE_HPP_
+#ifndef _SERIALIZE_HH_
+#define _SERIALIZE_HH_
 
 #include "commoninc.hh"
 #include "vec2t.hh"
@@ -49,16 +49,16 @@ inline int deserialize(int& val, istream& is, const vector<int>& mask)
 }
 
 //-------------------
-//double
-inline int serialize(const double& val, ostream& os, const vector<int>& mask)
+//float
+inline int serialize(const float& val, ostream& os, const vector<int>& mask)
 {
-  os.write((char*)&val, sizeof(double));
+  os.write((char*)&val, sizeof(float));
   return 0;
 }
 
-inline int deserialize(double& val, istream& is, const vector<int>& mask)
+inline int deserialize(float& val, istream& is, const vector<int>& mask)
 {
-  is.read((char*)&val, sizeof(double));
+  is.read((char*)&val, sizeof(float));
   return 0;
 }
 
@@ -94,13 +94,13 @@ inline int deserialize(Index2& val, istream& is, const vector<int>& mask)
 //Point2
 inline int serialize(const Point2& val, ostream& os, const vector<int>& mask)
 {
-  os.write((char*)&(val[0]), 2*sizeof(double));
+  os.write((char*)&(val[0]), 2*sizeof(float));
   return 0;
 }
 
 inline int deserialize(Point2& val, istream& is, const vector<int>& mask)
 {
-  is.read((char*)&(val[0]), 2*sizeof(double));
+  is.read((char*)&(val[0]), 2*sizeof(float));
   return 0;
 }
 
@@ -122,13 +122,13 @@ inline int deserialize(Index3& val, istream& is, const vector<int>& mask)
 //Point3
 inline int serialize(const Point3& val, ostream& os, const vector<int>& mask)
 {
-  os.write((char*)&(val[0]), 3*sizeof(double));
+  os.write((char*)&(val[0]), 3*sizeof(float));
   return 0;
 }
 
 inline int deserialize(Point3& val, istream& is, const vector<int>& mask)
 {
-  is.read((char*)&(val[0]), 3*sizeof(double));
+  is.read((char*)&(val[0]), 3*sizeof(float));
   return 0;
 }
 
@@ -360,67 +360,67 @@ inline int deserialize(IntNumTns& val, istream& is, const vector<int>& mask)
 
 
 //-------------------
-//DblNumVec
-inline int serialize(const DblNumVec& val, ostream& os, const vector<int>& mask)
+//FltNumVec
+inline int serialize(const FltNumVec& val, ostream& os, const vector<int>& mask)
 {
   int m = val.m();
   os.write((char*)&m, sizeof(int));
-  os.write((char*)(val.data()), m*sizeof(double));
+  os.write((char*)(val.data()), m*sizeof(float));
   return 0;
 }
 
-inline int deserialize(DblNumVec& val, istream& is, const vector<int>& mask)
+inline int deserialize(FltNumVec& val, istream& is, const vector<int>& mask)
 {
   int m;
   is.read((char*)&m, sizeof(int));
   val.resize(m);
-  is.read((char*)(val.data()), m*sizeof(double));
+  is.read((char*)(val.data()), m*sizeof(float));
   return 0;
 }
 
 //-------------------
-//DblNumMat
-inline int serialize(const DblNumMat& val, ostream& os, const vector<int>& mask)
+//FltNumMat
+inline int serialize(const FltNumMat& val, ostream& os, const vector<int>& mask)
 {
   int m = val.m();
   int n = val.n();
   os.write((char*)&m, sizeof(int));
   os.write((char*)&n, sizeof(int));
-  os.write((char*)(val.data()), m*n*sizeof(double));
+  os.write((char*)(val.data()), m*n*sizeof(float));
   return 0;
 }
 
-inline int deserialize(DblNumMat& val, istream& is, const vector<int>& mask)
+inline int deserialize(FltNumMat& val, istream& is, const vector<int>& mask)
 {
   int m;
   int n;
   is.read((char*)&m, sizeof(int));
   is.read((char*)&n, sizeof(int));
   val.resize(m,n);
-  is.read((char*)(val.data()), m*n*sizeof(double));
+  is.read((char*)(val.data()), m*n*sizeof(float));
   return 0;
 }
 
 //-------------------
-//DblNumTns
-inline int serialize(const DblNumTns& val, ostream& os, const vector<int>& mask)
+//FltNumTns
+inline int serialize(const FltNumTns& val, ostream& os, const vector<int>& mask)
 {
   int m = val.m();  int n = val.n();  int p = val.p();
   os.write((char*)&m, sizeof(int));
   os.write((char*)&n, sizeof(int));
   os.write((char*)&p, sizeof(int));
-  os.write((char*)(val.data()), m*n*p*sizeof(double));
+  os.write((char*)(val.data()), m*n*p*sizeof(float));
   return 0;
 }
 
-inline int deserialize(DblNumTns& val, istream& is, const vector<int>& mask)
+inline int deserialize(FltNumTns& val, istream& is, const vector<int>& mask)
 {
   int m,n,p;
   is.read((char*)&m, sizeof(int));
   is.read((char*)&n, sizeof(int));
   is.read((char*)&p, sizeof(int));
   val.resize(m,n,p);
-  is.read((char*)(val.data()), m*n*p*sizeof(double));
+  is.read((char*)(val.data()), m*n*p*sizeof(float));
   return 0;
 }
 

@@ -1,5 +1,5 @@
-#ifndef _OFFTNS_HPP_
-#define _OFFTNS_HPP_
+#ifndef _OFFTNS_HH_
+#define _OFFTNS_HH_
 
 #include "offmat.hh"
 
@@ -96,9 +96,9 @@ template <class F> inline void setvalue(OffTns<F>& T, F val)
 	T(i,j,k) = val;
   return;
 }
-template <class F> inline double energy(OffTns<F>& T)
+template <class F> inline float energy(OffTns<F>& T)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=T.s(); i<T.s()+T.m(); i++)	for(int j=T.t(); j<T.t()+T.n(); j++)	  for(int k=T.u(); k<T.u()+T.p(); k++)
 	sum += abs(T(i,j,k)*T(i,j,k));
   return sum;
@@ -107,6 +107,7 @@ template <class F> inline double energy(OffTns<F>& T)
 typedef OffTns<bool>   BolOffTns;
 typedef OffTns<int>    IntOffTns;
 typedef OffTns<double> DblOffTns;
+typedef OffTns<float>  FltOffTns;
 typedef OffTns<cpx>    CpxOffTns;
 
 #endif

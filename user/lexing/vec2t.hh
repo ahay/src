@@ -1,5 +1,5 @@
-#ifndef  _VEC2T_HPP_
-#define  _VEC2T_HPP_
+#ifndef  _VEC2T_HH_
+#define  _VEC2T_HH_
 
 #include "commoninc.hh"
 
@@ -137,7 +137,7 @@ template <class F> ostream& operator<<(ostream& os, const Vec2T<F>& a) {
 
 //---------------------------------------------------------
 /// MOST COMMONLY USED
-typedef Vec2T<double> Point2;
+typedef Vec2T<float> Point2;
 typedef Vec2T<int>    Index2;
 
 

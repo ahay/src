@@ -1,5 +1,5 @@
-#ifndef _COMMONINC_HPP_
-#define _COMMONINC_HPP_
+#ifndef _COMMONINC_HH_
+#define _COMMONINC_HH_
 
 //STL stuff
 #include <iostream>
@@ -27,14 +27,13 @@
 #include "lapack.h"
 
 //complex number
-typedef std::complex<double> cpx;
+typedef std::complex<float> cpx;
 
 //aux functions
 inline int pow2(int l) { assert(l>=0); return (1<<l); }
 
 #define iC(fun)  { int ierr=fun; assert(ierr==0); }
 #define iA(expr) { if((expr)==0) { std::cerr<<"wrong "<<__LINE__<<" in " <<__FILE__<<endl; assert(expr); } }
-//std::cerr<<"wrong"<<std::endl; assert(expr); } }
 
 using std::istream;
 using std::ostream;

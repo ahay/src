@@ -24,14 +24,14 @@
 
 using namespace std;
 
-static DblNumMat matrix;
+static FltNumMat matrix;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0);
+    setvalue(res,0.0f);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    res(a,b) = matrix(rs[a],cs[b]);
@@ -40,13 +40,13 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     return 0;
 }
 
-static void output(const char* name, DblNumMat& mat)
+static void output(const char* name, FltNumMat& mat)
 {
     int m=mat.m();
     int n=mat.n();
     int mn = m*n;
 
-    double *dmat = mat.data();
+    float *dmat = mat.data();
 
     std::valarray<float> fmat(mn);
     for (int k=0; k < mn; k++) {
@@ -87,18 +87,18 @@ int main(int argc, char** argv)
     std::valarray<float> fdata(m*n);
     in >> fdata;
     
-    std::valarray<double> data(m*n);
+    std::valarray<float> data(m*n);
     for (int k=0; k < m*n; k++) {
 	data[k] = fdata[k];
     }
     
-    DblNumMat mat(m,n,false,&(data[0]));
+    FltNumMat mat(m,n,false,&(data[0]));
     matrix = mat;
     
     vector<int> midx(m), nidx(n), lidx, ridx;
-    DblNumMat mid;
+    FltNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -108,13 +108,13 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    FltNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    DblNumMat rmat(n2,n);
+    FltNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
 
-    DblNumMat tmp1(m,n2);
+    FltNumMat tmp1(m,n2);
     iC( dgemm(1.0, lmat, mid, 0.0, tmp1) );
 
     if (outputs > 2) {

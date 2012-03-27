@@ -25,16 +25,16 @@
 using namespace std;
 
 static std::valarray<float>  vs;
-static std::valarray<double> ks;
+static std::valarray<float> ks;
 static float dt;
 static int nh;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0);
+    setvalue(res,0.0f);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    res(a,b) = 2*(cos(vs[rs[a]/nh]*ks[cs[b]]*dt)-1); 
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     float kh, kx, kz, kzmin;
 
-    std::valarray<double> k(n);
+    std::valarray<float> k(n);
     for (int ix=0; ix < nkx; ix++) {
 	kx = kx0+ix*dkx;
 	kx *= kx;
@@ -120,9 +120,9 @@ int main(int argc, char** argv)
     ks = k;
 
     vector<int> lidx, ridx;
-    DblNumMat mid;
+    FltNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) tol,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,tol,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -133,13 +133,13 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    FltNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    DblNumMat lmat2(m,n2);
+    FltNumMat lmat2(m,n2);
     iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    double *ldat = lmat2.data();
+    float *ldat = lmat2.data();
 
     std::valarray<float> ldata(m*n2);
     for (int k=0; k < m*n2; k++) 
@@ -149,9 +149,9 @@ int main(int argc, char** argv)
     left.put("n2",n2);
     left << ldata;
 
-    DblNumMat rmat(n2,n);
+    FltNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    double *rdat = rmat.data();
+    float *rdat = rmat.data();
 
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 

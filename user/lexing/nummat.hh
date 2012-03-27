@@ -1,5 +1,5 @@
-#ifndef _NUMMAT_HPP_
-#define _NUMMAT_HPP_
+#ifndef _NUMMAT_HH_
+#define _NUMMAT_HH_
 
 #include "numvec.hh"
 
@@ -88,9 +88,9 @@ template <class F> inline void setvalue(NumMat<F>& M, F val)
 	for(int j=0; j<M.n(); j++)
 	    M(i,j) = val;
 }
-template <class F> inline double energy(NumMat<F>& M)
+template <class F> inline float energy(NumMat<F>& M)
 {
-    double sum = 0;
+    float sum = 0;
     for(int i=0; i<M.m(); i++)	for(int j=0; j<M.n(); j++)	  sum += abs(M(i,j)*M(i,j));
     return sum;
 }

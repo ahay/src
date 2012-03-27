@@ -1,5 +1,5 @@
-#ifndef _NUMVEC_HPP_
-#define _NUMVEC_HPP_
+#ifndef _NUMVEC_HH_
+#define _NUMVEC_HH_
 
 #include "commoninc.hh"
 
@@ -83,15 +83,15 @@ template <class F> inline void setvalue(NumVec<F>& vec, F val)
   for(int i=0; i<vec.m(); i++)
     vec(i) = val;
 }
-template <class F> inline double energy(NumVec<F>& vec)
+template <class F> inline float energy(NumVec<F>& vec)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=0; i<vec.m(); i++)    sum += abs(vec(i)*vec(i));
   return sum;
 }  
-template <class F> inline double energy(const NumVec<F>& vec)
+template <class F> inline float energy(const NumVec<F>& vec)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=0; i<vec.m(); i++)    sum += abs(vec(i)*vec(i));
   return sum;
 }  

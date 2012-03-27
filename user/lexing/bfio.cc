@@ -25,18 +25,11 @@ using std::set;
 using std::queue;
 using std::cerr;
 
-extern "C"
-{
-  void vdsqrt_(int* n, double*, double*);
-  void vdsincos_(int* n, double*, double*, double*);
-}
-
 //---------------------------------------
 int serialize(const Entry& e, ostream& os, const vector<int>& mask)
 {
   iC( serialize(e._grid, os, mask) );
   iC( serialize(e._mats, os, mask) );
-  iC( serialize(e._dirc, os, mask) );
   return 0;
 }
 
@@ -44,136 +37,253 @@ int deserialize(Entry& e, istream& is, const vector<int>& mask)
 {
   iC( deserialize(e._grid, is, mask) );
   iC( deserialize(e._mats, is, mask) );
-  iC( deserialize(e._dirc, is, mask) );
   return 0;
 }
 
-#define CHEB_POINTS 13 /* number of chebyshev points */
+//---------------------------------------
+int BFIO::setup(iRSF& par, iRSF& inp)
+{
+  vector<int> all(1,1);
+  
+  par.get("EPSx1", _EPSx1); // number of chebyshev points
+  par.get("EPSx2", _EPSx2);
+  par.get("EPSp1", _EPSp1);
+  par.get("EPSp2", _EPSp2);
+  par.get("fi", _fi);
+  par.get("EL", _EL);
+  
+  //cerr<<"EPSx1 "<<_EPSx1<<" EPSx2 "<<_EPSx2<<endl;
+  //cerr<<"EPSp1 "<<_EPSp1<<" EPSp2 "<<_EPSp2<<endl;
+  //cerr<<"fi "<<_fi<<endl;
+  //cerr<<"EL "<<_EL<<endl;
+
+  ifstream fin("bfio.bin");
+
+  iC( deserialize(_e2dmap, fin, all) );
+  
+  int nw, nx;
+  inp.get("n1",nw);
+  inp.get("n2",nx);
+
+  float w0, dw;
+  inp.get("o1",w0);
+  inp.get("d1",dw);  
+
+  float x0, dx;
+  inp.get("o2",x0);
+  inp.get("d2",dx);
+
+  wmin = w0;
+  wmax = w0+nw*dw;
+
+  zmin = x0;
+  zmax = x0+nx*dx;
+
+  int nt;
+  float t0, dt;
+  par.get("nt",nt);
+  par.get("t0",t0);
+  par.get("dt",dt);
+  tmin = t0;
+  tmax = t0+nt*dt;
+
+  int np;
+  float p0, dp;
+  par.get("np",np);
+  par.get("p0",p0);
+  par.get("dp",dp);
+  pmin = p0;
+  pmax = p0+np*dp;
+  
+  cerr<<"nw "<<nw<<" nx "<<nx<<endl;
+  cerr<<"nt "<<nt<<" np "<<np<<endl;
+  cerr<<"wmin "<<wmin<<" wmax "<<wmax<<endl;
+  cerr<<"zmin "<<zmin<<" zmax "<<zmax<<endl;
+  cerr<<"taumin "<<tmin<<" taumax "<<tmax<<endl;
+  cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
+  return 0;
+}
+
 
 //---------------------------------------
-int BFIO::setup(iRSF &par, iRSF &inp) // map<string,string>& opts)
+int BFIO::setup32(iRSF& par, iRSF& inp)
 {
-    vector<int> all(1,1);
+  vector<int> all(1,1);
+  
+  par.get("EPSx1", _EPSx1); // number of chebyshev points
+  par.get("EPSx2", _EPSx2);
+  par.get("EPSp1", _EPSp1);
+  par.get("EPSp2", _EPSp2);
+  par.get("fi", _fi);
+  par.get("EL", _EL);
+  
+  //cerr<<"EPSx1 "<<_EPSx1<<" EPSx2 "<<_EPSx2<<endl;
+  //cerr<<"EPSp1 "<<_EPSp1<<" EPSp2 "<<_EPSp2<<endl;
+  //cerr<<"fi "<<_fi<<endl;
+  //cerr<<"EL "<<_EL<<endl;
 
-    par.get("EPSx1",_EPSx1,CHEB_POINTS); 
-    par.get("EPSx2",_EPSx2,CHEB_POINTS);
-    par.get("EPSk1",_EPSk1,CHEB_POINTS);
-    par.get("EPSk2",_EPSk2,CHEB_POINTS);
-    par.get("fi",_fi);
+  ifstream fin("bfio.bin");
 
-    ifstream fin("bfio.bin");
+  iC( deserialize(_e2dmap, fin, all) );
+  
+  int nw, nx, ny;
+  inp.get("n1",nw);
+  inp.get("n2",nx);
+  inp.get("n3",ny);
 
-    iC( deserialize(_e2dmap, fin, all) );
+  float w0, dw;
+  inp.get("o1",w0);
+  inp.get("d1",dw);  
 
-    int nw;
-    float w0,dw;
-    inp.get("n1",nw);
-    inp.get("o1",w0);
-    inp.get("d1",dw);
-    wmin = w0;
-    wmax = w0+(nw-1)*dw;
+  float x0, dx;
+  inp.get("o2",x0);
+  inp.get("d2",dx);
 
-    int nx;
-    float x0,dx;
-    inp.get("n1",nx);
-    inp.get("o1",x0);
-    inp.get("d1",dx);
-    zmin = x0;
-    zmax = x0+(nx-1)*dx;
+  float y0, dy;
+  inp.get("o3",y0);
+  inp.get("d3",dy);
 
-    int nt;
-    float t0,dt;
-    par.get("nt",nt);
-    par.get("t0",t0);
-    par.get("dt",dt);
-    tmin = t0;
-    tmax = t0+(nt-1)*dt;
+  wmin = w0;
+  wmax = w0+nw*dw;
 
-    int np;
-    float p0,dp;
-    par.get("np",np);
-    par.get("p0",p0);
-    par.get("dp",dp);
-    pmin = p0;
-    pmax = p0+(np-1)*dp;
+  float xmin = x0;
+  float xmax = x0+nx*dx;
+  float ymin = y0;
+  float ymax = y0+ny*dy;
+  zmin = 0.0;
+  zmax = sqrt(xmax*xmax+ymax*ymax);
 
-    return 0;
+  int nt;
+  float t0, dt;
+  par.get("nt",nt);
+  par.get("t0",t0);
+  par.get("dt",dt);
+  tmin = t0;
+  tmax = t0+nt*dt;
+
+  int np;
+  float p0, dp;
+  par.get("np",np);
+  par.get("p0",p0);
+  par.get("dp",dp);
+  pmin = p0;
+  pmax = p0+np*dp;
+  
+  cerr<<"nw "<<nw<<" nx*ny "<<nx*ny<<endl;
+  cerr<<"nt "<<nt<<" np "<<np<<endl;
+  cerr<<"wmin "<<wmin<<" wmax "<<wmax<<endl;
+  cerr<<"xmin "<<xmin<<" xmax "<<xmax<<endl;
+  cerr<<"ymin "<<ymin<<" ymax "<<ymax<<endl;
+  cerr<<"zmin "<<zmin<<" zmax "<<zmax<<endl;
+  cerr<<"taumin "<<tmin<<" taumax "<<tmax<<endl;
+  cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
+  return 0;
 }
+
+//---------------------------------------
+int BFIO::setup23(iRSF& par, iRSF& inp)
+{
+  vector<int> all(1,1);
+  
+  par.get("EPSx1", _EPSx1); // number of chebyshev points
+  par.get("EPSx2", _EPSx2);
+  par.get("EPSp1", _EPSp1);
+  par.get("EPSp2", _EPSp2);
+  par.get("fi", _fi);
+  par.get("EL", _EL);
+  
+  //cerr<<"EPSx1 "<<_EPSx1<<" EPSx2 "<<_EPSx2<<endl;
+  //cerr<<"EPSp1 "<<_EPSp1<<" EPSp2 "<<_EPSp2<<endl;
+  //cerr<<"fi "<<_fi<<endl;
+  //cerr<<"EL "<<_EL<<endl;
+
+  ifstream fin("bfio.bin");
+
+  iC( deserialize(_e2dmap, fin, all) );
+  
+  int nw, nx;
+  inp.get("n1",nw);
+  inp.get("n2",nx);
+
+  float w0, dw;
+  inp.get("o1",w0);
+  inp.get("d1",dw);  
+
+  float x0, dx;
+  inp.get("o2",x0);
+  inp.get("d2",dx);
+
+  wmin = w0;
+  wmax = w0+nw*dw;
+
+  zmin = x0;
+  zmax = x0+nx*dx;
+
+  int nt;
+  float t0, dt;
+  par.get("nt",nt);
+  par.get("t0",t0);
+  par.get("dt",dt);
+  tmin = t0;
+  tmax = t0+nt*dt;
+
+  int np1, np2;
+  float p10, p20;
+  float dp1, dp2;
+  par.get("np1",np1);
+  par.get("np2",np2);
+
+  par.get("p10",p10);
+  par.get("p20",p20);
+
+  par.get("dp1",dp1);
+  par.get("dp2",dp2);
+
+  float p1min = p10;
+  float p1max = p10+np1*dp1;
+
+  float p2min = p20;
+  float p2max = p20+np2*dp2;
+  
+  pmin = 0.0;
+  pmax = sqrt(p1max*p1max+p2max*p2max);
+  
+  cerr<<"nw "<<nw<<" nx "<<nx<<endl;
+  cerr<<"nt "<<nt<<" np1*np2 "<<np1*np2<<endl;
+  cerr<<"wmin "<<wmin<<" wmax "<<wmax<<endl;
+  cerr<<"zmin "<<zmin<<" zmax "<<zmax<<endl;
+  cerr<<"taumin "<<tmin<<" taumax "<<tmax<<endl;
+  cerr<<"p1min "<<p1min<<" p1max "<<p1max<<endl;
+  cerr<<"p2min "<<p2min<<" p2max "<<p2max<<endl;
+  cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
+  return 0;
+}
+
 
 
 //---------------------------------------
 int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
 {
-  if(       _fi==0) {
+  if(_fi==0) {
     //--------------------------
     int m = xs.size();
     int n = ks.size();
-    for(int i=0; i<m; i++)      xs[i] = xs[i]/double(N); //LEXING: IMPORTANT
-    //
-    vector<double> cs(m);
-    for(int i=0; i<m; i++) {
-      Point2 x = xs[i];
-      cs[i] = (2+sin(2*M_PI*x(0))*sin(2*M_PI*x(1)))/3.0;
-    }
-    vector<double> rs(n);
+    vector<float> ts(m), ps(m);
+    for(int i=0; i<m; i++)      ts[i] = xs[i](0)*(tmax-tmin) + tmin;
+    for(int i=0; i<m; i++)      ps[i] = xs[i](1)*(pmax-pmin) + pmin;
+    vector<float> ws(n), zs(n);
+    for(int i=0; i<n; i++)      ws[i] = ks[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      zs[i] = ks[i](1)*(zmax-zmin) + zmin; 
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
     for(int j=0; j<n; j++) {
-      Point2 k = ks[j];
-      rs[j] = sqrt(k(0)*k(0) + k(1)*k(1));
-    }
-    DblNumMat phs(m,n);
-    double COEF = 2*M_PI;
-    for(int j=0; j<n; j++) {
-      Point2 k = ks[j];
       for(int i=0; i<m; i++) {
-	Point2 x = xs[i];
-	phs(i,j) = COEF * ( (x(0)*k(0)+x(1)*k(1)) + cs[i]*rs[j] );
+	float pz = ps[i]*zs[j];
+	phs(i,j) = COEF * (sqrt(ts[i]*ts[i] + pz*pz)) * (ws[j]);
       }
     }
-    DblNumMat ss(m,n), cc(m,n);
-//    int TTL = m*n;
-    //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++) {
-	//sincos(phs(i,j), &(ss(i,j)), &(cc(i,j)));
-	ss(i,j) = sin(phs(i,j));
-	cc(i,j) = cos(phs(i,j));
-      }
-    res.resize(m,n);
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++)
-	res(i,j) = cpx( cc(i,j), ss(i,j) );
-  } else if(_fi==1)  {
-    //--------------------------
-    int m = xs.size();
-    int n = ks.size();
-    for(int i=0; i<m; i++)      xs[i] = xs[i]/double(N); //LEXING: IMPORTANT
-    //
-    vector<double> tmp1(m), tmp2(m);
-    for(int i=0; i<m; i++) {
-      Point2 x = xs[i];
-      tmp1[i] = (2+sin(2*M_PI*x(0))*sin(2*M_PI*x(1)))/3.0;
-      tmp2[i] = (2+cos(2*M_PI*x(0))*cos(2*M_PI*x(1)))/3.0;
-    }
-    DblNumMat tmp(m,n);
-    for(int j=0; j<n; j++) {
-      Point2 k = ks[j];
-      for(int i=0; i<m; i++) {
-	tmp(i,j) = tmp1[i]*(k(0)*k(0)) + tmp2[i]*(k(1)*k(1));
-      }
-    }
-//    int TTL = m*n;
-    DblNumMat phs(m,n);
-    //vdsqrt_(&TTL, tmp.data(), phs.data());
-    for(int i=0; i<m; i++)      for(int j=0; j<n; j++)	phs(i,j) = sqrt(tmp(i,j));
-    double COEF = 2*M_PI;
-    for(int j=0; j<n; j++) {
-      Point2 k = ks[j];
-      for(int i=0; i<m; i++) {
-	Point2 x = xs[i];
-	phs(i,j) = COEF * ( (x(0)*k(0)+x(1)*k(1)) + phs(i,j) );
-      }
-    }
-    DblNumMat ss(m,n), cc(m,n);
+    FltNumMat ss(m,n), cc(m,n);
+    //int TTL = m*n;
     //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++) {
@@ -185,64 +295,39 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++)
 	res(i,j) = cpx( cc(i,j), ss(i,j) );
-  } else if(_fi==2) {
+  } else if(_fi==1) {
     //--------------------------
     int m = xs.size();
     int n = ks.size();
-    for(int i=0; i<m; i++)      xs[i] = xs[i]/double(N); //LEXING: IMPORTANT
-    DblNumMat phs(m,n);
-    double COEF = 2*M_PI;
-    for(int j=0; j<n; j++) {
-      Point2 k = ks[j];
-      for(int i=0; i<m; i++) {
-	Point2 x = xs[i];
-	phs(i,j) = COEF * ( x(0)*k(0)+x(1)*k(1) );
-      }
-    }
-    DblNumMat ss(m,n), cc(m,n);
-//    int TTL = m*n;
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++) {
-	ss(i,j) = sin(phs(i,j));
-	cc(i,j) = cos(phs(i,j));
-	//sincos(phs(i,j), &(ss(i,j)), &(cc(i,j)));
-      }
+    vector<float> ts(m), ps(m);
+    for(int i=0; i<m; i++)      ts[i] = xs[i](0)*(tmax-tmin) + tmin;
+    for(int i=0; i<m; i++)      ps[i] = xs[i](1)*(pmax-pmin) + pmin;
+    vector<float> ws(n), zs(n);
+    for(int i=0; i<n; i++)      ws[i] = ks[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      zs[i] = ks[i](1)*(zmax-zmin) + zmin; 
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    FltNumMat ss(m,n), cc(m,n);
     res.resize(m,n);
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++)
-	res(i,j) = cpx( cc(i,j), ss(i,j) );
-  } else if(_fi==3) {
-    //--------------------------
-    int m = xs.size();
-    int n = ks.size();
-
-    vector<double> ts(m), ps(m);
-    for(int i=0; i<m; i++)      ts[i] = (xs[i](0)/double(N))*(tmax-tmin) + tmin;
-    for(int i=0; i<m; i++)      ps[i] = (xs[i](1)/double(N))*(pmax-pmin) + pmin;
-    vector<double> ws(n), zs(n);
-    for(int i=0; i<n; i++)      ws[i] = (ks[i](0)/double(N))*(wmax-wmin) + (wmax+wmin)/double(2);
-    for(int i=0; i<n; i++)      zs[i] = (ks[i](1)/double(N))*(zmax-zmin) + (zmax+zmin)/double(2); //z is x
-    DblNumMat phs(m,n);
-    double COEF = 2*M_PI;
     for(int j=0; j<n; j++) {
       for(int i=0; i<m; i++) {
-	double pz = ps[i]*zs[j];
-	phs(i,j) = COEF * sqrt(ts[i]*ts[i] + pz*pz) * ws[j];
+	float pz = ps[i]*zs[j];
+        float in = ts[i]*ts[i] - pz*pz;
+        if( in>0 ) {
+	  phs(i,j) = COEF * (sqrt(in)) * (ws[j]);
+          ss(i,j) = sin(phs(i,j));
+	  cc(i,j) = cos(phs(i,j));
+          res(i,j) = cpx( cc(i,j), ss(i,j) );
+        }
+        else {
+	  //res(i,j) = cpx(0,0);
+          phs(i,j) = 0;
+          ss(i,j) = sin(phs(i,j));
+	  cc(i,j) = cos(phs(i,j));
+          res(i,j) = cpx( cc(i,j), ss(i,j) );
+        }
       }
     }
-    DblNumMat ss(m,n), cc(m,n);
-//    int TTL = m*n;
-    //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++) {
-	ss(i,j) = sin(phs(i,j));
-	cc(i,j) = cos(phs(i,j));
-	//sincos(phs(i,j), &(ss(i,j)), &(cc(i,j)));
-      }
-    res.resize(m,n);
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++)
-	res(i,j) = cpx( cc(i,j), ss(i,j) );
   } else {
     //--------------------------
     iA(0);
@@ -251,7 +336,7 @@ int BFIO::kernel(int N, vector<Point2>& xs, vector<Point2>& ks, CpxNumMat& res)
 }
 
 //---------------------------------------
-int BFIO::check(int N, const CpxNumMat& f, const CpxNumMat& u, int NC, double& relerr)
+int BFIO::check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& z, const CpxNumMat& u, const FltNumVec& t, const FltNumVec& p, int NC, float& relerr)
 {
   int N1 = f.m();
   int N2 = f.n();
@@ -260,7 +345,7 @@ int BFIO::check(int N, const CpxNumMat& f, const CpxNumMat& u, int NC, double& r
   vector<Point2> src;
   for(int j=0; j<N2; j++)
     for(int i=0; i<N1; i++)
-      src.push_back( Point2(double(i*N)/double(N1)-double(N/2), double(j*N)/double(N2)-double(N/2)) );
+      src.push_back( Point2((w(i)-wmin)/(wmax-wmin), (z(j)-zmin)/(zmax-zmin)) );
   vector<cpx> app(NC);
   vector<cpx> dir(NC);
   //
@@ -270,8 +355,8 @@ int BFIO::check(int N, const CpxNumMat& f, const CpxNumMat& u, int NC, double& r
     //
     app[g] = u(x1,x2);
     //
-    vector<Point2> trg;    trg.push_back( Point2(double(x1*N)/double(M1),double(x2*N)/double(M2)) );
-    CpxNumMat res(1,N1*N2); iC( kernel(N, trg, src, res) );
+    vector<Point2> trg;  trg.push_back( Point2((t(x1)-tmin)/(tmax-tmin), (p(x2)-pmin)/(pmax-pmin)) );
+    CpxNumMat res(1,N1*N2);  iC( kernel(N, trg, src, res) );
     CpxNumMat resaux(N1,N2,false,res.data());
     cpx ttl(0,0);
     for(int j=0; j<N2; j++)
@@ -282,8 +367,8 @@ int BFIO::check(int N, const CpxNumMat& f, const CpxNumMat& u, int NC, double& r
   vector<cpx> err(NC);
   for(int g=0; g<NC; g++)
     err[g] = app[g] - dir[g];
-  double dn = 0;
-  double en = 0;
+  float dn = 0;
+  float en = 0;
   for(int g=0; g<NC; g++) {
     dn += abs(dir[g])*abs(dir[g]);
     en += abs(err[g])*abs(err[g]);

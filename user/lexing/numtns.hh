@@ -1,5 +1,5 @@
-#ifndef _NUMTNS_HPP_
-#define _NUMTNS_HPP_
+#ifndef _NUMTNS_HH_
+#define _NUMTNS_HH_
 
 #include "nummat.hh"
 
@@ -91,9 +91,9 @@ template <class F> inline void setvalue(NumTns<F>& T, F val)
   for(int i=0; i<T.m(); i++)	for(int j=0; j<T.n(); j++)	  for(int k=0; k<T.p(); k++)		T(i,j,k) = val;
   return;
 }
-template <class F> inline double energy(NumTns<F>& T)
+template <class F> inline float energy(NumTns<F>& T)
 {
-  double sum = 0;
+  float sum = 0;
   for(int i=0; i<T.m(); i++)	for(int j=0; j<T.n(); j++)	  for(int k=0; k<T.p(); k++)		sum += abs(T(i,j,k)*T(i,j,k));
   return sum;
 }
@@ -101,6 +101,7 @@ template <class F> inline double energy(NumTns<F>& T)
 typedef NumTns<bool>   BolNumTns;
 typedef NumTns<int>    IntNumTns;
 typedef NumTns<double> DblNumTns;
+typedef NumTns<float>  FltNumTns;
 typedef NumTns<cpx>    CpxNumTns;
 
 #endif

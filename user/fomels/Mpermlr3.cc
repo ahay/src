@@ -33,7 +33,7 @@ static float dkh,dkx,dkz;
 static int equation;
 static bool sub;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 // assuming dx=dh
 {
     int ix, ih, iz;
@@ -42,7 +42,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0);
+    setvalue(res,0.0f);
     for(int a=0; a<nr; a++) { /* space index */
 	int i = rs[a];
 
@@ -173,9 +173,9 @@ int main(int argc, char** argv)
     par.get("sub",sub,true); // if subtract one
 
     vector<int> lidx, ridx;
-    DblNumMat mid;
+    FltNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) tol,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,tol,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -186,13 +186,13 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    FltNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    DblNumMat lmat2(m,n2);
+    FltNumMat lmat2(m,n2);
     iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    double *ldat = lmat2.data();
+    float *ldat = lmat2.data();
 
     std::valarray<float> ldata(m*n2);
     for (int k=0; k < m*n2; k++) 
@@ -204,9 +204,9 @@ int main(int argc, char** argv)
     left.put("sub",sub);
     left << ldata;
 
-    DblNumMat rmat(n2,n);
+    FltNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    double *rdat = rmat.data();
+    float *rdat = rmat.data();
 
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 

@@ -1,5 +1,5 @@
-#ifndef  _VEC3T_HPP_
-#define  _VEC3T_HPP_
+#ifndef  _VEC3T_HH_
+#define  _VEC3T_HH_
 
 #include "commoninc.hh"
 
@@ -162,7 +162,7 @@ template <class F> ostream& operator<<(ostream& os, const Vec3T<F>& a) {
 
 //---------------------------------------------------------
 /// MOST COMMONLY USED
-typedef Vec3T<double> Point3;
+typedef Vec3T<float> Point3;
 typedef Vec3T<int>    Index3;
 
 #endif
