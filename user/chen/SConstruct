@@ -3,9 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psss psefd mdfd4 resample fart addevent
+fdip comp psss psefd mdfd4 resample addevent
 '''
-
 
 try:  # distributed version
 	Import('env root pkgdir bindir')
@@ -19,7 +18,12 @@ src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
 			LIBPATH=['../../lib'],
-			LIBS=[env.get('DYNLIB','')+'rsf'] )
+			LIBS=[env.get('DYNLIB','')+'rsf'])
+
+if env.get('LAPACK'):
+	progs += 'frt'
+	env.Prepend(LIBS=['blas','lapack'])
+
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
