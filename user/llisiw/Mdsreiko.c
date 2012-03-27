@@ -71,8 +71,10 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tau2",&tau2)) tau2=1.;
     /* tau2 */
 
-    if (!sf_getfloat("angle",&angle)) angle=0.1;
-    /* angle */
+    if (!sf_getfloat("angle",&angle)) angle=5.;
+    /* angle (degree) */
+
+    angle = tan(angle/180.*3.1416);
 
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");
