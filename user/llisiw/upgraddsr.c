@@ -174,13 +174,13 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 
 	if ((f0 == NULL && dt[0] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 2)) {
 	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]+ws-wr);
+	    upg->ww[it][1] = 2.*dt[1]*dd[1];
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][1];
 	    
-	    upg->qq[jt][0] = -dt[1]*dt[1]*dd[1]-ws+wr;
-	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]+ws-wr;
+	    upg->qq[jt][0] = 0.;
+	    upg->qq[jt][1] = 1.;
 
 	    continue;
 	}
@@ -188,26 +188,19 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	if ((f0 == NULL && dt[0] == 0. && dt[1] == 0.) || (f0 != NULL && f0[jt] == 3)) {
 	    upg->ww[it][0] = 0.;
 	    upg->ww[it][1] = 0.;
-	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-ws+wr);
+	    upg->ww[it][2] = 2.*dt[2]*dd[2];
 	    
 	    upg->ww[it][ndim] = upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-ws+wr;
-	    upg->qq[jt][1] = -dt[2]*dt[2]*dd[2]+ws-wr;
+	    upg->qq[jt][0] = 1.;
+	    upg->qq[jt][1] = 0.;
 
 	    continue;
 	}
 
 	/* two-sided */
 	if ((f0 == NULL && dt[0] == 0.) || (f0 != NULL && f0[jt] == 4)) {
-	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = sqrt(dd[1]);
-	    upg->ww[it][2] = sqrt(dd[2]);
-	    
-	    upg->ww[it][ndim] = upg->ww[it][1]+upg->ww[it][2];
-	    
-	    upg->qq[jt][0] = 1./(2.*sqrt(ws));
-	    upg->qq[jt][1] = 1./(2.*sqrt(wr));
+	    sf_error("flag[%d] = 4",jt);
 	    
 	    continue;
 	}
@@ -359,13 +352,6 @@ void upgrad_spread(upgrad upg,
     int it;
 
     for (it = 0; it < nt; it++) {
-	/*
-	if (upg->pos[it][0] == 15100)
-	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g, add = %g",rhs[upg->pos[it][0]],it,upg->qq[it][0],it,x[it],upg->qq[it][0]*x[it]);
-	if (upg->pos[it][1] == 15100)
-	    sf_warning("rhs = %g, qq[%d][0] = %g, x[%d] = %g, add = %g",rhs[upg->pos[it][1]],it,upg->qq[it][1],it,x[it],upg->qq[it][1]*x[it]);
-	*/
-
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
 	rhs[upg->pos[it][1]] += upg->qq[it][1]*x[it];
     }

@@ -244,7 +244,7 @@ int neighbors_default()
 /* initialize source */
 {
     int i, j, k, nxy;
-    double vr, vs;
+    double vr, vs, temp[2];
 
     /* total number of points */
     nxy = n[0]*n[1]*n[2];
@@ -274,8 +274,17 @@ int neighbors_default()
 	    vs = (double)v[j*s[1]+i];
 
 	    in[j*s[2]+(j+1)*s[1]+i] = SF_FRONT;
-	    t[j*s[2]+(j+1)*s[1]+i] = (sqrt(vr)*d[1]+sqrt(vs)*d[2])/2.;
-	    if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 4;
+
+	    temp[0] = sqrt(vr)*d[1];
+	    temp[1] = sqrt(vs)*d[2];
+
+	    if (temp[0] <= temp[1]) {
+		t[j*s[2]+(j+1)*s[1]+i] = temp[0];
+		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 2;
+	    } else {
+		t[j*s[2]+(j+1)*s[1]+i] = temp[1];
+		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 3;
+	    }
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
 	}
@@ -536,7 +545,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	temp[0] = sqrt(vr/xj[1]->delta)+xj[1]->value;
 	temp[1] = sqrt(vs/xj[2]->delta)+xj[2]->value;
 	
-	if (temp[0] < temp[1]) {
+	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 2;
 	    *th = 0.;
@@ -637,7 +646,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	temp[0] = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	temp[1] = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
-	if (temp[0] < temp[1]) {
+	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
 	    *th = 90.;
@@ -654,7 +663,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	temp[0] = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	temp[1] = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
-	if (temp[0] < temp[1]) {
+	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
 	    *th = 90.;
