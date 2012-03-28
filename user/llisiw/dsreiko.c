@@ -41,7 +41,7 @@ int neighbors_default();
 int neighbours(float* time, int i);
 int update(float value, float* time, int i, int f, float th);
 float qsolve(float* time, int i, int *f, float *th);
-bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd* xj[], double vr, double vs, int *f, float *th);
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th);
 double newton(double a,double b,double c,double d,double e, double guess);
 double ferrari(double a,double b,double c,double d,double e, double t0);
 
@@ -340,7 +340,7 @@ float qsolve(float* time, int i, int *f, float *th)
     int j, k, ix[3];
     float a, b, res;
     double vr, vs;
-    struct Upd *vv[3], xx[3], *xj[3];
+    struct Upd xx[3], *xj[3];
 
     for (j=0; j<3; j++) 
 	ix[j] = (i/s[j])%n[j];
@@ -348,7 +348,7 @@ float qsolve(float* time, int i, int *f, float *th)
     vr = v[ix[1]*s[1]+ix[0]];
     vs = v[ix[2]*s[1]+ix[0]];
 
-    for (j=0; j<3; j++) {
+    for (j=0; j < 3; j++) {
 	if (ix[j] > 0) { 
 	    k = i-s[j];
 	    a = time[k];
@@ -378,93 +378,179 @@ float qsolve(float* time, int i, int *f, float *th)
     xj[1]->stencil = vr-vs;
     xj[2]->stencil = vs-vr;
 
-    /* sort from smallest to largest */
-    if (xx[0].value <= xx[1].value) {
+    /* z-r-s */
+    if (xx[0].value < SF_HUGE && 
+	xx[1].value < SF_HUGE && 
+	xx[2].value < SF_HUGE) {
+
+	*f = 7;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+
 	if (xx[1].value <= xx[2].value) {
-	    vv[0] = xx; vv[1] = xx+1; vv[2] = xx+2;
-	} else if (xx[2].value <= xx[0].value) {
-	    vv[0] = xx+2; vv[1] = xx; vv[2] = xx+1;
+	    *f = 6;
+	    if (updaten(&res,xj,vr,vs,f,th)) 
+		return res;
+	
+	    *f = 8;
+	    if (updaten(&res,xj,vr,vs,f,th)) 
+		return res;
 	} else {
-	    vv[0] = xx; vv[1] = xx+2; vv[2] = xx+1;
+	    *f = 5;
+	    if (updaten(&res,xj,vr,vs,f,th)) 
+		return res;
+
+	    *f = 9;
+	    if (updaten(&res,xj,vr,vs,f,th)) 
+		return res;
 	}
-    } else {
-	if (xx[0].value <= xx[2].value) {
-	    vv[0] = xx+1; vv[1] = xx; vv[2] = xx+2;
-	} else if (xx[2].value <= xx[1].value) {
-	    vv[0] = xx+2; vv[1] = xx+1; vv[2] = xx;
-	} else {
-	    vv[0] = xx+1; vv[1] = xx+2; vv[2] = xx;
-	}
+
+	return SF_HUGE;
     }
 
-    if(vv[2]->value < SF_HUGE) {   /* update from all three directions */
-	if (updaten(i,3,&res,vv,xj,vr,vs,f,th) || 
-	    updaten(i,2,&res,vv,xj,vr,vs,f,th) || 
-	    updaten(i,1,&res,vv,xj,vr,vs,f,th)) return res;
-    } else if(vv[1]->value < SF_HUGE) { /* update from two directions */
-	if (updaten(i,2,&res,vv,xj,vr,vs,f,th) || 
-	    updaten(i,1,&res,vv,xj,vr,vs,f,th)) return res;
-    } else if(vv[0]->value < SF_HUGE) { /* update from only one direction */
-	if (updaten(i,1,&res,vv,xj,vr,vs,f,th)) return res;
+    /* r-s */
+    if (xx[0].value == SF_HUGE && 
+	xx[1].value <  SF_HUGE && 
+	xx[2].value <  SF_HUGE) {
+
+	*f = 4;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+
+	return SF_HUGE;
     }
+
+    /* z-s */
+    if (xx[0].value <  SF_HUGE && 
+	xx[1].value == SF_HUGE && 
+	xx[2].value <  SF_HUGE) {
+
+	*f = 5;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
 	
+	*f = 9;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+	
+	return SF_HUGE;
+    }
+
+    /* z-r */
+    if (xx[0].value <  SF_HUGE && 
+	xx[1].value <  SF_HUGE && 
+	xx[2].value == SF_HUGE) {
+
+	*f = 6;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+	
+	*f = 8;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+	
+	return SF_HUGE;
+    }
+
+    /* z */
+    if (xx[0].value <  SF_HUGE && 
+	xx[1].value == SF_HUGE && 
+	xx[2].value == SF_HUGE) {
+
+	*f = 1;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+
+	return SF_HUGE;
+    }
+
+    /* r */
+    if (xx[0].value == SF_HUGE && 
+	xx[1].value <  SF_HUGE && 
+	xx[2].value == SF_HUGE) {
+
+	*f = 2;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+
+	return SF_HUGE;
+    }
+
+    /* s */
+    if (xx[0].value == SF_HUGE && 
+	xx[1].value == SF_HUGE && 
+	xx[2].value <  SF_HUGE) {
+
+	*f = 3;
+	if (updaten(&res,xj,vr,vs,f,th)) 
+	    return res;
+
+	return SF_HUGE;
+    }
+
     return SF_HUGE;
 }
 
-bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], double vr, double vs, int *f, float *th)
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th)
 /* calculate new traveltime */
 {
-    double a, b, c, d, e, tt, temp[4], discr;
+    double a, b, c, d, e, causal, tt, temp[4], discr;
     int j, cc, count;    
 
+    causal = 0.;
+    for (j=0; j < 3; j++) {
+	if (xj[j]->value > causal && xj[j]->value < SF_HUGE)
+	    causal = xj[j]->value;
+    }
+    
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
 
-    *f = 0;
-    *th = -90.;
-
     /* one-sided */
-    if (m == 1 && vv[0]->label == 0) {
+    if (*f == 1) {
 	tt = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
 	*res = tt;
-	*f = 1;
 	*th = 90.;
 	return true;
     }
     
-    if (m == 1 && vv[0]->label == 1) {
+    if (*f == 2) {
 	tt = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
 	*res = tt;
-	*f = 2;
 	*th = 0.;
 	return true;
     }
 
-    if (m == 1 && vv[0]->label == 2) {
+    if (*f == 3) {
 	tt = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
 	*res = tt;
-	*f = 3;
 	*th = 0.;
 	return true;
     }
 
     /* two-sided */
-    if (m == 2 && vv[2]->label == 0) {
-	tt = ((sqrt(vr/xj[1]->delta)+xj[1]->value)+(sqrt(vs/xj[2]->delta)+xj[2]->value))/2.;
+    if (*f == 4) {
+	temp[0] = sqrt(vr/xj[1]->delta)+xj[1]->value;
+	temp[1] = sqrt(vs/xj[2]->delta)+xj[2]->value;
 	
-	*res = tt;
-	*f = 4;
-	*th = 0.;
+	if (temp[0] < temp[1]) {
+	    *res = temp[0];
+	    *f = 2;
+	    *th = 0.;
+	} else {
+	    *res = temp[1];
+	    *f = 3;
+	    *th = 0.;
+	}
+
 	return true;
     }
 
-    if (m == 2 && vv[2]->label == 1) {
-	/**/
+    if (*f == 5) {
 	count = 0;
-	/**/
 
 	a = xj[0]->delta+xj[2]->delta;
 	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta+sqrt(vr*xj[0]->delta);
@@ -473,7 +559,6 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
 	discr=b*b-c/a;
 
-	/**/
 	if (discr >= 0.) {
 	    temp[count++] = b+sqrt(discr);
 	    temp[count++] = b-sqrt(discr);
@@ -496,27 +581,18 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
 	tt = temp[0];
 	for (cc=1; cc < count; cc++) {
-	    if (temp[cc] < tt && temp[cc] > vv[m-1]->value+tau2) tt = temp[cc];
+	    if (temp[cc] < tt && temp[cc] > causal+tau2) tt = temp[cc];
 	}
 
-	if (tt <= vv[m-1]->value) return false;
-	/**/
-	/*
-	if (discr < 0.) return false;
+	if (tt <= causal) return false;
 
-	tt = b + sqrt(discr);
-	if (tt <= vv[m-1]->value) return false;
-	*/
 	*res = tt;
-	*f = 5;
 	*th = atan((tt-xj[0]->value)/(tt-xj[2]->value))/3.1416*180.;
 	return true;
     }
 
-    if (m == 2 && vv[2]->label == 2) {
-	/**/
+    if (*f == 6) {
 	count = 0;
-	/**/
 
 	a = xj[0]->delta+xj[1]->delta;
 	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta+sqrt(vs*xj[0]->delta);
@@ -525,7 +601,6 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
 	discr=b*b-c/a;
 
-	/**/
 	if (discr >= 0.) {
 	    temp[count++] = b+sqrt(discr);
 	    temp[count++] = b-sqrt(discr);
@@ -548,68 +623,98 @@ bool updaten(int i, int m, float* res, struct Upd *vv[], struct Upd *xj[], doubl
 
 	tt = temp[0];
 	for (cc=1; cc < count; cc++) {
-	    if (temp[cc] < tt && temp[cc] > vv[m-1]->value+tau2) tt = temp[cc];
+	    if (temp[cc] < tt && temp[cc] > causal+tau2) tt = temp[cc];
 	}
 
-	if (tt <= vv[m-1]->value) return false;
-	/**/
-	/*
-	if (discr < 0.) return false;
+	if (tt <= causal) return false;
 
-	tt = b + sqrt(discr);
-	if (tt <= vv[m-1]->value) return false;
-	*/
 	*res = tt;
-	*f = 6;
 	*th = atan((tt-xj[0]->value)/(tt-xj[1]->value))/3.1416*180.;
 	return true;
     }
 
+    if (*f == 8) {
+	temp[0] = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
+	temp[1] = sqrt(vr/xj[1]->delta)+xj[1]->value;
+
+	if (temp[0] < temp[1]) {
+	    *res = temp[0];
+	    *f = 1;
+	    *th = 90.;
+	    return true;
+	} else {
+	    *res = temp[1];
+	    *f = 2;
+	    *th = 0.;
+	    return true;
+	}
+    }
+    
+    if (*f == 9) {
+	temp[0] = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
+	temp[1] = sqrt(vs/xj[2]->delta)+xj[2]->value;
+
+	if (temp[0] < temp[1]) {
+	    *res = temp[0];
+	    *f = 1;
+	    *th = 90.;
+	    return true;
+	} else {
+	    *res = temp[1];
+	    *f = 3;
+	    *th = 0.;
+	    return true;
+	}
+    }
+
     /* three-sided */
-    for (j=0; j<m; j++) {
-	a += pow(vv[j]->delta,2.);
-	b += -4.*vv[j]->value*pow(vv[j]->delta,2.);
-	c += 6.*pow(vv[j]->value,2.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*vv[j]->delta;
-	d += -4.*pow(vv[j]->value,3.)*pow(vv[j]->delta,2.)+4.*vv[j]->stencil*vv[j]->value*vv[j]->delta;
-	e += pow(vv[j]->value,4.)*pow(vv[j]->delta,2.)-2.*vv[j]->stencil*pow(vv[j]->value,2.)*vv[j]->delta;
-    }    
-    e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
+    if (*f == 7) {
+	for (j=0; j < 3; j++) {
+	    a += pow(xj[j]->delta,2.);
+	    b += -4.*xj[j]->value*pow(xj[j]->delta,2.);
+	    c += 6.*pow(xj[j]->value,2.)*pow(xj[j]->delta,2.)-2.*xj[j]->stencil*xj[j]->delta;
+	    d += -4.*pow(xj[j]->value,3.)*pow(xj[j]->delta,2.)+4.*xj[j]->stencil*xj[j]->value*xj[j]->delta;
+	    e += pow(xj[j]->value,4.)*pow(xj[j]->delta,2.)-2.*xj[j]->stencil*pow(xj[j]->value,2.)*xj[j]->delta;
+	}    
+	e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
+	
+	
+	a += -2.*xj[1]->delta*xj[2]->delta
+	    +2.*xj[0]->delta*xj[2]->delta
+	    +2.*xj[1]->delta*xj[0]->delta;
+	
+	b += 4.*xj[1]->delta*xj[2]->delta*(xj[1]->value+xj[2]->value)
+	    -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value+xj[2]->value)
+	    -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value+xj[0]->value);
+	
+	c += -2.*xj[1]->delta*xj[2]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[2]->value+pow(xj[2]->value,2.))
+	    +2.*xj[0]->delta*xj[2]->delta*(pow(xj[0]->value,2.)+4.*xj[0]->value*xj[2]->value+pow(xj[2]->value,2.))
+	    +2.*xj[1]->delta*xj[0]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[0]->value+pow(xj[0]->value,2.));
+	
+	d += 4.*xj[1]->delta*xj[2]->delta*(xj[1]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[1]->value,2.))
+	    -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[0]->value,2.))
+	    -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value*pow(xj[0]->value,2.)+xj[0]->value*pow(xj[1]->value,2.));
+	
+	e += -2.*xj[1]->delta*xj[2]->delta*pow(xj[1]->value,2.)*pow(xj[2]->value,2.)
+	    +2.*xj[0]->delta*xj[2]->delta*pow(xj[0]->value,2.)*pow(xj[2]->value,2.)
+	    +2.*xj[1]->delta*xj[0]->delta*pow(xj[1]->value,2.)*pow(xj[0]->value,2.);
+	
+	/*
+	tt = newton(a,b,c,d,e,vv[m-1]->value);
+	*/
+	tt = ferrari(a,b,c,d,e,causal);
+	
+	/*
+	if (tt <= causal) return false;
+	*/
+	if (tt-xj[0]->value < (angle*sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))) return false;
+	
+	*res = tt;
+	*th = atan((tt-xj[0]->value)/sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))/3.1416*180.;
+	return true;
+    }
 
-
-    a += -2.*xj[1]->delta*xj[2]->delta
-	 +2.*xj[0]->delta*xj[2]->delta
-	 +2.*xj[1]->delta*xj[0]->delta;
-    
-    b +=  4.*xj[1]->delta*xj[2]->delta*(xj[1]->value+xj[2]->value)
-	 -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value+xj[2]->value)
-	 -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value+xj[0]->value);
-    
-    c += -2.*xj[1]->delta*xj[2]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[2]->value+pow(xj[2]->value,2.))
-	 +2.*xj[0]->delta*xj[2]->delta*(pow(xj[0]->value,2.)+4.*xj[0]->value*xj[2]->value+pow(xj[2]->value,2.))
-	 +2.*xj[1]->delta*xj[0]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[0]->value+pow(xj[0]->value,2.));
-    
-    d +=  4.*xj[1]->delta*xj[2]->delta*(xj[1]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[1]->value,2.))
-	 -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[0]->value,2.))
-	 -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value*pow(xj[0]->value,2.)+xj[0]->value*pow(xj[1]->value,2.));
-    
-    e += -2.*xj[1]->delta*xj[2]->delta*pow(xj[1]->value,2.)*pow(xj[2]->value,2.)
-	 +2.*xj[0]->delta*xj[2]->delta*pow(xj[0]->value,2.)*pow(xj[2]->value,2.)
-	 +2.*xj[1]->delta*xj[0]->delta*pow(xj[1]->value,2.)*pow(xj[0]->value,2.);
-    
-    /*
-    tt = newton(a,b,c,d,e,vv[m-1]->value);
-    */
-    tt = ferrari(a,b,c,d,e,vv[m-1]->value);
-
-    /*
-    if (tt <= vv[m-1]->value) return false;
-    */
-    if (tt-xj[0]->value < (angle*sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))) return false;
-
-    *res = tt;
-    *f = 7;
-    *th = atan((tt-xj[0]->value)/sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))/3.1416*180.;
-    return true;
+    return false;
 }
 
 double newton(double a,double b,double c,double d,double e /* coefficients */,
@@ -713,34 +818,5 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */,
     toy:  1.e-3
     test: 5.e-4
     Marmousi: 1.e-3
-    */
-
-    /*
-    return temp;
-    */
-
-    /* return the largest real root */
-    /*
-    root[0] = -1.;
-
-    delta = -3.*alpha-2.*y-2.*beta/W;
-    if (delta >= 0.) {
-	temp = -1./4.*b/a+1./2.*(W+sqrt(delta));
-	if (temp > root[0]) root[0] = temp;
-
-	temp = -1./4.*b/a+1./2.*(W-sqrt(delta));
-	if (temp > root[0]) root[0] = temp;
-    }
-
-    delta = -3.*alpha-2.*y+2.*beta/W;
-    if (delta >= 0.) {
-	temp = -1./4.*b/a+1./2.*(-W+sqrt(delta));
-	if (temp > root[0]) root[0] = temp;
-
-	temp = -1./4.*b/a+1./2.*(-W-sqrt(delta));
-	if (temp > root[0]) root[0] = temp;
-    }
-
-    return root[0];
     */
 }
