@@ -961,9 +961,7 @@ def lapack(context):
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    blas = context.env.get('BLAS')
-    if not blas:
-        blas = 'blas'
+    blas = context.env.get('BLAS','blas')
     lapack = context.env.get('LAPACK','lapack')
     mylibs = [lapack,blas]
     LIBS.extend(mylibs)

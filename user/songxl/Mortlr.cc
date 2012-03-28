@@ -73,8 +73,8 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
             //cerr<<"r="<<r<<" ";    cerr<<endl;
             r = sqrt(abs(r))-9*cc;
             float mm = -2*aa*aa*aa+3*r-9*aa*bb;
-            if (mm<0) r = -pow(-mm,1/3.0);
-            else r = pow(mm,1/3.0);
+            if (mm<0) r = -powf(-mm,1/3.0);
+            else r = powf(mm,1/3.0);
       //      cerr<<r<<" ";    cerr<<endl;
             if (abs(r) < 0.000001) {r = 0.0;}
             else { r = 1/6.0*(-con2*con2*r-2*con2*(aa*aa+3*bb)/r+2*aa);} 

@@ -31,13 +31,12 @@ ccprogs = 'ortholr ortlr orthollr permlr4 ortllr'
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
-    src = glob.glob('[a-z]*.c')
+    SConscript('../lexing/SConstruct')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
