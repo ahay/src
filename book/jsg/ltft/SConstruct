@@ -1,0 +1,9 @@
+from rsf.tex import *
+
+End(use='amsmath',
+    color=
+    '''
+    mask masktfk maskfxk st1 ltft1 ltft12 ltft13 ltft
+    ppltft morphltft ppmorphltft ltftspectra sbasis
+    cbasis tfk fxk vect-ppft-0a vect-psft-0a vect-ppft-0c vect-psft-0c
+    ''')

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpad', 'sfput', 'sfwindow', 'sfagc', 'sfgrey', 'sfltft', 'sfmath', 'sfreal', 'sfbyte', 'sftransp', 'sfgrey3', 'sfmutter', 'sfcut', 'sfimag', 'sfcmplx', 'sfadd', 'sffft3', 'sfradial', 'sfbandpass', 'sfwiggle', 'sffft1', 'sfstft']
+data=['data/ground/hector.HH']
+size= 3377628000
