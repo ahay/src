@@ -34,21 +34,21 @@ int optionsCreate(int argc, char** argv, map<string,string>& options)
 
 //
 int nz=1200;
-double dz=0.00762;
+float dz=0.00762;
 int nx=2133;
-double dx=0.0143;
-double dt = 0.001;
+float dx=0.0143;
+float dt = 0.001;
 int nkz=1200;
-double dkz=0.109361;
-double kz0=-65.6168;
+float dkz=0.109361;
+float kz0=-65.6168;
 int nkx=2160;
-double dkx=0.032375;
-double kx0=-34.965;
+float dkx=0.032375;
+float kx0=-34.965;
 
-DblNumVec vs;
-DblNumVec ks;
+FltNumVec vs;
+FltNumVec ks;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 {
   int nr = rs.size();
   int nc = cs.size();
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
   //
   mi = opts.find("-vsfile");  assert(mi!=opts.end());
   char vsfile[100];  {istringstream ss((*mi).second);  ss>>vsfile;}
-  //DblNumVec vs;
+  //FltNumVec vs;
   {ifstream fin(vsfile);  iC( deserialize(vs, fin, all) );  }
   cerr<<vs.m()<<endl;
   iA(vs.m()==nx*nz);
@@ -83,20 +83,20 @@ int main(int argc, char** argv)
   int cnt = 0;
   for(int ix=0; ix<nkx; ix++)
     for(int iz=0; iz<nkz; iz++) {
-      double tmpz = kz0 + iz*dkz;
-      double tmpx = kx0 + ix*dkx;
-      double tmp = sqrt(tmpz*tmpz+tmpx*tmpx);
+      float tmpz = kz0 + iz*dkz;
+      float tmpx = kx0 + ix*dkx;
+      float tmp = sqrt(tmpz*tmpz+tmpx*tmpx);
       ks(cnt) = tmp;      cnt++;
     }
   //
   //cerr<<sqrt(energy(vs))<<" "<<sqrt(energy(ks))<<endl;
   int m = vs.m();
   int n = ks.m();
-  double eps = 1e-4;
+  float eps = 1e-4;
   int npk = 20;
   vector<int> cidx;
   vector<int> ridx;
-  DblNumMat mid;
+  FltNumMat mid;
   t0 = time(0);
   iC( lowrank(m,n,&sample,eps,npk,cidx,ridx,mid) );
   t1 = time(0);  cout<<"lowrank used "<<difftime(t1,t0)<<"secs "<<endl;
