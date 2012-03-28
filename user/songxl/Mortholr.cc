@@ -32,7 +32,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0f);
+    setvalue(res,0.0);
     float con2 = pow(2.0,1/3.0);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
@@ -53,8 +53,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
            float bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
            //float cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
            float cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           // float dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-
+           float dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
            // cerr<<"aa="<<aa<<" ";    cerr<<endl;
            // cerr<<"bb="<<bb<<" ";    cerr<<endl;
           // if(cc) {  cerr<<"cc="<<cc<<" ";    cerr<<endl; }
@@ -64,8 +63,8 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
             //cerr<<"r="<<r<<" ";    cerr<<endl;
             r = sqrt(abs(r))-9*cc;
             float mm = -2*aa*aa*aa+3*r-9*aa*bb;
-            if (mm<0) r = -pow(-mm,1/3.0f);
-            else r = pow(mm,1/3.0f);
+            if (mm<0) r = -pow(-mm,1/3.0);
+            else r = pow(mm,1/3.0);
       //      cerr<<r<<" ";    cerr<<endl;
             if (abs(r) < 0.000001) {r = 0.0;}
             else { r = 1/6.0*(-con2*con2*r-2*con2*(aa*aa+3*bb)/r+2*aa);} 
@@ -156,7 +155,7 @@ int main(int argc, char** argv)
     vector<int> lidx, ridx;
     FltNumMat mid;
 
-    iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,(float) eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
