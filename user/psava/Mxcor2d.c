@@ -1,4 +1,4 @@
-/* OpenMP time- or freq-domain cross-correlation on axes 1,2,3 */
+/* OpenMP time- or freq-domain cross-correlation imaging condition */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
