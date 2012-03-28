@@ -211,9 +211,9 @@ int main(int argc, char** argv)
     left.put("n3",1);
     left << ldata;
 
-    DblNumMat rmat(n2,n);
+    FltNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    double *rdat = rmat.data();
+    float *rdat = rmat.data();
 
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
