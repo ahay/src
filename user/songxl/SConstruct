@@ -26,7 +26,7 @@ permffdxzc
 mpi_progs = 'tti4rtm'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr'
 
 try:  # distributed version
     Import('env root pkgdir bindir')

@@ -24,16 +24,16 @@
 using namespace std;
 
 static std::valarray<float>  vx, vy, vz, yi1, yi2, mu, q1, q2;
-static std::valarray<double> kx, ky, kz;
+static std::valarray<float> kx, ky, kz;
 static float dt;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0);
-    double con2 = pow(2.0,1/3.0);
+    float con2 = pow(2.0,1/3.0);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
         float wx = vx[i]*vx[i];
@@ -49,30 +49,30 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 
 	for(int b=0; b<nc; b++) {
            int j=cs[b];
-	   double x0 = kx[j];
-	   double y0 = ky[j];
-	   double z0 = kz[j];
+	   float x0 = kx[j];
+	   float y0 = ky[j];
+	   float z0 = kz[j];
 	    // rotation of coordinates
-	   double x = x0*c2+y0*s2;
-           double y =-x0*s2*c1+y0*c2*c1+z0*s1;
-	   double z = x0*s2*s1-y0*c2*s1+z0*c1;
+	   float x = x0*c2+y0*s2;
+           float y =-x0*s2*c1+y0*c2*c1+z0*s1;
+	   float z = x0*s2*s1-y0*c2*s1+z0*c1;
            x *= x;
            y *= y;
            z *= z;
-           double aa=(2*e1+1)*wx*x+(2*e2+1)*wy*y+wz*z;
-           double bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
-           //double cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
-           double cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
-           //double dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
+           float aa=(2*e1+1)*wx*x+(2*e2+1)*wy*y+wz*z;
+           float bb=wx*wx*x*y*(2*e1*e3+e3)*(2*e1*e3+e3)-wx*wy*(2*e1+1)*(2*e2+1)*x*y-2*wx*wz*e1*x*z-2*wy*wz*e2*y*z;
+           //float cc=-(wz*z)*(wx*x)*(wx*y)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(wz*z)*(wx*x)*(vx[i]*y*vy[i])*e3*(2*e1+1)-(wx*x)*(wy*y)*(wz*z)*(1-4*e1*e2);
+           float cc=(wz*z)*(wx*x)*y*(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
+           //float dd=(-(wx)*(2*e1*e3+e3)*(2*e1*e3+e3)+2*(vx[i]*vy[i])*e3*(2*e1+1)-(wy)*(1-4*e1*e2));
            // cerr<<"aa="<<aa<<" ";    cerr<<endl;
            // cerr<<"bb="<<bb<<" ";    cerr<<endl;
           // if(cc) {  cerr<<"cc="<<cc<<" ";    cerr<<endl; }
           //  if (dd) {cerr<<"dd="<<dd<<" ";    cerr<<endl; }
-           double r = (81*cc+6*aa*(2*aa*aa+9*bb))*cc-3*bb*bb*(aa*aa+4*bb);
+           float r = (81*cc+6*aa*(2*aa*aa+9*bb))*cc-3*bb*bb*(aa*aa+4*bb);
          //   if (r>0) {cerr<<"r="<<r<<" ";    cerr<<endl;}
             //cerr<<"r="<<r<<" ";    cerr<<endl;
             r = sqrt(abs(r))-9*cc;
-            double mm = -2*aa*aa*aa+3*r-9*aa*bb;
+            float mm = -2*aa*aa*aa+3*r-9*aa*bb;
             if (mm<0) r = -pow(-mm,1/3.0);
             else r = pow(mm,1/3.0);
       //      cerr<<r<<" ";    cerr<<endl;
@@ -173,13 +173,13 @@ int main(int argc, char** argv)
 
 
     vector<int> lidx, ridx;
-    DblNumMat mid;
+    FltNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,(float) eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
-    double *dmid = mid.data();
+    float *dmid = mid.data();
 
     std::valarray<float> fmid(m2*n2);
     for (int k=0; k < m2*n2; k++) {
@@ -198,9 +198,9 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    FltNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
-    double *ldat = lmat.data();
+    float *ldat = lmat.data();
 
     std::valarray<float> ldata(m*m2);
     for (int k=0; k < m*m2; k++) 

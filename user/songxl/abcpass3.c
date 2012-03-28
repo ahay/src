@@ -1,4 +1,4 @@
-/* All-pass plane-wave destruction filter coefficients */
+/*3D ABC */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -58,7 +58,7 @@ void bd3_init(int n1,  int n2, int n3    /*model size:x*/,
     abc_cal(nbt,ct,wt);
     abc_cal(nbb,cb,wb);
     abc_cal(nxl,cxl,wxl);
-    abc_cal(nxr,cxr,wxl);
+    abc_cal(nxr,cxr,wxr);
     abc_cal(nhl,chl,whl);
     abc_cal(nhr,chr,whr);
 }
@@ -83,40 +83,52 @@ void bd3_decay(float ***a /*3-D matrix*/)
     nzb = nz+nbt+nbb;
     nxb = nx+nxl+nxr;
     nhb = nh+nhl+nhr;
-    for (iz=0; iz < nbt; iz++) {  
-        for (ix=0; ix < nxb; ix++) {
-            for (ih=0; ih < nhb; ih++){
-                a[iz][ix][ih] *= wt[iz];
-            }
-        }
+    if(nbt){
+           for (iz=0; iz < nbt; iz++) {  
+               for (ix=0; ix < nxb; ix++) {
+                   for (ih=0; ih < nhb; ih++){
+                       a[iz][ix][ih] *= wt[iz];
+                   }
+               }
+           }
     }
-    for (iz=0; iz < nbb; iz++) {  
+    if(nbb){
+           for (iz=0; iz < nbb; iz++) {  
+               for (ix=0; ix < nxb; ix++) {
+                   for (ih=0; ih < nhb; ih++){
+                       a[iz+nz+nbt][ix][ih] *= wb[nbb-1-iz];
+                   }
+               }
+           }
+    }
+    for (iz=nbt; iz < nz+nbt; iz++) {  
         for (ix=0; ix < nxb; ix++) {
-            for (ih=0; ih < nhb; ih++){
-                a[iz+nz+nbt][ix][ih] *= wb[nbb-1-iz];
+            if(nhl){
+                   for (ih=0; ih < nhl; ih++){
+                       a[iz][ix][ih] *= whl[ih];
+                   }
+            }
+            if(nhr){
+                   for (ih=0; ih < nhr; ih++){
+                       a[iz][ix][nh+nhl+ih] *= whr[nhr-1-ih];
+                   }
             }
         }
     }
     for (iz=nbt; iz < nz+nbt; iz++) {  
-        for (ix=0; ix < nxb; ix++) {
-            for (ih=0; ih < nhl; ih++){
-                a[iz][ix][ih] *= whl[ih];
-            }
-            for (ih=0; ih < nhr; ih++){
-                a[iz][ix][nh+nhl+ih] *= whr[nhr-1-ih];
-            }
+        if(nxl){
+               for (ix=0; ix < nxl; ix++) {
+                   for (ih=nhl; ih < nh+nhl; ih++){
+                       a[iz][ix][ih] *= wxl[ix];
+                   }
+               }
         }
-    }
-    for (iz=nbt; iz < nz+nbt; iz++) {  
-        for (ix=0; ix < nxl; ix++) {
-            for (ih=nhl; ih < nh+nhl; ih++){
-                a[iz][ix][ih] *= wxl[ih];
-            }
-        }
-        for (ix=0; ix < nxr; ix++) {
-            for (ih=nhl; ih < nh+nhl; ih++){
-                a[iz][nx+nxl+ix][ih] *= wxr[nxr-1-ix];
-            }
+        if(nxr){
+               for (ix=0; ix < nxr; ix++) {
+                   for (ih=nhl; ih < nh+nhl; ih++){
+                       a[iz][nx+nxl+ix][ih] *= wxr[nxr-1-ix];
+                   }
+               }
         }
     }
 }

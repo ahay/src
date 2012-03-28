@@ -24,10 +24,10 @@
 using namespace std;
 
 static std::valarray<float>  vx, dv, vz, yi1, dyi, dmu;
-static std::valarray<double> kx, ky, kz;
+static std::valarray<float> kx, ky, kz;
 static float dt;
 
-int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -45,26 +45,25 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 
 	for(int b=0; b<nc; b++) {
            int j=cs[b];
-           double x=kx[j]*kx[j];
-           double y=ky[j]*ky[j];
-           double z=kz[j]*kz[j];
+           float x=kx[j]*kx[j];
+           float y=ky[j]*ky[j];
+           float z=kz[j]*kz[j];
           
-           double wxx = wx*x;
-           double wyy = wy*y;
-           double wzz = wz*z;
-           double wxy = dw*y;
-           double tmp1 = (wxx+wyy)*(1+2*e1);
-	   double phi0 = tmp1*tmp1+wzz*wzz-2.0*(wxx+wyy)*wzz*(2*e1-1);
+           float wxx = wx*x;
+           float wyy = wy*y;
+           float wzz = wz*z;
+           float wxy = dw*y;
+           float tmp1 = (wxx+wyy)*(1+2*e1);
+	   float phi0 = tmp1*tmp1+wzz*wzz-2.0*(wxx+wyy)*wzz*(2*e1-1);
            phi0 = sqrt(phi0) + tmp1 + wzz; 
-           double phi02 = phi0/2.0;
+           float phi02 = phi0/2.0;
            phi0 = sqrt(phi02);
-           double tmp2 = 2.0*tmp1*phi0*phi02+3.0*phi0*phi02*phi02+2*wzz*phi0*(phi02-(wxx+wyy)*e1);
-           double tmp3 = -2.0*tmp1*phi0*phi02+3.0*phi0*phi02*phi02-2*wzz*phi0*(phi02-(wxx+wyy)*e1);
-           double phiv = (abs(tmp2)>1.0e-7)?wxy*(wxx*(1+2.0*e1)-phi02)*(-2.0*wzz*e1+(1+2.0*e1)*phi02)/tmp2:0;
-           double phie = (abs(tmp2)>1.0e-7)?wyy*((wxx*(1+2.0*e1)-phi02)*phi02+wzz*(-2.0*wxx*e1+phi02))/tmp2:0;
-           double phig = (abs(tmp3)>1.0e-6)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/tmp3:0;
-           //double phig = (abs(tmp2)>1.0e-7)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/(-tmp2):0;
-           double phi = phi0 + phiv + phie*e2 + phig*e3;
+           float tmp2 = -2.0*tmp1*phi0*phi02+3.0*phi0*phi02*phi02+2*wzz*phi0*((wxx+wyy)*e1-phi02);
+           float phiv = (abs(tmp2)>1.0e-7)?-wxy*(wxx*(1+2.0*e1)-phi02)*(-2.0*wzz*e1+(1+2.0*e1)*phi02)/tmp2:0;
+           float phie = (abs(tmp2)>1.0e-7)?-wyy*((wxx*(1+2.0*e1)-phi02)*phi02+wzz*(-2.0*wxx*e1+phi02))/tmp2:0;
+           float phig = (abs(tmp2)>1.0e-7)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/tmp2:0;
+           //float phig = (abs(tmp2)>1.0e-7)?wxx*wyy*(1+2.0*e1)*(-2*wzz*e1+(1+2.0*e1)*phi02)/(-tmp2):0;
+           float phi = phi0 + phiv + phie*e2 + phig*e3;
 	   res(a,b) = 2*(cos(phi*dt)-1); 
 	}
     }
@@ -155,13 +154,13 @@ int main(int argc, char** argv)
         
 
     vector<int> lidx, ridx;
-    DblNumMat mid;
+    FltNumMat mid;
 
-    iC( lowrank(m,n,sample,(double) eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,(float) eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
-    double *dmid = mid.data();
+    float *dmid = mid.data();
 
     std::valarray<float> fmid(m2*n2);
     for (int k=0; k < m2*n2; k++) {
@@ -180,9 +179,9 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    FltNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
-    double *ldat = lmat.data();
+    float *ldat = lmat.data();
 
     std::valarray<float> ldata(m*m2);
     for (int k=0; k < m*m2; k++) 
@@ -193,9 +192,9 @@ int main(int argc, char** argv)
     left.put("n3",1);
     left << ldata;
 
-    DblNumMat rmat(n2,n);
+    FltNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    double *rdat = rmat.data();
+    float *rdat = rmat.data();
 
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
