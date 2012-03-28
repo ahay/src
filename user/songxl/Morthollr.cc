@@ -32,7 +32,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0);
+    setvalue(res,0.0f);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
         float wx = vx[i]*vx[i];
