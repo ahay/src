@@ -14,6 +14,7 @@ Papers(copyr='The University of Texas at Austin',
                 'apefint': 'Yang Liu and Sergey Fomel',
                 'reversible': 'William Burnett and Robert Ferguson',
                 'timefreq': 'Guochang Liu, Sergey Fomel, and Xiaohong Chen',
+                'ltft': 'Yang Liu and Sergey Fomel',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
