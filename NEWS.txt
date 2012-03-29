@@ -15,6 +15,8 @@ To the reproducible documents collection:
   attributes (Liu, Fomel, and Chen)
 * data/alaska: Open Data/Open Source: Seismic Unix scripts to process
   a 2D land line (Schleicher)
+* jsg/ltft: Seismic data analysis using local time-frequency
+  decomposition (Liu and Fomel)
 
 To SCons:
 
