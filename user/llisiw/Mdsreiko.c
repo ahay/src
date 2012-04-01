@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
     bool velocity;
     int dim, i, n[SF_MAX_DIM], is, ns;
     int *f;
-    float *th;
+    float *th, *al;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
     float tau1, tau2, angle;
     char key[6];
-    sf_file in, out, flag, theta;
+    sf_file in, out, flag, theta, alpha;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -99,6 +99,17 @@ int main(int argc, char* argv[])
 	th = NULL;
     }
 
+    if (NULL != sf_getstring("alpha")) {
+	alpha = sf_output("alpha");
+	sf_putint(alpha,"n3",n[1]);
+	sf_putfloat(alpha,"d3",d[1]);
+	sf_putfloat(alpha,"o3",o[1]);
+	al = sf_floatalloc(ns*n[1]);
+    } else {
+	alpha = NULL;
+	al = NULL;
+    }
+
     /* allocate memory for output */
     t = sf_floatalloc(ns*n[1]);
 
@@ -106,13 +117,14 @@ int main(int argc, char* argv[])
     dsreiko_init(n,o,d,tau1,tau2,angle);
 
     /* compute */
-    dsreiko_fastmarch(t,s,f,th);
+    dsreiko_fastmarch(t,s,f,th,al);
 
     /* mirror */
     dsreiko_mirror(t);
 
     if (flag != NULL) sf_intwrite(f,ns*n[1],flag);
     if (theta != NULL) sf_floatwrite(th,ns*n[1],theta);
+    if (alpha != NULL) sf_floatwrite(al,ns*n[1],alpha);
 
     /* write output dimension */
     sf_putint(out,"n3",n[1]);

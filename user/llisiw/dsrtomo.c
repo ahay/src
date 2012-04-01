@@ -97,7 +97,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 }
 
 void dsrtomo_debug(float *den)
-/*< debug >*/
+/*< debug den >*/
 {
     upgrad_debug(upg,den);
 }

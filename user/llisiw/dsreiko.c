@@ -26,22 +26,22 @@ struct Upd {
     int label;
 };
 
-static double tau1, tau2, angle;
+static double tau1, tau2, angle, miu;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
 static float **x, **xn, **x1;
 static int *offsets, *flag;
-static float *t, *theta;
+static float *t, *theta, *alpha;
 
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
 int neighbors_default();
 int neighbours(float* time, int i);
-int update(float value, float* time, int i, int f, float th);
-float qsolve(float* time, int i, int *f, float *th);
-bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th);
+int update(float value, float* time, int i, int f, float th, float al);
+float qsolve(float* time, int i, int *f, float *th, float *al);
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th, float *al);
 double newton(double a,double b,double c,double d,double e, double guess);
 double ferrari(double a,double b,double c,double d,double e, double t0);
 
@@ -76,12 +76,15 @@ void dsreiko_init(int *n_in   /* length */,
     tau1 = tau1_in;
     tau2 = tau2_in;
     angle = angle_in;
+
+    miu = d[0]/d[1];
 }
 
 void dsreiko_fastmarch(float *time /* time */,
 		       float *v_in /* slowness squared */,
 		       int *f_in   /* upwind flag */,
-		       float *theta_in /* characteristic angle */)
+		       float *theta_in /* characteristic angle */,
+		       float *alpha_in /* barycentric coordinate */)
 /*< fast-marching solver >*/
 {
     float *p;
@@ -91,6 +94,7 @@ void dsreiko_fastmarch(float *time /* time */,
     v = v_in;
     flag = f_in;
     theta = theta_in;
+    alpha = alpha_in;
 
     xn = x;
     x1 = x+1;
@@ -297,7 +301,7 @@ int neighbours(float* time, int i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
     int j, k, ix, np;
-    float ttemp, thtemp;
+    float ttemp, thtemp, altemp;
     int ftemp;
 
     np = 0;
@@ -308,22 +312,22 @@ int neighbours(float* time, int i)
 	if (ix+1 <= n[j]-1) {
 	    k = i+s[j]; 
 	    if (in[k] != SF_IN) {
-		ttemp = qsolve(time,k,&ftemp,&thtemp);
-		np += update(ttemp,time,k,ftemp,thtemp);
+		ttemp = qsolve(time,k,&ftemp,&thtemp,&altemp);
+		np += update(ttemp,time,k,ftemp,thtemp,altemp);
 	    }
 	}
 	if (ix-1 >= 0 ) {
 	    k = i-s[j];
 	    if (in[k] != SF_IN) {
-		ttemp = qsolve(time,k,&ftemp,&thtemp);
-		np += update(ttemp,time,k,ftemp,thtemp);
+		ttemp = qsolve(time,k,&ftemp,&thtemp,&altemp);
+		np += update(ttemp,time,k,ftemp,thtemp,altemp);
 	    }
 	}
     }
     return np;
 }
 
-int update(float value, float* time, int i, int f, float th)
+int update(float value, float* time, int i, int f, float th, float al)
 /* update gridpoint i with new value and modify wave front */
 {
     /* only update when smaller than current value */
@@ -331,6 +335,7 @@ int update(float value, float* time, int i, int f, float th)
 	time[i] = value;
 	if (flag != NULL) flag[i] = f;
 	if (theta != NULL) theta[i] = th;
+	if (alpha != NULL) alpha[i] = al;
 	if (in[i] == SF_OUT) { 
 	    in[i] = SF_FRONT;      
 	    pqueue_insert(time+i);
@@ -343,7 +348,7 @@ int update(float value, float* time, int i, int f, float th)
     return 0;
 }
 
-float qsolve(float* time, int i, int *f, float *th)
+float qsolve(float* time, int i, int *f, float *th, float *al)
 /* find new traveltime at gridpoint i */
 {
     int j, k, ix[3];
@@ -393,24 +398,24 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value < SF_HUGE) {
 
 	*f = 7;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 
 	if (xx[1].value <= xx[2].value) {
 	    *f = 6;
-	    if (updaten(&res,xj,vr,vs,f,th)) 
+	    if (updaten(&res,xj,vr,vs,f,th,al)) 
 		return res;
 	
 	    *f = 8;
-	    if (updaten(&res,xj,vr,vs,f,th)) 
+	    if (updaten(&res,xj,vr,vs,f,th,al)) 
 		return res;
 	} else {
 	    *f = 5;
-	    if (updaten(&res,xj,vr,vs,f,th)) 
+	    if (updaten(&res,xj,vr,vs,f,th,al)) 
 		return res;
 
 	    *f = 9;
-	    if (updaten(&res,xj,vr,vs,f,th)) 
+	    if (updaten(&res,xj,vr,vs,f,th,al)) 
 		return res;
 	}
 
@@ -423,7 +428,7 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 4;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -435,11 +440,11 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 5;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 	
 	*f = 9;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 	
 	return SF_HUGE;
@@ -451,11 +456,11 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value == SF_HUGE) {
 
 	*f = 6;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 	
 	*f = 8;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 	
 	return SF_HUGE;
@@ -467,7 +472,7 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value == SF_HUGE) {
 
 	*f = 1;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -479,7 +484,7 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value == SF_HUGE) {
 
 	*f = 2;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -491,7 +496,7 @@ float qsolve(float* time, int i, int *f, float *th)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 3;
-	if (updaten(&res,xj,vr,vs,f,th)) 
+	if (updaten(&res,xj,vr,vs,f,th,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -500,10 +505,11 @@ float qsolve(float* time, int i, int *f, float *th)
     return SF_HUGE;
 }
 
-bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th)
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th, float *al)
 /* calculate new traveltime */
 {
     double a, b, c, d, e, causal, tt, temp[4], discr;
+    double kappa1, kappa2;
     int j, cc, count;    
 
     causal = 0.;
@@ -521,6 +527,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	
 	*res = tt;
 	*th = 90.;
+	*al = 1.;
 	return true;
     }
     
@@ -529,6 +536,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
 	*res = tt;
 	*th = 0.;
+	*al = 0.;
 	return true;
     }
 
@@ -537,6 +545,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
 	*res = tt;
 	*th = 0.;
+	*al = 0.;
 	return true;
     }
 
@@ -549,10 +558,12 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *res = temp[0];
 	    *f = 2;
 	    *th = 0.;
+	    *al = 0.;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
 	    *th = 0.;
+	    *al = 0.;
 	}
 
 	return true;
@@ -597,6 +608,10 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/(tt-xj[2]->value))/3.1416*180.;
+	
+	kappa2 = pow((tt-xj[2]->value)*vs,2.)*xj[2]->delta;
+	*al = 1./(miu*sqrt(kappa2/(1.-kappa2))+1.);
+
 	return true;
     }
 
@@ -639,6 +654,10 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/(tt-xj[1]->value))/3.1416*180.;
+
+	kappa1 = pow((tt-xj[1]->value)*vr,2.)*xj[1]->delta;
+	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+1.);
+
 	return true;
     }
 
@@ -650,11 +669,13 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *res = temp[0];
 	    *f = 1;
 	    *th = 90.;
+	    *al = 1.;
 	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 2;
 	    *th = 0.;
+	    *al = 0.;
 	    return true;
 	}
     }
@@ -667,11 +688,13 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *res = temp[0];
 	    *f = 1;
 	    *th = 90.;
+	    *al = 1.;
 	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
 	    *th = 0.;
+	    *al = 0.;
 	    return true;
 	}
     }
@@ -720,6 +743,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))/3.1416*180.;
+
+	kappa1 = pow((tt-xj[1]->value)*vr,2.)*xj[1]->delta;
+	kappa2 = pow((tt-xj[2]->value)*vs,2.)*xj[2]->delta;	
+	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+miu*sqrt(kappa2/(1.-kappa2))+1.);
+
 	return true;
     }
 
