@@ -21,7 +21,6 @@
 #include <string.h>
 #include <rsf.h>
 #include "segy.h"
-#include "segy.c"
 
 int main(int argc, char* argv[])
 {
