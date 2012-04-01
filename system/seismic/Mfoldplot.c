@@ -1,4 +1,4 @@
-/* Build a seismic fold map. */
+/* Make a seismic foldplot/stacking chart. */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -17,11 +17,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-/* 12/10/2011 Karl Schleicher Original program */
 
 #include <string.h>
 #include <rsf.h>
-
 #include "segy.h"
 
 /* I cannot get the round function from math.h.  This is an obvious cludge */
