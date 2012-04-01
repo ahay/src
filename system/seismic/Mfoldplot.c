@@ -28,7 +28,9 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3;
     int n1, n2, n3, n1_input, n_input, i_input;
     int idx_offset,idx_xline,idx_iline;
-    char* label1, label2, label3;
+    char* label1;
+    char* label2;
+    char* label3;
     float* hdrin;
     float*** foldplot;
     
