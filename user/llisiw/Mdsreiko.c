@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int *f;
     float *th, *al;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
-    float tau1, tau2, angle;
+    float tau1, tau2, angle, thres;
     char key[6];
     sf_file in, out, flag, theta, alpha;
 
@@ -76,6 +76,9 @@ int main(int argc, char* argv[])
 
     angle = tan(angle/180.*3.1416);
 
+    if (!sf_getfloat("thres",&thres)) thres=0.1;
+    /* threshold (percentage) */
+
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");
 	sf_settype(flag,SF_INT);
@@ -114,7 +117,7 @@ int main(int argc, char* argv[])
     t = sf_floatalloc(ns*n[1]);
 
     /* initialize */
-    dsreiko_init(n,o,d,tau1,tau2,angle);
+    dsreiko_init(n,o,d,tau1,tau2,angle,thres);
 
     /* compute */
     dsreiko_fastmarch(t,s,f,th,al);

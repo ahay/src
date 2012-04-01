@@ -26,7 +26,7 @@ struct Upd {
     int label;
 };
 
-static double tau1, tau2, angle, miu;
+static double tau1, tau2, angle, thres, miu;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
@@ -50,7 +50,8 @@ void dsreiko_init(int *n_in   /* length */,
 		  float *d_in /* increment */,
 		  float tau1_in,
 		  float tau2_in,
-		  float angle_in)
+		  float angle_in,
+		  float thres_in)
 /*< initialize >*/
 {
     int maxband;
@@ -76,6 +77,7 @@ void dsreiko_init(int *n_in   /* length */,
     tau1 = tau1_in;
     tau2 = tau2_in;
     angle = angle_in;
+    thres = thres_in;
 
     miu = d[0]/d[1];
 }
@@ -510,13 +512,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 {
     double a, b, c, d, e, causal, tt, temp[4], discr;
     double kappa1, kappa2;
-    int j, cc, count;    
-
-    causal = 0.;
-    for (j=0; j < 3; j++) {
-	if (xj[j]->value > causal && xj[j]->value < SF_HUGE)
-	    causal = xj[j]->value;
-    }
+    int j, cc, count;
     
     /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
     a = b = c = d = e = 0.;
@@ -570,6 +566,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
     }
 
     if (*f == 5) {
+	if (xj[0]->value >= xj[2]->value)
+	    causal = xj[0]->value;
+	else
+	    causal = xj[2]->value;
+
 	count = 0;
 
 	a = xj[0]->delta+xj[2]->delta;
@@ -609,13 +610,20 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/(tt-xj[2]->value))/3.1416*180.;
 	
-	kappa2 = pow((tt-xj[2]->value)*vs,2.)*xj[2]->delta;
+	kappa2 = pow(tt-xj[2]->value,2.)*xj[2]->delta/vs;
+	if (kappa2 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa2/(1.-kappa2))+1.);
+	if (*al < thres) return false;
 
 	return true;
     }
 
     if (*f == 6) {
+	if (xj[0]->value >= xj[1]->value)
+	    causal = xj[0]->value;
+	else
+	    causal = xj[1]->value;
+
 	count = 0;
 
 	a = xj[0]->delta+xj[1]->delta;
@@ -655,8 +663,10 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/(tt-xj[1]->value))/3.1416*180.;
 
-	kappa1 = pow((tt-xj[1]->value)*vr,2.)*xj[1]->delta;
+	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
+	if (kappa1 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+1.);
+	if (*al < thres) return false;
 
 	return true;
     }
@@ -701,6 +711,12 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
     /* three-sided */
     if (*f == 7) {
+	causal = 0.;
+	for (j=0; j < 3; j++) {
+	    if (xj[j]->value > causal)
+		causal = xj[j]->value;
+	}
+	
 	for (j=0; j < 3; j++) {
 	    a += pow(xj[j]->delta,2.);
 	    b += -4.*xj[j]->value*pow(xj[j]->delta,2.);
@@ -736,17 +752,18 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	*/
 	tt = ferrari(a,b,c,d,e,causal);
 	
-	/*
 	if (tt <= causal) return false;
-	*/
 	if (tt-xj[0]->value < (angle*sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))) return false;
 	
 	*res = tt;
 	*th = atan((tt-xj[0]->value)/sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))/3.1416*180.;
 
-	kappa1 = pow((tt-xj[1]->value)*vr,2.)*xj[1]->delta;
-	kappa2 = pow((tt-xj[2]->value)*vs,2.)*xj[2]->delta;	
+	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
+	if (kappa1 > 1.-thres) return false;
+	kappa2 = pow(tt-xj[2]->value,2.)*xj[2]->delta/vs;
+	if (kappa2 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+miu*sqrt(kappa2/(1.-kappa2))+1.);
+	if (*al < thres) return false;
 
 	return true;
     }

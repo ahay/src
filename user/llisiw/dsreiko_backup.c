@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 
-#include "dsreiko.h"
+#include "dsreiko_backup.h"
 
 struct Upd {
     double stencil, value, delta;

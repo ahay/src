@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int iter, niter, cgiter, count;
     int *f, *m0, offset;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
-    float eps, tol, tau1, tau2, angle, *th, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
+    float eps, tol, tau1, tau2, angle, thres, *th, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
     char key[6], *what;
     sf_file in, out, reco, grad, flag, mask, debug;
 
@@ -285,9 +285,14 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
 	    /* tau2 */
 
-	    if (!sf_getfloat("angle",&angle)) angle=0.1;
-	    /* angle */
-
+	    if (!sf_getfloat("angle",&angle)) angle=5.;
+	    /* angle (degree) */
+	    
+	    angle = tan(angle/180.*3.1416);
+	    
+	    if (!sf_getfloat("thres",&thres)) thres=0.1;
+	    /* threshold (percentage) */
+	    
 	    /* output gradient at each iteration */
 	    if (NULL != sf_getstring("grad")) {
 		grad = sf_output("grad");
@@ -330,7 +335,7 @@ int main(int argc, char* argv[])
 	    al = sf_floatalloc(nt);
 
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d,tau1,tau2,angle);
+	    dsreiko_init(n,o,d,tau1,tau2,angle,thres);
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
