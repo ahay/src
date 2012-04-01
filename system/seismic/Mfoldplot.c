@@ -21,30 +21,16 @@
 #include <string.h>
 #include <rsf.h>
 #include "segy.h"
-
-/* I cannot get the round function from math.h.  This is an obvious cludge */
-static int roundf1(float number){
-    if(number>0) 
-	return (int) (number+0.5);
-    else
-	return (int) (number-0.5);
-}
+#include "segy.c"
 
 int main(int argc, char* argv[])
 {
     int verbose;
-    float o1,o2,o3;
-    int n1,n2,n3;
-    float d1,d2,d3;
-    char* label1;
-    char* label2;
-    char* label3;
-
-    int n1_input;
-    int n_input;
-    float* hdrin;
+    float o1, o2, o3, d1, d2, d3;
+    int n1, n2, n3, n1_input, n_input, i_input;
     int idx_offset,idx_xline,idx_iline;
-    int i_input;
+    char* label1, label2, label3;
+    float* hdrin;
     float*** foldplot;
     
     sf_file in=NULL, out=NULL;
@@ -52,10 +38,8 @@ int main(int argc, char* argv[])
     sf_init (argc,argv);
     in = sf_input ("in");
     out = sf_output ("out");
-
     sf_putint(out,"input",2);
 
-    /* verbose flag controls ammount of print */
     /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
     if(!sf_getint("verbose",&verbose))verbose=1;
 
@@ -65,7 +49,7 @@ int main(int argc, char* argv[])
        using label1, 2 and 3.
     */
 
-    /* get o1, n1, d1, label1 for axis1.  Do the same for axis2 and 3. */
+    /* get o1, n1, d1, label1 for axis1. Do the same for axis2 and 3. */
 
     /*( o1=-32.5 required parameter.  Minimum label1 - usually min offset ) */
     if(!sf_getfloat("o1",&o1))sf_error("o1 is a required parameter");
@@ -143,27 +127,27 @@ int main(int argc, char* argv[])
 
     if(verbose >=1)fprintf(stderr,"loop processing input trace headers\n");
     for (i_input=0 ; i_input<n_input; i_input++) {
-	int iiline,ixline,ioffset;
-	sf_floatread(hdrin,n1_input,in);
-	ioffset=roundf1((hdrin[idx_offset]-o1)/d1);
-	ixline =roundf1((hdrin[idx_xline ]-o2)/d2);
-	iiline =roundf1((hdrin[idx_iline ]-o3)/d3);
-	if(verbose>2){
-	    fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
-		    hdrin[idx_offset],
-		    hdrin[idx_xline ],
-		    hdrin[idx_iline ]);
-	    fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
-		    ioffset   ,ixline   ,iiline);
-	}
-	if(ioffset>=0 && ioffset< n1 &&
-	   ixline >=0 && ixline < n2 &&
-	   iiline >=0 && iiline < n3 ){
-	    if(verbose>2)
-		fprintf(stderr,"increment fold at %d,%d,%d\n",
-			iiline,ixline,ioffset); 
-	    foldplot[iiline][ixline][ioffset]++;
-	}
+      int iiline,ixline,ioffset;
+      sf_floatread(hdrin,n1_input,in);
+      ioffset=roundf((hdrin[idx_offset]-o1)/d1);
+      ixline =roundf((hdrin[idx_xline ]-o2)/d2);
+      iiline =roundf((hdrin[idx_iline ]-o3)/d3);
+      if(verbose>2){
+	fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
+	       hdrin[idx_offset],
+	       hdrin[idx_xline ],
+	       hdrin[idx_iline ]);
+	fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
+		        ioffset   ,ixline   ,iiline);
+      }
+      if(ioffset>=0 && ioffset< n1 &&
+	 ixline >=0 && ixline < n2 &&
+	 iiline >=0 && iiline < n3 ){
+	if(verbose>2)
+	  fprintf(stderr,"increment fold at %d,%d,%d\n",
+		         iiline,ixline,ioffset); 
+	foldplot[iiline][ixline][ioffset]++;
+      }
     }
     if(verbose >=1)fprintf(stderr,"write foldplot to output\n");
     /* write the output in one big write */
