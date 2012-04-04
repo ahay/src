@@ -242,16 +242,16 @@ int main (int argc, char* argv[]) {
 	
     // data
     // time - in ms
-    corUnit = (char*) "ms"; unit = sf_histstring (dataFile, "unit1");
+    corUnit = (char*) "ms"; unit = sf_histstring (dataFile, "unit1"); if (!unit) sf_error ("unit1 in data file is not defined");
     if ( strcmp (corUnit, unit) ) { dp.zStep *= 1000; dp.zStart *= 1000; }
     // inline - in m
-    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit2");
+    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit2"); if (!unit) sf_error ("unit2 in data file is not defined");
     if ( strcmp (corUnit, unit) ) { dp.xStep *= 1000; dp.xStart *= 1000; }
     // crossline - in m
-    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit3");
+    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit3"); if (!unit) sf_error ("unit3 in data file is not defined");
     if ( strcmp (corUnit, unit) ) { dp.yStep *= 1000; dp.yStart *= 1000; }
     // offset - in m
-    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit4");
+    corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit4"); if (!unit) sf_error ("unit4 in data file is not defined");
     if ( strcmp (corUnit, unit) ) { dp.hStep *= 1000; dp.hStart *= 1000; }
 	
     // VELOCITY MODEL PARAMS
@@ -269,13 +269,13 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (velFile, "o3", &vp.yStart) ) sf_error ("Need o3= in velocity file");
 
     // time - in ms
-    corUnit = (char*) "ms"; unit = sf_histstring (velFile, "unit1");
+    corUnit = (char*) "ms"; unit = sf_histstring (velFile, "unit1"); if (!unit) sf_error ("unit1 in velocity model is not defined");
     if ( strcmp (corUnit, unit) ) { vp.zStep *= 1000; vp.zStart *= 1000; }
     // inline - in m
-    corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit2");
+    corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit2"); if (!unit) sf_error ("unit2 in velocity model is not defined");
     if ( strcmp (corUnit, unit) ) { vp.xStep *= 1000; vp.xStart *= 1000; }
     // crossline - in m
-    corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit3");
+    corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit3"); if (!unit) sf_error ("unit3 in velocity model is not defined");
     if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
     // IMAGE PARAMS
