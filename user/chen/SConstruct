@@ -17,13 +17,13 @@ except: # local version
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
-			LIBPATH=['../../lib'],
-			LIBS=[env.get('DYNLIB','')+'rsf'])
+	    LIBPATH=['../../lib'],
+	    LIBS=[env.get('DYNLIB','')+'rsf'])
 
-if env.get('LAPACK'):
+lapack = env.get('LAPACK')
+if lapack:
 	progs += 'frt'
-	env.Prepend(LIBS=['blas','lapack'])
-
+	env.Prepend(LIBS=lapack)
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
