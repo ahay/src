@@ -10,7 +10,7 @@ import fdmod,math
     I will add in the future some filter for upgoing/downgoing
     wavefield separation.
     
-    Esteban Díaz,
+    Esteban Diaz,
 
     Center for Wave Phenomena
 '''
