@@ -99,12 +99,14 @@ def velcon(data,        # data name
          divn den=${SOURCES[1]} rect1=%d rect3=%d
          ''' % (srect1,srect2))
 
-#    Flow(vlf2,pad,
-#         '''
-#         transp plane=23 memsize=500 |
-#         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
-#         window n2=%d | transp plane=23 memsize=500
-#         ''' % (nv,dv,v0,padt,padt2,nx))
+    vlf1 = data+'-vlf1'
+
+    Flow(vlf1,pad,
+         '''
+         transp plane=23 memsize=1000 |
+         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
+         window n2=%d | transp plane=23 memsize=1000
+         ''' % (nv,dv,v0,padt,padt2,nx))
     
     if v1:
         Flow(mig+'1',data,'preconstkirch vel=%g' % v1,split=[4,nh])
