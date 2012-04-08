@@ -97,7 +97,7 @@ if os.path.isdir('user'):
 else:
     userdir = ''
 
-dotproj = Glob('book/*/*/*/.rsfproj')
+dotproj = Glob('book/[a-z]*/[a-z]*/[a-z]*/.rsfproj')
 
 frame_exports = 'env bindir libdir pkgdir shrdir srcdir system dotproj' +userdir
 
