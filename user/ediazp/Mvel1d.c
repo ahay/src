@@ -8,14 +8,12 @@
                           1 above the WB
                           0 bellow the WB
 
-   file stdout The output velocity model has dimensions of the mask file.
-   float vel [1.5]    velocity to use above the horizon (usually water velocity) 
+   stdout The output velocity model has dimensions of the mask file.
+   vel [1.5]    velocity to use above the horizon (usually water velocity) 
 
 
 
-   Syntaxis:
    
-   sfvel1d < 1dvel.rsf  mask=WB.rsf vel=1.5  >velocity.rsf
 
 */
 /*
@@ -127,6 +125,9 @@ int main (int argc, char* argv[])
            if(mask[i2][i1]-mask[i2][i1-1] != 0.0) wb[i2]=i1*d1+o1;
         }
     }
+
+
+
 
     for (i2=0; i2<n2; i2++) {
         j1=(int) ((wb[i2]-o1)/d1);
