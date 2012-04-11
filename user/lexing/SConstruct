@@ -3,11 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-hradon hradon32 hradon23 sthres hufft hufft1 lrmatrix
+radon2 radon32 radon23 radon3 slradon3 sthres lrmatrix
 '''
 
 subs = '''
-vecmatop bfio bfio_eval
+vecmatop bfio bfio_eval bfio_eval3
 '''
 
 try:  # distributed version

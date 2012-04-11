@@ -502,3 +502,15 @@ int ztran(const CpxNumMat& A, CpxNumMat& B)
   return 0;
 }
 
+//-------------------------------------------------------------------------
+//shift left
+int shiftleft(const CpxNumTns& A, CpxNumTns& B)
+{
+  iA( B.m()==A.n() && B.n()==A.p() && B.p()==A.m() );  //B.resize(A.n(), A.p(), A.m());
+  for(int i=0; i<B.m(); i++)
+    for(int j=0; j<B.n(); j++)
+      for(int k=0; k<B.p(); k++)
+	B(i,j,k) = A(k,i,j);
+  return 0;
+}
+

@@ -7,6 +7,7 @@
 #include "numtns.hh"
 #include "offtns.hh"
 #include "vec2t.hh"
+#include "vec3t.hh"
 #include "vecmatop.hh"
 
 using std::vector;
@@ -34,20 +35,24 @@ class BFIO: public ComObject
 public:
   int _EPSx1;
   int _EPSx2;
-  int _EPSp1;
-  int _EPSp2;
+  int _EPSx3;
+  int _EPSk1;
+  int _EPSk2;
+  int _EPSk3;
   int _fi;
   int _EL;
   map<int, Entry> _e2dmap;
-  float tmin, tmax, pmin, pmax;
-  float wmin, wmax, zmin, zmax; 
+  float taumin, taumax, pmin, pmax, qmin, qmax;
+  float wmin, wmax, xmin, xmax, ymin, ymax;
 public:
   BFIO(const string& p): ComObject(p) {;}
   ~BFIO() {;}
   int& EPSx1() { return _EPSx1; }
   int& EPSx2() { return _EPSx2; }
-  int& EPSp1() { return _EPSp1; }
-  int& EPSp2() { return _EPSp2; }
+  int& EPSx3() { return _EPSx3; }
+  int& EPSk1() { return _EPSk1; }
+  int& EPSk2() { return _EPSk2; }
+  int& EPSk3() { return _EPSk3; }
   int& fi() { return _fi; }
   int& EL() { return _EL; }
   map<int, Entry>& e2dmap() { return _e2dmap; }
@@ -55,11 +60,19 @@ public:
   int setup(iRSF& par, iRSF& inp);
   int setup32(iRSF& par, iRSF& inp);
   int setup23(iRSF& par, iRSF& inp);
-  int eval(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& z, CpxNumMat& u, const FltNumVec& t, const FltNumVec& p);
+  int setup3(iRSF& par, iRSF& inp);
+  //
   int kernel(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res);
-  int check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& z, const CpxNumMat& u, const FltNumVec& t, const FltNumVec& p, int NC, float& relerr);
+  int kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& res);
+  //
+  int eval(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
+  int eval3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q);
+  //
+  int check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr);
+  int check3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, const CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q, int NC, float& relerr);
   //
   int prep_aux(FltNumVec& grid, vector<float>& ts, CpxNumMat& tmp);
+  int eval_addaux(const CpxNumTns& ext, CpxNumTns& all, CpxNumMat& m1, CpxNumMat& m2, CpxNumMat& m3);
 };
 
 #endif

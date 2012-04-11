@@ -2,6 +2,7 @@
 #define _VECMATOP_HH_
 
 #include "nummat.hh"
+#include "numtns.hh"
 
 using std::vector;
 //typedef long int int;
@@ -37,6 +38,8 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&),
 	    vector<int>& cidx, vector<int>& ridx, FltNumMat& mid);
 
 int ztran(const CpxNumMat& A, CpxNumMat& B);
+
+int shiftleft(const CpxNumTns& A, CpxNumTns& B);
 
 #endif
 
