@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
     int m1,m2,m3;
     
     off_t start;
+    float f;
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -120,45 +121,37 @@ int main(int argc, char* argv[])
 	/* read filter*/
 	sf_floatread(fs[0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
 
-	for        (j3=0; j3<sf_n(a3); j3++) {
+	for(k3=0; k3<sf_n(f3); k3++) {   
+	    for(k2=0; k2<sf_n(f2); k2++) {		
+		for(k1=0; k1<sf_n(f1); k1++) {
 
-#ifdef _OPENMP
-#pragma omp parallel	       \
-    private(j2,j1,k3,k2,k1,i3,i2,i1)			\
-    shared (j3,   f3,f2,f1,a3,a2,a1,m3,m2,m1,y,x,fs)
-#endif
-	    for    (j2=0; j2<sf_n(a2); j2++) {	    
-		for(j1=0; j1<sf_n(a1); j1++) {
+		    f = fs[k3][k2][k1];
+
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel					\*/
+/*    private(j3,j2,j1,i3,i2,i1)		\*/
+/*    shared (a3,a2,a1,k3,k2,k1,m3,m2,m1,y,x,f)*/
+/*#endif*/
+		    for        (j3=0; j3<sf_n(a3); j3++) { i3=j3-k3+m3;
+			for    (j2=0; j2<sf_n(a2); j2++) { i2=j2-k2+m2;	    
+			    for(j1=0; j1<sf_n(a1); j1++) { i1=j1-k1+m1;
 		    
-		    for(    k3=0; k3<sf_n(f3); k3++) {
-			i3=j3-k3+m3;
-			if( INBOUND(0,sf_n(a3),i3)) {	
-			    
-			    for(    k2=0; k2<sf_n(f2); k2++) {
-				i2=j2-k2+m2;
-				if( INBOUND(0,sf_n(a2),i2)) {			
-				    
-				    for(k1=0; k1<sf_n(f1); k1++) {
-					i1=j1-k1+m1;
-					if( INBOUND(0,sf_n(a1),i1)) {   
-
-					    y[j3][j2][j1] += x[i3][i2][i1] * fs[k3][k2][k1];
-  
-					}
-				    } /* k1 loop */				    
+				if( INBOUND(0,sf_n(a3),i3) &&
+				    INBOUND(0,sf_n(a2),i2) &&
+				    INBOUND(0,sf_n(a1),i1) ) {
+				    y[j3][j2][j1] += x[i3][i2][i1] * f;
 				}
-			    } /* k2 loop */						    
-		    	}
-		    } /* k3 loop */
-		    
-		} /* j1 loop */
-	    } /* j2 loop */	
-	} /* j3 loop */	
-	
+			    }
+			}
+		    }
+		}
+	    }
+	}
+
     } else {
 	
 	start = sf_tell(Ff);
-
+	
 	for        (j3=0; j3<sf_n(a3); j3++) {
 
 #ifdef _OPENMP
@@ -183,11 +176,11 @@ int main(int argc, char* argv[])
 			sf_floatread(fn[ompith][0][0],sf_n(f1)*sf_n(f2)*sf_n(f3),Ff);
 		    }
 
-		    for(    k3=0; k3<sf_n(f3); k3++) {
+		    for(k3=0; k3<sf_n(f3); k3++) {
 			i3=j3-k3+m3;
 			if( INBOUND(0,sf_n(a3),i3)) {	
 			    
-			    for(    k2=0; k2<sf_n(f2); k2++) {
+			    for(k2=0; k2<sf_n(f2); k2++) {
 				i2=j2-k2+m2;
 				if( INBOUND(0,sf_n(a2),i2)) {			
 				    
