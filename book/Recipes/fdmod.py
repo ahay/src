@@ -536,6 +536,23 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
 
     Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
+def makeline(line,zmin,zmax,xmin,xmax,par):
+    Flow(line+'_z',None,
+         '''
+         spike nsp=2 mag=%g,%g
+         n1=2 o1=0 d1=1 k1=1,2 |
+         transp
+         '''%(zmin,zmax))
+
+    Flow(line+'_x',None,
+         '''
+         spike nsp=2 mag=%g,%g
+         n1=2 o1=0 d1=1 k1=1,2 |
+         transp
+         '''%(xmin,xmax))
+
+    Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
+
 
 
 # ------------------------------------------------------------
