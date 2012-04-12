@@ -29,6 +29,9 @@
    tmask [true]     write a mask (1 if z>h(x))
           false     put a tic on the horizon
 
+   above [false] put 1 above the horizon
+          true   put 1 below the horizon
+
    ntic [1]     works with tmask=false; put 1 around ntic grid points
                 above and below the horizon.   
 
@@ -71,7 +74,7 @@ int main (int argc, char* argv[])
     char  *PICKS;
     char line[80];
     FILE *fp; 
-    bool tmask, extend;
+    bool tmask, extend,above;
     sf_axis m1,m2;
     sf_file in=NULL, out=NULL;
 
@@ -87,6 +90,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("ntic", &ntic)) ntic=5;
     if (!sf_getbool("tmask", &tmask)) tmask=true;
     if (!sf_getbool("extend", &extend)) extend=false;
+    if (!sf_getbool("above", &above)) above=false;
  
     //=====================================================
     //Get parameters from stdin file
@@ -177,18 +181,38 @@ int main (int argc, char* argv[])
 
     if(tmask){
 
-        for (i2=0; i2<n2 ; i2++ ){
-            x=o1;
-            for ( i1=0; i1<n1; i1++){
-                if(x>interp[i2]) {
-                    mask[i2][i1]=1.0;
-                } else {
-                    mask[i2][i1]=0.0;
+        if (above){
+
+            for (i2=0; i2<n2 ; i2++ ){
+                x=o1;
+                for ( i1=0; i1<n1; i1++){
+                    if(x<interp[i2]) {
+                        mask[i2][i1]=1.0;
+                    } else {
+                        mask[i2][i1]=0.0;
+                    }
+                    if(interp[i2]==-999.0){
+                        mask[i2][i1]=0.0;
+                    }
+                    x+=d1;
                 }
-                if(interp[i2]==-999.0){
-                    mask[i2][i1]=0.0;
+            }
+            
+        }else{
+
+            for (i2=0; i2<n2 ; i2++ ){
+                x=o1;
+                for ( i1=0; i1<n1; i1++){
+                    if(x>interp[i2]) {
+                        mask[i2][i1]=1.0;
+                    } else {
+                        mask[i2][i1]=0.0;
+                    }
+                    if(interp[i2]==-999.0){
+                        mask[i2][i1]=0.0;
+                    }
+                    x+=d1;
                 }
-                x+=d1;
             }
         }
     }else{
