@@ -63,7 +63,7 @@
 int main (int argc, char* argv[])
 {
 
-    int i1,i2,i3,i4;
+    int i1,i2,i3,i4,lb,hb;
 
     int n1,n2,ntic;
     float o1,o2;
@@ -224,7 +224,9 @@ int main (int argc, char* argv[])
             }
             if(interp[i2]!=-999.0){
                 i3 = (int) ((interp[i2]-o1)/d1);
-                for (i4=i3-ntic; i4<i3+ntic; i4++){
+                if(i3-ntic<0) lb=0;
+                if(i3+ntic >n1) hb=n1;
+                for (i4=lb; i4<hb; i4++){
                     mask[i2][i4]=1.0;
                 }
                 x+=d1;
