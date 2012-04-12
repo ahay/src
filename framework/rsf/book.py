@@ -563,6 +563,7 @@ class RSFReport(Environment):
         self.Alias('www',self.doc)
         self.Depends('www','installs')
         self.Default('pdf')
+        self.Default('book.tex')
 
 # Default report
 book = RSFReport()

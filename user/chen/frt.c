@@ -3,7 +3,8 @@
 //	u = 1/sqrt(pi*Nx) Ld  :  L(np,nx) in Fortran format
 
 #include <rsf.h>
-#include "blas.inc"
+
+#include "_blas.h"
 
 typedef struct tag_frt
 {
@@ -110,7 +111,7 @@ static void frt_construct(double freq, sf_complex**L,
 		for(ip=0; ip<np; ip++)
 		{
 			x3 = x2*pp[ip];
-			L[ix][ip] = x1*( cos(x3) + I*sin(x3));
+			L[ix][ip] = x1*sf_cmplx(cos(x3),sin(x3));
 		}
 	}
 
