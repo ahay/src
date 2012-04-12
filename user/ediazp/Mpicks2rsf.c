@@ -15,25 +15,26 @@
 
    xn> ... >x4 >x3 >x2>x1
 
+   picks (file)  ascii file with two columns (x and h(x))
+                 the x values must be increasing order,
+                 you can easily achieve that by doing:
 
-
+                 sort -k 1  unsorted_picks.txt > sorted_picks.txt
+            
    stdin             2D file from which the axes will be read
    extend [false]    Extends picks to the boundaries of the axis
                           n Do not extend
                           y Extend to boundary
 
-   tmask [true] write a mask (1 if z>h(x))
-                 false put a tic on the horizon
+   tmask [true]     write a mask (1 if z>h(x))
+          false     put a tic on the horizon
 
    ntic [1]     works with tmask=false; put 1 around ntic grid points
                 above and below the horizon.   
-   
 
    stdout       It writes a file with the same dimensions as stdin 
                 with a mask function, 1 below the horizon 0 above 
-
 */
-
 
 /*
   Copyright (C) 2011 Colorado School of Mines
@@ -64,14 +65,13 @@ int main (int argc, char* argv[])
     int n1,n2,ntic;
     float o1,o2;
     float d1,d2;
-    float vel;
     float x,z;
     float *xcoord,*zcoord,*interp, **mask;
     int nl;
     char  *PICKS;
     char line[80];
     FILE *fp; 
-    bool tmask;
+    bool tmask, extend;
     sf_axis m1,m2;
     sf_file in=NULL, out=NULL;
 
@@ -84,9 +84,9 @@ int main (int argc, char* argv[])
     //=====================================================    
     //Get parameters from command line:
     
-    if (!sf_getfloat("vel", &vel)) vel=1.5;
     if (!sf_getint("ntic", &ntic)) ntic=5;
     if (!sf_getbool("tmask", &tmask)) tmask=true;
+    if (!sf_getbool("extend", &extend)) extend=false;
  
     //=====================================================
     //Get parameters from stdin file
@@ -166,7 +166,7 @@ int main (int argc, char* argv[])
 
 //   lint1_lop(true,false,n2,nl,interp,zcoord);   
    
-    lint1_interp(nl, n2, zcoord, interp,false);
+    lint1_interp(nl, n2, zcoord, interp,extend);
 
     for (i1=0;i1<n2 ; i1++){
 //       fprintf(stderr,"%13.5f%13.5f\n",d2*i1 +o2,interp[i1]);
