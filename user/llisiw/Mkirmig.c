@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
 
     nzx = nz*nx;
 
+    /* read traveltime table */
     table = sf_floatalloc2(nzx,ny);
     sf_floatread(table[0],(off_t)nzx*(off_t)ny,tbl);
     sf_fileclose(tbl);
@@ -94,6 +95,7 @@ int main(int argc, char* argv[])
     if (NULL != sf_getstring("tablex")) {
 	tbl = sf_input("tablex");
 
+	/* table of dT/ds */
 	tablex = sf_floatalloc2(nzx,ny);
 	sf_floatread(tablex[0],(off_t)nzx*(off_t)ny,tbl);
 	sf_fileclose(tbl);

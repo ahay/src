@@ -56,21 +56,27 @@ int main (int argc,char* argv[])
     t = sf_floatalloc2(nt,ns);
     sf_floatread(t[0],nt*ns,in);
 
-    /* read derivative file */
-    if (NULL == sf_getstring("deriv"))
-	sf_error("Need derivative deriv=");
-    deriv = sf_input("deriv");
-
-    tds = sf_floatalloc2(nt,ns);
-    sf_floatread(tds[0],nt*ns,deriv);
-    sf_fileclose(deriv);
-
-    if (!sf_getint("interp",&interp)) interp=1;
-    /* number of interpolation */
-
     if (NULL == (what = sf_getstring("what"))) what="expanded";
     /* Hermite basis functions (default expanded) */
 
+    if (what[0] == 'l') {
+	/* linear interpolation */
+	deriv = NULL;
+	tds = NULL;
+    } else {
+	/* read derivative file */
+	if (NULL == sf_getstring("deriv"))
+	    sf_error("Need derivative deriv=");
+	deriv = sf_input("deriv");
+
+	tds = sf_floatalloc2(nt,ns);
+	sf_floatread(tds[0],nt*ns,deriv);
+	sf_fileclose(deriv);
+    }
+    
+    if (!sf_getint("interp",&interp)) interp=1;
+    /* number of interpolation */
+    
     ds0 = ds/(float)(1+interp);
     ns0 = (ns-1)*interp+ns;
 
@@ -95,7 +101,16 @@ int main (int argc,char* argv[])
 	}
 	
 	/* do interpolation */
-	tinterp_interp(tempt,((float)ss)*ds0,t[s0],t[s0+1],tds[s0],tds[s0+1]);
+	switch (what[0]) {
+	    case 'l': /* linear */
+		tinterp_linear(tempt,((float)ss)*ds0,t[s0],t[s0+1]);
+		break;
+
+	    default: /* cubic Hermite spline */
+		tinterp_hermite(tempt,((float)ss)*ds0,t[s0],t[s0+1],tds[s0],tds[s0+1]);
+		break;
+	}
+	
 	sf_floatwrite(tempt,nt,out);
     }
 

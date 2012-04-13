@@ -40,11 +40,26 @@ void tinterp_init(int nt     /* model dimension */,
     type = what;
 }
 
-void tinterp_interp(float* p /* interpolated result */,
+void tinterp_linear(float* p /* interpolated result */,
 		    float x  /* position */,
-		    float* p0, float* p1 /* values at both ends */,
-		    float* m0, float* m1 /* tangent at both ends */)
-/*< interpolation >*/
+		    float* p0, float* p1 /* values at both ends */)
+/*< linear interpolation >*/
+{
+    int i;
+    float t;
+
+    t = x/dx;
+
+    for (i=0; i < nn; i++) {
+	p[i] = t*p0[i]+(1.-t)*p1[i];
+    }
+}
+
+void tinterp_hermite(float* p /* interpolated result */,
+		     float x  /* position */,
+		     float* p0, float* p1 /* values at both ends */,
+		     float* m0, float* m1 /* tangent at both ends */)
+/*< cubic Hermite spline interpolation >*/
 {
     int i;
     float t;
