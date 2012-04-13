@@ -26,6 +26,25 @@ using std::queue;
 using std::cerr;
 
 //---------------------------------------
+inline int BFIO::prep_aux(FltNumVec& grid, vector<float>& ts, CpxNumMat& tmp)
+{
+  int NG = grid.m();
+  int NT = ts.size();
+  tmp.resize(NG,NT);
+  for(int b=0; b<NT; b++)
+    for(int a=0; a<NG; a++) {
+      float prd = 1.0;
+      for(int c=0; c<NG; c++) {
+	if(c!=a) {
+	  prd *= (ts[b]-grid(c)) / (grid(a)-grid(c));
+	}
+      }
+      tmp(a,b) = prd;
+    }
+  return 0;
+}
+
+//---------------------------------------
 inline int BFIO::eval_addaux(const CpxNumTns& ext, CpxNumTns& all, CpxNumMat& m1, CpxNumMat& m2, CpxNumMat& m3)
 {
   int N1 = ext.m();
