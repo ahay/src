@@ -6,7 +6,7 @@ progs = '''
 kirmig kirmig0 drayinte lineiko
 testanal gradient cconst cgconst
 fatomo fatomoomp mkrcv cpxeikonal
-drays dsreiko dsrtomo eikods
+drays dsreiko dsrtomo eikods tinterp
 '''
 
 try:  # distributed version

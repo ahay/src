@@ -153,13 +153,11 @@ void eikods_dt1(int l      /* direction */,
 		float* d   /* sampling*/)
 /* first-order derivative */
 {
-    int j, ii[3], a, b, i1=-1, i2=-1;
-    double rhs, den, dw, dt;
+    int j, ii[3], a, b, i1=-1;
+    double rhs=0., den=0., dw, dt=0.;
 
     sf_line2cart(3,nn,i0,ii);
 
-    rhs = 0.;
-    den = 0.;
     for (j=0; j < ndim; j++) {
 	a = i0-ss[j];
 	b = i0+ss[j];
@@ -167,15 +165,20 @@ void eikods_dt1(int l      /* direction */,
 	if ((ii[j] == 0) || 
 	    (ii[j] != nn[j]-1 && 1==fermat(&a,&b))) {
 	    i1 = b;
-	    if (ii[j] < nn[j]-2) i2 = b+ss[j];
 	} else {
 	    i1 = a;
-	    if (ii[j] > 2)       i2 = a-ss[j];
 	}
 
 	if (t0[i1] < t0[i0]) {	    
 	    rhs += (t0[i0]-t0[i1])*dl1[i1]/(d[j]*d[j]);
 	    den += (t0[i0]-t0[i1])/(d[j]*d[j]);
+
+	    if (l == j) {
+		if (i1 == b)
+		    dt = (t0[i1]-t0[i0])/d[j];
+		else
+		    dt = (t0[i0]-t0[i1])/d[j];
+	    }
 	}	
     }
 
@@ -184,17 +187,13 @@ void eikods_dt1(int l      /* direction */,
 	ds1[i0] = 0.;
 	return;
     } else {
-	if (0 < ii[l] && ii[l] < nn[l]-1) {
+	if (0 < ii[l] && ii[l] < nn[l]-1)
 	    dw = (v0[i0+ss[l]]-v0[i0-ss[l]])/(2.*d[l]);
-	    dt = (t0[i0+ss[l]]-t0[i0-ss[l]])/(2.*d[l]);
-	} else if (ii[l] == 0) {
+	else if (ii[l] == 0)
 	    dw = (-v0[i0+2*ss[l]]+4.*v0[i0+ss[l]]-3.*v0[i0])/(2.*d[l]);
-	    dt = (-t0[i0+2*ss[l]]+4.*t0[i0+ss[l]]-3.*t0[i0])/(2.*d[l]);
-	} else {
+	else
 	    dw = (3.*v0[i0]-4.*v0[i0-ss[l]]+v0[i0-2*ss[l]])/(2.*d[l]);
-	    dt = (3.*t0[i0]-4.*t0[i0-ss[l]]+t0[i0-2*ss[l]])/(2.*d[l]);
-	}
-
+	
 	dl1[i0] = (0.5*dw+rhs)/den;
 	ds1[i0] = dl1[i0]-dt;
     }
@@ -208,12 +207,10 @@ void eikods_dt2(int l                  /* direction */,
 /* second-order derivative */
 {
     int j, ii[3], a, b, i1=-1, i2=-1;
-    double rhs, den, dw, dldt, dtdt;
+    double rhs=0., den=0., dw, dldt=0., dtdt=0.;
 
     sf_line2cart(3,nn,i0,ii);
 
-    rhs = 0.;
-    den = 0.;
     for (j=0; j < ndim; j++) {
 	a = i0-ss[j];
 	b = i0+ss[j];
@@ -231,6 +228,19 @@ void eikods_dt2(int l                  /* direction */,
 	    rhs += (t0[i0]-t0[i1])*dl2[i1]/(d[j]*d[j])
 		-(dl1[i0]-dl1[i1])*(dl1[i0]-dl1[i1])/(d[j]*d[j]);
 	    den += (t0[i0]-t0[i1])/(d[j]*d[j]);
+
+	    if (l == j) {
+		if (i1 == b)
+		    dldt = (dl1[i1]-dl1[i0])/d[j];
+		else
+		    dldt = (dl1[i0]-dl1[i1])/d[j];
+
+		if (i2 != -1 && t0[i2] < t0[i1])
+		    dtdt = (t0[i0]-2.*t0[i1]+t0[i2])/(d[j]*d[j]);
+		else
+		    /* Hmm... Be careful with this. */
+		    dtdt = (t0[i0]-t0[i1])/(d[j]*d[j]);
+	    }
 	}
     }
 
@@ -238,20 +248,13 @@ void eikods_dt2(int l                  /* direction */,
 	dl2[i0] = 0.;
 	return;
     } else {
-	if (0 < ii[l] && ii[l] < nn[l]-1) {
+	if (0 < ii[l] && ii[l] < nn[l]-1)
 	    dw   = (v0[i0+ss[l]]-2.*v0[i0]+v0[i0-ss[l]])/(d[l]*d[l]);
-	    dldt = (dl1[i0+ss[l]]-dl1[i0-ss[l]])/(2.*d[l]);
-	    dtdt = (t0[i0+ss[l]]-2.*t0[i0]+t0[i0-ss[l]])/(d[l]*d[l]);
-	} else if (ii[l] == 0) {
+	else if (ii[l] == 0)
 	    dw   = (2.*v0[i0]-5.*v0[i0+ss[l]]+4.*v0[i0+2*ss[l]]-3.*v0[i0+3*ss[l]])/(d[l]*d[l]);
-	    dldt = (-dl1[i0+2*ss[l]]+4.*dl1[i0+ss[l]]-3.*dl1[i0])/(2.*d[l]);
-	    dtdt = (2.*t0[i0]-5.*t0[i0+ss[l]]+4.*t0[i0+2*ss[l]]-3.*t0[i0+3*ss[l]])/(d[l]*d[l]);
-	} else {
+	else
 	    dw   = (2.*v0[i0]-5.*v0[i0-ss[l]]+4.*v0[i0-2*ss[l]]-3.*v0[i0-3*ss[l]])/(d[l]*d[l]);
-	    dldt = (3.*dl1[i0]-4.*dl1[i0-ss[l]]+dl1[i0-2*ss[l]])/(2.*d[l]);
-	    dtdt = (2.*t0[i0]-5.*t0[i0-ss[l]]+4.*t0[i0-2*ss[l]]-3.*t0[i0-3*ss[l]])/(d[l]*d[l]);
-	}
-
+	
 	dl2[i0] = (0.5*dw+rhs)/den;
 	ds2[i0] = dl2[i0]-2.*dldt+dtdt;
     }
