@@ -59,6 +59,7 @@ To programs:
 * sfewefd2d_gpu: 2d FDTD wave equation with GPU
 * sfewefd3d_gpu: 3d FDTD wave equation with GPU
 * user/aklokov: new contributor (Alexander Klokov)
+* user/ediazp: new contibutor (Esteban Diaz)
 
 ===Bug fixes===
 

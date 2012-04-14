@@ -59,12 +59,8 @@ void lint1_lop  (bool adj, bool add, int nm, int nd, float *mm, float *dd)
     }
 }
 
-
-
-
-
 void lint1_interp (int nin, int nout, float *yin, float *yout, bool extend)
-/*linear interpolation */
+/*< linear interpolation >*/
 {
     int k,i,j,jj;
     float *m,xout;
