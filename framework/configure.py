@@ -1389,8 +1389,8 @@ def f77(context):
     context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')
     if not F77:
-        compilers = ['gfortran','g77','f77','f90','f95','xlf90','pgf90',
-                     'ifort','ifc','pghpf','gfc']
+        compilers = ['gfortran','g77','f77','f90','f95','g95',
+                     'xlf90','pgf90','ifort','ifc','pghpf','gfc']
         F77 = context.env.Detect(compilers)
         if not F77:
             for comp in compilers:
@@ -1459,8 +1459,8 @@ def f90(context):
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
-        compilers = ['gfortran','gfc','f90','f95','xlf90','pgf90',
-                     'ifort','ifc','pghpf']
+        compilers = ['gfortran','gfc','f90','f95','g95',
+                     'xlf90','pgf90','ifort','ifc','pghpf']
         F90 = context.env.Detect(compilers)
         if not F90:
             for comp in compilers:
