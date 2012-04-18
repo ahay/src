@@ -65,7 +65,7 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
 {
     float fm, f0, fp, a, b;
     
-	//sf_warning("ic=%d  nc=%d  jc=%d  c=%f  prob=[%f %f %f %f %f]",ic,nc,jc,c,prob[0],prob[1],prob[2],prob[3],prob[4]);
+    /*sf_warning("ic=%d  nc=%d  jc=%d  c=%f  prob=[%f %f %f %f %f]",ic,nc,jc,c,prob[0],prob[1],prob[2],prob[3],prob[4]); */
     if (0==ic) {
 		ic++;
 		fm=c;
