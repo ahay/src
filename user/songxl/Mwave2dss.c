@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     nth = omp_get_num_threads();
     sf_warning("using %d threads",nth);
     #pragma omp for private(iz,ix,w1,w2,h1,h2,a1,a2,a3,a4) 
-               //     shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,nxt)
+    /*     shared(nbz,nbx,v,dt,dx,dz,vx,vz,a,b10,b20,b01,b02,cur,nxt) */
     #endif        
           for (iz=0; iz < nbz; iz++) {
           
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 
           #ifdef _OPENMP
           #pragma omp parallel for private(iz,ix) 
-                   // shared(nbz,nbx,old,cur,nxt)
+	      /* shared(nbz,nbx,old,cur,nxt) */
           #endif        
               for (iz=0; iz < nbz; iz++) { 
           
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
                nxt[nbz-1][ix] = cur[nbz-1][ix]*a[nbz-1][ix] + cur[nbz-1][ix-1]*b10[nbz-1][ix] +
                                 cur[nbz-1][ix+1]*b20[nbz-1][ix] + cur[nbz-2][ix]*b01[nbz-1][ix] -old[nbz-1][ix];
               }
-          nxt[0][sl+nb1] += sig[it]; // Source Location
+          nxt[0][sl+nb1] += sig[it]; /* Source Location */
 
           #ifdef _OPENMP
           #pragma omp parallel for private(iz,ix)\
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
           for (ix=0; ix < nbx; ix++) {
 
                nxt[nz+iz][ix] *= exp(-lmd*iz*iz*lmd);
-             //  nxt[nz+iz][ix] *= exp(-lmd*lmd*(iz+1)*(iz+1));
+	       /*  nxt[nz+iz][ix] *= exp(-lmd*lmd*(iz+1)*(iz+1)); */
               }
           }
           #ifdef _OPENMP
@@ -203,13 +203,13 @@ int main(int argc, char* argv[])
           #endif        
           for (iz=0; iz < nbz; iz++) {
           for (ix=0; ix < nb1; ix++) {
-              //nxt[iz][nb1-1-ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
-             // nxt[iz][nb1+nx+ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1));
+              /* nxt[iz][nb1-1-ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1)); */
+	      /* nxt[iz][nb1+nx+ix] *= exp(-lmd*lmd*(nb1-ix-1)*(nb1-ix-1)); */
               nxt[iz][nb1-1-ix] *= exp(-lmd*ix*ix*lmd);
               nxt[iz][nb1+nx+ix] *= exp(-lmd*ix*ix*lmd);
               }
           }
-	 //if (it < 500) {nxt[nb] = sig[it];} 
+	  /* if (it < 500) {nxt[nb] = sig[it];} */
          
 	 for (iz=0; iz < nz; iz++) {
          sf_floatwrite(nxt[iz]+nb1,nx,out);
