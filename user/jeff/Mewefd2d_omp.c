@@ -57,10 +57,10 @@
 
 /*------------------------------------------------------------*/
 /* CENTERED derivatives */
-//#define C1 +0.800000   /* +4/5    */
-//#define C2 -0.200000   /* -1/5    */
-//#define C3 +0.038095   /* +4/105  */
-//#define C4 -0.003571   /* -5/280  */
+/* #define C1 +0.800000   /* +4/5    */
+/* #define C2 -0.200000   /* -1/5    */
+/* #define C3 +0.038095   /* +4/105  */
+/* #define C4 -0.003571   /* -5/280  */
 
 #define C1 4.0f/5.0f
 #define C2 -1.0f/5.0f
@@ -312,17 +312,17 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     if(dabc) {
 	/* one-way abc setup   */
-	// vp = sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+	/* vp = sf_floatalloc2(fdm->nzpad,fdm->nxpad); */
 	vs = sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 	for    (ix=0; ix<fdm->nxpad; ix++) {
 	    for(iz=0; iz<fdm->nzpad; iz++) {
-		// vp[ix][iz] = sqrt( c11[ix][iz]/ro[ix][iz] );
+		/* vp[ix][iz] = sqrt( c11[ix][iz]/ro[ix][iz] ); */
 		vs[ix][iz] = sqrt( c55[ix][iz]/ro[ix][iz] );
 	    }
 	}
-	// abcp = abcone2d_make(NOP,dt,vp,fsrf,fdm);
+	/* abcp = abcone2d_make(NOP,dt,vp,fsrf,fdm); */
 	abcs = abcone2d_make(NOP,dt,vs,fsrf,fdm);
-	// free(*vp); free(vp);
+	/* free(*vp); free(vp); */
 	free(*vs); free(vs);
 
 	/* sponge abc setup */
@@ -505,8 +505,8 @@ int main(int argc, char* argv[])
 
 	if(dabc) {
 	    /* one-way ABC */
-	    // abcone2d_apply(uoz,umz,NOP,abcp,fdm);
-	    // abcone2d_apply(uox,umx,NOP,abcp,fdm);
+	    /* abcone2d_apply(uoz,umz,NOP,abcp,fdm); */
+	    /* abcone2d_apply(uox,umx,NOP,abcp,fdm); */
 	    
 	    abcone2d_apply(uoz,umz,NOP,abcs,fdm);
 	    abcone2d_apply(uox,umx,NOP,abcs,fdm);
