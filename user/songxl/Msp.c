@@ -37,25 +37,21 @@ int main(int argc, char* argv[])
     float ax, az, factor;
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
-     
 
     sf_init(argc,argv);
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
     source = sf_input("in");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    /*  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input"); */
+    /*  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input"); */
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
@@ -71,7 +67,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("factor",&factor)) factor= 5.0/6.0; /*suppress HF parameter*/
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-//    sf_putfloat(out,"o1",x0);
+/*    sf_putfloat(out,"o1",x0); */
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
     sf_putint(out,"n3",nt);
@@ -211,7 +207,7 @@ int main(int argc, char* argv[])
              }
          }
  
-    //     nxt[isz+nb][isx+nb] += wav[it];
+	 /*     nxt[isz+nb][isx+nb] += wav[it]; */
          
                  
 	 for (iz=0; iz < nb; iz++) {  
@@ -267,9 +263,6 @@ int main(int argc, char* argv[])
     free(dercur);     
     free(derold);     
     free(uk);     
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
  
     exit(0); 
 }           
@@ -287,8 +280,8 @@ float dehf(int k /*current frequency*/,
        depress = 1.0;
        }
     else
-       //depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0);
-       //depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
+	/* depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0); */
+	/* depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)))); */
        depress = exp(-a*(float)((k-kmax)*(k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)*(kn-kmax))));
     return(depress);
 }
