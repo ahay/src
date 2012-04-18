@@ -44,12 +44,13 @@ int main(int argc, char* argv[])
     if (inp_type == SF_FLOAT) {
         nbuf = BUFSIZ/sizeof(float);
         fbuf = sf_floatalloc(nbuf);
-    }
-    else if (inp_type == SF_INT) {
+    } else if (inp_type == SF_INT) {
         nbuf = BUFSIZ/sizeof(int);
         ibuf = sf_intalloc(nbuf);
+    } else {
+	nbuf = 0;
+	sf_error("Need float or int input");
     }
-    else sf_error("Need float or int input");
 
     n = sf_filesize(in);
 
