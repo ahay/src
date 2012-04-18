@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     FILE *out;
     bool opt,de;    /* optimal padding */
     float **fcos;
-    int nth=1, ith, esize, shot_num, n1, n2;
+    int nth=1, ith=0, esize, shot_num, n1, n2;
     int i, rank, nodes;
     int nr, jr, r0, nl, fsize, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
@@ -557,7 +557,9 @@ int main(int argc, char* argv[])
 		for (ix=1; ix < nxb; ix+=2){
 		    uk[iz][ix] = sf_cneg(uk[iz][ix]);
 		}
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
 		for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
 	    }
@@ -569,7 +571,9 @@ int main(int argc, char* argv[])
 		for (ikz=1; ikz<nkz; ikz+=2){
 		    uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
 		}
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
 		for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
 	    }
@@ -589,7 +593,9 @@ int main(int argc, char* argv[])
 #endif
 	    for (ikx=0; ikx < nkx; ikx++){
 		/* Inverse Fourier transform kz to z */
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
 		for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
 	    }
@@ -598,7 +604,9 @@ int main(int argc, char* argv[])
 #endif
 	    for (ikz=0; ikz < nkz; ikz++){
 		/* Inverse Fourier transform kx to x */
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
 		for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
 	    }
@@ -698,7 +706,9 @@ int main(int argc, char* argv[])
 		for (ix=1; ix < nxb; ix+=2){
 		    uk[iz][ix] = sf_cneg(uk[iz][ix]);
 		}
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
 		for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
 	    }
@@ -710,7 +720,9 @@ int main(int argc, char* argv[])
 		for (ikz=1; ikz<nkz; ikz+=2){
 		    uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
 		}
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
 		for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
 	    }
@@ -731,7 +743,9 @@ int main(int argc, char* argv[])
 #endif
 	    for (ikx=0; ikx < nkx; ikx++){
 		/* Inverse Fourier transform kz to z */
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
 		for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
 	    }
@@ -740,7 +754,9 @@ int main(int argc, char* argv[])
 #endif
 	    for (ikz=0; ikz < nkz; ikz++){
 		/* Inverse Fourier transform kx to x */
+#ifdef _OPENMP
 		ith = omp_get_thread_num();
+#endif
 		kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
 		for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
 	    }
