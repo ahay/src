@@ -31,9 +31,9 @@ int main(int argc, char* argv[])
     float  **v, **aa, *wb, c; 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
+    /* #ifdef _OPENMP
+   int nth;
+   #endif */
      
 
     sf_init(argc,argv);
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     vel = sf_input("vel");   /* velocity */
     source = sf_input("in");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("c",&c)) c = 0.01; /*decaying parameter*/
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-//    sf_putfloat(out,"o1",x0);
+/*    sf_putfloat(out,"o1",x0); */
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
     sf_putint(out,"n3",nt);
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
          }
 
  
-    //     nxt[isz+nb][isx+nb] += wav[it];
+	 /*     nxt[isz+nb][isx+nb] += wav[it]; */
          
                  
 	 for (iz=0; iz < nb; iz++) {  
@@ -218,9 +218,6 @@ int main(int argc, char* argv[])
     free(old);     
     free(dercur);     
     free(derold);     
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
  
     exit(0); 
 }           
