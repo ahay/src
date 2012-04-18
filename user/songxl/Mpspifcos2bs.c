@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     float **nxt,  **old,  **cur,  **nxtc, *wav, **uk, **uktmp, **derold, **dercur;
     /* sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; */
     /* kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi; */
-    float  **v, *vc, ***weight, *wb, c; 
+    float  **v, *vc, ***weight, *wb=NULL, c; 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     /* inp = sf_input("in"); */
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
-    /* source = sf_input("source");   /* source wavlet*/
+    /* source = sf_input("source");   source wavlet*/
     source = sf_input("in");   /* source wavlet*/
 
 /*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
