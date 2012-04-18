@@ -69,9 +69,9 @@ void source_smooth(float **source /*source matrix*/,
 
 
 float dehf(float k /*current frequency*/,
-          float kn /*highest frequency*/,
-          float a /*suppress factor*/,
-          float factor /*propotion*/);
+	   float kn /*highest frequency*/,
+	   float a /*suppress factor*/,
+	   float factor /*propotion*/);
 /*< high frequency depressing>*/
 int main(int argc, char* argv[]) 
 {
@@ -79,11 +79,11 @@ int main(int argc, char* argv[])
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, tmp, pi=SF_PI, o1, o2, kx0, kz0, knx, knz;
     float **new,  **old,  **cur, **ukr, **dercur, **derold, *wav, **rvr, **snap, **image;
     float **vx, vx2, vx4, vx0, vx02, vx04, **vz, vz2, vz4, vz0, vz02, vz04, **yi, yi0, **se, se0;
-    float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; //top, bottom, left, right 
+    float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; /* top, bottom, left, right */
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
     float vk, vk2, tmpvk, tmpk, k2, err, dt2, kx1, kz1;
-    float alpha; //source smoothing
+    float alpha; /* source smoothing */
     kiss_fft_cpx **uk, **ctracex, **ctracez;
     sf_file input, velx, velz, source, yita, seta, geo, output;
     FILE *out;
@@ -101,10 +101,10 @@ int main(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &nodes);
     if(rank==0) sf_warning("nodes=%d",nodes);
 /*
-    if (nodes < 2) {
-	fprintf(stderr,"Need at least two nodes!\n");
-	MPI_Finalize();
-    }
+  if (nodes < 2) {
+  fprintf(stderr,"Need at least two nodes!\n");
+  MPI_Finalize();
+  }
 */
 
     sf_init(argc,argv);
@@ -116,10 +116,10 @@ int main(int argc, char* argv[])
     seta = sf_input("seta");   /* TTI angle*/
 
     if (rank == 0){
-       if (SF_FLOAT != sf_gettype(velx)) sf_error("Need float input");
-       if (SF_FLOAT != sf_gettype(velz)) sf_error("Need float input");
-       if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
-       if (SF_FLOAT != sf_gettype(seta)) sf_error("Need float input");
+	if (SF_FLOAT != sf_gettype(velx)) sf_error("Need float input");
+	if (SF_FLOAT != sf_gettype(velz)) sf_error("Need float input");
+	if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
+	if (SF_FLOAT != sf_gettype(seta)) sf_error("Need float input");
     }
 
     if (!sf_histint(velx,"n1",&nx)) sf_error("No n1= in input");
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     
     if(SF_INT != sf_gettype(geo)) sf_error("Need int!");
     if(!sf_histint(geo,"esize",&esize)) esize = sizeof("int");
-    //if(!sf_histint(geo,"n1",&shot_num)) sf_error("No n1=!");
+    /* if(!sf_histint(geo,"n1",&shot_num)) sf_error("No n1=!"); */
     if(!sf_histint(geo,"n1",&n1)) sf_error("No n1=!");
     if(!(n1==4)) sf_error("n1 in geo should be 4");
     if(!sf_histint(geo,"n2",&shot_num)) sf_error("No n2=!");
@@ -182,11 +182,11 @@ int main(int argc, char* argv[])
     knz = 0.5/dz*2.0*pi;
 
 
-    #ifdef _OPENMP
-    #pragma omp parallel
-   {nth = omp_get_num_threads();}
-   if(rank==0)  sf_warning("using %d threads",nth);
-    #endif
+#ifdef _OPENMP
+#pragma omp parallel
+    {nth = omp_get_num_threads();}
+    if(rank==0)  sf_warning("using %d threads",nth);
+#endif
     uk = (kiss_fft_cpx **) sf_complexalloc2(nkx,nkz);
     ctracex = (kiss_fft_cpx **) sf_complexalloc2(nkx,nth);
     ctracez = (kiss_fft_cpx **) sf_complexalloc2(nkz,nth);
@@ -226,14 +226,14 @@ int main(int argc, char* argv[])
     for (iz=nbt; iz<nz+nbt; iz++){
         sf_floatread(vx[iz]+nbl,nx,velx);
         sf_floatread(vz[iz]+nbl,nx,velz);
-         for (ix=0; ix<nbl; ix++){
-             vx[iz][ix] = vx[iz][nbl];
-             vz[iz][ix] = vz[iz][nbl];
-         }
-         for (ix=0; ix<nbr; ix++){
-             vx[iz][nx+nbl+ix] = vx[iz][nx+nbl-1];
-             vz[iz][nx+nbl+ix] = vz[iz][nx+nbl-1];
-         }     
+	for (ix=0; ix<nbl; ix++){
+	    vx[iz][ix] = vx[iz][nbl];
+	    vz[iz][ix] = vz[iz][nbl];
+	}
+	for (ix=0; ix<nbr; ix++){
+	    vx[iz][nx+nbl+ix] = vx[iz][nx+nbl-1];
+	    vz[iz][nx+nbl+ix] = vz[iz][nx+nbl-1];
+	}     
     }
     for (iz=0; iz<nbt; iz++){
         for (ix=0; ix<nxb; ix++){
@@ -253,19 +253,19 @@ int main(int argc, char* argv[])
         for (ix=0; ix < nxb; ix++) {
             vx0 += vx[iz][ix]*vx[iz][ix];
             vz0 += vz[iz][ix]*vz[iz][ix];
-         }
+	}
     }
     vx0 = sqrtf(vx0/(nxb*nzb));
     vz0 = sqrtf(vz0/(nxb*nzb));
 /*
-    vz0 =5000.0;
-    for (iz=0; iz < nzb; iz++) {
-        for (ix=0; ix < nxb; ix++) {
-            if(vz0 > vz[iz][ix]) vz0 = vz[iz][ix];
-        }
-    }
+  vz0 =5000.0;
+  for (iz=0; iz < nzb; iz++) {
+  for (ix=0; ix < nxb; ix++) {
+  if(vz0 > vz[iz][ix]) vz0 = vz[iz][ix];
+  }
+  }
 */
-//    vx0 = vz0;
+/*    vx0 = vz0; */
     vx02=vx0*vx0; 
     vz02=vz0*vz0; 
     vx04=vx02*vx02; 
@@ -275,12 +275,12 @@ int main(int argc, char* argv[])
     yi = sf_floatalloc2(nxb,nzb);
     for (iz=nbt; iz<nz+nbt; iz++){
         sf_floatread(yi[iz]+nbl,nx,yita);
-         for (ix=0; ix<nbl; ix++){
-             yi[iz][ix] = yi[iz][nbl];
-         }
-         for (ix=0; ix<nbr; ix++){
-             yi[iz][nx+nbl+ix] = yi[iz][nx+nbl-1];
-         }     
+	for (ix=0; ix<nbl; ix++){
+	    yi[iz][ix] = yi[iz][nbl];
+	}
+	for (ix=0; ix<nbr; ix++){
+	    yi[iz][nx+nbl+ix] = yi[iz][nx+nbl-1];
+	}     
     }
     for (iz=0; iz<nbt; iz++){
         for (ix=0; ix<nxb; ix++){
@@ -297,18 +297,18 @@ int main(int argc, char* argv[])
     for (iz=0; iz < nzb; iz++) {
         for (ix=0; ix < nxb; ix++) {
             yi0+= yi[iz][ix]*yi[iz][ix];
-         }
+	}
     }
     yi0 = sqrtf(yi0/(nxb*nzb));
     se = sf_floatalloc2(nxb,nzb);
     for (iz=nbt; iz<nz+nbt; iz++){
         sf_floatread(se[iz]+nbl,nx,seta);
-         for (ix=0; ix<nbl; ix++){
-             se[iz][ix] = se[iz][nbl];
-         }
-         for (ix=0; ix<nbr; ix++){
-             se[iz][nx+nbl+ix] = se[iz][nx+nbl-1];
-         }     
+	for (ix=0; ix<nbl; ix++){
+	    se[iz][ix] = se[iz][nbl];
+	}
+	for (ix=0; ix<nbr; ix++){
+	    se[iz][nx+nbl+ix] = se[iz][nx+nbl-1];
+	}     
     }
     for (iz=0; iz<nbt; iz++){
         for (ix=0; ix<nxb; ix++){
@@ -325,16 +325,16 @@ int main(int argc, char* argv[])
     for (iz=0; iz < nzb; iz++) {
         for (ix=0; ix < nxb; ix++) {
             se0+= se[iz][ix];
-         }
+	}
     }
     se0 /= (nxb*nzb);
     if(de) {se0 *= pi/180.0; sf_warning("degree!");}
     if(de){
-          for (iz=0; iz < nzb; iz++) {
-              for (ix=0; ix < nxb; ix++) {
-                  se[iz][ix] *= pi/180.0;
-              }
-           }
+	for (iz=0; iz < nzb; iz++) {
+	    for (ix=0; ix < nxb; ix++) {
+		se[iz][ix] *= pi/180.0;
+	    }
+	}
     }
 
     cosg0 = cosf(se0);
@@ -392,35 +392,35 @@ int main(int argc, char* argv[])
     sf_fileclose(seta);
     sf_fileclose(source);
     for (ikz=0; ikz < nkz; ikz++) {
-        //kz1 = (kz0+ikz*dkz)*2.0*pi;
+        /* kz1 = (kz0+ikz*dkz)*2.0*pi; */
         kz1 = (kz0+ikz*dkz);
         for (ikx=0; ikx < nkx; ikx++) {
-            //kx1 = (kx0+ikx*dkx)*2.0*pi;
+            /* kx1 = (kx0+ikx*dkx)*2.0*pi; */
             kx1 = (kx0+ikx*dkx);
             kx = kx1*cosg0+kz1*sing0;
             kz = kz1*cosg0-kx1*sing0;
             tmpvk = (vx02*kx*kx+vz02*kz*kz);
             k2 = kx1*kx1+kz1*kz1;
             vk2 = 0.5*tmpvk+0.5*sqrtf(tmpvk*tmpvk-8.0*yi0/(1.0+2.0*yi0)*vx02*vz02*kx*kx*kz*kz);
-            //vk2 = tmpvk;
+            /* vk2 = tmpvk; */
             vk = sqrtf(vk2);
             tmpk = vk*dt;
             tmp = vz0*dt;
-//            tmpdt = 2.0*(cosf(tmpk)-1.0);
-            //if(k2 < err) 
+/*            tmpdt = 2.0*(cosf(tmpk)-1.0); */
+            /* if(k2 < err) */
             if(k2==0 || tmpk < err) 
-              //tmpdt /=(k2+err);
-              tmpdt = -(tmp)*(tmp);
+		/* tmpdt /=(k2+err); */
+		tmpdt = -(tmp)*(tmp);
 /*
-            else if(tmpk < 0.1) 
-              //tmpdt =(-tmpk*tmpk+tmpk*tmpk*tmpk*tmpk/12.0)/(k2);
-              tmpdt =(-tmp*tmp+tmp*tmp*tmp*tmp*k2/12.0);
-*/
+  else if(tmpk < 0.1) 
+  /* tmpdt =(-tmpk*tmpk+tmpk*tmpk*tmpk*tmpk/12.0)/(k2); */
+	    tmpdt =(-tmp*tmp+tmp*tmp*tmp*tmp*k2/12.0);
+	    */
             else
-              tmpdt = 2.0*(cosf(tmpk)-1.0)/k2;
-             // tmpdt = -2.0*(sinf(tmpk)*sinf(tmpk))/((cosf(tmpk)+1.0)*k2);
-//              tmpdt /= k2;
-            //fcos[ikz][ikx] = tmpdt*dehf(kx1,knx,ax,factor)*dehf(kz1,knz,az,factor);
+		tmpdt = 2.0*(cosf(tmpk)-1.0)/k2;
+	    /* tmpdt = -2.0*(sinf(tmpk)*sinf(tmpk))/((cosf(tmpk)+1.0)*k2); */
+/*              tmpdt /= k2; */
+            /* fcos[ikz][ikx] = tmpdt*dehf(kx1,knx,ax,factor)*dehf(kz1,knz,az,factor); */
             fcos[ikz][ikx] = tmpdt;
         }
     }
@@ -431,8 +431,8 @@ int main(int argc, char* argv[])
     sf_warning("Rank= %d",rank);
     for (i=rank; i < shot_num; i+=nodes) {
         sf_warning("Shot No. %d",i);
-        //out = fopen("/local/lfs1/data/snap","w");
-       // out = fopen("/tmp/snap","w");
+        /* out = fopen("/local/lfs1/data/snap","w"); */
+	/* out = fopen("/tmp/snap","w"); */
         sf_intread(&isx,1,geo);
         sf_intread(&r0,1,geo);
         sf_intread(&nl,1,geo);
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
         iname[3] = 'A';
         iname[4] = '/';
         iname[5] = 's';
-        //iname[5] = 'd';
+        /* iname[5] = 'd'; */
         iname[6] = 'h';
         iname[7] = 'o';
         iname[8] = 't';
@@ -476,10 +476,10 @@ int main(int argc, char* argv[])
         oname[2] = 'A';
         oname[3] = 'G';
 /*
-        oname[0] = 'I';
-        oname[1] = 'M';
-        oname[2] = 'G';
-        oname[3] = 'S';
+  oname[0] = 'I';
+  oname[1] = 'M';
+  oname[2] = 'G';
+  oname[3] = 'S';
 */
         oname[4] = '/';
         oname[5] = 'I';
@@ -517,139 +517,139 @@ int main(int argc, char* argv[])
             for (ix=0; ix < nxb; ix++) {
                 old[iz][ix] =  0.0; 
                 derold[iz][ix] =cur[iz][ix]/dt;
-               }
-             }
+	    }
+	}
  
         /* propagation in time */
         for (it=0; it < nt; it++) {
             if(it<1500 )  { 
-              cur[isz+nbt][isx+nbl] += wav[it];
-              source_smooth(cur,isz+nbt,isx+nbl,wav[it]);
-              }
+		cur[isz+nbt][isx+nbl] += wav[it];
+		source_smooth(cur,isz+nbt,isx+nbl,wav[it]);
+	    }
             if(!(it%jm)) {
-              //sf_floatwrite(cur[nbt],nxb*nz,out);
-              for(iz=0;iz < nz;iz++) fwrite(cur[nbt+iz]+nbl,sizeof(float),nx,out);
+		/* sf_floatwrite(cur[nbt],nxb*nz,out); */
+		for(iz=0;iz < nz;iz++) fwrite(cur[nbt+iz]+nbl,sizeof(float),nx,out);
             }
 
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++){
-                 for (ix=0; ix < nxb; ix++){ 
-                      new[iz][ix] = 0.0; 
-                      uk[iz][ix].r = cur[iz][ix];
-                      uk[iz][ix].i = 0.0; 
-                    }
-             }  
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++){
+		for (ix=0; ix < nxb; ix++){ 
+		    new[iz][ix] = 0.0; 
+		    uk[iz][ix].r = cur[iz][ix];
+		    uk[iz][ix].i = 0.0; 
+		}
+	    }  
 
 
 /*      compute u(kx,kz) */
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix,ikx,ith) 
-            #endif
-             for (iz=0; iz < nzb; iz++){
-                 /* Fourier transform x to kx */
-                    for (ix=1; ix < nxb; ix+=2){
-                        uk[iz][ix] = sf_cneg(uk[iz][ix]);
-                        }
-                    ith = omp_get_thread_num();
-                    kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
-                    for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
-                 }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikx=0; ikx < nkx; ikx++){
-                 /* Fourier transform z to kz */
-                    for (ikz=1; ikz<nkz; ikz+=2){
-                        uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
-                        }
-                    ith = omp_get_thread_num();
-                    kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
-                    for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
-                 }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix,ikx,ith) 
+#endif
+	    for (iz=0; iz < nzb; iz++){
+		/* Fourier transform x to kx */
+		for (ix=1; ix < nxb; ix+=2){
+		    uk[iz][ix] = sf_cneg(uk[iz][ix]);
+		}
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
+		for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikx=0; ikx < nkx; ikx++){
+		/* Fourier transform z to kz */
+		for (ikz=1; ikz<nkz; ikz+=2){
+		    uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
+		}
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
+		for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
+	    }
 
-        #ifdef _OPENMP
-        #pragma omp parallel for private(ikz,ikx,tmpdt) 
-        #endif
-             for (ikz=0; ikz < nkz; ikz++) {
-                 for (ikx=0; ikx < nkx; ikx++) {
-                     tmpdt = fcos[ikz][ikx];
-                     uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],tmpdt);
-                 }
-             }   
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,tmpdt) 
+#endif
+	    for (ikz=0; ikz < nkz; ikz++) {
+		for (ikx=0; ikx < nkx; ikx++) {
+		    tmpdt = fcos[ikz][ikx];
+		    uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],tmpdt);
+		}
+	    }   
 /*      Inverse FFT*/
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikx=0; ikx < nkx; ikx++){
-             /* Inverse Fourier transform kz to z */
-                 ith = omp_get_thread_num();
-                 kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
-                 for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
-             }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikz=0; ikz < nkz; ikz++){
-             /* Inverse Fourier transform kx to x */
-                 ith = omp_get_thread_num();
-                 kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
-                 for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
-             }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++){
-                 for (ix=0; ix < nxb; ix++){ 
-                      ukr[iz][ix] = sf_crealf(uk[iz][ix]); 
-                      ukr[iz][ix] /= (nkx*nkz); 
-                    }
-             }  
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikx=0; ikx < nkx; ikx++){
+		/* Inverse Fourier transform kz to z */
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
+		for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikz=0; ikz < nkz; ikz++){
+		/* Inverse Fourier transform kx to x */
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
+		for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++){
+		for (ix=0; ix < nxb; ix++){ 
+		    ukr[iz][ix] = sf_crealf(uk[iz][ix]); 
+		    ukr[iz][ix] /= (nkx*nkz); 
+		}
+	    }  
 
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=2; iz < nzb-2; iz++) {  
-                 for (ix=2; ix < nxb-2; ix++) {  
-                     new[iz][ix]  = ukr[iz][ix]*aa[iz][ix][0]
-                                  + (ukr[iz][ix-1]+ukr[iz][ix+1])*aa[iz][ix][1]
-                                  + (ukr[iz-1][ix]+ukr[iz+1][ix])*aa[iz][ix][2]
-                                  + (ukr[iz-1][ix-1]+ukr[iz-1][ix+1]+ukr[iz+1][ix-1]+ukr[iz+1][ix+1])*aa[iz][ix][3]
-                                  + (ukr[iz][ix-2]+ukr[iz][ix+2])*aa[iz][ix][4]
-                                  + (ukr[iz-2][ix]+ukr[iz+2][ix])*aa[iz][ix][5];
-                 }
-             }  
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=2; iz < nzb-2; iz++) {  
+		for (ix=2; ix < nxb-2; ix++) {  
+		    new[iz][ix]  = ukr[iz][ix]*aa[iz][ix][0]
+			+ (ukr[iz][ix-1]+ukr[iz][ix+1])*aa[iz][ix][1]
+			+ (ukr[iz-1][ix]+ukr[iz+1][ix])*aa[iz][ix][2]
+			+ (ukr[iz-1][ix-1]+ukr[iz-1][ix+1]+ukr[iz+1][ix-1]+ukr[iz+1][ix+1])*aa[iz][ix][3]
+			+ (ukr[iz][ix-2]+ukr[iz][ix+2])*aa[iz][ix][4]
+			+ (ukr[iz-2][ix]+ukr[iz+2][ix])*aa[iz][ix][5];
+		}
+	    }  
              
 
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++) {  
-                 for (ix=0; ix < nxb; ix++) {
-                     dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
-                     new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-                //     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; 
-                 }
-             }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++) {  
+		for (ix=0; ix < nxb; ix++) {
+		    dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
+		    new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
+		    /*     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; */
+		}
+	    }
  
-               bd_decay(new); 
-               bd_decay(dercur); 
+	    bd_decay(new); 
+	    bd_decay(dercur); 
  
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++) {  
-                 for(ix=0; ix < nxb; ix++) {
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++) {  
+		for(ix=0; ix < nxb; ix++) {
                     old[iz][ix] = cur[iz][ix]; 
                     cur[iz][ix] = new[iz][ix]; 
                     derold[iz][ix] = dercur[iz][ix]; 
-                 }
-             }
+		}
+	    }
         }
         fclose(out);
-        //out = fopen("/local/lfs1/data/snap","r");
-        //out = fopen("/tmp/snap","r");
+        /* out = fopen("/local/lfs1/data/snap","r"); */
+        /* out = fopen("/tmp/snap","r"); */
         out = fopen(sname,"r");
         for (iz=0; iz < nzb; iz++) {
             for (ix=0; ix < nxb; ix++) {
@@ -660,10 +660,10 @@ int main(int argc, char* argv[])
         }
         sf_floatread(rvr[0],nr*nt,input);
         sf_fileclose(input);
-        //for (it=nt-1; it >-1; it--) {
+        /* for (it=nt-1; it >-1; it--) { */
         for (it=nt-1; it >194; it--) {
-            //sf_floatread(rvr,nr,input);
-       //     for (ix=r0; ix < nx; ix+=jr) cur[irz+nbt][ix+nbl] += rvr[ix][it];
+            /* sf_floatread(rvr,nr,input); */
+	    /*     for (ix=r0; ix < nx; ix+=jr) cur[irz+nbt][ix+nbl] += rvr[ix][it]; */
             for (ir=0; ir < nl; ir++) {
                 ix = r0 + ir*jr;
                 cur[irz+nbt][ix+nbl] += rvr[rb+ir][it];
@@ -676,118 +676,118 @@ int main(int argc, char* argv[])
                 }
             }
             if(!(it%jm)) {
-               fseek(out,sizeof(float)*tl*(it/jm),SEEK_SET);
-               fread(snap[0],sizeof(float),tl,out);
-               for (iz=0; iz < nz; iz++) {
-                   for(ix=0; ix < nx; ix++) {
-                      image[iz][ix] += snap[iz][ix]*cur[iz+nbt][ix+nbl];
-                   }
-               }
+		fseek(out,sizeof(float)*tl*(it/jm),SEEK_SET);
+		fread(snap[0],sizeof(float),tl,out);
+		for (iz=0; iz < nz; iz++) {
+		    for(ix=0; ix < nx; ix++) {
+			image[iz][ix] += snap[iz][ix]*cur[iz+nbt][ix+nbl];
+		    }
+		}
             }
 /*      compute u(kx,kz) */
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix,ikx,ith) 
-            #endif
-             for (iz=0; iz < nzb; iz++){
-                 /* Fourier transform x to kx */
-                    for (ix=1; ix < nxb; ix+=2){
-                        uk[iz][ix] = sf_cneg(uk[iz][ix]);
-                        }
-                    ith = omp_get_thread_num();
-                    kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
-                    for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
-                 }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikx=0; ikx < nkx; ikx++){
-                 /* Fourier transform z to kz */
-                    for (ikz=1; ikz<nkz; ikz+=2){
-                        uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
-                        }
-                    ith = omp_get_thread_num();
-                    kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
-                    for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
-                 }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix,ikx,ith) 
+#endif
+	    for (iz=0; iz < nzb; iz++){
+		/* Fourier transform x to kx */
+		for (ix=1; ix < nxb; ix+=2){
+		    uk[iz][ix] = sf_cneg(uk[iz][ix]);
+		}
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgx[ith],uk[iz],ctracex[ith],1); 
+		for (ikx=0; ikx<nkx; ikx++) uk[iz][ikx] = ctracex[ith][ikx]; 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikx=0; ikx < nkx; ikx++){
+		/* Fourier transform z to kz */
+		for (ikz=1; ikz<nkz; ikz+=2){
+		    uk[ikz][ikx] = sf_cneg(uk[ikz][ikx]);
+		}
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgz[ith],uk[0]+ikx,ctracez[ith],nkx); 
+		for (ikz=0; ikz<nkz; ikz++) uk[ikz][ikx] = ctracez[ith][ikz]; 
+	    }
 
-        #ifdef _OPENMP
-        #pragma omp parallel for private(ikz,ikx,tmpdt) 
-        #endif
-             for (ikz=0; ikz < nkz; ikz++) {
-                 for (ikx=0; ikx < nkx; ikx++) {
-                     tmpdt = fcos[ikz][ikx];
-                     uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],tmpdt);
-                 }
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,tmpdt) 
+#endif
+	    for (ikz=0; ikz < nkz; ikz++) {
+		for (ikx=0; ikx < nkx; ikx++) {
+		    tmpdt = fcos[ikz][ikx];
+		    uk[ikz][ikx] = sf_crmul(uk[ikz][ikx],tmpdt);
+		}
 
-             }   
+	    }   
 /*      Inverse FFT*/
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikx=0; ikx < nkx; ikx++){
-             /* Inverse Fourier transform kz to z */
-                 ith = omp_get_thread_num();
-                 kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
-                 for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
-             }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(ikz,ikx,ith) 
-            #endif
-             for (ikz=0; ikz < nkz; ikz++){
-             /* Inverse Fourier transform kx to x */
-                 ith = omp_get_thread_num();
-                 kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
-                 for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
-             }
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++){
-                 for (ix=0; ix < nxb; ix++){ 
-                      ukr[iz][ix] = sf_crealf(uk[iz][ix]); 
-                      ukr[iz][ix] /= (nkx*nkz); 
-                    }
-             }  
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikx=0; ikx < nkx; ikx++){
+		/* Inverse Fourier transform kz to z */
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgzi[ith],(kiss_fft_cpx *)uk[0]+ikx,ctracez[ith],nkx); 
+		for (ikz=0; ikz < nkz; ikz++) uk[ikz][ikx] = sf_crmul(ctracez[ith][ikz],ikz%2?-1.0:1.0); 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ikz,ikx,ith) 
+#endif
+	    for (ikz=0; ikz < nkz; ikz++){
+		/* Inverse Fourier transform kx to x */
+		ith = omp_get_thread_num();
+		kiss_fft_stride(cfgxi[ith],(kiss_fft_cpx *)uk[ikz],ctracex[ith],1); 
+		for (ikx=0; ikx < nkx; ikx++) uk[ikz][ikx] = sf_crmul(ctracex[ith][ikx],ikx%2?-1.0:1.0); 
+	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++){
+		for (ix=0; ix < nxb; ix++){ 
+		    ukr[iz][ix] = sf_crealf(uk[iz][ix]); 
+		    ukr[iz][ix] /= (nkx*nkz); 
+		}
+	    }  
 
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=2; iz < nzb-2; iz++) {  
-                 for (ix=2; ix < nxb-2; ix++) {  
-                     new[iz][ix]  = ukr[iz][ix]*aa[iz][ix][0]
-                                  + (ukr[iz][ix-1]+ukr[iz][ix+1])*aa[iz][ix][1]
-                                  + (ukr[iz-1][ix]+ukr[iz+1][ix])*aa[iz][ix][2]
-                                  + (ukr[iz-1][ix-1]+ukr[iz-1][ix+1]+ukr[iz+1][ix-1]+ukr[iz+1][ix+1])*aa[iz][ix][3]
-                                  + (ukr[iz][ix-2]+ukr[iz][ix+2])*aa[iz][ix][4]
-                                  + (ukr[iz-2][ix]+ukr[iz+2][ix])*aa[iz][ix][5];
-                 }
-             }  
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=2; iz < nzb-2; iz++) {  
+		for (ix=2; ix < nxb-2; ix++) {  
+		    new[iz][ix]  = ukr[iz][ix]*aa[iz][ix][0]
+			+ (ukr[iz][ix-1]+ukr[iz][ix+1])*aa[iz][ix][1]
+			+ (ukr[iz-1][ix]+ukr[iz+1][ix])*aa[iz][ix][2]
+			+ (ukr[iz-1][ix-1]+ukr[iz-1][ix+1]+ukr[iz+1][ix-1]+ukr[iz+1][ix+1])*aa[iz][ix][3]
+			+ (ukr[iz][ix-2]+ukr[iz][ix+2])*aa[iz][ix][4]
+			+ (ukr[iz-2][ix]+ukr[iz+2][ix])*aa[iz][ix][5];
+		}
+	    }  
              
 
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++) {  
-                 for (ix=0; ix < nxb; ix++) {
-                     dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
-                     new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-                //     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; 
-                 }
-             }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++) {  
+		for (ix=0; ix < nxb; ix++) {
+		    dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
+		    new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
+		    /*     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; */
+		}
+	    }
  
-               bd_decay(new); 
-               bd_decay(dercur); 
+	    bd_decay(new); 
+	    bd_decay(dercur); 
  
-            #ifdef _OPENMP
-            #pragma omp parallel for private(iz,ix) 
-            #endif
-             for (iz=0; iz < nzb; iz++) {  
-                 for(ix=0; ix < nxb; ix++) {
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix) 
+#endif
+	    for (iz=0; iz < nzb; iz++) {  
+		for(ix=0; ix < nxb; ix++) {
                     old[iz][ix] = cur[iz][ix]; 
                     cur[iz][ix] = new[iz][ix]; 
                     derold[iz][ix] = dercur[iz][ix]; 
-                 }
-             }
+		}
+	    }
         }
         sf_floatwrite(image[0],tl,output);
         sf_warning("image output");
@@ -797,31 +797,29 @@ int main(int argc, char* argv[])
         free(sname);
     }
 
-       //remove("/local/lfs1/data/snap");
-       //remove("/tmp/snap");
-       bd_close();
-       srcsm_close();
-       free(**aa);
-       free(*aa);
-       free(aa);
-       free(*new);     
-       free(*cur);     
-       free(*old);     
-       free(*dercur);     
-       free(*derold);     
-       free(*uk);     
-       free(*ukr);     
-       free(new);     
-       free(cur);     
-       free(old);     
-       free(dercur);     
-       free(derold);     
-       free(uk);     
-       free(ukr);     
-       MPI_Finalize();
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
+    /* remove("/local/lfs1/data/snap"); */
+    /* remove("/tmp/snap"); */
+    bd_close();
+    srcsm_close();
+    free(**aa);
+    free(*aa);
+    free(aa);
+    free(*new);     
+    free(*cur);     
+    free(*old);     
+    free(*dercur);     
+    free(*derold);     
+    free(*uk);     
+    free(*ukr);     
+    free(new);     
+    free(cur);     
+    free(old);     
+    free(dercur);     
+    free(derold);     
+    free(uk);     
+    free(ukr);     
+    MPI_Finalize();
+
     exit(0); 
 }           
 
@@ -835,8 +833,8 @@ void itoa(int n, char *s)
     if (n < 0) n=-n;
     i = 0;
     do {
-       s[i++] = n%10+'0';
-       n = (int) n/10;
+	s[i++] = n%10+'0';
+	n = (int) n/10;
     } while(n > 0);
     if (sign <0) s[i++] = '-';
     s[i] = '\0';
@@ -847,7 +845,7 @@ void itoa(int n, char *s)
     }
 }
 
- void srcsm_init(float dz, float dx/*grid size*/)
+void srcsm_init(float dz, float dx/*grid size*/)
 /*< initialization >*/
 {
 
@@ -860,16 +858,16 @@ void itoa(int n, char *s)
     ws =  sf_floatalloc2(3,2);
     ws[0][0] = -0.5*dz2/(R0*R0)+1.0;
     if(2.0*dz < R0) { 
-      ws[0][1]= -2.0*dz2/(R0*R0)+1.0;
+	ws[0][1]= -2.0*dz2/(R0*R0)+1.0;
     } else {
-      ws[0][1]= 2.0*(dz-R0)*(dz-R0)/(R0*R0);
+	ws[0][1]= 2.0*(dz-R0)*(dz-R0)/(R0*R0);
     }
     ws[0][2]= 0.5*(rxzz-2.0*R0)*(rxzz-2.0*R0)/(R0*R0);
     ws[1][0] = -0.5*dx2/(R0*R0)+1.0;
     if(2.0*dx < R0) { 
-      ws[1][1] = -2.0*dx2/(R0*R0)+1.0;
+	ws[1][1] = -2.0*dx2/(R0*R0)+1.0;
     } else {
-      ws[1][1] = 2.0*(dx-R0)*(dx-R0)/(R0*R0);
+	ws[1][1] = 2.0*(dx-R0)*(dx-R0)/(R0*R0);
     }
     ws[1][2]= 0.5*(rxxz-2.0*R0)*(rxxz-2.0*R0)/(R0*R0);
 
@@ -992,7 +990,7 @@ void bd_decay(float **a /*2-D matrix*/)
     }
     for (iz=0; iz < nbt; iz++) {  
         for (ix=0; ix < nbl; ix++) {
-            //a[iz][ix] *= (float)iz/(float)(ix+iz)*wl[ix]+(float)ix/(float)(ix+iz)*wt[iz];
+            /* a[iz][ix] *= (float)iz/(float)(ix+iz)*wl[ix]+(float)ix/(float)(ix+iz)*wt[iz]; */
             a[iz][ix] *= iz>ix? wl[ix]:wt[iz];
         }
     }
@@ -1023,45 +1021,45 @@ void abc_cal(int abc /* decaying type*/,
     const float pi=SF_PI;
     if(!nb) return;
     switch(abc){
-          default:
-              for(ib=0; ib<nb; ib++){
-                 w[ib]=exp(-c*c*(nb-1-ib)*(nb-1-ib));
-              }
-          break;
-          case(1): 
-              for(ib=0; ib<nb; ib++){
-                 w[ib]=powf((1.0+0.9*cosf(((float)(nb-1.0)-(float)ib)/(float)(nb-1.0)*pi))/2.0,abc);
-              }
+	default:
+	    for(ib=0; ib<nb; ib++){
+		w[ib]=exp(-c*c*(nb-1-ib)*(nb-1-ib));
+	    }
+	    break;
+	case(1): 
+	    for(ib=0; ib<nb; ib++){
+		w[ib]=powf((1.0+0.9*cosf(((float)(nb-1.0)-(float)ib)/(float)(nb-1.0)*pi))/2.0,abc);
+	    }
     }   
 }
 float dehf(float k /*current frequency*/,
-          float kn /*highest frequency*/,
-          float a /*suppress factor*/,
-          float factor /*propotion*/)
+	   float kn /*highest frequency*/,
+	   float a /*suppress factor*/,
+	   float factor /*propotion*/)
 /*< high frequency depressing>*/
 {
     float kmax, kmax2;
     float depress;
-    //float pi=SF_PI;
+    /* float pi=SF_PI; */
     kmax =  (kn*factor);
     kmax2 = (kmax+kn)/2.0;
     if (fabs(k) < kmax) {
-       depress = 1.0;
-       }
-    else {
-       depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
-//         depress =cosf(((fabs(k)-kmax))/((kn-kmax))*pi/2.0);
- //       depress = depress * depress;
+	depress = 1.0;
     }
-    //   depress = exp(-a*((fabs(k)-kmax)*(fabs(k)-kmax))/((kn-kmax)*(kn-kmax)));
+    else {
+	depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
+/*          depress =cosf(((fabs(k)-kmax))/((kn-kmax))*pi/2.0); */
+	/*       depress = depress * depress; */
+    }
+    /*   depress = exp(-a*((fabs(k)-kmax)*(fabs(k)-kmax))/((kn-kmax)*(kn-kmax))); */
 /*
-    else if (fabs(k) < kmax2){
-         depress =cosf(((fabs(k)-kmax))/((kmax2-kmax))*pi/2.0);
-         depress = depress * depress;
-    }    
-       //depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
-    else
-        depress = 0.0;
+  else if (fabs(k) < kmax2){
+  depress =cosf(((fabs(k)-kmax))/((kmax2-kmax))*pi/2.0);
+  depress = depress * depress;
+  }    
+  // depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)))); 
+  else
+  depress = 0.0;
 //       depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
 */
     return(depress);
