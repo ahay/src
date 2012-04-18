@@ -51,13 +51,6 @@ int main(int argc, char *argv[])
     /* Whether to automatically estimate endianness or not */
     if (xdr) endian();
 
-    if (su) {
-	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
-	/* y, SU has XDR support */
-    } else {
-	suxdr = true;
-    }
-
     if (!sf_getbool("su",&su)) {
 	/* y if input is SU, n if input is SEGY */
 	prog = sf_getprog();
@@ -70,6 +63,13 @@ int main(int argc, char *argv[])
 		       prog);
 	    su = false;
 	}
+    }
+
+    if (su) {
+	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
+	/* y, SU has XDR support */
+    } else {
+	suxdr = true;
     }
 
     if (NULL == (filename = sf_getstring("tape"))) {
