@@ -30,20 +30,16 @@ int main(int argc, char* argv[])
     int nx, nz, nt, ix, iz, it, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz;
     float dt, dx, dz, o1, o2;
     float **old,  **cur,  **tmp, *wav;
-    float  **v, v0, ***aa, w, g1, g2, ct, cb, cl, cr; //top, bottom, left, right 
+    float  **v, v0, ***aa, w, g1, g2, ct, cb, cl, cr; /* top, bottom, left, right */
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
-     
 
     sf_init(argc,argv);
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
     source = sf_input("in");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
@@ -52,8 +48,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
     if (!sf_histfloat(vel,"o1",&o1)) o1=0.0;
     if (!sf_histfloat(vel,"o2",&o2)) o1=0.0;
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    /*  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input"); */
+    /*  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input"); */
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
@@ -73,7 +69,7 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-//    sf_putfloat(out,"o1",x0);
+/*    sf_putfloat(out,"o1",x0); */
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
     sf_putint(out,"n3",nt);
