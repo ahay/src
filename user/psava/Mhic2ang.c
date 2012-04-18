@@ -302,15 +302,18 @@ int main(int argc, char* argv[])
 	}
 
 	/* phi loop */
+
+	nph = sf_n(aph);
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)				\
     private(iph,phi,jk,qq,						\
 	    ith,tht,							\
 	    ihy,ihx,hy,hx,hz,						\
 	    tau,jht,fht,cosum,codif,v_s,v_r,psi,sitovel)	\
-    shared( aph,ath,aps,ahy,ahx,aht,cip,ang,vep,ves,eps,dlt)
+    shared( nph,aph,ath,aps,ahy,ahx,aht,cip,ang,vep,ves,eps,dlt)
 #endif
-	for(iph=0;iph<sf_n(aph);iph++) {
+	for(iph=0;iph<nph;iph++) {
 	    phi=(sf_o(aph)+iph*sf_d(aph))/180.*SF_PI;
 	    
 	    /* reflection azimuth vector */
