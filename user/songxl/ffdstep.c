@@ -121,8 +121,8 @@ float dehf(int k /*current frequency*/,
        depress = 1.0;
        }
     else
-       //depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0);
-       //depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
+	/* depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0); */
+	/* depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)))); */
        depress = exp(-a*(float)((k-kmax)*(k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)*(kn-kmax))));
     return(depress);
 }
