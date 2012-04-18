@@ -520,19 +520,21 @@ void weiwfl(weiop3d weop,
 	    bool causal)
 /*< wei wavefield >*/
 {
-    int iz,iw;
+    int iz,iw, nw;
     sf_complex w;
     int ompith=0;
     int weisign;
 
     weisign=causal?+1:-1;
 
+    nw = sf_n(cub->aw);
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,1)	\
     private(ompith,iw,w,iz)			\
-    shared(Fdat,Fwfl,weop,cub,ssr,tap,slo)
+    shared(Fdat,Fwfl,weop,cub,ssr,tap,slo,nw)
 #endif
-    for (iw=0; iw<sf_n(cub->aw); iw++) {
+    for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
 	ompith = omp_get_thread_num();
 #endif
@@ -589,7 +591,7 @@ void adjsou(weicub3d cub,
 /*< adjoint source construction >*/
 {
 
-    int ix, iy, iz, iw, ompith=0;
+    int ix, iy, iz, iw, nw, ompith=0;
     sf_complex *****eic, ****bwf, ****asou;
 
     eic = sf_complexalloc5(sf_n(cub->ahx),sf_n(cub->ahy),sf_n(cub->ahz),sf_n(cub->aht),sf_n(cub->ac));
@@ -602,12 +604,14 @@ void adjsou(weicub3d cub,
 
     /*------------------------------------------------------------*/
     /* loop over frequency */
+    nw = sf_n(cub->aw);
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
     private(ompith,iw,iz,iy,ix)			\
-    shared(cub,eico)
+    shared(cub,eico,nw)
 #endif
-    for (iw=0; iw<sf_n(cub->aw); iw++) {
+    for (iw=0; iw<nw; iw++) {
 
 #ifdef _OPENMP
         ompith = omp_get_thread_num();
@@ -655,7 +659,7 @@ void genwfl(weiop3d weop,
             bool   causal)
 /*< wei wavefield >*/
 {
-    int iz,ix,iy,iw,ompith=0,weisign;
+    int iz,ix,iy,iw,nw,ompith=0,weisign;
     sf_complex w;
     sf_complex **gensou;
 
@@ -666,13 +670,16 @@ void genwfl(weiop3d weop,
     /* read generalized source  */
     sf_complexread(gensou[0],sf_n(cub->ac)*sf_n(cub->aw),Fsou);
 
+    nw = sf_n(cub->aw);
+
     if(down){ /* downward continuation */
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,1)	\
     private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,eico,gensou)
 #endif
-        for (iw=0; iw<sf_n(cub->aw); iw++) {
+        for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
             ompith = omp_get_thread_num();
 #endif
@@ -723,7 +730,7 @@ void genwfl(weiop3d weop,
     private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,eico,gensou)
 #endif
-        for (iw=0; iw<sf_n(cub->aw); iw++) {
+        for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
             ompith = omp_get_thread_num();
 #endif
