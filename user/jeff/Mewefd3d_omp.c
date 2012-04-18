@@ -608,9 +608,9 @@ int main(int argc, char* argv[])
 	
 	if(dabc) {
 	    /* one-way ABC */
-	    //abcone3d_apply(uoz,umz,NOP,abcp,fdm);
-	    //abcone3d_apply(uox,umx,NOP,abcp,fdm);
-	    //abcone3d_apply(uoy,umy,NOP,abcp,fdm);
+	    /* abcone3d_apply(uoz,umz,NOP,abcp,fdm); */
+	    /* abcone3d_apply(uox,umx,NOP,abcp,fdm); */
+	    /* abcone3d_apply(uoy,umy,NOP,abcp,fdm); */
 	    
 	    abcone3d_apply(uoz,umz,NOP,abcs,fdm);
 	    abcone3d_apply(uox,umx,NOP,abcs,fdm);
