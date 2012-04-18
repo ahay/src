@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
     float vk, vk2, tmpvk, k2, err, dt2, kx1, kz1;
-    float alpha; //source smoothing
+    float alpha; /* source smoothing */
     kiss_fft_cpx **uk, *ctracex, *ctracez;
     kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     sf_file out, velx, velz, source, yita, seta;
