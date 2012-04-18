@@ -30,32 +30,28 @@ int main(int argc, char* argv[])
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, iv, nv, nz, iz, isx, isz, nb, nxb, nzb;
     float dt, dx, dkx, kx,  dz, dkz, kz, dv, tmpdt, pi=SF_PI, vmax, vmin, wsum;
     float **nxt,  **old,  **cur,  **nxtc, *wav, **uk, **uktmp, **derold, **dercur;
-    //sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; 
-    //kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
+    /* sf_complex  **uk, **uktmp, **curcmp, *ctracex, *ctracez; */
+    /* kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi; */
     float  **v, *vc, ***weight, *wb, c; 
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
-     
 
     sf_init(argc,argv);
-    //inp = sf_input("in");
+    /* inp = sf_input("in"); */
     out = sf_output("out");
     vel = sf_input("vel");   /* velocity */
-    //source = sf_input("source");   /* source wavlet*/
+    /* source = sf_input("source");   /* source wavlet*/
     source = sf_input("in");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in input");
     if (!sf_histfloat(vel,"d2",&dz)) sf_error("No d2= in input");
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    /*  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input"); */
+    /*  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input"); */
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
@@ -70,7 +66,7 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-//    sf_putfloat(out,"o1",x0);
+/*    sf_putfloat(out,"o1",x0); */
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
     sf_putint(out,"n3",nt);
@@ -118,7 +114,7 @@ int main(int argc, char* argv[])
 
 
     sf_floatread(wav,nt,source);
-//    sf_floatread(vx,nx,grad);
+/*    sf_floatread(vx,nx,grad); */
     vmax = -FLT_MAX;
     vmin = +FLT_MAX;
     for (iz=0; iz < nzb; iz++) {
@@ -134,7 +130,7 @@ int main(int argc, char* argv[])
          for (ix=0; ix < nxb; ix++) {
              wsum = 0.0;
              for (iv=0; iv < nv; iv++) {
-                weight[iv][iz][ix] = 1.0/((v[iz][ix]-vc[iv])*(v[iz][ix]-vc[iv])/10000.0+1.0); // Weight Function
+		 weight[iv][iz][ix] = 1.0/((v[iz][ix]-vc[iv])*(v[iz][ix]-vc[iv])/10000.0+1.0); /* Weight Function */
                 wsum += weight[iv][iz][ix];
              }
          for (iv=0; iv < nv; iv++) weight[iv][iz][ix] /= wsum;
@@ -229,7 +225,7 @@ int main(int argc, char* argv[])
 	      for (iz=0; iz < nzb; iz++) {  
 	          for (ix=0; ix < nxb; ix++) {  
                       nxtc[iz][ix]  = uktmp[iz][ix];
-                   //   nxtc[iz][ix] /= nkx * nkz; 
+		      /*   nxtc[iz][ix] /= nkx * nkz; */
 		      nxtc[iz][ix] *= weight[iv][iz][ix];
                       nxt[iz][ix] += nxtc[iz][ix];
                   }
@@ -300,9 +296,6 @@ int main(int argc, char* argv[])
     free(uk);     
     free(uktmp);     
     free(weight);
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
  
     exit(0); 
 }           
