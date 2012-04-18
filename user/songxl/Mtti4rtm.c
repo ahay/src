@@ -418,7 +418,7 @@ int main(int argc, char* argv[])
 		tmpdt = -(tmp)*(tmp);
 /*
   else if(tmpk < 0.1) 
-  /* tmpdt =(-tmpk*tmpk+tmpk*tmpk*tmpk*tmpk/12.0)/(k2); */
+  // tmpdt =(-tmpk*tmpk+tmpk*tmpk*tmpk*tmpk/12.0)/(k2); 
 	    tmpdt =(-tmp*tmp+tmp*tmp*tmp*tmp*k2/12.0);
 	    */
             else
