@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     int nx, nt, nkx, nkz,  ix, it, ikx, ikz, nz, iz, nb, nxb, nzb, isx, isz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI;
     float **nxt,  **old,  **cur,  **uk, **dercur, **derold, *wav;
-    float  **v, *wb, c; 
+    float  **v, *wb=NULL, c; 
     float ax, az, factor;
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
