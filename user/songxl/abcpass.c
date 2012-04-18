@@ -90,7 +90,7 @@ void bd_decay(float **a /*2-D matrix*/)
     }
     for (iz=0; iz < nbt; iz++) {  
         for (ix=0; ix < nbl; ix++) {
-            //a[iz][ix] *= (float)iz/(float)(ix+iz)*wl[ix]+(float)ix/(float)(ix+iz)*wt[iz];
+            /* a[iz][ix] *= (float)iz/(float)(ix+iz)*wl[ix]+(float)ix/(float)(ix+iz)*wt[iz]; */
             a[iz][ix] *= iz>ix? wl[ix]:wt[iz];
         }
     }
