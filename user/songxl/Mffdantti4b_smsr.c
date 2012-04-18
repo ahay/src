@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0;
     float **nxt,  **old,  **cur, **ukr, **dercur, **derold, *wav;
     float **vx, vx2, vx4, vx0, vx02, vx04, **vz, vz2, vz4, vz0, vz02, vz04, **yi, yi0, **se, se0;
-    float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; //top, bottom, left, right 
+    float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; /* top, bottom, left, right */
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
     float vk, vk2, tmpvk, k2, err, dt2, kx1, kz1;
@@ -38,11 +38,7 @@ int main(int argc, char* argv[])
     kiss_fft_cpx **uk, *ctracex, *ctracez;
     kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     sf_file out, velx, velz, source, yita, seta;
-    bool opt;    /* optimal padding */
-   // #ifdef _OPENMP
-   // int nth;
-   // #endif
-     
+    bool opt;    /* optimal padding */     
 
     sf_init(argc,argv);
     out = sf_output("out");
@@ -52,7 +48,7 @@ int main(int argc, char* argv[])
     source = sf_input("in");   /* source wavlet*/
     seta = sf_input("seta");   /* TTI angle*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(velx)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(velz)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
@@ -64,8 +60,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(velx,"d2",&dz)) sf_error("No d2= in input");
     if (!sf_histfloat(velx,"o1",&o1)) o1=0.0;
     if (!sf_histfloat(velx,"o2",&o2)) o2=0.0;
-  //  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input");
-  //  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input");
+    /*  if (!sf_histint(inp,"n2",&nt)) sf_error("No n2= in input"); */
+    /*  if (!sf_histfloat(inp,"d2",&dt)) sf_error("No d2= in input"); */
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
@@ -89,7 +85,7 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
-//    sf_putfloat(out,"o1",x0);
+/*    sf_putfloat(out,"o1",x0); */
     sf_putint(out,"n2",nz);
     sf_putfloat(out,"d2",dz);
     sf_putint(out,"n3",nt);
@@ -410,13 +406,13 @@ int main(int argc, char* argv[])
              nxt[iz][nx-1] = uk[iz][nx-1]*aa[iz][nx-1][0] + uk[iz][nx-2]*aa[iz][nx-1][1] + (uk[iz-1][nx-1]+uk[iz+1][nx-1])*aa[iz][nx-1][2]; 
          }
  */         
-      //   nxt[isz+nbt][isx+nbl] += wav[it];
+	 /*   nxt[isz+nbt][isx+nbl] += wav[it]; */
 
 	 for (iz=0; iz < nzb; iz++) {  
              for (ix=0; ix < nxb; ix++) {
                  dercur[iz][ix]= derold[iz][ix] + nxt[iz][ix]/dt;
                  nxt[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-            //     nxt[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; 
+		 /*     nxt[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; */
              }
          }
  
@@ -464,10 +460,7 @@ int main(int argc, char* argv[])
     free(derold);     
     free(uk);     
     free(ukr);     
- //   sf_fileclose(vel);
- //   sf_fileclose(inp);
- //   sf_fileclose(out);
- 
+
     exit(0); 
 }           
            
