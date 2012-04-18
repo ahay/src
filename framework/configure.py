@@ -206,18 +206,16 @@ def cc(context):
 
     if string.rfind(CC,'icc') >= 0:
         intel(context)
-
+    elif string.rfind(CC,'gcc') >= 0:
+        gcc(context)
+    
     context.Message("checking if %s works ... " % CC)
     res = context.TryLink(text,'.c')
     context.Result(res)
     if not res:
         need_pkg('libc')
     if string.rfind(CC,'gcc') >= 0 and \
-           string.rfind(CC,'pgcc') < 0:
-        libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
-        libs = filter (lambda x: re.search('gcc',x) and os.path.isdir(x),libdirs)
-        context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
-        
+           string.rfind(CC,'pgcc') < 0:        
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
@@ -1677,6 +1675,13 @@ def java(context):
     else:
         context.Result(context_failure)
         need_pkg('minesjtk', fatal=False)
+
+def gcc(context):
+    '''Handle dynamic gcc libraries.'''
+    libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
+    libs = filter (lambda x: re.search('gcc',x) and os.path.isdir(x),
+                   libdirs)
+    context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
