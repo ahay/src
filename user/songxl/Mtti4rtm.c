@@ -94,6 +94,7 @@ int main(int argc, char* argv[])
     int nr, jr, r0, nl, fsize, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
     float ax, az, factor;
+    kiss_fft_cfg *cfgx, *cfgxi, *cfgz, *cfgzi;
     /* MPI_Status stat; */
      
     MPI_Init(&argc,&argv);
@@ -190,8 +191,12 @@ int main(int argc, char* argv[])
     uk = (kiss_fft_cpx **) sf_complexalloc2(nkx,nkz);
     ctracex = (kiss_fft_cpx **) sf_complexalloc2(nkx,nth);
     ctracez = (kiss_fft_cpx **) sf_complexalloc2(nkz,nth);
-   
-    kiss_fft_cfg cfgx[nth], cfgxi[nth], cfgz[nth], cfgzi[nth];
+
+    cfgx  = (kiss_fft_cfg *) sf_complexalloc(nth);
+    cfgxi = (kiss_fft_cfg *) sf_complexalloc(nth);
+    cfgz  = (kiss_fft_cfg *) sf_complexalloc(nth);
+    cfgzi = (kiss_fft_cfg *) sf_complexalloc(nth);
+
     for (i=0; i < nth; i++) {
         cfgx[i] = kiss_fft_alloc(nkx,0,NULL,NULL);
         cfgxi[i] = kiss_fft_alloc(nkx,1,NULL,NULL);
