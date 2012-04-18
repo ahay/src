@@ -71,7 +71,7 @@
 	    for(ix=0;ix<sf_n(cub->amx);ix++){		\
 		{a} }}} /* zyx loop */
 
-#define EICLOOP(a) for(ic=0;  ic<sf_n(cub->ac); ic++ ) {	\
+#define EICLOOP(a) for(ic=0;  ic<nc; ic++ ) {			\
 	for(iht=0;iht<sf_n(cub->aht);iht++) {			\
 	    for(ihz=0;ihz<sf_n(cub->ahz);ihz++) {		\
 		for(ihy=0;ihy<sf_n(cub->ahy);ihy++) {		\
@@ -1661,13 +1661,14 @@ void weihic(weiop3d weop,
 	    sf_file Feic)
 /*< HIC migration >*/
 {
-    int ix,iy,iz,nz,iw;
+    int ix,iy,iz,nz,iw,nw;
     sf_complex ws,wr;
     int ompith=0;
     int ihx,ihy,iht,ic,nc;
    
     nz = sf_n(cub->az);
     nc = sf_n(cub->ac);
+    nw = sf_n(cub->aw);
 
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero CIC image...");
@@ -1695,7 +1696,7 @@ void weihic(weiop3d weop,
     private(ompith,iw,ws,wr,iz)			\
     shared(Fsou,Frec,weop,cub,ssr,tap,slo)
 #endif
-    for (iw=0; iw<sf_n(cub->aw); iw++) {
+    for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
 	ompith = omp_get_thread_num();
 #endif
@@ -1767,7 +1768,7 @@ void weieic(weiop3d weop,
 	    sf_file Feic)
 /*< EIC migration >*/
 {
-    int ix,iy,iz,nz,iw,ic,ihx,ihy,ihz,iht;
+    int ix,iy,iz,nz,iw,ic,nc,ihx,ihy,ihz,iht;
     sf_complex ws,wr;
     int ompith=0;
     int ibk,nbk;
@@ -1775,6 +1776,7 @@ void weieic(weiop3d weop,
     sf_fslice *stmp,*rtmp;
 
     nz = sf_n(cub->az);
+    nc = sf_n(cub->ac);
  
     /*------------------------------------------------------------*/
     nw=cub->ompnth;       /* frequencies in a block */
@@ -2278,7 +2280,7 @@ void weieic_apply(int jw,
 		  weicub3d cub)
 /*< apply EIC >*/
 {
-    int ihx,ihy,ihz,iht,ic;
+    int ihx,ihy,ihz,iht,nht,ic,nc;
     sf_complex wt;
     int mcx,pcx;
     int mcy,pcy;
@@ -2288,13 +2290,16 @@ void weieic_apply(int jw,
     nw=cub->ompnth;  
     iw=ibk*nw+jw;
 
+    nc = sf_n(cub->ac);
+    nht = sf_n(cub->aht);
+
     if(sf_n(cub->ac)>cub->ompnth) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)			\
     private(ic,iht,ihz,ihy,ihx,wt,mcz,pcz,mcy,pcy,mcx,pcx)	\
-    shared(cub,eico,weop,iw)
+    shared(cub,eico,weop,iw,nc)
 #endif
-	for(ic=0; ic<sf_n(cub->ac); ic++) {
+	for(ic=0; ic<nc; ic++) {
 	    if(eico->ccin[ic]) {
 		
 		for            (iht=0; iht<sf_n(cub->aht); iht++) { wt =eico->tt[iw][iht];
@@ -2322,7 +2327,7 @@ void weieic_apply(int jw,
     private(iht,ihz,ihy,ihx,wt,mcz,pcz,mcy,pcy,mcx,pcx) \
     shared(cub,eico,weop,iw,ic)
 #endif
-		for            (iht=0; iht<sf_n(cub->aht); iht++) { wt =eico->tt[iw][iht];
+		for            (iht=0; iht<nht; iht++) { wt =eico->tt[iw][iht];
 		    for        (ihz=0; ihz<sf_n(cub->ahz); ihz++) { mcz=eico->mczall[ic][ihz]; pcz=eico->pczall[ic][ihz];
 			for    (ihy=0; ihy<sf_n(cub->ahy); ihy++) { mcy=eico->mcyall[ic][ihy]; pcy=eico->pcyall[ic][ihy];
 			    for(ihx=0; ihx<sf_n(cub->ahx); ihx++) { mcx=eico->mcxall[ic][ihx]; pcx=eico->pcxall[ic][ihx];
