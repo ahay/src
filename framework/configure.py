@@ -214,6 +214,10 @@ def cc(context):
         need_pkg('libc')
     if string.rfind(CC,'gcc') >= 0 and \
            string.rfind(CC,'pgcc') < 0:
+        libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
+        libs = filter (lambda x: re.search('gcc',x) and os.path.isdir(x),libdirs)
+        context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
+        
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
