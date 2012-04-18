@@ -66,7 +66,7 @@
 	for(ix=0;ix<sf_n(cub->amx);ix++){		\
 	    {a} }} /*  yx loop */
 
-#define CICLOOP(a) for(iz=0;iz<sf_n(cub->az) ;iz++){	\
+#define CICLOOP(a) for(iz=0;iz<nz;iz++){	\
 	for(iy=0;iy<sf_n(cub->amy);iy++){		\
 	    for(ix=0;ix<sf_n(cub->amx);ix++){		\
 		{a} }}} /* zyx loop */
@@ -591,7 +591,7 @@ void adjsou(weicub3d cub,
 /*< adjoint source construction >*/
 {
 
-    int ix, iy, iz, iw, nw, ompith=0;
+    int ix, iy, iz, nz, iw, nw, ompith=0;
     sf_complex *****eic, ****bwf, ****asou;
 
     eic = sf_complexalloc5(sf_n(cub->ahx),sf_n(cub->ahy),sf_n(cub->ahz),sf_n(cub->aht),sf_n(cub->ac));
@@ -605,6 +605,7 @@ void adjsou(weicub3d cub,
     /*------------------------------------------------------------*/
     /* loop over frequency */
     nw = sf_n(cub->aw);
+    nz = sf_n(cub->az);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
@@ -785,12 +786,14 @@ void adjwfl(weiop3d weop,
             bool   causal)
 /*< wei wavefield >*/
 {
-    int iz,ix,iy,iw,ompith=0,weisign;
+    int iz,ix,iy,iw,nw,ompith=0,weisign;
     sf_complex w;
     sf_complex ****sou;
 
     sou = sf_complexalloc4(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az),cub->ompnth);
     weisign=causal?+1:-1;
+
+    nw = sf_n(cub->aw);
 
     if(down){ /* downward continuation */
 #ifdef _OPENMP
@@ -798,7 +801,7 @@ void adjwfl(weiop3d weop,
     private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,Fsou,cub,ssr,tap,slo,sou)
 #endif
-        for (iw=0; iw<sf_n(cub->aw); iw++) {
+        for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
             ompith = omp_get_thread_num();
 #endif
@@ -863,7 +866,7 @@ void adjwfl(weiop3d weop,
     private(ompith,iw,w,iz,ix,iy)		\
     shared(Fwfl,cub,ssr,tap,slo,sou)
 #endif
-        for (iw=0; iw<sf_n(cub->aw); iw++) {
+        for (iw=0; iw<nw; iw++) {
 #ifdef _OPENMP
             ompith = omp_get_thread_num();
 #endif
@@ -944,7 +947,7 @@ void gradient(weicub3d cub,
 	      bool conj)
 /*< wei gradient >*/
 {
-    int iz,ix,iy,iw,ompith=0;
+    int iz,nz, ix,iy,iw,ompith=0;
     sf_complex ****sou;
     sf_complex ****rec;
     sf_complex  ***cic;
@@ -952,6 +955,8 @@ void gradient(weicub3d cub,
     sou = sf_complexalloc4(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az),cub->ompnth);
     rec = sf_complexalloc4(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az),cub->ompnth);
     cic = sf_complexalloc3(sf_n(cub->amx),sf_n(cub->amy),sf_n(cub->az));
+
+    nz = sf_n(cub->az);
 
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero CIC image...");
@@ -1183,10 +1188,12 @@ void weicic(weiop3d weop,
 	    sf_file Fcic)
 /*< CIC migration >*/
 {
-    int ix,iy,iz,iw;
+    int ix,iy,iz,nz,iw;
     sf_complex ws,wr;
     int ompith=0;
    
+    nz = sf_n(cub->az);
+
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero CIC image...");
 #ifdef _OPENMP
@@ -1263,9 +1270,11 @@ void weizocic(weiop3d weop,
             sf_file Fcic)
 /*< zero-offset migration >*/
 {
-    int ix,iy,iz,iw;
+    int ix,iy,iz,nz,iw;
     sf_complex ws;
     int ompith=0;
+
+    nz = sf_n(cub->az);
 
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero CIC image...");
@@ -1643,11 +1652,13 @@ void weihic(weiop3d weop,
 	    sf_file Feic)
 /*< HIC migration >*/
 {
-    int ix,iy,iz,iw;
+    int ix,iy,iz,nz,iw;
     sf_complex ws,wr;
     int ompith=0;
     int ihx,ihy,iht,ic;
    
+    nz = sf_n(cub->az);
+
     /*------------------------------------------------------------*/
     if(cub->verb) fprintf(stderr,"zero CIC image...");
 #ifdef _OPENMP
@@ -1746,12 +1757,14 @@ void weieic(weiop3d weop,
 	    sf_file Feic)
 /*< EIC migration >*/
 {
-    int ix,iy,iz,iw,ic,ihx,ihy,ihz,iht;
+    int ix,iy,iz,nz,iw,ic,ihx,ihy,ihz,iht;
     sf_complex ws,wr;
     int ompith=0;
     int ibk,nbk;
     int jw,nw;
     sf_fslice *stmp,*rtmp;
+
+    nz = sf_n(cub->az);
  
     /*------------------------------------------------------------*/
     nw=cub->ompnth;       /* frequencies in a block */
@@ -2223,7 +2236,9 @@ void weicic_apply(weiop3d weop,
 		  weicub3d cub)
 /*< apply CIC >*/
 {
-    int ix,iy,iz;
+    int ix,iy,iz,nz;
+    
+    nz = sf_n(cub->az);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)	\
