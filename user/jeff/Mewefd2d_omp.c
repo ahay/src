@@ -57,10 +57,10 @@
 
 /*------------------------------------------------------------*/
 /* CENTERED derivatives */
-/* #define C1 +0.800000   /* +4/5    */
-/* #define C2 -0.200000   /* -1/5    */
-/* #define C3 +0.038095   /* +4/105  */
-/* #define C4 -0.003571   /* -5/280  */
+/* #define C1 +0.800000    +4/5    */
+/* #define C2 -0.200000   -1/5    */
+/* #define C3 +0.038095   +4/105  */
+/* #define C4 -0.003571   -5/280  */
 
 #define C1 4.0f/5.0f
 #define C2 -1.0f/5.0f
@@ -102,7 +102,8 @@ int main(int argc, char* argv[])
 
     /* FDM structure */
     fdm2d    fdm=NULL;
-    abcone2d abcp=NULL,abcs=NULL;
+/*    abcone2d abcp=NULL; */
+    abcone2d abcs=NULL;
     sponge   spo=NULL;
 
     /* I/O arrays */
@@ -124,7 +125,8 @@ int main(int argc, char* argv[])
     float **c33=NULL;
     float **c55=NULL;
     float **c13=NULL;
-    float **vp=NULL,**vs=NULL;
+    /* float **vp=NULL; */
+    float **vs=NULL;
     float **qp=NULL,**qs=NULL;
 
     /*------------------------------------------------------------*/
