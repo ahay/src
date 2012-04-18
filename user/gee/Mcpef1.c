@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
     a = sf_complexalloc(nf);
     mask = sf_boolalloc(nf);
 
-    a[0] = 1.0;
+    a[0] = sf_cmplx(1.0f,0.0f);
     mask[0] = true;
 
     for (i1=1; i1 < nf; i1++) {
-	a[i1] = 0.0;
+	a[i1] = sf_cmplx(0.0f,0.0f);
 	mask[i1] = false;
     }
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     resid = sf_complexalloc(nr);
 
     for (i1=0; i1 < nr; i1++) {
-	resid[i1] = 0.0f;
+	resid[i1] = sf_cmplx(0.0f,0.0f);
     }
 
     ctcaf1_init(n1,trace);
