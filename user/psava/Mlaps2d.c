@@ -34,7 +34,9 @@
 int main(int argc, char* argv[])
 {
     bool verb,buf;
+#ifdef _OPENMP
     int ompnth=1;
+#endif
 
     sf_file Fs,Fr,Fi,Fc;        /* I/O files */
     sf_axis az,ax,at,ac,aa;     /* cube axes */

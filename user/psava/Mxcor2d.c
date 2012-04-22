@@ -1,4 +1,4 @@
-/* time- or freq-domain cross-correlation on axes 1,2,3 */
+/* OpenMP time- or freq-domain cross-correlation on axes 1,2,3 */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
@@ -36,7 +36,9 @@ int main(int argc, char* argv[])
 {
     bool verb,rflg;
     int  axis;
+#ifdef _OPENMP
     int ompnth=1;
+#endif
 
     sf_file Fs,Fr,Fi;    /* I/O files */
     sf_axis a1,a2,a3,aa; /* cube axes */
@@ -139,21 +141,18 @@ int main(int argc, char* argv[])
 	    sf_complexread(c_ur[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fr);
 	}
 
-/*	sf_warning("%d %d",axis,rflg);*/
-
 	switch(axis) {
 	    
 	    /*------------------------------------------------------------*/
 	    case 3:
 		
 		if(rflg) {
-
-		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
-    private(i1,i2)				\
-    shared( a1,a2,ii,r_us,r_ur,scale)
+    private(ibuf,i1,i2)				\
+    shared( nbuf,a1,a2,ii,r_us,r_ur,scale)
 #endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
 				ii[i2][i1] += rCOR(r_us[ibuf][i2][i1],r_ur[ibuf][i2][i1]);
@@ -163,13 +162,12 @@ int main(int argc, char* argv[])
 
 		} else {
 
-
-		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
-    private(i1,i2)				\
-    shared( a1,a2,ii,c_us,c_ur,scale)
+    private(ibuf,i1,i2)				\
+    shared( nbuf,a1,a2,ii,c_us,c_ur,scale)
 #endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
 				ii[i2][i1] += cCOR(c_us[ibuf][i2][i1],c_ur[ibuf][i2][i1]);
@@ -237,6 +235,7 @@ int main(int argc, char* argv[])
 	    default:
 
 		if(rflg) {
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \

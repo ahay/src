@@ -31,7 +31,9 @@ int main(int argc, char* argv[])
     bool verb;
     bool  adj;
     bool anis;
+#ifdef _OPENMP
     int ompnth=1;
+#endif
 
     sf_file Fcip=NULL;	/*   lag-domain CIPs */
     sf_file Fang=NULL;	/* angle-domain CIPs */

@@ -49,13 +49,14 @@ int main(int argc, char* argv[])
         nbuf = BUFSIZ/sizeof(float);
         fbuf1 = sf_floatalloc(nbuf);
         fbuf2 = sf_floatalloc(nbuf);
-    }
-    else if (inp_type == SF_INT) {
+    } else if (inp_type == SF_INT) {
         nbuf = BUFSIZ/sizeof(int);
         ibuf1 = sf_intalloc(nbuf);
         ibuf2 = sf_intalloc(nbuf);
+    } else {
+	nbuf = 0;
+	sf_error("Need float or int input");
     }
-    else sf_error("Need float or int input");
 
     n = sf_filesize(in);
 
