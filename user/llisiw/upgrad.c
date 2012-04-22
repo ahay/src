@@ -148,7 +148,7 @@ void upgrad_solve(upgrad upg,
 
 	num = rhs[jt];
 	up = upg->update[it];
-	den = upg->ww[it][ndim];
+	den = upg->ww[it][ndim]; /* denominator */
 
 	if (den == 0.) { /* at the source, use boundary conditions */
 	    x[jt] = (NULL != x0)? x0[jt]: 0.;

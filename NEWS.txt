@@ -1,4 +1,36 @@
-==Release 1.3 (TBD)==
+==Release 1.4 (TBD)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+===Changes in defaults===
+
+==Release 1.3 (2012-04-22)==
 
 ===Additions and enhancements===
 
