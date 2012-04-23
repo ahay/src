@@ -19,6 +19,9 @@
 */
 #include <rsf.h>
 
+/* Roberts, A., 2001, Curvature attributes and their application to
+   3-D interpreted horizons: First Break, 19, no. 2, 85–99. */
+
 int main (int argc, char *argv[])
 {
     /*differentiation coefficient*/
@@ -60,13 +63,13 @@ int main (int argc, char *argv[])
 
 	for (ix=1; ix<nx-1; ix++) {
 	    for (iy=1; iy<ny-1; iy++) {
-		a=idx*idx*(c0*(slice[ix+1][iy-1]+slice[ix+1][iy+1]+slice[ix][iy-1]+slice[ix][iy+1]+slice[ix-1][iy-1]+slice[ix-1][iy+1])-c1*(slice[ix+1][iy]+slice[ix][iy]+slice[ix-1][iy]));
+		a=idy*idy*(c0*(slice[ix+1][iy-1]+slice[ix+1][iy+1]+slice[ix][iy-1]+slice[ix][iy+1]+slice[ix-1][iy-1]+slice[ix-1][iy+1])-c1*(slice[ix+1][iy]+slice[ix][iy]+slice[ix-1][iy]));
 	    
 		b=idx*idx*(c0*(slice[ix+1][iy-1]+slice[ix+1][iy]+slice[ix+1][iy+1]+slice[ix-1][iy-1]+slice[ix-1][iy]+slice[ix-1][iy+1])-c1*(slice[ix][iy-1]+slice[ix][iy]+slice[ix][iy+1]));
 		
-		c=idx*idx*c2*(slice[ix+1][iy+1]+slice[ix-1][iy-1]-slice[ix+1][iy-1]-slice[ix-1][iy+1]);
+		c=idx*idy*c2*(slice[ix+1][iy+1]+slice[ix-1][iy-1]-slice[ix+1][iy-1]-slice[ix-1][iy+1]);
 		   
-		d=idx*c1*(slice[ix+1][iy+1]+slice[ix][iy+1]+slice[ix-1][iy+1]-slice[ix+1][iy-1]-slice[ix][iy-1]-slice[ix-1][iy-1]);
+		d=idy*c1*(slice[ix+1][iy+1]+slice[ix][iy+1]+slice[ix-1][iy+1]-slice[ix+1][iy-1]-slice[ix][iy-1]-slice[ix-1][iy-1]);
 			
 		e=idx*c1*(slice[ix+1][iy-1]+slice[ix+1][iy]+slice[ix+1][iy+1]-slice[ix-1][iy-1]-slice[ix-1][iy]-slice[ix-1][iy+1]);
 			

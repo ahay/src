@@ -40,9 +40,10 @@ Flow('ssk','off', hcig2ssk())
 Flow('sskt','ssk','transp plane=23 memsize=150')
 Result('ssk','sskt',
        '''
+       window j1=2 |
        byte gainpanel=all pclip=99| grey3 labelrot=n title="PhDCIGs" 
        pclip=99   label1="z" label2="x" label3="tan"
-       frame1=500 frame2=250 frame3=200 point2=0.7 point1=0.7 point3=0.15 unit1=ft  unit2=ft
+       frame1=250 frame2=250 frame3=200 point2=0.7 point1=0.7 point3=0.15 unit1=ft  unit2=ft
        ''')
 
 Flow('ang','ssk',hssk2ang()) 
