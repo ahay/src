@@ -149,6 +149,25 @@ void opwd_freq(float p1, float p2, int nk, sf_complex**out, bool frac)
 	}
 }
 
+void lpwd_phase(float p, int n, float*out)
+/*< frequency response of line-interpolating PWD >*/
+{
+	int i1, j1;
+	sf_complex c1, c2;
+
+	pcmf_filt_1d(h, p, b[0]);
+	for(i1=0; i1<n; i1++)
+	{
+		for(j1=-nw, c1=0.0, c2=0.0; j1<=nw; j1++)
+		{
+			c1 += b[0][j1+nw]*cexp(I*2*M_PI*j1*i1/n);
+			c2 += b[0][j1+nw]*cexp(-I*2*M_PI*j1*i1/n);
+		}
+		out[i1] = cargf(c1/c2);
+	}
+}
+
+
 void pwd_release()
 /*< release memory >*/
 {
