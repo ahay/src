@@ -218,7 +218,7 @@ Flow('cos2','hwt2','window j2=4')
 # ------------------------------------------------------------
 # time data CC: (t,x)
 Flow  ('datCC','dd','transp memsize=1000')
-Result('datCC','grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
+Result('datCC','window j1=5 j2=5 | grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)

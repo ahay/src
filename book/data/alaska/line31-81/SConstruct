@@ -35,7 +35,7 @@ if pdfread:
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('surveylog','31_81_S.PDF',
-            pdfread + ' $SOURCE')
+            pdfread + ' $SOURCE',stdin=0)
     
     # download and view the observer notes:
     Fetch('31_81_O.PDF',
@@ -43,7 +43,7 @@ if pdfread:
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('observerlog','31_81_O.PDF',
-            pdfread + ' $SOURCE')
+            pdfread + ' $SOURCE',stdin=0)
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}

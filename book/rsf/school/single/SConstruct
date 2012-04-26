@@ -977,11 +977,11 @@ Result('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
 Plot('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
 
 Result('full_pAS_vB0_topt',
-       ''' grey title="top: p V*" pclip=99 grid=y 
+       '''grey title="top: p V*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_pAS_vB0_topt',
-       ''' grey title="top: p V*" pclip=99 grid=y 
+       '''window j1=5 | grey title="top: p V*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -990,7 +990,7 @@ Result('full_vAS_pB0_topt',
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('full_vAS_pB0_topt',
-       ''' grey title="top: V p*" pclip=99 grid=y 
+       '''window j1=5 | grey title="top: V p*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1073,7 +1073,7 @@ Result('pAS_vB0_topt',
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('pAS_vB0_topt',
-       ''' grey title="top: p_S V_0*" pclip=99 grid=y 
+       '''window j1=5 | grey title="top: p_S V_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1082,7 +1082,7 @@ Result('vAS_pB0_topt',
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 Plot('vAS_pB0_topt',
-       ''' grey title="top: v_S p_0*" pclip=99 grid=y 
+       '''window j1=5 | grey title="top: v_S p_0*" pclip=99 grid=y 
 		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
        ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1159,11 +1159,11 @@ for i in range(5):
 	
 	# Plot terms
 	Result('pAS_vB0_bott_'+str(i+2),
-	       ''' grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
+	       '''grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('pAS_vB0_bott_'+str(i+2),
-		   ''' grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
+		   '''window j1=5 |  grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
 		   	   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 		   ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1172,7 +1172,7 @@ for i in range(5):
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('vAS_pB0_bott_'+str(i+2),
-	       ''' grey title="bottom #%d: v_S p_0*" pclip=99 grid=y 
+	       '''window j1=5 |  grey title="bottom #%d: v_S p_0*" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1251,7 +1251,7 @@ for i in range(5):
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('full_pAS_vB0_bott_'+str(i+2),
-		   ''' grey title="bottom #%d: p V*" pclip=99 grid=y 
+		   '''window j1=5 | grey title="bottom #%d: p V*" pclip=99 grid=y 
 		   	   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 		   ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 
@@ -1260,7 +1260,7 @@ for i in range(5):
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 	Plot('full_vAS_pB0_bott_'+str(i+2),
-	       ''' grey title="bottom #%d: V p*" pclip=99 grid=y 
+	       '''window j1=5 | grey title="bottom #%d: V p*" pclip=99 grid=y 
 			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
 	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
 
