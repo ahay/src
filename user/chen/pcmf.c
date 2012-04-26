@@ -62,15 +62,15 @@ void* pcmf_init(int n)
 	return p;
 }
 
-void pcmf_filt_1d(void *h, double p, float *b)
-/*< return the 1d filter of p >*/
+void pcmf_filt_1d(void *h, double ag, float *b)
+/*< return the 1d filter of angle ag >*/
 {
 	pcmf *pp;
 	int k,i;
-	double val, pn;
+	double val, pn, p;
 
 	pp = (pcmf*)h;
-
+	p = tan(ag);
 	for(k=0; k<=2*pp->n; k++)
 	{
 		pn  = 1.0;
@@ -83,14 +83,15 @@ void pcmf_filt_1d(void *h, double p, float *b)
 	}
 }
 
-void pcmf_der_1d(void *h, double p, float *b)
+void pcmf_der_1d(void *h, double ag, float *b)
 /*< derivatives w.r.t p of the filter >*/
 {
 	pcmf *pp;
 	int k,i;
-	double val, pn;
+	double val, pn, p;
 
 	pp = (pcmf*)h;
+	p  = tan(ag);
 
 	for(k=0; k<=2*pp->n; k++)
 	{
@@ -100,18 +101,20 @@ void pcmf_der_1d(void *h, double p, float *b)
 		{
 			val += pp->c[k][i]*pn*i;
 		}
-		b[k] = val;
+		b[k] = val*(p*p+1);
 	}
 }
 
-void pcmf_filt_2d(void *h, double p1, double p2, float **b)
+void pcmf_filt_2d(void *h, double ag, float **b)
 /*< return the 2d filter of p >*/
 {
 	pcmf *pp;
 	int k1, k2, i;
-	double b1, b2, pn1, pn2;
+	double b1, b2, pn1, pn2, p1, p2;
 
 	pp = (pcmf*)h;
+	p1 = sin(ag);
+	p2 = cos(ag);
 
 	for(k1=0; k1<=2*pp->n; k1++)
 	{
@@ -132,29 +135,33 @@ void pcmf_filt_2d(void *h, double p1, double p2, float **b)
 }
 
 
-void pcmf_der_2d(void *h, double p1, double p2, float **b)
+void pcmf_der_2d(void *h, double ag, float **b)
 /*< derivatives w.r.t p of the filter >*/
 {
 	pcmf *pp;
 	int k1, k2, i;
-	double b1, b2, pn1, pn2;
+	double b1, b2, d1, d2,  pn1, pn2, p1, p2;
 
 	pp = (pcmf*)h;
+	p1 = sin(ag);
+	p2 = cos(ag);
 
 	for(k1=0; k1<=2*pp->n; k1++)
 	{
 		for(k2=0; k2<=2*pp->n; k2++)
 		{
-			pn1 = 1.0;
-			pn2 = 1.0;
-			b1  = 0.0;
-			b2  = 0.0;
+			pn1 = 1.0;	d1  = 0.0;
+			pn2 = 1.0;	d2  = 0.0;
+			b1 = pp->c[k1][0];
+			b2 = pp->c[k2][0];
 			for(i=1; i<=2*pp->n; i++, pn1*=p1, pn2*=p2)
 			{
-				b1 += pp->c[k1][i]*pn1*i;
-				b2 += pp->c[k2][i]*pn2*i;
+				b1 += pp->c[k1][i]*pn1*p1;
+				b2 += pp->c[k2][i]*pn2*p2;
+				d1 += pp->c[k1][i]*pn1*i;
+				d2 += pp->c[k2][i]*pn2*i;
 			}
-			b[k1][k2] = b1*b2;
+			b[k1][k2] = -b1*d2*p1+b2*d1*p2;
 		}
 	}
 }

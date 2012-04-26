@@ -29,7 +29,7 @@ void lpwd(float **in, float **out, float **p)
 		{
 			pcmf_filt_1d(h, p[i2][i1], b[0]);
 			for(k=-nw; k<=nw; k++)
-				out[i2][i1] += b[0][k+nw]*(in[i2][i1+k]-in[i2+1][i1-k]);
+				out[i2][i1] += b[0][nw-k]*(in[i2][i1+k]-in[i2+1][i1-k]);
 		}
 	}
 }
@@ -46,13 +46,13 @@ void lpwd_der(float **in, float **out, float **p)
 		{
 			pcmf_der_1d(h, p[i2][i1], b[0]);
 			for(k=-nw; k<=nw; k++)
-				out[i2][i1] += b[0][k+nw]*(in[i2][i1+k]-in[i2+1][i1-k]);
+				out[i2][i1] += b[0][nw-k]*(in[i2][i1+k]-in[i2+1][i1-k]);
 		}
 	}
 }
 
 
-void opwd(float **in, float **out, float **p1, float **p2)
+void opwd(float **in, float **out, float **p)
 /*< apply circle interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
@@ -62,16 +62,16 @@ void opwd(float **in, float **out, float **p1, float **p2)
 	{
 		for(i1=nw; i1<n1-nw; i1++)
 		{
-			pcmf_filt_2d(h, p1[i2][i1], p2[i2][i1], b);
+			pcmf_filt_2d(h, p[i2][i1], b);
 			for(j1=-nw; j1<=nw; j1++)
 			for(j2=-nw; j2<=nw; j2++)
-				out[i2][i1] += b[j1+nw][j2+nw]*
+				out[i2][i1] += b[nw-j1][nw-j2]*
 					(in[i2+j2][i1+j1]-in[i2-j2][i1-j1]);
 		}
 	}
 }
 
-void opwd_der(float **in, float **out, float **p1, float **p2)
+void opwd_der(float **in, float **out, float **p)
 /*< apply the derivative operator of circle interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
@@ -81,10 +81,10 @@ void opwd_der(float **in, float **out, float **p1, float **p2)
 	{
 		for(i1=nw; i1<n1-nw; i1++)
 		{
-			pcmf_der_2d(h, p1[i2][i1], p2[i2][i1], b);
+			pcmf_der_2d(h, p[i2][i1], b);
 			for(j1=-nw; j1<=nw; j1++)
 			for(j2=-nw; j2<=nw; j2++)
-				out[i2][i1] += b[j1+nw][j2+nw]*
+				out[i2][i1] += b[nw-j1][nw-j2]*
 					(in[i2+j2][i1+j1]-in[i2-j2][i1-j1]);
 		}
 	}
@@ -118,13 +118,13 @@ void lpwd_freq(float p, int nk, sf_complex**out, bool frac)
 }
 
 
-void opwd_freq(float p1, float p2, int nk, sf_complex**out, bool frac)
+void opwd_freq(float dip, int nk, sf_complex**out, bool frac)
 /*< frequency response of circle-interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
 	sf_complex c1,c2;
 
-	pcmf_filt_2d(h, p1, p2, b);
+	pcmf_filt_2d(h, dip, b);
 	for(i2=-nk; i2<=nk; i2++)
 	for(i1=-nk; i1<=nk; i1++)
 	if(frac)

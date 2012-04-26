@@ -60,9 +60,9 @@ int main(int argc, char*argv[])
 	
 		for(i=0; i<n3; i++)
 		{
-			if(opwd) opwd_freq(	r*sin((d3*i+o3)/180*M_PI), 
-					r*cos((d3*i+o3)/180*M_PI), n1, bc, iir);
-			else 	lpwd_freq(tan((d3*i+o3)/180*M_PI), n1, bc, iir);
+			if(opwd) opwd_freq(	(d3*i+o3)/180*M_PI, 
+					n1, bc, iir);
+			else 	lpwd_freq((d3*i+o3)/180*M_PI, n1, bc, iir);
 			sf_complexwrite(bc[0], (2*n1+1)*(2*n1+1), out);
 		}
 		free(bc[0]);
@@ -79,7 +79,7 @@ int main(int argc, char*argv[])
 		bf = sf_floatalloc(n1);
 		for(i=0; i<n3; i++)
 		{
-			lpwd_phase(tan((d3*i+o3)/180*M_PI), n1, bf);
+			lpwd_phase((d3*i+o3)/180*M_PI, n1, bf);
 			sf_floatwrite(bf, n1, out);
 		}
 		free(bf);
