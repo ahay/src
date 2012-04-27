@@ -43,13 +43,14 @@ void odip(float **in, float **dip, int nit, bool od)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
-	double norm;
+	double norm, eta;
 
 	for(i1=0; i1<n1*n2; i1++) 
-		dip[0][i1] = 0.0;
+		dip[0][i1] = 0.0; // M_PI_2*rand()/(RAND_MAX+1.0);
 
 	for (it=0; it<nit; it++)
 	{	
+		eta = 1.0/(1.0+it*it);
 		if(od)
 		{
 			opwd(in, u1, dip);
@@ -74,7 +75,9 @@ void odip(float **in, float **dip, int nit, bool od)
 		sf_divn(u1[0], u2[0], u3[0]);
 		for(i1=0; i1<n1*n2; i1++)
 		{
-			dip[0][i1] -= u3[0][i1];
+			dip[0][i1] -= eta*u3[0][i1];
+			while(dip[0][i1]>M_PI_2) dip[0][i1] -= M_PI_2;
+			while(dip[0][i1]<-M_PI_2) dip[0][i1] += M_PI_2;
 		}
 	}
 }

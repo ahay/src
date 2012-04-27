@@ -5,16 +5,20 @@
 
 static void *h;
 static int nw, n1, n2;
-static float **b;
+static double **b;
 
 void pwd_init(int mw, int m1, int m2)
 /*< initialize >*/
 {
+	int i1;
 	h = pcmf_init(mw);
 	nw = mw;
 	n1 = m1;
 	n2 = m2;
-	b = sf_floatalloc2(2*mw+1, 2*mw+1);
+	b = sf_alloc((2*mw+1), sizeof(double*));
+	b[0] = sf_alloc((2*mw+1)*(2*nw+1), sizeof(double));
+	for(i1=1; i1<2*nw+1; i1++)
+		b[i1] =b[i1-1] + 2*nw+1;
 }
 
 void lpwd(float **in, float **out, float **p)

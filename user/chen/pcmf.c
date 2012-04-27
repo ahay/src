@@ -62,7 +62,7 @@ void* pcmf_init(int n)
 	return p;
 }
 
-void pcmf_filt_1d(void *h, double ag, float *b)
+void pcmf_filt_1d(void *h, double ag, double *b)
 /*< return the 1d filter of angle ag >*/
 {
 	pcmf *pp;
@@ -83,7 +83,7 @@ void pcmf_filt_1d(void *h, double ag, float *b)
 	}
 }
 
-void pcmf_der_1d(void *h, double ag, float *b)
+void pcmf_der_1d(void *h, double ag, double *b)
 /*< derivatives w.r.t p of the filter >*/
 {
 	pcmf *pp;
@@ -105,7 +105,7 @@ void pcmf_der_1d(void *h, double ag, float *b)
 	}
 }
 
-void pcmf_filt_2d(void *h, double ag, float **b)
+void pcmf_filt_2d(void *h, double ag, double **b)
 /*< return the 2d filter of p >*/
 {
 	pcmf *pp;
@@ -135,7 +135,7 @@ void pcmf_filt_2d(void *h, double ag, float **b)
 }
 
 
-void pcmf_der_2d(void *h, double ag, float **b)
+void pcmf_der_2d(void *h, double ag, double **b)
 /*< derivatives w.r.t p of the filter >*/
 {
 	pcmf *pp;
