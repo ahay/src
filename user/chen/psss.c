@@ -45,7 +45,7 @@ void sf_psss_step(int iz, sf_complex **io)
 			if(t1>0) 
 			{
 				t1 = sqrt(t1)*dz;
-				a = cos(t1) + I*sin(t1);
+				a = sf_cmplx(cos(t1),sin(t1));
 			}else	a = 0.0;
 			io[ix][iw] *= a;
 		}

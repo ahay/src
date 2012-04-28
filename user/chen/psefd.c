@@ -40,27 +40,27 @@ void sf_psefd_step3(int iz, sf_complex **io)
 		t1=dz/(iw*dx2*df);
 		// ix=0 boundary
 		ix=0;
-		a1 = 1.0 - I*t1*vel[ix][iz];
-		a2 = 0 + I*0.5*t1*vel[ix+1][iz];
+		a1 = sf_cmplx(1.0,-t1*vel[ix][iz]);
+		a2 = sf_cmplx(0,0.5*t1*vel[ix+1][iz]);
 		t2 = df*dz*iw/vel[ix][iz];
-		b = cos(t2) + I*sin(t2);
+		b = sf_cmplx(cos(t2),sin(t2));
 		buf[ix] = b * (io[ix][iw]*a1 + io[ix+1][iw]*a2);
 
 		for(ix=1;ix<nx-1;ix++)
 		{
-			a0 = 0 + I*0.5*t1*vel[ix-1][iz];
-			a1 = 1.0 - I*t1*vel[ix][iz];
-			a2 = 0 + I*0.5*t1*vel[ix+1][iz];
+		    a0 = sf_cmplx(0.0,0.5*t1*vel[ix-1][iz]);
+		    a1 = sf_cmplx(1.0,-t1*vel[ix][iz]);
+		    a2 = sf_cmplx(0.0,0.5*t1*vel[ix+1][iz]);
 			t2 = df*dz*iw/vel[ix][iz];
-			b = cos(t2) + I*sin(t2);
+			b = sf_cmplx(cos(t2),sin(t2));
 			buf[ix] = b * (io[ix-1][iw]*a0 + io[ix][iw]*a1 + io[ix+1][iw]*a2);
 		}
 
 		//ix=nx-1 boundary
-		a0 = 0 + I*0.5*t1*vel[ix-1][iz];
-		a1 = 1.0 - I*t1*vel[ix][iz];
+		a0 = sf_cmplx(0.,0.5*t1*vel[ix-1][iz]);
+		a1 = sf_cmplx(1.0,-t1*vel[ix][iz]);
 		t2 = df*dz*iw/vel[ix][iz];
-		b = cos(t2) + I*sin(t2);
+		b = sf_cmplx(cos(t2),sin(t2));
 		buf[ix] = b * (io[ix-1][iw]*a0 + io[ix][iw]*a1);
 		
 		for(ix=0;ix<nx;ix++)

@@ -71,6 +71,7 @@ down = '''
 16648
 16955
 17347
+17739
 '''
 
 down = map(int,down.split())

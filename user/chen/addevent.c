@@ -51,7 +51,7 @@ void* sf_addevent_init(int nfft, float of, float df, 	// time domain sampling pa
 		freq=fabs(ifreq*df+of)/f0+0.001;
 		if(qv<=0) pp->vw[ifreq] = v0;		// dispersion velocity
 		else {
-			pp->vw[ifreq]=v0*pow(freq,1.0/(M_PI*qv));
+			pp->vw[ifreq]=v0*pow(freq,1.0/(SF_PI*qv));
 		}
 	}
 
@@ -94,11 +94,11 @@ void sf_addevent(void* p, float x, float complex *ftr)
 		{
 			if(pp->a0ref == 0) deltat = txw;
 			else deltat = txw-pp->t0;
-			fa = pp->a0*exp(-M_PI/fabs(freq*deltat));
+			fa = pp->a0*exp(-SF_PI/fabs(freq*deltat));
 		}else{
 			fa = pp->a0;
 		}
-		fc1 = fa*cos(2.0*M_PI*freq*txw) - I*fa*sin(2.0*M_PI*freq*txw);
+		fc1 = sf_cmplx(fa*cos(2.0*SF_PI*freq*txw),-fa*sin(2.0*SF_PI*freq*txw));
 		ftr[ifreq] += fc1*pp->wvlt[ifreq];
 	}
 }
