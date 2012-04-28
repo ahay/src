@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     /* stretch regularization */
 
     if (!sf_getbool("lagrange",&lagrange)) lagrange=false;
-    /* Use Lagrangian method */
+    /* Use Lagrangian method */    
 
     sf_putint(out,"n4",nz);
     sf_putfloat(out,"o4",z0);

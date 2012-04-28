@@ -6,14 +6,14 @@ progs = '''
 abalance analytical angle angle2 approx bdix beamform bil1 blur
 cameron cdivn cflow chebvc clpf cltft constperm cosftwave1 cpef
 dealias deblur dijkstra dip dip2 diplet dips distance divn dix
-dixshape eikonal eikonalvti erf exgr explanesignoi expsignoi fft2
-fftexp0 fftexp1 fftexp3 ffttest fftwave1 fftwave2 fftwave3 focus fpow
-freqest gaussmooth gbeamform imray interp2 interpt iphase kron locov
-lpf lsfit median mffit mig3 miss3 nconv nsmooth nsmooth1 ocparcel
-octentwt ofilp ofpwd ofpwd2 ofsemb patch phaserot pick pick3 plane
-planemis2 planemis3 planereg2 planereg3 planesignoi pmshape2 predict
-pwd pwcoh pwdix pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray
-pwspray2 pwspray3 regr rdiv reshape riesz rsin seislet seisigk
+dixshape dpeiko eikonal eikonalvti erf exgr explanesignoi expsignoi
+fft2 fftexp0 fftexp1 fftexp3 ffttest fftwave1 fftwave2 fftwave3 focus
+fpow freqest gaussmooth gbeamform imray interp2 interpt iphase kron
+locov lpf lsfit median mffit mig3 miss3 nconv nsmooth nsmooth1
+ocparcel octentwt ofilp ofpwd ofpwd2 ofsemb patch phaserot pick pick3
+plane planemis2 planemis3 planereg2 planereg3 planesignoi pmshape2
+predict pwd pwcoh pwdix pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3
+pwspray pwspray2 pwspray3 regr rdiv reshape riesz rsin seislet seisigk
 semblance shape shapeagc shapesigk shearer shift1 similarity simenv
 smoothreg taupfit thin timecont timefreq timeshift tomo trace2
 trismooth2 tristack twodip2 twofreq2 velcon velinv vofzperm warp1

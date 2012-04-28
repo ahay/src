@@ -15,6 +15,7 @@ To the Python package:
 To programs:
 
 * sfsemblance: semblance over the specified axis
+* sflinear: linear 1-D interpolation
 
 ===Bug fixes===
 

@@ -21,7 +21,7 @@
 
 #include <rsf.h>
 
-static float *prev, *next, **what, *dist, *prob;
+static float *prev, *next, **what, **ttime, *dist, *prob;
 static int n1, n2, gt;
 
 static float find_minimum(int ic, int nc, int jc, float c, float *pick);
@@ -30,7 +30,8 @@ static float interpolate(float fc, int i1);
 void dynprog_init(int nz    /* vertical */, 
 		  int nx    /* horizontal */, 
 		  int gate /* picking gate */, 
-		  float an  /* anisotropy */)
+		  float an  /* anisotropy (dz/dx) */,
+		  bool savetime /* save traveltime */)
 /*< Initialize >*/
 {
     int i2;
@@ -39,21 +40,32 @@ void dynprog_init(int nz    /* vertical */,
     n2=nx;
     gt=gate;
 
-    prev = sf_floatalloc(n2);
     next = sf_floatalloc(n2);
     dist = sf_floatalloc(n2);
     prob = sf_floatalloc(2*gate-1);
     what = sf_floatalloc2(n2,n1);
+    
+    if (savetime) {
+	ttime = sf_floatalloc2(n2,n1);
+	prev = NULL;
+    } else {
+	ttime = NULL;
+	prev = sf_floatalloc(n2);
+    }
 
     for (i2=0; i2 < n2; i2++) {
-		dist[i2] = hypotf(i2,an);
+	dist[i2] = hypotf(i2,an);
     }
 }
 
 void dynprog_close(void)
 /*< deallocate >*/
 {
-    free(prev);
+    if (NULL != prev) free(prev);
+    if (NULL != ttime) {
+	free(*ttime);
+	free(ttime);
+    }
     free(next);
     free(dist); 
     free(prob);
@@ -67,91 +79,104 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
     
     /*sf_warning("ic=%d  nc=%d  jc=%d  c=%f  prob=[%f %f %f %f %f]",ic,nc,jc,c,prob[0],prob[1],prob[2],prob[3],prob[4]); */
     if (0==ic) {
-		ic++;
-		fm=c;
-		f0=prob[ic];
-		fp=prob[ic+1];
+	ic++;
+	fm=c;
+	f0=prob[ic];
+	fp=prob[ic+1];
     } else if (nc-1==ic) {
-		ic--;
-		fm=prob[ic-1];
-		f0=prob[ic];
-		fp=c;
+	ic--;
+	fm=prob[ic-1];
+	f0=prob[ic];
+	fp=c;
     } else {
-		fm=prob[ic-1];
-		f0=c;
-		fp=prob[ic+1];
+	fm=prob[ic-1];
+	f0=c;
+	fp=prob[ic+1];
     }
     ic += jc;
     a = fm+fp-2.*f0;
     if (a <= 0.) { /* no minimum */
-		if (fm < f0 && fm < fp) {
-			*pick = ic-1;
-			return fm;
-		} 
-		if (fp < f0 && fp < fm) {
-			*pick = ic+1;
-			return fp;
-		} 
-		*pick = ic;
-		return f0;
+	if (fm < f0 && fm < fp) {
+	    *pick = ic-1;
+	    return fm;
+	} 
+	if (fp < f0 && fp < fm) {
+	    *pick = ic+1;
+	    return fp;
+	} 
+	*pick = ic;
+	return f0;
     }
     b = 0.5*(fm-fp);
     a = b/a;
     if (a > 1.) {
-		*pick = ic+1;
-		return fp;
+	*pick = ic+1;
+	return fp;
     }
     if (a < -1.) {
-		*pick = ic-1;
-		return fm;
+	*pick = ic-1;
+	return fm;
     }
     if (f0 < 0.5*b*a) {
-		*pick = ic;
-		return f0;
+	*pick = ic;
+	return f0;
     }
     f0 -= 0.5*b*a;
     *pick=ic+a;
     return f0;
 }
 
-void dynprog(int i0 /* starting velocity */,
-	     float** weight /* [n1][n2] */)
+float **dynprog(int i0 /* starting velocity */,
+		float** weight /* [n1][n2] */)
 /*< apply >*/
 {
     float d, c, w, w2;
     int i1, i2, i, ic, ib, ie, it;
     
+    if (NULL != ttime) {
+	for (i2=0; i2 < n2; i2++) {
+	    w = 0.5*(weight[0][i2]+weight[0][i0]);
+	    ttime[0][i2] = dist[SF_ABS(i2-i0)]*w;
+	}
+    }
+    
     for (i2=0; i2 < n2; i2++) {
-		w = 0.5*(weight[1][i2]+weight[0][i0]);
-		prev[i2] = dist[SF_ABS(i2-i0)]*w;
-		what[1][i2] = i0;
+	if (NULL != ttime) prev = ttime[1];
+
+	w = 0.5*(weight[1][i2]+weight[0][i0]);
+	prev[i2] = dist[SF_ABS(i2-i0)]*w;
+	what[1][i2] = i0;
+
     }
 
     for (i1=2; i1 < n1; i1++) {
-		for (i2=0; i2 < n2; i2++) {
-			w = weight[i1][i2];
-			ib = SF_MAX(i2-gt,-1);
-			ie = SF_MIN(i2+gt,n2);
-			c = FLT_MAX;
-			ic = -1;
-			for (i=ib+1; i < ie; i++) {
-				w2 = 0.5*(w+weight[i1-1][i]);
-				d = dist[SF_ABS(i2-i)]*w2+prev[i];
-				it = i-ib-1;
-				if (d < c) {
-					c =	d;
-					ic = it;
-				}
-				prob[it]=d;
-			}
+	if (NULL != ttime) prev = ttime[i1];
 
-			next[i2]=find_minimum(ic,ie-ib-1,ib+1,c,&what[i1][i2]);
+	for (i2=0; i2 < n2; i2++) {
+	    w = weight[i1][i2];
+	    ib = SF_MAX(i2-gt,-1);
+	    ie = SF_MIN(i2+gt,n2);
+	    c = FLT_MAX;
+	    ic = -1;
+	    for (i=ib+1; i < ie; i++) {
+		w2 = 0.5*(w+weight[i1-1][i]);
+		d = dist[SF_ABS(i2-i)]*w2+prev[i];
+		it = i-ib-1;
+		if (d < c) {
+		    c =	d;
+		    ic = it;
 		}
-		if (i1==n1-1) return;
-		for (i2=0; i2 < n2; i2++) {
-			prev[i2]=next[i2];
-		}
+		prob[it]=d;
+	    }
+
+	    next[i2]=find_minimum(ic,ie-ib-1,ib+1,c,&what[i1][i2]);
+	}
+	for (i2=0; i2 < n2; i2++) {
+	    prev[i2]=next[i2];
+	}
     }
+
+    return ttime;
 }
 
 void dynprog_traj(float *traj /* [n1] */)
@@ -165,17 +190,17 @@ void dynprog_traj(float *traj /* [n1] */)
 
     /* minimum at the bottom */
     for (i2=0; i2 < n2; i2++) {
-		d = next[i2];
-		if (d < c) {
-			c = d;
-			fc = i2;
-		}
+	d = next[i2];
+	if (d < c) {
+	    c = d;
+	    fc = i2;
+	}
     }
 
     /* coming up */
     for (i1=n1-1; i1 >= 0; i1--) {
-		traj[i1]=fc;
-		fc = interpolate(fc,i1);
+	traj[i1]=fc;
+	fc = interpolate(fc,i1);
     }
 }
 
