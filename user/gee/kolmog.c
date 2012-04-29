@@ -22,14 +22,16 @@
 #include "kolmog.h"
 
 static kiss_fftr_cfg forw, invs;
-static int nfft, nw;
+static int nfft, nw, lag;
 static sf_complex *fft;
 
-void kolmog_init(int n1)
+void kolmog_init(int n1, int lag1)
 /*< initialize with data length >*/
 {
     nfft = n1;
     nw = nfft/2+1;
+    lag = lag1;
+
     fft = sf_complexalloc(nw);   
 
     forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
@@ -66,6 +68,7 @@ void kolmog2(float *trace)
 /*< convert Fourier-domain auto-correlation to minimum-phase >*/ 
 {
     int i1;
+    float asym;
     const double eps=1.e-32;
 
     for (i1=0; i1 < nw; i1++) {
@@ -79,6 +82,13 @@ void kolmog2(float *trace)
     trace[nfft/2] *= 0.5;
     for (i1=1+nfft/2; i1 < nfft; i1++) {
 	trace[i1] = 0.;
+    }
+
+    for (i1=1; i1 < lag; i1++) {
+	asym = cosf(0.5*SF_PI*i1/(lag-1.0)); /* tapering weight */
+	asym *= 0.5*trace[i1]*asym;
+	trace[i1]      -= asym;
+	trace[nfft-i1] += asym;
     }
 
     /* Fourier transform */

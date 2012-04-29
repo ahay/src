@@ -22,7 +22,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2;
+    bool deriv;
+    int n1, n2, i2, order;
     int fft_size;
     float d1, freq, *trace=NULL;
     sf_file in=NULL, out=NULL;
@@ -43,9 +44,13 @@ int main(int argc, char* argv[])
       freq *= 2.*d1;
     }
 
+    if (!sf_getbool("deriv",&deriv)) deriv=false;
+    /* apply a half-order derivative filter */
+    order = deriv? 2:0;
+
     trace = sf_floatalloc(n1);
     fft_size = 2*kiss_fft_next_fast_size((n1+1)/2);
-    ricker_init(fft_size, 0.5*freq, 0);
+    ricker_init(fft_size, 0.5*freq, order);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);

@@ -30,7 +30,7 @@ int main (int argc, char *argv[])
     sf_axis ay,ax,at;
     int iy,ix,it;
     int ny,nx,nt;
-    float idx,dx,idy,dy;
+    float idx,dx,idy,dy, scale;
     const char *what;
     float a,b,c,d,e,***val,km,kg,**slice;
     
@@ -47,6 +47,10 @@ int main (int argc, char *argv[])
 
     if (NULL == (what = sf_getstring("what"))) what="val";
     /* what to compute */
+
+    if (!sf_getfloat("scale",&scale)) scale=1.0;
+    /* scaling (from time to depth) */
+
     val =sf_floatalloc3(nt,ny,nx);
     slice = sf_floatalloc2(ny,nx);
 
@@ -55,7 +59,7 @@ int main (int argc, char *argv[])
     for (it=0; it<nt; it++){
 	for (ix=0; ix<nx; ix++) {
 	    for (iy=0; iy<ny; iy++) {
-		slice[ix][iy] = val[ix][iy][it];
+		slice[ix][iy] = scale*val[ix][iy][it];
 		val[ix][iy][it] = 0.0;
 	    }
 	}

@@ -7,6 +7,7 @@ Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
 Zhonghuan Chen <isaacthu@gmail.com>
 Joseph Dellinger <geojoe@freeusp.org>
+Esteban Diaz <ediazpan@mines.edu>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
@@ -31,13 +32,14 @@ Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
 Karl Schleicher <k_schleicher@hotmail.com>
 Jeffrey Shragge <jshragge@gmail.com>
+Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
 I-Hua Tsai <caiyihua@gmail.com>
-Eduardo Filpo Silva <effsilva@mines.edu>
 Ioan Vlad <i.vlad@yahoo.com>
+Robin Weiss <robin.weiss@uwa.edu.au>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
-Esteban Diaz <ediazpan@mines.edu>
+
 
 
 Vplot authors:
