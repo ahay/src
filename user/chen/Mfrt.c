@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     sf_file in, out, ref;
     bool inv;
     int curv, mtd, niter;
-    float x0, maxoff, mu, eta, rfreq;
+    float x0, maxoff, mu, eta, rfreq, t1, t2;
     char buf[8];
     void *h;
 
@@ -80,7 +80,17 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dp",&d2)) d2=0; 
     /* stepout interval */
 
-    maxoff = fabs((inv?(o2+(n2-1)*d2):(o1+d1*(n1-1))));
+	if(inv)
+	{
+		t1 = fabs(o2+d2*(n2-1));
+		t2 = fabs(o2);
+		maxoff=(t1>t2?t1:t2);  
+	}else{
+		t1 = fabs(o1+d1*(n1-1));
+		t2 = fabs(o1);
+		maxoff=(t1>t2?t1:t2);  
+	}
+//    maxoff = fabs((inv?(o2+(n2-1)*d2):(o1+d1*(n1-1))));
     if (!sf_getfloat("x0",&x0)) x0 = maxoff; 
     /* reference offset */
 
