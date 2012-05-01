@@ -5,6 +5,7 @@ import bldutil
 progs = '''
 fdip comp psss psefd mdfd4 resample addevent pwdfreq odip
 '''
+docs = []
 
 try:  # distributed version
 	Import('env root pkgdir bindir')
@@ -30,7 +31,7 @@ if (lapack and blas):
 	prog = env.Program('sffrt',['Mfrt.c',frt_o])
 	if root:
 		env.Install(bindir,prog)
-
+		docs += map(lambda prog: env.Doc(prog,'M' + prog),['frt'])
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
@@ -54,7 +55,7 @@ if root:
 	user = os.path.basename(os.getcwd())
 	main = 'sf%s.py' % user
 	
-	docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)
 	env.Install(pkgdir,doc)
