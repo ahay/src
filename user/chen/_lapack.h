@@ -2,7 +2,7 @@
 #ifndef _LAPACK_INC_
 #define _LAPACK_INC_
 
-#include "blas.inc"
+#include "_blas.h"
 
 void cbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, float *d, float *e, cpx8 *vt, int *ldvt, cpx8 *u, int *ldu, cpx8 *c, int *ldc, float *rwork, int *info);
 void cgbbrd_(char *vect, int *m, int *n, int *ncc, int *kl, int *ku, cpx8 *ab, int *ldab, float *d, float *e, cpx8 *q, int *ldq, cpx8 *pt, int *ldpt, cpx8 *c, int *ldc, cpx8 *work, float *rwork, int *info);

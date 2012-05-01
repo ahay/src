@@ -2,7 +2,7 @@
 
 #include <rsf.h>
 
-#include "frt.h"
+#include "_frt.h"
 
 
 int main(int argc, char* argv[])

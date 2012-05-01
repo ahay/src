@@ -21,9 +21,16 @@ env.Prepend(CPPPATH=['../../include'],
 	    LIBS=[env.get('DYNLIB','')+'rsf'])
 
 lapack = env.get('LAPACK')
-if lapack:
-	progs += 'frt'
+blas = env.get('BLAS')
+if (lapack and blas):
+	frt_h = env.RSF_Include('_frt.c',prefix='')
+	frt_o = env.StaticObject('_frt.c')
+	env.Depends(frt_o,frt_h)
 	env.Prepend(LIBS=lapack)
+	prog = env.Program('sffrt',['Mfrt.c',frt_o])
+	if root:
+		env.Install(bindir,prog)
+
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')

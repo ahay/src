@@ -68,7 +68,7 @@ int main(int argc,char**argv)
 	for(i2=0;i2<n2;i2++)
 	{
 		sf_complexread(buf, n1, in);
-		sf_addevent(h , d2*i2+o2, buf);
+		sf_addevent(h , fabs(d2*i2+o2), buf);
 		sf_complexwrite(buf, n1, out);
 	}
 	sf_addevent_release(h);

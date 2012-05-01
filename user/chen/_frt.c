@@ -4,7 +4,7 @@
 
 #include <rsf.h>
 
-#include "_blas.h"
+#include "_lapack.h"
 
 typedef struct tag_frt
 {
@@ -167,8 +167,8 @@ void sf_firt(void *h, double freq,
 	alpha = 1.0;
 	beta  = 0.0;
 
-	cherk_("U", "N", &p->np, &p->nx, &alpha,
-		p->L[0], &p->np, &beta, p->LLH[0], &p->np);
+	cherk_("U", "N", &p->np, &p->nx, (float*) &alpha,
+		p->L[0], &p->np, (float*) &beta, p->LLH[0], &p->np);
 	for(i1=0; i1<p->np; i1++) p->LLH[i1][i1] += mu;
 
 	cgemm_("N", "N", &p->np, &nn, &p->nx, 
@@ -232,8 +232,8 @@ void sf_fhrt(void *h, double freq,
 	beta  = 0.0;
 	nrhs  = 1;
 
-	cherk_("U", "N", &p->np, &p->nx, &alpha,
-		p->L[0], &p->np, &beta, p->LLH[0], &p->np);
+	cherk_("U", "N", &p->np, &p->nx, (float*) &alpha,
+		p->L[0], &p->np, (float*)&beta, p->LLH[0], &p->np);
 
 	cgemm_("N", "N", &p->np, &nn, &p->nx, 
 		&alpha, p->L[0], &p->np, in[0], &p->nx,
@@ -284,8 +284,8 @@ void sf_fcrt(void*h, double freq,
 	beta  = 0.0;
 	nrhs  = 1;
 
-	cherk_("U", "N", &p->np, &p->nx, &alpha,
-		p->L[0], &p->np, &beta, p->LLH[0], &p->np);
+	cherk_("U", "N", &p->np, &p->nx, (float*)&alpha,
+		p->L[0], &p->np, (float*)&beta, p->LLH[0], &p->np);
 
 	cgemm_("N", "N", &p->np, &nn, &p->nx, 
 		&alpha, p->L[0], &p->np, in[0], &p->nx,
