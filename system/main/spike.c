@@ -29,16 +29,29 @@ int main(int argc, char* argv[])
     char key[7];
     const char *label, *unit;
     float f, *trace, *mag=NULL, **p=NULL, pp;
-    sf_file spike;
+    sf_file in, spike;
 
     sf_init (argc,argv);
-    spike = sf_output("out");
-    sf_setformat(spike,"native_float");
 
+    if (!sf_stdin()) { /* no input file in stdin */
+	in = NULL;
+    } else {
+	in = sf_input("in");
+    }
+
+    spike = sf_output("out");
+    
+    if (NULL == in) {
+	sf_setformat(spike,"native_float");
+    } else if (SF_FLOAT != sf_gettype(in)) {
+	sf_error("Need float input");
+    }
+    
     /* dimensions */
     for (i=0; i < SF_MAX_DIM; i++) {
 	snprintf(key,3,"n%d",i+1);
-	if (!sf_getint(key,n+i)) break;
+	if (!sf_getint(key,n+i) && 
+	    (NULL == in || !sf_histint(in,key,n+i))) break;
 	/*( n# size of #-th axis )*/  
 	sf_putint(spike,key,n[i]);
     }
@@ -49,26 +62,30 @@ int main(int argc, char* argv[])
     /* basic parameters */
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"o%d",i+1);
-	if (!sf_getfloat(key,&f)) f=0.;
+	if (!sf_getfloat(key,&f) && 
+	    (NULL == in || !sf_histfloat(in,key,&f))) f=0.;
 	/*( o#=[0,0,...] origin on #-th axis )*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,3,"d%d",i+1);
-	if (!sf_getfloat(key,&f)) f = (i==0)? 0.004: 0.1;
+	if (!sf_getfloat(key,&f) &&
+	    (NULL == in || !sf_histfloat(in,key,&f))) f = (i==0)? 0.004: 0.1;
 	/*( d#=[0.004,0.1,0.1,...] sampling on #-th axis )*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,7,"label%d",i+1);
-	if (NULL == (label = sf_getstring(key)))
+	if (NULL == (label = sf_getstring(key)) &&
+	    (NULL == in || NULL == (label = sf_histstring(in,key))))
 	    label = (i==0)? "Time":"Distance";
 	/*( label#=[Time,Distance,Distance,...] label on #-th axis )*/  
 	if (*label != '\0' && (*label != ' ' || *(label+1) != '\0')) 	
 	    sf_putstring(spike,key,label);
 
 	snprintf(key,6,"unit%d",i+1);
-	if (NULL == (unit = sf_getstring(key)))
+	if (NULL == (unit = sf_getstring(key)) &&
+	    (NULL == in || NULL == (unit = sf_histstring(in,key))))
 	    unit = (i==0)? "s":"km";
-	/*( unit#=[s,km,km,...] unit on #-th axis )*/  
+        /*( unit#=[s,km,km,...] unit on #-th axis )*/  
 	if (*unit != '\0' && (*unit != ' ' || *(unit+1) != '\0')) 	
 	    sf_putstring(spike,key,unit);
     }

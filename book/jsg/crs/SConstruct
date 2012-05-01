@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(use='amsmath',
+    color='dome crs-data4 ncrs-data4 pick crs-err4 ncrs-err4')
+
