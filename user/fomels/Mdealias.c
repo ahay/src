@@ -1,4 +1,4 @@
-/* 2-D trace interpolation to a denser grid using PWD.
+/* 3-D trace interpolation to a denser grid using PWD.
 
 It may be necessary to bandpass the data before and after dealiasing 
 to ensure that the temporal spectrum is banded. Rule of thumb: if 
