@@ -4,6 +4,9 @@
 
 To the reproducible documents collection:
 
+* jsg/lowrank: Seismic wave extrapolation using lowrank symbol
+  approximation (Fomel, Ying, and Song)
+
 To SCons:
 
 To documentation:

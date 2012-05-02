@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
 			val[ix][iy][it]=(a*(1+e*e)+b*(1+d*d)-(c*d*e))/((1+d*d+e*e)*sqrtf(1+d*d+e*e));
 			break;
 		    case 'g': /*Gaussian curvature*/  
-			val[ix][iy][it]=((4*a*b)-(c*c))/((1+d*d+e*e)*(1+d*d+e*e));
+			val[ix][iy][it]=(-(4*a*b)+(c*c))/((1+d*d+e*e)*(1+d*d+e*e)); /* flipped sign */
 			break;
 		    case 'x': /*Maximum curvature*/
 			km=(a*(1+e*e)+b*(1+d*d)-(c*d*e))/((1+d*d+e*e)*sqrtf(1+d*d+e*e));		      
@@ -92,10 +92,10 @@ int main (int argc, char *argv[])
 		    case 'i': /*Minimum curvature*/
 			km=(a*(1+e*e)+b*(1+d*d)-(c*d*e))/((1+d*d+e*e)*sqrtf(1+d*d+e*e));		      
 			kg=((4*a*b)-(c*c))/((1+d*d+e*e)*(1+d*d+e*e));		   			
-			val[ix][iy][it]=km-sqrtf(km*km-kg);
+			val[ix][iy][it]=-km+sqrtf(km*km-kg); /* flipped sign */
 			break;
 		    case 'p': /*Most positive curvature*/
-			val[ix][iy][it]=(a+b)-sqrtf((a-b)*(a-b)+(c*c));
+			val[ix][iy][it]=-(a+b)+sqrtf((a-b)*(a-b)+(c*c)); /* flipped sign */
 			break;
 		    case 'n': /*Most negative curvature*/
 			val[ix][iy][it]=(a+b)+sqrtf((a-b)*(a-b)+(c*c));		
@@ -107,7 +107,7 @@ int main (int argc, char *argv[])
 			val[ix][iy][it]=2*(a*e*e+b*d*d-c*d*e)/((d*d+e*e)*sqrtf(1+d*d+e*e));		      
 			break;
 		    case 'c': /*Contour curvature*/
-			val[ix][iy][it]=2*(a*e*e+b*d*d-c*d*e)/((d*d+e*e)*sqrt(d*d+e*e));
+			val[ix][iy][it]=2*(a*e*e+b*d*d-c*d*e)/((d*d+e*e)*sqrt(SF_EPS+d*d+e*e));
 			break;
 		}
 	    }

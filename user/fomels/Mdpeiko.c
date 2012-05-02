@@ -50,9 +50,9 @@ int main(int argc, char* argv[])
 	}
     }
 
-    dynprog_init(n2,n1,n1,d2/d1,true);
+    tt = dynprog_init(n2,n1,n1,d2/d1,true);
 
-    tt = dynprog(is,vv);
+    dynprog(is,vv);
 
     sf_floatwrite(tt[0],n1*n2,ttime);
 

@@ -1,0 +1,28 @@
+from rsf.tex import *
+
+End(use='algorithm,algorithmic,amsmath,amssymb,amsthm,hyperref',
+    color='prop prod proderr sub salt salt3 vpend2 vxend2 etaend2 thetaend2',
+    include=r'''
+\bibpunct{(}{)}{;}{a}{}{\,}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\renewcommand{\i}{\imath}
+\newcommand{\TODO}[1]{{\bf TODO: #1}}
+\newcommand{\p}{\partial}
+\newcommand{\Lapl}{\Delta}
+\newcommand{\hf}{\frac{1}{2}}
+\newcommand{\wt}[1]{\mathbf{\widetilde{#1}}}
+\newcommand{\vol}{\mathrm{vol}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{algo}[theorem]{Algorithm}
+\newtheorem{remark}[subsection]{Remark}
+\newtheorem{remarks}[subsection]{Remarks}
+\newtheorem{example}[subsection]{Example}
+   ''')
+

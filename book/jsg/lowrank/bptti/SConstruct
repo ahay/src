@@ -1,0 +1,135 @@
+from rsf.proj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('epsilon delta vp theta')
+
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
+
+Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+units = {
+	'epsilon':'',
+	'delta':'',
+	'vp':'km/s',
+	'theta':'degrees'
+}
+for par in pars:
+    Flow([par,par+'.asc',par+'.bin'],sgy[par],
+         '''
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
+         put
+         o2=0 d2=0.00625 label2=Distance unit2=km
+         o1=0 d1=0.00625 label1=Depth unit1=km %s |
+          transp plane=12 
+         ''' % ('','| scale dscale=0.001')[par=='vp'])
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  units[par]))
+Flow('vx','vp epsilon',
+     '''
+     math e=${SOURCES[1]} output="sqrt(input*input/(2.0*e+1.0))"
+     ''')
+Flow('eta','epsilon delta',
+     '''
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1.0+2.0*e)/(1.0+2.0*d)-1.0)/2.0"
+     ''')
+for par in ('vx','eta'):
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=6 barreverse=y
+           wanttitle=y allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n title=%s
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vx'],
+                  ('','km/s')[par=='vx'],
+                  par.capitalize()))
+
+nt=4300
+dt=0.001
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=200 | 
+     ricker1 frequency=15 
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+
+name = {'vp':'V\_z\^','vx':'V\_x\^','eta':'\F10 h\F3 ','theta':'\F10 q\F3 ','theta0':'\F10 q\F3 '}
+
+Flow('theta0','theta','smooth rect1=100 rect2=100')
+
+for par in ('vp','vx','eta','theta','theta0'):
+    Flow(par+'end2',par,'window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 | transp') 
+    Result(par+'end2',
+           '''
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           title=%s
+           ''' % (name[par],
+                  par != 'theta' and par != 'theta0',
+                  (0,1.5)[par=='vp' or par=='vx'],
+                  ('','km/s')[par=='vp' or par=='vx'],
+                  par.capitalize()))
+
+
+Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
+Flow('right left','vpend2 vxend2 etaend2 theta0end2 fft',
+     '''
+     anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=50
+     ''' % dt)
+
+Flow('refl',None,'spike n1=913 d1=0.0125 n2=2048 d2=0.0125 o2=34.5125 k1=15 k2=1024 | smooth rect1=2 rect2=2 repeat=3 | window f1=13')
+
+Flow('taper','refl',
+     '''
+     rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1 |
+     math output="abs(input)" | real |
+     scale axis=2 | mask min=0.001 | dd type=float |
+     smooth rect1=50 rect2=50 repeat=3
+     ''')
+
+Result('taper','grey title="Wavenumber Taper" screenratio=1 allpos=y')
+
+Flow('tright','taper right','spray axis=1 n=11 | put n3=1 n2=3686400 | mul ${SOURCES[1]}')
+
+Flow('wave','source refl left right',
+     '''
+     fftwave2 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y 
+     ''')
+
+Plot('wave',
+     ''' 
+     window j3=300 |
+     grey gainpanel=all wanttitle=n
+     ''',view=1)
+
+for f3 in (1299,2299,3299,4299):
+    Result('snap%d' % f3,'wave',
+           ''' 
+           window n3=1 f3=%d |
+           grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+           unit1=km unit2=km screenwd=14.41 screenht=9 clip=0.015
+           ''' % f3)
+
+End()

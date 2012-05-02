@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfgrey', 'sfwindow', 'sfspike', 'sfricker1', 'sffft1', 'sffft3', 'sfisolr2', 'sfsmooth', 'sffftwave2']
+data=['data/bpait/bpaitvel.hh']
+size= 7705537384

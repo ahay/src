@@ -27,11 +27,11 @@ static int n1, n2, gt;
 static float find_minimum(int ic, int nc, int jc, float c, float *pick);
 static float interpolate(float fc, int i1);
 
-void dynprog_init(int nz    /* vertical */, 
-		  int nx    /* horizontal */, 
-		  int gate /* picking gate */, 
-		  float an  /* anisotropy (dz/dx) */,
-		  bool savetime /* save traveltime */)
+float** dynprog_init(int nz    /* vertical */, 
+		     int nx    /* horizontal */, 
+		     int gate /* picking gate */, 
+		     float an  /* anisotropy (dz/dx) */,
+		     bool savetime /* save traveltime */)
 /*< Initialize >*/
 {
     int i2;
@@ -45,27 +45,25 @@ void dynprog_init(int nz    /* vertical */,
     prob = sf_floatalloc(2*gate-1);
     what = sf_floatalloc2(n2,n1);
     
-    if (savetime) {
-	ttime = sf_floatalloc2(n2,n1);
-	prev = NULL;
-    } else {
-	ttime = NULL;
-	prev = sf_floatalloc(n2);
-    }
+    ttime = savetime? sf_floatalloc2(n2,n1): NULL;
+    
+    prev = sf_floatalloc(n2);
 
     for (i2=0; i2 < n2; i2++) {
 	dist[i2] = hypotf(i2,an);
     }
+
+    return ttime;
 }
 
 void dynprog_close(void)
 /*< deallocate >*/
 {
-    if (NULL != prev) free(prev);
     if (NULL != ttime) {
 	free(*ttime);
 	free(ttime);
     }
+    free(prev);
     free(next);
     free(dist); 
     free(prob);
@@ -126,8 +124,8 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
     return f0;
 }
 
-float **dynprog(int i0 /* starting velocity */,
-		float** weight /* [n1][n2] */)
+void dynprog(int i0 /* starting velocity */,
+	     float** weight /* [n1][n2] */)
 /*< apply >*/
 {
     float d, c, w, w2;
@@ -136,22 +134,19 @@ float **dynprog(int i0 /* starting velocity */,
     if (NULL != ttime) {
 	for (i2=0; i2 < n2; i2++) {
 	    w = 0.5*(weight[0][i2]+weight[0][i0]);
-	    ttime[0][i2] = dist[SF_ABS(i2-i0)]*w;
+	    ttime[0][i2] = SF_ABS(i2-i0)*w;
 	}
     }
     
     for (i2=0; i2 < n2; i2++) {
-	if (NULL != ttime) prev = ttime[1];
-
 	w = 0.5*(weight[1][i2]+weight[0][i0]);
 	prev[i2] = dist[SF_ABS(i2-i0)]*w;
 	what[1][i2] = i0;
 
+	if (NULL != ttime) ttime[1][i2]=prev[i2];
     }
 
     for (i1=2; i1 < n1; i1++) {
-	if (NULL != ttime) prev = ttime[i1];
-
 	for (i2=0; i2 < n2; i2++) {
 	    w = weight[i1][i2];
 	    ib = SF_MAX(i2-gt,-1);
@@ -173,10 +168,9 @@ float **dynprog(int i0 /* starting velocity */,
 	}
 	for (i2=0; i2 < n2; i2++) {
 	    prev[i2]=next[i2];
+	    if (NULL != ttime) ttime[i1][i2]=prev[i2];
 	}
     }
-
-    return ttime;
 }
 
 void dynprog_traj(float *traj /* [n1] */)

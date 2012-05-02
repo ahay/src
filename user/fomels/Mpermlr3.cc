@@ -30,10 +30,28 @@ static int nh,nx,nz;
 static int nkh,nkx,nkz;
 static float kh0,kx0,kz0;
 static float dkh,dkx,dkz;
+static float eps;
 static int equation;
 static bool sub;
 
-int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
+static float smmax(float a, float b)
+/* smooth max function */
+{
+    float c;
+
+    if (a > b+eps) {
+	c=a;
+    } else if (b > a+eps) {
+	c=b;
+    } else {
+	c=eps+(a+b)*0.5-sqrtf(eps*eps*0.5-(a-b)*(a-b)*0.25);
+    }
+
+    return c;
+}
+ 
+
+static int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 // assuming dx=dh
 {
     int ix, ih, iz;
@@ -48,6 +66,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 
 	ih = i%nh; i /= nh; 
 	ix = i%nx; i /= nx; 
+
 	iz = i%nz; 
 
 	int is = SF_MIN(SF_MAX(0,ix-ih),nx-1);
@@ -85,7 +104,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 	    
 	    if (0==equation || 1==equation) {
 		float kzmin = sqrt(kh*kx);		
-		kz = SF_MAX(kz,kzmin); 
+		kz = smmax(kz,kzmin); 
 	    }
 
 	    switch (equation) {
@@ -137,6 +156,8 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     par.get("dt",dt); // time step
+
+    par.get("eps",eps,0.0); // regularization
 
     iRSF vel;
     vel.get("n1",nx);
