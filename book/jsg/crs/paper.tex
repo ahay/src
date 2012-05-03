@@ -210,13 +210,13 @@ traveltime for a 3-D hyperbolic reflector.
 \section{Accuracy comparisons}
 
 \subsection{Analytical Example}
-\inputdir{Math}
+\inputdir{.}
 
-\plot{circle}{height=0.8\textheight}{Relative error in prediction of
-  reflection traveltime in the case of a circular reflector in a
-  homogeneous medium using different approximations: (a)
-  multifocusing, (b) CRS, (c) non-hyperbolic CRS. The model parameters
-  are $m=R=D$ (see Figure~\ref{fig:crefl}.)}
+\multiplot{2}{crs,ncrs}{height=0.4\textheight}{Relative error in
+  prediction of reflection traveltime in the case of a circular
+  reflector in a homogeneous medium using different approximations:
+  (a) CRS, (b) non-hyperbolic CRS. The model parameters are $m=R=D$
+  (see Figure~\ref{fig:crefl}.)}
 
 The first example we use to compare the accuracy of different
 approximations is that of a circular reflector under a homogeneous
@@ -224,7 +224,7 @@ overburden. As shown in Appendix B, the exact traveltime in this case
 can be derived analytically in a parametric form. Obtaining a
 non-parametric closed-form expression in this case would require a
 solution of a high-order algebraic equation \cite[]{sigma}.
-Figure~\ref{fig:circle} compares the accuracy of CRS and nonhyperbolic
+Figure~\ref{fig:crs,ncrs} compares the accuracy of CRS and nonhyperbolic
 CRS approximations for a range of offsets and midpoints. We display
 the relative absolute error as a function of offset to depth ratio and
 midpoint separation to depth ratio for a range of offsets and

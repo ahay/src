@@ -20,5 +20,27 @@ Papers(copyr='The University of Texas at Austin',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
-End(use='amsmath,newalg')
+End(use='amsmath,newalg,hyperref,algorithmic',
+    include=r'''
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\renewcommand{\i}{\imath}
+\newcommand{\TODO}[1]{{\bf TODO: #1}}
+\newcommand{\p}{\partial}
+\newcommand{\Lapl}{\Delta}
+\newcommand{\hf}{\frac{1}{2}}
+\newcommand{\wt}[1]{\mathbf{\widetilde{#1}}}
+\newcommand{\vol}{\mathrm{vol}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{algo}[theorem]{Algorithm}
+\newtheorem{remark}[subsection]{Remark}
+\newtheorem{remarks}[subsection]{Remarks}
+\newtheorem{example}[subsection]{Example}
+   ''')
 

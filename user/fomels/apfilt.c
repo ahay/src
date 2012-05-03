@@ -22,7 +22,7 @@
 #include "apfilt.h"
 
 static int n;
-static float *b;
+static double *b;
 
 void apfilt_init(int nw /* filter order */)
 /*< initialize >*/
@@ -57,7 +57,7 @@ void passfilter (float p  /* slope */,
 /*< find filter coefficients >*/
 {
     int j, k;
-    float ak;
+    double ak;
     
     for (k=0; k <= n; k++) {
 	ak = b[k];
@@ -78,7 +78,7 @@ void aderfilter (float p  /* slope */,
 {
 
     int i, j, k;
-    float ak, ai;
+    double ak, ai;
     
     for (k=0; k <= n; k++) {
 	ak = 0.;

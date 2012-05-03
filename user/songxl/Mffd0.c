@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
                 ix = r0+ir*jr;
 		cur[nbt][ix+nbl] += rvr[it][ir];
 	    }
-            sf_warning("%d",it);
+            sf_warning("%d;",it);
 /*
             if(!(it%jm)) {
 		 sf_floatwrite(cur[nbt],nxb*nz,out); 
@@ -396,6 +396,7 @@ int main(int argc, char* argv[])
 		}
 	    }
         }
+	sf_warning(".");
 
 	for (iz=0; iz < nz; iz++) {  
 	    for(ix=0; ix < nx; ix++) {
