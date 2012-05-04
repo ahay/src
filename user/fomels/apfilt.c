@@ -31,7 +31,7 @@ void apfilt_init(int nw /* filter order */)
     double bk;
 
     n = nw*2;
-    b = sf_floatalloc(n+1);
+    b = (double*) sf_alloc(n+1,sizeof(double));
 
     for (k=0; k <= n; k++) {
 	bk = 1.0;
