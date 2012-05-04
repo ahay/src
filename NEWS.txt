@@ -6,6 +6,8 @@ To the reproducible documents collection:
 
 * jsg/lowrank: Seismic wave extrapolation using lowrank symbol
   approximation (Fomel, Ying, and Song)
+* jsg/crs: Non-hyperbolic common reflection surface (Fomel and
+  Kazinnik)
 
 To SCons:
 
