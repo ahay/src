@@ -1,6 +1,6 @@
 /* Oriented one-way wave equation. 
 
-Axis order: t, p, x
+   Axis order: x, p, t
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -26,7 +26,7 @@ Axis order: t, p, x
 int main(int argc, char* argv[])
 {
     bool lagrange;
-    int it, nt, ip, np, ix, nx, ntpx, iz, nz, ny;
+    int it, nt, ip, np, ix, nx, iz, nz, ny;
     float eps, t, t0, dt, p, p0, dp, x, x0, dx, sx, st, sp, z0, dz, sq, v, g;
     float ***slice, ***slice0, ***tstr, ***pstr, ***xstr, *vv, *vg;
     sf_file in, out, vel, vgrad;
@@ -38,19 +38,17 @@ int main(int argc, char* argv[])
     vel = sf_input("velocity");
     vgrad = sf_input("vgrad");
     
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n3",&nt)) sf_error("No n3= in input");
     if (!sf_histint(in,"n2",&np)) sf_error("No n2= in input");
-    if (!sf_histint(in,"n3",&nx)) sf_error("No n3= in input");
+    if (!sf_histint(in,"n1",&nx)) sf_error("No n1= in input");
 
-    if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"d3",&dt)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
-    if (!sf_histfloat(in,"d3",&dx)) sf_error("No d3= in input");
+    if (!sf_histfloat(in,"d1",&dx)) sf_error("No d1= in input");
 
-    if (!sf_histfloat(in,"o1",&t0)) t0=0.;
+    if (!sf_histfloat(in,"o3",&t0)) t0=0.;
     if (!sf_histfloat(in,"o2",&p0)) p0=0.;
-    if (!sf_histfloat(in,"o3",&x0)) x0=0.;
-
-    ntpx = nt*np*nx;
+    if (!sf_histfloat(in,"o1",&x0)) x0=0.;
 
     if (!sf_histint(vel,"n1",&ny) || ny != nx) sf_error("Need n1=%d in velocity",nx);
     if (!sf_histint(vel,"n2",&nz)) sf_error("No n2= in velocity");
@@ -63,23 +61,23 @@ int main(int argc, char* argv[])
     if (!sf_getbool("lagrange",&lagrange)) lagrange=false;
     /* Use Lagrangian method */    
 
-    sf_putint(out,"n4",nz);
-    sf_putfloat(out,"o4",z0);
-    sf_putfloat(out,"d4",dz);
+    sf_putint(out,"n3",nz);
+    sf_putfloat(out,"o3",z0);
+    sf_putfloat(out,"d3",dz);
     
-    tstr = sf_floatalloc3(nt,np,nx);
-    pstr = sf_floatalloc3(nt,np,nx);
-    xstr = sf_floatalloc3(nt,np,nx); 
+    tstr = sf_floatalloc3(nx,np,nt);
+    pstr = sf_floatalloc3(nx,np,nt);
+    xstr = sf_floatalloc3(nx,np,nt); 
 
     vv = sf_floatalloc(nx);
     vg = sf_floatalloc(nx);
 
-    warp3_init(nt, t0, dt,
+    warp3_init(nx, x0, dx,
 	       np, p0, dp,
-               nx, x0, dx,
+               nt, t0, dt,
 	       nt, np, nx, eps); 
 
-    slice  = sf_floatalloc3(nt,np,nx);
+    slice  = sf_floatalloc3(nx,np,nt);
 
     if (lagrange) {
 	slice0 = sf_floatalloc3(nt,np,nx);
@@ -88,48 +86,49 @@ int main(int argc, char* argv[])
 	slice0 = slice;
     } 
     
-    sf_floatread(slice0[0][0],ntpx,in);
+    sf_floatread(slice0[0][0],nt*np*nx,in);
 
     for (iz=0; iz < nz; iz++) {
 	sf_warning("depth %d of %d;",iz+1,nz);
 
-	sf_floatwrite (slice[0][0],ntpx,out);
+	sf_floatwrite (slice[0][0],nx*np,out);
 	if (iz==nz-1) break;
 
 	sf_floatread(vv,nx,vel);
 	sf_floatread(vg,nx,vgrad);
- 	
-	for (ix=0; ix < nx; ix++) {
-	    x = x0+ix*dx;
-	    v = vv[ix];
-	    g = vg[ix];
+
+	for (it=0; it < nt; it++) {
+	    t = t0+it*dt;
 
 	    for (ip=0; ip < np; ip++) {
 		p = p0+ip*dp;
+ 	
+		for (ix=0; ix < nx; ix++) {
+		    x = x0+ix*dx;
+		    v = 0.5*vv[ix];
+		    g = 0.5*vg[ix];
+		    
+		    
+		    sq = 1./sqrt(1.-v*v*p*p);
 
-		sq = 1./sqrt(1.-v*v*p*p);
+		    if (lagrange) {
+			sx -= sq*p*v;
+			sp += sq*g/(v*v);
+			st -= sq/v;
+		    } else {
+			sx = -sq*p*v;
+			sp = sq*g/(v*v);
+			st = -sq/v;
+		    }
 
-		if (lagrange) {
-		    sx -= sq*p*v;
-		    sp += sq*g/(v*v);
-		    st -= sq/v;
-		} else {
-		    sx = -sq*p*v;
-		    sp = sq*g/(v*v);
-		    st = -sq/v;
-		}
-		
-		for (it=0; it < nt; it++) {
-		    t = t0+it*dt;
-
-		    tstr[ix][ip][it] = t+st*dz;
-		    pstr[ix][ip][it] = p+sp*dz;
-		    xstr[ix][ip][it] = x+sx*dz;
+		    tstr[it][ip][ix] = t+st*dz;
+		    pstr[it][ip][ix] = p+sp*dz;
+		    xstr[it][ip][ix] = x+sx*dz;
 		}
 	    }
 	}
 
-	warp3(slice0,tstr,pstr,xstr,slice);
+	warp3(slice0,xstr,pstr,tstr,slice);
     }
     sf_warning(".");
     

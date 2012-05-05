@@ -46,6 +46,21 @@ Result('time','ntime time20 time2',
 
 # Compare with igrad
 
+Flow('itime','spike','igrad')
+Flow('ifreq','itime',fft)
+
+Result('ifreq','ifreq freq2',
+       '''
+       cat axis=2 ${SOURCES[1]} | imag |
+       dots labels=igrad:order=2 gaineach=n 
+       ''')
+Result('itime','itime time2',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       window min1=-33 max1=33 |
+       dots unit1=sample labels=igrad:order=2 gaineach=n dots=2
+       ''')
+
 # Error when differentiating a smooth function
 
 End()

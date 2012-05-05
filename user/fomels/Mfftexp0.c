@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 {
     bool mig;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2;
-    int im, i, j, m2, it1, it2, its, ik, n2, nk, ompchunk;
+    int im, i, j, m2, it1, it2, its, ik, n2, nk;
     float dt, dx, dz, c, old, x0;
     float *curr, *prev, **img, *dat, **lft, **rht, **wave;
     sf_complex *cwave, *cwavem;
@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
-
-    if(!sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -192,7 +190,7 @@ int main(int argc, char* argv[])
 
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz,i,j,im,old,c) shared(curr,prev,lft,wave)
+#pragma omp parallel for private(ix,iz,i,j,im,old,c) shared(curr,prev,lft,wave)
 #endif
 	for (ix = 0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {

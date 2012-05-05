@@ -18,6 +18,10 @@
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "fft3.h"
 
 int main(int argc, char* argv[])
@@ -226,6 +230,9 @@ int main(int argc, char* argv[])
 	    ifft3(wave[im],cwavem);
 	}
 
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz,ih,i,j,im,old,c) shared(curr,prev,lft,wave)
+#endif
 	for (iz=0; iz < nz; iz++) {
 	    for (ix = 0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {	
