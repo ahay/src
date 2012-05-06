@@ -62,5 +62,45 @@ Result('itime','itime time2',
        ''')
 
 # Error when differentiating a smooth function
+n1 = 2049
+d1 = 0.004
+
+Flow('sin',None,'math n1=%d d1=%g output="sin(x1)" ' % (n1,d1))
+Flow('cos','sin','math output="cos(x1)" ')
+
+j = 1
+errs=[[],[]]
+for n in range(10):
+     sin = 'sin%d' % n
+     cos = 'cos%d' % n
+     Flow(sin,'sin','window j1=%d' % j)
+     Flow(cos,'cos','window j1=%d' % j)
+
+     for case in range(2):   
+          err = 'err%d-%d' % (case,n)
+          Flow(err,[sin,cos],
+               '''
+               %s | math exact=${SOURCES[1]} output="(%g*input-exact)^2"  |
+               stack axis=1 | math output="log(input)"
+               ''' % (('deriv order=2','igrad')[case],1.0/d1))
+          errs[case].append(err)
+
+     j *= 2
+     d1 *= 2
+
+for case in range(2):
+     err = 'errs%d' % case
+     Flow(err,errs[case],
+          '''
+          cat axis=1 ${SOURCES[1:%d]} |
+          put o1=1 d1=1 
+          ''' % len(errs[case]))
+
+Result('errs','errs0 errs1',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       graph label1="Log(\F10 D\F3 x)" label2="Log(error)" wanttitle=n symbol=di
+       symbolsz=5 labelsz=5 min1=0.5 max1=10.5 min2=-20.5 max2=-0.5 screenratio=2
+       ''')
 
 End()
