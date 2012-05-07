@@ -22,34 +22,33 @@
 #include "linear.h"
 
 static int n;
-static float *x, *a, *b;
+static float *b, *x, *a;
 
 void linear_init(int n1 /* trace length */) 
 /*< initialize >*/
 {
     n = n1;
-    x = sf_floatalloc(n);
-    a = sf_floatalloc(n);
     b = sf_floatalloc(n);
 }
 
 void linear_close (void) 
 /*< free allocated storage >*/
 {
-    free (x);
-    free (a);
     free (b);
 }
 
-void linear_coeffs(float** table)
+void linear_coeffs(float* x1, float *a1)
 /*< feel coefficients table >*/
 {
     int k;
     float xk, fk, xp, fp;
     
+    x = x1;
+    a = a1;
+
     for (k=n-1; k >= 0; k--) {
-	x[k] = xk = table[k][0];
-	a[k] = fk = table[k][1];
+	xk = x[k];
+	fk = a[k];
 	
 	if (k < n-1) {
 	    b[k] = (fp-fk)/(xp-xk);

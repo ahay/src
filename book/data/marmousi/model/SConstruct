@@ -19,6 +19,6 @@ for file in raw:
 # Plotting Section
     Result(fileOut,'''window $SOURCE  | 
         grey color=I gainpanel=a allpos=y scalebar=y 
-        title=%s barlabel=\(km\/s\) screenratio=.326
+        title=%s barlabel=Velocity barunit=km/s screenratio=.326
         screenht=3 wheretitle=t labelsz=4 titlesz=6 ''' % t)
 End()

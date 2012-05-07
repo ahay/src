@@ -31,8 +31,8 @@
 
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
-static float d1, d2, d3, frame1, l1min, l1max, l2min, l2max, l3min, l3max;
-static int framecol, frame2, frame3, gridcol, gridfat=1;
+static float d1, d2, d3, frame1, frame2, frame3, l1min, l1max, l2min, l2max, l3min, l3max;
+static int framecol, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static int framelabelcol=VP_YELLOW;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
@@ -1935,7 +1935,7 @@ void vp_cuberaster(int n1, int n2,
     vp_cubeframe(f1,f2,f3);
 }
 
-void vp_cubeframe(float f1, int f2, int f3   /* frame numbers */) 
+void vp_cubeframe(float f1, float f2, float f3   /* frame numbers */) 
 /*< Drawing 3-D frame >*/
 {
     frame1 = f1;

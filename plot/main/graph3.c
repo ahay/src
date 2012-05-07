@@ -52,29 +52,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("orient",&orient)) orient=1;
     /* function orientation */
 
-    switch(orient) {
-	case 1:
-	    front = sf_floatalloc2(n1,1);
-	    side = sf_floatalloc2(1,n2);
-	    top = sf_floatalloc2(n1,n2);
-	    break;
-	case 2:
-	    front = sf_floatalloc2(n1,1);
-	    side = sf_floatalloc2(n1,n2);
-	    top = sf_floatalloc2(1,n2);
-	    break;
-	case 3:
-	    front = sf_floatalloc2(n1,n2);
-	    side = sf_floatalloc2(1,n2);
-	    top = sf_floatalloc2(n1,1);
-	    break;
-	default:
-	    front = NULL;
-	    side = NULL;
-	    top = NULL;
-	    sf_error("unknown orientation orient=%d",orient);
-	    break;
-    }
+    front = sf_floatalloc2(n1,1);
+    side = sf_floatalloc2(1,n2);
+    top = sf_floatalloc2(n1,n2);
 
     nomin = (bool) !sf_getfloat("min",&min);
     /* minimum function value */
@@ -110,19 +90,56 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&o2)) o2=0.;
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 
-    /* for proper frame */
-    dd1 = (min-max)/np;
-    oo1 = max+0.5*dd1;
+    switch(orient) {
+	case 1:
+	default:    
+	    dd1 = (min-max)/np;
+	    oo1 = max+0.5*dd1;
 
-    sf_putint(in,"n1",np);
-    sf_putfloat(in,"o1",oo1);
-    sf_putfloat(in,"d1",dd1);
-    sf_putint(in,"n2",n1);
-    sf_putfloat(in,"o2",o1);
-    sf_putfloat(in,"d2",d1);
-    sf_putint(in,"n3",n2);
-    sf_putfloat(in,"o3",o2);
-    sf_putfloat(in,"d3",d2);
+	    sf_putint(in,"n1",np);
+	    sf_putfloat(in,"o1",oo1);
+	    sf_putfloat(in,"d1",dd1);
+
+	    sf_putint(in,"n2",n1);
+	    sf_putfloat(in,"o2",o1);
+	    sf_putfloat(in,"d2",d1);
+
+	    sf_putint(in,"n3",n2);
+	    sf_putfloat(in,"o3",o2);
+	    sf_putfloat(in,"d3",d2);
+
+	    break;
+	case 2:
+	    dd1 = (max-min)/np;
+	    oo1 = min+0.5*dd1;
+
+	    sf_putint(in,"n2",np);
+	    sf_putfloat(in,"o2",oo1);
+	    sf_putfloat(in,"d2",dd1);
+
+	    sf_putint(in,"n3",n2);
+	    sf_putfloat(in,"o3",o2);
+	    sf_putfloat(in,"d3",d2);
+
+	    break;
+	case 3:
+	    dd1 = (max-min)/np;
+	    oo1 = min+0.5*dd1;
+
+	    sf_putint(in,"n1",n2);
+	    sf_putfloat(in,"o1",o2);
+	    sf_putfloat(in,"d1",d2);
+
+	    sf_putint(in,"n2",n1);
+	    sf_putfloat(in,"o2",o1);
+	    sf_putfloat(in,"d2",d1);
+
+	    sf_putint(in,"n3",np);
+	    sf_putfloat(in,"o3",oo1);
+	    sf_putfloat(in,"d3",dd1);
+
+	    break;
+    }
 
     label1 = sf_histstring(in,"label1");
     label2 = sf_histstring(in,"label2");
@@ -248,40 +265,135 @@ int main(int argc, char* argv[])
 
 	    /* front face */
 
-	    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
-	    sf_floatread(front[0],n1,in);
+	    switch(orient) {
+		case 1:
+		default:
+		    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
+		    sf_floatread(front[0],n1,in);
+		    
+		    vp_cubecoord(3,x[0],x[n1-1],min,max);
+		    vp_umove(x[0],front[0][0]);
+		    for (i1=1; i1 < n1; i1++) {
+			vp_udraw(x[i1],front[0][i1]);
+		    }
 
-	    vp_cubecoord(3,x[0],x[n1-1],min,max);
-	    vp_umove(x[0],front[0][0]);
-	    for (i1=1; i1 < n1; i1++) {
-		vp_udraw(x[i1],front[0][i1]);
-	    }
+		    break;
+		case 2:
+		    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
+		    sf_floatread(front[0],n1,in);
 
-	    for (i2=0; i2 < n2; i2++) {
-		sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
-		sf_floatread(side[i2],1,in);
+		    vp_cubecoord(3,min,max,x[0],x[n1-1]);
+		    vp_umove(front[0][0],x[0]);
+		    for (i1=1; i1 < n1; i1++) {
+			vp_udraw(front[0][i1],x[i1]);
+		    }
+		    
+		    break;
+		case 3:
+		    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
+		    sf_floatread(top[0],n1*n2,in);
+
+		    vp_cubecoord(3,x[0],x[n1-1],y[0],y[n2-1]);
+		    vp_contour_draw(cnt,false,top,frame1);
+
+		    break;
 	    }
+		    
 
 	    /* side face */
 
-	    vp_cubecoord(2,y[0],y[n2-1],min,max);
-	    vp_umove(y[0],side[0][0]);
-	    for (i2=1; i2 < n2; i2++) {
-		vp_udraw(y[i2],side[i2][0]);
+	    switch(orient) {
+		case 1:
+		default:	    
+		    for (i2=0; i2 < n2; i2++) {
+			sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
+			sf_floatread(side[i2],1,in);
+		    }
+		    
+		    vp_cubecoord(2,y[0],y[n2-1],min,max);
+		    vp_umove(y[0],side[0][0]);
+		    for (i2=1; i2 < n2; i2++) {
+			vp_udraw(y[i2],side[i2][0]);
+		    }
+
+		    break;
+		case 2:
+		    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
+		    sf_floatread(top[0],n1*n2,in);
+
+		    vp_cubecoord(2,x[0],x[n1-1],y[0],y[n2-1]);
+		    vp_contour_draw(cnt,false,top,frame1);
+		    
+		    break;
+		case 3:
+		    for (i2=0; i2 < n2; i2++) {
+			sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
+			sf_floatread(side[i2],1,in);
+		    }
+		    
+		    vp_cubecoord(2,min,max,y[0],y[n2-1]);
+		    vp_umove(side[0][0],y[0]);
+		    for (i2=1; i2 < n2; i2++) {
+			vp_udraw(side[i2][0],y[i2]);
+		    }
+
+		    break;
 	    }
 
 	    /* top face */
 
-	    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
-	    sf_floatread(top[0],n1*n2,in);
+	    switch(orient) {
+		case 1:
+		default:
+		    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
+		    sf_floatread(top[0],n1*n2,in);
+		    
+		    vp_cubecoord(1,x[0],x[n1-1],y[0],y[n2-1]);
+		    vp_contour_draw(cnt,false,top,frame1);
 
-	    vp_cubecoord(1,x[0],x[n1-1],y[0],y[n2-1]);
-	    vp_contour_draw(cnt,false,top,frame1);
+		    break;
+		case 2:
+		    for (i2=0; i2 < n2; i2++) {
+			sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
+			sf_floatread(side[i2],1,in);
+		    }
+		    
+		    vp_cubecoord(1,min,max,y[0],y[n2-1]);
+		    vp_umove(side[0][0],y[0]);
+		    for (i2=1; i2 < n2; i2++) {
+			vp_udraw(side[i2][0],y[i2]);
+		    }
+		    
+		    break;
+		case 3:
+		    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
+		    sf_floatread(front[0],n1,in);
+		    
+		    vp_cubecoord(1,x[0],x[n1-1],min,max);
+		    vp_umove(x[0],front[0][0]);
+		    for (i1=1; i1 < n1; i1++) {
+			vp_udraw(x[i1],front[0][i1]);
+		    }
+
+		    break;
+	    }
 	}
 	
 	vp_plot_unset();
 	vp_coordinates();
-	vp_cubeframe((frame1-oo1)/dd1,frame2,frame3);
+
+	switch(orient) {
+	    case 1:
+	    default:
+		vp_cubeframe((frame1-oo1)/dd1,frame2,frame3);
+		break;
+	    case 2:
+		vp_cubeframe(frame2,(frame1-oo1)/dd1,frame3);
+		break;
+	    case 3:
+		vp_cubeframe(frame2,frame3,(frame1-oo1)/dd1);
+		break;
+	}
 	
 	switch (movie) {
 	    case 2:

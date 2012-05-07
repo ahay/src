@@ -28,17 +28,18 @@ static float **table=NULL, **table2=NULL;
 
 static int compare_table (const void *a, const void *b)
 {
-    float fa = table[* ((int*) a)][0];
-    float fb = table[* ((int*) b)][0];
+    float fa = table[0][* ((int*) a)];
+    float fb = table[0][* ((int*) b)];
  
     return (fa < fb)? -1: (fa > fb)? 1: 0;
 }
 
 int main(int argc, char* argv[])
 {
-    int nd, n1, i1, n2, i2, two, id, *index;
-    float x, o1, d1, *trace;
+    int nd, n1, i1, n2, i2, two, id, *index, rect, iter, niter, nw;
+    float x, o1, d1, *trace, *datr, *modl;
     bool sort;
+    sf_triangle tr;
     sf_file in, out, pattern;
 
     sf_init(argc,argv);
@@ -55,6 +56,15 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&nd)) sf_error ("Need n2= in input");
     sf_putint(out,"n2",1);
     n2 = sf_leftsize(in,2);
+
+    if (!sf_getint("niter",&niter)) niter=0;
+    /* number of iterations */
+
+    if (!sf_getint("rect",&rect)) rect=1;
+    /* smoothing regularization */
+
+    if (!sf_getint("nw",&nw)) nw=2;
+    /* interpolator size */
 
     if (NULL != sf_getstring("pattern")) {
 	pattern = sf_input("pattern");
@@ -81,13 +91,24 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
 
-    table = sf_floatalloc2(2,nd);
+    table = sf_floatalloc2(nd,2);
+    
     if (sort) {
 	index = sf_intalloc(nd);
-	table2 = sf_floatalloc2(2,nd);
+	table2 = sf_floatalloc2(nd,2);
     }
 
     linear_init(nd);
+
+    if (niter > 0) {
+	tr = sf_triangle_init (rect,n1);
+	modl = sf_floatalloc(n1);
+	datr = sf_floatalloc(nd);
+    } else {
+	tr = NULL;
+	modl = NULL;
+	datr = NULL;
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(table[0],2*nd,in);
@@ -98,8 +119,8 @@ int main(int argc, char* argv[])
 	    }
 	    qsort(index,nd,sizeof(int),compare_table);
 	    for (id=0; id < nd; id++) {
-		table2[id][0] = table[index[id]][0];
-		table2[id][1] = table[index[id]][1];
+		table2[0][id] = table[0][index[id]];
+		table2[1][id] = table[1][index[id]];
 	    }
 
 	    free(table[0]);
@@ -108,14 +129,37 @@ int main(int argc, char* argv[])
 	    table = table2;
 	}
 
-	linear_coeffs(table);
+	linear_coeffs(table[0],table[1]);
 		
 	for (i1=0; i1 < n1; i1++) {
 	    x = o1 + i1*d1;
 	    trace[i1] = linear_eval(x);
 	}
 
-	sf_floatwrite(trace,n1,out);
+	if (niter > 0) {
+	    sf_int1_init (table[0], o1, d1, n1, sf_lg_int, nw, nd);
+
+	    for (i1=0; i1 < n1; i1++) {
+		modl[i1] = trace[i1];
+	    }
+
+	    for (iter=0; iter < niter; iter++) {
+		sf_int1_lop (false,false,n1,nd,modl,datr);
+		
+		linear_coeffs(table[0],datr);
+
+		for (i1=0; i1 < n1; i1++) {
+		    x = o1 + i1*d1;
+		    modl[i1] += trace[i1] - linear_eval(x);
+		}
+		
+		sf_smooth2 (tr, 0, 1, false, false, modl);
+	    }
+
+	    sf_floatwrite(modl,n1,out);
+	} else {
+	    sf_floatwrite(trace,n1,out);
+	}
     }
 
     exit(0);
