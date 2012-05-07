@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"n1",&two) || 2 != two) sf_error("Need n1=2 in input");
+    if (!sf_histint(in,"n2",&two) || 2 != two) sf_error("Need n2=2 in input");
 
     if (!sf_getbool("sort",&sort)) sort=false;
     /* if y, the coordinates need sorting */
 
-    if (!sf_histint(in,"n2",&nd)) sf_error ("Need n2= in input");
+    if (!sf_histint(in,"n1",&nd)) sf_error ("Need n1= in input");
     sf_putint(out,"n2",1);
     n2 = sf_leftsize(in,2);
 
@@ -96,6 +96,9 @@ int main(int argc, char* argv[])
     if (sort) {
 	index = sf_intalloc(nd);
 	table2 = sf_floatalloc2(nd,2);
+    } else {
+	index = NULL;
+	table2 = NULL;
     }
 
     linear_init(nd);
