@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
     int nr, jr, r0, nl, fsize, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
     float ax, az, factor;
+    int sht, tskip;
     kiss_fft_cfg *cfgx, *cfgxi, *cfgz, *cfgzi;
     /* MPI_Status stat; */
      
@@ -149,6 +150,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("ax",&ax)) ax= 2.0; /*suppress HF parameter*/
     if (!sf_getfloat("az",&az)) az= 2.0; /*suppress HF parameter*/
     if (!sf_getfloat("factor",&factor)) factor= 2.0/3.0; /*suppress HF parameter*/
+    if (!sf_getint("sht",&sht)) sht= 0; /*Time shift parameter*/
+    if (!sf_getint("tskip",&tskip)) tskip= 0; /*Time shift parameter*/
     
     if(SF_INT != sf_gettype(geo)) sf_error("Need int!");
     if(!sf_histint(geo,"esize",&esize)) esize = sizeof("int");
@@ -200,7 +203,7 @@ int main(int argc, char* argv[])
 
 
     wav    =  sf_floatalloc(nt);
-    rvr    =  sf_floatalloc2(nt,nr);
+    rvr    =  sf_floatalloc2(nt-sht,nr);
     fsize = sizeof(float);
     sf_floatread(wav,nt,source);
 
@@ -378,7 +381,7 @@ int main(int argc, char* argv[])
 		cur[isz+nbt][isx+nbl] += wav[it];
 		source_smooth(cur,isz+nbt,isx+nbl,wav[it]);
 	    }
-            if(!(it%jm)) {
+            if(!((it-sht)%jm)) {
 		/* sf_floatwrite(cur[nbt],nxb*nz,out); */
 		for(iz=0;iz < nz;iz++) fwrite(cur[nbt+iz]+nbl,sizeof(float),nx,out);
             }
@@ -518,7 +521,7 @@ int main(int argc, char* argv[])
         sf_floatread(rvr[0],nr*nt,input);
         sf_fileclose(input);
         /* for (it=nt-1; it >-1; it--) { */
-        for (it=nt-1; it >194; it--) {
+        for (it=nt-1-sht; it >tskip; it--) {
             /* sf_floatread(rvr,nr,input); */
 	    /*     for (ix=r0; ix < nx; ix+=jr) cur[irz+nbt][ix+nbl] += rvr[ix][it]; */
             for (ir=0; ir < nl; ir++) {
