@@ -113,7 +113,6 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("az",&az)) az= 2.0; /*suppress HF parameter*/
     if (!sf_getfloat("factor",&factor)) factor= 2.0/3.0; /*suppress HF parameter*/
     
-    sf_warning("in");
     output = sf_output("out");
     sf_putint(output,"n1",nx);
     sf_putfloat(output,"d1",dx);
@@ -226,7 +225,6 @@ int main(int argc, char* argv[])
             aa[iz][ix][0] = w-2.0*aa[iz][ix][1]-2.0*aa[iz][ix][2];
         }
     }
-    sf_warning("aaaa");
     free(*v);     
     free(v);     
     sf_fileclose(vel);
@@ -241,7 +239,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    sf_warning("bbbb");
 
         for (iz=0; iz < nz; iz++) {
             for (ix=0; ix < nx; ix++) {
