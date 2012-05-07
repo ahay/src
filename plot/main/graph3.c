@@ -246,6 +246,8 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) {
 	    vp_plot_set (i3);
 
+	    /* front face */
+
 	    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
 	    sf_floatread(front[0],n1,in);
 
@@ -260,11 +262,15 @@ int main(int argc, char* argv[])
 		sf_floatread(side[i2],1,in);
 	    }
 
+	    /* side face */
+
 	    vp_cubecoord(2,y[0],y[n2-1],min,max);
 	    vp_umove(y[0],side[0][0]);
 	    for (i2=1; i2 < n2; i2++) {
 		vp_udraw(y[i2],side[i2][0]);
 	    }
+
+	    /* top face */
 
 	    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
 	    sf_floatread(top[0],n1*n2,in);
