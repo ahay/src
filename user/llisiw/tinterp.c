@@ -51,7 +51,7 @@ void tinterp_linear(float* p /* interpolated result */,
     t = x/dx;
 
     for (i=0; i < nn; i++) {
-	p[i] = t*p0[i]+(1.-t)*p1[i];
+	p[i] = (1.-t)*p0[i]+t*p1[i];
     }
 }
 
@@ -88,6 +88,29 @@ void tinterp_hermite(float* p /* interpolated result */,
 	default:
 	    sf_error("Basis function not supported");
 	    break;
+    }
+}
+
+void dinterp_hermite(float* p /* interpolated result */,
+		     float x  /* position */,
+		     float* p0, float* p1 /* values at both ends */,
+		     float* m0, float* m1 /* tangent at both ends */)
+/*< cubic Hermite spline interpolation (derivative) >*/
+{
+    int i;
+    float t;
+    double h00, h10, h01, h11;
+
+    t = x/dx;
+
+    /* all basis functions provide the same coefficients */
+    h00 = -6.*t*(1.-t);
+    h10 = (1.-t)*(1.-3.*t);
+    h01 = 6.*t*(1.-t);
+    h11 = 3.*t*t-2.*t;
+
+    for (i=0; i < nn; i++) {
+	p[i] = h00*p0[i]+h10*dx*m0[i]+h01*p1[i]+h11*dx*m1[i];
     }
 }
 

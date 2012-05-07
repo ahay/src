@@ -1,6 +1,6 @@
 /* 2-D Post-stack Kirchhoff depth migration. */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,18 +19,20 @@
 #include <rsf.h>
 
 #include "kirmig.h"
+#include "tinterp.h"
 
 int main(int argc, char* argv[])
 {
     int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
     float *trace, *out, **table, **tablex, *stable, *stablex;
     float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal, tx;
-    char *unit;
-    sf_file inp, mig, tbl;
+    char *unit, *what, *type;
+    sf_file inp, mig, tbl, der;
 
     sf_init (argc,argv);
     inp = sf_input("in");
     tbl = sf_input("table"); /* traveltime table */
+    der = sf_input("deriv"); /* source derivative table */
     mig = sf_output("out");
 
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
@@ -71,22 +73,30 @@ int main(int argc, char* argv[])
 
     nzx = nz*nx;
 
+    /* read traveltime table */
     table = sf_floatalloc2(nzx,ny);
     sf_floatread(table[0],nzx*ny,tbl);
     sf_fileclose(tbl);
 
-    if (NULL != sf_getstring("tablex")) {
-	tbl = sf_input("tablex");
-
-	tablex = sf_floatalloc2(nzx,ny);
-	sf_floatread(tablex[0],nzx*ny,tbl);
-	sf_fileclose(tbl);
-    } else {
-	tablex = NULL;
-    }
+    /* read derivative table */
+    tablex = sf_floatalloc2(nzx,ny);
+    sf_floatread(tablex[0],nzx*ny,der);
+    sf_fileclose(der);
 
     out = sf_floatalloc(nzx);
     trace = sf_floatalloc(nt);
+
+    stable  = sf_floatalloc(nzx);
+    stablex = sf_floatalloc(nzx);
+
+    if (NULL == (type = sf_getstring("type"))) type="hermit";
+    /* type of interpolation (default Hermit) */
+
+    if (NULL == (what = sf_getstring("what"))) what="expanded";
+    /* Hermite basis functions (default expanded) */
+
+    /* initialize interpolation */
+    tinterp_init(nzx,dy,what);
 
     for (i=0; i < nzx; i++) {
 	out[i] = 0.;
@@ -95,26 +105,41 @@ int main(int argc, char* argv[])
     for (is=0; is < ns; is++) { /* surface location */
 	s = s0 + is*ds;
 
-	/* Add accurate interpolation later */
+	/* cubic Hermite spline interpolation */
+	ist = (s-y0)/dy;
+	if (ist <= 0) {
+	    for (ix=0; ix < nzx; ix++) {
+		stable[ix]  = table[0][ix];
+		stablex[ix] = tablex[0][ix];
+	    }
+	} else if (ist >= ny-1) {
+	    for (ix=0; ix < nzx; ix++) {
+		stable[ix]  = table[ny-1][ix];
+		stablex[ix] = tablex[ny-1][ix];
+	    }
+	} else {
+	    switch (type[0]) {
+		case 'l': /* linear */
+		    tinterp_linear(stable, s-ist*dy-y0,table[ist], table[ist+1]);
+		    tinterp_linear(stablex,s-ist*dy-y0,tablex[ist],tablex[ist+1]);
+		    break;
 
-	/* place in the table */
-	/* nearest neighbor interpolation */
+		case 'h': /* hermit */
+		    tinterp_hermite(stable, s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
+		    dinterp_hermite(stablex,s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
+		    break;
+	    }
+	}	
 
-	ist = 0.5 + (s-y0)/dy;
-	if (ist < 0) ist=0;
-	if (ist >= ny) ist=ny-1;
-
-	stable = table[ist];
-	stablex = (NULL==tablex)? NULL:tablex[ist];
-
+	/* read trace */
 	sf_floatread (trace,nt,inp);
 	doubint(nt,trace);
 
 	/* Add aperture limitation later */
 
 	for (ix=0; ix < nzx; ix++) { /* image */
-	    ti = 2*stable[ix];
-	    tx = (NULL==stablex)?0.:2*stablex[ix];
+	    ti = 2.*stable[ix];
+	    tx = 2.*stablex[ix];
 	    
 	    out[ix] += pick(ti,fabsf(tx*ds*aal),trace,nt,dt,t0);
 	}

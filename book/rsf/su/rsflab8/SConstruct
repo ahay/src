@@ -42,7 +42,7 @@ Flow('timex','time',
 
 # Kirchhoff migration
 Flow('kdmig','simple time timex',
-     'kirmig0 table=${SOURCES[1]} tablex=${SOURCES[2]}')
+     'kirmig0 type=linear table=${SOURCES[1]} deriv=${SOURCES[2]}')
 Result('kdmig','grey title="Kirchhoff migration" ')
 
 ####################################################################

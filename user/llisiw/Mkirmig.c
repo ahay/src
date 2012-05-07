@@ -1,6 +1,6 @@
 /* 2-D Prestack Kirchhoff depth migration. */
 /*
-  Copyright (C) 2009 University of Texas at Austin
+  Copyright (C) 2011 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,19 +19,21 @@
 #include <rsf.h>
 
 #include "kirmig.h"
+#include "tinterp.h"
 
 int main(int argc, char* argv[])
 {
-    char *unit;
+    char *unit, *what, *type;
     bool cig;
     int nt, nx, ny, ns, nh, nz, nzx, ix, ih, is, ist, iht;
     float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
     float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal, tx;
-    sf_file inp, mig, tbl;
+    sf_file inp, mig, tbl, der;
 
     sf_init (argc,argv);
     inp = sf_input("in");
     tbl = sf_input("table"); /* traveltime table */
+    der = sf_input("deriv"); /* source derivative table */
     mig = sf_output("out");
 
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in input");
@@ -92,34 +94,56 @@ int main(int argc, char* argv[])
     sf_floatread(table[0],(off_t)nzx*(off_t)ny,tbl);
     sf_fileclose(tbl);
 
-    if (NULL != sf_getstring("tablex")) {
-	tbl = sf_input("tablex");
-
-	/* table of dT/ds */
-	tablex = sf_floatalloc2(nzx,ny);
-	sf_floatread(tablex[0],(off_t)nzx*(off_t)ny,tbl);
-	sf_fileclose(tbl);
-    } else {
-	tablex = NULL;
-    }
+    /* read derivative table */
+    tablex = sf_floatalloc2(nzx,ny);
+    sf_floatread(tablex[0],(off_t)nzx*(off_t)ny,der);
+    sf_fileclose(der);    
 
     out = sf_floatalloc2(nzx,cig ? nh : 1);
     trace = sf_floatalloc(nt);
 
+    stable  = sf_floatalloc(nzx);
+    stablex = sf_floatalloc(nzx);
+    rtable  = sf_floatalloc(nzx);
+    rtablex = sf_floatalloc(nzx);
+
+    if (NULL == (type = sf_getstring("type"))) type="hermit";
+    /* type of interpolation (default Hermit) */    
+
+    if (NULL == (what = sf_getstring("what"))) what="expanded";
+    /* Hermite basis functions (default expanded) */
+
+    /* initialize interpolation */
+    tinterp_init(nzx,dy,what);
+
     for (is=0; is < ns; is++) { /* shot */
 	s = s0 + is*ds;
 
-	/* Add accurate interpolation later */
+	/* cubic Hermite spline interpolation */
+	ist = (s-y0)/dy;
+	if (ist <= 0) {
+	    for (ix=0; ix < nzx; ix++) {
+		stable[ix]  = table[0][ix];
+		stablex[ix] = tablex[0][ix];
+	    }
+	} else if (ist >= ny-1) {
+	    for (ix=0; ix < nzx; ix++) {
+		stable[ix]  = table[ny-1][ix];
+		stablex[ix] = tablex[ny-1][ix];
+	    }
+	} else {
+	    switch (type[0]) {
+		case 'l': /* linear */
+		    tinterp_linear(stable, s-ist*dy-y0,table[ist], table[ist+1]);
+		    tinterp_linear(stablex,s-ist*dy-y0,tablex[ist],tablex[ist+1]);
+		    break;
 
-	/* place in the table */
-	/* nearest neighbor interpolation */
-
-	ist = 0.5 + (s-y0)/dy;
-	if (ist < 0) ist=0;
-	if (ist >= ny) ist=ny-1;
-
-	stable = table[ist];
-	stablex = (NULL==tablex)? NULL:tablex[ist];
+		case 'h': /* hermit */
+		    tinterp_hermite(stable, s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
+		    dinterp_hermite(stablex,s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
+		    break;
+	    }
+	}
 
         if (!cig || 0 == is)
 	    memset (&out[0][0], 0, cig ? nzx*nh*sizeof(float) : nzx*sizeof(float));
@@ -127,16 +151,32 @@ int main(int argc, char* argv[])
 	for (ih=0; ih < nh; ih++) { /* offset */
 	    h = h0+ih*dh;
 
-	    /* place in the table */
-	    /* nearest neighbor interpolation */
+	    /* cubic Hermite spline interpolation */
+	    iht = (s+h-y0)/dy;
+	    if (iht <= 0) {
+		for (ix=0; ix < nzx; ix++) {
+		    rtable[ix]  = table[0][ix];
+		    rtablex[ix] = tablex[0][ix];
+		}
+	    } else if (iht >= ny-1) {
+		for (ix=0; ix < nzx; ix++) {
+		    rtable[ix]  = table[ny-1][ix];
+		    rtablex[ix] = tablex[ny-1][ix];
+		}
+	    } else {
+		switch (type[0]) {
+		case 'l': /* linear */
+		    tinterp_linear(rtable, s+h-iht*dy-y0,table[iht], table[iht+1]);
+		    tinterp_linear(rtablex,s+h-iht*dy-y0,tablex[iht],tablex[iht+1]);
+		    break;
 
-	    iht = 0.5 + (s+h-y0)/dy;
-	    if (iht < 0) iht=0;
-	    if (iht >= ny) iht=ny-1;
+		case 'h': /* hermit */
+		    tinterp_hermite(rtable, s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+		    dinterp_hermite(rtablex,s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+		}
+	    }
 
-	    rtable = table[iht];
-	    rtablex = (NULL==tablex)? NULL:tablex[iht];
-
+	    /* read trace */
 	    sf_floatread (trace,nt,inp);
 	    doubint(nt,trace);
 
@@ -147,8 +187,7 @@ int main(int argc, char* argv[])
 		t2 = rtable[ix];
 		ti = t1+t2;
 		
-		tx = (NULL==tablex)? 0.: SF_MAX(fabsf(stablex[ix]*ds),
-						fabsf(rtablex[ix]*dh));
+		tx = SF_MAX(fabsf(stablex[ix]*ds),fabsf(rtablex[ix]*dh));
                 out[cig ? ih : 0][ix] += pick(ti,tx*aal,trace,nt,dt,t0);
 	    } 
 	}
@@ -160,4 +199,3 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
-

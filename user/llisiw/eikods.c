@@ -154,7 +154,7 @@ void eikods_dt1(int l      /* direction */,
 /* first-order derivative */
 {
     int j, ii[3], a, b, i1=-1;
-    double rhs=0., den=0., dw, dt=0.;
+    double rhs=0., den=0., dw=0., dt=0.;
 
     sf_line2cart(3,nn,i0,ii);
 
@@ -174,10 +174,11 @@ void eikods_dt1(int l      /* direction */,
 	    den += (t0[i0]-t0[i1])/(d[j]*d[j]);
 
 	    if (l == j) {
-		if (i1 == b)
+		if (i1 == b) {
 		    dt = (t0[i1]-t0[i0])/d[j];
-		else
+		} else {
 		    dt = (t0[i0]-t0[i1])/d[j];
+		}
 	    }
 	}	
     }
@@ -193,7 +194,7 @@ void eikods_dt1(int l      /* direction */,
 	    dw = (-v0[i0+2*ss[l]]+4.*v0[i0+ss[l]]-3.*v0[i0])/(2.*d[l]);
 	else
 	    dw = (3.*v0[i0]-4.*v0[i0-ss[l]]+v0[i0-2*ss[l]])/(2.*d[l]);
-	
+
 	dl1[i0] = (0.5*dw+rhs)/den;
 	ds1[i0] = dl1[i0]-dt;
     }
