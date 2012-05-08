@@ -20,7 +20,7 @@
 
 #include <rsf.h>
 
-static float **prev, **next, ****what, **dist, **prob;
+static float **prev, **next, ****what, **dist, **dist0, **prob, ***ttime;
 static int n1, n2, n3, gt2, gt3;
 
 static float find_minimum(int ic1, int nc1, int jc1,
@@ -28,13 +28,15 @@ static float find_minimum(int ic1, int nc1, int jc1,
 			  float c, float *pick);
 static void interpolate(float f2, float f3, int i1, float *w);
 
-void dynprog3_init(int nz                /* vertical */, 
-		   int nx1, int nx2      /* horizontal */, 
-		   int gate1, int gate2  /* picking gate */, 
-		   float an1, float an2  /* anisotropy */)
+float *** dynprog3_init(int nz                /* vertical */, 
+			int nx1, int nx2      /* horizontal */, 
+			int gate1, int gate2  /* picking gate */, 
+			float an1, float an2  /* anisotropy */,
+			bool savetime         /* save traveltime */)
 /*< Initialize >*/
 {
     int i2, i3;
+    float hyp;
 
     n1=nz;
     n2=nx1;
@@ -45,23 +47,38 @@ void dynprog3_init(int nz                /* vertical */,
     prev = sf_floatalloc2(n2,n3);
     next = sf_floatalloc2(n2,n3);
     dist = sf_floatalloc2(n2,n3);
+    dist0 = sf_floatalloc2(n2,n3);
+
     prob = sf_floatalloc2(2*gate1-1,2*gate2-1);
     what = sf_floatalloc4(2,n2,n3,n1);
 
+    ttime = savetime? sf_floatalloc3(n2,n3,n1): NULL;
+
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    dist[i3][i2] = sqrtf(1. + (i2*i2)/(an1*an1) + (i3*i3)/(an2*an2));
+	    hyp = (i2*i2)/(an1*an1) + (i3*i3)/(an2*an2);
+	    dist0[i3][i2] = sqrtf(hyp);
+	    dist[i3][i2] = sqrtf(1. + hyp);
 	}
     }
+
+    return ttime;
 }
 
 void dynprog3_close(void)
 /*< deallocate >*/
 {
+    if (NULL != ttime) {
+	free(**ttime);
+	free(*ttime);
+	free(ttime);
+    }
     free(*prev);
     free(prev);
     free(*next);
     free(next);
+    free(*dist0); 
+    free(dist0);
     free(*dist); 
     free(dist); 
     free(*prob);
@@ -199,20 +216,32 @@ static float find_minimum(int ic1, int nc1, int jc1,
     return f00;
 }
 
-void dynprog3(int i0          /* starting velocity */,
-	      float*** weight /* [n1][n2][n3] */)
+void dynprog3(int q1, int q2  /* starting velocity */,
+	      float*** weight /* [n1][n3][n2] */)
 /*< apply >*/
 {
     float d, c, w, w2;
     int i1, i2, i3, k2, k3, ib2, ie2, ib3, ie3, m2, m3, l2, l3;
     
     /* first layer */
+    if (NULL != ttime) {
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		w = 0.5*(weight[0][i3][i2]+weight[0][q2][q1]);
+		ttime[0][i3][i2] = dist0[SF_ABS(i3-q2)][SF_ABS(i2-q1)];
+	    }
+	}
+    }
+
+    /* second layer */
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    w = 0.5*(weight[1][i3][i2]+weight[0][0][i0]);
-	    prev[i3][i2] = dist[i3][SF_ABS(i2-i0)]*w;
-	    what[1][i3][i2][0] = i0;
-	    what[1][i3][i2][1] = 0;
+	    w = 0.5*(weight[1][i3][i2]+weight[0][q2][q1]);
+	    prev[i3][i2] = dist[SF_ABS(i3-q2)][SF_ABS(i2-q1)]*w;
+	    what[1][i3][i2][0] = q1;
+	    what[1][i3][i2][1] = q2;
+
+	    if (NULL != ttime) ttime[1][i3][i2]=prev[i3][i2];
 	}
     }
 
@@ -263,6 +292,7 @@ void dynprog3(int i0          /* starting velocity */,
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		prev[i3][i2]=next[i3][i2];
+		if (NULL != ttime) ttime[i1][i3][i2]=prev[i3][i2];
 	    }
 	}
     } /* i1 */

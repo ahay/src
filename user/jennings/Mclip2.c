@@ -36,7 +36,7 @@ sfclip < in.rsf > out.rsf clip=x
 
 int main(int argc, char* argv[])
 {
-    int i, n, nbuf;
+    off_t i, n, nbuf;
     float upper, lower, *trace=NULL;
     sf_file in=NULL, out=NULL; /* Input and output files */
 

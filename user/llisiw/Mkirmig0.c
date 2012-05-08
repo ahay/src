@@ -23,26 +23,48 @@
 
 int main(int argc, char* argv[])
 {
+    bool adj;
     int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
     float *trace, *out, **table, **tablex, *stable, *stablex;
     float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal, tx;
     char *unit, *what, *type;
-    sf_file inp, mig, tbl, der;
+    sf_file dat, mig, tbl, der;
 
     sf_init (argc,argv);
-    inp = sf_input("in");
+
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* y for migration, n for modeling */
+
+    if (adj) {
+	dat = sf_input("in");
+	mig = sf_output("out");
+    } else {
+	mig = sf_input("in");
+	dat = sf_output("out");
+    }
+
     tbl = sf_input("table"); /* traveltime table */
     der = sf_input("deriv"); /* source derivative table */
-    mig = sf_output("out");
 
-    if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
-    if (!sf_histint(inp,"n2",&ns)) sf_error("No n2=");
-
-    if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1=");
-    if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1=");
-
-    if (!sf_histfloat(inp,"o2",&s0)) sf_error("No o2=");
-    if (!sf_histfloat(inp,"d2",&ds)) sf_error("No d2=");
+    if (adj) {
+	if (!sf_histint(dat,"n1",&nt)) sf_error("No n1=");
+	if (!sf_histint(dat,"n2",&ns)) sf_error("No n2=");
+	
+	if (!sf_histfloat(dat,"o1",&t0)) sf_error("No o1=");
+	if (!sf_histfloat(dat,"d1",&dt)) sf_error("No d1=");
+	
+	if (!sf_histfloat(dat,"o2",&s0)) sf_error("No o2=");
+	if (!sf_histfloat(dat,"d2",&ds)) sf_error("No d2=");
+    } else {
+	if (!sf_getint(dat,"nt",&nt)) sf_error("Need nt=");
+	if (!sf_getint(dat,"ns",&ns)) sf_error("Need ns=");
+	
+	if (!sf_gettfloat(dat,"t0",&t0)) t0=0.0;
+	if (!sf_getfloat(dat,"dt",&dt)) sf_error("Need dt=");
+	
+	if (!sf_getfloat(dat,"s0",&s0)) s0=0.0;
+	if (!sf_getfloat(dat,"ds",&ds)) sf_error("Need ds=");
+    }
 
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
     if (!sf_histint(tbl,"n2",&nx)) sf_error("No n2= in table");
@@ -61,7 +83,7 @@ int main(int argc, char* argv[])
     sf_putfloat(mig,"o1",z0);
     sf_putfloat(mig,"d1",dz);
     sf_putstring(mig,"label1","Depth");
-    unit = sf_histstring(inp,"unit2");
+    unit = sf_histstring(dat,"unit2");
     if (NULL != unit) sf_putstring(mig,"unit1",unit);
 
     sf_putfloat(mig,"o2",x0);
@@ -102,6 +124,8 @@ int main(int argc, char* argv[])
 	out[i] = 0.;
     }
 
+    kirmig_init(nt,dt,t0);
+
     for (is=0; is < ns; is++) { /* surface location */
 	s = s0 + is*ds;
 
@@ -132,7 +156,7 @@ int main(int argc, char* argv[])
 	}	
 
 	/* read trace */
-	sf_floatread (trace,nt,inp);
+	sf_floatread (trace,nt,dat);
 	doubint(nt,trace);
 
 	/* Add aperture limitation later */
@@ -141,7 +165,7 @@ int main(int argc, char* argv[])
 	    ti = 2.*stable[ix];
 	    tx = 2.*stablex[ix];
 	    
-	    out[ix] += pick(ti,fabsf(tx*ds*aal),trace,nt,dt,t0);
+	    pick(true,ti,fabsf(tx*ds*aal),out+ix,trace);
 	}
     }
 

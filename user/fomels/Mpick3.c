@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     scan = sf_floatalloc3(n1,n2,n3);
     weight = sf_floatalloc3(n2,n3,n1);
 
-    dynprog3_init(n1,n2,n3,gate1,gate2,an1,an2);
+    (void) dynprog3_init(n1,n2,n3,gate1,gate2,an1,an2,false);
 
     if (smooth) {
 	pick = sf_floatalloc2(n1,2);
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    dynprog3(i0, weight);
+    dynprog3(i0, 0, weight);
     dynprog3_traj(pick2);
 
     if (smooth) {

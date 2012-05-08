@@ -19,29 +19,47 @@
 
 #include <rsf.h>
 
-static void lagrange(float p, float *f)
-{
-    f[0]=0.5*p*(p-1.0);
-    f[1]=1.0-p*p;
-    f[2]=0.5*p*(p+1.0);
-}
+#include "opwd.h"
 
 int main(int argc, char *argv[])
 {
+    char *type;
+    sf_tris t1=NULL, t2=NULL;
+    interpolate interp;
     int i1, i2, n1, n2, n12;
-    float **dat, **ang, **res, filt[3], *trace;
+    float **dat, **ang, **res;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
 
-    dip = sf_input("dip");
+    dip = sf_input("angle"); 
+    /* dip angle */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
     n12 = n1*n2;
+
+    if (NULL == (type = sf_getstring("interp"))) type="lagrange";
+    /* interpolation type */
+
+    switch(type[0]) {
+	case 'l':
+	    interp = lagrange;
+	    break;
+	case 'b':
+	    interp = bspline;
+	    t1 = sf_tridiagonal_init(n1);
+	    t2 = sf_tridiagonal_init(n2);
+	    sf_tridiagonal_const_define(t1,0.75,0.125,true);
+	    sf_tridiagonal_const_define(t2,0.75,0.125,true);
+	    break;
+	default:
+	    interp = NULL;
+	    sf_error("unknown interp=%s",type);
+    }
 
     dat = sf_floatalloc2(n1,n2);
     ang = sf_floatalloc2(n1,n2);
@@ -50,23 +68,11 @@ int main(int argc, char *argv[])
     sf_floatread(dat[0],n12,inp);
     sf_floatread(ang[0],n12,dip);
 
+    filter2(n1,n2,interp,interp,t1,t2,ang,res,dat,ang);
+
     for (i2=0; i2 < n2; i2++) {
-	res[0][i2] = res[n1-1][i2] = 0.;
-	trace = dat[i2];
 	for (i1=1; i1 < n1-1; i1++) {
-	    lagrange(sinf(ang[i2][i1]),filt);
-
-	    res[i1][i2] = filt[0]*trace[i1-1]+filt[1]*trace[i1]+filt[2]*trace[i1+1];
-	}
-	dat[i2][0] = dat[i2][n1-1] = 0.;
-    }
-    for (i1=0; i1 < n1; i1++) {
-	dat[0][i1] = dat[n2-1][i1] = 0.;
-	trace = res[i1];
-	for (i2=1; i2 < n2-1; i2++) {
-	    lagrange(cosf(ang[i2][i1]),filt);
-
-	    dat[i2][i1] -= filt[0]*trace[i1-1]+filt[1]*trace[i1]+filt[2]*trace[i1+1];
+	    dat[i2][i1] -= ang[i2][i1];
 	}
     }
 

@@ -116,6 +116,9 @@ int main(int argc, char* argv[])
     /* initialize interpolation */
     tinterp_init(nzx,dy,what);
 
+    /* initialize summation */
+    kirmig_init(nt,dt,t0);
+
     for (is=0; is < ns; is++) { /* shot */
 	s = s0 + is*ds;
 
@@ -188,7 +191,7 @@ int main(int argc, char* argv[])
 		ti = t1+t2;
 		
 		tx = SF_MAX(fabsf(stablex[ix]*ds),fabsf(rtablex[ix]*dh));
-                out[cig ? ih : 0][ix] += pick(ti,tx*aal,trace,nt,dt,t0);
+		pick(true,ti,tx*aal,out[cig ? ih : 0]+ix,trace);
 	    } 
 	}
         if (!cig) 
