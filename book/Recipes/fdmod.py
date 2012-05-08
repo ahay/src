@@ -470,6 +470,27 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
 	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
+def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
+    Flow(cc+'_r',None,
+         '''
+         math n1=%d d1=%g o1=%g
+         output="((%g)*(%g))/sqrt( ((%g)*cos(x1/180*3.14))^2 + ((%g)*sin(x1/180*3.14))^2 )"
+         '''% (sampling,360./sampling,0.,
+                semiA,semiB,semiB,semiA) )
+    Flow(cc+'_x',cc+'_r',
+         'math output="%g+input*cos(x1/180*3.14)"'
+         % (xcenter) )
+    Flow(cc+'_z',cc+'_r',
+         'math output="%g+input*sin(x1/180*3.14)"'
+         % (zcenter) )
+
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp |
+	 put label1="" unit1="" label2="" unit2=""
+         ''', stdin=0)
+    
 def dipping(cc,intercept,slope,par):
     Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g+x1*%g" '%(intercept,slope))
