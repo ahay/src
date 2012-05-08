@@ -36,6 +36,7 @@ In the Python package:
 In programs:
 
 * Fixed size limitation in sfclip2
+* Added x0 and y0 in sfstolt 
 
 In the build system:
 
