@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 {
     fint1 map;
     int nt,nx,ny, iw,ix,iy, nf, nw, mute;
-    float dw, dt, dx,dy, t0, y, st, *trace=NULL, minstr;
+    float dw, dt, dx,dy, x0,y0, t0, y, st, *trace=NULL, minstr;
     sf_file in=NULL, out=NULL;
 
     sf_init (argc,argv);
@@ -64,8 +64,15 @@ int main(int argc, char* argv[])
     sf_cosft_init(nw/2+1);
     dw = 2 * SF_PI/(nw*dt);
 
+    if (!sf_histfloat(in,"o2",&x0)) x0=0.0; 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+
+    if (!sf_histfloat(in,"o3",&y0)) y0=0.0; 
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
+
+    x0 *= SF_PI * fabsf (vel);
+    y0 *= SF_PI * fabsf (vel);
+
     dx *= SF_PI * fabsf (vel);
     dy *= SF_PI * fabsf (vel);	
 
@@ -91,10 +98,10 @@ int main(int argc, char* argv[])
 
     for (iy = 0; iy < ny; iy++) {
 	sf_warning("%d of %d",iy+1,ny);
-	y = iy*dy;
+	y = y0+iy*dy;
 	y *= y;
 	for (ix = 0; ix < nx; ix++) {
-	    x = ix*dx;
+	    x = x0+ix*dx;
 	    x = st*(x*x + y);  
 
 	    sf_floatread(trace,nt,in);
