@@ -1234,14 +1234,12 @@ def rbox2d(rbox,xlow,xhig,zlow,zhig,par):
 def quiver(vect,custom,par):
 
 	Plot(vect+'o',vect,'window n1=1|' +
-     	cgraph('squeeze=n plotcol=0 plotfat=5 symbol=o '+custom,par))
+     	cgraph('squeeze=n plotcol=0 plotfat=3 symbol=. '+custom,par))
 	
 	Plot(vect+'h',vect,
-	cgraph('squeeze=n plotcol=0 plotfat=5 '+custom,par))	
+	cgraph('squeeze=n plotcol=0 plotfat=1 '+custom,par))	
 
 	Plot(vect,[vect+'h',vect+'o'],'Overlay')
-
-
 
 # ------------------------------------------------------------
 def hic2d(hic,wfs,wfr,cc,custom,par):
