@@ -56,14 +56,14 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(dat,"o2",&s0)) sf_error("No o2=");
 	if (!sf_histfloat(dat,"d2",&ds)) sf_error("No d2=");
     } else {
-	if (!sf_getint(dat,"nt",&nt)) sf_error("Need nt=");
-	if (!sf_getint(dat,"ns",&ns)) sf_error("Need ns=");
+	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
+	if (!sf_getint("ns",&ns)) sf_error("Need ns=");
 	
-	if (!sf_gettfloat(dat,"t0",&t0)) t0=0.0;
-	if (!sf_getfloat(dat,"dt",&dt)) sf_error("Need dt=");
+	if (!sf_getfloat("t0",&t0)) t0=0.0;
+	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
 	
-	if (!sf_getfloat(dat,"s0",&s0)) s0=0.0;
-	if (!sf_getfloat(dat,"ds",&ds)) sf_error("Need ds=");
+	if (!sf_getfloat("s0",&s0)) s0=0.0;
+	if (!sf_getfloat("ds",&ds)) sf_error("Need ds=");
     }
 
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
@@ -77,18 +77,32 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(tbl,"o3",&y0)) sf_error("No o3= in table");
     if (!sf_histfloat(tbl,"d3",&dy)) sf_error("No d3= in table");
 
-    sf_putint(mig,"n1",nz);
-    sf_putint(mig,"n2",nx);
+    if (adj) {
+	sf_putint(mig,"n1",nz);
+	sf_putint(mig,"n2",nx);
 
-    sf_putfloat(mig,"o1",z0);
-    sf_putfloat(mig,"d1",dz);
-    sf_putstring(mig,"label1","Depth");
-    unit = sf_histstring(dat,"unit2");
-    if (NULL != unit) sf_putstring(mig,"unit1",unit);
+	sf_putfloat(mig,"o1",z0);
+	sf_putfloat(mig,"d1",dz);
+	sf_putstring(mig,"label1","Depth");
+	unit = sf_histstring(dat,"unit2");
+	if (NULL != unit) sf_putstring(mig,"unit1",unit);
 
-    sf_putfloat(mig,"o2",x0);
-    sf_putfloat(mig,"d2",dx);
-    sf_putstring(mig,"label2","Distance");
+	sf_putfloat(mig,"o2",x0);
+	sf_putfloat(mig,"d2",dx);
+	sf_putstring(mig,"label2","Distance");
+    } else {
+	sf_putint(dat,"n1",nt);
+	sf_putint(dat,"n2",ns);
+	
+	sf_putfloat(dat,"o1",t0);
+	sf_putfloat(dat,"d1",dt);
+
+	sf_putfloat(dat,"o2",s0);
+	sf_putfloat(dat,"d2",ds);
+
+	sf_putstring(dat,"label1","Time");
+	sf_putstring(dat,"unit1","s");	
+    }
 
     if (!sf_getfloat("antialias",&aal)) aal=1.0;
     /* antialiasing */
@@ -120,9 +134,13 @@ int main(int argc, char* argv[])
     /* initialize interpolation */
     tinterp_init(nzx,dy,what);
 
-    for (i=0; i < nzx; i++) {
-	out[i] = 0.;
-    }
+    if (adj) {
+	for (i=0; i < nzx; i++) {
+	    out[i] = 0.;
+	}
+    } else {
+	sf_floatread(out,nzx,mig);
+    }       
 
     kirmig_init(nt,dt,t0);
 
@@ -155,9 +173,15 @@ int main(int argc, char* argv[])
 	    }
 	}	
 
-	/* read trace */
-	sf_floatread (trace,nt,dat);
-	doubint(nt,trace);
+	if (adj) {
+	    /* read trace */
+	    sf_floatread (trace,nt,dat);
+	    doubint(nt,trace);
+	} else {
+	    for (i=0; i < nt; i++) {
+		trace[i]=0.;
+	    }
+	}
 
 	/* Add aperture limitation later */
 
@@ -165,11 +189,16 @@ int main(int argc, char* argv[])
 	    ti = 2.*stable[ix];
 	    tx = 2.*stablex[ix];
 	    
-	    pick(true,ti,fabsf(tx*ds*aal),out+ix,trace);
+	    pick(adj,ti,fabsf(tx*ds*aal),out+ix,trace);
+	}
+
+	if (!adj) {
+	    doubint(nt,trace);
+	    sf_floatwrite (trace,nt,dat);
 	}
     }
 
-    sf_floatwrite(out,nzx,mig);        
+    if (adj) sf_floatwrite(out,nzx,mig);        
 
     exit(0);
 }

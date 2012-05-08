@@ -35,6 +35,8 @@ In the Python package:
 
 In programs:
 
+* Fixed size limitation in sfclip2
+
 In the build system:
 
 ===Changes in defaults===
