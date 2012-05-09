@@ -1,0 +1,362 @@
+Allocated domain dump: narr = 30
+arr 0
+array dump: ndim = 3
+dim 0:  gs = -4  ge = 53  n = 58  gs0 = -4  ge0 = 53  n0 = 58
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 1
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 2
+array dump: ndim = 3
+dim 0:  gs = -4  ge = 52  n = 57  gs0 = -4  ge0 = 52  n0 = 57
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 3
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 48  n = 49  gs0 = 0  ge0 = 48  n0 = 49
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 4
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -12  ge = 198  n = 211  gs0 = -12  ge0 = 198  n0 = 211
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 5
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -8  ge = 194  n = 203  gs0 = -8  ge0 = 194  n0 = 203
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 6
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = -4  ge = 393  n = 398  gs0 = -4  ge0 = 393  n0 = 398
+----------------------------------------
+arr 7
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 0  ge = 389  n = 390  gs0 = 0  ge0 = 389  n0 = 390
+----------------------------------------
+arr 8
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 9
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 48  n = 49  gs0 = 0  ge0 = 48  n0 = 49
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 10
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -12  ge = 199  n = 212  gs0 = -12  ge0 = 199  n0 = 212
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 11
+array dump: ndim = 3
+dim 0:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 12
+array dump: ndim = 3
+dim 0:  gs = -8  ge = 194  n = 203  gs0 = -8  ge0 = 194  n0 = 203
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 13
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = -4  ge = 394  n = 399  gs0 = -4  ge0 = 394  n0 = 399
+----------------------------------------
+arr 14
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 15
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 389  n = 390  gs0 = 0  ge0 = 389  n0 = 390
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 16
+array dump: ndim = 3
+dim 0:  gs = -4  ge = 53  n = 58  gs0 = -4  ge0 = 53  n0 = 58
+dim 1:  gs = -12  ge = 199  n = 212  gs0 = -12  ge0 = 199  n0 = 212
+dim 2:  gs = -4  ge = 394  n = 399  gs0 = -4  ge0 = 394  n0 = 399
+----------------------------------------
+arr 17
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 18
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 19
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 20
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 21
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 22
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 23
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 24
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 25
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 26
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 27
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 28
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 29
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+Computational domain dump: narr = 30
+arr 0
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = -4  ge0 = 53  n0 = 58
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 1
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 2
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 48  n = 49  gs0 = -4  ge0 = 52  n0 = 57
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 3
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 48  n = 49  gs0 = 0  ge0 = 48  n0 = 49
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 4
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -8  ge = 194  n = 203  gs0 = -12  ge0 = 198  n0 = 211
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 5
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -8  ge = 194  n = 203  gs0 = -8  ge0 = 194  n0 = 203
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 6
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 0  ge = 389  n = 390  gs0 = -4  ge0 = 393  n0 = 398
+----------------------------------------
+arr 7
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 0  ge = 389  n = 390  gs0 = 0  ge0 = 389  n0 = 390
+----------------------------------------
+arr 8
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 9
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 48  n = 49  gs0 = 0  ge0 = 48  n0 = 49
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 10
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -12  ge0 = 199  n0 = 212
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+----------------------------------------
+arr 11
+array dump: ndim = 3
+dim 0:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 12
+array dump: ndim = 3
+dim 0:  gs = -8  ge = 194  n = 203  gs0 = -8  ge0 = 194  n0 = 203
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 13
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = 1  ge0 = 48  n0 = 48
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -7  ge0 = 194  n0 = 202
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = -4  ge0 = 394  n0 = 399
+----------------------------------------
+arr 14
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 389  n = 389  gs0 = 1  ge0 = 389  n0 = 389
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 15
+array dump: ndim = 3
+dim 0:  gs = 0  ge = 389  n = 390  gs0 = 0  ge0 = 389  n0 = 390
+dim 1:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+dim 2:  gs = 0  ge = 0  n = 1  gs0 = 0  ge0 = 0  n0 = 1
+----------------------------------------
+arr 16
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 48  n = 48  gs0 = -4  ge0 = 53  n0 = 58
+dim 1:  gs = -7  ge = 194  n = 202  gs0 = -12  ge0 = 199  n0 = 212
+dim 2:  gs = 1  ge = 389  n = 389  gs0 = -4  ge0 = 394  n0 = 399
+----------------------------------------
+arr 17
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 18
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 19
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 20
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 21
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 22
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 23
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 24
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 25
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 26
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 27
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 28
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------
+arr 29
+array dump: ndim = 3
+dim 0:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 1:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+dim 2:  gs = 1  ge = 0  n = 0  gs0 = 1  ge0 = 0  n0 = 0
+----------------------------------------

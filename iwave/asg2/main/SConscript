@@ -1,0 +1,33 @@
+import os
+
+Import('vars', 'cpplist', 'liblist', 'libdirlist')
+
+# this version assumes that all source files in this directory
+# define main programs
+
+# initialize build environment
+env = Environment(ENV = os.environ,
+                  variables = vars,
+                  CC={'CC' : '${CC}'},
+		  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                  CXX={'CXX' : '${CXX}'},
+	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+	          LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+                  CPPPATH = cpplist, 
+                  LIBS = liblist, 
+	          LIBPATH = libdirlist)
+
+# find sources
+srcs=[]
+import glob
+srcs = srcs + glob.glob('./*.c')
+srcs = srcs + glob.glob('./*.cc')
+srcs = srcs + glob.glob('./*.cpp')
+
+# if any found, build main
+if len(srcs) > 0:
+    for prog in srcs:
+        prout = prog.split('.')[1].strip('/') + '.x'
+        env.Program(prout,prog)
+

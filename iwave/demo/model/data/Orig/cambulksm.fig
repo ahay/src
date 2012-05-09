@@ -1,0 +1,1 @@
+psimage n1=200 height=6 width=6 label1="z (km)" label2="x (km)" d1=0.005 d2=0.005 wclip=24500 bclip=26000 wrgb=0.0,0.0,1.0 grgb=1.0,0.0,0.0 brgb=1.0,1.0,1.0 legend=1 lbeg=22000 lend=27000 lstyle=horibottom units=MPa< cambulksm.rsf@ > Fig/cambulksm.ps

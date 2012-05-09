@@ -1,0 +1,64 @@
+import os
+import shutil
+
+Import('vars', 'cpplist', 'liblist', 'libdirlist')
+
+# this version assumes that all source files in this directory
+# define test programs, whose output is directed into files with
+# suffix .rpt
+
+# initialize build environment
+env = Environment(ENV = os.environ,
+                  variables = vars,
+                  CC={'CC' : '${CC}'},
+		  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                  CXX={'CXX' : '${CXX}'},
+	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+                  CPPPATH = cpplist, 
+                  LIBS = liblist, 
+	          LIBPATH = libdirlist)
+
+# find sources
+srcs=[]
+import glob
+srcs = srcs + glob.glob('./*.c')
+srcs = srcs + glob.glob('./*.cc')
+srcs = srcs + glob.glob('./*.cpp')
+
+thispath = os.getcwd()
+
+g = open(thispath + '/' + 'summary.rpt','w')
+
+def cmdx(target, source, env):
+    os.system('/bin/rm -rf ' + str(target[1]) + '; mkdir ' + str(target[1]))
+    cmdl='./' + str(source[0]) + '>' + str(target[0])
+    print cmdl
+    os.system(cmdl)
+    if os.path.exists(str(target[0]) + '_ref'):
+        f = open(str(target[0]),'r')
+        testres = f.read()
+        f.close()
+        f = open(str(target[0]) + '_ref','r')
+        refres = f.read()
+        f.close()
+        if testres == refres:
+            os.system('echo ' + str(target[0]) + ': TRUE  = normal termination, output identical to reference >> ' + thispath + '/summary.rpt')
+        else:
+            os.system('echo ' + str(target[0]) + ': FALSE = normal termination, output differs from reference >> ' + thispath + '/summary.rpt')
+    else:
+        shutil.copy(str(target[0]), str(target[0]) + '_ref')	        
+
+if len(srcs) > 0:
+    for prog in srcs:
+        pname = prog.split('.')[1].strip('/')
+        pprog = pname + '.x'
+        env.Program(pprog,prog)
+        prout = pname + '.rpt'
+	praux = pname + '.aux'
+        t = env.Command([prout, pname],[pprog],cmdx) 
+	Clean(t, pname)
+
+g.close()
+
+	

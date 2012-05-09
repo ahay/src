@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title>IWAVE</title>
+
+<link rel="stylesheet" type="text/css" href="../../../doc/html/mainPage.css" media="all">
+<link rel="SHORTCUT ICON" href="../../../doc/html/images/trip.logo.small.png">
+</head>
+
+<div id="header"><div id="headertext"><a href="../../../doc/html/index.html"><h1>IWAVE: A framework for wave simulation</h1></a></div></div>
+
+<div id="navigation">
+<a href="http://www.trip.caam.rice.edu/"><img border=0 style="color:black" src="../../../doc/html/images/TRIPLogo.png" alt=""></a>
+<br>
+<a href="http://www.rice.edu"><img style="color:black" border=0 src="../../../doc/html/images/RiceLogo.png" alt="Rice University"></a>
+<br>
+</div>
+
+<div id="content">
+<h1>IWAVE Demonstration Package</h1>
+<p> 
+Directories in this package
+define a number of simple IWAVE acoustic simulation
+examples, mostly in 2D. Simulation applications like IWAVE involve many optional choices. Study of the
+examples in this directory, espcially of the parameter files (demo.par
+in each demo directory), along with the <a
+href="../../../asg/doc/html/index.html">acoustic application docs</a>,
+should assist the user in understanding the various options and their
+input syntax.
+<p>
+<h2>Quick Start</h2>
+<ul>
+<li>install IWAVE - in the IWAVE root directory,
+<p>
+$ make -f MakeBuild install
+<p>
+</li>
+<li>
+cd to the demo directory, then to one of the subdirectories demo[1-11], then enter
+<p>
+$ make
+<p>
+On successful return, You will find a SEGY trace output file data.su, a postscript plot of this data in the Fig subdir (Fig/data.ps), and the parameter file demo.par used as input to the IWAVE acoustic modeling application asg.x.
+</li>
+</ul>
+<p>
+<h2>Preparation and Use</h2>
+<p>
+The demo package offers two majur use modes, automatic and
+manual. Some setup is required for both.
+<p>
+<b>Common Setup</b>
+<p>
+The first setup step is installation of the IWAVE simulator. This is 
+most conveniently accomplished via the install target in the IWAVE root
+directory:
+<p>
+$ make -f MakeBuild install
+<p>
+(see the <a href="../../../doc/html/install.html">installation instructions</a>).
+This target will also instrument the demo directory with makefiles.
+<p>
+IWAVE is paralleized by domain decomposition, therefore the number of
+domains along each coordinate axis must be specified. Serial mode is
+signalled by one domain in each direction. Serial execution is
+mandatory unless the code has been compiled and linked with MPI
+enabled.
+<p>
+The makefiles in the demo directory <i>compute</i> the number of
+processors is from the specification of the number of domains in each
+direction - these numbers are assigned the make variables ND1, ND2,
+and ND3 in the makefile fragment demo[1-11]/demo.er. As deliverred,
+these are all set to 1 (serial execution), except for the 3D example,
+demo11, for which all three are set to 2. Thus demo11, as downloaded,
+runs on 8 processes, and will <i>only</i> run if the simulator has
+been compiled and linked with MPI. The user, however, sets the ND1,
+ND2, and ND3 in demo[1-11]/demo.er (that is, separately for each demo), <b>not</b> the number of processors directly
+- that is handled by the makefile. Because the number of processes is
+computed, the MPI command line can be specified in a common file
+(demodefs in the demo root directory), shared by all demos.
+<p>
+The user is welcome to reset ND1, ND2 for demos 1-10 (but not ND3 -
+these are 2D simulations!) to run these in parallel as well, assuming
+that the code is set up to do so, or to run demo11 on one process by
+setting them all to 1.
+<p>
+<b>Automatic (Default) Mode</b>
+<p>
+The file demodefs in the demo root directory defines several choices
+common automatic mode for the entire package, notably the executable
+command variable EXEC, which the user may well need to edit. EXEC can
+either be simply the path to the acoustic simulator (the default), in
+which case this command is called directly from the shell and executed
+serially, or EXEC can incorporate MPI command line features for
+parallel simulation via domain decomposition.
+<p>
+EXEC in turn depends on IWAVE, which defines the path to the IWAVE root
+directory. As distributed, this is set correctly as a relative path from
+the viewpoint of the demo subdirectories. If you move demo out of its 
+original position in the IWAVE tree, you will need to modify the IWAVE
+make variable, as well as the hclasspath file in the demo package, to 
+include correct relative or absolute paths. 
+<p>
+Once these choices are made (by editing demodefs), you can execute all
+demos by making the default target in the demo root directory, or each
+demo individually by executing the default target in its directory.
+<p>
+<b>Manual Mode</b>
+<p>
+Manual mode permits the user to manually enter the simulation command, interactively determining the options passed to the shell (or to MPI). The steps are
+<ol>
+<li>
+Set up the simulation:
+<p>
+$ make setup
+<p>
+</li>
+<li>
+Perform it:
+<p>
+[optional MPI prefix involving mpiexec or mpirun] ../../asg/main/asg.x par=demo.par
+</li>
+</ol>
+<p>
+In this mode, no editing of the demodefs file is necessary. However
+the common preparation steps described above are required.
+<p>
+On the other hand, one of the by-products of the setup target is the
+parameter file demo.par (distribution copies of these appear linked in
+the directory list below). The user is free to experiment with the
+simulation parameters, guided by the <a
+href="../../../asg/doc/html/index.html">IWAVE acoustic simulator
+docs</a>. Note that the numbers of domains in each direction
+(parameters mpi_nd1, mpi_nd2, and mpi_nd3) determine the number of
+processes on the MPI command line.
+<p>
+A quirk of make must be mentioned here: after the setup target, the default target used in automatic mode no longer works properly. If you want to switch to automatic mode, clean the directory as described below.
+<p>
+<b>Cleanup</b>
+<p>
+The TRIP build system defines two cleanup targets. Both are recursive:
+they execute in the working directory, then recursively in every
+subdirectory equipped with makefiles.
+<ol>
+<li>
+<i>clean</i> - removes all intermediate results, that is, everything except the graphic output in the Fig subdirectory of each demo directory.
+</li>
+<li>
+<i>burn</i> - clean, followed by removing both the contents of Fig (if any) and the makefiles themselves, thus returning the directory tree to its original state.
+</li>
+</ol>
+To start over again, therefore, after a burn, means rebuilding the
+makefiles. The simplest way to do that (in the demo tree) is to go to
+the IWAVE root directory and re-install the entire package. For less invasive methods, see the <a href="../../../doc/html/build.html">TRIP build system docs</a>.
+<p>
+<h2>Nitty-Gritty Details</h2>
+<p>
+The makefiles contain commands to prepare intermediate data and commands, and to execute them in the proper order. The user need not do any data preparation or moving of files to run the demos, but they are set up so that study of the makefile fragments demo[1-11]/demo.er and demodefs will make clear how an IWAVE simulation is set up and run.
+<p>
+All demos use acoustic models generated by the standardmodel command
+(see model/main). This command self-documents; the examples use it
+implicitly, and its only role is to generate model velocity and
+density files. 
+<p>
+Other input data, and output graphics, depend on SU commands, and SU
+must be installed in the normal way, with SUXDR chosen as it is for
+the IWAVE installation, in order to create the examples.
+<p>
+Each demo is defined by a makefile fragment, demo.er, in the
+corresponding directory. Common targets across the various demos are
+<ol>
+<li> setup - complete pre-simulation problem setup, all required files built</li>
+<li> demo.par - IWAVE parameter file (also available via links below)</li>
+<li> data.su - SEGY trace file of output</li>
+<li> Fig/data.ps - postscript grey-scale image of data</li>
+</ol>
+<p>
+Other targets create the model input files and other inputs. The
+velocity and density rsf files are common to all simulations (mostly
+2D on 20m square grids, but in one case on 2D 10m grid, in another on
+3D 20m grid), and reside in the model/data subdir. Postscript plots of
+these are included in model/data/Fig. In its pristine state, the
+entire demo directory, contains no binary data - all such data is
+generated either by standardmodel or by SU commands scripted in the
+makefiles.
+<p>
+All examples produce three or possibly four kinds of output:
+<p>
+<ol>
+<li>a SEGY trace file data.su, in the style of Seismic Unix, that is,
+lacking the ebcidic header of the SEGY data standard. This file can be
+examined by any software that reads SEGY traces. It is formatted
+either in native binary floats or XDR encoding (IEEE big-endian 32 bit
+floats).</li> <li>a postscript file Fig/data.ps displaying data.su
+graphically.</li> <li>a verbose output file cout0.txt (or many such,
+in parallel mode) storing the diagnostic output produced by IWAVE
+during its run.
+</li>
+<li>in some cases a movie file movie_[field name].rsf[@], displaying a
+movie of a field - field namse for the acoustic app are p and v[d],
+d=1,2 or 3 (for prssure and velocity components, respectively). See <a
+href="../../../asg/doc/html/alternate.html">acoustic simulator
+alternate use case</a> documentation for a description of movie files
+and how to specify and view them, and for documentation of most of the
+following use cases.
+</li>
+</ol>
+<p>
+<h2 Serial vs. Parallel Execution</h2>
+<h2>Directory</h2>
+<p>
+The following list gives brief descriptions of each simulation. The
+link at the beginning of each line brings up the parameter file for
+the demo described.
+<p>
+<ul>
+<p>
+<li> <a href="../demo1.par">demo1:</a> typical 2D use case
+described in <a href="../../../asg/doc/html/typical.html">this
+document</a>. Source/receiver geometry in data traces prior to
+simulation, data portions overwritten. Source defined by file
+containing target pulse (trapezoidal bandpass filter), along with
+distance at which it is to be achieved (in a homogeneous medium with
+the default velocity) and amplitude to be achieved there - of course,
+these presecriptions are normalized to 3D, so in 2D result in a
+somewhat different pulse. (2,4) scheme, other options as described in
+documentation and parameter file.</li> 
+<p>
+<li> <a
+href="../demo2.par">demo2:</a> similar to demo1, but with
+source/receiver geometry described by a separate header file, and the
+output data file generated from this information. Should produce
+exactly the same data as demo1.</li> 
+<p>
+<li> <a
+href="../demo3.par">demo3:</a> same as demo1 but with Ricker wavelet,
+center frequency = fpeak, rather than wavelet read from file</li>
+<p>
+<li> <a href="../demo4.par">demo4:</a> similar to demo1, but with
+the source wavelet file used directly to define the RHS of the wave
+equation (that is, the pressure equation, with a delta function
+spatial factor). Also, sources and receivers are mostly located at
+non-grid points. The source point lies in the first row of grid cells
+below the free surface. To represent this situation with reasonable
+accuracy, bilinear spatial interpolation is used (sampord=1). This
+spec will produce different data than demo1</li> 
+<p>
+<li> <a href="../demo5.par">demo5:</a> similar to demo1, but bulk
+modulus and buoyancy supplied, rather than velocity and density -
+should produce nearly (but not exactly) the same output as demo1 -
+won't be exactly the same because buoyancy, rather than density, is
+averaged onto staggered grid.  </li>
+<p>
+<li> <a
+href="../demo6.par">demo6:</a> same input parameters as demo1, but
+produces a movie of pressure at 0.1 s intervals. Currently must also
+provide a trace file (hence produce traces), because source position
+is extracted from input traces - could be avoided by setting (single)
+trace position outside of model</li> 
+<p>
+<li> <a
+href="../demo7.par">demo7:</a> same model as demo1, but an array
+source defining a normally incident plane wave</li> 
+<p>
+<li> <a
+href="../demo8.par">demo8:</a> same as demo4 but with absorbing
+(rather than free) surface layer</li> 
+<p>
+<li> <a
+href="../demo9.par">demo9:</a> same as demo1 but with (2,10) rather
+than (2,4) scheme. Note that propagating pulse is considerably less
+dispersive, but because (2, 10) scheme is implemented in 2D by inner
+loop over stencil, MUCH slower! (3D (2, 10) scheme is inlined, hence
+is usably fast)</li> 
+<p>
+<li> <a href="../demo10.par">demo10:</a> same
+as demo1 but defined on 10m square grid rather than 20m square
+grid</li> 
+<p>
+<li> <a href="../demo11.par">demo11:</a> 3D version of demo1 - uses 2
+x 2 x 2 domain decomposition, must be run in parallel. It will be
+necessary to edit the file demodefs in the demo root directory so that
+the EXEC variable conforms to the user's MPI environment (the same is
+true for running any of the other examples under MPI, of course).</li>
+<p>
+<li> <a href="../cam1.par">cam1:</a> "Camembert" example from Gauthier et al. <i>Geophysics</i> vol. 51 (1986), pp. 1387-1403. This is the small (2%) bulk modulus perturbation version of the Camembert, reflection configuration. Data consists of 8 shots; this and the other three Camembert examples illustrate the ability of IWAVE to create multiple shot data.</li>
+<p>
+<li> <a href="../cam2.par">cam2:</a> "Camembert" example, large (20%) bulk modulus perturbation, reflection configuration.</li>
+</ul>
+<hr>
+<a href="../../../doc/html/index.html">IWAVE Home Page</a>
+    <hr>
+    Maintained by William W. Symes
+    <address><a href="mailto:symes@caam.rice.edu">symes@caam.rice.edu</a></address>
+<!-- Created: Sat Aug 28 20:27:43 CDT 2010 -->
+<!-- hhmts start -->
+Last modified: Thu Oct 21 19:45:22 CDT 2010
+<!-- hhmts end -->
+  </body>
+</html>

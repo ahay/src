@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title>IWAVE</title>
+
+<link rel="stylesheet" type="text/css" href="mainPage.css" media="all">
+<link rel="SHORTCUT ICON" href="images/trip.logo.small.png">
+</head>
+
+<div id="header"><div id="headertext"><a href="./index.html"><h1>IWAVE: A framework for wave simulation</h1></a></div></div>
+
+<div id="navigation">
+
+<a href="http://www.trip.caam.rice.edu/"><img border=0 style="color:black" src="images/TRIPLogo.png" alt="The Rice Inversion Project"></a>
+<br>
+<ul>
+        <li>Sponsors
+                <ul>
+                <li><a href="http://www.trip.caam.rice.edu/sponsors/sponsor_info.html">Sponsor Information</a></li>
+                <hr>
+                <li><a href="http://www.trip.caam.rice.edu/sponsors/sponsors_list.html">Current Sponsors</a></li>
+                </ul></li>
+        <li><a href="http://www.trip.caam.rice.edu/members/member_list.html">Project Staff and Alumnae</a></li>
+        <li><a href="http://www.trip.caam.rice.edu/reports/abstracts_list.html">Annual Reports</a></li>
+        <li><a href="http://www.trip.caam.rice.edu/downloads/downloads.html">Downloadable Materials</a></li>
+        <li><a href="http://www.trip.caam.rice.edu/software/software.html">Software</a></li>
+        <li>CAAM
+                <ul>
+                <li><a href="http://www.caam.rice.edu/">CAAM Home Page </a></li>
+                <hr>
+                <li><a href="http://riceinfo.rice.edu/maps/space/dun/">Directions to Duncan Hall</a></li>
+                </ul></li>
+</ul><br>
+<ul>
+        <li><a href="mailto:symes@caam.rice.edu">Contact</a></li>
+</ul><br>
+<a href="http://www.rice.edu"><img style="color:black" border=0 src="images/RiceLogo.png" alt="Rice University"></a>
+</div>
+
+<div id="content">
+<p>
+IWAVE is a software framework written in ISO C99 for construction of regular grid finite
+difference and finite element methods for time-dependents partial
+differential equations. It includes utility software for parameter
+parsing, spatial vectors and constants, and interaction with MPI; i/o
+methods for regularly gridded data and seismic trace data, sampling
+operators, definitions of distributed spatial arrays and groupings of
+arrays defining discretized models, and initialization and destruction
+functions for all of these data structures.
+
+<p>
+
+IWAVE applications parallelize either at loop level (domain
+decomposition) or task level (parallelization over
+simulations/shots/sources) or both simultaneously, via MPI - see <a
+ href="../../iwave/doc/html/parallel.html">Parallel Simulation with
+IWAVE</a>. Support for shared memory parallelization via OpenMP is
+also available for properly instrumented application code.
+
+  <p>
+Along with IWAVE come two complete applications, a solver for variable
+density acoustic wave propagation in 1, 2 or 3 spatial
+dimensions, and a solver for isotropic linear elasticity in 2 or 3
+spatial dimensions. These applications output specified stress or velocity traces at specified
+sample rates and geometry, and/or movie frames of stress or particle velocity components. The code
+uses staggered grid finite difference schemes of order 2 in time and
+2k in space, k=1,...,7, derived from the stress-velocity form of
+elastodynamics or the pressure-velocity form of acoustodynamics.
+Either pressure-free (reflecting) or absorbing (PML)
+boundary conditions may be specified on boundary faces of the
+simulation hypercube
+<p>
+<b>Obtaining IWAVE:</b>
+<p>
+See the <a href="http://www.trip.caam.rice.edu/software/software.html">TRIP software page</a> for current download instructions and release notes.
+<p>
+  <b>Installing IWAVE:</b>
+See installation instructions <a
+  href="http://www.trip.caam.rice.edu/software/admin/doc/html/install.html">here</a>.
+  <p>
+<b>Dependencies:</b> 
+<p>
+IWAVE proper (libraries and executables, serial option) is
+  self-contained. Parallel installation depends on MPI and/or OpenMP 
+  libraries and requires
+  definitions of appropriate paths and compiler options - see <a href="./install.html">install
+  notes</a> for details. The
+demonstration package uses <a
+href="http://timna.mines.edu/cwpcodes">Seismic Un*x</a> commands for
+data construction and manipulation. Construction of HTML documentation requires <a
+href="http://www.doxygen.org">doxygen</a>. 
+<p>
+<b>Authors:</b>
+<p>
+Igor S. Terentyev, Tetyana Vdovina, William W. Symes, Xin Wang, Dong Sun
+<p>
+<b>Acknowledgements:</b>
+<p>
+Development of IWAVE was supported by the SEG Advanced Modeling (SEAM)
+project, by the National Science Foundation under awards 0620821 and 0714193, and by the sponsors of The Rice Inversion Project. The IWAVE project owes a great deal to several open source seismic software packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully acknowledge. 
+<p>
+
+<b>
+Package Directory:</b>
+<ul>
+<li>
+<a href="./install.html">install</a>, <a href="./build.html">build</a> - installation instructions, notes on TRIP build system 
+<li> 
+<a href="../../base/doc/html/index.html">base</a> - parameter parsinng, file handling, and other utilities
+</li>
+<li>
+<a href="../../grid/doc/html/index.html">grid</a> - grid (RSF) data structures and i/o functions 
+</li>
+<li>
+<a href="../../sucore/doc/html/index.html">sucore</a> - subset of the SU library used in <a href="../../trace/doc/html/index.html">trace</a>
+</li>
+<li>
+<a href="../../trace/doc/html/index.html">trace</a> - trace (SEGY) data structures and i/o functions
+</li>
+<li>
+<a href="../../sample/doc/html/index.html">sample</a> - functions for sampling trace data from/to grid data
+</li>
+<li>
+<a href="../../iwave/doc/html/index.html">iwave</a> - functions and structs for expressing regular grid finite difference methods
+</li>
+<li>
+<a href="../../asg/doc/html/index.html">asg</a> - staggered grid
+finite difference
+(pressure, velocity) acoustic modeling package
+</li>
+<li>
+<a href="../../esg/doc/html/index.html">esg</a> - staggered grid
+finite difference (stress, velocity) elastic modeling package
+</li>
+<li>
+<a href="../../demo/doc/html/index.html">demo</a> - example simulations, illustrating various asg use cases
+</li>
+
+</ul>	
+</h2>
+
+<br>
+<hr>
+
+Maintained by William W. Symes<address><a href="mailto:symes@caam.rice.edu">symes@caam.rice.edu</a></address>
+Photo courtesy <a href="http://www.caam.rice.edu/~ivyip/">Ivy Gonzalez</a><br>
+
+<!-- Created: Sat Aug 28 14:47:41 CDT 2010 -->
+<!-- hhmts start -->
+Last modified: Sun Nov 21 12:02:44 CST 2010
+<!-- hhmts end -->
+</div>
+
+</body></html>

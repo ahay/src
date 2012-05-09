@@ -1,0 +1,36 @@
+############# LOCAL DEFINITIONS - MODIFY AS NEEDED ######################
+############# FOR PLATFORM AND COMPILER #################################
+
+# Many of these definitions will need to be changed according to the
+# user's environment.
+
+# parallel params (not used for serial exec - edit as needed)
+HOSTFILE   = /home/symes/obelix_hostfile
+
+# relative path to IWAVE root from demo directories. If you 
+# move the demo root from its location in the IWAVE tree, both
+# this definition and the hclasspath should be modified to 
+# correctly point to IWAVE root
+IWAVE      = ../..
+#IWAVE=${TSOPTROOT}/xwave
+
+# serial execution
+EXEC=${IWAVE}/asg/main/asg.x 
+
+# parallel execution - LAM
+#EXEC=mpiexec -machinefile ${HOSTFILE} -n ${NPROCS} ${IWAVE}/asg/main/asg.x
+
+# parallel execution - MPICH
+#EXEC=mpirun -np ${NPROCS} ${IWAVE}/asg/main/asg.x
+
+###### COMMON PORTABLE RULES FOR DEMO - DO NOT MODIFY ####################
+
+# avoid deletion of intermediates
+.SECONDARY:
+
+# return to this location
+PATHTOHERE = $(shell (exec /bin/pwd))
+
+# MPI SIZE IN TERMS OF DOMAINS IN EACH DIR
+#NPROCS = $$(( ${ND1} * ${ND2} * ${ND3} * ${PT} ))
+NPROCS = $$(( ( ${PT}>0 )?( ${ND1} * ${ND2} * ${ND3} * ${PT} ):( ${ND1} * ${ND2} * ${ND3} ) ))

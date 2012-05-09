@@ -1,0 +1,25 @@
+import os
+
+Import('vars', 'libname', 'cpplist', 'srclist', 'thispath')
+
+# create list of source files found in prescribed source directories
+import glob
+srcs=[]
+for dir in srclist:
+    srcs=srcs+glob.glob(thispath+'/'+dir+'/*.c')
+    srcs=srcs+glob.glob(thispath+'/'+dir+'/*.cc')
+    srcs=srcs+glob.glob(thispath+'/'+dir+'/*.cpp')
+
+# create library
+
+env = Environment(ENV = os.environ,
+                  variables = vars,
+                  CC={'CC' : '${CC}'},
+                  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                  CXX={'CXX' : '${CXX}'},
+		  CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+		  CPPPATH = cpplist)
+
+if len(srcs) > 0:
+    env.Library(libname,srcs)

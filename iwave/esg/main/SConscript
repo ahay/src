@@ -1,0 +1,54 @@
+import os
+
+imports = ' cpplist liblist libname libdirlist'
+
+try:  # madagascar version
+    Import('env root pkgdir bindir' + imports)
+    env = env.Clone()
+    env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist)
+except:  # autonomous version
+    Import('vars' + imports)
+    root = None
+    # initialize build environment
+    env = Environment(ENV = os.environ,
+                      variables = vars,
+                      CC={'CC' : '${CC}'},
+                      CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                      CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                      CXX={'CXX' : '${CXX}'},
+                      CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+                      LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+                      CPPPATH = cpplist, 
+                      LIBS = liblist, 
+                      LIBPATH = libdirlist)
+    
+# this version assumes that all source files in this directory
+# define main programs
+
+# find sources
+srcs=Glob('*.c') + Glob('*.cc') + Glob('*.cpp')
+
+# if any found, build main
+progs = []
+if len(srcs) > 0:
+    for prog in srcs:
+        if root:
+            prout = os.path.splitext(str(prog))[0]
+            progs.append(prout)
+        else:
+            prout = os.path.splitext(str(prog))[0] + '.x'
+        exe = env.Program(prout,prog)
+
+        # Madagascar installation
+        if root:
+            env.Install(bindir,exe)
+
+# Madagascar self-docs
+if root:
+    main = 'sf%s.py' % libname
+    
+    docs = map(lambda prog: env.Doc(prog,prog),progs)
+    env.Depends(docs,'#/framework/rsf/doc.py')
+
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)

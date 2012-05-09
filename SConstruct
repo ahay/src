@@ -93,13 +93,20 @@ if os.path.isdir('user'):
     # Avoid crashing when user places directories in RSFSRC/user
     user = filter(lambda x: os.path.isfile(os.path.join('user',x,'SConstruct')), 
         user)
-    userdir = ' user'
 else:
-    userdir = ''
+    user = []
+
+iwave = []
+if os.path.isdir('iwave') and os.path.exists('iwave/hsubpath'):
+    f = open('iwave/hsubpath','r')
+    iwave = (f.read().strip('\n')).split(':')
+    f.close() 
+
+    iwave = filter(lambda x: os.path.isdir(os.path.join('iwave',x,'main')), iwave)
 
 dotproj = Glob('book/[a-z]*/[a-z]*/[a-z]*/.rsfproj')
 
-frame_exports = 'env bindir libdir pkgdir shrdir srcdir system dotproj' +userdir
+frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user iwave dotproj'
 
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
@@ -249,20 +256,26 @@ if os.path.isdir('su'):
         Default(build)
 
 ##########################################################################
-# TRIP BUILD
+# IWAVE BUILD
 ##########################################################################
 
-if os.path.isdir('trip'):
-    sudirs = ('base','grid','trace')
-    for dir in map(lambda x: os.path.join('trip',x), sudirs):
+if os.path.isdir('iwave'):
+    try:
+        subpathfile = os.path.join('iwave','hsubpath')
+        f = open(subpathfile,'r')
+        sublist = (f.read().strip('\n')).split(':')
+        f.close()
+    except:
+        sublist = []
+    for sub in sublist:
+        dir = os.path.join('iwave',sub)
         build = os.path.join('build',dir)
         if configure.version[0] > 1:
             VariantDir(build,dir)
         else:
             BuildDir(build,dir)
-        trip_exports = 'env root libdir bindir incdir pkgdir'
-        SConscript(dirs=build,name='SConstruct',
-                   exports=trip_exports)
+        iwave_exports = 'env root libdir bindir incdir pkgdir'
+        SConscript(dirs=build,exports=iwave_exports)
         Default(build)
 
 ##########################################################################

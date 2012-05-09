@@ -1,0 +1,123 @@
+############################################################################
+###
+### Copyright Rice University, 2010.
+### All rights reserved.
+###
+### Permission is hereby granted, free of charge, to any person obtaining a
+### copy of this software and associated documentation files (the "Software"),
+### to deal in the Software without restriction, including without limitation
+### the rights to use, copy, modify, merge, publish, distribute, and/or sell
+### copies of the Software, and to permit persons to whom the Software is
+### furnished to do so, provided that the above copyright notice(s) and this
+### permission notice appear in all copies of the Software and that both the
+### above copyright notice(s) and this permission notice appear in supporting
+### documentation.
+### 
+### THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+### IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+### FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY
+### RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS
+### NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL
+### DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+### PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+### ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+### THIS SOFTWARE.
+###
+### Except as contained in this notice, the name of a copyright holder shall
+### not be used in advertising or otherwise to promote the sale, use or other
+### dealings in this Software without prior written authorization of the
+### copyright holder.
+###
+#########################################################################
+
+include ../demodefs
+
+########################## LOCAL DEFINITIONS ############################
+
+ND1 = 1
+ND2 = 1
+ND3 = 1
+PT  = 0
+
+N1=10
+N2=10
+D1=5.0
+D2=5.0
+ 
+######################### LOCAL RULES ###############
+
+default: adjtest
+
+sample.rsf: demo.er
+	@( echo " n1=${N1} d1=${D1} o1=0.0 " > $@; \
+	echo " n2=${N2} d2=${D2} o2=$0.0 " >> $@; \
+	echo " n3=1 d3=0.0 o3=0.0 " >> $@; \
+	echo " in=sample.rsf@ " >> $@; \
+	echo " data_type=sampletype " >> $@; \
+	echo " data_format=native_float " >> $@; \
+	)	
+
+bm.rsf: sample.rsf
+	cat sample.rsf | sed '/in/ s/sample/bm/' | sed '/data_type/ s/sampletype/bulkmod/' > $@
+
+bm.rsf@: bm.rsf
+	makevel nz=${N1} nx=${N2} v000=25000 > $@
+
+by.rsf: sample.rsf
+	cat sample.rsf | sed '/in/ s/sample/by/' | sed '/data_type/ s/sampletype/buoyancy/' > $@
+
+by.rsf@: by.rsf
+	makevel nz=${N1} nx=${N2} v000=0.00025 > $@
+
+demo.par: demo.er
+	@(echo INPUT DATA FOR iwave > $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo FD:>> $@; \
+	echo >> $@; \
+	echo "   scheme_phys = 24         scheme">> $@; \
+	echo "           cfl = 0.4        proportion of max dt/dx" >> $@; \
+	echo "          cmin = 1.0" >> $@; \
+	echo "          cmax = 4.5" >> $@; \
+	echo "          dmax = 4500" >> $@; \
+	echo "         fpeak = 0.05      central frequency" >> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------ >> $@; \
+	echo PML info: layer thickness in WL at fpeak, cmax >> $@; \
+	echo >> $@; \
+	echo "           nl1 = 0.0         z - neg">> $@; \
+	echo "           nr1 = 0.0         z - pos">> $@; \
+	echo "           nl2 = 0.0         x - neg">> $@; \
+	echo "           nr2 = 0.0         x - pos">> $@; \
+	echo "   scheme_npml = 24          scheme for PML">> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo Model info: >> $@; \
+	echo >> $@; \
+	echo "       bulkmod = bm.rsf" >>$@; \
+	echo "      buoyancy = by.rsf" >>$@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo MPI info: >> $@; \
+	echo >> $@; \
+	echo "       mpi_np1 = ${ND1}      n_doms along axis 1">> $@; \
+	echo "       mpi_np2 = ${ND2}      n_doms along axis 2">> $@; \
+	echo "       mpi_np3 = ${ND3}      n_doms along axis 3">> $@; \
+	echo "       partask = ${PT}       task parallelization">> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo Output info:>> $@; \
+	echo >> $@; \
+	echo "       dump_pi = 1           dump parallel/dom. decomp info">>$@; \
+	echo "      dump_lda = 1           dump grid data for allocated arrays">>$@; \
+	echo "      dump_ldc = 1           dump grid data for computational arrays">>$@; \
+	echo "     dump_term = 1           dump terminator data">>$@; \
+	)
+
+setup: bm.rsf bm.rsf@ by.rsf by.rsf@ demo.par
+
+adjtest: setup
+	../../asg/main/asgadjstep_test.x par=demo.par 
+
+
+ 

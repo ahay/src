@@ -1,0 +1,182 @@
+[This file is deprecated, and will be removed in the next release. 
+Please use instead the browser-enabled version 
+
+iwave/doc/html/install.html 
+]
+
+            *** Installing the IWAVE Package ***
+
+Quick version: assuming you've downloaded the IWAVE collection (iwave
+directory and its subdirs) from the TRIP subversion site (else how would
+you be reading this),
+
+  - download the TRIP admin package from the subversion site,
+    if you haven't already done so;
+
+  - define the environment variables COMP and TRIPADMIN to be the 
+    compiler tag and path to the admin directory, respectively (NOTE -
+    you may need other evironment variables - see below);
+
+  - in the iwave directory (here), enter
+
+    make -f MakeBuild install
+
+----------------------------
+
+The details:
+
+0. Preconditions: 
+
+   You should be able to install IWAVE in any standard Un*x
+   environment with the typical features (sh and csh shells or
+   descendents, Gnu make, ISO C99-compliant C compiler).
+
+   The IWAVE package installs via a version of the TRIP build system,
+   You will need to download the admin directory, which contains the shell
+   and make scripts which make up the build system, from the TRIP subversion
+   site, before installing IWAVE: 
+
+   svn co https://cvs.caam.rice.edu:3129/svn/trip/trunk/admin
+
+   You don't have to do anything else to the admin directory, other than 
+   download it and put it somewhere convenient.
+
+   Define in the .cshrc file in your home directory at
+   least the following two environment variables:
+
+   setenv COMP <tag for compiler family>
+   setenv TRIPADMIN <path to the TRIP admin directory>
+
+   The compiler family tag is often, though not always, the name of the
+   C compiler of the family. Its significance is as the last component 
+   of the config file name (in TRIPADMIN/rules). 
+
+   Note that these (and other) variables must be defined in .cshrc,
+   even if your working shell is a Bourne shell descendent, as the
+   helper scripts run under csh. On the other hand, you do not need to
+   make any changes to your .bashrc or .bash_profile, for example.
+
+   You will need to make sure that your architecture is recognized by
+   the build system, and that the admin/rules directory contains a
+   config (Prg.defs...) file for your architecure and compiler suite,
+   identified by appropriate tags. Config files provide compiler- and
+   architecture-depenedent compiler and loader flags. If your
+   combination of architecture and vendor does not correspond to a
+   config file in admin/rules, you will need to construct one, using
+   those supplied as models. A list of the combinations for which
+   config files are shipped with this release appears below.
+
+   Whether you build a config file of your own or use one of ours, you
+   will need to ensure that your environment is compatible with the
+   config file for the architecture and compiler family selected. For
+   example, the gcc config files supplied with this package
+   parametrize the path to gcc by the environment variable GCCBIN
+   (often, but not necessarily, /usr/bin). Using gcc with the config
+   files supplied thus entails defining this additional environment
+   variable. Similarly, config files for MPI-enabled compilation may
+   parametrize the path to the installed MPI by the environment
+   variable MPIROOT (this is true of the MPI-enabled config files
+   supplied with this release..
+
+   See README.MAKE for more on the TRIP build system, of which the
+   config file is a component.
+
+1. You can install the entire package via the master makefile
+   MakeBuild:
+
+   make -f MakeBuild (target)
+
+   in which (target) is one of the targets defined by MakeBuild:
+
+   (default)    builds all directories, including the model/method 
+                package defined by the macro MODEL. The default value 
+                of MODEL=asg. You can override this choice by passing
+                MODEL to make. The behaviour is that the default target
+                is executed in every package directory, assuming that a 
+                Makefile is present; if not, one is generated via the 
+                TRIP build system and the install target is executed,
+                which cleans the directory and builds all targets from
+                scratch. [NB for occasional makefile users: "default" 
+                in this context means "no target specified", that is,
+                "make -f MakeBuild"]
+
+   clean        runs the clean make target in each package, which removes
+                intermediate files (object files, for example), but leaves
+                libraries intact in lib/ARCH subdirs and binaries in 
+                bin/ARCH subdirs
+
+   burn         runs the burn make target in each package, returning it to 
+                its initial state.
+
+   install      reinitializes each package makefile and rebuilds the package
+                from scratch - use this target, rather than the default, to
+                force a clean rebuild of all packages.
+
+   docs         create html documentation in those packages supporting it. To
+                use this target, you must have doxygen installed, and assign
+                the environment variable DOXYGEN to the path to the doxygen
+                command. Not part of install target - must be run separately.
+
+2. Package-by-package:
+
+   You can invoke the build system's make targets directly, but should
+   do so within a C shell so that the necessary environment is set up
+   from your .cshrc (or, alternatively, you can also define and export
+   the required environment variables in your Bourne shell config
+   file).
+
+   cd to the package root directory (for example, (this dir)/base);
+   copy over the boot makefile from admin:
+
+   > cp $TRIPADMIN/makefile.boot Makefile
+
+   and enter
+
+   > make install
+
+3. Contents and dependencies
+
+   Note that dependencies exist between the packages. Here is a
+   current list of the generic iwave packages:
+
+   package	depends on (in order of precedence)
+
+   base   	(nothing)
+   sucore 	(nothing)
+   trace	sucore and base
+   grid         base
+   iwave        grid, trace, sucore, and base
+   sample       iwave, grid, trace, sucore, and base
+
+   In addition, iwave contains packages implementing particular models
+   and classes of difference schemes. These depend on all of the generic
+   packages. Currently active model/method packages:
+
+   asg          staggered grid variable-density acoustics 
+
+   Dependencies are encoded in the package hclasspath file (see item 5
+   in README.MAKE for an explanation of this file and its
+   functions). If you add a new package, you will need to acknowledge
+   any dependencies on other SEAM and user-installed packages by
+   creating an appropriate hclasspath. Also, if you move any of the 
+   subpackages out of the iwave directory, you will need to change
+   all references to it in all of the hclasspath files so that a 
+   correct relative or absolute path is restored. As downloaded, all
+   of the IWAVE subpackages are in the iwave directory, and all of the
+   pathnames are relative: for example, asg/hclasspath includes ../base
+   in its path.
+
+   Other, implicit dependencies on headers and libraries, such as
+   those provided by the operating system, compiler suite, MPI,
+   OpenMP, etc., do not need explicit representation in the hclasspath
+   - these are taken care of by the installation process for these
+   system-level applications.
+
+3. What you get:
+
+   Commands generated by installation of the IWAVE packages are
+   described in the package documentation, either in README files in
+   the package root directory, and in documents stored in the package
+   doc subdir (including possibly html reference pages).
+   
+   All IWAVE commands also self-doc after the fashion of SU commands.

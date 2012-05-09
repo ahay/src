@@ -1,0 +1,108 @@
+########################################################################
+####################### TRIP DEMO SCONSTRUCT ###########################
+########################################################################
+
+################### ENVIRONMENT-DEPENDENT USER INPUT ###################
+
+###### JOB LIST: PYTHON DICTIONARY OF JOB NAME AND CORRESPONDING COMMAND
+######
+###### FORM:
+######   jobs = {
+######     <job name> : <command string>,
+######     ...
+######   }
+######
+###### ASSUMPTIONS:
+###### - JOB NAME IS ALSO NAME OF PAR FILE IN THIS DIRECTORY
+######   example: job name = 'data', then par file name = './data.par'
+###### - JOB NAME WILL BE USED AS NAME OF BUILD SUBDIRECTORY FOR JOB
+######   example: job name = 'data', then script builds subdir ./data
+######   and executes job in this directory
+###### - EACH JOB REQUIRES EXACTLY ONE COMMAND
+###### - COMMANDS ARE ASSUMED TO BE BUILT WHEN DEMO IS - BUILD COMMANDS
+######   FIRST!
+###### - COMMAND NAME IS COMPLETE, WITH ALL NECESSARY SCRIPTS, FLAGS, 
+######   AND OPTIONS
+######   example: to use mpirun on 8 processors to execute cmd.x which
+######   resides in PATH_TO_COMMANDS (environment), the command string 
+######   should read 
+######   'mpirun -np 8 $PATH_TO_COMMANDS/cmd.x'
+###### - JOB BUILD COMMAND: 'jobs[jobname] par=jobname.par'
+######   example: if jobs dictionary includes this line:
+######   'data' : 'mpirun -np 256 $IWAVE/esg/main/esg.x'
+######   then the command to build this job is
+######   'mpirun -np 256 $IWAVE/esg/main/esg.x par=data.par'
+######   and this string is fed to a shell (interactive) or embedded in
+######   script which is then submitted (batch)
+###### - SCONS CLEAN COMMAND SHOULD REMOVE ALL JOB DIRECTORIES CREATED
+######   BY THIS SCRIPT (IT WILL!), AND THESE CONTAIN ALL OUTPUT OF THE
+######   CORRESPONDING COMMANDS
+
+###### DEFAULT: TYPICAL JOB LIST FOR IWAVE++ DEMO
+jobs = {
+'data' : '$IWAVE/asg2/main/asg.x'
+}
+
+###### BATCH SYSTEM TAG 
+###### BATCH = '' FOR COMMAND-LINE ENVIRONMENT, OR
+###### BATCH = 'PBS' OR BATCH = 'SGE'
+
+BATCH = ''
+
+########################################################################
+###### BATCH-ONLY OPTIONS - IGNORED FOR INTERACTIVE ENVIRONMENT   ######
+########################################################################
+
+###### EMAIL ADDRESS FOR BATCH SYSTEM NOTIFICATION
+MAIL = 'symes@caam.rice.edu'
+
+###### QUEUE NAME
+QUEUE = 'parallel'
+
+###### WALLCLOCK TIME LIMIT
+WALL = 'walltime=00:30:00'
+
+###### RESOURCE DESIGNATOR - NODES, CORES PER NODE, ETC.
+RESOURCES = 'nodes=2:ppn=12'
+
+########################################################################
+################### ENVIRONMENT-INDEPDENDENT COMMANDS ##################
+###################### DO NOT EDIT BELOW THIS LINE #####################
+########################################################################
+
+import os
+import shutil
+thispath = os.getcwd()
+env = Environment();
+
+def scriptwriter(batch,job,path,queue,mail,wall,res,exe):
+    if batch == 'PBS':
+        f = open(job + '/' + job +'.pbs','w')
+        f.write('#PBS -N ' + job + '\n')
+        f.write('#PBS -V\n')
+        f.write('#PBS -l '+wall + '\n')
+        f.write('#PBS -l '+res + '\n')
+        f.write('#PBS -q '+queue + '\n')
+        f.write('#PBS -m abe\n')
+        f.write('#PBS -M '+mail + '\n')
+        f.write('#PBS -o '+path+'/'+job+'/cout.txt\n')
+        f.write('#PBS -e '+path+'/'+job+'/cerr.txt\n')
+        f.write('cd '+path+'/'+job+'\n')
+        f.write(exe + ' par=../' + job + '.par\n')
+        f.close()
+
+def make(target, source, env):
+    os.system('/bin/rm -rf ./' + str(target[0]) + '; /bin/mkdir ./' + str(target[0]) )
+    if (BATCH == ''):
+        os.system('cd ./' + str(target[0]) + '; ' + jobs[str(target[0])] + ' par=../' + str(target[0]) + '.par')
+    else: 
+        print thispath
+        scriptwriter(BATCH, str(target[0]), thispath, QUEUE, MAIL, WALL, RESOURCES, jobs[str(target[0])])
+        if BATCH == 'PBS':
+            os.system('cd ' + str(target[0]) + '; qsub ' + str(target[0]) + '.pbs')
+
+for i in jobs.keys():
+    t = env.Command([i], [i + '.par', 'SConstruct'], make)
+    Clean(t,i)	
+
+

@@ -1,0 +1,124 @@
+################################################################################
+###
+### Copyright Rice University, 2010.
+### All rights reserved.
+###
+### Permission is hereby granted, free of charge, to any person obtaining a
+### copy of this software and associated documentation files (the "Software"),
+### to deal in the Software without restriction, including without limitation
+### the rights to use, copy, modify, merge, publish, distribute, and/or sell
+### copies of the Software, and to permit persons to whom the Software is
+### furnished to do so, provided that the above copyright notice(s) and this
+### permission notice appear in all copies of the Software and that both the
+### above copyright notice(s) and this permission notice appear in supporting
+### documentation.
+### 
+### THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+### IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+### FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY
+### RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS
+### NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL
+### DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+### PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+### ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+### THIS SOFTWARE.
+###
+### Except as contained in this notice, the name of a copyright holder shall
+### not be used in advertising or otherwise to promote the sale, use or other
+### dealings in this Software without prior written authorization of the
+### copyright holder.
+###
+#########################################################################
+
+include ../demodefs
+
+########################## LOCAL DEFINITIONS ############################
+
+# number of domains in each direction
+ND1     = 1
+ND2     = 1
+ND3     = 1
+PT      = 0
+ 
+######################### LOCAL RULES ###############
+
+default: data.su Fig/data.ps
+ 
+%.rsf: 
+	@(/bin/rm -f $@; cd ../model/data; make $@; cd ${PATHTOHERE}; ln -s ../model/data/$@ .)
+
+%.rsf@: 
+	@(/bin/rm -f $@; cd ../model/data; make $@; cd ${PATHTOHERE}; ln -s ../model/data/$@ .)
+
+wavelet.su:
+	@(suspike ntr=1 nt=401  offset=0 nspk=1 ix1=1 it1=201 dt=0.002 | sushw key=delrt  a=-400 |sufilter f=0.,2.5,15.0,20.0 amps=0.,1.,1.,0. | sugain scale=1.e6 > $@)
+
+demo.par: demo.er
+	@(echo INPUT DATA FOR iwave > $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo FD:>> $@; \
+	echo >> $@; \
+	echo "   scheme_phys = 24         scheme">> $@; \
+	echo "           cfl = 0.4        proportion of max dt/dx" >> $@; \
+	echo "          cmin = 1.0" >> $@; \
+	echo "          cmax = 4.5" >> $@; \
+	echo "         fpeak = 0.015      central frequency" >> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------ >> $@; \
+	echo PML info: layer thickness in WL at fpeak, cmax >> $@; \
+	echo >> $@; \
+	echo "           nl1 = 0.0         z - neg">> $@; \
+	echo "           nr1 = 0.5         z - pos">> $@; \
+	echo "           nl2 = 0.5         x - neg">> $@; \
+	echo "           nr2 = 0.5         x - pos">> $@; \
+	echo "   scheme_npml = 24          scheme for PML">> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo Source info: >> $@; \
+	echo >> $@; \
+	echo "       srctype = point" >> $@; \
+	echo "        source = wavelet.su" >> $@; \
+	echo "       sampord = 0             sampling order" >> $@; \
+	echo "       refdist = 1000.0        reference distance" >> $@; \
+	echo "        refamp = 1.0           reference pressure " >> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo Trace info:>> $@; \
+	echo >> $@; \
+	echo "     datafile  = data.su" >>$@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------ >> $@; \
+	echo Model info: >> $@; \
+	echo >> $@; \
+	echo "      velocity = vp2d_20m.rsf" >>$@; \
+	echo "       density = dn2d_20m.rsf" >>$@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo MPI info: >> $@; \
+	echo >> $@; \
+	echo "       mpi_np1 = ${ND1}      n_doms along axis 1">> $@; \
+	echo "       mpi_np2 = ${ND2}      n_doms along axis 2">> $@; \
+	echo "       mpi_np3 = ${ND3}      n_doms along axis 3">> $@; \
+	echo "       partask = ${PT}       number of parallel tasks">> $@; \
+	echo >> $@; \
+	echo ------------------------------------------------------------------------>> $@; \
+	echo Output info:>> $@; \
+	echo >> $@; \
+	echo "       dump_pi = 1           dump parallel/dom. decomp info">>$@; \
+	echo "      dump_lda = 1           dump grid data for allocated arrays">>$@; \
+	echo "      dump_ldc = 1           dump grid data for computational arrays">>$@; \
+	echo "     dump_term = 1           dump terminator data">>$@; \
+	)
+
+setup: vp2d_20m.rsf vp2d_20m.rsf@ dn2d_20m.rsf dn2d_20m.rsf@ wavelet.su demo.par
+	@(sunull nt=1501 ntr=301 dt=0.002 | sushw key=sx a=3300 c=0 j=301| sushw key=gx a=100 b=20 j=301 | sushw key=delrt a=0| sushw key=selev a=-40 | sushw key=gelev a=-20 > data.su)
+
+data.su: setup
+	@(${EXEC} par=demo.par) 
+
+Fig/data.ps: data.su
+	@(supsimage< $< width=6 height=6 d1=0.002 d2=0.02 f2=0.1 label1="t (s)" label2="gx (km)" perc=95 > $@)
+
+
+ 
