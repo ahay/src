@@ -147,37 +147,39 @@ int main(int argc, char* argv[])
 	    case 3:
 		
 		if(rflg) {
+		    
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
-    private(ibuf,i1,i2)				\
-    shared( nbuf,a1,a2,ii,r_us,r_ur,scale)
+    private(i1,i2)				\
+    shared( a1,a2,ii,r_us,r_ur,scale)
 #endif
-		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
 				ii[i2][i1] += rCOR(r_us[ibuf][i2][i1],r_ur[ibuf][i2][i1]);
 			    }
 			}
 		    } /* ibuf */
-
+		    
 		} else {
-
+		    
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
-    private(ibuf,i1,i2)				\
-    shared( nbuf,a1,a2,ii,c_us,c_ur,scale)
+    private(i1,i2)				\
+    shared( a1,a2,ii,c_us,c_ur,scale)
 #endif
-		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
 				ii[i2][i1] += cCOR(c_us[ibuf][i2][i1],c_ur[ibuf][i2][i1]);
 			    }
 			}
 		    } /* ibuf */
-
+		    
 		}
 		break;				
 		/*------------------------------------------------------------*/
+		
 	    case 2:
 
 		if(rflg) {
