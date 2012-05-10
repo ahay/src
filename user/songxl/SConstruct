@@ -20,14 +20,14 @@ lffd1_10 lffd2_4 lffd2_4_c lffd2_an_25
 nxtfftn orthowave
 ffd2_den_omp
 permffdxzc
-ffd0
+ffd0 ffd01
 '''
 
 
 mpi_progs = 'tti4rtm ffdrtm'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1_10 lfdc2_7 lfdanc2_25'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
