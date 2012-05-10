@@ -144,7 +144,7 @@ void sf_psefd_step3(int iz, sf_complex **io)
 #endif
 }
 
-void sf_psefd_release()
+void sf_psefd_close()
 /*< release allocated memory >*/
 {
 	free(buf);

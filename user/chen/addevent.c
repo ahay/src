@@ -103,7 +103,7 @@ void sf_addevent(void* p, float x, float complex *ftr)
 	}
 }
 
-void sf_addevent_release(void* p)
+void sf_addevent_close(void* p)
 /*< release memory >*/
 {
 	addevent *pp;

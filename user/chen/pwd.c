@@ -94,7 +94,7 @@ void opwd_der(float **in, float **out, float **p)
 	}
 }
 
-void lpwd_freq(float p, int nk, sf_complex**out, bool frac)
+void lpwd_freq(float p, int nk, sf_complex**out, bool iir)
 /*< frequency response of line-interpolating PWD >*/
 {
 	int i1, i2, j1;
@@ -103,7 +103,7 @@ void lpwd_freq(float p, int nk, sf_complex**out, bool frac)
 	pcmf_filt_1d(h, p, b[0]);
 	for(i2=-nk; i2<=nk; i2++)
 	for(i1=-nk; i1<=nk; i1++)
-	if(frac)
+	if(iir)
 	{
 		for(j1=-nw, c1=0.0, c2=0.0; j1<=nw; j1++)
 		{
@@ -123,7 +123,7 @@ void lpwd_freq(float p, int nk, sf_complex**out, bool frac)
 }
 
 
-void opwd_freq(float dip, int nk, sf_complex**out, bool frac)
+void opwd_freq(float dip, int nk, sf_complex**out, bool iir)
 /*< frequency response of circle-interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
@@ -132,7 +132,7 @@ void opwd_freq(float dip, int nk, sf_complex**out, bool frac)
 	pcmf_filt_2d(h, dip, b);
 	for(i2=-nk; i2<=nk; i2++)
 	for(i1=-nk; i1<=nk; i1++)
-	if(frac)
+	if(iir)
 	{
 		c1=0.0;
 		c2=0.0;
@@ -154,6 +154,7 @@ void opwd_freq(float dip, int nk, sf_complex**out, bool frac)
 	}
 }
 
+
 void lpwd_phase(float p, int n, float*out)
 /*< frequency response of line-interpolating PWD >*/
 {
@@ -173,12 +174,12 @@ void lpwd_phase(float p, int n, float*out)
 }
 
 
-void pwd_release()
+void pwd_close()
 /*< release memory >*/
 {
 	free(b[0]);
 	free(b);
-	pcmf_release(h);
+	pcmf_close(h);
 }
 
 

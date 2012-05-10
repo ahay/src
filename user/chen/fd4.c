@@ -56,7 +56,7 @@ void sf_fd4_laplacian(void * h, float **uin, float **uout)
 	}
 }
 
-void sf_fd4_release(void * h)
+void sf_fd4_close(void * h)
 /*< release memory >*/
 {
 	free(h);

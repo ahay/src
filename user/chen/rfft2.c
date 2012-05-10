@@ -127,7 +127,7 @@ void sf_rifft2(void *h, sf_complex **in, float **out)
 }
 
 
-void sf_rfft2_release(void *h)
+void sf_rfft2_close(void *h)
 /*< release memory >*/
 {
 	kiss_fftr_free(((rfft2*)h)->fwd1);

@@ -99,8 +99,8 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(pim[0],nz*nx,imag);
  
-	sf_psss_release();
-	sf_rfft2_release(h);
+	sf_psss_close();
+	sf_rfft2_close(h);
 
 	free(vel);
 	free(ptx[0]);

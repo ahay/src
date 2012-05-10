@@ -74,7 +74,7 @@ void sf_rifft1(void *h, sf_complex *in, float *out)
 		out[i1] = p->outbuf[i1]/p->nfft;
 }
 
-void sf_rfft1_release(void *h)
+void sf_rfft1_close(void *h)
 /*< release memory >*/
 {
 	kiss_fftr_free(((rfft1*)h)->fwd);

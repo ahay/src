@@ -84,7 +84,7 @@ int main(int argc, char*argv[])
 		}
 		free(bf);
 	}
-	pwd_release();
+	pwd_close();
 	return 0;
 }
 

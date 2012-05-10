@@ -52,7 +52,7 @@ void sf_psss_step(int iz, sf_complex **io)
 	}
 }
 
-void sf_psss_release()
+void sf_psss_close()
 /*< free allocated storage >*/
 {
 	free(vel);

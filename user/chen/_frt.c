@@ -71,7 +71,7 @@ void* sf_frt_init(int mtd, int curv,
 
 }
 
-void sf_frt_release(void *h)
+void sf_frt_close(void *h)
 /*< frt release memory >*/
 {
 	frt *p = (frt*)h;

@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
 	/* output seismic data */
 	sf_floatwrite(pout[0], nt*nr, data);
 
-	sf_fd4_release(h);
+	sf_fd4_close(h);
 	
 	free(pwv);
 	free(vv[0]);

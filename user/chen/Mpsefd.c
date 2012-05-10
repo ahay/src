@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(u3[0],nz*nx,imag);
  
-	sf_psefd_release();
+	sf_psefd_close();
 
 	return 0;
 }

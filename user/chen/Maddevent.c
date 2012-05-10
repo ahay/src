@@ -71,7 +71,7 @@ int main(int argc,char**argv)
 		sf_addevent(h , fabs(d2*i2+o2), buf);
 		sf_complexwrite(buf, n1, out);
 	}
-	sf_addevent_release(h);
+	sf_addevent_close(h);
 
 	return 0;
 }

@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 	sf_complexwrite(obuf[0], n2*nn, out);
     }
 
-    sf_frt_release(h);
+    sf_frt_close(h);
 
     free(ibuf[0]);
     free(ibuf);

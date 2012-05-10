@@ -169,7 +169,7 @@ void pcmf_der_2d(void *h, double ag, double **b)
 
 
 
-void pcmf_release(void *h)
+void pcmf_close(void *h)
 /*< release the memory >*/
 {
 	free(((pcmf*)h)->c[0]);

@@ -35,7 +35,7 @@ void odip_close()
 	free(u2);
 	free(u3[0]);
 	free(u3);
-	pwd_release();
+	pwd_close();
 	sf_divn_close();
 }
 
