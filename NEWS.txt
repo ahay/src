@@ -22,6 +22,7 @@ To programs:
 * sfsemblance: semblance over the specified axis
 * sflinear: linear 1-D interpolation
 * sfspike now optionally accepts stdin
+* iwave package from Bill Symes and The Rice Inversion Project
 
 ===Bug fixes===
 

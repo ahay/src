@@ -3,8 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psss psefd mdfd4 resample addevent lphase odip pwdfreq
+fdip comp psss psefd mdfd4 resample addevent lphase odip 
 '''
+# pwdfreq
+
 docs = []
 
 try:  # distributed version
