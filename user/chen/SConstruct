@@ -3,9 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psss psefd mdfd4 resample addevent lphase odip 
+fdip comp psss psefd mdfd4 resample addevent lphase odip pwdfreq
 '''
-# pwdfreq
 
 docs = []
 

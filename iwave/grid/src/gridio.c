@@ -720,11 +720,11 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   /* HEADER FILE SECTION */
 
   if (!ps_createfile(&par,fname)) {
-    if (ii=par_grid(&g,par,stream)) {
-      fprintf(stream,"Error rsfwrite err=%d\n",ii);
-      fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
-      return E_FILE;
-    }
+      if ((ii=par_grid(&g,par,stream))) {
+	  fprintf(stream,"Error rsfwrite err=%d\n",ii);
+	  fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
+	  return E_FILE;
+      }
     if (ps_ffcstring(par,"in",&dname)) {
       fprintf(stream,"Error: rsfwrite from ps_ffcstring\n");
       fprintf(stream,"failed to read data filename\n");

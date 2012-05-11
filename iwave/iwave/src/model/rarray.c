@@ -11,7 +11,7 @@ Igor Terentyev.
 /*
 Out of bounds message.
 */
-static void ra_oob(const RARR *arr, int idim, int ind, const char *funname)
+void ra_oob(const RARR *arr, int idim, int ind, const char *funname)
 {
     fprintf(stderr, "%s OUT OF BOUNDS: dim = %d, ind = %d\n", funname, idim, ind);
     ra_dump(arr, stderr);

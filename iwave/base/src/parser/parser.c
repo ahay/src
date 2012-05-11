@@ -142,14 +142,14 @@ int ps_addpairstring(PARARRAY *parr,
 
   /* construct parray workspace */
   ps_setnull(&addpar);
-  if (err=ps_createstrz(&addpar,sz)) {
+  if ((err=ps_createstrz(&addpar,sz))) {
     fprintf(stderr,"ERROR: ps_addpairstring from ps_createstrz, err=%d\n",err);
     return err;
   }
 
   /* tack the PARARRAY data member of the FO onto the newly-created
      PARARRAY */
-  if (err=ps_concat(&addpar,*parr)) {
+  if ((err=ps_concat(&addpar,*parr))) {
     fprintf(stderr,"ERROR: ps_addpairstring from ps_concat, err=%d\n",err);
     return err;
   }

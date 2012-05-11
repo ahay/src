@@ -10,7 +10,7 @@
 /*============================================================================*/
 
 #define NSTORE 20000
-static ireal _delta[NSTORE];
+/* static ireal _delta[NSTORE]; */
 
 #ifdef VEC
 #undef VEC

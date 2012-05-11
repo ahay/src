@@ -53,7 +53,8 @@ int main (int argc, char* argv[])
 		sf_putfloat(out,key,0.);
 		sf_putfloat(out,key2,o[i]);
 	    } else {		
-		if (!sf_histfloat(in,key2,o+i)) o[i]=0.;
+		if (!sf_histfloat(in,key2,o+i) && 
+		    !sf_getfloat(key,o+i)) o[i]=0.;
 		sf_putfloat(out,key,o[i]);
 	    }
 	    snprintf(key,3,"d%d",i+1);

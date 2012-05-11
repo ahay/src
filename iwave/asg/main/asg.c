@@ -315,6 +315,7 @@ int main(int argc, char ** argv) {
 	if (srctype) fprintf(stream,"ERROR: unknown source option = %s\n",srctype);
 	else fprintf(stream,"ERROR: unknown source option\n");
 	abortexit(err,&pars,&stream);
+	istart=0; /* shut up compiler warning */
       }
       
 #ifdef VERBOSE

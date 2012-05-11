@@ -139,6 +139,8 @@ int create_comp_rdom(RDOM * u) {
     err=rd_greset_s(u,i,gs[i],n[i]);
     if (err != 0) return err;
   }
+
+  return 0;
 }
 
 void assign_rand(RDOM * u) {

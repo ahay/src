@@ -371,7 +371,7 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
   }
 
   /* compute max stable step, optionally scaled by cfl from table */
-  if (err=sg_readgustime(dom,stream,&dtgus,g,cflgus,par)) {  
+  if ((err=sg_readgustime(dom,stream,&dtgus,g,cflgus,par))) {  
     fprintf(stream,"\ncalled from sg_readtimegrid\n");
     return err;
   }
@@ -381,7 +381,7 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
     return 0;
   }
 
-  if (err=sg_readcfltime(dom,stream,dt,g,cfl,cmax,par)) {  
+  if ((err=sg_readcfltime(dom,stream,dt,g,cfl,cmax,par))) {  
     fprintf(stream,"\ncalled from sg_readtimegrid\n");
     return err;
   }
@@ -513,8 +513,8 @@ int sg_readmedia(RDOM dom,
   bmin=REAL_ONE/dmax;
 
   /* reference values - first set defaults */
-  if (err=set_default_material_params(&refkappa,
-				      &refbuoy)) {
+  if ((err=set_default_material_params(&refkappa,
+				       &refbuoy))) {
     fprintf(stream,"ERROR: sg_readmedia from set_default\n");
     fprintf(stream,"SEAM units not set properly\n");
     return err;
@@ -1114,7 +1114,7 @@ int asg_readgrid(PARARRAY * pars,
   
   /* read physical grid parameters from bulk modulus or velocity
      grid, or from parameter file */
-  if (err=init_acoustic_geom_par(&(model->g),*pars,stream)) {
+  if ((err=init_acoustic_geom_par(&(model->g),*pars,stream))) {
     fprintf(stream,"Error: could not read grid parameters\n");
     return err;
   }

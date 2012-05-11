@@ -139,21 +139,21 @@ int asg_modelinit(PARARRAY *pars,
   /* main branch */
   if (ps_ffint(*pars,"order",&(sgnm->k))) {
     /* old-style iwave specs - deprecated */
-    if (err=ps_ffcstring(*pars,"scheme_phys",&jnk)) {
-      fprintf(stream,"ERROR: asg_modelinit from ps_ffstring\n");
-      fprintf(stream,"failed to read deprecated order param scheme_phys\n");
-      return err;
-    }
+      if ((err=ps_ffcstring(*pars,"scheme_phys",&jnk))) {
+	  fprintf(stream,"ERROR: asg_modelinit from ps_ffstring\n");
+	  fprintf(stream,"failed to read deprecated order param scheme_phys\n");
+	  return err;
+      }
     else {
       if (!strcmp(jnk,"22")) sgnm->k=1;
       else if (!strcmp(jnk,"24")) sgnm->k=2;
       else if (!strcmp(jnk,"210")) sgnm->k=5;
       else if (!strcmp(jnk,"2k")) {
-        if (err=ps_ffint(*pars,"k_phys",&(sgnm->k))) {
-	  fprintf(stream,"ERROR: asg_modelinit from ps_ffint\n");
-	  fprintf(stream,"failed to read deprecated order param k_phys\n");
-	  return err;
-	}
+	  if ((err=ps_ffint(*pars,"k_phys",&(sgnm->k)))) {
+	      fprintf(stream,"ERROR: asg_modelinit from ps_ffint\n");
+	      fprintf(stream,"failed to read deprecated order param k_phys\n");
+	      return err;
+	  }
       }
       else {
 	err=E_BADINPUT;

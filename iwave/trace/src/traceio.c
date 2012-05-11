@@ -744,14 +744,14 @@ int traceserver_put(FILE * fp,
 
   if (lrank==0) {
     
-    if (err=fseeko(fp,otr->m,SEEK_SET)) {
-      fprintf(stderr,"Error: traceserver_put from fseeko\n");
+      if ((err=fseeko(fp,otr->m,SEEK_SET))) {
+	  fprintf(stderr,"Error: traceserver_put from fseeko\n");
 #ifdef IWAVE_USE_MPI
-      MPI_Abort(wcomm,err);
+	  MPI_Abort(wcomm,err);
 #else
-      return err;
+	  return err;
 #endif
-    }
+      }
     fputtr(fp,&(otr->tr));
     
   }
@@ -1751,7 +1751,7 @@ void sampletraces(tracegeom * tg,
    *****************************************/
 
   int itr;    /* trace counter */
-  int ioff;   /* offset into sampled array */
+  int ioff=0;   /* offset into sampled array */
   //  int moff;   /* offset into multiplier array */
   int ndim;   /* problem dimension */
   IPNT ind;   /* integer part of sample coords */
