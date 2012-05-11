@@ -1,0 +1,151 @@
+from rsf.proj import *
+import rsf.suproj as su 
+import math
+
+#########################################
+# get rid of vented fire and read in data
+#########################################
+suline = 'line.su'
+Flow('suline',suline,'segyread su=y suxdr=y endian=n')
+Plot('suline','grey clip=1.4869e+09 maxval=2.14729e+09 minval=-2.14742e+09 title="SU" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+Plot('suline2','suline','grey pclip=80 title="SU" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+
+mgline = 'mgline2.su'
+Flow('mgline',mgline,'segyread su=y suxdr=y endian=y')
+Plot('mgline','grey clip=1.4869e+09 maxval=2.14729e+09 minval=-2.14742e+09 title="MG" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+Plot('mgline2','mgline','grey pclip=80 title="MG" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+
+Flow('diffline','suline mgline','add scale=1,-1 ${SOURCES[1]}')
+Plot('diffline','grey clip=1.4869e+09 maxval=2.14729e+09 minval=-2.14742e+09 title="Difference" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+Plot('diffline2','diffline','grey pclip=80 title="Difference" font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4')
+
+Result('diff1','mgline suline diffline','SideBySideAniso')
+Result('diff12','mgline2 suline2 diffline2','SideBySideAniso')
+
+Flow('mglineshots','mgline',
+     '''
+     put n2=101 n3=67 | window n2=96 f3=10 |
+     put o2=-5225 d2=110 label2=Offset unit2=ft
+     o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+Flow('mgsample','mglineshots','window o3=30 n3=1 n1=300 n2=96 d2=110')
+Plot('mgsample','wiggle transp=y yreverse=y title="One Shot in MG Before Statics" poly=y clip=2.14984e+09 maxval=2.38688e+09 minval=-2.33805e+09')
+
+Flow('sulineshots','suline',
+     '''
+     put n2=101 n3=67 | window n2=96 f3=10 |
+     put o2=-5225 d2=110 label2=Offset unit2=ft
+     o3=0 d3=440 label3=Shot unit3=ft     
+     ''')
+Flow('susample','sulineshots','window o3=30 n3=1 n1=300 n2=96 d2=110')
+Plot('susample','wiggle transp=y yreverse=y title="One Shot in SU Before Statics" poly=y clip=2.14984e+09 maxval=2.38688e+09 minval=-2.33805e+09')
+
+Result('sample','mgsample susample','SideBySideAniso')
+################################
+# applied static correction
+################################
+mgstline = 'displine.su' # madagascar result
+Flow('mgstline',mgstline,
+     '''
+     segyread su=y suxdr=y endian=y |
+     window n2=5280 |
+     put d2=110 label2=Offset unit2=ft
+     ''')
+Plot('mgstline',
+     '''
+     put o2=0 d2=1 |
+     grey title="Madagascar Statics Corrected" clip=2.49672e+08
+     maxval=4.43117e+09 minval=-4.37335e+09
+     ''')
+Flow('mgshots','mgstline',
+     '''
+     put n2=96 n3=5 o2=-5225 d2=110 lable2=Offset unit2=ft
+     o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+Result('mgshots',
+       '''
+       grey pclip=80 title="Madagascar Statics Corrected"
+       font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4
+       ''')
+
+# SU result
+su.Flow('sushiftshotline.su','allshots.su',
+	'''
+	sustatic hdrs=1 sign=-1 
+	''')
+Flow('sushiftshotline','sushiftshotline.su',
+     '''
+     segyread su=y endian=n suxdr=y tfile=t${TARGETS}
+     | put n2=96 n3=55 o2=-5225 d2=110 label2=Offset unit2=ft
+     o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+Result('sushiftshotline',
+       '''
+       grey title="SU Statics Corrected" pclip=80
+       font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4
+       ''')
+
+Flow('sulinestatics','sushiftshotline',
+     '''
+     put n2=5280 n3=1 o2=0 d2=1
+     ''')
+Plot('sulinestatics',
+     '''
+     grey title="SU Statics Corrected" clip=2.49672e+08
+     maxval=4.43117e+09 minval=-4.37335e+09
+     font=2 labelsz=8 titlesz=10 labelfat=2 titlefat=4
+     ''')
+Flow('diffwhole','mgstline sulinestatics','add scale=1,-1 ${SOURCES[1]} | put n2=5280 n3=1 o2=0 d2=1')
+Plot('diffwhole',
+     '''
+     grey title="Difference" clip=2.49672e+08 maxval=4.43117e+09 minval=-4.37335e+09
+     ''')
+Result('diff3','mgstline sulinestatics diffwhole','SideBySideAniso')
+
+###################################
+# part of the static corrected data
+###################################
+Flow('mgshotcomp','mgshots','window o3=30 n3=1')
+Flow('mgstatic','mgshotcomp','window f1=1100 n1=100')
+Flow('mgshotcompzoom','mgshots','window o3=30 n3=1 n1=300 n2=96 d2=110')
+
+Plot('mgshotcomp','grey title="One Shot in MG" clip=8.84427e+07 maxval=2.38688e+09 minval=-2.33805e+09')
+Plot('mgstatic','grey title="One Shot in MG" clip=1.39592e+07 maxval=1.82932e+07 minval=-2.2315e+07')
+Plot('mgshotcompzoom','wiggle transp=y yreverse=y title="One Shot in MG After Statics" poly=y clip=2.14984e+09 maxval=2.38688e+09 minval=-2.33805e+09')
+
+Flow('sushotcomp','sushiftshotline','window o3=30 n3=1')
+Flow('sustatic','sushotcomp','window f1=1100 n1=100')
+Flow('sushotcompzoom','sushiftshotline','window o3=30 n3=1 n1=300 n2=96 d2=110')
+
+Plot('sushotcomp','grey title="One Shot in SU" clip=8.84427e+07 maxval=2.38688e+09 minval=-2.33805e+09')
+Plot('sustatic','grey title="One Shot in SU" clip=1.39592e+07 maxval=1.82932e+07 minval=-2.2315e+07')
+Plot('sushotcompzoom','wiggle transp=y yreverse=y title="One Shot in SU After Statics" poly=y clip=2.14984e+09 maxval=2.38688e+09 minval=-2.33805e+09')
+
+Flow('shotcompzoomdiff','mgshotcompzoom sushotcompzoom','add scale=1,-1 ${SOURCES[1]}')
+Plot('shotcompzoomdiff','wiggle transp=y yreverse=y title="One Shot in SU After Statics" poly=y clip=2.14984e+09 maxval=2.38688e+09 minval=-2.33805e+09')
+
+Result('zoom','mgshotcompzoom sushotcompzoom shotcompzoomdiff','SideBySideAniso')
+Flow('diffshotcomp','mgshotcomp sushotcomp','add scale=1,-1 ${SOURCES[1]}')
+
+Plot('diffshotcomp','grey title="Difference" clip=8.84427e+07 maxval=2.38688e+09 minval=-2.33805e+09')
+Result('shotstatic','mgshotcomp sushotcomp diffshotcomp','SideBySideAniso')
+
+Flow('diffstatic','mgstatic sustatic','add scale=1,-1 ${SOURCES[1]}')
+Plot('diffstatic','grey title="Difference" clip=1.39592e+07 maxval=1.82932e+07 minval=-2.2315e+07 label2="Offset"')
+Result('static','mgstatic sustatic diffstatic','SideBySideAniso')
+
+#############################
+# Migration result comparison
+#############################
+
+phasem = "phasem.su"
+Flow('mgmig',phasem,'segyread su=y suxdr=y endian=y')
+Plot('mgmig','grey font=2 title="MG Migration Result"')
+
+migps = "migps.su"
+Flow('sumig',migps,'segyread su=y suxdr=y endian=n')
+Plot('sumig','grey font=2 title="SU Migration Result"')
+
+Result('mig','mgmig sumig','SideBySideAniso')
+
+End()

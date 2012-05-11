@@ -1,0 +1,544 @@
+from rsf.proj import *
+import math
+
+################
+# log
+################
+geo = {
+    'shint':440, 'gint':110,
+    'shots':55,  'dead':4
+    }
+
+rawsegy=['L23535','L23536','L23537']
+for name in rawsegy:
+#    Fetch(name+'.SGY',
+#          server='http://certmapper.cr.usgs.gov',
+#          top='nersl/NPRA/SEISMIC/1981/31_81',
+#          dir='DMUX')
+    Flow([name,'t'+name,name+'.bin',name+'.asc'],
+         name+'.SGY',
+         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
+Flow('mgline',rawsegy,'cat ${SOURCES[1:3]} axis=2')
+Flow('tmgline',map(lambda x: 't'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
+Result('mgline',
+       '''
+       grey pclip=80 title="Line 31-81 by Madagascar" label2=''
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+############################
+# zeros out shot 149
+# 157 misfire has been kept
+############################
+Flow('part','mgline','window f2=5955 n2=300')
+Plot('part',
+     '''
+     grey pclip=80 title="Shot 148-149-150" label2=''
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+Flow('nosig','mgline','window f2=6060 n2=96')
+Plot('nosig',
+     '''
+     grey pclip=80 title="Shot 149" label2=''
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+Flow('zero','nosig','math output=input*0')
+Plot('zero',
+     '''
+     grey pclip=80 title="Shot 149 Zero" label2=''
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+Result('bad','part nosig zero','SideBySideAniso')
+Flow('part1','mgline','window f2=0 n2=6060')
+Flow('part3','mgline','window f2=6156')
+join = ['part1','zero','part3']
+Flow('mgline2',join,'cat ${SOURCES[1:3]} axis=2')
+
+Flow('tmgline2','mgline2','segyheader')
+Flow('mgline2.su','mgline2 tmgline2',
+     'suwrite suxdr=y tfile=${SOURCES[1]}')
+
+Result('mgline2',
+       '''
+       grey pclip=80 title="Line 31-81 by Madagascar" label2=''
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+
+# shotline
+Flow('line','mgline2',
+     '''
+     put n2=101 n3=67 | window n2=96 f3=10 |
+     put o2=-5225 d2=110 label2=Offset unit2=ft
+         o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+
+Result('line',
+       '''
+       grey pclip=80 title="Line" label2=''
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+
+# elevation profile
+Flow('spelev','spnElev.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
+     dd form=native
+     ''',stdin=0)
+
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=+ plotcol=5
+     min2=75 max2=125 min1=88 max1=165
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+
+Flow('station','spelev','window n1=1')
+
+# Interpolation
+Flow('elev','spelev station',
+     'window f1=1 | invbin1 eps=0 head=${SOURCES[1]} x0=85 dx=1 nx=81')
+Plot('elev',
+     '''
+     graph title=Elevation label1=Shot
+     min2=75 max2=125 min1=88 max1=165
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+############################################
+# compare with previous interpolation result
+############################################
+
+Flow('interp','karl_interp.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=90 |
+     dd form=native
+     ''',stdin=0)
+Plot('interp',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     min2=75 max2=125 min1=88 max1=165
+     ''')
+Result('elev','elev spelev interp','Overlay')
+
+#################################
+# statics
+#################################
+Flow('helev','spelev',
+     '''
+     window n1=1 f1=0 |
+     math output="(input-100)*440"
+     ''')
+
+Flow('delev','spelev','window n1=1 f1=1')
+
+Flow('lineelev',['delev','helev'],
+     '''
+     shapebin1 nx=321 x0=-5280 dx=110 head=${SOURCES[1]} eps=0.1
+     ''')
+Flow('shotelev',None,
+     '''
+     spike n1=321 |
+     math output="input*(82.5+67.5)/4" |
+     put o1=-5280 d1=110 o2=1 n2=1 d2=1
+     ''')
+Flow('finalelev','lineelev shotelev','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('datum',['line','finalelev'],'datshift v0=10000 elev=${SOURCES[1]}')
+Plot('selev','spelev',
+     '''
+     dd type=complex | transp | math output="(real(input)-100)*440 + imag(input)" |
+     graph screenratio=0.8 min2=0 max2=140 min1=-3000 max1=30000
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     title="Elevation Profile" symbol="x"
+     ''')
+Plot('ielev','lineelev',
+     '''
+     graph screenratio=0.8 min2=0 max2=140 min1=-3000 max1=30000 title="Elevation Profile"
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+Result('elevprof','selev ielev','Overlay')
+Result('datum',
+       '''
+       put label3= unit3=s |
+       grey color=j allpos=n pclip=100 bias=0.012 scalebar=y title="Datum shift"
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+Flow('lineshift',['line','datum'],'datstretch datum=${SOURCES[1]}')
+Result('lineshift',
+       '''
+       grey pclip=80 title="Line 31-81 Statics Corrected" label2=Traces
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+Flow('displine','lineshift','put n2=5472 n3=1 d2=1 o2=1')
+Result('displine',
+       '''
+       grey pclip=80 title="Elevation Statics Corrected MG" label2=Traces
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4 unit2=''
+       ''')
+
+Flow('tdispline','displine','segyheader')
+Flow('displine.su','displine tdispline',
+     'suwrite suxdr=y tfile=${SOURCES[1]}')
+
+##########################################
+# mute, spreading correction
+##########################################
+
+Flow('gainline','displine',
+     '''
+     tpow tpow=1
+     ''')
+
+
+##############################
+# decon
+##############################
+
+Flow('spec','gainline','spectra all=y')
+Plot('spec','spec',
+     '''
+     graph title="Average Spectrum Before Decon"
+     min1=0 max1=120 label2='' unit2=''
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+
+Flow('acf','gainline',
+     '''
+     fft1 | math output="input*conj(input)" |
+     fft1 inv=y | stack 
+     ''')
+
+Plot('acf',
+     '''
+     wiggle max1=0.1 transp=y seemean=y yreverse=y verb=y pclip=100
+     title="ACF Before Decon"
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4 label2='' unit2=''
+     ''')
+
+# lag=80 ms, gap=7 ms for shallower part
+Flow('filt lag','gainline',
+     '''
+     lopef a=80,1 w=3000,120 k=2,1 dim=2 lag=${TARGETS[1]} 
+     ''')
+
+Flow('decon','gainline filt',
+     '''
+     decon filt=${SOURCES[1]} | bandpass flo=8 fhi=60
+     ''')
+Flow('specdecon','decon','spectra all=y')
+
+Plot('specdecon',
+     '''
+     graph title="Averege Spectrum After Decon"
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     min1=0 max1=120 unit2="" label2=""
+     ''')
+
+Result('specs','spec specdecon','SideBySideAniso')
+
+Flow('autocrdecon','decon',
+     '''
+     fft1 | math output="input*conj(input)" |
+     fft1 inv=y | stack 
+     ''')
+
+Plot('autocrdecon',
+     '''
+     wiggle max1=.1 title="ACF After Decon" transp=y
+     seemean=y yreverse=y verb=y pclip=100 label2='' unit2=''
+     font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+
+Result('acfs','acf autocrdecon','SideBySideAniso')
+
+#######################
+# 
+#######################
+
+
+
+
+
+
+#############################
+# pick velocity
+#############################
+
+velfiltcdpsmuterstat = 'velfiltcdpsmuterstat.su'
+Flow('velrestat',velfiltcdpsmuterstat,
+     '''
+     segyread su=y suxdr=n endian=n
+     ''')
+Plot('velrestat',
+     '''
+     grey title="Residual Statics SU" font=2
+     labelsz=10 titlesz=16 labelfat=2 titlefat=4
+     ''')
+
+Result('restat','gainline velrestat','SideBySideAniso')
+
+Flow('shotstat','velrestat',
+     '''
+     put n3=55 o3=0 n2=96 d2=110 d3=440 label2=Offset unit2=ft 
+     ''')
+Flow('cmp','shotstat',
+     '''
+     shot2cmp half=n |
+     put n2=12 d2=880 o2=-5225 n3=535 d3=55 o3=-2612.5 
+     ''')
+Flow('cmpsample','cmp','window n3=1 f3=350 | put o2=-5.5 d2=1')
+Plot('cmpsample','grey title="One CMP Gather by SU" label2="" unit2=""')
+
+Flow('semb','cmp',
+     '''
+     window f3=50 j3=20 n3=22 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50
+     ''')
+Flow('pick','semb',
+     '''
+     mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
+     mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
+     pick rect1=40 rect2=3 vel0=8000
+     ''')
+Flow('vel','pick',
+     '''
+     transp | spline n1=535 d1=55 o1=-2612.5 |
+     transp |
+     put n2=535 d2=55 o2=-2612.5 
+     ''')
+Result('vel',
+       '''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       title="After SU Residual Statics" unit2="ft"
+       ''')
+
+# my result
+Flow('shotstat2','gainline',
+     '''
+     put n3=55 o3=0 n2=96 d2=110 d3=440 label2=Offset unit2=ft 
+     ''')
+
+Flow('cmp2','shotstat2',
+     '''
+     shot2cmp half=n |
+     put n2=12 d2=880 o2=-5225 n3=535 d3=55 o3=-2612.5 
+     ''')
+
+Flow('cmp2sample','cmp2','window n3=1 f3=350 | put o2=-5.5 d2=1')
+Plot('cmp2sample','grey title="One CMP Gather by MG" pclip=80 label2="" unit2=""')
+
+Result('cmpcomp','cmp2sample cmpsample','SideBySideAniso')
+
+Flow('semb2','cmp2',
+     '''
+     window f3=50 j3=20 n3=23 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50
+     ''')
+
+Flow('pick2','semb2',
+     '''
+     mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
+     mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
+     pick rect1=40 rect2=3 vel0=8000
+     ''')
+
+Flow('vel2','pick2',
+     '''
+     transp | spline n1=535 d1=55 o1=-2612.5 |
+     transp |
+     put n2=535 d2=55 o2=-2612.5
+     ''')
+Result('vel2',
+       '''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       title="Velocity (every 20th CMP)" unit2="ft"
+       ''')
+
+# use decon result
+Flow('shotstat3','decon',
+     '''
+     put n3=55 o3=0 n2=96 d2=110 d3=440 label2=Offset unit2=ft 
+     ''')
+
+Flow('cmp3','shotstat3',
+     '''
+     shot2cmp half=n |
+     put n2=12 d2=880 o2=-5225 n3=535 d3=55 o3=-2612.5
+     ''')
+
+Flow('cmp3sample','cmp3','window n3=1 f3=350 | put o2=-5.5 d2=1')
+Plot('cmp3sample','grey title="One CMP Gather by MG" pclip=80 label2="" unit2=""')
+
+Result('cmpcomp2','cmp3sample cmpsample','SideBySideAniso')
+
+Flow('semb3','cmp3',
+     '''
+     window f3=50 j3=20 n3=23 |
+     sfvscan half=n semblance=y v0=5000 nv=251 dv=50
+     ''')
+
+Flow('pick3','semb3',
+     '''
+     mutter x0=10000 abs=n half=n inner=n slope0=0.00075 | 
+     mutter x0=7500  abs=n half=n inner=y slope0=0.0015 |
+     pick rect1=40 rect2=3 vel0=8000
+     ''')
+
+Flow('vel3','pick3',
+     '''
+     transp | spline n1=535 d1=55 o1=-2612.5 |
+     transp |
+     put n2=535 d2=55 o2=-2612.5 
+     ''')
+
+Result('vel3',
+       '''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       title="After Decon" unit2="ft"
+       ''')
+
+
+
+# Karl's velocity
+# Take picked velocities and covert to ascii RSF file
+Flow(['vpick','vpick.dat'],['./vpick2rsf.sh','./vpickorig.txt'],'''
+     ./${SOURCES[0]} ${SOURCES[1]} ${TARGETS[1]} |
+     dd form=native
+     ''',stdin=0)
+# Interpolate onto a regular grid
+Flow('karl','vpick','''
+     window n1=1 f1=2 | 
+     shapebin head=${SOURCES[0]} xkey=0 ykey=1
+              nx=3000 x0=0 dx=0.002 ny=551 y0=-2612.5 dy=55
+              niter=100 filt1=50 filt2=30 eps=0.1 |
+     put label1=Time unit1=s label2=Midpoint unit2=ft
+     ''')
+
+Result('karl',
+       '''
+       window n2=450 f2=50 |
+       grey allpos=y bias=8000 color=j scalebar=y pclip=100
+       title="Velocity by Karl" barlabel="velocity(ft/s)"
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+
+
+#############
+# NMO
+#############
+
+Flow('nmo1',['cmp3','vel3'],'nmo velocity=${SOURCES[1]} half=n')
+
+# Stacking with decon
+Flow('stack1','nmo1','stack axis=2 norm=n')
+Result('stack1','agc rect1=250 | grey title="Stack"')
+
+Flow('nmo2',['cmp2','vel2'],'nmo velocity=${SOURCES[1]} half=n')
+
+# Stacking without decon
+Flow('stack2','nmo2','stack axis=2 norm=n')
+Result('stack2','agc rect1=250 | grey title="Stack"')
+
+
+#######################
+# residual statics
+#######################
+
+
+
+
+
+
+
+
+
+
+########################
+# stack
+########################
+
+#######################
+# migration
+#######################
+
+stack1 = 'rstack1.su'
+Flow('stackinput',stack1,'segyread su=y suxdr=y endian=n')
+Result('stackinput','grey')
+
+Flow('vint.asc',None,
+     '''
+     echo
+     7612
+     8015
+     9512
+     12590
+     12315
+     15031
+     15700
+     n1=7 in=$TARGET
+     data_format=ascii_float
+     ''')
+intv = "vint.asc"
+Flow('vint',intv,'echo in=$SOURCE n1=7 data_format=ascii_float | dd form=native')
+
+Flow('time.asc',None,
+     '''
+     echo
+     0.15
+     0.45
+     0.87
+     1.36
+     1.91
+     2.41
+     4.31
+     n1=7 in=$TARGET
+     data_format=ascii_float
+     ''')
+ts = "time.asc"
+Flow('time',ts,'echo in=$SOURCE n1=7 data_format=ascii_float | dd form=native')
+
+# interpolation
+# remember to change x0 if necessary
+Flow('vintintp','vint time',
+     '''
+     window f1=0 |
+     invbin1 eps=0.2 head=${SOURCES[1]} x0=0 dx=0.002 nx=3000
+     ''')
+
+#Flow('time1',None,'math o1=0 d1=0.002 n1=3000 output=x1')
+Flow('pad','vintintp',
+     '''
+     put n2=1 d2=1. o2=0. | 
+     pad n2=536 d2=1. o2=0. |
+     math output=x1
+     ''')
+Result('pad',
+       '''
+       window n2=450 f2=50 |
+       grey color=j scalebar=y
+       title="Velocity I"
+       font=2 labelsz=10 titlesz=16 labelfat=2 titlefat=4
+       ''')
+Flow('fk','stackinput','cosft sign2=1')
+Flow('phasem','fk pad','gazdag velocity=${SOURCES[1]} | cosft sign2=-1')
+Result('phasem','grey title="MG After Migration" font=2 scalebar=n')
+
+Flow('tphasem','phasem','segyheader')
+Flow('phasem.su','phasem tphasem',
+     'suwrite suxdr=y tfile=${SOURCES[1]}')
+
+
+
+
+
+
+End()
