@@ -1,7 +1,8 @@
 /* frequency response of PWD operator */
 
 #include <rsf.h>
-#include "pwd.h"
+#include "lpwd.h"
+#include "opwd.h"
 
 int main(int argc, char*argv[])
 {
