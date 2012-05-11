@@ -1,7 +1,8 @@
 /* omnidirectional dip estimation by PWD */
 
 #include <rsf.h>
-#include "pwd.h"
+#include "lpwd.h"
+#include "opwd.h"
 
 static int n1, n2, nf;
 static float **u1, **u2, **u3;
@@ -22,7 +23,8 @@ void odip_init(int mf, int m1, int m2, int *rect, int niter, bool verb)
 	u2 = sf_floatalloc2(n1,n2);
 	u3 = sf_floatalloc2(n1,n2);
 
-	pwd_init(nf, n1, n2);
+	lpwd_init(0, nf, n1, n2);
+	opwd_init(0, nf, n1, n2);
 	sf_divn_init (2, n, nn, rect, niter, verb);
 }
 
@@ -35,7 +37,8 @@ void odip_close()
 	free(u2);
 	free(u3[0]);
 	free(u3);
-	pwd_close();
+	lpwd_close();
+	opwd_close();
 	sf_divn_close();
 }
 
@@ -53,11 +56,13 @@ void odip(float **in, float **dip, int nit, bool od)
 		eta = 1.0/(1.0+it*it);
 		if(od)
 		{
-			opwd(in, u1, dip);
-			opwd_der(in, u2, dip);
+			opwd(in, u1, dip, false);
+			opwd(in, u2, dip, true);
 		}else{
-			lpwd(in, u1, dip);
-			lpwd_der(in, u2, dip);
+			lpwd(in, u1, dip, false);
+			lpwd(in, u2, dip, true);
+//			lpwd(in, u1, dip);
+//			lpwd_der(in, u2, dip);
 		}
 
 		norm = 0.0;
