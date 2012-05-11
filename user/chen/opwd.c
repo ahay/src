@@ -105,7 +105,7 @@ void opwd_freq(float dip, int nk, sf_complex**out, bool iir)
 		out[i2+nk][i1+nk] = 1-c1*c2;
 		break;
 	default:
-		for(j1=-nw, c1=0.0, c2=0.0; j1<=nw; j1++)
+		for(j1=-nw, c1=0.0, c2=0.0, c3=0.0, c4=0.0; j1<=nw; j1++)
 		{
 			c1 += b1[j1+nw]*cexpf(sf_cmplx(0.,-2*SF_PI/nk*i1*j1));
 			c2 += b2[j1+nw]*cexpf(sf_cmplx(0.,-2*SF_PI/nk*i2*j1));

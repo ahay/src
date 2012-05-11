@@ -16,7 +16,7 @@ void sf_psefd_init(int nx0,int nw0,
 	nw=nw0;
 
 	dz=dz0;
-	df=2.0*M_PI*f00;
+	df=2.0*SF_PI*f00;
 	vel=v0;
 
 	dx2=(dx*dx);

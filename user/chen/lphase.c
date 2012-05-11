@@ -116,10 +116,10 @@ void lphase_filt(void *h, float delay, float *out, bool der)
 
 	m = p->n-p->n0;
 	if(der)
-	for(i=0; i<m; i++)
+	for(i=0; i<=m; i++)
 		out[i] = creal(plyr_dval(m, p->r[i], delay));	
 	else
-	for(i=0; i<m; i++)
+	for(i=0; i<=m; i++)
 		out[i] = creal(plyr_val(m, p->r[i], delay));	
 }
 
@@ -141,14 +141,14 @@ void lphase_freq(void *h, float delay, int nk, sf_complex *out)
 	switch(p->itp)
 	{
 	case 1:
-		for(i=-nk; i<nk; i++)
+		for(i=-nk; i<=nk; i++)
 		{
 			out[i+nk] = cexpf(sf_cmplx(0., -2.0*SF_PI*i*p->n0/nk)) *
 			poly_val(m, r, cexpf(sf_cmplx(0.,-2.0*SF_PI*i/nk)));
 		}
 		break;
 	default:
-		for(i=-nk; i<nk; i++)
+		for(i=-nk; i<=nk; i++)
 		{
 			c1 = cexpf(sf_cmplx(0., -2.0*SF_PI*i*p->n0/nk)) *
 			poly_val(m, r, cexpf(sf_cmplx(0.,-2.0*SF_PI*i/nk)));

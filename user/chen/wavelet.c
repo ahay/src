@@ -12,7 +12,7 @@ void sf_wvlt_frck(int nf,
 	{
 		freq=crealf(buf[ifr])/par[0];
 		freq=freq*freq;
-		buf[ifr]=4.0*sqrt(M_PI)*freq*exp(-freq);
+		buf[ifr]=4.0*sqrt(SF_PI)*freq*exp(-freq);
 	}
 }
 
@@ -24,7 +24,7 @@ void sf_wvlt_rck(int nt,
 	int it;
 	double d1, w0;
 
-	w0 = 2.0*M_PI*par[0];
+	w0 = 2.0*SF_PI*par[0];
 	for(it=0; it<nt; it++)
 	{
 		d1 = w0 * buf[it];
@@ -42,7 +42,7 @@ void sf_wvlt_harmonic(int nt,
 	int it;
 	double d1, w0;
 
-	w0 = 2.0*M_PI*par[0];
+	w0 = 2.0*SF_PI*par[0];
 	for(it=0; it<nt; it++)
 	{
 		d1 = w0 * buf[it];
@@ -59,11 +59,11 @@ void sf_wvlt_sinc(int nt,
 	int it;
 	float x;
 
-	x = M_PI*par[0];
+	x = SF_PI*par[0];
 	for(it=0;it<nt;it++)
 	{
 		if(buf[it] == 0.0) buf[it] = 1.0;
-		else	buf[it] = sin(x*creal(buf[it]))/(M_PI*buf[it]);
+		else	buf[it] = sin(x*creal(buf[it]))/(SF_PI*buf[it]);
 	}
 }
 

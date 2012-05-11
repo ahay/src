@@ -104,10 +104,10 @@ static void frt_construct(double freq, sf_complex**L,
 	double x1, x2, x3;
 	int ix, ip;
 
-	x1 = 1.0/sqrt(M_PI*nx);
+	x1 = 1.0/sqrt(SF_PI*nx);
 	for(ix=0; ix<nx; ix++)
 	{
-		x2 = 2*M_PI*freq*px[ix];
+		x2 = 2*SF_PI*freq*px[ix];
 		for(ip=0; ip<np; ip++)
 		{
 			x3 = x2*pp[ip];

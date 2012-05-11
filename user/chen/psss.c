@@ -15,7 +15,7 @@ void sf_psss_init(int nw0,int nx0,int nz,
 	nw=nw0;
 	nx=nx0;
 
-	dz=dz0*2.0*M_PI/(dx*nx);
+	dz=dz0*2.0*SF_PI/(dx*nx);
 
 	vel=(float*)sf_floatalloc(nz);
 	k2=(int*)sf_intalloc(nx);

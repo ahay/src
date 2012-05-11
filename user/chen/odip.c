@@ -46,7 +46,7 @@ void odip(float **in, float **dip, int nit, bool od)
 	double norm, eta;
 
 	for(i1=0; i1<n1*n2; i1++) 
-		dip[0][i1] = 0.0; // M_PI_2*rand()/(RAND_MAX+1.0);
+		dip[0][i1] = 0.0; // SF_PI_2*rand()/(RAND_MAX+1.0);
 
 	for (it=0; it<nit; it++)
 	{	
@@ -76,8 +76,8 @@ void odip(float **in, float **dip, int nit, bool od)
 		for(i1=0; i1<n1*n2; i1++)
 		{
 			dip[0][i1] -= eta*u3[0][i1];
-			while(dip[0][i1]>M_PI_2) dip[0][i1] -= M_PI_2;
-			while(dip[0][i1]<-M_PI_2) dip[0][i1] += M_PI_2;
+			while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
+			while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
 		}
 	}
 }
