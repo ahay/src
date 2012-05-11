@@ -3,7 +3,7 @@
 # to process alaska line 31-81.  This allows su processing without
 # using scons.
 
-export CWPROOT=/home/karl/su
+export CWPROOT=/home/yihua/CWPROOT/
 
 export PATH=$CWPROOT/bin:$PATH
 

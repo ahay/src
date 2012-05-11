@@ -8,8 +8,8 @@
 #include <string.h>
 #include <rsf.h>
 
-#include "/home/karl/madagascar/build/system/seismic/segy.h"
-#include "/home/karl/madagascar/build/system/seismic/segy.c"
+#include "/home/yihua/RSFSRC/build/system/seismic/segy.h"
+#include "/home/yihua/RSFSRC/build/system/seismic/segy.c"
 
 int main(int argc, char* argv[])
 {

@@ -7,10 +7,10 @@ from rsf.proj import *
 # Fetch the dataset and convert to multiple rsf files
 rawsegy=['L23535','L23536','L23537']
 for name in rawsegy:
-    Fetch(name+'.SGY',
-	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-      	  dir='DMUX')
+    #Fetch(name+'.SGY',
+    #     server='http://certmapper.cr.usgs.gov',
+    #  	  top='nersl/NPRA/SEISMIC/1981/31_81',
+    #  	  dir='DMUX')
     Flow([name,'t'+name,name+'.bin',name+'.asc'],name+'.SGY',
          'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
 
@@ -71,7 +71,8 @@ Plot('ielev','elev','''
            title="Elevation profile"
      ''')
 Result('elev',['selev','ielev'],'Overlay')
-Result('datum','''
+Result('datum',
+       '''
        put label3= unit3=s |
        grey color=j allpos=y pclip=100 bias=0.02 scalebar=y title="Datum shift"
        ''')
@@ -205,7 +206,7 @@ Flow('kvel','vpick','''
 Result('kvel','''
        window n2=450 f2=50 |
        grey allpos=y bias=8000 color=j scalebar=y pclip=100
-            title="Karl's velocities"
+            title="Karls velocities"
        ''')
 
 ##################
@@ -223,10 +224,10 @@ Flow('mstack','nmo','transp | despike2 | median')
 Result('mstack','agc rect1=250 | grey title="Despike + Median"')
 
 # Stack from USGS
-Fetch('31_81_PR.SGY',
-      server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
-      dir='PROCESSED')
+#Fetch('31_81_PR.SGY',
+#      server='http://certmapper.cr.usgs.gov',
+#      top='nersl/NPRA/SEISMIC/1981/31_81',
+#      dir='PROCESSED')
 Flow(['31_81_PR','t31_81_PR','31_81_PR.bin','31_81_PR.asc'],'31_81_PR.SGY',
      'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
 

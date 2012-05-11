@@ -12,38 +12,56 @@ from rsf.suproj import *
 
 # first download the display of the previous stack
 # download and view the image of the previous stack:
-Fetch('31_81_IM.JPG',
-      server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
-      dir='IMAGES')
+#Fetch('31_81_IM.JPG',
+#      server='http://certmapper.cr.usgs.gov',
+#      top='nersl/NPRA/SEISMIC/1981/31_81',
+#      dir='IMAGES')
 #THis can be done using:
 # wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
 
 oodraw = WhereIs('oodraw')
 
-if oodraw:
-    Result('prevstack','31_81_IM.JPG',
-           oodraw + ' $SOURCE',stdin=0)
+#if oodraw:
+#    Result('prevstack','31_81_IM.JPG',
+#           oodraw + ' $SOURCE',stdin=0)
 
-pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
-          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+#pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+#          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 
-if pdfread:
+#if pdfread:
     # download and view the survey notes:
+<<<<<<< .mine
+#    Fetch('31_81_S.PDF',
+#          server='http://certmapper.cr.usgs.gov',
+#          top='nersl/NPRA/SEISMIC/1981/31_81',
+#          dir='DOCUMENTS')
+#    Result('surveylog','31_81_S.PDF',
+#            pdfread + ' $SOURCE')
+=======
     Fetch('31_81_S.PDF',
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('surveylog','31_81_S.PDF',
             pdfread + ' $SOURCE',stdin=0)
+>>>>>>> .r8459
     
     # download and view the observer notes:
+<<<<<<< .mine
+#    Fetch('31_81_O.PDF',
+#          server='http://certmapper.cr.usgs.gov',
+#          top='nersl/NPRA/SEISMIC/1981/31_81',
+#          dir='DOCUMENTS')
+#    Result('observerlog','31_81_O.PDF',
+#            pdfread + ' $SOURCE')
+=======
     Fetch('31_81_O.PDF',
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('observerlog','31_81_O.PDF',
             pdfread + ' $SOURCE',stdin=0)
+>>>>>>> .r8459
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
@@ -53,10 +71,10 @@ segyclean
 
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
-    Fetch(file+'.SGY',
-	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-      	  dir='DMUX')
+#    Fetch(file+'.SGY',
+#	  server='http://certmapper.cr.usgs.gov',
+#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+#      	  dir='DMUX')
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
 
@@ -91,10 +109,10 @@ Result('zoomfirst','line',
 
 # make a movie of the all the shots on input files
 Result('firstmovie','line',
-     '''
-     suxmovie n2=101 loop=1 fframe=1 dframe=1 
-              title="record %g" perc=20 
-     ''')
+       '''
+       suxmovie n2=101 loop=1 fframe=1 dframe=1 
+       title="record %g" perc=20 
+       ''')
 
 # select the 24th record on the line and display it.
 Result('firstrec24','line',
@@ -156,12 +174,11 @@ Flow ('allshots', 'line binary_hdrfile1.dat',
 # make a movie of the shots after loading geometry and throwing 
 # out "donot process" traces
 Result('allshots','allshots',
-	'''
-	 suxmovie n2=96 loop=1 fframe=1 dframe=1 
-            title="allshots record %g" perc=20
- 	''')
+       '''
+       suxmovie n2=96 loop=1 fframe=1 dframe=1 
+       title="allshots record %g" perc=20
+       ''')
 
-	
 # download, convert, and view the stack from legacy processing
 Fetch('31_81_PR.SGY',
       server='http://certmapper.cr.usgs.gov',
@@ -209,7 +226,7 @@ Flow('velfiltcdpsmute','allvelfilt_shot',
      susort cdp ep |
      sunmo 
        par=vbruteorig.txt |
-     sumute 
+     sumute
        xmute=-5225,-2970,-55,55,2970,5225 
        tmute=.700,.280,.100,.100,.280,.700 
        mode=0 

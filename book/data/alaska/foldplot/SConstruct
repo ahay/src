@@ -4,12 +4,11 @@ from rsf.proj import *
 # file in ../line31-81.  This will build trace headers.
 
 # Program compilation
-#####################
 
-exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
+prog = Program('foldplot.c',CPPDEFINES='NO_BLAS')
 
 segyread = '''
-             segyread su=y endian=n tfile=${TARGETS[1]}
+           segyread su=y endian=n tfile=${TARGETS[1]}
            '''
 
 Flow(['rsfallshots','trsfallshots'],
@@ -17,19 +16,18 @@ Flow(['rsfallshots','trsfallshots'],
       segyread)
 
 
-Flow('foldplot','trsfallshots %s' % exe[0],
+Flow('folds','trsfallshots %s' % prog[0],
     '''
-      dd type=float |
-      ./${SOURCES[1]} 
-          o1=-5200 n1=96 d1=110 label1=offset
-          o2=101 n2=636 d2=1 label2=cdp
-          o3=0 n3=1 d3=10000 label3=iline
-          
+    dd type=float |
+    ./${SOURCES[1]} 
+    o1=-5200 n1=96 d1=110 label1=offset
+    o2=101 n2=636 d2=1 label2=cdp
+    o3=0 n3=1 d3=10000 label3=iline
     ''')
 
-Result('foldplot','foldplot',
-     '''
-     grey  title=foldplot
-     ''')
+Result('folds',
+       '''
+       grey title=foldplot
+       ''')
 
 End()
