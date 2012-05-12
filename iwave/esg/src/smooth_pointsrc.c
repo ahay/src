@@ -52,7 +52,7 @@ static inline ireal cubic_interp(ireal t, ireal dt, ireal *y, int n, ireal t0)
 static inline ireal pfun(IPNT ind, RPNT d,  int ndim,  SPOINTSRC *tr, ireal t, int iv, ireal dt)
 {
 	register int i;
-	register ireal r, x, xd, p, gradphi;
+	register ireal r, x, xd=0, p=0, gradphi;
   register ireal pi = 3.1415927;
   
   r = 0.0;
@@ -91,7 +91,7 @@ static inline ireal pfun(IPNT ind, RPNT d,  int ndim,  SPOINTSRC *tr, ireal t, i
 static inline ireal vfun(IPNT ind, RPNT d, int ndim, SPOINTSRC *tr, ireal t, ireal dt)
 {
 	register int i;
-	register ireal r, x, gradphi, f0, f1;
+	register ireal r, x, gradphi, f0=0, f1=0;
   ireal pi = 3.1415927;
     	
 	r = 0.0;
@@ -548,7 +548,7 @@ int spointsrc_run(SPOINTSRC * tr, IMODEL * m)
   RPNT d;  
   int ndim, i;
   IPNT ix, gs, ge;
-	ireal bm, bou, p0, p1, p2, ps, t; 
+	ireal bm, bou, p0, p1=0, p2=0, ps, t; 
   FILE * stream;
   stream = retrieveOutstream();
 

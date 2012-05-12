@@ -53,7 +53,7 @@ int main(int argc, char ** argv) {
   RPNT mult  ;             /* multiplier array   */
   RPNT scoord;             /* source cell loc    */
   int dump_term=0;         /* trace info dump    */
-  int istart;              /* start index        */
+  int istart=0;            /* start index        */
   int ts;                  /* thread support lvl */
   int rk;                  /* process rank       */
 

@@ -122,7 +122,7 @@
 /* Computing MAX */
     i__1 = (integer) (*d__ / *dt) + 1;
     nd = max(i__1,0);
-    nsx2 = *nsx - nd << 1;
+    nsx2 = (*nsx - nd) << 1;
     nfft = *ntx * nsx2;
 /* nfft < 2*ntx*nsx */
 /* ptr_to_wsave  < 1+6*ntx*nsx */

@@ -534,7 +534,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       
       tdt = (ireal)((m->tsind).dt);
       /* interpolate */
-      if (err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w, &(tr->n), &iend,wk,&wl)) {
+      if ((err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w, &(tr->n), &iend,wk,&wl))) {
 	fprintf(stream,"Error: pointsrc_init - from cubic\n");
 	return err;
       }
@@ -548,7 +548,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       tdt = (ireal)((m->tsind).dt);
 
       /* interpolate */
-      if (err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w,&(tr->n),&iend,wk,&wl)) {
+      if ((err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w,&(tr->n),&iend,wk,&wl))) {
 	fprintf(stream,"Error: pointsrc_init - from cubic\n");
 	return err;
       }

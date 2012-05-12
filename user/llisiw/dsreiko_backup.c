@@ -645,7 +645,7 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */,
 {
     double alpha, beta, gama, P, Q, y, W;
     double delta, root[4], temp;
-    double complex R, U;
+    sf_double_complex R, U;
     int cc, count;
 
     alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
@@ -659,17 +659,17 @@ double ferrari(double a,double b,double c,double d,double e /* coefficients */,
 
     /* R could be complex, any complex root will work */
     if (delta >= 0.)
-	R = -1./2.*Q+sqrt(delta)+I*0.;
+	R = sf_dcmplx(-1./2.*Q+sqrt(delta),0.);
     else
-	R = -1./2.*Q+I*sqrt(-delta);
+	R = sf_dcmplx(-1./2.*Q,sqrt(-delta));
     
     U = cpow(R,1./3.);
 
     /* rotate U by exp(i*2*pi/3) until W is real*/
     if (2.*creal(U) <= alpha/3.)
-	U *= -0.5+I*(sqrt(3.)/2.);
+	U *= sf_dcmplx(-0.5,(sqrt(3.)/2.));
     if (2.*creal(U) <= alpha/3.)
-	U *= -0.5+I*(sqrt(3.)/2.);
+	U *= sf_dcmplx(-0.5,(sqrt(3.)/2.));
 
     /* y must be real since a,b,c,d,e are all real */
     if (cabs(U) <= 1.e-15)

@@ -54,13 +54,13 @@ int main(int argc, char ** argv) {
   float h2;        /* input 2 param */
   float h2p;       /* (input 2 param)^order */
   Value val;       /* header word workspace */
-  float dt;        /* time step */
+  float dt=0.0f;   /* time step */
   int nt;          /* number of samples per trace */
   int order=1;     /* asymptotic order of data */
   double wk;       /* double workspace */
   float rfac;      /* Richardson factor: 1/(h1^order-h2^order) */
   float esamp;     /* sample error */
-  float gpow;      /* power of input 2 data */
+  float gpow=0.0f; /* power of input 2 data */
   float tpow;      /* power of input 2 trace */
   float terror;    /* trace error estimate */
   float gerror;    /* data error estimate */

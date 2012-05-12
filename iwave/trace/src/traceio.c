@@ -1459,7 +1459,8 @@ int init_tracegeom(tracegeom * tg,
   if (tg->ntraces) tg->buf =(float *)malloc(tg->ntraces * tg->nt * sizeof(float));
   if (tg->ntraces && !tg->buf) {
     fprintf(stream,"Error: tracegeom_init - failed to allocate trace\n");
-    fprintf(stream,"buffer of length %ld\n", tg->ntraces*tg->nt*sizeof(float));
+    fprintf(stream,"buffer of length %ld\n", 
+	    (long) (tg->ntraces*tg->nt*sizeof(float)));
     fflush(stream);
 #ifdef IWAVE_USE_MPI
     MPI_Abort(wcomm,E_ALLOC);
@@ -1481,7 +1482,7 @@ int init_tracegeom(tracegeom * tg,
     work=(float *)malloc(wlen*sizeof(float));
     if (!work) {
       fprintf(stream,"Error: tracegeom_init - failed to allocate work\n");
-      fprintf(stream,"buffer of length %ld\n",wlen*sizeof(float));
+      fprintf(stream,"buffer of length %ld\n",(long) (wlen*sizeof(float)));
       fflush(stream);
 #ifdef IWAVE_USE_MPI
       MPI_Abort(wcomm,E_ALLOC);

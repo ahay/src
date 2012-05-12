@@ -338,7 +338,7 @@ int ps_createstrz(PARARRAY *parr, SIZEDSTRING str)
         /* determine symbol type */
         if      ( fquo       ) ftype = GRAPHICAL;
         else if ( c == PS_SEP) ftype = SEPARATOR;
-        else if ( isgraph(c) ) ftype = GRAPHICAL;
+        else if ( isgraph((int) c) ) ftype = GRAPHICAL;
         else                   ftype = DELIMITER;
         /* check type */
         if ( ftype == SEPARATOR ) --nsep;

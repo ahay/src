@@ -17,7 +17,7 @@ int init_axis(axis * a, size_t n, ireal d, ireal o) {
 }
 
 int fprint_axis(FILE * fp, axis a) {
-  fprintf(fp,"axis: n=%ld d=%e o=%e id=%d\n",a.n,a.d,a.o,a.id);
+    fprintf(fp,"axis: n=%ld d=%e o=%e id=%d\n",(long) a.n,a.d,a.o,a.id);
   return 0;
 }
 
@@ -57,7 +57,7 @@ int init_grid(grid * g, size_t dim) {
 
 int fprint_grid(FILE * fp, grid a) {
   int i;
-  fprintf(fp,"Grid data structure, consisting of %ld axes:\n",a.dim);
+  fprintf(fp,"Grid data structure, consisting of %ld axes:\n",(long) a.dim);
   for (i=0;i<a.dim;i++) fprint_axis(fp,a.axes[i]);
   return 0;
 }

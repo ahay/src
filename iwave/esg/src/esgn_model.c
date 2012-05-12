@@ -98,21 +98,21 @@ int esg_modelinit(PARARRAY *pars,
   /* main branch */
   if (ps_ffint(*pars,"order",&(esgnp->k))) {
     /* old-style iwave specs - deprecated */
-    if (err=ps_ffcstring(*pars,"scheme_phys",&jnk)) {
-      fprintf(stream,"ERROR: asg_modelinit from ps_ffstring\n");
-      fprintf(stream,"failed to read deprecated order param scheme_phys\n");
-      return err;
-    }
+      if ((err=ps_ffcstring(*pars,"scheme_phys",&jnk))) {
+	  fprintf(stream,"ERROR: asg_modelinit from ps_ffstring\n");
+	  fprintf(stream,"failed to read deprecated order param scheme_phys\n");
+	  return err;
+      }
     else {
       if (!strcmp(jnk,"22")) esgnp->k=1;
       else if (!strcmp(jnk,"24")) esgnp->k=2;
       else if (!strcmp(jnk,"210")) esgnp->k=5;
       else if (!strcmp(jnk,"2k")) {
-        if (err=ps_ffint(*pars,"k_phys",&(esgnp->k))) {
-	  fprintf(stream,"ERROR: esg_modelinit from ps_ffint\n");
-	  fprintf(stream,"failed to read deprecated order param k_phys\n");
-	  return err;
-	}
+	  if ((err=ps_ffint(*pars,"k_phys",&(esgnp->k)))) {
+	      fprintf(stream,"ERROR: esg_modelinit from ps_ffint\n");
+	      fprintf(stream,"failed to read deprecated order param k_phys\n");
+	      return err;
+	  }
       }
       else {
 	err=E_BADINPUT;
@@ -332,7 +332,7 @@ int esg_alter_dom(int iv, IPNT gs, IPNT ge) {
   return 0;
 }
 
-static void esg_fprint_grid_type(FILE * stream, int ndim, IPNT gtype[RDOM_MAX_NARR]) {
+void esg_fprint_grid_type(FILE * stream, int ndim, IPNT gtype[RDOM_MAX_NARR]) {
   int iv, i;
   fprintf(stream, "============= FD grid type =============\n");
   for (iv = 0;iv < m_size;iv ++) {
@@ -721,6 +721,8 @@ int esg_modelpostts(int iarr, IMODEL * model) {
     }
     return 0;
   }
+
+  return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -783,7 +785,7 @@ int esg_create_sten(FILE * stream,
 int esg_assign_action_array(FILE * stream, IMODEL * model) {
   int ndim = model->g.dim;
   int i, j, idim;
-  int nss; /* number of shear stress components */
+  int nss=0; /* number of shear stress components */
   FD_MODEL *fdm = (FD_MODEL *)model->specs;
   if (ndim == 1) {
     fprintf(stream, "Error: Bad inpute: ndim = %d in esg_assign_action_array\n", 

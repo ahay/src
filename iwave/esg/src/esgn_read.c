@@ -1003,9 +1003,9 @@ int esg_readgrid(PARARRAY * pars,
   
   /* read physical grid parameters from bulk modulus or velocity
      grid, or from parameter file */
-  if (err=init_elastic_geom_par(&(model->g),*pars,stream)) {
-    fprintf(stream,"Error: could not read grid parameters\n");
-    return err;
+  if ((err=init_elastic_geom_par(&(model->g),*pars,stream))) {
+      fprintf(stream,"Error: could not read grid parameters\n");
+      return err;
   }
 
   /* extract grid steps */
