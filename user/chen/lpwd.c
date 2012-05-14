@@ -3,7 +3,7 @@
 #include <rsf.h>
 #include "lphase.h"
 
-static void *h;
+//static void *h;
 static int nw, n1, n2, itp;
 static float *b;
 //static float **b1;
@@ -19,7 +19,7 @@ void lpwd_init(int interp, int mw, int m1, int m2)
 
 	b = sf_floatalloc(2*mw+1);
 //	b1 = sf_floatalloc2(2*mw+1, m1);
-	h = lphase_init(nw, false, interp);
+	lphase_init(nw, false, interp);
 }
 
 void lpwc(float **in, float **out, float **p)
@@ -33,7 +33,7 @@ void lpwc(float **in, float **out, float **p)
 		for(i2=0; i2<n2; i2++)
 		for(i1=nw; i1<n1-nw; i1++)
 		{
-			lphase_filt(h, p[i2][i1], b, false);
+			lphase_filt(p[i2][i1], b);
 			out[i2][i1] = 0.0;
 			for(k=-nw; k<=nw; k++)
 				out[i2][i1] += b[k+nw]*in[i2][i1+k];
@@ -43,7 +43,7 @@ void lpwc(float **in, float **out, float **p)
 		for(i2=0; i2<n2; i2++)
 		for(i1=nw; i1<n1-nw; i1++)
 		{
-			lphase_filt(h, p[i2][i1], b, false);
+			lphase_filt(p[i2][i1], b);
 			out[i2][i1] = 0.0;
 			for(k=-nw; k<=nw; k++)
 				out[i2][i1] += b[k+nw]*in[i2][i1+k];
@@ -56,25 +56,30 @@ void lpwc(float **in, float **out, float **p)
 void lpwd(float **in, float **out, float **p, bool der)
 /*< apply line interpolating PWD >*/
 {
-	int i1, i2, k;
+	int i1, i2, j1;
+	
+	if(itp==1 || itp == 2)
+	{
+		for(i2=0; i2<n2-1; i2++)
+		for(i1=nw; i1<n1-nw; i1++)
+		{
+			if(der) lphase_dfilt(p[i2][i1], b);
+			else lphase_filt(p[i2][i1], b);
+			out[i2][i1] = in[i2][i1];
+			for(j1=-nw; j1<=nw; j1++)
+				out[i2][i1] -= b[j1+nw]*in[i2+1][i1+j1];
+		}
+		return;
+	}
 
 	for(i2=0; i2<n2-1; i2++)
 	for(i1=nw; i1<n1-nw; i1++)
 	{
-		lphase_filt(h, p[i2][i1], b, der);
-		switch(itp)
-		{
-		case 1:		// lagrange fir
-			out[i2][i1] = in[i2][i1];
-			for(k=-nw; k<=nw; k++)
-				out[i2][i1] -= b[k+nw]*in[i2+1][i1+k];
-			break;
-		default:	// maxflat iir
-			out[i2][i1] = 0.0;
-			for(k=-nw; k<=nw; k++)
-				out[i2][i1] += b[k+nw]*(in[i2][i1-k]-in[i2+1][i1+k]);
-			break;
-		}
+		if(der) lphase_dfilt(p[i2][i1], b);
+		else lphase_filt(p[i2][i1], b);
+		out[i2][i1] = 0.0;
+		for(j1=-nw; j1<=nw; j1++)
+			out[i2][i1] += b[j1+nw]*(in[i2][i1-j1]-in[i2+1][i1+j1]);
 	}
 }
 
@@ -84,12 +89,13 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 	int i1, i2, j1;
 	sf_complex c1, c2;
 
-	lphase_filt(h, tan(dip), b, false);
+	lphase_filt(tan(dip), b);
 	for(i2=-nk; i2<=nk; i2++)
 	for(i1=-nk; i1<=nk; i1++)
 	switch(itp)
 	{
 	case 1:
+	case 2:
 		for(j1=-nw, c1=0.0; j1<=nw; j1++)
 			c1 += b[j1+nw]*cexpf(sf_cmplx(0.,-2*SF_PI*j1*i1/nk));
 		c2 = 1.0 - cexpf(sf_cmplx(0.,2*SF_PI*i2/nk))*c1;
@@ -121,7 +127,7 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 void lpwd_close()
 /*< release memory >*/
 {
-	lphase_close(h);
+	lphase_close();
 	free(b);
 }
 

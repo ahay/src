@@ -9,7 +9,7 @@ int main(int argc, char*argv[])
 	sf_file out;
 	int n1, nw, n3, i, interp;
 	sf_complex **bc;
-	float d3, o3;
+	float d3, o3, radius;
 	bool iir, opwd;
 
 	sf_init(argc, argv);
@@ -47,10 +47,12 @@ int main(int argc, char*argv[])
 
 	if(!sf_getbool("opwd", &opwd)) opwd=true;
 	/* y: circle interpolating pwd; n: line interpolating pwd */
+	if(!sf_getfloat("radius", &radius)) radius=1.0;
+	/* radius for circle interpolating pwd */
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nw, 0, 0);
+		opwd_init(interp, nw, 0, 0, radius);
 		for(i=0; i<n3; i++)
 		{
 			opwd_freq((d3*i+o3)/180*SF_PI, n1, bc, iir);

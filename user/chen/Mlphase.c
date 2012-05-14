@@ -9,7 +9,6 @@ int main(int argc, char*argv[])
 	int n1, n2, nw, interp, i1, i2;
 	sf_complex *ph;
 	float **bf, d2, o2;
-	void *h;
 	bool causal;
 
 	sf_init(argc, argv);
@@ -31,7 +30,7 @@ int main(int argc, char*argv[])
 	if(!sf_getbool("causal", &causal)) causal=false;
 	/* y: causal; n: noncausal */
 
-	h = lphase_init(nw, causal, interp);
+	lphase_init(nw, causal, interp);
 
 	sf_putint(out, "n1", n1);
 	sf_putfloat(out, "o1", 0.0);
@@ -45,13 +44,13 @@ int main(int argc, char*argv[])
 
 	for(i2=0; i2<n2; i2++)
 	{
-		lphase_freq(h, tan((d2*i2+o2)/180*SF_PI), n1, ph);
+		lphase_freq(tan((d2*i2+o2)/180*SF_PI), n1, ph);
 		for(i1=0; i1<n1; i1++)
 			bf[i2][i1] = cargf(ph[i1+n1]);
 	}
 
 	sf_floatwrite(bf[0], n1*n2, out);
-	lphase_close(h);
+	lphase_close();
 	free(ph);
 	free(bf[0]);
 	free(bf);

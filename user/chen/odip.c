@@ -6,14 +6,17 @@
 
 static int n1, n2, nf;
 static float **u1, **u2, **u3;
+static bool od;
 
-void odip_init(int mf, int m1, int m2, int *rect, int niter, bool verb)
+void odip_init(bool opwd, float r,  int mf,
+	int m1, int m2, int *rect, int niter, bool verb)
 /*< initialize >*/
 {
 	int n, nn[4];
 	nf = mf;
 	n1 = m1;
 	n2 = m2;
+	od = opwd;
 
 	n = n1*n2;
 	nn[0] = n1;
@@ -23,8 +26,8 @@ void odip_init(int mf, int m1, int m2, int *rect, int niter, bool verb)
 	u2 = sf_floatalloc2(n1,n2);
 	u3 = sf_floatalloc2(n1,n2);
 
-	lpwd_init(0, nf, n1, n2);
-	opwd_init(0, nf, n1, n2);
+	if(od)	opwd_init(0, nf, n1, n2, r);
+	else lpwd_init(0, nf, n1, n2);
 	sf_divn_init (2, n, nn, rect, niter, verb);
 }
 
@@ -37,12 +40,12 @@ void odip_close()
 	free(u2);
 	free(u3[0]);
 	free(u3);
-	lpwd_close();
-	opwd_close();
+	if(od) opwd_close();
+	else lpwd_close();
 	sf_divn_close();
 }
 
-void odip(float **in, float **dip, int nit, bool od)
+void odip(float **in, float **dip, int nit)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
