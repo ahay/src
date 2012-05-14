@@ -17,8 +17,11 @@ Result('sean2','sean sean2','SideBySideAniso')
 def twodip2(extra):
     return 'twodip2 order=2 nj1=2 nj2=2 eps=8 verb=y gauss=n ' + extra 
 
+# initial estimation
 Flow('pq','sean2',twodip2('niter=10'))
+# the second dip is aliased, throw it away and reestimate
 Flow('pq1','sean2 pq',twodip2('both=n dip1=${SOURCES[1]} dip2=${SOURCES[1]}'))
+# now estimate two dips again, starting from non-aliased ones
 Flow('pq2','sean2 pq pq1',twodip2('dip1=${SOURCES[1]} dip2=${SOURCES[2]}'))
 Flow('pq3','pq2','transp | spline n1=180 o1=0 d1=1 | transp')
 

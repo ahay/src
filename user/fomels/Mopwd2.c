@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
     char *type;
     sf_tris t1=NULL, t2=NULL;
     interpolate interp;
-    int i1, i2, n1, n2, n12;
-    float **dat, **ang, **res;
+    int i, n1, n2, n12;
+    float **dat, **ang, **p1, **p2;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -63,17 +63,23 @@ int main(int argc, char *argv[])
 
     dat = sf_floatalloc2(n1,n2);
     ang = sf_floatalloc2(n1,n2);
-    res = sf_floatalloc2(n2,n1);
+    p1 = sf_floatalloc2(n1,n2);
+    p2 = sf_floatalloc2(n1,n2);
 
     sf_floatread(dat[0],n12,inp);
     sf_floatread(ang[0],n12,dip);
 
-    filter2(n1,n2,interp,interp,t1,t2,ang,res,dat,ang);
+    for (i=0; i < n12; i++) {
+	p1[0][i] = sinf(ang[0][i]);
+	p2[0][i] = cosf(ang[0][i]);
+    }
 
-    for (i2=0; i2 < n2; i2++) {
-	for (i1=1; i1 < n1-1; i1++) {
-	    dat[i2][i1] -= ang[i2][i1];
-	}
+    opwd_init(n1,n2);
+
+    opwd_filter(interp,interp,t1,t2,p1,p2,dat,ang);
+
+    for (i=0; i < n12; i++) {
+	dat[0][i] -= ang[0][i];
     }
 
     sf_floatwrite(dat[0],n12,out);

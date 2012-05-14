@@ -143,7 +143,7 @@ def retrieve(target=None,source=None,env=None):
         else:
             for file in map(str,target):
                 remote = os.path.basename(file)  
-                rdir =  string.join([server,folder,remote],'/')
+                rdir =  '/'.join([server,folder,remote])
                 try:
                     urllib.urlretrieve(rdir,file)
 
