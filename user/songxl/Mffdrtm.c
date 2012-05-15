@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
                 derold[iz][ix] = 0.0;
             }
         }
-        sf_floatread(rvr[0],nr*nt,input);
+        sf_floatread(rvr[0],nr*(nt-sht),input);
         sf_fileclose(input);
         /* for (it=nt-1; it >-1; it--) { */
         for (it=nt-1-sht; it >tskip; it--) {
