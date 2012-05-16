@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     bool lagrange;
     int it, nt, ip, np, ix, nx, ntpx, iv, nv;
-    float eps, t, t0, dt, p, p0, dp, x, x0, dx, v1, v0, dv, sq;
+    float eps, t, t0, dt, p, p0, dp, x, x0, dx, v0, v, dv, dv2, sq;
     float ***slice, ***slice0, ***tstr, ***pstr, ***xstr;
     sf_file in, out;
 
@@ -58,15 +58,13 @@ int main(int argc, char* argv[])
     /* Use Lagrangian method */
 
     if (!sf_getfloat("v0",&v0)) v0=0.; /* starting velocity */
-    if (!sf_getfloat("vmax",&v1)) sf_error("Need vmax="); /* end velocity */
+    if (!sf_getfloat("vmax",&v)) sf_error("Need vmax="); /* end velocity */
 
-    dv = (v1-v0)/nv;
+    dv = (v-v0)/nv;
 
     sf_putint(out,"n4",nv);
     sf_putfloat(out,"o4",v0+dv);
     sf_putfloat(out,"d4",dv);
-
-    dv = 0.25*(v1*v1-v0*v0)/nv;
     
     tstr   = sf_floatalloc3(nt,np,nx);
     pstr   = sf_floatalloc3(nt,np,nx);
@@ -81,21 +79,6 @@ int main(int argc, char* argv[])
 	slice0 = sf_floatalloc3(nt,np,nx);
 	slice  = sf_floatalloc3(nt,np,nx);
     } else {
-	for (ix=0; ix < nx; ix++) {
-	    x = x0+ix*dx;
-	    for (ip=0; ip < np; ip++) {
-		p = p0+ip*dp;
-		sq = sqrtf(1-p*p*dv);
-		
-		for (it=0; it < nt; it++) {
-		    t = t0+it*dt;
-		    
-		    tstr[ix][ip][it] = t*sq;
-		    pstr[ix][ip][it] = p/sq;
-		    xstr[ix][ip][it] = x - t*p*dv;
-		}
-	    }
-	}
 	slice  = sf_floatalloc3(nt,np,nx);	
 	slice0 = slice;
     } 
@@ -105,26 +88,30 @@ int main(int argc, char* argv[])
     for (iv=0; iv < nv; iv++) {
 	sf_warning("step %d of %d;",iv+1,nv);
 
-	if (lagrange) {	    
-	    for (ix=0; ix < nx; ix++) {
-		x = x0+ix*dx;
-		for (ip=0; ip < np; ip++) {
-		    p = p0+ip*dp;
-		    sq = sqrtf(1-(iv+1)*p*p*dv);
+	v = v0+iv*dv;
+
+	if (lagrange) {
+	    dv2 = 0.25*(v*v-v0*v0);
+	} else {
+	    dv2 = 0.25*(2*v-dv)*dv;
+	}
+	    
+	for (ix=0; ix < nx; ix++) {
+	    x = x0+ix*dx;
+	    for (ip=0; ip < np; ip++) {
+		p = p0+ip*dp;
+		sq = sqrtf(1-p*p*dv2);		
+		for (it=0; it < nt; it++) {
+		    t = t0+it*dt;
 		    
-		    for (it=0; it < nt; it++) {
-			t = t0+it*dt;
-			
-			tstr[ix][ip][it] = t*sq;
-			pstr[ix][ip][it] = p/sq;
-			xstr[ix][ip][it] = x - (iv+1)*t*p*dv;
-		    }
+		    tstr[ix][ip][it] = t*sq;
+		    pstr[ix][ip][it] = p/sq;
+		    xstr[ix][ip][it] = x - t*p*dv2;
 		}
 	    }
 	}
 
-	warp3(slice0,tstr,pstr,xstr,slice);
-	
+	warp3(slice0,tstr,pstr,xstr,slice);	
 	sf_floatwrite (slice[0][0],ntpx,out);
     }
     sf_warning(".");
