@@ -24,18 +24,19 @@
 
 using namespace std;
 
-//FltNumVec vs; //c
-//FltNumVec ks; //k
-static std::valarray<float> vs, ks;
+//DblNumVec vs; //c
+//DblNumVec ks; //k
+static std::valarray<float> vs;
+static std::valarray<double> ks;
 static float pi=SF_PI;
 static float dt,dx;
 
-int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0f);
+    setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
         res(a,b) = 2.0*cos(2*pi*vs[rs[a]]*ks[cs[b]]*dt);
@@ -44,12 +45,12 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
     return 0;
 }
 
-int FD10(vector<int>& rs, vector<int>& cs, FltNumMat& res)
+int FD10(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0f);
+    setvalue(res,0.0);
     float dx2 = dx*dx;
     float b1  = 5.0/(3.0*dx2);
     float b2  = -5.0/(21.0*dx2);
@@ -132,18 +133,18 @@ int main(int argc, char** argv)
     } 
     
     vector<int> cidx, ridx;
-    FltNumMat mid;
-    iC( lowrank(m,n,sample,eps,npk,cidx,ridx,mid) );
+    DblNumMat mid;
+    iC( ddlowrank(m,n,sample,(double) eps,npk,cidx,ridx,mid) );
 
-    FltNumMat M1(m,cidx.size());
+    DblNumMat M1(m,cidx.size());
     vector<int> rs(m);
     for(int k=0; k<m; k++) rs[k]=k;
     iC( sample(rs,cidx,M1) );
-    FltNumMat M2(ridx.size(),n);
+    DblNumMat M2(ridx.size(),n);
     vector<int> cs(n);
     for(int k=0; k<n; k++) cs[k]=k;
     iC( sample(ridx,cs,M2) );
-    FltNumMat Mexact(N,N);
+    DblNumMat Mexact(N,N);
     iC( sample(rs,cs,Mexact) );
 
     float dk2=dk/2.0;
@@ -152,7 +153,7 @@ int main(int argc, char** argv)
     Mexactfile.put("d2",dk2);
     Mexactfile.put("o2",0);
     std::valarray<float> fMlr(N*N);
-    float *ldat = Mexact.data();
+    double *ldat = Mexact.data();
     for (int k=0; k < N*N; k++) {
         fMlr[k] = ldat[k];
     } 
@@ -171,7 +172,7 @@ int main(int argc, char** argv)
     Mfdfile.put("d2",dk2);
     Mfdfile.put("o2",0);
 
-    FltNumMat Mlr(N,N);
+    DblNumMat Mlr(N,N);
     iC( FD10(rs,cs,Mlr) );
     ldat = Mlr.data();
     for (int k=0; k < N*N; k++) {
@@ -187,9 +188,9 @@ int main(int argc, char** argv)
     cerr<<endl;
     cerr<<M2._n<<" ";
     cerr<<endl;
-    FltNumMat tmpM(mid._m,M2._n);
-    iC(dgemm(1.0,mid,M2,0.0,tmpM));
-    iC(dgemm(1.0,M1,tmpM,0.0,Mlr));
+    DblNumMat tmpM(mid._m,M2._n);
+    iC(ddgemm(1.0,mid,M2,0.0,tmpM));
+    iC(ddgemm(1.0,M1,tmpM,0.0,Mlr));
     ldat = Mlr.data();
     for (int k=0; k < N*N; k++) {
         fMlr[k] = ldat[k];
@@ -198,30 +199,30 @@ int main(int argc, char** argv)
 /*  Next */
 
     float stmp[] = {0,1,2,3,4,5};
-    FltNumMat s(SIZE,1); for(int k=0; k<SIZE; k++) s._data[k]=stmp[k];    
-    FltNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
-    FltNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
-    FltNumMat B(SIZE,N), Bc(SIZE,count);
-    iC(dgemm(2*pi*dx,s,ktmp,0.0,B));
-    iC(dgemm(2*pi*dx,s,ktmpc,0.0,Bc));
+    DblNumMat s(SIZE,1); for(int k=0; k<SIZE; k++) s._data[k]=stmp[k];    
+    DblNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
+    DblNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
+    DblNumMat B(SIZE,N), Bc(SIZE,count);
+    iC(ddgemm(2*pi*dx,s,ktmp,0.0,B));
+    iC(ddgemm(2*pi*dx,s,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(Bc._data[k]);
-    FltNumMat IB(N,SIZE);    iC( pinv(B, 1e-16, IB) );
-    FltNumMat IBc(count,SIZE);    iC( pinv(Bc, 1e-16, IBc) );
-    FltNumMat coef(ridx.size(),SIZE);
-    FltNumMat M2c;
+    DblNumMat IB(N,SIZE);    iC( ddpinv(B, 1e-16, IB) );
+    DblNumMat IBc(count,SIZE);    iC( ddpinv(Bc, 1e-16, IBc) );
+    DblNumMat coef(ridx.size(),SIZE);
+    DblNumMat M2c;
     iC( sample(ridx,ksc,M2c) );
     
-    iC(dgemm(1.0,M2c,IBc,0.0,coef));
+    iC(ddgemm(1.0,M2c,IBc,0.0,coef));
 
-    FltNumMat G(N,SIZE), tmpG(mid._m,SIZE);
-    iC(dgemm(1.0,mid,coef,0.0,tmpG));
-    iC(dgemm(1.0,M1,tmpG,0.0,G));
+    DblNumMat G(N,SIZE), tmpG(mid._m,SIZE);
+    iC(ddgemm(1.0,mid,coef,0.0,tmpG));
+    iC(ddgemm(1.0,M1,tmpG,0.0,G));
 
     Bc.resize(SIZE,1);
     for(int k=0; k<SIZE; k++) Bc._data[k]=B(k,0);
-    FltNumMat tmpB(N,1);
-    iC(dgemm(1.0,G,Bc,0.0,tmpB));
+    DblNumMat tmpB(N,1);
+    iC(ddgemm(1.0,G,Bc,0.0,tmpB));
     for(int k=0; k<N; k++) tmpB._data[k]=2.0/tmpB._data[k];
     sf_warning("eeeee");
     for (int x=0; x<N; x++){
@@ -232,7 +233,7 @@ int main(int argc, char** argv)
     sf_warning("bbbb");
 
       
-    iC(dgemm(1.0,G,B,0.0,Mlr));
+    iC(ddgemm(1.0,G,B,0.0,Mlr));
     ldat = Mlr.data();
     for (int k=0; k < N*N; k++) {
         fMlr[k] = ldat[k];

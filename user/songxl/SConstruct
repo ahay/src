@@ -21,13 +21,14 @@ nxtfftn orthowave
 ffd2_den_omp
 permffdxzc
 ffd0 ffd01
+lffd2an25
 '''
 
 
 mpi_progs = 'tti4rtm ffdrtm'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1_10 lfdc2_7 lfdanc2_25'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1_10 lfdc1 lfdc2_7 lfdanc2_25 lffdanc2_25 lffdan'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
