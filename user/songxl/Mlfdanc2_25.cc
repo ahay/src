@@ -27,35 +27,35 @@ using namespace std;
 //FltNumVec vs; //c
 //FltNumVec ks; //k
 static std::valarray<float> vz,vx,q,t;
-static std::valarray<float> kx, kz;
+static std::valarray<double> kx, kz;
 static float pi=SF_PI;
 static float dt;
 
-int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
+int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0f);
+    setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
         float wx = vx[i]*vx[i];
         float wz = vz[i]*vz[i];
         float qq = q[i];
         float tt = t[i];
-        float c = cos(tt);
-        float s = sin(tt);
+        double c = cos(tt);
+        double s = sin(tt);
 
 	for (int b=0; b<nc; b++) {
-            float x0 = kx[cs[b]];
-            float z0 = kz[cs[b]];
+            double x0 = kx[cs[b]];
+            double z0 = kz[cs[b]];
             // rotation of coordinates
-            float x = x0*c+z0*s;
-            float z = z0*c-x0*s;
+            double x = x0*c+z0*s;
+            double z = z0*c-x0*s;
 
             z = wz*z*z;
             x = wx*x*x;
-            float r = x+z;
+            double r = x+z;
             r = r+sqrt(r*r-qq*x*z);
             r = sqrt(0.5*r);
             res(a,b) = 2.0*cos(2.0*pi*r*dt);
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     int i=0;
     float dkxz=dkx+dkz;
     int SMK=0;
-    std::valarray<float> ks(nxz);
+    std::valarray<double> ks(nxz);
     for (int ix=0; ix < nx; ix++) {
         kx1 = kx0+ix*dkx; 
         for (int iz=0; iz < nz; iz++) {
@@ -155,8 +155,6 @@ int main(int argc, char** argv)
         }
     }
     vector<int> ksc(COUNT), smallk(SMK);
-    sf_warning("COUNT=%d",COUNT);
-    sf_warning("SMK=%d",SMK);
     int nk=0, mk=0; 
     i=0;
     for (int ix=0; ix < nx; ix++) {
@@ -178,14 +176,14 @@ int main(int argc, char** argv)
     
     
     vector<int> cidx, ridx;
-    FltNumMat mid;
-    iC( lowrank(m,n,sample,eps,npk,cidx,ridx,mid) );
+    DblNumMat mid;
+    iC( ddlowrank(m,n,sample,eps,npk,cidx,ridx,mid) );
 
-    FltNumMat M1(m,cidx.size());
+    DblNumMat M1(m,cidx.size());
     vector<int> rs(m);
     for(int k=0; k<m; k++) rs[k]=k;
     iC( sample(rs,cidx,M1) );
-    FltNumMat M2(ridx.size(),n);
+    DblNumMat M2(ridx.size(),n);
     vector<int> cs(n);
     for(int k=0; k<n; k++) cs[k]=k;
     iC( sample(ridx,cs,M2) );
@@ -196,7 +194,6 @@ int main(int argc, char** argv)
     //float stmp[] = {0,1,2,3,4,5};
     std::valarray<float> stmp(SIZE);
     int band = (SIZE-1)/2;
-    sf_warning("BAND=%d",band);
     
     for (int ix=0; ix<SIZE; ix++) {stmp[ix]= (float) (ix-band);}
     int gdc=0;
@@ -206,7 +203,7 @@ int main(int argc, char** argv)
         }
     }
     nk = 0;
-    FltNumMat s1(gdc,1), s2(gdc,1); 
+    DblNumMat s1(gdc,1), s2(gdc,1); 
     for (int ix=0; ix<SIZE; ix++){
         for (int iz=0; iz<SIZE; iz++){
             if((stmp[iz] > 0 || (stmp[iz] == 0 && stmp[ix] >=0)) && ((stmp[iz]*stmp[iz]+stmp[ix]*stmp[ix])<(float) (band*band)+0.00001)){
@@ -218,24 +215,24 @@ int main(int argc, char** argv)
     }
     
 
-    FltNumMat kxtmp(1,nxz); for(int k=0; k<nxz; k++) kxtmp._data[k]=kx[k];
-    FltNumMat kztmp(1,nxz); for(int k=0; k<nxz; k++) kztmp._data[k]=kz[k];
- //   FltNumMat kxtmpc(1,COUNT); for(int k=0; k<COUNT; k++) kxtmpc._data[k]=kx[ksc[k]];
- //   FltNumMat kztmpc(1,COUNT); for(int k=0; k<COUNT; k++) kztmpc._data[k]=kz[ksc[k]];
+    DblNumMat kxtmp(1,nxz); for(int k=0; k<nxz; k++) kxtmp._data[k]=kx[k];
+    DblNumMat kztmp(1,nxz); for(int k=0; k<nxz; k++) kztmp._data[k]=kz[k];
+ //   DblNumMat kxtmpc(1,COUNT); for(int k=0; k<COUNT; k++) kxtmpc._data[k]=kx[ksc[k]];
+ //   DblNumMat kztmpc(1,COUNT); for(int k=0; k<COUNT; k++) kztmpc._data[k]=kz[ksc[k]];
     int LEN = s1._m;
-    FltNumMat Bc(LEN,nxz), B(LEN,nxz);
-//    FltNumMat Bxc(LEN,COUNT), Bc(LEN,COUNT);
-    iC(dgemm(dz,s1,kztmp,0.0,B));
-    iC(dgemm(dx,s2,kxtmp,0.0,Bc));
+    DblNumMat Bc(LEN,nxz), B(LEN,nxz);
+//    DblNumMat Bxc(LEN,COUNT), Bc(LEN,COUNT);
+    iC(ddgemm(dz,s1,kztmp,0.0,B));
+    iC(ddgemm(dx,s2,kxtmp,0.0,Bc));
 //    iC(dgemm(dz,s1,kztmpc,0.0,Bc));
 //    iC(dgemm(dx,s2,kxtmpc,0.0,Bxc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*pi*(B._data[k]+Bc._data[k]));
 //    for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(2.0*pi*(Bc._data[k]+Bxc._data[k]));
     float ACCU=1e-4;
-    FltNumMat WGT(nxz,1);
+    DblNumMat WGT(nxz,1);
     for(int k=0; k<nxz; k++) WGT._data[k]=1.0;
     for(int k=0; k<COUNT; k++) WGT._data[ksc[k]]=1.0/ACCU;
-    FltNumMat M2c;
+    DblNumMat M2c;
     iC( sample(ridx,ksc,M2c) );
     for (int x=0; x<M2._m; x++){
         for (int k=0; k<nxz; k++){
@@ -253,16 +250,16 @@ int main(int argc, char** argv)
         }
     } 
 
-    FltNumMat IBc(nxz,LEN);    iC( pinv(Bc, 1e-16, IBc) );
-    FltNumMat coef(ridx.size(),LEN);
-//    FltNumMat M2c;
+    DblNumMat IBc(nxz,LEN);    iC( ddpinv(Bc, 1e-16, IBc) );
+    DblNumMat coef(ridx.size(),LEN);
+//    DblNumMat M2c;
 //    iC( sample(ridx,ksc,M2c) );
     
-    iC(dgemm(1.0,M2,IBc,0.0,coef));
+    iC(ddgemm(1.0,M2,IBc,0.0,coef));
 
-    FltNumMat G(nxz,LEN), tmpG(mid._m,LEN);
-    iC(dgemm(1.0,mid,coef,0.0,tmpG));
-    iC(dgemm(1.0,M1,tmpG,0.0,G));
+    DblNumMat G(nxz,LEN), tmpG(mid._m,LEN);
+    iC(ddgemm(1.0,mid,coef,0.0,tmpG));
+    iC(ddgemm(1.0,M1,tmpG,0.0,G));
 
     Bc.resize(LEN,SMK);
 
@@ -271,8 +268,8 @@ int main(int argc, char** argv)
            Bc(k,j) =B(k,smallk[j]);
        }
     }
-    FltNumMat tmpB(nxz,SMK), maxB(nxz,1);
-    iC(dgemm(1.0,G,Bc,0.0,tmpB));
+    DblNumMat tmpB(nxz,SMK), maxB(nxz,1);
+    iC(ddgemm(1.0,G,Bc,0.0,tmpB));
     float tmpmax;
     for (int k=0; k<nxz; k++) {
         tmpmax=-9999999.0;
@@ -283,7 +280,6 @@ int main(int argc, char** argv)
     }
     i=0;
     for(int k=0; k<nxz; k++) if (maxB._data[k]>2.0) i++;
-    sf_warning("i=%d",i);
     if (i>0) {
        for(int k=0; k<nxz; k++) { maxB._data[k]=2.0/fabs(maxB._data[k]); }
        for (int x=0; x<nxz; x++){
@@ -294,7 +290,7 @@ int main(int argc, char** argv)
     }
 
     std::valarray<float> fMlr(nxz*LEN);
-    float *ldat = G.data();
+    double *ldat = G.data();
     for (int k=0; k < nxz*LEN; k++) {
         fMlr[k] = ldat[k];
     } 
