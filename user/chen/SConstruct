@@ -6,6 +6,9 @@ progs = '''
 fdip comp psss psefd mdfd4 resample addevent lphase odip pwdfreq
 '''
 
+pyprogs=' '
+pymods='pcmf'
+
 docs = []
 
 try:  # distributed version
@@ -47,6 +50,17 @@ for prog in mains:
 	if root:
 		env.Install(bindir,prog)
 
+######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+    for mod in Split(pymods):
+        env.Install(pkgdir,mod+'.py')
 
 
 ######################################################################
