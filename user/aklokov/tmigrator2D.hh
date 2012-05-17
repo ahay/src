@@ -1,7 +1,7 @@
 #ifndef TIME_MIGRATOR_2D_H
 #define TIME_MIGRATOR_2D_H
 
-#include "tmigratorBase.h"
+#include "tmigratorBase.hh"
 
 class TimeMigrator2D : public TimeMigratorBase {
 

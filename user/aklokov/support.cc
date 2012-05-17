@@ -1,5 +1,5 @@
 #include <string.h>
-#include "support.h"
+#include "support.hh"
 
 
 // -- class Point2D ---

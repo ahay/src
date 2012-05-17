@@ -1,7 +1,7 @@
 #ifndef CURVE_DEFINER_DIP_OFFSET_H
 #define CURVE_DEFINER_DIP_OFFSET_H
 
-#include "curveDefinerBase.h"
+#include "curveDefinerBase.hh"
 
 class CurveDefinerDipOffset : public CurveDefinerBase {
 

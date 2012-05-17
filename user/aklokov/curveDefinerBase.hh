@@ -6,7 +6,7 @@ class CurveDefinerBase {
 public:
 
                   CurveDefinerBase ();
-                 ~CurveDefinerBase ();
+                 virtual ~CurveDefinerBase ();
 
 	virtual void  getEscapePoint   (const float curY, const float curX, const float curZeroTime, 
 							       const float curDip, const float curAz, const float migVel,

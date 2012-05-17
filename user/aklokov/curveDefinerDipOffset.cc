@@ -1,6 +1,6 @@
 #include <math.h>
-#include "curveDefinerDipOffset.h"
-#include "support.h"
+#include "curveDefinerDipOffset.hh"
+#include "support.hh"
 
 CurveDefinerDipOffset::CurveDefinerDipOffset () {
 					

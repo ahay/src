@@ -1,4 +1,4 @@
-#include "curveDefinerBase.h"
+#include "curveDefinerBase.hh"
 
 CurveDefinerBase::CurveDefinerBase () {
 }

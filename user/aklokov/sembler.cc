@@ -1,4 +1,4 @@
-#include "sembler.h"
+#include "sembler.hh"
 #include <string.h>
 
 Sembler::Sembler () {

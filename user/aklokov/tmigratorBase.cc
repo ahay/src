@@ -1,8 +1,8 @@
 #include <math.h>
-#include "tmigratorBase.h"
-#include "curveDefinerBase.h"
-#include "curveDefinerDipOffset3D.h"
-#include "curveDefinerDipOffset.h"
+#include "tmigratorBase.hh"
+#include "curveDefinerBase.hh"
+#include "curveDefinerDipOffset3D.hh"
+#include "curveDefinerDipOffset.hh"
 
 
 TimeMigratorBase::TimeMigratorBase () {
@@ -48,7 +48,7 @@ float TimeMigratorBase::getMigVel (const float* const velTrace, const float curZ
 	if (curZ < zStart || curZ > zEnd)
 		return -1;
 
-	const int ind = (curZ - zStart) / zStep;
+	const int ind = (int) ((curZ - zStart) / zStep);
 
 	return 0.001 * velTrace[ind];
 }
@@ -78,11 +78,11 @@ bool TimeMigratorBase::isPointInsidePoly (Point2D* poly, int nPoly, Point2D& p0)
 
 	int ip = 0;
 
-	int firstRotation = ( p0.getY() - poly[ip].getY() ) * (poly[ip+1].getX() - poly[ip].getX()) - 
+	int firstRotation = (int) ( p0.getY() - poly[ip].getY() ) * (poly[ip+1].getX() - poly[ip].getX()) - 
 						( p0.getX() - poly[ip].getX() ) * (poly[ip+1].getY() - poly[ip].getY());
 
 	for (int ip = 1; ip < nPoly - 1; ++ip) {
-		int curRotation = ( p0.getY() - poly[ip].getY() ) * (poly[ip+1].getX() - poly[ip].getX()) - 
+	    int curRotation = (int) ( p0.getY() - poly[ip].getY() ) * (poly[ip+1].getX() - poly[ip].getX()) - 
 			  		      ( p0.getX() - poly[ip].getX() ) * (poly[ip+1].getY() - poly[ip].getY());
 		if (curRotation * firstRotation < 0)
 			return false;

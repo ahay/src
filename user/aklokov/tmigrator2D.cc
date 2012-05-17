@@ -1,8 +1,8 @@
 #include <string.h>
-#include "tmigrator2D.h"
-#include "support.h"
-#include "curveDefinerBase.h"
-#include "curveDefinerDipOffset.h"
+#include "tmigrator2D.hh"
+#include "support.hh"
+#include "curveDefinerBase.hh"
+#include "curveDefinerDipOffset.hh"
 
 
 TimeMigrator2D::TimeMigrator2D () {
@@ -32,7 +32,7 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
     float*     ptrGather = curoffsetGather;
 
 	curveDefiner_->curOffset_ = curOffset;
-	curOffset_ = curOffset;
+	curOffset_ = (int) curOffset;
 
     // compose gather
 	for (int id = 0; id < dipNum; ++id) {
@@ -79,7 +79,7 @@ int TimeMigrator2D::getSampleByBeam (const float yCIG, const float xCIG, const f
 	float time_2 (0.f); float xRayExit_2(0.f);	float yRayExit_2 (0.f);
 	curveDefiner_->getEscapePoint (yCIG, xCIG, curZeroTime, -curDip + dipStep * 0.5, curAz, migVel, time_2, xRayExit_2, yRayExit_2);
 
-	int curXSamp = xRayExit_1 / xStep;
+	int curXSamp = (int) (xRayExit_1 / xStep);
 	if (curXSamp * xStep < xRayExit_1) ++curXSamp;
 	
 	int count (0);
@@ -113,7 +113,7 @@ float TimeMigrator2D::getSampleByRay (const float yCIG, const float xCIG, const 
 	if (xRayExit - dataXMin_ < -1e-4 || xRayExit - dataXMax_ > 1e-4) return 0.f;
 	if (time < dataZMin_ || time > dataZMax_) return 0.f;
 
-	int curXSamp = xRayExit / xStep;
+	int curXSamp = (int) (xRayExit / xStep);
 	float curXpos = curXSamp * xStep;
 	if (curXpos < dataXMin_ || curXpos > dataXMax_) {return 0.f;}
 	float dx = curXpos - xCIG;
@@ -151,10 +151,10 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
 
 	float geoX = isCMP_ ? geoX1 - curOffset_ * 0.5 : geoX1;
 
-	const int itMiddle = (ti - zStart_) / zStep_;
+	const int itMiddle = (int) ((ti - zStart_) / zStep_);
 	if (itMiddle < 0 || itMiddle >= zNum_) return 0.f;
 
-	const int xSamp = (geoX - xStart_) / xStep_;
+	const int xSamp = (int) ((geoX - xStart_) / xStep_);
 	if (xSamp < 0 || xSamp >= xNum_) return 0.f;
 
 	float* const trace = ptrToData_ + xSamp * zNum_;
@@ -174,7 +174,7 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
   	// left sample
  
  	const float timeLeft = ti - filterLength;
- 	const int     itLeft = (timeLeft - zStart_) / zStep_; 
+ 	const int     itLeft = (int) ((timeLeft - zStart_) / zStep_); 
 	
 	if (itLeft < 0) return 0.f;
 
@@ -186,7 +186,7 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
 	// right sample
  
  	const float timeRight = ti + filterLength;
- 	const int     itRight = (timeRight - zStart_) / zStep_; 
+ 	const int     itRight = (int) ((timeRight - zStart_) / zStep_); 
 
 	if (itRight >= zNum_ - 1) return 0.f;
 

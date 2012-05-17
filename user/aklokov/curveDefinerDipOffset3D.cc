@@ -1,6 +1,6 @@
 #include <math.h>
-#include "curveDefinerDipOffset3D.h"
-#include "support.h"
+#include "curveDefinerDipOffset3D.hh"
+#include "support.hh"
 
 #include <iostream>
 using namespace std;

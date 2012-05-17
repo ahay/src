@@ -1,14 +1,14 @@
 #ifndef TIME_MIGRATOR_3D_H
 #define TIME_MIGRATOR_3D_H
 
-#include "tmigratorBase.h"
+#include "tmigratorBase.hh"
 
 class TimeMigrator3D : public TimeMigratorBase {
 
 public:
 
 	    TimeMigrator3D ();
-	   ~TimeMigrator3D ();
+	   virtual ~TimeMigrator3D ();
 
 	void  processGather (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
 								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);

@@ -1,9 +1,9 @@
-#include "tmigrator3D.h"
-#include "support.h"
+#include "tmigrator3D.hh"
+#include "support.hh"
 #include <string.h>
 #include <algorithm>
-#include "curveDefinerBase.h"
-#include "curveDefinerDipOffset.h"
+#include "curveDefinerBase.hh"
+#include "curveDefinerDipOffset.hh"
 
 using namespace std;
 
@@ -87,11 +87,11 @@ float TimeMigrator3D::getSampleFromData (const float geoY, const float geoX, con
 	float yStart_ = dp_->yStart;
 
 
-	const int itMiddle = (ti - zStart_) / zStep_;
+	const int itMiddle = (int) ((ti - zStart_) / zStep_);
 	if (itMiddle < 0 || itMiddle >= zNum_) return 0.f;
-	const int xSamp = (geoX - xStart_) / xStep_;
+	const int xSamp = (int) ((geoX - xStart_) / xStep_);
 	if (xSamp < 0 || xSamp >= xNum_) return 0.f;
-	const int ySamp = (geoY - yStart_) / yStep_;
+	const int ySamp = (int) ((geoY - yStart_) / yStep_);
 	if (ySamp < 0 || ySamp >= yNum_) return 0.f;
 
 
@@ -112,7 +112,7 @@ float TimeMigrator3D::getSampleFromData (const float geoY, const float geoX, con
   	// left sample
  
  	const float timeLeft = ti - filterLength;
- 	const int     itLeft = (timeLeft - zStart_) / zStep_; 
+ 	const int     itLeft = (int) ((timeLeft - zStart_) / zStep_); 
 	
 	if (itLeft < 0) return 0.f;
 
@@ -124,7 +124,7 @@ float TimeMigrator3D::getSampleFromData (const float geoY, const float geoX, con
 	// right sample
  
  	const float timeRight = ti + filterLength;
- 	const int     itRight = (timeRight - zStart_) / zStep_; 
+ 	const int     itRight = (int) ((timeRight - zStart_) / zStep_); 
 
 	if (itRight >= zNum_ - 1) return 0.f;
 
@@ -194,10 +194,10 @@ int TimeMigrator3D::getSampleByBeam (const float yCIG, const float xCIG, const f
 	float minY = *min_element (yRayExit, yRayExit + 3);
 	float maxY = *max_element (yRayExit, yRayExit + 3);
 
-	int curXSamp = (minX - xStart) / xStep;
+	int curXSamp = (int) ((minX - xStart) / xStep);
 	if (curXSamp * xStep - xStart < minX) ++curXSamp;
 
-	int curYSamp = (minY - yStart) / yStep;
+	int curYSamp = (int) ((minY - yStart) / yStep);
 	if (curYSamp * yStep - yStart < minY) ++curYSamp;
 
 	float curYpos = curYSamp * yStep + yStart;
@@ -262,9 +262,9 @@ float TimeMigrator3D::getSampleByRay (const float yCIG, const float xCIG, const 
 	float timeExit (0.f); float xRayExit (0.f);	float yRayExit (0.f);
 	curveDefiner_->getEscapePoint (yCIG, xCIG, curZeroTime, curDip, curAz, migVel, timeExit, xRayExit, yRayExit);
 
-	const int xSamp = (xRayExit - xStart_) / xStep_;
+	const int xSamp = (int) ((xRayExit - xStart_) / xStep_);
 	if (xSamp < 1 || xSamp >= xNum_ - 1) return 0.f;
-	const int ySamp = (yRayExit - yStart_) / yStep_;
+	const int ySamp = (int) ((yRayExit - yStart_) / yStep_);
 	if (ySamp < 1 || ySamp >= yNum_ - 1) return 0.f;
 
 	// get p
