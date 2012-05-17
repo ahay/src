@@ -425,7 +425,9 @@ class RSFReport(Environment):
                 self.doc = os.path.join(self.doc,level)
         rsf.path.mkdir(self.doc)
         self.paper = 1
+        self.collection = 0
     def Papers(self,papers,**kw):
+        self.colelction = 1
         # get list of papers
         if type(papers[0]) is types.TupleType:
             sections = Sections(papers)
@@ -519,6 +521,7 @@ class RSFReport(Environment):
             comm = 'scons -Q ' + target
             self.Tour(target+'s',chapters,command=comm)
     def Book(self,chapters,**kw):
+        self.collection = 1 # for now
         # get list of chapters
         for i in range(len(chapters)):
             chapter = chapters[i]
@@ -553,13 +556,19 @@ class RSFReport(Environment):
         self.Depends('book.pdf',self.papers)
         self.Alias('read','book.read')
         self.Alias('print','book.print')
-        self.Alias('html','toc_html')
-        self.Depends('toc_html/index.html','htmls')
-        self.Depends('html','htmls')
+        if self.collection:
+            self.Alias('html','toc_html')
+            self.Depends('toc_html/index.html','htmls')
+            self.Depends('html','htmls')
+            html = os.path.join(self.doc,'index.html')
+            self.Command(html,'toc_html/index.html',
+                         'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
+        else:
+            self.Alias('html','book_html')
+            html = os.path.join(self.doc,'index.html')
+            self.Command(html,'book_html/index.html',
+                         'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
         self.Install(self.doc,'book.pdf')
-        html = os.path.join(self.doc,'index.html')
-        self.Command(html,'toc_html/index.html',
-                    'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
         self.Alias('www',self.doc)
         self.Depends('www','installs')
         self.Default('pdf')

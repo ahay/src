@@ -6,6 +6,7 @@ try:  # madagascar version
     Import('env root pkgdir bindir' + imports)
     env = env.Clone()
     env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist)
+    print "Got it!", env.get('LIBS')
 except:  # autonomous version
     Import('vars' + imports)
     root = None
@@ -21,6 +22,7 @@ except:  # autonomous version
                       CPPPATH = cpplist, 
                       LIBS = liblist, 
                       LIBPATH = libdirlist)
+    print "Nope!"
     
 # this version assumes that all source files in this directory
 # define main programs
