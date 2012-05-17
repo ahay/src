@@ -11,8 +11,14 @@ using std::vector;
 int dgemm(float alpha, const FltNumMat& A, const FltNumMat& B, float beta, FltNumMat& C);
 int dgemm(int m, int n, int k, float alpha, float* A, float* B, float beta, float* C);
 
+int ddgemm(double alpha, const DblNumMat& A, const DblNumMat& B, double beta, DblNumMat& C);
+int ddgemm(int m, int n, int k, double alpha, double* A, double* B, double beta, double* C);
+
 int dgemv(float alpha, const FltNumMat& A, const FltNumVec& X, float beta, FltNumVec& Y);
 int dgemv(int m, int n, float alpha, float* A, float* X, float beta, float* Y);
+
+int ddgemv(double alpha, const DblNumMat& A, const DblNumVec& X, double beta, DblNumVec& Y);
+int ddgemv(int m, int n, double alpha, double* A, double* X, double beta, double* Y);
 
 //--------------------------------------------------
 int zgemm(cpx alpha, const CpxNumMat& A, const CpxNumMat& B, cpx beta, CpxNumMat& C);
