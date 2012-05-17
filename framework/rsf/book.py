@@ -427,7 +427,7 @@ class RSFReport(Environment):
         self.paper = 1
         self.collection = 0
     def Papers(self,papers,**kw):
-        self.colelction = 1
+        self.collection = 1
         # get list of papers
         if type(papers[0]) is types.TupleType:
             sections = Sections(papers)
