@@ -6,7 +6,7 @@ progs = '''
 fdip comp psss psefd mdfd4 resample addevent lphase odip pwdfreq
 '''
 
-pyprogs='circle'
+pyprogs='circle prefilt'
 pymods='pcmf'
 
 docs = []

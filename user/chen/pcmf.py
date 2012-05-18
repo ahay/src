@@ -6,7 +6,7 @@ def factorial(n):
 		m=m*(i1+1)
 	return m
 
-
+# B(Z) = c(n:-n, 2n:0)p^mZ^k
 def pcmf(n):
 	N=2*n+1	
 	c=np.zeros((N,N),dtype=float)
