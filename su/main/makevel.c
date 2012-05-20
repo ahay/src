@@ -221,11 +221,11 @@ main (int argc, char **argv)
 
 				/* chirp */
 				if (z>z1c && z<z2c) {
-					vtemp = sin((ac+bc*z)*z);
+					vtemp = sinf((ac+bc*z)*z);
 					if (vtemp<0.0)
-						v[iz] -= vzc*pow(-vtemp,exc);
+						v[iz] -= vzc*powf(-vtemp,exc);
 					else
-						v[iz] += vzc*pow(vtemp,exc);
+						v[iz] += vzc*powf(vtemp,exc);
 				}
 
 				/* random perturbation */
