@@ -71,8 +71,7 @@ Flow(['checkstack','checkstack.bin','checkstack.asc'],
 	    segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
 	        tape=$SOURCE endian=%d
 	    | segyclean 
-            | suximage title="checkstack" perc=90
-	''' % (1-little_endian()),
+    	''' % (1-little_endian()),
      stdin=0)
 
 Result('checkstack','checkstack',
