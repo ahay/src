@@ -21,30 +21,47 @@ def fir(p,x):
 		y[i1+n]=inner(p,x[i1:i1+np])
 	return y
 
-def dip_lop(n1, n2, p0, c, iter):
+def divn(a,b,eta):
+	n1=a.size
+	x=zeros(n1,'f')
+	na=0.0
+	for i1 in range(n1):
+#		na=((a[i1]*a[i1]+b[i1]*b[i1]))*eta
+		na=(abs(a[i1])+abs(b[i1]))*eta
+		x[i1]=b[i1]/(a[i1]+na*sign(a[i1]))
+	return x
+
+def dip_lop(n1, n2, p0, c, iter, eta):
 	p=p0
 	for it in range(iter):
 		for i2 in range(n2):
 			for i1 in range(n1):
-				r=polyval(c[:,i2,i1],p[i2,i1])
-				d=polyval(polyder(c[:,i2,i1]),p[i2,i1])
-				dp=r/d
+				rr=polyval(c[:,i2,i1],p[i2,i1])
+				dd=polyval(polyder(c[:,i2,i1]),p[i2,i1])
+				na=(rr*rr+dd*dd)*eta*sign(dd)
+#				na=(abs(rr)+abs(dd))*eta*sign(dd)
+				dp=rr/(dd+na)
 				p[i2,i1]=p[i2,i1]-0.5*dp
 	return p
 
 par=rsf.Par()
 input=rsf.Input()
 dip=rsf.Output("dip")
+coef=rsf.Output("coef")
 output=rsf.Output()
 
 nf=par.int("nf",1)
 iter=par.int("iter",5)
+eta=par.float("eta",0.05)
 n1=input.int("n1")
 n2=input.int("n2")
 
 n3=2*nf+1
 output.put("n3",2*nf+1)
 dip.put("n3",2*nf)
+dip.put("n2",n2-1)
+coef.put("n3",n3)
+coef.put("n2",n2-1)
 
 c=mf.pcmf(nf)
 
@@ -72,16 +89,24 @@ for i3 in range(n3):
 		y[i3,i2,:]=y[i3,i2,:]-y[i3,i2+1,:]*po
 	po=-po
 
-p=-y[1,:,:]/y[0,:,:]
+coef.write(y[:,0:n2-1,:])
+
+#p=-y[1,0:n2-1,:]/y[0,0:n2-1,:]
+p=zeros((n2-1,n1),'f')
+
+for i2 in range(n2-1):
+	p[i2,:]=divn(-y[0,i2,:], y[1,i2,:], eta)
+
 dip.write(p)
 for i3 in range(n3-2):
 	k=i3+3
-	c=y[0:k,:,:]
-	p=dip_lop(n1, n2, p, c, iter)
+	c=y[0:k,0:n2-1,:]
+	p=dip_lop(n1, n2-1, p, c, iter, eta)
 	dip.write(p)
 
 input.close()
 dip.close()
+coef.close()
 output.close()
 
 

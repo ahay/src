@@ -36,7 +36,7 @@ void lpwc(float **in, float **out, float **p)
 			lphase_filt(p[i2][i1], b);
 			out[i2][i1] = 0.0;
 			for(k=-nw; k<=nw; k++)
-				out[i2][i1] += b[k+nw]*in[i2][i1+k];
+				out[i2][i1] += b[k+nw]*in[i2][i1-k];
 		}
 		break;
 	default:	// maxflat iir
@@ -46,7 +46,7 @@ void lpwc(float **in, float **out, float **p)
 			lphase_filt(p[i2][i1], b);
 			out[i2][i1] = 0.0;
 			for(k=-nw; k<=nw; k++)
-				out[i2][i1] += b[k+nw]*in[i2][i1+k];
+				out[i2][i1] += b[k+nw]*in[i2][i1-k];
 		}
 		break;
 	}
@@ -67,7 +67,7 @@ void lpwd(float **in, float **out, float **p, bool der)
 			else lphase_filt(p[i2][i1], b);
 			out[i2][i1] = in[i2][i1];
 			for(j1=-nw; j1<=nw; j1++)
-				out[i2][i1] -= b[j1+nw]*in[i2+1][i1+j1];
+				out[i2][i1] -= b[j1+nw]*in[i2+1][i1-j1];
 		}
 		return;
 	}
@@ -79,7 +79,7 @@ void lpwd(float **in, float **out, float **p, bool der)
 		else lphase_filt(p[i2][i1], b);
 		out[i2][i1] = 0.0;
 		for(j1=-nw; j1<=nw; j1++)
-			out[i2][i1] += b[j1+nw]*(in[i2][i1-j1]-in[i2+1][i1+j1]);
+			out[i2][i1] += b[j1+nw]*(in[i2][i1+j1]-in[i2+1][i1-j1]);
 	}
 }
 
