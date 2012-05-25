@@ -9,7 +9,7 @@ LEGAL_STATEMENT included in the sucore root directory.
 SU utilities perform i/o in either native binary or XDR format. The
 IWAVE sublibrary (sucore package) installs either with or without the
 XDR option, depending on whether the SUXDR flag is passed as a -D 
-option to the compiler/linker. This option is part of the OCFLAGS 
-macro set in the compiler config file (seamx/admin/rules/
-Prg.defs.$PROJARCH.$COMP).
+option to the compiler/linker. To invoke XDR, include "-DSUXDR" in
+the CCFLAGS string value, specified in the config.py file in the IWAVE
+main directory. 
 
