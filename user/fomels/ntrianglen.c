@@ -24,7 +24,7 @@
 
 #include "ntriangle.h"
 
-static int *n, s[SF_MAX_DIM], nd, dim, **tlen, **tsft;
+static int *n, s[SF_MAX_DIM], nd, dim, **tlen, **tsft, nrep;
 static ntriangle *tr;
 static float *tmp;
 
@@ -32,7 +32,8 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
 		      int *nbox /* triangle radius [ndim] */, 
 		      int *ndat /* data dimensions [ndim] */,
 		      int **len /* triangle lengths [ndim][nd] */,
-                      int **sft /* triangle shifts [ndim][nd] */)
+                      int **sft /* triangle shifts [ndim][nd] */,
+		      int repeat /* repeated smoothing */)
 /*< initialize >*/
 {
     int i;
@@ -52,12 +53,13 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
     tsft = sft;
 
     tmp = sf_floatalloc(nd);
+    nrep = repeat;
 }
 
 void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
-    int i, j, i0;
+    int i, j, i0, irep;
 
     if (nx != ny || nx != nd) 
 	sf_error("%s: Wrong data dimensions: nx=%d, ny=%d, nd=%d",
@@ -80,7 +82,10 @@ void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		nsmooth (tr[i], i0, s[i], false, tlen[i], tsft[i], tmp);
+
+		for (irep=0; irep < nrep; irep++) {
+		    nsmooth (tr[i], i0, s[i], false, tlen[i], tsft[i], tmp);
+		}
 	    }
 	}
     }

@@ -77,7 +77,7 @@ Node AppendNode (double x, double y, double z, enum elemType type)
     if (LastNode == NodeList + NumbNode) return NULL; 
     node = LastNode;
 
-    node->x = (double *) calloc (DIMENSION, sizeof(double));
+    node->x = (double *) sf_alloc (DIMENSION, sizeof(double));
     node->x[0] = x;
     node->x[1] = y;
     node->x[2] = z;
@@ -361,3 +361,15 @@ void MoveNode (Node q, double x, double y)
     q->x[1] = y;
 }
 
+void NodeValues(int s, int n, const float *value) {
+/*< go through the list of nodes starting from s and reset values >*/
+    int i;
+    Node node;
+
+    if (s < 0 || NodeList+s+n > LastNode) sf_error("%s: out of range",__FILE__);
+
+    for (i=0; i < n; i++) {
+	node = NodeList+s+i;
+	node->x[2]=value[i];
+    }
+}

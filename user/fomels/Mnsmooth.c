@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
 {
     int *rct[SF_MAX_DIM], *sft[SF_MAX_DIM];
     int box[SF_MAX_DIM], n[SF_MAX_DIM], s[SF_MAX_DIM];
-    int dim, dim1, i, n1, n2, i1, i2, b;
+    int dim, dim1, i, n1, n2, i1, i2, b, nrep;
     float *data, *smoo;
     char key[8];
     sf_file in, out, rect[SF_MAX_DIM], shift[SF_MAX_DIM];
@@ -36,21 +36,22 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
  
+    if (!sf_getint("repeat",&nrep)) nrep=1;
+    /* repeat filtering several times */
+
     dim = sf_filedims (in,n);
 
     dim1 = -1;
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (NULL != sf_getstring(key)) {
-	    /*( rect# size of the smoothing stencil in #-th dimension 
-	      (auxiliary input file) )*/
+	    /*( rect# size of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 	    rect[i] = sf_input(key);
 	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
 	    dim1 = i;
 	    snprintf(key,8,"shift%d",i+1);
 	    if (NULL != sf_getstring(key)) {
-		/*( shift# shifting of the smoothing stencil in #-th dimension 
-		  (auxiliary input file) )*/
+		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
 		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
 	    } else {
@@ -104,7 +105,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    ntrianglen_init(dim1+1,box,n,rct,sft);
+    ntrianglen_init(dim1+1,box,n,rct,sft,nrep);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);

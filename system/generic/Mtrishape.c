@@ -27,10 +27,11 @@
 int main(int argc, char* argv[])
 {
     float o1, o2, g1, g2, o3, g3, d1, d2;
-    int n1, n2, nd, id, i2, i1, nr, three;
-    float **xyz, **z;
+    int n1, n2, nd, id, i2, i1, three, iter, niter, rect1, rect2, nw;
+    float **xyz, **z, **m, *d;
     Node q;
     float zero, xi, xmax, xmin, ymin, ymax, dx, dy, dz;
+    sf_triangle tr1=NULL, tr2=NULL;
     sf_file in, out, pattern;
 
     sf_init(argc,argv);
@@ -73,9 +74,21 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("zero",&zero)) zero = 0.;
     /* level surface */
 
-    if (!sf_getint("nr",&nr)) nr=0;
-    /* number of refinements */
+    if (!sf_getint("niter",&niter)) niter=0;
+    /* number of iterations */
 
+    if (niter > 0) {
+	if (!sf_getint("rect1",&rect1)) rect1=1;
+	if (!sf_getint("rect2",&rect2)) rect2=1;
+	/* smoothing regularization */
+
+	if (rect1 > 1) tr1 = sf_triangle_init (rect1,n1);
+	if (rect2 > 1) tr2 = sf_triangle_init (rect2,n2);
+    }
+
+    if (!sf_getint("nw",&nw)) nw=2;
+    /* interpolator size */
+    
     xyz = sf_floatalloc2(3,nd);
     sf_floatread(xyz[0],nd*3,in);
 
@@ -119,7 +132,7 @@ int main(int argc, char* argv[])
     if (o1 < xmin || g1 > xmax) sf_error("frame1 is too large\n");
     if (o2 < ymin || g2 > ymax) sf_error("frame2 is too large\n");
 
-    CreateNodeList (4+nd+nr);
+    CreateNodeList (4+nd);
     CreateEdgeList ();
     DelaunayNew ((double) xmin, (double) xmax, 
 		 (double) ymin, (double) ymax, (double) zero);
@@ -132,7 +145,13 @@ int main(int argc, char* argv[])
 
     z = sf_floatalloc2 (n1,n2);
 
-    nr -= DelaunayRefine (nr);
+    if (niter > 0) {
+	m = sf_floatalloc2 (n1,n2);
+	d = sf_floatalloc(nd);
+    } else {
+	m = z;
+	d = NULL;
+    }
 
     q = AppendNode (0.,0.,0.,EMPTY);
     for (i2 =0; i2 < n2; i2++) {
@@ -142,7 +161,41 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_floatwrite (z[0], n1*n2, out);
+    if (niter > 0) {
+	sf_int2_init (xyz, o1, o2, d1, d2, n1, n2, sf_lg_int, nw, nd);
+
+	for (i2 =0; i2 < n2; i2++) {
+	    for (i1 =0; i1 < n1; i1++) {
+		m[i2][i1] = z[i2][i1];
+	    }
+	}
+
+	for (iter=0; iter < niter; iter++) {
+	    sf_int2_lop (false,false,n1*n2,nd,m[0],d);
+	    NodeValues(4, nd, d);
+
+	    for (i2 =0; i2 < n2; i2++) {
+		for (i1 =0; i1 < n1; i1++) {
+		    MoveNode (q,  o1+i1*d1,  o2+i2*d2);
+		    m[i2][i1] += z[i2][i1] - Interpolate (q);
+		}
+	    }
+	    
+	    /* 2-D smoothing */
+	    if (NULL != tr1) {
+		for (i2=0; i2 < n2; i2++) {
+		    sf_smooth2 (tr1, 0, 1, false, false, m[i2]);
+		}
+	    }
+	    if (NULL != tr2) {
+		for (i1=0; i1 < n1; i1++) {
+		    sf_smooth2 (tr2, i1, n1, false, false, m[0]);
+		}
+	    }   
+	}
+    }
+    
+    sf_floatwrite (m[0], n1*n2, out);
 
     exit(0);
 }

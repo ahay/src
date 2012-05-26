@@ -75,12 +75,12 @@ int main(int argc, char* argv[])
     warp3_init(nx, x0, dx,
 	       np, p0, dp,
                nt, t0, dt,
-	       nt, np, nx, eps); 
+	       nx, np, nt, eps); 
 
     slice  = sf_floatalloc3(nx,np,nt);
 
     if (lagrange) {
-	slice0 = sf_floatalloc3(nt,np,nx);
+	slice0 = sf_floatalloc3(nx,np,nt);
 	sx = sp = st = 0.;
     } else {
 	slice0 = slice;
@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
     for (iz=0; iz < nz; iz++) {
 	sf_warning("depth %d of %d;",iz+1,nz);
 
+	/* time=0 */
 	sf_floatwrite (slice[0][0],nx*np,out);
 	if (iz==nz-1) break;
 

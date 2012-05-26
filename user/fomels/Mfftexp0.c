@@ -26,8 +26,8 @@
 
 int main(int argc, char* argv[])
 {
-    bool mig;
-    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2;
+    bool mig, cmplx;
+    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1;
     int im, i, j, m2, it1, it2, its, ik, n2, nk;
     float dt, dx, dz, c, old, x0;
     float *curr, *prev, **img, *dat, **lft, **rht, **wave;
@@ -38,6 +38,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("mig",&mig) && !sf_getbool("adj",&mig)) mig=false;
     /* if n, modeling; if y, migration */
+
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"unit2","s");
     }
 
-    nk = fft2_init(false,1,nx,nz,&nx2,&nz2);
+    nk = fft2_init(cmplx,pad1,nx,nz,&nx2,&nz2);
 
     nzx = nz*nx;
     nzx2 = nz2*nx2;
