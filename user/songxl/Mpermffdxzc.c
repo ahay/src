@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     float kz0, kx0, kh0;
     int nzb, nbt, nbb, nxb, nxl, nxr, nhb, nhr, nhl;
     float ct, cb, chl, chr, cxl, cxr;
-    float dt, dx, dz, dh, kx, kz, kh,  h, x, z, c, dkx, dkz, dkh, pi=SF_PI;
+    float dt, dx, dz, dh, kx, kz, kh,  h, x, z, dkx, dkz, dkh, pi=SF_PI;
     float ***prev, ***curr, **img, **dat, ***tmp, ***tmpq, **v;
     float ***a, ***b1, ***b2, ***b3, ***d1, ***d2, ***d3, epsilon;
     float x1, x2, x3, v0, v02, vz2, t2, vs, vr, vp2, tmpdt;

@@ -25,34 +25,34 @@
 using namespace std;
 
 static std::valarray<float>  vx, vz, q, t;
-static std::valarray<float> kx, kz;
-static float dt;
+static std::valarray<double> kx, kz;
+static double dt;
 
-static int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
+static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0f);
+    setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
-	float wx = vx[i]*vx[i];
-	float wz = vz[i]*vz[i];
-	float qq = q[i];
-	float tt = t[i];
-	float c = cos(tt);
-	float s = sin(tt);
+	double wx = vx[i]*vx[i];
+	double wz = vz[i]*vz[i];
+	double qq = q[i];
+	double tt = t[i];
+	double c = cos(tt);
+	double s = sin(tt);
 	
 	for(int b=0; b<nc; b++) {
-	    float x0 = kx[cs[b]];
-	    float z0 = kz[cs[b]];
+	    double x0 = kx[cs[b]];
+	    double z0 = kz[cs[b]];
 	    // rotation of coordinates
-	    float x = x0*c+z0*s;
-	    float z = z0*c-x0*s;
+	    double x = x0*c+z0*s;
+	    double z = z0*c-x0*s;
 
 	    z = wz*z*z;
 	    x = wx*x*x;
-	    float r = x+z;
+	    double r = x+z;
 	    r = r+sqrt(r*r-qq*x*z);
 	    r = sqrt(0.5*r);
 	    res(a,b) = 2*(cos(r*dt)-1); 
@@ -133,9 +133,9 @@ int main(int argc, char** argv)
     }
 
     vector<int> lidx, ridx;
-    FltNumMat mid;
+    DblNumMat mid;
 
-    iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
+    iC( ddlowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -146,13 +146,13 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    FltNumMat lmat(m,m2);
+    DblNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    FltNumMat lmat2(m,n2);
-    iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
+    DblNumMat lmat2(m,n2);
+    iC( ddgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    float *ldat = lmat2.data();
+    double *ldat = lmat2.data();
     std::valarray<float> ldata(m*n2);
     for (int k=0; k < m*n2; k++) 
 	ldata[k] = ldat[k];
@@ -161,10 +161,10 @@ int main(int argc, char** argv)
     left.put("n2",n2);
     left << ldata;
 
-    FltNumMat rmat(n2,n);
+    DblNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
 
-    float *rdat = rmat.data();
+    double *rdat = rmat.data();
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
 	rdata[k] = rdat[k];

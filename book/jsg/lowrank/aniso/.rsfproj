@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgrey', 'sfspike', 'sfricker1', 'sfgraph', 'sfrtoc', 'sffft3', 'sfanisolr2', 'sffftwave2', 'sfwindow', 'sfstack']
+data=[]
+size= 3164614368
