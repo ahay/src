@@ -8,12 +8,12 @@
 ######
 ###### FORM:
 ######   jobs = {
-######     <job name> : <command string>,
+######     <job name> : [<command string>, (other stuff - see below)],
 ######     ...
 ######   }
 ######
 ###### ASSUMPTIONS:
-###### - JOB NAME IS ALSO NAME OF PAR FILE IN THIS DIRECTORY
+###### - JOB NAME IS ALSO ROOT NAME OF PAR FILE IN THIS DIRECTORY
 ######   example: job name = 'data', then par file name = './data.par'
 ###### - JOB NAME WILL BE USED AS NAME OF BUILD SUBDIRECTORY FOR JOB
 ######   example: job name = 'data', then script builds subdir ./data
@@ -36,34 +36,46 @@
 ######   script which is then submitted (batch)
 ###### - SCONS CLEAN COMMAND SHOULD REMOVE ALL JOB DIRECTORIES CREATED
 ######   BY THIS SCRIPT (IT WILL!), AND THESE CONTAIN ALL OUTPUT OF THE
-######   CORRESPONDING COMMANDS
+######   CORRESPONDING COMMANDS. CONSEQUENCE: NO FILE CAN BE BOTH INPUT
+######   AND OUTPUT.
+######   example: a SEGY file cannot be both the source of header info 
+######   and the output data file - so a feature of early IWAVE commands
+######   cannot be exercised in these demos
 
-###### DEFAULT: TYPICAL JOB LIST FOR IWAVE++ DEMO
+###### job dictionary:
+###### key    = name of job = name of output directory
+###### val[0] = path to command
+###### val[1] = dependency
+###### val[2] = batch key ('' for interactive, else 'pbs' or 'sge' or ...)
+###### val[3] = wallclock limit (batch only)
+###### val[4] = resource alloc (batch only)
+###### val[5] = queue (batch only)
+
 jobs = {
-'data' : '$IWAVE/asg2/main/asg.x'
+'demo20m' : ['../../../asg2/main/asg.x','','','','',''],
+'demo10m' : ['../../../asg2/main/asg.x','demo20m','','','',''],
+'demo5m'  : ['../../../asg2/main/asg.x','demo10m','','','',''],
+'demo2.5m'  : ['../../../asg2/main/asg.x','demo5m','','','',''],
+'fig'     : ['../fig.par','demo2.5m', '', '', '', '']
 }
 
-###### BATCH SYSTEM TAG 
-###### BATCH = '' FOR COMMAND-LINE ENVIRONMENT, OR
-###### BATCH = 'PBS' OR BATCH = 'SGE'
-
-BATCH = ''
-
 ########################################################################
-###### BATCH-ONLY OPTIONS - IGNORED FOR INTERACTIVE ENVIRONMENT   ######
+################# OPTIONS COMMON FOR ALL BATCH JOBS ####################
 ########################################################################
+
+###### INDICES INTO JOB PARAM LIST
+n_cmd         = 0
+n_dep         = 1
+n_bat         = 2
+n_clk         = 3
+n_res         = 4
+n_que         = 5
 
 ###### EMAIL ADDRESS FOR BATCH SYSTEM NOTIFICATION
 MAIL = 'symes@caam.rice.edu'
 
-###### QUEUE NAME
-QUEUE = 'parallel'
-
-###### WALLCLOCK TIME LIMIT
-WALL = 'walltime=00:30:00'
-
-###### RESOURCE DESIGNATOR - NODES, CORES PER NODE, ETC.
-RESOURCES = 'nodes=2:ppn=12'
+###### ACCOUNT NAME
+ACCT = 'FDTD3D-Cont'
 
 ########################################################################
 ################### ENVIRONMENT-INDEPDENDENT COMMANDS ##################
@@ -75,10 +87,11 @@ import shutil
 thispath = os.getcwd()
 env = Environment();
 
-def scriptwriter(batch,job,path,queue,mail,wall,res,exe):
-    if batch == 'PBS':
+def scriptwriter(batch,job,path,queue,mail,acct,wall,res,exe):
+    if batch == 'pbs':
         f = open(job + '/' + job +'.pbs','w')
         f.write('#PBS -N ' + job + '\n')
+	f.write('#PBS -A ' + acct + '\n')
         f.write('#PBS -V\n')
         f.write('#PBS -l '+wall + '\n')
         f.write('#PBS -l '+res + '\n')
@@ -91,18 +104,41 @@ def scriptwriter(batch,job,path,queue,mail,wall,res,exe):
         f.write(exe + ' par=../' + job + '.par\n')
         f.close()
 
+    if batch == 'sge':
+        f = open(job + '/' + job +'.sge','w')
+        f.write('#$ -N ' + job + '\n')
+	f.write('#$ -A ' + acct + '\n')
+        f.write('#$ -V\n')
+	f.write('#$ -cwd\n')
+        f.write('#$ -l '+wall + '\n')
+        f.write('#$ -pe '+res + '\n')
+        f.write('#$ -q '+queue + '\n')
+        f.write('#$ -m abe\n')
+        f.write('#$ -M '+mail + '\n')
+        f.write('#$ -o '+path+'/'+job+'/cout.txt\n')
+        f.write('#$ -e '+path+'/'+job+'/cerr.txt\n')
+        f.write('cd '+path+'/'+job+'\n')
+        f.write(exe + ' par=../' + job + '.par\n')
+        f.close()
+
 def make(target, source, env):
-    os.system('/bin/rm -rf ./' + str(target[0]) + '; /bin/mkdir ./' + str(target[0]) )
-    if (BATCH == ''):
-        os.system('cd ./' + str(target[0]) + '; ' + jobs[str(target[0])] + ' par=../' + str(target[0]) + '.par')
+    tgt = str(target[0])
+    os.system('/bin/rm -rf ./' + tgt + '; /bin/mkdir ./' + tgt )
+    if (jobs[tgt][n_bat] == ''):
+        os.system('cd ./' + tgt + '; ' + jobs[tgt][n_cmd] + ' par=../' + tgt + '.par')
     else: 
-        print thispath
-        scriptwriter(BATCH, str(target[0]), thispath, QUEUE, MAIL, WALL, RESOURCES, jobs[str(target[0])])
-        if BATCH == 'PBS':
-            os.system('cd ' + str(target[0]) + '; qsub ' + str(target[0]) + '.pbs')
+        scriptwriter(jobs[tgt][n_bat], tgt, thispath, jobs[tgt][n_que], MAIL, ACCT, jobs[tgt][n_clk], jobs[tgt][n_res], jobs[tgt][n_cmd])
+	if jobs[tgt][n_dep] == '':
+	    DEP[tgt] = os.system('cd ' + tgt + '; qsub ' + tgt + '.' + jobs[tgt][n_bat])
+	elif jobs[tgt][n_bat] in DEP:
+	    DEP[tgt] = os.system('cd ' + tgt + '; qsub -W depend=afterok:' + DEP[jobs[tgt][n_dep]] + ' ' + tgt + '.' + jobs[tgt][n_bat])
+	else:
+	    DEP[tgt] = os.system('cd ' + tgt + '; qsub ' + tgt + '.' + jobs[tgt][n_bat])
 
 for i in jobs.keys():
-    t = env.Command([i], [i + '.par', 'SConstruct'], make)
+    if jobs[i][n_dep] == '':
+        t = env.Command([i], [i + '.par', 'SConstruct'], make)
+    else: 
+    	t = env.Command([i], [jobs[i][n_dep], i + '.par', 'SConstruct'], make)
     Clean(t,i)	
-
 
