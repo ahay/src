@@ -17,6 +17,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
+deriv3
 despike2-ed
 despike1-ed
 vel1d
