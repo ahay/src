@@ -12,6 +12,9 @@
 #include <par.h>
 #include <parser.h>
 
+/* define data path - suitable for use in demo dirs */
+#define DATAPATH "../../model/data/"
+
 /* define number of model types */
 #define NMODEL 11
 
@@ -656,21 +659,24 @@ int main(int argc, char **argv) {
   //   if (ps_getparstring("hfile",&fname) {
   if (!(ps_ffcstring(par,"hfile",&fname))) {
 
-    /* DATAPATH deprecated - WWS 08.01.12
-    if (getenv("DATAPATH")) {
-      dname=malloc(strlen(getenv("DATAPATH"))+strlen(fname)+1);
-      strcpy(dname,getenv("DATAPATH"));
-      strcat(dname,fname);
-    }
-    else {
-    */
+    /* DATAPATH deprecated - WWS 08.01.12*/
+    /* DATAPATH revived - WWS 28.05.12 */
+    //    if (getenv("DATAPATH")) {
+    //      dname=malloc(strlen(getenv("DATAPATH"))+strlen(fname)+2);
+    //      strcpy(dname,getenv("DATAPATH"));
+    dname=malloc(strlen(DATAPATH)+strlen(fname)+2);
+    strcpy(dname,DATAPATH);
+    strcat(dname,fname);
+    //    }
+    //    else {
     
-    dname=malloc(strlen(fname)+2);         /* D.S. 04/2012 */
+    
+    //    dname=malloc(strlen(fname)+2);         /* D.S. 04/2012 */
     //dname=malloc(strlen(fname)+1);
-    strcpy(dname,fname);
-      /*
-    }
-      */
+    //    strcpy(dname,fname);
+    /*
+    //    }
+    */
     strcat(dname,"@");
 
     fprintf(stderr,"writing header file %s\n",fname);
