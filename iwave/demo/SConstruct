@@ -1,0 +1,18 @@
+import os
+thispath = os.getcwd()
+env = Environment();
+
+texname = 'demo'
+bibname = 'masterref'
+
+def paper(target, source, env):
+    name = (str(source[0]).split('.'))[0]
+    os.system('latex ' + name + '.tex; bibtex ' + name + '; latex ' + name + '.tex; latex ' + name + '.tex')
+
+def final(target, source, env):
+    os.system('dvipdf ' + str(source[0]))
+
+env.Command([texname + '.dvi', texname + '.aux', texname + '.bbl', texname + '.log', texname + '.blg'], [texname + '.tex', bibname + '.bib', 'SConstruct'], paper)
+
+env.Command([texname + '.pdf'], [texname + '.dvi', 'SConstruct'], final)
+
