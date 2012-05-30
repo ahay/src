@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool velocity, verb, shape;
     int dim, i, j, n[3], rect[3], it, nt, order, nt0, nx0;
     int iter, niter, cgiter, *f0, *m0=NULL;
-    float d[3], o[3], dt0, dx0, ot0, ox0, eps, tol, *p=NULL, *p0=NULL;
+    float d[3], o[3], dt0, dx0, ot0, ox0, eps, tol, *p=NULL, *p0=NULL, thres;
     float *vd, *vdt, *vdx, *s, *t0, *x0, *ds, *rhs, *rhs0, error0, error;
     char key[6];
     sf_file in, out, dix, t_0=NULL, x_0=NULL, f_0=NULL, grad=NULL, cost=NULL, mini=NULL, prec=NULL;
@@ -107,6 +107,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("order",&order)) order=1;
     /* fastmarch accuracy order */
+
+    if (!sf_getfloat("thres",&thres)) thres=10.;
+    /* thresholding for caustics */
 
     if (!sf_getint("niter",&niter)) niter=1;
     /* number of nonlinear updates */
@@ -221,6 +224,9 @@ int main(int argc, char* argv[])
     /* fastmarch */
     fastmarch(t0,x0,f0,s);
 
+    /* caustic region (2D) */
+    t2d_caustic(x0,f0,n,d,thres);
+
     /* set up operator */
     t2d_set(t0,x0,f0,s,vd,vdt,vdx,m0,p0);
 
@@ -265,6 +271,9 @@ int main(int argc, char* argv[])
 
 	/* fastmarch */
 	fastmarch(t0,x0,f0,s);
+
+	/* caustic region (2D) */
+	t2d_caustic(x0,f0,n,d,thres);
 
 	/* set up operator */
 	t2d_set(t0,x0,f0,s,vd,vdt,vdx,m0,p0);

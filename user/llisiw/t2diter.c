@@ -53,6 +53,40 @@ void t2d_init(int dim  /* model dimension */,
     nx0 = n_x0; dx0 = d_x0; ox0 = o_x0;
 }
 
+void t2d_caustic(float* x0   /* x0 */,
+		 int* f0     /* f0 (modified in place) */, 
+		 int* n, float* d /* model */,
+		 float thres /* thresholding */)
+/*< caustic region (2D) >*/
+{
+    int i, j;
+
+    for (i=0; i < n[0]; i++) {
+	for (j=0; j < n[1]; j++) {
+	    if (j > 0) {
+		if (x0[j*n[0]+i] <= x0[(j-1)*n[0]+i]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+		if ((x0[j*n[0]+i]-x0[(j-1)*n[0]+i]) > thres*d[1]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+	    }
+	    if (j < n[1]-1) {
+		if (x0[(j+1)*n[0]+i] <= x0[j*n[0]+i]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+		if ((x0[(j+1)*n[0]+i]-x0[j*n[0]+i]) > thres*d[1]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+	    }
+	}
+    }
+}
+
 void t2d_set(float* t0 /* t0 */,
 	     float* x0 /* x0 */,
 	     int* f0   /* f0 */,

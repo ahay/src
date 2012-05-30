@@ -24,7 +24,7 @@ static float dt;
 static float t0;
 
 void doubint(int nt, float *trace)
-/*< causal and anticausal integratio >*/
+/*< causal and anticausal integration >*/
 {
     int it;
     float tt;

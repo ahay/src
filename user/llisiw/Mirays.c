@@ -24,8 +24,8 @@
 int main(int argc, char* argv[])
 {
     bool velocity;
-    int dim, i, n[3], it, nt, order;
-    float d[3], o[3];
+    int dim, i, n[3], it, nt, order, j;
+    float d[3], o[3], thres;
     float *s, *t0, *x0;
     int *f0;
     char key[3];
@@ -83,6 +83,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=1;
     /* fastmarching accuracy order */
 
+    if (!sf_getfloat("thres",&thres)) thres=10.;
+    /* thresholding for caustics */
+
     /* initialization */
     fastmarch_init(n,o,d,order);
 
@@ -93,6 +96,32 @@ int main(int argc, char* argv[])
     sf_floatwrite(s,nt,out);
     if (NULL!=ot0) sf_floatwrite(t0,nt,ot0);
     if (NULL!=ox0) sf_floatwrite(x0,nt,ox0);
+
+    /* caustic region (2D) */
+    for (i=0; i < n[0]; i++) {
+	for (j=0; j < n[1]; j++) {
+	    if (j > 0) {
+		if (x0[j*n[0]+i] <= x0[(j-1)*n[0]+i]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+		if ((x0[j*n[0]+i]-x0[(j-1)*n[0]+i]) > thres*d[1]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+	    }
+	    if (j < n[1]-1) {
+		if (x0[(j+1)*n[0]+i] <= x0[j*n[0]+i]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+		if ((x0[(j+1)*n[0]+i]-x0[j*n[0]+i]) > thres*d[1]) {
+		    f0[j*n[0]+i] = 0;
+		    continue;
+		}
+	    }
+	}
+    }
 
     /* write flag */
     if (NULL!=of0) sf_intwrite(f0,nt,of0);
