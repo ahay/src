@@ -46,9 +46,9 @@ def dip_lop(n1, n2, p0, c, iter, eta):
 
 par=rsf.Par()
 input=rsf.Input()
-dip=rsf.Output("dip")
+dip=rsf.Output()
 coef=rsf.Output("coef")
-output=rsf.Output()
+pf=rsf.Output("pf")
 
 nf=par.int("nf",1)
 iter=par.int("iter",5)
@@ -57,7 +57,7 @@ n1=input.int("n1")
 n2=input.int("n2")
 
 n3=2*nf+1
-output.put("n3",2*nf+1)
+pf.put("n3",2*nf+1)
 dip.put("n3",2*nf)
 dip.put("n2",n2-1)
 coef.put("n3",n3)
@@ -80,7 +80,7 @@ for i3 in range(n3):
 		yy=fir(p,x)
 		y[i3,i2,:]=yy
 
-output.write(y)
+pf.write(y)
 
 po=1
 # dip steps
@@ -91,22 +91,23 @@ for i3 in range(n3):
 
 coef.write(y[:,0:n2-1,:])
 
-#p=-y[1,0:n2-1,:]/y[0,0:n2-1,:]
+#p=-y[0,0:n2-1,:]/y[1,0:n2-1,:]
 p=zeros((n2-1,n1),'f')
 
 for i2 in range(n2-1):
-	p[i2,:]=divn(-y[0,i2,:], y[1,i2,:], eta)
+	p[i2,:]=divn(-y[1,i2,:], y[0,i2,:], eta)
 
 dip.write(p)
 for i3 in range(n3-2):
 	k=i3+3
-	c=y[0:k,0:n2-1,:]
+	cc=y[0:k,0:n2-1,:]
+	c=cc[::-1,:,:]
 	p=dip_lop(n1, n2-1, p, c, iter, eta)
 	dip.write(p)
 
 input.close()
 dip.close()
 coef.close()
-output.close()
+pf.close()
 
 
