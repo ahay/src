@@ -42,6 +42,7 @@ if plplot:
 
     if root:
         install = env.Install(libdir,[dlib,'plvpl.rc'])
+        env.InstallAs(os.path.join(libdir,'plvpl.driver_info'),'plvpl.rc')
 
         if env['PLATFORM'] == 'darwin':
             for lib in ('rsf','rsfplot'):

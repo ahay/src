@@ -637,6 +637,7 @@ def gd(context):
     LIBS.pop()
 
 pkg['plplot'] = {'fedora':'plplot-devel',
+                 'darwin':'plplot',
                  'suse':'libplplot-devel',
                  'ubuntu':'libplplot-dev'}
 

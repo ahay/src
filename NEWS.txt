@@ -38,6 +38,7 @@ In programs:
 
 * Fixed size limitation in sfclip2
 * Added x0 and y0 in sfstolt 
+* Fixed installing the plplot driver with .driver_info extension
 
 In the build system:
 
