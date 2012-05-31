@@ -24,9 +24,9 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int nt, nx, ny, ns, nz, nzx, ix, i, is, ist;
+    int nt, nx, ny, ns, nz, nzx, ix, iz, i, is, ist;
     float *trace, *out, **table, **tablex, *stable, *stablex;
-    float ds, s0, x0, y0, dy, s, dx,ti,t0,dt,z0,dz,aal, tx;
+    float ds, s0, x0, y0, dy, s, dx, ti, t0, dt, z0, dz, aal, tx, aper;
     char *unit, *what, *type;
     sf_file dat, mig, tbl, der;
 
@@ -103,6 +103,9 @@ int main(int argc, char* argv[])
 	sf_putstring(dat,"label1","Time");
 	sf_putstring(dat,"unit1","s");	
     }
+
+    if (!sf_getfloat("aperture",&aper)) aper=90.;
+    /* migration aperture (in degree) */
 
     if (!sf_getfloat("antialias",&aal)) aal=1.0;
     /* antialiasing */
@@ -183,13 +186,17 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	/* Add aperture limitation later */
-
-	for (ix=0; ix < nzx; ix++) { /* image */
-	    ti = 2.*stable[ix];
-	    tx = 2.*stablex[ix];
-	    
-	    pick(adj,ti,fabsf(tx*ds*aal),out+ix,trace);
+	for (ix=0; ix < nx; ix++) { 
+	    for (iz=0; iz < nz; iz++) { /* image */
+		/* aperture (cone angle) */
+		if (fabsf(atanf((x0+ix*dx-s)/(iz*dz)))*180./SF_PI > aper)
+		    continue;
+		
+		ti = 2.*stable[ix*nz+iz];
+		tx = 2.*stablex[ix*nz+iz];
+		
+		pick(adj,ti,fabsf(tx*ds*aal),out+ix*nz+iz,trace);
+	    }
 	}
 
 	if (!adj) {

@@ -32,16 +32,22 @@ void filt_init(float dt0 /* time sampling */,
     filt = sf_floatalloc(nsam);
 }
 
+void filt_close()
+/*< close >*/
+{
+    free(filt);
+}
+
 void filt_set(float tau /* time delay */)
 /*< set up filter >*/
 {
-    int tt, isam;
-
-    tt = tau/dt;
+    int isam;
 
     /* value */
-    for (isam=0; isam < nsam; isam++) {
-	filt[isam] = sqrtf(powf((tt+isam+1)*dt/tau,2.)-1.);
+    filt[0] = 0.;
+
+    for (isam=1; isam < nsam; isam++) {
+	filt[isam] = sqrtf(powf((tau+isam*dt)/tau,2.)-1.);
     }
 
     /* first derivative */
@@ -55,15 +61,17 @@ void filt_set(float tau /* time delay */)
     }
 }
 
-float pick(float* trace /* input trace */,
+float pick(float delta /* sample position */,
+	   float* trace /* input trace */,
 	   int shift /* sample shift */)
-/*< filter and scale for one output sample >*/
+/*< filter input trace for one output sample >*/
 {
     float value=0.;
-    int isam;
-    
+    int isam;    
+
     for (isam=0; (isam < nsam-1) && (shift-isam >= 0); isam++) {
-	value += trace[shift-isam]*filt[isam]/dt;
+	value += ((1.-delta)*trace[shift-isam]+delta*trace[shift-isam+1])
+	    *filt[isam]/dt;
     }
 
     return value;

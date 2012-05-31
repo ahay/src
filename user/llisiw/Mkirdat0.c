@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     bool adj;
     int it, nt, ix, nx, left, right, ic, aper, shift;
-    float datum, length, t0, dt, x0, dx, dist, tau;
+    float datum, length, t0, dt, x0, dx, dist, tau, delta=0.;
     float **tr_in, **tr_out, **table;
     sf_file in, out, green;
 
@@ -40,10 +40,10 @@ int main(int argc, char* argv[])
     /* datum depth */
 
     if (!sf_getint("aperture",&aper)) aper=50;
-    /* aperture */
+    /* aperture (number of near traces) */
 
     if (!sf_getfloat("length",&length)) length=0.025;
-    /* filter length */
+    /* filter length (in seconds) */
 
     /* read input */
     if (!sf_histint(in,"n1",&nt)) sf_error("No nt=");
@@ -89,11 +89,14 @@ int main(int argc, char* argv[])
 
 	    shift = 0;
 	    for (it=0; it < nt; it++) {
-		if (it*dt < tau) continue;
+		if (((float)it)*dt < tau) 
+		    continue;
+		else if (shift == 0)
+		    delta = (((float)it*dt)-tau)/dt;
 
-		tr_out[ix][it] += 1./3.14159265359
+		tr_out[ix][it] += 1./SF_PI
 		    *dx*datum*tau/dist
-		    *pick(tr_in[ic],shift);
+		    *pick(delta,tr_in[ic],shift);
 		shift++;
 	    }
 	}
