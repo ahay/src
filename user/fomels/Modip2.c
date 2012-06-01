@@ -23,8 +23,9 @@
 
 int main(int argc, char *argv[])
 {
-    int i, n1, n2, n12, n[2], niter, iter, liter, rect[2];
-    float **dat, **ang, **p1, **p2, ***den, *dena, *rat, **out, mean;
+    int i, k, n1, n2, n12, n[2], niter, iter, liter, rect[2];
+    float mean, a0, ai, norm, norm2, lam;
+    float **dat, **ang, **p1, **p2, ***den, *dena, *rat, **out;
     sf_file inp, dip;
 
     sf_init(argc,argv);
@@ -48,6 +49,9 @@ int main(int argc, char *argv[])
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* horizontal smoothing */
 
+    if (!sf_getfloat("a0",&a0)) a0=0;
+    /* initial angle */
+
     dat = sf_floatalloc2(n1,n2);
     ang = sf_floatalloc2(n1,n2);
     out = sf_floatalloc2(n1,n2);
@@ -62,25 +66,24 @@ int main(int argc, char *argv[])
     sf_floatread(dat[0],n12,inp);
 
     for (i=0; i < n12; i++) {
-	ang[0][i] = 0;
+	ang[0][i] = a0;
+	p1[0][i] = sinf(a0);
+	p2[0][i] = cosf(a0);
     }
 
     opwd_init(n1,n2);
     sf_divn_init(2, n12, n, rect, liter, true); 
 
+    opwd_filter(lagrange,lagrange,NULL,NULL,p1,p2,dat,out);
+    
+    norm = 0.;
+    for (i=0; i < n12; i++) {
+	out[0][i] = dat[0][i] - out[0][i];
+	norm += out[0][i]*out[0][i];
+    }
+
     for (iter=0; iter < niter; iter++) {
 	sf_warning("iter=%d of %d",iter+1,niter);
-
-	for (i=0; i < n12; i++) {
-	    p1[0][i] = sinf(ang[0][i]);
-	    p2[0][i] = cosf(ang[0][i]);
-	}
-
-	opwd_filter(lagrange,lagrange,NULL,NULL,p1,p2,dat,out);
-
-	for (i=0; i < n12; i++) {
-	    out[0][i] = dat[0][i] - out[0][i];
-	}
 
 	opwd_filter(lagrange_der,lagrange,NULL,NULL,p1,p2,dat,den[0]);
 	opwd_filter(lagrange,lagrange_der,NULL,NULL,p1,p2,dat,den[1]);
@@ -91,7 +94,7 @@ int main(int argc, char *argv[])
 
         mean = 0.;
 	for(i=0; i < n12; i++) {
-	    mean += dena[i];
+	    mean += dena[i]*dena[i];
 	}
 	mean = sqrtf (n12/mean);
     
@@ -102,9 +105,32 @@ int main(int argc, char *argv[])
     
 	sf_divn (out[0],dena,rat);
 
-	for(i=0; i < n12; i++) {
-	    ang[0][i] += rat[i];
+	/* Choose step size */
+	lam = 1.;
+	for (k=0; k < 8; k++) {	    
+	    for(i=0; i < n12; i++) {
+		ai = ang[0][i] + lam*rat[i];
+		if      (ai < -0.5*SF_PI) ai=-0.5*SF_PI;
+		else if (ai >  0.5*SF_PI) ai= 0.5*SF_PI;
+
+		p1[0][i] = sinf(ai);
+		p2[0][i] = cosf(ai);
+	    }
+	    opwd_filter(lagrange,lagrange,NULL,NULL,p1,p2,dat,out);
+
+	    norm2 = 0.;
+	    for (i=0; i < n12; i++) {
+		out[0][i] = dat[0][i] - out[0][i];
+		norm2 += out[0][i]*out[0][i];
+	    }
+	    if (norm2 < norm) break;
+	    lam *= 0.5;
 	}
+
+	for(i=0; i < n12; i++) {
+	    ang[0][i] += lam*rat[i];
+	    norm = norm2;
+	}	
     }
     
     sf_floatwrite(ang[0],n12,dip);
