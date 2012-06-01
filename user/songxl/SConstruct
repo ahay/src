@@ -22,13 +22,15 @@ ffd2_den_omp
 permffdxzc
 ffd0 ffd01
 lffd2an25
+phasescan
+ffd2dehftry
 '''
 
 
 mpi_progs = 'tti4rtm ffdrtm'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdanc2_25 lffdan'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
