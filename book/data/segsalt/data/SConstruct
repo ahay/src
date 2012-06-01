@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-from beg import server
+from rsf.recipes.beg import server
 # replace with your own data server
 
 for case in ('a1','a2','b1'):

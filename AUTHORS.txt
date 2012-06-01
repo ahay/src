@@ -34,6 +34,7 @@ Karl Schleicher <k_schleicher@hotmail.com>
 Jeffrey Shragge <jshragge@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
+Yanadet Sripanich <sripanichy@utexas.edu>
 I-Hua Tsai <caiyihua@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
 Robin Weiss <robin.weiss@uwa.edu.au>

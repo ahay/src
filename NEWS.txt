@@ -23,6 +23,7 @@ To programs:
 * sflinear: linear 1-D interpolation
 * sfspike now optionally accepts stdin
 * iwave package from Bill Symes and The Rice Inversion Project
+* user/zone: new contributor (Yanadet Sripanich)
 
 ===Bug fixes===
 

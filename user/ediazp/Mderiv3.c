@@ -120,7 +120,7 @@ int main (int argc, char* argv[])
 		c0=0.0; c1=-(1/dt); c2=-c1;		
 	
 	} else {
-	
+	    c0=c1=c2=0.0;
 		sf_error("operator can only be 1,2 or 3");
 	
 	}

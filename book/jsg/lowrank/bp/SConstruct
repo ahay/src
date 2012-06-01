@@ -6,7 +6,7 @@ Flow('bpvel','bpaitvel.hh',
      '''dd form=native | put
      label1=Depth label2=Distance unit1=m unit2=m''')
 
-Result('bpvel','''grey  
+Result('bpvel','''window j1=2 j2=4 | grey  
     color=j gainpanel=a title=BPait\ Velocity\ Model
     scalebar=y barreverse=y allpos=y barlabel=Velocity barunit=m/s 
     screenratio=%g screenht=4 labelsz=5 titlesz=6''' % (12.0/32.0))

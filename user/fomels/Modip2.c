@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     int i, n1, n2, n12, n[2], niter, iter, liter, rect[2];
-    float **dat, **ang, **p1, **p2, ***den, **rat, **out, mean;
+    float **dat, **ang, **p1, **p2, ***den, *dena, *rat, **out, mean;
     sf_file inp, dip;
 
     sf_init(argc,argv);
@@ -55,8 +55,9 @@ int main(int argc, char *argv[])
     p1 = sf_floatalloc2(n1,n2);
     p2 = sf_floatalloc2(n1,n2);
 
-    den = sf_floatalloc3(n1,n2,2);
-    rat = sf_floatalloc2(n12,2);
+    den  = sf_floatalloc3(n1,n2,2);
+    dena = sf_floatalloc(n12);
+    rat  = sf_floatalloc(n12);
 
     sf_floatread(dat[0],n12,inp);
 
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
     }
 
     opwd_init(n1,n2);
-    sf_multidivn_init(2, 2, n12, n, rect, den[0][0], NULL, true); 
+    sf_divn_init(2, n12, n, rect, liter, true); 
 
     for (iter=0; iter < niter; iter++) {
 	sf_warning("iter=%d of %d",iter+1,niter);
@@ -84,26 +85,28 @@ int main(int argc, char *argv[])
 	opwd_filter(lagrange_der,lagrange,NULL,NULL,p1,p2,dat,den[0]);
 	opwd_filter(lagrange,lagrange_der,NULL,NULL,p1,p2,dat,den[1]);
 
-        mean = 0.;
-	for(i=0; i < n12*2; i++) {
-	    mean += den[0][0][i]*den[0][0][i];
+	for(i=0; i < n12; i++) {
+	    dena[i] = den[0][0][i]*p2[0][i]-den[1][0][i]*p1[0][i];
 	}
-	mean = sqrtf (n12*2/mean);
+
+        mean = 0.;
+	for(i=0; i < n12; i++) {
+	    mean += dena[i];
+	}
+	mean = sqrtf (n12/mean);
     
 	for(i=0; i < n12; i++) {
 	    out[0][i] *= mean;
-	    den[0][0][i] *= mean;
-	    den[1][0][i] *= mean;
+	    dena[i] *= mean;
 	}
     
-	sf_multidivn (out[0],rat[0],liter);
+	sf_divn (out[0],dena,rat);
 
 	for(i=0; i < n12; i++) {
-	    ang[0][i] = atan2f(p1[0][i]+rat[0][i],
-			       p2[0][i]+rat[1][i]);
+	    ang[0][i] += rat[i];
 	}
     }
-
+    
     sf_floatwrite(ang[0],n12,dip);
 
     exit(0);

@@ -11,6 +11,7 @@ try:
 except:
     env = bldutil.Debug()
     root = None
+    SConscript('../c/SConstruct')
 
 jdk = env.get('JAVA_HOME')
 if not jdk: jdk = env.get('JAVA_SDK')

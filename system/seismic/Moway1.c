@@ -87,13 +87,10 @@ int main(int argc, char* argv[])
     } 
     
     sf_floatread(slice0[0][0],nt*np*nx,in);
+    sf_floatwrite (slice0[0][0],nx*np,out);
 
-    for (iz=0; iz < nz; iz++) {
+    for (iz=0; iz < nz-1; iz++) {
 	sf_warning("depth %d of %d;",iz+1,nz);
-
-	/* time=0 */
-	sf_floatwrite (slice[0][0],nx*np,out);
-	if (iz==nz-1) break;
 
 	sf_floatread(vv,nx,vel);
 	sf_floatread(vg,nx,vgrad);
@@ -106,9 +103,9 @@ int main(int argc, char* argv[])
  	
 		for (ix=0; ix < nx; ix++) {
 		    x = x0+ix*dx;
+
 		    v = 0.5*vv[ix];
-		    g = 0.5*vg[ix];
-		    
+		    g = 0.5*vg[ix];		    
 		    
 		    sq = 1./sqrt(1.-v*v*p*p);
 
@@ -130,6 +127,7 @@ int main(int argc, char* argv[])
 	}
 
 	warp3(slice0,xstr,pstr,tstr,slice);
+	sf_floatwrite (slice[0][0],nx*np,out); /* it=0 */
     }
     sf_warning(".");
     
